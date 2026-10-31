@@ -17,6 +17,7 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
+from scripts.learning.compass_outcomes import SIDEWAYS_TOLERANCE_PCT
 
 FORECAST_ROOT = Path("04_MARKET_LEARNING/handlekompas/official/daily")
 HOURLY_ROOT = Path("03_DAILY_CAPTURE_LOGS/hourly")
@@ -181,10 +182,12 @@ def one_report(entry: dict, candles: dict[datetime, dict], asof: datetime):
             else:
                 ret = 100*(observed["btc"]/r_btc-1)
                 status = "MATURED_EXPOST_ONLY"
-        if status == "MATURED_EXPOST_ONLY" and predicted in ("UP", "DOWN"):
-            correct = (ret > 0) if predicted == "UP" else (ret < 0)
+        if status == "MATURED_EXPOST_ONLY" and predicted in ("UP", "DOWN", "SIDEWAYS"):
+            correct = ((ret > 0) if predicted == "UP" else
+                       (ret < 0) if predicted == "DOWN" else
+                       abs(ret) <= SIDEWAYS_TOLERANCE_PCT[label])
             scored = "CORRECT" if correct else "INCORRECT"
-        elif predicted in ("MIXED", "NO_EDGE", "UNAVAILABLE", "SIDEWAYS"):
+        elif predicted in ("MIXED", "NO_EDGE", "UNAVAILABLE"):
             scored = "ABSTAIN_NO_DIRECTIONAL_CLAIM"
         else:
             scored = "NOT_SCORED"
@@ -202,6 +205,7 @@ def one_report(entry: dict, candles: dict[datetime, dict], asof: datetime):
                  baseline_direction in ("UP", "DOWN") else "NOT_SCORED"
             ),
             "point_in_time_issuance_verified": False,
+            "official_sideways_tolerance_pct": SIDEWAYS_TOLERANCE_PCT[label],
         }
     descriptive = {}
     for label, hours in DIFFERENT_FROM_FORECAST.items():
@@ -229,6 +233,15 @@ def aggregate(records: list[dict]) -> dict:
     counts["risk_states"] = dict(Counter(r["pullback_risk_state"] for r in records))
     counts["source_states"] = dict(Counter(str(r["data_status"]) for r in records))
     counts["reason"] = dict(Counter(str(r["run_reason"]) for r in records))
+    counts["reference_age_at_issuance"] = {
+        "available_n": sum(r["reference_age_hours"] is not None and r["reference_age_hours"] >= 0 for r in records),
+        "over_30m_n": sum(r["reference_age_hours"] is not None and r["reference_age_hours"] > 0.5 for r in records),
+        "over_60m_n": sum(r["reference_age_hours"] is not None and r["reference_age_hours"] > 1.0 for r in records),
+        "over_120m_n": sum(r["reference_age_hours"] is not None and r["reference_age_hours"] > 2.0 for r in records),
+        "over_180m_n": sum(r["reference_age_hours"] is not None and r["reference_age_hours"] > 3.0 for r in records),
+        "clock_type": "ISSUE_FIELD_MINUS_INDIVIDUAL_CANDLE_CLOSE_NOT_PROVIDER_FIRST_KNOWN",
+        "comparison": "TASK2_SOURCE_AGE_CENSUS_PR1857_IS_SEPARATE_257_ISSUANCE_COHORT",
+    }
     results = {}
     for horizon in HORIZONS:
         hist = [r["horizons"][horizon] for r in records]
@@ -241,7 +254,9 @@ def aggregate(records: list[dict]) -> dict:
             "matured_expost_n": len(eligible), "directional_testable_n": len(testable),
             "directional_correct_n": correct, "directional_wrong_n": wrong,
             "expost_direction_rate": round(correct/len(testable), 5) if testable else None,
-            "abstention_count": sum(x["expected_direction"] in ("MIXED","NO_EDGE","UNAVAILABLE","SIDEWAYS") for x in hist),
+            "abstention_count": sum(x["expected_direction"] in ("MIXED","NO_EDGE","UNAVAILABLE") for x in hist),
+            "sideways_testable_n": sum(x["status"] == "MATURED_EXPOST_ONLY" and x["expected_direction"] == "SIDEWAYS" for x in hist),
+            "sideways_correct_n": sum(x["status"] == "MATURED_EXPOST_ONLY" and x["expected_direction"] == "SIDEWAYS" and x["descriptive_direction_result"] == "CORRECT" for x in hist),
             "point_in_time_certified_edge": None,
         }
         paired = [x for x in testable if x["momentum_baseline_result"] in ("CORRECT", "INCORRECT")]
@@ -399,7 +414,23 @@ def main() -> int:
         print(json.dumps({"status": "ALREADY_PUBLISHED", "path": str(args.output)}, sort_keys=True))
         return 0
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False)+"\n")
+    payload = json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False)+"\n"
+    if len(payload.encode("utf-8")) > 8_000_000:
+        raise ValueError("RESEARCH_REPORT_TOO_LARGE_SKIP_PUBLICATION")
+    # Publish the complete report only after serialization and size checks.
+    # A failed exploratory audit must not produce a half-written JSON file.
+    import os
+    import tempfile
+    tmp = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=output.parent,
+                                         prefix=".research-audit-", suffix=".tmp", delete=False) as handle:
+            tmp = Path(handle.name)
+            handle.write(payload)
+        os.replace(tmp, output)
+    finally:
+        if tmp is not None and tmp.exists():
+            tmp.unlink()
     print(json.dumps({"status":"PUBLISHED_RESEARCH_ONLY","scope":args.scope,
                       "path":str(args.output),
                       "forecast_issuances":report["all_issuances"]["forecasts"],
