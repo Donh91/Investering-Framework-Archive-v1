@@ -28,6 +28,9 @@ def target_close_after(issued: datetime) -> datetime:
     """First completed UTC hourly candle STRICTLY after issuance."""
     utc = issued.astimezone(timezone.utc)
     start = utc.replace(minute=0, second=0, microsecond=0)
+    if utc != start:
+        start += HOUR
+    # Entire bar must open at or after issue. Do not use the straddling bar.
     return start + HOUR
 
 
