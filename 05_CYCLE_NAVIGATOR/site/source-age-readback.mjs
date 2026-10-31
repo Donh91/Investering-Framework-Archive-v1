@@ -20,13 +20,14 @@ export function originalSourceAgeAtIssue(internal,projection){
   const base={
     contract:'CN_OFFICIAL_ORIGINAL_SOURCE_AGE_READBACK_v1',
     status:'UNKNOWN',observation_age_seconds_at_issue:null,
-    packet_age_seconds_at_issue:null,issued_at_utc:null,
+    packet_age_seconds_at_issue:null,issued_at_utc:null,compass_id:null,
     observation_clock_status:'UNKNOWN',packet_clock_status:'UNKNOWN',
     provider_first_published_at_utc:null,first_investor_delivery_at_utc:null,
     authority:'PRESENTATION_ONLY_NO_GATE_OR_SIGNAL'
   };
-  if(internal?.contract!=='OFFICIAL_DAILY_COMPASS_v3'&&
-     !/^OFFICIAL_DAILY_COMPASS_v\d+$/.test(String(internal?.contract||'')))return base;
+  // Only the actually issued v1 original contract has verified clock semantics.
+  // Do not accept hypothetical future revisions by a version-number regex.
+  if(internal?.contract!=='OFFICIAL_DAILY_COMPASS_v1')return base;
   if(!projection||internal.compass_id!==projection.compass_id||!safeIso(internal.issued_at_utc)||
      internal.issued_at_utc!==projection.issued_at_utc)return base;
   const freshness=internal.source_bindings?.auto_market_state?.freshness;
@@ -37,7 +38,7 @@ export function originalSourceAgeAtIssue(internal,projection){
   return {...base,status:'ORIGINAL_ISSUANCE_CLOCKS_ONLY',
     observation_age_seconds_at_issue:obs.age_seconds,
     packet_age_seconds_at_issue:packet.age_seconds,
-    issued_at_utc:internal.issued_at_utc,
+    issued_at_utc:internal.issued_at_utc,compass_id:internal.compass_id,
     observation_clock_status:typeof obs.status==='string'?obs.status:'UNKNOWN',
     packet_clock_status:typeof packet.status==='string'?packet.status:'UNKNOWN'};
 }
@@ -49,8 +50,10 @@ export function originalSourceAgeLabel(compass,{lang='da',valid=false}={}){
   if(x?.contract!=='CN_OFFICIAL_ORIGINAL_SOURCE_AGE_READBACK_v1'||
      x?.status!=='ORIGINAL_ISSUANCE_CLOCKS_ONLY'||
      x?.issued_at_utc!==compass?.issued_at_utc||
+     x?.compass_id!==compass?.compass_id||
      !validAge(x?.observation_age_seconds_at_issue)||
-     !validAge(x?.packet_age_seconds_at_issue))return da?
+     !validAge(x?.packet_age_seconds_at_issue)||
+     x?.observation_age_seconds_at_issue<x?.packet_age_seconds_at_issue)return da?
        ' · Kildealder ved udstedelse: ukendt':' · Source age at issuance: unknown';
   const minutes=n=>n<60?'<1':String(Math.ceil(n/60));
   return da?
