@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {buildUnifiedRootHtml} from './unified-root.mjs';
 import {buildPremiumRootHtml} from './premium-root.mjs';
 import {VIEWS,currentCompass,sourceTranslation,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
 
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [original,pro]=await Promise.all([
@@ -537,6 +537,42 @@ test('latest observation vs 1–3d sourced contrast refuses to invent 12h/24h tr
   'NO_COMPARABLE_DIRECTIONS');
  assert.equal(shortVsForward({compass,view:{...view,compass:{...view.compass,state:'STALE'}},now}).state,
   'SOURCE_INVALID');
+ assert.equal(observedMarketClock({compass,now}).state,'FRESH_OBSERVATION');
+ // Public Hourly→Pages requires at most 90m since last completed 1h candle.
+ // Official projection validity can remain OK even when that candle is old.
+ const at89=Date.parse('2026-10-30T22:29:00Z');
+ const at90=Date.parse('2026-10-30T22:30:00Z');
+ const at91=Date.parse('2026-10-30T22:31:00Z');
+ assert.equal(observedMarketClock({compass,now:at89}).state,'FRESH_OBSERVATION');
+ assert.equal(observedMarketClock({compass,now:at90}).state,'FRESH_OBSERVATION');
+ assert.equal(observedMarketClock({compass,now:at91}).state,'OBSERVATION_DELAYED');
+ assert.equal(shortVsForward({compass,view,now:at89}).state,'CONTRAST_UP_DOWN');
+ const delayed=shortVsForward({compass,view,now:at91});
+ assert.equal(delayed.state,'OBSERVATION_DELAYED');
+ assert.equal(delayed.sourceBound,false);
+ assert.match(delayed.text,/over 90 minutter gammel/);
+ assert.equal(observedMarketClock({compass,now:Date.parse('2026-10-30T20:59:59Z')}).state,
+  'OBSERVATION_CLOCK_INVALID');
+ const badClock={...compass,market_now:{...compass.market_now,
+  market_observation_open_utc:'2026-10-30T20:30:00Z'}};
+ assert.equal(observedMarketClock({compass:badClock,now}).state,'OBSERVATION_CLOCK_INVALID');
+ assert.equal(shortVsForward({compass:badClock,view,now}).state,'OBSERVATION_CLOCK_INVALID');
+ const missingPrev={...compass,market_now:{...compass.market_now,
+  predecessor_market_observation_open_utc:null}};
+ assert.equal(observedMarketClock({compass:missingPrev,now}).state,
+  'NO_NEW_PRICE_OBSERVATION');
+ const sameClock={...compass,market_now:{...compass.market_now,
+  predecessor_market_observation_open_utc:'2026-10-30T20:00:00Z'}};
+ assert.equal(observedMarketClock({compass:sameClock,now}).state,'NO_NEW_PRICE_OBSERVATION');
+ const noFlag={...compass,market_now:{...compass.market_now,
+  new_price_observation:undefined}};
+ assert.equal(observedMarketClock({compass:noFlag,now}).state,'NO_NEW_PRICE_OBSERVATION');
+ // The separate official 1–3 day estimate remains source issued unchanged.
+ assert.equal(publicOverview({latest:{},compass,view,now:at91}).cards[0].sourceDirection,
+  'DOWN');
+ const runtimeClock=await read('./root-compass-pro.mjs');
+ assert.match(runtimeClock,/observedMarketClock\(\{compass:feeds\.compass\}\)/);
+ assert.match(runtimeClock,/OBSERVATION_DELAYED/);
  assert.equal(shortVsForward({compass,view,now:Date.parse('2026-10-30T23:31:00Z')}).state,
   'SOURCE_INVALID');
  assert.equal(shortVsForward({compass:{...compass,weekly_context:{...compass.weekly_context,
