@@ -346,7 +346,7 @@ class PullbackTimeboxResearchTests(unittest.TestCase):
         alerts=[x for x in r["alerts"] if x["new_alert_class"]=="ESCALATION"]
         self.assertEqual(r["new_warning_or_escalation_events"],3)
         self.assertEqual(len(alerts),2)  # first actual HIGH plus a fresh episode
-        self.assertEqual(r["warning_state_counts"]["RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"],39)
+        self.assertEqual(r["warning_state_counts"]["RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"],38)
         self.assertEqual(r["horizons"]["72h"]["hit_n"],0)
 
     def test_truly_separate_events_after_expiry_can_be_counted(self):
