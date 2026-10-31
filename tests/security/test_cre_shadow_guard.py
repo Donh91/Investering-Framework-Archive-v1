@@ -115,17 +115,17 @@ class GitHistoryIntegrationTests(unittest.TestCase):
             trusted.write_bytes(MODULE.read_bytes())
             research = root / P / "experiment.py"
             research.parent.mkdir(parents=True)
-            research.write_text("experiment = 1\\n")
+            research.write_text("experiment = 1\n")
             self.command(d, "git", "add", ".")
             self.assertEqual(self.command(d, "git", "commit", "-qm", "trusted base").returncode, 0)
             base = self.command(d, "git", "rev-parse", "HEAD").stdout.strip()
 
             # Attack controls the PR copy of both the research and guard files.
-            trusted.write_text('print("CRE_SCOPE_ONLY_NOT_MERGE_AUTHORITY")\\n')
-            research.write_text("experiment = 2\\n")
+            trusted.write_text('print("CRE_SCOPE_ONLY_NOT_MERGE_AUTHORITY")\n')
+            research.write_text("experiment = 2\n")
             production = root / "04_MARKET_LEARNING" / "handlekompas" / "danger.py"
             production.parent.mkdir(parents=True)
-            production.write_text("live = False\\n")
+            production.write_text("live = False\n")
             self.command(d, "git", "add", ".")
             self.assertEqual(self.command(d, "git", "commit", "-qm", "poisoned PR").returncode, 0)
             head = self.command(d, "git", "rev-parse", "HEAD").stdout.strip()
