@@ -4,7 +4,7 @@ import { dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preserveLegacyShell, releasePremiumShell } from "./premium-release.mjs";
 import { prospectiveRangeReadback } from "./prospective-range-readback.mjs";
-import { originalSourceAgeAtIssue } from "./premium-v2/source-age-readback.mjs";
+import { originalSourceAgeAtIssue } from "./source-age-readback.mjs";
 const siteDir=dirname(fileURLToPath(import.meta.url)); const repoRoot=resolve(siteDir,"../.."); const outputDir=resolve(siteDir,"dist"); const dataDir=resolve(outputDir,"data");
 const POINTER_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
 const COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json");
