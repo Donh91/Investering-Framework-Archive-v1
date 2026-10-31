@@ -1,0 +1,394 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/PUBLIC_RECEIPT_CONTRACT_V1.schema.json",
+  "title": "Alpha Public Compute, public-only and metadata-only source-health receipt, DRAFT",
+  "description": "Public-origin source evidence is NOT private source authority, an authenticated first-known timestamp, full chain observation, positive scientific outcome, BUY or public permission to disclose any sensitive input. Publication requires offline privacy review of all fields plus logs, path, branch and cohort timing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "authority",
+    "deployment_stage",
+    "privacy",
+    "source_class",
+    "source_id",
+    "chain_id",
+    "mode",
+    "status",
+    "collector",
+    "github",
+    "clock",
+    "coverage",
+    "event_count",
+    "source_data_sha256",
+    "provenance_claims"
+  ],
+  "properties": {
+    "contract": {
+      "const": "ALPHA_PUBLIC_SOURCE_RECEIPT_V1"
+    },
+    "authority": {
+      "const": "RESEARCH_ONLY_NO_PRIVATE_SOURCE_OR_TRADING_AUTHORITY"
+    },
+    "deployment_stage": {
+      "enum": [
+        "SYNTHETIC_TEST",
+        "PUBLIC_SHADOW",
+        "OWNER_ADMITTED_PUBLIC_SOURCE"
+      ]
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data_class",
+        "universe_policy",
+        "restricted_payload_present",
+        "user_selected_watchlist_present",
+        "private_query_response_present"
+      ],
+      "properties": {
+        "data_class": {
+          "const": "EXHAUSTIVE_APPROVED_PUBLIC_SOURCE"
+        },
+        "universe_policy": {
+          "enum": [
+            "APPROVED_GENERIC_CHAIN_FACTORY_UNIVERSE",
+            "APPROVED_SYNTHETIC_FIXTURE"
+          ]
+        },
+        "restricted_payload_present": {
+          "const": false
+        },
+        "user_selected_watchlist_present": {
+          "const": false
+        },
+        "private_query_response_present": {
+          "const": false
+        }
+      }
+    },
+    "source_class": {
+      "enum": [
+        "PUBLIC_CHAIN_RPC",
+        "SYNTHETIC_FIXTURE"
+      ]
+    },
+    "source_id": {
+      "type": "string",
+      "pattern": "^[A-Z0-9_]{4,64}$"
+    },
+    "chain_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "mode": {
+      "enum": [
+        "RECENT_TAIL",
+        "HISTORICAL_BACKFILL",
+        "SYNTHETIC_TEST"
+      ]
+    },
+    "status": {
+      "enum": [
+        "COMPLETE_INTERVAL",
+        "PARTIAL_COVERAGE",
+        "SOURCE_FAILED",
+        "SYNTHETIC_COMPLETE"
+      ]
+    },
+    "collector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "public_repo",
+        "code_commit_sha40",
+        "source_contract_id",
+        "schema_sha256"
+      ],
+      "properties": {
+        "public_repo": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+          "maxLength": 110
+        },
+        "code_commit_sha40": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "source_contract_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_]{4,64}$"
+        },
+        "schema_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "github": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "run_attempt",
+        "head_sha40",
+        "workflow_ref",
+        "event",
+        "runner_class",
+        "job_started_at_utc",
+        "job_completed_at_utc"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "run_attempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "head_sha40": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "workflow_ref": {
+          "type": "string",
+          "pattern": "^refs/heads/main$"
+        },
+        "event": {
+          "enum": [
+            "schedule",
+            "workflow_dispatch"
+          ]
+        },
+        "runner_class": {
+          "const": "STANDARD_GITHUB_HOSTED_UBUNTU"
+        },
+        "job_started_at_utc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+        },
+        "job_completed_at_utc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+        }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_observation_started_at_utc",
+        "source_observation_completed_at_utc",
+        "first_observed_at_utc",
+        "receipt_available_at_utc",
+        "independent_source_first_known_verified"
+      ],
+      "properties": {
+        "source_observation_started_at_utc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+        },
+        "source_observation_completed_at_utc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+        },
+        "first_observed_at_utc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+        },
+        "receipt_available_at_utc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+        },
+        "independent_source_first_known_verified": {
+          "const": false
+        },
+        "clock_limitations": {
+          "type": "string",
+          "enum": [
+            "RUNNER_CLOCK_NOT_INDEPENDENT_ATTESTATION",
+            "SYNTHETIC_NOT_MARKET_PROOF"
+          ]
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_block",
+        "end_block",
+        "safe_head_block",
+        "blocks_requested",
+        "blocks_completed",
+        "missing_ranges_count",
+        "contiguous",
+        "reorg_suspected",
+        "has_all_original_ranges"
+      ],
+      "properties": {
+        "start_block": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_block": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "safe_head_block": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocks_requested": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocks_completed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "missing_ranges_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contiguous": {
+          "type": "boolean"
+        },
+        "reorg_suspected": {
+          "type": "boolean"
+        },
+        "has_all_original_ranges": {
+          "type": "boolean"
+        }
+      }
+    },
+    "event_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source_data_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "previous_public_receipt_sha256": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "provenance_claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "public_source_only",
+        "original_machine_first_known_certified",
+        "canonical_alpha_census_recovered",
+        "private_signal_or_trade_permission",
+        "safe_for_private_import"
+      ],
+      "properties": {
+        "public_source_only": {
+          "const": true
+        },
+        "original_machine_first_known_certified": {
+          "const": false
+        },
+        "canonical_alpha_census_recovered": {
+          "const": false
+        },
+        "private_signal_or_trade_permission": {
+          "const": false
+        },
+        "safe_for_private_import": {
+          "const": false
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "COMPLETE_INTERVAL"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "coverage": {
+            "properties": {
+              "missing_ranges_count": {
+                "const": 0
+              },
+              "contiguous": {
+                "const": true
+              },
+              "reorg_suspected": {
+                "const": false
+              },
+              "has_all_original_ranges": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "SYNTHETIC_TEST"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "deployment_stage": {
+            "const": "SYNTHETIC_TEST"
+          },
+          "source_class": {
+            "const": "SYNTHETIC_FIXTURE"
+          },
+          "status": {
+            "const": "SYNTHETIC_COMPLETE"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "SYNTHETIC_COMPLETE"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "mode": {
+            "const": "SYNTHETIC_TEST"
+          }
+        }
+      }
+    }
+  ],
+  "$comment": "DRAFT schema-only. JSON Schema cannot establish true privacy or original first-known. Producer and private consumer must additionally check chain identity; timestamp ordering; safe_head>=end_block; end>=start; blocks_requested and completed arithmetic; provenance actual GitHub API run; path and repo allowlists; source terms; schema SHA; content digest; and dual-writer/dedup status. Never publish a complete production source receipt solely because this shape validates."
+}
