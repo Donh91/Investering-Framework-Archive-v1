@@ -128,7 +128,7 @@ class RollingCompassAudit(unittest.TestCase):
     def test_missing_target_candle_remains_unavailable(self):
         path=self.root/"03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-20.csv"
         raw=path.read_text()
-        raw=raw.replace("2026-10-20T14:00:00Z,2026-10-20T15:00:00Z","2026-10-20T14:30:00Z,2026-10-20T15:30:00Z")
+        raw=raw.replace("2026-10-20T13:00:00Z,2026-10-20T14:00:00Z","2026-10-20T13:30:00Z,2026-10-20T14:30:00Z")
         path.write_text(raw)
         r=run(self.root,ASOF,"rolling14")
         item=next(x for x in r["all_issuance_rows"] if x["id"]=="a")
@@ -169,8 +169,8 @@ class RollingCompassAudit(unittest.TestCase):
 
     def test_late_collection_window_is_not_admitted_by_earlier_analysis_asof(self):
         path=self.root/"03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-20.csv"
-        raw=path.read_text().replace("2026-10-20T14:00:00Z,2026-10-20T15:00:00Z",
-                                     "2026-10-20T14:00:00Z,2026-10-24T15:00:00Z")
+        raw=path.read_text().replace("2026-10-20T13:00:00Z,2026-10-20T14:00:00Z",
+                                     "2026-10-20T13:00:00Z,2026-10-24T14:00:00Z")
         path.write_text(raw)
         r=run(self.root,ASOF,"rolling14")
         item=next(x for x in r["all_issuance_rows"] if x["id"]=="a")
