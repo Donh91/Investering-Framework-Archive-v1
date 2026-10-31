@@ -15,6 +15,9 @@ on:
       - 'scripts/api_agent/build_weekly_calibration_context.py'
       - 'tests/api_agent/test_weekly_calibration_context_v4.py'
       - 'tests/learning/test_compass_outcomes.py'
+      - 'scripts/learning/compass_rolling_14d_audit.py'
+      - 'tests/learning/test_compass_rolling_14d_audit.py'
+      - '04_MARKET_LEARNING/handlekompas/research/rolling_14d/**'
       - '04_MARKET_LEARNING/handlekompas/research/2026-10-12__task2_synthetic_oracle_v1.mjs'
       - '04_MARKET_LEARNING/handlekompas/research/2026-10-13__task2_r1_no_hindsight_admission_oracle_v1.mjs'
       - '04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_R0_PINNED_PUBLIC_SOURCE_INVENTORY_v1.json'
@@ -59,6 +62,7 @@ jobs:
         run: |
           python -m py_compile scripts/learning/compass_outcomes.py scripts/learning/strategic_compass.py scripts/learning/strategic_compass_outcomes.py scripts/learning/shadow_compass_v2_outcomes.py scripts/learning/shadow_compass_v2_compare.py
           python -m unittest tests.learning.test_compass_outcomes -v
+          python -m unittest tests.learning.test_compass_rolling_14d_audit -v
           python -m unittest tests.learning.test_strategic_compass -v
           python -m unittest tests.learning.test_strategic_compass_outcomes -v
           python -m unittest tests.learning.test_shadow_compass_v2_outcomes -v
@@ -68,6 +72,27 @@ jobs:
           python scripts/learning/compass_outcomes.py --dry-run > /tmp/compass-maturity.json
           python scripts/learning/shadow_compass_v2_outcomes.py --now-utc 1970-01-01T00:00:00Z > /tmp/shadow-direct-exec.json
           python scripts/learning/shadow_compass_v2_compare.py > /tmp/shadow-official-compare-pr.json
+          python scripts/learning/compass_rolling_14d_audit.py --scope rolling14 --asof 2026-10-31T07:00:00Z --output 04_MARKET_LEARNING/handlekompas/research/rolling_14d/ci/CI_ROLLING14.json
+          python scripts/learning/compass_rolling_14d_audit.py --scope all --asof 2026-10-31T07:00:00Z --output 04_MARKET_LEARNING/handlekompas/research/rolling_14d/ci/CI_ALL_HISTORY.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          base=Path("04_MARKET_LEARNING/handlekompas/research/rolling_14d/ci")
+          for name in ("CI_ROLLING14","CI_ALL_HISTORY"):
+              r=json.loads((base/f"{name}.json").read_text())
+              assert r["automatic_model_reweighting"] is False
+              assert r["trade_permission"]=="NONE"
+              assert r["first_known_publication_verified"] is False
+              assert r["scientific_decision"]["admissible_automatic_calibration_changes"]==[]
+              assert r["all_issuances"]["forecasts"] >= r["deduplicated_12h_slots"]["forecasts"]
+              print(json.dumps({"audit":name,
+                 "files":r["all_issuances"]["forecasts"],
+                 "dedup_12h":r["deduplicated_12h_slots"]["forecasts"],
+                 "actions":r["all_issuances"]["actions"],
+                 "risk_states":r["all_issuances"]["risk_states"],
+                 "horizons":r["deduplicated_12h_slots"]["horizons"]},
+                 sort_keys=True))
+          PY
           python - <<'PY'
           import json
           d=json.load(open('/tmp/compass-maturity.json'))
@@ -129,6 +154,37 @@ jobs:
           python scripts/learning/strategic_compass_outcomes.py | tee /tmp/strategic-compass-outcomes.json
           python scripts/learning/shadow_compass_v2_outcomes.py | tee /tmp/shadow-compass-v2-outcomes.json
           python scripts/learning/shadow_compass_v2_compare.py | tee /tmp/shadow-official-comparison.json
+      - name: Publish bounded daily rolling 14d and Sunday full-history research
+        shell: bash
+        run: |
+          set -euo pipefail
+          local_day=$(TZ=Europe/Copenhagen date +%F)
+          year=$(TZ=Europe/Copenhagen date +%Y)
+          month=$(TZ=Europe/Copenhagen date +%m)
+          day=$(TZ=Europe/Copenhagen date +%d)
+          iso_asof=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          base="04_MARKET_LEARNING/handlekompas/research/rolling_14d"
+          target="$base/daily/$year/$month/$day/${local_day}_ROLLING14.json"
+          if [ ! -f "$target" ]; then
+            python scripts/learning/compass_rolling_14d_audit.py --scope rolling14 --asof "$iso_asof" --output "$target" | tee /tmp/compass-rolling14.json
+          else
+            echo "{\"status\":\"ALREADY_PUBLISHED\",\"scope\":\"rolling14\"}" > /tmp/compass-rolling14.json
+          fi
+          if [ "$(TZ=Europe/Copenhagen date +%u)" = "7" ]; then
+            weekly="$base/all_history/$year/$month/$day/${local_day}_FULL_HISTORY.json"
+            if [ ! -f "$weekly" ]; then
+              python scripts/learning/compass_rolling_14d_audit.py --scope all --asof "$iso_asof" --output "$weekly" | tee /tmp/compass-all-history.json
+            fi
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for p in Path("04_MARKET_LEARNING/handlekompas/research/rolling_14d").rglob("*.json"):
+              if not ("daily" in p.parts or "all_history" in p.parts):
+                  continue
+              if p.stat().st_size > 8_000_000:
+                  raise SystemExit("OVERSIZE_RESEARCH_REPORT")
+          PY
       - name: Verify forecasts were not rewritten
         shell: bash
         run: |
@@ -166,6 +222,12 @@ jobs:
           if [ -d 04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes ]; then
             git add 04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes
           fi
+          if [ -d 04_MARKET_LEARNING/handlekompas/research/rolling_14d/daily ]; then
+            git add 04_MARKET_LEARNING/handlekompas/research/rolling_14d/daily
+          fi
+          if [ -d 04_MARKET_LEARNING/handlekompas/research/rolling_14d/all_history ]; then
+            git add 04_MARKET_LEARNING/handlekompas/research/rolling_14d/all_history
+          fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "learning: mature Compass outcomes ${GITHUB_RUN_ID}"
           pushed=false
@@ -186,6 +248,8 @@ jobs:
             /tmp/strategic-compass-outcomes.json
             /tmp/shadow-compass-v2-outcomes.json
             /tmp/shadow-official-comparison.json
+            /tmp/compass-rolling14.json
+            /tmp/compass-all-history.json
           retention-days: 30
           if-no-files-found: warn
 
