@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/native_market_recovery.py",
+    "tests/health/test_native_market_recovery.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-7a2ce591c6bbac96",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "recovery-reject-fresh-but-incomplete-hourly-owner-pointer",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized bounded P0 source-integrity recovery fix. 11/11 native recovery tests and five exact-head public CI workflows PASS. Independent Codex final HEAD 4ae5ddf no unresolved findings. Previous premerge main cce27cebae604150b759373a1735d66abf5931c3. No new scheduler or trading authority. Natural source-to-site continuity remains POST_FIX_OBSERVATION.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/native_market_recovery.py": "63757cb930596e9adef141fa1aa150f68d00e8cf",
+    "tests/health/test_native_market_recovery.py": "9a72df1e8d1c22e5f0863a7744ecb826fa2fd14b"
+  },
+  "source_commit_sha": "7a2ce591c6bbac969ea2069f9004494dc0ed1149",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-30T16:38:41-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(recovery): reject fresh but incomplete Hourly owner pointer (#1855)"
+}
