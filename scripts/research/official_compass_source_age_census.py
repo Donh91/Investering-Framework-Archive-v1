@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import subprocess
 from pathlib import Path
@@ -88,9 +89,17 @@ def original_records(repo: Path) -> list[dict]:
 
 def age(checks: list[dict], lane: str) -> int:
     found = [c.get("age_seconds") for c in checks if c.get("lane") == lane]
-    if len(found) != 1 or type(found[0]) is not int or found[0] < 0:
+    # Actual pinned Official producer JSON encodes seconds as 10356.0, not
+    # 10356. Preserve exact second semantics and reject lossy coercion.
+    if len(found) != 1 or type(found[0]) not in (int, float):
         raise ValueError(f"missing_or_invalid_age:{lane}")
-    return found[0]
+    raw = found[0]
+    try:
+        if not math.isfinite(raw) or raw < 0 or raw != int(raw):
+            raise ValueError(f"missing_or_invalid_age:{lane}")
+    except (ValueError, OverflowError) as exc:
+        raise ValueError(f"missing_or_invalid_age:{lane}") from exc
+    return int(raw)
 
 
 def summarize(records: list[dict]) -> dict:
