@@ -674,73 +674,82 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             self.assertFalse(action["portfolio_execution"])
 
     def test_full_original_corpus_nonadmission_and_legacy_parity(self):
-        """Fail closed on an incomplete public production input tree.
+        """Replay old and new registry loops on the EXACT SAME entire tree.
 
-        The checked-in pre-change registry is an independent immutable output
-        from the old engine. This compares all original fields, never merely
-        totals or the one synthetic matured fixture.
+        Reverse ONLY the diagnostic loop and emitted diagnostic field with the
+        prior reviewed code. No stale publication snapshot is a comparator.
         """
-        from scripts.experiments.experiment_lifecycle import registry
+        import inspect
+        import scripts.experiments.experiment_lifecycle as lifecycle
 
         repo = Path(__file__).resolve().parents[2]
-        inputs = {
-            "candidate": repo / "research/experiment_lifecycle/candidates",
-            "observation": repo / "research/experiment_lifecycle/observations",
-            "forecast": repo / "research/framework_memory/forecast_memory",
-            "outcome": repo / "research/framework_memory/outcome_memory",
-            "receipt": repo / "research/experiment_lifecycle/receipts",
-        }
+        roots = (
+            repo / "research/experiment_lifecycle/candidates",
+            repo / "research/experiment_lifecycle/observations",
+            repo / "research/framework_memory/forecast_memory",
+            repo / "research/framework_memory/outcome_memory",
+            repo / "research/experiment_lifecycle/receipts",
+        )
+        for path in roots:
+            self.assertTrue(path.is_dir(), f"FULL_CORPUS_INPUT_UNAVAILABLE:{path}")
         baseline_file = repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
-        for name, path in inputs.items():
-            self.assertTrue(path.is_dir(), f"FULL_CORPUS_INPUT_UNAVAILABLE:{name}:{path}")
-        self.assertTrue(baseline_file.is_file(), "FULL_CORPUS_BASELINE_UNAVAILABLE")
-        baseline = json.loads(baseline_file.read_text(encoding="utf-8"))
-        self.assertEqual(baseline["contract"], "EXPERIMENT_LIFECYCLE_REGISTRY_v1")
-        self.assertGreaterEqual(baseline["candidate_count"], 650)
-        self.assertEqual(baseline["candidate_count"], len(baseline["candidates"]))
-        self.assertTrue(all(
-            "scientific_score_nonadmission_counts_v1" not in row
-            for row in baseline["candidates"]
-        ), "BASELINE_MUST_PRECEDE_NEW_DIAGNOSTIC")
+        self.assertTrue(baseline_file.is_file(), "MISSING_PINNED_PRODUCTION_CENSUS")
+        last_published = json.loads(baseline_file.read_text(encoding="utf-8"))
+        self.assertGreaterEqual(last_published["candidate_count"], 650)
+        self.assertEqual(last_published["candidate_count"], len(last_published["candidates"]))
 
-        current = registry(
-            inputs["candidate"], inputs["observation"],
-            inputs["forecast"], inputs["outcome"], inputs["receipt"],
-            baseline["generated_at_utc"],
+        # This literal is the EXACT old, status-eligible original comprehension
+        # from the reviewed PR base, not another call to the new diagnostics.
+        diagnostic_loop = r'''        eligible = []
+        nonadmission_counts = {}
+        for item in matured:
+            forecast_id = item.get("forecast_id")
+            reason = []
+            if (item.get("scientific_score_eligible") is not True
+                    or item.get("result") not in {"HIT", "MISS"}
+                    or forecast_id not in original_forecasts
+                    or original_forecasts[forecast_id][0] != candidate_id):
+                reason.append("OUTCOME_PREREQUISITE_NOT_MET")
+            elif outcome_bound_to_frozen_forecast(
+                    item, original_forecasts[forecast_id][1], outcome_root,
+                    source_anchor=source_anchor,
+                    forecast_path=original_forecast_paths[forecast_id],
+                    nonadmission=reason):
+                eligible.append(item)
+            else:
+                if not reason:
+                    reason.append("BINDING_OR_OTHER_VALIDATION_REJECTED")
+            if reason:
+                nonadmission_counts[reason[0]] = nonadmission_counts.get(reason[0], 0) + 1
+'''
+        original_loop = r'''        eligible = [item for item in matured
+                    if item.get("scientific_score_eligible") is True
+                    and item.get("result") in {"HIT", "MISS"}
+                    and item.get("forecast_id") in original_forecasts
+                    and original_forecasts[item["forecast_id"]][0] == candidate_id
+                    and outcome_bound_to_frozen_forecast(
+                        item, original_forecasts[item["forecast_id"]][1], outcome_root,
+                        source_anchor=source_anchor,
+                        forecast_path=original_forecast_paths[item["forecast_id"]])]
+'''
+        diagnostic_field = '            "scientific_score_nonadmission_counts_v1": nonadmission_counts,\n'
+        live_source = inspect.getsource(lifecycle.registry)
+        self.assertEqual(live_source.count(diagnostic_loop), 1, "DIAGNOSTIC_LOOP_DRIFT")
+        self.assertEqual(live_source.count(diagnostic_field), 1, "DIAGNOSTIC_FIELD_DRIFT")
+        original_source = (
+            live_source.replace(diagnostic_loop, original_loop, 1)
+            .replace(diagnostic_field, "", 1)
         )
-        self.assertEqual(current["candidate_count"], baseline["candidate_count"])
-        self.assertEqual(len(current["candidates"]), len(baseline["candidates"]))
-        self.assertEqual(
-            [row["candidate_id"] for row in current["candidates"]],
-            [row["candidate_id"] for row in baseline["candidates"]],
-            "CANDIDATE_ID_ORDER_OR_DEDUP_CHANGED",
-        )
-        # The checked-in published registry is subsequently enriched by the
-        # INDEPENDENT scientific-admission stage. Its two candidate metadata
-        # fields and path mirror are not emitted by registry(); compare only
-        # this producer's original owned fields, for every candidate.
-        # Do NOT silently ignore any new or otherwise missing field.
-        external_row_keys = {"semantic_fingerprint", "scientific_admission_status"}
-        external_root_keys = {"scientific_admission_registry_path"}
-        self.assertEqual(
-            set(baseline) - set(current),
-            external_root_keys,
-            "UNEXPECTED_ROOT_FIELD_DRIFT",
-        )
-        expected = {
-            k: v for k, v in baseline.items()
-            if k not in external_root_keys and k != "candidates"
-        }
-        for row in baseline["candidates"]:
-            self.assertEqual(
-                set(row) - (set(current["candidates"][0]) - {"scientific_score_nonadmission_counts_v1"}),
-                external_row_keys,
-                f"UNEXPECTED_EXTERNAL_ROW_FIELDS:{row['candidate_id']}",
-            )
-        expected["candidates"] = [
-            {k: v for k, v in row.items() if k not in external_row_keys}
-            for row in baseline["candidates"]
-        ]
+        original_scope = vars(lifecycle).copy()
+        exec(compile(original_source, "<exact-legacy-registry>", "exec"), original_scope)
+        old_registry = original_scope["registry"]
+
+        now = last_published["generated_at_utc"]
+        old = old_registry(*roots, now)
+        current = lifecycle.registry(*roots, now)
+        self.assertGreaterEqual(old["candidate_count"], 650)
+        self.assertEqual(len(old["candidates"]), old["candidate_count"])
+        self.assertEqual(len(current["candidates"]), current["candidate_count"])
         normalized = {
             **current,
             "candidates": [
@@ -749,7 +758,9 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                 for row in current["candidates"]
             ],
         }
-        self.assertEqual(normalized, expected, "FULL_CORPUS_OWNED_LEGACY_FIELDS_DRIFT")
+        # Root contract, all original candidate fields, state/counts and
+        # scientific eligibility must remain identical on the same inputs.
+        self.assertEqual(normalized, old, "SAME_TREE_LEGACY_FIELDS_DRIFT")
 
         totals = {"matured": 0, "eligible": 0, "nonadmitted": 0}
         allowed = {
@@ -773,7 +784,14 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             totals["nonadmitted"] += sum(reasons.values())
         self.assertGreaterEqual(totals["matured"], 1272)
         self.assertEqual(totals["nonadmitted"], totals["matured"] - totals["eligible"])
-        self.assertFalse(current["authority"] != "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION")
+        self.assertEqual(current["authority"], "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION")
+        print("FULL_CORPUS_OLD_NEW_SAME_TREE_PARITY_PASS " + json.dumps({
+            "candidates": current["candidate_count"],
+            "matured": totals["matured"],
+            "eligible": totals["eligible"],
+            "nonadmitted": totals["nonadmitted"],
+            "legacy_fields_equal": True,
+        }, sort_keys=True))
 
     def test_old_adjudication_fails_existing_state_and_count_drift_gates(self):
         # The existing CLI consumer uses a sibling-module import.
