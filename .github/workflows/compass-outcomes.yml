@@ -158,6 +158,9 @@ jobs:
           python scripts/learning/shadow_compass_v2_outcomes.py | tee /tmp/shadow-compass-v2-outcomes.json
           python scripts/learning/shadow_compass_v2_compare.py | tee /tmp/shadow-official-comparison.json
       - name: Publish bounded daily rolling 14d and Sunday full-history research
+        # Research is optional. A delayed, malformed or oversized audit cannot
+        # stop the existing Official/Strategic/Shadow outcome maturity writer.
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
@@ -225,11 +228,13 @@ jobs:
           if [ -d 04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes ]; then
             git add 04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes
           fi
+          # Stage ONLY committed complete JSON snapshots, never orphan temp
+          # files if the optional research subprocess was interrupted.
           if [ -d 04_MARKET_LEARNING/handlekompas/research/rolling_14d/daily ]; then
-            git add 04_MARKET_LEARNING/handlekompas/research/rolling_14d/daily
+            find 04_MARKET_LEARNING/handlekompas/research/rolling_14d/daily -type f -name '*_ROLLING14.json' -print0 | xargs -0 -r git add --
           fi
           if [ -d 04_MARKET_LEARNING/handlekompas/research/rolling_14d/all_history ]; then
-            git add 04_MARKET_LEARNING/handlekompas/research/rolling_14d/all_history
+            find 04_MARKET_LEARNING/handlekompas/research/rolling_14d/all_history -type f -name '*_FULL_HISTORY.json' -print0 | xargs -0 -r git add --
           fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "learning: mature Compass outcomes ${GITHUB_RUN_ID}"
