@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import datetime, timedelta, timezone
+import math
 from typing import Any
 
 CONTRACT = "PULLBACK_RADAR_TIMEBOX_SHADOW_v1"
@@ -77,6 +78,28 @@ def evaluate_path(issued: datetime, asof: datetime, market: dict, horizon_hours:
     }
 
 
+def reference_clock_valid(f: dict, issued: datetime) -> bool:
+    """Do not admit a warning using a future, ambiguous or missing reference."""
+    ref = f.get("market_reference") or {}
+    opened = ref.get("observation_open_utc")
+    if not isinstance(opened, str):
+        return False
+    try:
+        t = datetime.fromisoformat(opened.replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return False
+    if t.utcoffset() is None:
+        return False
+    t = t.astimezone(timezone.utc)
+    if t.minute or t.second or t.microsecond or t + HOUR > issued:
+        return False
+    for asset in ("btc_usdt", "eth_usdt"):
+        v = ref.get(asset)
+        if isinstance(v, bool) or not isinstance(v, (float, int)) or not math.isfinite(v) or v <= 0:
+            return False
+    return True
+
+
 def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any]:
     """No new warning without a real fresh state transition. No aging credit."""
     previous = None
@@ -91,9 +114,11 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
         tracker = f.get("protection_tracker") or {}
         risk = str(tracker.get("pullback_risk_state") or "UNAVAILABLE")
         good = (risk in RANK and tracker.get("data_quality") == "OK" and
+                tracker.get("contract") == "COMPASS_PROTECTION_TRACKER_v1" and
                 f.get("contract") == "OFFICIAL_DAILY_COMPASS_v1")
-        if not good:
-            counts["SOURCE_UNAVAILABLE_OR_UNQUALIFIED"] += 1
+        if not good or not reference_clock_valid(f, issued):
+            counts["SOURCE_UNAVAILABLE_OR_UNQUALIFIED" if not good else
+                   "INVALID_REFERENCE_CLOCK_OR_PRICE"] += 1
             previous = None
             active_since = None
             continue
