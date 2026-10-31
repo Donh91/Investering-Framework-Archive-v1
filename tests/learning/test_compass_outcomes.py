@@ -65,6 +65,56 @@ class CompassOutcomeTest(unittest.TestCase):
             writer.writeheader()
             writer.writerow({"timestamp_utc": "2026-09-16T23:00:00Z", "btc_close": "95", "eth_close": "47", "ethbtc_close": "0.4947"})
 
+    def test_v41_observed_nowcast_cannot_mint_official_12h_forecast_outcome(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            freeze = self.freeze()
+            freeze["decision_policy_version"] = "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1"
+            freeze["horizons"]["NEXT_12H"].update({
+                "semantics": "OBSERVED_MOMENTUM_NOT_FORECAST",
+                "predictive_edge_status": "NOT_PROVEN",
+                "eta": None,
+            })
+            path.write_text(json.dumps(freeze))
+            frozen_bytes = path.read_bytes()
+            self.write_hourly(root)
+            outcome_dir = Path("04_MARKET_LEARNING/handlekompas/official")
+            result = mature_one(root, path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), outcome_dir)
+            self.assertEqual(result["status"], "QUARANTINED_NONPREDICTIVE_12H_NOWCAST")
+            self.assertFalse(result["prediction_scored"])
+            self.assertEqual(frozen_bytes, path.read_bytes())
+            self.assertFalse((root / outcome_dir / "outcomes").exists())
+            # Even a missing/mutated new-policy marker may not recover forward
+            # scoring permission from the old v3 scoring_contract.
+            for marker in (None, "FORGED_FORWARD_FORECAST"):
+                other = json.loads(json.dumps(freeze))
+                if marker is None:
+                    other["horizons"]["NEXT_12H"].pop("semantics")
+                else:
+                    other["horizons"]["NEXT_12H"]["semantics"] = marker
+                path.write_text(json.dumps(other))
+                result = mature_one(root, path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), outcome_dir)
+                self.assertEqual(result["status"], "QUARANTINED_NONPREDICTIVE_12H_NOWCAST")
+                self.assertFalse((root / outcome_dir / "outcomes").exists())
+
+    def test_legacy_v3_original_forecast_is_not_reclassified_by_v41(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/16/CMP-20260916-test.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            freeze = self.freeze()
+            freeze["decision_policy_version"] = "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0"
+            path.write_text(json.dumps(freeze))
+            self.write_hourly(root)
+            outcome_dir = Path("04_MARKET_LEARNING/handlekompas/official")
+            result = mature_one(root, path, "12h", datetime(2026, 9, 17, 2, tzinfo=timezone.utc), outcome_dir)
+            # Any old v3 record remains subject to its genuine legacy scoring
+            # procedure and timestamp evidence, not v4.1's semantic quarantine.
+            self.assertNotEqual(result["status"], "QUARANTINED_NONPREDICTIVE_12H_NOWCAST")
+            self.assertEqual(json.loads(path.read_text())["decision_policy_version"], freeze["decision_policy_version"])
+
     def test_existing_legacy_outcome_remains_already_matured_without_rewrite(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
