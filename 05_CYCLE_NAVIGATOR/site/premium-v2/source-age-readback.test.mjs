@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {originalSourceAgeAtIssue,originalSourceAgeLabel} from './source-age-readback.mjs';
+import {originalSourceAgeAtIssue,originalSourceAgeLabel} from '../source-age-readback.mjs';
 
 const issue='2026-10-13T14:14:43Z';
 const compass='CMP-EXACT-ORIGINAL';
