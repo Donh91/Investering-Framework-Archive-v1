@@ -317,6 +317,65 @@ class PullbackTimeboxResearchTests(unittest.TestCase):
         self.assertIsNone(result["horizons"]["72h"]["hit_rate_descriptive"])
         self.assertTrue(result["expired_alert_cannot_be_credited_from_later_drop"])
 
+    def test_flapping_normal_elevated_cannot_multiply_one_drawdown(self):
+        # Grok Bridge #113 P1 reproduction: 72 apparent fresh alerts in six
+        # days despite one market shock. At most one per 72h episode.
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freezes=[self.freeze(t+timedelta(hours=i),
+                             "NORMAL" if i%2==0 else "ELEVATED")
+                 for i in range(144)]
+        market=self.tape(t,205,fall_at=148,fall_to=95.0)
+        r=evaluate(freezes,market,t+timedelta(hours=205))
+        self.assertEqual(r["new_warning_or_escalation_events"],2)
+        self.assertEqual(r["warning_state_counts"]["NEW_WARNING"],2)
+        self.assertEqual(r["warning_state_counts"]["RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"],70)
+        self.assertEqual(r["horizons"]["72h"]["hit_n"],0)
+        self.assertEqual(r["horizons"]["72h"]["false_alarm_n"],2)
+        self.assertIsNone(r["horizons"]["72h"]["warning_skill_or_edge"])
+        self.assertFalse(r["independent_event_clustering_verified"])
+
+    def test_flapping_high_elevated_cannot_recredit_same_shock(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freezes=[self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"ELEVATED")]
+        freezes += [self.freeze(t+timedelta(hours=i),
+                                "HIGH" if i%2==0 else "ELEVATED")
+                    for i in range(2,82)]
+        r=evaluate(freezes,self.tape(t,180,fall_at=160),t+timedelta(hours=180))
+        alerts=[x for x in r["alerts"] if x["new_alert_class"]=="ESCALATION"]
+        self.assertEqual(r["new_warning_or_escalation_events"],3)
+        self.assertEqual(len(alerts),2)  # first actual HIGH plus a fresh episode
+        self.assertEqual(r["warning_state_counts"]["RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"],39)
+        self.assertEqual(r["horizons"]["72h"]["hit_n"],0)
+
+    def test_truly_separate_events_after_expiry_can_be_counted(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freeze=[self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"ELEVATED"),
+                self.freeze(t+timedelta(hours=80),"NORMAL"),
+                self.freeze(t+timedelta(hours=81),"ELEVATED")]
+        # Insert a fresh NORMAL just before second to avoid stale (>24h)
+        # lookback and keep both events independently observable.
+        r=evaluate(freeze,self.tape(t,170),t+timedelta(hours=170))
+        self.assertEqual(r["new_warning_or_escalation_events"],2)
+        self.assertEqual(r["warning_state_counts"]["RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"],0)
+
+    def test_suppressed_retrigger_never_resets_expiry_clock(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        freezes=[self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"ELEVATED"),
+                 self.freeze(t+timedelta(hours=2),"NORMAL"),
+                 self.freeze(t+timedelta(hours=3),"ELEVATED"),
+                 self.freeze(t+timedelta(hours=4),"ELEVATED"),
+                 self.freeze(t+timedelta(hours=75),"ELEVATED")]
+        r=evaluate(freezes,self.tape(t,165,fall_at=90),t+timedelta(hours=165))
+        self.assertEqual(r["new_warning_or_escalation_events"],1)
+        self.assertEqual(r["warning_state_counts"]["RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"],1)
+        # No fresh valid evidence around t+75; the old episode has expired
+        # and a late fall cannot be credited to it.
+        self.assertEqual(r["horizons"]["72h"]["hit_n"],0)
+
     def test_fresh_transition_counted_once_and_timeboxed(self):
         from scripts.learning.pullback_warning_timeliness_shadow import evaluate
         t=START+timedelta(hours=3)
