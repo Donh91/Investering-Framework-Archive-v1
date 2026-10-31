@@ -1,32 +1,7 @@
 {
   "contract": "AUTOMATION_ORCHESTRATOR_LUNA_CONTEXT_v1",
   "instructions_context": "Triage only. Distinguish transient execution failure, likely shared dependency, missing evidence, or code-defect candidate. Do not create remediation authority.",
-  "items": [
-    {
-      "cluster_id": null,
-      "existing_remediation": {
-        "finding": "LATEST_RUN_FAILED",
-        "route": "OBSERVE",
-        "signature": "6527da8c9acf543d83c1",
-        "state": "OBSERVED"
-      },
-      "failure_streak": 1,
-      "findings": [
-        "LATEST_RUN_FAILED"
-      ],
-      "latest_head_sha": "c8f643b0a95b402110a78db277fd6d916b476d36",
-      "latest_run_id": 41040523764,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41040523764",
-      "model_lane": "GPT_6_LUNA",
-      "openai_enabled": true,
-      "recent_failure_count": 1,
-      "route": "LUNA_TRIAGE",
-      "scheduled": true,
-      "workflow": "framework-learning-supervisor.yml",
-      "write_target_class": "DIRECT_MAIN",
-      "writer_group": "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
-    }
-  ],
-  "plan_fingerprint": "1a62eee58bb607d6e0ef873a07bba2749c5156955a5c50322b451a6e82b7fe52",
-  "source_health_generated_at_utc": "2026-10-30T23:39:25.843259Z"
+  "items": [],
+  "plan_fingerprint": "46f0a9783d44ddddb67376ba2d739cf351025e82e1092cd7fd5f9c92af5bbda6",
+  "source_health_generated_at_utc": "2026-10-31T10:29:23.617281Z"
 }
