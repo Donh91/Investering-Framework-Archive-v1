@@ -10,7 +10,7 @@ const safeIso=s=>typeof s==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(s
   Number.isFinite(Date.parse(s))&&new Date(Date.parse(s)).toISOString()===s.replace('Z','.000Z');
 
 function lane(freshness,name){
-  const matches=freshness?.checks?.filter(c=>c?.lane===name);
+  const matches=Array.isArray(freshness?.checks)?freshness.checks.filter(c=>c?.lane===name):[];
   return Array.isArray(matches)&&matches.length===1&&validAge(matches[0]?.age_seconds)?
     matches[0]:null;
 }
@@ -28,7 +28,8 @@ export function originalSourceAgeAtIssue(internal,projection){
   // Only the actually issued v1 original contract has verified clock semantics.
   // Do not accept hypothetical future revisions by a version-number regex.
   if(internal?.contract!=='OFFICIAL_DAILY_COMPASS_v1')return base;
-  if(!projection||internal.compass_id!==projection.compass_id||!safeIso(internal.issued_at_utc)||
+  if(!projection||typeof internal.compass_id!=='string'||!internal.compass_id||
+     internal.compass_id!==projection.compass_id||!safeIso(internal.issued_at_utc)||
      internal.issued_at_utc!==projection.issued_at_utc)return base;
   const freshness=internal.source_bindings?.auto_market_state?.freshness;
   const obs=lane(freshness,'source_observation_freshness');
@@ -50,7 +51,8 @@ export function originalSourceAgeLabel(compass,{lang='da',valid=false}={}){
   if(x?.contract!=='CN_OFFICIAL_ORIGINAL_SOURCE_AGE_READBACK_v1'||
      x?.status!=='ORIGINAL_ISSUANCE_CLOCKS_ONLY'||
      x?.issued_at_utc!==compass?.issued_at_utc||
-     x?.compass_id!==compass?.compass_id||
+     typeof x?.compass_id!=='string'||!x.compass_id||
+     x.compass_id!==compass?.compass_id||
      !validAge(x?.observation_age_seconds_at_issue)||
      !validAge(x?.packet_age_seconds_at_issue)||
      x?.observation_age_seconds_at_issue<x?.packet_age_seconds_at_issue)return da?
