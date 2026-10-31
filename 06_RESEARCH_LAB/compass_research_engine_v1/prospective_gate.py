@@ -108,8 +108,10 @@ def preflight(freeze: Mapping, public_witness: Mapping | None = None,
         elif (target - pub).total_seconds() < 10 * 3600:
             errors.append("LESS_THAN_TEN_EFFECTIVE_FORECAST_HOURS")
     for known in (source_known, baseline_known):
-        if known is not None and pub is not None and known > pub:
-            errors.append("SOURCE_KNOWN_AFTER_PUBLICATION")
+        # The feature must have existed at declared issuance, not merely by
+        # the time an eventual public GitHub receipt was written.
+        if known is not None and issue is not None and known > issue:
+            errors.append("SOURCE_KNOWN_AFTER_ISSUANCE")
     sha = public_witness.get("original_file_sha256")
     commit = public_witness.get("first_git_commit_sha40")
     path = public_witness.get("original_path")
