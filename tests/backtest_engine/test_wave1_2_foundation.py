@@ -48,6 +48,15 @@ class StatisticalFoundationTests(unittest.TestCase):
             self.assertLess(max(split.train_indices), min(split.purged_indices))
             self.assertLess(max(split.purged_indices), min(split.test_indices))
 
+    def test_walk_forward_does_not_double_count_overlap(self) -> None:
+        from collections import Counter
+        splits = purged_expanding_walk_forward(30, 10, 5, purge=2, embargo=3)
+        counts = Counter(index for part in splits for index in part.test_indices)
+        self.assertTrue(counts)
+        self.assertEqual(max(counts.values()),1)
+        with self.assertRaisesRegex(ValueError,"double-counts"):
+            purged_expanding_walk_forward(30, 10, 5, purge=0, embargo=3, step=2)
+
     def test_benjamini_hochberg(self) -> None:
         result = benjamini_hochberg({"a": 0.001, "b": 0.01, "c": 0.2, "d": 0.8}, 0.05)
         self.assertTrue(result["a"]["rejected"])
