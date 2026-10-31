@@ -104,6 +104,10 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
     """No new warning without a real fresh state transition. No aging credit."""
     previous = None
     active_since = None
+    # One correlated market-risk episode can contain transient NORMAL ticks and
+    # legitimate severity escalation. Neither resets the 72h episode clock.
+    episode_at = None
+    episode_peak = -1
     counts = Counter()
     rows = []
     for e in sorted(freezes, key=lambda x: (x["issued"], x["path"])):
@@ -140,6 +144,18 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
         else:
             status = "NO_WARNING"
             active_since = None
+        if status in {"NEW_WARNING", "ESCALATION"}:
+            open_episode = (episode_at is not None and
+                            timedelta(0) <= issued - episode_at < timedelta(hours=EXPIRY_HOURS))
+            if open_episode and RANK[risk] <= episode_peak:
+                # Risk flapping is not a fresh forecast. Suppression must not
+                # re-arm the countdown or grant later market drops extra credit.
+                status = "RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"
+                active_since = episode_at
+            else:
+                if not open_episode:
+                    episode_at, episode_peak = issued, -1
+                episode_peak = max(episode_peak, RANK[risk])
         previous = (issued, risk)
         counts[status] += 1
         # A persistent ELEVATED flag is neither repeated warning coverage nor
