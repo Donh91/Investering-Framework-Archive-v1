@@ -673,6 +673,84 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             self.assertFalse(action["canonical_effect"])
             self.assertFalse(action["portfolio_execution"])
 
+    def test_full_original_corpus_nonadmission_and_legacy_parity(self):
+        """Fail closed on an incomplete public production input tree.
+
+        The checked-in pre-change registry is an independent immutable output
+        from the old engine. This compares all original fields, never merely
+        totals or the one synthetic matured fixture.
+        """
+        from scripts.experiments.experiment_lifecycle import registry
+
+        repo = Path(__file__).resolve().parents[2]
+        inputs = {
+            "candidate": repo / "research/experiment_lifecycle/candidates",
+            "observation": repo / "research/experiment_lifecycle/observations",
+            "forecast": repo / "research/framework_memory/forecast_memory",
+            "outcome": repo / "research/framework_memory/outcome_memory",
+            "receipt": repo / "research/experiment_lifecycle/receipts",
+        }
+        baseline_file = repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
+        for name, path in inputs.items():
+            self.assertTrue(path.is_dir(), f"FULL_CORPUS_INPUT_UNAVAILABLE:{name}:{path}")
+        self.assertTrue(baseline_file.is_file(), "FULL_CORPUS_BASELINE_UNAVAILABLE")
+        baseline = json.loads(baseline_file.read_text(encoding="utf-8"))
+        self.assertEqual(baseline["contract"], "EXPERIMENT_LIFECYCLE_REGISTRY_v1")
+        self.assertGreaterEqual(baseline["candidate_count"], 650)
+        self.assertEqual(baseline["candidate_count"], len(baseline["candidates"]))
+        self.assertTrue(all(
+            "scientific_score_nonadmission_counts_v1" not in row
+            for row in baseline["candidates"]
+        ), "BASELINE_MUST_PRECEDE_NEW_DIAGNOSTIC")
+
+        current = registry(
+            inputs["candidate"], inputs["observation"],
+            inputs["forecast"], inputs["outcome"], inputs["receipt"],
+            baseline["generated_at_utc"],
+        )
+        self.assertEqual(current["candidate_count"], baseline["candidate_count"])
+        self.assertEqual(len(current["candidates"]), len(baseline["candidates"]))
+        self.assertEqual(
+            [row["candidate_id"] for row in current["candidates"]],
+            [row["candidate_id"] for row in baseline["candidates"]],
+            "CANDIDATE_ID_ORDER_OR_DEDUP_CHANGED",
+        )
+        # Every existing field in all 650+ original candidates, rules, counts,
+        # state and authority must remain byte-for-byte semantically identical.
+        normalized = {
+            **current,
+            "candidates": [
+                {k: v for k, v in row.items()
+                 if k != "scientific_score_nonadmission_counts_v1"}
+                for row in current["candidates"]
+            ],
+        }
+        self.assertEqual(normalized, baseline, "FULL_CORPUS_LEGACY_FIELDS_DRIFT")
+
+        totals = {"matured": 0, "eligible": 0, "nonadmitted": 0}
+        allowed = {
+            "OUTCOME_PREREQUISITE_NOT_MET",
+            "FORECAST_SOURCE_ANCHOR_REJECTED",
+            "SETTLEMENT_SOURCE_ANCHOR_REJECTED",
+            "BINDING_OR_OTHER_VALIDATION_REJECTED",
+        }
+        for row in current["candidates"]:
+            reasons = row["scientific_score_nonadmission_counts_v1"]
+            self.assertIsInstance(reasons, dict)
+            self.assertTrue(set(reasons).issubset(allowed), row["candidate_id"])
+            self.assertTrue(all(type(count) is int and count > 0
+                                for count in reasons.values()), row["candidate_id"])
+            matured = row["matured_outcome_count"]
+            eligible = row["scientific_score_eligible_outcome_count"]
+            self.assertEqual(sum(reasons.values()), matured - eligible,
+                             f"FIRST_REACHED_REASON_CONSERVATION:{row['candidate_id']}")
+            totals["matured"] += matured
+            totals["eligible"] += eligible
+            totals["nonadmitted"] += sum(reasons.values())
+        self.assertGreaterEqual(totals["matured"], 1272)
+        self.assertEqual(totals["nonadmitted"], totals["matured"] - totals["eligible"])
+        self.assertFalse(current["authority"] != "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION")
+
     def test_old_adjudication_fails_existing_state_and_count_drift_gates(self):
         # The existing CLI consumer uses a sibling-module import.
         sys.path.insert(0, str(Path(__file__).parents[2] / "scripts/research"))
