@@ -39,6 +39,16 @@ jobs:
         run: python tests/learning/test_forecast_ratification_throughput.py -v
       - name: Existing forecast candidate backlog regressions
         run: python tests/api_agent/test_forecast_candidate_backlog.py -v
+      # The original October source-age archive is only read from the exact
+      # frozen historical Git object tree, not the mutable market-state latest.
+      # This read-only check must use checkout fetch-depth: 0 above.
+      - name: Task2 Official source-age census, full 257 original Git blobs
+        run: |
+          python -m py_compile \
+            scripts/research/official_compass_source_age_census.py \
+            tests/research/test_official_compass_source_age_census.py
+          python -m unittest tests.research.test_official_compass_source_age_census -v
+          python scripts/research/official_compass_source_age_census.py --repo . --verify
       - name: Live pending source-provenance census
         run: |
           python - <<'PY'
