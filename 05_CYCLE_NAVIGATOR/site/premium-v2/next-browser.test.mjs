@@ -11,6 +11,7 @@ import {resolve,dirname,extname,join,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {tmpdir} from 'node:os';
 import {setTimeout as delay} from 'node:timers/promises';
+import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
 
 const here=dirname(fileURLToPath(import.meta.url));
 const dist=resolve(here,'../dist');
@@ -25,6 +26,19 @@ if(rootMode)assert.ok(existsSync(resolve(dist,'index.html')),'ROOT_BROWSER_MISSI
 // This is the exact built and shipped PUBLIC Official, not a test-invented
 // live/eligible forecast. A DEGRADED real source must be tested as such.
 const builtOfficial=rootMode?JSON.parse(readFileSync(resolve(dist,'data/compass.json'),'utf8')):null;
+const builtLatest=rootMode?JSON.parse(readFileSync(resolve(dist,'data/latest.json'),'utf8')):null;
+// The browser's sourceCurrent gate is the SAME canonical source inspector.
+// OK + ALIGNED alone does not establish CURRENT: owner expiry, CN linkage,
+// delivery freshness, age and clock semantics must all pass.
+const sourceAt=(nowUtc)=>inspectOfficialPublicFeeds(builtLatest,builtOfficial,{nowUtc}).compass;
+if(rootMode){
+ const expiry=Date.parse(builtOfficial?.full_stack?.official_freshness?.valid_until_utc);
+ if(Number.isFinite(expiry)){
+  const expired=sourceAt(new Date(expiry+1000).toISOString());
+  assert.equal(expired.permit_path_live_gates,false,'ROOT_EXPIRED_OWNER_PROMOTED_TO_CURRENT');
+  assert.notEqual(expired.state,'FRESH','ROOT_EXPIRED_OWNER_ISSUER_FRESH');
+ }
+}
 
 const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript',
  '.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png'};
@@ -469,13 +483,14 @@ try{
      !report.rotationHasUnknownRaw&&
      report.horizonOverview.every(x=>/Evidenspoint|Evidence points|Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance)),
      'ROOT_OVERVIEW_STRUCTURE_OR_RAW_STATE:'+JSON.stringify(report));
-   if(builtOfficial?.data_status==='OK'&&builtOfficial?.weekly_context?.status==='ALIGNED'){
+   const verifiedSource=sourceAt(new Date().toISOString());
+   if(verifiedSource.permit_path_live_gates===true){
      assert.ok(report.rotationRows>0&&report.horizonOverview.every(x=>x.valid==='true'&&
        !/Ingen aktuel vurdering|No current outlook/.test(x.direction)),
        'ROOT_VERIFIED_SOURCE_BOUND_OVERVIEW_NOT_VISIBLE:'+JSON.stringify(report));
    }else{
      assert.ok(builtOfficial?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&
-       (builtOfficial?.data_status!=='OK'||builtOfficial?.weekly_context?.status!=='ALIGNED')&&
+       verifiedSource.permit_path_live_gates!==true&&
        report.horizonOverview.every(x=>x.valid==='false'&&
          /Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
          x.arrow==='?'&&
