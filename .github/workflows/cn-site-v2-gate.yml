@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - '05_CYCLE_NAVIGATOR/site/**'
+      - '04_MARKET_LEARNING/handlekompas/research/rolling_14d/daily/**'
       - '05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'
       - '05_CYCLE_NAVIGATOR/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json'
       - '05_CYCLE_NAVIGATOR/public_series/**'
@@ -39,6 +40,9 @@ jobs:
           python3 05_CYCLE_NAVIGATOR/site/tests/test_public_hourly_curve.py
           node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node --test 05_CYCLE_NAVIGATOR/site/tests/pullback-research-readback.test.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-pullback-research.mjs
+          test -f 05_CYCLE_NAVIGATOR/site/dist/data/pullback-research.json
           node 05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs
           node 05_CYCLE_NAVIGATOR/site/tests/official-compass-freshness.test.mjs
           node 05_CYCLE_NAVIGATOR/site/tests/full-stack-readback.test.mjs
