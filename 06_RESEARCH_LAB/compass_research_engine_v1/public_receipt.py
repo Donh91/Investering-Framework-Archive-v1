@@ -11,9 +11,9 @@ from collections.abc import Mapping
 
 CONTRACT = "CRE_PUBLIC_EVIDENCE_RECEIPT_V1"
 ALLOWED_FIELDS = frozenset({"contract", "request_alias", "disclosure_state", "evidence_alias", "research_lane"})
-DISCLOSURE_STATES = frozenset({"METADATA_ONLY", "NO_PUBLIC_DISCLOSURE", "NOT_AVAILABLE"})
+DISCLOSURE_STATES = frozenset({"METADATA_ONLY", "NO_PUBLIC_DISCLOSURE"})
 RESEARCH_LANES = frozenset({"PUBLIC_ONLY", "PRIVATE_SOURCE_HEALTH"})
-ALIAS = re.compile(r"^[a-z0-9_-]{24,80}$", re.ASCII)
+ALIAS = re.compile(r"^[0-9a-f]{24}$", re.ASCII)
 
 
 class PublicReceiptError(ValueError):
@@ -40,7 +40,7 @@ def validate_receipt(document: Mapping[str, object]) -> dict[str, str]:
     if document["research_lane"] not in RESEARCH_LANES:
         raise PublicReceiptError("UNAUTHORIZED_RESEARCH_LANE")
     for key in ("request_alias", "evidence_alias"):
-        if not ALIAS.fullmatch(document[key]):
+        if not isinstance(document[key], str) or not document[key].startswith(key.split("_")[0] + "_") or not ALIAS.fullmatch(document[key].split("_", 1)[1]):
             raise PublicReceiptError("INVALID_OPAQUE_ALIAS")
     return {key: document[key] for key in sorted(ALLOWED_FIELDS)}
 
