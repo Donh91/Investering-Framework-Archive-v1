@@ -9,13 +9,13 @@ GOOD = {
     "request_alias": "request_83de9175be2981f210fe44f3",
     "disclosure_state": "METADATA_ONLY",
     "evidence_alias": "evidence_73bb4ed075bd913fcab6e128",
-    "research_lane": "PRIVATE_SOURCE_HEALTH",
+    "research_lane": "PUBLIC_ONLY",
 }
 
 
 class PublicReceiptTests(unittest.TestCase):
     def test_positive_exact_shape(self):
-        self.assertEqual(validate_receipt(GOOD)["research_lane"], "PRIVATE_SOURCE_HEALTH")
+        self.assertEqual(validate_receipt(GOOD)["research_lane"], "PUBLIC_ONLY")
         self.assertIn('"contract"', dumps_receipt(GOOD))
 
     def test_reject_raw_market_value(self):
@@ -30,6 +30,14 @@ class PublicReceiptTests(unittest.TestCase):
                       "test/../../secrets", "evidence%20btc", "ea31f7-funding:0.02"):
             with self.subTest(alias=alias), self.assertRaises(PublicReceiptError):
                 validate_receipt({**GOOD, "evidence_alias": alias})
+
+    def test_private_lane_disabled_even_if_shape_valid(self):
+        with self.assertRaises(PublicReceiptError):
+            validate_receipt({**GOOD, "research_lane": "PRIVATE_SOURCE_HEALTH"})
+
+    def test_disallow_embedded_low_entropy_oracle_even_in_public_lane(self):
+        with self.assertRaises(PublicReceiptError):
+            validate_receipt({**GOOD, "disclosure_state": "BETTER_THAN_BASELINE"})
 
     def test_reject_round3_or_scoring_promotion(self):
         for lane in ("ROUND3_SCORING", "PRIVATE_HYPOTHESIS", "LIVE_TRADING", "PUBLIC_ONLY\nprice=80000"):
