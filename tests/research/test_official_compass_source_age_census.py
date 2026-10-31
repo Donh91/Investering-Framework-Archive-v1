@@ -27,6 +27,19 @@ class OfficialCompassSourceAgeCensusTest(unittest.TestCase):
         self.assertEqual(result["packet_within_30m_source_older_30m"], 0)
         self.assertEqual(result["official_OK"], 1)
 
+    def test_integral_float_seconds_from_pinned_official_producer_are_lossless(self):
+        # The original immutable October Official JSON encodes 10356.0
+        # rather than 10356. These values must produce the same census.
+        self.assertEqual(summarize([official(1800.0, 30.0)]),
+                         summarize([official(1800, 30)]))
+        result = summarize([official(1801.0, 40.0)])
+        self.assertEqual(result["older_than_30m"], 1)
+        self.assertEqual(result["packet_within_30m_source_older_30m"], 1)
+
+    def test_nonintegral_packet_seconds_fail_closed(self):
+        with self.assertRaisesRegex(ValueError, "missing_or_invalid_age:auto_market_state_packet"):
+            summarize([official(100, 1.5)])
+
     def test_aged_market_observation_in_fresh_wrapper_detected(self):
         result = summarize([official(1801, 40)])
         self.assertEqual(result["older_than_30m"], 1)
@@ -64,7 +77,7 @@ class OfficialCompassSourceAgeCensusTest(unittest.TestCase):
             summarize([x])
 
     def test_null_and_negative_age_fail_closed(self):
-        for invalid in (None, -1, True, 1.5, "1800"):
+        for invalid in (None, -1, True, False, 1.5, -0.5, float("nan"), float("inf"), "1800"):
             x = official(invalid, 50)
             with self.subTest(invalid=invalid):
                 with self.assertRaisesRegex(ValueError, "missing_or_invalid_age"):
