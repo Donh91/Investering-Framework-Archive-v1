@@ -337,7 +337,7 @@ class PullbackTimeboxResearchTests(unittest.TestCase):
         r=evaluate(freezes,market,issued+timedelta(hours=80))
         self.assertEqual(r["horizons"]["12h"]["false_alarm_n"],1)
         self.assertEqual(r["horizons"]["24h"]["hit_n"],1)
-        self.assertEqual(r["horizons"]["72h"]["hit_n"],0) if False else None
+        self.assertEqual(r["horizons"]["72h"]["hit_n"],1)
         self.assertGreater(r["alerts"][0]["outcomes"]["24h"]["lead_hours"],0)
         # Late decline after the 72h expiry is not retrospectively credited.
         late=evaluate(freezes,self.tape(issued,100,fall_at=80,fall_to=60.0),
