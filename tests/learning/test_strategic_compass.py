@@ -88,6 +88,47 @@ class StrategicCompassTests(unittest.TestCase):
             self.assertEqual(anchor["cross_horizon_alignment"]["class"], "TACTICAL_PULLBACK_STRUCTURAL_BULL")
             self.assertFalse(anchor["authority"]["portfolio_execution"])
 
+    def test_legacy_12h_nowcast_is_not_forward_alignment_or_action(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = fixture_repo(Path(td))
+            path = repo / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/30/CMP-test.json"
+            freeze = json.loads(path.read_text())
+            # Only the 12h source points down. Longer governed paths are UP.
+            freeze["horizons"]["NEXT_1_3D"]["expected_direction"] = "UP"
+            freeze["horizons"]["NEXT_5_7D"]["expected_direction"] = "UP"
+            write(path, freeze)
+            r = materialize(repo, datetime(2026, 9, 30, 12, tzinfo=timezone.utc))
+            a = json.loads((repo / r["anchor_path"]).read_text())
+            self.assertEqual(a["tactical_context"]["12h"]["direction"], "UNAVAILABLE")
+            self.assertEqual(a["tactical_context"]["12h"]["observed_momentum_direction"], "UNAVAILABLE")
+            self.assertEqual(a["tactical_context"]["12h"]["semantics"], "LEGACY_UNVERIFIED_NOT_FORWARD")
+            self.assertIsNone(a["tactical_context"]["12h"]["eta"])
+            self.assertEqual(a["cross_horizon_alignment"]["class"], "MIXED_OR_NO_EDGE")
+            self.assertFalse(a["authority"]["portfolio_execution"])
+
+    def test_typed_12h_nowcast_preserves_current_observation_without_future_vote(self):
+        from scripts.learning.strategic_compass import official_horizon
+        old = {"horizons": {"NEXT_12H": {
+            "expected_direction": "DOWN", "eta": "0-12h",
+            "semantics": "OBSERVED_MOMENTUM_NOT_FORECAST",
+            "predictive_edge_status": "NOT_PROVEN",
+            "action_posture": "DEPLOY",
+        }}}
+        row = official_horizon(old, "NEXT_12H")
+        self.assertEqual(row["direction"], "UNAVAILABLE")
+        self.assertEqual(row["observed_momentum_direction"], "DOWN")
+        self.assertEqual(row["semantics"], "OBSERVED_MOMENTUM_NOT_FORECAST")
+        self.assertEqual(row["action_posture"], "NO_EDGE")
+        self.assertIsNone(row["eta"])
+        corrupt = json.loads(json.dumps(old))
+        corrupt["horizons"]["NEXT_12H"]["semantics"] = "FORWARD_PROVEN"
+        self.assertEqual(official_horizon(corrupt, "NEXT_12H")["observed_momentum_direction"], "UNAVAILABLE")
+        self.assertEqual(official_horizon(corrupt, "NEXT_12H")["direction"], "UNAVAILABLE")
+        # Other horizons remain governed, unmodified source calls.
+        self.assertEqual(official_horizon({"horizons": {"NEXT_1_3D": {
+            "expected_direction": "UP", "action_posture": "HOLD",
+        }}}, "NEXT_1_3D")["direction"], "UP")
+
     def test_missing_month_projection_fails_closed_without_stretching_2_3w(self):
         with tempfile.TemporaryDirectory() as td:
             repo = fixture_repo(Path(td), month=False)
