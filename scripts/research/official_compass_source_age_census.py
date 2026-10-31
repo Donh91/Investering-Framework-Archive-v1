@@ -44,6 +44,7 @@ def original_records(repo: Path) -> list[dict]:
         raise ValueError("frozen_october_tree_sha_mismatch")
     records = []
     seen = set()
+    invalid_metadata = []
     for entry in git(repo, "ls-tree", "-r", "-z", MONTH_TREE).split(b"\0"):
         if not entry:
             continue
@@ -61,9 +62,27 @@ def original_records(repo: Path) -> list[dict]:
         doc = json.loads(content)
         if not isinstance(doc, dict):
             raise ValueError("invalid_official_json")
+        # Inspect every original immutable record, and report exactly which
+        # paths fail before scoring any aggregate. Never fill missing ages.
+        try:
+            summarize([doc])
+        except (KeyError, TypeError, ValueError) as exc:
+            invalid_metadata.append({
+                "path": rel_path,
+                "error_type": type(exc).__name__,
+                "reason": str(exc)[:120],
+            })
         records.append(doc)
     if len(records) != 257:
         raise ValueError(f"original_population_changed:{len(records)}")
+    if invalid_metadata:
+        raise ValueError(
+            "original_official_metadata_invalid:" +
+            json.dumps({
+                "count": len(invalid_metadata),
+                "examples": invalid_metadata[:32],
+            }, sort_keys=True)
+        )
     return records
 
 
