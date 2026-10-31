@@ -162,6 +162,10 @@ def one_report(entry: dict, candles: dict[datetime, dict], asof: datetime):
     for label, (key, hours) in HORIZONS.items():
         predicted = (h.get(key) or {}).get("expected_direction") or "UNAVAILABLE"
         target = t + timedelta(hours=hours) if t else None
+        # Nominal horizon starts at frozen reference candle CLOSE, not issue time.
+        # Expose effective decision lead so users do not misread this as a
+        # guaranteed 12h-forward path from publication.
+        effective_lead_h = round((target - issued).total_seconds()/3600, 4) if target else None
         status = base_error
         ret = None
         if not status and f.get("scoring_contract") != EXPECTED_SCORING:
@@ -186,6 +190,9 @@ def one_report(entry: dict, candles: dict[datetime, dict], asof: datetime):
             scored = "NOT_SCORED"
         signals[label] = {
             "expected_direction": predicted, "target_at_utc": iso(target),
+            "nominal_hours_from_reference_close": hours,
+            "effective_forward_hours_from_issuance": effective_lead_h,
+            "time_basis": "REFERENCE_CANDLE_CLOSE_NOT_ISSUANCE",
             "status": status, "btc_close_return_pct": round(ret, 5) if ret is not None else None,
             "descriptive_direction_result": scored,
             "frozen_momentum_baseline_direction": baseline_direction,
@@ -211,6 +218,7 @@ def one_report(entry: dict, candles: dict[datetime, dict], asof: datetime):
         "scoring_contract": f.get("scoring_contract"), "run_reason": f.get("run_reason"),
         "action_now": f.get("action_now"), "pullback_risk_state": state,
         "price_reference": {"btc": r_btc, "eth": r_eth},
+        "publication_verified_independently": False,
         "horizons": signals, "additional_expost_6_24_72h": descriptive,
     }
 
