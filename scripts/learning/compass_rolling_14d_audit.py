@@ -21,8 +21,10 @@ from zoneinfo import ZoneInfo
 # EXISTING GitHub Outcomes workflow. Both must bind to the same official scorer.
 if __package__:
     from scripts.learning.compass_outcomes import SIDEWAYS_TOLERANCE_PCT
+    from scripts.learning.pullback_warning_timeliness_shadow import evaluate as evaluate_pullback_timebox
 else:
     from compass_outcomes import SIDEWAYS_TOLERANCE_PCT
+    from pullback_warning_timeliness_shadow import evaluate as evaluate_pullback_timebox
 
 FORECAST_ROOT = Path("04_MARKET_LEARNING/handlekompas/official/daily")
 HOURLY_ROOT = Path("03_DAILY_CAPTURE_LOGS/hourly")
@@ -389,6 +391,7 @@ def run(root: Path, asof: datetime, scope: str) -> dict:
         "all_issuances": aggregate(rows), "deduplicated_12h_slots": slot_summary,
         "descriptive_market_path": descriptive_market_path,
         "nonbinding_calibration_research_flags": flags,
+        "pullback_warning_timebox_shadow": evaluate_pullback_timebox(freeze_rows, market, asof),
         "all_issuance_rows": rows,
         "scientific_decision": {
             "status": "HOLD_UNTIL_ORIGINAL_PIT_RECEIPTS_AND_PRE_REGISTERED_HOLDOUT",
