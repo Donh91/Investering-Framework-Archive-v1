@@ -11,6 +11,10 @@ on:
       - 'scripts/orchestration/weekly_orchestration_controller.py'
       - 'research/master_monday_preflight/**'
       - 'research/pullback_forensics/**'
+      - 'scripts/research/rebound_quality_shadow.py'
+      - 'tests/research/test_rebound_quality_shadow.py'
+      - 'scripts/research/rqs_five_lanes_expost.py'
+      - 'tests/research/test_rqs_five_lanes_expost.py'
       - 'research/experiment_lifecycle/RESEARCH_EXECUTION_TOPOLOGY_v1.json'
       - 'tests/daily_capture/**'
       - 'backtest_engine/blind_dual_run.py'
@@ -84,7 +88,9 @@ jobs:
             tests.daily_capture.test_daily_capture_pipeline \
             tests.daily_capture.test_weekly_market_close_endpoint \
             tests.daily_capture.test_master_monday_final_correction \
-            tests.backtest_engine.test_blind_dual_run_v2 -v
+            tests.backtest_engine.test_blind_dual_run_v2 \
+            tests.research.test_rebound_quality_shadow \
+            tests.research.test_rqs_five_lanes_expost -v
       - name: Compile capture, Situation Room, Pullback Forensics, verification-scope and Master Monday modules
         run: |
           python -m py_compile \
