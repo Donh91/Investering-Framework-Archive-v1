@@ -21,6 +21,7 @@ on:
       - "scripts/cycle_navigator/validate_public_series.py"
       - "04_MARKET_LEARNING/handlekompas/LATEST.json"
       - "04_MARKET_LEARNING/handlekompas/official/**"
+      - "04_MARKET_LEARNING/handlekompas/research/rolling_14d/daily/**"
       - "04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json"
       - "04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
       - "04_MARKET_LEARNING/handlekompas/event_refresh/**"
@@ -64,7 +65,12 @@ jobs:
       - name: Validate public product contract
         run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
       - name: Build privacy-safe public bundle
-        run: node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+        run: |
+          node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node --test 05_CYCLE_NAVIGATOR/site/tests/pullback-research-readback.test.mjs
+          node --test 05_CYCLE_NAVIGATOR/site/tests/pullback-pages-run-block.test.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-pullback-research.mjs
+          test -f 05_CYCLE_NAVIGATOR/site/dist/data/pullback-research.json
       - name: Validate Compass bundle contract
         run: node 05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs
       - name: Bind canonical weekly scorecard
