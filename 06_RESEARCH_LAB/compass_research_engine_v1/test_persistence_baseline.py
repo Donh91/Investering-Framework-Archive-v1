@@ -39,6 +39,19 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(r["n_independent_clusters"], 0)
         self.assertEqual(r["excluded_abstained"], 2)
 
+    def test_distinct_abstention_causes_sum_to_same_total(self):
+        r = compare_pairs([
+            row("forecast_abstain", "SIDEWAYS", "UP", .5),
+            row("actual_sideways", "UP", "SIDEWAYS", .5),
+            row("baseline_flat", "UP", "UP", 0.0),
+            row("positive", "UP", "UP", .5),
+        ])
+        self.assertEqual(r["excluded_abstained"], 3)
+        self.assertEqual(r["excluded_actual_sideways"], 1)
+        self.assertEqual(r["excluded_baseline_flat"], 1)
+        self.assertEqual(r["n_independent_clusters"], 1)
+        self.assertEqual(r["forecast_correct"], r["baseline_correct"])
+
     def test_no_valid_values(self):
         for x in (None, True, "1", float("nan"), float("inf")):
             with self.subTest(x=x), self.assertRaises(ValueError):
