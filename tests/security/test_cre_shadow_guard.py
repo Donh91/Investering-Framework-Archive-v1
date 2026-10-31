@@ -101,6 +101,54 @@ class GitHistoryIntegrationTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertIn('CRE_MIXED_SCOPE_OR_TRUSTED_POLICY_CHANGE', result.stdout)
 
+    def test_trusted_base_guard_rejects_poisoned_pr_guard_and_production_change(self):
+        """A mutable PR guard can lie; running the base blob must reject the same diff."""
+        import sys
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self.assertEqual(self.command(d, "git", "init", "-q").returncode, 0)
+            self.command(d, "git", "config", "user.name", "test")
+            self.command(d, "git", "config", "user.email", "test@example.invalid")
+            trusted = root / g.TRUSTED_GUARD
+            trusted.parent.mkdir(parents=True)
+            trusted.write_bytes(MODULE.read_bytes())
+            research = root / P / "experiment.py"
+            research.parent.mkdir(parents=True)
+            research.write_text("experiment = 1\\n")
+            self.command(d, "git", "add", ".")
+            self.assertEqual(self.command(d, "git", "commit", "-qm", "trusted base").returncode, 0)
+            base = self.command(d, "git", "rev-parse", "HEAD").stdout.strip()
+
+            # Attack controls the PR copy of both the research and guard files.
+            trusted.write_text('print("CRE_SCOPE_ONLY_NOT_MERGE_AUTHORITY")\\n')
+            research.write_text("experiment = 2\\n")
+            production = root / "04_MARKET_LEARNING" / "handlekompas" / "danger.py"
+            production.parent.mkdir(parents=True)
+            production.write_text("live = False\\n")
+            self.command(d, "git", "add", ".")
+            self.assertEqual(self.command(d, "git", "commit", "-qm", "poisoned PR").returncode, 0)
+            head = self.command(d, "git", "rev-parse", "HEAD").stdout.strip()
+
+            # This is the vulnerable behavior prior to the workflow fix.
+            unsafe = self.command(d, sys.executable, str(trusted), "--base", base, "--head", head)
+            self.assertEqual(unsafe.returncode, 0, unsafe.stdout + unsafe.stderr)
+
+            # This is the reviewed workflow behavior: git show base blob to temp.
+            original = self.command(d, "git", "show", f"{base}:{g.TRUSTED_GUARD}")
+            self.assertEqual(original.returncode, 0)
+            base_copy = root / "base_guard.py"
+            base_copy.write_text(original.stdout)
+            safe = self.command(d, sys.executable, str(base_copy), "--base", base, "--head", head)
+            self.assertEqual(safe.returncode, 2, safe.stdout + safe.stderr)
+            self.assertIn("CRE_MIXED_SCOPE_OR_TRUSTED_POLICY_CHANGE", safe.stdout)
+
+    def test_workflow_declares_base_guard_not_pr_guard(self):
+        wf = (MODULE.parents[2] / ".github/workflows/cre-shadow-tests.yml").read_text()
+        self.assertIn('git show "$BASE_SHA:scripts/security/cre_shadow_guard.py"', wf)
+        self.assertIn('python "$RUNNER_TEMP/cre_guard_base.py"', wf)
+        self.assertIn('BOOTSTRAP_OWNER_REVIEW_REQUIRED', wf)
+
 
 if __name__ == '__main__':
     unittest.main()
