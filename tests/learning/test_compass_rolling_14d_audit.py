@@ -149,6 +149,29 @@ class RollingCompassAudit(unittest.TestCase):
         item=next(x for x in r["all_issuance_rows"] if x["id"]=="a")
         self.assertEqual(item["horizons"]["12h"]["status"],"UNAVAILABLE_TARGET_CANDLE")
 
+    def test_identical_recollected_candle_with_later_batch_clock_is_not_conflicting(self):
+        # source_window_end_utc is a batch collection time, not the candle's
+        # identity. An identical-price row may be recollected later.
+        before = run(self.root, ASOF, "rolling14")
+        path = self.root / "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-20.csv"
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write("2026-10-20T13:00:00Z,2026-10-20T15:00:00Z,100.13,200.13,PASS\\n".replace("\\\\n", "\\n"))
+        after = run(self.root, ASOF, "rolling14")
+        self.assertEqual(after["complete_spot_close_rows"], before["complete_spot_close_rows"])
+        self.assertEqual(after["price_source_quality"].get("conflicting_candle_clocks"), 0)
+        self.assertEqual(after["price_source_quality"].get("matching_recollected_hour_rows"), 1)
+        row = next(x for x in after["all_issuance_rows"] if x["id"] == "a")
+        self.assertEqual(row["horizons"]["12h"]["status"], "MATURED_EXPOST_ONLY")
+
+    def test_distinct_prices_for_same_candle_still_quarantined(self):
+        path = self.root / "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-20.csv"
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write("2026-10-20T13:00:00Z,2026-10-20T15:00:00Z,103.13,200.13,PASS\\n".replace("\\\\n", "\\n"))
+        report = run(self.root, ASOF, "rolling14")
+        self.assertEqual(report["price_source_quality"]["conflicting_candle_clocks"], 1)
+        item = next(x for x in report["all_issuance_rows"] if x["id"] == "a")
+        self.assertEqual(item["horizons"]["12h"]["status"], "UNAVAILABLE_TARGET_CANDLE")
+
     def test_all_history_includes_old_freezes_excluded_by_14d(self):
         old=datetime(2026,9,1,tzinfo=timezone.utc)
         put(self.root,"04_MARKET_LEARNING/handlekompas/official/daily/2026/09/01/CMP-old.json",
