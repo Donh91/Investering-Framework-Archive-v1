@@ -60,7 +60,10 @@ def git(*args: str, check: bool = True) -> bytes:
 
 
 def bootstrap_expected(base: str) -> bool:
-    return not bool(git("cat-file", "-e", f"{base}:{TRUSTED_GUARD}", check=False))
+    # git cat-file -e reports success via EXIT STATUS, never stdout.
+    result = subprocess.run(["git", "cat-file", "-e", f"{base}:{TRUSTED_GUARD}"],
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+    return result.returncode != 0
 
 
 def changed_paths(base: str, head: str) -> list[str]:
