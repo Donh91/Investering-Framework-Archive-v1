@@ -144,6 +144,49 @@ def preflight(freeze: Mapping, public_witness: Mapping | None = None,
     }
 
 
+def first_daily_candidate_preflight(day_utc: str, rows) -> dict:
+    """Conservative first-of-day candidate preflight, NEVER cohort admission.
+
+    Caller must supply a COMPLETE, authenticated enumeration outside this
+    module. A missing/wrong publication clock anywhere in the candidate
+    window blocks selection rather than replacing it with a later winner.
+    """
+    try:
+        day = datetime.strptime(day_utc, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return {"selection_state": "INVALID_DAY", "scientifically_admitted": False}
+    candidate_rows = []
+    for row in rows:
+        if not isinstance(row, Mapping):
+            return {"selection_state": "UNTRUSTED_CENSUS", "scientifically_admitted": False}
+        forecast = row.get("forecast")
+        witness = row.get("public_witness")
+        source = row.get("source_witness")
+        if not isinstance(forecast, Mapping):
+            return {"selection_state": "UNTRUSTED_CENSUS", "scientifically_admitted": False}
+        issued = parse_utc(forecast.get("issued_at_utc"))
+        if issued is None:
+            return {"selection_state": "UNVERIFIABLE_ISSUANCE_CLOCK_IN_CENSUS", "scientifically_admitted": False}
+        if issued.date() != day or not (7 <= issued.hour < 9):
+            continue
+        witness = witness if isinstance(witness, Mapping) else {}
+        published = parse_utc(witness.get("server_created_at_utc"))
+        if published is None:
+            return {"selection_state": "AMBIGUOUS_FIRST_PUBLICATION_BLOCK_DAY", "scientifically_admitted": False}
+        candidate_rows.append((published, str(witness.get("original_path") or ""), forecast, witness, source))
+    if not candidate_rows:
+        return {"selection_state": "NO_FORECAST_IN_REGISTERED_WINDOW", "scientifically_admitted": False}
+    candidate_rows.sort(key=lambda x: (x[0], x[1]))
+    first = candidate_rows[0]
+    result = preflight(first[2], first[3], first[4])
+    result["selection_state"] = "FIRST_REPORTED_PUBLICATION_CLOCK_ONLY"
+    result["reported_window_candidates"] = len(candidate_rows)
+    # A correct deterministic selection is still NOT proof of a full census.
+    result["external_full_day_census_verified"] = False
+    result["scientifically_admitted"] = False
+    return result
+
+
 def ensure_study_not_started_late(protocol_merge_time_utc):
     """Never permit retroactive cohort activation based on a moving main."""
     merged = parse_utc(protocol_merge_time_utc)
