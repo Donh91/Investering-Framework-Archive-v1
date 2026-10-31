@@ -715,8 +715,32 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             [row["candidate_id"] for row in baseline["candidates"]],
             "CANDIDATE_ID_ORDER_OR_DEDUP_CHANGED",
         )
-        # Every existing field in all 650+ original candidates, rules, counts,
-        # state and authority must remain byte-for-byte semantically identical.
+        # The checked-in published registry is subsequently enriched by the
+        # INDEPENDENT scientific-admission stage. Its two candidate metadata
+        # fields and path mirror are not emitted by registry(); compare only
+        # this producer's original owned fields, for every candidate.
+        # Do NOT silently ignore any new or otherwise missing field.
+        external_row_keys = {"semantic_fingerprint", "scientific_admission_status"}
+        external_root_keys = {"scientific_admission_registry_path"}
+        self.assertEqual(
+            set(baseline) - set(current),
+            external_root_keys,
+            "UNEXPECTED_ROOT_FIELD_DRIFT",
+        )
+        expected = {
+            k: v for k, v in baseline.items()
+            if k not in external_root_keys and k != "candidates"
+        }
+        for row in baseline["candidates"]:
+            self.assertEqual(
+                set(row) - (set(current["candidates"][0]) - {"scientific_score_nonadmission_counts_v1"}),
+                external_row_keys,
+                f"UNEXPECTED_EXTERNAL_ROW_FIELDS:{row['candidate_id']}",
+            )
+        expected["candidates"] = [
+            {k: v for k, v in row.items() if k not in external_row_keys}
+            for row in baseline["candidates"]
+        ]
         normalized = {
             **current,
             "candidates": [
@@ -725,7 +749,7 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                 for row in current["candidates"]
             ],
         }
-        self.assertEqual(normalized, baseline, "FULL_CORPUS_LEGACY_FIELDS_DRIFT")
+        self.assertEqual(normalized, expected, "FULL_CORPUS_OWNED_LEGACY_FIELDS_DRIFT")
 
         totals = {"matured": 0, "eligible": 0, "nonadmitted": 0}
         allowed = {
