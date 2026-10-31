@@ -6,37 +6,40 @@
     "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
   },
   "cause_codes": [
-    "OFFICIAL_SOURCE_REFRESH_DUE",
-    "MARKET_STATE_CHANGED"
+    "DATA_HEALTH_CHANGED",
+    "ACTION_STATE_CHANGED",
+    "MARKET_STATE_CHANGED",
+    "CAPITALIZATION_LADDER_CHANGED",
+    "PROTECTION_STATE_CHANGED"
   ],
   "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
   "cooldown_seconds": 10800,
-  "current_action": "HOLD_WAIT",
-  "current_data_status": "OK",
+  "current_action": "HOLD_WAIT_DATA_DEGRADED",
+  "current_data_status": "DEGRADED",
   "current_ladder": [
     [
       "BTC",
-      "HOLD"
+      "UNAVAILABLE"
     ],
     [
       "ETH",
-      "HOLD"
+      "UNAVAILABLE"
     ],
     [
       "LARGE_CAPS",
-      "WAIT"
+      "UNAVAILABLE"
     ],
     [
       "MID_CAPS",
-      "WAIT"
+      "UNAVAILABLE"
     ],
     [
       "SMALL_CAPS",
-      "WAIT"
+      "UNAVAILABLE"
     ],
     [
       "MICROCAPS",
-      "HARD_WAIT"
+      "UNAVAILABLE"
     ],
     [
       "MEMES",
@@ -44,17 +47,14 @@
     ]
   ],
   "current_market_state": {
-    "action_permission": "HOLD_WAIT",
-    "btc_delta_pct": 0.2585539359097888,
-    "directional_state": "BULLISH",
-    "eth_delta_pct": 0.20128788620998872,
-    "eth_relative_state": "WEAKENING",
-    "ethbtc_delta_pct": -0.03444712366517111,
-    "market_observation_open_utc": "2026-10-31T00:00:00Z",
-    "new_price_observation": true,
-    "predecessor_market_observation_open_utc": "2026-10-30T23:00:00Z",
-    "regime": "BULLISH",
-    "summary": "BTC and ETH are both advancing over the latest governed comparison interval; action authority remains separate."
+    "action_permission": "HOLD_WAIT_DATA_DEGRADED",
+    "btc_delta_pct": -0.4838800543672028,
+    "directional_state": "UNAVAILABLE",
+    "eth_delta_pct": -0.45643227291716215,
+    "eth_relative_state": "UNAVAILABLE",
+    "ethbtc_delta_pct": 0.0,
+    "regime": "DATA_DEGRADED",
+    "summary": "Current market direction is unavailable because required state is degraded."
   },
   "current_protection_tracker": {
     "authority": {
@@ -64,37 +64,19 @@
     },
     "confidence_quality": "LOW",
     "contract": "COMPASS_PROTECTION_TRACKER_v1",
-    "data_quality": "OK",
-    "decisive_public_drivers": [
-      "W43 BTC opened at 82,116.00 and closed at 80,154.09; ETH opened at 2,410.31 and closed at 2,329.87 after an earlier rebound.",
-      "ETH/BTC declined from 0.02936 to 0.02908; the 30d shadow rotation score ended at 18 after starting at 31.",
-      "Five settled sessions totaled positive 301.2 BTC and negative 220.7 ETH in reported units; flows were divergent rather than uniformly negative.",
-      "The final Master Monday supports only a low-confidence downside and relative-weakness research hypothesis, not a confirmed cycle regime or distribution."
-    ],
+    "data_quality": "DEGRADED",
+    "decisive_public_drivers": [],
     "distribution_risk": "UNKNOWN",
-    "eta_window": "A renewed retest is possible during W44; its onset is unsupported.",
-    "invalidation": "Concern weakens if price resilience persists alongside ETH-relative stabilization, broader participation and improving settled ETH flows. Positive BTC flows alone do not resolve ETH weakness.",
-    "last_material_change_at": "2026-10-30T07:19:13Z",
-    "public_explanation": {
-      "action_authority": false,
-      "contract": "CN_PUBLIC_PROTECTION_COPY_v1",
-      "forecast_week": "2026-W44",
-      "method": "EXISTING_WEEKLY_LLM_PUBLIC_LANGUAGE_FILTER",
-      "onset_end_utc": null,
-      "onset_start_utc": null,
-      "risk_class": "RENEWED-RETEST RISK FOLLOWING AN UNSUCCESSFUL REBOUND; SEVERITY AND ONSET ARE UNQUANTIFIED.",
-      "risk_state": "ELEVATED",
-      "summary": "Pullback risk remains elevated after a rebound gave way to weakness; distribution is not confirmed.",
-      "watch_for": "Watch whether a recovery holds while Ethereum stops weakening relative to Bitcoin and participation broadens.",
-      "weakens_if": "Concern eases if prices hold up while relative strength, participation and flows improve together."
-    },
-    "pullback_class": "RENEWED-RETEST RISK FOLLOWING AN UNSUCCESSFUL REBOUND; SEVERITY AND ONSET ARE UNQUANTIFIED.",
-    "pullback_risk_state": "ELEVATED",
-    "reentry_message": "No re-entry review is active.",
-    "reentry_state": "INACTIVE"
+    "eta_window": "UNKNOWN",
+    "invalidation": "Fresh canonical market and Cycle Navigator evidence is required.",
+    "last_material_change_at": "2026-10-31T05:46:31Z",
+    "pullback_class": "UNKNOWN",
+    "pullback_risk_state": "UNAVAILABLE",
+    "reentry_message": "Re-entry review is unavailable until canonical evidence is healthy.",
+    "reentry_state": "UNAVAILABLE"
   },
   "dispatch": true,
-  "evaluated_at_utc": "2026-10-31T01:19:01Z",
+  "evaluated_at_utc": "2026-10-31T05:46:31Z",
   "heat_detail": {
     "btc_return_24h_pct": -3.39773,
     "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
@@ -103,23 +85,23 @@
     "median_return_24h_pct": -0.77937
   },
   "heat_state": "NORMAL",
-  "last_request_age_seconds": 5058.0,
-  "last_requested_source_sha": "19344a515b12b0a93a97955e2d67c13b11977e9a9aaddfc4303b7fc0aabcb806",
-  "latest_compass_source_packet_sha256": "19344a515b12b0a93a97955e2d67c13b11977e9a9aaddfc4303b7fc0aabcb806",
+  "last_request_age_seconds": 16050.0,
+  "last_requested_source_sha": "97a0a5cad013890c38ba47ff278bc055d43f5d6b94b5e6e5f6ed38df7026944b",
+  "latest_compass_source_packet_sha256": "97a0a5cad013890c38ba47ff278bc055d43f5d6b94b5e6e5f6ed38df7026944b",
   "missing_freeze_observation_only": true,
   "missing_scheduled_freeze": null,
-  "protective_bypass": false,
+  "protective_bypass": true,
   "reason": "MATERIAL_REASSESSMENT_REQUIRED",
   "request_retry_seconds": 1200,
   "scheduled_slot_proximity_seconds": 1800,
-  "seconds_to_next_scheduled_compass": 21479.0,
-  "source_packet_sha256": "97a0a5cad013890c38ba47ff278bc055d43f5d6b94b5e6e5f6ed38df7026944b",
+  "seconds_to_next_scheduled_compass": 5429.0,
+  "source_packet_sha256": "0197da2780642dd9103e35d6aaf4e9888cecf2f9d09c87bfc5c58793c8b30acf",
   "suppressed_cause_codes": [],
   "temporary_source_continuity": {
     "active": true,
     "expires_local_date": "2026-11-01",
-    "expiry_at_utc": "2026-10-31T02:00:00Z",
-    "refresh_admitted": true,
+    "expiry_at_utc": "2026-10-31T04:00:00Z",
+    "refresh_admitted": false,
     "semantics": "SOURCE_FRESHNESS_MAINTENANCE_ONLY_NO_MARKET_OR_PORTFOLIO_ACTION"
   },
   "upstream_refresh_required": false

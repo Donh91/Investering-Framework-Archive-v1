@@ -1,0 +1,108 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "DATA_HEALTH_CHANGED",
+    "ACTION_STATE_CHANGED",
+    "MARKET_STATE_CHANGED",
+    "CAPITALIZATION_LADDER_CHANGED",
+    "PROTECTION_STATE_CHANGED"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "HOLD_WAIT_DATA_DEGRADED",
+  "current_data_status": "DEGRADED",
+  "current_ladder": [
+    [
+      "BTC",
+      "UNAVAILABLE"
+    ],
+    [
+      "ETH",
+      "UNAVAILABLE"
+    ],
+    [
+      "LARGE_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MID_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "SMALL_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MICROCAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MEMES",
+      "UNAVAILABLE"
+    ]
+  ],
+  "current_market_state": {
+    "action_permission": "HOLD_WAIT_DATA_DEGRADED",
+    "btc_delta_pct": -0.4838800543672028,
+    "directional_state": "UNAVAILABLE",
+    "eth_delta_pct": -0.45643227291716215,
+    "eth_relative_state": "UNAVAILABLE",
+    "ethbtc_delta_pct": 0.0,
+    "regime": "DATA_DEGRADED",
+    "summary": "Current market direction is unavailable because required state is degraded."
+  },
+  "current_protection_tracker": {
+    "authority": {
+      "new_market_classifier": false,
+      "portfolio_execution": false,
+      "wallet_specific": false
+    },
+    "confidence_quality": "LOW",
+    "contract": "COMPASS_PROTECTION_TRACKER_v1",
+    "data_quality": "DEGRADED",
+    "decisive_public_drivers": [],
+    "distribution_risk": "UNKNOWN",
+    "eta_window": "UNKNOWN",
+    "invalidation": "Fresh canonical market and Cycle Navigator evidence is required.",
+    "last_material_change_at": "2026-10-31T05:46:31Z",
+    "pullback_class": "UNKNOWN",
+    "pullback_risk_state": "UNAVAILABLE",
+    "reentry_message": "Re-entry review is unavailable until canonical evidence is healthy.",
+    "reentry_state": "UNAVAILABLE"
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-10-31T05:46:31Z",
+  "heat_detail": {
+    "btc_return_24h_pct": -3.39773,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": -2.07956,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": -0.77937
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 16050.0,
+  "last_requested_source_sha": "97a0a5cad013890c38ba47ff278bc055d43f5d6b94b5e6e5f6ed38df7026944b",
+  "latest_compass_source_packet_sha256": "97a0a5cad013890c38ba47ff278bc055d43f5d6b94b5e6e5f6ed38df7026944b",
+  "missing_freeze_observation_only": true,
+  "missing_scheduled_freeze": null,
+  "protective_bypass": true,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 5429.0,
+  "source_packet_sha256": "0197da2780642dd9103e35d6aaf4e9888cecf2f9d09c87bfc5c58793c8b30acf",
+  "suppressed_cause_codes": [],
+  "temporary_source_continuity": {
+    "active": true,
+    "expires_local_date": "2026-11-01",
+    "expiry_at_utc": "2026-10-31T04:00:00Z",
+    "refresh_admitted": false,
+    "semantics": "SOURCE_FRESHNESS_MAINTENANCE_ONLY_NO_MARKET_OR_PORTFOLIO_ACTION"
+  },
+  "upstream_refresh_required": false
+}
