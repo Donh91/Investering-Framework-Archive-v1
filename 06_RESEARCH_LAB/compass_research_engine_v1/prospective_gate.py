@@ -20,6 +20,7 @@ PROTOCOL = json.loads(_PROTOCOL_PATH.read_text(encoding="utf-8"))
 HOUR = timedelta(hours=1)
 _SHA40 = re.compile(r"^[a-f0-9]{40}$")
 _SHA256 = re.compile(r"^[a-f0-9]{64}$")
+_COMPASS_ID = re.compile(r"^CMP-[0-9]{8}-[a-f0-9]{12}$")
 _ALLOWED_DIRECTIONS = frozenset(("UP", "DOWN"))
 
 
@@ -69,7 +70,10 @@ def preflight(freeze: Mapping, public_witness: Mapping | None = None,
     market_now = freeze.get("market_now")
     market_now = market_now if isinstance(market_now, Mapping) else {}
     momentum = market_now.get("btc_delta_pct")
+    observation_open = parse_utc(market_now.get("market_observation_open_utc"))
+    predecessor_open = parse_utc(market_now.get("predecessor_market_observation_open_utc"))
     forecast = h12.get("expected_direction")
+    compass_id = freeze.get("compass_id")
 
     if freeze.get("contract") != PROTOCOL["universe"]["forecast_contract"]:
         errors.append("FORECAST_CONTRACT_MISMATCH")
@@ -86,6 +90,10 @@ def preflight(freeze: Mapping, public_witness: Mapping | None = None,
             errors.append("OUTSIDE_DAILY_UTC_SELECTION_WINDOW")
     if ref_open is None or ref_open.minute or ref_open.second or ref_open.microsecond:
         errors.append("REFERENCE_NOT_WHOLE_UTC_OPEN")
+    if observation_open is None or observation_open != ref_open:
+        errors.append("MOMENTUM_OBSERVATION_NOT_REFERENCE_BOUND")
+    if predecessor_open is None or (ref_open is not None and predecessor_open >= ref_open):
+        errors.append("MOMENTUM_PREDECESSOR_NOT_PREVIOUS_OBSERVATION")
     if issue is not None and ref_close is not None and ref_close > issue:
         errors.append("REFERENCE_CANDLE_FROM_FUTURE")
     if forecast not in _ALLOWED_DIRECTIONS:
@@ -121,6 +129,12 @@ def preflight(freeze: Mapping, public_witness: Mapping | None = None,
             or not path.startswith("04_MARKET_LEARNING/handlekompas/official/daily/")
             or not path.endswith(".json") or ".." in path.split("/")):
         errors.append("PUBLIC_BLOB_IDENTITY_UNBOUND")
+    if (not isinstance(compass_id, str) or not _COMPASS_ID.fullmatch(compass_id)
+            or issue is None or compass_id[4:12] != issue.strftime("%Y%m%d")
+            or not isinstance(path, str)
+            or not path.endswith("/" + compass_id + ".json")
+            or f"/{issue:%Y/%m/%d}/" not in path):
+        errors.append("FORECAST_ID_PATH_ISSUANCE_MISMATCH")
     if freeze.get("pit_verified") is True or public_witness.get("scientific_approved") is True:
         errors.append("UNTRUSTED_SELF_ATTESTATION_IGNORED")
 
