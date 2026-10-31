@@ -10,7 +10,7 @@ import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
-import {originalSourceAgeLabel} from './source-age-readback.mjs';
+import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
