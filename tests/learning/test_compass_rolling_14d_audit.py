@@ -155,7 +155,7 @@ class RollingCompassAudit(unittest.TestCase):
         before = run(self.root, ASOF, "rolling14")
         path = self.root / "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-20.csv"
         with path.open("a", encoding="utf-8") as handle:
-            handle.write("2026-10-20T13:00:00Z,2026-10-20T15:00:00Z,100.13,200.13,PASS\\n".replace("\\\\n", "\\n"))
+            handle.write("2026-10-20T13:00:00Z,2026-10-20T15:00:00Z,100.13,200.13,PASS\\n")
         after = run(self.root, ASOF, "rolling14")
         self.assertEqual(after["complete_spot_close_rows"], before["complete_spot_close_rows"])
         self.assertEqual(after["price_source_quality"].get("conflicting_candle_clocks"), 0)
@@ -166,7 +166,7 @@ class RollingCompassAudit(unittest.TestCase):
     def test_distinct_prices_for_same_candle_still_quarantined(self):
         path = self.root / "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-20.csv"
         with path.open("a", encoding="utf-8") as handle:
-            handle.write("2026-10-20T13:00:00Z,2026-10-20T15:00:00Z,103.13,200.13,PASS\\n".replace("\\\\n", "\\n"))
+            handle.write("2026-10-20T13:00:00Z,2026-10-20T15:00:00Z,103.13,200.13,PASS\\n")
         report = run(self.root, ASOF, "rolling14")
         self.assertEqual(report["price_source_quality"]["conflicting_candle_clocks"], 1)
         item = next(x for x in report["all_issuance_rows"] if x["id"] == "a")
