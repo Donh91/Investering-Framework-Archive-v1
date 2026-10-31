@@ -4,6 +4,7 @@ import { dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preserveLegacyShell, releasePremiumShell } from "./premium-release.mjs";
 import { prospectiveRangeReadback } from "./prospective-range-readback.mjs";
+import { originalSourceAgeAtIssue } from "./premium-v2/source-age-readback.mjs";
 const siteDir=dirname(fileURLToPath(import.meta.url)); const repoRoot=resolve(siteDir,"../.."); const outputDir=resolve(siteDir,"dist"); const dataDir=resolve(outputDir,"data");
 const POINTER_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
 const COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json");
@@ -63,6 +64,10 @@ async function buildCompassSnapshot(weeklyPointer){
       if(internalContentSha!==internalPointer?.compass_content_sha256) throw new Error("Internal Compass pointer/content hash mismatch");
       const internalCompass=JSON.parse(internalBytes.toString("utf8"));
       if(internalCompass?.compass_id!==projection.compass_id) throw new Error("Internal/public Compass artifact mismatch");
+      // Original Official clocks come from the already content-hash-verified
+      // immutable INTERNAL record. Public page never computes a new freshness
+      // pass, decision, risk stage or late-edited market observation.
+      projection.original_source_age_at_issue=originalSourceAgeAtIssue(internalCompass,projection);
       const cnBinding=internalCompass?.source_bindings?.cycle_navigator||{};
       const weeklyYear=Number(weeklyPointer?.iso_year),weeklyWeek=Number(weeklyPointer?.iso_week),weeklyIssue=Number(weeklyPointer?.issue_number);
       const boundYear=Number(cnBinding?.iso_year),boundWeek=Number(cnBinding?.iso_week),boundIssue=Number(cnBinding?.issue_number);
