@@ -50,6 +50,38 @@ class TemporalGateTests(unittest.TestCase):
         self.assertFalse(row["external_full_day_census_verified"])
         self.assertEqual(row["evidence_state"], "CLOCK_PREFLIGHT_ONLY_EXTERNAL_AUTHENTICATION_REQUIRED")
 
+    def test_new_v41_momentum_is_not_a_forward_forecast_for_locked_study(self):
+        f = freeze(decision_policy_version="2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1",
+                   horizons={"NEXT_12H": {
+                       "expected_direction": "DOWN",
+                       "semantics": "OBSERVED_MOMENTUM_NOT_FORECAST",
+                       "predictive_edge_status": "NOT_PROVEN",
+                   }})
+        row = preflight(f, public(), source())
+        self.assertIn("NOWCAST_NOT_FORWARD_FORECAST_FOR_LOCKED_STUDY", row["quarantine_reasons"])
+        self.assertFalse(row["temporal_preflight_pass"])
+        self.assertFalse(row["scientifically_admitted"])
+
+    def test_missing_or_forged_semantics_do_not_bypass_v41_policy(self):
+        for value in (None, "PROVEN_FUTURE_FORECAST", ""):
+            with self.subTest(marker=value):
+                h = {"expected_direction": "UP"}
+                if value is not None:
+                    h["semantics"] = value
+                f = freeze(decision_policy_version="2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1",
+                           horizons={"NEXT_12H": h})
+                result = preflight(f, public(), source())
+                self.assertIn("NOWCAST_NOT_FORWARD_FORECAST_FOR_LOCKED_STUDY", result["quarantine_reasons"])
+                self.assertFalse(result["scientifically_admitted"])
+
+    def test_observed_momentum_marker_fails_even_without_policy_id(self):
+        f = freeze(horizons={"NEXT_12H": {
+            "expected_direction": "UP", "semantics": "OBSERVED_MOMENTUM_NOT_FORECAST",
+        }})
+        row = preflight(f, public(), source())
+        self.assertIn("NOWCAST_NOT_FORWARD_FORECAST_FOR_LOCKED_STUDY", row["quarantine_reasons"])
+        self.assertFalse(row["temporal_preflight_pass"])
+
     def test_forged_pit_bit_is_not_a_valid_admission(self):
         row = preflight(freeze(pit_verified=True), public(scientific_approved=True), source())
         self.assertIn("UNTRUSTED_SELF_ATTESTATION_IGNORED", row["quarantine_reasons"])
