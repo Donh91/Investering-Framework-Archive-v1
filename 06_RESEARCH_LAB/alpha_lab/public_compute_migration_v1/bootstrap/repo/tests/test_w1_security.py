@@ -99,6 +99,20 @@ class TestReceiptV1(unittest.TestCase):
     def test_invalid_source_run_zero_rejected(self) -> None:
         self.check_bad(lambda x: x["github"].update(run_id=0))
 
+    def test_fractional_clock_six_digits_allowed(self) -> None:
+        self.valid["clock"]["first_observed_at_utc"] = self.valid["clock"]["first_observed_at_utc"].replace("Z", ".123456Z")
+        # Original job clock timestamps are identical, so changing only T0
+        # makes clock ordering inconsistent; schema alone must still admit it.
+        from jsonschema import Draft202012Validator
+        schema = json.loads(DEFAULT_SCHEMA.read_text())
+        self.assertEqual(list(Draft202012Validator(schema).iter_errors(self.valid)), [])
+
+    def test_fractional_clock_seven_digits_rejected(self) -> None:
+        self.check_bad(lambda x: x["clock"].update(first_observed_at_utc="2026-10-31T12:00:00.1234567Z"))
+
+    def test_fractional_clock_nineteen_digits_rejected(self) -> None:
+        self.check_bad(lambda x: x["github"].update(job_started_at_utc="2026-10-31T12:00:00.1234567890123456789Z"))
+
     def test_actual_jsonschema_draft_202012_check(self) -> None:
         from jsonschema import Draft202012Validator
         raw = json.loads(DEFAULT_SCHEMA.read_text())
@@ -158,6 +172,53 @@ class TestPublicWorkflowGuard(unittest.TestCase):
 
     def test_unknown_job_fails(self) -> None:
         self.reject(self.workflow.replace('jobs:\n', 'jobs:\n  malicious:\n    runs-on: ubuntu-latest\n    steps: []\n'))
+
+    def test_workflow_name_bidi_rejected(self) -> None:
+        self.reject(self.workflow.replace(
+            'name: W1 Public Compute Synthetic Security Only',
+            'name: W1\u202e Public Compute Synthetic Security Only', 1,
+        ))
+
+    def test_step_expression_name_rejected(self) -> None:
+        source = self.workflow.replace(
+            'name: Install pinned security test libraries',
+            'name: "${{ github.event.pull_request.title }}"', 1,
+        )
+        with self.assertRaisesRegex(UnsafePublicWorkflow, 'W1_STEP_NAME_UNSAFE'):
+            guard_workflow(source)
+
+    def test_different_arbitrary_ascii_step_name_rejected(self) -> None:
+        self.reject(self.workflow.replace('name: Install pinned security test libraries',
+                                          'name: Approved by Grok', 1))
+
+    def test_malformed_uses_list_is_typed_denial(self) -> None:
+        src = self.workflow.replace('uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # pinned v4.2.2',
+                                    'uses: [a]', 1)
+        with self.assertRaisesRegex(UnsafePublicWorkflow, 'W1_MALFORMED_STRUCTURE'):
+            guard_workflow(src)
+
+    def test_complex_yaml_mapping_key_is_typed_denial(self) -> None:
+        src = self.workflow.replace('permissions:\n', 'permissions:\n  ? [a]\n  : 1\n', 1)
+        with self.assertRaisesRegex(UnsafePublicWorkflow, 'W1_MALFORMED_STRUCTURE'):
+            guard_workflow(src)
+
+    def test_pip_does_not_allow_unhashed_installs(self) -> None:
+        self.reject(self.workflow.replace('--require-hashes', '', 1))
+        self.reject(self.workflow.replace('--only-binary=:all:', '', 1))
+
+    def test_hashed_dependency_lock_complete_and_well_formed(self) -> None:
+        import re
+        names = set()
+        for line in (ROOT / 'requirements-ci.txt').read_text().splitlines():
+            if not line or line.startswith('#'):
+                continue
+            m = re.fullmatch(r'([A-Za-z0-9-]+)==([0-9.]+) --hash=sha256:([0-9a-f]{64})', line)
+            self.assertIsNotNone(m, msg=f'unhashed dependency: {line[:40]}')
+            names.add(m.group(1).lower())
+        self.assertEqual(names, {
+            'jsonschema','pyyaml','attrs','referencing','rpds-py',
+            'jsonschema-specifications','typing-extensions',
+        })
 
     def test_duplicate_yaml_keys_rejected(self) -> None:
         # A stricter YAML parser is required to reject duplicates, rather than
