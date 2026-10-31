@@ -1,6 +1,8 @@
 from __future__ import annotations
 import json
 import tempfile
+import subprocess
+import sys
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -68,6 +70,19 @@ class RollingCompassAudit(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name)
         seed(self.root)
+
+    def test_direct_script_cli_import_and_publication(self):
+        # Regression for CI failure: "python scripts/learning/...py" has no
+        # top-level scripts package in its default sys.path.
+        script=Path(__file__).resolve().parents[2]/"scripts/learning/compass_rolling_14d_audit.py"
+        output="04_MARKET_LEARNING/handlekompas/research/rolling_14d/daily/2026/10/23/check_ROLLING14.json"
+        ran=subprocess.run([sys.executable,str(script),"--repo",str(self.root),
+                            "--scope","rolling14","--asof","2026-10-23T00:00:00Z",
+                            "--output",output],capture_output=True,text=True,timeout=30)
+        self.assertEqual(ran.returncode,0,ran.stderr)
+        report=json.loads((self.root/output).read_text())
+        self.assertEqual(report["contract"],CONTRACT)
+        self.assertFalse(report["automatic_model_reweighting"])
 
     def test_recover_every_frozen_release_and_deduplicate_independent_slots(self):
         report=run(self.root,ASOF,"rolling14")
