@@ -128,8 +128,20 @@ def load_market(root: Path, start: datetime, end: datetime):
                     quality["nonpass_or_missing_spot_close"] += 1
                     continue
                 item = {"btc": b, "eth": e, "source_window_end_utc": iso(collection_end)}
-                if closed in candles and candles[closed] != item:
-                    conflict.add(closed)
+                if closed in candles:
+                    previous = candles[closed]
+                    # The batch collection clock is NOT part of the candle's
+                    # value/identity. Identical prices recollected at different
+                    # batch ends must not fabricate a conflicting price bar.
+                    if previous["btc"] != b or previous["eth"] != e:
+                        conflict.add(closed)
+                    else:
+                        quality["matching_recollected_hour_rows"] += 1
+                        # Retain the earliest archive collection marker only
+                        # as metadata, NEVER as proven provider first-known.
+                        previous_batch = stamp(previous["source_window_end_utc"])
+                        if previous_batch is not None and collection_end < previous_batch:
+                            candles[closed] = item
                 else:
                     candles[closed] = item
         except (ValueError, UnicodeError, csv.Error):
