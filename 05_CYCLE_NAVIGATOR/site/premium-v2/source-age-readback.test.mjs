@@ -5,11 +5,13 @@ import {originalSourceAgeAtIssue,originalSourceAgeLabel} from '../source-age-rea
 const issue='2026-10-13T14:14:43Z';
 const compass='CMP-EXACT-ORIGINAL';
 const projection={contract:'PUBLIC_COMPASS_PROJECTION_v1',compass_id:compass,issued_at_utc:issue};
+const originalTimestamp=age=>Number.isSafeInteger(age)&&age>=0?
+  new Date(Date.parse(issue)-age*1000).toISOString().replace('.000Z','Z'):issue;
 const internal=(age=8083,packetAge=6945)=>({
  contract:'OFFICIAL_DAILY_COMPASS_v1',compass_id:compass,issued_at_utc:issue,
- source_bindings:{auto_market_state:{freshness:{checks:[
-  {lane:'source_observation_freshness',age_seconds:age,status:'PASS'},
-  {lane:'auto_market_state_packet',age_seconds:packetAge,status:'PASS'}
+ source_bindings:{auto_market_state:{freshness:{evaluated_at_utc:issue,checks:[
+  {lane:'source_observation_freshness',age_seconds:age,status:'PASS',timestamp:originalTimestamp(age)},
+  {lane:'auto_market_state_packet',age_seconds:packetAge,status:'PASS',timestamp:originalTimestamp(packetAge)}
  ]}}}
 });
 
@@ -83,4 +85,26 @@ test('the presentation only code never implies market action or recalibrates sou
  const txt=originalSourceAgeLabel({...projection,original_source_age_at_issue:m},{valid:true});
  assert.match(txt,/31 min/);
  assert.doesNotMatch(txt,/SELL|BUY|P=|4\/5/);
+});
+
+test('adversarial contradictory timestamp/age or evaluation clock fails closed',()=>{
+ assert.equal(originalSourceAgeAtIssue(internal(),projection).status,'ORIGINAL_ISSUANCE_CLOCKS_ONLY');
+ const badObservation=internal();
+ badObservation.source_bindings.auto_market_state.freshness.checks[0].timestamp=issue;
+ assert.equal(originalSourceAgeAtIssue(badObservation,projection).status,'UNKNOWN');
+ const badPacket=internal();
+ badPacket.source_bindings.auto_market_state.freshness.checks[1].timestamp=issue;
+ assert.equal(originalSourceAgeAtIssue(badPacket,projection).status,'UNKNOWN');
+ const wrongEvaluation=internal();
+ wrongEvaluation.source_bindings.auto_market_state.freshness.evaluated_at_utc='2026-10-13T14:14:42Z';
+ assert.equal(originalSourceAgeAtIssue(wrongEvaluation,projection).status,'UNKNOWN');
+ const noEvaluation=internal();
+ delete noEvaluation.source_bindings.auto_market_state.freshness.evaluated_at_utc;
+ assert.equal(originalSourceAgeAtIssue(noEvaluation,projection).status,'UNKNOWN');
+ const missingObservationTimestamp=internal();
+ delete missingObservationTimestamp.source_bindings.auto_market_state.freshness.checks[0].timestamp;
+ assert.equal(originalSourceAgeAtIssue(missingObservationTimestamp,projection).status,'UNKNOWN');
+ const futurePacket=internal();
+ futurePacket.source_bindings.auto_market_state.freshness.checks[1].timestamp='2026-10-13T14:15:43Z';
+ assert.equal(originalSourceAgeAtIssue(futurePacket,projection).status,'UNKNOWN');
 });
