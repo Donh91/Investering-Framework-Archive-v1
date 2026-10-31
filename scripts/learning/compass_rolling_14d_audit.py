@@ -149,6 +149,15 @@ def one_report(entry: dict, candles: dict[datetime, dict], asof: datetime):
         base_error = None
     state = ((f.get("protection_tracker") or {}).get("pullback_risk_state") or "UNKNOWN")
     h = f.get("horizons") or {}
+    # Frozen latest-momentum is only a NAIVE no-model comparison at the
+    # same issue clock, not evidence of a prospective source timestamp.
+    market_now = f.get("market_now") or {}
+    momentum = market_now.get("btc_delta_pct")
+    baseline_direction = ("UP" if isinstance(momentum, (int, float)) and
+                          not isinstance(momentum, bool) and math.isfinite(momentum) and momentum > 0
+                          else "DOWN" if isinstance(momentum, (int, float)) and
+                          not isinstance(momentum, bool) and math.isfinite(momentum) and momentum < 0
+                          else "UNAVAILABLE")
     signals = {}
     for label, (key, hours) in HORIZONS.items():
         predicted = (h.get(key) or {}).get("expected_direction") or "UNAVAILABLE"
@@ -179,6 +188,12 @@ def one_report(entry: dict, candles: dict[datetime, dict], asof: datetime):
             "expected_direction": predicted, "target_at_utc": iso(target),
             "status": status, "btc_close_return_pct": round(ret, 5) if ret is not None else None,
             "descriptive_direction_result": scored,
+            "frozen_momentum_baseline_direction": baseline_direction,
+            "momentum_baseline_result": (
+                ("CORRECT" if ((ret > 0) if baseline_direction == "UP" else (ret < 0))
+                 else "INCORRECT") if status == "MATURED_EXPOST_ONLY" and
+                 baseline_direction in ("UP", "DOWN") else "NOT_SCORED"
+            ),
             "point_in_time_issuance_verified": False,
         }
     descriptive = {}
@@ -221,7 +236,38 @@ def aggregate(records: list[dict]) -> dict:
             "abstention_count": sum(x["expected_direction"] in ("MIXED","NO_EDGE","UNAVAILABLE","SIDEWAYS") for x in hist),
             "point_in_time_certified_edge": None,
         }
+        paired = [x for x in testable if x["momentum_baseline_result"] in ("CORRECT", "INCORRECT")]
+        results[horizon]["matched_momentum_control"] = {
+            "matched_n": len(paired),
+            "compass_correct_n": sum(x["descriptive_direction_result"] == "CORRECT" for x in paired),
+            "naive_momentum_correct_n": sum(x["momentum_baseline_result"] == "CORRECT" for x in paired),
+            "incremental_certified_edge": None,
+            "warning": "EXPOST_SAME_COHORT_DESCRIPTIVE_ONLY_WITHOUT_ORIGINAL_FIRST_KNOWN",
+        }
     counts["horizons"] = results
+    # Intraday event-driven issuance often repeats the same market shock.
+    # Grouping is UTC fixed-slot descriptive, not statistical independence.
+    by_day = defaultdict(list)
+    for row in records:
+        when = stamp(row["issued_at_utc"])
+        if when:
+            by_day[when.astimezone(ZoneInfo("Europe/Copenhagen")).date().isoformat()].append(row)
+    counts["by_copenhagen_day"] = {
+        day: {
+            "issuances": len(items),
+            "actions": dict(Counter(x["action_now"] or "UNKNOWN" for x in items)),
+            "risk_states": dict(Counter(x["pullback_risk_state"] for x in items)),
+            "12h_direction": dict(Counter(x["horizons"]["12h"]["expected_direction"] for x in items)),
+            "12h_matured_directional_n": sum(
+                x["horizons"]["12h"]["descriptive_direction_result"] in ("CORRECT","INCORRECT")
+                for x in items
+            ),
+            "12h_direction_correct_n": sum(
+                x["horizons"]["12h"]["descriptive_direction_result"] == "CORRECT"
+                for x in items
+            ),
+        } for day, items in sorted(by_day.items())
+    }
     return counts
 
 
@@ -243,6 +289,51 @@ def run(root: Path, asof: datetime, scope: str) -> dict:
     clock_sample = list(groups.values())
     selected_hashes = [{"path": x["path"], "sha256": x["sha256"]} for x in freeze_rows]
     local = asof.astimezone(ZoneInfo("Europe/Copenhagen"))
+    slot_summary = aggregate(clock_sample)
+    matured_12 = slot_summary["horizons"]["12h"]
+    risks = Counter(row["pullback_risk_state"] for row in rows)
+    flags = []
+    if matured_12["directional_testable_n"] >= 20 and matured_12["expost_direction_rate"] < 0.5:
+        flags.append({
+            "id": "TWELVE_HOUR_DIRECTION_LOW_DESCRIPTIVE_HITRATE",
+            "evidence": {
+                "testable_12h_slots": matured_12["directional_testable_n"],
+                "hit_rate": matured_12["expost_direction_rate"],
+            },
+            "recommended_action": "EXAMINE_PROSPECTIVE_12H_NOWCAST_VS_FORWARD_SEMANTICS_AND_MATCHED_BASELINES",
+            "automatic_weight_change": False,
+        })
+    if len(rows) >= 20 and risks and max(risks.values())/len(rows) > 0.8:
+        flags.append({
+            "id": "RISK_STATE_CONCENTRATION_MONITOR",
+            "evidence": {"largest_state": risks.most_common(1)[0][0],
+                         "count": risks.most_common(1)[0][1],
+                         "denominator": len(rows)},
+            "recommended_action": "INVESTIGATE_SEVERITY_DISCRIMINATION_AND_FALSE_ALARM_COST_BEFORE_ESCALATION",
+            "automatic_weight_change": False,
+        })
+    if len(clock_sample) and len(rows) >= 2*len(clock_sample):
+        flags.append({
+            "id": "MULTIPLE_ISSUANCES_PER_UTC12_SLOT",
+            "evidence": {"issuance_n": len(rows), "selected_slot_n": len(clock_sample)},
+            "recommended_action": "NEVER_SCORE_ALL_EVENT_DRIVEN_ISSUANCES_AS_INDEPENDENT_TRADES",
+            "automatic_weight_change": False,
+        })
+    clocks = sorted(market)
+    start_bar = next((t for t in clocks if start is None or t >= start), None)
+    end_bar = clocks[-1] if clocks else None
+    descriptive_market_path = {
+        "start_close_utc": iso(start_bar), "end_close_utc": iso(end_bar),
+        "btc_start": market[start_bar]["btc"] if start_bar else None,
+        "btc_end": market[end_bar]["btc"] if end_bar else None,
+        "eth_start": market[start_bar]["eth"] if start_bar else None,
+        "eth_end": market[end_bar]["eth"] if end_bar else None,
+        "btc_return_pct": round(100*(market[end_bar]["btc"]/market[start_bar]["btc"]-1),5)
+                          if start_bar and end_bar else None,
+        "eth_return_pct": round(100*(market[end_bar]["eth"]/market[start_bar]["eth"]-1),5)
+                          if start_bar and end_bar else None,
+        "point_in_time_prediction_or_performance": False,
+    }
     return {
         "contract": CONTRACT, "scope": scope,
         "generated_at_utc": iso(asof), "copenhagen_date": local.date().isoformat(),
@@ -255,7 +346,9 @@ def run(root: Path, asof: datetime, scope: str) -> dict:
         "research_only": True, "data_inventory": inventory,
         "price_source_quality": market_quality, "complete_spot_close_rows": len(market),
         "source_manifest": {"official_freezes": selected_hashes, "hourly_csv": sources},
-        "all_issuances": aggregate(rows), "deduplicated_12h_slots": aggregate(clock_sample),
+        "all_issuances": aggregate(rows), "deduplicated_12h_slots": slot_summary,
+        "descriptive_market_path": descriptive_market_path,
+        "nonbinding_calibration_research_flags": flags,
         "all_issuance_rows": rows,
         "scientific_decision": {
             "status": "HOLD_UNTIL_ORIGINAL_PIT_RECEIPTS_AND_PRE_REGISTERED_HOLDOUT",
