@@ -1,7 +1,7 @@
 """Adversarial future-cohort tests. No source/PIT admission is ever granted."""
 import unittest
 
-from prospective_gate import ensure_study_not_started_late, preflight
+from prospective_gate import ensure_study_not_started_late, preflight, first_daily_candidate_preflight
 
 
 def freeze(**changes):
@@ -106,6 +106,34 @@ class TemporalGateTests(unittest.TestCase):
     def test_missing_timezone_rejected(self):
         row = preflight(freeze(issued_at_utc="2026-11-02T07:17:00"), public(), source())
         self.assertIn("ISSUE_CLOCK_MISSING_OR_INVALID", row["quarantine_reasons"])
+
+    def test_first_original_abstention_cannot_be_replaced_by_later_winner(self):
+        rows = [
+            {"forecast": freeze(issued_at_utc="2026-11-02T07:10:00Z",
+                                 horizons={"NEXT_12H": {"expected_direction": "NO_EDGE"}}),
+             "public_witness": public(server_created_at_utc="2026-11-02T07:12:00Z"),
+             "source_witness": source()},
+            {"forecast": freeze(issued_at_utc="2026-11-02T07:20:00Z"),
+             "public_witness": public(server_created_at_utc="2026-11-02T07:23:00Z"),
+             "source_witness": source()},
+        ]
+        result = first_daily_candidate_preflight("2026-11-02", rows)
+        self.assertEqual(result["selection_state"], "FIRST_REPORTED_PUBLICATION_CLOCK_ONLY")
+        self.assertIn("NO_DIRECTIONAL_CALL_OR_ABSTAIN", result["quarantine_reasons"])
+        self.assertEqual(result["reported_window_candidates"], 2)
+        self.assertFalse(result["scientifically_admitted"])
+
+    def test_missing_earlier_publication_blocks_entire_day(self):
+        rows = [
+            {"forecast": freeze(issued_at_utc="2026-11-02T07:10:00Z"),
+             "public_witness": public(server_created_at_utc=None), "source_witness": source()},
+            {"forecast": freeze(issued_at_utc="2026-11-02T07:20:00Z"),
+             "public_witness": public(server_created_at_utc="2026-11-02T07:23:00Z"),
+             "source_witness": source()},
+        ]
+        result = first_daily_candidate_preflight("2026-11-02", rows)
+        self.assertEqual(result["selection_state"], "AMBIGUOUS_FIRST_PUBLICATION_BLOCK_DAY")
+        self.assertFalse(result["scientifically_admitted"])
 
     def test_study_requires_protocol_merge_before_start(self):
         self.assertTrue(ensure_study_not_started_late("2026-11-01T23:59:59Z"))
