@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest.mock import patch, Mock
 
 MODULE = Path(__file__).resolve().parents[2] / 'scripts/security/cre_shadow_guard.py'
 spec = importlib.util.spec_from_file_location('cre_shadow_guard', MODULE)
@@ -10,6 +11,12 @@ P = g.ROOT
 
 
 class GuardTests(unittest.TestCase):
+    def test_bootstrap_detection_uses_exit_status_not_stdout(self):
+        with patch.object(g.subprocess, "run", return_value=Mock(returncode=0)):
+            self.assertFalse(g.bootstrap_expected("a" * 40))
+        with patch.object(g.subprocess, "run", return_value=Mock(returncode=1)):
+            self.assertTrue(g.bootstrap_expected("b" * 40))
+
     def test_normal_experiment_path(self):
         self.assertEqual(g.inspect_scope([P + 'model.py'], is_bootstrap=False), 'CRE_SCOPE_ONLY_NOT_MERGE_AUTHORITY')
 
