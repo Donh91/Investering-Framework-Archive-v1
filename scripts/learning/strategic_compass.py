@@ -50,7 +50,28 @@ def clean_direction(value: Any) -> str:
 
 
 def official_horizon(compass: Mapping[str, Any], key: str) -> dict[str, Any]:
-    row = ((compass.get("horizons") or {}).get(key) or {})
+    """Read existing horizons; never turn observed 12h momentum into a forecast.
+
+    The original frozen 12h sign remains available only as a descriptive
+    nowcast field under its explicit v4.1 marker. Legacy markerless freezes
+    are NOT presumed to be modern, verified forward predictions either.
+    """
+    horizons = compass.get("horizons")
+    horizons = horizons if isinstance(horizons, Mapping) else {}
+    row = horizons.get(key)
+    row = row if isinstance(row, Mapping) else {}
+    if key == "NEXT_12H":
+        nowcast = (row.get("semantics") == "OBSERVED_MOMENTUM_NOT_FORECAST"
+                   and row.get("predictive_edge_status") == "NOT_PROVEN")
+        return {
+            "direction": "UNAVAILABLE",
+            "observed_momentum_direction": clean_direction(row.get("expected_direction")) if nowcast else "UNAVAILABLE",
+            "semantics": "OBSERVED_MOMENTUM_NOT_FORECAST" if nowcast else "LEGACY_UNVERIFIED_NOT_FORWARD",
+            "path": "Observed momentum only; no separately verified 12h forward forecast.",
+            "action_posture": "NO_EDGE",
+            "confidence": None,
+            "eta": None,
+        }
     return {
         "direction": clean_direction(row.get("expected_direction")),
         "path": row.get("expected_path"),
