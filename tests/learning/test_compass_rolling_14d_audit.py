@@ -291,6 +291,7 @@ class PullbackTimeboxResearchTests(unittest.TestCase):
     def freeze(when, state="ELEVATED", quality="OK", path=None):
         f=sample_freeze(when,str(when.timestamp()),risk=state)
         f["protection_tracker"]["data_quality"]=quality
+        f["protection_tracker"]["contract"]="COMPASS_PROTECTION_TRACKER_v1"
         return {"issued":when,"path":path or f"CMP-{int(when.timestamp())}.json",
                 "sha256":"a"*64,"data":f}
 
@@ -419,6 +420,29 @@ class PullbackTimeboxResearchTests(unittest.TestCase):
         self.assertEqual(r["new_warning_or_escalation_events"],0)
         self.assertEqual(r["warning_state_counts"]["SOURCE_UNAVAILABLE_OR_UNQUALIFIED"],1)
         self.assertEqual(r["warning_state_counts"]["LEFT_CENSORED_NO_TRANSITION_PROOF"],1)
+
+    def test_future_reference_candle_cannot_issue_retroactive_warning(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        earlier=self.freeze(t,"NORMAL")
+        future=self.freeze(t+timedelta(hours=1),"ELEVATED")
+        future["data"]["market_reference"]["observation_open_utc"]=(t+timedelta(hours=2)).isoformat()
+        r=evaluate([earlier,future],self.tape(t,100),t+timedelta(hours=100))
+        self.assertEqual(r["new_warning_or_escalation_events"],0)
+        self.assertEqual(r["warning_state_counts"]["INVALID_REFERENCE_CLOCK_OR_PRICE"],1)
+
+    def test_invalid_reference_price_and_uncontracted_tracker_fail_closed(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        earlier=self.freeze(t,"NORMAL")
+        invalid=self.freeze(t+timedelta(hours=1),"ELEVATED")
+        invalid["data"]["market_reference"]["btc_usdt"]=float("nan")
+        uncontracted=self.freeze(t+timedelta(hours=2),"HIGH")
+        del uncontracted["data"]["protection_tracker"]["contract"]
+        r=evaluate([earlier,invalid,uncontracted],self.tape(t,100),t+timedelta(hours=100))
+        self.assertEqual(r["new_warning_or_escalation_events"],0)
+        self.assertEqual(r["warning_state_counts"]["INVALID_REFERENCE_CLOCK_OR_PRICE"],1)
+        self.assertEqual(r["warning_state_counts"]["SOURCE_UNAVAILABLE_OR_UNQUALIFIED"],1)
 
     def test_no_embedded_research_result_can_change_original_forecast(self):
         result=run(self.root,ASOF,"rolling14")
