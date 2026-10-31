@@ -158,6 +158,30 @@ class RollingCompassAudit(unittest.TestCase):
         self.assertEqual(s["status"],"HOLD_UNTIL_ORIGINAL_PIT_RECEIPTS_AND_PRE_REGISTERED_HOLDOUT")
         self.assertFalse(r["research_only"] is False)
 
+    def test_frozen_momentum_baseline_is_matched_only_on_same_matured_slot(self):
+        t=START+timedelta(hours=22)
+        f=sample_freeze(t,"with_momentum",signal="UP")
+        f["market_now"]={"btc_delta_pct":0.4}
+        put(self.root,f"04_MARKET_LEARNING/handlekompas/official/daily/{t:%Y/%m/%d}/CMP-mom.json",
+            json.dumps(f))
+        report=run(self.root,ASOF,"rolling14")
+        row=next(r for r in report["all_issuance_rows"] if r["id"]=="with_momentum")
+        h=row["horizons"]["12h"]
+        self.assertEqual(h["frozen_momentum_baseline_direction"],"UP")
+        self.assertIn(h["momentum_baseline_result"],("CORRECT","INCORRECT"))
+        paired=report["all_issuances"]["horizons"]["12h"]["matched_momentum_control"]
+        self.assertEqual(paired["matched_n"],1)
+        self.assertIsNone(paired["incremental_certified_edge"])
+
+    def test_daily_risk_and_calibration_flags_never_change_parameters(self):
+        report=run(self.root,ASOF,"rolling14")
+        daily=report["all_issuances"]["by_copenhagen_day"]
+        self.assertTrue(any("2026-10-20" in d for d in daily))
+        self.assertTrue(all("12h_direction_correct_n" in d for d in daily.values()))
+        self.assertTrue(all(not flag["automatic_weight_change"]
+                            for flag in report["nonbinding_calibration_research_flags"]))
+        self.assertFalse(report["descriptive_market_path"]["point_in_time_prediction_or_performance"])
+
     def test_no_future_files_are_read_into_historical_replay(self):
         r1=run(self.root,ASOF,"rolling14")
         put(self.root,"03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-30.csv",
