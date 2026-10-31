@@ -1,0 +1,126 @@
+{
+  "contract": "CRE_PROSPECTIVE_NEXT12H_PROTOCOL_v1",
+  "study_id": "CRE-KOMPAS-NEXT12H-VS-PERSISTENCE-W45-2026-V1",
+  "governance_state": "OWNER_MISSION_APPROVED_PROTOCOL_RELEASE_PENDING",
+  "written_before_study_start": true,
+  "owner_mandate": "User approved 2026-10-31 mission to freeze PIT+baseline trial; exact protocol becomes binding only once GitHub PR merge/readback is verified before observation",
+  "science_state": "NO_ADMISSION_UNTIL_TRUSTED_FIRST_KNOWN_AND_RELEASE",
+  "authority": "SHADOW_RESEARCH_ONLY_NO_PRODUCTION_OR_TRADE_AUTHORITY",
+  "phases": [
+    {
+      "name": "DISCOVERY",
+      "start_utc": "2026-11-02T00:00:00Z",
+      "end_exclusive_utc": "2026-12-14T00:00:00Z",
+      "days": 42
+    },
+    {
+      "name": "LOCKED_REPLICATION",
+      "start_utc": "2026-12-14T00:00:00Z",
+      "end_exclusive_utc": "2027-01-25T00:00:00Z",
+      "days": 42
+    }
+  ],
+  "activation": {
+    "must_merge_protocol_before": "2026-11-02T00:00:00Z",
+    "on_missed_deadline": "DO_NOT_RETROACTIVELY_START_REQUIRE_NEW_PREREG",
+    "requires_immutable_git_sha_receipt": true,
+    "requires_owner_or_s1_scientific_contract_acceptance": true
+  },
+  "universe": {
+    "instrument": "BTCUSDT_SPOT_REFERENCE",
+    "forecast_source": "04_MARKET_LEARNING/handlekompas/official/daily/**/CMP-*.json",
+    "forecast_contract": "OFFICIAL_DAILY_COMPASS_v1",
+    "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+    "horizon": "NEXT_12H",
+    "evaluation_time_basis": "REFERENCE_CANDLE_CLOSE_PLUS_12H",
+    "maximum_one_primary_candidate_per_utc_calendar_day": true
+  },
+  "selection": {
+    "utc_open": "07:00:00",
+    "utc_close_exclusive": "09:00:00",
+    "rule": "FIRST_ORIGINAL_FORECAST_BY_INDEPENDENT_PUBLICATION_TIME_WITHIN_WINDOW",
+    "no_substitution_after_quarantine": true,
+    "missing_or_ambiguous_first_publication": "WHOLE_DAY_NOT_ADMITTED",
+    "later_reissues": "AUDIT_ONLY_NOT_NEW_INDEPENDENT_OBSERVATION",
+    "days_without_any_issuance": "COUNT_AS_MISSING_COVERAGE"
+  },
+  "baselines": {
+    "primary": "SIGN_OF_ORIGINALLY_FROZEN_MARKET_NOW_BTC_DELTA_PCT",
+    "secondary": "CLASS_PREVALENCE_ALWAYS_UP_ALWAYS_DOWN",
+    "null_price": "UNCHANGED_PRICE_BENCHMARK_IS_LEVEL_FORECAST_ONLY_NOT_DIRECTIONAL_HIT_RATE",
+    "forbid_recomputing_prior_momentum_from_later_data": true
+  },
+  "provenance": {
+    "requires_independently_timestamped_github_publication_before_target": true,
+    "requires_original_frozen_blob_sha256_and_path": true,
+    "requires_source_market_reference_clock_close_before_issuance": true,
+    "requires_preissue_source_first_known_verified": true,
+    "requires_preissue_baseline_first_known_verified": true,
+    "requires_target_price_source_binding_and_clock": true,
+    "git_commit_time_or_immutable_blob_alone_is_not_first_publication_proof": true,
+    "provider_values_restricted_to_private_plane": true,
+    "round3_prohibited_for_hypothesis_testing": true,
+    "missing_evidence": "QUARANTINE_NOT_ZERO_NOT_MODEL_ERROR"
+  },
+  "timing": {
+    "source_candle_timestamp_is_open": true,
+    "source_candle_close_is_open_plus_hours": 1,
+    "target_hours_after_reference_close": 12,
+    "minimum_effective_hours_from_publication": 10,
+    "require_target_close_strictly_after_publication": true,
+    "late_or_mutated_publication": "QUARANTINE"
+  },
+  "primary_estimand": {
+    "name": "PAIRED_DIRECTIONAL_ACCURACY_LIFT",
+    "formula": "(forecast_only_correct - baseline_only_correct) / n_admitted_paired_days",
+    "unit": "percentage_points",
+    "test": "EXACT_TWO_SIDED_MCNEMAR_ON_DISCORDANT_PAIRS",
+    "uncertainty": "SEVEN_DAY_BLOCK_BOOTSTRAP_SENSITIVITY_WITH_FIXED_SEED_20261102",
+    "minimum_admitted_daily_pairs_per_phase": 20,
+    "minimum_covered_utc_weeks_per_phase": 6,
+    "no_sequential_significance_peeking": true,
+    "phases_predeclared": true,
+    "report_both_phases_even_if_null": true
+  },
+  "secondary_diagnostics": [
+    "FIRST_KNOWN_ELIGIBILITY_RATE",
+    "ABSTENTION_AND_MISSINGNESS",
+    "SOURCE_AGE_BANDS_<=30M_30-60M_>60M",
+    "UP_DOWN_BASE_RATE",
+    "NEGATIVE_CONTROL_SHUFFLED_DIRECTION",
+    "EFFECTIVE_LEAD_HOURS",
+    "REGIME_SENSITIVITY_WITHOUT_REWEIGHTING"
+  ],
+  "analysis": {
+    "primary_family_size": 1,
+    "max_challenger_variants_in_this_prereg": 0,
+    "exploratory_comparisons_never_promoted": true,
+    "blocked_if_any_input_trust_absent": true,
+    "weekly_reports_are_descriptive_and_cannot_certify_edge": true,
+    "confirmation_requires_replication_and_independent_review": true,
+    "no_historical_backfill_into_new_trial": true,
+    "immutable_original_outcomes": true
+  },
+  "launch_conditions": [
+    "EXACT_MERGED_PROTOCOL_SHA_BEFORE_FIRST_STUDY_ISSUANCE",
+    "PIT_PROOF_FROM_TRUSTED_OWNER_NOT_FROM_SELF_REPORTED_FLAG",
+    "NO_ACTIVE_S1_HEAD_COLLISION",
+    "ACTUAL_CI_AND_NEGATIVE_TESTS_PASS"
+  ],
+  "outputs": {
+    "allowed": [
+      "STUDY_READINESS",
+      "CANDIDATE_QUARANTINE_REASONS",
+      "ADMITTED_PAIRED_DENOMINATOR_AFTER_AUTHENTICATED_PROVENANCE",
+      "NULL_NO_EDGE_FINDINGS"
+    ],
+    "forbidden": [
+      "PRODUCTION_WEIGHT_CHANGE",
+      "AUTOMATIC_SIGNAL",
+      "TRADE",
+      "CANONICAL_PROMOTION",
+      "ROUND3_OUTCOME_SCORING"
+    ]
+  },
+  "research_owner": "Existing 06_RESEARCH_LAB and research/experiment_lifecycle. S1 owns production and scientific release; CRE shadow research executor only"
+}
