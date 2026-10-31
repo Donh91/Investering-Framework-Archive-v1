@@ -1,0 +1,41 @@
+name: W1 Public Compute Synthetic Security Only
+
+# NO market source, private token, schedule, publisher or downstream consumer.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-w1-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # pinned v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install pinned security test libraries
+        run: python -m pip install --disable-pip-version-check --no-cache-dir -r requirements-ci.txt
+      - name: Run public-only security and receipt regression suite
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+  synthetic_receipt:
+    if: github.repository == 'Donh91/investering-public-compute' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: test
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # pinned v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install pinned receipt validator
+        run: python -m pip install --disable-pip-version-check --no-cache-dir -r requirements-ci.txt
+      - name: Generate synthetic-only source receipt to runner temp
+        run: python -m tools.produce_synthetic --out /tmp/w1-synthetic.json
+      - name: Validate synthetic-only source receipt (NEVER private admission)
+        run: python -m tools.validate_receipt /tmp/w1-synthetic.json --schema contracts/public_receipt_v1.schema.json
