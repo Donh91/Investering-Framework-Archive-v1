@@ -182,6 +182,44 @@ class RollingCompassAudit(unittest.TestCase):
                             for flag in report["nonbinding_calibration_research_flags"]))
         self.assertFalse(report["descriptive_market_path"]["point_in_time_prediction_or_performance"])
 
+    def test_official_sideways_is_scored_not_abstention(self):
+        # Official scoring v3 awards a SIDEWAYS prediction inside the 1.5%
+        # band. Task2 legacy and abstention controls must not erase this call.
+        t=START+timedelta(hours=22)
+        f=sample_freeze(t,"sideways",signal="SIDEWAYS")
+        put(self.root,f"04_MARKET_LEARNING/handlekompas/official/daily/{t:%Y/%m/%d}/CMP-sideways.json",
+            json.dumps(f))
+        report=run(self.root,ASOF,"rolling14")
+        row=next(x for x in report["all_issuance_rows"] if x["id"]=="sideways")
+        self.assertEqual(row["horizons"]["12h"]["descriptive_direction_result"],"CORRECT")
+        self.assertEqual(row["horizons"]["12h"]["official_sideways_tolerance_pct"],1.5)
+        summary=report["all_issuances"]["horizons"]["12h"]
+        self.assertEqual(summary["sideways_testable_n"],1)
+        self.assertEqual(summary["sideways_correct_n"],1)
+        self.assertEqual(summary["abstention_count"],1)
+
+    def test_source_age_thresholds_are_diagnostic_not_a_data_gate(self):
+        result=run(self.root,ASOF,"rolling14")
+        d=result["all_issuances"]["reference_age_at_issuance"]
+        self.assertEqual(d["available_n"],4)
+        self.assertEqual(d["over_30m_n"],4)
+        self.assertGreaterEqual(d["over_60m_n"],0)
+        self.assertIn("NOT_PROVIDER_FIRST_KNOWN",d["clock_type"])
+        self.assertEqual(result["all_issuances"]["horizons"]["12h"]["directional_testable_n"],3)
+        self.assertFalse(result["automatic_model_reweighting"])
+
+    def test_oversized_report_fails_before_any_publication(self):
+        from unittest.mock import patch
+        from scripts.learning.compass_rolling_14d_audit import main as cli_main
+        output="04_MARKET_LEARNING/handlekompas/research/rolling_14d/daily/2026/10/23/test.json"
+        with patch("sys.argv",["audit","--repo",str(self.root),"--asof",
+                               "2026-10-23T00:00:00Z","--scope","rolling14","--output",output]):
+            with patch("scripts.learning.compass_rolling_14d_audit.run",
+                       return_value={"payload":"x"*8_000_001}):
+                with self.assertRaisesRegex(ValueError,"RESEARCH_REPORT_TOO_LARGE"):
+                    cli_main()
+        self.assertFalse((self.root/output).exists())
+
     def test_no_future_files_are_read_into_historical_replay(self):
         r1=run(self.root,ASOF,"rolling14")
         put(self.root,"03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-30.csv",
