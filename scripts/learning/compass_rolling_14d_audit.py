@@ -17,7 +17,12 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
-from scripts.learning.compass_outcomes import SIDEWAYS_TOLERANCE_PCT
+# Imported as a package by unittest, but called as a standalone script in the
+# EXISTING GitHub Outcomes workflow. Both must bind to the same official scorer.
+if __package__:
+    from scripts.learning.compass_outcomes import SIDEWAYS_TOLERANCE_PCT
+else:
+    from compass_outcomes import SIDEWAYS_TOLERANCE_PCT
 
 FORECAST_ROOT = Path("04_MARKET_LEARNING/handlekompas/official/daily")
 HOURLY_ROOT = Path("03_DAILY_CAPTURE_LOGS/hourly")
