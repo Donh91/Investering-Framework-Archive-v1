@@ -1,0 +1,52 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/CODEOWNERS",
+    ".github/workflows/cre-shadow-tests.yml",
+    "06_RESEARCH_LAB/compass_research_engine_v1/PREREGISTRATION.md",
+    "06_RESEARCH_LAB/compass_research_engine_v1/README.md",
+    "06_RESEARCH_LAB/compass_research_engine_v1/persistence_baseline.py",
+    "06_RESEARCH_LAB/compass_research_engine_v1/public_receipt.py",
+    "06_RESEARCH_LAB/compass_research_engine_v1/test_persistence_baseline.py",
+    "06_RESEARCH_LAB/compass_research_engine_v1/test_public_receipt.py",
+    "scripts/security/cre_shadow_guard.py",
+    "tests/security/test_cre_shadow_guard.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-0b7a748dcabc90fc",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized bounded non-production integration, 26 real positive/negative tests PASS at exact head; Grok #112 P1 remediated. No yellow autonomous merge, private data, source mutation or trading authority. CRE shadow research only.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/CODEOWNERS": "2941310cd214a82b69f891e4a45ded593cb1e3d3",
+    ".github/workflows/cre-shadow-tests.yml": "104c21507b30aeadd2381e79f28311e4c26ce73d",
+    "06_RESEARCH_LAB/compass_research_engine_v1/PREREGISTRATION.md": "a019aa26a864a558133f87f27f1318d4d7b01402",
+    "06_RESEARCH_LAB/compass_research_engine_v1/README.md": "5d0dd7360d12a3e21ce9a34c280a21b6eb6d060e",
+    "06_RESEARCH_LAB/compass_research_engine_v1/persistence_baseline.py": "50f50afb006b1fbd6026a86530f6f19ca195e978",
+    "06_RESEARCH_LAB/compass_research_engine_v1/public_receipt.py": "3cb987caa3968646ce763a53669b1dbc00172bf2",
+    "06_RESEARCH_LAB/compass_research_engine_v1/test_persistence_baseline.py": "a33a3b6813ac3085f2e5fec694e6a9bc4f3b6b64",
+    "06_RESEARCH_LAB/compass_research_engine_v1/test_public_receipt.py": "e027b6f2dd975ffc5973e1841ac95dbaa5579b58",
+    "scripts/security/cre_shadow_guard.py": "08a3bd2dfae96e1b0989924fbeecb79f3852b3aa",
+    "tests/security/test_cre_shadow_guard.py": "65291bfd6d484012d80c361ebe13d35dafacef1f"
+  },
+  "source_commit_sha": "0b7a748dcabc90fc1759293480bc0bcf8cd6b47c",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-31T05:27:25-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(cre): verified read-only shadow bootstrap and guarded tests"
+}

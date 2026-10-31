@@ -1,0 +1,60 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/ARCHITECTURE_AND_THREAT_MODEL.md",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/PUBLIC_RECEIPT_CONTRACT_V1.schema.json",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/RELEASE_AND_FALSIFICATION_GATES_V1.md",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/.github/CODEOWNERS",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/.github/workflows/w1-synthetic-security.yml",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/.gitignore",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/README.md",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/contracts/public_receipt_v1.schema.json",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/requirements-ci.txt",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/tests/test_w1_security.py",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/tools/__init__.py",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/tools/produce_synthetic.py",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/tools/public_guard.py",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/tools/validate_receipt.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-11c5de06926a78da",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized research-only W1 source archive. 52 offline negative tests PASS; Grok #119 advisory no P0/P1 on predecessor SHA, 7 bounded review fixes implemented. Nested workflow is not installed in Archive Actions. No Pons, new public runner, private importer, secrets, scheduled source, or trading authority. New public repo security bootstrap/hosted CI remains a separate explicit gate.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/ARCHITECTURE_AND_THREAT_MODEL.md": "c340c61d4734250e8975c30475b91f029946a427",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/PUBLIC_RECEIPT_CONTRACT_V1.schema.json": "9daa670478fc2db3c0d75564689ca132d014da96",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/RELEASE_AND_FALSIFICATION_GATES_V1.md": "2ae8fcfa3d9ba58172e157ff21f5e993dbcf93b8",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/.github/CODEOWNERS": "a09883233381d6ffff33dc6c9e43dc768d54fb1f",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/.github/workflows/w1-synthetic-security.yml": "46dd6c16d9c9b96edc505cef52eae3ae6909032f",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/.gitignore": "5cc30f02466273999e4b1c964c3927a9f1171dcd",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/README.md": "495c2386703a95d64b0be0a6b87b82697ff76778",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/contracts/public_receipt_v1.schema.json": "9daa670478fc2db3c0d75564689ca132d014da96",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/requirements-ci.txt": "992ef407a846a2607dba3ebd9b09ac6cbda64146",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/tests/test_w1_security.py": "4476accaf2855a999a7e81649824583c83fe7253",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/tools/__init__.py": "85a5683fa3334699c80a63d92acbd6abe7a59198",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/tools/produce_synthetic.py": "99ad5b6956c7d680b16b42d53eb7e9066d029d83",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/tools/public_guard.py": "03e812689494aa8f79459bd9b0487fe310cf3e14",
+    "06_RESEARCH_LAB/alpha_lab/public_compute_migration_v1/bootstrap/repo/tools/validate_receipt.py": "6a190fa09739a5b9d4f124593cd8d7fe19253389"
+  },
+  "source_commit_sha": "11c5de06926a78da88c19d625fa0f5e8beb42539",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-31T08:26:04-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(alpha): archive secure W1 public-compute bootstrap source only"
+}
