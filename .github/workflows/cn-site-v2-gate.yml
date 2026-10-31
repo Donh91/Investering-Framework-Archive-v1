@@ -41,6 +41,7 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
           node --test 05_CYCLE_NAVIGATOR/site/tests/pullback-research-readback.test.mjs
+          node --test 05_CYCLE_NAVIGATOR/site/tests/pullback-pages-run-block.test.mjs
           node 05_CYCLE_NAVIGATOR/site/build-pullback-research.mjs
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/pullback-research.json
           node 05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs
