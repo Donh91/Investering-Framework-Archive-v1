@@ -25,7 +25,7 @@ def compare_pairs(rows: Iterable[Mapping[str, object]]) -> dict[str, object]:
     """Counts matched 12h observations. Does not claim statistical edge."""
     outcomes = []
     seen = set()
-    excluded = {"unverified": 0, "unmatured": 0, "abstained": 0}
+    excluded = {"unverified": 0, "unmatured": 0, "abstained": 0, "actual_sideways": 0, "baseline_flat": 0}
     total = 0
     for row in rows:
         total += 1
@@ -41,12 +41,17 @@ def compare_pairs(rows: Iterable[Mapping[str, object]]) -> dict[str, object]:
             continue
         forecast = row.get("forecast_direction")
         actual = row.get("actual_direction")
-        if forecast not in (UP, DOWN) or actual not in (UP, DOWN):
+        if forecast not in (UP, DOWN):
             excluded["abstained"] += 1
+            continue
+        if actual not in (UP, DOWN):
+            excluded["abstained"] += 1
+            excluded["actual_sideways"] += 1
             continue
         baseline = sign(row.get("known_momentum_pct"))
         if baseline not in (UP, DOWN):
             excluded["abstained"] += 1
+            excluded["baseline_flat"] += 1
             continue
         outcomes.append((forecast == actual, baseline == actual))
     n = len(outcomes)
@@ -57,6 +62,8 @@ def compare_pairs(rows: Iterable[Mapping[str, object]]) -> dict[str, object]:
         "excluded_unverified": excluded["unverified"],
         "excluded_unmatured": excluded["unmatured"],
         "excluded_abstained": excluded["abstained"],
+        "excluded_actual_sideways": excluded["actual_sideways"],
+        "excluded_baseline_flat": excluded["baseline_flat"],
         "forecast_correct": sum(f for f, _ in outcomes),
         "baseline_correct": sum(b for _, b in outcomes),
         "forecast_only_correct": sum(f and not b for f, b in outcomes),
