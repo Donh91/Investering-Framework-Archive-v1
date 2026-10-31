@@ -281,6 +281,12 @@ class RollingCompassAudit(unittest.TestCase):
 class PullbackTimeboxResearchTests(unittest.TestCase):
     """Adversarial policy controls. They are NOT historical edge claims."""
 
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root=Path(self.tmp.name)
+        seed(self.root)
+
     @staticmethod
     def freeze(when, state="ELEVATED", quality="OK", path=None):
         f=sample_freeze(when,str(when.timestamp()),risk=state)
