@@ -259,9 +259,13 @@ def execute(capture_root=archive.CAPTURE_ROOT,spot_root=archive.PRICE_ROOT, *, p
 
 def main():
     p=argparse.ArgumentParser();p.add_argument("--out",type=Path)
-    p.add_argument("--legacy-expost",action="store_true",help="Reproduce inspected old data ONLY; never label as PIT")
+    # Existing scheduled Framework Learning Operations publishes only descriptive,
+    # inspected-history EXPOST receipts. Keep that CLI compatible without
+    # weakening execute()'s strict-by-default scientific admission.
+    p.add_argument("--pit-strict",action="store_true",
+                   help="Run strict batch-as-of science; original archive is expected to fail closed")
     q=p.parse_args()
-    result=execute(pit_strict=not q.legacy_expost)
+    result=execute(pit_strict=q.pit_strict)
     if q.out:
         q.out.parent.mkdir(parents=True,exist_ok=True)
         q.out.write_text(json.dumps(result,sort_keys=True,indent=2)+"\n")
