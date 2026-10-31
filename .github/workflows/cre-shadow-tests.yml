@@ -1,0 +1,41 @@
+name: CRE Shadow Bootstrap Tests
+on:
+  pull_request:
+    paths:
+      - '06_RESEARCH_LAB/compass_research_engine_v1/**'
+      - 'scripts/security/cre_shadow_guard.py'
+      - 'tests/security/test_cre_shadow_guard.py'
+      - '.github/workflows/cre-shadow-tests.yml'
+      - '.github/CODEOWNERS'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cre-shadow-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify scope and file types
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/security/cre_shadow_guard.py --base "$BASE_SHA" --head "$HEAD_SHA"
+      - name: Compile and execute real positive/negative tests
+        run: |
+          python -m py_compile 06_RESEARCH_LAB/compass_research_engine_v1/*.py scripts/security/cre_shadow_guard.py
+          python -m unittest discover -s 06_RESEARCH_LAB/compass_research_engine_v1 -p 'test_*.py' -v
+          python -m unittest discover -s tests/security -p 'test_cre_shadow_guard.py' -v
