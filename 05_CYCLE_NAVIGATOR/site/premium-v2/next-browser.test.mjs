@@ -27,6 +27,63 @@ if(rootMode)assert.ok(existsSync(resolve(dist,'index.html')),'ROOT_BROWSER_MISSI
 // live/eligible forecast. A DEGRADED real source must be tested as such.
 const builtOfficial=rootMode?JSON.parse(readFileSync(resolve(dist,'data/compass.json'),'utf8')):null;
 const builtLatest=rootMode?JSON.parse(readFileSync(resolve(dist,'data/latest.json'),'utf8')):null;
+// Isolated browser-only fixtures. These override HTTP responses in this local
+// test server, never staged dist files, immutable Official or Pages assets.
+let browserFixture=null,fixtureRequests={};
+function makeRootFixture(kind){
+ const latest=structuredClone(builtLatest),compass=structuredClone(builtOfficial);
+ assert.equal(latest?.schema,'CN_PUBLIC_SNAPSHOT_V2','ROOT_FIXTURE_LATEST_CONTRACT');
+ assert.equal(compass?.contract,'PUBLIC_COMPASS_PROJECTION_v1','ROOT_FIXTURE_COMPASS_CONTRACT');
+ const pointer=latest.pointer,pkg=latest.package;
+ const projection=latest.public_series?.current_public_projection;
+ assert.ok(pointer&&pkg&&projection,'ROOT_FIXTURE_MISSING_WEEKLY_INPUTS');
+ const week=Number(pointer.iso_week),year=Number(pointer.iso_year);
+ assert.ok(Number.isInteger(week)&&week>=1&&week<=53&&Number.isInteger(year),
+  'ROOT_FIXTURE_WEEK_CLOCK');
+ const forecastWeek=year+'-W'+String(week).padStart(2,'0');
+ const issue=Number.isInteger(projection.public_issue_number)&&projection.public_issue_number>0?
+   projection.public_issue_number:42;
+ const now=Date.now(),utc=ms=>new Date(ms).toISOString();
+ latest.generated_at=utc(now);
+ pointer.issue_number=issue;pointer.status='OK';
+ pkg.issue_number=issue;pkg.status='OK';
+ projection.public_issue_number=issue;projection.forecast_week=forecastWeek;
+ compass.compass_id='TEST_ONLY_SOURCE_'+kind.toUpperCase();
+ compass.issued_at_utc=utc(now-60000);
+ compass.data_status=kind==='degraded'?'DEGRADED':'OK';
+ compass.weekly_context={...compass.weekly_context,status:'ALIGNED',
+   forecast_week:forecastWeek,public_issue_number:issue};
+ compass.full_stack={...compass.full_stack,official_freshness:{
+   ...compass.full_stack?.official_freshness,
+   contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',
+   status:'VERIFIED_OWNER_POLICY',
+   semantics:'SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA',
+   source_asof_utc:utc(now-60000),
+   valid_until_utc:utc(now+(kind==='expired'?-1000:3600000))
+ }};
+ compass.action_now='WAIT';
+ compass.horizons={...compass.horizons};
+ for(const id of ['NEXT_1_3D','NEXT_5_7D','NEXT_2_3W']){
+  compass.horizons[id]={...compass.horizons[id],expected_direction:'UP',
+    action_posture:'WAIT',
+    expected_path:'Synthetic browser-only source direction; no trading permission.'};
+ }
+ compass.bull_bear_scale={
+  contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',owner:'OFFICIAL_COMPASS',
+  authority:{probability_model:false,site_synthesis_allowed:false},
+  resolution:'COARSE_CATEGORICAL_DIRECTION',
+  horizons:Object.fromEntries(['1_3d','5_7d','2_3w'].map(id=>[id,
+    {status:'OK',bull:5,bear:5}]))
+ };
+ compass.capitalization_ladder=['BTC','ETH','LARGE_CAPS','MID_CAPS',
+   'SMALL_CAPS','MICROCAPS','MEMES'].map(segment=>({
+     segment,action:'WAIT',status:'WAIT'
+   }));
+ const verified=inspectOfficialPublicFeeds(latest,compass,{nowUtc:utc(now)}).compass;
+ assert.equal(verified.permit_path_live_gates,kind==='eligible',
+   'ROOT_FIXTURE_INSPECTOR_NOT_'+kind.toUpperCase());
+ return {latest,compass};
+}
 // The browser's sourceCurrent gate is the SAME canonical source inspector.
 // OK + ALIGNED alone does not establish CURRENT: owner expiry, CN linkage,
 // delivery freshness, age and clock semantics must all pass.
@@ -49,6 +106,12 @@ const server=createServer((req,res)=>{
  if(!path.startsWith(base)){res.writeHead(404).end();return;}
  let rel=path.slice(base.length);
  if(!rel||rel.endsWith('/'))rel+='index.html';
+ if(browserFixture&&(rel==='data/latest.json'||rel==='data/compass.json')){
+  fixtureRequests[rel]=(fixtureRequests[rel]||0)+1;
+  res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'})
+   .end(JSON.stringify(rel==='data/latest.json'?browserFixture.latest:browserFixture.compass));
+  return;
+ }
  const file=resolve(dist,rel);
  if(!file.startsWith(dist+sep)){res.writeHead(403).end();return;}
  try{
@@ -716,6 +779,61 @@ try{
    }
    released.push({width,oneB:true,onePRO:true,source:true});
   }
+  // Deterministic REAL ROOT BROWSER paths. A degraded real public feed cannot
+  // stand in for a positive test; fixtures are HTTP-only and never published.
+  // The positive case is mutation-sensitive: an always-UNAVAILABLE renderer
+  // must fail the same live-card assertions, not silently count as a PASS.
+  const requireEligible=snapshot=>{
+   assert.equal(snapshot.current,'true','ROOT_FIXTURE_ALWAYS_UNAVAILABLE_CURRENT');
+   assert.ok(snapshot.cards.length===3&&snapshot.cards.every(x=>
+     x.valid==='true'&&x.arrow!=='?'&&
+     !/Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
+     /Bull 5/.test(x.balance))&&snapshot.rotation>0,
+     'ROOT_FIXTURE_ELIGIBLE_CARDS_NOT_RENDERED:'+JSON.stringify(snapshot));
+  };
+  assert.throws(()=>requireEligible({current:'false',cards:[],rotation:0}),
+    /ROOT_FIXTURE_ALWAYS_UNAVAILABLE_CURRENT/,
+    'ROOT_FIXTURE_ALWAYS_UNAVAILABLE_MUTANT_ESCAPED');
+  for(const kind of ['eligible','degraded','expired']){
+   browserFixture=makeRootFixture(kind);
+   fixtureRequests={};
+   await send('Emulation.setDeviceMetricsOverride',{
+    width:390,height:844,deviceScaleFactor:1,mobile:true});
+   await send('Page.navigate',{url:origin+'?source_fixture='+kind});
+   let ready=false;
+   for(let attempt=0;attempt<100;attempt++){
+    await delay(100);
+    ready=await evaluate(()=>document.readyState==='complete'&&
+     !!document.getElementById('compass-pro')&&
+     (document.getElementById('pro-source-status')?.textContent||'')!==
+      'Kontrollerer officiel kilde og gyldighed…');
+    if(ready&&fixtureRequests['data/latest.json']&&fixtureRequests['data/compass.json'])break;
+   }
+   assert.ok(ready&&fixtureRequests['data/latest.json']>0&&
+     fixtureRequests['data/compass.json']>0,
+     'ROOT_FIXTURE_NOT_LOADED_FROM_HTTP:'+kind+':'+JSON.stringify(fixtureRequests));
+   const snapshot=await evaluate(()=>({
+    current:document.getElementById('compass-pro')?.dataset.sourceCurrent,
+    source:document.getElementById('pro-source-status')?.textContent||'',
+    rotation:document.querySelectorAll('#cn-rotation-classes [role="listitem"]').length,
+    cards:[...document.querySelectorAll('.cn-horizon-card')].map(el=>({
+     valid:el.dataset.sourceCurrent,
+     direction:el.querySelector('.cn-horizon-direction strong')?.textContent||'',
+     arrow:el.querySelector('.cn-horizon-arrow')?.textContent||'',
+     balance:el.querySelector('.cn-evidence small')?.textContent||''
+    }))
+   }));
+   if(kind==='eligible')requireEligible(snapshot);
+   else assert.ok(snapshot.current==='false'&&snapshot.rotation===0&&
+    snapshot.cards.length===3&&snapshot.cards.every(x=>x.valid==='false'&&
+     x.arrow==='?'&&/Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
+     /Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance)),
+    'ROOT_FIXTURE_INVALID_SOURCE_PROMOTED:'+kind+':'+JSON.stringify(snapshot));
+   assert.deepEqual(errors,[],'ROOT_FIXTURE_JS_ERRORS:'+kind);
+   assert.deepEqual(responses,[],'ROOT_FIXTURE_ASSET_ERRORS:'+kind);
+  }
+  browserFixture=null;
+  console.log('ROOT_SOURCE_FIXTURE_ELIGIBLE_DEGRADED_EXPIRED_BROWSER_PASS');
   // Desktop pixels complete the same two-gate visual inspection.
   if(process.env.GITHUB_EVENT_NAME==='pull_request'){
    await send('Emulation.setDeviceMetricsOverride',{width:1440,height:960,deviceScaleFactor:1,mobile:false});
