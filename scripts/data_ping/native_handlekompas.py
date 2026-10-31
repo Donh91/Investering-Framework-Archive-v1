@@ -26,10 +26,12 @@ POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
 OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
 OFFICIAL_COMPASS_SCHEMA_VERSION = 4
 # V3_2 adds the explicit Main-Framework permission ceiling for proactive long-cycle actions.
-OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0"
+OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1"
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
 PUBLIC_COMPASS_CONTRACT = "PUBLIC_COMPASS_PROJECTION_v1"
 PUBLIC_COMPASS_POINTER = "PUBLIC_COMPASS_LATEST_POINTER_v1"
+NEXT_12H_NOWCAST_SEMANTICS = "OBSERVED_MOMENTUM_NOT_FORECAST"
+LEGACY_12H_SEMANTICS = "LEGACY_UNVERIFIED_NOT_FORWARD"
 DEFAULT_AUTO_STATE_POINTER = Path("04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json")
 DEFAULT_CN_POINTER = Path("05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json")
 CN_DECISION_PROJECTION_ADDENDUM = "DECISION_PROJECTION_ADDENDUM_v1.json"
@@ -1174,7 +1176,14 @@ def horizon_map(
             "eta": None,
             "confidence": None,
         }
-        return {key: dict(unavailable) for key in HORIZON_ORDER}
+        rows = {key: dict(unavailable) for key in HORIZON_ORDER}
+        rows["NEXT_12H"].update({
+            "semantics": NEXT_12H_NOWCAST_SEMANTICS,
+            "predictive_edge_status": "NOT_PROVEN",
+            "eta_kind": "NONE",
+            "reassessment_window": None,
+        })
+        return rows
 
     posture = str(action.get("NOW") or "HOLD_WAIT")
     current = derive_market_now(auto_state, action, as_of=as_of)["directional_state"]
@@ -1208,7 +1217,11 @@ def horizon_map(
                 "action_posture": a12,
                 "confirmation_trigger": {"type": "ACTION_STATE", "states": ["PREPARE", "GRADUATED_TOPUP_ACTIVE"]},
                 "invalidation_trigger": {"type": "ACTION_STATE", "states": ["HOLD_DEFENSIVE_WAIT", "HOLD_WAIT_DATA_DEGRADED"]},
-                "eta": "0-12h", "confidence": None,
+                "eta": None, "confidence": None,
+                "semantics": NEXT_12H_NOWCAST_SEMANTICS,
+                "predictive_edge_status": "NOT_PROVEN",
+                "eta_kind": "REASSESSMENT_WINDOW_ONLY",
+                "reassessment_window": "0-12h",
             },
             "NEXT_1_3D": dict(forward_unavailable),
             "NEXT_5_7D": dict(forward_unavailable),
@@ -1241,7 +1254,11 @@ def horizon_map(
             "expected_direction": d12, "label": label(d12),
             "expected_path": "Current-state continuation unless the native confirmation or deterioration gate changes state.",
             "action_posture": a12, "confirmation_trigger": confirm, "invalidation_trigger": invalidate,
-            "eta": "0-12h", "confidence": None,
+            "eta": None, "confidence": None,
+            "semantics": NEXT_12H_NOWCAST_SEMANTICS,
+            "predictive_edge_status": "NOT_PROVEN",
+            "eta_kind": "REASSESSMENT_WINDOW_ONLY",
+            "reassessment_window": "0-12h",
         },
         "NEXT_1_3D": {
             "expected_direction": d13, "label": label(d13),
@@ -1405,9 +1422,34 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         for key, value in (compass.get("horizons") or {}).items()
         if key in HORIZON_ORDER and isinstance(value, Mapping)
     }
+    # A legacy 12h direction may be scored only as its ORIGINAL historical issue.
+    # Public projection must never silently promote a missing/forged marker to
+    # a prospective prediction, nor inherit a 12h price-event ETA.
+    twelve = public_horizons.get("NEXT_12H")
+    original_twelve = (compass.get("horizons") or {}).get("NEXT_12H")
+    eligible_nowcast = (
+        isinstance(twelve, dict) and isinstance(original_twelve, Mapping)
+        and original_twelve.get("semantics") == NEXT_12H_NOWCAST_SEMANTICS
+        and original_twelve.get("predictive_edge_status") == "NOT_PROVEN"
+    )
+    if isinstance(twelve, dict):
+        twelve.update({
+            "semantics": NEXT_12H_NOWCAST_SEMANTICS if eligible_nowcast else LEGACY_12H_SEMANTICS,
+            "predictive_edge_status": "NOT_PROVEN",
+            "eta_kind": "REASSESSMENT_WINDOW_ONLY" if eligible_nowcast else "NONE",
+            "reassessment_window": original_twelve.get("reassessment_window") if eligible_nowcast else None,
+            "eta": None,
+        })
+        if not eligible_nowcast:
+            twelve.update({
+                "expected_direction": "UNAVAILABLE",
+                "label": "UNAVAILABLE",
+                "expected_path": "Legacy or unverified 12h semantics, not a forward forecast.",
+            })
     return {
         "contract": PUBLIC_COMPASS_CONTRACT,
         "compass_id": compass.get("compass_id"),
+        "source_compass_sha256": compass.get("compass_sha256"),
         "issued_at_utc": compass.get("issued_at_utc"),
         "data_status": compass.get("data_status"),
         "market_now": compass.get("market_now"),
@@ -1417,8 +1459,12 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         "protection_tracker": compass.get("protection_tracker"),
         "sell_assessment": compass.get("sell_assessment"),
         "action_now": compass.get("action_now"),
-        "next_meaningful_change_eta": compass.get("next_meaningful_change_eta"),
-        "conclusion": compass.get("conclusion"),
+        "next_meaningful_change_eta": None,
+        "conclusion": (
+            compass.get("conclusion")
+            if eligible_nowcast and "next 12h" not in str(compass.get("conclusion") or "").lower()
+            else "Observed market momentum only; no verified 12h forward forecast."
+        ),
         "authority": {"official_navigation_output": True, "portfolio_execution": False, "source_override": False},
     }
 
@@ -1463,9 +1509,9 @@ def build_official_compass(
         f"schema={OFFICIAL_COMPASS_SCHEMA_VERSION}|policy={OFFICIAL_COMPASS_DECISION_POLICY_VERSION}"
     )
     compass_id = f"CMP-{issued:%Y%m%d}-{digest(source_identity.encode())[:12]}"
-    next_eta = horizons["NEXT_12H"].get("eta") if data_status == "OK" else None
+    next_eta = None  # Observed momentum cannot supply a future price-event ETA.
     conclusion = (
-        f"{horizons['NEXT_12H']['label']} next 12h; {horizons['NEXT_1_3D']['label']} over 1-3d; "
+        f"Observed momentum {horizons['NEXT_12H']['label']} (not a 12h forecast); {horizons['NEXT_1_3D']['label']} over 1-3d; "
         f"{horizons['NEXT_5_7D']['label']} over 5-7d; "
         f"{horizons['CYCLE_ALTCOINS_3_8W']['label']} for the long-cycle altcoin lane. Current action: {action.get('NOW')}."
     )
