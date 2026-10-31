@@ -90,7 +90,10 @@ jobs:
                  "dedup_12h":r["deduplicated_12h_slots"]["forecasts"],
                  "actions":r["all_issuances"]["actions"],
                  "risk_states":r["all_issuances"]["risk_states"],
-                 "horizons":r["deduplicated_12h_slots"]["horizons"]},
+                 "horizons":r["deduplicated_12h_slots"]["horizons"],
+                 "market_path":r["descriptive_market_path"],
+                 "research_flags":r["nonbinding_calibration_research_flags"],
+                 "daily":r["deduplicated_12h_slots"]["by_copenhagen_day"]},
                  sort_keys=True))
           PY
           python - <<'PY'
