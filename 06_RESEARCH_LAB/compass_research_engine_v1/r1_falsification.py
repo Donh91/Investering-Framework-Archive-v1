@@ -22,7 +22,7 @@ ASSETS = ("BTC", "ETH")
 
 
 def git_blob(payload: bytes) -> str:
-    return hashlib.sha1(b"blob " + str(len(payload)).encode() + b"\\x00" + payload).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(payload)).encode() + b"\x00" + payload).hexdigest()
 
 
 def frozen_read(path: Path, expected_blob: str) -> dict:
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
     result = execute()
-    payload = json.dumps(result, indent=2, sort_keys=True) + "\\n"
+    payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if args.out is not None:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(payload, encoding="utf-8")
