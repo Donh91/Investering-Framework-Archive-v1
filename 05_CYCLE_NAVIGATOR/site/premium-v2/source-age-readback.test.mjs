@@ -16,6 +16,7 @@ const internal=(age=8083,packetAge=6945)=>({
 test('original independent observation/packet ages retained without deriving status or direction',()=>{
  const m=originalSourceAgeAtIssue(internal(),projection);
  assert.equal(m.status,'ORIGINAL_ISSUANCE_CLOCKS_ONLY');
+ assert.equal(m.compass_id,compass);
  assert.equal(m.observation_age_seconds_at_issue,8083);
  assert.equal(m.packet_age_seconds_at_issue,6945);
  assert.equal(m.provider_first_published_at_utc,null);
@@ -39,6 +40,9 @@ test('independent internal/public forecast id or issued clock mismatch fails clo
  assert.equal(originalSourceAgeAtIssue({...internal(),issued_at_utc:'2026-10-13T14:14:44Z'},projection).status,'UNKNOWN');
  assert.equal(originalSourceAgeAtIssue({...internal(),issued_at_utc:'not-a-time'},projection).status,'UNKNOWN');
  assert.equal(originalSourceAgeAtIssue({...internal(),contract:'INTERNAL_V2_UNKNOWN'},projection).status,'UNKNOWN');
+ for(const future of ['OFFICIAL_DAILY_COMPASS_v2','OFFICIAL_DAILY_COMPASS_v3','OFFICIAL_DAILY_COMPASS_v99']){
+  assert.equal(originalSourceAgeAtIssue({...internal(),contract:future},projection).status,'UNKNOWN');
+ }
 });
 
 test('duplicated, missing, null, negative and non-integer source clocks rejected',()=>{
@@ -60,6 +64,11 @@ test('a forged copied age object cannot be shown for another official issue',()=
  const m=originalSourceAgeAtIssue(internal(),projection);
  const p={...projection,issued_at_utc:'2026-10-14T14:14:43Z',original_source_age_at_issue:m};
  assert.match(originalSourceAgeLabel(p,{valid:true}),/ukendt/);
+ const sameClockDifferentId={...projection,compass_id:'CMP-CORRECTED-SAME-SECOND',original_source_age_at_issue:m};
+ assert.match(originalSourceAgeLabel(sameClockDifferentId,{valid:true}),/ukendt/);
+ assert.match(originalSourceAgeLabel(sameClockDifferentId,{lang:'en',valid:true}),/unknown/);
+ const forgedContradictory={...projection,original_source_age_at_issue:{...m,observation_age_seconds_at_issue:1,packet_age_seconds_at_issue:100}};
+ assert.match(originalSourceAgeLabel(forgedContradictory,{valid:true}),/ukendt/);
 });
 
 test('the presentation only code never implies market action or recalibrates source policy',()=>{
