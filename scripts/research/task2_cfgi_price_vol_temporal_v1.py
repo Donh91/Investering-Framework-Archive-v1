@@ -63,7 +63,26 @@ def past_realized_vol(prices, base_clock, symbol):
     vol=math.sqrt(sum((x-mean)**2 for x in rets)/8)*100
     return vol if math.isfinite(vol) else None
 
-def source_cases(captures, prices):
+def batch_end_after_decision(prices, base_clock, decision_clock, hours=8):
+    """Fail closed if an archived feature row was batched after the decision.
+
+    A completed candle can be stable ex-post without being proven available
+    to this pipeline at decision time. This does NOT prove provider-first-known.
+    """
+    for j in range(hours, -1, -1):
+        item = prices.get(base_clock - j * HOUR)
+        if not isinstance(item, dict):
+            return True
+        try:
+            batch_end = source.time_utc(item["source_window_end_utc"])
+        except (KeyError, TypeError, ValueError):
+            return True
+        if batch_end > decision_clock:
+            return True
+    return False
+
+
+def source_cases(captures, prices, *, pit_strict=True):
     """One earliest valid CFGI event per exact symbol/provider-row timestamp."""
     out=[];counts=Counter();source_receipts=[]
     keys=set()
@@ -98,6 +117,9 @@ def source_cases(captures, prices):
                 keys.add(ident)
                 if row["state"]!="EXPOST_JOIN_ONLY":
                     counts["excluded_"+row["state"]]+=1
+                    continue
+                if pit_strict and batch_end_after_decision(prices, base, local_clock):
+                    counts["excluded_feature_batch_end_after_capture"]+=1
                     continue
                 vol=past_realized_vol(prices,base,symbol)
                 if vol is None:
@@ -192,9 +214,9 @@ def metrics(rows,models):
             "descriptive_logloss_improvement_vs_price_vol":round(base["logloss"]-aug["logloss"],8) if base and aug else None,
             "market_edge_admitted":False}
 
-def execute(capture_root=archive.CAPTURE_ROOT,spot_root=archive.PRICE_ROOT):
+def execute(capture_root=archive.CAPTURE_ROOT,spot_root=archive.PRICE_ROOT, *, pit_strict=True):
     spot,receipt,missing,partial=archive.spot_index(spot_root)
-    rows,counts,captures=source_cases(capture_root,spot)
+    rows,counts,captures=source_cases(capture_root,spot,pit_strict=pit_strict)
     split={}
     for symbol in simple.SYMBOLS:
         by=[r for r in rows if r["symbol"]==symbol]
@@ -213,6 +235,7 @@ def execute(capture_root=archive.CAPTURE_ROOT,spot_root=archive.PRICE_ROOT):
                        "model_selection_after_validation":False,
                        "independent_shock_families_certified":0}
     return {"contract":CONTRACT,"classification":"EX_POST_INSPECTED_HISTORY_TEMPORAL_DIAGNOSTIC_NOT_SCIENTIFIC_PIT",
+            "source_asof_mode": "STRICT_ARCHIVE_BATCH_END" if pit_strict else "LEGACY_EXPOST_NOT_PIT",
             "authority":AUTHORITY,"chronology":{"train_end":TRAIN_END.isoformat(),
               "validation_start":VAL_START.isoformat(),"validation_end":VAL_END.isoformat(),
               "test_start":TEST_START.isoformat(),"test_end":TEST_END.isoformat(),
@@ -235,8 +258,10 @@ def execute(capture_root=archive.CAPTURE_ROOT,spot_root=archive.PRICE_ROOT):
             "interpretation":"Temporal retrospective model diagnostic only; all historical outcomes were already exposed when model designed, and actual provider/price first-known is not certified."}
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument("--out",type=Path);q=p.parse_args()
-    result=execute()
+    p=argparse.ArgumentParser();p.add_argument("--out",type=Path)
+    p.add_argument("--legacy-expost",action="store_true",help="Reproduce inspected old data ONLY; never label as PIT")
+    q=p.parse_args()
+    result=execute(pit_strict=not q.legacy_expost)
     if q.out:
         q.out.parent.mkdir(parents=True,exist_ok=True)
         q.out.write_text(json.dumps(result,sort_keys=True,indent=2)+"\n")
