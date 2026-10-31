@@ -22,7 +22,7 @@
 
 ## Private Evidence Bridge boundary
 
-This release deploys no private executor and does not read or dispatch into Donh91/secrets. Round 3 remains PROSPECTIVE_COLLECTION_ONLY, with hypothesis tests, effect calculations, threshold calibration and PnL forbidden. Restricted values never enter public GitHub Actions, logs, caches, attachments, comments, issue bodies or public artifacts, whether encrypted or hashed. Public disclosure may use only the existing authorized value-free binding and schema. Cross-query disclosure / differencing protections must be enforced by the trusted private owner, not by this public parser. The public NO_PUBLIC_DISCLOSURE status is deliberately non-explanatory.
+This release deploys no private executor and does not read or dispatch into Donh91/secrets. The Stage-0 receipt validator explicitly rejects the PRIVATE_SOURCE_HEALTH lane; it cannot attest that a syntactically opaque identifier carries no private values. Only a future owner-approved private executor with private-side keyed identifier verification, cross-query controls and a separately audited disclosure contract could enable that lane. Round 3 remains PROSPECTIVE_COLLECTION_ONLY, with hypothesis tests, effect calculations, threshold calibration and PnL forbidden. Restricted values never enter public GitHub Actions, logs, caches, attachments, comments, issue bodies or public artifacts, whether encrypted or hashed. Public disclosure may use only the existing authorized value-free binding and schema. Cross-query disclosure / differencing protections must be enforced by the trusted private owner, not by this public parser. The public NO_PUBLIC_DISCLOSURE status is deliberately non-explanatory.
 
 ## Release and CI constraints
 
