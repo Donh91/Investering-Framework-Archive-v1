@@ -58,6 +58,13 @@ test('duplicated, missing, null, negative and non-integer source clocks rejected
  d2.source_bindings.auto_market_state.freshness.checks.splice(0,1);
  assert.equal(originalSourceAgeAtIssue(d2,projection).status,'UNKNOWN');
  assert.equal(originalSourceAgeAtIssue(internal(30,90),projection).status,'UNKNOWN');
+ for(const malformedChecks of [{},'not-array',null,17]){
+  const bad=internal();
+  bad.source_bindings.auto_market_state.freshness.checks=malformedChecks;
+  assert.equal(originalSourceAgeAtIssue(bad,projection).status,'UNKNOWN');
+ }
+ assert.equal(originalSourceAgeAtIssue({...internal(),compass_id:null},projection).status,'UNKNOWN');
+ assert.equal(originalSourceAgeAtIssue({...internal(),compass_id:''},projection).status,'UNKNOWN');
 });
 
 test('a forged copied age object cannot be shown for another official issue',()=>{
