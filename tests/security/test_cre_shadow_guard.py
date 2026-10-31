@@ -63,17 +63,17 @@ class GitHistoryIntegrationTests(unittest.TestCase):
             self.assertEqual(self.command(d, 'git', 'init', '-q').returncode, 0)
             self.command(d, 'git', 'config', 'user.name', 'test')
             self.command(d, 'git', 'config', 'user.email', 'test@example.invalid')
-            (root / 'README.md').write_text('base\\n')
+            (root / 'README.md').write_text('base\n')
             self.command(d, 'git', 'add', '.')
             self.assertEqual(self.command(d, 'git', 'commit', '-qm', 'base').returncode, 0)
             base = self.command(d, 'git', 'rev-parse', 'HEAD').stdout.strip()
 
             file = root / P / 'model.py'
             file.parent.mkdir(parents=True)
-            file.write_text('def baseline(): return None\\n')
+            file.write_text('def baseline(): return None\n')
             trusted = root / g.TRUSTED_GUARD
             trusted.parent.mkdir(parents=True)
-            trusted.write_text('trusted guard fixture\\n')
+            trusted.write_text('trusted guard fixture\n')
             self.command(d, 'git', 'add', '.')
             self.assertEqual(self.command(d, 'git', 'commit', '-qm', 'bootstrap').returncode, 0)
             boot_head = self.command(d, 'git', 'rev-parse', 'HEAD').stdout.strip()
@@ -83,7 +83,7 @@ class GitHistoryIntegrationTests(unittest.TestCase):
             self.assertIn('BOOTSTRAP_OWNER_REVIEW_REQUIRED', result.stdout)
             self.assertIn('AUTONOMOUS_MERGE_AUTHORITY=FALSE', result.stdout)
 
-            file.write_text('def baseline(): return 0\\n')
+            file.write_text('def baseline(): return 0\n')
             self.command(d, 'git', 'add', '.')
             self.assertEqual(self.command(d, 'git', 'commit', '-qm', 'safe experiment').returncode, 0)
             safe_head = self.command(d, 'git', 'rev-parse', 'HEAD').stdout.strip()
@@ -92,8 +92,8 @@ class GitHistoryIntegrationTests(unittest.TestCase):
             self.assertIn('CRE_SCOPE_ONLY_NOT_MERGE_AUTHORITY', result.stdout)
 
             prod = root / 'scripts/production.py'
-            prod.write_text('do_not_change = True\\n')
-            file.write_text('def baseline(): return 1\\n')
+            prod.write_text('do_not_change = True\n')
+            file.write_text('def baseline(): return 1\n')
             self.command(d, 'git', 'add', '.')
             self.assertEqual(self.command(d, 'git', 'commit', '-qm', 'mixed scope').returncode, 0)
             mixed = self.command(d, 'git', 'rev-parse', 'HEAD').stdout.strip()
