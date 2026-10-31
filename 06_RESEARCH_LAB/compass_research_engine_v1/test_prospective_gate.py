@@ -7,10 +7,13 @@ from prospective_gate import ensure_study_not_started_late, preflight, first_dai
 def freeze(**changes):
     record = {
         "contract": "OFFICIAL_DAILY_COMPASS_v1",
+        "compass_id": "CMP-20261102-aaaaaaaaaaaa",
         "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
         "issued_at_utc": "2026-11-02T07:17:00Z",
         "market_reference": {"observation_open_utc": "2026-11-02T06:00:00Z", "btc_usdt": 77777.0},
-        "market_now": {"btc_delta_pct": -0.5},
+        "market_now": {"btc_delta_pct": -0.5,
+                       "market_observation_open_utc": "2026-11-02T06:00:00Z",
+                       "predecessor_market_observation_open_utc": "2026-11-02T04:00:00Z"},
         "horizons": {"NEXT_12H": {"expected_direction": "DOWN"}},
     }
     record.update(changes)
@@ -22,7 +25,7 @@ def public(**changes):
         "server_created_at_utc": "2026-11-02T07:20:00Z",
         "first_git_commit_sha40": "a" * 40,
         "original_file_sha256": "b" * 64,
-        "original_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/CMP-original.json",
+        "original_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/02/CMP-20261102-aaaaaaaaaaaa.json",
     }
     result.update(changes)
     return result
@@ -80,8 +83,24 @@ class TemporalGateTests(unittest.TestCase):
     def test_no_recompute_future_momentum(self):
         for momentum in (None, 0, "0.5", float("nan"), True):
             with self.subTest(momentum=momentum):
-                row = preflight(freeze(market_now={"btc_delta_pct": momentum}), public(), source())
+                row = preflight(freeze(market_now={"btc_delta_pct": momentum, "market_observation_open_utc": "2026-11-02T06:00:00Z", "predecessor_market_observation_open_utc": "2026-11-02T04:00:00Z"}), public(), source())
                 self.assertFalse(row["temporal_preflight_pass"])
+
+    def test_price_momentum_reference_mismatch_is_not_eligible(self):
+        good = freeze()
+        good["market_now"]["market_observation_open_utc"] = "2026-11-02T05:00:00Z"
+        row = preflight(good, public(), source())
+        self.assertIn("MOMENTUM_OBSERVATION_NOT_REFERENCE_BOUND", row["quarantine_reasons"])
+
+    def test_predecessor_must_be_from_earlier_market_observation(self):
+        good = freeze()
+        good["market_now"]["predecessor_market_observation_open_utc"] = "2026-11-02T06:00:00Z"
+        row = preflight(good, public(), source())
+        self.assertIn("MOMENTUM_PREDECESSOR_NOT_PREVIOUS_OBSERVATION", row["quarantine_reasons"])
+
+    def test_swapped_forecast_identity_is_rejected(self):
+        row = preflight(freeze(compass_id="CMP-20261102-bbbbbbbbbbbb"), public(), source())
+        self.assertIn("FORECAST_ID_PATH_ISSUANCE_MISMATCH", row["quarantine_reasons"])
 
     def test_abstention_not_cherrypicked(self):
         row = preflight(freeze(horizons={"NEXT_12H": {"expected_direction": "NO_EDGE"}}), public(), source())
@@ -92,7 +111,7 @@ class TemporalGateTests(unittest.TestCase):
         self.assertIn("OUTSIDE_DAILY_UTC_SELECTION_WINDOW", row["quarantine_reasons"])
 
     def test_old_history_cannot_be_reenrolled(self):
-        row = preflight(freeze(issued_at_utc="2026-10-31T07:17:00Z"), public(server_created_at_utc="2026-10-31T07:20:00Z"), source())
+        row = preflight(freeze(issued_at_utc="2026-10-31T07:17:00Z", compass_id="CMP-20261031-aaaaaaaaaaaa"), public(server_created_at_utc="2026-10-31T07:20:00Z", original_path="04_MARKET_LEARNING/handlekompas/official/daily/2026/10/31/CMP-20261031-aaaaaaaaaaaa.json"), source())
         self.assertIn("OUTSIDE_FROZEN_COHORT", row["quarantine_reasons"])
 
     def test_legacy_scoring_quarantined(self):
