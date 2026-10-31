@@ -32,9 +32,18 @@ export function originalSourceAgeAtIssue(internal,projection){
      internal.compass_id!==projection.compass_id||!safeIso(internal.issued_at_utc)||
      internal.issued_at_utc!==projection.issued_at_utc)return base;
   const freshness=internal.source_bindings?.auto_market_state?.freshness;
+  // The recorded ages must be independently consistent with their ORIGINAL
+  // observation timestamps and the issuer's evaluation clock. A hash verifies
+  // file identity, not the semantic truth of contradictory clock fields.
+  if(!safeIso(freshness?.evaluated_at_utc)||
+     freshness.evaluated_at_utc!==internal.issued_at_utc)return base;
   const obs=lane(freshness,'source_observation_freshness');
   const packet=lane(freshness,'auto_market_state_packet');
-  if(!obs||!packet)return base;
+  const issuedMs=Date.parse(internal.issued_at_utc);
+  const clockMatches=check=>safeIso(check?.timestamp)&&
+    Date.parse(check.timestamp)<=issuedMs&&
+    (issuedMs-Date.parse(check.timestamp))/1000===check.age_seconds;
+  if(!obs||!packet||!clockMatches(obs)||!clockMatches(packet))return base;
   if(obs.age_seconds<packet.age_seconds)return base; // newer source than its wrapper would be contradictory
   return {...base,status:'ORIGINAL_ISSUANCE_CLOCKS_ONLY',
     observation_age_seconds_at_issue:obs.age_seconds,
