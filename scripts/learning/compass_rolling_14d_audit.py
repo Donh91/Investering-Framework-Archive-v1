@@ -455,6 +455,12 @@ def main() -> int:
                       "path":str(args.output),
                       "forecast_issuances":report["all_issuances"]["forecasts"],
                       "deduplicated_12h_slots":report["deduplicated_12h_slots"]["forecasts"],
+                      "pullback_timebox": {
+                          "new_alerts": report["pullback_warning_timebox_shadow"]["new_warning_or_escalation_events"],
+                          "state_counts": report["pullback_warning_timebox_shadow"]["warning_state_counts"],
+                          "horizons": report["pullback_warning_timebox_shadow"]["horizons"],
+                          "predictive_edge": None,
+                      },
                       "automatic_model_reweighting":False},sort_keys=True))
     return 0
 
