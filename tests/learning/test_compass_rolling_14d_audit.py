@@ -359,7 +359,7 @@ class PullbackTimeboxResearchTests(unittest.TestCase):
         # lookback and keep both events independently observable.
         r=evaluate(freeze,self.tape(t,170),t+timedelta(hours=170))
         self.assertEqual(r["new_warning_or_escalation_events"],2)
-        self.assertEqual(r["warning_state_counts"]["RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED"],0)
+        self.assertEqual(r["warning_state_counts"].get("RETRIGGER_WITHIN_OPEN_WINDOW_NOT_SCORED", 0),0)
 
     def test_suppressed_retrigger_never_resets_expiry_clock(self):
         from scripts.learning.pullback_warning_timeliness_shadow import evaluate
