@@ -22,6 +22,9 @@ assert.ok(chrome,'NEXT_BROWSER_NO_CHROME');
 assert.ok(existsSync(resolve(dist,'next/index.html')),'NEXT_BROWSER_NO_REAL_VITE_ROOT');
 assert.ok(existsSync(resolve(dist,'next/graph-b/source-graph-b.html')),'NEXT_BROWSER_NO_B_ENTRY');
 if(rootMode)assert.ok(existsSync(resolve(dist,'index.html')),'ROOT_BROWSER_MISSING_OFFICIAL_ENTRY');
+// This is the exact built and shipped PUBLIC Official, not a test-invented
+// live/eligible forecast. A DEGRADED real source must be tested as such.
+const builtOfficial=rootMode?JSON.parse(readFileSync(resolve(dist,'data/compass.json'),'utf8')):null;
 
 const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript',
  '.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png'};
@@ -457,12 +460,31 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   // Separate the genuine live-source positive path from the genuine
+   // degraded-source negative path. NEVER mark an old/unqualified Official as
+   // fresh just so the smoke test passes, and never delete the positive case.
    assert.ok(report.horizonOverview.length===3&&
      report.horizonOverview.every(x=>x.direction?.length>1&&x.arrow?.length>0&&x.balance?.length>4)&&
      report.riskCollapsed&&report.readerCollapsed&&report.positionsCollapsed&&
-     report.rotationRows>0&&!report.rotationHasUnknownRaw&&
+     !report.rotationHasUnknownRaw&&
      report.horizonOverview.every(x=>/Evidenspoint|Evidence points|Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance)),
-     'ROOT_SOURCE_BOUND_OVERVIEW_NOT_VISIBLE:'+JSON.stringify(report.horizonOverview));
+     'ROOT_OVERVIEW_STRUCTURE_OR_RAW_STATE:'+JSON.stringify(report));
+   if(builtOfficial?.data_status==='OK'&&builtOfficial?.weekly_context?.status==='ALIGNED'){
+     assert.ok(report.rotationRows>0&&report.horizonOverview.every(x=>x.valid==='true'&&
+       !/Ingen aktuel vurdering|No current outlook/.test(x.direction)),
+       'ROOT_VERIFIED_SOURCE_BOUND_OVERVIEW_NOT_VISIBLE:'+JSON.stringify(report));
+   }else{
+     assert.ok(builtOfficial?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&
+       (builtOfficial?.data_status!=='OK'||builtOfficial?.weekly_context?.status!=='ALIGNED')&&
+       report.horizonOverview.every(x=>x.valid==='false'&&
+         /Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
+         x.arrow==='?'&&
+         /Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance))&&
+       /Ingen aktuel vurdering|No current outlook/.test(report.source),
+       'ROOT_DEGRADED_SOURCE_WAS_PROMOTED_OR_HIDDEN:'+JSON.stringify({
+         officialStatus:builtOfficial?.data_status,week:builtOfficial?.weekly_context?.status,
+         source:report.source,cards:report.horizonOverview}));
+   }
    assert.ok(report.actionWhy.length>22&&!report.actionWhy.includes('HOLD_WAIT'),
      'ROOT_VERDICT_NO_ADAPTIVE_PLAIN_LANGUAGE_EXPLANATION:'+JSON.stringify(report));
    assert.ok(report.nowCaption&&/Nu · seneste prisbevægelse|Now · latest observed price move/.test(report.nowCaption)&&
