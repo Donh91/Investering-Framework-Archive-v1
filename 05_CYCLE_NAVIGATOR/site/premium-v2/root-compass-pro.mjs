@@ -10,6 +10,7 @@ import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
+import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {
   renderProductExperience,initProductExperience
@@ -64,6 +65,7 @@ function renderOverview(){
  keys.forEach((key,i)=>{
   const card=model.cards[i];
   set('cn-overview-'+key+'-arrow',card.arrow);
+  enhanceLegacyArrow(document,$('cn-overview-'+key+'-arrow'),card.sourceDirection);
   set('cn-overview-'+key+'-direction',card.direction);
   set('cn-overview-'+key+'-position',card.position);
   set('cn-overview-'+key+'-summary',card.summary.text);
@@ -200,6 +202,7 @@ function renderQuickDecision(){
  set('cn-horizon-13',eligible?
    forwardArrow+' '+readable(directions,direction,lang==='en'?'Not established':'Ikke fastlagt'):
    lang==='en'?'Awaiting updated data':'Afventer nye data');
+ if(eligible)enhanceLegacyLabel(document,$('cn-horizon-13'),direction,forwardArrow);
  set('cn-horizon-13-posture',eligible?
    readable(postures,posture,lang==='en'?'See details':'Se detaljer'):'—');
  set('cn-horizon-13-label',lang==='en'?'Next 1–3 days':'De næste 1–3 dage');
@@ -228,6 +231,7 @@ function renderQuickDecision(){
  set('premium-now-direction',nowLabels[nowState]?
    (nowArrow==='?'?'':nowArrow+' ')+nowLabels[nowState][lang==='en'?1:0]:
    (lang==='en'?'Awaiting valid data':'Afventer gyldige data'));
+ if(eligible)enhanceLegacyLabel(document,$('premium-now-direction'),nowState,nowArrow);
  const actionLabels={
   HOLD_WAIT:['Officiel vurdering · afvent','Official outlook · wait'],
   WAIT:['Officiel vurdering · afvent','Official outlook · wait'],

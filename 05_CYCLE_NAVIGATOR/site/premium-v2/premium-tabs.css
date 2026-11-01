@@ -241,3 +241,73 @@
  .cn-horizon-card{padding:10px 12px}
 }
 @media(prefers-reduced-motion:reduce){.cn-evidence-rail span{transition:none}}
+
+
+/* CN DIRECTIONAL VECTOR v1 · owner-approved visual direction is unchanged.
+ * Decorative only: real source enums + source-owned wording remain mandatory.
+ * Two opposing mini arrows = MIXED (not a sequential price path).
+ * Quiet teal / muted clay are directional ink, never BUY / SELL authority. */
+.cn-tabbed-ui .cn-horizon-direction .cn-horizon-arrow,
+.cn-tabbed-ui #compass-pro .cn-direction-mark {
+ --cn-dir-ink:#55728d;
+ display:inline-flex;align-items:center;justify-content:center;
+ flex:0 0 28px;width:28px;height:28px;min-width:28px;
+ border:1px solid #dfe7ef;border-radius:9px;
+ background:#f0f4f9;box-sizing:border-box;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.75);
+ line-height:1;
+}
+.cn-tabbed-ui .cn-horizon-direction .cn-horizon-arrow{
+ font-size:0;letter-spacing:0;color:transparent;white-space:nowrap;
+}
+.cn-tabbed-ui .cn-horizon-arrow .cn-direction-svg,
+.cn-tabbed-ui .cn-direction-mark .cn-direction-svg{
+ display:block;width:19px;height:19px;flex:none;
+ color:var(--cn-dir-ink);overflow:visible;
+}
+.cn-tabbed-ui #compass-pro .cn-direction-mark[data-direction-mark="up"],
+.cn-tabbed-ui .cn-horizon-arrow[data-direction-mark="up"]{
+ --cn-dir-ink:#247d76;background:#eff8f6;border-color:#d5e9e4;
+}
+.cn-tabbed-ui #compass-pro .cn-direction-mark[data-direction-mark="down"],
+.cn-tabbed-ui .cn-horizon-arrow[data-direction-mark="down"]{
+ --cn-dir-ink:#a96561;background:#fbf3f1;border-color:#efdeda;
+}
+.cn-tabbed-ui #compass-pro .cn-direction-mark[data-direction-mark="mixed"],
+.cn-tabbed-ui .cn-horizon-arrow[data-direction-mark="mixed"]{
+ --cn-dir-ink:#426d96;background:#edf4fb;border-color:#d9e6f2;
+}
+.cn-tabbed-ui #compass-pro .cn-direction-mark[data-direction-mark="lean-up"],
+.cn-tabbed-ui .cn-horizon-arrow[data-direction-mark="lean-up"]{
+ --cn-dir-ink:#5e8b86;background:#f3f9f7;border-color:#e0ede9;
+}
+.cn-tabbed-ui #compass-pro .cn-direction-mark[data-direction-mark="lean-down"],
+.cn-tabbed-ui .cn-horizon-arrow[data-direction-mark="lean-down"]{
+ --cn-dir-ink:#ac817d;background:#fbf6f5;border-color:#eee3e1;
+}
+.cn-tabbed-ui #compass-pro .cn-direction-mark[data-direction-mark="missing"],
+.cn-tabbed-ui .cn-horizon-arrow[data-direction-mark="missing"]{
+ --cn-dir-ink:#8b99a8;background:#f5f7f9;border-color:#e7ebf0;
+}
+.cn-tabbed-ui #compass-pro .cn-direction-inline{
+ display:inline-flex;align-items:center;justify-content:flex-start;
+ gap:7px;flex-wrap:wrap;min-width:0;max-width:100%;
+}
+.cn-tabbed-ui #compass-pro .cn-direction-inline .cn-direction-readable{
+ min-width:0;overflow-wrap:anywhere;font:inherit;
+}
+.cn-tabbed-ui #compass-pro .cn-direction-inline .cn-direction-legacy{
+ display:none!important;
+}
+@media(max-width:430px){
+ .cn-tabbed-ui .cn-horizon-direction .cn-horizon-arrow,
+ .cn-tabbed-ui #compass-pro .cn-direction-mark{
+  flex-basis:26px;width:26px;height:26px;min-width:26px;border-radius:8px;
+ }
+ .cn-tabbed-ui #compass-pro .cn-direction-inline{gap:6px}
+}
+@media(prefers-reduced-motion:reduce){
+ .cn-tabbed-ui .cn-horizon-arrow,.cn-tabbed-ui .cn-direction-mark{
+  transition:none!important;animation:none!important;
+ }
+}
