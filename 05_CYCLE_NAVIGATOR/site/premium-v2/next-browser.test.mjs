@@ -689,11 +689,15 @@ try{
     risk.open=false;legend.open=false;
     return state;
    });
+   // Rotation is source-bound. On a genuinely unavailable Official, zero
+   // rows is the required fail-closed result, not a missing UI disclosure.
+   const liveSource=inspectOfficialPublicFeeds(builtLatest,builtOfficial,{
+     nowUtc:new Date().toISOString()}).compass.permit_path_live_gates===true;
    assert.ok(disclosure.riskOpen&&disclosure.legendOpen&&
      disclosure.glossaryTerms===8&&disclosure.riskStages===5&&
-     disclosure.rotationRows>0&&disclosure.readerClosed&&
-     disclosure.legendExplainsNoMandatorySequence,
-     'ROOT_DISCREET_DISCLOSURE_FAILED:'+JSON.stringify(disclosure));
+     (liveSource?disclosure.rotationRows>0:disclosure.rotationRows===0)&&
+     disclosure.readerClosed&&disclosure.legendExplainsNoMandatorySequence,
+     'ROOT_DISCREET_DISCLOSURE_FAILED:'+JSON.stringify({disclosure,liveSource}));
    if(process.env.GITHUB_EVENT_NAME==='pull_request'){
     const visible=await evaluate(()=>{
      const panel=document.querySelector('.cn-risk-quick');
