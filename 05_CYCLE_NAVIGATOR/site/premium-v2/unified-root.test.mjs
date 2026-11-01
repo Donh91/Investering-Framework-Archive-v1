@@ -717,23 +717,24 @@ test('directional vector icons preserve source states and all legacy textContent
 });
 
 
-test('SITE graph history route is discoverable inside weekly Graph B, not an invented fifth tab',async()=>{
+test('SITE Graph History link is rendered separately from the exact original Graph B markup',async()=>{
  const html=buildUnifiedRootHtml(original,pro);
  const history=await read('../graph-history/index.html');
- for(const key of ['cn-graph-history-title','cn-graph-history-note','cn-graph-history-link'])
-  assert.equal(id(html,key),1,'missing or duplicate history entry '+key);
- assert.match(html,/href="\/Investering-Framework-Archive-v1\/graph-history\/"/);
- assert.ok(html.indexOf('id="variant-panel"')<html.indexOf('id="cn-graph-history-link"'));
- assert.ok(html.indexOf('id="cn-graph-history-link"')<html.indexOf('id="proof-explorer"'));
+ const originalB=original.slice(original.indexOf('<section id="variant-panel"'),
+   original.indexOf('<section id="proof-explorer"'));
+ assert.ok(html.includes(originalB.trim().replace(/<\/section>\s*$/,'').trim()),
+  'original B must remain byte-identical');
+ assert.equal(id(html,'cn-graph-history-link'),0,'new route belongs to DOM presentation only');
  assert.match(history,/CN_GRAPH_HISTORY_TIMELINE_v1/);
  assert.match(history,/data\/graph-history\/timeline\.json/);
- assert.match(html,/Fra uge 45 \(2026\)/);
- assert.equal((html.match(/data-premium-nav="graph"/g)||[]).length,1);
  const tabs=await read('./premium-tabs.mjs');
  const css=await read('./premium-tabs.css');
+ assert.match(tabs,/graphPanel\.append\(entry\)/);
+ assert.match(tabs,/link\.href='\/Investering-Framework-Archive-v1\/graph-history\/'/);
+ assert.match(tabs,/Fra uge 45 \(2026\)/);
  assert.match(tabs,/Graph history/);
- assert.match(tabs,/document\.getElementById\(id\)/);
  assert.match(css,/\.cn-tabbed-ui \.cn-graph-history-entry a/);
  assert.match(css,/min-height:44px/);
- assert.doesNotMatch(html,/graph-history.*(?:SELL|BUY|confidence|probability)/i);
+ assert.equal((html.match(/data-premium-nav="graph"/g)||[]).length,1);
+ assert.doesNotMatch(tabs,/Math\.sin|forecast_low|forecast_high|fetch\(|probability|probabilit/);
 });
