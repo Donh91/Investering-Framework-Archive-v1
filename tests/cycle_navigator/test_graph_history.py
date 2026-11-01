@@ -147,9 +147,10 @@ class GraphHistoryTest(unittest.TestCase):
         archive(self.root, W45)
         latest = self.root / "05_CYCLE_NAVIGATOR/site/dist/data/latest.json"
         put(latest, {"public_live_precision": {
-            "contract": "CN_PUBLIC_LIVE_PRICE_PRECISION_v1", "forecast_week": "2026-W45",
+            "contract": "CN_PUBLIC_LIVE_PRICE_PRECISION_v1", "forecast_week": "2026-W45", "public_issue_number": 32,
             "hourly_price_path": {"contract": "CN_PUBLIC_HOURLY_PRICE_PATH_v1",
-                                  "source": "HOURLY_SPOT_PASS_ONLY", "forecast_week": "2026-W45",
+                                  "source": "HOURLY_SPOT_PASS_ONLY", "forecast_week": "2026-W45", "public_issue_number": 32,
+                                  "observed_through_utc": "2026-11-02T11:00:00Z",
                                   "BTC": [{"observed_at_utc": "2026-11-02T11:00:00Z", "close": 80500}],
                                   "ETH": []}}})
         x = publish(self.root)
@@ -161,6 +162,25 @@ class GraphHistoryTest(unittest.TestCase):
             "hourly_price_path": {"contract": "CN_PUBLIC_HOURLY_PRICE_PATH_v1",
                                   "source": "HOURLY_SPOT_PASS_ONLY", "forecast_week": "2026-W46",
                                   "BTC": [{"observed_at_utc": "2026-11-02T11:00:00Z", "close": 80500}]}}})
+        self.assertEqual(publish(self.root)["actual"], [])
+
+    def test_live_wrong_issue_and_future_hour_cannot_poison_history(self):
+        source(self.root)
+        archive(self.root, W45)
+        latest = self.root / "05_CYCLE_NAVIGATOR/site/dist/data/latest.json"
+        good = {"contract": "CN_PUBLIC_LIVE_PRICE_PRECISION_v1", "forecast_week": "2026-W45",
+                "public_issue_number": 32, "hourly_price_path": {
+                    "contract": "CN_PUBLIC_HOURLY_PRICE_PATH_v1", "forecast_week": "2026-W45",
+                    "public_issue_number": 32, "source": "HOURLY_SPOT_PASS_ONLY",
+                    "observed_through_utc": "2026-11-02T11:00:00Z",
+                    "BTC": [{"observed_at_utc": "2026-11-02T12:00:00Z", "close": 80000},
+                            {"observed_at_utc": "2026-11-09T01:00:00Z", "close": 80000}],
+                    "ETH": []}}
+        put(latest, {"public_live_precision": good})
+        self.assertEqual(publish(self.root)["actual"], [])
+        good["hourly_price_path"]["BTC"].append({"observed_at_utc": "2026-11-02T10:00:00Z", "close": 80500})
+        good["public_issue_number"] = 31
+        put(latest, {"public_live_precision": good})
         self.assertEqual(publish(self.root)["actual"], [])
 
 
