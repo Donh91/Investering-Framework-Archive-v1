@@ -555,7 +555,7 @@ function paint(){
  set('pro-source-status',failed?t('Indlæsning mislykkedes · ingen aktuel handling','Source fetch failed · no current action'):
    fresh?t('Aktuel vurdering · opdateret ','Current verified outlook · updated ')+time(last)+
          t(' · gyldig til ',' · valid until ')+validUntil+weekly+sourceAgeAtIssue:
-   expired?t('Seneste Kompas-vurdering udløb ','Last Compass outlook expired ')+expiredTime+
+   expired?t('Ingen aktuel vurdering: Seneste Kompas-vurdering udløb ','No current outlook: last Compass issue expired ')+expiredTime+
      t('. Ingen aktuel handling. Afventer ny verificeret udgivelse.','. No current action. Awaiting a new verified issue.')+weekly:
    t('Ingen aktuel vurdering: data er for gamle, mangler eller passer ikke til denne uge','No current outlook: data are too old, missing or do not match this week')+weekly);
  const gate=fresh&&view?.path?.state==='SOURCE_BOUND'?safe(view.path.next_gate):'UNAVAILABLE';
