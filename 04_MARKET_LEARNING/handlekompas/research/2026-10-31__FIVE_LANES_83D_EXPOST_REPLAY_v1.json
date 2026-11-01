@@ -1,0 +1,290 @@
+{
+  "contract": "KOMPAS_FIVE_RESEARCH_LANES_83D_EXPOST_REPLAY_v1",
+  "status": "SCIENTIFIC_HOLD_NO_PIT_ADMISSION",
+  "source_archive_pr_sha": "fa4bf66b91f91f596c941cb91a4b16d27b61c733",
+  "asof_utc": "2026-10-30T21:00:00Z",
+  "analysis": "independent JavaScript in-session recomputation of primitive GitHub CSV rows; separately reproducible with scripts/research/rqs_five_lanes_expost.py",
+  "sources": [
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W32/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "1d08cd273f48015996d993797f5730fccf91fba4",
+      "rows": 40
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W33/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "90189381443c5bce836cd2190dba0ab28b75d0ff",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W34/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "ffbcacaa0223d08db27b5d9fd9cfe492780e692c",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W35/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "09f0f19276e8c88e30afd6ed3b31619bf2aa2b01",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W36/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "34dc8125aef0f85252ffd0a37a73c0e1f7aa4eac",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W37/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "1b84d81e399541b41624ba016b0f37b76179bdee",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W38/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "8b82bd412c4e252e8786d1ce0df27471c9e901bb",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W39/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "02cc2db27d0ebc070853e1535088d1b9e2c656d2",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W40/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "33e0d1366c8de7e69ea1bd9655a96764aeabc70f",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W41/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "56c68795ad9564cebd0c1d17e32c71522bbd4e99",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W42/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "78a3706fe1b1a39d0a4974ea1539dc948362b908",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W43/WEEKLY_HOURLY_ENRICHED.csv",
+      "git_blob_sha": "256e63e6b18b9839c3d7694c137f25eecad0150c",
+      "rows": 168
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-26.csv",
+      "git_blob_sha": "9866e34b490d1684514ed31eddf35000db131ec4",
+      "rows": 24
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-27.csv",
+      "git_blob_sha": "8cb948f024418d6be3497968f11eedc62e0f0a1d",
+      "rows": 24
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-28.csv",
+      "git_blob_sha": "fb34cd6299b9e1a97b7a06e70f7070cf38b6eb85",
+      "rows": 24
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-29.csv",
+      "git_blob_sha": "a7ab3bd312ef5ecc5a40ab0d3996540671afc59c",
+      "rows": 24
+    },
+    {
+      "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-30.csv",
+      "git_blob_sha": "baf0ffdbb103c025e7061b95712875551f666a10",
+      "rows": 21
+    }
+  ],
+  "coverage": {
+    "unique_hours": 2005,
+    "completed_past24h_feature_clocks": 1982,
+    "run_coverage_over_1h_after_candle": 1318,
+    "raw_candidate_hours": 34,
+    "illustrative_12h_groups": 14
+  },
+  "five_lanes": {
+    "rebound_failure_detector": {
+      "raw_candidate_hours": 34,
+      "illustrative_12h_event_groups": 14,
+      "from_14_mature24": 14,
+      "negative_or_zero_24h": 6,
+      "retest_prior_trough_24h": 3,
+      "episode_24h": {
+        "n": 14,
+        "mature_n": 14,
+        "positive_n": 8,
+        "negative_n": 6,
+        "mean_pct": -0.0298,
+        "median_pct": 0.2221
+      },
+      "episode_72h": {
+        "n": 14,
+        "mature_n": 13,
+        "positive_n": 8,
+        "negative_n": 5,
+        "mean_pct": 0.9995,
+        "median_pct": 0.4319
+      }
+    },
+    "early_pullback_warning": {
+      "historical_rule": "past4h return <= -1%",
+      "future_target": "lowest next24h close <= -3% from cutoff",
+      "mature_overlapping_decision_clocks": 1958,
+      "future_falls_overlapping_clocks": 98,
+      "warning_clocks": 117,
+      "true_positive_overlapping_clocks": 8,
+      "false_positive_overlapping_clocks": 109,
+      "missed_future_falls_overlapping_clocks": 90,
+      "official_risk3of5_clock_comparison": "UNAVAILABLE_NO_VERIFIED_ORIGINAL_WARNING_RECEIPTS"
+    },
+    "regime_conditional_recovery": {
+      "research_only_range_cutoff_pct": 3,
+      "high": {
+        "n": 6,
+        "mature_n": 6,
+        "positive_n": 3,
+        "negative_n": 3,
+        "mean_pct": 0.0336,
+        "median_pct": 0.1556
+      },
+      "low": {
+        "n": 8,
+        "mature_n": 8,
+        "positive_n": 5,
+        "negative_n": 3,
+        "mean_pct": -0.0775,
+        "median_pct": 0.2221
+      },
+      "months": {
+        "2026-08": {
+          "n": 3,
+          "mature_n": 3,
+          "positive_n": 2,
+          "negative_n": 1,
+          "mean_pct": 1.0445,
+          "median_pct": 1.0768
+        },
+        "2026-09": {
+          "n": 5,
+          "mature_n": 5,
+          "positive_n": 2,
+          "negative_n": 3,
+          "mean_pct": -0.2671,
+          "median_pct": -0.3755
+        },
+        "2026-10": {
+          "n": 6,
+          "mature_n": 6,
+          "positive_n": 4,
+          "negative_n": 2,
+          "mean_pct": -0.3693,
+          "median_pct": 0.5216
+        }
+      }
+    },
+    "capital_rotation_and_breadth": {
+      "ethbtc_up": {
+        "n": 10,
+        "mature_n": 10,
+        "positive_n": 7,
+        "negative_n": 3,
+        "mean_pct": 0.4115,
+        "median_pct": 0.5216
+      },
+      "ethbtc_nonpositive": {
+        "n": 4,
+        "mature_n": 4,
+        "positive_n": 1,
+        "negative_n": 3,
+        "mean_pct": -1.1332,
+        "median_pct": -0.3864
+      },
+      "spot_buy_share_gt50pct": {
+        "n": 12,
+        "mature_n": 12,
+        "positive_n": 6,
+        "negative_n": 6,
+        "mean_pct": -0.1396,
+        "median_pct": -0.1347
+      },
+      "spot_buy_share_le50pct": {
+        "n": 2,
+        "mature_n": 2,
+        "positive_n": 2,
+        "negative_n": 0,
+        "mean_pct": 0.6288,
+        "median_pct": 0.6288
+      },
+      "oi_falling": {
+        "n": 10,
+        "mature_n": 10,
+        "positive_n": 6,
+        "negative_n": 4,
+        "mean_pct": -0.163,
+        "median_pct": 0.2221
+      },
+      "oi_nonfalling": {
+        "n": 4,
+        "mature_n": 4,
+        "positive_n": 2,
+        "negative_n": 2,
+        "mean_pct": 0.3031,
+        "median_pct": 0.2556
+      },
+      "independent_same_clock_breadth": "UNAVAILABLE"
+    },
+    "decision_utility_learning": {
+      "unconditional_all_hours_24h": {
+        "n": 1982,
+        "mature_n": 1958,
+        "positive_n": 1009,
+        "negative_n": 949,
+        "mean_pct": 0.2394,
+        "median_pct": 0.0463
+      },
+      "raw_candidates_24h": {
+        "n": 34,
+        "mature_n": 31,
+        "positive_n": 16,
+        "negative_n": 15,
+        "mean_pct": -0.1798,
+        "median_pct": 0.0876
+      },
+      "first_candidate_per_12h_24h": {
+        "n": 14,
+        "mature_n": 14,
+        "positive_n": 8,
+        "negative_n": 6,
+        "mean_pct": -0.0298,
+        "median_pct": 0.2221
+      },
+      "wait_hypothetical_net_pct": 0,
+      "round_trip_cost_pct_scenarios": [
+        {
+          "cost": 0.2,
+          "n": 14,
+          "hypothetical_net_mean_pct": -0.2298,
+          "net_positive_n": 7
+        },
+        {
+          "cost": 0.6,
+          "n": 14,
+          "hypothetical_net_mean_pct": -0.6298,
+          "net_positive_n": 6
+        }
+      ],
+      "real_pnl_edge": null
+    }
+  },
+  "governance": {
+    "original_first_known_verified": false,
+    "forward_forecasts_issued": false,
+    "independent_event_calibration": false,
+    "after_cost_trading_edge_verified": false,
+    "trade_permission": "NONE",
+    "mechanical_pullback_episode_authority": "SUSPENDED",
+    "notes": [
+      "Ex-post exploratory research only; source run coverage may be late weekly reaggregation",
+      "No official risk3/5 warning clock join",
+      "All rates are overlapping-window or illustrative group rates, no formal confidence or significance",
+      "Broad altcoin breadth and independent spot exchanges not joined",
+      "Cost scenarios illustrative; not wallet PnL or trade advice"
+    ]
+  }
+}
