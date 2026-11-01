@@ -19,6 +19,42 @@ const ACCEPTED=Object.freeze({
  cycle_navigator:['WEEKLY_POINTER_ALIGNED','UNVERIFIED']
 });
 const clean=(id,v)=>ACCEPTED[id]?.includes(v)?v:'UNAVAILABLE';
+
+/** One consistent DA/EN presentation vocabulary; preserve all source enums. */
+const PUBLIC_STATUS_LABELS=Object.freeze({
+ VERIFIED:['Verificeret','Verified'],UNVERIFIED:['Ikke verificeret','Unverified'],
+ UNAVAILABLE:['Utilgængelig','Unavailable'],DEGRADED:['Forringet kildegrundlag','Degraded source'],
+ HASH_VERIFIED:['Hash verificeret','Hash verified'],
+ SOURCE_ALIGNED:['Kildeafstemt','Source aligned'],
+ VERIFIED_NEWER_OR_DIFFERENT_SOURCE:['Verificeret anden kilde','Verified different source'],
+ ALIGNED_RESEARCH:['Research afstemt','Research aligned'],
+ STALE_RESEARCH:['Research er forældet','Stale research'],
+ BOUND_WEEKLY_ANCHOR:['Bundet til ugegrundlag','Bound to weekly evidence'],
+ WEEKLY_POINTER_ALIGNED:['Ugepeger afstemt','Weekly pointer aligned'],
+ COMPLETE:['Komplet','Complete'],PARTIAL_OR_DEGRADED:['Delvist kildegrundlag','Partial source evidence'],
+ PARTIAL_ANALYTICS:['Delvis analyse','Partial analytics'],
+ UNAVAILABLE_API_CONTRACT:['API-analyse ikke tilgængelig','API analysis unavailable'],
+ AVAILABLE_SHADOW_ONLY:['Kun shadow-research','Shadow research only'],
+ NO_EDGE:['Ingen dokumenteret edge','No proven edge']
+});
+const LONG_DIRECTION_LABELS=Object.freeze({
+ UP:['Op','Up'],DOWN:['Ned','Down'],MIXED:['Blandet','Mixed'],
+ SIDEWAYS:['Sideværts','Sideways'],UNCLEAR:['Uafklaret','Unclear'],
+ LEAN_BEARISH:['Tendens ned','Leaning bearish'],LEAN_BULLISH:['Tendens op','Leaning bullish'],
+ NO_EDGE:['Ingen dokumenteret edge','No proven edge'],
+ UNAVAILABLE:['Ikke verificeret','Not verified']
+});
+export function displayPublicStatus(value,lang='da'){
+ const pair=PUBLIC_STATUS_LABELS[value];
+ return pair?pair[lang==='en'?1:0]:(lang==='en'?'Unknown source status':'Ukendt kildestatus');
+}
+export function displayLongDirection(row,lang='da'){
+ if(!['CYCLE_NAVIGATOR_WEEKLY','CYCLE_NAVIGATOR_STRATEGIC_CONTEXT'].includes(row?.owner))
+  return lang==='en'?'— (nonbinding research)':'— (ikke-bindende research)';
+ const pair=LONG_DIRECTION_LABELS[row?.direction];
+ return pair?pair[lang==='en'?1:0]:(lang==='en'?'Not verified':'Ikke verificeret');
+}
+
 const validDirection=v=>typeof v==='string'&&/^[A-Z][A-Z_]{1,39}$/.test(v)&&v!=='UNAVAILABLE'?v:'UNAVAILABLE';
 const closed=(reason='SOURCE_UNVERIFIED')=>({
   contract:'CN_PREMIUM_SOURCE_TRACE_v1',status:'UNVERIFIED',reason,

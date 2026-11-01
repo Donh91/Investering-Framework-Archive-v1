@@ -5,6 +5,7 @@ import {buildUnifiedRootHtml} from './unified-root.mjs';
 import {buildPremiumRootHtml} from './premium-root.mjs';
 import {VIEWS,currentCompass,expiredOfficial,sourceTranslation,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
+import {displayPublicStatus,displayLongDirection} from '../vnext-live/source-trace.mjs';
 
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [original,pro]=await Promise.all([
@@ -638,4 +639,18 @@ test('SOURCE expiry is labelled only for the exact original matched issuer, neve
  assert.match(runtime,/Seneste Kompas-vurdering udløb/);
  assert.match(runtime,/Ingen aktuel handling/);
  assert.match(runtime,/Europe\/Copenhagen/);
+});
+
+test('source-trace status and research horizon use the original owner, never a fake Official direction',async()=>{
+ assert.equal(displayLongDirection({owner:'STRATEGIC_RESEARCH',direction:'UP'},'da'),'— (ikke-bindende research)');
+ assert.equal(displayLongDirection({owner:'CYCLE_NAVIGATOR_WEEKLY',direction:'MIXED'},'da'),'Blandet');
+ assert.equal(displayLongDirection({owner:'CYCLE_NAVIGATOR_STRATEGIC_CONTEXT',direction:'UNCLEAR'},'da'),'Uafklaret');
+ assert.equal(displayLongDirection({owner:'STRATEGIC_RESEARCH',direction:'MIXED'},'en'),'— (nonbinding research)');
+ assert.equal(displayPublicStatus('UNAVAILABLE','da'),'Utilgængelig');
+ assert.equal(displayPublicStatus('UNAVAILABLE_API_CONTRACT','da'),'API-analyse ikke tilgængelig');
+ assert.equal(displayPublicStatus('INVALID_SOURCE_ENUM','da'),'Ukendt kildestatus');
+ const root=await read('./root-compass-pro.mjs');
+ assert.match(root,/displayLongDirection\(item,lang\)/);
+ assert.match(root,/displayPublicStatus\(item.status,lang\)/);
+ assert.doesNotMatch(root,/row\('long-horizon-body',\[periods\[item.id\]\|\|safe\(item.id\),safe\(item.direction\),owner\]\)/);
 });
