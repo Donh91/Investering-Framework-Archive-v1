@@ -9,6 +9,7 @@ def freeze(**changes):
         "contract": "OFFICIAL_DAILY_COMPASS_v1",
         "compass_id": "CMP-20261102-aaaaaaaaaaaa",
         "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "decision_policy_version": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
         "issued_at_utc": "2026-11-02T07:17:00Z",
         "market_reference": {"observation_open_utc": "2026-11-02T06:00:00Z", "btc_usdt": 77777.0},
         "market_now": {"btc_delta_pct": -0.5,
@@ -49,6 +50,20 @@ class TemporalGateTests(unittest.TestCase):
         self.assertFalse(row["independent_source_first_known_verified"])
         self.assertFalse(row["external_full_day_census_verified"])
         self.assertEqual(row["evidence_state"], "CLOCK_PREFLIGHT_ONLY_EXTERNAL_AUTHENTICATION_REQUIRED")
+
+    def test_unregistered_or_missing_future_policy_cannot_impersonate_old_forecast(self):
+        for policy in (None, "", "2026-11-02_UNREGISTERED_NEXT12_FORECAST_V4_2",
+                       "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1"):
+            with self.subTest(policy=policy):
+                f = freeze()
+                if policy is None:
+                    f.pop("decision_policy_version")
+                else:
+                    f["decision_policy_version"] = policy
+                r = preflight(f, public(), source())
+                self.assertIn("SOURCE_POLICY_NOT_ORIGINAL_LOCKED_FORECAST_VERSION", r["quarantine_reasons"])
+                self.assertFalse(r["temporal_preflight_pass"])
+                self.assertFalse(r["scientifically_admitted"])
 
     def test_new_v41_momentum_is_not_a_forward_forecast_for_locked_study(self):
         f = freeze(decision_policy_version="2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1",
