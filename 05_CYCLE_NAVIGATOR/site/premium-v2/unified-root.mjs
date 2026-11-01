@@ -188,6 +188,16 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   const b=unique(html,graph,'original-graph');
   if(b<=a)throw Error('CN_UNIFIED_ROOT_DECISION_ORDER');
   html=html.slice(0,a)+pro+'\n'+html.slice(b);
+  // SITE #1578: non-authoritative navigation to the existing W45+ archive.
+  // Preserve Graph B, current tabs and immutable source-only history semantics.
+  const historyMarker='<details class="cn-range-evidence">';
+  unique(html,historyMarker,'graph-history-inside-original-B');
+  const historyEntry='<aside class="cn-graph-history-entry" aria-labelledby="cn-graph-history-title">'+
+    '<div><strong id="cn-graph-history-title">Grafhistorik</strong>'+
+    '<p id="cn-graph-history-note">Fra uge 45 (2026). Faktisk BTC-kurs fra verificerede timer; kun forhåndsudstedte dagsprognoser vises som blå kurve.</p></div>'+
+    '<a id="cn-graph-history-link" href="/Investering-Framework-Archive-v1/graph-history/">Åbn grafhistorik</a>'+
+    '</aside>';
+  html=html.replace(historyMarker,historyEntry+'\n'+historyMarker);
   const details='<section class="official-product-pilot premium-compass-detail"';
   const meta='<aside class="premium-meta"';
   const c=unique(html,details,'legacy-details');
