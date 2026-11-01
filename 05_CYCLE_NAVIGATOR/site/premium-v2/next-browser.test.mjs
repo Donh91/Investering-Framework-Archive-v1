@@ -405,7 +405,7 @@ try{
    };
   });
   assert.ok(narrow.width===320&&narrow.overflow<=2&&
-   narrow.cardsColumns?.split(' ').length===1&&
+   /^(?:minmax\(0(?:px)?,\s*1fr\)|\d+(?:\.\d+)?px)$/.test(narrow.cardsColumns||'')&&
    narrow.sourceTextClamp==='none'&&
    narrow.selected==='true'&&narrow.proofVisible&&narrow.sourceVisible,
    'ROOT_320_REFLOW_OR_TAB_FAILURE:'+JSON.stringify(narrow));
