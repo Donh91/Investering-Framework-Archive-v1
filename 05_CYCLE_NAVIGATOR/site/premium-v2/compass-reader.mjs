@@ -37,6 +37,23 @@ const readableSource=(text,lang)=>cleanSentence(text)
   .replace(/\bHOLD_WAIT\b/g,lang==='en'?'wait':'afvent');
 
 
+/**
+ * Presentation only. Confirm the original Official expiry without reviving
+ * an invalid or mismatched source as a CURRENT decision.
+ */
+export function expiredOfficial({compass,view,now=Date.now()}){
+ const until=Date.parse(compass?.full_stack?.official_freshness?.valid_until_utc);
+ const issued=Date.parse(compass?.issued_at_utc);
+ return !!(compass?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&
+  compass?.data_status==='OK'&&
+  typeof compass.compass_id==='string'&&compass.compass_id&&
+  view?.compass?.compass_id===compass.compass_id&&
+  compass?.weekly_context?.status==='ALIGNED'&&
+  compass.weekly_context.forecast_week===view?.weekly?.forecast_week&&
+  Number.isFinite(until)&&until<=now&&
+  Number.isFinite(issued)&&issued<=until&&issued<=now);
+}
+
 export function currentCompass({compass,view,now=Date.now()}){
   const until=Date.parse(compass?.full_stack?.official_freshness?.valid_until_utc);
   const issued=Date.parse(compass?.issued_at_utc);
