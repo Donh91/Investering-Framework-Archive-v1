@@ -169,37 +169,40 @@ def observed(root, monday):
             "points": result}
 
 
+def verify_index_chain(index):
+    if index.get("contract") != CONTRACT or not isinstance(index.get("weeks"), list):
+        raise ValueError("INVALID_HISTORY_INDEX")
+    prior_weeks = {}
+    prior_chain = "0" * 64
+    prior_label = None
+    for row in index["weeks"]:
+        label = row.get("forecast_week")
+        if label in prior_weeks or row.get("previous_week") != prior_label:
+            raise ValueError("INVALID_HISTORY_INDEX_SEQUENCE")
+        if row.get("status") not in ("MISSING_FREEZE", "RECORDED"):
+            raise ValueError("INVALID_HISTORY_INDEX_STATUS")
+        sha = row.get("source_sha256")
+        if (row["status"] == "MISSING_FREEZE" and sha is not None) or (
+                row["status"] == "RECORDED" and not isinstance(sha, str)):
+            raise ValueError("INVALID_HISTORY_INDEX_SOURCE")
+        prior_chain = digest(canonical({"previous": prior_chain, "week": label,
+                                        "source_sha256": sha, "status": row["status"]}))
+        if row.get("chain_digest") != prior_chain:
+            raise ValueError("INVALID_HISTORY_INDEX_CHAIN")
+        prior_weeks[label] = row
+        prior_label = label
+    if index.get("chain_tip") != prior_chain:
+        raise ValueError("INVALID_HISTORY_INDEX_TIP")
+
+    return prior_weeks
+
+
 def archive(root, target):
     if target < START:
         return {"contract": CONTRACT, "status": "NOT_STARTED", "weeks": []}
     index_file = root / ROOT / "index.json"
     old_index = read(index_file) if index_file.exists() else None
-    if old_index is not None:
-        if old_index.get("contract") != CONTRACT or not isinstance(old_index.get("weeks"), list):
-            raise ValueError("INVALID_HISTORY_INDEX")
-        prior_weeks = {}
-        prior_chain = "0" * 64
-        prior_label = None
-        for row in old_index["weeks"]:
-            label = row.get("forecast_week")
-            if label in prior_weeks or row.get("previous_week") != prior_label:
-                raise ValueError("INVALID_HISTORY_INDEX_SEQUENCE")
-            if row.get("status") not in ("MISSING_FREEZE", "RECORDED"):
-                raise ValueError("INVALID_HISTORY_INDEX_STATUS")
-            sha = row.get("source_sha256")
-            if (row["status"] == "MISSING_FREEZE" and sha is not None) or (
-                    row["status"] == "RECORDED" and not isinstance(sha, str)):
-                raise ValueError("INVALID_HISTORY_INDEX_SOURCE")
-            prior_chain = digest(canonical({"previous": prior_chain, "week": label,
-                                            "source_sha256": sha, "status": row["status"]}))
-            if row.get("chain_digest") != prior_chain:
-                raise ValueError("INVALID_HISTORY_INDEX_CHAIN")
-            prior_weeks[label] = row
-            prior_label = label
-        if old_index.get("chain_tip") != prior_chain:
-            raise ValueError("INVALID_HISTORY_INDEX_TIP")
-    else:
-        prior_weeks = {}
+    prior_weeks = verify_index_chain(old_index) if old_index is not None else {}
     result = []
     cursor = START
     previous = None
@@ -252,7 +255,9 @@ def archive(root, target):
 def publish(root):
     index_file = root / ROOT / "index.json"
     index = read(index_file) if index_file.exists() else {"contract": CONTRACT, "weeks": []}
-    if index.get("contract") != CONTRACT:
+    if index_file.exists():
+        verify_index_chain(index)
+    elif index.get("contract") != CONTRACT:
         raise ValueError("INVALID_HISTORY_INDEX")
     weeks, actual = [], []
     for item in index["weeks"]:
