@@ -412,7 +412,8 @@ try{
     proBeforeGraph:!!(pro.compareDocumentPosition(graph)&Node.DOCUMENT_POSITION_FOLLOWING),
     tabMode:document.body.classList.contains('cn-tabbed-ui'),
     tabDefault:!pro.hidden&&graph.hidden,
-    tabs:nav?.querySelectorAll('[role="tab"]').length
+    tabs:nav?.querySelectorAll('[role="tab"]').length,
+    historyLink:(()=>{const link=document.querySelector('#variant-panel #cn-graph-history-link');return !!link&&link.getAttribute('href')==='/Investering-Framework-Archive-v1/graph-history/'&&link.closest('#variant-panel')===graph})()
    };
   });
   assert.equal(measured.width,width,'UNIFIED_WRONG_VIEWPORT');
@@ -420,7 +421,7 @@ try{
   assert.ok(measured.uniqueIds&&measured.singleton&&measured.noLegacy,
     'UNIFIED_DUPLICATE_OR_MISSING_NODE:'+JSON.stringify(measured));
   assert.ok(measured.noindex&&measured.navBeforePro&&measured.proBeforeGraph&&
-    measured.tabMode&&measured.tabDefault&&measured.tabs===4,
+    measured.tabMode&&measured.tabDefault&&measured.tabs===4&&measured.historyLink,
     'UNIFIED_PREVIEW_OR_TABS_MISMATCH:'+JSON.stringify(measured));
   const switching=await evaluate(()=>{
     const click=k=>document.querySelector('[data-premium-nav="'+k+'"]')?.click();
