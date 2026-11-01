@@ -23,25 +23,79 @@ assert.ok(chrome,'NEXT_BROWSER_NO_CHROME');
 assert.ok(existsSync(resolve(dist,'next/index.html')),'NEXT_BROWSER_NO_REAL_VITE_ROOT');
 assert.ok(existsSync(resolve(dist,'next/graph-b/source-graph-b.html')),'NEXT_BROWSER_NO_B_ENTRY');
 if(rootMode)assert.ok(existsSync(resolve(dist,'index.html')),'ROOT_BROWSER_MISSING_OFFICIAL_ENTRY');
+// This is the exact built and shipped PUBLIC Official, not a test-invented
+// live/eligible forecast. A DEGRADED real source must be tested as such.
 const builtOfficial=rootMode?JSON.parse(readFileSync(resolve(dist,'data/compass.json'),'utf8')):null;
 const builtLatest=rootMode?JSON.parse(readFileSync(resolve(dist,'data/latest.json'),'utf8')):null;
+// Isolated browser-only fixtures. These override HTTP responses in this local
+// test server, never staged dist files, immutable Official or Pages assets.
+let browserFixture=null,fixtureRequests={};
+function makeRootFixture(kind){
+ const latest=structuredClone(builtLatest),compass=structuredClone(builtOfficial);
+ assert.equal(latest?.schema,'CN_PUBLIC_SNAPSHOT_V2','ROOT_FIXTURE_LATEST_CONTRACT');
+ assert.equal(compass?.contract,'PUBLIC_COMPASS_PROJECTION_v1','ROOT_FIXTURE_COMPASS_CONTRACT');
+ const pointer=latest.pointer,pkg=latest.package;
+ const projection=latest.public_series?.current_public_projection;
+ assert.ok(pointer&&pkg&&projection,'ROOT_FIXTURE_MISSING_WEEKLY_INPUTS');
+ const week=Number(pointer.iso_week),year=Number(pointer.iso_year);
+ assert.ok(Number.isInteger(week)&&week>=1&&week<=53&&Number.isInteger(year),
+  'ROOT_FIXTURE_WEEK_CLOCK');
+ const forecastWeek=year+'-W'+String(week).padStart(2,'0');
+ const issue=Number.isInteger(projection.public_issue_number)&&projection.public_issue_number>0?
+   projection.public_issue_number:42;
+ const now=Date.now(),utc=ms=>new Date(ms).toISOString();
+ latest.generated_at=utc(now);
+ pointer.issue_number=issue;pointer.status='OK';
+ pkg.issue_number=issue;pkg.status='OK';
+ projection.public_issue_number=issue;projection.forecast_week=forecastWeek;
+ compass.compass_id='TEST_ONLY_SOURCE_'+kind.toUpperCase();
+ compass.issued_at_utc=utc(now-60000);
+ compass.data_status=kind==='degraded'?'DEGRADED':'OK';
+ compass.weekly_context={...compass.weekly_context,status:'ALIGNED',
+   forecast_week:forecastWeek,public_issue_number:issue};
+ compass.full_stack={...compass.full_stack,official_freshness:{
+   ...compass.full_stack?.official_freshness,
+   contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',
+   status:'VERIFIED_OWNER_POLICY',
+   semantics:'SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA',
+   source_asof_utc:utc(now-60000),
+   valid_until_utc:utc(now+(kind==='expired'?-1000:3600000))
+ }};
+ compass.action_now='WAIT';
+ compass.horizons={...compass.horizons};
+ for(const id of ['NEXT_1_3D','NEXT_5_7D','NEXT_2_3W']){
+  compass.horizons[id]={...compass.horizons[id],expected_direction:'UP',
+    action_posture:'WAIT',
+    expected_path:'Synthetic browser-only source direction; no trading permission.'};
+ }
+ compass.bull_bear_scale={
+  contract:'OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1',owner:'OFFICIAL_COMPASS',
+  authority:{probability_model:false,site_synthesis_allowed:false},
+  resolution:'COARSE_CATEGORICAL_DIRECTION',
+  horizons:Object.fromEntries(['1_3d','5_7d','2_3w'].map(id=>[id,
+    {status:'OK',bull:5,bear:5}]))
+ };
+ compass.capitalization_ladder=['BTC','ETH','LARGE_CAPS','MID_CAPS',
+   'SMALL_CAPS','MICROCAPS','MEMES'].map(segment=>({
+     segment,action:'WAIT',status:'WAIT'
+   }));
+ const verified=inspectOfficialPublicFeeds(latest,compass,{nowUtc:utc(now)}).compass;
+ assert.equal(verified.permit_path_live_gates,kind==='eligible',
+   'ROOT_FIXTURE_INSPECTOR_NOT_'+kind.toUpperCase());
+ return {latest,compass};
+}
+// The browser's sourceCurrent gate is the SAME canonical source inspector.
+// OK + ALIGNED alone does not establish CURRENT: owner expiry, CN linkage,
+// delivery freshness, age and clock semantics must all pass.
+const sourceAt=(nowUtc)=>inspectOfficialPublicFeeds(builtLatest,builtOfficial,{nowUtc}).compass;
 if(rootMode){
- // Adversarial negative: even an otherwise eligible source must be denied
- // when the original publisher declares it DEGRADED. No HTTP fixture or
- // source mutation is applied to the actual browser run.
- const degraded=structuredClone(builtOfficial);
- degraded.data_status='DEGRADED';
- const denied=inspectOfficialPublicFeeds(builtLatest,degraded,{
-   nowUtc:new Date().toISOString()}).compass;
- assert.equal(denied.permit_path_live_gates,false,'ROOT_DEGRADED_NEGATIVE_CONTROL');
  const expiry=Date.parse(builtOfficial?.full_stack?.official_freshness?.valid_until_utc);
  if(Number.isFinite(expiry)){
-   const expired=inspectOfficialPublicFeeds(builtLatest,builtOfficial,{
-     nowUtc:new Date(expiry+1000).toISOString()}).compass;
-   assert.equal(expired.permit_path_live_gates,false,'ROOT_EXPIRED_OWNER_NEGATIVE_CONTROL');
+  const expired=sourceAt(new Date(expiry+1000).toISOString());
+  assert.equal(expired.permit_path_live_gates,false,'ROOT_EXPIRED_OWNER_PROMOTED_TO_CURRENT');
+  assert.notEqual(expired.state,'FRESH','ROOT_EXPIRED_OWNER_ISSUER_FRESH');
  }
 }
-
 
 const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript',
  '.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png'};
@@ -52,6 +106,12 @@ const server=createServer((req,res)=>{
  if(!path.startsWith(base)){res.writeHead(404).end();return;}
  let rel=path.slice(base.length);
  if(!rel||rel.endsWith('/'))rel+='index.html';
+ if(browserFixture&&(rel==='data/latest.json'||rel==='data/compass.json')){
+  fixtureRequests[rel]=(fixtureRequests[rel]||0)+1;
+  res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'})
+   .end(JSON.stringify(rel==='data/latest.json'?browserFixture.latest:browserFixture.compass));
+  return;
+ }
  const file=resolve(dist,rel);
  if(!file.startsWith(dist+sep)){res.writeHead(403).end();return;}
  try{
@@ -535,28 +595,31 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
-   // Read the same fail-closed production source inspector as the shipped UI.
-   // A degraded/expired Official must not be forced into a CURRENT display by
-   // a layout test. Keep the genuine positive branch for a source that passes.
+   // Separate the genuine live-source positive path from the genuine
+   // degraded-source negative path. NEVER mark an old/unqualified Official as
+   // fresh just so the smoke test passes, and never delete the positive case.
    assert.ok(report.horizonOverview.length===3&&
      report.horizonOverview.every(x=>x.direction?.length>1&&x.arrow?.length>0&&x.balance?.length>4)&&
      report.riskCollapsed&&report.readerCollapsed&&report.positionsCollapsed&&
      !report.rotationHasUnknownRaw&&
      report.horizonOverview.every(x=>/Evidenspoint|Evidence points|Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance)),
-     'ROOT_OVERVIEW_STRUCTURE_OR_RAW_STATE:'+JSON.stringify(report.horizonOverview));
-   const sourceEligibility=inspectOfficialPublicFeeds(builtLatest,builtOfficial,{
-     nowUtc:new Date().toISOString()}).compass;
-   if(sourceEligibility.permit_path_live_gates===true){
+     'ROOT_OVERVIEW_STRUCTURE_OR_RAW_STATE:'+JSON.stringify(report));
+   const verifiedSource=sourceAt(new Date().toISOString());
+   if(verifiedSource.permit_path_live_gates===true){
      assert.ok(report.rotationRows>0&&report.horizonOverview.every(x=>x.valid==='true'&&
        !/Ingen aktuel vurdering|No current outlook/.test(x.direction)),
-       'ROOT_ELIGIBLE_SOURCE_NOT_VISIBLE:'+JSON.stringify(report.horizonOverview));
+       'ROOT_VERIFIED_SOURCE_BOUND_OVERVIEW_NOT_VISIBLE:'+JSON.stringify(report));
    }else{
      assert.ok(builtOfficial?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&
-       report.horizonOverview.every(x=>x.valid==='false'&&x.arrow==='?'&&
+       verifiedSource.permit_path_live_gates!==true&&
+       report.horizonOverview.every(x=>x.valid==='false'&&
          /Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
+         x.arrow==='?'&&
          /Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance))&&
        /Ingen aktuel vurdering|No current outlook/.test(report.source),
-       'ROOT_UNAVAILABLE_SOURCE_FALSELY_PROMOTED:'+JSON.stringify(report.horizonOverview));
+       'ROOT_DEGRADED_SOURCE_WAS_PROMOTED_OR_HIDDEN:'+JSON.stringify({
+         officialStatus:builtOfficial?.data_status,week:builtOfficial?.weekly_context?.status,
+         source:report.source,cards:report.horizonOverview}));
    }
    assert.ok(report.actionWhy.length>22&&!report.actionWhy.includes('HOLD_WAIT'),
      'ROOT_VERDICT_NO_ADAPTIVE_PLAIN_LANGUAGE_EXPLANATION:'+JSON.stringify(report));
@@ -680,6 +743,8 @@ try{
      glossaryTerms:legend.querySelectorAll('#cn-position-terms dt').length,
      riskStages:document.querySelectorAll('#cn-risk-quick-steps .risk-step').length,
      rotationRows:document.querySelectorAll('#cn-rotation-classes [role="listitem"]').length,
+     sourceCurrent:document.querySelector('[data-cn-overview="d13"]')?.dataset.sourceCurrent,
+     rotationSummary:document.getElementById('cn-rotation-summary')?.textContent||'',
      action:document.getElementById('premium-now-action')?.textContent,
      legendExplainsNoMandatorySequence:
       /ikke aktive signaler|not an active|mandatory/.test(
@@ -689,15 +754,18 @@ try{
     risk.open=false;legend.open=false;
     return state;
    });
-   // Rotation is source-bound. On a genuinely unavailable Official, zero
-   // rows is the required fail-closed result, not a missing UI disclosure.
-   const liveSource=inspectOfficialPublicFeeds(builtLatest,builtOfficial,{
-     nowUtc:new Date().toISOString()}).compass.permit_path_live_gates===true;
+   // The live Official feed may expire between two real-browser PR runs.
+   // When stale, NO actionable class rows may be shown; when current,
+   // the rail must still contain source-authorized position guidance.
+   const rotationGate=disclosure.sourceCurrent==='true'
+     ? disclosure.rotationRows>0
+     : disclosure.sourceCurrent==='false'&&disclosure.rotationRows===0&&
+       /afventer|unavailable|awaiting/.test(disclosure.rotationSummary.toLowerCase());
    assert.ok(disclosure.riskOpen&&disclosure.legendOpen&&
      disclosure.glossaryTerms===8&&disclosure.riskStages===5&&
-     (liveSource?disclosure.rotationRows>0:disclosure.rotationRows===0)&&
-     disclosure.readerClosed&&disclosure.legendExplainsNoMandatorySequence,
-     'ROOT_DISCREET_DISCLOSURE_FAILED:'+JSON.stringify({disclosure,liveSource}));
+     rotationGate&&disclosure.readerClosed&&
+     disclosure.legendExplainsNoMandatorySequence,
+     'ROOT_DISCREET_DISCLOSURE_FAILED:'+JSON.stringify(disclosure));
    if(process.env.GITHUB_EVENT_NAME==='pull_request'){
     const visible=await evaluate(()=>{
      const panel=document.querySelector('.cn-risk-quick');
@@ -778,6 +846,61 @@ try{
    }
    released.push({width,oneB:true,onePRO:true,source:true});
   }
+  // Deterministic REAL ROOT BROWSER paths. A degraded real public feed cannot
+  // stand in for a positive test; fixtures are HTTP-only and never published.
+  // The positive case is mutation-sensitive: an always-UNAVAILABLE renderer
+  // must fail the same live-card assertions, not silently count as a PASS.
+  const requireEligible=snapshot=>{
+   assert.equal(snapshot.current,'true','ROOT_FIXTURE_ALWAYS_UNAVAILABLE_CURRENT');
+   assert.ok(snapshot.cards.length===3&&snapshot.cards.every(x=>
+     x.valid==='true'&&x.arrow!=='?'&&
+     !/Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
+     /Bull 5/.test(x.balance))&&snapshot.rotation>0,
+     'ROOT_FIXTURE_ELIGIBLE_CARDS_NOT_RENDERED:'+JSON.stringify(snapshot));
+  };
+  assert.throws(()=>requireEligible({current:'false',cards:[],rotation:0}),
+    /ROOT_FIXTURE_ALWAYS_UNAVAILABLE_CURRENT/,
+    'ROOT_FIXTURE_ALWAYS_UNAVAILABLE_MUTANT_ESCAPED');
+  for(const kind of ['eligible','degraded','expired']){
+   browserFixture=makeRootFixture(kind);
+   fixtureRequests={};
+   await send('Emulation.setDeviceMetricsOverride',{
+    width:390,height:844,deviceScaleFactor:1,mobile:true});
+   await send('Page.navigate',{url:origin+'?source_fixture='+kind});
+   let ready=false;
+   for(let attempt=0;attempt<100;attempt++){
+    await delay(100);
+    ready=await evaluate(()=>document.readyState==='complete'&&
+     !!document.getElementById('compass-pro')&&
+     (document.getElementById('pro-source-status')?.textContent||'')!==
+      'Kontrollerer officiel kilde og gyldighed…');
+    if(ready&&fixtureRequests['data/latest.json']&&fixtureRequests['data/compass.json'])break;
+   }
+   assert.ok(ready&&fixtureRequests['data/latest.json']>0&&
+     fixtureRequests['data/compass.json']>0,
+     'ROOT_FIXTURE_NOT_LOADED_FROM_HTTP:'+kind+':'+JSON.stringify(fixtureRequests));
+   const snapshot=await evaluate(()=>({
+    current:document.getElementById('compass-pro')?.dataset.sourceCurrent,
+    source:document.getElementById('pro-source-status')?.textContent||'',
+    rotation:document.querySelectorAll('#cn-rotation-classes [role="listitem"]').length,
+    cards:[...document.querySelectorAll('.cn-horizon-card')].map(el=>({
+     valid:el.dataset.sourceCurrent,
+     direction:el.querySelector('.cn-horizon-direction strong')?.textContent||'',
+     arrow:el.querySelector('.cn-horizon-arrow')?.textContent||'',
+     balance:el.querySelector('.cn-evidence small')?.textContent||''
+    }))
+   }));
+   if(kind==='eligible')requireEligible(snapshot);
+   else assert.ok(snapshot.current==='false'&&snapshot.rotation===0&&
+    snapshot.cards.length===3&&snapshot.cards.every(x=>x.valid==='false'&&
+     x.arrow==='?'&&/Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
+     /Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance)),
+    'ROOT_FIXTURE_INVALID_SOURCE_PROMOTED:'+kind+':'+JSON.stringify(snapshot));
+   assert.deepEqual(errors,[],'ROOT_FIXTURE_JS_ERRORS:'+kind);
+   assert.deepEqual(responses,[],'ROOT_FIXTURE_ASSET_ERRORS:'+kind);
+  }
+  browserFixture=null;
+  console.log('ROOT_SOURCE_FIXTURE_ELIGIBLE_DEGRADED_EXPIRED_BROWSER_PASS');
   // Desktop pixels complete the same two-gate visual inspection.
   if(process.env.GITHUB_EVENT_NAME==='pull_request'){
    await send('Emulation.setDeviceMetricsOverride',{width:1440,height:960,deviceScaleFactor:1,mobile:false});
