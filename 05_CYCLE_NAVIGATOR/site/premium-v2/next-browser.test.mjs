@@ -685,6 +685,8 @@ try{
      glossaryTerms:legend.querySelectorAll('#cn-position-terms dt').length,
      riskStages:document.querySelectorAll('#cn-risk-quick-steps .risk-step').length,
      rotationRows:document.querySelectorAll('#cn-rotation-classes [role="listitem"]').length,
+     sourceCurrent:document.querySelector('[data-cn-overview="d13"]')?.dataset.sourceCurrent,
+     rotationSummary:document.getElementById('cn-rotation-summary')?.textContent||'',
      action:document.getElementById('premium-now-action')?.textContent,
      legendExplainsNoMandatorySequence:
       /ikke aktive signaler|not an active|mandatory/.test(
@@ -694,9 +696,16 @@ try{
     risk.open=false;legend.open=false;
     return state;
    });
+   // The live Official feed may expire between two real-browser PR runs.
+   // When stale, NO actionable class rows may be shown; when current,
+   // the rail must still contain source-authorized position guidance.
+   const rotationGate=disclosure.sourceCurrent==='true'
+     ? disclosure.rotationRows>0
+     : disclosure.sourceCurrent==='false'&&disclosure.rotationRows===0&&
+       /afventer|unavailable|awaiting/.test(disclosure.rotationSummary.toLowerCase());
    assert.ok(disclosure.riskOpen&&disclosure.legendOpen&&
      disclosure.glossaryTerms===8&&disclosure.riskStages===5&&
-     disclosure.rotationRows>0&&disclosure.readerClosed&&
+     rotationGate&&disclosure.readerClosed&&
      disclosure.legendExplainsNoMandatorySequence,
      'ROOT_DISCREET_DISCLOSURE_FAILED:'+JSON.stringify(disclosure));
    if(process.env.GITHUB_EVENT_NAME==='pull_request'){
