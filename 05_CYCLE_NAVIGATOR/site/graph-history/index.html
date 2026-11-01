@@ -93,7 +93,7 @@ function draw(){
  });
  const values=[...eligible.map(p=>p[1]),...preds.flat().map(p=>p[1])];
  const wide=Math.max(880, selected.length*220),height=440, left=78,right=25,top=34,bottom=55;
- svg.setAttribute('width',wide);svg.setAttribute('viewBox',\`0 0 \${wide} \${height}\`);
+ svg.setAttribute('width',wide);svg.setAttribute('viewBox',`0 0 ${wide} ${height}`);
  if(!selected.length||!values.length){
   svgText(36,140,'Ingen originale historiske kurser endnu',21);
   svgText(36,175,'Uge 45 åbner, når mandagens originale data foreligger.',14);
@@ -116,7 +116,7 @@ function draw(){
  }
  if(eligible.length){const p=eligible.at(-1);el('circle',{cx:xf(p[0]),cy:yf(p[1]),r:5,fill:'#fff',stroke:'#099866','stroke-width':3});}
  const missing=selected.filter(w=>w.forecast_status!=='PUBLISHED').length;
- $('notice').textContent=missing?\`\${missing} uge(r) uden kildeudstedt 7-dages prognose, vist uden opdigtet blå kurve.\`:'Alle viste uger har syv originale CN-prognosepunkter.';
+ $('notice').textContent=missing?`${missing} uge(r) uden kildeudstedt 7-dages prognose, vist uden opdigtet blå kurve.`:'Alle viste uger har syv originale CN-prognosepunkter.';
  }
 function table(){
  $('weeks').textContent=data.weeks.length;
@@ -126,7 +126,7 @@ function table(){
  for(const w of [...data.weeks].reverse()){
   const tr=document.createElement('tr');
   const status=w.forecast_status==='PUBLISHED'?'7 originale punkter':'Ikke udstedt';
-  for(const value of [w.week,status,\`\${w.observed_hours}/168 · \${w.actual_status}\`]){
+  for(const value of [w.week,status,`${w.observed_hours}/168 · ${w.actual_status}`]){
    const td=document.createElement('td');td.textContent=value;tr.append(td);}
   body.append(tr);
  }
