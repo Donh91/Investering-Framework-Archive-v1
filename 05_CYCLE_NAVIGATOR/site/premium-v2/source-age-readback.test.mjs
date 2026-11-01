@@ -108,3 +108,35 @@ test('adversarial contradictory timestamp/age or evaluation clock fails closed',
  futurePacket.source_bindings.auto_market_state.freshness.checks[1].timestamp='2026-10-13T14:15:43Z';
  assert.equal(originalSourceAgeAtIssue(futurePacket,projection).status,'UNKNOWN');
 });
+
+test('issuer clock statuses must both be PASS before presenting numeric source ages',()=>{
+ for(const laneIndex of [0,1]){
+  for(const bad of ['WARN','FAIL','UNKNOWN','',null,undefined]){
+   const d=internal();
+   const lane=d.source_bindings.auto_market_state.freshness.checks[laneIndex];
+   if(bad===undefined)delete lane.status; else lane.status=bad;
+   const readback=originalSourceAgeAtIssue(d,projection);
+   assert.equal(readback.status,'UNKNOWN','non-PASS clock cannot be a numeric age');
+   const shown=originalSourceAgeLabel({...projection,original_source_age_at_issue:readback},
+     {lang:'en',valid:true});
+   assert.match(shown,/unknown/);
+   assert.doesNotMatch(shown,/market data [0-9]/);
+  }
+ }
+ assert.equal(originalSourceAgeAtIssue(internal(),projection).status,
+   'ORIGINAL_ISSUANCE_CLOCKS_ONLY');
+});
+
+test('copied public metadata cannot hide a non-PASS clock under valid source flag',()=>{
+ const valid=originalSourceAgeAtIssue(internal(),projection);
+ for(const lane of ['observation_clock_status','packet_clock_status']){
+  for(const bad of ['FAIL','WARN',null,undefined]){
+   const forged={...valid,[lane]:bad};
+   const pub={...projection,original_source_age_at_issue:forged};
+   assert.match(originalSourceAgeLabel(pub,{valid:true,lang:'da'}),/ukendt/);
+   assert.match(originalSourceAgeLabel(pub,{valid:true,lang:'en'}),/unknown/);
+  }
+ }
+ assert.match(originalSourceAgeLabel(
+   {...projection,original_source_age_at_issue:valid},{valid:true}),/markedsdata 135 min/);
+});
