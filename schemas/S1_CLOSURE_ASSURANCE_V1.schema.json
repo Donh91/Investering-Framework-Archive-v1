@@ -43,7 +43,7 @@
     },
     "original_url": {
       "type": "string",
-      "pattern": "^https://github.com/"
+      "pattern": "^https://github\\.com/Donh91/"
     },
     "status": {
       "enum": [
@@ -76,7 +76,8 @@
     },
     "last_material_progress_utc": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
     },
     "next_action": {
       "type": "string",
@@ -157,7 +158,8 @@
         },
         "verified_at_utc": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
         }
       }
     },
@@ -179,6 +181,29 @@
           "minLength": 10
         },
         "expected_user_value": {
+          "type": "string",
+          "minLength": 10
+        }
+      }
+    },
+    "stall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root_cause",
+        "falsifier",
+        "different_next_step"
+      ],
+      "properties": {
+        "root_cause": {
+          "type": "string",
+          "minLength": 10
+        },
+        "falsifier": {
+          "type": "string",
+          "minLength": 10
+        },
+        "different_next_step": {
           "type": "string",
           "minLength": 10
         }
@@ -251,6 +276,143 @@
           "authority": {
             "const": "ADVISORY_ONLY"
           }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PROCESS_STALLED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "stall"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "CLOSED_VERIFIED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "closure_proof": {
+            "properties": {
+              "disposition": {
+                "const": "MERGED_AND_VERIFIED"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "REJECTED_WITH_EVIDENCE"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "closure_proof": {
+            "properties": {
+              "disposition": {
+                "const": "REJECTED"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "SUPERSEDED_VERIFIED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "closure_proof": {
+            "properties": {
+              "disposition": {
+                "const": "SUPERSEDED"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ADOPTED_VERIFIED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "closure_proof": {
+            "properties": {
+              "disposition": {
+                "const": "ADOPTED_AND_VERIFIED"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "DISCOVERED",
+              "ACTIONABLE",
+              "IN_PROGRESS",
+              "BLOCKED_WITH_TRIGGER",
+              "READY_FOR_TEST",
+              "IN_VALIDATION",
+              "VERIFICATION",
+              "PROCESS_STALLED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "closure_proof"
+          ]
         }
       }
     }
