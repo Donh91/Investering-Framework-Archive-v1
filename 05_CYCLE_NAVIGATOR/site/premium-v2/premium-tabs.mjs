@@ -35,6 +35,17 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     en:{compass:'Compass',graph:'Weekly forecast',path:'Market cycle',proof:'Results'}
   };
   const lang = () => document.querySelector('[data-lang][aria-pressed="true"]')?.getAttribute('data-lang') === 'en' ? 'en' : 'da';
+  // Keep the selected tab discoverable when browser zoom makes the rail scroll.
+  // Change only the rail's horizontal position, never the page scroll or tab model.
+  const revealSelected = link => {
+    if (!link || nav.scrollWidth <= nav.clientWidth + 1) return;
+    const rail = nav.getBoundingClientRect(), item = link.getBoundingClientRect();
+    const padding = 8;
+    if (item.left < rail.left + padding)
+      nav.scrollLeft -= rail.left + padding - item.left;
+    else if (item.right > rail.right - padding)
+      nav.scrollLeft += item.right - (rail.right - padding);
+  };
   const paintLabels = () => {
     const compact=window.matchMedia('(max-width: 440px)').matches;
     const names={...translations[lang()]};
@@ -45,6 +56,8 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     for (const x of nodes) if(x.link.textContent!==names[x.key]) x.link.textContent=names[x.key];
     const navName=lang()==='en'?'Choose market view':'Vælg markedsvisning';
     if(nav.getAttribute('aria-label')!==navName)nav.setAttribute('aria-label',navName);
+    const active=nodes.find(x=>x.link.getAttribute('aria-selected')==='true');
+    if(active)revealSelected(active.link);
   };
   const fromHash = () => nodes.find(x => '#'+x.id === location.hash)?.key;
   const activate = (key, changeUrl=false) => {
@@ -58,6 +71,7 @@ if (nav && nodes.every(x => x.link && x.panel)) {
       else x.link.removeAttribute('aria-current');
     }
     document.body.dataset.cnSiteView=selected.key;
+    revealSelected(selected.link);
     if (changeUrl) history.pushState({cnSiteView:selected.key},'', '#'+selected.id);
   };
   for (const x of nodes) x.link.addEventListener('click',event => {

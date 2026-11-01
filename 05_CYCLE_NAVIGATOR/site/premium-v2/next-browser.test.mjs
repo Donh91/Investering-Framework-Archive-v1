@@ -11,6 +11,7 @@ import {resolve,dirname,extname,join,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {tmpdir} from 'node:os';
 import {setTimeout as delay} from 'node:timers/promises';
+import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
 
 const here=dirname(fileURLToPath(import.meta.url));
 const dist=resolve(here,'../dist');
@@ -22,6 +23,25 @@ assert.ok(chrome,'NEXT_BROWSER_NO_CHROME');
 assert.ok(existsSync(resolve(dist,'next/index.html')),'NEXT_BROWSER_NO_REAL_VITE_ROOT');
 assert.ok(existsSync(resolve(dist,'next/graph-b/source-graph-b.html')),'NEXT_BROWSER_NO_B_ENTRY');
 if(rootMode)assert.ok(existsSync(resolve(dist,'index.html')),'ROOT_BROWSER_MISSING_OFFICIAL_ENTRY');
+const builtOfficial=rootMode?JSON.parse(readFileSync(resolve(dist,'data/compass.json'),'utf8')):null;
+const builtLatest=rootMode?JSON.parse(readFileSync(resolve(dist,'data/latest.json'),'utf8')):null;
+if(rootMode){
+ // Adversarial negative: even an otherwise eligible source must be denied
+ // when the original publisher declares it DEGRADED. No HTTP fixture or
+ // source mutation is applied to the actual browser run.
+ const degraded=structuredClone(builtOfficial);
+ degraded.data_status='DEGRADED';
+ const denied=inspectOfficialPublicFeeds(builtLatest,degraded,{
+   nowUtc:new Date().toISOString()}).compass;
+ assert.equal(denied.permit_path_live_gates,false,'ROOT_DEGRADED_NEGATIVE_CONTROL');
+ const expiry=Date.parse(builtOfficial?.full_stack?.official_freshness?.valid_until_utc);
+ if(Number.isFinite(expiry)){
+   const expired=inspectOfficialPublicFeeds(builtLatest,builtOfficial,{
+     nowUtc:new Date(expiry+1000).toISOString()}).compass;
+   assert.equal(expired.permit_path_live_gates,false,'ROOT_EXPIRED_OWNER_NEGATIVE_CONTROL');
+ }
+}
+
 
 const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript',
  '.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png'};
@@ -369,6 +389,64 @@ try{
 
 
  if(rootMode){
+  // Real 320 CSS-px Chrome layout proxy for the 200%-zoom reflow.
+  // Unlike a CSS source-string assertion, this exercises rendered root
+  // panels and tab-rail scroll. It is NOT Safari/VoiceOver certification.
+  await send('Emulation.setDeviceMetricsOverride',{
+   width:320,height:700,deviceScaleFactor:1,mobile:true});
+  await send('Page.navigate',{url:origin});
+  let narrowReady=false;
+  for(let attempt=0;attempt<100;attempt++){
+   await delay(100);
+   narrowReady=await evaluate(()=>document.readyState==='complete'&&
+    !!document.getElementById('compass-pro')&&
+    (document.getElementById('pro-source-status')?.textContent||'')!==
+     'Kontrollerer officiel kilde og gyldighed…');
+   if(narrowReady)break;
+  }
+  assert.ok(narrowReady,'ROOT_320_SOURCE_NOT_READY');
+  const narrow=await evaluate(()=>{
+   const nav=document.querySelector('.premium-entry-navigation');
+   const cards=document.querySelector('.cn-overview-cards');
+   const description=document.querySelector('.cn-horizon-card p');
+   const proof=document.querySelector('[data-premium-nav="proof"]');
+   proof?.click();
+   const rail=nav?.getBoundingClientRect(),item=proof?.getBoundingClientRect();
+   return {
+    width:innerWidth,
+    overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+    cardsColumns:cards?getComputedStyle(cards).gridTemplateColumns:null,
+    sourceTextClamp:description?getComputedStyle(description).webkitLineClamp:null,
+    selected:proof?.getAttribute('aria-selected'),
+    proofVisible:!!(rail&&item&&item.left>=rail.left-2&&item.right<=rail.right+2),
+    railScroll:nav?.scrollLeft??null,
+    railScrollable:!!nav&&nav.scrollWidth>nav.clientWidth+1,
+    sourceVisible:!!document.getElementById('pro-source-status')
+   };
+  });
+  assert.ok(narrow.width===320&&narrow.overflow<=2&&
+   /^(?:minmax\(0(?:px)?,\s*1fr\)|\d+(?:\.\d+)?px)$/.test(narrow.cardsColumns||'')&&
+   narrow.sourceTextClamp==='none'&&
+   narrow.selected==='true'&&narrow.proofVisible&&narrow.sourceVisible,
+   'ROOT_320_REFLOW_OR_TAB_FAILURE:'+JSON.stringify(narrow));
+  const narrowGraph=await evaluate(()=>{
+   document.querySelector('[data-premium-nav="graph"]')?.click();
+   const plot=document.querySelector('#variant-panel .plot-shell');
+   const svg=document.querySelector('#variant-panel #chart');
+   const axis=document.querySelector('#variant-panel .chart-price-axis');
+   return {
+    selected:document.querySelector('[data-premium-nav="graph"]')?.getAttribute('aria-selected'),
+    plotWidth:plot?.getBoundingClientRect().width??0,
+    chartWidth:svg?.getBoundingClientRect().width??0,
+    axisWidth:axis?.getBoundingClientRect().width??0,
+    overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth
+   };
+  });
+  assert.ok(narrowGraph.selected==='true'&&narrowGraph.plotWidth>=200&&
+   narrowGraph.chartWidth>=150&&narrowGraph.axisWidth>0&&narrowGraph.overflow<=2,
+   'ROOT_320_CHART_REFLOW_FAILURE:'+JSON.stringify(narrowGraph));
+  console.log('ROOT_320_CHROME_ZOOM_PROXY_PASS '+JSON.stringify({narrow,narrowGraph}));
+
   const released=[];
   for(const width of [390,430]){
    await send('Emulation.setDeviceMetricsOverride',{width,height:width===390?844:932,
@@ -457,12 +535,29 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   // Read the same fail-closed production source inspector as the shipped UI.
+   // A degraded/expired Official must not be forced into a CURRENT display by
+   // a layout test. Keep the genuine positive branch for a source that passes.
    assert.ok(report.horizonOverview.length===3&&
      report.horizonOverview.every(x=>x.direction?.length>1&&x.arrow?.length>0&&x.balance?.length>4)&&
      report.riskCollapsed&&report.readerCollapsed&&report.positionsCollapsed&&
-     report.rotationRows>0&&!report.rotationHasUnknownRaw&&
+     !report.rotationHasUnknownRaw&&
      report.horizonOverview.every(x=>/Evidenspoint|Evidence points|Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance)),
-     'ROOT_SOURCE_BOUND_OVERVIEW_NOT_VISIBLE:'+JSON.stringify(report.horizonOverview));
+     'ROOT_OVERVIEW_STRUCTURE_OR_RAW_STATE:'+JSON.stringify(report.horizonOverview));
+   const sourceEligibility=inspectOfficialPublicFeeds(builtLatest,builtOfficial,{
+     nowUtc:new Date().toISOString()}).compass;
+   if(sourceEligibility.permit_path_live_gates===true){
+     assert.ok(report.rotationRows>0&&report.horizonOverview.every(x=>x.valid==='true'&&
+       !/Ingen aktuel vurdering|No current outlook/.test(x.direction)),
+       'ROOT_ELIGIBLE_SOURCE_NOT_VISIBLE:'+JSON.stringify(report.horizonOverview));
+   }else{
+     assert.ok(builtOfficial?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&
+       report.horizonOverview.every(x=>x.valid==='false'&&x.arrow==='?'&&
+         /Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
+         /Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance))&&
+       /Ingen aktuel vurdering|No current outlook/.test(report.source),
+       'ROOT_UNAVAILABLE_SOURCE_FALSELY_PROMOTED:'+JSON.stringify(report.horizonOverview));
+   }
    assert.ok(report.actionWhy.length>22&&!report.actionWhy.includes('HOLD_WAIT'),
      'ROOT_VERDICT_NO_ADAPTIVE_PLAIN_LANGUAGE_EXPLANATION:'+JSON.stringify(report));
    assert.ok(report.nowCaption&&/Nu · seneste prisbevægelse|Now · latest observed price move/.test(report.nowCaption)&&
@@ -594,11 +689,15 @@ try{
     risk.open=false;legend.open=false;
     return state;
    });
+   // Rotation is source-bound. On a genuinely unavailable Official, zero
+   // rows is the required fail-closed result, not a missing UI disclosure.
+   const liveSource=inspectOfficialPublicFeeds(builtLatest,builtOfficial,{
+     nowUtc:new Date().toISOString()}).compass.permit_path_live_gates===true;
    assert.ok(disclosure.riskOpen&&disclosure.legendOpen&&
      disclosure.glossaryTerms===8&&disclosure.riskStages===5&&
-     disclosure.rotationRows>0&&disclosure.readerClosed&&
-     disclosure.legendExplainsNoMandatorySequence,
-     'ROOT_DISCREET_DISCLOSURE_FAILED:'+JSON.stringify(disclosure));
+     (liveSource?disclosure.rotationRows>0:disclosure.rotationRows===0)&&
+     disclosure.readerClosed&&disclosure.legendExplainsNoMandatorySequence,
+     'ROOT_DISCREET_DISCLOSURE_FAILED:'+JSON.stringify({disclosure,liveSource}));
    if(process.env.GITHUB_EVENT_NAME==='pull_request'){
     const visible=await evaluate(()=>{
      const panel=document.querySelector('.cn-risk-quick');
