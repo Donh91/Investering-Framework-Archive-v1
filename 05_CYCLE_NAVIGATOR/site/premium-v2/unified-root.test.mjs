@@ -715,3 +715,26 @@ test('directional vector icons preserve source states and all legacy textContent
   'cn-overview-d13-arrow','cn-overview-d57-arrow','cn-overview-w23-arrow',
   'chart','forecast','actual'])assert.equal(id(html,name),1);
 });
+
+
+test('SITE Graph History link is rendered separately from the exact original Graph B markup',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ const history=await read('../graph-history/index.html');
+ const originalB=original.slice(original.indexOf('<section id="variant-panel"'),
+   original.indexOf('<section id="proof-explorer"'));
+ assert.ok(html.includes(originalB.trim().replace(/<\/section>\s*$/,'').trim()),
+  'original B must remain byte-identical');
+ assert.equal(id(html,'cn-graph-history-link'),0,'new route belongs to DOM presentation only');
+ assert.match(history,/CN_GRAPH_HISTORY_TIMELINE_v1/);
+ assert.match(history,/data\/graph-history\/timeline\.json/);
+ const tabs=await read('./premium-tabs.mjs');
+ const css=await read('./premium-tabs.css');
+ assert.match(tabs,/graphPanel\.append\(entry\)/);
+ assert.match(tabs,/link\.href='\/Investering-Framework-Archive-v1\/graph-history\/'/);
+ assert.match(tabs,/Fra uge 45 \(2026\)/);
+ assert.match(tabs,/Graph history/);
+ assert.match(css,/\.cn-tabbed-ui \.cn-graph-history-entry a/);
+ assert.match(css,/min-height:44px/);
+ assert.equal((html.match(/data-premium-nav="graph"/g)||[]).length,1);
+ assert.doesNotMatch(tabs,/Math\.sin|forecast_low|forecast_high|fetch\(|probability|probabilit/);
+});

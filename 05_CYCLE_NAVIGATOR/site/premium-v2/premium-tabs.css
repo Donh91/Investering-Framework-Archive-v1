@@ -311,3 +311,11 @@
   transition:none!important;animation:none!important;
  }
 }
+
+/* SOURCE-ONLY GRAPH HISTORY · one quiet route in the weekly forecast tab. */
+.cn-tabbed-ui .cn-graph-history-entry{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;padding:13px 15px;background:#f7f9fc;border:1px solid #dfe7ef;border-radius:12px}
+.cn-tabbed-ui .cn-graph-history-entry strong{display:block;color:#123656;font-size:14px;line-height:1.35}
+.cn-tabbed-ui .cn-graph-history-entry p{margin:4px 0 0;color:#536b81;font-size:12px;line-height:1.55;max-width:65ch}
+.cn-tabbed-ui .cn-graph-history-entry a{display:inline-flex;align-items:center;justify-content:center;flex:none;min-height:44px;padding:10px 13px;background:#fff;color:#245a91;border:1px solid #cbdbea;border-radius:9px;font-size:12px;font-weight:740;text-decoration:none;text-align:center}
+.cn-tabbed-ui .cn-graph-history-entry a:hover,.cn-tabbed-ui .cn-graph-history-entry a:focus-visible{border-color:#2f6fda;outline-offset:3px;text-decoration:underline}
+@media(max-width:560px){.cn-tabbed-ui .cn-graph-history-entry{align-items:stretch;flex-direction:column;gap:8px;padding:12px}.cn-tabbed-ui .cn-graph-history-entry a{align-self:flex-start}}
