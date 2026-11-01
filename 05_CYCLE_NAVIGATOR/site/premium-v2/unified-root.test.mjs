@@ -609,6 +609,6 @@ test('200 percent reflow keeps approved Graph B geometry, full source meaning an
  assert.match(graphSource,/attr\('forecast','d',''\)/);
  assert.match(graphSource,/attr\('actual','d'/);
  const markup=buildUnifiedRootHtml(original,pro);
- for(const id of ['chart','forecast','actual','compass-pro','official-path-view'])
-  assert.equal(id(markup,id),1);
+ for(const name of ['chart','forecast','actual','compass-pro','official-path-view'])
+  assert.equal(id(markup,name),1);
 });
