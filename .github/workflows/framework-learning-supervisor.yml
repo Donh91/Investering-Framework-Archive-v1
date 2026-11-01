@@ -394,7 +394,7 @@ jobs:
           registry=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
           policy=json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
           task=registry['tasks']['SENIOR_REPAIR_AUDIT']
-          assert task['model']=='gpt-6-sol'
+          assert task['model']=='gpt-6.1-sol'
           assert task['reasoning_effort']=='high'
           assert task['invocation_mode']=='EVENT_DRIVEN_OWNER_GATED_ONLY'
           assert task['advisory_only'] is True

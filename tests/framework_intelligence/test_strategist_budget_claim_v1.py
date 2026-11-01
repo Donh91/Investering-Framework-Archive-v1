@@ -157,7 +157,9 @@ class BudgetClaimTests(unittest.TestCase):
 
     def test_worst_case_includes_output_tokens(self):
         amount = max_liability(self.root, self.runtime)
-        self.assertGreaterEqual(amount, 0.054)
+        # Latest Terra 6.1 output is $5/M versus Sol 6.1 $10/M.
+        # At 5,400 reserved output tokens, worst-case liability includes >= $0.027.
+        self.assertGreaterEqual(amount, 0.027)
         self.assertLessEqual(amount, 0.15)
         (self.runtime / "context.json").write_text("x"*12002)
         with self.assertRaisesRegex(ValueError, "unbounded"):

@@ -954,7 +954,7 @@ def build_box(scorecard: dict[str, Any], current_freeze: dict[str, Any], generic
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", type=Path, default=Path("."))
-    ap.add_argument("--model", default="gpt-5.6-terra")
+    ap.add_argument("--model", default="gpt-6.1-terra")
     ap.add_argument("--max-output-tokens", type=int, default=5000)
     args = ap.parse_args()
     repo = args.repo_root.resolve()
