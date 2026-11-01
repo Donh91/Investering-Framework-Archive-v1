@@ -61,8 +61,12 @@ def official_horizon(compass: Mapping[str, Any], key: str) -> dict[str, Any]:
     row = horizons.get(key)
     row = row if isinstance(row, Mapping) else {}
     if key == "NEXT_12H":
-        nowcast = (row.get("semantics") == "OBSERVED_MOMENTUM_NOT_FORECAST"
-                   and row.get("predictive_edge_status") == "NOT_PROVEN")
+        nowcast = (
+            compass.get("decision_policy_version")
+            == "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1"
+            and row.get("semantics") == "OBSERVED_MOMENTUM_NOT_FORECAST"
+            and row.get("predictive_edge_status") == "NOT_PROVEN"
+        )
         return {
             "direction": "UNAVAILABLE",
             "observed_momentum_direction": clean_direction(row.get("expected_direction")) if nowcast else "UNAVAILABLE",
