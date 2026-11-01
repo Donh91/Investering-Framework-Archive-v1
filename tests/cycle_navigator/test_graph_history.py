@@ -135,6 +135,46 @@ class GraphHistoryTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "CONFLICTING_SOURCE_HOUR"):
             observed(self.root, W45)
 
+    def test_missing_forecast_week_never_backfills_but_keeps_actual_curve(self):
+        source(self.root, W46, issued="2026-11-09T07:00:00Z")
+        at = datetime(2026, 11, 2, 0, tzinfo=timezone.utc)
+        hour(self.root, at)
+        one = archive(self.root, W46)
+        self.assertEqual(one["weeks"][0]["status"], "MISSING_FREEZE")
+        self.assertIsNone(one["weeks"][0]["forecast_path"])
+        actual_file = self.root / ROOT / "weeks/2026/W45/actual-series.json"
+        self.assertEqual(json.loads(actual_file.read_text())["observed_hours"], 1)
+        self.assertEqual(len(publish(self.root)["actual"]), 1)
+        source(self.root, W45, issued="2026-11-02T07:00:00Z")
+        two = archive(self.root, W46)
+        self.assertEqual(two["weeks"][0]["status"], "MISSING_FREEZE")
+        self.assertEqual(two["weeks"][0]["chain_digest"], one["weeks"][0]["chain_digest"])
+        self.assertFalse((self.root / ROOT / "weeks/2026/W45/forecast-reference.json").exists())
+        self.assertEqual(publish(self.root)["weeks"][0]["forecast"], [])
+        # Missing a forecast must not weaken the original hourly immutability gate.
+        path = self.root / "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-02.csv"
+        path.write_text(path.read_text().replace("80200", "80301"))
+        with self.assertRaisesRegex(ValueError, "ACTUAL_MUTATION_OR_LOST_HOUR"):
+            archive(self.root, W46)
+
+    def test_recorded_forecast_cannot_disappear_on_later_archive(self):
+        folder = source(self.root)
+        original = archive(self.root, W45)
+        (folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").unlink()
+        with self.assertRaisesRegex(ValueError, "INDEX_HISTORY_REWRITE"):
+            archive(self.root, W45)
+        self.assertEqual(json.loads((self.root / ROOT / "index.json").read_text()), original)
+
+    def test_prior_chain_tampering_cannot_be_rehashed_to_a_new_history(self):
+        source(self.root)
+        archive(self.root, W45)
+        path = self.root / ROOT / "index.json"
+        old = json.loads(path.read_text())
+        old["weeks"][0]["chain_digest"] = "0" * 64
+        put(path, old)
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_CHAIN"):
+            archive(self.root, W45)
+
     def test_reject_future_wrong_week_bad_spot_and_invalid_quote(self):
         source(self.root)
         hour(self.root, datetime(2026, 11, 2, 0, tzinfo=timezone.utc), spot="FAIL")
