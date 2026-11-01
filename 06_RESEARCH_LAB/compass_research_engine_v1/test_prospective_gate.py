@@ -9,6 +9,7 @@ def freeze(**changes):
         "contract": "OFFICIAL_DAILY_COMPASS_v1",
         "compass_id": "CMP-20261102-aaaaaaaaaaaa",
         "scoring_contract": "OFFICIAL_DAILY_COMPASS_SCORING_v3",
+        "decision_policy_version": "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
         "issued_at_utc": "2026-11-02T07:17:00Z",
         "market_reference": {"observation_open_utc": "2026-11-02T06:00:00Z", "btc_usdt": 77777.0},
         "market_now": {"btc_delta_pct": -0.5,
@@ -49,6 +50,52 @@ class TemporalGateTests(unittest.TestCase):
         self.assertFalse(row["independent_source_first_known_verified"])
         self.assertFalse(row["external_full_day_census_verified"])
         self.assertEqual(row["evidence_state"], "CLOCK_PREFLIGHT_ONLY_EXTERNAL_AUTHENTICATION_REQUIRED")
+
+    def test_unregistered_or_missing_future_policy_cannot_impersonate_old_forecast(self):
+        for policy in (None, "", "2026-11-02_UNREGISTERED_NEXT12_FORECAST_V4_2",
+                       "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1"):
+            with self.subTest(policy=policy):
+                f = freeze()
+                if policy is None:
+                    f.pop("decision_policy_version")
+                else:
+                    f["decision_policy_version"] = policy
+                r = preflight(f, public(), source())
+                self.assertIn("SOURCE_POLICY_NOT_ORIGINAL_LOCKED_FORECAST_VERSION", r["quarantine_reasons"])
+                self.assertFalse(r["temporal_preflight_pass"])
+                self.assertFalse(r["scientifically_admitted"])
+
+    def test_new_v41_momentum_is_not_a_forward_forecast_for_locked_study(self):
+        f = freeze(decision_policy_version="2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1",
+                   horizons={"NEXT_12H": {
+                       "expected_direction": "DOWN",
+                       "semantics": "OBSERVED_MOMENTUM_NOT_FORECAST",
+                       "predictive_edge_status": "NOT_PROVEN",
+                   }})
+        row = preflight(f, public(), source())
+        self.assertIn("NOWCAST_NOT_FORWARD_FORECAST_FOR_LOCKED_STUDY", row["quarantine_reasons"])
+        self.assertFalse(row["temporal_preflight_pass"])
+        self.assertFalse(row["scientifically_admitted"])
+
+    def test_missing_or_forged_semantics_do_not_bypass_v41_policy(self):
+        for value in (None, "PROVEN_FUTURE_FORECAST", ""):
+            with self.subTest(marker=value):
+                h = {"expected_direction": "UP"}
+                if value is not None:
+                    h["semantics"] = value
+                f = freeze(decision_policy_version="2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1",
+                           horizons={"NEXT_12H": h})
+                result = preflight(f, public(), source())
+                self.assertIn("NOWCAST_NOT_FORWARD_FORECAST_FOR_LOCKED_STUDY", result["quarantine_reasons"])
+                self.assertFalse(result["scientifically_admitted"])
+
+    def test_observed_momentum_marker_fails_even_without_policy_id(self):
+        f = freeze(horizons={"NEXT_12H": {
+            "expected_direction": "UP", "semantics": "OBSERVED_MOMENTUM_NOT_FORECAST",
+        }})
+        row = preflight(f, public(), source())
+        self.assertIn("NOWCAST_NOT_FORWARD_FORECAST_FOR_LOCKED_STUDY", row["quarantine_reasons"])
+        self.assertFalse(row["temporal_preflight_pass"])
 
     def test_forged_pit_bit_is_not_a_valid_admission(self):
         row = preflight(freeze(pit_verified=True), public(scientific_approved=True), source())
