@@ -73,6 +73,27 @@ class StrategicCompassTests(unittest.TestCase):
     def test_tactical_pullback_structural_bull_class(self):
         self.assertEqual(alignment_class(["DOWN", "DOWN", "SIDEWAYS", "UP", "UP"]), "TACTICAL_PULLBACK_STRUCTURAL_BULL")
 
+    def test_forward_alignment_classes_survive_without_unverified_12h_vote(self):
+        U = "UNAVAILABLE"
+        cases = [
+            (["UP", "UP", "UP", "UP"], "FULL_BULL_ALIGNMENT"),
+            (["DOWN", "DOWN", "DOWN", "DOWN"], "DISTRIBUTION_ALIGNMENT"),
+            (["DOWN", "DOWN", "SIDEWAYS", "DOWN"], "TRANSITION_WARNING"),
+            (["DOWN", "UP", "UP", "UP"], "TACTICAL_PULLBACK_STRUCTURAL_BULL"),
+            (["UP", "DOWN", "UP", "DOWN"], "MIXED_OR_NO_EDGE"),
+        ]
+        for forward, expected in cases:
+            for twelve in ("UP", "DOWN", U):
+                with self.subTest(forward=forward, twelve=twelve):
+                    self.assertEqual(alignment_class([twelve, *forward]), expected)
+        # Missing, unknown or malformed forward sources must never be promoted.
+        for directions in ([U, U, "UP", "UP", "UP"],
+                           [U, "DOWN", U, "DOWN", "DOWN"],
+                           [U, "UP", "UP", "UP"],
+                           [U, "UP", "UP", "UP", "UP", "UP"]):
+            with self.subTest(unqualified=directions):
+                self.assertEqual(alignment_class(directions), "MIXED_OR_NO_EDGE")
+
     def test_materialize_preserves_horizon_disagreement(self):
         with tempfile.TemporaryDirectory() as td:
             repo = fixture_repo(Path(td))
@@ -103,7 +124,7 @@ class StrategicCompassTests(unittest.TestCase):
             self.assertEqual(a["tactical_context"]["12h"]["observed_momentum_direction"], "UNAVAILABLE")
             self.assertEqual(a["tactical_context"]["12h"]["semantics"], "LEGACY_UNVERIFIED_NOT_FORWARD")
             self.assertIsNone(a["tactical_context"]["12h"]["eta"])
-            self.assertEqual(a["cross_horizon_alignment"]["class"], "MIXED_OR_NO_EDGE")
+            self.assertEqual(a["cross_horizon_alignment"]["class"], "FULL_BULL_ALIGNMENT")
             self.assertFalse(a["authority"]["portfolio_execution"])
 
     def test_typed_12h_nowcast_preserves_current_observation_without_future_vote(self):
