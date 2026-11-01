@@ -14,7 +14,7 @@ const KINDS=Object.freeze({
 const PATHS=Object.freeze({
  up:['M5 18L18 5','M10.5 5H18v7.5'],
  down:['M5 5L18 18','M10.5 18H18v-7.5'],
- mixed:['M4.5 8H19','M14.5 4 19 8l-4.5 4','M19.5 16H5','M9.5 12 5 16l4.5 4'],
+ mixed:['M4.5 8H19','M14.5 4l4.5 4-4.5 4','M19.5 16H5','M9.5 12L5 16l4.5 4'],
  flat:['M5.5 12h13','M14.5 8l4 4-4 4'],
  missing:['M7 12h10']
 });
