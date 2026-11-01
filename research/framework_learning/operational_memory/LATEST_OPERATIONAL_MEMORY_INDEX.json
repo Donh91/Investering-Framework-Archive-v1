@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 7232,
-  "generated_at_utc": "2026-11-01T10:46:45.704132Z",
+  "episode_count": 7236,
+  "generated_at_utc": "2026-11-01T11:28:53.528281Z",
   "rows": [
     {
       "changed_paths": [
@@ -99124,10 +99124,10 @@
         "tests/cycle_navigator/test_v2_edge_forecast_freeze.py"
       ],
       "compatibility": {
-        "changed": 1,
+        "changed": 2,
         "checked": 4,
         "removed": 0,
-        "same": 3,
+        "same": 2,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": ".github",
@@ -143034,10 +143034,10 @@
         "tests/health/test_architecture_health_v2_1.py"
       ],
       "compatibility": {
-        "changed": 1,
+        "changed": 2,
         "checked": 9,
         "removed": 0,
-        "same": 8,
+        "same": 7,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "scripts",
@@ -204160,10 +204160,10 @@
         "research/architecture_health/history/41237494340-attempt-1.json"
       ],
       "compatibility": {
-        "changed": 2,
+        "changed": 7,
         "checked": 11,
         "removed": 0,
-        "same": 9,
+        "same": 4,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -204251,11 +204251,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 3,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 4,
-        "status": "PARTIAL"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-b5fbc6e08d62d97e",
@@ -204263,7 +204263,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "b5fbc6e08d62d97ee4ee4287e6f774c3f87d3334",
       "source_timestamp": "2026-10-31T20:24:03Z",
       "task_class": "GENERAL_FRAMEWORK",
@@ -205623,11 +205623,11 @@
         "research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-4b0dc48d4dd6c81e",
@@ -206055,6 +206055,66 @@
       "source_timestamp": "2026-11-01T02:42:14Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: daily machine throughput 2026-10-31 41266109771"
+    },
+    {
+      "changed_paths": [
+        ".github/workflows/cn-site-v2-gate.yml",
+        ".github/workflows/cycle-navigator-pages.yml",
+        ".github/workflows/cycle-navigator-weekly-publication.yml",
+        "05_CYCLE_NAVIGATOR/graph_history/v1/README.md",
+        "05_CYCLE_NAVIGATOR/site/graph-history/index.html",
+        "scripts/cycle_navigator/build_graph_history.py",
+        "tests/cycle_navigator/test_graph_history.py"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": ".github",
+      "episode_id": "OE-8c4fef8ae5df9754",
+      "episode_path": "episodes/2026/11/OE-8c4fef8ae5df9754.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "ARCHIVE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "8c4fef8ae5df97545d60eca13bf8095fab422364",
+      "source_timestamp": "2026-11-01T03:06:03-08:00",
+      "task_class": "CYCLE_NAVIGATOR",
+      "task_summary": "feat(cn/site): source-bound W45+ graph history archive and BTC Time Machine"
+    },
+    {
+      "changed_paths": [
+        ".github/workflows/daily-capture-architecture-gate.yml",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-30__KOMPAS_PRO_CONTINUOUS_LEARNING_ROADMAP_v0_1.md",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-30__RQS_REBOUND_QUALITY_SHADOW_V0.md",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-31__FIVE_LANES_83D_EXPOST_REPLAY_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-31__RQS_83D_LONGITUDINAL_EXPOST_DISCOVERY_v1.md",
+        "scripts/research/rebound_quality_shadow.py",
+        "scripts/research/rqs_five_lanes_expost.py",
+        "tests/research/test_rebound_quality_shadow.py",
+        "tests/research/test_rqs_five_lanes_expost.py"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 9,
+        "removed": 0,
+        "same": 9,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-7a1e2c09a9b74194",
+      "episode_path": "episodes/2026/11/OE-7a1e2c09a9b74194.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "7a1e2c09a9b74194615d6710c973becdd3707930",
+      "source_timestamp": "2026-11-01T03:18:04-08:00",
+      "task_class": "AUTOMATION_REMEDIATION",
+      "task_summary": "research(rqs): integrate source-only rebound and five-lane ex-post diagnostics (#1850)"
     },
     {
       "changed_paths": [
@@ -206591,11 +206651,11 @@
         "research/experiment_lifecycle/receipts/XR-024632893349644e9925.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 25,
         "removed": 0,
-        "same": 25,
-        "status": "EXACT"
+        "same": 23,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-6307dfe567a87e2f",
@@ -206888,7 +206948,67 @@
       "source_timestamp": "2026-11-01T10:29:43Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: adaptive cadence observation 41297682931"
+    },
+    {
+      "changed_paths": [
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/LATEST_HOURLY_SOURCE_7D.json",
+        "research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json",
+        "research/architecture_health/history/41301684310-attempt-1.json",
+        "research/architecture_health/hourly_source_sla/daily/2026-10-31.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 9,
+        "removed": 0,
+        "same": 9,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-e17cf529ea239e42",
+      "episode_path": "episodes/2026/11/OE-e17cf529ea239e42.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "e17cf529ea239e4266c66dd2c1962bfd9af74f0d",
+      "source_timestamp": "2026-11-01T11:27:16Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 41301684310"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-ebba6f01261021b7",
+      "episode_path": "episodes/2026/11/OE-ebba6f01261021b7.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "ebba6f01261021b7465150127a4ddb6e7777cdeb",
+      "source_timestamp": "2026-11-01T11:28:02Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 41301954576"
     }
   ],
-  "source_head_sha": "32ffc878a95fea477cb7db4f3c32f9597b763190"
+  "source_head_sha": "ebba6f01261021b7465150127a4ddb6e7777cdeb"
 }

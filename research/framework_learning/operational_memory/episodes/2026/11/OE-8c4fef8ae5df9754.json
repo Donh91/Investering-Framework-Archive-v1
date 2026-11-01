@@ -1,0 +1,46 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    ".github/workflows/cycle-navigator-weekly-publication.yml",
+    "05_CYCLE_NAVIGATOR/graph_history/v1/README.md",
+    "05_CYCLE_NAVIGATOR/site/graph-history/index.html",
+    "scripts/cycle_navigator/build_graph_history.py",
+    "tests/cycle_navigator/test_graph_history.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-8c4fef8ae5df9754",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "ARCHIVE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(cn): add source-bound append-only graph history builder * test(cn): negative controls for immutable graph history and week rollover * feat(site): add separate source-bound Graph History preview route * fix(site): valid native JS template strings in graph history preview * docs(cn): archive permanent W45 graph-history source contract and recovery policy * ci(cn): wire graph-history archive and public timeline to existing owner flows * ci(cn): wire graph-history archive and public timeline to existing owner flows * ci(site): test graph archive and build graph-history public payload * fix(",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "d47d6515dc6e43b204a824e0327f27e95478ea5f",
+    ".github/workflows/cycle-navigator-pages.yml": "5e310c0f0e2ecd53fbb3201756024a95d7820db9",
+    ".github/workflows/cycle-navigator-weekly-publication.yml": "6b07e8e0161a69174ce9a5c5604e308d72553e21",
+    "05_CYCLE_NAVIGATOR/graph_history/v1/README.md": "587be5a97cfa8fa163a188508f3fea07dfd1a948",
+    "05_CYCLE_NAVIGATOR/site/graph-history/index.html": "9609676374684a28fd56fe9d33acace004cf870c",
+    "scripts/cycle_navigator/build_graph_history.py": "3569e797ec5058615c32246a2ec6d5f0ec900647",
+    "tests/cycle_navigator/test_graph_history.py": "5a0904b54d6dd0c25bbae391b1743b089ac8f6a2"
+  },
+  "source_commit_sha": "8c4fef8ae5df97545d60eca13bf8095fab422364",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-01T03:06:03-08:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "feat(cn/site): source-bound W45+ graph history archive and BTC Time Machine"
+}
