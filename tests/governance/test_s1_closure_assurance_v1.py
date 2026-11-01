@@ -6,11 +6,7 @@ from pathlib import Path
 
 SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "S1_CLOSURE_ASSURANCE_V1.schema.json"
 
-try:
-    from jsonschema import Draft202012Validator, FormatChecker
-except ImportError:
-    Draft202012Validator = None
-    FormatChecker = None
+from jsonschema import Draft202012Validator, FormatChecker
 
 
 def sample():
@@ -31,7 +27,6 @@ def sample():
     }
 
 
-@unittest.skipUnless(Draft202012Validator is not None, "jsonschema dependency unavailable")
 class ClosureAssuranceSchemaTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
