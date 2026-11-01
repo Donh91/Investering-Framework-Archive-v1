@@ -285,8 +285,11 @@ def publish(root):
                 prices.get("source") == "HOURLY_SPOT_PASS_ONLY" and
                 prices.get("forecast_week") == current["week"] and
                 live.get("forecast_week") == current["week"] and
-                prices.get("public_issue_number") == current["public_issue_number"] and
-                live.get("public_issue_number") == current["public_issue_number"]):
+                type(live.get("public_issue_number")) is int and
+                live["public_issue_number"] > 0 and
+                prices.get("public_issue_number") == live["public_issue_number"] and
+                (current["public_issue_number"] is None or
+                 live["public_issue_number"] == current["public_issue_number"])):
             monday = date.fromisocalendar(int(current["week"][:4]), int(current["week"][6:]), 1)
             week_start = datetime.combine(monday, datetime.min.time(), UTC)
             week_end = week_start + timedelta(days=7)
