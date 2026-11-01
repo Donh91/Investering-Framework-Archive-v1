@@ -881,6 +881,7 @@ try{
      'ROOT_FIXTURE_NOT_LOADED_FROM_HTTP:'+kind+':'+JSON.stringify(fixtureRequests));
    const snapshot=await evaluate(()=>({
     current:document.getElementById('compass-pro')?.dataset.sourceCurrent,
+    expiryState:document.getElementById('compass-pro')?.dataset.sourceState,
     source:document.getElementById('pro-source-status')?.textContent||'',
     rotation:document.querySelectorAll('#cn-rotation-classes [role="listitem"]').length,
     cards:[...document.querySelectorAll('.cn-horizon-card')].map(el=>({
@@ -890,8 +891,18 @@ try{
      balance:el.querySelector('.cn-evidence small')?.textContent||''
     }))
    }));
-   if(kind==='eligible')requireEligible(snapshot);
-   else assert.ok(snapshot.current==='false'&&snapshot.rotation===0&&
+   if(kind==='eligible'){
+    requireEligible(snapshot);
+    assert.equal(snapshot.expiryState,'FRESH','ROOT_ELIGIBLE_EXPIRED_FALSELY');
+   }else{
+    assert.equal(snapshot.expiryState,kind==='expired'?'EXPIRED':'UNAVAILABLE',
+      'ROOT_EXPIRY_CLASSIFICATION_WRONG:'+kind+':'+JSON.stringify(snapshot));
+    if(kind==='expired')assert.match(snapshot.source,/Ingen aktuel vurdering: Seneste Kompas-vurdering udløb.*dansk tid/,
+      'ROOT_EXPIRED_SOURCE_NOT_EXPLAINED_IN_COPENHAGEN_TIME');
+    if(kind==='degraded')assert.doesNotMatch(snapshot.source,/udløb|expired/i,
+      'ROOT_UNAVAILABLE_WAS_MISLABELED_AS_EXPIRED');
+   }
+   if(kind!=='eligible')assert.ok(snapshot.current==='false'&&snapshot.rotation===0&&
     snapshot.cards.length===3&&snapshot.cards.every(x=>x.valid==='false'&&
      x.arrow==='?'&&/Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
      /Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance)),
