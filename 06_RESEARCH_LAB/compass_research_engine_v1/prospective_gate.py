@@ -22,6 +22,9 @@ _SHA40 = re.compile(r"^[a-f0-9]{40}$")
 _SHA256 = re.compile(r"^[a-f0-9]{64}$")
 _COMPASS_ID = re.compile(r"^CMP-[0-9]{8}-[a-f0-9]{12}$")
 _ALLOWED_DIRECTIONS = frozenset(("UP", "DOWN"))
+# Original Official source policy at the locked study creation. Future policy
+# changes cannot silently inherit the preregistered NEXT_12H hypothesis.
+_ORIGINAL_12H_POLICY = "2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0"
 
 
 def parse_utc(value):
@@ -110,6 +113,8 @@ def preflight(freeze: Mapping, public_witness: Mapping | None = None,
         errors.append("NO_DIRECTIONAL_CALL_OR_ABSTAIN")
     if new_nowcast_only:
         errors.append("NOWCAST_NOT_FORWARD_FORECAST_FOR_LOCKED_STUDY")
+    if freeze.get("decision_policy_version") != _ORIGINAL_12H_POLICY:
+        errors.append("SOURCE_POLICY_NOT_ORIGINAL_LOCKED_FORECAST_VERSION")
     if not _valid_number(momentum):
         errors.append("BASELINE_NOT_ORIGINALLY_FROZEN")
     elif momentum == 0:
