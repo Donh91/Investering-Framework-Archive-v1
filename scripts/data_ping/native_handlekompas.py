@@ -1428,7 +1428,8 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
     twelve = public_horizons.get("NEXT_12H")
     original_twelve = (compass.get("horizons") or {}).get("NEXT_12H")
     eligible_nowcast = (
-        isinstance(twelve, dict) and isinstance(original_twelve, Mapping)
+        compass.get("decision_policy_version") == OFFICIAL_COMPASS_DECISION_POLICY_VERSION
+        and isinstance(twelve, dict) and isinstance(original_twelve, Mapping)
         and original_twelve.get("semantics") == NEXT_12H_NOWCAST_SEMANTICS
         and original_twelve.get("predictive_edge_status") == "NOT_PROVEN"
     )
