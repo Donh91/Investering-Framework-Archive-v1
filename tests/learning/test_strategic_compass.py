@@ -73,6 +73,27 @@ class StrategicCompassTests(unittest.TestCase):
     def test_tactical_pullback_structural_bull_class(self):
         self.assertEqual(alignment_class(["DOWN", "DOWN", "SIDEWAYS", "UP", "UP"]), "TACTICAL_PULLBACK_STRUCTURAL_BULL")
 
+    def test_forward_alignment_classes_survive_without_unverified_12h_vote(self):
+        U = "UNAVAILABLE"
+        cases = [
+            (["UP", "UP", "UP", "UP"], "FULL_BULL_ALIGNMENT"),
+            (["DOWN", "DOWN", "DOWN", "DOWN"], "DISTRIBUTION_ALIGNMENT"),
+            (["DOWN", "DOWN", "SIDEWAYS", "DOWN"], "TRANSITION_WARNING"),
+            (["DOWN", "UP", "UP", "UP"], "TACTICAL_PULLBACK_STRUCTURAL_BULL"),
+            (["UP", "SIDEWAYS", "DOWN", "UP"], "MIXED_OR_NO_EDGE"),
+        ]
+        for forward, expected in cases:
+            for twelve in ("UP", "DOWN", U):
+                with self.subTest(forward=forward, twelve=twelve):
+                    self.assertEqual(alignment_class([twelve, *forward]), expected)
+        # Missing, unknown or malformed forward sources must never be promoted.
+        for directions in ([U, U, "UP", "UP", "UP"],
+                           [U, "DOWN", U, "DOWN", "DOWN"],
+                           [U, "UP", "UP", "UP"],
+                           [U, "UP", "UP", "UP", "UP", "UP"]):
+            with self.subTest(unqualified=directions):
+                self.assertEqual(alignment_class(directions), "MIXED_OR_NO_EDGE")
+
     def test_materialize_preserves_horizon_disagreement(self):
         with tempfile.TemporaryDirectory() as td:
             repo = fixture_repo(Path(td))
@@ -87,6 +108,63 @@ class StrategicCompassTests(unittest.TestCase):
             self.assertEqual(anchor["cycle_4_8w"]["direction"], "UP")
             self.assertEqual(anchor["cross_horizon_alignment"]["class"], "TACTICAL_PULLBACK_STRUCTURAL_BULL")
             self.assertFalse(anchor["authority"]["portfolio_execution"])
+
+    def test_legacy_12h_nowcast_is_not_forward_alignment_or_action(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = fixture_repo(Path(td))
+            path = repo / "04_MARKET_LEARNING/handlekompas/official/daily/2026/09/30/CMP-test.json"
+            freeze = json.loads(path.read_text())
+            # Only the 12h source points down. Longer governed paths are UP.
+            freeze["horizons"]["NEXT_1_3D"]["expected_direction"] = "UP"
+            freeze["horizons"]["NEXT_5_7D"]["expected_direction"] = "UP"
+            write(path, freeze)
+            r = materialize(repo, datetime(2026, 9, 30, 12, tzinfo=timezone.utc))
+            a = json.loads((repo / r["anchor_path"]).read_text())
+            self.assertEqual(a["tactical_context"]["12h"]["direction"], "UNAVAILABLE")
+            self.assertEqual(a["tactical_context"]["12h"]["observed_momentum_direction"], "UNAVAILABLE")
+            self.assertEqual(a["tactical_context"]["12h"]["semantics"], "LEGACY_UNVERIFIED_NOT_FORWARD")
+            self.assertIsNone(a["tactical_context"]["12h"]["eta"])
+            self.assertEqual(a["cross_horizon_alignment"]["class"], "FULL_BULL_ALIGNMENT")
+            self.assertFalse(a["authority"]["portfolio_execution"])
+
+    def test_typed_12h_nowcast_preserves_current_observation_without_future_vote(self):
+        from scripts.learning.strategic_compass import official_horizon
+        old = {"decision_policy_version": "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1",
+               "horizons": {"NEXT_12H": {
+            "expected_direction": "DOWN", "eta": "0-12h",
+            "semantics": "OBSERVED_MOMENTUM_NOT_FORECAST",
+            "predictive_edge_status": "NOT_PROVEN",
+            "action_posture": "DEPLOY",
+        }}}
+        row = official_horizon(old, "NEXT_12H")
+        self.assertEqual(row["direction"], "UNAVAILABLE")
+        self.assertEqual(row["observed_momentum_direction"], "DOWN")
+        self.assertEqual(row["semantics"], "OBSERVED_MOMENTUM_NOT_FORECAST")
+        self.assertEqual(row["action_posture"], "NO_EDGE")
+        self.assertIsNone(row["eta"])
+        corrupt = json.loads(json.dumps(old))
+        corrupt["horizons"]["NEXT_12H"]["semantics"] = "FORWARD_PROVEN"
+        self.assertEqual(official_horizon(corrupt, "NEXT_12H")["observed_momentum_direction"], "UNAVAILABLE")
+        self.assertEqual(official_horizon(corrupt, "NEXT_12H")["direction"], "UNAVAILABLE")
+        # A forged typed marker under a legacy/missing/future policy is not
+        # authenticated nowcast observation; reject it just as public does.
+        for policy in ("2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+                       "2026-11-02_UNREGISTERED_V4_2", "", None):
+            candidate = json.loads(json.dumps(old))
+            if policy is None:
+                candidate.pop("decision_policy_version")
+            else:
+                candidate["decision_policy_version"] = policy
+            observed = official_horizon(candidate, "NEXT_12H")
+            self.assertEqual(observed["direction"], "UNAVAILABLE")
+            self.assertEqual(observed["observed_momentum_direction"], "UNAVAILABLE")
+            self.assertEqual(observed["semantics"], "LEGACY_UNVERIFIED_NOT_FORWARD")
+            self.assertEqual(observed["action_posture"], "NO_EDGE")
+            self.assertIsNone(observed["eta"])
+        # Other horizons remain governed, unmodified source calls.
+        self.assertEqual(official_horizon({"horizons": {"NEXT_1_3D": {
+            "expected_direction": "UP", "action_posture": "HOLD",
+        }}}, "NEXT_1_3D")["direction"], "UP")
 
     def test_missing_month_projection_fails_closed_without_stretching_2_3w(self):
         with tempfile.TemporaryDirectory() as td:

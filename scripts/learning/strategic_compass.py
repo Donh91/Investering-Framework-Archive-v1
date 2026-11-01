@@ -50,7 +50,32 @@ def clean_direction(value: Any) -> str:
 
 
 def official_horizon(compass: Mapping[str, Any], key: str) -> dict[str, Any]:
-    row = ((compass.get("horizons") or {}).get(key) or {})
+    """Read existing horizons; never turn observed 12h momentum into a forecast.
+
+    The original frozen 12h sign remains available only as a descriptive
+    nowcast field under its explicit v4.1 marker. Legacy markerless freezes
+    are NOT presumed to be modern, verified forward predictions either.
+    """
+    horizons = compass.get("horizons")
+    horizons = horizons if isinstance(horizons, Mapping) else {}
+    row = horizons.get(key)
+    row = row if isinstance(row, Mapping) else {}
+    if key == "NEXT_12H":
+        nowcast = (
+            compass.get("decision_policy_version")
+            == "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1"
+            and row.get("semantics") == "OBSERVED_MOMENTUM_NOT_FORECAST"
+            and row.get("predictive_edge_status") == "NOT_PROVEN"
+        )
+        return {
+            "direction": "UNAVAILABLE",
+            "observed_momentum_direction": clean_direction(row.get("expected_direction")) if nowcast else "UNAVAILABLE",
+            "semantics": "OBSERVED_MOMENTUM_NOT_FORECAST" if nowcast else "LEGACY_UNVERIFIED_NOT_FORWARD",
+            "path": "Observed momentum only; no separately verified 12h forward forecast.",
+            "action_posture": "NO_EDGE",
+            "confidence": None,
+            "eta": None,
+        }
     return {
         "direction": clean_direction(row.get("expected_direction")),
         "path": row.get("expected_path"),
@@ -72,13 +97,23 @@ def thesis_state(direction: str, source_status: str) -> str:
 
 
 def alignment_class(directions: list[str]) -> str:
-    tactical = directions[:3]
-    strategic = directions[3:]
-    if all(x == "UP" for x in directions):
+    """Classify four governed forward horizons; observed 12h is never a vote.
+
+    Input remains [12h, 72h, 168h, 21_30d, 4_8w] for source readback.
+    Incomplete or unqualified forward evidence must not imply alignment.
+    """
+    if len(directions) != 5:
+        return "MIXED_OR_NO_EDGE"
+    forward = directions[1:]
+    if any(x not in {"UP", "DOWN", "SIDEWAYS", "MIXED"} for x in forward):
+        return "MIXED_OR_NO_EDGE"
+    tactical = forward[:2]
+    strategic = forward[2:]
+    if all(x == "UP" for x in forward):
         return "FULL_BULL_ALIGNMENT"
-    if any(x == "DOWN" for x in tactical[:2]) and any(x == "UP" for x in strategic):
+    if any(x == "DOWN" for x in tactical) and any(x == "UP" for x in strategic):
         return "TACTICAL_PULLBACK_STRUCTURAL_BULL"
-    if all(x == "DOWN" for x in directions):
+    if all(x == "DOWN" for x in forward):
         return "DISTRIBUTION_ALIGNMENT"
     if all(x == "DOWN" for x in tactical) and any(x in {"UP", "SIDEWAYS", "MIXED"} for x in strategic):
         return "TRANSITION_WARNING"

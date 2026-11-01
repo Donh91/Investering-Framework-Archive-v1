@@ -368,6 +368,96 @@ class OfficialDailyCompassTest(unittest.TestCase):
             for key in ("NEXT_1_3D", "NEXT_5_7D", "NEXT_2_3W", "CYCLE_ALTCOINS_3_8W"):
                 self.assertEqual(out["horizons"][key]["expected_direction"], "UNAVAILABLE")
 
+
+    def test_next12_is_observed_momentum_not_a_forward_forecast(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for btc, eth, want in [(1.2, 2.0, "UP"), (-1.2, -2.0, "DOWN")]:
+                with self.subTest(want=want):
+                    issued = self.build(
+                        tmp,
+                        deltas={"btc_usdt": {"pct": btc}, "eth_usdt": {"pct": eth}, "ethbtc": {"pct": 0.0}},
+                    )
+                    row = issued["horizons"]["NEXT_12H"]
+                    self.assertEqual(row["expected_direction"], want)  # historical scoring compatibility only
+                    self.assertEqual(row["semantics"], nh.NEXT_12H_NOWCAST_SEMANTICS)
+                    self.assertEqual(row["predictive_edge_status"], "NOT_PROVEN")
+                    self.assertIsNone(row["eta"])
+                    self.assertEqual(row["eta_kind"], "REASSESSMENT_WINDOW_ONLY")
+                    self.assertEqual(row["reassessment_window"], "0-12h")
+                    self.assertIsNone(issued["next_meaningful_change_eta"])
+                    self.assertNotIn("next 12h", issued["conclusion"].lower())
+                    public = build_public_projection(issued)
+                    self.assertEqual(public["source_compass_sha256"], issued["compass_sha256"])
+                    self.assertEqual(public["horizons"]["NEXT_12H"]["semantics"], row["semantics"])
+                    self.assertEqual(public["horizons"]["NEXT_12H"]["eta_kind"], "REASSESSMENT_WINDOW_ONLY")
+                    self.assertIsNone(public["horizons"]["NEXT_12H"]["eta"])
+                    self.assertNotIn("next 12h", public["conclusion"].lower())
+                    self.assertFalse(public["authority"]["portfolio_execution"])
+                    self.assertEqual(issued["action_now"], "HOLD_WAIT")
+
+    def test_unqualified_legacy_12h_marker_cannot_become_public_forecast(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            original = self.build(tmp, deltas={
+                "btc_usdt": {"pct": 1.2}, "eth_usdt": {"pct": 2.0}, "ethbtc": {"pct": 0.0}
+            })
+            for corrupt in ("MISSING", "FORWARD_FORECAST_VERIFIED", None):
+                with self.subTest(corrupt=corrupt):
+                    candidate = json.loads(json.dumps(original))
+                    if corrupt == "MISSING":
+                        candidate["horizons"]["NEXT_12H"].pop("semantics")
+                    else:
+                        candidate["horizons"]["NEXT_12H"]["semantics"] = corrupt
+                    candidate["conclusion"] = "BULLISH next 12h"
+                    candidate["next_meaningful_change_eta"] = "0-12h"
+                    public = build_public_projection(candidate)
+                    row = public["horizons"]["NEXT_12H"]
+                    self.assertEqual(row["semantics"], nh.LEGACY_12H_SEMANTICS)
+                    self.assertEqual(row["expected_direction"], "UNAVAILABLE")
+                    self.assertIsNone(row["eta"])
+                    self.assertIsNone(public["next_meaningful_change_eta"])
+                    self.assertNotIn("bullish next 12h", public["conclusion"].lower())
+
+    def test_forged_nowcast_marker_under_legacy_or_unregistered_policy_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            original = self.build(tmp, deltas={
+                "btc_usdt": {"pct": 1.2}, "eth_usdt": {"pct": 2.0}, "ethbtc": {"pct": 0.0},
+            })
+            self.assertEqual(original["decision_policy_version"], nh.OFFICIAL_COMPASS_DECISION_POLICY_VERSION)
+            for policy in ("2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+                           "2026-11-02_UNREGISTERED_V4_2", "", None):
+                with self.subTest(policy=policy):
+                    candidate = json.loads(json.dumps(original))
+                    if policy is None:
+                        candidate.pop("decision_policy_version")
+                    else:
+                        candidate["decision_policy_version"] = policy
+                    # A forged typed nowcast cannot acquire a verified policy
+                    # merely from payload semantics or a sign and label.
+                    self.assertEqual(candidate["horizons"]["NEXT_12H"]["semantics"],
+                                     nh.NEXT_12H_NOWCAST_SEMANTICS)
+                    public = build_public_projection(candidate)
+                    twelve = public["horizons"]["NEXT_12H"]
+                    self.assertEqual(twelve["semantics"], nh.LEGACY_12H_SEMANTICS)
+                    self.assertEqual(twelve["expected_direction"], "UNAVAILABLE")
+                    self.assertIsNone(twelve["eta"])
+                    self.assertIsNone(public["next_meaningful_change_eta"])
+                    self.assertFalse(public["authority"]["portfolio_execution"])
+
+    def test_repeated_or_stale_observation_cannot_create_forward_signal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repeated = self.build(
+                tmp, observation_open="2026-09-16T18:00:00Z",
+                predecessor_observation="2026-09-16T18:00:00Z",
+                deltas={"btc_usdt": {"pct": 0.0}, "eth_usdt": {"pct": 0.0}, "ethbtc": {"pct": 0.0}},
+            )
+            stale = self.build(tmp, issued_at=datetime(2026, 9, 17, 0, 30, tzinfo=timezone.utc))
+            for out in (repeated, stale):
+                public = build_public_projection(out)
+                self.assertEqual(public["horizons"]["NEXT_12H"]["expected_direction"], "UNAVAILABLE")
+                self.assertEqual(public["horizons"]["NEXT_12H"]["predictive_edge_status"], "NOT_PROVEN")
+                self.assertIsNone(public["next_meaningful_change_eta"])
+                self.assertFalse(public["authority"]["portfolio_execution"])
+
     def test_negative_market_direction_is_bearish_while_action_stays_hold(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(
