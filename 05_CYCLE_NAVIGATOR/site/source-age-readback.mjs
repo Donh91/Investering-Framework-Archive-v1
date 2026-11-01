@@ -43,7 +43,10 @@ export function originalSourceAgeAtIssue(internal,projection){
   const clockMatches=check=>safeIso(check?.timestamp)&&
     Date.parse(check.timestamp)<=issuedMs&&
     (issuedMs-Date.parse(check.timestamp))/1000===check.age_seconds;
-  if(!obs||!packet||!clockMatches(obs)||!clockMatches(packet))return base;
+  // A non-PASS issuer clock must never be rendered as an unqualified valid age.
+  // Preserve the original record; only the derived presentation readback fails closed.
+  if(!obs||!packet||obs.status!=='PASS'||packet.status!=='PASS'||
+     !clockMatches(obs)||!clockMatches(packet))return base;
   if(obs.age_seconds<packet.age_seconds)return base; // newer source than its wrapper would be contradictory
   return {...base,status:'ORIGINAL_ISSUANCE_CLOCKS_ONLY',
     observation_age_seconds_at_issue:obs.age_seconds,
@@ -62,6 +65,7 @@ export function originalSourceAgeLabel(compass,{lang='da',valid=false}={}){
      x?.issued_at_utc!==compass?.issued_at_utc||
      typeof x?.compass_id!=='string'||!x.compass_id||
      x.compass_id!==compass?.compass_id||
+     x?.observation_clock_status!=='PASS'||x?.packet_clock_status!=='PASS'||
      !validAge(x?.observation_age_seconds_at_issue)||
      !validAge(x?.packet_age_seconds_at_issue)||
      x?.observation_age_seconds_at_issue<x?.packet_age_seconds_at_issue)return da?
