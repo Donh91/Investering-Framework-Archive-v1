@@ -4,11 +4,26 @@
   "canonical_effect": false,
   "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "55d59382741ca01b40d4e8f17ce54719a583efcd712112b366f738e7f00b8620",
+  "evidence_fingerprint": "3f2cc41638f6a2d3463611f32ceec03b6dfe1b89406989104975d182588a03f8",
   "external_provider_calls_authorized": false,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "queue": [
+    {
+      "action": "RESEARCH_NEW_HYPOTHESIS",
+      "canonical_effect": false,
+      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "830539e518710b4d857d94ddd0e36e2ad08a8e68344fc1bb30f5a2f488443a5d",
+      "impact_tier": "HIGH",
+      "novelty_verdict": "NOVEL",
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "In a newly preregistered sample of nonoverlapping prospective 168h ETH episodes, the median maximum adverse excursion, measured in percent, is more negative for episodes without a typed warning than for comparable episodes with one. Falsified if the no-warning median is equal or less negative. Episode selection, warning definitions and comparability criteria must be fixed before outcomes; the existing freezes cannot serve as confirmation.",
+      "source": "MONTHLY_COUNCIL",
+      "target": "MLC-HYP-fe3b5f79970bd147"
+    },
     {
       "action": "RECOVER_EVALUATOR",
       "canonical_effect": false,
@@ -74,21 +89,6 @@
       "canonical_effect": false,
       "decision_surface": "CALIBRATION_QUALITY",
       "deep_research_authorized": false,
-      "evidence_fingerprint": "fba3442e5489bae5096409b9c3195335a81983d4d4653f103e16355143c2fec6",
-      "impact_tier": "LOW",
-      "novelty_verdict": null,
-      "paid_data_authorized": false,
-      "paid_review_only": false,
-      "portfolio_execution": false,
-      "reason": "No evidence-backed escalation or surviving AI research hypothesis justified a new bounded research item.",
-      "source": "MONTHLY_COUNCIL",
-      "target": "MONTHLY_AI_LEARNING_COUNCIL"
-    },
-    {
-      "action": "CONTINUE_OBSERVING",
-      "canonical_effect": false,
-      "decision_surface": "CALIBRATION_QUALITY",
-      "deep_research_authorized": false,
       "evidence_fingerprint": "",
       "impact_tier": "LOW",
       "novelty_verdict": null,
@@ -116,11 +116,11 @@
     }
   ],
   "queue_n": 7,
-  "reason": "registered source material exists but exact evaluator recovery is still required",
+  "reason": "In a newly preregistered sample of nonoverlapping prospective 168h ETH episodes, the median maximum adverse excursion, measured in percent, is more negative for episodes without a typed warning than for comparable episodes with one. Falsified if the no-warning median is equal or less negative. Episode selection, warning definitions and comparability criteria must be fixed before outcomes; the existing freezes cannot serve as confirmation.",
   "resolved_specialist_state_n": 7,
-  "selected_action": "RECOVER_EVALUATOR",
-  "selected_decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-  "selected_impact_tier": "MEDIUM",
-  "selected_source": "SHADOW_REGISTRY",
-  "selected_target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+  "selected_action": "RESEARCH_NEW_HYPOTHESIS",
+  "selected_decision_surface": "ALTSEASON_ENTRY_ROTATION",
+  "selected_impact_tier": "HIGH",
+  "selected_source": "MONTHLY_COUNCIL",
+  "selected_target": "MLC-HYP-fe3b5f79970bd147"
 }
