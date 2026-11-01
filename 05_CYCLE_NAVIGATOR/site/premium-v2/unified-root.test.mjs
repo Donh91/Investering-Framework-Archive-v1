@@ -715,3 +715,25 @@ test('directional vector icons preserve source states and all legacy textContent
   'cn-overview-d13-arrow','cn-overview-d57-arrow','cn-overview-w23-arrow',
   'chart','forecast','actual'])assert.equal(id(html,name),1);
 });
+
+
+test('SITE graph history route is discoverable inside weekly Graph B, not an invented fifth tab',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ const history=await read('../graph-history/index.html');
+ for(const key of ['cn-graph-history-title','cn-graph-history-note','cn-graph-history-link'])
+  assert.equal(id(html,key),1,'missing or duplicate history entry '+key);
+ assert.match(html,/href="\/Investering-Framework-Archive-v1\/graph-history\/"/);
+ assert.ok(html.indexOf('id="variant-panel"')<html.indexOf('id="cn-graph-history-link"'));
+ assert.ok(html.indexOf('id="cn-graph-history-link"')<html.indexOf('id="proof-explorer"'));
+ assert.match(history,/CN_GRAPH_HISTORY_TIMELINE_v1/);
+ assert.match(history,/data\/graph-history\/timeline\.json/);
+ assert.match(html,/Fra uge 45 \(2026\)/);
+ assert.equal((html.match(/data-premium-nav="graph"/g)||[]).length,1);
+ const tabs=await read('./premium-tabs.mjs');
+ const css=await read('./premium-tabs.css');
+ assert.match(tabs,/Graph history/);
+ assert.match(tabs,/document\.getElementById\(id\)/);
+ assert.match(css,/\.cn-tabbed-ui \.cn-graph-history-entry a/);
+ assert.match(css,/min-height:44px/);
+ assert.doesNotMatch(html,/graph-history.*(?:SELL|BUY|confidence|probability)/i);
+});
