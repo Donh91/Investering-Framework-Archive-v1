@@ -11,6 +11,9 @@ on:
       - '05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl'
       - '05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json'
       - 'scripts/cycle_navigator/build_public_live_precision.py'
+      - 'scripts/cycle_navigator/build_graph_history.py'
+      - 'tests/cycle_navigator/test_graph_history.py'
+      - '05_CYCLE_NAVIGATOR/graph_history/**'
       - '05_CYCLE_NAVIGATOR/CANONICAL_SCORE_AND_LINEAGE.md'
       - 'scripts/cycle_navigator/validate_public_series.py'
       - '.github/workflows/cycle-navigator-pages.yml'
@@ -50,6 +53,10 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
           python3 scripts/cycle_navigator/build_public_live_precision.py
+          python3 tests/cycle_navigator/test_graph_history.py
+          python3 scripts/cycle_navigator/build_graph_history.py --repo-root . --mode public
+          test -f 05_CYCLE_NAVIGATOR/site/dist/data/graph-history/timeline.json
+          test -f 05_CYCLE_NAVIGATOR/site/dist/graph-history/index.html
           python3 scripts/cycle_navigator/check_publication_lineage.py --self-test
           python3 scripts/cycle_navigator/check_publication_lineage.py
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
