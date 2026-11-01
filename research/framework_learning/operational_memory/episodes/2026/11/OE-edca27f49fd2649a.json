@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/premium-v2/compass-reader.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/next-browser.test.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/root-compass-pro.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/unified-root.test.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-edca27f49fd2649a",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "site-label-expired-official-kompas-stale-actions",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(site): classify exact original expiry without promoting stale data * fix(site): display verified expiry in Copenhagen time * test(site): reject forged and stale source expiry labels * fix(site): retain generic no-current label with explicit expiry * test(site): browser expiry, degraded, eligible and Copenhagen time",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/premium-v2/compass-reader.mjs": "038c504c1fc0a4f2ca6b329311bd49a1aa4dd1d9",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/next-browser.test.mjs": "d6da11944bc316f0198cbb83c672b9b14aa38279",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/root-compass-pro.mjs": "de87ab85c9b6ae127f68f6b576c7a459b7a6f6fb",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/unified-root.test.mjs": "1dec1bf3cdca7607a372fbb7d7b4f7a693a3aa16"
+  },
+  "source_commit_sha": "edca27f49fd2649a316a6950881bc7be2b112ab4",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-01T06:27:12-08:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(site): label expired Official Kompas without stale actions"
+}

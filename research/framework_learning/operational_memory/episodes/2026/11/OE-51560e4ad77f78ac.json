@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/data_ping/native_handlekompas.py",
+    "scripts/learning/compass_outcomes.py",
+    "scripts/learning/strategic_compass.py",
+    "tests/data_ping/test_official_daily_compass.py",
+    "tests/learning/test_compass_outcomes.py",
+    "tests/learning/test_strategic_compass.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-51560e4ad77f78ac",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "kompas-separate-observed-12h-momentum-forward-forecasts",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized v4.1 semantics and scoring correction. Original forecast freezes remain immutable. CI 8/8 exact head green; internal safepoint verified. External Vault state not claimed.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/data_ping/native_handlekompas.py": "b860dd466f901f9b2ae62fd45c5cdcfe069fe70b",
+    "scripts/learning/compass_outcomes.py": "134055c6f03432c354be9d6d97fcb80cbcd6df3a",
+    "scripts/learning/strategic_compass.py": "e0dcd47bea31e1b094bb9daa49a1bfa3b1561b99",
+    "tests/data_ping/test_official_daily_compass.py": "e829f19fcc9415ecbe06fc25809a26ab8130b7c8",
+    "tests/learning/test_compass_outcomes.py": "6f9b8ac92b0ef98701a03607ad8eb21d8da0d714",
+    "tests/learning/test_strategic_compass.py": "7736bfde7fb9b3dc490bfb32526fdea8115b65d3"
+  },
+  "source_commit_sha": "51560e4ad77f78ac743819e871edb35179e7543d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-01T03:30:58-08:00",
+  "task_class": "MARKET_STATE",
+  "task_summary": "fix(kompas): separate observed 12h momentum from forward forecasts"
+}
