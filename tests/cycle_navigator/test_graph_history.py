@@ -193,6 +193,16 @@ class GraphHistoryTest(unittest.TestCase):
         put(path, truncated)
         with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_SEQUENCE"):
             publish(self.root)
+        forged_path = json.loads(json.dumps(original))
+        forged_path["weeks"][0]["forecast_path"] = None
+        put(path, forged_path)
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_PATH"):
+            publish(self.root)
+        forged_actual = json.loads(json.dumps(original))
+        forged_actual["weeks"][0]["actual_path"] = "../../untrusted-actuals.json"
+        put(path, forged_actual)
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_PATH"):
+            publish(self.root)
         put(path, original)
         self.assertEqual(len(publish(self.root)["weeks"]), 2)
 
