@@ -169,9 +169,49 @@ def observed(root, monday):
             "points": result}
 
 
+def verify_index_chain(index):
+    if index.get("contract") != CONTRACT or not isinstance(index.get("weeks"), list):
+        raise ValueError("INVALID_HISTORY_INDEX")
+    prior_weeks = {}
+    prior_chain = "0" * 64
+    prior_label = None
+    for row in index["weeks"]:
+        label = row.get("forecast_week")
+        expected_monday = START + timedelta(days=7 * len(prior_weeks))
+        expected_label, year, week = week_label(expected_monday)
+        if label != expected_label or label in prior_weeks or row.get("previous_week") != prior_label:
+            raise ValueError("INVALID_HISTORY_INDEX_SEQUENCE")
+        expected_folder = ROOT / "weeks" / str(year) / f"W{week:02d}"
+        expected_forecast = str(expected_folder / "forecast-reference.json")
+        expected_actual = str(expected_folder / "actual-series.json")
+        if ((row.get("forecast_path") != expected_forecast if row.get("status") == "RECORDED"
+             else row.get("forecast_path") is not None) or
+                row.get("actual_path") not in (None, expected_actual)):
+            raise ValueError("INVALID_HISTORY_INDEX_PATH")
+        if row.get("status") not in ("MISSING_FREEZE", "RECORDED"):
+            raise ValueError("INVALID_HISTORY_INDEX_STATUS")
+        sha = row.get("source_sha256")
+        if (row["status"] == "MISSING_FREEZE" and sha is not None) or (
+                row["status"] == "RECORDED" and not isinstance(sha, str)):
+            raise ValueError("INVALID_HISTORY_INDEX_SOURCE")
+        prior_chain = digest(canonical({"previous": prior_chain, "week": label,
+                                        "source_sha256": sha, "status": row["status"]}))
+        if row.get("chain_digest") != prior_chain:
+            raise ValueError("INVALID_HISTORY_INDEX_CHAIN")
+        prior_weeks[label] = row
+        prior_label = label
+    if index.get("chain_tip") != prior_chain:
+        raise ValueError("INVALID_HISTORY_INDEX_TIP")
+
+    return prior_weeks
+
+
 def archive(root, target):
     if target < START:
         return {"contract": CONTRACT, "status": "NOT_STARTED", "weeks": []}
+    index_file = root / ROOT / "index.json"
+    old_index = read(index_file) if index_file.exists() else None
+    prior_weeks = verify_index_chain(old_index) if old_index is not None else {}
     result = []
     cursor = START
     previous = None
@@ -181,29 +221,39 @@ def archive(root, target):
         folder = week_folder(root, cursor)
         forecast_file = folder / "forecast-reference.json"
         actual_file = folder / "actual-series.json"
-        original = load_original(root, cursor)
+        prior = prior_weeks.get(label)
+        # Once a week's forecast status is recorded, it must never be backfilled
+        # or silently withdrawn on a later archive run.
+        original = None if prior and prior["status"] == "MISSING_FREEZE" else load_original(root, cursor)
+        if prior and prior["status"] == "RECORDED" and (
+                original is None or original["original_source_sha256"] != prior["source_sha256"]):
+            raise ValueError(f"INDEX_HISTORY_REWRITE:{label}")
         if original is not None:
             write(forecast_file, original, immutable=True)
-            # Only completed weeks are durably materialized. The live week
-            # remains in existing hourly/PAGES readback until its next Monday.
-            if cursor < target:
-                actual = observed(root, cursor)
-                if actual_file.exists():
-                    prior = read(actual_file)
-                    old = prior.get("points", [])
-                    new_map = {r["observed_at_utc"]: r for r in actual["points"]}
-                    if any(new_map.get(p["observed_at_utc"]) != p for p in old):
-                        raise ValueError(f"ACTUAL_MUTATION_OR_LOST_HOUR:{label}")
-                write(actual_file, actual)
+        # Historical green Hourly observations are independently sourced:
+        # absence of a blue forecast MUST NOT erase valid actual closes.
+        if cursor < target:
+            actual = observed(root, cursor)
+            if actual_file.exists():
+                older_actual = read(actual_file)
+                old = older_actual.get("points", [])
+                new_map = {r["observed_at_utc"]: r for r in actual["points"]}
+                if any(new_map.get(p["observed_at_utc"]) != p for p in old):
+                    raise ValueError(f"ACTUAL_MUTATION_OR_LOST_HOUR:{label}")
+            write(actual_file, actual)
         status = "MISSING_FREEZE" if original is None else "RECORDED"
         sha = original["original_source_sha256"] if original is not None else None
         chain = digest(canonical({"previous": chain, "week": label, "source_sha256": sha, "status": status}))
+        if prior and prior.get("chain_digest") != chain:
+            raise ValueError(f"INDEX_HISTORY_REWRITE:{label}")
         result.append({"forecast_week": label, "status": status, "previous_week": previous,
                        "source_sha256": sha, "chain_digest": chain,
                        "forecast_path": str(forecast_file.relative_to(root)) if original else None,
                        "actual_path": str(actual_file.relative_to(root)) if actual_file.exists() else None})
         previous = label
         cursor += timedelta(days=7)
+    if set(prior_weeks) - {w["forecast_week"] for w in result}:
+        raise ValueError("INDEX_HISTORY_TRUNCATION")
     payload = {"contract": CONTRACT, "start_week": "2026-W45",
                "semantics": "SOURCE_ONLY_PRESENTATION_NO_TRADING_AUTHORITY",
                "weeks": result, "chain_tip": chain}
@@ -214,7 +264,9 @@ def archive(root, target):
 def publish(root):
     index_file = root / ROOT / "index.json"
     index = read(index_file) if index_file.exists() else {"contract": CONTRACT, "weeks": []}
-    if index.get("contract") != CONTRACT:
+    if index_file.exists():
+        verify_index_chain(index)
+    elif index.get("contract") != CONTRACT:
         raise ValueError("INVALID_HISTORY_INDEX")
     weeks, actual = [], []
     for item in index["weeks"]:
@@ -247,8 +299,11 @@ def publish(root):
                 prices.get("source") == "HOURLY_SPOT_PASS_ONLY" and
                 prices.get("forecast_week") == current["week"] and
                 live.get("forecast_week") == current["week"] and
-                prices.get("public_issue_number") == current["public_issue_number"] and
-                live.get("public_issue_number") == current["public_issue_number"]):
+                type(live.get("public_issue_number")) is int and
+                live["public_issue_number"] > 0 and
+                prices.get("public_issue_number") == live["public_issue_number"] and
+                (current["public_issue_number"] is None or
+                 live["public_issue_number"] == current["public_issue_number"])):
             monday = date.fromisocalendar(int(current["week"][:4]), int(current["week"][6:]), 1)
             week_start = datetime.combine(monday, datetime.min.time(), UTC)
             week_end = week_start + timedelta(days=7)

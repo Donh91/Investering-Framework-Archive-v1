@@ -135,6 +135,77 @@ class GraphHistoryTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "CONFLICTING_SOURCE_HOUR"):
             observed(self.root, W45)
 
+    def test_missing_forecast_week_never_backfills_but_keeps_actual_curve(self):
+        source(self.root, W46, issued="2026-11-09T07:00:00Z")
+        at = datetime(2026, 11, 2, 0, tzinfo=timezone.utc)
+        hour(self.root, at)
+        one = archive(self.root, W46)
+        self.assertEqual(one["weeks"][0]["status"], "MISSING_FREEZE")
+        self.assertIsNone(one["weeks"][0]["forecast_path"])
+        actual_file = self.root / ROOT / "weeks/2026/W45/actual-series.json"
+        self.assertEqual(json.loads(actual_file.read_text())["observed_hours"], 1)
+        self.assertEqual(len(publish(self.root)["actual"]), 1)
+        source(self.root, W45, issued="2026-11-02T07:00:00Z")
+        two = archive(self.root, W46)
+        self.assertEqual(two["weeks"][0]["status"], "MISSING_FREEZE")
+        self.assertEqual(two["weeks"][0]["chain_digest"], one["weeks"][0]["chain_digest"])
+        self.assertFalse((self.root / ROOT / "weeks/2026/W45/forecast-reference.json").exists())
+        self.assertEqual(publish(self.root)["weeks"][0]["forecast"], [])
+        # Missing a forecast must not weaken the original hourly immutability gate.
+        path = self.root / "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-02.csv"
+        path.write_text(path.read_text().replace("80200", "80301"))
+        with self.assertRaisesRegex(ValueError, "ACTUAL_MUTATION_OR_LOST_HOUR"):
+            archive(self.root, W46)
+
+    def test_recorded_forecast_cannot_disappear_on_later_archive(self):
+        folder = source(self.root)
+        original = archive(self.root, W45)
+        (folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").unlink()
+        with self.assertRaisesRegex(ValueError, "INDEX_HISTORY_REWRITE"):
+            archive(self.root, W45)
+        self.assertEqual(json.loads((self.root / ROOT / "index.json").read_text()), original)
+
+    def test_prior_chain_tampering_cannot_be_rehashed_to_a_new_history(self):
+        source(self.root)
+        archive(self.root, W45)
+        path = self.root / ROOT / "index.json"
+        old = json.loads(path.read_text())
+        old["weeks"][0]["chain_digest"] = "0" * 64
+        put(path, old)
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_CHAIN"):
+            archive(self.root, W45)
+        # Public-only Pages builds must also fail closed without a fresh archive pass.
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_CHAIN"):
+            publish(self.root)
+
+    def test_public_only_rejects_forged_missing_forecast_and_index_truncation(self):
+        source(self.root)
+        archive(self.root, W46)
+        path = self.root / ROOT / "index.json"
+        original = json.loads(path.read_text())
+        forged = json.loads(json.dumps(original))
+        forged["weeks"][0].update(status="MISSING_FREEZE", source_sha256=None, forecast_path=None)
+        put(path, forged)
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_CHAIN"):
+            publish(self.root)
+        truncated = json.loads(json.dumps(original))
+        truncated["weeks"].pop(0)
+        put(path, truncated)
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_SEQUENCE"):
+            publish(self.root)
+        forged_path = json.loads(json.dumps(original))
+        forged_path["weeks"][0]["forecast_path"] = None
+        put(path, forged_path)
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_PATH"):
+            publish(self.root)
+        forged_actual = json.loads(json.dumps(original))
+        forged_actual["weeks"][0]["actual_path"] = "../../untrusted-actuals.json"
+        put(path, forged_actual)
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_PATH"):
+            publish(self.root)
+        put(path, original)
+        self.assertEqual(len(publish(self.root)["weeks"]), 2)
+
     def test_reject_future_wrong_week_bad_spot_and_invalid_quote(self):
         source(self.root)
         hour(self.root, datetime(2026, 11, 2, 0, tzinfo=timezone.utc), spot="FAIL")
@@ -163,6 +234,42 @@ class GraphHistoryTest(unittest.TestCase):
                                   "source": "HOURLY_SPOT_PASS_ONLY", "forecast_week": "2026-W46",
                                   "BTC": [{"observed_at_utc": "2026-11-02T11:00:00Z", "close": 80500}]}}})
         self.assertEqual(publish(self.root)["actual"], [])
+
+    def test_missing_forecast_current_week_preserves_only_verified_live_actuals(self):
+        # The source-only green curve is independent of a missing blue forecast.
+        result = archive(self.root, W45)
+        self.assertEqual(result["weeks"][0]["status"], "MISSING_FREEZE")
+        latest = self.root / "05_CYCLE_NAVIGATOR/site/dist/data/latest.json"
+        good = {"public_live_precision": {
+            "contract": "CN_PUBLIC_LIVE_PRICE_PRECISION_v1",
+            "forecast_week": "2026-W45", "public_issue_number": 32,
+            "hourly_price_path": {
+                "contract": "CN_PUBLIC_HOURLY_PRICE_PATH_v1",
+                "source": "HOURLY_SPOT_PASS_ONLY",
+                "forecast_week": "2026-W45", "public_issue_number": 32,
+                "observed_through_utc": "2026-11-02T11:00:00Z",
+                "BTC": [{"observed_at_utc": "2026-11-02T11:00:00Z", "close": 80500}],
+                "ETH": []}}}
+        put(latest, good)
+        valid = publish(self.root)
+        self.assertEqual(valid["weeks"][0]["forecast"], [])
+        self.assertEqual(valid["weeks"][0]["forecast_status"], "UNAVAILABLE")
+        self.assertEqual(valid["weeks"][0]["actual_status"], "LIVE")
+        self.assertEqual(valid["actual"], [{"time": "2026-11-02T11:00:00Z", "close": 80500}])
+
+        def rejected(mutator):
+            case = json.loads(json.dumps(good))
+            mutator(case["public_live_precision"])
+            put(latest, case)
+            self.assertEqual(publish(self.root)["actual"], [])
+
+        rejected(lambda live: live["hourly_price_path"].update(public_issue_number=33))
+        rejected(lambda live: live.update(public_issue_number=None))
+        rejected(lambda live: live.update(public_issue_number=0))
+        rejected(lambda live: live.update(forecast_week="2026-W46"))
+        rejected(lambda live: live["hourly_price_path"].update(source="UNVERIFIED"))
+        rejected(lambda live: live["hourly_price_path"]["BTC"][0].update(
+            observed_at_utc="2026-11-02T12:00:00Z"))
 
     def test_live_wrong_issue_and_future_hour_cannot_poison_history(self):
         source(self.root)

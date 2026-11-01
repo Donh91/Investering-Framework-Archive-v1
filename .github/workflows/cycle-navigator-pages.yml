@@ -83,11 +83,20 @@ jobs:
       - name: Build public live Price Range precision
         run: python3 scripts/cycle_navigator/build_public_live_precision.py
       - name: Build continuous BTC graph history from frozen source only
+        id: graph_history
+        continue-on-error: true
         run: |
           python3 tests/cycle_navigator/test_graph_history.py
           python3 scripts/cycle_navigator/build_graph_history.py --repo-root . --mode public
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/graph-history/timeline.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/graph-history/index.html
+      - name: Quarantine failed optional Graph History bundle without blocking canonical Pages
+        if: steps.graph_history.outcome == 'failure'
+        run: |
+          rm -f 05_CYCLE_NAVIGATOR/site/dist/data/graph-history/timeline.json
+          rm -f 05_CYCLE_NAVIGATOR/site/dist/graph-history/index.html
+          echo "::warning::GRAPH_HISTORY_STALLED: optional timeline build failed; canonical site publishing continues"
+          echo "GRAPH_HISTORY_STALLED: optional timeline unavailable, not a source or forecast success" >> "$GITHUB_STEP_SUMMARY"
       - name: Verify actual hourly capture reaches public bundle without fabrication
         run: |
           python3 scripts/cycle_navigator/check_publication_lineage.py --self-test

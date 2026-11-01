@@ -53,13 +53,25 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
           python3 scripts/cycle_navigator/build_public_live_precision.py
-          python3 tests/cycle_navigator/test_graph_history.py
-          python3 scripts/cycle_navigator/build_graph_history.py --repo-root . --mode public
-          test -f 05_CYCLE_NAVIGATOR/site/dist/data/graph-history/timeline.json
-          test -f 05_CYCLE_NAVIGATOR/site/dist/graph-history/index.html
           python3 scripts/cycle_navigator/check_publication_lineage.py --self-test
           python3 scripts/cycle_navigator/check_publication_lineage.py
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+      - name: Enforce Graph History immutable-source regression tests
+        run: python3 tests/cycle_navigator/test_graph_history.py
+      - name: Build optional Graph History without blocking canonical SITE Product Gate
+        id: graph_history
+        continue-on-error: true
+        run: |
+          python3 scripts/cycle_navigator/build_graph_history.py --repo-root . --mode public
+          test -f 05_CYCLE_NAVIGATOR/site/dist/data/graph-history/timeline.json
+          test -f 05_CYCLE_NAVIGATOR/site/dist/graph-history/index.html
+      - name: Quarantine failed optional graph artifacts and disclose degraded state
+        if: steps.graph_history.outcome == 'failure'
+        run: |
+          rm -f 05_CYCLE_NAVIGATOR/site/dist/data/graph-history/timeline.json
+          rm -f 05_CYCLE_NAVIGATOR/site/dist/graph-history/index.html
+          echo "::warning::GRAPH_HISTORY_STALLED: optional Graph History failed; canonical product gate remains effective"
+          echo "GRAPH_HISTORY_STALLED: optional Graph History validation failed" >> "$GITHUB_STEP_SUMMARY"
       - name: Prove isolated NEXT Vite build and preserve entire canonical artifact
         run: node 05_CYCLE_NAVIGATOR/site/premium-v2/stage-next.mjs
       - name: Verify actual NEXT Pages-prefix browser behavior at 390/430
