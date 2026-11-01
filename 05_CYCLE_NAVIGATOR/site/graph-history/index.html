@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CN Time Machine | Grafhistorik</title>
+<meta name="description" content="Bitcoin-kurser mod Cycle Navigators oprindelige, frosne mandagsprognoser. Fra uge 45 i 2026.">
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17263e;background:#f6f8fc}
+*{box-sizing:border-box}body{margin:0}main{max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,36px)}
+a{color:#2456be}.eyebrow{font-size:12px;letter-spacing:.15em;font-weight:800;color:#3465bc}
+h1{font-size:clamp(28px,4vw,48px);letter-spacing:-.04em;line-height:1.1;margin:12px 0}
+.intro{font-size:clamp(14px,1.6vw,18px);color:#506177;max-width:740px;line-height:1.55}
+.panel{background:#fff;border-radius:20px;border:1px solid #e3e8f1;box-shadow:0 8px 28px #192b4d0a;padding:clamp(14px,2.5vw,28px);margin:24px 0}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
+label{font-weight:700;font-size:14px}select{font:inherit;background:#fff;color:#17263e;border:1px solid #bdcbdc;padding:10px 12px;border-radius:10px;min-height:44px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;font-weight:700;margin-top:14px}
+.legend span::before{content:"";display:inline-block;width:25px;vertical-align:middle;margin-right:7px;border-top:3px solid #0c9562}
+.legend .forecast::before{border-top:3px dashed #2662df}
+.legend .boundary::before{border-top:2px dotted #8c98a8}
+#scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x pan-y;border:1px solid #eef1f5;border-radius:14px;margin-top:18px;background:linear-gradient(#fff,#fafdff)}
+#plot{display:block;height:440px;max-height:62vh;min-height:310px}#notice{font-size:13px;color:#596a7e;line-height:1.5;margin:12px 0}
+.metrics{display:flex;gap:12px;flex-wrap:wrap}.metric{flex:1;min-width:150px;padding:14px;border:1px solid #e1e6ef;border-radius:12px}.metric b{display:block;font-size:22px}.metric small{color:#627389}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;border-bottom:1px solid #e5ebf2;padding:12px 8px}th{color:#526279}tr:last-child td{border:0}.scrolltable{overflow-x:auto}
+.note{color:#64748b;font-size:12px;line-height:1.6}.warn{color:#9b5120}
+@media(max-width:600px){main{padding:14px} .panel{border-radius:14px;padding:14px}#plot{height:390px}.legend{font-size:12px}.metric{min-width:130px}}
+</style>
+</head>
+<body>
+<main>
+<a href="../">‹ Tilbage til Kompas Pro</a>
+<div class="eyebrow" style="margin-top:26px">CYCLE NAVIGATOR / GRAFARKIV</div>
+<h1>CN Time Machine</h1>
+<p class="intro">Én sammenhængende Bitcoin-kurslinje. Hver blå prognose er den oprindelige, uændrede mandagsprognose for netop sin uge. Start: 2. november 2026.</p>
+<section class="panel" aria-label="Historisk Bitcoin-graf">
+<div class="toolbar">
+<div><strong style="font-size:19px">BTC · Faktisk vs. prognose</strong><div class="note">UTC · Historiske originale kilder</div></div>
+<label for="period">Vis periode:
+<select id="period"><option value="4">Seneste 4 uger</option><option value="10" selected>Seneste 10 uger</option><option value="all">Hele historikken</option></select>
+</label>
+</div>
+<div class="legend"><span>Faktisk timekurs</span><span class="forecast">Frossen ugeprognose</span><span class="boundary">Ugegrænser</span></div>
+<div id="scroll" role="region" aria-label="Vandret scrollbar for historiske kurser" tabindex="0"><svg id="plot" role="img" aria-label="Historiske Bitcoin-kurser og kildeudstedte ugeprognoser"></svg></div>
+<div id="notice" aria-live="polite">Indlæser verificeret historik…</div>
+<div class="metrics">
+<div class="metric"><b id="weeks">0</b><small>Arkiverede uger</small></div>
+<div class="metric"><b id="forecasts">0</b><small>Uger med 7 prognosepunkter</small></div>
+<div class="metric"><b id="hours">0</b><small>Verificerede timeluk</small></div>
+</div>
+</section>
+<section class="panel"><h2>Ugearkiv</h2><div class="scrolltable"><table><thead><tr><th>Uge</th><th>CN-prognose</th><th>Faktiske data</th></tr></thead><tbody id="archive"><tr><td colspan="3">Afventer kilde</td></tr></tbody></table></div></section>
+<p class="note">Historikken bygger kun på det oprindelige CN-freeze og verificerede, afsluttede Hourly Capture-kurser. Manglende prognoser og databrud udfyldes aldrig kunstigt. Frosne prognoser er i USD, mens de registrerede spotkurser er USDT; sammenligning er indikativ, ikke en godkendt præcisionsscore eller et handelssignal.</p>
+</main>
+<script type="module">
+const URL='../data/graph-history/timeline.json';
+const svg=document.getElementById('plot'), scroll=document.getElementById('scroll');
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg', DAY=86400000, HOUR=3600000;
+let data=null;
+function el(name,attributes={},text=''){
+ const node=document.createElementNS(NS,name);
+ for(const [key,value] of Object.entries(attributes))node.setAttribute(key,String(value));
+ if(text)node.textContent=text; svg.append(node);return node;
+}
+function svgText(x,y,value,size=12,anchor='start'){
+ return el('text',{x,y,fill:'#52647c','font-size':size,'text-anchor':anchor,'font-family':'system-ui,sans-serif'},value);
+}
+function isoWeekStart(week){
+ const m=/^(\d{4})-W(\d{2})$/.exec(week||'');if(!m)return NaN;
+ const y=Number(m[1]),w=Number(m[2]);
+ const jan4=Date.UTC(y,0,4),dow=(new Date(jan4).getUTCDay()+6)%7;
+ return jan4-dow*DAY+(w-1)*7*DAY;
+}
+function path(points,xf,yf,threshold=Infinity){
+ let d='',last=NaN;
+ for(const p of points){if(!Number.isFinite(p[0])||!Number.isFinite(p[1]))continue;
+ d+=(!Number.isFinite(last)||p[0]-last>threshold?'M':'L')+xf(p[0]).toFixed(1)+','+yf(p[1]).toFixed(1)+' ';
+ last=p[0];}return d;
+}
+function draw(){
+ if(!data)return;
+ while(svg.firstChild)svg.firstChild.remove();
+ const all=data.weeks,limit=$('period').value;
+ const selected=limit==='all'?all:all.slice(-Number(limit));
+ const start=selected.length?isoWeekStart(selected[0].week):NaN;
+ const end=selected.length?isoWeekStart(selected.at(-1).week)+7*DAY:NaN;
+ const eligible=data.actual.filter(p=>{const t=Date.parse(p.time);return t>=start&&t<=end&&Number.isFinite(p.close)&&p.close>0;})
+  .map(p=>[Date.parse(p.time),p.close]);
+ const preds=selected.map(w=>{
+  const monday=isoWeekStart(w.week);
+  return (w.forecast_status==='PUBLISHED'&&w.forecast.length===7&&/^[0-9a-f]{64}$/.test(w.source_sha256||''))
+   ?w.forecast.map((p,i)=>[monday+(i+1)*DAY,p.expected_close]).filter(p=>Number.isFinite(p[1])&&p[1]>0):[];
+ });
+ const values=[...eligible.map(p=>p[1]),...preds.flat().map(p=>p[1])];
+ const wide=Math.max(880, selected.length*220),height=440, left=78,right=25,top=34,bottom=55;
+ svg.setAttribute('width',wide);svg.setAttribute('viewBox',`0 0 ${wide} ${height}`);
+ if(!selected.length||!values.length){
+  svgText(36,140,'Ingen originale historiske kurser endnu',21);
+  svgText(36,175,'Uge 45 åbner, når mandagens originale data foreligger.',14);
+  $('notice').textContent='Ingen prognosekurve konstrueres uden syv originale, frosne dagspriser.';
+  return;
+ }
+ const min=Math.min(...values),max=Math.max(...values),pad=Math.max(70,(max-min)*.10),lo=min-pad,hi=max+pad;
+ const xf=t=>left+(t-start)/(end-start)*(wide-left-right);
+ const yf=v=>top+(hi-v)/(hi-lo)*(height-top-bottom);
+ for(let i=0;i<5;i++){
+  const v=lo+(hi-lo)*i,y=yf(v); el('line',{x1:left,y1:y,x2:wide-right,y2:y,stroke:'#e5eaf1'});
+  svgText(left-10,y+4,Math.round(v).toLocaleString('da-DK'),12,'end');
+ }
+ for(const w of selected){const x=xf(isoWeekStart(w.week));
+  el('line',{x1:x,y1:top,x2:x,y2:height-bottom,stroke:'#96a4b8','stroke-dasharray':'3 7',opacity:'.8'});
+  svgText(x+8,height-22,w.week,13);}
+ el('path',{d:path(eligible,xf,yf,HOUR*1.5),fill:'none',stroke:'#099866','stroke-width':'2.8','stroke-linecap':'round','stroke-linejoin':'round'});
+ for(const set of preds)if(set.length===7){
+  el('path',{d:path(set,xf,yf,DAY*1.2),fill:'none',stroke:'#2563eb','stroke-width':'3.1','stroke-dasharray':'9 6','stroke-linecap':'round'});
+ }
+ if(eligible.length){const p=eligible.at(-1);el('circle',{cx:xf(p[0]),cy:yf(p[1]),r:5,fill:'#fff',stroke:'#099866','stroke-width':3});}
+ const missing=selected.filter(w=>w.forecast_status!=='PUBLISHED').length;
+ $('notice').textContent=missing?`${missing} uge(r) uden kildeudstedt 7-dages prognose, vist uden opdigtet blå kurve.`:'Alle viste uger har syv originale CN-prognosepunkter.';
+ }
+function table(){
+ $('weeks').textContent=data.weeks.length;
+ $('forecasts').textContent=data.weeks.filter(w=>w.forecast_status==='PUBLISHED').length;
+ $('hours').textContent=data.actual.length.toLocaleString('da-DK');
+ const body=$('archive');body.replaceChildren();
+ for(const w of [...data.weeks].reverse()){
+  const tr=document.createElement('tr');
+  const status=w.forecast_status==='PUBLISHED'?'7 originale punkter':'Ikke udstedt';
+  for(const value of [w.week,status,`${w.observed_hours}/168 · ${w.actual_status}`]){
+   const td=document.createElement('td');td.textContent=value;tr.append(td);}
+  body.append(tr);
+ }
+ if(!data.weeks.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=3;td.textContent='Starter med den første ægte W45-freeze';tr.append(td);body.append(tr);}
+}
+$('period').addEventListener('change',draw);
+try {
+ const resp=await fetch(URL,{cache:'no-store'});
+ if(!resp.ok)throw Error('Kildedata kan ikke hentes');
+ const value=await resp.json();
+ if(value?.contract!=='CN_GRAPH_HISTORY_TIMELINE_v1'||!Array.isArray(value.weeks)||!Array.isArray(value.actual))throw Error('Ugyldig historikkontrakt');
+ data=value;table();draw();scroll.scrollLeft=scroll.scrollWidth-scroll.clientWidth;
+}catch(error){$('notice').textContent='Grafhistorikken er utilgængelig. Sidste verificerede data er ikke blevet erstattet med estimerede kurser.'; svgText(28,100,'Kildedata utilgængelige',18);}
+</script>
+</body>
+</html>

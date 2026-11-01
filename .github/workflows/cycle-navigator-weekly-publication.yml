@@ -263,6 +263,14 @@ jobs:
             | tee runtime_cn_v2_edge_freeze.json
           echo 'CN_V2_ACCOUNTABILITY_SOURCE_CAPTURE_COMPLETE_OR_EXPLICITLY_SKIPPED'
 
+      - name: Append source-only CN graph history after original freeze
+        id: graph_history
+        if: steps.precheck.outputs.skip != 'true'
+        continue-on-error: true
+        run: |
+          python3 tests/cycle_navigator/test_graph_history.py
+          python3 scripts/cycle_navigator/build_graph_history.py --repo-root . --mode archive
+
       - name: Commit complete weekly Cycle Navigator archive
         if: steps.precheck.outputs.skip != 'true'
         shell: bash
@@ -277,6 +285,11 @@ jobs:
                   05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json \
                   05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json \
                   04_MARKET_LEARNING/handlekompas/strategic
+          if [ "${{ steps.graph_history.outcome }}" = "success" ]; then
+            git add 05_CYCLE_NAVIGATOR/graph_history/v1
+          else
+            echo 'GRAPH_HISTORY_ARCHIVE_FAILED_SOURCE_CN_CONTINUES'
+          fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "cycle-navigator: publish weekly package after final Master Monday"
           pushed=false
