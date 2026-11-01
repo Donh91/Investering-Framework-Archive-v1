@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "backtest_engine/statistics.py",
+    "scripts/research/task2_cfgi_price_vol_temporal_v1.py",
+    "tests/backtest_engine/test_wave1_2_foundation.py",
+    "tests/research/test_task2_cfgi_price_vol_temporal_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-fd572133067a346d",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-fail-closed-non-features-overlapping-oos-tests",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "OWNER_AUTHORIZED_RESEARCH_ONLY_MERGE; original exact HEAD 70227d7a0ffc2b6f19cac69f7b0117237214dda5; low impact, zero live trading authority; Grok #124 original falsification, 5/5 exact-head CI, Codex quota exhausted; previous main 653163e30a10c934bf2d73c6d58f5b3e462cd6c7; preserve immutable originals and retain separate independent review status.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "backtest_engine/statistics.py": "31667cdead5db52dcfa46522c547590338af756d",
+    "scripts/research/task2_cfgi_price_vol_temporal_v1.py": "64d1f436259f7fac8caeee583d10ec7939fba5b1",
+    "tests/backtest_engine/test_wave1_2_foundation.py": "bb568bed42da7cefd7445e4bb3d92a3e0765dd2f",
+    "tests/research/test_task2_cfgi_price_vol_temporal_v1.py": "ec6bab72b4512cbdafee39193ca5a0e1bc288734"
+  },
+  "source_commit_sha": "fd572133067a346d918ef0ce52a443b88a87a81f",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-31T13:38:20-07:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "fix(task2): fail closed on non-as-of archive features and overlapping OOS tests (#1867)"
+}
