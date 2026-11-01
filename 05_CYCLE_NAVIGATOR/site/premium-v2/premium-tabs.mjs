@@ -54,6 +54,13 @@ if (nav && nodes.every(x => x.link && x.panel)) {
       names.path=lang()==='en'?'Cycle':'Cyklus';
     }
     for (const x of nodes) if(x.link.textContent!==names[x.key]) x.link.textContent=names[x.key];
+    // This link stays inside the weekly graph panel, never becomes a fifth tab.
+    const historyCopy=lang()==='en'?{title:'Graph history',note:'From week 45 (2026). Verified BTC hourly prices; a blue daily forecast appears only if issued before outcomes.',link:'Open graph history'}:
+      {title:'Grafhistorik',note:'Fra uge 45 (2026). Faktisk BTC-kurs fra verificerede timer; kun forhåndsudstedte dagsprognoser vises som blå kurve.',link:'Åbn grafhistorik'};
+    for(const [id,value] of [['cn-graph-history-title',historyCopy.title],['cn-graph-history-note',historyCopy.note],['cn-graph-history-link',historyCopy.link]]){
+      const element=document.getElementById(id);
+      if(element&&element.textContent!==value)element.textContent=value;
+    }
     const navName=lang()==='en'?'Choose market view':'Vælg markedsvisning';
     if(nav.getAttribute('aria-label')!==navName)nav.setAttribute('aria-label',navName);
     const active=nodes.find(x=>x.link.getAttribute('aria-selected')==='true');
