@@ -174,6 +174,27 @@ class GraphHistoryTest(unittest.TestCase):
         put(path, old)
         with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_CHAIN"):
             archive(self.root, W45)
+        # Public-only Pages builds must also fail closed without a fresh archive pass.
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_CHAIN"):
+            publish(self.root)
+
+    def test_public_only_rejects_forged_missing_forecast_and_index_truncation(self):
+        source(self.root)
+        archive(self.root, W46)
+        path = self.root / ROOT / "index.json"
+        original = json.loads(path.read_text())
+        forged = json.loads(json.dumps(original))
+        forged["weeks"][0].update(status="MISSING_FREEZE", source_sha256=None, forecast_path=None)
+        put(path, forged)
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_CHAIN"):
+            publish(self.root)
+        truncated = json.loads(json.dumps(original))
+        truncated["weeks"].pop(0)
+        put(path, truncated)
+        with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_SEQUENCE"):
+            publish(self.root)
+        put(path, original)
+        self.assertEqual(len(publish(self.root)["weeks"]), 2)
 
     def test_reject_future_wrong_week_bad_spot_and_invalid_quote(self):
         source(self.root)
