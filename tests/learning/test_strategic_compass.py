@@ -129,7 +129,8 @@ class StrategicCompassTests(unittest.TestCase):
 
     def test_typed_12h_nowcast_preserves_current_observation_without_future_vote(self):
         from scripts.learning.strategic_compass import official_horizon
-        old = {"horizons": {"NEXT_12H": {
+        old = {"decision_policy_version": "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1",
+               "horizons": {"NEXT_12H": {
             "expected_direction": "DOWN", "eta": "0-12h",
             "semantics": "OBSERVED_MOMENTUM_NOT_FORECAST",
             "predictive_edge_status": "NOT_PROVEN",
@@ -145,6 +146,21 @@ class StrategicCompassTests(unittest.TestCase):
         corrupt["horizons"]["NEXT_12H"]["semantics"] = "FORWARD_PROVEN"
         self.assertEqual(official_horizon(corrupt, "NEXT_12H")["observed_momentum_direction"], "UNAVAILABLE")
         self.assertEqual(official_horizon(corrupt, "NEXT_12H")["direction"], "UNAVAILABLE")
+        # A forged typed marker under a legacy/missing/future policy is not
+        # authenticated nowcast observation; reject it just as public does.
+        for policy in ("2026-09-30_DIRECTION_ACTION_SEPARATION_V4_0",
+                       "2026-11-02_UNREGISTERED_V4_2", "", None):
+            candidate = json.loads(json.dumps(old))
+            if policy is None:
+                candidate.pop("decision_policy_version")
+            else:
+                candidate["decision_policy_version"] = policy
+            observed = official_horizon(candidate, "NEXT_12H")
+            self.assertEqual(observed["direction"], "UNAVAILABLE")
+            self.assertEqual(observed["observed_momentum_direction"], "UNAVAILABLE")
+            self.assertEqual(observed["semantics"], "LEGACY_UNVERIFIED_NOT_FORWARD")
+            self.assertEqual(observed["action_posture"], "NO_EDGE")
+            self.assertIsNone(observed["eta"])
         # Other horizons remain governed, unmodified source calls.
         self.assertEqual(official_horizon({"horizons": {"NEXT_1_3D": {
             "expected_direction": "UP", "action_posture": "HOLD",
