@@ -225,6 +225,7 @@ def publish(root):
             raise ValueError(f"HISTORY_SOURCE_HASH_MISMATCH:{label}")
         weeks.append({"week": label, "status": item["status"],
                       "source_sha256": item.get("source_sha256"),
+                      "public_issue_number": prediction["public_issue_number"] if prediction else None,
                       "issued_at_utc": prediction["issued_at_utc"] if prediction else None,
                       "first_eligible_utc": prediction["first_eligible_utc"] if prediction else None,
                       "forecast_status": prediction["BTC"]["status"] if prediction else "UNAVAILABLE",
@@ -245,13 +246,21 @@ def publish(root):
                 prices.get("contract") == "CN_PUBLIC_HOURLY_PRICE_PATH_v1" and
                 prices.get("source") == "HOURLY_SPOT_PASS_ONLY" and
                 prices.get("forecast_week") == current["week"] and
-                live.get("forecast_week") == current["week"]):
+                live.get("forecast_week") == current["week"] and
+                prices.get("public_issue_number") == current["public_issue_number"] and
+                live.get("public_issue_number") == current["public_issue_number"]):
+            monday = date.fromisocalendar(int(current["week"][:4]), int(current["week"][6:]), 1)
+            week_start = datetime.combine(monday, datetime.min.time(), UTC)
+            week_end = week_start + timedelta(days=7)
+            cutoff = dt(prices["observed_through_utc"])
             seen = {x["time"] for x in actual}
             for p in prices.get("BTC", []):
                 try:
                     clock = dt(p["observed_at_utc"])
                     value = float(p["close"])
-                    if math.isfinite(value) and value > 0 and iso(clock) not in seen:
+                    if (math.isfinite(value) and value > 0 and
+                            week_start < clock <= week_end and clock <= cutoff and
+                            clock.minute == 0 and clock.second == 0 and iso(clock) not in seen):
                         actual.append({"time": iso(clock), "close": value})
                         seen.add(iso(clock))
                 except (KeyError, TypeError, ValueError):
