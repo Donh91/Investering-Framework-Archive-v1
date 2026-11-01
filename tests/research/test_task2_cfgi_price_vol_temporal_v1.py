@@ -96,9 +96,25 @@ class TimeSeparatedCFGIIncrementalTests(unittest.TestCase):
         self.assertEqual((m.ITERATIONS,m.LEARNING_RATE,m.RIDGE),(750,0.08,0.3))
         self.assertFalse(m.AUTHORITY["live_rule_change"])
         self.assertFalse(m.AUTHORITY["new_provider_requests"])
+    def test_batch_end_guard_rejects_archive_data_unavailable_at_decision(self):
+        t=datetime(2026,10,15,12,5,tzinfo=timezone.utc)
+        base=datetime(2026,10,15,11,0,tzinfo=timezone.utc)
+        def tape(offset):
+            return {base-j*H:{"source_window_end_utc":(base-j*H+offset*H).strftime("%Y-%m-%dT%H:%M:%SZ")} for j in range(9)}
+        self.assertFalse(m.batch_end_after_decision(tape(1),base,t))
+        self.assertTrue(m.batch_end_after_decision(tape(24),base,t))
+        self.assertTrue(m.batch_end_after_decision({k:v for k,v in tape(1).items() if k!=base-5*H},base,t))
+        invalid=tape(1);invalid[base]["source_window_end_utc"]="not-a-time"
+        self.assertTrue(m.batch_end_after_decision(invalid,base,t))
+
     def test_full_original_archive_when_available(self):
         if m.archive.CAPTURE_ROOT.is_dir() and m.archive.PRICE_ROOT.is_dir():
-            x=m.execute()
+            # The original archive is not true as-of evidence. Strict admission
+            # must fail, while legacy inspected-history is explicitly opt-in.
+            with self.assertRaisesRegex(ValueError,"INSUFFICIENT_PROSPECTIVE_ARCHIVE_SOURCE_CENSUS"):
+                m.execute()
+            x=m.execute(pit_strict=False)
+            self.assertEqual(x["source_asof_mode"],"LEGACY_EXPOST_NOT_PIT")
             self.assertEqual(x["contract"],m.CONTRACT)
             self.assertEqual(set(x["asset_results"]),{"BTC","ETH"})
             self.assertFalse(x["statistical_significance_or_economic_edge_claim"])

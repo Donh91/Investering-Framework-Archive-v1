@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/forecast-source-temporal-provenance-gate.yml",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/compass_edge_r2_20261030/05_OFFICIAL_SOURCE_AGE_257_CENSUS_REPORT_v1.md",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/compass_edge_r2_20261030/05_OFFICIAL_SOURCE_AGE_257_POPULATION_AUDIT_v1.json",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/compass_edge_r2_20261030/README.md",
+    "scripts/research/official_compass_source_age_census.py",
+    "tests/research/test_official_compass_source_age_census.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-216a30d1a1b9d645",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized bounded research-only merge. Full immutable Git source tree 257/257 verified in public hosted Actions job 124469031280, 12/12 new negative/positive tests PASS, 5/5 exact head public CI PASS. Original float-second schema correctly handled, no change to production Compass signals, trading, scheduler, privacy, or provider first-known evidence. Exact PR HEAD 47baa7fa20b64334928042b925c120773828175a. Premerge main bb697791d4ccc605cf04497bf1a491b460d9545d. Codex quota blocked, Grok review pending, owner-directed technical review documented in PR #1857.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/forecast-source-temporal-provenance-gate.yml": "583e985432410dcedff2463fcb7f70010906e661",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/compass_edge_r2_20261030/05_OFFICIAL_SOURCE_AGE_257_CENSUS_REPORT_v1.md": "be9cf971f0f8ec4cd1d862dbca052a6409efa385",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/compass_edge_r2_20261030/05_OFFICIAL_SOURCE_AGE_257_POPULATION_AUDIT_v1.json": "111d8e54301e5b550cf6891e71c48553eda5e6e9",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/compass_edge_r2_20261030/README.md": "516059155eadd7c60f2e60624f8af7f122744e48",
+    "scripts/research/official_compass_source_age_census.py": "c2c79fd78a2085cd2093f4668851f3bd371dec80",
+    "tests/research/test_official_compass_source_age_census.py": "66d0ae3eb3d62e53279b8f918dd88959328d8f03"
+  },
+  "source_commit_sha": "216a30d1a1b9d6452413417ea292df37e89d440a",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-10-30T23:47:08-07:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(task2): verified 257-run Official source-age census and replay (#1857)"
+}

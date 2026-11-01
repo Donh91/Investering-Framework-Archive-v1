@@ -267,6 +267,44 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
                 self.assertEqual(c["scientific_score_eligible_outcome_count"],0)
                 self.assertEqual(c["censored_outcome_count"],0)
 
+    def test_nonadmission_reports_only_reached_anchor_gate(self):
+        with tempfile.TemporaryDirectory() as td:
+            row = self.sample_registry(Path(td), [self.outcome("EXP-FC-1")])["candidates"][0]
+            self.assertEqual(row["scientific_score_eligible_outcome_count"], 0)
+            self.assertEqual(row["scientific_score_nonadmission_counts_v1"],
+                             {"FORECAST_SOURCE_ANCHOR_REJECTED": 1})
+
+    def test_nonadmission_does_not_attribute_precheck_failure_to_custody(self):
+        with tempfile.TemporaryDirectory() as td:
+            row = self.sample_registry(Path(td), [self.outcome("EXP-FC-1", score=False)])["candidates"][0]
+            self.assertEqual(row["scientific_score_nonadmission_counts_v1"],
+                             {"OUTCOME_PREREQUISITE_NOT_MET": 1})
+
+    def test_nonadmission_reports_binding_failure_separately(self):
+        from scripts.experiments.experiment_lifecycle import registry
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.sample_registry(root, [self.outcome("EXP-FC-1")])
+            (root / "settlement_bindings/EXP-FC-1.json").unlink()
+            row = registry(root/"candidates", root/"observations", root/"forecasts",
+                           root/"outcomes", root/"receipts", "2026-10-18T01:00:00Z")["candidates"][0]
+            self.assertEqual(row["scientific_score_nonadmission_counts_v1"],
+                             {"BINDING_OR_OTHER_VALIDATION_REJECTED": 1})
+
+    def test_nonadmission_second_anchor_and_positive_fixture(self):
+        from unittest.mock import patch
+        for answers, counts, expected in [
+            ([True, False], {"SETTLEMENT_SOURCE_ANCHOR_REJECTED": 1}, 0),
+            ([True, True], {}, 1),
+        ]:
+            with self.subTest(answers=answers), tempfile.TemporaryDirectory() as td:
+                # Synthetic seam only: never claims a real trusted clock exists.
+                with patch("scripts.experiments.source_git_anchor.AcceptedMainSource.matches",
+                           side_effect=answers):
+                    row = self.sample_registry(Path(td), [self.outcome("EXP-FC-1")])["candidates"][0]
+                self.assertEqual(row["scientific_score_nonadmission_counts_v1"], counts)
+                self.assertEqual(row["scientific_score_eligible_outcome_count"], expected)
+
     def test_physical_maturity_without_scientific_eligibility_never_promotes(self):
         for value in (False,None,"true"):
             with self.subTest(score=value),tempfile.TemporaryDirectory() as td:
@@ -634,6 +672,126 @@ class CensoredOutcomeIntegrityTests(unittest.TestCase):
             self.assertEqual(action["selected_action"], "KEEP_SHADOW_INCONCLUSIVE")
             self.assertFalse(action["canonical_effect"])
             self.assertFalse(action["portfolio_execution"])
+
+    def test_full_original_corpus_nonadmission_and_legacy_parity(self):
+        """Replay old and new registry loops on the EXACT SAME entire tree.
+
+        Reverse ONLY the diagnostic loop and emitted diagnostic field with the
+        prior reviewed code. No stale publication snapshot is a comparator.
+        """
+        import inspect
+        import scripts.experiments.experiment_lifecycle as lifecycle
+
+        repo = Path(__file__).resolve().parents[2]
+        roots = (
+            repo / "research/experiment_lifecycle/candidates",
+            repo / "research/experiment_lifecycle/observations",
+            repo / "research/framework_memory/forecast_memory",
+            repo / "research/framework_memory/outcome_memory",
+            repo / "research/experiment_lifecycle/receipts",
+        )
+        for path in roots:
+            self.assertTrue(path.is_dir(), f"FULL_CORPUS_INPUT_UNAVAILABLE:{path}")
+        baseline_file = repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
+        self.assertTrue(baseline_file.is_file(), "MISSING_PINNED_PRODUCTION_CENSUS")
+        last_published = json.loads(baseline_file.read_text(encoding="utf-8"))
+        self.assertGreaterEqual(last_published["candidate_count"], 650)
+        self.assertEqual(last_published["candidate_count"], len(last_published["candidates"]))
+
+        # This literal is the EXACT old, status-eligible original comprehension
+        # from the reviewed PR base, not another call to the new diagnostics.
+        diagnostic_loop = r'''        eligible = []
+        nonadmission_counts = {}
+        for item in matured:
+            forecast_id = item.get("forecast_id")
+            reason = []
+            if (item.get("scientific_score_eligible") is not True
+                    or item.get("result") not in {"HIT", "MISS"}
+                    or forecast_id not in original_forecasts
+                    or original_forecasts[forecast_id][0] != candidate_id):
+                reason.append("OUTCOME_PREREQUISITE_NOT_MET")
+            elif outcome_bound_to_frozen_forecast(
+                    item, original_forecasts[forecast_id][1], outcome_root,
+                    source_anchor=source_anchor,
+                    forecast_path=original_forecast_paths[forecast_id],
+                    nonadmission=reason):
+                eligible.append(item)
+            else:
+                if not reason:
+                    reason.append("BINDING_OR_OTHER_VALIDATION_REJECTED")
+            if reason:
+                nonadmission_counts[reason[0]] = nonadmission_counts.get(reason[0], 0) + 1
+'''
+        original_loop = r'''        eligible = [item for item in matured
+                    if item.get("scientific_score_eligible") is True
+                    and item.get("result") in {"HIT", "MISS"}
+                    and item.get("forecast_id") in original_forecasts
+                    and original_forecasts[item["forecast_id"]][0] == candidate_id
+                    and outcome_bound_to_frozen_forecast(
+                        item, original_forecasts[item["forecast_id"]][1], outcome_root,
+                        source_anchor=source_anchor,
+                        forecast_path=original_forecast_paths[item["forecast_id"]])]
+'''
+        diagnostic_field = '            "scientific_score_nonadmission_counts_v1": nonadmission_counts,\n'
+        live_source = inspect.getsource(lifecycle.registry)
+        self.assertEqual(live_source.count(diagnostic_loop), 1, "DIAGNOSTIC_LOOP_DRIFT")
+        self.assertEqual(live_source.count(diagnostic_field), 1, "DIAGNOSTIC_FIELD_DRIFT")
+        original_source = (
+            live_source.replace(diagnostic_loop, original_loop, 1)
+            .replace(diagnostic_field, "", 1)
+        )
+        original_scope = vars(lifecycle).copy()
+        exec(compile(original_source, "<exact-legacy-registry>", "exec"), original_scope)
+        old_registry = original_scope["registry"]
+
+        now = last_published["generated_at_utc"]
+        old = old_registry(*roots, now)
+        current = lifecycle.registry(*roots, now)
+        self.assertGreaterEqual(old["candidate_count"], 650)
+        self.assertEqual(len(old["candidates"]), old["candidate_count"])
+        self.assertEqual(len(current["candidates"]), current["candidate_count"])
+        normalized = {
+            **current,
+            "candidates": [
+                {k: v for k, v in row.items()
+                 if k != "scientific_score_nonadmission_counts_v1"}
+                for row in current["candidates"]
+            ],
+        }
+        # Root contract, all original candidate fields, state/counts and
+        # scientific eligibility must remain identical on the same inputs.
+        self.assertEqual(normalized, old, "SAME_TREE_LEGACY_FIELDS_DRIFT")
+
+        totals = {"matured": 0, "eligible": 0, "nonadmitted": 0}
+        allowed = {
+            "OUTCOME_PREREQUISITE_NOT_MET",
+            "FORECAST_SOURCE_ANCHOR_REJECTED",
+            "SETTLEMENT_SOURCE_ANCHOR_REJECTED",
+            "BINDING_OR_OTHER_VALIDATION_REJECTED",
+        }
+        for row in current["candidates"]:
+            reasons = row["scientific_score_nonadmission_counts_v1"]
+            self.assertIsInstance(reasons, dict)
+            self.assertTrue(set(reasons).issubset(allowed), row["candidate_id"])
+            self.assertTrue(all(type(count) is int and count > 0
+                                for count in reasons.values()), row["candidate_id"])
+            matured = row["matured_outcome_count"]
+            eligible = row["scientific_score_eligible_outcome_count"]
+            self.assertEqual(sum(reasons.values()), matured - eligible,
+                             f"FIRST_REACHED_REASON_CONSERVATION:{row['candidate_id']}")
+            totals["matured"] += matured
+            totals["eligible"] += eligible
+            totals["nonadmitted"] += sum(reasons.values())
+        self.assertGreaterEqual(totals["matured"], 1272)
+        self.assertEqual(totals["nonadmitted"], totals["matured"] - totals["eligible"])
+        self.assertEqual(current["authority"], "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION")
+        print("FULL_CORPUS_OLD_NEW_SAME_TREE_PARITY_PASS " + json.dumps({
+            "candidates": current["candidate_count"],
+            "matured": totals["matured"],
+            "eligible": totals["eligible"],
+            "nonadmitted": totals["nonadmitted"],
+            "legacy_fields_equal": True,
+        }, sort_keys=True))
 
     def test_old_adjudication_fails_existing_state_and_count_drift_gates(self):
         # The existing CLI consumer uses a sibling-module import.

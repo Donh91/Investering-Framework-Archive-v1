@@ -280,6 +280,7 @@ def outcome_bound_to_frozen_forecast(
     outcome: dict[str, Any], frozen: dict[str, Any], outcome_root: Path,
     *, source_anchor: AcceptedMainSource | None = None,
     forecast_path: Path | None = None,
+    nonadmission: list[str] | None = None,
 ) -> bool:
     """Narrow status-eligible evidence: a self-declared score flag is insufficient.
 
@@ -394,9 +395,13 @@ def outcome_bound_to_frozen_forecast(
         if not anchor.matches(relative_forecast_path,
                               hashlib.sha256(forecast_path.read_bytes()).hexdigest(),
                               accepted_before=dt(due)):
+            if nonadmission is not None:
+                nonadmission.append("FORECAST_SOURCE_ANCHOR_REJECTED")
             return False
         if not anchor.matches(Path(raw_ref), evidence.get("source_raw_sha256"),
                               accepted_after=dt(due)):
+            if nonadmission is not None:
+                nonadmission.append("SETTLEMENT_SOURCE_ANCHOR_REJECTED")
             return False
     except (OSError, ValueError, TypeError, UnicodeError):
         return False
@@ -514,15 +519,27 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
         matured = [item for item in original_outcomes
                    if item.get("contract") in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}
                    and item.get("status") == "MATURED"]
-        eligible = [item for item in matured
-                    if item.get("scientific_score_eligible") is True
-                    and item.get("result") in {"HIT", "MISS"}
-                    and item.get("forecast_id") in original_forecasts
-                    and original_forecasts[item["forecast_id"]][0] == candidate_id
-                    and outcome_bound_to_frozen_forecast(
-                        item, original_forecasts[item["forecast_id"]][1], outcome_root,
-                        source_anchor=source_anchor,
-                        forecast_path=original_forecast_paths[item["forecast_id"]])]
+        eligible = []
+        nonadmission_counts = {}
+        for item in matured:
+            forecast_id = item.get("forecast_id")
+            reason = []
+            if (item.get("scientific_score_eligible") is not True
+                    or item.get("result") not in {"HIT", "MISS"}
+                    or forecast_id not in original_forecasts
+                    or original_forecasts[forecast_id][0] != candidate_id):
+                reason.append("OUTCOME_PREREQUISITE_NOT_MET")
+            elif outcome_bound_to_frozen_forecast(
+                    item, original_forecasts[forecast_id][1], outcome_root,
+                    source_anchor=source_anchor,
+                    forecast_path=original_forecast_paths[forecast_id],
+                    nonadmission=reason):
+                eligible.append(item)
+            else:
+                if not reason:
+                    reason.append("BINDING_OR_OTHER_VALIDATION_REJECTED")
+            if reason:
+                nonadmission_counts[reason[0]] = nonadmission_counts.get(reason[0], 0) + 1
         censored = [item for item in original_outcomes
                     if item.get("contract") in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}
                     and item.get("status") == "CENSORED"]
@@ -562,6 +579,7 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
             "censored_outcome_count": len(censored),
             "unknown_outcome_count": unresolved_count,
             "scientific_score_eligible_outcome_count": len(eligible),
+            "scientific_score_nonadmission_counts_v1": nonadmission_counts,
             "outcome_evidence_state": (
                 "CENSORED_ONLY" if censored and not matured and not unresolved_count
                 else "MATURED_SOME" if matured

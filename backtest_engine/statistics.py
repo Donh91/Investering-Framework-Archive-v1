@@ -175,6 +175,8 @@ def purged_expanding_walk_forward(
     step_size = test_size if step is None else step
     if step_size <= 0:
         raise ValueError("step must be positive")
+    if step_size < test_size:
+        raise ValueError("step below test_size overlaps and double-counts held-out test observations")
 
     splits: list[WalkForwardSplit] = []
     test_start = minimum_train_size + purge

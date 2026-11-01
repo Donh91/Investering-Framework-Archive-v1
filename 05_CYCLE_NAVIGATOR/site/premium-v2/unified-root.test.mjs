@@ -584,3 +584,31 @@ test('latest observation vs 1–3d sourced contrast refuses to invent 12h/24h tr
  assert.match(runtime,/Nu · seneste prisbevægelse/);
  assert.doesNotMatch(runtime,/Seneste 12 timer · målt retning/);
 });
+
+
+test('200 percent reflow keeps approved Graph B geometry, full source meaning and navigable tabs',async()=>{
+ const [css,tabs,graphSource]=await Promise.all([
+  read('./premium-overhaul.css'),read('./premium-tabs.mjs'),
+  read('./graph-b/source-graph-b.mjs')
+ ]);
+ assert.match(css,/QUIET PRECISION · 200% ZOOM REFLOW/);
+ assert.match(css,/@media\(max-width:320px\)/);
+ assert.match(css,/\.premium-next\.premium-home #variant-panel \.instrument-header\{/);
+ assert.match(css,/\.premium-next\.premium-home #variant-panel \.plot-shell #chart\{/);
+ assert.match(css,/\.premium-next\.premium-home #variant-panel \.chart-price-axis\{/);
+ assert.match(css,/\.premium-next\.premium-home \.cn-horizon-card p\{/);
+ assert.match(css,/-webkit-line-clamp:unset!important/);
+ assert.match(css,/\.premium-next\.premium-home #official-path-view \.cn-alt-milestone\{/);
+ assert.match(css,/\.premium-next\.premium-home \.premium-entry-navigation::-webkit-scrollbar\{/);
+ assert.match(tabs,/const revealSelected = link =>/);
+ assert.match(tabs,/nav\.scrollWidth <= nav\.clientWidth \+ 1/);
+ assert.match(tabs,/nav\.scrollLeft [+-]=/);
+ assert.match(tabs,/revealSelected\(selected\.link\)/);
+ // Navigation stays a read-only projection and source Graph B remains intact.
+ assert.doesNotMatch(tabs,/fetch\(|Math\.sin|expected_close|forecast_low|probability/);
+ assert.match(graphSource,/attr\('forecast','d',''\)/);
+ assert.match(graphSource,/attr\('actual','d'/);
+ const markup=buildUnifiedRootHtml(original,pro);
+ for(const name of ['chart','forecast','actual','compass-pro','official-path-view'])
+  assert.equal(id(markup,name),1);
+});
