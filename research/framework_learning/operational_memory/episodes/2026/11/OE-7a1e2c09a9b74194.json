@@ -1,0 +1,50 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/daily-capture-architecture-gate.yml",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-30__KOMPAS_PRO_CONTINUOUS_LEARNING_ROADMAP_v0_1.md",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-30__RQS_REBOUND_QUALITY_SHADOW_V0.md",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-31__FIVE_LANES_83D_EXPOST_REPLAY_v1.json",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-31__RQS_83D_LONGITUDINAL_EXPOST_DISCOVERY_v1.md",
+    "scripts/research/rebound_quality_shadow.py",
+    "scripts/research/rqs_five_lanes_expost.py",
+    "tests/research/test_rebound_quality_shadow.py",
+    "tests/research/test_rqs_five_lanes_expost.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "04_MARKET_LEARNING",
+  "episode_id": "OE-7a1e2c09a9b74194",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized research-only integration after exact-head Codex review, substantive PR CI, source-clock negative controls and no prospective/trade promotion. Preserve first-known=false and trade_permission=NONE.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/daily-capture-architecture-gate.yml": "cd19ac644a83ff0d903c16d372c1ba9741888b4d",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-30__KOMPAS_PRO_CONTINUOUS_LEARNING_ROADMAP_v0_1.md": "dc3185482310873ca56e62f01462af190b5e5ad9",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-30__RQS_REBOUND_QUALITY_SHADOW_V0.md": "3d815c951691b2ecedfd0df3a87b091207cad58f",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-31__FIVE_LANES_83D_EXPOST_REPLAY_v1.json": "f125cb9fafbe668512a01cc1087d3150ecf45281",
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-31__RQS_83D_LONGITUDINAL_EXPOST_DISCOVERY_v1.md": "e39ccd21c3a3a7217b51a111a6a1edce2dbd7304",
+    "scripts/research/rebound_quality_shadow.py": "bc3608948cd8fae4177e1c00bf76056f1387b59b",
+    "scripts/research/rqs_five_lanes_expost.py": "544bfef2ce16fefae697afc692210da40f13aa52",
+    "tests/research/test_rebound_quality_shadow.py": "f9dfc3011dfb9a259a7efc9847e85de9f4b52099",
+    "tests/research/test_rqs_five_lanes_expost.py": "2dbc21821984e97e9ef556813c9d630fa96850ae"
+  },
+  "source_commit_sha": "7a1e2c09a9b74194615d6710c973becdd3707930",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-01T03:18:04-08:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(rqs): integrate source-only rebound and five-lane ex-post diagnostics (#1850)"
+}

@@ -235,6 +235,28 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     outcome_path = repo_root / outcome_rel
     if outcome_path.exists():
         return {"status": "ALREADY_MATURED", "path": outcome_rel.as_posix()}
+    # Policy v4.1's NEXT_12H is a present-state momentum observation, NOT an
+    # original forward directional forecast. Its future price can be evaluated
+    # separately in research, but the governed Official forecast-accuracy
+    # writer must not mint a misleading 12h prediction/outcome pair. Existing
+    # legacy originals with their original scoring contract stay immutable.
+    if horizon == "12h":
+        horizons = freeze.get("horizons")
+        horizons = horizons if isinstance(horizons, Mapping) else {}
+        nowcast = horizons.get("NEXT_12H")
+        nowcast = nowcast if isinstance(nowcast, Mapping) else {}
+        if (
+            freeze.get("decision_policy_version") == "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1"
+            or nowcast.get("semantics") == "OBSERVED_MOMENTUM_NOT_FORECAST"
+        ):
+            return {
+                "status": "QUARANTINED_NONPREDICTIVE_12H_NOWCAST",
+                "horizon": horizon,
+                "compass_id": freeze.get("compass_id"),
+                "reason": "OBSERVED_MOMENTUM_NOT_A_FORWARD_FORECAST",
+                "prediction_scored": False,
+                "original_freeze_unchanged": True,
+            }
     # A forecast's frozen scoring contract is immutable. Never silently score
     # v1/v2 forecasts under new v3 candle semantics after deployment.
     if freeze.get("scoring_contract") != SCORING_CONTRACT:

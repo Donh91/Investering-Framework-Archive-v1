@@ -3,7 +3,7 @@
  * Never synthesize a market action, forecast, score or hidden source. */
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
 import {mondayContext,mondayLabels} from './monday-public-bridge.mjs';
-import {sourceTrace} from './source-trace.mjs';
+import {sourceTrace,displayPublicStatus,displayLongDirection} from './source-trace.mjs';
 import {forwardOutlook} from './forward-outlook.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
 import {renderProductExperience,initProductExperience,presentOfficialAction} from './premium-experience.mjs';
@@ -138,10 +138,10 @@ function drawMonday(){
  show('monday-week',verified?m.completed_week:'—');
  show('monday-source',verified?tr('Verificeret ugegrundlag','Verified completed-week source'):tr('Kilde ikke verificeret','Source unverified'));
  show('monday-source-explanation',tr('Ugentlig kontekst – ingen selvstændig handelstilladelse.','Weekly context only – no independent trade permission.'));
- show('monday-scorecard',verified?m.scorecard_status:'UNAVAILABLE');
- show('monday-translation',verified?m.operational_translation_status:'UNAVAILABLE');
+ show('monday-scorecard',displayPublicStatus(verified?m.scorecard_status:'UNAVAILABLE',lang));
+ show('monday-translation',displayPublicStatus(verified?m.operational_translation_status:'UNAVAILABLE',lang));
  show('monday-api',verified&&m.api_analysis_status==='AVAILABLE_SHADOW_ONLY'
-   ?tr('Tilgængelig · ikke-bindende','Available · nonbinding'):'UNAVAILABLE');
+   ?tr('Tilgængelig · ikke-bindende','Available · nonbinding'):displayPublicStatus('UNAVAILABLE',lang));
 }
 function drawSourceTrace(){
  const result=sourceTrace(feeds?.latest,feeds?.compass,view);
@@ -156,7 +156,7 @@ function drawSourceTrace(){
  clear('long-horizon-body');
  const labels={'2_3w':'2–3u','21_30d':'21–30d','4_8w':'4–8u'};
  for(const h of result.long_horizons){
-   row('long-horizon-body',[labels[h.id]||h.id,h.direction,
+   row('long-horizon-body',[labels[h.id]||h.id,displayLongDirection(h,lang),
      h.owner==='CYCLE_NAVIGATOR_WEEKLY'
        ?tr('Cycle Navigator · frossen uge','Cycle Navigator · frozen week')
        :h.owner==='CYCLE_NAVIGATOR_STRATEGIC_CONTEXT'
@@ -171,14 +171,14 @@ function drawSourceTrace(){
    'Cycle Navigator':'Cycle Navigator'
  };
  for(const item of result.sources)
-   row('source-trace-body',[lang==='da'?(da[item.name]||item.name):item.name,item.status]);
+   row('source-trace-body',[lang==='da'?(da[item.name]||item.name):item.name,displayPublicStatus(item.status,lang)]);
 }
 function drawForward(){
  const trace=sourceTrace(feeds?.latest,feeds?.compass,view);
  const output=forwardOutlook(feeds?.latest,feeds?.compass,trace);
  const say=(da,en)=>lang==='da'?da:en;
- const direction=value=>value==='MIXED'?say('BLANDET','MIXED'):value==='UP'?say('OP','UP'):value==='DOWN'?say('NED','DOWN'):value==='SIDEWAYS'?say('SIDEVÆRTS','SIDEWAYS'):value==='NO_EDGE'?say('INGEN EDGE','NO EDGE'):'UNAVAILABLE';
- show('cn-forward-source-status',output.status);
+ const direction=value=>value==='MIXED'?say('BLANDET','MIXED'):value==='UP'?say('OP','UP'):value==='DOWN'?say('NED','DOWN'):value==='SIDEWAYS'?say('SIDEVÆRTS','SIDEWAYS'):value==='NO_EDGE'?say('INGEN EDGE','NO EDGE') :say('UTILGÆNGELIG','UNAVAILABLE');
+ show('cn-forward-source-status',displayPublicStatus(output.status,lang));
  show('cn-forward-week-direction',direction(output.weekly.direction));
  show('cn-forward-strategic-direction',direction(output.strategic.direction));
  show('cn-forward-week-copy',output.weekly.summary||say('Ingen kvalificeret 2–3 ugers analyse udstedt.','No eligible 2–3 week outlook issued.'));

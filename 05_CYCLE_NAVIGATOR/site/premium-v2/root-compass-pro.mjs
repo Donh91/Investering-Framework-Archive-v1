@@ -5,12 +5,13 @@
  */
 import '../vnext-live/premium-experience.css';
 import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
-import {sourceTrace} from '../vnext-live/source-trace.mjs';
+import {sourceTrace,displayPublicStatus,displayLongDirection} from '../vnext-live/source-trace.mjs';
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
-import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
+import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
+import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -64,8 +65,6 @@ function renderOverview(){
  keys.forEach((key,i)=>{
   const card=model.cards[i];
   set('cn-overview-'+key+'-arrow',card.arrow);
-  // Decorative vector only. Preserve original source glyph in textContent for
-  // source-state browser QA; visible status is still the verified text label.
   enhanceLegacyArrow(document,$('cn-overview-'+key+'-arrow'),card.sourceDirection);
   set('cn-overview-'+key+'-direction',card.direction);
   set('cn-overview-'+key+'-position',card.position);
@@ -497,9 +496,9 @@ function sourceRows(){
     item.owner==='CYCLE_NAVIGATOR_STRATEGIC_CONTEXT'?
       t('Cycle Navigator · strategisk kontekst','Cycle Navigator · strategic context'):
       t('Strategisk forskning · ikke-bindende','Strategic research · nonbinding');
-  row('long-horizon-body',[periods[item.id]||safe(item.id),safe(item.direction),owner]);
+  row('long-horizon-body',[periods[item.id]||safe(item.id),displayLongDirection(item,lang),owner]);
  }
- for(const item of (trace?.sources||[]))row('source-trace-body',[safe(item.name),safe(item.status)]);
+ for(const item of (trace?.sources||[]))row('source-trace-body',[safe(item.name),displayPublicStatus(item.status,lang)]);
  const title=$('source-trace-title');
  if(title)title.textContent=lang==='da'?'Længere tidshorisonter · kildekontekst':'Longer horizons · source context';
  const sourceSummary=$('compass-pro')?.querySelector('.source-trace-details > summary');
@@ -512,17 +511,17 @@ function mondayReadback(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  let labels=null;try{if(m)labels=mondayLabels(m,lang)}catch{}
  const valid=m?.source_state==='SOURCE_ALIGNED';
- set('monday-reading',labels?.title||'UNAVAILABLE');
+ set('monday-reading',labels?.title||displayPublicStatus('UNAVAILABLE',lang));
  set('monday-explanation',labels?.evidence||t('Ugens kildegrundlag mangler','Weekly source unavailable'));
  set('monday-week',valid?m.completed_week:'—');
  set('monday-source',valid?t('Verificeret ugegrundlag','Verified weekly source'):
    t('Ugegrundlag ikke verificeret','Weekly source unverified'));
  set('monday-source-explanation',t('Ugeanalyse er kontekst, ikke en ny handelstilladelse.',
    'Weekly analysis is context, not new trade permission.'));
- set('monday-scorecard',valid?m.scorecard_status:'UNAVAILABLE');
- set('monday-translation',valid?m.operational_translation_status:'UNAVAILABLE');
+ set('monday-scorecard',displayPublicStatus(valid?m.scorecard_status:'UNAVAILABLE',lang));
+ set('monday-translation',displayPublicStatus(valid?m.operational_translation_status:'UNAVAILABLE',lang));
  set('monday-api',valid&&m.api_analysis_status==='AVAILABLE_SHADOW_ONLY'?
-  t('Research tilgængelig · ikke-bindende','Research available · nonbinding'):'UNAVAILABLE');
+  t('Research tilgængelig · ikke-bindende','Research available · nonbinding'):displayPublicStatus('UNAVAILABLE',lang));
  const title=$('monday-title');
  if(title)title.textContent=t('Mandagens dokumenterede ugegrundlag','Monday’s verified weekly context');
 }
@@ -550,16 +549,25 @@ function paint(){
  const expires=feeds?.compass?.full_stack?.official_freshness?.valid_until_utc;
  const deadline=Date.parse(expires);
  const validUntil=Number.isFinite(deadline)?time(expires):'—';
+ const expired=!fresh&&expiredOfficial({compass:feeds?.compass,view});
+ const expiredTime=Number.isFinite(deadline)?new Date(deadline).toLocaleString(
+   lang==='en'?'en-GB':'da-DK',
+   {timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}
+ )+(lang==='en'?' (Copenhagen time)':' (dansk tid)'):'—';
  const last=feeds?.compass?.issued_at_utc;
+ const sourceAgeAtIssue=originalSourceAgeLabel(feeds?.compass,{lang,valid:fresh});
  set('pro-source-status',failed?t('Indlæsning mislykkedes · ingen aktuel handling','Source fetch failed · no current action'):
    fresh?t('Aktuel vurdering · opdateret ','Current verified outlook · updated ')+time(last)+
-         t(' · gyldig til ',' · valid until ')+validUntil+weekly:
+         t(' · gyldig til ',' · valid until ')+validUntil+weekly+sourceAgeAtIssue:
+   expired?t('Ingen aktuel vurdering: Seneste Kompas-vurdering udløb ','No current outlook: last Compass issue expired ')+expiredTime+
+     t('. Ingen aktuel handling. Afventer ny verificeret udgivelse.','. No current action. Awaiting a new verified issue.')+weekly:
    t('Ingen aktuel vurdering: data er for gamle, mangler eller passer ikke til denne uge','No current outlook: data are too old, missing or do not match this week')+weekly);
  const gate=fresh&&view?.path?.state==='SOURCE_BOUND'?safe(view.path.next_gate):'UNAVAILABLE';
  set('pro-next-gate',t('Næste bekræftelse: ','Next confirmation: ')+(gate==='UNAVAILABLE'?
    t('Afventer pålidelige data','Awaiting reliable data'):gate));
  const root=$('compass-pro');if(root){
   root.dataset.sourceCurrent=fresh?'true':'false';
+  root.dataset.sourceState=fresh?'FRESH':expired?'EXPIRED':'UNAVAILABLE';
   root.dataset.weeklyHealth=w?.state||'UNAVAILABLE';
  }
  const proNav=document.querySelector('[data-premium-nav="compass"]');

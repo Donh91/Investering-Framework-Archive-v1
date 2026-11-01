@@ -186,7 +186,7 @@ function decisionDetail(compass, rec, meta) {
   const issued = clean(compass?.issued_at_utc);
   const issuedLabel = issued ? new Date(issued).toLocaleString('en-GB',{timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',','') + ' CPH' : 'timestamp unavailable';
   const investor = rec.action === 'HOLD'
-    ? 'Keep existing positioning. The bearish 0–12h pressure reading is tactical, not the 5–7 day base case. Do not broaden high-beta exposure from this signal alone.'
+    ? 'Keep existing positioning. The current 0–12h direction is observed market momentum, not a verified forward forecast or the 5–7 day base case. Do not broaden high-beta exposure from this reading alone.'
     : rec.copy;
   const swing = 'Treat ' + meta.live + ' over ' + meta.liveEta + ' as short-horizon pressure, while the 5–7 day outlook remains ' + meta.weekly + '. ' + meta.risk + ' means a retest deserves attention, but it is not a confirmed sell, short or distribution signal.';
   return '<details id="liveDecisionDetail" class="premium-decision-detail">'

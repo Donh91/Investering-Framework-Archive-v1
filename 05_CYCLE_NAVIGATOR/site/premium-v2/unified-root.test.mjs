@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {buildUnifiedRootHtml} from './unified-root.mjs';
 import {buildPremiumRootHtml} from './premium-root.mjs';
-import {VIEWS,currentCompass,sourceTranslation,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
+import {VIEWS,currentCompass,expiredOfficial,sourceTranslation,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
 import {vectorKind,enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
+import {displayPublicStatus,displayLongDirection} from '../vnext-live/source-trace.mjs';
 
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [original,pro]=await Promise.all([
@@ -614,6 +615,46 @@ test('200 percent reflow keeps approved Graph B geometry, full source meaning an
   assert.equal(id(markup,name),1);
 });
 
+test('SOURCE expiry is labelled only for the exact original matched issuer, never a live action',async()=>{
+ const now=Date.parse('2026-11-01T13:05:00Z');
+ const view={compass:{state:'EXPIRED',permit_path_live_gates:false,compass_id:'CMP-EXPIRED'},
+   weekly:{forecast_week:'2026-W44'}};
+ const compass={
+  contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',compass_id:'CMP-EXPIRED',
+  issued_at_utc:'2026-11-01T11:31:36Z',
+  weekly_context:{status:'ALIGNED',forecast_week:'2026-W44'},
+  full_stack:{official_freshness:{valid_until_utc:'2026-11-01T12:00:00Z'}}
+ };
+ assert.equal(expiredOfficial({compass,view,now}),true);
+ assert.equal(currentCompass({compass,view,now}),false);
+ assert.equal(readHorizon({latest:{},compass,view,now}).current,false);
+ assert.equal(expiredOfficial({compass,view,now:Date.parse('2026-11-01T11:50:00Z')}),false);
+ assert.equal(expiredOfficial({compass:{...compass,data_status:'DEGRADED'},view,now}),false);
+ assert.equal(expiredOfficial({compass:{...compass,compass_id:'FORGED'},view,now}),false);
+ assert.equal(expiredOfficial({compass:{...compass,weekly_context:{...compass.weekly_context,forecast_week:'2026-W45'}},view,now}),false);
+ assert.equal(expiredOfficial({compass:{...compass,issued_at_utc:'2026-11-01T12:01:00Z'},view,now}),false);
+ assert.equal(expiredOfficial({compass:{...compass,full_stack:{official_freshness:{valid_until_utc:'WRONG'}}},view,now}),false);
+ const runtime=await read('./root-compass-pro.mjs');
+ assert.match(runtime,/expiredOfficial\(\{compass:feeds\?\.compass,view\}\)/);
+ assert.match(runtime,/sourceState=fresh\?'FRESH':expired\?'EXPIRED':'UNAVAILABLE'/);
+ assert.match(runtime,/Seneste Kompas-vurdering udløb/);
+ assert.match(runtime,/Ingen aktuel handling/);
+ assert.match(runtime,/Europe\/Copenhagen/);
+});
+
+test('source-trace status and research horizon use the original owner, never a fake Official direction',async()=>{
+ assert.equal(displayLongDirection({owner:'STRATEGIC_RESEARCH',direction:'UP'},'da'),'— (ikke-bindende research)');
+ assert.equal(displayLongDirection({owner:'CYCLE_NAVIGATOR_WEEKLY',direction:'MIXED'},'da'),'Blandet');
+ assert.equal(displayLongDirection({owner:'CYCLE_NAVIGATOR_STRATEGIC_CONTEXT',direction:'UNCLEAR'},'da'),'Uafklaret');
+ assert.equal(displayLongDirection({owner:'STRATEGIC_RESEARCH',direction:'MIXED'},'en'),'— (nonbinding research)');
+ assert.equal(displayPublicStatus('UNAVAILABLE','da'),'Utilgængelig');
+ assert.equal(displayPublicStatus('UNAVAILABLE_API_CONTRACT','da'),'API-analyse ikke tilgængelig');
+ assert.equal(displayPublicStatus('INVALID_SOURCE_ENUM','da'),'Ukendt kildestatus');
+ const root=await read('./root-compass-pro.mjs');
+ assert.match(root,/displayLongDirection\(item,lang\)/);
+ assert.match(root,/displayPublicStatus\(item.status,lang\)/);
+ assert.doesNotMatch(root,/row\('long-horizon-body',\[periods\[item.id\]\|\|safe\(item.id\),safe\(item.direction\),owner\]\)/);
+});
 
 test('directional vector icons preserve source states and all legacy textContent',async()=>{
  const sources=['UP','BULLISH','DOWN','BEARISH','MIXED','SIDEWAYS','NEUTRAL',

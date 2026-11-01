@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
 import {mondayContext,mondayLabels} from './monday-public-bridge.mjs';
-import {sourceTrace} from './source-trace.mjs';
+import {sourceTrace,displayPublicStatus,displayLongDirection} from './source-trace.mjs';
 import './test-forward-outlook.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
 import {verifiedBtcFrozenReference} from './official-path.mjs';
@@ -482,3 +482,20 @@ assert.match(chartImplementation,/forecast=m.daily.length===7[\s\S]*?:\[\];/);
 assert.match(chartStyles,/\.fw-forecast-not-issued\{/);
 assert.match(html,/id="official-chart-heading"/);
 assert.match(client,/show\('official-chart-heading',hasDaily\?/);
+
+// Source authority remains untouched; only localized display may differ.
+
+assert.equal(displayLongDirection({owner:'STRATEGIC_RESEARCH',direction:'UP'},'da'),'— (ikke-bindende research)');
+assert.equal(displayLongDirection({owner:'STRATEGIC_RESEARCH',direction:'MIXED'},'en'),'— (nonbinding research)');
+assert.equal(displayLongDirection({owner:'CYCLE_NAVIGATOR_WEEKLY',direction:'MIXED'},'da'),'Blandet');
+assert.equal(displayLongDirection({owner:'CYCLE_NAVIGATOR_STRATEGIC_CONTEXT',direction:'UNCLEAR'},'da'),'Uafklaret');
+assert.equal(displayLongDirection({owner:'CYCLE_NAVIGATOR_WEEKLY',direction:'BUY'},'da'),'Ikke verificeret');
+assert.equal(displayPublicStatus('UNAVAILABLE','da'),'Utilgængelig');
+assert.equal(displayPublicStatus('UNAVAILABLE_API_CONTRACT','da'),'API-analyse ikke tilgængelig');
+assert.equal(displayPublicStatus('HASH_VERIFIED','da'),'Hash verificeret');
+assert.equal(displayPublicStatus('STALE_RESEARCH','da'),'Research er forældet');
+assert.equal(displayPublicStatus('BUY','da'),'Ukendt kildestatus');
+assert.match(client,/displayLongDirection\(h,lang\)/);
+assert.match(client,/displayPublicStatus\(item.status,lang\)/);
+assert.match(client,/displayPublicStatus\(output.status,lang\)/);
+assert.match(read('compass-pro-readback.mjs'),/DIN HANDLING NU · VEJLEDENDE PLAN/);
