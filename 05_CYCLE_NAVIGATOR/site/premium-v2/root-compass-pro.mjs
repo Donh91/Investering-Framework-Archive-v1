@@ -5,7 +5,7 @@
  */
 import '../vnext-live/premium-experience.css';
 import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
-import {sourceTrace} from '../vnext-live/source-trace.mjs';
+import {sourceTrace,displayPublicStatus,displayLongDirection} from '../vnext-live/source-trace.mjs';
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
@@ -492,9 +492,9 @@ function sourceRows(){
     item.owner==='CYCLE_NAVIGATOR_STRATEGIC_CONTEXT'?
       t('Cycle Navigator · strategisk kontekst','Cycle Navigator · strategic context'):
       t('Strategisk forskning · ikke-bindende','Strategic research · nonbinding');
-  row('long-horizon-body',[periods[item.id]||safe(item.id),safe(item.direction),owner]);
+  row('long-horizon-body',[periods[item.id]||safe(item.id),displayLongDirection(item,lang),owner]);
  }
- for(const item of (trace?.sources||[]))row('source-trace-body',[safe(item.name),safe(item.status)]);
+ for(const item of (trace?.sources||[]))row('source-trace-body',[safe(item.name),displayPublicStatus(item.status,lang)]);
  const title=$('source-trace-title');
  if(title)title.textContent=lang==='da'?'Længere tidshorisonter · kildekontekst':'Longer horizons · source context';
  const sourceSummary=$('compass-pro')?.querySelector('.source-trace-details > summary');
@@ -507,17 +507,17 @@ function mondayReadback(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  let labels=null;try{if(m)labels=mondayLabels(m,lang)}catch{}
  const valid=m?.source_state==='SOURCE_ALIGNED';
- set('monday-reading',labels?.title||'UNAVAILABLE');
+ set('monday-reading',labels?.title||displayPublicStatus('UNAVAILABLE',lang));
  set('monday-explanation',labels?.evidence||t('Ugens kildegrundlag mangler','Weekly source unavailable'));
  set('monday-week',valid?m.completed_week:'—');
  set('monday-source',valid?t('Verificeret ugegrundlag','Verified weekly source'):
    t('Ugegrundlag ikke verificeret','Weekly source unverified'));
  set('monday-source-explanation',t('Ugeanalyse er kontekst, ikke en ny handelstilladelse.',
    'Weekly analysis is context, not new trade permission.'));
- set('monday-scorecard',valid?m.scorecard_status:'UNAVAILABLE');
- set('monday-translation',valid?m.operational_translation_status:'UNAVAILABLE');
+ set('monday-scorecard',displayPublicStatus(valid?m.scorecard_status:'UNAVAILABLE',lang));
+ set('monday-translation',displayPublicStatus(valid?m.operational_translation_status:'UNAVAILABLE',lang));
  set('monday-api',valid&&m.api_analysis_status==='AVAILABLE_SHADOW_ONLY'?
-  t('Research tilgængelig · ikke-bindende','Research available · nonbinding'):'UNAVAILABLE');
+  t('Research tilgængelig · ikke-bindende','Research available · nonbinding'):displayPublicStatus('UNAVAILABLE',lang));
  const title=$('monday-title');
  if(title)title.textContent=t('Mandagens dokumenterede ugegrundlag','Monday’s verified weekly context');
 }
