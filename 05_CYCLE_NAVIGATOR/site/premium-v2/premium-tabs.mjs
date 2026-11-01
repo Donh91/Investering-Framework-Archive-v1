@@ -30,6 +30,28 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     x.panel.setAttribute('role','tabpanel');
     x.panel.setAttribute('aria-labelledby',x.link.id);
   }
+  // Do not edit original Graph B markup. A single, source-neutral archive link
+  // is appended inside the existing weekly graph tab after client initialization.
+  const graphPanel=nodes.find(x=>x.key==='graph')?.panel;
+  if(graphPanel&&!document.getElementById('cn-graph-history-link')){
+    const entry=document.createElement('aside');
+    entry.className='cn-graph-history-entry';
+    entry.setAttribute('aria-labelledby','cn-graph-history-title');
+    const description=document.createElement('div');
+    const heading=document.createElement('strong');
+    heading.id='cn-graph-history-title';
+    heading.textContent='Grafhistorik';
+    const note=document.createElement('p');
+    note.id='cn-graph-history-note';
+    note.textContent='Fra uge 45 (2026). Faktisk BTC-kurs fra verificerede timer; kun forhåndsudstedte dagsprognoser vises som blå kurve.';
+    description.append(heading,note);
+    const link=document.createElement('a');
+    link.id='cn-graph-history-link';
+    link.href='/Investering-Framework-Archive-v1/graph-history/';
+    link.textContent='Åbn grafhistorik';
+    entry.append(description,link);
+    graphPanel.append(entry);
+  }
   const translations = {
     da:{compass:'Kompas',graph:'Ugens prognose',path:'Markedscyklus',proof:'Resultater'},
     en:{compass:'Compass',graph:'Weekly forecast',path:'Market cycle',proof:'Results'}
