@@ -177,8 +177,17 @@ def verify_index_chain(index):
     prior_label = None
     for row in index["weeks"]:
         label = row.get("forecast_week")
-        if label in prior_weeks or row.get("previous_week") != prior_label:
+        expected_monday = START + timedelta(days=7 * len(prior_weeks))
+        expected_label, year, week = week_label(expected_monday)
+        if label != expected_label or label in prior_weeks or row.get("previous_week") != prior_label:
             raise ValueError("INVALID_HISTORY_INDEX_SEQUENCE")
+        expected_folder = ROOT / "weeks" / str(year) / f"W{week:02d}"
+        expected_forecast = str(expected_folder / "forecast-reference.json")
+        expected_actual = str(expected_folder / "actual-series.json")
+        if ((row.get("forecast_path") != expected_forecast if row.get("status") == "RECORDED"
+             else row.get("forecast_path") is not None) or
+                row.get("actual_path") not in (None, expected_actual)):
+            raise ValueError("INVALID_HISTORY_INDEX_PATH")
         if row.get("status") not in ("MISSING_FREEZE", "RECORDED"):
             raise ValueError("INVALID_HISTORY_INDEX_STATUS")
         sha = row.get("source_sha256")
