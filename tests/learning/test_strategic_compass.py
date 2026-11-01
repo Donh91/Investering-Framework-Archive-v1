@@ -80,7 +80,7 @@ class StrategicCompassTests(unittest.TestCase):
             (["DOWN", "DOWN", "DOWN", "DOWN"], "DISTRIBUTION_ALIGNMENT"),
             (["DOWN", "DOWN", "SIDEWAYS", "DOWN"], "TRANSITION_WARNING"),
             (["DOWN", "UP", "UP", "UP"], "TACTICAL_PULLBACK_STRUCTURAL_BULL"),
-            (["UP", "DOWN", "UP", "DOWN"], "MIXED_OR_NO_EDGE"),
+            (["UP", "SIDEWAYS", "DOWN", "UP"], "MIXED_OR_NO_EDGE"),
         ]
         for forward, expected in cases:
             for twelve in ("UP", "DOWN", U):
