@@ -8,7 +8,7 @@ import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs
 import {sourceTrace} from '../vnext-live/source-trace.mjs';
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
-import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
+import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {
@@ -545,17 +545,25 @@ function paint(){
  const expires=feeds?.compass?.full_stack?.official_freshness?.valid_until_utc;
  const deadline=Date.parse(expires);
  const validUntil=Number.isFinite(deadline)?time(expires):'—';
+ const expired=!fresh&&expiredOfficial({compass:feeds?.compass,view});
+ const expiredTime=Number.isFinite(deadline)?new Date(deadline).toLocaleString(
+   lang==='en'?'en-GB':'da-DK',
+   {timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}
+ )+(lang==='en'?' (Copenhagen time)':' (dansk tid)'):'—';
  const last=feeds?.compass?.issued_at_utc;
  const sourceAgeAtIssue=originalSourceAgeLabel(feeds?.compass,{lang,valid:fresh});
  set('pro-source-status',failed?t('Indlæsning mislykkedes · ingen aktuel handling','Source fetch failed · no current action'):
    fresh?t('Aktuel vurdering · opdateret ','Current verified outlook · updated ')+time(last)+
          t(' · gyldig til ',' · valid until ')+validUntil+weekly+sourceAgeAtIssue:
+   expired?t('Seneste Kompas-vurdering udløb ','Last Compass outlook expired ')+expiredTime+
+     t('. Ingen aktuel handling. Afventer ny verificeret udgivelse.','. No current action. Awaiting a new verified issue.')+weekly:
    t('Ingen aktuel vurdering: data er for gamle, mangler eller passer ikke til denne uge','No current outlook: data are too old, missing or do not match this week')+weekly);
  const gate=fresh&&view?.path?.state==='SOURCE_BOUND'?safe(view.path.next_gate):'UNAVAILABLE';
  set('pro-next-gate',t('Næste bekræftelse: ','Next confirmation: ')+(gate==='UNAVAILABLE'?
    t('Afventer pålidelige data','Awaiting reliable data'):gate));
  const root=$('compass-pro');if(root){
   root.dataset.sourceCurrent=fresh?'true':'false';
+  root.dataset.sourceState=fresh?'FRESH':expired?'EXPIRED':'UNAVAILABLE';
   root.dataset.weeklyHealth=w?.state||'UNAVAILABLE';
  }
  const proNav=document.querySelector('[data-premium-nav="compass"]');
