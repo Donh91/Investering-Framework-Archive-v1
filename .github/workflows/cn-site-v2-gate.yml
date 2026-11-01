@@ -56,11 +56,12 @@ jobs:
           python3 scripts/cycle_navigator/check_publication_lineage.py --self-test
           python3 scripts/cycle_navigator/check_publication_lineage.py
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
-      - name: Validate optional Graph History without blocking canonical SITE Product Gate
+      - name: Enforce Graph History immutable-source regression tests
+        run: python3 tests/cycle_navigator/test_graph_history.py
+      - name: Build optional Graph History without blocking canonical SITE Product Gate
         id: graph_history
         continue-on-error: true
         run: |
-          python3 tests/cycle_navigator/test_graph_history.py
           python3 scripts/cycle_navigator/build_graph_history.py --repo-root . --mode public
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/graph-history/timeline.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/graph-history/index.html
