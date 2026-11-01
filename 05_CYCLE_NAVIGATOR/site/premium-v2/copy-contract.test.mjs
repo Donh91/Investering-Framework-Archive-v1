@@ -4,11 +4,12 @@ import {readFile} from 'node:fs/promises';
 import {buildPremiumRootHtml} from './premium-root.mjs';
 
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
-const [source,graphCode,compassShell,app]=await Promise.all([
+const [source,graphCode,compassShell,app,marketPremium]=await Promise.all([
  read('./graph-b/source-graph-b.html'),
  read('./graph-b/source-graph-b.mjs'),
  read('../vnext-live/index.html'),
- read('../vnext-live/app.mjs')
+ read('../vnext-live/app.mjs'),
+ read('../market-compass-premium.js')
 ]);
 
 test('Graph B chart remains exactly one source-owned SVG',()=>{
@@ -51,4 +52,12 @@ test('Professional accountability and trader warnings are explicit, not marketin
  assert.match(app,/Ingen blå dagsprognose uden forudgående udstedelse/);
  assert.doesNotMatch(app,/resultsHeading:'Beviser frem for hype\.'/);
  assert.match(source,/risiko er ikke i sig selv en salgsordre/);
+});
+
+
+test('Premium site never hard-codes bearish 12h pressure for a HOLD action',()=>{
+ assert.match(marketPremium,/The current 0–12h direction is observed market momentum/);
+ assert.match(marketPremium,/not a verified forward forecast/);
+ assert.doesNotMatch(marketPremium,/The bearish 0–12h pressure reading is tactical/);
+ assert.match(marketPremium,/meta\.live/);
 });
