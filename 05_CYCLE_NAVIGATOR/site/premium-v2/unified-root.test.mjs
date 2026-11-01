@@ -5,6 +5,7 @@ import {buildUnifiedRootHtml} from './unified-root.mjs';
 import {buildPremiumRootHtml} from './premium-root.mjs';
 import {VIEWS,currentCompass,sourceTranslation,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
+import {vectorKind,enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [original,pro]=await Promise.all([
@@ -611,4 +612,65 @@ test('200 percent reflow keeps approved Graph B geometry, full source meaning an
  const markup=buildUnifiedRootHtml(original,pro);
  for(const name of ['chart','forecast','actual','compass-pro','official-path-view'])
   assert.equal(id(markup,name),1);
+});
+
+
+test('directional vector icons preserve source states and all legacy textContent',async()=>{
+ const sources=['UP','BULLISH','DOWN','BEARISH','MIXED','SIDEWAYS','NEUTRAL',
+  'LEAN_BULLISH','LEAN_BEARISH','UNAVAILABLE','WAIT','SELL','UNKNOWN'];
+ assert.deepEqual(sources.map(vectorKind),[
+  'up','up','down','down','mixed','flat','flat','lean-up','lean-down','missing',
+  null,null,null
+ ]);
+ // Tiny DOM stub exercises the actual no-HTML-injection rendering helpers.
+ // The vector is always aria-hidden. There is no way to issue a signal here.
+ class El {
+  constructor(tag){this.tagName=tag;this.attributes={};this.dataset={};
+   this.children=[];this._text='';this.className='';
+   this.classList={add:x=>{this.className+=' '+x}};
+  }
+  get textContent(){return this._text+this.children.map(x=>x.textContent??'').join('')}
+  set textContent(v){this._text=String(v);this.children=[]}
+  setAttribute(k,v){this.attributes[k]=v}
+  append(...children){this.children.push(...children)}
+  replaceChildren(...children){this._text='';this.children=children}
+ }
+ const doc={createElement:tag=>new El(tag),createElementNS:(_ns,tag)=>new El(tag)};
+ const legacy=new El('span');legacy.textContent='↗/↘';
+ assert.equal(enhanceLegacyArrow(doc,legacy,'MIXED'),true);
+ assert.equal(legacy.textContent,'↗/↘');
+ assert.equal(legacy.children[0].attributes['aria-hidden'],'true');
+ assert.equal(legacy.children[0].tagName,'svg');
+ assert.equal(legacy.children[0].children.length,4);
+ const firstFold=new El('strong');firstFold.textContent='↗/↘ Blandet';
+ assert.equal(enhanceLegacyLabel(doc,firstFold,'MIXED','↗/↘'),true);
+ assert.equal(firstFold.textContent,'↗/↘ Blandet');
+ assert.equal(firstFold.children[0].attributes['aria-hidden'],'true');
+ assert.equal(firstFold.children[1].attributes['aria-hidden'],'true');
+ assert.equal(firstFold.children[1].dataset.directionMark,'mixed');
+ assert.equal(firstFold.children[2].textContent,'Blandet');
+ const bullish=new El('strong');bullish.textContent='Stigende';
+ assert.equal(enhanceLegacyLabel(doc,bullish,'BULLISH','?'),true);
+ assert.equal(bullish.textContent,'Stigende');
+ assert.equal(bullish.children[1].dataset.directionMark,'up');
+ const missing=new El('span');missing.textContent='?';
+ assert.equal(enhanceLegacyArrow(doc,missing,'UNAVAILABLE'),true);
+ assert.equal(missing.textContent,'?');
+ assert.equal(missing.dataset.directionMark,'missing');
+ const forbidden=new El('strong');forbidden.textContent='SELL';
+ assert.equal(enhanceLegacyLabel(doc,forbidden,'SELL','?'),false);
+ assert.equal(forbidden.textContent,'SELL');
+ const [css,runtime,graph]=await Promise.all([
+  read('./premium-tabs.css'),read('./root-compass-pro.mjs'),
+  read('./graph-b/source-graph-b.mjs')
+ ]);
+ assert.match(css,/CN DIRECTIONAL VECTOR v1/);
+ assert.match(css,/cn-direction-legacy/);
+ assert.match(runtime,/enhanceLegacyArrow\(document/);
+ assert.match(runtime,/if\(eligible\)enhanceLegacyLabel\(document/);
+ assert.doesNotMatch(graph,/direction-mark/);
+ const html=buildUnifiedRootHtml(original,pro);
+ for(const name of ['premium-now-direction','cn-horizon-13',
+  'cn-overview-d13-arrow','cn-overview-d57-arrow','cn-overview-w23-arrow',
+  'chart','forecast','actual'])assert.equal(id(html,name),1);
 });
