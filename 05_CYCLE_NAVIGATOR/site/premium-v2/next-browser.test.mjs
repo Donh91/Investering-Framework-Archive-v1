@@ -679,6 +679,64 @@ try{
    }
    released.push({width,oneB:true,onePRO:true,source:true});
   }
+  // Real 320 CSS-px Chrome layout proxy for the 200%-zoom reflow.
+  // Unlike a CSS source-string assertion, this exercises rendered root
+  // panels and tab-rail scroll. It is NOT Safari/VoiceOver certification.
+  await send('Emulation.setDeviceMetricsOverride',{
+   width:320,height:700,deviceScaleFactor:1,mobile:true});
+  await send('Page.navigate',{url:origin});
+  let narrowReady=false;
+  for(let attempt=0;attempt<100;attempt++){
+   await delay(100);
+   narrowReady=await evaluate(()=>document.readyState==='complete'&&
+    !!document.getElementById('compass-pro')&&
+    (document.getElementById('pro-source-status')?.textContent||'')!==
+     'Kontrollerer officiel kilde og gyldighed…');
+   if(narrowReady)break;
+  }
+  assert.ok(narrowReady,'ROOT_320_SOURCE_NOT_READY');
+  const narrow=await evaluate(()=>{
+   const nav=document.querySelector('.premium-entry-navigation');
+   const cards=document.querySelector('.cn-overview-cards');
+   const description=document.querySelector('.cn-horizon-card p');
+   const proof=document.querySelector('[data-premium-nav="proof"]');
+   proof?.click();
+   const rail=nav?.getBoundingClientRect(),item=proof?.getBoundingClientRect();
+   return {
+    width:innerWidth,
+    overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+    cardsColumns:cards?getComputedStyle(cards).gridTemplateColumns:null,
+    sourceTextClamp:description?getComputedStyle(description).webkitLineClamp:null,
+    selected:proof?.getAttribute('aria-selected'),
+    proofVisible:!!(rail&&item&&item.left>=rail.left-2&&item.right<=rail.right+2),
+    railScroll:nav?.scrollLeft??null,
+    railScrollable:!!nav&&nav.scrollWidth>nav.clientWidth+1,
+    sourceVisible:!!document.getElementById('pro-source-status')
+   };
+  });
+  assert.ok(narrow.width===320&&narrow.overflow<=2&&
+   narrow.cardsColumns?.split(' ').length===1&&
+   narrow.sourceTextClamp==='none'&&
+   narrow.selected==='true'&&narrow.proofVisible&&narrow.sourceVisible,
+   'ROOT_320_REFLOW_OR_TAB_FAILURE:'+JSON.stringify(narrow));
+  const narrowGraph=await evaluate(()=>{
+   document.querySelector('[data-premium-nav="graph"]')?.click();
+   const plot=document.querySelector('#variant-panel .plot-shell');
+   const svg=document.querySelector('#variant-panel #chart');
+   const axis=document.querySelector('#variant-panel .chart-price-axis');
+   return {
+    selected:document.querySelector('[data-premium-nav="graph"]')?.getAttribute('aria-selected'),
+    plotWidth:plot?.getBoundingClientRect().width??0,
+    chartWidth:svg?.getBoundingClientRect().width??0,
+    axisWidth:axis?.getBoundingClientRect().width??0,
+    overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth
+   };
+  });
+  assert.ok(narrowGraph.selected==='true'&&narrowGraph.plotWidth>=200&&
+   narrowGraph.chartWidth>=150&&narrowGraph.axisWidth>0&&narrowGraph.overflow<=2,
+   'ROOT_320_CHART_REFLOW_FAILURE:'+JSON.stringify(narrowGraph));
+  console.log('ROOT_320_CHROME_ZOOM_PROXY_PASS '+JSON.stringify({narrow,narrowGraph}));
+
   // Desktop pixels complete the same two-gate visual inspection.
   if(process.env.GITHUB_EVENT_NAME==='pull_request'){
    await send('Emulation.setDeviceMetricsOverride',{width:1440,height:960,deviceScaleFactor:1,mobile:false});
