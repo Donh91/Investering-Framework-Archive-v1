@@ -204,6 +204,42 @@ class GraphHistoryTest(unittest.TestCase):
                                   "BTC": [{"observed_at_utc": "2026-11-02T11:00:00Z", "close": 80500}]}}})
         self.assertEqual(publish(self.root)["actual"], [])
 
+    def test_missing_forecast_current_week_preserves_only_verified_live_actuals(self):
+        # The source-only green curve is independent of a missing blue forecast.
+        result = archive(self.root, W45)
+        self.assertEqual(result["weeks"][0]["status"], "MISSING_FREEZE")
+        latest = self.root / "05_CYCLE_NAVIGATOR/site/dist/data/latest.json"
+        good = {"public_live_precision": {
+            "contract": "CN_PUBLIC_LIVE_PRICE_PRECISION_v1",
+            "forecast_week": "2026-W45", "public_issue_number": 32,
+            "hourly_price_path": {
+                "contract": "CN_PUBLIC_HOURLY_PRICE_PATH_v1",
+                "source": "HOURLY_SPOT_PASS_ONLY",
+                "forecast_week": "2026-W45", "public_issue_number": 32,
+                "observed_through_utc": "2026-11-02T11:00:00Z",
+                "BTC": [{"observed_at_utc": "2026-11-02T11:00:00Z", "close": 80500}],
+                "ETH": []}}}
+        put(latest, good)
+        valid = publish(self.root)
+        self.assertEqual(valid["weeks"][0]["forecast"], [])
+        self.assertEqual(valid["weeks"][0]["forecast_status"], "UNAVAILABLE")
+        self.assertEqual(valid["weeks"][0]["actual_status"], "LIVE")
+        self.assertEqual(valid["actual"], [{"time": "2026-11-02T11:00:00Z", "close": 80500}])
+
+        def rejected(mutator):
+            case = json.loads(json.dumps(good))
+            mutator(case["public_live_precision"])
+            put(latest, case)
+            self.assertEqual(publish(self.root)["actual"], [])
+
+        rejected(lambda live: live["hourly_price_path"].update(public_issue_number=33))
+        rejected(lambda live: live.update(public_issue_number=None))
+        rejected(lambda live: live.update(public_issue_number=0))
+        rejected(lambda live: live.update(forecast_week="2026-W46"))
+        rejected(lambda live: live["hourly_price_path"].update(source="UNVERIFIED"))
+        rejected(lambda live: live["hourly_price_path"]["BTC"][0].update(
+            observed_at_utc="2026-11-02T12:00:00Z"))
+
     def test_live_wrong_issue_and_future_hour_cannot_poison_history(self):
         source(self.root)
         archive(self.root, W45)
