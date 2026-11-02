@@ -6,7 +6,9 @@ on:
       - '.github/workflows/framework-learning-supervisor.yml'
       - 'scripts/api_agent/senior_repair_audit_dispatch.py'
       - 'scripts/api_agent/temporary_bridge_pr_review.py'
+      - 'scripts/api_agent/s1_v43_terra_max_review.py'
       - 'tests/api_agent/test_temporary_bridge_pr_review.py'
+      - 'tests/api_agent/test_s1_v43_terra_max_review.py'
       - 'scripts/api_agent/fmos_mission_loop_audit_dispatch.py'
       - 'scripts/api_agent/api_gateway.py'
       - 'scripts/framework_intelligence/automation_orchestration_v1.py'
@@ -82,6 +84,7 @@ jobs:
           python -m py_compile \
             scripts/api_agent/senior_repair_audit_dispatch.py \
             scripts/api_agent/temporary_bridge_pr_review.py \
+            scripts/api_agent/s1_v43_terra_max_review.py \
             scripts/api_agent/fmos_mission_loop_audit_dispatch.py \
             scripts/api_agent/api_gateway.py \
             scripts/framework_intelligence/automation_orchestration_v1.py \
@@ -111,6 +114,7 @@ jobs:
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
             tests.api_agent.test_temporary_bridge_pr_review \
+            tests.api_agent.test_s1_v43_terra_max_review \
             tests.api_agent.test_fmos_mission_loop_audit_dispatch \
             tests.api_agent.test_capability_router \
             tests.framework_intelligence.test_automation_orchestration_v1 \
