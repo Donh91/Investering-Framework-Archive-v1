@@ -285,6 +285,11 @@ jobs:
           set -euo pipefail
           git config user.name framework-cycle-navigator-bot
           git config user.email framework-cycle-navigator-bot@users.noreply.github.com
+          # Persist any bounded supplemental model cost into the EXISTING
+          # monthly receipt lane before committing the weekly freeze.
+          find research/api_agent/outputs/weekly -type f \
+            -name 'CN_DAILY_RECOVERY_COST_RESERVATION.json' \
+            -exec git add -- {} +
           git add 05_CYCLE_NAVIGATOR/weekly \
                   05_CYCLE_NAVIGATOR/track_record \
                   05_CYCLE_NAVIGATOR/range_baselines \
@@ -380,6 +385,7 @@ jobs:
             runtime_cn_precheck.txt
             runtime_strategic_compass.json
             runtime/consumer-receipts/CYCLE_NAVIGATOR_HANDOFF.json
+            research/api_agent/outputs/weekly/**/CN_DAILY_RECOVERY_COST_RESERVATION.json
           retention-days: 14
 
   w45-late-supplement:
@@ -410,5 +416,7 @@ jobs:
         if: always()
         with:
           name: cn-w45-late-supplement-${{ github.run_id }}
-          path: runtime/cn_w45_late_*.json
+          path: |
+            runtime/cn_w45_late_*.json
+            runtime/api-cost-ledger/CN_W45_LATE_SUPPLEMENT_COST_RESERVATION.json
           retention-days: 30
