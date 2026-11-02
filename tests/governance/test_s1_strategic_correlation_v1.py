@@ -19,6 +19,17 @@ class StrategicCorrelationTests(unittest.TestCase):
         ]
         self.assertEqual(len(select_cases(copies)), 1)
 
+    def test_unknown_case_status_rejected(self):
+        from scripts.governance.s1_opportunity_recovery_v1 import AdvisoryInputError
+        with self.assertRaises(AdvisoryInputError):
+            select_cases([{**CASE, "status": "MERGED_VERIFIED"}])
+
+    def test_original_must_be_real_issue_or_pull_path(self):
+        from scripts.governance.s1_opportunity_recovery_v1 import AdvisoryInputError
+        bad = "https://github.com/Donh91/Investering-Framework-Archive-v1/tree/main"
+        with self.assertRaises(AdvisoryInputError):
+            select_cases([{**CASE, "original_url": bad}])
+
     def test_strategist_can_only_match_exact_proposal(self):
         case = {**CASE, "ambiguous_owner": True,
                 "strategist_proposal_id": "proposal-exact"}
