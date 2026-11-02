@@ -366,6 +366,107 @@ jobs:
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
             --body "TEMP_SOL_PR_REVIEW failed with USD 0.75 durable reservation. Provider-side charges may be UNKNOWN after timeout. No automatic retry or formal GitHub approval."
 
+  s1-v43-terra-max-review:
+    # Existing original owner issue, one paid review, no new cron or workflow.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.number == 1156 &&
+      github.event.comment.author_association == 'OWNER' &&
+      startsWith(github.event.comment.body, '[S1_TERRA_MAX_REVIEW] PR=1877 HEAD=')
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test exact-head and one-time review contract
+        run: |
+          python -m unittest tests.api_agent.test_s1_v43_terra_max_review -v
+          python -m py_compile scripts/api_agent/s1_v43_terra_max_review.py scripts/api_agent/api_gateway.py
+      - name: Freeze complete public PR diff and exact HEAD
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/api_agent/s1_v43_terra_max_review.py build \
+            --event "$GITHUB_EVENT_PATH" --output-dir runtime/s1-v43-terra-review
+      - name: Verify conservative lane and monthly cost ceilings
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task S1_V43_TERRA_MAX_REVIEW --cap-usd 1.5 --reserve-usd 1.5
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 30 --reserve-usd 1.5
+      - name: Reserve exactly one owner-approved paid review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/api_agent/s1_v43_terra_max_review.py reserve \
+            --output-dir runtime/s1-v43-terra-review
+      - name: Execute GPT-6.1 Terra with MAX reasoning, one attempt
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task S1_V43_TERRA_MAX_REVIEW \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/s1-v43-terra-review/prompt.txt \
+            --context-file runtime/s1-v43-terra-review/context.json \
+            --output-dir runtime/s1-v43-terra-review/output \
+            --intended-write-prefix research/api_agent/outputs/s1_v43_terra_max_review/
+      - name: Validate exact-head real model/cost/review receipt
+        run: |
+          python scripts/api_agent/s1_v43_terra_max_review.py validate \
+            --output-dir runtime/s1-v43-terra-review
+      - name: Send public-safe review back to existing S1 #1156
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path('runtime/s1-v43-terra-review')
+          m=json.loads((root/'manifest.json').read_text())
+          r=json.loads((root/'output/receipt.json').read_text())
+          o=json.loads((root/'output/output.json').read_text())
+          lines=[
+            'S1_V43_TERRA_MAX_REVIEW_RECEIPT ADVISORY_ONLY',
+            f"Original PR #1877 HEAD {m['head']}",
+            f"Model {r['model']} reasoning={r['reasoning_effort']}",
+            f"Native GitHub Actions run {os.environ['GITHUB_RUN_ID']}",
+            f"API response id {r.get('response_id')}",
+            f"Estimated cost USD {r['estimated_cost_usd']}",
+            f"Verdict {o.get('summary')}",
+            'No formal APPROVED review, merge authority or private content.',
+            'Findings:'
+          ]
+          lines += ['- '+str(s)[:1200] for s in o.get('evidence_against',[]) if str(s).startswith(('P0|','P1|','P2|','P3|'))][:12]
+          lines += ['Uncertainties:']
+          lines += ['- '+str(s)[:900] for s in o.get('uncertainties',[])][:8]
+          (root/'report.md').write_text('\n'.join(lines)+'\n')
+          PY
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
+            --body-file runtime/s1-v43-terra-review/report.md
+      - name: Preserve public-safe review output and API receipt as run artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-v43-terra-review-${{ github.run_id }}
+          path: |
+            runtime/s1-v43-terra-review/manifest.json
+            runtime/s1-v43-terra-review/output/receipt.json
+            runtime/s1-v43-terra-review/output/output.json
+            runtime/s1-v43-terra-review/report.md
+          if-no-files-found: warn
+
   senior-repair-audit:
     if: >-
       github.event_name == 'issue_comment' &&
