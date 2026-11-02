@@ -101,8 +101,9 @@ def build_visible_horizon_rows(ledger: Mapping[str, Any],
     """Project *already-authenticated* owner rows to minimal UI-safe status.
 
     Successful shape validation is not historical provider-first-known proof.
-    Consumers need their OWN signed source/exact-sha parity gate before using
-    status ISSUED_NUMERIC in a published navigation surface.
+    No numerical forecast escapes this disconnected readback, even if a caller
+    asserts 'verified' and supplies a plausible SHA. Existing Graph B or a
+    future authenticated source consumer may separately render original prices.
     """
     if ledger.get("contract") != CONTRACT or [h.get("id") for h in ledger.get("horizons", [])] != list(HORIZON_IDS):
         raise ValueError("INVALID_HORIZON_LEDGER")
@@ -165,13 +166,22 @@ def build_visible_horizon_rows(ledger: Mapping[str, Any],
             direction = row.get("direction", "UNAVAILABLE")
             if direction not in DIRECTIONS:
                 raise ValueError("INVALID_ISSUED_DIRECTION")
+            # The caller's 'verified' boolean and a correctly shaped SHA are
+            # ASSERTIONS, not independent provider/source-custody proofs.
+            # This disconnected projection MUST NOT publicly disclose a
+            # numeric forecast. The existing original-source Graph B and any
+            # future owner-certified original-issue consumer own that gate.
+            direction = "UNAVAILABLE"
         result.append({
-            "horizon_id": k, "label": h["label"], "status": status, "direction": direction,
-            "color": COLORS[direction], "price_status": "SOURCE_ISSUED" if status == "ISSUED_NUMERIC" else "NOT_ISSUED",
-            "quote": row.get("price_quote") if status in ("OBSERVED", "ISSUED_NUMERIC") else None,
+            "horizon_id": k, "label": h["label"],
+            "status": "ORIGINAL_BINDING_REQUIRED" if status == "ISSUED_NUMERIC" else status,
+            "direction": direction,
+            "color": COLORS[direction],
+            "price_status": "ORIGINAL_BINDING_REQUIRED" if status == "ISSUED_NUMERIC" else "NOT_ISSUED",
+            "quote": row.get("price_quote") if status == "OBSERVED" else None,
             "observed_price": row.get("observed_price") if status == "OBSERVED" else None,
-            "price_low": row.get("low") if status == "ISSUED_NUMERIC" else None,
-            "price_expected_close": row.get("expected_close") if status == "ISSUED_NUMERIC" else None,
-            "price_high": row.get("high") if status == "ISSUED_NUMERIC" else None,
+            "price_low": None,
+            "price_expected_close": None,
+            "price_high": None,
         })
     return result
