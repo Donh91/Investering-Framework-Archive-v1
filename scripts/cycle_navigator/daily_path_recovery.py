@@ -255,7 +255,8 @@ def _one_request(model: str, payload_context: dict[str, Any]) -> tuple[dict[str,
 def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
                        year: int, week: int, model: str, issued_at: datetime,
                        request=None, budget_check=None,
-                       cost_receipt_path: Path | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
+                       cost_receipt_path: Path | None = None,
+                       primary_unaccounted_cost_usd: float = 0.0) -> tuple[dict[str, Any], dict[str, Any]]:
     """Return original value with only independently validated UNAVAILABLE assets repaired."""
     freeze = value["forecast_freeze"]
     original = freeze["daily_price_path"]
@@ -313,6 +314,22 @@ def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
             raise RuntimeError("RECOVERY_MONTHLY_BUDGET_BLOCKED")
         receipt["budget_guard"] = budget
         if request is None:
+            # The primary weekly model call just occurred and is not yet
+            # represented in the monthly stored receipt census. Reserve its
+            # actual usage before approving another paid request.
+            import math
+            remaining = budget.get("remaining_usd_before")
+            if (not isinstance(remaining, (int, float)) or isinstance(remaining, bool)
+                    or not math.isfinite(remaining)
+                    or not isinstance(primary_unaccounted_cost_usd, (int, float))
+                    or isinstance(primary_unaccounted_cost_usd, bool)
+                    or not math.isfinite(primary_unaccounted_cost_usd)
+                    or primary_unaccounted_cost_usd < 0):
+                raise RuntimeError("RECOVERY_UNACCOUNTED_PRIMARY_COST_INVALID")
+            if remaining - primary_unaccounted_cost_usd <= (
+                    RECOVERY_MONTHLY_RESERVE_USD + MAX_RECOVERY_WORST_CASE_USD):
+                raise RuntimeError("RECOVERY_PRIMARY_PLUS_RETRY_EXCEEDS_BUDGET")
+            receipt["primary_unaccounted_cost_usd"] = primary_unaccounted_cost_usd
             if cost_receipt_path is None:
                 raise RuntimeError("RECOVERY_DURABLE_COST_RECEIPT_PATH_MISSING")
             receipt["cost_reservation"] = _reserve_cost(
