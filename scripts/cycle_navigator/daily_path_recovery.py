@@ -27,6 +27,33 @@ RECOVERY_MONTHLY_RESERVE_USD = 4.0
 ALLOWED_RECOVERY_MODELS = {"gpt-6-sol", "gpt-6.1-sol"}
 
 
+def _reserve_cost(path: Path, model: str, issued: datetime, request_sha256: str) -> dict[str, Any]:
+    """Create a durable worst-case reservation BEFORE sending the paid request.
+
+    Existing monthly guard scans research/api_agent/outputs; reserving the
+    worst-case cost prevents unbilled/unknown-response accounting gaps.
+    Never rewrite a reservation, even if the provider later fails.
+    """
+    if model not in ALLOWED_RECOVERY_MODELS:
+        raise RuntimeError("RECOVERY_MODEL_PRICE_UNVERIFIED")
+    if path.exists():
+        raise RuntimeError("RECOVERY_COST_RESERVATION_ALREADY_EXISTS")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "contract": "CN_DAILY_RECOVERY_COST_RESERVATION_v1",
+        "model": model,
+        "request_sha256": request_sha256,
+        "created_at_utc": issued.isoformat().replace("+00:00", "Z"),
+        "estimated_cost_usd": MAX_RECOVERY_WORST_CASE_USD,
+        "authority": "BOUNDED_API_COST_RESERVATION_NOT_FORECAST_OR_TRADE",
+        "usage_accounting": "WORST_CASE_CONSERVATIVE_UNTIL_PROVIDER_SETTLEMENT",
+    }
+    with path.open("xb") as stream:
+        stream.write(_canonical(record))
+    return {"path": str(path), "request_sha256": request_sha256,
+            "estimated_cost_usd": MAX_RECOVERY_WORST_CASE_USD}
+
+
 def _budget_guard() -> dict[str, Any]:
     """Rerun the existing canonical monthly ledger guard before any paid retry."""
     guard = Path(__file__).resolve().parents[1] / "api_agent" / "check_monthly_cost_guard.py"
@@ -199,7 +226,8 @@ def _one_request(model: str, payload_context: dict[str, Any]) -> tuple[dict[str,
 
 def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
                        year: int, week: int, model: str, issued_at: datetime,
-                       request=None, budget_check=None) -> tuple[dict[str, Any], dict[str, Any]]:
+                       request=None, budget_check=None,
+                       cost_receipt_path: Path | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
     """Return original value with only independently validated UNAVAILABLE assets repaired."""
     freeze = value["forecast_freeze"]
     original = freeze["daily_price_path"]
@@ -256,7 +284,12 @@ def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
         if budget.get("status") != "PASS":
             raise RuntimeError("RECOVERY_MONTHLY_BUDGET_BLOCKED")
         receipt["budget_guard"] = budget
-    except (RuntimeError, KeyError, TypeError, ValueError) as exc:
+        if request is None:
+            if cost_receipt_path is None:
+                raise RuntimeError("RECOVERY_DURABLE_COST_RECEIPT_PATH_MISSING")
+            receipt["cost_reservation"] = _reserve_cost(
+                cost_receipt_path, model, issued_at, _sha(candidate_input))
+    except (RuntimeError, KeyError, TypeError, ValueError, OSError) as exc:
         receipt["status"] = "SKIPPED_BUDGET_OR_OPERATOR_GUARD"
         receipt["budget_error_code"] = str(exc).split(":")[0][:100]
         receipt["final"] = receipt["initial"].copy()
