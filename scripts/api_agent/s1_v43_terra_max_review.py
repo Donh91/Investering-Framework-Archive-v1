@@ -175,10 +175,10 @@ def validate(outdir: Path) -> dict:
     def severity(value):
         if not isinstance(value, str):
             return 0  # malformed finding, fail closed
-        match = re.match(r"^\\s*P\\s*([0-3])\\s*\\|", value, re.IGNORECASE)
+        match = re.match(r"^\s*P\s*([0-3])\s*\|", value, re.IGNORECASE)
         if match:
             return int(match.group(1))
-        if re.search(r"\\bP\\s*[01]\\b", value, re.IGNORECASE):
+        if re.search(r"\bP\s*[01]\b", value, re.IGNORECASE):
             return 0  # unstructured P0/P1 evidence is blocking
         return None
 
