@@ -95,3 +95,38 @@ This is a **selective source reference**, not a requirement to use the listed to
 - Maxon Autograph product and terms: https://www.maxon.net/en/autograph
 
 **State:** RESEARCH_REFERENCE_ONLY / NO_RUNTIME_ADOPTION / NO_NEW_AUTOMATION / NO_MARKET_LOGIC_CHANGE. This appendix records an independent relative suitability evaluation, not a benchmark, successful video render or production validation.
+
+
+---
+
+## Deferred site-design reference: Fluid Functionalism and Stageshow (2026-11-02)
+
+**Owner instruction (2026-11-02):** Save these as design references and concrete future-use proposals. Try/test only once the production site is product-ready. **Do not install, migrate, redesign or modify the live site now.** This is an optional enhancement candidate, not a P0 task, new automation, release authorisation or requirement.
+
+**Original reference:** Owner-provided screenshot of Micka (@micka_design) citing Fluid Functionalism and Benji Taylor's Stageshow (X, November 2026). These are distinct tools: a real component/interaction library versus a faux-product demonstration skill. Sources checked 2026-11-02:
+
+- **Fluid Functionalism:** https://www.fluidfunctionalism.com/ and https://github.com/mickadesign/fluid-functionalism ; MIT-licensed shadcn/ui registry with Radix/Base UI variants, React/Tailwind/motion underpinnings; accompanying AI agent skill (upstream install example: npx skills add mickadesign/fluid-functionalism).
+- **Stageshow:** https://benji.org/stageshow and https://github.com/benjitaylor/skills ; skill for illustrated/faux product UI stills, filmed cursor demos, animation, bento composition and product marketing. Upstream example: npx skills add benjitaylor/skills --skill stageshow. **Illustration is not live product functionality.** Check upstream licence and third-party asset notices before reuse.
+
+### Future-use proposals, only after product readiness
+
+| Candidate | Concrete scoped experiment | Priority and boundary |
+| --- | --- | --- |
+| Fluid Functionalism - stateful controls | Isolated visual prototype of NOW/Kompas Pro switching, active horizon selection, source-status affordances and coherent pressed/focus/hover states | First candidate. Borrow patterns into native CSS/JS; do not auto-install React/shadcn or replace current HTML/CSS/JS site. |
+| Fluid Functionalism - graph controls | Test cleaner History/Graph B time-range selector, hover/touch/focus tooltip, source-date disclosure and small semantic transitions | Optional **controls-only** experiment. Do not alter plot, axis math, series, forecast/actual colours, cutoff, continuity, or provenance. |
+| Fluid Functionalism - system refinement | Test coherent, restrained sizing/typography/motion vocabulary consistent with Quiet Precision | Optional. Preserve system font, light editorial design, approved CN palette and lightweight Pages runtime. |
+| Stageshow - launch/demo assets | Off-site demo showing real Kompas Pro/HISTORY flow, e.g. concise walkthrough, release announcement or X/Telegram visual | Later and separate. Use fictional or explicitly timestamped/verified data. Mockups are not official market readings, scores or accuracy evidence. |
+
+### Explicit owner-approved visual baseline to preserve
+
+On **2026-11-02**, owner feedback on the **History graph** was strongly positive: the current graph is visually excellent and **matches the requested design**. Treat the version observed by the owner at this date as a **protected subjective visual-acceptance reference**, not as proof of data correctness, native Safari QA, or deployment state. Do not redesign this graph by default. Preserve its current plot appearance and readable forecast-versus-observed distinction. Any later experiment must start with a captured, version-pinned before-state (release SHA and screenshots) and compare against it, with a frictionless rollback. Do not conflate the separate Graph B chart and the History graph.
+
+### Readiness and promotion gate
+
+1. **Entry:** First prove site, Kompas Pro, CN, Master Monday and History data feeds are product-ready, with source freshness, working routes and release/readback gates. Until then, **REFERENCE_ONLY / DEFERRED**.
+2. **Isolated proof:** Choose one UI interaction on a non-production preview; no site root, graph/history source, engine, forecast, ledger, scoring or deployment mutation.
+3. **Evaluate actual experience:** Before/after screenshots and functional testing on iPhone Safari 390/430px, touch/keyboard navigation, VoiceOver, 200% zoom, reduced motion, contrast, no horizontal scroll, touch targets, runtime weight and loading performance. Require material benefit, not decoration.
+4. **Source integrity:** Tooltips and animations may not interpolate missing prices or suggest unissued expected-close forecasts; distinguish LIVE from frozen OFFICIAL, stale and unavailable data.
+5. **Release:** Check exact version, dependencies, licences/security, independent review and owner visual approval before any promotion. If benefit is negligible, reject and keep native implementation. Visual demos never validate underlying market data.
+
+**Disposition: KEEP AS REFERENCE.** No package installation, new automation, PR or production/site changes authorised by this note. Preserve the owner-approved History graph appearance.
