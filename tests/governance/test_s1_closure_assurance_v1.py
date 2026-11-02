@@ -7,6 +7,7 @@ from pathlib import Path
 SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "S1_CLOSURE_ASSURANCE_V1.schema.json"
 
 from jsonschema import Draft202012Validator, FormatChecker
+from rfc3339_validator import validate_rfc3339  # fail closed if optional format dependency missing
 
 
 def sample():
@@ -81,15 +82,23 @@ class ClosureAssuranceSchemaTests(unittest.TestCase):
         item["status"] = "PROCESS_STALLED"
         self.assertFalse(self.valid(item))
 
-
-
-class GrokHardeningTests(ClosureAssuranceSchemaTests):
     def test_bad_timestamp_rejected(self):
         item = sample()
         item["last_material_progress_utc"] = "not-a-date"
         self.assertFalse(self.valid(item))
         item["last_material_progress_utc"] = "2026-11-01T20:00:00Z"
         self.assertTrue(self.valid(item))
+
+    def test_calendar_invalid_timestamp_rejected(self):
+        for invalid in ("2026-02-30T20:00:00Z", "2026-13-01T20:00:00Z", "2026-11-01T25:00:00Z"):
+            self.assertFalse(validate_rfc3339(invalid))
+            item = sample()
+            item["last_material_progress_utc"] = invalid
+            self.assertFalse(self.valid(item))
+            item = sample()
+            item["status"] = "CLOSED_VERIFIED"
+            item["closure_proof"] = {"disposition": "MERGED_AND_VERIFIED", "proof_refs": ["main@123"], "verified_at_utc": invalid}
+            self.assertFalse(self.valid(item))
 
     def test_disposition_must_match_status(self):
         item = sample()
