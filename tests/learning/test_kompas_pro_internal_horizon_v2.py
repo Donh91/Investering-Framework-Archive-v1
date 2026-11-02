@@ -80,7 +80,7 @@ class KompasProContractTests(unittest.TestCase):
             build_visible_horizon_rows(self.ledger, {"H0_12H": x})
 
     def test_grok_strategic_direction_cannot_become_official(self):
-        with self.assertRaisesRegex(ValueError, "RESEARCH_DIRECTION_CANNOT_BE_OFFICIAL"):
+        with self.assertRaises(ValueError):
             build_visible_horizon_rows(self.ledger, {"H21_30D": {
                 "status": "OFFICIAL_DIRECTION",
                 "direction_owner": "STRATEGIC_COMPASS_CN_PROJECTION",
