@@ -8,6 +8,12 @@ on:
     - cron: '5 9 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
+    inputs:
+      w45_late_supplement:
+        description: "One-time append-only W45 supplemental DAILY issue, not original freeze"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   actions: write
@@ -21,8 +27,9 @@ concurrency:
 jobs:
   publish-cycle-navigator:
     if: >-
-      github.event_name != 'workflow_run' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event_name != 'workflow_dispatch' || inputs.w45_late_supplement != true) &&
+      (github.event_name != 'workflow_run' ||
+       github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -374,3 +381,34 @@ jobs:
             runtime_strategic_compass.json
             runtime/consumer-receipts/CYCLE_NAVIGATOR_HANDOFF.json
           retention-days: 14
+
+  w45-late-supplement:
+    # Manual only, zero impact on existing scheduled weekly writer cadence.
+    if: github.event_name == 'workflow_dispatch' && inputs.w45_late_supplement == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: One bounded W45 late prospective supplement, never canonical rewrite
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/cycle_navigator/issue_late_daily_amendment.py \
+            --repo-root . --year 2026 --week 45 --model gpt-6-sol \
+            --output "runtime/cn_w45_late_${GITHUB_RUN_ID}.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cn-w45-late-supplement-${{ github.run_id }}
+          path: runtime/cn_w45_late_*.json
+          retention-days: 30
