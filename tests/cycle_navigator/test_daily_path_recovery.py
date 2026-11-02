@@ -54,7 +54,7 @@ def _context():
                     "eth": {"week_range": {"open": 200, "close": 202, "low": 190, "high": 215},
                             "max_abs_return_1h_pct": 2.3, "max_range_1h_pct": 3.4, "up_hours": 85, "down_hours": 83},
                     "spot_flow_readback": {"BTC": {"quote_unit": "USDT", "semantics": "RETAINED_SPOT_EXCHANGE"},
-                                           "ETH": {"quote_unit": "USDT", "semantics": "RETAINED_SPOT_EXCHANGE"}}}}}}
+                                           "ETH": {"quote_unit": "USDT", "semantics": "RETAINED_SPOT_EXCHANGE"}}}}}
 
 
 def _proposal(btc="PUBLISHED", eth="PUBLISHED"):
