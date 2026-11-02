@@ -177,10 +177,20 @@ class TerraReviewTests(unittest.TestCase):
                 (out / "output" / "receipt.json").write_text(json.dumps(receipt))
                 return terra.validate(out)
             with patch.object(terra, "check_pr", return_value=pr()):
-                with self.assertRaisesRegex(ValueError, "UNDERSTATED"):
-                    check(["P1|x.py|blocking"], "PASS_WITH_FINDINGS", "DEGRADED")
+                for finding in (
+                    "P1|x.py|blocking", " P1|x.py|blocking",
+                    "P1 |x.py|blocking", "  p1 |x.py|blocking",
+                    "P0 |x.py|critical", "blocking P1 in x.py",
+                ):
+                    with self.subTest(finding=finding):
+                        with self.assertRaisesRegex(ValueError, "UNDERSTATED"):
+                            check([finding], "PASS_WITH_FINDINGS", "DEGRADED")
+                for finding in (" P2 |x.py|minor", "p2|x.py|minor"):
+                    with self.subTest(finding=finding):
+                        with self.assertRaisesRegex(ValueError, "FALSE_PASS"):
+                            check([finding], "PASS", "READY")
                 self.assertEqual(check(["P2|x.py|minor"], "PASS_WITH_FINDINGS", "DEGRADED")["head"], HEAD)
-                self.assertEqual(check(["P1|x.py|blocking"], "FAIL", "BLOCKED")["head"], HEAD)
+                self.assertEqual(check([" P1 |x.py|blocking"], "FAIL", "BLOCKED")["head"], HEAD)
 
 
 if __name__ == "__main__":
