@@ -157,6 +157,38 @@ class GraphHistoryTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ACTUAL_MUTATION_OR_LOST_HOUR"):
             archive(self.root, W46)
 
+    def test_deleted_index_cannot_rebootstrap_over_recorded_forecast(self):
+        source(self.root)
+        original = archive(self.root, W46)
+        self.assertEqual(original["weeks"][0]["status"], "RECORDED")
+        recorded = self.root / ROOT / "weeks/2026/W45/forecast-reference.json"
+        self.assertTrue(recorded.is_file())
+        (self.root / ROOT / "index.json").unlink()
+        with self.assertRaisesRegex(ValueError, "HISTORY_INDEX_MISSING_WITH_EXISTING_RECORDS"):
+            archive(self.root, W46)
+        with self.assertRaisesRegex(ValueError, "HISTORY_INDEX_MISSING_WITH_EXISTING_RECORDS"):
+            publish(self.root)
+        self.assertTrue(recorded.is_file())
+
+    def test_deleted_index_cannot_rebootstrap_over_actuals_only(self):
+        original = archive(self.root, W46)
+        self.assertEqual(original["weeks"][0]["status"], "MISSING_FREEZE")
+        self.assertTrue((self.root / ROOT / "weeks/2026/W45/actual-series.json").is_file())
+        (self.root / ROOT / "index.json").unlink()
+        with self.assertRaisesRegex(ValueError, "HISTORY_INDEX_MISSING_WITH_EXISTING_RECORDS"):
+            archive(self.root, W46)
+        with self.assertRaisesRegex(ValueError, "HISTORY_INDEX_MISSING_WITH_EXISTING_RECORDS"):
+            publish(self.root)
+
+    def test_interrupted_index_write_cannot_be_silently_accepted(self):
+        index_tmp = self.root / ROOT / "index.json.tmp"
+        index_tmp.parent.mkdir(parents=True, exist_ok=True)
+        index_tmp.write_text("partial-write")
+        with self.assertRaisesRegex(ValueError, "HISTORY_INDEX_MISSING_WITH_EXISTING_RECORDS"):
+            archive(self.root, W45)
+        with self.assertRaisesRegex(ValueError, "HISTORY_INDEX_MISSING_WITH_EXISTING_RECORDS"):
+            publish(self.root)
+
     def test_recorded_forecast_cannot_disappear_on_later_archive(self):
         folder = source(self.root)
         original = archive(self.root, W45)
