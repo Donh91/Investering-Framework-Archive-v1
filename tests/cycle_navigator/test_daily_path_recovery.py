@@ -48,6 +48,7 @@ def _context():
                 "source_capture_paths": ["immutable/2026-W45.json"],
                 "hourly_gap_diagnostics": {"observed_hours": 168, "missing_hour_count": 0},
                 "hourly_sequence": {
+                    "first_hour_utc": "2026-11-02T00:00:00Z",
                     "last_hour_utc": "2026-11-08T23:00:00Z",
                     "btc": {"week_range": {"open": 100, "close": 102, "low": 90, "high": 115},
                             "max_abs_return_1h_pct": 1.3, "max_range_1h_pct": 2.4, "up_hours": 80, "down_hours": 88},
@@ -159,7 +160,7 @@ def test_invalid_second_attempt_must_not_publish_fabricated_path(bad):
 
 
 @pytest.mark.parametrize("bad", ["future_capture", "future_mm", "target_week_rows", "wrong_completed_week",
-                                   "missing_lineage", "missing_hours", "not_ready", "wrong_clock", "missing_quote"])
+                                   "missing_lineage", "missing_hours", "not_ready", "wrong_clock", "missing_quote", "wrong_first_hour"])
 def test_source_and_clock_guard_fail_closed_without_extra_spend(bad):
     context = _context()
     cap = context["completed_week_hourly_capture"]
@@ -181,6 +182,8 @@ def test_source_and_clock_guard_fail_closed_without_extra_spend(bad):
         cap["generated_at_utc"] = "bad-clock"
     elif bad == "missing_quote":
         cap["hourly_sequence"]["spot_flow_readback"] = {}
+    elif bad == "wrong_first_hour":
+        cap["hourly_sequence"]["first_hour_utc"] = "2026-11-03T00:00:00Z"
     calls = []
     out, receipt = _run(_value(), context=context, request=_fake(_proposal(), calls))
     assert receipt["attempt_count"] == 0 and calls == []
@@ -231,3 +234,45 @@ def test_legacy_original_semantic_call_remains_one_and_workflow_not_extended():
     workflow = (Path(builder.__file__).parents[2] / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
     assert "group: framework-main-writer" in workflow
     assert "Enforce monthly API cost guard" in workflow
+
+def test_single_http_reconsideration_exactly_once(monkeypatch):
+    import json
+    from scripts.cycle_navigator import daily_path_recovery as repair
+    received = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self):
+            return json.dumps({"id": "single-model-output", "status": "completed",
+                               "output_text": json.dumps(_proposal()),
+                               "usage": {"input_tokens": 123, "output_tokens": 456}}).encode()
+
+    def urlopen(req, timeout=180):
+        received.append(json.loads(req.data))
+        return Response()
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(repair.urllib.request, "urlopen", urlopen)
+    out, receipt = _run(_value())
+    assert len(received) == 1
+    assert received[0]["max_output_tokens"] == repair.MAX_RECOVERY_OUTPUT_TOKENS
+    assert received[0]["store"] is False
+    assert received[0]["model"] == "test-sol"
+    assert receipt["attempt_count"] == 1
+    assert receipt["response_id"] == "single-model-output"
+    assert out["forecast_freeze"]["daily_price_path"]["BTC"]["status"] == "PUBLISHED"
+
+
+def test_source_input_size_guard_never_calls_paid_api(monkeypatch):
+    from scripts.cycle_navigator import daily_path_recovery as repair
+    calls = []
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(repair.urllib.request, "urlopen", lambda req, timeout=180: calls.append(req))
+    with pytest.raises(RuntimeError, match="RECOVERY_INPUT_SIZE_EXCEEDED"):
+        repair._one_request("test-model", {"very_large_payload": "x" * (repair.MAX_RECOVERY_INPUT_BYTES + 1)})
+    assert calls == []
