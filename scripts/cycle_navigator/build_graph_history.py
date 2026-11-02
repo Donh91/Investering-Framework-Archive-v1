@@ -169,7 +169,7 @@ def observed(root, monday):
             "points": result}
 
 
-def verify_index_chain(index):
+def verify_index_chain(index, root=None):
     if index.get("contract") != CONTRACT or not isinstance(index.get("weeks"), list):
         raise ValueError("INVALID_HISTORY_INDEX")
     prior_weeks = {}
@@ -198,6 +198,18 @@ def verify_index_chain(index):
                                         "source_sha256": sha, "status": row["status"]}))
         if row.get("chain_digest") != prior_chain:
             raise ValueError("INVALID_HISTORY_INDEX_CHAIN")
+        # A rehashed index is not proof that the original frozen forecast
+        # disappeared. Bind index status and source identity to the durable
+        # on-disk forecast copy whenever the working archive is available.
+        if root is not None:
+            disk_forecast = root / expected_forecast
+            if row["status"] == "MISSING_FREEZE" and disk_forecast.exists():
+                raise ValueError(f"INDEX_DISK_RECORD_CONFLICT:{label}")
+            if row["status"] == "RECORDED":
+                if not disk_forecast.is_file():
+                    raise ValueError(f"INDEX_DISK_RECORD_CONFLICT:{label}")
+                if read(disk_forecast).get("original_source_sha256") != sha:
+                    raise ValueError(f"INDEX_DISK_RECORD_CONFLICT:{label}")
         prior_weeks[label] = row
         prior_label = label
     if index.get("chain_tip") != prior_chain:
@@ -229,7 +241,7 @@ def archive(root, target):
         return {"contract": CONTRACT, "status": "NOT_STARTED", "weeks": []}
     index_file = root / ROOT / "index.json"
     old_index = _read_index_or_fail_missing_history(root)
-    prior_weeks = verify_index_chain(old_index) if old_index is not None else {}
+    prior_weeks = verify_index_chain(old_index, root) if old_index is not None else {}
     result = []
     cursor = START
     previous = None
@@ -283,7 +295,7 @@ def publish(root):
     index_file = root / ROOT / "index.json"
     index = _read_index_or_fail_missing_history(root) or {"contract": CONTRACT, "weeks": []}
     if index_file.exists():
-        verify_index_chain(index)
+        verify_index_chain(index, root)
     elif index.get("contract") != CONTRACT:
         raise ValueError("INVALID_HISTORY_INDEX")
     weeks, actual = [], []

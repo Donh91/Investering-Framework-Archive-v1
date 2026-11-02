@@ -323,5 +323,48 @@ class GraphHistoryTest(unittest.TestCase):
         self.assertEqual(publish(self.root)["actual"], [])
 
 
+    def test_rechained_forecast_withdrawal_fails_against_immutable_disk_record(self):
+        # Adversarial: chain/tip recomputed, so hash-only verification passes.
+        source(self.root)
+        archive(self.root, W46)
+        index_file = self.root / ROOT / "index.json"
+        original_index = json.loads(index_file.read_text())
+        self.assertEqual(publish(self.root)["weeks"][0]["status"], "RECORDED")
+        chain = "0" * 64
+        altered = json.loads(json.dumps(original_index))
+        for row in altered["weeks"]:
+            if row["forecast_week"] == "2026-W45":
+                row.update(status="MISSING_FREEZE", source_sha256=None, forecast_path=None)
+            chain = digest(canonical({"previous": chain, "week": row["forecast_week"],
+                                      "source_sha256": row["source_sha256"], "status": row["status"]}))
+            row["chain_digest"] = chain
+        altered["chain_tip"] = chain
+        put(index_file, altered)
+        with self.assertRaisesRegex(ValueError, "INDEX_DISK_RECORD_CONFLICT:2026-W45"):
+            publish(self.root)
+        with self.assertRaisesRegex(ValueError, "INDEX_DISK_RECORD_CONFLICT:2026-W45"):
+            archive(self.root, W46)
+        put(index_file, original_index)
+        self.assertEqual(publish(self.root)["weeks"][0]["status"], "RECORDED")
+        self.assertEqual(archive(self.root, W46), original_index)
+
+    def test_rechained_forecast_sha_substitution_fails_against_disk(self):
+        source(self.root)
+        archive(self.root, W45)
+        index_file = self.root / ROOT / "index.json"
+        forged = json.loads(index_file.read_text())
+        forged["weeks"][0]["source_sha256"] = "f" * 64
+        row = forged["weeks"][0]
+        forged["chain_tip"] = digest(canonical({"previous": "0" * 64,
+            "week": row["forecast_week"], "source_sha256": row["source_sha256"],
+            "status": row["status"]}))
+        row["chain_digest"] = forged["chain_tip"]
+        put(index_file, forged)
+        with self.assertRaisesRegex(ValueError, "INDEX_DISK_RECORD_CONFLICT"):
+            publish(self.root)
+        with self.assertRaisesRegex(ValueError, "INDEX_DISK_RECORD_CONFLICT"):
+            archive(self.root, W45)
+
+
 if __name__ == "__main__":
     unittest.main()
