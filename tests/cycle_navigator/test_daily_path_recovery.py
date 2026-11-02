@@ -64,10 +64,11 @@ def _proposal(btc="PUBLISHED", eth="PUBLISHED"):
             "BTC": _asset(btc, 100), "ETH": _asset(eth, 200)}
 
 
-def _run(value, context=None, request=None, issued=ISSUED, budget_check=None):
+def _run(value, context=None, request=None, issued=ISSUED, budget_check=None, cost_receipt_path=None):
     return recover_daily_path(value, _context() if context is None else context,
                               year=2026, week=46, model="gpt-6-sol", issued_at=issued, request=request,
-                              budget_check=budget_check or (lambda: {"status": "PASS", "test_injection": True}))
+                              budget_check=budget_check or (lambda: {"status": "PASS", "test_injection": True}),
+                              cost_receipt_path=cost_receipt_path)
 
 
 def _fake(proposal, calls):
@@ -277,7 +278,7 @@ def test_legacy_original_semantic_call_remains_one_and_workflow_not_extended():
     assert "group: framework-main-writer" in workflow
     assert "Enforce monthly API cost guard" in workflow
 
-def test_single_http_reconsideration_exactly_once(monkeypatch):
+def test_single_http_reconsideration_exactly_once(monkeypatch, tmp_path):
     import json
     from scripts.cycle_navigator import daily_path_recovery as repair
     received = []
@@ -300,8 +301,12 @@ def test_single_http_reconsideration_exactly_once(monkeypatch):
 
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     monkeypatch.setattr(repair.urllib.request, "urlopen", urlopen)
-    out, receipt = _run(_value())
+    out, receipt = _run(_value(), cost_receipt_path=tmp_path / "bounded-cost.json")
     assert len(received) == 1
+    saved = __import__("json").loads((tmp_path / "bounded-cost.json").read_text())
+    assert saved["estimated_cost_usd"] == 0.15
+    assert saved["model"] == "gpt-6-sol"
+    assert receipt["cost_reservation"]["estimated_cost_usd"] == 0.15
     assert received[0]["max_output_tokens"] == repair.MAX_RECOVERY_OUTPUT_TOKENS
     assert received[0]["store"] is False
     assert received[0]["model"] == "gpt-6-sol"
@@ -318,3 +323,25 @@ def test_source_input_size_guard_never_calls_paid_api(monkeypatch):
     with pytest.raises(RuntimeError, match="RECOVERY_INPUT_SIZE_EXCEEDED"):
         repair._one_request("test-model", {"very_large_payload": "x" * (repair.MAX_RECOVERY_INPUT_BYTES + 1)})
     assert calls == []
+
+
+def test_no_real_api_request_without_durable_cost_reservation(monkeypatch):
+    from scripts.cycle_navigator import daily_path_recovery as repair
+    called = []
+    monkeypatch.setattr(repair.urllib.request, "urlopen", lambda *a, **k: called.append(1))
+    _, receipt = _run(_value(), cost_receipt_path=None)
+    assert receipt["attempt_count"] == 0 and called == []
+    assert receipt["status"] == "SKIPPED_BUDGET_OR_OPERATOR_GUARD"
+    assert receipt["budget_error_code"] == "RECOVERY_DURABLE_COST_RECEIPT_PATH_MISSING"
+
+
+def test_existing_cost_reservation_prevents_double_paid_call(monkeypatch, tmp_path):
+    from scripts.cycle_navigator import daily_path_recovery as repair
+    called = []
+    monkeypatch.setattr(repair.urllib.request, "urlopen", lambda *a, **k: called.append(1))
+    path = tmp_path / "already-reserved.json"
+    path.write_text('{"preexisting":true}')
+    _, receipt = _run(_value(), cost_receipt_path=path)
+    assert receipt["attempt_count"] == 0 and called == []
+    assert receipt["budget_error_code"] == "RECOVERY_COST_RESERVATION_ALREADY_EXISTS"
+    assert path.read_text() == '{"preexisting":true}'
