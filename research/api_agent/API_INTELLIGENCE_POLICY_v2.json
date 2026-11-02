@@ -15,7 +15,8 @@
     "FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT": 6,
     "RESEARCH_LAB_SOL_ANALYSIS": 10,
     "CN_INTERNAL_LONG_HORIZON_SCORER": 1,
-    "FRAMEWORK_STRATEGIST_SEMANTIC": 0.75
+    "FRAMEWORK_STRATEGIST_SEMANTIC": 0.75,
+    "S1_V43_TERRA_MAX_REVIEW": 1.5
   },
   "director_schedule": {
     "maximum_runs_per_day": 4,
@@ -120,5 +121,23 @@
     "market_action": false,
     "model_selection": "DETERMINISTIC_FIRST, GPT_6_LUNA_EXISTING_ROUTINE_LANES, GPT_6_1_SOL_MATERIAL_CROSS_DOMAIN_STRATEGIST, ASTRA_MANUAL_ONLY",
     "no_automatic_escalation": true
+  },
+  "s1_v43_terra_max_review": {
+    "enabled": true,
+    "invocation_mode": "EXACT_HEAD_OWNER_COMMENT_SINGLE_SHOT",
+    "original_pr": 1877,
+    "owner_issue": 1156,
+    "model": "gpt-6.1-terra",
+    "reasoning_effort": "max",
+    "monthly_lifetime_limit": 1,
+    "max_paid_attempts": 1,
+    "release_authority": false,
+    "autonomous_merge": false,
+    "automatic_code_write": false,
+    "no_new_cron": true,
+    "require_exact_head": true,
+    "require_reservation_before_payment": true,
+    "budget_cap_usd": 1.5,
+    "global_monthly_hard_stop_unchanged": true
   }
 }
