@@ -50,11 +50,15 @@ class MetricTests(unittest.TestCase):
         x = weekly_comparison(rows, "Demo", END.isoformat(), CUTOFF)
         self.assertEqual(x["reason"], "DUPLICATE_VENUE_DAY")
 
-    def test_future_known_at_rejected(self):
+    def test_future_or_impossible_availability_rejected(self):
         rows = cohort()
         rows[3]["source_available_at_utc"] = "2026-11-02T00:00:00Z"
         x = weekly_comparison(rows, "Demo", END.isoformat(), CUTOFF)
         self.assertEqual(x["reason"], "FUTURE_AVAILABLE_DATA")
+        rows = cohort()
+        rows[-1]["source_available_at_utc"] = "2026-10-31T23:59:59Z"
+        x = weekly_comparison(rows, "Demo", END.isoformat(), CUTOFF)
+        self.assertEqual(x["reason"], "IMPOSSIBLE_PERIOD_AVAILABILITY")
 
     def test_incomplete_current_period_rejected(self):
         rows = cohort()
@@ -62,11 +66,15 @@ class MetricTests(unittest.TestCase):
         x = weekly_comparison(rows, "Demo", END.isoformat(), CUTOFF)
         self.assertEqual(x["reason"], "IN_PROGRESS_PERIOD")
 
-    def test_mixed_product_volume_rejected(self):
+    def test_mixed_product_or_source_cohort_rejected(self):
         rows = cohort()
         rows[-1]["options_only_verified"] = False
         x = weekly_comparison(rows, "Demo", END.isoformat(), CUTOFF)
         self.assertEqual(x["reason"], "OPTIONS_ONLY_UNVERIFIED")
+        rows = cohort()
+        rows[-1]["source_id"] = "OTHER_PROVIDER"
+        x = weekly_comparison(rows, "Demo", END.isoformat(), CUTOFF)
+        self.assertEqual(x["reason"], "MIXED_SOURCE_COHORT")
 
     def test_fee_scope_mismatch_not_fabricated(self):
         rows = cohort()
