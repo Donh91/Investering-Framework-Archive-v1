@@ -80,7 +80,8 @@ def select_cases(cases, maximum=3):
         rank = (ORDER[item["priority"]],
                 0 if item.get("ready_for_preflight") is True else 1,
                 -impact, effort, item["case_id"])
-        identity = item["original_url"]
+        # A permalink, query string or trailing slash cannot create a second case.
+        identity = urlparse(item["original_url"]).path.rstrip("/")
         if identity not in selected or rank < selected[identity][0]:
             selected[identity] = (rank, item)
     result = sorted(selected.values(), key=lambda v: v[0])[:maximum]
@@ -115,7 +116,16 @@ def strategic_question(item, brief):
         "intent": brief["intent_sha256"],
         "generated": brief.get("generated_at_utc"),
     }
+    matches = []
+    for proposal in brief.get("proposals", []):
+        if not isinstance(proposal, dict):
+            continue
+        if (proposal.get("id") == item.get("strategist_proposal_id")
+                or proposal.get("evidence_fingerprint") == item["evidence_fingerprint"]):
+            if isinstance(proposal.get("id"), str) and len(matches) < 3:
+                matches.append(proposal["id"])
     return {
+        "matched_existing_proposal_ids": sorted(set(matches)),
         "state": "READ_EXISTING_BRIEF",
         "brief_binding_sha256": sha256(json.dumps(
             bound, sort_keys=True, separators=(",", ":")
