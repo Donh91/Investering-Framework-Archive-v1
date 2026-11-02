@@ -29,7 +29,7 @@ def _url(value):
         return False
     parsed = urlparse(value)
     return parsed.scheme == "https" and parsed.netloc == "github.com" and (
-        parsed.path.startswith("/Donh91/") and not parsed.fragment
+        parsed.path.startswith("/Donh91/") and (not parsed.fragment or re.fullmatch(r"(?:issuecomment-\d+|discussion_r\d+|pullrequestreview-\d+)", parsed.fragment) is not None)
     )
 
 
