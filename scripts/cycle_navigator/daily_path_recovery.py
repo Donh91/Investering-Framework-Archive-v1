@@ -303,6 +303,15 @@ def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
         receipt["status"] = "SKIPPED_SOURCE_QUOTE"
         receipt["final"] = receipt["initial"].copy()
         return value, receipt
+    # Owner policy 2026-11-02: no automatic second paid model call.
+    # `request` is an injected offline test callback, never production transport.
+    # A future paid exception requires separate authenticated, cross-workflow
+    # durable pre-HTTP authorization, not this semantic retry lane.
+    if request is None:
+        receipt["status"] = "SKIPPED_PAID_RECOVERY_DISABLED"
+        receipt["budget_error_code"] = "PAID_SEMANTIC_RECOVERY_NOT_AUTHORIZED"
+        receipt["final"] = receipt["initial"].copy()
+        return value, receipt
     if os.environ.get("CN_DAILY_RECOVERY_ENABLED", "1") != "1":
         receipt["status"] = "SKIPPED_BUDGET_OR_OPERATOR_GUARD"
         receipt["final"] = receipt["initial"].copy()

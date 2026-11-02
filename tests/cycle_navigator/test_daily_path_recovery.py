@@ -280,42 +280,21 @@ def test_legacy_original_semantic_call_remains_one_and_workflow_not_extended():
     assert "group: framework-main-writer" in workflow
     assert "Enforce monthly API cost guard" in workflow
 
-def test_single_http_reconsideration_exactly_once(monkeypatch, tmp_path):
-    import json
+def test_production_never_makes_extra_paid_call_even_if_env_and_budget_allow(monkeypatch, tmp_path):
     from scripts.cycle_navigator import daily_path_recovery as repair
-    received = []
-
-    class Response:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            return False
-
-        def read(self):
-            return json.dumps({"id": "single-model-output", "status": "completed",
-                               "output_text": json.dumps(_proposal()),
-                               "usage": {"input_tokens": 123, "output_tokens": 456}}).encode()
-
-    def urlopen(req, timeout=180):
-        received.append(json.loads(req.data))
-        return Response()
-
+    called = []
+    monkeypatch.setenv("CN_DAILY_RECOVERY_ENABLED", "1")
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
-    monkeypatch.setattr(repair.urllib.request, "urlopen", urlopen)
-    out, receipt = _run(_value(), cost_receipt_path=tmp_path / "bounded-cost.json",
-                        budget_check=lambda: {"status":"PASS","remaining_usd_before":36.0})
-    assert len(received) == 1
-    saved = __import__("json").loads((tmp_path / "bounded-cost.json").read_text())
-    assert saved["estimated_cost_usd"] == 0.15
-    assert saved["model"] == "gpt-6-sol"
-    assert receipt["cost_reservation"]["estimated_cost_usd"] == 0.15
-    assert received[0]["max_output_tokens"] == repair.MAX_RECOVERY_OUTPUT_TOKENS
-    assert received[0]["store"] is False
-    assert received[0]["model"] == "gpt-6-sol"
-    assert receipt["attempt_count"] == 1
-    assert receipt["response_id"] == "single-model-output"
-    assert out["forecast_freeze"]["daily_price_path"]["BTC"]["status"] == "PUBLISHED"
+    monkeypatch.setattr(repair.urllib.request, "urlopen", lambda *a, **k: called.append(1))
+    reservation = tmp_path / "must-not-create-paid-reservation.json"
+    original = _value()
+    out, receipt = _run(copy.deepcopy(original), cost_receipt_path=reservation,
+                        budget_check=lambda: {"status": "PASS", "remaining_usd_before": 100.0})
+    assert out == original
+    assert receipt["attempt_count"] == 0 and called == []
+    assert receipt["status"] == "SKIPPED_PAID_RECOVERY_DISABLED"
+    assert receipt["budget_error_code"] == "PAID_SEMANTIC_RECOVERY_NOT_AUTHORIZED"
+    assert not reservation.exists()
 
 
 def test_source_input_size_guard_never_calls_paid_api(monkeypatch):
@@ -334,8 +313,8 @@ def test_no_real_api_request_without_durable_cost_reservation(monkeypatch):
     monkeypatch.setattr(repair.urllib.request, "urlopen", lambda *a, **k: called.append(1))
     _, receipt = _run(_value(), cost_receipt_path=None)
     assert receipt["attempt_count"] == 0 and called == []
-    assert receipt["status"] == "SKIPPED_BUDGET_OR_OPERATOR_GUARD"
-    assert receipt["budget_error_code"] == "RECOVERY_DURABLE_COST_RECEIPT_PATH_MISSING"
+    assert receipt["status"] == "SKIPPED_PAID_RECOVERY_DISABLED"
+    assert receipt["budget_error_code"] == "PAID_SEMANTIC_RECOVERY_NOT_AUTHORIZED"
 
 
 def test_existing_cost_reservation_prevents_double_paid_call(monkeypatch, tmp_path):
@@ -346,7 +325,7 @@ def test_existing_cost_reservation_prevents_double_paid_call(monkeypatch, tmp_pa
     path.write_text('{"preexisting":true}')
     _, receipt = _run(_value(), cost_receipt_path=path)
     assert receipt["attempt_count"] == 0 and called == []
-    assert receipt["budget_error_code"] == "RECOVERY_COST_RESERVATION_ALREADY_EXISTS"
+    assert receipt["budget_error_code"] == "PAID_SEMANTIC_RECOVERY_NOT_AUTHORIZED"
     assert path.read_text() == '{"preexisting":true}'
 
 
@@ -387,7 +366,7 @@ def test_extra_paid_request_includes_unrecorded_primary_cost(monkeypatch, tmp_pa
     _, receipt = _run(_value(), cost_receipt_path=reservation,
                       budget_check=lambda: {"status":"PASS", "remaining_usd_before":remaining},
                       primary_unaccounted_cost_usd=primary_cost)
-    assert receipt["status"] == "SKIPPED_BUDGET_OR_OPERATOR_GUARD"
+    assert receipt["status"] == "SKIPPED_PAID_RECOVERY_DISABLED"
     assert receipt["attempt_count"] == 0 and called == []
     assert not reservation.exists()
 
