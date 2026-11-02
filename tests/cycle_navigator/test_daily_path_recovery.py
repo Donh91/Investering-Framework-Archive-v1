@@ -66,7 +66,7 @@ def _proposal(btc="PUBLISHED", eth="PUBLISHED"):
 
 def _run(value, context=None, request=None, issued=ISSUED, budget_check=None):
     return recover_daily_path(value, _context() if context is None else context,
-                              year=2026, week=46, model="test-sol", issued_at=issued, request=request,
+                              year=2026, week=46, model="gpt-6-sol", issued_at=issued, request=request,
                               budget_check=budget_check or (lambda: {"status": "PASS", "test_injection": True}))
 
 
@@ -304,7 +304,7 @@ def test_single_http_reconsideration_exactly_once(monkeypatch):
     assert len(received) == 1
     assert received[0]["max_output_tokens"] == repair.MAX_RECOVERY_OUTPUT_TOKENS
     assert received[0]["store"] is False
-    assert received[0]["model"] == "test-sol"
+    assert received[0]["model"] == "gpt-6-sol"
     assert receipt["attempt_count"] == 1
     assert receipt["response_id"] == "single-model-output"
     assert out["forecast_freeze"]["daily_price_path"]["BTC"]["status"] == "PUBLISHED"
