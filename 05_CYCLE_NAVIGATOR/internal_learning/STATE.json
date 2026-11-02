@@ -1,5 +1,5 @@
 {
-  "api_review_status": "READY",
+  "api_review_status": "NOT_REQUIRED",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "automatic_promotion": false,
   "automatic_threshold_change": false,
@@ -8,9 +8,9 @@
   "checkpoint_sequence": 2,
   "contract": "CN_PRECISION_LEARNING_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "a9e66d69b7976f4b67e219f0e67e59c0db9eca86af5d092570f7792134a427fc",
+  "evidence_fingerprint": "f9e9d0f2d0166ae6b348e945e973a3c1deff02ab9008ebcbe415dddf7a81a144",
   "external_provider_calls_authorized": false,
-  "family": "rotation",
+  "family": "",
   "family_states": {
     "altseason": {
       "change_vs_previous_4w_pp": null,
@@ -319,9 +319,9 @@
   "latest_weekly_snapshot": "05_CYCLE_NAVIGATOR/internal_learning/weekly/2026/W44.json",
   "paid_data_authorized": false,
   "portfolio_execution": false,
-  "primary_action": "RESEARCH_NEW_HYPOTHESIS",
+  "primary_action": "WAIT_FOR_MORE_EVIDENCE",
   "public_surface_effect": false,
-  "reason": "4-settlement checkpoint detected PERSISTENT_WEAKNESS in rotation: mean_4w=50.0 weak_weeks=4 zero_weeks=0. Research-only falsification is warranted; no threshold, weight, forecast, public score or portfolio change is authorized. Deep review: Research-only four-settlement review finds concentrated, partially falsified concerns rather than evidence of a system-wide precision breakdown. Rotation is persistently partial at 50 across W41\u2013W44. Late-week intraday precision is weaker than earlier-week partitions, and the W43\u2013W44 critiques suggest possible difficulty representing within-week reversals. Range concerns are episodic and lower-tail/subweekly in character: W41 missed both weekly lower bounds, but W42\u2013W44 weekly ranges recovered. Several families lack usable current-window observations, preventing a complete cross-family diagnosis. First bounded hypothesis: H1 \u2014 Rotation claim-form hypothesis: Across the next four eligible settled Cycle Navigator observations containing rotation scoring, rotation will continue to score below 100 more often than the contemporaneous breadth and ETH/BTC families; falsified if rotation scores 100 in at least three of four such observations, or if its below-100 frequency does not exceed both comparators. This tests whether the observed weakness is rotation-specific rather than a general settlement effect.",
+  "reason": "Persistent weakness is visible in rotation but the next four-settlement checkpoint has not matured. Continue observing without research escalation.",
   "settled_week_count": 8,
-  "target": "CN_PRECISION::rotation"
+  "target": ""
 }
