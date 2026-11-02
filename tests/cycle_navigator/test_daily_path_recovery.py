@@ -390,3 +390,15 @@ def test_extra_paid_request_includes_unrecorded_primary_cost(monkeypatch, tmp_pa
     assert receipt["status"] == "SKIPPED_BUDGET_OR_OPERATOR_GUARD"
     assert receipt["attempt_count"] == 0 and called == []
     assert not reservation.exists()
+
+
+def test_semantic_retry_does_not_feed_model_its_old_abstention_rationale():
+    from scripts.cycle_navigator.daily_path_recovery import _input_excerpt
+    original = _value()
+    original["forecast_freeze"]["daily_price_path"]["BTC"]["reason"] = "UNIQUE_OLD_REFUSAL_NOT_EVIDENCE"
+    context = _context()
+    src = {"quote": {"BTC": "USDT", "ETH": "USDT"}}
+    payload = _input_excerpt(context, src, original, original["forecast_freeze"])
+    assert "prior_abstentions" not in payload
+    assert payload["prior_status"] == {"BTC": "UNAVAILABLE", "ETH": "UNAVAILABLE"}
+    assert "UNIQUE_OLD_REFUSAL_NOT_EVIDENCE" not in __import__("json").dumps(payload)
