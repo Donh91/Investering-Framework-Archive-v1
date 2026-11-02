@@ -64,11 +64,13 @@ def _proposal(btc="PUBLISHED", eth="PUBLISHED"):
             "BTC": _asset(btc, 100), "ETH": _asset(eth, 200)}
 
 
-def _run(value, context=None, request=None, issued=ISSUED, budget_check=None, cost_receipt_path=None):
+def _run(value, context=None, request=None, issued=ISSUED, budget_check=None,
+         cost_receipt_path=None, primary_unaccounted_cost_usd=0.0):
     return recover_daily_path(value, _context() if context is None else context,
                               year=2026, week=46, model="gpt-6-sol", issued_at=issued, request=request,
                               budget_check=budget_check or (lambda: {"status": "PASS", "test_injection": True}),
-                              cost_receipt_path=cost_receipt_path)
+                              cost_receipt_path=cost_receipt_path,
+                              primary_unaccounted_cost_usd=primary_unaccounted_cost_usd)
 
 
 def _fake(proposal, calls):
@@ -301,7 +303,8 @@ def test_single_http_reconsideration_exactly_once(monkeypatch, tmp_path):
 
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     monkeypatch.setattr(repair.urllib.request, "urlopen", urlopen)
-    out, receipt = _run(_value(), cost_receipt_path=tmp_path / "bounded-cost.json")
+    out, receipt = _run(_value(), cost_receipt_path=tmp_path / "bounded-cost.json",
+                        budget_check=lambda: {"status":"PASS","remaining_usd_before":36.0})
     assert len(received) == 1
     saved = __import__("json").loads((tmp_path / "bounded-cost.json").read_text())
     assert saved["estimated_cost_usd"] == 0.15
@@ -373,3 +376,17 @@ def test_first_model_pass_missing_quote_never_publishes():
     candidate = reject_unverified_initial_daily_quotes(value, _context())
     assert all(candidate["forecast_freeze"]["daily_price_path"][asset]["status"] == "UNAVAILABLE"
                for asset in ("BTC", "ETH"))
+
+
+@pytest.mark.parametrize("primary_cost,remaining", [(0.20, 4.30), (0.0, 4.10), (float("nan"), 30.0)])
+def test_extra_paid_request_includes_unrecorded_primary_cost(monkeypatch, tmp_path, primary_cost, remaining):
+    from scripts.cycle_navigator import daily_path_recovery as repair
+    called = []
+    monkeypatch.setattr(repair.urllib.request, "urlopen", lambda *a, **k: called.append(1))
+    reservation = tmp_path / "reserved-before-real-api.json"
+    _, receipt = _run(_value(), cost_receipt_path=reservation,
+                      budget_check=lambda: {"status":"PASS", "remaining_usd_before":remaining},
+                      primary_unaccounted_cost_usd=primary_cost)
+    assert receipt["status"] == "SKIPPED_BUDGET_OR_OPERATOR_GUARD"
+    assert receipt["attempt_count"] == 0 and called == []
+    assert not reservation.exists()
