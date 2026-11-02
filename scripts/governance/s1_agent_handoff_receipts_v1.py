@@ -140,7 +140,11 @@ def handoff_followup(events, observed_at_utc, timeout_minutes, attempts, max_att
     elif (now - recent).total_seconds() < timeout_minutes * 60:
         action = "AWAIT_EXISTING_RECEIVER"
     elif state in ("ACKNOWLEDGED", "ACCEPTED"):
-        action = "RECEIVER_RESULT_OVERDUE_NO_DUPLICATE_REQUEST"
+        # A real recipient already owns the request. Never retry it.
+        # Finite escalation after three inactivity windows, no ghost dispatch.
+        action = ("RECEIVER_STALLED_ESCALATE_ORIGINAL_OWNER"
+                  if (now - recent).total_seconds() >= timeout_minutes * 180
+                  else "RECEIVER_RESULT_OVERDUE_NO_DUPLICATE_REQUEST")
     elif attempts < max_attempts:
         action = "RETRY_ONLY_IF_NATIVE_INTAKE_AUTHORIZED"
     else:
