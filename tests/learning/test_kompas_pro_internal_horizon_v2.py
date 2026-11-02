@@ -87,11 +87,16 @@ class KompasProContractTests(unittest.TestCase):
         item = rows[3]
         self.assertEqual((item["direction"], item["color"], item["price_status"]), ("MIXED", "AMBER", "NOT_ISSUED"))
 
-    def test_structurally_source_issued_numeric_only_and_no_automatic_promotion(self):
+    def test_structurally_eligible_numeric_is_not_publicly_source_verified(self):
+        # A caller-supplied plausible SHA/verified flag is NOT original-source proof.
         row = build_visible_horizon_rows(self.ledger, {"H5_7D": issued()})[4]
-        self.assertEqual(row["price_expected_close"], 80000)
-        self.assertEqual(row["price_status"], "SOURCE_ISSUED")
-        self.assertEqual(row["color"], "AMBER")
+        self.assertIsNone(row["price_expected_close"])
+        self.assertIsNone(row["price_low"])
+        self.assertIsNone(row["price_high"])
+        self.assertIsNone(row["quote"])
+        self.assertEqual(row["price_status"], "ORIGINAL_BINDING_REQUIRED")
+        self.assertEqual(row["status"], "ORIGINAL_BINDING_REQUIRED")
+        self.assertEqual(row["color"], "GREY")
         self.assertIsNone(build_visible_horizon_rows(self.ledger, {"H8_14D": {"status": "RESEARCH_ONLY"}})[5]["price_low"])
 
     def test_unissued_or_research_numeric_leak_is_rejected(self):
@@ -124,7 +129,10 @@ class KompasProContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "PROVENANCE"):
             build_visible_horizon_rows(self.ledger, {"H5_7D": row})
         row["price_venue"] = "BINANCE_SPOT_BTCUSDT"
-        self.assertEqual(build_visible_horizon_rows(self.ledger, {"H5_7D": row})[4]["quote"], "USDT")
+        protected = build_visible_horizon_rows(self.ledger, {"H5_7D": row})[4]
+        self.assertIsNone(protected["quote"])
+        self.assertIsNone(protected["price_expected_close"])
+        self.assertEqual(protected["status"], "ORIGINAL_BINDING_REQUIRED")
 
     def test_fictitious_price_bounds_or_nonfinite_rejected(self):
         for change in [
