@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
@@ -42,7 +43,9 @@ def parse_event(path: Path) -> tuple[str, int]:
 
 def check_pr(head: str) -> dict:
     pr = json.loads(gh("api", f"repos/{REPO}/pulls/{PR}"))
-    if (pr.get("state") != "open" or pr.get("draft") is True
+    released = pr.get("state") == "closed" and bool(pr.get("merged_at"))
+    if (not (pr.get("state") == "open" or released)
+            or pr.get("draft") is True
             or pr.get("head", {}).get("sha") != head
             or pr.get("base", {}).get("ref") != "main"
             or pr.get("head", {}).get("repo", {}).get("full_name") != REPO
@@ -138,20 +141,35 @@ def validate(outdir: Path) -> dict:
         raise ValueError("CONTEXT_CHANGED")
     receipt = json.loads((outdir / "output" / "receipt.json").read_text())
     result = json.loads((outdir / "output" / "output.json").read_text())
+    cost = receipt.get("estimated_cost_usd")
+    if (isinstance(cost, bool) or not isinstance(cost, (int, float))
+            or not math.isfinite(cost) or cost < 0 or cost > RESERVE_USD):
+        raise ValueError("INVALID_FINITE_TERRA_REVIEW_COST")
     if (receipt.get("status") != "PASS"
             or receipt.get("model") != "gpt-6.1-terra"
             or receipt.get("reasoning_effort") != "max"
             or receipt.get("attempt_count") != 1
-            or float(receipt.get("estimated_cost_usd", 9)) > RESERVE_USD
+            or not isinstance(receipt.get("response_id"), str)
+            or not receipt["response_id"]
             or receipt.get("forecast_candidate_count") != 0
             or result.get("forecast_candidates") != []):
         raise ValueError("TERRA_MAX_RECEIPT_OR_BUDGET_INVALID")
     summary = str(result.get("summary") or "")
-    if not re.fullmatch(
+    verdict = re.fullmatch(
         r"(PASS_WITH_FINDINGS|PASS|FAIL) MODEL_USED=gpt-6\.1-terra "
         r"REASONING_MAX NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE", summary
-    ):
+    )
+    if verdict is None:
         raise ValueError("REVIEW_VERDICT_OR_MODEL_MARKERS_INVALID")
+    expected = {"PASS": "READY", "PASS_WITH_FINDINGS": "DEGRADED", "FAIL": "BLOCKED"}
+    findings = result.get("evidence_against", [])
+    if not isinstance(findings, list) or result.get("status") != expected[verdict.group(1)]:
+        raise ValueError("REVIEW_VERDICT_STATUS_CONTRADICTION")
+    if verdict.group(1) == "PASS" and any(
+        isinstance(x, str) and x.startswith(("P0|", "P1|", "P2|"))
+        for x in findings
+    ):
+        raise ValueError("REVIEW_FALSE_PASS_WITH_ACTIONABLE_FINDINGS")
     if receipt.get("context_hash") != sha256(data):
         raise ValueError("CONTEXT_BINDING_MISMATCH")
     check_pr(manifest["head"])
