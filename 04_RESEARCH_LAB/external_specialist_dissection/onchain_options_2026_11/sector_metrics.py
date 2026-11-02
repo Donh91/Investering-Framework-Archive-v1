@@ -8,6 +8,10 @@ from math import isfinite
 from typing import Any
 
 
+# An invented period-end timestamp is not an observed first-known clock.
+QUALIFIED_AVAILABILITY = {"VENDOR_FIRST_KNOWN", "ARCHIVED_RETRIEVAL_BEFORE_CUTOFF"}
+
+
 class EvidenceGap(ValueError):
     """Reject unsupported or incomparable evidence rather than invent zeros."""
 
@@ -40,6 +44,8 @@ def _admit(row: dict, cutoff: datetime) -> None:
         raise EvidenceGap("SOURCE_OR_VENUE_MISSING")
     if not isinstance(row.get("adapter_epoch"), str) or not row["adapter_epoch"].strip():
         raise EvidenceGap("ADAPTER_EPOCH_MISSING")
+    if row.get("available_at_kind") not in QUALIFIED_AVAILABILITY:
+        raise EvidenceGap("AVAILABILITY_PROVENANCE_UNQUALIFIED")
     available = _utc(row.get("source_available_at_utc"))
     if available > cutoff:
         raise EvidenceGap("FUTURE_AVAILABLE_DATA")
@@ -60,11 +66,11 @@ def weekly_comparison(rows: list[dict], venue: str, last_day: str,
     Exactly one valid row per UTC day/venue is required, with no after-cutoff data.
     Fees are not assumed options-only; no tokenholder metric is computed.
     """
-    cutoff = _utc(cutoff_utc)
-    end = date.fromisoformat(last_day)
-    window = [end - timedelta(days=k) for k in range(13, -1, -1)]
     by_day = {}
     try:
+        cutoff = _utc(cutoff_utc)
+        end = date.fromisoformat(last_day)
+        window = [end - timedelta(days=k) for k in range(13, -1, -1)]
         for row in rows:
             if row.get("venue") != venue:
                 continue

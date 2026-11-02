@@ -1,5 +1,6 @@
 """Synthetic negative controls for REA options metrics. No live-source or edge proof."""
 import unittest
+from pathlib import Path
 from datetime import date, timedelta
 
 from sector_metrics import premium_hhi, weekly_comparison
@@ -17,6 +18,7 @@ def cohort():
             "day_utc": d.isoformat(),
             "source_id": "SYNTHETIC",
             "adapter_epoch": "SYNTHETIC_V1",
+            "available_at_kind": "VENDOR_FIRST_KNOWN",
             "source_available_at_utc": f"{(d + timedelta(days=1)).isoformat()}T00:00:00Z",
             "period_final": True,
             "options_only_verified": True,
@@ -112,6 +114,30 @@ class MetricTests(unittest.TestCase):
         rows = [cohort()[-1]]
         x = premium_hhi(rows, END.isoformat(), CUTOFF, {"Demo", "Other"})
         self.assertEqual(x["reason"], "INCOMPLETE_VENUE_CENSUS")
+
+    def test_assumed_or_missing_availability_kind_rejected(self):
+        # A syntactically plausible backfill timestamp must never count as first-known.
+        self.assertEqual(weekly_comparison(cohort(), "Demo", END.isoformat(), CUTOFF)["status"],
+                         "DESCRIPTIVE_ONLY")
+        for kind in ("ASSUMED_PERIOD_END", None):
+            rows = cohort()
+            rows[5]["available_at_kind"] = kind
+            x = weekly_comparison(rows, "Demo", END.isoformat(), CUTOFF)
+            self.assertEqual(x["status"], "UNKNOWN")
+            self.assertEqual(x["reason"], "AVAILABILITY_PROVENANCE_UNQUALIFIED")
+
+    def test_malformed_window_args_fail_as_unknown(self):
+        for last_day, cutoff in (("bad", CUTOFF), (END.isoformat(), "bad")):
+            x = weekly_comparison(cohort(), "Demo", last_day, cutoff)
+            self.assertEqual(x["status"], "UNKNOWN")
+
+    def test_preregistration_declares_falsifiable_guards(self):
+        prereg = (Path(__file__).resolve().parent.parent /
+                  "2026-11-01__onchain-options-adoption-value-capture-rea__shadow.md").read_text()
+        for marker in ("Frozen test parameters", "Holm", "alpha 0.05",
+                       "12 independent", "persistence", "H-REA-01",
+                       "H-REA-02", "H-S5-OPTIONS-01", "NOT_MEASURABLE"):
+            self.assertIn(marker, prereg)
 
 
 if __name__ == "__main__":
