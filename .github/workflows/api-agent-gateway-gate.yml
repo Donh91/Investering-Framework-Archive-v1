@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: dry-run or controlled live smoke call
+        description: Normal main smoke mode; owner-only endgame branch triggers its one-time job regardless of this UI value
         required: true
         default: dry-run
         type: choice
@@ -29,6 +29,13 @@ permissions:
 
 jobs:
   gateway-gate:
+    # For this finite OWNER-SPECIFIC branch, any manual dispatch is the Terra Max one-shot.
+    # GitHub mobile has twice submitted UI 'live-smoke' as normal dry-run behavior.
+    # Branch+owner+attempt+durable claim control payment, not a fragile dropdown.
+    if: >-
+      github.event_name != 'workflow_dispatch' ||
+      github.ref != 'refs/heads/chore/model-class-currency-20261027' ||
+      github.actor != 'Donh91'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -46,7 +53,11 @@ jobs:
             tests.api_agent.test_director_learning_context \
             tests.api_agent.test_director_situation_room_shadow \
             tests.api_agent.test_daily_director_conflict_budget \
-            tests.api_agent.test_daily_director_workflow_contract -v
+            tests.api_agent.test_daily_director_workflow_contract \
+            tests.api_agent.test_terra_max_endgame_context \
+            tests.api_agent.test_terra_high_p0_once \
+            tests.api_agent.test_legacy_paid_job_retirement \
+            tests.api_agent.test_endgame_semantic_report -v
       - name: Verify GPT-6.1 Sol owner release and no-repeat paid admission
         run: |
           python -m py_compile scripts/api_agent/research_lab_sol_dispatch.py
@@ -102,7 +113,7 @@ jobs:
             --output-dir api-agent-output \
             --intended-write-prefix research/api_agent/outputs/daily/ \
             --dry-run
-      - name: Dry-run GPT-6 Sol senior repair audit lane
+      - name: Dry-run GPT-6.1 Sol senior repair audit lane
         if: github.event_name == 'pull_request' || inputs.mode == 'dry-run'
         run: |
           python scripts/api_agent/api_gateway.py \
@@ -117,7 +128,7 @@ jobs:
           import json
           from pathlib import Path
           r=json.loads(Path('senior-repair-audit-output/receipt.json').read_text())
-          assert r['model']=='gpt-6-sol'
+          assert r['model']=='gpt-6.1-sol'
           assert r['reasoning_effort']=='high'
           assert r['allowed_write_prefix']=='research/api_agent/outputs/senior_repair_audit/'
           assert r['intended_write_prefix']==r['allowed_write_prefix']
@@ -164,3 +175,1078 @@ jobs:
           path: api-agent-output/
           retention-days: 7
           if-no-files-found: error
+
+
+  terra-max-endgame-once:
+    # One finite owner-approved endgame dispatch. GitHub UI mode is NOT a trusted
+    # control: an exact owner+branch manual event is the only dispatch path.
+    # Paid claim step independently requires first-run-attempt and a unique GitHub
+    # issue #1156 bot-created marker BEFORE the single model request.
+    if: >-
+      false &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/chore/model-class-currency-20261027' &&
+      github.actor == 'Donh91'
+    concurrency:
+      group: terra-max-owner-endgame-20261027-once
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: No paid rerun, even if Actions job conditional is evaluated differently
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1" || { echo 'NO_PAID_RERUN'; exit 1; }
+      - name: Freeze exact current public main and compile bounded machinery
+        run: |
+          git fetch origin main
+          git rev-parse refs/remotes/origin/main
+          python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/terra_max_endgame_context.py scripts/api_agent/terra_max_endgame_claim.py
+          python -m unittest tests.api_agent.test_terra_max_endgame_context -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          t=r['tasks']['TERRA_MAX_ENDGAME_ONCE']
+          assert t['model']=='gpt-6.1-terra' and t['reasoning_effort']=='max'
+          assert t['max_attempts']==1 and t['manual_only'] is True
+          assert t['automatic_code_write'] is False and t['automatic_merge'] is False
+          assert t['allowed_write_prefix']=='research/api_agent/outputs/terra_max_endgame/'
+          assert r['monthly_hard_stop_usd']==40 and r['single_run_hard_stop_usd']==3
+          PY
+
+      - name: Enforce existing monthly USD 40 stop against latest main receipts
+        run: |
+          git worktree add --detach /tmp/terra-source-main refs/remotes/origin/main
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root /tmp/terra-source-main/research/api_agent/outputs \
+            --hard-stop-usd 40 --reserve-usd 4.0
+
+      - name: Prepare fresh-main and public Pages evidence packet
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/api_agent/terra_max_endgame_context.py \
+            --repo-root . --output-dir runtime/terra-max-endgame
+
+      - name: Fail closed if source packet or public readback incomplete
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('runtime/terra-max-endgame/manifest.json').read_text())
+          assert r['contract']=='TERRA_MAX_ENDGAME_GITHUB_ONCE_v1'
+          assert r['source_missing_count']==0, 'REQUIRED_PUBLIC_SOURCE_MISSING'
+          assert r['public_readback_success_count']==2, 'PAGES_LINEAGE_READBACK_UNAVAILABLE'
+          assert r['source_file_count']==15
+          assert r['api_calls_from_packet_builder']==0
+          assert r['automatic_code_write'] is False
+          assert r['automatic_merge'] is False
+          PY
+
+      - name: Dry-run existing strict API gateway at zero cost
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task TERRA_MAX_ENDGAME_ONCE \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/terra-max-endgame/prompt.txt \
+            --context-file runtime/terra-max-endgame/context.json \
+            --output-dir runtime/terra-max-endgame/dry \
+            --intended-write-prefix research/api_agent/outputs/terra_max_endgame/ \
+            --dry-run
+
+      - name: Check model availability with no inference
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os, urllib.request
+          key=os.environ.get('OPENAI_API_KEY')
+          if not key: raise SystemExit('OPENAI_API_KEY_NOT_CONFIGURED')
+          req=urllib.request.Request(
+            'https://api.openai.com/v1/models/gpt-6.1-terra',
+            headers={'Authorization':'Bearer '+key})
+          with urllib.request.urlopen(req, timeout=18) as resp:
+            if resp.status!=200: raise SystemExit('MODEL_ACCESS_BLOCKED')
+          print('TERRA_MODEL_READ_ACCESS_PASS_NO_INFERENCE')
+          PY
+
+      - name: Claim single durable paid liability before calling OpenAI
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python scripts/api_agent/terra_max_endgame_claim.py \
+            --run-id "$GITHUB_RUN_ID" \
+            --source-sha "$(git rev-parse refs/remotes/origin/main)" \
+            > runtime/terra-max-endgame/claim.json
+
+      - name: 'ONE API call: GPT-6.1 Terra Max endgame'
+        id: paid_call
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task TERRA_MAX_ENDGAME_ONCE \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/terra-max-endgame/prompt.txt \
+            --context-file runtime/terra-max-endgame/context.json \
+            --output-dir runtime/terra-max-endgame/live \
+            --intended-write-prefix research/api_agent/outputs/terra_max_endgame/
+
+      - name: Validate receipt, without claiming an implemented repair
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('runtime/terra-max-endgame/live')
+          r=json.loads((p/'receipt.json').read_text())
+          o=json.loads((p/'output.json').read_text())
+          assert r['status']=='PASS'
+          assert r['model']=='gpt-6.1-terra' and r['reasoning_effort']=='max'
+          assert r['attempt_count']==1 and r['estimated_cost_usd']<=3.0
+          assert o['forecast_candidates']==[]
+          assert not any(r['authority'].values())
+          m=json.loads(Path('runtime/terra-max-endgame/manifest.json').read_text())
+          assert len(m['source_commit_sha'])==40
+          print('STRUCTURED_API_RECEIPT_PASS_NOT_PRODUCTION_CLOSURE')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terra-max-endgame-once-${{ github.run_id }}
+          path: runtime/terra-max-endgame/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Report one-time run receipt to existing owner issue
+        if: always() && steps.claim.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f runtime/terra-max-endgame/live/receipt.json ]; then
+            state=$(python -c "import json;print(json.load(open('runtime/terra-max-endgame/live/receipt.json'))['status'])")
+          else
+            state="NO_DURABLE_PAID_RECEIPT_CHARGE_UNKNOWN"
+          fi
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
+            --body "Terra Max one-time endgame API: gateway_receipt_status=$state; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT. Never auto-retry. Frozen source, detailed scientific/repair proposal and exact model/cost receipt available under this Actions run: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . No code was automatically merged or marked production verified."
+
+  terra-high-p0-once:
+    # Owner-authorized single-use P0 only. This is a PR-scoped one-time API step,
+    # not a scheduler or production source-writer. Existing PR #1823 only.
+    if: >-
+      false &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1823 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'chore/model-class-currency-20261027' &&
+      github.actor == 'Donh91'
+    concurrency:
+      group: owner-terra-high-p0-one-time-20261027
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate exact owner and bounded P0 task without paid inference
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1" || { echo 'NO_PAID_RERUN'; exit 1; }
+          python -m unittest tests.api_agent.test_terra_high_p0_once tests.api_agent.test_api_gateway -v
+          python -m py_compile scripts/api_agent/terra_high_p0_once.py scripts/api_agent/api_gateway.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          reg=json.loads(Path("research/api_agent/API_TASK_REGISTRY_v1.json").read_text())
+          t=reg["tasks"]["TERRA_HIGH_P0_OWNER_ONCE"]
+          assert t["model"] == "gpt-6.1-terra"
+          assert t["reasoning_effort"] == "high"
+          assert t["max_attempts"] == 1
+          assert t["max_output_tokens"] == 12000
+          assert t["allowed_write_prefix"] == "research/api_agent/outputs/terra_high_p0_once/"
+          assert t["automatic_code_write"] is False and t["automatic_merge"] is False
+          assert reg["monthly_hard_stop_usd"] == 40 and reg["single_run_hard_stop_usd"] == 3
+          PY
+      - name: Check existing P0 owner claim and skip if consumed
+        id: admit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          allowed=$(python - <<'PY'
+          from scripts.api_agent.terra_high_p0_once import existing_claim
+          print("false" if existing_claim() else "true")
+          PY
+          )
+          test "$allowed" = "true" -o "$allowed" = "false"
+          echo "run_p0=$allowed" >> "$GITHUB_OUTPUT"
+          echo "TERRA_HIGH_P0_NOT_YET_CLAIMED=$allowed"
+      - name: Enforce monthly and P0 lane budgets from current production main
+        if: steps.admit.outputs.run_p0 == 'true'
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add --detach /tmp/terra-high-p0-main refs/remotes/origin/main
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root /tmp/terra-high-p0-main/research/api_agent/outputs \
+            --hard-stop-usd 40 --reserve-usd 4.0
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root /tmp/terra-high-p0-main/research/api_agent/outputs \
+            --task TERRA_HIGH_P0_OWNER_ONCE --cap-usd 0.75 --reserve-usd 0.20
+      - name: Build one P0 frozen source and current public Pages packet
+        if: steps.admit.outputs.run_p0 == 'true'
+        run: |
+          mkdir -p runtime/terra-high-p0
+          python scripts/api_agent/terra_high_p0_once.py build \
+            --output-dir runtime/terra-high-p0
+          python scripts/api_agent/api_gateway.py \
+            --task TERRA_HIGH_P0_OWNER_ONCE \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/terra-high-p0/prompt.txt \
+            --context-file runtime/terra-high-p0/context.json \
+            --output-dir runtime/terra-high-p0/dry \
+            --intended-write-prefix research/api_agent/outputs/terra_high_p0_once/ \
+            --dry-run
+      - name: Verify provider Terra 6.1 model access without inference
+        if: steps.admit.outputs.run_p0 == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request
+          key=os.environ.get("OPENAI_API_KEY")
+          if not key: raise SystemExit("OPENAI_API_KEY_MISSING")
+          q=urllib.request.Request("https://api.openai.com/v1/models/gpt-6.1-terra", headers={"Authorization":"Bearer "+key})
+          with urllib.request.urlopen(q,timeout=20) as r:
+            if r.status!=200: raise SystemExit("TERRA_HIGH_MODEL_UNAVAILABLE")
+          print("TERRA_HIGH_MODEL_ACCESS_VERIFIED_NO_CHARGE")
+          PY
+      - name: Durably claim ONE P0 High paid attempt in existing supervisor issue
+        if: steps.admit.outputs.run_p0 == 'true'
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python scripts/api_agent/terra_high_p0_once.py claim \
+            --run-id "$GITHUB_RUN_ID" \
+            --main-sha "$(git rev-parse refs/remotes/origin/main)" \
+            > runtime/terra-high-p0/claim.json
+      - name: ONE paid GPT-6.1 Terra High P0 repair call
+        if: steps.admit.outputs.run_p0 == 'true' && steps.claim.outcome == 'success'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task TERRA_HIGH_P0_OWNER_ONCE \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/terra-high-p0/prompt.txt \
+            --context-file runtime/terra-high-p0/context.json \
+            --output-dir runtime/terra-high-p0/live \
+            --intended-write-prefix research/api_agent/outputs/terra_high_p0_once/
+      - name: Require accepted one-shot P0 receipt and no output authority
+        if: steps.admit.outputs.run_p0 == 'true' && steps.claim.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("runtime/terra-high-p0/live")
+          receipt=json.loads((root/"receipt.json").read_text())
+          output=json.loads((root/"output.json").read_text())
+          assert receipt["status"]=="PASS", "P0_MODEL_OUTPUT_NOT_ACCEPTED_DO_NOT_RETRY"
+          assert receipt["model"]=="gpt-6.1-terra" and receipt["reasoning_effort"]=="high"
+          assert receipt["attempt_count"]==1 and receipt["estimated_cost_usd"]<=3.0
+          assert output["forecast_candidates"]==[]
+          assert all(v is False for v in receipt["authority"].values())
+          assert len(output["evidence_against"])<=2
+          print("TERRA_HIGH_P0_RECEIPT_PASS_ADVISORY_ONLY")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.admit.outputs.run_p0 == 'true'
+        with:
+          name: terra-high-p0-once-${{ github.run_id }}
+          path: runtime/terra-high-p0/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Report single P0 API receipt on existing supervisor issue
+        if: always() && steps.claim.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ -f runtime/terra-high-p0/live/receipt.json ]; then
+            state=$(python -c "import json;print(json.load(open('runtime/terra-high-p0/live/receipt.json'))['status'])")
+            cost=$(python -c "import json;print(json.load(open('runtime/terra-high-p0/live/receipt.json'))['estimated_cost_usd'])")
+          else
+            state="CHARGE_UNKNOWN"
+            cost="UNKNOWN"
+          fi
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
+            --body "Terra 6.1 HIGH P0 one-time API: gateway_receipt_status=$state; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT (estimated USD $cost). This is advisory, NOT a deployed data-chain repair. One paid attempt only, never auto-retry. Frozen source, output and receipt artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Continue P0 under existing GitHub PR owners; no AppDeploy or parallel workflow."
+
+  terra-max-p0-schedule-once:
+    # SECOND distinct explicit owner authorization, after first Max + High claims
+    # already consumed. Existing PR branch only, no main cron or extra workflow.
+    if: >-
+      false &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1823 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'chore/model-class-currency-20261027' &&
+      github.actor == 'Donh91'
+    concurrency:
+      group: terra-max-p0-schedule-one-time-20261027
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate owner, distinct claim, exact contract and cheap negative tests
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1" || { echo 'NO_PAID_RERUN'; exit 1; }
+          python -m py_compile scripts/api_agent/terra_max_p0_schedule_once.py scripts/api_agent/api_gateway.py
+          python -m unittest -v tests.api_agent.test_terra_max_p0_schedule_once tests.api_agent.test_api_gateway
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          j=json.loads(Path("research/api_agent/API_TASK_REGISTRY_v1.json").read_text())
+          t=j["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]
+          assert t["model"] == "gpt-6.1-terra" and t["reasoning_effort"] == "max"
+          assert t["max_attempts"] == 1 and t["max_output_tokens"] == 45000
+          assert t["manual_only"] is False and t["automatic_code_write"] is False
+          assert t["automatic_merge"] is False
+          assert t["allowed_write_prefix"] == "research/api_agent/outputs/terra_max_p0_schedule_once/"
+          assert j["monthly_hard_stop_usd"] == 40 and j["single_run_hard_stop_usd"] == 3
+          assert j["tasks"]["TERRA_MAX_ENDGAME_ONCE"]["max_attempts"] == 1
+          print("SECOND_TERRA_MAX_OWNER_SCOPE_AND_BUDGET_PASS")
+          PY
+      - name: Skip if new P0 Max liability is already claimed; require old Max claim
+        id: admit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          from scripts.api_agent.terra_max_p0_schedule_once import MARKER, scan_existing_marker
+          prior=scan_existing_marker("[TERRA_MAX_ENDGAME_ONCE_CLAIM_v1]")
+          if not prior:
+              raise SystemExit("FIRST_MAX_PAID_CLAIM_REQUIRED_NO_SECOND_MISSION")
+          fresh=scan_existing_marker(MARKER) is None
+          print("run_max=" + ("true" if fresh else "false"))
+          print("SECOND_MAX_CLAIM_AVAILABLE=" + str(fresh))
+          PY
+      - name: Enforce original global and separate P0 Max one-shot budget
+        if: steps.admit.outputs.run_max == 'true'
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add --detach /tmp/terra-max-p0-main refs/remotes/origin/main
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root /tmp/terra-max-p0-main/research/api_agent/outputs --hard-stop-usd 40 --reserve-usd 4.0
+          python scripts/api_agent/check_api_lane_budget.py --receipt-root /tmp/terra-max-p0-main/research/api_agent/outputs --task TERRA_MAX_P0_SCHEDULE_ONCE --cap-usd 1.0 --reserve-usd 0.50
+      - name: Freeze latest public main, two public CDN files, real incident evidence
+        if: steps.admit.outputs.run_max == 'true'
+        run: |
+          mkdir -p runtime/terra-max-p0-schedule
+          python scripts/api_agent/terra_max_p0_schedule_once.py build --output-dir runtime/terra-max-p0-schedule
+          python scripts/api_agent/api_gateway.py --task TERRA_MAX_P0_SCHEDULE_ONCE --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/terra-max-p0-schedule/prompt.txt --context-file runtime/terra-max-p0-schedule/context.json --output-dir runtime/terra-max-p0-schedule/dry --intended-write-prefix research/api_agent/outputs/terra_max_p0_schedule_once/ --dry-run
+      - name: Verify exact Terra model listing without inference
+        if: steps.admit.outputs.run_max == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request
+          key=os.environ.get("OPENAI_API_KEY")
+          if not key: raise SystemExit("OPENAI_API_KEY_NOT_CONFIGURED")
+          req=urllib.request.Request("https://api.openai.com/v1/models/gpt-6.1-terra",headers={"Authorization":"Bearer "+key})
+          with urllib.request.urlopen(req,timeout=20) as res:
+              if res.status!=200: raise SystemExit("TERRA_MODEL_NOT_AVAILABLE")
+          print("TERRA_MODEL_AVAILABLE_NO_INFERENCE")
+          PY
+      - name: Claim distinct second owner-authorized paid liability before OpenAI call
+        if: steps.admit.outputs.run_max == 'true'
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python scripts/api_agent/terra_max_p0_schedule_once.py claim --run-id "$GITHUB_RUN_ID" --main-sha "$(git rev-parse refs/remotes/origin/main)" > runtime/terra-max-p0-schedule/claim.json
+      - name: ONE paid Terra 6.1 Max schedule-liveness closure API response
+        if: steps.admit.outputs.run_max == 'true' && steps.claim.outcome == 'success'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task TERRA_MAX_P0_SCHEDULE_ONCE --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/terra-max-p0-schedule/prompt.txt --context-file runtime/terra-max-p0-schedule/context.json --output-dir runtime/terra-max-p0-schedule/live --intended-write-prefix research/api_agent/outputs/terra_max_p0_schedule_once/
+      - name: Validate one-shot MAX structured receipt, never call advisory an actual repair
+        if: steps.admit.outputs.run_max == 'true' && steps.claim.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("runtime/terra-max-p0-schedule/live")
+          r=json.loads((p/"receipt.json").read_text())
+          o=json.loads((p/"output.json").read_text())
+          assert r["status"]=="PASS", "SECOND_MAX_OUTPUT_UNACCEPTED_NO_RETRY"
+          assert r["model"]=="gpt-6.1-terra" and r["reasoning_effort"]=="max"
+          assert r["attempt_count"]==1 and r["estimated_cost_usd"]<=3.0
+          assert o["forecast_candidates"]==[]
+          assert all(v is False for v in r["authority"].values())
+          assert len(o["evidence_against"])<=2 and len(o["hypotheses"])<=2
+          print("SECOND_TERRA_MAX_P0_STRICT_OUTPUT_PASS_ADVISORY_NOT_MERGED")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.admit.outputs.run_max == 'true'
+        with:
+          name: terra-max-p0-schedule-once-${{ github.run_id }}
+          path: runtime/terra-max-p0-schedule/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Log second Max result to existing S1 GitHub issue, no paid retry
+        if: always() && steps.claim.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f runtime/terra-max-p0-schedule/live/receipt.json ]; then
+            status=$(python -c "import json;print(json.load(open('runtime/terra-max-p0-schedule/live/receipt.json'))['status'])")
+            cost=$(python -c "import json;print(json.load(open('runtime/terra-max-p0-schedule/live/receipt.json'))['estimated_cost_usd'])")
+          else
+            status="PAID_RECEIPT_MISSING_COST_UNKNOWN"
+            cost="UNKNOWN"
+          fi
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Second distinct owner-authorized Terra MAX P0 schedule liveness: gateway_receipt_status=$status; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT (estimated USD $cost). Exactly one API attempt, consumed claim, NEVER auto-retry. Source-bound proposed fix, frozen context and receipt under https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Not a code merge or proof of six natural schedule hours."
+
+  terra-max-endgame-archive-batch1-20261027:
+    # New, separate owner-mandated, branch-only API diagnostic for Archive PRs.
+    # This is NOT a rerun of any spent paid one-shot and NEVER writes main.
+    if: >-
+      false &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1823 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'chore/model-class-currency-20261027'
+    concurrency:
+      group: terra-max-endgame-archive-batch1-20261027-single-liability
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reject retries and confirm immutable separate model scope
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          reg=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          name='TERRA_MAX_ENDGAME_ARCHIVE_BATCH1_20261027'
+          cfg=reg['tasks'][name]
+          assert cfg['model']=='gpt-6.1-terra'
+          assert cfg['reasoning_effort']=='max'
+          assert cfg['max_attempts']==1
+          assert cfg['max_output_tokens']==12000
+          assert cfg['automatic_code_write'] is False and cfg['automatic_merge'] is False
+          assert cfg['allowed_write_prefix']=='research/api_agent/outputs/terra_max_endgame_archive_batch1/'
+          assert reg['single_run_hard_stop_usd']==3
+          print('NEW_DISTINCT_ENDGAME_OWNER_SCOPE_PASS')
+          PY
+      - name: Skip permanently if this unique mission was already claimed
+        id: admit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          marker='[TERRA_MAX_ENDGAME_ARCHIVE_BATCH1_CLAIM_v1]'
+          existing=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/1156/comments?per_page=100" --jq '.[] | select(.body | contains("[TERRA_MAX_ENDGAME_ARCHIVE_BATCH1_CLAIM_v1]")) | .id' | head -n1)
+          if [ -n "$existing" ]; then
+            echo "run_api=false" >> "$GITHUB_OUTPUT"
+            echo "ALREADY_CLAIMED_NO_PAID_RERUN"
+          else
+            echo "run_api=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Fail closed on October org spend and old ambiguous liability
+        if: steps.admit.outputs.run_api == 'true'
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add --detach /tmp/terra-endgame-main refs/remotes/origin/main
+          # Actual owner-verified org cap USD30 is LOWER than internal USD40.
+          # Reserve USD9 for previous unknown charge, this call and variance.
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root /tmp/terra-endgame-main/research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 9
+      - name: Build fresh public Archive source and PR-only evidence packet
+        if: steps.admit.outputs.run_api == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/terra-endgame-archive-batch1
+          python - <<'PY'
+          import hashlib,json,os,subprocess
+          from pathlib import Path
+          def cmd(*xs):
+              return subprocess.check_output(xs,stderr=subprocess.PIPE).decode('utf-8','replace')
+          main=cmd('git','rev-parse','refs/remotes/origin/main').strip()
+          repo=os.environ['GITHUB_REPOSITORY']
+          paths=[
+              '.github/workflows/hourly-sequence-capture.yml',
+              '.github/workflows/native-market-recovery.yml',
+              '03_DAILY_CAPTURE_LOGS/hourly/LATEST.json',
+              '04_MARKET_LEARNING/handlekompas/LATEST.json',
+              '05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json',
+              'scripts/api_agent/api_gateway.py',
+              '.github/workflows/shared-row-tournament-research-gate.yml'
+          ]
+          evidence=[]
+          for name in paths:
+              try:
+                  raw=subprocess.check_output(['git','show',f'refs/remotes/origin/main:{name}'])
+                  evidence.append({'path':name,'sha256':hashlib.sha256(raw).hexdigest(),'original_byte_length':len(raw),'bounded_excerpt':raw.decode('utf-8','replace')[:9000]})
+              except subprocess.CalledProcessError:
+                  evidence.append({'path':name,'status':'UNAVAILABLE'})
+          prs=[]
+          for n in (1823,1814):
+              try:
+                  p=json.loads(cmd('gh','api',f'repos/{repo}/pulls/{n}'))
+                  changes=json.loads(cmd('gh','api',f'repos/{repo}/pulls/{n}/files?per_page=100'))
+                  prs.append({'number':n,'state':p['state'],'head_sha':p['head']['sha'],'draft':p['draft'],'files':[{'path':c['filename'],'status':c['status'],'patch_excerpt':str(c.get('patch') or '')[:2600]} for c in changes[:20]]})
+              except (subprocess.CalledProcessError,ValueError,KeyError):
+                  prs.append({'number':n,'status':'PR_SOURCE_UNAVAILABLE'})
+          context={'contract':'OWNER_TERRA_ENDGAME_ARCHIVE_BATCH1_v1','public_only':True,'no_private_repo_access':True,'public_main_sha':main,'pr_scope':prs,'source':evidence,'no_auto_merge':True,'no_trade':True}
+          root=Path('runtime/terra-endgame-archive-batch1')
+          (root/'context.json').write_text(json.dumps(context,ensure_ascii=False,sort_keys=True))
+          (root/'prompt.txt').write_text('Conduct one finite engineering audit for exact Archive PRs 1823 and 1814, official SITE 1578, P0 source clock and scientific Task2 readiness. Output a tightly scoped patch-ready repair plan with exact files, negative tests and truthful blockers; never assert unproven edge or merges. Include one smallest next experimental falsification. Output strict gateway schema, forecast_candidates=[].')
+          (root/'manifest.json').write_text(json.dumps({'public_main_sha':main,'head_sha':os.environ['GITHUB_SHA'],'source_count':len(evidence),'pr_count':len(prs),'source_byte_bounded':True},sort_keys=True))
+          print('FROZEN_PUBLIC_PR_PACKET_READY',main)
+          PY
+          python scripts/api_agent/api_gateway.py --task TERRA_MAX_ENDGAME_ARCHIVE_BATCH1_20261027 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/terra-endgame-archive-batch1/prompt.txt --context-file runtime/terra-endgame-archive-batch1/context.json --output-dir runtime/terra-endgame-archive-batch1/dry --intended-write-prefix research/api_agent/outputs/terra_max_endgame_archive_batch1/ --dry-run
+      - name: Verify provider Terra model availability, no inference
+        if: steps.admit.outputs.run_api == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request
+          key=os.environ.get('OPENAI_API_KEY')
+          if not key: raise SystemExit('MISSING_OPENAI_API_KEY')
+          q=urllib.request.Request('https://api.openai.com/v1/models/gpt-6.1-terra',headers={'Authorization':'Bearer '+key})
+          with urllib.request.urlopen(q,timeout=20) as r:
+              if r.status!=200: raise SystemExit('TERRA_ACCESS_BLOCKED')
+          print('TERRA_MAX_MODEL_ACCESS_VERIFIED_NO_INFERENCE')
+          PY
+      - name: Irrevocably claim NEW one-shot liability before the paid call
+        if: steps.admit.outputs.run_api == 'true'
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          marker='[TERRA_MAX_ENDGAME_ARCHIVE_BATCH1_CLAIM_v1]'
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/1156/comments" -f body="$marker Owner-authorized distinct Archive PR batch #1823/#1814, run $GITHUB_RUN_ID attempt $GITHUB_RUN_ATTEMPT. Maximum one paid Terra MAX API request, no retry even if output truncated or bill unknown. Org cap USD30 and conservative reserve preflight. No production merge." > runtime/terra-endgame-archive-batch1/claim.json
+          test -s runtime/terra-endgame-archive-batch1/claim.json
+      - name: ONE REAL Terra 6.1 MAX OpenAI Responses API call
+        if: steps.admit.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task TERRA_MAX_ENDGAME_ARCHIVE_BATCH1_20261027 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/terra-endgame-archive-batch1/prompt.txt --context-file runtime/terra-endgame-archive-batch1/context.json --output-dir runtime/terra-endgame-archive-batch1/live --intended-write-prefix research/api_agent/outputs/terra_max_endgame_archive_batch1/
+      - name: Strict receipt and no-code-authority validation
+        if: steps.admit.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('runtime/terra-endgame-archive-batch1/live')
+          r=json.loads((root/'receipt.json').read_text())
+          o=json.loads((root/'output.json').read_text())
+          assert r['status']=='PASS'
+          assert r['model']=='gpt-6.1-terra' and r['reasoning_effort']=='max'
+          assert r['attempt_count']==1 and r['estimated_cost_usd']<=3
+          assert o['forecast_candidates']==[]
+          assert all(v is False for v in r['authority'].values())
+          print('ONE_TERRA_MAX_REAL_API_RECEIPT_PASS_PROPOSAL_NOT_CODE_MERGE')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terra-max-endgame-archive-batch1-${{ github.run_id }}
+          path: runtime/terra-endgame-archive-batch1/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Log exact result to EXISTING endgame issue
+        if: always() && steps.claim.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          state="PAID_RECEIPT_MISSING_COST_UNKNOWN_NO_RETRY"
+          if [ -f runtime/terra-endgame-archive-batch1/live/receipt.json ]; then
+            state=$(python -c "import json;print(json.load(open('runtime/terra-endgame-archive-batch1/live/receipt.json'))['status'])")
+          fi
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "NEW Terra MAX Archive ENDGAME batch #1823/#1814: gateway_receipt_status=$state; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT. Real Actions run: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . Distinct owner authorization, one attempt only, no auto-retry, no code merged or market skill claimed. See artifact for output and model receipt."
+
+  terra-high-shared-row-ci-fix-20261027:
+    # Distinct P0 real API review on the already open Archive PR. No new PR.
+    if: >-
+      false &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1823 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'chore/model-class-currency-20261027'
+    concurrency:
+      group: terra-high-shared-row-ci-fix-20261027-single-liability
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Scope, retry and governed-model guard
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          t=r['tasks']['TERRA_HIGH_SHARED_ROW_CI_FIX_20261027']
+          assert t['model']=='gpt-6.1-terra' and t['reasoning_effort']=='high'
+          assert t['max_output_tokens']==20000 and t['max_attempts']==1
+          assert t['automatic_merge'] is False and t['automatic_code_write'] is False
+          assert r['single_run_hard_stop_usd']==3
+          PY
+      - name: Single liability claim precheck
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          found=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/1156/comments?per_page=100" --jq '.[] | select(.body | contains("[TERRA_HIGH_SHARED_ROW_CI_FIX_CLAIM_v1]")) | .id' | head -n1)
+          if [ -n "$found" ]; then echo "run_api=false" >> "$GITHUB_OUTPUT"; else echo "run_api=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Enforce real 30 USD organization cap with conservative reserved headroom
+        if: steps.gate.outputs.run_api == 'true'
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add --detach /tmp/shared-row-endgame-main refs/remotes/origin/main
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root /tmp/shared-row-endgame-main/research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 11
+      - name: Build bounded source-accurate PR 1814 failure reproduction
+        if: steps.gate.outputs.run_api == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/shared-row-api-fix
+          python - <<'PY'
+          import json,os,subprocess,hashlib
+          from pathlib import Path
+          repo=os.environ['GITHUB_REPOSITORY']
+          pr=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/pulls/1814']))
+          files=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/pulls/1814/files?per_page=100']))
+          def read(ref,path,limit):
+              try:
+                  raw=subprocess.check_output(['git','show',f'{ref}:{path}'])
+                  return {'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw),'excerpt':raw.decode(errors='replace')[:limit]}
+              except subprocess.CalledProcessError:return {'status':'UNAVAILABLE'}
+          context={
+              'exact_original_PR_1814_head':pr['head']['sha'],'original_base':pr['base']['sha'],'draft':pr['draft'],
+              'prior_failed_gate_run_id':40309130816,
+              'original_failure_reason':'2026-10-26 gate: actions/checkout@v4 depth=1; all five parent rows are source_binding excluded, monitor exit 2; synthetic positive/negative tests and other preliminary source validators pass.',
+              'changed_files':[{'path':f['filename'],'status':f['status'],'patch':(f.get('patch') or '')[:4000]} for f in files[:5]],
+              'original_workflow':read('refs/remotes/origin/main','.github/workflows/shared-row-tournament-research-gate.yml',6300),
+              'original_research_gate':read('refs/remotes/origin/main','scripts/research/shared_row_tournament_monitor.py',4300),
+              'source_unavailable_is_a_hard_block':True,'model_cannot_merge':True
+          }
+          root=Path('runtime/shared-row-api-fix')
+          (root/'context.json').write_text(json.dumps(context,sort_keys=True))
+          (root/'prompt.txt').write_text('Return a concise exact-scoped code-review fix of existing PR #1814 failing Shared Row source binding CI. Focus exclusively on source Git commit ancestry vs shallow checkout, preserve all fail-closed negative tests, describe exact patch and ways to falsify it. Output in strict gateway schema, forecast_candidates=[]. NO claim of merge or live edge.')
+          print('EXACT_SHARED_ROW_GATE_EVIDENCE',pr['head']['sha'])
+          PY
+          python scripts/api_agent/api_gateway.py --task TERRA_HIGH_SHARED_ROW_CI_FIX_20261027 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/shared-row-api-fix/prompt.txt --context-file runtime/shared-row-api-fix/context.json --output-dir runtime/shared-row-api-fix/dry --intended-write-prefix research/api_agent/outputs/terra_high_shared_row_ci_fix/ --dry-run
+      - name: Check model exists and credentials before claim
+        if: steps.gate.outputs.run_api == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request
+          k=os.environ.get('OPENAI_API_KEY')
+          if not k:raise SystemExit('KEY_MISSING')
+          with urllib.request.urlopen(urllib.request.Request('https://api.openai.com/v1/models/gpt-6.1-terra',headers={'Authorization':'Bearer '+k}),timeout=20) as r:assert r.status==200
+          PY
+      - name: Record irrevocable distinct paid attempt
+        if: steps.gate.outputs.run_api == 'true'
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/1156/comments" -f body="[TERRA_HIGH_SHARED_ROW_CI_FIX_CLAIM_v1] Run $GITHUB_RUN_ID, exactly one new source-specific Terra HIGH P0 code-fix call, prior MAX claims remain consumed. NO automatic retry, no merge before original-gate proof. " > runtime/shared-row-api-fix/claim.json
+          test -s runtime/shared-row-api-fix/claim.json
+      - name: Real Terra HIGH code-fix API review
+        if: steps.gate.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task TERRA_HIGH_SHARED_ROW_CI_FIX_20261027 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/shared-row-api-fix/prompt.txt --context-file runtime/shared-row-api-fix/context.json --output-dir runtime/shared-row-api-fix/live --intended-write-prefix research/api_agent/outputs/terra_high_shared_row_ci_fix/
+      - name: Verify strict structured reply and no merge invention
+        if: steps.gate.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('runtime/shared-row-api-fix/live')
+          r=json.loads((p/'receipt.json').read_text())
+          o=json.loads((p/'output.json').read_text())
+          assert r['status']=='PASS',r
+          assert r['model']=='gpt-6.1-terra' and r['reasoning_effort']=='high'
+          assert r['attempt_count']==1 and r['estimated_cost_usd']<=3
+          assert o['forecast_candidates']==[]
+          assert all(not b for b in r['authority'].values())
+          print('MODEL_REVIEW_VALID_TECHNICAL_PROPOSAL_ONLY')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terra-high-shared-row-ci-fix-${{ github.run_id }}
+          path: runtime/shared-row-api-fix/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Persist terminal result to existing #1156
+        if: always() && steps.claim.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status=NO_RECEIPT
+          if [ -f runtime/shared-row-api-fix/live/receipt.json ]; then
+            status=$(python -c 'import json;print(json.load(open("runtime/shared-row-api-fix/live/receipt.json"))["status"])')
+          fi
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Scoped Terra HIGH #1814 source-binding exact-code review: gateway_receipt_status=$status; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT. Evidence/artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . No auto retry, new PR, merge, or historical-skill claim."
+
+  terra-xhigh-task2-edge-readiness-20261027:
+    # One bounded long-horizon research test of the new xhigh route. No main write.
+    if: >-
+      false &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1823 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'chore/model-class-currency-20261027'
+    concurrency:
+      group: terra-xhigh-task2-edge-readiness-20261027-one-liability
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Confirm xhigh support, single attempt and no code authority
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          registry=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          cfg=registry['tasks']['TERRA_XHIGH_TASK2_EDGE_READINESS_20261027']
+          assert cfg['model']=='gpt-6.1-terra' and cfg['reasoning_effort']=='xhigh'
+          assert cfg['max_attempts']==1 and cfg['max_output_tokens']==28000
+          assert cfg['automatic_code_write'] is False and cfg['automatic_merge'] is False
+          assert registry['single_run_hard_stop_usd']==3
+          PY
+          python -m unittest tests.api_agent.test_api_gateway -v
+      - name: Precheck irrevocable unique xhigh claim
+        id: admit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          existing=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/1156/comments?per_page=100" --jq '.[] | select(.body | contains("[TERRA_XHIGH_TASK2_EDGE_READINESS_CLAIM_v1]")) | .id' | head -n1)
+          if [ -z "$existing" ]; then echo "run_api=true" >> "$GITHUB_OUTPUT"; else echo "run_api=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Honor strict 30 USD provider cap and existing unknown-liability reserve
+        if: steps.admit.outputs.run_api == 'true'
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add --detach /tmp/terra-xhigh-main refs/remotes/origin/main
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root /tmp/terra-xhigh-main/research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 11
+      - name: Freeze narrow original Task 2 research evidence and dry-run
+        if: steps.admit.outputs.run_api == 'true'
+        run: |
+          mkdir -p runtime/terra-xhigh-task2
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          main=subprocess.check_output(['git','rev-parse','refs/remotes/origin/main'],text=True).strip()
+          paths=[
+            '04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FULL_STACK_NO_HINDSIGHT_AUDIT_WORK_HANDOFF_v1.md',
+            '06_RESEARCH_LAB/audit_summaries/2026-10-14__TASK2_DEEP_RESEARCH_INDEPENDENT_REVIEW_PACKET_v1.md',
+            '04_RESEARCH_LAB/auto_trading/EXTERNAL_ARCHITECTURE_AUDIT_2026-09-12__SECOND_PASS_DECISION.md',
+            '05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json',
+            '03_DAILY_CAPTURE_LOGS/hourly/LATEST.json',
+          ]
+          evidence=[]
+          for path in paths:
+            try:
+              data=subprocess.check_output(['git','show',f'refs/remotes/origin/main:{path}'])
+              evidence.append({'path':path,'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data),'excerpt':data.decode(errors='replace')[:5800]})
+            except subprocess.CalledProcessError:
+              evidence.append({'path':path,'status':'SOURCE_UNAVAILABLE'})
+          ctx={'contract':'TERRA_XHIGH_TASK2_FIRST_ADMITTED_COHORT_v1','actual_main_sha':main,'evidence':evidence,'public_only':True,'original_source_required':True,'no_execute_or_merge':True}
+          root=Path('runtime/terra-xhigh-task2')
+          (root/'context.json').write_text(json.dumps(ctx,sort_keys=True))
+          (root/'prompt.txt').write_text('Produce ONE finite code-level Task 2 P0 PIT-admission/unambiguous data-blocker repair using existing scientific owners and exact original public sources; prioritize a reproducible positive and negative test and a specific first historical cohort eligibility proof. What would falsify an apparent CN edge versus HOLD, persistence, trend, volatility in earlier altseasons without original-source lookahead? Machine-valid concise JSON, forecast_candidates=[]. No spurious accuracy or ROI.')
+          print('FROZEN_TASK2_SOURCE_SHAS',len(evidence),main)
+          PY
+          python scripts/api_agent/api_gateway.py --task TERRA_XHIGH_TASK2_EDGE_READINESS_20261027 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/terra-xhigh-task2/prompt.txt --context-file runtime/terra-xhigh-task2/context.json --output-dir runtime/terra-xhigh-task2/dry --intended-write-prefix research/api_agent/outputs/terra_xhigh_task2_edge_readiness/ --dry-run
+      - name: Confirm authentic provider model access without inference
+        if: steps.admit.outputs.run_api == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request
+          k=os.environ.get('OPENAI_API_KEY')
+          if not k:raise SystemExit('MISSING_OPENAI_API_KEY')
+          req=urllib.request.Request('https://api.openai.com/v1/models/gpt-6.1-terra',headers={'Authorization':'Bearer '+k})
+          with urllib.request.urlopen(req,timeout=20) as r:assert r.status==200
+          PY
+      - name: Claim one distinct xhigh paid liability with no retry
+        id: claim
+        if: steps.admit.outputs.run_api == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/1156/comments" -f body="[TERRA_XHIGH_TASK2_EDGE_READINESS_CLAIM_v1] Unique owner-approved Task 2 scientific P0 extra-high one-shot, run $GITHUB_RUN_ID attempt $GITHUB_RUN_ATTEMPT; all old high/max claims consumed; no paid retry; no merge claims." > runtime/terra-xhigh-task2/claim.json
+          test -s runtime/terra-xhigh-task2/claim.json
+      - name: ONE real Terra 6.1 Extra High Responses API call
+        if: steps.admit.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task TERRA_XHIGH_TASK2_EDGE_READINESS_20261027 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/terra-xhigh-task2/prompt.txt --context-file runtime/terra-xhigh-task2/context.json --output-dir runtime/terra-xhigh-task2/live --intended-write-prefix research/api_agent/outputs/terra_xhigh_task2_edge_readiness/
+      - name: Verify exact xhigh receipt, strict evidence and zero self-merge
+        if: steps.admit.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('runtime/terra-xhigh-task2/live')
+          r=json.loads((root/'receipt.json').read_text())
+          o=json.loads((root/'output.json').read_text())
+          assert r['status']=='PASS',r
+          assert r['model']=='gpt-6.1-terra' and r['reasoning_effort']=='xhigh'
+          assert r['attempt_count']==1 and r['estimated_cost_usd']<=3
+          assert o['forecast_candidates']==[]
+          assert all(not v for v in r['authority'].values())
+          print('XHIGH_TASK2_P0_ACCEPTED_RESEARCH_ONLY')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terra-xhigh-task2-edge-readiness-${{ github.run_id }}
+          path: runtime/terra-xhigh-task2/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Record finite API outcome in existing #1156 owner issue
+        if: always() && steps.claim.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status=RECEIPT_MISSING_UNKNOWN
+          if [ -f runtime/terra-xhigh-task2/live/receipt.json ]; then
+            status=$(python -c 'import json;print(json.load(open("runtime/terra-xhigh-task2/live/receipt.json"))["status"])')
+          fi
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body "Terra 6.1 XHIGH Task 2 original-cohort scientific gate: gateway_receipt_status=$status; substantive_result=NOT_VERIFIED_BY_LEGACY_REPORT. Exact Actions artifact: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . One-time, no auto retry, no historical edge without PIT. No new PR or merge authority."
+
+  terra-xhigh-endgame-progress-v1:
+    # Reusable bounded event-driven PR lane: one distinct paid work_id per material PR update.
+    # No schedule, no new PR, no model-authorized code writes or auto-merge.
+    if: >-
+      false &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1823 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'chore/model-class-currency-20261027'
+    concurrency:
+      group: terra-xhigh-endgame-progress-v1-single-liability
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact single-call profile and bounded work manifest
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          python -m unittest tests.api_agent.test_endgame_progress_packet -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.api_agent.endgame_progress_packet import manifest
+          r=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+          c=r['tasks']['TERRA_XHIGH_ENDGAME_PROGRESS_V1']
+          assert (c['model'],c['reasoning_effort'],c['max_attempts'])==('gpt-6.1-terra','xhigh',1)
+          assert c['automatic_code_write'] is False and c['automatic_merge'] is False
+          assert r['single_run_hard_stop_usd']==3
+          manifest(json.loads(Path('research/api_agent/ENDGAME_PROGRESS_QUEUE_v1.json').read_text()))
+          print('ENDGAME_SCOPE_AND_RETRY_GATE_PASS')
+          PY
+      - name: One-charge-per-work-ID precheck
+        id: admit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          work=$(python -c "import json;print(json.load(open('research/api_agent/ENDGAME_PROGRESS_QUEUE_v1.json'))['active']['work_id'])")
+          marker="[TERRA_ENDGAME_WORK_${work}_CLAIM_v1]"
+          existing=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/1156/comments?per_page=100" --jq ".[] | select(.body | contains(\"$marker\")) | .id" | head -n1)
+          echo "work=$work" >> "$GITHUB_OUTPUT"
+          if [ -n "$existing" ]; then echo "run_api=false" >> "$GITHUB_OUTPUT"; else echo "run_api=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Check lower actual organization limit with conservative liability reserve
+        if: steps.admit.outputs.run_api == 'true'
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add --detach /tmp/endgame-progress-source refs/remotes/origin/main
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root /tmp/endgame-progress-source/research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 12
+      - name: Freeze only original public-source bytes and validate gateway schema
+        if: steps.admit.outputs.run_api == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/api_agent/endgame_progress_packet.py build runtime/endgame-progress
+          python scripts/api_agent/api_gateway.py --task TERRA_XHIGH_ENDGAME_PROGRESS_V1 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/endgame-progress/prompt.txt --context-file runtime/endgame-progress/context.json --output-dir runtime/endgame-progress/dry --intended-write-prefix research/api_agent/outputs/terra_xhigh_endgame_progress/ --dry-run
+      - name: Verify provider model access with actual project credential
+        if: steps.admit.outputs.run_api == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os,urllib.request
+          key=os.environ.get('OPENAI_API_KEY')
+          if not key:raise SystemExit('API_KEY_MISSING')
+          with urllib.request.urlopen(urllib.request.Request('https://api.openai.com/v1/models/gpt-6.1-terra',headers={'Authorization':'Bearer '+key}),timeout=20) as r:assert r.status==200
+          print('TERRA_MODEL_ACCESS_QUALIFIED_NO_INFERENCE')
+          PY
+      - name: Claim unique new work ID irrevocably before inference
+        if: steps.admit.outputs.run_api == 'true'
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORK_ID: ${{ steps.admit.outputs.work }}
+        run: |
+          marker="[TERRA_ENDGAME_WORK_${WORK_ID}_CLAIM_v1]"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/1156/comments" -f body="$marker Finite owner-approved, new materially distinct Terra xhigh original-PR task; run $GITHUB_RUN_ID; one paid attempt, never auto-retry or re-label consumed work. No merge until tests + policy." > runtime/endgame-progress/claim.json
+          test -s runtime/endgame-progress/claim.json
+      - name: ONE real Terra xhigh ENDGAME original-PR API work unit
+        if: steps.admit.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py --task TERRA_XHIGH_ENDGAME_PROGRESS_V1 --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/endgame-progress/prompt.txt --context-file runtime/endgame-progress/context.json --output-dir runtime/endgame-progress/live --intended-write-prefix research/api_agent/outputs/terra_xhigh_endgame_progress/
+      - name: Validate accepted output, prohibit model self-merge and ungrounded edge
+        if: steps.admit.outputs.run_api == 'true' && steps.claim.outcome == 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('runtime/endgame-progress/live')
+          r=json.loads((p/'receipt.json').read_text());o=json.loads((p/'output.json').read_text())
+          assert r['status']=='PASS'
+          assert r['model']=='gpt-6.1-terra' and r['reasoning_effort']=='xhigh'
+          assert r['attempt_count']==1 and r['estimated_cost_usd']<=3
+          assert o['forecast_candidates']==[]
+          assert all(v is False for v in r['authority'].values())
+          print('FINITE_XHIGH_WORK_UNIT_ACCEPTED_EVIDENCE_NOT_MERGE')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terra-xhigh-endgame-progress-${{ github.run_id }}
+          path: runtime/endgame-progress/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Record terminal proof in existing owner issue without another PR
+        if: always() && steps.claim.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORK_ID: ${{ steps.admit.outputs.work }}
+        run: |
+          set -euo pipefail
+          python scripts/api_agent/endgame_semantic_report.py \
+            --root runtime/endgame-progress \
+            --work-id "$WORK_ID" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            > runtime/endgame-progress/semantic_report.txt
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
+            --body-file runtime/endgame-progress/semantic_report.txt

@@ -1,9 +1,16 @@
 import json
 import os
 import unittest
+import json
+import sys
+import tempfile
+import http.client
+import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 
+from scripts.api_agent import api_gateway as gateway
+from scripts.api_agent.api_gateway import write_unknown_transport_receipt
 from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, output_schema, retry_output_token_limit, request_timeout_seconds, validate_output
 from scripts.api_agent.advance_deep_research_queue import build_task_packet, retained_providers, select_next
 from scripts.api_agent.advance_mcp_connection_scorecard import apply_evaluation
@@ -94,6 +101,128 @@ def deep_research_fixture():
 
 
 class ApiGatewayTests(unittest.TestCase):
+    def test_transport_disconnect_writes_pessimistic_not_zero_cost_receipt(self):
+        reg = load_registry(REGISTRY)
+        cfg = reg["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            receipt = write_unknown_transport_receipt(
+                output_dir=directory, task="TERRA_MAX_P0_SCHEDULE_ONCE",
+                task_cfg=cfg, registry=reg, request_hash="a" * 64,
+                prompt="nonsecret test", context={"receipt": "public"},
+                allowed_prefix=cfg["allowed_write_prefix"], attempt_number=1,
+                transport_error=http.client.RemoteDisconnected("INTERNAL_SECRET_NEVER_LOG"),
+            )
+            stored = json.loads((directory / "receipt.json").read_text())
+            blocked = json.loads((directory / "output.json").read_text())
+            self.assertEqual(stored, receipt)
+            self.assertEqual(receipt["contract"], "API_UNKNOWN_LIABILITY_RESERVATION_v1")
+            self.assertEqual(receipt["estimated_cost_usd"], 3)
+            self.assertIsNone(receipt["actual_provider_cost_usd"])
+            self.assertIsNone(receipt["response_id"])
+            self.assertNotIn("input_tokens", receipt)
+            self.assertNotIn("output_tokens", receipt)
+            self.assertEqual(receipt["transport_error_class"], "RemoteDisconnected")
+            self.assertEqual(receipt["status"], "PROVIDER_CHARGE_UNKNOWN_NO_RETRY")
+            self.assertTrue(receipt["no_automatic_retry"])
+            self.assertEqual(blocked["status"], "BLOCKED")
+            self.assertEqual(blocked["forecast_candidates"], [])
+            self.assertNotIn("INTERNAL_SECRET_NEVER_LOG", (directory / "receipt.json").read_text())
+
+    def test_main_unknown_transport_failure_never_retries_even_when_task_allows_two(self):
+        registry = load_registry(REGISTRY)
+        registry["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]["max_attempts"] = 2
+        task = registry["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            rp = root / "registry.json"
+            pp = root / "prompt.txt"
+            cp = root / "context.json"
+            output = root / "out"
+            rp.write_text(json.dumps(registry))
+            pp.write_text("test public prompt")
+            cp.write_text('{"owner": "public"}')
+            argv = [
+                "api_gateway.py", "--task", "TERRA_MAX_P0_SCHEDULE_ONCE",
+                "--registry", str(rp), "--prompt-file", str(pp),
+                "--context-file", str(cp), "--output-dir", str(output),
+                "--intended-write-prefix", task["allowed_write_prefix"],
+            ]
+            with patch.object(sys, "argv", argv), \
+                 patch.dict(os.environ, {"OPENAI_API_KEY": "DUMMY_NOT_TO_PRINT"}), \
+                 patch.object(gateway, "call_api", side_effect=http.client.RemoteDisconnected("gone")) as called:
+                with self.assertRaisesRegex(SystemExit, "PROVIDER_CHARGE_UNKNOWN_NO_RETRY"):
+                    gateway.main()
+            called.assert_called_once()
+            receipt = json.loads((output / "receipt.json").read_text())
+            self.assertEqual(receipt["attempt_count"], 1)
+            self.assertEqual(receipt["status"], "PROVIDER_CHARGE_UNKNOWN_NO_RETRY")
+
+    def test_unreadable_paid_http_body_is_unknown_liability_no_retry(self):
+        registry = load_registry(REGISTRY)
+        registry["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]["max_attempts"] = 2
+        task = registry["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]
+        errors = [
+            json.JSONDecodeError("truncated", "{", 0),
+            UnicodeDecodeError("utf-8", bytes([255]), 0, 1, "invalid start byte"),
+        ]
+        for err in errors:
+            with self.subTest(error=type(err).__name__), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                (root / "registry.json").write_text(json.dumps(registry))
+                (root / "prompt.txt").write_text("public scoped P0 evidence")
+                (root / "context.json").write_text('{"synthetic":true}')
+                argv = [
+                    "api_gateway.py", "--task", "TERRA_MAX_P0_SCHEDULE_ONCE",
+                    "--registry", str(root / "registry.json"),
+                    "--prompt-file", str(root / "prompt.txt"),
+                    "--context-file", str(root / "context.json"),
+                    "--output-dir", str(root / "out"),
+                    "--intended-write-prefix", task["allowed_write_prefix"],
+                ]
+                with patch.object(sys, "argv", argv), \
+                     patch.dict(os.environ, {"OPENAI_API_KEY": "DUMMY_NOT_TO_PRINT"}), \
+                     patch.object(gateway, "call_api", side_effect=err) as called:
+                    with self.assertRaisesRegex(SystemExit, "PROVIDER_CHARGE_UNKNOWN_NO_RETRY"):
+                        gateway.main()
+                called.assert_called_once()
+                receipt = json.loads((root / "out" / "receipt.json").read_text())
+                output = json.loads((root / "out" / "output.json").read_text())
+                self.assertEqual(receipt["status"], "PROVIDER_CHARGE_UNKNOWN_NO_RETRY")
+                self.assertEqual(receipt["transport_error_class"], type(err).__name__)
+                self.assertEqual(receipt["attempt_count"], 1)
+                self.assertEqual(receipt["estimated_cost_usd"], 3)
+                self.assertIsNone(receipt["actual_provider_cost_usd"])
+                self.assertTrue(receipt["no_automatic_retry"])
+                self.assertEqual(output["status"], "BLOCKED")
+                self.assertEqual(output["forecast_candidates"], [])
+
+    def test_http_error_is_not_misclassified_as_unknown_disconnect(self):
+        registry = load_registry(REGISTRY)
+        task = registry["tasks"]["TERRA_MAX_P0_SCHEDULE_ONCE"]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "registry.json").write_text(json.dumps(registry))
+            (root / "prompt.txt").write_text("public")
+            (root / "context.json").write_text("{}")
+            output = root / "out"
+            argv = [
+                "api_gateway.py", "--task", "TERRA_MAX_P0_SCHEDULE_ONCE",
+                "--registry", str(root / "registry.json"),
+                "--prompt-file", str(root / "prompt.txt"),
+                "--context-file", str(root / "context.json"),
+                "--output-dir", str(output),
+                "--intended-write-prefix", task["allowed_write_prefix"],
+            ]
+            http_error = urllib.error.HTTPError("https://api.openai.com", 429, "rate limited", {}, None)
+            with patch.object(sys, "argv", argv), \
+                 patch.dict(os.environ, {"OPENAI_API_KEY": "DUMMY_NOT_TO_PRINT"}), \
+                 patch.object(gateway, "call_api", side_effect=http_error) as called:
+                with self.assertRaises(urllib.error.HTTPError):
+                    gateway.main()
+            called.assert_called_once()
+            self.assertFalse((output / "receipt.json").exists())
+
     def test_registry_is_shadow_only(self):
         data=load_registry(REGISTRY);self.assertEqual(data['status'],'ACTIVE_SHADOW_ONLY');self.assertFalse(data['authority']['portfolio_action']);self.assertFalse(data['authority']['framework_state_change'])
     def test_daily_output_budget_can_hold_strict_schema(self):
@@ -101,10 +230,37 @@ class ApiGatewayTests(unittest.TestCase):
     def test_cost_estimate(self):
         self.assertEqual(estimate_cost('gpt-6-luna',1000000,1000000),0.6)
         self.assertEqual(estimate_cost('gpt-5.6-terra',1000000,1000000),14.0)
+        self.assertEqual(estimate_cost('gpt-6.1-terra',1000000,1000000),6.0)
         self.assertEqual(estimate_cost('gpt-6.1-sol',1000000,1000000),12.0)
         self.assertEqual(estimate_cost('gpt-6-sol',1000000,1000000),12.0)
         self.assertEqual(estimate_cost('gpt-5.6-luna',1000000,1000000),1.4)
         self.assertEqual(estimate_cost('gpt-5.6-sol',1000000,1000000),24.0)
+    def test_paid_gateway_rejects_astra_even_if_supplied_as_task_model(self):
+        from scripts.api_agent.api_gateway import build_request
+        task_cfg = {
+            "model": "gpt-6-astra", "reasoning_effort": "high",
+            "max_output_tokens": 1000,
+        }
+        with self.assertRaisesRegex(ValueError, "paid_api_model_class_forbidden"):
+            build_request("DAILY_DIRECTOR_SHADOW", task_cfg, "test", {})
+
+    def test_current_terra_high_xhigh_and_max_are_supported_without_astra(self):
+        from scripts.api_agent.api_gateway import build_request
+        cfg = {"model": "gpt-6.1-terra", "reasoning_effort": "high", "max_output_tokens": 2000}
+        for effort in ("high", "xhigh", "max"):
+            cfg["reasoning_effort"] = effort
+            request = build_request("DAILY_CONFLICT_REVIEW", cfg, "test", {})
+            self.assertEqual(request["model"], "gpt-6.1-terra")
+            self.assertEqual(request["reasoning"]["effort"], effort)
+            self.assertFalse(request["store"])
+        data = load_registry(REGISTRY)
+        task = data["tasks"]["TERRA_XHIGH_TASK2_EDGE_READINESS_20261027"]
+        self.assertEqual(task["reasoning_effort"], "xhigh")
+        self.assertEqual(task["model"], "gpt-6.1-terra")
+        self.assertEqual(task["max_attempts"], 1)
+        self.assertFalse(task["automatic_code_write"])
+        self.assertFalse(task["automatic_merge"])
+
     def test_automation_orchestration_tasks_use_luna_then_gpt_6_1_sol(self):
         data=load_registry(REGISTRY)
         triage=data['tasks']['AUTOMATION_ORCHESTRATOR_TRIAGE']

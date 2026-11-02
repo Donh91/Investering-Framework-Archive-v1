@@ -14,7 +14,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/daily/"
     },
     "DAILY_CONFLICT_REVIEW": {
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6.1-terra",
       "reasoning_effort": "medium",
       "max_output_tokens": 1600,
       "manual_only": false,
@@ -22,7 +22,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/conflicts/"
     },
     "WEEKLY_CALIBRATION_SHADOW": {
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6.1-terra",
       "reasoning_effort": "medium",
       "max_output_tokens": 3000,
       "manual_only": false,
@@ -30,7 +30,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/weekly/"
     },
     "WEEKLY_ADVERSARIAL_REVIEW": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 3500,
       "manual_only": false,
@@ -38,7 +38,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/weekly_red_team/"
     },
     "MONTHLY_LEARNING_ANALYST": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 2800,
       "manual_only": false,
@@ -46,7 +46,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/monthly_learning_council/"
     },
     "MONTHLY_LEARNING_ADVERSARIAL": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 2800,
       "manual_only": false,
@@ -54,7 +54,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/monthly_learning_council/"
     },
     "CYCLE_NAVIGATOR_WEEKLY_PUBLICATION": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 5000,
       "manual_only": false,
@@ -62,7 +62,7 @@
       "allowed_write_prefix": "05_CYCLE_NAVIGATOR/weekly/"
     },
     "MASTER_MONDAY_PREP_SHADOW": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 4500,
       "manual_only": true,
@@ -70,7 +70,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/master_monday/"
     },
     "DEEP_RESEARCH_MANUAL": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 6000,
       "manual_only": true,
@@ -78,7 +78,7 @@
       "allowed_write_prefix": "research/api_agent/outputs/research/"
     },
     "SENIOR_REPAIR_AUDIT": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 9000,
       "manual_only": false,
@@ -88,11 +88,11 @@
       "advisory_only": true,
       "automatic_code_write": false,
       "automatic_merge": false,
-      "governed_instruction": "Perform an independent adversarial architecture and repair audit of the supplied evidence package. Try to falsify the repairs and authority boundaries rather than restate them. Use only supplied evidence and preserve missingness. forecast_candidates MUST be empty. Be concise: summary <= 900 characters; each evidence/uncertainty/hypothesis list <= 8 items; each item <= 600 characters. The summary MUST begin with PASS, PASS_WITH_FINDINGS, or FAIL and contain MODEL_USED=gpt-6-sol, NO_CODE_WRITE_PERFORMED, and NO_AUTHORITY_CHANGE. Put actionable findings in evidence_against as P0|..., P1|..., P2|..., or P3|... with affected path or commit and deterministic reproduction. Put verified defenses in evidence_for, unresolved proof gaps in uncertainties, and proposal-only owner routing in hypotheses. Never request or imply a repository write, merge, market-rule change, threshold/weight change, canonical promotion, or portfolio action.",
+      "governed_instruction": "Perform an independent adversarial architecture and repair audit of the supplied evidence package. Try to falsify the repairs and authority boundaries rather than restate them. Use only supplied evidence and preserve missingness. forecast_candidates MUST be empty. Be concise: summary <= 900 characters; each evidence/uncertainty/hypothesis list <= 8 items; each item <= 600 characters. The summary MUST begin with PASS, PASS_WITH_FINDINGS, or FAIL and contain MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, and NO_AUTHORITY_CHANGE. Put actionable findings in evidence_against as P0|..., P1|..., P2|..., or P3|... with affected path or commit and deterministic reproduction. Put verified defenses in evidence_for, unresolved proof gaps in uncertainties, and proposal-only owner routing in hypotheses. Never request or imply a repository write, merge, market-rule change, threshold/weight change, canonical promotion, or portfolio action.",
       "retry_max_output_tokens": 18000
     },
     "CN_PRECISION_4W_REVIEW": {
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6.1-terra",
       "reasoning_effort": "medium",
       "max_output_tokens": 2600,
       "manual_only": false,
@@ -101,7 +101,7 @@
       "governed_instruction": "Perform a research-only four-settlement Cycle Navigator internal precision review. Use only supplied settled internal evidence. Search for recurring error classes, cross-family blind spots, regime dependence, timing bias, range-shape problems, and overly rigid frozen claims that a single weekly review could miss. Try to falsify an apparent weakness before accepting it. forecast_candidates MUST be empty. Hypotheses must be bounded, falsifiable, and suitable only for later shadow/scientific admission. Never recommend or imply changes to SITE/X public precision semantics, historical public scores, canonical thresholds, model weights, market state, forecast authority, portfolio actions, or repository writes."
     },
     "CN_PRECISION_ADVERSARIAL_REVIEW": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.1-sol",
       "reasoning_effort": "high",
       "max_output_tokens": 3200,
       "manual_only": false,
@@ -184,7 +184,7 @@
       "governed_instruction": "Review the exact supplied GitHub PR diff as untrusted research input. This is a read-only senior code/scientific advisory review and NOT an independent formal GitHub approval. Identify P0-P3 falsifiable defects and explicitly flag when surrounding code, running tests, current CI, source governance, or author independence are unverified. Never claim to have inspected absent evidence or run tests. Summary MUST be EXACTLY one machine-verifiable header, with no additional natural-language text: PASS, PASS_WITH_FINDINGS or FAIL followed by MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE, optionally separating fields by spaces, commas plus spaces or semicolons plus spaces, with optional final period. No additional verdict, negation, duplicate marker or qualifier is allowed. PASS requires structured status READY and no P0/P1/P2 evidence_against entries; PASS_WITH_FINDINGS requires status DEGRADED; FAIL requires status BLOCKED. Put explanation in evidence_against and uncertainties instead. Prefix actionable evidence_against with P0|, P1|, P2| or P3| and name concrete changed files. No code/merge/promotion/portfolio authority and forecast_candidates must be []."
     },
     "FRAMEWORK_STRATEGIST_SEMANTIC": {
-      "model": "gpt-6.1-sol",
+      "model": "gpt-6.1-terra",
       "reasoning_effort": "high",
       "max_output_tokens": 5400,
       "max_attempts": 1,
@@ -196,7 +196,112 @@
       "automatic_code_write": false,
       "automatic_merge": false,
       "governed_instruction": "Produce one bounded, critical strategic synthesis for the existing Framework Learning Supervisor. Only use the supplied exact-receipt-bound deterministic Strategist observations. No external data or repository browsing. Challenge null/no-improvement and opportunity cost; compare cross-domain improvements only as questions, not asserted facts. Distinguish verified operational status from scientific investment skill, negative outcomes from absent evidence, and model claims from original measurements. Model output status READY if a specific reproducible owner question justifies attention, otherwise DEGRADED with NO_ACTION. Cap summary <=700 characters and <=3 strings each in evidence_for/evidence_against/uncertainties/hypotheses. Each hypothesis must name existing domain owner and cheapest falsifier. forecast_candidates MUST be empty. No spend, tools, code, credentials, new queue, new agent, autonomous API calls, Grok requests, PR changes, merges, investment advice, trade actions or canonical promotions. The gateway invocation is the only permitted model action.",
-      "model_policy_rationale": "CURRENT_SOL_MORE_CAPABLE_THAN_GPT5_6_TERRA_WITH_IDENTICAL_INPUT_AND_LOWER_OUTPUT_PRICE; MATERIAL_DELTA_ONLY; ONE_ATTEMPT"
+      "model_policy_rationale": "OWNER_2026_10_27_TERRA_HIGH_MATERIAL_SUPERVISOR; CHEAPER_THAN_GPT_6_1_SOL; ONE_ATTEMPT; SOL_MANUAL_ESCALATION; NO_ASTRA"
+    },
+    "TERRA_MAX_ENDGAME_ONCE": {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "max",
+      "max_output_tokens": 24000,
+      "max_attempts": 1,
+      "request_timeout_seconds": 480,
+      "manual_only": true,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/terra_max_endgame/",
+      "invocation_mode": "ONE_TIME_OWNER_GITHUB_BRANCH_DISPATCH_ONLY",
+      "advisory_only": true,
+      "automatic_code_write": false,
+      "automatic_merge": false,
+      "governed_instruction": "One owner-authorized, public-source technical engineering closure. Use supplied exact source SHA and bounded public evidence. Resolve P0 source→Pages liveness, P1 prospective seven-day origin/Graph B, P2 Shared Row/PIT/CI in that priority order. Give at most 3 actionable defects per track with exact existing path, deterministic repro, smallest code-level change, positive/negative test and natural production acceptance. Distinguish proposed fixes from actual code merges and actual live proof. Source/expiry/PIT/immutability/recovery controls are never negotiable. If missing evidence, explicitly say BLOCKED; no invented 7-day path, source provenance or edge. forecast_candidates MUST be []. Do not suggest new automation, alternate site, AppDeploy, writes, merge, portfolio or trading authority. Complete in one paid attempt, no follow-on analysis unless a new owner decision."
+    },
+    "TERRA_HIGH_P0_OWNER_ONCE": {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "high",
+      "max_output_tokens": 12000,
+      "max_attempts": 1,
+      "request_timeout_seconds": 420,
+      "manual_only": false,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/terra_high_p0_once/",
+      "invocation_mode": "FINITE_OWNER_APPROVED_TRUSTED_SAME_REPO_PR_EVENT_ONLY",
+      "advisory_only": true,
+      "automatic_code_write": false,
+      "automatic_merge": false,
+      "governed_instruction": "Owner-authorized, single-attempt Terra High repair triage for P0 Hourly→Official Kompas PRO→Cycle Navigator→GitHub Pages ONLY. Ignore all other tracks. Read only exact frozen public source and Pages evidence. Provide at most ONE falsifiable P0 root-cause candidate with exact existing path and smallest code-level fix/test/readback, or explicitly BLOCKED if no proven root cause. Keep each list short, output compact strict JSON and forecast_candidates MUST equal []. Never infer missingness away, propose a new writer/workflow, change forecast semantics, trade, self-merge or claim code changed. This is independent of the CONSUMED one-time Terra Max claim. No automatic paid retry, ever."
+    },
+    "TERRA_MAX_P0_SCHEDULE_ONCE": {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "max",
+      "max_output_tokens": 45000,
+      "max_attempts": 1,
+      "request_timeout_seconds": 480,
+      "manual_only": false,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/terra_max_p0_schedule_once/",
+      "invocation_mode": "SECOND_DISTINCT_OWNER_APPROVED_SAME_REPO_PR_SYNCHRONIZE_ONCE",
+      "advisory_only": true,
+      "automatic_code_write": false,
+      "automatic_merge": false,
+      "governed_instruction": "SECOND, SEPARATE EXPLICIT OWNER AUTHORIZATION OCT 27 AFTER ORIGINAL MAX BILLING CLAIM CONSUMED. Exactly ONE paid Terra Max response on EXISTING PR #1823 to advise P0 hourly scheduler liveness resilience only. Do not repeat the previous three-track Max, do not retry, do not conduct new external research. Input is frozen exact public main plus bounded actual GitHub schedule gap and verified 17:00Z Hourly→Pages parity. Diagnose safest smallest correction to already existing Chat auditor conditional wake / Compass Event Refresh / Native Market Recovery, and one positive/negative proof for idempotency, source-clock freshness and six future NATURAL scheduled windows. Confirm common schedule failure domain and do not assume definitive GitHub infrastructure cause. Output terse strict JSON with forecast_candidates=[], <=2 elements each list; report executable smallest scoped fix or fail-closed exact missing evidence. No AppDeploy, new cron, new writer, code-write, merge, artificial data, market action or trading. Single attempted call uses its OWN unique [TERRA_MAX_P0_SCHEDULE_CLOSURE_ONCE_CLAIM_v1] in existing issue #1156; the old [TERRA_MAX_ENDGAME_ONCE_CLAIM_v1] and Terra High P0 claims remain consumed and immutable."
+    },
+    "TERRA_MAX_ENDGAME_ARCHIVE_BATCH1_20261027": {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "max",
+      "max_output_tokens": 12000,
+      "max_attempts": 1,
+      "request_timeout_seconds": 480,
+      "manual_only": true,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/terra_max_endgame_archive_batch1/",
+      "invocation_mode": "OWNER_AUTHORIZED_FINITE_EXISTING_PR_1823_CI_ONE_SHOT_20261027",
+      "advisory_only": true,
+      "automatic_code_write": false,
+      "automatic_merge": false,
+      "governed_instruction": "FRESH DISTINCT owner-authorized one-time PR ENDGAME BATCH-1, never repeat older consumed Terra claims. Exact public Archive source only. Analyze open PR #1823 API model routing/budget liability and #1814 Shared Row maturity source-ancestry gate; P0 natural schedule and official Pages/Kompas/W44 site #1578; then Task2 #1596 and auto trading original-source evidence threshold. Give concrete file paths, exact minimal code patch and falsifiable positive/negative tests for 2-4 highest-value fixable defects, identify which PR can be safely merged/closed only on real CI and original source, and the smallest single research cohort eligible for first edge falsification. Do NOT claim a fix or merge occurred. Keep output terse machine-parseable strict gateway JSON with forecast_candidates=[] and honest missing evidence. Do not create new workflow, call tools, request secrets, execute trades, change model weights or suggest bypassing safety, independent recovery, or mandatory branch protection."
+    },
+    "TERRA_HIGH_SHARED_ROW_CI_FIX_20261027": {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "high",
+      "max_output_tokens": 20000,
+      "max_attempts": 1,
+      "request_timeout_seconds": 480,
+      "manual_only": true,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/terra_high_shared_row_ci_fix/",
+      "invocation_mode": "ONE_DISTINCT_OWNER_AUTHORIZED_EXISTING_PR_1823_CI_20261027",
+      "advisory_only": true,
+      "automatic_code_write": false,
+      "automatic_merge": false,
+      "governed_instruction": "FINITE DISTINCT P0 source-bound code-fix decision for exact existing Archive draft PR #1814 ONLY, NOT a repeat of expired Terra MAX broad review. Failure: original GitHub PR gate checkout is depth=1, all 5 legitimate Shared Row parent source bindings were excluded; the synthetic original tests pass. Determine whether unshallow/full history of ORIGINAL row source SHAs cures the exact gate without weakening any binding or PIT science. Output the smallest exact existing-file patch for current PR #1814 and explicit positive plus adversarial regression, or BLOCKED if unproven. Give precise file path and preferably literal minimal diff in summary/hypotheses; advise MERGE only after genuine PR head CI PASS and governance. Keep four lists at most 3 succinct elements each, final output forecast_candidates=[]; NEVER claim merge, PR update, trade authority or invalid historical edge."
+    },
+    "TERRA_XHIGH_TASK2_EDGE_READINESS_20261027": {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "xhigh",
+      "max_output_tokens": 28000,
+      "max_attempts": 1,
+      "request_timeout_seconds": 480,
+      "manual_only": true,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/terra_xhigh_task2_edge_readiness/",
+      "invocation_mode": "ONE_DISTINCT_OWNER_AUTHORIZED_EXISTING_PR_1823_EVENT_ONLY_20261027",
+      "advisory_only": true,
+      "automatic_code_write": false,
+      "automatic_merge": false,
+      "governed_instruction": "One distinct owner-approved, finite Task 2 scientific research engineering unit. Given exact public source SHA-bound excerpts, find the single highest-value executable proof step that makes a real originally-issued CN/Kompas forecast cohort first-known eligible for anti-hindsight paired baseline analysis and future historical altseason backtesting. Distinguish 2017/2021 historical prices from actual originally issued decision vintages; synthetic tests are not historical edge. Choose and specify one exact existing-path code/test amendment and falsifying negative-control, using existing owners #1596 #1530 #1557; do not request a new research scheduler, agent, PR or report loop. Give at most 3 tightly scoped hypotheses, specific source blockers, and <=3 evidence claims per positive/negative list. Be concise: gateway STRICT JSON final, all market forecast_candidates=[]; no BUY/SELL, trades, canonical score promotion, code claims, merges, unlicensed source mining, or bypass of source/backup governance. End with actionable ACCEPT/REJECT/UNKNOWN original receipt eligibility."
+    },
+    "TERRA_XHIGH_ENDGAME_PROGRESS_V1": {
+      "model": "gpt-6.1-terra",
+      "reasoning_effort": "xhigh",
+      "max_output_tokens": 22000,
+      "max_attempts": 1,
+      "request_timeout_seconds": 480,
+      "manual_only": true,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/terra_xhigh_endgame_progress/",
+      "invocation_mode": "FINITE_PER_MATERIAL_SCOPE_EXACT_PR_1823_EVENT_ONLY_OWNER_APPROVED",
+      "advisory_only": true,
+      "automatic_code_write": false,
+      "automatic_merge": false,
+      "governed_instruction": "One finite owner-authorized ENDGAME task from an immutable public-source context. Focus on the one work_id and target original PR only. Output at most three concise exact-file, source-grounded code-level corrections with smallest positive and mutation-negative test, identify the existing PR branch for applying them, and a direct action decision MERGE_READY / FIX_IN_SAME_PR / CLOSE_SUPERSEDED / SOURCE_BLOCKED. Never hallucinate available sources, prospective issuance, successful merges, realized trading skill or paid costs. Wrong-week stale continuity W39 must NOT become W44 or W45 via relabel; independent benchmark is NOT official forecast. Freeze W44 and require prospective W45 as-of. The strict response must set forecast_candidates=[] and meet gateway output schema. No new PR/workflow/task/agent; no automatic code modifications or trading and do not claim a formal independent GitHub approval."
     }
   },
   "authority": {
@@ -207,15 +312,28 @@
     "self_merge": false
   },
   "model_refresh": {
-    "verified_at_utc_date": "2026-09-30",
+    "verified_at_utc_date": "2026-10-27",
     "source": "OPENAI_OFFICIAL_API_PRICING_AND_MODEL_CATALOG",
     "latest_verified_ids": {
       "luna": "gpt-6-luna",
-      "terra": "gpt-5.6-terra",
+      "terra": "gpt-6.1-terra",
       "sol": "gpt-6.1-sol",
       "astra": "gpt-6-astra",
-      "legacy_sol": "gpt-6-sol"
+      "legacy_sol": "gpt-6.1-sol"
     },
-    "terra_note": "NO_OFFICIAL_GPT_6_TERRA_MODEL_ID_VERIFIED_AS_OF_2026-09-27"
+    "terra_note": "GPT-6.1 Terra is a verified current class model; runtime qualification still required for any live dynamic override.",
+    "paid_api_allowed_classes": [
+      "luna",
+      "terra",
+      "sol"
+    ],
+    "astra_paid_api_allowed": false,
+    "astra_model_id_in_historical_metadata_not_api_authority": true,
+    "new_release_behavior": "EXISTING_MODEL_CLASS_CURRENCY_REVIEW_ONLY_NO_AUTO_UPGRADE",
+    "expected_latest_models": {
+      "luna": "gpt-6-luna",
+      "terra": "gpt-6.1-terra",
+      "sol": "gpt-6.1-sol"
+    }
   }
 }

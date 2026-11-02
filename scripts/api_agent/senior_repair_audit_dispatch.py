@@ -52,7 +52,7 @@ Specifically try to prove: false GREEN/AMBER paths; manual/skipped/wrong-event r
 Use only supplied evidence. Do not invent missing repository state. forecast_candidates MUST be empty.
 
 Encode the result inside the existing strict gateway schema:
-- summary MUST begin with PASS, PASS_WITH_FINDINGS, or FAIL and include MODEL_USED=gpt-6-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE.
+- summary MUST begin with PASS, PASS_WITH_FINDINGS, or FAIL and include MODEL_USED=gpt-6.1-sol, NO_CODE_WRITE_PERFORMED, NO_AUTHORITY_CHANGE.
 - evidence_for: concise verified defenses with exact path/commit references.
 - evidence_against: each actionable finding as P0|..., P1|..., P2|... or P3|..., including affected path/commit and deterministic reproduction.
 - uncertainties: anything not proven from the supplied packet.
@@ -145,7 +145,7 @@ def validate_result(output_dir: Path) -> dict[str, Any]:
     output = json.loads((output_dir / "output" / "output.json").read_text())
     if receipt.get("status") != "PASS":
         raise ValueError("senior_audit_receipt_not_pass")
-    if receipt.get("model") != "gpt-6-sol" or receipt.get("reasoning_effort") != "high":
+    if receipt.get("model") != "gpt-6.1-sol" or receipt.get("reasoning_effort") != "high":
         raise ValueError("senior_audit_model_binding_invalid")
     cost = receipt.get("estimated_cost_usd")
     if isinstance(cost, bool) or not isinstance(cost, (int, float)) or not 0 <= float(cost) <= 3.0:
@@ -155,7 +155,7 @@ def validate_result(output_dir: Path) -> dict[str, Any]:
     summary = str(output.get("summary") or "")
     if not summary.startswith(("PASS", "PASS_WITH_FINDINGS", "FAIL")):
         raise ValueError("senior_audit_summary_verdict_missing")
-    for marker in ("MODEL_USED=gpt-6-sol", "NO_CODE_WRITE_PERFORMED", "NO_AUTHORITY_CHANGE"):
+    for marker in ("MODEL_USED=gpt-6.1-sol", "NO_CODE_WRITE_PERFORMED", "NO_AUTHORITY_CHANGE"):
         if marker not in summary:
             raise ValueError("senior_audit_summary_marker_missing:" + marker)
     authority = receipt.get("authority")

@@ -71,19 +71,20 @@ class SemanticTest(unittest.TestCase):
         self.fixture.write(str(output.relative_to(self.root) / "receipt.json"),receipt)
         return plan, row, receipt, result
 
-    def test_current_sol_is_stronger_tier_at_equal_or_lower_api_price_than_terra(self):
+    def test_current_terra_high_costs_less_than_sol_and_is_owner_approved(self):
         source = json.loads(Path("research/api_agent/API_TASK_REGISTRY_v1.json").read_text())
         task = source["tasks"][TASK]
-        self.assertEqual(task["model"], "gpt-6.1-sol")
+        self.assertEqual(task["model"], "gpt-6.1-terra")
         self.assertEqual(task["reasoning_effort"], "high")
         self.assertEqual(task["max_attempts"], 1)
         self.assertGreaterEqual(task["max_output_tokens"], 4500)
+        terra = PRICES_PER_MILLION["gpt-6.1-terra"]
         sol = PRICES_PER_MILLION["gpt-6.1-sol"]
-        terra = PRICES_PER_MILLION["gpt-5.6-terra"]
-        self.assertLessEqual(sol["input"], terra["input"])
-        self.assertLess(sol["output"], terra["output"])
-        self.assertLess(estimate_cost("gpt-6.1-sol", 2200, 1700),
-                        estimate_cost("gpt-5.6-terra", 2200, 1700))
+        self.assertLess(terra["input"], sol["input"])
+        self.assertLess(terra["output"], sol["output"])
+        self.assertLess(estimate_cost("gpt-6.1-terra", 2200, 1700),
+                        estimate_cost("gpt-6.1-sol", 2200, 1700))
+        self.assertFalse(source["model_refresh"]["astra_paid_api_allowed"])
 
     def test_existing_strategist_model_spend_caps_are_not_expanded(self):
         policy = json.loads(Path("research/api_agent/API_INTELLIGENCE_POLICY_v2.json").read_text())
@@ -99,11 +100,11 @@ class SemanticTest(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 api_attempt_limit({"max_attempts": value})
 
-    def test_prepare_material_high_uses_sol_6_1_existing_lane(self):
+    def test_prepare_material_high_uses_terra_6_1_existing_lane(self):
         plan = self.plan()
         self.assertTrue(plan["run_allowed"])
         self.assertEqual(plan["reason"], "MATERIAL_CANDIDATE")
-        self.assertEqual(plan["model"], "gpt-6.1-sol")
+        self.assertEqual(plan["model"], "gpt-6.1-terra")
         self.assertEqual(plan["max_api_calls"], 1)
         self.assertTrue(plan["no_api_retry"])
 

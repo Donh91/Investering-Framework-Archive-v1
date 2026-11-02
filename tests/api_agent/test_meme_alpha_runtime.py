@@ -62,6 +62,16 @@ class MemeAlphaRuntimeTests(unittest.TestCase):
             plan3 = build_plan(root, POLICY, {"processed_inputs": processed})
             self.assertTrue(plan3["no_op"])
 
+    def test_paid_model_class_guard_blocks_astra_across_runtime_versions(self) -> None:
+        for model in ("gpt-6-astra", "gpt-7-astra", "other-provider", "gpt-6.1-terra-preview"):
+            with self.subTest(model=model), self.assertRaisesRegex(
+                    ValueError, "paid_api_model_class_forbidden"):
+                build_request(model, "high", "MAL-test", {"status": "QUEUED"}, enable_web=False)
+        for model in ("gpt-6-luna", "gpt-6.1-terra", "gpt-6.1-sol"):
+            with self.subTest(model=model):
+                output = build_request(model, "high", "MAL-test", {"status": "QUEUED"}, enable_web=False)
+                self.assertEqual(output["model"], model)
+
     def test_changed_source_becomes_eligible_again(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

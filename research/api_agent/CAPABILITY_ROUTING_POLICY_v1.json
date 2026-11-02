@@ -9,7 +9,7 @@
   "routing_strategy": "CAPABILITY_MATCHED_WITH_ESCALATION",
   "routing_objective": "LOWEST_SUFFICIENT_CAPABILITY_TIER_THEN_LOWEST_EXPECTED_TOTAL_TASK_COST",
   "pricing_snapshot": {
-    "observed_at_utc_date": "2026-09-30",
+    "observed_at_utc_date": "2026-10-27",
     "semantics": "ROUTING_COST_ESTIMATE_ONLY_NOT_BILLING_OR_BUDGET_AUTHORITY",
     "long_context_threshold_tokens": 272000,
     "long_context_input_multiplier": 2,
@@ -17,13 +17,15 @@
     "source": "OPENAI_OFFICIAL_API_PRICING",
     "verified_latest_model_ids": {
       "luna": "gpt-6-luna",
-      "terra": "gpt-5.6-terra",
+      "terra": "gpt-6.1-terra",
       "sol": "gpt-6.1-sol",
       "astra": "gpt-6-astra",
       "legacy_sol": "gpt-6-sol"
     },
-    "terra_note": "NO_OFFICIAL_GPT_6_TERRA_MODEL_ID_VERIFIED_AS_OF_2026-09-27",
-    "sol_6_1_note": "GPT-6.1 Sol is the preferred current senior specialist when runtime-qualified; GPT-6 Sol remains a compatibility fallback during staged migration."
+    "sol_6_1_note": "GPT-6.1 Sol is the preferred current senior specialist when runtime-qualified; GPT-6 Sol remains a compatibility fallback during staged migration.",
+    "terra_note": "GPT-6.1 Terra officially released 2026-10-26, API model ID gpt-6.1-terra. Prices $1/M input, $5/M output, $0.05/M cached input; cached pricing is not included in worst-case admission estimates.",
+    "official_model_catalog": "https://developers.openai.com/api/docs/models",
+    "api_allowlist_note": "Only Luna/Terra/Sol API classes; Astra is excluded even if provider lists the model. Upgrades require documented listing, account availability, qualification, correct price snapshot, scoped CI and explicit release."
   },
   "principles": {
     "deterministic_first": true,
@@ -47,19 +49,26 @@
     "delegation_lineage_required_for_hardened_profiles": true,
     "bounded_redelegation_only": true,
     "preserve_role_tiers_when_senior_model_is_cheaper": true,
-    "prefer_current_model_within_same_capability_tier": true
+    "prefer_current_model_within_same_capability_tier": true,
+    "latest_verifiably_available_within_class": true,
+    "never_silent_model_upgrades": true,
+    "frozen_experiments_preserve_original_model": true,
+    "model_release_does_not_override_qualification_or_budget_gates": true,
+    "only_luna_terra_sol_for_paid_api": true,
+    "disable_astra_paid_api_even_if_present_in_runtime": true
   },
   "model_role_policy": {
     "gpt-5.6-terra": {
-      "role": "INTERMEDIATE_SYNTHESIS_AND_CONFLICT_REVIEW",
+      "role": "LEGACY_TERRA_COMPATIBILITY_FALLBACK",
       "preferred_for": [
         "bounded_conflict_review",
         "intermediate_synthesis",
         "moderate_multi_source_review"
-      ]
+      ],
+      "routing_note": "Historical compatibility only; not a new default or active registry choice. Requires verified runtime availability and deliberate fallback approval."
     },
     "gpt-6-astra": {
-      "role": "SCARCE_AGENTIC_AND_EXTREME_COMPLEXITY_TIER",
+      "role": "HISTORICAL_PRICE_READBACK_ONLY_API_DISABLED",
       "preferred_for": [
         "agentic_execution",
         "cross_domain_orchestration",
@@ -67,7 +76,7 @@
         "highest_complexity_architecture",
         "long_running_multi_step_work"
       ],
-      "routing_note": "RESERVE_FOR_TASKS_WHERE_AGENTIC_EXECUTION_OR_CAPABILITY_DELTA_MATERIALLY_EXCEEDS_SOL"
+      "routing_note": "API EXECUTION PROHIBITED for all new tasks and independent reviews, including requires_astra. Historical cost-readback metadata only. No paid Astra calls."
     },
     "gpt-6-luna": {
       "role": "ROUTINE_WORKFORCE",
@@ -116,6 +125,17 @@
         "strategic_planning"
       ],
       "routing_note": "PREFERRED_CURRENT_SOL_FOR_DIFFICULT_WORK_WHEN_RUNTIME_QUALIFIED; NEAR_ASTRA_CLASS_WORK_SHOULD_TRY_SOL_6_1_BEFORE_ASTRA_UNLESS_AGENTIC_OR_EXTREME_CONTEXT_IS_REQUIRED"
+    },
+    "gpt-6.1-terra": {
+      "role": "INTERMEDIATE_SYNTHESIS_CURRENT",
+      "preferred_for": [
+        "bounded_conflict_review",
+        "intermediate_synthesis",
+        "moderate_multi_source_review",
+        "scoped_code_fix_review",
+        "visual_or_computer_use_tasks"
+      ],
+      "routing_note": "CURRENT_DEFAULT_TERRA; use only when runtime-qualified and budget-admitted"
     }
   },
   "escalation_policy": {
@@ -209,7 +229,7 @@
     },
     "gpt-6-astra": {
       "rank": 4,
-      "api_eligible": true,
+      "api_eligible": false,
       "reasoning_efforts": [
         "low",
         "medium",
@@ -313,6 +333,31 @@
         "output": 10
       },
       "selection_priority": 20
+    },
+    "gpt-6.1-terra": {
+      "rank": 2,
+      "api_eligible": true,
+      "reasoning_efforts": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "capabilities": [
+        "classification",
+        "conflict_review",
+        "extraction",
+        "structured_output",
+        "summarization",
+        "synthesis"
+      ],
+      "price_per_million": {
+        "input": 1,
+        "output": 5
+      },
+      "selection_priority": 30
     }
   },
   "review": {
@@ -326,14 +371,20 @@
   },
   "execution": {
     "max_parallel_units": 4,
-    "astra_parent_only_when_required_by_profile": true,
+    "astra_parent_only_when_required_by_profile": false,
     "api_override_requires_verified_runtime_snapshot": true,
     "api_override_requires_explicit_gateway_flag": true,
     "code_write_requires_codex_runtime_available": true,
     "code_write_requires_existing_task_authority": true,
     "deterministic_executor_name": "DETERMINISTIC",
     "code_executor_name": "CODEX",
-    "api_executor_name": "OPENAI_API"
+    "api_executor_name": "OPENAI_API",
+    "api_model_class_allowlist": [
+      "luna",
+      "terra",
+      "sol"
+    ],
+    "astra_api_execution_permitted": false
   },
   "authority": {
     "creates_truth": false,
@@ -345,5 +396,43 @@
     "trade_action": false,
     "canonical_promotion": false,
     "automatic_merge": false
+  },
+  "model_currency_governance": {
+    "rule": "LATEST_VERIFIED_AND_RUNTIME_QUALIFIED_MODEL_WITHIN_ASSIGNED_CLASS",
+    "current_classes": {
+      "luna": "gpt-6-luna",
+      "terra": "gpt-6.1-terra",
+      "sol": "gpt-6.1-sol",
+      "astra": "gpt-6-astra"
+    },
+    "new_release_procedure": "VERIFY_OFFICIAL_ID_PRICING_CONTEXT_TOOLS_AND_ACCOUNT_AVAILABILITY_THEN_TEST_EXISTING_EVIDENCE_AND_CHANGE_THROUGH_GOVERNED_PR",
+    "no_silent_upgrade": true,
+    "requires_budget_admission": true,
+    "requires_exact_model_receipt": true,
+    "requires_task_qualification": true,
+    "on_unverified_or_unavailable": "FAIL_CLOSED_OR_EXPLICIT_APPROVED_SAME_CLASS_FALLBACK",
+    "frozen_forward_tests": "KEEP_PRE_REGISTERED_MODEL_UNTIL_EXPERIMENT_VERSIONED",
+    "review_cadence": "ON_NEW_PROVIDER_RELEASE_AND_MONTHLY",
+    "authority": "NO_AUTOMATIC_MERGE_OR_CANONICAL_OR_PORTFOLIO_AUTHORITY",
+    "prohibit_astra_on_paid_api": true,
+    "review_on_new_model_release_only": true
+  },
+  "long_task_effort_policy": {
+    "status": "OWNER_AUTHORIZED_STAGED_EFFORT_FOR_COMPLEX_WORK",
+    "provider_model": "gpt-6.1-terra",
+    "official_reasoning_effort_values": [
+      "high",
+      "xhigh",
+      "max"
+    ],
+    "recommended_selection": {
+      "high": "SINGLE_FOCUSED_PR_DEFECT_OR_DETERMINISTIC_CODE_REPAIR",
+      "xhigh": "DEFAULT_COMPLEX_LONG_TASK_FOR_CODE_REVIEW_TASK2_PIT_SITE_SOURCE_INTEGRATION_AND_ALTS_CYCLE_BASELINES",
+      "max": "ONLY_HARDEST_ISOLATED_P0_AFTER_XHIGH_NOT_SUFFICIENT_OR_UNAMBIGUOUS_MAX_GAIN"
+    },
+    "quality_gate": "MEASURE_VALID_OUTPUT_PLUS_CODE_TEST_AND_COMPLETION_PER_USD_VS_HIGH; MORE_REASONING_DOES_NOT_GRANT_MERGE_AUTHORITY",
+    "budget": "ACTUAL_ORG_LIMIT_30_USD_IS_LOWER_THAN_INTERNAL_40; HONOR_LOWER_ENFORCED_LIMIT_AND_3_USD_SINGLE_CALL; CONSERVATIVE_PRIOR_UNKNOWN_TRANSPORT_RESERVATION",
+    "bounds": "TASK_SCOPED_INPUT_AND_FINITE_OUTPUT; DO_NOT_EXPEND_REASONING_ON_ALL_26_PRS_IN_ONE_INCOMPLETE_RESPONSE",
+    "activation": "LIVE_XHIGH_EXPLICIT_EXISTING_GATE_OWNER_FINITE_CLAIM_ONLY_NO_REPEAT_CONSUMED_HIGH_OR_MAX"
   }
 }

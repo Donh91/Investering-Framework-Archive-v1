@@ -133,7 +133,7 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         self.assertIn('NO_CODE_WRITE_PERFORMED', text)
         self.assertIn('NO_AUTHORITY_CHANGE', text)
         self.assertIn('private_data_included', text)
-        self.assertIn('gpt-6-sol', text)
+        self.assertIn('gpt-6.1-sol', text)
     def test_architecture_forbids_authority_escalation(self):
         text = Path('00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md').read_text()
         self.assertIn('Canonical market authority: NONE', text)

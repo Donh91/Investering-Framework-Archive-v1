@@ -26,7 +26,7 @@ from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
 
 CONTRACT = "FRAMEWORK_STRATEGIST_MONTHLY_LIABILITY_v1"
 TASK = "FRAMEWORK_STRATEGIST_SEMANTIC"
-MODEL = "gpt-6.1-sol"
+MODEL = "gpt-6.1-terra"
 CAP_USD = 0.75
 RESERVE_USD = 0.05
 OVERHEAD_TOKENS = 8192  # conservative protocol/context wrapper budget
