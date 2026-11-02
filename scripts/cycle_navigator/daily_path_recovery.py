@@ -166,6 +166,34 @@ def _source_gate(context: Mapping[str, Any], year: int, week: int, issued: datet
             "source_admitted_for_scientific_scoring": False}, "ELIGIBLE"
 
 
+def reject_unverified_initial_daily_quotes(value: dict[str, Any],
+                                          context: Mapping[str, Any]) -> dict[str, Any]:
+    """An initial 7/7 model answer cannot bypass original price-quote parity.
+
+    Mutates only the still-unfrozen in-memory publication candidate and never
+    changes canonical scoring or a previously frozen forecast.
+    """
+    freeze = value["forecast_freeze"]
+    path = freeze["daily_price_path"]
+    quotes = freeze.get("price_quote") or {}
+    spot = ((context.get("completed_week_hourly_capture") or {})
+            .get("hourly_sequence") or {}).get("spot_flow_readback") or {}
+    changes = {}
+    for asset in ("BTC", "ETH"):
+        item = path.get(asset)
+        if not isinstance(item, dict) or item.get("status") != "PUBLISHED":
+            continue
+        actual = (spot.get(asset) or {}).get("quote_unit")
+        claimed = quotes.get(asset)
+        if actual not in ("USD", "USDT") or claimed != actual:
+            changes[asset] = {"status": "UNAVAILABLE", "points": [],
+                              "reason": "Original price-quote identity unverified or inconsistent; never equate USD and USDT."}
+    if changes:
+        value["forecast_freeze"] = {**freeze,
+            "daily_price_path": {**path, **changes}}
+    return value
+
+
 def _input_excerpt(context: Mapping[str, Any], source: Mapping[str, Any], original: Mapping[str, Any], freeze: Mapping[str, Any]) -> dict[str, Any]:
     sequence = (context["completed_week_hourly_capture"].get("hourly_sequence") or {})
     assets = {}
