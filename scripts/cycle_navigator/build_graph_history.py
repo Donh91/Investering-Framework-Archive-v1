@@ -206,11 +206,34 @@ def verify_index_chain(index):
     return prior_weeks
 
 
+def _read_index_or_fail_missing_history(root):
+    """Never silently bootstrap over an existing durable history after index loss.
+
+    This is local consistency protection, NOT an external trusted checkpoint:
+    deletion of the entire history tree remains outside its proof boundary.
+    """
+    index_file = root / ROOT / "index.json"
+    if index_file.exists():
+        return read(index_file)
+    weeks_dir = root / ROOT / "weeks"
+    if weeks_dir.exists() and any(
+        weeks_dir.rglob(pattern)
+        for pattern in ()
+    ):
+        raise AssertionError("unreachable")
+    for pattern in ("forecast-reference.json", "actual-series.json"):
+        if weeks_dir.exists() and next(weeks_dir.rglob(pattern), None) is not None:
+            raise ValueError("HISTORY_INDEX_MISSING_WITH_EXISTING_RECORDS")
+    if (root / ROOT / "index.json.tmp").exists():
+        raise ValueError("HISTORY_INDEX_MISSING_WITH_EXISTING_RECORDS")
+    return None
+
+
 def archive(root, target):
     if target < START:
         return {"contract": CONTRACT, "status": "NOT_STARTED", "weeks": []}
     index_file = root / ROOT / "index.json"
-    old_index = read(index_file) if index_file.exists() else None
+    old_index = _read_index_or_fail_missing_history(root)
     prior_weeks = verify_index_chain(old_index) if old_index is not None else {}
     result = []
     cursor = START
@@ -263,7 +286,7 @@ def archive(root, target):
 
 def publish(root):
     index_file = root / ROOT / "index.json"
-    index = read(index_file) if index_file.exists() else {"contract": CONTRACT, "weeks": []}
+    index = _read_index_or_fail_missing_history(root) or {"contract": CONTRACT, "weeks": []}
     if index_file.exists():
         verify_index_chain(index)
     elif index.get("contract") != CONTRACT:
