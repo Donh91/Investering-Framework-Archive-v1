@@ -56,7 +56,7 @@ class KompasProContractTests(unittest.TestCase):
         self.assertIn("Internal Kompas", doc)
         self.assertIn("21–30D", doc)
         self.assertIn("ONE BTC graph", doc)
-        self.assertIn("No synthetic", doc) if "No synthetic" in doc else self.assertIn("No", doc)
+        self.assertIn("No synthetic numeric forecast", doc)
         self.assertTrue(self.route["output"]["kompas_pro_presentational_contract"]["deep_internal_analysis_required_before_visible_answer"])
 
     def test_exact_fourteen_horizons_not_an_abbreviated_four_horizon_read(self):
@@ -72,12 +72,64 @@ class KompasProContractTests(unittest.TestCase):
         self.assertTrue(all(r["price_expected_close"] is None for r in rows))
 
     def test_real_observation_is_not_an_expected_future_close(self):
-        x = {"status": "OBSERVED", "observed_price": 78000.0, "observed_at_utc": "2026-11-02T09:00:00Z", "price_quote": "USDT"}
-        rows = build_visible_horizon_rows(self.ledger, {"NOW": x})
+        x = {"status": "OBSERVED", "observed_price": 78000.0, "observed_at_utc": "2026-11-02T09:00:00Z", "price_quote": "USDT", "asset": "BTC", "price_venue": "BINANCE_SPOT_BTCUSDT"}
+        rows = build_visible_horizon_rows(self.ledger, {"NOW": x}, as_of_utc="2026-11-02T09:30:00Z")
         self.assertEqual(rows[0]["observed_price"], 78000)
         self.assertIsNone(rows[0]["price_expected_close"])
         with self.assertRaisesRegex(ValueError, "OBSERVED_AS_FORECAST"):
             build_visible_horizon_rows(self.ledger, {"H0_12H": x})
+
+    def test_grok_strategic_direction_cannot_become_official(self):
+        with self.assertRaisesRegex(ValueError, "RESEARCH_DIRECTION_CANNOT_BE_OFFICIAL"):
+            build_visible_horizon_rows(self.ledger, {"H21_30D": {
+                "status": "OFFICIAL_DIRECTION",
+                "direction_owner": "STRATEGIC_COMPASS_CN_PROJECTION",
+                "direction": "UP",
+            }})
+        ledger = deepcopy(self.ledger)
+        ledger["horizons"][5]["direction_owner"] = "OFFICIAL_DAILY_COMPASS"
+        with self.assertRaisesRegex(ValueError, "RESEARCH_DIRECTION_CANNOT_BE_OFFICIAL"):
+            build_visible_horizon_rows(ledger, {"H8_14D": {
+                "status": "OFFICIAL_DIRECTION",
+                "direction_owner": "OFFICIAL_DAILY_COMPASS",
+                "direction": "DOWN",
+            }})
+        self.assertEqual(build_visible_horizon_rows(self.ledger, {"H1_3D": {
+            "status": "OFFICIAL_DIRECTION",
+            "direction_owner": "OFFICIAL_DAILY_COMPASS",
+            "direction": "UP",
+        }})[3]["color"], "GREEN")
+
+    def test_grok_observed_btc_source_and_freshness(self):
+        valid = {"status": "OBSERVED", "observed_price": 78000.0,
+                 "observed_at_utc": "2026-11-02T09:00:00Z",
+                 "price_quote": "USDT", "asset": "BTC",
+                 "price_venue": "BINANCE_SPOT_BTCUSDT"}
+        self.assertEqual(build_visible_horizon_rows(
+            self.ledger, {"NOW": valid}, as_of_utc="2026-11-02T10:59:59Z"
+        )[0]["observed_price"], 78000.0)
+        for change, clock in [
+            ({"asset": "ETH"}, "2026-11-02T09:30:00Z"),
+            ({"price_venue": "UNKNOWN"}, "2026-11-02T09:30:00Z"),
+            ({}, "2026-11-02T11:00:01Z"),
+            ({}, "2026-11-02T08:59:59Z"),
+            ({}, None),
+        ]:
+            with self.subTest(change=change, clock=clock), self.assertRaises(ValueError):
+                row = dict(valid)
+                row.update(change)
+                build_visible_horizon_rows(self.ledger, {"NOW": row}, as_of_utc=clock)
+
+    def test_grok_all_required_guards_and_sixteen_families(self):
+        for field in ("require_target_start_end_utc", "require_original_source_hash"):
+            ledger = deepcopy(self.ledger)
+            ledger["horizons"][0][field] = False
+            with self.assertRaises(ValueError):
+                validate_route_and_ledger(self.route, ledger)
+        ledger = deepcopy(self.ledger)
+        ledger["full_internal_required_families"] = ledger["full_internal_required_families"][:14]
+        with self.assertRaisesRegex(ValueError, "INTERNAL_SOURCE_AUDIT_TOO_SHALLOW"):
+            validate_route_and_ledger(self.route, ledger)
 
     def test_official_mixed_direction_retains_label_but_never_mints_price(self):
         rows = build_visible_horizon_rows(self.ledger, {
