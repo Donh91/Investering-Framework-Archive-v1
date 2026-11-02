@@ -27,6 +27,8 @@ COLORS = {
 SHA = re.compile(r"[0-9a-f]{64}\Z")
 UTC_STAMP = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z\Z")
 NUMERIC_FIELDS = ("low", "expected_close", "high")
+OFFICIAL_DIRECTION_OWNERS = frozenset(("OFFICIAL_NATIVE", "OFFICIAL_DAILY_COMPASS"))
+OBSERVED_MAX_AGE_SECONDS = 7200
 
 
 def _utc(value: Any) -> datetime:
@@ -66,12 +68,14 @@ def validate_route_and_ledger(route: Mapping[str, Any], ledger: Mapping[str, Any
     ids = [item.get("id") for item in ledger.get("horizons", ())]
     if ids != list(HORIZON_IDS) or len(ids) != len(set(ids)):
         raise ValueError("MISSING_DUPLICATE_OR_UNORDERED_HORIZON")
-    if len(ledger.get("full_internal_required_families", ())) < 14:
+    if len(ledger.get("full_internal_required_families", ())) != 16:
         raise ValueError("INTERNAL_SOURCE_AUDIT_TOO_SHALLOW")
     if [p.get("id") for p in ledger.get("release_phases", ())] != ["G0", "G1", "G2", "G3", "G4", "G5", "G6"]:
         raise ValueError("RELEASE_CHAIN_MISSING")
     if not all(h.get("numeric_publication_default") == "NOT_ISSUED" and
                h.get("require_original_issue") is True and
+               h.get("require_target_start_end_utc") is True and
+               h.get("require_original_source_hash") is True and
                h.get("require_quote_parity") is True and h.get("action_owner") == "OFFICIAL_DAILY_COMPASS_ONLY"
                for h in ledger["horizons"]):
         raise ValueError("PRICE_OR_ACTION_AUTHORITY_PROMOTED")
@@ -97,7 +101,8 @@ def _number(value: Any) -> float:
 
 
 def build_visible_horizon_rows(ledger: Mapping[str, Any],
-                               rows: Mapping[str, Mapping[str, Any]]) -> list[dict[str, Any]]:
+                               rows: Mapping[str, Mapping[str, Any]],
+                               *, as_of_utc: str | None = None) -> list[dict[str, Any]]:
     """Project *already-authenticated* owner rows to minimal UI-safe status.
 
     Successful shape validation is not historical provider-first-known proof.
@@ -124,14 +129,23 @@ def build_visible_horizon_rows(ledger: Mapping[str, Any],
             if k != "NOW" or row.get("expected_close") is not None or row.get("low") is not None or row.get("high") is not None:
                 raise ValueError("OBSERVED_AS_FORECAST")
             _number(row.get("observed_price"))
-            _utc(row.get("observed_at_utc"))
+            observed_at = _utc(row.get("observed_at_utc"))
+            if row.get("asset") != "BTC":
+                raise ValueError("OBSERVED_ASSET_MUST_BE_BTC")
             if not row.get("price_quote") in ("USDT", "USD"):
                 raise ValueError("OBSERVED_QUOTE_MISSING")
+            if row.get("price_quote") == "USDT" and row.get("price_venue") != "BINANCE_SPOT_BTCUSDT":
+                raise ValueError("USDT_PROVENANCE_MISMATCH")
+            age = (_utc(as_of_utc) - observed_at).total_seconds() if as_of_utc is not None else None
+            if age is None or age < 0 or age > OBSERVED_MAX_AGE_SECONDS:
+                raise ValueError("OBSERVED_PRICE_STALE_FUTURE_OR_UNCLOCKED")
             direction = "UNAVAILABLE"
         elif status == "OFFICIAL_DIRECTION":
             if row.get("direction_owner") != h["direction_owner"] or any(row.get(x) is not None for x in NUMERIC_FIELDS):
                 raise ValueError("OFFICIAL_DIRECTION_CANNOT_MINT_PRICE")
-            if h["direction_owner"] in ("STRATEGIC_COMPASS_RESEARCH", "STRATEGIC_COMPASS_LONG_RANGE_VALIDATOR", "CN_STRATEGIC_SHADOW"):
+            if h["direction_owner"] not in OFFICIAL_DIRECTION_OWNERS or h.get("baseline_readiness") in (
+                    "RESEARCH_PREFLIGHT_NOT_ISSUED", "STRATEGIC_QUALITATIVE_PRICE_NOT_ISSUED",
+                    "SHADOW_LONG_RANGE_PRICE_NOT_ISSUED", "LONG_RANGE_SCENARIO_RESEARCH_ONLY"):
                 raise ValueError("RESEARCH_DIRECTION_CANNOT_BE_OFFICIAL")
             direction = row.get("direction")
             if direction not in DIRECTIONS:
