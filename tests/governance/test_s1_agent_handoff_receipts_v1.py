@@ -75,6 +75,15 @@ class HandoffTests(unittest.TestCase):
         data[1]["at_utc"] = "2026-02-30T10:01:00Z"
         self.reject(data)
 
+    def test_owner_path_traversal_rejected(self):
+        for bad in ("https://github.com/Donh91/../evil/issues/5",
+                    "https://github.com/Donh91/%2e%2e/evil/issues/5",
+                    "https://github.com/Donh91/%2E%2E/evil/issues/5"):
+            data = chain()
+            for row in data:
+                row["original_url"] = bad
+            self.reject(data)
+
 
 if __name__ == "__main__":
     unittest.main()

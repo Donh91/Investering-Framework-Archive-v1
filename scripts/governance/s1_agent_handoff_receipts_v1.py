@@ -4,7 +4,7 @@ Validates the SHAPE of a request/ACK/result chain. It does not authenticate
 GitHub actors, prove agent execution, grant merge authority or call providers.
 """
 from datetime import datetime
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 import re
 import hashlib
 import json
@@ -32,6 +32,10 @@ def _url(value):
     if not isinstance(value, str):
         return False
     parsed = urlparse(value)
+    # Shape-only validation must not accept path traversal under the trusted owner.
+    segments = unquote(parsed.path).replace(chr(92), "/").split("/")
+    if any(segment in (".", "..") for segment in segments):
+        return False
     return parsed.scheme == "https" and parsed.netloc == "github.com" and (
         parsed.path.startswith("/Donh91/") and (not parsed.fragment or re.fullmatch(r"(?:issuecomment-\d+|discussion_r\d+|pullrequestreview-\d+)", parsed.fragment) is not None)
     )
