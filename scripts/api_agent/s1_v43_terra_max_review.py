@@ -172,6 +172,14 @@ def validate(outdir: Path) -> dict:
         raise ValueError("REVIEW_FALSE_PASS_WITH_ACTIONABLE_FINDINGS")
     if receipt.get("context_hash") != sha256(data):
         raise ValueError("CONTEXT_BINDING_MISMATCH")
+    if (receipt.get("task") != TASK
+            or receipt.get("prompt_hash") != sha256((outdir / "prompt.txt").read_bytes())
+            or receipt.get("output_hash") != sha256((outdir / "output" / "output.json").read_bytes())):
+        raise ValueError("MODEL_OUTPUT_OR_PROMPT_HASH_MISMATCH")
+    if (type(receipt.get("input_tokens")) is not int or receipt["input_tokens"] < 1
+            or type(receipt.get("output_tokens")) is not int or receipt["output_tokens"] < 1
+            or not re.fullmatch(r"[a-f0-9]{64}", str(receipt.get("request_hash") or ""))):
+        raise ValueError("PAID_USAGE_AND_REQUEST_HASH_REQUIRED")
     check_pr(manifest["head"])
     return {"head": manifest["head"], "receipt": receipt, "result": result}
 
