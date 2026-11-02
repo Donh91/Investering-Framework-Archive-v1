@@ -170,13 +170,25 @@ def validate(outdir: Path) -> dict:
     findings = result.get("evidence_against", [])
     if not isinstance(findings, list) or result.get("status") != expected[verdict.group(1)]:
         raise ValueError("REVIEW_VERDICT_STATUS_CONTRADICTION")
+    # Normalize model formatting before interpreting severity. A whitespace-
+    # wrapped or lower-case P1 must never be accepted as a nonblocking finding.
+    def severity(value):
+        if not isinstance(value, str):
+            return 0  # malformed finding, fail closed
+        match = re.match(r"^\\s*P\\s*([0-3])\\s*\\|", value, re.IGNORECASE)
+        if match:
+            return int(match.group(1))
+        if re.search(r"\\bP\\s*[01]\\b", value, re.IGNORECASE):
+            return 0  # unstructured P0/P1 evidence is blocking
+        return None
+
+    levels = [severity(x) for x in findings]
     if verdict.group(1) == "PASS" and any(
-        isinstance(x, str) and x.startswith(("P0|", "P1|", "P2|"))
-        for x in findings
+        level in (0, 1, 2) for level in levels
     ):
         raise ValueError("REVIEW_FALSE_PASS_WITH_ACTIONABLE_FINDINGS")
     if verdict.group(1) != "FAIL" and any(
-        isinstance(x, str) and x.startswith(("P0|", "P1|")) for x in findings
+        level in (0, 1) for level in levels
     ):
         raise ValueError("REVIEW_UNDERSTATED_BLOCKING_FINDINGS")
     if receipt.get("context_hash") != sha256(data):
