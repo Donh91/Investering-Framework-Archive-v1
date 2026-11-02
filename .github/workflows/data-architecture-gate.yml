@@ -21,6 +21,14 @@ jobs:
           python 04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/test_source_qa_v1.py
       - name: Verify Task 2 R0 pinned-source Git-object fail-closed cases
         run: node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs
+      - name: Run onchain options REA synthetic positive and negative controls (research only)
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m py_compile 04_RESEARCH_LAB/external_specialist_dissection/onchain_options_2026_11/sector_metrics.py 04_RESEARCH_LAB/external_specialist_dissection/onchain_options_2026_11/test_sector_metrics.py
+          python -m unittest discover -s 04_RESEARCH_LAB/external_specialist_dissection/onchain_options_2026_11 -p 'test_sector_metrics.py' -v 2>&1 | tee /tmp/options-rea-tests.log
+          grep -Eq '^Ran 10 tests in ' /tmp/options-rea-tests.log
+          grep -qx 'OK' /tmp/options-rea-tests.log
       - run: python -m unittest tests.data_storage.test_durable_promotion_controller tests.data_storage.test_storage_telemetry
       - run: python scripts/data_storage/storage_telemetry.py --root . --output storage-telemetry.json
       - uses: actions/upload-artifact@v4
