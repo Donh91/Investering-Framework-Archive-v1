@@ -38,11 +38,15 @@ def _admit(row: dict, cutoff: datetime) -> None:
         raise EvidenceGap("IN_PROGRESS_PERIOD")
     if not row.get("source_id") or not row.get("venue"):
         raise EvidenceGap("SOURCE_OR_VENUE_MISSING")
-    if _utc(row.get("source_available_at_utc")) > cutoff:
+    available = _utc(row.get("source_available_at_utc"))
+    if available > cutoff:
         raise EvidenceGap("FUTURE_AVAILABLE_DATA")
     day = date.fromisoformat(row["day_utc"])
-    if datetime.combine(day + timedelta(days=1), datetime.min.time(), timezone.utc) > cutoff:
+    period_end = datetime.combine(day + timedelta(days=1), datetime.min.time(), timezone.utc)
+    if period_end > cutoff:
         raise EvidenceGap("INCOMPLETE_DAY")
+    if available < period_end:
+        raise EvidenceGap("IMPOSSIBLE_PERIOD_AVAILABILITY")
     _amount(row.get("premium_usd"), "premium")
     _amount(row.get("notional_usd"), "notional")
 
@@ -71,6 +75,8 @@ def weekly_comparison(rows: list[dict], venue: str, last_day: str,
             by_day[day] = row
         if any(day not in by_day for day in window):
             raise EvidenceGap("INCOMPLETE_14_DAY_COHORT")
+        if len({r["source_id"] for r in by_day.values()}) != 1:
+            raise EvidenceGap("MIXED_SOURCE_COHORT")
         first = [by_day[d] for d in window[:7]]
         last = [by_day[d] for d in window[7:]]
         prev = sum(_amount(r["premium_usd"], "premium") for r in first)
