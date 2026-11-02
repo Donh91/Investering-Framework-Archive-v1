@@ -345,3 +345,31 @@ def test_existing_cost_reservation_prevents_double_paid_call(monkeypatch, tmp_pa
     assert receipt["attempt_count"] == 0 and called == []
     assert receipt["budget_error_code"] == "RECOVERY_COST_RESERVATION_ALREADY_EXISTS"
     assert path.read_text() == '{"preexisting":true}'
+
+
+def test_first_model_pass_fails_closed_when_price_quote_mismatches():
+    from scripts.cycle_navigator.daily_path_recovery import reject_unverified_initial_daily_quotes
+    value = _value("PUBLISHED", "PUBLISHED")
+    value["forecast_freeze"]["price_quote"] = {"BTC": "USD", "ETH": "USDT"}
+    updated = reject_unverified_initial_daily_quotes(value, _context())
+    path = updated["forecast_freeze"]["daily_price_path"]
+    assert path["BTC"]["status"] == "UNAVAILABLE"
+    assert path["BTC"]["points"] == []
+    assert path["ETH"]["status"] == "PUBLISHED"
+    assert path["ETH"]["points"][0]["expected_close"] == 201
+
+
+def test_first_model_pass_all_verified_preserves_original_7of7():
+    from scripts.cycle_navigator.daily_path_recovery import reject_unverified_initial_daily_quotes
+    value = _value("PUBLISHED", "PUBLISHED")
+    value["forecast_freeze"]["price_quote"] = {"BTC": "USDT", "ETH": "USDT"}
+    original = copy.deepcopy(value)
+    assert reject_unverified_initial_daily_quotes(value, _context()) == original
+
+
+def test_first_model_pass_missing_quote_never_publishes():
+    from scripts.cycle_navigator.daily_path_recovery import reject_unverified_initial_daily_quotes
+    value = _value("PUBLISHED", "PUBLISHED")
+    candidate = reject_unverified_initial_daily_quotes(value, _context())
+    assert all(candidate["forecast_freeze"]["daily_price_path"][asset]["status"] == "UNAVAILABLE"
+               for asset in ("BTC", "ETH"))
