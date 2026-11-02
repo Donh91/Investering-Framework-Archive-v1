@@ -17,6 +17,7 @@ TRIGGER = re.compile(r"^\[S1_TERRA_MAX_REVIEW\] PR=1877 HEAD=([a-f0-9]{40})$")
 MAX_DIFF_BYTES = 160000
 MAX_CONTEXT_BYTES = 195000
 RESERVE_USD = 1.50
+BOT_LOGIN = "github-actions[bot]"
 
 
 def sha256(data: bytes) -> str:
@@ -116,6 +117,8 @@ def reserve(outdir: Path) -> None:
     prefix = "S1_TERRA_MAX_RESERVATION_V1 "
     previous = []
     for comment in [v for page in records for v in page]:
+        if (comment.get("user") or {}).get("login") != BOT_LOGIN:
+            continue  # unauthenticated public comments cannot reserve budget
         body = str(comment.get("body") or "").strip()
         if body.startswith(prefix):
             if not re.fullmatch(r"S1_TERRA_MAX_RESERVATION_V1 PR=1877 HEAD=[a-f0-9]{40} COMMENT=[0-9]+", body):
@@ -129,7 +132,9 @@ def reserve(outdir: Path) -> None:
     gh("issue", "comment", str(ISSUE), "--repo", REPO, "--body", body)
     refreshed = gh("api", "--paginate", "--slurp", f"repos/{REPO}/issues/{ISSUE}/comments?per_page=100")
     after = json.loads(refreshed)
-    found = [v for page in after for v in page if str(v.get("body") or "").strip() == body]
+    found = [v for page in after for v in page
+             if str(v.get("body") or "").strip() == body
+             and (v.get("user") or {}).get("login") == BOT_LOGIN]
     if len(found) != 1:
         raise ValueError("RESERVATION_READBACK_FAILED")
 
@@ -170,6 +175,10 @@ def validate(outdir: Path) -> dict:
         for x in findings
     ):
         raise ValueError("REVIEW_FALSE_PASS_WITH_ACTIONABLE_FINDINGS")
+    if verdict.group(1) != "FAIL" and any(
+        isinstance(x, str) and x.startswith(("P0|", "P1|")) for x in findings
+    ):
+        raise ValueError("REVIEW_UNDERSTATED_BLOCKING_FINDINGS")
     if receipt.get("context_hash") != sha256(data):
         raise ValueError("CONTEXT_BINDING_MISMATCH")
     if (receipt.get("task") != TASK

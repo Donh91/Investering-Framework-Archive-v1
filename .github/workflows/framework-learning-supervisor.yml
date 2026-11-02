@@ -377,6 +377,9 @@ jobs:
       github.event.issue.number == 1156 &&
       github.event.comment.author_association == 'OWNER' &&
       startsWith(github.event.comment.body, '[S1_TERRA_MAX_REVIEW] PR=1877 HEAD=')
+    concurrency:
+      group: s1-v43-terra-max-review
+      cancel-in-progress: false
     permissions:
       contents: read
       issues: write

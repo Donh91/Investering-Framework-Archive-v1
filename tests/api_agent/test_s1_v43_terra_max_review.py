@@ -80,7 +80,8 @@ class TerraReviewTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             dest = Path(d)
             (dest / "manifest.json").write_text(json.dumps({"pr": 1877, "head": HEAD, "comment": 991}))
-            prior = {"body": "S1_TERRA_MAX_RESERVATION_V1 PR=1877 HEAD=" + HEAD + " COMMENT=991"}
+            prior = {"user": {"login": "github-actions[bot]"},
+                     "body": "S1_TERRA_MAX_RESERVATION_V1 PR=1877 HEAD=" + HEAD + " COMMENT=991"}
             with patch.object(terra, "gh", return_value=json.dumps([[prior]])):
                 with self.assertRaisesRegex(ValueError, "ALREADY_USED"):
                     terra.reserve(dest)
@@ -132,6 +133,54 @@ class TerraReviewTests(unittest.TestCase):
                 (out / "output" / "receipt.json").write_text(json.dumps(receipt))
                 with self.assertRaisesRegex(ValueError, "FINITE"):
                     terra.validate(out)
+
+
+    def test_spoofed_public_reservations_do_not_block_owner(self):
+        body = "S1_TERRA_MAX_RESERVATION_V1 PR=1877 HEAD=" + HEAD + " COMMENT=991"
+        spoof = [{"user": {"login": "anonymous"}, "body": body},
+                 {"user": {"login": "anonymous"}, "body": "S1_TERRA_MAX_RESERVATION_V1 bad"}]
+        mine = {"user": {"login": "github-actions[bot]"}, "body": body}
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d)
+            (out / "manifest.json").write_text(json.dumps({"pr": 1877, "head": HEAD, "comment": 991}))
+            with patch.object(terra, "gh", side_effect=[json.dumps([spoof]), "", json.dumps([[*spoof, mine]])]), patch.object(terra, "check_pr", return_value=pr()):
+                terra.reserve(out)
+
+    def test_spoofed_readback_cannot_validate_reservation(self):
+        body = "S1_TERRA_MAX_RESERVATION_V1 PR=1877 HEAD=" + HEAD + " COMMENT=991"
+        spoof = {"user": {"login": "anonymous"}, "body": body}
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d)
+            (out / "manifest.json").write_text(json.dumps({"pr": 1877, "head": HEAD, "comment": 991}))
+            with patch.object(terra, "gh", side_effect=[json.dumps([[]]), "", json.dumps([[spoof]])]), patch.object(terra, "check_pr", return_value=pr()):
+                with self.assertRaisesRegex(ValueError, "READBACK_FAILED"):
+                    terra.reserve(out)
+
+    def test_fail_with_p1_required_even_when_receipt_is_valid(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d)
+            (out / "output").mkdir()
+            canonical = b'{"a":1}\n'
+            (out / "context.json").write_bytes(canonical)
+            (out / "prompt.txt").write_text("p")
+            (out / "manifest.json").write_text(json.dumps({"head": HEAD, "context_sha256": terra.sha256(canonical)}))
+            def check(findings, verdict, status):
+                result = {"status": status, "evidence_against": findings, "forecast_candidates": [],
+                          "summary": verdict + " MODEL_USED=gpt-6.1-terra REASONING_MAX NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE"}
+                (out / "output" / "output.json").write_text(json.dumps(result))
+                receipt = {"status": "PASS", "model": "gpt-6.1-terra", "reasoning_effort": "max",
+                           "attempt_count": 1, "estimated_cost_usd": 0.3, "forecast_candidate_count": 0,
+                           "context_hash": terra.sha256(canonical), "response_id": "resp_x",
+                           "task": terra.TASK, "prompt_hash": terra.sha256(b"p"),
+                           "output_hash": terra.sha256((out / "output" / "output.json").read_bytes()),
+                           "input_tokens": 9, "output_tokens": 9, "request_hash": "f" * 64}
+                (out / "output" / "receipt.json").write_text(json.dumps(receipt))
+                return terra.validate(out)
+            with patch.object(terra, "check_pr", return_value=pr()):
+                with self.assertRaisesRegex(ValueError, "UNDERSTATED"):
+                    check(["P1|x.py|blocking"], "PASS_WITH_FINDINGS", "DEGRADED")
+                self.assertEqual(check(["P2|x.py|minor"], "PASS_WITH_FINDINGS", "DEGRADED")["head"], HEAD)
+                self.assertEqual(check(["P1|x.py|blocking"], "FAIL", "BLOCKED")["head"], HEAD)
 
 
 if __name__ == "__main__":
