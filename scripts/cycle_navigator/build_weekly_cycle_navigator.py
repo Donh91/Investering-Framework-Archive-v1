@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.api_agent.api_gateway import estimate_cost
 from scripts.cycle_navigator.prospective_range_bridge import load_bridge
 from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy, daily_path_issue_summary, daily_range_plan_schema, validate_daily_range_plan
 from scripts.cycle_navigator.daily_path_recovery import recover_daily_path, reject_unverified_initial_daily_quotes
@@ -885,9 +886,21 @@ def main() -> None:
     freeze = value["forecast_freeze"]
     # A valid semantic abstention may receive at most ONE additional bounded
     # source-qualified call, always before the original immutable week freeze.
+    primary_usage = raw.get("usage") if isinstance(raw.get("usage"), dict) else {}
+    try:
+        primary_input = primary_usage.get("input_tokens")
+        primary_output = primary_usage.get("output_tokens")
+        if any(type(x) is not int or x < 0 for x in (primary_input, primary_output)):
+            raise ValueError("INVALID_PRIMARY_USAGE")
+        primary_unaccounted_cost = estimate_cost(args.model, primary_input, primary_output)
+    except (KeyError, TypeError, ValueError):
+        # Let semantic retry fail closed without blocking the valid original
+        # weekly publication if provider cost is not independently priceable.
+        primary_unaccounted_cost = float("nan")
     value, daily_recovery_receipt = recover_daily_path(
         value, context, year=target_year, week=target_week,
         model=args.model, issued_at=datetime.now(timezone.utc),
+        primary_unaccounted_cost_usd=primary_unaccounted_cost,
         cost_receipt_path=(repo / "research/api_agent/outputs/weekly" /
                            str(target_year) / f"W{target_week:02d}" /
                            "CN_DAILY_RECOVERY_COST_RESERVATION.json"))
