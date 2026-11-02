@@ -80,7 +80,9 @@ def issue_once(repo: Path, *, year: int, week: int, model: str,
         "forecast_freeze": dict(original),
     }
     candidate, receipt = recover_daily_path(value, context, year=year, week=week,
-            model=model, issued_at=issued_at, request=request, budget_check=budget_check)
+            model=model, issued_at=issued_at, request=request, budget_check=budget_check,
+            cost_receipt_path=repo / "runtime/api-cost-ledger" /
+                "CN_W45_LATE_SUPPLEMENT_COST_RESERVATION.json")
     daily_path = candidate["forecast_freeze"]["daily_price_path"]
     validate_daily_path(daily_path, original, year, week)
     status = ("SUPPLEMENTAL_SEVEN_DAY_CANDIDATE" if any(
