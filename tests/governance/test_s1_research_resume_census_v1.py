@@ -48,6 +48,16 @@ class ResearchRecoveryTests(unittest.TestCase):
         self.assertEqual(census(item, SHA)["items"][0]["disposition"],
                          "RETAIN_NEGATIVE_LEARNING")
 
+    def test_negative_missing_action_retained(self):
+        item = queue()
+        item["lanes"][0]["state"] = "REJECTED_FALSIFIED"
+        del item["lanes"][0]["next_action"]
+        self.assertEqual(census(item, SHA)["items"][0]["disposition"],
+                         "RETAIN_NEGATIVE_LEARNING")
+        del item["lanes"][0]["execution_issue"]
+        self.assertEqual(census(item, SHA)["items"][0]["disposition"],
+                         "RETAIN_NEGATIVE_LEARNING_OWNER_LINK_REQUIRED")
+
     def test_original_link_required(self):
         item = queue()
         del item["lanes"][0]["execution_issue"]
