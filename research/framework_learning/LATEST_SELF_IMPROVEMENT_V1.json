@@ -8,13 +8,22 @@
     "portfolio_action": false,
     "type": "ADVISORY_DERIVED_READ_ONLY"
   },
-  "candidate_count": 666,
+  "candidate_count": 668,
   "challengers": [
     {
       "automatic_promotion": false,
       "candidate_id": "EC-0258e3807909a4d1987f",
       "evidence_direction": "INCONCLUSIVE",
-      "matured_outcome_count": 127,
+      "matured_outcome_count": 131,
+      "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
+      "source_state": "MATURED_INCONCLUSIVE",
+      "verdict": "UNPROVEN"
+    },
+    {
+      "automatic_promotion": false,
+      "candidate_id": "EC-02d7ffd26679d741fb33",
+      "evidence_direction": "INCONCLUSIVE",
+      "matured_outcome_count": 3,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_INCONCLUSIVE",
       "verdict": "UNPROVEN"
@@ -23,7 +32,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-031fe5e419bd0096db4d",
       "evidence_direction": "INCONCLUSIVE",
-      "matured_outcome_count": 85,
+      "matured_outcome_count": 89,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_INCONCLUSIVE",
       "verdict": "UNPROVEN"
@@ -32,7 +41,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-03d0c1a48139b386534c",
       "evidence_direction": "INCONCLUSIVE",
-      "matured_outcome_count": 153,
+      "matured_outcome_count": 157,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_INCONCLUSIVE",
       "verdict": "UNPROVEN"
@@ -41,7 +50,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-05f05e742b6cd1ed61f0",
       "evidence_direction": "INCONCLUSIVE",
-      "matured_outcome_count": 93,
+      "matured_outcome_count": 94,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_INCONCLUSIVE",
       "verdict": "UNPROVEN"
@@ -50,7 +59,7 @@
       "automatic_promotion": false,
       "candidate_id": "EC-065c78e4af0270a9d365",
       "evidence_direction": "INCONCLUSIVE",
-      "matured_outcome_count": 210,
+      "matured_outcome_count": 211,
       "reason": "No independently verified, preregistered baseline and held-out improvement gate in this input",
       "source_state": "MATURED_INCONCLUSIVE",
       "verdict": "UNPROVEN"
@@ -322,7 +331,7 @@
     "adaptive_evolution": 1157,
     "self_healing": 1156
   },
-  "generated_at_utc": "2026-11-01T20:44:40.950956Z",
+  "generated_at_utc": "2026-11-02T11:38:33.020657Z",
   "health_consistency": "OK",
   "health_live_coverage": 0.99,
   "incident_count": 7,
@@ -642,7 +651,7 @@
       "automatic_code_write_allowed": false,
       "automatic_retry_allowed": false,
       "classification": "UNKNOWN",
-      "counted_in_this_snapshot": true,
+      "counted_in_this_snapshot": false,
       "findings": [
         "HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H"
       ],
@@ -806,22 +815,22 @@
   "scoreboard": {
     "DOCUMENTED_IMPROVEMENT": 0,
     "FALSIFIED": 0,
-    "INSUFFICIENT_EVIDENCE": 632,
+    "INSUFFICIENT_EVIDENCE": 633,
     "KILLED": 0,
     "REGRESSED": 0,
-    "UNPROVEN": 34
+    "UNPROVEN": 35
   },
   "source_generated_at_utc": {
     "automation_health": "2026-11-01T20:40:19.178443Z"
   },
-  "source_observation_counted": true,
+  "source_observation_counted": false,
   "source_paths": {
     "automation_health": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
     "experiment_registry": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
   },
   "source_sha256": {
     "automation_health": "81083a1beb50de5e61cfed56bc2ac0aac5ecba95984e933147cdb7af1d3302f8",
-    "experiment_registry": "c315e6212c26129c128d4a504979e18b0aeb984cfb2f33b2a3c301df37ad9422"
+    "experiment_registry": "cbfe783a29b4cad8d7b3d82c635fe6805dce87acf06a5729ad7294f7c7933629"
   },
   "workflow_census_count": 200
 }
