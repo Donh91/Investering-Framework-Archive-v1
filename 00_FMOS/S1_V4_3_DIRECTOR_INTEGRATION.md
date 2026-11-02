@@ -57,3 +57,21 @@ Terra/Sol API escalation is allowed only through an actually available owner-gov
 After governed G0 merge, G1 requires real authenticated Archive-Bridge and Archive-Alpha roundtrips, G2 updates only the existing hourly Chat S1 task, G3 proves one parked research disposition, and G4 measures 7/28 natural days. A source-only PR merge does not equal G1-G4 production activation.
 
 Fail closed for high-impact source/recovery, private data and science. Continue unrelated safe PR closure while a stable external transport or reviewer gate awaits evidence.
+
+
+## 2026-11-02 final G0 scope extension: shared defects and outcome denominator
+
+Two further deterministic, READ-ONLY helpers now exist on this original branch:
+
+- scripts/governance/s1_shared_blocker_advisor_v1.py clusters two or more ORIGINAL cases by identical upstream owner URL and evidence fingerprint. It never creates a new issue, approves release or assumes the shared defect is fixed. Unverified or malformed links are excluded, and the maximum clustering readout is three.
+- scripts/governance/s1_closure_impact_readout_v1.py generates only a candidate 7/28-day impact denominator. It never credits issue comments, green builds or other actors as S1 merges. It deduplicates merge SHA and separate task run IDs. It always returns externally_authenticated=false and verified_production_impact=null until authenticated GitHub/task/main/consumer source reads supply independent proof.
+
+Required new adversarial tests: tests/governance/test_s1_shared_blocker_advisor_v1.py and tests/governance/test_s1_closure_impact_readout_v1.py. Actual on-head hosted PR CI, job executable steps and run IDs are authoritative. Any older green HEAD is stale for release.
+
+Important boundary: these modules are deliberately pure. The code is not an autonomous GitHub executor, listening webhook, connected Grok routine or paid model endpoint. Real REQUEST, native ACK and RESULT must be proven through the existing receiving agent's actual supported intake, rather than inferred from comments or fabricated events. S1 remains the only authenticated owner-directed merger.
+
+Premerge G0 MUST check current AGENTS.md section 0.2a, owner issue #1156, original branch lease, current main SHA, actual required GitHub rules/reviews and substantive PR-event CI. Current PR has a CI workflow dependency change, so assess its operational risk and any domain-specific safepoint/independent-review requirements explicitly. Do not downgrade high-impact controls or publish private recovery data to accelerate this merge.
+
+Independent review can be fulfilled by a real exact-head Codex/Grok/approved specialist report with explicit model/provider run evidence. Existing Grok Bridge #137 is an earlier-head schema-only advisory, NOT a current-head review. A Codex quota failure is not a code defect or APPROVED. A requested review is not a received review.
+
+Release status remains G0_UNMERGED until authenticated expected-head integration and main readback are actually complete. G1 transport, G2 hourly task adoption, G3 parked research disposition, and G4 7/28 natural days are separately measured and cannot be claimed merely by merging G0.
