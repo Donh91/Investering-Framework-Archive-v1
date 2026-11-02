@@ -7,15 +7,15 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import os
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Mapping
 import urllib.request
 
 from scripts.cycle_navigator.daily_price_journey import CONTRACT, daily_path_schema, validate_daily_path
 
-MAX_RECOVERY_OUTPUT_TOKENS = 2500
+MAX_RECOVERY_OUTPUT_TOKENS = 5500
+MAX_RECOVERY_INPUT_BYTES = 32000
 
 
 def _canonical(value: Any) -> bytes:
@@ -41,9 +41,8 @@ def _source_gate(context: Mapping[str, Any], year: int, week: int, issued: datet
     pointer = context.get("master_monday_pointer") or {}
     if not isinstance(completed, dict) or not isinstance(mm, dict) or not isinstance(pointer, dict):
         return {}, "SOURCE_CONTRACT_MISSING"
-    completed_week = date.fromisocalendar(year, week, 1).fromordinal(
-        date.fromisocalendar(year, week, 1).toordinal() - 7
-    ).isocalendar()
+    completed_monday = date.fromisocalendar(year, week, 1) - timedelta(days=7)
+    completed_week = completed_monday.isocalendar()
     if (completed.get("iso_year"), completed.get("iso_week")) != (completed_week.year, completed_week.week):
         return {}, "COMPLETED_WEEK_IDENTITY_MISMATCH"
     if (pointer.get("iso_year"), pointer.get("iso_week")) != (completed_week.year, completed_week.week):
@@ -59,10 +58,12 @@ def _source_gate(context: Mapping[str, Any], year: int, week: int, issued: datet
     if not isinstance(sequence, dict):
         return {}, "COMPLETED_SEQUENCE_MISSING"
     try:
+        completed_first = _clock(sequence.get("first_hour_utc"))
         completed_last = _clock(sequence.get("last_hour_utc"))
         cutoff = datetime.combine(date.fromisocalendar(year, week, 1), datetime.min.time(), timezone.utc)
-        if completed_last >= cutoff:
-            return {}, "TARGET_WEEK_OUTCOME_LEAKAGE"
+        start = datetime.combine(completed_monday, datetime.min.time(), timezone.utc)
+        if completed_first != start or completed_last != cutoff - timedelta(hours=1):
+            return {}, "COMPLETED_SOURCE_WINDOW_INVALID"
         if any(_clock(v) > issued for v in (completed.get("generated_at_utc"), mm.get("created_at_utc"))):
             return {}, "SOURCE_CLOCK_AFTER_ISSUANCE"
     except (TypeError, ValueError, OverflowError):
@@ -122,7 +123,10 @@ def _one_request(model: str, payload_context: dict[str, Any]) -> tuple[dict[str,
                "input": [{"role": "user", "content": [{"type": "input_text", "text": json.dumps(payload_context, sort_keys=True, allow_nan=False)}]}],
                "text": {"format": {"type": "json_schema", "name": "cn_daily_path_reconsideration_v1",
                                    "strict": True, "schema": daily_path_schema()}}}
-    req = urllib.request.Request("https://api.openai.com/v1/responses", data=_canonical(payload),
+    encoded = _canonical(payload)
+    if len(encoded) > MAX_RECOVERY_INPUT_BYTES:
+        raise RuntimeError("RECOVERY_INPUT_SIZE_EXCEEDED")
+    req = urllib.request.Request("https://api.openai.com/v1/responses", data=encoded,
                                  headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, method="POST")
     # Exactly one outbound request: no transport, schema or incomplete-output retry.
     with urllib.request.urlopen(req, timeout=180) as response:
@@ -203,7 +207,6 @@ def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
         for asset in eligible:
             item = proposal.get(asset)
             try:
-                trial = {**original, asset: item}
                 validate_daily_path({**original, "contract": CONTRACT,
                                      "forecast_week": receipt["forecast_week"], asset: item},
                                     freeze, year, week)
