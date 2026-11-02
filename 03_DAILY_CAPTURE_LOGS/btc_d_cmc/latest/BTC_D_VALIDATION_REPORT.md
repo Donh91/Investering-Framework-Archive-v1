@@ -1,16 +1,16 @@
 # BTC.D Validation Report
 
 - Validation status: `PASS`
-- Normalized rows: 1399
+- Normalized rows: 1400
 - First date: 2023-01-01
-- Last date: 2026-10-31
-- Required latest complete date: 2026-10-31
+- Last date: 2026-11-01
+- Required latest complete date: 2026-11-01
 - Future/current partial rows excluded: 0
 - Duplicate dates rejected: 0
 - Parse errors: 0
 - Genuine date-gap ranges: 1
-- Raw SHA-256: `c5b4fa9847e11debff12f8f7980acf9115d56d78a7af7c2361374c0574754d90`
-- Normalized CSV SHA-256: `d9734e79e9073caade4e9004fd7fe4e34bb39055bc3e6b26d69c47c4b1356744`
+- Raw SHA-256: `2458ace9d248988009e0751a5e8f58626fb4d5446dcaa7f59677de18f49132b9`
+- Normalized CSV SHA-256: `4ba04a131f5b628445942e0132782f361ae91beb4ace1ada6fcd0d3ada936c8d`
 
 ## Convention
 
@@ -23,21 +23,21 @@ This is not the TradingView top-125 convention.
 - 2023-01-01: 40.0387
 - 2023-05-09: 46.9594
 - 2023-09-13: 48.9142
-- 2024-01-18: 49.7612
-- 2024-05-24: 52.6568
-- 2024-09-28: 56.1325
+- 2024-01-19: 49.603
+- 2024-05-25: 53.0021
+- 2024-09-29: 56.3107
 - 2025-02-03: 59.7831
 - 2025-06-10: 63.7291
 - 2025-10-15: 58.5948
-- 2026-02-19: 57.9903
-- 2026-06-26: 58.0728
-- 2026-10-31: 59.7013
+- 2026-02-20: 58.2124
+- 2026-06-27: 58.0008
+- 2026-11-01: 59.8406
 
 ## Latest three complete dates
 
-- 2026-10-29: 60.1008
 - 2026-10-30: 60.0041
 - 2026-10-31: 59.7013
+- 2026-11-01: 59.8406
 
 ## Genuine gap ranges
 
