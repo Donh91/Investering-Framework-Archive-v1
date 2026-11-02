@@ -68,7 +68,7 @@ def _run(value, context=None, request=None, issued=ISSUED, budget_check=None,
          cost_receipt_path=None, primary_unaccounted_cost_usd=0.0):
     return recover_daily_path(value, _context() if context is None else context,
                               year=2026, week=46, model="gpt-6-sol", issued_at=issued, request=request,
-                              budget_check=budget_check or (lambda: {"status": "PASS", "test_injection": True}),
+                              budget_check=budget_check or (lambda: {"status": "PASS", "remaining_usd_before": 40.0, "test_injection": True}),
                               cost_receipt_path=cost_receipt_path,
                               primary_unaccounted_cost_usd=primary_unaccounted_cost_usd)
 
