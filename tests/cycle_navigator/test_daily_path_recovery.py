@@ -40,7 +40,8 @@ def _value(btc="UNAVAILABLE", eth="UNAVAILABLE"):
 
 
 def _context():
-    return {"master_monday_pointer": {"iso_year": 2026, "iso_week": 45, "status": "READY"},
+    return {"weekly_envelope_quote": {"BTC": "USDT", "ETH": "USDT"},
+            "master_monday_pointer": {"iso_year": 2026, "iso_week": 45, "status": "READY"},
             "master_monday_machine_package": {"api_status": "success", "created_at_utc": "2026-11-09T09:00:00Z"},
             "completed_week_hourly_capture": {
                 "iso_year": 2026, "iso_week": 45, "readiness": "READY",
@@ -63,9 +64,10 @@ def _proposal(btc="PUBLISHED", eth="PUBLISHED"):
             "BTC": _asset(btc, 100), "ETH": _asset(eth, 200)}
 
 
-def _run(value, context=None, request=None, issued=ISSUED):
+def _run(value, context=None, request=None, issued=ISSUED, budget_check=None):
     return recover_daily_path(value, _context() if context is None else context,
-                              year=2026, week=46, model="test-sol", issued_at=issued, request=request)
+                              year=2026, week=46, model="test-sol", issued_at=issued, request=request,
+                              budget_check=budget_check or (lambda: {"status": "PASS", "test_injection": True}))
 
 
 def _fake(proposal, calls):
@@ -191,6 +193,45 @@ def test_source_and_clock_guard_fail_closed_without_extra_spend(bad):
     assert out["forecast_freeze"]["daily_price_path"]["BTC"]["status"] == "UNAVAILABLE"
 
 
+@pytest.mark.parametrize("bad", ["unbound_weekly_quote", "cross_quote", "first_close_passed", "before_week_start"])
+def test_weekly_quote_or_prospective_clock_rejects_without_api_call(bad):
+    from datetime import timedelta
+    context = _context()
+    issued = ISSUED
+    if bad == "unbound_weekly_quote":
+        del context["weekly_envelope_quote"]
+    elif bad == "cross_quote":
+        context["weekly_envelope_quote"]["BTC"] = "USD"
+        context["weekly_envelope_quote"]["ETH"] = "USD"
+    elif bad == "first_close_passed":
+        issued = datetime(2026, 11, 10, 0, 0, tzinfo=timezone.utc)
+    else:
+        issued = datetime(2026, 11, 8, 23, 59, tzinfo=timezone.utc)
+    calls = []
+    _, receipt = _run(_value(), context=context, issued=issued, request=_fake(_proposal(), calls))
+    assert receipt["attempt_count"] == 0 and not calls
+    assert receipt["status"] == "SKIPPED_SOURCE_GUARD"
+
+
+def test_monthly_cost_guard_blocks_even_injected_request():
+    calls = []
+    _, receipt = _run(_value(), request=_fake(_proposal(), calls),
+                      budget_check=lambda: {"status": "BLOCKED"})
+    assert receipt["status"] == "SKIPPED_BUDGET_OR_OPERATOR_GUARD"
+    assert receipt["attempt_count"] == 0 and calls == []
+
+
+def test_budget_readback_unavailable_fails_closed_without_paid_request(monkeypatch):
+    from scripts.cycle_navigator import daily_path_recovery as repair
+    import subprocess
+    monkeypatch.setattr(repair.subprocess, "run", lambda *args, **kwargs:
+                        subprocess.CompletedProcess(args, 1, stdout='{"status":"BLOCKED","remaining_usd":0}', stderr=""))
+    calls = []
+    _, receipt = _run(_value(), request=_fake(_proposal(), calls), budget_check=repair._budget_guard)
+    assert receipt["attempt_count"] == 0 and calls == []
+    assert receipt["status"] == "SKIPPED_BUDGET_OR_OPERATOR_GUARD"
+
+
 def test_negative_missing_key_and_transport_error_keep_original_abstention():
     for fake in (lambda m,p: (_ for _ in ()).throw(TimeoutError("network")),
                  lambda m,p: ({"contract": CONTRACT, "forecast_week": WEEK, "BTC": {}},
@@ -225,6 +266,7 @@ def test_source_manifest_holds_attempt_and_canonical_scoring_is_untouched():
     assert "CYCLE_NAVIGATOR_SCORECARD_v1" in src
     assert "value[\"evaluation\"]" in src
     assert "existing_forecast_freeze_refuses_reissue" in src
+    assert "daily_path_recovery" in src
     assert 'daily_path_issue_summary(freeze.get("daily_price_path")' in src
 
 
