@@ -56,11 +56,13 @@ def census(queue, source_blob_sha):
         if not _github_original(original):
             original = None
         followup = item.get("next_action")
-        if not isinstance(followup, str) or len(followup.strip()) < 10:
-            disposition = "OWNER_MUST_DEFINE_NEXT_ACTION"
-        elif any(token in current for token in ("REJECTED", "FALSIFIED", "KILLED")):
+        # Retain negative scientific history even if an old record has
+        # no next action. Missing follow-up must never erase falsification.
+        if any(token in current for token in ("REJECTED", "FALSIFIED", "KILLED")):
             disposition = ("RETAIN_NEGATIVE_LEARNING" if original is not None
                            else "RETAIN_NEGATIVE_LEARNING_OWNER_LINK_REQUIRED")
+        elif not isinstance(followup, str) or len(followup.strip()) < 10:
+            disposition = "OWNER_MUST_DEFINE_NEXT_ACTION"
         elif original is None:
             disposition = "ORIGINAL_OWNER_LINK_REQUIRED"
         elif current == "MERGED_CAPABILITY_ACTIVE":
