@@ -6,8 +6,12 @@ GitHub actors, prove agent execution, grant merge authority or call providers.
 from datetime import datetime
 from urllib.parse import urlparse
 import re
+import hashlib
+import json
 
 SHA = re.compile(r"^[a-f0-9]{40}$")
+REQUEST_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{11,127}$")
+UTC_STAMP = re.compile(r"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$")
 STEPS = ["REQUESTED", "ACKNOWLEDGED", "ACCEPTED", "RESULT_DELIVERED", "S1_VERIFIED"]
 
 
@@ -16,7 +20,7 @@ class ReceiptError(ValueError):
 
 
 def _time(value):
-    if not isinstance(value, str) or not value.endswith("Z"):
+    if not isinstance(value, str) or UTC_STAMP.fullmatch(value) is None:
         raise ReceiptError("UTC Z timestamp required")
     try:
         return datetime.fromisoformat(value[:-1] + "+00:00")
@@ -42,10 +46,18 @@ def validate_chain(events):
     if not isinstance(events, list) or not events:
         raise ReceiptError("missing request")
     start = events[0]
+    if not isinstance(start, dict):
+        raise ReceiptError("request object required")
     keys = ("request_id", "source_head", "source_fingerprint",
             "sender", "recipient", "original_url")
     if any(not start.get(k) for k in keys):
         raise ReceiptError("missing request binding")
+    if not isinstance(start["request_id"], str) or REQUEST_ID.fullmatch(start["request_id"]) is None:
+        raise ReceiptError("unique typed request id required")
+    if not isinstance(start["source_fingerprint"], str) or len(start["source_fingerprint"]) < 8:
+        raise ReceiptError("source fingerprint too weak")
+    if any(not isinstance(start[k], str) for k in keys):
+        raise ReceiptError("request keys must be strings")
     if not SHA.fullmatch(start["source_head"]):
         raise ReceiptError("exact 40-character source SHA required")
     if start["sender"] == start["recipient"]:
@@ -93,6 +105,7 @@ def validate_chain(events):
         status = proposed
     return {
         "request_id": start["request_id"],
+        "request_binding_sha256": hashlib.sha256(json.dumps(dict(zip(keys, binding)), sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest(),
         "source_head": start["source_head"],
         "structural_state": status,
         "events_checked": len(events),
