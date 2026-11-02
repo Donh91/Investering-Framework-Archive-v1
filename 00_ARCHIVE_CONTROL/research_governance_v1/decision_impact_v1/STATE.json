@@ -4,26 +4,11 @@
   "canonical_effect": false,
   "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "3f2cc41638f6a2d3463611f32ceec03b6dfe1b89406989104975d182588a03f8",
+  "evidence_fingerprint": "babde215933b917d73b8e66b0041e605ac409875bc6cbcf85432955dc50462c2",
   "external_provider_calls_authorized": false,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "queue": [
-    {
-      "action": "RESEARCH_NEW_HYPOTHESIS",
-      "canonical_effect": false,
-      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
-      "deep_research_authorized": false,
-      "evidence_fingerprint": "830539e518710b4d857d94ddd0e36e2ad08a8e68344fc1bb30f5a2f488443a5d",
-      "impact_tier": "HIGH",
-      "novelty_verdict": "NOVEL",
-      "paid_data_authorized": false,
-      "paid_review_only": false,
-      "portfolio_execution": false,
-      "reason": "In a newly preregistered sample of nonoverlapping prospective 168h ETH episodes, the median maximum adverse excursion, measured in percent, is more negative for episodes without a typed warning than for comparable episodes with one. Falsified if the no-warning median is equal or less negative. Episode selection, warning definitions and comparability criteria must be fixed before outcomes; the existing freezes cannot serve as confirmation.",
-      "source": "MONTHLY_COUNCIL",
-      "target": "MLC-HYP-fe3b5f79970bd147"
-    },
     {
       "action": "RECOVER_EVALUATOR",
       "canonical_effect": false,
@@ -44,7 +29,7 @@
       "canonical_effect": false,
       "decision_surface": "RESEARCH_OPERATIONS",
       "deep_research_authorized": false,
-      "evidence_fingerprint": "a8daa8757a7d9d5a845cdf362c8e7ee3eb90ed7d8fb3f21ac62582586f46e41f",
+      "evidence_fingerprint": "f9e9d0f2d0166ae6b348e945e973a3c1deff02ab9008ebcbe415dddf7a81a144",
       "impact_tier": "LOW",
       "novelty_verdict": null,
       "paid_data_authorized": false,
@@ -113,14 +98,29 @@
       "reason": "terminal/closeout source state has no independent decision upside unless linked to a current high-value blocker",
       "source": "SOURCE_RECOVERY",
       "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
+    },
+    {
+      "action": "RESEARCH_NEW_HYPOTHESIS",
+      "canonical_effect": false,
+      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "830539e518710b4d857d94ddd0e36e2ad08a8e68344fc1bb30f5a2f488443a5d",
+      "impact_tier": "BLOCKED",
+      "novelty_verdict": "DUPLICATE_EXACT",
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
+      "source": "MONTHLY_COUNCIL",
+      "target": "MLC-HYP-fe3b5f79970bd147"
     }
   ],
   "queue_n": 7,
-  "reason": "In a newly preregistered sample of nonoverlapping prospective 168h ETH episodes, the median maximum adverse excursion, measured in percent, is more negative for episodes without a typed warning than for comparable episodes with one. Falsified if the no-warning median is equal or less negative. Episode selection, warning definitions and comparability criteria must be fixed before outcomes; the existing freezes cannot serve as confirmation.",
+  "reason": "registered source material exists but exact evaluator recovery is still required",
   "resolved_specialist_state_n": 7,
-  "selected_action": "RESEARCH_NEW_HYPOTHESIS",
-  "selected_decision_surface": "ALTSEASON_ENTRY_ROTATION",
-  "selected_impact_tier": "HIGH",
-  "selected_source": "MONTHLY_COUNCIL",
-  "selected_target": "MLC-HYP-fe3b5f79970bd147"
+  "selected_action": "RECOVER_EVALUATOR",
+  "selected_decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+  "selected_impact_tier": "MEDIUM",
+  "selected_source": "SHADOW_REGISTRY",
+  "selected_target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
 }
