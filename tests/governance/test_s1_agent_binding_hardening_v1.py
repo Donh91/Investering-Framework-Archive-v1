@@ -75,6 +75,20 @@ class RequestBindingHardeningTests(unittest.TestCase):
         with self.assertRaises(ReceiptError):
             handoff_followup(chain()[:1], "2026-11-02T09:59:00Z", 30, 1)
 
+    def test_delivered_result_may_not_be_timed_out(self):
+        delivered = chain()[:4]
+        last = {**delivered[-1], "state": "TIMED_OUT", "actor": "S1",
+                "at_utc": "2026-11-02T10:05:00Z"}
+        with self.assertRaises(ReceiptError):
+            validate_chain(delivered + [last])
+
+    def test_blocked_s1_verification_not_a_successful_closure(self):
+        events = chain()
+        events[-1]["verification"] = "BLOCKED"
+        result = validate_chain(events)
+        self.assertEqual(result["reported_verification_outcome"], "BLOCKED")
+        self.assertFalse(result["authenticated_delivery"])
+
     def test_no_space_in_utc_timestamp(self):
         entries = chain()
         entries[0]["at_utc"] = "2026-11-02 10:00:00Z"
