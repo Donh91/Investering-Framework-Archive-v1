@@ -216,11 +216,6 @@ def _read_index_or_fail_missing_history(root):
     if index_file.exists():
         return read(index_file)
     weeks_dir = root / ROOT / "weeks"
-    if weeks_dir.exists() and any(
-        weeks_dir.rglob(pattern)
-        for pattern in ()
-    ):
-        raise AssertionError("unreachable")
     for pattern in ("forecast-reference.json", "actual-series.json"):
         if weeks_dir.exists() and next(weeks_dir.rglob(pattern), None) is not None:
             raise ValueError("HISTORY_INDEX_MISSING_WITH_EXISTING_RECORDS")
