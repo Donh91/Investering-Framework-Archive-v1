@@ -93,3 +93,18 @@ def test_W45_only_and_no_backfill_other_weeks(tmp_path):
         issue_once(ROOT, year=2026, week=44, model="gpt-6-sol", issued_at=ISSUED,
                    output=tmp_path / "wrong.json", request=make_request([]),
                    budget_check=lambda: {"status": "PASS"})
+
+
+def test_real_w45_failed_attempt_is_durably_recorded_without_changing_original():
+    import hashlib
+    receipt = json.loads((ROOT / "05_CYCLE_NAVIGATOR/weekly/2026/W45/supplements/CN_W45_LATE_20261102T101027Z_RECEIPT.json").read_text())
+    frozen = ROOT / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+    assert receipt["result"] == "SUPPLEMENTAL_UNAVAILABLE"
+    assert receipt["BTC"]["point_count"] == 0 and receipt["ETH"]["point_count"] == 0
+    assert receipt["provenance"]["run_id"] == 41426539789
+    assert receipt["analysis"]["attempt_count"] == 1
+    assert receipt["original"]["unchanged"] is True
+    assert receipt["original"]["freeze_sha256"] == hashlib.sha256(frozen.read_bytes()).hexdigest()
+    cost = json.loads((ROOT / "research/api_agent/outputs/weekly/2026/W45/CN_W45_LATE_SUPPLEMENT_COST_RESERVATION.json").read_text())
+    assert cost["estimated_cost_usd"] == 0.15
+    assert cost["request_sha256"] == "f1da170d202dddfa3ed1b508fbed5bb9f112a601e256c273d9d7d48d990155c6"
