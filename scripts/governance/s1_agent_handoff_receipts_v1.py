@@ -11,7 +11,7 @@ import json
 
 SHA = re.compile(r"^[a-f0-9]{40}$")
 REQUEST_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{11,127}$")
-UTC_STAMP = re.compile(r"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$")
+UTC_STAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$")
 STEPS = ["REQUESTED", "ACKNOWLEDGED", "ACCEPTED", "RESULT_DELIVERED", "S1_VERIFIED"]
 
 
