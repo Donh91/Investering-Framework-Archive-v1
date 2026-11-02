@@ -882,7 +882,10 @@ def main() -> None:
     # source-qualified call, always before the original immutable week freeze.
     value, daily_recovery_receipt = recover_daily_path(
         value, context, year=target_year, week=target_week,
-        model=args.model, issued_at=datetime.now(timezone.utc))
+        model=args.model, issued_at=datetime.now(timezone.utc),
+        cost_receipt_path=(repo / "research/api_agent/outputs/weekly" /
+                           str(target_year) / f"W{target_week:02d}" /
+                           "CN_DAILY_RECOVERY_COST_RESERVATION.json"))
     freeze = value["forecast_freeze"]
     validate_daily_path(freeze.get("daily_price_path"), freeze, target_year, target_week)
     daily_path_issue = daily_path_issue_summary(freeze.get("daily_price_path"), freeze, target_year, target_week)
