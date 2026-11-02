@@ -8,6 +8,9 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import subprocess
+import sys
+from pathlib import Path
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Mapping
 import urllib.request
@@ -16,6 +19,38 @@ from scripts.cycle_navigator.daily_price_journey import CONTRACT, daily_path_sch
 
 MAX_RECOVERY_OUTPUT_TOKENS = 5500
 MAX_RECOVERY_INPUT_BYTES = 32000
+# 32 KB payload + 5,500 output tokens at Sol's approved price
+# are below $0.12 worst-case. Reserve $0.15, without expanding owner caps.
+MAX_RECOVERY_WORST_CASE_USD = 0.15
+RECOVERY_MONTHLY_HARD_STOP_USD = 30.0
+RECOVERY_MONTHLY_RESERVE_USD = 4.0
+ALLOWED_RECOVERY_MODELS = {"gpt-6-sol", "gpt-6.1-sol"}
+
+
+def _budget_guard() -> dict[str, Any]:
+    """Rerun the existing canonical monthly ledger guard before any paid retry."""
+    guard = Path(__file__).resolve().parents[1] / "api_agent" / "check_monthly_cost_guard.py"
+    if not guard.is_file():
+        raise RuntimeError("RECOVERY_BUDGET_CHECK_UNAVAILABLE")
+    try:
+        process = subprocess.run(
+            [sys.executable, str(guard), "--receipt-root", "research/api_agent/outputs",
+             "--pending-ledger-root", "runtime/api-cost-ledger",
+             "--hard-stop-usd", str(RECOVERY_MONTHLY_HARD_STOP_USD),
+             "--reserve-usd", str(RECOVERY_MONTHLY_RESERVE_USD + MAX_RECOVERY_WORST_CASE_USD)],
+            capture_output=True, text=True, timeout=30, check=False)
+        report = json.loads(process.stdout.strip().splitlines()[-1])
+    except (OSError, subprocess.TimeoutExpired, ValueError, IndexError) as exc:
+        raise RuntimeError("RECOVERY_BUDGET_CHECK_UNAVAILABLE") from exc
+    if (process.returncode != 0 or report.get("status") != "PASS"
+            or not isinstance(report.get("remaining_usd"), (int, float))
+            or report["remaining_usd"] <= RECOVERY_MONTHLY_RESERVE_USD + MAX_RECOVERY_WORST_CASE_USD):
+        raise RuntimeError("RECOVERY_MONTHLY_BUDGET_BLOCKED")
+    return {"status": "PASS", "remaining_usd_before": report["remaining_usd"],
+            "maximum_new_estimated_cost_usd": MAX_RECOVERY_WORST_CASE_USD,
+            "hard_stop_usd": RECOVERY_MONTHLY_HARD_STOP_USD,
+            "reserve_usd": RECOVERY_MONTHLY_RESERVE_USD}
+
 
 
 def _canonical(value: Any) -> bytes:
@@ -41,6 +76,11 @@ def _source_gate(context: Mapping[str, Any], year: int, week: int, issued: datet
     pointer = context.get("master_monday_pointer") or {}
     if not isinstance(completed, dict) or not isinstance(mm, dict) or not isinstance(pointer, dict):
         return {}, "SOURCE_CONTRACT_MISSING"
+    cutoff = datetime.combine(date.fromisocalendar(year, week, 1), datetime.min.time(), timezone.utc)
+    # Seven forward daily CLOSE points can only be originally issued while
+    # the FIRST UTC day's settlement remains in the future.
+    if issued >= cutoff + timedelta(days=1) or issued < cutoff:
+        return {}, "SEVEN_DAY_PROSPECTIVE_WINDOW_CLOSED_OR_NOT_STARTED"
     completed_monday = date.fromisocalendar(year, week, 1) - timedelta(days=7)
     completed_week = completed_monday.isocalendar()
     if (completed.get("iso_year"), completed.get("iso_week")) != (completed_week.year, completed_week.week):
@@ -79,10 +119,24 @@ def _source_gate(context: Mapping[str, Any], year: int, week: int, issued: datet
             quotes[asset] = quote
     if not any(quotes.values()):
         return {}, "SOURCE_QUOTE_UNVERIFIED"
+    # The spot-flow quote cannot certify the separate LLM weekly envelope.
+    # Only explicit, source-bound matching quote metadata can do so.
+    envelope_quote = context.get("weekly_envelope_quote")
+    if not isinstance(envelope_quote, dict):
+        return {}, "WEEKLY_ENVELOPE_QUOTE_UNBOUND"
+    for asset in ("BTC", "ETH"):
+        if envelope_quote.get(asset) not in ("USD", "USDT"):
+            quotes[asset] = None
+        elif quotes[asset] != envelope_quote[asset]:
+            quotes[asset] = None
+    if not any(quotes.values()):
+        return {}, "WEEKLY_ENVELOPE_QUOTE_MISMATCH"
     return {"quote": quotes, "completed_week": f"{completed_week.year:04d}-W{completed_week.week:02d}",
             "completed_last_utc": completed_last.isoformat(),
             "source_generated_at_utc": completed["generated_at_utc"],
-            "master_monday_created_at_utc": mm["created_at_utc"]}, "ELIGIBLE"
+            "master_monday_created_at_utc": mm["created_at_utc"],
+            "quote_evidence": "EXPLICIT_WEEKLY_ENVELOPE_QUOTE_PARITY",
+            "source_admitted_for_scientific_scoring": False}, "ELIGIBLE"
 
 
 def _input_excerpt(context: Mapping[str, Any], source: Mapping[str, Any], original: Mapping[str, Any], freeze: Mapping[str, Any]) -> dict[str, Any]:
@@ -145,7 +199,7 @@ def _one_request(model: str, payload_context: dict[str, Any]) -> tuple[dict[str,
 
 def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
                        year: int, week: int, model: str, issued_at: datetime,
-                       request=None) -> tuple[dict[str, Any], dict[str, Any]]:
+                       request=None, budget_check=None) -> tuple[dict[str, Any], dict[str, Any]]:
     """Return original value with only independently validated UNAVAILABLE assets repaired."""
     freeze = value["forecast_freeze"]
     original = freeze["daily_price_path"]
@@ -193,6 +247,20 @@ def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
                        "issue_number": receipt["issue_number"], "eligible_assets": eligible,
                        "immutable_original_weekly_bounds_sha256": receipt["original_weekly_envelope_sha256"],
                        "evidence": _input_excerpt(context, source, value, freeze)}
+    # This is independent of model simulation: even injected requests must
+    # pass the same budget decision. An unknown model cannot be priced.
+    try:
+        if model not in ALLOWED_RECOVERY_MODELS and request is None:
+            raise RuntimeError("RECOVERY_MODEL_PRICE_UNVERIFIED")
+        budget = (budget_check or _budget_guard)()
+        if budget.get("status") != "PASS":
+            raise RuntimeError("RECOVERY_MONTHLY_BUDGET_BLOCKED")
+        receipt["budget_guard"] = budget
+    except (RuntimeError, KeyError, TypeError, ValueError) as exc:
+        receipt["status"] = "SKIPPED_BUDGET_OR_OPERATOR_GUARD"
+        receipt["budget_error_code"] = str(exc).split(":")[0][:100]
+        receipt["final"] = receipt["initial"].copy()
+        return value, receipt
     receipt["attempt_count"] = 1
     try:
         proposal, raw = (request or _one_request)(model, candidate_input)
@@ -200,6 +268,11 @@ def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
         usage = raw.get("usage") or {}
         receipt["input_tokens"] = int(usage.get("input_tokens", 0) or 0)
         receipt["output_tokens"] = int(usage.get("output_tokens", 0) or 0)
+        if model in ALLOWED_RECOVERY_MODELS:
+            receipt["estimated_cost_usd"] = round(
+                (receipt["input_tokens"] * 2.0 + receipt["output_tokens"] * 10.0) / 1_000_000, 8)
+            if receipt["estimated_cost_usd"] > MAX_RECOVERY_WORST_CASE_USD:
+                raise RuntimeError("RECOVERY_COST_CEILING_EXCEEDED")
         if proposal.get("contract") != CONTRACT or proposal.get("forecast_week") != receipt["forecast_week"]:
             raise ValueError("RECOVERY_IDENTITY_MISMATCH")
         updated = {**original}
