@@ -114,3 +114,35 @@ def validate_chain(events):
         "release_authorized": False,
         "reason": "AUTHENTICATED_NATIVE_READBACK_STILL_REQUIRED",
     }
+
+
+def handoff_followup(events, observed_at_utc, timeout_minutes, attempts, max_attempts=2):
+    """Bounded non-dispatch guidance. Time passage is NOT an ACK or PR trigger."""
+    result = validate_chain(events)
+    if (type(timeout_minutes) is not int or not 1 <= timeout_minutes <= 10080
+            or type(attempts) is not int or not 1 <= attempts
+            or type(max_attempts) is not int or not 1 <= max_attempts <= 3):
+        raise ReceiptError("invalid bounded retry policy")
+    if attempts > max_attempts:
+        raise ReceiptError("retry ledger inconsistent")
+    now = _time(observed_at_utc)
+    recent = _time(events[-1]["at_utc"])
+    if now < recent:
+        raise ReceiptError("observation predates last receipt")
+    state = result["structural_state"]
+    if state in ("REJECTED", "TIMED_OUT", "S1_VERIFIED"):
+        action = "TERMINAL_NO_DISPATCH"
+    elif (now - recent).total_seconds() < timeout_minutes * 60:
+        action = "AWAIT_EXISTING_RECEIVER"
+    elif attempts < max_attempts:
+        action = "RETRY_ONLY_IF_NATIVE_INTAKE_AUTHORIZED"
+    else:
+        action = "DEAD_LETTER_ESCALATE_WITH_ORIGINAL_OWNER"
+    return {
+        "request_binding_sha256": result["request_binding_sha256"],
+        "structural_state": state,
+        "next_action": action,
+        "automatically_dispatched": False,
+        "delivery_authenticated": False,
+        "retries_remaining": max_attempts - attempts,
+    }
