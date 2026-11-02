@@ -29,12 +29,14 @@ def census(queue, source_blob_sha):
     All state changes require live source/owner evidence outside this module.
     The caller must authenticate the queue blob and linked PR/issue states.
     """
-    if not SHA40.fullmatch(source_blob_sha or ""):
+    if not isinstance(source_blob_sha, str) or not SHA40.fullmatch(source_blob_sha):
         raise ResearchQueueError("authenticated queue blob SHA required")
     if (not isinstance(queue, dict)
             or queue.get("contract") != SOURCE_CONTRACT
             or queue.get("authority") != "RESEARCH_ONLY"):
         raise ResearchQueueError("unexpected research authority")
+    if not isinstance(queue.get("transversal", []), list) or not isinstance(queue.get("lanes", []), list):
+        raise ResearchQueueError("invalid original queue sections")
     items = queue.get("transversal", []) + queue.get("lanes", [])
     if not items or len(items) > 100:
         raise ResearchQueueError("missing or unbounded original research lanes")
@@ -48,16 +50,19 @@ def census(queue, source_blob_sha):
             raise ResearchQueueError("duplicate research claim identity")
         seen.add(name)
         current = item.get("state", "UNKNOWN")
+        if not isinstance(current, str):
+            raise ResearchQueueError("invalid original research state")
         original = item.get("execution_issue")
         if not _github_original(original):
             original = None
         followup = item.get("next_action")
         if not isinstance(followup, str) or len(followup.strip()) < 10:
             disposition = "OWNER_MUST_DEFINE_NEXT_ACTION"
+        elif any(token in current for token in ("REJECTED", "FALSIFIED", "KILLED")):
+            disposition = ("RETAIN_NEGATIVE_LEARNING" if original is not None
+                           else "RETAIN_NEGATIVE_LEARNING_OWNER_LINK_REQUIRED")
         elif original is None:
             disposition = "ORIGINAL_OWNER_LINK_REQUIRED"
-        elif any(token in current for token in ("REJECTED", "FALSIFIED", "KILLED")):
-            disposition = "RETAIN_NEGATIVE_LEARNING"
         elif current == "MERGED_CAPABILITY_ACTIVE":
             disposition = "EXISTING_MERGE_FOLLOWUP_NOT_AUTO_CLOSED"
         elif any(token in current for token in (
