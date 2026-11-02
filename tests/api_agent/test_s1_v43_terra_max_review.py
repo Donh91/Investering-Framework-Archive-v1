@@ -83,6 +83,7 @@ class TerraReviewTests(unittest.TestCase):
             context = {"hello": "world"}
             canonical = (json.dumps(context, sort_keys=True, separators=(",", ":")) + "\n").encode()
             (out / "context.json").write_bytes(canonical)
+            (out / "prompt.txt").write_text("review prompt")
             (out / "manifest.json").write_text(json.dumps({
                 "head": HEAD, "context_sha256": terra.sha256(canonical)
             }))
@@ -93,6 +94,12 @@ class TerraReviewTests(unittest.TestCase):
                       "forecast_candidates": []}
             (out / "output" / "receipt.json").write_text(json.dumps(receipt))
             (out / "output" / "output.json").write_text(json.dumps(result))
+            receipt.update({
+                "task": terra.TASK, "prompt_hash": terra.sha256(b"review prompt"),
+                "output_hash": terra.sha256((out / "output" / "output.json").read_bytes()),
+                "input_tokens": 900, "output_tokens": 220, "request_hash": "f"*64,
+            })
+            (out / "output" / "receipt.json").write_text(json.dumps(receipt))
             with patch.object(terra, "check_pr", return_value=pr()):
                 self.assertEqual(terra.validate(out)["head"], HEAD)
                 receipt["model"] = "gpt-6.1-sol"
