@@ -62,6 +62,13 @@ class RequestBindingHardeningTests(unittest.TestCase):
         self.assertEqual(response["next_action"], "RECEIVER_RESULT_OVERDUE_NO_DUPLICATE_REQUEST")
         self.assertFalse(response["automatically_dispatched"])
 
+    def test_acknowledged_stalls_terminally_without_re_dispatch(self):
+        from scripts.governance.s1_agent_handoff_receipts_v1 import handoff_followup
+        result = handoff_followup(chain()[:2], "2026-11-02T12:00:00Z", 30, 1)
+        self.assertEqual(result["next_action"], "RECEIVER_STALLED_ESCALATE_ORIGINAL_OWNER")
+        self.assertFalse(result["automatically_dispatched"])
+        self.assertFalse(result["delivery_authenticated"])
+
     def test_delivered_result_needs_verification_not_retry(self):
         from scripts.governance.s1_agent_handoff_receipts_v1 import handoff_followup
         response = handoff_followup(chain()[:4], "2026-11-02T10:08:00Z", 30, 1)
