@@ -17,6 +17,10 @@ TERMINAL = frozenset((
     "CLOSED_VERIFIED", "REJECTED_WITH_EVIDENCE",
     "SUPERSEDED_VERIFIED", "ADOPTED_VERIFIED",
 ))
+VALID_STATES = TERMINAL | frozenset((
+    "DISCOVERED", "ACTIONABLE", "IN_PROGRESS", "BLOCKED_WITH_TRIGGER",
+    "READY_FOR_TEST", "IN_VALIDATION", "VERIFICATION", "PROCESS_STALLED",
+))
 
 
 class AdvisoryInputError(ValueError):
@@ -27,7 +31,10 @@ def _url(value):
     if not isinstance(value, str):
         return False
     u = urlparse(value)
-    return u.scheme == "https" and u.netloc == "github.com" and u.path.startswith("/Donh91/")
+    parts = u.path.strip("/").split("/")
+    return (u.scheme == "https" and u.netloc == "github.com"
+            and len(parts) == 4 and parts[0] == "Donh91"
+            and parts[2] in ("issues", "pull") and parts[3].isdigit())
 
 
 def _check(item):
@@ -41,6 +48,8 @@ def _check(item):
         raise AdvisoryInputError("noncanonical owner URL")
     if item["priority"] not in ORDER:
         raise AdvisoryInputError("unknown priority")
+    if item["status"] not in VALID_STATES:
+        raise AdvisoryInputError("unknown lifecycle state")
     if item["authority"] not in ("ADVISORY_ONLY", "READ_ONLY", "OWNER_GOVERNED"):
         raise AdvisoryInputError("authority escalation")
     if len(item["evidence_fingerprint"]) < 8:
