@@ -34,6 +34,16 @@ class RequestBindingHardeningTests(unittest.TestCase):
         with self.assertRaises(ReceiptError):
             validate_chain(entries)
 
+    def test_native_comment_permalink(self):
+        from scripts.governance.s1_agent_handoff_receipts_v1 import _url
+        link = "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6572590941"
+        self.assertTrue(_url(link))
+
+    def test_unrecognized_fragment_not_accepted(self):
+        from scripts.governance.s1_agent_handoff_receipts_v1 import _url
+        link = "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#injected"
+        self.assertFalse(_url(link))
+
     def test_no_space_in_utc_timestamp(self):
         entries = chain()
         entries[0]["at_utc"] = "2026-11-02 10:00:00Z"
