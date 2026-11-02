@@ -22,6 +22,9 @@ on:
       - "scripts/cycle_navigator/build_weekly_cycle_navigator.py"
       - "scripts/cycle_navigator/daily_path_recovery.py"
       - "tests/cycle_navigator/test_daily_path_recovery.py"
+      - "tests/cycle_navigator/test_late_daily_amendment.py"
+      - "scripts/cycle_navigator/issue_late_daily_amendment.py"
+      - ".github/workflows/cycle-navigator-weekly-publication.yml"
       - "tests/cycle_navigator/test_daily_price_journey.py"
       - "tests/cycle_navigator/test_weekly_publication_resilience.py"
       - ".github/workflows/cycle-navigator-pages.yml"
@@ -42,6 +45,9 @@ on:
       - "scripts/cycle_navigator/build_weekly_cycle_navigator.py"
       - "scripts/cycle_navigator/daily_path_recovery.py"
       - "tests/cycle_navigator/test_daily_path_recovery.py"
+      - "tests/cycle_navigator/test_late_daily_amendment.py"
+      - "scripts/cycle_navigator/issue_late_daily_amendment.py"
+      - ".github/workflows/cycle-navigator-weekly-publication.yml"
       - "tests/cycle_navigator/test_daily_price_journey.py"
       - "tests/cycle_navigator/test_weekly_publication_resilience.py"
       - ".github/workflows/cycle-navigator-pages.yml"
@@ -69,7 +75,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check pytest
-          python -m pytest -q tests/cycle_navigator/test_daily_path_recovery.py tests/cycle_navigator/test_daily_price_journey.py tests/cycle_navigator/test_weekly_publication_resilience.py
+          python -m pytest -q tests/cycle_navigator/test_daily_path_recovery.py tests/cycle_navigator/test_late_daily_amendment.py tests/cycle_navigator/test_daily_price_journey.py tests/cycle_navigator/test_weekly_publication_resilience.py
 
       - name: Verify machine calibration lineage
         shell: bash
