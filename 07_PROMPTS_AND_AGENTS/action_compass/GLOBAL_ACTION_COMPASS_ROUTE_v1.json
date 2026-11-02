@@ -114,7 +114,17 @@
       "no_new_buy_sell_authority": true,
       "legacy_short_version_requires_explicit_request": true,
       "no_widgets": true,
-      "effect": "PRESENTATION_ONLY"
+      "effect": "PRESENTATION_ONLY",
+      "versioned_internal_contract": "07_PROMPTS_AND_AGENTS/action_compass/2026-11-02__kompas-pro-internal-output-and-forward-horizon-v2__owner-approved.md",
+      "horizon_implementation_ledger": "07_PROMPTS_AND_AGENTS/action_compass/KOMPAS_PRO_HORIZON_IMPLEMENTATION_LEDGER_v2.json",
+      "deep_internal_analysis_required_before_visible_answer": true,
+      "visual_output_preference": "SOURCE_VERIFIED_BTC_PRICE_FIRST_COLOR_CODED_HORIZON_LADDER_SMALL_MOBILE_VIEW",
+      "btc_graph_preference": "ONE_MINIMAL_BTC_GRAPH_INLINE_IF_SOURCE_AVAILABLE_NO_DOWNLOAD_LINK",
+      "horizon_labels_require_explicit_unavailable": true,
+      "bull_bear_bars_require_original_official_scores": true,
+      "color_scale_is_probability": false,
+      "long_range_numeric_prices_research_only_until_original_issue": true,
+      "site_forecast_issuance_forbidden": true
     }
   },
   "official_compass_policy": {
@@ -240,6 +250,33 @@
     "output_policy": "TEXT_ONLY_NO_WIDGETS",
     "fail_closed": "SOURCE_GAPS_EXPLICIT_NO_SHADOW_PROMOTION",
     "on_demand_render_creates_receipt": false,
-    "default_chat_presentation": "KOMPAS_PRO_CURRENT"
+    "default_chat_presentation": "KOMPAS_PRO_CURRENT",
+    "internal_horizon_contract": "KOMPAS_PRO_INTERNAL_HORIZON_IMPLEMENTATION_LEDGER_v2",
+    "internal_horizon_ids": [
+      "NOW",
+      "H0_12H",
+      "H24H",
+      "H1_3D",
+      "H5_7D",
+      "H8_14D",
+      "H15_21D",
+      "H2_3W",
+      "H21_30D",
+      "H4_8W",
+      "H1_3M",
+      "H3_6M",
+      "H6_9M",
+      "H9_12M"
+    ],
+    "deep_analysis_families_required_before_render": true,
+    "official_vs_shadow_source_separation_required": true,
+    "graph_history_readback": "05_CYCLE_NAVIGATOR/graph_history/v1",
+    "forward_path_owner_issue": 1516,
+    "site_owner_issue": 1578,
+    "cn_owner_issue": 1593,
+    "outcomes_owner_issue": 1596,
+    "closure_owner_issue": 1156,
+    "persistent_implementation_state_ledger": "07_PROMPTS_AND_AGENTS/action_compass/KOMPAS_PRO_HORIZON_IMPLEMENTATION_LEDGER_v2.json",
+    "numeric_price_reference_requires_issued_source_clock_and_quote": true
   }
 }

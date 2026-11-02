@@ -1,0 +1,507 @@
+{
+  "contract": "KOMPAS_PRO_INTERNAL_HORIZON_IMPLEMENTATION_LEDGER_v2",
+  "version": "2.0.0",
+  "effective_after_merge_on_main": true,
+  "classification": "ROUTING_PRESENTATION_AND_IMPLEMENTATION_PLAN_ONLY",
+  "owner": "MAIN_FRAMEWORK_GLOBAL_ACTION_COMPASS",
+  "canonical_route": "07_PROMPTS_AND_AGENTS/action_compass/GLOBAL_ACTION_COMPASS_ROUTE_v1.json",
+  "canonical_prose": "07_PROMPTS_AND_AGENTS/action_compass/2026-11-02__kompas-pro-internal-output-and-forward-horizon-v2__owner-approved.md",
+  "triggers": [
+    "kompas",
+    "kompas pro",
+    "compass",
+    "send kompas",
+    "kompas nu"
+  ],
+  "default_visible": {
+    "mode": "COLOR_CODED_MINIMAL_MOBILE",
+    "input_rule": "DETAILED_INTERNAL_FIRST_THEN_COMPACT_VISIBLE",
+    "price_asset": "BTC",
+    "graph_assets": [
+      "BTC"
+    ],
+    "graph_delivery": "INLINE_CHAT_OPTIONAL_NO_DOWNLOAD_LINK",
+    "render_scale_without_widget": true,
+    "render_scale_without_image": true,
+    "mandatory_tables": [
+      "MIT_TAKTISKE_KOMPAS",
+      "AKTIVKLASSER"
+    ],
+    "max_table_columns": 3,
+    "unknown_is_grey": true,
+    "colors": {
+      "UP": "GREEN",
+      "CAUTIOUS_UP": "LIGHT_GREEN",
+      "MIXED": "AMBER",
+      "CAUTIOUS_DOWN": "ORANGE",
+      "DOWN": "RED",
+      "UNAVAILABLE": "GREY"
+    },
+    "bull_bear_semantics": "COARSE_EVIDENCE_BALANCE_NOT_PROBABILITY",
+    "score_source": "OFFICIAL_COMPASS_ONLY",
+    "percentage_from_direction_forbidden": true
+  },
+  "full_internal_required_families": [
+    "TIMESTAMP_SOURCE_FIRST_KNOWN_UTC_HASH",
+    "FRESHNESS_AND_DATA_QUALITY",
+    "BTC_ETH_ETHBTC_BREADTH_ROTATION",
+    "ETF_MACRO_LIQUIDITY_SENTIMENT",
+    "OFFICIAL_NOW_ACTION_AND_12_72_168",
+    "NATIVE_SOURCE_AND_NOWCAST_SEPARATION",
+    "SHADOW_CHALLENGER_DISAGREEMENT_AND_PIT",
+    "MASTER_MONDAY_CN_WEEK_ISSUE_FREEZE",
+    "FORWARD_PRICE_1D_7D_14D_21D_30D_56D",
+    "LONG_RANGE_1_3M_3_6M_6_9M_9_12M",
+    "PULLBACK_DISTRIBUTION_SELL_SWING_REENTRY",
+    "CAPITALIZATION_AND_ALTSEASON_GATES",
+    "FORECAST_OUTCOME_CALIBRATION_WIDTH_EDGE",
+    "GRAPH_HISTORY_ROLLOVER_SOURCE_PARITY",
+    "GITHUB_PR_GOVERNANCE_COST_RELEASE",
+    "INDEPENDENT_NONBINDING_INTERPRETATION_AND_FALSIFIERS"
+  ],
+  "per_horizon_required_fields": [
+    "horizon_id",
+    "as_of_utc",
+    "forecast_start_utc",
+    "forecast_end_utc",
+    "source_owner",
+    "original_issue_id",
+    "original_source_sha256",
+    "source_first_known_at_utc",
+    "public_issuance_verified",
+    "price_quote",
+    "price_venue",
+    "price_semantics",
+    "direction",
+    "official_action",
+    "shadow_challenge",
+    "evidence_quality",
+    "calibration_status",
+    "low",
+    "expected_close",
+    "high",
+    "source_status",
+    "unavailability_reason",
+    "invalidation",
+    "reassessment_utc",
+    "maturity_state",
+    "freshness",
+    "consumer_refs"
+  ],
+  "horizons": [
+    {
+      "id": "NOW",
+      "label": "Nu",
+      "baseline_readiness": "OBSERVATION_ONLY",
+      "direction_owner": "OFFICIAL_NATIVE",
+      "price_owner": "HOURLY_SEQUENCE",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Only spot timestamp/quote; never a prospective price forecast"
+    },
+    {
+      "id": "H0_12H",
+      "label": "0-12 timer",
+      "baseline_readiness": "OBSERVED_NOWCAST_NOT_ISSUED_PRICE",
+      "direction_owner": "OFFICIAL_DAILY_COMPASS",
+      "price_owner": "OFFICIAL_12H_PROSPECTIVE_IF_ADMITTED",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Observed momentum MUST NOT be called a predictive 12h estimate"
+    },
+    {
+      "id": "H24H",
+      "label": "24 timer",
+      "baseline_readiness": "RESEARCH_PRICE_NOT_ISSUED",
+      "direction_owner": "OFFICIAL_DAILY_COMPASS",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "No fabricated 24h price from 12h nowcast or 1d shadow"
+    },
+    {
+      "id": "H1_3D",
+      "label": "1-3 dage",
+      "baseline_readiness": "OFFICIAL_DIRECTION_PRICE_NOT_ISSUED",
+      "direction_owner": "OFFICIAL_DAILY_COMPASS",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Official action and direction distinct from price"
+    },
+    {
+      "id": "H5_7D",
+      "label": "5-7 dage",
+      "baseline_readiness": "OFFICIAL_DIRECTION_OPTIONAL_ORIGINAL_CN_7D",
+      "direction_owner": "OFFICIAL_DAILY_COMPASS",
+      "price_owner": "CN_ORIGINAL_WEEKLY_1593",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Only original 7 valid daily expected closes may be drawn as a path"
+    },
+    {
+      "id": "H8_14D",
+      "label": "8-14 dage",
+      "baseline_readiness": "RESEARCH_PREFLIGHT_NOT_ISSUED",
+      "direction_owner": "STRATEGIC_COMPASS_RESEARCH",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Historical q10/q90 and D8-14 validator are not live issued prices"
+    },
+    {
+      "id": "H15_21D",
+      "label": "15-21 dage",
+      "baseline_readiness": "RESEARCH_PREFLIGHT_NOT_ISSUED",
+      "direction_owner": "STRATEGIC_COMPASS_RESEARCH",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Do not copy official 2-3w direction as a numeric close"
+    },
+    {
+      "id": "H2_3W",
+      "label": "2-3 uger",
+      "baseline_readiness": "OFFICIAL_DIRECTION_PRICE_NOT_ISSUED",
+      "direction_owner": "OFFICIAL_DAILY_COMPASS",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Official qualitative support; numeric forecast has separate custody"
+    },
+    {
+      "id": "H21_30D",
+      "label": "21-30 dage",
+      "baseline_readiness": "STRATEGIC_QUALITATIVE_PRICE_NOT_ISSUED",
+      "direction_owner": "STRATEGIC_COMPASS_CN_PROJECTION",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Use original Strategic anchor; cannot extrapolate from 2-3w"
+    },
+    {
+      "id": "H4_8W",
+      "label": "4-8 uger",
+      "baseline_readiness": "SHADOW_LONG_RANGE_PRICE_NOT_ISSUED",
+      "direction_owner": "CN_STRATEGIC_SHADOW",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "56d research may ABSTAIN with insufficient independent blocks"
+    },
+    {
+      "id": "H1_3M",
+      "label": "1-3 måneder",
+      "baseline_readiness": "LONG_RANGE_SCENARIO_RESEARCH_ONLY",
+      "direction_owner": "STRATEGIC_COMPASS_LONG_RANGE_VALIDATOR",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Conditional scenarios only; no numeric public projections yet"
+    },
+    {
+      "id": "H3_6M",
+      "label": "3-6 måneder",
+      "baseline_readiness": "LONG_RANGE_SCENARIO_RESEARCH_ONLY",
+      "direction_owner": "STRATEGIC_COMPASS_LONG_RANGE_VALIDATOR",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Conditional scenarios only; no numeric public projections yet"
+    },
+    {
+      "id": "H6_9M",
+      "label": "6-9 måneder",
+      "baseline_readiness": "LONG_RANGE_SCENARIO_RESEARCH_ONLY",
+      "direction_owner": "STRATEGIC_COMPASS_LONG_RANGE_VALIDATOR",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Conditional scenarios only; no numeric public projections yet"
+    },
+    {
+      "id": "H9_12M",
+      "label": "9-12 måneder",
+      "baseline_readiness": "LONG_RANGE_SCENARIO_RESEARCH_ONLY",
+      "direction_owner": "STRATEGIC_COMPASS_LONG_RANGE_VALIDATOR",
+      "price_owner": "FORWARD_PATH_1516",
+      "action_owner": "OFFICIAL_DAILY_COMPASS_ONLY",
+      "numeric_publication_default": "NOT_ISSUED",
+      "require_original_issue": true,
+      "require_target_start_end_utc": true,
+      "require_original_source_hash": true,
+      "require_quote_parity": true,
+      "unavailable_reason": "Conditional scenarios only; no numeric public projections yet"
+    }
+  ],
+  "release_phases": [
+    {
+      "id": "G0",
+      "name": "Persistent invocation/internal-source v2",
+      "domain_issue": 1516,
+      "owners": [
+        1156,
+        1516
+      ],
+      "state": "IN_PROGRESS",
+      "deliverables": [
+        "Versioned canonical global route reference",
+        "Full internal horizon ledger",
+        "Visually small colored chat output",
+        "Binding regression tests"
+      ],
+      "completion_evidence": [
+        "merged_main_sha",
+        "current_head_ci",
+        "literal Kompas readback",
+        "source matrices checked"
+      ],
+      "restart_trigger": "Reviewed exact-head PR acceptance and merge"
+    },
+    {
+      "id": "G1",
+      "name": "Real W45+ seven daily BTC original issuance and independent green actual history",
+      "domain_issue": 1593,
+      "owners": [
+        1516,
+        1593,
+        1578,
+        1156
+      ],
+      "state": "BLOCKED_EXTERNAL",
+      "deliverables": [
+        "Bounded pre-freeze semantic fallback with measured API cap",
+        "Original prospective seven BTC daily closes or documented abstention",
+        "Original source-clock receipt and SOURCE_ISSUED if valid",
+        "Graph History #1872 current-head repair",
+        "genuine site CDN readback"
+      ],
+      "completion_evidence": [
+        "cn_freeze_sha",
+        "fallback_attempt_receipt",
+        "pages_run",
+        "cdn_timeline_parity",
+        "green_without_blue_negative_test"
+      ],
+      "restart_trigger": "Original W45 natural source + verified current-main Vault separation"
+    },
+    {
+      "id": "G2",
+      "name": "Native BTCUSDT true 1/7/14/21/30/56d priced shadow issuance",
+      "domain_issue": 1516,
+      "owners": [
+        1516,
+        1593
+      ],
+      "state": "BLOCKED_EXTERNAL",
+      "deliverables": [
+        "Independent source custody/first receiver clock and quote",
+        "Forward-only original source forecast issuance",
+        "Terminal-close vs extrema separate contracts",
+        "N/block sufficiency including 56d abstention"
+      ],
+      "completion_evidence": [
+        "independent_source_custody_receipt",
+        "original_issue_sha",
+        "provider_quote_venue_contract",
+        "preoutcome_cutoff"
+      ],
+      "restart_trigger": "Verified admitted prospective source and separated recovery custody"
+    },
+    {
+      "id": "G3",
+      "name": "Matured scientific scoring and calibration",
+      "domain_issue": 1596,
+      "owners": [
+        1596,
+        1516
+      ],
+      "state": "NATURAL_WAIT",
+      "deliverables": [
+        "Matched same-quote exact-clock B0/B1/B3 comparators",
+        "Joint extrema coverage and width penalties",
+        "Independent N and explicit abstention denominator",
+        "Edge/no-edge independent review"
+      ],
+      "completion_evidence": [
+        "outcome_maturity_receipts",
+        "PIT_admission",
+        "scorer_replay",
+        "independent_negative_controls"
+      ],
+      "restart_trigger": "First genuine original issued candidate matures"
+    },
+    {
+      "id": "G4",
+      "name": "SITE source-only horizon ladder and CN multiweek Graph History",
+      "domain_issue": 1578,
+      "owners": [
+        1578,
+        1593
+      ],
+      "state": "NOT_STARTED",
+      "deliverables": [
+        "Sanitized complete horizon-vector readback",
+        "One minimal BTC Graph History with original source owner",
+        "4/10/all week compatible renderer",
+        "Mobile and accessibility review",
+        "No synthetic site forecaster"
+      ],
+      "completion_evidence": [
+        "published_source_hash_parity",
+        "mobile_browser",
+        "cdn_actual",
+        "source_missing_negative"
+      ],
+      "restart_trigger": "G1 authentic original graph, G0 source-render contract and no collision with #1872"
+    },
+    {
+      "id": "G5",
+      "name": "1–12 month conditional BTC scenarios and gated numerical long horizon",
+      "domain_issue": 1516,
+      "owners": [
+        1516,
+        1596
+      ],
+      "state": "NOT_STARTED",
+      "deliverables": [
+        "Conditional macro/liquidity forecasts with dated falsification",
+        "Original shadow source-first-known freeze and scored outcome",
+        "Only later independently eligible numeric target envelopes"
+      ],
+      "completion_evidence": [
+        "validated_long_range_candidate",
+        "prospective_issuance",
+        "matured_outcome",
+        "independent_promotion_gate"
+      ],
+      "restart_trigger": "G2 issue/source method and sufficient prospective independent cohort"
+    },
+    {
+      "id": "G6",
+      "name": "Perpetual due-only Closure and Graph History accountability",
+      "domain_issue": 1156,
+      "owners": [
+        1156,
+        1593,
+        1578,
+        1596
+      ],
+      "state": "IN_PROGRESS",
+      "deliverables": [
+        "S1 due-only receipt on material transition",
+        "Monday CN week rollover and graph continuity checks",
+        "No missing owner PR or untracked blocker",
+        "Expedited P0/P1 followup, no duplicate scheduler"
+      ],
+      "completion_evidence": [
+        "s1_receipt",
+        "w45_and_w46_source_readback",
+        "site_cdn_parity",
+        "outcome_learning_consumption"
+      ],
+      "restart_trigger": "Natural Monday/eligible PR merge/review/source restoration/matured outcome"
+    }
+  ],
+  "release_gates": {
+    "requires_exact_head_ci": true,
+    "independent_review_on_consequential_changes": true,
+    "high_impact_requires_separate_vault_restore": true,
+    "main_sha_lease_before_merge": true,
+    "postmerge_natural_readback": true,
+    "no_auto_promotion_of_shadow": true,
+    "no_new_schedule": true,
+    "no_new_API_spend": true,
+    "owner_mandate_does_not_override_scientific_truth": true
+  },
+  "ownership": {
+    "forward_path": 1516,
+    "weekly_cn_master_monday": 1593,
+    "site": 1578,
+    "scientific_outcome": 1596,
+    "integrity": 1827,
+    "closure_supervisor": 1156
+  },
+  "public_projection": {
+    "producer": "CURRENT_EXISTING_PUBLIC_COMPASS_FULL_STACK_READBACK",
+    "consumer": "CURRENT_EXISTING_CANONICAL_SITE",
+    "from_internal_only_allowlisted_verified_fields": true,
+    "private_data_excluded": true,
+    "horizon_status_without_numeric_is_allowed": true,
+    "site_cannot_issue_forecast": true
+  },
+  "graph_history": {
+    "start_week": "2026-W45",
+    "canonical_path": "05_CYCLE_NAVIGATOR/graph_history/v1",
+    "blue_segment_requires_seven_original_points": true,
+    "green_actual_independent_of_blue": true,
+    "missing_hours_interpolated": false,
+    "source_or_render_may_be_rebuilt": true,
+    "archive_repair_original_pr": 1872
+  },
+  "status_policy": {
+    "states": [
+      "NOT_STARTED",
+      "IN_PROGRESS",
+      "BLOCKED_EXTERNAL",
+      "NATURAL_WAIT",
+      "VERIFIED_COMPLETE"
+    ],
+    "completion_requires_evidence": true,
+    "stale_issue_status_not_authoritative": true,
+    "source_live_status_read_each_run": true,
+    "owner_issue_comment_log_required": true
+  }
+}
