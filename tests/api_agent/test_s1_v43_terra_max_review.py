@@ -52,6 +52,15 @@ class TerraReviewTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 terra.check_pr(HEAD)
 
+    def test_postmerge_original_head_can_be_audited(self):
+        merged = {**pr(state="closed"), "merged_at": "2026-11-02T11:00:00Z"}
+        with patch.object(terra, "gh", return_value=json.dumps(merged)):
+            terra.check_pr(HEAD)
+        merged["head"]["sha"] = "c" * 40
+        with patch.object(terra, "gh", return_value=json.dumps(merged)):
+            with self.assertRaises(ValueError):
+                terra.check_pr(HEAD)
+
     def test_full_patch_coverage_and_context_bound(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "event.json"
