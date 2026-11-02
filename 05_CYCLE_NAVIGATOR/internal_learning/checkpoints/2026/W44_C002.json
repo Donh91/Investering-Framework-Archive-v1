@@ -1,0 +1,374 @@
+{
+  "api_review": {
+    "evidence_against": [
+      "The apparent rotation weakness is not a broad contemporaneous precision collapse: breadth, breadth_persistence, ETH/BTC, and intraday day 1\u20132 each scored 100 in all four W41\u2013W44 settlements, while regime scored 50 only in W41 and 100 thereafter.",
+      "Rotation's settled score is consistently 50 rather than 0 across W41\u2013W44. The supplied evidence therefore supports persistent partial precision loss, but does not identify whether the misses are directional, magnitude-related, timing-related, or attributable to a single repeated claim form.",
+      "The W41 BTC and ETH envelope failures were followed by 100 scores for both range families in W42\u2013W44. This falsifies a claim of continuously inadequate weekly range containment over the complete four-settlement window.",
+      "Intraday day 3\u20134 improved from 50 in W41\u2013W42 to 100 in W43\u2013W44, which weakens an interpretation of a uniform intraday-timing failure across the week.",
+      "Altseason, deeper_transmission, first_handoff, and leadership have zero valid observations in the checkpoint window; they cannot support or refute a cross-family blind-spot conclusion."
+    ],
+    "evidence_for": [
+      "Rotation is the clearest recurring weakness: it scored 50 in each of W41\u2013W44, with mean and median 50, four weak weeks, and a four-week low-score streak. The prior four-week mean was also only 58.33, indicating that the issue predates the current window rather than arising solely from one settlement.",
+      "Intraday day 5\u20137 scored 50 in W41, W43, and W44, with a 62.5 four-week mean, 50 median, three weak weeks, and a current two-week low-score streak. In contrast, day 1\u20132 was 100 throughout and day 3\u20134 recovered to 100 in the latter two settlements. This pattern is consistent with a possible late-week timing-specific precision issue.",
+      "Self-critiques show alternating directional-framing errors: W43 underweighted a failed early rebound and negative weekly closes, while W44 underweighted a partial late repair and nearly flat ETH/BTC close. Together, these descriptions support investigation of overly persistent weekly narratives that may not sufficiently represent within-week reversals.",
+      "W41 had simultaneous BTC and ETH weekly-envelope misses, with observed lows below both frozen floors; W42 then had a narrowly missed ETH day 3\u20134 floor despite both weekly bands holding. This supports a bounded investigation into lower-tail and subweekly range-shape calibration rather than a general conclusion that all ranges are inadequate.",
+      "The checkpoint itself flags rotation for research-only hypothesis generation and separately identifies BTC range, ETH range, and intraday day 3\u20134 as watch families, consistent with concentrated rather than system-wide review priorities."
+    ],
+    "forecast_candidates": [],
+    "hypotheses": [
+      "H1 \u2014 Rotation claim-form hypothesis: Across the next four eligible settled Cycle Navigator observations containing rotation scoring, rotation will continue to score below 100 more often than the contemporaneous breadth and ETH/BTC families; falsified if rotation scores 100 in at least three of four such observations, or if its below-100 frequency does not exceed both comparators. This tests whether the observed weakness is rotation-specific rather than a general settlement effect.",
+      "H2 \u2014 Late-week timing-decay hypothesis: Across the next four eligible settlements with all intraday partitions scored, intraday day 5\u20137 will score below 100 in more observations than both day 1\u20132 and day 3\u20134; falsified if day 5\u20137 reaches 100 in at least three observations or does not underperform both earlier partitions. This isolates timing placement without asserting a cause.",
+      "H3 \u2014 Narrative-reversal hypothesis: In the next four eligible settled observations whose self-critiques explicitly describe an early move reversing or a late repair, the associated directional or mixed-framing parameter will score below 100 in at least two cases; falsified if fewer than two such cases score below 100. This tests whether frozen framing is insufficiently conditional on within-week path changes.",
+      "H4 \u2014 Lower-tail range-shape hypothesis: In the next four eligible settlements with BTC and ETH range-family scores, below-floor or downside-extrema misses will occur more often than above-ceiling misses among any range failures; falsified if no range failures occur, or if upper-tail misses equal or exceed lower-tail misses. This is limited to failure shape and does not presume persistent poor aggregate range containment."
+    ],
+    "status": "READY",
+    "summary": "Research-only four-settlement review finds concentrated, partially falsified concerns rather than evidence of a system-wide precision breakdown. Rotation is persistently partial at 50 across W41\u2013W44. Late-week intraday precision is weaker than earlier-week partitions, and the W43\u2013W44 critiques suggest possible difficulty representing within-week reversals. Range concerns are episodic and lower-tail/subweekly in character: W41 missed both weekly lower bounds, but W42\u2013W44 weekly ranges recovered. Several families lack usable current-window observations, preventing a complete cross-family diagnosis.",
+    "uncertainties": [
+      "The supplied family scores are coarse outcome values and do not provide parameter-level miss attribution for rotation; the underlying error class cannot be determined from a 50 score alone.",
+      "The four-settlement window contains only one jointly failed weekly BTC/ETH range event, so evidence is insufficient to establish stable downside-tail asymmetry.",
+      "Self-critiques are qualitative and settlement-specific; they support candidate mechanisms but do not independently establish causal timing bias or rigidity.",
+      "Family availability changes across the eight settlements, and four checkpoint families have no valid observations in W41\u2013W44, limiting comparability across the full Cycle Navigator surface.",
+      "The evidence contains no explicit regime labels or market-path measurements beyond the stated settlement summaries, so regime dependence remains unverified."
+    ]
+  },
+  "api_review_required": true,
+  "api_review_tier": "TERRA_MEDIUM",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "checkpoint_sequence": 2,
+  "completed_iso_week": 44,
+  "completed_iso_year": 2026,
+  "contract": "CN_PRECISION_4W_CHECKPOINT_v1",
+  "family_trends": {
+    "altseason": {
+      "change_vs_previous_4w_pp": null,
+      "family": "altseason",
+      "low_score_streak": 0,
+      "mean_4w": null,
+      "median_4w": null,
+      "previous_4w_mean": 83.33,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "recovery_ready": false,
+      "state": "NORMAL",
+      "valid_observations_4w": 0,
+      "weak_weeks_4w": 0,
+      "zero_weeks_4w": 0
+    },
+    "breadth": {
+      "change_vs_previous_4w_pp": 25.0,
+      "family": "breadth",
+      "low_score_streak": 0,
+      "mean_4w": 100.0,
+      "median_4w": 100.0,
+      "previous_4w_mean": 75.0,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        100.0,
+        100.0,
+        100.0,
+        100.0
+      ],
+      "recovery_ready": true,
+      "state": "NORMAL",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 0,
+      "zero_weeks_4w": 0
+    },
+    "breadth_persistence": {
+      "change_vs_previous_4w_pp": -0.0,
+      "family": "breadth_persistence",
+      "low_score_streak": 0,
+      "mean_4w": 100.0,
+      "median_4w": 100.0,
+      "previous_4w_mean": 100.0,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        100.0,
+        100.0,
+        100.0,
+        100.0
+      ],
+      "recovery_ready": true,
+      "state": "NORMAL",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 0,
+      "zero_weeks_4w": 0
+    },
+    "btc_range": {
+      "change_vs_previous_4w_pp": -25.0,
+      "family": "btc_range",
+      "low_score_streak": 0,
+      "mean_4w": 75.0,
+      "median_4w": 100.0,
+      "previous_4w_mean": 100.0,
+      "raw_state": "WATCH",
+      "recent_scores": [
+        0.0,
+        100.0,
+        100.0,
+        100.0
+      ],
+      "recovery_ready": true,
+      "state": "WATCH",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 1,
+      "zero_weeks_4w": 1
+    },
+    "deeper_transmission": {
+      "change_vs_previous_4w_pp": null,
+      "family": "deeper_transmission",
+      "low_score_streak": 0,
+      "mean_4w": null,
+      "median_4w": null,
+      "previous_4w_mean": 50.0,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "recovery_ready": false,
+      "state": "NORMAL",
+      "valid_observations_4w": 0,
+      "weak_weeks_4w": 0,
+      "zero_weeks_4w": 0
+    },
+    "eth_range": {
+      "change_vs_previous_4w_pp": -25.0,
+      "family": "eth_range",
+      "low_score_streak": 0,
+      "mean_4w": 75.0,
+      "median_4w": 100.0,
+      "previous_4w_mean": 100.0,
+      "raw_state": "WATCH",
+      "recent_scores": [
+        0.0,
+        100.0,
+        100.0,
+        100.0
+      ],
+      "recovery_ready": true,
+      "state": "WATCH",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 1,
+      "zero_weeks_4w": 1
+    },
+    "ethbtc": {
+      "change_vs_previous_4w_pp": 25.0,
+      "family": "ethbtc",
+      "low_score_streak": 0,
+      "mean_4w": 100.0,
+      "median_4w": 100.0,
+      "previous_4w_mean": 75.0,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        100.0,
+        100.0,
+        100.0,
+        100.0
+      ],
+      "recovery_ready": true,
+      "state": "NORMAL",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 0,
+      "zero_weeks_4w": 0
+    },
+    "first_handoff": {
+      "change_vs_previous_4w_pp": null,
+      "family": "first_handoff",
+      "low_score_streak": 0,
+      "mean_4w": null,
+      "median_4w": null,
+      "previous_4w_mean": 50.0,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "recovery_ready": false,
+      "state": "NORMAL",
+      "valid_observations_4w": 0,
+      "weak_weeks_4w": 0,
+      "zero_weeks_4w": 0
+    },
+    "intraday_day_1_2": {
+      "change_vs_previous_4w_pp": 25.0,
+      "family": "intraday_day_1_2",
+      "low_score_streak": 0,
+      "mean_4w": 100.0,
+      "median_4w": 100.0,
+      "previous_4w_mean": 75.0,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        100.0,
+        100.0,
+        100.0,
+        100.0
+      ],
+      "recovery_ready": true,
+      "state": "NORMAL",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 0,
+      "zero_weeks_4w": 0
+    },
+    "intraday_day_3_4": {
+      "change_vs_previous_4w_pp": 25.0,
+      "family": "intraday_day_3_4",
+      "low_score_streak": 0,
+      "mean_4w": 75.0,
+      "median_4w": 75.0,
+      "previous_4w_mean": 50.0,
+      "raw_state": "WATCH",
+      "recent_scores": [
+        50.0,
+        50.0,
+        100.0,
+        100.0
+      ],
+      "recovery_ready": true,
+      "state": "WATCH",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 2,
+      "zero_weeks_4w": 0
+    },
+    "intraday_day_5_7": {
+      "change_vs_previous_4w_pp": -12.5,
+      "family": "intraday_day_5_7",
+      "low_score_streak": 2,
+      "mean_4w": 62.5,
+      "median_4w": 50.0,
+      "previous_4w_mean": 75.0,
+      "raw_state": "PERSISTENT_WEAKNESS",
+      "recent_scores": [
+        50.0,
+        100.0,
+        50.0,
+        50.0
+      ],
+      "recovery_ready": false,
+      "state": "PERSISTENT_WEAKNESS",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 3,
+      "zero_weeks_4w": 0
+    },
+    "leadership": {
+      "change_vs_previous_4w_pp": null,
+      "family": "leadership",
+      "low_score_streak": 0,
+      "mean_4w": null,
+      "median_4w": null,
+      "previous_4w_mean": 75.0,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "recovery_ready": false,
+      "state": "NORMAL",
+      "valid_observations_4w": 0,
+      "weak_weeks_4w": 0,
+      "zero_weeks_4w": 0
+    },
+    "regime": {
+      "change_vs_previous_4w_pp": -0.0,
+      "family": "regime",
+      "low_score_streak": 0,
+      "mean_4w": 87.5,
+      "median_4w": 100.0,
+      "previous_4w_mean": 87.5,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        50.0,
+        100.0,
+        100.0,
+        100.0
+      ],
+      "recovery_ready": true,
+      "state": "NORMAL",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 1,
+      "zero_weeks_4w": 0
+    },
+    "rotation": {
+      "change_vs_previous_4w_pp": -8.33,
+      "family": "rotation",
+      "low_score_streak": 4,
+      "mean_4w": 50.0,
+      "median_4w": 50.0,
+      "previous_4w_mean": 58.33,
+      "raw_state": "PERSISTENT_WEAKNESS",
+      "recent_scores": [
+        50.0,
+        50.0,
+        50.0,
+        50.0
+      ],
+      "recovery_ready": false,
+      "state": "PERSISTENT_WEAKNESS",
+      "valid_observations_4w": 4,
+      "weak_weeks_4w": 4,
+      "zero_weeks_4w": 0
+    },
+    "structural_call_5": {
+      "change_vs_previous_4w_pp": null,
+      "family": "structural_call_5",
+      "low_score_streak": 0,
+      "mean_4w": 100.0,
+      "median_4w": 100.0,
+      "previous_4w_mean": null,
+      "raw_state": "NORMAL",
+      "recent_scores": [
+        100.0,
+        null,
+        null,
+        null
+      ],
+      "recovery_ready": false,
+      "state": "NORMAL",
+      "valid_observations_4w": 1,
+      "weak_weeks_4w": 0,
+      "zero_weeks_4w": 0
+    }
+  },
+  "persistent_families": [
+    "rotation",
+    "intraday_day_5_7"
+  ],
+  "portfolio_execution": false,
+  "previous_score_keys": [
+    "Y2026-W37-CN25",
+    "Y2026-W38-CN26",
+    "Y2026-W39-CN27",
+    "Y2026-W40-CN28"
+  ],
+  "public_surface_effect": false,
+  "recent_score_keys": [
+    "Y2026-W41-CN29",
+    "Y2026-W42-CN30",
+    "Y2026-W43-CN31",
+    "Y2026-W44-CN32"
+  ],
+  "research_signal": {
+    "family": "rotation",
+    "primary_action": "RESEARCH_NEW_HYPOTHESIS",
+    "reason": "4-settlement checkpoint detected PERSISTENT_WEAKNESS in rotation: mean_4w=50.0 weak_weeks=4 zero_weeks=0. Research-only falsification is warranted; no threshold, weight, forecast, public score or portfolio change is authorized.",
+    "target": "CN_PRECISION::rotation"
+  },
+  "settlement_count": 8,
+  "watch_families": [
+    "btc_range",
+    "eth_range",
+    "intraday_day_3_4"
+  ]
+}
