@@ -84,6 +84,8 @@ def validate_chain(events):
         elif status in ("REJECTED", "TIMED_OUT", "S1_VERIFIED"):
             raise ReceiptError("already terminal")
         elif proposed == "TIMED_OUT":
+            if status == "RESULT_DELIVERED":
+                raise ReceiptError("a delivered result must be verified, not dropped")
             if actor != start["sender"]:
                 raise ReceiptError("only sender may expire")
         elif proposed == "REJECTED":
@@ -108,6 +110,7 @@ def validate_chain(events):
         "request_binding_sha256": hashlib.sha256(json.dumps(dict(zip(keys, binding)), sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest(),
         "source_head": start["source_head"],
         "structural_state": status,
+        "reported_verification_outcome": events[-1].get("verification") if status == "S1_VERIFIED" else None,
         "events_checked": len(events),
         "authenticated_delivery": False,
         "actual_job_execution_proven": False,
