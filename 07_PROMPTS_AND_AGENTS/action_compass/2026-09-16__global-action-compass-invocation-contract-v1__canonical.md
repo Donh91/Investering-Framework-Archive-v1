@@ -411,3 +411,20 @@ Production requirements and science remain under existing #1516 and
 #1578, site overlay under `SITE_CONTRACT.md`. The source-only
 `compass-pro-readback.mjs` may produce pre-authored planning text, but
 **never** an official market classifier, SELL rule or trading signal.
+
+## 5.3 Approved Kompas PRO v2, deep internals + elegant color scale (2026-11-02)
+
+**Presentation/analysis supersession only**, never a new forecast issuer, market authority, source custody, trade/SELL rule or independent SITE price generator. This v2 improves the former 2026-10-25 Kompas PRO layout without deleting the original section 5.1 two-table requirement or the complete cross-layer read rule in 3.1.
+
+**Durable contract:** `07_PROMPTS_AND_AGENTS/action_compass/2026-11-02__kompas-pro-internal-output-and-forward-horizon-v2__owner-approved.md`.
+
+**Machine horizon/source/owner/closure ledger:** `07_PROMPTS_AND_AGENTS/action_compass/KOMPAS_PRO_HORIZON_IMPLEMENTATION_LEDGER_v2.json`.
+
+1. The **internal Kompas MUST be detailed and complete on EVERY single-word `Kompas` invocation** across Official, Native, independent nonbinding Shadow, Strategic, CN/Master Monday, forward price source/quote, 14 labelled horizons (NOW through 9–12 months), ETF/breadth/macro/sentiment, protection/SELL/reentry, precision learning/PIT, GitHub/Pages/source-chain and Graph History. Check exact owner clocks/SHA and authority separately. The **visible** answer is not required to print the whole internal audit.
+2. The **visible Kompas is short, colorful and phone-first**, starting with BTC/USDT observed price, source timestamp, current official action and a compact 14-horizon color-coded price/status ladder. Bull/Bear bars may show only originally reported official categorical evidence and are **not probabilities**. Unsupported numeric prices show `IKKE UDSTEDT` in grey, never synthetic dollar targets, hidden SHADOW price ranges or side-loaded historical values. Red/orange/amber/green direction wording only when sourced, always repeat the text label for accessibility.
+3. Keep one minimal source-backed BTC **price graph** embedded inline when actually available, no separate download-link section, and **no widget** for scales. ETH/ETHBTC and other capital segments are still evaluated internally and shown in the governed narrow asset table, but no second ETH chart. Preserve both required two three-column tables in section 5.1, pullback/SELL boundary, then `DIN HANDLING NU` and a qualified assistant interpretation.
+4. **Long-range BTC 14/21/30/56 days and 1–12 months are target features** under existing #1516, #1593, #1578, #1596, #1156, not proof of live numerical original forecasts. The #1729/#1731/#1733/#1808/#1820 sources are previously merged foundations (research/preflight/site/weekly original issuer), but none alone proves issuance or calibrated edge. D8–14/D15–21 numerical forecasts and month targets require actual pre-outcome source and quote custody, bounded original issue and independent maturation.
+5. **Every source-issued 7-day CN line flows into original W45+ Graph History**, separate from the independent green actual price source. Never bridge unrelated weekly blue forecast segments; preserve absent hour and absent forecast evidence. SITE consumes only source-verified and sanitized public readback. The open #1872 Graph History original repair and Vault-governed current-main restore proof remain distinct closure gates.
+6. Existing S1 #1156 must keep the **seven G0–G6 implementation phases** in the versioned ledger and domain issues #1516/#1593/#1578/#1596/#1827 actionable; only evidence-backed terminal receipts can mark `VERIFIED_COMPLETE`. No duplicate supervisor/schedule or stale prior review reuse. Source-only tests are included through the existing Official/Strategic Compass test collection.
+
+If the v2 ledger is absent on the executing branch, report `V2_IMPLEMENTATION_NOT_VERIFIED` and use the existing canonical source rules, **never** fill in price targets from this prose. A written preference does not prove a change to an external ChatGPT client's code.
