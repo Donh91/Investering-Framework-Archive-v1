@@ -162,12 +162,16 @@ def _source_gate(context: Mapping[str, Any], year: int, week: int, issued: datet
             "completed_last_utc": completed_last.isoformat(),
             "source_generated_at_utc": completed["generated_at_utc"],
             "master_monday_created_at_utc": mm["created_at_utc"],
-            "quote_evidence": "EXPLICIT_WEEKLY_ENVELOPE_QUOTE_PARITY",
+            "quote_evidence": "MODEL_DECLARED_ENVELOPE_QUOTE_EQUALS_SPOT_QUOTE_NOT_INDEPENDENT",
+            "envelope_quote_independently_verified": False,
             "source_admitted_for_scientific_scoring": False}, "ELIGIBLE"
 
 
 def reject_unverified_initial_daily_quotes(value: dict[str, Any],
-                                          context: Mapping[str, Any]) -> dict[str, Any]:
+                                          context: Mapping[str, Any], *,
+                                          year: int | None = None,
+                                          week: int | None = None,
+                                          issued_at: datetime | None = None) -> dict[str, Any]:
     """An initial 7/7 model answer cannot bypass original price-quote parity.
 
     Mutates only the still-unfrozen in-memory publication candidate and never
@@ -178,6 +182,14 @@ def reject_unverified_initial_daily_quotes(value: dict[str, Any],
     quotes = freeze.get("price_quote") or {}
     spot = ((context.get("completed_week_hourly_capture") or {})
             .get("hourly_sequence") or {}).get("spot_flow_readback") or {}
+    # Production checks the post-model issuance clock and full source gate,
+    # including initially valid 7/7 paths; offline legacy callers remain safe.
+    qualified = None
+    gate = "NOT_REQUESTED_FOR_LEGACY_TEST"
+    if year is not None or week is not None or issued_at is not None:
+        if year is None or week is None or issued_at is None:
+            raise ValueError("INITIAL_SOURCE_GATE_ARGUMENTS_INCOMPLETE")
+        qualified, gate = _source_gate(context, year, week, issued_at)
     changes = {}
     for asset in ("BTC", "ETH"):
         item = path.get(asset)
@@ -185,12 +197,44 @@ def reject_unverified_initial_daily_quotes(value: dict[str, Any],
             continue
         actual = (spot.get(asset) or {}).get("quote_unit")
         claimed = quotes.get(asset)
-        if actual not in ("USD", "USDT") or claimed != actual:
+        if (actual not in ("USD", "USDT") or claimed != actual or
+                (qualified is not None and
+                 (gate != "ELIGIBLE" or qualified.get("quote", {}).get(asset) != actual))):
             changes[asset] = {"status": "UNAVAILABLE", "points": [],
-                              "reason": "Original price-quote identity unverified or inconsistent; never equate USD and USDT."}
+                              "reason": "Initial daily path source, clock or quote unverified before freeze."}
     if changes:
         value["forecast_freeze"] = {**freeze,
             "daily_price_path": {**path, **changes}}
+    return value
+
+
+
+def quarantine_late_daily_issuance(value: dict[str, Any], *, year: int, week: int,
+                                   publication_clock: datetime) -> dict[str, Any]:
+    """Do not freeze seven expected closes after the first UTC day settles.
+
+    This changes only the still-unfrozen daily path, never original weekly
+    ranges, scoring, past recorded forecasts, or observed actual prices.
+    """
+    if publication_clock.tzinfo is None:
+        raise ValueError("PUBLICATION_CLOCK_UNZONED")
+    now = publication_clock.astimezone(timezone.utc)
+    monday = datetime.combine(date.fromisocalendar(year, week, 1),
+                              datetime.min.time(), tzinfo=timezone.utc)
+    if monday <= now < monday + timedelta(days=1):
+        return value
+    freeze = value["forecast_freeze"]
+    path = freeze["daily_price_path"]
+    replacement = {}
+    for asset in ("BTC", "ETH"):
+        if path[asset]["status"] == "PUBLISHED":
+            replacement[asset] = {
+                "status": "UNAVAILABLE", "points": [],
+                "reason": "Seven-day issuance cutoff not met at immutable publication clock."
+            }
+    if replacement:
+        value["forecast_freeze"] = {**freeze,
+                                   "daily_price_path": {**path, **replacement}}
     return value
 
 

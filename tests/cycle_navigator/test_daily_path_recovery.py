@@ -381,3 +381,69 @@ def test_semantic_retry_does_not_feed_model_its_old_abstention_rationale():
     assert "prior_abstentions" not in payload
     assert payload["prior_status"] == {"BTC": "UNAVAILABLE", "ETH": "UNAVAILABLE"}
     assert "UNIQUE_OLD_REFUSAL_NOT_EVIDENCE" not in __import__("json").dumps(payload)
+
+
+def test_initial_7of7_cannot_bypass_source_gate_when_clock_or_capture_invalid():
+    from scripts.cycle_navigator.daily_path_recovery import reject_unverified_initial_daily_quotes
+    initial = _value("PUBLISHED", "PUBLISHED")
+    initial["forecast_freeze"]["price_quote"] = {"BTC": "USDT", "ETH": "USDT"}
+    good = reject_unverified_initial_daily_quotes(
+        copy.deepcopy(initial), _context(), year=2026, week=46, issued_at=ISSUED)
+    assert good["forecast_freeze"]["daily_price_path"]["BTC"]["status"] == "PUBLISHED"
+    for defect in ("bad_completed_source", "clock_crosses_day1", "bad_mm"):
+        context = _context()
+        clock = ISSUED
+        if defect == "bad_completed_source":
+            context["completed_week_hourly_capture"]["readiness"] = "DEGRADED"
+        elif defect == "clock_crosses_day1":
+            clock = datetime(2026, 11, 10, 0, 0, 1, tzinfo=timezone.utc)
+        else:
+            context["master_monday_pointer"]["status"] = "STALE"
+        out = reject_unverified_initial_daily_quotes(
+            copy.deepcopy(initial), context, year=2026, week=46, issued_at=clock)
+        assert all(out["forecast_freeze"]["daily_price_path"][a]["status"] == "UNAVAILABLE"
+                   for a in ("BTC", "ETH"))
+
+
+def test_grok_quote_evidence_is_model_declared_not_independent():
+    _, receipt = _run(_value(), request=_fake(_proposal(), []))
+    evidence = receipt["source_clock_and_quote"]
+    assert evidence["quote_evidence"] == "MODEL_DECLARED_ENVELOPE_QUOTE_EQUALS_SPOT_QUOTE_NOT_INDEPENDENT"
+    assert evidence["envelope_quote_independently_verified"] is False
+    assert evidence["source_admitted_for_scientific_scoring"] is False
+    wrong = _context()
+    wrong["weekly_envelope_quote"] = {"BTC": "USD", "ETH": "USD"}
+    _, rejected = _run(_value(), context=wrong, request=_fake(_proposal(), []))
+    assert rejected["status"] == "SKIPPED_SOURCE_GUARD"
+
+
+def test_post_model_publication_clock_cannot_retroactively_issue_day1():
+    from scripts.cycle_navigator.daily_path_recovery import quarantine_late_daily_issuance
+    original = _value("PUBLISHED", "PUBLISHED")
+    safe = quarantine_late_daily_issuance(
+        copy.deepcopy(original), year=2026, week=46,
+        publication_clock=datetime(2026, 11, 9, 23, 59, 59, tzinfo=timezone.utc))
+    assert safe == original
+    for clock in (datetime(2026, 11, 10, 0, 0, tzinfo=timezone.utc),
+                  datetime(2026, 11, 10, 0, 0, 1, tzinfo=timezone.utc),
+                  datetime(2026, 11, 8, 23, 59, tzinfo=timezone.utc)):
+        late = quarantine_late_daily_issuance(
+            copy.deepcopy(original), year=2026, week=46, publication_clock=clock)
+        assert all(late["forecast_freeze"]["daily_price_path"][a]["status"] == "UNAVAILABLE"
+                   for a in ("BTC", "ETH"))
+        assert all(late["forecast_freeze"]["daily_price_path"][a]["points"] == []
+                   for a in ("BTC", "ETH"))
+    with pytest.raises(ValueError, match="PUBLICATION_CLOCK_UNZONED"):
+        quarantine_late_daily_issuance(copy.deepcopy(original), year=2026, week=46,
+                                       publication_clock=datetime(2026, 11, 9))
+
+
+def test_production_uses_current_source_clock_and_late_publication_check():
+    src = Path(builder.__file__).read_text()
+    assert "value = reject_unverified_initial_daily_quotes(" in src
+    assert "issued_at=datetime.now(timezone.utc))" in src
+    assert "value = quarantine_late_daily_issuance(" in src
+    assert "publication_clock=datetime.fromtimestamp(generated_unix, tz=timezone.utc)" in src
+    assert src.index("value = quarantine_late_daily_issuance(") < src.index("daily_path_issue = daily_path_issue_summary(")
+    assert "generated_unix = int(time.time())" in src
+

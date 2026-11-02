@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.api_agent.api_gateway import estimate_cost
 from scripts.cycle_navigator.prospective_range_bridge import load_bridge
 from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy, daily_path_issue_summary, daily_range_plan_schema, validate_daily_range_plan
-from scripts.cycle_navigator.daily_path_recovery import recover_daily_path, reject_unverified_initial_daily_quotes
+from scripts.cycle_navigator.daily_path_recovery import recover_daily_path, reject_unverified_initial_daily_quotes, quarantine_late_daily_issuance
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
 
 
@@ -882,7 +882,9 @@ def main() -> None:
     # The FIRST model answer also needs price-quote integrity. A PUBLISHED
     # asset whose original weekly quote does not match the source quote is
     # reduced to an honest UNAVAILABLE before any immutable freeze.
-    value = reject_unverified_initial_daily_quotes(value, context)
+    value = reject_unverified_initial_daily_quotes(
+        value, context, year=target_year, week=target_week,
+        issued_at=datetime.now(timezone.utc))
     freeze = value["forecast_freeze"]
     # A valid semantic abstention may receive at most ONE additional bounded
     # source-qualified call, always before the original immutable week freeze.
@@ -904,11 +906,16 @@ def main() -> None:
         cost_receipt_path=(repo / "research/api_agent/outputs/weekly" /
                            str(target_year) / f"W{target_week:02d}" /
                            "CN_DAILY_RECOVERY_COST_RESERVATION.json"))
+    # A request that starts before day-one close but finishes after it
+    # cannot be frozen as a prospective seven-day forecast.
+    generated_unix = int(time.time())
+    value = quarantine_late_daily_issuance(
+        value, year=target_year, week=target_week,
+        publication_clock=datetime.fromtimestamp(generated_unix, tz=timezone.utc))
     freeze = value["forecast_freeze"]
     validate_daily_path(freeze.get("daily_price_path"), freeze, target_year, target_week)
     daily_path_issue = daily_path_issue_summary(freeze.get("daily_price_path"), freeze, target_year, target_week)
     source_manifest = {"daily_path_issuance": daily_path_issue, "daily_path_recovery": daily_recovery_receipt, "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
-    generated_unix = int(time.time())
     scoring_valid_from_unix = ((generated_unix + 3599) // 3600) * 3600
     scoring_valid_from_utc = datetime.fromtimestamp(scoring_valid_from_unix, tz=timezone.utc).isoformat().replace("+00:00", "Z")
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": generated_unix, "public_issue_number": public_issue, "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
