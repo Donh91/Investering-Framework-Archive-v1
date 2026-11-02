@@ -7,6 +7,7 @@ Only final completed-week evidence enters the extra one-shot synthesis.
 from __future__ import annotations
 
 # OWNER_APPROVED_ONE_SHOT_W45_ACTION_TRIGGER_20261102
+# SECOND_TRIGGER_ONLY_AFTER_FIRST_RUN_FAILED_PRE_API_ZERO_PAID_CALLS
 
 import argparse
 import hashlib
