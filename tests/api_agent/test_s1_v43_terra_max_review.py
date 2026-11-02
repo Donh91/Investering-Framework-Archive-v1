@@ -88,8 +88,8 @@ class TerraReviewTests(unittest.TestCase):
             }))
             receipt = {"status": "PASS", "model": "gpt-6.1-terra", "reasoning_effort": "max",
                        "attempt_count": 1, "estimated_cost_usd": 0.34,
-                       "forecast_candidate_count": 0, "context_hash": terra.sha256(canonical)}
-            result = {"summary": "PASS MODEL_USED=gpt-6.1-terra REASONING_MAX NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE",
+                       "forecast_candidate_count": 0, "context_hash": terra.sha256(canonical), "response_id": "resp_valid"}
+            result = {"status": "READY", "evidence_against": [], "summary": "PASS MODEL_USED=gpt-6.1-terra REASONING_MAX NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE",
                       "forecast_candidates": []}
             (out / "output" / "receipt.json").write_text(json.dumps(receipt))
             (out / "output" / "output.json").write_text(json.dumps(result))
@@ -103,6 +103,18 @@ class TerraReviewTests(unittest.TestCase):
                 receipt["estimated_cost_usd"] = 2.4
                 (out / "output" / "receipt.json").write_text(json.dumps(receipt))
                 with self.assertRaises(ValueError):
+                    terra.validate(out)
+                receipt["estimated_cost_usd"] = 0.25
+                (out / "output" / "receipt.json").write_text(json.dumps(receipt))
+                result["evidence_against"] = ["P1|scripts/api_agent/example.py|counterexample"]
+                (out / "output" / "output.json").write_text(json.dumps(result))
+                with self.assertRaisesRegex(ValueError, "FALSE_PASS"):
+                    terra.validate(out)
+                result["evidence_against"] = []
+                (out / "output" / "output.json").write_text(json.dumps(result))
+                receipt["estimated_cost_usd"] = float("nan")
+                (out / "output" / "receipt.json").write_text(json.dumps(receipt))
+                with self.assertRaisesRegex(ValueError, "FINITE"):
                     terra.validate(out)
 
 
