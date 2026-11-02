@@ -56,6 +56,18 @@ class RequestBindingHardeningTests(unittest.TestCase):
         self.assertEqual(dead["next_action"], "DEAD_LETTER_ESCALATE_WITH_ORIGINAL_OWNER")
         self.assertFalse(dead["delivery_authenticated"])
 
+    def test_existing_ack_must_not_be_resent(self):
+        from scripts.governance.s1_agent_handoff_receipts_v1 import handoff_followup
+        response = handoff_followup(chain()[:2], "2026-11-02T11:05:00Z", 30, 1)
+        self.assertEqual(response["next_action"], "RECEIVER_RESULT_OVERDUE_NO_DUPLICATE_REQUEST")
+        self.assertFalse(response["automatically_dispatched"])
+
+    def test_delivered_result_needs_verification_not_retry(self):
+        from scripts.governance.s1_agent_handoff_receipts_v1 import handoff_followup
+        response = handoff_followup(chain()[:4], "2026-11-02T10:08:00Z", 30, 1)
+        self.assertEqual(response["next_action"], "VERIFY_NATIVE_RESULT_NOW")
+        self.assertFalse(response["delivery_authenticated"])
+
     def test_invalid_attempt_policy_rejected(self):
         from scripts.governance.s1_agent_handoff_receipts_v1 import handoff_followup
         with self.assertRaises(ReceiptError):
