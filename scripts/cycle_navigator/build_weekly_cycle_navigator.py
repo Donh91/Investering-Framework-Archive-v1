@@ -16,7 +16,7 @@ from typing import Any, Mapping
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.cycle_navigator.prospective_range_bridge import load_bridge
 from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy, daily_path_issue_summary, daily_range_plan_schema, validate_daily_range_plan
-from scripts.cycle_navigator.daily_path_recovery import recover_daily_path
+from scripts.cycle_navigator.daily_path_recovery import recover_daily_path, reject_unverified_initial_daily_quotes
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
 
 
@@ -878,6 +878,11 @@ def main() -> None:
     # Quote is original model envelope metadata, independently crosschecked
     # against completed-week source quote in the recovery source gate.
     context["weekly_envelope_quote"] = freeze.get("price_quote")
+    # The FIRST model answer also needs price-quote integrity. A PUBLISHED
+    # asset whose original weekly quote does not match the source quote is
+    # reduced to an honest UNAVAILABLE before any immutable freeze.
+    value = reject_unverified_initial_daily_quotes(value, context)
+    freeze = value["forecast_freeze"]
     # A valid semantic abstention may receive at most ONE additional bounded
     # source-qualified call, always before the original immutable week freeze.
     value, daily_recovery_receipt = recover_daily_path(
