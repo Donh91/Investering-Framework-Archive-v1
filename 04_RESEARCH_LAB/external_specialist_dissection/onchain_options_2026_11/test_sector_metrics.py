@@ -16,6 +16,7 @@ def cohort():
             "venue": "Demo",
             "day_utc": d.isoformat(),
             "source_id": "SYNTHETIC",
+            "adapter_epoch": "SYNTHETIC_V1",
             "source_available_at_utc": f"{(d + timedelta(days=1)).isoformat()}T00:00:00Z",
             "period_final": True,
             "options_only_verified": True,
@@ -75,6 +76,14 @@ class MetricTests(unittest.TestCase):
         rows[-1]["source_id"] = "OTHER_PROVIDER"
         x = weekly_comparison(rows, "Demo", END.isoformat(), CUTOFF)
         self.assertEqual(x["reason"], "MIXED_SOURCE_COHORT")
+        rows = cohort()
+        del rows[-1]["adapter_epoch"]
+        x = weekly_comparison(rows, "Demo", END.isoformat(), CUTOFF)
+        self.assertEqual(x["reason"], "ADAPTER_EPOCH_MISSING")
+        rows = cohort()
+        rows[-1]["adapter_epoch"] = "SYNTHETIC_V2"
+        x = weekly_comparison(rows, "Demo", END.isoformat(), CUTOFF)
+        self.assertEqual(x["reason"], "MIXED_ADAPTER_EPOCH")
 
     def test_fee_scope_mismatch_not_fabricated(self):
         rows = cohort()
