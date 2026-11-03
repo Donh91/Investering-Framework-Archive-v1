@@ -2,18 +2,18 @@
   "active_heavy_workstreams": [
     {
       "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "4c1b652a80e791aa2a4efc83aff2bdb347889a8d5359685af78117ae2c0dd36c",
+      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
+      "evidence_fingerprint": "86f24026e95002af18bb3860da1eba39ac69257e1dfe47b2599fc0853335ca6f",
       "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "MEDIUM",
-      "novelty_verdict": null,
+      "impact_tier": "HIGH",
+      "novelty_verdict": "NOVEL",
       "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
       "paid_data_authorized": false,
       "portfolio_execution": false,
-      "reason": "registered source material exists but exact evaluator recovery is still required",
-      "source": "SHADOW_REGISTRY",
-      "specialist_action": "RECOVER_EVALUATOR",
-      "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+      "reason": "Prospectively test whether a warning typed before the observation window is associated with more negative 72h maximum adverse excursion than a no-typed-warning state, using preregistered, non-overlapping episodes and comparable market-regime and decision-policy strata. Assess subsequent upside separately. The hypothesis fails if the prespecified episode-level comparison shows no adverse-excursion separation. Choosing 72h after inspecting the reported horizons must be disclosed; this is a new test, not validation of the descriptive rows.",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "RESEARCH_NEW_HYPOTHESIS",
+      "target": "MLC-HYP-d4a6abc1db1a17f8"
     }
   ],
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
@@ -83,16 +83,46 @@
   "contract": "RESEARCH_META_ORCHESTRATOR_STATE_v1",
   "controller_conflicts": [],
   "deep_research_authorized": false,
-  "evidence_fingerprint": "d1d052977ed0729c48185e8c7e787e7e7d9b57426adc0a0864ae9d783b2b9950",
+  "evidence_fingerprint": "669238c31db4a9bc58a6875d01fdbbb91d6d24b590eb755aff3901b7075629bc",
   "external_provider_calls_authorized": false,
   "max_concurrent_heavy_workstreams": 1,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "primary_action": "QUEUE_BOUNDED_RESEARCH",
   "primary_execution_mode": "AUTO_LOCAL_RESEARCH",
-  "primary_source": "SHADOW_REGISTRY",
-  "primary_target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY",
+  "primary_source": "MONTHLY_COUNCIL",
+  "primary_target": "MLC-HYP-d4a6abc1db1a17f8",
   "queue": [
+    {
+      "canonical_effect": false,
+      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
+      "evidence_fingerprint": "86f24026e95002af18bb3860da1eba39ac69257e1dfe47b2599fc0853335ca6f",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "HIGH",
+      "novelty_verdict": "NOVEL",
+      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "Prospectively test whether a warning typed before the observation window is associated with more negative 72h maximum adverse excursion than a no-typed-warning state, using preregistered, non-overlapping episodes and comparable market-regime and decision-policy strata. Assess subsequent upside separately. The hypothesis fails if the prespecified episode-level comparison shows no adverse-excursion separation. Choosing 72h after inspecting the reported horizons must be disclosed; this is a new test, not validation of the descriptive rows.",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "RESEARCH_NEW_HYPOTHESIS",
+      "target": "MLC-HYP-d4a6abc1db1a17f8"
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
+      "evidence_fingerprint": "",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "HIGH",
+      "novelty_verdict": "NOVEL",
+      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "The first information-review floor is met; inspect matured disagreements before changing research scope.",
+      "source": "SHARED_ROW",
+      "specialist_action": "INVESTIGATE_DIVERGENCE",
+      "target": "CORE_C01_C07"
+    },
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
@@ -107,21 +137,6 @@
       "source": "SHADOW_REGISTRY",
       "specialist_action": "RECOVER_EVALUATOR",
       "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
-    },
-    {
-      "canonical_effect": false,
-      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
-      "evidence_fingerprint": "830539e518710b4d857d94ddd0e36e2ad08a8e68344fc1bb30f5a2f488443a5d",
-      "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "BLOCKED",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "orchestrator_action": "SUPPRESS_DUPLICATE_RESEARCH",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
-      "source": "MONTHLY_COUNCIL",
-      "specialist_action": "RESEARCH_NEW_HYPOTHESIS",
-      "target": "MLC-HYP-fe3b5f79970bd147"
     },
     {
       "canonical_effect": false,
@@ -141,7 +156,7 @@
     {
       "canonical_effect": false,
       "decision_surface": "CALIBRATION_QUALITY",
-      "evidence_fingerprint": "4b5513b1238e74c499b4cd9a7625107bcb821c5044685843a48f808ffdaa2645",
+      "evidence_fingerprint": "cf312c9dcdaa473e7bcf15fcc02d106b039a3ff839ebf32a894c6dcafaceff47",
       "execution_mode": "AUTO_OBSERVE",
       "impact_tier": "LOW",
       "novelty_verdict": null,
@@ -170,21 +185,6 @@
     },
     {
       "canonical_effect": false,
-      "decision_surface": "CALIBRATION_QUALITY",
-      "evidence_fingerprint": "",
-      "execution_mode": "AUTO_OBSERVE",
-      "impact_tier": "LOW",
-      "novelty_verdict": null,
-      "orchestrator_action": "WAIT_FOR_EVIDENCE",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "Too few matured +7d rows for the first information review.",
-      "source": "SHARED_ROW",
-      "specialist_action": "CONTINUE_OBSERVING",
-      "target": "CORE_C01_C07"
-    },
-    {
-      "canonical_effect": false,
       "decision_surface": "DATA_INTEGRITY",
       "evidence_fingerprint": "85c232ccf2f028711c556173c396841bfa7f0c1ff7af11906c3d0ec4299e438e",
       "execution_mode": "AUTO_OBSERVE",
@@ -200,7 +200,7 @@
     }
   ],
   "queue_n": 7,
-  "reason": "registered source material exists but exact evaluator recovery is still required",
+  "reason": "Prospectively test whether a warning typed before the observation window is associated with more negative 72h maximum adverse excursion than a no-typed-warning state, using preregistered, non-overlapping episodes and comparable market-regime and decision-policy strata. Assess subsequent upside separately. The hypothesis fails if the prespecified episode-level comparison shows no adverse-excursion separation. Choosing 72h after inspecting the reported horizons must be disclosed; this is a new test, not validation of the descriptive rows.",
   "sentinel_verdict": "PASS",
   "specialist_intake_handoff": {
     "authority": "RESEARCH_ONLY_NON_CANONICAL",
