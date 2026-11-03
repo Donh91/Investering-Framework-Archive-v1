@@ -5,7 +5,7 @@
   "canonical_effect": false,
   "consumer_integrity_filter": {
     "eligible_divergences": 108,
-    "eligible_rows": 30,
+    "eligible_rows": 31,
     "excluded": {
       "divergence_decision": 0,
       "divergence_outcome": 0,
@@ -20,36 +20,139 @@
       "source_binding": 0
     },
     "raw_divergences": 108,
-    "raw_rows": 30
+    "raw_rows": 31
   },
   "contract": "RESEARCH_NEXT_ACTION_PACKET_v1",
-  "decision_fingerprint": "79f7c0162830b9de911111fe7e876d291d443e37aecfb02a30b2e2e1d0948354",
+  "decision_fingerprint": "bc1eac70e37f4793145a93102942f035c522c33031bf90a77cc0be75b419298f",
   "deep_research_authorized": false,
   "evidence_summary": {
-    "candidate_divergence_stats_7d": {},
+    "candidate_divergence_stats_7d": {
+      "C01_ETHBTC": {
+        "correct": 0,
+        "distinct_error_contexts": 1,
+        "distinct_error_prospective_blocks": 1,
+        "distinct_error_regimes": 1,
+        "errors": 1,
+        "false_positive_adverse_mae_mean": null,
+        "false_positive_adverse_mae_n": 0,
+        "resolved_divergences": 1,
+        "unique_failures": 1,
+        "unique_wins": 0
+      },
+      "C02_BREADTH": {
+        "correct": 6,
+        "distinct_error_contexts": 0,
+        "distinct_error_prospective_blocks": 0,
+        "distinct_error_regimes": 0,
+        "errors": 0,
+        "false_positive_adverse_mae_mean": null,
+        "false_positive_adverse_mae_n": 0,
+        "resolved_divergences": 6,
+        "unique_failures": 0,
+        "unique_wins": 6
+      },
+      "C03_BTCD": {
+        "correct": 0,
+        "distinct_error_contexts": 1,
+        "distinct_error_prospective_blocks": 1,
+        "distinct_error_regimes": 1,
+        "errors": 1,
+        "false_positive_adverse_mae_mean": null,
+        "false_positive_adverse_mae_n": 0,
+        "resolved_divergences": 1,
+        "unique_failures": 1,
+        "unique_wins": 0
+      },
+      "C04_ETHBTC_BREADTH": {
+        "correct": 0,
+        "distinct_error_contexts": 1,
+        "distinct_error_prospective_blocks": 1,
+        "distinct_error_regimes": 1,
+        "errors": 1,
+        "false_positive_adverse_mae_mean": null,
+        "false_positive_adverse_mae_n": 0,
+        "resolved_divergences": 1,
+        "unique_failures": 1,
+        "unique_wins": 0
+      },
+      "C05_ETHBTC_BTCD": {
+        "correct": 0,
+        "distinct_error_contexts": 1,
+        "distinct_error_prospective_blocks": 1,
+        "distinct_error_regimes": 1,
+        "errors": 1,
+        "false_positive_adverse_mae_mean": null,
+        "false_positive_adverse_mae_n": 0,
+        "resolved_divergences": 1,
+        "unique_failures": 1,
+        "unique_wins": 0
+      },
+      "C06_BREADTH_BTCD": {
+        "correct": 0,
+        "distinct_error_contexts": 1,
+        "distinct_error_prospective_blocks": 1,
+        "distinct_error_regimes": 1,
+        "errors": 1,
+        "false_positive_adverse_mae_mean": null,
+        "false_positive_adverse_mae_n": 0,
+        "resolved_divergences": 1,
+        "unique_failures": 1,
+        "unique_wins": 0
+      },
+      "C07_SIMPLE_3": {
+        "correct": 0,
+        "distinct_error_contexts": 1,
+        "distinct_error_prospective_blocks": 1,
+        "distinct_error_regimes": 1,
+        "errors": 1,
+        "false_positive_adverse_mae_mean": null,
+        "false_positive_adverse_mae_n": 0,
+        "resolved_divergences": 1,
+        "unique_failures": 1,
+        "unique_wins": 0
+      }
+    },
     "divergences_total": 108,
-    "eligible_rows_total": 30,
+    "eligible_rows_total": 31,
     "excluded_pre_repair_rows": 0,
     "excluded_unbound_divergences": 0,
     "matured_divergences": {
-      "24h": 84,
+      "24h": 96,
       "72h": 66,
-      "7d": 0
+      "7d": 6
     },
     "matured_rows": {
-      "24h": 28,
-      "72h": 20,
-      "7d": 5
+      "24h": 29,
+      "72h": 23,
+      "7d": 7
     },
-    "pairwise_vs_baseline_7d": {}
+    "pairwise_vs_baseline_7d": {
+      "C02_BREADTH": {
+        "baseline_false_positive_mae_mean": null,
+        "baseline_false_positive_mae_n": 0,
+        "baseline_unique_wins": 0,
+        "distinct_prospective_blocks": 1,
+        "distinct_regimes": 1,
+        "net_unique_wins": 1,
+        "resolved": 1,
+        "tail_non_deterioration": true,
+        "target_false_positive_mae_mean": null,
+        "target_false_positive_mae_n": 0,
+        "target_unique_wins": 1,
+        "unique_resolution_n": 1,
+        "unique_win_share": 1.0,
+        "wilson_lower": 0.20654329147389294,
+        "wilson_upper": 1.0
+      }
+    }
   },
-  "generated_at_utc": "2026-11-02T13:52:51Z",
+  "generated_at_utc": "2026-11-03T00:03:42Z",
   "paid_data_authorized": false,
   "policy_contract": "RESEARCH_NEXT_ACTION_POLICY_v1",
-  "primary_action": "CONTINUE_OBSERVING",
-  "reason": "Too few matured +7d rows for the first information review.",
-  "research_action_gate": "COLLECT_MORE_EVIDENCE",
-  "research_instruction": "Continue prospective evidence accumulation under frozen contracts.",
+  "primary_action": "INVESTIGATE_DIVERGENCE",
+  "reason": "The first information-review floor is met; inspect matured disagreements before changing research scope.",
+  "research_action_gate": "JUSTIFIED",
+  "research_instruction": "Audit matured disagreement rows by candidate pair, regime and catalyst; identify unique wins, unique failures and tail-error asymmetry. Do not tune thresholds.",
   "target": "CORE_C01_C07",
   "terminal_verdict": "INSUFFICIENT_EVIDENCE"
 }
