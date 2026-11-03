@@ -210,10 +210,34 @@ def verify_index_chain(index, root=None):
                     raise ValueError(f"INDEX_DISK_RECORD_CONFLICT:{label}")
                 if read(disk_forecast).get("original_source_sha256") != sha:
                     raise ValueError(f"INDEX_DISK_RECORD_CONFLICT:{label}")
+            # Never let null actual_path hide a durable actual-series file.
+            # A missing file is legitimate only when the index also says null.
+            disk_actual = root / expected_actual
+            if disk_actual.is_file() and row.get("actual_path") != expected_actual:
+                raise ValueError(f"INDEX_DISK_ACTUAL_OMITTED:{label}")
+            if row.get("actual_path") == expected_actual and not disk_actual.is_file():
+                raise ValueError(f"INDEX_DISK_ACTUAL_MISSING:{label}")
         prior_weeks[label] = row
         prior_label = label
     if index.get("chain_tip") != prior_chain:
         raise ValueError("INVALID_HISTORY_INDEX_TIP")
+
+    if root is not None:
+        # A correctly re-chained prefix must not erase any durable suffix from
+        # public history. This is LOCAL filesystem consistency, not an external
+        # checkpoint against coordinated deletion of both index and files.
+        represented = {path for row in index["weeks"]
+                       for path in (row.get("forecast_path"), row.get("actual_path"))
+                       if path is not None}
+        weeks_dir = root / ROOT / "weeks"
+        if weeks_dir.is_dir():
+            for filename in ("forecast-reference.json", "actual-series.json"):
+                for path in weeks_dir.rglob(filename):
+                    if not path.is_file():
+                        raise ValueError(f"INDEX_DISK_HISTORY_NOT_REGULAR_FILE:{path}")
+                    relative = str(path.relative_to(root))
+                    if relative not in represented:
+                        raise ValueError(f"INDEX_DISK_UNINDEXED_HISTORY:{relative}")
 
     return prior_weeks
 
