@@ -210,6 +210,57 @@ class GraphHistoryTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "INVALID_HISTORY_INDEX_CHAIN"):
             publish(self.root)
 
+    def test_durable_actual_is_not_hidden_by_null_index_path(self):
+        source(self.root)
+        hour(self.root, datetime(2026, 11, 2, 0, tzinfo=timezone.utc))
+        original = archive(self.root, W46)
+        actual = self.root / ROOT / "weeks/2026/W45/actual-series.json"
+        self.assertTrue(actual.is_file())
+        self.assertEqual(len(publish(self.root)["actual"]), 1)
+        index_path = self.root / ROOT / "index.json"
+        altered = json.loads(json.dumps(original))
+        altered["weeks"][0]["actual_path"] = None
+        put(index_path, altered)
+        with self.assertRaisesRegex(ValueError, "INDEX_DISK_ACTUAL_OMITTED:2026-W45"):
+            publish(self.root)
+        with self.assertRaisesRegex(ValueError, "INDEX_DISK_ACTUAL_OMITTED:2026-W45"):
+            archive(self.root, W46)
+        self.assertTrue(actual.is_file())
+        put(index_path, original)
+        self.assertEqual(len(publish(self.root)["actual"]), 1)
+
+    def test_durable_suffix_cannot_be_hidden_by_valid_rechained_prefix(self):
+        source(self.root, W45)
+        source(self.root, W46, issued="2026-11-09T08:00:00Z")
+        w47 = W46 + timedelta(days=7)
+        source(self.root, w47, issued="2026-11-16T08:00:00Z")
+        original = archive(self.root, w47)
+        self.assertEqual(len(original["weeks"]), 3)
+        preserved = self.root / ROOT / "weeks/2026/W46/forecast-reference.json"
+        self.assertTrue(preserved.is_file())
+        index_path = self.root / ROOT / "index.json"
+        truncated = json.loads(json.dumps(original))
+        truncated["weeks"] = truncated["weeks"][:1]
+        truncated["chain_tip"] = truncated["weeks"][0]["chain_digest"]
+        put(index_path, truncated)
+        with self.assertRaisesRegex(ValueError, "INDEX_DISK_UNINDEXED_HISTORY"):
+            publish(self.root)
+        with self.assertRaisesRegex(ValueError, "INDEX_DISK_UNINDEXED_HISTORY"):
+            archive(self.root, w47)
+        self.assertTrue(preserved.is_file())
+        put(index_path, original)
+        self.assertEqual(len(publish(self.root)["weeks"]), 3)
+
+    def test_true_absent_actual_path_and_unavailable_forecast_are_allowed(self):
+        first = archive(self.root, W45)
+        self.assertEqual(first["weeks"][0]["status"], "MISSING_FREEZE")
+        self.assertIsNone(first["weeks"][0]["actual_path"])
+        self.assertEqual(len(publish(self.root)["weeks"]), 1)
+        second = archive(self.root, W46)
+        self.assertEqual(second["weeks"][0]["status"], "MISSING_FREEZE")
+        self.assertEqual(len(publish(self.root)["weeks"]), 2)
+        self.assertTrue((self.root / ROOT / "weeks/2026/W45/actual-series.json").is_file())
+
     def test_public_only_rejects_forged_missing_forecast_and_index_truncation(self):
         source(self.root)
         archive(self.root, W46)
