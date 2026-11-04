@@ -210,6 +210,41 @@ class SolMaxPatchTests(unittest.TestCase):
                 mod.call_api(root / "context.json", root)
             self.assertEqual(sent, ["POST", "GET"])
 
+    def test_incomplete_reasoning_exhaustion_is_recorded_without_paid_retry(self):
+        class FakeResponse:
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                pass
+            def read(self):
+                return json.dumps({
+                    "id": "resp_incomplete123", "model": mod.MODEL,
+                    "status": "incomplete",
+                    "incomplete_details": {"reason": "max_output_tokens"},
+                    "usage": {"input_tokens": 3508, "output_tokens": 16000,
+                              "output_tokens_details": {"reasoning_tokens": 16000}},
+                    "output": []
+                }).encode()
+        sent = []
+        def fake_open(req, timeout):
+            sent.append(req.get_method())
+            return FakeResponse()
+        with tempfile.TemporaryDirectory() as t, \
+             patch.dict(os.environ, {"OPENAI_API_KEY": "test-token"}), \
+             patch.object(mod.urllib.request, "urlopen", side_effect=fake_open):
+            root = Path(t)
+            (root / "context.json").write_text("{}")
+            (root / "reservation.json").write_text(json.dumps({
+                "status": "RESERVED", "claim_id": 42,
+                "model": mod.MODEL, "effort": mod.EFFORT}))
+            with self.assertRaisesRegex(ValueError, "API_INCOMPLETE_OUTPUT_TOKENS_EXHAUSTED_NO_PATCH"):
+                mod.call_api(root / "context.json", root)
+            self.assertEqual(sent, ["POST"])
+            meta = json.loads((root / "api_meta.json").read_text())
+            self.assertEqual(meta["incomplete_details"]["reason"], "max_output_tokens")
+            self.assertEqual(meta["estimated_cost_usd"], 0.167016)
+            self.assertFalse((root / "proposal.json").exists())
+
     def test_paid_call_is_one_request_with_max_store_false_and_schema(self):
         class FakeResponse:
             def __enter__(self):
