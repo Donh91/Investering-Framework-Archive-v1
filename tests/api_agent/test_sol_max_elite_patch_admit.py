@@ -154,7 +154,7 @@ class ElitePatchAdmissionTests(unittest.TestCase):
             for field, forged in (
                 ("response_id", "resp_wrong0000"),
                 ("mission", "S1-UNAUTHORIZED-20261104"),
-                ("source_head", "a" * 40),
+                ("source_head", "b" * 40),
                 ("context_sha256", "0" * 64),
                 ("status", "PENDING_GET_ONLY"),
                 ("http_status", 404),
