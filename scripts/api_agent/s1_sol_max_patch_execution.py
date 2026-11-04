@@ -111,9 +111,25 @@ def claim(head: str, repo: str) -> dict:
         raise ValueError("NATIVE_RESERVATION_CENSUS_UNKNOWN")
     prefix = "S1_SOL_MAX_PATCH_RESERVATION_V1"
     target = f"{prefix} HEAD={head} PR=1877 MODEL={MODEL} EFFORT={EFFORT} MAX_USD={RESERVE_USD:.2f}"
-    if any(str(row.get("body") or "").strip() == target for page in pages for row in page):
+    pattern = re.compile(
+        r"^S1_SOL_MAX_PATCH_RESERVATION_V1 HEAD=[a-f0-9]{40} "
+        r"PR=1877 MODEL=gpt-6\\.1-sol EFFORT=max MAX_USD=0\\.75$")
+    prior = []
+    for page in pages:
+        for row in page:
+            if (row.get("user") or {}).get("login") != "github-actions[bot]":
+                continue
+            body = str(row.get("body") or "").strip()
+            if body.startswith(prefix):
+                if not pattern.fullmatch(body):
+                    raise ValueError("UNPARSEABLE_NATIVE_PATCH_RESERVATION")
+                prior.append(body)
+    if target in prior:
         raise ValueError("DUPLICATE_PAID_PATCH_RESERVATION")
-    # The complete census above detects all existing same-head claims before charging.
+    # One recoverable protocol change after a prior UNKNOWN billing timeout,
+    # no unbounded paid reattempt loop. Prior $0.75 stays fully reserved.
+    if len(prior) >= 2:
+        raise ValueError("PATCH_MISSION_TWO_ATTEMPT_HARD_STOP")
     subprocess_check("gh", "issue", "comment", "1156", "--repo", repo, "--body", target)
     refreshed = json.loads(subprocess_check("gh", "api", "--paginate", "--slurp",
                           f"repos/{repo}/issues/1156/comments?per_page=100"))
