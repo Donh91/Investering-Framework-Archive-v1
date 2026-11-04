@@ -19,7 +19,11 @@ h2{font-size:clamp(19px,2.4vw,26px);letter-spacing:-.025em;margin:0 0 8px}
 .intro{font-size:clamp(14px,1.45vw,17px);color:#abbed6;max-width:740px;line-height:1.7;margin:0}
 .panel{background:linear-gradient(145deg,rgba(19,42,63,.98),rgba(11,27,44,.97) 68%);border-radius:20px;border:1px solid var(--border);box-shadow:0 23px 64px #0107105e,0 1px 0 #ffffff08 inset;padding:clamp(17px,2.4vw,30px);margin:25px 0;overflow:hidden}
 .panel-primary{position:relative}.panel-primary:before{position:absolute;content:"";top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--blue),#4e8ee4 40%,var(--green) 78%,transparent)}
-.toolbar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:space-between}.toolbar strong{letter-spacing:-.025em}
+.toolbar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:space-between}
+.observed-readout{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-top:12px}
+.observed-price{color:#f1f7ff;font-weight:740;font-size:clamp(21px,2.8vw,30px);font-variant-numeric:tabular-nums;letter-spacing:-.035em}
+.observed-meta{color:#9eb7d2;font-size:11px;font-weight:550}
+.toolbar strong{letter-spacing:-.025em}
 label{display:inline-flex;align-items:center;gap:11px;flex-wrap:wrap;font-weight:700;font-size:13px;color:#d3e0f2}
 select{font:600 13px system-ui;background:#0b1a2d;color:#e8f0fb;border:1px solid #36506d;padding:10px 36px 10px 12px;border-radius:9px;min-height:44px;cursor:pointer}
 .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;font-weight:650;color:#c0cfe4;margin-top:18px;align-items:center}
@@ -51,7 +55,8 @@ td:first-child{font-weight:700;color:#eaf2ff;white-space:nowrap}
 <p class="intro">Én sammenhængende Bitcoin-kurslinje. Hver blå prognose er den oprindelige, uændrede mandagsprognose for netop sin uge. Start: 2. november 2026.</p>
 <section class="panel panel-primary" aria-label="Historisk Bitcoin-graf">
 <div class="toolbar">
-<div><strong style="font-size:19px">BTC · Faktisk vs. prognose</strong><div class="note">UTC · Historiske originale kilder</div></div>
+<div><strong style="font-size:19px">BTC · Faktisk vs. prognose</strong><div class="note">UTC · Historiske originale kilder</div>
+<div class="observed-readout" aria-live="polite"><span class="observed-price" id="last-close">—</span><span class="observed-meta" id="last-time">Afventer verificeret timeluk</span></div></div>
 <label for="period">Vis periode:
 <select id="period"><option value="4">Seneste 4 uger</option><option value="10" selected>Seneste 10 uger</option><option value="all">Hele historikken</option></select>
 </label>
@@ -108,6 +113,14 @@ function draw(){
   return (w.forecast_status==='PUBLISHED'&&w.forecast.length===7&&/^[0-9a-f]{64}$/.test(w.source_sha256||''))
    ?w.forecast.map((p,i)=>[monday+(i+1)*DAY,p.expected_close]).filter(p=>Number.isFinite(p[1])&&p[1]>0):[];
  });
+ // Observed only. Never call an archived UTC close a current/live quote.
+ eligible.sort((a,b)=>a[0]-b[0]);
+ const latest=eligible.at(-1),nativeQuote=data.actual_unit==='USDT'?'USDT':'UNAVAILABLE';
+ $('last-close').textContent=latest?
+   latest[1].toLocaleString('da-DK',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+nativeQuote:'—';
+ $('last-time').textContent=latest?
+   'Seneste registrerede timeluk · '+new Date(latest[0]).toISOString().slice(0,16).replace('T',' ')+' UTC':
+   'Ingen verificerede timeluk for den valgte periode';
  const values=[...eligible.map(p=>p[1]),...preds.flat().map(p=>p[1])];
  const wide=Math.max(880, selected.length*220),height=440, left=78,right=25,top=34,bottom=55;
  svg.setAttribute('width',wide);svg.setAttribute('viewBox',`0 0 ${wide} ${height}`);
