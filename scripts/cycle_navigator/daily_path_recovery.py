@@ -183,7 +183,8 @@ def reject_unverified_initial_daily_quotes(value: dict[str, Any],
     spot = ((context.get("completed_week_hourly_capture") or {})
             .get("hourly_sequence") or {}).get("spot_flow_readback") or {}
     # Production checks the post-model issuance clock and full source gate,
-    # including initially valid 7/7 paths; offline legacy callers remain safe.
+    # including initially valid 7/7 paths. Missing independent source evidence
+    # must never be upgraded from equal model-declared currency labels.
     qualified = None
     gate = "NOT_REQUESTED_FOR_LEGACY_TEST"
     if year is not None or week is not None or issued_at is not None:
@@ -198,8 +199,9 @@ def reject_unverified_initial_daily_quotes(value: dict[str, Any],
         actual = (spot.get(asset) or {}).get("quote_unit")
         claimed = quotes.get(asset)
         if (actual not in ("USD", "USDT") or claimed != actual or
-                (qualified is not None and
-                 (gate != "ELIGIBLE" or qualified.get("quote", {}).get(asset) != actual))):
+                (qualified is None or gate != "ELIGIBLE"
+                 or qualified.get("envelope_quote_independently_verified") is not True
+                 or qualified.get("quote", {}).get(asset) != actual)):
             changes[asset] = {"status": "UNAVAILABLE", "points": [],
                               "reason": "Initial daily path source, clock or quote unverified before freeze."}
     if changes:
@@ -449,3 +451,4 @@ def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
         receipt["error_code"] = str(exc).split(":")[0][:120] if not isinstance(exc, OSError) else "RECOVERY_TRANSPORT_ERROR"
     receipt["final"] = {a: value["forecast_freeze"]["daily_price_path"][a]["status"] for a in ("BTC", "ETH")}
     return value, receipt
+

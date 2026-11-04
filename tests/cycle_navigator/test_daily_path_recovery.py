@@ -337,16 +337,18 @@ def test_first_model_pass_fails_closed_when_price_quote_mismatches():
     path = updated["forecast_freeze"]["daily_price_path"]
     assert path["BTC"]["status"] == "UNAVAILABLE"
     assert path["BTC"]["points"] == []
-    assert path["ETH"]["status"] == "PUBLISHED"
-    assert path["ETH"]["points"][0]["expected_close"] == 201
+    assert path["ETH"]["status"] == "UNAVAILABLE"
+    assert path["ETH"]["points"] == []
 
 
-def test_first_model_pass_all_verified_preserves_original_7of7():
+def test_first_model_pass_matching_quote_without_source_binding_abstains():
     from scripts.cycle_navigator.daily_path_recovery import reject_unverified_initial_daily_quotes
     value = _value("PUBLISHED", "PUBLISHED")
     value["forecast_freeze"]["price_quote"] = {"BTC": "USDT", "ETH": "USDT"}
     original = copy.deepcopy(value)
-    assert reject_unverified_initial_daily_quotes(value, _context()) == original
+    out = reject_unverified_initial_daily_quotes(value, _context())
+    assert all(out["forecast_freeze"]["daily_price_path"][a]["status"] == "UNAVAILABLE" for a in ("BTC", "ETH"))
+    assert {k: v for k, v in out["forecast_freeze"].items() if k != "daily_price_path"} == {k: v for k, v in original["forecast_freeze"].items() if k != "daily_price_path"}
 
 
 def test_first_model_pass_missing_quote_never_publishes():
@@ -389,7 +391,7 @@ def test_initial_7of7_cannot_bypass_source_gate_when_clock_or_capture_invalid():
     initial["forecast_freeze"]["price_quote"] = {"BTC": "USDT", "ETH": "USDT"}
     good = reject_unverified_initial_daily_quotes(
         copy.deepcopy(initial), _context(), year=2026, week=46, issued_at=ISSUED)
-    assert good["forecast_freeze"]["daily_price_path"]["BTC"]["status"] == "PUBLISHED"
+    assert good["forecast_freeze"]["daily_price_path"]["BTC"]["status"] == "UNAVAILABLE"
     for defect in ("bad_completed_source", "clock_crosses_day1", "bad_mm"):
         context = _context()
         clock = ISSUED
@@ -447,3 +449,36 @@ def test_production_uses_current_source_clock_and_late_publication_check():
     assert src.index("value = quarantine_late_daily_issuance(") < src.index("daily_path_issue = daily_path_issue_summary(")
     assert "generated_unix = int(time.time())" in src
 
+
+
+
+def test_production_matching_model_and_spot_quotes_do_not_attest_envelope():
+    from scripts.cycle_navigator.daily_path_recovery import reject_unverified_initial_daily_quotes
+    original = _value("PUBLISHED", "PUBLISHED")
+    original["forecast_freeze"]["price_quote"] = {"BTC": "USDT", "ETH": "USDT"}
+    before = copy.deepcopy(original)
+    context = _context()
+    # A mutable caller assertion is not independent source provenance.
+    context["envelope_quote_independently_verified"] = True
+    out = reject_unverified_initial_daily_quotes(
+        original, context, year=2026, week=46, issued_at=ISSUED)
+    assert all(out["forecast_freeze"]["daily_price_path"][a]["status"] == "UNAVAILABLE"
+               and out["forecast_freeze"]["daily_price_path"][a]["points"] == []
+               for a in ("BTC", "ETH"))
+    for key, value in before["forecast_freeze"].items():
+        if key != "daily_price_path":
+            assert out["forecast_freeze"][key] == value
+    assert out["base_case_this_week"] == before["base_case_this_week"]
+
+
+def test_legitimate_abstention_remains_unchanged_without_extra_model_call():
+    from scripts.cycle_navigator.daily_path_recovery import reject_unverified_initial_daily_quotes
+    original = _value()
+    original["forecast_freeze"]["price_quote"] = {"BTC": "USDT", "ETH": "USDT"}
+    before = copy.deepcopy(original)
+    checked = reject_unverified_initial_daily_quotes(
+        original, _context(), year=2026, week=46, issued_at=ISSUED)
+    out, receipt = _run(checked)
+    assert out == before
+    assert receipt["attempt_count"] == 0
+    assert receipt["status"] == "SKIPPED_PAID_RECOVERY_DISABLED"
