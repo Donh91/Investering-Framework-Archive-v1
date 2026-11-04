@@ -358,7 +358,12 @@ def read_elite_sol_batch_queue(root: Path) -> list[dict[str, Any]]:
     A malformed or activated candidate is not admitted.
     """
     rel = "research/api_agent/coordination/S1_SOL_MAX_ELITE_BOUNDED_BATCH_20261104.json"
-    batch = load_json(root / rel, {}) or {}
+    try:
+        batch = load_json(root / rel, {}) or {}
+    except (OSError, UnicodeError, ValueError, TypeError):
+        return []
+    if not isinstance(batch, dict):
+        return []
     if (batch.get("contract") != "S1_SOL_MAX_ELITE_BOUNDED_BATCH_v1"
             or batch.get("repo") != "Donh91/Investering-Framework-Archive-v1"
             or batch.get("state") != "REGISTERED_NOT_EXECUTING"
@@ -381,11 +386,17 @@ def read_elite_sol_batch_queue(root: Path) -> list[dict[str, Any]]:
     ids = [x.get("id") for x in rows if isinstance(x, dict)]
     if len(ids) != 5 or len(set(ids)) != 5:
         return []
-    if any(x.get("phase", "").startswith("STAGED") is not True or
-           x.get("owner_issue") not in (1156, 1157, 1516) or
-           set(x.get("depends_on", [])) - set(ids)
-           for x in rows):
-        return []
+    for x in rows:
+        if not isinstance(x, dict) or not isinstance(x.get("phase"), str):
+            return []
+        if (not x["phase"].startswith("STAGED")
+                or x.get("owner_issue") not in (1156, 1157, 1516)
+                or x.get("priority") not in ("P0", "P1")
+                or not isinstance(x.get("rank"), int)
+                or not isinstance(x.get("depends_on"), list)
+                or any(not isinstance(dep, str) or dep not in ids
+                       for dep in x["depends_on"])):
+            return []
     queue = []
     for item in rows:
         queue.append({
