@@ -8,6 +8,9 @@ import hashlib
 import io
 import json
 import zipfile
+import pytest
+import urllib.request
+from scripts.cycle_navigator.price_input_attestation import NoCrossHostBearerRedirect, PriceEvidenceError
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -196,3 +199,17 @@ def test_unverified_caller_boolean_never_opens_daily_path(tmp_path):
         candidate(), ctx, year=2026, week=46, issued_at=ISSUED)
     assert all(out["forecast_freeze"]["daily_price_path"][a]["status"] == "UNAVAILABLE"
                for a in ("BTC", "ETH"))
+
+
+def test_original_artifact_redirect_strips_bearer_and_rejects_http():
+    handler = NoCrossHostBearerRedirect()
+    request = urllib.request.Request(
+        "https://api.github.com/repos/example/repo/actions/artifacts/123/zip",
+        headers={"Authorization": "Bearer INTERNAL_SECRET"})
+    redirected = handler.redirect_request(
+        request, None, 302, "Found", {},
+        "https://storage.example.invalid/temporary-signed-artifact")
+    assert redirected.get_header("Authorization") is None
+    with pytest.raises(PriceEvidenceError, match="SOURCE_ARTIFACT_UNSAFE_REDIRECT"):
+        handler.redirect_request(request, None, 302, "Found", {},
+                                 "http://storage.example.invalid/insecure")
