@@ -60,15 +60,12 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
   verify-public-score-authority:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -83,32 +80,6 @@ jobs:
           set -euo pipefail
           python -m pip install --disable-pip-version-check pytest
           python -m pytest -q tests/cycle_navigator/test_original_price_input_attestation.py tests/cycle_navigator/test_daily_path_recovery.py tests/cycle_navigator/test_late_daily_amendment.py tests/cycle_navigator/test_daily_price_journey.py tests/cycle_navigator/test_weekly_publication_resilience.py
-
-      - name: One-time W44 original-source artifact proof for CN 1879
-        if: github.event_name == 'pull_request' && github.event.pull_request.number == 1879
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import json,os
-          from datetime import datetime,timezone
-          from pathlib import Path
-          from scripts.cycle_navigator.price_input_attestation import attest_completed_week
-          root=Path(".")
-          capture=json.loads((root/"03_DAILY_CAPTURE_LOGS/weekly/2026/W44.json").read_text())
-          proof=attest_completed_week(root,2026,44,capture,
-              issued_at=datetime(2026,11,2,9,tzinfo=timezone.utc),
-              token=os.environ["GITHUB_TOKEN"],
-              repo_full_name=os.environ["GITHUB_REPOSITORY"])
-          assert proof.verified_assets == ("BTC","ETH")
-          print(json.dumps({"status":"PASS","week":proof.completed_week,
-              "verified_assets":proof.verified_assets,"run_count":len(proof.source_run_ids),
-              "raw_price_rows_per_asset":168,
-              "authority":"SOURCE_PROOF_ONLY_NO_FORECAST_BACKFILL"},sort_keys=True))
-          PY
 
       - name: Verify machine calibration lineage
         shell: bash
