@@ -307,6 +307,33 @@ class SolMaxPatchTests(unittest.TestCase):
                 mod.call_api(root / "context.json", root)
             outbound.assert_not_called()
 
+    def test_submit_only_persists_id_before_any_get(self):
+        class Posted:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self): return json.dumps({
+                "id": "resp_newcached123", "status": "in_progress",
+                "model": mod.MODEL, "output": []}).encode()
+        operations = []
+        def open_(request, timeout):
+            operations.append(request.get_method())
+            return Posted()
+        with tempfile.TemporaryDirectory() as t, \
+             patch.dict(os.environ, {"OPENAI_API_KEY": "example-key"}), \
+             patch.object(mod.urllib.request, "urlopen", side_effect=open_):
+            root = Path(t)
+            (root / "context.json").write_text(public_context())
+            (root / "reservation.json").write_text(json.dumps({
+                "status": "RESERVED", "claim_id": 90,
+                "model": mod.MODEL, "effort": mod.EFFORT, "source_head": HEAD}))
+            status = mod.call_api(root / "context.json", root, submit_only=True)
+            handle = json.loads((root / "response_handle.json").read_text())
+            self.assertEqual(status["status"], "PENDING_COLLECT")
+            self.assertEqual(handle["response_id"], "resp_newcached123")
+            self.assertEqual(handle["storage_consent"], mod.PUBLIC_STORAGE_CONSENT)
+            self.assertEqual(operations, ["POST"])
+            self.assertFalse((root / "proposal.json").exists())
+
     def test_paid_call_is_one_request_with_owner_scoped_store_true_and_schema(self):
         class FakeResponse:
             def __enter__(self):
