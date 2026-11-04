@@ -1,7 +1,7 @@
 """Opportunity, research reactivation and Strategist governance tests."""
 import unittest
 from scripts.governance.s1_opportunity_recovery_v1 import (
-    AdvisoryInputError, reactivated, select_cases, strategic_question,
+    AdvisoryInputError, reactivated, select_cases, select_cases_isolated, strategic_question,
 )
 
 URL = "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1877"
@@ -18,6 +18,32 @@ def blocker():
 
 
 class OpportunityTests(unittest.TestCase):
+    def test_native_actions_run_and_job_reactivate_ci_only(self):
+        for suffix in ("/actions/runs/123", "/actions/runs/123/job/456"):
+            row = blocker()
+            row["material_trigger"].update(current="new-data-1234", native_evidence_url=
+                "https://github.com/Donh91/Investering-Framework-Archive-v1" + suffix)
+            self.assertTrue(reactivated(row))
+            row["material_trigger"]["kind"] = "clock"
+            self.assertFalse(reactivated(row))
+
+    def test_forged_or_malformed_actions_url_not_reactivation(self):
+        for url in ("https://github.com.evil/Donh91/repo/actions/runs/123",
+                    "https://github.com/Donh91/repo/actions/runs/abc",
+                    "https://github.com/Other/repo/actions/runs/123",
+                    "https://github.com/Donh91/repo/actions/runs/123/../../1"):
+            row = blocker(); row["material_trigger"].update(current="new-data-1234", native_evidence_url=url)
+            self.assertFalse(reactivated(row))
+
+    def test_invalid_case_isolated_without_hiding_repair(self):
+        out = select_cases_isolated([{}, CASE, None, {**CASE, "priority": "bad"}])
+        self.assertEqual(len(out["selected"]), 1)
+        self.assertEqual(len(out["invalid_cases"]), 3)
+        self.assertTrue(all(row["other_prs_may_continue"] for row in out["invalid_cases"]))
+        self.assertFalse(out["release_authority"])
+        with self.assertRaises(AdvisoryInputError):
+            select_cases([{}, CASE])  # legacy strict API unchanged
+
     def test_static_blocker_skipped(self):
         self.assertEqual(select_cases([blocker()]), [])
 

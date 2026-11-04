@@ -2,6 +2,116 @@
 
 Owner-approved 2026-11-02. Current delivery is a NON-EXECUTING read-only first slice on the original branch. Code and tests are real, but this is NOT proof of live machine-to-machine transport, autonomous Grok/Codex jobs, S1 runtime activation, merge or scientific improvement.
 
+## 2026-11-04 deterministic release dispositions
+
+This extension belongs to ORIGINAL #1877 and existing #1156. It adds no workflow, schedule, supervisor, database, secret, paid provider call, merge writer or market authority. The existing Chat S1 v4.2 automation and its cadence remain unchanged. The paid Terra job currently has `if: ${{ false }}` and stays disabled; historical prose describing an executable paid postmerge lane is not current activation authority.
+
+### Existing caller and permanent integration boundary
+
+The existing contract `00_FMOS/S1_CLOSURE_ASSURANCE_STRATEGIC_RECOVERY_V1.md` now requires this per-PR evaluation for owner-directed releases. Existing S1/operator routing remains current native sources -> exact original PR -> current domain/policy/platform checks -> deterministic advisory disposition -> existing authorized integration -> exact main readback -> natural production observation. The pure helpers previously had no production caller. This patch supplies a concrete finite CLI and a normative existing-contract binding; it does **not** claim the saved Chat task automatically imports Python, that G1/G2 have passed, or that natural S1 runtime observations exist.
+
+The existing S1/operator invokes:
+
+```sh
+python scripts/governance/s1_release_evidence_classifier_v1.py < current-pr-evidence.json
+```
+
+Input is a JSON list of normalized per-PR evidence records; output is an advisory batch with per-input indices. The invocation only reads stdin and writes stdout. The operator obtains the record from current authenticated native APIs and exact blobs; no hand-written fixture or mutable narrative is external authentication. `classify_pr_batch` isolates malformed record telemetry. Candidate selection uses `select_cases_isolated`, which retains valid independent candidates while returning explicit `invalid_cases`. The original strict API remains compatible.
+
+After governed merge/main readback, the existing #1156 handoff must point S1 to this exact contract and merged code. Record the first natural S1 use with native run ID, evidence fingerprint, input provenance and resulting disposition. Until observed, runtime use is `POST_FIX_OBSERVATION`, not FIXED-in-production. Preserve current Chat configuration; G2 remains a separately qualified runtime step. If the execution environment lacks the module, disclose that local limitation and use the existing qualified operator/native policy route for independent work. No global HOLD or unsafe fallback authorization is created.
+
+### Input record and authority boundaries
+
+| Field | Required meaning and source |
+| --- | --- |
+| `current` | Exact 40-hex `head`, `main`, canonical `policy` blob/commit identity, intended `source` SHA, freshly read from native sources. |
+| `evaluated` | The same four bindings used for CI/review/recovery evaluation. Any drift requires reevaluation, never reuse of a stale green receipt. |
+| `risk` | `LOW` or `HIGH`, derived from actual changed paths and current policy, never a PR title. |
+| `platform_denied`, `active_writer_lease` | Actual platform refusal and current existing lease census; no bypass and no competing writer. |
+| `merge_state` | `clean`, `conflicting`, or another explicit observed state. Only genuine conflict is `MERGE_CONFLICT`; unknown/computing/rule-blocked is a distinct external dependency. |
+| `rule_census`, `required_rules_enforced` | Actual applicability census, each rule with boolean `binding` and observed `enforcement`. Empty census is valid when no platform rule is binding. A configured disabled NONBINDING rule does not create a new requirement. Disabled BINDING protection blocks only its relevant release. Canonical policy obligations remain separately evaluated. Never enable rules or change settings merely to make this field true. |
+| `owner_authorized`, `unresolved_p0_p1`, `source_science_gate` | Current actual mandate, review finding census and original source/science admission; unknown is not a PASS. Legitimate forecast abstention can satisfy a contract that explicitly admits abstention. |
+| `required_pr_job_names`, `pr_jobs` | Current policy-derived complete required job census and exact-head PR-event completed successful jobs with actual integer `executed_test_steps > 0`. Green/skipped observer workflows do not count. |
+| `independent_review_required`, `review` | Whether current binding policy requires independent formal approval; if required, independent `APPROVED` bound to head/main/policy/source. COMMENTED is advisory. Missing policy is not permission. |
+| `review_requires_current_main` | Default strict. Only explicit current policy may set false to reuse an independent review across unrelated main drift while head, source and policy remain exact. Current main must still be revalidated separately. |
+| Physical SITE fields | `physical_site_review_required`, `physical_site_review_passed`, `owner_physical_review_waiver` reflect the current applicable owner policy; no invented waiver or extra physical gate. |
+| `recovery` | For HIGH impact: `technical_recovery`, exact `source`, `snapshot`, `tree`, reviewed `workflow`, 64-hex `manifest_sha256`, native `receipt_url`, UTC-Z `observed_at_utc`; native `release_permission` maps unchanged to `native_release_permission=false`. `independent_custody` and `separation` are derived separately from authenticated custody/platform evidence, not from the technical receipt. |
+| `release_assessment` | A SEPARATE independent assessment with `release_permission=true` only when established by the existing qualified independent authority, `independent=true`, distinct `attestation_url`, exact head/main/policy/source/snapshot/manifest bindings, UTC-Z observation. A native technical comment cannot serve as its own independent assessment. |
+| `now_utc`, `recovery_max_age_seconds`, `safepoint_source` | Current observation, actual applicable positive freshness bound no greater than 24h, and independently read-back immediate source safepoint. Source match and freshness are both required. Future timestamps fail. |
+| `previous_fingerprint`, `material_touches` | Existing receipt ledger evidence. Identical ticks do not count as treatments. Four genuine treatments make a blocked disposition terminal until a material evidence change. Observation/issue clocks alone never reactivate it. |
+| Postmerge fields | `merged`, exact `merge.head`, merge SHA, observed current main, authenticated ancestry finding, complete expected changed paths/blob IDs and rollback SHA. A different actor's real merge can be observed without crediting S1 or merging again. |
+| `production` | Separate natural source-to-consumer event, source match, freshness and public readback. Successful Pages deployment alone is not natural data continuity. |
+| Supersession | Closed PR needs exact independently checked replacement URL/commit and owner evidence; closure alone is not resolved work. |
+
+All these values are **supplied claims until externally authenticated**. The module never authenticates actors or signs custody. Every output explicitly has `authorized=false`, `externally_authenticated=false`, and `SUPPLIED_RECORD_REQUIRES_NATIVE_AUTHENTICATION`. Even `READY_TO_MERGE` is advisory, and `MERGED_VERIFIED` classifies a supplied merge/readback record rather than manufacturing native proof. The existing owner/platform gate must still check current bindings immediately before the actual merge. The classifier does not make comments or review state atomic with merge.
+
+The native `VAULT_NATIVE_RECEIPT_V1.release_permission=false` is expected and must never be rewritten to true. Technical recovery, independent custody and aggregated release permission are separate layers. A valid native restore plus 404 can support historical technical evidence; only genuine separate current custody/assessment evidence can satisfy HIGH_IMPACT release. Missing private access alone cannot block independent LOW-risk candidates. No new independent authority is created by this schema.
+
+### Existing CI and measured implementation status
+
+The existing `.github/workflows/automation-production-health-gate.yml` executes `tests/governance/`; the modified classifier and opportunity tests remain in that existing suite. No new workflow or cron is necessary. The existing Framework Learning Supervisor validation retains its separate API tests and the hard-disabled paid job. Required CI admission must verify exact final HEAD, PR event, actual executed job/steps and logs after this patch is pushed. Prior green runs do not cover this extension.
+
+Local verification command:
+
+```sh
+python -m unittest discover -s tests/governance -p 'test_s1_*.py'
+```
+
+Status labels below describe this original-branch implementation, **not merge or runtime activation**. `FIXED_AND_TESTED` means local regression-tested source pending final independent review/exact-head hosted CI/main integration. No row certifies custody merely because a fixture is green.
+
+| Risk | Existing owner/component and present evidence | Positive / adversarial test | Status |
+| --- | --- | --- | --- |
+| 1 Vault 403/404 conflation | Classifier ignores direct-access status as recovery truth; HIGH/LOW scoped by actual policy. | `test_vault404_with_complete_recovery` / `test_vault404_missing_recovery_scoped_by_risk` | FIXED_AND_TESTED |
+| 2 Successful backup still cannot authorize release | Native false flag preserved; independent exact-bound aggregated assessment added. Actual missing custody remains owned by existing recovery custodian, reactivated only by authenticated current attestation. | `test_native_false_is_expected_but_not_aggregated_permission` / `test_aggregated_permission_bound_to_exact_current_state` | FIXED_AND_TESTED for classification; BLOCKED_WITH_TRIGGER for any actual unattested release |
+| 3 Stale HEAD/main/policy/source | Existing classifier had CI HEAD check only; new preflight binds all four states. | positive fixture / `test_head_changes_after_green_ci`, `test_main_changes_between_validation_and_merge` | FIXED_AND_TESTED |
+| 4 Green without executed tests | Existing PR-event/step-count guards retained; required job census made explicit. | positive fixture / `test_green_skipped_test_job`, `test_manual_workflow_cannot_replace_pr_event` | FIXED_AND_TESTED |
+| 5 Passive mergeable=false HOLD | Per-PR conflict versus computing/rule-blocked disposition with exact responsible owner and trigger. | `test_repairable_original_branch_conflict` / unknown mergeability remains external | FIXED_AND_TESTED |
+| 6 Redundant review loops | Exact-bound review reuse only when current policy explicitly permits it; no COMMENTED-as-APPROVED. | `test_review_reuse_only_if_current_policy_explicitly_allows` / `test_grok_commented_is_not_required_approval` | FIXED_AND_TESTED |
+| 7 One blocker stops all candidates | Existing selector already skips static blockers; new batch/isolation entrypoints retain independent valid candidates when another record is malformed. | `test_static_hold_cannot_occupy_slots` / `test_batch_isolates_missing_telemetry_and_preserves_authority_boundary` | FIXED_AND_TESTED |
+| 8 Repeated HOLD receipts | Deterministic fingerprint and explicit emit flag; no clock-only reactivation; native Actions evidence URL accepted. | `test_new_executed_ci_or_recovery_reactivates` / `test_identical_blocker_twelve_ticks_no_repeated_receipt` | FIXED_AND_TESTED |
+| 9 Competing HEAD writers | Existing active-editor exclusion retained; explicit current lease requirement in advisory preflight. Actual lease enforcement remains existing integrator responsibility. | positive fixture / `test_other_writer_active_lease` | FIXED_AND_TESTED for classification; existing native lease still mandatory |
+| 10 Ghost merge | Exact supplied merged HEAD, current main/ancestry, complete changed blobs and rollback anchor required. | `test_other_actor_merge_observed_without_merging_again` / `test_merge_success_main_readback_failure` | FIXED_AND_TESTED |
+| 11 Pages mistaken for production | Existing natural-source distinction retained; merged state can remain POST_FIX_OBSERVATION when data is stale. | natural matched fixture / `test_pages_deployed_stale_source_is_pending_production` | FIXED_AND_TESTED |
+| 12 Endless reviews/ticks | Four real material treatments -> specific terminal-until-change; fresh CI/recovery can reactivate, observation clocks cannot. | `test_new_executed_ci_or_recovery_reactivates` / 12-tick and clock tests | FIXED_AND_TESTED |
+
+### Required regression matrix
+
+Tests below are concrete methods in `tests/governance/test_s1_release_evidence_classifier_v1.py`, with every output also asserting the non-authorization boundary and a local reason/owner/trigger. Opportunity-specific tests live in the existing matching test file.
+
+| # | Scenario | Expected result / test |
+| --- | --- | --- |
+| 1 | Vault404 + complete independent evidence | Advisory READY, no permission; `test_vault404_with_complete_recovery` |
+| 2 | Vault404 + missing recovery | HIGH blocked, LOW independent ready; `test_vault404_missing_recovery_scoped_by_risk` |
+| 3 | SUCCESS with stale source SHA | RECOVERY_SOURCE_STALE; `test_successful_restore_stale_source` |
+| 4 | SUCCESS without custody | CUSTODY_UNATTESTED; `test_successful_restore_unattested_custody` |
+| 5 | SUCCESS without independent release permission | RECOVERY_RELEASE_NOT_PERMITTED; `test_successful_restore_release_false` |
+| 6 | Source/custody/assessment all supplied | Advisory READY but never authenticated; `test_complete_recovery_still_never_authenticates_or_authorizes` |
+| 7 | HEAD changes after CI | INTERNAL_REPAIRABLE; `test_head_changes_after_green_ci` |
+| 8 | Green skipped tests | CI_NOT_EXECUTED; `test_green_skipped_test_job` |
+| 9 | Manual workflow instead of required PR event | CI_NOT_EXECUTED; `test_manual_workflow_cannot_replace_pr_event` |
+| 10 | Repairable original branch conflict | MERGE_CONFLICT, recheck after repair; `test_repairable_original_branch_conflict` |
+| 11 | Main advances before merge | Reevaluate bindings; `test_main_changes_between_validation_and_merge` |
+| 12 | Other actor already merged | Observe actual merge/readback, do not merge/credit again; `test_other_actor_merge_observed_without_merging_again` |
+| 13 | Grok COMMENTED where approval required | REVIEW_REQUIRED_BY_POLICY; `test_grok_commented_is_not_required_approval` |
+| 14 | Required independent APPROVED missing | REVIEW_REQUIRED_BY_POLICY; `test_required_independent_approved_missing` |
+| 15 | Independent APPROVED not required | No invented approval gate; `test_independent_approved_not_required_by_policy` |
+| 16 | Disabled ruleset | Binding rule blocks, nonbinding/empty applicable census does not; both disabled-rule tests |
+| 17 | Unresolved P1 | INTERNAL_REPAIRABLE; `test_concrete_p1_still_open` |
+| 18 | Physical SITE waiver applies | Waiver honored only from actual owner policy; `test_physical_site_review_owner_waiver` |
+| 19 | Blocked P0 beside ready independent PR | Continue ready PR; `test_blocked_p0_does_not_block_independent_candidate` |
+| 20 | Same blocker 12 ticks | No repeat receipt or reactivation; `test_identical_blocker_twelve_ticks_no_repeated_receipt` |
+| 21 | Material CI/recovery arrives | Reactivate; `test_new_executed_ci_or_recovery_reactivates` |
+| 22 | Merge succeeds but readback fails | MERGE_MAIN_READBACK_UNVERIFIED; `test_merge_success_main_readback_failure` |
+| 23 | Pages deployed but source stale | MERGED classification plus POST_FIX_OBSERVATION, not production success; `test_pages_deployed_stale_source_is_pending_production` |
+| 24 | Active writer lease | Local external dependency; `test_other_writer_active_lease` |
+| 25 | GitHub/platform denies action | Local dependency with no alternate-route evasion; `test_github_or_platform_denial_no_route_bypass` |
+
+Additional negative controls cover malformed URLs, future/invalid/stale timestamps, missing identity/manifest, separation false, incomplete/duplicate required-job census, boolean test counts, stale review/policy, missing owner mandate, closed-without-supersession, independent-assessment drift, native technical flag tampering, clock-only updates and isolated invalid records. Critical tests must fail when source/custody/assessment/HEAD/test-execution/main-readback guards are removed; record actual mutation evidence in the final exact-head review receipt.
+
+### Natural acceptance and rollback
+
+The existing #1156 owner records final head, CI jobs/logs, advisory review, actual merge and changed main blobs, then natural S1 observations. Verify ordinary ticks use current evidence, avoid duplicate unchanged receipts, continue independent candidates, and retain genuine HIGH_IMPACT blocks. Native Pages/readback and the next legitimate forecast issuance remain separate domain observations; never synthesize W45 points or trigger a paid run to obtain a green result. No activation of a second writer or S1 schedule change is permitted. If regression appears, use the existing governed revert PR path and the recorded rollback commit, preserving source history and independently retained recovery.
+
 ## System architecture
 
 - S1 retains sole original PR execution ownership, max 3 candidates per tick, and the owner's existing hourly cadence at :10 Europe/Copenhagen. No extra supervisor/task/scheduler.

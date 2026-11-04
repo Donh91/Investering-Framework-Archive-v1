@@ -6,6 +6,7 @@ Caller must authenticate every input against current original owner records.
 from hashlib import sha256
 import json
 from urllib.parse import urlparse
+import re
 
 ORDER = {"P0": 0, "P1": 1, "P2": 2, "P3": 3, "RESEARCH": 4}
 MATERIAL = frozenset((
@@ -63,9 +64,36 @@ def reactivated(item):
     if not isinstance(change, dict) or change.get("kind") not in MATERIAL:
         return False
     before, after = change.get("previous"), change.get("current")
+    evidence_url = change.get("native_evidence_url")
+    native_run = False
+    if change.get("kind") == "executed_ci" and isinstance(evidence_url, str):
+        parsed = urlparse(evidence_url)
+        native_run = (parsed.scheme == "https" and parsed.netloc == "github.com"
+                      and re.fullmatch(r"/Donh91/[A-Za-z0-9_.-]+/actions/runs/[1-9][0-9]*(?:/job/[1-9][0-9]*)?", parsed.path) is not None)
     return (isinstance(before, str) and isinstance(after, str)
             and len(before) >= 8 and len(after) >= 8 and before != after
-            and _url(change.get("native_evidence_url")))
+            and (_url(evidence_url) or native_run))
+
+
+def select_cases_isolated(cases, maximum=3):
+    """Keep malformed candidate telemetry local; preserve strict legacy API.
+
+    Invalid rows are reported, never silently admitted or granted authority.
+    Existing callers can migrate without changing select_cases' exception API.
+    """
+    if not isinstance(cases, list):
+        raise AdvisoryInputError("case list required")
+    good, invalid = [], []
+    for index, item in enumerate(cases):
+        try:
+            select_cases([item], maximum=maximum)
+        except (AdvisoryInputError, TypeError, ValueError) as exc:
+            invalid.append({"input_index": index, "disposition": "INTERNAL_REPAIRABLE",
+                            "reason": str(exc), "other_prs_may_continue": True})
+        else:
+            good.append(item)
+    return {"selected": select_cases(good, maximum=maximum),
+            "invalid_cases": invalid, "release_authority": False}
 
 
 def select_cases(cases, maximum=3):

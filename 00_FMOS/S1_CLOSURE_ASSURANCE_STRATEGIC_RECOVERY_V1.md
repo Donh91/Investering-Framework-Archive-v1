@@ -18,6 +18,16 @@ A BLOCKED_WITH_TRIGGER is a *nonterminal monitored state*, requiring named trigg
 
 Each material receipt must satisfy `schemas/S1_CLOSURE_ASSURANCE_V1.schema.json`. Schema checks are structural only; independent original SHA, source clocks, GitHub CI job steps, policy and consumer readback remain mandatory.
 
+## Permanent per-PR release disposition contract
+
+For every owner-directed release preflight, the EXISTING S1/operator must apply the per-PR input/evidence contract and regression matrix in `00_FMOS/S1_V4_3_DIRECTOR_INTEGRATION.md`, section "2026-11-04 deterministic release dispositions". Use `scripts/governance/s1_release_evidence_classifier_v1.py` for a finite read-only classification of normalized native evidence; use `select_cases_isolated` for independent candidate selection when candidate telemetry may be malformed. Preserve the original strict `select_cases` API for existing strict callers.
+
+Persist a material disposition through the existing #1156 receipt owner, with exact current HEAD/main/policy/source, reason, responsible owner, native evidence references and reactivation trigger. Suppress an unchanged fingerprint. After four genuine material treatments, retain the specific blocked disposition as terminal until a new material trigger; do not count ticks/comments as treatments. Revalidate every binding before merge and read back merge/main/blobs afterward. A local blocked candidate never consumes every independent queue slot.
+
+These are permanent instructions for the existing release process once governed integration completes, not evidence that the saved Chat S1 task has been changed or has executed the new code. `READY_TO_MERGE` is an advisory classification, always with `authorized=false`; only existing authenticated owner authorization and actual platform/domain requirements can permit integration. Native Vault technical `release_permission=false` is immutable and is not itself an independent release assessment. The separate evidence-bound assessment, when genuinely available, belongs to the existing independent recovery authority. No self-attestation or new custodian is introduced.
+
+If the helper cannot execute, report the exact local telemetry/tool limitation and apply the same existing native policy checks to independent candidates through the qualified operator. Do not fabricate an executed-helper receipt, treat unavailable telemetry as PASS, or invent a new global dependency on this module. Required high-impact recovery remains fail-closed for the affected candidate.
+
 ## S1 selection and fairness
 
 At each **existing** S1 tick: cheap deltas for existing owners; select up to 3 actionable original candidates. Active P0 safety/recovery first, then independent ready fixes, then Strategist/Research Lab bounded falsification when capacity permits. A static external HOLD cannot monopolize all slots. Do not interpret a changed issue timestamp, a review comment, a Codex-ready label, or green observer workflow as engineering progress. Prefer verified code/tests/release/readback or concrete owner reactivation. No duplicate PR or competing HEAD writer.
