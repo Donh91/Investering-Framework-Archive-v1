@@ -51,7 +51,7 @@ class NativeSolDispatchTests(unittest.TestCase):
                 d.owner_event(p, mode="submit")
 
     def test_native_main_sha_mismatch_blocks_preflight(self):
-        with patch.object(d.subprocess, "check_output", return_value=(HEAD + "\n").encode()), \
+        with patch.object(d.subprocess, "check_output", return_value=HEAD + "\n"), \
              patch.dict(os.environ, ENV), \
              patch.object(d, "api", return_value={"object": {"sha": "b" * 40}}):
             with self.assertRaisesRegex(ValueError, "STALE_MAIN"):
@@ -178,7 +178,7 @@ class NativeSolDispatchTests(unittest.TestCase):
         self.assertNotIn("sol_max_elite_dispatch.py submit", collect)
         self.assertNotIn("api_gateway.py", collect)
         self.assertIn("if: always()", collect)
-        self.assertIn("sol-max-elite-attempt-", workflow)
+        self.assertIn("s1-sol-elite-attempt-", workflow)
 
     def test_origin_artifact_attack_rejected_before_provider(self):
         with tempfile.TemporaryDirectory() as td, patch.dict(os.environ, ENV):
