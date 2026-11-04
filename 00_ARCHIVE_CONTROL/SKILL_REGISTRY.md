@@ -27,6 +27,7 @@ Skills are process instructions. They do not own market truth, framework doctrin
 | typesafe-ai | `.agents/skills/typesafe-ai/SKILL.md` | INSTALLED_EXPERIMENTAL_SHADOW_ONLY | TypeSafe/JEV design, primitives, API integration, cookbook-guided shadow experiments | Advisory/reference only; no market, trading, routing, threshold, promotion or repository-write authority |
 
 | adaptive-analysis-methods | `.agents/skills/adaptive-analysis-methods/SKILL.md` | PILOT_CANDIDATE_READ_ONLY_V1 | deep audit, repeated failure, uncertain research, high-consequence review | Read-only method selection only; no model, queue, write, market or portfolio authority |
+| s1-pr-repair-learning | `.agents/skills/s1-pr-repair-learning/SKILL.md` | PILOT_ACTIVE_AFTER_GOVERNED_MERGE | original S1 PR repeatedly HOLD, merge conflict, Sol MAX patch handoff, closure proof, operational memory reuse | Procedure and evidence only; no new agent, scheduler, paid call, release, market or portfolio authority |
 
 ## 3. Default composition
 
@@ -63,6 +64,18 @@ canonical-context-router
 ```
 
 The router resolves current authority. Prospective Evidence Ledger governs causal row lifecycle and evidence integrity. Developer Source Research retrieves and verifies upstream technical evidence without replacing local repository authority. The red-team skill evaluates decision value and test survival. Codex Intake converts reproducible code-local research findings into governed candidates without granting research code authority. Skill Quality Gate compares frozen baselines and candidates without authoring or promoting them. Archive Governance controls placement, duplication, discoverability, write safety and backup-scope truth.
+
+For existing Chat S1 stalled original-PR or model-patch recovery only:
+
+```text
+canonical-context-router
+-> s1-pr-repair-learning
+-> existing original-domain regression and native GitHub proof
+-> skill-quality-gate for a new/changed procedural candidate
+-> archive-governance before explicitly authorized GitHub writes
+```
+
+This adds no new writer, schedule, merge permission, paid API trigger or scientific/market authority. The active saved S1 automation still controls when/what can be executed.
 
 ## 4. Global constraints
 
