@@ -227,7 +227,7 @@ def output_schema() -> dict:
     }
 
 
-def call_api(context_file: Path, result_dir: Path) -> dict:
+def call_api(context_file: Path, result_dir: Path, *, submit_only: bool = False) -> dict:
     # A native pre-HTTP claim must already have been posted AND read back.
     # Do not charge OpenAI for a direct invocation without this durable record.
     reservation_file = result_dir / "reservation.json"
@@ -292,8 +292,15 @@ def call_api(context_file: Path, result_dir: Path) -> dict:
     }
     (result_dir / "response_handle.json").write_text(json.dumps(
         handle, sort_keys=True, indent=2) + "\n")
-    # Polling retrieves the SAME response, not a retry. Timebound below the
-    # response retention; later GET-only recovery must remain available.
+    # Two-stage support: persist the paid response ID before any long GET polling.
+    # An existing GitHub artifact must be uploaded immediately in submit-only
+    # mode, allowing the separate GET-only collector to resume across runs.
+    if submit_only:
+        return {"status": "PENDING_COLLECT", "response_id": response_id,
+                "source_head": reservation.get("source_head"),
+                "charged_call": True, "automatic_patch_application": False}
+    # Legacy in-run GET polling remains only for backward-compatible tests.
+    # Production uses submit-only and a separate retrieval step.
     deadline = time.monotonic() + 480
     attempts = 0
     while response.get("status") in ("queued", "in_progress"):
@@ -402,6 +409,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("action", choices=["guard", "build", "claim", "call", "validate"])
     ap.add_argument("--head", required=True)
+    ap.add_argument("--submit-only", action="store_true")
     ap.add_argument("--repo", default="Donh91/Investering-Framework-Archive-v1")
     ap.add_argument("--output-dir", type=Path, default=Path("runtime/s1-sol-max"))
     args = ap.parse_args()
@@ -417,7 +425,7 @@ def main() -> None:
             json.dumps(out, sort_keys=True, indent=2) + "\n")
     elif args.action == "call":
         try:
-            out = call_api(args.output_dir / "context.json", args.output_dir)
+            out = call_api(args.output_dir / "context.json", args.output_dir, submit_only=args.submit_only)
         except Exception as exc:
             # Persist a machine-readable terminal incident. There is no
             # automatic paid retry, even when HTTP never returned a response.
