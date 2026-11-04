@@ -482,3 +482,19 @@ def test_legitimate_abstention_remains_unchanged_without_extra_model_call():
     assert out == before
     assert receipt["attempt_count"] == 0
     assert receipt["status"] == "SKIPPED_PAID_RECOVERY_DISABLED"
+
+
+def test_primary_seven_day_model_gets_bounded_premodel_source_observation():
+    """P0-B: pass genuine premodel evidence, not self-attestation."""
+    source = Path(builder.__file__).read_text()
+    assert 'CN_PREMODEL_SPOT_QUOTE_OBSERVATION_v1' in source
+    assert 'SOURCE_OBSERVATION_NOT_ENVELOPE_ATTESTATION' in source
+    assert 'weekly_capture_sha256' in source
+    assert 'source_rows_sha256' in source
+    assert 'PRIMARY SEVEN-DAY PRICE PATH PRODUCT:' in source
+    assert 'A MIXED regime or multiple plausible scenarios alone does NOT require abstention' in source
+    assert source.index('context["pre_model_spot_quote_observation"]') < source.index(
+        'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
+    assert source.index('value = reject_unverified_initial_daily_quotes(') > source.index(
+        'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
+    assert 'context["weekly_envelope_quote"] = freeze.get("price_quote")' in source
