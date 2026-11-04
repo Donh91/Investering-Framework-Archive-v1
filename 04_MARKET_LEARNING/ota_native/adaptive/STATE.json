@@ -1,15 +1,16 @@
 {
   "active_signal_signature": [
+    "breadth_material_delta",
     "classified_evidential",
     "classified_new_information"
   ],
-  "adaptive_score": 1.975,
+  "adaptive_score": 2.8375,
   "adaptive_score_threshold": 3.0,
   "attention_weights": {
-    "breadth_material_delta": 0.95,
+    "breadth_material_delta": 1.0,
     "breadth_regime_change": 1.0,
-    "classified_evidential": 1.05,
-    "classified_new_information": 1.1,
+    "classified_evidential": 1.1,
+    "classified_new_information": 1.15,
     "framework_data_gap": 0.7,
     "research_novelty": 0.8,
     "settled_transition": 1.25
@@ -28,24 +29,25 @@
   ],
   "canonical_effect": false,
   "classified_delta_counts": {
-    "CONTEXT_ONLY": 1,
+    "CONTEXT_ONLY": 0,
     "EVIDENTIAL": 1,
     "NEW_INFORMATION": 1
   },
   "contract": "NATIVE_OTA_ADAPTIVE_GATE_v1",
   "decision": "NO_ADAPTIVE_FULL_OTA",
-  "decision_hash_sha256": "18a5dc1af0c2d00fa312640b22e7a46b008da1d2ac6d8e60cfe798743c62ff94",
+  "decision_hash_sha256": "1b014cc9c0e495bb5645c5b6a1c62d870bfe1a97427ae4df92401d22455f1587",
   "framework_data_gap_count": 0,
   "full_ota_runs_this_iso_week_before_decision": 0,
-  "generated_at_utc": "2026-10-28T00:45:19.851281Z",
+  "generated_at_utc": "2026-11-04T01:40:33.467084Z",
   "hours_since_latest_full_ota": null,
-  "latest_breadth_advance_ratio": 0.7,
+  "latest_breadth_advance_ratio": 0.5,
   "latest_full_ota_utc": null,
-  "learning_update": "DAMP_REPEATED_SIGNATURE",
+  "learning_update": "BOOST_NOVEL_ACTIVE_SIGNALS",
   "market_semantics_changed": false,
   "portfolio_rules_changed": false,
-  "previous_adaptive_breadth_advance_ratio": 0.8,
+  "previous_adaptive_breadth_advance_ratio": 0.7,
   "reasons": [
+    "breadth_material_delta",
     "classified_evidential",
     "classified_new_information"
   ],
@@ -59,15 +61,15 @@
     "NOVELTY_WEIGHTING"
   ],
   "signal_contributions": {
-    "breadth_material_delta": 0.0,
+    "breadth_material_delta": 0.95,
     "breadth_regime_change": 0.0,
-    "classified_evidential": 0.825,
-    "classified_new_information": 1.15,
+    "classified_evidential": 0.7875,
+    "classified_new_information": 1.1,
     "framework_data_gap": 0.0,
     "research_novelty": 0.0,
     "settled_transition": 0.0
   },
   "source_policy": "READ_EXISTING_GITHUB_OWNERS_ONLY_NO_NEW_MARKET_SOURCE_CALLS",
-  "state_hash_sha256": "31907dfab76057128aecc7344bdee87048d51a973800d47c9bfd40d872e22749",
+  "state_hash_sha256": "4f8193ee30139799b860867fb33b176dda63ee28b79715d2f27ec29d76be44f4",
   "thresholds_changed": false
 }
