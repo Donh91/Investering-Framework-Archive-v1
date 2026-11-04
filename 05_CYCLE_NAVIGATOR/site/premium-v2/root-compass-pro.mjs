@@ -13,6 +13,7 @@ import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForwar
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
+import {kompasSourceClockReadback} from './kompas-clock-readback.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -534,8 +535,12 @@ function renderHorizonStatus(){
  if(!host)return;
  const lang=document.documentElement.lang==='en'?'en':'da';
  const clock=observedMarketClock({compass:feeds?.compass});
+ let strategic=null;
+ try{strategic=forwardOutlook(feeds?.latest,feeds?.compass,
+  sourceTrace(feeds?.latest,feeds?.compass,view))}catch{}
  const matrix=kompasHorizonStatusRows({
-  compass:feeds?.compass,view,lang,observationCurrent:clock.state==='FRESH_OBSERVATION'
+  compass:feeds?.compass,view,lang,strategic,
+  observationCurrent:clock.state==='FRESH_OBSERVATION'
  });
  const fragment=document.createDocumentFragment();
  for(const item of matrix.rows){
@@ -575,6 +580,22 @@ function renderHorizonStatus(){
   'Manglende kursmål, udbudte prognoser og handelssignaler udledes aldrig her.');
 }
 
+// Official issuance/freshness and latest completed market observation are
+// deliberately separate clocks. Never use site rebuild time as market time.
+function renderSourceClocks(){
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ const clocks=kompasSourceClockReadback({compass:feeds?.compass,view,lang});
+ const entries=[['cn-clock-official',clocks.official],['cn-clock-market',clocks.observation]];
+ for(const [id,state] of entries){
+  const el=$(id);
+  if(!el)continue;
+  el.textContent=state.label;
+  el.dataset.tone=state.tone;
+  el.dataset.clockStatus=state.status;
+ }
+ const group=document.querySelector('.cn-source-clocks');
+ if(group)group.setAttribute('aria-label',lang==='en'?'Source freshness':'Kildeaktualitet');
+}
 function paint(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  try{view=feeds?inspectOfficialPublicFeeds(feeds.latest,feeds.compass,{lang}):null}
@@ -582,6 +603,7 @@ function paint(){
  // Official source gate remains upstream. An expired issuer can never be
  // refreshed via a newer Pages bundle timestamp or cached prior DOM text.
  renderProductExperience(view,feeds,lang);
+ renderSourceClocks();
  renderQuickDecision();
  renderRiskQuick();
  renderOverview();
