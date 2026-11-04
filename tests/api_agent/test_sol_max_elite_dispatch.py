@@ -83,9 +83,9 @@ class NativeSolDispatchTests(unittest.TestCase):
         with patch.object(d, "gh", return_value=json.dumps([[
                 {"body": valid, "user": {"login": "github-actions[bot]"}, "id": 6}]])):
             self.assertEqual(len(d.all_native_claims()), 1)
-        t.check_unspent_claim(
-            [{"body": valid, "user": {"login": "github-actions[bot]"}}], MISSION
-        ) if False else None
+        with self.assertRaisesRegex(ValueError, "ALREADY_CLAIMED_NO_REPOST"):
+            t.check_unspent_claim(
+                [{"body": valid, "user": {"login": "github-actions[bot]"}}], MISSION)
 
     def test_account_wide_cost_guard_and_native_claim_capacity(self):
         with tempfile.TemporaryDirectory() as td:
@@ -149,6 +149,19 @@ class NativeSolDispatchTests(unittest.TestCase):
             self.assertFalse(result["source_applied"])
             self.assertFalse(result["merge_authorized"])
             self.assertEqual(getter.call_count, 1)
+
+    def test_existing_workflow_owns_paired_submit_and_get_only(self):
+        workflow = Path(".github/workflows/framework-learning-supervisor.yml").read_text()
+        self.assertIn("sol-max-elite-submit:", workflow)
+        self.assertIn("sol-max-elite-collect:", workflow)
+        self.assertIn("github.event.comment.author_association == 'OWNER'", workflow)
+        collect = workflow.split("  sol-max-elite-collect:", 1)[1].split(
+            "  sol-max-implementation-patch:", 1)[0]
+        self.assertIn("sol_max_elite_dispatch.py collect", collect)
+        self.assertNotIn("sol_max_elite_dispatch.py submit", collect)
+        self.assertNotIn("api_gateway.py", collect)
+        self.assertIn("if: always()", collect)
+        self.assertIn("sol-max-elite-attempt-", workflow)
 
     def test_origin_artifact_attack_rejected_before_provider(self):
         with tempfile.TemporaryDirectory() as td, patch.dict(os.environ, ENV):
