@@ -43,6 +43,15 @@ class NewsOssEventChallengerTests(unittest.TestCase):
         b = report(url="https://alpha.example/story1/?id=9&utm_source=B#article")
         self.assertEqual(relation(a, b)["relation"], "SAME_ARTICLE")
 
+    def test_userinfo_url_cannot_impersonate_article_host(self):
+        self.assertIsNone(canonical_article_url("https://publisher.test@evil.test/story"))
+        self.assertIsNone(canonical_article_url("https://user:pass@publisher.test/story"))
+        self.assertEqual(
+            relation(report(url="https://publisher.test@evil.test/story"),
+                     report(url="https://publisher.test/story"))["relation"],
+            "POSSIBLE_SAME_OCCURRENCE",
+        )
+
     def test_meaningful_query_parameter_is_not_erased(self):
         self.assertNotEqual(
             canonical_article_url("https://agency.test/report?id=1"),
