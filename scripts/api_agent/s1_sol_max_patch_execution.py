@@ -11,6 +11,7 @@ import json
 import os
 import re
 import subprocess
+import time
 import urllib.request
 from pathlib import Path
 
@@ -169,15 +170,57 @@ def call_api(context_file: Path, result_dir: Path) -> dict:
         "text": {"format": {"type": "json_schema", "name": "s1_sol_max_patch_v1",
                             "strict": True, "schema": output_schema()}},
     }
+    # True background mode returns a durable response ID promptly. Poll GETs
+    # without creating another paid response. OpenAI documents background mode
+    # with store=false and temporary retention for bounded polling.
+    payload["background"] = True
     req = urllib.request.Request("https://api.openai.com/v1/responses",
           data=json.dumps(payload, separators=(",", ":")).encode(),
           headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
           method="POST")
-    # ONE request only: timeout, incomplete and unknown provider liability are terminal,
-    # never auto-retry or start a second paid call.
-    with urllib.request.urlopen(req, timeout=210) as res:
-        response = json.loads(res.read())
     result_dir.mkdir(parents=True, exist_ok=True)
+    # The POST is the only potentially billable operation in this function.
+    # Its failure is UNKNOWN LIABILITY and must NEVER cause another POST.
+    with urllib.request.urlopen(req, timeout=75) as res:
+        response = json.loads(res.read())
+    response_id = response.get("id")
+    if not isinstance(response_id, str) or not re.fullmatch(r"resp_[A-Za-z0-9_-]{4,180}", response_id):
+        raise ValueError("BACKGROUND_RESPONSE_ID_MISSING_OR_UNTRUSTED_BILLING_UNKNOWN")
+    handle = {
+        "contract": "S1_SOL_MAX_BACKGROUND_HANDLE_v1",
+        "response_id": response_id,
+        "context_sha256": sha(context),
+        "reservation_claim_id": reservation["claim_id"],
+        "model": MODEL, "reasoning_effort": EFFORT,
+        "source_head": reservation.get("source_head"),
+        "state": response.get("status"),
+    }
+    (result_dir / "response_handle.json").write_text(json.dumps(
+        handle, sort_keys=True, indent=2) + "\n")
+    # Polling retrieves the SAME response, not a retry. Timebound below the
+    # documented ephemeral store=false response-retention window.
+    deadline = time.monotonic() + 480
+    attempts = 0
+    while response.get("status") in ("queued", "in_progress"):
+        if time.monotonic() >= deadline:
+            raise ValueError("BACKGROUND_STILL_RUNNING_WITH_RESPONSE_ID_NO_REPOST")
+        attempts += 1
+        if attempts > 60:
+            raise ValueError("BACKGROUND_POLL_LIMIT_WITH_RESPONSE_ID_NO_REPOST")
+        time.sleep(8)
+        poll = urllib.request.Request(
+            "https://api.openai.com/v1/responses/" + response_id,
+            headers={"Authorization": "Bearer " + key}, method="GET")
+        with urllib.request.urlopen(poll, timeout=35) as res:
+            response = json.loads(res.read())
+        if response.get("id") != response_id:
+            raise ValueError("BACKGROUND_RESPONSE_ID_CHANGED")
+        handle["state"] = response.get("status")
+        handle["polls"] = attempts
+        (result_dir / "response_handle.json").write_text(json.dumps(
+            handle, sort_keys=True, indent=2) + "\n")
+    if response.get("id") != response_id:
+        raise ValueError("BACKGROUND_FINAL_RESPONSE_ID_MISMATCH")
     usage = response.get("usage") or {}
     inputs, outputs = usage.get("input_tokens"), usage.get("output_tokens")
     if any(type(v) is not int or v < 0 for v in (inputs, outputs)):
