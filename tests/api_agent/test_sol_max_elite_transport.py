@@ -173,6 +173,14 @@ class EliteTransportTests(unittest.TestCase):
                     m.submit_one(Path(td), active(batch), payload, claim, output, "fake-key",
                                  native_reader=native(claim, payload), environment=ENV, post=post)
             self.assertEqual(len(sends), 1)
+            # Switching output directory cannot purchase the mission again.
+            with patch.object(m.subprocess, "check_output", return_value=(HEAD + "\n").encode()), \
+                    patch.object(m.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+                with self.assertRaisesRegex(ValueError, "ALREADY_SUBMITTED_IN_THIS_RUN"):
+                    m.submit_one(Path(td), active(batch), payload, claim, Path(td) / "paid-2",
+                                 "fake-key", native_reader=native(claim, payload),
+                                 environment=ENV, post=post)
+            self.assertEqual(len(sends), 1)
 
     def test_timeout_stays_unknown_liability_and_never_reposts(self):
         with tempfile.TemporaryDirectory() as td:
