@@ -55,6 +55,12 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<section id="view-path"', '<section id="view-results"', 'pro-path')
     .replace('<section id="view-path" class="view" hidden role="tabpanel" aria-labelledby="tab-path">',
       '<section id="official-path-view" class="cn-path-source" aria-label="PATH · kildeverificeret markedsforløb">')
+    .replace('<div class="path-hero">',
+      '<section class="cn-cycle-truth" aria-label="Cyklus kildegrundlag">'+
+      '<strong id="cn-cycle-health">Kontrollerer ugegrundlag</strong>'+
+      '<p id="cn-cycle-meaning">Ingen markedsfase vurderes uden verificerede kilder.</p>'+
+      '<small id="cn-cycle-reason">Afventer kildekontrol.</small></section>'+
+      '<div class="path-hero">')
     .replace('<section class="section"><div class="section-heading"><div><p class="eyebrow">02 / MARKET CYCLE</p>',
       '<aside class="cn-alt-milestone" aria-labelledby="cn-alt-milestone-title">'+
       '<div><span class="cn-milestone-eyebrow">NÆSTE STORE ALTCOIN-MILEPÆL</span>'+
