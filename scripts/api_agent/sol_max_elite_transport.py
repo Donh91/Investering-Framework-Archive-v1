@@ -28,10 +28,10 @@ CLAIM_PREFIX = "S1_SOL_ELITE_NATIVE_PAID_CLAIM_V1"
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 RESPONSE_ID = re.compile(r"^resp_[A-Za-z0-9_-]{4,180}$")
 MISSION_ID = re.compile(r"^S1-[A-Z]+(?:-[A-Z]+)*-20261104$")
-SOURCE_MAX = 120000
-FILE_MAX = 35000
+SOURCE_MAX = 240000
+FILE_MAX = 100000
 OUTPUT_TOKENS = 45000
-INPUT_BOUND = 145000
+INPUT_BOUND = 300000
 INPUT_PRICE, OUTPUT_PRICE = 2.0, 10.0
 PRICING_RECHECK_AFTER = date(2026, 12, 4)
 CREDENTIALS = (
@@ -161,7 +161,7 @@ def render_source(root: Path, mission: str, head: str) -> dict:
 def expected_max_cost() -> float:
     if date.today() > PRICING_RECHECK_AFTER:
         raise ValueError("ELITE_PRICING_STALE")
-    # One-token-per-byte conservatively bounds the <=140 kB public packet.
+    # One-token-per-byte conservatively bounds the <=260 kB public packet.
     upper = (INPUT_BOUND * INPUT_PRICE + OUTPUT_TOKENS * OUTPUT_PRICE) / 1_000_000
     if upper > 3:
         raise ValueError("ELITE_COST_CAP_EXCEEDED")
