@@ -270,5 +270,64 @@ class SituationRoomOwnerTests(unittest.TestCase):
             self.assertFalse(rows[0]["shared_row_tournament_eligible"])
 
 
+    def test_midterm_headline_is_not_lost_before_article_fetch(self):
+        text = "Democrats win House and Senate in US midterm elections"
+        self.assertTrue(owner.relevant(text))
+        self.assertFalse(owner.relevant("How to clean your house before a party"))
+        family, subtype, _, lanes = owner.classify(text, "P1")
+        self.assertEqual(subtype, "US_ELECTION_POLICY_CONTEXT")
+        self.assertIn("MACRO_RISK", lanes)
+        self.assertNotEqual(family, "CANONICAL_TRADE_SIGNAL")
+
+    def test_previous_utc_day_requires_genuine_timestamp_and_one_day_bound(self):
+        self.assertTrue(owner.event_in_daily_discovery_window(
+            "2026-11-03T23:55:00Z", "TIMESTAMP", "2026-11-04"))
+        self.assertTrue(owner.event_in_daily_discovery_window(
+            "2026-11-04T01:00:00Z", "TIMESTAMP", "2026-11-04"))
+        self.assertFalse(owner.event_in_daily_discovery_window(
+            "2026-11-03T00:00:00Z", "DATE_ONLY", "2026-11-04"))
+        self.assertFalse(owner.event_in_daily_discovery_window(
+            "2026-11-02T23:59:59Z", "TIMESTAMP", "2026-11-04"))
+        self.assertFalse(owner.event_in_daily_discovery_window(
+            "2026-11-05T00:01:00Z", "TIMESTAMP", "2026-11-04"))
+
+    def test_previous_day_primary_discovery_keeps_original_timestamp(self):
+        landing = (b'<html><a href="/midterms">Democrats win House and Senate '
+                   b'in US midterm elections</a></html>')
+        detail = (b'<html><head><title>Democrats win House and Senate in US '
+                  b'midterm elections</title>'
+                  b'<meta property="article:published_time" '
+                  b'content="2026-11-03T23:35:00Z"></head></html>')
+        sources = (("P1", "PRIMARY", "https://p1.test/news"),
+                   ("P2", "PRIMARY", "https://p2.test/news"),
+                   ("P3", "PRIMARY", "https://p3.test/news"))
+        def fake_fetch(url, timeout=15):
+            if url == "https://p1.test/news":
+                return self.result(url, landing)
+            if url == "https://p1.test/midterms":
+                return self.result(url, detail)
+            return self.result(url)
+        with tempfile.TemporaryDirectory() as td, patch.object(owner, "SOURCES", sources), patch.object(owner, "fetch", fake_fetch):
+            result = owner.run(Path(td), "2026-11-04")
+        self.assertEqual(len(result["events"]), 1)
+        self.assertEqual(result["events"][0]["event_time_utc"], "2026-11-03T23:35:00Z")
+        self.assertEqual(result["events"][0]["event_time_precision"], "TIMESTAMP")
+        self.assertEqual(result["events"][0]["causal_authority"], "NONE")
+        self.assertFalse(result["portfolio_effect"])
+
+    def test_retrieval_completion_clock_distinguishes_known_and_legacy(self):
+        old = self.result("https://p1.test/news")
+        self.assertIsNone(old.receipt("P1", "PRIMARY")["retrieval_end_utc"])
+        completed = owner.FetchResult(
+            "https://p1.test/news", "PASS", 200,
+            "2026-11-04T15:26:50Z", b"{}",
+            None, "2026-11-04T15:26:53Z",
+        )
+        receipt = completed.receipt("P1", "PRIMARY")
+        self.assertEqual(receipt["fetched_at_utc"], "2026-11-04T15:26:50Z")
+        self.assertEqual(receipt["retrieval_end_utc"], "2026-11-04T15:26:53Z")
+        self.assertEqual(receipt["status"], "PASS")
+
+
 if __name__ == "__main__":
     unittest.main()
