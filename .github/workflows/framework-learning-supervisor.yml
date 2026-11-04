@@ -6,6 +6,8 @@ on:
       - '.github/workflows/framework-learning-supervisor.yml'
       - 'scripts/api_agent/senior_repair_audit_dispatch.py'
       - 'scripts/api_agent/temporary_bridge_pr_review.py'
+      - 'scripts/api_agent/s1_sol_max_patch_execution.py'
+      - 'tests/api_agent/test_s1_sol_max_patch_execution.py'
       - 'scripts/api_agent/s1_v43_terra_max_review.py'
       - 'tests/api_agent/test_temporary_bridge_pr_review.py'
       - 'tests/api_agent/test_s1_v43_terra_max_review.py'
@@ -68,6 +70,121 @@ concurrency:
   queue: max
   cancel-in-progress: false
 jobs:
+  sol-max-implementation-patch:
+    # One owner-issued PR commit launches one bounded paid Sol 6.1 MAX patch
+    # candidate. This lane can neither push PR code nor grant merge authority.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1877 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor == 'Donh91'
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate bounded Sol MAX source and no-network negative tests
+        run: |
+          python -m py_compile scripts/api_agent/s1_sol_max_patch_execution.py
+          python -m unittest tests.api_agent.test_s1_sol_max_patch_execution -v
+      - name: Check native current PR HEAD and explicit owner launch commit
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python scripts/api_agent/s1_sol_max_patch_execution.py guard --head "$PR_HEAD" \
+            --output-dir runtime/s1-sol-max > /tmp/sol-gate.json
+          cat /tmp/sol-gate.json
+          active=$(python -c 'import json; print(str(json.load(open("/tmp/sol-gate.json"))["run"]).lower())')
+          echo "go=$active" >> "$GITHUB_OUTPUT"
+      - name: Verify account-wide API budget before any claim
+        if: steps.gate.outputs.go == 'true'
+        run: |
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 40 --reserve-usd 4.0
+      - name: Build exact-head bounded two-file source context
+        if: steps.gate.outputs.go == 'true'
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/api_agent/s1_sol_max_patch_execution.py build --head "$PR_HEAD" \
+            --output-dir runtime/s1-sol-max
+      - name: Create and verify native claim before paid inference
+        if: steps.gate.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/api_agent/s1_sol_max_patch_execution.py claim --head "$PR_HEAD" \
+            --output-dir runtime/s1-sol-max
+      - name: Execute real GPT-6.1 Sol MAX patch synthesis, ONE HTTP request
+        if: steps.gate.outputs.go == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/api_agent/s1_sol_max_patch_execution.py call --head "$PR_HEAD" \
+            --output-dir runtime/s1-sol-max
+      - name: Validate generated patch and run original regression suite
+        if: steps.gate.outputs.go == 'true'
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/api_agent/s1_sol_max_patch_execution.py validate --head "$PR_HEAD" \
+            --output-dir runtime/s1-sol-max | tee runtime/s1-sol-max/validation.json
+          python -m unittest tests.api_agent.test_capability_router -v
+          # Do not commit/push model code from this runner. The existing
+          # authorized original-branch executor and separate review own that.
+      - name: Archive proof, patch and provider usage as workflow artifacts
+        if: always() && steps.gate.outputs.go == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-sol-max-patch-${{ github.run_id }}
+          path: runtime/s1-sol-max/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Publish exact-head native handoff and validated patch
+        if: always() && steps.gate.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("runtime/s1-sol-max")
+          head=os.environ["PR_HEAD"]
+          run=os.environ.get("GITHUB_RUN_ID","")
+          output=["## SOL MAX ORIGINAL BRANCH IMPLEMENTATION RECEIPT",
+                  f"PR #1877, source HEAD {head}",
+                  f"GitHub Actions run https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{run}",
+                  "The paid model has no merge or source-write authority. Release requires native current-head review and custody.",
+                  ""]
+          for name in ("reservation.json","api_meta.json","validation.json"):
+              src=p/name
+              if src.exists():
+                  output.extend([name+":", (chr(96)*3)+"json",src.read_text()[:2000],chr(96)*3,""])
+          patch=p/"proposal.patch"
+          if patch.exists() and (p/"validation.json").exists() and len(patch.read_bytes())<=16000:
+              output.extend(["Validated uncommitted candidate diff:", (chr(96)*3)+"diff",patch.read_text(),chr(96)*3])
+          else:
+              output.append("No fully validated patch: inspect the workflow failure/ABSTAIN; do NOT claim code was applied.")
+          (p/"report.md").write_text("\n".join(output)+"\n")
+          PY
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body-file runtime/s1-sol-max/report.md
+
   validate:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
