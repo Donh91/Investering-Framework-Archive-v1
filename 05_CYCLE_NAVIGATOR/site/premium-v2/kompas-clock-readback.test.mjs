@@ -22,7 +22,7 @@ test('separates original Official validity from completed hourly market observat
  assert.equal(r.contract,'CN_KOMPAS_PRO_DUAL_SOURCE_CLOCK_v2');
  assert.equal(r.official.status,'CURRENT');
  assert.equal(r.observation.status,'CURRENT');
- assert.match(r.official.label,/gyldigt til/);
+ assert.match(r.official.label,/gælder til/);
  assert.match(r.observation.label,/Kompas-måling afsluttet/);
  assert.ok(!r.official.label.includes('timekurs'));
 });
