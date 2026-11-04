@@ -448,5 +448,25 @@ class GraphHistoryTest(unittest.TestCase):
             publish(self.root)
 
 
+    def test_time_machine_premium_view_preserves_data_provenance(self):
+        """Visual-only upgrade must keep historical blue/green admission separate."""
+        html = (Path(__file__).resolve().parents[2] /
+                "05_CYCLE_NAVIGATOR/site/graph-history/index.html").read_text()
+        for required in (
+                "#071320", "#31d0a0", "#79aaff",
+                "class=\"panel panel-primary\"", "prefers-reduced-motion",
+                "Kildeudstedt dagsprognose · 7/7",
+                "w.forecast_status==='PUBLISHED'&&w.forecast.length===7",
+                "path(eligible,xf,yf,HOUR*1.5)",
+                "forecast_model_declared_quote",
+                "Seneste registrerede timeluk",
+                "data.actual_unit==='USDT'?'USDT':'UNAVAILABLE'",
+                "Ingen automatisk USD/USDT-omregning",
+                "Ingen prognosekurve konstrueres uden syv originale",
+        ):
+            self.assertIn(required, html)
+        self.assertNotIn("Frosne prognoser er i USD", html)
+
+
 if __name__ == "__main__":
     unittest.main()

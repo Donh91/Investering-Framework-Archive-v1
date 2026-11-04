@@ -6,40 +6,62 @@
 <title>CN Time Machine | Grafhistorik</title>
 <meta name="description" content="Bitcoin-kurser mod Cycle Navigators oprindelige, frosne mandagsprognoser. Fra uge 45 i 2026.">
 <style>
-:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17263e;background:#f6f8fc}
-*{box-sizing:border-box}body{margin:0}main{max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,36px)}
-a{color:#2456be}.eyebrow{font-size:12px;letter-spacing:.15em;font-weight:800;color:#3465bc}
-h1{font-size:clamp(28px,4vw,48px);letter-spacing:-.04em;line-height:1.1;margin:12px 0}
-.intro{font-size:clamp(14px,1.6vw,18px);color:#506177;max-width:740px;line-height:1.55}
-.panel{background:#fff;border-radius:20px;border:1px solid #e3e8f1;box-shadow:0 8px 28px #192b4d0a;padding:clamp(14px,2.5vw,28px);margin:24px 0}
-.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
-label{font-weight:700;font-size:14px}select{font:inherit;background:#fff;color:#17263e;border:1px solid #bdcbdc;padding:10px 12px;border-radius:10px;min-height:44px}
-.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;font-weight:700;margin-top:14px}
-.legend span::before{content:"";display:inline-block;width:25px;vertical-align:middle;margin-right:7px;border-top:3px solid #0c9562}
-.legend .forecast::before{border-top:3px dashed #2662df}
-.legend .boundary::before{border-top:2px dotted #8c98a8}
-#scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x pan-y;border:1px solid #eef1f5;border-radius:14px;margin-top:18px;background:linear-gradient(#fff,#fafdff)}
-#plot{display:block;height:440px;max-height:62vh;min-height:310px}#notice{font-size:13px;color:#596a7e;line-height:1.5;margin:12px 0}
-.metrics{display:flex;gap:12px;flex-wrap:wrap}.metric{flex:1;min-width:150px;padding:14px;border:1px solid #e1e6ef;border-radius:12px}.metric b{display:block;font-size:22px}.metric small{color:#627389}
-table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;border-bottom:1px solid #e5ebf2;padding:12px 8px}th{color:#526279}tr:last-child td{border:0}.scrolltable{overflow-x:auto}
-.note{color:#64748b;font-size:12px;line-height:1.6}.warn{color:#9b5120}
-@media(max-width:600px){main{padding:14px} .panel{border-radius:14px;padding:14px}#plot{height:390px}.legend{font-size:12px}.metric{min-width:130px}}
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:#eaf2fd;background:#071320;color-scheme:dark;--bg:#071320;--panel:#0d2033;--panel2:#10283e;--border:#263c55;--text:#eaf2fd;--muted:#9bacc4;--blue:#79aaff;--green:#31d0a0}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 7% 0%,#172e48 0,transparent 40%),radial-gradient(ellipse at 95% 60%,#0d2837 0,transparent 40%),var(--bg)}
+main{max-width:1240px;margin:0 auto;padding:clamp(18px,3vw,40px) clamp(15px,3vw,38px) 60px}
+a{color:#adc9ff;text-underline-offset:4px}a:hover{color:#e9f2ff}
+a:focus-visible,select:focus-visible,#scroll:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.back{display:inline-flex;align-items:center;gap:8px;padding:9px 0;font-size:13px;font-weight:600;text-decoration:none;color:#c1d2e9}
+.eyebrow{font-size:11px;letter-spacing:.19em;font-weight:800;color:var(--blue);text-transform:uppercase}
+h1{font-size:clamp(34px,5vw,58px);letter-spacing:-.047em;line-height:1.04;margin:13px 0 16px;font-weight:760}
+h1 em{font-style:normal;color:#83b4ff}
+h2{font-size:clamp(19px,2.4vw,26px);letter-spacing:-.025em;margin:0 0 8px}
+.intro{font-size:clamp(14px,1.45vw,17px);color:#abbed6;max-width:740px;line-height:1.7;margin:0}
+.panel{background:linear-gradient(145deg,rgba(19,42,63,.98),rgba(11,27,44,.97) 68%);border-radius:20px;border:1px solid var(--border);box-shadow:0 23px 64px #0107105e,0 1px 0 #ffffff08 inset;padding:clamp(17px,2.4vw,30px);margin:25px 0;overflow:hidden}
+.panel-primary{position:relative}.panel-primary:before{position:absolute;content:"";top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--blue),#4e8ee4 40%,var(--green) 78%,transparent)}
+.toolbar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:space-between}
+.observed-readout{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-top:12px}
+.observed-price{color:#f1f7ff;font-weight:740;font-size:clamp(21px,2.8vw,30px);font-variant-numeric:tabular-nums;letter-spacing:-.035em}
+.observed-meta{color:#9eb7d2;font-size:11px;font-weight:550}
+.toolbar strong{letter-spacing:-.025em}
+label{display:inline-flex;align-items:center;gap:11px;flex-wrap:wrap;font-weight:700;font-size:13px;color:#d3e0f2}
+select{font:600 13px system-ui;background:#0b1a2d;color:#e8f0fb;border:1px solid #36506d;padding:10px 36px 10px 12px;border-radius:9px;min-height:44px;cursor:pointer}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;font-weight:650;color:#c0cfe4;margin-top:18px;align-items:center}
+.legend span{white-space:normal}.legend span::before{content:"";display:inline-block;width:23px;vertical-align:middle;margin-right:8px;border-top:3px solid var(--green)}
+.legend .forecast::before{border-top:3px dashed var(--blue)}.legend .boundary::before{border-top:2px dotted #8194ac}
+#scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x pan-y;border:1px solid #294059;border-radius:14px;margin-top:18px;background:linear-gradient(180deg,#0b1d30,#091728 88%);scrollbar-color:#536e91 #102034;scrollbar-width:thin}
+#plot{display:block;height:440px;max-height:62vh;min-height:310px}
+#notice{font-size:12px;color:#c6d7ee;line-height:1.6;margin:16px 0 12px;padding:12px 14px;border-left:2px solid var(--blue);background:#10274087;border-radius:0 8px 8px 0}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.metric{min-width:0;padding:16px;border:1px solid #2b4059;border-radius:12px;background:#0a1a2b94}.metric b{display:block;font-size:clamp(22px,2.7vw,32px);font-weight:750;letter-spacing:-.035em;font-variant-numeric:tabular-nums;color:#edf4ff}
+.metric small{display:block;margin-top:5px;color:#9fb3cf;font-size:12px;line-height:1.5}
+table{border-collapse:collapse;width:100%;font-size:13px;line-height:1.5}
+th,td{text-align:left;border-bottom:1px solid #2a4057;padding:13px 10px;vertical-align:top}th{color:#a7bedc;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+tbody tr:hover{background:#ffffff06}tr:last-child td{border:0}
+td:first-child{font-weight:700;color:#eaf2ff;white-space:nowrap}
+.scrolltable{overflow-x:auto;scrollbar-color:#536e91 #102034}
+.note{color:#a4b7d0;font-size:12px;line-height:1.65}.warn{color:#ffcb96}
+.custody{margin-top:24px;padding:16px 19px;border:1px solid #29445b;border-radius:11px;background:#1023368c}
+@media(max-width:700px){main{padding:16px 14px 38px}.panel{border-radius:15px;padding:16px;margin:18px 0}.toolbar{align-items:flex-start}.toolbar label{width:100%;justify-content:space-between}#plot{height:380px}.legend{font-size:11px;gap:10px 13px}.metric{padding:12px}.metric small{font-size:10px}}
+@media(max-width:430px){.metrics{gap:8px}.metric{padding:12px 9px}.metric b{font-size:20px}.metric small{font-size:10px}h1{font-size:34px}.toolbar strong{font-size:17px!important}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
 <main>
-<a href="../">‹ Tilbage til Kompas Pro</a>
+<a class="back" href="../" aria-label="Tilbage til Kompas Pro">‹ Tilbage til Kompas Pro</a>
 <div class="eyebrow" style="margin-top:26px">CYCLE NAVIGATOR / GRAFARKIV</div>
-<h1>CN Time Machine</h1>
+<h1>CN <em>Time Machine</em></h1>
 <p class="intro">Én sammenhængende Bitcoin-kurslinje. Hver blå prognose er den oprindelige, uændrede mandagsprognose for netop sin uge. Start: 2. november 2026.</p>
-<section class="panel" aria-label="Historisk Bitcoin-graf">
+<section class="panel panel-primary" aria-label="Historisk Bitcoin-graf">
 <div class="toolbar">
-<div><strong style="font-size:19px">BTC · Faktisk vs. prognose</strong><div class="note">UTC · Historiske originale kilder</div></div>
+<div><strong style="font-size:19px">BTC · Faktisk vs. prognose</strong><div class="note">UTC · Historiske originale kilder</div>
+<div class="observed-readout" aria-live="polite"><span class="observed-price" id="last-close">—</span><span class="observed-meta" id="last-time">Afventer verificeret timeluk</span></div></div>
 <label for="period">Vis periode:
 <select id="period"><option value="4">Seneste 4 uger</option><option value="10" selected>Seneste 10 uger</option><option value="all">Hele historikken</option></select>
 </label>
 </div>
-<div class="legend"><span>Faktisk timekurs</span><span class="forecast">Frossen ugeprognose</span><span class="boundary">Ugegrænser</span></div>
+<div class="legend"><span>Faktisk timekurs</span><span class="forecast">Kildeudstedt dagsprognose · 7/7</span><span class="boundary">Ugegrænser</span></div>
 <div id="scroll" role="region" aria-label="Vandret scrollbar for historiske kurser" tabindex="0"><svg id="plot" role="img" aria-label="Historiske Bitcoin-kurser og kildeudstedte ugeprognoser"></svg></div>
 <div id="notice" aria-live="polite">Indlæser verificeret historik…</div>
 <div class="metrics">
@@ -49,7 +71,7 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;b
 </div>
 </section>
 <section class="panel"><h2>Ugearkiv</h2><div class="scrolltable"><table><thead><tr><th>Uge</th><th>CN-prognose</th><th>Faktiske data</th></tr></thead><tbody id="archive"><tr><td colspan="3">Afventer kilde</td></tr></tbody></table></div></section>
-<p class="note">Historikken bygger kun på det oprindelige CN-freeze og verificerede, afsluttede Hourly Capture-kurser. Manglende prognoser og databrud udfyldes aldrig kunstigt. Prognosens valuta vises kun, når den er deklareret i den originale frosne kilde. Observerede Binance Spot-kurser er i USDT. Ingen automatisk USD/USDT-omregning, og ingen godkendt præcisionsscore eller handelssignal.</p>
+<p class="note custody">Historikken bygger kun på det oprindelige CN-freeze og verificerede, afsluttede Hourly Capture-kurser. Manglende prognoser og databrud udfyldes aldrig kunstigt. Prognosens valuta vises kun, når den er deklareret i den originale frosne kilde. Observerede Binance Spot-kurser er i USDT. Ingen automatisk USD/USDT-omregning, og ingen godkendt præcisionsscore eller handelssignal.</p>
 </main>
 <script type="module">
 const URL='../data/graph-history/timeline.json';
@@ -63,7 +85,7 @@ function el(name,attributes={},text=''){
  if(text)node.textContent=text; svg.append(node);return node;
 }
 function svgText(x,y,value,size=12,anchor='start'){
- return el('text',{x,y,fill:'#52647c','font-size':size,'text-anchor':anchor,'font-family':'system-ui,sans-serif'},value);
+ return el('text',{x,y,fill:'#a6b9d4','font-size':size,'text-anchor':anchor,'font-family':'system-ui,sans-serif'},value);
 }
 function isoWeekStart(week){
  const m=/^(\d{4})-W(\d{2})$/.exec(week||'');if(!m)return NaN;
@@ -91,6 +113,14 @@ function draw(){
   return (w.forecast_status==='PUBLISHED'&&w.forecast.length===7&&/^[0-9a-f]{64}$/.test(w.source_sha256||''))
    ?w.forecast.map((p,i)=>[monday+(i+1)*DAY,p.expected_close]).filter(p=>Number.isFinite(p[1])&&p[1]>0):[];
  });
+ // Observed only. Never call an archived UTC close a current/live quote.
+ eligible.sort((a,b)=>a[0]-b[0]);
+ const latest=eligible.at(-1),nativeQuote=data.actual_unit==='USDT'?'USDT':'UNAVAILABLE';
+ $('last-close').textContent=latest?
+   latest[1].toLocaleString('da-DK',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+nativeQuote:'—';
+ $('last-time').textContent=latest?
+   'Seneste registrerede timeluk · '+new Date(latest[0]).toISOString().slice(0,16).replace('T',' ')+' UTC':
+   'Ingen verificerede timeluk for den valgte periode';
  const values=[...eligible.map(p=>p[1]),...preds.flat().map(p=>p[1])];
  const wide=Math.max(880, selected.length*220),height=440, left=78,right=25,top=34,bottom=55;
  svg.setAttribute('width',wide);svg.setAttribute('viewBox',`0 0 ${wide} ${height}`);
@@ -104,17 +134,17 @@ function draw(){
  const xf=t=>left+(t-start)/(end-start)*(wide-left-right);
  const yf=v=>top+(hi-v)/(hi-lo)*(height-top-bottom);
  for(let i=0;i<5;i++){
-  const v=lo+(hi-lo)*i,y=yf(v); el('line',{x1:left,y1:y,x2:wide-right,y2:y,stroke:'#e5eaf1'});
+  const v=lo+(hi-lo)*i,y=yf(v); el('line',{x1:left,y1:y,x2:wide-right,y2:y,stroke:'#253e57'});
   svgText(left-10,y+4,Math.round(v).toLocaleString('da-DK'),12,'end');
  }
  for(const w of selected){const x=xf(isoWeekStart(w.week));
-  el('line',{x1:x,y1:top,x2:x,y2:height-bottom,stroke:'#96a4b8','stroke-dasharray':'3 7',opacity:'.8'});
+  el('line',{x1:x,y1:top,x2:x,y2:height-bottom,stroke:'#58718d','stroke-dasharray':'3 7',opacity:'.8'});
   svgText(x+8,height-22,w.week,13);}
- el('path',{d:path(eligible,xf,yf,HOUR*1.5),fill:'none',stroke:'#099866','stroke-width':'2.8','stroke-linecap':'round','stroke-linejoin':'round'});
+ el('path',{d:path(eligible,xf,yf,HOUR*1.5),fill:'none',stroke:'#31d0a0','stroke-width':'2.8','stroke-linecap':'round','stroke-linejoin':'round'});
  for(const set of preds)if(set.length===7){
-  el('path',{d:path(set,xf,yf,DAY*1.2),fill:'none',stroke:'#2563eb','stroke-width':'3.1','stroke-dasharray':'9 6','stroke-linecap':'round'});
+  el('path',{d:path(set,xf,yf,DAY*1.2),fill:'none',stroke:'#79aaff','stroke-width':'3.1','stroke-dasharray':'9 6','stroke-linecap':'round'});
  }
- if(eligible.length){const p=eligible.at(-1);el('circle',{cx:xf(p[0]),cy:yf(p[1]),r:5,fill:'#fff',stroke:'#099866','stroke-width':3});}
+ if(eligible.length){const p=eligible.at(-1);el('circle',{cx:xf(p[0]),cy:yf(p[1]),r:5,fill:'#102238',stroke:'#31d0a0','stroke-width':3});}
  const missing=selected.filter(w=>w.forecast_status!=='PUBLISHED').length;
  $('notice').textContent=missing?`${missing} uge(r) uden kildeudstedt 7-dages prognose, vist uden opdigtet blå kurve.`:'Alle viste uger har syv originale CN-prognosepunkter.';
  }
