@@ -23,6 +23,10 @@ KEYWORDS = (
     "sanction", "cyber", "hack", "security breach", "geopolit", "tariff",
     "market structure", "clarity act", "securities law", "regulation crypto",
     "genius act", "bear market", "china stocks", "equity selloff",
+    # National-election event phrases, not generic "house" or "vote" noise.
+    "midterm", "congressional election", "election result", "election outcome",
+    "senate majority", "senate control", "house majority", "house of representatives",
+    "election night", "race called", "certified election",
 )
 
 SOURCES = (
@@ -107,6 +111,9 @@ class FetchResult:
     fetched_at_utc: str
     body: bytes
     error: str | None
+    # The completion clock is the first demonstrably available byte clock.
+    # Missing legacy completion timestamps remain PIT_UNKNOWN.
+    retrieval_end_utc: str | None = None
 
     def receipt(self, source_id: str, role: str) -> dict:
         return {
@@ -116,6 +123,7 @@ class FetchResult:
             "status": self.status,
             "http_status": self.http_status,
             "fetched_at_utc": self.fetched_at_utc,
+            "retrieval_end_utc": self.retrieval_end_utc,
             "bytes": len(self.body),
             "sha256": hashlib.sha256(self.body).hexdigest() if self.body else None,
             "error_class": self.error,
@@ -132,9 +140,9 @@ def fetch(url: str, timeout: int = 15) -> FetchResult:
         req = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"})
         with urlopen(req, timeout=timeout) as response:
             body = response.read(2_000_000)
-            return FetchResult(url, "PASS", getattr(response, "status", 200), stamp, body, None)
+            return FetchResult(url, "PASS", getattr(response, "status", 200), stamp, body, None, utc_now())
     except Exception as exc:  # network/source failures are evidence states, never no-event
-        return FetchResult(url, "FAIL", None, stamp, b"", type(exc).__name__)
+        return FetchResult(url, "FAIL", None, stamp, b"", type(exc).__name__, utc_now())
 
 
 def parse_page(body: bytes) -> PageParser:
@@ -212,6 +220,8 @@ def classify(title: str, source_id: str) -> tuple[str, str, str, list[str]]:
         return "STRUCTURAL", "REGULATORY_CATALYST", "WEEKS_TO_MONTHS", ["CATALYST_NEWS", "MACRO_RISK", "CRYPTO_POLICY"]
     if any(k in t for k in ("bear market", "china stocks", "equity selloff")):
         return "MARKET_RELEVANT", "EQUITY_RISK_SPILLOVER", "HOURS_TO_DAYS", ["CATALYST_NEWS", "MACRO_RISK", "BTC", "ETH", "LEVERAGE"]
+    if any(k in t for k in ("midterm", "congressional election", "election result", "election outcome", "senate majority", "senate control", "house majority", "house of representatives", "election night", "race called", "certified election")):
+        return "MARKET_RELEVANT", "US_ELECTION_POLICY_CONTEXT", "DAYS_TO_WEEKS", ["CATALYST_NEWS", "MACRO_RISK", "BTC", "ETH"]
     if "buyback" in t or (source_id == "TREASURY" and "liquidity" in t):
         return "SYSTEMIC", "MACRO_LIQUIDITY_POLICY", "DAYS_TO_MONTHS", ["MACRO_RISK", "LIQUIDITY", "BTC", "ETH"]
     if any(k in t for k in ("fomc", "interest rate", "rates", "monetary policy")):
@@ -279,6 +289,27 @@ def observation_date(event_time: str | None) -> str | None:
     return event_time[:10] if event_time and len(event_time) >= 10 else None
 
 
+def event_in_daily_discovery_window(event_time: str | None, precision: str, date_utc: str) -> bool:
+    """Today's events, plus one prior UTC date only with a precise timestamp.
+
+    This is discovery, NOT a historical predictive admission. Consumers must
+    independently enforce first-known and completion clocks. DATE_ONLY cannot
+    imply intraday availability of a prior-day event.
+    """
+    if not event_time or not observation_date(event_time):
+        return False
+    if observation_date(event_time) == date_utc:
+        return True
+    if precision != "TIMESTAMP":
+        return False
+    try:
+        source_date = datetime.fromisoformat(event_time.replace("Z", "+00:00")).date()
+        target_date = datetime.fromisoformat(date_utc).date()
+    except (ValueError, TypeError, AttributeError):
+        return False
+    return (target_date - source_date).days == 1
+
+
 def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
     detection = utc_now()
     receipts: list[dict] = []
@@ -341,7 +372,7 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
                 candidate["verification_status"] = "EVENT_TIME_UNRESOLVED"
                 unresolved.append(candidate)
                 continue
-            if observation_date(event_time) != date_utc:
+            if not event_in_daily_discovery_window(event_time, precision, date_utc):
                 continue
             classification, subtype, duration, lanes = classify(title, source_id)
             event_id = "EVT_" + hashlib.sha256(url.encode()).hexdigest()[:20]
