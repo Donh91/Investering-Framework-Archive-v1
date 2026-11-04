@@ -312,6 +312,7 @@ jobs:
             --source runtime/s1-sol-elite-origin/source.json \
             --request runtime/s1-sol-elite-origin/request.json \
             --provider-response runtime/s1-sol-elite-collect/provider_response.json \
+            --get-receipt runtime/s1-sol-elite-collect/receipt.json \
             --output-dir runtime/s1-sol-elite-collect
       - name: Preserve a non-authoritative collector and billing receipt
         if: always()

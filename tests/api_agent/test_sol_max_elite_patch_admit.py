@@ -134,5 +134,46 @@ class ElitePatchAdmissionTests(unittest.TestCase):
                              ["source_written"], False)
 
 
+    def test_authenticated_get_receipt_must_match_exact_source_and_response(self):
+        with tempfile.TemporaryDirectory() as td:
+            source, request, response = fixture(Path(td))
+            receipt = {
+                "contract": "S1_SOL_ELITE_GET_RECEIPT_v1",
+                "origin_run": "41900777596",
+                "response_id": response["id"],
+                "mission": source["mission_id"],
+                "source_head": source["source_head"],
+                "context_sha256": t.digest(t.canonical(source)),
+                "status": "COMPLETED",
+                "http_status": 200,
+                "new_paid_post": False,
+                "source_applied": False,
+                "merge_authorized": False,
+            }
+            m.verify_get_receipt(source, response, receipt)
+            for field, forged in (
+                ("response_id", "resp_wrong0000"),
+                ("mission", "S1-UNAUTHORIZED-20261104"),
+                ("source_head", "a" * 40),
+                ("context_sha256", "0" * 64),
+                ("status", "PENDING_GET_ONLY"),
+                ("http_status", 404),
+                ("new_paid_post", True),
+                ("source_applied", True),
+                ("merge_authorized", True),
+                ("origin_run", "invalid-run"),
+            ):
+                with self.subTest(field=field):
+                    tampered = dict(receipt)
+                    tampered[field] = forged
+                    with self.assertRaisesRegex(ValueError, "GET_RECEIPT_NOT_SOURCE_BOUND"):
+                        m.verify_get_receipt(source, response, tampered)
+            with self.assertRaises(ValueError):
+                m.verify_get_receipt(source, response, {})
+            with self.assertRaises(ValueError):
+                m.verify_get_receipt(source, response, [])
+
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -110,6 +110,26 @@ def patch_paths(diff: str, source_files: dict[str, dict]) -> list[str]:
     return paths
 
 
+
+def verify_get_receipt(source: dict, response: dict, receipt: dict) -> None:
+    """Bind advisory patch admission to the authenticated GET-only origin."""
+    if (not isinstance(receipt, dict)
+            or receipt.get("contract") != "S1_SOL_ELITE_GET_RECEIPT_v1"
+            or receipt.get("status") != "COMPLETED"
+            or type(receipt.get("http_status")) is not int
+            or receipt.get("http_status") != 200
+            or receipt.get("response_id") != response.get("id")
+            or receipt.get("source_head") != source.get("source_head")
+            or receipt.get("mission") != source.get("mission_id")
+            or receipt.get("context_sha256") != t.digest(t.canonical(source))
+            or receipt.get("new_paid_post") is not False
+            or receipt.get("source_applied") is not False
+            or receipt.get("merge_authorized") is not False
+            or not isinstance(receipt.get("origin_run"), str)
+            or re.fullmatch(r"[1-9][0-9]{0,17}", receipt["origin_run"]) is None):
+        raise ValueError("ELITE_PATCH_GET_RECEIPT_NOT_SOURCE_BOUND")
+
+
 def admit(source: dict, request: dict, response: dict) -> tuple[dict, dict]:
     files = verify_source(source, request)
     proposal = extract_structured(response)
@@ -152,10 +172,12 @@ def main() -> None:
     p.add_argument("--source", type=Path, required=True)
     p.add_argument("--request", type=Path, required=True)
     p.add_argument("--provider-response", type=Path, required=True)
+    p.add_argument("--get-receipt", type=Path, required=True)
     p.add_argument("--output-dir", type=Path, required=True)
     args = p.parse_args()
-    source, request, response = (load_object(x) for x in (
-        args.source, args.request, args.provider_response))
+    source, request, response, receipt = (load_object(x) for x in (
+        args.source, args.request, args.provider_response, args.get_receipt))
+    verify_get_receipt(source, response, receipt)
     result, proposal = admit(source, request, response)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     for file in ("patch_candidate.json", "proposal.json"):
