@@ -84,6 +84,66 @@ def daily_path_issue_summary(value: Any, freeze: Mapping[str, Any], year: int, w
     }
 
 
+
+def daily_product_acceptance(freeze: Mapping[str, Any], year: int, week: int,
+                             issued_at: datetime) -> dict[str, Any]:
+    """Separate PRODUCT completeness from scientific honesty and source validity.
+
+    This does not generate, amend, or score a forecast. A 0/7 abstention can be
+    an honest scientific answer but is a failed daily-price PRODUCT delivery.
+    The trusted original issuer must still independently validate source custody
+    and quote parity before the frozen candidate can be called PUBLISHED.
+    """
+    if issued_at.tzinfo is None:
+        raise ValueError("daily_product_issue_clock_unzoned")
+    issued_utc = issued_at.astimezone(timezone.utc)
+    monday = datetime.combine(date.fromisocalendar(year, week, 1),
+                              datetime.min.time(), timezone.utc)
+    before_first_close = monday <= issued_utc < monday + timedelta(days=1)
+    path = validate_daily_path(freeze.get("daily_price_path"), freeze, year, week)
+    ranges = validate_daily_range_plan(freeze.get("daily_range_plan"), freeze, year, week)
+    quote = freeze.get("price_quote") or {}
+    assets: dict[str, dict[str, Any]] = {}
+    for asset in ("BTC", "ETH"):
+        daily = (path or {}).get(asset) or {}
+        day_ranges = (ranges or {}).get(asset) or {}
+        close_count = len(daily.get("points") or []) if daily.get("status") == "PUBLISHED" else 0
+        range_count = len(day_ranges.get("points") or []) if day_ranges.get("status") == "PUBLISHED" else 0
+        unit = quote.get(asset) if isinstance(quote, dict) else None
+        unit_valid = unit in ("USD", "USDT")
+        complete = before_first_close and close_count == 7 and range_count == 7 and unit_valid
+        missing = []
+        if not before_first_close:
+            missing.append("ORIGINAL_ISSUANCE_AFTER_FIRST_UTC_CLOSE_OR_WRONG_WEEK")
+        if not unit_valid:
+            missing.append("ORIGINAL_FORECAST_QUOTE_NOT_DECLARED")
+        if close_count != 7:
+            missing.append("SEVEN_DAILY_EXPECTED_CLOSES_NOT_ISSUED")
+        if range_count != 7:
+            missing.append("SEVEN_DAILY_LOW_HIGH_RANGES_NOT_ISSUED")
+        assets[asset] = {
+            "status": "COMPLETE" if complete else "INCOMPLETE",
+            "expected_close_points": close_count,
+            "low_high_range_points": range_count,
+            "model_declared_quote": unit if unit_valid else "UNAVAILABLE",
+            "missing_requirements": missing,
+        }
+    return {
+        "contract": "CN_MONDAY_SEVEN_DAY_PRODUCT_ACCEPTANCE_v1",
+        "forecast_week": f"{year:04d}-W{week:02d}",
+        "issued_at_utc": issued_utc.isoformat().replace("+00:00", "Z"),
+        "required_assets": ["BTC", "ETH"],
+        "required_daily_expected_close_points_per_asset": 7,
+        "required_daily_low_high_range_points_per_asset": 7,
+        "status": "COMPLETE" if all(v["status"] == "COMPLETE" for v in assets.values()) else "INCOMPLETE",
+        "assets": assets,
+        "product_completion_not_proof_of_accuracy_or_edge": True,
+        "no_backward_reconstruction": True,
+        "scoring_authority": False,
+        "portfolio_execution": False,
+    }
+
+
 def public_copy_schema() -> dict[str, Any]:
     return {"type": "object", "additionalProperties": False,
             "required": ["contract", "summary", "watch_for", "weakens_if", "onset_start_day", "onset_end_day"],
