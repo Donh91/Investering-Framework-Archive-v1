@@ -443,7 +443,10 @@ def test_post_model_publication_clock_cannot_retroactively_issue_day1():
 def test_production_uses_current_source_clock_and_late_publication_check():
     src = Path(builder.__file__).read_text()
     assert "value = reject_unverified_initial_daily_quotes(" in src
-    assert "issued_at=datetime.now(timezone.utc))" in src
+    assert "issued_at=datetime.now(timezone.utc)," in src
+    assert "trusted_price_source=trusted_price_source" in src
+    assert src.index("trusted_price_source = attest_completed_week(") < src.index(
+        "value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)")
     assert "value = quarantine_late_daily_issuance(" in src
     assert "publication_clock=datetime.fromtimestamp(generated_unix, tz=timezone.utc)" in src
     assert src.index("value = quarantine_late_daily_issuance(") < src.index("daily_path_issue = daily_path_issue_summary(")
