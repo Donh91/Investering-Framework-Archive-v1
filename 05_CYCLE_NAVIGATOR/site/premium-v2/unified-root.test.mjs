@@ -776,3 +776,21 @@ test('one source summary explains Official validity separately from measured pri
  assert.match(css,/\.cn-source-summary/);
  assert.doesNotMatch(css,/\.cn-source-clocks\s*\{/);
 });
+
+test('Cycle source semantics keep archived references separate from actual phase',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ for(const idName of ['cn-cycle-health','cn-cycle-meaning','cn-cycle-reason'])
+  assert.equal(id(html,idName),1,'missing source evidence: '+idName);
+ assert.ok(html.indexOf('id="cn-cycle-health"')<html.indexOf('id="premium-path-now"'));
+ assert.equal(id(html,'premium-path-rail'),1);
+ assert.equal(id(html,'premium-rotation'),1);
+ assert.equal(id(html,'variant-panel'),1);
+ const runtime=await read('./root-compass-pro.mjs');
+ const css=await read('./premium-overhaul.css');
+ assert.match(runtime,/cycleSourceReadback/);
+ assert.match(runtime,/renderCycleSource\(\)/);
+ assert.match(runtime,/dataset\.referenceKind/);
+ assert.match(css,/\.cn-cycle-truth/);
+ assert.match(css,/data-reference-kind="NO_VERIFIED_PHASE"/);
+ assert.doesNotMatch(runtime,/new Promise\(.*forecast/);
+});
