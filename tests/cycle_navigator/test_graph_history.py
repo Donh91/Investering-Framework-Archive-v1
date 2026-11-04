@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.cycle_navigator.build_graph_history import (
-    archive, canonical, digest, load_original, observed, publish, ROOT, WEEKLY
+    archive, canonical, digest, load_original, observed, publish, publish_w45_research_preview, ROOT, WEEKLY
 )
 
 W45 = date(2026, 11, 2)
@@ -466,6 +466,53 @@ class GraphHistoryTest(unittest.TestCase):
         ):
             self.assertIn(required, html)
         self.assertNotIn("Frosne prognoser er i USD", html)
+
+
+    def test_optional_source_locked_w45_research_route_is_isolated_from_original_graph(self):
+        root = Path(__file__).resolve().parents[2]
+        src = root / "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_MIDWEEK_PROSPECTIVE_BENCHMARK_v1.json"
+        page = root / "05_CYCLE_NAVIGATOR/site/research-w45/index.html"
+        self.assertTrue(src.is_file())
+        self.assertTrue(page.is_file())
+        dst_src = self.root / src.relative_to(root)
+        dst_page = self.root / page.relative_to(root)
+        dst_src.parent.mkdir(parents=True, exist_ok=True)
+        dst_page.parent.mkdir(parents=True, exist_ok=True)
+        dst_src.write_bytes(src.read_bytes())
+        dst_page.write_bytes(page.read_bytes())
+        result = publish_w45_research_preview(self.root)
+        self.assertEqual(result, "RESEARCH_ONLY_PUBLISHED")
+        exposed = self.root / "05_CYCLE_NAVIGATOR/site/dist/data/research-w45-shadow.json"
+        delivered = self.root / "05_CYCLE_NAVIGATOR/site/dist/research-w45/index.html"
+        self.assertEqual(exposed.read_bytes(), src.read_bytes())
+        self.assertEqual(delivered.read_bytes(), page.read_bytes())
+        self.assertIn(b"noindex,nofollow", delivered.read_bytes())
+        self.assertNotIn(b"BUYSIGNAL", delivered.read_bytes())
+        original = json.loads(exposed.read_text())
+        self.assertFalse(original["forecast"]["site_blue_original_forecast_eligible"])
+        self.assertEqual(original["original_W45_daily_price_path_status"],
+                         {"BTC": "UNAVAILABLE", "ETH": "UNAVAILABLE"})
+
+        # Research authority must never be able to become original CN.
+        original["forecast"]["site_blue_original_forecast_eligible"] = True
+        put(dst_src, original)
+        self.assertEqual(publish_w45_research_preview(self.root), "RESEARCH_QUARANTINED")
+        self.assertFalse(exposed.exists())
+        self.assertFalse(delivered.exists())
+        # Retaining the research page cannot change canonical source state.
+        self.assertFalse((self.root / ROOT / "index.json").exists())
+
+        dst_src.write_bytes(src.read_bytes())
+        tampered = page.read_text().replace("noindex,nofollow", "index,follow")
+        dst_page.write_text(tampered)
+        self.assertEqual(publish_w45_research_preview(self.root), "RESEARCH_QUARANTINED")
+        self.assertFalse(exposed.exists())
+        self.assertFalse(delivered.exists())
+
+    def test_missing_research_preview_never_blocks_canonical_site(self):
+        self.assertEqual(publish_w45_research_preview(self.root), "NOT_AVAILABLE")
+        self.assertEqual(archive(self.root, W45)["weeks"][0]["status"], "MISSING_FREEZE")
+        self.assertEqual(publish(self.root)["weeks"][0]["forecast_status"], "UNAVAILABLE")
 
 
 if __name__ == "__main__":
