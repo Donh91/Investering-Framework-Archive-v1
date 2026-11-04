@@ -12,6 +12,8 @@ on:
       - 'scripts/api_agent/sol_max_elite_transport.py'
       - 'scripts/api_agent/sol_max_elite_dispatch.py'
       - 'scripts/api_agent/sol_max_elite_patch_admit.py'
+      - 'scripts/api_agent/sol_max_elite_sandbox.py'
+      - 'tests/api_agent/test_sol_max_elite_sandbox.py'
       - 'tests/api_agent/test_sol_max_elite_patch_admit.py'
       - 'tests/api_agent/test_sol_max_elite_dispatch.py'
       - 'tests/api_agent/test_s1_sol_background_collect.py'
@@ -314,6 +316,16 @@ jobs:
             --provider-response runtime/s1-sol-elite-collect/provider_response.json \
             --get-receipt runtime/s1-sol-elite-collect/receipt.json \
             --output-dir runtime/s1-sol-elite-collect
+      - name: Verify isolated git patch application without executing model code
+        if: success() && hashFiles('runtime/s1-sol-elite-collect/candidate.patch') != ''
+        run: |
+          python -m scripts.api_agent.sol_max_elite_sandbox \
+            --repo-root . \
+            --source runtime/s1-sol-elite-origin/source.json \
+            --patch-candidate runtime/s1-sol-elite-collect/patch_candidate.json \
+            --get-receipt runtime/s1-sol-elite-collect/receipt.json \
+            --patch runtime/s1-sol-elite-collect/candidate.patch \
+            --output-dir runtime/s1-sol-elite-collect
       - name: Preserve a non-authoritative collector and billing receipt
         if: always()
         uses: actions/upload-artifact@v4
@@ -513,6 +525,7 @@ jobs:
             tests.api_agent.test_fmos_mission_loop_audit_dispatch \
             tests.api_agent.test_sol_max_elite_dispatch \
             tests.api_agent.test_sol_max_elite_patch_admit \
+            tests.api_agent.test_sol_max_elite_sandbox \
             tests.api_agent.test_sol_max_elite_transport \
             tests.governance.test_s1_native_handoff_auth_v1 \
             tests.api_agent.test_capability_router \
