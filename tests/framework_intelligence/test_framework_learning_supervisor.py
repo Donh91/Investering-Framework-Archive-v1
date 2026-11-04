@@ -255,6 +255,14 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
             original["payment_policy"]["no_auto_paid_trigger_until_reconciled"] = False
             dest.write_text(json.dumps(original))
             self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
+            original["payment_policy"]["no_auto_paid_trigger_until_reconciled"] = True
+            original["definitions"][0]["depends_on"] = [{"not": "a dependency"}]
+            dest.write_text(json.dumps(original))
+            self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
+            dest.write_text("{invalid-json")
+            self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
+            dest.write_text("[]")
+            self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
             dest.unlink()
             self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
 
