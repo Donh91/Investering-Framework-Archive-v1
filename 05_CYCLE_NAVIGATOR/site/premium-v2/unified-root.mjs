@@ -171,6 +171,9 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<p>Aktuel markedsretning, risiko og hvad der kan ændre udsynet. '+
     'Manglende eller gamle data vises tydeligt.</p></div>'+
     '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p>'+
+    '<div class="cn-source-clocks" role="group" aria-label="Kildeaktualitet">'+
+    '<span id="cn-clock-official" class="cn-source-clock" data-tone="missing">Kompas · kilde afventer</span>'+
+    '<span id="cn-clock-market" class="cn-source-clock" data-tone="missing">Prisobservation · afventer</span></div>'+
     compactCore.replace('<details class="cn-pro-more">',
       '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
       '<p id="cn-short-meaning" class="cn-short-meaning">12 timer viser målt momentum. En selvstændig 24-timersprognose er ikke udstedt.</p>'+
