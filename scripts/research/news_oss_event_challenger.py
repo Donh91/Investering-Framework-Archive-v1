@@ -43,7 +43,7 @@ def canonical_article_url(value: object) -> str | None:
         p = urlsplit(value)
     except ValueError:
         return None
-    if p.scheme not in {"https", "http"} or not p.hostname:
+    if p.scheme not in {"https", "http"} or not p.hostname or p.username is not None or p.password is not None:
         return None
     host = p.hostname.casefold()
     try:
