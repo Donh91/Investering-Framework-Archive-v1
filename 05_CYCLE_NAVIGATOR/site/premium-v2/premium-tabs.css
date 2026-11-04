@@ -319,3 +319,22 @@
 .cn-tabbed-ui .cn-graph-history-entry a{display:inline-flex;align-items:center;justify-content:center;flex:none;min-height:44px;padding:10px 13px;background:#fff;color:#245a91;border:1px solid #cbdbea;border-radius:9px;font-size:12px;font-weight:740;text-decoration:none;text-align:center}
 .cn-tabbed-ui .cn-graph-history-entry a:hover,.cn-tabbed-ui .cn-graph-history-entry a:focus-visible{border-color:#2f6fda;outline-offset:3px;text-decoration:underline}
 @media(max-width:560px){.cn-tabbed-ui .cn-graph-history-entry{align-items:stretch;flex-direction:column;gap:8px;padding:12px}.cn-tabbed-ui .cn-graph-history-entry a{align-self:flex-start}}
+
+
+/* Kompas PRO v2 14-horizon source-only disclosure. A readback, not a new forecast or market classifier. */
+.cn-horizon-status {margin-top:24px;padding-top:18px;border-top:1px solid #e0e7ee}
+.cn-horizon-status-heading h4 {margin:0;color:#0c2541;font-size:15px;font-weight:750}
+.cn-horizon-status-heading p,.cn-horizon-status > p {margin:5px 0 12px;color:#62748a;font-size:12px;line-height:1.5}
+.cn-horizon-status-rows {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cn-horizon-status-row {min-width:0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;
+  border:1px solid #e1e8ef;background:#fff;border-radius:10px;padding:11px 12px}
+.cn-horizon-status-identity,.cn-horizon-status-reading {min-width:0;display:grid;gap:4px}
+.cn-horizon-status-identity strong {color:#142f4a;font-size:12px;line-height:1.3}
+.cn-horizon-status-identity small,.cn-horizon-status-reading small {color:#66788b;font-size:10px;line-height:1.4}
+.cn-horizon-status-reading {text-align:right;max-width:54%}
+.cn-horizon-status-direction {font-size:12px;font-weight:700;line-height:1.3;color:#586b7e}
+.cn-horizon-status-row[data-tone="up"] .cn-horizon-status-direction {color:#1c6f51}
+.cn-horizon-status-row[data-tone="down"] .cn-horizon-status-direction {color:#aa462c}
+.cn-horizon-status-row[data-tone="mixed"] .cn-horizon-status-direction {color:#91680d}
+@media(max-width:760px){.cn-horizon-status-rows {grid-template-columns:minmax(0,1fr)}}
+@media(max-width:430px){.cn-horizon-status-row {padding:10px}.cn-horizon-status-reading {max-width:55%}}
