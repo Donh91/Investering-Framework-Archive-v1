@@ -79,6 +79,7 @@ def fixture():
         "conclusion": "success",
         "steps": [
             {"name": "Set up job", "status": "completed", "conclusion": "success"},
+            {"name": "Run bounded implementation", "status": "completed", "conclusion": "success"},
             {"name": "Run bounded tests", "status": "completed", "conclusion": "success"},
         ],
     }
@@ -92,7 +93,7 @@ def fixture():
     return chain, binding, native, artifact_bytes
 
 
-def evaluate(chain=None, binding=None, native=None, artifact=None):
+def evaluate(chain=None, binding=None, native=None, artifact=None, required=None):
     base_chain, base_binding, base_native, base_artifact = fixture()
     return authenticate_native_chain(
         base_chain if chain is None else chain,
@@ -102,6 +103,7 @@ def evaluate(chain=None, binding=None, native=None, artifact=None):
         sender_login="Donh91", recipient_login="codex[bot]",
         native_get=lambda path: (base_native if native is None else native)[path],
         artifact_bytes_get=lambda _repo, _id: base_artifact if artifact is None else artifact,
+        required_execution_steps=(("Run bounded implementation", "Run bounded tests") if required is None else required),
     )
 
 
@@ -199,6 +201,34 @@ class NativeHandoffTests(unittest.TestCase):
             {"name": "Set up job", "status": "completed", "conclusion": "success"},
         ]
         self.blocked(evaluate(native=db))
+
+    def test_checkout_only_even_if_success_must_not_prove_execution(self):
+        chain, binding, db, artifact = fixture()
+        db[f"/repos/{REPO}/actions/jobs/77"]["steps"] = [
+            {"name": "Set up job", "status": "completed", "conclusion": "success"},
+            {"name": "Run actions/checkout@v4", "status": "completed", "conclusion": "success"},
+            {"name": "Run actions/setup-python@v5", "status": "completed", "conclusion": "success"},
+        ]
+        self.blocked(evaluate(native=db))
+
+    def test_two_required_steps_must_both_execute(self):
+        for name in ("Run bounded implementation", "Run bounded tests"):
+            chain, binding, db, artifact = fixture()
+            for row in db[f"/repos/{REPO}/actions/jobs/77"]["steps"]:
+                if row["name"] == name:
+                    row["conclusion"] = "skipped"
+            with self.subTest(name=name):
+                self.blocked(evaluate(native=db))
+
+    def test_untrusted_or_setup_step_manifest_must_be_rejected(self):
+        for required in (
+            [], ["Run bounded tests"], ["Run bounded tests", "Run bounded tests"],
+            ["Run actions/checkout@v4", "Run bounded tests"],
+            ["Set up job", "Run bounded tests"],
+            ["Run actions/setup-python@v5", "Run bounded tests"],
+        ):
+            with self.subTest(required=required):
+                self.blocked(evaluate(required=required))
 
     def test_wrong_or_expired_artifact(self):
         for field, value in (("workflow_run", {"id": 999}), ("expired", True)):
