@@ -11,6 +11,8 @@ on:
       - 'scripts/api_agent/s1_sol_background_collect.py'
       - 'scripts/api_agent/sol_max_elite_transport.py'
       - 'scripts/api_agent/sol_max_elite_dispatch.py'
+      - 'scripts/api_agent/sol_max_elite_patch_admit.py'
+      - 'tests/api_agent/test_sol_max_elite_patch_admit.py'
       - 'tests/api_agent/test_sol_max_elite_dispatch.py'
       - 'tests/api_agent/test_s1_sol_background_collect.py'
       - 'tests/api_agent/test_s1_sol_response_probe.py'
@@ -303,6 +305,14 @@ jobs:
             --event-file "$GITHUB_EVENT_PATH" \
             --output-dir runtime/s1-sol-elite-collect \
             --artifact-dir runtime/s1-sol-elite-origin
+      - name: Admit untrusted code diff against original source hashes, no execution
+        if: success() && hashFiles('runtime/s1-sol-elite-collect/provider_response.json') != ''
+        run: |
+          python -m scripts.api_agent.sol_max_elite_patch_admit \
+            --source runtime/s1-sol-elite-origin/source.json \
+            --request runtime/s1-sol-elite-origin/request.json \
+            --provider-response runtime/s1-sol-elite-collect/provider_response.json \
+            --output-dir runtime/s1-sol-elite-collect
       - name: Preserve a non-authoritative collector and billing receipt
         if: always()
         uses: actions/upload-artifact@v4
@@ -468,6 +478,7 @@ jobs:
             scripts/api_agent/s1_v43_terra_max_review.py \
             scripts/api_agent/fmos_mission_loop_audit_dispatch.py \
             scripts/api_agent/sol_max_elite_dispatch.py \
+            scripts/api_agent/sol_max_elite_patch_admit.py \
             scripts/api_agent/sol_max_elite_transport.py \
             scripts/api_agent/api_gateway.py \
             scripts/framework_intelligence/automation_orchestration_v1.py \
@@ -500,6 +511,7 @@ jobs:
             tests.api_agent.test_s1_v43_terra_max_review \
             tests.api_agent.test_fmos_mission_loop_audit_dispatch \
             tests.api_agent.test_sol_max_elite_dispatch \
+            tests.api_agent.test_sol_max_elite_patch_admit \
             tests.api_agent.test_sol_max_elite_transport \
             tests.governance.test_s1_native_handoff_auth_v1 \
             tests.api_agent.test_capability_router \
