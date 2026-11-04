@@ -584,17 +584,21 @@ function renderHorizonStatus(){
 // deliberately separate clocks. Never use site rebuild time as market time.
 function renderSourceClocks(){
  const lang=document.documentElement.lang==='en'?'en':'da';
- const clocks=kompasSourceClockReadback({compass:feeds?.compass,view,lang});
- const entries=[['cn-clock-official',clocks.official],['cn-clock-market',clocks.observation]];
- for(const [id,state] of entries){
-  const el=$(id);
-  if(!el)continue;
-  el.textContent=state.label;
-  el.dataset.tone=state.tone;
-  el.dataset.clockStatus=state.status;
+ const reading=kompasSourceClockReadback({compass:feeds?.compass,view,lang});
+ set('cn-source-headline',reading.headline);
+ set('cn-source-context',reading.context);
+ set('cn-source-explanation',reading.explanation);
+ set('cn-source-technical-label',lang==='en'?
+  'Publication and source details':'Udgivelse og kildegrundlag');
+ const group=document.querySelector('.cn-source-summary');
+ if(group){
+  group.dataset.tone=reading.tone;
+  group.dataset.officialStatus=reading.official.status;
+  group.dataset.observationStatus=reading.observation.status;
+  group.dataset.hourlyStatus=reading.hourlyStatus;
+  group.setAttribute('aria-label',lang==='en'?
+   'Compass source and price evidence':'Kompas-vurdering og prisgrundlag');
  }
- const group=document.querySelector('.cn-source-clocks');
- if(group)group.setAttribute('aria-label',lang==='en'?'Source freshness':'Kildeaktualitet');
 }
 function paint(){
  const lang=document.documentElement.lang==='en'?'en':'da';

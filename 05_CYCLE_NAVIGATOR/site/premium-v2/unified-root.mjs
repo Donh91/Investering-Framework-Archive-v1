@@ -170,10 +170,12 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<h2 id="pro-heading">Kompas PRO</h2>'+
     '<p>Aktuel markedsretning, risiko og hvad der kan ændre udsynet. '+
     'Manglende eller gamle data vises tydeligt.</p></div>'+
-    '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p>'+
-    '<div class="cn-source-clocks" role="group" aria-label="Kildeaktualitet">'+
-    '<span id="cn-clock-official" class="cn-source-clock" data-tone="missing">Kompas · kilde afventer</span>'+
-    '<span id="cn-clock-market" class="cn-source-clock" data-tone="missing">Prisobservation · afventer</span></div>'+
+    '<section class="cn-source-summary" aria-labelledby="cn-source-headline" data-tone="missing">'+
+    '<strong id="cn-source-headline">Kompas · afventer kilde</strong>'+
+    '<p id="cn-source-context">Kontrollerer seneste prisgrundlag.</p>'+
+    '<small id="cn-source-explanation">Kursgraf og Kompas er forskellige kilder.</small></section>'+
+    '<details class="cn-source-technical"><summary id="cn-source-technical-label">Udgivelse og kildegrundlag</summary>'+
+    '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p></details>'+
     compactCore.replace('<details class="cn-pro-more">',
       '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
       '<p id="cn-short-meaning" class="cn-short-meaning">12 timer viser målt momentum. En selvstændig 24-timersprognose er ikke udstedt.</p>'+

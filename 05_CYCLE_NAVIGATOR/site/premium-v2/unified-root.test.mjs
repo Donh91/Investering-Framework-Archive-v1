@@ -759,19 +759,20 @@ test('Kompas v2 14-horizon status is subordinate and cannot overwrite Graph B',a
  assert.doesNotMatch(runtime,/const forecast\s*=\s*\[/);
 });
 
-test('two independent Kompas source clocks remain outside Graph B without new signals',async()=>{
+test('one source summary explains Official validity separately from measured price basis',async()=>{
  const html=buildUnifiedRootHtml(original,pro);
- for(const idName of ['cn-clock-official','cn-clock-market'])
-  assert.equal(id(html,idName),1,'expected one source clock '+idName);
- assert.ok(html.indexOf('id="pro-source-status"')<html.indexOf('id="cn-clock-official"'));
- assert.ok(html.indexOf('id="cn-clock-official"')<html.indexOf('id="variant-panel"'));
+ for(const name of ['cn-source-headline','cn-source-context',
+  'cn-source-explanation','cn-source-technical-label','pro-source-status'])
+  assert.equal(id(html,name),1,'expected one source explanation: '+name);
+ assert.equal(id(html,'cn-clock-official'),0);
+ assert.equal(id(html,'cn-clock-market'),0);
+ assert.ok(html.indexOf('id="cn-source-headline"')<html.indexOf('id="variant-panel"'));
  assert.equal(id(html,'variant-panel'),1);
  const runtime=await read('./root-compass-pro.mjs');
  const css=await read('./premium-tabs.css');
  assert.match(runtime,/kompasSourceClockReadback/);
  assert.match(runtime,/renderSourceClocks\(\)/);
  assert.match(runtime,/strategic=forwardOutlook\(/);
- assert.match(runtime,/sourceTrace\(feeds\?\.latest,feeds\?\.compass,view\)/);
- assert.match(css,/cn-source-clocks/);
- assert.doesNotMatch(css,/transition.*cn-source-clocks/);
+ assert.match(css,/\.cn-source-summary/);
+ assert.doesNotMatch(css,/\.cn-source-clocks\s*\{/);
 });
