@@ -229,8 +229,13 @@ def validate_patch(output_dir: Path, head: str) -> dict:
     matches = DIFF.findall(patch)
     if not matches or len(set(matches)) != len(matches):
         raise ValueError("PATCH_MISSING_OR_DUPLICATED_FILES")
-    for src, dst in matches:
-        if src != dst or src not in ALLOWED:
+    # Unified-diff ---/+++ headers must match the diff --git headers exactly;
+    # otherwise git apply can be tricked into editing a different path.
+    body_paths = re.findall(r"^--- (\S+)\n\+\+\+ (\S+)$", patch, re.MULTILINE)
+    if len(body_paths) != len(matches):
+        raise ValueError("PATCH_HEADER_COVERAGE_MISMATCH")
+    for (src, dst), (old, new) in zip(matches, body_paths):
+        if src != dst or src not in ALLOWED or old != "a/" + src or new != "b/" + dst:
             raise ValueError("PATCH_PATH_NOT_ALLOWLISTED")
     # Do not allow file deletion, mode changes or additive executable resources.
     if any(line.startswith(("new file mode ", "deleted file mode ", "old mode ",
