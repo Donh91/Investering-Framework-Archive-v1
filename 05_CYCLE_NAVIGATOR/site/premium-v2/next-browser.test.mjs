@@ -317,7 +317,8 @@ try{
   assert.ok(report.horizonSourceState==='unavailable'||
     (report.horizonsPresent&&report.pathStageCount===10),
    'NEXT_HORIZON_SOURCE_OR_PATH_COUNT_MISMATCH');
-  assert.ok(selection.ethSelected&&selection.pair==='ETH / USD','NEXT_BTC_ETH_NOT_INTERACTIVE');
+  assert.ok(selection.ethSelected&&selection.pair==='ETH / USDT',
+    'NEXT_BTC_ETH_NOT_INTERACTIVE_OR_NATIVE_QUOTE_MISMATCH:'+JSON.stringify(selection));
   assert.ok(report.rootPath.endsWith(base+'next/'),'NEXT_WRONG_BASEPATH');
   // Current NEXT pilot is retained for source/rollback coverage; root audited below.
   assert.equal(errors.length,0,'NEXT_BROWSER_JS_EXCEPTIONS:'+JSON.stringify(errors));
