@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0b1524">
+<title>W45 Research Preview | Cycle Navigator</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1524;--panel:#111f31;--panel2:#15283c;--line:#293c52;--text:#f0f6fc;--muted:#a7bad0;--green:#38d2a8;--amber:#efb864;--gray:#9cabc2}
+*{box-sizing:border-box}body{margin:0;font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:radial-gradient(ellipse 800px 460px at 70% 0%,#1d324a 0%,transparent 75%),var(--bg);color:var(--text)}a{color:#b8d7ff;text-decoration:none}a:hover{text-decoration:underline}a:focus-visible{outline:3px solid #89c5ff;outline-offset:4px}
+.shell{max-width:1160px;margin:0 auto;padding:22px clamp(16px,3vw,40px) 50px}
+header{display:flex;justify-content:space-between;align-items:center;gap:18px;padding-bottom:22px;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:11px;font-weight:750;letter-spacing:.03em}.brand-mark{display:grid;place-items:center;width:34px;height:34px;border:1px solid #385a75;border-radius:10px;background:#132942;color:#cbe9fa;font-weight:800}.headlinks{display:flex;gap:22px;font-size:13px;color:var(--muted)}
+.intro{margin:30px 0 24px}.eyebrow{color:var(--amber);text-transform:uppercase;letter-spacing:.16em;font-size:11px;font-weight:800}h1{margin:10px 0 8px;font-size:clamp(30px,4.8vw,54px);line-height:1.09;letter-spacing:-.045em;font-weight:730}.lead{max-width:800px;color:#b8c9db;margin:12px 0 0;font-size:clamp(14px,2vw,17px)}
+.disclosure{margin:22px 0;padding:15px 18px;border-left:3px solid var(--amber);background:rgba(239,184,100,.065);color:#e0ccaa;border-radius:0 10px 10px 0;font-size:13px}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:25px 0 20px}.metric{padding:16px 18px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(160deg,#192b40,#112136)}.metric small{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.metric strong{font-weight:720;font-size:clamp(18px,2.5vw,25px);font-variant-numeric:tabular-nums}.metric em{display:block;font-size:11px;color:#97afc8;font-style:normal}
+.panel{border:1px solid var(--line);background:linear-gradient(140deg,rgba(22,39,59,.98),rgba(12,26,44,.99));border-radius:18px;overflow:hidden}.panel-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:21px 24px 0}.panel-head h2{font-size:18px;letter-spacing:-.02em;margin:0}.panel-head p{color:var(--muted);font-size:12px;margin:5px 0 0}.live-label{font-size:11px;color:var(--muted);padding:6px 10px;border:1px solid var(--line);border-radius:20px;white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:11px 20px;padding:18px 24px 0;font-size:12px;color:#b7c9de}.legend span{display:flex;align-items:center;gap:8px}.swatch{width:24px;height:0;border-top:3px solid var(--green)}.swatch.amber{border-top:3px dashed var(--amber)}.swatch.gray{border-top:2px dashed var(--gray)}
+.plot-wrap{padding:12px 12px 5px;position:relative}.plot-wrap canvas{display:block;width:100%;height:clamp(300px,41vw,450px);touch-action:pan-y}.hover{position:absolute;top:20px;right:24px;padding:5px 9px;background:rgba(10,23,37,.9);border:1px solid var(--line);border-radius:8px;color:#d5e4f3;font-size:12px;pointer-events:none}.chart-bottom{padding:0 24px 20px;color:#9eb3c9;font-size:12px}
+.subgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}.info{border:1px solid var(--line);background:#101e2f;border-radius:13px;padding:18px 21px}.info h3{font-size:15px;margin:0 0 8px}.info p{font-size:13px;color:#b5c5d9;margin:0}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}th,td{text-align:right;padding:11px 10px;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{font-weight:650;color:#a8c1d9;font-size:11px;text-transform:uppercase;letter-spacing:.06em}tr+tr{border-top:1px solid #26384b}.table-wrap{overflow-x:auto;margin:18px 0 5px}td{color:#d7e7f7}td.missing{color:#879db5}footer{color:#8ea6be;font-size:11px;margin-top:28px;line-height:1.8}
+@media(max-width:700px){.headlinks{gap:10px;font-size:11px}.metrics{grid-template-columns:1fr 1fr}.metrics .metric:last-child{grid-column:1/-1}.metric{padding:13px}.panel-head{padding:17px 15px 0}.legend{padding:14px 15px 0;gap:9px 13px}.chart-bottom{padding:2px 15px 14px}.plot-wrap{padding:9px 3px}.hover{right:9px;top:14px;font-size:10px}.subgrid{grid-template-columns:1fr}.shell{padding-bottom:28px}th,td{padding:9px 7px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+  <div class="brand"><span class="brand-mark" aria-hidden="true">CN</span><span>CYCLE NAVIGATOR <span style="color:#8da9c3;font-weight:450">/ LAB</span></span></div>
+  <nav class="headlinks" aria-label="Navigation"><a href="../">Officielt site</a><a href="../graph-history/">Historik</a></nav>
+</header>
+<section class="intro">
+  <div class="eyebrow">Source-locked · Research preview · Week 45</div>
+  <h1>Markedsforløb og fremadrettet forskning.</h1>
+  <p class="lead">Den faktiske BTC/USDT-kurs, time for time, sammenlignet med to særskilt udstedte forskningsforløb for torsdag til søndag. Den officielle mandagsprognose er ikke tilføjet eller ændret.</p>
+</section>
+<div class="disclosure" role="note"><strong>Ikke en original CN-prognose.</strong> Mandagens oprindelige prognose har 0/7 dagskurser. Gul og grå stiplet linje er et senere, ikke-kalibreret forskningseksperiment, først fastlagt 5. november kl. 00.29 dansk tid. Ingen dokumenteret edge eller handelstilladelse. De frosne mandagsintervaller har ikke uafhængigt fastslået USD/USDT-paritet og er derfor ikke tegnet som samme valutaserie.</div>
+<section class="metrics" aria-label="Kildestatus">
+  <div class="metric"><small>Sidste observerede BTC/USDT</small><strong id="last-value">Afventer data</strong><em id="last-time">Verificeret Hourly Capture</em></div>
+  <div class="metric"><small>Observerede timer, uge 45</small><strong id="actual-count">—</strong><em id="source-status">Ingen fremtidige datapunkter</em></div>
+  <div class="metric"><small>Originalt mandagsforecast</small><strong>0 / 7</strong><em>Original kilde uændret</em></div>
+</section>
+<section class="panel" aria-label="BTC research comparison">
+  <div class="panel-head"><div><h2>BTC · Observed vs. research</h2><p>UTC uge 45, spotpris i USDT, original timekurve uden interpolerede huller.</p></div><span class="live-label" id="freshness">KILDE AFVENTER</span></div>
+  <div class="legend" aria-label="Grafens linjer"><span><i class="swatch" aria-hidden="true"></i>Faktisk observeret</span><span><i class="swatch amber" aria-hidden="true"></i>B1, aftagende momentum</span><span><i class="swatch gray" aria-hidden="true"></i>B0, neutral baseline</span></div>
+  <div class="plot-wrap"><canvas id="plot" role="img" aria-label="BTC timevis faktisk pris i grøn, efterfølgende forskningsprognose i gul og neutral baseline i grå. Ingen original blå mandagsprognose."></canvas><div id="hover" class="hover" aria-live="polite">Indlæser autentiske kilder</div></div>
+  <div class="chart-bottom" id="chart-note">Den blå originale 7-døgnslinje tegnes aldrig uden de syv oprindeligt udstedte mandagspriser.</div>
+</section>
+<div class="subgrid">
+  <section class="info"><h3>Hvad er B0 og B1?</h3><p>B0 fastholder den seneste verificerede kurs. B1 viderefører 35 % af det seneste døgns log-momentum, aftagende dag for dag. Begge er enkle referencehypoteser, ikke en dokumenteret intelligent eller statistisk kalibreret prognose.</p></section>
+  <section class="info"><h3>Sådan lærer vi uden bagklogskab</h3><p>Kun fuldt afsluttede UTC-dage efter forskningsudstedelsen må få faktisk dagsslutkurs. Vi viser B0 og B1 side om side og registrerer fejlen, men fire afhængige dage fra én uge beviser ikke økonomisk edge.</p></section>
+</div>
+<section class="panel" style="margin-top:18px;padding:18px 22px">
+  <div class="panel-head" style="padding:0"><div><h2>Fire fremadrettede dagsluk</h2><p>Frosne research-priser fra 5. november kl. 00.29, ikke en bagudrettet mandagsudstedelse.</p></div></div>
+  <div class="table-wrap"><table><thead><tr><th>UTC-dag</th><th>B0 · USDT</th><th>B1 · USDT</th><th>Faktisk luk · USDT</th><th>B1-afvigelse</th></tr></thead><tbody id="results"><tr><td colspan="5">Kilde afventes</td></tr></tbody></table></div>
+</section>
+<footer>Data: originalt Hourly Capture og original Graph History, beregninger: Research Lab W45, kilde- og scenarioklokker beholdes særskilt. Ingen original mandags-CN, ændret historisk score, USD/USDT-konvertering eller handelsautoritet. <a href="../">Tilbage til officiel Kompas Pro</a>.</footer>
+</div>
+<script type="module">
+const root='../data/',WEEK_START=Date.parse('2026-11-02T00:00:00Z'),WEEK_END=Date.parse('2026-11-09T00:00:00Z');
+const $=id=>document.getElementById(id),FMT=new Intl.NumberFormat('da-DK',{maximumFractionDigits:2,minimumFractionDigits:2}),money=v=>Number.isFinite(v)?FMT.format(v):'—';
+const utc=t=>new Date(t).toLocaleString('da-DK',{timeZone:'UTC',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' UTC';
+const epoch=v=>Date.parse(v),valid=v=>typeof v==='number'&&Number.isFinite(v)&&v>0;
+let state=null;
+async function fetchJson(path){const res=await fetch(root+path,{cache:'no-store'});if(!res.ok)throw Error('KILDE_HENTNING_FEJLET_'+res.status);return res.json();}
+function validate(history,research){
+ if(history?.contract!=='CN_GRAPH_HISTORY_TIMELINE_v1'||history?.actual_unit!=='USDT')throw Error('GRAF_KILDE_EJERFEJL');
+ const wk=(history.weeks||[]).find(x=>x.week==='2026-W45');
+ if(!wk||wk.forecast_status!=='UNAVAILABLE'||(wk.forecast||[]).length)throw Error('ORIGINAL_W45_STATUS_AENDRET');
+ if(research?.contract!=='RESEARCH_W45_MIDWEEK_FORWARD_BENCHMARK_v1'||research.forecast_week!=='2026-W45'||research.source?.assets_quote!=='USDT')throw Error('FORSKNINGSKILDE_AFVIST');
+ if(research.original_W45_daily_price_path_status?.BTC!=='UNAVAILABLE'||research.forecast?.site_blue_original_forecast_eligible!==false||research.forecast?.official_scoring_eligible!==false||research.forecast?.portfolio_action_authority!==false)throw Error('FORSKNINGSKILDE_MYNDIGHED_FEJL');
+ const anchor=research.forecast.assets.BTC.source_anchor_close,anchorTime=epoch(research.forecast.assets.BTC.source_anchor_at_utc),issue=epoch(research.generated_at_utc);
+ if(!valid(anchor)||anchorTime!==Date.parse('2026-11-04T22:00:00Z')||issue<=anchorTime||issue>=Date.parse('2026-11-06T00:00:00Z'))throw Error('FORSKNINGSKLOKKE_FEJL');
+ const future=research.forecast.assets.BTC.forecast;
+ if(!Array.isArray(future)||future.length!==4||future.some((p,i)=>p.day!==i+4||epoch(p.target_close_at_utc)!==Date.parse('2026-11-'+String(i+6).padStart(2,'0')+'T00:00:00Z')||!valid(p.B0_persistence_expected_close)||!valid(p.B1_decay_momentum_expected_close)))throw Error('FORSKNINGSPUNKTER_UGYLDIGE');
+ const actual=[],seen=new Set();
+ for(const row of history.actual||[]){
+  const t=epoch(row?.time);
+  if(!Number.isFinite(t)||t<WEEK_START||t>WEEK_END)continue;
+  if(t>Date.now()+60000||!valid(row.close)||seen.has(t)||t%3600000!==0)throw Error('AKTUEL_KURVE_KILDEFEJL');
+  actual.push({time:t,value:row.close});seen.add(t);
+ }
+ actual.sort((a,b)=>a.time-b.time);
+ return {actual,anchor,anchorTime,issue,future,research};
+}
+function render(){
+ if(!state)return;
+ const {actual,anchor,anchorTime,issue,future}=state;
+ const last=actual.at(-1);
+ $('last-value').textContent=last?money(last.value):'—';
+ $('last-time').textContent=last?'Sidst observeret '+utc(last.time):'Ingen observation';
+ $('actual-count').textContent=actual.length+' / 168';
+ const stale=!last||Date.now()-last.time>90*60000;
+ $('freshness').textContent=stale?'HISTORISK / FORÆLDET':'SOURCE FRESH';
+ $('source-status').textContent=stale?'Ingen påstand om aktuel spotkurs':'Seneste gyldige timeluk';
+ const list=$('results');list.replaceChildren();
+ const map=new Map(actual.map(p=>[p.time,p.value]));
+ for(const item of future){
+  const target=epoch(item.target_close_at_utc),value=map.get(target),tr=document.createElement('tr');
+  const values=[item.utc_date,money(item.B0_persistence_expected_close),money(item.B1_decay_momentum_expected_close),
+   Number.isFinite(value)?money(value):'Afventer',
+   Number.isFinite(value)?((item.B1_decay_momentum_expected_close/value-1)*100).toFixed(2)+' %':'—'];
+  for(let i=0;i<values.length;i++){const td=document.createElement('td');td.textContent=values[i];if(i>=3&&!Number.isFinite(value))td.className='missing';tr.append(td)}
+  list.append(tr);
+ }
+ const canvas=$('plot'),rect=canvas.getBoundingClientRect(),w=Math.max(320,rect.width),h=Math.max(300,rect.height),dpr=Math.min(3,window.devicePixelRatio||1);
+ canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+ const ctx=canvas.getContext('2d');if(!ctx)return;
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+ const left=w<550?51:76,right=20,top=29,bottom=52;
+ const cw=w-left-right,ch=h-top-bottom;
+ const pred=future.map(p=>({time:epoch(p.target_close_at_utc),b0:p.B0_persistence_expected_close,b1:p.B1_decay_momentum_expected_close}));
+ const numbers=[...actual.map(p=>p.value),anchor,...pred.flatMap(p=>[p.b0,p.b1])];
+ let lo=Math.min(...numbers),hi=Math.max(...numbers);const pad=Math.max((hi-lo)*.13,hi*.004);lo-=pad;hi+=pad;
+ const x=t=>left+(t-WEEK_START)/(WEEK_END-WEEK_START)*cw,y=v=>top+(hi-v)/(hi-lo)*ch;
+ ctx.fillStyle='#9db0c9';ctx.font=(w<550?'10':'12')+'px system-ui';
+ for(let i=0;i<5;i++){
+  const py=top+i*ch/4;ctx.strokeStyle='#28394e';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(left,py);ctx.lineTo(w-right,py);ctx.stroke();
+  const val=hi-(hi-lo)*i/4;ctx.fillStyle='#a7bad0';ctx.textAlign='right';ctx.fillText(new Intl.NumberFormat('da-DK',{maximumFractionDigits:0}).format(val),left-8,py+4);
+ }
+ const days=['Man','Tir','Ons','Tor','Fre','Lør','Søn'];
+ for(let d=0;d<7;d++){
+  const px=x(WEEK_START+(d+.5)*86400000);
+  ctx.fillStyle='#9db0c9';ctx.textAlign='center';ctx.font=(w<550?'10':'12')+'px system-ui';ctx.fillText(days[d],px,h-17);
+ }
+ // Only the research area is softly tinted. It is never the original blue forecast.
+ ctx.fillStyle='rgba(239,184,100,.035)';ctx.fillRect(Math.max(left,x(anchorTime)),top,Math.max(0,w-right-Math.max(left,x(anchorTime))),ch);
+ ctx.strokeStyle='#c58f59';ctx.setLineDash([3,6]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x(anchorTime),top);ctx.lineTo(x(anchorTime),top+ch);ctx.stroke();ctx.setLineDash([]);
+ function path(points,color,width,dash,breakOnMissing=false){
+  ctx.beginPath();ctx.lineWidth=width;ctx.strokeStyle=color;ctx.lineJoin='round';ctx.lineCap='round';ctx.setLineDash(dash);
+  let prev=null;for(const p of points){if(!Number.isFinite(p.time)||!valid(p.value))continue;
+   const px=x(p.time),py=y(p.value);if(prev===null||(breakOnMissing&&p.time-prev>3600000))ctx.moveTo(px,py);else ctx.lineTo(px,py);prev=p.time}
+  ctx.stroke();ctx.setLineDash([]);
+ }
+ path(actual,'#38d2a8',3.4,[],true);
+ const baseline=[{time:anchorTime,value:anchor},...pred.map(p=>({time:p.time,value:p.b0}))];
+ const challenger=[{time:anchorTime,value:anchor},...pred.map(p=>({time:p.time,value:p.b1}))];
+ path(baseline,'#9cabc2',1.8,[4,6]);path(challenger,'#efb864',2.5,[7,5]);
+ if(last){ctx.beginPath();ctx.arc(x(last.time),y(last.value),4.4,0,2*Math.PI);ctx.fillStyle='#38d2a8';ctx.fill();}
+ $('hover').textContent=last?'Sidste timeluk: '+money(last.value)+' USDT':'Data afventes';
+ $('chart-note').textContent='Grøn: kun verificerede timepriser. Gul og grå: forskningsforløb fra '+utc(issue)+'. Original blå mandagsprognose: 0/7, tegnes ikke.';
+}
+try{
+ const [history,research]=await Promise.all([fetchJson('graph-history/timeline.json'),fetchJson('research-w45-shadow.json')]);
+ state=validate(history,research);
+ render();window.addEventListener('resize',render,{passive:true});
+}catch(error){$('hover').textContent='Kilden kan ikke valideres';$('chart-note').textContent='Forskningsgrafen er skjult, fordi kilde eller identitet ikke kunne bekræftes: '+String(error.message||error).slice(0,100);}
+</script>
+</body></html>
