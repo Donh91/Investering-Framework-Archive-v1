@@ -872,7 +872,7 @@ try{
    for(let attempt=0;attempt<100;attempt++){
     await delay(100);
     ready=await evaluate(()=>document.readyState==='complete'&&
-     !!document.getElementById('compass-pro')&&
+     document.getElementById('compass-pro')?.dataset.publicFeedHydrated==='true'&&
      (document.getElementById('pro-source-status')?.textContent||'')!==
       'Kontrollerer officiel kilde og gyldighed…');
     if(ready&&fixtureRequests['data/latest.json']&&fixtureRequests['data/compass.json'])break;
@@ -881,6 +881,7 @@ try{
      fixtureRequests['data/compass.json']>0,
      'ROOT_FIXTURE_NOT_LOADED_FROM_HTTP:'+kind+':'+JSON.stringify(fixtureRequests));
    const snapshot=await evaluate(()=>({
+    hydrated:document.getElementById('compass-pro')?.dataset.publicFeedHydrated,
     current:document.getElementById('compass-pro')?.dataset.sourceCurrent,
     expiryState:document.getElementById('compass-pro')?.dataset.sourceState,
     source:document.getElementById('pro-source-status')?.textContent||'',
@@ -892,6 +893,8 @@ try{
      balance:el.querySelector('.cn-evidence small')?.textContent||''
     }))
    }));
+   assert.equal(snapshot.hydrated,'true',
+     'ROOT_FIXTURE_UNHYDRATED_SOURCE_WAS_CLASSIFIED:'+kind);
    if(kind==='eligible'){
     requireEligible(snapshot);
     assert.equal(snapshot.expiryState,'FRESH','ROOT_ELIGIBLE_EXPIRED_FALSELY');
