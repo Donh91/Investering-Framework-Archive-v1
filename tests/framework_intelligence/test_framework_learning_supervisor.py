@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import unittest
 from pathlib import Path
 
@@ -114,7 +115,10 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         self.assertIn('--reserve-usd 4.0', text)
         self.assertIn('comment-${COMMENT_ID}', text)
         self.assertIn('senior_repair_audit_dispatch.py validate', text)
-        self.assertIn("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'", text)
+        self.assertIn("github.event_name == 'schedule'", text)
+        self.assertIn("(github.event_name == 'workflow_dispatch' && inputs.sol_collect_run_id == '')", text)
+        self.assertIn("inputs.sol_collect_run_id != ''", text)
+        self.assertIn("sol-max-collect:", text)
         self.assertNotIn("if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'", text)
 
     def test_failed_senior_audit_cost_receipt_is_persisted_before_validation(self):
@@ -133,7 +137,11 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         self.assertIn('NO_CODE_WRITE_PERFORMED', text)
         self.assertIn('NO_AUTHORITY_CHANGE', text)
         self.assertIn('private_data_included', text)
-        self.assertIn('gpt-6-sol', text)
+        # Match the current canonical task binding. Legacy Sol is no
+        # longer the hard-coded senior model after owner-authorized upgrades.
+        task = json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())['tasks']['SENIOR_REPAIR_AUDIT']
+        self.assertIn(task['model'], text)
+        self.assertIn(f"MODEL_USED={task['model']}", text)
     def test_architecture_forbids_authority_escalation(self):
         text = Path('00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md').read_text()
         self.assertIn('Canonical market authority: NONE', text)

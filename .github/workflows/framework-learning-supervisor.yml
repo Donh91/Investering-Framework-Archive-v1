@@ -6,7 +6,15 @@ on:
       - '.github/workflows/framework-learning-supervisor.yml'
       - 'scripts/api_agent/senior_repair_audit_dispatch.py'
       - 'scripts/api_agent/temporary_bridge_pr_review.py'
+      - 'scripts/api_agent/s1_sol_max_patch_execution.py'
+      - 'scripts/api_agent/s1_sol_response_probe.py'
+      - 'scripts/api_agent/s1_sol_background_collect.py'
+      - 'tests/api_agent/test_s1_sol_background_collect.py'
+      - 'tests/api_agent/test_s1_sol_response_probe.py'
+      - 'tests/api_agent/test_s1_sol_max_patch_execution.py'
+      - 'scripts/api_agent/s1_v43_terra_max_review.py'
       - 'tests/api_agent/test_temporary_bridge_pr_review.py'
+      - 'tests/api_agent/test_s1_v43_terra_max_review.py'
       - 'scripts/api_agent/fmos_mission_loop_audit_dispatch.py'
       - 'scripts/api_agent/api_gateway.py'
       - 'scripts/framework_intelligence/automation_orchestration_v1.py'
@@ -54,6 +62,12 @@ on:
     - cron: '35 9 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
+    inputs:
+      sol_collect_run_id:
+        description: "GET-only resume of an existing paid Sol response; empty = normal manual workflow"
+        required: false
+        type: string
+        default: ""
   workflow_run:
     workflows: ['Automation Production Health']
     types: [completed]
@@ -66,6 +80,238 @@ concurrency:
   queue: max
   cancel-in-progress: false
 jobs:
+  sol-max-response-probe:
+    # Owner-issued one-response retrieval-only rescue. Never POST or claim money.
+    # Existing workflow/PR, no new schedule, new supervisor or writer.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1877 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor == 'Donh91'
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove zero-POST recovery safety without API credentials
+        run: |
+          python -m py_compile scripts/api_agent/s1_sol_response_probe.py
+          python -m unittest tests.api_agent.test_s1_sol_response_probe -v
+      - name: One owner-bound existing-response GET, never POST
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/api_agent/s1_sol_response_probe.py --head "$PR_HEAD" \
+            --output-dir runtime/sol-get-only
+      - name: Preserve retrieval receipt without modifying any repository branch
+        if: always() && hashFiles('runtime/sol-get-only/receipt.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-sol-get-only-${{ github.run_id }}
+          path: runtime/sol-get-only/
+          retention-days: 30
+          if-no-files-found: error
+
+  sol-max-collect:
+    # Non-empty collector dispatch is GET-only, and bypasses production operate.
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.sol_collect_run_id != '' &&
+      github.actor == 'Donh91' &&
+      github.repository == 'Donh91/Investering-Framework-Archive-v1'
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate zero-POST collector source and no-network tests
+        run: |
+          python -m py_compile scripts/api_agent/s1_sol_background_collect.py
+          python -m unittest tests.api_agent.test_s1_sol_background_collect -v
+      - name: Download durable handle from authenticated original paid run
+        uses: actions/download-artifact@v4
+        with:
+          name: s1-sol-max-handle-${{ inputs.sol_collect_run_id }}
+          run-id: ${{ inputs.sol_collect_run_id }}
+          github-token: ${{ github.token }}
+          path: runtime/s1-sol-collect-input
+      - name: Collect with GET only and native source/payment proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SOL_ORIGIN_RUN: ${{ inputs.sol_collect_run_id }}
+        run: |
+          python scripts/api_agent/s1_sol_background_collect.py \
+            --origin-run "$SOL_ORIGIN_RUN" \
+            --artifact-dir runtime/s1-sol-collect-input \
+            --out runtime/s1-sol-collect-result
+      - name: Retain non-authoritative result and billing-unknown receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-sol-collect-${{ github.run_id }}
+          path: runtime/s1-sol-collect-result/
+          retention-days: 30
+          if-no-files-found: warn
+
+  sol-max-implementation-patch:
+    # One owner-issued PR commit launches one bounded paid Sol 6.1 MAX patch
+    # candidate. This lane can neither push PR code nor grant merge authority.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1877 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor == 'Donh91'
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate bounded Sol MAX source and no-network negative tests
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/api_agent/s1_sol_max_patch_execution.py
+          python -m unittest \
+            tests.api_agent.test_s1_sol_max_patch_execution \
+            tests.api_agent.test_s1_sol_background_collect \
+            tests.api_agent.test_capability_router \
+            tests.governance.test_s1_agent_handoff_receipts_v1 \
+            tests.framework_intelligence.test_framework_learning_supervisor -v
+      - name: Check native current PR HEAD and explicit owner launch commit
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python scripts/api_agent/s1_sol_max_patch_execution.py guard --head "$PR_HEAD" \
+            --output-dir runtime/s1-sol-max > /tmp/sol-gate.json
+          cat /tmp/sol-gate.json
+          active=$(python -c 'import json; print(str(json.load(open("/tmp/sol-gate.json"))["run"]).lower())')
+          echo "go=$active" >> "$GITHUB_OUTPUT"
+      - name: Verify account-wide API budget before any claim
+        if: steps.gate.outputs.go == 'true'
+        run: |
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 40 --reserve-usd 4.0
+      - name: Build exact-head bounded two-file source context
+        if: steps.gate.outputs.go == 'true'
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/api_agent/s1_sol_max_patch_execution.py build --head "$PR_HEAD" \
+            --output-dir runtime/s1-sol-max
+      - name: Create and verify native claim before paid inference
+        if: steps.gate.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/api_agent/s1_sol_max_patch_execution.py claim --head "$PR_HEAD" \
+            --output-dir runtime/s1-sol-max
+      - name: Execute real GPT-6.1 Sol MAX patch synthesis, ONE HTTP request
+        if: steps.gate.outputs.go == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/api_agent/s1_sol_max_patch_execution.py call --head "$PR_HEAD" \
+            --submit-only --output-dir runtime/s1-sol-max
+      - name: Persist original paid response handle immediately
+        if: steps.gate.outputs.go == 'true' && hashFiles('runtime/s1-sol-max/response_handle.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-sol-max-handle-${{ github.run_id }}
+          path: runtime/s1-sol-max/
+          retention-days: 30
+          if-no-files-found: error
+      - name: Validate generated patch and run original regression suite
+        if: steps.gate.outputs.go == 'true' && hashFiles('runtime/s1-sol-max/proposal.json') != ''
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python scripts/api_agent/s1_sol_max_patch_execution.py validate --head "$PR_HEAD" \
+            --output-dir runtime/s1-sol-max | tee runtime/s1-sol-max/validation.json
+          python -m unittest tests.api_agent.test_capability_router -v
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          validated=json.loads(Path("runtime/s1-sol-max/validation.json").read_text())
+          assert validated["status"]=="PATCH_VALIDATED_IN_ISOLATED_CHECKOUT"
+          Path("runtime/s1-sol-max/CI_VALIDATED.flag").write_text("SUCCESS\n")
+          PY
+          # Do not commit/push model code from this runner. The existing
+          # authorized original-branch executor and separate review own that.
+      - name: Archive proof, patch and provider usage as workflow artifacts
+        if: always() && steps.gate.outputs.go == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-sol-max-patch-${{ github.run_id }}
+          path: runtime/s1-sol-max/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Publish exact-head native handoff and validated patch
+        if: always() && steps.gate.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("runtime/s1-sol-max")
+          head=os.environ["PR_HEAD"]
+          run=os.environ.get("GITHUB_RUN_ID","")
+          output=["## SOL MAX ORIGINAL BRANCH IMPLEMENTATION RECEIPT",
+                  f"PR #1877, source HEAD {head}",
+                  f"GitHub Actions run https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{run}",
+                  "The paid model has no merge or source-write authority. Release requires native current-head review and custody.",
+                  ""]
+          for name in ("reservation.json","response_handle.json","api_meta.json","failure.json","validation.json"):
+              src=p/name
+              if src.exists():
+                  output.extend([name+":", (chr(96)*3)+"json",src.read_text()[:2000],chr(96)*3,""])
+          patch=p/"proposal.patch"
+          if patch.exists() and (p/"CI_VALIDATED.flag").exists() and len(patch.read_bytes())<=16000:
+              output.extend(["Validated uncommitted candidate diff:", (chr(96)*3)+"diff",patch.read_text(),chr(96)*3])
+          else:
+              output.append("No fully validated patch: inspect the workflow failure/ABSTAIN; do NOT claim code was applied.")
+          (p/"report.md").write_text("\n".join(output)+"\n")
+          PY
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" --body-file runtime/s1-sol-max/report.md
+
   validate:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -82,6 +328,7 @@ jobs:
           python -m py_compile \
             scripts/api_agent/senior_repair_audit_dispatch.py \
             scripts/api_agent/temporary_bridge_pr_review.py \
+            scripts/api_agent/s1_v43_terra_max_review.py \
             scripts/api_agent/fmos_mission_loop_audit_dispatch.py \
             scripts/api_agent/api_gateway.py \
             scripts/framework_intelligence/automation_orchestration_v1.py \
@@ -111,6 +358,7 @@ jobs:
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
             tests.api_agent.test_temporary_bridge_pr_review \
+            tests.api_agent.test_s1_v43_terra_max_review \
             tests.api_agent.test_fmos_mission_loop_audit_dispatch \
             tests.api_agent.test_capability_router \
             tests.framework_intelligence.test_automation_orchestration_v1 \
@@ -366,6 +614,108 @@ jobs:
           gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
             --body "TEMP_SOL_PR_REVIEW failed with USD 0.75 durable reservation. Provider-side charges may be UNKNOWN after timeout. No automatic retry or formal GitHub approval."
 
+  s1-v43-terra-max-review:
+    # Owner 2026-11-02: paid API is exceptional/manual, never routine.
+    # Fail closed until a cross-workflow durable pre-HTTP budget claim and
+    # independent current-head security review are verified.
+    if: ${{ false }}
+    concurrency:
+      group: s1-v43-terra-max-review
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test exact-head and one-time review contract
+        run: |
+          python -m unittest tests.api_agent.test_s1_v43_terra_max_review -v
+          python -m py_compile scripts/api_agent/s1_v43_terra_max_review.py scripts/api_agent/api_gateway.py
+      - name: Freeze complete public PR diff and exact HEAD
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/api_agent/s1_v43_terra_max_review.py build \
+            --event "$GITHUB_EVENT_PATH" --output-dir runtime/s1-v43-terra-review
+      - name: Verify conservative lane and monthly cost ceilings
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task S1_V43_TERRA_MAX_REVIEW --cap-usd 1.5 --reserve-usd 1.5
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 30 --reserve-usd 1.5
+      - name: Reserve exactly one owner-approved paid review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/api_agent/s1_v43_terra_max_review.py reserve \
+            --output-dir runtime/s1-v43-terra-review
+      - name: Execute GPT-6.1 Terra with MAX reasoning, one attempt
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task S1_V43_TERRA_MAX_REVIEW \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/s1-v43-terra-review/prompt.txt \
+            --context-file runtime/s1-v43-terra-review/context.json \
+            --output-dir runtime/s1-v43-terra-review/output \
+            --intended-write-prefix research/api_agent/outputs/s1_v43_terra_max_review/
+      - name: Validate exact-head real model/cost/review receipt
+        run: |
+          python scripts/api_agent/s1_v43_terra_max_review.py validate \
+            --output-dir runtime/s1-v43-terra-review
+      - name: Send public-safe review back to existing S1 #1156
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path('runtime/s1-v43-terra-review')
+          m=json.loads((root/'manifest.json').read_text())
+          r=json.loads((root/'output/receipt.json').read_text())
+          o=json.loads((root/'output/output.json').read_text())
+          lines=[
+            'S1_V43_TERRA_MAX_REVIEW_RECEIPT ADVISORY_ONLY',
+            f"Original PR #1877 HEAD {m['head']}",
+            f"Model {r['model']} reasoning={r['reasoning_effort']}",
+            f"Native GitHub Actions run {os.environ['GITHUB_RUN_ID']}",
+            f"API response id {r.get('response_id')}",
+            f"Estimated cost USD {r['estimated_cost_usd']}",
+            f"Verdict {o.get('summary')}",
+            'No formal APPROVED review, merge authority or private content.',
+            'Findings:'
+          ]
+          lines += ['- '+str(s)[:1200] for s in o.get('evidence_against',[]) if str(s).startswith(('P0|','P1|','P2|','P3|'))][:12]
+          lines += ['Uncertainties:']
+          lines += ['- '+str(s)[:900] for s in o.get('uncertainties',[])][:8]
+          (root/'report.md').write_text('\n'.join(lines)+'\n')
+          PY
+          gh issue comment 1156 --repo "$GITHUB_REPOSITORY" \
+            --body-file runtime/s1-v43-terra-review/report.md
+      - name: Preserve public-safe review output and API receipt as run artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-v43-terra-review-${{ github.run_id }}
+          path: |
+            runtime/s1-v43-terra-review/manifest.json
+            runtime/s1-v43-terra-review/output/receipt.json
+            runtime/s1-v43-terra-review/output/output.json
+            runtime/s1-v43-terra-review/report.md
+          if-no-files-found: warn
+
   senior-repair-audit:
     if: >-
       github.event_name == 'issue_comment' &&
@@ -394,8 +744,8 @@ jobs:
           registry=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
           policy=json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
           task=registry['tasks']['SENIOR_REPAIR_AUDIT']
-          assert task['model']=='gpt-6-sol'
-          assert task['reasoning_effort']=='high'
+          assert task['model']=='gpt-6.1-sol'
+          assert task['reasoning_effort']=='max'
           assert task['invocation_mode']=='EVENT_DRIVEN_OWNER_GATED_ONLY'
           assert task['advisory_only'] is True
           assert task['automatic_code_write'] is False
@@ -558,8 +908,8 @@ jobs:
           policy=json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
           task=registry['tasks']['FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT']
           assert task['model']=='gpt-6.1-sol'
-          assert task['reasoning_effort']=='high'
-          assert task['invocation_mode']=='EVENT_DRIVEN_OWNER_GATED_ONE_OFF'
+          assert task['reasoning_effort']=='max'
+          assert task['invocation_mode']=='EVENT_DRIVEN_OWNER_GATED_ONLY'
           assert task['advisory_only'] is True
           assert task['automatic_code_write'] is False
           assert task['automatic_merge'] is False
@@ -687,7 +1037,7 @@ jobs:
           gh issue comment 1440 --repo "$GITHUB_REPOSITORY" --body "FMOS mission-loop audit duplicate trigger ${COMMENT_ID}: NOOP, final immutable receipt already exists."
   operate:
     if: >-
-      ((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main') ||
+      ((github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.sol_collect_run_id == '')) && github.ref == 'refs/heads/main') ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     permissions:
       contents: write
@@ -1033,6 +1383,8 @@ jobs:
           import os
           import subprocess
           from pathlib import Path
+          from scripts.framework_intelligence.operational_memory_fail_to_codex_intake_v1 import (
+              NOTICE_PREFIX, native_notice, notice_payload, notification_action)
 
           repo=os.environ['GITHUB_REPOSITORY']
           title=os.environ['ISSUE_TITLE']
@@ -1045,12 +1397,57 @@ jobs:
               audit={'status':'FAIL','failures':['audit_file_missing_or_invalid'],'warnings':[],'source_head_sha':os.environ.get('GITHUB_SHA')}
               status='FAIL'
 
-          raw=subprocess.check_output(['gh','issue','list','--repo',repo,'--state','open','--limit','100','--json','number,title'],text=True)
+          raw=subprocess.check_output(['gh','issue','list','--repo',repo,'--state','open','--limit','100','--json','number,title,author'],text=True)
           issues=json.loads(raw)
-          existing=next((x for x in issues if x.get('title')==title),None)
+          existing=next((x for x in issues if x.get('title')==title and
+                         (x.get('author') or {}).get('login') in {'github-actions[bot]', 'app/github-actions'}),None)
 
-          if status=='FAIL':
+          # Bounded native census, never trust a copied receipt marker alone.
+          # At most one issue read, two comment pages and ten run lookups.
+          latest_notice=None
+          census_complete=True
+          if existing:
+              issue=json.loads(subprocess.check_output(['gh','api',f"repos/{repo}/issues/{existing['number']}"],text=True))
+              count=int(issue.get('comments') or 0)
+              last_page=max(1,(count+99)//100)
+              comments=[]
+              for page in range(max(1,last_page-1),last_page+1):
+                  comments.extend(json.loads(subprocess.check_output(['gh','api',f"repos/{repo}/issues/{existing['number']}/comments?per_page=100&page={page}"],text=True)))
+              records=sorted(comments,key=lambda row:int(row.get('id') or 0),reverse=True)
+              # Trust immutable bot comments only, never the editable issue body.
+              lookups=0
+              for record in records:
+                  if (record.get('user') or {}).get('login') != 'github-actions[bot]':
+                      continue
+                  first=(record.get('body') or '').splitlines()
+                  if not first or not first[0].startswith(NOTICE_PREFIX):
+                      continue
+                  try:
+                      run_id=json.loads(first[0][len(NOTICE_PREFIX):]).get('run_id')
+                      if type(run_id) is not int or run_id<=0:
+                          continue
+                      lookups+=1
+                      if lookups>10:
+                          census_complete=False
+                          break
+                      run=json.loads(subprocess.check_output(['gh','api',f"repos/{repo}/actions/runs/{run_id}"],text=True))
+                      latest_notice=native_notice(record,run,repo)
+                      if latest_notice:
+                          break
+                      census_complete=False
+                      break
+                  except (ValueError,TypeError,subprocess.CalledProcessError):
+                      census_complete=False
+                      break
+              # Do not infer absence from a truncated comments census.
+              if latest_notice is None and count>200:
+                  census_complete=False
+          action=notification_action(audit,latest_notice,census_complete=census_complete)
+          receipt=NOTICE_PREFIX+json.dumps(notice_payload(audit,int(os.environ['GITHUB_RUN_ID'])),sort_keys=True)+'\n\n'
+
+          if status=='FAIL' and action=='PUBLISH_FAILURE':
               body=(
+                  receipt+
                   'Operational Memory post-production audit failed. Memory reuse for this run is blocked.\n\n'
                   f"Run: {run_url}\n"
                   f"Source head: `{audit.get('source_head_sha')}`\n"
@@ -1061,11 +1458,15 @@ jobs:
               if existing:
                   subprocess.run(['gh','issue','comment',str(existing['number']),'--repo',repo,'--body',body],check=True)
               else:
-                  subprocess.run(['gh','issue','create','--repo',repo,'--title',title,'--body',body],check=True)
-          elif existing:
-              body=f"Recovered automatically on {run_url}. Audit status: `{status}`. Closing automation-owned incident."
-              subprocess.run(['gh','issue','comment',str(existing['number']),'--repo',repo,'--body',body],check=True)
+                  issue_url=subprocess.check_output(['gh','issue','create','--repo',repo,'--title',title,'--body','Operational Memory incident. Native failure receipts follow in comments.'],text=True).strip()
+                  subprocess.run(['gh','issue','comment',issue_url,'--repo',repo,'--body',body],check=True)
+          elif existing and status in {'PASS','WARN'} and action in {'PUBLISH_RECOVERY','RECOVERY_ALREADY_NOTIFIED'}:
+              if action=='PUBLISH_RECOVERY':
+                  body=receipt+f"Recovered automatically on {run_url}. Audit status: `{status}`. Closing automation-owned incident."
+                  subprocess.run(['gh','issue','comment',str(existing['number']),'--repo',repo,'--body',body],check=True)
               subprocess.run(['gh','issue','close',str(existing['number']),'--repo',repo],check=True)
+          else:
+              print('Operational Memory notification:',action,'; audit enforcement unchanged')
           PY
       - name: Route failed audit to bounded Codex remediation
         if: always()
@@ -1118,7 +1519,8 @@ jobs:
           )"
           created="$(python - <<'PY'
           import json,os
-          print('true' if json.loads(os.environ['OPMEM_ROUTE_RESULT']).get('created') else 'false')
+          from scripts.framework_intelligence.operational_memory_fail_to_codex_intake_v1 import maturation_dispatch_required
+          print('true' if maturation_dispatch_required(json.loads(os.environ['OPMEM_ROUTE_RESULT'])) else 'false')
           PY
           )"
 
@@ -1138,7 +1540,15 @@ jobs:
             [ "$pushed" = true ]
           fi
 
-          gh workflow run remediation-maturation.yml --repo "$GITHUB_REPOSITORY" --ref main
+          if [ "$created" = "true" ]; then
+            # First delivery only. A failed dispatch leaves durable intake for
+            # the receiver's existing natural schedule, never a fabricated ACK.
+            git fetch origin main
+            git show "origin/main:$path" | cmp - "$path"
+            gh workflow run remediation-maturation.yml --repo "$GITHUB_REPOSITORY" --ref main
+          else
+            echo 'Existing intake retained; natural maturation consumes it without duplicate dispatch.'
+          fi
       - name: Enforce Operational Memory audit gate
         if: always()
         run: |
@@ -1198,3 +1608,4 @@ jobs:
             git show origin/main:"$rel" > "$tmp"
             cmp -s "$rel" "$tmp" || { echo "framework_learning_main_readback_mismatch:$rel"; exit 1; }
           done
+

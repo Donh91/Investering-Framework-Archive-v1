@@ -150,7 +150,7 @@ class TemporaryBridgeTests(unittest.TestCase):
                                                               "base_sha": BASE, "diff_sha256": "0" * 64,
                                                               "context_sha256": bridge.sha256(canonical)}))
             (dst / "output").mkdir()
-            receipt = {"status": "PASS", "model": "gpt-6.1-sol", "context_hash": bridge.sha256(canonical),
+            receipt = {"status": "PASS", "model": "gpt-6.1-sol", "reasoning_effort": "max", "context_hash": bridge.sha256(canonical),
                        "forecast_candidate_count": 0, "input_tokens": 800, "output_tokens": 400,
                        "estimated_cost_usd": 0.006}
             output = {"status": "READY", "summary": "PASS MODEL_USED=gpt-6.1-sol NO_CODE_WRITE_PERFORMED NO_AUTHORITY_CHANGE",
@@ -216,6 +216,13 @@ class TemporaryBridgeTests(unittest.TestCase):
             with patch.object(bridge, "pr_info", return_value=info(head="c" * 40)):
                 with self.assertRaisesRegex(ValueError, "EXACT_HEAD"):
                     bridge.validate(dst)
+            # A previous High review is not a MAX review and must fail closed.
+            receipt["reasoning_effort"] = "high"
+            (dst / "output" / "receipt.json").write_text(json.dumps(receipt))
+            with patch.object(bridge, "pr_info", return_value=info()):
+                with self.assertRaisesRegex(ValueError, "NO_ACCEPTED"):
+                    bridge.validate(dst)
+            receipt["reasoning_effort"] = "max"
             receipt["model"] = "gpt-6-sol"
             (dst / "output" / "receipt.json").write_text(json.dumps(receipt))
             with patch.object(bridge, "pr_info", return_value=info()):

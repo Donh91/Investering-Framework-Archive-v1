@@ -1,0 +1,420 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "S1 Closure Assurance and Strategic Opportunity Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "case_id",
+    "case_kind",
+    "original_owner",
+    "original_url",
+    "status",
+    "priority",
+    "evidence_fingerprint",
+    "last_material_progress_utc",
+    "next_action",
+    "acceptance_criterion",
+    "source_refs",
+    "authority"
+  ],
+  "properties": {
+    "contract": {
+      "const": "S1_CLOSURE_ASSURANCE_V1"
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "case_kind": {
+      "enum": [
+        "DEFECT",
+        "PR",
+        "SOURCE",
+        "INCIDENT",
+        "STRATEGIST_PROPOSAL",
+        "RESEARCH_HYPOTHESIS",
+        "IDEA"
+      ]
+    },
+    "original_owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "original_url": {
+      "type": "string",
+      "pattern": "^https://github\\.com/Donh91/"
+    },
+    "status": {
+      "enum": [
+        "DISCOVERED",
+        "ACTIONABLE",
+        "IN_PROGRESS",
+        "BLOCKED_WITH_TRIGGER",
+        "READY_FOR_TEST",
+        "IN_VALIDATION",
+        "VERIFICATION",
+        "PROCESS_STALLED",
+        "REJECTED_WITH_EVIDENCE",
+        "SUPERSEDED_VERIFIED",
+        "ADOPTED_VERIFIED",
+        "CLOSED_VERIFIED"
+      ]
+    },
+    "priority": {
+      "enum": [
+        "P0",
+        "P1",
+        "P2",
+        "P3",
+        "RESEARCH"
+      ]
+    },
+    "evidence_fingerprint": {
+      "type": "string",
+      "minLength": 8
+    },
+    "last_material_progress_utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 10
+    },
+    "acceptance_criterion": {
+      "type": "string",
+      "minLength": 10
+    },
+    "source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "authority": {
+      "enum": [
+        "ADVISORY_ONLY",
+        "OWNER_GOVERNED",
+        "READ_ONLY"
+      ]
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "reactivation_trigger",
+        "trigger_owner"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "INTERNAL_REPAIRABLE",
+            "EXTERNAL",
+            "SCIENCE",
+            "RESOURCE",
+            "REVIEW",
+            "SECURITY"
+          ]
+        },
+        "reactivation_trigger": {
+          "type": "string",
+          "minLength": 10
+        },
+        "trigger_owner": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "closure_proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "disposition",
+        "proof_refs",
+        "verified_at_utc"
+      ],
+      "properties": {
+        "disposition": {
+          "enum": [
+            "MERGED_AND_VERIFIED",
+            "SUPERSEDED",
+            "REJECTED",
+            "ADOPTED_AND_VERIFIED"
+          ]
+        },
+        "proof_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "verified_at_utc": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+        }
+      }
+    },
+    "strategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hypothesis",
+        "falsification",
+        "expected_user_value"
+      ],
+      "properties": {
+        "hypothesis": {
+          "type": "string",
+          "minLength": 10
+        },
+        "falsification": {
+          "type": "string",
+          "minLength": 10
+        },
+        "expected_user_value": {
+          "type": "string",
+          "minLength": 10
+        }
+      }
+    },
+    "stall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root_cause",
+        "falsifier",
+        "different_next_step"
+      ],
+      "properties": {
+        "root_cause": {
+          "type": "string",
+          "minLength": 10
+        },
+        "falsifier": {
+          "type": "string",
+          "minLength": 10
+        },
+        "different_next_step": {
+          "type": "string",
+          "minLength": 10
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "BLOCKED_WITH_TRIGGER",
+              "PROCESS_STALLED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "blocker"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "REJECTED_WITH_EVIDENCE",
+              "SUPERSEDED_VERIFIED",
+              "ADOPTED_VERIFIED",
+              "CLOSED_VERIFIED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "closure_proof"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "case_kind": {
+            "enum": [
+              "STRATEGIST_PROPOSAL",
+              "RESEARCH_HYPOTHESIS",
+              "IDEA"
+            ]
+          }
+        },
+        "required": [
+          "case_kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "strategy"
+        ],
+        "properties": {
+          "authority": {
+            "const": "ADVISORY_ONLY"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PROCESS_STALLED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "stall"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "CLOSED_VERIFIED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "closure_proof": {
+            "properties": {
+              "disposition": {
+                "const": "MERGED_AND_VERIFIED"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "REJECTED_WITH_EVIDENCE"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "closure_proof": {
+            "properties": {
+              "disposition": {
+                "const": "REJECTED"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "SUPERSEDED_VERIFIED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "closure_proof": {
+            "properties": {
+              "disposition": {
+                "const": "SUPERSEDED"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ADOPTED_VERIFIED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "closure_proof": {
+            "properties": {
+              "disposition": {
+                "const": "ADOPTED_AND_VERIFIED"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "DISCOVERED",
+              "ACTIONABLE",
+              "IN_PROGRESS",
+              "BLOCKED_WITH_TRIGGER",
+              "READY_FOR_TEST",
+              "IN_VALIDATION",
+              "VERIFICATION",
+              "PROCESS_STALLED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "closure_proof"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -362,7 +362,7 @@ def _select_api_model(
     requires_astra = bool(unit.get("requires_astra", False))
     estimated_input = int(unit.get("estimated_input_tokens", 0) or 0)
     estimated_output = int(unit.get("estimated_output_tokens", 0) or 0)
-    candidates: list[tuple[float, int, str, dict[str, Any]]] = []
+    candidates: list[tuple[float, int, int, str, dict[str, Any]]] = []
     for model_id, cfg in policy["models"].items():
         if model_id in exclude or model_id not in available or cfg.get("api_eligible") is not True:
             continue
@@ -375,13 +375,18 @@ def _select_api_model(
         if not required.issubset(set(cfg.get("capabilities", []))):
             continue
         cost = estimate_model_cost(policy, cfg, estimated_input, estimated_output)
-        candidates.append((cost, int(cfg["rank"]), model_id, cfg))
+        priority = cfg.get("selection_priority", 0)
+        if type(priority) is not int:
+            raise ValueError(f"invalid_model_selection_priority:{model_id}")
+        candidates.append((cost, int(cfg["rank"]), priority, model_id, cfg))
     if not candidates:
         return None
     # Preserve capability tiers first: choose the lowest sufficient rank, then
     # minimize expected cost within that tier. A cheaper senior model must not
     # erase an intentionally intermediate role such as Terra synthesis.
-    cost, _, model_id, cfg = sorted(candidates, key=lambda x: (x[1], x[0], x[2]))[0]
+    # Same-tier, same-cost selections respect explicit policy priority so the
+    # current Sol 6.1 wins over legacy Sol rather than lexicographic ID order.
+    cost, _, _, model_id, cfg = sorted(candidates, key=lambda x: (x[1], x[0], -x[2], x[3]))[0]
     return {
         "executor": policy["execution"]["api_executor_name"],
         "model": model_id,
