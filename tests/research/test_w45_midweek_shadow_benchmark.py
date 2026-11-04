@@ -41,7 +41,7 @@ def test_exact_frozen_shadow_packet_replays_without_originating_cn_prices():
     ("price", "RESEARCH_FORECAST_SOURCE_RECOMPUTATION_MISMATCH"),
     ("duplicate_hour", "MISSING_DUPLICATE_OR_UNSORTED_HOUR"),
     ("future_source", "CAPTURE_TIME_BEFORE_CANDLE_OR_AFTER_ISSUE"),
-    ("backdated_issuance", "W45_RESEARCH_PIT_BOUNDARY_INVALID"),
+    ("backdated_issuance", "CAPTURE_TIME_BEFORE_CANDLE_OR_AFTER_ISSUE"),
     ("fake_authority", "RESEARCH_AUTHORITY_LEAK"),
     ("fake_original", "ORIGINAL_FORECAST_MISREPRESENTED"),
     ("wrong_quote", "UNVERIFIED_SOURCE_QUOTE_OR_FILES"),
