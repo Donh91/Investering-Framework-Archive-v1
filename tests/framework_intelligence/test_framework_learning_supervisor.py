@@ -230,5 +230,43 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         )
 
 
+    def test_elite_sol_batch_is_advisory_existing_queue_only(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            rel = Path("research/api_agent/coordination/S1_SOL_MAX_ELITE_BOUNDED_BATCH_20261104.json")
+            dest = root / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            original = json.loads((Path(".") / rel).read_text())
+            dest.write_text(json.dumps(original))
+            rows = mod.read_elite_sol_batch_queue(root)
+            self.assertEqual(len(rows), 5)
+            self.assertEqual(rows[0]["semantic_identity"], "S1-ELITE-EXECUTOR-20261104")
+            self.assertEqual(rows[1]["next_gate"], "UNBLOCK_API_TRANSPORT_AND_UNKNOWN_BILLING")
+            self.assertTrue(all(x["paid_dispatch_allowed"] is False for x in rows))
+            self.assertTrue(all(x["automatic_merge_allowed"] is False for x in rows))
+            self.assertEqual(rows[2]["original_pr"], 1879)
+            self.assertEqual(rows[2]["original_owner_issue"], 1516)
+            original["dispatch_enabled"] = True
+            dest.write_text(json.dumps(original))
+            self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
+            original["dispatch_enabled"] = False
+            original["payment_policy"]["no_auto_paid_trigger_until_reconciled"] = False
+            dest.write_text(json.dumps(original))
+            self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
+            original["payment_policy"]["no_auto_paid_trigger_until_reconciled"] = True
+            original["definitions"][0]["depends_on"] = [{"not": "a dependency"}]
+            dest.write_text(json.dumps(original))
+            self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
+            dest.write_text("{invalid-json")
+            self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
+            dest.write_text("[]")
+            self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
+            dest.unlink()
+            self.assertEqual(mod.read_elite_sol_batch_queue(root), [])
+
+
+
 if __name__ == '__main__':
     unittest.main()

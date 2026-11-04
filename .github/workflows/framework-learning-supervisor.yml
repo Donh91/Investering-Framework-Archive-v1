@@ -9,6 +9,13 @@ on:
       - 'scripts/api_agent/s1_sol_max_patch_execution.py'
       - 'scripts/api_agent/s1_sol_response_probe.py'
       - 'scripts/api_agent/s1_sol_background_collect.py'
+      - 'scripts/api_agent/sol_max_elite_transport.py'
+      - 'scripts/api_agent/sol_max_elite_dispatch.py'
+      - 'scripts/api_agent/sol_max_elite_patch_admit.py'
+      - 'scripts/api_agent/sol_max_elite_sandbox.py'
+      - 'tests/api_agent/test_sol_max_elite_sandbox.py'
+      - 'tests/api_agent/test_sol_max_elite_patch_admit.py'
+      - 'tests/api_agent/test_sol_max_elite_dispatch.py'
       - 'tests/api_agent/test_s1_sol_background_collect.py'
       - 'tests/api_agent/test_s1_sol_response_probe.py'
       - 'tests/api_agent/test_s1_sol_max_patch_execution.py'
@@ -177,6 +184,157 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
+  sol-max-elite-submit:
+    # Reuse the EXISTING issue comment owner route. Never infer a paid grant
+    # from staged mission registration or an ordinary supervisor schedule.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.number == 1156 &&
+      github.event.comment.author_association == 'OWNER' &&
+      github.actor == 'Donh91' &&
+      startsWith(github.event.comment.body, '[S1_SOL_MAX_ELITE] mission=')
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Confirm no-network claim/GET/payment regressions
+        run: |
+          python -m py_compile scripts/api_agent/sol_max_elite_transport.py scripts/api_agent/sol_max_elite_dispatch.py
+          python -m unittest tests.api_agent.test_sol_max_elite_transport tests.api_agent.test_sol_max_elite_dispatch -v
+      - name: Native owner scope, exact main and public source preflight
+        id: preflight
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m scripts.api_agent.sol_max_elite_dispatch preflight --repo-root . \
+            --event-file "$GITHUB_EVENT_PATH" --output-dir runtime/s1-sol-elite \
+            > /tmp/s1-sol-elite-admission.json
+          cat /tmp/s1-sol-elite-admission.json
+          echo "go=$(python -c 'import json; print(str(json.load(open("/tmp/s1-sol-elite-admission.json"))["paid_allowed"]).lower())')" >> "$GITHUB_OUTPUT"
+      - name: Enforce owner $30 hard stop and $12 reserve before any native paid claim
+        if: steps.preflight.outputs.go == 'true'
+        run: |
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 12
+      - name: One native bot claim per original mission and GitHub run
+        if: steps.preflight.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m scripts.api_agent.sol_max_elite_dispatch reserve --repo-root . \
+            --event-file "$GITHUB_EVENT_PATH" --output-dir runtime/s1-sol-elite
+      - name: Submit ONE source-bound background Sol MAX request, no automatic retry
+        if: steps.preflight.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python -m scripts.api_agent.sol_max_elite_dispatch submit --repo-root . \
+            --event-file "$GITHUB_EVENT_PATH" --output-dir runtime/s1-sol-elite
+      - name: Preserve preflight, native reservation and uncertain/known provider handle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-sol-elite-attempt-${{ github.run_id }}
+          path: runtime/s1-sol-elite/
+          retention-days: 30
+          if-no-files-found: warn
+
+  sol-max-elite-collect:
+    # A separate OWNER comment retrieves a stored response with GET only.
+    # No scheduled sender, no second POST, no production writer, no Git merges.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.number == 1156 &&
+      github.event.comment.author_association == 'OWNER' &&
+      github.actor == 'Donh91' &&
+      startsWith(github.event.comment.body, '[S1_SOL_MAX_ELITE_COLLECT] run=')
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify native GET-only collector without any credentials
+        run: |
+          python -m unittest tests.api_agent.test_sol_max_elite_transport tests.api_agent.test_sol_max_elite_dispatch -v
+      - name: Parse the strict original-run ID from the owner comment
+        id: origin
+        run: |
+          python - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          event=json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+          body=(event.get("comment") or {}).get("body") or ""
+          match=re.fullmatch(r"\[S1_SOL_MAX_ELITE_COLLECT\] run=([1-9][0-9]{0,17})", body.strip())
+          if match is None:
+              raise SystemExit("INVALID_ORIGIN_RUN")
+          with open(os.environ["GITHUB_OUTPUT"],"a") as out:
+              out.write("run="+match.group(1)+"\n")
+          PY
+      - name: Download the native original attempt artifact by exact run ID
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ORIGIN: ${{ steps.origin.outputs.run }}
+        run: |
+          gh run download "$ORIGIN" --repo "$GITHUB_REPOSITORY" \
+            --name "s1-sol-elite-attempt-$ORIGIN" --dir runtime/s1-sol-elite-origin
+      - name: Authenticated source/claim proof plus exactly one GET
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python -m scripts.api_agent.sol_max_elite_dispatch collect \
+            --event-file "$GITHUB_EVENT_PATH" \
+            --output-dir runtime/s1-sol-elite-collect \
+            --artifact-dir runtime/s1-sol-elite-origin
+      - name: Admit untrusted code diff against original source hashes, no execution
+        if: success() && hashFiles('runtime/s1-sol-elite-collect/provider_response.json') != ''
+        run: |
+          python -m scripts.api_agent.sol_max_elite_patch_admit \
+            --source runtime/s1-sol-elite-origin/source.json \
+            --request runtime/s1-sol-elite-origin/request.json \
+            --provider-response runtime/s1-sol-elite-collect/provider_response.json \
+            --get-receipt runtime/s1-sol-elite-collect/receipt.json \
+            --output-dir runtime/s1-sol-elite-collect
+      - name: Verify isolated git patch application without executing model code
+        if: success() && hashFiles('runtime/s1-sol-elite-collect/candidate.patch') != ''
+        run: |
+          python -m scripts.api_agent.sol_max_elite_sandbox \
+            --repo-root . \
+            --source runtime/s1-sol-elite-origin/source.json \
+            --patch-candidate runtime/s1-sol-elite-collect/patch_candidate.json \
+            --get-receipt runtime/s1-sol-elite-collect/receipt.json \
+            --patch runtime/s1-sol-elite-collect/candidate.patch \
+            --output-dir runtime/s1-sol-elite-collect
+      - name: Preserve a non-authoritative collector and billing receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-sol-elite-get-only-${{ github.run_id }}
+          path: runtime/s1-sol-elite-collect/
+          retention-days: 30
+          if-no-files-found: warn
+
   sol-max-implementation-patch:
     # One owner-issued PR commit launches one bounded paid Sol 6.1 MAX patch
     # candidate. This lane can neither push PR code nor grant merge authority.
@@ -332,6 +490,9 @@ jobs:
             scripts/api_agent/temporary_bridge_pr_review.py \
             scripts/api_agent/s1_v43_terra_max_review.py \
             scripts/api_agent/fmos_mission_loop_audit_dispatch.py \
+            scripts/api_agent/sol_max_elite_dispatch.py \
+            scripts/api_agent/sol_max_elite_patch_admit.py \
+            scripts/api_agent/sol_max_elite_transport.py \
             scripts/api_agent/api_gateway.py \
             scripts/framework_intelligence/automation_orchestration_v1.py \
             scripts/framework_intelligence/framework_learning_supervisor.py \
@@ -362,6 +523,10 @@ jobs:
             tests.api_agent.test_temporary_bridge_pr_review \
             tests.api_agent.test_s1_v43_terra_max_review \
             tests.api_agent.test_fmos_mission_loop_audit_dispatch \
+            tests.api_agent.test_sol_max_elite_dispatch \
+            tests.api_agent.test_sol_max_elite_patch_admit \
+            tests.api_agent.test_sol_max_elite_sandbox \
+            tests.api_agent.test_sol_max_elite_transport \
             tests.governance.test_s1_native_handoff_auth_v1 \
             tests.api_agent.test_capability_router \
             tests.framework_intelligence.test_automation_orchestration_v1 \

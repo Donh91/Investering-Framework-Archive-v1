@@ -1,0 +1,47 @@
+{
+  "contract": "RESEARCH_LAB_SOL_API_MISSION_PACKET_v1",
+  "created_date": "2026-11-04",
+  "status": "OWNER_RELEASED_FOR_SINGLE_RESEARCH_REVIEW",
+  "mission_id": "CN1879-ROOT-CAUSE-20261104-001",
+  "title": "Seven-day issuance root-cause, smallest safe source fix",
+  "priority": "P0",
+  "recommended_task_lane": "RESEARCH_LAB_SOL_ANALYSIS",
+  "recommended_model": "gpt-6.1-sol",
+  "reasoning_effort": "high",
+  "question": "Can any authentic prospective 7/7 candidate pass the existing #1879 quote gate when the independent quote flag is always false? Find the minimal secure existing-source repair. Separate that mechanical admission defect from model abstention.",
+  "hypothesis": "The current path to accepting an otherwise valid candidate may be impossible because source binding and forecast accuracy are conflated.",
+  "baseline": "Current immutable 0/7 original W45 and existing safety gates.",
+  "falsifier": "Find a valid original positive-path case where quote attestation is actually true, or demonstrate an independent missing original price-chain artifact that makes acceptance unsafe.",
+  "kill_condition": "If raw OHLC quote evidence is unverifiable, report exactly what is missing and preserve abstention.",
+  "required_outputs": [
+    "REACHABILITY_PROOF",
+    "ONE_MINIMAL_SOURCE_FIX",
+    "ONE_POSITIVE_AND_THREE_NEGATIVE_TESTS",
+    "INPUT_PROVENANCE_VS_MODEL_ABSTENTION",
+    "EXACT_ORIGINAL_PR_FILES",
+    "GO_OR_BLOCK_VERDICT"
+  ],
+  "forbidden": [
+    "code write",
+    "automatic merge",
+    "historical rewrite",
+    "fabricated forecast values",
+    "new workflow",
+    "market action",
+    "source gate bypass"
+  ],
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "canonical_promotion": false,
+    "repository_write": false
+  },
+  "exact_pr_head_shas": {
+    "1879": "291e17762f512ad3b1b3e091acd93bdb2e1a3c77"
+  },
+  "review_only_no_code_write": true,
+  "max_runs_for_this_release": 1
+}

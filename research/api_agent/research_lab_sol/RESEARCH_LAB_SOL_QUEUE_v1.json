@@ -253,7 +253,7 @@
     {
       "sequence": 10,
       "mission_id": "TASK2-PIT-P0-SOL61-20261019-002",
-      "state": "FINAL_ADJUDICATED",
+      "state": "OWNER_HELD_AFTER_LAST_VERIFIED_API_RESULT",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_PIT_REVIEW_v1.json",
       "context_status": "EXACT_PR1675_2026_10_19_REVISION",
       "context_paths": [
@@ -266,43 +266,28 @@
       "pass_scope": "SEPARATE_NEW_MATERIAL_TASK2_PIT_FALSIFIER_ONE_PAID_PASS",
       "additional_sol_pass_limit": 1,
       "selected_live_rules": [],
-      "new_paid_attempts_authorized": true,
+      "new_paid_attempts_authorized": false,
       "owner_release_reason": "USER_AUTHORIZED_DISTINCT_TASK2_SCIENTIFIC_PIT_ADVERSARIAL_REVIEW_2026_10_19_EXACT_PR1675_HEAD_0e7ac446edd51063d2a4aa2a41a71c8abe27bf0f",
-      "final_verdict": "INSUFFICIENT_EVIDENCE",
-      "completed_paid_receipt": "research/api_agent/outputs/research_lab_sol/TASK2-PIT-P0-SOL61-20261019-002/issue-1476/comment-6270675295/receipt.json",
-      "follow_up_requires_material_new_evidence": true
+      "completed_api_results": [
+        "research/api_agent/outputs/research_lab_sol/TASK2-PIT-P0-SOL61-20261019-002/issue-1476/comment-6270675295/receipt.json"
+      ],
+      "owner_hold_reason": "ONE_VERIFIED_2026_10_19_API_RECEIPT; NO_REPEAT"
     },
     {
       "sequence": 11,
-      "mission_id": "RL-NEWS-INTELLIGENCE-EDGE-011",
+      "mission_id": "CN1879-ROOT-CAUSE-20261104-001",
       "state": "ACTIVE_RELEASED",
-      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-04__RL-NEWS-INTELLIGENCE-EDGE-011__sol-api.json",
-      "context_status": "SOURCE_BOUND_NOV4_NEW_P0_CODE_UNDER_OWNER_AUTHORIZED_PR_NOT_YET_CI_VERIFIED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_ONE_SHOT_v1.json",
+      "context_status": "PINNED_ORIGINAL_PR1879_HEAD_AND_W44_W45_SOURCE_EXCERPTS",
       "context_paths": [
-        "04_MARKET_LEARNING/external_research/news_intelligence/2026-11-04__NEWS_INTELLIGENCE_P0_SOURCE_AUDIT_EXECUTION_v1.md",
-        "06_RESEARCH_LAB/mission_packets/2026-11-04__RL-NEWS-INTELLIGENCE-EDGE-011__sol-api.json",
-        "scripts/data_terminal/situation_room_daily_owner.py",
-        "scripts/data_terminal/situation_room_static_daily_adapter.py",
-        "scripts/api_agent/augment_director_news_intelligence_context.py",
-        "scripts/research/coingecko_news_shadow_probe.py",
-        "tests/data_terminal/test_situation_room_daily_owner.py",
-        "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/2026/11/2026-11-04.json",
-        "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/EVENT_LEDGER.jsonl",
-        "04_MARKET_LEARNING/external_research/news_intelligence/NEWS_INTELLIGENCE_FORWARD_TEST_v1.md",
-        "04_MARKET_LEARNING/external_research/news_intelligence/forward_rows/2026/10/NEWSFT-20261007-001.json",
-        "research/api_agent/outputs/daily/2026/11/04/131355/context.json",
-        "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/04/CMP-20261104-e410032378e9.json",
-        "research/api_agent/API_TASK_REGISTRY_v1.json",
-        "AGENTS.md"
+        "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_EVIDENCE_v1.md",
+        "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_ONE_SHOT_v1.json"
       ],
-      "analysis_focus": "ADVERSARIAL_NEWS_INTELLIGENCE_DISCOVERY_TO_KOMPAS_ALPHA_SOURCE_AND_PIT_RECOVERY_WITH_NO_CLAIMED_EDGE",
-      "owner_authorization": "OWNER_2026-11-04_ISSUE_1888_ONE_SHOT_HIGH",
+      "release_gate": "OWNER_ONE_SHOT_AUTHORISED_20261104_WITH_GLOBAL_30_12_3_BUDGET",
+      "pass_scope": "ONE_INDEPENDENT_SOURCE_GATE_FALSIFICATION_NO_CODE_WRITE",
+      "additional_sol_pass_limit": 1,
       "new_paid_attempts_authorized": true,
-      "max_paid_attempts": 1,
-      "prerequisite_previous_receipt": "research/api_agent/outputs/research_lab_sol/TASK2-PIT-P0-SOL61-20261019-002/issue-1476/comment-6270675295/receipt.json",
-      "output_advisory_only": true,
-      "no_auto_merge": true,
-      "no_new_scheduler": true
+      "owner_release_reason": "OWNER_APPROVES_SINGLE_API_ANALYSIS_WITHIN_BUDGET_2026_11_04"
     }
   ],
   "authority": {
@@ -315,7 +300,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "RL-NEWS-INTELLIGENCE-EDGE-011",
-  "program_phase": "2026_10_19_TASK2_PIT_SOL61_REVIEW_OWNER_RELEASED_SITE_P1_UNMERGED",
-  "last_owner_release_date": "2026-11-04"
+  "active_mission": "CN1879-ROOT-CAUSE-20261104-001",
+  "program_phase": "2026_11_04_CN1879_ONE_SHOT_SOL_ROOT_CAUSE"
 }

@@ -19,6 +19,10 @@ jobs:
         run: |
           python -m py_compile 04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/source_qa_v1.py 04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/test_source_qa_v1.py
           python 04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/test_source_qa_v1.py
+      - name: Verify offline News OSS event/PIT challenger regression controls
+        run: |
+          python -m py_compile scripts/research/news_oss_event_challenger.py tests/research/test_news_oss_event_challenger.py
+          python -m unittest -v tests.research.test_news_oss_event_challenger
       - name: Verify Task 2 R0 pinned-source Git-object fail-closed cases
         run: node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs
       - name: Run onchain options REA synthetic positive and negative controls (research only)

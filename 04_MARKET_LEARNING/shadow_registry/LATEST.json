@@ -17,14 +17,14 @@
       "new_schedulers": 0,
       "wallet_signing": false
     },
-    "generated_at_utc": "2026-10-26T13:31:19.667395Z",
+    "generated_at_utc": "2026-11-02T16:31:38.299481Z",
     "lanes": [
       {
         "independent_review_complete": false,
         "lane_id": "COMPASS",
         "metrics": {
-          "calibration_eligible_rows_not_independent_forecasts": 652,
-          "calibration_warning_rows_not_proven_alerts": 440,
+          "calibration_eligible_rows_not_independent_forecasts": 1126,
+          "calibration_warning_rows_not_proven_alerts": 914,
           "economic_action_edge": "NOT_ESTABLISHED",
           "qualified_buy_sell_net_return": null
         },
@@ -34,22 +34,22 @@
           {
             "expected_contract": "SHADOW_COMPASS_V2_LATEST_POINTER_v1",
             "path": "04_MARKET_LEARNING/handlekompas/shadow_v2/LATEST.json",
-            "sha256": "432d92ae6a709907dba96fd3b022470c0e96bb4aa74fa2592c86b80d69a47b27",
-            "source_at_utc": "2026-10-25T21:56:24Z",
+            "sha256": "e82dd331008433f9d9271df665d62e71f9169707a29f28bfd7ae107fb1349a64",
+            "source_at_utc": "2026-11-01T22:55:59Z",
             "source_status": "CURRENT_CONTRACT_VALID"
           },
           {
             "expected_contract": "ACTION_COMPASS_PROTECTION_CALIBRATION_v2",
             "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-            "sha256": "b1f8ae059413458855d69c5c5e43faf3b87948b78ce5c5ebc0d84830b6bf5171",
-            "source_at_utc": "2026-10-26T07:53:30Z",
+            "sha256": "56f1505c7c7990795b2d36946b1bc3c58fd0d95d364ee001ef20919593de3fc2",
+            "source_at_utc": "2026-11-02T09:37:20Z",
             "source_status": "CURRENT_CONTRACT_VALID"
           },
           {
             "expected_contract": "EDGE_COMPOUND_GOVERNOR_v1",
             "path": "research/framework_memory/edge_compound_governor/LATEST.json",
-            "sha256": "6e9a34fc90dd9842a738664ad85f3aea474def625074bf458bbaed74839f482b",
-            "source_at_utc": "2026-10-26T07:54:43.384294Z",
+            "sha256": "58c725cc25528d3810f540a39bd46958ece880d0b410e45e824ca26b795fb053",
+            "source_at_utc": "2026-11-02T09:27:12.608672Z",
             "source_status": "CURRENT_CONTRACT_VALID"
           }
         ],
@@ -62,7 +62,7 @@
         "lane_id": "AUTO_TRADING",
         "metrics": {
           "global_proposal_time_trial_denominator": null,
-          "research_candidate_count_NOT_GLOBAL_TRIAL_DENOMINATOR": 564,
+          "research_candidate_count_NOT_GLOBAL_TRIAL_DENOMINATOR": 618,
           "research_queue_shadow_only": null,
           "verified_paper_trade_net_return": null
         },
@@ -72,8 +72,8 @@
           {
             "expected_contract": "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1",
             "path": "research/experiment_lifecycle/weekly_adjudication/LATEST.json",
-            "sha256": "c739e4b946858de9f0892327526b1511d4856052500fe65f8261d34a7e6609de",
-            "source_at_utc": "2026-10-19T14:27:52Z",
+            "sha256": "a7183822884943dad59082b84170f6cf80301536df35871ff69d2394d118af99",
+            "source_at_utc": "2026-10-26T14:58:37Z",
             "source_status": "CURRENT_CONTRACT_VALID"
           },
           {
@@ -111,9 +111,9 @@
       "qualified_live_trading_strategies": 0,
       "supervisor_advisory_only": true
     },
-    "week": "2026-W44"
+    "week": "2026-W45"
   },
-  "generated_at_utc": "2026-10-26T13:31:19.667395+00:00",
+  "generated_at_utc": "2026-11-02T16:31:38.299481+00:00",
   "interpretation_rule": "This runtime records evidence availability and pre-registered evaluator outputs. It does not infer NOISE, REDUNDANT or PROMOTION from file presence alone.",
   "portfolio_execution": false,
   "promotion_requires_separate_review": true,
@@ -122,7 +122,7 @@
       "calibration_readiness": "SCORABLE",
       "entry_signal_summary": {
         "activation_event_count": 8,
-        "generated_at_utc": "2026-10-26T11:07:37.773679+00:00",
+        "generated_at_utc": "2026-11-02T15:56:49.458715+00:00",
         "horizons": {
           "14d": {
             "btc_mean_return_pct": 3.3901803523940455,
@@ -160,7 +160,7 @@
       "evaluator_binding": {
         "contract": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1",
         "output_path": "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
-        "output_sha256": "c9c0ad92eb86a712d77a9c96a24edc4a5162f29faf1452c91f9800294c147c30",
+        "output_sha256": "00b9e4f1eaccaa00808bcc91e835cf7d84b8a7c8d99cb38d1d95ac2b6089691d",
         "producer_path": "scripts/entry_signal/entry_signal_ledger.py",
         "producer_sha256": "46a4c3edfcf6d1b610aa61f7c209965c3714976135003030fe9ce5d7fd0b5268",
         "reason": "REGISTERED_EVALUATOR_OUTPUT_VALID",
@@ -170,14 +170,14 @@
       },
       "evidence": [
         {
-          "commit": "e2ae8aff6d85ec2bd23dc682e357fa5aee1a7ec5",
-          "committed_at": "2026-10-26T11:07:38Z",
+          "commit": "fa5bcf767c5b99c5877fa0db8d8648886134c3df",
+          "committed_at": "2026-11-02T15:56:52Z",
           "exists": true,
           "path": "04_MARKET_LEARNING/entry_signals/LATEST.json"
         },
         {
-          "commit": "e2ae8aff6d85ec2bd23dc682e357fa5aee1a7ec5",
-          "committed_at": "2026-10-26T11:07:38Z",
+          "commit": "fa5bcf767c5b99c5877fa0db8d8648886134c3df",
+          "committed_at": "2026-11-02T15:56:52Z",
           "exists": true,
           "path": "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json"
         },
@@ -188,8 +188,8 @@
           "path": "04_MARKET_LEARNING/entry_signals/events"
         },
         {
-          "commit": "e2ae8aff6d85ec2bd23dc682e357fa5aee1a7ec5",
-          "committed_at": "2026-10-26T11:07:38Z",
+          "commit": "fa5bcf767c5b99c5877fa0db8d8648886134c3df",
+          "committed_at": "2026-11-02T15:56:52Z",
           "exists": true,
           "path": "04_MARKET_LEARNING/entry_signals/outcomes"
         }
@@ -408,14 +408,14 @@
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/TRANSFORM_FREEZE_REGISTRY.json"
         },
         {
-          "commit": "ca99fc4e3f3ccd110d5022f7c7d61560dcae9e71",
-          "committed_at": "2026-10-26T11:34:05Z",
+          "commit": "0d5033effa12ae3783f030a9060fb186418e0437",
+          "committed_at": "2026-11-02T13:52:54Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv"
         },
         {
-          "commit": "0d25a405863609262c937f4638046bfb5ae561ce",
-          "committed_at": "2026-08-22T18:13:45+02:00",
+          "commit": "0d5033effa12ae3783f030a9060fb186418e0437",
+          "committed_at": "2026-11-02T13:52:54Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/14_DIVERGENCE_FNP_LEDGER.csv"
         },
@@ -426,20 +426,20 @@
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/CATALYST_LEDGER.csv"
         },
         {
-          "commit": "ca99fc4e3f3ccd110d5022f7c7d61560dcae9e71",
-          "committed_at": "2026-10-26T11:34:05Z",
+          "commit": "0d5033effa12ae3783f030a9060fb186418e0437",
+          "committed_at": "2026-11-02T13:52:54Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/RELEVANCE_STATE.json"
         },
         {
-          "commit": "ca99fc4e3f3ccd110d5022f7c7d61560dcae9e71",
-          "committed_at": "2026-10-26T11:34:05Z",
+          "commit": "0d5033effa12ae3783f030a9060fb186418e0437",
+          "committed_at": "2026-11-02T13:52:54Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor/LATEST.json"
         },
         {
-          "commit": "ed5f49557c89f19a5a2b037c8aae9e547efedb09",
-          "committed_at": "2026-10-19T13:15:43Z",
+          "commit": "d9161bafb312509cb67dddae2c8107c605461f6d",
+          "committed_at": "2026-10-26T14:16:22Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/weekly/LATEST.json"
         }
@@ -459,5 +459,5 @@
     "sensor_count": 9,
     "source_missing_count": 0
   },
-  "week": "2026-W44"
+  "week": "2026-W45"
 }
