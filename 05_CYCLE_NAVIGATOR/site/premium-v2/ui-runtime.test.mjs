@@ -129,7 +129,7 @@ test('P2-D unresolved and out-of-order asset fetches cannot borrow BTC under ETH
  h.setFetch(url=>new Promise(resolve=>pending.push({url,resolve})));
  h.buttons.asset[1].click(); // ETH loading
  h.buttons.lang[1].click();
- assert.equal(h.get('pair').textContent,'ETH / USD');
+ assert.equal(h.get('pair').textContent,'ETH / UNAVAILABLE');
  assert.equal(h.get('observed-value').textContent,'—');
  h.get('hour-slider').listeners.input({currentTarget:{value:'168'}});
  assert.equal(h.get('observed-value').textContent,'—');
@@ -137,7 +137,7 @@ test('P2-D unresolved and out-of-order asset fetches cannot borrow BTC under ETH
  for(const p of pending.slice(2))p.resolve({ok:true,json:async()=>String(p.url).endsWith('latest.json')?snapshot():null});
  await h.settle();assert.match(h.get('observed-value').textContent,/80,168/);
  for(const p of pending.slice(0,2))p.resolve({ok:true,json:async()=>String(p.url).endsWith('latest.json')?snapshot():null});
- await h.settle();assert.equal(h.get('pair').textContent,'BTC / USD');
+ await h.settle();assert.equal(h.get('pair').textContent,'BTC / UNAVAILABLE');
  assert.match(h.get('observed-value').textContent,/80,168/);
 });
 test('P2-C Proof renders timestamp and SLA separately from provisional score; open tab expires',async()=>{

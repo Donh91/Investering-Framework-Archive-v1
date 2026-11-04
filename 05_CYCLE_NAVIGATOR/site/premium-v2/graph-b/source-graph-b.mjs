@@ -118,7 +118,7 @@ function paintFrozenWindowLedger(bands){
   tag.textContent=(language==='en'?'DAYS ':'DAG ')+['1–2','3–4','5–7'][i];
   const value=document.createElement('strong');value.textContent=
    new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0}).format(v.forecast_low)+
-   ' – '+new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0}).format(v.forecast_high)+' USD';
+   ' – '+new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0}).format(v.forecast_high)+' '+(model?.forecast_declared_quote_unit||'UNAVAILABLE');
   const title=document.createElement('small');
   title.textContent=language==='en'?'Original frozen range':'Originalt frosset interval';
   box.append(tag,value,title);parent.append(box);
@@ -135,7 +135,7 @@ function paintDailyResearchNotes(daily){
  for(const point of daily){
   const article=document.createElement('article');article.className='cn-daily-note';
   const title=document.createElement('strong');title.textContent=
-   (language==='da'?'Dag ':'Day ')+point.day+' · '+nf.format(point.low)+' – '+nf.format(point.high)+' USD';
+   (language==='da'?'Dag ':'Day ')+point.day+' · '+nf.format(point.low)+' – '+nf.format(point.high)+' '+(model?.forecast_declared_quote_unit||'UNAVAILABLE');
   const reason=document.createElement('p');reason.textContent=point.why;
   const condition=document.createElement('small');condition.textContent=
     (language==='da'?'Ugyldig hvis: ':'Invalid if: ')+point.invalidate_if;
@@ -150,7 +150,7 @@ function plot(){
  // Update focus and pair before the early missing-source return.
  document.querySelectorAll('[data-asset]').forEach(b=>
   b.setAttribute('aria-pressed',String(b.dataset.asset===asset)));
- set('pair',asset+' / USD');
+ set('pair',asset+' / '+(model?.actual_quote_unit||'UNAVAILABLE'));
  const card=$('variant-panel');card.dataset.variant='b';
  card.dataset.source=model?.forecast_status==='SOURCE_ISSUED'?'published':'missing';
  card.dataset.freshness=model?.source_status==='SOURCE_BOUNDED'?model.live_freshness.toLowerCase():'unavailable';
@@ -273,7 +273,7 @@ function plot(){
  for(let i=0;i<5;i++){const span=document.createElement('span');
   span.textContent=new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0}).format(hi-(hi-lo)*i/4);
   span.style.top=(100*(28+344*i/4)/405)+'%';axis.append(span)}
- set('pair',asset+' / USD');set('observed-value',num(last?.value));
+ set('pair',asset+' / '+(model?.actual_quote_unit||'UNAVAILABLE'));set('observed-value',num(last?.value));
  set('time-label',last?utc(last.time*1000):'—');
  set('timeline-label',utc(cursor));
  const st=model.forecast_status==='SOURCE_ISSUED'?
@@ -285,7 +285,10 @@ function plot(){
  set('feed-status',(stale?t('FORÆLDEDE OBSERVATIONER · IKKE AKTUEL KURS. ','STALE OBSERVATIONS · NOT CURRENT PRICE. '):'')+
  t('Kilde: offentlig CN '+model.forecast_week+' · #'+model.public_issue_number,
  'Source: public CN '+model.forecast_week+' · #'+model.public_issue_number)+
- ' · '+t('senest målt','last observed')+' '+(model.last_observed_at_utc||'—'));
+ ' · '+t('senest målt','last observed')+' '+(model.last_observed_at_utc||'—')+
+  ' · '+t('spot-valuta: ','spot quote: ')+(model.actual_quote_unit||'UNAVAILABLE')+
+  ' · '+t('frosset interval: ','frozen interval: ')+(model.forecast_declared_quote_unit||'UNAVAILABLE')+
+  ' · '+t('ingen automatisk omregning','no automatic conversion'));
  set('chart-title',t('Mandagens intraday-intervaller mod faktisk kurs','Monday intraday forecast ranges versus observed price'));
  set('chart-description',t('Mandagens tre originale prognoseintervaller vises for dag 1–2, 3–4 og 5–7. Den grønne observerede kurs brydes ved manglende timer. Blå stiplet forventet dagskurs kræver syv udstedte punkter.',
  'Verified hourly prices only; missing hours break the path. Blue daily forecasts require original published points.'));

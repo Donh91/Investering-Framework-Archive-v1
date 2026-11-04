@@ -49,7 +49,7 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;b
 </div>
 </section>
 <section class="panel"><h2>Ugearkiv</h2><div class="scrolltable"><table><thead><tr><th>Uge</th><th>CN-prognose</th><th>Faktiske data</th></tr></thead><tbody id="archive"><tr><td colspan="3">Afventer kilde</td></tr></tbody></table></div></section>
-<p class="note">Historikken bygger kun på det oprindelige CN-freeze og verificerede, afsluttede Hourly Capture-kurser. Manglende prognoser og databrud udfyldes aldrig kunstigt. Frosne prognoser er i USD, mens de registrerede spotkurser er USDT; sammenligning er indikativ, ikke en godkendt præcisionsscore eller et handelssignal.</p>
+<p class="note">Historikken bygger kun på det oprindelige CN-freeze og verificerede, afsluttede Hourly Capture-kurser. Manglende prognoser og databrud udfyldes aldrig kunstigt. Prognosens valuta vises kun, når den er deklareret i den originale frosne kilde. Observerede Binance Spot-kurser er i USDT. Ingen automatisk USD/USDT-omregning, og ingen godkendt præcisionsscore eller handelssignal.</p>
 </main>
 <script type="module">
 const URL='../data/graph-history/timeline.json';
@@ -125,7 +125,7 @@ function table(){
  const body=$('archive');body.replaceChildren();
  for(const w of [...data.weeks].reverse()){
   const tr=document.createElement('tr');
-  const status=w.forecast_status==='PUBLISHED'?'7 originale punkter':'Ikke udstedt';
+  const status=(w.forecast_status==='PUBLISHED'?'7 originale punkter':'Ikke udstedt')+' · prognosevaluta '+(w.forecast_model_declared_quote||'UNAVAILABLE');
   for(const value of [w.week,status,`${w.observed_hours}/168 · ${w.actual_status}`]){
    const td=document.createElement('td');td.textContent=value;tr.append(td);}
   body.append(tr);

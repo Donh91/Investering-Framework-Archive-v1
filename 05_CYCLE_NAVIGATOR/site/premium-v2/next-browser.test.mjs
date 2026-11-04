@@ -317,7 +317,8 @@ try{
   assert.ok(report.horizonSourceState==='unavailable'||
     (report.horizonsPresent&&report.pathStageCount===10),
    'NEXT_HORIZON_SOURCE_OR_PATH_COUNT_MISMATCH');
-  assert.ok(selection.ethSelected&&selection.pair==='ETH / USD','NEXT_BTC_ETH_NOT_INTERACTIVE');
+  assert.ok(selection.ethSelected&&selection.pair==='ETH / USDT',
+    'NEXT_BTC_ETH_NOT_INTERACTIVE_OR_NATIVE_QUOTE_MISMATCH:'+JSON.stringify(selection));
   assert.ok(report.rootPath.endsWith(base+'next/'),'NEXT_WRONG_BASEPATH');
   // Current NEXT pilot is retained for source/rollback coverage; root audited below.
   assert.equal(errors.length,0,'NEXT_BROWSER_JS_EXCEPTIONS:'+JSON.stringify(errors));
@@ -356,7 +357,7 @@ try{
    assert.equal(staleAction.bias,'—','NEXT_OFFLINE_RETAINED_BULL_BEAR');
    assert.match(staleAction.biasNote,/No verified Bull\/Bear/,'NEXT_OFFLINE_RETAINED_BIAS_VALIDITY');
    assert.equal(staleAction.quote,'—','NEXT_ASSET_SWITCH_BORROWED_PRIOR_PRICE');
-   assert.equal(staleAction.pair,'BTC / USD','NEXT_ASSET_SWITCH_WRONG_SELECTED_PAIR');
+   assert.equal(staleAction.pair,'BTC / UNAVAILABLE','NEXT_ASSET_SWITCH_WRONG_SELECTED_PAIR');
   }
  }
  await send('Page.navigate',{url:origin+'next/graph-b/source-graph-b.html'});
