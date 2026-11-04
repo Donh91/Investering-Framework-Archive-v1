@@ -14,8 +14,11 @@ from pathlib import Path
 from typing import Any, Mapping
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.api_agent.api_gateway import estimate_cost
 from scripts.cycle_navigator.prospective_range_bridge import load_bridge
 from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy, daily_path_issue_summary, daily_range_plan_schema, validate_daily_range_plan
+from scripts.cycle_navigator.daily_path_recovery import recover_daily_path, reject_unverified_initial_daily_quotes, quarantine_late_daily_issuance
+from scripts.cycle_navigator.price_input_attestation import attest_completed_week, PriceEvidenceError, CONTRACT as ORIGINAL_PRICE_CONTRACT
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
 
 
@@ -341,7 +344,7 @@ def output_schema() -> dict[str, Any]:
             },
             "forecast_freeze": {
                 "type": "object", "additionalProperties": False,
-                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "market_structure_analysis", "bull_bear_scale", "forecast_horizon_days", "intraday_map", "daily_price_path", "daily_range_plan"],
+                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "market_structure_analysis", "bull_bear_scale", "forecast_horizon_days", "intraday_map", "price_quote", "daily_price_path", "daily_range_plan"],
                 "properties": {
                     "scoring_contract": {"type": "string", "const": "CN_PUBLIC_CONTINUITY_v1"},
                     "btc_range_low": nullable_num, "btc_range_high": nullable_num,
@@ -409,6 +412,10 @@ def output_schema() -> dict[str, Any]:
                         }
                     },
                     "forecast_horizon_days": {"type": "integer", "minimum": 5, "maximum": 10},
+                    "price_quote": {"type": "object", "additionalProperties": False,
+                        "required": ["BTC", "ETH"],
+                        "properties": {asset: {"type": "string", "enum": ["USD", "USDT", "UNAVAILABLE"]}
+                                       for asset in ("BTC", "ETH")}},
                     "daily_price_path": daily_path_schema(),
                     "daily_range_plan": daily_range_plan_schema(),
                     "intraday_map": intraday_schema
@@ -545,6 +552,8 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
         "market_cycle_context describes the current accepted weekly macro regime, not a projected destination or a tactical segment permission. Use UNAVAILABLE when no stable phase is established. Translate why and next_gate into brief public English, without implying a scheduled transition. "
         "NEW DAILY RANGE RESEARCH: In forecast_freeze.daily_range_plan issue seven prospective, separate high/low ranges for UTC Monday–Sunday, independently for BTC and ETH, with per-day short causal explanation WHY and observable invalidate_if trigger. The ranges MUST be generated from evidence BEFORE outcomes, bounded by the authoritative frozen whole-week envelope; they are NOT derived or subdivided mechanically from the three 1-2/3-4/5-7 legacy windows, nor retrofilled using realized prices. Make the seven-day ranges plausible as uncertain conditional scenarios, not precise claims of clock-time turns. If insufficient evidence to time a day, asset status UNAVAILABLE, points=[], explicit reason; do not invent false precision. Preserve separately mandatory 3-window ranges, daily expected-close field, and current public scoring. Future 2–3-week daily ranges remain shadow research ONLY until independently verified. This new per-day research contract is append-only, nonauthoritative and forward-evaluated 1–4 weeks after freeze, with issue/clock/source IDs bound. "
+        "PRIMARY SEVEN-DAY PRICE PATH PRODUCT: For each of BTC and ETH independently, first inspect the completed-week 168h observations, Master Monday and the independent pre-model spot pair/quote observation. The latest observed spot quote is only a source-quality hint, NEVER self-proof of the LLM weekly envelope currency. When sufficient source-qualified evidence supports a conditional base case, attempt exactly seven separately considered UTC Monday-to-Sunday daily expected_close values, each with low/high inside the original weekly bounds. A MIXED regime or multiple plausible scenarios alone does NOT require abstention. Express the reasonable conditional central path, its invalidation and uncertainty; do not mechanically interpolate three windows, fill in a week midpoint, retrofill outcomes, fabricate turning times, or silently convert USD and USDT. If day-by-day price levels are not independently defensible, explicitly abstain with a specific source/quote/timing reason rather than generic MIXED. Preserve a valid BTC path when ETH lacks evidence and vice versa. This changes only prospective model guidance; final quote/provenance gates retain independent fail-closed authority. "
+        "Explicitly populate forecast_freeze.price_quote.BTC/ETH with the actual quote of the original corresponding weekly price envelope: USD, USDT or UNAVAILABLE. Bind quote to supplied completed-week source, never infer USD from a dollar sign or silently treat USDT as USD. If quote cannot be established, use UNAVAILABLE; the downstream daily-path guard must abstain. "
         "Also populate forecast_freeze.daily_price_path with prospective BTC/ETH UTC Monday-Sunday daily expected closing prices and low/high ranges inside the weekly envelope, day 1 through 7. This is the CONDITIONAL BASE-CASE daily analytical path from the existing final Master Monday synthesis, not a statistically calibrated probability or a trade signal. Decide independently for BTC and ETH. A MIXED market, a possible retest, or competing BULL/BEAR alternatives does not alone rule out a conditional BASE-CASE path: first evaluate whether the evidence, accepted weekly range, and base_case_this_week support one coherent seven-day expected-close sequence. If they do, issue all seven authentic analytical expected closes with justified daily low/high bounds. Describe conditional reversals through base-case assumptions and existing protection text, not made-up oscillations. Do not fabricate a daily turning point, derive expected closes from range midpoints, copy last week's observed closes, infer future prices from target-week outcomes, or force an unsupported path. If an asset has no defensible day-by-day time profile, set its status to UNAVAILABLE with an explicit reason and points=[]; the other asset may still publish independently. Weekly and 3-window range publication must continue even when the daily path abstains. The daily path is a presentation-only uncalibrated forecast, not automatic economic edge or official action, and does not change public price precision scoring. "
         "In protection.public_explanation, translate the internal analysis into three short plain-English evidence statements: summary, watch_for, weakens_if. No internal jargon, numbers, dates, percentages or trading instructions in that copy. Preserve risk classification and uncertainty. onset_start_day/onset_end_day are nullable UTC days 1-7 of the forecast week for a supported possible onset window, never decline duration. Both must be null if timing is unsupported. This copy has no action authority. "
         "Populate decision_projection as the sole machine-readable directional/protection projection, including next_1_3d, next_5_7d, next_2_3w, next_21_30d, weeks_4_8 and protection. In next_21_30d, scenario weights are uncalibrated analytical weights, never probabilities, and BTC/ETH/ETHBTC directions must be explicit. It must be semantically equivalent to the narrative but never inferred by downstream keyword parsing. "
@@ -657,6 +666,8 @@ def main() -> None:
     public_issue = latest_public_issue + 1
     target_dir = repo / "05_CYCLE_NAVIGATOR/weekly" / str(target_year) / f"W{target_week:02d}"
     target_dir.mkdir(parents=True, exist_ok=True)
+    if (target_dir / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").exists():
+        raise SystemExit("existing_forecast_freeze_refuses_reissue")
 
     # Publish an independent deterministic range benchmark before the LLM call.
     # It is deliberately NOT added to the model context, preserving benchmark independence.
@@ -713,6 +724,43 @@ def main() -> None:
         "prospective_range_bridge": load_bridge(repo, target_year=target_year, target_week=target_week, freeze_at=datetime.now(timezone.utc)),
         "range_continuity_rule": "READY 168h hourly capture makes BTC/ETH weekly and intraday ranges mandatory."
     }
+    # Supply an immutable pre-model observation of the actual retained spot
+    # pair/quote and weekly source bytes. This is a DATA-QUALITY HINT, not
+    # independent attestation of the LLM-generated weekly price envelope.
+    # The source gate must still independently qualify issuance at use.
+    observed_spot = (((weekly_capture or {}).get("hourly_sequence") or {})
+                     .get("spot_flow_readback") or {})
+    context["pre_model_spot_quote_observation"] = {
+        "contract": "CN_PREMODEL_SPOT_QUOTE_OBSERVATION_v1",
+        "authority": "SOURCE_OBSERVATION_NOT_ENVELOPE_ATTESTATION",
+        "weekly_capture_sha256": (sha256_bytes(weekly_capture_path.read_bytes())
+                                  if isinstance(weekly_capture, dict) else None),
+        "assets": {
+            asset: {field: (observed_spot.get(asset) or {}).get(field)
+                    for field in ("symbol", "quote_unit", "source_rows_sha256",
+                                  "status", "observed_hours")}
+            for asset in ("BTC", "ETH")
+        },
+    }
+    # Verify original Binance raw bytes against retained 168 UTC OHLC rows
+    # and the actual weekly model-input price frame BEFORE the original call.
+    # This is read-only. Absence of Actions artifacts must never block weekly
+    # ranges or create an extra billed inference; only daily paths abstain.
+    trusted_price_source = None
+    try:
+        trusted_price_source = attest_completed_week(
+            repo, completed_year, completed_week, weekly_capture,
+            issued_at=datetime.now(timezone.utc),
+            token=os.environ.get("GITHUB_TOKEN", ""),
+            repo_full_name=os.environ.get("GITHUB_REPOSITORY", "Donh91/Investering-Framework-Archive-v1"))
+        context["pre_model_original_price_attestation"] = trusted_price_source.public_summary()
+    except (PriceEvidenceError, OSError, ValueError, TypeError) as exc:
+        context["pre_model_original_price_attestation"] = {
+            "contract": ORIGINAL_PRICE_CONTRACT,
+            "status": "UNAVAILABLE",
+            "reason": (str(exc).split(":")[0] or type(exc).__name__)[:100],
+            "authority": "NO_INDEPENDENT_QUOTE_ATTESTATION",
+        }
     prompt = (
         f"Generate internal Cycle Navigator machine issue #{issue} for ISO week W{target_week:02d}, but the continuing public series number for this forecast week is CN #{public_issue}. Use CN #{public_issue} in readable_markdown and x_ready_markdown headings/current-issue references. First evaluate the prior frozen machine issue #{prev_issue} against completed W{completed_week:02d}. "
         "Then freeze the new week's explicit forecasts. The X-ready version must include a precision section, an honest what-went-well/what-went-wrong section, "
@@ -867,9 +915,48 @@ def main() -> None:
             raise SystemExit(f"RANGE_CONTINUITY_BLOCK:intraday_{bucket}_unavailable_despite_168h_ready")
 
     validate_daily_range_plan(freeze.get("daily_range_plan"), freeze, target_year, target_week)
-    daily_path_issue = daily_path_issue_summary(freeze.get("daily_price_path"), freeze, target_year, target_week)
-    source_manifest = {"daily_path_issuance": daily_path_issue, "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
+    # Quote is original model envelope metadata, independently crosschecked
+    # against completed-week source quote in the recovery source gate.
+    context["weekly_envelope_quote"] = freeze.get("price_quote")
+    # The FIRST model answer also needs price-quote integrity. A PUBLISHED
+    # asset whose original weekly quote does not match the source quote is
+    # reduced to an honest UNAVAILABLE before any immutable freeze.
+    value = reject_unverified_initial_daily_quotes(
+        value, context, year=target_year, week=target_week,
+        issued_at=datetime.now(timezone.utc),
+        trusted_price_source=trusted_price_source)
+    freeze = value["forecast_freeze"]
+    # A valid semantic abstention may receive at most ONE additional bounded
+    # source-qualified call, always before the original immutable week freeze.
+    primary_usage = raw.get("usage") if isinstance(raw.get("usage"), dict) else {}
+    try:
+        primary_input = primary_usage.get("input_tokens")
+        primary_output = primary_usage.get("output_tokens")
+        if any(type(x) is not int or x < 0 for x in (primary_input, primary_output)):
+            raise ValueError("INVALID_PRIMARY_USAGE")
+        primary_unaccounted_cost = estimate_cost(args.model, primary_input, primary_output)
+    except (KeyError, TypeError, ValueError):
+        # Let semantic retry fail closed without blocking the valid original
+        # weekly publication if provider cost is not independently priceable.
+        primary_unaccounted_cost = float("nan")
+    value, daily_recovery_receipt = recover_daily_path(
+        value, context, year=target_year, week=target_week,
+        trusted_price_source=trusted_price_source,
+        model=args.model, issued_at=datetime.now(timezone.utc),
+        primary_unaccounted_cost_usd=primary_unaccounted_cost,
+        cost_receipt_path=(repo / "research/api_agent/outputs/weekly" /
+                           str(target_year) / f"W{target_week:02d}" /
+                           "CN_DAILY_RECOVERY_COST_RESERVATION.json"))
+    # A request that starts before day-one close but finishes after it
+    # cannot be frozen as a prospective seven-day forecast.
     generated_unix = int(time.time())
+    value = quarantine_late_daily_issuance(
+        value, year=target_year, week=target_week,
+        publication_clock=datetime.fromtimestamp(generated_unix, tz=timezone.utc))
+    freeze = value["forecast_freeze"]
+    validate_daily_path(freeze.get("daily_price_path"), freeze, target_year, target_week)
+    daily_path_issue = daily_path_issue_summary(freeze.get("daily_price_path"), freeze, target_year, target_week)
+    source_manifest = {"daily_path_issuance": daily_path_issue, "daily_path_recovery": daily_recovery_receipt, "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
     scoring_valid_from_unix = ((generated_unix + 3599) // 3600) * 3600
     scoring_valid_from_utc = datetime.fromtimestamp(scoring_valid_from_unix, tz=timezone.utc).isoformat().replace("+00:00", "Z")
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": generated_unix, "public_issue_number": public_issue, "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
