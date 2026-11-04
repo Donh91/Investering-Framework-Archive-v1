@@ -192,7 +192,7 @@ def validate_one(outdir: Path, name: str) -> dict[str, Any]:
     receipt=json.loads((outdir/"receipt.json").read_text())
     output=json.loads((outdir/"output.json").read_text())
     if receipt.get("status")!="PASS": raise ValueError(f"{name}_receipt_not_pass")
-    if receipt.get("model")!=MODEL or receipt.get("reasoning_effort")!="high": raise ValueError(f"{name}_model_binding_invalid")
+    if receipt.get("model")!=MODEL or receipt.get("reasoning_effort")!="max": raise ValueError(f"{name}_model_binding_invalid")
     if receipt.get("forecast_candidate_count")!=0 or output.get("forecast_candidates")!=[]: raise ValueError(f"{name}_forecast_candidates_forbidden")
     summary=str(output.get("summary") or "")
     required="DECISION=" if name=="pass3" else name.upper()
@@ -209,7 +209,7 @@ def report(root: Path, persisted: str) -> str:
     total_in=sum(int(rows[n]["receipt"].get("input_tokens") or 0) for n in rows)
     total_out=sum(int(rows[n]["receipt"].get("output_tokens") or 0) for n in rows)
     body=["## FMOS Autonomous Mission Loop GPT-6.1 Sol audit completed","",
-          f"Decision: **{decision}**",f"Model: {MODEL}, reasoning: high, 3-pass adversarial audit",
+          f"Decision: **{decision}**",f"Model: {MODEL}, reasoning: max, 3-pass adversarial audit",
           f"Tokens: input={total_in}, output={total_out}",f"Estimated total API cost: {total_cost:.6f} USD","",
           str(final.get("summary") or ""),"",f"Actionable final findings: {len(findings)}"]
     body.extend(["- "+x for x in findings[:12]] or ["- none"])
