@@ -70,14 +70,18 @@ def read_registration(root: Path) -> dict:
     if not isinstance(obj, dict):
         raise ValueError("ELITE_REGISTRATION_NOT_OBJECT")
     pay = obj.get("payment_policy")
-    if (obj.get("contract") != "S1_SOL_MAX_ELITE_BOUNDED_BATCH_v1"
+    status = obj.get("state")
+    active = status == "OWNER_APPROVED_DISPATCH"
+    if (status not in ("REGISTERED_NOT_EXECUTING", "OWNER_APPROVED_DISPATCH")
+            or obj.get("dispatch_enabled") is not active
+            or obj.get("contract") != "S1_SOL_MAX_ELITE_BOUNDED_BATCH_v1"
             or obj.get("repo") != REPO
             or (obj.get("model"), obj.get("reasoning_effort")) != (MODEL, EFFORT)
             or not isinstance(pay, dict)
             or (pay.get("owner_monthly_hard_stop_usd"),
                 pay.get("owner_global_reserve_usd"), pay.get("per_call_max_usd")) != (30, 12, 3)
             or pay.get("do_not_retry_unresolved_paid_post") is not True
-            or pay.get("no_auto_paid_trigger_until_reconciled") is not True
+            or pay.get("no_auto_paid_trigger_until_reconciled") is not (not active)
             or obj.get("max_concurrent_paid_missions") != 1
             or obj.get("forbid_new_scheduler_agent_or_writer") is not True):
         raise ValueError("ELITE_REGISTRATION_CONTRACT_INVALID")
@@ -253,7 +257,29 @@ def verify_native_claim(claim: dict, request_payload: dict, *,
         raise ValueError("ELITE_NATIVE_CLAIM_NOT_AUTHENTICATED")
 
 
-def submit_one(registration: dict, request_payload: dict, claim: dict,
+
+def attest_paid_source(root: Path, registration: dict, claim: dict,
+                       request_payload: dict) -> None:
+    """Prevent a model prompt from silently becoming a new source authority."""
+    current = read_registration(root)
+    if canonical(current) != canonical(registration):
+        raise ValueError("ELITE_MAIN_REGISTRATION_CHANGED")
+    mission, head = claim.get("mission"), claim.get("source_head")
+    try:
+        checkout = subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL, timeout=15).decode().strip()
+        dirty = subprocess.run(["git", "-C", str(root), "diff", "--quiet"],
+                               timeout=15, check=False).returncode
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ValueError("ELITE_SOURCE_GIT_ATTESTATION_UNAVAILABLE") from exc
+    if checkout != head or dirty != 0:
+        raise ValueError("ELITE_CHECKOUT_HEAD_OR_DIRTY_SOURCE")
+    expected = render_source(root, mission, head)["packet"]
+    if canonical(request_payload) != canonical(checked_request(expected)):
+        raise ValueError("ELITE_API_PAYLOAD_NOT_BOUND_TO_PUBLIC_CHECKOUT")
+
+def submit_one(root: Path, registration: dict, request_payload: dict, claim: dict,
                output: Path, api_key: str, *, native_reader,
                environment: dict, post=urllib.request.urlopen) -> dict:
     """One externally claimed POST, UNKNOWN on any interruption; no retry."""
@@ -265,6 +291,7 @@ def submit_one(registration: dict, request_payload: dict, claim: dict,
             or request_payload.get("max_output_tokens") != OUTPUT_TOKENS
             or request_payload.get("input") is None):
         raise ValueError("ELITE_PROVIDER_REQUEST_UNAUTHORIZED")
+    attest_paid_source(root, registration, claim, request_payload)
     verify_native_claim(claim, request_payload, native_reader=native_reader,
                         environment=environment)
     if output.exists() and any(output.iterdir()):
