@@ -63,6 +63,7 @@ def guard(head: str, repo: str) -> dict:
         "gh", "api", "repos/" + repo + "/pulls/" + str(PR_NUMBER)))
     if (current.get("head", {}).get("sha") != head
             or current.get("head", {}).get("repo", {}).get("full_name") != repo
+            or current.get("head", {}).get("repo", {}).get("private") is not False
             or current.get("state") != "open"
             or current.get("draft") is True):
         raise ValueError("NATIVE_PR_HEAD_OR_OWNER_CHANGED")
