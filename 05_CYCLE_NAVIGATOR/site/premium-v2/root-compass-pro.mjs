@@ -14,6 +14,7 @@ import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
 import {kompasSourceClockReadback} from './kompas-clock-readback.mjs';
+import {cycleSourceReadback} from './cycle-source-readback.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -600,6 +601,58 @@ function renderSourceClocks(){
    'Compass source and price evidence':'Kompas-vurdering og prisgrundlag');
  }
 }
+/**
+ * This week in the cycle, shown without pretending a frozen weekly
+ * reference is a currently verified stage. All 7 tier postures come from
+ * the existing Official capitalization ladder via source-verified PATH.
+ */
+function renderCycleSource(){
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ const en=lang==='en';
+ const model=cycleSourceReadback({view,lang});
+ set('cn-cycle-health',model.weekLabel);
+ set('cn-cycle-meaning',model.meaning);
+ set('cn-cycle-reason',model.reason||model.nextMeaning||
+  (en?'Source unavailable':'Afventer kilde'));
+ const root=$('official-path-view');
+ if(root){
+  root.dataset.cycleSourceState=model.state;
+  root.dataset.referenceKind=model.referenceKind;
+ }
+ const nowLabel=document.querySelector('#official-path-view [data-exp-t="pathNow"]');
+ if(nowLabel)nowLabel.textContent=model.referenceKind==='FROZEN_WEEK_REFERENCE'?
+   (en?'Last documented weekly reference':'Seneste dokumenterede ugereference'):
+   (en?'Verified market phase':'Verificeret markedsfase');
+ const source=$('premium-path-source');
+ if(source){
+  source.textContent=model.weekLabel;
+  if(model.rawSource)source.title=model.rawSource;
+  else source.removeAttribute('title');
+ }
+ // Only the existing source-issued tier IDs and actions. No stage progression,
+ // BUY inference, timing or MEMES proxy from MICROCAPS.
+ const rotation=$('premium-rotation');
+ if(rotation){
+  rotation.replaceChildren();
+  for(const entry of model.rotation){
+   const li=document.createElement('li');
+   li.className='rotation-tier cn-cycle-tier';
+   li.dataset.stance=entry.state;
+   const name=document.createElement('b');
+   name.textContent=entry.label;
+   const state=document.createElement('strong');
+   state.textContent=entry.action;
+   li.append(name,state);
+   rotation.append(li);
+  }
+  if(!model.rotation.length){
+   const li=document.createElement('li');
+   li.className='path-empty';
+   li.textContent=en?'Rotation status unavailable':'Rotationsstatus afventer kilde';
+   rotation.append(li);
+  }
+ }
+}
 function paint(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  try{view=feeds?inspectOfficialPublicFeeds(feeds.latest,feeds.compass,{lang}):null}
@@ -607,6 +660,7 @@ function paint(){
  // Official source gate remains upstream. An expired issuer can never be
  // refreshed via a newer Pages bundle timestamp or cached prior DOM text.
  renderProductExperience(view,feeds,lang);
+ renderCycleSource();
  renderSourceClocks();
  renderQuickDecision();
  renderRiskQuick();
