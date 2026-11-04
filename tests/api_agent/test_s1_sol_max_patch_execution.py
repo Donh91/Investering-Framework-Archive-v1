@@ -101,6 +101,83 @@ class SolMaxPatchTests(unittest.TestCase):
                 mod.call_api(context, Path(t))
             outbound.assert_not_called()
 
+    def test_sol_max_background_queue_polls_existing_id_without_second_paid_post(self):
+        class FakeResponse:
+            def __init__(self, payload):
+                self.payload = payload
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                pass
+            def read(self):
+                return json.dumps(self.payload).encode()
+
+        messages = [
+            {"id": "resp_queued123", "status": "queued"},
+            {
+                "id": "resp_queued123", "status": "completed",
+                "model": mod.MODEL,
+                "usage": {"input_tokens": 35, "output_tokens": 80},
+                "output": [{"type": "message", "content": [
+                    {"type": "output_text", "text": json.dumps({
+                        "status": "ABSTAIN", "unified_diff": "",
+                        "rationale": "no safe patch", "tests": []})}]}],
+            },
+        ]
+        sent = []
+        def fake_open(req, timeout):
+            sent.append((req.get_method(), req.full_url, req.data))
+            return FakeResponse(messages[len(sent) - 1])
+        with tempfile.TemporaryDirectory() as t, \
+             patch.dict(os.environ, {"OPENAI_API_KEY": "test-token"}), \
+             patch.object(mod.urllib.request, "urlopen", side_effect=fake_open), \
+             patch.object(mod.time, "sleep", return_value=None):
+            root = Path(t)
+            (root / "context.json").write_text("{}")
+            (root / "reservation.json").write_text(json.dumps({
+                "status": "RESERVED", "claim_id": 8,
+                "model": mod.MODEL, "effort": mod.EFFORT, "source_head": HEAD}))
+            result = mod.call_api(root / "context.json", root)
+            self.assertEqual(result["status"], "ABSTAIN")
+            self.assertEqual([x[0] for x in sent], ["POST", "GET"])
+            self.assertIn("resp_queued123", sent[1][1])
+            self.assertTrue(json.loads(sent[0][2])["background"])
+            self.assertIs(json.loads(sent[0][2])["store"], False)
+            handle = json.loads((root / "response_handle.json").read_text())
+            self.assertEqual(handle["response_id"], "resp_queued123")
+            self.assertEqual(handle["state"], "completed")
+
+    def test_background_wrong_response_id_fails_without_another_paid_post(self):
+        class FakeResponse:
+            def __init__(self, payload):
+                self.payload = payload
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                pass
+            def read(self):
+                return json.dumps(self.payload).encode()
+        ids = [
+            {"id": "resp_first123", "status": "in_progress"},
+            {"id": "resp_different123", "status": "completed"},
+        ]
+        sent = []
+        def fake_open(req, timeout):
+            sent.append(req.get_method())
+            return FakeResponse(ids[len(sent) - 1])
+        with tempfile.TemporaryDirectory() as t, \
+             patch.dict(os.environ, {"OPENAI_API_KEY": "test-token"}), \
+             patch.object(mod.urllib.request, "urlopen", side_effect=fake_open), \
+             patch.object(mod.time, "sleep", return_value=None):
+            root = Path(t)
+            (root / "context.json").write_text("{}")
+            (root / "reservation.json").write_text(json.dumps({
+                "status": "RESERVED", "claim_id": 8,
+                "model": mod.MODEL, "effort": mod.EFFORT}))
+            with self.assertRaisesRegex(ValueError, "BACKGROUND_RESPONSE_ID_CHANGED"):
+                mod.call_api(root / "context.json", root)
+            self.assertEqual(sent, ["POST", "GET"])
+
     def test_paid_call_is_one_request_with_max_store_false_and_schema(self):
         class FakeResponse:
             def __enter__(self):
@@ -133,6 +210,7 @@ class SolMaxPatchTests(unittest.TestCase):
             self.assertEqual(posted[0]["model"], "gpt-6.1-sol")
             self.assertEqual(posted[0]["reasoning"]["effort"], "max")
             self.assertIs(posted[0]["store"], False)
+            self.assertIs(posted[0]["background"], True)
             self.assertEqual(posted[0]["text"]["format"]["type"], "json_schema")
 
 
