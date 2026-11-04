@@ -115,7 +115,10 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
         self.assertIn('--reserve-usd 4.0', text)
         self.assertIn('comment-${COMMENT_ID}', text)
         self.assertIn('senior_repair_audit_dispatch.py validate', text)
-        self.assertIn("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'", text)
+        self.assertIn("github.event_name == 'schedule'", text)
+        self.assertIn("(github.event_name == 'workflow_dispatch' && inputs.sol_collect_run_id == '')", text)
+        self.assertIn("inputs.sol_collect_run_id != ''", text)
+        self.assertIn("sol-max-collect:", text)
         self.assertNotIn("if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'", text)
 
     def test_failed_senior_audit_cost_receipt_is_persisted_before_validation(self):
