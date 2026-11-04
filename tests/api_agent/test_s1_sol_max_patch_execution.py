@@ -91,6 +91,33 @@ class SolMaxPatchTests(unittest.TestCase):
                         mod.validate_patch(folder, HEAD)
                     apply.assert_not_called()
 
+    def test_native_reservation_caps_entire_patch_mission_at_two_paid_attempts(self):
+        prev = ("S1_SOL_MAX_PATCH_RESERVATION_V1 HEAD=" + "b"*40 +
+                " PR=1877 MODEL=gpt-6.1-sol EFFORT=max MAX_USD=0.75")
+        current = ("S1_SOL_MAX_PATCH_RESERVATION_V1 HEAD=" + HEAD +
+                   " PR=1877 MODEL=gpt-6.1-sol EFFORT=max MAX_USD=0.75")
+        def row(body, ident):
+            return {"user": {"login": "github-actions[bot]"},
+                    "body": body, "id": ident}
+        with patch.dict(os.environ, {"GH_TOKEN": "test-token"}), \
+             patch.object(mod, "guard", return_value={"run": True}), \
+             patch.object(mod, "subprocess_check", side_effect=[
+                json.dumps([[row(prev, 1)]]), "posted",
+                json.dumps([[row(prev, 1), row(current, 2)]])
+             ]) as commands:
+            out = mod.claim(HEAD, REPO)
+            self.assertEqual(out["claim_id"], 2)
+            self.assertEqual(commands.call_count, 3)
+        with patch.dict(os.environ, {"GH_TOKEN": "test-token"}), \
+             patch.object(mod, "guard", return_value={"run": True}), \
+             patch.object(mod, "subprocess_check", return_value=json.dumps([
+                 [row(prev, 1), row("S1_SOL_MAX_PATCH_RESERVATION_V1 HEAD=" +
+                     "c"*40 + " PR=1877 MODEL=gpt-6.1-sol EFFORT=max MAX_USD=0.75", 3)]
+             ])) as commands:
+            with self.assertRaisesRegex(ValueError, "TWO_ATTEMPT_HARD_STOP"):
+                mod.claim(HEAD, REPO)
+            self.assertEqual(commands.call_count, 1)
+
     def test_unreserved_api_request_is_rejected_before_any_network(self):
         with tempfile.TemporaryDirectory() as t, \
              patch.dict(os.environ, {"OPENAI_API_KEY": "test-token"}), \
