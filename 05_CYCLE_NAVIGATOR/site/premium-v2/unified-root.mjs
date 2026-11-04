@@ -157,6 +157,14 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<tr><th id="cn-reader-term-5" scope="row">MANGLER DATA</th><td id="cn-reader-definition-5">Ingen gyldig aktuel vurdering; tidligere signal gælder ikke.</td></tr>'+
     '</tbody></table></details></section>';
 
+  // Compact, secondary source-status matrix. No forecast issuance, no new
+  // public action surface, and no changes to the owner-approved Graph B.
+  const horizonStatus='<section class="cn-horizon-status" aria-labelledby="cn-horizon-status-heading">'+
+    '<div class="cn-horizon-status-heading"><h4 id="cn-horizon-status-heading">Kompas PRO · 14 tidshorisonter</h4>'+
+    '<p id="cn-horizon-status-caption">Kun dokumenterede kilder. Udstedte retningsvurderinger er ikke kursmål.</p></div>'+
+    '<div id="cn-horizon-status-rows" class="cn-horizon-status-rows" role="list"></div>'+
+    '<p id="cn-horizon-status-note">Mangler en original kilde, vises ingen beregnet pris eller handling.</p></section>';
+
   const pro='<section id="compass-pro" class="cn-pro-surface" aria-labelledby="pro-heading">'+
     '<div class="cn-pro-intro"><span class="small-kicker">MARKEDSBLIK</span>'+
     '<h2 id="pro-heading">Kompas PRO</h2>'+
@@ -180,7 +188,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
       '<div class="cn-risk-quick-foot"><span id="cn-risk-quick-quality">Evidenskvalitet: ukendt</span><span id="cn-risk-quick-onset">Starttidspunkt: ikke dokumenteret</span></div>'+
       '</div></details></section>'+rotationPeek+positions+
       '<details class="cn-reader-expand"><summary id="cn-reader-expand-title">Flere horisonter, Swing/HODL og dokumentation</summary>'+
-      reader+'</details><details class="cn-pro-more">')+'</section>';
+      reader+horizonStatus+'</details><details class="cn-pro-more">')+'</section>';
 
   const oldDecision='<section class="official-product-pilot premium-decision-summary"';
   const graph='<section id="variant-panel"';
