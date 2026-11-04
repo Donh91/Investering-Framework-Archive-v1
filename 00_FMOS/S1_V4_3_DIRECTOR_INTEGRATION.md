@@ -262,3 +262,7 @@ claims from a comment or cached brief.
 ## Owner-authorized bounded Sol MAX implementation launch, 4 November 2026
 
 The current owner has authorized one material GPT-6.1 Sol MAX code-patch execution for the existing #1877 handoff reliability scope, under the standing task-matched model policy. The launching commit is the sole owner-issued exact-HEAD activation signal for the existing workflow job. A genuine API charge, patch, CI result, or completed implementation must only be claimed from the subsequent native GitHub Actions run and authenticated receipt; this document is NOT that receipt. The model produces a bounded uncommitted code candidate, and the existing qualified integrator is responsible for application, independent review and eventual policy-safe merge.
+
+## Bounded owner-authorized MAX background recovery launch, 2026-11-04
+
+This is the SECOND and FINAL permitted native payment reservation for this bounded S1 patch mission. The original attempt at `61c3f34c9320e39895a29b49e555998c382f471a`, Actions run `41825037191`, timed out on a foreground HTTP read after 210 seconds. Its $0.75 conservative reservation is retained as UNKNOWN liability; do not erase, replay or rewrite that receipt. The new implementation uses OpenAI Responses `background:true`, `store:false`, saves an actual provider response ID and polls GET without another paid POST. Exact-head test preflight, real provider evidence and separate code review still control acceptance. No successful model response or patch is claimed by this launch commit alone.
