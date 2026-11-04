@@ -3,7 +3,7 @@
 Validates the SHAPE of a request/ACK/result chain. It does not authenticate
 GitHub actors, prove agent execution, grant merge authority or call providers.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlparse, unquote
 import re
 import hashlib
@@ -42,10 +42,10 @@ def _url(value):
 
 
 def validate_chain(events):
-    """Reject missing ACK, forged sender, head drift and replay.
+    """Validate reported actor labels, request/head binding and state ordering.
 
-    Caller must additionally cross-check native GitHub actor and job/event IDs
-    in authenticated repos before marking delivery or execution as proven.
+    Caller must cross-check native GitHub actor and job/event IDs in
+    authenticated repos and a replay ledger before proving delivery or execution.
     """
     if not isinstance(events, list) or not events:
         raise ReceiptError("missing request")
@@ -123,9 +123,25 @@ def validate_chain(events):
     }
 
 
-def handoff_followup(events, observed_at_utc, timeout_minutes, attempts, max_attempts=2):
-    """Bounded non-dispatch guidance. Time passage is NOT an ACK or PR trigger."""
+def handoff_followup(events, observed_at_utc, timeout_minutes, attempts,
+                     max_attempts=2, *, expected_source_head=None,
+                     expected_request_binding_sha256=None):
+    """Bounded shape-only guidance. No ACK, dispatch or release is authenticated.
+
+    Optional current-source fences must come from a trusted native caller.
+    Native recipient/job readback and true delivery remain separate gates.
+    ACK must precede the request deadline. An ACCEPTED event never renews
+    the ACK-anchored result deadline.
+    """
     result = validate_chain(events)
+    if (expected_source_head is not None
+            and (not isinstance(expected_source_head, str)
+                 or result["source_head"] != expected_source_head)):
+        raise ReceiptError("stale source head")
+    if (expected_request_binding_sha256 is not None
+            and (not isinstance(expected_request_binding_sha256, str)
+                 or result["request_binding_sha256"] != expected_request_binding_sha256)):
+        raise ReceiptError("stale request binding")
     if (type(timeout_minutes) is not int or not 1 <= timeout_minutes <= 10080
             or type(attempts) is not int or not 1 <= attempts
             or type(max_attempts) is not int or not 1 <= max_attempts <= 3):
@@ -136,18 +152,25 @@ def handoff_followup(events, observed_at_utc, timeout_minutes, attempts, max_att
     recent = _time(events[-1]["at_utc"])
     if now < recent:
         raise ReceiptError("observation predates last receipt")
+    timeout = timedelta(minutes=timeout_minutes)
+    requested = _time(events[0]["at_utc"])
+    ack_at = next((_time(event["at_utc"]) for event in events
+                   if event["state"] == "ACKNOWLEDGED"), None)
+    elapsed = now - (ack_at if ack_at is not None else requested)
     state = result["structural_state"]
     if state in ("REJECTED", "TIMED_OUT", "S1_VERIFIED"):
         action = "TERMINAL_NO_DISPATCH"
     elif state == "RESULT_DELIVERED":
         action = "VERIFY_NATIVE_RESULT_NOW"
-    elif (now - recent).total_seconds() < timeout_minutes * 60:
-        action = "AWAIT_EXISTING_RECEIVER"
+    elif ack_at is not None and ack_at - requested >= timeout:
+        action = "ACK_EXPIRED_ESCALATE_ORIGINAL_OWNER"
+    elif elapsed < timeout:
+        action = ("AWAIT_NATIVE_ACK" if state == "REQUESTED"
+                  else "AWAIT_EXISTING_RECEIVER")
     elif state in ("ACKNOWLEDGED", "ACCEPTED"):
-        # A real recipient already owns the request. Never retry it.
-        # Finite escalation after three inactivity windows, no ghost dispatch.
+        # A reported receiver must not trigger a duplicate request.
         action = ("RECEIVER_STALLED_ESCALATE_ORIGINAL_OWNER"
-                  if (now - recent).total_seconds() >= timeout_minutes * 180
+                  if elapsed >= timeout * 3
                   else "RECEIVER_RESULT_OVERDUE_NO_DUPLICATE_REQUEST")
     elif attempts < max_attempts:
         action = "RETRY_ONLY_IF_NATIVE_INTAKE_AUTHORIZED"
@@ -159,5 +182,8 @@ def handoff_followup(events, observed_at_utc, timeout_minutes, attempts, max_att
         "next_action": action,
         "automatically_dispatched": False,
         "delivery_authenticated": False,
+        "actual_job_execution_proven": False,
+        "release_authorized": False,
+        "reason": result["reason"],
         "retries_remaining": max_attempts - attempts,
     }
