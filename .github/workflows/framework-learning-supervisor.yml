@@ -142,9 +142,17 @@ jobs:
         env:
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
+          set -euo pipefail
           python scripts/api_agent/s1_sol_max_patch_execution.py validate --head "$PR_HEAD" \
             --output-dir runtime/s1-sol-max | tee runtime/s1-sol-max/validation.json
           python -m unittest tests.api_agent.test_capability_router -v
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          validated=json.loads(Path("runtime/s1-sol-max/validation.json").read_text())
+          assert validated["status"]=="PATCH_VALIDATED_IN_ISOLATED_CHECKOUT"
+          Path("runtime/s1-sol-max/CI_VALIDATED.flag").write_text("SUCCESS\n")
+          PY
           # Do not commit/push model code from this runner. The existing
           # authorized original-branch executor and separate review own that.
       - name: Archive proof, patch and provider usage as workflow artifacts
@@ -177,7 +185,7 @@ jobs:
               if src.exists():
                   output.extend([name+":", (chr(96)*3)+"json",src.read_text()[:2000],chr(96)*3,""])
           patch=p/"proposal.patch"
-          if patch.exists() and (p/"validation.json").exists() and len(patch.read_bytes())<=16000:
+          if patch.exists() and (p/"CI_VALIDATED.flag").exists() and len(patch.read_bytes())<=16000:
               output.extend(["Validated uncommitted candidate diff:", (chr(96)*3)+"diff",patch.read_text(),chr(96)*3])
           else:
               output.append("No fully validated patch: inspect the workflow failure/ABSTAIN; do NOT claim code was applied.")
