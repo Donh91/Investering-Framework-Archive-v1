@@ -448,6 +448,26 @@ def main() -> None:
         "frozen_at_utc": fmt_iso(frozen_at),
         "live_as_of_utc": fmt_iso(observed_through),
         "freeze_sha256": digest,
+        # Unit labels are PUBLIC DISPLAY METADATA, not a conversion or an
+        # independent attestation of a model-produced forecast envelope.
+        # Hourly Spot is native Binance BTCUSDT/ETHUSDT (USDT quote);
+        # the original freeze may omit or declare a different forecast quote.
+        "price_quote_labels": {
+            "contract": "CN_PUBLIC_PRICE_QUOTE_LABELS_v1",
+            "actual_native_spot": {"BTC": "USDT", "ETH": "USDT"},
+            "forecast_model_declared": {
+                asset: (
+                    (freeze.get("price_quote") or {}).get(asset)
+                    if isinstance(freeze.get("price_quote"), dict)
+                    and (freeze.get("price_quote") or {}).get(asset) in ("USD", "USDT")
+                    else "UNAVAILABLE"
+                )
+                for asset in ("BTC", "ETH")
+            },
+            "conversion_applied": False,
+            "proof_authority": False,
+            "comparison_precision_eligible": False,
+        },
         "daily_price_path": daily_path,
         "daily_range_plan": daily_ranges,
         "daily_observations": daily_observations(hourly, iso_year, iso_week),
