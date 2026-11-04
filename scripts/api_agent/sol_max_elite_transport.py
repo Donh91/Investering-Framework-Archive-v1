@@ -31,7 +31,7 @@ MISSION_ID = re.compile(r"^S1-[A-Z]+(?:-[A-Z]+)*-20261104$")
 SOURCE_MAX = 120000
 FILE_MAX = 35000
 OUTPUT_TOKENS = 45000
-INPUT_BOUND = 40000
+INPUT_BOUND = 145000
 INPUT_PRICE, OUTPUT_PRICE = 2.0, 10.0
 PRICING_RECHECK_AFTER = date(2026, 12, 4)
 CREDENTIALS = (
@@ -161,6 +161,7 @@ def render_source(root: Path, mission: str, head: str) -> dict:
 def expected_max_cost() -> float:
     if date.today() > PRICING_RECHECK_AFTER:
         raise ValueError("ELITE_PRICING_STALE")
+    # One-token-per-byte conservatively bounds the <=140 kB public packet.
     upper = (INPUT_BOUND * INPUT_PRICE + OUTPUT_TOKENS * OUTPUT_PRICE) / 1_000_000
     if upper > 3:
         raise ValueError("ELITE_COST_CAP_EXCEEDED")
@@ -271,9 +272,11 @@ def attest_paid_source(root: Path, registration: dict, claim: dict,
             stderr=subprocess.DEVNULL, timeout=15).decode().strip()
         dirty = subprocess.run(["git", "-C", str(root), "diff", "--quiet"],
                                timeout=15, check=False).returncode
+        staged_dirty = subprocess.run(["git", "-C", str(root), "diff", "--cached", "--quiet"],
+                                      timeout=15, check=False).returncode
     except (OSError, subprocess.SubprocessError) as exc:
         raise ValueError("ELITE_SOURCE_GIT_ATTESTATION_UNAVAILABLE") from exc
-    if checkout != head or dirty != 0:
+    if checkout != head or dirty != 0 or staged_dirty != 0:
         raise ValueError("ELITE_CHECKOUT_HEAD_OR_DIRTY_SOURCE")
     expected = render_source(root, mission, head)["packet"]
     if canonical(request_payload) != canonical(checked_request(expected)):
