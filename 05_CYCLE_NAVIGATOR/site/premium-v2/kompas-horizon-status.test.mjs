@@ -72,3 +72,33 @@ test('English labels remain explicit about research/price/authority boundaries',
   assert.equal(by(rows,'H24H').value,'Not issued');
   assert.ok(rows.every(r=>!('low' in r)&&!('high' in r)&&!('expected_close' in r)));
 });
+
+test('verified 21-30d BTC strategic direction is nonbinding and not a price target',()=>{
+ const strategic={contract:'CN_PUBLIC_FORWARD_OUTLOOK_v1',status:'FROZEN_CONTEXT_ONLY',
+  strategic:{available:true,btc_direction:'DOWN'}};
+ const {rows}=kompasHorizonStatusRows({compass,view,strategic});
+ const r=by(rows,'H21_30D');
+ assert.equal(r.status,'VERIFIED_STRATEGIC_CONTEXT_ONLY');
+ assert.equal(r.sourceStatus,'STRATEGIC_SOURCE_NONBINDING');
+ assert.equal(r.tone,'down');
+ assert.equal(r.value,'Faldende');
+ assert.match(r.sourceLabel,/ikke-bindende/);
+ assert.match(r.priceLabel,/ikke kursmål/);
+ assert.equal(by(rows,'H1_3M').status,'SCENARIO_ONLY');
+});
+
+test('unverified strategic evidence is never treated as an issued official forecast',()=>{
+ for(const strategic of [
+  {contract:'FAKE',status:'FROZEN_CONTEXT_ONLY',strategic:{available:true,btc_direction:'UP'}},
+  {contract:'CN_PUBLIC_FORWARD_OUTLOOK_v1',status:'UNAVAILABLE',strategic:{available:true,btc_direction:'UP'}},
+  {contract:'CN_PUBLIC_FORWARD_OUTLOOK_v1',status:'FROZEN_CONTEXT_ONLY',strategic:{available:true,btc_direction:'BUY'}},
+  {contract:'CN_PUBLIC_FORWARD_OUTLOOK_v1',status:'FROZEN_CONTEXT_ONLY',strategic:{available:false,btc_direction:'UP'}}
+ ]){
+  const {rows}=kompasHorizonStatusRows({compass,view,strategic});
+  assert.equal(by(rows,'H21_30D').status,'NONBINDING_CONTEXT');
+ }
+ const strategic={contract:'CN_PUBLIC_FORWARD_OUTLOOK_v1',status:'FROZEN_CONTEXT_ONLY',
+  strategic:{available:true,btc_direction:'DOWN'}};
+ const expired={...view,compass:{...view.compass,state:'EXPIRED'}};
+ assert.equal(by(kompasHorizonStatusRows({compass,view:expired,strategic}).rows,'H21_30D').status,'SOURCE_UNAVAILABLE');
+});
