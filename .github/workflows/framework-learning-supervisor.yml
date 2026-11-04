@@ -124,6 +124,57 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
+  sol-max-collect:
+    # Non-empty collector dispatch is GET-only, and bypasses production operate.
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.sol_collect_run_id != '' &&
+      github.actor == 'Donh91' &&
+      github.repository == 'Donh91/Investering-Framework-Archive-v1'
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate zero-POST collector source and no-network tests
+        run: |
+          python -m py_compile scripts/api_agent/s1_sol_background_collect.py
+          python -m unittest tests.api_agent.test_s1_sol_background_collect -v
+      - name: Download durable handle from authenticated original paid run
+        uses: actions/download-artifact@v4
+        with:
+          name: s1-sol-max-handle-${{ inputs.sol_collect_run_id }}
+          run-id: ${{ inputs.sol_collect_run_id }}
+          github-token: ${{ github.token }}
+          path: runtime/s1-sol-collect-input
+      - name: Collect with GET only and native source/payment proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SOL_ORIGIN_RUN: ${{ inputs.sol_collect_run_id }}
+        run: |
+          python scripts/api_agent/s1_sol_background_collect.py \
+            --origin-run "$SOL_ORIGIN_RUN" \
+            --artifact-dir runtime/s1-sol-collect-input \
+            --out runtime/s1-sol-collect-result
+      - name: Retain non-authoritative result and billing-unknown receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-sol-collect-${{ github.run_id }}
+          path: runtime/s1-sol-collect-result/
+          retention-days: 30
+          if-no-files-found: warn
+
   sol-max-implementation-patch:
     # One owner-issued PR commit launches one bounded paid Sol 6.1 MAX patch
     # candidate. This lane can neither push PR code nor grant merge authority.
@@ -197,6 +248,14 @@ jobs:
         run: |
           python scripts/api_agent/s1_sol_max_patch_execution.py call --head "$PR_HEAD" \
             --submit-only --output-dir runtime/s1-sol-max
+      - name: Persist original paid response handle immediately
+        if: steps.gate.outputs.go == 'true' && hashFiles('runtime/s1-sol-max/response_handle.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-sol-max-handle-${{ github.run_id }}
+          path: runtime/s1-sol-max/
+          retention-days: 30
+          if-no-files-found: error
       - name: Validate generated patch and run original regression suite
         if: steps.gate.outputs.go == 'true' && hashFiles('runtime/s1-sol-max/proposal.json') != ''
         env:
