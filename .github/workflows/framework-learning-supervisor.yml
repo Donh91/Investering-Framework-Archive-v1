@@ -7,6 +7,8 @@ on:
       - 'scripts/api_agent/senior_repair_audit_dispatch.py'
       - 'scripts/api_agent/temporary_bridge_pr_review.py'
       - 'scripts/api_agent/s1_sol_max_patch_execution.py'
+      - 'scripts/api_agent/s1_sol_response_probe.py'
+      - 'tests/api_agent/test_s1_sol_response_probe.py'
       - 'tests/api_agent/test_s1_sol_max_patch_execution.py'
       - 'scripts/api_agent/s1_v43_terra_max_review.py'
       - 'tests/api_agent/test_temporary_bridge_pr_review.py'
@@ -70,6 +72,50 @@ concurrency:
   queue: max
   cancel-in-progress: false
 jobs:
+  sol-max-response-probe:
+    # Owner-issued one-response retrieval-only rescue. Never POST or claim money.
+    # Existing workflow/PR, no new schedule, new supervisor or writer.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.number == 1877 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor == 'Donh91'
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove zero-POST recovery safety without API credentials
+        run: |
+          python -m py_compile scripts/api_agent/s1_sol_response_probe.py
+          python -m unittest tests.api_agent.test_s1_sol_response_probe -v
+      - name: One owner-bound existing-response GET, never POST
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/api_agent/s1_sol_response_probe.py --head "$PR_HEAD" \
+            --output-dir runtime/sol-get-only
+      - name: Preserve retrieval receipt without modifying any repository branch
+        if: always() && hashFiles('runtime/sol-get-only/receipt.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-sol-get-only-${{ github.run_id }}
+          path: runtime/sol-get-only/
+          retention-days: 30
+          if-no-files-found: error
+
   sol-max-implementation-patch:
     # One owner-issued PR commit launches one bounded paid Sol 6.1 MAX patch
     # candidate. This lane can neither push PR code nor grant merge authority.
