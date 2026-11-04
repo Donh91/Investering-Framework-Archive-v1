@@ -417,5 +417,36 @@ class GraphHistoryTest(unittest.TestCase):
             archive(self.root, W45)
 
 
+    def test_historical_forecast_quote_is_only_original_source_declared(self):
+        # W45 lacks a typed original price_quote; a dollar sign is NOT proof.
+        first_folder = source(self.root)
+        second_folder = source(self.root, W46, issued="2026-11-09T07:00:00Z")
+        original = json.loads((second_folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_text())
+        original["price_quote"] = {"BTC": "USDT", "ETH": "USDT"}
+        put(second_folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json", original)
+        source_hash = digest((second_folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_bytes())
+        pointer_file = second_folder / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json"
+        pointer = json.loads(pointer_file.read_text())
+        pointer["forecast_freeze_sha256"] = source_hash
+        put(pointer_file, pointer)
+        receipt_file = second_folder / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+        receipt = json.loads(receipt_file.read_text())
+        receipt["source_forecast_freeze_sha256"] = source_hash
+        put(receipt_file, receipt)
+        archive(self.root, W46)
+        display = publish(self.root)
+        self.assertEqual(display["forecast_unit"], "PER_WEEK_DECLARED_OR_UNAVAILABLE")
+        self.assertEqual(display["actual_unit"], "USDT")
+        self.assertFalse(display["comparison_precision_eligible"])
+        self.assertEqual([w["forecast_model_declared_quote"] for w in display["weeks"]],
+                         ["UNAVAILABLE", "USDT"])
+        # Tamper with original typed quote while preserving source-reference bytes.
+        altered = json.loads((second_folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_text())
+        altered["price_quote"]["BTC"] = "USD"
+        put(second_folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json", altered)
+        with self.assertRaisesRegex(ValueError, "HISTORY_ORIGINAL_QUOTE_SOURCE_MISMATCH"):
+            publish(self.root)
+
+
 if __name__ == "__main__":
     unittest.main()
