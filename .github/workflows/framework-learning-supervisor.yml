@@ -40,6 +40,8 @@ on:
       - 'scripts/framework_intelligence/operational_memory_post_production_audit_v1.py'
       - 'scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
+      - 'scripts/governance/s1_native_handoff_auth_v1.py'
+      - 'tests/governance/test_s1_native_handoff_auth_v1.py'
       - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
       - 'tests/framework_intelligence/test_self_improvement_v1.py'
       - 'tests/framework_intelligence/test_supervisor_mission_intake_v1.py'
@@ -360,6 +362,7 @@ jobs:
             tests.api_agent.test_temporary_bridge_pr_review \
             tests.api_agent.test_s1_v43_terra_max_review \
             tests.api_agent.test_fmos_mission_loop_audit_dispatch \
+            tests.governance.test_s1_native_handoff_auth_v1 \
             tests.api_agent.test_capability_router \
             tests.framework_intelligence.test_automation_orchestration_v1 \
             tests.api_agent.test_api_gateway \
