@@ -51,8 +51,10 @@ def digest(data: bytes) -> str:
 
 
 def check_safe_relative(path: str) -> None:
+    if not isinstance(path, str) or not path:
+        raise ValueError("SOURCE_PATH_NOT_PUBLIC_ALLOWLISTED")
     p = Path(path)
-    if (not isinstance(path, str) or not path or p.is_absolute()
+    if (p.is_absolute()
             or any(part in (".", "..", "") for part in p.parts)
             or str(p) != path or path.startswith(("Donh91/", ".git/"))
             or any(part.casefold() in ("secrets", "vault", ".env", "private")
@@ -80,8 +82,11 @@ def read_registration(root: Path) -> dict:
             or obj.get("forbid_new_scheduler_agent_or_writer") is not True):
         raise ValueError("ELITE_REGISTRATION_CONTRACT_INVALID")
     missions = obj.get("definitions")
-    if (not isinstance(missions, list) or len(missions) != 5
-            or len({item.get("id") for item in missions if isinstance(item, dict)}) != 5):
+    if not isinstance(missions, list) or len(missions) != 5:
+        raise ValueError("ELITE_MISSION_CENSUS_INVALID")
+    ids = [item.get("id") for item in missions if isinstance(item, dict)]
+    if (len(ids) != 5 or any(not isinstance(k, str) for k in ids)
+            or len(set(ids)) != 5):
         raise ValueError("ELITE_MISSION_CENSUS_INVALID")
     return obj
 
@@ -213,16 +218,58 @@ def check_unspent_claim(comments: list[dict], mission: str) -> None:
             raise ValueError("ELITE_MISSION_ALREADY_CLAIMED_NO_REPOST")
 
 
-def submit_one(request_payload: dict, claim: dict, output: Path, api_key: str,
-               *, post=urllib.request.urlopen) -> dict:
-    """Exactly one POST per call, with durable UNKNOWN outcome on ANY exception."""
+def verify_native_claim(claim: dict, request_payload: dict, *,
+                        native_reader, environment: dict) -> None:
+    """Check real actor/run and unique hash-bound bot claim before paid POST.
+
+    GitHub's workflow concurrency must serialize claims across all eligible
+    paid lanes. A rerun of the original workflow attempt is never billable.
+    """
     if (claim.get("status") != "NATIVE_VERIFIED_PRE_HTTP"
-            or not isinstance(claim.get("id"), int)
+            or type(claim.get("id")) is not int or claim["id"] < 1
             or not isinstance(claim.get("body"), str)
-            or not claim["body"].startswith(CLAIM_PREFIX)
-            or not api_key):
-        raise ValueError("ELITE_NATIVE_CLAIM_OR_KEY_MISSING")
-    output.mkdir(parents=True, exist_ok=True)
+            or not isinstance(claim.get("mission"), str)
+            or not isinstance(claim.get("source_head"), str)
+            or not isinstance(claim.get("origin_run_id"), str)
+            or environment.get("GITHUB_RUN_ATTEMPT") != "1"
+            or environment.get("GITHUB_RUN_ID") != claim["origin_run_id"]
+            or environment.get("GITHUB_ACTOR") != "Donh91"
+            or environment.get("GITHUB_REPOSITORY") != REPO):
+        raise ValueError("ELITE_NATIVE_CLAIM_OR_RUN_MISSING")
+    expected = claim_body(claim["mission"], claim["source_head"],
+                          digest(canonical(request_payload)))
+    if claim["body"] != expected:
+        raise ValueError("ELITE_NATIVE_CLAIM_HASH_MISMATCH")
+    comment = native_reader("issues/comments/" + str(claim["id"]))
+    run = native_reader("actions/runs/" + claim["origin_run_id"])
+    if (str(comment.get("id")) != str(claim["id"])
+            or str(comment.get("body") or "").strip() != expected
+            or (comment.get("user") or {}).get("login") != "github-actions[bot]"
+            or str(run.get("id")) != claim["origin_run_id"]
+            or run.get("name") != "Framework Learning Supervisor"
+            or run.get("event") != "issue_comment"
+            or run.get("actor", {}).get("login") != "Donh91"
+            or run.get("head_sha") != claim["source_head"]):
+        raise ValueError("ELITE_NATIVE_CLAIM_NOT_AUTHENTICATED")
+
+
+def submit_one(registration: dict, request_payload: dict, claim: dict,
+               output: Path, api_key: str, *, native_reader,
+               environment: dict, post=urllib.request.urlopen) -> dict:
+    """One externally claimed POST, UNKNOWN on any interruption; no retry."""
+    require_paid_authority(registration)
+    if (not api_key or request_payload.get("model") != MODEL
+            or request_payload.get("background") is not True
+            or request_payload.get("store") is not True
+            or request_payload.get("reasoning", {}).get("effort") != EFFORT
+            or request_payload.get("max_output_tokens") != OUTPUT_TOKENS
+            or request_payload.get("input") is None):
+        raise ValueError("ELITE_PROVIDER_REQUEST_UNAUTHORIZED")
+    verify_native_claim(claim, request_payload, native_reader=native_reader,
+                        environment=environment)
+    if output.exists() and any(output.iterdir()):
+        raise ValueError("ELITE_OUTPUT_ALREADY_EXISTS_NO_SECOND_POST")
+    output.mkdir(parents=True, exist_ok=False)
     state = {"contract": "S1_SOL_ELITE_ATTEMPT_v1", "claim_id": claim["id"],
              "claim_body": claim["body"], "state": "POST_OUTCOME_UNKNOWN",
              "billable_attempts_allowed": 0}
