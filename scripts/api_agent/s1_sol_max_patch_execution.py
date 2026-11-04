@@ -26,6 +26,15 @@ MAX_PATCH_BYTES = 16000
 MAX_INPUT_BYTES = 40000
 MAX_OUTPUT_TOKENS = 64000
 RESERVE_USD = 0.75
+# Owner 2026-11-04 authorizes stored Responses for THIS public-source lane.
+# Scope and worst-case costs must pass before any potentially billable POST.
+PUBLIC_STORAGE_CONSENT = "OWNER_PUBLIC_ONLY_2026-11-04"
+PRICING_VERIFIED_DATE = "2026-11-04"
+PRICING_RECHECK_DEADLINE = "2026-12-04"
+STANDARD_INPUT_USD_PER_MTOK = 2.00
+STANDARD_OUTPUT_USD_PER_MTOK = 10.00
+INPUT_TOKENS_UPPER_BOUND = 45000
+
 MARKER = "SOL_MAX_PATCH_EXECUTION_20261104"
 COMMIT_MESSAGE = "feat(s1): guarded Sol MAX patch implementation run [SOL_MAX_PATCH_EXECUTION_20261104]"
 SHA = re.compile(r"^[a-f0-9]{40}$")
@@ -103,6 +112,57 @@ def build_context(head: str, output_dir: Path) -> dict:
             "bytes": len(raw), "max_reserved_usd": RESERVE_USD}
 
 
+
+def persistent_storage_preflight(context: bytes) -> dict:
+    """Only owner-approved, hash-bound PUBLIC allowlisted code may use store=true.
+
+    Fixed-price standard-tier reservation envelope is a conservative guard,
+    not a provider-enforced guaranteed spend cap. Re-verify price when stale.
+    """
+    from datetime import datetime, timezone
+    if datetime.now(timezone.utc).date().isoformat() > PRICING_RECHECK_DEADLINE:
+        raise ValueError("STALE_API_PRICING_REVERIFY_BEFORE_PAID_POST")
+    if not context or len(context) > MAX_INPUT_BYTES:
+        raise ValueError("PUBLIC_STORAGE_CONTEXT_OVERSIZED_OR_MISSING")
+    try:
+        body = json.loads(context)
+    except (ValueError, UnicodeError) as exc:
+        raise ValueError("PUBLIC_STORAGE_INVALID_CONTEXT") from exc
+    if (type(body) is not dict
+            or body.get("contract") != "S1_SOL_MAX_PATCH_CONTEXT_v1"
+            or body.get("repo") != "Donh91/Investering-Framework-Archive-v1"
+            or body.get("original_pr") != PR_NUMBER
+            or not isinstance(body.get("source_head"), str)
+            or SHA.fullmatch(body["source_head"]) is None
+            or set(body.get("scope") or []) != ALLOWED):
+        raise ValueError("PUBLIC_STORAGE_CONTEXT_SCOPE_UNVERIFIED")
+    files = body.get("files")
+    if not isinstance(files, dict) or set(files) != ALLOWED:
+        raise ValueError("PUBLIC_STORAGE_FILES_NOT_ALLOWLISTED")
+    for path, entry in files.items():
+        if not isinstance(entry, dict) or not isinstance(entry.get("content"), str):
+            raise ValueError("PUBLIC_STORAGE_FILE_INVALID")
+        raw = entry["content"].encode("utf-8")
+        if len(raw) > 25000 or entry.get("sha256") != sha(raw):
+            raise ValueError("PUBLIC_STORAGE_FILE_HASH_OR_SIZE_INVALID")
+    # Public repository source can still accidentally contain keys: deny known
+    # credential formats rather than trusting the repo visibility alone.
+    denied = (b"sk-proj-", b"ghp_", b"github_pat_", b"-----BEGIN PRIVATE KEY-----")
+    if any(token in context for token in denied):
+        raise ValueError("PUBLIC_STORAGE_POSSIBLE_SECRET")
+    if (STANDARD_INPUT_USD_PER_MTOK * INPUT_TOKENS_UPPER_BOUND
+            + STANDARD_OUTPUT_USD_PER_MTOK * MAX_OUTPUT_TOKENS) / 1_000_000 > RESERVE_USD:
+        raise ValueError("PRE_HTTP_COST_ENVELOPE_EXCEEDS_RESERVATION")
+    return {
+        "consent": PUBLIC_STORAGE_CONSENT,
+        "store": True,
+        "pricing_verified": PRICING_VERIFIED_DATE,
+        "worst_case_standard_usd": round(
+            (STANDARD_INPUT_USD_PER_MTOK * INPUT_TOKENS_UPPER_BOUND
+             + STANDARD_OUTPUT_USD_PER_MTOK * MAX_OUTPUT_TOKENS) / 1_000_000, 6),
+    }
+
+
 def claim(head: str, repo: str) -> dict:
     if guard(head, repo).get("run") is not True:
         raise ValueError("NO_VALID_OWNER_LAUNCH")
@@ -177,9 +237,12 @@ def call_api(context_file: Path, result_dir: Path) -> dict:
     if not key:
         raise ValueError("OPENAI_API_KEY_MISSING")
     context = context_file.read_bytes()
+    public_preflight = persistent_storage_preflight(context)
+    if reservation.get("source_head") != json.loads(context).get("source_head"):
+        raise ValueError("RESERVATION_CONTEXT_HEAD_MISMATCH")
     payload = {
         "model": MODEL, "reasoning": {"effort": EFFORT},
-        "store": False, "max_output_tokens": MAX_OUTPUT_TOKENS,
+        "store": public_preflight["store"], "max_output_tokens": MAX_OUTPUT_TOKENS,
         "instructions": (
             "You are a senior source-code patch author, NOT a merger or release authority. "
             "Return a minimal unified git diff, using standard diff --git/a/b headers, "
@@ -196,7 +259,7 @@ def call_api(context_file: Path, result_dir: Path) -> dict:
     }
     # True background mode returns a durable response ID promptly. Poll GETs
     # without creating another paid response. OpenAI documents background mode
-    # with store=false and temporary retention for bounded polling.
+    # with store=true for explicit owner-approved PUBLIC source retention.
     payload["background"] = True
     req = urllib.request.Request("https://api.openai.com/v1/responses",
           data=json.dumps(payload, separators=(",", ":")).encode(),
@@ -217,12 +280,14 @@ def call_api(context_file: Path, result_dir: Path) -> dict:
         "reservation_claim_id": reservation["claim_id"],
         "model": MODEL, "reasoning_effort": EFFORT,
         "source_head": reservation.get("source_head"),
+        "storage_consent": public_preflight["consent"],
+        "pre_http_cost_envelope_usd": public_preflight["worst_case_standard_usd"],
         "state": response.get("status"),
     }
     (result_dir / "response_handle.json").write_text(json.dumps(
         handle, sort_keys=True, indent=2) + "\n")
     # Polling retrieves the SAME response, not a retry. Timebound below the
-    # documented ephemeral store=false response-retention window.
+    # response retention; later GET-only recovery must remain available.
     deadline = time.monotonic() + 480
     attempts = 0
     while response.get("status") in ("queued", "in_progress"):
