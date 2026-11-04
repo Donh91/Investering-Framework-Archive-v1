@@ -111,6 +111,18 @@ hourlyActual.public_live_precision.hourly_price_path={
  }))
 };
 const hourlySourceModel=chartModel(hourlyActual,'BTC'),actualHourlyPlan=chartLinePlan(hourlySourceModel);
+const quoteFixture=structuredClone(hourlyActual);
+quoteFixture.public_live_precision.price_quote_labels={
+ contract:'CN_PUBLIC_PRICE_QUOTE_LABELS_v1',actual_native_spot:{BTC:'USDT',ETH:'USDT'},
+ forecast_model_declared:{BTC:'USD',ETH:'UNAVAILABLE'},
+ conversion_applied:false,proof_authority:false,comparison_precision_eligible:false
+};
+const quoteBTC=chartModel(quoteFixture,'BTC'),quoteETH=chartModel(quoteFixture,'ETH');
+if(quoteBTC.actualQuote!=='USDT'||quoteBTC.forecastQuote!=='USD'||
+   quoteETH.forecastQuote!=='UNAVAILABLE'||chartModel(hourlyActual,'BTC').actualQuote!=='UNAVAILABLE'||
+   chartLinePlan(quoteBTC).forecast.length!==0)
+ throw Error('Chart B quote disclosure must remain source-declared without conversion or synthetic forecasts');
+
 const wrongHourlyWeek=structuredClone(hourlyActual);wrongHourlyWeek.public_live_precision.hourly_price_path.forecast_week='2026-W42';
 const futureHourly=structuredClone(hourlyActual);futureHourly.public_live_precision.hourly_price_path.BTC.push({observed_at_utc:'2099-10-05T04:00:00Z',close:110});
 const invalidHourlySource=structuredClone(hourlyActual);invalidHourlySource.public_live_precision.hourly_price_path.BTC[0].close=-2;
