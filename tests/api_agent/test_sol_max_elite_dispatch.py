@@ -180,6 +180,18 @@ class NativeSolDispatchTests(unittest.TestCase):
         self.assertIn("if: always()", collect)
         self.assertIn("s1-sol-elite-attempt-", workflow)
 
+    def test_real_p0_transport_sources_fit_public_cost_bounds(self):
+        packet = t.render_source(Path("."), "S1-API-RESILIENCE-20261104", HEAD)
+        self.assertEqual(packet["file_count"], 6)
+        self.assertLess(packet["cost_ceiling_usd"], 3)
+        self.assertGreater(len(t.canonical(packet["packet"])), 100_000)
+        self.assertFalse(packet["dispatch_enabled"])
+
+    def test_unmerged_original_forecast_branch_is_not_faked_as_main(self):
+        # Original #1879 source ownership is NOT interchangeable with main.
+        with self.assertRaisesRegex(ValueError, "ELITE_PUBLIC_SOURCE_UNAVAILABLE"):
+            t.render_source(Path("."), "S1-FORECAST-UNLOCK-20261104", HEAD)
+
     def test_origin_artifact_attack_rejected_before_provider(self):
         with tempfile.TemporaryDirectory() as td, patch.dict(os.environ, ENV):
             root = Path(td)
