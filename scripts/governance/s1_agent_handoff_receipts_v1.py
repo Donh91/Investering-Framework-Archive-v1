@@ -165,8 +165,9 @@ def handoff_followup(events, observed_at_utc, timeout_minutes, attempts,
     elif ack_at is not None and ack_at - requested >= timeout:
         action = "ACK_EXPIRED_ESCALATE_ORIGINAL_OWNER"
     elif elapsed < timeout:
-        action = ("AWAIT_NATIVE_ACK" if state == "REQUESTED"
-                  else "AWAIT_EXISTING_RECEIVER")
+        # Preserve stable action vocabulary used by existing S1 consumers.
+        # This state is still explicitly unauthenticated until native ACK.
+        action = "AWAIT_EXISTING_RECEIVER"
     elif state in ("ACKNOWLEDGED", "ACCEPTED"):
         # A reported receiver must not trigger a duplicate request.
         action = ("RECEIVER_STALLED_ESCALATE_ORIGINAL_OWNER"
