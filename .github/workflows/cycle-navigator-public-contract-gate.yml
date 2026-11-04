@@ -21,6 +21,8 @@ on:
       - "scripts/cycle_navigator/validate_public_series.py"
       - "scripts/cycle_navigator/build_weekly_cycle_navigator.py"
       - "scripts/cycle_navigator/daily_path_recovery.py"
+      - "scripts/cycle_navigator/price_input_attestation.py"
+      - "tests/cycle_navigator/test_original_price_input_attestation.py"
       - "tests/cycle_navigator/test_daily_path_recovery.py"
       - "tests/cycle_navigator/test_late_daily_amendment.py"
       - "scripts/cycle_navigator/issue_late_daily_amendment.py"
@@ -44,6 +46,8 @@ on:
       - "scripts/cycle_navigator/validate_public_series.py"
       - "scripts/cycle_navigator/build_weekly_cycle_navigator.py"
       - "scripts/cycle_navigator/daily_path_recovery.py"
+      - "scripts/cycle_navigator/price_input_attestation.py"
+      - "tests/cycle_navigator/test_original_price_input_attestation.py"
       - "tests/cycle_navigator/test_daily_path_recovery.py"
       - "tests/cycle_navigator/test_late_daily_amendment.py"
       - "scripts/cycle_navigator/issue_late_daily_amendment.py"
@@ -75,7 +79,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check pytest
-          python -m pytest -q tests/cycle_navigator/test_daily_path_recovery.py tests/cycle_navigator/test_late_daily_amendment.py tests/cycle_navigator/test_daily_price_journey.py tests/cycle_navigator/test_weekly_publication_resilience.py
+          python -m pytest -q tests/cycle_navigator/test_original_price_input_attestation.py tests/cycle_navigator/test_daily_path_recovery.py tests/cycle_navigator/test_late_daily_amendment.py tests/cycle_navigator/test_daily_price_journey.py tests/cycle_navigator/test_weekly_publication_resilience.py
 
       - name: Verify machine calibration lineage
         shell: bash
