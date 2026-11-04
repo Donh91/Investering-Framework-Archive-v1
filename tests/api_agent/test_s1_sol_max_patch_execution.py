@@ -117,7 +117,9 @@ class SolMaxPatchTests(unittest.TestCase):
         with patch.dict(os.environ, {"GH_TOKEN": "test-token"}), \
              patch.object(mod, "guard", return_value={"run": True}), \
              patch.object(mod, "subprocess_check", return_value=json.dumps([
-                 [row(prev, 1), row(prev2, 2), row(current, 3)]
+                 [row(prev, 1), row(prev2, 2), row(
+                     "S1_SOL_MAX_PATCH_RESERVATION_V1 HEAD=" + "d"*40 +
+                     " PR=1877 MODEL=gpt-6.1-sol EFFORT=max MAX_USD=0.75", 3)]
              ])) as commands:
             with self.assertRaisesRegex(ValueError, "THREE_ATTEMPT_HARD_STOP"):
                 mod.claim(HEAD, REPO)
