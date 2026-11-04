@@ -16,6 +16,7 @@ from typing import Any, Mapping
 import urllib.request
 
 from scripts.cycle_navigator.daily_price_journey import CONTRACT, daily_path_schema, validate_daily_path
+from scripts.cycle_navigator.price_input_attestation import OriginalSpotPriceProof
 
 MAX_RECOVERY_OUTPUT_TOKENS = 5500
 MAX_RECOVERY_INPUT_BYTES = 32000
@@ -97,7 +98,8 @@ def _clock(value: Any) -> datetime:
     return timestamp.astimezone(timezone.utc)
 
 
-def _source_gate(context: Mapping[str, Any], year: int, week: int, issued: datetime) -> tuple[dict[str, Any], str]:
+def _source_gate(context: Mapping[str, Any], year: int, week: int, issued: datetime,
+                 trusted_price_source: OriginalSpotPriceProof | None = None) -> tuple[dict[str, Any], str]:
     completed = context.get("completed_week_hourly_capture") or {}
     mm = context.get("master_monday_machine_package") or {}
     pointer = context.get("master_monday_pointer") or {}
@@ -158,12 +160,35 @@ def _source_gate(context: Mapping[str, Any], year: int, week: int, issued: datet
             quotes[asset] = None
     if not any(quotes.values()):
         return {}, "WEEKLY_ENVELOPE_QUOTE_MISMATCH"
-    return {"quote": quotes, "completed_week": f"{completed_week.year:04d}-W{completed_week.week:02d}",
+    # A model's currency label cannot certify its own price input. Only an
+    # internal proof object produced by raw Binance artifact verification
+    # before the original paid model call may authenticate a native quote.
+    proof_ok = (isinstance(trusted_price_source, OriginalSpotPriceProof)
+                and trusted_price_source.completed_week ==
+                    f"{completed_week.year:04d}-W{completed_week.week:02d}"
+                and trusted_price_source.completed_capture_sha256 == _sha(completed))
+    if proof_ok:
+        try:
+            proof_ok = _clock(trusted_price_source.attested_at_utc) <= issued
+        except (ValueError, TypeError):
+            proof_ok = False
+    independently_verified_quotes = {
+        asset: (quotes[asset] if proof_ok and quotes.get(asset)
+                and trusted_price_source.quote_for(asset) == quotes[asset]
+                else None)
+        for asset in ("BTC", "ETH")
+    }
+    any_verified = any(independently_verified_quotes.values())
+    return {"quote": quotes,
+            "verified_source_quotes": independently_verified_quotes,
+            "completed_week": f"{completed_week.year:04d}-W{completed_week.week:02d}",
             "completed_last_utc": completed_last.isoformat(),
             "source_generated_at_utc": completed["generated_at_utc"],
             "master_monday_created_at_utc": mm["created_at_utc"],
-            "quote_evidence": "MODEL_DECLARED_ENVELOPE_QUOTE_EQUALS_SPOT_QUOTE_NOT_INDEPENDENT",
-            "envelope_quote_independently_verified": False,
+            "quote_evidence": ("ORIGINAL_BINANCE_RAW_TO_168H_OHLC_PREMODEL_VERIFIED"
+                               if any_verified else
+                               "MODEL_DECLARED_ENVELOPE_QUOTE_EQUALS_SPOT_QUOTE_NOT_INDEPENDENT"),
+            "envelope_quote_independently_verified": bool(any_verified),
             "source_admitted_for_scientific_scoring": False}, "ELIGIBLE"
 
 
@@ -171,7 +196,8 @@ def reject_unverified_initial_daily_quotes(value: dict[str, Any],
                                           context: Mapping[str, Any], *,
                                           year: int | None = None,
                                           week: int | None = None,
-                                          issued_at: datetime | None = None) -> dict[str, Any]:
+                                          issued_at: datetime | None = None,
+                                          trusted_price_source: OriginalSpotPriceProof | None = None) -> dict[str, Any]:
     """An initial 7/7 model answer cannot bypass original price-quote parity.
 
     Mutates only the still-unfrozen in-memory publication candidate and never
@@ -190,7 +216,7 @@ def reject_unverified_initial_daily_quotes(value: dict[str, Any],
     if year is not None or week is not None or issued_at is not None:
         if year is None or week is None or issued_at is None:
             raise ValueError("INITIAL_SOURCE_GATE_ARGUMENTS_INCOMPLETE")
-        qualified, gate = _source_gate(context, year, week, issued_at)
+        qualified, gate = _source_gate(context, year, week, issued_at, trusted_price_source)
     changes = {}
     for asset in ("BTC", "ETH"):
         item = path.get(asset)
@@ -201,7 +227,8 @@ def reject_unverified_initial_daily_quotes(value: dict[str, Any],
         if (actual not in ("USD", "USDT") or claimed != actual or
                 (qualified is None or gate != "ELIGIBLE"
                  or qualified.get("envelope_quote_independently_verified") is not True
-                 or qualified.get("quote", {}).get(asset) != actual)):
+                 or qualified.get("quote", {}).get(asset) != actual
+                 or qualified.get("verified_source_quotes", {}).get(asset) != actual)):
             changes[asset] = {"status": "UNAVAILABLE", "points": [],
                               "reason": "Initial daily path source, clock or quote unverified before freeze."}
     if changes:
@@ -309,7 +336,8 @@ def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
                        year: int, week: int, model: str, issued_at: datetime,
                        request=None, budget_check=None,
                        cost_receipt_path: Path | None = None,
-                       primary_unaccounted_cost_usd: float = 0.0) -> tuple[dict[str, Any], dict[str, Any]]:
+                       primary_unaccounted_cost_usd: float = 0.0,
+                       trusted_price_source: OriginalSpotPriceProof | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
     """Return original value with only independently validated UNAVAILABLE assets repaired."""
     freeze = value["forecast_freeze"]
     original = freeze["daily_price_path"]
@@ -333,7 +361,7 @@ def recover_daily_path(value: dict[str, Any], context: Mapping[str, Any], *,
     if not pending:
         receipt["final"] = receipt["initial"].copy()
         return value, receipt
-    source, gate = _source_gate(context, year, week, issued_at)
+    source, gate = _source_gate(context, year, week, issued_at, trusted_price_source)
     receipt["source_gate"] = gate
     receipt["source_clock_and_quote"] = source
     if gate != "ELIGIBLE":
