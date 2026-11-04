@@ -137,6 +137,17 @@ def output_schema() -> dict:
 
 
 def call_api(context_file: Path, result_dir: Path) -> dict:
+    # A native pre-HTTP claim must already have been posted AND read back.
+    # Do not charge OpenAI for a direct invocation without this durable record.
+    reservation_file = result_dir / "reservation.json"
+    if not reservation_file.exists():
+        raise ValueError("PRE_HTTP_RESERVATION_MISSING")
+    reservation = json.loads(reservation_file.read_text())
+    if (reservation.get("status") != "RESERVED"
+            or not isinstance(reservation.get("claim_id"), int)
+            or reservation.get("model") != MODEL
+            or reservation.get("effort") != EFFORT):
+        raise ValueError("PRE_HTTP_RESERVATION_INVALID")
     key = os.environ.get("OPENAI_API_KEY")
     if not key:
         raise ValueError("OPENAI_API_KEY_MISSING")
@@ -167,11 +178,20 @@ def call_api(context_file: Path, result_dir: Path) -> dict:
     with urllib.request.urlopen(req, timeout=210) as res:
         response = json.loads(res.read())
     result_dir.mkdir(parents=True, exist_ok=True)
+    usage = response.get("usage") or {}
+    inputs, outputs = usage.get("input_tokens"), usage.get("output_tokens")
+    if any(type(v) is not int or v < 0 for v in (inputs, outputs)):
+        raise ValueError("PROVIDER_USAGE_UNKNOWN_BILLING_MAY_HAVE_OCCURRED")
+    estimated_cost = round((2.0 * inputs + 10.0 * outputs) / 1_000_000, 6)
     (result_dir / "api_meta.json").write_text(json.dumps({
         "response_id": response.get("id"), "model": response.get("model"),
-        "status": response.get("status"), "usage": response.get("usage"),
+        "status": response.get("status"), "usage": usage,
+        "estimated_cost_usd": estimated_cost,
         "context_sha256": sha(context), "reasoning_effort": EFFORT,
+        "reservation_claim_id": reservation["claim_id"],
     }, sort_keys=True, indent=2) + "\n")
+    if estimated_cost > RESERVE_USD:
+        raise ValueError("PROVIDER_COST_EXCEEDS_RESERVATION_BILLING_INCIDENT")
     if response.get("status") != "completed":
         raise ValueError("API_NOT_COMPLETED_BILLING_MAY_HAVE_OCCURRED")
     parts = [c.get("text") for item in response.get("output", [])
@@ -245,6 +265,10 @@ def main() -> None:
         out = build_context(args.head, args.output_dir)
     elif args.action == "claim":
         out = claim(args.head, args.repo)
+        out["model"], out["effort"], out["source_head"] = MODEL, EFFORT, args.head
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+        (args.output_dir / "reservation.json").write_text(
+            json.dumps(out, sort_keys=True, indent=2) + "\n")
     elif args.action == "call":
         out = call_api(args.output_dir / "context.json", args.output_dir)
     else:
