@@ -885,6 +885,11 @@ try{
     current:document.getElementById('compass-pro')?.dataset.sourceCurrent,
     expiryState:document.getElementById('compass-pro')?.dataset.sourceState,
     source:document.getElementById('pro-source-status')?.textContent||'',
+    cycleState:document.getElementById('official-path-view')?.dataset.cycleSourceState||'',
+    cycleKind:document.getElementById('official-path-view')?.dataset.referenceKind||'',
+    cycleMeaning:document.getElementById('cn-cycle-meaning')?.textContent||'',
+    cycleWeek:document.getElementById('cn-cycle-health')?.textContent||'',
+    cycleTierStates:[...document.querySelectorAll('#premium-rotation .cn-cycle-tier')].map(x=>({key:x.querySelector('b')?.textContent||'',stance:x.dataset.stance||''})),
     rotation:document.querySelectorAll('#cn-rotation-classes [role="listitem"]').length,
     cards:[...document.querySelectorAll('.cn-horizon-card')].map(el=>({
      valid:el.dataset.sourceCurrent,
@@ -895,8 +900,20 @@ try{
    }));
    assert.equal(snapshot.hydrated,'true',
      'ROOT_FIXTURE_UNHYDRATED_SOURCE_WAS_CLASSIFIED:'+kind);
+   // Real 390px canonical-root browser checks, using HTTP-served synthetic
+   // original public feeds (never published). Important: the source model is
+   // not allowed to claim a current market phase from a valid HOLD allocation.
    if(kind==='eligible'){
     requireEligible(snapshot);
+    assert.equal(snapshot.cycleState,'SOURCE_ALIGNED','CYCLE_SOURCE_JOIN_NOT_READY:'+JSON.stringify(snapshot));
+    assert.equal(snapshot.cycleKind,'NO_VERIFIED_PHASE','CYCLE_INFERRED_LIVE_PHASE_FROM_HOLD:'+JSON.stringify(snapshot));
+    assert.match(snapshot.cycleMeaning,/Ingen aktiv markedsfase er bekræftet|No current market phase is confirmed/,
+      'CYCLE_NOT_EXPLICIT_ABOUT_UNCONFIRMED_PHASE:'+JSON.stringify(snapshot));
+    assert.equal(snapshot.cycleTierStates.length,7,'CYCLE_NOT_ALL_SEVEN_SOURCE_TIERS:'+JSON.stringify(snapshot));
+    assert.ok(snapshot.cycleTierStates.every(x=>x.stance==='wait'),
+      'CYCLE_SOURCE_TIER_PROXY_OR_ACTION_UPGRADE:'+JSON.stringify(snapshot.cycleTierStates));
+    assert.match(snapshot.cycleWeek,/CN #.*W[0-9]{2}/,'CYCLE_MISSING_ORIGINAL_WEEK_ISSUE:'+JSON.stringify(snapshot));
+
     assert.equal(snapshot.expiryState,'FRESH','ROOT_ELIGIBLE_EXPIRED_FALSELY');
    }else{
     assert.equal(snapshot.expiryState,kind==='expired'?'EXPIRED':'UNAVAILABLE',
@@ -905,6 +922,12 @@ try{
       'ROOT_EXPIRED_SOURCE_NOT_EXPLAINED_IN_COPENHAGEN_TIME');
     if(kind==='degraded')assert.doesNotMatch(snapshot.source,/udløb|expired/i,
       'ROOT_UNAVAILABLE_WAS_MISLABELED_AS_EXPIRED');
+   }
+   if(kind!=='eligible'){
+    assert.equal(snapshot.cycleState,'UNAVAILABLE',
+      'CYCLE_EXPIRED_OR_DEGRADED_WAS_PROMOTED:'+kind+':'+JSON.stringify(snapshot));
+    assert.equal(snapshot.cycleTierStates.length,0,
+      'CYCLE_ACTION_TIERS_LEAKED_AFTER_INVALID_SOURCE:'+kind+':'+JSON.stringify(snapshot));
    }
    if(kind!=='eligible')assert.ok(snapshot.current==='false'&&snapshot.rotation===0&&
     snapshot.cards.length===3&&snapshot.cards.every(x=>x.valid==='false'&&
