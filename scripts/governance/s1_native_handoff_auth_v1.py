@@ -18,7 +18,27 @@ SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 REPO = re.compile(r"Donh91/[A-Za-z0-9_.-]+\Z")
 COMMENT_PATH = re.compile(r"/Donh91/([A-Za-z0-9_.-]+)/issues/([0-9]+)\Z")
 COMMENT_FRAGMENT = re.compile(r"issuecomment-([0-9]+)\Z")
-NON_TEST_STEPS = {"set up job", "checkout", "setup python", "complete job", "post checkout"}
+NON_EXECUTION_PREFIXES = (
+    "set up job", "complete job", "checkout", "post checkout",
+    "run actions/checkout@", "post run actions/checkout@",
+    "run actions/setup-", "post run actions/setup-",
+    "run actions/cache@", "post run actions/cache@",
+)
+
+
+def _trusted_steps(required_steps):
+    # Pinned by an authenticated original owner, never by an issue body/model.
+    if (not isinstance(required_steps, (tuple, list))
+            or not 2 <= len(required_steps) <= 8
+            or any(not isinstance(x, str) or not 3 <= len(x.strip()) <= 90
+                   for x in required_steps)):
+        raise ReceiptError("TRUSTED_EXECUTION_AND_TEST_STEPS_REQUIRED")
+    names = [x.strip().casefold() for x in required_steps]
+    if len(set(names)) != len(names) or any(
+        x.startswith(NON_EXECUTION_PREFIXES) for x in names
+    ):
+        raise ReceiptError("SETUP_STEP_CANNOT_PROVE_RECIPIENT_EXECUTION")
+    return names
 
 
 def _blocked(reason, structure=None):
@@ -66,7 +86,7 @@ def _native_comment(event, *, repo, login, binding, native_get):
 def authenticate_native_chain(
     events, *, expected_source_head, expected_binding_sha256,
     origin_repo, recipient_repo, sender_login, recipient_login,
-    native_get, artifact_bytes_get,
+    native_get, artifact_bytes_get, required_execution_steps,
 ):
     """Native-reader injection must come from a trusted authenticated caller."""
     try:
@@ -133,14 +153,17 @@ def authenticate_native_chain(
                 or job.get("id") != job_id or job.get("run_id") != run_id
                 or job.get("status") != "completed" or job.get("conclusion") != "success"):
             raise ReceiptError("NATIVE_RUN_JOB_ACTOR_OR_SOURCE_MISMATCH")
+        required = _trusted_steps(required_execution_steps)
         steps = job.get("steps")
-        if not isinstance(steps, list) or not any(
-            isinstance(s, dict) and s.get("status") == "completed"
-            and s.get("conclusion") == "success"
-            and str(s.get("name", "")).strip().lower() not in NON_TEST_STEPS
-            for s in steps
+        if not isinstance(steps, list) or not all(
+            any(isinstance(step, dict)
+                and step.get("status") == "completed"
+                and step.get("conclusion") == "success"
+                and str(step.get("name", "")).strip().casefold() == name
+                for step in steps)
+            for name in required
         ):
-            raise ReceiptError("NO_SUBSTANTIVE_EXECUTED_JOB_STEP")
+            raise ReceiptError("REQUIRED_NATIVE_EXECUTION_OR_TEST_STEP_NOT_EXECUTED")
         listings = native_get(f"/repos/{recipient_repo}/actions/runs/{run_id}/artifacts")
         listed = listings.get("artifacts") if isinstance(listings, dict) else None
         artifact = next((a for a in (listed or []) if isinstance(a, dict)
