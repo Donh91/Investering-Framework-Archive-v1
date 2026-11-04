@@ -98,7 +98,7 @@ class HandoffTests(unittest.TestCase):
 
     def test_missing_ack_deadline_and_retry_bound(self):
         for at, attempts, action in (
-            ("2026-11-02T10:01:59.999999Z", 1, "AWAIT_NATIVE_ACK"),
+            ("2026-11-02T10:01:59.999999Z", 1, "AWAIT_EXISTING_RECEIVER"),
             ("2026-11-02T10:02:00Z", 1, "RETRY_ONLY_IF_NATIVE_INTAKE_AUTHORIZED"),
             ("2026-11-02T10:02:00Z", 2, "DEAD_LETTER_ESCALATE_WITH_ORIGINAL_OWNER"),
         ):
@@ -148,7 +148,7 @@ class HandoffTests(unittest.TestCase):
                        expected_request_binding_sha256=binding)
         self.assertEqual(
             self.followup(chain()[:1], "2026-11-02T10:00:00Z", **context),
-            "AWAIT_NATIVE_ACK")
+            "AWAIT_EXISTING_RECEIVER")
         for key, value in (("source_head", "b"*40),
                            ("request_id", "req-20261102-002"),
                            ("source_fingerprint", "other12345678")):
