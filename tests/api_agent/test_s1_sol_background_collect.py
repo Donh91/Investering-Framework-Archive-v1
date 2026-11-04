@@ -131,6 +131,24 @@ class CollectorTests(unittest.TestCase):
     def test_429_is_retryable_without_post(self):
         self.assertEqual(c.interpret({"response_id": RID}, 429, {})["state"], "RETRYABLE_GET_ONLY")
 
+    def test_collect_dispatch_cannot_run_production_writer(self):
+        workflow = Path(".github/workflows/framework-learning-supervisor.yml").read_text()
+        self.assertIn("sol-max-collect:", workflow)
+        self.assertIn("inputs.sol_collect_run_id != ''", workflow)
+        self.assertIn("inputs.sol_collect_run_id == ''", workflow)
+        self.assertIn("actions/download-artifact@v4", workflow)
+        self.assertIn("ref: main", workflow)
+
+    def test_response_handle_uploaded_before_any_validation(self):
+        workflow = Path(".github/workflows/framework-learning-supervisor.yml").read_text()
+        call = workflow.index("s1_sol_max_patch_execution.py call --head")
+        persist = workflow.index("name: Persist original paid response handle immediately")
+        validate = workflow.index("name: Validate generated patch and run original regression suite")
+        self.assertLess(call, persist)
+        self.assertLess(persist, validate)
+        self.assertIn("--submit-only", workflow[call:persist])
+        self.assertIn("hashFiles('runtime/s1-sol-max/proposal.json') != ''", workflow)
+
     def test_output_remains_non_authoritative_even_if_completed(self):
         self.assertFalse(c.interpret({"response_id": RID}, 200,
                          {"id": RID, "status": "completed"})["automatic_source_application"])
