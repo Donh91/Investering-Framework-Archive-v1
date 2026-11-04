@@ -47,7 +47,10 @@
     "delegation_lineage_required_for_hardened_profiles": true,
     "bounded_redelegation_only": true,
     "preserve_role_tiers_when_senior_model_is_cheaper": true,
-    "prefer_current_model_within_same_capability_tier": true
+    "prefer_current_model_within_same_capability_tier": true,
+    "astra_excluded_from_automatic_api_routing": true,
+    "owner_manual_work_controls_astra": true,
+    "supervisor_chooses_task_matched_model_and_reasoning": true
   },
   "model_role_policy": {
     "gpt-5.6-terra": {
@@ -59,15 +62,9 @@
       ]
     },
     "gpt-6-astra": {
-      "role": "SCARCE_AGENTIC_AND_EXTREME_COMPLEXITY_TIER",
-      "preferred_for": [
-        "agentic_execution",
-        "cross_domain_orchestration",
-        "extreme_context",
-        "highest_complexity_architecture",
-        "long_running_multi_step_work"
-      ],
-      "routing_note": "RESERVE_FOR_TASKS_WHERE_AGENTIC_EXECUTION_OR_CAPABILITY_DELTA_MATERIALLY_EXCEEDS_SOL"
+      "role": "OWNER_MANUAL_WORK_ONLY",
+      "preferred_for": [],
+      "routing_note": "EXCLUDED_FROM_ALL_AUTONOMOUS_API_ROUTING. Astra use is owner-initiated manual Work only; historical model metadata retained solely for old receipts and price accounting."
     },
     "gpt-6-luna": {
       "role": "ROUTINE_WORKFORCE",
@@ -115,7 +112,7 @@
         "scientific_falsification",
         "strategic_planning"
       ],
-      "routing_note": "PREFERRED_CURRENT_SOL_FOR_DIFFICULT_WORK_WHEN_RUNTIME_QUALIFIED; NEAR_ASTRA_CLASS_WORK_SHOULD_TRY_SOL_6_1_BEFORE_ASTRA_UNLESS_AGENTIC_OR_EXTREME_CONTEXT_IS_REQUIRED"
+      "routing_note": "CURRENT_SOL_SENIOR: choose low/medium/high/xhigh/max according to material task complexity, independent review value and budget, never force MAX for ordinary runs; never substitute Astra."
     }
   },
   "escalation_policy": {
@@ -128,11 +125,7 @@
       "high_expected_rework_cost",
       "prior_lower_tier_attempt_failed_or_circled_without_resolution"
     ],
-    "direct_to_astra_when": [
-      "agentic_execution_is_required",
-      "extreme_context_exceeds_practical_sol_workflow",
-      "cross_domain_orchestration_requires_persistent_multi_step_execution"
-    ],
+    "direct_to_astra_when": [],
     "lower_tier_retry_limit_before_escalation": 1,
     "budget_authority_unchanged": true
   },
@@ -209,7 +202,7 @@
     },
     "gpt-6-astra": {
       "rank": 4,
-      "api_eligible": true,
+      "api_eligible": false,
       "reasoning_efforts": [
         "low",
         "medium",
@@ -298,10 +291,13 @@
         "max"
       ],
       "capabilities": [
+        "architecture",
         "classification",
         "conflict_review",
+        "cross_domain",
         "difficult_reasoning",
         "extraction",
+        "orchestration",
         "research",
         "review",
         "structured_output",
@@ -326,14 +322,15 @@
   },
   "execution": {
     "max_parallel_units": 4,
-    "astra_parent_only_when_required_by_profile": true,
+    "astra_parent_only_when_required_by_profile": false,
     "api_override_requires_verified_runtime_snapshot": true,
     "api_override_requires_explicit_gateway_flag": true,
     "code_write_requires_codex_runtime_available": true,
     "code_write_requires_existing_task_authority": true,
     "deterministic_executor_name": "DETERMINISTIC",
     "code_executor_name": "CODEX",
-    "api_executor_name": "OPENAI_API"
+    "api_executor_name": "OPENAI_API",
+    "owner_model_selection": "S1_TASK_MATCHED_REUSABLE_API_AUTHORITY_EXCLUDING_ASTRA"
   },
   "authority": {
     "creates_truth": false,
