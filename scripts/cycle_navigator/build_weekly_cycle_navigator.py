@@ -18,6 +18,7 @@ from scripts.api_agent.api_gateway import estimate_cost
 from scripts.cycle_navigator.prospective_range_bridge import load_bridge
 from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy, daily_path_issue_summary, daily_range_plan_schema, validate_daily_range_plan
 from scripts.cycle_navigator.daily_path_recovery import recover_daily_path, reject_unverified_initial_daily_quotes, quarantine_late_daily_issuance
+from scripts.cycle_navigator.price_input_attestation import attest_completed_week, PriceEvidenceError, CONTRACT as ORIGINAL_PRICE_CONTRACT
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
 
 
@@ -741,6 +742,25 @@ def main() -> None:
             for asset in ("BTC", "ETH")
         },
     }
+    # Verify original Binance raw bytes against retained 168 UTC OHLC rows
+    # and the actual weekly model-input price frame BEFORE the original call.
+    # This is read-only. Absence of Actions artifacts must never block weekly
+    # ranges or create an extra billed inference; only daily paths abstain.
+    trusted_price_source = None
+    try:
+        trusted_price_source = attest_completed_week(
+            repo, completed_year, completed_week, weekly_capture,
+            issued_at=datetime.now(timezone.utc),
+            token=os.environ.get("GITHUB_TOKEN", ""),
+            repo_full_name=os.environ.get("GITHUB_REPOSITORY", "Donh91/Investering-Framework-Archive-v1"))
+        context["pre_model_original_price_attestation"] = trusted_price_source.public_summary()
+    except (PriceEvidenceError, OSError, ValueError, TypeError) as exc:
+        context["pre_model_original_price_attestation"] = {
+            "contract": ORIGINAL_PRICE_CONTRACT,
+            "status": "UNAVAILABLE",
+            "reason": (str(exc).split(":")[0] or type(exc).__name__)[:100],
+            "authority": "NO_INDEPENDENT_QUOTE_ATTESTATION",
+        }
     prompt = (
         f"Generate internal Cycle Navigator machine issue #{issue} for ISO week W{target_week:02d}, but the continuing public series number for this forecast week is CN #{public_issue}. Use CN #{public_issue} in readable_markdown and x_ready_markdown headings/current-issue references. First evaluate the prior frozen machine issue #{prev_issue} against completed W{completed_week:02d}. "
         "Then freeze the new week's explicit forecasts. The X-ready version must include a precision section, an honest what-went-well/what-went-wrong section, "
@@ -903,7 +923,8 @@ def main() -> None:
     # reduced to an honest UNAVAILABLE before any immutable freeze.
     value = reject_unverified_initial_daily_quotes(
         value, context, year=target_year, week=target_week,
-        issued_at=datetime.now(timezone.utc))
+        issued_at=datetime.now(timezone.utc),
+        trusted_price_source=trusted_price_source)
     freeze = value["forecast_freeze"]
     # A valid semantic abstention may receive at most ONE additional bounded
     # source-qualified call, always before the original immutable week freeze.
@@ -920,6 +941,7 @@ def main() -> None:
         primary_unaccounted_cost = float("nan")
     value, daily_recovery_receipt = recover_daily_path(
         value, context, year=target_year, week=target_week,
+        trusted_price_source=trusted_price_source,
         model=args.model, issued_at=datetime.now(timezone.utc),
         primary_unaccounted_cost_usd=primary_unaccounted_cost,
         cost_receipt_path=(repo / "research/api_agent/outputs/weekly" /
