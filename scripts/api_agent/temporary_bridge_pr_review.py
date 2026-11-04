@@ -201,7 +201,7 @@ def validate(out_dir: Path) -> str:
         raise ValueError("CONTEXT_CHANGED_AFTER_REVIEW")
     receipt = json.loads((out_dir / "output" / "receipt.json").read_text())
     result = json.loads((out_dir / "output" / "output.json").read_text())
-    if receipt.get("status") != "PASS" or receipt.get("model") != "gpt-6.1-sol":
+    if receipt.get("status") != "PASS" or receipt.get("model") != "gpt-6.1-sol" or receipt.get("reasoning_effort") != "max":
         raise ValueError("NO_ACCEPTED_GPT_6_1_SOL_RECEIPT")
     if receipt.get("context_hash") != sha256(context) and receipt.get("context_hash") != sha256(
             (json.dumps(json.loads(context), sort_keys=True, separators=(",", ":")) + "\n").encode()):
