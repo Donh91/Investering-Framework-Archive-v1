@@ -46,7 +46,8 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
     const row={id,label:tr(lang,da,en),kind,sourceStatus:'NOT_ISSUED_IN_THIS_VIEW',
       // Never invent a numerical terminal close, interval, forecast or ETA.
       priceLabel:tr(lang,'Ingen separat verificeret kursprognose her','No separate verified price forecast here'),
-      ...emptyStatus(lang)};
+      ...emptyStatus(lang),value:tr(lang,'Afventer gyldig kilde','Awaiting verified source'),
+      label:tr(lang,da,en)};
     if(!verified)return row;
     if(kind==='OFFICIAL'){
       const h=compass.horizons?.[officialId];
