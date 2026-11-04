@@ -23,6 +23,19 @@ def proposal_dir(root, status, diff):
         "model": mod.MODEL, "reasoning_effort": mod.EFFORT}))
 
 
+def public_context(head=HEAD, source="safe public source"):
+    content = source.encode()
+    return json.dumps({
+        "contract": "S1_SOL_MAX_PATCH_CONTEXT_v1",
+        "source_head": head,
+        "repo": REPO,
+        "original_pr": 1877,
+        "scope": sorted(mod.ALLOWED),
+        "files": {path: {"sha256": mod.sha(content), "content": source}
+                  for path in mod.ALLOWED},
+    })
+
+
 class SolMaxPatchTests(unittest.TestCase):
     def test_model_max_and_no_auto_write_authority(self):
         self.assertEqual((mod.MODEL, mod.EFFORT), ("gpt-6.1-sol", "max"))
@@ -167,7 +180,7 @@ class SolMaxPatchTests(unittest.TestCase):
              patch.object(mod.urllib.request, "urlopen", side_effect=fake_open), \
              patch.object(mod.time, "sleep", return_value=None):
             root = Path(t)
-            (root / "context.json").write_text("{}")
+            (root / "context.json").write_text(public_context())
             (root / "reservation.json").write_text(json.dumps({
                 "status": "RESERVED", "claim_id": 8,
                 "model": mod.MODEL, "effort": mod.EFFORT, "source_head": HEAD}))
@@ -176,7 +189,7 @@ class SolMaxPatchTests(unittest.TestCase):
             self.assertEqual([x[0] for x in sent], ["POST", "GET"])
             self.assertIn("resp_queued123", sent[1][1])
             self.assertTrue(json.loads(sent[0][2])["background"])
-            self.assertIs(json.loads(sent[0][2])["store"], False)
+            self.assertIs(json.loads(sent[0][2])["store"], True)
             handle = json.loads((root / "response_handle.json").read_text())
             self.assertEqual(handle["response_id"], "resp_queued123")
             self.assertEqual(handle["state"], "completed")
@@ -204,10 +217,10 @@ class SolMaxPatchTests(unittest.TestCase):
              patch.object(mod.urllib.request, "urlopen", side_effect=fake_open), \
              patch.object(mod.time, "sleep", return_value=None):
             root = Path(t)
-            (root / "context.json").write_text("{}")
+            (root / "context.json").write_text(public_context())
             (root / "reservation.json").write_text(json.dumps({
                 "status": "RESERVED", "claim_id": 8,
-                "model": mod.MODEL, "effort": mod.EFFORT}))
+                "model": mod.MODEL, "effort": mod.EFFORT, "source_head": HEAD}))
             with self.assertRaisesRegex(ValueError, "BACKGROUND_RESPONSE_ID_CHANGED"):
                 mod.call_api(root / "context.json", root)
             self.assertEqual(sent, ["POST", "GET"])
@@ -235,10 +248,10 @@ class SolMaxPatchTests(unittest.TestCase):
              patch.dict(os.environ, {"OPENAI_API_KEY": "test-token"}), \
              patch.object(mod.urllib.request, "urlopen", side_effect=fake_open):
             root = Path(t)
-            (root / "context.json").write_text("{}")
+            (root / "context.json").write_text(public_context())
             (root / "reservation.json").write_text(json.dumps({
                 "status": "RESERVED", "claim_id": 42,
-                "model": mod.MODEL, "effort": mod.EFFORT}))
+                "model": mod.MODEL, "effort": mod.EFFORT, "source_head": HEAD}))
             with self.assertRaisesRegex(ValueError, "API_INCOMPLETE_OUTPUT_TOKENS_EXHAUSTED_NO_PATCH"):
                 mod.call_api(root / "context.json", root)
             self.assertEqual(sent, ["POST"])
@@ -247,7 +260,47 @@ class SolMaxPatchTests(unittest.TestCase):
             self.assertEqual(meta["estimated_cost_usd"], 0.167016)
             self.assertFalse((root / "proposal.json").exists())
 
-    def test_paid_call_is_one_request_with_max_store_false_and_schema(self):
+    def test_public_persistent_storage_preflight_rejects_secrets_and_bad_scope(self):
+        positive = mod.persistent_storage_preflight(public_context().encode())
+        self.assertEqual(positive["consent"], mod.PUBLIC_STORAGE_CONSENT)
+        self.assertTrue(positive["store"])
+        self.assertLessEqual(positive["worst_case_standard_usd"], mod.RESERVE_USD)
+        cases = [
+            '{}',
+            public_context(source="sk-proj-" + "A" * 30),
+        ]
+        for data in cases:
+            with self.subTest(data=data[:15]):
+                with self.assertRaisesRegex(ValueError, "PUBLIC_STORAGE_"):
+                    mod.persistent_storage_preflight(data.encode())
+        malformed = json.loads(public_context())
+        malformed["repo"] = "Donh91/Investering-Framework-Vault"
+        with self.assertRaisesRegex(ValueError, "SCOPE_UNVERIFIED"):
+            mod.persistent_storage_preflight(json.dumps(malformed).encode())
+
+    def test_cost_estimate_and_price_expiry_fail_before_post(self):
+        context = public_context().encode()
+        with patch.object(mod, "STANDARD_OUTPUT_USD_PER_MTOK", 20.0):
+            with self.assertRaisesRegex(ValueError, "PRE_HTTP_COST_ENVELOPE"):
+                mod.persistent_storage_preflight(context)
+        with patch.object(mod, "PRICING_RECHECK_DEADLINE", "2020-01-01"):
+            with self.assertRaisesRegex(ValueError, "STALE_API_PRICING"):
+                mod.persistent_storage_preflight(context)
+
+    def test_store_true_denies_untrusted_source_without_paid_network(self):
+        with tempfile.TemporaryDirectory() as t, \
+             patch.dict(os.environ, {"OPENAI_API_KEY": "fake-key"}), \
+             patch.object(mod.urllib.request, "urlopen") as outbound:
+            root = Path(t)
+            (root / "context.json").write_text('{"contract":"fake"}')
+            (root / "reservation.json").write_text(json.dumps({
+                "status": "RESERVED", "claim_id": 42,
+                "model": mod.MODEL, "effort": mod.EFFORT, "source_head": HEAD}))
+            with self.assertRaisesRegex(ValueError, "PUBLIC_STORAGE_CONTEXT_SCOPE"):
+                mod.call_api(root / "context.json", root)
+            outbound.assert_not_called()
+
+    def test_paid_call_is_one_request_with_owner_scoped_store_true_and_schema(self):
         class FakeResponse:
             def __enter__(self):
                 return self
@@ -269,16 +322,16 @@ class SolMaxPatchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t, patch.dict(os.environ, {"OPENAI_API_KEY": "test-token"}), \
              patch.object(mod.urllib.request, "urlopen", side_effect=fake_open):
             context = Path(t) / "context.json"
-            context.write_text('{"contract":"fake"}')
+            context.write_text(public_context())
             (Path(t) / "reservation.json").write_text(json.dumps({
                 "status": "RESERVED", "claim_id": 42,
-                "model": mod.MODEL, "effort": mod.EFFORT}))
+                "model": mod.MODEL, "effort": mod.EFFORT, "source_head": HEAD}))
             out = mod.call_api(context, Path(t))
             self.assertEqual(out["status"], "ABSTAIN")
             self.assertEqual(len(posted), 1)
             self.assertEqual(posted[0]["model"], "gpt-6.1-sol")
             self.assertEqual(posted[0]["reasoning"]["effort"], "max")
-            self.assertIs(posted[0]["store"], False)
+            self.assertIs(posted[0]["store"], True)
             self.assertIs(posted[0]["background"], True)
             self.assertEqual(posted[0]["text"]["format"]["type"], "json_schema")
 
