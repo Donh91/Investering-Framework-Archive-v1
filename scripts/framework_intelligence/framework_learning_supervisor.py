@@ -349,6 +349,80 @@ def build_queue(families, unconsumed, staleness):
     return queue[:25]
 
 
+
+def read_elite_sol_batch_queue(root: Path) -> list[dict[str, Any]]:
+    """Reflect owner-registered, NO-POST missions in existing proposal queue.
+
+    This is display/routing evidence only, not API release, Codex-READY,
+    delegated code execution, branch lease or autonomous merge authority.
+    A malformed or activated candidate is not admitted.
+    """
+    rel = "research/api_agent/coordination/S1_SOL_MAX_ELITE_BOUNDED_BATCH_20261104.json"
+    try:
+        batch = load_json(root / rel, {}) or {}
+    except (OSError, UnicodeError, ValueError, TypeError):
+        return []
+    if not isinstance(batch, dict):
+        return []
+    if (batch.get("contract") != "S1_SOL_MAX_ELITE_BOUNDED_BATCH_v1"
+            or batch.get("repo") != "Donh91/Investering-Framework-Archive-v1"
+            or batch.get("state") != "REGISTERED_NOT_EXECUTING"
+            or batch.get("dispatch_enabled") is not False
+            or batch.get("model") != "gpt-6.1-sol"
+            or batch.get("reasoning_effort") != "max"
+            or batch.get("max_concurrent_paid_missions") != 1
+            or batch.get("billing_liability_for_run_41870364609") != "UNKNOWN"):
+        return []
+    pay = batch.get("payment_policy") or {}
+    if not isinstance(pay, dict):
+        return []
+    if (pay.get("owner_monthly_hard_stop_usd") != 30
+            or pay.get("owner_global_reserve_usd") != 12
+            or pay.get("per_call_max_usd") != 3
+            or pay.get("do_not_retry_unresolved_paid_post") is not True
+            or pay.get("no_auto_paid_trigger_until_reconciled") is not True):
+        return []
+    rows = batch.get("definitions")
+    if not isinstance(rows, list) or len(rows) != 5:
+        return []
+    ids = [x.get("id") for x in rows if isinstance(x, dict)]
+    if (len(ids) != 5 or any(not isinstance(item, str) or not item for item in ids)
+            or len(set(ids)) != 5):
+        return []
+    for x in rows:
+        if not isinstance(x, dict) or not isinstance(x.get("phase"), str):
+            return []
+        if (not x["phase"].startswith("STAGED")
+                or x.get("owner_issue") not in (1156, 1157, 1516)
+                or x.get("priority") not in ("P0", "P1")
+                or not isinstance(x.get("rank"), int)
+                or not isinstance(x.get("depends_on"), list)
+                or any(not isinstance(dep, str) or dep not in ids
+                       for dep in x["depends_on"])):
+            return []
+    queue = []
+    for item in rows:
+        queue.append({
+            "priority": 1 if item["priority"] == "P0" else 2,
+            "mission_rank": item["rank"],
+            "state": "OWNER_APPROVED_IMPLEMENTATION_GATED",
+            "specialist": "EXISTING_S1_SOURCE_OWNER",
+            "compute_tier": "DETERMINISTIC_FIRST_SOL_MAX_ONLY_AFTER_GATES",
+            "api_model": "gpt-6.1-sol",
+            "api_reasoning_effort": "max",
+            "paid_dispatch_allowed": False,
+            "automatic_merge_allowed": False,
+            "semantic_identity": item["id"],
+            "source": rel,
+            "original_owner_issue": item["owner_issue"],
+            "original_pr": item["original_pr"],
+            "reason": item["defect"],
+            "next_gate": ("UNBLOCK_API_TRANSPORT_AND_UNKNOWN_BILLING" if
+                          item["id"] == "S1-API-RESILIENCE-20261104" else
+                          "EXISTING_OWNER_PATCH_TEST_REVIEW_OR_DEPENDENCY"),
+        })
+    return queue
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", default=".")
@@ -409,7 +483,8 @@ def main():
         "automatic_change_allowed": False,
     }]
 
-    queue = build_queue(memory_rows, unconsumed, staleness)
+    # Reuse this existing delegation queue; these five tasks are staged, never paid.
+    queue = (read_elite_sol_batch_queue(root) + build_queue(memory_rows, unconsumed, staleness))[:25]
     negative = [x for x in memory_rows if x["negative_memory"]]
     ranges = [x for x in memory_rows if any("RANGE" in t.upper() for t in x["titles"]) and x["family_status"] in {"SUPPORTED_NEEDS_INCREMENTAL_VALUE", "CONTESTED"}]
     change_counts = Counter(x["change"] for x in deltas)
