@@ -27,7 +27,8 @@ const directions={
   LEAN_BEARISH:['Forsigtigt faldende','Cautiously falling','down'],
   BULLISH:['Stigende måling','Rising observation','up'],
   BEARISH:['Faldende måling','Falling observation','down'],
-  NEUTRAL:['Neutral måling','Neutral observation','mixed']
+  NEUTRAL:['Neutral måling','Neutral observation','mixed'],
+  NO_EDGE:['Ingen påvist edge','No proven edge','missing']
 };
 const tr=(lang,da,en)=>lang==='en'?en:da;
 function validOfficial(compass,view){
@@ -40,7 +41,7 @@ function validOfficial(compass,view){
 function emptyStatus(lang){
   return {label:tr(lang,'Afventer gyldig kilde','Awaiting verified source'),tone:'missing',status:'SOURCE_UNAVAILABLE'};
 }
-export function kompasHorizonStatusRows({compass,view,lang='da',observationCurrent=false}={}){
+export function kompasHorizonStatusRows({compass,view,lang='da',observationCurrent=false,strategic=null}={}){
   const verified=validOfficial(compass,view);
   const out=KOMPAS_HORIZONS.map(([id,da,en,kind,officialId])=>{
     const row={id,label:tr(lang,da,en),kind,sourceStatus:'NOT_ISSUED_IN_THIS_VIEW',
@@ -60,6 +61,18 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
         sourceLabel:tr(lang,'Officiel retningsvurdering','Official direction'),
         // A direction is never an independently issued BTC price target.
         priceLabel:tr(lang,'Retning, ikke kursmål','Direction, not a price target')};
+    }
+    if(kind==='STRATEGIC'&&strategic?.contract==='CN_PUBLIC_FORWARD_OUTLOOK_v1'&&
+      strategic.status==='FROZEN_CONTEXT_ONLY'&&strategic.strategic?.available===true){
+      const direction=strategic.strategic.btc_direction;
+      const info=['UP','DOWN','MIXED','SIDEWAYS','NO_EDGE'].includes(direction)?
+        directions[direction]:null;
+      if(info)return {...row,status:'VERIFIED_STRATEGIC_CONTEXT_ONLY',
+        tone:info[2],sourceStatus:'STRATEGIC_SOURCE_NONBINDING',
+        value:tr(lang,info[0],info[1]),
+        sourceLabel:tr(lang,'Kildeverificeret strategi · ikke-bindende',
+          'Verified strategic context · nonbinding'),
+        priceLabel:tr(lang,'BTC-retning · ikke kursmål','BTC direction · not a price target')};
     }
     if(kind==='OBSERVED'){
       const info=observationCurrent?directions[compass.market_now?.directional_state]:null;
