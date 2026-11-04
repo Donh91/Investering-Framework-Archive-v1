@@ -150,6 +150,10 @@ This is a constraint on the EXISTING Codex intake, Supervisor and GitHub PR/CI p
 
 **Learning:** Use existing #1156 and operational receipts to record advisory code review defects, test evidence, exact head, owner authorization, actual merge, postmerge defects, real cost and producer/consumer closure. No new parallel metric or autonomous integrator.
 
+### 0.2b S1 original-PR root-cause recovery and compounding learning (2026-11-05)
+
+When the EXISTING Chat S1 Supervisor or an authorized operator is handling an original PR that repeatedly HOLDs, a genuine branch merge conflict, an unverified code/production closure, or an owner-scoped Sol MAX patch handoff, load `.agents/skills/s1-pr-repair-learning/SKILL.md` after `canonical-context-router` and before further repair or release claims. Use its source-pinned historical-fix retrieval, conflict-preserving branch repair, positive/adversarial tests, native merge/main/consumer readback, and procedural learning casebook. Existing #1156, S1 saved automation, GitHub review/merge rules and `AGENTS.md` remain authoritative. This routing creates no new executor, paid request, schedule, merge permission, CODEX_READY status, market authority or self-promotion. Record verified learning through the existing Operational Memory owner, not by editing generated LATEST or a chat-only summary.
+
 ### 0.3 Global Action Compass invocation - all Investering threads
 
 Canonical owner:
