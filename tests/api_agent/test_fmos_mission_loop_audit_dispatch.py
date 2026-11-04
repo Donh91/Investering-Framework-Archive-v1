@@ -31,7 +31,7 @@ class TestFmosMissionLoopAuditDispatch(unittest.TestCase):
             (root / "receipt.json").write_text(json.dumps({
                 "status": "PASS",
                 "model": "gpt-6.1-sol",
-                "reasoning_effort": "high",
+                "reasoning_effort": "max",
                 "forecast_candidate_count": 0,
                 "estimated_cost_usd": 0.1,
             }))
@@ -53,7 +53,7 @@ class TestFmosMissionLoopAuditDispatch(unittest.TestCase):
             (root / "receipt.json").write_text(json.dumps({
                 "status": "PASS",
                 "model": "gpt-6.1-sol",
-                "reasoning_effort": "high",
+                "reasoning_effort": "max",
                 "forecast_candidate_count": 0,
                 "estimated_cost_usd": 0.1,
             }))
