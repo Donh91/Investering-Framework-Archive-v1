@@ -16,7 +16,7 @@ from typing import Any, Mapping
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.api_agent.api_gateway import estimate_cost
 from scripts.cycle_navigator.prospective_range_bridge import load_bridge
-from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy, daily_path_issue_summary, daily_range_plan_schema, validate_daily_range_plan
+from scripts.cycle_navigator.daily_price_journey import daily_path_schema, public_copy_schema, validate_daily_path, validated_public_copy, daily_path_issue_summary, daily_product_acceptance, daily_range_plan_schema, validate_daily_range_plan
 from scripts.cycle_navigator.daily_path_recovery import recover_daily_path, reject_unverified_initial_daily_quotes, quarantine_late_daily_issuance
 from scripts.cycle_navigator.price_input_attestation import attest_completed_week, PriceEvidenceError, CONTRACT as ORIGINAL_PRICE_CONTRACT
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
@@ -956,7 +956,10 @@ def main() -> None:
     freeze = value["forecast_freeze"]
     validate_daily_path(freeze.get("daily_price_path"), freeze, target_year, target_week)
     daily_path_issue = daily_path_issue_summary(freeze.get("daily_price_path"), freeze, target_year, target_week)
-    source_manifest = {"daily_path_issuance": daily_path_issue, "daily_path_recovery": daily_recovery_receipt, "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
+    daily_product = daily_product_acceptance(
+        freeze, target_year, target_week,
+        datetime.fromtimestamp(generated_unix, timezone.utc))
+    source_manifest = {"daily_path_issuance": daily_path_issue, "daily_product_acceptance": daily_product, "daily_path_recovery": daily_recovery_receipt, "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
     scoring_valid_from_unix = ((generated_unix + 3599) // 3600) * 3600
     scoring_valid_from_utc = datetime.fromtimestamp(scoring_valid_from_unix, tz=timezone.utc).isoformat().replace("+00:00", "Z")
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": generated_unix, "public_issue_number": public_issue, "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
@@ -994,6 +997,7 @@ def main() -> None:
         "source_forecast_freeze_sha256": pointer["forecast_freeze_sha256"],
         "source_binding_path": str((target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").relative_to(repo)),
         "daily_path_issuance": daily_path_issue,
+        "daily_product_acceptance": daily_product,
         "score_family": "PRICE_RANGE_PRECISION",
         "score_formula": "70pct_containment_plus_30pct_jaccard",
         "score_window_policy": "FIRST_COMPLETE_UTC_HOUR_AT_OR_AFTER_FREEZE_v1",
