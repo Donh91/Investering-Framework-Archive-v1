@@ -258,3 +258,7 @@ receipt age and source hashes before accepting a matched proposal. A supplied
 `input_status=CURRENT` is not verification; missing source verification remains
 `SOURCE_UNVERIFIED`. The caller must not replace missing native source bytes with
 claims from a comment or cached brief.
+
+## Owner-authorized bounded Sol MAX implementation launch, 4 November 2026
+
+The current owner has authorized one material GPT-6.1 Sol MAX code-patch execution for the existing #1877 handoff reliability scope, under the standing task-matched model policy. The launching commit is the sole owner-issued exact-HEAD activation signal for the existing workflow job. A genuine API charge, patch, CI result, or completed implementation must only be claimed from the subsequent native GitHub Actions run and authenticated receipt; this document is NOT that receipt. The model produces a bounded uncommitted code candidate, and the existing qualified integrator is responsible for application, independent review and eventual policy-safe merge.
