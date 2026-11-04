@@ -2,6 +2,16 @@
 
 Owner-approved 2026-11-02. Current delivery is a NON-EXECUTING read-only first slice on the original branch. Code and tests are real, but this is NOT proof of live machine-to-machine transport, autonomous Grok/Codex jobs, S1 runtime activation, merge or scientific improvement.
 
+## Standing owner correction, 2026-11-04: Sol 6.1 MAX
+
+The current owner's direct instruction supersedes the prior **one-off-only** API mandate and stale **High** default for qualified deep implementation and senior review. This is standing authority for future material S1/Strategist-owned problems, not an automatic paid API call every scheduled tick.
+
+- Preferred qualified senior provider: `gpt-6.1-sol` with Responses API `reasoning.effort=max`, `store=false`.
+- The existing owner-gated `SENIOR_REPAIR_AUDIT`, `TEMP_SOL_PR_REVIEW`, and `FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT` tasks must be explicitly MAX-bound; exact model/effort receipts are verified, and High receipts cannot prove a MAX review. The former FMOS one-off invocation restriction is removed. Normal low-cost triage or scheduled scientific/shadow tasks do not automatically become expensive MAX runs.
+- MAX remains an intelligence setting, not write/merge/recovery authority. The present API gateway is advisory-only and cannot truthfully claim code execution. After review, a separate currently authorized original-branch writer must apply concrete repairs, run substantive CI, obtain independently binding approvals and perform qualified merge/main readback. Do not mark a task completed on a model report.
+- Every material API request requires a verified account-wide allowance, robust pre-HTTP durable spend claim, no concurrent duplicate claims, an explicit work ID, a check against the USD 40 monthly ceiling with its current reserve, provider usage/readback, finite retries, and existing custody/ruleset boundaries. The USD 10-15 normal-spend target remains a preference, not a conflicting hard cap. New recurring paid scheduling is NOT authorized.
+- A missing MAX-capable execution route triggers a finite existing-owner capability repair with S1 follow-up, ACK and next verifiable action, not a silent fallback to High, a bogus MAX receipt or an indefinite HOLD.
+
 ## 2026-11-04 deterministic release dispositions
 
 This extension belongs to ORIGINAL #1877 and existing #1156. It adds no workflow, schedule, supervisor, database, secret, paid provider call, merge writer or market authority. The existing Chat S1 v4.2 automation and its cadence remain unchanged. The paid Terra job currently has `if: ${{ false }}` and stays disabled; historical prose describing an executable paid postmerge lane is not current activation authority.
