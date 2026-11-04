@@ -334,7 +334,29 @@ def main() -> None:
         (args.output_dir / "reservation.json").write_text(
             json.dumps(out, sort_keys=True, indent=2) + "\n")
     elif args.action == "call":
-        out = call_api(args.output_dir / "context.json", args.output_dir)
+        try:
+            out = call_api(args.output_dir / "context.json", args.output_dir)
+        except Exception as exc:
+            # Persist a machine-readable terminal incident. There is no
+            # automatic paid retry, even when HTTP never returned a response.
+            args.output_dir.mkdir(parents=True, exist_ok=True)
+            handle = args.output_dir / "response_handle.json"
+            receipt = args.output_dir / "reservation.json"
+            incident = {
+                "contract": "S1_SOL_MAX_PATCH_FAILURE_RECEIPT_v1",
+                "status": "FAILED_NO_AUTORETRY",
+                "error_type": type(exc).__name__,
+                "error_code": str(exc)[:240] if isinstance(exc, ValueError)
+                    else "PROVIDER_OR_TRANSPORT_EXCEPTION",
+                "original_pr": PR_NUMBER, "head": args.head,
+                "reservation_present": receipt.exists(),
+                "response_handle_present": handle.exists(),
+                "provider_liability": "UNKNOWN_IF_HTTP_STARTED",
+                "next_action": "RECONCILE_PROVIDER_USAGE_AND_REPAIR_TRANSPORT_BEFORE_NEW_OWNER_BOUND_LAUNCH",
+            }
+            (args.output_dir / "failure.json").write_text(
+                json.dumps(incident, sort_keys=True, indent=2) + "\n")
+            raise
     else:
         out = validate_patch(args.output_dir, args.head)
     print(json.dumps(out, sort_keys=True))
