@@ -91,6 +91,16 @@ class SolMaxPatchTests(unittest.TestCase):
                         mod.validate_patch(folder, HEAD)
                     apply.assert_not_called()
 
+    def test_unreserved_api_request_is_rejected_before_any_network(self):
+        with tempfile.TemporaryDirectory() as t, \
+             patch.dict(os.environ, {"OPENAI_API_KEY": "test-token"}), \
+             patch.object(mod.urllib.request, "urlopen") as outbound:
+            context = Path(t) / "context.json"
+            context.write_text('{}')
+            with self.assertRaisesRegex(ValueError, "RESERVATION_MISSING"):
+                mod.call_api(context, Path(t))
+            outbound.assert_not_called()
+
     def test_paid_call_is_one_request_with_max_store_false_and_schema(self):
         class FakeResponse:
             def __enter__(self):
@@ -114,6 +124,9 @@ class SolMaxPatchTests(unittest.TestCase):
              patch.object(mod.urllib.request, "urlopen", side_effect=fake_open):
             context = Path(t) / "context.json"
             context.write_text('{"contract":"fake"}')
+            (Path(t) / "reservation.json").write_text(json.dumps({
+                "status": "RESERVED", "claim_id": 42,
+                "model": mod.MODEL, "effort": mod.EFFORT}))
             out = mod.call_api(context, Path(t))
             self.assertEqual(out["status"], "ABSTAIN")
             self.assertEqual(len(posted), 1)
