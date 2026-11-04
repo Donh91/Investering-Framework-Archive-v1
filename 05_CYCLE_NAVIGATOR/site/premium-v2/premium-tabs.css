@@ -338,3 +338,16 @@
 .cn-horizon-status-row[data-tone="mixed"] .cn-horizon-status-direction {color:#91680d}
 @media(max-width:760px){.cn-horizon-status-rows {grid-template-columns:minmax(0,1fr)}}
 @media(max-width:430px){.cn-horizon-status-row {padding:10px}.cn-horizon-status-reading {max-width:55%}}
+
+
+/* SITE Source clock contrast: two independent measurements, never a second signal. */
+.cn-source-clocks {display:flex;flex-wrap:wrap;align-items:center;gap:5px 18px;
+  margin:0 0 14px;padding:0 0 10px;border-bottom:1px solid #e3e9ee}
+.cn-source-clock {display:inline-flex;align-items:center;gap:7px;min-width:0;
+  color:#516479;font-size:11px;font-weight:620;line-height:1.5}
+.cn-source-clock::before {content:"";width:7px;height:7px;flex:none;border-radius:50%;background:#8192a4}
+.cn-source-clock[data-tone="current"]::before {background:#267553}
+.cn-source-clock[data-tone="warning"]::before {background:#ad761e}
+.cn-source-clock[data-tone="warning"] {color:#77531a}
+.cn-source-clock[data-tone="missing"] {color:#5c7084}
+@media(max-width:430px){.cn-source-clocks {gap:5px 11px}}
