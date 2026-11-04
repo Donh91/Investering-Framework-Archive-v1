@@ -39,6 +39,7 @@ jobs:
       - name: Run deterministic tests
         run: |
           python -m unittest \
+            tests.api_agent.test_s1_sol_max_elite_batch \
             tests.api_agent.test_api_gateway \
             tests.api_agent.test_capability_router \
             tests.api_agent.test_forecast_candidate_backlog \

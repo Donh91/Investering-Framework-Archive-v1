@@ -1,0 +1,161 @@
+{
+  "contract": "S1_SOL_MAX_ELITE_BOUNDED_BATCH_v1",
+  "created_utc": "2026-11-04",
+  "repo": "Donh91/Investering-Framework-Archive-v1",
+  "source_main_sha_at_registration": "a6cc3c42e8ec82fd75fde1b1af23d721852560dd",
+  "canonical_owner_issue": 1156,
+  "bridge_observation": "Donh91/Investering-AI-Audit-Bridge#145",
+  "owner_authorized": true,
+  "model": "gpt-6.1-sol",
+  "reasoning_effort": "max",
+  "state": "REGISTERED_NOT_EXECUTING",
+  "dispatch_enabled": false,
+  "max_concurrent_paid_missions": 1,
+  "forbid_new_scheduler_agent_or_writer": true,
+  "require_existing_dispatcher_adaptation": true,
+  "billing_liability_for_run_41870364609": "UNKNOWN",
+  "payment_policy": {
+    "owner_monthly_hard_stop_usd": 30,
+    "owner_global_reserve_usd": 12,
+    "per_call_max_usd": 3,
+    "source_of_truth": "OWNER_INSTRUCTION_PLUS_EFFECTIVE_GOVERNED_GATE_RECONCILIATION",
+    "do_not_retry_unresolved_paid_post": true,
+    "no_auto_paid_trigger_until_reconciled": true
+  },
+  "security": {
+    "public_only_api_context": true,
+    "explicit_storage_consent_and_source_filter": true,
+    "do_not_use_astra_api": true,
+    "never_infer_codex_ack": true,
+    "original_pr_branch_owner_required": true,
+    "independent_source_recovery_required_for_high_impact": true,
+    "no_model_git_credentials": true,
+    "no_historical_forecast_rewrite": true,
+    "no_auto_trade": true
+  },
+  "definitions": [
+    {
+      "rank": 1,
+      "id": "S1-ELITE-EXECUTOR-20261104",
+      "owner_issue": 1156,
+      "original_pr": null,
+      "priority": "P0",
+      "phase": "STAGED_NO_PAID_DISPATCH",
+      "depends_on": [
+        "S1-API-RESILIENCE-20261104"
+      ],
+      "scope": [
+        "scripts/api_agent/s1_sol_max_patch_execution.py",
+        "scripts/governance/s1_agent_handoff_receipts_v1.py",
+        "scripts/framework_intelligence/automation_orchestration_v1.py"
+      ],
+      "defect": "Existing Sol MAX patch lane is pinned to merged PR 1877 and only two files; most supervisor routes are advisory and cannot prove actual executor completion when Codex is unavailable.",
+      "deliverable": "Bounded existing-owner capability registry, scoped dynamic patch synthesis, isolated real test runner, native authentic recipient receipt and S1 authorized release handoff. No GitHub credentials for model and no invented execution.",
+      "tests": [
+        "Codex unavailable -> authenticated GitHub patch executor delivers actual changed bytes and tests",
+        "Forgeries, unknown actor, stale owner/HEAD, two writers, unsafe path, secret leak, missing CI, no real ACK -> reject",
+        "Run 20 synthetic edge cases and at least one real no-cost end-to-end patch episode"
+      ],
+      "kill": "Any cross-boundary write attempt, inability to attest native execution, or absent qualified reviewer blocks activation."
+    },
+    {
+      "rank": 2,
+      "id": "S1-API-RESILIENCE-20261104",
+      "owner_issue": 1156,
+      "original_pr": null,
+      "priority": "P0",
+      "phase": "STAGED_FOR_DETERMINISTIC_REPAIR_FIRST",
+      "depends_on": [],
+      "scope": [
+        "scripts/api_agent/api_gateway.py",
+        "scripts/api_agent/s1_sol_max_patch_execution.py",
+        "scripts/api_agent/s1_sol_background_collect.py",
+        ".github/workflows/framework-learning-supervisor.yml",
+        "research/api_agent/API_INTELLIGENCE_POLICY_v2.json",
+        "research/api_agent/API_TASK_REGISTRY_v1.json"
+      ],
+      "defect": "FMOS run 41870364609 PASS1 timed out in synchronous urllib POST before response ID/receipt; native public-only background store/collect is confined to merged PR 1877; owner budget 30/12/3 and registry 40/4 conflict.",
+      "deliverable": "One reusable source-bound pre-HTTP immutable budget claim plus background submit with durable response ID, GET-only collection, ambiguous-billing quarantine, actor/source validation and no post-timeout retry. Price/budget policy readback.",
+      "tests": [
+        "Mock delayed completion and cross-run GET-only recovery with one POST",
+        "Concurrent duplicate claims, timeout before response ID, failed persistence, replay/rerun, stale HEAD, unexpected store=true private context, missing pricing and forced retry -> fail closed",
+        "Model no paid request until provider billing uncertainty and owner cap reconcile"
+      ],
+      "kill": "Unknown billing cannot be bounded or duplicate paid POST cannot be excluded."
+    },
+    {
+      "rank": 3,
+      "id": "S1-FORECAST-UNLOCK-20261104",
+      "owner_issue": 1516,
+      "original_pr": 1879,
+      "priority": "P0",
+      "phase": "STAGED_ORIGINAL_BRANCH_ONLY",
+      "depends_on": [
+        "S1-API-RESILIENCE-20261104"
+      ],
+      "scope": [
+        "scripts/daily_capture/build_hourly_sequence.py",
+        "scripts/daily_capture/build_weekly_calibration.py",
+        "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+        "scripts/cycle_navigator/daily_path_recovery.py",
+        "tests/cycle_navigator/test_daily_path_recovery.py"
+      ],
+      "defect": "PR #1879 HEAD 291e17762f512ad3b1b3e091acd93bdb2e1a3c77 passed exact-head CI, but original W44 provider/venue/instrument/quote envelope attestation remains unproven; initial 7/7 is correctly discarded.",
+      "deliverable": "Original-branch source-to-forecast lineage patch with real 168-hour Binance manifest, response/row hash, UTC clocks, pair and USDT quote; source-qualified 7 unique forward expected-close/low/high only if supported. W45 immutably remains 0/7; verify W46 original issuance and Pages graph.",
+      "tests": [
+        "Positive genuine 168-hour source -> legitimate 7/7 candidate and exact hash-bound graph",
+        "Spoofed hashes, wrong pair, USD/USDT implicit conversion, future leaks, missing hours, late issue, interpolated prices, first-week rewrite -> reject",
+        "No paid W45 retries; preserve scientific abstention"
+      ],
+      "kill": "Missing independent source or no lawful prospective issuance -> source-qualified abstention and tracked open product gap."
+    },
+    {
+      "rank": 4,
+      "id": "S1-CLOSURE-ENGINE-20261104",
+      "owner_issue": 1156,
+      "original_pr": null,
+      "priority": "P0",
+      "phase": "STAGED_NO_PAID_DISPATCH",
+      "depends_on": [
+        "S1-ELITE-EXECUTOR-20261104"
+      ],
+      "scope": [
+        "scripts/governance/s1_opportunity_recovery_v1.py",
+        "scripts/governance/s1_research_resume_census_v1.py",
+        "scripts/framework_intelligence/automation_orchestration_v1.py"
+      ],
+      "defect": "S1 recycles unchanged HOLD decisions, does not sufficiently distinguish repairable code/credential/true source/owner lease/CI/recovery and can repeatedly spend scheduled turns on parked candidates.",
+      "deliverable": "Finite case fingerprint state machine: local fix -> qualified delegated executor -> independent review -> merge/readback OR terminal block with exact reactivation event; rotate eligible candidates, no new clock/agent.",
+      "tests": [
+        "Repeat 12 unchanged ticks -> no duplicate repair/comment/API dispatch",
+        "New material CI/source/custody/permission event -> resume exactly once",
+        "Ready merge requires exact-head actual authorization and main readback; genuine protections never bypassed"
+      ],
+      "kill": "Any invented approval/ACK, bypass of independent recovery, or loss of terminal evidence."
+    },
+    {
+      "rank": 5,
+      "id": "S1-STRATEGIST-CONTINUITY-20261104",
+      "owner_issue": 1157,
+      "original_pr": null,
+      "priority": "P1",
+      "phase": "STAGED_NO_PAID_DISPATCH",
+      "depends_on": [
+        "S1-CLOSURE-ENGINE-20261104"
+      ],
+      "scope": [
+        "scripts/framework_intelligence/framework_strategist_v1.py",
+        "scripts/framework_intelligence/operational_memory_v1.py",
+        "scripts/governance/s1_research_resume_census_v1.py"
+      ],
+      "defect": "Research and Grok findings can be read and commented on without authentic owner ACK, concrete implementation adoption, falsification or terminal closure.",
+      "deliverable": "Reuse existing source-bound research/Strategist receipts and ownership; accepted finding -> bounded executable task -> actual tests and result, discarded noise -> evidence terminal; negative findings preserved.",
+      "tests": [
+        "Previously implemented finding is deduped, never requeued",
+        "New reproducible finding gets original owner, authentic ACK, test result and release observation",
+        "Expired/noisy research is terminated with reason and no authority leakage"
+      ],
+      "kill": "Research content obtains writer/market/portfolio authority or duplicates permanent research queue."
+    }
+  ]
+}
