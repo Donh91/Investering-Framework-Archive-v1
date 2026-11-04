@@ -111,6 +111,23 @@ class NativeSolDispatchTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "RERUN"):
                     d.require_original_owner_run(HEAD)
 
+    def test_reserved_submission_remains_pinned_if_unrelated_main_advances(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            out = root / "out"
+            out.mkdir()
+            (out / "request.json").write_text("{}")
+            (out / "reservation.json").write_text(json.dumps({
+                "mission": MISSION, "source_head": HEAD}))
+            with patch.object(d, "owner_event", return_value=(MISSION, {})), \
+                 patch.object(d.t, "read_registration", return_value={}), \
+                 patch.object(d.subprocess, "check_output", return_value=HEAD), \
+                 patch.object(d, "current_checkout", side_effect=AssertionError("do not reread moving main")), \
+                 patch.object(d.t, "submit_one", return_value={"status": "PENDING_COLLECT"}) as api:
+                result = d.submit(root, out, root / "event.json")
+            self.assertEqual(result["status"], "PENDING_COLLECT")
+            self.assertEqual(api.call_count, 1)
+
     def test_collect_is_only_get_and_never_writer(self):
         with tempfile.TemporaryDirectory() as td, patch.dict(os.environ, ENV):
             root = Path(td)
