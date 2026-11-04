@@ -329,7 +329,20 @@ def publish(root):
         past = read(root / item["actual_path"]) if item.get("actual_path") else None
         if prediction and prediction.get("original_source_sha256") != item["source_sha256"]:
             raise ValueError(f"HISTORY_SOURCE_HASH_MISMATCH:{label}")
+        # The original W45 freeze does not declare a quote. Historical
+        # forecast-reference.json is immutable and contains a legacy USD
+        # label; the PUBLIC quote cannot inherit that unproven default.
+        declared_quote = "UNAVAILABLE"
+        if prediction:
+            source_path = root / prediction["original_source_path"]
+            if (not source_path.is_file() or
+                    digest(source_path.read_bytes()) != prediction["original_source_sha256"]):
+                raise ValueError(f"HISTORY_ORIGINAL_QUOTE_SOURCE_MISMATCH:{label}")
+            original_quote = read(source_path).get("price_quote")
+            if isinstance(original_quote, dict) and original_quote.get("BTC") in ("USD", "USDT"):
+                declared_quote = original_quote["BTC"]
         weeks.append({"week": label, "status": item["status"],
+                      "forecast_model_declared_quote": declared_quote,
                       "source_sha256": item.get("source_sha256"),
                       "public_issue_number": prediction["public_issue_number"] if prediction else None,
                       "issued_at_utc": prediction["issued_at_utc"] if prediction else None,
@@ -378,9 +391,9 @@ def publish(root):
             current["observed_hours"] = len(prices.get("BTC", []))
     actual.sort(key=lambda p: p["time"])
     payload = {"contract": "CN_GRAPH_HISTORY_TIMELINE_v1", "start_week": "2026-W45",
-               "forecast_unit": "USD", "actual_unit": "USDT",
+               "forecast_unit": "PER_WEEK_DECLARED_OR_UNAVAILABLE", "actual_unit": "USDT",
                "comparison_precision_eligible": False,
-               "comparison_caveat": "Nominal USD forecasts vs USDT spot observations; no calibrated forecast accuracy claim.",
+               "comparison_caveat": "Forecast quote is source-declared per week or unavailable; observed native Binance spot is USDT. No automatic currency conversion or calibrated accuracy claim.",
                "weeks": weeks, "actual": actual}
     dist = root / PUBLIC / "graph-history"
     write(dist / "timeline.json", payload)
