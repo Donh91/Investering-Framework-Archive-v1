@@ -78,6 +78,30 @@ trade targets. B1's rising path merely extrapolates a portion of the preceding
 24h momentum, which could fail immediately. Do not compare their USDT amounts
 to an undeclared original CN weekly quote as if parities had been proven.
 
+## 3A. PIT-aware W45 original 3-window progress (not seven daily predictions)
+The original freeze was issued **2026-11-02 08:19:08 UTC**, so its first
+admissible bar is from **09:00 UTC**. Do not count Monday's preceding 9 hours
+as a prospective price test.
+
+Against original bands using native observed Binance USDT extrema through
+4 Nov 22:00 UTC:
+
+| Frozen bucket | Valid source hours | Asset | Original numeric bounds (quote UNVERIFIED) | Observed USDT extrema | Numeric containment so far | Original width / midpoint |
+|---|---:|---|---:|---:|---|---:|
+| Day 1–2 | 39 / 39 post-freeze | BTC | 75,000–81,500 | 76,388.88–78,357.23 | Inside | 8.31% |
+| Day 1–2 | 39 / 39 post-freeze | ETH | 2,120–2,380 | 2,237.38–2,309.00 | Inside | 11.56% |
+| Day 3–4 | 22 / 48 so far | BTC | 73,500–82,500 | 75,736.38–81,196.01 | Inside so far | 11.54% |
+| Day 3–4 | 22 / 48 so far | ETH | 2,050–2,440 | 2,226.44–2,450.00 | **10 above upper numeric bound** | 17.37% |
+
+The ETH numeric range breach is a source-backed observed fact **in USDT**
+versus a historically dollar-formatted original range whose quote was
+**not independently verified**. Therefore it must NOT automatically become
+a currency-parity-approved error score, quantified historical edge or a
+complete-window outcome. The second bucket is still LIVE (22/48 valid
+hours), not finalized. Very wide frozen bands can also achieve high
+containment without useful decision precision, so width and matched
+benchmarks matter.
+
 ## 4. For the website
 The official current-week Graph B can already show a **genuine green hourly
 observed path** and original frozen *three-window bands*. Its authentic original
