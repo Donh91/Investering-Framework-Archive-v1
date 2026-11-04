@@ -58,6 +58,12 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
  const rows=keys.map(w=>(m.rows||[]).find(x=>x.asset===asset&&x.window===w));
  if(rows.some(r=>!r||!NUM(r.forecast_low)||!NUM(r.forecast_high)||r.forecast_low>=r.forecast_high))
    return bad('ORIGINAL_RANGE_EVIDENCE_INVALID');
+ // Public label metadata is non-authoritative and never converts prices.
+ const quotes=m?.price_quote_labels?.contract==='CN_PUBLIC_PRICE_QUOTE_LABELS_v1'
+   ?m.price_quote_labels:null;
+ const actualQuote=quotes?.actual_native_spot?.[asset]==='USDT'?'USDT':'UNAVAILABLE';
+ const declared=quotes?.forecast_model_declared?.[asset];
+ const forecastQuote=declared==='USD'||declared==='USDT'?declared:'UNAVAILABLE';
  const obs=m?.daily_observations;
  const cutoff=date(obs?.observed_through_utc||m.live_as_of_utc);
  if(obs?.contract!=='CN_PUBLIC_DAILY_OBSERVATIONS_v1'||
@@ -140,6 +146,7 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
  return {
    contract:'CN_PREMIUM_V2_GRAPH_B_PRESENTATION_v1',
    asset,public_issue_number:m.public_issue_number,forecast_week:m.forecast_week,
+   actual_quote_unit:actualQuote,forecast_declared_quote_unit:forecastQuote,
    source_status:'SOURCE_BOUNDED',source_reason:null,
    forecast_status:forecastStatus,forecast,bands:lowHigh,
    daily_range_status:dailyRangeStatus,daily_ranges:dailyRanges,
