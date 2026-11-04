@@ -113,7 +113,7 @@ def claim(head: str, repo: str) -> dict:
     target = f"{prefix} HEAD={head} PR=1877 MODEL={MODEL} EFFORT={EFFORT} MAX_USD={RESERVE_USD:.2f}"
     pattern = re.compile(
         r"^S1_SOL_MAX_PATCH_RESERVATION_V1 HEAD=[a-f0-9]{40} "
-        r"PR=1877 MODEL=gpt-6\\.1-sol EFFORT=max MAX_USD=0\\.75$")
+        r"PR=1877 MODEL=gpt-6\.1-sol EFFORT=max MAX_USD=0\.75$")
     prior = []
     for page in pages:
         for row in page:
