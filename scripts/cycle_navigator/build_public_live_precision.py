@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from scripts.cycle_navigator.daily_price_journey import validate_daily_path, validate_daily_range_plan
+from scripts.cycle_navigator.daily_price_journey import validate_daily_path, validate_daily_range_plan, daily_product_acceptance
 
 
 FORMULA = "70pct_containment_plus_30pct_jaccard"
@@ -409,6 +409,16 @@ def main() -> None:
 
     frozen_unix = int(receipt.get("frozen_unix", 0) or 0)
     frozen_at = datetime.fromtimestamp(frozen_unix, tz=timezone.utc) if frozen_unix > 0 else None
+    # The public product badge is a recomputation from the same immutable
+    # original freeze and issuance time, never an unsupported READY claim.
+    stored_product = receipt.get("daily_product_acceptance")
+    product_readback = None
+    if stored_product is not None:
+        if frozen_at is None:
+            raise SystemExit("daily_product_issuance_clock_unavailable")
+        product_readback = daily_product_acceptance(freeze, iso_year, iso_week, frozen_at)
+        if product_readback != stored_product:
+            raise SystemExit("daily_product_receipt_source_mismatch")
     snapshot = read_json(dist_latest)
     snapshot["public_live_precision"] = {
         "contract": "CN_PUBLIC_LIVE_PRICE_PRECISION_v1",
@@ -448,6 +458,7 @@ def main() -> None:
         "frozen_at_utc": fmt_iso(frozen_at),
         "live_as_of_utc": fmt_iso(observed_through),
         "freeze_sha256": digest,
+        "daily_product_acceptance": product_readback,
         # Unit labels are PUBLIC DISPLAY METADATA, not a conversion or an
         # independent attestation of a model-produced forecast envelope.
         # Hourly Spot is native Binance BTCUSDT/ETHUSDT (USDT quote);
