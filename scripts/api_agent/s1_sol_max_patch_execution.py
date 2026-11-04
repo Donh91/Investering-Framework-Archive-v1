@@ -23,7 +23,7 @@ ALLOWED = frozenset({
     "tests/governance/test_s1_agent_handoff_receipts_v1.py",
 })
 MAX_PATCH_BYTES = 16000
-MAX_INPUT_BYTES = 55000
+MAX_INPUT_BYTES = 40000
 MAX_OUTPUT_TOKENS = 64000
 RESERVE_USD = 0.75
 MARKER = "SOL_MAX_PATCH_EXECUTION_20261104"
