@@ -8,6 +8,8 @@ on:
       - 'scripts/api_agent/temporary_bridge_pr_review.py'
       - 'scripts/api_agent/s1_sol_max_patch_execution.py'
       - 'scripts/api_agent/s1_sol_response_probe.py'
+      - 'scripts/api_agent/s1_sol_background_collect.py'
+      - 'tests/api_agent/test_s1_sol_background_collect.py'
       - 'tests/api_agent/test_s1_sol_response_probe.py'
       - 'tests/api_agent/test_s1_sol_max_patch_execution.py'
       - 'scripts/api_agent/s1_v43_terra_max_review.py'
@@ -60,6 +62,12 @@ on:
     - cron: '35 9 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
+    inputs:
+      sol_collect_run_id:
+        description: "GET-only resume of an existing paid Sol response; empty = normal manual workflow"
+        required: false
+        type: string
+        default: ""
   workflow_run:
     workflows: ['Automation Production Health']
     types: [completed]
@@ -144,6 +152,7 @@ jobs:
           python -m py_compile scripts/api_agent/s1_sol_max_patch_execution.py
           python -m unittest \
             tests.api_agent.test_s1_sol_max_patch_execution \
+            tests.api_agent.test_s1_sol_background_collect \
             tests.api_agent.test_capability_router \
             tests.governance.test_s1_agent_handoff_receipts_v1 \
             tests.framework_intelligence.test_framework_learning_supervisor -v
@@ -187,9 +196,9 @@ jobs:
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           python scripts/api_agent/s1_sol_max_patch_execution.py call --head "$PR_HEAD" \
-            --output-dir runtime/s1-sol-max
+            --submit-only --output-dir runtime/s1-sol-max
       - name: Validate generated patch and run original regression suite
-        if: steps.gate.outputs.go == 'true'
+        if: steps.gate.outputs.go == 'true' && hashFiles('runtime/s1-sol-max/proposal.json') != ''
         env:
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
@@ -969,7 +978,7 @@ jobs:
           gh issue comment 1440 --repo "$GITHUB_REPOSITORY" --body "FMOS mission-loop audit duplicate trigger ${COMMENT_ID}: NOOP, final immutable receipt already exists."
   operate:
     if: >-
-      ((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main') ||
+      ((github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.sol_collect_run_id == '')) && github.ref == 'refs/heads/main') ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     permissions:
       contents: write
