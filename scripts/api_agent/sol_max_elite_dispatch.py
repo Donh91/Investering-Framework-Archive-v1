@@ -203,8 +203,14 @@ def submit(root: Path, out: Path, event_file: Path) -> dict:
     batch = t.read_registration(root)
     request = json.loads((out / "request.json").read_text())
     claim = json.loads((out / "reservation.json").read_text())
-    if claim["mission"] != mission or current_checkout(root) != claim["source_head"]:
-        raise ValueError("ELITE_CLAIM_MAIN_DRIFT")
+    # After a durable native reservation, continue from the ORIGINAL pinned
+    # checkout even if an unrelated daily main writer advances. The result
+    # remains advisory and must be revalidated against HEAD before applying.
+    checkout = subprocess.check_output(
+        ["git", "-C", str(root), "rev-parse", "HEAD"],
+        text=True, timeout=20).strip()
+    if claim["mission"] != mission or checkout != claim["source_head"]:
+        raise ValueError("ELITE_RESERVED_CHECKOUT_DRIFT")
     key = os.environ.get("OPENAI_API_KEY", "")
     return t.submit_one(root, batch, request, claim, out / "post", key,
                         native_reader=api, environment=os.environ)
