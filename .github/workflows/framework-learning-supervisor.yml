@@ -94,8 +94,13 @@ jobs:
           python-version: '3.12'
       - name: Validate bounded Sol MAX source and no-network negative tests
         run: |
+          set -euo pipefail
           python -m py_compile scripts/api_agent/s1_sol_max_patch_execution.py
-          python -m unittest tests.api_agent.test_s1_sol_max_patch_execution -v
+          python -m unittest \
+            tests.api_agent.test_s1_sol_max_patch_execution \
+            tests.api_agent.test_capability_router \
+            tests.governance.test_s1_agent_handoff_receipts_v1 \
+            tests.framework_intelligence.test_framework_learning_supervisor -v
       - name: Check native current PR HEAD and explicit owner launch commit
         id: gate
         env:
