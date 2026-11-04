@@ -57,11 +57,18 @@ class SolMaxPatchTests(unittest.TestCase):
 
     def test_real_owner_launch_is_bound_to_native_pr_head(self):
         native = {"state": "open", "draft": False,
-                  "head": {"sha": HEAD, "repo": {"full_name": REPO}}}
+                  "head": {"sha": HEAD, "repo": {"full_name": REPO, "private": False}}}
         with patch.dict(os.environ, {"GH_TOKEN": "test-token"}), \
              patch.object(mod, "subprocess_check",
                           side_effect=[HEAD, mod.COMMIT_MESSAGE, json.dumps(native)]):
             self.assertTrue(mod.guard(HEAD, REPO)["run"])
+        native["head"]["repo"]["private"] = True
+        with patch.dict(os.environ, {"GH_TOKEN": "test-token"}), \
+             patch.object(mod, "subprocess_check",
+                          side_effect=[HEAD, mod.COMMIT_MESSAGE, json.dumps(native)]):
+            with self.assertRaisesRegex(ValueError, "HEAD_OR_OWNER_CHANGED"):
+                mod.guard(HEAD, REPO)
+        native["head"]["repo"]["private"] = False
         native["head"]["sha"] = "b" * 40
         with patch.dict(os.environ, {"GH_TOKEN": "test-token"}), \
              patch.object(mod, "subprocess_check",
