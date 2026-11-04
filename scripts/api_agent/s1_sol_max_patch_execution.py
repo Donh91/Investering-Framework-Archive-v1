@@ -24,7 +24,7 @@ ALLOWED = frozenset({
 })
 MAX_PATCH_BYTES = 16000
 MAX_INPUT_BYTES = 55000
-MAX_OUTPUT_TOKENS = 16000
+MAX_OUTPUT_TOKENS = 64000
 RESERVE_USD = 0.75
 MARKER = "SOL_MAX_PATCH_EXECUTION_20261104"
 COMMIT_MESSAGE = "feat(s1): guarded Sol MAX patch implementation run [SOL_MAX_PATCH_EXECUTION_20261104]"
@@ -78,10 +78,14 @@ def build_context(head: str, output_dir: Path) -> dict:
         "status": "UNTRUSTED_MODEL_CODE_ONLY",
         "scope_note": "Read-only patch candidate; authenticated S1 must separately evaluate and apply via existing owner integrator.",
         "mission": (
-            "Repair the existing S1 handoff chain's reliability without broadening authority. "
-            "Deliver a minimal precise unified git diff for the two allowlisted files. "
-            "Focus on observable bounded receiver ACK, overdue accepted-but-never-executed, "
-            "native actor and job proof boundaries, stale HEAD and replay. "
+            "PHASE 1 ONLY: Repair the existing S1 handoff receipts' deterministic "
+            "ACK liveness and overdue accepted-but-unexecuted detection, without "
+            "broadening authority. Deliver a concise unified git diff for the "
+            "two allowlisted files, with adversarial tests. Do not design a "
+            "new transport or attempt live GitHub API calls. Explicitly signal "
+            "that native recipient/job authentication and true delivery "
+            "remain separate follow-on integration gates. "
+            "Focus on expired ACK, accepted stalled delivery, stale HEAD/replay. "
             "Do not claim an ACK, execution or approval without trusted external evidence. "
             "No extra supervisors, schedules, network clients, paid model calls, new writers, "
             "Vault access, branch protection changes or direct main writes. "
@@ -126,10 +130,14 @@ def claim(head: str, repo: str) -> dict:
                 prior.append(body)
     if target in prior:
         raise ValueError("DUPLICATE_PAID_PATCH_RESERVATION")
-    # One recoverable protocol change after a prior UNKNOWN billing timeout,
-    # no unbounded paid reattempt loop. Prior $0.75 stays fully reserved.
-    if len(prior) >= 2:
-        raise ValueError("PATCH_MISSION_TWO_ATTEMPT_HARD_STOP")
+    # Owner 2026-11-04 continuation: the second background response is
+    # terminal INCOMPLETE, output was entirely reasoning tokens (16000/16000),
+    # provider usage is recorded, and no code was returned. Preserve the
+    # unknown first-try USD 0.75 reserve. One fresh, explicit MAX launch may
+    # use a larger output budget; still never retry a failed HTTP POST.
+    # Third-and-final claim is uniquely bound to the NEW exact launch HEAD.
+    if len(prior) >= 3:
+        raise ValueError("PATCH_MISSION_THREE_ATTEMPT_HARD_STOP")
     subprocess_check("gh", "issue", "comment", "1156", "--repo", repo, "--body", target)
     refreshed = json.loads(subprocess_check("gh", "api", "--paginate", "--slurp",
                           f"repos/{repo}/issues/1156/comments?per_page=100"))
@@ -244,13 +252,16 @@ def call_api(context_file: Path, result_dir: Path) -> dict:
     estimated_cost = round((2.0 * inputs + 10.0 * outputs) / 1_000_000, 6)
     (result_dir / "api_meta.json").write_text(json.dumps({
         "response_id": response.get("id"), "model": response.get("model"),
-        "status": response.get("status"), "usage": usage,
+        "status": response.get("status"),
+        "incomplete_details": response.get("incomplete_details"), "usage": usage,
         "estimated_cost_usd": estimated_cost,
         "context_sha256": sha(context), "reasoning_effort": EFFORT,
         "reservation_claim_id": reservation["claim_id"],
     }, sort_keys=True, indent=2) + "\n")
     if estimated_cost > RESERVE_USD:
         raise ValueError("PROVIDER_COST_EXCEEDS_RESERVATION_BILLING_INCIDENT")
+    if response.get("status") == "incomplete":
+        raise ValueError("API_INCOMPLETE_OUTPUT_TOKENS_EXHAUSTED_NO_PATCH")
     if response.get("status") != "completed":
         raise ValueError("API_NOT_COMPLETED_BILLING_MAY_HAVE_OCCURRED")
     parts = [c.get("text") for item in response.get("output", [])
