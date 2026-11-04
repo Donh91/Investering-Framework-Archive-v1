@@ -700,6 +700,9 @@ function paint(){
   root.dataset.sourceCurrent=fresh?'true':'false';
   root.dataset.sourceState=fresh?'FRESH':expired?'EXPIRED':'UNAVAILABLE';
   root.dataset.weeklyHealth=w?.state||'UNAVAILABLE';
+  // Distinguish first unhydrated paint from an actually fetched but invalid
+  // public source, so browser checks never mistake pending HTTP for expiry.
+  root.dataset.publicFeedHydrated=feeds&&!failed?'true':'false';
  }
  const proNav=document.querySelector('[data-premium-nav="compass"]');
  if(proNav)proNav.textContent=lang==='en'?'Compass PRO':'Kompas PRO';
