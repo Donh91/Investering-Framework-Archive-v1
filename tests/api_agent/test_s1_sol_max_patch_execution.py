@@ -27,6 +27,10 @@ class SolMaxPatchTests(unittest.TestCase):
     def test_model_max_and_no_auto_write_authority(self):
         self.assertEqual((mod.MODEL, mod.EFFORT), ("gpt-6.1-sol", "max"))
         self.assertLessEqual(mod.MAX_PATCH_BYTES, 16000)
+        self.assertEqual(mod.MAX_OUTPUT_TOKENS, 64000)
+        # 64k output tokens cannot exceed the existing USD 0.75 reservation
+        # under the bounded source context and current Sol token pricing.
+        self.assertLess((mod.MAX_OUTPUT_TOKENS * 10.0 + 40000 * 2.0) / 1e6, mod.RESERVE_USD)
         self.assertEqual(mod.ALLOWED, {
             "scripts/governance/s1_agent_handoff_receipts_v1.py",
             "tests/governance/test_s1_agent_handoff_receipts_v1.py",
@@ -91,9 +95,11 @@ class SolMaxPatchTests(unittest.TestCase):
                         mod.validate_patch(folder, HEAD)
                     apply.assert_not_called()
 
-    def test_native_reservation_caps_entire_patch_mission_at_two_paid_attempts(self):
+    def test_native_reservation_caps_entire_patch_mission_at_three_owner_bound_attempts(self):
         prev = ("S1_SOL_MAX_PATCH_RESERVATION_V1 HEAD=" + "b"*40 +
                 " PR=1877 MODEL=gpt-6.1-sol EFFORT=max MAX_USD=0.75")
+        prev2 = ("S1_SOL_MAX_PATCH_RESERVATION_V1 HEAD=" + "c"*40 +
+                 " PR=1877 MODEL=gpt-6.1-sol EFFORT=max MAX_USD=0.75")
         current = ("S1_SOL_MAX_PATCH_RESERVATION_V1 HEAD=" + HEAD +
                    " PR=1877 MODEL=gpt-6.1-sol EFFORT=max MAX_USD=0.75")
         def row(body, ident):
@@ -102,19 +108,18 @@ class SolMaxPatchTests(unittest.TestCase):
         with patch.dict(os.environ, {"GH_TOKEN": "test-token"}), \
              patch.object(mod, "guard", return_value={"run": True}), \
              patch.object(mod, "subprocess_check", side_effect=[
-                json.dumps([[row(prev, 1)]]), "posted",
-                json.dumps([[row(prev, 1), row(current, 2)]])
+                json.dumps([[row(prev, 1), row(prev2, 2)]]), "posted",
+                json.dumps([[row(prev, 1), row(prev2, 2), row(current, 3)]])
              ]) as commands:
             out = mod.claim(HEAD, REPO)
-            self.assertEqual(out["claim_id"], 2)
+            self.assertEqual(out["claim_id"], 3)
             self.assertEqual(commands.call_count, 3)
         with patch.dict(os.environ, {"GH_TOKEN": "test-token"}), \
              patch.object(mod, "guard", return_value={"run": True}), \
              patch.object(mod, "subprocess_check", return_value=json.dumps([
-                 [row(prev, 1), row("S1_SOL_MAX_PATCH_RESERVATION_V1 HEAD=" +
-                     "c"*40 + " PR=1877 MODEL=gpt-6.1-sol EFFORT=max MAX_USD=0.75", 3)]
+                 [row(prev, 1), row(prev2, 2), row(current, 3)]
              ])) as commands:
-            with self.assertRaisesRegex(ValueError, "TWO_ATTEMPT_HARD_STOP"):
+            with self.assertRaisesRegex(ValueError, "THREE_ATTEMPT_HARD_STOP"):
                 mod.claim(HEAD, REPO)
             self.assertEqual(commands.call_count, 1)
 
