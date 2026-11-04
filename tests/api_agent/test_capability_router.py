@@ -169,15 +169,26 @@ class CapabilityRouterTests(unittest.TestCase):
         self.assertEqual(plan["status"], "WAITING_FOR_CAPABILITY")
         self.assertEqual(plan["units"][0]["reason"], "NO_VERIFIED_MODEL_SATISFIES_PROFILE")
 
-    def test_required_astra_routes_only_when_runtime_confirms_it(self):
+    def test_owner_manual_astra_is_never_eligible_for_automatic_api_even_when_available(self):
+        self.assertIs(self.policy["models"]["gpt-6-astra"]["api_eligible"], False)
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-6-sol", "gpt-6-astra"),
+            runtime("gpt-6.1-sol", "gpt-6-astra"),
             profile(complexity="ARCHITECTURE", capabilities=["architecture"], effort="xhigh", requires_astra=True),
         )
+        self.assertEqual(plan["status"], "WAITING_FOR_CAPABILITY")
+        self.assertEqual(plan["units"][0]["reason"], "NO_VERIFIED_MODEL_SATISFIES_PROFILE")
+
+    def test_supervisor_can_choose_sol_6_1_max_for_architecture_without_astra(self):
+        plan = build_execution_plan(
+            self.policy,
+            runtime("gpt-6.1-sol", "gpt-6-astra"),
+            profile(complexity="ARCHITECTURE", capabilities=["architecture"], effort="max"),
+        )
         self.assertEqual(plan["status"], "READY")
-        self.assertEqual(plan["units"][0]["model"], "gpt-6-astra")
-        self.assertTrue(plan["units"][0]["runtime_confirmed"])
+        self.assertEqual(plan["units"][0]["model"], "gpt-6.1-sol")
+        self.assertEqual(plan["units"][0]["reasoning_effort"], "max")
+        self.assertFalse(plan["units"][0]["router_grants_write_authority"])
 
     def test_repository_write_is_codex_only_and_router_grants_no_authority(self):
         p = profile(executor_class="CODE", write=True, scope=["scripts/example.py"])
@@ -205,17 +216,25 @@ class CapabilityRouterTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "write_scope_requires_code_executor"):
             build_execution_plan(self.policy, runtime("gpt-6-luna"), p)
 
-    def test_independent_review_uses_different_model_when_available(self):
+    def test_independent_review_uses_different_permitted_model_not_astra(self):
         plan = build_execution_plan(
             self.policy,
-            runtime("gpt-6-sol", "gpt-6-astra"),
+            runtime("gpt-6.1-sol", "gpt-6-sol", "gpt-6-astra"),
             profile(complexity="DIFFICULT", capabilities=["difficult_reasoning"], effort="high", review=True),
         )
         route = plan["units"][0]
-        self.assertEqual(route["model"], "gpt-6-sol")
-        self.assertEqual(route["review"]["model"], "gpt-6-astra")
+        self.assertEqual(route["model"], "gpt-6.1-sol")
+        self.assertEqual(route["review"]["model"], "gpt-6-sol")
         self.assertTrue(route["review"]["read_only"])
         self.assertFalse(route["review"]["repository_write_authority"])
+
+    def test_astra_only_runtime_never_forces_paid_api_routing(self):
+        plan = build_execution_plan(
+            self.policy, runtime("gpt-6-astra"),
+            profile(complexity="ARCHITECTURE", capabilities=["architecture"], effort="max"),
+        )
+        self.assertEqual(plan["status"], "WAITING_FOR_CAPABILITY")
+        self.assertEqual(plan["units"][0]["reason"], "NO_VERIFIED_MODEL_SATISFIES_PROFILE")
 
     def test_plan_never_grants_framework_or_merge_authority(self):
         plan = build_execution_plan(self.policy, runtime("gpt-6-luna"), profile())
