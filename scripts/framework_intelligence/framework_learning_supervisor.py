@@ -374,6 +374,8 @@ def read_elite_sol_batch_queue(root: Path) -> list[dict[str, Any]]:
             or batch.get("billing_liability_for_run_41870364609") != "UNKNOWN"):
         return []
     pay = batch.get("payment_policy") or {}
+    if not isinstance(pay, dict):
+        return []
     if (pay.get("owner_monthly_hard_stop_usd") != 30
             or pay.get("owner_global_reserve_usd") != 12
             or pay.get("per_call_max_usd") != 3
@@ -384,7 +386,8 @@ def read_elite_sol_batch_queue(root: Path) -> list[dict[str, Any]]:
     if not isinstance(rows, list) or len(rows) != 5:
         return []
     ids = [x.get("id") for x in rows if isinstance(x, dict)]
-    if len(ids) != 5 or len(set(ids)) != 5:
+    if (len(ids) != 5 or any(not isinstance(item, str) or not item for item in ids)
+            or len(set(ids)) != 5):
         return []
     for x in rows:
         if not isinstance(x, dict) or not isinstance(x.get("phase"), str):
