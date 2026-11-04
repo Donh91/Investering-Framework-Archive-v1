@@ -286,3 +286,35 @@ Owner demanded continuing the original mission without a fourth billable request
 The new scripts/api_agent/s1_sol_response_probe.py has no POST, no claim(), no model invocation and no branch writer. It requires an exact owner launch commit subject and authenticated original PR current-HEAD readback. Its GH job is only in the preexisting Framework Learning Supervisor workflow, scoped to original PR #1877. If GET yields HTTP 404, mark EXPIRED_OR_NOT_STORED, not $0 spent, and reconcile usage separately. No store=true paid POST is approved by this launch and all three previous reservations are preserved.
 
 Results must be read back from the native Actions workflow receipt before claiming completion; the wider S1/Strategist/Compass recovery remains open.
+
+## P0 Sol MAX recovery v2, owner-approved source retention, 4 November 2026
+
+**Owner authorization:** `store=true` is approved ONLY for GPT-6.1 Sol API requests containing preverified public, credential-free Archive source code in the original PR #1877 two-file allowlist. API Task Registry `default_store=false` is intentionally unchanged for every other task. OpenAI Responses may retain application-state data **for at least 30 days**; the owner explicitly accepts this scope. Zero Data Retention projects may override this storage flag, so a native terminal readback remains required. No private Vault, credential, wallet, personal information, unpublished paid source, protected market data or unreviewed external dataset is permitted in the stored payload.
+
+### Actual fixes on ORIGINAL #1877 branch, not yet production main
+
+- Stored background responses explicitly declare `store=true` behind the public/source SHA/allowlist/credential-shaped-secret preflight and native public-GitHub-repo guard.
+- Before billable POST, the lane checks a conservative **standard-tier** upper-bound token envelope using owner-reserved USD 0.75 and current official `gpt-6.1-sol` input/output prices (USD 2/10 per 1M tokens, reverify after 2026-12-04). Estimated upper bound USD 0.73. This is NOT a hard provider cap: actual billing and future price/tier changes must still be reconciled. Monthly owner cap USD 40 unchanged; default spend target USD 10-15.
+- Paid response submission gains a `--submit-only` path: one POST, durable `response_id` plus source HEAD, context digest, native reservation and storage consent written to `response_handle.json` immediately; next workflow step uploads immutable `s1-sol-max-handle-<run_id>` before any long GET wait. Never repeat an uncertain billable POST.
+- The existing Framework Learning Supervisor workflow gains an **isolated GET-only** `sol-max-collect` job on owner `workflow_dispatch` with `sol_collect_run_id`. It downloads the original paid-run handle, checks native run identity, original source SHA/context hash and bot-authored claim, and performs one GET for the already-paid `response_id`. Terminal/pending/expired/transient results generate a receipt and a 30-day artifact; model output is untrusted, never autoapplied, and never a PR approval.
+- Critical side-effect prevention: ordinary manual workflow dispatch can run `operate`, so an explicitly configured `sol_collect_run_id` must suppress the production writer. All paid PR lanes stay gated by a DIFFERENT owner-specific launch commit. No new supervisor, scheduler, repo writer, duplicate PR, custody bypass or automated payment cadence.
+- Existing one-off #1877 three-native-claim cap remains binding and consumed by three attempts, even though third response was rescued at HTTP 200. Separate future project/phase claims must be designed, independently tested and owner-authorized without reopening this spent claim or resetting uncertain liability.
+- The recovered Sol MAX phase-one S1 ACK/liveness patch was applied earlier and 10/10 relevant CI passed at HEAD `aee99059b565fb9835ac9b8f34b81bd362c2c602`. The new retained-response/collector changes are separate and must pass fresh exact-HEAD CI and independent review. PR #1877 remains OPEN until actual qualified expected-HEAD merge/main readback.
+
+### Remaining cross-framework closure gates
+
+**G0**: Merge original #1877 only after current exact-HEAD CI, source-bound independent custody and applicable HIGH_IMPACT/independent-review gates. No claim that PR green equals merged.
+
+**G1**: Real authenticated Archive-Bridge/Alpha recipient acknowledgement, native downstream job evidence and result readback, not merely a structural classifier or comments.
+
+**G2**: Verified adoption by the same existing Chat S1 task/runtime, with correct one-writer authority. No separate supervisor or new schedule.
+
+**G3**: Demonstrated transition of a parked legitimate request to an actual completed/blocked outcome, plus finite next actor for failed work.
+
+**G4**: Natural 7/28-day prospective reliability/learning outcomes and falsification, not static tests alone. Strategist original owner #1157 remains open and must preserve UNPROVEN versus DOCUMENTED_IMPROVEMENT.
+
+**CN P0**: Separate original #1879 / source #1516 and Kompas integrity #1827 must deliver independently attributable prospective seven-day forecast source pairs and real after-merge SITE/Graph History/Kompas readback. W45 remains authentic 0/7, not seven fabricated points. Do not market PR #1879's green historical CI as a production 7/7 forecast.
+
+**Provider accounting**: The original three paid claims are durable. Attempt 1 actual provider charge remains unknown. Attempt 2 returned terminal incomplete 16,000 reasoning tokens (usage estimate USD 0.167016). Attempt 3 returned a previously paid successful response after GET-only recovery; provider metering exists, account billing is not independently reconciled. Until provider usage reconciliation, charge unknown attempts conservatively against reserved ceilings. No fourth paid POST for this protocol.
+
+**Verification:** Exact source commit, same-HEAD GitHub Actions and native artifact must be reread before closing each gate. No approval, merge, production readiness or economic edge may be inferred from text or workflow creation alone.
