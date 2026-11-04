@@ -1713,3 +1713,51 @@
    padding-left:0!important;padding-top:10px!important
  }
 }
+/* Cycle SOURCE TRUTH v1, data first. No inferred phase progress or ETA.
+ * Protected Graph B and History visuals are not touched. */
+.premium-next #official-path-view .cn-cycle-truth {
+ display:grid;gap:5px;margin:17px 0 15px;padding:14px 17px;
+ background:#f9fbfd;border:1px solid #e1e8f0;border-radius:12px;
+}
+.premium-next #official-path-view .cn-cycle-truth strong {
+ color:#264765;font-size:12px;font-weight:760;line-height:1.35;
+ font-variant-numeric:tabular-nums;
+}
+.premium-next #official-path-view .cn-cycle-truth p {
+ color:#344e67;font-size:13px;line-height:1.5;margin:0;
+}
+.premium-next #official-path-view .cn-cycle-truth small {
+ color:#637c92;font-size:11px;line-height:1.45;
+}
+.premium-next #official-path-view[data-cycle-source-state="PARTIAL_WEEKLY"]
+ .cn-cycle-truth strong {color:#95651c}
+.premium-next #official-path-view[data-reference-kind="NO_VERIFIED_PHASE"] .path-hero {
+ background:#f7f9fb;border-color:#e0e7ef;color:#274563;
+}
+.premium-next #official-path-view .path-rotation {
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:8px;padding:0;margin:14px 0;list-style:none;
+}
+.premium-next #official-path-view .cn-cycle-tier {
+ display:flex;flex-direction:column;gap:4px;
+ padding:11px 12px;border:1px solid #e3e9f0;
+ background:#fff;border-radius:10px;min-width:0;
+}
+.premium-next #official-path-view .cn-cycle-tier b {
+ color:#596e82;font-size:11px;font-weight:660;line-height:1.3;
+}
+.premium-next #official-path-view .cn-cycle-tier strong {
+ color:#4e6275;font-size:11px;font-weight:720;
+ line-height:1.4;overflow-wrap:anywhere;
+}
+.premium-next #official-path-view .cn-cycle-tier[data-stance="hold"] strong {color:#235477}
+.premium-next #official-path-view .cn-cycle-tier[data-stance="caution"] strong {color:#92631b}
+.premium-next #official-path-view .cn-cycle-tier[data-stance="missing"] {background:#f6f8fa}
+.premium-next #official-path-view .cn-cycle-tier[data-stance="missing"] strong {color:#778697}
+@media(max-width:760px){
+ .premium-next #official-path-view .path-rotation {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:430px){
+ .premium-next #official-path-view .cn-cycle-truth {padding:12px 13px}
+ .premium-next #official-path-view .cn-cycle-tier {padding:9px 10px}
+}
