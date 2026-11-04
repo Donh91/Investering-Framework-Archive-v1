@@ -315,6 +315,48 @@ def archive(root, target):
     return payload
 
 
+def publish_w45_research_preview(root):
+    """Optional clearly labeled SHADOW page, isolated from Graph B and CN output.
+
+    Never issues, promotes, or modifies a forecast. Bad research evidence is
+    quarantined WITHOUT blocking publication of the original green actual
+    timeline or the canonical site.
+    """
+    original = root / "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_MIDWEEK_PROSPECTIVE_BENCHMARK_v1.json"
+    html = root / "05_CYCLE_NAVIGATOR/site/research-w45/index.html"
+    dst_data = root / "05_CYCLE_NAVIGATOR/site/dist/data/research-w45-shadow.json"
+    dst_page = root / "05_CYCLE_NAVIGATOR/site/dist/research-w45/index.html"
+    def discard():
+        for path in (dst_data, dst_page):
+            if path.exists():
+                path.unlink()
+    if not original.is_file() or not html.is_file():
+        discard()
+        return "NOT_AVAILABLE"
+    try:
+        # No authority promotion: the verifier requires both issuer and
+        # first-known flags to remain research-only with original W45 0/7.
+        from scripts.research.verify_w45_midweek_shadow_benchmark import verify
+        verified = verify(read(original))
+        if verified.get("status") != "PASS_RESEARCH_ONLY" or verified.get("official_cn_issued_points") != 0:
+            raise ValueError("RESEARCH_W45_AUTHORITY_GUARD")
+        markup = html.read_text(encoding="utf-8")
+        if ('noindex,nofollow' not in markup or
+                "RESEARCH_W45_MIDWEEK_FORWARD_BENCHMARK_v1" not in markup or
+                "site_blue_original_forecast_eligible" not in markup or
+                "Original blå mandagsprognose" not in markup):
+            raise ValueError("RESEARCH_W45_PREVIEW_DISCLOSURE_GUARD")
+        dst_data.parent.mkdir(parents=True, exist_ok=True)
+        dst_page.parent.mkdir(parents=True, exist_ok=True)
+        # Preserve exact source bytes in the public research-only snapshot.
+        dst_data.write_bytes(original.read_bytes())
+        dst_page.write_bytes(html.read_bytes())
+        return "RESEARCH_ONLY_PUBLISHED"
+    except (ValueError, KeyError, TypeError, OSError, json.JSONDecodeError):
+        discard()
+        return "RESEARCH_QUARANTINED"
+
+
 def publish(root):
     index_file = root / ROOT / "index.json"
     index = _read_index_or_fail_missing_history(root) or {"contract": CONTRACT, "weeks": []}
@@ -402,6 +444,10 @@ def publish(root):
         destination = root / "05_CYCLE_NAVIGATOR/site/dist/graph-history/index.html"
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(preview.read_bytes())
+    # Independent optional research route: never modifies graph-history
+    # response identity, official Blue/Green status or original freeze.
+    research_status = publish_w45_research_preview(root)
+    print(json.dumps({"research_preview": research_status}, sort_keys=True))
     return payload
 
 
