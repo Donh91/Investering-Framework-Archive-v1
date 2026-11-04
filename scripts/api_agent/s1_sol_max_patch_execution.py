@@ -147,8 +147,13 @@ def persistent_storage_preflight(context: bytes) -> dict:
             raise ValueError("PUBLIC_STORAGE_FILE_HASH_OR_SIZE_INVALID")
     # Public repository source can still accidentally contain keys: deny known
     # credential formats rather than trusting the repo visibility alone.
-    denied = (b"sk-proj-", b"ghp_", b"github_pat_", b"-----BEGIN PRIVATE KEY-----")
-    if any(token in context for token in denied):
+    credential_patterns = (
+        rb"sk-proj-[A-Za-z0-9_-]{16,}",
+        rb"github_pat_[A-Za-z0-9_]{16,}",
+        rb"ghp_[A-Za-z0-9]{20,}",
+        rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----",
+    )
+    if any(re.search(pattern, context) for pattern in credential_patterns):
         raise ValueError("PUBLIC_STORAGE_POSSIBLE_SECRET")
     if (STANDARD_INPUT_USD_PER_MTOK * INPUT_TOKENS_UPPER_BOUND
             + STANDARD_OUTPUT_USD_PER_MTOK * MAX_OUTPUT_TOKENS) / 1_000_000 > RESERVE_USD:
