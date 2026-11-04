@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from scripts.api_agent import sol_max_elite_transport as m
@@ -58,6 +59,10 @@ def paid_fixture(root):
              "mission": MISSION, "source_head": HEAD, "origin_run_id": RUN,
              "body": m.claim_body(MISSION, HEAD, m.digest(m.canonical(payload)))}
     return batch, packet, payload, claim
+
+
+def save_paid_registration(root, batch):
+    (root / m.BATCH).write_text(json.dumps(active(batch)))
 
 
 class FakeHTTP:
@@ -153,15 +158,20 @@ class EliteTransportTests(unittest.TestCase):
                 self.assertEqual(req.get_full_url(), "https://api.openai.com/v1/responses")
                 return FakeHTTP({"id": "resp_unique1234", "status": "in_progress"})
             output = Path(td) / "paid"
-            result = m.submit_one(active(batch), payload, claim, output, "fake-key",
-                                  native_reader=native(claim, payload), environment=ENV, post=post)
+            save_paid_registration(Path(td), batch)
+            with patch.object(m.subprocess, "check_output", return_value=(HEAD + "\n").encode()), \
+                    patch.object(m.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+                result = m.submit_one(Path(td), active(batch), payload, claim, output, "fake-key",
+                                      native_reader=native(claim, payload), environment=ENV, post=post)
             self.assertEqual(sends, ["POST"])
             self.assertEqual(result["response_id"], "resp_unique1234")
             self.assertEqual(json.loads((output / "attempt.json").read_text())["state"],
                              "SUBMITTED_GET_ONLY")
-            with self.assertRaisesRegex(ValueError, "ALREADY_EXISTS_NO_SECOND_POST"):
-                m.submit_one(active(batch), payload, claim, output, "fake-key",
-                             native_reader=native(claim, payload), environment=ENV, post=post)
+            with patch.object(m.subprocess, "check_output", return_value=(HEAD + "\n").encode()), \
+                    patch.object(m.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+                with self.assertRaisesRegex(ValueError, "ALREADY_EXISTS_NO_SECOND_POST"):
+                    m.submit_one(Path(td), active(batch), payload, claim, output, "fake-key",
+                                 native_reader=native(claim, payload), environment=ENV, post=post)
             self.assertEqual(len(sends), 1)
 
     def test_timeout_stays_unknown_liability_and_never_reposts(self):
@@ -172,15 +182,20 @@ class EliteTransportTests(unittest.TestCase):
                 sends.append(req.get_method())
                 raise TimeoutError("no response ID")
             output = Path(td) / "unknown"
-            with self.assertRaises(TimeoutError):
-                m.submit_one(active(batch), payload, claim, output, "fake-key",
-                             native_reader=native(claim, payload), environment=ENV, post=fail)
+            save_paid_registration(Path(td), batch)
+            with patch.object(m.subprocess, "check_output", return_value=(HEAD + "\n").encode()), \
+                    patch.object(m.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+                with self.assertRaises(TimeoutError):
+                    m.submit_one(Path(td), active(batch), payload, claim, output, "fake-key",
+                                 native_reader=native(claim, payload), environment=ENV, post=fail)
             self.assertEqual(sends, ["POST"])
             self.assertEqual(json.loads((output / "attempt.json").read_text())["state"],
                              "POST_OUTCOME_UNKNOWN")
-            with self.assertRaisesRegex(ValueError, "ALREADY_EXISTS_NO_SECOND_POST"):
-                m.submit_one(active(batch), payload, claim, output, "fake-key",
-                             native_reader=native(claim, payload), environment=ENV, post=fail)
+            with patch.object(m.subprocess, "check_output", return_value=(HEAD + "\n").encode()), \
+                    patch.object(m.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+                with self.assertRaisesRegex(ValueError, "ALREADY_EXISTS_NO_SECOND_POST"):
+                    m.submit_one(Path(td), active(batch), payload, claim, output, "fake-key",
+                                 native_reader=native(claim, payload), environment=ENV, post=fail)
             self.assertEqual(len(sends), 1)
 
     def test_get_only_never_submits_another_request(self):
@@ -196,6 +211,19 @@ class EliteTransportTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "VERIFIED_RESPONSE_ID"):
             m.collect_one("forged id", "fake-key", get=get)
         self.assertEqual(methods, ["GET"])
+
+    def test_paid_request_cannot_be_replaced_with_untrusted_source(self):
+        with tempfile.TemporaryDirectory() as td:
+            batch, _, payload, claim = paid_fixture(Path(td))
+            save_paid_registration(Path(td), batch)
+            altered = copy.deepcopy(payload)
+            altered["input"][0]["content"][0]["text"] = "{}"
+            with patch.object(m.subprocess, "check_output", return_value=(HEAD + "\n").encode()), \
+                    patch.object(m.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+                with self.assertRaisesRegex(ValueError, "API_PAYLOAD_NOT_BOUND"):
+                    m.submit_one(Path(td), active(batch), altered, claim, Path(td) / "never",
+                                 "fake-key", native_reader=native(claim, payload),
+                                 environment=ENV, post=lambda *_: self.fail("unexpected POST"))
 
     def test_native_duplicate_claim_is_terminal_until_reconciled(self):
         body = m.claim_body(MISSION, HEAD, "f" * 64)
