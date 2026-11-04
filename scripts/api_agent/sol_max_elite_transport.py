@@ -297,12 +297,24 @@ def submit_one(root: Path, registration: dict, request_payload: dict, claim: dic
     attest_paid_source(root, registration, claim, request_payload)
     verify_native_claim(claim, request_payload, native_reader=native_reader,
                         environment=environment)
-    if output.exists() and any(output.iterdir()):
+    if output.exists():
         raise ValueError("ELITE_OUTPUT_ALREADY_EXISTS_NO_SECOND_POST")
-    output.mkdir(parents=True, exist_ok=False)
     state = {"contract": "S1_SOL_ELITE_ATTEMPT_v1", "claim_id": claim["id"],
              "claim_body": claim["body"], "state": "POST_OUTCOME_UNKNOWN",
              "billable_attempts_allowed": 0}
+    # A single immutable local attempt key prevents a different output path
+    # from buying the SAME mission twice within one GitHub run attempt.
+    marker = root / "runtime/s1-sol-elite-payment-lock" / (claim["mission"] + ".json")
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(marker, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError as exc:
+        raise ValueError("ELITE_MISSION_ALREADY_SUBMITTED_IN_THIS_RUN") from exc
+    with os.fdopen(fd, "wb") as lock:
+        lock.write(canonical(state))
+        lock.flush()
+        os.fsync(lock.fileno())
+    output.mkdir(parents=True, exist_ok=False)
     (output / "attempt.json").write_bytes(canonical(state))
     req = urllib.request.Request("https://api.openai.com/v1/responses",
           data=canonical(request_payload),
