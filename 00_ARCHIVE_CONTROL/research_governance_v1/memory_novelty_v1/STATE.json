@@ -16,13 +16,21 @@
       "evidence_fingerprint": "86f24026e95002af18bb3860da1eba39ac69257e1dfe47b2599fc0853335ca6f",
       "external_provider_calls_authorized": false,
       "family": "",
-      "matched_record": null,
-      "novelty_reason": "no prior gated proposal clears the conservative exact/near duplicate conditions",
-      "novelty_verdict": "NOVEL",
+      "matched_record": {
+        "action": "RESEARCH_NEW_HYPOTHESIS",
+        "evidence_fingerprint": "86f24026e95002af18bb3860da1eba39ac69257e1dfe47b2599fc0853335ca6f",
+        "novelty_verdict": "NOVEL",
+        "reason": "Prospectively test whether a warning typed before the observation window is associated with more negative 72h maximum adverse excursion than a no-typed-warning state, using preregistered, non-overlapping episodes and comparable market-regime and decision-policy strata. Assess subsequent upside separately. The hypothesis fails if the prespecified episode-level comparison shows no adverse-excursion separation. Choosing 72h after inspecting the reported horizons must be disclosed; this is a new test, not validation of the descriptive rows.",
+        "record_type": "NOVELTY_LEDGER",
+        "source": "MONTHLY_COUNCIL",
+        "target": "MLC-HYP-d4a6abc1db1a17f8"
+      },
+      "novelty_reason": "same source/action/target and same evidence fingerprint already passed through novelty gate",
+      "novelty_verdict": "DUPLICATE_EXACT",
       "paid_data_authorized": false,
       "portfolio_execution": false,
       "reason": "Prospectively test whether a warning typed before the observation window is associated with more negative 72h maximum adverse excursion than a no-typed-warning state, using preregistered, non-overlapping episodes and comparable market-regime and decision-policy strata. Assess subsequent upside separately. The hypothesis fails if the prespecified episode-level comparison shows no adverse-excursion separation. Choosing 72h after inspecting the reported horizons must be disclosed; this is a new test, not validation of the descriptive rows.",
-      "similarity": 0.0,
+      "similarity": 1.0,
       "source": "MONTHLY_COUNCIL",
       "target": "MLC-HYP-d4a6abc1db1a17f8"
     },
@@ -34,20 +42,28 @@
       "evidence_fingerprint": "",
       "external_provider_calls_authorized": false,
       "family": "",
-      "matched_record": null,
-      "novelty_reason": "no prior gated proposal clears the conservative exact/near duplicate conditions",
-      "novelty_verdict": "NOVEL",
+      "matched_record": {
+        "action": "INVESTIGATE_DIVERGENCE",
+        "evidence_fingerprint": "",
+        "novelty_verdict": "NOVEL",
+        "reason": "The first information-review floor is met; inspect matured disagreements before changing research scope.",
+        "record_type": "NOVELTY_LEDGER",
+        "source": "SHARED_ROW",
+        "target": "CORE_C01_C07"
+      },
+      "novelty_reason": "proposal is semantically near a prior gated proposal at deterministic token Jaccard 1.000",
+      "novelty_verdict": "DUPLICATE_NEAR",
       "paid_data_authorized": false,
       "portfolio_execution": false,
       "reason": "The first information-review floor is met; inspect matured disagreements before changing research scope.",
-      "similarity": 0.0,
+      "similarity": 1.0,
       "source": "SHARED_ROW",
       "target": "CORE_C01_C07"
     }
   ],
-  "reason": "no prior gated proposal clears the conservative exact/near duplicate conditions",
-  "selected_action": "RESEARCH_NEW_HYPOTHESIS",
-  "selected_source": "MONTHLY_COUNCIL",
-  "selected_target": "MLC-HYP-d4a6abc1db1a17f8",
-  "selected_verdict": "NOVEL"
+  "reason": "proposal is semantically near a prior gated proposal at deterministic token Jaccard 1.000",
+  "selected_action": "INVESTIGATE_DIVERGENCE",
+  "selected_source": "SHARED_ROW",
+  "selected_target": "CORE_C01_C07",
+  "selected_verdict": "DUPLICATE_NEAR"
 }

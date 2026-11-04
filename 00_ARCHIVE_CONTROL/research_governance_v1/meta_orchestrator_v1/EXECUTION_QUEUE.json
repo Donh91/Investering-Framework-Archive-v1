@@ -2,18 +2,18 @@
   "active_heavy_workstreams": [
     {
       "canonical_effect": false,
-      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
-      "evidence_fingerprint": "86f24026e95002af18bb3860da1eba39ac69257e1dfe47b2599fc0853335ca6f",
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "evidence_fingerprint": "4c1b652a80e791aa2a4efc83aff2bdb347889a8d5359685af78117ae2c0dd36c",
       "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "HIGH",
-      "novelty_verdict": "NOVEL",
+      "impact_tier": "MEDIUM",
+      "novelty_verdict": null,
       "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
       "paid_data_authorized": false,
       "portfolio_execution": false,
-      "reason": "Prospectively test whether a warning typed before the observation window is associated with more negative 72h maximum adverse excursion than a no-typed-warning state, using preregistered, non-overlapping episodes and comparable market-regime and decision-policy strata. Assess subsequent upside separately. The hypothesis fails if the prespecified episode-level comparison shows no adverse-excursion separation. Choosing 72h after inspecting the reported horizons must be disclosed; this is a new test, not validation of the descriptive rows.",
-      "source": "MONTHLY_COUNCIL",
-      "specialist_action": "RESEARCH_NEW_HYPOTHESIS",
-      "target": "MLC-HYP-d4a6abc1db1a17f8"
+      "reason": "registered source material exists but exact evaluator recovery is still required",
+      "source": "SHADOW_REGISTRY",
+      "specialist_action": "RECOVER_EVALUATOR",
+      "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
     }
   ],
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
@@ -21,36 +21,6 @@
   "canonical_effect": false,
   "contract": "RESEARCH_META_EXECUTION_QUEUE_v1",
   "queue": [
-    {
-      "canonical_effect": false,
-      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
-      "evidence_fingerprint": "86f24026e95002af18bb3860da1eba39ac69257e1dfe47b2599fc0853335ca6f",
-      "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "HIGH",
-      "novelty_verdict": "NOVEL",
-      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "Prospectively test whether a warning typed before the observation window is associated with more negative 72h maximum adverse excursion than a no-typed-warning state, using preregistered, non-overlapping episodes and comparable market-regime and decision-policy strata. Assess subsequent upside separately. The hypothesis fails if the prespecified episode-level comparison shows no adverse-excursion separation. Choosing 72h after inspecting the reported horizons must be disclosed; this is a new test, not validation of the descriptive rows.",
-      "source": "MONTHLY_COUNCIL",
-      "specialist_action": "RESEARCH_NEW_HYPOTHESIS",
-      "target": "MLC-HYP-d4a6abc1db1a17f8"
-    },
-    {
-      "canonical_effect": false,
-      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
-      "evidence_fingerprint": "",
-      "execution_mode": "AUTO_LOCAL_RESEARCH",
-      "impact_tier": "HIGH",
-      "novelty_verdict": "NOVEL",
-      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
-      "paid_data_authorized": false,
-      "portfolio_execution": false,
-      "reason": "The first information-review floor is met; inspect matured disagreements before changing research scope.",
-      "source": "SHARED_ROW",
-      "specialist_action": "INVESTIGATE_DIVERGENCE",
-      "target": "CORE_C01_C07"
-    },
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
@@ -65,6 +35,36 @@
       "source": "SHADOW_REGISTRY",
       "specialist_action": "RECOVER_EVALUATOR",
       "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
+      "evidence_fingerprint": "86f24026e95002af18bb3860da1eba39ac69257e1dfe47b2599fc0853335ca6f",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "BLOCKED",
+      "novelty_verdict": "DUPLICATE_EXACT",
+      "orchestrator_action": "SUPPRESS_DUPLICATE_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "RESEARCH_NEW_HYPOTHESIS",
+      "target": "MLC-HYP-d4a6abc1db1a17f8"
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
+      "evidence_fingerprint": "",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "BLOCKED",
+      "novelty_verdict": "DUPLICATE_NEAR",
+      "orchestrator_action": "SUPPRESS_DUPLICATE_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_NEAR)",
+      "source": "SHARED_ROW",
+      "specialist_action": "INVESTIGATE_DIVERGENCE",
+      "target": "CORE_C01_C07"
     },
     {
       "canonical_effect": false,
