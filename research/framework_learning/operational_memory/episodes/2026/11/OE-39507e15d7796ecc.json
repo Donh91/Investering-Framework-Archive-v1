@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_EVIDENCE_v1.md",
+    "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_ONE_SHOT_v1.json",
+    "research/api_agent/API_TASK_REGISTRY_v1.json",
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-39507e15d7796ecc",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized independent read-only Sol mission. Exact-head 8/8 PR CI green; activate one new Research Lab mission after completed prior receipt. Single API attempt (no retry), source-pinned original #1879 and W44-W45 evidence. Owner global 30/12 and 3-per-call gate retains authority; no separate producer, historical rewrite or automatic model patch.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_EVIDENCE_v1.md": "560067fdd97010a24fde98869c13ac1e6432ac80",
+    "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_ONE_SHOT_v1.json": "8c652d05ad0ac9265b8097e22b543db71c29f080",
+    "research/api_agent/API_TASK_REGISTRY_v1.json": "8d9d45de077ff210996c939a96b0ec0896c445b2",
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json": "6ce00545445db9a2d061ba0ae58762e61c02b583"
+  },
+  "source_commit_sha": "39507e15d7796ecc7078f8a20be3e11b4c49f4e8",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T16:19:10-05:00",
+  "task_class": "API_AGENT",
+  "task_summary": "research(CN): one-shot source-gate Sol falsification registration (#1899)"
+}
