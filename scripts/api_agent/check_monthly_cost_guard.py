@@ -13,6 +13,11 @@ if str(SCRIPTS_ROOT) not in sys.path:
 from api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
 from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegative, json_evidence_paths, load_evidence
 
+# Owner-approved effective account-wide cap, 2026-11-04. Legacy workflows
+# passing 40/4 cannot weaken these limits; stricter lane guards still apply.
+OWNER_GLOBAL_HARD_STOP_USD = 30.0
+OWNER_GLOBAL_RESERVE_USD = 12.0
+
 
 def parse_created(value: dict) -> datetime | None:
     return created_utc(value)
@@ -105,8 +110,18 @@ def main() -> None:
     if not math.isfinite(total):
         errors.append({"path": str(args.receipt_root), "reason": "COST_TOTAL_NONFINITE"})
         total = None
-    remaining = args.hard_stop_usd - total if total is not None else None
-    status = "BLOCKED" if errors or remaining is None or remaining <= args.reserve_usd else "PASS"
+    # Two simultaneous checks: preserve a stricter local/lane cap and
+    # enforce the owner's global budget/reserve independently. In particular,
+    # a legacy 40/4 argument never expands the owner's 30/12 ceiling.
+    effective_hard_stop = min(args.hard_stop_usd, OWNER_GLOBAL_HARD_STOP_USD)
+    effective_reserve = (max(args.reserve_usd, OWNER_GLOBAL_RESERVE_USD)
+                         if args.hard_stop_usd >= OWNER_GLOBAL_HARD_STOP_USD
+                         else args.reserve_usd)
+    remaining = effective_hard_stop - total if total is not None else None
+    owner_remaining = OWNER_GLOBAL_HARD_STOP_USD - total if total is not None else None
+    status = ("BLOCKED" if errors or remaining is None
+              or owner_remaining is None or remaining <= effective_reserve
+              or owner_remaining <= OWNER_GLOBAL_RESERVE_USD else "PASS")
     result = {
         "status": status,
         "month": now.strftime("%Y-%m"),
@@ -115,7 +130,12 @@ def main() -> None:
         "cost_basis": "CURRENT_GATEWAY_PRICING_FOR_TOKENIZED_OPENAI_RECEIPTS_ELSE_RECORDED_COST",
         "spent_usd": round(total, 8) if total is not None else None,
         "remaining_usd": round(remaining, 8) if remaining is not None else None,
-        "reserve_usd": args.reserve_usd,
+        "requested_hard_stop_usd": args.hard_stop_usd,
+        "effective_hard_stop_usd": effective_hard_stop,
+        "owner_global_hard_stop_usd": OWNER_GLOBAL_HARD_STOP_USD,
+        "owner_global_reserve_usd": OWNER_GLOBAL_RESERVE_USD,
+        "owner_remaining_usd": round(owner_remaining, 8) if owner_remaining is not None else None,
+        "reserve_usd": effective_reserve,
         "malformed_cost_receipts": [e["path"] for e in errors],
         "cost_evidence_errors": errors,
         "missing_optional_roots": missing_optional_roots,
