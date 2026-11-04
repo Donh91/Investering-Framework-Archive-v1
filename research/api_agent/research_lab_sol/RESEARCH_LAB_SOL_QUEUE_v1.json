@@ -253,7 +253,7 @@
     {
       "sequence": 10,
       "mission_id": "TASK2-PIT-P0-SOL61-20261019-002",
-      "state": "ACTIVE_RELEASED",
+      "state": "FINAL_ADJUDICATED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_PIT_REVIEW_v1.json",
       "context_status": "EXACT_PR1675_2026_10_19_REVISION",
       "context_paths": [
@@ -267,7 +267,42 @@
       "additional_sol_pass_limit": 1,
       "selected_live_rules": [],
       "new_paid_attempts_authorized": true,
-      "owner_release_reason": "USER_AUTHORIZED_DISTINCT_TASK2_SCIENTIFIC_PIT_ADVERSARIAL_REVIEW_2026_10_19_EXACT_PR1675_HEAD_0e7ac446edd51063d2a4aa2a41a71c8abe27bf0f"
+      "owner_release_reason": "USER_AUTHORIZED_DISTINCT_TASK2_SCIENTIFIC_PIT_ADVERSARIAL_REVIEW_2026_10_19_EXACT_PR1675_HEAD_0e7ac446edd51063d2a4aa2a41a71c8abe27bf0f",
+      "final_verdict": "INSUFFICIENT_EVIDENCE",
+      "completed_paid_receipt": "research/api_agent/outputs/research_lab_sol/TASK2-PIT-P0-SOL61-20261019-002/issue-1476/comment-6270675295/receipt.json",
+      "follow_up_requires_material_new_evidence": true
+    },
+    {
+      "sequence": 11,
+      "mission_id": "RL-NEWS-INTELLIGENCE-EDGE-011",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-04__RL-NEWS-INTELLIGENCE-EDGE-011__sol-api.json",
+      "context_status": "SOURCE_BOUND_NOV4_NEW_P0_CODE_UNDER_OWNER_AUTHORIZED_PR_NOT_YET_CI_VERIFIED",
+      "context_paths": [
+        "04_MARKET_LEARNING/external_research/news_intelligence/2026-11-04__NEWS_INTELLIGENCE_P0_SOURCE_AUDIT_EXECUTION_v1.md",
+        "06_RESEARCH_LAB/mission_packets/2026-11-04__RL-NEWS-INTELLIGENCE-EDGE-011__sol-api.json",
+        "scripts/data_terminal/situation_room_daily_owner.py",
+        "scripts/data_terminal/situation_room_static_daily_adapter.py",
+        "scripts/api_agent/augment_director_news_intelligence_context.py",
+        "scripts/research/coingecko_news_shadow_probe.py",
+        "tests/data_terminal/test_situation_room_daily_owner.py",
+        "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/2026/11/2026-11-04.json",
+        "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/EVENT_LEDGER.jsonl",
+        "04_MARKET_LEARNING/external_research/news_intelligence/NEWS_INTELLIGENCE_FORWARD_TEST_v1.md",
+        "04_MARKET_LEARNING/external_research/news_intelligence/forward_rows/2026/10/NEWSFT-20261007-001.json",
+        "research/api_agent/outputs/daily/2026/11/04/131355/context.json",
+        "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/04/CMP-20261104-e410032378e9.json",
+        "research/api_agent/API_TASK_REGISTRY_v1.json",
+        "AGENTS.md"
+      ],
+      "analysis_focus": "ADVERSARIAL_NEWS_INTELLIGENCE_DISCOVERY_TO_KOMPAS_ALPHA_SOURCE_AND_PIT_RECOVERY_WITH_NO_CLAIMED_EDGE",
+      "owner_authorization": "OWNER_2026-11-04_ISSUE_1888_ONE_SHOT_HIGH",
+      "new_paid_attempts_authorized": true,
+      "max_paid_attempts": 1,
+      "prerequisite_previous_receipt": "research/api_agent/outputs/research_lab_sol/TASK2-PIT-P0-SOL61-20261019-002/issue-1476/comment-6270675295/receipt.json",
+      "output_advisory_only": true,
+      "no_auto_merge": true,
+      "no_new_scheduler": true
     }
   ],
   "authority": {
@@ -280,6 +315,7 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "TASK2-PIT-P0-SOL61-20261019-002",
-  "program_phase": "2026_10_19_TASK2_PIT_SOL61_REVIEW_OWNER_RELEASED_SITE_P1_UNMERGED"
+  "active_mission": "RL-NEWS-INTELLIGENCE-EDGE-011",
+  "program_phase": "2026_10_19_TASK2_PIT_SOL61_REVIEW_OWNER_RELEASED_SITE_P1_UNMERGED",
+  "last_owner_release_date": "2026-11-04"
 }
