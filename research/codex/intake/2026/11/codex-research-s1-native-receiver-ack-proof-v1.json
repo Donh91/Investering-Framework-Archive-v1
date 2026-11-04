@@ -1,0 +1,78 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-s1-native-receiver-ack-proof-v1",
+  "submitted_at_utc": "2026-11-04T15:12:53.336Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Owner-authorized S1 G1 native transport reliability follow-on after #1877 merge",
+    "source_paths": [
+      "scripts/governance/s1_agent_handoff_receipts_v1.py",
+      "scripts/governance/s1_research_resume_census_v1.py",
+      "00_FMOS/S1_V4_3_DIRECTOR_INTEGRATION.md",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6634161860"
+    ]
+  },
+  "title": "S1 G1 proof: authenticate existing cross-agent receiver ACK and actual native job completion",
+  "objective": "Add the smallest source-bound, read-only native GitHub provenance adapter for the existing S1 handoff chain. The merged shape-only validator reports authenticated_delivery=false and actual_job_execution_proven=false even for structurally complete receipts. Preserve this honest boundary; independently verify real recipient identity, source/head binding, native issue/PR actor, completed specific GitHub run/job and received result before S1 can mark a request delivered. Remain in the existing #1156 owner, without a new transport, supervisor, scheduler, writer, paid API or automatic release authority. This is G1 phase 1, not claim of genuine recipient execution until a natural live cross-repository case is observed.",
+  "finding_key": "S1_G1_NATIVE_ACK_ACTOR_JOB_PROOF_MISSING",
+  "primary_target": "scripts/governance/s1_agent_handoff_receipts_v1.py",
+  "allowed_change_scope": [
+    "scripts/governance/s1_native_handoff_auth_v1.py",
+    "tests/governance/test_s1_native_handoff_auth_v1.py",
+    "scripts/governance/s1_agent_handoff_receipts_v1.py only if a minimal backward-compatible adapter hook is unavoidable"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "6e44070b1bd67eacc6d00dfb7d5ac3cd0cb308a9",
+      "summary": "Actual original #1877 merged to main; all 10 exact-head workflows passed; source job proof still absent"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/governance/s1_agent_handoff_receipts_v1.py",
+      "summary": "validate_chain explicitly authenticates only shape and consistently sets delivery/job proven=false"
+    },
+    {
+      "kind": "OTHER",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6634161860",
+      "summary": "G0 main readback verified, G1 recipient native ACK and actual execution explicitly open"
+    },
+    {
+      "kind": "PR",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1877",
+      "summary": "Source of current authenticated-receipt wiring and regression suite"
+    }
+  ],
+  "reproduction": "On current main, construct a syntactically complete REQUESTED, ACKNOWLEDGED, ACCEPTED, RESULT_DELIVERED and S1_VERIFIED chain using only a plausible github.com native_event_url and actor labels. Call scripts.governance.s1_agent_handoff_receipts_v1.validate_chain. It must return authenticated_delivery=false and actual_job_execution_proven=false because no authenticated GitHub API actor/run/job validation is performed. This is an intentionally honest missing integration, not proof of a forged execution. Create a read-only adapter, accepting injected native transport to independently corroborate each claimed event and the exact recipient run/job. Prove it cannot infer success from comments, other PR checks or source label alone.",
+  "acceptance_tests": {
+    "positive": [
+      "Exact source-bound request, authenticated expected receiving GitHub bot/user, native issue comment/PR event binding and COMPLETED SUCCESS specific downstream job produce a source-bound OBSERVED_EXECUTION receipt, never self-granting release",
+      "Existing shape-only validation and 10/10 merged S1 PR regression contracts remain backward compatible",
+      "Native read-only proof reports actual actor, job/run IDs and origin fingerprint without raw/private payload"
+    ],
+    "negative": [
+      "Forged actor or changed comment author; unrelated run/job; stale source HEAD; conflicting source fingerprints; replay of another work_id all fail closed",
+      "Queued, cancelled, failed, skipped or zero-substantive-step job never qualifies as actual execution",
+      "Grok COMMENTED, Codex candidate READY or S1's own sender message are not treated as independent receiving ACK or actual job result",
+      "Offline provider/GitHub 403/404 and incomplete native evidence remain UNKNOWN or BLOCKED, not success; no retries that create paid inference or duplicate requests",
+      "A mutation that removes source/head/actor/job guards makes critical negative tests fail in isolation"
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new supervisor, schedule, queue or cross-repository writer",
+    "private source publication",
+    "Vault/recovery credential changes",
+    "automatic release, auto trading, historical receipt rewrite or scientific promotion"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "Native authenticated recipient ACK and downstream actual job result on an original legitimate work_id, current main/blob readback, independent technical review, positive/negative/mutation tests, one natural G1 case before VERIFIED"
+}
