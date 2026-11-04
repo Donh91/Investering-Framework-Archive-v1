@@ -185,7 +185,7 @@ jobs:
                   f"GitHub Actions run https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{run}",
                   "The paid model has no merge or source-write authority. Release requires native current-head review and custody.",
                   ""]
-          for name in ("reservation.json","api_meta.json","validation.json"):
+          for name in ("reservation.json","response_handle.json","api_meta.json","failure.json","validation.json"):
               src=p/name
               if src.exists():
                   output.extend([name+":", (chr(96)*3)+"json",src.read_text()[:2000],chr(96)*3,""])
