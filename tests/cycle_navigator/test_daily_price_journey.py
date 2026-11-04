@@ -4,7 +4,7 @@ import copy
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from scripts.cycle_navigator.daily_price_journey import CONTRACT, COPY_CONTRACT, validate_daily_path, validated_public_copy, daily_path_issue_summary, DAILY_RANGE_CONTRACT, validate_daily_range_plan, daily_range_plan_schema
+from scripts.cycle_navigator.daily_price_journey import CONTRACT, COPY_CONTRACT, validate_daily_path, validated_public_copy, daily_path_issue_summary, DAILY_RANGE_CONTRACT, validate_daily_range_plan, daily_range_plan_schema, daily_product_acceptance
 from scripts.cycle_navigator.build_public_live_precision import daily_observations
 
 
@@ -130,3 +130,53 @@ def test_prospective_daily_range_plan_seven_days_and_fail_closed():
     plan['BTC']['points'][2]['why'] = ''
     with pytest.raises(ValueError, match='daily_range_explanation_missing'):
         validate_daily_range_plan(plan, freeze, 2026, 41)
+
+
+def test_original_monday_complete_product_requires_fourteen_closes_and_fourteen_daily_ranges():
+    freeze, path = forecast()
+    dayrange = lambda: {
+        'status': 'PUBLISHED', 'reason': 'Prospectively tested conditional ranges',
+        'points': [{'day': day, 'low': 85, 'high': 119,
+                    'why': 'Prior week range and volatility context',
+                    'invalidate_if': 'Weekly evidence ceases to hold'}
+                   for day in range(1, 8)]
+    }
+    freeze['daily_price_path'] = path
+    freeze['daily_range_plan'] = {'contract': DAILY_RANGE_CONTRACT,
+        'forecast_week': '2026-W41',
+        'BTC': dayrange(), 'ETH': dayrange()}
+    freeze['price_quote'] = {'BTC': 'USDT', 'ETH': 'USDT'}
+    monday = datetime(2026, 10, 5, 9, 0, tzinfo=timezone.utc)
+    full = daily_product_acceptance(freeze, 2026, 41, monday)
+    assert full['status'] == 'COMPLETE'
+    assert full['assets']['BTC']['expected_close_points'] == 7
+    assert full['assets']['ETH']['low_high_range_points'] == 7
+    assert full['scoring_authority'] is False
+    assert 'points' not in full
+    assert 'expected_close' not in full
+    original = copy.deepcopy(freeze)
+    freeze['daily_range_plan']['ETH'] = {'status': 'UNAVAILABLE',
+        'points': [], 'reason': 'No independent day-by-day range evidence'}
+    partial = daily_product_acceptance(freeze, 2026, 41, monday)
+    assert partial['status'] == 'INCOMPLETE'
+    assert partial['assets']['BTC']['status'] == 'COMPLETE'
+    assert partial['assets']['ETH']['missing_requirements'] == ['SEVEN_DAILY_LOW_HIGH_RANGES_NOT_ISSUED']
+    assert partial['assets']['ETH']['expected_close_points'] == 7
+    freeze = original
+    freeze['daily_price_path']['BTC'] = {'status': 'UNAVAILABLE',
+        'points': [], 'reason': 'Source abstention, no invented curve'}
+    none = daily_product_acceptance(freeze, 2026, 41, monday)
+    assert none['status'] == 'INCOMPLETE'
+    assert 'SEVEN_DAILY_EXPECTED_CLOSES_NOT_ISSUED' in none['assets']['BTC']['missing_requirements']
+    freeze = original
+    freeze['price_quote']['ETH'] = 'UNAVAILABLE'
+    unknown_unit = daily_product_acceptance(freeze, 2026, 41, monday)
+    assert unknown_unit['status'] == 'INCOMPLETE'
+    assert 'ORIGINAL_FORECAST_QUOTE_NOT_DECLARED' in unknown_unit['assets']['ETH']['missing_requirements']
+    after_first_day = daily_product_acceptance(original, 2026, 41,
+        datetime(2026, 10, 6, 0, 0, tzinfo=timezone.utc))
+    assert after_first_day['status'] == 'INCOMPLETE'
+    assert all('ORIGINAL_ISSUANCE_AFTER_FIRST_UTC_CLOSE_OR_WRONG_WEEK'
+               in x['missing_requirements'] for x in after_first_day['assets'].values())
+    with pytest.raises(ValueError, match='daily_product_issue_clock_unzoned'):
+        daily_product_acceptance(original, 2026, 41, datetime(2026, 10, 5, 9, 0))
