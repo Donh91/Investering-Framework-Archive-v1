@@ -1,6 +1,8 @@
 """No-network native owner-run and GET-only Sol MAX dispatch tests."""
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -49,6 +51,14 @@ class NativeSolDispatchTests(unittest.TestCase):
             event(p, "[S1_SOL_MAX_ELITE] mission=evil\nrm -rf /")
             with self.assertRaisesRegex(ValueError, "COMMENT_MARKER_INVALID"):
                 d.owner_event(p, mode="submit")
+
+    def test_actual_runner_module_cli_loads_without_pythonpath_hack(self):
+        result = subprocess.run(
+            [sys.executable, "-m", "scripts.api_agent.sol_max_elite_dispatch", "--help"],
+            capture_output=True, text=True, check=False, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("preflight", result.stdout)
+        self.assertIn("collect", result.stdout)
 
     def test_native_main_sha_mismatch_blocks_preflight(self):
         with patch.object(d.subprocess, "check_output", return_value=HEAD + "\n"), \
@@ -174,8 +184,11 @@ class NativeSolDispatchTests(unittest.TestCase):
         self.assertIn("github.event.comment.author_association == 'OWNER'", workflow)
         collect = workflow.split("  sol-max-elite-collect:", 1)[1].split(
             "  sol-max-implementation-patch:", 1)[0]
-        self.assertIn("sol_max_elite_dispatch.py collect", collect)
-        self.assertNotIn("sol_max_elite_dispatch.py submit", collect)
+        command = "python -m scripts.api_agent.sol_max_elite_dispatch "
+        self.assertEqual(workflow.count(command), 4)
+        self.assertIn(command + "collect", collect)
+        self.assertNotIn(command + "submit", collect)
+        self.assertNotIn("python scripts/api_agent/sol_max_elite_dispatch.py", workflow)
         self.assertNotIn("api_gateway.py", collect)
         self.assertIn("if: always()", collect)
         self.assertIn("s1-sol-elite-attempt-", workflow)

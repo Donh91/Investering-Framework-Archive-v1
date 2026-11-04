@@ -213,7 +213,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python scripts/api_agent/sol_max_elite_dispatch.py preflight --repo-root . \
+          python -m scripts.api_agent.sol_max_elite_dispatch preflight --repo-root . \
             --event-file "$GITHUB_EVENT_PATH" --output-dir runtime/s1-sol-elite \
             > /tmp/s1-sol-elite-admission.json
           cat /tmp/s1-sol-elite-admission.json
@@ -228,7 +228,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python scripts/api_agent/sol_max_elite_dispatch.py reserve --repo-root . \
+          python -m scripts.api_agent.sol_max_elite_dispatch reserve --repo-root . \
             --event-file "$GITHUB_EVENT_PATH" --output-dir runtime/s1-sol-elite
       - name: Submit ONE source-bound background Sol MAX request, no automatic retry
         if: steps.preflight.outputs.go == 'true'
@@ -236,7 +236,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          python scripts/api_agent/sol_max_elite_dispatch.py submit --repo-root . \
+          python -m scripts.api_agent.sol_max_elite_dispatch submit --repo-root . \
             --event-file "$GITHUB_EVENT_PATH" --output-dir runtime/s1-sol-elite
       - name: Preserve preflight, native reservation and uncertain/known provider handle
         if: always()
@@ -299,7 +299,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          python scripts/api_agent/sol_max_elite_dispatch.py collect \
+          python -m scripts.api_agent.sol_max_elite_dispatch collect \
             --event-file "$GITHUB_EVENT_PATH" \
             --output-dir runtime/s1-sol-elite-collect \
             --artifact-dir runtime/s1-sol-elite-origin
