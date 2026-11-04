@@ -107,7 +107,7 @@ class EliteSandboxTests(unittest.TestCase):
             src, cand, receipt = make_case(repo)
             (repo / PATH).write_bytes(b"def fix():\n    return 999\n")
             with self.assertRaisesRegex(ValueError, "GIT_VERIFICATION_FAILED"):
-                bad = PATCH.replace(b"return 1", b"return 3")
+                bad = PATCH.replace(b"-    return 1", b"-    return 999")
                 cand["patch_sha256"] = t.digest(bad)
                 s.verify_in_sandbox(repo, src, cand, receipt, bad)
             self.assertEqual((repo / PATH).read_bytes(), b"def fix():\n    return 999\n")
