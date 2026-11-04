@@ -738,3 +738,23 @@ test('SITE Graph History link is rendered separately from the exact original Gra
  assert.equal((html.match(/data-premium-nav="graph"/g)||[]).length,1);
  assert.doesNotMatch(tabs,/Math\.sin|forecast_low|forecast_high|fetch\(|probability|probabilit/);
 });
+
+
+test('Kompas v2 14-horizon status is subordinate and cannot overwrite Graph B',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ assert.equal(id(html,'cn-horizon-status-rows'),1);
+ assert.equal(id(html,'cn-horizon-status-heading'),1);
+ assert.equal(id(html,'cn-horizon-status-caption'),1);
+ assert.equal(id(html,'cn-horizon-status-note'),1);
+ assert.ok(html.indexOf('id="cn-reader-title"')<html.indexOf('id="cn-horizon-status-rows"'));
+ assert.ok(html.indexOf('id="cn-horizon-status-rows"')<html.indexOf('id="variant-panel"'));
+ assert.equal(id(html,'variant-panel'),1);
+ const runtime=await read('./root-compass-pro.mjs');
+ const css=await read('./premium-tabs.css');
+ assert.match(runtime,/import \{kompasHorizonStatusRows\}/);
+ assert.match(runtime,/renderHorizonStatus\(\)/);
+ assert.match(runtime,/host\.replaceChildren\(fragment\)/);
+ assert.match(css,/cn-horizon-status-rows/);
+ assert.match(css,/@media\(max-width:760px\)/);
+ assert.doesNotMatch(runtime,/const forecast\s*=\s*\[/);
+});

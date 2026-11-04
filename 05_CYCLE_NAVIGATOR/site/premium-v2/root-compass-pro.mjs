@@ -12,6 +12,7 @@ import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,source
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
+import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -525,6 +526,55 @@ function mondayReadback(){
  const title=$('monday-title');
  if(title)title.textContent=t('Mandagens dokumenterede ugegrundlag','Monday’s verified weekly context');
 }
+// Optional expanded readback of the 14 existing Kompas v2 horizon IDs.
+// Source-dependent directions are projected only from verified Official
+// Compass fields. This UI NEVER issues forecast prices or actions.
+function renderHorizonStatus(){
+ const host=$('cn-horizon-status-rows');
+ if(!host)return;
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ const clock=observedMarketClock({compass:feeds?.compass});
+ const matrix=kompasHorizonStatusRows({
+  compass:feeds?.compass,view,lang,observationCurrent:clock.state==='FRESH_OBSERVATION'
+ });
+ const fragment=document.createDocumentFragment();
+ for(const item of matrix.rows){
+  const row=document.createElement('div');
+  row.className='cn-horizon-status-row';
+  row.setAttribute('role','listitem');
+  row.dataset.tone=item.tone;
+  row.dataset.sourceStatus=item.status;
+  const left=document.createElement('div');
+  left.className='cn-horizon-status-identity';
+  const name=document.createElement('strong');name.textContent=item.label;
+  const qualification=document.createElement('small');
+  qualification.textContent=item.sourceLabel||
+   (lang==='en'?'Source not verified':'Kilde ikke verificeret');
+  left.append(name,qualification);
+  const right=document.createElement('div');
+  right.className='cn-horizon-status-reading';
+  const reading=document.createElement('span');
+  reading.className='cn-horizon-status-direction';
+  reading.textContent=item.value||
+    (lang==='en'?'Not issued':'Ikke udstedt');
+  const price=document.createElement('small');
+  price.textContent=item.priceLabel;
+  right.append(reading,price);
+  row.append(left,right);
+  fragment.append(row);
+ }
+ host.replaceChildren(fragment);
+ host.dataset.officialSourceCurrent=String(matrix.officialSourceCurrent);
+ set('cn-horizon-status-heading',lang==='en'?
+  'Compass PRO · 14 horizons':'Kompas PRO · 14 tidshorisonter');
+ set('cn-horizon-status-caption',lang==='en'?
+  'Source status only. An official direction is not a numeric price forecast.':
+  'Kun kilde- og retningsstatus. Officiel retning er ikke et kursmål.');
+ set('cn-horizon-status-note',lang==='en'?
+  'Forecast prices, forecasts without qualified issuance and trading actions are never inferred here.':
+  'Manglende kursmål, udbudte prognoser og handelssignaler udledes aldrig her.');
+}
+
 function paint(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  try{view=feeds?inspectOfficialPublicFeeds(feeds.latest,feeds.compass,{lang}):null}
@@ -536,6 +586,7 @@ function paint(){
  renderRiskQuick();
  renderOverview();
  renderReader();
+ renderHorizonStatus();
  renderAltMilestone();
  horizons();
  renderForward();
