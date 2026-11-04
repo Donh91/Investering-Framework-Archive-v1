@@ -253,7 +253,7 @@
     {
       "sequence": 10,
       "mission_id": "TASK2-PIT-P0-SOL61-20261019-002",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_AFTER_LAST_VERIFIED_API_RESULT",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-10-19__TASK2_SOL61_PIT_REVIEW_v1.json",
       "context_status": "EXACT_PR1675_2026_10_19_REVISION",
       "context_paths": [
@@ -266,8 +266,28 @@
       "pass_scope": "SEPARATE_NEW_MATERIAL_TASK2_PIT_FALSIFIER_ONE_PAID_PASS",
       "additional_sol_pass_limit": 1,
       "selected_live_rules": [],
+      "new_paid_attempts_authorized": false,
+      "owner_release_reason": "USER_AUTHORIZED_DISTINCT_TASK2_SCIENTIFIC_PIT_ADVERSARIAL_REVIEW_2026_10_19_EXACT_PR1675_HEAD_0e7ac446edd51063d2a4aa2a41a71c8abe27bf0f",
+      "completed_api_results": [
+        "research/api_agent/outputs/research_lab_sol/TASK2-PIT-P0-SOL61-20261019-002/issue-1476/comment-6270675295/receipt.json"
+      ],
+      "owner_hold_reason": "ONE_VERIFIED_2026_10_19_API_RECEIPT; NO_REPEAT"
+    },
+    {
+      "sequence": 11,
+      "mission_id": "CN1879-ROOT-CAUSE-20261104-001",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_ONE_SHOT_v1.json",
+      "context_status": "PINNED_ORIGINAL_PR1879_HEAD_AND_W44_W45_SOURCE_EXCERPTS",
+      "context_paths": [
+        "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_EVIDENCE_v1.md",
+        "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_ONE_SHOT_v1.json"
+      ],
+      "release_gate": "OWNER_ONE_SHOT_AUTHORISED_20261104_WITH_GLOBAL_30_12_3_BUDGET",
+      "pass_scope": "ONE_INDEPENDENT_SOURCE_GATE_FALSIFICATION_NO_CODE_WRITE",
+      "additional_sol_pass_limit": 1,
       "new_paid_attempts_authorized": true,
-      "owner_release_reason": "USER_AUTHORIZED_DISTINCT_TASK2_SCIENTIFIC_PIT_ADVERSARIAL_REVIEW_2026_10_19_EXACT_PR1675_HEAD_0e7ac446edd51063d2a4aa2a41a71c8abe27bf0f"
+      "owner_release_reason": "OWNER_APPROVES_SINGLE_API_ANALYSIS_WITHIN_BUDGET_2026_11_04"
     }
   ],
   "authority": {
@@ -280,6 +300,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "TASK2-PIT-P0-SOL61-20261019-002",
-  "program_phase": "2026_10_19_TASK2_PIT_SOL61_REVIEW_OWNER_RELEASED_SITE_P1_UNMERGED"
+  "active_mission": "CN1879-ROOT-CAUSE-20261104-001",
+  "program_phase": "2026_11_04_CN1879_ONE_SHOT_SOL_ROOT_CAUSE"
 }
