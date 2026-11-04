@@ -14,7 +14,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 VALID_PRECISION = {"TIMESTAMP", "DATE_ONLY", "ASSUMED_UTC_FROM_SOURCE"}
 ADMISSIBLE_VERIFICATION = {"PRIMARY_SOURCE_VERIFIED", "STRONG_INDEPENDENT_VERIFIED"}
-TRACKING_KEYS = {"fbclid", "gclid", "mc_cid", "mc_eid", "ref", "source"}
+TRACKING_KEYS = {"fbclid", "gclid", "mc_cid", "mc_eid"}
 
 
 def _normalise(value: object) -> str:
@@ -46,10 +46,14 @@ def canonical_article_url(value: object) -> str | None:
     if p.scheme not in {"https", "http"} or not p.hostname:
         return None
     host = p.hostname.casefold()
-    if p.port:
-        default = (p.scheme == "http" and p.port == 80) or (p.scheme == "https" and p.port == 443)
+    try:
+        port = p.port
+    except ValueError:
+        return None
+    if port:
+        default = (p.scheme == "http" and port == 80) or (p.scheme == "https" and port == 443)
         if not default:
-            host += f":{p.port}"
+            host += f":{port}"
     params = sorted(
         (k, v) for k, v in parse_qsl(p.query, keep_blank_values=True)
         if k.casefold() not in TRACKING_KEYS and not k.casefold().startswith("utm_")
