@@ -117,6 +117,20 @@ def _run_id_from_original_commit(repo: Path, relative: Path) -> int:
     return int(match.group(1))
 
 
+class NoCrossHostBearerRedirect(urllib.request.HTTPRedirectHandler):
+    """GitHub artifact storage redirects must never receive our GitHub token."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if urllib.parse.urlsplit(newurl).scheme != "https":
+            raise PriceEvidenceError("SOURCE_ARTIFACT_UNSAFE_REDIRECT")
+        redirected = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if redirected is not None and (urllib.parse.urlsplit(newurl).netloc
+                                       != urllib.parse.urlsplit(req.full_url).netloc):
+            redirected.remove_header("Authorization")
+            redirected.remove_header("Cookie")
+        return redirected
+
+
 def _github_artifact_zip(run_id: int, *, repo_full_name: str, token: str) -> bytes:
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo_full_name) or not token:
         raise PriceEvidenceError("SOURCE_ARTIFACT_AUTH_UNAVAILABLE")
@@ -126,7 +140,7 @@ def _github_artifact_zip(run_id: int, *, repo_full_name: str, token: str) -> byt
             "Accept": "application/vnd.github+json", "Authorization": "Bearer " + token,
             "User-Agent": "CN-Original-OHLC-Proof/1"})
         try:
-            with urllib.request.urlopen(request, timeout=20) as response:
+            with urllib.request.build_opener(NoCrossHostBearerRedirect()).open(request, timeout=20) as response:
                 data = response.read(limit + 1)
         except Exception as exc:
             raise PriceEvidenceError("SOURCE_ARTIFACT_TRANSPORT_UNAVAILABLE") from exc
