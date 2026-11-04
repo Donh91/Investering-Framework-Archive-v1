@@ -60,6 +60,92 @@ def candidate_prefix(audit: dict[str, Any]) -> str:
     return f"codex-operational-memory-audit-{failure_fingerprint(audit)}"
 
 
+NOTICE_PREFIX = "OPMEM_NATIVE_NOTICE_v1 "
+
+
+def notice_payload(audit: dict[str, Any], run_id: int) -> dict[str, Any]:
+    """A notification receipt, never proof that repair or recovery succeeded."""
+    if type(run_id) is not int or run_id <= 0:
+        raise ValueError("invalid_native_run_id")
+    status = audit.get("status")
+    if status not in {"FAIL", "PASS", "WARN"}:
+        raise ValueError("invalid_audit_notice_status")
+    return {"run_id": run_id, "status": status,
+            "failure_fingerprint": failure_fingerprint(audit) if status == "FAIL" else None}
+
+
+def native_notice(comment: dict[str, Any], run: dict[str, Any], repository: str) -> dict[str, Any] | None:
+    """Authenticate provenance from native API objects, never marker text alone.
+
+    Caller obtains the comment and referenced run from this repository's API.
+    This trusts the existing GitHub Actions principal, not arbitrary issue users.
+    A compromised trusted workflow is outside this notification-only boundary.
+    """
+    user = comment.get("user") or {}
+    if user.get("login") != "github-actions[bot]" or user.get("type") != "Bot":
+        return None
+    if comment.get("updated_at") != comment.get("created_at"):
+        return None
+    try:
+        first = comment["body"].splitlines()[0]
+        if not first.startswith(NOTICE_PREFIX):
+            return None
+        payload = json.loads(first[len(NOTICE_PREFIX):])
+        if set(payload) != {"run_id", "status", "failure_fingerprint"}:
+            return None
+        run_id = payload["run_id"]
+        if type(run_id) is not int or run_id <= 0 or run.get("id") != run_id:
+            return None
+        if (run.get("path") != ".github/workflows/framework-learning-supervisor.yml"
+                or run.get("head_branch") != "main"
+                or run.get("event") not in {"schedule", "workflow_dispatch", "workflow_run"}
+                or run.get("status") != "completed"
+                or run.get("html_url") != f"https://github.com/{repository}/actions/runs/{run_id}"):
+            return None
+        created = datetime.fromisoformat(comment["created_at"].replace("Z", "+00:00"))
+        started = datetime.fromisoformat(run["run_started_at"].replace("Z", "+00:00"))
+        ended = datetime.fromisoformat(run["updated_at"].replace("Z", "+00:00"))
+        if not started <= created <= ended:
+            return None
+        fingerprint = payload["failure_fingerprint"]
+        if payload["status"] == "FAIL":
+            if (not isinstance(fingerprint, str) or len(fingerprint) != 16
+                    or any(c not in "0123456789abcdef" for c in fingerprint)):
+                return None
+        elif payload["status"] not in {"PASS", "WARN"} or fingerprint is not None:
+            return None
+        return payload
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return None
+
+
+def notification_action(audit: dict[str, Any], latest_notice: dict[str, Any] | None,
+                        *, census_complete: bool) -> str:
+    """Clock/source-HEAD churn cannot reactivate the same failure notice."""
+    if not census_complete:
+        return "NOTICE_EVIDENCE_UNAVAILABLE"
+    status = audit.get("status")
+    if status == "FAIL":
+        if (latest_notice and latest_notice.get("status") == "FAIL"
+                and latest_notice.get("failure_fingerprint") == failure_fingerprint(audit)):
+            return "UNCHANGED_FAILURE_NOOP"
+        return "PUBLISH_FAILURE"
+    if status in {"PASS", "WARN"}:
+        return "RECOVERY_ALREADY_NOTIFIED" if latest_notice and latest_notice.get("status") in {"PASS", "WARN"} else "PUBLISH_RECOVERY"
+    return "NOTICE_EVIDENCE_UNAVAILABLE"
+
+
+def maturation_dispatch_required(route_result: dict[str, Any]) -> bool:
+    """Only first delivery. Durable pending intake is also read by natural runs.
+
+    Caller must commit/read back a newly created candidate BEFORE dispatch.
+    A failed dispatch leaves intake pending; it is never recorded as an ACK.
+    """
+    return (route_result.get("created") is True
+            and route_result.get("reason") == "FAIL_ROUTED_TO_BOUNDED_CODEX_INTAKE"
+            and bool(route_result.get("candidate_id")) and bool(route_result.get("path")))
+
+
 def intake_paths(repo: Path, prefix: str) -> list[Path]:
     root = repo / "research/codex/intake"
     if not root.exists():
@@ -258,3 +344,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

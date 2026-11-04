@@ -90,7 +90,7 @@ class OpportunityTests(unittest.TestCase):
                 "authority": {"type": "ADVISORY_ONLY"},
                 "input_status": "CURRENT", "intent_sha256": "abc123",
                 "generated_at_utc": "2026-11-02T10:00:00Z"}
-        self.assertEqual(strategic_question(problem, good)["state"], "READ_EXISTING_BRIEF")
+        self.assertEqual(strategic_question(problem, good)["state"], "SOURCE_UNVERIFIED")
         with self.assertRaises(AdvisoryInputError):
             strategic_question(problem, {**good, "authority": {"type": "MERGE"}})
 

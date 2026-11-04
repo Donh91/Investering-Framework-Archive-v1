@@ -128,6 +128,40 @@ class AutomationOrchestrationV1Test(unittest.TestCase):
             self.assertFalse(second["agent_calls"]["luna_required"])
             self.assertFalse(second["agent_calls"]["sol_6_1_required"])
 
+    def test_observation_clock_refresh_does_not_repeat_diagnosis(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write_fixture(root, [workflow("repeat.yml", streak=3)])
+            out = root / "out"
+            first = mod.build_plan(root, out)
+            hp = root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
+            health = json.loads(hp.read_text())
+            for hour in range(12):
+                health["generated_at_utc"] = f"2026-10-01T{hour:02}:00:00Z"
+                hp.write_text(json.dumps(health))
+                current = mod.build_plan(root, out)
+                self.assertEqual(first["fingerprint"], current["fingerprint"])
+                self.assertEqual(current["source_health_generated_at_utc"], health["generated_at_utc"])
+                self.assertFalse(current["material_delta"])
+                self.assertFalse(current["agent_calls"]["luna_required"])
+                self.assertFalse(current["agent_calls"]["sol_6_1_required"])
+
+    def test_new_native_run_reactivates_same_head_diagnosis(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write_fixture(root, [workflow("repeat.yml", streak=3)])
+            out = root / "out"
+            first = mod.build_plan(root, out)
+            hp = root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
+            health = json.loads(hp.read_text())
+            health["workflows"][0]["live"]["latest_run"]["id"] = 124
+            hp.write_text(json.dumps(health))
+            current = mod.build_plan(root, out)
+            self.assertNotEqual(first["fingerprint"], current["fingerprint"])
+            self.assertTrue(current["material_delta"])
+            self.assertTrue(current["agent_calls"]["sol_6_1_required"])
+            self.assertTrue(current["guardrails"]["no_automatic_merge"])
+
     def test_finalize_preserves_advisory_authority(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -282,3 +316,4 @@ class AutomationOrchestrationV1Test(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

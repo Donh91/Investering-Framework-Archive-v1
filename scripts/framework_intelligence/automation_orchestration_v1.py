@@ -270,12 +270,15 @@ def build_plan(repo: Path, out_root: Path) -> dict[str, Any]:
             existing_items.append(item)
 
     fingerprint_basis = {
-        "health_generated_at_utc": health.get("generated_at_utc"),
+        # A refreshed observation clock is not a new diagnostic opportunity.
+        # Keep the timestamp in telemetry below, while binding real new native
+        # executions even when HEAD and the reported finding stay unchanged.
         "items": [
             {
                 "workflow": x["workflow"],
                 "findings": x["findings"],
                 "failure_streak": x["failure_streak"],
+                "latest_run_id": x["latest_run_id"],
                 "latest_head_sha": x["latest_head_sha"],
                 "route": x["route"],
                 "remediation_state": (x.get("existing_remediation") or {}).get("state"),
@@ -421,3 +424,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -185,3 +185,64 @@ Premerge G0 MUST check current AGENTS.md section 0.2a, owner issue #1156, origin
 Independent review can be fulfilled by a real exact-head Codex/Grok/approved specialist report with explicit model/provider run evidence. Existing Grok Bridge #137 is an earlier-head schema-only advisory, NOT a current-head review. A Codex quota failure is not a code defect or APPROVED. A requested review is not a received review.
 
 Release status remains G0_UNMERGED until authenticated expected-head integration and main readback are actually complete. G1 transport, G2 hourly task adoption, G3 parked research disposition, and G4 7/28 natural days are separately measured and cannot be claimed merely by merging G0.
+
+## Existing-owner diagnosis and bounded repair
+
+S1 owns operational follow-through, authenticated intake, branch lease, exact-head
+release checks and closure readback. The existing Framework Strategist owns
+read-only goal alignment, competing hypotheses, falsifiers and owner ambiguity;
+its brief never grants code, merge, spend or scientific authority. Archive-Alpha
+retains the original research case, prospective outcome and negative findings.
+An Alpha handoff must use the existing source-bound REQUEST/ACK/RESULT sequence
+and existing original owner link; a comment or proposal is not execution.
+
+For a repeated failure, S1 first reads the current native run, existing remediation
+and Operational Memory preflight. Reuse an active original repair instead of
+creating another task. The existing automation_orchestration_v1.py provides
+shared-head diagnosis and existing-owner routing. Its material fingerprint ignores
+an observation-clock refresh but includes the native run identity, so unchanged
+telemetry does not request another diagnostic model call. A new run is evidence
+for reassessment, not spend authorization or proof of a successful repair.
+
+For a repair within current owner authority, use the existing capability_router.py
+hardened task contract, explicit allowed paths, deterministic positive/negative
+tests, current runtime capability census, single-writer lease and existing Codex
+intake. Router READY is a routing result, never write authority. Prefer a bounded
+deterministic diagnostic before a code executor; use actual existing capabilities,
+not an unavailable model name. Preserve the router's unit cost/token limits,
+maximum delegation depth and at most one permitted redelegation. No paid call is
+authorized by this contract. An unavailable executor, exhausted attempt, denied
+platform action or out-of-scope repair returns to the original owner with exact
+reason and a verifiable reactivation event, while unrelated work continues.
+
+When the same failed strategy recurs, S1 records the existing repair's hypothesis,
+observed failure, falsifier and bounded alternative in its original receipt. Ask
+the existing Strategist for owner/alternative advice only when the original case
+is ambiguous; do not repeat the unchanged repair or create a competing controller.
+Preserve the four-material-treatment terminal rule and authenticated material
+reactivation. After a patch, require executed tests, original-PR integration and
+main readback, then the natural domain observation before claiming recovery.
+
+This extends existing owner duties only. No schedule, paid runner or Chat S1 task
+is activated by these source changes. Natural S1 consumption, real Alpha ACK and
+successful post-fix production remain separately observable acceptance events.
+
+Operational Memory notification dedupe uses the existing failure fingerprint,
+not refreshed source HEAD or clock. Only an unedited GitHub Actions comment bound
+to this repository's completed learning workflow run can suppress the same
+notice. Reads are bounded to two comment pages and ten run lookups; incomplete
+provenance yields NOTICE_EVIDENCE_UNAVAILABLE, never recovered or delivered.
+A changed failure produces a new notice; recovery produces one notice and a
+retryable close. Audit FAIL enforcement is independent of all notifications.
+The original intake is dispatched only after a new candidate's durable main
+readback. Existing pending intake is consumed by the existing natural maturation
+schedule; dispatch failure does not manufacture an ACK or authorize repeated
+dispatch. No cadence changes are part of this repair.
+
+For Strategist correlation, call the existing `strategic_question` with
+`source_root` pointing to the authenticated current checkout and `now` containing
+the current UTC-aware datetime. Its existing main-read verification checks
+receipt age and source hashes before accepting a matched proposal. A supplied
+`input_status=CURRENT` is not verification; missing source verification remains
+`SOURCE_UNVERIFIED`. The caller must not replace missing native source bytes with
+claims from a comment or cached brief.

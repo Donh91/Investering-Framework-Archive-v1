@@ -1139,6 +1139,8 @@ jobs:
           import os
           import subprocess
           from pathlib import Path
+          from scripts.framework_intelligence.operational_memory_fail_to_codex_intake_v1 import (
+              NOTICE_PREFIX, native_notice, notice_payload, notification_action)
 
           repo=os.environ['GITHUB_REPOSITORY']
           title=os.environ['ISSUE_TITLE']
@@ -1151,12 +1153,57 @@ jobs:
               audit={'status':'FAIL','failures':['audit_file_missing_or_invalid'],'warnings':[],'source_head_sha':os.environ.get('GITHUB_SHA')}
               status='FAIL'
 
-          raw=subprocess.check_output(['gh','issue','list','--repo',repo,'--state','open','--limit','100','--json','number,title'],text=True)
+          raw=subprocess.check_output(['gh','issue','list','--repo',repo,'--state','open','--limit','100','--json','number,title,author'],text=True)
           issues=json.loads(raw)
-          existing=next((x for x in issues if x.get('title')==title),None)
+          existing=next((x for x in issues if x.get('title')==title and
+                         (x.get('author') or {}).get('login') in {'github-actions[bot]', 'app/github-actions'}),None)
 
-          if status=='FAIL':
+          # Bounded native census, never trust a copied receipt marker alone.
+          # At most one issue read, two comment pages and ten run lookups.
+          latest_notice=None
+          census_complete=True
+          if existing:
+              issue=json.loads(subprocess.check_output(['gh','api',f"repos/{repo}/issues/{existing['number']}"],text=True))
+              count=int(issue.get('comments') or 0)
+              last_page=max(1,(count+99)//100)
+              comments=[]
+              for page in range(max(1,last_page-1),last_page+1):
+                  comments.extend(json.loads(subprocess.check_output(['gh','api',f"repos/{repo}/issues/{existing['number']}/comments?per_page=100&page={page}"],text=True)))
+              records=sorted(comments,key=lambda row:int(row.get('id') or 0),reverse=True)
+              # Trust immutable bot comments only, never the editable issue body.
+              lookups=0
+              for record in records:
+                  if (record.get('user') or {}).get('login') != 'github-actions[bot]':
+                      continue
+                  first=(record.get('body') or '').splitlines()
+                  if not first or not first[0].startswith(NOTICE_PREFIX):
+                      continue
+                  try:
+                      run_id=json.loads(first[0][len(NOTICE_PREFIX):]).get('run_id')
+                      if type(run_id) is not int or run_id<=0:
+                          continue
+                      lookups+=1
+                      if lookups>10:
+                          census_complete=False
+                          break
+                      run=json.loads(subprocess.check_output(['gh','api',f"repos/{repo}/actions/runs/{run_id}"],text=True))
+                      latest_notice=native_notice(record,run,repo)
+                      if latest_notice:
+                          break
+                      census_complete=False
+                      break
+                  except (ValueError,TypeError,subprocess.CalledProcessError):
+                      census_complete=False
+                      break
+              # Do not infer absence from a truncated comments census.
+              if latest_notice is None and count>200:
+                  census_complete=False
+          action=notification_action(audit,latest_notice,census_complete=census_complete)
+          receipt=NOTICE_PREFIX+json.dumps(notice_payload(audit,int(os.environ['GITHUB_RUN_ID'])),sort_keys=True)+'\n\n'
+
+          if status=='FAIL' and action=='PUBLISH_FAILURE':
               body=(
+                  receipt+
                   'Operational Memory post-production audit failed. Memory reuse for this run is blocked.\n\n'
                   f"Run: {run_url}\n"
                   f"Source head: `{audit.get('source_head_sha')}`\n"
@@ -1167,11 +1214,15 @@ jobs:
               if existing:
                   subprocess.run(['gh','issue','comment',str(existing['number']),'--repo',repo,'--body',body],check=True)
               else:
-                  subprocess.run(['gh','issue','create','--repo',repo,'--title',title,'--body',body],check=True)
-          elif existing:
-              body=f"Recovered automatically on {run_url}. Audit status: `{status}`. Closing automation-owned incident."
-              subprocess.run(['gh','issue','comment',str(existing['number']),'--repo',repo,'--body',body],check=True)
+                  issue_url=subprocess.check_output(['gh','issue','create','--repo',repo,'--title',title,'--body','Operational Memory incident. Native failure receipts follow in comments.'],text=True).strip()
+                  subprocess.run(['gh','issue','comment',issue_url,'--repo',repo,'--body',body],check=True)
+          elif existing and status in {'PASS','WARN'} and action in {'PUBLISH_RECOVERY','RECOVERY_ALREADY_NOTIFIED'}:
+              if action=='PUBLISH_RECOVERY':
+                  body=receipt+f"Recovered automatically on {run_url}. Audit status: `{status}`. Closing automation-owned incident."
+                  subprocess.run(['gh','issue','comment',str(existing['number']),'--repo',repo,'--body',body],check=True)
               subprocess.run(['gh','issue','close',str(existing['number']),'--repo',repo],check=True)
+          else:
+              print('Operational Memory notification:',action,'; audit enforcement unchanged')
           PY
       - name: Route failed audit to bounded Codex remediation
         if: always()
@@ -1224,7 +1275,8 @@ jobs:
           )"
           created="$(python - <<'PY'
           import json,os
-          print('true' if json.loads(os.environ['OPMEM_ROUTE_RESULT']).get('created') else 'false')
+          from scripts.framework_intelligence.operational_memory_fail_to_codex_intake_v1 import maturation_dispatch_required
+          print('true' if maturation_dispatch_required(json.loads(os.environ['OPMEM_ROUTE_RESULT'])) else 'false')
           PY
           )"
 
@@ -1244,7 +1296,15 @@ jobs:
             [ "$pushed" = true ]
           fi
 
-          gh workflow run remediation-maturation.yml --repo "$GITHUB_REPOSITORY" --ref main
+          if [ "$created" = "true" ]; then
+            # First delivery only. A failed dispatch leaves durable intake for
+            # the receiver's existing natural schedule, never a fabricated ACK.
+            git fetch origin main
+            git show "origin/main:$path" | cmp - "$path"
+            gh workflow run remediation-maturation.yml --repo "$GITHUB_REPOSITORY" --ref main
+          else
+            echo 'Existing intake retained; natural maturation consumes it without duplicate dispatch.'
+          fi
       - name: Enforce Operational Memory audit gate
         if: always()
         run: |
@@ -1304,3 +1364,4 @@ jobs:
             git show origin/main:"$rel" > "$tmp"
             cmp -s "$rel" "$tmp" || { echo "framework_learning_main_readback_mismatch:$rel"; exit 1; }
           done
+

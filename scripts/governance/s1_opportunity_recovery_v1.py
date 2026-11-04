@@ -133,8 +133,12 @@ def select_cases(cases, maximum=3):
     } for _, item in result]
 
 
-def strategic_question(item, brief):
-    """Use only existing Strategist advisory, not an LLM/API dispatch."""
+def strategic_question(item, brief, *, source_root=None, now=None):
+    """Correlate offline advice only after the existing source reader accepts it.
+
+    A supplied CURRENT label is not verification. source_root is a local checkout;
+    this boundary performs no network access, dispatch or file writes.
+    """
     _check(item)
     needs_advice = any(item.get(k) is True for k in (
         "ambiguous_owner", "cross_domain_conflict",
@@ -144,14 +148,34 @@ def strategic_question(item, brief):
         return {"state": "NOT_NEEDED", "release_authority": False}
     if not isinstance(brief, dict) or brief.get("contract") != "FRAMEWORK_STRATEGIST_BRIEF_v1":
         return {"state": "SOURCE_UNAVAILABLE", "release_authority": False}
-    if brief.get("authority", {}).get("type") != "ADVISORY_ONLY":
+    if (not isinstance(brief.get("authority"), dict)
+            or brief["authority"].get("type") != "ADVISORY_ONLY"):
         raise AdvisoryInputError("Strategist cannot escalate authority")
     if brief.get("input_status") != "CURRENT" or not brief.get("intent_sha256"):
         return {"state": "STALE_BRIEF", "release_authority": False}
+    if source_root is None or now is None:
+        return {"state": "SOURCE_UNVERIFIED", "release_authority": False}
+    from pathlib import Path
+    from scripts.framework_intelligence.framework_learning_supervisor import read_strategist_advisory
+    root = Path(source_root)
+    verified = read_strategist_advisory(root, now)
+    if verified.get("status") != "ADVISORY_PREVIOUS_EVIDENCE":
+        state = "SOURCE_UNAVAILABLE" if verified.get("status") == "UNAVAILABLE" else "SOURCE_UNVERIFIED"
+        return {"state": state, "reason": verified.get("status"),
+                "release_authority": False}
+    try:
+        raw = (root / verified["reference"]).read_bytes()
+        if (sha256(raw).hexdigest() != verified.get("source_sha256")
+                or json.loads(raw) != brief):
+            return {"state": "SOURCE_UNVERIFIED", "reason": "BRIEF_CHANGED",
+                    "release_authority": False}
+    except (OSError, ValueError, UnicodeDecodeError):
+        return {"state": "SOURCE_UNAVAILABLE", "release_authority": False}
     bound = {
         "case": item["evidence_fingerprint"],
         "intent": brief["intent_sha256"],
         "generated": brief.get("generated_at_utc"),
+        "source_sha256": verified["source_sha256"],
     }
     matches = []
     for proposal in brief.get("proposals", []):
