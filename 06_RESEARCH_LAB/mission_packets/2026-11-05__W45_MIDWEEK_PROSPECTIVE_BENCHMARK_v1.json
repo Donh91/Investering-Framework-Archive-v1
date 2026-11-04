@@ -1,0 +1,1610 @@
+{
+  "contract": "RESEARCH_W45_MIDWEEK_FORWARD_BENCHMARK_v1",
+  "category": "SHADOW_RESEARCH_ONLY_NOT_ORIGINAL_CN_ISSUANCE",
+  "forecast_week": "2026-W45",
+  "generated_at_utc": "2026-11-04T23:29:12.208Z",
+  "historical_original_weekly_freeze_sha256": "e933a2c8a08669a7acbe1542c24b1fddd4a5f7852131d83f2b98369834ac1be1",
+  "original_W45_daily_price_path_status": {
+    "BTC": "UNAVAILABLE",
+    "ETH": "UNAVAILABLE"
+  },
+  "original_W45_daily_range_plan_status": {
+    "BTC": "UNAVAILABLE",
+    "ETH": "UNAVAILABLE"
+  },
+  "source": {
+    "upstream_owner": "03_DAILY_CAPTURE_LOGS/hourly (PASS spot hours only)",
+    "captured_from_read_only_main_sha": "aa4885aa7d42a85d297a347dcd73708129cdfb89",
+    "provider_first_known_verified": false,
+    "source_clock_basis": "timestamp_utc + one hour = candle close; source_window_end_utc = capture batch latest source time, not necessarily exact candle close",
+    "observed_as_of_utc": "2026-11-04T22:00:00Z",
+    "file_blobs": [
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-26.csv",
+        "git_blob_sha": "9866e34b490d1684514ed31eddf35000db131ec4"
+      },
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-27.csv",
+        "git_blob_sha": "8cb948f024418d6be3497968f11eedc62e0f0a1d"
+      },
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-28.csv",
+        "git_blob_sha": "fb34cd6299b9e1a97b7a06e70f7070cf38b6eb85"
+      },
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-29.csv",
+        "git_blob_sha": "a7ab3bd312ef5ecc5a40ab0d3996540671afc59c"
+      },
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-30.csv",
+        "git_blob_sha": "3ee37647a78c7ad5705fc683a4d7d4c2dae5c284"
+      },
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/10/2026-10-31.csv",
+        "git_blob_sha": "c65763460e6cd15abb8c60ed84881fe3ab4eaebe"
+      },
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-01.csv",
+        "git_blob_sha": "66a8df333e2280f44bbcc5ea2984fb77ee9c40d0"
+      },
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-02.csv",
+        "git_blob_sha": "b9cdbc7696e1e91c903a694708a21f13c86b2f35"
+      },
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-03.csv",
+        "git_blob_sha": "2bfff1294bc7c571be13c703fa85c18ba9d78e2e"
+      },
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-04.csv",
+        "git_blob_sha": "edc106de20a27f34e040814c46550255128b6095"
+      }
+    ],
+    "completed_prior_week_hours": 168,
+    "current_week_observed_hours": 70,
+    "monotone_hourly_source": true,
+    "assets_quote": "USDT"
+  },
+  "forecast": {
+    "origin_utc": "2026-11-04T23:29:12.208Z",
+    "first_future_calendar_day": "2026-11-05",
+    "last_future_calendar_day": "2026-11-08",
+    "source_admitted_for_official_CN": false,
+    "site_blue_original_forecast_eligible": false,
+    "official_scoring_eligible": false,
+    "portfolio_action_authority": false,
+    "research_models": {
+      "B0": "FLAT_LAST_OBSERVED_SPOT_CLOSE",
+      "B1": "DECAYED_35PCT_RECENT_24H_LOG_MOMENTUM_WITH_2PCT_DAY_CAP",
+      "dispersion": "ONE_POINT_FIVE_TIMES_SAMPLE_HOURLY_LOG_RETURN_SD_SQRT_24H_K; NOT PROBABILITY OR INTRADAY HIGH_LOW"
+    },
+    "assets": {
+      "BTC": {
+        "native_quote": "USDT",
+        "native_spot_pair": "BTCUSDT",
+        "source_anchor_close": 80240.18,
+        "source_anchor_at_utc": "2026-11-04T22:00:00Z",
+        "prior_24h_close": 77902.52,
+        "momentum_24h_pct": 3.001,
+        "empirical_hourly_log_return_sd": 0.00391547,
+        "hourly_return_count": 237,
+        "forecast": [
+          {
+            "day": 4,
+            "utc_date": "2026-11-05",
+            "target_close_at_utc": "2026-11-06T00:00:00Z",
+            "B0_persistence_expected_close": 80240.18,
+            "B1_decay_momentum_expected_close": 81074.83,
+            "heuristic_terminal_close_low": 77964.35,
+            "heuristic_terminal_close_high": 82582.44
+          },
+          {
+            "day": 5,
+            "utc_date": "2026-11-06",
+            "target_close_at_utc": "2026-11-07T00:00:00Z",
+            "B0_persistence_expected_close": 80240.18,
+            "B1_decay_momentum_expected_close": 81579.78,
+            "heuristic_terminal_close_low": 77040.68,
+            "heuristic_terminal_close_high": 83572.55
+          },
+          {
+            "day": 6,
+            "utc_date": "2026-11-07",
+            "target_close_at_utc": "2026-11-08T00:00:00Z",
+            "B0_persistence_expected_close": 80240.18,
+            "B1_decay_momentum_expected_close": 81884.25,
+            "heuristic_terminal_close_low": 76339.36,
+            "heuristic_terminal_close_high": 84340.33
+          },
+          {
+            "day": 7,
+            "utc_date": "2026-11-08",
+            "target_close_at_utc": "2026-11-09T00:00:00Z",
+            "B0_persistence_expected_close": 80240.18,
+            "B1_decay_momentum_expected_close": 82067.49,
+            "heuristic_terminal_close_low": 75753.07,
+            "heuristic_terminal_close_high": 84993.08
+          }
+        ]
+      },
+      "ETH": {
+        "native_quote": "USDT",
+        "native_spot_pair": "ETHUSDT",
+        "source_anchor_close": 2418.34,
+        "source_anchor_at_utc": "2026-11-04T22:00:00Z",
+        "prior_24h_close": 2294.67,
+        "momentum_24h_pct": 5.389,
+        "empirical_hourly_log_return_sd": 0.00514583,
+        "hourly_return_count": 237,
+        "forecast": [
+          {
+            "day": 4,
+            "utc_date": "2026-11-05",
+            "target_close_at_utc": "2026-11-06T00:00:00Z",
+            "B0_persistence_expected_close": 2418.34,
+            "B1_decay_momentum_expected_close": 2463.18,
+            "heuristic_terminal_close_low": 2328.6,
+            "heuristic_terminal_close_high": 2511.54
+          },
+          {
+            "day": 5,
+            "utc_date": "2026-11-06",
+            "target_close_at_utc": "2026-11-07T00:00:00Z",
+            "B0_persistence_expected_close": 2418.34,
+            "B1_decay_momentum_expected_close": 2490.48,
+            "heuristic_terminal_close_low": 2292.41,
+            "heuristic_terminal_close_high": 2551.19
+          },
+          {
+            "day": 6,
+            "utc_date": "2026-11-07",
+            "target_close_at_utc": "2026-11-08T00:00:00Z",
+            "B0_persistence_expected_close": 2418.34,
+            "B1_decay_momentum_expected_close": 2507.01,
+            "heuristic_terminal_close_low": 2265.02,
+            "heuristic_terminal_close_high": 2582.03
+          },
+          {
+            "day": 7,
+            "utc_date": "2026-11-08",
+            "target_close_at_utc": "2026-11-09T00:00:00Z",
+            "B0_persistence_expected_close": 2418.34,
+            "B1_decay_momentum_expected_close": 2516.98,
+            "heuristic_terminal_close_low": 2242.19,
+            "heuristic_terminal_close_high": 2608.33
+          }
+        ]
+      }
+    }
+  },
+  "observations": [
+    {
+      "candle_close_at_utc": "2026-10-26T01:00:00Z",
+      "source_window_end_utc": "2026-10-26T01:00:00Z",
+      "BTC_USDT": 80168,
+      "ETH_USDT": 2330
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T02:00:00Z",
+      "source_window_end_utc": "2026-10-26T05:00:00Z",
+      "BTC_USDT": 79756.51,
+      "ETH_USDT": 2315.01
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T03:00:00Z",
+      "source_window_end_utc": "2026-10-26T05:00:00Z",
+      "BTC_USDT": 79580.52,
+      "ETH_USDT": 2304.86
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T04:00:00Z",
+      "source_window_end_utc": "2026-10-26T05:00:00Z",
+      "BTC_USDT": 79598.02,
+      "ETH_USDT": 2303.1
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T05:00:00Z",
+      "source_window_end_utc": "2026-10-26T05:00:00Z",
+      "BTC_USDT": 80134.01,
+      "ETH_USDT": 2322.13
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T06:00:00Z",
+      "source_window_end_utc": "2026-10-26T06:00:00Z",
+      "BTC_USDT": 80263.32,
+      "ETH_USDT": 2327.46
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T07:00:00Z",
+      "source_window_end_utc": "2026-10-26T07:00:00Z",
+      "BTC_USDT": 80130.01,
+      "ETH_USDT": 2320.32
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T08:00:00Z",
+      "source_window_end_utc": "2026-10-26T11:00:00Z",
+      "BTC_USDT": 80046.71,
+      "ETH_USDT": 2318.71
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T09:00:00Z",
+      "source_window_end_utc": "2026-10-26T11:00:00Z",
+      "BTC_USDT": 80235.14,
+      "ETH_USDT": 2325.52
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T10:00:00Z",
+      "source_window_end_utc": "2026-10-26T11:00:00Z",
+      "BTC_USDT": 80538.53,
+      "ETH_USDT": 2336.04
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T11:00:00Z",
+      "source_window_end_utc": "2026-10-26T11:00:00Z",
+      "BTC_USDT": 80370.01,
+      "ETH_USDT": 2328.37
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T12:00:00Z",
+      "source_window_end_utc": "2026-10-26T14:00:00Z",
+      "BTC_USDT": 80416.01,
+      "ETH_USDT": 2334.05
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T13:00:00Z",
+      "source_window_end_utc": "2026-10-26T14:00:00Z",
+      "BTC_USDT": 80332.71,
+      "ETH_USDT": 2324
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T14:00:00Z",
+      "source_window_end_utc": "2026-10-26T14:00:00Z",
+      "BTC_USDT": 79702.63,
+      "ETH_USDT": 2303.17
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T15:00:00Z",
+      "source_window_end_utc": "2026-10-26T15:00:00Z",
+      "BTC_USDT": 80411.37,
+      "ETH_USDT": 2327.31
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T16:00:00Z",
+      "source_window_end_utc": "2026-10-26T19:00:00Z",
+      "BTC_USDT": 80427.69,
+      "ETH_USDT": 2328.26
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T17:00:00Z",
+      "source_window_end_utc": "2026-10-26T19:00:00Z",
+      "BTC_USDT": 80236.25,
+      "ETH_USDT": 2321.27
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T18:00:00Z",
+      "source_window_end_utc": "2026-10-26T19:00:00Z",
+      "BTC_USDT": 80334.01,
+      "ETH_USDT": 2325.75
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T19:00:00Z",
+      "source_window_end_utc": "2026-10-26T19:00:00Z",
+      "BTC_USDT": 79992.01,
+      "ETH_USDT": 2314.29
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T20:00:00Z",
+      "source_window_end_utc": "2026-10-26T20:00:00Z",
+      "BTC_USDT": 80020.01,
+      "ETH_USDT": 2318.2
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T21:00:00Z",
+      "source_window_end_utc": "2026-10-27T00:00:00Z",
+      "BTC_USDT": 79864.94,
+      "ETH_USDT": 2306.59
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T22:00:00Z",
+      "source_window_end_utc": "2026-10-27T00:00:00Z",
+      "BTC_USDT": 80105.24,
+      "ETH_USDT": 2311.3
+    },
+    {
+      "candle_close_at_utc": "2026-10-26T23:00:00Z",
+      "source_window_end_utc": "2026-10-27T00:00:00Z",
+      "BTC_USDT": 80001.86,
+      "ETH_USDT": 2313.91
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T00:00:00Z",
+      "source_window_end_utc": "2026-10-27T00:00:00Z",
+      "BTC_USDT": 80150.56,
+      "ETH_USDT": 2324.55
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T01:00:00Z",
+      "source_window_end_utc": "2026-10-27T01:00:00Z",
+      "BTC_USDT": 80223.79,
+      "ETH_USDT": 2327.12
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T02:00:00Z",
+      "source_window_end_utc": "2026-10-27T05:00:00Z",
+      "BTC_USDT": 80071.43,
+      "ETH_USDT": 2323.65
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T03:00:00Z",
+      "source_window_end_utc": "2026-10-27T05:00:00Z",
+      "BTC_USDT": 79818.02,
+      "ETH_USDT": 2313.73
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T04:00:00Z",
+      "source_window_end_utc": "2026-10-27T05:00:00Z",
+      "BTC_USDT": 79819.56,
+      "ETH_USDT": 2314.88
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T05:00:00Z",
+      "source_window_end_utc": "2026-10-27T05:00:00Z",
+      "BTC_USDT": 79759.26,
+      "ETH_USDT": 2313.34
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T06:00:00Z",
+      "source_window_end_utc": "2026-10-27T06:00:00Z",
+      "BTC_USDT": 79976.8,
+      "ETH_USDT": 2316.3
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T07:00:00Z",
+      "source_window_end_utc": "2026-10-27T10:00:00Z",
+      "BTC_USDT": 79669.99,
+      "ETH_USDT": 2305.44
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T08:00:00Z",
+      "source_window_end_utc": "2026-10-27T10:00:00Z",
+      "BTC_USDT": 79806.72,
+      "ETH_USDT": 2314.9
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T09:00:00Z",
+      "source_window_end_utc": "2026-10-27T10:00:00Z",
+      "BTC_USDT": 79871.15,
+      "ETH_USDT": 2313.84
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T10:00:00Z",
+      "source_window_end_utc": "2026-10-27T10:00:00Z",
+      "BTC_USDT": 79776.99,
+      "ETH_USDT": 2313.05
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T11:00:00Z",
+      "source_window_end_utc": "2026-10-27T11:00:00Z",
+      "BTC_USDT": 79968.01,
+      "ETH_USDT": 2316.49
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T12:00:00Z",
+      "source_window_end_utc": "2026-10-27T12:00:00Z",
+      "BTC_USDT": 79910.01,
+      "ETH_USDT": 2316.04
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T13:00:00Z",
+      "source_window_end_utc": "2026-10-27T13:00:00Z",
+      "BTC_USDT": 80365.66,
+      "ETH_USDT": 2335.22
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T14:00:00Z",
+      "source_window_end_utc": "2026-10-27T15:00:00Z",
+      "BTC_USDT": 80045,
+      "ETH_USDT": 2322.32
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T15:00:00Z",
+      "source_window_end_utc": "2026-10-27T15:00:00Z",
+      "BTC_USDT": 80356.23,
+      "ETH_USDT": 2334.83
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T16:00:00Z",
+      "source_window_end_utc": "2026-10-27T16:00:00Z",
+      "BTC_USDT": 80562.27,
+      "ETH_USDT": 2347.18
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T17:00:00Z",
+      "source_window_end_utc": "2026-10-27T17:00:00Z",
+      "BTC_USDT": 80662,
+      "ETH_USDT": 2351.41
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T18:00:00Z",
+      "source_window_end_utc": "2026-10-27T18:00:00Z",
+      "BTC_USDT": 80507.74,
+      "ETH_USDT": 2346.3
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T19:00:00Z",
+      "source_window_end_utc": "2026-10-27T19:00:00Z",
+      "BTC_USDT": 80624,
+      "ETH_USDT": 2344.05
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T20:00:00Z",
+      "source_window_end_utc": "2026-10-27T20:00:00Z",
+      "BTC_USDT": 80817.76,
+      "ETH_USDT": 2347.98
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T21:00:00Z",
+      "source_window_end_utc": "2026-10-27T21:00:00Z",
+      "BTC_USDT": 80797.11,
+      "ETH_USDT": 2344.61
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T22:00:00Z",
+      "source_window_end_utc": "2026-10-27T22:00:00Z",
+      "BTC_USDT": 80913.37,
+      "ETH_USDT": 2350.97
+    },
+    {
+      "candle_close_at_utc": "2026-10-27T23:00:00Z",
+      "source_window_end_utc": "2026-10-27T23:00:00Z",
+      "BTC_USDT": 80905.75,
+      "ETH_USDT": 2350.46
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T00:00:00Z",
+      "source_window_end_utc": "2026-10-28T00:00:00Z",
+      "BTC_USDT": 80909.77,
+      "ETH_USDT": 2350.36
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T01:00:00Z",
+      "source_window_end_utc": "2026-10-28T01:00:00Z",
+      "BTC_USDT": 80747.14,
+      "ETH_USDT": 2346.68
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T02:00:00Z",
+      "source_window_end_utc": "2026-10-28T02:00:00Z",
+      "BTC_USDT": 80952.01,
+      "ETH_USDT": 2355.36
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T03:00:00Z",
+      "source_window_end_utc": "2026-10-28T03:00:00Z",
+      "BTC_USDT": 80950.59,
+      "ETH_USDT": 2357.5
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T04:00:00Z",
+      "source_window_end_utc": "2026-10-28T04:00:00Z",
+      "BTC_USDT": 81145.11,
+      "ETH_USDT": 2360.63
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T05:00:00Z",
+      "source_window_end_utc": "2026-10-28T05:00:00Z",
+      "BTC_USDT": 80994,
+      "ETH_USDT": 2355.61
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T06:00:00Z",
+      "source_window_end_utc": "2026-10-28T06:00:00Z",
+      "BTC_USDT": 80900.57,
+      "ETH_USDT": 2352.13
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T07:00:00Z",
+      "source_window_end_utc": "2026-10-28T07:00:00Z",
+      "BTC_USDT": 80867.61,
+      "ETH_USDT": 2351.83
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T08:00:00Z",
+      "source_window_end_utc": "2026-10-28T08:00:00Z",
+      "BTC_USDT": 81082,
+      "ETH_USDT": 2361.36
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T09:00:00Z",
+      "source_window_end_utc": "2026-10-28T09:00:00Z",
+      "BTC_USDT": 81479.02,
+      "ETH_USDT": 2372.29
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T10:00:00Z",
+      "source_window_end_utc": "2026-10-28T11:00:00Z",
+      "BTC_USDT": 81550,
+      "ETH_USDT": 2373.29
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T11:00:00Z",
+      "source_window_end_utc": "2026-10-28T11:00:00Z",
+      "BTC_USDT": 81500.01,
+      "ETH_USDT": 2368.76
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T12:00:00Z",
+      "source_window_end_utc": "2026-10-28T12:00:00Z",
+      "BTC_USDT": 81341.96,
+      "ETH_USDT": 2361.64
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T13:00:00Z",
+      "source_window_end_utc": "2026-10-28T13:00:00Z",
+      "BTC_USDT": 80749.78,
+      "ETH_USDT": 2340
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T14:00:00Z",
+      "source_window_end_utc": "2026-10-28T14:00:00Z",
+      "BTC_USDT": 80740.01,
+      "ETH_USDT": 2336.31
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T15:00:00Z",
+      "source_window_end_utc": "2026-10-28T15:00:00Z",
+      "BTC_USDT": 80599.27,
+      "ETH_USDT": 2333.33
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T16:00:00Z",
+      "source_window_end_utc": "2026-10-28T16:00:00Z",
+      "BTC_USDT": 80553.13,
+      "ETH_USDT": 2334.87
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T17:00:00Z",
+      "source_window_end_utc": "2026-10-28T18:00:00Z",
+      "BTC_USDT": 80626.01,
+      "ETH_USDT": 2335.56
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T18:00:00Z",
+      "source_window_end_utc": "2026-10-28T18:00:00Z",
+      "BTC_USDT": 80860.01,
+      "ETH_USDT": 2344.93
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T19:00:00Z",
+      "source_window_end_utc": "2026-10-28T19:00:00Z",
+      "BTC_USDT": 81011.68,
+      "ETH_USDT": 2355.05
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T20:00:00Z",
+      "source_window_end_utc": "2026-10-28T20:00:00Z",
+      "BTC_USDT": 81585.39,
+      "ETH_USDT": 2371.51
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T21:00:00Z",
+      "source_window_end_utc": "2026-10-28T21:00:00Z",
+      "BTC_USDT": 81329.72,
+      "ETH_USDT": 2360.92
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T22:00:00Z",
+      "source_window_end_utc": "2026-10-28T22:00:00Z",
+      "BTC_USDT": 81370.01,
+      "ETH_USDT": 2364.72
+    },
+    {
+      "candle_close_at_utc": "2026-10-28T23:00:00Z",
+      "source_window_end_utc": "2026-10-28T23:00:00Z",
+      "BTC_USDT": 81276.01,
+      "ETH_USDT": 2360.3
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T00:00:00Z",
+      "source_window_end_utc": "2026-10-29T00:00:00Z",
+      "BTC_USDT": 81343.5,
+      "ETH_USDT": 2359.68
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T01:00:00Z",
+      "source_window_end_utc": "2026-10-29T01:00:00Z",
+      "BTC_USDT": 81106.15,
+      "ETH_USDT": 2354.51
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T02:00:00Z",
+      "source_window_end_utc": "2026-10-29T02:00:00Z",
+      "BTC_USDT": 80019.56,
+      "ETH_USDT": 2314.29
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T03:00:00Z",
+      "source_window_end_utc": "2026-10-29T03:00:00Z",
+      "BTC_USDT": 79964,
+      "ETH_USDT": 2312.19
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T04:00:00Z",
+      "source_window_end_utc": "2026-10-29T04:00:00Z",
+      "BTC_USDT": 79858.01,
+      "ETH_USDT": 2309.03
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T05:00:00Z",
+      "source_window_end_utc": "2026-10-29T05:00:00Z",
+      "BTC_USDT": 80256.22,
+      "ETH_USDT": 2321.64
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T06:00:00Z",
+      "source_window_end_utc": "2026-10-29T07:00:00Z",
+      "BTC_USDT": 80234.14,
+      "ETH_USDT": 2323.07
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T07:00:00Z",
+      "source_window_end_utc": "2026-10-29T07:00:00Z",
+      "BTC_USDT": 79968.94,
+      "ETH_USDT": 2313.5
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T08:00:00Z",
+      "source_window_end_utc": "2026-10-29T08:00:00Z",
+      "BTC_USDT": 79861.89,
+      "ETH_USDT": 2310.36
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T09:00:00Z",
+      "source_window_end_utc": "2026-10-29T10:00:00Z",
+      "BTC_USDT": 80070.01,
+      "ETH_USDT": 2319.38
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T10:00:00Z",
+      "source_window_end_utc": "2026-10-29T10:00:00Z",
+      "BTC_USDT": 80207.4,
+      "ETH_USDT": 2321.52
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T11:00:00Z",
+      "source_window_end_utc": "2026-10-29T11:00:00Z",
+      "BTC_USDT": 80285,
+      "ETH_USDT": 2328.89
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T12:00:00Z",
+      "source_window_end_utc": "2026-10-29T12:00:00Z",
+      "BTC_USDT": 80170.02,
+      "ETH_USDT": 2325.28
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T13:00:00Z",
+      "source_window_end_utc": "2026-10-29T13:00:00Z",
+      "BTC_USDT": 80058.01,
+      "ETH_USDT": 2323.11
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T14:00:00Z",
+      "source_window_end_utc": "2026-10-29T15:00:00Z",
+      "BTC_USDT": 80305.21,
+      "ETH_USDT": 2327.22
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T15:00:00Z",
+      "source_window_end_utc": "2026-10-29T15:00:00Z",
+      "BTC_USDT": 81178.32,
+      "ETH_USDT": 2344.73
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T16:00:00Z",
+      "source_window_end_utc": "2026-10-29T16:00:00Z",
+      "BTC_USDT": 81777.74,
+      "ETH_USDT": 2369.06
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T17:00:00Z",
+      "source_window_end_utc": "2026-10-29T17:00:00Z",
+      "BTC_USDT": 81269.56,
+      "ETH_USDT": 2353.2
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T18:00:00Z",
+      "source_window_end_utc": "2026-10-29T18:00:00Z",
+      "BTC_USDT": 80891.82,
+      "ETH_USDT": 2341.43
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T19:00:00Z",
+      "source_window_end_utc": "2026-10-29T19:00:00Z",
+      "BTC_USDT": 80864.01,
+      "ETH_USDT": 2331.47
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T20:00:00Z",
+      "source_window_end_utc": "2026-10-29T21:00:00Z",
+      "BTC_USDT": 80848.64,
+      "ETH_USDT": 2336.89
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T21:00:00Z",
+      "source_window_end_utc": "2026-10-29T21:00:00Z",
+      "BTC_USDT": 78851.99,
+      "ETH_USDT": 2257.88
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T22:00:00Z",
+      "source_window_end_utc": "2026-10-30T00:00:00Z",
+      "BTC_USDT": 79033.28,
+      "ETH_USDT": 2273.59
+    },
+    {
+      "candle_close_at_utc": "2026-10-29T23:00:00Z",
+      "source_window_end_utc": "2026-10-30T00:00:00Z",
+      "BTC_USDT": 79011.31,
+      "ETH_USDT": 2274.25
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T00:00:00Z",
+      "source_window_end_utc": "2026-10-30T00:00:00Z",
+      "BTC_USDT": 77991.89,
+      "ETH_USDT": 2253.13
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T01:00:00Z",
+      "source_window_end_utc": "2026-10-30T01:00:00Z",
+      "BTC_USDT": 77252.14,
+      "ETH_USDT": 2222.69
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T02:00:00Z",
+      "source_window_end_utc": "2026-10-30T02:00:00Z",
+      "BTC_USDT": 76837.04,
+      "ETH_USDT": 2195.34
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T03:00:00Z",
+      "source_window_end_utc": "2026-10-30T03:00:00Z",
+      "BTC_USDT": 77436.43,
+      "ETH_USDT": 2210.12
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T04:00:00Z",
+      "source_window_end_utc": "2026-10-30T04:00:00Z",
+      "BTC_USDT": 78235.15,
+      "ETH_USDT": 2237.82
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T05:00:00Z",
+      "source_window_end_utc": "2026-10-30T05:00:00Z",
+      "BTC_USDT": 78280.01,
+      "ETH_USDT": 2243.79
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T06:00:00Z",
+      "source_window_end_utc": "2026-10-30T06:00:00Z",
+      "BTC_USDT": 78554.01,
+      "ETH_USDT": 2239.35
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T07:00:00Z",
+      "source_window_end_utc": "2026-10-30T07:00:00Z",
+      "BTC_USDT": 78651.94,
+      "ETH_USDT": 2254.1
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T08:00:00Z",
+      "source_window_end_utc": "2026-10-30T08:00:00Z",
+      "BTC_USDT": 78185.38,
+      "ETH_USDT": 2237.07
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T09:00:00Z",
+      "source_window_end_utc": "2026-10-30T09:00:00Z",
+      "BTC_USDT": 78030.94,
+      "ETH_USDT": 2228.86
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T10:00:00Z",
+      "source_window_end_utc": "2026-10-30T10:00:00Z",
+      "BTC_USDT": 77700,
+      "ETH_USDT": 2229.69
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T11:00:00Z",
+      "source_window_end_utc": "2026-10-30T11:00:00Z",
+      "BTC_USDT": 77831.02,
+      "ETH_USDT": 2249.6
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T12:00:00Z",
+      "source_window_end_utc": "2026-10-30T12:00:00Z",
+      "BTC_USDT": 77382.01,
+      "ETH_USDT": 2236.62
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T13:00:00Z",
+      "source_window_end_utc": "2026-10-30T13:00:00Z",
+      "BTC_USDT": 77476.15,
+      "ETH_USDT": 2234.93
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T14:00:00Z",
+      "source_window_end_utc": "2026-10-30T14:00:00Z",
+      "BTC_USDT": 77174,
+      "ETH_USDT": 2226
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T15:00:00Z",
+      "source_window_end_utc": "2026-10-30T15:00:00Z",
+      "BTC_USDT": 77251.95,
+      "ETH_USDT": 2237.94
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T16:00:00Z",
+      "source_window_end_utc": "2026-10-30T16:00:00Z",
+      "BTC_USDT": 77622,
+      "ETH_USDT": 2227.44
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T17:00:00Z",
+      "source_window_end_utc": "2026-10-30T18:00:00Z",
+      "BTC_USDT": 77352.67,
+      "ETH_USDT": 2233.58
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T18:00:00Z",
+      "source_window_end_utc": "2026-10-30T18:00:00Z",
+      "BTC_USDT": 77192.45,
+      "ETH_USDT": 2244.15
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T19:00:00Z",
+      "source_window_end_utc": "2026-10-30T19:00:00Z",
+      "BTC_USDT": 76661.13,
+      "ETH_USDT": 2232.84
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T20:00:00Z",
+      "source_window_end_utc": "2026-10-30T20:00:00Z",
+      "BTC_USDT": 76942.57,
+      "ETH_USDT": 2240.32
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T21:00:00Z",
+      "source_window_end_utc": "2026-10-30T21:00:00Z",
+      "BTC_USDT": 76938.01,
+      "ETH_USDT": 2239.98
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T22:00:00Z",
+      "source_window_end_utc": "2026-10-30T23:00:00Z",
+      "BTC_USDT": 76721.99,
+      "ETH_USDT": 2238.93
+    },
+    {
+      "candle_close_at_utc": "2026-10-30T23:00:00Z",
+      "source_window_end_utc": "2026-10-30T23:00:00Z",
+      "BTC_USDT": 76970.35,
+      "ETH_USDT": 2236.27
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T00:00:00Z",
+      "source_window_end_utc": "2026-10-31T00:00:00Z",
+      "BTC_USDT": 77368.77,
+      "ETH_USDT": 2245.54
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T01:00:00Z",
+      "source_window_end_utc": "2026-10-31T01:00:00Z",
+      "BTC_USDT": 77568.81,
+      "ETH_USDT": 2250.06
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T02:00:00Z",
+      "source_window_end_utc": "2026-10-31T05:00:00Z",
+      "BTC_USDT": 77405.99,
+      "ETH_USDT": 2244.45
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T03:00:00Z",
+      "source_window_end_utc": "2026-10-31T05:00:00Z",
+      "BTC_USDT": 77452,
+      "ETH_USDT": 2246.51
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T04:00:00Z",
+      "source_window_end_utc": "2026-10-31T05:00:00Z",
+      "BTC_USDT": 77170.74,
+      "ETH_USDT": 2240
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T05:00:00Z",
+      "source_window_end_utc": "2026-10-31T05:00:00Z",
+      "BTC_USDT": 77193.47,
+      "ETH_USDT": 2239.79
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T06:00:00Z",
+      "source_window_end_utc": "2026-10-31T07:00:00Z",
+      "BTC_USDT": 77270.01,
+      "ETH_USDT": 2242.76
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T07:00:00Z",
+      "source_window_end_utc": "2026-10-31T07:00:00Z",
+      "BTC_USDT": 77388.85,
+      "ETH_USDT": 2245.92
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T08:00:00Z",
+      "source_window_end_utc": "2026-10-31T10:00:00Z",
+      "BTC_USDT": 77356,
+      "ETH_USDT": 2244.04
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T09:00:00Z",
+      "source_window_end_utc": "2026-10-31T10:00:00Z",
+      "BTC_USDT": 77358.26,
+      "ETH_USDT": 2241.79
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T10:00:00Z",
+      "source_window_end_utc": "2026-10-31T10:00:00Z",
+      "BTC_USDT": 77473.28,
+      "ETH_USDT": 2245.8
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T11:00:00Z",
+      "source_window_end_utc": "2026-10-31T12:00:00Z",
+      "BTC_USDT": 77424.17,
+      "ETH_USDT": 2244.93
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T12:00:00Z",
+      "source_window_end_utc": "2026-10-31T12:00:00Z",
+      "BTC_USDT": 77618.97,
+      "ETH_USDT": 2248.64
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T13:00:00Z",
+      "source_window_end_utc": "2026-10-31T13:00:00Z",
+      "BTC_USDT": 77557.45,
+      "ETH_USDT": 2253
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T14:00:00Z",
+      "source_window_end_utc": "2026-10-31T15:00:00Z",
+      "BTC_USDT": 77543.02,
+      "ETH_USDT": 2251.87
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T15:00:00Z",
+      "source_window_end_utc": "2026-10-31T15:00:00Z",
+      "BTC_USDT": 77440,
+      "ETH_USDT": 2246.45
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T16:00:00Z",
+      "source_window_end_utc": "2026-10-31T17:00:00Z",
+      "BTC_USDT": 77622.01,
+      "ETH_USDT": 2250.88
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T17:00:00Z",
+      "source_window_end_utc": "2026-10-31T17:00:00Z",
+      "BTC_USDT": 77626.27,
+      "ETH_USDT": 2252.03
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T18:00:00Z",
+      "source_window_end_utc": "2026-10-31T18:00:00Z",
+      "BTC_USDT": 77718.9,
+      "ETH_USDT": 2255.55
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T19:00:00Z",
+      "source_window_end_utc": "2026-10-31T20:00:00Z",
+      "BTC_USDT": 77635.25,
+      "ETH_USDT": 2255.75
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T20:00:00Z",
+      "source_window_end_utc": "2026-10-31T20:00:00Z",
+      "BTC_USDT": 77588.83,
+      "ETH_USDT": 2254.68
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T21:00:00Z",
+      "source_window_end_utc": "2026-10-31T21:00:00Z",
+      "BTC_USDT": 77565.87,
+      "ETH_USDT": 2253.94
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T22:00:00Z",
+      "source_window_end_utc": "2026-10-31T22:00:00Z",
+      "BTC_USDT": 77682.01,
+      "ETH_USDT": 2255.72
+    },
+    {
+      "candle_close_at_utc": "2026-10-31T23:00:00Z",
+      "source_window_end_utc": "2026-11-01T01:00:00Z",
+      "BTC_USDT": 77548.01,
+      "ETH_USDT": 2254.75
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T00:00:00Z",
+      "source_window_end_utc": "2026-11-01T01:00:00Z",
+      "BTC_USDT": 77582.02,
+      "ETH_USDT": 2255.66
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T01:00:00Z",
+      "source_window_end_utc": "2026-11-01T01:00:00Z",
+      "BTC_USDT": 77690.41,
+      "ETH_USDT": 2262.42
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T02:00:00Z",
+      "source_window_end_utc": "2026-11-01T02:00:00Z",
+      "BTC_USDT": 77728.38,
+      "ETH_USDT": 2270.5
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T03:00:00Z",
+      "source_window_end_utc": "2026-11-01T07:00:00Z",
+      "BTC_USDT": 77742.02,
+      "ETH_USDT": 2265.3
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T04:00:00Z",
+      "source_window_end_utc": "2026-11-01T07:00:00Z",
+      "BTC_USDT": 77802,
+      "ETH_USDT": 2268.43
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T05:00:00Z",
+      "source_window_end_utc": "2026-11-01T07:00:00Z",
+      "BTC_USDT": 77820.73,
+      "ETH_USDT": 2266.72
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T06:00:00Z",
+      "source_window_end_utc": "2026-11-01T07:00:00Z",
+      "BTC_USDT": 77922,
+      "ETH_USDT": 2270.31
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T07:00:00Z",
+      "source_window_end_utc": "2026-11-01T07:00:00Z",
+      "BTC_USDT": 78035.6,
+      "ETH_USDT": 2270.09
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T08:00:00Z",
+      "source_window_end_utc": "2026-11-01T08:00:00Z",
+      "BTC_USDT": 77991.28,
+      "ETH_USDT": 2270.3
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T09:00:00Z",
+      "source_window_end_utc": "2026-11-01T09:00:00Z",
+      "BTC_USDT": 78284.98,
+      "ETH_USDT": 2276.46
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T10:00:00Z",
+      "source_window_end_utc": "2026-11-01T15:00:00Z",
+      "BTC_USDT": 78125.26,
+      "ETH_USDT": 2270.6
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T11:00:00Z",
+      "source_window_end_utc": "2026-11-01T15:00:00Z",
+      "BTC_USDT": 78037.88,
+      "ETH_USDT": 2270.2
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T12:00:00Z",
+      "source_window_end_utc": "2026-11-01T15:00:00Z",
+      "BTC_USDT": 77962.62,
+      "ETH_USDT": 2270.32
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T13:00:00Z",
+      "source_window_end_utc": "2026-11-01T15:00:00Z",
+      "BTC_USDT": 77890.02,
+      "ETH_USDT": 2261.9
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T14:00:00Z",
+      "source_window_end_utc": "2026-11-01T15:00:00Z",
+      "BTC_USDT": 78035.45,
+      "ETH_USDT": 2267.99
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T15:00:00Z",
+      "source_window_end_utc": "2026-11-01T15:00:00Z",
+      "BTC_USDT": 78055.84,
+      "ETH_USDT": 2272.06
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T16:00:00Z",
+      "source_window_end_utc": "2026-11-01T16:00:00Z",
+      "BTC_USDT": 77988.03,
+      "ETH_USDT": 2266.97
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T17:00:00Z",
+      "source_window_end_utc": "2026-11-01T19:00:00Z",
+      "BTC_USDT": 78149.99,
+      "ETH_USDT": 2269.74
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T18:00:00Z",
+      "source_window_end_utc": "2026-11-01T19:00:00Z",
+      "BTC_USDT": 77980.54,
+      "ETH_USDT": 2264.6
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T19:00:00Z",
+      "source_window_end_utc": "2026-11-01T19:00:00Z",
+      "BTC_USDT": 77892,
+      "ETH_USDT": 2263.45
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T20:00:00Z",
+      "source_window_end_utc": "2026-11-01T20:00:00Z",
+      "BTC_USDT": 77799.29,
+      "ETH_USDT": 2259.3
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T21:00:00Z",
+      "source_window_end_utc": "2026-11-01T21:00:00Z",
+      "BTC_USDT": 77906.33,
+      "ETH_USDT": 2263.7
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T22:00:00Z",
+      "source_window_end_utc": "2026-11-01T23:00:00Z",
+      "BTC_USDT": 77889.64,
+      "ETH_USDT": 2264.17
+    },
+    {
+      "candle_close_at_utc": "2026-11-01T23:00:00Z",
+      "source_window_end_utc": "2026-11-01T23:00:00Z",
+      "BTC_USDT": 77823.88,
+      "ETH_USDT": 2260.04
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T00:00:00Z",
+      "source_window_end_utc": "2026-11-02T00:00:00Z",
+      "BTC_USDT": 78354,
+      "ETH_USDT": 2275.31
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T01:00:00Z",
+      "source_window_end_utc": "2026-11-02T01:00:00Z",
+      "BTC_USDT": 78138,
+      "ETH_USDT": 2273.22
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T02:00:00Z",
+      "source_window_end_utc": "2026-11-02T02:00:00Z",
+      "BTC_USDT": 78415.63,
+      "ETH_USDT": 2289.77
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T03:00:00Z",
+      "source_window_end_utc": "2026-11-02T05:00:00Z",
+      "BTC_USDT": 78458.02,
+      "ETH_USDT": 2295.7
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T04:00:00Z",
+      "source_window_end_utc": "2026-11-02T05:00:00Z",
+      "BTC_USDT": 78634.01,
+      "ETH_USDT": 2309.25
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T05:00:00Z",
+      "source_window_end_utc": "2026-11-02T05:00:00Z",
+      "BTC_USDT": 78414.45,
+      "ETH_USDT": 2293.05
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T06:00:00Z",
+      "source_window_end_utc": "2026-11-02T06:00:00Z",
+      "BTC_USDT": 78377.96,
+      "ETH_USDT": 2292.21
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T07:00:00Z",
+      "source_window_end_utc": "2026-11-02T07:00:00Z",
+      "BTC_USDT": 78168.01,
+      "ETH_USDT": 2285.67
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T08:00:00Z",
+      "source_window_end_utc": "2026-11-02T08:00:00Z",
+      "BTC_USDT": 78113.85,
+      "ETH_USDT": 2284.62
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T09:00:00Z",
+      "source_window_end_utc": "2026-11-02T10:00:00Z",
+      "BTC_USDT": 78246.86,
+      "ETH_USDT": 2297.67
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T10:00:00Z",
+      "source_window_end_utc": "2026-11-02T10:00:00Z",
+      "BTC_USDT": 78082.91,
+      "ETH_USDT": 2290.87
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T11:00:00Z",
+      "source_window_end_utc": "2026-11-02T15:00:00Z",
+      "BTC_USDT": 77973.99,
+      "ETH_USDT": 2286.53
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T12:00:00Z",
+      "source_window_end_utc": "2026-11-02T15:00:00Z",
+      "BTC_USDT": 77894.16,
+      "ETH_USDT": 2286.62
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T13:00:00Z",
+      "source_window_end_utc": "2026-11-02T15:00:00Z",
+      "BTC_USDT": 77808.01,
+      "ETH_USDT": 2285.82
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T14:00:00Z",
+      "source_window_end_utc": "2026-11-02T15:00:00Z",
+      "BTC_USDT": 77944.01,
+      "ETH_USDT": 2287.38
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T15:00:00Z",
+      "source_window_end_utc": "2026-11-02T15:00:00Z",
+      "BTC_USDT": 77869.12,
+      "ETH_USDT": 2291.79
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T16:00:00Z",
+      "source_window_end_utc": "2026-11-02T18:00:00Z",
+      "BTC_USDT": 77519.24,
+      "ETH_USDT": 2273.41
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T17:00:00Z",
+      "source_window_end_utc": "2026-11-02T18:00:00Z",
+      "BTC_USDT": 77501.73,
+      "ETH_USDT": 2269.14
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T18:00:00Z",
+      "source_window_end_utc": "2026-11-02T18:00:00Z",
+      "BTC_USDT": 77154.15,
+      "ETH_USDT": 2259.3
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T19:00:00Z",
+      "source_window_end_utc": "2026-11-02T20:00:00Z",
+      "BTC_USDT": 77022,
+      "ETH_USDT": 2254.05
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T20:00:00Z",
+      "source_window_end_utc": "2026-11-02T20:00:00Z",
+      "BTC_USDT": 77096.29,
+      "ETH_USDT": 2254.18
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T21:00:00Z",
+      "source_window_end_utc": "2026-11-02T23:00:00Z",
+      "BTC_USDT": 76779.73,
+      "ETH_USDT": 2248.39
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T22:00:00Z",
+      "source_window_end_utc": "2026-11-02T23:00:00Z",
+      "BTC_USDT": 76838.01,
+      "ETH_USDT": 2258.38
+    },
+    {
+      "candle_close_at_utc": "2026-11-02T23:00:00Z",
+      "source_window_end_utc": "2026-11-02T23:00:00Z",
+      "BTC_USDT": 76933.48,
+      "ETH_USDT": 2256.87
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T00:00:00Z",
+      "source_window_end_utc": "2026-11-03T01:00:00Z",
+      "BTC_USDT": 76816,
+      "ETH_USDT": 2253.29
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T01:00:00Z",
+      "source_window_end_utc": "2026-11-03T01:00:00Z",
+      "BTC_USDT": 77128.01,
+      "ETH_USDT": 2258.19
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T02:00:00Z",
+      "source_window_end_utc": "2026-11-03T02:00:00Z",
+      "BTC_USDT": 77114.01,
+      "ETH_USDT": 2257.86
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T03:00:00Z",
+      "source_window_end_utc": "2026-11-03T06:00:00Z",
+      "BTC_USDT": 76705.58,
+      "ETH_USDT": 2251.79
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T04:00:00Z",
+      "source_window_end_utc": "2026-11-03T06:00:00Z",
+      "BTC_USDT": 76937.05,
+      "ETH_USDT": 2253.49
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T05:00:00Z",
+      "source_window_end_utc": "2026-11-03T06:00:00Z",
+      "BTC_USDT": 76944.26,
+      "ETH_USDT": 2257.37
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T06:00:00Z",
+      "source_window_end_utc": "2026-11-03T06:00:00Z",
+      "BTC_USDT": 76656.71,
+      "ETH_USDT": 2248.5
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T07:00:00Z",
+      "source_window_end_utc": "2026-11-03T09:00:00Z",
+      "BTC_USDT": 76579.76,
+      "ETH_USDT": 2246
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T08:00:00Z",
+      "source_window_end_utc": "2026-11-03T09:00:00Z",
+      "BTC_USDT": 76829.55,
+      "ETH_USDT": 2258.64
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T09:00:00Z",
+      "source_window_end_utc": "2026-11-03T09:00:00Z",
+      "BTC_USDT": 76644.01,
+      "ETH_USDT": 2257.58
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T10:00:00Z",
+      "source_window_end_utc": "2026-11-03T10:00:00Z",
+      "BTC_USDT": 77070.99,
+      "ETH_USDT": 2268.37
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T11:00:00Z",
+      "source_window_end_utc": "2026-11-03T15:00:00Z",
+      "BTC_USDT": 77132.59,
+      "ETH_USDT": 2272.23
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T12:00:00Z",
+      "source_window_end_utc": "2026-11-03T15:00:00Z",
+      "BTC_USDT": 77108.37,
+      "ETH_USDT": 2267.14
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T13:00:00Z",
+      "source_window_end_utc": "2026-11-03T15:00:00Z",
+      "BTC_USDT": 77427.59,
+      "ETH_USDT": 2282.95
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T14:00:00Z",
+      "source_window_end_utc": "2026-11-03T15:00:00Z",
+      "BTC_USDT": 77400.01,
+      "ETH_USDT": 2286.8
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T15:00:00Z",
+      "source_window_end_utc": "2026-11-03T15:00:00Z",
+      "BTC_USDT": 77394.01,
+      "ETH_USDT": 2287.46
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T16:00:00Z",
+      "source_window_end_utc": "2026-11-03T18:00:00Z",
+      "BTC_USDT": 77688.47,
+      "ETH_USDT": 2299.41
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T17:00:00Z",
+      "source_window_end_utc": "2026-11-03T18:00:00Z",
+      "BTC_USDT": 77732,
+      "ETH_USDT": 2297.96
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T18:00:00Z",
+      "source_window_end_utc": "2026-11-03T18:00:00Z",
+      "BTC_USDT": 77644.43,
+      "ETH_USDT": 2296.39
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T19:00:00Z",
+      "source_window_end_utc": "2026-11-03T20:00:00Z",
+      "BTC_USDT": 77584,
+      "ETH_USDT": 2292.91
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T20:00:00Z",
+      "source_window_end_utc": "2026-11-03T20:00:00Z",
+      "BTC_USDT": 77612,
+      "ETH_USDT": 2287.04
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T21:00:00Z",
+      "source_window_end_utc": "2026-11-03T21:00:00Z",
+      "BTC_USDT": 77860.01,
+      "ETH_USDT": 2290.83
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T22:00:00Z",
+      "source_window_end_utc": "2026-11-03T23:00:00Z",
+      "BTC_USDT": 77902.52,
+      "ETH_USDT": 2294.67
+    },
+    {
+      "candle_close_at_utc": "2026-11-03T23:00:00Z",
+      "source_window_end_utc": "2026-11-03T23:00:00Z",
+      "BTC_USDT": 77875.86,
+      "ETH_USDT": 2293.19
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T00:00:00Z",
+      "source_window_end_utc": "2026-11-04T01:00:00Z",
+      "BTC_USDT": 77453.86,
+      "ETH_USDT": 2274.77
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T01:00:00Z",
+      "source_window_end_utc": "2026-11-04T01:00:00Z",
+      "BTC_USDT": 77244.14,
+      "ETH_USDT": 2274.68
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T02:00:00Z",
+      "source_window_end_utc": "2026-11-04T03:00:00Z",
+      "BTC_USDT": 77035.21,
+      "ETH_USDT": 2264.09
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T03:00:00Z",
+      "source_window_end_utc": "2026-11-04T03:00:00Z",
+      "BTC_USDT": 76170.85,
+      "ETH_USDT": 2244.35
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T04:00:00Z",
+      "source_window_end_utc": "2026-11-04T06:00:00Z",
+      "BTC_USDT": 76496.04,
+      "ETH_USDT": 2249.34
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T05:00:00Z",
+      "source_window_end_utc": "2026-11-04T06:00:00Z",
+      "BTC_USDT": 77390.01,
+      "ETH_USDT": 2279.84
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T06:00:00Z",
+      "source_window_end_utc": "2026-11-04T06:00:00Z",
+      "BTC_USDT": 77748.09,
+      "ETH_USDT": 2293.07
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T07:00:00Z",
+      "source_window_end_utc": "2026-11-04T09:00:00Z",
+      "BTC_USDT": 78007.91,
+      "ETH_USDT": 2297.71
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T08:00:00Z",
+      "source_window_end_utc": "2026-11-04T09:00:00Z",
+      "BTC_USDT": 78140,
+      "ETH_USDT": 2303.6
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T09:00:00Z",
+      "source_window_end_utc": "2026-11-04T09:00:00Z",
+      "BTC_USDT": 78500,
+      "ETH_USDT": 2323.13
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T10:00:00Z",
+      "source_window_end_utc": "2026-11-04T11:00:00Z",
+      "BTC_USDT": 78400,
+      "ETH_USDT": 2322.62
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T11:00:00Z",
+      "source_window_end_utc": "2026-11-04T11:00:00Z",
+      "BTC_USDT": 78608.86,
+      "ETH_USDT": 2328.34
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T12:00:00Z",
+      "source_window_end_utc": "2026-11-04T15:00:00Z",
+      "BTC_USDT": 78477.25,
+      "ETH_USDT": 2327.96
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T13:00:00Z",
+      "source_window_end_utc": "2026-11-04T15:00:00Z",
+      "BTC_USDT": 78298,
+      "ETH_USDT": 2314.07
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T14:00:00Z",
+      "source_window_end_utc": "2026-11-04T15:00:00Z",
+      "BTC_USDT": 78364.01,
+      "ETH_USDT": 2319.22
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T15:00:00Z",
+      "source_window_end_utc": "2026-11-04T15:00:00Z",
+      "BTC_USDT": 79347.33,
+      "ETH_USDT": 2379.06
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T16:00:00Z",
+      "source_window_end_utc": "2026-11-04T17:00:00Z",
+      "BTC_USDT": 80296.01,
+      "ETH_USDT": 2425.99
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T17:00:00Z",
+      "source_window_end_utc": "2026-11-04T17:00:00Z",
+      "BTC_USDT": 80538.01,
+      "ETH_USDT": 2434.99
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T18:00:00Z",
+      "source_window_end_utc": "2026-11-04T18:00:00Z",
+      "BTC_USDT": 80427.66,
+      "ETH_USDT": 2424.85
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T19:00:00Z",
+      "source_window_end_utc": "2026-11-04T19:00:00Z",
+      "BTC_USDT": 80351.49,
+      "ETH_USDT": 2423.09
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T20:00:00Z",
+      "source_window_end_utc": "2026-11-04T22:00:00Z",
+      "BTC_USDT": 79997.8,
+      "ETH_USDT": 2406.47
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T21:00:00Z",
+      "source_window_end_utc": "2026-11-04T22:00:00Z",
+      "BTC_USDT": 80138,
+      "ETH_USDT": 2420.99
+    },
+    {
+      "candle_close_at_utc": "2026-11-04T22:00:00Z",
+      "source_window_end_utc": "2026-11-04T22:00:00Z",
+      "BTC_USDT": 80240.18,
+      "ETH_USDT": 2418.34
+    }
+  ]
+}
