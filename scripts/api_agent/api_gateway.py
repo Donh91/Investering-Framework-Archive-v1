@@ -8,6 +8,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from scripts.api_agent import recoverable_responses_v1
 from typing import Any
 
 PRICES_PER_MILLION = {
@@ -289,13 +290,29 @@ def blocked_output(reason: str) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", required=True);parser.add_argument("--registry", type=Path, required=True);parser.add_argument("--prompt-file", type=Path, required=True)
-    parser.add_argument("--context-file", type=Path, required=True);parser.add_argument("--output-dir", type=Path, required=True);parser.add_argument("--intended-write-prefix", required=True);parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--context-file", type=Path, required=True);parser.add_argument("--output-dir", type=Path, required=True);parser.add_argument("--intended-write-prefix", required=True);parser.add_argument("--dry-run", action="store_true");parser.add_argument("--resume-background", action="store_true")
     args = parser.parse_args()
     registry = load_registry(args.registry);task_cfg = registry["tasks"].get(args.task)
     if not task_cfg: raise SystemExit("unknown_task")
     allowed_prefix = str(task_cfg.get("allowed_write_prefix") or "")
     if not allowed_prefix or args.intended_write_prefix != allowed_prefix: raise SystemExit("allowed_write_prefix_mismatch")
-    prompt = args.prompt_file.read_text();context = json.loads(args.context_file.read_text());request_payload = build_request(args.task, task_cfg, prompt, context);request_hash = sha256_bytes(canonical_bytes(request_payload));args.output_dir.mkdir(parents=True, exist_ok=True)
+    prompt = args.prompt_file.read_text();context = json.loads(args.context_file.read_text());request_payload = build_request(args.task, task_cfg, prompt, context)
+    background = task_cfg.get("recoverable_background") is True
+    if args.resume_background and not background:
+        raise SystemExit("BACKGROUND_RECOVERY_NOT_AUTHORIZED")
+    if background:
+        # An explicit public-source owner release is required before sending
+        # anything to a persisted Responses background task. No private data.
+        if (task_cfg.get("model") != "gpt-6.1-sol"
+                or task_cfg.get("reasoning_effort") != "max"
+                or task_cfg.get("max_attempts") != 1
+                or task_cfg.get("public_background_storage_authorized") is not True
+                or context.get("private_data_included") is not False
+                or context.get("public_source_only") is not True
+                or context.get("authority") != "ADVISORY_READ_ONLY"):
+            raise SystemExit("BACKGROUND_PUBLIC_SOURCE_OR_OWNER_GATE_FAILED")
+        request_payload = {**request_payload, "background": True, "store": True}
+    request_hash = sha256_bytes(canonical_bytes(request_payload));args.output_dir.mkdir(parents=True, exist_ok=True)
     responses: list[dict[str, Any]] = []
     errors: list[str] = []
     output: dict[str, Any] | None = None
@@ -305,17 +322,26 @@ def main() -> None:
     else:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: raise SystemExit("OPENAI_API_KEY_missing")
-        for attempt in range(api_attempt_limit(task_cfg)):
-            payload = dict(request_payload)
-            if attempt == 1:
-                payload["max_output_tokens"] = retry_output_token_limit(task_cfg)
-            response = call_api(api_key, payload, timeout_seconds=request_timeout_seconds(task_cfg))
+        if background:
+            # A pending handle is preserved by the existing Actions artifact.
+            # --resume-background retrieves it with GET only, never a new POST.
+            response = recoverable_responses_v1.submit_or_resume(
+                request_payload, api_key, args.output_dir / "transport",
+                resume=args.resume_background)
             responses.append(response)
-            try:
-                output = extract_output(response)
-                break
-            except (ValueError, json.JSONDecodeError) as exc:
-                errors.append(f"attempt_{attempt + 1}:{type(exc).__name__}:{str(exc)[:240]}")
+            output = extract_output(response)
+        else:
+            for attempt in range(api_attempt_limit(task_cfg)):
+                payload = dict(request_payload)
+                if attempt == 1:
+                    payload["max_output_tokens"] = retry_output_token_limit(task_cfg)
+                response = call_api(api_key, payload, timeout_seconds=request_timeout_seconds(task_cfg))
+                responses.append(response)
+                try:
+                    output = extract_output(response)
+                    break
+                except (ValueError, json.JSONDecodeError) as exc:
+                    errors.append(f"attempt_{attempt + 1}:{type(exc).__name__}:{str(exc)[:240]}")
     input_tokens = output_tokens = 0
     for response in responses:
         i, o = usage_of(response);input_tokens += i;output_tokens += o
