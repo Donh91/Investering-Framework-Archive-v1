@@ -242,7 +242,7 @@ def test_monday_daily_range_guidance_is_day_first_and_source_bound():
         "7 prospectively issued ordered daily low/high pairs", "expected_close INSIDE",
         "abstain per asset only if real source", "immutable W45",
         "no extra paid model retry", "no changes to scoring",
-        "no exact reversal day", "not two independent engines",
+        "exact reversal day or exact price", "not two independent engines",
     ):
         assert guard in text
     # Old verbose/duplicated instructions had conflated uncertain day bands
