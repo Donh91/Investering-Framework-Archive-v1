@@ -68,7 +68,8 @@ async function run(value,{clientWidth=390,fetchError=false}={}){
  const paths=elements.get('plot').children.filter(x=>x.tag==='path');
  return {elements,fetched,paths,
   blue:paths.filter(x=>x.attrs.stroke==='#79aaff'),
-  green:paths.filter(x=>x.attrs.stroke==='#31d0a0')};
+  green:paths.filter(x=>x.attrs.stroke==='#31d0a0'),
+  amber:paths.filter(x=>x.attrs.stroke==='#e9ae65')};
 }
 test('W45 0/7 + synthetic W46 7/7 is shown with USDT original blue only, green has hourly gap',async()=>{
  const r=await run(fixture());
@@ -119,6 +120,61 @@ test('real W45 history with no original seven-day blue remains readable and curr
  assert.equal(r.elements.get('forecasts').textContent,0);
  assert.match(r.elements.get('notice').textContent,/Ingen opdigtet blå kurve/);
 });
+
+function honestThursday(){
+ const row=(asset)=>{
+  const values=asset==='BTC'?[75573.64,74670.48,74133.78,73813.61]:[2244.16,2210.28,2190.20,2178.24];
+  const ranges=asset==='BTC'?[[74143.64,77417.33],[71871.41,78516.89],[71354.82,77578.57],[71046.66,77020.96]]:
+    [[2186.31,2315.09],[2097.79,2364.50],[2078.73,2328.80],[2067.38,2307.65]];
+  return values.map((v,i)=>({day:i+4,target_at_utc:new Date(Date.UTC(2026,10,6+i)).toISOString().replace('.000Z','Z'),
+   expected_close:v,low:ranges[i][0],high:ranges[i][1]}));
+ };
+ return {contract:'CN_GRAPH_HISTORY_FIRST_HONEST_MIDWEEK_RESEARCH_v1',
+  forecast_week:'2026-W45',original_source:'OWNER_ISSUED_2026_11_05_COMMENT_6668153478',
+  frozen_packet_sha256:'c'.repeat(64),
+  issued_at_utc:'2026-11-05T20:11:38Z',input_cutoff_utc:'2026-11-05T18:00:00Z',
+  price_quote:'USDT',provider_first_known_verified:false,research_only:true,
+  original_monday_issuance:false,official_scoring_eligible:false,portfolio_action_authority:false,
+  BTC:row('BTC'),ETH:row('ETH')};
+}
+
+test('truly Thursday-issued W45 suffix draws amber now alongside independent W46 Monday blue',async()=>{
+ const d=fixture();d.first_honest_midweek_research=honestThursday();
+ const r=await run(d);
+ assert.equal(r.amber.length,1);
+ assert.equal(r.blue.length,1);
+ assert.equal(r.green.length,1);
+ assert.equal(r.elements.get('forecasts').textContent,1,'RESEARCH_MUST_NOT_COUNT_AS_ORIGINAL');
+ assert.match(r.elements.get('notice').textContent,/Gul stiplet/);
+ assert.equal((r.amber[0].attrs.d.match(/L/g)||[]).length,3,'RESEARCH_NOT_FOUR_FUTURE_POINTS');
+ assert.equal(d.first_honest_midweek_research.BTC[0].target_at_utc,'2026-11-06T00:00:00Z');
+});
+
+test('backdated or promoted W45 research is rejected without hiding real green and W46 blue',async()=>{
+ const mutations=[
+  d=>{d.first_honest_midweek_research.issued_at_utc='2026-11-05T18:00:00Z'},
+  d=>{d.first_honest_midweek_research.input_cutoff_utc='2026-11-05T21:00:00Z'},
+  d=>{d.first_honest_midweek_research.price_quote='USD'},
+  d=>{d.first_honest_midweek_research.official_scoring_eligible=true},
+  d=>{d.first_honest_midweek_research.original_monday_issuance=true},
+  d=>{d.first_honest_midweek_research.provider_first_known_verified=true},
+  d=>{d.first_honest_midweek_research.portfolio_action_authority=true},
+  d=>{d.first_honest_midweek_research.frozen_packet_sha256='invalid'},
+  d=>{d.first_honest_midweek_research.BTC[0].target_at_utc='2026-11-05T00:00:00Z'},
+  d=>{d.first_honest_midweek_research.BTC[0].expected_close=1e9},
+  d=>{d.first_honest_midweek_research.ETH[0].low=99999},
+  d=>{d.weeks[0].forecast_status='PUBLISHED'},
+  d=>{d.actual_unit='USD'}
+ ];
+ for(const mutate of mutations){
+  const d=fixture();d.first_honest_midweek_research=honestThursday();mutate(d);
+  const r=await run(d);
+  assert.equal(r.amber.length,0,'UNTRUSTED_MIDWEEK_OVERLAY_RENDERED');
+  assert.equal(r.green.length,1);
+  assert.equal(r.elements.get('forecasts').textContent,r.blue.length,'RESEARCH_COUNTED_AS_OFFICIAL');
+ }
+});
+
 test('offline Graph History fails closed without fabricated observations or a source-issued blue curve',async()=>{
  const r=await run(fixture(),{fetchError:true});
  assert.equal(r.blue.length,0);
