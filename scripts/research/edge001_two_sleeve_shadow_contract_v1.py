@@ -78,7 +78,9 @@ def validate_two_sleeve_shadow_row(record: Mapping) -> dict:
         r"[0-9a-fA-F]{40}", record["source_commit"]
     ):
         _fail("TWO_SLEEVE_SHA40_REQUIRED")
-    if record["sleeve_role"] not in ROLES or record["status"] not in STATES:
+    if (not isinstance(record["sleeve_role"], str) or
+            not isinstance(record["status"], str) or
+            record["sleeve_role"] not in ROLES or record["status"] not in STATES):
         _fail("TWO_SLEEVE_RESEARCH_ONLY_ENUM_REQUIRED")
     if record["currency"] != "USD":
         _fail("TWO_SLEEVE_CURRENCY_USD_REQUIRED")
@@ -136,6 +138,8 @@ def validate_two_sleeve_shadow_row(record: Mapping) -> dict:
             _fail("TWO_SLEEVE_CASH_NO_TRADE_REQUIRED")
         if any(v is not None for v in (quote, cap, quote_at, quote_known, execution)):
             _fail("TWO_SLEEVE_CASH_NO_EXECUTION_QUOTE")
+        if any(costs[k] not in (None, 0, 0.0) for k in ("fees", "slippage", "gas")):
+            _fail("TWO_SLEEVE_CASH_NO_TRADE_COST")
     elif fraction > 0:
         if notional <= 0 or cap is None or notional * fraction > cap:
             _fail("TWO_SLEEVE_FILL_EXCEEDS_CAPACITY")
