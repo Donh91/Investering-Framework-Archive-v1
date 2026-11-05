@@ -8,10 +8,6 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
-if __package__:
-    from . import recoverable_responses_v1
-else:
-    import recoverable_responses_v1
 from typing import Any
 
 PRICES_PER_MILLION = {
@@ -326,6 +322,12 @@ def main() -> None:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: raise SystemExit("OPENAI_API_KEY_missing")
         if background:
+            # Lazy import preserves dynamic source-schema inspections that load
+            # api_gateway.py as a standalone module via importlib.
+            try:
+                from scripts.api_agent import recoverable_responses_v1
+            except ModuleNotFoundError:
+                import recoverable_responses_v1
             # A pending handle is preserved by the existing Actions artifact.
             # --resume-background retrieves it with GET only, never a new POST.
             response = recoverable_responses_v1.submit_or_resume(
