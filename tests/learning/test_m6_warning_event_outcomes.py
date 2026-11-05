@@ -64,6 +64,47 @@ class M6WarningEventTests(unittest.TestCase):
         self.assertAlmostEqual(v["reference_anchor"]["mfe_pct"],10.0)
         self.assertFalse(v["adverse_barriers"]["-10.0"]["touched"])
 
+    def test_shadow_reclaim_requires_later_completed_close_after_minimum(self):
+        start=M.parse("2026-10-06T16:14:15Z")
+        segment=[
+            {"close":M.parse("2026-10-06T17:00:00Z"),"btc":100.0,"btc_high":999.0,"btc_low":1.0},
+            {"close":M.parse("2026-10-06T18:00:00Z"),"btc":92.0,"btc_high":102.0,"btc_low":80.0},
+            {"close":M.parse("2026-10-06T19:00:00Z"),"btc":99.0,"btc_high":103.0,"btc_low":90.0},
+            {"close":M.parse("2026-10-06T20:00:00Z"),"btc":105.0,"btc_high":106.0,"btc_low":98.0}
+        ]
+        result=M.asset_view(segment,100.0,"BTC",start)
+        recovery=result["recovery_after_mae"]
+        self.assertEqual(recovery["status"],"OBSERVED_FIRST_LATER_CLOSE_RECLAIM")
+        self.assertFalse(recovery["right_censored"])
+        self.assertEqual(recovery["observed_trough_at_utc"],"2026-10-06T18:00:00Z")
+        self.assertEqual(recovery["first_close_reclaim_at_utc"],"2026-10-06T20:00:00Z")
+        self.assertAlmostEqual(recovery["time_from_mae_to_reclaim_hours"],2.0)
+        self.assertFalse(recovery["durable_recovery_proven"])
+        self.assertFalse(recovery["economic_action_authority"])
+
+    def test_intrabar_same_candle_rebound_does_not_fake_recovery(self):
+        start=M.parse("2026-10-06T16:14:15Z")
+        segment=[
+            {"close":M.parse("2026-10-06T17:00:00Z"),"btc":100.0,"btc_high":999.0,"btc_low":1.0},
+            {"close":M.parse("2026-10-06T18:00:00Z"),"btc":105.0,"btc_high":110.0,"btc_low":80.0}
+        ]
+        result=M.asset_view(segment,100.0,"BTC",start)["recovery_after_mae"]
+        self.assertEqual(result["status"],"RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM")
+        self.assertIsNone(result["first_close_reclaim_at_utc"])
+        self.assertTrue(result["right_censored"])
+        self.assertIsNone(result["time_from_mae_to_reclaim_hours"])
+
+    def test_no_observed_drawdown_is_not_fictitious_recovery(self):
+        start=M.parse("2026-10-06T16:14:15Z")
+        segment=[
+            {"close":M.parse("2026-10-06T17:00:00Z"),"btc":105.0,"btc_high":999.0,"btc_low":1.0},
+            {"close":M.parse("2026-10-06T18:00:00Z"),"btc":110.0,"btc_high":115.0,"btc_low":101.0}
+        ]
+        recovery=M.asset_view(segment,100.0,"BTC",start)["recovery_after_mae"]
+        self.assertEqual(recovery["status"],"NO_OBSERVED_ADVERSE_MOVE")
+        self.assertFalse(recovery["right_censored"])
+        self.assertIsNone(recovery["time_to_first_close_reclaim_hours"])
+
     def test_missing_full_post_warning_bar_ohlc_fails_closed(self):
         start=M.parse("2026-10-06T16:14:15Z")
         segment=[
