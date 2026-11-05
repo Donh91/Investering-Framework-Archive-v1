@@ -206,5 +206,141 @@ class OriginalAdmissionTests(unittest.TestCase):
         self.assertNotIn('"price":', serialized)
 
 
+from scripts.research import task2_r1_scoped_readiness_v1 as readiness
+
+
+class ScopedReadinessReconciliationTests(unittest.TestCase):
+    """No market feature is selected and no historical PIT promotion is possible."""
+
+    def sample(self):
+        return readiness.pinned_inputs()
+
+    def reject(self, sample, reason):
+        with self.assertRaisesRegex(ValueError, "TASK2_RECONCILE_"+reason):
+            readiness.reconcile(sample)
+
+    def test_original_frozen_four_receipts_reconcile(self):
+        r=readiness.reconcile(self.sample())
+        self.assertEqual(r["counts"]["original_attempts"],11)
+        self.assertEqual(r["counts"]["source_replayed"],11)
+        self.assertEqual(r["counts"]["scoped_source_chain_complete"],10)
+        self.assertEqual(r["counts"]["scoped_source_chain_unverified"],1)
+        self.assertEqual(r["counts"]["original_outcomes_present"],9)
+        self.assertEqual(r["counts"]["original_outcomes_absent"],2)
+        self.assertEqual(r["counts"]["connected_outcome_overlap_blocks"],1)
+        self.assertEqual(r["counts"]["full_historical_pit_admissions"],0)
+        self.assertEqual(r["counts"]["certified_independent_market_event_families"],0)
+        self.assertFalse(r["portfolio_execution_allowed"])
+        self.assertFalse(r["economic_edge_claim"])
+        self.assertFalse(r["forecast_accuracy_edge_claim"])
+
+    def test_development_is_not_certified_historical_backtest(self):
+        r=readiness.reconcile(self.sample())
+        self.assertEqual(r["counts"]["matched_nonabstained_asset_slots"],16)
+        self.assertEqual(r["counts"]["model_correct"],7)
+        self.assertEqual(r["counts"]["B2_correct"],7)
+        self.assertIn("BLOCKED",r["modes"]["HISTORICAL_PIT_MODEL_BACKTEST"])
+        self.assertIn("BLOCKED",r["modes"]["AFTER_COST_INVESTOR_TOURNAMENT"])
+        self.assertIn("FORBIDDEN",r["modes"]["ROUND3_OUTCOME_ANALYSIS"])
+        self.assertNotIn("price_usd",json.dumps(r))
+
+    def test_fake_historical_pit_admission_rejected(self):
+        x=self.sample()
+        x["ledger"]["rows"][0]["information_edge_gate"]["status"]="ADMITTED"
+        self.reject(x,"FORECAST_UNVERIFIED_GATE")
+
+    def test_fake_source_r1_admission_rejected(self):
+        x=self.sample()
+        x["source"]["rows"][0]["full_R1_admitted"]=True
+        self.reject(x,"FORGED_R1_ADMISSION")
+
+    def test_fake_scoped_publication_fails_without_original_server_log(self):
+        x=self.sample()
+        original=next(r for r in x["source"]["rows"] if
+                      not r["scope_specific_source_chain_complete"])
+        original["scope_specific_source_chain_complete"]=True
+        self.reject(x,"SOURCE_PUBLICATION_CONFLICT")
+
+    def test_source_complete_requires_proven_remote_push_before_issue(self):
+        x=self.sample()
+        completed=next(r for r in x["source"]["rows"] if
+                       r["scope_specific_source_chain_complete"])
+        completed["packet_publication"]["remote_push_reported_at_utc"]="2026-10-14T00:00:00Z"
+        self.reject(x,"SERVER_PUBLICATION_PROOF")
+
+    def test_original_hourly_source_arriving_after_decision_rejected(self):
+        x=self.sample()
+        x["source"]["rows"][0]["hourly_source_availability_upper_bound_utc"]="2026-10-14T00:00:00Z"
+        self.reject(x,"HOURLY_AFTER_ISSUE")
+
+    def test_original_outcome_must_not_be_replaced_with_later_backfill(self):
+        x=self.sample()
+        absent=next(r for r in x["comparison"]["rows"] if
+                    r["original_outcome_status"]!="FROZEN_ORIGINAL_HASH_AND_TARGET_MATCHED")
+        absent["outcome_git_blob"]="a"*40
+        self.reject(x,"BACKFILLED_OUTCOME")
+
+    def test_no_cherry_picking_issued_forecasts(self):
+        x=self.sample()
+        x["comparison"]["rows"].pop()
+        self.reject(x,"ORIGINAL_ATTEMPT_DENOMINATOR")
+
+    def test_duplicate_attempt_cannot_inflate_statistics(self):
+        x=self.sample()
+        x["source"]["rows"].append(json.loads(json.dumps(x["source"]["rows"][0])))
+        self.reject(x,"SOURCE_DUPLICATE_ID")
+
+    def test_wrong_same_clock_outcome_identity_rejected(self):
+        x=self.sample()
+        record=next(r for r in x["comparison"]["rows"] if
+                    r["original_outcome_status"]=="FROZEN_ORIGINAL_HASH_AND_TARGET_MATCHED")
+        record["target_at_utc"]="2026-10-15T00:00:00Z"
+        self.reject(x,"ORIGINAL_OUTCOME_OR_TARGET_MISMATCH")
+
+    def test_connected_overlapping_targets_do_not_become_independent_events(self):
+        x=self.sample()
+        x["comparison"]["connected_overlap_blocks_in_nine_target_bound_rows"]=9
+        self.reject(x,"CROSS_RECEIPT_CONFLICT")
+
+    def test_exposed_cohort_cannot_claim_untouched_holdout(self):
+        x=self.sample()
+        x["comparison"]["untouched_holdout"]=True
+        self.reject(x,"COMPARISON_SCIENCE_PROMOTION")
+
+    def test_private_round3_historical_use_cannot_be_enabled_by_custody(self):
+        x=self.sample()
+        x["custody"]["restricted_read_authority"]["round3_value_analysis_authorized_or_executed"]=True
+        self.reject(x,"RESTRICTED_SOURCE_AUTHORITY")
+
+    def test_notional_full_sell_economics_not_inferred_from_direction(self):
+        x=self.sample()
+        x["custody"]["scientific_authority"]["investor_economic_edge_established"]=True
+        self.reject(x,"CUSTODY_SCIENCE_PROMOTION")
+
+    def test_receipt_digests_must_be_unchanged(self):
+        x=self.sample()
+        x["comparison"]["source_audit_result_sha256"]="0"*64
+        self.reject(x,"SOURCE_DIGEST_IDENTITY")
+
+    def test_utc_rejects_naive_and_noncanonical_local_times(self):
+        for bad in ("2026-10-12T19:59:38", "2026-10-12T21:59:38+02:00", "2026-10-12", None, "2026-10-12T99:59:38Z"):
+            with self.subTest(bad=bad), self.assertRaisesRegex(ValueError,"TASK2_RECONCILE_"):
+                readiness.utc(bad)
+
+    def test_pinned_blob_bytes_fail_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            for path,_ in readiness.SOURCES.values():
+                dest=root/path
+                dest.parent.mkdir(parents=True,exist_ok=True)
+                dest.write_bytes((readiness.ROOT/path).read_bytes())
+            self.assertEqual(readiness.reconcile(readiness.pinned_inputs(root))["counts"]["original_attempts"],11)
+            f=root/readiness.SOURCES["source"][0]
+            f.write_bytes(f.read_bytes()+b"\n")
+            with self.assertRaisesRegex(ValueError,"IMMUTABLE_SOURCE_BLOB_CHANGED"):
+                readiness.pinned_inputs(root)
+
+
+
 if __name__ == "__main__":
     unittest.main()
