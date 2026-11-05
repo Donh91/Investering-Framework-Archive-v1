@@ -30,6 +30,7 @@ def effective_registry_for_mission(registry: dict, packet: dict, mission_id: str
                 or not zero_authority(packet.get("authority"))):
             raise ValueError("MAX_ONE_SHOT_MANDATE_NOT_BOUND")
         task["reasoning_effort"] = "max"
+        task["max_output_tokens"] = 16000
         task["max_attempts"] = 1
     elif effort != "high":
         raise ValueError("RESEARCH_EFFORT_NOT_ADMITTED")
