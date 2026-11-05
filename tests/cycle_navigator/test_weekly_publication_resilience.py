@@ -205,10 +205,10 @@ def test_range_benchmark_rewrite_conflict_is_fail_soft_not_publication_abort():
 
 def test_existing_weekly_api_owns_conditional_daily_scenario_without_extra_call():
     source = (ROOT / "scripts/cycle_navigator/build_weekly_cycle_navigator.py").read_text()
-    assert "CONDITIONAL BASE-CASE daily analytical path" in source
-    assert "A MIXED market" in source
-    assert "the other asset may still publish independently" in source
-    assert "or force an unsupported path" in source.lower()
+    assert "DAILY HIGH/LOW FIRST:" in source
+    assert "A MIXED market is not itself grounds to abstain" in source
+    assert "abstain per asset only if real source" in source
+    assert "do NOT fabricate price evidence".lower() in source.lower()
     assert "daily_path_issue_summary(freeze.get(\"daily_price_path\")" in source
     assert '"daily_path_issuance": daily_path_issue' in source
     # The original single call remains before source/receipt production.
