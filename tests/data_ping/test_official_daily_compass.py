@@ -702,11 +702,83 @@ class OfficialDailyCompassTest(unittest.TestCase):
                 issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
                 run_reason="ON_DEMAND",
             )
-            self.assertEqual(out["horizons"]["NEXT_1_3D"]["expected_direction"], "NO_EDGE")
-            self.assertEqual(out["horizons"]["NEXT_5_7D"]["expected_direction"], "NO_EDGE")
+            self.assertEqual(out["horizons"]["NEXT_1_3D"]["expected_direction"], "UNAVAILABLE")
+            self.assertEqual(out["horizons"]["NEXT_5_7D"]["expected_direction"], "UNAVAILABLE")
+            self.assertEqual(out["horizons"]["NEXT_1_3D"]["eta"], None)
+            self.assertEqual(out["horizons"]["NEXT_5_7D"]["eta"], None)
+            for key in ("1_3d", "5_7d"):
+                self.assertEqual(out["bull_bear_scale"]["horizons"][key]["status"], "UNAVAILABLE")
+                self.assertIsNone(out["bull_bear_scale"]["horizons"][key]["bull"])
             self.assertEqual(out["horizons"]["CYCLE_ALTCOINS_3_8W"]["expected_direction"], "UNAVAILABLE")
             self.assertEqual(out["protection_tracker"]["pullback_risk_state"], "UNAVAILABLE")
             self.assertEqual(out["protection_tracker"]["distribution_risk"], "UNKNOWN")
+
+    def test_cn_missing_direction_is_not_a_no_edge_or_mixed_market_verdict(self):
+        now = datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc)
+        for structure in ("missing_lane", "null_direction", "invalid_direction", "bad_contract"):
+            with self.subTest(structure=structure):
+                cn = self.cn()
+                projection = cn["decision_projection"]
+                if structure == "missing_lane":
+                    del projection["next_1_3d"]
+                    del projection["next_5_7d"]
+                elif structure == "null_direction":
+                    projection["next_1_3d"]["direction"] = None
+                    projection["next_5_7d"]["direction"] = ""
+                elif structure == "invalid_direction":
+                    projection["next_1_3d"]["direction"] = "BULLISH"
+                    projection["next_5_7d"]["direction"] = True
+                else:
+                    projection["contract"] = "WRONG_CONTRACT"
+                # A protective regime must not hallucinate MIXED from no CN evidence.
+                rows = nh.horizon_map(self.auto(), {"NOW": "HOLD_DEFENSIVE_WAIT"}, cn, as_of=now)
+                for horizon in ("NEXT_1_3D", "NEXT_5_7D", "NEXT_2_3W"):
+                    row = rows[horizon]
+                    if horizon == "NEXT_2_3W" and structure != "bad_contract":
+                        continue  # Valid unmodified original structured 2-3 week lane.
+                    self.assertEqual(row["expected_direction"], "UNAVAILABLE")
+                    self.assertEqual(row["label"], "UNAVAILABLE")
+                    self.assertIsNone(row["eta"])
+                    self.assertEqual(row["action_posture"], "NO_EDGE")
+                scale = nh.bull_bear_scale(rows)["horizons"]
+                for k in ("1_3d", "5_7d"):
+                    self.assertEqual(scale[k]["status"], "UNAVAILABLE")
+                    self.assertIsNone(scale[k]["bull"])
+                    self.assertIsNone(scale[k]["bear"])
+
+    def test_cn_explicit_no_edge_remains_distinct_from_missing_source(self):
+        now = datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc)
+        for posture in ("HOLD_WAIT", "HOLD_DEFENSIVE_WAIT", "PREPARE"):
+            with self.subTest(posture=posture):
+                cn = self.cn()
+                cn["decision_projection"]["next_1_3d"]["direction"] = "NO_EDGE"
+                cn["decision_projection"]["next_5_7d"]["direction"] = "NO_EDGE"
+                rows = nh.horizon_map(self.auto(), {"NOW": posture}, cn, as_of=now)
+                self.assertEqual(rows["NEXT_1_3D"]["expected_direction"], "NO_EDGE")
+                self.assertEqual(rows["NEXT_5_7D"]["expected_direction"], "NO_EDGE")
+                self.assertNotEqual(rows["NEXT_1_3D"]["action_posture"], "PREPARE")
+                self.assertNotEqual(rows["NEXT_5_7D"]["action_posture"], "PREPARE")
+        self.assertEqual(nh._cn_direction(None, "next_1_3d"), "UNAVAILABLE")
+        self.assertEqual(nh._cn_direction(self.cn(), "missing_lane"), "UNAVAILABLE")
+        self.assertEqual(nh._cn_direction(self.cn(), "next_1_3d"), "SIDEWAYS")
+
+    def test_partial_cn_with_missing_weekly_direction_does_not_derive_an_outlook_from_prose(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cn = self.cn()
+            cn["base_case_this_week"] = "Extremely bullish prose without a typed forecast."
+            del cn["decision_projection"]["next_5_7d"]
+            out = build_official_compass(
+                self.auto(), packet_path=Path("unused.json"), cn_package=cn,
+                cn_binding={"status": "PASS"}, repo_root=Path(tmp),
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+            )
+            self.assertEqual(out["horizons"]["NEXT_5_7D"]["expected_direction"], "UNAVAILABLE")
+            self.assertEqual(out["horizons"]["NEXT_5_7D"]["eta"], None)
+            self.assertNotIn("Extremely bullish", out["horizons"]["NEXT_5_7D"]["expected_path"])
+            public = build_public_projection(out)
+            self.assertEqual(public["horizons"]["NEXT_5_7D"]["expected_direction"], "UNAVAILABLE")
+            self.assertEqual(public["bull_bear_scale"]["horizons"]["5_7d"]["status"], "UNAVAILABLE")
+            self.assertFalse(public["authority"]["portfolio_execution"])
 
     def test_evidence_snapshot_maps_derivatives_sentiment_and_source_times(self):
         with tempfile.TemporaryDirectory() as tmp:

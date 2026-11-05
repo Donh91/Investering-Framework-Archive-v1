@@ -818,12 +818,18 @@ def _cn_decision_projection(cn_package: Mapping[str, Any] | None) -> Mapping[str
 
 
 def _cn_direction(cn_package: Mapping[str, Any] | None, lane: str) -> str:
+    """Preserve the distinction between absent CN evidence and genuine NO_EDGE.
+
+    A missing/invalid structured lane is UNKNOWN, not a measured negative
+    hypothesis. Only an explicit and eligible typed NO_EDGE may be reported.
+    """
     projection = _cn_decision_projection(cn_package)
     row = projection.get(lane)
     if not isinstance(row, Mapping):
-        return "NO_EDGE"
-    direction = str(row.get("direction") or "NO_EDGE").upper()
-    return direction if direction in {"UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"} else "NO_EDGE"
+        return "UNAVAILABLE"
+    raw = row.get("direction")
+    direction = raw.strip().upper() if isinstance(raw, str) else ""
+    return direction if direction in {"UP", "DOWN", "SIDEWAYS", "MIXED", "NO_EDGE", "UNAVAILABLE"} else "UNAVAILABLE"
 
 
 def _cn_projection_summary(cn_package: Mapping[str, Any] | None, lane: str) -> str | None:
@@ -1229,9 +1235,11 @@ def horizon_map(
             "CYCLE_ALTCOINS_3_8W": _altcoin_cycle_lane(None, posture, as_of or datetime.now(timezone.utc)),
         }
 
-    if posture in {"GRADUATED_TOPUP_ACTIVE", "PREPARE"} and d13_source in {"UP", "SIDEWAYS"}:
+    if d13_source == "UNAVAILABLE":
+        d13, a13 = "UNAVAILABLE", "WAIT"
+    elif posture in {"GRADUATED_TOPUP_ACTIVE", "PREPARE"} and d13_source in {"UP", "SIDEWAYS"}:
         d13, a13 = "UP", "PREPARE"
-    elif posture == "HOLD_DEFENSIVE_WAIT":
+    elif posture == "HOLD_DEFENSIVE_WAIT" and d13_source != "NO_EDGE":
         d13, a13 = ("DOWN" if d13_source == "DOWN" else "MIXED"), "WAIT"
     else:
         d13, a13 = d13_source, "WAIT"
@@ -1260,18 +1268,24 @@ def horizon_map(
             "eta_kind": "REASSESSMENT_WINDOW_ONLY",
             "reassessment_window": "0-12h",
         },
-        "NEXT_1_3D": {
-            "expected_direction": d13, "label": label(d13),
-            "expected_path": "Short-horizon state is cross-checked against the current weekly regime; transmission must improve before risk moves down-cap.",
-            "action_posture": a13, "confirmation_trigger": confirm, "invalidation_trigger": invalidate,
-            "eta": "24-72h", "confidence": None,
-        },
-        "NEXT_5_7D": {
-            "expected_direction": d57, "label": label(d57),
-            "expected_path": str((cn_package or {}).get("base_case_this_week") or "No stronger weekly path is eligible; remain fail-closed."),
-            "action_posture": a57, "confirmation_trigger": confirm, "invalidation_trigger": invalidate,
-            "eta": "120-168h", "confidence": None,
-        },
+        "NEXT_1_3D": (
+            _unavailable_horizon("Structured Cycle Navigator 1-3 day decision projection is unavailable.")
+            if d13 == "UNAVAILABLE" else {
+                "expected_direction": d13, "label": label(d13),
+                "expected_path": "Short-horizon state is cross-checked against the current weekly regime; transmission must improve before risk moves down-cap.",
+                "action_posture": a13, "confirmation_trigger": confirm, "invalidation_trigger": invalidate,
+                "eta": "24-72h", "confidence": None,
+            }
+        ),
+        "NEXT_5_7D": (
+            _unavailable_horizon("Structured Cycle Navigator 5-7 day decision projection is unavailable.")
+            if d57 == "UNAVAILABLE" else {
+                "expected_direction": d57, "label": label(d57),
+                "expected_path": str((cn_package or {}).get("base_case_this_week") or "No stronger weekly path is eligible; remain fail-closed."),
+                "action_posture": a57, "confirmation_trigger": confirm, "invalidation_trigger": invalidate,
+                "eta": "120-168h", "confidence": None,
+            }
+        ),
         "NEXT_2_3W": (
             {
                 "expected_direction": d23_source,
