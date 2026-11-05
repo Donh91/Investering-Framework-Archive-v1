@@ -276,7 +276,7 @@
     {
       "sequence": 11,
       "mission_id": "CN1879-ROOT-CAUSE-20261104-001",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_AFTER_LAST_VERIFIED_API_RESULT",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-04__CN1879_SOL_ROOT_CAUSE_ONE_SHOT_v1.json",
       "context_status": "PINNED_ORIGINAL_PR1879_HEAD_AND_W44_W45_SOURCE_EXCERPTS",
       "context_paths": [
@@ -286,8 +286,37 @@
       "release_gate": "OWNER_ONE_SHOT_AUTHORISED_20261104_WITH_GLOBAL_30_12_3_BUDGET",
       "pass_scope": "ONE_INDEPENDENT_SOURCE_GATE_FALSIFICATION_NO_CODE_WRITE",
       "additional_sol_pass_limit": 1,
+      "new_paid_attempts_authorized": false,
+      "owner_release_reason": "OWNER_APPROVES_SINGLE_API_ANALYSIS_WITHIN_BUDGET_2026_11_04",
+      "completed_api_result_reference": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1476#issuecomment-6642472116"
+    },
+    {
+      "sequence": 12,
+      "mission_id": "SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-05__SOL61_MAX_CYCLE_RECOVERY_ALTSEASON_v1.json",
+      "context_status": "PUBLIC_SOURCE_BOUND_RESEARCH_V1",
+      "context_paths": [
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK2_FALSIFIABLE_HYPOTHESES_AND_DATA_WISHLIST_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-12__R4P_PULLBACK_INVESTOR_DECISION_EDGE_DEEP_AUDIT_v1.md",
+        "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/CHARTER_v1.md",
+        "04_MARKET_LEARNING/rotation_survival/2026-07-08__m4-rotation-survival-replay-degraded-first-pass__canonical.md",
+        "research/pullback_forensics/2026-10-31__PULLBACK_RADAR_TIMEBOX_SHADOW_PREREG_v1.md",
+        "04_MARKET_LEARNING/handlekompas/strategic/FORWARD_PRICE_SHADOW_SPEC_v1.md",
+        "06_RESEARCH_LAB/audit_summaries/2026-08-27__copper-gold-slow-cycle-audit-and-implementation__shadow.md",
+        "05_CYCLE_NAVIGATOR/site/PATH_V3_CYCLE_ROTATION_PRODUCT_SPEC.md",
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_EXPLORATORY_BASELINE_AND_SIMULATION_RELEASE_v1.json",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-14__TASK2_R1_NATIVE_V3_11_SOURCE_CLOCK_CASES_v1.json",
+        "06_RESEARCH_LAB/audit_summaries/2026-07-22__btc-range-headroom-and-pullback-predictability-audit__shadow.md"
+      ],
+      "release_gate": "OWNER_MAX_ONE_SHOT_ISSUE1918_BUDGET_NATIVE_CLAIM",
+      "pass_scope": "ONE_ADVISORY_CYCLE_REENTRY_ALTSEASON_EXPERIMENT_PROGRAM",
       "new_paid_attempts_authorized": true,
-      "owner_release_reason": "OWNER_APPROVES_SINGLE_API_ANALYSIS_WITHIN_BUDGET_2026_11_04"
+      "max_paid_attempts": 1,
+      "no_automatic_retry": true,
+      "owner_issue": 1918,
+      "requested_effort": "max"
     }
   ],
   "authority": {
@@ -300,6 +329,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "CN1879-ROOT-CAUSE-20261104-001",
-  "program_phase": "2026_11_04_CN1879_ONE_SHOT_SOL_ROOT_CAUSE"
+  "active_mission": "SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105",
+  "program_phase": "2026_11_05_OWNER_GATED_CYCLE_MAX_RESEARCH"
 }
