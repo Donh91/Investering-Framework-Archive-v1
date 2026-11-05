@@ -66,7 +66,7 @@ td:first-child{font-weight:700;color:#eaf2ff;white-space:nowrap}
 <div id="notice" aria-live="polite">Indlæser verificeret historik…</div>
 <div class="metrics">
 <div class="metric"><b id="weeks">0</b><small>Arkiverede uger</small></div>
-<div class="metric"><b id="forecasts">0</b><small>Uger med 7 prognosepunkter</small></div>
+<div class="metric"><b id="forecasts">0</b><small>Uger med sammenlignelig original prognose</small></div>
 <div class="metric"><b id="hours">0</b><small>Verificerede timeluk</small></div>
 </div>
 </section>
@@ -99,6 +99,20 @@ function path(points,xf,yf,threshold=Infinity){
  d+=(!Number.isFinite(last)||p[0]-last>threshold?'M':'L')+xf(p[0]).toFixed(1)+','+yf(p[1]).toFixed(1)+' ';
  last=p[0];}return d;
 }
+function comparableOriginal(w){
+ // Graph history is USDT-native. A model-declared USD or unknown weekly
+ // quote cannot share a USDT price axis without a source-owned FX conversion.
+ const monday=isoWeekStart(w?.week);
+ const issued=Date.parse(w?.issued_at_utc||''),first=Date.parse(w?.first_eligible_utc||'');
+ return data?.actual_unit==='USDT'&&w?.forecast_model_declared_quote==='USDT'&&
+   w?.forecast_status==='PUBLISHED'&&/^[0-9a-f]{64}$/.test(w?.source_sha256||'')&&
+   Number.isFinite(monday)&&Number.isFinite(issued)&&Number.isFinite(first)&&
+   monday<=issued&&issued<first&&issued<monday+DAY&&first<monday+7*DAY&&
+   Array.isArray(w.forecast)&&w.forecast.length===7&&
+   w.forecast.every((p,i)=>p?.day===i+1&&
+     Number.isFinite(p.expected_close)&&Number.isFinite(p.low)&&Number.isFinite(p.high)&&
+     p.low>0&&p.low<=p.expected_close&&p.expected_close<=p.high);
+}
 function draw(){
  if(!data)return;
  while(svg.firstChild)svg.firstChild.remove();
@@ -110,8 +124,8 @@ function draw(){
   .map(p=>[Date.parse(p.time),p.close]);
  const preds=selected.map(w=>{
   const monday=isoWeekStart(w.week);
-  return (w.forecast_status==='PUBLISHED'&&w.forecast.length===7&&/^[0-9a-f]{64}$/.test(w.source_sha256||''))
-   ?w.forecast.map((p,i)=>[monday+(i+1)*DAY,p.expected_close]).filter(p=>Number.isFinite(p[1])&&p[1]>0):[];
+  return comparableOriginal(w)
+   ?w.forecast.map((p,i)=>[monday+(i+1)*DAY,p.expected_close]):[];
  });
  // Observed only. Never call an archived UTC close a current/live quote.
  eligible.sort((a,b)=>a[0]-b[0]);
@@ -145,17 +159,18 @@ function draw(){
   el('path',{d:path(set,xf,yf,DAY*1.2),fill:'none',stroke:'#79aaff','stroke-width':'3.1','stroke-dasharray':'9 6','stroke-linecap':'round'});
  }
  if(eligible.length){const p=eligible.at(-1);el('circle',{cx:xf(p[0]),cy:yf(p[1]),r:5,fill:'#102238',stroke:'#31d0a0','stroke-width':3});}
- const missing=selected.filter(w=>w.forecast_status!=='PUBLISHED').length;
- $('notice').textContent=missing?`${missing} uge(r) uden kildeudstedt 7-dages prognose, vist uden opdigtet blå kurve.`:'Alle viste uger har syv originale CN-prognosepunkter.';
+ const missing=selected.filter(w=>!comparableOriginal(w)).length;
+ $('notice').textContent=missing?`${missing} uge(r) uden original kildeudstedt, tidsverificeret og USDT-sammenlignelig dagsprognose. Ingen opdigtet blå kurve eller USD/USDT-omregning.`:'Alle viste uger har syv originale, valutasammenlignelige CN-dagspunkter.';
  }
 function table(){
  $('weeks').textContent=data.weeks.length;
- $('forecasts').textContent=data.weeks.filter(w=>w.forecast_status==='PUBLISHED').length;
+ $('forecasts').textContent=data.weeks.filter(comparableOriginal).length;
  $('hours').textContent=data.actual.length.toLocaleString('da-DK');
  const body=$('archive');body.replaceChildren();
  for(const w of [...data.weeks].reverse()){
   const tr=document.createElement('tr');
-  const status=(w.forecast_status==='PUBLISHED'?'7 originale punkter':'Ikke udstedt')+' · prognosevaluta '+(w.forecast_model_declared_quote||'UNAVAILABLE');
+  const issued=w.forecast_status==='PUBLISHED';
+  const status=(issued?(comparableOriginal(w)?'7 originale, sammenlignelige punkter':'Original udstedt · ikke sammenlignelig med USDT'):'Ikke udstedt')+' · prognosevaluta '+(w.forecast_model_declared_quote||'UNAVAILABLE');
   for(const value of [w.week,status,`${w.observed_hours}/168 · ${w.actual_status}`]){
    const td=document.createElement('td');td.textContent=value;tr.append(td);}
   body.append(tr);
