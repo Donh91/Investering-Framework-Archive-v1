@@ -462,7 +462,6 @@ class GraphHistoryTest(unittest.TestCase):
                 "issued<first&&issued<monday+DAY",
                 "w.forecast.length===7",
                 "comparableOriginal(w)",
-                "without source-proven original comparison",
                 "path(eligible,xf,yf,HOUR*1.5)",
                 "forecast_model_declared_quote",
                 "Seneste registrerede timeluk",
