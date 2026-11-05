@@ -220,7 +220,7 @@ test('Graph freshness expires in an already-open tab without another fetch',asyn
  assert.doesNotMatch(h.get('feed-status').textContent,/FORÆLDEDE/);
  assert.equal(h.get('variant-panel').dataset.freshness,'fresh');
  await h.advance('2026-10-26T01:30:01Z');
- assert.match(h.get('feed-status').textContent,/FORÆLDEDE/);
+ assert.match(h.get('feed-status').textContent,/Observerede kurser er forældede/);
  assert.equal(h.get('variant-panel').dataset.freshness,'stale');
  h.buttons.lang[1].click();assert.match(h.get('feed-status').textContent,/Observed prices are stale/);
 });
