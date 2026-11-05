@@ -593,6 +593,66 @@ class GraphHistoryTest(unittest.TestCase):
         # The primary graph never consumes any research self-test bytes.
         self.assertFalse((self.root / ROOT / "index.json").exists())
 
+    def test_honest_midweek_w45_is_first_prospective_forecast_not_original_blue(self):
+        real = Path(__file__).resolve().parents[2]
+        files = (
+            "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_THURSDAY_SELFTEST_v1.json",
+            "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-04.csv",
+            "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-05.csv",
+        )
+        for rel in files:
+            dst = self.root / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_bytes((real / rel).read_bytes())
+        source(self.root, status="UNAVAILABLE")
+        archive(self.root, W45)
+        result = publish(self.root)
+        overlay = result["first_honest_midweek_research"]
+        self.assertEqual(overlay["contract"], "CN_GRAPH_HISTORY_FIRST_HONEST_MIDWEEK_RESEARCH_v1")
+        self.assertEqual(overlay["issued_at_utc"], "2026-11-05T20:11:38Z")
+        self.assertEqual(overlay["input_cutoff_utc"], "2026-11-05T18:00:00Z")
+        self.assertEqual(len(overlay["BTC"]), 4)
+        self.assertEqual(len(overlay["ETH"]), 4)
+        self.assertEqual(overlay["BTC"][0]["target_at_utc"], "2026-11-06T00:00:00Z")
+        self.assertEqual(overlay["BTC"][0]["expected_close"], 75573.64)
+        self.assertTrue(overlay["research_only"])
+        self.assertFalse(overlay["original_monday_issuance"])
+        self.assertFalse(overlay["official_scoring_eligible"])
+        self.assertEqual(result["weeks"][0]["forecast_status"], "UNAVAILABLE")
+        self.assertEqual(result["weeks"][0]["forecast"], [])
+        self.assertEqual(
+            json.loads((self.root / "05_CYCLE_NAVIGATOR/site/dist/data/graph-history/timeline.json").read_text())
+            ["first_honest_midweek_research"]["frozen_packet_sha256"],
+            overlay["frozen_packet_sha256"])
+
+        # On each attempted mutation, research overlay disappears. Frozen
+        # Monday original stays unavailable and actual source remains separate.
+        packet = self.root / files[0]
+        original = packet.read_bytes()
+        mutated = json.loads(original)
+        mutated["first_public_issue_utc"] = "2026-11-05T18:00:00Z"
+        put(packet, mutated)
+        self.assertIsNone(publish(self.root)["first_honest_midweek_research"])
+        self.assertEqual(publish(self.root)["weeks"][0]["forecast"], [])
+        packet.write_bytes(original)
+        changed = json.loads(original)
+        changed["assets"]["BTC"]["forecasts"][0]["B1_conditional_close"] += 500
+        put(packet, changed)
+        self.assertIsNone(publish(self.root)["first_honest_midweek_research"])
+        packet.write_bytes(original)
+        w45 = self.root / files[2]
+        before = w45.read_text()
+        w45.write_text(before.replace("75952.45", "79952.45"))
+        self.assertIsNone(publish(self.root)["first_honest_midweek_research"])
+
+    def test_midweek_overlay_never_claims_seven_original_when_w45_valid_monday_source(self):
+        source(self.root, status="PUBLISHED")
+        archive(self.root, W45)
+        # No original owner-issued Thursday packet in this fixture.
+        result = publish(self.root)
+        self.assertIsNone(result["first_honest_midweek_research"])
+        self.assertEqual(result["weeks"][0]["forecast_status"], "PUBLISHED")
+
     def test_missing_research_preview_never_blocks_canonical_site(self):
         self.assertEqual(publish_w45_research_preview(self.root), "NOT_AVAILABLE")
         self.assertEqual(archive(self.root, W45)["weeks"][0]["status"], "MISSING_FREEZE")
