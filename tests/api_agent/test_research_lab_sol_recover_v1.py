@@ -65,6 +65,23 @@ def native(path):
 
 
 class RecoveryNativeTests(unittest.TestCase):
+
+    def test_collector_workflow_heredocs_and_guard_removal(self):
+        """The no-POST collector must remain valid shell, not an Actions expression."""
+        workflow = (Path(__file__).resolve().parents[2] /
+                    ".github/workflows/research-lab-sol-dispatch.yml").read_text()
+        invalid = "python - " + "$" + "{{'PY'"
+        valid = "python - " + "<<" + "'PY'"
+        self.assertNotIn(invalid, workflow, "COLLECTOR_WORKFLOW_HEREDOC_INVALID")
+        for step in ("Parse exact original-run ID",
+                     "Persist original result in existing research evidence lane"):
+            heading = "      - name: " + step + "\n"
+            self.assertIn(heading, workflow)
+            body = workflow.split(heading, 1)[1].split("\n      - name:", 1)[0]
+            self.assertIn(valid, body, "COLLECTOR_WORKFLOW_HEREDOC_MISSING:" + step)
+            with self.assertRaises(AssertionError):
+                self.assertNotIn(invalid, body.replace(valid, invalid, 1))
+
     def test_exact_native_proof_and_response_hash(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
