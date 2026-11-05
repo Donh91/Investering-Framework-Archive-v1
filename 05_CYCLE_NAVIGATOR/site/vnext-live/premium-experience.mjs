@@ -166,13 +166,9 @@ export function pathRotationDisplay(path,lang='da'){
  * A weekly CN issue and a valid public hourly closing feed are different
  * authorities. Neither is a forecast, stage transition, or current action. */
 export function pathSourceReadback(view,latest,lang='da',now=Date.now()){
- const t=txt(lang),w=view?.weekly,p=view?.path,comp=view?.compass;
- const eligible=p?.state==='SOURCE_BOUND'&&comp?.state==='FRESH'&&
-  comp?.permit_path_live_gates===true&&
-  p?.source_week===w?.forecast_week&&p?.source_issue===w?.public_issue_number&&
-  p?.source_identity===comp?.compass_id&&
-  typeof w?.forecast_week==='string'&&/^20\d{2}-W(?:0[1-9]|[1-4]\d|5[0-3])$/.test(w.forecast_week)&&
-  Number.isInteger(w?.public_issue_number)&&w.public_issue_number>0;
+ const t=txt(lang),w=view?.weekly;
+ // Exactly the SAME selector used by the displayed PATH reference rail.
+ const eligible=pathModel(view,lang).eligible;
  const weekly=eligible?'CN #'+w.public_issue_number+' · '+w.forecast_week:t.pathSourceMissing;
  const live=latest?.public_live_precision,path=live?.hourly_price_path,quotes=live?.price_quote_labels;
  const status=live?.contract==='CN_PUBLIC_LIVE_PRICE_PRECISION_v1'&&
@@ -182,7 +178,14 @@ export function pathSourceReadback(view,latest,lang='da',now=Date.now()){
    path.forecast_week===live.forecast_week&&path.public_issue_number===live.public_issue_number&&
    live.forecast_week===w?.forecast_week&&live.public_issue_number===w?.public_issue_number&&
    quotes?.contract==='CN_PUBLIC_PRICE_QUOTE_LABELS_v1'&&
-   quotes.actual_native_spot?.BTC==='USDT'&&quotes.conversion_applied===false;
+   quotes.actual_native_spot?.BTC==='USDT'&&quotes.actual_native_spot?.ETH==='USDT'&&
+   quotes.conversion_applied===false&&
+   Array.isArray(path.BTC)&&path.BTC.length>0&&
+   Array.isArray(path.ETH)&&path.ETH.length>0&&
+   path.BTC.at(-1)?.observed_at_utc===path.observed_through_utc&&
+   path.ETH.at(-1)?.observed_at_utc===path.observed_through_utc&&
+   typeof path.BTC.at(-1)?.close==='number'&&Number.isFinite(path.BTC.at(-1).close)&&path.BTC.at(-1).close>0&&
+   typeof path.ETH.at(-1)?.close==='number'&&Number.isFinite(path.ETH.at(-1).close)&&path.ETH.at(-1).close>0;
  const observedTime=status?Date.parse(path.observed_through_utc):NaN;
  const validTime=Number.isFinite(observedTime)&&observedTime>0&&observedTime<=now&&
    Date.parse(live.live_as_of_utc)===observedTime;
