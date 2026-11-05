@@ -308,7 +308,17 @@
         "literal Kompas readback",
         "source matrices checked"
       ],
-      "restart_trigger": "Reviewed exact-head PR acceptance and merge"
+      "restart_trigger": "Current literal Kompas readback against real source/clock plus all 14 horizon statuses; PR #1878 code itself is already merged and must not be reopened",
+      "code_delivery": {
+        "state": "MERGED_MAIN_VERIFIED",
+        "pr": 1878,
+        "merge_commit": "59d692b9b980f84e0d6cfb56232d9b38dd801f3a",
+        "original_global_routing_and_ledger_present": true,
+        "remaining_before_verified_complete": [
+          "LITERAL_KOMPAS_CURRENT_SOURCE_OUTPUT_READBACK",
+          "REQUIRED_14_HORIZON_SOURCE_MATRIX_CHECK"
+        ]
+      }
     },
     {
       "id": "G1",
@@ -320,7 +330,7 @@
         1578,
         1156
       ],
-      "state": "BLOCKED_EXTERNAL",
+      "state": "NATURAL_WAIT",
       "deliverables": [
         "Bounded pre-freeze semantic fallback with measured API cap",
         "Original prospective seven BTC daily closes or documented abstention",
@@ -335,7 +345,56 @@
         "cdn_timeline_parity",
         "green_without_blue_negative_test"
       ],
-      "restart_trigger": "Original W45 natural source + verified current-main Vault separation"
+      "restart_trigger": "At original 2026-W46 Master Monday/CN issuance on Monday 2026-11-09, verify source manifest, immutable 7/7 both asset price/range receipt, exact native quote and public Graph B; if absent remain PRODUCT_INCOMPLETE and do not backfill W45",
+      "code_delivery": {
+        "state": "SOURCE_AND_SITE_PIPELINES_MERGED_VERIFIED",
+        "owner": "ORIGINAL_MASTER_MONDAY_CN_GITHUB_ACTIONS",
+        "implemented": [
+          {
+            "pr": 1879,
+            "merge_commit": "d039d2ce1003de1e7f31f558ca21b0b3f82f4b54",
+            "scope": "PREMODEL_WEEKLY_SOURCE_PRICE_QUOTE_ADMISSION"
+          },
+          {
+            "pr": 1872,
+            "merge_commit": "340b025df72dd788918f06279022560efee5eb59",
+            "scope": "ORIGINAL_CN_GRAPH_HISTORY_AND_ACTUAL_SOURCE"
+          },
+          {
+            "pr": 1901,
+            "merge_commit": "1d2743dd8963d7e15d0f61f04eda9e04468509d7",
+            "scope": "PUBLIC_USD_USDT_TRUTHFUL_DISPLAY"
+          },
+          {
+            "pr": 1902,
+            "merge_commit": "c6608fc74298f5cb9f4271e05ca087494d5880f7",
+            "scope": "MONDAY_SEVEN_DAY_PRODUCT_ACCEPTANCE"
+          }
+        ],
+        "verified_public_green_source": true,
+        "independent_first_known_and_same_quote_scientific_edge_claim": false
+      },
+      "actual_product_delivery": {
+        "forecast_week": "2026-W45",
+        "original_frozen_daily_expected_close_counts": {
+          "BTC": 0,
+          "ETH": 0
+        },
+        "original_frozen_daily_range_plan_counts": {
+          "BTC": 0,
+          "ETH": 0
+        },
+        "original_frozen_7d_blue_status": "UNAVAILABLE",
+        "product_status": "INCOMPLETE",
+        "prospectively_issued_7d_product": false,
+        "unverified_weekly_quote_for_W45": "UNAVAILABLE",
+        "next_natural_target_forecast_week": "2026-W46",
+        "next_natural_utc_monday": "2026-11-09",
+        "required_daily_expected_closes_each_asset": 7,
+        "required_reasoned_daily_range_plan_each_asset": 7,
+        "official_authority": "UNCHANGED_GITHUB_ACTIONS_ORIGINAL_FREEZE",
+        "shadow_research_can_substitute": false
+      }
     },
     {
       "id": "G2",
@@ -391,7 +450,7 @@
         1578,
         1593
       ],
-      "state": "NOT_STARTED",
+      "state": "IN_PROGRESS",
       "deliverables": [
         "Sanitized complete horizon-vector readback",
         "One minimal BTC Graph History with original source owner",
@@ -405,7 +464,29 @@
         "cdn_actual",
         "source_missing_negative"
       ],
-      "restart_trigger": "G1 authentic original graph, G0 source-render contract and no collision with #1872"
+      "restart_trigger": "Independent W46 original source and 14-horizon sanitized site proof plus any newly verified physical Safari/mobile issues; do not duplicate already merged Graph History #1872",
+      "code_delivery": {
+        "state": "SOURCE_BOUND_GRAPH_HISTORY_AND_MOBILE_RUNTIME_AVAILABLE_NOT_FULL_14_HORIZON_RELEASE",
+        "verified": [
+          {
+            "pr": 1872,
+            "scope": "MULTIWEEK_GRAPH_HISTORY_SOURCE_BOUND"
+          },
+          {
+            "pr": 1905,
+            "scope": "OPTIONAL_W45_RESEARCH_PAGE_SOURCE_BOUND_NOT_OFFICIAL_GRAPH_B"
+          },
+          {
+            "pr": 1909,
+            "scope": "EXACT_PAGE_SCRIPT_GREEN_AMBER_GREY_RENDER_390_430_RUNTIME_TESTS"
+          }
+        ],
+        "live_public_research_preview": "https://donh91.github.io/Investering-Framework-Archive-v1/research-w45/",
+        "research_expected_close_7_of_7_promoted": false,
+        "canonical_w45_7d_blue_status": "UNAVAILABLE",
+        "physical_iphone_safari_visual_review_verified": false,
+        "full_14_horizon_source_grade_public_renderer_verified": false
+      }
     },
     {
       "id": "G5",
@@ -503,5 +584,17 @@
     "stale_issue_status_not_authoritative": true,
     "source_live_status_read_each_run": true,
     "owner_issue_comment_log_required": true
+  },
+  "release_phase_status_readback": {
+    "contract": "KOMPAS_PRO_RELEASE_PARTIAL_SOURCE_EVIDENCE_v1",
+    "as_of_utc": "2026-11-05T00:14:05.616Z",
+    "evidence_class": "HISTORICAL_GITHUB_MERGE_AND_PUBLIC_READBACK_NOT_LIVE_MARKET_AUTHORITY",
+    "G0": "CODE_MERGED_LITERAL_SOURCE_MATRIX_PENDING",
+    "G1": "PIPELINES_MERGED_W46_7D_ORIGINAL_PRODUCT_NATURAL_WAIT",
+    "G4": "GRAPH_HISTORY_LIVE_14_HORIZON_RELEASE_PARTIAL",
+    "no_product_completion_claim": true,
+    "no_shadow_promotion": true,
+    "no_original_week45_mutation": true,
+    "no_portfolio_action_authority": true
   }
 }
