@@ -548,6 +548,45 @@ class PullbackTimeboxResearchTests(unittest.TestCase):
         self.assertIsNone(controls["false_negative_recall"])
         self.assertEqual(result["new_warning_or_escalation_events"],1)
 
+    def test_both_warning_and_no_warning_use_same_close_only_trough_and_reclaim(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        market=self.tape(t,100)
+        from scripts.learning.pullback_warning_timeliness_shadow import target_close_after
+        anchor=target_close_after(t)
+        market[anchor+timedelta(hours=1)]["btc"]=94.0
+        market[anchor+timedelta(hours=2)]["btc"]=92.0
+        market[anchor+timedelta(hours=3)]["btc"]=101.0
+        controls=evaluate([self.freeze(t,"NORMAL")],market,t+timedelta(hours=100))
+        c=controls["no_warning_snapshot_controls"]["snapshots"][0]["outcomes"]["12h"]
+        self.assertEqual(c["observed_worst_close_at_utc"],(anchor+timedelta(hours=2)).isoformat().replace("+00:00","Z"))
+        self.assertAlmostEqual(c["observed_worst_btc_close_drawdown_pct"],-8.0)
+        self.assertAlmostEqual(c["time_from_worst_close_to_reclaim_hours"],1.0)
+        self.assertEqual(c["recovery_status"],"OBSERVED_FIRST_LATER_CLOSE_RECLAIM")
+        self.assertFalse(c["recovery_right_censored"])
+        warned=evaluate([self.freeze(t-timedelta(hours=1),"NORMAL"),
+                         self.freeze(t,"ELEVATED")],market,t+timedelta(hours=100))
+        a=warned["alerts"][0]["outcomes"]["12h"]
+        self.assertEqual(a["observed_worst_close_at_utc"],c["observed_worst_close_at_utc"])
+        self.assertEqual(a["time_from_worst_close_to_reclaim_hours"],c["time_from_worst_close_to_reclaim_hours"])
+        self.assertIsNone(controls["no_warning_snapshot_controls"]["false_negative_recall"])
+
+    def test_close_only_recovery_censored_and_invalid_price_unknown(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        market=self.tape(t,100,fall_at=3,fall_to=94.0)
+        control=evaluate([self.freeze(t,"NORMAL")],market,t+timedelta(hours=100))
+        h=control["no_warning_snapshot_controls"]["snapshots"][0]["outcomes"]["12h"]
+        self.assertEqual(h["recovery_status"],"RIGHT_CENSORED_AT_HORIZON")
+        self.assertTrue(h["recovery_right_censored"])
+        self.assertIsNone(h["first_later_reclaim_close_at_utc"])
+        from scripts.learning.pullback_warning_timeliness_shadow import target_close_after
+        anchor=target_close_after(t)
+        market[anchor+timedelta(hours=1)]["btc"]=True
+        invalid=evaluate([self.freeze(t,"NORMAL")],market,t+timedelta(hours=100))
+        self.assertEqual(invalid["no_warning_snapshot_controls"]["horizons"]["12h"]["unknown_n"],1)
+        self.assertEqual(invalid["no_warning_snapshot_controls"]["horizons"]["12h"]["matured_n"],0)
+
     def test_no_embedded_research_result_can_change_original_forecast(self):
         result=run(self.root,ASOF,"rolling14")
         radar=result["pullback_warning_timebox_shadow"]
