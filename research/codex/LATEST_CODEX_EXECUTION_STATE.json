@@ -1,17 +1,17 @@
 {
   "authority": "OBSERVABILITY_ONLY_LATEST_CODEX_READY_TASKS_REMAINS_QUEUE_AUTHORITY",
   "contract": "CODEX_EXECUTION_STATE_v1",
-  "generated_at_utc": "2026-11-05T12:47:57Z",
+  "generated_at_utc": "2026-11-05T22:19:22Z",
   "history_scope": "FORWARD_FROM_CODEX_INTAKE_V1_ACTIVATION_PLUS_CURRENT_STATE_BASELINE",
   "ledger_path": "research/codex/CODEX_EXECUTION_LEDGER.jsonl",
   "queue_authority": "LATEST_CODEX_READY_TASKS.json",
   "summary": {
-    "codex_ready": 12,
+    "codex_ready": 5,
     "in_remediation": 0,
-    "needs_more_evidence": 10,
+    "needs_more_evidence": 3,
     "post_fix_observation": 39,
     "resolved": 24,
-    "total": 85
+    "total": 79
   },
   "tasks": [
     {
@@ -31,6 +31,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature c5d4b004cd85c0ced797 --branch <TASK_BRANCH>",
+      "last_evaluated_at_utc": "2026-11-05T22:19:07Z",
       "last_observed_at_utc": "2026-11-05T12:47:46Z",
       "latest_run_id": 41836231737,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41836231737",
@@ -46,10 +47,10 @@
       ],
       "required_observations": 2,
       "risk_class": "B_CODEX_PR",
-      "route": "CODEX_PR",
+      "route": "NONE",
       "signature": "c5d4b004cd85c0ced797",
       "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "CODEX_READY",
+      "state": "CLEARED_NO_CHANGE",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
         "workflow job logs",
@@ -59,6 +60,7 @@
       ],
       "success_streak": 20,
       "task_contract_sha256": "14b811be8c2a265a8ff1964267a78c35517621799a9985cd08a1a20e52abb018",
+      "terminal_reason": "FINDING_ABSENT_BEFORE_REMEDIATION_BINDING",
       "transition_receipt_path": "research/remediation/transitions/c5d4b004cd85c0ced797.json",
       "transition_receipt_required": true,
       "workflow": "daily-slow-cycle-shadow.yml"
@@ -80,6 +82,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature dbb38d4f6e5030e721ab --branch <TASK_BRANCH>",
+      "last_evaluated_at_utc": "2026-11-05T22:19:07Z",
       "last_observed_at_utc": "2026-11-05T12:47:46Z",
       "latest_run_id": 41834061287,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41834061287",
@@ -95,10 +98,10 @@
       ],
       "required_observations": 2,
       "risk_class": "B_CODEX_PR",
-      "route": "CODEX_PR",
+      "route": "NONE",
       "signature": "dbb38d4f6e5030e721ab",
       "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "CODEX_READY",
+      "state": "CLEARED_NO_CHANGE",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
         "workflow job logs",
@@ -108,6 +111,7 @@
       ],
       "success_streak": 20,
       "task_contract_sha256": "04a0e8f5d758ff89a1659935afa156054bebd0d07dd198786f53aeddfc966a28",
+      "terminal_reason": "FINDING_ABSENT_BEFORE_REMEDIATION_BINDING",
       "transition_receipt_path": "research/remediation/transitions/dbb38d4f6e5030e721ab.json",
       "transition_receipt_required": true,
       "workflow": "monthly-ai-learning-council.yml"
@@ -129,6 +133,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature f9538daacc5d375062e7 --branch <TASK_BRANCH>",
+      "last_evaluated_at_utc": "2026-11-05T22:19:07Z",
       "last_observed_at_utc": "2026-11-05T12:47:46Z",
       "latest_run_id": 41925200684,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41925200684",
@@ -144,10 +149,10 @@
       ],
       "required_observations": 2,
       "risk_class": "B_CODEX_PR",
-      "route": "CODEX_PR",
+      "route": "NONE",
       "signature": "f9538daacc5d375062e7",
       "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "CODEX_READY",
+      "state": "CLEARED_NO_CHANGE",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
         "workflow job logs",
@@ -157,6 +162,7 @@
       ],
       "success_streak": 20,
       "task_contract_sha256": "b1e7ab4a480565f8874167808a2ff0190921dd2335bb64dc12e80b6f31faf7b3",
+      "terminal_reason": "FINDING_ABSENT_BEFORE_REMEDIATION_BINDING",
       "transition_receipt_path": "research/remediation/transitions/f9538daacc5d375062e7.json",
       "transition_receipt_required": true,
       "workflow": "operations-dashboard.yml"
@@ -178,6 +184,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 90386cf337a0366978ad --branch <TASK_BRANCH>",
+      "last_evaluated_at_utc": "2026-11-05T22:19:07Z",
       "last_observed_at_utc": "2026-11-05T12:47:46Z",
       "latest_run_id": 41922883508,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41922883508",
@@ -193,10 +200,10 @@
       ],
       "required_observations": 2,
       "risk_class": "B_CODEX_PR",
-      "route": "CODEX_PR",
+      "route": "NONE",
       "signature": "90386cf337a0366978ad",
       "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "CODEX_READY",
+      "state": "CLEARED_NO_CHANGE",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
         "workflow job logs",
@@ -206,9 +213,214 @@
       ],
       "success_streak": 20,
       "task_contract_sha256": "e0ac8eefc9ec60d5ed9af2a5d1c7319317858db4b39ab1f9337faf63bc313cdb",
+      "terminal_reason": "FINDING_ABSENT_BEFORE_REMEDIATION_BINDING",
       "transition_receipt_path": "research/remediation/transitions/90386cf337a0366978ad.json",
       "transition_receipt_required": true,
       "workflow": "remediation-maturation.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/research-owner-breadth-daily.yml",
+        "directly related scripts and tests"
+      ],
+      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "SCHEDULE_STALE",
+      "first_observed_at_utc": "2026-11-04T12:36:40Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 9ae0a76b9f1d048976b1 --branch <TASK_BRANCH>",
+      "last_evaluated_at_utc": "2026-11-05T22:19:07Z",
+      "last_observed_at_utc": "2026-11-05T12:47:46Z",
+      "latest_run_id": 41848796627,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41848796627",
+      "lifecycle_state": "ACTIVE",
+      "objective": "Resolve SCHEDULE_STALE for research-owner-breadth-daily.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+      "observations": 3,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "precondition": "Fresh Automation Production Health still contains signature 9ae0a76b9f1d048976b1 for research-owner-breadth-daily.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "B_CODEX_PR",
+      "route": "NONE",
+      "signature": "9ae0a76b9f1d048976b1",
+      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
+      "state": "CLEARED_NO_CHANGE",
+      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+      "success_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests",
+        "3_SUCCESSFUL_EXPECTED_RUNS"
+      ],
+      "success_streak": 20,
+      "task_contract_sha256": "696630f0cb9e68eeaa58765a7bbc3db8bf675b48e4b919527fbaf7c97c45408a",
+      "terminal_reason": "FINDING_ABSENT_BEFORE_REMEDIATION_BINDING",
+      "transition_receipt_path": "research/remediation/transitions/9ae0a76b9f1d048976b1.json",
+      "transition_receipt_required": true,
+      "workflow": "research-owner-breadth-daily.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/rich-breadth-checkpoint.yml",
+        "directly related scripts and tests"
+      ],
+      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "SCHEDULE_STALE",
+      "first_observed_at_utc": "2026-11-04T12:36:40Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature d9a66dedabacfa13f52e --branch <TASK_BRANCH>",
+      "last_evaluated_at_utc": "2026-11-05T22:19:07Z",
+      "last_observed_at_utc": "2026-11-05T12:47:46Z",
+      "latest_run_id": 41948887081,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41948887081",
+      "lifecycle_state": "ACTIVE",
+      "objective": "Resolve SCHEDULE_STALE for rich-breadth-checkpoint.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+      "observations": 3,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "precondition": "Fresh Automation Production Health still contains signature d9a66dedabacfa13f52e for rich-breadth-checkpoint.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "B_CODEX_PR",
+      "route": "NONE",
+      "signature": "d9a66dedabacfa13f52e",
+      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
+      "state": "CLEARED_NO_CHANGE",
+      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+      "success_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests",
+        "3_SUCCESSFUL_EXPECTED_RUNS"
+      ],
+      "success_streak": 20,
+      "task_contract_sha256": "41b192e864c8b6e1af0b553eefecedf47af175759421e0934725bb695af0cb69",
+      "terminal_reason": "FINDING_ABSENT_BEFORE_REMEDIATION_BINDING",
+      "transition_receipt_path": "research/remediation/transitions/d9a66dedabacfa13f52e.json",
+      "transition_receipt_required": true,
+      "workflow": "rich-breadth-checkpoint.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/shared-row-prospective-evidence-loop.yml",
+        "directly related scripts and tests"
+      ],
+      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "SCHEDULE_STALE",
+      "first_observed_at_utc": "2026-11-04T12:36:40Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 2692d5672c82e38e2389 --branch <TASK_BRANCH>",
+      "last_evaluated_at_utc": "2026-11-05T22:19:07Z",
+      "last_observed_at_utc": "2026-11-05T12:47:46Z",
+      "latest_run_id": 41963525822,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41963525822",
+      "lifecycle_state": "ACTIVE",
+      "objective": "Resolve SCHEDULE_STALE for shared-row-prospective-evidence-loop.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+      "observations": 3,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "precondition": "Fresh Automation Production Health still contains signature 2692d5672c82e38e2389 for shared-row-prospective-evidence-loop.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "B_CODEX_PR",
+      "route": "NONE",
+      "signature": "2692d5672c82e38e2389",
+      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
+      "state": "CLEARED_NO_CHANGE",
+      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+      "success_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests",
+        "3_SUCCESSFUL_EXPECTED_RUNS"
+      ],
+      "success_streak": 20,
+      "task_contract_sha256": "5a8aeb9b010ac092a46c0d54e87f64247e6daab2a2ef84d1e86d307794362d26",
+      "terminal_reason": "FINDING_ABSENT_BEFORE_REMEDIATION_BINDING",
+      "transition_receipt_path": "research/remediation/transitions/2692d5672c82e38e2389.json",
+      "transition_receipt_required": true,
+      "workflow": "shared-row-prospective-evidence-loop.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/source-provenance-recovery-loop.yml",
+        "directly related scripts and tests"
+      ],
+      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "SCHEDULE_STALE",
+      "first_observed_at_utc": "2026-11-04T12:36:40Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 82b2ee52753c4a28e0a9 --branch <TASK_BRANCH>",
+      "last_evaluated_at_utc": "2026-11-05T22:19:07Z",
+      "last_observed_at_utc": "2026-11-05T12:47:46Z",
+      "latest_run_id": 41843896885,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41843896885",
+      "lifecycle_state": "ACTIVE",
+      "objective": "Resolve SCHEDULE_STALE for source-provenance-recovery-loop.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+      "observations": 3,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "precondition": "Fresh Automation Production Health still contains signature 82b2ee52753c4a28e0a9 for source-provenance-recovery-loop.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "B_CODEX_PR",
+      "route": "NONE",
+      "signature": "82b2ee52753c4a28e0a9",
+      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
+      "state": "CLEARED_NO_CHANGE",
+      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+      "success_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests",
+        "3_SUCCESSFUL_EXPECTED_RUNS"
+      ],
+      "success_streak": 20,
+      "task_contract_sha256": "be97bad9858ef682f2dd92755d0178105fadacc8ca7c126b53c1b39edb066c41",
+      "terminal_reason": "FINDING_ABSENT_BEFORE_REMEDIATION_BINDING",
+      "transition_receipt_path": "research/remediation/transitions/82b2ee52753c4a28e0a9.json",
+      "transition_receipt_required": true,
+      "workflow": "source-provenance-recovery-loop.yml"
     },
     {
       "allowed_change_scope": [
@@ -237,7 +449,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a369f29837aa0a0c3c82 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -310,7 +522,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -382,7 +594,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -443,7 +655,7 @@
         "private source publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 19427e2aa5b87c1b2426 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -480,29 +692,29 @@
     },
     {
       "allowed_change_scope": [
-        ".github/workflows/research-owner-breadth-daily.yml",
+        ".github/workflows/research-lab-sol-dispatch.yml",
         "directly related scripts and tests"
       ],
       "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
       "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-04T12:36:40Z",
+      "failure_streak": 10,
+      "finding": "REPEATED_CONSECUTIVE_FAILURES",
+      "first_observed_at_utc": "2026-11-05T22:19:07Z",
       "forbidden_changes": [
         "market gates",
         "model weights",
         "canonical authority",
         "portfolio logic"
       ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 9ae0a76b9f1d048976b1 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 41848796627,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41848796627",
+      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature ac7f6a72e007935d3979 --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-11-05T22:19:07Z",
+      "latest_run_id": 42112267128,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42112267128",
       "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for research-owner-breadth-daily.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature 9ae0a76b9f1d048976b1 for research-owner-breadth-daily.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
+      "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for research-lab-sol-dispatch.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+      "observations": 1,
+      "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
+      "precondition": "Fresh Automation Production Health still contains signature ac7f6a72e007935d3979 for research-lab-sol-dispatch.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
         "workflow job logs",
         "reproduction or repeated identical signature",
@@ -511,511 +723,21 @@
       "required_observations": 2,
       "risk_class": "B_CODEX_PR",
       "route": "CODEX_PR",
-      "signature": "9ae0a76b9f1d048976b1",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
+      "signature": "ac7f6a72e007935d3979",
+      "source_health_generated_at_utc": "2026-11-05T22:09:45.503461Z",
       "state": "CODEX_READY",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
         "workflow job logs",
         "reproduction or repeated identical signature",
         "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
+        "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN"
       ],
-      "success_streak": 20,
-      "task_contract_sha256": "696630f0cb9e68eeaa58765a7bbc3db8bf675b48e4b919527fbaf7c97c45408a",
-      "transition_receipt_path": "research/remediation/transitions/9ae0a76b9f1d048976b1.json",
+      "success_streak": 0,
+      "task_contract_sha256": "71a1c02ff808a6173e58a229c3e3a299c44933517b3f7b92ec28b30fc847f152",
+      "transition_receipt_path": "research/remediation/transitions/ac7f6a72e007935d3979.json",
       "transition_receipt_required": true,
-      "workflow": "research-owner-breadth-daily.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/rich-breadth-checkpoint.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-04T12:36:40Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature d9a66dedabacfa13f52e --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 41948887081,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41948887081",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for rich-breadth-checkpoint.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature d9a66dedabacfa13f52e for rich-breadth-checkpoint.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 2,
-      "risk_class": "B_CODEX_PR",
-      "route": "CODEX_PR",
-      "signature": "d9a66dedabacfa13f52e",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 20,
-      "task_contract_sha256": "41b192e864c8b6e1af0b553eefecedf47af175759421e0934725bb695af0cb69",
-      "transition_receipt_path": "research/remediation/transitions/d9a66dedabacfa13f52e.json",
-      "transition_receipt_required": true,
-      "workflow": "rich-breadth-checkpoint.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/shared-row-prospective-evidence-loop.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-04T12:36:40Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 2692d5672c82e38e2389 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 41963525822,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41963525822",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for shared-row-prospective-evidence-loop.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature 2692d5672c82e38e2389 for shared-row-prospective-evidence-loop.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 2,
-      "risk_class": "B_CODEX_PR",
-      "route": "CODEX_PR",
-      "signature": "2692d5672c82e38e2389",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 20,
-      "task_contract_sha256": "5a8aeb9b010ac092a46c0d54e87f64247e6daab2a2ef84d1e86d307794362d26",
-      "transition_receipt_path": "research/remediation/transitions/2692d5672c82e38e2389.json",
-      "transition_receipt_required": true,
-      "workflow": "shared-row-prospective-evidence-loop.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/source-provenance-recovery-loop.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-04T12:36:40Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 82b2ee52753c4a28e0a9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 41843896885,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41843896885",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for source-provenance-recovery-loop.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature 82b2ee52753c4a28e0a9 for source-provenance-recovery-loop.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 2,
-      "risk_class": "B_CODEX_PR",
-      "route": "CODEX_PR",
-      "signature": "82b2ee52753c4a28e0a9",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 20,
-      "task_contract_sha256": "be97bad9858ef682f2dd92755d0178105fadacc8ca7c126b53c1b39edb066c41",
-      "transition_receipt_path": "research/remediation/transitions/82b2ee52753c4a28e0a9.json",
-      "transition_receipt_required": true,
-      "workflow": "source-provenance-recovery-loop.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/autonomous-research-governance-loop.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-05T12:47:46Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 8db1a2d74fe3828b2eab --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 41850535884,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41850535884",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for autonomous-research-governance-loop.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 1,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature 8db1a2d74fe3828b2eab for autonomous-research-governance-loop.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 2,
-      "risk_class": "B_CODEX_PR",
-      "route": "OBSERVE",
-      "signature": "8db1a2d74fe3828b2eab",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "OBSERVED",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 20,
-      "task_contract_sha256": "390c7f97769f9d8376ee0675a01a3b131f44e70dc10ea33f77fc2c054b190fd8",
-      "transition_receipt_path": "research/remediation/transitions/8db1a2d74fe3828b2eab.json",
-      "transition_receipt_required": true,
-      "workflow": "autonomous-research-governance-loop.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/compass-schedule-watchdog.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-05T12:47:46Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature c545f8e0910aa11fab86 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 41941383025,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41941383025",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for compass-schedule-watchdog.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 1,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature c545f8e0910aa11fab86 for compass-schedule-watchdog.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 3,
-      "risk_class": "B_CODEX_PR",
-      "route": "OBSERVE",
-      "signature": "c545f8e0910aa11fab86",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "OBSERVED",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 20,
-      "task_contract_sha256": "6e5f43787d47ea6ba6fc0048894c4d6f363fba932ed59ed3a40a8d22820f9b08",
-      "transition_receipt_path": "research/remediation/transitions/c545f8e0910aa11fab86.json",
-      "transition_receipt_required": true,
-      "workflow": "compass-schedule-watchdog.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/daily-compass.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-05T12:47:46Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature f84fd11c4e2f784a8c79 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 42018908906,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42018908906",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for daily-compass.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 1,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature f84fd11c4e2f784a8c79 for daily-compass.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 3,
-      "risk_class": "B_CODEX_PR",
-      "route": "OBSERVE",
-      "signature": "f84fd11c4e2f784a8c79",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "OBSERVED",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 20,
-      "task_contract_sha256": "d036a47a5666d249cf885391f75f1e7166a652bf5fb8be940a5c347f8e8187df",
-      "transition_receipt_path": "research/remediation/transitions/f84fd11c4e2f784a8c79.json",
-      "transition_receipt_required": true,
-      "workflow": "daily-compass.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/daily-director-shadow.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-05T12:47:46Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 290a6eef59374e2b7615 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 41956811356,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41956811356",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for daily-director-shadow.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 1,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature 290a6eef59374e2b7615 for daily-director-shadow.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 3,
-      "risk_class": "B_CODEX_PR",
-      "route": "OBSERVE",
-      "signature": "290a6eef59374e2b7615",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "OBSERVED",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 20,
-      "task_contract_sha256": "08530f5817c3fabb29af30e2742dea2f34fa026a4b2cef261565635a0d199bc0",
-      "transition_receipt_path": "research/remediation/transitions/290a6eef59374e2b7615.json",
-      "transition_receipt_required": true,
-      "workflow": "daily-director-shadow.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/daily-stablecoin-liquidity.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-05T12:47:46Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature c673a6565466f5fff7b4 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 41850219113,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41850219113",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for daily-stablecoin-liquidity.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 1,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature c673a6565466f5fff7b4 for daily-stablecoin-liquidity.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 2,
-      "risk_class": "B_CODEX_PR",
-      "route": "OBSERVE",
-      "signature": "c673a6565466f5fff7b4",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "OBSERVED",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 20,
-      "task_contract_sha256": "5bb6f80cdca5ed8dd30eb76a34dd9edba4feb635dabdf9ca379141137952f570",
-      "transition_receipt_path": "research/remediation/transitions/c673a6565466f5fff7b4.json",
-      "transition_receipt_required": true,
-      "workflow": "daily-stablecoin-liquidity.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/research-owner-btcd-daily.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-05T12:47:46Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 0a607e0c3b194a89ca65 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 41851650154,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41851650154",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for research-owner-btcd-daily.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 1,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature 0a607e0c3b194a89ca65 for research-owner-btcd-daily.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 2,
-      "risk_class": "B_CODEX_PR",
-      "route": "OBSERVE",
-      "signature": "0a607e0c3b194a89ca65",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "OBSERVED",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 20,
-      "task_contract_sha256": "4917a7787d24e39ae018c7410b2d15d7fa87c34fe70f3ca3d075915664569b9f",
-      "transition_receipt_path": "research/remediation/transitions/0a607e0c3b194a89ca65.json",
-      "transition_receipt_required": true,
-      "workflow": "research-owner-btcd-daily.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/shadow-compass-v2.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "SCHEDULE_STALE",
-      "first_observed_at_utc": "2026-11-05T12:47:46Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature f5d79a5472c3be598fd6 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 41941361111,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41941361111",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve SCHEDULE_STALE for shadow-compass-v2.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 1,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature f5d79a5472c3be598fd6 for shadow-compass-v2.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 3,
-      "risk_class": "B_CODEX_PR",
-      "route": "OBSERVE",
-      "signature": "f5d79a5472c3be598fd6",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
-      "state": "OBSERVED",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 20,
-      "task_contract_sha256": "cec33c9c165eec18f79c9dd55bac239033eefedd149d22854fd4a144c7286700",
-      "transition_receipt_path": "research/remediation/transitions/f5d79a5472c3be598fd6.json",
-      "transition_receipt_required": true,
-      "workflow": "shadow-compass-v2.yml"
+      "workflow": "research-lab-sol-dispatch.yml"
     },
     {
       "allowed_change_scope": [
@@ -1034,12 +756,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 69fcc2d6cfd9ec2f7085 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
+      "last_observed_at_utc": "2026-11-05T22:19:07Z",
       "latest_run_id": 37676031230,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/37676031230",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve RECOVERING_AFTER_RECENT_FAILURES for edge001-t2-registry.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 66,
+      "observations": 67,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "precondition": "Fresh Automation Production Health still contains signature 69fcc2d6cfd9ec2f7085 for edge001-t2-registry.yml/RECOVERING_AFTER_RECENT_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -1051,7 +773,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "69fcc2d6cfd9ec2f7085",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
+      "source_health_generated_at_utc": "2026-11-05T22:09:45.503461Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -1083,12 +805,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 9647a849c6137484fed0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
-      "latest_run_id": 42017623853,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42017623853",
+      "last_observed_at_utc": "2026-11-05T22:19:07Z",
+      "latest_run_id": 42119235746,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42119235746",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H for hourly-sequence-capture.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 35,
+      "observations": 36,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 9647a849c6137484fed0 for hourly-sequence-capture.yml/HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -1100,7 +822,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "9647a849c6137484fed0",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
+      "source_health_generated_at_utc": "2026-11-05T22:09:45.503461Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -1132,12 +854,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 567527d9b72e9975ed4e --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:46Z",
+      "last_observed_at_utc": "2026-11-05T22:19:07Z",
       "latest_run_id": 41407002068,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41407002068",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve RECOVERING_AFTER_RECENT_FAILURES for sunday-market-close-and-cfgi.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 23,
+      "observations": 24,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 567527d9b72e9975ed4e for sunday-market-close-and-cfgi.yml/RECOVERING_AFTER_RECENT_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -1149,7 +871,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "567527d9b72e9975ed4e",
-      "source_health_generated_at_utc": "2026-11-05T12:35:24.562176Z",
+      "source_health_generated_at_utc": "2026-11-05T22:09:45.503461Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -1193,7 +915,7 @@
         "suppressing genuinely missed expected runs"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature fc85702034f4024cba02 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1266,7 +988,7 @@
         "workflow schedules unrelated to health observation"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 1763b3d77bcf2dca5b37 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1339,7 +1061,7 @@
         "weakening required forecast fields merely to make parsing pass"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 774d6478412574ae9461 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1413,7 +1135,7 @@
         "weakening pointer hash verification"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature dbafb3a6d059c6375c6e --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1481,7 +1203,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature f1a5d4570b28c8325c8b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1556,7 +1278,7 @@
         "sampling schedules"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 1bdca0e1db62aaccc292 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1636,7 +1358,7 @@
         "review-budget threshold changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 5772814fc479a87eb694 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1719,7 +1441,7 @@
         "review-budget threshold changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 1623dee92fa97bf2a9bd --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1798,7 +1520,7 @@
         "workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 50b1e1fd5809ae36c2b6 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1868,7 +1590,7 @@
         "workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 920994b3a419997af94d --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1941,7 +1663,7 @@
         "rewriting historical research evidence"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 992f7f91fff033487385 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2013,7 +1735,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 644003823eb58c75eeb1 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2088,7 +1810,7 @@
         "weakening scripts/governance/check_append_only_evidence.py"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e2e06783f79846eceb10 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2159,7 +1881,7 @@
         "workflow schedule or trigger changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ad33f0ed0776e20da9f3 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2233,7 +1955,7 @@
         "workflow schedule or trigger changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 4a968f5f8577265ab5fd --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2296,7 +2018,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 90f76bff777fb07fe2c0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2374,7 +2096,7 @@
         "trading or SELL action semantics"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a6e20836103b8e49f4ab --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2453,7 +2175,7 @@
         "threshold invention"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 29f285578389eca587bd --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2521,7 +2243,7 @@
         "retrospective timing reconstruction"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c9adb00c6dc0d7daec45 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2592,7 +2314,7 @@
         "re-enabling retired breadth predictive authority"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 6d300c1feb6603433dca --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2664,7 +2386,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 560bc131167442101f8b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2738,7 +2460,7 @@
         "stale threshold changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 7b83701444e991ea1722 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2811,7 +2533,7 @@
         "retrospective uncensoring"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 3ddfccaba4b59ce99cc8 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2884,7 +2606,7 @@
         "workflow schedule or trigger changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 07f98812e44e77f54fa2 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -2970,7 +2692,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 5b3f080e7ac85eb04b65 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3048,7 +2770,7 @@
         "unrelated workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ffa962f667950097668e --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3123,7 +2845,7 @@
         "skill authoring or automatic registry mutation"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 7aca41ad40562550eec9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3194,7 +2916,7 @@
         "workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 6b7e494a6dbf5bd9aa46 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3265,7 +2987,7 @@
         "retroactive scoring"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ad9eb8075d7529802226 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3334,7 +3056,7 @@
         "retrospective row backfill"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b14f0f264547ba5e6ed0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3406,7 +3128,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e42a4face457d80066d7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3476,7 +3198,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature f7ca0bb8cce97bea8619 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3551,7 +3273,7 @@
         "private raw data publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 4e2c6df9c10d30c4b1d9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3623,7 +3345,7 @@
         "predecessor selection or time policy"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a2838fc5808208860a9c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3697,7 +3419,7 @@
         "private source bytes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ad6c41744767265f7c5a --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3774,7 +3496,7 @@
         "source first-known promotion"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ff1c1d6794fc131c6991 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3847,7 +3569,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c767d605f29f7bd2722b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3914,7 +3636,7 @@
         "timestamp rewriting"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a9f7ba653c7655a20c97 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -3986,7 +3708,7 @@
         "treating retrieval failure as NO_NEW_MATERIAL_CATALYST"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 794db8bab0e3fe7454f1 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4067,7 +3789,7 @@
         "weakening no-lookahead or terminal provider assertions"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature d6b3315bde4696b62b7b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4148,7 +3870,7 @@
         "weakening the provider-bounded v3.1 no-lookahead contract"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ec5f07ad340fb6efaba7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4221,7 +3943,7 @@
         "rewriting historical W34 artifacts"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 71ee5ee351c3f847b5d4 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4304,7 +4026,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b62105cfe794e5c80c70 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4389,7 +4111,7 @@
         "weekly owner persistence"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature fcc1788f4f8ef1d1e330 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4466,7 +4188,7 @@
         "workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 519faf5dbdea209bd86a --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4540,7 +4262,7 @@
         "workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a5c6723d706bb2f703bb --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4611,7 +4333,7 @@
         "workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ebaa23067c15f9617f44 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4686,7 +4408,7 @@
         "workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature eb484eb56d9d714de993 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4758,7 +4480,7 @@
         "workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c5c44d064aa1c7bcd318 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4832,7 +4554,7 @@
         "workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b53fa52dc306023f3a12 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4911,7 +4633,7 @@
         "telemetry-driven resolution or post-fix bypass"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature f5079796ac4143f9b385 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -4987,7 +4709,7 @@
         "workflow schedule or trigger changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 719d63ce62a65a3c08f7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5063,7 +4785,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature d5f9cc11d5d7d05418b9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5138,7 +4860,7 @@
         "workflow schedule or trigger changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b753d6295680eb62d7a3 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5212,7 +4934,7 @@
         "workflow schedule or trigger changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature f976903834cfe0b49297 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5289,7 +5011,7 @@
         "workflow schedule or trigger changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 0d8e569e7924526a7378 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5370,7 +5092,7 @@
         "user alerts"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature fb4a2d5e71b40ba39d61 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:57Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5447,7 +5169,7 @@
         "qualitative-label portfolio authority"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 4bc9351c84bc70cb0583 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5522,7 +5244,7 @@
         "retrospective evidence rewrite"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 6574d30a3f1e5cbf9e4d --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5600,7 +5322,7 @@
         "retrospective evidence rewrite"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 0905eced7be72e94f276 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5676,7 +5398,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 49ecf37e76b7834b97a5 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5752,7 +5474,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 5d77a6e68e092eed1ca3 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:21Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -5826,7 +5548,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 8f6171759c38388efd76 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-05T12:47:56Z",
+      "last_observed_at_utc": "2026-11-05T22:19:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
