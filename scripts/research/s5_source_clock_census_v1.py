@@ -58,7 +58,7 @@ def census_capture(capture: dict[str, Any], *, source_blob_sha: str | None = Non
         ts = [row_ms(row) for row in rows]
         if len(ts) != len(set(ts)):
             raise ValueError(f"{field}_duplicate_hourly_clock")
-        needed = baseline_hours if field in ("spot_hourly", "oi_hourly") else flow_hours
+        needed = (baseline_hours if field == "spot_hourly" else\n                  [baseline_hours[0], baseline_hours[-1]] if field == "oi_hourly" else\n                  flow_hours if field == "futures_taker_hourly" else\n                  [flow_hours[-1]])
         existing = set(ts)
         absent = sum(x not in existing for x in needed)
         if absent:
