@@ -139,3 +139,18 @@ class FullArchitectureTests(unittest.TestCase):
         self.assertIn('Ran 130 tests',result.stderr)
 
 if __name__=='__main__': unittest.main()
+
+
+# Existing Full Architecture PR gate runs this class on the exact submitted HEAD.
+# Shadow-only: it cannot authorize a merge, spend money or promote market science.
+import unittest as _s1_shadow_unittest
+
+class S1ShadowNativeReplayHostedIntegrationTests(_s1_shadow_unittest.TestCase):
+    def test_shadow_replay_27_adversarial_cases(self):
+        from tests.orchestration.test_s1_shadow_native_replay_v1 import ShadowReplayTests
+        suite = _s1_shadow_unittest.defaultTestLoader.loadTestsFromTestCase(ShadowReplayTests)
+        result = _s1_shadow_unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 28, "expected fixed negative-control census")
+        self.assertFalse(result.failures, result.failures)
+        self.assertFalse(result.errors, result.errors)
