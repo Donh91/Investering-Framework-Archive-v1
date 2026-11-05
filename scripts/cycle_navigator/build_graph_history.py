@@ -342,8 +342,9 @@ def publish_w45_research_preview(root):
     html = root / "05_CYCLE_NAVIGATOR/site/research-w45/index.html"
     dst_data = root / "05_CYCLE_NAVIGATOR/site/dist/data/research-w45-shadow.json"
     dst_page = root / "05_CYCLE_NAVIGATOR/site/dist/research-w45/index.html"
+    dst_outcomes = root / "05_CYCLE_NAVIGATOR/site/dist/data/research-w45-outcomes.json"
     def discard():
-        for path in (dst_data, dst_page):
+        for path in (dst_data, dst_page, dst_outcomes):
             if path.exists():
                 path.unlink()
     if not original.is_file() or not html.is_file():
@@ -362,10 +363,21 @@ def publish_w45_research_preview(root):
                 "site_blue_original_forecast_eligible" not in markup or
                 "Original blå mandagsprognose" not in markup):
             raise ValueError("RESEARCH_W45_PREVIEW_DISCLOSURE_GUARD")
+        from scripts.research.w45_rehearsal_outcomes import compile_from_repo
+        # Derive prospective, source-verified (or explicitly unavailable)
+        # BTC+ETH outcome receipts from the already existing public capture.
+        # This never updates the original research forecast or Monday CN.
+        outcomes = compile_from_repo(root)
+        if (outcomes.get("contract") != "RESEARCH_W45_PROSPECTIVE_OUTCOMES_v1"
+                or outcomes.get("research_only") is not True
+                or outcomes.get("official_scoring_eligible") is not False
+                or outcomes.get("portfolio_action_authority") is not False):
+            raise ValueError("W45_REHEARSAL_AUTHORITY_GUARD")
         dst_data.parent.mkdir(parents=True, exist_ok=True)
         dst_page.parent.mkdir(parents=True, exist_ok=True)
         # Preserve exact source bytes in the public research-only snapshot.
         dst_data.write_bytes(original.read_bytes())
+        dst_outcomes.write_bytes(canonical(outcomes))
         dst_page.write_bytes(html.read_bytes())
         return "RESEARCH_ONLY_PUBLISHED"
     except (ValueError, KeyError, TypeError, OSError, json.JSONDecodeError):

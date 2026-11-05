@@ -13,13 +13,13 @@
 header{display:flex;justify-content:space-between;align-items:center;gap:18px;padding-bottom:22px;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:11px;font-weight:750;letter-spacing:.03em}.brand-mark{display:grid;place-items:center;width:34px;height:34px;border:1px solid #385a75;border-radius:10px;background:#132942;color:#cbe9fa;font-weight:800}.headlinks{display:flex;gap:22px;font-size:13px;color:var(--muted)}
 .intro{margin:30px 0 24px}.eyebrow{color:var(--amber);text-transform:uppercase;letter-spacing:.16em;font-size:11px;font-weight:800}h1{margin:10px 0 8px;font-size:clamp(30px,4.8vw,54px);line-height:1.09;letter-spacing:-.045em;font-weight:730}.lead{max-width:800px;color:#b8c9db;margin:12px 0 0;font-size:clamp(14px,2vw,17px)}
 .disclosure{margin:22px 0;padding:15px 18px;border-left:3px solid var(--amber);background:rgba(239,184,100,.065);color:#e0ccaa;border-radius:0 10px 10px 0;font-size:13px}
-.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:25px 0 20px}.metric{padding:16px 18px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(160deg,#192b40,#112136)}.metric small{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.metric strong{font-weight:720;font-size:clamp(18px,2.5vw,25px);font-variant-numeric:tabular-nums}.metric em{display:block;font-size:11px;color:#97afc8;font-style:normal}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:25px 0 20px}.metric{padding:16px 18px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(160deg,#192b40,#112136)}.metric small{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.metric strong{font-weight:720;font-size:clamp(18px,2.5vw,25px);font-variant-numeric:tabular-nums}.metric em{display:block;font-size:11px;color:#97afc8;font-style:normal}
 .panel{border:1px solid var(--line);background:linear-gradient(140deg,rgba(22,39,59,.98),rgba(12,26,44,.99));border-radius:18px;overflow:hidden}.panel-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:21px 24px 0}.panel-head h2{font-size:18px;letter-spacing:-.02em;margin:0}.panel-head p{color:var(--muted);font-size:12px;margin:5px 0 0}.live-label{font-size:11px;color:var(--muted);padding:6px 10px;border:1px solid var(--line);border-radius:20px;white-space:nowrap}
 .legend{display:flex;flex-wrap:wrap;gap:11px 20px;padding:18px 24px 0;font-size:12px;color:#b7c9de}.legend span{display:flex;align-items:center;gap:8px}.swatch{width:24px;height:0;border-top:3px solid var(--green)}.swatch.amber{border-top:3px dashed var(--amber)}.swatch.gray{border-top:2px dashed var(--gray)}
 .plot-wrap{padding:12px 12px 5px;position:relative}.plot-wrap canvas{display:block;width:100%;height:clamp(300px,41vw,450px);touch-action:pan-y}.hover{position:absolute;top:20px;right:24px;padding:5px 9px;background:rgba(10,23,37,.9);border:1px solid var(--line);border-radius:8px;color:#d5e4f3;font-size:12px;pointer-events:none}.chart-bottom{padding:0 24px 20px;color:#9eb3c9;font-size:12px}
 .subgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}.info{border:1px solid var(--line);background:#101e2f;border-radius:13px;padding:18px 21px}.info h3{font-size:15px;margin:0 0 8px}.info p{font-size:13px;color:#b5c5d9;margin:0}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}th,td{text-align:right;padding:11px 10px;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{font-weight:650;color:#a8c1d9;font-size:11px;text-transform:uppercase;letter-spacing:.06em}tr+tr{border-top:1px solid #26384b}.table-wrap{overflow-x:auto;margin:18px 0 5px}td{color:#d7e7f7}td.missing{color:#879db5}footer{color:#8ea6be;font-size:11px;margin-top:28px;line-height:1.8}
-@media(max-width:700px){.headlinks{gap:10px;font-size:11px}.metrics{grid-template-columns:1fr 1fr}.metrics .metric:last-child{grid-column:1/-1}.metric{padding:13px}.panel-head{padding:17px 15px 0}.legend{padding:14px 15px 0;gap:9px 13px}.chart-bottom{padding:2px 15px 14px}.plot-wrap{padding:9px 3px}.hover{right:9px;top:14px;font-size:10px}.subgrid{grid-template-columns:1fr}.shell{padding-bottom:28px}th,td{padding:9px 7px}}
+@media(max-width:700px){.headlinks{gap:10px;font-size:11px}.metrics{grid-template-columns:1fr 1fr}.metric{padding:13px}.panel-head{padding:17px 15px 0}.legend{padding:14px 15px 0;gap:9px 13px}.chart-bottom{padding:2px 15px 14px}.plot-wrap{padding:9px 3px}.hover{right:9px;top:14px;font-size:10px}.subgrid{grid-template-columns:1fr}.shell{padding-bottom:28px}th,td{padding:9px 7px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -39,6 +39,7 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font
   <div class="metric"><small>Sidste observerede BTC/USDT</small><strong id="last-value">Afventer data</strong><em id="last-time">Verificeret Hourly Capture</em></div>
   <div class="metric"><small>Observerede timer, uge 45</small><strong id="actual-count">—</strong><em id="source-status">Ingen fremtidige datapunkter</em></div>
   <div class="metric"><small>Originalt mandagsforecast</small><strong>0 / 7</strong><em>Original kilde uændret</em></div>
+  <div class="metric"><small>Modne forskningsudfald</small><strong id="matured-count">— / 8</strong><em id="rehearsal-source">Kilde afventes</em></div>
 </section>
 <section class="panel" aria-label="BTC research comparison">
   <div class="panel-head"><div><h2>BTC · Observed vs. research</h2><p>UTC uge 45, spotpris i USDT, original timekurve uden interpolerede huller.</p></div><span class="live-label" id="freshness">KILDE AFVENTER</span></div>
@@ -51,10 +52,11 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font
   <section class="info"><h3>Sådan lærer vi uden bagklogskab</h3><p>Kun fuldt afsluttede UTC-dage efter forskningsudstedelsen må få faktisk dagsslutkurs. Vi viser B0 og B1 side om side og registrerer fejlen, men fire afhængige dage fra én uge beviser ikke økonomisk edge.</p></section>
 </div>
 <section class="panel" style="margin-top:18px;padding:18px 22px">
-  <div class="panel-head" style="padding:0"><div><h2>Fire fremadrettede dagsluk</h2><p>Frosne research-priser fra 5. november kl. 00.29, ikke en bagudrettet mandagsudstedelse.</p></div></div>
-  <div class="table-wrap"><table><thead><tr><th>UTC-dag</th><th>B0 · USDT</th><th>B1 · USDT</th><th>Faktisk luk · USDT</th><th>B1-afvigelse</th></tr></thead><tbody id="results"><tr><td colspan="5">Kilde afventes</td></tr></tbody></table></div>
+  <div class="panel-head" style="padding:0"><div><h2>Generalprøve · fire dagsluk for BTC og ETH</h2><p>Otte udstedte forskningspunkter. Kun kvalificerede, afsluttede UTC-dage tælles. Ingen efterredigering af prognoser.</p></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Aktiv / UTC-dag</th><th>B0 · USDT</th><th>B1 · USDT</th><th>Faktisk luk · USDT</th><th>B0 · fejl</th><th>B1 · fejl</th></tr></thead><tbody id="results"><tr><td colspan="6">Kilde afventes</td></tr></tbody></table></div>
+  <p class="small" id="rehearsal-note" style="color:#9eb3c9;font-size:12px;margin:10px 4px 0">Kilde og prognosekvittering kontrolleres.</p>
 </section>
-<footer>Data: originalt Hourly Capture og original Graph History, beregninger: Research Lab W45, kilde- og scenarioklokker beholdes særskilt. Ingen original mandags-CN, ændret historisk score, USD/USDT-konvertering eller handelsautoritet. <a href="../">Tilbage til officiel Kompas Pro</a>.</footer>
+<footer>Data: originalt Hourly Capture, original Graph History og kildeafstemt BTC/ETH-resultatkvittering fra eksisterende Pages-byg. Udfald låses først, når den præcise UTC-timeluk findes i den kvalificerede kilde. Uafhængig first-known-validering og dokumenteret statistisk edge foreligger ikke. Ingen original mandags-CN, omskrevet historisk score, USD/USDT-konvertering eller handelsautoritet. <a href="../">Tilbage til officiel Kompas Pro</a>.</footer>
 </div>
 <script type="module">
 const root='../data/',WEEK_START=Date.parse('2026-11-02T00:00:00Z'),WEEK_END=Date.parse('2026-11-09T00:00:00Z');
@@ -83,6 +85,65 @@ function validate(history,research){
  actual.sort((a,b)=>a.time-b.time);
  return {actual,anchor,anchorTime,issue,future,research};
 }
+// The existing publisher creates this SECOND, research-only source receipt.
+// Never infer maturity from a chart point or the browser clock alone.
+function validateOutcomes(state,receipt){
+ const research=state.research,issues=research.forecast.assets;
+ if(receipt?.contract!=='RESEARCH_W45_PROSPECTIVE_OUTCOMES_v1'||
+    receipt.forecast_week!=='2026-W45'||receipt.research_only!==true||
+    receipt.official_scoring_eligible!==false||receipt.portfolio_action_authority!==false||
+    receipt.provider_first_known_verified!==false||receipt.independent_scientific_edge_proven!==false||
+    receipt.original_monday_daily_forecast_issued_counts?.BTC!==0||
+    receipt.original_monday_daily_forecast_issued_counts?.ETH!==0||
+    receipt.original_research_issued_at_utc!==research.generated_at_utc||
+    !/^[0-9a-f]{64}$/.test(receipt.original_research_source_sha256||'')||
+    receipt.total_forecast_observations!==8||!Array.isArray(receipt.rows)||
+    receipt.rows.length!==8)throw Error('REHEARSAL_OUTCOME_AUTHORITY_OR_ORIGIN');
+ const sourceValid=receipt.source_state==='VERIFIED_PUBLIC_CAPTURE_NOT_INDEPENDENT_FIRST_KNOWN';
+ const sourceMissing=receipt.source_state==='UNAVAILABLE_FAIL_CLOSED';
+ if(!sourceValid&&!sourceMissing)throw Error('REHEARSAL_SOURCE_STATUS_INVALID');
+ if(!['PUBLIC_LIVE_W45','IMMUTABLE_W45_HISTORY'].includes(receipt.source_mode))
+  throw Error('REHEARSAL_SOURCE_OWNER_INVALID');
+ const captured=receipt.observed_through_utc?epoch(receipt.observed_through_utc):NaN;
+ const issued=epoch(research.generated_at_utc),readback=epoch(receipt.created_at_utc);
+ if(!Number.isFinite(readback)||readback<issued||readback>Date.now()+60000||
+    (sourceValid&&(!Number.isFinite(captured)||captured>readback+60000))||
+    (sourceMissing&&receipt.matured_observations!==0))throw Error('REHEARSAL_SOURCE_CLOCK_INVALID');
+ let mature=0;const sourceBTC=new Map(state.actual.map(p=>[p.time,p.value]));
+ const ordered=[];
+ for(const asset of ['BTC','ETH'])for(let i=0;i<4;i++){
+  const item=receipt.rows[(asset==='BTC'?0:4)+i],original=issues[asset].forecast[i],target=epoch(original.target_close_at_utc);
+  if(item?.asset!==asset||item?.day!==original.day||item.utc_date!==original.utc_date||
+     item.target_close_at_utc!==original.target_close_at_utc||
+     item.B0_original_expected_close_USDT!==original.B0_persistence_expected_close||
+     item.B1_original_expected_close_USDT!==original.B1_decay_momentum_expected_close||
+     target<=issued||!Number.isFinite(target))throw Error('REHEARSAL_FORECAST_ROW_REWRITTEN');
+  if(item.outcome_state==='MATURED_PUBLIC_CAPTURE'){
+   const value=item.observed_close_USDT;
+   if(!sourceValid||target>Date.now()||target>readback||
+      target>captured||!valid(value)||!valid(item.B0_original_expected_close_USDT)||
+      !valid(item.B1_original_expected_close_USDT))throw Error('REHEARSAL_FUTURE_OR_UNSOURCED_SCORE');
+   if(asset==='BTC'&&sourceBTC.get(target)!==value)throw Error('REHEARSAL_BTC_HISTORY_MISMATCH');
+   const b0=Math.abs(item.B0_original_expected_close_USDT/value-1)*100;
+   const b1=Math.abs(item.B1_original_expected_close_USDT/value-1)*100;
+   if(Math.abs(b0-item.B0_absolute_percentage_error)>0.000015||
+      Math.abs(b1-item.B1_absolute_percentage_error)>0.000015)
+     throw Error('REHEARSAL_SCORE_MATH_INVALID');
+   mature++;
+  }else if(item.outcome_state==='PENDING_UTC_TARGET'){
+   if(!(target>readback)||item.observed_close_USDT!==null||
+      item.B0_absolute_percentage_error!==null||item.B1_absolute_percentage_error!==null)
+     throw Error('REHEARSAL_PRETARGET_MISLABELED');
+  }else if(item.outcome_state==='AWAITING_VERIFIED_SOURCE'){
+   if(!(target<=readback)||item.observed_close_USDT!==null||
+      item.B0_absolute_percentage_error!==null||item.B1_absolute_percentage_error!==null)
+     throw Error('REHEARSAL_MISSING_SOURCE_MISLABELED');
+  }else throw Error('REHEARSAL_OUTCOME_STATUS_INVALID');
+  ordered.push(item);
+ }
+ if(receipt.matured_observations!==mature)throw Error('REHEARSAL_COUNT_MISMATCH');
+ return {...receipt,rows:ordered};
+}
 function render(){
  if(!state)return;
  const {actual,anchor,anchorTime,issue,future}=state;
@@ -93,14 +154,23 @@ function render(){
  const stale=!last||Date.now()-last.time>90*60000;
  $('freshness').textContent=stale?'HISTORISK / FORÆLDET':'SOURCE FRESH';
  $('source-status').textContent=stale?'Ingen påstand om aktuel spotkurs':'Seneste gyldige timeluk';
+ const receipt=state.outcomes;
+ $('matured-count').textContent=receipt.matured_observations+' / 8';
+ $('rehearsal-source').textContent=receipt.source_state==='UNAVAILABLE_FAIL_CLOSED'?'Udfaldskilde utilgængelig':'Offentlig hourly-kilde · ikke PIT-certificeret';
+ $('rehearsal-note').textContent=receipt.source_state==='UNAVAILABLE_FAIL_CLOSED'?
+  'Ingen dagsresultater er verificerbare. Afventer kilde, ingen estimerede udfald.':
+  'BTC og ETH sammenlignes kun ved kildens præcise UTC-dagsluk. '+receipt.matured_observations+
+  ' af 8 modne observationer. Prognosen blev fastlåst før alle otte mål. Ikke et dokumenteret edge.';
  const list=$('results');list.replaceChildren();
- const map=new Map(actual.map(p=>[p.time,p.value]));
- for(const item of future){
-  const target=epoch(item.target_close_at_utc),value=map.get(target),tr=document.createElement('tr');
-  const values=[item.utc_date,money(item.B0_persistence_expected_close),money(item.B1_decay_momentum_expected_close),
-   Number.isFinite(value)?money(value):'Afventer',
-   Number.isFinite(value)?((item.B1_decay_momentum_expected_close/value-1)*100).toFixed(2)+' %':'—'];
-  for(let i=0;i<values.length;i++){const td=document.createElement('td');td.textContent=values[i];if(i>=3&&!Number.isFinite(value))td.className='missing';tr.append(td)}
+ for(const item of receipt.rows){
+  const scored=item.outcome_state==='MATURED_PUBLIC_CAPTURE',tr=document.createElement('tr');
+  const err=x=>scored?new Intl.NumberFormat('da-DK',{minimumFractionDigits:2,maximumFractionDigits:2}).format(x)+' %':'—';
+  const values=[item.asset+' · '+item.utc_date,money(item.B0_original_expected_close_USDT),
+   money(item.B1_original_expected_close_USDT),scored?money(item.observed_close_USDT):
+   item.outcome_state==='PENDING_UTC_TARGET'?'Afventer UTC-luk':'Kilde afventes',
+   err(item.B0_absolute_percentage_error),err(item.B1_absolute_percentage_error)];
+  for(let i=0;i<values.length;i++){const td=document.createElement('td');td.textContent=values[i];
+   if(i>=3&&!scored)td.className='missing';tr.append(td)}
   list.append(tr);
  }
  const canvas=$('plot'),rect=canvas.getBoundingClientRect(),w=Math.max(320,rect.width),h=Math.max(300,rect.height),dpr=Math.min(3,window.devicePixelRatio||1);
@@ -141,8 +211,12 @@ function render(){
  $('chart-note').textContent='Grøn: kun verificerede timepriser. Gul og grå: forskningsforløb fra '+utc(issue)+'. Original blå mandagsprognose: 0/7, tegnes ikke.';
 }
 try{
- const [history,research]=await Promise.all([fetchJson('graph-history/timeline.json'),fetchJson('research-w45-shadow.json')]);
+ const [history,research,outcomes]=await Promise.all([
+  fetchJson('graph-history/timeline.json'),fetchJson('research-w45-shadow.json'),
+  fetchJson('research-w45-outcomes.json')
+ ]);
  state=validate(history,research);
+ state.outcomes=validateOutcomes(state,outcomes);
  render();window.addEventListener('resize',render,{passive:true});
 }catch(error){$('hover').textContent='Kilden kan ikke valideres';$('chart-note').textContent='Forskningsgrafen er skjult, fordi kilde eller identitet ikke kunne bekræftes: '+String(error.message||error).slice(0,100);}
 </script>
