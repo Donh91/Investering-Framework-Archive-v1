@@ -100,7 +100,7 @@ Object.assign(TXT.da,{
  pathLegendReference:'Frosset ugereference',
  pathLegendWatch:'Ubekræftet næste betingelse',
  pathLegendNeutral:'Ingen dokumenteret progression',
- pathStageReference:'Ugerekord · ikke bekræftet faseovergang',
+ pathStageReference:'Ugereference · ikke bekræftet faseovergang',
  pathStageNext:'Betinget observationspunkt',
  pathStageNeutral:'Ikke verificeret',
  pathRotationIntro:'Syv aktivgrupper, vurderet hver for sig.',
@@ -171,7 +171,7 @@ export function pathSourceReadback(view,latest,lang='da',now=Date.now()){
   comp?.permit_path_live_gates===true&&
   p?.source_week===w?.forecast_week&&p?.source_issue===w?.public_issue_number&&
   p?.source_identity===comp?.compass_id&&
-  typeof w?.forecast_week==='string'&&/^20\\d{2}-W(?:0[1-9]|[1-4]\\d|5[0-3])$/.test(w.forecast_week)&&
+  typeof w?.forecast_week==='string'&&/^20\d{2}-W(?:0[1-9]|[1-4]\d|5[0-3])$/.test(w.forecast_week)&&
   Number.isInteger(w?.public_issue_number)&&w.public_issue_number>0;
  const weekly=eligible?'CN #'+w.public_issue_number+' · '+w.forecast_week:t.pathSourceMissing;
  const live=latest?.public_live_precision,path=live?.hourly_price_path,quotes=live?.price_quote_labels;
