@@ -45,6 +45,8 @@ Only structural metadata verdicts may be returned; historical PIT, real fills, i
 
 ## P0-B to P0-D: later strictly gated implementation
 
+**P0-B implementation/readback route:** [Source Feasibility & Execution Truth audit](../../06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/2026-11-05__ALTSEASON_SOURCE_FEASIBILITY_EXECUTION_V1.md), [18-source machine registry](../../06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/ALTSEASON_SOURCE_FEASIBILITY_V1.json). The registry inventories actual missing proof; it does NOT open historical scoring or Round3 analysis.
+
 **P0-B Data feasibility FIRST:** original source owners enumerate each market series (public/private, vintage, delistings, venue, contract identity, original provider first publication, collector/as-of, issue, delivery, quote and orderbook availability, executable depth, fees/gas, missingness, matched HOLD/price-only baselines). Each input receives AVAILABLE_VERIFIED, AVAILABLE_NOT_PIT, MISSING or UNSAFE and a concrete next trigger. Without source admission, stop. Do not use reconstructed candles as historical execution proof.
 
 **P0-C Sealed toy portfolio dry-run, only if absent:** adapt the EXISTING static synthetic economics harness, never invent a second market engine. Test true role-matching, largecaps peaking first, microcap failed sale, no-altseason, V-recovery, first delivered quote and false distribution exit. Classify as SYNTHETIC_ONLY_NOT_HISTORICAL_EDGE.

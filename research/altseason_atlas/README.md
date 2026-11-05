@@ -137,6 +137,8 @@ Never equate cross-sectional positive signal accuracy with a certified altseason
 
 ## 12. Næste forskningsopgaver
 
+**P0-B Source Feasibility:** [Original-owner audit and 18-input evidence matrix](../../06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/2026-11-05__ALTSEASON_SOURCE_FEASIBILITY_EXECUTION_V1.md). 11 metadata/code inputs lack historical PIT, 6 inputs remain missing, one restricted Round3 analysis lane is unsafe; no economic backtest admitted.
+
 **M1 + M2 + M3 build/owner route:** [Altseason Intelligence integration and release architecture v1](../framework_evolution_learning/2026-11-05__altseason_missions_1_2_3_execution_architecture_v1.md). This is a staged source/contract implementation handoff, not verified market edge, a finished Deep Research report, or new trading authority.
 
 

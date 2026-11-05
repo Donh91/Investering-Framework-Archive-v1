@@ -389,5 +389,174 @@ class TwoSleeveManifestConsistencyTests(unittest.TestCase):
         self.assertFalse(spec["private_values_in_public_repository"])
         self.assertEqual(spec["live_actions"], "NONE")
 
+
+# Altseason M1/M2/M3 P0-B source feasibility, PUBLIC METADATA only.
+from edge001_altseason_source_feasibility_v1 import (
+    validate_source_feasibility_registry, CONTRACT as FEASIBILITY_CONTRACT,
+)
+
+class AltseasonP0BFeasibilityTests(unittest.TestCase):
+    @staticmethod
+    def manifest():
+        import json
+        root = Path(__file__).resolve().parents[2]
+        p = root / (
+            "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/"
+            "ALTSEASON_SOURCE_FEASIBILITY_V1.json"
+        )
+        return json.loads(p.read_text(encoding="utf-8"))
+
+    def clone(self):
+        from copy import deepcopy
+        return deepcopy(self.manifest())
+
+    def test_actual_public_catalog_has_no_fictitious_admission(self):
+        out = validate_source_feasibility_registry(self.manifest())
+        self.assertEqual(out["contract"], FEASIBILITY_CONTRACT)
+        self.assertEqual(out["rows_n"], 18)
+        self.assertEqual(out["counts"], {
+            "AVAILABLE_NOT_PIT": 11, "AVAILABLE_VERIFIED": 0,
+            "MISSING": 6, "UNSAFE": 1,
+        })
+        self.assertFalse(out["historical_pit_admitted"])
+        self.assertFalse(out["historical_portfolio_tournament_authorized"])
+        self.assertFalse(out["research_claim_of_edge_allowed"])
+        self.assertFalse(out["live_portfolio_action_authorized"])
+        self.assertFalse(out["exact_source_bytes_independently_verified"])
+        self.assertFalse(out["private_values_echoed"])
+        self.assertEqual(out["blocked_rows_n"], 18)
+        self.assertNotIn("blocked_source_ids", out)
+
+    def test_18_unique_source_inputs_and_reactivation_triggers(self):
+        rows = self.manifest()["rows"]
+        self.assertEqual(len(set(r["id"] for r in rows)), 18)
+        self.assertTrue(all(r["next_reactivation_trigger"].strip() for r in rows))
+        self.assertTrue(all(r["blocking_reasons"] for r in rows))
+
+    def test_private_alpha_contract_only_metadata_and_no_values(self):
+        rows = self.manifest()["rows"]
+        private = [r for r in rows if r["source_repo"] == "Donh91/Meme-Alpha-Lab"]
+        self.assertEqual(len(private), 1)
+        self.assertEqual(private[0]["access_class"], "PRIVATE_METADATA_ONLY")
+        self.assertTrue(all(r["private_values_in_public"] is False for r in rows))
+        out = str(validate_source_feasibility_registry(self.manifest()))
+        self.assertNotIn("token_address", out)
+        self.assertNotIn("capacity_usd", out)
+
+    def test_provider_self_proof_without_receipt_fails(self):
+        x = self.clone()
+        x["rows"][0]["capability_proof"]["provider_first_publication"] = True
+        with self.assertRaisesRegex(ValueError, "CLAIMED_PROOF_WITHOUT_RECEIPT"):
+            validate_source_feasibility_registry(x)
+
+    def test_verified_status_requires_all_5_proof_receipts(self):
+        x = self.clone()
+        x["rows"][0]["status"] = "AVAILABLE_VERIFIED"
+        with self.assertRaisesRegex(ValueError, "AVAILABLE_VERIFIED_LAUNDERED"):
+            validate_source_feasibility_registry(x)
+
+    def test_fake_receipt_format_is_rejected(self):
+        x = self.clone()
+        x["rows"][0]["binding_receipts"]["provider_first_publication"] = "LOOK_VERIFIED"
+        with self.assertRaisesRegex(ValueError, "BOUND_RECEIPT_SHA256"):
+            validate_source_feasibility_registry(x)
+
+    def test_labeled_verified_document_cannot_be_promoted(self):
+        x = self.clone()
+        source = x["rows"][0]
+        source["status"] = "AVAILABLE_VERIFIED"
+        source["capability_proof"] = {k: True for k in source["capability_proof"]}
+        source["binding_receipts"] = {k: "a" * 64 for k in source["binding_receipts"]}
+        with self.assertRaisesRegex(ValueError, "DOCUMENTARY_OR_PRIVATE_NOT_VERIFIED"):
+            validate_source_feasibility_registry(x)
+
+    def test_hash_only_nondocumentary_verification_is_not_source_authority(self):
+        x = self.clone()
+        source = next(r for r in x["rows"] if
+                      r["source_role"] == "SOURCE_REFERENCE" and
+                      r["access_class"] == "PUBLIC_METADATA")
+        source["status"] = "AVAILABLE_VERIFIED"
+        source["capability_proof"] = {k: True for k in source["capability_proof"]}
+        source["binding_receipts"] = {k: "a" * 64 for k in source["binding_receipts"]}
+        with self.assertRaisesRegex(ValueError,
+                                    "AVAILABLE_VERIFIED_REQUIRES_EXTERNAL_OWNER_ADJUDICATION"):
+            validate_source_feasibility_registry(x)
+
+    def test_private_alpha_mislabelled_public_rejected(self):
+        x = self.clone()
+        private = next(r for r in x["rows"] if r["source_repo"] == "Donh91/Meme-Alpha-Lab")
+        private["access_class"] = "PUBLIC_METADATA"
+        with self.assertRaisesRegex(ValueError, "PRIVATE_REPO_MUST_REMAIN_METADATA_ONLY"):
+            validate_source_feasibility_registry(x)
+
+    def test_private_data_or_round3_analysis_cannot_be_activated(self):
+        x = self.clone()
+        x["public_values_copied"] = True
+        with self.assertRaisesRegex(ValueError, "PRIVATE_VALUE_EXPORT"):
+            validate_source_feasibility_registry(x)
+        x = self.clone()
+        x["explicit_authority"]["round3_analysis_authorized"] = True
+        with self.assertRaisesRegex(ValueError, "AUTHORITY_MUST_REMAIN_FALSE"):
+            validate_source_feasibility_registry(x)
+
+    def test_round3_firewall_cannot_be_relabeled(self):
+        x = self.clone()
+        restricted = next(r for r in x["rows"] if r["status"] == "UNSAFE")
+        restricted["status"] = "AVAILABLE_NOT_PIT"
+        with self.assertRaisesRegex(ValueError, "RESTRICTED_MUST_BE_UNSAFE"):
+            validate_source_feasibility_registry(x)
+
+    def test_unsafe_status_needs_explicit_analysis_firewall(self):
+        x = self.clone()
+        restricted = next(r for r in x["rows"] if r["status"] == "UNSAFE")
+        restricted["blocking_reasons"] = ["LICENSED_ACCESS"]
+        with self.assertRaisesRegex(ValueError, "UNSAFE_FIREWALL_REQUIRED"):
+            validate_source_feasibility_registry(x)
+
+    def test_no_traversal_or_secrets_source_pointer(self):
+        x = self.clone()
+        x["rows"][0]["source_path"] = "../secrets/token.json"
+        with self.assertRaisesRegex(ValueError, "SOURCE_LOCATOR_UNSAFE"):
+            validate_source_feasibility_registry(x)
+        x = self.clone()
+        x["rows"][0]["source_repo"] = "Donh91/secrets"
+        with self.assertRaisesRegex(ValueError, "SOURCE_LOCATOR_UNSAFE"):
+            validate_source_feasibility_registry(x)
+
+    def test_source_blob_sha_must_be_exact_40_hex(self):
+        x = self.clone()
+        x["rows"][0]["source_blob_sha"] = "main"
+        with self.assertRaisesRegex(ValueError, "SOURCE_BLOB_SHA40"):
+            validate_source_feasibility_registry(x)
+
+    def test_duplicate_source_id_rejected(self):
+        x = self.clone()
+        x["rows"][1]["id"] = x["rows"][0]["id"]
+        with self.assertRaisesRegex(ValueError, "DUPLICATE_OR_INVALID_SOURCE_ID"):
+            validate_source_feasibility_registry(x)
+
+    def test_arbitrary_private_field_rejected(self):
+        x = self.clone()
+        x["rows"][0]["user_wallet"] = "DO_NOT_LOG"
+        with self.assertRaisesRegex(ValueError, "SOURCE_FIELD_SET"):
+            validate_source_feasibility_registry(x)
+
+    def test_unrecognized_state_or_wrong_boolean_rejected(self):
+        x = self.clone()
+        x["rows"][0]["status"] = ["AVAILABLE_VERIFIED"]
+        with self.assertRaisesRegex(ValueError, "UNRECOGNIZED_STATE"):
+            validate_source_feasibility_registry(x)
+        x = self.clone()
+        x["rows"][0]["capability_proof"]["full_position_sellability"] = 1
+        with self.assertRaisesRegex(ValueError, "PROOF_FIELDS_REQUIRED"):
+            validate_source_feasibility_registry(x)
+
+    def test_regime_lag_and_sellability_cannot_get_trade_edge(self):
+        out = validate_source_feasibility_registry(self.manifest())
+        self.assertEqual(out["blocked_rows_n"], 18)
+        self.assertFalse(out["research_claim_of_edge_allowed"])
+        self.assertFalse(out["historical_portfolio_tournament_authorized"])
+
+
 if __name__=='__main__': unittest.main(verbosity=2)
 
