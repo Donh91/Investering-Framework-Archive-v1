@@ -137,6 +137,10 @@ Never equate cross-sectional positive signal accuracy with a certified altseason
 
 ## 12. Næste forskningsopgaver
 
+**M1 + M2 + M3 build/owner route:** [Altseason Intelligence integration and release architecture v1](../framework_evolution_learning/2026-11-05__altseason_missions_1_2_3_execution_architecture_v1.md). This is a staged source/contract implementation handoff, not verified market edge, a finished Deep Research report, or new trading authority.
+
+
+
 Use [DEEP_RESEARCH_MISSION_v1.md](DEEP_RESEARCH_MISSION_v1.md) for systematic original-file review and a validated, deduplicated source bibliography. Register resulting findings under existing [Research Lab #1512](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512), [Strategist #1157](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1157), owner [#1918](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1918), and two-sleeve mandate [#1930](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1930).
 
 **Recommended implementation sequence** after file-by-file source QA: (1) material verified PIT/eligible universe gap list, (2) independent natural market event denominator, (3) realistic microcap sellability and tier-specific after-cost outcome ledger, (4) prospective early rotation vs conservative delay comparison, (5) distribution/false-exit utility, (6) existing Kompas source-owner review. No new paid API or live buy/sell signal follows automatically.

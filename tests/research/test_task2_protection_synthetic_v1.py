@@ -203,5 +203,191 @@ class PriceOnlyLeadTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'QUOTE_CAPTURE'):
             validate(q,signal(),policy(),10000)
 
+
+# EDGE-001 Mission 1/2/3 structural shadow ledger; no historical observations.
+from edge001_two_sleeve_shadow_contract_v1 import (
+    validate_two_sleeve_shadow_row, audit_two_sleeve_shadow_batch,
+)
+
+class TwoSleeveContractTests(unittest.TestCase):
+    def toy(self, role="PRE_IGNITION_MICRO"):
+        # All numeric fields here are fabricated UNIT TEST fixtures.
+        row = {
+            "record_id": "TOY-" + role, "source_commit": "a" * 40,
+            "source_receipt_id": "SYNTHETIC-UNVERIFIED-RECEIPT",
+            "source_contract_id": "SYNTHETIC-ONLY",
+            "first_known_at": "2026-01-01T00:00:00Z",
+            "asof_at": "2026-01-01T01:00:00Z",
+            "issued_at": "2026-01-01T02:00:00Z",
+            "delivered_at": "2026-01-01T03:00:00Z",
+            "sleeve_role": role,
+            "original_consensus_or_abstention": "ABSTAIN",
+            "market_regime_frozen": "UNKNOWN",
+            "asset_universe_vintage": "TOY-UNIVERSE",
+            "event_family_id": "TOY-FAMILY-1", "currency": "USD",
+            "initial_capital": 1000.0, "notional": 100.0,
+            "execution_at": "2026-01-01T05:00:00Z",
+            "quote_at": "2026-01-01T04:00:00Z",
+            "quote_first_known_at": "2026-01-01T04:00:00Z",
+            "capacity_at_execution": 200.0,
+            "bid_ask": {"bid": 10.0, "ask": 11.0},
+            "fees_slippage_gas": {"fees": 1.0, "slippage": 2.0, "gas": 3.0},
+            "filled_fraction": 0.5, "missed_fill": False,
+            "opportunity_cost": 0.0, "drawdown": 0.25,
+            "terminal_net_liquidatable_wealth": 900.0,
+            "hold_baseline_wealth": 950.0,
+            "tax_assumption_or_unknown": "UNKNOWN",
+            "status": "SHADOW_ACCOUNTING_CANDIDATE",
+        }
+        if role == "CASH":
+            row.update(notional=0, filled_fraction=0, execution_at=None,
+                       quote_at=None, quote_first_known_at=None,
+                       capacity_at_execution=None, bid_ask=None,
+                       fees_slippage_gas={"fees": 0, "slippage": 0, "gas": 0},
+                       opportunity_cost=0, drawdown=0,
+                       terminal_net_liquidatable_wealth=1000,
+                       hold_baseline_wealth=1000)
+        return row
+
+    def test_valid_row_is_never_admitted_to_edge_or_actions(self):
+        out = validate_two_sleeve_shadow_row(self.toy())
+        self.assertEqual(out["structural_status"],
+                         "STRUCTURAL_ONLY_UNVERIFIED_PROVENANCE")
+        self.assertFalse(out["provider_first_known_verified"])
+        self.assertFalse(out["actual_fill_verified"])
+        self.assertFalse(out["historical_pit_admitted"])
+        self.assertFalse(out["portfolio_economic_edge_admitted"])
+        self.assertFalse(out["live_portfolio_action_authorized"])
+        self.assertNotIn("900", str(out))
+        self.assertNotIn("SYNTHETIC-UNVERIFIED-RECEIPT", str(out))
+
+    def test_same_clock_three_roles_but_not_scientific_edge(self):
+        out = audit_two_sleeve_shadow_batch([
+            self.toy("PRE_IGNITION_MICRO"),
+            self.toy("LATE_LIQUID_LARGE"),
+            self.toy("CASH"),
+        ])
+        self.assertTrue(out["complete_three_role_cohort"])
+        self.assertFalse(out["valid_for_historical_scoring"])
+        self.assertIsNone(out["independent_event_family_n"])
+
+    def test_incomplete_cohort_not_hallucinated_complete(self):
+        out = audit_two_sleeve_shadow_batch([self.toy()])
+        self.assertFalse(out["complete_three_role_cohort"])
+
+    def test_forged_pit_or_live_label_rejected(self):
+        row = self.toy()
+        row["status"] = "PIT_VERIFIED_LIVE"
+        with self.assertRaisesRegex(ValueError, "RESEARCH_ONLY_ENUM"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_source_clock_future_to_issue_rejected(self):
+        row = self.toy()
+        row["first_known_at"] = "2026-01-01T06:00:00Z"
+        with self.assertRaisesRegex(ValueError, "CAUSAL_SOURCE_CLOCK"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_non_utc_clock_rejected(self):
+        row = self.toy()
+        row["issued_at"] = "2026-01-01T03:00:00+01:00"
+        with self.assertRaisesRegex(ValueError, "CLOCK_INVALID"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_fill_on_delivery_quote_rejected(self):
+        row = self.toy()
+        row["quote_at"] = row["delivered_at"]
+        with self.assertRaisesRegex(ValueError, "QUOTE_AFTER_DELIVERY"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_positive_fill_exceeding_capacity_rejected(self):
+        row = self.toy()
+        row["capacity_at_execution"] = 49.0
+        with self.assertRaisesRegex(ValueError, "EXCEEDS_CAPACITY"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_missed_fill_cannot_create_profit(self):
+        row = self.toy()
+        row.update(filled_fraction=0, missed_fill=True, execution_at=None,
+                   terminal_net_liquidatable_wealth=12345)
+        with self.assertRaisesRegex(ValueError, "UNFILLED_TERMINAL_WEALTH"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_missed_fill_and_filled_are_incompatible(self):
+        row = self.toy()
+        row["missed_fill"] = True
+        with self.assertRaisesRegex(ValueError, "MISSED_FILL_CANNOT_BE_FILLED"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_nan_or_boolean_money_rejected(self):
+        row = self.toy()
+        row["notional"] = float("nan")
+        with self.assertRaisesRegex(ValueError, "FINITE_REQUIRED"):
+            validate_two_sleeve_shadow_row(row)
+        row["notional"] = True
+        with self.assertRaisesRegex(ValueError, "FINITE_REQUIRED"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_bad_sha_and_unknown_extra_fields_rejected(self):
+        row = self.toy()
+        row["source_commit"] = "main"
+        with self.assertRaisesRegex(ValueError, "SHA40"):
+            validate_two_sleeve_shadow_row(row)
+        row = self.toy()
+        row["private_secret"] = "must-not-escape"
+        with self.assertRaisesRegex(ValueError, "FIELDS_EXACT_SET"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_cash_cannot_have_filled_trade_or_costs(self):
+        row = self.toy("CASH")
+        row["filled_fraction"] = 0.5
+        with self.assertRaisesRegex(ValueError, "CASH_NO_TRADE"):
+            validate_two_sleeve_shadow_row(row)
+        row = self.toy("CASH")
+        row["fees_slippage_gas"]["fees"] = 1
+        with self.assertRaisesRegex(ValueError, "CASH_NO_TRADE_COST"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_invalid_enum_type_rejected_consistently(self):
+        row = self.toy()
+        row["status"] = []
+        with self.assertRaisesRegex(ValueError, "RESEARCH_ONLY_ENUM"):
+            validate_two_sleeve_shadow_row(row)
+
+    def test_unmatched_cohort_clock_or_wealth_blocked(self):
+        a = self.toy("PRE_IGNITION_MICRO")
+        b = self.toy("LATE_LIQUID_LARGE")
+        b["initial_capital"] = 1100
+        with self.assertRaisesRegex(ValueError, "UNMATCHED_STARTING_WEALTH"):
+            audit_two_sleeve_shadow_batch([a, b])
+        b = self.toy("LATE_LIQUID_LARGE")
+        b["asof_at"] = "2026-01-01T01:30:00Z"
+        with self.assertRaisesRegex(ValueError, "UNMATCHED_DECISION_CLOCK"):
+            audit_two_sleeve_shadow_batch([a, b])
+
+    def test_duplicate_role_rejected(self):
+        a = self.toy()
+        b = self.toy()
+        b["record_id"] = "OTHER"
+        with self.assertRaisesRegex(ValueError, "DUPLICATE_ROLE"):
+            audit_two_sleeve_shadow_batch([a, b])
+
+class TwoSleeveManifestConsistencyTests(unittest.TestCase):
+    def test_machine_contract_matches_exact_code_fields_and_flags(self):
+        import json
+        from edge001_two_sleeve_shadow_contract_v1 import (
+            CONTRACT, REQUIRED_FIELDS, ROLES, STATES
+        )
+        root = Path(__file__).resolve().parents[2]
+        p = root / "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/TWO_SLEEVE_SHADOW_ROW_CONTRACT_v1.json"
+        spec = json.loads(p.read_text(encoding="utf-8"))
+        self.assertEqual(spec["contract"], CONTRACT)
+        self.assertEqual(set(spec["required_fields"]), REQUIRED_FIELDS)
+        self.assertEqual(set(spec["allowed_sleeve_roles"]), ROLES)
+        self.assertEqual(set(spec["allowed_statuses"]), STATES)
+        self.assertEqual(len(spec["required_fields"]), len(REQUIRED_FIELDS))
+        self.assertTrue(all(value is False for value in spec["evidence_claims"].values()))
+        self.assertFalse(spec["private_values_in_public_repository"])
+        self.assertEqual(spec["live_actions"], "NONE")
+
 if __name__=='__main__': unittest.main(verbosity=2)
 

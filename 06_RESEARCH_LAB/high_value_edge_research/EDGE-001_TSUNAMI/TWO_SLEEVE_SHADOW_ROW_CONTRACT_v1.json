@@ -1,0 +1,95 @@
+{
+  "contract": "EDGE001_TWO_SLEEVE_SHADOW_ROW_v1",
+  "classification": "RESEARCH_ONLY_SCHEMA_NOT_HISTORICAL_ADMISSION",
+  "owner_issues": [
+    "Donh91/Investering-Framework-Archive-v1#1530",
+    "Donh91/Investering-Framework-Archive-v1#1596",
+    "Donh91/Investering-Framework-Archive-v1#1157"
+  ],
+  "research_missions": [
+    "ALTSEASON_ATLAS_M1",
+    "ALTSEASON_WAR_ROOM_M2",
+    "ALTSEASON_REALITY_LAB_M3"
+  ],
+  "scope": "PRIVATE_MEMORY_ONLY_OR_SYNTHETIC; NEVER WRITE RAW/RESTRICTED ROWS TO PUBLIC ARCHIVE",
+  "required_fields": [
+    "record_id",
+    "source_commit",
+    "source_receipt_id",
+    "source_contract_id",
+    "first_known_at",
+    "asof_at",
+    "issued_at",
+    "delivered_at",
+    "sleeve_role",
+    "original_consensus_or_abstention",
+    "market_regime_frozen",
+    "asset_universe_vintage",
+    "event_family_id",
+    "currency",
+    "initial_capital",
+    "notional",
+    "execution_at",
+    "quote_at",
+    "quote_first_known_at",
+    "capacity_at_execution",
+    "bid_ask",
+    "fees_slippage_gas",
+    "filled_fraction",
+    "missed_fill",
+    "opportunity_cost",
+    "drawdown",
+    "terminal_net_liquidatable_wealth",
+    "hold_baseline_wealth",
+    "tax_assumption_or_unknown",
+    "status"
+  ],
+  "allowed_sleeve_roles": [
+    "PRE_IGNITION_MICRO",
+    "LATE_LIQUID_LARGE",
+    "CASH"
+  ],
+  "allowed_statuses": [
+    "NOT_ADMITTED",
+    "SOURCE_REVIEW_PENDING",
+    "SHADOW_ACCOUNTING_CANDIDATE"
+  ],
+  "nested_fields": {
+    "bid_ask": [
+      "bid",
+      "ask"
+    ],
+    "fees_slippage_gas": [
+      "fees",
+      "slippage",
+      "gas"
+    ]
+  },
+  "unit": "USD for monetary fields, fraction 0..1 for filled_fraction and drawdown, RFC3339 UTC Z for times",
+  "first_known_rule": "first_known_at <= asof_at <= issued_at <= delivered_at; execution must be after delivered",
+  "liquidation_rule": "Filled notional cannot exceed executable capacity. Unfilled non-cash exits cannot claim terminal liquidatable wealth.",
+  "matching_rule": "Same frozen asof, starting capital, event family, independent source-legal observations",
+  "human_review_required": "SHA40 syntax and valid JSON do not prove actual provider knowledge, quote capacity, fill or independent N",
+  "immutable_negative_controls": [
+    "NO_ALTSEASON",
+    "FAILED_MICROCAP_SELL",
+    "FALSE_DISTRIBUTION_EXIT",
+    "V_RECOVERY",
+    "LARGE_CAP_PEAK_EARLY"
+  ],
+  "evidence_claims": {
+    "provider_first_known_verified": false,
+    "actual_fill_verified": false,
+    "historical_pit_admitted": false,
+    "portfolio_economic_edge_admitted": false,
+    "statistical_significance_admitted": false,
+    "live_portfolio_action_authorized": false
+  },
+  "unverified_data_state": "NULL_OR_UNKNOWN_NOT_ZERO",
+  "live_actions": "NONE",
+  "private_values_in_public_repository": false,
+  "automatic_history_replay": false,
+  "automatic_market_scoring": false,
+  "scheduled_job": false,
+  "external_api_spend": false
+}
