@@ -19,9 +19,9 @@ const t=(da,en)=>language==='da'?da:en;
 const utc=ms=>new Date(ms).toLocaleString(language==='da'?'da-DK':'en-GB',{
  timeZone:'UTC',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'
 })+' UTC';
-const num=value=>s(value)?new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{
-  style:'currency',currency:'USD',maximumFractionDigits:2
- }).format(value):'—';
+const num=(value,unit)=>s(value)?new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{
+  minimumFractionDigits:2,maximumFractionDigits:2
+ }).format(value)+' '+(unit==='USDT'?'USDT':'UNAVAILABLE'):'—';
 const set=(id,value)=>{const n=$(id);if(n)n.textContent=String(value)};
 const attr=(id,key,value)=>{const n=$(id);if(n)n.setAttribute(key,String(value))};
 const movePath=pts=>pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ');
@@ -273,11 +273,13 @@ function plot(){
  for(let i=0;i<5;i++){const span=document.createElement('span');
   span.textContent=new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0}).format(hi-(hi-lo)*i/4);
   span.style.top=(100*(28+344*i/4)/405)+'%';axis.append(span)}
- set('pair',asset+' / '+(model?.actual_quote_unit||'UNAVAILABLE'));set('observed-value',num(last?.value));
+ set('pair',asset+' / '+(model?.actual_quote_unit||'UNAVAILABLE'));set('observed-value',num(last?.value,model?.actual_quote_unit));
  set('time-label',last?utc(last.time*1000):'—');
  set('timeline-label',utc(cursor));
+ const incompatibleQuote=model.forecast_status==='SOURCE_ISSUED_QUOTE_INCOMPARABLE';
  const st=model.forecast_status==='SOURCE_ISSUED'?
   t('Kildeudstedt dagsprognose','Source-issued daily forecast'):
+  incompatibleQuote?t('Kildeudstedt, anden/ukendt valuta','Source-issued, different/unknown quote'):
   hasDailyRanges?t('7 frosne dagsintervaller','7 frozen daily ranges'):
   t('Original prognose · 3 vinduer','Original forecast · 3 windows');
  set('source-state',st);
@@ -288,7 +290,8 @@ function plot(){
  ' · '+t('senest målt','last observed')+' '+(model.last_observed_at_utc||'—')+
   ' · '+t('spot-valuta: ','spot quote: ')+(model.actual_quote_unit||'UNAVAILABLE')+
   ' · '+t('frosset interval: ','frozen interval: ')+(model.forecast_declared_quote_unit||'UNAVAILABLE')+
-  ' · '+t('ingen automatisk omregning','no automatic conversion'));
+  ' · '+(incompatibleQuote?t('Dagsprognose skjult: valuta kan ikke sammenlignes. ','Daily path hidden: quotes are not comparable. '):'')+
+  t('ingen automatisk omregning','no automatic conversion'));
  set('chart-title',t('Mandagens intraday-intervaller mod faktisk kurs','Monday intraday forecast ranges versus observed price'));
  set('chart-description',t('Mandagens tre originale prognoseintervaller vises for dag 1–2, 3–4 og 5–7. Den grønne observerede kurs brydes ved manglende timer. Blå stiplet forventet dagskurs kræver syv udstedte punkter.',
  'Verified hourly prices only; missing hours break the path. Blue daily forecasts require original published points.'));

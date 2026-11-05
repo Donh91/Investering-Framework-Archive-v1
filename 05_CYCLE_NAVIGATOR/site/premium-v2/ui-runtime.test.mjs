@@ -123,6 +123,23 @@ test('P2-B weekly replay includes 168, scrubs 167 exactly, missing last close ca
   assert.match(h.get('observed-value').textContent,new RegExp('80[.,]'+last));
  }
 });
+test('observed Graph B price prints the source-declared USDT unit, never a synthetic USD currency symbol',async()=>{
+ const value=snapshot();
+ value.public_live_precision.price_quote_labels={
+  contract:'CN_PUBLIC_PRICE_QUOTE_LABELS_v1',
+  actual_native_spot:{BTC:'USDT',ETH:'USDT'},
+  forecast_model_declared:{BTC:'UNAVAILABLE',ETH:'UNAVAILABLE'},
+  conversion_applied:false,proof_authority:false,comparison_precision_eligible:false
+ };
+ const h=await harness('./graph-b/source-graph-b.mjs',{latest:value});
+ const text=h.get('observed-value').textContent;
+ assert.match(text,/USDT$/);
+ assert.doesNotMatch(text,/\$|USD$/);
+ assert.equal(h.get('pair').textContent,'BTC / USDT');
+ assert.match(h.get('feed-status').textContent,/spot-valuta: USDT/);
+ assert.equal(h.get('forecast').attrs.d,'');
+});
+
 test('P2-D unresolved and out-of-order asset fetches cannot borrow BTC under ETH label',async()=>{
  const h=await harness('./graph-b/source-graph-b.mjs');
  const pending=[];
