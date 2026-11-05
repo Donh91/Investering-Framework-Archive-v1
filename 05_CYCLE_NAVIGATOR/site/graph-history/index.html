@@ -28,7 +28,7 @@ label{display:inline-flex;align-items:center;gap:11px;flex-wrap:wrap;font-weight
 select{font:600 13px system-ui;background:#0b1a2d;color:#e8f0fb;border:1px solid #36506d;padding:10px 36px 10px 12px;border-radius:9px;min-height:44px;cursor:pointer}
 .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;font-weight:650;color:#c0cfe4;margin-top:18px;align-items:center}
 .legend span{white-space:normal}.legend span::before{content:"";display:inline-block;width:23px;vertical-align:middle;margin-right:8px;border-top:3px solid var(--green)}
-.legend .forecast::before{border-top:3px dashed var(--blue)}.legend .boundary::before{border-top:2px dotted #8194ac}
+.legend .forecast::before{border-top:3px dashed var(--blue)}.legend .midweek::before{border-top:3px dashed #e9ae65}.legend .boundary::before{border-top:2px dotted #8194ac}
 #scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x pan-y;border:1px solid #294059;border-radius:14px;margin-top:18px;background:linear-gradient(180deg,#0b1d30,#091728 88%);scrollbar-color:#536e91 #102034;scrollbar-width:thin}
 #plot{display:block;height:440px;max-height:62vh;min-height:310px}
 #notice{font-size:12px;color:#c6d7ee;line-height:1.6;margin:16px 0 12px;padding:12px 14px;border-left:2px solid var(--blue);background:#10274087;border-radius:0 8px 8px 0}
@@ -61,7 +61,7 @@ td:first-child{font-weight:700;color:#eaf2ff;white-space:nowrap}
 <select id="period"><option value="4">Seneste 4 uger</option><option value="10" selected>Seneste 10 uger</option><option value="all">Hele historikken</option></select>
 </label>
 </div>
-<div class="legend"><span>Faktisk timekurs</span><span class="forecast">Kildeudstedt dagsprognose · 7/7</span><span class="boundary">Ugegrænser</span></div>
+<div class="legend"><span>Faktisk timekurs</span><span class="forecast">Original mandagsprognose · 7/7</span><span class="midweek">Først udstedte prognose W45, torsdag · forskning</span><span class="boundary">Ugegrænser</span></div>
 <div id="scroll" role="region" aria-label="Vandret scrollbar for historiske kurser" tabindex="0"><svg id="plot" role="img" aria-label="Historiske Bitcoin-kurser og kildeudstedte ugeprognoser"></svg></div>
 <div id="notice" aria-live="polite">Indlæser verificeret historik…</div>
 <div class="metrics">
@@ -71,7 +71,7 @@ td:first-child{font-weight:700;color:#eaf2ff;white-space:nowrap}
 </div>
 </section>
 <section class="panel"><h2>Ugearkiv</h2><div class="scrolltable"><table><thead><tr><th>Uge</th><th>CN-prognose</th><th>Faktiske data</th></tr></thead><tbody id="archive"><tr><td colspan="3">Afventer kilde</td></tr></tbody></table></div></section>
-<p class="note custody">Historikken bygger kun på det oprindelige CN-freeze og verificerede, afsluttede Hourly Capture-kurser. Manglende prognoser og databrud udfyldes aldrig kunstigt. Prognosens valuta vises kun, når den er deklareret i den originale frosne kilde. Observerede Binance Spot-kurser er i USDT. Ingen automatisk USD/USDT-omregning, og ingen godkendt præcisionsscore eller handelssignal.</p>
+<p class="note custody">Den blå officielle historik bygger kun på det oprindelige CN-freeze og afsluttede Hourly Capture-kurser. En særskilt gul prognose blev først udstedt torsdag 5. november kl. 20.11 UTC, ikke mandag, og er ikke officiel prognose eller godkendt præcisionsscore. Manglende prognoser og databrud udfyldes aldrig kunstigt. Prognosens valuta vises kun, når den er deklareret i den originale frosne kilde. Observerede Binance Spot-kurser er i USDT. Ingen automatisk USD/USDT-omregning, og ingen godkendt præcisionsscore eller handelssignal.</p>
 </main>
 <script type="module">
 const URL='../data/graph-history/timeline.json';
@@ -113,6 +113,28 @@ function comparableOriginal(w){
      Number.isFinite(p.expected_close)&&Number.isFinite(p.low)&&Number.isFinite(p.high)&&
      p.low>0&&p.low<=p.expected_close&&p.expected_close<=p.high);
 }
+function validMidweek(m){
+ if(!m||m.contract!=='CN_GRAPH_HISTORY_FIRST_HONEST_MIDWEEK_RESEARCH_v1'||
+  m.forecast_week!=='2026-W45'||m.price_quote!=='USDT'||
+  m.issued_at_utc!=='2026-11-05T20:11:38Z'||
+  m.input_cutoff_utc!=='2026-11-05T18:00:00Z'||
+  m.research_only!==true||m.original_monday_issuance!==false||
+  m.official_scoring_eligible!==false||m.portfolio_action_authority!==false||
+  m.provider_first_known_verified!==false||
+  !/^[0-9a-f]{64}$/.test(m.frozen_packet_sha256||'')||
+  data?.actual_unit!=='USDT'||
+  data.weeks.find(w=>w.week==='2026-W45')?.forecast_status!=='UNAVAILABLE')return false;
+ const issue=Date.parse(m.issued_at_utc),cutoff=Date.parse(m.input_cutoff_utc);
+ if(!Number.isFinite(issue)||!(cutoff<issue))return false;
+ for(const asset of ['BTC','ETH']){
+  if(!Array.isArray(m[asset])||m[asset].length!==4||!m[asset].every((p,i)=>
+    p?.day===i+4&&p?.target_at_utc===new Date(Date.UTC(2026,10,6+i)).toISOString().replace('.000Z','Z')&&
+    Date.parse(p.target_at_utc)>issue&&Number.isFinite(p.expected_close)&&
+    Number.isFinite(p.low)&&Number.isFinite(p.high)&&
+    p.low>0&&p.low<=p.expected_close&&p.expected_close<=p.high))return false;
+ }
+ return true;
+}
 function draw(){
  if(!data)return;
  while(svg.firstChild)svg.firstChild.remove();
@@ -122,6 +144,8 @@ function draw(){
  const end=selected.length?isoWeekStart(selected.at(-1).week)+7*DAY:NaN;
  const eligible=data.actual.filter(p=>{const t=Date.parse(p.time);return t>=start&&t<=end&&Number.isFinite(p.close)&&p.close>0;})
   .map(p=>[Date.parse(p.time),p.close]);
+ const midweek=validMidweek(data.first_honest_midweek_research)&&selected.some(w=>w.week==='2026-W45')?data.first_honest_midweek_research:null;
+ const midpoints=midweek?midweek.BTC.map(p=>[Date.parse(p.target_at_utc),p.expected_close]):[];
  const preds=selected.map(w=>{
   const monday=isoWeekStart(w.week);
   return comparableOriginal(w)
@@ -135,7 +159,7 @@ function draw(){
  $('last-time').textContent=latest?
    'Seneste registrerede timeluk · '+new Date(latest[0]).toISOString().slice(0,16).replace('T',' ')+' UTC':
    'Ingen verificerede timeluk for den valgte periode';
- const values=[...eligible.map(p=>p[1]),...preds.flat().map(p=>p[1])];
+ const values=[...eligible.map(p=>p[1]),...preds.flat().map(p=>p[1]),...midpoints.map(p=>p[1])];
  const wide=Math.max(880, selected.length*220),height=440, left=78,right=25,top=34,bottom=55;
  svg.setAttribute('width',wide);svg.setAttribute('viewBox',`0 0 ${wide} ${height}`);
  if(!selected.length||!values.length){
@@ -155,12 +179,15 @@ function draw(){
   el('line',{x1:x,y1:top,x2:x,y2:height-bottom,stroke:'#58718d','stroke-dasharray':'3 7',opacity:'.8'});
   svgText(x+8,height-22,w.week,13);}
  el('path',{d:path(eligible,xf,yf,HOUR*1.5),fill:'none',stroke:'#31d0a0','stroke-width':'2.8','stroke-linecap':'round','stroke-linejoin':'round'});
+ if(midpoints.length===4){
+  el('path',{d:path(midpoints,xf,yf,DAY*1.2),fill:'none',stroke:'#e9ae65','stroke-width':'2.5','stroke-dasharray':'6 6','stroke-linecap':'round'});
+ }
  for(const set of preds)if(set.length===7){
   el('path',{d:path(set,xf,yf,DAY*1.2),fill:'none',stroke:'#79aaff','stroke-width':'3.1','stroke-dasharray':'9 6','stroke-linecap':'round'});
  }
  if(eligible.length){const p=eligible.at(-1);el('circle',{cx:xf(p[0]),cy:yf(p[1]),r:5,fill:'#102238',stroke:'#31d0a0','stroke-width':3});}
  const missing=selected.filter(w=>!comparableOriginal(w)).length;
- $('notice').textContent=missing?`${missing} uge(r) uden original kildeudstedt, tidsverificeret og USDT-sammenlignelig dagsprognose. Ingen opdigtet blå kurve eller USD/USDT-omregning.`:'Alle viste uger har syv originale, valutasammenlignelige CN-dagspunkter.';
+ $('notice').textContent=(missing?`${missing} uge(r) uden original kildeudstedt, tidsverificeret og USDT-sammenlignelig dagsprognose. Ingen opdigtet blå kurve eller USD/USDT-omregning.`:'Alle viste uger har syv originale, valutasammenlignelige CN-dagspunkter.')+(midweek?' Gul stiplet: særskilt W45-forskning først udstedt torsdag 5/11 kl. 20.11 UTC, fire fremtidige dagsslutninger, ikke original mandagsforecast.':'');
  }
 function table(){
  $('weeks').textContent=data.weeks.length;

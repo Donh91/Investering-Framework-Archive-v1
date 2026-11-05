@@ -406,6 +406,63 @@ def publish_w45_research_preview(root):
         return "RESEARCH_QUARANTINED"
 
 
+
+def first_honest_midweek_history(root, weeks):
+    """Actual Thursday-issued suffix only, never Monday official blue."""
+    w45 = next((w for w in weeks if w["week"] == "2026-W45"), None)
+    if not w45 or w45["forecast_status"] != "UNAVAILABLE":
+        return None
+    packet_path = root / "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_THURSDAY_SELFTEST_v1.json"
+    if not packet_path.is_file():
+        return None
+    try:
+        from scripts.research.w45_thursday_selftest_outcomes import verify_freeze, compile_from_repo
+        packet_bytes = packet_path.read_bytes()
+        packet = json.loads(packet_bytes)
+        verify_freeze(packet)
+        proof = compile_from_repo(root)
+        if (proof["contract"] != "RESEARCH_W45_THURSDAY_SELFTEST_OUTCOMES_v1"
+                or proof["source_state"] != "PUBLIC_PASS_OHLC_NOT_PROVIDER_FIRST_KNOWN"
+                or proof["original_issue_utc"] != "2026-11-05T20:11:38Z"
+                or proof["original_monday_daily_issued"] != {"BTC": 0, "ETH": 0}
+                or any(proof[k] is not False for k in (
+                    "provider_first_known_verified", "official_scoring_eligible",
+                    "scientific_edge_proven", "portfolio_action_authority"))):
+            return None
+        issued = dt(proof["original_issue_utc"])
+        source_cutoff = dt(proof["input_cutoff_utc"])
+        if not (source_cutoff < issued < dt("2026-11-06T00:00:00Z")):
+            return None
+        rows = {}
+        for asset in ("BTC", "ETH"):
+            series = []
+            for original in packet["assets"][asset]["forecasts"]:
+                target = dt(original["target_close_at_utc"])
+                if target <= issued:
+                    raise ValueError("MIDWEEK_NON_PROSPECTIVE_TARGET")
+                series.append({
+                    "day": original["day"], "target_at_utc": iso(target),
+                    "expected_close": original["B1_conditional_close"],
+                    "low": original["low"], "high": original["high"],
+                })
+            if len(series) != 4:
+                raise ValueError("MIDWEEK_RESEARCH_COUNT_CHANGED")
+            rows[asset] = series
+        return {
+            "contract": "CN_GRAPH_HISTORY_FIRST_HONEST_MIDWEEK_RESEARCH_v1",
+            "forecast_week": "2026-W45",
+            "original_source": "OWNER_ISSUED_2026_11_05_COMMENT_6668153478",
+            "frozen_packet_sha256": digest(packet_bytes),
+            "issued_at_utc": iso(issued), "input_cutoff_utc": iso(source_cutoff),
+            "price_quote": "USDT", "provider_first_known_verified": False,
+            "research_only": True, "original_monday_issuance": False,
+            "official_scoring_eligible": False, "portfolio_action_authority": False,
+            "BTC": rows["BTC"], "ETH": rows["ETH"],
+        }
+    except (KeyError, ValueError, TypeError, OSError, json.JSONDecodeError):
+        return None
+
+
 def publish(root):
     index_file = root / ROOT / "index.json"
     index = _read_index_or_fail_missing_history(root) or {"contract": CONTRACT, "weeks": []}
@@ -485,7 +542,8 @@ def publish(root):
                "forecast_unit": "PER_WEEK_DECLARED_OR_UNAVAILABLE", "actual_unit": "USDT",
                "comparison_precision_eligible": False,
                "comparison_caveat": "Forecast quote is source-declared per week or unavailable; observed native Binance spot is USDT. No automatic currency conversion or calibrated accuracy claim.",
-               "weeks": weeks, "actual": actual}
+               "weeks": weeks, "actual": actual,
+               "first_honest_midweek_research": first_honest_midweek_history(root, weeks)}
     dist = root / PUBLIC / "graph-history"
     write(dist / "timeline.json", payload)
     preview = root / "05_CYCLE_NAVIGATOR/site/graph-history/index.html"

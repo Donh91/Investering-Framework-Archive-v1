@@ -500,7 +500,7 @@ class GraphHistoryTest(unittest.TestCase):
         for required in (
                 "#071320", "#31d0a0", "#79aaff",
                 "class=\"panel panel-primary\"", "prefers-reduced-motion",
-                "Kildeudstedt dagsprognose · 7/7",
+                "Original mandagsprognose · 7/7",
                 "w?.forecast_status==='PUBLISHED'",
                 "w?.forecast_model_declared_quote==='USDT'",
                 "data?.actual_unit==='USDT'",
@@ -592,6 +592,119 @@ class GraphHistoryTest(unittest.TestCase):
         self.assertTrue(original_file.exists())
         # The primary graph never consumes any research self-test bytes.
         self.assertFalse((self.root / ROOT / "index.json").exists())
+
+    def test_honest_midweek_w45_is_first_prospective_forecast_not_original_blue(self):
+        real = Path(__file__).resolve().parents[2]
+        files = (
+            "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_THURSDAY_SELFTEST_v1.json",
+            "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-04.csv",
+            "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-05.csv",
+        )
+        for rel in files:
+            dst = self.root / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_bytes((real / rel).read_bytes())
+        source(self.root, status="UNAVAILABLE")
+        archive(self.root, W45)
+        result = publish(self.root)
+        overlay = result["first_honest_midweek_research"]
+        self.assertEqual(overlay["contract"], "CN_GRAPH_HISTORY_FIRST_HONEST_MIDWEEK_RESEARCH_v1")
+        self.assertEqual(overlay["issued_at_utc"], "2026-11-05T20:11:38Z")
+        self.assertEqual(overlay["input_cutoff_utc"], "2026-11-05T18:00:00Z")
+        self.assertEqual(len(overlay["BTC"]), 4)
+        self.assertEqual(len(overlay["ETH"]), 4)
+        self.assertEqual(overlay["BTC"][0]["target_at_utc"], "2026-11-06T00:00:00Z")
+        self.assertEqual(overlay["BTC"][0]["expected_close"], 75573.64)
+        self.assertTrue(overlay["research_only"])
+        self.assertFalse(overlay["original_monday_issuance"])
+        self.assertFalse(overlay["official_scoring_eligible"])
+        self.assertEqual(result["weeks"][0]["forecast_status"], "UNAVAILABLE")
+        self.assertEqual(result["weeks"][0]["forecast"], [])
+        self.assertEqual(
+            json.loads((self.root / "05_CYCLE_NAVIGATOR/site/dist/data/graph-history/timeline.json").read_text())
+            ["first_honest_midweek_research"]["frozen_packet_sha256"],
+            overlay["frozen_packet_sha256"])
+
+        # On each attempted mutation, research overlay disappears. Frozen
+        # Monday original stays unavailable and actual source remains separate.
+        packet = self.root / files[0]
+        original = packet.read_bytes()
+        mutated = json.loads(original)
+        mutated["first_public_issue_utc"] = "2026-11-05T18:00:00Z"
+        put(packet, mutated)
+        self.assertIsNone(publish(self.root)["first_honest_midweek_research"])
+        self.assertEqual(publish(self.root)["weeks"][0]["forecast"], [])
+        packet.write_bytes(original)
+        changed = json.loads(original)
+        changed["assets"]["BTC"]["forecasts"][0]["B1_conditional_close"] += 500
+        put(packet, changed)
+        self.assertIsNone(publish(self.root)["first_honest_midweek_research"])
+        packet.write_bytes(original)
+        w45 = self.root / files[2]
+        before = w45.read_text()
+        w45.write_text(before.replace("75952.45", "79952.45"))
+        self.assertIsNone(publish(self.root)["first_honest_midweek_research"])
+
+    def test_midweek_overlay_never_claims_seven_original_when_w45_valid_monday_source(self):
+        source(self.root, status="PUBLISHED")
+        archive(self.root, W45)
+        # No original owner-issued Thursday packet in this fixture.
+        result = publish(self.root)
+        self.assertIsNone(result["first_honest_midweek_research"])
+        self.assertEqual(result["weeks"][0]["forecast_status"], "PUBLISHED")
+
+    def test_w46_original_fourteen_closes_and_fourteen_ranges_publish_blue_first_time(self):
+        """End-to-end positive code rehearsal, not a claim of real model emission."""
+        from scripts.cycle_navigator.daily_price_journey import (
+            DAILY_RANGE_CONTRACT, daily_product_acceptance,
+        )
+        folder = source(self.root, W46, status="PUBLISHED",
+                        issued="2026-11-09T09:05:00Z")
+        freeze_path = folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+        freeze = json.loads(freeze_path.read_text())
+        freeze["price_quote"] = {"BTC": "USDT", "ETH": "USDT"}
+        freeze["daily_price_path"]["ETH"] = {
+            "status": "PUBLISHED", "reason": "Prospective bounded scenario, test only",
+            "points": [{"day": i, "low": 2200, "expected_close": 2275+i*12,
+                        "high": 2480} for i in range(1, 8)]
+        }
+        freeze["daily_range_plan"] = {
+            "contract": DAILY_RANGE_CONTRACT, "forecast_week": "2026-W46",
+            **{asset: {"status": "PUBLISHED", "reason": "Test-only bounded range",
+                "points": [
+                    {"day": p["day"], "low": p["low"], "high": p["high"],
+                     "why": "Completed source supports a conditional daily interval, not calibrated.",
+                     "invalidate_if": "Real source quote or completed-hour evidence diverges."}
+                    for p in freeze["daily_price_path"][asset]["points"]
+                ]} for asset in ("BTC", "ETH")}
+        }
+        put(freeze_path, freeze)
+        pointer = folder / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json"
+        receipt = folder / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+        sha = digest(freeze_path.read_bytes())
+        val = json.loads(pointer.read_text())
+        val["forecast_freeze_sha256"] = sha
+        put(pointer, val)
+        val = json.loads(receipt.read_text())
+        val["source_forecast_freeze_sha256"] = sha
+        put(receipt, val)
+        product = daily_product_acceptance(
+            freeze, 2026, 46, datetime(2026, 11, 9, 9, 5, tzinfo=timezone.utc))
+        self.assertEqual(product["status"], "COMPLETE")
+        for asset in ("BTC", "ETH"):
+            self.assertEqual(product["assets"][asset]["expected_close_points"], 7)
+            self.assertEqual(product["assets"][asset]["low_high_range_points"], 7)
+        archive(self.root, W46)
+        public = publish(self.root)
+        w46 = [row for row in public["weeks"] if row["week"] == "2026-W46"][0]
+        self.assertEqual(w46["forecast_status"], "PUBLISHED")
+        self.assertEqual(w46["forecast_model_declared_quote"], "USDT")
+        self.assertEqual(len(w46["forecast"]), 7)
+        self.assertEqual(w46["issued_at_utc"], "2026-11-09T09:05:00Z")
+        self.assertIsNone(public["first_honest_midweek_research"])
+        self.assertFalse(public["comparison_precision_eligible"])
+        # This tests downstream acceptance and presentation contracts ONLY.
+        # It is not a live provider response, source custody pass, or W46 issuance.
 
     def test_missing_research_preview_never_blocks_canonical_site(self):
         self.assertEqual(publish_w45_research_preview(self.root), "NOT_AVAILABLE")
