@@ -47,8 +47,12 @@ def classify_snapshot(row: Any) -> dict[str, Any]:
             and type(number) is int and number > 0):
         return _result("UNKNOWN", "INVALID_INPUT", "VALID_ORIGINAL_ID_REQUIRED", None)
     identity = f"{repo}#{number}"
-    fields = ("repo", "original_pr", "head_sha", "state", "draft", "merged",
-              "merge_sha", "required_pr_jobs", "changed_main_blobs", "natural_consumer")
+    # Fingerprint all material native gate deltas, never only the code HEAD.
+    # A mergeability/review/rules/lease/source change must reactivate a case.
+    fields = ("repo", "original_pr", "head_sha", "base_sha", "main_sha",
+              "state", "draft", "merged", "mergeable", "merge_sha",
+              "required_pr_jobs", "changed_main_blobs", "natural_consumer",
+              "review_state", "rule_census", "source_binding", "active_editor_lease")
     try:
         fingerprint = _stable_hash({k: row.get(k) for k in fields})
     except (TypeError, ValueError):
