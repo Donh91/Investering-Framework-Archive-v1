@@ -434,6 +434,10 @@ class GraphHistoryTest(unittest.TestCase):
         receipt["source_forecast_freeze_sha256"] = source_hash
         put(receipt_file, receipt)
         archive(self.root, W46)
+        original_history = (self.root / ROOT / "weeks/2026/W45/forecast-reference.json")
+        w46_history = (self.root / ROOT / "weeks/2026/W46/forecast-reference.json")
+        self.assertEqual(json.loads(original_history.read_text())["forecast_quote_unit"], "UNAVAILABLE")
+        self.assertEqual(json.loads(w46_history.read_text())["forecast_quote_unit"], "USDT")
         display = publish(self.root)
         self.assertEqual(display["forecast_unit"], "PER_WEEK_DECLARED_OR_UNAVAILABLE")
         self.assertEqual(display["actual_unit"], "USDT")
@@ -447,6 +451,47 @@ class GraphHistoryTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "HISTORY_ORIGINAL_QUOTE_SOURCE_MISMATCH"):
             publish(self.root)
 
+
+    def test_historical_w45_legacy_usd_tag_survives_replay_while_public_quote_stays_unavailable(self):
+        # Simulate a real previously archived W45 forecast-reference from the
+        # old code, without altering a freeze, timestamp or portfolio signal.
+        source(self.root, status="UNAVAILABLE")
+        archive(self.root, W45)
+        ref = self.root / ROOT / "weeks/2026/W45/forecast-reference.json"
+        historical = json.loads(ref.read_text())
+        self.assertEqual(historical["forecast_quote_unit"], "UNAVAILABLE")
+        historical["forecast_quote_unit"] = "USD"
+        put(ref, historical)
+        exact_bytes = ref.read_bytes()
+        archive(self.root, W46)
+        self.assertEqual(ref.read_bytes(), exact_bytes)
+        self.assertEqual(publish(self.root)["weeks"][0]["forecast_model_declared_quote"], "UNAVAILABLE")
+        self.assertEqual(json.loads(ref.read_text())["forecast_quote_unit"], "USD")
+        # The exception only permits the single historical quote-label bug.
+        # A changed frozen forecast field still triggers immutable conflict.
+        historical["BTC"]["reason"] = "UNAUTHORIZED_RETROACTIVE_CHANGE"
+        put(ref, historical)
+        with self.assertRaisesRegex(ValueError, "IMMUTABLE_HISTORY_CONFLICT"):
+            archive(self.root, W46)
+
+    def test_untyped_original_btc_quote_never_borrows_eth_or_native_spot_usdt(self):
+        folder = source(self.root)
+        frozen = json.loads((folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_text())
+        frozen["price_quote"] = {"BTC": "UNAVAILABLE", "ETH": "USDT"}
+        put(folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json", frozen)
+        hashed = digest((folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_bytes())
+        pointer = folder / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json"
+        pointer_data = json.loads(pointer.read_text())
+        pointer_data["forecast_freeze_sha256"] = hashed
+        put(pointer, pointer_data)
+        receipt = folder / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+        receipt_data = json.loads(receipt.read_text())
+        receipt_data["source_forecast_freeze_sha256"] = hashed
+        put(receipt, receipt_data)
+        original = load_original(self.root, W45)
+        self.assertEqual(original["forecast_quote_unit"], "UNAVAILABLE")
+        self.assertEqual(original["BTC"]["status"], "PUBLISHED")
+        self.assertEqual(original["ETH"]["status"], "UNAVAILABLE")
 
     def test_time_machine_premium_view_preserves_data_provenance(self):
         """Visual-only upgrade must keep historical blue/green admission separate."""
