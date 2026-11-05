@@ -58,6 +58,8 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
       - name: Enforce Graph History immutable-source regression tests
         run: python3 tests/cycle_navigator/test_graph_history.py
+      - name: Execute Graph History same-quote original-blue W45/W46 browser runtime guard
+        run: node --test 05_CYCLE_NAVIGATOR/site/graph-history/runtime.test.mjs
       - name: Execute optional W45 research preview source/Canvas/UTC regressions (no network)
         run: node --test 05_CYCLE_NAVIGATOR/site/research-w45/preview.test.mjs
       - name: Build optional Graph History without blocking canonical SITE Product Gate
