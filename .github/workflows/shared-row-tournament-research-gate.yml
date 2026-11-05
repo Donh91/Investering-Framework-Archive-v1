@@ -24,6 +24,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Source-binding validator reconstructs original git commit:path
+          # blobs and requires git merge-base ancestry of frozen source commits.
+          # Shallow PR checkout incorrectly rejects every real source row.
+          fetch-depth: 0
+      - name: Assert source-bound Git ancestry is available
+        run: |
+          test "$(git rev-parse --is-shallow-repository)" = false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
