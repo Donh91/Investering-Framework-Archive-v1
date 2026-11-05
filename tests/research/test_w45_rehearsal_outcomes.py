@@ -100,7 +100,7 @@ class W45Rehearsal(unittest.TestCase):
                                              row["observed_close_USDT"] - 1), places=4)
         self.assertTrue(all(row["outcome_state"] == "PENDING_UTC_TARGET"
                             for i, row in enumerate(receipt["rows"]) if i not in (0, 4)))
-        self.assertIsNone(receipt["assets"]["BTC"]["claim_of_edge"] if False else None)
+        self.assertFalse(receipt["assets"]["BTC"]["claim_of_edge"])
         self.assertFalse(receipt["assets"]["ETH"]["claim_of_edge"])
 
     def test_closed_day_with_missing_exact_hour_does_not_get_nearest_price(self):
