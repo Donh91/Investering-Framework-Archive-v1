@@ -77,4 +77,54 @@ class DerivativesCrowdingV1Tests(unittest.TestCase):
         self.assertEqual(out['windows']['12h']['state'],'INSUFFICIENT_WINDOW')
         self.assertEqual(out['windows']['4h']['state'],'COMPLETE')
 
+
+from scripts.research.s5_source_clock_census_v1 import census_capture
+from copy import deepcopy
+
+
+class S5SourceClockCensusV1Tests(unittest.TestCase):
+    def test_replay_complete_is_not_pit_or_edge(self):
+        out=census_capture(capture(),source_blob_sha="fixture-blob")
+        self.assertEqual(out["capability_24h_window_state"],"COMPLETE")
+        self.assertEqual(out["source_clock_state"],"UNVERIFIED_FIRST_KNOWN")
+        self.assertEqual(out["economic_edge_claim"],"NOT_ESTIMABLE")
+        self.assertFalse(out["prospective_pit_admitted"])
+        self.assertEqual(out["series"]["funding_events"]["rows_at_or_after_cutoff"],1)
+
+    def test_missing_baseline_detected(self):
+        data=capture()
+        data["spot_hourly"].pop(0)
+        self.assertEqual(census_capture(data)["capability_24h_window_state"],"MISSING_INPUT_WINDOW")
+
+    def test_self_declared_first_known_cannot_certify(self):
+        data=capture()
+        data["provenance"]={"captured_at_utc":"2026-10-06T07:59:59Z"}
+        for name in ("spot_hourly","oi_hourly","futures_taker_hourly","basis_hourly"):
+            for row in data[name]:
+                row["source_first_known_utc"]="2026-10-05T00:00:00Z"
+                row["retrieved_at_utc"]="2026-10-06T07:59:59Z"
+        out=census_capture(data)
+        self.assertGreater(out["source_publication_clocks_declared"],0)
+        self.assertFalse(out["independent_provider_first_known_verified"])
+        self.assertFalse(out["prospective_pit_admitted"])
+
+    def test_duplicate_hour_detected(self):
+        data=capture()
+        data["oi_hourly"].append(deepcopy(data["oi_hourly"][0]))
+        with self.assertRaisesRegex(ValueError,"duplicate_hourly_clock"):
+            census_capture(data)
+
+    def test_naive_cutoff_fails_closed(self):
+        data=capture()
+        data["decision_cutoff_utc"]="2026-10-06T08:00:00"
+        with self.assertRaisesRegex(ValueError,"decision_cutoff"):
+            census_capture(data)
+
+    def test_no_funding_not_imputed(self):
+        data=capture()
+        data["funding_events"]=[]
+        out=census_capture(data)
+        self.assertEqual(out["series"]["funding_events"]["rows_before_cutoff"],0)
+        self.assertFalse(out["prospective_pit_admitted"])
+
 if __name__=='__main__':unittest.main()
