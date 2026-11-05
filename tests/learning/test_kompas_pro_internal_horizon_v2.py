@@ -222,6 +222,58 @@ class KompasProContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "RELEASE_SAFETY"):
             validate_route_and_ledger(self.route, led)
 
+    def test_release_readback_reconciles_source_merges_without_inventing_w45_original_prices(self):
+        phases = {row["id"]: row for row in self.ledger["release_phases"]}
+        meta = self.ledger["release_phase_status_readback"]
+        self.assertEqual(meta["contract"], "KOMPAS_PRO_RELEASE_PARTIAL_SOURCE_EVIDENCE_v1")
+        for field in ("no_product_completion_claim", "no_shadow_promotion",
+                      "no_original_week45_mutation", "no_portfolio_action_authority"):
+            self.assertIs(meta[field], True)
+        self.assertEqual(phases["G0"]["state"], "IN_PROGRESS")
+        self.assertEqual(phases["G0"]["code_delivery"]["state"], "MERGED_MAIN_VERIFIED")
+        self.assertIn("LITERAL_KOMPAS_CURRENT_SOURCE_OUTPUT_READBACK",
+                      phases["G0"]["code_delivery"]["remaining_before_verified_complete"])
+        self.assertEqual(phases["G1"]["state"], "NATURAL_WAIT")
+        self.assertEqual(phases["G1"]["code_delivery"]["state"],
+                         "SOURCE_AND_SITE_PIPELINES_MERGED_VERIFIED")
+        self.assertEqual({x["pr"] for x in phases["G1"]["code_delivery"]["implemented"]},
+                         {1879, 1872, 1901, 1902})
+        delivery = phases["G1"]["actual_product_delivery"]
+        self.assertEqual(delivery["forecast_week"], "2026-W45")
+        self.assertEqual(delivery["original_frozen_daily_expected_close_counts"], {"BTC": 0, "ETH": 0})
+        self.assertEqual(delivery["original_frozen_daily_range_plan_counts"], {"BTC": 0, "ETH": 0})
+        self.assertEqual(delivery["original_frozen_7d_blue_status"], "UNAVAILABLE")
+        self.assertEqual(delivery["unverified_weekly_quote_for_W45"], "UNAVAILABLE")
+        self.assertIs(delivery["prospectively_issued_7d_product"], False)
+        self.assertIs(delivery["shadow_research_can_substitute"], False)
+        self.assertEqual(delivery["next_natural_target_forecast_week"], "2026-W46")
+        self.assertEqual(delivery["next_natural_utc_monday"], "2026-11-09")
+        self.assertEqual(delivery["required_daily_expected_closes_each_asset"], 7)
+        self.assertEqual(delivery["required_reasoned_daily_range_plan_each_asset"], 7)
+        self.assertNotEqual(phases["G1"]["state"], "VERIFIED_COMPLETE")
+        frozen = json.loads((ROOT /
+            "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_text())
+        for asset in ("BTC", "ETH"):
+            self.assertEqual(frozen["daily_price_path"][asset]["status"], "UNAVAILABLE")
+            self.assertEqual(frozen["daily_price_path"][asset]["points"], [])
+            self.assertEqual(frozen["daily_range_plan"][asset]["status"], "UNAVAILABLE")
+        validate_route_and_ledger(self.route, self.ledger)
+
+    def test_graph_history_is_partial_g4_not_full_horizon_promotion(self):
+        phases = {row["id"]: row for row in self.ledger["release_phases"]}
+        g4 = phases["G4"]
+        self.assertEqual(g4["state"], "IN_PROGRESS")
+        self.assertEqual(g4["code_delivery"]["state"],
+                         "SOURCE_BOUND_GRAPH_HISTORY_AND_MOBILE_RUNTIME_AVAILABLE_NOT_FULL_14_HORIZON_RELEASE")
+        self.assertEqual({p["pr"] for p in g4["code_delivery"]["verified"]}, {1872, 1905, 1909})
+        self.assertIs(g4["code_delivery"]["research_expected_close_7_of_7_promoted"], False)
+        self.assertIs(g4["code_delivery"]["physical_iphone_safari_visual_review_verified"], False)
+        self.assertIs(g4["code_delivery"]["full_14_horizon_source_grade_public_renderer_verified"], False)
+        self.assertEqual(g4["code_delivery"]["canonical_w45_7d_blue_status"], "UNAVAILABLE")
+        self.assertTrue((ROOT / "05_CYCLE_NAVIGATOR/site/research-w45/index.html").is_file())
+        self.assertTrue((ROOT / "05_CYCLE_NAVIGATOR/site/research-w45/preview.test.mjs").is_file())
+        self.assertNotEqual(g4["state"], "VERIFIED_COMPLETE")
+
     def test_site_cannot_issue_price_and_long_range_is_not_marked_complete(self):
         self.assertTrue(self.ledger["public_projection"]["site_cannot_issue_forecast"])
         phases = self.ledger["release_phases"]
