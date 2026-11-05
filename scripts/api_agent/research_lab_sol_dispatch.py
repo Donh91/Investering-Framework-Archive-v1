@@ -29,9 +29,13 @@ def effective_registry_for_mission(registry: dict, packet: dict, mission_id: str
                 or packet.get("review_only_no_code_write") is not True
                 or not zero_authority(packet.get("authority"))):
             raise ValueError("MAX_ONE_SHOT_MANDATE_NOT_BOUND")
+        if packet.get("public_storage_consent_30_days") is not True:
+            raise ValueError("MAX_PUBLIC_BACKGROUND_STORAGE_CONSENT_REQUIRED")
         task["reasoning_effort"] = "max"
         task["max_output_tokens"] = 16000
         task["max_attempts"] = 1
+        task["recoverable_background"] = True
+        task["public_background_storage_authorized"] = True
     elif effort != "high":
         raise ValueError("RESEARCH_EFFORT_NOT_ADMITTED")
     return output
@@ -169,10 +173,16 @@ def paid_attempt_admission(repo_root: Path, mission_id: str, issue_number: int) 
 
 
 def clipped_file(repo_root: Path, rel: str) -> dict[str, Any]:
+    if not isinstance(rel, str) or not rel or Path(rel).is_absolute() or any(
+            part in ("", ".", "..") or part.casefold() in
+            ("secrets", "vault", ".env", "private") for part in Path(rel).parts):
+        raise ValueError("PUBLIC_SOURCE_PATH_NOT_ALLOWLISTED")
     path = repo_root / rel
-    if not path.is_file():
-        raise ValueError(f"context_path_missing:{rel}")
+    if (not path.is_file() or not path.resolve().is_relative_to(repo_root.resolve())):
+        raise ValueError(f"context_path_missing_or_private:{rel}")
     raw = path.read_bytes()
+    if re.search(rb"sk-proj-[A-Za-z0-9_-]{16,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_-]{16,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", raw):
+        raise ValueError("PUBLIC_SOURCE_CONTAINS_CREDENTIAL")
     text = raw.decode(errors="replace")
     clipped = text if len(text) <= PER_FILE_CLIP_CHARS else text[:PER_FILE_CLIP_CHARS] + "\n[TRUNCATED_AT_BOUND]\n"
     return {
@@ -207,6 +217,8 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
     context = {
         "contract": "RESEARCH_LAB_SOL_CONTEXT_v1",
         "authority": "ADVISORY_READ_ONLY",
+        "private_data_included": False,
+        "public_source_only": True,
         "task": TASK_NAME,
         "model": MODEL,
         "mission_id": mission_id,
