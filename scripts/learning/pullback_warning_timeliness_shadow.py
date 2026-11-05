@@ -57,7 +57,9 @@ def evaluate_path(issued: datetime, asof: datetime, market: dict, horizon_hours:
     t = anchor
     while t <= target:
         item = market.get(t)
-        if not item or not isinstance(item.get("btc"), (float, int)) or item["btc"] <= 0:
+        if (not item or isinstance(item.get("btc"), bool) or
+                not isinstance(item.get("btc"), (float, int)) or
+                not math.isfinite(float(item["btc"])) or item["btc"] <= 0):
             return {**base, "maturity": "UNKNOWN_MISSING_COMPLETED_HOUR"}
         closes.append((t, float(item["btc"])))
         t += HOUR
@@ -66,13 +68,32 @@ def evaluate_path(issued: datetime, asof: datetime, market: dict, horizon_hours:
     start = closes[0][1]
     downs = [(when, 100*(p/start-1)) for when,p in closes[1:]]
     first = next(((when, ret) for when,ret in downs if ret <= barrier_pct), None)
-    worst = min(ret for _,ret in downs)
+    worst_when, worst = min(downs, key=lambda v: v[1])
+    # Conservative close-only ordering: reclaim must occur at a STRICTLY
+    # LATER completed close after the observed within-window lowest close.
+    # One reclaim is not proof of a durable bottom or tradeable fill.
+    first_reclaim = (next((when for when, close in closes
+                          if when > worst_when and close >= start), None)
+                     if worst < 0 else None)
+    recovery_status = ("NO_OBSERVED_ADVERSE_CLOSE" if worst >= 0 else
+                       "OBSERVED_FIRST_LATER_CLOSE_RECLAIM" if first_reclaim else
+                       "RIGHT_CENSORED_AT_HORIZON")
     return {
         **base, "maturity": "MATURED_EXPOST_ONLY",
         "hit_within_window": first is not None,
         "first_touch_at_utc": iso(first[0]) if first else None,
         "lead_hours": round((first[0]-issued).total_seconds()/3600, 5) if first else None,
         "observed_worst_btc_close_drawdown_pct": round(worst, 6),
+        "observed_worst_close_at_utc": iso(worst_when),
+        "time_to_observed_worst_close_hours": round((worst_when-issued).total_seconds()/3600, 5),
+        "first_later_reclaim_close_at_utc": iso(first_reclaim) if first_reclaim else None,
+        "time_from_worst_close_to_reclaim_hours": (
+            round((first_reclaim-worst_when).total_seconds()/3600, 5)
+            if first_reclaim else None),
+        "recovery_status": recovery_status,
+        "recovery_right_censored": worst < 0 and first_reclaim is None,
+        "observed_within_horizon_only_not_final_cycle_trough": True,
+        "reclaim_is_not_durable_recovery_proof": True,
         "anchor_close_utc": iso(anchor), "anchor_price_source": "FIRST_FULLY_POST_ISSUE_HOURLY_CLOSE",
         "candle_count": len(closes),
     }
