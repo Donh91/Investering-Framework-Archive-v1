@@ -5,6 +5,13 @@ import {buildPremiumRootHtml} from './premium-root.mjs';
 import {buildUnifiedRootHtml} from './unified-root.mjs';
 import {promoteHtml,promoteUnifiedHtml} from './promote-root.mjs';
 
+
+function withInvalidScoreHref(html,href){
+ const anchor=/<a\b[^>]*data-premium-nav="scoreArchive"[^>]*>/;
+ if(!anchor.test(html))throw Error('FIXTURE_SCORE_ANCHOR_MISSING');
+ return html.replace(anchor,tag=>tag.replace(/href="[^"]+"/,'href="'+href+'"'));
+}
+
 const source=await readFile(new URL('./graph-b/source-graph-b.html',import.meta.url),'utf8');
 const staged=buildPremiumRootHtml(source)
  .replace('<link rel="stylesheet" href="./premium-overhaul.css">',
@@ -24,7 +31,7 @@ test('official root preserves original B and removes preview metadata',()=>{
 });
 test('broken entry or unexpected source fails closed',()=>{
  assert.throws(()=>promoteHtml(staged.replace('id="variant-panel"','id="missing"')),/COMPONENT_MISSING/);
- assert.throws(()=>promoteHtml(staged.replace('href="https://github.com/Donh91/CycleNavigator-scores"','href="bad"')),/SOURCE_MISMATCH/);
+ assert.throws(()=>promoteHtml(withInvalidScoreHref(staged,'bad')),/SOURCE_MISMATCH/);
  assert.throws(()=>promoteHtml(staged.replace('Weekly Outlook <span class="alt-token">B<\/span>','Demo')),/COMPONENT_MISSING/);
 });
 
@@ -63,7 +70,7 @@ test('unified cutover aborts on missing/duplicate identity, legacy owner and bad
   /UNIFIED_PROMOTION_SINGLETON_MISSING:chart/);
  assert.throws(()=>promoteUnifiedHtml(stagedUnified.replace('</body>','<div id="official-product-pilot"></div></body>')),
   /UNIFIED_PROMOTION_LEGACY_OWNER/);
- assert.throws(()=>promoteUnifiedHtml(stagedUnified.replace('href="https://github.com/Donh91/CycleNavigator-scores"','href="../wrong/latest.json"')),
+ assert.throws(()=>promoteUnifiedHtml(withInvalidScoreHref(stagedUnified,'../wrong/latest.json')),
   /ROOT_PROMOTION_SOURCE_MISMATCH/);
  assert.throws(()=>promoteUnifiedHtml(stagedUnified.replace('/Investering-Framework-Archive-v1/next/assets/','/bad-prefix/assets/')),
   /UNIFIED_PROMOTION_COMPILED_ASSETS_MISSING/);
@@ -71,9 +78,9 @@ test('unified cutover aborts on missing/duplicate identity, legacy owner and bad
 
 test('promoted source evidence rejects missing and duplicated public documentation links',()=>{
  const sourceLink='href="https://github.com/Donh91/CycleNavigator-scores"';
- assert.throws(()=>promoteHtml(staged.replace(sourceLink,'href="https://example.invalid"')),
+ assert.throws(()=>promoteHtml(withInvalidScoreHref(staged,'https://example.invalid')),
   /ROOT_PROMOTION_SOURCE_MISMATCH/);
- assert.throws(()=>promoteUnifiedHtml(stagedUnified.replace(sourceLink,'href="../data/latest.json"')),
+ assert.throws(()=>promoteUnifiedHtml(withInvalidScoreHref(stagedUnified,'../data/latest.json')),
   /ROOT_PROMOTION_SOURCE_MISMATCH/);
  const duplicate='<a href="https://github.com/Donh91/CycleNavigator-scores" data-premium-nav="scoreArchive">Duplicate</a>';
  assert.throws(()=>promoteUnifiedHtml(stagedUnified.replace('</nav></details>',duplicate+'</nav></details>')),
