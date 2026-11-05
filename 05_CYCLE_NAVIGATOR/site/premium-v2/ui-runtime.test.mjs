@@ -222,11 +222,15 @@ test('Proof expiry is armed even when optional external source links never respo
  await h.advance('2026-10-26T01:30:00.001Z');
  assert.equal(h.get('proof-freshness').dataset.freshness,'stale');
 });
-test('Open tab rechecks all three public feeds and clears evidence on source failure',async()=>{
+test('Open tab rechecks all feeds; only Graph B keeps authenticated stale HISTORY, not Compass authority',async()=>{
  for(const [path,assertCleared] of [
   ['./graph-b/source-graph-b.mjs',h=>{
-   assert.equal(h.get('observed-value').textContent,'—');
+   assert.notEqual(h.get('observed-value').textContent,'—');
+   assert.match(h.get('feed-status').textContent,/KUN SIDST VERIFICEREDE HISTORIK/);
+   assert.match(h.get('feed-status').textContent,/FORÆLDEDE OBSERVATIONER/);
+   assert.equal(h.get('variant-panel').dataset.freshness,'stale');
    assert.equal(h.get('forecast').attrs.d,'');
+   assert.ok(h.get('actual').attrs.d.length>0);
   }],
   ['./compass/compass-path-ui.mjs',h=>{
    assert.equal(h.get('official-pilot-action').textContent,'—');
@@ -243,6 +247,54 @@ test('Open tab rechecks all three public feeds and clears evidence on source fai
   assertCleared(h);
  }
 });
+test('Graph B temporary outage historical fallback recovers on verified source but rejects corrupted new source',async()=>{
+ const original=snapshot({last:168});
+ original.public_live_precision.price_quote_labels={
+  contract:'CN_PUBLIC_PRICE_QUOTE_LABELS_v1',
+  actual_native_spot:{BTC:'USDT',ETH:'USDT'},
+  forecast_model_declared:{BTC:'UNAVAILABLE',ETH:'UNAVAILABLE'},
+  conversion_applied:false,proof_authority:false,comparison_precision_eligible:false
+ };
+ const h=await harness('./graph-b/source-graph-b.mjs',{latest:original});
+ const green=h.get('actual').attrs.d;
+ assert.ok(green.length>0);
+ assert.match(h.get('observed-value').textContent,/USDT$/);
+ h.setFetch(async()=>{throw Error('CDN_TEMPORARILY_UNAVAILABLE')});
+ await h.advance('2026-10-26T00:35:01Z');
+ assert.equal(h.get('variant-panel').dataset.freshness,'stale');
+ assert.equal(h.get('actual').attrs.d,green);
+ assert.match(h.get('observed-value').textContent,/USDT$/);
+ assert.match(h.get('feed-status').textContent,/IKKE AKTUEL KURS/);
+ assert.match(h.get('feed-status').textContent,/KUN SIDST VERIFICEREDE HISTORIK/);
+ // A newly received malformed public issue must not inherit the history
+ // fallback. It is a source-integrity failure, not a network outage.
+ const invalid=snapshot({last:168});
+ invalid.public_live_precision.public_issue_number=100;
+ h.setFetch(url=>Promise.resolve({ok:true,json:async()=>String(url).endsWith('latest.json')?invalid:null}));
+ h.doc.dispatchEvent({type:'visibilitychange'});await h.settle();
+ assert.equal(h.get('observed-value').textContent,'—');
+ assert.equal(h.get('actual').attrs.d,'');
+ assert.equal(h.get('variant-panel').dataset.freshness,'unavailable');
+ // Once a valid source returns, only the new verified read can clear STALE.
+ h.setFetch(url=>Promise.resolve({ok:true,json:async()=>String(url).endsWith('latest.json')?original:null}));
+ h.doc.dispatchEvent({type:'visibilitychange'});await h.settle();
+ assert.equal(h.get('variant-panel').dataset.freshness,'fresh');
+ assert.match(h.get('observed-value').textContent,/USDT$/);
+ assert.doesNotMatch(h.get('feed-status').textContent,/KUN SIDST VERIFICEREDE HISTORIK/);
+});
+
+test('Graph B cannot carry BTC historical fallback across an asset switch on failed fetch',async()=>{
+ const h=await harness('./graph-b/source-graph-b.mjs');
+ h.setFetch(async()=>{throw Error('OFFLINE')});
+ await h.advance('2026-10-26T00:35:01Z');
+ assert.match(h.get('feed-status').textContent,/KUN SIDST VERIFICEREDE HISTORIK/);
+ h.buttons.asset[1].click();await h.settle();
+ assert.equal(h.get('pair').textContent,'ETH / UNAVAILABLE');
+ assert.equal(h.get('observed-value').textContent,'—');
+ assert.equal(h.get('actual').attrs.d,'');
+ assert.equal(h.get('variant-panel').dataset.freshness,'unavailable');
+});
+
 test('Open Graph B follows a newly published close while a manual replay stays put',async()=>{
  const initial=snapshot({last:167}),updated=snapshot({last:168});
  const h=await harness('./graph-b/source-graph-b.mjs',{latest:initial});
