@@ -200,10 +200,15 @@ class NativeSolDispatchTests(unittest.TestCase):
         self.assertGreater(len(t.canonical(packet["packet"])), 100_000)
         self.assertFalse(packet["dispatch_enabled"])
 
-    def test_unmerged_original_forecast_branch_is_not_faked_as_main(self):
-        # Original #1879 source ownership is NOT interchangeable with main.
-        with self.assertRaisesRegex(ValueError, "ELITE_PUBLIC_SOURCE_UNAVAILABLE"):
-            t.render_source(Path("."), "S1-FORECAST-UNLOCK-20261104", HEAD)
+    def test_merged_original_forecast_is_still_advisory_and_no_paid_authority(self):
+        # #1879 has genuinely merged. Its public files now exist on main, but
+        # presence must NEVER be treated as a new paid grant or quote evidence.
+        packet = t.render_source(Path("."), "S1-FORECAST-UNLOCK-20261104", HEAD)
+        self.assertEqual(packet["file_count"], 5)
+        self.assertFalse(packet["dispatch_enabled"])
+        self.assertEqual(packet["packet"]["original_pr"], 1879)
+        self.assertEqual(packet["packet"]["authority"],
+                         "PATCH_CANDIDATE_ONLY_NO_SOURCE_WRITE_NO_MERGE")
 
     def test_origin_artifact_attack_rejected_before_provider(self):
         with tempfile.TemporaryDirectory() as td, patch.dict(os.environ, ENV):
