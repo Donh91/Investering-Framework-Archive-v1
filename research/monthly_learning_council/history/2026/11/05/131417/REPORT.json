@@ -1,0 +1,75 @@
+{
+  "ai": {
+    "adversarial": {
+      "evidence_against": [],
+      "evidence_for": [],
+      "forecast_candidates": [],
+      "hypotheses": [],
+      "status": "BLOCKED",
+      "summary": "AI review unavailable; deterministic council remains valid.",
+      "uncertainties": [
+        "ADVERSARIAL_OUTPUT_UNAVAILABLE"
+      ]
+    },
+    "analyst": {
+      "evidence_against": [
+        "No scientific learning claim is established: all 28 registry candidates marked MATURED_INCONCLUSIVE have zero scientific-score-eligible outcomes, despite some having many matured outcomes. The shadow registry lists no promotion candidates.",
+        "The same W39–W43 driver sets recur across assets and horizons. The protection calibration explicitly warns that overlapping freezes are not independent events; independent adverse-event counts are null.",
+        "Rebounds, positive BTC ETF flows during W43, and positive short-horizon terminal returns in some cohorts challenge a one-sided or uninterrupted-downside interpretation. No supplied artifact confirms distribution.",
+        "The 30-day rotation label reached ALTCOIN_SEASON in W40 while the 90-day and 365-day readings were 55 and 37, ETH/BTC declined, and ETH ETF flows were negative. The short-window label alone does not establish broad transmission."
+      ],
+      "evidence_for": [
+        "An evidence-milestone review is supported by the supplied eligibility markers: 39 newly matured outcomes exceed the stated minimum of 25; the monthly review is not due and no escalation is triggered.",
+        "The architecture dashboard reports 272 matured and adjudicated outcomes in its 14-day window, with zero censored outcomes. This supports an outcome-accountability review, not a skill finding.",
+        "The protection calibration contains 1,240 eligible series rows, including 1,028 warning rows. Its W42–W43 elevated-retest cohorts show negative median terminal returns at 72h and 168h for both BTC and ETH, descriptively.",
+        "Rows without a frozen typed warning also show substantial observed 168h maximum adverse excursions: median −4.72% for BTC and −10.20% for ETH, each across 20 distinct Compass freezes. These are observations, not established missed-warning events.",
+        "Weekly adjudication labels 346 of 670 reviewed candidates ARCHIVE_ONLY_DUPLICATE and 288 WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE. This identifies redundancy and an evidence gap without treating either as learned market behavior."
+      ],
+      "forecast_candidates": [],
+      "hypotheses": [
+        "New, preregistered research test: At the independent, non-overlapping episode level, frozen typed protection states discriminate subsequent 72h BTC and ETH maximum adverse excursion better than a prespecified comparable no-typed-warning baseline, without obscuring subsequent upside. Falsified if the out-of-sample episode-level comparison shows no incremental discrimination or an offsetting upside cost. Existing tests must remain unchanged.",
+        "New, preregistered research test: ETH/BTC weakness adds information about subsequent ETH-relative downside when BTC and ETH settled ETF flows diverge, beyond the frozen comparison inputs. Falsified if an out-of-sample, non-overlapping episode comparison finds no incremental ETH-relative discrimination. The supplied W43 divergence is motivation, not validation."
+      ],
+      "status": "DEGRADED",
+      "summary": "The milestone permits a research review, but not a scientific learning claim. The clearest finding is descriptive outcome accountability alongside unresolved discrimination: warning cohorts experienced downside at longer horizons, yet substantial adverse excursions also occurred without typed warnings, while rebounds and upside complicate a one-sided reading. The highest-information bounded question is whether frozen protection states add out-of-sample, episode-level 72h downside discrimination over a comparable no-warning baseline while accounting for upside. Distribution, timing, exit and re-entry rules remain unlearned.",
+      "uncertainties": [
+        "The 39-outcome maturation delta is not identified as 39 independent events or 39 scientific-score-eligible outcomes.",
+        "Independent adverse-event counts are null; overlapping freezes and repeated asset/horizon rows preclude treating row counts as independent sample sizes.",
+        "The no-typed-warning adverse excursions do not establish false negatives without an eligible event definition and comparable baseline.",
+        "The registry has 691 candidates and 28 matured-inconclusive candidates, whereas the weekly adjudication covers 670 and assigns 27 KEEP_SHADOW_INCONCLUSIVE; these are different reported scopes, not reconciled counts.",
+        "Architecture health is GREEN only within its evidence scope; automation health is AMBER, including schedule-staleness findings and four created hourly schedule events against 24 expected slots on 2026-11-04. Aggregate system health is not asserted."
+      ]
+    }
+  },
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "contract": "MONTHLY_AI_LEARNING_COUNCIL_REPORT_v1",
+  "deterministic": {
+    "candidate_queue": [],
+    "challenged_claims": [],
+    "learning_claims": [],
+    "primary_action": "CONTINUE_OBSERVING",
+    "target": "MONTHLY_AI_LEARNING_COUNCIL"
+  },
+  "eligibility": {
+    "escalation_trigger": false,
+    "maturation_trigger": true,
+    "matured_outcome_delta": 39,
+    "milestone_due": true,
+    "month_key": "2026-11",
+    "monthly_due": false,
+    "run_review": true
+  },
+  "firewall": {
+    "automatic_canonical_promotion": false,
+    "automatic_market_rule_change": false,
+    "automatic_threshold_change": false,
+    "automatic_weight_change": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "freeze_sha256": "273c0b2382cec859db1060bf9de843aa65f1bb9a31e22eb65cc0e9884a7e0fae",
+  "generated_at_utc": "2026-11-05T13:14:17Z",
+  "portfolio_execution": false,
+  "review_kind": "EVIDENCE_MILESTONE"
+}
