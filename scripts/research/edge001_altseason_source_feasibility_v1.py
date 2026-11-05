@@ -112,7 +112,9 @@ def validate_source_feasibility_registry(registry: Mapping) -> dict:
                 _fail("EMPTY_OWNER_TOPIC_OR_TRIGGER")
         if not fullmatch(r"Donh91/[A-Za-z0-9_.-]+#\d+", row["owner_issue"]):
             _fail("SOURCE_OWNER_ISSUE_FORMAT")
-        if row["status"] not in STATUSES or row["access_class"] not in ACCESS or row["source_role"] not in ROLES:
+        if (not isinstance(row["status"], str) or not isinstance(row["access_class"], str)
+                or not isinstance(row["source_role"], str) or row["status"] not in STATUSES
+                or row["access_class"] not in ACCESS or row["source_role"] not in ROLES):
             _fail("UNRECOGNIZED_STATE")
         if type(row["source_is_documentary"]) is not bool or row["private_values_in_public"] is not False:
             _fail("SOURCE_PRIVATE_OR_DOC_FLAG")
