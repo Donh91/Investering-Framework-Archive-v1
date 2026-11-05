@@ -25,6 +25,15 @@ function fixture(){
   }
  };
 }
+function bindSameQuotedNativeSource(v){
+ v.public_live_precision.price_quote_labels={
+  contract:'CN_PUBLIC_PRICE_QUOTE_LABELS_v1',
+  actual_native_spot:{BTC:'USDT',ETH:'USDT'},
+  forecast_model_declared:{BTC:'USDT',ETH:'USDT'},
+  conversion_applied:false,proof_authority:false,comparison_precision_eligible:false
+ };
+ return v;
+}
 const now='2026-10-19T04:20:00Z';
 test('W43 genuine ranges+actual does NOT become an invented blue forecast',()=>{
  const m=readOfficialGraphB(fixture(),'BTC',{now_utc:now});
@@ -66,7 +75,7 @@ test('duplicates, future points and non-hourly observations are rejected',()=>{
  assert.equal(readOfficialGraphB(n,'BTC',{now_utc:now}).source_reason,'HOURLY_SAMPLES_UNVERIFIED');
 });
 test('prospective PUBLISHED is only a structurally valid 7-day source path, never a generated line',()=>{
- const v=fixture();
+ const v=bindSameQuotedNativeSource(fixture());
  v.public_live_precision.daily_price_path.BTC={status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({
   day:i+1,low:81000,high:84000,expected_close:82000+i*100
  }))};
@@ -102,7 +111,7 @@ test('post-cutoff or future-issued published daily path is rejected',()=>{
 });
 
 test('blue path must have frozen at source before first scored hour (no hindsight)',()=>{
- const sample=fixture();
+ const sample=bindSameQuotedNativeSource(fixture());
  sample.public_live_precision.daily_price_path.BTC={status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({
    day:i+1,low:80000,high:85000,expected_close:82000+i*100
  }))};
@@ -202,4 +211,50 @@ test('source-quote disclosure keeps actual USDT separate from unverified model e
  assert.equal(btc.forecast_status,'UNAVAILABLE');
  source.public_live_precision.price_quote_labels.forecast_model_declared.BTC='BTC';
  assert.equal(readOfficialGraphB(source,'BTC',{now_utc:now}).forecast_declared_quote_unit,'UNAVAILABLE');
+});
+
+
+test('original seven-point forecast cannot overlay USDT actual if quote metadata is absent or USD',()=>{
+ const x=fixture();x.public_live_precision.daily_price_path.BTC={
+  status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({
+   day:i+1,low:81000,high:84000,expected_close:82000+i*100
+  }))
+ };
+ const noQuote=readOfficialGraphB(x,'BTC',{now_utc:'2026-10-19T06:00:00Z'});
+ assert.equal(noQuote.source_status,'SOURCE_BOUNDED');
+ assert.equal(noQuote.forecast_status,'SOURCE_ISSUED_QUOTE_INCOMPARABLE');
+ assert.equal(noQuote.forecast_comparison_quote_status,'UNVERIFIED_OR_DIFFERENT_UNIT');
+ assert.deepEqual(noQuote.forecast,[]);
+ assert.equal(noQuote.hourly_observations.length,3);
+ bindSameQuotedNativeSource(x);
+ x.public_live_precision.price_quote_labels.forecast_model_declared.BTC='USD';
+ const usd=readOfficialGraphB(x,'BTC',{now_utc:'2026-10-19T06:00:00Z'});
+ assert.equal(usd.forecast_status,'SOURCE_ISSUED_QUOTE_INCOMPARABLE');
+ assert.equal(usd.forecast_declared_quote_unit,'USD');
+ assert.deepEqual(usd.forecast,[]);
+ assert.equal(usd.actual_quote_unit,'USDT');
+ assert.equal(usd.hourly_observations.length,3);
+ x.public_live_precision.price_quote_labels.forecast_model_declared.BTC='USDT';
+ const same=readOfficialGraphB(x,'BTC',{now_utc:'2026-10-19T06:00:00Z'});
+ assert.equal(same.forecast_status,'SOURCE_ISSUED');
+ assert.equal(same.forecast_comparison_quote_status,'SAME_DECLARED_UNIT');
+ assert.equal(same.forecast.length,7);
+ assert.equal(same.proof_authority,false);
+ assert.equal(same.score_authority,false);
+});
+
+test('a valid ETH daily forecast cannot borrow BTC quote identity to force its path',()=>{
+ const x=bindSameQuotedNativeSource(fixture());const m=x.public_live_precision;
+ m.daily_price_path.ETH={status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({
+  day:i+1,low:2300,high:2600,expected_close:2400+i*10
+ }))};
+ m.price_quote_labels.forecast_model_declared.ETH='UNAVAILABLE';
+ const eth=readOfficialGraphB(x,'ETH',{now_utc:'2026-10-19T06:00:00Z'});
+ assert.equal(eth.forecast_status,'SOURCE_ISSUED_QUOTE_INCOMPARABLE');
+ assert.deepEqual(eth.forecast,[]);
+ assert.equal(eth.actual_quote_unit,'USDT');
+ assert.equal(eth.forecast_declared_quote_unit,'UNAVAILABLE');
+ const btc=readOfficialGraphB(x,'BTC',{now_utc:'2026-10-19T06:00:00Z'});
+ assert.equal(btc.forecast_status,'UNAVAILABLE');
+ assert.deepEqual(btc.forecast,[]);
 });
