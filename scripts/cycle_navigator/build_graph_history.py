@@ -343,8 +343,10 @@ def publish_w45_research_preview(root):
     dst_data = root / "05_CYCLE_NAVIGATOR/site/dist/data/research-w45-shadow.json"
     dst_page = root / "05_CYCLE_NAVIGATOR/site/dist/research-w45/index.html"
     dst_outcomes = root / "05_CYCLE_NAVIGATOR/site/dist/data/research-w45-outcomes.json"
+    dst_thursday = root / "05_CYCLE_NAVIGATOR/site/dist/data/research-w45-thursday-outcomes.json"
+    frozen_thursday = root / "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_THURSDAY_SELFTEST_v1.json"
     def discard():
-        for path in (dst_data, dst_page, dst_outcomes):
+        for path in (dst_data, dst_page, dst_outcomes, dst_thursday):
             if path.exists():
                 path.unlink()
     if not original.is_file() or not html.is_file():
@@ -379,6 +381,25 @@ def publish_w45_research_preview(root):
         dst_data.write_bytes(original.read_bytes())
         dst_outcomes.write_bytes(canonical(outcomes))
         dst_page.write_bytes(html.read_bytes())
+        # Independent original owner comment-issued Thursday experiment.
+        # Bad/missing optional experiment must NEVER block the original
+        # Wednesday shadow page, original Graph B or canonical Pages.
+        if frozen_thursday.is_file():
+            try:
+                from scripts.research.w45_thursday_selftest_outcomes import compile_from_repo as thursday_outcomes
+                thursday = thursday_outcomes(root)
+                if (thursday.get("contract") != "RESEARCH_W45_THURSDAY_SELFTEST_OUTCOMES_v1"
+                        or thursday.get("research_only") is not True
+                        or thursday.get("official_scoring_eligible") is not False
+                        or thursday.get("portfolio_action_authority") is not False
+                        or thursday.get("original_monday_daily_issued") != {"BTC": 0, "ETH": 0}):
+                    raise ValueError("THURSDAY_SELFTEST_AUTHORITY_GUARD")
+                dst_thursday.write_bytes(canonical(thursday))
+            except (ValueError, KeyError, TypeError, OSError, json.JSONDecodeError):
+                if dst_thursday.exists():
+                    dst_thursday.unlink()
+        elif dst_thursday.exists():
+            dst_thursday.unlink()
         return "RESEARCH_ONLY_PUBLISHED"
     except (ValueError, KeyError, TypeError, OSError, json.JSONDecodeError):
         discard()
