@@ -371,5 +371,23 @@ class TwoSleeveContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "DUPLICATE_ROLE"):
             audit_two_sleeve_shadow_batch([a, b])
 
+class TwoSleeveManifestConsistencyTests(unittest.TestCase):
+    def test_machine_contract_matches_exact_code_fields_and_flags(self):
+        import json
+        from edge001_two_sleeve_shadow_contract_v1 import (
+            CONTRACT, REQUIRED_FIELDS, ROLES, STATES
+        )
+        root = Path(__file__).resolve().parents[2]
+        p = root / "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/TWO_SLEEVE_SHADOW_ROW_CONTRACT_v1.json"
+        spec = json.loads(p.read_text(encoding="utf-8"))
+        self.assertEqual(spec["contract"], CONTRACT)
+        self.assertEqual(set(spec["required_fields"]), REQUIRED_FIELDS)
+        self.assertEqual(set(spec["allowed_sleeve_roles"]), ROLES)
+        self.assertEqual(set(spec["allowed_statuses"]), STATES)
+        self.assertEqual(len(spec["required_fields"]), len(REQUIRED_FIELDS))
+        self.assertTrue(all(value is False for value in spec["evidence_claims"].values()))
+        self.assertFalse(spec["private_values_in_public_repository"])
+        self.assertEqual(spec["live_actions"], "NONE")
+
 if __name__=='__main__': unittest.main(verbosity=2)
 
