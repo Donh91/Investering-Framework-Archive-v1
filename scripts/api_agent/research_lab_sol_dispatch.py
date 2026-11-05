@@ -373,7 +373,22 @@ def failure_report(output_dir: Path, mission_id: str, comment_id: str) -> str:
             f"Parse errors: {json.dumps(receipt.get('parse_errors') or [], sort_keys=True)}",
         ]
     else:
-        lines.append("No durable paid-call receipt was produced.")
+        from os import environ
+        transport = output_dir / "output" / "transport"
+        handle_path = transport / "response_handle.json"
+        if handle_path.is_file():
+            handle = load_json(handle_path)
+            origin = environ.get("GITHUB_RUN_ID", "")
+            lines.append("Durable original provider response ID EXISTS; analysis is not yet accepted.")
+            lines.append("GET-only recovery is possible from the original Actions artifact. No second POST.")
+            if re.fullmatch(r"[1-9][0-9]{0,17}", origin):
+                lines.append("Existing owner recovery marker: "
+                             + "[RESEARCH_LAB_SOL_COLLECT] origin=" + origin)
+        elif (transport / "attempt.json").is_file():
+            lines.append("Paid POST may have reached provider but no response ID was received. "
+                         "Billing UNKNOWN. No second POST or invented GET.")
+        else:
+            lines.append("No durable paid-call receipt was produced.")
     lines += ["", "No research conclusion was accepted and no authority changed."]
     return "\n".join(lines) + "\n"
 
