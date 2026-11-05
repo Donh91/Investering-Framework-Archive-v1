@@ -110,6 +110,45 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         ]
         return rows, divs
 
+    def test_calendar_blocks_report_dependence_not_false_independent_n(self):
+        active=runtime()
+        active["core_prospective_eligibility_start"]="2026-10-24T12:00:00Z"
+        legal=[
+            row("EARLY","2026-10-25T00:00:00Z"),
+            row("LATER","2026-11-04T12:00:00Z"),
+            row("NEXT_BLOCK","2026-11-21T12:00:00Z"),
+        ]
+        result=weekly.dependence_census(legal,active)
+        self.assertEqual(result["eligible_row_n"],3)
+        self.assertEqual(result["fixed_28d_calendar_block_n"],2)
+        self.assertEqual(result["calendar_blocks"],[
+            {"block_index":0,"observed_row_n":2},
+            {"block_index":1,"observed_row_n":1},
+        ])
+        self.assertIsNone(result["independent_market_shock_family_n"])
+        self.assertFalse(result["statistical_independence_verified"])
+        self.assertIsNone(result["verified_predictive_or_economic_edge"])
+
+    def test_dependence_census_pre_floor_or_inactive_fails_closed(self):
+        with self.assertRaisesRegex(ValueError,"invalid_prospective_timestamp"):
+            weekly.dependence_census([row("OLD","2026-09-29T23:00:00Z")],runtime())
+        with self.assertRaisesRegex(ValueError,"nonactive_rows"):
+            weekly.dependence_census([row("NEW")],runtime(False))
+        empty=weekly.dependence_census([],runtime(False))
+        self.assertEqual(empty["fixed_28d_calendar_block_n"],0)
+        self.assertIsNone(empty["independent_market_shock_family_n"])
+
+    def test_candidate_row_precision_is_not_inferential_altseason_skill(self):
+        sample=row("CANDIDATE")
+        sample["outcome_24h"]="1"
+        data=weekly.metrics([sample],"C01_ETHBTC","24h")
+        self.assertEqual(data["n"],1)
+        self.assertEqual(data["precision"],1.0)
+        self.assertTrue(data["row_based_descriptive_only"])
+        self.assertIsNone(data["independent_market_shock_family_n"])
+        self.assertIsNone(data["independent_population_precision"])
+        self.assertIsNone(data["statistically_valid_comparative_edge"])
+
     def test_shared_filter_counts_only_bound_post_floor_rows(self) -> None:
         rows, divs = self.adversarial_data()
         valid_rows, valid_divs, excluded = weekly.filter_consumer_rows(rows, divs, runtime(), verifier)
