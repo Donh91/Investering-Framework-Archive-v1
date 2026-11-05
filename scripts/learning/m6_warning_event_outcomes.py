@@ -135,7 +135,38 @@ def asset_view(seg,start_price,label,start):
     lows=closes+[(r["close"],r[low_key]) for r in full_rows]
     terminal=closes[-1];lo=min(lows,key=lambda x:x[1]);hi=max(highs,key=lambda x:x[1])
     post_anchor=closes[0]
-    return {"state":"MATURED","reference_anchor":{"price":start_price,"semantics":"FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+    # Trough is an observed hourly close or a FULL post-knowledge bar low.
+    # Do NOT pretend to know whether a bar's high/close followed its own low.
+    # A reclaim must occur at a strictly LATER hourly close after that minimum.
+    # This is descriptive, never an executable quote or a verified durable bottom.
+    if lo[1]>=start_price:
+        recovery_state="NO_OBSERVED_ADVERSE_MOVE"
+        first_reclaim=None
+        right_censored=False
+    else:
+        first_reclaim=next(((at,price) for at,price in closes
+                            if at>lo[0] and price>=start_price),None)
+        right_censored=first_reclaim is None
+        recovery_state=("RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM" if right_censored
+                        else "OBSERVED_FIRST_LATER_CLOSE_RECLAIM")
+    recovery_after_mae={
+        "status":recovery_state,
+        "right_censored":right_censored,
+        "observed_trough_at_utc":z(lo[0]),
+        "observation_end_at_utc":z(terminal[0]),
+        "first_close_reclaim_at_utc":z(first_reclaim[0]) if first_reclaim else None,
+        "time_to_first_close_reclaim_hours":(
+            round((first_reclaim[0]-start).total_seconds()/3600.0,6)
+            if first_reclaim else None),
+        "time_from_mae_to_reclaim_hours":(
+            round((first_reclaim[0]-lo[0]).total_seconds()/3600.0,6)
+            if first_reclaim else None),
+        "reference_price_semantics":"FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+        "reclaim_clock_semantics":"FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+        "durable_recovery_proven":False,
+        "economic_action_authority":False,
+    }
+    return {"state":"MATURED","recovery_after_mae":recovery_after_mae,"reference_anchor":{"price":start_price,"semantics":"FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
             "terminal_return_pct":pct(start_price,terminal[1]),"mae_pct":pct(start_price,lo[1]),"mfe_pct":pct(start_price,hi[1]),
             "time_to_mae_hours":(lo[0]-start).total_seconds()/3600,"time_to_mfe_hours":(hi[0]-start).total_seconds()/3600,
             "extremum_timestamp_semantics":"HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME"},
