@@ -99,6 +99,66 @@ def evaluate_path(issued: datetime, asof: datetime, market: dict, horizon_hours:
     }
 
 
+
+def price_only_24h_context(issued: datetime, market: dict) -> dict[str, Any]:
+    """Strict 24 completed historical closes, with original collector clocks.
+
+    Bounded 24h peak proxy for the frozen M6 5% running-peak comparator.
+    NOT the original unlimited-history running peak, NOT source provider
+    first-known proof, and never a decision/action recommendation.
+    """
+    end = issued.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0)
+    base = {
+        "contract": "PULLBACK_PRIOR24H_PRICE_ONLY_SHADOW_v1",
+        "status": "UNKNOWN",
+        "source_window_start_at_utc": iso(end-timedelta(hours=23)),
+        "source_window_end_at_utc": iso(end),
+        "close_count_required": 24,
+        "source_clock_rule": "ALL_24_COMPLETED_CANDLES_COLLECTED_NOT_LATER_THAN_ORIGINAL_ISSUE",
+        "prior24h_peak_price": None,
+        "last_known_close_price": None,
+        "distance_from_peak_pct": None,
+        "price_only_5pct_drawdown_context": None,
+        "threshold_source": "M6_PRICE_ONLY_5PCT_RUNNING_PEAK_BOUNDED_24H_PROXY",
+        "provider_first_known_verified": False,
+        "prospective_model_comparison_admitted": False,
+        "portfolio_action": False,
+    }
+    closes = []
+    for i in range(24):
+        close_at = end - timedelta(hours=23-i)
+        row = market.get(close_at)
+        if not isinstance(row, dict):
+            return {**base, "status": "UNKNOWN_MISSING_PRIOR_HOURLY_CLOSE"}
+        value = row.get("btc")
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(float(value)) or value <= 0):
+            return {**base, "status": "UNKNOWN_INVALID_PRIOR_HOURLY_PRICE"}
+        collected_text = row.get("source_window_end_utc")
+        if not isinstance(collected_text, str):
+            return {**base, "status": "UNKNOWN_MISSING_OR_INVALID_COLLECTION_CLOCK"}
+        try:
+            collected = datetime.fromisoformat(collected_text.replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return {**base, "status": "UNKNOWN_MISSING_OR_INVALID_COLLECTION_CLOCK"}
+        if collected.utcoffset() is None:
+            return {**base, "status": "UNKNOWN_MISSING_OR_INVALID_COLLECTION_CLOCK"}
+        collected = collected.astimezone(timezone.utc)
+        if collected < close_at or collected > issued:
+            return {**base, "status": "UNKNOWN_CANDLE_NOT_COLLECTED_BY_ISSUE"}
+        closes.append(float(value))
+    peak = max(closes)
+    last = closes[-1]
+    drawdown = 100*(last/peak-1)
+    return {
+        **base, "status": "OBSERVABLE_AT_COLLECTOR_CLOCK_NOT_PROVIDER_VERIFIED",
+        "prior24h_peak_price": peak,
+        "last_known_close_price": last,
+        "distance_from_peak_pct": round(drawdown, 6),
+        "price_only_5pct_drawdown_context": drawdown <= -5.0,
+    }
+
+
 def reference_clock_valid(f: dict, issued: datetime) -> bool:
     """Do not admit a warning using a future, ambiguous or missing reference."""
     ref = f.get("market_reference") or {}
@@ -198,6 +258,7 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
             "issued_at_utc": iso(issued), "risk_state": risk,
             "new_alert_class": status, "outcomes": horizons,
             "first_known_source_verified": False,
+            "price_only_prior24h": price_only_24h_context(issued, market),
             "portfolio_action": False,
         })
     # Development denominator: sample the FIRST eligible at-issue NORMAL/BUILDING
@@ -228,6 +289,7 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
                 slot * 12 * 3600, tz=timezone.utc)),
             "subsequent_new_warning_within_72h": later_warning_within_72h,
             "outcomes": outcomes,
+            "price_only_prior24h": price_only_24h_context(issued, market),
             "original_provider_first_known_verified": False,
         })
     control_horizon_summary = {}
@@ -262,6 +324,28 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
         "certified_warning_skill": None,
         "economic_action_authority": False,
     }
+    # Collector-legal price-only context on the exact same at-issue rows.
+    # Alerts and selected controls are NOT a matched/equally sampled cohort;
+    # do not compute comparative hit rate, recall, edge or an action vote.
+    contexts = rows + controls
+    baseline_counts = Counter(
+        item["price_only_prior24h"]["status"] for item in contexts)
+    baseline_context = {
+        "contract": "PULLBACK_PRICE_ONLY_SAME_ISSUANCE_CONTEXT_v1",
+        "status": "DESCRIPTIVE_UNMATCHED_SOURCE_CLOCK_CENSUS",
+        "warning_rows_n": len(rows),
+        "no_warning_snapshot_rows_n": len(controls),
+        "total_selected_rows_n": len(contexts),
+        "source_admission_counts": dict(sorted(baseline_counts.items())),
+        "original_m6_running_peak_exact_equivalent": False,
+        "method": "TRAILING_24_COMPLETED_HOURLY_CLOSE_PEAK_5PCT_PROXY",
+        "source_provider_first_known_verified": False,
+        "independent_event_families_verified": False,
+        "equal_sampling_or_alert_budget_verified": False,
+        "paired_predictive_skill": None,
+        "economic_action_edge": None,
+        "trade_permission": "NONE",
+    }
     horizon_summary = {}
     for name in HORIZONS:
         mature = [row["outcomes"][name] for row in rows
@@ -286,6 +370,7 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
         "new_warning_or_escalation_events": len(rows),
         "horizons": horizon_summary, "alerts": rows,
         "no_warning_snapshot_controls": no_warning_snapshot_controls,
+        "same_issuance_price_only_context": baseline_context,
         "repeated_elevated_count_is_not_warning_success": True,
         "expired_alert_cannot_be_credited_from_later_drop": True,
         "false_negative_recall_unknown_without_matched_no_alert_grid": True,
