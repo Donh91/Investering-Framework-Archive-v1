@@ -143,6 +143,10 @@ def validate_source_feasibility_registry(registry: Mapping) -> dict:
                 _fail("AVAILABLE_VERIFIED_LAUNDERED")
             if row["source_is_documentary"] or row["access_class"] != "PUBLIC_METADATA":
                 _fail("DOCUMENTARY_OR_PRIVATE_NOT_VERIFIED")
+            # Cryptographic receipt syntax is not an authenticated original
+            # provider/publication or source-owner signature. This metadata
+            # validator never upgrades source scientific admission.
+            _fail("AVAILABLE_VERIFIED_REQUIRES_EXTERNAL_OWNER_ADJUDICATION")
         if row["status"] == "AVAILABLE_NOT_PIT" and not row["source_is_documentary"] and row["source_role"] == "GAP_RECEIPT":
             _fail("GAP_RECEIPT_CANNOT_BE_AVAILABLE")
         if row["status"] == "UNSAFE":
@@ -159,7 +163,7 @@ def validate_source_feasibility_registry(registry: Mapping) -> dict:
         "snapshot_date": registry["snapshot_date"],
         "rows_n": len(rows),
         "counts": {key: counts[key] for key in sorted(STATUSES)},
-        "blocked_source_ids": sorted(blocked),
+        "blocked_rows_n": len(blocked),
         "source_feasibility_only": True,
         "exact_source_bytes_independently_verified": False,
         "historical_pit_admitted": False,
