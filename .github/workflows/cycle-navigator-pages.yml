@@ -84,6 +84,8 @@ jobs:
         run: python3 scripts/cycle_navigator/build_public_live_precision.py
       - name: Enforce immutable Graph History regression before optional Pages build
         run: python3 tests/cycle_navigator/test_graph_history.py
+      - name: Execute Graph History same-quote original-blue W45/W46 browser runtime guard
+        run: node --test 05_CYCLE_NAVIGATOR/site/graph-history/runtime.test.mjs
       - name: Build continuous BTC graph history from frozen source only
         id: graph_history
         continue-on-error: true
