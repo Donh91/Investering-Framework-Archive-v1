@@ -34,8 +34,8 @@ jobs:
 
       - name: Validate bounded Research Lab Sol machinery
         run: |
-          python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/check_api_lane_budget.py scripts/api_agent/check_monthly_cost_guard.py scripts/api_agent/research_lab_sol_dispatch.py
-          python -m unittest tests.api_agent.test_research_lab_sol_max_owner_gate tests.api_agent.test_research_lab_sol_paid_admission -v
+          python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/check_api_lane_budget.py scripts/api_agent/check_monthly_cost_guard.py scripts/api_agent/research_lab_sol_dispatch.py scripts/api_agent/recoverable_responses_v1.py scripts/api_agent/research_lab_sol_recover_v1.py
+          python -m unittest tests.api_agent.test_research_lab_sol_max_owner_gate tests.api_agent.test_research_lab_sol_paid_admission tests.api_agent.test_recoverable_responses_v1 tests.api_agent.test_research_lab_sol_recover_v1 -v
           python - <<'PY'
           import json
           from pathlib import Path
@@ -98,7 +98,7 @@ jobs:
           # liability and USD3 prospective request. Existing HIGH path unchanged.
           if [ "${{ steps.trigger.outputs.mission }}" = "SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105" ]; then
             python scripts/api_agent/check_monthly_cost_guard.py \
-              --receipt-root research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 18
+              --receipt-root research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 21
           else
             python scripts/api_agent/check_monthly_cost_guard.py \
               --receipt-root research/api_agent/outputs --hard-stop-usd 40 --reserve-usd 4.0
@@ -139,6 +139,15 @@ jobs:
             --context-file runtime/research-lab-sol/context.json \
             --output-dir runtime/research-lab-sol/output \
             --intended-write-prefix research/api_agent/outputs/research_lab_sol/
+
+      - name: Preserve one-POST background handle and public source packet
+        if: always() && steps.dedupe.outputs.run_analysis == 'true' && hashFiles('runtime/research-lab-sol/output/transport/attempt.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-lab-sol-recovery-${{ github.run_id }}
+          path: runtime/research-lab-sol/
+          retention-days: 30
+          if-no-files-found: error
 
       - name: Validate accepted Sol output
         if: steps.dedupe.outputs.run_analysis == 'true'
@@ -217,3 +226,120 @@ jobs:
           COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           gh issue comment 1476 --repo "$GITHUB_REPOSITORY" --body "RESEARCH_LAB_SOL duplicate trigger ${COMMENT_ID}: CLEAN_NOOP, immutable receipt already exists."
+
+  research-lab-sol-collect:
+    # Reuse the EXISTING owner comment route. No new cron, workflow or POST.
+    if: >-
+      github.event.issue.number == 1476 &&
+      github.event.comment.author_association == 'OWNER' &&
+      github.actor == 'Donh91' &&
+      startsWith(github.event.comment.body, '[RESEARCH_LAB_SOL_COLLECT] origin=')
+    permissions:
+      contents: write
+      actions: read
+      issues: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test collector and one-POST guarantee without API credentials
+        run: |
+          python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/recoverable_responses_v1.py scripts/api_agent/research_lab_sol_recover_v1.py
+          python -m unittest tests.api_agent.test_recoverable_responses_v1 tests.api_agent.test_research_lab_sol_recover_v1 tests.api_agent.test_research_lab_sol_max_owner_gate -v
+      - name: Parse exact original-run ID
+        id: origin
+        run: |
+          python - ${{'PY'
+          import json,os,re
+          from pathlib import Path
+          event=json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+          body=(event.get("comment") or {}).get("body") or ""
+          m=re.fullmatch(r"\[RESEARCH_LAB_SOL_COLLECT\] origin=([1-9][0-9]{0,17})",body.strip())
+          if not m: raise SystemExit("SOL_GET_ORIGIN_MARKER_INVALID")
+          with open(os.environ["GITHUB_OUTPUT"],"a") as out:
+              out.write("run="+m.group(1)+"\n")
+          PY
+      - name: Fetch durable original paid-attempt artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ORIGIN: ${{ steps.origin.outputs.run }}
+        run: |
+          gh run download "$ORIGIN" --repo "$GITHUB_REPOSITORY" \
+            --name "research-lab-sol-recovery-$ORIGIN" \
+            --dir runtime/research-lab-sol
+      - name: Verify origin actor, exact SHA, native one-use claim and API request bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ORIGIN: ${{ steps.origin.outputs.run }}
+        run: |
+          python -m scripts.api_agent.research_lab_sol_recover_v1 \
+            --event-file "$GITHUB_EVENT_PATH" \
+            --artifact-dir runtime/research-lab-sol \
+            --expected-origin "$ORIGIN" \
+            --output runtime/research-lab-sol/verified-origin.json
+      - name: GET original response only, never POST or spend
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task RESEARCH_LAB_SOL_ANALYSIS \
+            --registry runtime/research-lab-sol/effective_registry.json \
+            --prompt-file runtime/research-lab-sol/prompt.txt \
+            --context-file runtime/research-lab-sol/context.json \
+            --output-dir runtime/research-lab-sol/output \
+            --intended-write-prefix research/api_agent/outputs/research_lab_sol/ \
+            --resume-background
+      - name: Validate completed research and strict original owner authority
+        run: |
+          python scripts/api_agent/research_lab_sol_dispatch.py validate \
+            --output-dir runtime/research-lab-sol
+      - name: Persist original result in existing research evidence lane
+        run: |
+          python - ${{'PY'
+          import json,re,shutil
+          from pathlib import Path
+          root=Path("runtime/research-lab-sol")
+          proof=json.loads((root/"verified-origin.json").read_text())
+          mission=proof["mission"]
+          original=proof["trigger_comment"]
+          if not re.fullmatch(r"[A-Z0-9-]{1,160}",mission) or not re.fullmatch(r"[1-9][0-9]{0,17}",original):
+              raise SystemExit("SOL_GET_DESTINATION_NOT_ALLOWLISTED")
+          dest=Path("research/api_agent/outputs/research_lab_sol")/mission/"issue-1476"/("comment-"+original)
+          if dest.exists() and any(dest.iterdir()):
+              raise SystemExit("SOL_GET_RESULT_ALREADY_PERSISTED_NO_OVERWRITE")
+          dest.mkdir(parents=True,exist_ok=True)
+          shutil.copyfile(root/"output/output.json",dest/"RESEARCH_LAB_SOL_ANALYSIS.json")
+          shutil.copyfile(root/"output/receipt.json",dest/"receipt.json")
+          shutil.copyfile(root/"context_manifest.json",dest/"context_manifest.json")
+          PY
+          git config user.name 'research-lab-sol[bot]'
+          git config user.email 'research-lab-sol@users.noreply.github.com'
+          git add research/api_agent/outputs/research_lab_sol/
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: recover original Sol MAX response via GET"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - name: Preserve GET-only recovery receipt, including pending outcomes
+        if: always() && hashFiles('runtime/research-lab-sol/verified-origin.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-lab-sol-collected-${{ github.run_id }}
+          path: |
+            runtime/research-lab-sol/verified-origin.json
+            runtime/research-lab-sol/output/receipt.json
+            runtime/research-lab-sol/output/output.json
+          retention-days: 30
+          if-no-files-found: warn

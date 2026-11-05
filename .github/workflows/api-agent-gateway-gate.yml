@@ -45,6 +45,8 @@ jobs:
             tests.api_agent.test_sol_max_elite_sandbox \
             tests.api_agent.test_owner_global_api_budget_cap \
             tests.api_agent.test_api_gateway \
+            tests.api_agent.test_recoverable_responses_v1 \
+            tests.api_agent.test_research_lab_sol_recover_v1 \
             tests.api_agent.test_capability_router \
             tests.api_agent.test_forecast_candidate_backlog \
             tests.api_agent.test_api_intelligence_v2 \
@@ -54,7 +56,7 @@ jobs:
             tests.api_agent.test_daily_director_workflow_contract -v
       - name: Verify GPT-6.1 Sol owner release and no-repeat paid admission
         run: |
-          python -m py_compile scripts/api_agent/research_lab_sol_dispatch.py
+          python -m py_compile scripts/api_agent/research_lab_sol_dispatch.py scripts/api_agent/recoverable_responses_v1.py scripts/api_agent/research_lab_sol_recover_v1.py
           python -m unittest -v tests.api_agent.test_research_lab_sol_paid_admission tests.api_agent.test_research_lab_sol_max_owner_gate
       - name: Run CN paid API preflight, receipt and fail-closed regression tests
         run: |
