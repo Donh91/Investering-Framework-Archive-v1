@@ -500,7 +500,7 @@ class GraphHistoryTest(unittest.TestCase):
         for required in (
                 "#071320", "#31d0a0", "#79aaff",
                 "class=\"panel panel-primary\"", "prefers-reduced-motion",
-                "Kildeudstedt dagsprognose · 7/7",
+                "Original mandagsprognose · 7/7",
                 "w?.forecast_status==='PUBLISHED'",
                 "w?.forecast_model_declared_quote==='USDT'",
                 "data?.actual_unit==='USDT'",
