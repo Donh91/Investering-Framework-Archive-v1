@@ -26,10 +26,29 @@ test('Premium root renders original Graph B, Proof, official Compass and PATH',(
  assert.ok(root.indexOf('id="official-product-pilot"')<root.indexOf('class="official-product-pilot premium-path"'));
  assert.ok(root.indexOf('class="official-product-pilot premium-path"')<root.indexOf('class="premium-meta"'));
  assert.equal((root.match(/id="feed-status"/g)||[]).length,1);
- assert.match(root,/href="\.\.\/data\/latest\.json" data-premium-nav="cnSource"/);
- assert.match(root,/href="\.\.\/data\/compass\.json" data-premium-nav="compassSource"/);
+ assert.match(root,/href="https:\/\/github\.com\/Donh91\/Investering-Framework-Archive-v1\/tree\/main\/05_CYCLE_NAVIGATOR"[^>]+data-premium-nav="cnSource"/);
+ assert.match(root,/href="https:\/\/github\.com\/Donh91\/Investering-Framework-Archive-v1\/tree\/main\/04_MARKET_LEARNING\/handlekompas"[^>]+data-premium-nav="compassSource"/);
+ assert.match(root,/href="https:\/\/github\.com\/Donh91\/CycleNavigator-scores"[^>]+data-premium-nav="scoreArchive"/);
+ assert.match(root,/<details class="premium-meta-disclosure"><summary/);
+ assert.match(root,/class="premium-meta-intro"/);
+ assert.match(root,/data-premium-copy="metaMethod"/);
+ assert.doesNotMatch(root,/href="\.\.\/data\/(latest|compass)\.json" data-premium-nav/);
  assert.match(root,/href="\.\/premium-overhaul\.css"/);
 });
+test('source summary is plain language and records only public documentation links',()=>{
+ const root=buildPremiumRootHtml(original);
+ assert.equal((root.match(/id="feed-status"/g)||[]).length,1);
+ assert.equal((root.match(/class="premium-meta-disclosure"/g)||[]).length,1);
+ assert.equal((root.match(/data-premium-nav="scoreArchive"/g)||[]).length,1);
+ const meta=root.slice(root.indexOf('<aside class="premium-meta"'),root.indexOf('</aside>')+8);
+ assert.match(meta,/KILDEGRUNDLAG/);
+ assert.match(meta,/Offentlig Cycle Navigator/);
+ assert.doesNotMatch(meta,/\bsource_window_end\b|archive_receipt|(?:sk-proj-|ghp_)/);
+ assert.equal((meta.match(/target="_blank" rel="noopener noreferrer"/g)||[]).length,3);
+ assert.ok(meta.indexOf('class="premium-meta-intro"')<meta.indexOf('id="feed-status"'));
+ assert.ok(meta.indexOf('id="feed-status"')<meta.indexOf('<details class="premium-meta-disclosure"'));
+});
+
 test('first fold moves the single source-issued action ahead of original Graph B',()=>{
  const html=buildPremiumRootHtml(original);
  for(const id of ['official-product-pilot','official-pilot-action','official-pilot-status','variant-panel'])
