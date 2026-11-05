@@ -25,6 +25,8 @@ jobs:
           python -m unittest -v tests.research.test_news_oss_event_challenger
       - name: Verify Task 2 R0 pinned-source Git-object fail-closed cases
         run: node 04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs
+      - name: Verify Kompas Pro 14-horizon source owner and G0/G1/G4 partial status ledger
+        run: python -m unittest -v tests.learning.test_kompas_pro_internal_horizon_v2
       - name: Run onchain options REA synthetic positive and negative controls (research only)
         shell: bash
         run: |
