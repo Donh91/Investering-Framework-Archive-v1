@@ -11,6 +11,73 @@ from typing import Any
 
 QUEUE_PATH = Path("research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json")
 TASK_NAME = "RESEARCH_LAB_SOL_ANALYSIS"
+
+MAX_ONESHOT_MISSION = "SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105"
+MAX_CLAIM_PREFIX = "RL_SOL_MAX_PRE_HTTP_CLAIM_V1"
+
+def effective_registry_for_mission(registry: dict, packet: dict, mission_id: str) -> dict:
+    """Allow MAX only for this one exact owner-mandated, advisory research case."""
+    output = json.loads(json.dumps(registry))
+    task = output.get("tasks", {}).get(TASK_NAME)
+    if not isinstance(task, dict) or (task.get("model"), task.get("reasoning_effort")) != ("gpt-6.1-sol", "high"):
+        raise ValueError("RESEARCH_LAB_BASE_TASK_POLICY_CHANGED")
+    effort = packet.get("reasoning_effort", "high")
+    if effort == "max":
+        if (mission_id != MAX_ONESHOT_MISSION or packet.get("mission_id") != mission_id
+                or packet.get("original_owner_issue") != 1918
+                or packet.get("max_runs_for_this_release") != 1
+                or packet.get("review_only_no_code_write") is not True
+                or not zero_authority(packet.get("authority"))):
+            raise ValueError("MAX_ONE_SHOT_MANDATE_NOT_BOUND")
+        task["reasoning_effort"] = "max"
+        task["max_attempts"] = 1
+    elif effort != "high":
+        raise ValueError("RESEARCH_EFFORT_NOT_ADMITTED")
+    return output
+
+def reserve_native_max_claim(root: Path, mission_id: str, issue_number: int, comment_id: str) -> dict:
+    """Require genuine owner event and a single bot claim before any paid POST."""
+    import os
+    if mission_id != MAX_ONESHOT_MISSION:
+        return {"state": "NORMAL_HIGH_NO_EXTRA_CLAIM"}
+    if (issue_number != 1476 or os.environ.get("GITHUB_REPOSITORY") != "Donh91/Investering-Framework-Archive-v1"
+            or os.environ.get("GITHUB_EVENT_NAME") != "issue_comment"
+            or os.environ.get("GITHUB_ACTOR") != "Donh91"
+            or os.environ.get("GITHUB_RUN_ATTEMPT") != "1"
+            or not os.environ.get("GH_TOKEN")):
+        raise ValueError("MAX_NATIVE_OWNER_EVENT_INVALID")
+    import subprocess
+    def gh(*args):
+        return subprocess.check_output(["gh", *args], text=True, timeout=90)
+    head = current_head(root)
+    native_head = json.loads(gh("api", "repos/Donh91/Investering-Framework-Archive-v1/git/ref/heads/main")).get("object", {}).get("sha")
+    if head != native_head:
+        raise ValueError("MAX_NATIVE_MAIN_HEAD_DRIFT")
+    event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+    comment = event.get("comment") or {}
+    if (str(comment.get("id")) != str(comment_id)
+            or (comment.get("user") or {}).get("login") != "Donh91"
+            or comment.get("author_association") != "OWNER"
+            or (event.get("issue") or {}).get("number") != 1476):
+        raise ValueError("MAX_NATIVE_OWNER_COMMENT_INVALID")
+    def claims():
+        pages = json.loads(gh("api", "--paginate", "--slurp",
+          "repos/Donh91/Investering-Framework-Archive-v1/issues/1476/comments?per_page=100"))
+        if not isinstance(pages, list) or any(not isinstance(page, list) for page in pages):
+            raise ValueError("MAX_CLAIM_CENSUS_UNTRUSTED")
+        return [row for page in pages for row in page if isinstance(row,dict)
+                and str(row.get("body") or "").startswith(MAX_CLAIM_PREFIX + " mission=" + mission_id + " ")]
+    if claims():
+        raise ValueError("MAX_CLAIM_ALREADY_EXISTS_NO_REPOST")
+    body = f"{MAX_CLAIM_PREFIX} mission={mission_id} head={head} trigger={comment_id} max_usd=3.00"
+    gh("issue","comment","1476","--repo","Donh91/Investering-Framework-Archive-v1","--body",body)
+    found = [item for item in claims() if item.get("body") == body
+             and (item.get("user") or {}).get("login") == "github-actions[bot]"]
+    if len(found) != 1:
+        raise ValueError("MAX_CLAIM_NATIVE_READBACK_MISSING_NO_POST")
+    return {"status":"NATIVE_PRE_HTTP_CLAIM_VERIFIED","claim_id":found[0].get("id"),
+            "mission":mission_id,"head":head,"max_usd":3.0}
+
 MODEL = "gpt-6.1-sol"
 MAX_CONTEXT_BYTES = 480_000
 PER_FILE_CLIP_CHARS = 36_000
@@ -217,6 +284,9 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
             "canonical_promotion": False,
         },
     }
+    effective = effective_registry_for_mission(load_json(repo_root / "research/api_agent/API_TASK_REGISTRY_v1.json"), packet, mission_id)
+    (output_dir / "effective_registry.json").write_text(json.dumps(effective, sort_keys=True, indent=2) + "\n")
+    manifest["reasoning_effort"] = effective["tasks"][TASK_NAME]["reasoning_effort"]
     (output_dir / "context_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     return manifest
 
@@ -228,7 +298,9 @@ def validate(output_dir: Path) -> dict[str, Any]:
         raise ValueError("research_lab_sol_receipt_not_pass")
     if receipt.get("task") != TASK_NAME:
         raise ValueError("research_lab_sol_task_binding_invalid")
-    if receipt.get("model") != MODEL or receipt.get("reasoning_effort") != "high":
+    context = load_json(output_dir / "context.json")
+    expected_effort = context.get("mission_packet", {}).get("reasoning_effort", "high")
+    if expected_effort not in ("high","max") or receipt.get("model") != MODEL or receipt.get("reasoning_effort") != expected_effort:
         raise ValueError("research_lab_sol_model_binding_invalid")
     cost = receipt.get("estimated_cost_usd")
     if isinstance(cost, bool) or not isinstance(cost, (int, float)) or not 0 <= float(cost) <= 3.0:
@@ -316,6 +388,12 @@ def main() -> None:
     build_p.add_argument("--issue-number", type=int, required=True)
     build_p.add_argument("--comment-id", required=True)
 
+    claim = sub.add_parser("reserve-max-claim")
+    claim.add_argument("--repo-root", type=Path, default=Path("."))
+    claim.add_argument("--mission-id", required=True)
+    claim.add_argument("--issue-number", type=int, required=True)
+    claim.add_argument("--comment-id", required=True)
+
     val = sub.add_parser("validate")
     val.add_argument("--output-dir", type=Path, required=True)
 
@@ -352,6 +430,9 @@ def main() -> None:
                           "mission": args.mission_id}, sort_keys=True))
     elif args.cmd == "build":
         print(json.dumps(build(args.repo_root, args.output_dir, args.mission_id, args.issue_number, args.comment_id), sort_keys=True))
+    elif args.cmd == "reserve-max-claim":
+        print(json.dumps(reserve_native_max_claim(args.repo_root, args.mission_id,
+                                                  args.issue_number, args.comment_id), sort_keys=True))
     elif args.cmd == "validate":
         result = validate(args.output_dir)
         print(json.dumps({
