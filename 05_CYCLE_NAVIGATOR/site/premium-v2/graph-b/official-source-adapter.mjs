@@ -64,6 +64,9 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
  const actualQuote=quotes?.actual_native_spot?.[asset]==='USDT'?'USDT':'UNAVAILABLE';
  const declared=quotes?.forecast_model_declared?.[asset];
  const forecastQuote=declared==='USD'||declared==='USDT'?declared:'UNAVAILABLE';
+ // Distinct currency identifiers are not an exchange rate. A source-issued
+ // USD expected-close must not be overlaid with the observed USDT chart.
+ const quoteComparable=actualQuote==='USDT'&&forecastQuote===actualQuote;
  const obs=m?.daily_observations;
  const cutoff=date(obs?.observed_through_utc||m.live_as_of_utc);
  if(obs?.contract!=='CN_PUBLIC_DAILY_OBSERVATIONS_v1'||
@@ -99,10 +102,14 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
       issued<=now&&issued<firstEligible&&issued<start+DAY&&Array.isArray(values)&&values.length===7&&
       values.every((p,i)=>p?.day===i+1&&NUM(p?.expected_close)&&NUM(p?.low)&&NUM(p?.high)&&
       p.low<p.high&&p.low<=p.expected_close&&p.expected_close<=p.high);
-   if(good){
+   if(good&&quoteComparable){
      forecast=values.map((p,i)=>({day:i+1,time:(start+(i+1)*DAY)/1000,
        expected_close:p.expected_close,low:p.low,high:p.high}));
      forecastStatus='SOURCE_ISSUED';
+   }else if(good){
+     // Preserve genuine source issuance status while declining an unsupported
+     // comparison. Existing 7 original prices remain in the immutable freeze.
+     forecastStatus='SOURCE_ISSUED_QUOTE_INCOMPARABLE';
    }else forecastStatus='PUBLISHED_INVALID_FAIL_CLOSED';
  }
  // Seven individual prospective high/low ranges from the original freeze.
@@ -147,6 +154,7 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
    contract:'CN_PREMIUM_V2_GRAPH_B_PRESENTATION_v1',
    asset,public_issue_number:m.public_issue_number,forecast_week:m.forecast_week,
    actual_quote_unit:actualQuote,forecast_declared_quote_unit:forecastQuote,
+   forecast_comparison_quote_status:quoteComparable?'SAME_DECLARED_UNIT':'UNVERIFIED_OR_DIFFERENT_UNIT',
    source_status:'SOURCE_BOUNDED',source_reason:null,
    forecast_status:forecastStatus,forecast,bands:lowHigh,
    daily_range_status:dailyRangeStatus,daily_ranges:dailyRanges,
