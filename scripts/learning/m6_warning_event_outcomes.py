@@ -66,19 +66,29 @@ def load_tape(root,start,end):
             by_close[close]={"close":close,"btc":btc,"eth":eth,"btc_high":bh,"btc_low":bl,"eth_high":eh,"eth_low":el}
     return [by_close[k] for k in sorted(by_close)],bindings
 
-def eligible_freezes(root):
+def eligible_freezes(root, asof=None):
     rows=[];base=root/FREEZES
     if not base.exists():return rows
     for p in sorted(base.rglob("CMP-*.json")):
         try:f=json.loads(p.read_text())
         except Exception:continue
-        t=f.get("protection_tracker") or {};state=t.get("pullback_risk_state");issued=parse(f.get("issued_at_utc"));ref=f.get("market_reference") or {};obs=parse(ref.get("observation_open_utc"))
-        knowledge=max(issued,obs+timedelta(hours=1)) if issued and obs else issued
-        if (f.get("contract")==FREEZE_CONTRACT and t.get("contract")==PROTECTION_CONTRACT and t.get("data_quality")=="OK" and
-            state in PRIMARY and issued and knowledge and finite_number(ref.get("btc_usdt")) is not None and finite_number(ref.get("eth_usdt")) is not None):
-            rows.append({"path":p,"freeze":f,"tracker":t,"issued":issued,"knowledge":knowledge})
-    # Family identity and first-warning weight must use actual knowledge time, not
-    # filename / compass-id lexical order (which is not chronological).
+        t=f.get("protection_tracker") or {};state=t.get("pullback_risk_state")
+        issued=parse(f.get("issued_at_utc"));ref=f.get("market_reference") or {}
+        obs=parse(ref.get("observation_open_utc"))
+        # Never turn an unclocked or future reference into an apparently
+        # early warning by silently moving its knowledge clock after issuance.
+        # This is not independent provider first-publication proof.
+        if (issued is None or obs is None or
+            obs.minute or obs.second or obs.microsecond or
+            obs+timedelta(hours=1)>issued or
+            (asof is not None and issued>asof)):
+            continue
+        btc=finite_number(ref.get("btc_usdt"));eth=finite_number(ref.get("eth_usdt"))
+        if (f.get("contract")==FREEZE_CONTRACT and t.get("contract")==PROTECTION_CONTRACT and
+            t.get("data_quality")=="OK" and state in PRIMARY and
+            btc is not None and btc>0 and eth is not None and eth>0):
+            rows.append({"path":p,"freeze":f,"tracker":t,"issued":issued,"knowledge":issued})
+    # Only at-issue chronology, never filename order or future price knowledge.
     rows.sort(key=lambda row: (row['knowledge'], str(row['freeze'].get('compass_id') or '')))
     return rows
 
@@ -180,12 +190,14 @@ def asset_view(seg,start_price,label,start):
         "adverse_barriers":barrier_view(start_price,sorted(lows,key=lambda observation:observation[0]),BARRIERS[label])}
 
 def build(root,now):
-    warnings=cluster(eligible_freezes(root));events=[]
+    warnings=cluster(eligible_freezes(root,now));events=[]
     for r in warnings:
         f,t=r["freeze"],r["tracker"];ref=f["market_reference"];start=r["knowledge"];max_end=min(now,start+timedelta(days=30));tape,bindings=load_tape(root,start,max_end)
         event_id="M6E-"+hashlib.sha256((str(f.get("compass_id"))+"|"+start.isoformat()).encode()).hexdigest()[:16]
         event={"contract":CONTRACT,"integrity_revision":INTEGRITY_REVISION,"event_id":event_id,"warning_state":t["pullback_risk_state"],
-          "warning_timestamp":f.get("issued_at_utc"),"knowledge_timestamp":z(start),"source_path":r["path"].relative_to(root).as_posix(),"source_hash":sha(r["path"]),
+          "warning_timestamp":f.get("issued_at_utc"),"knowledge_timestamp":z(start),
+          "knowledge_clock_semantics":"ISSUED_WITH_COMPLETED_REFERENCE_HOUR_NOT_PROVIDER_FIRST_KNOWN",
+          "provider_first_known_verified":False,"source_path":r["path"].relative_to(root).as_posix(),"source_hash":sha(r["path"]),
           "compass_id":f.get("compass_id"),"data_health_state":t.get("data_quality"),"episode_family_id":r["episode_family_id"],
           "episode_family_status":r["episode_family_status"],"within_family_warning_index":r["within_family_warning_index"],"independent_family_weight":r["independent_family_weight"],
           "start_prices":{"BTC":finite_number(ref["btc_usdt"]),"ETH":finite_number(ref["eth_usdt"])},
