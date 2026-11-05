@@ -84,7 +84,11 @@ def verify_original(origin: str, artifact: Path, *, fetch=gh_api) -> dict:
     if (str(run.get("id")) != origin
             or run.get("event") != "issue_comment"
             or run.get("name") != "Research Lab Sol Mission Dispatcher"
-            or run.get("head_sha") != source_sha
+            # The event SHA may predate the checkout of main. The checkout's
+            # exact source SHA is independently frozen by the bot's native
+            # pre-HTTP claim, the source manifest and the request hash.
+            or not isinstance(run.get("head_sha"), str)
+            or SHA40.fullmatch(run["head_sha"]) is None
             or (run.get("actor") or {}).get("login") != "Donh91"
             or (comment.get("user") or {}).get("login") != "Donh91"
             or (comment.get("issue_url") or "").rstrip("/") !=
