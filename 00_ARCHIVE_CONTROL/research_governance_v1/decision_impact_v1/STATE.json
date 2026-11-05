@@ -4,7 +4,7 @@
   "canonical_effect": false,
   "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "046cceb43907aa4cc1fd9d3d7074162e0337b32d6be6c632264bd8fd7b6b4de9",
+  "evidence_fingerprint": "750485afbedad5f340ad90ea03bcd26e1c38eaa3e0deab2c158428057d0756f9",
   "external_provider_calls_authorized": false,
   "paid_data_authorized": false,
   "portfolio_execution": false,
@@ -70,6 +70,21 @@
       "target": ""
     },
     {
+      "action": "CONTINUE_OBSERVING",
+      "canonical_effect": false,
+      "decision_surface": "CALIBRATION_QUALITY",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "273c0b2382cec859db1060bf9de843aa65f1bb9a31e22eb65cc0e9884a7e0fae",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "No evidence-backed escalation or surviving AI research hypothesis justified a new bounded research item.",
+      "source": "MONTHLY_COUNCIL",
+      "target": "MONTHLY_AI_LEARNING_COUNCIL"
+    },
+    {
       "action": "DECLARE_NOT_TESTABLE",
       "canonical_effect": false,
       "decision_surface": "DATA_INTEGRITY",
@@ -83,21 +98,6 @@
       "reason": "terminal/closeout source state has no independent decision upside unless linked to a current high-value blocker",
       "source": "SOURCE_RECOVERY",
       "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
-    },
-    {
-      "action": "RESEARCH_NEW_HYPOTHESIS",
-      "canonical_effect": false,
-      "decision_surface": "ALTSEASON_ENTRY_ROTATION",
-      "deep_research_authorized": false,
-      "evidence_fingerprint": "86f24026e95002af18bb3860da1eba39ac69257e1dfe47b2599fc0853335ca6f",
-      "impact_tier": "BLOCKED",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "paid_data_authorized": false,
-      "paid_review_only": false,
-      "portfolio_execution": false,
-      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
-      "source": "MONTHLY_COUNCIL",
-      "target": "MLC-HYP-d4a6abc1db1a17f8"
     },
     {
       "action": "INVESTIGATE_DIVERGENCE",
