@@ -1,0 +1,339 @@
+{
+  "authority": {
+    "automatic_rule_changes": false,
+    "candidate_is_portfolio_action": false,
+    "canonical_market_state": false,
+    "shadow_only": true
+  },
+  "contract": "INTRADAY_DIRECTION_PREDICTION_v1",
+  "horizons": {
+    "1H": {
+      "due_at_utc": "2026-11-05T12:00:00Z",
+      "horizon_hours": 1,
+      "minimum_remaining_forward_hours": 0.5,
+      "remaining_forward_hours_at_issue": 0.702482,
+      "source_cutoff_utc": "2026-11-05T11:00:00Z",
+      "status": "ELIGIBLE",
+      "targets": {
+        "BTC": {
+          "calibration_key": "5_of_6",
+          "confidence_status_at_issue": "WARMUP",
+          "direction": "DOWN",
+          "evidence_agreement_pct": 83.33,
+          "frozen_calibrated_probability_pct": null,
+          "independent_calibration_samples_at_issue": 12,
+          "start_value": 80276.08,
+          "votes": [
+            {
+              "direction": "DOWN",
+              "family": "return_1h",
+              "value": -0.201322707844
+            },
+            {
+              "direction": "DOWN",
+              "family": "return_4h",
+              "value": -0.462843102536703
+            },
+            {
+              "direction": "DOWN",
+              "family": "session_vwap",
+              "value": -0.293781638609214
+            },
+            {
+              "direction": "DOWN",
+              "family": "momentum_acceleration",
+              "value": -0.11413049197389999
+            },
+            {
+              "direction": "DOWN",
+              "family": "taker_balance",
+              "value": 0.398455275172
+            },
+            {
+              "direction": "UP",
+              "family": "taker_change",
+              "value": 0.05927504504433334
+            }
+          ],
+          "wilson_lower_95_pct_at_issue": 25.4
+        },
+        "ETH": {
+          "calibration_key": "4_of_8",
+          "confidence_status_at_issue": "ABSTAIN_NO_EDGE",
+          "direction": "NO_EDGE",
+          "evidence_agreement_pct": 50.0,
+          "frozen_calibrated_probability_pct": null,
+          "independent_calibration_samples_at_issue": 0,
+          "start_value": 2418.48,
+          "votes": [
+            {
+              "direction": "DOWN",
+              "family": "return_1h",
+              "value": -0.0549629929623
+            },
+            {
+              "direction": "DOWN",
+              "family": "return_4h",
+              "value": -0.4740740740740712
+            },
+            {
+              "direction": "DOWN",
+              "family": "session_vwap",
+              "value": -0.13782790666324596
+            },
+            {
+              "direction": "UP",
+              "family": "momentum_acceleration",
+              "value": 0.08451688735689997
+            },
+            {
+              "direction": "DOWN",
+              "family": "taker_balance",
+              "value": 0.46915767624
+            },
+            {
+              "direction": "UP",
+              "family": "taker_change",
+              "value": 0.189875000967
+            },
+            {
+              "direction": "UP",
+              "family": "ethbtc_1h",
+              "value": 0.0997008973081
+            },
+            {
+              "direction": "UP",
+              "family": "breadth_balance",
+              "value": 0.67
+            }
+          ],
+          "wilson_lower_95_pct_at_issue": null
+        }
+      }
+    },
+    "24H": {
+      "due_at_utc": "2026-11-06T11:00:00Z",
+      "horizon_hours": 24,
+      "minimum_remaining_forward_hours": 12.0,
+      "remaining_forward_hours_at_issue": 23.702482,
+      "source_cutoff_utc": "2026-11-05T11:00:00Z",
+      "status": "ELIGIBLE",
+      "targets": {
+        "BTC": {
+          "calibration_key": "5_of_6",
+          "confidence_status_at_issue": "EARLY_CALIBRATION",
+          "direction": "DOWN",
+          "evidence_agreement_pct": 83.33,
+          "frozen_calibrated_probability_pct": 56.0,
+          "independent_calibration_samples_at_issue": 23,
+          "start_value": 80276.08,
+          "votes": [
+            {
+              "direction": "DOWN",
+              "family": "return_1h",
+              "value": -0.201322707844
+            },
+            {
+              "direction": "DOWN",
+              "family": "return_4h",
+              "value": -0.462843102536703
+            },
+            {
+              "direction": "DOWN",
+              "family": "session_vwap",
+              "value": -0.293781638609214
+            },
+            {
+              "direction": "DOWN",
+              "family": "momentum_acceleration",
+              "value": -0.11413049197389999
+            },
+            {
+              "direction": "DOWN",
+              "family": "taker_balance",
+              "value": 0.398455275172
+            },
+            {
+              "direction": "UP",
+              "family": "taker_change",
+              "value": 0.05927504504433334
+            }
+          ],
+          "wilson_lower_95_pct_at_issue": 36.8
+        },
+        "ETH": {
+          "calibration_key": "4_of_8",
+          "confidence_status_at_issue": "ABSTAIN_NO_EDGE",
+          "direction": "NO_EDGE",
+          "evidence_agreement_pct": 50.0,
+          "frozen_calibrated_probability_pct": null,
+          "independent_calibration_samples_at_issue": 0,
+          "start_value": 2418.48,
+          "votes": [
+            {
+              "direction": "DOWN",
+              "family": "return_1h",
+              "value": -0.0549629929623
+            },
+            {
+              "direction": "DOWN",
+              "family": "return_4h",
+              "value": -0.4740740740740712
+            },
+            {
+              "direction": "DOWN",
+              "family": "session_vwap",
+              "value": -0.13782790666324596
+            },
+            {
+              "direction": "UP",
+              "family": "momentum_acceleration",
+              "value": 0.08451688735689997
+            },
+            {
+              "direction": "DOWN",
+              "family": "taker_balance",
+              "value": 0.46915767624
+            },
+            {
+              "direction": "UP",
+              "family": "taker_change",
+              "value": 0.189875000967
+            },
+            {
+              "direction": "UP",
+              "family": "ethbtc_1h",
+              "value": 0.0997008973081
+            },
+            {
+              "direction": "UP",
+              "family": "breadth_balance",
+              "value": 0.67
+            }
+          ],
+          "wilson_lower_95_pct_at_issue": null
+        }
+      }
+    },
+    "4H": {
+      "due_at_utc": "2026-11-05T15:00:00Z",
+      "horizon_hours": 4,
+      "minimum_remaining_forward_hours": 2.0,
+      "remaining_forward_hours_at_issue": 3.702482,
+      "source_cutoff_utc": "2026-11-05T11:00:00Z",
+      "status": "ELIGIBLE",
+      "targets": {
+        "BTC": {
+          "calibration_key": "5_of_6",
+          "confidence_status_at_issue": "EARLY_CALIBRATION",
+          "direction": "DOWN",
+          "evidence_agreement_pct": 83.33,
+          "frozen_calibrated_probability_pct": 34.4,
+          "independent_calibration_samples_at_issue": 30,
+          "start_value": 80276.08,
+          "votes": [
+            {
+              "direction": "DOWN",
+              "family": "return_1h",
+              "value": -0.201322707844
+            },
+            {
+              "direction": "DOWN",
+              "family": "return_4h",
+              "value": -0.462843102536703
+            },
+            {
+              "direction": "DOWN",
+              "family": "session_vwap",
+              "value": -0.293781638609214
+            },
+            {
+              "direction": "DOWN",
+              "family": "momentum_acceleration",
+              "value": -0.11413049197389999
+            },
+            {
+              "direction": "DOWN",
+              "family": "taker_balance",
+              "value": 0.398455275172
+            },
+            {
+              "direction": "UP",
+              "family": "taker_change",
+              "value": 0.05927504504433334
+            }
+          ],
+          "wilson_lower_95_pct_at_issue": 19.2
+        },
+        "ETH": {
+          "calibration_key": "4_of_8",
+          "confidence_status_at_issue": "ABSTAIN_NO_EDGE",
+          "direction": "NO_EDGE",
+          "evidence_agreement_pct": 50.0,
+          "frozen_calibrated_probability_pct": null,
+          "independent_calibration_samples_at_issue": 0,
+          "start_value": 2418.48,
+          "votes": [
+            {
+              "direction": "DOWN",
+              "family": "return_1h",
+              "value": -0.0549629929623
+            },
+            {
+              "direction": "DOWN",
+              "family": "return_4h",
+              "value": -0.4740740740740712
+            },
+            {
+              "direction": "DOWN",
+              "family": "session_vwap",
+              "value": -0.13782790666324596
+            },
+            {
+              "direction": "UP",
+              "family": "momentum_acceleration",
+              "value": 0.08451688735689997
+            },
+            {
+              "direction": "DOWN",
+              "family": "taker_balance",
+              "value": 0.46915767624
+            },
+            {
+              "direction": "UP",
+              "family": "taker_change",
+              "value": 0.189875000967
+            },
+            {
+              "direction": "UP",
+              "family": "ethbtc_1h",
+              "value": 0.0997008973081
+            },
+            {
+              "direction": "UP",
+              "family": "breadth_balance",
+              "value": 0.67
+            }
+          ],
+          "wilson_lower_95_pct_at_issue": null
+        }
+      }
+    }
+  },
+  "hourly_sequence_run_id": "HOURLY_SEQUENCE_20261105T111705Z_e04e0e63bee6",
+  "issued_at_utc": "2026-11-05T11:17:51.064339Z",
+  "production_context": {
+    "commit_sha": "998a73da8b39893d6e37ac0d5d4e93a344b077d5",
+    "event": "workflow_dispatch",
+    "ref": "refs/heads/main",
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "run_attempt": "1",
+    "run_id": "42017623853"
+  },
+  "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
+  "registration_receipt_sha256": "a61938f9b772f204ab0d5bc1e11798e51ee313bf1e1857f3d6bafd7b6bdf66d2",
+  "source_candle_open_utc": "2026-11-05T10:00:00+00:00",
+  "source_lag_minutes": 17.851,
+  "source_observation_semantics": "CLOSED_1H_CANDLE_CLOSE_OBSERVABLE_TIME",
+  "source_price_observation_utc": "2026-11-05T11:00:00Z"
+}
