@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.test.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.html",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/ui-runtime.test.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-d1365933767d41a1",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "site-native-usdt-readout-original-blue-graph-quote",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(site): suppress original daily-price overlay when frozen forecast quote differs from Binance USDT observations * fix(site): print verified observed BTC spot in USDT and disclose noncomparable issued blue source * fix(site): avoid pre-source USD placeholder while public Graph B loads * test(site): reject USD/USDT or absent quote on original blue weekly curve, permit matching source-owned unit * test(site): live Graph B BTC readout must print source-owned USDT, not dollar-sign USD",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.mjs": "a785df7ba5f99c41beb159e6eca0a7440142fd66",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.test.mjs": "e3034e40dc90db45b57df7e6701ecffef5f02349",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.html": "7df12f63c820240d129fecd95acd766d03fdbf79",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.mjs": "8e2a18a34f14d49fc8d578218e22cc4a1d46a5dc",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/ui-runtime.test.mjs": "6b34a74d8f917f944987fa730c59bb39ac72f2fa"
+  },
+  "source_commit_sha": "d1365933767d41a1c133f4da6c0f0d81b8cbcb62",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T19:31:44-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(site): native USDT readout and original blue graph quote parity (#1914)"
+}

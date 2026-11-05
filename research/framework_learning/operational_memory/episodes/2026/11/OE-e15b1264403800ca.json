@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/data-architecture-gate.yml",
+    "07_PROMPTS_AND_AGENTS/action_compass/KOMPAS_PRO_HORIZON_IMPLEMENTATION_LEDGER_v2.json",
+    "tests/learning/test_kompas_pro_internal_horizon_v2.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-e15b1264403800ca",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* governance(kompas): reconcile merged G0 G1 G4 code separately from missing original W45 7/7 product * test(kompas): original W45 0/7 freeze parity and G0 G1 G4 source-vs-product status truth * ci(governance): enforce Kompas Pro source-routing and partial-release readback under existing Data Architecture Gate",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/data-architecture-gate.yml": "04dd814b2367b1d0a8808978f770961bde877c45",
+    "07_PROMPTS_AND_AGENTS/action_compass/KOMPAS_PRO_HORIZON_IMPLEMENTATION_LEDGER_v2.json": "956b5ecec371d0d934506acd8f2a3e30905762a3",
+    "tests/learning/test_kompas_pro_internal_horizon_v2.py": "6be129eae1fd877ebcb3856ac219b5c744a30085"
+  },
+  "source_commit_sha": "e15b1264403800ca987f6d6929a24e335eb7a3c1",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T19:17:10-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "governance(kompas): G0 G1 G4 source delivery vs actual W45 W46 product status (#1911)"
+}

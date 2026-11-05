@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/api-agent-gateway-gate.yml",
+    ".github/workflows/research-lab-sol-dispatch.yml",
+    "06_RESEARCH_LAB/mission_packets/2026-11-05__SOL61_MAX_CYCLE_RECOVERY_ALTSEASON_v1.json",
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json",
+    "scripts/api_agent/research_lab_sol_dispatch.py",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-868a150f1202a689",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research: owner-gated Sol MAX cycle mission evidence and tests * research: release distinct MAX cycle research and close prior paid slot * api: original Research Lab owner gated one-shot MAX effort and native reservation * test: enforce Sol MAX one-shot owner scope and no global promotion * ci: source-bound one-shot Sol MAX with conservative cost and native paid claim * api: allocate bounded 16k total tokens for one-shot MAX research * ci: run owner-scoped MAX admission and no-promotion regressions in PR gate",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/api-agent-gateway-gate.yml": "70e47702b90ca9b374cdb930ccfaf0de3ce1efc4",
+    ".github/workflows/research-lab-sol-dispatch.yml": "d5b82b997b2dae9595d2d22241f090f984c773c6",
+    "06_RESEARCH_LAB/mission_packets/2026-11-05__SOL61_MAX_CYCLE_RECOVERY_ALTSEASON_v1.json": "918ec351a758013da6d6431996d733aaa04263e8",
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json": "9fcffa38945114aec0248bd1e1145bae11465ac3",
+    "scripts/api_agent/research_lab_sol_dispatch.py": "5071a50ab9dfa20c89f3659f05f12b1557984f4b",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py": "2879a4d9b64d91549dde13075c13ae8381a666ed"
+  },
+  "source_commit_sha": "868a150f1202a6894bfb828dba137c36ef764576",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T20:34:34-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research: release one owner-gated Sol MAX full-cycle study"
+}

@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/ui-runtime.test.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-1610d082227575fc",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "site-safe-verified-graph-history-fallback-during-temporary",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(site): preserve only prior authenticated BTC chart as explicit stale history during transient CDN failure * test(site): source-verified Graph B historical fallback, recovery and asset/source-integrity isolation",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.mjs": "bbfb17ff365e9bdfd851ec626a55ced1ee3409fb",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/ui-runtime.test.mjs": "0aaa8dfde4a38988b5f558e3ed80a02be5cd3c8a"
+  },
+  "source_commit_sha": "1610d082227575fc76eea3b3bf7fbbf7ca3cf6ab",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T19:46:56-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(site): safe verified Graph B history fallback during temporary network outages (#1917)"
+}

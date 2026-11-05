@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/t6_rotation_survival.py",
+    "tests/learning/test_t6_rotation_survival.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-727f8fdcd0e30b91",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "t6-reject-impossible-ethbtc-rotations-before-freezing-sequence",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(t6): reject invalid ratio and threshold before rotation freeze * test(t6): impossible prior not cross and no frozen-state damage",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/t6_rotation_survival.py": "55b0d39ba533a6c5c537ea6959b7aeb375560222",
+    "tests/learning/test_t6_rotation_survival.py": "19a16ae6975b69d722ec6453b43d9d29d8c0de54"
+  },
+  "source_commit_sha": "727f8fdcd0e30b9173e2a686527ea4aa13fe0a13",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-05T01:26:23-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(t6): reject impossible ETHBTC rotations before freezing a sequence"
+}

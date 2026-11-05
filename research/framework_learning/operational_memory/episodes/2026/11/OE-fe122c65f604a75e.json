@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".agents/skills/s1-pr-repair-learning/SKILL.md",
+    ".agents/skills/s1-pr-repair-learning/references/verified-casebook.json",
+    "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md",
+    "AGENTS.md",
+    "tests/agents/test_s1_pr_repair_learning_skill.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".agents",
+  "episode_id": "OE-fe122c65f604a75e",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "feat-s1-verified-pr-learning-skill-1906",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized procedural skill integration under #1156. Native repository skill, casebook and static tests; no new authority, scheduler, paid API or writer.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".agents/skills/s1-pr-repair-learning/SKILL.md": "dcf47c5fc637ef9d65d721ff89718fadb32f1f0b",
+    ".agents/skills/s1-pr-repair-learning/references/verified-casebook.json": "7e0ff25f2ae21e5a5b293cda77fa253c6de79453",
+    "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md": "ee43c8d695ab49279fec6357f4125faf3aee67d8",
+    "AGENTS.md": "7e56fb043da787ef2a411557e2e8d52f3009a972",
+    "tests/agents/test_s1_pr_repair_learning_skill.py": "30f2e7ace9026b1147bb7e496f18294a18640b99"
+  },
+  "source_commit_sha": "fe122c65f604a75eb015c0289fc704803ae24114",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T19:01:29-05:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "feat(s1): install verified PR repair learning skill (#1906)"
+}

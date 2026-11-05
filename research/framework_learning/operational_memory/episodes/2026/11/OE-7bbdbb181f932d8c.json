@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/pullback_warning_timeliness_shadow.py",
+    "tests/learning/test_compass_rolling_14d_audit.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-7bbdbb181f932d8c",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "BUILD",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(pullback): source-clock legal price-only 24h peak comparator context * test(pullback): fail closed on backfilled 24h price baseline and unknown publisher",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/pullback_warning_timeliness_shadow.py": "03133f5d22b22b3cb062a18a0b33f34432af1620",
+    "tests/learning/test_compass_rolling_14d_audit.py": "fec1ca62530dc0836ccac045ed05f621d908e8a6"
+  },
+  "source_commit_sha": "7bbdbb181f932d8ce049953ebf3fe8d45b728293",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-05T01:23:01-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "research(pullback): add strict pre-issue price-only context to warning/control samples"
+}

@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_MIDWEEK_PROSPECTIVE_BENCHMARK_v1.json",
+    "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_MIDWEEK_PROSPECTIVE_BENCHMARK_v1.md",
+    "scripts/research/verify_w45_midweek_shadow_benchmark.py",
+    "tests/research/test_w45_midweek_shadow_benchmark.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-defb068ecb78b4e2",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(w45): freeze source-bound four-day shadow benchmark and 238 observed hours * research(w45): add strict no-lookahead shadow forecast recomputation and authority gate * test(research): W45 shadow 4-day forecast replay and adversarial PIT/source separation * test(research): match earliest source-availability guard for retroactive clock spoof * research(w45): evidence-backed Monday postmortem and prospective Thu-Sun BTC/ETH shadow paths * research(w45): PIT-aware Monday 3-window observed range comparison and ETH nominal breach",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_MIDWEEK_PROSPECTIVE_BENCHMARK_v1.json": "f3684406071d7234547db58288774324f422d67e",
+    "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_MIDWEEK_PROSPECTIVE_BENCHMARK_v1.md": "61866bebcc2dc6329e327184541357d7a532b7fc",
+    "scripts/research/verify_w45_midweek_shadow_benchmark.py": "8b0e8505747c00f2a38cc953ec2508700941c418",
+    "tests/research/test_w45_midweek_shadow_benchmark.py": "c47efb69a9fdcc0d58e6277811cdc580a33b082d"
+  },
+  "source_commit_sha": "defb068ecb78b4e2a7ef7c5aa3c920e1b6f8a937",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T18:34:30-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "research(w45): source-bound midweek BTC ETH shadow baselines and PIT guard (#1904)"
+}

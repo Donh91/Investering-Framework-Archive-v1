@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/cycle_navigator/build_graph_history.py",
+    "tests/cycle_navigator/test_graph_history.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-0034147544e92c9f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cn-original-frozen-btc-quote-future-graph-archives",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(cn): original graph archive quote from frozen BTC source, preserve exact historic W45 legacy bytes * test(cn): prospective original BTC quote and immutable W45 legacy USD reference readback",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/cycle_navigator/build_graph_history.py": "ab9e966ffd8fa8314781b76172c83584d91cd711",
+    "tests/cycle_navigator/test_graph_history.py": "b3246048f3e29c5c75383afa8077aea0b375e8eb"
+  },
+  "source_commit_sha": "0034147544e92c9f076a3e1e04def575a17bd883",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T19:41:46-05:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "fix(cn): preserve original frozen BTC quote in future graph archives and legacy W45 bytes (#1916)"
+}

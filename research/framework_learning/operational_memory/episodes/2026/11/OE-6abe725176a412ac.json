@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "tests/cycle_navigator/test_daily_path_recovery.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-6abe725176a412ac",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cn-w46-original-source-versus-day-product-diagnostic",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(cn): record independent premodel source proof versus original 7/7 issuance failures in W46 source manifest * test(cn): identify source artifact/quote/model/range blockers without promoting W45 or paid retry * test(cn): import JSON for immutable legacy W45 source-manifest negative check",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py": "0cc4b88d366820d73db4055fbfa7af68b6d8b781",
+    "tests/cycle_navigator/test_daily_path_recovery.py": "2aef78baf22acde4173c2114ab7c4041bfaf4131"
+  },
+  "source_commit_sha": "6abe725176a412ac9912dd1806212dc2e21acba6",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T19:26:20-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(cn): W46 original source versus 7-day product diagnostic receipt (#1913)"
+}

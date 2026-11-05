@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/CROSS_REPO_OWNER_COVERAGE_SHADOW_V1.md",
+    "scripts/orchestration/cross_repo_owner_coverage_v1.py",
+    "tests/architecture/test_full_architecture_1to7.py",
+    "tests/orchestration/test_cross_repo_owner_coverage_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-edb4af62da8edfd4",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(research): add bounded read-only cross-repo owner coverage reconciliation * test(research): adversarial public scope, P0, shadow, private boundary and no-dispatch controls * test(architecture): exercise P0 ownership and no-forced-shadow controls in existing CI * docs(s1): bounded cross-repo P0 and shadow accountability pilot, no parallel authority",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/CROSS_REPO_OWNER_COVERAGE_SHADOW_V1.md": "4641f9885e996d2fdd75b736d85de72918808ff0",
+    "scripts/orchestration/cross_repo_owner_coverage_v1.py": "591579573ff18d9f893b285698521e337e44846a",
+    "tests/architecture/test_full_architecture_1to7.py": "ea136a8f14cd17f96ed02bee59b68b06f4cc00a1",
+    "tests/orchestration/test_cross_repo_owner_coverage_v1.py": "e2bc5b772de24a38ad18a2439b61924bc637689d"
+  },
+  "source_commit_sha": "edb4af62da8edfd4464e477d029239bff40642ed",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-05T05:40:09-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "feat(s1): P0 cross-repo owner coverage and shadow no-work reconciliation (#1936)"
+}

@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/orchestration/s1_shadow_native_replay_v1.py",
+    "tests/architecture/test_full_architecture_1to7.py",
+    "tests/orchestration/test_s1_shadow_native_replay_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-b114e4706a188d91",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(s1): add fail-closed read-only original PR shadow replay reducer * test(s1): 27 positive/adversarial shadow replay authority regressions * test(architecture): execute S1 shadow replay negatives in existing hosted gate * fix(s1 shadow): include changed release-gate fingerprints and regression * fix(s1 shadow): include changed release-gate fingerprints and regression * fix(s1 shadow): include changed release-gate fingerprints and regression",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/orchestration/s1_shadow_native_replay_v1.py": "39cbcea30b7d51439a4e4adbcc17d06ff817a440",
+    "tests/architecture/test_full_architecture_1to7.py": "22ea9978ea917ef74c299c8e748edf5a848bdaed",
+    "tests/orchestration/test_s1_shadow_native_replay_v1.py": "1d697f0695278f66120b64064f1a787b39911a27"
+  },
+  "source_commit_sha": "b114e4706a188d91f21c3ee576052f42485c1c4b",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-05T04:15:03-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "test(s1): native-evidence shadow replay with 27 fail-closed regressions (#1933)"
+}

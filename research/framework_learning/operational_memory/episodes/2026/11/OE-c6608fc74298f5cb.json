@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/MONDAY_7_DAY_FORECAST_PRODUCT_ACCEPTANCE_v1.md",
+    "scripts/cycle_navigator/build_public_live_precision.py",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "scripts/cycle_navigator/daily_price_journey.py",
+    "tests/cycle_navigator/test_daily_price_journey.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-c6608fc74298f5cb",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cn-monday-seven-day-btc-eth-product-acceptance",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(cn): explicit Monday 14-point product completeness audit, without weakening source guards * feat(cn): bind 14-point Monday product acceptance into original immutable issuer and public receipt * fix(site): recompute Monday 14-point acceptance from immutable freeze before public readback * test(cn): 14/14 product truth gate and source/time/quote/adversarial missingness * fix(cn): prioritize conditional Monday seven-day estimates without suppressing real source abstentions * docs(cn): owner-ratified Monday 7/7 BTC and ETH product acceptance and W46 readback",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/MONDAY_7_DAY_FORECAST_PRODUCT_ACCEPTANCE_v1.md": "0402df02f6c1a521546253c5dfe8f5ba25123aa4",
+    "scripts/cycle_navigator/build_public_live_precision.py": "af241cc5d11e369e666a9ec32d5ba0512fbb4d81",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py": "d488067027b18172edd3084093141ec6fde2d256",
+    "scripts/cycle_navigator/daily_price_journey.py": "621aa1b9a677ff6e9b09cd1c2394d1ad8d3451e7",
+    "tests/cycle_navigator/test_daily_price_journey.py": "7d10ed3acb7d2ad39ddc685650adac89252d63a4"
+  },
+  "source_commit_sha": "c6608fc74298f5cb9f4271e05ca087494d5880f7",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T18:15:54-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(cn): Monday seven-day BTC/ETH product acceptance and source-linked readback (#1902)"
+}

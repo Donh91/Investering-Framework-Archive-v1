@@ -1,0 +1,46 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    "05_CYCLE_NAVIGATOR/site/research-w45/index.html",
+    "05_CYCLE_NAVIGATOR/site/research-w45/preview.test.mjs",
+    "scripts/cycle_navigator/build_graph_history.py",
+    "scripts/research/w45_rehearsal_outcomes.py",
+    "tests/research/test_w45_rehearsal_outcomes.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-4f71748ad58f2766",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(w45): source-locked BTC+ETH 4-day prospective outcome receipts; never pre-target score * research(site): publish W45 BTC+ETH outcome readback with existing optional lab route * site(research): show prospective BTC+ETH four-day lab with frozen B0/B1 and source-matured outcomes only * test(research): eight BTC/ETH W45 future issuance, exact UTC maturity, poisoned source and historical replay * test(site): real BTC+ETH research outcome receipts, UTC maturation and adversarial authority guards * test(research): assert both asset outcome aggregates claim no edge * ci(research): guard sou",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "ece60d9410ff4b0253255497efd8a153bf400b8d",
+    ".github/workflows/cycle-navigator-pages.yml": "bf867983752b9299df18c83f6ca0b03962bd0aff",
+    "05_CYCLE_NAVIGATOR/site/research-w45/index.html": "cdd8fb97b7ee3e113fbbdefc6de7f969c99ab3b7",
+    "05_CYCLE_NAVIGATOR/site/research-w45/preview.test.mjs": "193b6678b2ebb5fbdcb2a9a380009d698cea927e",
+    "scripts/cycle_navigator/build_graph_history.py": "259760dae031b500890a004bb755da2886f349c9",
+    "scripts/research/w45_rehearsal_outcomes.py": "73d41faaa078124593f2a048c1896215c21bc741",
+    "tests/research/test_w45_rehearsal_outcomes.py": "8f3d51dabd2526146fac4628aa2e1a3849cb63d7"
+  },
+  "source_commit_sha": "4f71748ad58f2766e632f4e69fc88c5f2e3df276",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-05T04:07:12-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "research(site): prospective W45 BTC and ETH mature-only source-locked rehearsal (#1932)"
+}

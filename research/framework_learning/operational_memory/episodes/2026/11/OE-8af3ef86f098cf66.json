@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    "05_CYCLE_NAVIGATOR/site/graph-history/index.html",
+    "05_CYCLE_NAVIGATOR/site/graph-history/runtime.test.mjs",
+    "tests/cycle_navigator/test_graph_history.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-8af3ef86f098cf66",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "site-historical-blue-line-same-unit-prospective-clock",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(site): graph history draws blue only from original prospective same-quote USDT with valid source clock * test(site): execute Graph History real client script with USDT quote parity and W46 issuance guard * ci(site): verify real Graph History JS keeps USD/USDT forecast units separate before Pages release * ci(site): verify real Graph History JS keeps USD/USDT forecast units separate before Pages release * test(site): require stronger history quote and pre-outcome source checks instead of previous weak 7d text * test(site): drop stray non-source literal from history provenance contract ass",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "9d1b7bb5e67db23b02e0fb2752e0bad2befc0796",
+    ".github/workflows/cycle-navigator-pages.yml": "6e81dd6dc7687c775f674e308de6a2ad2cdfd2a9",
+    "05_CYCLE_NAVIGATOR/site/graph-history/index.html": "0e58bb974e66b6e0c342af624637f7b98e44f448",
+    "05_CYCLE_NAVIGATOR/site/graph-history/runtime.test.mjs": "089f370b8dbbd4592fa437a861cd0b2367765b24",
+    "tests/cycle_navigator/test_graph_history.py": "2b402d94809cf5b0947f35f136053a8e06ce08ad"
+  },
+  "source_commit_sha": "8af3ef86f098cf6631c0bfa0da040a56fec63d4d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T19:38:21-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(site): historical blue line same-unit and prospective clock protection (#1915)"
+}

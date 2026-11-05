@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/pullback_warning_timeliness_shadow.py",
+    "tests/learning/test_compass_rolling_14d_audit.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-c0627e3dc180e222",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(pullback): close-only time-to-worst and reclaim censoring for warning/control * test(pullback): equal-clock duration, censored and invalid price cases",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/pullback_warning_timeliness_shadow.py": "ba026aea938fe2efda3edee2ab73b40631bb9fbc",
+    "tests/learning/test_compass_rolling_14d_audit.py": "bed303d52f03b3151c276894c97496db703d21fa"
+  },
+  "source_commit_sha": "c0627e3dc180e22210e165067619c0132bd0b693",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-05T01:12:11-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "research(pullback): measure BTC close-only trough and subsequent reclaim time"
+}

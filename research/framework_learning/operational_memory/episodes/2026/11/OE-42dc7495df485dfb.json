@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".agents/skills/s1-pr-repair-learning/SKILL.md",
+    ".agents/skills/s1-pr-repair-learning/references/verified-casebook.json",
+    ".github/workflows/cross-repo-agent-context-gate.yml",
+    "tests/agents/test_s1_pr_repair_learning_skill.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".agents",
+  "episode_id": "OE-42dc7495df485dfb",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "learn-s1-1156-verified-alpha-176-case-automatic",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "One owner-invoked S1 PR conflict fix with native original PR merge and validated main readback; record and assert verified case under existing skill owner. No new agent, scheduling, model budget, market or portfolio authority.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".agents/skills/s1-pr-repair-learning/SKILL.md": "171374c69a9c98bc4d2d6bb3d99123762351531c",
+    ".agents/skills/s1-pr-repair-learning/references/verified-casebook.json": "f89f2787c554bb9562ef1cf38b76f40811fbcff3",
+    ".github/workflows/cross-repo-agent-context-gate.yml": "c03ad11b7e3acdf891110987e641d1f5908f0e17",
+    "tests/agents/test_s1_pr_repair_learning_skill.py": "078f3a442177fef2ce2bec43d4350a74e5d0664e"
+  },
+  "source_commit_sha": "42dc7495df485dfb34f7484885f51e30f0280e22",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-04T19:18:04-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "learn(s1 #1156): verified Alpha #176 repair case and automatic CI skill tests"
+}
