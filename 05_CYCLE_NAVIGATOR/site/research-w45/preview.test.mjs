@@ -25,8 +25,45 @@ const baseHistory={
  actual:study.observations.slice(-70).map(row=>({time:row.candle_close_at_utc,close:row.BTC_USDT}))
 };
 const clone=x=>JSON.parse(JSON.stringify(x));
+const baseOutcomes={
+ contract:'RESEARCH_W45_PROSPECTIVE_OUTCOMES_v1',forecast_week:'2026-W45',
+ created_at_utc:'2026-11-05T04:00:00Z',
+ original_research_issued_at_utc:study.generated_at_utc,
+ original_research_source_sha256:'a'.repeat(64),
+ original_monday_daily_forecast_issued_counts:{BTC:0,ETH:0},
+ source_mode:'PUBLIC_LIVE_W45',source_state:'UNAVAILABLE_FAIL_CLOSED',
+ source_failure:'PUBLIC_LIVE_SOURCE_IDENTITY_UNVERIFIED',
+ source_issue_number:null,observed_through_utc:null,observed_hours:0,
+ matured_observations:0,total_forecast_observations:8,
+ assets:{BTC:{matured_days:0,claim_of_edge:false},ETH:{matured_days:0,claim_of_edge:false}},
+ rows:['BTC','ETH'].flatMap(asset=>study.forecast.assets[asset].forecast.map(p=>({
+  asset,utc_date:p.utc_date,day:p.day,target_close_at_utc:p.target_close_at_utc,
+  B0_original_expected_close_USDT:p.B0_persistence_expected_close,
+  B1_original_expected_close_USDT:p.B1_decay_momentum_expected_close,
+  observed_close_USDT:null,B0_absolute_percentage_error:null,
+  B1_absolute_percentage_error:null,outcome_state:'PENDING_UTC_TARGET'
+ }))),
+ research_only:true,provider_first_known_verified:false,
+ independent_scientific_edge_proven:false,official_scoring_eligible:false,
+ portfolio_action_authority:false
+};
+function matureFirstOutcome(fixture,btcValue=79990.5,ethValue=2422){
+ fixture.created_at_utc='2026-11-06T01:00:00Z';
+ fixture.source_mode='PUBLIC_LIVE_W45';
+ fixture.source_state='VERIFIED_PUBLIC_CAPTURE_NOT_INDEPENDENT_FIRST_KNOWN';
+ fixture.observed_through_utc='2026-11-06T00:00:00Z';fixture.observed_hours=96;
+ fixture.matured_observations=2;
+ for(const i of [0,4]){
+  const row=fixture.rows[i],v=i===0?btcValue:ethValue;
+  row.outcome_state='MATURED_PUBLIC_CAPTURE';row.observed_close_USDT=v;
+  row.B0_absolute_percentage_error=Number((Math.abs(row.B0_original_expected_close_USDT/v-1)*100).toFixed(5));
+  row.B1_absolute_percentage_error=Number((Math.abs(row.B1_original_expected_close_USDT/v-1)*100).toFixed(5));
+ }
+ return fixture;
+}
 
-async function execute({history=clone(baseHistory),research=clone(study),now='2026-11-05T04:00:00Z',width=390,failFetch=false}={}){
+async function execute({history=clone(baseHistory),research=clone(study),
+ outcomes=clone(baseOutcomes),now='2026-11-05T04:00:00Z',width=390,failFetch=false}={}){
  const elements=new Map(),calls=[];
  class FakeElement{
   constructor(tag='div'){this.tag=tag;this.textContent='';this.className='';this.children=[];this.style={};}
@@ -43,7 +80,7 @@ async function execute({history=clone(baseHistory),research=clone(study),now='20
   font:'',fillStyle:'',lineWidth:0,strokeStyle:'',textAlign:''
  };
  const ids=['last-value','last-time','actual-count','source-status','freshness',
-  'results','plot','hover','chart-note'];
+  'matured-count','rehearsal-source','rehearsal-note','results','plot','hover','chart-note'];
  for(const id of ids)elements.set(id,new FakeElement(id));
  const canvas=elements.get('plot');canvas.getContext=kind=>kind==='2d'?ctx:null;canvas.width=0;canvas.height=0;
  class FakeDate extends Date{static now(){return Date.parse(now)}}
@@ -56,13 +93,15 @@ async function execute({history=clone(baseHistory),research=clone(study),now='20
  const fetch=async url=>{
   requested.push(url);
   if(failFetch)throw Error('NETWORK_UNAVAILABLE');
-  assert.ok(['../data/graph-history/timeline.json','../data/research-w45-shadow.json'].includes(url));
-  return{ok:true,json:async()=>clone(url.includes('graph-history')?history:research)}
+  assert.ok(['../data/graph-history/timeline.json','../data/research-w45-shadow.json',
+   '../data/research-w45-outcomes.json'].includes(url));
+  return{ok:true,json:async()=>clone(url.includes('graph-history')?history:
+    url.includes('outcomes')?outcomes:research)}
  };
  await vm.runInNewContext('(async()=>{'+source+'\n})()',{
    fetch,document,window,Date:FakeDate,console
  },{timeout:3500});
- return{elements,calls,requested,canvas,history,research};
+ return{elements,calls,requested,canvas,history,research,outcomes};
 }
 
 test('page runs source-bound actual hourly curve and exactly two separate shadow paths at mobile 390 and 430',async()=>{
@@ -73,8 +112,9 @@ test('page runs source-bound actual hourly curve and exactly two separate shadow
   assert.match(text('hover'),/USDT/);
   assert.match(text('chart-note'),/Original blå mandagsprognose: 0\/7/);
   assert.equal(r.canvas.width,width*2);
-  assert.equal(r.elements.get('results').children.length,4);
-  assert.equal(r.requested.length,2);
+  assert.equal(r.elements.get('results').children.length,8);
+  assert.equal(r.elements.get('matured-count').textContent,'0 / 8');
+  assert.equal(r.requested.length,3);
   assert.ok(r.calls.some(x=>x.color==='#38d2a8'),'REAL_GREEN_MISSING');
   assert.ok(r.calls.some(x=>x.color==='#efb864'&&x.dash.length),'SHADOW_B1_MISSING');
   assert.ok(r.calls.some(x=>x.color==='#9cabc2'&&x.dash.length),'SHADOW_B0_MISSING');
@@ -92,14 +132,19 @@ test('genuine hourly source gaps break the observed stroke, do not bridge missin
  assert.equal(r.elements.get('actual-count').textContent,'69 / 168');
 });
 
-test('prospective daily research scoring remains empty until the actual UTC close',async()=>{
+test('BTC and ETH first daily results require source receipt AFTER UTC close, later days pending',async()=>{
  const history=clone(baseHistory);
  history.actual.push({time:'2026-11-06T00:00:00Z',close:79990.5});
- let r=await execute({history,now:'2026-11-06T01:00:00Z'});
- let first=r.elements.get('results').children[0].children;
- assert.equal(first[3].textContent,'79.990,50');
- assert.match(first[4].textContent,/ %$/);
- assert.equal(r.elements.get('results').children[1].children[3].textContent,'Afventer');
+ const outcomes=matureFirstOutcome(clone(baseOutcomes));
+ const r=await execute({history,outcomes,now:'2026-11-06T01:00:00Z'});
+ const rows=r.elements.get('results').children;
+ assert.equal(r.elements.get('matured-count').textContent,'2 / 8');
+ assert.equal(rows[0].children[3].textContent,'79.990,50');
+ assert.match(rows[0].children[4].textContent,/ %$/);
+ assert.match(rows[0].children[5].textContent,/ %$/);
+ assert.equal(rows[4].children[3].textContent,'2.422,00');
+ assert.equal(rows[1].children[3].textContent,'Afventer UTC-luk');
+ assert.equal(rows[5].children[3].textContent,'Afventer UTC-luk');
 });
 
 test('missing or retroactively changed Monday CN original is quarantined, never fabricated',async()=>{
@@ -138,4 +183,56 @@ test('missing research fetch does not show a misleading modeled chart or fallbac
  assert.equal(r.calls.length,0);
  assert.match(r.elements.get('hover').textContent,/Kilden kan ikke valideres/);
  assert.match(r.elements.get('chart-note').textContent,/KILDE_HENTNING_FEJLET|NETWORK_UNAVAILABLE/);
+});
+
+
+test('outcome claim cannot promote research to original Monday issuance, even with plausible prices',async()=>{
+ const changes=[
+  x=>{x.official_scoring_eligible=true},
+  x=>{x.portfolio_action_authority=true},
+  x=>{x.original_monday_daily_forecast_issued_counts.BTC=7},
+  x=>{x.original_research_issued_at_utc='2026-11-02T08:19:08Z'},
+  x=>{x.rows[4].B1_original_expected_close_USDT+=1},
+  x=>{x.original_research_source_sha256='invalid'}
+ ];
+ for(const change of changes){const outcomes=clone(baseOutcomes);change(outcomes);
+  const r=await execute({outcomes});
+  assert.match(r.elements.get('hover').textContent,/Kilden kan ikke valideres/);
+  assert.equal(r.calls.length,0);
+ }
+});
+
+test('reported mature results before UTC target, after future capture, or math tampering are rejected',async()=>{
+ for(const action of [
+  x=>{x.rows[0].B1_absolute_percentage_error+=2},
+  x=>{x.created_at_utc='2026-11-05T09:00:00Z'},
+  x=>{x.observed_through_utc='2026-11-05T08:00:00Z'},
+  x=>{x.matured_observations=8},
+  x=>{x.rows[4].observed_close_USDT=9999},
+ ]){
+  const history=clone(baseHistory);history.actual.push({time:'2026-11-06T00:00:00Z',close:79990.5});
+  const outcomes=matureFirstOutcome(clone(baseOutcomes));action(outcomes);
+  const r=await execute({history,outcomes,now:'2026-11-06T01:00:00Z'});
+  assert.match(r.elements.get('hover').textContent,/Kilden kan ikke valideres/);
+  assert.equal(r.calls.length,0);
+ }
+});
+
+test('claimed BTC outcome must agree exactly with independently displayed Graph History close',async()=>{
+ const history=clone(baseHistory);history.actual.push({time:'2026-11-06T00:00:00Z',close:79990.51});
+ const outcomes=matureFirstOutcome(clone(baseOutcomes));
+ const r=await execute({history,outcomes,now:'2026-11-06T01:00:00Z'});
+ assert.match(r.elements.get('hover').textContent,/Kilden kan ikke valideres/);
+ assert.equal(r.calls.length,0);
+});
+
+test('source unavailable after UTC target means awaiting source, not an invented outcome',async()=>{
+ const outcomes=clone(baseOutcomes);
+ outcomes.created_at_utc='2026-11-06T01:00:00Z';
+ outcomes.rows[0].outcome_state='AWAITING_VERIFIED_SOURCE';
+ outcomes.rows[4].outcome_state='AWAITING_VERIFIED_SOURCE';
+ const r=await execute({outcomes,now:'2026-11-06T01:00:00Z'});
+ assert.equal(r.elements.get('matured-count').textContent,'0 / 8');
+ assert.equal(r.elements.get('results').children[0].children[3].textContent,'Kilde afventes');
+ assert.equal(r.elements.get('results').children[4].children[3].textContent,'Kilde afventes');
 });
