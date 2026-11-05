@@ -495,8 +495,8 @@ def test_primary_seven_day_model_gets_bounded_premodel_source_observation():
     assert 'SOURCE_OBSERVATION_NOT_ENVELOPE_ATTESTATION' in source
     assert 'weekly_capture_sha256' in source
     assert 'source_rows_sha256' in source
-    assert 'PRIMARY SEVEN-DAY PRICE PATH PRODUCT:' in source
-    assert 'A MIXED regime or multiple plausible scenarios alone does NOT require abstention' in source
+    assert 'DAILY HIGH/LOW FIRST:' in source
+    assert 'A MIXED market is not itself grounds to abstain' in source
     assert source.index('context["pre_model_spot_quote_observation"]') < source.index(
         'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
     assert source.index('value = reject_unverified_initial_daily_quotes(') > source.index(
