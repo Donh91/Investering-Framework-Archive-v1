@@ -146,5 +146,9 @@ class NewsOssEventChallengerTests(unittest.TestCase):
         self.assertTrue(r["no_truth_or_compass_promotion"])
 
 
+# Reuse the already-authorized Data Architecture Gate test entrypoint for the
+# independent framework-wide OSS source inventory without a second workflow.
+from tests.research.test_frameworkwide_oss_source_snapshot import FrameworkWideOssIntakeTests
+
 if __name__ == "__main__":
     unittest.main()
