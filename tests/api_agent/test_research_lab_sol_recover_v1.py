@@ -74,6 +74,19 @@ class RecoveryNativeTests(unittest.TestCase):
             self.assertEqual(proof["additional_paid_posts"], 0)
             self.assertEqual(proof["claim_comment_id"], 19)
 
+    def test_original_event_sha_may_precede_source_checkout_but_claim_stays_exact(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            fixture(root)
+            def event_before_checkout(path):
+                row = native(path)
+                if path == "actions/runs/" + RUN:
+                    row["head_sha"] = "b" * 40
+                return row
+            proof = m.verify_original(RUN, root, fetch=event_before_checkout)
+            self.assertEqual(proof["source_main_sha"], HEAD)
+            self.assertEqual(proof["claim_comment_id"], 19)
+
     def test_forged_actor_or_missing_bot_claim_rejects(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
