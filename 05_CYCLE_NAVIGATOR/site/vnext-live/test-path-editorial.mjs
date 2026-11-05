@@ -117,6 +117,13 @@ for(const id of ['premium-path-source-summary','premium-path-observed',
  'premium-path-rail','premium-rotation','premium-path-alt','premium-path-now'])
  assert.ok(region.includes('id="'+id+'"'),'source/readback anchor lost: '+id);
 assert.ok(css.includes('/* PATH · Quiet Editorial v1'));
+const rootCss=readFileSync(fileURLToPath(new URL('../premium-v2/premium-overhaul.css',import.meta.url)),'utf8');
+const sourceBlock=css.slice(css.indexOf('/* PATH · Quiet Editorial v1'));
+assert.ok(rootCss.endsWith(sourceBlock.replaceAll('#view-path','.premium-next #official-path-view')),
+ 'Canonical PATH and composed-root design system diverged');
+const composedRoot=readFileSync(fileURLToPath(new URL('../premium-v2/unified-root.mjs',import.meta.url)),'utf8');
+assert.match(composedRoot,/id="official-path-view" class="cn-path-source path-editorial"/);
+assert.match(composedRoot,/cn-alt-milestone" hidden style="display:none"/);
 const scoped=css.slice(css.indexOf('/* PATH · Quiet Editorial v1'));
 assert.ok(scoped.includes('@media(max-width:1040px)')&&
  scoped.includes('@media(max-width:680px)')&&
