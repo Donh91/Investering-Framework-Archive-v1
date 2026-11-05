@@ -9,6 +9,7 @@ ROOT=Path('06_RESEARCH_LAB/shared_row_model_tournament_v1'); LED=ROOT/'data/PROS
 ACTIVE_COLLECTION_STATE='ACTIVE_POST_REPAIR_PROSPECTIVE_COLLECTION'
 ACTIVE_FLOOR_STATUS='ACTIVE_POST_REPAIR_FLOOR'
 ROW_INTEGRITY_CONTRACT='SHARED_ROW_P0_BINDING_v1'
+TARGET_OUTCOME='ETHBTC_FORWARD_RELATIVE_RETURN_GT_ZERO_NOT_ALTSEASON_LIFECYCLE'
 SHA256_RE=re.compile(r'^[0-9a-f]{64}$')
 def read(p):
     with p.open(newline='',encoding='utf-8-sig') as f:return list(csv.DictReader(f))
@@ -153,7 +154,9 @@ def metrics(rows,cid,h):
             except Exception: pass
     n=tp+fp+tn+fn
     return {'n':n,'tp':tp,'fp':fp,'tn':tn,'fn':fn,'precision':ratio(tp,tp+fp),'recall':ratio(tp,tp+fn),'false_positive_rate':ratio(fp,fp+tn),'false_negative_rate':ratio(fn,fn+tp),'mae_mean':sum(mae)/len(mae) if mae else None,'mfe_mean':sum(mfe)/len(mfe) if mfe else None,
-            'row_based_descriptive_only':True,'independent_market_shock_family_n':None,
+            'row_based_descriptive_only':True,'binary_target':TARGET_OUTCOME,
+            'altseason_takeoff_or_exit_scored':False,'investor_after_cost_utility':None,
+            'independent_market_shock_family_n':None,
             'independent_population_precision':None,'independent_population_recall':None,
             'statistically_valid_comparative_edge':None}
 def incr(rows,base,other,h='24h'):
@@ -173,9 +176,13 @@ def main():
     challengers=['C08_SIMPLE_3_ETF','C09_SIMPLE_3_ETF_LEVERAGE','C10_STABLECOIN_CHALLENGER','C11_CFGI_CHALLENGER','C12_FULL_STACK']
     report={'contract':'SHARED_ROW_TOURNAMENT_WEEKLY_v1','authority':'RESEARCH_ONLY_NON_CANONICAL','generated_at_utc':now.replace(microsecond=0).isoformat().replace('+00:00','Z'),'iso_year':y,'iso_week':w,'status':'COLLECTING' if not rows else 'EVALUATING','eligible_rows_total':len(rows),'consensus_rows':sum(1 for r in rows if len(set(json.loads(r.get('candidate_decisions') or '{}').values()))<=1),'divergences_total':len(div),'matured':mats,'candidate_performance':perf,'incremental_value_matrix':[incr(rows,'C07_SIMPLE_3',x) for x in challengers],'tail_error_prevention':{'status':'UNAVAILABLE' if not div else 'EVALUATE_FROM_MATURED_DIVERGENCES','n':len(div)},'consumer_integrity_filter':{'raw_rows':len(raw_rows),'raw_divergences':len(raw_div),'excluded':excluded},'architecture_gate':'INSUFFICIENT_EVIDENCE',
             'dependence_census':dependence_census(rows,runtime),
-            'decision_quality_not_proven':True,'canonical_effect':False}
+            'decision_quality_not_proven':True,
+            'binary_outcome_semantics':TARGET_OUTCOME,
+            'broad_altcoin_takeoff_scored':False,'cycle_exit_scored':False,
+            'holder_vs_cash_after_cost_evaluated':False,
+            'canonical_effect':False}
     block_count=report["dependence_census"]["fixed_28d_calendar_block_n"]
     OUT.mkdir(parents=True,exist_ok=True); name=f'SHARED_ROW_TOURNAMENT_WEEKLY_{y}-W{w:02d}.json'; (OUT/name).write_text(json.dumps(report,indent=2,sort_keys=True)+'\n'); (OUT/'LATEST.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
-    (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n- 28-day calendar blocks: **{block_count}** (NOT independent market shocks)\n- Independent market-shock N: `UNKNOWN`\n\nRow-based precision and recall are DESCRIPTIVE ONLY; no statistical or economic winner is permitted.\n')
+    (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n- 28-day calendar blocks: **{block_count}** (NOT independent market shocks)\n- Independent market-shock N: `UNKNOWN`\n- Outcome: ETH/BTC forward relative return positive, NOT broad altseason takeoff or exit\n\nRow-based precision and recall are DESCRIPTIVE ONLY; no statistical or economic winner is permitted.\n')
     print(json.dumps({'status':'PASS','report':str(OUT/name),'eligible_rows':len(rows),'divergences':len(div)},sort_keys=True))
 if __name__=='__main__':main()
