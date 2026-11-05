@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/research/task2_r1_scoped_readiness_v1.py",
+    "tests/research/test_task2_r1_original_admission.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-d691ba12eae9e1a7",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-source-rescued-r1-original-cohort-before-historical",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(task2): reconcile frozen 11-original source/target receipts into fail-closed simulation admission * test(task2): adversarial source-custody, outcome census, chronology and no-edge admission guards * fix(task2): preserve original outcome-absent rows with no fabricated scoring counters",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/research/task2_r1_scoped_readiness_v1.py": "ff9a3018483b74642d479289851a66d915dd2008",
+    "tests/research/test_task2_r1_original_admission.py": "6d7d01d4128ee1d4affa312f09a9df7ea8b1c47e"
+  },
+  "source_commit_sha": "d691ba12eae9e1a7d2396b84458184bdfff541bd",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-05T16:15:03-05:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "research(task2): reconcile source-rescued R1 original cohort before historical simulation release (#1946)"
+}

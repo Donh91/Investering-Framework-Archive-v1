@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    "05_CYCLE_NAVIGATOR/site/research-w45/index.html",
+    "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_THURSDAY_SELFTEST_v1.json",
+    "scripts/cycle_navigator/build_graph_history.py",
+    "scripts/research/w45_thursday_selftest_outcomes.py",
+    "tests/cycle_navigator/test_graph_history.py",
+    "tests/research/test_w45_thursday_selftest_outcomes.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-ea18a12194883511",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "w45-source-locked-thursday-sunday-btc-eth-self",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(w45): freeze owner-issued Thursday prospective BTC ETH selftest separately from Monday CN * research(w45): score source-bound Thursday selftest only after actual issue and complete UTC hours * test(research): prove clock-bound Thursday scoreboard and negative no-hindsight guards * site(w45): publish optional Thursday future-only outcome receipt, fail closed without touching Graph B * ci(w45): execute prospective selftest source/clock negative controls on Pages PR * site(w45): disclose real Thursday issue time and link separate source-gated future-only results * test(site): prove Thu",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "1b5e147dc455723b47fe87d35302a7831392d098",
+    ".github/workflows/cycle-navigator-pages.yml": "bece3d68c688976c7927713edcae231641736fb3",
+    "05_CYCLE_NAVIGATOR/site/research-w45/index.html": "7f2c6311506b749038462492e2df8c799e338e8a",
+    "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_THURSDAY_SELFTEST_v1.json": "f1d7ed866281dc4fb85561c9c4fd5fe776a66e77",
+    "scripts/cycle_navigator/build_graph_history.py": "bc74c41938e4fe36b10448b1509cc20956cda483",
+    "scripts/research/w45_thursday_selftest_outcomes.py": "c2371754a4746fe827a9afb136af223e5a2452bf",
+    "tests/cycle_navigator/test_graph_history.py": "c03ffcd46d1f4a87c40b15fc2cf8d83615665e13",
+    "tests/research/test_w45_thursday_selftest_outcomes.py": "4d6988c5793b39755591b76e9e76eb93f5b311c7"
+  },
+  "source_commit_sha": "ea18a1219488351183902797b71441e83151c0ad",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-05T15:56:56-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(research W45): source-locked Thursday-Sunday BTC ETH self-test scoring without hindsight (#1945)"
+}

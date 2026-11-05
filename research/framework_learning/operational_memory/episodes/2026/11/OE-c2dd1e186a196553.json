@@ -1,0 +1,52 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/api-agent-gateway-gate.yml",
+    ".github/workflows/research-lab-sol-dispatch.yml",
+    "scripts/api_agent/api_gateway.py",
+    "scripts/api_agent/recoverable_responses_v1.py",
+    "scripts/api_agent/research_lab_sol_dispatch.py",
+    "scripts/api_agent/research_lab_sol_recover_v1.py",
+    "tests/api_agent/test_recoverable_responses_v1.py",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py",
+    "tests/api_agent/test_research_lab_sol_recover_v1.py",
+    "tests/api_agent/test_sol_max_elite_dispatch.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-c2dd1e186a196553",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "api-recoverable-sol-max-background-transport-native-get",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized source-bound safe API repair. 9 exact-head CI workflows passed; no paid run or duplicate POST. Prior #41870364609/#41949497953 billing remains unknown and is budget-reserved; no bypass of owner/public storage gates. GitHub safepoint safepoint/s1-sol-max1943-20261105.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/api-agent-gateway-gate.yml": "ebb3b6e7f7d3def65f8aeede28fc9e066411532a",
+    ".github/workflows/research-lab-sol-dispatch.yml": "d99f42ce583e150fc7106904e98524478da316e5",
+    "scripts/api_agent/api_gateway.py": "5ef7e2d9c6afd0065bd23e2744c15f0b36eda262",
+    "scripts/api_agent/recoverable_responses_v1.py": "69c849e949b7ffe2d9897db3277f6f4918699c4f",
+    "scripts/api_agent/research_lab_sol_dispatch.py": "2e9f31a3b7f6843353e75dd0faa133a03b951199",
+    "scripts/api_agent/research_lab_sol_recover_v1.py": "c45b4ee77ae63ef2c7471679af398b414159e89a",
+    "tests/api_agent/test_recoverable_responses_v1.py": "4c7333e63bc446ea4da55e07b00de564273396c9",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py": "91058896a1374f102f8255361f0a2cf5f4ebc1c1",
+    "tests/api_agent/test_research_lab_sol_recover_v1.py": "8ca3ffa0e05e46088755c0bc7180b0deed61e9d1",
+    "tests/api_agent/test_sol_max_elite_dispatch.py": "6e402e56b023cd119452ad3d5c08d837a17433da"
+  },
+  "source_commit_sha": "c2dd1e186a1965539ffb650355370c60a85bd301",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-05T15:17:03-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(api): recoverable Sol MAX background transport and native GET-only collection"
+}
