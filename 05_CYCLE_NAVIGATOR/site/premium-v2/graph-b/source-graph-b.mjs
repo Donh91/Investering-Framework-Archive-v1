@@ -284,7 +284,11 @@ function plot(){
   t('Original prognose · 3 vinduer','Original forecast · 3 windows');
  set('source-state',st);
  const stale=model.live_freshness==='STALE';
- set('feed-status',(stale?t('FORÆLDEDE OBSERVATIONER · IKKE AKTUEL KURS. ','STALE OBSERVATIONS · NOT CURRENT PRICE. '):'')+
+ const historicalFallback=model.transport_fallback_historical===true;
+ set('feed-status',(historicalFallback?
+  t('OFFENTLIG KILDE MIDLERTIDIGT UTILGÆNGELIG · KUN SIDST VERIFICEREDE HISTORIK. ',
+    'PUBLIC SOURCE TEMPORARILY UNAVAILABLE · LAST VERIFIED HISTORY ONLY. '):'')+
+ (stale?t('FORÆLDEDE OBSERVATIONER · IKKE AKTUEL KURS. ','STALE OBSERVATIONS · NOT CURRENT PRICE. '):'')+
  t('Kilde: offentlig CN '+model.forecast_week+' · #'+model.public_issue_number,
  'Source: public CN '+model.forecast_week+' · #'+model.public_issue_number)+
  ' · '+t('senest målt','last observed')+' '+(model.last_observed_at_utc||'—')+
@@ -346,7 +350,14 @@ async function refresh({background=false}={}){
   if(request!==requestGeneration||selected!==asset)return;
   clearPlaying();
   if(staleTimer!==null){clearTimeout(staleTimer);staleTimer=null;}
-  model=null;sliderHour=0;
+  // Only after a previously authenticated source-bound Graph B: a temporary
+  // network/JSON transport failure must not erase genuine observed history.
+  // This is a HISTORICAL read, not a live/current price or an admitted new
+  // source. Explicit source-integrity rejection still produces UNAVAILABLE.
+  if(background&&model?.asset===selected&&model.source_status==='SOURCE_BOUNDED'){
+   model={...model,live_freshness:'STALE',is_current_quote:false,
+    transport_fallback_historical:true};
+  }else{model=null;sliderHour=0;}
  }
  plot();
 }
@@ -367,7 +378,10 @@ $('play')?.addEventListener('click',()=>{
  set('play-text',t('Stop','Pause'));
  playTimer=setInterval(()=>{sliderHour=Math.min(end,sliderHour+1);plot();if(sliderHour>=end)clearPlaying()},135);
 });
-document.addEventListener('visibilitychange',()=>{if(document.hidden)clearPlaying();else refresh()});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden)clearPlaying();
+ else refresh({background:model?.source_status==='SOURCE_BOUNDED'});
+});
 window.addEventListener('pagehide',clearPlaying);
 // Pages can publish a new source bundle while the iPhone tab stays open.
 // Re-read the public files; never extend a quote's freshness from a local timer.
