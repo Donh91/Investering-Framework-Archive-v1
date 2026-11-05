@@ -89,6 +89,7 @@ jobs:
       - name: Verify frozen W45 BTC/ETH prospective outcome boundary and browser view
         run: |
           python3 -m unittest discover -s tests/research -p test_w45_rehearsal_outcomes.py
+          python3 -m unittest discover -s tests/research -p test_w45_thursday_selftest_outcomes.py
           node --test 05_CYCLE_NAVIGATOR/site/research-w45/preview.test.mjs
       - name: Build continuous BTC graph history from frozen source only
         id: graph_history

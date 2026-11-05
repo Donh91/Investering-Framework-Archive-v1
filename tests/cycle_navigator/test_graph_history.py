@@ -559,6 +559,40 @@ class GraphHistoryTest(unittest.TestCase):
         self.assertFalse(exposed.exists())
         self.assertFalse(delivered.exists())
 
+    def test_optional_thursday_forecast_scoring_does_not_promote_or_break_original_research(self):
+        root = Path(__file__).resolve().parents[2]
+        required = (
+            "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_MIDWEEK_PROSPECTIVE_BENCHMARK_v1.json",
+            "06_RESEARCH_LAB/mission_packets/2026-11-05__W45_THURSDAY_SELFTEST_v1.json",
+            "05_CYCLE_NAVIGATOR/site/research-w45/index.html",
+        )
+        for rel in required:
+            src, dst = root / rel, self.root / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_bytes(src.read_bytes())
+        self.assertEqual(publish_w45_research_preview(self.root), "RESEARCH_ONLY_PUBLISHED")
+        outcome_file = self.root / "05_CYCLE_NAVIGATOR/site/dist/data/research-w45-thursday-outcomes.json"
+        original_file = self.root / "05_CYCLE_NAVIGATOR/site/dist/data/research-w45-outcomes.json"
+        self.assertTrue(outcome_file.is_file())
+        self.assertTrue(original_file.is_file())
+        outcome = json.loads(outcome_file.read_text())
+        self.assertEqual(outcome["contract"], "RESEARCH_W45_THURSDAY_SELFTEST_OUTCOMES_v1")
+        self.assertEqual(outcome["original_monday_daily_issued"], {"BTC": 0, "ETH": 0})
+        self.assertEqual(outcome["matured_observations"], 0)
+        self.assertFalse(outcome["official_scoring_eligible"])
+        self.assertFalse(outcome["portfolio_action_authority"])
+        # A malicious rewrite of Thursday's locked initial issue must
+        # quarantine ONLY this independent additional JSON endpoint.
+        freeze = self.root / required[1]
+        changed = json.loads(freeze.read_text())
+        changed["first_public_issue_utc"] = "2026-11-05T18:00:00Z"
+        put(freeze, changed)
+        self.assertEqual(publish_w45_research_preview(self.root), "RESEARCH_ONLY_PUBLISHED")
+        self.assertFalse(outcome_file.exists())
+        self.assertTrue(original_file.exists())
+        # The primary graph never consumes any research self-test bytes.
+        self.assertFalse((self.root / ROOT / "index.json").exists())
+
     def test_missing_research_preview_never_blocks_canonical_site(self):
         self.assertEqual(publish_w45_research_preview(self.root), "NOT_AVAILABLE")
         self.assertEqual(archive(self.root, W45)["weeks"][0]["status"], "MISSING_FREEZE")
