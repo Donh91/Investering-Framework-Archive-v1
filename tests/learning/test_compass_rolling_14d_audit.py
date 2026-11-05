@@ -587,6 +587,74 @@ class PullbackTimeboxResearchTests(unittest.TestCase):
         self.assertEqual(invalid["no_warning_snapshot_controls"]["horizons"]["12h"]["unknown_n"],1)
         self.assertEqual(invalid["no_warning_snapshot_controls"]["horizons"]["12h"]["matured_n"],0)
 
+    def test_price_only_prior24h_clocked_context_is_same_on_warning_and_control(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import (
+            evaluate, price_only_24h_context, iso, target_close_after)
+        t=START+timedelta(hours=3)
+        market=self.tape(t,100)
+        # These 25 hourly closes were collected by their own completion times,
+        # before either decision. No post-issue price can enter the feature.
+        for i in range(25):
+            close=t-timedelta(hours=23)+timedelta(hours=i)
+            value=94.0 if i>=24 else 95.0 if i==23 else 100.0
+            market[close]={"btc":value,"eth":200.0,"source_window_end_utc":iso(close)}
+        control=evaluate([self.freeze(t,"NORMAL")],market,t+timedelta(hours=100))
+        control_row=control["no_warning_snapshot_controls"]["snapshots"][0]
+        control_base=control_row["price_only_prior24h"]
+        self.assertEqual(control_base["status"],"OBSERVABLE_AT_COLLECTOR_CLOCK_NOT_PROVIDER_VERIFIED")
+        self.assertEqual(control_base["prior24h_peak_price"],100.0)
+        self.assertEqual(control_base["last_known_close_price"],95.0)
+        self.assertTrue(control_base["price_only_5pct_drawdown_context"])
+        self.assertFalse(control_base["provider_first_known_verified"])
+        warning=evaluate([self.freeze(t,"NORMAL"), self.freeze(t+timedelta(hours=1),"HIGH")],
+                         market,t+timedelta(hours=100))
+        alert_base=warning["alerts"][0]["price_only_prior24h"]
+        self.assertTrue(alert_base["price_only_5pct_drawdown_context"])
+        self.assertEqual(alert_base["last_known_close_price"],94.0)
+        self.assertIsNone(warning["same_issuance_price_only_context"]["paired_predictive_skill"])
+        self.assertFalse(warning["same_issuance_price_only_context"]["equal_sampling_or_alert_budget_verified"])
+
+    def test_price_only_context_fails_closed_if_backfilled_after_issue_or_unclocked(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import (
+            price_only_24h_context, iso)
+        t=START+timedelta(hours=3)
+        market={}
+        for i in range(24):
+            close=t-timedelta(hours=23-i)
+            market[close]={"btc":100.0,"source_window_end_utc":iso(close)}
+        good=price_only_24h_context(t,market)
+        self.assertEqual(good["status"],"OBSERVABLE_AT_COLLECTOR_CLOCK_NOT_PROVIDER_VERIFIED")
+        market[t-timedelta(hours=1)]["source_window_end_utc"]=iso(t+timedelta(hours=1))
+        self.assertEqual(price_only_24h_context(t,market)["status"],
+                         "UNKNOWN_CANDLE_NOT_COLLECTED_BY_ISSUE")
+        market[t-timedelta(hours=1)]["source_window_end_utc"]=None
+        self.assertEqual(price_only_24h_context(t,market)["status"],
+                         "UNKNOWN_MISSING_OR_INVALID_COLLECTION_CLOCK")
+        market[t-timedelta(hours=1)]["source_window_end_utc"]=iso(t-timedelta(hours=1))
+        market[t-timedelta(hours=2)]["btc"]=float("nan")
+        self.assertEqual(price_only_24h_context(t,market)["status"],
+                         "UNKNOWN_INVALID_PRIOR_HOURLY_PRICE")
+        del market[t-timedelta(hours=2)]
+        self.assertEqual(price_only_24h_context(t,market)["status"],
+                         "UNKNOWN_MISSING_PRIOR_HOURLY_CLOSE")
+
+    def test_price_only_context_never_uses_partly_open_hour_or_future_tape(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import (
+            price_only_24h_context, iso)
+        t=START+timedelta(hours=3,minutes=25)
+        last=t.replace(minute=0)
+        market={}
+        for i in range(24):
+            close=last-timedelta(hours=23-i)
+            market[close]={"btc":100.0,"source_window_end_utc":iso(close)}
+        future=last+timedelta(hours=1)
+        market[future]={"btc":1.0,"source_window_end_utc":iso(future)}
+        p=price_only_24h_context(t,market)
+        self.assertEqual(p["status"],"OBSERVABLE_AT_COLLECTOR_CLOCK_NOT_PROVIDER_VERIFIED")
+        self.assertEqual(p["source_window_end_at_utc"],iso(last))
+        self.assertFalse(p["price_only_5pct_drawdown_context"])
+        self.assertEqual(p["last_known_close_price"],100.0)
+
     def test_no_embedded_research_result_can_change_original_forecast(self):
         result=run(self.root,ASOF,"rolling14")
         radar=result["pullback_warning_timebox_shadow"]
