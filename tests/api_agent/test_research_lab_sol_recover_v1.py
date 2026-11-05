@@ -25,7 +25,7 @@ def fixture(root):
            "public_background_storage_authorized": True}
     registry = {"tasks": {"RESEARCH_LAB_SOL_ANALYSIS": cfg}}
     prompt = "research on public historical evidence only"
-    (root / "output" / "transport").mkdir(parents=True)
+    (root / "output" / "transport").mkdir(parents=True, exist_ok=True)
     context_data = gateway.canonical_bytes(ctx)
     (root / "context.json").write_bytes(context_data)
     (root / "prompt.txt").write_text(prompt)
