@@ -63,7 +63,7 @@ A treatment increments the per-original SLA only for **novel material** diagnosi
 
 Use separate axes, never collapse them: `CODE_PATCHED`, `MERGED_VERIFIED`, `PROD_VERIFIED`, `POST_FIX_OBSERVATION`, `SCIENTIFIC_ADMISSION`, `API_EXECUTED`. Each needs its own native receipt. First one does not imply next.
 
-If only one external actor can unblock a case, send **one** precise request with an objective, testable resolver trigger. Do not repeat it on hourly wakes. Stable `BLOCKED_EXTERNAL` gets only a cheap trigger check, allowing other original PRs to finish.
+If only one external actor can unblock a case, send **one** precise request with an objective, testable resolver trigger. Do not repeat it on hourly wakes. Stable `BLOCKED_EXTERNAL` gets only a cheap trigger check, allowing other original PRs to finish. If preflight finds no material new fingerprint and no executable action, record silent `NO_UPDATE`, not another HOLD comment.
 
 ## 5. Machine-readable receipts, no issue-comment treadmill
 
