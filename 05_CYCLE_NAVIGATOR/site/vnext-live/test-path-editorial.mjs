@@ -54,7 +54,7 @@ const good=pathSourceReadback(base,latest,'da',Date.parse('2026-11-05T08:00:00Z'
 assert.equal(good.eligible,true);
 assert.equal(good.weekly,'CN #32 · 2026-W45');
 assert.equal(good.quoteVerified,true);
-assert.match(good.observed,/07:|08:|09:/);
+assert.match(good.observed,/08[.:]00/);
 assert.match(good.observed,/BTC\/USDT/);
 const en=pathSourceReadback(base,latest,'en',Date.parse('2026-11-05T08:00:00Z'));
 assert.match(en.observed,/Latest documented hourly close/);
