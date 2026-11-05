@@ -25,6 +25,8 @@ Start every fresh repository session here:
 
 Folder `README.md` files are **navigation and mission cards, not independent authority**. They tell a capable model what the folder owns, where current truth lives, what questions are worth challenging, and what authority ceiling applies. Canonical owners, current machine pointers and verified receipts always win over README prose.
 
+**Altseason / microcap / distribution research shortcut, AFTER the mandatory authority read:** [Altseason Research Atlas](research/altseason_atlas/README.md), with a SHA-pinned, public-safe [source manifest](research/altseason_atlas/SOURCE_MANIFEST_v1.json) and a separately executable [Deep Research brief](research/altseason_atlas/DEEP_RESEARCH_MISSION_v1.md). This is discoverability only, not a model, trading signal, source authority, or scheduled Deep Research run.
+
 For Astra or any successor model with materially stronger long-horizon engineering/research capability, also read:
 
 ```text
