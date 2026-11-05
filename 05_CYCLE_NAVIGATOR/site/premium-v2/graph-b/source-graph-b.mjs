@@ -64,14 +64,20 @@ function textLabels(){
   title:'This week’s forecast. Observed prices.',
   intro:'Monday’s original price range versus observed prices.',
   disclaimer:officialHome?'Source-backed · Original ranges and observed prices.':'Preview · Source-backed, without demo prices.',
-  graph:'Weekly chart',compass:'Compass',pro:'Compass PRO ↗',path:'PATH',proof:officialHome?'Results':'Results & method',official:officialHome?'Archive ↗':'Official site ↗',meta:'STATUS / SOURCES',
-  cnSource:'CN source ↗',compassSource:'Compass source ↗'
+  graph:'Weekly chart',compass:'Compass',pro:'Compass PRO ↗',path:'PATH',proof:officialHome?'Results':'Results & method',official:officialHome?'Archive ↗':'Official site ↗',meta:'SOURCES & METHOD',metaTitle:'Evidence, not assumptions.',
+  metaCopy:'Public Cycle Navigator, Official Compass and observed market prices. No recreated forecasts or interpolated outcomes.',
+  metaOpen:'Sources and documentation',
+  metaMethod:'Cycle, Compass and market observations have separate source rules. Archived results remain tied to their original published evidence.',
+  cnSource:'Cycle Navigator ↗',compassSource:'Compass ↗',scoreArchive:'Results archive ↗'
  }:{
   title:'Ugens prognose. Faktiske kurser.',
   intro:'Mandagens frosne high/low mod den faktiske kursudvikling.',
   disclaimer:officialHome?'Kildebaseret · Oprindelige intervaller og observerede kurser.':'Forhåndsvisning · Kildebaseret, uden demonstrationskurser.',
-  graph:'Ugens graf',compass:'Kompas',pro:'Kompas PRO ↗',path:'PATH',proof:officialHome?'Resultater':'Resultat og metode',official:officialHome?'Arkiv ↗':'Officiel side ↗',meta:'STATUS / KILDER',
-  cnSource:'CN-data ↗',compassSource:'Kompas-data ↗'
+  graph:'Ugens graf',compass:'Kompas',pro:'Kompas PRO ↗',path:'PATH',proof:officialHome?'Resultater':'Resultat og metode',official:officialHome?'Arkiv ↗':'Officiel side ↗',meta:'KILDER & METODE',metaTitle:'Dokumenteret, ikke antaget.',
+  metaCopy:'Offentlig Cycle Navigator, officielt Kompas og observerede markedspriser. Ingen konstruerede prognoser eller udfald.',
+  metaOpen:'Kilder og dokumentation',
+  metaMethod:'Cyklus, Kompas og observerede markedspriser har hver deres kildekrav. Historiske resultater bygger på den oprindelige offentliggjorte dokumentation.',
+  cnSource:'Cycle Navigator ↗',compassSource:'Kompas ↗',scoreArchive:'Resultatarkiv ↗'
  };
  document.querySelectorAll('[data-premium-nav]').forEach(el=>{
   const v=rootWords[el.dataset.premiumNav];if(v)el.textContent=v;
@@ -285,17 +291,25 @@ function plot(){
  set('source-state',st);
  const stale=model.live_freshness==='STALE';
  const historicalFallback=model.transport_fallback_historical===true;
+ const clockMs=Date.parse(model?.last_observed_at_utc||'');
+ const observedClock=Number.isFinite(clockMs)?
+  new Date(clockMs).toLocaleString(language==='da'?'da-DK':'en-GB',{
+   timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'
+  }):'—';
  set('feed-status',(historicalFallback?
-  t('OFFENTLIG KILDE MIDLERTIDIGT UTILGÆNGELIG · KUN SIDST VERIFICEREDE HISTORIK. ',
-    'PUBLIC SOURCE TEMPORARILY UNAVAILABLE · LAST VERIFIED HISTORY ONLY. '):'')+
- (stale?t('FORÆLDEDE OBSERVATIONER · IKKE AKTUEL KURS. ','STALE OBSERVATIONS · NOT CURRENT PRICE. '):'')+
- t('Kilde: offentlig CN '+model.forecast_week+' · #'+model.public_issue_number,
- 'Source: public CN '+model.forecast_week+' · #'+model.public_issue_number)+
- ' · '+t('senest målt','last observed')+' '+(model.last_observed_at_utc||'—')+
-  ' · '+t('spot-valuta: ','spot quote: ')+(model.actual_quote_unit||'UNAVAILABLE')+
-  ' · '+t('frosset interval: ','frozen interval: ')+(model.forecast_declared_quote_unit||'UNAVAILABLE')+
-  ' · '+(incompatibleQuote?t('Dagsprognose skjult: valuta kan ikke sammenlignes. ','Daily path hidden: quotes are not comparable. '):'')+
-  t('ingen automatisk omregning','no automatic conversion'));
+  t('Kilden kan ikke hentes nu. Kun tidligere verificeret historik vises. ',
+    'Source temporarily unavailable. Previously verified history only. '):'')+
+ (stale?t('Observerede kurser er forældede, ikke aktuelle. ',
+  'Observed prices are stale, not current. '):'')+
+ t('Offentlig Cycle Navigator og verificerede spotobservationer. ',
+   'Public Cycle Navigator and verified spot observations. ')+
+ t('Seneste dokumenterede timeluk: ','Last documented hourly close: ')+observedClock+
+ ' · '+(model.actual_quote_unit==='USDT'?'USDT':t('valuta ikke bekræftet','quote not confirmed'))+
+ '. '+(incompatibleQuote?
+   t('Den originale prognosekurve skjules, da kursvalutaerne ikke kan sammenlignes.',
+     'Original forecast line hidden because the currencies are not comparable.'):
+   t('Kun originale, sammenlignelige prognosedata vises.',
+     'Only original, comparable forecast data is shown.')));
  set('chart-title',t('Mandagens intraday-intervaller mod faktisk kurs','Monday intraday forecast ranges versus observed price'));
  set('chart-description',t('Mandagens tre originale prognoseintervaller vises for dag 1–2, 3–4 og 5–7. Den grønne observerede kurs brydes ved manglende timer. Blå stiplet forventet dagskurs kræver syv udstedte punkter.',
  'Verified hourly prices only; missing hours break the path. Blue daily forecasts require original published points.'));

@@ -592,8 +592,12 @@ try{
    assert.ok(report.homepage&&!report.preview&&!report.old,'ROOT_PROMOTED_LEGACY_OR_PREVIEW');
    assert.ok(report.unique&&report.singleton&&report.order,'ROOT_UNIFIED_COMPETING_SOURCE');
    assert.equal(report.rollback,'./vnext/','ROOT_NO_PRIOR_VERSION');
-   assert.ok(['./data/latest.json','./data/compass.json'].every(x=>report.data.includes(x)),
-      'ROOT_SOURCE_DATA_LINKS');
+   assert.deepEqual(report.data,[
+     'https://github.com/Donh91/Investering-Framework-Archive-v1/tree/main/05_CYCLE_NAVIGATOR',
+     'https://github.com/Donh91/Investering-Framework-Archive-v1/tree/main/04_MARKET_LEARNING/handlekompas',
+     'https://github.com/Donh91/CycleNavigator-scores',
+     './vnext/'
+   ],'ROOT_PUBLIC_SOURCE_DOCUMENTATION_LINKS');
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');

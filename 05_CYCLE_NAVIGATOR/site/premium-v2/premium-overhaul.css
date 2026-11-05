@@ -1764,6 +1764,77 @@
 
 
 /* SOURCE-SYNCHRONIZED PATH QUIET EDITORIAL V1 · vnext-live/premium-experience.css mirror. No Graph B/Compass overrides. */
+/* Editorial source disclosure. No Graph B source or quote authority changes. */
+.premium-next .premium-meta{
+ margin-top:34px;padding:22px clamp(18px,3vw,26px) 20px;
+ border:1px solid #dce5ed;border-radius:15px;background:#fbfcfe;
+ color:#20364c;box-shadow:0 4px 23px rgba(20,45,75,.022);
+}
+.premium-next .premium-meta .premium-meta-label{
+ font-size:10px;font-weight:730;letter-spacing:.12em;color:#6e8497;
+}
+.premium-next .premium-meta .premium-meta-title{
+ margin:7px 0 9px;font-size:clamp(19px,2.7vw,23px);line-height:1.2;
+ font-weight:710;letter-spacing:-.035em;color:#1b334c;
+}
+.premium-next .premium-meta .premium-meta-intro{
+ color:#647b91;font-size:13px;line-height:1.65;
+ max-width:72ch;margin:0 0 8px;
+}
+.premium-next .premium-meta #feed-status{
+ font-size:11px;line-height:1.65;font-weight:530;
+ color:#72879c;letter-spacing:0;margin:9px 0 12px;
+ max-width:86ch;overflow-wrap:normal;
+}
+.premium-next .premium-meta .premium-meta-disclosure{
+ padding:0;margin-top:15px;border-top:1px solid #e5ebf1;
+}
+.premium-next .premium-meta .premium-meta-disclosure>summary{
+ list-style:none;cursor:pointer;min-height:48px;
+ display:flex;align-items:center;padding:12px 28px 12px 0;
+ color:#355d83;font-weight:670;font-size:12px;position:relative;
+}
+.premium-next .premium-meta .premium-meta-disclosure>summary::-webkit-details-marker{display:none}
+.premium-next .premium-meta .premium-meta-disclosure>summary:after{
+ content:"+";font-size:19px;color:#71889c;position:absolute;right:3px;top:11px;
+}
+.premium-next .premium-meta .premium-meta-disclosure[open]>summary:after{content:"−"}
+.premium-next .premium-meta .premium-meta-disclosure>summary:focus-visible{
+ outline:3px solid #3b6fa8;outline-offset:2px;border-radius:5px;
+}
+.premium-next .premium-meta .premium-meta-method{
+ color:#6d8396;font-size:12px;line-height:1.75;
+ margin:4px 0 13px;max-width:70ch;
+}
+.premium-next .premium-meta .premium-meta-links{
+ display:flex;align-items:stretch;flex-wrap:wrap;gap:8px;
+ margin:0 0 3px;padding-top:6px;
+}
+.premium-next .premium-meta .premium-meta-links a{
+ min-height:44px;padding:11px 13px;border:1px solid #e1e9f0;
+ background:#fff;border-radius:8px;display:inline-flex;align-items:center;
+ justify-content:center;line-height:1.4;text-decoration:none;
+ color:#416488;font-size:11px;font-weight:650;
+}
+.premium-next .premium-meta .premium-meta-links a:hover{
+ border-color:#bacce0;background:#f3f7fb;text-decoration:none;
+}
+.premium-next .premium-meta .premium-meta-links a:focus-visible{
+ outline:3px solid #3b6fa8;outline-offset:2px;
+}
+@media(max-width:530px){
+ .premium-next .premium-meta{margin-top:25px;padding:19px 16px 17px}
+ .premium-next .premium-meta .premium-meta-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .premium-next .premium-meta .premium-meta-links a{min-width:0;padding:10px;overflow-wrap:anywhere;text-align:center}
+}
+@media(max-width:365px){
+ .premium-next .premium-meta .premium-meta-links{grid-template-columns:minmax(0,1fr)}
+}
+@media(prefers-reduced-motion:reduce){
+ .premium-next .premium-meta .premium-meta-disclosure *{animation:none!important;transition:none!important}
+}
+
+
 /* PATH · Quiet Editorial v1, D0-D6, source presentation only.
  * Scope strictly to .premium-next #official-path-view. Leave Graph B, Official Compass, data,
  * source gates, scoring and historical CSS contracts untouched.

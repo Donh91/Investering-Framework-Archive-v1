@@ -136,10 +136,20 @@ test('observed Graph B price prints the source-declared USDT unit, never a synth
  assert.match(text,/USDT$/);
  assert.doesNotMatch(text,/\$|USD$/);
  assert.equal(h.get('pair').textContent,'BTC / USDT');
- assert.match(h.get('feed-status').textContent,/spot-valuta: USDT/);
+ assert.match(h.get('feed-status').textContent,/dokumenterede timeluk:.*USDT/);
  assert.equal(h.get('forecast').attrs.d,'');
 });
 
+test('public Graph B source status describes high-level evidence without internal issue IDs or ISO source clocks',async()=>{
+ const h=await harness('./graph-b/source-graph-b.mjs');
+ const text=h.get('feed-status').textContent;
+ assert.match(text,/Offentlig Cycle Navigator og verificerede spotobservationer/);
+ assert.match(text,/Seneste dokumenterede timeluk/);
+ assert.doesNotMatch(text,/Source: public CN|Kilde: offentlig CN|\b#[0-9]{1,5}\b|T\d\d:\d\d:\d\dZ/);
+ h.buttons.lang[1].click();
+ assert.match(h.get('feed-status').textContent,/Public Cycle Navigator and verified spot observations/);
+ assert.doesNotMatch(h.get('feed-status').textContent,/Source: public CN/);
+});
 test('P2-D unresolved and out-of-order asset fetches cannot borrow BTC under ETH label',async()=>{
  const h=await harness('./graph-b/source-graph-b.mjs');
  const pending=[];
@@ -193,7 +203,7 @@ test('Graph B SLA expires during unresolved 5-minute refresh; old generation gat
  };
  const live=await run(null);
  assert.equal(live.get('variant-panel').dataset.freshness,'stale');
- assert.match(live.get('feed-status').textContent,/FORÆLDEDE OBSERVATIONER/);
+ assert.match(live.get('feed-status').textContent,/Observerede kurser er forældede/);
  const mutated=await run(code=>{
   const sentinel='if(asset!==selected)return;\\n      const currentDeadline='
    .replace('\\n','\n');
@@ -203,16 +213,16 @@ test('Graph B SLA expires during unresolved 5-minute refresh; old generation gat
  });
  assert.equal(mutated.get('variant-panel').dataset.freshness,'fresh',
   'negative control must recreate the stale masking from the earlier guard');
- assert.doesNotMatch(mutated.get('feed-status').textContent,/FORÆLDEDE OBSERVATIONER/);
+ assert.doesNotMatch(mutated.get('feed-status').textContent,/Observerede kurser er forældede/);
 });
 test('Graph freshness expires in an already-open tab without another fetch',async()=>{
  const h=await harness('./graph-b/source-graph-b.mjs');
  assert.doesNotMatch(h.get('feed-status').textContent,/FORÆLDEDE/);
  assert.equal(h.get('variant-panel').dataset.freshness,'fresh');
  await h.advance('2026-10-26T01:30:01Z');
- assert.match(h.get('feed-status').textContent,/FORÆLDEDE/);
+ assert.match(h.get('feed-status').textContent,/Observerede kurser er forældede/);
  assert.equal(h.get('variant-panel').dataset.freshness,'stale');
- h.buttons.lang[1].click();assert.match(h.get('feed-status').textContent,/STALE OBSERVATIONS/);
+ h.buttons.lang[1].click();assert.match(h.get('feed-status').textContent,/Observed prices are stale/);
 });
 test('Proof expiry is armed even when optional external source links never respond',async()=>{
  const latest=snapshot();
@@ -226,8 +236,8 @@ test('Open tab rechecks all feeds; only Graph B keeps authenticated stale HISTOR
  for(const [path,assertCleared] of [
   ['./graph-b/source-graph-b.mjs',h=>{
    assert.notEqual(h.get('observed-value').textContent,'—');
-   assert.match(h.get('feed-status').textContent,/KUN SIDST VERIFICEREDE HISTORIK/);
-   assert.match(h.get('feed-status').textContent,/FORÆLDEDE OBSERVATIONER/);
+   assert.match(h.get('feed-status').textContent,/Kun tidligere verificeret historik/);
+   assert.match(h.get('feed-status').textContent,/Observerede kurser er forældede/);
    assert.equal(h.get('variant-panel').dataset.freshness,'stale');
    assert.equal(h.get('forecast').attrs.d,'');
    assert.ok(h.get('actual').attrs.d.length>0);
@@ -264,8 +274,8 @@ test('Graph B temporary outage historical fallback recovers on verified source b
  assert.equal(h.get('variant-panel').dataset.freshness,'stale');
  assert.equal(h.get('actual').attrs.d,green);
  assert.match(h.get('observed-value').textContent,/USDT$/);
- assert.match(h.get('feed-status').textContent,/IKKE AKTUEL KURS/);
- assert.match(h.get('feed-status').textContent,/KUN SIDST VERIFICEREDE HISTORIK/);
+ assert.match(h.get('feed-status').textContent,/ikke aktuelle/);
+ assert.match(h.get('feed-status').textContent,/Kun tidligere verificeret historik/);
  // A newly received malformed public issue must not inherit the history
  // fallback. It is a source-integrity failure, not a network outage.
  const invalid=snapshot({last:168});
@@ -280,14 +290,14 @@ test('Graph B temporary outage historical fallback recovers on verified source b
  h.doc.dispatchEvent({type:'visibilitychange'});await h.settle();
  assert.equal(h.get('variant-panel').dataset.freshness,'fresh');
  assert.match(h.get('observed-value').textContent,/USDT$/);
- assert.doesNotMatch(h.get('feed-status').textContent,/KUN SIDST VERIFICEREDE HISTORIK/);
+ assert.doesNotMatch(h.get('feed-status').textContent,/Kun tidligere verificeret historik/);
 });
 
 test('Graph B cannot carry BTC historical fallback across an asset switch on failed fetch',async()=>{
  const h=await harness('./graph-b/source-graph-b.mjs');
  h.setFetch(async()=>{throw Error('OFFLINE')});
  await h.advance('2026-10-26T00:35:01Z');
- assert.match(h.get('feed-status').textContent,/KUN SIDST VERIFICEREDE HISTORIK/);
+ assert.match(h.get('feed-status').textContent,/Kun tidligere verificeret historik/);
  h.buttons.asset[1].click();await h.settle();
  assert.equal(h.get('pair').textContent,'ETH / UNAVAILABLE');
  assert.equal(h.get('observed-value').textContent,'—');
