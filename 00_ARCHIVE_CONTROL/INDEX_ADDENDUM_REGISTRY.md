@@ -29,6 +29,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 
 | Addendum or routing anchor | Domain | Discovery status |
 |---|---|---|
+| `00_ARCHIVE_CONTROL/2026-11-05__index-addendum-altseason-source-atlas-v1.md` | **Altseason Research Atlas**, microcap early / largecap distribution, original source SHA inventory and Deep Research TOC | REGISTRY_DISCOVERABLE · NAVIGATION_ONLY |
 | `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` | cross-repository control/restricted/credential boundary | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json` | agent, skill, automation and subsystem routing | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-08-25__index-addendum-three-horizon-action-compass-output-contract-v1.md` | DATA PING / RAW main-framework interpretation / sole action vocabulary / prospective decision accountability | REGISTRY_DISCOVERABLE |
