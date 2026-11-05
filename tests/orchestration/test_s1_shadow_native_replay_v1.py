@@ -167,6 +167,18 @@ class ShadowReplayTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "BOUNDED_REPLAY"):
             replay([fixture()] * 201)
 
+    def test_fingerprint_changes_on_external_release_gate(self):
+        base = fixture()
+        a = classify_snapshot(base)["fingerprint"]
+        for key, value in (("mergeable", True), ("review_state", "APPROVED"),
+                           ("rule_census", ["binding_review"]),
+                           ("source_binding", "changed_source"),
+                           ("active_editor_lease", "other_writer")):
+            with self.subTest(key=key):
+                changed = copy.deepcopy(base)
+                changed[key] = value
+                self.assertNotEqual(classify_snapshot(changed)["fingerprint"], a)
+
     def test_fingerprint_stable_and_changed_on_head(self):
         a = fixture()
         b = copy.deepcopy(a)
