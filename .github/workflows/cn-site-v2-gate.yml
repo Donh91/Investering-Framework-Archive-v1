@@ -61,6 +61,8 @@ jobs:
       - name: Execute Graph History same-quote original-blue W45/W46 browser runtime guard
         run: node --test 05_CYCLE_NAVIGATOR/site/graph-history/runtime.test.mjs
       - name: Execute optional W45 research preview source/Canvas/UTC regressions (no network)
+      - name: Validate prospective W45 BTC/ETH UTC research-outcome safety and exact frozen issue
+        run: python3 -m unittest discover -s tests/research -p test_w45_rehearsal_outcomes.py
         run: node --test 05_CYCLE_NAVIGATOR/site/research-w45/preview.test.mjs
       - name: Build optional Graph History without blocking canonical SITE Product Gate
         id: graph_history
