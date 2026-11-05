@@ -501,3 +501,92 @@ def test_primary_seven_day_model_gets_bounded_premodel_source_observation():
     assert source.index('value = reject_unverified_initial_daily_quotes(') > source.index(
         'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
     assert 'context["weekly_envelope_quote"] = freeze.get("price_quote")' in source
+
+
+def _diagnostic_inputs(source_available=True):
+    source = (
+        {"contract": builder.ORIGINAL_PRICE_CONTRACT,
+         "authority": "PREMODEL_SOURCE_PRICE_AND_UNIT_ONLY_NOT_FORECAST_ACCURACY",
+         "weekly_ohlc_sha256": "a" * 64,
+         "completed_capture_sha256": "b" * 64,
+         "quote": {"BTC": "USDT", "ETH": "USDT"},
+         "source_run_ids": [12345],
+         "forecast_scoring_authority": False}
+        if source_available else
+        {"contract": builder.ORIGINAL_PRICE_CONTRACT,
+         "status": "UNAVAILABLE",
+         "reason": "ORIGINAL_SOURCE_RUN_COVERAGE_GAP",
+         "authority": "NO_INDEPENDENT_QUOTE_ATTESTATION"}
+    )
+    context = {"pre_model_original_price_attestation": source}
+    freeze = {
+        "price_quote": {"BTC": "USDT", "ETH": "USDT"},
+        "daily_price_path": {"BTC": {"status": "UNAVAILABLE", "points": []},
+                             "ETH": {"status": "UNAVAILABLE", "points": []}},
+        "daily_range_plan": {"BTC": {"status": "UNAVAILABLE", "points": []},
+                             "ETH": {"status": "UNAVAILABLE", "points": []}},
+    }
+    product = {
+        "status": "INCOMPLETE",
+        "assets": {a: {"status": "INCOMPLETE", "expected_close_points": 0,
+                       "low_high_range_points": 0} for a in ("BTC", "ETH")},
+    }
+    recovery = {"status": "SKIPPED_PAID_RECOVERY_DISABLED",
+                "source_gate": "ELIGIBLE",
+                "initial": {"BTC": "UNAVAILABLE", "ETH": "UNAVAILABLE"}}
+    return context, freeze, product, recovery
+
+
+def test_w46_diagnostic_distinguishes_missing_original_byte_proof_from_model_refusal():
+    context, freeze, product, recovery = _diagnostic_inputs(source_available=False)
+    missing = builder.build_weekly_price_product_diagnostic(context, freeze, product, recovery)
+    assert missing["contract"] == "CN_ORIGINAL_PRICE_PRODUCT_DIAGNOSTIC_v1"
+    assert missing["source_proof_status"] == "UNAVAILABLE"
+    assert missing["pre_model_original_price_attestation"]["reason"] == "ORIGINAL_SOURCE_RUN_COVERAGE_GAP"
+    assert set(a["diagnosis"] for a in missing["assets"].values()) == {
+        "PREMODEL_ORIGINAL_PRICE_PROOF_UNAVAILABLE"}
+    context, freeze, product, recovery = _diagnostic_inputs(source_available=True)
+    refused = builder.build_weekly_price_product_diagnostic(context, freeze, product, recovery)
+    assert refused["source_proof_status"] == "AVAILABLE_FOR_SOURCE_GATE"
+    assert refused["source_gate_from_recovery_receipt"] == "ELIGIBLE"
+    assert set(a["diagnosis"] for a in refused["assets"].values()) == {
+        "DAILY_PATH_ABSTAINED_OR_REJECTED_BEFORE_FREEZE"}
+    assert all(a["original_source_quote_attested"] for a in refused["assets"].values())
+    assert all(a["same_quote_admitted_by_diagnostic"] for a in refused["assets"].values())
+    assert refused["weekly_product_status"] == "INCOMPLETE"
+    assert refused["source_first_known_certified_for_scientific_edge"] is False
+    assert refused["scoring_authority"] is False
+    assert refused["portfolio_execution"] is False
+    assert refused["not_a_source_gate_or_forecast"] is True
+
+
+def test_w46_diagnostic_distinguishes_per_asset_quote_and_missing_daily_range():
+    context, freeze, product, recovery = _diagnostic_inputs()
+    freeze["price_quote"]["ETH"] = "USD"
+    freeze["daily_price_path"]["BTC"]["status"] = "PUBLISHED"
+    product["assets"]["BTC"]["expected_close_points"] = 7
+    out = builder.build_weekly_price_product_diagnostic(context, freeze, product, recovery)
+    assert out["assets"]["BTC"]["diagnosis"] == "DAILY_RANGE_PLAN_NOT_ISSUED"
+    assert out["assets"]["ETH"]["diagnosis"] == "ORIGINAL_WEEKLY_ENVELOPE_QUOTE_NOT_VERIFIED"
+    assert out["assets"]["BTC"]["model_declared_weekly_envelope_quote"] == "USDT"
+    assert out["assets"]["ETH"]["model_declared_weekly_envelope_quote"] == "USD"
+    freeze["daily_range_plan"]["BTC"]["status"] = "PUBLISHED"
+    product["assets"]["BTC"].update(status="COMPLETE", low_high_range_points=7)
+    assert builder.build_weekly_price_product_diagnostic(context, freeze, product, recovery)[
+        "assets"]["BTC"]["diagnosis"] == "SOURCE_QUOTE_MATCHED_PRODUCT_COMPLETE"
+    freeze["price_quote"]["BTC"] = "UNAVAILABLE"
+    assert builder.build_weekly_price_product_diagnostic(context, freeze, product, recovery)[
+        "assets"]["BTC"]["diagnosis"] == "ORIGINAL_WEEKLY_ENVELOPE_QUOTE_NOT_VERIFIED"
+
+
+def test_w46_diagnostic_is_additive_new_source_manifest_only_and_old_w45_untouched():
+    source = Path(builder.__file__).read_text()
+    assert source.count('"original_price_product_diagnostic": build_weekly_price_product_diagnostic(') == 1
+    assert source.index('context["pre_model_original_price_attestation"]') < source.index(
+        'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
+    assert source.index('"original_price_product_diagnostic": build_weekly_price_product_diagnostic(') > source.index(
+        'value = quarantine_late_daily_issuance(')
+    assert source.count("value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)") == 1
+    old = json.loads((Path(builder.__file__).resolve().parents[2] /
+        "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_SOURCE_MANIFEST.json").read_text())
+    assert "original_price_product_diagnostic" not in old
