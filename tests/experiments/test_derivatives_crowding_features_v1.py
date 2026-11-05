@@ -120,6 +120,16 @@ class S5SourceClockCensusV1Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"decision_cutoff"):
             census_capture(data)
 
+    def test_unused_oi_and_basis_hours_do_not_false_fail(self):
+        data=capture()
+        # The S5 24h vector only consumes OI baseline/end and latest basis.
+        data["oi_hourly"].pop(8)
+        data["basis_hourly"].pop(8)
+        out=census_capture(data)
+        self.assertEqual(out["capability_24h_window_state"],"COMPLETE")
+        self.assertEqual(out["series"]["oi_hourly"]["required_24h_timestamps"],2)
+        self.assertEqual(out["series"]["basis_hourly"]["required_24h_timestamps"],1)
+
     def test_no_funding_not_imputed(self):
         data=capture()
         data["funding_events"]=[]
