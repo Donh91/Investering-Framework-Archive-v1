@@ -120,12 +120,17 @@ def load_original(root, monday):
             "points": [{"day": p["day"], "expected_close": p["expected_close"], "low": p["low"], "high": p["high"]}
                        for p in row["points"]] if published else [],
         }
+    # The archive is BTC-only. Its quote must come from the *original frozen
+    # source*, never a static USD convention or the observed Binance USDT feed.
+    original_units = freeze.get("price_quote")
+    quoted_btc = original_units.get("BTC") if isinstance(original_units, dict) else None
+    original_btc_quote = quoted_btc if quoted_btc in ("USD", "USDT") else "UNAVAILABLE"
     return {
         "contract": "CN_GRAPH_HISTORY_FORECAST_v1", "forecast_week": label,
         "public_issue_number": pointer["public_issue_number"],
         "original_source_path": str(freeze_file.relative_to(root)),
         "original_source_sha256": original_sha, "issued_at_utc": iso(issued),
-        "first_eligible_utc": iso(first_eligible), "forecast_quote_unit": "USD",
+        "first_eligible_utc": iso(first_eligible), "forecast_quote_unit": original_btc_quote,
         "authoritative_forecast": False, "portfolio_action": False,
         "BTC": asset_rows["BTC"], "ETH": asset_rows["ETH"],
     }
@@ -283,6 +288,17 @@ def archive(root, target):
                 original is None or original["original_source_sha256"] != prior["source_sha256"]):
             raise ValueError(f"INDEX_HISTORY_REWRITE:{label}")
         if original is not None:
+            if prior and cursor == START and forecast_file.is_file():
+                # Pre-fix W45 used a static USD tag in its immutable reference
+                # even though original W45 has no typed quote. Retain EXACT
+                # historical bytes for compatibility, never reissue its values.
+                # Public Graph History independently reads the hash-bound
+                # original freeze's price_quote and still reports UNAVAILABLE.
+                historical = read(forecast_file)
+                if (historical.get("forecast_quote_unit") == "USD"
+                        and original.get("forecast_quote_unit") == "UNAVAILABLE"
+                        and {**historical, "forecast_quote_unit": "UNAVAILABLE"} == original):
+                    original = historical
             write(forecast_file, original, immutable=True)
         # Historical green Hourly observations are independently sourced:
         # absence of a blue forecast MUST NOT erase valid actual closes.
