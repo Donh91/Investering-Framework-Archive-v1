@@ -34,6 +34,41 @@ class M6WarningEventTests(unittest.TestCase):
             self.assertEqual(e["independent_family_weight"],1.0);self.assertFalse(e["authority"]["sell"])
             self.assertFalse(r["economic_action_scoring_ready"])
 
+    def test_future_unclocked_partial_reference_and_nonpositive_price_rejected(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.freeze(root,"HIGH",issued="2026-10-06T09:00:00Z")
+            self.assertEqual(M.build(root,M.parse("2026-10-07T00:00:00Z"))["event_count"],0)
+            p=root/"04_MARKET_LEARNING/handlekompas/official/daily/2026/10/06/CMP-HIGH.json"
+            valid=json.loads(p.read_text())
+            valid["market_reference"]["observation_open_utc"]="2026-10-06T08:00:00Z"
+            for bad in (None,"2026-10-06T08:30:00Z","2026-10-06T09:00:00Z"):
+                case=json.loads(json.dumps(valid))
+                if bad is None:
+                    case["market_reference"].pop("observation_open_utc")
+                else:
+                    case["market_reference"]["observation_open_utc"]=bad
+                p.write_text(json.dumps(case))
+                self.assertEqual(M.build(root,M.parse("2026-10-07T00:00:00Z"))["event_count"],0)
+            for bad_price in (0.0,-100.0):
+                case=json.loads(json.dumps(valid))
+                case["market_reference"]["btc_usdt"]=bad_price
+                p.write_text(json.dumps(case))
+                self.assertEqual(M.build(root,M.parse("2026-10-07T00:00:00Z"))["event_count"],0)
+            p.write_text(json.dumps(valid))
+            report=M.build(root,M.parse("2026-10-07T00:00:00Z"))
+            self.assertEqual(report["event_count"],1)
+            e=report["events"][0]
+            self.assertEqual(e["knowledge_timestamp"],"2026-10-06T09:00:00Z")
+            self.assertFalse(e["provider_first_known_verified"])
+            self.assertIn("NOT_PROVIDER_FIRST_KNOWN",e["knowledge_clock_semantics"])
+
+    def test_future_issued_freeze_cannot_be_present_warning(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            self.freeze(root,"HIGH",issued="2026-10-06T16:14:15Z")
+            self.assertEqual(M.build(root,M.parse("2026-10-06T15:30:00Z"))["event_count"],0)
+
     def test_numeric_string_reference_price_is_rejected(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t);self.freeze(root,"ELEVATED",btc="85000.0")
@@ -130,6 +165,11 @@ class M6WarningEventTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t)
             self.freeze(root,"HIGH",issued="2026-10-06T09:00:00Z")
+            # The default 15:00 observation is FUTURE information at 09:00.
+            p=root/"04_MARKET_LEARNING/handlekompas/official/daily/2026/10/06/CMP-HIGH.json"
+            payload=json.loads(p.read_text())
+            payload["market_reference"]["observation_open_utc"]="2026-10-06T08:00:00Z"
+            p.write_text(json.dumps(payload))
             self.freeze(root,"ELEVATED",issued="2026-10-06T17:00:00Z")
             report=M.build(root,M.parse("2026-10-07T00:00:00Z"))
             self.assertEqual(report["event_count"],2)
