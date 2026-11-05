@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import csv,hashlib,json,re
-from datetime import datetime,timezone
+from datetime import datetime,timezone,timedelta
 from pathlib import Path
 import prospective_evidence_controller as evidence
 import shared_row_outcome_receipt_gate as outcome_gate
@@ -88,6 +88,52 @@ def filter_consumer_rows(rows,divs,runtime,verify_source_bindings=None,outcome_d
             excluded['divergence_outcome']+=1; continue
         valid_divs.append(div)
     return list(valid.values()),valid_divs,excluded
+
+def dependence_census(valid_rows, runtime):
+    """Post-filter calendar-block coverage, NOT independent shock inference.
+
+    The source research contract fixes non-overlapping 28-day blocks at the
+    prospective eligibility floor. Do not mistake many hourly decisions inside
+    one block for many independent bull/altseason regime episodes.
+    """
+    floor=ts(runtime.get("core_prospective_eligibility_start"))
+    if (floor is None or runtime.get("collection_state")!=ACTIVE_COLLECTION_STATE
+            or runtime.get("core_prospective_eligibility_status")!=ACTIVE_FLOOR_STATUS):
+        if valid_rows:
+            raise ValueError("independence_census_nonactive_rows")
+        return {
+            "contract":"SHARED_ROW_FIXED_28D_DEPENDENCE_CENSUS_v1",
+            "status":"INACTIVE_OR_UNAVAILABLE_FLOOR",
+            "eligible_row_n":0,"fixed_28d_calendar_block_n":0,
+            "calendar_blocks":[],
+            "independent_market_shock_family_n":None,
+            "statistical_independence_verified":False,
+            "verified_predictive_or_economic_edge":None,
+        }
+    span=timedelta(days=28)
+    blocks={}
+    for item in valid_rows:
+        at=ts(item.get("observation_timestamp_utc"))
+        if at is None or at<floor or at>datetime.now(timezone.utc)+timedelta(days=1):
+            raise ValueError("dependence_census_invalid_prospective_timestamp")
+        index=(at-floor)//span
+        first=floor+index*span
+        blocks[index]=blocks.get(index,0)+1
+    return {
+        "contract":"SHARED_ROW_FIXED_28D_DEPENDENCE_CENSUS_v1",
+        "status":"CALENDAR_COVERAGE_ONLY_NOT_INDEPENDENT_EVENT_N",
+        "eligible_row_n":len(valid_rows),
+        "block_anchor_utc":floor.isoformat().replace("+00:00","Z"),
+        "block_days":28,
+        "fixed_28d_calendar_block_n":len(blocks),
+        "calendar_blocks":[{"block_index":idx,"observed_row_n":blocks[idx]}
+                           for idx in sorted(blocks)],
+        "independent_market_shock_family_n":None,
+        "statistical_independence_verified":False,
+        "source_owner":"ORIGINAL_SHARED_ROW_ELIGIBLE_ROWS_AFTER_FILTER_CONSUMER_ROWS",
+        "verified_predictive_or_economic_edge":None,
+    }
+
 def b(v):
     s=str(v).strip().lower(); return 1 if s in {'1','true','yes','positive','signal','permission'} else 0 if s in {'0','false','no','negative','no_signal','wait','block'} else None
 def ratio(a,z):return None if z==0 else a/z
@@ -107,7 +153,10 @@ def metrics(rows,cid,h):
                 if str(r.get(name,'')).strip(): arr.append(float(r[name]))
             except Exception: pass
     n=tp+fp+tn+fn
-    return {'n':n,'tp':tp,'fp':fp,'tn':tn,'fn':fn,'precision':ratio(tp,tp+fp),'recall':ratio(tp,tp+fn),'false_positive_rate':ratio(fp,fp+tn),'false_negative_rate':ratio(fn,fn+tp),'mae_mean':sum(mae)/len(mae) if mae else None,'mfe_mean':sum(mfe)/len(mfe) if mfe else None}
+    return {'n':n,'tp':tp,'fp':fp,'tn':tn,'fn':fn,'precision':ratio(tp,tp+fp),'recall':ratio(tp,tp+fn),'false_positive_rate':ratio(fp,fp+tn),'false_negative_rate':ratio(fn,fn+tp),'mae_mean':sum(mae)/len(mae) if mae else None,'mfe_mean':sum(mfe)/len(mfe) if mfe else None,
+            'row_based_descriptive_only':True,'independent_market_shock_family_n':None,
+            'independent_population_precision':None,'independent_population_recall':None,
+            'statistically_valid_comparative_edge':None}
 def incr(rows,base,other,h='24h'):
     changed=wins=fails=0
     for r in rows:
@@ -123,8 +172,10 @@ def main():
     raw_rows=read(LED); raw_div=read(FNP); runtime=json.loads((ROOT/'RUNTIME_STATUS.json').read_text()); rows,div,excluded=filter_consumer_rows(raw_rows,raw_div,runtime); now=datetime.now(timezone.utc); y,w,_=now.isocalendar(); ids=[c['id'] for c in json.loads(REG.read_text())['candidates']]
     perf={cid:{h:metrics(rows,cid,h) for h in ['24h','72h','7d']} for cid in ids}; mats={h:sum(bool(d.get(f'matured_{h}_utc')) for d in div) for h in ['24h','72h','7d']}
     challengers=['C08_SIMPLE_3_ETF','C09_SIMPLE_3_ETF_LEVERAGE','C10_STABLECOIN_CHALLENGER','C11_CFGI_CHALLENGER','C12_FULL_STACK']
-    report={'contract':'SHARED_ROW_TOURNAMENT_WEEKLY_v1','authority':'RESEARCH_ONLY_NON_CANONICAL','generated_at_utc':now.replace(microsecond=0).isoformat().replace('+00:00','Z'),'iso_year':y,'iso_week':w,'status':'COLLECTING' if not rows else 'EVALUATING','eligible_rows_total':len(rows),'consensus_rows':sum(1 for r in rows if len(set(json.loads(r.get('candidate_decisions') or '{}').values()))<=1),'divergences_total':len(div),'matured':mats,'candidate_performance':perf,'incremental_value_matrix':[incr(rows,'C07_SIMPLE_3',x) for x in challengers],'tail_error_prevention':{'status':'UNAVAILABLE' if not div else 'EVALUATE_FROM_MATURED_DIVERGENCES','n':len(div)},'consumer_integrity_filter':{'raw_rows':len(raw_rows),'raw_divergences':len(raw_div),'excluded':excluded},'architecture_gate':'INSUFFICIENT_EVIDENCE','canonical_effect':False}
+    report={'contract':'SHARED_ROW_TOURNAMENT_WEEKLY_v1','authority':'RESEARCH_ONLY_NON_CANONICAL','generated_at_utc':now.replace(microsecond=0).isoformat().replace('+00:00','Z'),'iso_year':y,'iso_week':w,'status':'COLLECTING' if not rows else 'EVALUATING','eligible_rows_total':len(rows),'consensus_rows':sum(1 for r in rows if len(set(json.loads(r.get('candidate_decisions') or '{}').values()))<=1),'divergences_total':len(div),'matured':mats,'candidate_performance':perf,'incremental_value_matrix':[incr(rows,'C07_SIMPLE_3',x) for x in challengers],'tail_error_prevention':{'status':'UNAVAILABLE' if not div else 'EVALUATE_FROM_MATURED_DIVERGENCES','n':len(div)},'consumer_integrity_filter':{'raw_rows':len(raw_rows),'raw_divergences':len(raw_div),'excluded':excluded},'architecture_gate':'INSUFFICIENT_EVIDENCE',
+            'dependence_census':dependence_census(rows,runtime),
+            'decision_quality_not_proven':True,'canonical_effect':False}
     OUT.mkdir(parents=True,exist_ok=True); name=f'SHARED_ROW_TOURNAMENT_WEEKLY_{y}-W{w:02d}.json'; (OUT/name).write_text(json.dumps(report,indent=2,sort_keys=True)+'\n'); (OUT/'LATEST.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
-    (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n\nNo narrative winner is permitted before prospective evidence can support it.\n')
+    (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n- 28-day calendar blocks: **{dependence_census(rows,runtime)[\"fixed_28d_calendar_block_n\"]}** (NOT independent market shocks)\n- Independent market-shock N: `UNKNOWN`\n\nRow-based precision and recall are DESCRIPTIVE ONLY; no statistical or economic winner is permitted.\n')
     print(json.dumps({'status':'PASS','report':str(OUT/name),'eligible_rows':len(rows),'divergences':len(div)},sort_keys=True))
 if __name__=='__main__':main()
