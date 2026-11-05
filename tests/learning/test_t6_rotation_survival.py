@@ -58,6 +58,45 @@ class T6RotationSurvivalTests(unittest.TestCase):
             self.assertEqual(result["event"], "NO_ELIGIBLE_FIRST_CROSS")
             self.assertIsNone(result["active_sequence_id"])
 
+    def test_zero_or_negative_inferred_prior_not_a_first_cross(self):
+        for delta in (0.0301, 0.0401):
+            with self.subTest(delta=delta), tempfile.TemporaryDirectory() as td:
+                root=Path(td)
+                result=operate(packet(0.0301,delta),cadence(),root)
+                self.assertEqual(result["event"],"NO_ELIGIBLE_FIRST_CROSS")
+                self.assertIsNone(result["active_sequence_id"])
+                obs=json.loads(Path(result["observation_path"]).read_text())
+                self.assertIsNone(obs["prior_ethbtc"])
+                self.assertFalse(obs["first_cross_detected"])
+                self.assertFalse(obs["authority"]["portfolio_action"])
+                self.assertFalse((root/"sequences").exists())
+
+    def test_nonpositive_current_and_nonfinite_level_fail_before_any_write(self):
+        for bad_current in (0.0,-0.01,float("nan"),float("inf")):
+            with self.subTest(bad_current=bad_current), tempfile.TemporaryDirectory() as td:
+                root=Path(td)
+                with self.assertRaisesRegex(ValueError,"ethbtc_required"):
+                    operate(packet(bad_current,0.0002),cadence(),root)
+                self.assertEqual(list(root.rglob("*.json")),[])
+        for bad_level in (float("nan"),float("inf"),float("-inf"),-0.03):
+            with self.subTest(bad_level=bad_level), tempfile.TemporaryDirectory() as td:
+                root=Path(td)
+                with self.assertRaisesRegex(ValueError,"registered_level_required"):
+                    operate(packet(0.0301,0.0002),cadence(bad_level),root)
+                self.assertEqual(list(root.rglob("*.json")),[])
+
+    def test_invalid_later_ethbtc_does_not_close_real_frozen_sequence(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            first=operate(packet(0.0301,0.0002),cadence(),root)
+            before={p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob("*.json")}
+            with self.assertRaisesRegex(ValueError,"ethbtc_required"):
+                operate(packet(-0.001,-0.0311,stamp="2026-09-10T01:00:00Z"),cadence(),root)
+            self.assertEqual({p.relative_to(root).as_posix():p.read_bytes()
+                              for p in root.rglob("*.json")},before)
+            self.assertEqual(json.loads((root/"STATE.json").read_text())["active_sequence_id"],
+                             first["active_sequence_id"])
+
     def test_active_sequence_appends_observation_without_rewriting_baseline(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
