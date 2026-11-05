@@ -626,6 +626,85 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
     raise RuntimeError("openai_structured_output_retry_exhausted")
 
 
+def build_weekly_price_product_diagnostic(
+    context: Mapping[str, Any], freeze: Mapping[str, Any],
+    product: Mapping[str, Any], recovery: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Read-only evidence: separate source admission, model, and product delivery.
+
+    Diagnostics NEVER qualify a forecast, repair a refused source, or grant
+    scoring/portfolio authority. The original source gate remains definitive.
+    """
+    raw = context.get("pre_model_original_price_attestation") or {}
+    proof = (
+        isinstance(raw, Mapping)
+        and raw.get("contract") == ORIGINAL_PRICE_CONTRACT
+        and raw.get("authority") == "PREMODEL_SOURCE_PRICE_AND_UNIT_ONLY_NOT_FORECAST_ACCURACY"
+        and isinstance(raw.get("weekly_ohlc_sha256"), str)
+        and len(raw["weekly_ohlc_sha256"]) == 64
+        and isinstance(raw.get("completed_capture_sha256"), str)
+        and len(raw["completed_capture_sha256"]) == 64
+    )
+    proven_quote = raw.get("quote", {}) if proof else {}
+    if not isinstance(proven_quote, Mapping):
+        proven_quote = {}
+    issued_quote = freeze.get("price_quote") or {}
+    if not isinstance(issued_quote, Mapping):
+        issued_quote = {}
+    daily = freeze.get("daily_price_path") or {}
+    ranges = freeze.get("daily_range_plan") or {}
+    product_assets = product.get("assets") or {}
+    recovery_initial = recovery.get("initial") or {}
+    items = {}
+    for asset in ("BTC", "ETH"):
+        observed = proven_quote.get(asset)
+        original = issued_quote.get(asset)
+        original = original if original in ("USD", "USDT") else "UNAVAILABLE"
+        attested = observed in ("USD", "USDT")
+        model_quote_valid = attested and original == observed
+        path = daily.get(asset) or {}
+        day_range = ranges.get(asset) or {}
+        acceptance = product_assets.get(asset) or {}
+        if not attested:
+            diagnosis = "PREMODEL_ORIGINAL_PRICE_PROOF_UNAVAILABLE"
+        elif not model_quote_valid:
+            diagnosis = "ORIGINAL_WEEKLY_ENVELOPE_QUOTE_NOT_VERIFIED"
+        elif path.get("status") != "PUBLISHED":
+            diagnosis = "DAILY_PATH_ABSTAINED_OR_REJECTED_BEFORE_FREEZE"
+        elif day_range.get("status") != "PUBLISHED":
+            diagnosis = "DAILY_RANGE_PLAN_NOT_ISSUED"
+        elif acceptance.get("status") != "COMPLETE":
+            diagnosis = "ORIGINAL_ISSUANCE_CLOCK_OR_PRODUCT_INCOMPLETE"
+        else:
+            diagnosis = "SOURCE_QUOTE_MATCHED_PRODUCT_COMPLETE"
+        items[asset] = {
+            "original_source_quote_attested": bool(attested),
+            "original_source_quote": observed if attested else "UNAVAILABLE",
+            "model_declared_weekly_envelope_quote": original,
+            "same_quote_admitted_by_diagnostic": bool(model_quote_valid),
+            "recovery_initial_path_status": recovery_initial.get(asset, "UNAVAILABLE"),
+            "final_original_path_status": path.get("status", "UNAVAILABLE"),
+            "final_original_daily_range_plan_status": day_range.get("status", "UNAVAILABLE"),
+            "product_expected_close_count": acceptance.get("expected_close_points", 0),
+            "product_reasoned_daily_range_count": acceptance.get("low_high_range_points", 0),
+            "product_status": acceptance.get("status", "INCOMPLETE"),
+            "diagnosis": diagnosis,
+        }
+    return {
+        "contract": "CN_ORIGINAL_PRICE_PRODUCT_DIAGNOSTIC_v1",
+        "source_proof_status": "AVAILABLE_FOR_SOURCE_GATE" if proof else "UNAVAILABLE",
+        "pre_model_original_price_attestation": dict(raw) if isinstance(raw, Mapping) else {},
+        "weekly_product_status": product.get("status", "INCOMPLETE"),
+        "recovery_status": recovery.get("status", "UNAVAILABLE"),
+        "source_gate_from_recovery_receipt": recovery.get("source_gate", "NOT_RECORDED"),
+        "assets": items,
+        "not_a_source_gate_or_forecast": True,
+        "scoring_authority": False,
+        "portfolio_execution": False,
+        "source_first_known_certified_for_scientific_edge": False,
+    }
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", type=Path, default=Path("."))
@@ -960,7 +1039,7 @@ def main() -> None:
     daily_product = daily_product_acceptance(
         freeze, target_year, target_week,
         datetime.fromtimestamp(generated_unix, timezone.utc))
-    source_manifest = {"daily_path_issuance": daily_path_issue, "daily_product_acceptance": daily_product, "daily_path_recovery": daily_recovery_receipt, "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
+    source_manifest = {"daily_path_issuance": daily_path_issue, "daily_product_acceptance": daily_product, "daily_path_recovery": daily_recovery_receipt, "original_price_product_diagnostic": build_weekly_price_product_diagnostic(context, freeze, daily_product, daily_recovery_receipt), "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
     scoring_valid_from_unix = ((generated_unix + 3599) // 3600) * 3600
     scoring_valid_from_utc = datetime.fromtimestamp(scoring_valid_from_unix, tz=timezone.utc).isoformat().replace("+00:00", "Z")
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": generated_unix, "public_issue_number": public_issue, "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
