@@ -91,6 +91,109 @@ const TXT={
   proofPrompt:'Independently audit Cycle Navigator using these PUBLIC GitHub archives. Read README, v2/scorebook-index.json and latest_readback. For each claim fetch ORIGINAL frozen forecast at its exact source_commit; check public CN identity, forecast_week, pre-outcome publication, byte-exact SHA-256, established 70/30 Price Range method, 168-hour eligibility and six original BTC/ETH forecast windows. Keep Price Range precision separate from Direction/Flow/Rotation and Pullback Edge, which can be ABSTAIN/PENDING. Inspect censoring, missing evidence, base rates and controls. Require independently verifiable timestamp and immutable release before saying VERIFIED. Output PASS/FAIL/UNVERIFIED with primary-source URLs. Never fill missing data.'
  }
 };
+Object.assign(TXT.da,{
+ pathOrientation:'01 / UGENS ORIENTERING',
+ pathOrientationTitle:'Hvor står markedet?',
+ pathReferenceLabel:'Kildebaseret · ingen faseprognose',
+ pathCycleEyebrow:'02 / MARKEDSCYKLUS',
+ pathCycleIntro:'Ti mulige faser. Kun dokumenterede referencer bliver markeret.',
+ pathLegendReference:'Frosset ugereference',
+ pathLegendWatch:'Ubekræftet næste betingelse',
+ pathLegendNeutral:'Ingen dokumenteret progression',
+ pathStageReference:'Ugerekord · ikke bekræftet faseovergang',
+ pathStageNext:'Betinget observationspunkt',
+ pathStageNeutral:'Ikke verificeret',
+ pathRotationIntro:'Syv aktivgrupper, vurderet hver for sig.',
+ pathSourcesCopy:'Bygger på offentlig Cycle Navigator, Kompas og verificerede markedsobservationer. Kildevisning er ikke bevis for en faseovergang eller en handelstilladelse.',
+ pathSourceTitle:'KILDER & METODE',
+ pathSourceSummary:'Grundlaget bag vurderingen',
+ pathSourceCN:'Cycle Navigator',
+ pathSourceCompass:'Kompas',
+ pathSourceArchive:'Resultatarkiv',
+ pathSourceMissing:'Uge- og Kompasgrundlag afventer verificering',
+ pathObservedMissing:'Intet verificeret timesluk at vise',
+ pathObservedLabel:'Seneste dokumenterede timesluk',
+ pathRotationUnknown:'Afventer kilde',
+ pathRotationStatus:'Kildestatus',
+ pathRotationNoEta:'Ingen dokumenteret tidsramme'
+});
+Object.assign(TXT.en,{
+ pathOrientation:'01 / WEEKLY ORIENTATION',
+ pathOrientationTitle:'Where does the market stand?',
+ pathReferenceLabel:'Source-backed · no phase forecast',
+ pathCycleEyebrow:'02 / MARKET CYCLE',
+ pathCycleIntro:'Ten possible stages. Only documented references are highlighted.',
+ pathLegendReference:'Frozen weekly reference',
+ pathLegendWatch:'Unconfirmed next condition',
+ pathLegendNeutral:'No documented progression',
+ pathStageReference:'Weekly reference · not a confirmed transition',
+ pathStageNext:'Conditional watch point',
+ pathStageNeutral:'Unverified',
+ pathRotationIntro:'Seven asset groups, each assessed independently.',
+ pathSourcesCopy:'Based on public Cycle Navigator, Compass and verified market observations. Source presentation does not confirm a phase transition or permit trading.',
+ pathSourceTitle:'SOURCES & METHOD',
+ pathSourceSummary:'Evidence behind the reading',
+ pathSourceCN:'Cycle Navigator',
+ pathSourceCompass:'Compass',
+ pathSourceArchive:'Public results archive',
+ pathSourceMissing:'Weekly and Compass source context awaiting verification',
+ pathObservedMissing:'No verified hourly close to display',
+ pathObservedLabel:'Latest documented hourly close',
+ pathRotationUnknown:'Awaiting source',
+ pathRotationStatus:'Source status',
+ pathRotationNoEta:'No verified time horizon'
+});
+const ROTATION_KEYS=[
+ ['BTC','BTC'],['ETH','ETH'],['LARGE_CAPS','LARGE'],
+ ['MID_CAPS','MID'],['SMALL_CAPS','SMALL'],
+ ['MICROCAPS','MICRO'],['MEMES','MEMES']
+];
+// Fixed structural sequence, not a claim of capital flowing between tiers.
+export function pathRotationDisplay(path,lang='da'){
+ const t=txt(lang),m=new Map((path?.eligible?path.rotation:[]).map(x=>[x.key,x]));
+ return ROTATION_KEYS.map(([key,label])=>{
+  const original=m.get(key);
+  const allowed=['HOLD','WAIT','HARD_WAIT','UNAVAILABLE'];
+  const action=allowed.includes(original?.action)?original.action:'UNAVAILABLE';
+  return {key,label,source:!!original&&action!=='UNAVAILABLE',
+   action:action==='UNAVAILABLE'?t.pathRotationUnknown:
+    action==='HARD_WAIT'?(lang==='da'?'AFVENT / DEFENSIV':'WAIT / DEFENSIVE'):
+    action==='WAIT'?(lang==='da'?'AFVENT':'WAIT'):action,
+   time:t.pathRotationNoEta};
+ });
+}
+/* Intentionally public-facing, read-only and independently freshness-bound.
+ * A weekly CN issue and a valid public hourly closing feed are different
+ * authorities. Neither is a forecast, stage transition, or current action. */
+export function pathSourceReadback(view,latest,lang='da',now=Date.now()){
+ const t=txt(lang),w=view?.weekly,p=view?.path,comp=view?.compass;
+ const eligible=p?.state==='SOURCE_BOUND'&&comp?.state==='FRESH'&&
+  comp?.permit_path_live_gates===true&&
+  p?.source_week===w?.forecast_week&&p?.source_issue===w?.public_issue_number&&
+  p?.source_identity===comp?.compass_id&&
+  typeof w?.forecast_week==='string'&&/^20\\d{2}-W(?:0[1-9]|[1-4]\\d|5[0-3])$/.test(w.forecast_week)&&
+  Number.isInteger(w?.public_issue_number)&&w.public_issue_number>0;
+ const weekly=eligible?'CN #'+w.public_issue_number+' · '+w.forecast_week:t.pathSourceMissing;
+ const live=latest?.public_live_precision,path=live?.hourly_price_path,quotes=live?.price_quote_labels;
+ const status=live?.contract==='CN_PUBLIC_LIVE_PRICE_PRECISION_v1'&&
+   path?.contract==='CN_PUBLIC_HOURLY_PRICE_PATH_v1'&&
+   path?.source==='HOURLY_SPOT_PASS_ONLY'&&
+   path?.semantics==='OBSERVED_HOURLY_CLOSE_NOT_A_PROSPECTIVE_FORECAST'&&
+   path.forecast_week===live.forecast_week&&path.public_issue_number===live.public_issue_number&&
+   live.forecast_week===w?.forecast_week&&live.public_issue_number===w?.public_issue_number&&
+   quotes?.contract==='CN_PUBLIC_PRICE_QUOTE_LABELS_v1'&&
+   quotes.actual_native_spot?.BTC==='USDT'&&quotes.conversion_applied===false;
+ const observedTime=status?Date.parse(path.observed_through_utc):NaN;
+ const validTime=Number.isFinite(observedTime)&&observedTime>0&&observedTime<=now&&
+   Date.parse(live.live_as_of_utc)===observedTime;
+ const formatted=validTime?new Date(observedTime).toLocaleString(
+   lang==='da'?'da-DK':'en-GB',
+   {timeZone:'Europe/Copenhagen',day:'2-digit',month:'short',
+    hour:'2-digit',minute:'2-digit'}):null;
+ return {eligible,weekly,observed:formatted?
+   t.pathObservedLabel+' · '+formatted+' · BTC/USDT':t.pathObservedMissing,
+   quoteVerified:!!formatted};
+}
 const URLS=[
  'https://github.com/Donh91/CycleNavigator-scores',
  'https://github.com/Donh91/CycleNavigator-scores/blob/main/v2/scorebook-index.json',
@@ -291,22 +394,38 @@ export function renderProductExperience(view,feeds,lang='da'){
  for(const b of document.querySelectorAll('[data-investor-lens]')){
   const key=b.dataset.investorLens;b.textContent=t[key];b.setAttribute('aria-pressed',String(selectedLens===key));
  }
+ const publicSource=pathSourceReadback(view,feeds?.latest,lang);
  set('premium-path-now',path.now);set('premium-path-next',path.next);
  set('premium-path-gate',path.gate);set('premium-path-alt',path.alt);
- set('premium-path-alt-status',path.altStatus);set('premium-path-source',path.source);
+ set('premium-path-alt-status',path.altStatus);
+ set('premium-path-source',path.eligible?t.pathFrozen:t.pathUnavailable);
+ set('premium-path-source-summary',publicSource.weekly);
+ set('premium-path-observed',publicSource.observed);
  set('premium-path-explainer',t.pathNote);set('premium-path-eta',t.pathNoEta);
+ const root=holder('view-path');
+ if(root)root.dataset.evidence=path.eligible?'reference':'unverified';
  const rail=reset('premium-path-rail');
- if(rail){path.phases.forEach((x,i)=>{const e=element('li','path-node'),name=element('strong','',x.label);
+ if(rail){path.phases.forEach((x,i)=>{
+    const e=element('li','path-node'),name=element('strong','path-phase-label',x.label);
     e.dataset.kind=x.kind;e.dataset.phase=x.key;
-    e.append(element('span','path-number',String(i+1).padStart(2,'0')),name);
-    if(x.kind==='reference')e.append(element('small','',t.pathFrozen));
-    if(x.kind==='next')e.append(element('small','',t.wait));
-    rail.append(e)});
+    const status=x.kind==='reference'?t.pathStageReference:
+      x.kind==='next'?t.pathStageNext:t.pathStageNeutral;
+    const number=element('span','path-number',String(i+1).padStart(2,'0'));
+    const state=element('span','path-phase-state',status);
+    e.append(number,name,state);
+    rail.append(e);
+   });
    if(path.phases.length===0)rail.append(element('li','path-empty',t.pathUnavailable));}
  const rot=reset('premium-rotation');
- if(rot){for(const x of path.rotation){const row=element('li','rotation-tier');
-    row.append(element('b','',x.key),element('strong','',x.action),element('small','',x.eta));rot.append(row)}
-   if(!path.rotation.length)rot.append(element('li','path-empty',t.pathUnavailable));}
+ if(rot){for(const x of pathRotationDisplay(path,lang)){
+    const item=element('li','rotation-tier');
+    item.dataset.source=x.source?'source':'unavailable';
+    item.dataset.tier=x.key;
+    item.append(element('span','rotation-tier-label',x.label),
+      element('strong','rotation-tier-action',x.action),
+      element('small','rotation-tier-time',x.time));
+    rot.append(item);
+   }}
  // Render this week's existing published *provisional* price-range sequences.
  // They do not imply Direction/Rotation or Pullback Edge, nor final weekly score.
  const seq=priceSequenceModel(view,feeds?.latest);
