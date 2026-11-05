@@ -342,5 +342,129 @@ class ScopedReadinessReconciliationTests(unittest.TestCase):
 
 
 
+from scripts.research import task2_r1_original_publication_recovery_v1 as recovered
+
+
+class OriginalPublicationRecoveryTests(unittest.TestCase):
+    """The newly recovered server witness repairs ONE publication proof, no PIT/edge."""
+
+    def sample(self):
+        return recovered.pinned_inputs(), recovered.load_witness()
+
+    def reject(self, inputs, witness, reason):
+        with self.assertRaisesRegex(ValueError, "TASK2_RECONCILE_"+reason):
+            recovered.recover(inputs, witness)
+
+    def test_real_original_log_recovers_last_scoped_publication(self):
+        inputs, witness = self.sample()
+        output = recovered.recover(inputs, witness)
+        self.assertEqual(output["original_forecasts"], 11)
+        self.assertEqual(output["preexisting_original_publication_witnesses"], 10)
+        self.assertEqual(output["new_original_publication_witnesses"], 1)
+        self.assertEqual(output["scoped_original_publication_witnesses"], 11)
+        self.assertEqual(output["original_witness_publication_commit"], recovered.COMMIT)
+        self.assertEqual(output["full_R1_scientific_PIT_admissions"], 0)
+        self.assertEqual(output["certified_independent_event_families"], 0)
+        self.assertEqual(output["historic_original_outcomes_present"], 9)
+        self.assertEqual(output["historic_original_outcomes_absent"], 2)
+        self.assertFalse(output["economic_edge_established"])
+        self.assertFalse(output["untouched_holdout"])
+        self.assertIn("BLOCKED", output["historical_backtest_release"])
+        self.assertIn("BLOCKED", output["investor_after_cost_backtest"])
+
+    def test_old_source_recovery_is_not_rewritten(self):
+        inputs, witness = self.sample()
+        before = recovered.reconcile(inputs)
+        recovered.recover(inputs, witness)
+        after = recovered.reconcile(inputs)
+        self.assertEqual(before, after)
+        self.assertEqual(after["counts"]["scoped_source_chain_complete"], 10)
+        self.assertEqual(after["counts"]["full_historical_pit_admissions"], 0)
+
+    def test_wrong_original_id_cannot_convert_a_different_attempt(self):
+        inputs, witness = self.sample()
+        witness["source_forecast_id"] = "CMP-20261013-88618d3ad2a7"
+        self.reject(inputs, witness, "RECOVERED_WITNESS_NOT_ORIGINAL_MISSING_CASE")
+
+    def test_original_issuer_clock_cannot_be_backdated(self):
+        inputs, witness = self.sample()
+        witness["original_forecast_issued_at_utc"] = "2026-10-12T19:58:00Z"
+        self.reject(inputs, witness, "RECOVERED_WITNESS_ORIGINAL_ISSUER_CHANGED")
+
+    def test_source_blob_substitution_is_rejected(self):
+        inputs, witness = self.sample()
+        witness["original_packet_blob_sha"] = "0"*40
+        self.reject(inputs, witness, "RECOVERED_WITNESS_ORIGINAL_SOURCE_IDENTITY")
+
+    def test_publication_commit_substitution_is_rejected(self):
+        inputs, witness = self.sample()
+        witness["original_packet_first_add_commit"] = "0"*40
+        self.reject(inputs, witness, "RECOVERED_WITNESS_ORIGINAL_SOURCE_IDENTITY")
+
+    def test_wrong_job_id_cannot_borrow_a_good_run(self):
+        inputs, witness = self.sample()
+        witness["github_original_job_id"] = 114983897924
+        self.reject(inputs, witness, "RECOVERED_WITNESS_GITHUB_RUN_BINDING")
+
+    def test_job_failure_cannot_be_called_a_publication_success(self):
+        inputs, witness = self.sample()
+        witness["github_original_job_conclusion"] = "failure"
+        self.reject(inputs, witness, "RECOVERED_WITNESS_GITHUB_RUN_BINDING")
+
+    def test_forged_original_server_push_line_is_not_accepted(self):
+        inputs, witness = self.sample()
+        witness["authenticated_log_lines"]["remote_push"] = (
+            "2026-10-12T19:59:40Z 74130fa250..6495f36225 HEAD -> main")
+        self.reject(inputs, witness, "RECOVERED_WITNESS_ORIGINAL_LOG_IDENTITY")
+
+    def test_forged_original_commit_created_path_is_not_accepted(self):
+        inputs, witness = self.sample()
+        witness["authenticated_log_lines"]["original_path_first_add"] = (
+            "2026-10-12T19:58:03.8343024Z create mode 100644 future.json")
+        self.reject(inputs, witness, "RECOVERED_WITNESS_ORIGINAL_LOG_IDENTITY")
+
+    def test_fake_github_log_can_never_claim_vendor_first_publication(self):
+        inputs, witness = self.sample()
+        witness["first_provider_publication_or_original_response_full_model_verified"] = True
+        self.reject(inputs, witness, "RECOVERED_WITNESS_FORBIDDEN_PROMOTION")
+
+    def test_private_round3_stays_off(self):
+        inputs, witness = self.sample()
+        witness["round3_analysis_authorized"] = True
+        self.reject(inputs, witness, "RECOVERED_WITNESS_FORBIDDEN_PROMOTION")
+
+    def test_user_delivery_economics_cannot_be_promoted_from_packet_log(self):
+        inputs, witness = self.sample()
+        witness["first_user_delivery_verified"] = True
+        self.reject(inputs, witness, "RECOVERED_WITNESS_FORBIDDEN_PROMOTION")
+
+    def test_scoped_11_of_11_is_not_global_11_of_11_pit(self):
+        inputs, witness = self.sample()
+        witness["source_scope_complete_after_this_witness"] = "FULL_HISTORICAL_PIT_ADMITTED"
+        self.reject(inputs, witness, "RECOVERED_WITNESS_SCOPED_CLASSIFICATION")
+
+    def test_missing_old_original_still_not_a_new_historical_outcome(self):
+        inputs, witness = self.sample()
+        inputs["ledger"]["cohort"]["admitted"] = 1
+        self.reject(inputs, witness, "ORIGINAL_SCIENCE_GATE")
+
+    def test_recovered_server_line_requires_strict_utc(self):
+        with self.assertRaisesRegex(ValueError, "TASK2_RECONCILE_"):
+            recovered.logtime("2026-10-12T21:58:05+02:00 HEAD -> main")
+
+    def test_witness_is_pinned_to_exact_public_git_blob(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            path = root / recovered.PATH
+            path.parent.mkdir(parents=True)
+            path.write_bytes((recovered.ROOT / recovered.PATH).read_bytes())
+            self.assertEqual(recovered.load_witness(root)["contract"],
+                             "TASK2_R1_MISSING_ORIGINAL_PUBLICATION_WITNESS_V1")
+            path.write_bytes(path.read_bytes() + b" ")
+            with self.assertRaisesRegex(ValueError, "WITNESS_IMMUTABLE_BLOB_CHANGED"):
+                recovered.load_witness(root)
+
+
+
 if __name__ == "__main__":
     unittest.main()
