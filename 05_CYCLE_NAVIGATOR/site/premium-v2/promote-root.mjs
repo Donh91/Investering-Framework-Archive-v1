@@ -14,6 +14,37 @@ function replaceOnce(input,from,to){
  if(first<0||input.indexOf(from,first+from.length)>=0)throw Error('ROOT_PROMOTION_SOURCE_MISMATCH:'+from);
  return input.replace(from,to);
 }
+// Preserve the original runtime's data authority. Preview-only legacy entries still
+// rebase their two raw source links. The new editorial footer replaces those
+// *visible* links with three exact public documentation links, while Graph B
+// continues to fetch its genuine feeds through the official source adapter.
+function rebaseSourceLinks(html){
+ const latest='href="../data/latest.json"';
+ const compass='href="../data/compass.json"';
+ const latestCount=html.split(latest).length-1;
+ const compassCount=html.split(compass).length-1;
+ if(latestCount||compassCount){
+  if(latestCount!==1||compassCount!==1||html.includes('data-premium-nav="scoreArchive"'))
+   throw Error('ROOT_PROMOTION_SOURCE_MISMATCH:legacy-source-pair');
+  return replaceOnce(replaceOnce(html,latest,'href="./data/latest.json"'),
+   compass,'href="./data/compass.json"');
+ }
+ const footers=html.match(/<aside class="premium-meta"[^>]*>[\s\S]*?<\/aside>/g);
+ if(!footers||footers.length!==1)throw Error('ROOT_PROMOTION_SOURCE_MISMATCH:public-footer');
+ const anchors=footers[0].match(/<a\b[^>]*>/g)||[];
+ const docs=[
+  ['https://github.com/Donh91/Investering-Framework-Archive-v1/tree/main/05_CYCLE_NAVIGATOR','cnSource'],
+  ['https://github.com/Donh91/Investering-Framework-Archive-v1/tree/main/04_MARKET_LEARNING/handlekompas','compassSource'],
+  ['https://github.com/Donh91/CycleNavigator-scores','scoreArchive']
+ ];
+ if(anchors.length!==docs.length)throw Error('ROOT_PROMOTION_SOURCE_MISMATCH:public-link-count');
+ for(const [url,id] of docs){
+  const count=anchors.filter(a=>a.includes('href="'+url+'"')&&a.includes('data-premium-nav="'+id+'"')).length;
+  if(count!==1)throw Error('ROOT_PROMOTION_SOURCE_MISMATCH:public-link:'+id);
+ }
+ return html;
+}
+
 export function promoteHtml(input){
  if(!input.includes('id="variant-panel"')||!input.includes('id="official-product-pilot"')||
     !input.includes('id="proof-explorer"')||!input.includes('id="official-pilot-path"')||
@@ -29,9 +60,9 @@ export function promoteHtml(input){
   ['Forhåndsvisning · Kildebaseret, uden demonstrationskurser.','Kildebaseret · Oprindelige intervaller og observerede kurser.'],
   ['href="../" class="premium-entry-canonical"','href="./vnext/" class="premium-entry-canonical"'],
   ['>Officiel side ↗</a>','>Forrige version ↗</a>'],
-  ['href="../data/latest.json"','href="./data/latest.json"'],
-  ['href="../data/compass.json"','href="./data/compass.json"']
+  // Source-link validation/rebasing is handled below.
  ])html=replaceOnce(html,from,to);
+ html=rebaseSourceLinks(html);
  if(/noindex|PREMIUM v2\.1 · IKKE OFFICIEL|Math\.sin\s*\(/.test(html))
   throw Error('ROOT_PROMOTION_PREVIEW_OR_SYNTHETIC_SOURCE');
  if(!html.includes('/Investering-Framework-Archive-v1/next/assets/'))
@@ -77,9 +108,9 @@ export function promoteUnifiedHtml(input){
   ['href="../" class="premium-entry-canonical"',
    'href="./vnext/" class="premium-entry-canonical"'],
   ['>Officiel side ↗</a>','>Forrige version ↗</a>'],
-  ['href="../data/latest.json"','href="./data/latest.json"'],
-  ['href="../data/compass.json"','href="./data/compass.json"']
+  // Source-link validation/rebasing is handled below.
  ])html=replaceOnce(html,from,to);
+ html=rebaseSourceLinks(html);
  if(/noindex|IKKE OFFICIEL FORSIDE|Math\.sin\s*\(/.test(html))
   throw Error('UNIFIED_PROMOTION_PREVIEW_OR_SYNTHETIC_SOURCE');
  if(!html.includes('/Investering-Framework-Archive-v1/next/assets/'))
