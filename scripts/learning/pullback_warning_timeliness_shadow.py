@@ -110,6 +110,8 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
     episode_peak = -1
     counts = Counter()
     rows = []
+    # Descriptive source-qualified no-warning snapshots, NOT matched controls.
+    no_warning_candidates = []
     for e in sorted(freezes, key=lambda x: (x["issued"], x["path"])):
         f = e["data"]
         issued = e["issued"]
@@ -158,6 +160,10 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
                 episode_peak = max(episode_peak, RANK[risk])
         previous = (issued, risk)
         counts[status] += 1
+        if status == "NO_WARNING" and risk in {"NORMAL", "BUILDING"}:
+            no_warning_candidates.append({
+                "issued": issued, "path": e["path"], "sha256": e["sha256"], "risk": risk,
+            })
         # A persistent ELEVATED flag is neither repeated warning coverage nor
         # proof of a correct downside forecast.
         if status not in {"NEW_WARNING", "ESCALATION"}:
@@ -173,6 +179,68 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
             "first_known_source_verified": False,
             "portfolio_action": False,
         })
+    # Development denominator: sample the FIRST eligible at-issue NORMAL/BUILDING
+    # state per fixed UTC 12h slot, regardless of future market outcome.
+    # These slots are NOT independent shock families or propensity-matched.
+    first_per_slot = {}
+    for candidate in no_warning_candidates:
+        slot = int(candidate["issued"].timestamp()) // (12 * 3600)
+        first_per_slot.setdefault(slot, candidate)
+    controls = []
+    for slot, candidate in sorted(first_per_slot.items()):
+        issued = candidate["issued"]
+        outcomes = {
+            name: evaluate_path(issued, asof, market, hours, barrier)
+            for name, (hours, barrier) in HORIZONS.items()
+        }
+        later_warning_within_72h = any(
+            issued < datetime.fromisoformat(alert["issued_at_utc"].replace("Z", "+00:00"))
+            <= issued + timedelta(hours=EXPIRY_HOURS)
+            for alert in rows
+        )
+        controls.append({
+            "source_path": candidate["path"],
+            "source_sha256": candidate["sha256"],
+            "issued_at_utc": iso(issued),
+            "risk_state": candidate["risk"],
+            "slot_start_at_utc": iso(datetime.fromtimestamp(
+                slot * 12 * 3600, tz=timezone.utc)),
+            "subsequent_new_warning_within_72h": later_warning_within_72h,
+            "outcomes": outcomes,
+            "original_provider_first_known_verified": False,
+        })
+    control_horizon_summary = {}
+    for name in HORIZONS:
+        observations = [row["outcomes"][name] for row in controls]
+        mature = [x for x in observations if x["maturity"] == "MATURED_EXPOST_ONLY"]
+        downs = sum(x["hit_within_window"] is True for x in mature)
+        control_horizon_summary[name] = {
+            "snapshot_candidates_n": len(controls),
+            "matured_n": len(mature),
+            "observed_downside_n": downs,
+            "no_downside_n": len(mature) - downs,
+            "pending_n": sum(x["maturity"] == "PENDING" for x in observations),
+            "unknown_n": sum(x["maturity"].startswith("UNKNOWN") for x in observations),
+            "prospective_false_negative_rate": None,
+            "independent_event_n": None,
+        }
+    no_warning_snapshot_controls = {
+        "contract": "PULLBACK_NO_WARNING_SNAPSHOT_DEVELOPMENT_v1",
+        "status": "DESCRIPTIVE_AT_ISSUE_NOT_MATCHED_CONTROLS",
+        "selection": "FIRST_ELIGIBLE_NORMAL_OR_BUILDING_PER_FIXED_UTC_12H_SLOT",
+        "all_qualified_no_warning_issuances_n": len(no_warning_candidates),
+        "slot_candidate_count": len(controls),
+        "horizons": control_horizon_summary,
+        "snapshots": controls,
+        "overlapping_horizons_not_independent": True,
+        "future_warning_can_follow_no_warning_snapshot": True,
+        "first_known_publication_verified": False,
+        "independent_shock_family_census_completed": False,
+        "regime_matched_no_warning_controls_completed": False,
+        "false_negative_recall": None,
+        "certified_warning_skill": None,
+        "economic_action_authority": False,
+    }
     horizon_summary = {}
     for name in HORIZONS:
         mature = [row["outcomes"][name] for row in rows
@@ -196,6 +264,7 @@ def evaluate(freezes: list[dict], market: dict, asof: datetime) -> dict[str, Any
         "warning_state_counts": dict(sorted(counts.items())),
         "new_warning_or_escalation_events": len(rows),
         "horizons": horizon_summary, "alerts": rows,
+        "no_warning_snapshot_controls": no_warning_snapshot_controls,
         "repeated_elevated_count_is_not_warning_success": True,
         "expired_alert_cannot_be_credited_from_later_drop": True,
         "false_negative_recall_unknown_without_matched_no_alert_grid": True,
