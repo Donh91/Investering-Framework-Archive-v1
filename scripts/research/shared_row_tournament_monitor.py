@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from shared_row_tournament_weekly import filter_consumer_rows
+from shared_row_tournament_weekly import filter_consumer_rows, verified_matured_divergence_counts
 
 ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
 REGISTRY = Path("04_MARKET_LEARNING/shadow_registry/REGISTRY.json")
@@ -20,19 +20,14 @@ def read_csv(path: Path):
         return list(csv.DictReader(handle))
 
 
-def verified_matured_divergence_counts(valid_rows: list[dict], divergences: list[dict]) -> dict:
-    """A timestamp marker is NOT an outcome; only admitted parent receipts count.
+def verified_matured_shared_row_counts(valid_rows: list[dict]) -> dict:
+    """Count parent outcomes only AFTER the shared consumer integrity gate.
 
-    The shared consumer gate already checked each parent outcome against its
-    immutable owner receipt and all copied pairwise outcome columns.
+    Consensus rows can mature without any pairwise divergence. These are row
+    counts, not independent trials or evidence of predictive/economic edge.
     """
-    parents = {row["event_id"]: row for row in valid_rows}
     return {
-        horizon: sum(
-            str(parents.get(div.get("event_id"), {}).get(f"outcome_{horizon}", "")) in {"0", "1"}
-            and str(div.get(f"outcome_{horizon}", "")) in {"0", "1"}
-            for div in divergences
-        )
+        horizon: sum(str(row.get(f"outcome_{horizon}", "")) in {"0", "1"} for row in valid_rows)
         for horizon in ("24h", "72h", "7d")
     }
 
@@ -77,10 +72,23 @@ def main() -> None:
     core_unresolved = [family for family in unresolved if family in CORE_FAMILIES]
     optional_unresolved = [family for family in unresolved if family not in CORE_FAMILIES]
     matured = verified_matured_divergence_counts(valid_rows, divergences)
+    matured_shared_rows = verified_matured_shared_row_counts(valid_rows)
     rule = freeze.get("core_activation_rule", {})
-    collection_state = rule.get("collection_state")
-    quarantined = collection_state != ACTIVE or rule.get("containment_floor_sentinel") is not False
-    if issues and "UNVERIFIED_PROSPECTIVE_ROW_OR_DIVERGENCE" in issues:
+    freeze_collection_state = rule.get("collection_state")
+    runtime_collection_state = runtime.get("collection_state")
+    freeze_active = freeze_collection_state == ACTIVE
+    runtime_active = runtime_collection_state == ACTIVE
+    if freeze_active != runtime_active:
+        issues.append("COLLECTION_STATE_MISMATCH")
+    quarantined = not (freeze_active and runtime_active
+                       and rule.get("containment_floor_sentinel") is False)
+    collection_state = (ACTIVE if not quarantined else
+                        "INCONSISTENT" if freeze_active != runtime_active
+                        else "QUARANTINED")
+    if "COLLECTION_STATE_MISMATCH" in issues:
+        next_event = "RECONCILE_RUNTIME_AND_FREEZE_COLLECTION_STATE"
+        readiness = "FAIL_CLOSED_INCONSISTENT_RUNTIME"
+    elif issues and "UNVERIFIED_PROSPECTIVE_ROW_OR_DIVERGENCE" in issues:
         next_event = "RECONCILE_ORIGINAL_ROW_HASH_GIT_SOURCE_AND_OUTCOME_DETAILS"
         readiness = "FAIL_CLOSED_UNVERIFIED_RESEARCH_EVIDENCE"
     elif quarantined:
@@ -92,13 +100,13 @@ def main() -> None:
     elif not valid_rows:
         next_event = "FIRST_P0_BOUND_SHARED_ROW_AFTER_ACTIVE_FLOOR"
         readiness = "NOT_READY_NO_SHARED_ROWS"
-    elif matured["24h"] == 0:
+    elif matured_shared_rows["24h"] == 0:
         next_event = "FIRST_MATURED_24H_OUTCOME"
         readiness = "READY_FOR_AVAILABLE_MATURED_OUTCOMES"
-    elif matured["72h"] == 0:
+    elif matured_shared_rows["72h"] == 0:
         next_event = "FIRST_MATURED_72H_OUTCOME"
         readiness = "READY_FOR_AVAILABLE_MATURED_OUTCOMES"
-    elif matured["7d"] == 0:
+    elif matured_shared_rows["7d"] == 0:
         next_event = "FIRST_MATURED_7D_OUTCOME"
         readiness = "READY_FOR_AVAILABLE_MATURED_OUTCOMES"
     else:
@@ -106,11 +114,13 @@ def main() -> None:
         readiness = "READY_FOR_AVAILABLE_MATURED_OUTCOMES"
     output = {
         "contract": "SHARED_ROW_TOURNAMENT_MONITOR_v1",
-        "contract_revision": "1.2-consumer-source-bound-integrity",
+        "contract_revision": "1.3-separate-parent-and-divergence-maturity",
         "authority": "RESEARCH_ONLY_NON_CANONICAL",
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "status": "PASS" if not issues else "FAIL",
         "collection_state": collection_state,
+        "freeze_collection_state": freeze_collection_state,
+        "runtime_collection_state": runtime_collection_state,
         "scoring_readiness": readiness,
         "eligible_row_n": len(valid_rows),
         "excluded_pre_repair_row_n": len(all_rows) - len(valid_rows),
@@ -124,6 +134,13 @@ def main() -> None:
             "excluded": excluded,
         },
         "matured": matured,
+        "matured_shared_rows": matured_shared_rows,
+        "maturity_count_semantics": {
+            "matured": "VERIFIED_PAIRWISE_DIVERGENCE_COMPARISONS_LEGACY",
+            "matured_shared_rows": "VERIFIED_PARENT_OUTCOME_RECEIPTS_INCLUDING_CONSENSUS",
+            "independent_trial_count": None,
+            "row_counts_are_independent_trials": False,
+        },
         "core_unresolved_family_bindings": core_unresolved,
         "optional_unresolved_family_bindings": optional_unresolved,
         "unresolved_family_bindings": unresolved,
@@ -140,3 +157,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
