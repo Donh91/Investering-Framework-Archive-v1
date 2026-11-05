@@ -26,7 +26,7 @@ Read public fixtures by exact Git blob:
 | Provider first-publication clock per row across five sources | **0** | **0** |
 | Explicit retrieval clock per row across five sources | **0** | **0** |
 
-**Interpretation:** Both files are complete 24h *fixture-calculation inputs*. Neither fixes the provider's contemporaneous publication clock, end-to-end knowledge time, immutable original capture receipt, or an eligible independent outcome population. A historical candle timestamp is NOT proof the candle, OI value or funding rate was accessible at that timestamp. Funding settlement time is not an announcement/publication timestamp. The at-or-after-cutoff rows must be rejected from as-of features as the existing transformer already does.
+**Interpretation:** The 24h census checks exactly the source rows consumed by the current S5 feature transformer: **25 spot hourly timestamps** (including the price baseline), **two OI endpoints**, **24 futures-taker hours**, and **one latest basis hour**. It does not falsely require unused intermediate OI or basis values. Both files are complete 24h *fixture-calculation inputs*. Neither fixes the provider's contemporaneous publication clock, end-to-end knowledge time, immutable original capture receipt, or an eligible independent outcome population. A historical candle timestamp is NOT proof the candle, OI value or funding rate was accessible at that timestamp. Funding settlement time is not an announcement/publication timestamp. The at-or-after-cutoff rows must be rejected from as-of features as the existing transformer already does.
 
 The new read-only `scripts/research/s5_source_clock_census_v1.py` enumerates coverage and self-declared clocks, without granting scientific admission. It explicitly emits:
 - `capability_24h_window_state=COMPLETE` for these fixture shapes;
@@ -44,7 +44,7 @@ python scripts/research/s5_source_clock_census_v1.py --input 06_RESEARCH_LAB/der
 python scripts/research/s5_source_clock_census_v1.py --input 06_RESEARCH_LAB/derivatives_crowding_v1/fixtures/BINANCE_ETHUSDT_2026-10-06.json --git-blob-sha 3f14f9588f53c50e4e0c254ef8ae462cd37b3b60
 ```
 
-Six additional tests cover complete fixture with NO PIT proof, missing 24h baseline, self-declared fake publication clocks, duplicate hourly timestamp, naive cutoff, and empty funding. Existing S5 CI workflow already runs this test module on its changed path; new workflow/cron not needed. Local detached test logic passed 7/7 before GitHub submission; **GitHub CI and independent review must be independently checked on this PR head**, never presumed.
+Seven additional tests cover complete fixture with NO PIT proof, missing 24h baseline, self-declared fake publication clocks, duplicate hourly timestamp, naive cutoff, empty funding, and removal of unconsumed OI/basis hourly rows. Existing S5 CI workflow already runs this test module on its changed path; new workflow/cron not needed. Local detached test logic passed 7/7 before GitHub submission; **GitHub CI and independent review must be independently checked on this PR head**, never presumed.
 
 ## Exact next decision and blocking trigger, no parking
 1. **Terminal disposition for current public historic fixtures:** `SOURCE_CLOCK_UNVERIFIED` / `INSUFFICIENT_PROSPECTIVE_EVIDENCE`; do not calculate directional or economic skill, do not promote a vendor/flow label as market rule.
