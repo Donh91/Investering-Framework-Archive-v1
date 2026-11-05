@@ -151,6 +151,6 @@ class S1ShadowNativeReplayHostedIntegrationTests(_s1_shadow_unittest.TestCase):
         suite = _s1_shadow_unittest.defaultTestLoader.loadTestsFromTestCase(ShadowReplayTests)
         result = _s1_shadow_unittest.TestResult()
         suite.run(result)
-        self.assertEqual(result.testsRun, 27, "expected fixed negative-control census")
+        self.assertEqual(result.testsRun, 28, "expected fixed negative-control census")
         self.assertFalse(result.failures, result.failures)
         self.assertFalse(result.errors, result.errors)
