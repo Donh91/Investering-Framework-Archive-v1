@@ -225,9 +225,9 @@ def test_monday_daily_range_guidance_is_day_first_and_source_bound():
     """A 3-day band is min/max of three ORIGINAL forecasts, never a fabricated split."""
     source = (ROOT / "scripts/cycle_navigator/build_weekly_cycle_navigator.py").read_text()
     tree = ast.parse(source)
-    main = next(n for n in tree.body
-                if isinstance(n, ast.FunctionDef) and n.name == "main")
-    text = " ".join(n.value for n in ast.walk(main)
+    issuer = next(n for n in tree.body
+                  if isinstance(n, ast.FunctionDef) and n.name == "call_openai")
+    text = " ".join(n.value for n in ast.walk(issuer)
                     if isinstance(n, ast.Constant) and isinstance(n.value, str))
     assert text.count("DAILY HIGH/LOW FIRST:") == 1
     assert text.count("DAILY THREE-WINDOW SUMMARY:") == 1
