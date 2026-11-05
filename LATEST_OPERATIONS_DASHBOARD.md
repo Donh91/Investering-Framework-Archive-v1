@@ -1,30 +1,30 @@
 # Operations Dashboard
 
 Overall: **RED**
-Generated: `2026-11-05T22:13:51.087564Z`
+Generated: `2026-11-05T22:33:48.363776Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 1.581 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 0.987 |
-| `weekly_output` | **GREEN** | FRESH | 85.98 |
-| `automation_health` | **RED** | RED | 0.068 |
-| `architecture_health` | **GREEN** | GREEN | 0.015 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 0.983 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 12.624 |
-| `remediation_maturation` | **GREEN** | FRESH | 9.435 |
+| `daily_capture` | **GREEN** | FRESH | 1.914 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.32 |
+| `weekly_output` | **GREEN** | FRESH | 86.312 |
+| `automation_health` | **RED** | RED | 0.401 |
+| `architecture_health` | **GREEN** | GREEN | 0.348 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 1.315 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 12.957 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.245 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **74**
-- OpenAI estimated cost this month: **$5.253415 from receipts**
+- OpenAI receipts this month: **75**
+- OpenAI estimated cost this month: **$5.269143 from receipts**
 - Pending forecast candidates: **283**
 - Experiment candidates: **695**
 - Experiment dispatch requests: **51959**
-- Codex-ready remediation tasks: **12**
-- Needs-more-evidence items: **10**
+- Codex-ready remediation tasks: **5**
+- Needs-more-evidence items: **3**
 
 ## Incidents
 
@@ -54,4 +54,4 @@ A gateway PASS alone is not measured downstream value or investment edge.
 - **P0** `automation_health` - ['research-lab-sol-dispatch.yml:REPEATED_CONSECUTIVE_FAILURES']
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `4eff6765a8e3fb5cb1688046fbcdeb40e3a2655bbb93a6cdc88abbea271cdcf8`
+Dashboard SHA-256: `e8b4a57932eb1c903438502ead811bcb87d584c7a4d70bd0151235f1012f6000`
