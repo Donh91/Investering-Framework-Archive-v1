@@ -82,8 +82,18 @@ export function buildPremiumRootHtml(source){
  source=source.replace(pathStart,'</section>\n<section class="official-product-pilot premium-path" aria-label="PATH · Cyklens ti faser">\n'+pathStart);
  once(source,'</section>\n</main>','main-end');
  source=source.replace('</section>\n</main>',
-  '</section>\n<aside class="premium-meta" aria-label="Kilder og status"><span class="premium-meta-label" data-premium-copy="meta">STATUS / KILDER</span>'+status+
-  '<div class="premium-meta-links"><a href="../data/latest.json" data-premium-nav="cnSource">CN-data ↗</a><a href="../data/compass.json" data-premium-nav="compassSource">Kompas-data ↗</a></div></aside>\n</main>');
+  '</section>\n<aside class="premium-meta" aria-label="Om dokumentation og kildegrundlag">'+
+  '<span class="premium-meta-label" data-premium-copy="meta">KILDEGRUNDLAG</span>'+
+  '<h2 class="premium-meta-title" data-premium-copy="metaTitle">Dokumenterede kilder.</h2>'+
+  '<p class="premium-meta-intro" data-premium-copy="metaCopy">Offentlig Cycle Navigator, officielt Kompas og observerede markedspriser. Ingen konstruerede kurser eller efterredigerede prognoser.</p>'+status+
+  '<details class="premium-meta-disclosure">'+
+  '<summary data-premium-copy="metaOpen">Kilder og metode</summary>'+
+  '<p class="premium-meta-method" data-premium-copy="metaMethod">Cyklus og risiko vurderes ud fra hver sin oprindelige kilde. Historiske resultater scores kun på deres eget grundlag. Links åbner offentlig dokumentation.</p>'+
+  '<nav class="premium-meta-links" aria-label="Offentlige kilder">'+
+  '<a href="https://github.com/Donh91/Investering-Framework-Archive-v1/tree/main/05_CYCLE_NAVIGATOR" target="_blank" rel="noopener noreferrer" data-premium-nav="cnSource">Cycle Navigator ↗</a>'+
+  '<a href="https://github.com/Donh91/Investering-Framework-Archive-v1/tree/main/04_MARKET_LEARNING/handlekompas" target="_blank" rel="noopener noreferrer" data-premium-nav="compassSource">Kompas ↗</a>'+
+  '<a href="https://github.com/Donh91/CycleNavigator-scores" target="_blank" rel="noopener noreferrer" data-premium-nav="scoreArchive">Resultatarkiv ↗</a>'+
+  '</nav></details></aside>\n</main>');
  for(const id of ['variant-panel','official-product-pilot','official-pilot-path','proof-explorer'])
   once(source,'id="'+id+'"',id);
  if(!source.includes('name="robots" content="noindex,nofollow"'))
