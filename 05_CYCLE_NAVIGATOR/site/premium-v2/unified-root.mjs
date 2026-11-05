@@ -53,24 +53,27 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   // micro acceleration in the existing 10-stage journey. No fake ETA.
   const path=excerpt(proSource,
     '<section id="view-path"', '<section id="view-results"', 'pro-path')
-    .replace('<section id="view-path" class="view" hidden role="tabpanel" aria-labelledby="tab-path">',
-      '<section id="official-path-view" class="cn-path-source" aria-label="PATH · kildeverificeret markedsforløb">')
+    .replace('<section id="view-path" class="view path-editorial" hidden role="tabpanel" aria-labelledby="tab-path">',
+      '<section id="official-path-view" class="cn-path-source path-editorial" aria-label="PATH · kildebaseret markedsforløb">')
     .replace('<div class="path-hero">',
       '<section class="cn-cycle-truth" aria-label="Cyklus kildegrundlag">'+
       '<strong id="cn-cycle-health">Kontrollerer ugegrundlag</strong>'+
       '<p id="cn-cycle-meaning">Ingen markedsfase vurderes uden verificerede kilder.</p>'+
       '<small id="cn-cycle-reason">Afventer kildekontrol.</small></section>'+
       '<div class="path-hero">')
-    .replace('<section class="section"><div class="section-heading"><div><p class="eyebrow">02 / MARKET CYCLE</p>',
-      '<aside class="cn-alt-milestone" aria-labelledby="cn-alt-milestone-title">'+
-      '<div><span class="cn-milestone-eyebrow">NÆSTE STORE ALTCOIN-MILEPÆL</span>'+
-      '<h2 id="cn-alt-milestone-title">Altseason ignition</h2>'+
-      '<p id="cn-alt-milestone-subtitle">Før small/micro-acceleration · kræver verificeret rotation</p></div>'+
-      '<div class="cn-milestone-eta"><span id="cn-alt-milestone-eta-label">Tid til fase</span>'+
-      '<strong id="cn-alt-milestone-eta">Ingen verificeret ETA</strong>'+
-      '<small id="cn-alt-milestone-state">Betinget watch · ikke nedtælling</small></div>'+
-      '</aside>'+
-      '<section class="section"><div class="section-heading"><div><p class="eyebrow">02 / MARKET CYCLE</p>');
+    // Reuse the ONE Altseason Watch card inside the existing ten-stage cycle,
+    // while keeping prior source-owned milestone readback IDs for the root
+    // runtime. Historical source/status widgets must never create a parallel
+    // duplicate cycle ladder or a second visual Altseason timer.
+    .replace('<section class="path-alt-milestone" aria-labelledby="path-alt-title">',
+      '<section class="path-alt-milestone" aria-labelledby="path-alt-title">'+
+      '<div class="cn-alt-milestone" hidden style="display:none" aria-hidden="true">'+
+      '<span id="cn-alt-milestone-title">Altseason betingelse</span>'+
+      '<span id="cn-alt-milestone-subtitle">Afventer kilde</span>'+
+      '<span id="cn-alt-milestone-eta-label">Tid</span>'+
+      '<span id="cn-alt-milestone-eta">Ingen verificeret ETA</span>'+
+      '<span id="cn-alt-milestone-state">Ikke bekræftet</span>'+
+      '</div>');
 
   // The original PRO product's one official action is visible immediately.
   // Risk, trading lenses and longer official horizons stay within the same
