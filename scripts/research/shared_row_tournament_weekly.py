@@ -114,10 +114,9 @@ def dependence_census(valid_rows, runtime):
     blocks={}
     for item in valid_rows:
         at=ts(item.get("observation_timestamp_utc"))
-        if at is None or at<floor or at>datetime.now(timezone.utc)+timedelta(days=1):
+        if at is None or at<floor:
             raise ValueError("dependence_census_invalid_prospective_timestamp")
         index=(at-floor)//span
-        first=floor+index*span
         blocks[index]=blocks.get(index,0)+1
     return {
         "contract":"SHARED_ROW_FIXED_28D_DEPENDENCE_CENSUS_v1",
@@ -175,7 +174,8 @@ def main():
     report={'contract':'SHARED_ROW_TOURNAMENT_WEEKLY_v1','authority':'RESEARCH_ONLY_NON_CANONICAL','generated_at_utc':now.replace(microsecond=0).isoformat().replace('+00:00','Z'),'iso_year':y,'iso_week':w,'status':'COLLECTING' if not rows else 'EVALUATING','eligible_rows_total':len(rows),'consensus_rows':sum(1 for r in rows if len(set(json.loads(r.get('candidate_decisions') or '{}').values()))<=1),'divergences_total':len(div),'matured':mats,'candidate_performance':perf,'incremental_value_matrix':[incr(rows,'C07_SIMPLE_3',x) for x in challengers],'tail_error_prevention':{'status':'UNAVAILABLE' if not div else 'EVALUATE_FROM_MATURED_DIVERGENCES','n':len(div)},'consumer_integrity_filter':{'raw_rows':len(raw_rows),'raw_divergences':len(raw_div),'excluded':excluded},'architecture_gate':'INSUFFICIENT_EVIDENCE',
             'dependence_census':dependence_census(rows,runtime),
             'decision_quality_not_proven':True,'canonical_effect':False}
+    block_count=report["dependence_census"]["fixed_28d_calendar_block_n"]
     OUT.mkdir(parents=True,exist_ok=True); name=f'SHARED_ROW_TOURNAMENT_WEEKLY_{y}-W{w:02d}.json'; (OUT/name).write_text(json.dumps(report,indent=2,sort_keys=True)+'\n'); (OUT/'LATEST.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
-    (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n- 28-day calendar blocks: **{dependence_census(rows,runtime)[\"fixed_28d_calendar_block_n\"]}** (NOT independent market shocks)\n- Independent market-shock N: `UNKNOWN`\n\nRow-based precision and recall are DESCRIPTIVE ONLY; no statistical or economic winner is permitted.\n')
+    (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n- 28-day calendar blocks: **{block_count}** (NOT independent market shocks)\n- Independent market-shock N: `UNKNOWN`\n\nRow-based precision and recall are DESCRIPTIVE ONLY; no statistical or economic winner is permitted.\n')
     print(json.dumps({'status':'PASS','report':str(OUT/name),'eligible_rows':len(rows),'divergences':len(div)},sort_keys=True))
 if __name__=='__main__':main()
