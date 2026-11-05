@@ -213,7 +213,14 @@ def reconcile(inputs):
                  c.get("outcome_git_blob") is None and
                  c.get("target_at_utc") is None,
                  "BACKFILLED_OUTCOME_"+fid)
-        counts = c["counts"]
+        # The two original-missing outcomes intentionally have no result
+        # counts. Never coerce them into wins/losses or drop their attempts.
+        if l["original_outcome_status"] == "PRESENT":
+            need(isinstance(c.get("counts"), dict),
+                 "MISSING_MATCHED_OUTCOME_COUNTS_"+fid)
+        else:
+            need("counts" not in c, "FABRICATED_ABSENT_OUTCOME_COUNTS_"+fid)
+        counts = c.get("counts", {})
         matched += counts.get("matched_slots", 0)
         equal += counts.get("direction_equal_slots", 0)
         model_correct += counts.get("model_correct_slots", 0)
