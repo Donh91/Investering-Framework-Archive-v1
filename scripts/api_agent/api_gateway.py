@@ -8,7 +8,10 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
-from scripts.api_agent import recoverable_responses_v1
+if __package__:
+    from . import recoverable_responses_v1
+else:
+    import recoverable_responses_v1
 from typing import Any
 
 PRICES_PER_MILLION = {
