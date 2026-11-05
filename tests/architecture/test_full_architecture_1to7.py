@@ -154,3 +154,15 @@ class S1ShadowNativeReplayHostedIntegrationTests(_s1_shadow_unittest.TestCase):
         self.assertEqual(result.testsRun, 28, "expected fixed negative-control census")
         self.assertFalse(result.failures, result.failures)
         self.assertFalse(result.errors, result.errors)
+
+
+# Existing Full Architecture CI, no new workflow or runtime writer.
+class CrossRepoOwnerCoverageHostedTests(_s1_shadow_unittest.TestCase):
+    def test_existing_owner_public_coverage_critical_negative_controls(self):
+        from tests.orchestration.test_cross_repo_owner_coverage_v1 import OwnerCoverageShadowTests
+        suite = _s1_shadow_unittest.defaultTestLoader.loadTestsFromTestCase(OwnerCoverageShadowTests)
+        result = _s1_shadow_unittest.TestResult()
+        suite.run(result)
+        self.assertGreaterEqual(result.testsRun, 30)
+        self.assertFalse(result.failures, result.failures)
+        self.assertFalse(result.errors, result.errors)
