@@ -424,6 +424,8 @@ class AltseasonP0BFeasibilityTests(unittest.TestCase):
         self.assertFalse(out["live_portfolio_action_authorized"])
         self.assertFalse(out["exact_source_bytes_independently_verified"])
         self.assertFalse(out["private_values_echoed"])
+        self.assertEqual(out["blocked_rows_n"], 18)
+        self.assertNotIn("blocked_source_ids", out)
 
     def test_18_unique_source_inputs_and_reactivation_triggers(self):
         rows = self.manifest()["rows"]
@@ -466,6 +468,18 @@ class AltseasonP0BFeasibilityTests(unittest.TestCase):
         source["capability_proof"] = {k: True for k in source["capability_proof"]}
         source["binding_receipts"] = {k: "a" * 64 for k in source["binding_receipts"]}
         with self.assertRaisesRegex(ValueError, "DOCUMENTARY_OR_PRIVATE_NOT_VERIFIED"):
+            validate_source_feasibility_registry(x)
+
+    def test_hash_only_nondocumentary_verification_is_not_source_authority(self):
+        x = self.clone()
+        source = next(r for r in x["rows"] if
+                      r["source_role"] == "SOURCE_REFERENCE" and
+                      r["access_class"] == "PUBLIC_METADATA")
+        source["status"] = "AVAILABLE_VERIFIED"
+        source["capability_proof"] = {k: True for k in source["capability_proof"]}
+        source["binding_receipts"] = {k: "a" * 64 for k in source["binding_receipts"]}
+        with self.assertRaisesRegex(ValueError,
+                                    "AVAILABLE_VERIFIED_REQUIRES_EXTERNAL_OWNER_ADJUDICATION"):
             validate_source_feasibility_registry(x)
 
     def test_private_alpha_mislabelled_public_rejected(self):
@@ -539,10 +553,9 @@ class AltseasonP0BFeasibilityTests(unittest.TestCase):
 
     def test_regime_lag_and_sellability_cannot_get_trade_edge(self):
         out = validate_source_feasibility_registry(self.manifest())
-        self.assertIn("INDEPENDENT_EVENT_FAMILY_N", out["blocked_source_ids"])
-        self.assertIn("HISTORIC_MICRO_EXECUTABLE_DEPTH", out["blocked_source_ids"])
-        self.assertIn("MICRO_PAIRED_SELLABILITY", out["blocked_source_ids"])
+        self.assertEqual(out["blocked_rows_n"], 18)
         self.assertFalse(out["research_claim_of_edge_allowed"])
+        self.assertFalse(out["historical_portfolio_tournament_authorized"])
 
 
 if __name__=='__main__': unittest.main(verbosity=2)
