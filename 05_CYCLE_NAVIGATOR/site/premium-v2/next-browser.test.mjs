@@ -595,7 +595,8 @@ try{
    assert.deepEqual(report.data,[
      'https://github.com/Donh91/Investering-Framework-Archive-v1/tree/main/05_CYCLE_NAVIGATOR',
      'https://github.com/Donh91/Investering-Framework-Archive-v1/tree/main/04_MARKET_LEARNING/handlekompas',
-     'https://github.com/Donh91/CycleNavigator-scores'
+     'https://github.com/Donh91/CycleNavigator-scores',
+     './vnext/'
    ],'ROOT_PUBLIC_SOURCE_DOCUMENTATION_LINKS');
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
