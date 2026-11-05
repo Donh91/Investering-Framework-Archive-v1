@@ -503,6 +503,51 @@ class PullbackTimeboxResearchTests(unittest.TestCase):
         self.assertEqual(r["warning_state_counts"]["INVALID_REFERENCE_CLOCK_OR_PRICE"],1)
         self.assertEqual(r["warning_state_counts"]["SOURCE_UNAVAILABLE_OR_UNQUALIFIED"],1)
 
+    def test_no_warning_controls_dedupe_12h_slots_without_fake_recall(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        items=[self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"BUILDING"),
+               self.freeze(t+timedelta(hours=2),"NORMAL"),
+               self.freeze(t+timedelta(hours=13),"NORMAL")]
+        result=evaluate(items,self.tape(t,110,fall_at=4,fall_to=96.0),t+timedelta(hours=110))
+        controls=result["no_warning_snapshot_controls"]
+        self.assertEqual(controls["all_qualified_no_warning_issuances_n"],4)
+        self.assertEqual(controls["slot_candidate_count"],2)
+        self.assertEqual(controls["horizons"]["12h"]["matured_n"],2)
+        self.assertEqual(controls["horizons"]["12h"]["observed_downside_n"],1)
+        self.assertEqual(controls["horizons"]["12h"]["no_downside_n"],1)
+        self.assertIsNone(controls["false_negative_recall"])
+        self.assertIsNone(controls["horizons"]["72h"]["independent_event_n"])
+        self.assertFalse(controls["regime_matched_no_warning_controls_completed"])
+        self.assertTrue(result["false_negative_recall_unknown_without_matched_no_alert_grid"])
+        self.assertEqual(result["new_warning_or_escalation_events"],0)
+        self.assertEqual(result["warning_state_counts"]["NO_WARNING"],4)
+
+    def test_no_warning_control_bad_reference_excluded_and_pending_not_a_miss(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        bad=self.freeze(t+timedelta(hours=1),"NORMAL")
+        bad["data"]["market_reference"]["observation_open_utc"]=(t+timedelta(hours=2)).isoformat()
+        result=evaluate([self.freeze(t,"BUILDING"),bad],self.tape(t,100),t+timedelta(hours=8))
+        controls=result["no_warning_snapshot_controls"]
+        self.assertEqual(controls["slot_candidate_count"],1)
+        self.assertEqual(controls["horizons"]["12h"]["pending_n"],1)
+        self.assertEqual(controls["horizons"]["12h"]["matured_n"],0)
+        self.assertIsNone(controls["horizons"]["12h"]["prospective_false_negative_rate"])
+        self.assertEqual(result["warning_state_counts"]["INVALID_REFERENCE_CLOCK_OR_PRICE"],1)
+
+    def test_control_followed_by_real_new_warning_is_flagged_not_false_negative(self):
+        from scripts.learning.pullback_warning_timeliness_shadow import evaluate
+        t=START+timedelta(hours=3)
+        result=evaluate([self.freeze(t,"NORMAL"),self.freeze(t+timedelta(hours=1),"ELEVATED")],
+                        self.tape(t,110,fall_at=4,fall_to=95.0),t+timedelta(hours=110))
+        controls=result["no_warning_snapshot_controls"]
+        self.assertEqual(controls["slot_candidate_count"],1)
+        self.assertTrue(controls["snapshots"][0]["subsequent_new_warning_within_72h"])
+        self.assertEqual(controls["horizons"]["12h"]["observed_downside_n"],1)
+        self.assertIsNone(controls["false_negative_recall"])
+        self.assertEqual(result["new_warning_or_escalation_events"],1)
+
     def test_no_embedded_research_result_can_change_original_forecast(self):
         result=run(self.root,ASOF,"rolling14")
         radar=result["pullback_warning_timebox_shadow"]
