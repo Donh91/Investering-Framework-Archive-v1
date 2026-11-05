@@ -5,7 +5,7 @@ description: 'Use when the existing Chat S1 Supervisor must recover a repeatedly
 
 # S1 PR Repair & Verified Learning
 
-Status: OWNER-REQUESTED PROCEDURAL SKILL, CANDIDATE UNTIL GOVERNED MERGE AND TEST.
+Status: PILOT_ACTIVE, one owner-invoked original PR recovery (#176) verified; natural unattended scheduled S1 effectiveness NOT YET PROVEN.
 Owner: existing Chat S1 / Archive #1156 only. This skill is not an extra supervisor, queue, writer, model call or release policy.
 
 ## First read and routing
@@ -36,6 +36,12 @@ Read `research/api_agent/coordination/S1_SOL_MAX_ELITE_BOUNDED_BATCH_20261104.js
 ## Historical casebook, not an automatic success claim
 
 Read `references/verified-casebook.json`. It separates *actual GitHub merge evidence* from *unproved natural production closure*. Examples include #1879, #1900 and #1889 from the owner's screen recording. Do not train on screen narration alone. Freshly verify all three on GitHub before reusing them in a new case.
+
+## Observed recovery lesson (Alpha #176, 2026-11-05)
+
+The source-bound case `S1-RECOVERY-ALPHA-176` in `references/verified-casebook.json` is the first observed full original-PR conflict repair performed through the user-invoked S1 instruction path. GitHub reported 71 base-only commits and ONE shared changed path (`.github/workflows/v4-gate.yml`) with 16 unique PR research/test files. Preserve every original file blob; build a two-parent merge commit on the original PR branch that retains current-main workflow semantics and adds only the original 19 testing/path lines. Validate that removing those 19 additions yields the exact original current-main workflow bytes. Confirm original PR is clean, then require actual PR-event CI executing the test steps (not merely a green skipped gate), resolved independently raised code issues, current rules/owner release authority, exact-head merge and new-main readback. A reviewed code blob is still the same blob when reused; a post-review changed blob must be separately re-reviewed where policy requires. A model suggestion or source-historical precedent alone is never approval.
+
+Measured result: original PR #176 merged at `48cd9da95550762e5ef2a78c3f782c427091a0f9`; exact-HEAD PR-triggered CI run `41939354582` succeeded; original Loadout research remains noncanonical and not a live trading/forecast improvement. This case verifies ONE invoked repair, NOT unattended scheduled autonomous skill reliability. The operative use of a casebook must always revalidate source/head and current policy.
 
 ## Minimal proof record
 

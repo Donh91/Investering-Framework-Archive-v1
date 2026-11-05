@@ -15,6 +15,8 @@ on:
       - '00_FMOS/CONTINUITY_LEARNING_ARCHITECTURE_v1.md'
       - '00_FMOS/WP00_PATH_OWNER_REGISTRY_v1.md'
       - '.agents/skills/**/SKILL.md'
+      - '.agents/skills/s1-pr-repair-learning/references/**'
+      - 'tests/agents/test_s1_pr_repair_learning_skill.py'
       - '07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md'
       - 'research/codex/README.md'
       - 'research/specialists/**'
@@ -24,6 +26,8 @@ on:
       - 'changelog/2026-08-23__cross-repo-agent-context-integration-receipt.md'
       - 'scripts/governance/validate_cross_repo_agent_context.py'
       - 'scripts/governance/validate_round3_runtime_reconciliation.py'
+      - '.agents/skills/s1-pr-repair-learning/references/**'
+      - 'tests/agents/test_s1_pr_repair_learning_skill.py'
       - '.github/workflows/cross-repo-agent-context-gate.yml'
   push:
     branches: [main]
@@ -49,3 +53,5 @@ jobs:
         run: python scripts/governance/validate_cross_repo_agent_context.py
       - name: Validate Round 3 runtime reconciliation
         run: python scripts/governance/validate_round3_runtime_reconciliation.py
+      - name: Verify S1 original-PR repair skill source and casebook
+        run: python -m unittest -v tests.agents.test_s1_pr_repair_learning_skill

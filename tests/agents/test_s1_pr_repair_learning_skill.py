@@ -29,13 +29,24 @@ class S1RepairLearningSkillTest(unittest.TestCase):
     def test_cases_separate_merge_from_production(self):
         packet = json.loads(CASES.read_text(encoding="utf-8"))
         self.assertEqual(packet["contract"], "S1_PR_REPAIR_LEARNING_CASEBOOK_v1")
-        self.assertEqual({x["original_pr"] for x in packet["examples"]}, {1879, 1889, 1900})
+        self.assertEqual({x["original_pr"] for x in packet["examples"]}, {176, 1879, 1889, 1900})
         self.assertTrue(all(x["merge_confirmed"] for x in packet["examples"]))
         self.assertTrue(all("not" in x["verified_limit"].lower() or
                             "remain" in x["verified_limit"].lower() or
                             "requires" in x["verified_limit"].lower()
                             for x in packet["examples"]))
         self.assertGreaterEqual(len(packet["negative_controls"]), 6)
+        alpha = next(case for case in packet["examples"] if case["id"] == "S1-RECOVERY-ALPHA-176")
+        self.assertEqual(alpha["repository"], "Donh91/Meme-Alpha-Lab")
+        self.assertEqual(len(alpha["merged_main_sha"]), 40)
+        self.assertEqual(len(alpha["conflict_resolution_sha"]), 40)
+        self.assertEqual(alpha["original_files_preserved_without_blob_change"], 16)
+        self.assertEqual(alpha["workflow_merge_additive_lines"], 19)
+        self.assertEqual(alpha["overlapping_changed_paths"], [".github/workflows/v4-gate.yml"])
+        self.assertEqual(alpha["exact_head_ci"]["event"], "pull_request")
+        self.assertEqual(alpha["exact_head_ci"]["conclusion"], "success")
+        self.assertIn("NOT VERIFIED", alpha["verified_limit"])
+        self.assertIn("owner-invoked", alpha["verified_limit"])
 
 if __name__ == "__main__":
     unittest.main()
