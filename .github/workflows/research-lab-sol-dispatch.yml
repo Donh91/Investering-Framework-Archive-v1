@@ -98,7 +98,7 @@ jobs:
           # liability and USD3 prospective request. Existing HIGH path unchanged.
           if [ "${{ steps.trigger.outputs.mission }}" = "SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105" ]; then
             python scripts/api_agent/check_monthly_cost_guard.py \
-              --receipt-root research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 18
+              --receipt-root research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 21
           else
             python scripts/api_agent/check_monthly_cost_guard.py \
               --receipt-root research/api_agent/outputs --hard-stop-usd 40 --reserve-usd 4.0
