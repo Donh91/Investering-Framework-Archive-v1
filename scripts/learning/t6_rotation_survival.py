@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -78,7 +79,8 @@ def registered_level(cadence: dict[str, Any]) -> float:
     if cadence.get("authority") != "OPERATIONAL_SAMPLING_ONLY_NON_BINDING":
         raise ValueError("cadence_authority_mismatch")
     level = cadence.get("registered_ethbtc_level_read_only")
-    if isinstance(level, bool) or not isinstance(level, (int, float)) or level <= 0:
+    if (isinstance(level, bool) or not isinstance(level, (int, float))
+            or not math.isfinite(float(level)) or level <= 0):
         raise ValueError("registered_level_required")
     return float(level)
 
@@ -86,9 +88,13 @@ def registered_level(cadence: dict[str, Any]) -> float:
 def prior_ethbtc(packet: dict[str, Any], current: float) -> float | None:
     row = (packet.get("deltas_since_prior_auto_packet") or {}).get("ethbtc") or {}
     absolute = row.get("absolute")
-    if isinstance(absolute, bool) or not isinstance(absolute, (int, float)):
+    if (isinstance(absolute, bool) or not isinstance(absolute, (int, float))
+            or not math.isfinite(float(absolute))):
         return None
-    return current - float(absolute)
+    prior = current - float(absolute)
+    # A missing/impossible zero-or-negative prior relative price is NOT
+    # evidence of a real first cross. Preserve absent prior as UNKNOWN.
+    return prior if math.isfinite(prior) and prior > 0 else None
 
 
 def snapshot_axes(packet: dict[str, Any]) -> dict[str, Any]:
@@ -224,7 +230,8 @@ def operate(packet: dict[str, Any], cadence: dict[str, Any], root: Path) -> dict
         raise ValueError("auto_market_state_contract_required")
     observed_at = packet_timestamp(packet)
     current = scalar(packet, "ethbtc")
-    if isinstance(current, bool) or not isinstance(current, (int, float)):
+    if (isinstance(current, bool) or not isinstance(current, (int, float))
+            or not math.isfinite(float(current)) or current <= 0):
         raise ValueError("ethbtc_required")
     current = float(current)
     level = registered_level(cadence)
