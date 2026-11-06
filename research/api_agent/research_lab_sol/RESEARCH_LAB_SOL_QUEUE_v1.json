@@ -425,7 +425,7 @@
       ],
       "release_gate": "NEW_NATIVE_DONH91_ONE_USE_SHA_SIGNED_ISSUE1476_PUBLIC30D_CONSENT_AND_BUDGET",
       "pass_scope": "READ_ONLY_SOURCE_PINNED_G0_G4_NATIVE_S1_CAUSAL_AUDIT_MAX_THREE_PATCHES",
-      "new_paid_attempts_authorized": true,
+      "new_paid_attempts_authorized": false,
       "max_paid_attempts": 1,
       "no_automatic_retry": true,
       "owner_issue": 1156,
@@ -436,7 +436,7 @@
     {
       "sequence": 16,
       "mission_id": "S1-GOAL-NATIVE-G0G4-AUTONOMY-SOL61-MAX-20261106-CONSENT-V2",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_NO_REPOST",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__S1_GOAL_NATIVE_G0G4_SOL61_MAX_CONSENT_FIXED_v2.json",
       "context_status": "NEW_DISTINCT_OWNER_APPROVED_G0_G4_NATIVE_AUTONOMY_NOT_DUPLICATE_PRIOR_S1_TRIAGE",
       "context_paths": [
@@ -451,13 +451,50 @@
       ],
       "release_gate": "NEW_NATIVE_DONH91_ONE_USE_SHA_SIGNED_ISSUE1476_PUBLIC30D_CONSENT_AND_BUDGET",
       "pass_scope": "READ_ONLY_SOURCE_PINNED_G0_G4_NATIVE_S1_CAUSAL_AUDIT_MAX_THREE_PATCHES",
+      "new_paid_attempts_authorized": false,
+      "max_paid_attempts": 1,
+      "no_automatic_retry": true,
+      "owner_issue": 1156,
+      "requested_effort": "max",
+      "public_storage_consent_30_days": true,
+      "previous_distinct_completed_mission": "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B",
+      "result_run_id": 42243442600,
+      "result_owner_comment_id": 6688659517,
+      "result_status": "PASS_WITH_INSUFFICIENT_EVIDENCE_ADVISORY_ZERO_PATCHES",
+      "result_estimated_cost_usd": 0.195216,
+      "result_receipt_path": "research/api_agent/outputs/research_lab_sol/S1-GOAL-NATIVE-G0G4-AUTONOMY-SOL61-MAX-20261106-CONSENT-V2/issue-1476/comment-6688509222/receipt.json"
+    },
+    {
+      "sequence": 17,
+      "mission_id": "GOAL2-W46-KOMPAS-P0-SOURCE-FORECAST-SOL61-MAX-20261106",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__GOAL2_W46_KOMPAS_SOURCE_CONTINUITY_SOL61_MAX_v1.json",
+      "context_status": "P0_KOMPAS_W46_NATURAL_SOURCE_DAILY_FORECAST_BRIDGE146_AND_CN_CROSSRUN_CLAIM_FIVE_GOAL_M2",
+      "context_paths": [
+        "06_RESEARCH_LAB/audit_summaries/2026-11-06__w46_kompas_source_bridge_sol_max_intake_v1.md",
+        "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
+        "scripts/daily_capture/build_hourly_sequence.py",
+        ".github/workflows/hourly-sequence-capture.yml",
+        ".github/workflows/native-market-recovery.yml",
+        ".github/workflows/compass-schedule-watchdog.yml",
+        ".github/workflows/cycle-navigator-weekly-publication.yml",
+        "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+        "scripts/cycle_navigator/daily_price_journey.py",
+        "scripts/cycle_navigator/price_input_attestation.py",
+        "scripts/cycle_navigator/build_public_live_precision.py",
+        "scripts/cycle_navigator/verify_hourly_pages_handoff.py",
+        "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.mjs",
+        "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/official-source-adapter.mjs"
+      ],
+      "release_gate": "NATIVE_DONH91_NEW_UNIQUE_SHA_SIGNED_ISSUE1476_ORIGINAL_PUBLIC30D_CONSENT_BUDGET_LIABILITY_AND_SINGLE_ACTIVE",
+      "pass_scope": "SOURCE_PINNED_READ_ONLY_W46_PROSPECTIVE_CADENCE_AND_CN_PAYMENT_RESEARCH_ADVISORY_ONLY",
       "new_paid_attempts_authorized": true,
       "max_paid_attempts": 1,
       "no_automatic_retry": true,
       "owner_issue": 1156,
       "requested_effort": "max",
       "public_storage_consent_30_days": true,
-      "previous_distinct_completed_mission": "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B"
+      "previous_distinct_completed_mission": "S1-GOAL-NATIVE-G0G4-AUTONOMY-SOL61-MAX-20261106-CONSENT-V2"
     }
   ],
   "authority": {
@@ -470,6 +507,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "S1-GOAL-NATIVE-G0G4-AUTONOMY-SOL61-MAX-20261106-CONSENT-V2",
-  "program_phase": "FIVE_GOAL_MISSION_1_DISTINCT_CONSENT_CORRECTION_PENDING"
+  "active_mission": "GOAL2-W46-KOMPAS-P0-SOURCE-FORECAST-SOL61-MAX-20261106",
+  "program_phase": "FIVE_GOAL_OWNER_APPROVED_MISSION_2_OF_5_SEQUENTIAL_ONE_SHOT"
 }
