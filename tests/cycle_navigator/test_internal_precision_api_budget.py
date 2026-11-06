@@ -251,14 +251,23 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             "created_unix": int(datetime.now(timezone.utc).timestamp()),
         }
         (ledger / ("a" * 64 + ".json")).write_text(json.dumps(reservation))
-        # Isolate the CN reservation fixture from real framework-wide pending
-        # November POST exposure. Production keeps the canonical risk ledger.
+        # The global guard MUST include BOTH actual, still-unknown native
+        # POST exposures even in a CN-only fixture. A syntactically valid
+        # empty ledger is a forbidden undercount, never an isolation shortcut.
         isolated_risk = self.root / "fixture-global-api-risk.json"
+        frozen_old = ("41870364609", "41949497953")
         isolated_risk.write_text(json.dumps({
             "contract": "API_PENDING_BILLING_RISK_V1",
             "no_retry_original_ids": True,
             "requires_reconciliation_before_releasing_reserve": True,
-            "unresolved": [],
+            "unresolved": [{
+                "run_id": rid, "created_month_utc": "2026-11",
+                "status": "POST_OUTCOME_UNKNOWN",
+                "lower_usd": 0, "upper_usd": 3,
+                "source": ("https://github.com/Donh91/"
+                           "Investering-Framework-Archive-v1/actions/runs/" + rid),
+                "basis": "Source-pinned native USD3 one-use claim, unknown provider bill; no replay.",
+            } for rid in frozen_old],
         }))
         guard = Path(__file__).resolve().parents[2] / "scripts/api_agent/check_monthly_cost_guard.py"
         base_cmd = [
@@ -268,12 +277,14 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             "--liability-ledger", str(isolated_risk),
         ]
         allowed = subprocess.run(base_cmd + [
-            "--hard-stop-usd", "0.4", "--reserve-usd", "0.1"
+            "--hard-stop-usd", "6.4", "--reserve-usd", "0.1"
         ], capture_output=True, text=True)
         self.assertEqual(allowed.returncode, 0, allowed.stderr)
         self.assertEqual(json.loads(allowed.stdout)["spent_usd"], 0.12)
+        self.assertEqual(json.loads(allowed.stdout)["pending_liability_upper_usd"], 6)
+        self.assertEqual(json.loads(allowed.stdout)["exposure_range_max_usd"], 6.12)
         blocked = subprocess.run(base_cmd + [
-            "--hard-stop-usd", "0.2", "--reserve-usd", "0.1"
+            "--hard-stop-usd", "6.2", "--reserve-usd", "0.1"
         ], capture_output=True, text=True)
         self.assertNotEqual(blocked.returncode, 0)
         self.assertEqual(json.loads(blocked.stdout)["status"], "BLOCKED")
