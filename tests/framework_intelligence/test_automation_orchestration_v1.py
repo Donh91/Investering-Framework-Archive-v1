@@ -54,6 +54,77 @@ class AutomationOrchestrationV1Test(unittest.TestCase):
         cp = root / "research/remediation/LATEST_CODEX_READY_TASKS.json"
         cp.write_text(json.dumps(codex or {"tasks": []}))
 
+    def test_missing_remediation_snapshot_never_becomes_new_paid_diagnosis(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write_fixture(
+                root, [workflow("repeat.yml", streak=3)],
+                remediation={"items": [{
+                    "workflow": "repeat.yml", "state": "IN_REMEDIATION", "signature": "real"
+                }]},
+            )
+            out = root / "out"
+            first = mod.build_plan(root, out)
+            self.assertEqual(first["items"][0]["route"], "FOLLOW_EXISTING_REMEDIATION")
+            self.assertFalse(first["agent_calls"]["sol_6_1_required"])
+            remediation = root / "research/remediation/LATEST_REMEDIATION_QUEUE.json"
+            remediation.unlink()
+            missing = mod.build_plan(root, out)
+            self.assertEqual(missing["items"][0]["route"], "AUTHORITATIVE_INPUT_UNAVAILABLE")
+            self.assertEqual(missing["source_authority"]["remediation"], "UNAVAILABLE")
+            self.assertEqual(missing["routing_summary"]["authoritative_input_unknown_count"], 1)
+            self.assertEqual(missing["routing_summary"]["existing_remediation_count"], 0)
+            self.assertFalse(missing["agent_calls"]["sol_6_1_required"])
+            self.assertFalse(missing["agent_calls"]["luna_required"])
+            self.assertNotEqual(missing["fingerprint"], first["fingerprint"])
+            remediation.write_text("{bad json")
+            malformed = mod.build_plan(root, out)
+            self.assertEqual(malformed["source_authority"]["remediation"], "UNAVAILABLE")
+            self.assertFalse(malformed["agent_calls"]["sol_6_1_required"])
+            remediation.write_text(json.dumps({"items": []}))
+            available = mod.build_plan(root, out)
+            self.assertEqual(available["source_authority"]["remediation"], "VALID")
+            self.assertEqual(available["items"][0]["route"], "SOL_DIAGNOSIS")
+            self.assertTrue(available["agent_calls"]["sol_6_1_required"])
+
+    def test_invalid_authority_schema_and_missing_codex_fail_closed(self):
+        for invalid in ({}, [], {"items": {}}, {"tasks": None}):
+            with self.subTest(invalid=invalid):
+                with tempfile.TemporaryDirectory() as td:
+                    root = Path(td)
+                    self.write_fixture(root, [workflow("repeat.yml", streak=3)])
+                    remediation = root / "research/remediation/LATEST_REMEDIATION_QUEUE.json"
+                    remediation.write_text(json.dumps(invalid))
+                    plan = mod.build_plan(root, root / "out")
+                    self.assertEqual(plan["source_authority"]["remediation"], "INVALID")
+                    self.assertEqual(plan["items"][0]["route"], "AUTHORITATIVE_INPUT_UNAVAILABLE")
+                    self.assertFalse(plan["agent_calls"]["sol_6_1_required"])
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write_fixture(root, [workflow("repeat.yml", streak=3)])
+            (root / "research/remediation/LATEST_CODEX_READY_TASKS.json").unlink()
+            plan = mod.build_plan(root, root / "out")
+            self.assertEqual(plan["source_authority"]["codex_ready"], "UNAVAILABLE")
+            self.assertEqual(plan["items"][0]["route"], "AUTHORITATIVE_INPUT_UNAVAILABLE")
+            self.assertFalse(plan["agent_calls"]["sol_6_1_required"])
+
+    def test_input_loss_guard_removal_falsifier_detects_duplicate_diagnosis(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write_fixture(root, [workflow("repeat.yml", streak=3)])
+            (root / "research/remediation/LATEST_REMEDIATION_QUEUE.json").unlink()
+            def require_fail_closed():
+                plan = mod.build_plan(root, root / "out")
+                self.assertEqual(plan["items"][0]["route"], "AUTHORITATIVE_INPUT_UNAVAILABLE")
+                self.assertFalse(plan["agent_calls"]["sol_6_1_required"])
+            require_fail_closed()
+            # Removing source-validity checks must break the negative assertion.
+            with patch.object(mod, "read_authoritative_rows",
+                              return_value=({"items": []}, "VALID")):
+                with self.assertRaises(AssertionError):
+                    require_fail_closed()
+
     def test_existing_remediation_prevents_duplicate_agent_work(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
