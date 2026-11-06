@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-78acfbeb486be9f2",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cn-one-billable-w46-publisher-post-per-invocation",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE \u00b7 owner /goal under original #1516/#1156. Fails closed on ambiguous paid Responses POST and billable incomplete/invalid result, with no second request inside one invocation. Six exact-HEAD native PR-event SUCCESS, source Contract Gate 113 tests incl new adversarial no-second-POST cases. No new API POST, budget, workflow, schedule, model or source rewrite. No independent formal APPROVED claimed. Current source safepoint in parent main; natural W46 7/7 still separately unverified.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py": "ac35b2564b3eca1d0e54547f1a65e9abe47d63df",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py": "310bfb7777a9a11b56a3b7e71eb919a2b1c48d5a"
+  },
+  "source_commit_sha": "78acfbeb486be9f2df7f4cbde37a240b635c2b31",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-06T06:25:39-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(cn): one billable W46 publisher POST per invocation"
+}
