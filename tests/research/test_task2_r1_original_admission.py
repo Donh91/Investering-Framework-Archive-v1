@@ -618,5 +618,55 @@ class OriginalCausalSourceInventoryTests(unittest.TestCase):
                 causal.build()
 
 
+    def test_each_original_feature_has_explicit_machine_actionable_vintage_gap(self):
+        report=causal.build()
+        matrix=report["per_feature_first_known_gap_matrix"]
+        self.assertEqual(len(matrix),24)
+        self.assertEqual(sum(x["original_attempt_n"] for x in matrix.values()),264)
+        self.assertTrue(all(
+            x["original_attempt_n"]==11 and
+            sum(x["source_owner_counts"].values())==11 and
+            sum(x["original_clock_status_counts"].values())==11 and
+            x["provider_first_publication_or_original_full_model_response_proof"]=="NOT_VERIFIED" and
+            x["full_R1_historical_PIT_admitted"] is False and
+            x["economic_after_cost_edge_admitted"] is False
+            for x in matrix.values()))
+        self.assertEqual(matrix["btc_delta_since_prior_packet_pct"]["source_role"],
+                         "DIRECT_12H_DIRECTION_DELTA")
+        self.assertEqual(matrix["btc_funding"]["source_role"],
+                         "EVIDENCE_INDEX_NOT_DIRECT_12H_SIGN")
+
+    def test_each_issued_original_retains_all_24_per_feature_clocks_without_values(self):
+        report=causal.build()
+        self.assertEqual(len(report["original_rows"]),11)
+        for row in report["original_rows"]:
+            index=row["feature_clock_index"]
+            self.assertEqual(len(index),24)
+            self.assertEqual(set(index),set(causal.ROLES))
+            self.assertTrue(all(
+                isinstance(v["source_owner"],str)
+                and v["independent_provider_publication_verified"] is False
+                and v["full_historical_pit_admitted"] is False
+                for v in index.values()))
+        self.assertNotIn('"value":',json.dumps(report))
+        self.assertNotIn('"funding_rate":',json.dumps(report))
+
+    def test_funding_settlement_clock_is_not_mislabeled_quote_observation(self):
+        report=causal.build()
+        for feature in ("btc_funding","eth_funding"):
+            statuses=report["per_feature_first_known_gap_matrix"][feature]["original_clock_status_counts"]
+            self.assertEqual(statuses.get("SETTLEMENT_IS_NOT_QUOTE_OBSERVATION"),11)
+            self.assertNotIn("AVAILABLE_VERIFIED",statuses)
+
+    def test_source_owner_variants_are_recorded_without_inventing_first_known(self):
+        report=causal.build()
+        for feature in ("breadth_advance_ratio","btc_usdt","sentiment_market_score"):
+            row=report["per_feature_first_known_gap_matrix"][feature]
+            self.assertEqual(sum(row["source_owner_counts"].values()),11)
+            self.assertEqual(row["provider_first_publication_or_original_full_model_response_proof"],
+                             "NOT_VERIFIED")
+        self.assertEqual(report["full_original_R1_PIT_admissions"],0)
+
+
 if __name__ == "__main__":
     unittest.main()
