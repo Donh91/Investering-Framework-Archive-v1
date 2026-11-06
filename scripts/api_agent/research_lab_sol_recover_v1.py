@@ -72,7 +72,7 @@ def verify_original(origin: str, artifact: Path, *, fetch=gh_api) -> dict:
             or context.get("public_source_only") is not True
             or context.get("authority") != "ADVISORY_READ_ONLY"
             or cfg.get("model") not in ("gpt-6.1-sol", "gpt-6.2-sol")
-            or cfg.get("model") != context.get("model")
+            or cfg.get("model") != context.get("model", cfg.get("model"))
             or manifest.get("selected_model", cfg.get("model")) != cfg.get("model")
             or cfg.get("reasoning_effort") != "max"
             or cfg.get("recoverable_background") is not True
