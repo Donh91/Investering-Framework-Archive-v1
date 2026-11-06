@@ -42,6 +42,17 @@ class Full18mWalkForwardTests(unittest.TestCase):
         out=walkforward(d,months=MONTHS[:2],min_train_months=1)
         self.assertEqual(len(out),1)
         self.assertEqual(out[0]["month"],"2025-06")
+    def test_month_boundary_uses_only_labels_matured_before_test(self):
+        d=self.mock_data()
+        edge=d[(d.month=="2025-10")&(d.market=="BTC-PERP")].iloc[[0]].copy()
+        edge["timestamp"]=pd.Timestamp("2025-10-31T23:00:00Z")
+        d=pd.concat([d,edge],ignore_index=True)
+        out=walkforward(d)
+        first=out[0]
+        self.assertGreaterEqual(first["training_labels_excluded_due_to_embargo"],1)
+        self.assertLess(pd.Timestamp(first["max_train_label_maturity_utc"]),
+                        pd.Timestamp(first["training_boundary_cutoff_utc"]))
+        self.assertEqual(first["training_label_embargo_hours"],25)
     def test_no_valid_months_fails_closed(self):
         s=summarize([{"status":"INSUFFICIENT_SOURCE_ANCHORS"}])
         self.assertEqual(s["status"],"NO_VALID_MONTHS")
