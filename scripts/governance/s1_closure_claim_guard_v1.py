@@ -116,7 +116,7 @@ def inspect_claim(record: Mapping[str, Any]) -> dict[str, Any]:
             "authentic scheduled task run and invocation provenance",
             "native original PR identity/HEAD, real review policy and CI job steps",
             "native merge expected-head invocation, actor, main and blob readback",
-            "independent request/ACK/actual receiver job/result/consumed ACK for full autonomy",
+            "for delegated execution: independently authenticated request/ACK/job/result/S1-consumption; for direct: actual natural scheduled tool provenance",
             "separate natural producer/consumer evidence for PROD_VERIFIED",
         ],
     }
