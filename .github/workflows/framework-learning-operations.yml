@@ -29,6 +29,8 @@ on:
       - 'tests/research/test_task2_hourly_source_window_clocks_v1.py'
       - 'scripts/research/task2_price_window_robustness_v1.py'
       - 'tests/research/test_task2_price_window_robustness_v1.py'
+      - 'scripts/research/task2_archive_first_edge_matrix_v1.py'
+      - 'tests/research/test_task2_archive_first_edge_matrix_v1.py'
       - 'scripts/research/task2_cfgi_price_expost_4h_v1.py'
       - 'tests/research/test_task2_cfgi_price_expost_4h_v1.py'
       - 'scripts/research/task2_cfgi_64d_expost_cohorts_v1.py'
@@ -73,6 +75,10 @@ jobs:
           python -m unittest tests.learning.test_m6_warning_event_outcomes tests.learning.test_edge001_tsunami_feature_ledger tests.research.test_edge_compound_governor -v
           python scripts/research/edge001_144_variant_pit_harness.py --self-test
           python -m unittest discover -s tests/research -p 'test_task2_protection_synthetic_v1.py' -v
+      - name: Validate Task 2 archive-first source-delta advisory and no authority
+        run: |
+          python -m py_compile scripts/research/task2_archive_first_edge_matrix_v1.py
+          python -m unittest tests.research.test_task2_archive_first_edge_matrix_v1 -v
       - name: Task2 archived price-only 1152-cell ex-post stress, research only
         run: |
           python -m unittest tests.research.test_task2_archive_price_only_stress_v1 -v
@@ -694,6 +700,32 @@ jobs:
             --registry research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json \
             --consumer-index research/framework_handoffs/LATEST_DATA_CONSUMER_INDEX.json \
             --output research/experiment_lifecycle/LATEST_EXPERIMENT_YIELD_SHADOW.json
+      - name: Record only changed Task 2 original source evidence in existing research memory
+        # Research sidecar under the SAME existing daily operations writer.
+        # Failure is an observable research gap, never a reason to stop daily
+        # canonical source capture or silently replace an outcome.
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/task2-archive-first
+          python scripts/research/task2_archive_first_edge_matrix_v1.py \
+            --output runtime/task2-archive-first/LATEST.json \
+            --advisory-latest
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          doc=json.loads(Path('runtime/task2-archive-first/LATEST.json').read_text())
+          assert doc['contract']=='TASK2_ARCHIVE_FIRST_EDGE_EVIDENCE_MATRIX_v1'
+          assert doc['scientific_verdict']=='INSUFFICIENT_EVIDENCE'
+          assert not doc['canonical_promotion_allowed']
+          assert not doc['automatic_model_weight_change']
+          assert not doc['portfolio_execution']
+          assert doc['E2_rotation']['independent_market_event_family_n'] is None
+          print('TASK2_DAILY_ADVISORY_SOURCE_CENSUS',doc['E2_rotation']['matured_7d_rows'],
+                'original outcome rows, independent N UNKNOWN')
+          PY
       - name: Commit compact outputs and verify main readback
         shell: bash
         run: |
