@@ -130,17 +130,12 @@ class NativeNewPaidClaimTests(unittest.TestCase):
         if command[1:3]==["api","repos/Donh91/Investering-Framework-Archive-v1/git/ref/heads/main"]:
             return json.dumps({"object":{"sha":self.head}})
         if command[1:3]==["api","repos/Donh91/Investering-Framework-Archive-v1/issues/comments/"+str(self.packet["public_storage_consent_comment_id"])]:
-            if self.packet["mission_id"] == MAX_ONESHOT_MISSION:
-                marker="<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106B -->"
-            else:
-                digest=native.sha256_bytes((self.root/self.packetpath).read_bytes())
-                marker=("<--" if self.invalid_consent else "<!--")
-                marker+=(" SOL_MAX_OWNER_RELEASE_V1 mission="
-                        +self.packet["mission_id"]+" packet_sha256="+digest+" -->")
+            marker=("<!"+ "-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106B -->"
+                    if self.packet["mission_id"] == MAX_ONESHOT_MISSION
+                    else "<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106 -->")
             return json.dumps({"user":{"login":"Donh91"},
                 "issue_url":"https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/issues/1156",
-                "body":marker+"\\n"+self.packet["mission_id"]
-                       +" 30 DAYS PUBLIC SOURCE ONLY max_output_tokens=48000"})
+                "body":marker+"\\n"+self.packet["mission_id"]+" 30 DAYS PUBLIC SOURCE ONLY"})
         if command[1:4]==["api","--paginate","--slurp"]:
             return json.dumps([self.claims])
         if command[1:4]==["issue","comment","1476"]:
@@ -177,16 +172,24 @@ class NativeNewPaidClaimTests(unittest.TestCase):
     def configure_future_thread_mission(self):
         mid="OTHER-THREAD-OWNER-SOLMAX-20261107-001"
         self.packet["mission_id"]=mid
-        self.packet["public_storage_consent_comment_id"]=881993311
+        self.packet["public_storage_consent_comment_id"]=6682722905
         self.packet["one_shot_owner_mandate"]=(
             "https://github.com/Donh91/Investering-Framework-Archive-v1/"
-            "issues/1156#issuecomment-881993311")
+            "issues/1156#issuecomment-6682722905")
         (self.root/self.packetpath).write_text(json.dumps(self.packet))
         (self.root/native.QUEUE_PATH).write_text(json.dumps({"missions":[{
             "mission_id":mid,"state":"ACTIVE_RELEASED",
             "mission_packet":self.packetpath}]}))
         (self.root/"runtime/research-lab-sol/context.json").write_text(
             json.dumps({"mission_id":mid,"model":"gpt-6.1-sol"}))
+        digest=native.sha256_bytes((self.root/self.packetpath).read_bytes())
+        release=("<!"+"-- SOL_MAX_OWNER_RELEASE_V1 mission="+mid
+                 +" packet_sha256="+digest+" -->")
+        event=json.loads(self.event.read_text())
+        event["comment"]["body"]=("[RESEARCH_LAB_SOL] mission="+mid+"\\n"
+                                   +release+"\\n30 DAYS PUBLIC SOURCE ONLY "
+                                   "max_output_tokens=48000")
+        self.event.write_text(json.dumps(event))
         return mid
 
     def test_any_chat_thread_owner_native_sourced_new_mission_can_claim_once(self):
@@ -201,9 +204,12 @@ class NativeNewPaidClaimTests(unittest.TestCase):
 
     def test_forged_new_owner_comment_cannot_claim(self):
         self.configure_future_thread_mission()
-        self.invalid_consent=True
+        event=json.loads(self.event.read_text())
+        event["comment"]["body"]=event["comment"]["body"].replace(
+            "packet_sha256=", "packet_sha256=forged")
+        self.event.write_text(json.dumps(event))
         with self.assertRaisesRegex(ValueError,
-                                    "MAX_NATIVE_PUBLIC_30D_OWNER_CONSENT_UNVERIFIED"):
+                                    "MAX_NATIVE_TRIGGER_PACKET_HASH_NOT_OWNER_SIGNED"):
             self.execute()
         self.assertEqual(self.writes,0)
 
