@@ -1,5 +1,21 @@
 # Hugging Face × Framework Task 2, research and execution gateway
 
+## Ironflow public historical derivatives research, 6 November 2026
+
+**Actually executed GitHub Actions research** from [PR #1988](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1988), **NOT a canonical prediction or validated trading edge**. Full Task 2 admission and durable T3 archive remain separate. Source attribution: Ironflow (ironflow.sh), CC BY 4.0.
+
+- [10-lane cross-repository scientific mission](IRONFLOW_10_LANE_MISSION_20261106.md), original owner Task 2 #1596 and derivatives #387, Alpha follow-on #22.
+- [Pinned six-dataset source manifest](SOURCE_MANIFEST_IRONFLOW_20261106.json), exact 40-character Hugging Face revisions.
+- [Machine-readable 16-file actual SHA256/source receipt](IRONFLOW_EXECUTED_FILE_REGISTRY_20261106.json), source QA/retention and **durable-storage-not-yet-proven** status.
+- [First real T1 success, corrected funding joins and nine hourly-cohort comparisons](IRONFLOW_ACTUAL_T1_EXECUTION_AND_COHORTS_20261106.md), 12 public monthly files/6,624 BTC-ETH-HYPE market-hours, dated Actions #42310616110.
+- [Executed T02 dayblocking, T04 tick flow, T05 crash, T08 wallets, T10 HIP4](IRONFLOW_EXECUTED_6_LANE_EMPIRICAL_REPORT_20261106.md), actual Actions #42311443044 and expiring research artifacts.
+- [T02/T03 chronological baseline vs derivatives Brier/AUC](IRONFLOW_T2_T3_CHRONOLOGICAL_ABLATION_RESULT_20261106.md), actual Actions #42311881876: **no replicated independent edge**, interval includes zero.
+- [T06 source-independent Binance vs Hyperliquid two-day sample](IRONFLOW_T6_BINANCE_HYPERLIQUID_2DAY_CROSSVENUE_20261106.md), source-clock warning and non-PIT status.
+- Executable read-only bounded research: `scripts/research/ironflow_*.py`, adversarial tests `tests/research/test_ironflow_*.py`, and one on-demand/PR workflow `.github/workflows/ironflow-task2-source-pilot.yml`. **No new cron, account credentials, self-authorized trades or extra supervisor.**
+
+**Unfinished scientific/custody gates:** independent original-event first-known, true prospective market timing, live source/consumer delivery, venue reconciliation across many months, T3 permanent raw storage, ex-ante risk/utility controls, sealed holdout, and other unrelated Task 2 requirements. A PR link is not an S1 autonomous merge or a production readback.
+
+
 **Current research checkpoint: 23 October 2026.** Existing owner [#1596](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596); evidence package [draft PR #1747](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1747). Public source QA, the original-file census, eleven exact 12h input/engine replays and an exposed matched B2 diagnostic have been executed. The package remains unmerged. Original no-hindsight information edge and investor economic edge remain unestablished.
 
 ## Verified continuation, 25 October 2026
