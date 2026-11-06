@@ -6,11 +6,7 @@
     "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
   },
   "cause_codes": [
-    "DATA_HEALTH_CHANGED",
-    "ACTION_STATE_CHANGED",
-    "MARKET_STATE_CHANGED",
-    "CAPITALIZATION_LADDER_CHANGED",
-    "PROTECTION_STATE_CHANGED"
+    "SCHEDULED_FREEZE_MISSING"
   ],
   "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
   "cooldown_seconds": 10800,
@@ -48,16 +44,16 @@
   ],
   "current_market_state": {
     "action_permission": "HOLD_WAIT",
-    "btc_delta_pct": -0.4187175403665422,
-    "directional_state": "BEARISH",
-    "eth_delta_pct": -0.37470412219194893,
-    "eth_relative_state": "STRENGTHENING",
-    "ethbtc_delta_pct": 0.03401360544217358,
-    "market_observation_open_utc": "2026-11-06T15:00:00Z",
-    "new_price_observation": true,
-    "predecessor_market_observation_open_utc": "2026-11-06T09:00:00Z",
-    "regime": "BEARISH",
-    "summary": "BTC and ETH are both declining over the latest governed comparison interval; this does not create sell authority."
+    "btc_delta_pct": 0.0,
+    "directional_state": "UNCHANGED_NO_NEW_OBSERVATION",
+    "eth_delta_pct": 0.0,
+    "eth_relative_state": "NO_NEW_OBSERVATION",
+    "ethbtc_delta_pct": 0.0,
+    "market_observation_open_utc": "2026-11-06T20:00:00Z",
+    "new_price_observation": false,
+    "predecessor_market_observation_open_utc": "2026-11-06T20:00:00Z",
+    "regime": "NO_NEW_OBSERVATION",
+    "summary": "The price owner repeated the same completed hourly observation; no fresh directional market claim is made."
   },
   "current_protection_tracker": {
     "authority": {
@@ -77,7 +73,7 @@
     "distribution_risk": "UNKNOWN",
     "eta_window": "Another test is possible during W45; its onset day is unsupported.",
     "invalidation": "Concern weakens if price resilience persists alongside improving ETH-relative strength, broader participation and settled flows. Positive retained-exchange spot imbalance alone is insufficient.",
-    "last_material_change_at": "2026-11-06T16:14:39Z",
+    "last_material_change_at": "2026-11-06T16:15:21Z",
     "public_explanation": {
       "action_authority": false,
       "contract": "CN_PUBLIC_PROTECTION_COPY_v1",
@@ -97,31 +93,31 @@
     "reentry_state": "INACTIVE"
   },
   "dispatch": true,
-  "evaluated_at_utc": "2026-11-06T16:14:39Z",
+  "evaluated_at_utc": "2026-11-06T21:53:14Z",
   "heat_detail": {
-    "btc_return_24h_pct": -4.92198,
+    "btc_return_24h_pct": -0.29372,
     "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
-    "eth_return_24h_pct": -6.57388,
+    "eth_return_24h_pct": -1.2996,
     "existing_entry_temperature": "NORMAL",
-    "median_return_24h_pct": -3.26376
+    "median_return_24h_pct": 1.204385
   },
   "heat_state": "NORMAL",
-  "last_request_age_seconds": 28704.0,
-  "last_requested_source_sha": "3070af1d584b16707e5a62309378b12855fb4aab1f2425457ebe7dc219bd4d92",
-  "latest_compass_source_packet_sha256": "09843fe3f7e74c0f84dadb8a7cdb3c8fcac31dc599b3543f3aa11b5056f5d757",
+  "last_request_age_seconds": 20315.0,
+  "last_requested_source_sha": "f8d4332d5b0106793a583f62c4fb5fbfa36cca95d6cc0dd3095996e22b8da5fb",
+  "latest_compass_source_packet_sha256": "f8d4332d5b0106793a583f62c4fb5fbfa36cca95d6cc0dd3095996e22b8da5fb",
   "missing_freeze_observation_only": true,
-  "missing_scheduled_freeze": null,
-  "protective_bypass": true,
+  "missing_scheduled_freeze": "EVENING",
+  "protective_bypass": false,
   "reason": "MATERIAL_REASSESSMENT_REQUIRED",
   "request_retry_seconds": 1200,
   "scheduled_slot_proximity_seconds": 1800,
-  "seconds_to_next_scheduled_compass": 10941.0,
-  "source_packet_sha256": "f8d4332d5b0106793a583f62c4fb5fbfa36cca95d6cc0dd3095996e22b8da5fb",
+  "seconds_to_next_scheduled_compass": 33826.0,
+  "source_packet_sha256": "8f86eb71eb7f031e5b85bdf972097556eae3807a4250c2280def26a256651d81",
   "suppressed_cause_codes": [],
   "temporary_source_continuity": {
     "active": false,
     "expires_local_date": "2026-11-01",
-    "expiry_at_utc": null,
+    "expiry_at_utc": "2026-11-06T19:00:00Z",
     "refresh_admitted": false,
     "semantics": "SOURCE_FRESHNESS_MAINTENANCE_ONLY_NO_MARKET_OR_PORTFOLIO_ACTION"
   },
