@@ -40,3 +40,18 @@ It includes all original available parent event rows, not cherry-picked disagree
 Existing due-only Shared Row and CRE output, Unified Adjudication, Compounding Learning, existing Research Supervisor and Strategist should consume only MATERIAL, source-authenticated new observations, preserving negative memory. Daily descriptive summaries or 7/14-day concerns cannot promote a new model. No automatic paid API, new agent, new cron, duplicate Task 2 branch, current production market-rule update or private wallet bridge.
 
 The program and this report are additive to original #1596 and do not modify original open source ancestry PR #1814, model policy PR #1823, official Kompas, CN or Alpha Lab.
+
+
+## 5. Existing daily writer integration, second bounded release
+
+The existing scheduled Framework Learning Operations owner is already scheduled for daily weekday/weekend capture and publishes research/framework_memory. A later **read-only sidecar inside this existing workflow** runs the archive-first source report against the original latest source rows, only on existing MAIN daily operations, after source/outcome maturation and before the original writer commit step. It DOES NOT create a new schedule, new writer job, new market data provider, Alpha cross-repo importer or live Compass engine.
+
+Output: research/framework_memory/task2_archive_first/LATEST.json, under the original operations writer's already covered research/framework_memory add list. The source report is research-only and is never inserted into the official Compass forecast owner or counted as an independently admitted experimental outcome.
+
+The new output is **idempotent on source content**. If all original source Git blobs, raw research classification and E1/E2/E3 evaluation results are unchanged, rerunning on another day returns SOURCE_UNCHANGED_NO_WRITE even if the clock changed. On changed source evidence it emits SOURCE_CHANGED_ADVISORY_WRITTEN; the original operations writer then handles existing main commit and readback. The old advisory's contract/authority, target path and symlink safety are checked before an update, and a malformed prior advisory is never blindly overwritten.
+
+The step uses continue-on-error solely so the optional research sidecar cannot stop existing daily source/forecast operations. This is **NOT evidence the daily run succeeded** or a license to ignore source errors: the original GitHub job log, preserved original source delta, latest output and next natural consumer must still be inspected. The original research report must remain UNKNOWN if no accepted production artifact exists. Existing original Compounding Learning and Strategist retain independent scientific eligibility and canonical-change barriers.
+
+Native tests cover new-source write, time-only no-op, re-evaluation on source content changes, reject market authority, reject unsafe previous output, and reject symlink redirect. CI is on the original Framework Learning Operations PR-only read-only validation job, not a new workflow.
+
+Release criterion: exact-head native workflow and universal architecture/health gates succeed, qualified merge/main readback and a following actual original daily workflow emits accepted latest advisory. Technical deployment does NOT claim that a model improved, nor that historical 12h Kompas edge has been proven.
