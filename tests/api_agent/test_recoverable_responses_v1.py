@@ -127,6 +127,42 @@ class RecoveryTests(unittest.TestCase):
                             post=lambda *_: self.fail("unsafe POST"))
             self.assertFalse((Path(td) / "out" / "attempt.json").exists())
 
+    def test_terminal_incomplete_persists_bounded_no_secret_diagnostics(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "attempt"
+            t.start(payload(), "fake", root,
+                    post=lambda *_args, **_kwargs: HttpResult({
+                        "id": "resp_abc1234"}))
+            calls = []
+            def terminal(req, timeout):
+                calls.append(req.get_method())
+                return HttpResult({
+                    "id": "resp_abc1234",
+                    "status": "incomplete",
+                    "incomplete_details": {"reason": "max_output_tokens",
+                                           "private_message": "NEVER_PUBLISH"},
+                    "usage": {"input_tokens": 17001, "output_tokens": 16000,
+                              "output_tokens_details": {"reasoning_tokens": 15550}},
+                    "output": [{"content": "SENSITIVE_OUTPUT_DO_NOT_PRINT"}],
+                })
+            with self.assertRaisesRegex(ValueError,
+                                         "BACKGROUND_TERMINAL_INCOMPLETE_REASON_MAX_OUTPUT_TOKENS"):
+                t.collect(payload(), "fake", root, get=terminal)
+            evidence = json.loads((root / "terminal_evidence.json").read_text())
+            self.assertEqual(calls, ["GET"])
+            self.assertEqual(evidence["provider_status"], "incomplete")
+            self.assertEqual(evidence["incomplete_reason"], "max_output_tokens")
+            self.assertEqual(evidence["input_tokens"], 17001)
+            self.assertEqual(evidence["output_tokens"], 16000)
+            self.assertEqual(evidence["reasoning_tokens"], 15550)
+            self.assertEqual(evidence["additional_paid_posts"], 0)
+            self.assertNotIn("SENSITIVE_OUTPUT_DO_NOT_PRINT",
+                             (root / "terminal_evidence.json").read_text())
+            self.assertNotIn("NEVER_PUBLISH",
+                             (root / "terminal_evidence.json").read_text())
+            self.assertNotIn("resp_abc1234",
+                             (root / "terminal_evidence.json").read_text())
+
     def test_failed_or_unknown_provider_status_is_not_success(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "attempt"
