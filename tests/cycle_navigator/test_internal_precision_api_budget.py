@@ -255,7 +255,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
         # POST exposures even in a CN-only fixture. A syntactically valid
         # empty ledger is a forbidden undercount, never an isolation shortcut.
         isolated_risk = self.root / "fixture-global-api-risk.json"
-        frozen_old = ("41870364609", "41949497953")
+        frozen_old = ("41870364609", "41949497953", "42204120988")
         isolated_risk.write_text(json.dumps({
             "contract": "API_PENDING_BILLING_RISK_V1",
             "no_retry_original_ids": True,
@@ -277,14 +277,14 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             "--liability-ledger", str(isolated_risk),
         ]
         allowed = subprocess.run(base_cmd + [
-            "--hard-stop-usd", "6.4", "--reserve-usd", "0.1"
+            "--hard-stop-usd", "9.4", "--reserve-usd", "0.1"
         ], capture_output=True, text=True)
         self.assertEqual(allowed.returncode, 0, allowed.stderr)
         self.assertEqual(json.loads(allowed.stdout)["spent_usd"], 0.12)
-        self.assertEqual(json.loads(allowed.stdout)["pending_liability_upper_usd"], 6)
-        self.assertEqual(json.loads(allowed.stdout)["exposure_range_max_usd"], 6.12)
+        self.assertEqual(json.loads(allowed.stdout)["pending_liability_upper_usd"], 9)
+        self.assertEqual(json.loads(allowed.stdout)["exposure_range_max_usd"], 9.12)
         blocked = subprocess.run(base_cmd + [
-            "--hard-stop-usd", "6.2", "--reserve-usd", "0.1"
+            "--hard-stop-usd", "9.2", "--reserve-usd", "0.1"
         ], capture_output=True, text=True)
         self.assertNotEqual(blocked.returncode, 0)
         self.assertEqual(json.loads(blocked.stdout)["status"], "BLOCKED")
