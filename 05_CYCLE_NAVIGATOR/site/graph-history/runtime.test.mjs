@@ -67,9 +67,10 @@ async function run(value,{clientWidth=390,fetchError=false}={}){
  await vm.runInNewContext('(async()=>{'+javascript+'\n})()',{document,fetch,Date,Intl,console},{timeout:3500});
  const paths=elements.get('plot').children.filter(x=>x.tag==='path');
  return {elements,fetched,paths,
-  blue:paths.filter(x=>x.attrs.stroke==='#79aaff'),
-  green:paths.filter(x=>x.attrs.stroke==='#31d0a0'),
-  amber:paths.filter(x=>x.attrs.stroke==='#e9ae65')};
+  blue:paths.filter(x=>x.attrs.stroke==='#2563eb'),
+  green:paths.filter(x=>x.attrs.stroke==='#099866'),
+  amber:paths.filter(x=>x.attrs.stroke==='#e9ae65'),
+  dividers:elements.get('plot').children.filter(x=>x.tag==='line'&&x.attrs.stroke==='#9aa8bb')};
 }
 test('W45 0/7 + synthetic W46 7/7 is shown with USDT original blue only, green has hourly gap',async()=>{
  const r=await run(fixture());
@@ -79,6 +80,7 @@ test('W45 0/7 + synthetic W46 7/7 is shown with USDT original blue only, green h
  assert.equal(r.fetched.length,1);
  assert.equal(r.blue.length,1);
  assert.equal(r.green.length,1);
+ assert.equal(r.dividers.length,2,'WEEK_SEPARATORS_MISSING');
  assert.ok((r.green[0].attrs.d.match(/M/g)||[]).length>=2,'MISSING_SOURCE_HOUR_INTERPOLATED');
  assert.match(r.elements.get('notice').textContent,/1 uge\(r\)/);
  assert.match(r.elements.get('last-close').textContent,/USDT/);
@@ -138,19 +140,18 @@ function honestThursday(){
   BTC:row('BTC'),ETH:row('ETH')};
 }
 
-test('truly Thursday-issued W45 suffix draws amber now alongside independent W46 Monday blue',async()=>{
+test('later Thursday W45 research is never plotted as a competing third forecast series',async()=>{
  const d=fixture();d.first_honest_midweek_research=honestThursday();
  const r=await run(d);
- assert.equal(r.amber.length,1);
+ assert.equal(r.amber.length,0,'RESEARCH_SNEAKED_INTO_APPROVED_TWO_LINE_HISTORY');
  assert.equal(r.blue.length,1);
  assert.equal(r.green.length,1);
  assert.equal(r.elements.get('forecasts').textContent,1,'RESEARCH_MUST_NOT_COUNT_AS_ORIGINAL');
- assert.match(r.elements.get('notice').textContent,/Gul stiplet/);
- assert.equal((r.amber[0].attrs.d.match(/L/g)||[]).length,3,'RESEARCH_NOT_FOUR_FUTURE_POINTS');
+ assert.doesNotMatch(r.elements.get('notice').textContent,/Gul stiplet/);
  assert.equal(d.first_honest_midweek_research.BTC[0].target_at_utc,'2026-11-06T00:00:00Z');
 });
 
-test('backdated or promoted W45 research is rejected without hiding real green and W46 blue',async()=>{
+test('malformed or promoted W45 research never changes original green and blue history',async()=>{
  const mutations=[
   d=>{d.first_honest_midweek_research.issued_at_utc='2026-11-05T18:00:00Z'},
   d=>{d.first_honest_midweek_research.input_cutoff_utc='2026-11-05T21:00:00Z'},
@@ -180,4 +181,19 @@ test('offline Graph History fails closed without fabricated observations or a so
  assert.equal(r.blue.length,0);
  assert.equal(r.green.length,0);
  assert.match(r.elements.get('notice').textContent,/utilgængelig/);
+});
+
+test('original approved light History styling and compact route use one verified renderer',async()=>{
+ const html=page;
+ assert.match(html,/background:#f6f8fc/);
+ assert.match(html,/\.cn-embedded-history #plot\{/);
+ assert.match(html,/URLSearchParams\(location\.search\)/);
+ assert.match(html,/Ugegrænser/);
+ assert.doesNotMatch(html,/radial-gradient\(/);
+ assert.doesNotMatch(html,/class="midweek"/);
+ const d=fixture();d.weeks=[week45()];
+ const r=await run(d,{clientWidth:430});
+ assert.equal(r.elements.get('plot').attrs.width,'430','SINGLE_WEEK_MUST_NOT_FORCE_WIDE_SCROLL');
+ assert.equal(r.dividers.length,1,'VISIBLE_WEEK_BOUNDARY_REQUIRED');
+ assert.equal(r.blue.length,0,'W45_MISSING_FORECAST_MUST_REMAIN_UNPLOTTED');
 });
