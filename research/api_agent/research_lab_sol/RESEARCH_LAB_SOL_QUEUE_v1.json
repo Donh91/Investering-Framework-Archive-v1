@@ -375,7 +375,7 @@
     {
       "sequence": 15,
       "mission_id": "TASK2-DAILY-EVIDENCE-LEARNING-SOL61-MAX-20261106",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_PRE_HTTP_BUILD_FAILURE_NO_PROVIDER_POST",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__TASK2_DAILY_EVIDENCE_LEARNING_SOL61_MAX_v1.json",
       "context_status": "NEW_SOURCE_FROZEN_TASK2_SCIENTIFIC_TO_DAILY_LEARNING_DISTINCT_FROM_S1_AND_FULL_CYCLE",
       "context_paths": [
@@ -397,6 +397,34 @@
       ],
       "release_gate": "NATIVE_DONH91_SINGLE_NEW_OWNER_SIGNED_PACKET_SHA_AND_PUBLIC_30D_CONSENT_WITH_ACCOUNT_LANE_LIABILITY_GUARD",
       "pass_scope": "SOURCE_TRACEABLE_DEDUPED_DAILY_EVIDENCE_TO_LEARNING_ARCHITECTURE_ADVISORY_ONLY",
+      "new_paid_attempts_authorized": false,
+      "max_paid_attempts": 1,
+      "no_automatic_retry": true,
+      "owner_issue": 1156,
+      "requested_effort": "max",
+      "public_storage_consent_30_days": true,
+      "previous_distinct_completed_mission": "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B",
+      "previous_attempt": "NATIVE_ACTIONS_42218784447_BUILD_IMPORT_ERROR_PRE_CLAIM_PRE_POST",
+      "owner_hold_reason": "Native issue #1476 trigger 6684941928, run 42218784447: budget/admission PASS, build ModuleNotFoundError, reserve-max-claim and paid gateway SKIPPED; no durable claim or provider POST. Single-use release terminal. Independently merged CLI import repair main cdd0e96b2fa9b1cbdad36c8fbdc00a578e83f088, no replay."
+    },
+    {
+      "sequence": 16,
+      "mission_id": "S1-GOAL-NATIVE-G0G4-AUTONOMY-SOL61-MAX-20261106",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__S1_GOAL_NATIVE_G0G4_SOL61_MAX_v1.json",
+      "context_status": "NEW_DISTINCT_OWNER_APPROVED_G0_G4_NATIVE_AUTONOMY_NOT_DUPLICATE_PRIOR_S1_TRIAGE",
+      "context_paths": [
+        "00_FMOS/CHAT_S1_ELITE_RUNBOOK.md",
+        ".agents/skills/s1-pr-repair-learning/SKILL.md",
+        "scripts/framework_intelligence/automation_orchestration_v1.py",
+        "scripts/governance/s1_agent_handoff_receipts_v1.py",
+        "research/framework_learning/LATEST_SUPERVISOR_STATE.json",
+        "research/api_agent/coordination/SOL_MAX_SHARED_MODEL_POLICY_V1.json",
+        "07_PROMPTS_AND_AGENTS/api/SHARED_SOL_MAX_CROSS_THREAD_RUNBOOK_V1.md",
+        "00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md"
+      ],
+      "release_gate": "NEW_NATIVE_DONH91_ONE_USE_SHA_SIGNED_ISSUE1476_PUBLIC30D_CONSENT_AND_BUDGET",
+      "pass_scope": "READ_ONLY_SOURCE_PINNED_G0_G4_NATIVE_S1_CAUSAL_AUDIT_MAX_THREE_PATCHES",
       "new_paid_attempts_authorized": true,
       "max_paid_attempts": 1,
       "no_automatic_retry": true,
@@ -416,6 +444,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "TASK2-DAILY-EVIDENCE-LEARNING-SOL61-MAX-20261106",
-  "program_phase": "TASK2_OWNER_AUTHORIZED_DAILY_EVIDENCE_LEARNING_SINGLE_NEW_PUBLIC_SOL_MAX_ONE_SHOT"
+  "active_mission": "S1-GOAL-NATIVE-G0G4-AUTONOMY-SOL61-MAX-20261106",
+  "program_phase": "FIVE_GOAL_OWNER_APPROVED_MISSION_1_OF_5_SEQUENTIAL_ONE_SHOT"
 }
