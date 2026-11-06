@@ -3,6 +3,8 @@ import unittest
 import json
 import os
 import tempfile
+import subprocess
+import sys
 from unittest.mock import patch
 from pathlib import Path
 from scripts.api_agent import research_lab_sol_dispatch as native
@@ -12,6 +14,23 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
     def setUp(self):
         self.base={"tasks":{TASK_NAME:{"model":"gpt-6.1-sol","reasoning_effort":"high","max_attempts":1}}}
         self.packet={"mission_id":MAX_ONESHOT_MISSION,"original_owner_issue":1156,"reasoning_effort":"max","max_runs_for_this_release":1,"max_model_output_tokens_per_new_attempt":48000,"public_storage_consent_30_days":True,"public_storage_consent_comment_id":6683279250,"public_source_only":True,"one_shot_owner_mandate":"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6683279250","review_only_no_code_write":True,"authority":{"portfolio_action":False,"repository_write":False}}
+    def test_native_actions_direct_script_build_resolves_absolute_imports(self):
+        # This is the exact CLI mode used by the issue_comment workflow.
+        # No paid gateway invocation: build creates only a local context file.
+        root = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as td:
+            result = subprocess.run(
+                [sys.executable, "scripts/api_agent/research_lab_sol_dispatch.py",
+                 "build", "--repo-root", str(root), "--output-dir", td,
+                 "--mission-id", "TASK2-DAILY-EVIDENCE-LEARNING-SOL61-MAX-20261106",
+                 "--issue-number", "1476", "--comment-id", "6684941928"],
+                cwd=root, text=True, capture_output=True, timeout=25,
+                env={**os.environ, "PYTHONPATH": ""},
+            )
+            self.assertNotIn("ModuleNotFoundError", result.stderr)
+            self.assertEqual(result.returncode, 0, result.stderr[-1800:])
+            self.assertTrue((Path(td) / "context.json").exists())
+
     def test_max_and_no_global_mutation(self):
         out=effective_registry_for_mission(self.base,self.packet,MAX_ONESHOT_MISSION)
         self.assertEqual(out["tasks"][TASK_NAME]["reasoning_effort"],"max")
