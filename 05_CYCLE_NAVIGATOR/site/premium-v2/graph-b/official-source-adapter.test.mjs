@@ -323,3 +323,60 @@ test('two source-issued daily contracts with conflicting bounds fail closed on B
   assert.equal(readOfficialGraphB(x,asset,when).forecast.length,7);
  }
 });
+
+
+test('genuine source-owned daily high/low is projected only for contiguous covered UTC hours',()=>{
+ const x=bindSameQuotedNativeSource(fixture()),m=x.public_live_precision;
+ const start=Date.parse('2026-10-19T00:00:00Z');
+ const times=Array.from({length:6},(_,i)=>new Date(start+(i+1)*3600000).toISOString());
+ const mkRows=(asset)=>Array.from({length:7},(_,i)=>i===0?{
+  day:1,date:'2026-10-19',observed_hours:6,expected_hours:6,
+  coverage_complete_to_date:true,status:'LIVE',
+  low:asset==='BTC'?81000:2350,high:asset==='BTC'?83500:2500,
+  close:asset==='BTC'?82500:2450,as_of_utc:'2026-10-19T06:00:00Z'
+ }:{day:i+1,date:new Date(start+i*86400000).toISOString().slice(0,10),
+  observed_hours:0,expected_hours:0,coverage_complete_to_date:false,
+  status:'NOT_STARTED',low:null,high:null,close:null,as_of_utc:null});
+ m.hourly_price_path.observed_through_utc='2026-10-19T06:00:00Z';
+ m.daily_observations={contract:'CN_PUBLIC_DAILY_OBSERVATIONS_v1',timezone:'UTC',
+  observed_through_utc:'2026-10-19T06:00:00Z',BTC:mkRows('BTC'),ETH:mkRows('ETH')};
+ for(const asset of ['BTC','ETH']){
+  const endValue=asset==='BTC'?82500:2450;
+  const middle=asset==='BTC'?82000:2400;
+  m.hourly_price_path[asset]=times.map((t,i)=>({
+   observed_at_utc:t,close:i===5?endValue:middle
+  }));
+ }
+ const at={now_utc:'2026-10-19T06:20:00Z'};
+ const positive=readOfficialGraphB(x,'BTC',at);
+ assert.equal(positive.source_status,'SOURCE_BOUNDED');
+ assert.equal(positive.actual_daily_ranges.length,1);
+ assert.equal(positive.actual_daily_ranges[0].status,'LIVE');
+ assert.equal(positive.actual_daily_ranges[0].as_of_utc,'2026-10-19T06:00:00Z');
+ assert.equal(positive.actual_daily_ranges[0].low,81000);
+ assert.equal(positive.actual_daily_ranges[0].high,83500);
+ assert.equal(readOfficialGraphB(x,'ETH',at).actual_daily_ranges.length,1);
+ const row=m.daily_observations.BTC[0],original={...row};
+ for(const [key,bad] of [
+  ['coverage_complete_to_date',false],['expected_hours',5],
+  ['date','2026-10-20'],['as_of_utc','2026-10-19T07:00:00Z'],
+  ['high',82499],['status','COMPLETE']]){
+  row[key]=bad;
+  assert.deepEqual(readOfficialGraphB(x,'BTC',at).actual_daily_ranges,[],key);
+  Object.assign(row,original);
+ }
+ m.hourly_price_path.BTC.splice(2,1);
+ assert.deepEqual(readOfficialGraphB(x,'BTC',at).actual_daily_ranges,[]);
+ assert.equal(readOfficialGraphB(x,'ETH',at).actual_daily_ranges.length,1);
+});
+
+test('daily observed range is excluded when quote or source date is unverified',()=>{
+ const x=fixture(),m=x.public_live_precision;
+ m.daily_observations.timezone='UTC';
+ m.daily_observations.BTC=Array.from({length:7},(_,i)=>({
+  day:i+1,date:new Date(Date.parse('2026-10-19T00:00:00Z')+i*86400000).toISOString().slice(0,10),
+  observed_hours:0,expected_hours:0,coverage_complete_to_date:false,
+  status:'NOT_STARTED',low:null,high:null,close:null,as_of_utc:null
+ }));
+ assert.deepEqual(readOfficialGraphB(x,'BTC',{now_utc:now}).actual_daily_ranges,[]);
+});

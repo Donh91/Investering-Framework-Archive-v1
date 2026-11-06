@@ -24,7 +24,7 @@ const empty=(asset,reason)=>({
  contract:'CN_PREMIUM_V2_GRAPH_B_PRESENTATION_v1',
  asset,source_status:'UNAVAILABLE',source_reason:reason,
  forecast_status:'UNAVAILABLE',forecast:[],bands:[],
- actual_segments:[],hourly_observations:[],last_observed_at_utc:null,
+ actual_segments:[],hourly_observations:[],actual_daily_ranges:[],last_observed_at_utc:null,
  live_freshness:'UNAVAILABLE',is_current_quote:false,
  proof_authority:false,score_authority:false
 });
@@ -38,6 +38,43 @@ function runs(points){
  }
  if(current.length)out.push(current);
  return out;
+}
+// Read-only, hour-bound original daily OHLC evidence. This does NOT infer
+// intraday high/low from hourly closes or turn an observation into a forecast.
+// A day with any missing or conflicting hourly source is omitted completely.
+function originalActualDaily(obs,asset,points,start,cutoff,now,actualQuote){
+ const rows=obs?.[asset];
+ if(obs?.timezone!=='UTC'||actualQuote!=='USDT'||!Array.isArray(rows)||rows.length!==7)return [];
+ const byTime=new Map(points.map(p=>[p.time*1000,p.value]));
+ const result=[];
+ for(let i=0;i<7;i++){
+  const row=rows[i],from=start+i*DAY,to=from+DAY;
+  if(!row||row.day!==i+1||row.date!==new Date(from).toISOString().slice(0,10)||
+     row.coverage_complete_to_date!==true||
+     !Number.isInteger(row.observed_hours)||!Number.isInteger(row.expected_hours)||
+     row.expected_hours<1||row.expected_hours>24||
+     row.observed_hours!==row.expected_hours||
+     !['LIVE','COMPLETE'].includes(row.status)||
+     ![row.low,row.high,row.close].every(NUM)||
+     row.low>row.close||row.close>row.high)continue;
+  const expected=Math.min(24,Math.max(0,Math.floor((cutoff-from)/HOUR)));
+  const asOf=date(row.as_of_utc);
+  if(expected!==row.expected_hours||asOf!==from+expected*HOUR||
+     asOf>now||asOf>cutoff||asOf>to||
+     (row.status==='COMPLETE')!==(expected===24))continue;
+  let contiguous=true,lastClose=null;
+  for(let hour=1;hour<=expected;hour++){
+   const close=byTime.get(from+hour*HOUR);
+   if(!NUM(close)||close<row.low||close>row.high){contiguous=false;break}
+   lastClose=close;
+  }
+  if(!contiguous||lastClose!==row.close)continue;
+  result.push({day:i+1,date:row.date,status:row.status,
+   low:row.low,high:row.high,close:row.close,
+   as_of_utc:row.as_of_utc,as_of_time:asOf/1000,
+   observed_hours:expected});
+ }
+ return result;
 }
 export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=null}={}){
  const bad=reason=>empty(asset,reason);
@@ -156,6 +193,7 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
    dailyRangeStatus='PUBLISHED_INVALID_FAIL_CLOSED';
   }
  }
+ const actualDailyRanges=originalActualDaily(obs,asset,points,start,cutoff,now,actualQuote);
  // The global cutoff is provenance, NOT the last price for this asset.
  // BTC may have missing rows while ETH continues to publish fresh closes.
  const lastAssetClose=points.at(-1)?.observed_at_utc||null;
@@ -179,6 +217,7 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
    forecast_status:forecastStatus,forecast,bands:lowHigh,
    daily_range_status:dailyRangeStatus,daily_ranges:dailyRanges,
    hourly_observations:points,actual_segments:runs(points),
+   actual_daily_ranges:actualDailyRanges,
    last_observed_at_utc:lastAssetClose,
    provenance_observed_through_utc:h.observed_through_utc,
    live_freshness:stale?'STALE':'FRESH',
