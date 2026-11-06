@@ -23,7 +23,8 @@
       "legacy_sol": "gpt-6-sol"
     },
     "terra_note": "NO_OFFICIAL_GPT_6_TERRA_MODEL_ID_VERIFIED_AS_OF_2026-09-27",
-    "sol_6_1_note": "GPT-6.1 Sol is the preferred current senior specialist when runtime-qualified; GPT-6 Sol remains a compatibility fallback during staged migration."
+    "sol_6_1_note": "GPT-6.1 Sol is the preferred current senior specialist when runtime-qualified; GPT-6 Sol remains a compatibility fallback during staged migration.",
+    "sol_upgrade_priority": "Prefer the newest officially verified Sol version with approved capacity/pricing plus project model GET availability. 6.2-sol remains NOT verified as of 2026-11-06. NEVER choose Astra automatically; explicit owner message and approval mandatory."
   },
   "principles": {
     "deterministic_first": true,
@@ -227,7 +228,10 @@
       "price_per_million": {
         "input": 10,
         "output": 50
-      }
+      },
+      "automatic_selection_forbidden": true,
+      "manual_owner_message_and_approval_required": true,
+      "fallback_from_sol_forbidden": true
     },
     "gpt-6-luna": {
       "rank": 1,
