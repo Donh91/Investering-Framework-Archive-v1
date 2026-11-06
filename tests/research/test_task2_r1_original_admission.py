@@ -536,7 +536,7 @@ class OriginalCausalSourceInventoryTests(unittest.TestCase):
     def test_original_forecast_must_match_frozen_main_source_and_issuer(self):
         x=causal.pinned_inputs()
         x["ledger"]["rows"][0]["original_forecast_git_blob_sha"]="0"*40
-        with self.assertRaisesRegex(ValueError,"ORIGINAL_FORECAST_IDENTITY|ORIGINAL_FORECAST_GIT_BLOB|ORIGINAL_ATTEMPT"):
+        with self.assertRaisesRegex(ValueError,"COMPARISON_ORIGINAL_IDENTITY|ORIGINAL_FORECAST_IDENTITY|ORIGINAL_ATTEMPT"):
             causal.build(originals=x)
 
     def test_original_vintage_inventory_rejects_forged_pit_promotion(self):
