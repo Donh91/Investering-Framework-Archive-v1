@@ -81,7 +81,7 @@ def choose_model(policy: dict, prices: dict, *,
     """Prefer newest approved *and project-available* Sol; 6.1 is safe fallback."""
     rows = validated_models(policy, prices)
     for row in rows:
-        if row["id"] == LEGACY_SOL or available is None or available(row["id"]):
+        if row["id"] == LEGACY_SOL or (available is not None and available(row["id"])):
             return row
     raise ValueError("SOL_MAX_NO_PROJECT_AVAILABLE_SOL")
 
