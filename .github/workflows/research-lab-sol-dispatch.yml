@@ -34,8 +34,8 @@ jobs:
 
       - name: Validate bounded Research Lab Sol machinery
         run: |
-          python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/check_api_lane_budget.py scripts/api_agent/check_monthly_cost_guard.py scripts/api_agent/research_lab_sol_dispatch.py scripts/api_agent/recoverable_responses_v1.py scripts/api_agent/research_lab_sol_recover_v1.py
-          python -m unittest tests.api_agent.test_research_lab_sol_max_owner_gate tests.api_agent.test_research_lab_sol_paid_admission tests.api_agent.test_recoverable_responses_v1 tests.api_agent.test_research_lab_sol_recover_v1 -v
+          python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/check_api_lane_budget.py scripts/api_agent/check_monthly_cost_guard.py scripts/api_agent/research_lab_sol_dispatch.py scripts/api_agent/sol_max_shared_policy_v1.py scripts/api_agent/recoverable_responses_v1.py scripts/api_agent/research_lab_sol_recover_v1.py
+          python -m unittest tests.api_agent.test_research_lab_sol_max_owner_gate tests.api_agent.test_sol_max_shared_policy_v1 tests.api_agent.test_research_lab_sol_paid_admission tests.api_agent.test_recoverable_responses_v1 tests.api_agent.test_research_lab_sol_recover_v1 -v
           python - <<'PY'
           import json
           from pathlib import Path
