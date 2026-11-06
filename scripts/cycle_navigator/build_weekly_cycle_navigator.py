@@ -531,10 +531,6 @@ def _output_text(raw: dict[str, Any]) -> str:
     return "".join(parts)
 
 
-def _next_output_budget(current: int) -> int:
-    return min(max(current * 2, 12_000), 16_000)
-
-
 def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tokens: int) -> tuple[dict[str, Any], dict[str, Any]]:
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
@@ -562,66 +558,57 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Provide public_translations as exact English/Danish pairs for every public narrative you generated: market_state, all base cases, market_cycle_context why/next_gate, rotation/altseason explanations, public decision-projection summaries and expected paths, protection public_explanation, public Bull/Bear summaries, intraday_map, market_structure_analysis and evaluation strengths/misses/uncertainties. en must match the exact emitted public text; da must be professional plain Danish with identical meaning, uncertainty and all numeric tokens exactly unchanged. Do not add recommendations, probabilities or facts. Do not translate identifiers, private scenarios, thresholds, prompts, readable_markdown or x_ready_markdown. This is presentation metadata only, with no market/scoring authority and no additional model call. "
         "This publication has no authority to change Master Monday, thresholds, model weights or portfolio execution."
     )
-    budget = max_output_tokens
-    for attempt in range(2):
-        payload = {
-            "model": model,
-            "reasoning": {"effort": "high", "context": "current_turn"},
-            "store": False,
-            "max_output_tokens": budget,
-            "instructions": instructions,
-            "input": [{"role": "user", "content": [{"type": "input_text", "text": json.dumps({"task": "CYCLE_NAVIGATOR_WEEKLY_PUBLICATION", "prompt": prompt, "context": context}, sort_keys=True)}]}],
-            "text": {"format": {"type": "json_schema", "name": "cycle_navigator_weekly_v1_1", "strict": True, "schema": output_schema()}}
-        }
-        req = urllib.request.Request(
-            "https://api.openai.com/v1/responses",
-            data=canonical_bytes(payload),
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=180) as response:
-                raw = json.loads(response.read())
-        except urllib.error.HTTPError as exc:
-            body = exc.read().decode(errors="replace")
-            raise RuntimeError(f"openai_http_{exc.code}:{body[:600]}") from exc
-        except (TimeoutError, urllib.error.URLError) as exc:
-            if attempt == 0:
-                continue
-            raise RuntimeError(f"openai_transport_retry_exhausted:{type(exc).__name__}") from exc
+    # One source-owned weekly issue attempt may make ONE paid HTTP POST.
+    # A timed-out POST can have reached the provider: never silently bill twice.
+    # Completed-but-incomplete/malformed output is billable too; fail closed
+    # and preserve the original source/provenance rather than resubmit.
+    payload = {
+        "model": model,
+        "reasoning": {"effort": "high", "context": "current_turn"},
+        "store": False,
+        "max_output_tokens": max_output_tokens,
+        "instructions": instructions,
+        "input": [{"role": "user", "content": [{"type": "input_text", "text": json.dumps({"task": "CYCLE_NAVIGATOR_WEEKLY_PUBLICATION", "prompt": prompt, "context": context}, sort_keys=True)}]}],
+        "text": {"format": {"type": "json_schema", "name": "cycle_navigator_weekly_v1_1", "strict": True, "schema": output_schema()}}
+    }
+    req = urllib.request.Request(
+        "https://api.openai.com/v1/responses",
+        data=canonical_bytes(payload),
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=180) as response:
+            raw = json.loads(response.read())
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode(errors="replace")
+        raise RuntimeError(f"openai_http_{exc.code}:{body[:600]}") from exc
+    except (TimeoutError, urllib.error.URLError) as exc:
+        raise RuntimeError(
+            f"openai_transport_outcome_unknown_no_retry:{type(exc).__name__}"
+        ) from exc
 
-        status = raw.get("status")
+    if not isinstance(raw, dict):
+        raise RuntimeError(f"openai_response_invalid_type:{type(raw).__name__}")
+    if raw.get("status") != "completed":
         incomplete = raw.get("incomplete_details") if isinstance(raw.get("incomplete_details"), dict) else {}
         reason = str(incomplete.get("reason") or "")
-        if status == "incomplete":
-            if attempt == 0 and reason in {"max_output_tokens", "max_tokens"}:
-                budget = _next_output_budget(budget)
-                continue
-            raise RuntimeError(f"openai_incomplete:{reason or 'unknown'}")
-
-        text = _output_text(raw)
-        if not text:
-            raise RuntimeError("missing_output_text")
-        try:
-            value = json.loads(text)
-            # Some Responses payloads can arrive as a JSON string containing the
-            # schema-conformant object. Normalize that transport quirk once before
-            # treating the output as malformed.
-            if isinstance(value, str):
-                value = json.loads(value)
-        except json.JSONDecodeError as exc:
-            if attempt == 0:
-                budget = _next_output_budget(budget)
-                continue
-            raise RuntimeError(f"invalid_structured_output_json:{exc.msg}@{exc.pos}") from exc
-        if not isinstance(value, dict):
-            if attempt == 0:
-                budget = _next_output_budget(budget)
-                continue
-            raise RuntimeError(f"invalid_structured_output_type:{type(value).__name__}")
-        return value, raw
-
-    raise RuntimeError("openai_structured_output_retry_exhausted")
+        if raw.get("status") == "incomplete":
+            raise RuntimeError(f"openai_incomplete_no_repost:{reason or 'unknown'}")
+        raise RuntimeError(f"openai_unusable_status_no_repost:{raw.get('status')}")
+    text = _output_text(raw)
+    if not text:
+        raise RuntimeError("missing_output_text_no_repost")
+    try:
+        value = json.loads(text)
+        # Double-encoded but complete responses can be normalized locally.
+        if isinstance(value, str):
+            value = json.loads(value)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"invalid_structured_output_json_no_repost:{exc.msg}@{exc.pos}") from exc
+    if not isinstance(value, dict):
+        raise RuntimeError(f"invalid_structured_output_type_no_repost:{type(value).__name__}")
+    return value, raw
 
 
 def build_weekly_price_product_diagnostic(

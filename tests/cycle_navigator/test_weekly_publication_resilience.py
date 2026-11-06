@@ -68,58 +68,56 @@ def test_double_encoded_structured_object_is_normalized_without_retry(monkeypatc
     assert budgets == [12_000]
 
 
-def test_transport_timeout_retries_once(monkeypatch):
+def test_transport_timeout_never_reposts_an_ambiguous_paid_call(monkeypatch):
     budgets = install_responses(monkeypatch, [
         TimeoutError("read timed out"),
-        {"status": "completed", "output_text": json.dumps({"ok": True}), "usage": {}},
+        {"status": "completed", "output_text": json.dumps({"ok": True})},
     ])
-    value, _ = mod.call_openai("test-model", "prompt", {}, 12_000)
-    assert value == {"ok": True}
-    assert budgets == [12_000, 12_000]
-
-
-def test_second_transport_timeout_fails_closed(monkeypatch):
-    budgets = install_responses(monkeypatch, [
-        TimeoutError("read timed out"),
-        TimeoutError("read timed out again"),
-    ])
-    with pytest.raises(RuntimeError, match="openai_transport_retry_exhausted"):
+    with pytest.raises(RuntimeError, match="openai_transport_outcome_unknown_no_retry"):
         mod.call_openai("test-model", "prompt", {}, 12_000)
-    assert budgets == [12_000, 12_000]
+    assert budgets == [12_000]  # The potential second POST was never sent.
 
 
-def test_token_limit_incomplete_retries_once_with_larger_budget(monkeypatch):
+def test_connection_error_does_not_retry_or_spawn_another_paid_post(monkeypatch):
+    from urllib.error import URLError
     budgets = install_responses(monkeypatch, [
-        {
-            "status": "incomplete",
-            "incomplete_details": {"reason": "max_tokens"},
-            "output_text": '{"partial":',
-        },
-        {"status": "completed", "output_text": json.dumps({"ok": True}), "usage": {}},
+        URLError("upstream disconnected"),
+        {"status": "completed", "output_text": json.dumps({"ok": True})},
     ])
-    value, _ = mod.call_openai("test-model", "prompt", {}, 5_000)
-    assert value == {"ok": True}
-    assert budgets == [5_000, 12_000]
+    with pytest.raises(RuntimeError, match="openai_transport_outcome_unknown_no_retry"):
+        mod.call_openai("test-model", "prompt", {}, 12_000)
+    assert budgets == [12_000]
 
 
-def test_truncated_json_retries_once_then_succeeds(monkeypatch):
+def test_billable_token_limit_incomplete_never_posts_again(monkeypatch):
+    budgets = install_responses(monkeypatch, [
+        {"status": "incomplete", "incomplete_details": {"reason": "max_tokens"},
+         "output_text": '{"partial":'},
+        {"status": "completed", "output_text": json.dumps({"ok": True})},
+    ])
+    with pytest.raises(RuntimeError, match="openai_incomplete_no_repost:max_tokens"):
+        mod.call_openai("test-model", "prompt", {}, 5_000)
+    assert budgets == [5_000]
+
+
+def test_billable_malformed_json_never_posts_again(monkeypatch):
     budgets = install_responses(monkeypatch, [
         {"status": "completed", "output_text": '{"ok":'},
-        {"status": "completed", "output_text": json.dumps({"ok": True}), "usage": {}},
+        {"status": "completed", "output_text": json.dumps({"ok": True})},
     ])
-    value, _ = mod.call_openai("test-model", "prompt", {}, 12_000)
-    assert value == {"ok": True}
-    assert budgets == [12_000, 16_000]
-
-
-def test_second_truncated_json_fails_closed(monkeypatch):
-    budgets = install_responses(monkeypatch, [
-        {"status": "completed", "output_text": '{"ok":'},
-        {"status": "completed", "output_text": '{"still":'},
-    ])
-    with pytest.raises(RuntimeError, match="invalid_structured_output_json"):
+    with pytest.raises(RuntimeError, match="invalid_structured_output_json_no_repost"):
         mod.call_openai("test-model", "prompt", {}, 12_000)
-    assert budgets == [12_000, 16_000]
+    assert budgets == [12_000]
+
+
+def test_double_encoded_but_invalid_json_never_retries(monkeypatch):
+    budgets = install_responses(monkeypatch, [
+        {"status": "completed", "output_text": json.dumps('{"bad":')},
+        {"status": "completed", "output_text": json.dumps({"ok": True})},
+    ])
+    with pytest.raises(RuntimeError, match="invalid_structured_output_json_no_repost"):
+        mod.call_openai("test-model", "prompt", {}, 12_000)
+    assert budgets == [12_000]
 
 
 def test_non_token_incomplete_fails_without_retry(monkeypatch):
@@ -130,15 +128,19 @@ def test_non_token_incomplete_fails_without_retry(monkeypatch):
             "output_text": "",
         }
     ])
-    with pytest.raises(RuntimeError, match="openai_incomplete:content_filter"):
+    with pytest.raises(RuntimeError, match="openai_incomplete_no_repost:content_filter"):
         mod.call_openai("test-model", "prompt", {}, 12_000)
     assert budgets == [12_000]
 
 
-def test_output_budget_growth_is_bounded():
-    assert mod._next_output_budget(5_000) == 12_000
-    assert mod._next_output_budget(12_000) == 16_000
-    assert mod._next_output_budget(16_000) == 16_000
+def test_non_object_result_fails_without_duplicate_post(monkeypatch):
+    budgets = install_responses(monkeypatch, [
+        {"status": "completed", "output_text": json.dumps(23)},
+        {"status": "completed", "output_text": json.dumps({"ok": True})},
+    ])
+    with pytest.raises(RuntimeError, match="invalid_structured_output_type_no_repost:int"):
+        mod.call_openai("test-model", "prompt", {}, 12_000)
+    assert budgets == [12_000]
 
 
 def test_intraday_validation_does_not_shadow_structured_output_mapping():
@@ -250,3 +252,23 @@ def test_monday_daily_range_guidance_is_day_first_and_source_bound():
     assert "NEW DAILY RANGE RESEARCH:" not in text
     assert "PRIMARY SEVEN-DAY PRICE PATH PRODUCT:" not in text
     assert "OWNER-APPROVED MONDAY PRODUCT ACCEPTANCE:" not in text
+
+
+def test_single_post_fails_closed_on_unexpected_provider_status(monkeypatch):
+    budgets = install_responses(monkeypatch, [
+        {"status": "queued", "output_text": json.dumps({"ok": True})},
+        {"status": "completed", "output_text": json.dumps({"ok": True})},
+    ])
+    with pytest.raises(RuntimeError, match="openai_unusable_status_no_repost:queued"):
+        mod.call_openai("test-model", "prompt", {}, 12_000)
+    assert budgets == [12_000]
+
+
+def test_single_post_source_guard_has_no_retry_loop():
+    source = (ROOT / "scripts/cycle_navigator/build_weekly_cycle_navigator.py").read_text()
+    tree = ast.parse(source)
+    fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "call_openai")
+    assert not any(isinstance(n, (ast.For, ast.While)) for n in ast.walk(fn))
+    posts = [n for n in ast.walk(fn) if isinstance(n, ast.Call)
+             and isinstance(n.func, ast.Attribute) and n.func.attr == "urlopen"]
+    assert len(posts) == 1
