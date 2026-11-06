@@ -5,7 +5,7 @@
  */
 import '../vnext-live/premium-experience.css';
 import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
-import {sourceTrace,displayPublicStatus,displayLongDirection} from '../vnext-live/source-trace.mjs';
+import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfidence} from '../vnext-live/source-trace.mjs';
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
@@ -411,13 +411,13 @@ function renderForward(){
   value==='DOWN'?say('NED','DOWN'):
   value==='MIXED'?say('BLANDET','MIXED'):
   value==='SIDEWAYS'?say('SIDEVÆRTS','SIDEWAYS'):
-  value==='NO_EDGE'?say('INGEN PÅVIST EDGE','NO DEMONSTRATED EDGE'):'UNAVAILABLE';
+  value==='NO_EDGE'?say('INGEN PÅVIST EDGE','NO DEMONSTRATED EDGE'):say('UTILGÆNGELIG','UNAVAILABLE');
  let out=null;
  try{
    const trace=sourceTrace(feeds?.latest,feeds?.compass,view);
    out=forwardOutlook(feeds?.latest,feeds?.compass,trace);
  }catch{out=null}
- set('cn-forward-source-status',out?.status||'UNAVAILABLE');
+ set('cn-forward-source-status',displayPublicStatus(out?.status||'UNAVAILABLE',lang));
  set('cn-forward-week-direction',direction(out?.weekly?.direction));
  set('cn-forward-strategic-direction',direction(out?.strategic?.direction));
  set('cn-forward-week-copy',out?.weekly?.summary||
@@ -427,7 +427,7 @@ function renderForward(){
  set('cn-forward-issued',out?.strategic?.issued_at_utc?time(out.strategic.issued_at_utc):'—');
  set('cn-forward-assets',out?.strategic?.available?
    'BTC '+direction(out.strategic.btc_direction)+' / ETH '+
-   direction(out.strategic.eth_direction)+' · '+safe(out.strategic.confidence):'—');
+   direction(out.strategic.eth_direction)+' · '+displaySourceConfidence(out.strategic.confidence,lang):'—');
  set('cn-forward-path',out?.strategic?.expected_path||
    say('Ingen understøttet forventet markedssti.','No supported expected market path.'));
  const reset=id=>{const e=$(id);if(e)e.replaceChildren();return e};

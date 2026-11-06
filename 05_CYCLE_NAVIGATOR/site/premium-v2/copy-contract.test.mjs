@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {buildPremiumRootHtml} from './premium-root.mjs';
+import {displayPublicStatus,displaySourceConfidence} from '../vnext-live/source-trace.mjs';
 
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const [source,graphCode,compassShell,app,marketPremium]=await Promise.all([
@@ -60,4 +61,19 @@ test('Premium site never hard-codes bearish 12h pressure for a HOLD action',()=>
  assert.match(marketPremium,/not a verified forward forecast/);
  assert.doesNotMatch(marketPremium,/The bearish 0–12h pressure reading is tactical/);
  assert.match(marketPremium,/meta\.live/);
+});
+
+test('Frozen and unavailable forward contexts are distinctly translated without new source decisions',async()=>{
+ assert.equal(displayPublicStatus('FROZEN_CONTEXT_ONLY','da'),'Frossen kontekst · ikke handlesignal');
+ assert.equal(displayPublicStatus('FROZEN_CONTEXT_ONLY','en'),'Frozen context · not a trading signal');
+ assert.equal(displayPublicStatus('UNAVAILABLE','da'),'Utilgængelig');
+ assert.equal(displaySourceConfidence('LOW','da'),'Kildesikkerhed: lav');
+ assert.equal(displaySourceConfidence('HIGH','en'),'Source confidence: high');
+ assert.equal(displaySourceConfidence('INVALID','da'),'Kildesikkerhed: ikke dokumenteret');
+ const root=await read('./root-compass-pro.mjs');
+ assert.ok(root.includes("displayPublicStatus(out?.status||'UNAVAILABLE',lang)"));
+ assert.ok(root.includes("displaySourceConfidence(out.strategic.confidence,lang)"));
+ assert.ok(!root.includes("set('cn-forward-source-status',out?.status||'UNAVAILABLE')"));
+ const preview=await read('../vnext-live/app.mjs');
+ assert.ok(preview.includes("displaySourceConfidence(output.strategic.confidence,lang)"));
 });
