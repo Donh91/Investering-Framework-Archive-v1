@@ -24,6 +24,7 @@ const clean=(id,v)=>ACCEPTED[id]?.includes(v)?v:'UNAVAILABLE';
 const PUBLIC_STATUS_LABELS=Object.freeze({
  VERIFIED:['Verificeret','Verified'],UNVERIFIED:['Ikke verificeret','Unverified'],
  UNAVAILABLE:['Utilgængelig','Unavailable'],DEGRADED:['Forringet kildegrundlag','Degraded source'],
+ FROZEN_CONTEXT_ONLY:['Frossen kontekst · ikke handlesignal','Frozen context · not a trading signal'],
  HASH_VERIFIED:['Hash verificeret','Hash verified'],
  SOURCE_ALIGNED:['Kildeafstemt','Source aligned'],
  VERIFIED_NEWER_OR_DIFFERENT_SOURCE:['Verificeret anden kilde','Verified different source'],
@@ -47,6 +48,17 @@ const LONG_DIRECTION_LABELS=Object.freeze({
 export function displayPublicStatus(value,lang='da'){
  const pair=PUBLIC_STATUS_LABELS[value];
  return pair?pair[lang==='en'?1:0]:(lang==='en'?'Unknown source status':'Ukendt kildestatus');
+}
+/** Source-categorical confidence, not calibrated probability or a site judgment. */
+const SOURCE_CONFIDENCE_LABELS=Object.freeze({
+ LOW:['Kildesikkerhed: lav','Source confidence: low'],
+ MEDIUM:['Kildesikkerhed: moderat','Source confidence: moderate'],
+ HIGH:['Kildesikkerhed: høj','Source confidence: high'],
+ UNKNOWN:['Kildesikkerhed: ikke dokumenteret','Source confidence: not documented']
+});
+export function displaySourceConfidence(value,lang='da'){
+ const pair=SOURCE_CONFIDENCE_LABELS[value]||SOURCE_CONFIDENCE_LABELS.UNKNOWN;
+ return pair[lang==='en'?1:0];
 }
 export function displayLongDirection(row,lang='da'){
  if(!['CYCLE_NAVIGATOR_WEEKLY','CYCLE_NAVIGATOR_STRATEGIC_CONTEXT'].includes(row?.owner))
