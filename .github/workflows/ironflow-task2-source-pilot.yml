@@ -12,6 +12,7 @@ on:
       - 'scripts/research/ironflow_wallet_risk_v1.py'
       - 'scripts/research/ironflow_crash_forensics_v1.py'
       - 'scripts/research/ironflow_tick_hip4_qa_v1.py'
+      - 'scripts/research/ironflow_oot_ablation_v1.py'
       - '.github/workflows/ironflow-task2-source-pilot.yml'
       - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/SOURCE_MANIFEST_IRONFLOW_20261106.json'
   workflow_dispatch:
@@ -33,7 +34,7 @@ jobs:
       - name: Bounded scientific dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install 'pandas>=2.2,<3' 'numpy>=2,<3' 'pyarrow>=17,<22'
+          python -m pip install 'pandas>=2.2,<3' 'numpy>=2,<3' 'pyarrow>=17,<22' 'scikit-learn>=1.5,<2'
       - name: No-lookahead and negative-fixture regression
         run: |
           python -m unittest discover -s tests/research -p 'test_ironflow_*_v1.py' -v
@@ -73,6 +74,9 @@ jobs:
       - name: Event anatomy and adverse quiet-day controls
         run: |
           python scripts/research/ironflow_crash_forensics_v1.py --root /tmp/ironflow --output /tmp/ironflow-results/T5_CRASH_FORENSICS.json
+      - name: Exploratory out-of-time price-only vs derivative-source ablation
+        run: |
+          python scripts/research/ironflow_oot_ablation_v1.py --root /tmp/ironflow --output /tmp/ironflow-results/T2_T3_OOT_ABLATION.json
       - name: Print value-free scientific receipt
         if: always()
         run: |
