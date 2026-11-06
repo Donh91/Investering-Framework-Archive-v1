@@ -165,7 +165,14 @@ def collect(payload: dict, api_key: str, output_dir: Path, *,
             "additional_paid_posts": 0,
             "request_sha256": source_sha,
         }
-        _write_once(output_dir / "terminal_evidence.json", evidence)
+        terminal_path = output_dir / "terminal_evidence.json"
+        try:
+            _write_once(terminal_path, evidence)
+        except FileExistsError:
+            # A second GET must be idempotent only for identical original
+            # provider evidence. Never overwrite historical diagnostics.
+            if _read(terminal_path) != evidence:
+                raise ValueError("BACKGROUND_TERMINAL_DIAGNOSTIC_DRIFT")
         raise ValueError("BACKGROUND_TERMINAL_" + str(status).upper()
                          + "_REASON_" + evidence["incomplete_reason"].upper())
     return body
