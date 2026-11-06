@@ -120,6 +120,10 @@ def main():
             "hourly_clock":"completely_closed_hour_plus_1h",
             "outcome":"next_24h_any_downside_2pct",
             "selection_validity":"UNSEALED_HISTORICAL_RESEARCH_ONLY",
+            "february_2026_eligible_utc_dates":{
+                market:anchors[(anchors.month=="2026-02")&(anchors.market==market)].timestamp.dt.strftime("%Y-%m-%d").tolist()
+                for market in ("BTC-PERP","ETH-PERP","HYPE-PERP")
+            },
             "monthly_results":results,"month_summary":summarize(results)}
     (args.output_dir/"FULL18M_WALKFORWARD_RESEARCH.json").write_text(
         json.dumps(report,indent=2,allow_nan=False)+"\n")
