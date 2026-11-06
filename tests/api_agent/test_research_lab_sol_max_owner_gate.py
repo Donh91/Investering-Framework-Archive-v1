@@ -115,9 +115,11 @@ class NativeNewPaidClaimTests(unittest.TestCase):
         raise AssertionError("unexpected native mock command "+repr(command))
 
     def execute(self):
-        with patch.dict(os.environ,self.env), \\
-             patch.object(native,"current_head",return_value=self.head), \\
-             patch("subprocess.check_output",side_effect=self.remote):
+        with (
+            patch.dict(os.environ,self.env),
+            patch.object(native,"current_head",return_value=self.head),
+            patch("subprocess.check_output",side_effect=self.remote),
+        ):
             return native.reserve_native_max_claim(self.root,MAX_ONESHOT_MISSION,
                                                    1476,self.trigger)
 
