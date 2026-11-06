@@ -375,7 +375,7 @@
     {
       "sequence": 15,
       "mission_id": "TASK2-DAILY-EVIDENCE-LEARNING-SOL61-MAX-20261106",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_PRE_HTTP_BUILD_FAILURE_NO_PROVIDER_POST",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__TASK2_DAILY_EVIDENCE_LEARNING_SOL61_MAX_v1.json",
       "context_status": "NEW_SOURCE_FROZEN_TASK2_SCIENTIFIC_TO_DAILY_LEARNING_DISTINCT_FROM_S1_AND_FULL_CYCLE",
       "context_paths": [
@@ -397,13 +397,15 @@
       ],
       "release_gate": "NATIVE_DONH91_SINGLE_NEW_OWNER_SIGNED_PACKET_SHA_AND_PUBLIC_30D_CONSENT_WITH_ACCOUNT_LANE_LIABILITY_GUARD",
       "pass_scope": "SOURCE_TRACEABLE_DEDUPED_DAILY_EVIDENCE_TO_LEARNING_ARCHITECTURE_ADVISORY_ONLY",
-      "new_paid_attempts_authorized": true,
+      "new_paid_attempts_authorized": false,
       "max_paid_attempts": 1,
       "no_automatic_retry": true,
       "owner_issue": 1156,
       "requested_effort": "max",
       "public_storage_consent_30_days": true,
-      "previous_distinct_completed_mission": "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B"
+      "previous_distinct_completed_mission": "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B",
+      "previous_attempt": "FAILED_PRE_HTTP_BUILD_IMPORT_ERROR_ACTIONS_42218784447_NO_CLAIM_NO_POST",
+      "owner_hold_reason": "Original owner trigger comment 6684941928 ran GitHub Actions #42218784447; admission and budget PASS; build step failed ModuleNotFoundError before reserve-max-claim and paid gateway steps, both SKIPPED. Original release is single-use and must never be reposted. New distinct missions may be released only after dispatcher import fix merged with hosted CI, frozen new packet, exact SHA and budget check."
     }
   ],
   "authority": {
