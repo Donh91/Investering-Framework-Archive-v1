@@ -11,6 +11,7 @@ import argparse
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
+import re
 from typing import Any, Mapping
 
 from scripts.learning.kompas_pro_horizon_readback_v2 import HORIZON_IDS
@@ -80,7 +81,7 @@ def build_report(
     """
     now = utc(as_of_utc)
     horizon_rows = ledger.get("horizons") if isinstance(ledger, Mapping) else None
-    if (ledger.get("contract") != "KOMPAS_PRO_INTERNAL_HORIZON_IMPLEMENTATION_LEDGER_v2"
+    if (not isinstance(ledger, Mapping) or ledger.get("contract") != "KOMPAS_PRO_INTERNAL_HORIZON_IMPLEMENTATION_LEDGER_v2"
             or not isinstance(horizon_rows, list)
             or [r.get("id") for r in horizon_rows] != list(HORIZON_IDS)):
         raise ValueError("CANONICAL_14_HORIZON_LEDGER_REQUIRED")
@@ -178,9 +179,15 @@ def main() -> None:
     off = _load(root, op["compass_path"])
     sp = _load(root, "04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json")
     strategic = _load(root, sp["anchor_path"])
-    # A named source week is diagnostic only. It must not be rolled into
-    # a different issue week or dynamically reconstructed for a prior Monday.
-    weekly = _load(root, "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
+    # Follow existing current CN delivery pointer, never hardcode W45 or
+    # synthesize last week from calendar time. Confine paths to weekly owner.
+    wp = _load(root, "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json")
+    week_dir = wp.get("week_dir")
+    if (wp.get("contract") != "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1"
+            or not isinstance(week_dir, str)
+            or not re.fullmatch(r"05_CYCLE_NAVIGATOR/weekly/20[0-9]{2}/W[0-9]{2}", week_dir)):
+        raise ValueError("WEEKLY_OWNER_POINTER_INVALID")
+    weekly = _load(root, week_dir + "/CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
     report = build_report(ledger, op, off, sp, strategic, weekly, as_of_utc=args.as_of_utc)
     print(json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2))
 
