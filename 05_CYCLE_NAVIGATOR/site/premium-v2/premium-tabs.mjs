@@ -57,6 +57,25 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     frame.title='Grafhistorik · faktiske BTC-kurser og originale ugeprognoser';
     frame.loading='lazy';
     frame.referrerPolicy='same-origin';
+    // The preview is same-origin. Match the verified source document's actual
+    // height so narrow iPhones never show a nested vertical scrollbar.
+    // No data is copied into the parent or used to infer any forecast.
+    const fitHistory=()=>{
+      try{
+        const doc=frame.contentDocument;
+        if(!doc?.body)return;
+        const natural=Math.max(doc.body.scrollHeight,doc.documentElement.scrollHeight);
+        if(Number.isFinite(natural)&&natural>0)
+          frame.style.height=Math.ceil(natural+6)+'px';
+      }catch{/* Source-only link remains accessible if iframe is unavailable. */}
+    };
+    frame.addEventListener('load',()=>{
+      fitHistory();
+      try{
+        if(frame.contentWindow?.ResizeObserver)
+          new frame.contentWindow.ResizeObserver(fitHistory).observe(frame.contentDocument.body);
+      }catch{/* Keep fixed-height fallback if same-origin inspection is denied. */}
+    });
     entry.append(description,frame,link);
     graphPanel.append(entry);
   }
