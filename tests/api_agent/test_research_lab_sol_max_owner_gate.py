@@ -76,10 +76,24 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         # This is a one-use rotating queue, not a permanent legacy mission ID.
         # Releasing a new original owner-bound mission must not weaken the
         # one-active rule or let an old completed/unknown POST be replayed.
-        self.assertEqual(len(active), 1)
-        self.assertEqual(queue["active_mission"], active[0]["mission_id"])
-        self.assertTrue(active[0]["new_paid_attempts_authorized"])
-        self.assertEqual(active[0]["requested_effort"], "max")
+        self.assertLessEqual(len(active), 1)
+        self.assertEqual(queue["active_mission"], active[0]["mission_id"] if active else None)
+        if active:
+            self.assertTrue(active[0]["new_paid_attempts_authorized"])
+            self.assertEqual(active[0]["requested_effort"], "max")
+        else:
+            # A fully completed owner-approved five-goal program must have NO
+            # active provider mission. Paid admission remains fail-closed.
+            self.assertEqual(queue.get("program_phase"),
+                             "FIVE_GOAL_MISSIONS_1_TO_5_COMPLETE_ADVISORY_NO_ACTIVE")
+            self.assertFalse(any(row.get("new_paid_attempts_authorized", False)
+                                 for row in queue["missions"]))
+            terminal = [row for row in queue["missions"] if row["mission_id"] ==
+                        "GOAL5-ALTSEASON-CAPITAL-REALITY-LAB-SOL61-MAX-20261106B"]
+            self.assertEqual(len(terminal), 1)
+            self.assertEqual(terminal[0]["state"],
+                             "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_NO_REPOST")
+            self.assertEqual(terminal[0]["result_run_id"], 42270191125)
         for archived in ("SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105",
                          "S1-ELITE-RESILIENCE-SOL61-MAX-20261106"):
             rows=[r for r in queue["missions"] if r["mission_id"]==archived]
@@ -90,8 +104,9 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         self.assertEqual(len(old), 1)
         self.assertFalse(old[0]["new_paid_attempts_authorized"])
         self.assertNotEqual(old[0]["state"], "ACTIVE_RELEASED")
-        packet=json.loads((root/active[0]["mission_packet"]).read_text())
-        self.assertEqual(packet["mission_id"], active[0]["mission_id"])
+        mission = active[0] if active else terminal[0]
+        packet=json.loads((root/mission["mission_packet"]).read_text())
+        self.assertEqual(packet["mission_id"], mission["mission_id"])
         self.assertEqual(packet["original_owner_issue"], 1156)
         self.assertEqual(packet["reasoning_effort"], "max")
         self.assertEqual(packet["max_runs_for_this_release"], 1)
@@ -99,7 +114,7 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         self.assertTrue(packet["public_source_only"])
         self.assertTrue(packet["public_storage_consent_30_days"])
         self.assertFalse(packet["authority"]["repository_write"])
-        if active[0]["mission_id"] != MAX_ONESHOT_MISSION:
+        if mission["mission_id"] != MAX_ONESHOT_MISSION:
             legacy = [r for r in queue["missions"]
                       if r["mission_id"] == MAX_ONESHOT_MISSION]
             self.assertEqual(len(legacy), 1)
