@@ -94,12 +94,12 @@ jobs:
             --task RESEARCH_LAB_SOL_ANALYSIS \
             --cap-usd 10.0 \
             --reserve-usd 1.0
-          # New distinct 2026-11-06 owner-consented focused MAX. Global risk
-          # ledger reserves THREE unsettled historical POSTs (USD3 each),
-          # including original 16k reasoning-only terminal-incomplete run.
-          # Reserve the entire new request USD3 before any durable claim/POST.
-          # Exceptional USD45 remains unavailable. Existing HIGH stays 40/4.
-          if [ "${{ steps.trigger.outputs.mission }}" = "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B" ]; then
+          # Common owner-governed Sol MAX for ALL qualifying original
+          # missions, including missions created by other ChatGPT threads.
+          # The global ledger reserves previous unresolved POSTs; reserve USD3
+          # for EACH distinct new MAX before any native bot claim or POST.
+          # Older HIGH paths retain the same 40/4 guard. No Astra fallback.
+          if [ "${{ steps.dedupe.outputs.max_requested }}" = "true" ]; then
             python scripts/api_agent/check_monthly_cost_guard.py \
               --receipt-root research/api_agent/outputs \
               --hard-stop-usd 40 --reserve-usd 4.0 \
@@ -114,6 +114,7 @@ jobs:
         env:
           COMMENT_ID: ${{ github.event.comment.id }}
           MISSION_ID: ${{ steps.trigger.outputs.mission }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python scripts/api_agent/research_lab_sol_dispatch.py build \
             --repo-root . \
@@ -132,7 +133,7 @@ jobs:
           python scripts/api_agent/research_lab_sol_dispatch.py reserve-max-claim \
             --repo-root . --mission-id "$MISSION_ID" --issue-number 1476 --comment-id "$COMMENT_ID"
 
-      - name: Run one GPT-6.1 Sol Research Lab analysis
+      - name: Run one governed verified Sol Research Lab analysis
         if: steps.dedupe.outputs.run_analysis == 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
