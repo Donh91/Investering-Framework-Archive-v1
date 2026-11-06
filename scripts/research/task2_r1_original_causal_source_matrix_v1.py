@@ -64,6 +64,12 @@ ROLES = {
 DIRECTION_DELTAS = frozenset(("btc_delta_since_prior_packet_pct", "eth_delta_since_prior_packet_pct"))
 DIRECTION_PRICE = frozenset(("btc_usdt", "eth_usdt"))
 RELATIVE_CONTEXT = frozenset(("ethbtc", "ethbtc_delta_since_prior_packet_pct"))
+REQUIRED_HEALTH_LANES = frozenset((
+    "hourly_market", "live_anchor", "btc_dominance", "derivatives",
+    "breadth", "settled_etf", "stablecoin_liquidity", "macro_risk",
+    "sentiment", "altseason_context", "entry_signal_reference",
+))
+OPTIONAL_HEALTH_LANES = frozenset(("catalyst_context",))
 
 def git_blob(raw: bytes) -> str:
     return hashlib.sha1(b"blob "+str(len(raw)).encode("ascii")+b"\x00"+raw).hexdigest()
@@ -156,6 +162,8 @@ def build(source_bytes: bytes | None = None, originals=None):
     counts=Counter()
     statuses=Counter()
     owners=Counter()
+    required_health_statuses=Counter()
+    optional_health_statuses=Counter()
     for row in ledger["rows"]:
         fid=row["forecast_id"]
         bound=row["original_bound_main_sha"]
@@ -181,6 +189,40 @@ def build(source_bytes: bytes | None = None, originals=None):
         meta={f["feature_id"]:f for f in row["selected_feature_clocks"]}
         need(set(meta)==set(ROLES),"ORIGINAL_LEDGER_FEATURE_ROSTER_"+fid)
         issue=utc(row["issued_at_utc"])
+        # Exact original packet snapshot: source health can affect NO_EDGE and
+        # decision availability even when feature values do not determine sign.
+        packet, packet_blob = original.original(
+            row["source_packet"]["first_git_commit_sha"],
+            row["source_packet"]["path"],
+            row["source_packet"]["git_blob_sha"],
+        )
+        need(packet_blob==row["source_packet"]["git_blob_sha"] and
+             packet.get("packet_sha256")==original_forecast["source_bindings"]["auto_market_state"]["packet_sha256"],
+             "ORIGINAL_HEALTH_PACKET_IDENTITY_"+fid)
+        denominator=packet.get("replacement_score",{}).get("denominator",{})
+        need(denominator.get("decision_context_required_lanes")==11 and
+             set(denominator.get("decision_context_lanes") or ())==REQUIRED_HEALTH_LANES,
+             "ORIGINAL_REQUIRED_HEALTH_ROSTER_"+fid)
+        statuses_by_lane=packet.get("source_health",{})
+        need(isinstance(statuses_by_lane,dict) and
+             set(statuses_by_lane)==REQUIRED_HEALTH_LANES | OPTIONAL_HEALTH_LANES,
+             "ORIGINAL_HEALTH_LANE_UNIVERSE_"+fid)
+        need(packet.get("decision_context_status")=="PASS" and
+             packet.get("validation_status") in {"PASS","DEGRADED"} and
+             packet.get("blockers")==[],
+             "ORIGINAL_PACKET_DECISION_CONTEXT_CHANGED_"+fid)
+        need(original_forecast["source_bindings"]["auto_market_state"]["freshness"]["status"]=="PASS",
+             "ORIGINAL_ISSUANCE_FRESHNESS_CHANGED_"+fid)
+        for lane in sorted(REQUIRED_HEALTH_LANES):
+            state=statuses_by_lane[lane].get("status")
+            need(state=="PASS","ORIGINAL_REQUIRED_HEALTH_CHANGED_"+fid+"_"+lane)
+            required_health_statuses[state]+=1
+        for lane in sorted(OPTIONAL_HEALTH_LANES):
+            state=statuses_by_lane[lane].get("status")
+            need(state in {"PASS","DEGRADED"} and
+                 lane in set(packet.get("optional_degraded_lanes") or ()) if state=="DEGRADED" else state=="PASS",
+                 "ORIGINAL_OPTIONAL_HEALTH_SEMANTICS_"+fid+"_"+lane)
+            optional_health_statuses[state]+=1
         for key in sorted(ROLES):
             source=meta[key]
             feature=mapped[key]
@@ -216,6 +258,9 @@ def build(source_bytes: bytes | None = None, originals=None):
             "source_packet_git_blob":row["source_packet"]["git_blob_sha"],
             "engine_git_blob":exact_blob,
             "selected_feature_index_size":24,
+            "required_original_source_health_lanes":11,
+            "optional_source_health_lanes":1,
+            "original_health_gate":"REPORTED_PASS_NOT_INDEPENDENT_VENDOR_FIRST_KNOWN",
             "direct_12h_direction_deltas_present":sorted(DIRECTION_DELTAS),
             "original_packet_issued_utc":row["issued_at_utc"],
             "original_outcome_state":row["original_outcome_status"],
@@ -231,6 +276,9 @@ def build(source_bytes: bytes | None = None, originals=None):
     }
     need(dict(counts)==expected,"ROLE_COUNTS_DRIFT")
     need(sum(statuses.values())==264, "SOURCE_CLOCK_COUNT_DRIFT")
+    need(required_health_statuses==Counter({"PASS":121}) and
+         sum(optional_health_statuses.values())==11,
+         "ORIGINAL_REQUIRED_HEALTH_DENOMINATOR_CHANGED")
     return {
         "contract":CONTRACT,
         "classification":"NO_VALUES_OR_SCORING_PUBLIC_SAFE_FROZEN_ORIGINAL_SOURCE_DEPENDENCY_INDEX",
@@ -240,6 +288,10 @@ def build(source_bytes: bytes | None = None, originals=None):
         "source_role_counts":dict(sorted(counts.items())),
         "selected_feature_clock_status_counts":dict(sorted(statuses.items())),
         "selected_feature_owner_counts":dict(sorted(owners.items())),
+        "original_required_health_lanes":sorted(REQUIRED_HEALTH_LANES),
+        "original_optional_health_lanes":sorted(OPTIONAL_HEALTH_LANES),
+        "required_health_census_status":dict(sorted(required_health_statuses.items())),
+        "optional_health_census_status":dict(sorted(optional_health_statuses.items())),
         "original_forecasts":11,
         "selected_feature_instances":264,
         "scoped_original_packet_publication_witnesses":11,
