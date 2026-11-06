@@ -6,6 +6,7 @@ import tempfile
 from unittest.mock import patch
 from pathlib import Path
 from scripts.api_agent import research_lab_sol_dispatch as native
+from scripts.api_agent import sol_max_shared_policy_v1 as sol_policy
 from scripts.api_agent.research_lab_sol_dispatch import effective_registry_for_mission, MAX_ONESHOT_MISSION, TASK_NAME
 class ResearchLabMaxOwnerGateTests(unittest.TestCase):
     def setUp(self):
@@ -18,6 +19,7 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         self.assertEqual(out["tasks"][TASK_NAME]["max_output_tokens"],48000)
         self.assertTrue(out["tasks"][TASK_NAME]["recoverable_background"])
         self.assertTrue(out["tasks"][TASK_NAME]["public_background_storage_authorized"])
+        self.assertEqual(out["tasks"][TASK_NAME]["model"], "gpt-6.1-sol")
         self.assertEqual(self.base["tasks"][TASK_NAME]["reasoning_effort"],"high")
     def test_max_without_public_storage_consent_fails_before_paid_post(self):
         packet=dict(self.packet)
@@ -33,6 +35,16 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(ValueError, "MAX_PUBLIC_BACKGROUND_STORAGE_CONSENT_REQUIRED"):
                 effective_registry_for_mission(self.base, broken, MAX_ONESHOT_MISSION)
+    def test_future_token_limit_128k_and_beyond_bound_rejected(self):
+        newer = dict(self.packet, max_model_output_tokens_per_new_attempt=128000)
+        cfg = effective_registry_for_mission(self.base, newer, MAX_ONESHOT_MISSION)
+        self.assertEqual(cfg["tasks"][TASK_NAME]["max_output_tokens"], 128000)
+        for out in (0, 128001, 200000, "128000"):
+            with self.assertRaisesRegex(ValueError, "MAX_OUTPUT_LIMIT_INVALID"):
+                effective_registry_for_mission(
+                    self.base, dict(self.packet,
+                                    max_model_output_tokens_per_new_attempt=out),
+                    MAX_ONESHOT_MISSION)
     def test_new_single_active_queue_and_old_unknown_quarantine(self):
         root=Path(__file__).resolve().parents[2]
         queue=json.loads((root/"research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json").read_text())
@@ -80,14 +92,23 @@ class NativeNewPaidClaimTests(unittest.TestCase):
             "authority":{"repository_write":False,"portfolio_action":False}
         }
         self.packetpath="06_RESEARCH_LAB/mission_packets/new-s1.json"
+        self.registry={"tasks":{TASK_NAME:{"model":"gpt-6.1-sol",
+                          "reasoning_effort":"high","max_attempts":1}}}
+        self.effective = native.effective_registry_for_mission(
+            self.registry, self.packet, MAX_ONESHOT_MISSION)
+        source_policy=json.loads((Path(__file__).resolve().parents[2]/
+                                   sol_policy.POLICY_PATH).read_text())
         for path,data in (
+            (sol_policy.POLICY_PATH, source_policy),
+            (Path("runtime/research-lab-sol/effective_registry.json"), self.effective),
+            (Path("runtime/research-lab-sol/context.json"),
+             {"mission_id":MAX_ONESHOT_MISSION, "model":"gpt-6.1-sol"}),
             (native.QUEUE_PATH, {"missions":[{
                 "mission_id":MAX_ONESHOT_MISSION,"state":"ACTIVE_RELEASED",
                 "mission_packet":self.packetpath}]}),
             (Path(self.packetpath),self.packet),
-            (Path("research/api_agent/API_TASK_REGISTRY_v1.json"),{
-                "tasks":{TASK_NAME:{"model":"gpt-6.1-sol",
-                  "reasoning_effort":"high","max_attempts":1}}}),
+            (Path("research/api_agent/API_TASK_REGISTRY_v1.json"),
+             self.registry),
         ):
             target=self.root/path
             target.parent.mkdir(parents=True,exist_ok=True)
@@ -102,16 +123,24 @@ class NativeNewPaidClaimTests(unittest.TestCase):
                   "GITHUB_EVENT_PATH":str(self.event)}
         self.claims=[]
         self.writes=0
+        self.invalid_consent=False
 
     def remote(self, command, text, timeout):
         self.assertEqual(command[0],"gh")
         if command[1:3]==["api","repos/Donh91/Investering-Framework-Archive-v1/git/ref/heads/main"]:
             return json.dumps({"object":{"sha":self.head}})
-        if command[1:3]==["api","repos/Donh91/Investering-Framework-Archive-v1/issues/comments/6683279250"]:
+        if command[1:3]==["api","repos/Donh91/Investering-Framework-Archive-v1/issues/comments/"+str(self.packet["public_storage_consent_comment_id"])]:
+            if self.packet["mission_id"] == MAX_ONESHOT_MISSION:
+                marker="<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106B -->"
+            else:
+                digest=native.sha256_bytes((self.root/self.packetpath).read_bytes())
+                marker=("<--" if self.invalid_consent else "<!--")
+                marker+=(" SOL_MAX_OWNER_RELEASE_V1 mission="
+                        +self.packet["mission_id"]+" packet_sha256="+digest+" -->")
             return json.dumps({"user":{"login":"Donh91"},
                 "issue_url":"https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/issues/1156",
-                "body":"<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106B -->\\n"
-                       +MAX_ONESHOT_MISSION+" 30 DAYS"})
+                "body":marker+"\\n"+self.packet["mission_id"]
+                       +" 30 DAYS PUBLIC SOURCE ONLY max_output_tokens=48000"})
         if command[1:4]==["api","--paginate","--slurp"]:
             return json.dumps([self.claims])
         if command[1:4]==["issue","comment","1476"]:
