@@ -35,7 +35,22 @@ def walkforward(anchors,months=MONTHS,min_train_months=6):
         pb=model_prob(train,test,False)
         pdv=model_prob(train,test,True)
         uncertainty=paired_day_bootstrap(test,y,pb,pdv)
+        per_market={}
+        for market in ("BTC-PERP","ETH-PERP","HYPE-PERP"):
+            mask=(test.market==market).to_numpy()
+            yy=y[mask]
+            if not len(yy): continue
+            bm=scores(yy,pb[mask])
+            dx=scores(yy,pdv[mask])
+            per_market[market]={
+                "n":int(len(yy)),
+                "actual_next_24h_2pct_drawdown_rate":round(float(yy.mean()),6),
+                "price_only_brier":bm["brier"],
+                "with_derivatives_brier":dx["brier"],
+                "price_minus_derivatives_brier":round(bm["brier"]-dx["brier"],6),
+                "source_quality_gate":"HISTORICAL_NOT_PIT"}
         out.append({"month":month,"status":"HISTORICAL_MONTH_REPLAY_OK",
+                    "per_market_descriptive_failure_atlas":per_market,
                     "train_months":list(months[:k]),
                     "train_n":int(len(train)),"test_n":int(len(test)),
                     "test_distinct_UTC_dates":int(test.timestamp.dt.date.nunique()),
