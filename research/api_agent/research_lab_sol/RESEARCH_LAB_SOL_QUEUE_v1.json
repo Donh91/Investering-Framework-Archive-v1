@@ -467,7 +467,7 @@
     {
       "sequence": 17,
       "mission_id": "GOAL2-W46-KOMPAS-P0-SOURCE-FORECAST-SOL61-MAX-20261106",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_PRE_HTTP_CONTEXT_ABOVE_180KB_NO_PROVIDER_POST",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__GOAL2_W46_KOMPAS_SOURCE_CONTINUITY_SOL61_MAX_v1.json",
       "context_status": "P0_KOMPAS_W46_NATURAL_SOURCE_DAILY_FORECAST_BRIDGE146_AND_CN_CROSSRUN_CLAIM_FIVE_GOAL_M2",
       "context_paths": [
@@ -488,6 +488,35 @@
       ],
       "release_gate": "NATIVE_DONH91_NEW_UNIQUE_SHA_SIGNED_ISSUE1476_ORIGINAL_PUBLIC30D_CONSENT_BUDGET_LIABILITY_AND_SINGLE_ACTIVE",
       "pass_scope": "SOURCE_PINNED_READ_ONLY_W46_PROSPECTIVE_CADENCE_AND_CN_PAYMENT_RESEARCH_ADVISORY_ONLY",
+      "new_paid_attempts_authorized": false,
+      "max_paid_attempts": 1,
+      "no_automatic_retry": true,
+      "owner_issue": 1156,
+      "requested_effort": "max",
+      "public_storage_consent_30_days": true,
+      "previous_distinct_completed_mission": "S1-GOAL-NATIVE-G0G4-AUTONOMY-SOL61-MAX-20261106-CONSENT-V2",
+      "owner_hold_reason": "Original signed native #1476 trigger 6688954585 / Actions #42246449475 build raised SOL_MAX_INPUT_OR_OUTPUT_BOUND_INVALID before pre-HTTP claim and provider POST, source context exceeded 180000 bytes; no paid receipt. Original one-use release terminal, do not replay."
+    },
+    {
+      "sequence": 18,
+      "mission_id": "GOAL2-W46-KOMPAS-P0-SOURCE-FORECAST-SOL61-MAX-20261106B",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__GOAL2_W46_KOMPAS_SOURCE_CONTINUITY_SOL61_MAX_B_v2.json",
+      "context_status": "P0_W46_CONTEXT_UNDER_180KB_COMPACT_DISTINCT_PRE_HTTP_REPLACEMENT",
+      "context_paths": [
+        "06_RESEARCH_LAB/audit_summaries/2026-11-06__w46_kompas_source_bridge_sol_max_intake_v1.md",
+        "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
+        "scripts/daily_capture/build_hourly_sequence.py",
+        ".github/workflows/hourly-sequence-capture.yml",
+        ".github/workflows/native-market-recovery.yml",
+        ".github/workflows/compass-schedule-watchdog.yml",
+        ".github/workflows/cycle-navigator-weekly-publication.yml",
+        "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+        "scripts/cycle_navigator/verify_hourly_pages_handoff.py",
+        "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.mjs"
+      ],
+      "release_gate": "NATIVE_OWNER_UNIQUE_SIGNED_SHA_PUBLIC30D_CONSENT_USD3_MAX_WITH_SINGLE_ONE_SHOT",
+      "pass_scope": "W46_SOURCE_CADENCE_CN_PRIMARY_PAYMENT_CLAIM_AND_SITE_ADVISORY_ONLY",
       "new_paid_attempts_authorized": true,
       "max_paid_attempts": 1,
       "no_automatic_retry": true,
@@ -507,6 +536,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "GOAL2-W46-KOMPAS-P0-SOURCE-FORECAST-SOL61-MAX-20261106",
-  "program_phase": "FIVE_GOAL_OWNER_APPROVED_MISSION_2_OF_5_SEQUENTIAL_ONE_SHOT"
+  "active_mission": "GOAL2-W46-KOMPAS-P0-SOURCE-FORECAST-SOL61-MAX-20261106B",
+  "program_phase": "FIVE_GOAL_MISSION_2_COMPACT_PRE_HTTP_CORRECTION_ONE_SHOT"
 }
