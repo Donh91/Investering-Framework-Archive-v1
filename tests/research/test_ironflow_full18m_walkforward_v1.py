@@ -41,7 +41,7 @@ class Full18mWalkForwardTests(unittest.TestCase):
         d=self.mock_data()
         out=walkforward(d,months=MONTHS[:2],min_train_months=1)
         self.assertEqual(len(out),1)
-        self.assertEqual(out[0]["test_month"],"2025-06") if "test_month" in out[0] else self.assertEqual(out[0]["month"],"2025-06")
+        self.assertEqual(out[0]["month"],"2025-06")
     def test_no_valid_months_fails_closed(self):
         s=summarize([{"status":"INSUFFICIENT_SOURCE_ANCHORS"}])
         self.assertEqual(s["status"],"NO_VALID_MONTHS")
