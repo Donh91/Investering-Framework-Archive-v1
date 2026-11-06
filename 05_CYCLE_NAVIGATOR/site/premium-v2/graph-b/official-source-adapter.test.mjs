@@ -380,3 +380,33 @@ test('daily observed range is excluded when quote or source date is unverified',
  }));
  assert.deepEqual(readOfficialGraphB(x,'BTC',{now_utc:now}).actual_daily_ranges,[]);
 });
+
+
+// General rehearsal: the existing adapter MUST admit seven source-typed,
+ // quote-compatible, prospectively frozen DAILY closes, including variation.
+ // Fictional fixtures only; no live Monday/W46 issuance is claimed.
+test('seven fictional but structurally eligible daily closes survive ORIGINAL adapter with non-flat values',()=>{
+ const v=bindSameQuotedNativeSource(fixture());
+ const closes=[82150,83720,82600,84900,83150,85820,84300];
+ v.public_live_precision.daily_price_path.BTC={
+  status:'PUBLISHED',points:closes.map((expected_close,i)=>({
+   day:i+1,low:80000,high:86000,expected_close
+  }))
+ };
+ const m=readOfficialGraphB(v,'BTC',{now_utc:'2026-10-19T06:00:00Z'});
+ assert.equal(m.source_status,'SOURCE_BOUNDED');
+ assert.equal(m.forecast_status,'SOURCE_ISSUED');
+ assert.equal(m.forecast.length,7);
+ assert.deepEqual(m.forecast.map(p=>p.expected_close),closes);
+ assert.equal(new Set(m.forecast.map(p=>p.expected_close)).size,7);
+ assert.equal(m.forecast_comparison_quote_status,'SAME_DECLARED_UNIT');
+ assert.equal(m.forecast[0].time,Date.parse('2026-10-20T00:00:00Z')/1000);
+ assert.equal(m.forecast[6].time,Date.parse('2026-10-26T00:00:00Z')/1000);
+ // Same invented path must NOT be authorized when quote or issuance fails.
+ const wrongQuote=structuredClone(v);
+ wrongQuote.public_live_precision.price_quote_labels.forecast_model_declared.BTC='USD';
+ assert.notEqual(readOfficialGraphB(wrongQuote,'BTC',{now_utc:'2026-10-19T06:00:00Z'}).forecast_status,'SOURCE_ISSUED');
+ const lateFreeze=structuredClone(v);
+ lateFreeze.public_live_precision.frozen_at_utc='2026-10-19T08:00:00Z';
+ assert.notEqual(readOfficialGraphB(lateFreeze,'BTC',{now_utc:'2026-10-19T09:00:00Z'}).forecast_status,'SOURCE_ISSUED');
+});
