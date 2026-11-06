@@ -143,22 +143,31 @@ def reserve_native_max_claim(root: Path, mission_id: str, issue_number: int,
         + str(consent_id)))
     consent_body = native_consent.get("body") or ""
     if mission_id == MAX_ONESHOT_MISSION:
-        # Historical original B has its own exact, already-consumed consent.
+        # Historical one-shot B, already paid and never eligible to replay.
         marker = "<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106B -->"
         allowed = (consent_id == PUBLIC_CONSENT_COMMENT and
                    isinstance(consent_body, str) and
                    consent_body.startswith(marker) and
                    mission_id in consent_body and "30 DAYS" in consent_body)
     else:
+        # Existing signed public-only 30-day consent is reusable, but a NEW
+        # owner event on original #1476 must also sign THIS exact packet/hash.
+        allowed = (consent_id == 6682722905 and
+                   isinstance(consent_body, str) and
+                   consent_body.startswith(
+                       "<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106 -->")
+                   and "30 DAYS" in consent_body)
         packet_digest = sha256_bytes(packet_path.read_bytes())
         marker = ("<!-- SOL_MAX_OWNER_RELEASE_V1 mission=" + mission_id
                   + " packet_sha256=" + packet_digest + " -->")
-        allowed = (isinstance(consent_body, str)
-                   and consent_body.startswith(marker)
-                   and "PUBLIC SOURCE ONLY" in consent_body
-                   and "30 DAYS" in consent_body
-                   and ("max_output_tokens="
-                        + str(frozen["max_output_tokens"])) in consent_body)
+        trigger_body = comment.get("body") or ""
+        if (not isinstance(trigger_body, str)
+                or marker not in trigger_body
+                or "PUBLIC SOURCE ONLY" not in trigger_body
+                or "30 DAYS" not in trigger_body
+                or ("max_output_tokens="
+                    + str(frozen["max_output_tokens"])) not in trigger_body):
+            raise ValueError("MAX_NATIVE_TRIGGER_PACKET_HASH_NOT_OWNER_SIGNED")
     if ((native_consent.get("user") or {}).get("login") != "Donh91"
             or native_consent.get("issue_url") !=
                "https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/issues/1156"
