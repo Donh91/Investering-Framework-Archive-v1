@@ -794,3 +794,20 @@ test('Cycle source semantics keep archived references separate from actual phase
  assert.match(css,/data-reference-kind="NO_VERIFIED_PHASE"/);
  assert.doesNotMatch(runtime,/new Promise\(.*forecast/);
 });
+
+// The original B remains unchanged. Its tab now ends with the existing
+// immutable Graph History renderer, not an invented second chart model.
+test('weekly forecast tab embeds History at its end with one detailed route',async()=>{
+ const runtime=await read('./premium-tabs.mjs');
+ const css=await read('./premium-tabs.css');
+ const history=await read('../graph-history/index.html');
+ assert.match(runtime,/graphPanel\.append\(entry\)/);
+ assert.match(runtime,/createElement\('iframe'\)/);
+ assert.match(runtime,/graph-history\/\?embed=1/);
+ assert.match(runtime,/Se detaljeret grafhistorik/);
+ assert.match(css,/#cn-graph-history-preview/);
+ assert.match(history,/URLSearchParams\(location\.search\)/);
+ assert.match(history,/Faktisk timekurs/);
+ assert.match(history,/Ugegrænser/);
+ assert.equal((runtime.match(/createElement\('iframe'\)/g)||[]).length,1);
+});

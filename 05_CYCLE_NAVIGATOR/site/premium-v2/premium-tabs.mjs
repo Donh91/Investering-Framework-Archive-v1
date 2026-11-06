@@ -34,7 +34,7 @@ if (nav && nodes.every(x => x.link && x.panel)) {
   // is appended inside the existing weekly graph tab after client initialization.
   const graphPanel=nodes.find(x=>x.key==='graph')?.panel;
   if(graphPanel&&!document.getElementById('cn-graph-history-link')){
-    const entry=document.createElement('aside');
+    const entry=document.createElement('section');
     entry.className='cn-graph-history-entry';
     entry.setAttribute('aria-labelledby','cn-graph-history-title');
     const description=document.createElement('div');
@@ -48,8 +48,35 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     const link=document.createElement('a');
     link.id='cn-graph-history-link';
     link.href='/Investering-Framework-Archive-v1/graph-history/';
-    link.textContent='Åbn grafhistorik';
-    entry.append(description,link);
+    link.textContent='Se detaljeret grafhistorik';
+    // Reuse the already-published immutable-source History renderer in compact
+    // mode. No second chart model, no reforecast, no copied market data.
+    const frame=document.createElement('iframe');
+    frame.id='cn-graph-history-preview';
+    frame.src='/Investering-Framework-Archive-v1/graph-history/?embed=1';
+    frame.title='Grafhistorik · faktiske BTC-kurser og originale ugeprognoser';
+    frame.loading='lazy';
+    frame.referrerPolicy='same-origin';
+    // The preview is same-origin. Match the verified source document's actual
+    // height so narrow iPhones never show a nested vertical scrollbar.
+    // No data is copied into the parent or used to infer any forecast.
+    const fitHistory=()=>{
+      try{
+        const doc=frame.contentDocument;
+        if(!doc?.body)return;
+        const natural=Math.max(doc.body.scrollHeight,doc.documentElement.scrollHeight);
+        if(Number.isFinite(natural)&&natural>0)
+          frame.style.height=Math.ceil(natural+6)+'px';
+      }catch{/* Source-only link remains accessible if iframe is unavailable. */}
+    };
+    frame.addEventListener('load',()=>{
+      fitHistory();
+      try{
+        if(frame.contentWindow?.ResizeObserver)
+          new frame.contentWindow.ResizeObserver(fitHistory).observe(frame.contentDocument.body);
+      }catch{/* Keep fixed-height fallback if same-origin inspection is denied. */}
+    });
+    entry.append(description,frame,link);
     graphPanel.append(entry);
   }
   const translations = {
@@ -77,8 +104,10 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     }
     for (const x of nodes) if(x.link.textContent!==names[x.key]) x.link.textContent=names[x.key];
     // This link stays inside the weekly graph panel, never becomes a fifth tab.
-    const historyCopy=lang()==='en'?{title:'Graph history',note:'From week 45 (2026). Verified BTC hourly prices; a blue daily forecast appears only if issued before outcomes.',link:'Open graph history'}:
-      {title:'Grafhistorik',note:'Fra uge 45 (2026). Faktisk BTC-kurs fra verificerede timer; kun forhåndsudstedte dagsprognoser vises som blå kurve.',link:'Åbn grafhistorik'};
+    const historyCopy=lang()==='en'?{title:'Graph history',note:'One continuous BTC price line with week boundaries. Green = observed prices; dashed blue = original forecast issued before outcomes.',link:'Explore detailed history'}:
+      {title:'Grafhistorik',note:'Én sammenhængende BTC-kurve med ugeadskillelser. Grøn = faktiske kurser, stiplet blå = original forhåndsudstedt ugeprognose.',link:'Se detaljeret grafhistorik'};
+    const preview=document.getElementById('cn-graph-history-preview');
+    if(preview)preview.title=lang()==='en'?'Historical BTC prices and original weekly forecasts':'Grafhistorik med faktiske BTC-kurser og originale ugeprognoser';
     for(const [id,value] of [['cn-graph-history-title',historyCopy.title],['cn-graph-history-note',historyCopy.note],['cn-graph-history-link',historyCopy.link]]){
       const element=document.getElementById(id);
       if(element&&element.textContent!==value)element.textContent=value;
