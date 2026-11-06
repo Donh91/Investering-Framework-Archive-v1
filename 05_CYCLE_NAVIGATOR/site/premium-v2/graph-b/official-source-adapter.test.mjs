@@ -167,7 +167,7 @@ test('a midweek backfill cannot turn retrospective daily prices into original bl
 });
 
 test('seven original frozen daily high/low points become source-bound graphic data only',()=>{
- const v=fixture(),m=v.public_live_precision;
+ const v=bindSameQuotedNativeSource(fixture()),m=v.public_live_precision;
  m.daily_range_plan={contract:'CN_FROZEN_DAILY_RANGE_PLAN_v1',forecast_week:'2026-W43',
   BTC:{status:'PUBLISHED',reason:'Original research',
    points:Array.from({length:7},(_,i)=>({day:i+1,low:79000+i*100,high:85000+i*100,
@@ -257,4 +257,34 @@ test('a valid ETH daily forecast cannot borrow BTC quote identity to force its p
  const btc=readOfficialGraphB(x,'BTC',{now_utc:'2026-10-19T06:00:00Z'});
  assert.equal(btc.forecast_status,'UNAVAILABLE');
  assert.deepEqual(btc.forecast,[]);
+});
+
+
+test('BTC and ETH daily ranges cannot overlay native USDT without matching source-issued quote',()=>{
+ const x=fixture(),m=x.public_live_precision;
+ const makeRanges=(asset)=>({status:'PUBLISHED',reason:'Original prospective daily bands',
+  points:Array.from({length:7},(_,i)=>({
+   day:i+1,low:asset==='BTC'?79000:2200,high:asset==='BTC'?85000:2500,
+   why:'Prospective weekly market structure and risk evidence',
+   invalidate_if:'Independent source condition invalidates the range'
+  }))});
+ m.daily_range_plan={contract:'CN_FROZEN_DAILY_RANGE_PLAN_v1',
+  forecast_week:'2026-W43',BTC:makeRanges('BTC'),ETH:makeRanges('ETH')};
+ for(const asset of ['BTC','ETH']){
+  const missing=readOfficialGraphB(x,asset,{now_utc:'2026-10-19T08:20:00Z'});
+  assert.equal(missing.daily_range_status,'SOURCE_ISSUED_QUOTE_INCOMPARABLE');
+  assert.deepEqual(missing.daily_ranges,[]);
+  assert.equal(missing.forecast_comparison_quote_status,'UNVERIFIED_OR_DIFFERENT_UNIT');
+ }
+ bindSameQuotedNativeSource(x);
+ for(const asset of ['BTC','ETH']){
+  m.price_quote_labels.forecast_model_declared[asset]='USD';
+  const usd=readOfficialGraphB(x,asset,{now_utc:'2026-10-19T08:20:00Z'});
+  assert.equal(usd.daily_range_status,'SOURCE_ISSUED_QUOTE_INCOMPARABLE');
+  assert.deepEqual(usd.daily_ranges,[]);
+  m.price_quote_labels.forecast_model_declared[asset]='USDT';
+  const usdt=readOfficialGraphB(x,asset,{now_utc:'2026-10-19T08:20:00Z'});
+  assert.equal(usdt.daily_range_status,'SOURCE_ISSUED');
+  assert.equal(usdt.daily_ranges.length,7);
+ }
 });

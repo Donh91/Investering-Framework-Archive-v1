@@ -136,7 +136,7 @@ def test_original_monday_complete_product_requires_fourteen_closes_and_fourteen_
     freeze, path = forecast()
     dayrange = lambda: {
         'status': 'PUBLISHED', 'reason': 'Prospectively tested conditional ranges',
-        'points': [{'day': day, 'low': 85, 'high': 119,
+        'points': [{'day': day, 'low': 90, 'high': 115,
                     'why': 'Prior week range and volatility context',
                     'invalidate_if': 'Weekly evidence ceases to hold'}
                    for day in range(1, 8)]
@@ -180,3 +180,31 @@ def test_original_monday_complete_product_requires_fourteen_closes_and_fourteen_
                in x['missing_requirements'] for x in after_first_day['assets'].values())
     with pytest.raises(ValueError, match='daily_product_issue_clock_unzoned'):
         daily_product_acceptance(original, 2026, 41, datetime(2026, 10, 5, 9, 0))
+
+
+@pytest.mark.parametrize(('asset', 'field', 'replacement'), [
+    ('BTC', 'high', 116), ('ETH', 'low', 89),
+])
+def test_daily_product_rejects_mismatched_original_bounds_per_asset(asset, field, replacement):
+    freeze, path = forecast()
+    freeze['daily_price_path'] = path
+    dayrange = lambda: {'status': 'PUBLISHED', 'reason': 'Prospective original ranges',
+        'points': [{'day': day, 'low': 90, 'high': 115,
+                    'why': 'Prospective weekly market structure',
+                    'invalidate_if': 'Source evidence no longer supports bounds'}
+                   for day in range(1, 8)]}
+    freeze['daily_range_plan'] = {'contract': DAILY_RANGE_CONTRACT,
+        'forecast_week': '2026-W41', 'BTC': dayrange(), 'ETH': dayrange()}
+    freeze['price_quote'] = {'BTC': 'USDT', 'ETH': 'USDT'}
+    issued_at = datetime(2026, 10, 5, 9, tzinfo=timezone.utc)
+    assert daily_product_acceptance(freeze, 2026, 41, issued_at)['status'] == 'COMPLETE'
+    original = copy.deepcopy(freeze)
+    freeze['daily_range_plan'][asset]['points'][3][field] = replacement
+    fail = daily_product_acceptance(freeze, 2026, 41, issued_at)
+    other = 'ETH' if asset == 'BTC' else 'BTC'
+    assert fail['status'] == 'INCOMPLETE'
+    assert fail['assets'][asset]['status'] == 'INCOMPLETE'
+    assert fail['assets'][asset]['missing_requirements'] == ['DAILY_PATH_RANGE_BOUNDS_MISMATCH']
+    assert fail['assets'][other]['status'] == 'COMPLETE'
+    assert freeze['daily_price_path'] == original['daily_price_path']
+    assert daily_product_acceptance(original, 2026, 41, issued_at)['status'] == 'COMPLETE'

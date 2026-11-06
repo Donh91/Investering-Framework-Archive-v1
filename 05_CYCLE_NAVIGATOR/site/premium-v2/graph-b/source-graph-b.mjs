@@ -185,6 +185,7 @@ function plot(){
   return;
  }
  const bands=model.bands||[],hourly=model.hourly_observations||[];
+ const quoteComparable=model.forecast_comparison_quote_status==='SAME_DECLARED_UNIT';
  paintFrozenWindowLedger(bands);
  const hasDailyRanges=model.daily_range_status==='SOURCE_ISSUED'&&model.daily_ranges?.length===7;
  paintDailyResearchNotes(hasDailyRanges?model.daily_ranges:[]);
@@ -200,7 +201,7 @@ function plot(){
  $('playhead').setAttribute('visibility','visible');
  const observedRuns=replayObservedUntil(model,new Date(cursor).toISOString());
  const visible=observedRuns.flat();
- const values=[...bands.flatMap(b=>[b.forecast_low,b.forecast_high]),
+ const values=[...(quoteComparable?bands.flatMap(b=>[b.forecast_low,b.forecast_high]):[]),
   ...(hasDailyRanges?model.daily_ranges.flatMap(d=>[d.low,d.high]):[]),
   ...model.forecast.flatMap(p=>[p.expected_close,p.low,p.high]),...hourly.map(p=>p.value)].filter(s);
  if(values.length===0){model=null;plot();return}
@@ -234,6 +235,10 @@ function plot(){
   }).join(' ');
   attr('range-upper','d',edge('high'));
   attr('range-lower','d',edge('low'));
+ }else if(!quoteComparable){
+  // Retain the original ledger, but never draw forecast numbers on a
+  // native spot axis when the declared quote is different or unknown.
+  for(const id of ['forecast','range-band','range-upper','range-lower'])attr(id,'d','');
  }else{
   attr('forecast','d','');
   // Each frozen intraweek window is already a prospective range forecast.
@@ -282,10 +287,13 @@ function plot(){
  set('pair',asset+' / '+(model?.actual_quote_unit||'UNAVAILABLE'));set('observed-value',num(last?.value,model?.actual_quote_unit));
  set('time-label',last?utc(last.time*1000):'—');
  set('timeline-label',utc(cursor));
- const incompatibleQuote=model.forecast_status==='SOURCE_ISSUED_QUOTE_INCOMPARABLE';
+ const incompatibleQuote=!quoteComparable;
+ const issuedButIncomparable=model.forecast_status==='SOURCE_ISSUED_QUOTE_INCOMPARABLE'||
+  model.daily_range_status==='SOURCE_ISSUED_QUOTE_INCOMPARABLE';
  const st=model.forecast_status==='SOURCE_ISSUED'?
   t('Kildeudstedt dagsprognose','Source-issued daily forecast'):
-  incompatibleQuote?t('Kildeudstedt, anden/ukendt valuta','Source-issued, different/unknown quote'):
+  issuedButIncomparable?t('Kildeudstedt, anden/ukendt valuta','Source-issued, different/unknown quote'):
+  incompatibleQuote?t('Valuta ikke sammenlignelig','Quote not comparable'):
   hasDailyRanges?t('7 frosne dagsintervaller','7 frozen daily ranges'):
   t('Original prognose · 3 vinduer','Original forecast · 3 windows');
  set('source-state',st);

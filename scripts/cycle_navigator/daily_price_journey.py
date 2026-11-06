@@ -111,7 +111,14 @@ def daily_product_acceptance(freeze: Mapping[str, Any], year: int, week: int,
         range_count = len(day_ranges.get("points") or []) if day_ranges.get("status") == "PUBLISHED" else 0
         unit = quote.get(asset) if isinstance(quote, dict) else None
         unit_valid = unit in ("USD", "USDT")
-        complete = before_first_close and close_count == 7 and range_count == 7 and unit_valid
+        # Two separately validated original contracts must describe the SAME
+        # seven reasoned bounds, not merely have seven rows apiece.
+        same_bounds = close_count == range_count == 7 and all(
+            (left["day"], left["low"], left["high"]) ==
+            (right["day"], right["low"], right["high"])
+            for left, right in zip(daily["points"], day_ranges["points"])
+        )
+        complete = before_first_close and unit_valid and same_bounds
         missing = []
         if not before_first_close:
             missing.append("ORIGINAL_ISSUANCE_AFTER_FIRST_UTC_CLOSE_OR_WRONG_WEEK")
@@ -121,6 +128,8 @@ def daily_product_acceptance(freeze: Mapping[str, Any], year: int, week: int,
             missing.append("SEVEN_DAILY_EXPECTED_CLOSES_NOT_ISSUED")
         if range_count != 7:
             missing.append("SEVEN_DAILY_LOW_HIGH_RANGES_NOT_ISSUED")
+        if close_count == range_count == 7 and not same_bounds:
+            missing.append("DAILY_PATH_RANGE_BOUNDS_MISMATCH")
         assets[asset] = {
             "status": "COMPLETE" if complete else "INCOMPLETE",
             "expected_close_points": close_count,

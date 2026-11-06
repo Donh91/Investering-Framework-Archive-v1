@@ -128,12 +128,14 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
        p.low>=weekLow&&p.high<=weekHigh&&p.low<p.high&&
        typeof p.why==='string'&&p.why.length>=12&&
        typeof p.invalidate_if==='string'&&p.invalidate_if.length>=8);
-  if(good){
+  if(good&&quoteComparable){
    dailyRanges=data.map((p,i)=>({day:i+1,low:p.low,high:p.high,
       why:p.why,invalidate_if:p.invalidate_if,
       window_start_utc:new Date(start+i*DAY).toISOString(),
       window_end_utc:new Date(start+(i+1)*DAY).toISOString()}));
    dailyRangeStatus='SOURCE_ISSUED';
+  }else if(good){
+   dailyRangeStatus='SOURCE_ISSUED_QUOTE_INCOMPARABLE';
   }else dailyRangeStatus='PUBLISHED_INVALID_FAIL_CLOSED';
  }
  // The global cutoff is provenance, NOT the last price for this asset.
