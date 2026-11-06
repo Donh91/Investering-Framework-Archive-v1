@@ -1,0 +1,52 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/research-lab-sol-dispatch.yml",
+    "06_RESEARCH_LAB/mission_packets/2026-11-06__S1_ELITE_SOL61_MAX_FOCUSED_TRIAGE_B_v1.json",
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json",
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json",
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "scripts/api_agent/research_lab_sol_dispatch.py",
+    "tests/api_agent/test_owner_global_api_budget_cap.py",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py",
+    "tests/api_agent/test_research_lab_sol_paid_admission.py",
+    "tests/cycle_navigator/test_internal_precision_api_budget.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-125f97f87f275240",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized one-new-POST bounded separate public-only source. 8/8 exact-head CI, verified safepoint, new native 30day consent #6683279250, 3 prior unresolved USD3 floors and USD3 new cap, original no-retry hardgates, old 16k reasoning-only provider result terminal incomplete. No independent formal APPROVED, no provider POST in merge.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/research-lab-sol-dispatch.yml": "eed8b00270959317ac39104bee5d7a1fc9d8a5d6",
+    "06_RESEARCH_LAB/mission_packets/2026-11-06__S1_ELITE_SOL61_MAX_FOCUSED_TRIAGE_B_v1.json": "f12d6656a0bbcb4d560d098dd60d29cf487bff60",
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json": "4cac6262a0a8c2604bd31444c82c8e125679b5a6",
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json": "1a34cba24ac9bf6c943547543a38be747708f6b6",
+    "scripts/api_agent/check_monthly_cost_guard.py": "67a0a3122bf6b1f881c953d1fea916ef37d4f89b",
+    "scripts/api_agent/research_lab_sol_dispatch.py": "44e7d7ccc1b82e8abd642c8ac1b357b756101681",
+    "tests/api_agent/test_owner_global_api_budget_cap.py": "3a67eb3208a2fec4a4c1815024fdf5fcb95c39ee",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py": "0fb62ed0eff515b109d5841480542d2428c420c1",
+    "tests/api_agent/test_research_lab_sol_paid_admission.py": "5da891e42e2cd50f9d46be50494d0bd5675bc467",
+    "tests/cycle_navigator/test_internal_precision_api_budget.py": "867a5c5acd3401fb830b4428d952fa05b6e71633"
+  },
+  "source_commit_sha": "125f97f87f275240b9ad6758dfed90273995edec",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-06T06:10:34-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "release(api): focused Sol MAX B with 48k output and three reserved old liabilities"
+}

@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/forward_price_shadow.py",
+    "tests/architecture/test_full_architecture_1to7.py",
+    "tests/learning/test_forward_price_native_usdt_shadow.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-e1091250621a1cfa",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "unblock-btcusdt-56-day-shadow-horizon-history-gate",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-authorized exact-head CI PASS; 56d remains unissued research and source/PIT controls unchanged.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/forward_price_shadow.py": "0d7164a97649f6de965d960f909b7b74799f7170",
+    "tests/architecture/test_full_architecture_1to7.py": "01f16b39c10e744f1b7212813f6ef8a0f8c08a8c",
+    "tests/learning/test_forward_price_native_usdt_shadow.py": "dc1134e7889c615c88da8b55b23a0cd506d210b1"
+  },
+  "source_commit_sha": "e1091250621a1cfa401c087e1d1011d35a5fcbbc",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-06T03:44:35-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(research): unblock BTCUSDT 56-day shadow horizon history gate (#1954)"
+}

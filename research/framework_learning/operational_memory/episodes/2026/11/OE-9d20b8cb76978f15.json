@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/API_MAX_OWNER_APPROVAL_AND_COST_RANGE_V1.md",
+    "research/api_agent/API_INTELLIGENCE_POLICY_v2.json",
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json",
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "tests/api_agent/test_owner_global_api_budget_cap.py",
+    "tests/cycle_navigator/test_internal_precision_api_budget.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-9d20b8cb76978f15",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "api-account-wide-40-budget-conservative-ambiguous-post",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE \u00b7 owner expressly approved safety release and 30-day public source consent in ChatGPT 2026-11-06. 8/8 exact-head hosted CI PASS, no remaining evidenced P1 from owner interactive tests, safepoint verified. NOT independent formal GitHub APPROVED or provider-billing reconciliation; preserve both unknown POSTs and keep exceptional USD45 locked without source-specific capability; no provider POST.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/API_MAX_OWNER_APPROVAL_AND_COST_RANGE_V1.md": "98aa1ebf2fb20fefa7b449debab8a037c26a55c1",
+    "research/api_agent/API_INTELLIGENCE_POLICY_v2.json": "df322e2b94afe7383b813b6bd9b351936b1c06ff",
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json": "07afe359c5e5ec4a8cd2291c969161877d26d4ea",
+    "scripts/api_agent/check_monthly_cost_guard.py": "db2f555fd3c92fa4a150004b04c40267885ff707",
+    "tests/api_agent/test_owner_global_api_budget_cap.py": "1042e6b49a8dda07054ab0939545d3e3689bdc92",
+    "tests/cycle_navigator/test_internal_precision_api_budget.py": "da344c2dad9155490935ea1e523c9247a4221a4c"
+  },
+  "source_commit_sha": "9d20b8cb76978f15dc29cf7a10bdf4ff3a87375c",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-06T05:27:35-05:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix(api): account-wide 40 budget, conservative ambiguous POST liability and safe MAX quote"
+}

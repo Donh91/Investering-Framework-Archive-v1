@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-11-05T22:17:49Z",
+  "generated_at_utc": "2026-11-06T11:28:00Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -15,42 +15,13 @@
   },
   "luna_triage": null,
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "5eeadac01697194299aa86a220671d7e05ca0b49bf34ee22c619cde74ce9b138",
+  "plan_fingerprint": "2e60671c919725b464296a18e704548b4e4d06f29c60d9a2105046dc6acb2f43",
   "routing_summary": {
-    "existing_remediation_count": 0,
+    "existing_remediation_count": 1,
     "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
-    "sol_6_1_diagnosis_count": 1
+    "sol_6_1_diagnosis_count": 0
   },
-  "sol_6_1_diagnosis": {
-    "evidence_against": [
-      "Only one workflow item is supplied and clusters is empty. There is no observed cross-workflow cluster; this also does not establish that failures are independent.",
-      "The head SHA is available only for the latest run. The evidence does not establish that all ten failures occurred at that head or share an error signature.",
-      "No job logs, failed-step names, error messages, dependency graph, overlapping-run timings, or upstream outcomes are supplied.",
-      "DIRECT_MAIN, framework-main-writer, GPT_6_1_SOL, and openai_enabled=true are configuration metadata, not evidence that writing, concurrency, or model access caused the failures."
-    ],
-    "evidence_for": [
-      "research-lab-sol-dispatch.yml has failure_streak=10, recent_failure_count=10, and the finding REPEATED_CONSECUTIVE_FAILURES. This supports prioritizing a recurring-cause investigation over ten independent repairs; the two counts must not be added together.",
-      "The latest identified run is 42112267128 at head beb6ad98b1a852adad681efde5b20d41105b2a18, providing a concrete starting point for read-only inspection.",
-      "The item identifies route SOL_DIAGNOSIS and writer group framework-main-writer, providing candidate boundaries for dependency and shared-writer checks.",
-      "existing_remediation and cluster_id are both null. No remediation or cluster association is supplied."
-    ],
-    "forecast_candidates": [],
-    "hypotheses": [
-      "Priority 1 \u2014 A recurring failure mechanism may explain multiple attempts. Bounded diagnostic: inspect the latest run's first failing step and error signature, then compare the runs underlying the reported ten-failure streak. Group matching signatures by head and failure stage; do not create separate remediation proposals merely because run IDs differ.",
-      "Priority 2 \u2014 A shared-head regression or upstream prerequisite failure may be propagating into this workflow. Bounded diagnostic: establish which reported failures actually share the latest head, identify prerequisites of the first failing step, and inspect only directly relevant producer outcomes. If available, compare the most recent successful run. No dependency or regression is established by the supplied data.",
-      "Priority 3 \u2014 Shared-writer interaction may explain failures if they occur during a write-related stage. Bounded diagnostic: first confirm that stage from logs, then inspect framework-main-writer overlaps during the affected attempts for explicit lock, conflict, permission, or rejected-write evidence. Metadata alone does not justify changing writer settings or permissions.",
-      "Priority 4 \u2014 Route or model-service failure is another possible common cause, but model enablement does not establish invocation. Bounded diagnostic: determine from existing logs whether the latest failure occurred before invocation, during the request, or after the response; compare that boundary across the reported failures without issuing new calls or rerunning workflows."
-    ],
-    "status": "DEGRADED",
-    "summary": "The supplied snapshot supports one repeated-failure investigation, not ten independent repairs. Root cause and cross-workflow deduplication remain unresolved because only one workflow record and no execution details are supplied. Before any new remediation proposal, read-only verification should check whether the run, head, or failure signature already belongs to an existing remediation or Codex record; preserve any discovered state without modification. All proposed next steps are bounded diagnostics, not repair authorization.",
-    "uncertainties": [
-      "The underlying cause, first failing step, and consistency of error signatures across the ten failures are unknown.",
-      "Whether other workflows share the head, writer group, dependency, or failure window is unknown.",
-      "A null existing_remediation field does not establish that no remediation or Codex record exists elsewhere.",
-      "The supplied health snapshot was generated at 2026-11-05T22:09:45.503461Z; subsequent run outcomes and remediation changes are not supplied.",
-      "No run logs or external records have been inspected in this review."
-    ]
-  },
+  "sol_6_1_diagnosis": null,
   "source_health_generated_at_utc": "2026-11-05T22:09:45.503461Z"
 }

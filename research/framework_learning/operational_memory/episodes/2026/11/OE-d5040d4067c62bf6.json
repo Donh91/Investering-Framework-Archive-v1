@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/research-lab-sol-dispatch.yml",
+    "tests/api_agent/test_research_lab_sol_recover_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-d5040d4067c62bf6",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "actions-lab-sol-collector-workflow-parser",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE \u00b7 two malformed Python heredoc openers only; exact-head 6/6 native PR CI, separate interactive COMMENT technical review (not formal APPROVED), verified immediate safepoint. No provider call, budget escalation, storage consent, native independent approval or S1 unattended-merge claim.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/research-lab-sol-dispatch.yml": "e7b0a945fe9010b2f958208941c095d5feb9f900",
+    "tests/api_agent/test_research_lab_sol_recover_v1.py": "b1dd96f707bc913c25d359c99118b3aead907767"
+  },
+  "source_commit_sha": "d5040d4067c62bf60d92aa490490535f23d66387",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-06T05:11:34-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(actions): restore Research Lab Sol collector workflow parser"
+}
