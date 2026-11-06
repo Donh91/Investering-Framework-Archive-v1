@@ -1,5 +1,15 @@
 # Hugging Face × Framework Task 2, research and execution gateway
 
+## Ironflow full 18-month follow-on, 7 November 2026
+
+**New, actual source replay** from [PR #1989](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1989), initially verified [run #42313211239](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42313211239): **72/72** exact pinned Parquet files, **374,343,275 bytes**, all four historical source families across **18 months**, **14,572,946** combined raw rows. Matched BTC/ETH/HYPE 37,758 completed hours and 1,545 day anchors; expanding monthly chronological experiment trained on six prior months and evaluated **12 out-of-time months**.
+
+- [Actual 18-month, 12-test Brier/AUC result, negative performance finding](IRONFLOW_FULL18M_ACTUAL_RESULTS_20261107.md): price+derivative features beat price-only in 7 months, lost in 5, mean Brier delta **-0.001749**, month-bootstrap 95% **[-0.007628,+0.002512]**, neither stable prediction edge nor economic edge.
+- [Verified 72-file SHA256 provenance and exact retrieval contract](IRONFLOW_FULL18M_SOURCE_SHA256_REGISTRY_20261107.md). Public-original repo revisions frozen, original first-known no historical proof, **T3 permanent raw binary custody pending**. The 72 SHA256 text metadata is durable, the 374MB actual bytes remain off-archive unless an approved owner T3 mirror is created.
+- `scripts/research/ironflow_full18m_walkforward_v1.py`, `tests/research/test_ironflow_full18m_walkforward_v1.py`: 18-month fixed-model analysis on existing read-only GitHub workflow. Latest head CI and main merge must be independently verified before the status is promoted from PR to merged.
+
+**Important:** Scientific findings were obtained on Nov-2026-released data for historical dates; not original 2025/2026 issued forecasts. Do not promote to Compass/portfolio policy. Preserve the February-2026 negative failure regime and audit it separately, without parameter tuning.
+
 ## Ironflow public historical derivatives research, 6 November 2026
 
 **Actually executed GitHub Actions research** from [PR #1988](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1988), **NOT a canonical prediction or validated trading edge**. Full Task 2 admission and durable T3 archive remain separate. Source attribution: Ironflow (ironflow.sh), CC BY 4.0.
