@@ -466,5 +466,111 @@ class OriginalPublicationRecoveryTests(unittest.TestCase):
 
 
 
+from scripts.research import task2_r1_original_causal_source_matrix_v1 as causal
+
+
+class OriginalCausalSourceInventoryTests(unittest.TestCase):
+    """Frozen code/forecast field roles and source clock gaps, no PIT promotion."""
+
+    def test_pinned_original_engine_extracts_exact_12h_direction_inputs(self):
+        raw=causal.original.git("show", f"{causal.ORIGINAL_ENGINE_REF}:{causal.ENGINE_PATH}")
+        actual=causal.audited_original_engine(raw)
+        self.assertEqual(actual["original_12h_direction_delta_source_keys"],
+                         ["btc_usdt", "eth_usdt", "ethbtc"])
+        self.assertEqual(actual["direction_sign_required_deltas"],
+                         ["btc_delta_since_prior_packet_pct","eth_delta_since_prior_packet_pct"])
+        self.assertEqual(len(actual["evidence_snapshot_index_ids"]),24)
+        self.assertEqual(actual["source_git_blob"],causal.ENGINE_SHA)
+
+    def test_genuine_original_11_attempt_causal_inventory(self):
+        r=causal.build()
+        self.assertEqual(r["original_forecasts"],11)
+        self.assertEqual(r["selected_feature_instances"],264)
+        self.assertEqual(r["source_role_counts"],{
+            "DIRECT_12H_DIRECTION_DELTA":22,
+            "ORIGINAL_PRICE_INPUT_TO_DIRECTION_DELTA_AND_REFERENCE":22,
+            "RELATIVE_DIRECTION_CONTEXT_NOT_BTC_ETH_12H_SIGN":22,
+            "EVIDENCE_INDEX_NOT_DIRECT_12H_SIGN":198,
+        })
+        self.assertEqual(r["scoped_original_packet_publication_witnesses"],11)
+        self.assertEqual(r["full_original_R1_PIT_admissions"],0)
+        self.assertFalse(r["source_authentication_semantics"]["full_model_historical_backtest_authorized"])
+        self.assertEqual(len(r["original_rows"]),11)
+        self.assertEqual(sum(x["original_outcome_state"]=="PRESENT" for x in r["original_rows"]),9)
+        self.assertEqual(sum(x["original_outcome_state"]=="ABSENT_AT_ORIGINAL_SNAPSHOT" for x in r["original_rows"]),2)
+        self.assertFalse(any(r["prohibitions"].values()))
+
+    def test_source_clock_count_does_not_mean_publication_admission(self):
+        r=causal.build()
+        self.assertEqual(sum(r["selected_feature_clock_status_counts"].values()),264)
+        self.assertEqual(sum(r["selected_feature_owner_counts"].values()),264)
+        self.assertEqual(r["source_authentication_semantics"]["entire_upstream_vendor_revision_first_known"],
+                         "NOT_VERIFIED")
+        self.assertEqual(r["independent_12h_market_event_families_certified"],0)
+        self.assertNotIn('"value":',json.dumps(r))
+        self.assertNotIn('"funding_rate":',json.dumps(r))
+
+    def test_altered_frozen_engine_fails_even_if_shape_appears_similar(self):
+        raw=causal.original.git("show", f"{causal.ORIGINAL_ENGINE_REF}:{causal.ENGINE_PATH}")
+        with self.assertRaisesRegex(ValueError,"ORIGINAL_ENGINE_BLOB_CHANGED"):
+            causal.audited_original_engine(raw+b"\n")
+
+    def test_altered_original_sign_logic_fails_closed(self):
+        raw=causal.original.git("show", f"{causal.ORIGINAL_ENGINE_REF}:{causal.ENGINE_PATH}")
+        with self.assertRaisesRegex(ValueError,"ORIGINAL_ENGINE_BLOB_CHANGED"):
+            causal.audited_original_engine(raw.replace(b'btc > 0 and eth > 0',
+                                                       b'btc > 0 or eth > 0'))
+
+    def test_missing_a_directional_feature_is_not_silently_ignored(self):
+        x=causal.pinned_inputs()
+        x["ledger"]["rows"][0]["selected_feature_clocks"].pop()
+        with self.assertRaisesRegex(ValueError,"ORIGINAL_LEDGER_FEATURE_ROSTER"):
+            causal.build(originals=x)
+
+    def test_moved_original_source_clock_cannot_invalidate_history_silently(self):
+        x=causal.pinned_inputs()
+        x["ledger"]["rows"][0]["selected_feature_clocks"][0]["declared_observed_at"]="2026-10-14T20:00:00Z"
+        with self.assertRaisesRegex(ValueError,"ORIGINAL_FIELD_SOURCE_OR_CLOCK_MISMATCH"):
+            causal.build(originals=x)
+
+    def test_original_forecast_must_match_frozen_main_source_and_issuer(self):
+        x=causal.pinned_inputs()
+        x["ledger"]["rows"][0]["original_forecast_git_blob_sha"]="0"*40
+        with self.assertRaisesRegex(ValueError,"ORIGINAL_FORECAST_IDENTITY|ORIGINAL_FORECAST_GIT_BLOB|ORIGINAL_ATTEMPT"):
+            causal.build(originals=x)
+
+    def test_original_vintage_inventory_rejects_forged_pit_promotion(self):
+        x=causal.pinned_inputs()
+        x["ledger"]["rows"][0]["information_edge_gate"]["status"]="ADMITTED"
+        with self.assertRaisesRegex(ValueError,"FORECAST_UNVERIFIED_GATE"):
+            causal.build(originals=x)
+
+    def test_cannot_backfill_original_outcomes_in_causal_inventory(self):
+        x=causal.pinned_inputs()
+        missing=next(y for y in x["ledger"]["rows"] if y["original_outcome_status"]=="ABSENT_AT_ORIGINAL_SNAPSHOT")
+        missing["original_outcome_status"]="PRESENT"
+        with self.assertRaisesRegex(ValueError,"ORIGINAL_OUTCOME_OR_TARGET_MISMATCH"):
+            causal.build(originals=x)
+
+    def test_cannot_change_24_feature_role_contract_without_reproving_engine(self):
+        old=causal.ROLES["sentiment_market_score"]
+        try:
+            causal.ROLES["sentiment_market_score"]="DIRECT_12H_DIRECTION_DELTA"
+            raw=causal.original.git("show", f"{causal.ORIGINAL_ENGINE_REF}:{causal.ENGINE_PATH}")
+            with self.assertRaisesRegex(ValueError,"ROLE_DENOMINATOR_CHANGED"):
+                causal.audited_original_engine(raw)
+        finally:
+            causal.ROLES["sentiment_market_score"]=old
+
+    def test_independent_event_n_is_still_zero_even_with_all_packet_publications(self):
+        r=causal.build()
+        self.assertEqual(r["original_forecasts"],r["scoped_original_packet_publication_witnesses"])
+        self.assertEqual(r["full_original_R1_PIT_admissions"],0)
+        self.assertEqual(r["independent_12h_market_event_families_certified"],0)
+        self.assertEqual(r["source_authentication_semantics"]["original_12h_direction"],
+                         "NOWCAST_DELTA_CONTINUATION_NOT_PROVEN_PREDICTIVE_EDGE")
+
+
+
 if __name__ == "__main__":
     unittest.main()
