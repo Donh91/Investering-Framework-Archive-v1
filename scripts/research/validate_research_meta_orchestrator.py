@@ -164,4 +164,90 @@ with tempfile.TemporaryDirectory() as td, tempfile.TemporaryDirectory() as exter
     assert unsafe["status"]=="SOURCE_QUEUE_OUTSIDE_REPO", unsafe
     print("PASS symlinked_source_directory_escape_rejected")
 
+
+# Real canonical nine-method intake regression: source-only observations.
+# This test explicitly exercises X0 / News / M7 original owners and prevents
+# either a permissive wildcard owner or note-path exception from creeping in.
+import copy
+with tempfile.TemporaryDirectory() as td:
+    whole=Path(td)
+    source_queue=json.loads((ROOT/o.SPECIALIST_QUEUE_REL).read_text())
+    assert len(source_queue["method_intakes"])==9
+    for rel in {item["evidence_note"] for item in source_queue["method_intakes"]}:
+        dest=whole/rel
+        dest.parent.mkdir(parents=True,exist_ok=True)
+        dest.write_bytes((ROOT/rel).read_bytes())
+    queue_path=whole/o.SPECIALIST_QUEUE_REL
+    queue_path.parent.mkdir(parents=True,exist_ok=True)
+    queue_path.write_text(json.dumps(source_queue))
+    _git(whole,"init","-b","main")
+    def commit_real_queue():
+        _git(whole,"add","-A")
+        _git(whole,"-c","user.name=Research Test",
+             "-c","user.email=test@example.invalid","commit","--allow-empty",
+             "-m","real canonical method intake regression")
+        _git(whole,"update-ref","refs/remotes/origin/main","HEAD")
+    commit_real_queue()
+    all_nine=o.specialist_intake_handoff(whole)
+    assert all_nine["status"]=="PUBLIC_NOTES_READ_ONLY", all_nine
+    assert len(all_nine["entries"])==9, all_nine
+    assert all(x["status"]=="NOTE_PRESENT_NOT_SOURCE_ADMITTED" for x in all_nine["entries"])
+    assert all(not x["market_source_admitted"] and not x["automatic_promotion"]
+               for x in all_nine["entries"])
+    original=o.orchestrate(pol,{}, {},voi,{"verdict":"PASS"})
+    observed=o.attach_specialist_intakes(original,whole)
+    assert observed["queue_n"]==original["queue_n"]+9
+    assert observed["primary_action"]==original["primary_action"]
+    assert observed["active_heavy_workstreams"]==original["active_heavy_workstreams"]
+    assert all(x["canonical_effect"] is False and x["paid_data_authorized"] is False
+               and x["portfolio_execution"] is False for x in observed["queue"][-9:])
+    print("PASS real_nine_specialist_methods_observed_without_authority")
+
+    # Each invalid cross-domain mutation still rejects the ENTIRE queue.
+    invalids=(
+        ("HEYASKR_EXTERNAL_METHOD_REFERENCE_20261028","owner_lane",
+         "S5_DERIVATIVES_CROWDING_TO_PULLBACK_V1"),
+        ("NEWS_OSS_EVENT_FAMILY_CHALLENGER_20261104","owner_lane",
+         "S5_DERIVATIVES_CROWDING_TO_PULLBACK_V1"),
+        ("NEWS_OSS_EVENT_FAMILY_CHALLENGER_20261104","owner_lane",
+         "FORGED_NEWS_OWNER"),
+        ("FRAMEWORK_WIDE_OPEN_SOURCE_REVERSE_ENGINEERING_20261105","owner_lane",
+         "CROSS_FRAMEWORK_METHOD_REUSE_FORGED"),
+        ("FRAMEWORK_WIDE_OPEN_SOURCE_REVERSE_ENGINEERING_20261105","evidence_note",
+         "06_RESEARCH_LAB/m7_open_source_validation_harvest/other.md"),
+        ("FRAMEWORK_WIDE_OPEN_SOURCE_REVERSE_ENGINEERING_20261105","evidence_note",
+         "06_RESEARCH_LAB/m7_open_source_validation_harvest/../escape.md"),
+        ("NEWS_OSS_EVENT_FAMILY_CHALLENGER_20261104","execution_permission",True),
+    )
+    for id_,key,value in invalids:
+        corrupted=copy.deepcopy(source_queue)
+        next(x for x in corrupted["method_intakes"] if x["id"]==id_)[key]=value
+        queue_path.write_text(json.dumps(corrupted))
+        commit_real_queue()
+        rejected=o.specialist_intake_handoff(whole)
+        assert rejected["status"]=="INVALID_INTAKE_AUTHORITY_OR_PATH" and rejected["entries"]==[], (id_,key,rejected)
+    print("PASS forged_owner_cross_domain_path_and_execution_denied")
+
+    # Transversal X0 must remain explicitly declared by the source queue.
+    missing_transversal=copy.deepcopy(source_queue)
+    missing_transversal["transversal"]=[]
+    queue_path.write_text(json.dumps(missing_transversal))
+    commit_real_queue()
+    rejected=o.specialist_intake_handoff(whole)
+    assert rejected["status"]=="INVALID_INTAKE_AUTHORITY_OR_PATH" and rejected["entries"]==[]
+    print("PASS missing_transversal_authority_rejected")
+
+    # Exact committed original M7 note bytes matter, not a filename or claim.
+    queue_path.write_text(json.dumps(source_queue))
+    commit_real_queue()
+    m7=whole/next(x["evidence_note"] for x in source_queue["method_intakes"]
+                  if x["id"]=="FRAMEWORK_WIDE_OPEN_SOURCE_REVERSE_ENGINEERING_20261105")
+    m7.write_bytes(m7.read_bytes()+b"\nFORGED\n")
+    dirty=o.specialist_intake_handoff(whole)
+    assert dirty["status"]=="PUBLIC_NOTES_READ_ONLY"
+    assert sum(x["status"]=="NOTE_NOT_MERGED_OR_MISSING" for x in dirty["entries"])==1
+    attached=o.attach_specialist_intakes(original,whole)
+    assert attached["queue_n"]==original["queue_n"]+8
+    print("PASS dirty_cross_domain_note_cannot_be_admitted")
+
 print("RESEARCH_SPECIALIST_HANDOFF_GATE_v1 PASS")
