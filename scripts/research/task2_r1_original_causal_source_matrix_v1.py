@@ -164,6 +164,13 @@ def build(source_bytes: bytes | None = None, originals=None):
     owners=Counter()
     required_health_statuses=Counter()
     optional_health_statuses=Counter()
+    # Machine-actionable original-source gaps per feature. These are only
+    # public original identity/clock metadata, never original market values.
+    per_feature={
+        key:{"role":ROLES[key],"attempt_n":0,
+             "source_owner_counts":Counter(),"clock_status_counts":Counter()}
+        for key in sorted(ROLES)
+    }
     for row in ledger["rows"]:
         fid=row["forecast_id"]
         bound=row["original_bound_main_sha"]
@@ -225,6 +232,7 @@ def build(source_bytes: bytes | None = None, originals=None):
                 need(lane in set(packet.get("optional_degraded_lanes") or ()),
                      "ORIGINAL_OPTIONAL_DEGRADATION_UNDECLARED_"+fid+"_"+lane)
             optional_health_statuses[state]+=1
+        original_feature_clocks={}
         for key in sorted(ROLES):
             source=meta[key]
             feature=mapped[key]
@@ -249,6 +257,18 @@ def build(source_bytes: bytes | None = None, originals=None):
             counts[ROLES[key]]+=1
             statuses[clock_state]+=1
             owners[source["source_owner"]]+=1
+            per_feature[key]["attempt_n"]+=1
+            per_feature[key]["source_owner_counts"][source["source_owner"]]+=1
+            per_feature[key]["clock_status_counts"][clock_state]+=1
+            original_feature_clocks[key]={
+                "source_role":ROLES[key],
+                "source_owner":source["source_owner"],
+                "original_observation_clock":source["declared_observed_at"],
+                "original_retrieval_clock":source["declared_retrieved_at"],
+                "original_clock_status":clock_state,
+                "independent_provider_publication_verified":False,
+                "full_historical_pit_admitted":False,
+            }
         need(row["admissibility"]=="NOT_ADMITTED" and
              row["information_edge_gate"]["status"]=="NOT_ADMITTED" and
              row["investor_action_edge_gate"]["status"]=="NOT_ADMITTED" and
@@ -266,6 +286,7 @@ def build(source_bytes: bytes | None = None, originals=None):
             "direct_12h_direction_deltas_present":sorted(DIRECTION_DELTAS),
             "original_packet_issued_utc":row["issued_at_utc"],
             "original_outcome_state":row["original_outcome_status"],
+            "feature_clock_index":original_feature_clocks,
             "admission":"NOT_ADMITTED",
         })
     need(len(rows)==11 and sum(counts.values())==264,
@@ -278,6 +299,12 @@ def build(source_bytes: bytes | None = None, originals=None):
     }
     need(dict(counts)==expected,"ROLE_COUNTS_DRIFT")
     need(sum(statuses.values())==264, "SOURCE_CLOCK_COUNT_DRIFT")
+    need(len(per_feature)==24 and
+         all(rec["attempt_n"]==11 and
+             sum(rec["source_owner_counts"].values())==11 and
+             sum(rec["clock_status_counts"].values())==11
+             for rec in per_feature.values()),
+         "PER_FEATURE_ORIGINAL_DENOMINATOR_CHANGED")
     need(required_health_statuses==Counter({"PASS":121}) and
          sum(optional_health_statuses.values())==11,
          "ORIGINAL_REQUIRED_HEALTH_DENOMINATOR_CHANGED")
@@ -290,6 +317,18 @@ def build(source_bytes: bytes | None = None, originals=None):
         "source_role_counts":dict(sorted(counts.items())),
         "selected_feature_clock_status_counts":dict(sorted(statuses.items())),
         "selected_feature_owner_counts":dict(sorted(owners.items())),
+        "per_feature_first_known_gap_matrix":{
+            key:{
+                "source_role":entry["role"],
+                "original_attempt_n":entry["attempt_n"],
+                "source_owner_counts":dict(sorted(entry["source_owner_counts"].items())),
+                "original_clock_status_counts":dict(sorted(entry["clock_status_counts"].items())),
+                "provider_first_publication_or_original_full_model_response_proof":"NOT_VERIFIED",
+                "full_R1_historical_PIT_admitted":False,
+                "economic_after_cost_edge_admitted":False,
+            }
+            for key,entry in sorted(per_feature.items())
+        },
         "original_required_health_lanes":sorted(REQUIRED_HEALTH_LANES),
         "original_optional_health_lanes":sorted(OPTIONAL_HEALTH_LANES),
         "required_health_census_status":dict(sorted(required_health_statuses.items())),
