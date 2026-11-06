@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/data-architecture-gate.yml",
+    "06_RESEARCH_LAB/audit_summaries/2026-11-06__task2_archive_first_measured_edge_matrix_v1.md",
+    "scripts/research/task2_archive_first_edge_matrix_v1.py",
+    "tests/research/test_task2_archive_first_edge_matrix_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-7df22920260f611d",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(task2): deterministic archive-first edge matrix with original outcome receipt checks * test(task2): original-source, matured-receipt, hindsight and baseline negative controls * ci(task2): run archive-first diagnostic and adversarial real-source tests in existing read-only gate * research(task2): source-bound E1/E2/E3 historical and fresh shared-row matrix with null-model warnings",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/data-architecture-gate.yml": "730bd6db058b529807ca9f40f3625f74db8feca4",
+    "06_RESEARCH_LAB/audit_summaries/2026-11-06__task2_archive_first_measured_edge_matrix_v1.md": "3fd9a1f661198c4e349de5fa277ba970e7c2adef",
+    "scripts/research/task2_archive_first_edge_matrix_v1.py": "1c308430f1b4b2a40115bbacdc92765b119de9a8",
+    "tests/research/test_task2_archive_first_edge_matrix_v1.py": "aa414cba4ec3720e8c07a126345583843c8b7a68"
+  },
+  "source_commit_sha": "7df22920260f611db91c37a74951c043e1d761e8",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-06T09:30:49-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(task2): source-bound archive-first E1 E2 E3 diagnostics and null baselines"
+}

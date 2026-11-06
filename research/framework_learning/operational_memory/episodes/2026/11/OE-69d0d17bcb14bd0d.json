@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/premium-v2/contrast-a11y.test.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/package.json",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/premium-overhaul.css"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-69d0d17bcb14bd0d",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "site-enforce-readable-premium-header-language-toggle-contrast",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(site): readable premium identity and locale switch contrast * test(site): enforce WCAG AA header and locale contrast including negative controls * test(site): include accessibility regression in existing premium CI * test(site): correct whitespace matching in contrast declarations",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/premium-v2/contrast-a11y.test.mjs": "492a89179125dbfd94d31371f420bfea3ce1d642",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/package.json": "644c51ddf37eeb994972c366915ca3ac094c3e14",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/premium-overhaul.css": "ef042df470ec79e821fecc6f304f9ea89b7c9f4d"
+  },
+  "source_commit_sha": "69d0d17bcb14bd0deecb04bb6572cf1f8604cc2d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-06T13:40:57-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(site): enforce readable premium header and language toggle contrast (#1983)"
+}

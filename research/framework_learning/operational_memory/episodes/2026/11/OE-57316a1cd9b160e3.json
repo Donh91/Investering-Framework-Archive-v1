@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.daycells.test.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/package.json"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-57316a1cd9b160e3",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "kompas-w46-source-issued-daily-daycells-replay-visibility",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(kompas): render source-issued UTC daily bounds as day cells and replay-only axis * test(kompas): exercise UTC daycells, replay no-lookahead and quote failure on native renderer * test(kompas): execute new Graph B renderer regressions in existing exact-head Premium CI",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.daycells.test.mjs": "42a2715be5a3a03eb86fae34b5b8a330cdc66674",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/graph-b/source-graph-b.mjs": "cdb7461351f83f52b363835a05d4abc283b89a3f",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/package.json": "4e508d2d0b92a6d33d991eb514c3eb09b40be595"
+  },
+  "source_commit_sha": "57316a1cd9b160e36778a069c668eb16bdce30aa",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-06T10:46:45-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(kompas): W46 source-issued daily daycells and replay visibility regression"
+}

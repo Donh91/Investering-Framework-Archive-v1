@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/api_agent/research_lab_sol_dispatch.py",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-cdd0e96b2fa9b1cb",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "sol-allow-direct-lab-cli-imports-before-any",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Native run #42218784447 failed pre-HTTP at build context with scripts module import. Minimal sys.path source bootstrap, isolated -I regression. Six exact-head CI success. No prior paid POST, no budget/market change.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/api_agent/research_lab_sol_dispatch.py": "853d77696647d59e351731d0f7e42cb193ef7446",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py": "81610596bf9595c9765ea20231a4ffa77f34fbfe"
+  },
+  "source_commit_sha": "cdd0e96b2fa9b1cbdad36c8fbdc00a578e83f088",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-06T07:39:37-05:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix(sol): allow direct Research Lab CLI imports before any paid HTTP claim"
+}
