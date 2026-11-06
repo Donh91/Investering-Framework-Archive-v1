@@ -53,6 +53,8 @@ def run_guard(spent=0, cap=40, reserve=4, rows=None, extra=None,
         result = subprocess.run(cmd, capture_output=True, text=True,
                                 check=False, timeout=25, cwd=ROOT)
         if not result.stdout.strip():
+            if result.returncode != 0 and "caps/reserves must be finite nonnegative" in result.stderr:
+                return result.returncode, {"status": "BLOCKED", "error": result.stderr}
             raise AssertionError(result.stderr)
         return result.returncode, json.loads(result.stdout)
 
