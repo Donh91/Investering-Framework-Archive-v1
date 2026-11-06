@@ -255,7 +255,7 @@ jobs:
       - name: Parse exact original-run ID
         id: origin
         run: |
-          python - ${{'PY'
+          python - <<'PY'
           import json,os,re
           from pathlib import Path
           event=json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
@@ -301,7 +301,7 @@ jobs:
             --output-dir runtime/research-lab-sol
       - name: Persist original result in existing research evidence lane
         run: |
-          python - ${{'PY'
+          python - <<'PY'
           import json,re,shutil
           from pathlib import Path
           root=Path("runtime/research-lab-sol")
