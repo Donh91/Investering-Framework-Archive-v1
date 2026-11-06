@@ -7,9 +7,6 @@ import argparse,json
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import brier_score_loss,log_loss,roc_auc_score
-from sklearn.preprocessing import StandardScaler
 from ironflow_dayblocked_study_v1 import load,day_anchors,M
 from ironflow_hourly_stress_v1 import build
 
@@ -27,6 +24,8 @@ def matrix(df,extra):
     if not np.isfinite(z.to_numpy(dtype=float)).all():raise ValueError("invalid feature matrix")
     return z
 def model_prob(train,test,extra):
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.preprocessing import StandardScaler
     xtrain=matrix(train,extra).to_numpy(dtype=float)
     xtest=matrix(test,extra).to_numpy(dtype=float)
     scaler=StandardScaler()
@@ -37,6 +36,7 @@ def model_prob(train,test,extra):
     model.fit(a,train.drawdown_2pct_next_day.to_numpy(dtype=int))
     return model.predict_proba(b)[:,1]
 def scores(y,probs):
+    from sklearn.metrics import brier_score_loss,log_loss,roc_auc_score
     p=np.clip(probs,1e-5,1-1e-5)
     return {"n":int(len(y)),"positives":int(y.sum()),
             "brier":round(float(brier_score_loss(y,p)),6),
