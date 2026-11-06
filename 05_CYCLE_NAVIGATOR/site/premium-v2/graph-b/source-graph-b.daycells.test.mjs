@@ -105,3 +105,42 @@ for(const asset of ['BTC','ETH']){
   assert.equal(x.get('forecast').getAttribute('d'),'');
  });
 }
+
+
+// SITE owner's 9 Nov W46 GENERAL REHEARSAL. All prices are intentionally
+// FICTIONAL and exist ONLY in this Node test, never in public data or Pages.
+// This calls the ACTUAL source-graph-b.mjs plot() from harness(), not a
+// recreated chart, new forecast generator or retrospectively scored signal.
+test('W46 7 distinct frozen closes produce a non-flat BLUE weekly Graph B path; green follows chosen hour',()=>{
+ const m=source(108,'BTC');
+ const expected=[77150,78900,78020,80840,79280,82300,80760];
+ const lows=[75650,77050,76700,79100,77800,80500,79400];
+ const highs=[78350,80120,79200,82100,80550,83600,82400];
+ m.bands=m.bands.map(b=>({...b,forecast_low:75000,forecast_high:84000}));
+ m.forecast=m.forecast.map((p,i)=>({...p,expected_close:expected[i],low:lows[i],high:highs[i]}));
+ m.hourly_observations=m.hourly_observations.map((p,i)=>({
+  ...p,value:76000+Math.floor(i/24)*370+(i%24)*16
+ }));
+ const early=harness(),late=harness();
+ early.render(m,30,'BTC');late.render(m,80,'BTC');
+ const blue=late.get('forecast').getAttribute('d'), knots=points(blue);
+ assert.equal(knots.length,7,'NO_SEVEN_ORIGINAL_FROZEN_DAY_POINTS');
+ assert.equal(new Set(knots.map(p=>p[1])).size,7,
+  'BLUE_EXPECTED_CLOSE_PATH_IS_WRONGLY_STRAIGHT');
+ assert.ok(Math.max(...knots.map(p=>p[1]))-Math.min(...knots.map(p=>p[1]))>100,
+  'BLUE_UNDERREPRESENTS_SOURCE_MOVEMENT');
+ assert.equal(early.get('forecast').getAttribute('d'),blue,
+  'FROZEN_FORECAST_CHANGED_DURING_WEEK_REPLAY');
+ assert.notEqual(early.get('actual').getAttribute('d'),late.get('actual').getAttribute('d'),
+  'GREEN_OBSERVED_SERIES_DID_NOT_REVEAL_HOURLY_PROGRESS');
+ assert.equal((late.get('range-band').getAttribute('d').match(/Z/g)||[]).length,7,
+  'HIGH_LOW_DAILY_CELLS_NOT_RENDERED');
+ assert.ok(late.get('actual').getAttribute('d').startsWith('M'));
+ // Removing source issuance immediately removes blue, without touching green.
+ const unavailable={...m,forecast_status:'UNAVAILABLE',forecast:[]};
+ const gate=harness();gate.render(unavailable,80,'BTC');
+ assert.equal(gate.get('forecast').getAttribute('d'),'',
+  'PUBLISHED_FAKE_BLUE_PERSISTED_WITHOUT_SEVEN_DAY_SOURCE');
+ assert.ok(gate.get('actual').getAttribute('d').length>0,
+  'SOURCE_REFUSAL_ERASED_INDEPENDENT_VERIFIED_GREEN_OBSERVATIONS');
+});
