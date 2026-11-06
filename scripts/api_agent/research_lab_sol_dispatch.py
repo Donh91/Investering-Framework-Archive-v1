@@ -12,9 +12,10 @@ from typing import Any
 QUEUE_PATH = Path("research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json")
 TASK_NAME = "RESEARCH_LAB_SOL_ANALYSIS"
 
-MAX_ONESHOT_MISSION = "S1-ELITE-RESILIENCE-SOL61-MAX-20261106"
+MAX_ONESHOT_MISSION = "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B"
 LEGACY_MAX_UNCERTAIN = "SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105"
-PUBLIC_CONSENT_COMMENT = 6682722905
+LEGACY_MAX_INCOMPLETE = "S1-ELITE-RESILIENCE-SOL61-MAX-20261106"
+PUBLIC_CONSENT_COMMENT = 6683279250
 MAX_CLAIM_PREFIX = "RL_SOL_MAX_PRE_HTTP_CLAIM_V1"
 
 def effective_registry_for_mission(registry: dict, packet: dict, mission_id: str) -> dict:
@@ -28,6 +29,7 @@ def effective_registry_for_mission(registry: dict, packet: dict, mission_id: str
         if (mission_id != MAX_ONESHOT_MISSION or packet.get("mission_id") != mission_id
                 or packet.get("original_owner_issue") != 1156
                 or packet.get("max_runs_for_this_release") != 1
+                or packet.get("max_model_output_tokens_per_new_attempt") != 48000
                 or packet.get("review_only_no_code_write") is not True
                 or not zero_authority(packet.get("authority"))):
             raise ValueError("MAX_ONE_SHOT_MANDATE_NOT_BOUND")
@@ -39,7 +41,7 @@ def effective_registry_for_mission(registry: dict, packet: dict, mission_id: str
                     "issues/1156#issuecomment-" + str(PUBLIC_CONSENT_COMMENT))):
             raise ValueError("MAX_PUBLIC_BACKGROUND_STORAGE_CONSENT_REQUIRED")
         task["reasoning_effort"] = "max"
-        task["max_output_tokens"] = 16000
+        task["max_output_tokens"] = 48000
         task["max_attempts"] = 1
         task["recoverable_background"] = True
         task["public_background_storage_authorized"] = True
@@ -89,7 +91,7 @@ def reserve_native_max_claim(root: Path, mission_id: str, issue_number: int, com
                "https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/issues/1156"
             or not isinstance(consent_body, str)
             or not consent_body.startswith(
-                "<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106 -->")
+                "<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106B -->")
             or mission_id not in consent_body
             or "30 DAYS" not in consent_body):
         raise ValueError("MAX_NATIVE_PUBLIC_30D_OWNER_CONSENT_UNVERIFIED")
@@ -169,6 +171,8 @@ def paid_attempt_admission(repo_root: Path, mission_id: str, issue_number: int) 
     """
     if mission_id == LEGACY_MAX_UNCERTAIN:
         return False, "LEGACY_MAX_PAID_POST_OUTCOME_UNKNOWN_NO_REPOST"
+    if mission_id == LEGACY_MAX_INCOMPLETE:
+        return False, "LEGACY_MAX_TERMINAL_INCOMPLETE_NO_REPOST"
     try:
         queue = load_json(repo_root / QUEUE_PATH)
     except (OSError, ValueError, TypeError):

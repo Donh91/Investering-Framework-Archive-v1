@@ -94,11 +94,12 @@ jobs:
             --task RESEARCH_LAB_SOL_ANALYSIS \
             --cap-usd 10.0 \
             --reserve-usd 1.0
-          # New 2026-11-06 owner-consented single MAX only. The global risk
-          # ledger reserves BOTH unresolved historical POSTs (USD3 each).
+          # New distinct 2026-11-06 owner-consented focused MAX. Global risk
+          # ledger reserves THREE unsettled historical POSTs (USD3 each),
+          # including original 16k reasoning-only terminal-incomplete run.
           # Reserve the entire new request USD3 before any durable claim/POST.
           # Exceptional USD45 remains unavailable. Existing HIGH stays 40/4.
-          if [ "${{ steps.trigger.outputs.mission }}" = "S1-ELITE-RESILIENCE-SOL61-MAX-20261106" ]; then
+          if [ "${{ steps.trigger.outputs.mission }}" = "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B" ]; then
             python scripts/api_agent/check_monthly_cost_guard.py \
               --receipt-root research/api_agent/outputs \
               --hard-stop-usd 40 --reserve-usd 4.0 \
