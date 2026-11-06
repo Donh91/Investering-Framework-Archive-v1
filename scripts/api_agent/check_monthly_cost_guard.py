@@ -20,6 +20,13 @@ OWNER_GLOBAL_TARGET_USD = 40.0
 OWNER_GLOBAL_HARD_STOP_USD = 45.0
 OWNER_GLOBAL_RESERVE_USD = 4.0  # Routine paths retain existing protected headroom.
 OWNER_SINGLE_REQUEST_CAP_USD = 3.0
+# Exact unresolved native POSTs. Missing/removed rows must never silently
+# become zero risk. This immutable floor may only change with separately
+# reviewed provider-settlement evidence, NEVER by editing a JSON ledger alone.
+UNRESOLVED_NATIVE_POST_FLOOR_USD = {
+    "41870364609": 3.0,
+    "41949497953": 3.0,
+}
 CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
     "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
 )
@@ -64,6 +71,13 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
         seen.add(rid)
         low += float(lo)
         high += float(hi)
+    missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
+    if missing:
+        raise ValueError("KNOWN_UNSETTLED_NATIVE_POST_MISSING")
+    for row in value["unresolved"]:
+        floor = UNRESOLVED_NATIVE_POST_FLOOR_USD.get(row["run_id"])
+        if floor is not None and float(row["upper_usd"]) < floor:
+            raise ValueError("KNOWN_UNSETTLED_NATIVE_POST_UNDER_RESERVED")
     if not math.isfinite(high) or high > OWNER_GLOBAL_HARD_STOP_USD:
         raise ValueError("LIABILITY_TOTAL_INVALID")
     return low, high, len(seen)
@@ -233,8 +247,14 @@ def main() -> None:
                        "reason": "MODEL_APPROVAL_BLOCKED:" + str(exc)[:100]})
     if new_upper > OWNER_SINGLE_REQUEST_CAP_USD:
         errors.append({"path": "MAX_NEW_REQUEST", "reason": "MAX_SINGLE_REQUEST_CEILING_EXCEEDED"})
-    # Caller-specific smaller cap and reserve still bind; only a specifically
-    # reviewed 45-cap invocation can consume the exceptional USD5 tolerance.
+    # OWNER_APPROVED 45 is a tolerance, not a bearer capability. No native
+    # caller-specific exceptional authorization has been merged yet.
+    # A naked --hard-stop-usd 45 --reserve-usd 0 is NOT an owner claim.
+    # Fail closed here until a separately reviewed exact-work-id, source-HEAD,
+    # actual-event proof is bound to the existing paid caller.
+    if args.hard_stop_usd > OWNER_GLOBAL_TARGET_USD:
+        errors.append({"path": "OWNER_EXCEPTIONAL_CAP",
+                       "reason": "EXCEPTIONAL_45_NATIVE_SOURCE_CAPABILITY_REQUIRED"})
     effective_hard_stop = min(args.hard_stop_usd, OWNER_GLOBAL_HARD_STOP_USD)
     # Only an explicitly reviewed 45-cap caller can use the exceptional
     # USD5 tolerance; normal callers must retain USD4 minimum headroom.
