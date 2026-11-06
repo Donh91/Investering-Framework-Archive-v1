@@ -1,0 +1,293 @@
+{
+  "E1_warning": {
+    "c2_original_unique_false_alarm_dates": 2,
+    "c2_original_unique_signal_dates": 14,
+    "c2_reported_median_true_pre_lead_days": 2.0,
+    "decision_value_proven": false,
+    "event_family_n_independent": null,
+    "multiple_horizon_and_rule_selection_adjusted": false,
+    "provider_publication_clocks_authenticated": false,
+    "reported_comparison": [
+      {
+        "c2_rule": {
+          "events_one_to_one": 8,
+          "frequency_matched_random_median": 4.0,
+          "reported_exploratory_p": 0.002,
+          "unique_signal_dates": 14
+        },
+        "c_family": {
+          "events_one_to_one": 9,
+          "frequency_matched_random_median": 4.0,
+          "reported_exploratory_p": 0.0,
+          "unique_signal_dates": 15
+        },
+        "window_days": 14
+      },
+      {
+        "c2_rule": {
+          "events_one_to_one": 8,
+          "frequency_matched_random_median": 5.0,
+          "reported_exploratory_p": 0.011,
+          "unique_signal_dates": 14
+        },
+        "c_family": {
+          "events_one_to_one": 9,
+          "frequency_matched_random_median": 5.0,
+          "reported_exploratory_p": 0.0,
+          "unique_signal_dates": 15
+        },
+        "window_days": 21
+      },
+      {
+        "c2_rule": {
+          "events_one_to_one": 8,
+          "frequency_matched_random_median": 6.0,
+          "reported_exploratory_p": 0.058,
+          "unique_signal_dates": 14
+        },
+        "c_family": {
+          "events_one_to_one": 9,
+          "frequency_matched_random_median": 6.0,
+          "reported_exploratory_p": 0.006,
+          "unique_signal_dates": 15
+        },
+        "window_days": 30
+      },
+      {
+        "c2_rule": {
+          "events_one_to_one": 9,
+          "frequency_matched_random_median": 6.0,
+          "reported_exploratory_p": 0.02,
+          "unique_signal_dates": 14
+        },
+        "c_family": {
+          "events_one_to_one": 9,
+          "frequency_matched_random_median": 7.0,
+          "reported_exploratory_p": 0.029,
+          "unique_signal_dates": 15
+        },
+        "window_days": 45
+      }
+    ],
+    "role": "LEAN_WARNING_HYPOTHESIS_ONLY",
+    "rule": "C2 ratio-5d<=-3%, frozen legacy source, not live threshold",
+    "status": "HISTORICAL_EXPLORATORY_NOT_NEW_PIT_OR_PROSPECTIVE"
+  },
+  "E2_rotation": {
+    "c02_vs_c07_disagreements": {
+      "c02_matches": 7,
+      "c07_matches": 0,
+      "disagreement_n_7d": 7
+    },
+    "fixed_28d_block_n": 1,
+    "future_observations_excluded": 0,
+    "independent_market_event_family_n": null,
+    "independent_original_git_source_ancestry_replayed_here": false,
+    "label_source": "EXISTING_SHARED_ROW_OUTCOME_OWNER_ONLY",
+    "matured_7d_negative": 2,
+    "matured_7d_positive": 18,
+    "matured_7d_rows": 20,
+    "models": {
+      "B0_ALWAYS_NEGATIVE": {
+        "accuracy_pct": 10.0,
+        "fn": 18,
+        "fp": 0,
+        "n": 20,
+        "tn": 2,
+        "tp": 0
+      },
+      "B0_ALWAYS_POSITIVE": {
+        "accuracy_pct": 90.0,
+        "fn": 0,
+        "fp": 2,
+        "n": 20,
+        "tn": 0,
+        "tp": 18
+      },
+      "C01_ETHBTC": {
+        "accuracy_pct": 10.0,
+        "fn": 18,
+        "fp": 0,
+        "n": 20,
+        "tn": 2,
+        "tp": 0
+      },
+      "C02_BREADTH": {
+        "accuracy_pct": 45.0,
+        "fn": 11,
+        "fp": 0,
+        "n": 20,
+        "tn": 2,
+        "tp": 7
+      },
+      "C03_BTCD": {
+        "accuracy_pct": 30.0,
+        "fn": 14,
+        "fp": 0,
+        "n": 20,
+        "tn": 2,
+        "tp": 4
+      },
+      "C04_ETHBTC_BREADTH": {
+        "accuracy_pct": 10.0,
+        "fn": 18,
+        "fp": 0,
+        "n": 20,
+        "tn": 2,
+        "tp": 0
+      },
+      "C05_ETHBTC_BTCD": {
+        "accuracy_pct": 10.0,
+        "fn": 18,
+        "fp": 0,
+        "n": 20,
+        "tn": 2,
+        "tp": 0
+      },
+      "C06_BREADTH_BTCD": {
+        "accuracy_pct": 30.0,
+        "fn": 14,
+        "fp": 0,
+        "n": 20,
+        "tn": 2,
+        "tp": 4
+      },
+      "C07_SIMPLE_3": {
+        "accuracy_pct": 10.0,
+        "fn": 18,
+        "fp": 0,
+        "n": 20,
+        "tn": 2,
+        "tp": 0
+      }
+    },
+    "not_due_or_missing_7d": 16,
+    "observations_through_as_of": 36,
+    "price_only_baseline_on_same_event_tested": false,
+    "provider_first_publication_authenticated_here": false,
+    "source_observations_seen": 36,
+    "statistical_or_economic_edge_established": false,
+    "status": "DESCRIPTIVE_OWNER_RECEIPT_CHECKED_NO_GIT_ANCESTRY_REPLAY",
+    "target": "ETHBTC_7D_FORWARD_RETURN_POSITIVE_NOT_BROAD_ALTSEASON",
+    "winner_selected": false
+  },
+  "E3_hidden_deterioration": {
+    "after_cost_investable_joint_sequence_comparator": null,
+    "breadth_added_mae_deterioration_pp": {
+      "14d": 1.0762,
+      "28d": 3.7377,
+      "7d": 0.8366
+    },
+    "breadth_standalone_predictive_gate": "NOT_SUPPORTED",
+    "deployment_expanding_historical_strategy_return_pct_0_extra_delay": 17.54475,
+    "deployment_expanding_historical_strategy_return_pct_1_extra_day": -4.978081,
+    "etf_outflow_strong_edge_verdict": "REJECTED_FROM_EXISTING_OWNER_ADJUDICATION",
+    "frozen_breadth_universe_rows": 18400,
+    "frozen_breadth_weekly_snapshots": 184,
+    "full_2020_2026_source_causal_pit_replay": false,
+    "new_model_or_sensor_promoted": false,
+    "one_day_strategy_sensitivity_pp": -22.522831,
+    "portfolio_edge_or_live_signal": false,
+    "status": "CONDITIONAL_SEQUENCE_NOT_PAIRED_ON_COMMON_TIMESTAMPS"
+  },
+  "after_cost_edge_proven": false,
+  "as_of_utc": "2026-11-06T14:39:54.609562Z",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "automatic_model_weight_change": false,
+  "canonical_promotion_allowed": false,
+  "contract": "TASK2_ARCHIVE_FIRST_EDGE_EVIDENCE_MATRIX_v1",
+  "external_data_calls": 0,
+  "next_action": "REUSE_EXISTING_OWNER_PROSPECTIVE_SOURCE_VINTAGE_AND_DUE_OUTCOMES",
+  "official_compass_original_scientific_gate": "BLOCKED_SCIENTIFIC_CLOSURE",
+  "portfolio_execution": false,
+  "round3_analysis_authorized": false,
+  "scientific_verdict": "INSUFFICIENT_EVIDENCE",
+  "scope": "ARCHIVED_M1_SENSOR_AND_SHARED_ROW_BINARY_OUTCOMES_ONLY",
+  "source_discovery": {
+    "complete_whole_repo_crawl": false,
+    "frozen_source_tree_count": 3,
+    "indexed_public_paths_not_semantically_reviewed_datasets": 518,
+    "private_repo_values_imported": false
+  },
+  "source_first_known_vendor_authentication_added": false,
+  "source_manifest": {
+    "archive_atlas": {
+      "bytes": 310975,
+      "git_blob_sha1": "ab3de09429a659e1c3fbc9da7a530bea386e0e4d",
+      "path": "research/altseason_atlas/SOURCE_MANIFEST_v1.json",
+      "sha256": "5141a7116f7d7cb7ddbb409ba76768a4befd65ed8878c45c23cb61caaceafa0a"
+    },
+    "breadth_summary": {
+      "bytes": 2636,
+      "git_blob_sha1": "3c531f9fd29d7372da4870602877103d28b28a03",
+      "path": "06_RESEARCH_LAB/audit_summaries/marginal_decision_breadth_v1/MACHINE_SUMMARY.json",
+      "sha256": "0bd741ab917509792f34f5c3c9aabfe2d246d0d27360f860c54a8931c1c9b12b"
+    },
+    "edge_admission": {
+      "bytes": 5419,
+      "git_blob_sha1": "b7e3dc8c1b1e8f948df72ef32fa762e7667a6bde",
+      "path": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK_1_5_EDGE_ADMISSION_GATE_v1.json",
+      "sha256": "efc92635f4593df0fd46319bfdda197f4eb911a997fd81ce32c89f5921da45f8"
+    },
+    "etf_adjudication": {
+      "bytes": 5499,
+      "git_blob_sha1": "154dded8ee862bea5fc139f2b1ac02a3e9e59630",
+      "path": "06_RESEARCH_LAB/m1_checkpoints/2026-10-05__RL-ETF-TEMPORAL-EDGE-001__FINAL_ADJUDICATION_v1.md",
+      "sha256": "1221dff4a38ea8ddc81042204b2003f11c6b280efd2e591baf4f0c358dde0e1d"
+    },
+    "historical_terminal": {
+      "bytes": 4780,
+      "git_blob_sha1": "cb483942c83dd691fe8f7c4ea8b59ef86a44623e",
+      "path": "06_RESEARCH_LAB/historical_altseason_pullback_v1/ROUND2_TERMINAL_RESEARCH_DECISION.md",
+      "sha256": "ea8eee8133a1af2da967af9d3972908d74dd3f052d0d355638e0b3af2de32e7a"
+    },
+    "m1_placebo": {
+      "bytes": 1856,
+      "git_blob_sha1": "23907085e05cb7d4142908106e1b9197fbf0a7fc",
+      "path": "06_RESEARCH_LAB/audit_summaries/sensor_survival_v1/data/M1_FREQUENCY_MATCHED_TIMING_PLACEBO.csv",
+      "sha256": "89d65e9267a90453463194f35c8156e1bd54a01159a0e0b0df2017953ee839a0"
+    },
+    "m1_rule_timing": {
+      "bytes": 696,
+      "git_blob_sha1": "4ad596248bbee55aa8fc6aad596b5feab3d427eb",
+      "path": "06_RESEARCH_LAB/audit_summaries/sensor_survival_v1/data/M1_RULE_TIMING_ATLAS.csv",
+      "sha256": "96fa2edb09d82227974a43aa34c384fecf072a4db35c80d3d8f2ffbe37901e53"
+    },
+    "shared_candidates": {
+      "bytes": 1500,
+      "git_blob_sha1": "68f77b1d6710cdf35be0d8df0ef4deba160d1c71",
+      "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/03_CANDIDATE_REGISTRY.json",
+      "sha256": "396ce95478402defeac5daa7d2e534d562f00f75f7489e6a5421cecf2ec64250"
+    },
+    "shared_divergences": {
+      "bytes": 52218,
+      "git_blob_sha1": "8f06556dca73cd6707b8fc38d8d3f8208c391589",
+      "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/14_DIVERGENCE_FNP_LEDGER.csv",
+      "sha256": "9e3c4ba1997ed1fb086c9f440f2040abef7fb4d9a4ed5cde672fb7db668d4ef8"
+    },
+    "shared_outcomes": {
+      "bytes": 171201,
+      "git_blob_sha1": "d394eda40defbb95994a532ffc7a85788011f5c3",
+      "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/OUTCOME_DETAIL_LEDGER.csv",
+      "sha256": "3f6449dc435b6044b887f411ea8a7f09bca3a74a340343244c5c9694b71ec02f"
+    },
+    "shared_rows": {
+      "bytes": 304567,
+      "git_blob_sha1": "bc089fc6fcc6c82187c99b58a400d1aeb5fe8b36",
+      "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",
+      "sha256": "a4c2fb8c4fd35bd1cca1e34c3b2bcdf328aa405567144bdab40d77aa23031c02"
+    },
+    "shared_runtime": {
+      "bytes": 1727,
+      "git_blob_sha1": "2e2d136710962e6ce6726f8410d92c82481f41a4",
+      "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json",
+      "sha256": "557be4c545c557d5fa853670c8b83128a8314776592feff0bfcec72341278af6"
+    },
+    "transmission_latency": {
+      "bytes": 1124,
+      "git_blob_sha1": "5689ebe69096ef6e348146c1408be447a85469d0",
+      "path": "06_RESEARCH_LAB/audit_summaries/sensor_survival_v1/data/M4_STRATEGY_OPERATIONAL_LATENCY_TEST.csv",
+      "sha256": "c07e686284b2ce3354a0632d2a6c6aa79a19ea4dc6ef6cca569cdfea6e06510f"
+    }
+  }
+}

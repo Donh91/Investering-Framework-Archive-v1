@@ -17,17 +17,12 @@
   "decision": "FALSIFY",
   "decision_reason": "Resolve deterministic integrity/cohort blockers before scoring or external interpretation.",
   "deltas": [
-    "m6_event_count:224->232",
-    "feature_row_count:224->232",
-    "pit_verified_feature_rows:211->217",
-    "pit_unverified_feature_rows:13->15",
-    "matured_event_counts.14d:82->92",
-    "matured_event_counts.24h:217->224",
-    "matured_event_counts.72h:206->212",
-    "matured_event_counts.7d:164->178",
-    "unknown_horizon_counts.24h:1->0",
-    "unknown_horizon_counts.72h:2->0",
-    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED",
+    "matured_event_counts.14d:92->93",
+    "matured_event_counts.72h:212->213",
+    "matured_event_counts.7d:178->179",
+    "unknown_horizon_counts.14d:0->2",
+    "unknown_horizon_counts.24h:0->1",
+    "unknown_horizon_counts.7d:0->3",
     "M6_MATURED_PAYLOAD_INTEGRITY_CHANGED"
   ],
   "external_routing": {
@@ -35,7 +30,7 @@
     "claude_recommended": false,
     "sol_recommended": false
   },
-  "generated_at_utc": "2026-11-06T09:24:06.500976Z",
+  "generated_at_utc": "2026-11-06T14:39:43.485134Z",
   "material_delta": true,
   "prior_false_bootstrap_supersession": null,
   "rules": {
@@ -44,7 +39,7 @@
     "raw_external_output_canonical": false,
     "warning_is_sell": false
   },
-  "semantic_fingerprint": "7c31840a58c72d918b128fa3c14b9f38d3b3efe38684057d094e6b2f08bb04c0",
+  "semantic_fingerprint": "634b63bb5e9c90cfaf396c4ec7c1681c4958835f8cc86d4a9e87a41083076521",
   "semantic_state": {
     "blockers": [
       "PIT_UNVERIFIED_FEATURE_ROWS"
@@ -69,18 +64,18 @@
     },
     "m6_integrity_revision": "v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
     "m6_matured_payload_integrity": {
-      "checked": 718,
+      "checked": 721,
       "invalid": 0,
       "reasons": [],
       "status": "PASS"
     },
     "m6_provisional_family_count": 2,
     "matured_event_counts": {
-      "14d": 92,
+      "14d": 93,
       "24h": 224,
       "30d": 12,
-      "72h": 212,
-      "7d": 178
+      "72h": 213,
+      "7d": 179
     },
     "matured_family_counts": {
       "14d": 2,
@@ -102,18 +97,18 @@
       "status": "BLOCKED_RESEARCH_PREFLIGHT"
     },
     "unknown_horizon_counts": {
-      "14d": 0,
-      "24h": 0,
+      "14d": 2,
+      "24h": 1,
       "30d": 0,
       "72h": 0,
-      "7d": 0
+      "7d": 3
     },
     "verified_independent_adverse_family_count": null
   },
   "source_bindings": {
     "calibration": {
       "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-      "sha256": "f83a7a52d0a1024eca610c4f3fb4749acad872a08c161f17ee6baca69db57f06",
+      "sha256": "dff58d568b5fa836ebbd1eee276f1e2553def63d172f493027a64fadb7c0bace",
       "status": "PASS"
     },
     "compass_freeze": {
@@ -128,7 +123,7 @@
     },
     "edge_features": {
       "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
-      "sha256": "4cc50e9255e01f498802343249fe9cf96a0a7489b7019fcf85a42b8ed6dd9a66",
+      "sha256": "63e1cb3274312769686941d5d74cad9bdd34586909e7afbca9de61a48be72f2b",
       "status": "PASS"
     },
     "latest_sol": {
@@ -140,7 +135,7 @@
     },
     "m6_events": {
       "path": "research/framework_memory/m6_warning_events/LATEST.json",
-      "sha256": "0f4851f60b7001ba980b06679a4663a2f1684bd83fb60ea6bbd4fee21ab059cd",
+      "sha256": "bbfc18eb65d8ded504319331031da5592079b1deff64f43fba7336d442cef14d",
       "status": "PASS"
     },
     "task15_gate": {
