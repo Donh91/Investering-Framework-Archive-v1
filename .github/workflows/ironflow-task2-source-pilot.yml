@@ -14,6 +14,8 @@ on:
       - 'scripts/research/ironflow_crash_forensics_v1.py'
       - 'scripts/research/ironflow_tick_hip4_qa_v1.py'
       - 'scripts/research/ironflow_oot_ablation_v1.py'
+      - 'scripts/research/ironflow_full18m_walkforward_v1.py'
+      - 'tests/research/test_ironflow_full18m_walkforward_v1.py'
       - '.github/workflows/ironflow-task2-source-pilot.yml'
       - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/SOURCE_MANIFEST_IRONFLOW_20261106.json'
   workflow_dispatch:
@@ -129,5 +131,59 @@ jobs:
         with:
           name: ironflow-task2-tick-hip4-scope
           path: /tmp/tick-results/
+          retention-days: 30
+          if-no-files-found: warn
+
+  full18m-history-walkforward:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Exact source branch
+        uses: actions/checkout@v4
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bounded QA and model dependencies
+        run: |
+          python -m pip install 'pandas>=2.2,<3' 'numpy>=2,<3' 'pyarrow>=17,<22' 'scikit-learn>=1.5,<2'
+      - name: Original synthetic controls and monthly no-lookahead checks
+        run: |
+          python -m unittest discover -s tests/research -p 'test_ironflow_*_v1.py' -v
+      - name: Download full four-source common history to ephemeral runner only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ironflow18/{liquidations,funding,oi,candles} /tmp/ironflow18-results
+          for month in 2025-{05..12} 2026-{01..10}; do
+            for family in liquidations funding oi candles; do
+              case "$family" in
+                liquidations) ds=hyperliquid-liquidations; rev=7e89a460214631013946e081ffd06a84a65ee710; prefix=data/events;;
+                funding) ds=hyperliquid-funding; rev=6e64357c3ff723a2c4f0e757ba708f2b71cca773; prefix=data;;
+                oi) ds=hyperliquid-open-interest; rev=0106c103b4933263c96f727ddab02d771203e27b; prefix=data;;
+                candles) ds=hyperliquid-candles-1h; rev=9f262cc27d89112b8c56550cf4c9455346f5eece; prefix=data;;
+              esac
+              url="https://huggingface.co/datasets/ironflow/"$ds"/resolve/"$rev"/"$prefix"/"$month".parquet?download=true"
+              dest="/tmp/ironflow18/$family/$month.parquet"
+              curl --fail --location --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 15 --max-time 180 --max-filesize 26000000 "$url" -o "$dest"
+              test "$(head -c 4 "$dest")" = PAR1
+              sha256sum "$dest" >> /tmp/ironflow18-results/HF_MEMBER_SHA256SUMS
+            done
+          done
+      - name: Actual 72-file T1 and expanding 18-month scientific replay
+        run: |
+          python scripts/research/ironflow_full18m_walkforward_v1.py --root /tmp/ironflow18 --output-dir /tmp/ironflow18-results
+      - name: Print compact scientific admission report
+        if: always()
+        run: |
+          if test -f /tmp/ironflow18-results/FULL18M_WALKFORWARD_RESEARCH.json; then
+            python -c 'import json;d=json.load(open("/tmp/ironflow18-results/FULL18M_WALKFORWARD_RESEARCH.json"));print(json.dumps({"rows":d["eligible_hourly_rows"],"n_anchors":d["qualifying_day_anchors"],"months":d["month_summary"].get("tested_months"),"brier_mean_delta":d["month_summary"].get("mean_price_minus_derivative_brier"),"verdict":d["month_summary"]["decision"]}))'
+          fi
+      - name: Keep read-only T2 evidence artifact, no raw bulk Git mirror
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ironflow-task2-full18m-walkforward
+          path: /tmp/ironflow18-results/
           retention-days: 30
           if-no-files-found: warn
