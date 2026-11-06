@@ -192,11 +192,53 @@ class NativeUsdtShadowPriceTests(unittest.TestCase):
         self.assertEqual(out["horizons_days"]["56"]["nonoverlap_upper_bound"], 4)
 
     def test_reject_insufficient_or_oversized_history(self):
-        for n in (1, 21, 250, 251, 367):
+        for n in (1, 21, 250, 251, 841):
             with self.subTest(n=n):
                 p = fixture(n=n)
                 with self.assertRaises(ValueError):
                     build_native_usdt_shadow(p)
+
+    def test_56_day_minimum_independent_history_boundary(self):
+        # 12 * 56 plus one prior close: the original 366-bar ceiling made
+        # this branch permanently ABSTAIN, even with valid extended source.
+        for n, expected_status, independent_n in (
+            (366, "ABSTAIN", 6),
+            (672, "ABSTAIN", 11),
+            (673, "SHADOW_BASELINE_ONLY", 12),
+            (720, "SHADOW_BASELINE_ONLY", 12),
+        ):
+            with self.subTest(n=n):
+                packet = fixture(n=n)
+                frozen = copy.deepcopy(packet)
+                output = build_native_usdt_shadow(packet)
+                self.assertEqual(packet, frozen)
+                row = output["horizons_days"]["56"]
+                self.assertEqual(row["status"], expected_status)
+                self.assertEqual(row["nonoverlap_upper_bound"], independent_n)
+                self.assertEqual(output["authority"], "SHADOW_NOT_ISSUED")
+                self.assertTrue(output["no_publication"])
+                self.assertFalse(output["source_first_known_independently_rechecked"])
+                self.assertIsNone(row.get("coverage_probability"))
+                if expected_status == "SHADOW_BASELINE_ONLY":
+                    self.assertLess(row["low_usdt"], row["high_usdt"])
+                    self.assertGreater(row["low_usdt"], 0)
+
+    def test_extended_56d_usdt_cannot_expand_original_usd_contract(self):
+        with self.assertRaisesRegex(ValueError, "insufficient_or_oversized_closed_daily_history"):
+            build_shadow(fixture(quote="USD", n=673))
+
+    def test_56d_extended_history_keeps_private_custody_firewall(self):
+        for n in (673, 720):
+            with self.subTest(n=n):
+                packet = fixture(n=n)
+                packet["provider_first_known_proven"] = False
+                with self.assertRaisesRegex(ValueError, "provider_knowledge_requires_independent_proof"):
+                    build_native_usdt_shadow(packet)
+                packet = fixture(n=n)
+                packet["bars"][12]["first_known_at_utc"] = "2030-01-01T00:00:00Z"
+                packet["source_rows_sha256"] = hashlib.sha256(canonical(packet["bars"])).hexdigest()
+                with self.assertRaisesRegex(ValueError, "lookahead_or_unsettled_bar"):
+                    build_native_usdt_shadow(packet)
 
     def test_reject_unsafe_object_or_hidden_market_action_keys(self):
         for payload in (None, [], "", 1):

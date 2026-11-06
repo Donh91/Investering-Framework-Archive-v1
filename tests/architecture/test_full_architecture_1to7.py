@@ -9,6 +9,9 @@ import unittest
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+# Exercise the 56-day quote-native research boundaries in existing architecture CI.
+from tests.learning.test_forward_price_native_usdt_shadow import NativeUsdtShadowPriceTests  # noqa: F401
+
 ROOT=Path(__file__).resolve().parents[2]
 
 
