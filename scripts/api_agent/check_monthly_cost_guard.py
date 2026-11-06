@@ -13,10 +13,121 @@ if str(SCRIPTS_ROOT) not in sys.path:
 from api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
 from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegative, json_evidence_paths, load_evidence
 
-# Owner-approved effective account-wide cap, 2026-11-04. Legacy workflows
-# passing 40/4 cannot weaken these limits; stricter lane guards still apply.
-OWNER_GLOBAL_HARD_STOP_USD = 30.0
-OWNER_GLOBAL_RESERVE_USD = 12.0
+# Owner approval: normal USD40, account-wide exceptional ceiling USD45.
+# Legacy caller-specific smaller caps/reserves remain binding; this code never
+# grants a paid POST or lowers a lane's independent ceiling.
+OWNER_GLOBAL_TARGET_USD = 40.0
+OWNER_GLOBAL_HARD_STOP_USD = 45.0
+OWNER_GLOBAL_RESERVE_USD = 4.0  # Routine paths retain existing protected headroom.
+OWNER_SINGLE_REQUEST_CAP_USD = 3.0
+# Exact unresolved native POSTs. Missing/removed rows must never silently
+# become zero risk. This immutable floor may only change with separately
+# reviewed provider-settlement evidence, NEVER by editing a JSON ledger alone.
+UNRESOLVED_NATIVE_POST_FLOOR_USD = {
+    "41870364609": 3.0,
+    "41949497953": 3.0,
+}
+CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
+)
+
+
+def pending_risk(path: Path) -> tuple[float, float, int]:
+    """Conservative persistent upper risk, never a provider invoice or retry permit.
+
+    Unknown POSTs remain reserved across UTC month rollover until independent
+    settlement evidence is admitted in the original governed source.
+    """
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if (not isinstance(value, dict)
+            or value.get("contract") != "API_PENDING_BILLING_RISK_V1"
+            or value.get("no_retry_original_ids") is not True
+            or value.get("requires_reconciliation_before_releasing_reserve") is not True
+            or not isinstance(value.get("unresolved"), list)):
+        raise ValueError("LIABILITY_LEDGER_CONTRACT_INVALID")
+    low, high, seen = 0.0, 0.0, set()
+    for row in value["unresolved"]:
+        if not isinstance(row, dict):
+            raise ValueError("LIABILITY_ROW_NOT_OBJECT")
+        rid = row.get("run_id")
+        month = row.get("created_month_utc")
+        lo, hi = row.get("lower_usd"), row.get("upper_usd")
+        src = row.get("source")
+        if (not isinstance(rid, str) or not rid.isdecimal()
+                or rid in seen or len(rid) > 19
+                or not isinstance(month, str) or len(month) != 7
+                or month[4] != "-" or not month[:4].isdigit()
+                or not month[5:].isdigit() or not 1 <= int(month[5:]) <= 12
+                or row.get("status") != "POST_OUTCOME_UNKNOWN"
+                or not finite_nonnegative(lo) or not finite_nonnegative(hi)
+                or float(lo) > float(hi) or float(hi) <= 0
+                or float(hi) > OWNER_SINGLE_REQUEST_CAP_USD
+                or not isinstance(src, str)
+                or src != ("https://github.com/Donh91/"
+                           "Investering-Framework-Archive-v1/actions/runs/" + rid)
+                or not isinstance(row.get("basis"), str)
+                or len(row["basis"].strip()) < 30):
+            raise ValueError("LIABILITY_ROW_UNBOUNDED_OR_UNVERIFIED")
+        seen.add(rid)
+        low += float(lo)
+        high += float(hi)
+    missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
+    if missing:
+        raise ValueError("KNOWN_UNSETTLED_NATIVE_POST_MISSING")
+    for row in value["unresolved"]:
+        floor = UNRESOLVED_NATIVE_POST_FLOOR_USD.get(row["run_id"])
+        if floor is not None and float(row["upper_usd"]) < floor:
+            raise ValueError("KNOWN_UNSETTLED_NATIVE_POST_UNDER_RESERVED")
+    if not math.isfinite(high) or high > OWNER_GLOBAL_HARD_STOP_USD:
+        raise ValueError("LIABILITY_TOTAL_INVALID")
+    return low, high, len(seen)
+
+
+def model_quote(args: argparse.Namespace) -> tuple[float, dict | None]:
+    """No-network, no-POST price preview against CURRENT approved model/route.
+
+    A new Sol version needs an actual verified price and original-owner registry
+    update. A model name supplied by a chat/comment does not authorize billing.
+    """
+    fields = (args.model, args.task, args.effort, args.owner_work_id,
+              args.input_token_upper, args.output_token_upper)
+    if all(v is None for v in fields):
+        return float(args.new_request_upper_usd), None
+    if any(v is None for v in fields):
+        raise ValueError("INCOMPLETE_OWNER_MODEL_APPROVAL")
+    if (not isinstance(args.owner_work_id, str)
+            or not 9 <= len(args.owner_work_id) <= 110
+            or not all(x.isalnum() or x in "_-." for x in args.owner_work_id)
+            or args.effort != "max"):
+        raise ValueError("MAX_APPROVAL_ID_OR_EFFORT_INVALID")
+    root = SCRIPTS_ROOT.parent
+    registry = json.loads((root / "research/api_agent/API_TASK_REGISTRY_v1.json").read_text())
+    routing = json.loads((root / "research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json").read_text())
+    task = registry.get("tasks", {}).get(args.task)
+    model = args.model
+    approved_model = routing.get("pricing_snapshot", {}).get("verified_latest_model_ids", {}).get("sol")
+    price = routing.get("models", {}).get(model, {}).get("price_per_million")
+    if (not isinstance(task, dict) or task.get("model") != model
+            or task.get("reasoning_effort") != args.effort
+            or task.get("advisory_only") is not True
+            or task.get("automatic_code_write") is not False
+            or task.get("automatic_merge") is not False
+            or model != approved_model or model not in PRICES_PER_MILLION
+            or price != PRICES_PER_MILLION[model]):
+        raise ValueError("MAX_MODEL_NOT_CURRENTLY_PRICED_AND_ADMITTED")
+    input_bound, output_bound = args.input_token_upper, args.output_token_upper
+    if (type(input_bound) is not int or type(output_bound) is not int
+            or not 0 <= input_bound <= 500_000
+            or not 1 <= output_bound <= 100_000):
+        raise ValueError("MAX_TOKEN_BOUND_INVALID")
+    quoted = (input_bound * price["input"] + output_bound * price["output"]) / 1_000_000
+    required = max(quoted, float(args.new_request_upper_usd))
+    if not math.isfinite(required) or required > OWNER_SINGLE_REQUEST_CAP_USD:
+        raise ValueError("MAX_SINGLE_REQUEST_CEILING_EXCEEDED")
+    return required, {"model": model, "effort": args.effort, "task": args.task,
+                      "work_id": args.owner_work_id,
+                      "token_price_upper_usd": round(quoted, 8),
+                      "status": "QUOTE_ONLY_NATIVE_OWNER_CLAIM_REQUIRED"}
 
 
 def parse_created(value: dict) -> datetime | None:
@@ -48,9 +159,20 @@ def main() -> None:
     parser.add_argument("--hard-stop-usd", type=float, required=True)
     parser.add_argument("--reserve-usd", type=float, default=0.25)
     parser.add_argument("--pending-ledger-root", type=Path)
+    parser.add_argument("--liability-ledger", type=Path, default=CANONICAL_LIABILITY_LEDGER)
+    parser.add_argument("--new-request-upper-usd", type=float, default=0.0)
+    parser.add_argument("--model")
+    parser.add_argument("--task")
+    parser.add_argument("--effort")
+    parser.add_argument("--owner-work-id")
+    parser.add_argument("--input-token-upper", type=int)
+    parser.add_argument("--output-token-upper", type=int)
     args = parser.parse_args()
-    if not finite_nonnegative(args.hard_stop_usd) or not finite_nonnegative(args.reserve_usd):
-        parser.error("hard stop and reserve must be finite nonnegative amounts")
+    if (not finite_nonnegative(args.hard_stop_usd)
+            or not finite_nonnegative(args.reserve_usd)
+            or not finite_nonnegative(args.new_request_upper_usd)
+            or args.new_request_upper_usd > OWNER_SINGLE_REQUEST_CAP_USD):
+        parser.error("caps/reserves must be finite nonnegative; one request <= USD3")
 
     now = datetime.now(timezone.utc)
     total = 0.0
@@ -110,18 +232,42 @@ def main() -> None:
     if not math.isfinite(total):
         errors.append({"path": str(args.receipt_root), "reason": "COST_TOTAL_NONFINITE"})
         total = None
-    # Two simultaneous checks: preserve a stricter local/lane cap and
-    # enforce the owner's global budget/reserve independently. In particular,
-    # a legacy 40/4 argument never expands the owner's 30/12 ceiling.
+    pending_low, pending_high, pending_count = 0.0, 0.0, 0
+    try:
+        pending_low, pending_high, pending_count = pending_risk(args.liability_ledger)
+    except (OSError, UnicodeError, ValueError, TypeError) as exc:
+        errors.append({"path": str(args.liability_ledger),
+                       "reason": "LIABILITY_EVIDENCE_UNAVAILABLE:" + str(exc)[:100]})
+    quoted = None
+    new_upper = float(args.new_request_upper_usd)
+    try:
+        new_upper, quoted = model_quote(args)
+    except (OSError, UnicodeError, ValueError, TypeError, KeyError) as exc:
+        errors.append({"path": "MAX_MODEL_QUOTE",
+                       "reason": "MODEL_APPROVAL_BLOCKED:" + str(exc)[:100]})
+    if new_upper > OWNER_SINGLE_REQUEST_CAP_USD:
+        errors.append({"path": "MAX_NEW_REQUEST", "reason": "MAX_SINGLE_REQUEST_CEILING_EXCEEDED"})
+    # OWNER_APPROVED 45 is a tolerance, not a bearer capability. No native
+    # caller-specific exceptional authorization has been merged yet.
+    # A naked --hard-stop-usd 45 --reserve-usd 0 is NOT an owner claim.
+    # Fail closed here until a separately reviewed exact-work-id, source-HEAD,
+    # actual-event proof is bound to the existing paid caller.
+    if args.hard_stop_usd > OWNER_GLOBAL_TARGET_USD:
+        errors.append({"path": "OWNER_EXCEPTIONAL_CAP",
+                       "reason": "EXCEPTIONAL_45_NATIVE_SOURCE_CAPABILITY_REQUIRED"})
     effective_hard_stop = min(args.hard_stop_usd, OWNER_GLOBAL_HARD_STOP_USD)
+    # Only an explicitly reviewed 45-cap caller can use the exceptional
+    # USD5 tolerance; normal callers must retain USD4 minimum headroom.
     effective_reserve = (max(args.reserve_usd, OWNER_GLOBAL_RESERVE_USD)
-                         if args.hard_stop_usd >= OWNER_GLOBAL_HARD_STOP_USD
+                         if args.hard_stop_usd == OWNER_GLOBAL_TARGET_USD
                          else args.reserve_usd)
-    remaining = effective_hard_stop - total if total is not None else None
-    owner_remaining = OWNER_GLOBAL_HARD_STOP_USD - total if total is not None else None
-    status = ("BLOCKED" if errors or remaining is None
-              or owner_remaining is None or remaining <= effective_reserve
-              or owner_remaining <= OWNER_GLOBAL_RESERVE_USD else "PASS")
+    exposure_lower = total + pending_low if total is not None else None
+    exposure_upper = total + pending_high + new_upper if total is not None else None
+    remaining = effective_hard_stop - exposure_upper if exposure_upper is not None else None
+    owner_remaining = OWNER_GLOBAL_HARD_STOP_USD - exposure_upper if exposure_upper is not None else None
+    normal_remaining = OWNER_GLOBAL_TARGET_USD - exposure_upper if exposure_upper is not None else None
+    status = ("BLOCKED" if errors or remaining is None or owner_remaining is None
+              or remaining < effective_reserve or owner_remaining < 0 else "PASS")
     result = {
         "status": status,
         "month": now.strftime("%Y-%m"),
@@ -134,6 +280,16 @@ def main() -> None:
         "effective_hard_stop_usd": effective_hard_stop,
         "owner_global_hard_stop_usd": OWNER_GLOBAL_HARD_STOP_USD,
         "owner_global_reserve_usd": OWNER_GLOBAL_RESERVE_USD,
+        "owner_normal_target_usd": OWNER_GLOBAL_TARGET_USD,
+        "pending_liability_count": pending_count,
+        "pending_liability_lower_usd": round(pending_low, 8),
+        "pending_liability_upper_usd": round(pending_high, 8),
+        "new_request_reserved_upper_usd": round(new_upper, 8),
+        "exposure_range_min_usd": round(exposure_lower, 8) if exposure_lower is not None else None,
+        "exposure_range_max_usd": round(exposure_upper, 8) if exposure_upper is not None else None,
+        "normal_remaining_usd": round(normal_remaining, 8) if normal_remaining is not None else None,
+        "approval_quote": quoted,
+        "owner_global_remaining_usd_after_risk": round(owner_remaining, 8) if owner_remaining is not None else None,
         "owner_remaining_usd": round(owner_remaining, 8) if owner_remaining is not None else None,
         "reserve_usd": effective_reserve,
         "malformed_cost_receipts": [e["path"] for e in errors],

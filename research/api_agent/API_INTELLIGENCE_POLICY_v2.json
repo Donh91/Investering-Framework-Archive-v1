@@ -2,6 +2,19 @@
   "contract": "API_INTELLIGENCE_POLICY_v2",
   "status": "ACTIVE_SHADOW_ONLY",
   "monthly_hard_stop_usd": 40,
+  "owner_exceptional_budget": {
+    "contract": "OWNER_BOUNDED_MODEL_APPROVAL_V1",
+    "normal_target_usd": 40,
+    "absolute_ceiling_usd": 45,
+    "account_wide_not_per_request": true,
+    "risk_ledger_path": "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json",
+    "explicit_existing_owner_event_required": true,
+    "new_api_request_requires_current_model_price_and_exact_work_id": true,
+    "unknown_old_post_never_retried": true,
+    "existing_3_usd_request_ceiling_unchanged": true,
+    "exceptional_5_usd_requires_separately_reviewed_owner_route": true,
+    "no_new_scheduler_or_model_privilege": true
+  },
   "global_reserve_usd": 4,
   "lane_caps_usd": {
     "DAILY_DIRECTOR_SHADOW": 4,
