@@ -156,7 +156,7 @@ class NativeNewPaidClaimTests(unittest.TestCase):
             patch.object(native,"current_head",return_value=self.head),
             patch("subprocess.check_output",side_effect=self.remote),
         ):
-            return native.reserve_native_max_claim(self.root,MAX_ONESHOT_MISSION,
+            return native.reserve_native_max_claim(self.root,self.packet["mission_id"],
                                                    1476,self.trigger)
 
     def test_real_owner_consent_claim_once_and_never_repeat(self):
@@ -171,6 +171,39 @@ class NativeNewPaidClaimTests(unittest.TestCase):
         self.packet["public_storage_consent_comment_id"]=1
         (self.root/self.packetpath).write_text(json.dumps(self.packet))
         with self.assertRaisesRegex(ValueError,"MAX_PUBLIC_BACKGROUND_STORAGE_CONSENT_REQUIRED"):
+            self.execute()
+        self.assertEqual(self.writes,0)
+
+    def configure_future_thread_mission(self):
+        mid="OTHER-THREAD-OWNER-SOLMAX-20261107-001"
+        self.packet["mission_id"]=mid
+        self.packet["public_storage_consent_comment_id"]=881993311
+        self.packet["one_shot_owner_mandate"]=(
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/"
+            "issues/1156#issuecomment-881993311")
+        (self.root/self.packetpath).write_text(json.dumps(self.packet))
+        (self.root/native.QUEUE_PATH).write_text(json.dumps({"missions":[{
+            "mission_id":mid,"state":"ACTIVE_RELEASED",
+            "mission_packet":self.packetpath}]}))
+        (self.root/"runtime/research-lab-sol/context.json").write_text(
+            json.dumps({"mission_id":mid,"model":"gpt-6.1-sol"}))
+        return mid
+
+    def test_any_chat_thread_owner_native_sourced_new_mission_can_claim_once(self):
+        mid=self.configure_future_thread_mission()
+        result=self.execute()
+        self.assertEqual(result["mission"],mid)
+        self.assertEqual(result["model"],"gpt-6.1-sol")
+        self.assertEqual(self.writes,1)
+        with self.assertRaisesRegex(ValueError,"MAX_CLAIM_ALREADY_EXISTS_NO_REPOST"):
+            self.execute()
+        self.assertEqual(self.writes,1)
+
+    def test_forged_new_owner_comment_cannot_claim(self):
+        self.configure_future_thread_mission()
+        self.invalid_consent=True
+        with self.assertRaisesRegex(ValueError,
+                                    "MAX_NATIVE_PUBLIC_30D_OWNER_CONSENT_UNVERIFIED"):
             self.execute()
         self.assertEqual(self.writes,0)
 
