@@ -26,9 +26,9 @@ def _utc(value: object) -> datetime | None:
         return None
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
+        return parsed.astimezone(timezone.utc) if parsed.tzinfo else None
+    except (ValueError, OverflowError):
         return None
-    return parsed.astimezone(timezone.utc) if parsed.tzinfo else None
 
 
 def inspect_claim(record: Mapping[str, Any]) -> dict[str, Any]:
@@ -41,7 +41,7 @@ def inspect_claim(record: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("Expected a JSON object")
 
     case_type = record.get("case_type")
-    if case_type in {"research_only", "partial_publication", "no_eligible_case"}:
+    if isinstance(case_type, str) and case_type in {"research_only", "partial_publication", "no_eligible_case"}:
         return {
             "classification": {
                 "research_only": "ADVISORY_RESEARCH_ONLY",
