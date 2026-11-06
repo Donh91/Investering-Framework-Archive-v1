@@ -148,6 +148,37 @@ function paintDailyResearchNotes(daily){
   article.append(title,reason,condition);body.append(article);
  }
 }
+function paintActualDailyRanges(days,x,y){
+ const svg=$('chart');
+ if(!svg)return;
+ let parent=svg.querySelector('[data-actual-daily-ranges]');
+ if(!parent){
+  parent=document.createElementNS(SVG,'g');
+  parent.setAttribute('data-actual-daily-ranges','');
+  parent.setAttribute('aria-label','Observed daily high and low');
+  svg.append(parent);
+ }
+ parent.replaceChildren();
+ for(const day of days){
+  const g=document.createElementNS(SVG,'g');
+  g.setAttribute('data-actual-day',String(day.day));
+  g.setAttribute('data-observation-state',day.status);
+  const title=document.createElementNS(SVG,'title');
+  title.textContent=day.date+' UTC | '+day.status+' | low '+day.low+
+    ', high '+day.high+', close '+day.close+', as of '+day.as_of_utc;
+  g.append(title);
+  const cx=x(day.as_of_time*1000),lo=y(day.low),hi=y(day.high);
+  for(const [x1,y1,x2,y2] of [
+   [cx,hi,cx,lo],[cx-5,hi,cx+5,hi],[cx-5,lo,cx+5,lo]]){
+   const line=document.createElementNS(SVG,'line');
+   for(const [key,value] of [['x1',x1],['y1',y1],['x2',x2],['y2',y2],
+     ['stroke','var(--actual)'],['stroke-width',2],['stroke-linecap','round']])
+     line.setAttribute(key,String(value));
+   g.append(line);
+  }
+  parent.append(g);
+ }
+}
 function plot(){
  // Never present BTC-source numeric evidence as ETH while a new fetch is pending.
  if(model && model.asset!==asset)model=null;
@@ -175,6 +206,7 @@ function plot(){
   paintFrozenWindowLedger([]);
   paintDailyResearchNotes([]);
   ['range-band','range-upper','range-lower','forecast','actual'].forEach(id=>attr(id,'d',''));
+  $('chart')?.querySelector('[data-actual-daily-ranges]')?.replaceChildren();
   $('price-axis')?.replaceChildren();$('grid')?.replaceChildren();
   set('observed-value','—');set('time-label','—');set('timeline-label','—');
   set('source-state',t('Ingen verificeret kilde','No verified source'));
@@ -185,6 +217,7 @@ function plot(){
   return;
  }
  const bands=model.bands||[],hourly=model.hourly_observations||[];
+ const quoteComparable=model.forecast_comparison_quote_status==='SAME_DECLARED_UNIT';
  paintFrozenWindowLedger(bands);
  const hasDailyRanges=model.daily_range_status==='SOURCE_ISSUED'&&model.daily_ranges?.length===7;
  paintDailyResearchNotes(hasDailyRanges?model.daily_ranges:[]);
@@ -200,9 +233,12 @@ function plot(){
  $('playhead').setAttribute('visibility','visible');
  const observedRuns=replayObservedUntil(model,new Date(cursor).toISOString());
  const visible=observedRuns.flat();
- const values=[...bands.flatMap(b=>[b.forecast_low,b.forecast_high]),
+ // Only show days whose ORIGINAL observation cutoff is at/before replay time.
+ const visibleActualDays=(model.actual_daily_ranges||[]).filter(p=>p.as_of_time*1000<=cursor);
+ const values=[...(quoteComparable?bands.flatMap(b=>[b.forecast_low,b.forecast_high]):[]),
   ...(hasDailyRanges?model.daily_ranges.flatMap(d=>[d.low,d.high]):[]),
-  ...model.forecast.flatMap(p=>[p.expected_close,p.low,p.high]),...hourly.map(p=>p.value)].filter(s);
+  ...model.forecast.flatMap(p=>[p.expected_close,p.low,p.high]),
+  ...hourly.map(p=>p.value),...visibleActualDays.flatMap(p=>[p.low,p.high])].filter(s);
  if(values.length===0){model=null;plot();return}
  const min=Math.min(...values),max=Math.max(...values),padding=(max-min||1)*.07;
  const lo=min-padding,hi=max+padding;
@@ -234,6 +270,10 @@ function plot(){
   }).join(' ');
   attr('range-upper','d',edge('high'));
   attr('range-lower','d',edge('low'));
+ }else if(!quoteComparable){
+  // Retain the original ledger, but never draw forecast numbers on a
+  // native spot axis when the declared quote is different or unknown.
+  for(const id of ['forecast','range-band','range-upper','range-lower'])attr(id,'d','');
  }else{
   attr('forecast','d','');
   // Each frozen intraweek window is already a prospective range forecast.
@@ -260,6 +300,7 @@ function plot(){
   attr('range-lower','d',edge('forecast_low'));
  }
  attr('actual','d',observedRuns.map(run=>movePath(run.map(xy))).join(' '));
+ paintActualDailyRanges(visibleActualDays,x,y);
  const last=visible.at(-1);
  for(const id of ['endpoint','endpoint-halo'])$(id)?.setAttribute('visibility',last?'visible':'hidden');
  if(last){attr('endpoint','cx',x(last.time*1000));attr('endpoint','cy',y(last.value));
@@ -282,10 +323,13 @@ function plot(){
  set('pair',asset+' / '+(model?.actual_quote_unit||'UNAVAILABLE'));set('observed-value',num(last?.value,model?.actual_quote_unit));
  set('time-label',last?utc(last.time*1000):'—');
  set('timeline-label',utc(cursor));
- const incompatibleQuote=model.forecast_status==='SOURCE_ISSUED_QUOTE_INCOMPARABLE';
+ const incompatibleQuote=!quoteComparable;
+ const issuedButIncomparable=model.forecast_status==='SOURCE_ISSUED_QUOTE_INCOMPARABLE'||
+  model.daily_range_status==='SOURCE_ISSUED_QUOTE_INCOMPARABLE';
  const st=model.forecast_status==='SOURCE_ISSUED'?
   t('Kildeudstedt dagsprognose','Source-issued daily forecast'):
-  incompatibleQuote?t('Kildeudstedt, anden/ukendt valuta','Source-issued, different/unknown quote'):
+  issuedButIncomparable?t('Kildeudstedt, anden/ukendt valuta','Source-issued, different/unknown quote'):
+  incompatibleQuote?t('Valuta ikke sammenlignelig','Quote not comparable'):
   hasDailyRanges?t('7 frosne dagsintervaller','7 frozen daily ranges'):
   t('Original prognose · 3 vinduer','Original forecast · 3 windows');
  set('source-state',st);
@@ -310,6 +354,20 @@ function plot(){
      'Original forecast line hidden because the currencies are not comparable.'):
    t('Kun originale, sammenlignelige prognosedata vises.',
      'Only original, comparable forecast data is shown.')));
+ const observedDay=visibleActualDays.at(-1);
+ if(observedDay){
+  const frozenDay=model.forecast?.find(row=>row.day===observedDay.day);
+  const details=t('Faktisk dagsinterval','Observed daily range')+' '+
+   observedDay.date+' UTC ('+
+   (observedDay.status==='LIVE'?t('delvis','partial'):t('komplet','complete'))+
+   '): '+num(observedDay.low,model.actual_quote_unit)+' / '+
+   num(observedDay.high,model.actual_quote_unit)+
+   ' · '+t('luk','close')+' '+num(observedDay.close,model.actual_quote_unit)+
+   ' · '+utc(observedDay.as_of_time*1000);
+  set('feed-status',$('feed-status').textContent+' '+details+
+   (frozenDay?' · '+t('oprindeligt forventet luk','original expected close')+
+     ' '+num(frozenDay.expected_close,model.forecast_declared_quote_unit):''));
+ }
  set('chart-title',t('Mandagens intraday-intervaller mod faktisk kurs','Monday intraday forecast ranges versus observed price'));
  set('chart-description',t('Mandagens tre originale prognoseintervaller vises for dag 1–2, 3–4 og 5–7. Den grønne observerede kurs brydes ved manglende timer. Blå stiplet forventet dagskurs kræver syv udstedte punkter.',
  'Verified hourly prices only; missing hours break the path. Blue daily forecasts require original published points.'));

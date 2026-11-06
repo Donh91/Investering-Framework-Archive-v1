@@ -651,6 +651,33 @@ try{
    assert.ok(report.source&&report.source!=='—','ROOT_NO_SOURCE_STATUS');
    assert.deepEqual(errors,[],'ROOT_BROKEN_JS');
    assert.deepEqual(responses,[],'ROOT_BROKEN_ASSET');
+   // Observe actual published OHLC, not a synthetic forecast fixture.
+   // The public feed may legitimately have no covered day; in that case
+   // no whisker is required and NONE must be invented.
+   const originalDaily=builtLatest?.public_live_precision?.daily_observations;
+   const actualQuote=builtLatest?.public_live_precision?.price_quote_labels?.actual_native_spot?.BTC;
+   const originalCovered=actualQuote==='USDT'&&originalDaily?.timezone==='UTC'?
+     (originalDaily.BTC||[]).filter(row=>row.coverage_complete_to_date===true&&
+       ['COMPLETE','LIVE'].includes(row.status)&&row.expected_hours>0).length:0;
+   if(originalCovered>0){
+    let actualMarks=[];
+    for(let attempt=0;attempt<40;attempt++){
+     actualMarks=await evaluate(()=>[...document.querySelectorAll(
+      '#chart [data-actual-daily-ranges] [data-actual-day]')].map(node=>({
+       state:node.getAttribute('data-observation-state'),
+       lines:node.querySelectorAll('line').length,
+       title:node.querySelector('title')?.textContent||''
+      })));
+     if(actualMarks.length>=originalCovered)break;
+     await delay(100);
+    }
+    assert.equal(actualMarks.length,originalCovered,
+     'ROOT_SOURCE_DAILY_HIGH_LOW_NOT_RENDERED:'+width+':'+JSON.stringify(actualMarks));
+    assert.ok(actualMarks.every(day=>
+      ['COMPLETE','LIVE'].includes(day.state)&&day.lines===3&&
+      /low |high |close |as of /.test(day.title)),
+     'ROOT_DAILY_HIGH_LOW_WRONG_GEOMETRY_OR_PROVENANCE:'+width+':'+JSON.stringify(actualMarks));
+   }
    // Source-reader user journey: real DOM interaction at each mobile width.
    // This does not change or mutate the original Official Compass decision.
    const reader=await evaluate(()=>{
