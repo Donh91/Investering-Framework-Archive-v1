@@ -2,7 +2,7 @@ import sys,unittest
 from pathlib import Path
 import numpy as np,pandas as pd
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]/"scripts"/"research"))
-from ironflow_full18m_walkforward_v1 import MONTHS,walkforward,summarize
+from ironflow_full18m_walkforward_v1 import MONTHS,walkforward,summarize,verify_frozen_72_source_sha
 
 class Full18mWalkForwardTests(unittest.TestCase):
     @staticmethod
@@ -53,6 +53,20 @@ class Full18mWalkForwardTests(unittest.TestCase):
         self.assertLess(pd.Timestamp(first["max_train_label_maturity_utc"]),
                         pd.Timestamp(first["training_boundary_cutoff_utc"]))
         self.assertEqual(first["training_label_embargo_hours"],25)
+    def test_all_72_original_sha_registry_enforced_and_mutation_rejected(self):
+        registry=Path(__file__).resolve().parents[2]/"06_RESEARCH_LAB"/"hugging_face_task2_audit_20261022"/"IRONFLOW_FULL18M_SOURCE_SHA256_REGISTRY_20261107.md"
+        records=[]
+        for line in registry.read_text(encoding="utf8").splitlines():
+            parts=line.split()
+            if len(parts)==5 and parts[0] in MONTHS:
+                for family,digest in zip(("liquidations","funding","oi","candles"),parts[1:]):
+                    records.append({"month":parts[0],"family":family,"actual_sha256":digest})
+        self.assertEqual(len(records),72)
+        self.assertEqual(verify_frozen_72_source_sha(records,registry)["file_digests_verified_against_frozen_registry"],72)
+        bad=[dict(r) for r in records]
+        bad[0]["actual_sha256"]="0"*64
+        with self.assertRaisesRegex(ValueError,"FROZEN_ORIGINAL_SOURCE_SHA256_MISMATCH"):
+            verify_frozen_72_source_sha(bad,registry)
     def test_no_valid_months_fails_closed(self):
         s=summarize([{"status":"INSUFFICIENT_SOURCE_ANCHORS"}])
         self.assertEqual(s["status"],"NO_VALID_MONTHS")
