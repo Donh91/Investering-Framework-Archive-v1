@@ -562,7 +562,7 @@
     {
       "sequence": 20,
       "mission_id": "GOAL4-AUTONOMOUS-REPAIR-RECOVERY-SOL61-MAX-20261106",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_NO_REPOST",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__GOAL4_AUTONOMOUS_REPAIR_RECOVERY_SOL61_MAX_v1.json",
       "context_status": "GOAL4_FROZEN_PUBLIC_SOURCE_SNAPSHOT_REPLACES_TRUNCATED_FULL_QUEUE_WITH_ORIGINAL_TESTS_AND_RECEIPT",
       "context_paths": [
@@ -582,13 +582,52 @@
       ],
       "release_gate": "NATIVE_OWNER_UNIQUE_SIGNED_SHA_PUBLIC30D_CONSENT_USD3_MAX_WITH_SINGLE_ONE_SHOT",
       "pass_scope": "AUTONOMOUS_REPAIR_RECOVERY_ORIGINAL_BRANCH_CLAIM_AND_INDEPENDENT_CUSTODY_AUDIT_ONLY",
+      "new_paid_attempts_authorized": false,
+      "max_paid_attempts": 1,
+      "no_automatic_retry": true,
+      "owner_issue": 1156,
+      "requested_effort": "max",
+      "public_storage_consent_30_days": true,
+      "previous_distinct_completed_mission": "GOAL3-STRATEGIST-CROSS-REPO-INTELLIGENCE-SOL61-MAX-20261106",
+      "result_run_id": 42268797512,
+      "original_paid_run_id": 42267577386,
+      "result_receipt_path": "research/api_agent/outputs/research_lab_sol/GOAL4-AUTONOMOUS-REPAIR-RECOVERY-SOL61-MAX-20261106/issue-1476/comment-6691873269/receipt.json",
+      "result_status": "PASS_WITH_INSUFFICIENT_EVIDENCE_ADVISORY_ZERO_DEPLOYED_PATCHES",
+      "result_estimated_cost_usd": 0.306882,
+      "owner_hold_reason": "Original native issue #1476 owner trigger 6691873269; pre-HTTP bot claim 6691888828; exactly one paid POST original GitHub Actions run 42267577386; provider response ID retained, original Actions FAILURE then GET-only collector 42268797512 SUCCESS with immutable accepted PASS on main. Estimated USD0.306882; advisory INSUFFICIENT_EVIDENCE, ZERO new verified fixes. NEVER repost original paid mission or try another POST."
+    },
+    {
+      "sequence": 21,
+      "mission_id": "GOAL5-ALTSEASON-CAPITAL-REALITY-LAB-SOL61-MAX-20261106",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__GOAL5_ALTSEASON_CAPITAL_REALITY_LAB_SOL61_MAX_v1.json",
+      "context_status": "GOAL5_DISTINCT_OWNER_APPROVED_PIT_ALTSEASON_PAPER_ONLY_AFTER_GOAL4_GET_RECOVERED_PASS",
+      "context_paths": [
+        "research/altseason_atlas/README.md",
+        "research/framework_evolution_learning/2026-11-05__altseason_missions_1_2_3_execution_architecture_v1.md",
+        "research/framework_evolution_learning/2026-11-05__altseason_capital_path_microcap_early_largecap_exit_research_mandate_v1.md",
+        "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/2026-11-05__ALTSEASON_SOURCE_FEASIBILITY_EXECUTION_V1.md",
+        "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/ALTSEASON_SOURCE_FEASIBILITY_V1.json",
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1/ROUND2_TERMINAL_RESEARCH_DECISION.md",
+        "research/portfolio_compass/CAPITAL_COMMAND_DURABLE_OPERATING_PLAN_V1.md",
+        "research/portfolio_compass/CAPITAL_COMMAND_DURABLE_BRIDGE_V1.json",
+        "scripts/research/shared_row_outcome_owner.py",
+        "scripts/research/shared_row_tournament_maturation.py",
+        "04_MARKET_LEARNING/shadow_registry/CROSS_DOMAIN_COMPASS_AUTOTRADING_WEEKLY_SHADOW_CONTRACT_v1.md",
+        "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/TWO_SLEEVE_SHADOW_ROW_CONTRACT_v1.json",
+        "research/framework_memory/task2_archive_first/LATEST.json",
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1/README.md",
+        "06_RESEARCH_LAB/mission_packets/2026-11-06__GOAL5_PUBLIC_EVIDENCE_SOURCE_PREFLIGHT_v1.md"
+      ],
+      "release_gate": "NATIVE_OWNER_UNIQUE_SIGNED_SHA_PUBLIC30D_CONSENT_USD3_MAX_WITH_SINGLE_ONE_SHOT",
+      "pass_scope": "ALTSEASON_PIT_LIQUIDITY_SELLABILITY_BASELINE_AND_SHADOW_REALITY_FALSIFICATION_ONLY",
       "new_paid_attempts_authorized": true,
       "max_paid_attempts": 1,
       "no_automatic_retry": true,
       "owner_issue": 1156,
       "requested_effort": "max",
       "public_storage_consent_30_days": true,
-      "previous_distinct_completed_mission": "GOAL3-STRATEGIST-CROSS-REPO-INTELLIGENCE-SOL61-MAX-20261106"
+      "previous_distinct_completed_mission": "GOAL4-AUTONOMOUS-REPAIR-RECOVERY-SOL61-MAX-20261106"
     }
   ],
   "authority": {
@@ -601,6 +640,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "GOAL4-AUTONOMOUS-REPAIR-RECOVERY-SOL61-MAX-20261106",
-  "program_phase": "FIVE_GOAL_MISSION_4_OF_5_NEW_DISTINCT_ONE_SHOT"
+  "active_mission": "GOAL5-ALTSEASON-CAPITAL-REALITY-LAB-SOL61-MAX-20261106",
+  "program_phase": "FIVE_GOAL_MISSION_5_OF_5_NEW_DISTINCT_ONE_SHOT"
 }
