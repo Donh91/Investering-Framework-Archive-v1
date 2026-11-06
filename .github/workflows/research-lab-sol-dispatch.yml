@@ -94,11 +94,15 @@ jobs:
             --task RESEARCH_LAB_SOL_ANALYSIS \
             --cap-usd 10.0 \
             --reserve-usd 1.0
-          # MAX safeguards reserve USD12 owner headroom, USD3 prior ambiguous
-          # liability and USD3 prospective request. Existing HIGH path unchanged.
-          if [ "${{ steps.trigger.outputs.mission }}" = "SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105" ]; then
+          # New 2026-11-06 owner-consented single MAX only. The global risk
+          # ledger reserves BOTH unresolved historical POSTs (USD3 each).
+          # Reserve the entire new request USD3 before any durable claim/POST.
+          # Exceptional USD45 remains unavailable. Existing HIGH stays 40/4.
+          if [ "${{ steps.trigger.outputs.mission }}" = "S1-ELITE-RESILIENCE-SOL61-MAX-20261106" ]; then
             python scripts/api_agent/check_monthly_cost_guard.py \
-              --receipt-root research/api_agent/outputs --hard-stop-usd 30 --reserve-usd 21
+              --receipt-root research/api_agent/outputs \
+              --hard-stop-usd 40 --reserve-usd 4.0 \
+              --new-request-upper-usd 3.0
           else
             python scripts/api_agent/check_monthly_cost_guard.py \
               --receipt-root research/api_agent/outputs --hard-stop-usd 40 --reserve-usd 4.0

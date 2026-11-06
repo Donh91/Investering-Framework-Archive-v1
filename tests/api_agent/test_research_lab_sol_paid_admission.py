@@ -71,6 +71,18 @@ class SolPaidAdmissionTests(unittest.TestCase):
         self.persist()
         self.assertFalse(self.check()[0])
 
+    def test_legacy_ambiguous_max_never_reposted_even_if_rogue_queue_reactivated(self):
+        old = "SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105"
+        self.queue["active_mission"] = old
+        self.queue["missions"] = [{
+            "mission_id":old,"state":"ACTIVE_RELEASED",
+            "new_paid_attempts_authorized":True,
+        }]
+        self.persist()
+        ok, reason=paid_attempt_admission(self.root,old,1476)
+        self.assertFalse(ok)
+        self.assertEqual(reason,"LEGACY_MAX_PAID_POST_OUTCOME_UNKNOWN_NO_REPOST")
+
     def test_explicit_no_new_paid_attempts_flag(self):
         self.queue["missions"][0]["new_paid_attempts_authorized"] = False
         self.persist()
