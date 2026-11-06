@@ -18,7 +18,7 @@ from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegati
 # grants a paid POST or lowers a lane's independent ceiling.
 OWNER_GLOBAL_TARGET_USD = 40.0
 OWNER_GLOBAL_HARD_STOP_USD = 45.0
-OWNER_GLOBAL_RESERVE_USD = 0.0
+OWNER_GLOBAL_RESERVE_USD = 4.0  # Routine paths retain existing protected headroom.
 OWNER_SINGLE_REQUEST_CAP_USD = 3.0
 CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
     "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
@@ -53,7 +53,7 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
                 or not month[5:].isdigit() or not 1 <= int(month[5:]) <= 12
                 or row.get("status") != "POST_OUTCOME_UNKNOWN"
                 or not finite_nonnegative(lo) or not finite_nonnegative(hi)
-                or float(lo) > float(hi)
+                or float(lo) > float(hi) or float(hi) <= 0
                 or float(hi) > OWNER_SINGLE_REQUEST_CAP_USD
                 or not isinstance(src, str)
                 or src != ("https://github.com/Donh91/"
@@ -236,7 +236,11 @@ def main() -> None:
     # Caller-specific smaller cap and reserve still bind; only a specifically
     # reviewed 45-cap invocation can consume the exceptional USD5 tolerance.
     effective_hard_stop = min(args.hard_stop_usd, OWNER_GLOBAL_HARD_STOP_USD)
-    effective_reserve = max(args.reserve_usd, OWNER_GLOBAL_RESERVE_USD)
+    # Only an explicitly reviewed 45-cap caller can use the exceptional
+    # USD5 tolerance; normal callers must retain USD4 minimum headroom.
+    effective_reserve = (max(args.reserve_usd, OWNER_GLOBAL_RESERVE_USD)
+                         if args.hard_stop_usd <= OWNER_GLOBAL_TARGET_USD
+                         else args.reserve_usd)
     exposure_lower = total + pending_low if total is not None else None
     exposure_upper = total + pending_high + new_upper if total is not None else None
     remaining = effective_hard_stop - exposure_upper if exposure_upper is not None else None
