@@ -1,0 +1,31 @@
+{
+  "contract": "API_PENDING_BILLING_RISK_V1",
+  "status": "OWNER_APPROVED_RANGE_ESTIMATE_NOT_PROVIDER_INVOICE",
+  "owner_reference": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6680520240",
+  "normal_budget_usd": 40,
+  "absolute_budget_usd": 45,
+  "method": "Account for all still-ambiguous previous HTTP POSTs as nonzero reserved upper exposure. USD3 is the authenticated original per-run admission limit, a conservative risk estimate, not independently verified provider billing. Never repeat an old POST or release its reserve without external receipt and owner/source-bound reconciliation.",
+  "unresolved": [
+    {
+      "run_id": "41870364609",
+      "created_month_utc": "2026-11",
+      "status": "POST_OUTCOME_UNKNOWN",
+      "lower_usd": 0,
+      "upper_usd": 3,
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41870364609",
+      "basis": "Original FMOS Sol call timed out at pass1 after admitted account/lane budget check. Governed API task registry single_run_hard_stop_usd=3.0. No provider invoice or durable response ID."
+    },
+    {
+      "run_id": "41949497953",
+      "created_month_utc": "2026-11",
+      "status": "POST_OUTCOME_UNKNOWN",
+      "lower_usd": 0,
+      "upper_usd": 3,
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41949497953",
+      "basis": "Original Research Lab MAX job disconnected after claimed POST; original native pre-HTTP claim #6647190305 capped at USD3. No durable provider response ID."
+    }
+  ],
+  "no_retry_original_ids": true,
+  "requires_reconciliation_before_releasing_reserve": true,
+  "no_api_authority": true
+}
