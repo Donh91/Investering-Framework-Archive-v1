@@ -108,7 +108,13 @@ def _build_quote_shadow(payload: dict[str, Any], *, target_quote: str) -> dict[s
         raise ValueError("invalid_source_rows_sha")
     if hashlib.sha256(canonical(bars)).hexdigest() != payload["source_rows_sha256"]:
         raise ValueError("source_rows_content_hash_mismatch")
-    if not isinstance(bars, list) or len(bars) < 252 or len(bars) > 366:
+    # 56d requires >=12 disjoint historical blocks: (12 * 56) + 1 = 673
+    # closed days. The former universal 366-bar ceiling made the native USDT
+    # 56d research candidate mathematically impossible to produce. Extend
+    # ONLY the USDT shadow ceiling to admit the existing ~720-day history;
+    # retain the original USD 366-bar contract and every source/PIT gate.
+    max_bars = 840 if target_quote == "USDT" else 366
+    if not isinstance(bars, list) or len(bars) < 252 or len(bars) > max_bars:
         raise ValueError("insufficient_or_oversized_closed_daily_history")
     cleaned = []
     last_date = None
