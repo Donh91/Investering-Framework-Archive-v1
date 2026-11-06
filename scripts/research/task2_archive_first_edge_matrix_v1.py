@@ -20,6 +20,8 @@ import json
 from pathlib import Path
 import re
 import sys
+import os
+import tempfile
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts" / "research"))
@@ -360,11 +362,64 @@ def build(root: Path, as_of: datetime) -> dict:
     }
 
 
+ADVISORY_PATH = Path("research/framework_memory/task2_archive_first/LATEST.json")
+
+
+def persist_advisory_if_changed(root: Path, document: dict) -> str:
+    """Existing daily learning writer only. No new independent market owner.
+
+    Suppress routine time-only updates. A malformed/untrusted previous public
+    advisory fails closed instead of being silently rewritten or promoted.
+    """
+    if (
+        document.get("contract") != CONTRACT
+        or document.get("authority") != AUTHORITY
+        or document.get("scientific_verdict") != "INSUFFICIENT_EVIDENCE"
+        or document.get("canonical_promotion_allowed") is not False
+        or document.get("automatic_model_weight_change") is not False
+        or document.get("portfolio_execution") is not False
+        or document.get("source_first_known_vendor_authentication_added") is not False
+    ):
+        raise ValueError("TASK2_PUBLIC_ADVISORY_AUTHORITY_BREACH")
+    root = root.resolve()
+    target = root / ADVISORY_PATH
+    parent = target.parent
+    # A public workflow may not follow a symlink to a private or other owner.
+    if parent.is_symlink() or target.is_symlink() or (parent.exists() and not parent.is_dir()):
+        raise ValueError("TASK2_ADVISORY_PATH_UNSAFE")
+    if target.is_file():
+        if target.stat().st_size > 2_000_000:
+            raise ValueError("TASK2_ADVISORY_OLD_FILE_TOO_LARGE")
+        old = json.loads(target.read_text(encoding="utf-8"))
+        if old.get("contract") != CONTRACT or old.get("authority") != AUTHORITY:
+            raise ValueError("TASK2_ADVISORY_PREVIOUS_CONTRACT_DRIFT")
+        # All fields listed here represent upstream evidence, not the current
+        # run timestamp. Never commit another copy merely for a new wake.
+        stable = (
+            "source_manifest", "E1_warning", "E2_rotation",
+            "E3_hidden_deterioration", "official_compass_original_scientific_gate",
+        )
+        if all(old.get(key) == document.get(key) for key in stable):
+            return "SOURCE_UNCHANGED_NO_WRITE"
+    parent.mkdir(parents=True, exist_ok=True)
+    fd, temp = tempfile.mkstemp(prefix=".task2-evidence-", suffix=".json", dir=parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            json.dump(document, stream, sort_keys=True, indent=2, ensure_ascii=False)
+            stream.write("\n")
+        os.replace(temp, target)
+    finally:
+        if os.path.exists(temp):
+            os.unlink(temp)
+    return "SOURCE_CHANGED_ADVISORY_WRITTEN"
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--root", default=str(REPO))
     p.add_argument("--as-of-utc")
     p.add_argument("--output")
+    p.add_argument("--advisory-latest", action="store_true")
     args = p.parse_args()
     at = utc(args.as_of_utc) if args.as_of_utc else datetime.now(timezone.utc)
     result = build(Path(args.root).resolve(), at)
@@ -373,6 +428,8 @@ def main() -> None:
         Path(args.output).write_text(serialized, encoding="utf-8")
     else:
         print(serialized, end="")
+    if args.advisory_latest:
+        print("TASK2_ARCHIVE_FIRST_ADVISORY", persist_advisory_if_changed(Path(args.root), result))
 
 
 if __name__ == "__main__":
