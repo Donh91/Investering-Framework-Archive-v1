@@ -6,8 +6,16 @@ import hashlib
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
+
+# The native workflow invokes this file as a script, not with `python -m`.
+# In that mode Python prepends scripts/api_agent, not the repository root.
+# Keep existing absolute package imports valid without PYTHONPATH or workflow changes.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 QUEUE_PATH = Path("research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json")
 TASK_NAME = "RESEARCH_LAB_SOL_ANALYSIS"
