@@ -564,7 +564,7 @@
       "mission_id": "GOAL4-AUTONOMOUS-REPAIR-RECOVERY-SOL61-MAX-20261106",
       "state": "ACTIVE_RELEASED",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__GOAL4_AUTONOMOUS_REPAIR_RECOVERY_SOL61_MAX_v1.json",
-      "context_status": "NEW_DISTINCT_GOAL4_PUBLIC_SOURCE_PINNED_REPAIR_CUSTODY_ADVISORY_ONLY",
+      "context_status": "GOAL4_FROZEN_PUBLIC_SOURCE_SNAPSHOT_REPLACES_TRUNCATED_FULL_QUEUE_WITH_ORIGINAL_TESTS_AND_RECEIPT",
       "context_paths": [
         "00_FMOS/CHAT_S1_ELITE_RUNBOOK.md",
         ".agents/skills/s1-pr-repair-learning/SKILL.md",
@@ -575,7 +575,10 @@
         "scripts/api_agent/research_lab_sol_recover_v1.py",
         "scripts/api_agent/check_monthly_cost_guard.py",
         "07_PROMPTS_AND_AGENTS/api/SHARED_SOL_MAX_CROSS_THREAD_RUNBOOK_V1.md",
-        "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json"
+        "06_RESEARCH_LAB/mission_packets/2026-11-06__GOAL4_NATIVE_QUEUE_RECEIPT_SOURCE_SNAPSHOT_v1.md",
+        "tests/api_agent/test_research_lab_sol_max_owner_gate.py",
+        "tests/api_agent/test_research_lab_sol_paid_admission.py",
+        "research/api_agent/outputs/research_lab_sol/GOAL3-STRATEGIST-CROSS-REPO-INTELLIGENCE-SOL61-MAX-20261106/issue-1476/comment-6689611554/receipt.json"
       ],
       "release_gate": "NATIVE_OWNER_UNIQUE_SIGNED_SHA_PUBLIC30D_CONSENT_USD3_MAX_WITH_SINGLE_ONE_SHOT",
       "pass_scope": "AUTONOMOUS_REPAIR_RECOVERY_ORIGINAL_BRANCH_CLAIM_AND_INDEPENDENT_CUSTODY_AUDIT_ONLY",
