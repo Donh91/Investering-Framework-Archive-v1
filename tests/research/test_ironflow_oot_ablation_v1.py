@@ -42,6 +42,14 @@ class OTTAblationFixtures(unittest.TestCase):
         s=paired_day_bootstrap(d,y,p0,p1)
         self.assertEqual(s["n_date_clusters"],28)
         self.assertEqual(len(s["paired_day_bootstrap_95pct_interval"]),2)
+    def test_2month_sample_purges_unmatured_prior_month_labels(self):
+        edge=self.a[(self.a.month=="2026-09")&(self.a.market=="BTC-PERP")].iloc[[0]].copy()
+        edge["timestamp"]=pd.Timestamp("2026-09-30T23:00:00Z")
+        d=pd.concat([self.a,edge],ignore_index=True)
+        results=evaluate(d)
+        self.assertGreaterEqual(results[1]["purged_unmatured_training_labels"],1)
+        self.assertLess(pd.Timestamp(results[1]["max_training_target_maturity_utc"]),
+                        pd.Timestamp(results[1]["test_month_start_utc"]))
     def test_invalid_source_is_fail_closed(self):
         a=self.a.copy()
         a.loc[0,"settled_funding_sum_24h"]=np.nan
