@@ -12,7 +12,7 @@ function rule(selector) {
   return css.slice(open+1,close);
 }
 function foreground(selector) {
-  const declaration=rule(selector).match(/(?:^|[;\\s])color:\\s*(#[0-9a-fA-F]{6})\\s*;/);
+  const declaration=rule(selector).match(/(?:^|[;\s])color:\s*(#[0-9a-fA-F]{6})\s*;/);
   assert.ok(declaration,'MISSING_EXPLICIT_TEXT_COLOR: '+selector);
   return declaration[1];
 }
