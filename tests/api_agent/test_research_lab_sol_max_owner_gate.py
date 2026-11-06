@@ -1,7 +1,11 @@
 """Only one explicit owner-bound MAX exception, without promoting other missions."""
 import unittest
 import json
+import os
+import tempfile
+from unittest.mock import patch
 from pathlib import Path
+from scripts.api_agent import research_lab_sol_dispatch as native
 from scripts.api_agent.research_lab_sol_dispatch import effective_registry_for_mission, MAX_ONESHOT_MISSION, TASK_NAME
 class ResearchLabMaxOwnerGateTests(unittest.TestCase):
     def setUp(self):
@@ -50,4 +54,92 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
     def test_reject_unapproved_effort_and_base_drift(self):
         with self.assertRaises(ValueError):effective_registry_for_mission(self.base,dict(self.packet,reasoning_effort="xhigh"),MAX_ONESHOT_MISSION)
         with self.assertRaises(ValueError):effective_registry_for_mission({"tasks":{TASK_NAME:{"model":"gpt-6.1-sol","reasoning_effort":"max"}}},self.packet,MAX_ONESHOT_MISSION)
+class NativeNewPaidClaimTests(unittest.TestCase):
+    """Mock the authenticated native GitHub evidence, not the API provider."""
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root=Path(self.temp.name)
+        self.head="a"*40
+        self.trigger="100001"
+        self.packet={
+            "mission_id":MAX_ONESHOT_MISSION, "original_owner_issue":1156,
+            "reasoning_effort":"max","max_runs_for_this_release":1,
+            "public_storage_consent_30_days":True,
+            "public_storage_consent_comment_id":6682722905,
+            "one_shot_owner_mandate":
+                "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6682722905",
+            "public_source_only":True,"review_only_no_code_write":True,
+            "authority":{"repository_write":False,"portfolio_action":False}
+        }
+        self.packetpath="06_RESEARCH_LAB/mission_packets/new-s1.json"
+        for path,data in (
+            (native.QUEUE_PATH, {"missions":[{
+                "mission_id":MAX_ONESHOT_MISSION,"state":"ACTIVE_RELEASED",
+                "mission_packet":self.packetpath}]}),
+            (Path(self.packetpath),self.packet),
+            (Path("research/api_agent/API_TASK_REGISTRY_v1.json"),{
+                "tasks":{TASK_NAME:{"model":"gpt-6.1-sol",
+                  "reasoning_effort":"high","max_attempts":1}}}),
+        ):
+            target=self.root/path
+            target.parent.mkdir(parents=True,exist_ok=True)
+            target.write_text(json.dumps(data))
+        self.event=self.root/"event.json"
+        self.event.write_text(json.dumps({"issue":{"number":1476},"comment":{
+            "id":int(self.trigger),"user":{"login":"Donh91"},
+            "author_association":"OWNER"}}))
+        self.env={"GITHUB_REPOSITORY":"Donh91/Investering-Framework-Archive-v1",
+                  "GITHUB_EVENT_NAME":"issue_comment","GITHUB_ACTOR":"Donh91",
+                  "GITHUB_RUN_ATTEMPT":"1","GH_TOKEN":"test-only",
+                  "GITHUB_EVENT_PATH":str(self.event)}
+        self.claims=[]
+        self.writes=0
+
+    def remote(self, command, text, timeout):
+        self.assertEqual(command[0],"gh")
+        if command[1:3]==["api","repos/Donh91/Investering-Framework-Archive-v1/git/ref/heads/main"]:
+            return json.dumps({"object":{"sha":self.head}})
+        if command[1:3]==["api","repos/Donh91/Investering-Framework-Archive-v1/issues/comments/6682722905"]:
+            return json.dumps({"user":{"login":"Donh91"},
+                "issue_url":"https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/issues/1156",
+                "body":"<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106 -->\\n"
+                       +MAX_ONESHOT_MISSION+" 30 DAYS"})
+        if command[1:4]==["api","--paginate","--slurp"]:
+            return json.dumps([self.claims])
+        if command[1:4]==["issue","comment","1476"]:
+            self.writes+=1
+            self.claims.append({"body":command[-1],"id":654321,
+                                "user":{"login":"github-actions[bot]"}})
+            return "native-comment-created"
+        raise AssertionError("unexpected native mock command "+repr(command))
+
+    def execute(self):
+        with patch.dict(os.environ,self.env), \\
+             patch.object(native,"current_head",return_value=self.head), \\
+             patch("subprocess.check_output",side_effect=self.remote):
+            return native.reserve_native_max_claim(self.root,MAX_ONESHOT_MISSION,
+                                                   1476,self.trigger)
+
+    def test_real_owner_consent_claim_once_and_never_repeat(self):
+        result=self.execute()
+        self.assertEqual(result["status"],"NATIVE_PRE_HTTP_CLAIM_VERIFIED")
+        self.assertEqual(self.writes,1)
+        with self.assertRaisesRegex(ValueError,"MAX_CLAIM_ALREADY_EXISTS_NO_REPOST"):
+            self.execute()
+        self.assertEqual(self.writes,1)
+
+    def test_wrong_or_lost_30_day_consent_cannot_claim(self):
+        self.packet["public_storage_consent_comment_id"]=1
+        (self.root/self.packetpath).write_text(json.dumps(self.packet))
+        with self.assertRaisesRegex(ValueError,"MAX_PUBLIC_BACKGROUND_STORAGE_CONSENT_REQUIRED"):
+            self.execute()
+        self.assertEqual(self.writes,0)
+
+    def test_wrong_actor_cannot_make_paid_claim(self):
+        self.env["GITHUB_ACTOR"]="attacker"
+        with self.assertRaisesRegex(ValueError,"MAX_NATIVE_OWNER_EVENT_INVALID"):
+            self.execute()
+        self.assertEqual(self.writes,0)
+
 if __name__=="__main__":unittest.main()
