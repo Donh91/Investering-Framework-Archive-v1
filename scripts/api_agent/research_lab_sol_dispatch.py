@@ -6,8 +6,18 @@ import hashlib
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
+
+# Actions invokes this file by path (python scripts/api_agent/...py).
+# In that mode sys.path[0] is scripts/api_agent, not the repository root;
+# the existing absolute 'scripts.api_agent' imports otherwise fail before
+# the first provider call. Add only this file's own trusted repository root.
+if __name__ == "__main__" and not __package__:
+    _repo_root = str(Path(__file__).resolve().parents[2])
+    if _repo_root not in sys.path:
+        sys.path.insert(0, _repo_root)
 
 QUEUE_PATH = Path("research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json")
 TASK_NAME = "RESEARCH_LAB_SOL_ANALYSIS"
