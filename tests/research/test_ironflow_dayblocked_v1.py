@@ -32,7 +32,7 @@ class DayBlockedLeakageFixtures(unittest.TestCase):
     def test_unknown_funding_excludes_anchor(self):
         self.f.loc[40:50,"funding_rate"]=float("nan")
         x=self.anchors()
-        self.assertEqual(len(x),1
+        self.assertEqual(len(x),1)
     def test_missing_hour_cannot_form_invalid_future(self):
         for name in ("c","o","f"):
             setattr(self,name,getattr(self,name).drop(90))
