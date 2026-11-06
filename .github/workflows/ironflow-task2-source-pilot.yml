@@ -11,6 +11,7 @@ on:
       - 'scripts/research/ironflow_dayblocked_study_v1.py'
       - 'scripts/research/ironflow_wallet_risk_v1.py'
       - 'scripts/research/ironflow_crash_forensics_v1.py'
+      - 'scripts/research/ironflow_tick_hip4_qa_v1.py'
       - '.github/workflows/ironflow-task2-source-pilot.yml'
       - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/SOURCE_MANIFEST_IRONFLOW_20261106.json'
   workflow_dispatch:
@@ -84,5 +85,44 @@ jobs:
         with:
           name: ironflow-task2-public-source-T1
           path: /tmp/ironflow-results/
+          retention-days: 30
+          if-no-files-found: warn
+
+  tick-hip4-source-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install scoped DuckDB query engine
+        run: |
+          python -m pip install 'duckdb>=1.1,<2' 'pandas>=2.2,<3'
+          python -m py_compile scripts/research/ironflow_tick_hip4_qa_v1.py
+      - name: Fetch two independently pinned trade / HIP-4 days, no whole-corpus bulk transfer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ironflow/ticks/{trades,outcomes} /tmp/tick-results
+          for day in 2026-10-07 2026-10-23; do
+            trade_url="https://huggingface.co/datasets/ironflow/hyperliquid-trades/resolve/8e0c2f593fdbf324772db734747ccfce597f3b80/data/$day.parquet?download=true"
+            outcome_url="https://huggingface.co/datasets/ironflow/hyperliquid-outcomes/resolve/5d162f4220937be06665f5ce0d9b5b96c7d6d8c1/data/fills/$day.parquet?download=true"
+            curl --fail --location --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 15 --max-time 250 --max-filesize 270000000 "$trade_url" -o "/tmp/ironflow/ticks/trades/$day.parquet"
+            curl --fail --location --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 15 --max-time 90 --max-filesize 30000000 "$outcome_url" -o "/tmp/ironflow/ticks/outcomes/$day.parquet"
+            test "$(head -c 4 "/tmp/ironflow/ticks/trades/$day.parquet")" = PAR1
+            test "$(head -c 4 "/tmp/ironflow/ticks/outcomes/$day.parquet")" = PAR1
+          done
+      - name: Compute aggregated market microstructure and HIP-4 QA
+        run: |
+          python scripts/research/ironflow_tick_hip4_qa_v1.py --root /tmp/ironflow/ticks --output /tmp/tick-results/T4_T10_TICK_HIP4_QA.json
+      - name: Publish bounded research summary only, never wallets or raw trades
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ironflow-task2-tick-hip4-scope
+          path: /tmp/tick-results/
           retention-days: 30
           if-no-files-found: warn
