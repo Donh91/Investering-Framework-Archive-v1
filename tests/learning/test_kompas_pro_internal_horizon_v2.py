@@ -9,7 +9,10 @@ import json
 from pathlib import Path
 import unittest
 
-# Include source-gap negative controls in the existing 14-horizon Data Gate.\nfrom tests.learning.test_kompas_pro_source_gap_report_v1 import KompasProSourceGapTests  # noqa: F401\n\nfrom scripts.learning.kompas_pro_horizon_readback_v2 import (
+# Include source-gap negative controls in the existing 14-horizon Data Gate.
+from tests.learning.test_kompas_pro_source_gap_report_v1 import KompasProSourceGapTests  # noqa: F401
+
+from scripts.learning.kompas_pro_horizon_readback_v2 import (
     HORIZON_IDS, build_visible_horizon_rows, validate_route_and_ledger,
 )
 
