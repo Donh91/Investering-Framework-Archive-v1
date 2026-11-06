@@ -239,7 +239,7 @@ def main() -> None:
     # Only an explicitly reviewed 45-cap caller can use the exceptional
     # USD5 tolerance; normal callers must retain USD4 minimum headroom.
     effective_reserve = (max(args.reserve_usd, OWNER_GLOBAL_RESERVE_USD)
-                         if args.hard_stop_usd <= OWNER_GLOBAL_TARGET_USD
+                         if args.hard_stop_usd == OWNER_GLOBAL_TARGET_USD
                          else args.reserve_usd)
     exposure_lower = total + pending_low if total is not None else None
     exposure_upper = total + pending_high + new_upper if total is not None else None
