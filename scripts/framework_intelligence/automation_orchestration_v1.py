@@ -28,6 +28,24 @@ def read_json(path: Path, default: Any) -> Any:
         return default
 
 
+def read_authoritative_rows(path: Path) -> tuple[dict[str, Any], str]:
+    """Never equate unreadable remediation authority with a verified empty queue.
+
+    Missing/invalid upstream evidence cannot authorize a new model diagnosis.
+    A valid empty snapshot is an object with an explicit list-valued owner key.
+    """
+    try:
+        value = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}, "UNAVAILABLE"
+    owner_keys = ("items", "tasks", "codex_ready_tasks", "active_remediation")
+    if (not isinstance(value, dict)
+            or not any(key in value for key in owner_keys)
+            or any(not isinstance(value[key], list) for key in owner_keys if key in value)):
+        return {}, "INVALID"
+    return value, "VALID"
+
+
 def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
@@ -186,8 +204,9 @@ def build_plan(repo: Path, out_root: Path) -> dict[str, Any]:
     codex_path = repo / "research/remediation/LATEST_CODEX_READY_TASKS.json"
 
     health = read_json(health_path, {})
-    remediation = read_json(remediation_path, {})
-    codex = read_json(codex_path, {})
+    remediation, remediation_status = read_authoritative_rows(remediation_path)
+    codex, codex_status = read_authoritative_rows(codex_path)
+    authority_unknown = remediation_status != "VALID" or codex_status != "VALID"
     if health.get("contract") is None or not isinstance(health.get("workflows"), list):
         raise SystemExit("automation_health_unavailable_or_invalid")
 
@@ -211,6 +230,7 @@ def build_plan(repo: Path, out_root: Path) -> dict[str, Any]:
     luna_items: list[dict[str, Any]] = []
     sol_items: list[dict[str, Any]] = []
     existing_items: list[dict[str, Any]] = []
+    unknown_items: list[dict[str, Any]] = []
 
     for row in sorted(red_rows, key=lambda x: str(x.get("workflow") or "")):
         workflow = str(row.get("workflow") or "")
@@ -224,6 +244,10 @@ def build_plan(repo: Path, out_root: Path) -> dict[str, Any]:
 
         if match and remediation_state in ACTIVE_REMEDIATION_STATES:
             route = "FOLLOW_EXISTING_REMEDIATION"
+            model_lane = "NONE"
+        elif authority_unknown:
+            # No new diagnosis while either original authoritative owner view is unknown.
+            route = "AUTHORITATIVE_INPUT_UNAVAILABLE"
             model_lane = "NONE"
         elif cluster_id:
             route = "SOL_CLUSTER_DIAGNOSIS"
@@ -266,8 +290,10 @@ def build_plan(repo: Path, out_root: Path) -> dict[str, Any]:
             luna_items.append(item)
         elif model_lane == "GPT_6_1_SOL":
             sol_items.append(item)
-        else:
+        elif route == "FOLLOW_EXISTING_REMEDIATION":
             existing_items.append(item)
+        else:
+            unknown_items.append(item)
 
     fingerprint_basis = {
         # A refreshed observation clock is not a new diagnostic opportunity.
@@ -286,6 +312,7 @@ def build_plan(repo: Path, out_root: Path) -> dict[str, Any]:
             for x in items
         ],
         "clusters": clusters,
+        "authoritative_input_status": [remediation_status, codex_status],
     }
     fingerprint = canonical_hash(fingerprint_basis)
     previous = read_json(out_root / "LATEST_PLAN.json", {})
@@ -297,6 +324,11 @@ def build_plan(repo: Path, out_root: Path) -> dict[str, Any]:
         "generated_at_utc": now_iso(),
         "source_health_generated_at_utc": health.get("generated_at_utc"),
         "source_health_status": health.get("status"),
+        "source_authority": {
+            "remediation": remediation_status,
+            "codex_ready": codex_status,
+            "new_diagnosis_eligible": not authority_unknown,
+        },
         "fingerprint": fingerprint,
         "material_delta": material_delta,
         "fleet": {
@@ -311,6 +343,7 @@ def build_plan(repo: Path, out_root: Path) -> dict[str, Any]:
             "luna_triage_count": len(luna_items),
             "sol_6_1_diagnosis_count": len(sol_items),
             "existing_remediation_count": len(existing_items),
+            "authoritative_input_unknown_count": len(unknown_items),
             "shared_head_cluster_count": len(clusters),
         },
         "agent_calls": {
@@ -382,6 +415,7 @@ def finalize(out_root: Path, luna_output: Path | None, sol_output: Path | None) 
         "plan_fingerprint": plan.get("fingerprint"),
         "source_health_generated_at_utc": plan.get("source_health_generated_at_utc"),
         "routing_summary": plan.get("routing_summary"),
+        "source_authority": plan.get("source_authority"),
         "luna_triage": luna,
         "sol_6_1_diagnosis": sol,
         "guardrails": plan.get("guardrails"),
