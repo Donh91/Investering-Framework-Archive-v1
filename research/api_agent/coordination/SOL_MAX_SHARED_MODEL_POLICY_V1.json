@@ -1,0 +1,50 @@
+{
+  "contract": "SOL_MAX_SHARED_MODEL_POLICY_V1",
+  "owner_issue": 1156,
+  "trigger_issue": 1476,
+  "selection": "highest_OFFICIALLY_VERIFIED_and_PROJECT_AVAILABLE_SOL_only",
+  "effective_date": "2026-11-06",
+  "policy_source": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+  "max_output_tokens": 128000,
+  "monthly_normal_cap_usd": 40,
+  "monthly_reserve_usd": 4,
+  "single_new_request_upper_cap_usd": 3,
+  "public_only": true,
+  "public_background_storage_30d_requires_native_owner_receipt": true,
+  "forbidden_auto_models": [
+    "gpt-6-astra",
+    "gpt-6.1-astra",
+    "gpt-6.2-astra"
+  ],
+  "manual_astra_only": "Astra requires a separate, current, explicit owner message and approval. NEVER fall back to or auto-select Astra from any supervisor, strategist, model router, research agent or thread.",
+  "available_verified_sol_models": [
+    {
+      "id": "gpt-6.1-sol",
+      "version": [
+        6,
+        1
+      ],
+      "verified_available": true,
+      "official_model_spec": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+      "verified_utc_date": "2026-11-06",
+      "max_output_tokens": 128000,
+      "standard_input_usd_per_million": 2,
+      "standard_output_usd_per_million": 10,
+      "long_context_input_threshold_tokens": 272000,
+      "long_context_input_multiplier": 2,
+      "long_context_output_multiplier": 1.5
+    }
+  ],
+  "future_upgrade_policy": "When a newer Sol version such as gpt-6.2-sol becomes officially available, the existing S1/Strategist may stage a bounded source-backed policy+gateway price update in a tested PR. After verified release and per-project non-billable model availability GET, new missions should automatically prefer it. No undocumented price guessing or Astra fallback. Do not alter old mission request hashes, refunds, or receipts.",
+  "unverified_next_candidate": "gpt-6.2-sol",
+  "unverified_next_candidate_enabled": false,
+  "source_approval_requires": [
+    "official_model_id",
+    "current_standard_and_long_context_prices",
+    "maximum_output_capacity",
+    "model_project_availability_via_GET",
+    "API_GATEWAY_PRICING_MATCH",
+    "exact_head_CI_and_owner_release"
+  ],
+  "new_models_not_approved_by_name_alone": true
+}
