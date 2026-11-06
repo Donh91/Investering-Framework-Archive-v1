@@ -1,3 +1,5 @@
+> **SUPERSEDED FOR MODEL PERFORMANCE:** This original successful CI receipt used an unembargoed month-boundary train label. The corrected, actual 25-hour purged results and Feb 12/13 OI source QA are authoritative in [IRONFLOW_FULL18M_EMBARGO_CORRECTED_SCIENCE_V2_20261107.md](IRONFLOW_FULL18M_EMBARGO_CORRECTED_SCIENCE_V2_20261107.md). Its 72-source-hash/byte QA and execution receipts remain historically valid. Do not cite the old Brier numbers below as final model results.
+
 # 48 | Ironflow complete 18-month actual public-data replay: 12 chronological monthly results
 
 **Executed at:** 2026-11-06 23:39 UTC. **Original source:** Ironflow (ironflow.sh), CC BY 4.0. **Source gate:** T1_SOURCED_PARQUET_READBACK_PASS / HISTORICAL_DEVELOPMENT_ONLY. **Model status:** NO_REPLICATED_INCREMENTAL_EDGE. **Owner:** existing Task 2 #1596, derivatives #387, Research Lab. This report complements the prior three-month pilot merged in #1988, and extends it on PR #1989.
