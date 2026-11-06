@@ -414,7 +414,15 @@ try{
     tabMode:document.body.classList.contains('cn-tabbed-ui'),
     tabDefault:!pro.hidden&&graph.hidden,
     tabs:nav?.querySelectorAll('[role="tab"]').length,
-    historyLink:(()=>{const link=document.querySelector('#variant-panel #cn-graph-history-link');return !!link&&link.getAttribute('href')==='/Investering-Framework-Archive-v1/graph-history/'&&link.closest('#variant-panel')===graph})()
+    historyLink:(()=>{const link=document.querySelector('#variant-panel #cn-graph-history-link');return !!link&&link.getAttribute('href')==='/Investering-Framework-Archive-v1/graph-history/'&&link.closest('#variant-panel')===graph})(),
+    historyPreview:(()=>{
+      const frame=document.querySelector('#variant-panel #cn-graph-history-preview');
+      const entry=frame?.closest('.cn-graph-history-entry');
+      return !!frame&&!!entry&&frame.getAttribute('src')==='/Investering-Framework-Archive-v1/graph-history/?embed=1'&&
+        frame.getAttribute('loading')==='lazy'&&
+        entry.contains(document.getElementById('cn-graph-history-link'))&&
+        entry.parentElement===graph;
+    })()
    };
   });
   assert.equal(measured.width,width,'UNIFIED_WRONG_VIEWPORT');
@@ -422,7 +430,7 @@ try{
   assert.ok(measured.uniqueIds&&measured.singleton&&measured.noLegacy,
     'UNIFIED_DUPLICATE_OR_MISSING_NODE:'+JSON.stringify(measured));
   assert.ok(measured.noindex&&measured.navBeforePro&&measured.proBeforeGraph&&
-    measured.tabMode&&measured.tabDefault&&measured.tabs===4&&measured.historyLink,
+    measured.tabMode&&measured.tabDefault&&measured.tabs===4&&measured.historyLink&&measured.historyPreview,
     'UNIFIED_PREVIEW_OR_TABS_MISMATCH:'+JSON.stringify(measured));
   const switching=await evaluate(()=>{
     const click=k=>document.querySelector('[data-premium-nav="'+k+'"]')?.click();
@@ -432,12 +440,16 @@ try{
     const proof=document.getElementById('proof-explorer');
     click('graph'); const graphVisible=!graph.hidden&&comp.hidden&&
       document.getElementById('chart').getBoundingClientRect().width>0;
+    const preview=document.getElementById('cn-graph-history-preview');
+    const historyVisible=!!preview&&
+      preview.getBoundingClientRect().width>0&&
+      preview.getBoundingClientRect().width<=graph.getBoundingClientRect().width+1;
     click('path'); const pathVisible=!path.hidden&&graph.hidden;
     click('proof'); const proofVisible=!proof.hidden&&path.hidden;
     click('compass'); const returned=!comp.hidden&&proof.hidden;
-    return {graphVisible,pathVisible,proofVisible,returned,hash:location.hash};
+    return {graphVisible,historyVisible,pathVisible,proofVisible,returned,hash:location.hash};
   });
-  assert.ok(switching.graphVisible&&switching.pathVisible&&switching.proofVisible&&
+  assert.ok(switching.graphVisible&&switching.historyVisible&&switching.pathVisible&&switching.proofVisible&&
     switching.returned&&switching.hash==='#compass-pro',
     'UNIFIED_TAB_SWITCH_BROKEN:'+JSON.stringify(switching));
   assert.equal(measured.english,'Compass PRO','UNIFIED_EN_LABEL');
