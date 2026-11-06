@@ -37,13 +37,20 @@ def audit_one(root,month,family):
     d["timestamp"]=pd.to_datetime(d.timestamp,utc=True,errors="coerce")
     if d.timestamp.isna().any():raise ValueError("Null or invalid timestamps")
     keys=["market","timestamp"]
-    dup_count=int(d.duplicated(keys).sum()) if family!="liquidations" else None
+    if family=="funding":
+        hour=d.timestamp.dt.floor("h")
+        bad_h=int((d.timestamp!=hour).sum())
+        dup_count=int(pd.DataFrame({"market":d.market,"hour":hour}).duplicated().sum())
+    else:
+        bad_h=None
+        dup_count=int(d.duplicated(keys).sum()) if family!="liquidations" else None
     if dup_count and family!="liquidations":raise ValueError("Duplicate market/hour keys")
     m=d[d.market.isin(["BTC-PERP","ETH-PERP","HYPE-PERP"])]
     out={"source":DATASETS[family][0],"revision":DATASETS[family][1],
          "family":family,"month":month,"actual_bytes":p.stat().st_size,
          "actual_sha256":sha256_file(p),"actual_rows":len(d),
          "eligible_btc_eth_hype_rows":len(m),"duplicate_market_timestamp":dup_count,
+         "funding_timestamp_off_exact_hour_rows":bad_h,
          "utc_min":d.timestamp.min().isoformat(),"utc_max":d.timestamp.max().isoformat(),
          "null_count":{k:int(d[k].isna().sum()) for k in COLUMNS[family]}}
     if family=="candles":
