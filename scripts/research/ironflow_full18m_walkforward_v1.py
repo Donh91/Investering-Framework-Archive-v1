@@ -23,6 +23,14 @@ def walkforward(anchors,months=MONTHS,min_train_months=6):
         month=months[k]
         train=anchors[anchors.month.isin(prior)].copy()
         test=anchors[anchors.month==month].copy()
+        # Target is 24 future hourly lows, not known until the final future
+        # candle has closed. Freeze training before 00:00 UTC of test month.
+        # Conservatively embargo the last 25h + equality boundary from train.
+        test_month_start=pd.Timestamp(month+"-01T00:00:00Z")
+        train["target_matures_at_utc"]=train.timestamp+pd.Timedelta(hours=25)
+        embargoed=len(train)
+        train=train[train.target_matures_at_utc<test_month_start].copy()
+        embargoed-=len(train)
         if len(test)<10 or len(train)<60:
             out.append({"month":month,"status":"INSUFFICIENT_SOURCE_ANCHORS",
                         "train_n":len(train),"test_n":len(test)})
@@ -55,6 +63,10 @@ def walkforward(anchors,months=MONTHS,min_train_months=6):
         out.append({"month":month,"status":"HISTORICAL_MONTH_REPLAY_OK",
                     "per_market_descriptive_failure_atlas":per_market,
                     "train_months":list(months[:k]),
+                    "training_label_embargo_hours":25,
+                    "training_boundary_cutoff_utc":test_month_start.isoformat(),
+                    "training_labels_excluded_due_to_embargo":int(embargoed),
+                    "max_train_label_maturity_utc":train.target_matures_at_utc.max().isoformat(),
                     "train_n":int(len(train)),"test_n":int(len(test)),
                     "test_distinct_UTC_dates":int(test.timestamp.dt.date.nunique()),
                     "constant":scores(y,p0),
@@ -114,7 +126,7 @@ def main():
             "source_first_known_at_original_era":"UNKNOWN",
             "real_trading_authority":False,
             "independent_confirmed_edge":False,
-            "method":"expanding_train_6_months_then_12_monthly_out_of_time_tests",
+            "method":"expanding_train_6_months_then_12_monthly_out_of_time_tests_WITH_25H_PURGED_TRAIN_LABEL_BOUNDARY",
             "baseline_price_only":[ "market_dummies","past_price_return_24h","past_volatility_24h"],
             "additional_derivative_features":["liq_ratio_24h","oi_change_24h","settled_funding_sum_24h"],
             "hourly_clock":"completely_closed_hour_plus_1h",
