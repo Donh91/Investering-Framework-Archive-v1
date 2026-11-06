@@ -41,7 +41,21 @@ function validOfficial(compass,view){
 function emptyStatus(lang){
   return {label:tr(lang,'Afventer gyldig kilde','Awaiting verified source'),tone:'missing',status:'SOURCE_UNAVAILABLE'};
 }
-export function kompasHorizonStatusRows({compass,view,lang='da',observationCurrent=false,strategic=null}={}){
+// Strategic context has its OWN source clock and weekly lineage. A current
+// Official decision is neither required nor sufficient for that NONBINDING
+// context, but a caller-supplied outlook alone is never sufficient proof.
+function trustedStrategicContext(trace,strategic){
+  const lane=trace?.long_horizons?.find(x=>x.id==='21_30d');
+  return trace?.contract==='CN_PREMIUM_SOURCE_TRACE_v1'&&
+    ['COMPLETE','PARTIAL_OR_DEGRADED'].includes(trace.status)&&
+    trace.sources?.some(x=>x.id==='strategic'&&x.status==='BOUND_WEEKLY_ANCHOR')&&
+    lane?.owner==='CYCLE_NAVIGATOR_STRATEGIC_CONTEXT'&&
+    lane.direction!=='UNAVAILABLE'&&
+    strategic?.contract==='CN_PUBLIC_FORWARD_OUTLOOK_v1'&&
+    strategic.status==='FROZEN_CONTEXT_ONLY'&&
+    strategic.strategic?.available===true;
+}
+export function kompasHorizonStatusRows({compass,view,lang='da',observationCurrent=false,strategic=null,trace=null}={}){
   const verified=validOfficial(compass,view);
   const out=KOMPAS_HORIZONS.map(([id,da,en,kind,officialId])=>{
     const row={id,label:tr(lang,da,en),kind,sourceStatus:'NOT_ISSUED_IN_THIS_VIEW',
@@ -49,6 +63,32 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
       priceLabel:tr(lang,'Ingen separat verificeret kursprognose her','No separate verified price forecast here'),
       ...emptyStatus(lang),value:tr(lang,'Afventer gyldig kilde','Awaiting verified source'),
       label:tr(lang,da,en)};
+    // Static knowledge of what is NOT issued must never disappear merely
+    // because the separate Official daily decision has expired.
+    if(kind==='PENDING'||kind==='RESEARCH'||kind==='SCENARIO'){
+      const c={
+        PENDING:['Ikke udstedt','Not issued','PENDING',
+          'Ingen officiel prognose udstedt','No official forecast issued'],
+        RESEARCH:['Research, ikke udstedt','Research, not issued','RESEARCH_ONLY',
+          'Forskningshorisont · ikke prognose','Research horizon · not a forecast'],
+        SCENARIO:['Scenarie ikke udstedt','Scenario not issued','SCENARIO_ONLY',
+          'Muligt betinget researchscenarie','Potential conditional research scenario']
+      }[kind];
+      return {...row,status:c[2],tone:'missing',value:tr(lang,c[0],c[1]),
+        sourceLabel:tr(lang,c[3],c[4])};
+    }
+    // A valid separately source-bound strategic anchor can still be shown as
+    // FROZEN / NONBINDING after the daily Official decision expires.
+    if(kind==='STRATEGIC'&&trustedStrategicContext(trace,strategic)){
+      const info=directions[strategic.strategic.btc_direction];
+      if(info&&['UP','DOWN','MIXED','SIDEWAYS','NO_EDGE'].includes(strategic.strategic.btc_direction))
+        return {...row,status:'VERIFIED_STRATEGIC_CONTEXT_ONLY',
+          tone:info[2],sourceStatus:'STRATEGIC_SOURCE_NONBINDING',
+          value:tr(lang,info[0],info[1]),
+          sourceLabel:tr(lang,'Tidligere udstedt strategisk kontekst · ikke-bindende',
+            'Previously issued strategic context · nonbinding'),
+          priceLabel:tr(lang,'BTC-retning · ikke kursmål','BTC direction · not a price target')};
+    }
     if(!verified)return row;
     if(kind==='OFFICIAL'){
       const h=compass.horizons?.[officialId];
@@ -62,18 +102,6 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
         // A direction is never an independently issued BTC price target.
         priceLabel:tr(lang,'Retning, ikke kursmål','Direction, not a price target')};
     }
-    if(kind==='STRATEGIC'&&strategic?.contract==='CN_PUBLIC_FORWARD_OUTLOOK_v1'&&
-      strategic.status==='FROZEN_CONTEXT_ONLY'&&strategic.strategic?.available===true){
-      const direction=strategic.strategic.btc_direction;
-      const info=['UP','DOWN','MIXED','SIDEWAYS','NO_EDGE'].includes(direction)?
-        directions[direction]:null;
-      if(info)return {...row,status:'VERIFIED_STRATEGIC_CONTEXT_ONLY',
-        tone:info[2],sourceStatus:'STRATEGIC_SOURCE_NONBINDING',
-        value:tr(lang,info[0],info[1]),
-        sourceLabel:tr(lang,'Kildeverificeret strategi · ikke-bindende',
-          'Verified strategic context · nonbinding'),
-        priceLabel:tr(lang,'BTC-retning · ikke kursmål','BTC direction · not a price target')};
-    }
     if(kind==='OBSERVED'){
       const info=observationCurrent?directions[compass.market_now?.directional_state]:null;
       const v=info?tr(lang,info[0],info[1]):
@@ -83,11 +111,10 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
         sourceLabel:tr(lang,'Observeret momentum, ikke prognose','Observed momentum, not a forecast'),
         priceLabel:tr(lang,'Ingen fremadrettet kursprognose','No forward price forecast')};
     }
+    // No source-verified strategic anchor. A type label is not an issued
+    // direction, much less a numerical price forecast.
     const categories={
-      PENDING:['Ikke udstedt','Not issued','PENDING'],
-      RESEARCH:['Forskningshorisont','Research horizon','RESEARCH_ONLY'],
-      STRATEGIC:['Strategisk kontekst','Strategic context','NONBINDING_CONTEXT'],
-      SCENARIO:['Betinget scenarie','Conditional scenario','SCENARIO_ONLY']
+      STRATEGIC:['Strategisk kontekst afventer','Strategic context pending','NONBINDING_CONTEXT']
     };
     const c=categories[kind];
     return {...row,status:c[2],tone:'missing',value:tr(lang,c[0],c[1]),

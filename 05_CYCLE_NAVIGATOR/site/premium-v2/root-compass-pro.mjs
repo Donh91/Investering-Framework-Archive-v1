@@ -536,11 +536,13 @@ function renderHorizonStatus(){
  if(!host)return;
  const lang=document.documentElement.lang==='en'?'en':'da';
  const clock=observedMarketClock({compass:feeds?.compass});
- let strategic=null;
- try{strategic=forwardOutlook(feeds?.latest,feeds?.compass,
-  sourceTrace(feeds?.latest,feeds?.compass,view))}catch{}
+ let strategic=null,trace=null;
+ try{
+  trace=sourceTrace(feeds?.latest,feeds?.compass,view);
+  strategic=forwardOutlook(feeds?.latest,feeds?.compass,trace);
+ }catch{strategic=null;trace=null}
  const matrix=kompasHorizonStatusRows({
-  compass:feeds?.compass,view,lang,strategic,
+  compass:feeds?.compass,view,lang,strategic,trace,
   observationCurrent:clock.state==='FRESH_OBSERVATION'
  });
  const fragment=document.createDocumentFragment();

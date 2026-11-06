@@ -13,6 +13,13 @@ const compass={
 };
 const view={compass:{state:'FRESH',permit_path_live_gates:true,compass_id:'CMP-TEST-1'}};
 const by=(rows,id)=>rows.find(row=>row.id===id);
+const strategicTrace={
+ contract:'CN_PREMIUM_SOURCE_TRACE_v1',status:'PARTIAL_OR_DEGRADED',
+ sources:[{id:'official',status:'UNAVAILABLE'},{id:'strategic',status:'BOUND_WEEKLY_ANCHOR'}],
+ long_horizons:[{id:'21_30d',owner:'CYCLE_NAVIGATOR_STRATEGIC_CONTEXT',direction:'DOWN'}]
+};
+const sourceBoundStrategy={contract:'CN_PUBLIC_FORWARD_OUTLOOK_v1',
+ status:'FROZEN_CONTEXT_ONLY',strategic:{available:true,btc_direction:'DOWN'}};
 
 test('all 14 exact source-contract horizons are represented once, in canonical order',()=>{
   const ids=KOMPAS_HORIZONS.map(x=>x[0]);
@@ -55,7 +62,14 @@ test('expired, wrong ID, fake contract and invalid official direction all fail c
   ]){
     const x=kompasHorizonStatusRows({compass,view:v});
     assert.equal(x.officialSourceCurrent,false);
-    assert.ok(x.rows.every(r=>r.status==='SOURCE_UNAVAILABLE'&&r.tone==='missing'));
+    for(const id of ['NOW','H0_12H','H1_3D','H5_7D','H2_3W','H21_30D']){
+      assert.equal(by(x.rows,id).status,'SOURCE_UNAVAILABLE');
+      assert.equal(by(x.rows,id).tone,'missing');
+    }
+    // Nonissued research type is a timeless truth, not stale market data.
+    assert.equal(by(x.rows,'H24H').status,'PENDING');
+    assert.equal(by(x.rows,'H8_14D').status,'RESEARCH_ONLY');
+    assert.equal(by(x.rows,'H9_12M').status,'SCENARIO_ONLY');
   }
   const fake=kompasHorizonStatusRows({compass:{...compass,contract:'FAKE'},view});
   assert.equal(fake.officialSourceCurrent,false);
@@ -66,17 +80,16 @@ test('expired, wrong ID, fake contract and invalid official direction all fail c
 test('English labels remain explicit about research/price/authority boundaries',()=>{
   const rows=kompasHorizonStatusRows({compass,view,lang:'en',observationCurrent:true}).rows;
   assert.equal(by(rows,'H1_3D').value,'Rising');
-  assert.equal(by(rows,'H8_14D').value,'Research horizon');
-  assert.equal(by(rows,'H21_30D').value,'Strategic context');
-  assert.equal(by(rows,'H9_12M').value,'Conditional scenario');
+  assert.equal(by(rows,'H8_14D').value,'Research, not issued');
+  assert.equal(by(rows,'H21_30D').value,'Strategic context pending');
+  assert.equal(by(rows,'H9_12M').value,'Scenario not issued');
   assert.equal(by(rows,'H24H').value,'Not issued');
   assert.ok(rows.every(r=>!('low' in r)&&!('high' in r)&&!('expected_close' in r)));
 });
 
 test('verified 21-30d BTC strategic direction is nonbinding and not a price target',()=>{
- const strategic={contract:'CN_PUBLIC_FORWARD_OUTLOOK_v1',status:'FROZEN_CONTEXT_ONLY',
-  strategic:{available:true,btc_direction:'DOWN'}};
- const {rows}=kompasHorizonStatusRows({compass,view,strategic});
+ const {rows}=kompasHorizonStatusRows({compass,view,
+  strategic:sourceBoundStrategy,trace:strategicTrace});
  const r=by(rows,'H21_30D');
  assert.equal(r.status,'VERIFIED_STRATEGIC_CONTEXT_ONLY');
  assert.equal(r.sourceStatus,'STRATEGIC_SOURCE_NONBINDING');
@@ -101,4 +114,43 @@ test('unverified strategic evidence is never treated as an issued official forec
   strategic:{available:true,btc_direction:'DOWN'}};
  const expired={...view,compass:{...view.compass,state:'EXPIRED'}};
  assert.equal(by(kompasHorizonStatusRows({compass,view:expired,strategic}).rows,'H21_30D').status,'SOURCE_UNAVAILABLE');
+});
+
+
+test('frozen verified strategic context survives official expiry without upgrading daily forecast',()=>{
+ const expired={...view,compass:{...view.compass,state:'EXPIRED'}};
+ const result=kompasHorizonStatusRows({compass,view:expired,strategic:sourceBoundStrategy,
+  trace:strategicTrace,lang:'da'});
+ assert.equal(result.officialSourceCurrent,false);
+ assert.equal(by(result.rows,'H1_3D').status,'SOURCE_UNAVAILABLE');
+ assert.equal(by(result.rows,'NOW').status,'SOURCE_UNAVAILABLE');
+ const long=by(result.rows,'H21_30D');
+ assert.equal(long.status,'VERIFIED_STRATEGIC_CONTEXT_ONLY');
+ assert.equal(long.sourceStatus,'STRATEGIC_SOURCE_NONBINDING');
+ assert.equal(long.value,'Faldende');
+ assert.match(long.sourceLabel,/Tidligere udstedt.*ikke-bindende/);
+ assert.match(long.priceLabel,/ikke kursmål/);
+ assert.equal(by(result.rows,'H8_14D').value,'Research, ikke udstedt');
+ assert.equal(by(result.rows,'H1_3M').value,'Scenarie ikke udstedt');
+});
+
+test('spoofed/stale/missing trace cannot resurrect strategic context after official expiry',()=>{
+ const expired={...view,compass:{...view.compass,state:'EXPIRED'}};
+ const falsifiers=[
+  null,
+  {...strategicTrace,contract:'UNTRUSTED'},
+  {...strategicTrace,status:'UNVERIFIED'},
+  {...strategicTrace,sources:[{id:'strategic',status:'UNAVAILABLE'}]},
+  {...strategicTrace,long_horizons:[{id:'21_30d',owner:'UNTRUSTED',direction:'DOWN'}]},
+  {...strategicTrace,long_horizons:[{id:'21_30d',owner:'CYCLE_NAVIGATOR_STRATEGIC_CONTEXT',direction:'UNAVAILABLE'}]}
+ ];
+ for(const trace of falsifiers){
+  const x=kompasHorizonStatusRows({compass,view:expired,strategic:sourceBoundStrategy,trace});
+  assert.equal(by(x.rows,'H21_30D').status,'SOURCE_UNAVAILABLE');
+  assert.equal(by(x.rows,'H1_3D').status,'SOURCE_UNAVAILABLE');
+  assert.equal(by(x.rows,'H9_12M').status,'SCENARIO_ONLY');
+ }
+ const fake={...sourceBoundStrategy,contract:'UNTRUSTED'};
+ assert.equal(by(kompasHorizonStatusRows({compass,view:expired,strategic:fake,
+  trace:strategicTrace}).rows,'H21_30D').status,'SOURCE_UNAVAILABLE');
 });
