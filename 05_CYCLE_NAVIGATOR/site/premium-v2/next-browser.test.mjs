@@ -845,6 +845,22 @@ try{
     console.log('CN_DESIGN_SCREENSHOT_'+width+'_BEGIN');
     for(const chunk of shot.data.match(/.{1,8000}/g))console.log('CN_DESIGN_SCREENSHOT_'+width+'_PART '+chunk);
     console.log('CN_DESIGN_SCREENSHOT_'+width+'_END');
+    // Verify the owner-approved history preview visually, not the old link-only
+    // stub. The actual source renderer remains hosted in /graph-history/.
+    const historyFrame=await evaluate(()=>{
+     const frame=document.getElementById('cn-graph-history-preview');
+     if(!frame||frame.closest('#variant-panel')===null)return false;
+     frame.scrollIntoView({block:'center',behavior:'instant'});
+     return frame.getBoundingClientRect().width>200;
+    });
+    assert.equal(historyFrame,true,'VISUAL_HISTORY_PREVIEW_NOT_VISIBLE');
+    await delay(350);
+    const historyShot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    assert.ok(historyShot.data?.length>1000,'VISUAL_HISTORY_SCREENSHOT_MISSING');
+    console.log('CN_HISTORY_SCREENSHOT_'+width+'_BEGIN');
+    for(const chunk of historyShot.data.match(/.{1,8000}/g))
+     console.log('CN_HISTORY_SCREENSHOT_'+width+'_PART '+chunk);
+    console.log('CN_HISTORY_SCREENSHOT_'+width+'_END');
    }
    // Live negative control on the RELEASED root, not only the /next pilot.
    // Deliberately break BOTH public feed requests after initial boot. A stale
