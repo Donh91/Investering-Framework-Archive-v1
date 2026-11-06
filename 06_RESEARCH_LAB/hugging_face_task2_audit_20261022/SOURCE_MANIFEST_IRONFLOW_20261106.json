@@ -1,0 +1,91 @@
+{
+  "contract": "IRONFLOW_PUBLIC_DATASET_REVISIONS_V1",
+  "recorded_utc_date": "2026-11-06",
+  "data_owner": "Ironflow (ironflow.sh)",
+  "license_tag": "cc-by-4.0",
+  "license_scope": "HUGGING_FACE_CARDS_ONLY",
+  "download_and_full_qa": "NOT_EXECUTED",
+  "first_known_evidence": "POST_HOC_HF_PUBLICATION_ONLY",
+  "economic_edge_status": "UNPROVEN",
+  "hypothesis_testing_authority": "RESEARCH_DEV_ONLY_NO_ROUND3",
+  "repo_family": "https://huggingface.co/ironflow",
+  "pinned_dataset_revisions": {
+    "ironflow/hyperliquid-liquidations": {
+      "sha": "7e89a460214631013946e081ffd06a84a65ee710",
+      "datasets": [
+        "events",
+        "fills"
+      ],
+      "monthly_ranges": [
+        "2025-10",
+        "2026-09",
+        "2026-10"
+      ],
+      "months_through": "2026-10",
+      "reported_event_rows": 2848413
+    },
+    "ironflow/hyperliquid-funding": {
+      "sha": "6e64357c3ff723a2c4f0e757ba708f2b71cca773",
+      "monthly_ranges": [
+        "2025-10",
+        "2026-09",
+        "2026-10"
+      ],
+      "months_through": "2026-10",
+      "reported_rows": 6100462
+    },
+    "ironflow/hyperliquid-open-interest": {
+      "sha": "0106c103b4933263c96f727ddab02d771203e27b",
+      "monthly_ranges": [
+        "2025-10",
+        "2026-09",
+        "2026-10"
+      ],
+      "months_through": "2026-10",
+      "reported_rows": 5938268
+    },
+    "ironflow/hyperliquid-candles-1h": {
+      "sha": "9f262cc27d89112b8c56550cf4c9455346f5eece",
+      "monthly_ranges": [
+        "2025-10",
+        "2026-09",
+        "2026-10"
+      ],
+      "months_through": "2026-10",
+      "reported_rows": 3642453
+    },
+    "ironflow/hyperliquid-trades": {
+      "sha": "8e0c2f593fdbf324772db734747ccfce597f3b80",
+      "daily_from": "2026-10-03",
+      "daily_to": "2026-11-05",
+      "reported_rows": 196840577,
+      "bytes_estimate": 4900000000,
+      "download_gate": "BOUNDED_SAMPLE_ONLY"
+    },
+    "ironflow/hyperliquid-outcomes": {
+      "sha": "5d162f4220937be06665f5ce0d9b5b96c7d6d8c1",
+      "daily_from": "2026-08-01",
+      "daily_to": "2026-11-05",
+      "reported_fills": 13893235,
+      "reported_contracts": 39260,
+      "download_gate": "SEPARATE_HIP4_PILOT_ONLY"
+    }
+  },
+  "immutable_source_url_template": "https://huggingface.co/datasets/{repo}/resolve/{revision}/data/{path}?download=true",
+  "reproducibility_requirements": [
+    "actual_file_bytes",
+    "sha256",
+    "row_count",
+    "null_count",
+    "UTC_gap_census",
+    "trade_tuple_dedup",
+    "license_attribution",
+    "provider_event_time",
+    "original_published_time",
+    "local_observed_time"
+  ],
+  "repository_storage_policy": "MANIFEST_AND_CODE_IN_PUBLIC_GIT; RAW_OFFLINE_ARCHIVE_SEPARATELY_GOVERNED",
+  "hf_compute_test": "HTTP_402_PAYMENT_REQUIRED",
+  "github_runner_test": "NOT_YET_RUN",
+  "promotion_permission": false
+}
