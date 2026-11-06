@@ -1,0 +1,133 @@
+name: Ironflow Task 2 Public Source T1 Pilot
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/research/ironflow_source_preflight_v1.py'
+      - 'scripts/research/ironflow_hourly_stress_v1.py'
+      - 'tests/research/test_ironflow_hourly_stress_v1.py'
+      - 'tests/research/test_ironflow_dayblocked_v1.py'
+      - 'tests/research/test_ironflow_oot_ablation_v1.py'
+      - 'scripts/research/ironflow_dayblocked_study_v1.py'
+      - 'scripts/research/ironflow_wallet_risk_v1.py'
+      - 'scripts/research/ironflow_crash_forensics_v1.py'
+      - 'scripts/research/ironflow_tick_hip4_qa_v1.py'
+      - 'scripts/research/ironflow_oot_ablation_v1.py'
+      - '.github/workflows/ironflow-task2-source-pilot.yml'
+      - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/SOURCE_MANIFEST_IRONFLOW_20261106.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-source-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Source code checkout
+        uses: actions/checkout@v4
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bounded scientific dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'pandas>=2.2,<3' 'numpy>=2,<3' 'pyarrow>=17,<22' 'scikit-learn>=1.5,<2'
+      - name: No-lookahead and negative-fixture regression
+        run: |
+          python -m unittest discover -s tests/research -p 'test_ironflow_*_v1.py' -v
+      - name: Fetch 12 immutable public Parquet files, capped size
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ironflow/{liquidations,funding,oi,candles} /tmp/ironflow-results
+          for month in 2025-10 2026-09 2026-10; do
+            for family in liquidations funding oi candles; do
+              case "$family" in
+                liquidations) ds=hyperliquid-liquidations; rev=7e89a460214631013946e081ffd06a84a65ee710; prefix=data/events;;
+                funding) ds=hyperliquid-funding; rev=6e64357c3ff723a2c4f0e757ba708f2b71cca773; prefix=data;;
+                oi) ds=hyperliquid-open-interest; rev=0106c103b4933263c96f727ddab02d771203e27b; prefix=data;;
+                candles) ds=hyperliquid-candles-1h; rev=9f262cc27d89112b8c56550cf4c9455346f5eece; prefix=data;;
+              esac
+              url="https://huggingface.co/datasets/ironflow/"$ds"/resolve/"$rev"/"$prefix"/"$month".parquet?download=true"
+              dest="/tmp/ironflow/$family/$month.parquet"
+              curl --fail --location --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 15 --max-time 180 --max-filesize 26000000 "$url" -o "$dest"
+              test "$(wc -c <"$dest")" -ge 1000
+              test "$(head -c 4 "$dest")" = PAR1
+              sha256sum "$dest" >> /tmp/ironflow-results/SHA256SUMS
+            done
+          done
+      - name: Exact monthly source QA, T1 evidence
+        run: |
+          python scripts/research/ironflow_source_preflight_v1.py --root /tmp/ironflow --output /tmp/ironflow-results/T1_SOURCE_QA.json
+      - name: Retrospective pressure baselines, NOT predictive edge
+        run: |
+          python scripts/research/ironflow_hourly_stress_v1.py --root /tmp/ironflow --output /tmp/ironflow-results/T1_HISTORICAL_DEV.json
+      - name: Nonoverlapping 24h anchor diagnostics
+        run: |
+          python scripts/research/ironflow_dayblocked_study_v1.py --root /tmp/ironflow --output /tmp/ironflow-results/T2_DAYBLOCKED_RESEARCH.json
+      - name: Liquidation wallet recurrence without PnL assumptions
+        run: |
+          python scripts/research/ironflow_wallet_risk_v1.py --root /tmp/ironflow --output /tmp/ironflow-results/T8_WALLET_RISK.json
+      - name: Event anatomy and adverse quiet-day controls
+        run: |
+          python scripts/research/ironflow_crash_forensics_v1.py --root /tmp/ironflow --output /tmp/ironflow-results/T5_CRASH_FORENSICS.json
+      - name: Exploratory out-of-time price-only vs derivative-source ablation
+        run: |
+          python scripts/research/ironflow_oot_ablation_v1.py --root /tmp/ironflow --output /tmp/ironflow-results/T2_T3_OOT_ABLATION.json
+      - name: Print value-free scientific receipt
+        if: always()
+        run: |
+          if test -f /tmp/ironflow-results/T1_SOURCE_QA.json; then
+            python -c 'import json;d=json.load(open("/tmp/ironflow-results/T1_SOURCE_QA.json"));print("IRONFLOW_FILES_VERIFIED",len(d["data"]));print("RETROSPECTIVE_ONLY",d["temporal_class"])'
+          fi
+      - name: Upload bounded reproducible research receipt, no raw mirror
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ironflow-task2-public-source-T1
+          path: /tmp/ironflow-results/
+          retention-days: 30
+          if-no-files-found: warn
+
+  tick-hip4-source-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install scoped DuckDB query engine
+        run: |
+          python -m pip install 'duckdb>=1.1,<2' 'pandas>=2.2,<3'
+          python -m py_compile scripts/research/ironflow_tick_hip4_qa_v1.py
+      - name: Fetch two independently pinned trade / HIP-4 days, no whole-corpus bulk transfer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ironflow/ticks/{trades,outcomes} /tmp/tick-results
+          for day in 2026-10-07 2026-10-23; do
+            trade_url="https://huggingface.co/datasets/ironflow/hyperliquid-trades/resolve/8e0c2f593fdbf324772db734747ccfce597f3b80/data/$day.parquet?download=true"
+            outcome_url="https://huggingface.co/datasets/ironflow/hyperliquid-outcomes/resolve/5d162f4220937be06665f5ce0d9b5b96c7d6d8c1/data/fills/$day.parquet?download=true"
+            curl --fail --location --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 15 --max-time 250 --max-filesize 270000000 "$trade_url" -o "/tmp/ironflow/ticks/trades/$day.parquet"
+            curl --fail --location --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 15 --max-time 90 --max-filesize 30000000 "$outcome_url" -o "/tmp/ironflow/ticks/outcomes/$day.parquet"
+            test "$(head -c 4 "/tmp/ironflow/ticks/trades/$day.parquet")" = PAR1
+            test "$(head -c 4 "/tmp/ironflow/ticks/outcomes/$day.parquet")" = PAR1
+          done
+      - name: Compute aggregated market microstructure and HIP-4 QA
+        run: |
+          python scripts/research/ironflow_tick_hip4_qa_v1.py --root /tmp/ironflow/ticks --output /tmp/tick-results/T4_T10_TICK_HIP4_QA.json
+      - name: Publish bounded research summary only, never wallets or raw trades
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ironflow-task2-tick-hip4-scope
+          path: /tmp/tick-results/
+          retention-days: 30
+          if-no-files-found: warn
