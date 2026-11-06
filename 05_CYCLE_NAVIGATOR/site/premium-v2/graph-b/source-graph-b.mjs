@@ -238,7 +238,7 @@ function plot(){
  const values=[...(quoteComparable?bands.flatMap(b=>[b.forecast_low,b.forecast_high]):[]),
   ...(hasDailyRanges?model.daily_ranges.flatMap(d=>[d.low,d.high]):[]),
   ...model.forecast.flatMap(p=>[p.expected_close,p.low,p.high]),
-  ...hourly.map(p=>p.value),...visibleActualDays.flatMap(p=>[p.low,p.high])].filter(s);
+  ...visible.map(p=>p.value),...visibleActualDays.flatMap(p=>[p.low,p.high])].filter(s);
  if(values.length===0){model=null;plot();return}
  const min=Math.min(...values),max=Math.max(...values),padding=(max-min||1)*.07;
  const lo=min-padding,hi=max+padding;
@@ -250,9 +250,18 @@ function plot(){
  if(model.forecast_status==='SOURCE_ISSUED'){
   const f=model.forecast.map(p=>({time:p.time,value:p.expected_close}));
   attr('forecast','d',movePath(f.map(xy)));
-  attr('range-band','d',area(model.forecast));
-  attr('range-upper','d',movePath(model.forecast.map(p=>({x:x(p.time*1000),y:y(p.high)}))));
-  attr('range-lower','d',movePath(model.forecast.map(p=>({x:x(p.time*1000),y:y(p.low)}))));
+  // Each source-issued daily high/low belongs to its original UTC day cell.
+  // The seven forecast close points stay at their original end-of-day timestamps.
+  const cells=model.forecast.map((p,i)=>({
+   left:x(start+i*DAY),right:x(start+(i+1)*DAY),low:p.low,high:p.high
+  }));
+  attr('range-band','d',cells.map(p=>
+   'M'+p.left+','+y(p.high)+' L'+p.right+','+y(p.high)+
+   ' L'+p.right+','+y(p.low)+' L'+p.left+','+y(p.low)+' Z').join(' '));
+  for(const [id,key] of [['range-upper','high'],['range-lower','low']])
+   attr(id,'d',cells.map(p=>
+    'M'+p.left.toFixed(2)+','+y(p[key]).toFixed(2)+
+    ' L'+p.right.toFixed(2)+','+y(p[key]).toFixed(2)).join(' '));
  }else if(hasDailyRanges){
   // Authentic daily high/low envelope only. Never draw an implied close line.
   attr('forecast','d','');
