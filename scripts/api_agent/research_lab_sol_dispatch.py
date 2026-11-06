@@ -18,33 +18,61 @@ LEGACY_MAX_INCOMPLETE = "S1-ELITE-RESILIENCE-SOL61-MAX-20261106"
 PUBLIC_CONSENT_COMMENT = 6683279250
 MAX_CLAIM_PREFIX = "RL_SOL_MAX_PRE_HTTP_CLAIM_V1"
 
-def effective_registry_for_mission(registry: dict, packet: dict, mission_id: str) -> dict:
-    """Allow MAX only for this one exact owner-mandated, advisory research case."""
+def effective_registry_for_mission(
+    registry: dict, packet: dict, mission_id: str, *,
+    model_available=None,
+) -> dict:
+    """Any new owner-bound public MAX mission, never an arbitrary owner comment.
+
+    Model choice is pinned to the verified Sol-only source policy and current
+    gateway price table. A newer Sol needs project GET proof to be promoted.
+    """
+    from scripts.api_agent import sol_max_shared_policy_v1 as sol_policy
+    from scripts.api_agent.api_gateway import PRICES_PER_MILLION
     output = json.loads(json.dumps(registry))
     task = output.get("tasks", {}).get(TASK_NAME)
-    if not isinstance(task, dict) or (task.get("model"), task.get("reasoning_effort")) != ("gpt-6.1-sol", "high"):
+    if (not isinstance(task, dict)
+            or (task.get("model"), task.get("reasoning_effort")) != ("gpt-6.1-sol", "high")):
         raise ValueError("RESEARCH_LAB_BASE_TASK_POLICY_CHANGED")
     effort = packet.get("reasoning_effort", "high")
     if effort == "max":
-        if (mission_id != MAX_ONESHOT_MISSION or packet.get("mission_id") != mission_id
+        if (not isinstance(mission_id, str)
+                or re.fullmatch(r"[A-Z][A-Z0-9-]{15,109}", mission_id) is None
+                or packet.get("mission_id") != mission_id
                 or packet.get("original_owner_issue") != 1156
                 or packet.get("max_runs_for_this_release") != 1
-                or packet.get("max_model_output_tokens_per_new_attempt") != 48000
                 or packet.get("review_only_no_code_write") is not True
                 or not zero_authority(packet.get("authority"))):
             raise ValueError("MAX_ONE_SHOT_MANDATE_NOT_BOUND")
         if (packet.get("public_storage_consent_30_days") is not True
-                or packet.get("public_storage_consent_comment_id") != PUBLIC_CONSENT_COMMENT
                 or packet.get("public_source_only") is not True
+                or type(packet.get("public_storage_consent_comment_id")) is not int
+                or packet["public_storage_consent_comment_id"] <= 0
                 or packet.get("one_shot_owner_mandate") !=
                    ("https://github.com/Donh91/Investering-Framework-Archive-v1/"
-                    "issues/1156#issuecomment-" + str(PUBLIC_CONSENT_COMMENT))):
+                    "issues/1156#issuecomment-"
+                    + str(packet["public_storage_consent_comment_id"]))):
             raise ValueError("MAX_PUBLIC_BACKGROUND_STORAGE_CONSENT_REQUIRED")
+        requested = packet.get("max_model_output_tokens_per_new_attempt")
+        if (type(requested) is not int or not 2048 <= requested <=
+                sol_policy.MAX_OUTPUT):
+            raise ValueError("MAX_OUTPUT_LIMIT_INVALID_OR_MODEL_CAP_EXCEEDED")
+        policy = load_json(Path(__file__).resolve().parents[2] /
+                           sol_policy.POLICY_PATH)
+        selected = sol_policy.choose_model(
+            policy, PRICES_PER_MILLION, available=model_available)
+        if requested > selected["max_output_tokens"]:
+            raise ValueError("MAX_OUTPUT_LIMIT_INVALID_OR_MODEL_CAP_EXCEEDED")
+        task["model"] = selected["id"]
         task["reasoning_effort"] = "max"
-        task["max_output_tokens"] = 48000
+        task["max_output_tokens"] = requested
         task["max_attempts"] = 1
         task["recoverable_background"] = True
         task["public_background_storage_authorized"] = True
+        instruction = task.get("governed_instruction")
+        if isinstance(instruction, str):
+            task["governed_instruction"] = instruction.replace(
+                "MODEL_USED=gpt-6.1-sol", "MODEL_USED=" + selected["id"])
     elif effort != "high":
         raise ValueError("RESEARCH_EFFORT_NOT_ADMITTED")
     return output
