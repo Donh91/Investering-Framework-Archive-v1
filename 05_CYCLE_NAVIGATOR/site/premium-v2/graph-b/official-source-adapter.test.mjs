@@ -328,7 +328,7 @@ test('two source-issued daily contracts with conflicting bounds fail closed on B
 test('genuine source-owned daily high/low is projected only for contiguous covered UTC hours',()=>{
  const x=bindSameQuotedNativeSource(fixture()),m=x.public_live_precision;
  const start=Date.parse('2026-10-19T00:00:00Z');
- const times=Array.from({length:6},(_,i)=>new Date(start+(i+1)*3600000).toISOString());
+ const times=Array.from({length:6},(_,i)=>new Date(start+(i+1)*3600000).toISOString().replace('.000Z','Z'));
  const mkRows=(asset)=>Array.from({length:7},(_,i)=>i===0?{
   day:1,date:'2026-10-19',observed_hours:6,expected_hours:6,
   coverage_complete_to_date:true,status:'LIVE',
