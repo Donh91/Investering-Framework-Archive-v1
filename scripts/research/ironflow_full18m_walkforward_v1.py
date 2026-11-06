@@ -2,7 +2,7 @@
 """Ironflow complete common-history monthly walkforward, historical research ONLY.
 Ironflow (ironflow.sh), CC BY 4.0, Nov-2026 source vintage. No live signal.
 """
-import argparse,json
+import argparse,json,re
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -98,17 +98,43 @@ def source_checks(root,months=MONTHS):
         for family in DATASETS:
             receipts.append(audit_one(root,month,family))
     return receipts
+def verify_frozen_72_source_sha(receipts,registry):
+    """Fail closed on a changed original source byte, not only on unreadable files."""
+    if not registry.is_file():raise FileNotFoundError(str(registry))
+    expected={}
+    families=("liquidations","funding","oi","candles")
+    for line in registry.read_text(encoding="utf8").splitlines():
+        parts=line.strip().split()
+        if (len(parts)==5 and re.fullmatch(r"20\\d\\d-(?:0[1-9]|1[0-2])",parts[0])
+            and all(re.fullmatch(r"[0-9a-f]{64}",v) for v in parts[1:])):
+            month=parts[0]
+            if month in expected:raise ValueError("DUPLICATE_FROZEN_MONTH")
+            expected[month]=dict(zip(families,parts[1:]))
+    if set(expected)!=set(MONTHS):raise ValueError("FROZEN_SOURCE_REGISTRY_MONTH_COVERAGE_MISMATCH")
+    actual={(r["month"],r["family"]):r["actual_sha256"] for r in receipts}
+    if len(actual)!=72:raise ValueError("ACTUAL_SOURCE_FILE_COVERAGE_MISMATCH")
+    for month in MONTHS:
+        for family in families:
+            if actual.get((month,family))!=expected[month][family]:
+                raise ValueError("FROZEN_ORIGINAL_SOURCE_SHA256_MISMATCH:"+month+":"+family)
+    return {"file_digests_verified_against_frozen_registry":72,
+            "registry_path":str(registry),"status":"FROZEN_BYTES_EXACT_MATCH"}
+
 def main():
     a=argparse.ArgumentParser()
     a.add_argument("--root",type=Path,required=True)
     a.add_argument("--output-dir",type=Path,required=True)
+    a.add_argument("--expected-registry",type=Path,
+        default=Path("06_RESEARCH_LAB/hugging_face_task2_audit_20261022/IRONFLOW_FULL18M_SOURCE_SHA256_REGISTRY_20261107.md"))
     args=a.parse_args()
     args.output_dir.mkdir(parents=True,exist_ok=True)
     receipts=source_checks(args.root)
+    digest_gate=verify_frozen_72_source_sha(receipts,args.expected_registry)
     (args.output_dir/"FULL18M_T1_SOURCE_QA.json").write_text(
         json.dumps({"contract":"IRONFLOW_FULL18M_T1_QA_V1",
                     "source":"Ironflow (ironflow.sh), CC BY 4.0",
                     "status":"ACTUAL_FILES_SHA_VERIFIED_NOT_ORIGINAL_PIT",
+                    "frozen_source_sha_gate":digest_gate,
                     "data":receipts},indent=2,allow_nan=False)+"\n")
     df=load(args.root,MONTHS)
     panel=build(df["candles"],df["oi"],df["funding"],df["liquidations"])
@@ -131,6 +157,7 @@ def main():
     report={"contract":"IRONFLOW_FULL18M_CHRONOLOGICAL_REPLAY_V1",
             "source":"Ironflow (ironflow.sh), CC BY 4.0",
             "months":list(MONTHS),
+            "frozen_source_sha_gate":digest_gate,
             "dataset_vintage":"NOV_2026_POST_HOC",
             "initial_train_period":"2025-05..2025-10",
             "source_event_date_range":"2025-05-25..2026-10-31",
