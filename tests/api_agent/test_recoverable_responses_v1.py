@@ -164,19 +164,30 @@ class RecoveryTests(unittest.TestCase):
                              (root / "terminal_evidence.json").read_text())
 
     def test_failed_or_unknown_provider_status_is_not_success(self):
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td) / "attempt"
-            t.start(payload(), "fake", root,
-                    post=lambda *_args, **_kwargs: HttpResult({"id": "resp_abc1234"}))
-            for status in ("failed", "cancelled", "incomplete"):
+        for status in ("failed", "cancelled", "incomplete"):
+            # Distinct provider histories require distinct immutable records.
+            with tempfile.TemporaryDirectory() as td:
+                root = Path(td) / "attempt"
+                t.start(payload(), "fake", root,
+                        post=lambda *_args, **_kwargs: HttpResult({"id": "resp_abc1234"}))
                 with self.assertRaisesRegex(ValueError, "BACKGROUND_TERMINAL_"):
                     t.collect(payload(), "fake", root,
                               get=lambda *_args, **_kwargs: HttpResult({
                                   "id": "resp_abc1234", "status": status}))
-            with self.assertRaisesRegex(ValueError, "UNRECOGNIZED_PROVIDER_STATUS"):
-                t.collect(payload(), "fake", root,
-                          get=lambda *_args, **_kwargs: HttpResult({
-                              "id": "resp_abc1234", "status": "weird"}))
+                self.assertTrue((root / "terminal_evidence.json").is_file())
+                with self.assertRaisesRegex(ValueError, "BACKGROUND_TERMINAL_"):
+                    t.collect(payload(), "fake", root,
+                              get=lambda *_args, **_kwargs: HttpResult({
+                                  "id": "resp_abc1234", "status": status}))
+                with self.assertRaisesRegex(ValueError, "BACKGROUND_TERMINAL_DIAGNOSTIC_DRIFT"):
+                    t.collect(payload(), "fake", root,
+                              get=lambda *_args, **_kwargs: HttpResult({
+                                  "id": "resp_abc1234", "status": "completed" if False else
+                                  ("failed" if status != "failed" else "cancelled")}))
+                with self.assertRaisesRegex(ValueError, "UNRECOGNIZED_PROVIDER_STATUS"):
+                    t.collect(payload(), "fake", root,
+                              get=lambda *_args, **_kwargs: HttpResult({
+                                  "id": "resp_abc1234", "status": "weird"}))
 
 
 if __name__ == "__main__":
