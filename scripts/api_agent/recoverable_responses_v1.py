@@ -138,7 +138,43 @@ def collect(payload: dict, api_key: str, output_dir: Path, *,
     if status not in TERMINAL:
         raise ValueError("BACKGROUND_UNRECOGNIZED_PROVIDER_STATUS")
     if status != "completed":
-        raise ValueError("BACKGROUND_TERMINAL_" + str(status).upper())
+        # Only provider status/reason and integer token counters are
+        # exported. Never publish response content, request data or secrets.
+        details = body.get("incomplete_details") or {}
+        if not isinstance(details, dict):
+            details = {}
+        raw_reason = details.get("reason")
+        reason = (raw_reason if raw_reason in
+                  ("max_output_tokens", "content_filter") else "unknown")
+        usage = body.get("usage")
+        if not isinstance(usage, dict):
+            usage = {}
+        output_details = usage.get("output_tokens_details")
+        if not isinstance(output_details, dict):
+            output_details = {}
+        def bounded_token(value):
+            return value if type(value) is int and 0 <= value <= 10_000_000 else None
+        evidence = {
+            "contract": "SOL_BACKGROUND_TERMINAL_DIAGNOSTIC_V1",
+            "response_id_sha256": hashlib.sha256(response_id.encode()).hexdigest(),
+            "provider_status": status,
+            "incomplete_reason": reason if status == "incomplete" else "not_applicable",
+            "input_tokens": bounded_token(usage.get("input_tokens")),
+            "output_tokens": bounded_token(usage.get("output_tokens")),
+            "reasoning_tokens": bounded_token(output_details.get("reasoning_tokens")),
+            "additional_paid_posts": 0,
+            "request_sha256": source_sha,
+        }
+        terminal_path = output_dir / "terminal_evidence.json"
+        try:
+            _write_once(terminal_path, evidence)
+        except FileExistsError:
+            # A second GET must be idempotent only for identical original
+            # provider evidence. Never overwrite historical diagnostics.
+            if _read(terminal_path) != evidence:
+                raise ValueError("BACKGROUND_TERMINAL_DIAGNOSTIC_DRIFT")
+        raise ValueError("BACKGROUND_TERMINAL_" + str(status).upper()
+                         + "_REASON_" + evidence["incomplete_reason"].upper())
     return body
 
 
