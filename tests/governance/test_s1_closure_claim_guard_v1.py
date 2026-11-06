@@ -128,6 +128,36 @@ class TestS1ClosureClaimGuard(unittest.TestCase):
         self.assertEqual(none["classification"], "NO_ELIGIBLE_CASE_OBSERVED")
         self.assertEqual(none["eligible_denominator"], "UNKNOWN")
 
+    def test_unhashable_case_type_fails_closed_without_traceback(self):
+        # Valid JSON arrays/objects must not crash the advisory claim checker.
+        for malformed in ([], {}, ["original_merge"], {"kind": "original_merge"}, 1, False):
+            with self.subTest(case_type=repr(malformed)):
+                case = complete_shape()
+                case["case_type"] = malformed
+                result = inspect_claim(case)
+                self.assertEqual(result["classification"], "UNSUPPORTED_S1_OWN_CLOSURE_CLAIM")
+                self.assertIn("CASE_TYPE_NOT_ORIGINAL_MERGE", result["reasons"])
+                self.assertFalse(result["candidate_for_native_check"])
+                self.assertFalse(result["s1_own_merged_verified"])
+                self.assertFalse(result["full_autonomy_verified"])
+                self.assertFalse(result["prod_verified"])
+
+    def test_extreme_timezone_conversion_fails_closed_without_traceback(self):
+        # Aware ISO dates near datetime's min/max parse, but UTC offset can overflow.
+        for extreme in ("0001-01-01T00:00:00+14:00",
+                        "9999-12-31T23:59:59-14:00"):
+            for field in ("task_started_at", "task_completed_at"):
+                with self.subTest(value=extreme, field=field):
+                    case = complete_shape()
+                    case[field] = extreme
+                    result = inspect_claim(case)
+                    self.assertIn("NATIVE_MERGE_TIME_NOT_WITHIN_SCHEDULED_RUN",
+                                  result["reasons"])
+                    self.assertFalse(result["candidate_for_native_check"])
+                    self.assertFalse(result["s1_own_merged_verified"])
+                    self.assertFalse(result["full_autonomy_verified"])
+                    self.assertFalse(result["prod_verified"])
+
     def test_no_mutation(self):
         case = complete_shape()
         original = copy.deepcopy(case)
