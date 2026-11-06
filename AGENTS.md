@@ -71,6 +71,29 @@ Before automation, incident, API-agent, Codex, scheduled delivery or remediation
 
 A health report may be RED while its observer workflow correctly succeeds after durable publication. `CODEX_READY` is a bounded task package, not proof that Codex has run, changed code or merged. `LATEST_CODEX_EXECUTION_STATE.json` is observability only and never overrides `LATEST_CODEX_READY_TASKS.json`. Do not work from conversation memory or an issue summary when newer hash-bound operational files exist.
 
+### Shared Sol MAX lane for ANY owner-authorized ChatGPT thread
+
+If the user in any conversation requests `Sol API MAX`, `GPT-6.1 Sol MAX`
+or successor Sol research, read
+`07_PROMPTS_AND_AGENTS/api/SHARED_SOL_MAX_CROSS_THREAD_RUNBOOK_V1.md`
+and `research/api_agent/coordination/SOL_MAX_SHARED_MODEL_POLICY_V1.json`
+before proposing or triggering an API run. The chat thread itself is never
+an API authorization identity: use authenticated native owner GitHub
+comments, the SAME existing Research Lab Sol workflow and original
+owner issues #1156 and #1476, a new frozen public-only packet, its
+exact SHA-256 in the native signed trigger, budget/unknown-liability guards,
+one-use pre-HTTP bot claim, and immutable receipts. No background
+cron/new supervisor/extra secrets/automatic paid retry. A thread without
+GitHub write capability can draft but must NOT claim dispatch.
+
+Prefer the newest OFFICIALLY VERIFIED, PRICED and account-accessible Sol
+version, currently 6.1 Sol, with future 6.2 selected only after official
+documentation, gateway price, model-cap, source-reviewed CI and
+non-billable project GET evidence. If not verified, use 6.1 Sol.
+**Astra is MANUAL OWNER REQUEST AND APPROVAL ONLY, for all model
+routers/agent roles. NEVER select or fall back to Astra automatically.**
+If no safe Sol route exists, fail closed, never switch to Astra.
+
 ### 0.1 Current production data authority - binding
 
 Canonical owner:

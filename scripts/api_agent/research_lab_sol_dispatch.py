@@ -18,100 +18,186 @@ LEGACY_MAX_INCOMPLETE = "S1-ELITE-RESILIENCE-SOL61-MAX-20261106"
 PUBLIC_CONSENT_COMMENT = 6683279250
 MAX_CLAIM_PREFIX = "RL_SOL_MAX_PRE_HTTP_CLAIM_V1"
 
-def effective_registry_for_mission(registry: dict, packet: dict, mission_id: str) -> dict:
-    """Allow MAX only for this one exact owner-mandated, advisory research case."""
+def effective_registry_for_mission(
+    registry: dict, packet: dict, mission_id: str, *,
+    model_available=None,
+) -> dict:
+    """Any new owner-bound public MAX mission, never an arbitrary owner comment.
+
+    Model choice is pinned to the verified Sol-only source policy and current
+    gateway price table. A newer Sol needs project GET proof to be promoted.
+    """
+    from scripts.api_agent import sol_max_shared_policy_v1 as sol_policy
+    from scripts.api_agent.api_gateway import PRICES_PER_MILLION
     output = json.loads(json.dumps(registry))
     task = output.get("tasks", {}).get(TASK_NAME)
-    if not isinstance(task, dict) or (task.get("model"), task.get("reasoning_effort")) != ("gpt-6.1-sol", "high"):
+    if (not isinstance(task, dict)
+            or (task.get("model"), task.get("reasoning_effort")) != ("gpt-6.1-sol", "high")):
         raise ValueError("RESEARCH_LAB_BASE_TASK_POLICY_CHANGED")
     effort = packet.get("reasoning_effort", "high")
     if effort == "max":
-        if (mission_id != MAX_ONESHOT_MISSION or packet.get("mission_id") != mission_id
+        if (not isinstance(mission_id, str)
+                or re.fullmatch(r"[A-Z][A-Z0-9-]{15,109}", mission_id) is None
+                or packet.get("mission_id") != mission_id
                 or packet.get("original_owner_issue") != 1156
                 or packet.get("max_runs_for_this_release") != 1
-                or packet.get("max_model_output_tokens_per_new_attempt") != 48000
                 or packet.get("review_only_no_code_write") is not True
                 or not zero_authority(packet.get("authority"))):
             raise ValueError("MAX_ONE_SHOT_MANDATE_NOT_BOUND")
         if (packet.get("public_storage_consent_30_days") is not True
-                or packet.get("public_storage_consent_comment_id") != PUBLIC_CONSENT_COMMENT
                 or packet.get("public_source_only") is not True
+                or type(packet.get("public_storage_consent_comment_id")) is not int
+                or packet["public_storage_consent_comment_id"] <= 0
                 or packet.get("one_shot_owner_mandate") !=
                    ("https://github.com/Donh91/Investering-Framework-Archive-v1/"
-                    "issues/1156#issuecomment-" + str(PUBLIC_CONSENT_COMMENT))):
+                    "issues/1156#issuecomment-"
+                    + str(packet["public_storage_consent_comment_id"]))):
             raise ValueError("MAX_PUBLIC_BACKGROUND_STORAGE_CONSENT_REQUIRED")
+        requested = packet.get("max_model_output_tokens_per_new_attempt")
+        if (type(requested) is not int or not 2048 <= requested <=
+                sol_policy.MAX_OUTPUT):
+            raise ValueError("MAX_OUTPUT_LIMIT_INVALID_OR_MODEL_CAP_EXCEEDED")
+        policy = load_json(Path(__file__).resolve().parents[2] /
+                           sol_policy.POLICY_PATH)
+        selected = sol_policy.choose_model(
+            policy, PRICES_PER_MILLION, available=model_available)
+        if requested > selected["max_output_tokens"]:
+            raise ValueError("MAX_OUTPUT_LIMIT_INVALID_OR_MODEL_CAP_EXCEEDED")
+        task["model"] = selected["id"]
         task["reasoning_effort"] = "max"
-        task["max_output_tokens"] = 48000
+        task["max_output_tokens"] = requested
         task["max_attempts"] = 1
         task["recoverable_background"] = True
         task["public_background_storage_authorized"] = True
+        instruction = task.get("governed_instruction")
+        if isinstance(instruction, str):
+            task["governed_instruction"] = instruction.replace(
+                "MODEL_USED=gpt-6.1-sol", "MODEL_USED=" + selected["id"])
     elif effort != "high":
         raise ValueError("RESEARCH_EFFORT_NOT_ADMITTED")
     return output
 
-def reserve_native_max_claim(root: Path, mission_id: str, issue_number: int, comment_id: str) -> dict:
-    """Require genuine owner event and a single bot claim before any paid POST."""
+def reserve_native_max_claim(root: Path, mission_id: str, issue_number: int,
+                             comment_id: str) -> dict:
+    """Any owner's one frozen MAX mission, same original bot claim lane.
+
+    Conversation identity is irrelevant: only authenticated GitHub OWNER
+    events, source-frozen packets and independent native pre-HTTP claims count.
+    """
     import os
-    if mission_id != MAX_ONESHOT_MISSION:
+    from scripts.api_agent import sol_max_shared_policy_v1 as sol_policy
+    from scripts.api_agent.api_gateway import PRICES_PER_MILLION
+    queue = load_json(root / QUEUE_PATH)
+    row = mission_row(queue, mission_id)
+    packet_path = root / str(row.get("mission_packet") or "")
+    packet = load_json(packet_path)
+    if packet.get("reasoning_effort", "high") != "max":
         return {"state": "NORMAL_HIGH_NO_EXTRA_CLAIM"}
-    if (issue_number != 1476 or os.environ.get("GITHUB_REPOSITORY") != "Donh91/Investering-Framework-Archive-v1"
+    if (issue_number != 1476
+            or os.environ.get("GITHUB_REPOSITORY") !=
+               "Donh91/Investering-Framework-Archive-v1"
             or os.environ.get("GITHUB_EVENT_NAME") != "issue_comment"
             or os.environ.get("GITHUB_ACTOR") != "Donh91"
             or os.environ.get("GITHUB_RUN_ATTEMPT") != "1"
             or not os.environ.get("GH_TOKEN")):
         raise ValueError("MAX_NATIVE_OWNER_EVENT_INVALID")
-    import subprocess
     def gh(*args):
         return subprocess.check_output(["gh", *args], text=True, timeout=90)
     head = current_head(root)
-    native_head = json.loads(gh("api", "repos/Donh91/Investering-Framework-Archive-v1/git/ref/heads/main")).get("object", {}).get("sha")
+    native_head = json.loads(gh(
+        "api", "repos/Donh91/Investering-Framework-Archive-v1/"
+        "git/ref/heads/main")).get("object", {}).get("sha")
     if head != native_head:
         raise ValueError("MAX_NATIVE_MAIN_HEAD_DRIFT")
-    event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+    event = load_json(Path(os.environ["GITHUB_EVENT_PATH"]))
     comment = event.get("comment") or {}
     if (str(comment.get("id")) != str(comment_id)
             or (comment.get("user") or {}).get("login") != "Donh91"
             or comment.get("author_association") != "OWNER"
             or (event.get("issue") or {}).get("number") != 1476):
         raise ValueError("MAX_NATIVE_OWNER_COMMENT_INVALID")
-    # Verify the real distinct OWNER comment, not a writable packet's
-    # storage-consent boolean, BEFORE an irreversible paid claim.
-    queue = load_json(root / QUEUE_PATH)
-    row = mission_row(queue, mission_id)
-    packet = load_json(root / str(row.get("mission_packet") or ""))
-    effective_registry_for_mission(
+    # Recompute current *actual* model/source/price before irrevocable claim.
+    effective_path = root / "runtime/research-lab-sol/effective_registry.json"
+    context_path = root / "runtime/research-lab-sol/context.json"
+    if not effective_path.is_file() or not context_path.is_file():
+        raise ValueError("MAX_FROZEN_SOURCE_OR_MODEL_ABSENT")
+    frozen = load_json(effective_path)["tasks"][TASK_NAME]
+    effective = effective_registry_for_mission(
         load_json(root / "research/api_agent/API_TASK_REGISTRY_v1.json"),
-        packet, mission_id)
+        packet, mission_id, model_available=lambda name: name == frozen["model"])
+    if effective["tasks"][TASK_NAME] != frozen:
+        raise ValueError("MAX_FROZEN_MODEL_DRIFT")
+    policy = load_json(root / sol_policy.POLICY_PATH)
+    models = sol_policy.validated_models(policy, PRICES_PER_MILLION)
+    selected = next((x for x in models if x["id"] == frozen["model"]), None)
+    if selected is None:
+        raise ValueError("MAX_MODEL_NOT_SOURCE_VERIFIED")
+    quoted = sol_policy.quoted_upper_usd(
+        context_path.stat().st_size, frozen["max_output_tokens"], selected)
+    # The original account-wide and lane admission already reserved USD3.
+    if quoted > 3.0:
+        raise ValueError("MAX_PRICE_EXCEEDS_NATIVE_PAID_CLAIM")
+    consent_id = packet["public_storage_consent_comment_id"]
     native_consent = json.loads(gh(
-        "api", "repos/Donh91/Investering-Framework-Archive-v1/"
-        "issues/comments/" + str(PUBLIC_CONSENT_COMMENT)))
+        "api", "repos/Donh91/Investering-Framework-Archive-v1/issues/comments/"
+        + str(consent_id)))
     consent_body = native_consent.get("body") or ""
+    if mission_id == MAX_ONESHOT_MISSION:
+        # Historical one-shot B, already paid and never eligible to replay.
+        marker = "<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106B -->"
+        allowed = (consent_id == PUBLIC_CONSENT_COMMENT and
+                   isinstance(consent_body, str) and
+                   consent_body.startswith(marker) and
+                   mission_id in consent_body and "30 DAYS" in consent_body)
+    else:
+        # Existing signed public-only 30-day consent is reusable, but a NEW
+        # owner event on original #1476 must also sign THIS exact packet/hash.
+        allowed = (consent_id == 6682722905 and
+                   isinstance(consent_body, str) and
+                   consent_body.startswith(
+                       "<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106 -->")
+                   and "30 DAYS" in consent_body)
+        packet_digest = sha256_bytes(packet_path.read_bytes())
+        marker = ("<!-- SOL_MAX_OWNER_RELEASE_V1 mission=" + mission_id
+                  + " packet_sha256=" + packet_digest + " -->")
+        trigger_body = comment.get("body") or ""
+        if (not isinstance(trigger_body, str)
+                or marker not in trigger_body
+                or "PUBLIC SOURCE ONLY" not in trigger_body
+                or "30 DAYS" not in trigger_body
+                or ("max_output_tokens="
+                    + str(frozen["max_output_tokens"])) not in trigger_body):
+            raise ValueError("MAX_NATIVE_TRIGGER_PACKET_HASH_NOT_OWNER_SIGNED")
     if ((native_consent.get("user") or {}).get("login") != "Donh91"
             or native_consent.get("issue_url") !=
                "https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/issues/1156"
-            or not isinstance(consent_body, str)
-            or not consent_body.startswith(
-                "<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106B -->")
-            or mission_id not in consent_body
-            or "30 DAYS" not in consent_body):
+            or not allowed):
         raise ValueError("MAX_NATIVE_PUBLIC_30D_OWNER_CONSENT_UNVERIFIED")
     def claims():
         pages = json.loads(gh("api", "--paginate", "--slurp",
-          "repos/Donh91/Investering-Framework-Archive-v1/issues/1476/comments?per_page=100"))
-        if not isinstance(pages, list) or any(not isinstance(page, list) for page in pages):
+            "repos/Donh91/Investering-Framework-Archive-v1/"
+            "issues/1476/comments?per_page=100"))
+        if not isinstance(pages, list) or any(
+                not isinstance(page, list) for page in pages):
             raise ValueError("MAX_CLAIM_CENSUS_UNTRUSTED")
-        return [row for page in pages for row in page if isinstance(row,dict)
-                and str(row.get("body") or "").startswith(MAX_CLAIM_PREFIX + " mission=" + mission_id + " ")]
+        return [item for page in pages for item in page
+                if isinstance(item, dict)
+                and str(item.get("body") or "").startswith(
+                    MAX_CLAIM_PREFIX + " mission=" + mission_id + " ")]
     if claims():
         raise ValueError("MAX_CLAIM_ALREADY_EXISTS_NO_REPOST")
-    body = f"{MAX_CLAIM_PREFIX} mission={mission_id} head={head} trigger={comment_id} max_usd=3.00"
-    gh("issue","comment","1476","--repo","Donh91/Investering-Framework-Archive-v1","--body",body)
+    body = (f"{MAX_CLAIM_PREFIX} mission={mission_id} head={head} "
+            f"trigger={comment_id} max_usd=3.00")
+    gh("issue", "comment", "1476", "--repo",
+       "Donh91/Investering-Framework-Archive-v1", "--body", body)
     found = [item for item in claims() if item.get("body") == body
              and (item.get("user") or {}).get("login") == "github-actions[bot]"]
     if len(found) != 1:
         raise ValueError("MAX_CLAIM_NATIVE_READBACK_MISSING_NO_POST")
-    return {"status":"NATIVE_PRE_HTTP_CLAIM_VERIFIED","claim_id":found[0].get("id"),
-            "mission":mission_id,"head":head,"max_usd":3.0}
+    return {"status": "NATIVE_PRE_HTTP_CLAIM_VERIFIED",
+            "claim_id": found[0].get("id"), "mission": mission_id,
+            "head": head, "max_usd": 3.0, "model": frozen["model"],
+            "quoted_upper_usd": quoted}
 
 MODEL = "gpt-6.1-sol"
 MAX_CONTEXT_BYTES = 480_000
@@ -247,6 +333,16 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
         raise ValueError("mission_packet_authority_not_zero")
 
     evidence = [clipped_file(repo_root, rel) for rel in row.get("context_paths", [])]
+    from scripts.api_agent import sol_max_shared_policy_v1 as sol_policy
+    from scripts.api_agent.api_gateway import PRICES_PER_MILLION
+    import os
+    # Only approved newer Sol models receive a non-billable availability GET.
+    effective = effective_registry_for_mission(
+        load_json(repo_root / "research/api_agent/API_TASK_REGISTRY_v1.json"),
+        packet, mission_id,
+        model_available=lambda model: sol_policy.project_model_available(
+            model, os.environ.get("OPENAI_API_KEY", "")))
+    selected_model = effective["tasks"][TASK_NAME]["model"]
     head = current_head(repo_root)
     context = {
         "contract": "RESEARCH_LAB_SOL_CONTEXT_v1",
@@ -254,7 +350,7 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
         "private_data_included": False,
         "public_source_only": True,
         "task": TASK_NAME,
-        "model": MODEL,
+        "model": selected_model,
         "mission_id": mission_id,
         "trigger": {"issue_number": issue_number, "comment_id": comment_id},
         "current_main_sha": head,
@@ -280,6 +376,13 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
     payload = canonical_bytes(context)
     if len(payload) > MAX_CONTEXT_BYTES:
         raise ValueError(f"context_too_large:{len(payload)}>{MAX_CONTEXT_BYTES}")
+    if packet.get("reasoning_effort") == "max":
+        selected = next(row for row in sol_policy.validated_models(
+            load_json(repo_root / sol_policy.POLICY_PATH),
+            PRICES_PER_MILLION) if row["id"] == selected_model)
+        sol_policy.quoted_upper_usd(
+            len(payload), effective["tasks"][TASK_NAME]["max_output_tokens"],
+            selected)
 
     required_outputs = packet.get("required_outputs", [])
     prompt = "\n".join([
@@ -290,7 +393,7 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
         f"Falsifier: {packet.get('falsifier')}",
         f"Kill condition: {packet.get('kill_condition')}",
         "",
-        "Perform the independent GPT-6.1 Sol scientific/economic arm only.",
+        f"Perform the independent {selected_model} scientific/economic arm only.",
         "Try to falsify the hypothesis before preserving it.",
         "Use only the supplied point-in-time evidence package. Do not infer missing rows.",
         "Distinguish source/provenance defects from signal/economic defects.",
@@ -301,10 +404,10 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
         "",
         "Encode the result in the gateway schema.",
         "summary must start exactly with one of:",
-        "VERDICT=VERIFIED; MODEL_USED=gpt-6.1-sol; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
-        "VERDICT=WEAKENED; MODEL_USED=gpt-6.1-sol; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
-        "VERDICT=REJECTED; MODEL_USED=gpt-6.1-sol; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
-        "VERDICT=INSUFFICIENT_EVIDENCE; MODEL_USED=gpt-6.1-sol; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
+        f"VERDICT=VERIFIED; MODEL_USED={selected_model}; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
+        f"VERDICT=WEAKENED; MODEL_USED={selected_model}; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
+        f"VERDICT=REJECTED; MODEL_USED={selected_model}; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
+        f"VERDICT=INSUFFICIENT_EVIDENCE; MODEL_USED={selected_model}; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
         "Use evidence_for for claims surviving attack, evidence_against for falsification/adverse evidence, uncertainties for UNKNOWNs, hypotheses only for bounded next research tests.",
         "forecast_candidates must be [].",
     ])
@@ -331,9 +434,9 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
             "canonical_promotion": False,
         },
     }
-    effective = effective_registry_for_mission(load_json(repo_root / "research/api_agent/API_TASK_REGISTRY_v1.json"), packet, mission_id)
     (output_dir / "effective_registry.json").write_text(json.dumps(effective, sort_keys=True, indent=2) + "\n")
     manifest["reasoning_effort"] = effective["tasks"][TASK_NAME]["reasoning_effort"]
+    manifest["selected_model"] = selected_model
     (output_dir / "context_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     return manifest
 
@@ -346,8 +449,13 @@ def validate(output_dir: Path) -> dict[str, Any]:
     if receipt.get("task") != TASK_NAME:
         raise ValueError("research_lab_sol_task_binding_invalid")
     context = load_json(output_dir / "context.json")
+    frozen = load_json(output_dir / "effective_registry.json")["tasks"][TASK_NAME]
     expected_effort = context.get("mission_packet", {}).get("reasoning_effort", "high")
-    if expected_effort not in ("high","max") or receipt.get("model") != MODEL or receipt.get("reasoning_effort") != expected_effort:
+    expected_model = frozen["model"]
+    if (expected_effort not in ("high", "max")
+            or context.get("model") != expected_model
+            or receipt.get("model") != expected_model
+            or receipt.get("reasoning_effort") != expected_effort):
         raise ValueError("research_lab_sol_model_binding_invalid")
     cost = receipt.get("estimated_cost_usd")
     if isinstance(cost, bool) or not isinstance(cost, (int, float)) or not 0 <= float(cost) <= 3.0:
@@ -356,7 +464,7 @@ def validate(output_dir: Path) -> dict[str, Any]:
         raise ValueError("research_lab_sol_forecast_candidates_forbidden")
     summary = str(output.get("summary") or "")
     valid_prefixes = tuple(
-        f"VERDICT={verdict}; MODEL_USED=gpt-6.1-sol; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;"
+        f"VERDICT={verdict}; MODEL_USED={expected_model}; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;"
         for verdict in ("VERIFIED", "WEAKENED", "REJECTED", "INSUFFICIENT_EVIDENCE")
     )
     if not summary.startswith(valid_prefixes):
@@ -485,9 +593,17 @@ def main() -> None:
                 f"/issue-{args.issue_number}/comment-{args.comment_id}")
         # Own the workflow step outputs; do not accidentally append duplicate
         # runner output names across two contradictory admissions.
+        max_requested = False
+        if admitted:
+            frozen_queue = load_json(args.repo_root / QUEUE_PATH)
+            frozen_row = mission_row(frozen_queue, args.mission_id)
+            frozen_packet = load_json(
+                args.repo_root / str(frozen_row.get("mission_packet") or ""))
+            max_requested = frozen_packet.get("reasoning_effort") == "max"
         with args.github_output.open("a", encoding="utf-8") as out:
             out.write(f"run_analysis={str(admitted).lower()}\n")
             out.write(f"dest={dest}\n")
+            out.write(f"max_requested={str(max_requested).lower()}\n")
         print(json.dumps({"admitted": admitted, "reason": reason,
                           "mission": args.mission_id}, sort_keys=True))
     elif args.cmd == "build":
