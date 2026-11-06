@@ -45,6 +45,9 @@ def walkforward(anchors,months=MONTHS,min_train_months=6):
             per_market[market]={
                 "n":int(len(yy)),
                 "actual_next_24h_2pct_drawdown_rate":round(float(yy.mean()),6),
+                "mean_price_only_predicted_prob":round(float(pb[mask].mean()),6),
+                "mean_derivatives_predicted_prob":round(float(pdv[mask].mean()),6),
+                "training_base_rate":round(float(train.drawdown_2pct_next_day.mean()),6),
                 "price_only_brier":bm["brier"],
                 "with_derivatives_brier":dx["brier"],
                 "price_minus_derivatives_brier":round(bm["brier"]-dx["brier"],6),
