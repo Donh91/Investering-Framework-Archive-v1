@@ -83,6 +83,18 @@ class SolPaidAdmissionTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertEqual(reason,"LEGACY_MAX_PAID_POST_OUTCOME_UNKNOWN_NO_REPOST")
 
+    def test_previously_terminal_16k_reasoning_only_max_cannot_repost(self):
+        old = "S1-ELITE-RESILIENCE-SOL61-MAX-20261106"
+        self.queue["active_mission"] = old
+        self.queue["missions"] = [{
+            "mission_id":old,"state":"ACTIVE_RELEASED",
+            "new_paid_attempts_authorized":True,
+        }]
+        self.persist()
+        ok, reason=paid_attempt_admission(self.root,old,1476)
+        self.assertFalse(ok)
+        self.assertEqual(reason,"LEGACY_MAX_TERMINAL_INCOMPLETE_NO_REPOST")
+
     def test_explicit_no_new_paid_attempts_flag(self):
         self.queue["missions"][0]["new_paid_attempts_authorized"] = False
         self.persist()
