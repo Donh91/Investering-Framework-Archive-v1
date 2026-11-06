@@ -113,6 +113,20 @@ def main():
     df=load(args.root,MONTHS)
     panel=build(df["candles"],df["oi"],df["funding"],df["liquidations"])
     anchors=day_anchors(panel)
+    # February's missing day anchors must be explained from ORIGINAL source
+    # field missingness, not silently dropped as if the market were quiet.
+    feb=panel[(panel.timestamp>=pd.Timestamp("2026-02-10T00:00:00Z"))&
+              (panel.timestamp<pd.Timestamp("2026-02-15T00:00:00Z"))].copy()
+    feb["day_utc"]=feb.timestamp.dt.strftime("%Y-%m-%d")
+    source_gap_census=[]
+    for (market,day),part in feb.groupby(["market","day_utc"]):
+        source_gap_census.append({
+            "market":market,"day_utc":day,"hours":int(len(part)),
+            "missing_open_interest_usd":int(part.open_interest_usd.isna().sum()),
+            "missing_funding_rate":int(part.funding_rate.isna().sum()),
+            "missing_prior_price_return":int(part.price_change_1h.isna().sum()),
+            "missing_next_24h_drawdown_label":int(part.drawdown_next_24h.isna().sum()),
+            "n_completed_23_utc_anchors":int((part.timestamp.dt.hour==23).sum())})
     results=walkforward(anchors)
     report={"contract":"IRONFLOW_FULL18M_CHRONOLOGICAL_REPLAY_V1",
             "source":"Ironflow (ironflow.sh), CC BY 4.0",
@@ -132,6 +146,7 @@ def main():
             "hourly_clock":"completely_closed_hour_plus_1h",
             "outcome":"next_24h_any_downside_2pct",
             "selection_validity":"UNSEALED_HISTORICAL_RESEARCH_ONLY",
+            "february_2026_original_source_hour_census":source_gap_census,
             "february_2026_eligible_utc_dates":{
                 market:anchors[(anchors.month=="2026-02")&(anchors.market==market)].timestamp.dt.strftime("%Y-%m-%d").tolist()
                 for market in ("BTC-PERP","ETH-PERP","HYPE-PERP")
