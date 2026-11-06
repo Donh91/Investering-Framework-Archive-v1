@@ -288,3 +288,38 @@ test('BTC and ETH daily ranges cannot overlay native USDT without matching sourc
   assert.equal(usdt.daily_ranges.length,7);
  }
 });
+
+
+test('two source-issued daily contracts with conflicting bounds fail closed on BOTH graph layers',()=>{
+ const x=bindSameQuotedNativeSource(fixture()),m=x.public_live_precision;
+ const mk=(asset)=>asset==='BTC'?{low:81000,high:84000,close:82000}:{low:2300,high:2500,close:2400};
+ m.daily_price_path.BTC={status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({
+   day:i+1,low:81000,high:84000,expected_close:82000+i*100
+ }))};
+ m.daily_price_path.ETH={status:'PUBLISHED',points:Array.from({length:7},(_,i)=>({
+   day:i+1,low:2300,high:2500,expected_close:2400+i*10
+ }))};
+ m.daily_range_plan={contract:'CN_FROZEN_DAILY_RANGE_PLAN_v1',forecast_week:'2026-W43',
+   ...Object.fromEntries(['BTC','ETH'].map(asset=>[asset,{status:'PUBLISHED',reason:'Original bands',
+     points:Array.from({length:7},(_,i)=>({
+       day:i+1,low:mk(asset).low,high:mk(asset).high,
+       why:'Prospective source-backed market structure',
+       invalidate_if:'Source support for range is invalidated'
+     }))}]))};
+ const when={now_utc:'2026-10-19T08:20:00Z'};
+ for(const asset of ['BTC','ETH']){
+  const good=readOfficialGraphB(x,asset,when);
+  assert.equal(good.forecast_status,'SOURCE_ISSUED');
+  assert.equal(good.daily_range_status,'SOURCE_ISSUED');
+  m.daily_range_plan[asset].points[3].high+=1;
+  const bad=readOfficialGraphB(x,asset,when);
+  assert.equal(bad.forecast_status,'PUBLISHED_INVALID_FAIL_CLOSED');
+  assert.equal(bad.daily_range_status,'PUBLISHED_INVALID_FAIL_CLOSED');
+  assert.deepEqual(bad.forecast,[]);
+  assert.deepEqual(bad.daily_ranges,[]);
+  const other=asset==='BTC'?'ETH':'BTC';
+  assert.equal(readOfficialGraphB(x,other,when).forecast.length,7);
+  m.daily_range_plan[asset].points[3].high-=1;
+  assert.equal(readOfficialGraphB(x,asset,when).forecast.length,7);
+ }
+});

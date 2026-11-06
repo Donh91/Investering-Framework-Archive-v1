@@ -138,6 +138,24 @@ export function readOfficialGraphB(snapshot,asset,{now_utc,publication_lineage=n
    dailyRangeStatus='SOURCE_ISSUED_QUOTE_INCOMPARABLE';
   }else dailyRangeStatus='PUBLISHED_INVALID_FAIL_CLOSED';
  }
+ // Even a source-issued central daily path cannot bypass the original
+ // companion range contract when BOTH claim to be published. A mismatch
+ // invalidates both plotted presentations, not the immutable source bytes.
+ const bothDailyPublished=freeze?.contract==='CN_FROZEN_DAILY_PRICE_PATH_v1'&&
+  dr?.contract==='CN_FROZEN_DAILY_RANGE_PLAN_v1'&&
+  freeze.forecast_week===m.forecast_week&&dr.forecast_week===m.forecast_week&&
+  block?.status==='PUBLISHED'&&drAsset?.status==='PUBLISHED';
+ if(bothDailyPublished){
+  const left=block.points,right=drAsset.points;
+  const same=Array.isArray(left)&&Array.isArray(right)&&left.length===7&&right.length===7&&
+   left.every((p,i)=>p?.day===i+1&&right[i]?.day===i+1&&
+     p.low===right[i].low&&p.high===right[i].high);
+  if(!same){
+   forecast=[];dailyRanges=[];
+   forecastStatus='PUBLISHED_INVALID_FAIL_CLOSED';
+   dailyRangeStatus='PUBLISHED_INVALID_FAIL_CLOSED';
+  }
+ }
  // The global cutoff is provenance, NOT the last price for this asset.
  // BTC may have missing rows while ETH continues to publish fresh closes.
  const lastAssetClose=points.at(-1)?.observed_at_utc||null;
