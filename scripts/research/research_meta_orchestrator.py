@@ -201,6 +201,20 @@ def specialist_intake_handoff(root:Path=ROOT)->dict:
         if source.get("contract")!="RESEARCH_LAB_EXTERNAL_SPECIALIST_DISSECTION_QUEUE_V1":
             return {**result,"status":"INVALID_SOURCE_QUEUE_CONTRACT"}
         lanes={x["id"] for x in source.get("lanes",[]) if isinstance(x,dict) and isinstance(x.get("id"),str)}
+        transversal={x["id"] for x in source.get("transversal",[]) if isinstance(x,dict) and isinstance(x.get("id"),str)}
+        # Exactly paired existing cross-domain method references, NOT general
+        # owner/path wildcard admission or any code/execution authorization.
+        known={
+            "HEYASKR_EXTERNAL_METHOD_REFERENCE_20261028": (
+                "X0_DISAGREEMENT_ALPHA_V1",
+                "04_RESEARCH_LAB/external_specialist_dissection/2026-10-28__EQM_ASKR_SOURCE_REVIEW_ONLY_v1.md"),
+            "NEWS_OSS_EVENT_FAMILY_CHALLENGER_20261104": (
+                "NEWS_INTELLIGENCE_EXISTING_OWNER_1888",
+                "04_RESEARCH_LAB/external_specialist_dissection/2026-11-04__NEWS_OSS_PRIMITIVE_CHALLENGER_v1.md"),
+            "FRAMEWORK_WIDE_OPEN_SOURCE_REVERSE_ENGINEERING_20261105": (
+                "CROSS_FRAMEWORK_METHOD_REUSE_EXISTING_RESEARCH_LAB",
+                "06_RESEARCH_LAB/m7_open_source_validation_harvest/2026-11-05__FRAMEWORK_WIDE_OSS_REVERSE_ENGINEERING_AND_ADAPTATION_v1.md"),
+        }
         raw=source.get("method_intakes",[])
         if not isinstance(raw,list) or len(raw)>MAX_METHOD_INTAKES:
             return {**result,"status":"INVALID_INTAKE_COUNT_OR_TYPE"}
@@ -209,16 +223,25 @@ def specialist_intake_handoff(root:Path=ROOT)->dict:
             if not isinstance(item,dict):
                 return {**result,"status":"INVALID_INTAKE_ENTRY","entries":[]}
             iid=item.get("id"); owner=item.get("owner_lane"); note=item.get("evidence_note")
+            exact=known.get(iid) if isinstance(iid,str) else None
+            if exact is not None:
+                owner_and_note_valid=(owner,note)==exact
+                if iid=="HEYASKR_EXTERNAL_METHOD_REFERENCE_20261028":
+                    owner_and_note_valid=owner_and_note_valid and owner in transversal
+                note_directory=(root/Path(exact[1]).parent).resolve()
+            else:
+                owner_and_note_valid=(owner in lanes|{"TASK2_R1_EXISTING_SOURCE_ADMISSION"} and
+                                      isinstance(note,str) and note.startswith(SPECIALIST_NOTES_DIR))
+                note_directory=allowed_directory.resolve()
             if (not isinstance(iid,str) or not INTAKE_ID_RE.fullmatch(iid) or iid in seen or
-                    not isinstance(owner,str) or
-                    owner not in lanes|{"TASK2_R1_EXISTING_SOURCE_ADMISSION"} or
+                    not isinstance(owner,str) or not owner_and_note_valid or
                     item.get("execution_permission") is not False or
-                    not isinstance(note,str) or not note.startswith(SPECIALIST_NOTES_DIR) or
-                    not note.endswith(".md") or ".." in Path(note).parts):
+                    not isinstance(note,str) or not note.endswith(".md") or
+                    ".." in Path(note).parts):
                 return {**result,"status":"INVALID_INTAKE_AUTHORITY_OR_PATH","entries":[]}
             seen.add(iid)
             p=(root/note).resolve()
-            if not p.is_relative_to(allowed_directory.resolve()) or not p.is_relative_to(root):
+            if not p.is_relative_to(note_directory) or not p.is_relative_to(root):
                 return {**result,"status":"PATH_OUTSIDE_SPECIALIST_PUBLIC_NOTES","entries":[]}
             # One atomic local file read: no has-file/read-hash race.
             try:
