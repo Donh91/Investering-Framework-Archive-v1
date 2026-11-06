@@ -16,6 +16,8 @@ on:
       - 'scripts/research/ironflow_oot_ablation_v1.py'
       - 'scripts/research/ironflow_full18m_walkforward_v1.py'
       - 'tests/research/test_ironflow_full18m_walkforward_v1.py'
+      - 'scripts/research/ironflow_18m_wallet_ecology_v1.py'
+      - 'tests/research/test_ironflow_18m_wallet_ecology_v1.py'
       - '.github/workflows/ironflow-task2-source-pilot.yml'
       - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/SOURCE_MANIFEST_IRONFLOW_20261106.json'
   workflow_dispatch:
@@ -173,6 +175,9 @@ jobs:
       - name: Actual 72-file T1 and expanding 18-month scientific replay
         run: |
           python scripts/research/ironflow_full18m_walkforward_v1.py --root /tmp/ironflow18 --output-dir /tmp/ironflow18-results
+      - name: 18-month wallet liquidation ecology, no wallet addresses exported
+        run: |
+          python scripts/research/ironflow_18m_wallet_ecology_v1.py --root /tmp/ironflow18 --output /tmp/ironflow18-results/FULL18M_WALLET_ECOLOGY.json
       - name: Print compact scientific admission report
         if: always()
         run: |
