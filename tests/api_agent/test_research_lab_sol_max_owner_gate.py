@@ -3,6 +3,8 @@ import unittest
 import json
 import os
 import tempfile
+import subprocess
+import sys
 from unittest.mock import patch
 from pathlib import Path
 from scripts.api_agent import research_lab_sol_dispatch as native
@@ -45,6 +47,28 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
                     self.base, dict(self.packet,
                                     max_model_output_tokens_per_new_attempt=out),
                     MAX_ONESHOT_MISSION)
+    def test_native_cli_direct_execution_imports_existing_repo_packages(self):
+        """Native run #42218784447 failed before HTTP when direct CLI could not import scripts.
+
+        Isolated subprocess removes Python's implicit current working directory.
+        No source, budget, owner claim, GitHub or provider call occurs.
+        """
+        root = Path(__file__).resolve().parents[2]
+        script = root / "scripts/api_agent/research_lab_sol_dispatch.py"
+        code = (
+            "import runpy,sys;"
+            "module=runpy.run_path(sys.argv[1],run_name='cli_import_probe');"
+            "from scripts.api_agent import sol_max_shared_policy_v1;"
+            "assert module['TASK_NAME']=='RESEARCH_LAB_SOL_ANALYSIS'"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            proc = subprocess.run(
+                [sys.executable, "-I", "-c", code, str(script)],
+                cwd=tmp, capture_output=True, text=True, timeout=20,
+                check=False,
+            )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+
     def test_new_single_active_queue_and_old_unknown_quarantine(self):
         root=Path(__file__).resolve().parents[2]
         queue=json.loads((root/"research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json").read_text())
