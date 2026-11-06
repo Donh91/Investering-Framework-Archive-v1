@@ -77,69 +77,118 @@ def effective_registry_for_mission(
         raise ValueError("RESEARCH_EFFORT_NOT_ADMITTED")
     return output
 
-def reserve_native_max_claim(root: Path, mission_id: str, issue_number: int, comment_id: str) -> dict:
-    """Require genuine owner event and a single bot claim before any paid POST."""
+def reserve_native_max_claim(root: Path, mission_id: str, issue_number: int,
+                             comment_id: str) -> dict:
+    """Any owner's one frozen MAX mission, same original bot claim lane.
+
+    Conversation identity is irrelevant: only authenticated GitHub OWNER
+    events, source-frozen packets and independent native pre-HTTP claims count.
+    """
     import os
-    if mission_id != MAX_ONESHOT_MISSION:
+    from scripts.api_agent import sol_max_shared_policy_v1 as sol_policy
+    from scripts.api_agent.api_gateway import PRICES_PER_MILLION
+    queue = load_json(root / QUEUE_PATH)
+    row = mission_row(queue, mission_id)
+    packet_path = root / str(row.get("mission_packet") or "")
+    packet = load_json(packet_path)
+    if packet.get("reasoning_effort", "high") != "max":
         return {"state": "NORMAL_HIGH_NO_EXTRA_CLAIM"}
-    if (issue_number != 1476 or os.environ.get("GITHUB_REPOSITORY") != "Donh91/Investering-Framework-Archive-v1"
+    if (issue_number != 1476
+            or os.environ.get("GITHUB_REPOSITORY") !=
+               "Donh91/Investering-Framework-Archive-v1"
             or os.environ.get("GITHUB_EVENT_NAME") != "issue_comment"
             or os.environ.get("GITHUB_ACTOR") != "Donh91"
             or os.environ.get("GITHUB_RUN_ATTEMPT") != "1"
             or not os.environ.get("GH_TOKEN")):
         raise ValueError("MAX_NATIVE_OWNER_EVENT_INVALID")
-    import subprocess
     def gh(*args):
         return subprocess.check_output(["gh", *args], text=True, timeout=90)
     head = current_head(root)
-    native_head = json.loads(gh("api", "repos/Donh91/Investering-Framework-Archive-v1/git/ref/heads/main")).get("object", {}).get("sha")
+    native_head = json.loads(gh(
+        "api", "repos/Donh91/Investering-Framework-Archive-v1/"
+        "git/ref/heads/main")).get("object", {}).get("sha")
     if head != native_head:
         raise ValueError("MAX_NATIVE_MAIN_HEAD_DRIFT")
-    event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+    event = load_json(Path(os.environ["GITHUB_EVENT_PATH"]))
     comment = event.get("comment") or {}
     if (str(comment.get("id")) != str(comment_id)
             or (comment.get("user") or {}).get("login") != "Donh91"
             or comment.get("author_association") != "OWNER"
             or (event.get("issue") or {}).get("number") != 1476):
         raise ValueError("MAX_NATIVE_OWNER_COMMENT_INVALID")
-    # Verify the real distinct OWNER comment, not a writable packet's
-    # storage-consent boolean, BEFORE an irreversible paid claim.
-    queue = load_json(root / QUEUE_PATH)
-    row = mission_row(queue, mission_id)
-    packet = load_json(root / str(row.get("mission_packet") or ""))
-    effective_registry_for_mission(
+    # Recompute current *actual* model/source/price before irrevocable claim.
+    effective_path = root / "runtime/research-lab-sol/effective_registry.json"
+    context_path = root / "runtime/research-lab-sol/context.json"
+    if not effective_path.is_file() or not context_path.is_file():
+        raise ValueError("MAX_FROZEN_SOURCE_OR_MODEL_ABSENT")
+    frozen = load_json(effective_path)["tasks"][TASK_NAME]
+    effective = effective_registry_for_mission(
         load_json(root / "research/api_agent/API_TASK_REGISTRY_v1.json"),
-        packet, mission_id)
+        packet, mission_id, model_available=lambda name: name == frozen["model"])
+    if effective["tasks"][TASK_NAME] != frozen:
+        raise ValueError("MAX_FROZEN_MODEL_DRIFT")
+    policy = load_json(root / sol_policy.POLICY_PATH)
+    models = sol_policy.validated_models(policy, PRICES_PER_MILLION)
+    selected = next((x for x in models if x["id"] == frozen["model"]), None)
+    if selected is None:
+        raise ValueError("MAX_MODEL_NOT_SOURCE_VERIFIED")
+    quoted = sol_policy.quoted_upper_usd(
+        context_path.stat().st_size, frozen["max_output_tokens"], selected)
+    # The original account-wide and lane admission already reserved USD3.
+    if quoted > 3.0:
+        raise ValueError("MAX_PRICE_EXCEEDS_NATIVE_PAID_CLAIM")
+    consent_id = packet["public_storage_consent_comment_id"]
     native_consent = json.loads(gh(
-        "api", "repos/Donh91/Investering-Framework-Archive-v1/"
-        "issues/comments/" + str(PUBLIC_CONSENT_COMMENT)))
+        "api", "repos/Donh91/Investering-Framework-Archive-v1/issues/comments/"
+        + str(consent_id)))
     consent_body = native_consent.get("body") or ""
+    if mission_id == MAX_ONESHOT_MISSION:
+        # Historical original B has its own exact, already-consumed consent.
+        marker = "<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106B -->"
+        allowed = (consent_id == PUBLIC_CONSENT_COMMENT and
+                   isinstance(consent_body, str) and
+                   consent_body.startswith(marker) and
+                   mission_id in consent_body and "30 DAYS" in consent_body)
+    else:
+        packet_digest = sha256_bytes(packet_path.read_bytes())
+        marker = ("<!-- SOL_MAX_OWNER_RELEASE_V1 mission=" + mission_id
+                  + " packet_sha256=" + packet_digest + " -->")
+        allowed = (isinstance(consent_body, str)
+                   and consent_body.startswith(marker)
+                   and "PUBLIC SOURCE ONLY" in consent_body
+                   and "30 DAYS" in consent_body
+                   and ("max_output_tokens="
+                        + str(frozen["max_output_tokens"])) in consent_body)
     if ((native_consent.get("user") or {}).get("login") != "Donh91"
             or native_consent.get("issue_url") !=
                "https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/issues/1156"
-            or not isinstance(consent_body, str)
-            or not consent_body.startswith(
-                "<!-- OWNER_RELEASE_SOL_MAX_PUBLIC_30D_20261106B -->")
-            or mission_id not in consent_body
-            or "30 DAYS" not in consent_body):
+            or not allowed):
         raise ValueError("MAX_NATIVE_PUBLIC_30D_OWNER_CONSENT_UNVERIFIED")
     def claims():
         pages = json.loads(gh("api", "--paginate", "--slurp",
-          "repos/Donh91/Investering-Framework-Archive-v1/issues/1476/comments?per_page=100"))
-        if not isinstance(pages, list) or any(not isinstance(page, list) for page in pages):
+            "repos/Donh91/Investering-Framework-Archive-v1/"
+            "issues/1476/comments?per_page=100"))
+        if not isinstance(pages, list) or any(
+                not isinstance(page, list) for page in pages):
             raise ValueError("MAX_CLAIM_CENSUS_UNTRUSTED")
-        return [row for page in pages for row in page if isinstance(row,dict)
-                and str(row.get("body") or "").startswith(MAX_CLAIM_PREFIX + " mission=" + mission_id + " ")]
+        return [item for page in pages for item in page
+                if isinstance(item, dict)
+                and str(item.get("body") or "").startswith(
+                    MAX_CLAIM_PREFIX + " mission=" + mission_id + " ")]
     if claims():
         raise ValueError("MAX_CLAIM_ALREADY_EXISTS_NO_REPOST")
-    body = f"{MAX_CLAIM_PREFIX} mission={mission_id} head={head} trigger={comment_id} max_usd=3.00"
-    gh("issue","comment","1476","--repo","Donh91/Investering-Framework-Archive-v1","--body",body)
+    body = (f"{MAX_CLAIM_PREFIX} mission={mission_id} head={head} "
+            f"trigger={comment_id} max_usd=3.00")
+    gh("issue", "comment", "1476", "--repo",
+       "Donh91/Investering-Framework-Archive-v1", "--body", body)
     found = [item for item in claims() if item.get("body") == body
              and (item.get("user") or {}).get("login") == "github-actions[bot]"]
     if len(found) != 1:
         raise ValueError("MAX_CLAIM_NATIVE_READBACK_MISSING_NO_POST")
-    return {"status":"NATIVE_PRE_HTTP_CLAIM_VERIFIED","claim_id":found[0].get("id"),
-            "mission":mission_id,"head":head,"max_usd":3.0}
+    return {"status": "NATIVE_PRE_HTTP_CLAIM_VERIFIED",
+            "claim_id": found[0].get("id"), "mission": mission_id,
+            "head": head, "max_usd": 3.0, "model": frozen["model"],
+            "quoted_upper_usd": quoted}
 
 MODEL = "gpt-6.1-sol"
 MAX_CONTEXT_BYTES = 480_000
