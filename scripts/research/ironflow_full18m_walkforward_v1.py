@@ -105,7 +105,7 @@ def verify_frozen_72_source_sha(receipts,registry):
     families=("liquidations","funding","oi","candles")
     for line in registry.read_text(encoding="utf8").splitlines():
         parts=line.strip().split()
-        if (len(parts)==5 and re.fullmatch(r"20\\d\\d-(?:0[1-9]|1[0-2])",parts[0])
+        if (len(parts)==5 and re.fullmatch(r"20[0-9][0-9]-(?:0[1-9]|1[0-2])",parts[0])
             and all(re.fullmatch(r"[0-9a-f]{64}",v) for v in parts[1:])):
             month=parts[0]
             if month in expected:raise ValueError("DUPLICATE_FROZEN_MONTH")
