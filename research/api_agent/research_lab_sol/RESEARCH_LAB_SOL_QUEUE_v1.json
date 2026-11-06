@@ -353,7 +353,7 @@
     {
       "sequence": 14,
       "mission_id": "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_NO_REPOST",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__S1_ELITE_SOL61_MAX_FOCUSED_TRIAGE_B_v1.json",
       "context_status": "SECOND_DISTINCT_PUBLIC_SOURCE_REDUCED_AFTER_PROVEN_MAX_OUTPUT_EXHAUSTION",
       "context_paths": [
@@ -363,13 +363,47 @@
       ],
       "release_gate": "OWNER_1156_6683279250_PUBLIC_30D_ONE_NEW_POST_ALL_THREE_UNSETTLED_NATIVE_RISKS_AND_USD3_NEW_RESERVE",
       "pass_scope": "FOCUSED_TOP_3_S1_ELITE_NATIVE_RECEIPT_AND_ORIGINAL_CODE_TESTS_ONLY",
+      "new_paid_attempts_authorized": false,
+      "max_paid_attempts": 1,
+      "no_automatic_retry": true,
+      "owner_issue": 1156,
+      "requested_effort": "max",
+      "public_storage_consent_30_days": true,
+      "previous_distinct_terminal_mission": "S1-ELITE-RESILIENCE-SOL61-MAX-20261106",
+      "owner_hold_reason": "NATIVE_COMPLETED_RUN_42208370888_NO_REPOST_OUTPUT_AND_CLAIM_PRESERVED"
+    },
+    {
+      "sequence": 15,
+      "mission_id": "TASK2-DAILY-EVIDENCE-LEARNING-SOL61-MAX-20261106",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-06__TASK2_DAILY_EVIDENCE_LEARNING_SOL61_MAX_v1.json",
+      "context_status": "NEW_SOURCE_FROZEN_TASK2_SCIENTIFIC_TO_DAILY_LEARNING_DISTINCT_FROM_S1_AND_FULL_CYCLE",
+      "context_paths": [
+        "06_RESEARCH_LAB/audit_summaries/2026-11-06__task2_daily_evidence_learning_source_audit_v1.md",
+        "scripts/research/task2_r1_original_causal_source_matrix_v1.py",
+        "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK_1_5_EDGE_ADMISSION_GATE_v1.json",
+        "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/task2_scoped_development_comparison_result.json",
+        "06_RESEARCH_LAB/compass_research_engine_v1/README.md",
+        "06_RESEARCH_LAB/compass_research_engine_v1/CRE_NEXT12H_PROSPECTIVE_PROTOCOL_v1.json",
+        "04_MARKET_LEARNING/shadow_registry/CROSS_DOMAIN_COMPASS_AUTOTRADING_WEEKLY_SHADOW_CONTRACT_v1.md",
+        "scripts/framework_intelligence/framework_learning_supervisor.py",
+        "research/framework_learning/LATEST_SUPERVISOR_STATE.json",
+        "research/framework_learning/weekly_forensics/LATEST.json",
+        "05_CYCLE_NAVIGATOR/protocols/CN_PRECISION_LEARNING_SUPERVISOR_v1.md",
+        "scripts/research/shared_row_next_action_controller.py",
+        "scripts/research/shared_row_tournament_maturation.py",
+        "06_RESEARCH_LAB/audit_summaries/2026-11-05__shared-row-altseason-first-matured-divergence-audit_v1.md",
+        "00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md"
+      ],
+      "release_gate": "NATIVE_DONH91_SINGLE_NEW_OWNER_SIGNED_PACKET_SHA_AND_PUBLIC_30D_CONSENT_WITH_ACCOUNT_LANE_LIABILITY_GUARD",
+      "pass_scope": "SOURCE_TRACEABLE_DEDUPED_DAILY_EVIDENCE_TO_LEARNING_ARCHITECTURE_ADVISORY_ONLY",
       "new_paid_attempts_authorized": true,
       "max_paid_attempts": 1,
       "no_automatic_retry": true,
       "owner_issue": 1156,
       "requested_effort": "max",
       "public_storage_consent_30_days": true,
-      "previous_distinct_terminal_mission": "S1-ELITE-RESILIENCE-SOL61-MAX-20261106"
+      "previous_distinct_completed_mission": "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B"
     }
   ],
   "authority": {
@@ -382,6 +416,6 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "S1-ELITE-REPAIR-TRIAGE-SOL61-MAX-20261106B",
-  "program_phase": "OWNER_AUTHORIZED_SECOND_DISTINCT_REDUCED_SOURCE_ONE_SHOT_AFTER_TERMINAL_OUTPUT_LIMIT"
+  "active_mission": "TASK2-DAILY-EVIDENCE-LEARNING-SOL61-MAX-20261106",
+  "program_phase": "TASK2_OWNER_AUTHORIZED_DAILY_EVIDENCE_LEARNING_SINGLE_NEW_PUBLIC_SOL_MAX_ONE_SHOT"
 }
