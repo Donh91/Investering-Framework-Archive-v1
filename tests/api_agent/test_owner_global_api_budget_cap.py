@@ -81,19 +81,21 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertNotEqual(rc, 0, state)
         self.assertEqual(state["status"], "BLOCKED")
 
-    def test_usd45_tolerance_requires_explicit_caller_headroom(self):
-        rc, state = run_guard(36, cap=40, reserve=0)
-        self.assertNotEqual(rc, 0)
-        self.assertEqual(state["exposure_range_max_usd"], 42)
-        rc, state = run_guard(36, cap=45, reserve=0,
-                              extra=["--new-request-upper-usd", "3"])
+    def test_usd45_tolerance_needs_real_native_authority_not_arbitrary_cli(self):
+        rc, state = run_guard(30, cap=40, reserve=0)
         self.assertEqual(rc, 0, state)
-        self.assertEqual(state["exposure_range_max_usd"], 45)
-        self.assertEqual(state["normal_remaining_usd"], -5)
+        self.assertEqual(state["reserve_usd"], 4)
+        # A naked local --hard-stop-usd 45 is NOT an authenticated, reviewed
+        # owner-bound payment capability. It must not unlock exceptional spend.
+        for spent in (30, 36, 36.01):
+            rc, state = run_guard(spent, cap=45, reserve=0,
+                                  extra=["--new-request-upper-usd", "3"])
+            self.assertNotEqual(rc, 0)
+            self.assertEqual(state["status"], "BLOCKED")
+            self.assertIn("EXCEPTIONAL_45_NATIVE_SOURCE_CAPABILITY_REQUIRED",
+                          str(state["cost_evidence_errors"]))
         rc, state = run_guard(36.01, cap=45, reserve=0,
                               extra=["--new-request-upper-usd", "3"])
-        self.assertNotEqual(rc, 0)
-        self.assertEqual(state["status"], "BLOCKED")
         self.assertGreater(state["exposure_range_max_usd"], 45)
 
     def test_stricter_original_caller_reserve_and_lane_still_bind(self):
@@ -113,6 +115,11 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertIn("LIABILITY_EVIDENCE_UNAVAILABLE",
                       str(state["cost_evidence_errors"]))
         for rows in (
+            [],
+            [risk_row(41870364609)],
+            [risk_row(41949497953)],
+            [risk_row(41870364609, upper=2.99), risk_row(41949497953)],
+            [risk_row(41870364609), risk_row(41949497953, upper=2.99)],
             [risk_row(41870364609), risk_row(41870364609)],
             [risk_row(41870364609, upper=4)],
             [risk_row(41870364609, upper=0)],
@@ -138,13 +145,13 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
             "--effort", "max", "--owner-work-id", "S1-MAX-20261106-NEW",
             "--input-token-upper", "300000", "--output-token-upper", "45000",
         ]
-        rc, state = run_guard(30, cap=45, reserve=0, extra=params)
+        rc, state = run_guard(28, cap=40, reserve=4, extra=params)
         self.assertEqual(rc, 0, state)
         self.assertEqual(state["approval_quote"]["status"],
                          "QUOTE_ONLY_NATIVE_OWNER_CLAIM_REQUIRED")
         self.assertEqual(state["approval_quote"]["token_price_upper_usd"], 1.05)
         self.assertEqual(state["new_request_reserved_upper_usd"], 1.05)
-        self.assertEqual(state["exposure_range_max_usd"], 37.05)
+        self.assertEqual(state["exposure_range_max_usd"], 35.05)
 
     def test_future_model_unknown_price_or_unapproved_route_fails_closed(self):
         params = [
