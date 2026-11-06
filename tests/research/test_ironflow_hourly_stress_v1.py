@@ -48,6 +48,16 @@ class TestIronflowStress(unittest.TestCase):
         p=self.p()
         self.assertTrue(pd.isna(p.iloc[0].open_interest_usd))
         self.assertTrue(pd.isna(p.iloc[1].oi_change_1h))
+    def test_funding_fractional_settlement_time_joins_hour(self):
+        self.f["timestamp"]=self.f.timestamp+pd.Timedelta(milliseconds=123)
+        p=self.p()
+        self.assertEqual(int(p.funding_rate.isna().sum()),0)
+        self.assertAlmostEqual(float(p.iloc[0].funding_rate),0.0001)
+    def test_funding_duplicate_after_hour_floor_rejected(self):
+        f2=self.f.iloc[[0]].copy()
+        f2["timestamp"]=f2.timestamp+pd.Timedelta(milliseconds=321)
+        self.f=pd.concat([self.f,f2],ignore_index=True)
+        with self.assertRaisesRegex(ValueError,"duplicate funding"):self.p()
     def test_gap_refuses_false_horizon(self):
         self.c=self.c.drop(2)
         self.o=self.o.drop(2)
