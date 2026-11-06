@@ -219,9 +219,11 @@ def build(source_bytes: bytes | None = None, originals=None):
             required_health_statuses[state]+=1
         for lane in sorted(OPTIONAL_HEALTH_LANES):
             state=statuses_by_lane[lane].get("status")
-            need(state in {"PASS","DEGRADED"} and
-                 lane in set(packet.get("optional_degraded_lanes") or ()) if state=="DEGRADED" else state=="PASS",
+            need(state in {"PASS", "DEGRADED"},
                  "ORIGINAL_OPTIONAL_HEALTH_SEMANTICS_"+fid+"_"+lane)
+            if state=="DEGRADED":
+                need(lane in set(packet.get("optional_degraded_lanes") or ()),
+                     "ORIGINAL_OPTIONAL_DEGRADATION_UNDECLARED_"+fid+"_"+lane)
             optional_health_statuses[state]+=1
         for key in sorted(ROLES):
             source=meta[key]
