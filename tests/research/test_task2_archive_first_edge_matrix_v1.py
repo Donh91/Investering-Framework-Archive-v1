@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import copy
+import json
+import tempfile
 from datetime import timedelta
 import sys
 import unittest
@@ -115,6 +117,49 @@ class ArchiveFirstTask2Tests(unittest.TestCase):
         self.assertEqual(audit.audit_e3(self.data)["etf_outflow_strong_edge_verdict"],
                          "REJECTED_FROM_EXISTING_OWNER_ADJUDICATION")
         self.assertLess(audit.audit_e3(self.data)["one_day_strategy_sensitivity_pp"], 0)
+
+    def test_daily_advisory_is_idempotent_without_new_source_evidence(self):
+        report = audit.build(REPO, AS_OF)
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.assertEqual(audit.persist_advisory_if_changed(root, report),
+                             "SOURCE_CHANGED_ADVISORY_WRITTEN")
+            p = root / audit.ADVISORY_PATH
+            first = p.read_bytes()
+            time_only = copy.deepcopy(report)
+            time_only["as_of_utc"] = "2026-11-07T12:00:00Z"
+            self.assertEqual(audit.persist_advisory_if_changed(root, time_only),
+                             "SOURCE_UNCHANGED_NO_WRITE")
+            self.assertEqual(p.read_bytes(), first)
+            source_delta = copy.deepcopy(report)
+            source_delta["source_manifest"]["shared_rows"]["sha256"] = "a" * 64
+            self.assertEqual(audit.persist_advisory_if_changed(root, source_delta),
+                             "SOURCE_CHANGED_ADVISORY_WRITTEN")
+            self.assertNotEqual(p.read_bytes(), first)
+
+    def test_daily_advisory_rejects_unsafe_previous_contract_and_permissions(self):
+        report = audit.build(REPO, AS_OF)
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bad = copy.deepcopy(report)
+            bad["automatic_model_weight_change"] = True
+            with self.assertRaisesRegex(ValueError, "AUTHORITY_BREACH"):
+                audit.persist_advisory_if_changed(root, bad)
+            path = root / audit.ADVISORY_PATH
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({"contract":"UNTRUSTED","authority":"UNKNOWN"}))
+            with self.assertRaisesRegex(ValueError, "PREVIOUS_CONTRACT_DRIFT"):
+                audit.persist_advisory_if_changed(root, report)
+
+    def test_daily_advisory_rejects_symlinked_output_parent(self):
+        report = audit.build(REPO, AS_OF)
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            parent = root / audit.ADVISORY_PATH.parent
+            parent.parent.mkdir(parents=True)
+            parent.symlink_to(root, target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, "ADVISORY_PATH_UNSAFE"):
+                audit.persist_advisory_if_changed(root, report)
 
     def test_calendar_blocks_never_equal_independent_event_families(self):
         e2 = audit.audit_e2(self.data, AS_OF)
