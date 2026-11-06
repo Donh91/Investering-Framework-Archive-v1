@@ -73,6 +73,14 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(state["exposure_range_max_usd"], 23)
         self.assertEqual(state["normal_remaining_usd"], 17)
 
+    def test_routine_zero_reserve_argument_does_not_remove_four_dollar_buffer(self):
+        rc, state = run_guard(30, cap=40, reserve=0)
+        self.assertEqual(rc, 0, state)
+        self.assertEqual(state["reserve_usd"], 4)
+        rc, state = run_guard(30.01, cap=40, reserve=0)
+        self.assertNotEqual(rc, 0, state)
+        self.assertEqual(state["status"], "BLOCKED")
+
     def test_usd45_tolerance_requires_explicit_caller_headroom(self):
         rc, state = run_guard(36, cap=40, reserve=0)
         self.assertNotEqual(rc, 0)
@@ -107,6 +115,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         for rows in (
             [risk_row(41870364609), risk_row(41870364609)],
             [risk_row(41870364609, upper=4)],
+            [risk_row(41870364609, upper=0)],
             [risk_row(41870364609, upper=-1)],
             [risk_row(41870364609, lower=2, upper=1)],
             [risk_row(41870364609, upper=float("nan"))],
