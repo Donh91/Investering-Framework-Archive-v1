@@ -572,5 +572,51 @@ class OriginalCausalSourceInventoryTests(unittest.TestCase):
 
 
 
+    def test_original_required_health_is_121_pass_and_optional_is_not_a_blocker(self):
+        report=causal.build()
+        self.assertEqual(report["original_required_health_lanes"],
+                         sorted(causal.REQUIRED_HEALTH_LANES))
+        self.assertEqual(report["original_optional_health_lanes"],["catalyst_context"])
+        self.assertEqual(report["required_health_census_status"],{"PASS":121})
+        self.assertEqual(sum(report["optional_health_census_status"].values()),11)
+        self.assertEqual(report["full_original_R1_PIT_admissions"],0)
+
+    def test_original_required_health_failure_cannot_be_called_green(self):
+        real=causal.original.original
+        def fake_original(ref,path,expected_blob=None):
+            doc,sha=real(ref,path,expected_blob)
+            if path.endswith("195803_d6d9ee28ede4.json"):
+                doc=json.loads(json.dumps(doc))
+                doc["source_health"]["derivatives"]["status"]="FAIL"
+            return doc,sha
+        with mock.patch.object(causal.original,"original",side_effect=fake_original):
+            with self.assertRaisesRegex(ValueError,"ORIGINAL_REQUIRED_HEALTH_CHANGED"):
+                causal.build()
+
+    def test_original_required_lane_denominator_cannot_be_shrunk(self):
+        real=causal.original.original
+        def fake_original(ref,path,expected_blob=None):
+            doc,sha=real(ref,path,expected_blob)
+            if path.endswith("195803_d6d9ee28ede4.json"):
+                doc=json.loads(json.dumps(doc))
+                doc["replacement_score"]["denominator"]["decision_context_required_lanes"]=10
+            return doc,sha
+        with mock.patch.object(causal.original,"original",side_effect=fake_original):
+            with self.assertRaisesRegex(ValueError,"ORIGINAL_REQUIRED_HEALTH_ROSTER"):
+                causal.build()
+
+    def test_optional_catalyst_degradation_cannot_hide_as_undeclared(self):
+        real=causal.original.original
+        def fake_original(ref,path,expected_blob=None):
+            doc,sha=real(ref,path,expected_blob)
+            if path.endswith("195803_d6d9ee28ede4.json"):
+                doc=json.loads(json.dumps(doc))
+                doc["optional_degraded_lanes"]=[]
+            return doc,sha
+        with mock.patch.object(causal.original,"original",side_effect=fake_original):
+            with self.assertRaisesRegex(ValueError,"ORIGINAL_OPTIONAL_DEGRADATION_UNDECLARED"):
+                causal.build()
+
+
 if __name__ == "__main__":
     unittest.main()
