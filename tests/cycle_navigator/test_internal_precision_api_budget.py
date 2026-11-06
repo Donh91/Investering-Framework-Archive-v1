@@ -251,11 +251,21 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             "created_unix": int(datetime.now(timezone.utc).timestamp()),
         }
         (ledger / ("a" * 64 + ".json")).write_text(json.dumps(reservation))
+        # Isolate the CN reservation fixture from real framework-wide pending
+        # November POST exposure. Production keeps the canonical risk ledger.
+        isolated_risk = self.root / "fixture-global-api-risk.json"
+        isolated_risk.write_text(json.dumps({
+            "contract": "API_PENDING_BILLING_RISK_V1",
+            "no_retry_original_ids": True,
+            "requires_reconciliation_before_releasing_reserve": True,
+            "unresolved": [],
+        }))
         guard = Path(__file__).resolve().parents[2] / "scripts/api_agent/check_monthly_cost_guard.py"
         base_cmd = [
             os.sys.executable, str(guard),
             "--receipt-root", str(self.root / "research/api_agent/outputs"),
             "--pending-ledger-root", str(self.root / "runtime/api-cost-ledger"),
+            "--liability-ledger", str(isolated_risk),
         ]
         allowed = subprocess.run(base_cmd + [
             "--hard-stop-usd", "0.4", "--reserve-usd", "0.1"
