@@ -16,6 +16,10 @@ def build(c,o,f,l):
     c=c[c.market.isin(MARKETS)&(c.market_class=="perp")].copy()
     o=o[o.market.isin(MARKETS)].copy()
     f=f[f.market.isin(MARKETS)].copy()
+    # Settled funding timestamps contain nonzero milliseconds: normalize to their
+    # *settlement UTC hour*, after the raw timestamp is parsed; all features
+    # are only eligible after the hour's completed candle close (t+1h).
+    f["timestamp"]=f.timestamp.dt.floor("h")
     l=l[l.market.isin(MARKETS)].copy()
     for name,d in [("candles",c),("oi",o),("funding",f)]:
         if d.duplicated(["market","timestamp"]).any():raise ValueError("duplicate "+name)
@@ -79,6 +83,9 @@ def run(root,months):
         d=build(df["candles"],df["oi"],df["funding"],df["liquidations"])
         by_market={m:int(c) for m,c in d.market.value_counts().items()}
         missing={k:int(d[k].isna().sum()) for k in ("open_interest_usd","funding_rate","price_change_1h")}
+        # Fail closed if a seemingly healthy source silently misses a time-alignment join.
+        if missing["funding_rate"] > len(d)*0.01:
+            raise ValueError("funding coverage below 99 percent: check settlement-hour alignment")
         results.append({"month":m,"eligible_hourly_rows":int(len(d)),"market_rows":by_market,
                         "missing":missing,"cohorts":describe(d)})
     return {"contract":"IRONFLOW_HOURLY_HISTORICAL_V1","status":"AFTER_FACT_DEVELOPMENT_ONLY",
