@@ -3,7 +3,7 @@
  * Never synthesize a market action, forecast, score or hidden source. */
 import {inspectOfficialPublicFeeds} from './official-feed-parity.mjs';
 import {mondayContext,mondayLabels} from './monday-public-bridge.mjs';
-import {sourceTrace,displayPublicStatus,displayLongDirection} from './source-trace.mjs';
+import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfidence} from './source-trace.mjs';
 import {forwardOutlook} from './forward-outlook.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
 import {renderProductExperience,initProductExperience,presentOfficialAction} from './premium-experience.mjs';
@@ -184,7 +184,7 @@ function drawForward(){
  show('cn-forward-week-copy',output.weekly.summary||say('Ingen kvalificeret 2–3 ugers analyse udstedt.','No eligible 2–3 week outlook issued.'));
  show('cn-forward-strategic-copy',output.strategic.summary||say('Ingen kildeverificeret strategisk vurdering.','No source-verified strategic outlook.'));
  show('cn-forward-issued',output.strategic.issued_at_utc?stamp(output.strategic.issued_at_utc):'—');
- show('cn-forward-assets',output.strategic.available?'BTC '+direction(output.strategic.btc_direction)+' / ETH '+direction(output.strategic.eth_direction)+' · '+output.strategic.confidence:'—');
+ show('cn-forward-assets',output.strategic.available?'BTC '+direction(output.strategic.btc_direction)+' / ETH '+direction(output.strategic.eth_direction)+' · '+displaySourceConfidence(output.strategic.confidence,lang):'—');
  show('cn-forward-path',output.strategic.expected_path||say('Ingen understøttet forventet sti.','No supported expected path.'));
  const scenarios=clear('cn-forward-scenarios');
  for(const row of output.strategic.scenarios){
