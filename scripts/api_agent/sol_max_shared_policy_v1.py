@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Callable
 
 POLICY_PATH = Path("research/api_agent/coordination/SOL_MAX_SHARED_MODEL_POLICY_V1.json")
-SOL_ID = re.compile(r"gpt-6(?:\\.[1-9][0-9]*)?-sol\\Z")
+SOL_ID = re.compile(r"gpt-6(?:\.[1-9][0-9]*)?-sol\Z")
 MAX_OUTPUT = 128_000
 MAX_INPUT_EVIDENCE_BYTES = 180_000
 MAX_NEW_REQUEST_USD = 3.0
