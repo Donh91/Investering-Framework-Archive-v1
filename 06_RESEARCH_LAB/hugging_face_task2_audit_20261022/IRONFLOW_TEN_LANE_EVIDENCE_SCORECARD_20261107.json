@@ -1,0 +1,152 @@
+{
+  "contract": "IRONFLOW_TEN_LANE_OWNER_EVIDENCE_SCORECARD_V1",
+  "as_of_utc_date": "2026-11-07",
+  "producer": "Ironflow (ironflow.sh)",
+  "license": "CC BY 4.0",
+  "authority": {
+    "framework_repo": "Donh91/Investering-Framework-Archive-v1",
+    "science_owner_issue": 1596,
+    "derivatives_owner_issue": 387,
+    "alpha_owner": "Donh91/Meme-Alpha-Lab#22",
+    "original_merged_pr": 1988,
+    "full_history_pr": 1989,
+    "owner_auto_trade": false,
+    "new_cron_created": false
+  },
+  "scientific_admission": {
+    "source_T1": "PASS_72_ACTUAL_PINNED_FILES",
+    "source_origin_PIT": "BLOCK_NOV_2026_SOURCE_SNAPSHOT",
+    "forecast_verified_edge": "NOT_SUPPORTED",
+    "wallet_skill_edge": "NOT_SUPPORTED",
+    "risk_warning_delivered": "NOT_PROVEN",
+    "task2_complete": false
+  },
+  "observed": {
+    "four_source_months": 18,
+    "file_count": 72,
+    "byte_count": 374343275,
+    "all_market_raw_rows": 14572946,
+    "liquidation_position_events": 2848413,
+    "distinct_liquidated_wallet_addresses": 506880,
+    "matched_btc_eth_hype_hourly_rows": 37758,
+    "nonoverlap_market_day_anchors": 1545,
+    "scored_months": 12,
+    "scored_asset_days": 1074,
+    "model_brier_delta_month_mean": -0.00171,
+    "model_brier_delta_month_bootstrap_95pct": [
+      -0.007503,
+      0.002501
+    ],
+    "better_months": 7,
+    "worse_months": 5,
+    "Feb_2026_drawdown_events": 60,
+    "Feb_2026_asset_day_test_rows": 78,
+    "Feb_2026_OI_missing_UTC_day": "2026-02-12",
+    "Feb_2026_next_lookback_excluded_day": "2026-02-13"
+  },
+  "primary_sources": {
+    "fullhash": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/IRONFLOW_FULL18M_SOURCE_SHA256_REGISTRY_20261107.md",
+    "corrected_science": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/IRONFLOW_FULL18M_EMBARGO_CORRECTED_SCIENCE_V2_20261107.md",
+    "wallet_ecology": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/IRONFLOW_FULL18M_WALLET_ECOLOGY_20261107.md",
+    "source_manifest": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/SOURCE_MANIFEST_IRONFLOW_20261106.json",
+    "original_run_pilot": 42310320953,
+    "successful_18m_UTC_25h_embargo_run": 42314538645,
+    "successful_18m_Feb_gap_census_run": 42314816983
+  },
+  "lanes": [
+    {
+      "id": "T01",
+      "name": "Source custody, 72 original Parquet SHA and PIT boundary",
+      "state": "T1_COMPLETED_T3_PENDING",
+      "evidence": "72 actual file QA; 18 months; posthoc source availability cannot certify prior era"
+    },
+    {
+      "id": "T02",
+      "name": "Liquidation cascades versus next-day downside",
+      "state": "RETROSPECTIVE_TESTED_NO_STABLE_EDGE",
+      "evidence": "1,545 scored day anchors, all assets correlated, model no lift"
+    },
+    {
+      "id": "T03",
+      "name": "OI/funding crowded positioning and negative controls",
+      "state": "12_MONTH_REPLAY_COMPLETED_NO_REPLICATED_LIFT",
+      "evidence": "25h train-label embargo; 7 positive vs 5 negative; Feb adverse undercalibration"
+    },
+    {
+      "id": "T04",
+      "name": "Tick flow and microstructure reality",
+      "state": "T1_TWO_DAYS_COMPLETE_FULL_TICK_PERIOD_NOT_ANALYZED",
+      "evidence": "2 independent days Oct7 and Oct23 trade grain crosschecks"
+    },
+    {
+      "id": "T05",
+      "name": "Crash and quiet-day causal timing",
+      "state": "RETROSPECTIVE_EVENT_ANATOMY_COMPLETE_WARNING_LEAD_UNPROVEN",
+      "evidence": "2025 Oct10 three-market crisis + selected quiet controls"
+    },
+    {
+      "id": "T06",
+      "name": "Cross venue independent Binance sanity check",
+      "state": "T1_TWO_DAYS_ONLY",
+      "evidence": "BTC/ETH Oct7 and Oct23 OI/taker, UTC returned-row offset"
+    },
+    {
+      "id": "T07",
+      "name": "Prospective original first-known and user alert delivery",
+      "state": "BLOCKED_MISSING_ORIGINAL_LIVE_SOURCE_AND_CONSUMER_RECEIPTS",
+      "evidence": "Nov26 published historical files are not earlier-time information"
+    },
+    {
+      "id": "T08",
+      "name": "Wallet survivability and forced-liquidation incidence",
+      "state": "RETROSPECTIVE_FULL_18M_COMPLETE_NOT_PNL",
+      "evidence": "2.85m position liquidations, 506,880 wallets; 30d selected cohort recurrence 55.64%"
+    },
+    {
+      "id": "T09",
+      "name": "Meme/altseason transfer to exact CA risk",
+      "state": "NOT_TESTED_NO_ORIGINAL_CA_JOIN",
+      "evidence": "No ID or ownership equivalence between Hyperliquid perp wallet and EVM token launcher"
+    },
+    {
+      "id": "T10",
+      "name": "HIP4 prediction-market resolved-event model",
+      "state": "T1_TWO_DAY_FILLS_QA_ONLY",
+      "evidence": "HIP4 metadata latest resolution/time leakage, no validated predictive market baseline"
+    }
+  ],
+  "supervisor_queue": [
+    {
+      "priority": "P0",
+      "action": "Verify PR #1989 exact-head 5 CI + 72-file T1 and 25h embargo negative test; merge only when eligible; verify main SHA",
+      "done_when": "merged PR, actual main readback and CI receipts"
+    },
+    {
+      "priority": "P1",
+      "action": "Source T3 durable offline copy needs approved object/release/LFS storage with exact 72 file SHA readback, no new credentials",
+      "done_when": "durable location+member hashes+recovery readback, or explicit terminal blocker"
+    },
+    {
+      "priority": "P1",
+      "action": "Record Feb12 OI USD day gap and Feb13 lookback censor in existing Task2 source QA; no imputation",
+      "done_when": "source health receipt + forward eligible alternative owner decision"
+    },
+    {
+      "priority": "P1",
+      "action": "Plan original first-known live source clock and alert-delivery causality in existing owners",
+      "done_when": "prospective original collector event plus consumer proof, not old snapshot"
+    },
+    {
+      "priority": "P2",
+      "action": "If T04 or T06 has independent VOI, test matched provider-delayed source and all quiet controls; avoid feature fishing",
+      "done_when": "prespecified frozen comparison, negative controls and no forced edge"
+    }
+  ],
+  "storage": {
+    "T0_machine_manifest": "CURRENT_PR",
+    "T2_actions_artifacts": "30_DAY_EXPIRY",
+    "T3_offline_raw_owner_copy": "NOT_PROVEN",
+    "raw_374MB_in_public_git": false
+  },
+  "unresolved_notes": "Research is not Task2 completion and past source data cannot be auto-promoted into historical issued forecasts. No new automation or trading authority."
+}
