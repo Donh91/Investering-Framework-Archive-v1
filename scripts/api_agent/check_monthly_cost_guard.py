@@ -26,6 +26,7 @@ OWNER_SINGLE_REQUEST_CAP_USD = 3.0
 UNRESOLVED_NATIVE_POST_FLOOR_USD = {
     "41870364609": 3.0,
     "41949497953": 3.0,
+    "42204120988": 3.0,  # Provider terminal incomplete, native 3 USD one-use claim.
 }
 CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
     "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
