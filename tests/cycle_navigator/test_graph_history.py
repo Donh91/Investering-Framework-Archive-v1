@@ -498,8 +498,10 @@ class GraphHistoryTest(unittest.TestCase):
         html = (Path(__file__).resolve().parents[2] /
                 "05_CYCLE_NAVIGATOR/site/graph-history/index.html").read_text()
         for required in (
-                "#071320", "#31d0a0", "#79aaff",
+                "#f6f8fc", "#099866", "#2563eb",
                 "class=\"panel panel-primary\"", "prefers-reduced-motion",
+                "cn-embedded-history", "URLSearchParams(location.search)",
+                "stroke:'#9aa8bb'", "Ugegrænser",
                 "Original mandagsprognose · 7/7",
                 "w?.forecast_status==='PUBLISHED'",
                 "w?.forecast_model_declared_quote==='USDT'",
@@ -516,6 +518,9 @@ class GraphHistoryTest(unittest.TestCase):
         ):
             self.assertIn(required, html)
         self.assertNotIn("Frosne prognoser er i USD", html)
+        self.assertNotIn("#071320", html)  # Rejected later dark Time Machine restyle.
+        self.assertNotIn('class="midweek"', html)  # Research is separate.
+        self.assertNotIn("stroke:'#e9ae65'", html)  # Two source-owned curves only.
 
 
     def test_optional_source_locked_w45_research_route_is_isolated_from_original_graph(self):
