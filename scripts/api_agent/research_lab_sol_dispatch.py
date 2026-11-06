@@ -324,6 +324,16 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
         raise ValueError("mission_packet_authority_not_zero")
 
     evidence = [clipped_file(repo_root, rel) for rel in row.get("context_paths", [])]
+    from scripts.api_agent import sol_max_shared_policy_v1 as sol_policy
+    from scripts.api_agent.api_gateway import PRICES_PER_MILLION
+    import os
+    # Only approved newer Sol models receive a non-billable availability GET.
+    effective = effective_registry_for_mission(
+        load_json(repo_root / "research/api_agent/API_TASK_REGISTRY_v1.json"),
+        packet, mission_id,
+        model_available=lambda model: sol_policy.project_model_available(
+            model, os.environ.get("OPENAI_API_KEY", "")))
+    selected_model = effective["tasks"][TASK_NAME]["model"]
     head = current_head(repo_root)
     context = {
         "contract": "RESEARCH_LAB_SOL_CONTEXT_v1",
@@ -331,7 +341,7 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
         "private_data_included": False,
         "public_source_only": True,
         "task": TASK_NAME,
-        "model": MODEL,
+        "model": selected_model,
         "mission_id": mission_id,
         "trigger": {"issue_number": issue_number, "comment_id": comment_id},
         "current_main_sha": head,
@@ -357,6 +367,13 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
     payload = canonical_bytes(context)
     if len(payload) > MAX_CONTEXT_BYTES:
         raise ValueError(f"context_too_large:{len(payload)}>{MAX_CONTEXT_BYTES}")
+    if packet.get("reasoning_effort") == "max":
+        selected = next(row for row in sol_policy.validated_models(
+            load_json(repo_root / sol_policy.POLICY_PATH),
+            PRICES_PER_MILLION) if row["id"] == selected_model)
+        sol_policy.quoted_upper_usd(
+            len(payload), effective["tasks"][TASK_NAME]["max_output_tokens"],
+            selected)
 
     required_outputs = packet.get("required_outputs", [])
     prompt = "\n".join([
@@ -367,7 +384,7 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
         f"Falsifier: {packet.get('falsifier')}",
         f"Kill condition: {packet.get('kill_condition')}",
         "",
-        "Perform the independent GPT-6.1 Sol scientific/economic arm only.",
+        f"Perform the independent {selected_model} scientific/economic arm only.",
         "Try to falsify the hypothesis before preserving it.",
         "Use only the supplied point-in-time evidence package. Do not infer missing rows.",
         "Distinguish source/provenance defects from signal/economic defects.",
@@ -378,10 +395,10 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
         "",
         "Encode the result in the gateway schema.",
         "summary must start exactly with one of:",
-        "VERDICT=VERIFIED; MODEL_USED=gpt-6.1-sol; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
-        "VERDICT=WEAKENED; MODEL_USED=gpt-6.1-sol; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
-        "VERDICT=REJECTED; MODEL_USED=gpt-6.1-sol; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
-        "VERDICT=INSUFFICIENT_EVIDENCE; MODEL_USED=gpt-6.1-sol; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
+        f"VERDICT=VERIFIED; MODEL_USED={selected_model}; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
+        f"VERDICT=WEAKENED; MODEL_USED={selected_model}; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
+        f"VERDICT=REJECTED; MODEL_USED={selected_model}; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
+        f"VERDICT=INSUFFICIENT_EVIDENCE; MODEL_USED={selected_model}; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;",
         "Use evidence_for for claims surviving attack, evidence_against for falsification/adverse evidence, uncertainties for UNKNOWNs, hypotheses only for bounded next research tests.",
         "forecast_candidates must be [].",
     ])
@@ -408,9 +425,9 @@ def build(repo_root: Path, output_dir: Path, mission_id: str, issue_number: int,
             "canonical_promotion": False,
         },
     }
-    effective = effective_registry_for_mission(load_json(repo_root / "research/api_agent/API_TASK_REGISTRY_v1.json"), packet, mission_id)
     (output_dir / "effective_registry.json").write_text(json.dumps(effective, sort_keys=True, indent=2) + "\n")
     manifest["reasoning_effort"] = effective["tasks"][TASK_NAME]["reasoning_effort"]
+    manifest["selected_model"] = selected_model
     (output_dir / "context_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     return manifest
 
@@ -423,8 +440,13 @@ def validate(output_dir: Path) -> dict[str, Any]:
     if receipt.get("task") != TASK_NAME:
         raise ValueError("research_lab_sol_task_binding_invalid")
     context = load_json(output_dir / "context.json")
+    frozen = load_json(output_dir / "effective_registry.json")["tasks"][TASK_NAME]
     expected_effort = context.get("mission_packet", {}).get("reasoning_effort", "high")
-    if expected_effort not in ("high","max") or receipt.get("model") != MODEL or receipt.get("reasoning_effort") != expected_effort:
+    expected_model = frozen["model"]
+    if (expected_effort not in ("high", "max")
+            or context.get("model") != expected_model
+            or receipt.get("model") != expected_model
+            or receipt.get("reasoning_effort") != expected_effort):
         raise ValueError("research_lab_sol_model_binding_invalid")
     cost = receipt.get("estimated_cost_usd")
     if isinstance(cost, bool) or not isinstance(cost, (int, float)) or not 0 <= float(cost) <= 3.0:
@@ -433,7 +455,7 @@ def validate(output_dir: Path) -> dict[str, Any]:
         raise ValueError("research_lab_sol_forecast_candidates_forbidden")
     summary = str(output.get("summary") or "")
     valid_prefixes = tuple(
-        f"VERDICT={verdict}; MODEL_USED=gpt-6.1-sol; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;"
+        f"VERDICT={verdict}; MODEL_USED={expected_model}; NO_CODE_WRITE_PERFORMED; NO_AUTHORITY_CHANGE;"
         for verdict in ("VERIFIED", "WEAKENED", "REJECTED", "INSUFFICIENT_EVIDENCE")
     )
     if not summary.startswith(valid_prefixes):
