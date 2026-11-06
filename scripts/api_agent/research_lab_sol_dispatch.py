@@ -584,9 +584,17 @@ def main() -> None:
                 f"/issue-{args.issue_number}/comment-{args.comment_id}")
         # Own the workflow step outputs; do not accidentally append duplicate
         # runner output names across two contradictory admissions.
+        max_requested = False
+        if admitted:
+            frozen_queue = load_json(args.repo_root / QUEUE_PATH)
+            frozen_row = mission_row(frozen_queue, args.mission_id)
+            frozen_packet = load_json(
+                args.repo_root / str(frozen_row.get("mission_packet") or ""))
+            max_requested = frozen_packet.get("reasoning_effort") == "max"
         with args.github_output.open("a", encoding="utf-8") as out:
             out.write(f"run_analysis={str(admitted).lower()}\n")
             out.write(f"dest={dest}\n")
+            out.write(f"max_requested={str(max_requested).lower()}\n")
         print(json.dumps({"admitted": admitted, "reason": reason,
                           "mission": args.mission_id}, sort_keys=True))
     elif args.cmd == "build":
