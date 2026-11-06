@@ -182,8 +182,8 @@ class RecoveryTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "BACKGROUND_TERMINAL_DIAGNOSTIC_DRIFT"):
                     t.collect(payload(), "fake", root,
                               get=lambda *_args, **_kwargs: HttpResult({
-                                  "id": "resp_abc1234", "status": "completed" if False else
-                                  ("failed" if status != "failed" else "cancelled")}))
+                                  "id": "resp_abc1234",
+                                  "status": "failed" if status != "failed" else "cancelled"}))
                 with self.assertRaisesRegex(ValueError, "UNRECOGNIZED_PROVIDER_STATUS"):
                     t.collect(payload(), "fake", root,
                               get=lambda *_args, **_kwargs: HttpResult({
