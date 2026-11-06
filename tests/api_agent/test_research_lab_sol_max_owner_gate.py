@@ -49,8 +49,13 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         root=Path(__file__).resolve().parents[2]
         queue=json.loads((root/"research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json").read_text())
         active=[r for r in queue["missions"] if r["state"]=="ACTIVE_RELEASED"]
-        self.assertEqual([r["mission_id"] for r in active], [MAX_ONESHOT_MISSION])
-        self.assertEqual(queue["active_mission"], MAX_ONESHOT_MISSION)
+        # This is a one-use rotating queue, not a permanent legacy mission ID.
+        # Releasing a new original owner-bound mission must not weaken the
+        # one-active rule or let an old completed/unknown POST be replayed.
+        self.assertEqual(len(active), 1)
+        self.assertEqual(queue["active_mission"], active[0]["mission_id"])
+        self.assertTrue(active[0]["new_paid_attempts_authorized"])
+        self.assertEqual(active[0]["requested_effort"], "max")
         for archived in ("SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105",
                          "S1-ELITE-RESILIENCE-SOL61-MAX-20261106"):
             rows=[r for r in queue["missions"] if r["mission_id"]==archived]
@@ -62,9 +67,20 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         self.assertFalse(old[0]["new_paid_attempts_authorized"])
         self.assertNotEqual(old[0]["state"], "ACTIVE_RELEASED")
         packet=json.loads((root/active[0]["mission_packet"]).read_text())
-        self.assertEqual(packet["mission_id"], MAX_ONESHOT_MISSION)
+        self.assertEqual(packet["mission_id"], active[0]["mission_id"])
+        self.assertEqual(packet["original_owner_issue"], 1156)
+        self.assertEqual(packet["reasoning_effort"], "max")
+        self.assertEqual(packet["max_runs_for_this_release"], 1)
+        self.assertEqual(packet["review_only_no_code_write"], True)
+        self.assertTrue(packet["public_source_only"])
         self.assertTrue(packet["public_storage_consent_30_days"])
         self.assertFalse(packet["authority"]["repository_write"])
+        if active[0]["mission_id"] != MAX_ONESHOT_MISSION:
+            legacy = [r for r in queue["missions"]
+                      if r["mission_id"] == MAX_ONESHOT_MISSION]
+            self.assertEqual(len(legacy), 1)
+            self.assertNotEqual(legacy[0]["state"], "ACTIVE_RELEASED")
+            self.assertFalse(legacy[0]["new_paid_attempts_authorized"])
     def test_normal_high_unchanged(self):
         self.assertEqual(effective_registry_for_mission(self.base,dict(self.packet,reasoning_effort="high"),"OLD")["tasks"][TASK_NAME]["reasoning_effort"],"high")
     def test_wrong_mission_owner_attempt_or_authority_fails(self):
