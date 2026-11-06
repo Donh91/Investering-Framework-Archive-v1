@@ -126,11 +126,11 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
             self.assertEqual(state["status"], "BLOCKED")
 
     def test_pending_past_month_stays_reserved_until_reconciled(self):
-        rc, state = run_guard(32, cap=40, reserve=0,
+        rc, state = run_guard(29, cap=40, reserve=0,
                               rows=[risk_row(41870364609, month="2026-10"),
                                     risk_row(41949497953, month="2026-11")])
         self.assertEqual(rc, 0)
-        self.assertEqual(state["exposure_range_max_usd"], 38)
+        self.assertEqual(state["exposure_range_max_usd"], 35)
 
     def test_max_quote_current_model_one_time_no_payment(self):
         params = [
