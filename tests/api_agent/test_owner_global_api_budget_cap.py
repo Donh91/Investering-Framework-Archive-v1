@@ -42,7 +42,8 @@ def run_guard(spent=0, cap=40, reserve=4, rows=None, extra=None,
                 "no_retry_original_ids": True,
                 "requires_reconciliation_before_releasing_reserve": True,
                 "unresolved": rows if rows is not None else [
-                    risk_row(41870364609), risk_row(41949497953)],
+                    risk_row(41870364609), risk_row(41949497953),
+                    risk_row(42204120988)],
             }
             ledger.write_text(json.dumps(content))
         cmd = [
@@ -60,34 +61,34 @@ def run_guard(spent=0, cap=40, reserve=4, rows=None, extra=None,
 
 
 class OwnerGlobalBudgetTests(unittest.TestCase):
-    def test_known_cost_plus_two_upper_unknown_is_never_zero(self):
+    def test_known_cost_plus_three_upper_unknown_is_never_zero(self):
         rc, state = run_guard(17)
         self.assertEqual(rc, 0, state)
         self.assertEqual(state["status"], "PASS")
         self.assertEqual(state["owner_normal_target_usd"], 40)
         self.assertEqual(state["effective_hard_stop_usd"], 40)
-        self.assertEqual(state["pending_liability_count"], 2)
+        self.assertEqual(state["pending_liability_count"], 3)
         self.assertEqual(state["pending_liability_lower_usd"], 0)
-        self.assertEqual(state["pending_liability_upper_usd"], 6)
+        self.assertEqual(state["pending_liability_upper_usd"], 9)
         self.assertEqual(state["exposure_range_min_usd"], 17)
-        self.assertEqual(state["exposure_range_max_usd"], 23)
-        self.assertEqual(state["normal_remaining_usd"], 17)
+        self.assertEqual(state["exposure_range_max_usd"], 26)
+        self.assertEqual(state["normal_remaining_usd"], 14)
 
     def test_routine_zero_reserve_argument_does_not_remove_four_dollar_buffer(self):
-        rc, state = run_guard(30, cap=40, reserve=0)
+        rc, state = run_guard(26, cap=40, reserve=0)
         self.assertEqual(rc, 0, state)
         self.assertEqual(state["reserve_usd"], 4)
-        rc, state = run_guard(30.01, cap=40, reserve=0)
+        rc, state = run_guard(27.01, cap=40, reserve=0)
         self.assertNotEqual(rc, 0, state)
         self.assertEqual(state["status"], "BLOCKED")
 
     def test_usd45_tolerance_needs_real_native_authority_not_arbitrary_cli(self):
-        rc, state = run_guard(30, cap=40, reserve=0)
+        rc, state = run_guard(26, cap=40, reserve=0)
         self.assertEqual(rc, 0, state)
         self.assertEqual(state["reserve_usd"], 4)
         # A naked local --hard-stop-usd 45 is NOT an authenticated, reviewed
         # owner-bound payment capability. It must not unlock exceptional spend.
-        for spent in (30, 36, 36.01):
+        for spent in (26, 33, 36.01):
             rc, state = run_guard(spent, cap=45, reserve=0,
                                   extra=["--new-request-upper-usd", "3"])
             self.assertNotEqual(rc, 0)
@@ -118,6 +119,8 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
             [],
             [risk_row(41870364609)],
             [risk_row(41949497953)],
+            [risk_row(41870364609), risk_row(41949497953)],
+            [risk_row(41870364609), risk_row(41949497953), risk_row(42204120988, upper=2.99)],
             [risk_row(41870364609, upper=2.99), risk_row(41949497953)],
             [risk_row(41870364609), risk_row(41949497953, upper=2.99)],
             [risk_row(41870364609), risk_row(41870364609)],
@@ -133,9 +136,10 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
             self.assertEqual(state["status"], "BLOCKED")
 
     def test_pending_past_month_stays_reserved_until_reconciled(self):
-        rc, state = run_guard(29, cap=40, reserve=0,
+        rc, state = run_guard(26, cap=40, reserve=0,
                               rows=[risk_row(41870364609, month="2026-10"),
-                                    risk_row(41949497953, month="2026-11")])
+                                    risk_row(41949497953, month="2026-11"),
+                                    risk_row(42204120988, month="2026-11")])
         self.assertEqual(rc, 0)
         self.assertEqual(state["exposure_range_max_usd"], 35)
 
@@ -145,13 +149,13 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
             "--effort", "max", "--owner-work-id", "S1-MAX-20261106-NEW",
             "--input-token-upper", "300000", "--output-token-upper", "45000",
         ]
-        rc, state = run_guard(28, cap=40, reserve=4, extra=params)
+        rc, state = run_guard(24, cap=40, reserve=4, extra=params)
         self.assertEqual(rc, 0, state)
         self.assertEqual(state["approval_quote"]["status"],
                          "QUOTE_ONLY_NATIVE_OWNER_CLAIM_REQUIRED")
         self.assertEqual(state["approval_quote"]["token_price_upper_usd"], 1.05)
         self.assertEqual(state["new_request_reserved_upper_usd"], 1.05)
-        self.assertEqual(state["exposure_range_max_usd"], 35.05)
+        self.assertEqual(state["exposure_range_max_usd"], 34.05)
 
     def test_future_model_unknown_price_or_unapproved_route_fails_closed(self):
         params = [
