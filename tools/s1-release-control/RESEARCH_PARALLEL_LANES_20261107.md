@@ -23,7 +23,7 @@ The coordinator performed multiple independent **read-only GitHub tool requests*
 - Baseline: plain GitHub REST responses.
 - Hypothesis: one versioned read-only machine object can preserve source, clock, SHA, status, gaps and no-authorization marker.
 - Falsifier: simulated merge permission; missing SHA/clock incorrectly passing; a consumer requiring private data to understand a public item.
-- Evidence: `projection-v1.mjs`, `test-projection-v1.mjs`, GitHub Actions `projection-adversarial` job.
+- Evidence: `projection-v1.mjs`, `agent-context-v1.mjs`, `AGENT_CONSUMPTION_CONTRACT.md`, `test-projection-v1.mjs`, `test-agent-context-v1.mjs`, and actual GitHub Actions `projection-adversarial` job. Public original-operation sources are fixed at SHA, original Git blob SHA verified against bytes, SHA256 recorded, and main re-read; not a mutable second queue.
 - Open: actual *existing authorized agent* import/readback is not yet independently observed.
 
 ### R03 · Native GitHub release intelligence · ADVISORY CLASSIFICATION TESTED, RELEASE UNPROVEN
@@ -66,13 +66,13 @@ The coordinator performed multiple independent **read-only GitHub tool requests*
 - Evidence: `00_FMOS/S1/MISSION.md`, shared projection always reports `autonomy_evidence: UNOBSERVED`, `test-projection-v1.mjs`.
 - Open: actual natural S1 to original merge and production readback. Existing model spend estimates are not release success.
 
-### R08 · Hosting / resilience · PR BUILD TESTED, PRODUCTION NOT RELEASED
-- Owner: current Cycle Navigator Pages workflow / original PR #1996 release.
-- Baseline: no cockpit deployment, static `tools/` folder absent from Pages artifact.
-- Hypothesis: optional static copy into existing `site/dist/s1-release-control/` preserves the canonical CN homepage and rollback while serving a separate read-only route.
-- Falsifier: CN root/legacy/vnext changes or failure to build; absent new files silently represented as shipped.
-- Evidence: optional `build-public.mjs` copy with absence warning and PR-only isolation tests; Chrome loopback tests.
-- Open: current-source release/recovery gates, qualified merge, successful Pages publication and exact production CDN bytes.
+### R08 · Hosting / resilience · STANDALONE BUILD VERIFIED, PRODUCTION NOT RELEASED
+- Owner: original PR #1996; a **dedicated future S1 GitHub Pages repository** is the distinct product publication owner. Cycle Navigator is a separate market product.
+- Baseline: original Archive only publishes CN via existing `05_CYCLE_NAVIGATOR/site/dist`. No independent S1 site.
+- Hypothesis: a separate public repository/project Pages site can publish the self-contained S1 static artifact without touching CN's bundle or hosting identity.
+- Falsifier: S1 requires CN build, changes CN root/legacy/vnext, generates a false second URL from the same Pages source, or claims a source-only artifact has reached CDN.
+- Evidence: the experimental CN staging in `build-public.mjs` was **reverted entirely**. The PR-only `standalone-browser-and-artifact` job now builds and tests only S1's own HTML and shared core, then emits a SHA256-bound static site artifact. Desktop/mobile Chrome acceptance with API denied was independently verified in an earlier run. GitHub Pages docs explicitly provide one project site per repository (https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages).
+- Open: existing GitHub connector cannot create a new public repository or configure separate Pages. Paid browser automation lacks existing spending authority and is not used. `SEPARATE_GITHUB_PAGES_REPOSITORY_CREATION_UNAVAILABLE` is the precise non-production blocker. GitHub repo creation/configuration, independent exact-source release/custody, original PR merge and real HTTPS/CDN byte readback remain unproven. No live site URL exists.
 
 ## Dependency map and honest finish line
 
@@ -80,6 +80,6 @@ The coordinator performed multiple independent **read-only GitHub tool requests*
 
 This cockpit never writes source authority; GitHub, original ledgers and original owners remain canonical. Recoverability and exact release permission sit outside the browser. Priority queue is deterministic PLAN_ONLY, never an execution queue. `PROPOSED` cannot mean authorized MERGE. A manual interactive GitHub action cannot claim natural S1 completion.
 
-**Not done:** private metadata projection, authentic S1 consumer adoption, immutable per-release external restore, independent technical review, release merge, real CDN acceptance and production autonomy metrics. Completion cannot be claimed while these are missing.
+**Not done:** private metadata integration, authenticated natural S1/Grok consumer readback, immutable per-release external restore, independent technical review, dedicated Pages repository and deployment, exact-current-main merger, real CDN acceptance and production autonomy metrics. Completion cannot be claimed while these are missing.
 
 **Next source-bound action:** validate exact current PR HEAD and all meaningful tests, obtain an independent current-source recovery/separation attestation through the existing qualified owner, then evaluate governed release under existing policy. Avoid repeating unchanged reviews or fabricating PASS. Keep draft/HOLD when real evidence is absent.
