@@ -1,6 +1,6 @@
 # Historical Reality Engine (HRE) v1 | 2020-2026, living research program
 
-**State: DESIGN_STAGED_FOR_OWNER_APPROVAL. No historical study, autonomous handoff or paid Sol call is claimed from this proposal.**
+**Current state: R1_OWNER_APPROVED_NATIVE_RESEARCH_PILOT.** Owner original issue receipt: https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6709645392. PR #2009 was merged on main with verified tests. The initial source, crisis and CN naive historical pilots are implemented on a separate PR branch; they are NOT research results or native Actions execution proof until actual job/artifact readback. No paid Sol, live market rule or autonomous S1 action is claimed.
 **Authority:** RESEARCH_ONLY / SHADOW_ONLY. Does not own Official Kompas, CN production, risk thresholds, wallet decisions, API budgets, bot permissions or GitHub releases.
 **Original science owners:** Task2 [#1596](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596), Forward Path/CN [#1516](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1516), Risk-to-Action [#1553](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1553), Altseason [#1918](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1918), source integrity [#1827](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1827), sole S1 [#1156](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156).
 **Existing source and method anchors:** research/historical_research_vault/, canonical-project-archive/05_RESEARCH_LAB/research_operating_system/no_hindsight_replay_harness_v0_2/, research/altseason_atlas/, .agents/skills/research-parallel-lanes/, .agents/skills/skill-quality-gate/, 06_RESEARCH_LAB/hugging_face_task2_audit_20261022/.
@@ -26,6 +26,7 @@ No intervention, source, indicator, forecast, alert or portfolio-action performa
 - SKILL_FOUNDRY_v1.md: useful procedures become candidate skills; independent quality gate, registration, rollback, not automated self-promotion.
 - APPROVAL_AND_RELEASE_v1.md: explicit owner-gated rollout and acceptance checks; do not confuse approval of design with launch completion.
 - scripts/research/validate_historical_reality_program_v1.py: deterministic plan/episode contract validator, paired with tests.
+- NATIVE_PILOT_METHOD_v1.md: real native checksum-verified public source and 3-lane retrospective first-phase protocol, with original PIT limits.
 
 ## Operating principle: no manual 'what next?' ritual
 

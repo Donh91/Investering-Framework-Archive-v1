@@ -24,7 +24,8 @@ class HistoricalRealityDesignTests(unittest.TestCase):
     def test_design_passes_without_claiming_execution(self):
         q, a = self.copies()
         self.assertEqual(hre.inspect(q, a), [])
-        self.assertFalse(q["activation"])
+        self.assertTrue(q["activation"])
+        self.assertTrue(q["owner_approval_receipt"].startswith("https://github.com/Donh91/"))
         self.assertTrue(all(t["completion_receipt"] is None for t in q["tasks"]))
 
     def test_rejects_unauthorized_paid_dispatch(self):
@@ -34,7 +35,7 @@ class HistoricalRealityDesignTests(unittest.TestCase):
 
     def test_rejects_unauthorized_activation(self):
         q, a = self.copies()
-        q["activation"] = True
+        q.pop("owner_approval_receipt")
         self.assertIn("activation_without_authenticated_owner_receipt", hre.inspect(q, a))
 
     def test_rejects_duplicate_task(self):
