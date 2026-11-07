@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import test from 'node:test';
-import {composeBrief} from './agent-brief-v1.mjs';
+import {composeBrief,buildReadbackStatus} from './agent-brief-v1.mjs';
 const SHA='a'.repeat(40), ALT='b'.repeat(40), SRC='https://github.com/Donh91/Investering-Framework-Archive-v1/blob/'+SHA+'/LATEST_OPERATIONS_DASHBOARD.json';
 const REPO='Donh91/Investering-Framework-Archive-v1';
 function src(id,summary={}){return {
@@ -135,4 +135,53 @@ test('one source error beyond intended sampling invalidates advisory sample qual
  const a=composeBrief(ctx(),r,'2026-11-07T13:02:00Z');
  assert.equal(a.state,'PARTIAL_OR_STALE_RECHECK');
  assert.equal(a.source_scope,'PARTIAL_OR_UNVERIFIED');
+});
+
+test('stale handoff with fresh canonical Codex keeps read-only original pointers, never admits a full brief',()=>{
+ const c=ctx();c.partial=true;
+ c.source_files.find(x=>x.id==='handoff').freshness='STALE';
+ const codex=c.source_files.find(x=>x.id==='codex_ready');
+ codex.source_path='LATEST_CODEX_READY_TASKS.json';
+ codex.source_url='https://github.com/'+REPO+'/blob/'+SHA+'/LATEST_CODEX_READY_TASKS.json';
+ codex.summary.task_refs[0].source_url='https://github.com/'+REPO+'/blob/'+SHA+'/research/codex/intake/2026/11/case1.json';
+ const brief=composeBrief(c,rel(),'2026-11-07T13:02:00Z');
+ assert.equal(brief.state,'PARTIAL_OR_STALE_RECHECK');
+ const d=buildReadbackStatus(brief,'f'.repeat(40),{admitted:false});
+ assert.equal(d.contract,'S1_AGENT_BRIEF_ADMISSION_STATUS_v1');
+ assert.equal(d.status,'WITHHELD_RECHECK_ORIGINAL_SOURCE');
+ assert.equal(d.full_brief_admitted,false);
+ assert.equal(d.merge_authorized,false);
+ assert.equal(d.eligible_for_original_action,false);
+ assert.equal(d.requires_live_original_source_recheck,true);
+ assert.equal(d.source_refresh_cadence_verified_in_this_packet,false);
+ assert.equal(d.read_only_original_codex_candidate_pointers.length,1);
+ assert.equal(d.read_only_original_codex_candidate_pointers[0].candidate_id,'case1');
+ assert.equal(d.read_only_original_codex_candidate_pointers[0].candidate_file_revalidated,false);
+ assert.equal(d.read_only_original_codex_candidate_pointers[0].action_permission,false);
+ assert.equal(d.read_only_original_codex_candidate_pointers[0].source_ledger_sha256,'d'.repeat(64));
+ const handoff=d.source_statuses.find(x=>x.id==='handoff');
+ assert.equal(handoff.freshness,'STALE');
+ assert.equal(d.source_statuses.find(x=>x.id==='codex_ready').freshness,'FRESH_ADVISORY');
+});
+test('no codex pointers when original source identity, recency, main alignment or path is invalid',()=>{
+ const c=ctx();c.partial=true;c.source_files.find(x=>x.id==='handoff').freshness='STALE';
+ const source=c.source_files.find(x=>x.id==='codex_ready');
+ source.source_path='LATEST_CODEX_READY_TASKS.json';
+ source.source_url='https://github.com/'+REPO+'/blob/'+SHA+'/LATEST_CODEX_READY_TASKS.json';
+ source.summary.task_refs[0].source_url='https://github.com/'+REPO+'/blob/'+SHA+'/research/codex/intake/a.json';
+ const basis=composeBrief(c,rel(),'2026-11-07T13:02:00Z');
+ for(const corrupt of [
+   b=>b.source_alignment='UNOBSERVED',
+   b=>b.source_coverage.canonical_sources.find(x=>x.id==='codex_ready').freshness='STALE',
+   b=>b.source_coverage.canonical_sources.find(x=>x.id==='codex_ready').sha256='bad',
+   b=>b.source_coverage.canonical_sources.find(x=>x.id==='codex_ready').source_ref='https://github.com/Donh91/secrets/blob/'+SHA+'/anything',
+   b=>b.original_codex_ready_hints[0].original_source_ref='https://github.com/Donh91/secrets/blob/'+SHA+'/anything',
+   b=>b.original_codex_ready_hints[0].code_executed_proven=true
+ ]){
+   const copy=structuredClone(basis);corrupt(copy);
+   const diagnostic=buildReadbackStatus(copy,'f'.repeat(40));
+   assert.deepEqual(diagnostic.read_only_original_codex_candidate_pointers,[]);
+   assert.equal(diagnostic.eligible_for_original_action,false);
+ }
+ assert.throws(()=>buildReadbackStatus(basis,'invalid'),/CANDIDATE_HEAD_REQUIRED/);
 });
