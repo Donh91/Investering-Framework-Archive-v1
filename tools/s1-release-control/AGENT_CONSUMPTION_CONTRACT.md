@@ -9,6 +9,7 @@
 - Public GitHub PR projection: `node tools/s1-release-control/projection-v1.mjs --stdout`, contract `S1_RELEASE_PROJECTION_v1`.
 - Shared human/machine fail-closed rules: `tools/s1-release-control/release-core.js`.
 - Positive, negative, mutation and source-bound tests: `test-static.mjs`, `test-projection-v1.mjs`, `test-agent-context-v1.mjs`.
+- To verify an exported brief, run `node tools/s1-release-control/verify-agent-brief-v1.mjs ARTIFACT.json EXACT_PR_HEAD_SHA`. Its bounded, deterministic proof checks source SHA bindings, original read-only controls and a maximum 90-minute observation age. `ADVISORY_SOURCE_IDENTITIES_VERIFIED` **does not** mean current main was reread or that any original action is authorized. Tests deliberately reject a historical artifact replay, future timestamp, stale review-style claim and false S1/Grok authority.
 - These scripts execute only on an existing authorized runtime when called, with no cron, additional supervisor, new credential, paid API or model dispatch. They use **anonymous public GET**. A local run is not evidence of unattended S1 operation.
 
 ## Strict read and decision sequence
