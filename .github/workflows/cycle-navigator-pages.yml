@@ -78,6 +78,7 @@ jobs:
         run: |
           node --test 05_CYCLE_NAVIGATOR/site/kompas-pro-test/alternativer/alternatives.test.mjs
           test -f 05_CYCLE_NAVIGATOR/site/dist/kompas-pro-test/alternativer/index.html
+          node 05_CYCLE_NAVIGATOR/site/kompas-pro-test/alternativer/browser.test.mjs
       - name: Validate Compass bundle contract
         run: node 05_CYCLE_NAVIGATOR/site/validate-compass-site-v5.mjs
       - name: Bind canonical weekly scorecard
