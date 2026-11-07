@@ -54,6 +54,43 @@ class Task2W44PostfreezeTests(unittest.TestCase):
         self.assertFalse(p["round3_analysis_performed"])
         self.assertTrue(p["no_model_selection_or_parameter_tuning"])
 
+    def test_actual_55_batch_window_ends_are_not_fake_hourly_candle_closes(self):
+        result=self.replay
+        self.assertEqual(result["batch_window_after_candle_end_rows"],55)
+        self.assertEqual(result["time_series_clock"],
+            "TIMESTAMP_UTC_CANONICAL_CANDLE_OPEN_PLUS_ONE_COMPLETED_HOUR")
+        self.assertTrue(result["batch_request_end_is_not_first_known"])
+        self.assertFalse(result["original_vendor_first_known_proven"])
+        self.assertEqual(result["postfreeze_eligible_hours"],162)
+
+    def test_two_distinct_nominal_hours_share_batch_end_legitimately(self):
+        a,first_end,late_a=w44.validated_hourly_candle_clocks({
+            "timestamp_utc":"2026-10-26T01:00:00Z",
+            "source_window_end_utc":"2026-10-26T05:00:00Z"})
+        b,second_end,late_b=w44.validated_hourly_candle_clocks({
+            "timestamp_utc":"2026-10-26T02:00:00Z",
+            "source_window_end_utc":"2026-10-26T05:00:00Z"})
+        self.assertNotEqual(a,b)
+        self.assertNotEqual(first_end,second_end)
+        self.assertEqual((second_end-first_end).total_seconds(),3600)
+        self.assertTrue(late_a)
+        self.assertTrue(late_b)
+
+    def test_invalid_batch_window_and_noncanonical_candle_fail_closed(self):
+        for start,end,error in (
+            ("2026-10-26T07:00:00Z","2026-10-26T07:00:00Z",
+             "INVALID_COLLECTOR_BATCH_WINDOW_SPAN"),
+            ("2026-10-26T07:00:00Z","2026-10-27T08:00:00Z",
+             "INVALID_COLLECTOR_BATCH_WINDOW_SPAN"),
+            ("2026-10-26T07:30:00Z","2026-10-26T09:00:00Z",
+             "NON_HOURLY_CANONICAL_SOURCE_CLOCK"),
+            ("2026-10-26T07:00:00Z","2026-10-26T09:30:00Z",
+             "NON_HOURLY_CANONICAL_SOURCE_CLOCK"),
+        ):
+            with self.assertRaisesRegex(ValueError,error):
+                w44.validated_hourly_candle_clocks({
+                    "timestamp_utc":start,"source_window_end_utc":end})
+
     def test_inverted_missing_or_nonfinite_range_fails_closed(self):
         for vals in ((100,99,90,110,100),(10,20,30,29,100),
                      (float("nan"),20,3,15,100),(0,10,3,9,100)):
