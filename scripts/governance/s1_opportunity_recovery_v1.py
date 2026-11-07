@@ -154,7 +154,12 @@ def recommend_work_mode(pr_cases, issue_cases=None, *,
     def typed(rows, kind):
         accepted, wrong_kind = [], 0
         for item in rows:
-            path = urlparse(item.get("original_url", "")).path.strip("/").split("/") if isinstance(item, dict) else []
+            raw_url = item.get("original_url") if isinstance(item, dict) else None
+            try:
+                path = (urlparse(raw_url).path.strip("/").split("/")
+                        if isinstance(raw_url, str) else [])
+            except ValueError:
+                path = []
             if len(path) == 4 and path[2] == kind:
                 accepted.append(item)
             else:
