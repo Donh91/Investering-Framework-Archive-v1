@@ -26,6 +26,8 @@ jobs:
         run: node --test tools/s1-release-control/test-static.mjs
       - name: Assert read-only versioned machine schemas
         run: node --test tools/s1-release-control/test-contract-schema-v1.mjs
+      - name: Verify public agent artifact positive and tamper-negative controls
+        run: node --test tools/s1-release-control/test-verify-agent-brief-v1.mjs
       - name: Validate eight research lanes contract without dispatch
         run: python3 scripts/research/validate_parallel_research_manifest_v1.py tools/s1-release-control/RESEARCH_PARALLEL_LANES_V1.json
   projection-adversarial:
@@ -88,6 +90,9 @@ jobs:
             writeFileSync('/tmp/s1-release-control-agent-brief-v1.json',JSON.stringify(packet,null,2)+'\n');
           }
           NODE
+          if test -f /tmp/s1-release-control-agent-brief-v1.json; then
+            node tools/s1-release-control/verify-agent-brief-v1.mjs /tmp/s1-release-control-agent-brief-v1.json "$S1_CANDIDATE_HEAD"
+          fi
       - name: Upload immutable-candidate agent brief for existing S1/Grok readback
         uses: actions/upload-artifact@v4
         with:
