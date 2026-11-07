@@ -5,7 +5,6 @@ on:
     paths:
       - "tools/s1-release-control/**"
       - ".github/workflows/s1-release-control-pr.yml"
-      - "05_CYCLE_NAVIGATOR/site/build-public.mjs"
 
 permissions:
   contents: read
@@ -60,32 +59,35 @@ jobs:
           if(!x.observed||report.partial||!report.items.length)process.exitCode=1;
           NODE
 
-  pages-isolation-smoke:
+  standalone-browser-and-artifact:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Build existing Cycle Navigator without publishing
-        run: node 05_CYCLE_NAVIGATOR/site/build-public.mjs
-      - name: Assert isolated S1 bundle and unchanged CN routes
+      - name: Validate S1 standalone source, independent from Cycle Navigator
         run: |
-          test -f 05_CYCLE_NAVIGATOR/site/dist/index.html
-          test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
-          test -f 05_CYCLE_NAVIGATOR/site/dist/vnext/index.html
-          test -f 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/index.html
-          test -f 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/release-core.js
-          cmp tools/s1-release-control/index.html 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/index.html
-          cmp tools/s1-release-control/release-core.js 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/release-core.js
-          grep -q 'RELEASE CONTROL' 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/index.html
-      - name: Verify actual desktop and mobile Chrome runtime with denied GitHub API
+          test -f tools/s1-release-control/index.html
+          test -f tools/s1-release-control/release-core.js
+          ! grep -q "05_CYCLE_NAVIGATOR/site/dist" tools/s1-release-control/test-browser.mjs
+          ! grep -q "s1-release-control" 05_CYCLE_NAVIGATOR/site/build-public.mjs
+      - name: Actual Chrome desktop and mobile behavior with API unavailable
         run: node tools/s1-release-control/test-browser.mjs
-      - name: Attach isolated S1 static release candidate, not published
+      - name: Prepare standalone public bundle only
+        run: |
+          mkdir -p /tmp/s1-site
+          cp tools/s1-release-control/index.html /tmp/s1-site/index.html
+          cp tools/s1-release-control/release-core.js /tmp/s1-site/release-core.js
+          touch /tmp/s1-site/.nojekyll
+          (cd /tmp/s1-site && sha256sum index.html release-core.js > SHA256SUMS)
+          test -f /tmp/s1-site/SHA256SUMS
+      - name: Attach independent GitHub Pages candidate, not deployed
         uses: actions/upload-artifact@v4
         with:
-          name: s1-release-control-${{ github.event.pull_request.head.sha }}
-          path: 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/
+          name: s1-standalone-site-${{ github.event.pull_request.head.sha }}
+          path: /tmp/s1-site/
+          include-hidden-files: true
           if-no-files-found: error
-          retention-days: 3
+          retention-days: 7
