@@ -37,6 +37,29 @@ jobs:
           node-version: '22'
       - name: Verify source-bound fail-closed projection
         run: node --test tools/s1-release-control/test-projection-v1.mjs
+      - name: Public GitHub live readback, advisory and quota-aware
+        continue-on-error: true
+        run: |
+          node --input-type=module <<'NODE'
+          import {buildProjection} from './tools/s1-release-control/projection-v1.mjs';
+          const report=await buildProjection({
+            repositories:['Donh91/Investering-Framework-Archive-v1'],
+            maxPerRepo:1
+          });
+          const x=report.source_repositories[0];
+          console.log('S1_PUBLIC_LIVE_SOURCE_READBACK',JSON.stringify({
+            observed:x.observed,
+            main_sha:x.main_sha,
+            observed_at:report.observed_at,
+            item_count:report.items.length,
+            source_issues:x.source_issues,
+            partial:report.partial,
+            credential_mode:'ANONYMOUS_GET_ONLY',
+            merge_authority:report.release_authority
+          }));
+          if(!x.observed||report.partial||!report.items.length)process.exitCode=1;
+          NODE
+
   pages-isolation-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 8
