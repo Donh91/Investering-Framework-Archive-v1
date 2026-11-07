@@ -125,7 +125,7 @@ test('mutation negative: removing exact run SHA condition invalidates cross-comm
   const context={module:{exports:{}},globalThis:{}};
   runInNewContext(source.replace(clause,"r&&r.event==='pull_request'&&Array.isArray(r.pr_numbers)&&r.pr_numbers.includes(p.number)&&Number.isSafeInteger(r.id)"),context);
   const mutant=context.module.exports;
-  const wrong=pr({runs:[{id:123,head_sha:SHA_B,status:'completed',conclusion:'success'}]});
+  const wrong=pr({runs:[{...base.runs[0],head_sha:SHA_B,status:'completed',conclusion:'success'}]});
   assert.equal(core.ci(wrong).status,'UNOBSERVED');
   assert.equal(mutant.ci(wrong).status,'PROVEN','the negative test detects cross-commit admission');
 });
