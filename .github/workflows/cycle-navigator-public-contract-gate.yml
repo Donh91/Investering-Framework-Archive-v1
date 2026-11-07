@@ -139,6 +139,9 @@ jobs:
         run: |
           set -euo pipefail
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node --test 05_CYCLE_NAVIGATOR/site/qa/w46-preview/preview.test.mjs
+          test -f 05_CYCLE_NAVIGATOR/site/dist/qa/w46-preview/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/qa/w46-preview/fixture.mjs
           node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
           node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
