@@ -1,0 +1,36 @@
+name: S1 Release Control PR validation
+
+on:
+  pull_request:
+    paths:
+      - "tools/s1-release-control/**"
+      - ".github/workflows/s1-release-control-pr.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s1-release-control-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  static-and-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate read-only browser boundaries
+        run: node --test tools/s1-release-control/test-static.mjs
+  projection-adversarial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source-bound fail-closed projection
+        run: node --test tools/s1-release-control/test-projection-v1.mjs
