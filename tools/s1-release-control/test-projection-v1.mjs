@@ -9,7 +9,7 @@ const owner='Donh91/Investering-Framework-Archive-v1';
 const root='https://api.github.com/repos/'+owner;
 const base={repo:owner,number:1996,author:'Donh91',state:'open',merged:false,draft:false,head:SHA_A,base:SHA_C,
   changedFiles:1,filesObserved:true,files:[{filename:'tools/s1-release-control/README.md'}],
-  runObserved:true,runs:[{id:123,head_sha:SHA_A,conclusion:'success',status:'completed'}],
+  runObserved:true,runs:[{id:123,head_sha:SHA_A,conclusion:'success',status:'completed',event:'pull_request',pr_numbers:[1996]}],
   reviewsObserved:true,reviews:[],labels:[],seed:false};
 const pr=(patch={})=>({...base,...patch});
 test('exact 40-digit SHA is required and missing head fails closed',()=>{
@@ -64,7 +64,7 @@ function mkFetch({main=SHA_B,afterMain=SHA_B,runHead=SHA_A,denyFiles=false,denyB
     else if(url===root+'/pulls/1996')value=sample;
     else if(url===root+'/pulls/1996/files?per_page=100'){value=[{filename:'tools/s1-release-control/index.html'}];if(denyFiles)status=403;}
     else if(url===root+'/pulls/1996/reviews?per_page=100')value=[];
-    else if(url===root+'/actions/runs?head_sha='+SHA_A+'&per_page=100')value={workflow_runs:[{id:123,head_sha:runHead,conclusion:'success',status:'completed',name:'Static'}]};
+    else if(url===root+'/actions/runs?head_sha='+SHA_A+'&per_page=100')value={workflow_runs:[{id:123,head_sha:runHead,conclusion:'success',status:'completed',event:'pull_request',pull_requests:[{number:1996}],name:'Static'}]};
     else throw Error('UNEXPECTED_URL: '+url);
     return {ok:status===200,status,json:async()=>value};
   };
@@ -120,10 +120,10 @@ test('mutation negative: removing HIGH_IMPACT hold changes expected safety verdi
 });
 test('mutation negative: removing exact run SHA condition invalidates cross-commit CI proof',()=>{
   const source=readFileSync(new URL('./release-core.js',import.meta.url),'utf8');
-  const clause='r&&r.head_sha===p.head&&Number.isSafeInteger(r.id)';
+  const clause="r&&r.head_sha===p.head&&r.event==='pull_request'&&Array.isArray(r.pr_numbers)&&r.pr_numbers.includes(p.number)&&Number.isSafeInteger(r.id)";
   assert.ok(source.includes(clause),'cannot silently skip SHA mutation coverage');
   const context={module:{exports:{}},globalThis:{}};
-  runInNewContext(source.replace(clause,'r&&Number.isSafeInteger(r.id)'),context);
+  runInNewContext(source.replace(clause,"r&&r.event==='pull_request'&&Array.isArray(r.pr_numbers)&&r.pr_numbers.includes(p.number)&&Number.isSafeInteger(r.id)"),context);
   const mutant=context.module.exports;
   const wrong=pr({runs:[{id:123,head_sha:SHA_B,status:'completed',conclusion:'success'}]});
   assert.equal(core.ci(wrong).status,'UNOBSERVED');
@@ -139,4 +139,11 @@ test('mutation negative: stale formal approvals must not pass',()=>{
   const wrong=pr({reviews:[{user:{login:'reviewer'},submitted_at:'2026-11-07T01:00:00Z',commit_id:SHA_B,state:'APPROVED'}]});
   assert.equal(core.review(wrong),'UNOBSERVED');
   assert.equal(mutant.review(wrong),'PROVEN','the negative test detects stale-review admission');
+});
+
+test('scheduled or unrelated PR run is never counted as exact-PR CI',()=>{
+  const scheduled=pr({runs:[{...base.runs[0],event:'schedule'}]});
+  const unrelated=pr({runs:[{...base.runs[0],pr_numbers:[100]}]});
+  assert.equal(core.ci(scheduled).status,'UNOBSERVED');
+  assert.equal(core.ci(unrelated).status,'UNOBSERVED');
 });
