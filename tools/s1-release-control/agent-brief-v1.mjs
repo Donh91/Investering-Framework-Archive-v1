@@ -126,6 +126,82 @@ export async function buildAgentBrief({fetcher=fetch,clock=()=>new Date().toISOS
  ]);
  return composeBrief(context,projection,clock());
 }
+
+/* Partial source diagnostic for existing agents, NOT an alternative queue.
+ * A stale handoff with a fresh Codex original may expose bounded read-only
+ * source pointers; it never admits the full brief or grants S1 action.
+ */
+const DIAGNOSTIC_ORIGINAL_PATHS=Object.freeze({
+  operations:'LATEST_OPERATIONS_DASHBOARD.json',
+  handoff:'LATEST_HANDOFF.json',
+  codex_ready:'LATEST_CODEX_READY_TASKS.json',
+  remediation:'LATEST_REMEDIATION_QUEUE.json'
+});
+export function buildReadbackStatus(brief,candidateHead,{admitted=false}={}){
+ if(!SHA40.test(candidateHead||''))throw Error('CANDIDATE_HEAD_REQUIRED');
+ if(!brief||brief.schema!=='S1_AGENT_OPERATIONS_BRIEF_v1'||admitted!==Boolean(admitted))
+   throw Error('INVALID_ORIGINAL_BRIEF_DIAGNOSTIC');
+ const main=brief.source_alignment==='MATCHED'&&SHA40.test(brief.archive_main_sha||'')
+   ?brief.archive_main_sha:null;
+ const prefix=main?'https://github.com/'+MAIN_REPO+'/blob/'+main+'/':null;
+ const rows=(Array.isArray(brief.source_coverage?.canonical_sources)
+   ?brief.source_coverage.canonical_sources:[]).slice(0,4).map(s=>{
+   const expected=DIAGNOSTIC_ORIGINAL_PATHS[s?.id];
+   const identity=Boolean(main&&expected&&s.source_path===expected&&
+     s.source_ref===prefix+expected&&s.main_sha===main&&SHA40.test(s.blob_sha||'')&&
+     /^[a-f0-9]{64}$/i.test(s.sha256||'')&&
+     Number.isSafeInteger(s.bytes)&&s.bytes>0&&
+     s.status==='OBSERVED'&&
+     ['FRESH_ADVISORY','STALE'].includes(s.freshness));
+   return {
+     id:expected?s.id:'UNRECOGNIZED',
+     status:identity?'OBSERVED':'UNOBSERVED',
+     freshness:identity?s.freshness:'UNOBSERVED',
+     original_source_ref:identity?s.source_ref:null,
+     source_main_sha:identity?main:null,
+     source_blob_sha:identity?s.blob_sha:null,
+     source_sha256:identity?s.sha256:null,
+     source_bytes:identity?s.bytes:null,
+     identity_verified_in_source_context:identity,
+     action_permission:false
+   };
+ });
+ const codex=rows.find(x=>x.id==='codex_ready'&&x.identity_verified_in_source_context&&x.freshness==='FRESH_ADVISORY');
+ const raw=Array.isArray(brief.original_codex_ready_hints)?brief.original_codex_ready_hints:[];
+ const candidates=main&&codex?raw.slice(0,8).filter(h=>
+   h?.kind==='EXISTING_CODEX_READY_HINT'&&h.original_owner==='EXISTING_CODEX_INTAKE'&&
+   h.code_executed_proven===false&&h.release_permission===false&&
+   typeof h.candidate_id==='string'&&/^[a-z0-9._:-]{1,150}$/i.test(h.candidate_id)&&
+   typeof h.original_source_ref==='string'&&
+   h.original_source_ref.startsWith(prefix+'research/codex/intake/')&&
+   !h.original_source_ref.includes('..')
+ ).map(h=>({
+   candidate_id:h.candidate_id,original_source_ref:h.original_source_ref,
+   original_queue_source_ref:codex.original_source_ref,
+   source_main_sha:main,source_ledger_blob_sha:codex.source_blob_sha,
+   source_ledger_sha256:codex.source_sha256,
+   pointer_only:true,candidate_file_revalidated:false,
+   original_intake_recheck_required:true,code_execution_proven:false,
+   action_permission:false,merge_authorized:false
+ })):[];
+ return {
+   contract:'S1_AGENT_BRIEF_ADMISSION_STATUS_v1',candidate_pr_head_sha:candidateHead,
+   observed_at_utc:brief.observed_at_utc||null,original_main_sha:main,
+   status:admitted?'ADMITTED_SOURCE_IDENTITIES_ONLY':'WITHHELD_RECHECK_ORIGINAL_SOURCE',
+   source_statuses:rows,source_issues:Array.isArray(brief.source_coverage?.public_github_repository?.source_issues)
+     ?brief.source_coverage.public_github_repository.source_issues.slice(0,8).filter(x=>typeof x==='string').map(x=>x.slice(0,100)):[],
+   original_codex_ready_hint_count:admitted?raw.length:null,
+   read_only_original_codex_candidate_pointers:candidates,
+   partial_research_possible:candidates.length>0,
+   full_brief_admitted:admitted,requires_live_original_source_recheck:true,
+   source_decision_age_policy_unchanged:true,
+   source_refresh_cadence_verified_in_this_packet:false,
+   merge_authorized:false,eligible_for_original_action:false,
+   natural_s1_execution_proven:false,independent_recovery_verified:false,
+   private_bridge:'UNOBSERVED',production_verified:false
+ };
+}
+
 async function cli(){
  const args=process.argv.slice(2);
  if(args.length && !(args.length===1&&args[0]==='--stdout') &&
