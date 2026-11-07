@@ -94,7 +94,7 @@ try{
   assert.ok(ready,"GITHUB_NATIVE_CHART_NOT_READY_"+width);
   const colors=[];
   for(const design of ["nordic","atelier","signal"]){
-   await evaluate('document.querySelector("[data-concept-choice='+"'"+design+"'"+']").click();true');
+   await evaluate('document.querySelector("[data-concept-choice='+design+']").click();true');
    await delay(140);
    const report=await evaluate('(()=>{const rows=[...document.querySelectorAll("#daily-rows tr")];return {design:document.body.dataset.concept,chartDesign:document.querySelector(".chart-area")?.getAttribute("data-kompas-alternative"),color:getComputedStyle(document.querySelector(".fw-canvas")).backgroundColor,canvases:document.querySelectorAll("#native-chart .fw-canvas canvas").length,rows:rows.length,actual:rows.filter(r=>!r.cells[4]?.textContent?.includes("Afventer")).length,observed:document.querySelector("#observed-hours")?.textContent,error:!document.querySelector("#graph-error").hidden,overflow:document.documentElement.scrollWidth>innerWidth+2,forecast:document.querySelector(".fw-progress-forecast")?.textContent}})()');
    assert.equal(report.design,design,JSON.stringify(report));
