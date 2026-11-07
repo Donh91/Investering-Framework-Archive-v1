@@ -2,7 +2,7 @@
   "contract": "HRE_RESEARCH_QUEUE_V1",
   "as_of_utc_date": "2026-11-07",
   "project": "Historical Reality Engine",
-  "proposal_state": "DESIGN_STAGED_OWNER_APPROVAL_REQUIRED",
+  "proposal_state": "R1_OWNER_APPROVED_NATIVE_PILOT_IN_IMPLEMENTATION",
   "authority": "NAVIGATION_ONLY_NO_EXECUTION_RIGHTS",
   "science_owner": "Archive#1596",
   "related_owners": [
@@ -23,7 +23,7 @@
   "new_supervisor": false,
   "new_github_identity": false,
   "new_workflow_in_this_proposal": false,
-  "activation": false,
+  "activation": true,
   "automatic_paid_sol": false,
   "automatic_research_model_promotion": false,
   "automatic_live_portfolio_action": false,
@@ -41,7 +41,7 @@
       "id": "HR-001",
       "priority": 0,
       "original_owner_issue": "Archive#1596",
-      "stage": "NOT_STARTED_OWNER_APPROVAL_REQUIRED",
+      "stage": "OWNER_APPROVED_WAITING_NATIVE_VALIDATED_PILOT",
       "depends_on": [],
       "question": "Historical source census and eligibility across 2020-2026",
       "first_action": "Inventory original-period Binance data, Coin Metrics price, existing vault, FRED ALFRED vintages, HF sources; record first-known, author, quote and source-license rules",
@@ -51,14 +51,14 @@
       "default_execution": "EXISTING_READ_ONLY_ACTIONS_OR_AUTHORIZED_OWNER_PR",
       "authorized_spend_usd": 0,
       "completion_receipt": null,
-      "blocker": "OWNER_ROLLOUT_APPROVAL_AND_REAL_SOURCE_CENSUS",
-      "reactivation_trigger": "Owner approval plus source manifest, original owner and bounded native workflow action"
+      "blocker": "NATIVE_PARALLEL_JOBS_AND_SOURCE_SHA256_RECEIPTS_NOT_YET_EXECUTED",
+      "reactivation_trigger": "Latest original HRE PR exact-head native source QA and replay jobs succeed or fail with evidence"
     },
     {
       "id": "HR-002",
       "priority": 0,
       "original_owner_issue": "Archive#1596",
-      "stage": "NOT_STARTED_OWNER_APPROVAL_REQUIRED",
+      "stage": "OWNER_APPROVED_WAITING_NATIVE_VALIDATED_PILOT",
       "depends_on": [
         "HR-001"
       ],
@@ -70,8 +70,8 @@
       "default_execution": "EXISTING_READ_ONLY_ACTIONS_OR_AUTHORIZED_OWNER_PR",
       "authorized_spend_usd": 0,
       "completion_receipt": null,
-      "blocker": "OWNER_ROLLOUT_APPROVAL_AND_REAL_SOURCE_CENSUS",
-      "reactivation_trigger": "Owner approval plus source manifest, original owner and bounded native workflow action"
+      "blocker": "NATIVE_PARALLEL_JOBS_AND_SOURCE_SHA256_RECEIPTS_NOT_YET_EXECUTED",
+      "reactivation_trigger": "Latest original HRE PR exact-head native source QA and replay jobs succeed or fail with evidence"
     },
     {
       "id": "HR-003",
@@ -153,7 +153,7 @@
       "id": "HR-007",
       "priority": 0,
       "original_owner_issue": "Archive#1553",
-      "stage": "NOT_STARTED_OWNER_APPROVAL_REQUIRED",
+      "stage": "OWNER_APPROVED_WAITING_NATIVE_VALIDATED_PILOT",
       "depends_on": [
         "HR-001"
       ],
@@ -165,8 +165,8 @@
       "default_execution": "EXISTING_READ_ONLY_ACTIONS_OR_AUTHORIZED_OWNER_PR",
       "authorized_spend_usd": 0,
       "completion_receipt": null,
-      "blocker": "OWNER_ROLLOUT_APPROVAL_AND_REAL_SOURCE_CENSUS",
-      "reactivation_trigger": "Owner approval plus source manifest, original owner and bounded native workflow action"
+      "blocker": "NATIVE_PARALLEL_JOBS_AND_SOURCE_SHA256_RECEIPTS_NOT_YET_EXECUTED",
+      "reactivation_trigger": "Latest original HRE PR exact-head native source QA and replay jobs succeed or fail with evidence"
     },
     {
       "id": "HR-008",
@@ -191,7 +191,7 @@
       "id": "HR-009",
       "priority": 0,
       "original_owner_issue": "Archive#1516",
-      "stage": "NOT_STARTED_OWNER_APPROVAL_REQUIRED",
+      "stage": "OWNER_APPROVED_WAITING_NATIVE_VALIDATED_PILOT",
       "depends_on": [
         "HR-001"
       ],
@@ -203,8 +203,8 @@
       "default_execution": "EXISTING_READ_ONLY_ACTIONS_OR_AUTHORIZED_OWNER_PR",
       "authorized_spend_usd": 0,
       "completion_receipt": null,
-      "blocker": "OWNER_ROLLOUT_APPROVAL_AND_REAL_SOURCE_CENSUS",
-      "reactivation_trigger": "Owner approval plus source manifest, original owner and bounded native workflow action"
+      "blocker": "NATIVE_PARALLEL_JOBS_AND_SOURCE_SHA256_RECEIPTS_NOT_YET_EXECUTED",
+      "reactivation_trigger": "Latest original HRE PR exact-head native source QA and replay jobs succeed or fail with evidence"
     },
     {
       "id": "HR-010",
@@ -314,5 +314,9 @@
       "blocker": "OWNER_ROLLOUT_APPROVAL_AND_REAL_SOURCE_CENSUS",
       "reactivation_trigger": "Owner approval plus source manifest, original owner and bounded native workflow action"
     }
-  ]
+  ],
+  "owner_approval_receipt": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6709645392",
+  "activation_authority": "INTERACTIVE_OWNER_GOAL_2026_11_07_AND_NATIVE_GITHUB_RESEARCH_HANDOFF_NO_PAYMENT_AUTHORIZATION",
+  "original_research_branch": "research/hre-native-replay-pilot-v1-20261107",
+  "approval_is_not_sol_paid_release": true
 }
