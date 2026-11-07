@@ -4,6 +4,8 @@
  * The OFFICIAL current-direction gate is inherited from the existing site
  * verifier. Unknown/missing source never becomes an affirmative direction.
  */
+import {originalWeekPriceLabel} from './original-week-price-readback.mjs';
+
 export const KOMPAS_HORIZONS=Object.freeze([
   ['NOW','Nu','Now','OBSERVED'],
   ['H0_12H','0–12 timer','0–12 hours','OBSERVED'],
@@ -55,8 +57,14 @@ function trustedStrategicContext(trace,strategic){
     strategic.status==='FROZEN_CONTEXT_ONLY'&&
     strategic.strategic?.available===true;
 }
-export function kompasHorizonStatusRows({compass,view,lang='da',observationCurrent=false,strategic=null,trace=null}={}){
+export function kompasHorizonStatusRows({compass,view,lang='da',observationCurrent=false,strategic=null,trace=null,originalWeekPrice=null}={}){
   const verified=validOfficial(compass,view);
+  const weekPriceText=originalWeekPriceLabel(originalWeekPrice,{lang});
+  const weekOnly=(row)=>({...row,status:'SOURCE_ISSUED_WEEK_PRICE_ONLY',
+    tone:'mixed',sourceStatus:'ORIGINAL_WEEK_PRICE_NOT_DAILY_ACTION',
+    value:tr(lang,'Frosset ugeprognose · dagsvurdering afventer','Frozen week forecast · daily outlook unavailable'),
+    sourceLabel:tr(lang,'Original 7-dagesprognose · ikke en aktuel handelshandling',
+      'Original 7-day forecast · not a current trading action'),priceLabel:weekPriceText});
   const out=KOMPAS_HORIZONS.map(([id,da,en,kind,officialId])=>{
     const row={id,label:tr(lang,da,en),kind,sourceStatus:'NOT_ISSUED_IN_THIS_VIEW',
       // Never invent a numerical terminal close, interval, forecast or ETA.
@@ -89,18 +97,23 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
             'Previously issued strategic context · nonbinding'),
           priceLabel:tr(lang,'BTC-retning · ikke kursmål','BTC direction · not a price target')};
     }
-    if(!verified)return row;
+    if(!verified){
+      // Independently source-issued Monday prices survive expiry of the
+      // separate Official daily action. No stale direction is resurrected.
+      return id==='H5_7D'&&weekPriceText?weekOnly(row):row;
+    }
     if(kind==='OFFICIAL'){
       const h=compass.horizons?.[officialId];
       const info=directions[h?.expected_direction];
       if(!info||!['UP','DOWN','MIXED','SIDEWAYS','LEAN_BULLISH','LEAN_BEARISH'].includes(h.expected_direction))
-        return row;
+        return id==='H5_7D'&&weekPriceText?weekOnly(row):row;
       return {...row,label:tr(lang,da,en),kind,status:'OFFICIAL_DIRECTION_ONLY',
         tone:info[2],sourceStatus:'OFFICIAL_SOURCE_DIRECTION_ONLY',
         value:tr(lang,info[0],info[1]),
         sourceLabel:tr(lang,'Officiel retningsvurdering','Official direction'),
         // A direction is never an independently issued BTC price target.
-        priceLabel:tr(lang,'Retning, ikke kursmål','Direction, not a price target')};
+        priceLabel:id==='H5_7D'&&weekPriceText?weekPriceText:
+          tr(lang,'Retning, ikke kursmål','Direction, not a price target')};
     }
     if(kind==='OBSERVED'){
       const info=observationCurrent?directions[compass.market_now?.directional_state]:null;
