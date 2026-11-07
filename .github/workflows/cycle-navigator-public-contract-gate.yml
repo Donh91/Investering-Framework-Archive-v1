@@ -139,6 +139,8 @@ jobs:
         run: |
           set -euo pipefail
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node --test 05_CYCLE_NAVIGATOR/site/kompas-pro-test/alternativer/alternatives.test.mjs
+          test -f 05_CYCLE_NAVIGATOR/site/dist/kompas-pro-test/alternativer/index.html
           node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
           node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
