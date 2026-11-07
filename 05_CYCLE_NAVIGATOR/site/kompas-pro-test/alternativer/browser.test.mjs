@@ -96,7 +96,7 @@ try{
   for(const design of ["nordic","atelier","signal"]){
    await evaluate('document.querySelector("[data-concept-choice='+design+']").click();true');
    await delay(140);
-   const report=await evaluate('(()=>{const rows=[...document.querySelectorAll("#daily-rows tr")];return {design:document.body.dataset.concept,chartDesign:document.querySelector(".chart-area")?.getAttribute("data-kompas-alternative"),color:getComputedStyle(document.querySelector(".fw-canvas")).backgroundColor,canvases:document.querySelectorAll("#native-chart .fw-canvas canvas").length,rows:rows.length,actual:rows.filter(r=>!r.cells[4]?.textContent?.includes("Afventer")).length,observed:document.querySelector("#observed-hours")?.textContent,error:!document.querySelector("#graph-error").hidden,overflow:document.documentElement.scrollWidth>innerWidth+2,forecast:document.querySelector(".fw-progress-forecast")?.textContent}})()');
+   const report=await evaluate('(()=>{const rows=[...document.querySelectorAll("#daily-rows tr")];return {design:document.body.dataset.concept,chartDesign:document.querySelector(".chart-area")?.getAttribute("data-kompas-alternative"),color:getComputedStyle(document.querySelector(".fw-canvas")).backgroundColor,canvases:document.querySelectorAll("#native-chart .fw-canvas canvas").length,rows:rows.length,actual:rows.filter(r=>!r.cells[4]?.textContent?.includes("Afventer")).length,observed:document.querySelector("#observed-hours")?.textContent,error:!document.querySelector("#graph-error").hidden,overflow:document.documentElement.scrollWidth>innerWidth+2,forecast:document.querySelector(".fw-progress-forecast")?.textContent,dayFoldOpen:document.querySelector("#daily-values-fold")?.open,rangeExplanationDisplay:getComputedStyle(document.querySelector("#nordic-range-explanation")).display}})()');
    assert.equal(report.design,design,JSON.stringify(report));
    assert.equal(report.chartDesign,design,JSON.stringify(report));
    assert.ok(report.canvases>=1,JSON.stringify(report));
@@ -106,6 +106,13 @@ try{
    assert.equal(report.error,false,JSON.stringify(report));
    assert.equal(report.overflow,false,JSON.stringify(report));
    assert.match(report.forecast||"",/7/);
+   if(design==="nordic"){
+     assert.equal(report.dayFoldOpen,false,"NORDIC_DAY_TABLE_MUST_BE_COLLAPSED_BY_DEFAULT");
+     assert.notEqual(report.rangeExplanationDisplay,"none","NORDIC_RANGE_EXPLANATION_REQUIRED");
+   }else{
+     assert.equal(report.dayFoldOpen,true,"OTHER_DESIGNS_KEEP_EXISTING_TABLES");
+     assert.equal(report.rangeExplanationDisplay,"none","NORDIC_HINT_NOT_VISIBLE_IN_OTHER_DESIGNS");
+   }
    colors.push(report.color);
   }
   assert.equal(new Set(colors).size,3,"THREE_LIGHT_CHART_BACKGROUNDS_NOT_DIFFERENT "+JSON.stringify(colors));
