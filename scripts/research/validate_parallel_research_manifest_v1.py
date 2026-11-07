@@ -25,9 +25,11 @@ def validate(data: dict) -> list[str]:
     errors=[]
     if not isinstance(data,dict):
         return ["top-level value must be an object"]
-    for k,val in (("contract","RESEARCH_PARALLEL_LANES_V1"),
-                  ("status","PLANNING_ONLY_EXAMPLE")):
-        if data.get(k)!=val: errors.append(f"{k} requires {val}")
+    if data.get("contract")!="RESEARCH_PARALLEL_LANES_V1":
+        errors.append("contract requires RESEARCH_PARALLEL_LANES_V1")
+    if data.get("status") not in {"PLANNING_ONLY_EXAMPLE","PLANNED",
+                                 "IN_PROGRESS","EVIDENCE_RECONCILED","BLOCKED"}:
+        errors.append("unsupported mission status")
     if not isinstance(data.get("mission_id"),str) or not data.get("mission_id"):
         errors.append("mission_id required")
     owner=data.get("original_owner_issue","")
@@ -120,6 +122,12 @@ def validate(data: dict) -> list[str]:
             errors.append(prefix+": failed lane requires a specific failure receipt")
         if state in {"PLANNED","NOT_EXECUTED"} and proof.get("conclusion")=="success":
             errors.append(prefix+": planning-only lane cannot assert success")
+    if data.get("status")=="EVIDENCE_RECONCILED":
+        if any(l.get("status") in {"PLANNED","RUNNING","NOT_EXECUTED"} for l in lanes if isinstance(l,dict)):
+            errors.append("EVIDENCE_RECONCILED cannot contain unexecuted required lanes")
+    if data.get("status")=="PLANNING_ONLY_EXAMPLE":
+        if any(l.get("status")!="PLANNED" for l in lanes if isinstance(l,dict)):
+            errors.append("EXAMPLE cannot claim observed execution")
     if len(names)!=len(set(names)):
         errors.append("duplicate lane id")
     if len(paths)!=len(set(paths)):
