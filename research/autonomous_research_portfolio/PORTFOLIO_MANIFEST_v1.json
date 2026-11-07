@@ -1,0 +1,751 @@
+{
+  "contract": "ARP_PORTFOLIO_V1",
+  "date_utc": "2026-11-07",
+  "based_on_main_sha": "22b94f060e130586c62e4faba25f5097c39f30e5",
+  "status": "PROPOSAL_IN_OWNER_BRANCH_NOT_ACTIVATED",
+  "classification": "RESEARCH_COORDINATION_ONLY",
+  "primary_repository": "Donh91/Investering-Framework-Archive-v1",
+  "original_research_owner": "Archive#1596",
+  "science_adjudicator": "Archive#1157",
+  "closure_owner": "Archive#1156",
+  "score_method": {
+    "weights": {
+      "incremental_decision_value": 25,
+      "source_testability": 20,
+      "forward_learning": 15,
+      "automation_fit": 15,
+      "cross_framework_reuse": 10,
+      "cost_efficiency": 10,
+      "simplicity": 5
+    },
+    "scale": "0-100 criterion scores; weighted arithmetic mean, subjective ex ante opportunity estimates NOT predictive performance",
+    "criteria_order": [
+      "incremental_decision_value",
+      "source_testability",
+      "forward_learning",
+      "automation_fit",
+      "cross_framework_reuse",
+      "cost_efficiency",
+      "simplicity"
+    ],
+    "uncertainty": "Indicative plus/minus absolute score points, overlaps make adjacent rankings non-decisive"
+  },
+  "ranked_candidates": [
+    {
+      "id": "ARP-01",
+      "name": "Forecast Edge & Calibration Tournament",
+      "criterion_scores": {
+        "incremental_decision_value": 86,
+        "source_testability": 78,
+        "forward_learning": 88,
+        "automation_fit": 93,
+        "cross_framework_reuse": 92,
+        "cost_efficiency": 91,
+        "simplicity": 78
+      },
+      "weighted_score": 86.5,
+      "uncertainty_points": 9,
+      "status": "DESIGNED_NOT_PROVEN",
+      "owner": "Archive#1596"
+    },
+    {
+      "id": "ARP-02",
+      "name": "Decision Utility & Opportunity-Cost Laboratory",
+      "criterion_scores": {
+        "incremental_decision_value": 88,
+        "source_testability": 69,
+        "forward_learning": 90,
+        "automation_fit": 84,
+        "cross_framework_reuse": 88,
+        "cost_efficiency": 81,
+        "simplicity": 70
+      },
+      "weighted_score": 82.3,
+      "uncertainty_points": 13,
+      "status": "DESIGNED_NOT_PROVEN",
+      "owner": "Archive#1553"
+    },
+    {
+      "id": "ARP-03",
+      "name": "Transition & Liquidity Fragility Lab",
+      "criterion_scores": {
+        "incremental_decision_value": 87,
+        "source_testability": 70,
+        "forward_learning": 82,
+        "automation_fit": 86,
+        "cross_framework_reuse": 88,
+        "cost_efficiency": 82,
+        "simplicity": 68
+      },
+      "weighted_score": 81.4,
+      "uncertainty_points": 14,
+      "status": "DESIGNED_NOT_PROVEN",
+      "owner": "Archive#1530"
+    },
+    {
+      "id": "ARP-04",
+      "name": "Microcap Survival & Executable Alpha Evidence",
+      "criterion_scores": {
+        "incremental_decision_value": 95,
+        "source_testability": 59,
+        "forward_learning": 90,
+        "automation_fit": 88,
+        "cross_framework_reuse": 73,
+        "cost_efficiency": 71,
+        "simplicity": 54
+      },
+      "weighted_score": 79.4,
+      "uncertainty_points": 17,
+      "status": "DESIGNED_NOT_PROVEN",
+      "owner": "AlphaLab#22"
+    },
+    {
+      "id": "ARP-05",
+      "name": "Narrative Novelty & Verified Event Impact",
+      "criterion_scores": {
+        "incremental_decision_value": 77,
+        "source_testability": 62,
+        "forward_learning": 82,
+        "automation_fit": 83,
+        "cross_framework_reuse": 81,
+        "cost_efficiency": 78,
+        "simplicity": 65
+      },
+      "weighted_score": 75.6,
+      "uncertainty_points": 15,
+      "status": "DESIGNED_NOT_PROVEN",
+      "owner": "Archive#1888"
+    }
+  ],
+  "excluded_candidates": [
+    {
+      "name": "Standalone Global Liquidity Observatory",
+      "estimated_score": 70,
+      "reason": "Redundant with existing Market Anticipation Research Program, Risk, DefiLlama existing owner and ARP-03 source experiments; integrate as one data-family lane."
+    },
+    {
+      "name": "New Cross-cutting Source Resilience Engine",
+      "estimated_score": 83.3,
+      "reason": "High generic ROI, but standalone engine would duplicate #1827, existing Source QA, HRE Vault and #1157; treat as REQUIRED_SHARED_GATE, not sixth engine."
+    }
+  ],
+  "shared_dependencies": [
+    "Archive#1827 source first-known/closed-candle/timezone",
+    "Archive#1596 original issued forecast and PIT census",
+    "HRE episode atlas and negative controls",
+    "research/historical_research_vault source rights and nonduplicated collectors",
+    "Archive#1157 preregistration/multiple comparison/kill rules",
+    "Existing PR-only Research Parallel Lanes and Skill Quality Gate"
+  ],
+  "strict_authority": {
+    "new_scheduler": false,
+    "new_supervisor": false,
+    "new_github_identity": false,
+    "new_market_rule": false,
+    "new_official_forecast": false,
+    "live_trading": false,
+    "paid_API_default": false,
+    "s1_autonomous_end_to_end_verified": false,
+    "grok_bridge_report_received_for_ARP": false,
+    "round3_prospective_collection_only": true,
+    "private_raw_in_public": false
+  },
+  "research_lifecycle": [
+    "DISCOVER",
+    "PRIORITIZE",
+    "SOURCE_VERIFY",
+    "EXECUTE",
+    "MEASURE",
+    "CHALLENGE",
+    "LEARN",
+    "IMPROVE",
+    "VALIDATE",
+    "HANDOFF",
+    "CONTINUE"
+  ],
+  "budget_ex_ante": {
+    "monthly_public_actions_minutes_illustrative": 444,
+    "shared_validation_reserve_minutes": 110,
+    "monthly_pilot_soft_ceiling_minutes": 600,
+    "owner_monthly_actions_budget_minutes": 3000,
+    "api_default_usd": 0,
+    "sol_max_optional": "EXISTING #1476 native one-shot release only, max per exact current policy; do not auto invoke",
+    "precision": "BUDGET_PLANNING_ESTIMATES_NOT_OBSERVED_RUNTIMES"
+  },
+  "packages": [
+    {
+      "id": "ARP-01",
+      "name": "Forecast Edge & Calibration Tournament",
+      "lane": "A",
+      "priority": 1,
+      "score": [
+        86,
+        78,
+        88,
+        93,
+        92,
+        91,
+        78
+      ],
+      "uncertainty_points": 9,
+      "owner": "Archive#1596",
+      "coowners": [
+        "Archive#1516",
+        "Archive#1827",
+        "Archive#1157"
+      ],
+      "scope": "Research-only extension of existing Task2/CRE/Kompas/CN forecast ledger; NO second official model, scheduler or scorer",
+      "hypothesis": "A preregistered horizon-specific interval+direction+abstention challenger beats no-change, price persistence and volatility bands on mature source-legal prospective observations",
+      "primary_endpoint": "Proper-score and width-penalized range improvement over best frozen simple baseline on eligible nonoverlap decision units",
+      "safety": "No degradation on missing/stale/source integrity, tail miss or calibration by regime",
+      "falsifier": "Zero/negative paired lift or skill concentrated only in one regime or caused by revised source / post-freeze model selection",
+      "data": [
+        "Existing immutable Official/Shadow Kompas issuance and CN Monday freezes",
+        "Binance UTC completed spot candles with verified SHA",
+        "Source/forecast version and first-issued timestamps"
+      ],
+      "backtest": "2020-26 HRE descriptive baseline only where original PIT not admitted; do NOT claim historical Kompas forecast",
+      "prospective": "Freeze BTC/ETH 12h,72h,168h,2-3w forecasts and challengers at same issue cutoff; maturity 12h..21d",
+      "jobs": [
+        "eligible issuance census",
+        "independent price/interval scorer",
+        "regime-stratified baseline and ablation"
+      ],
+      "first_three": [
+        "Map exact original issuance denominator + source delivery clocks for #1596/#1827",
+        "Rerun simple persistence/volatility-band and width-penalized CN ranges on frozen eligible W46 onward",
+        "Freeze 12h nowcast/persistence challenger without changing official NOW/72/168h output"
+      ],
+      "kill": "Two independent prospective evaluation windows fail predeclared lift or source-clock gap prevents admission",
+      "monthly_actions_minutes_budget": 72,
+      "paid_api_usd_default": 0,
+      "priority_class": "P0_RESEARCH",
+      "runtime_state": "DESIGN_ONLY_NO_NATIVE_NEW_RUN",
+      "research_stages": [
+        "R0 ownership/duplication/source snapshot",
+        "R1 first-known source/license/admission",
+        "R2 preregister baseline/falsifier/cost",
+        "R3 bounded source-legal retrospective + negative controls",
+        "R4 prospective frozen shadow and due-only maturity",
+        "R5 independent deterministic then Grok optional challenge; Sol if separately native-approved",
+        "R6 original owner PR exact-head CI review merge/main and consumer readback only if eligible"
+      ],
+      "skills": "Reuse research-parallel-lanes + skill-quality-gate; candidate only after repeated measurable benefit",
+      "next_trigger": "Original owner approves exact bounded source/experiment PR and source first-known/rights gates clear"
+    },
+    {
+      "id": "ARP-02",
+      "name": "Decision Utility & Opportunity-Cost Laboratory",
+      "lane": "F",
+      "priority": 2,
+      "score": [
+        88,
+        69,
+        90,
+        84,
+        88,
+        81,
+        70
+      ],
+      "uncertainty_points": 13,
+      "owner": "Archive#1553",
+      "coowners": [
+        "Archive#1530",
+        "Archive#1918",
+        "Archive#1157",
+        "AlphaLab#98"
+      ],
+      "scope": "Paper-only risk-to-review economic comparisons, not a trading actor, SELL owner, automated execution or second portfolio",
+      "hypothesis": "Source-frozen graded watch/review and staged paper decisions improve after-cost utility versus HOLD/WAIT and always-react policies without intolerable tail risk",
+      "primary_endpoint": "Paired, capacity-aware after-cost wealth/drawdown/opportunity-cost delta on source-eligible fixed decision cohorts",
+      "safety": "WARNING != SELL; restricted portfolio and tax values never published; slippage/MEV/liquidity/missed entry must be counted",
+      "falsifier": "Net gain evaporates after fills/fees/latency, or false exits/missed rallies dominate avoided downside",
+      "data": [
+        "Original #1553 protection/warning freeze and delivery receipts",
+        "M6/EDGE-001 fixed event family and action alternatives",
+        "Alpha Lab sellability/capacity research, only approved public-safe metadata"
+      ],
+      "backtest": "HRE scenarios for diagnostic only; 0/11 altseason reload policies beating HOLD retained as negative result",
+      "prospective": "Pre-register risk-review cohorts and independent future source-clocked outcome maturation",
+      "jobs": [
+        "warning/delivery join",
+        "counterfactual HOLD/WAIT vs paper review",
+        "cost, drawdown and false-negative sensitivity"
+      ],
+      "first_three": [
+        "Census whether 3/5 risk ever became timely 4/5 in true pre-loss clock, with matched noncrash controls",
+        "Specify capacity/fee/latency and no-fill fields at #1553/#1530 scientific owner seam",
+        "Preregister paper-only paired decision utility endpoint and kill budget before any new comparator"
+      ],
+      "kill": "No reasonable execution evidence or utility fails realistic costs / opportunity cost",
+      "monthly_actions_minutes_budget": 64,
+      "paid_api_usd_default": 0,
+      "priority_class": "P0_RESEARCH",
+      "runtime_state": "DESIGN_ONLY_NO_NATIVE_NEW_RUN",
+      "research_stages": [
+        "R0 ownership/duplication/source snapshot",
+        "R1 first-known source/license/admission",
+        "R2 preregister baseline/falsifier/cost",
+        "R3 bounded source-legal retrospective + negative controls",
+        "R4 prospective frozen shadow and due-only maturity",
+        "R5 independent deterministic then Grok optional challenge; Sol if separately native-approved",
+        "R6 original owner PR exact-head CI review merge/main and consumer readback only if eligible"
+      ],
+      "skills": "Reuse research-parallel-lanes + skill-quality-gate; candidate only after repeated measurable benefit",
+      "next_trigger": "Original owner approves exact bounded source/experiment PR and source first-known/rights gates clear"
+    },
+    {
+      "id": "ARP-03",
+      "name": "Transition & Liquidity Fragility Lab",
+      "lane": "B+D",
+      "priority": 3,
+      "score": [
+        87,
+        70,
+        82,
+        86,
+        88,
+        82,
+        68
+      ],
+      "uncertainty_points": 14,
+      "owner": "Archive#1530",
+      "coowners": [
+        "Archive#1553",
+        "Archive#1918",
+        "Archive#1596",
+        "Archive#1157"
+      ],
+      "scope": "Combine proposed regime and global liquidity observatories into experiments under existing Market Anticipation / EDGE owners, not new market state authority",
+      "hypothesis": "Independent liquidity/deployment, derivatives and market participation families improve early regime-transition or crash vulnerability warnings beyond prices with controlled false alarms",
+      "primary_endpoint": "Independent-event warning lead time at predeclared false alarm budget versus price-only and current original risk baseline",
+      "safety": "No ETF pre-era backfill, no revised macro vintages, no single-family 4/5 elevation, no fake independence from correlated daily windows",
+      "falsifier": "Lead disappears on ALFRED release vintages, novel events or matched no-crash volatile episodes",
+      "data": [
+        "Existing DefiLlama stablecoins owner, distinguish supply from deployment",
+        "FRED/ALFRED vintage and release clock",
+        "Binance spot/futures OI/funding when actually source legal",
+        "ETF settled flows only after era and release time",
+        "Top100 breadth with historical membership and delisting caveats"
+      ],
+      "backtest": "HRE 2020, Terra/FTX 2022, SVB/USDC 2023, Aug 2024, Feb 2026 paired quiet controls; episode-level effective N",
+      "prospective": "Frozen independent risk/transition state at first known time; 72h/7d/30d maturity and lead-time review",
+      "jobs": [
+        "macro vintage admission",
+        "derivatives+stablecoin source family audit",
+        "episode controls and warning ablation"
+      ],
+      "first_three": [
+        "Build 15-field PIT coverage matrix for stablecoin/derivative/breadth/macro and sources before events",
+        "Construct matched no-crash volatility controls for HRE failure cohort",
+        "Test ablation showing incremental lead/false alarms over best fixed price-only warning"
+      ],
+      "kill": "No original vintage legally available or lift absent after controls",
+      "monthly_actions_minutes_budget": 64,
+      "paid_api_usd_default": 0,
+      "priority_class": "P0_RESEARCH",
+      "runtime_state": "DESIGN_ONLY_NO_NATIVE_NEW_RUN",
+      "research_stages": [
+        "R0 ownership/duplication/source snapshot",
+        "R1 first-known source/license/admission",
+        "R2 preregister baseline/falsifier/cost",
+        "R3 bounded source-legal retrospective + negative controls",
+        "R4 prospective frozen shadow and due-only maturity",
+        "R5 independent deterministic then Grok optional challenge; Sol if separately native-approved",
+        "R6 original owner PR exact-head CI review merge/main and consumer readback only if eligible"
+      ],
+      "skills": "Reuse research-parallel-lanes + skill-quality-gate; candidate only after repeated measurable benefit",
+      "next_trigger": "Original owner approves exact bounded source/experiment PR and source first-known/rights gates clear"
+    },
+    {
+      "id": "ARP-04",
+      "name": "Microcap Survival & Executable Alpha Evidence",
+      "lane": "C",
+      "priority": 4,
+      "score": [
+        95,
+        59,
+        90,
+        88,
+        73,
+        71,
+        54
+      ],
+      "uncertainty_points": 17,
+      "owner": "AlphaLab#22",
+      "coowners": [
+        "AlphaLab#98",
+        "AlphaLab#77",
+        "AlphaLab#88",
+        "Archive#1596"
+      ],
+      "scope": "Extend existing Meme-Alpha-Lab research, wallet ancestry, sellability and paper-owner lanes; no copy of private data into Archive",
+      "hypothesis": "PIT-certified wallet/creator/LP and first-known activity factors improve survivor selection and realizable paper returns beyond launch-momentum and all-token baseline",
+      "primary_endpoint": "Net realizable paper return or opportunity-precision under explicit token cohort, gas, slippage, failed routes, market impact and capacity",
+      "safety": "Exact chain+CA, include dead/unlisted/zero-liquidity tokens, full position exits, MEV, no survivorship selection or creator-control inference via shared CEX",
+      "falsifier": "Improvements vanish with loser census, source-first-known embargo, independently frozen test tokens or capacity/route costs",
+      "data": [
+        "Existing Alpha Lab original issue #22 and sellability #98",
+        "existing Trenches HF source ablation, exact revision must be frozen",
+        "Public finalized-chain RPC/SQD bounded replay",
+        "HF RugPull1K noncommercial academic-only candidate, temporal-midpoint mismatch not blindly production-admitted"
+      ],
+      "backtest": "Original 2020-26 chain cohorts only where source and executable historical depth exist; no future labels to prior T0",
+      "prospective": "Daily/weekly source-frozen token census and due-only 1d/3d/7d/30d survival+sellability outcomes",
+      "jobs": [
+        "HF source-clock and train-only selector QA",
+        "one bounded exact-chain launch/loser replay",
+        "capacity-aware after-cost hold/exit audit"
+      ],
+      "first_three": [
+        "Repair or prove false existing Alpha HF feature time and resolve/main hash leakage findings",
+        "Run bounded 30 token includes failed/zero-liquidity hard negatives with buy/sell route trace",
+        "Reconcile AlphaLab#98 partial SELL vs full position executable after costs"
+      ],
+      "kill": "Cannot reconstruct negative cohorts/usable fills or net edge fails forward matched controls",
+      "monthly_actions_minutes_budget": 144,
+      "paid_api_usd_default": 0,
+      "priority_class": "P0_RESEARCH",
+      "runtime_state": "DESIGN_ONLY_NO_NATIVE_NEW_RUN",
+      "research_stages": [
+        "R0 ownership/duplication/source snapshot",
+        "R1 first-known source/license/admission",
+        "R2 preregister baseline/falsifier/cost",
+        "R3 bounded source-legal retrospective + negative controls",
+        "R4 prospective frozen shadow and due-only maturity",
+        "R5 independent deterministic then Grok optional challenge; Sol if separately native-approved",
+        "R6 original owner PR exact-head CI review merge/main and consumer readback only if eligible"
+      ],
+      "skills": "Reuse research-parallel-lanes + skill-quality-gate; candidate only after repeated measurable benefit",
+      "next_trigger": "Original owner approves exact bounded source/experiment PR and source first-known/rights gates clear"
+    },
+    {
+      "id": "ARP-05",
+      "name": "Narrative Novelty & Verified Event Impact",
+      "lane": "E",
+      "priority": 5,
+      "score": [
+        77,
+        62,
+        82,
+        83,
+        81,
+        78,
+        65
+      ],
+      "uncertainty_points": 15,
+      "owner": "Archive#1888",
+      "coowners": [
+        "Archive#1563",
+        "Archive#1760",
+        "AlphaLab#218",
+        "Archive#1827"
+      ],
+      "scope": "Add independent event novelty/market consequence challenger to existing Situation Room, not new news scraper, scheduler or issuer",
+      "hypothesis": "Official event timestamp + deduplicated independent confirmations + first-observed novelty improves material-event recall and downstream forecast context vs existing six-page+keyword baseline",
+      "primary_endpoint": "Prospective material event-family recall and critical miss rate with same T0 cutoff and source-verified precision; later incremental forecast effect separate endpoint",
+      "safety": "Published vs first-seen vs completed retrieval clocks; rumors not truth; social sentiment and syndications not independent verification; no retrospective Nov3 warning",
+      "falsifier": "No source-verified incremental events or events never change reliable decision calibration versus cheapest news-free baseline",
+      "data": [
+        "Official Fed/BLS/SEC/CFTC/Treasury public sources where legally available",
+        "Existing Situation Room and NEWSFT ledger",
+        "GDELT discovery only with rights/clock check",
+        "HF Instrumetriq observational Sunday snapshots, not original 2020-24 event coverage or alpha"
+      ],
+      "backtest": "Historical event reconstruction descriptive only unless first-known provider observation provenance exists",
+      "prospective": "Preregister 50+ material first-known event families and matched no-event windows; outcome 4h,24h,3d,7d",
+      "jobs": [
+        "official-source coverage miss census",
+        "syndication/event identity challenge",
+        "bounded future news impact/abstention scorer"
+      ],
+      "first_three": [
+        "Recheck 0-verification source coverage in #1888 against current main and event denominator",
+        "Freeze publisher first-seen and completed retrieval event contract with duplicate/syndication controls",
+        "Pilot source-specific novelty versus existing news-free price baseline, with N>=50 gate"
+      ],
+      "kill": "Noncompliant source rights, insufficient event cohort or no incremental source/decision benefit",
+      "monthly_actions_minutes_budget": 60,
+      "paid_api_usd_default": 0,
+      "priority_class": "P0_RESEARCH",
+      "runtime_state": "DESIGN_ONLY_NO_NATIVE_NEW_RUN",
+      "research_stages": [
+        "R0 ownership/duplication/source snapshot",
+        "R1 first-known source/license/admission",
+        "R2 preregister baseline/falsifier/cost",
+        "R3 bounded source-legal retrospective + negative controls",
+        "R4 prospective frozen shadow and due-only maturity",
+        "R5 independent deterministic then Grok optional challenge; Sol if separately native-approved",
+        "R6 original owner PR exact-head CI review merge/main and consumer readback only if eligible"
+      ],
+      "skills": "Reuse research-parallel-lanes + skill-quality-gate; candidate only after repeated measurable benefit",
+      "next_trigger": "Original owner approves exact bounded source/experiment PR and source first-known/rights gates clear"
+    }
+  ],
+  "source_evidence": [
+    {
+      "id": "ARP-SRC-01",
+      "kind": "ORIGINAL_GITHUB",
+      "path": "research/historical_reality_engine/CROSS_ERA_RESULTS_20261107.md",
+      "blob_sha": "ddfd6d43e2f604d2003e7efedb68641c11f5b2e3",
+      "finding": "5 retrospective crisis cohorts source SHA-verified, overlapping severe 72h windows; no Kompas alpha",
+      "owner": "Archive#1596"
+    },
+    {
+      "id": "ARP-SRC-02",
+      "kind": "ORIGINAL_GITHUB",
+      "path": "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/2026-11-05__ALTSEASON_SOURCE_FEASIBILITY_EXECUTION_V1.md",
+      "blob_sha": "ecc3496e6246fe7eda3b69bf1eb859339a921b28",
+      "finding": "18 source capability requirements, 0 combined full PIT admissions and no verified full-sized microcap exits",
+      "owner": "Archive#1530"
+    },
+    {
+      "id": "ARP-SRC-03",
+      "kind": "ORIGINAL_GITHUB",
+      "path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/08_EXISTING_ALPHA_LAB_CODE_CROSSCHECK.md",
+      "blob_sha": "1c72da9ab50309804ab32221de24f8677a0bee46",
+      "finding": "Existing HF Alpha workflow static audit: tau first-known, train/test feature selection, mutable resolve/main, split gate",
+      "owner": "AlphaLab#22"
+    },
+    {
+      "id": "ARP-SRC-04",
+      "kind": "ORIGINAL_GITHUB",
+      "path": "04_MARKET_LEARNING/external_research/news_intelligence/2026-11-04__NEWS_INTELLIGENCE_P0_SOURCE_AUDIT_EXECUTION_v1.md",
+      "blob_sha": "1ecd77916845f723396f9db276bb788284793655",
+      "finding": "News arrival/completion/verification clocks and event coverage gaps; original owner #1888",
+      "owner": "Archive#1888"
+    }
+  ],
+  "external_citations": [
+    {
+      "url": "https://github.com/binance/binance-public-data",
+      "claim": "ZIP+CHECKSUM, revised archives, SPOT microsecond timestamps from 2025"
+    },
+    {
+      "url": "https://fred.stlouisfed.org/docs/api/fred/realtime_period.html",
+      "claim": "Macro revised data need ALFRED real-time vintages"
+    },
+    {
+      "url": "https://support.coingecko.com/articles/5723073761-what-granularity-do-you-support-for-historical-data",
+      "claim": "Demo historical endpoint is past-year limited; do not assume 2020-26 intraday free coverage"
+    },
+    {
+      "url": "https://huggingface.co/datasets/fati-80-Sho/RugPull1K",
+      "claim": "NC academic rugpull set, 1028 token claims; no production use, inspect discrepancy between dataset cards and one-column viewer"
+    },
+    {
+      "url": "https://huggingface.co/datasets/Instrumetriq/crypto-market-sentiment-observations",
+      "claim": "45 weekly Sunday snapshots as of Nov1 and methodology v1/v2 cutover Feb2026, observational only"
+    },
+    {
+      "url": "https://huggingface.co/datasets/Chainticks/defi-liquidations",
+      "claim": "Public on-chain DeFi liquidation events not centralized exchange forced-liquidation labels; provisional source pilot"
+    }
+  ],
+  "research_findings": [
+    {
+      "id": "ARP-F-001",
+      "owner": "Archive#1827",
+      "status": "FIX_NOW",
+      "baseline": "Last-trade intrabar provider close_time<=cutoff",
+      "falsifier": "Canonical production owner already uses valid nominal closed-bar time",
+      "source": "HRE-HYP-001",
+      "smallest_action": "Verify code-path equivalence; patch only reproduced canonical defect",
+      "required_tests": [
+        "intrabar close",
+        "gap",
+        "microsecond fixture"
+      ],
+      "next_trigger": "Fresh original hourly source owner readback",
+      "verified_outcome": null,
+      "blocker": "Canonical source owner defect not independently established"
+    },
+    {
+      "id": "ARP-F-002",
+      "owner": "Archive#1596",
+      "status": "SOURCE_REPAIR",
+      "baseline": "Price-only 72h risk rules",
+      "falsifier": "First-known nonprice features show no useful pre-event availability",
+      "source": "ARP-SRC-01",
+      "smallest_action": "One 2022 source-vintage + matched noncrash control pilot",
+      "required_tests": [
+        "historical provider vintage",
+        "source gap",
+        "control episode"
+      ],
+      "next_trigger": "Source rights and contemporaneous first-known proven",
+      "verified_outcome": null,
+      "blocker": "No admitted nonprice event-era sources"
+    },
+    {
+      "id": "ARP-F-003",
+      "owner": "AlphaLab#22",
+      "status": "SOURCE_REPAIR",
+      "baseline": "Current HF G2 as coded",
+      "falsifier": "Tests show no test-set-aware selection or timestamps violation",
+      "source": "ARP-SRC-03",
+      "smallest_action": "Freeze HF revision, train-only selection and per-field tau gates",
+      "required_tests": [
+        "late feature rejected",
+        "split overlap",
+        "manifest hash"
+      ],
+      "next_trigger": "Alpha owner exact source code and permitted branch",
+      "verified_outcome": null,
+      "blocker": "Static audit not run-time reproduction"
+    },
+    {
+      "id": "ARP-F-004",
+      "owner": "Archive#1888",
+      "status": "SOURCE_REPAIR",
+      "baseline": "Situation Room original six-source fetch",
+      "falsifier": "Current actual first-party event coverage and NEWSFT 50+ rows already proven",
+      "source": "ARP-SRC-04",
+      "smallest_action": "Compare first-known article event and verified coverage separately",
+      "required_tests": [
+        "syndication",
+        "date-only",
+        "retrieval end"
+      ],
+      "next_trigger": "Current ledger and source coverage readback",
+      "verified_outcome": null,
+      "blocker": "Nov4 source audit is not current natural production verification"
+    }
+  ],
+  "queue": [
+    {
+      "id": "ARP-Q01",
+      "package": "ARP-01",
+      "owner": "Archive#1596",
+      "priority": 0,
+      "status": "FIX_NOW",
+      "depends_on": [],
+      "next_action": "Original 12h/72h/168h/W46 issue census, source first-known and label maturity",
+      "required_proof": "Immutable original-issued denominator+sha receipt",
+      "trigger": "Original #1596 readback and eligible branch"
+    },
+    {
+      "id": "ARP-Q02",
+      "package": "ARP-03",
+      "owner": "Archive#1827",
+      "priority": 0,
+      "status": "SOURCE_REPAIR",
+      "depends_on": [],
+      "next_action": "Canonical closed-candle source-clock check vs HRE-HYP-001",
+      "required_proof": "Current production contract comparison and adversarial fixture",
+      "trigger": "Actual original source owner file checked"
+    },
+    {
+      "id": "ARP-Q03",
+      "package": "ARP-04",
+      "owner": "AlphaLab#22",
+      "priority": 0,
+      "status": "SOURCE_REPAIR",
+      "depends_on": [],
+      "next_action": "HF source revision/manifest and feature-tau selection QA",
+      "required_proof": "Pinned HF SHA and targeted negative fixtures",
+      "trigger": "Existing Alpha HF owner branch and source rights"
+    },
+    {
+      "id": "ARP-Q04",
+      "package": "ARP-05",
+      "owner": "Archive#1888",
+      "priority": 0,
+      "status": "SOURCE_REPAIR",
+      "depends_on": [],
+      "next_action": "Current news verified event recall and request/response/first-known clock census",
+      "required_proof": "Original NEWSFT/source receipts and incomplete denominator",
+      "trigger": "Actual latest Situation Room readback"
+    },
+    {
+      "id": "ARP-Q05",
+      "package": "ARP-02",
+      "owner": "Archive#1553",
+      "priority": 1,
+      "status": "BUILD_SHADOW",
+      "depends_on": [
+        "ARP-Q01"
+      ],
+      "next_action": "Risk warning 3/5 to 4/5 false alarm vs missed wave paired prereg",
+      "required_proof": "Matched original issue time vs downside and controls",
+      "trigger": "Frozen warnings+ex-ante control cohort"
+    },
+    {
+      "id": "ARP-Q06",
+      "package": "ARP-01",
+      "owner": "Archive#1516",
+      "priority": 1,
+      "status": "AWAIT_MATURITY",
+      "depends_on": [
+        "ARP-Q01"
+      ],
+      "next_action": "Prospective range proper-score tournament on eligible W46+ rows",
+      "required_proof": "Immutable Monday freeze and post-maturity outcomes",
+      "trigger": "W46 original issued+due outcomes verified"
+    },
+    {
+      "id": "ARP-Q07",
+      "package": "ARP-03",
+      "owner": "Archive#1530",
+      "priority": 1,
+      "status": "SCIENTIFIC_BLOCK",
+      "depends_on": [
+        "ARP-Q02"
+      ],
+      "next_action": "ALFRED/settled ETF/derivatives source-legal ablation",
+      "required_proof": "Vintage publication for each feature and baseline",
+      "trigger": "First source-legal nonprice family available"
+    },
+    {
+      "id": "ARP-Q08",
+      "package": "ARP-04",
+      "owner": "AlphaLab#98",
+      "priority": 1,
+      "status": "SCIENTIFIC_BLOCK",
+      "depends_on": [
+        "ARP-Q03"
+      ],
+      "next_action": "Full-position executable capacity and sell route paper outcomes",
+      "required_proof": "Original quote and fill-latency evidence",
+      "trigger": "First decision-time bid/route/full-size evidence available"
+    },
+    {
+      "id": "ARP-Q09",
+      "package": "ARP-05",
+      "owner": "Archive#1888",
+      "priority": 1,
+      "status": "AWAIT_MATURITY",
+      "depends_on": [
+        "ARP-Q04"
+      ],
+      "next_action": "50-event source-verified novelty and no-news baseline frozen test",
+      "required_proof": "50 distinct accepted prospective event families",
+      "trigger": "N>=50 independently admitted actual events"
+    },
+    {
+      "id": "ARP-Q10",
+      "package": "ARP-02",
+      "owner": "Archive#1530",
+      "priority": 1,
+      "status": "SCIENTIFIC_BLOCK",
+      "depends_on": [
+        "ARP-Q05",
+        "ARP-Q08"
+      ],
+      "next_action": "After-cost HOLD vs review/trim/rebuy paper tournament",
+      "required_proof": "Capacity-aware source timing, independent event families, cost+missed-entry accounting",
+      "trigger": "Joined warnings and executable paper-price source admitted"
+    }
+  ],
+  "negative_findings": [
+    "HRE daily 72h severe windows overlap and are not independent crisis N",
+    "2021 CN naive experiment has only two source-eligible complete weeks per asset",
+    "Altseason pullback fixed reload policies 0/11 beat HOLD in prior tested sample; no promotion",
+    "Current full altseason source feasibility contains zero end-to-end historical PIT admissions",
+    "First-known source timestamp is not supplied by a modern archive ZIP checksum",
+    "RugPull1K first-half project lifecycle is not automatically a launch-time observable feature",
+    "HF dataset viewer 429 and RugPull1K claimed token projects vs one text column makes schema currently unverified",
+    "News transport 6/6 passing does not imply material-event coverage",
+    "Prospective natural S1 multi-stage autonomous closure still unproven for ARP"
+  ]
+}
