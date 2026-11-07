@@ -133,7 +133,7 @@
       c.save();
       if(m.daily.length){
         const upper=m.days.map(d=>[x(d.closeTime),y(d.forecast.high)]),lower=m.days.map(d=>[x(d.closeTime),y(d.forecast.low)]).reverse();
-        if(upper.concat(lower).every(p=>p.every(v=>v!==null))){c.beginPath();upper.concat(lower).forEach((p,i)=>i?c.lineTo(...p):c.moveTo(...p));c.closePath();c.fillStyle='rgba(95,150,255,.09)';c.fill();}
+        if(upper.concat(lower).every(p=>p.every(v=>v!==null))){c.beginPath();upper.concat(lower).forEach((p,i)=>i?c.lineTo(...p):c.moveTo(...p));c.closePath();c.fillStyle=m.precisionQa?'rgba(95,150,255,.065)':'rgba(95,150,255,.09)';c.fill();}
       }else{
         spans.forEach(({row:r,first,last})=>{
           const left=x(m.days[first].time),right=x(m.days[last].closeTime);
@@ -179,7 +179,8 @@
     const visibleHours=m.hourly.filter(p=>p.time<=shownUntil);
     const lastHour=visibleHours.at(-1);
     const shownDays=m.days.map(d=>({...d,actual:d.closeTime<=shownUntil?d.actual:null}));
-    const plotModel={...m,hourly:visibleHours,days:shownDays,scrubbing:scrubHour!==null,
+    const precisionQa=!!host.closest?.('[data-kompas-precision-qa]');
+    const plotModel={...m,hourly:visibleHours,days:shownDays,scrubbing:scrubHour!==null,precisionQa,
       approvedB:!!host.closest?.('.chart-area[data-approved-design="B"]')};
     const picked=m.days.find(d=>d.index===selected)||last||m.days[0];selected=picked.index;
     const rangeLabel=new Date(m.start).toLocaleDateString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{day:'numeric',month:'short',timeZone:'UTC'})+' – '+new Date(m.start+(horizon-1)*DAY).toLocaleDateString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
@@ -276,14 +277,14 @@
     const canvas=host.querySelector('.fw-canvas');
     const values=[...m.rows.flatMap(r=>[r.forecast_low,r.forecast_high]),...m.daily.flatMap(p=>[p.low,p.high]),...m.hourly.flatMap(p=>[p.value]),...m.days.filter(d=>d.actual).flatMap(d=>[d.actual.low,d.actual.high])];
     const min=Math.min(...values),max=Math.max(...values),padding=(max-min)*.10;
-    const chart=lib.createChart(canvas,{autoSize:true,layout:{background:{type:lib.ColorType.Solid,color:'#0a1729'},textColor:'#91a2b9',fontFamily:'-apple-system,BlinkMacSystemFont,system-ui,sans-serif',fontSize:11,attributionLogo:true},grid:{vertLines:{color:'rgba(147,166,190,.055)'},horzLines:{color:'rgba(147,166,190,.09)'}},rightPriceScale:{borderColor:'#243247',minimumWidth:72,scaleMargins:{top:.13,bottom:.13}},timeScale:{borderColor:'#243247',timeVisible:false,rightOffset:.5,fixLeftEdge:true,fixRightEdge:true,lockVisibleTimeRangeOnResize:true,tickMarkFormatter:time=>{
+    const chart=lib.createChart(canvas,{autoSize:true,layout:{background:{type:lib.ColorType.Solid,color:'#0a1729'},textColor:precisionQa?'#a4b8d3':'#91a2b9',fontFamily:'-apple-system,BlinkMacSystemFont,system-ui,sans-serif',fontSize:11,attributionLogo:true},grid:{vertLines:{color:precisionQa?'rgba(147,166,190,.035)':'rgba(147,166,190,.055)'},horzLines:{color:precisionQa?'rgba(147,166,190,.065)':'rgba(147,166,190,.09)'}},rightPriceScale:{borderColor:'#243247',minimumWidth:72,scaleMargins:{top:.13,bottom:.13}},timeScale:{borderColor:'#243247',timeVisible:false,rightOffset:.5,fixLeftEdge:true,fixRightEdge:true,lockVisibleTimeRangeOnResize:true,tickMarkFormatter:time=>{
       const ms=typeof time==='number'?time*1000:Date.parse(time);
       if(horizon>7){const d=Math.floor((ms-m.start)/DAY)+1;return Number.isFinite(d)&&d>=1&&d<=horizon+1?txt('D','D')+d:'';}
       return new Date(ms).toLocaleDateString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{weekday:'short',timeZone:'UTC'});
     }},crosshair:{mode:lib.CrosshairMode.Normal,vertLine:{color:'#6b809b',width:1,style:lib.LineStyle.Dashed,labelBackgroundColor:'#30435d'},horzLine:{color:'#6b809b',width:1,style:lib.LineStyle.Dashed,labelBackgroundColor:'#30435d'}},localization:{locale:window.CNI18n?.language==='da'?'da-DK':'en-US',priceFormatter:money,timeFormatter:t=>new Date(t*1000).toLocaleDateString(window.CNI18n?.language==='da'?'da-DK':'en-GB',{weekday:'long',day:'numeric',month:'short',timeZone:'UTC'})},handleScroll:{mouseWheel:false,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:false},handleScale:{mouseWheel:true,pinch:true,axisPressedMouseMove:{time:true,price:true}}});
     const opts={priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:true,lineWidth:2,autoscaleInfoProvider:()=>({priceRange:{minValue:min-padding,maxValue:max+padding}})};
     const plan=linePlan(plotModel);
-    const baseline=chart.addSeries(lib.LineSeries,{...opts,color:BLUE,lineType:lib.LineType.Simple,lineStyle:lib.LineStyle.Dashed,lineWidth:2});baseline.setData(plan.forecast);
+    const baseline=chart.addSeries(lib.LineSeries,{...opts,color:precisionQa?'#86bbff':BLUE,lineType:lib.LineType.Simple,lineStyle:lib.LineStyle.Dashed,lineWidth:2,pointMarkersVisible:precisionQa,pointMarkersRadius:precisionQa?2:3});baseline.setData(plan.forecast);
     // Source interval bounds, NOT prospective seven-day daily close forecasts.
     // Genuine dashed chart series are reliably visible above grid/primitive.
     // Approved B has no blue point forecast in UNAVAILABLE weeks. Original
@@ -304,7 +305,7 @@
     // Visual hierarchy remains just two primary closing-price strokes.
     scaleAnchor.attachPrimitive(new EvidenceOverlay(plotModel,scaleAnchor));
     // Separate observed runs rather than trusting a line to bridge missing evidence.
-    plan.actualRuns.forEach((points,i)=>{const latest=i===plan.actualRuns.length-1;const series=chart.addSeries(lib.LineSeries,{...opts,color:GREEN,lineStyle:lib.LineStyle.Solid,lineWidth:4,pointMarkersVisible:true,pointMarkersRadius:3,lastValueVisible:latest,priceLineVisible:latest,priceLineColor:'rgba(39,197,154,.30)',priceLineStyle:lib.LineStyle.Dashed});series.setData(points);});
+    plan.actualRuns.forEach((points,i)=>{const latest=i===plan.actualRuns.length-1;const series=chart.addSeries(lib.LineSeries,{...opts,color:GREEN,lineStyle:lib.LineStyle.Solid,lineWidth:precisionQa?3:4,pointMarkersVisible:true,pointMarkersRadius:precisionQa?2:3,lastValueVisible:latest,priceLineVisible:latest,priceLineColor:'rgba(39,197,154,.30)',priceLineStyle:lib.LineStyle.Dashed});series.setData(points);});
     chart.timeScale().fitContent();
     const select=d=>{selected=d.index;readout(d);};
     chart.subscribeCrosshairMove(p=>{if(p.time===undefined)return;const d=m.days.find(d=>p.time>d.time&&p.time<=d.closeTime)||m.days.find(d=>p.time===d.time&&d.index===0);if(d)select(d);});
