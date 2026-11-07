@@ -113,7 +113,9 @@ def score_weekly_pair(packet):
         if not _is_sha(candidate.get("immutable_sha")):
             return {"status": "CHALLENGER_NOT_FROZEN", "scores": {}, "contract": CONTRACT}
         candidate_issue = utc(candidate["issue_utc"])
-        if candidate_issue > issue or candidate_issue >= begin:
+        # A same-Monday challenger issued no later than the original is legal;
+        # the week may have started before either model was frozen.
+        if candidate_issue > issue or candidate_issue >= first_eligible_close:
             return {"status": "CHALLENGER_ISSUED_TOO_LATE", "scores": {}, "contract": CONTRACT}
         first_known = candidate.get("vendor_first_known_utc")
         if first_known is None or utc(first_known) > candidate_issue:
