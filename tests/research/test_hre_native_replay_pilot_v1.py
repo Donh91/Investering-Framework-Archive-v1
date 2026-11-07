@@ -81,6 +81,29 @@ class SourceIntegrity(unittest.TestCase):
         self.assertEqual(hre._decode_epoch(str(opened)),1735689600000)
         self.assertEqual(hre._decode_epoch(str(ended)),1735693199999)
 
+    def test_real_source_intrabar_last_trade_never_unfreezes_candle(self):
+        blob=make_zip()
+        name="BTCUSDT-1h-2020-03.csv"
+        with zipfile.ZipFile(io.BytesIO(blob)) as z:
+            original=z.read(name).decode()
+        lines=original.splitlines()
+        chosen=lines[12].split(",")
+        opened=int(chosen[0])
+        chosen[6]=str(opened+2_132_286)
+        lines[12]=",".join(chosen)
+        buf=io.BytesIO()
+        with zipfile.ZipFile(buf,"w",compression=zipfile.ZIP_DEFLATED) as z:
+            z.writestr(name,"\\n".join(lines))
+        entries=hre.parse_binance_hourly(buf.getvalue(),name,"2020-03")
+        self.assertEqual(entries[12].provider_last_trade_ms,opened+2_132_286)
+        self.assertEqual(entries[12].close_ms,opened+3_599_999)
+        self.assertNotIn(entries[12],hre.closed_as_of(entries,opened+2_132_287))
+        self.assertIn(entries[12],hre.closed_as_of(entries,opened+3_600_000))
+
+    def test_microsecond_last_trade_arbitrary_submillisecond(self):
+        opened=1735689600000000
+        self.assertEqual(hre._decode_epoch(str(opened+2_132_286_123)),1735691732286)
+
     def test_closed_before_cutoff(self):
         x=hre.parse_binance_hourly(make_zip(),"BTCUSDT-1h-2020-03.csv","2020-03")
         ref=x[15].open_ms
