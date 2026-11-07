@@ -59,3 +59,10 @@ jobs:
           grep -q 'RELEASE CONTROL' 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/index.html
       - name: Verify actual desktop and mobile Chrome runtime with denied GitHub API
         run: node tools/s1-release-control/test-browser.mjs
+      - name: Attach isolated S1 static release candidate, not published
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-release-control-${{ github.event.pull_request.head.sha }}
+          path: 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/
+          if-no-files-found: error
+          retention-days: 3
