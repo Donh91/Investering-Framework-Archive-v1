@@ -53,6 +53,16 @@ class KompasScientificProgramContractTests(unittest.TestCase):
         self.assertIn("paid_release_without_native_gate",errors)
         self.assertIn("permission_bypass:restricted_round3_outcome_scoring_allowed",errors)
 
+    def test_approval_receipt_is_exact_and_does_not_grant_api_release(self):
+        j=copy.deepcopy(self.program)
+        self.assertEqual(j["proposal_state"], "OWNER_APPROVED_PLAN_RELEASE_GATED")
+        self.assertIn("issuecomment-6711560934", j["owner_approval_receipt"])
+        j["owner_approval_receipt"]="https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-FAKE"
+        j["approval_is_api_payment_release"]=True
+        e=v.validate_manifest(j)
+        self.assertIn("missing_authenticated_owner_approval_record",e)
+        self.assertIn("permission_bypass:approval_is_api_payment_release",e)
+
     def test_w46_priority_and_monday_s1_freeze_cannot_be_removed(self):
         j=copy.deepcopy(self.program)
         j["next_w46_local_date"]="2026-11-16"
