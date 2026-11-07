@@ -18,8 +18,8 @@ const server=createServer((req,res)=>{
   let pathname;try{pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname)}catch{res.writeHead(400).end();return}
   const full=resolve(dist,'.'+(pathname==='/'?'/index.html':pathname));
   if(!full.startsWith(dist+sep)){res.writeHead(403).end();return}
-  try{res.setHeader('Content-Type',mime[extname(full)]||'text/plain');res.setHeader('Cache-Control','no-store');res.writeHead(200).end(readFileSync(full))}
-  catch{res.writeHead(404).end('missing')}
+  try{const bytes=readFileSync(full);res.setHeader('Content-Type',mime[extname(full)]||'text/plain');res.setHeader('Cache-Control','no-store');res.writeHead(200).end(bytes)}
+  catch(error){if(!res.headersSent){res.writeHead(404).end('missing')}else{res.end();console.error('S1_STATIC_SERVER_POST_HEADER_ERROR',String(error.message||error))}}
 });
 await new Promise((ok,no)=>server.once('error',no).listen(0,'127.0.0.1',ok));
 const pageUrl='http://127.0.0.1:'+server.address().port+'/s1-release-control/';
