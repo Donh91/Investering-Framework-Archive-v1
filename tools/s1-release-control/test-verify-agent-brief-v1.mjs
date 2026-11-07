@@ -18,7 +18,7 @@ const packet=()=>({
   existing_actors:{S1:{natural_closure_proven:'UNOBSERVED'},Grok:{formal_approval_proven:false}},
   source_coverage:{
    private_bridge:'UNOBSERVED',private_alpha_lab:'UNOBSERVED',independent_recovery:'UNOBSERVED',
-   canonical_sources:[{id:'handoff',status:'OBSERVED',freshness:'FRESH_ADVISORY',blob_sha:B,
+   canonical_sources:[{id:'handoff',status:'OBSERVED',freshness:'FRESH_ADVISORY',main_sha:M,blob_sha:B,sha256:'d'.repeat(64),bytes:1024,
       source_ref:`https://github.com/${REPO}/blob/${M}/LATEST_HANDOFF.json`}],
    public_github_repository:{repo:REPO,main_sha:M,observed:true,discovery_complete:false,
       source_issues:['PR_DISCOVERY_SAMPLED_NOT_COMPLETE']}
@@ -45,7 +45,10 @@ test('source main, clock and source locator must be coherent',()=>{
   p=>p.brief.original_context_main_sha='e'.repeat(40),
   p=>p.brief.source_coverage.canonical_sources[0].source_ref='https://github.com/Donh91/secrets/blob/'+M+'/private.json',
   p=>p.brief.observed_at_utc='2026-11-07T13:01:00Z',
-  p=>p.brief.source_coverage.canonical_sources[0].blob_sha='short'
+  p=>p.brief.source_coverage.canonical_sources[0].blob_sha='short',
+  p=>p.brief.source_coverage.canonical_sources[0].sha256='bad-hash',
+  p=>p.brief.source_coverage.canonical_sources[0].bytes=-1,
+  p=>p.brief.source_coverage.canonical_sources[0].main_sha='f'.repeat(40)
  ]){
   const p=packet();tamper(p);
   assert.equal(verify(p,H).status,'REJECTED');
