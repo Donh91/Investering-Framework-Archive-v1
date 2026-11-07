@@ -13,13 +13,14 @@
   var id=function(p){return p.repo+"#"+p.number;};
   function risk(p){
     if(p.seed)return p.risk||"UNKNOWN";
+    if(p.headMoved)return "UNKNOWN";
     if(!p.filesObserved||!Number.isSafeInteger(p.changedFiles)||p.changedFiles<0||p.changedFiles>100||!Array.isArray(p.files)||p.files.length!==p.changedFiles||p.files.length>=100)return "UNKNOWN";
     var names=p.files.map(function(f){return f.filename||"";});
     if(names.some(function(n){return /(^\.github\/workflows\/|^AGENTS\.md$|\/governance\/|\/api_agent\/|\/backup\/|\/recovery\/|\/billing\/|\/permissions\/|\/security\/|\/secrets\/|charge.once|allowlist|safety.policy|release.policy|build-public\.mjs)/i.test(n);}))return "HIGH";
     return p.changedFiles>=20?"MEDIUM":"LOW";
   }
   function ci(p){
-    if(!safeSha(p.head)||!p.runObserved||!Array.isArray(p.runs))return {status:"UNOBSERVED",n:0,label:"exact-HEAD ukendt"};
+    if(p.headMoved||!safeSha(p.head)||!p.runObserved||!Array.isArray(p.runs))return {status:"UNOBSERVED",n:0,label:"exact-HEAD ukendt"};
     var runs=p.runs.filter(function(r){return r&&r.head_sha===p.head&&Number.isSafeInteger(r.id);});
     if(!runs.length)return {status:"UNOBSERVED",n:0,label:"ingen exact-HEAD runs"};
     var good=runs.filter(function(r){return r.status==="completed"&&r.conclusion==="success";}).length;
@@ -27,7 +28,7 @@
     return {status:fail?"BLOCKED":good===runs.length?"PROVEN":"UNOBSERVED",n:runs.length,label:good+"/"+runs.length+" observerede runs",required_checks:"UNOBSERVED"};
   }
   function review(p){
-    if(!safeSha(p.head)||!p.reviewsObserved||!Array.isArray(p.reviews))return "UNOBSERVED";
+    if(p.headMoved||!safeSha(p.head)||!p.reviewsObserved||!Array.isArray(p.reviews))return "UNOBSERVED";
     var latest={};
     p.reviews.forEach(function(r){
       if(!r||!r.user||!r.user.login)return;
@@ -45,6 +46,8 @@
       return "CLOSED";
     }
     if(p.draft||p.risk==="HIGH")return "HOLD";
+    if(p.headMoved)return "UNOBSERVED";
+    if(ci(p).status==="BLOCKED")return "BLOCKED";
     if(!safeSha(p.head)||p.risk==="UNKNOWN"||ci(p).status!=="PROVEN")return "UNOBSERVED";
     return "PROPOSED"; // Merely a candidate for examination, NEVER permission to merge.
   }
