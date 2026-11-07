@@ -1,0 +1,111 @@
+{
+  "contract": "EXTERNAL_SPECIALIST_PUBLIC_METHOD_REGISTRY_v1",
+  "date_utc": "2026-11-07",
+  "sources": [
+    {
+      "id": "BIRDEYE",
+      "url": "https://birdeye.so/",
+      "official_docs": [
+        "https://birdeye.so/data-api/blog/detail/new-api-token-first-buyers-identify-the-earliest-buyers-of-any-solana-token",
+        "https://docs.birdeye.so/reference/get-wallet-v2-net-worth-details",
+        "https://docs.birdeye.so/docs/pricing"
+      ],
+      "rights": "OFFICIAL_METHOD_REFERENCE_ONLY; NO_PROVIDER_DATA_CAPTURE_OR_MODEL_IMPORT",
+      "first_buyers": "SOLANA_ONLY; CURRENT_STATUS_TAGS_CREATE_PIT_RISK; STANDARD_PLAN_ACCESS_NOT_VERIFIED",
+      "owner_lane": "S2_WALLET_SKILL_TRUTH_TOURNAMENT_V1",
+      "related_lanes": [
+        "S1_EXECUTABLE_SELLABILITY_TRUTH_V1",
+        "S4_LAUNCH_TRAJECTORY_AND_RETENTION_V1",
+        "S6_DISTRIBUTION_EGRESS_AND_EXCHANGE_FLOW_V1"
+      ]
+    },
+    {
+      "id": "RELAY",
+      "url": "https://relay.link/",
+      "official_docs": [
+        "https://relay.link/blog/how-to-integrate-relay-api",
+        "https://docs.relay.link/references/api/api_core_concepts/handling-errors",
+        "https://support.relay.link/en/articles/9260724-how-do-i-find-my-transaction"
+      ],
+      "rights": "PUBLIC_DOCUMENTATION_ONLY; API/TRANSACTION_DATA_RIGHTS_NOT_GRANTED_BY_THIS_AUDIT",
+      "owner_lane": "S3_ENTITY_ADJUSTED_CLUSTER_AND_BUNDLE_V1",
+      "related_lanes": [
+        "S1_EXECUTABLE_SELLABILITY_TRUTH_V1",
+        "S6_DISTRIBUTION_EGRESS_AND_EXCHANGE_FLOW_V1"
+      ]
+    }
+  ],
+  "methods": [
+    {
+      "id": "B1",
+      "state": "EXISTING_OWNER_DUPE",
+      "owner": "S4"
+    },
+    {
+      "id": "B2",
+      "state": "HIGH_VALUE_PROSPECTIVE_WAIT",
+      "owner": "S2"
+    },
+    {
+      "id": "B3",
+      "state": "EXISTING_OWNER_DUPE",
+      "owner": "S2"
+    },
+    {
+      "id": "B4",
+      "state": "EXISTING_OWNER_DUPE",
+      "owner": "S1/S4"
+    },
+    {
+      "id": "B5",
+      "state": "RESEARCH_ONLY",
+      "owner": "S6"
+    },
+    {
+      "id": "B6",
+      "state": "PIT_SOURCE_AUTH_UNVERIFIED",
+      "owner": "S2"
+    },
+    {
+      "id": "R1",
+      "state": "DETERMINISTIC_CONFLICT_REGRESSION_IN_PR",
+      "owner": "S3"
+    },
+    {
+      "id": "R2",
+      "state": "SOURCE_QUALIFICATION_REQUIRED",
+      "owner": "S3/S6"
+    },
+    {
+      "id": "R3",
+      "state": "P2_METHOD_ONLY",
+      "owner": "S1"
+    },
+    {
+      "id": "R4",
+      "state": "EXISTING_OWNER_DUPE",
+      "owner": "S1"
+    },
+    {
+      "id": "R5",
+      "state": "P2_SOURCE_ONLY",
+      "owner": "S6"
+    },
+    {
+      "id": "R6",
+      "state": "DETERMINISTIC_REGRESSION_IN_PR",
+      "owner": "S3"
+    }
+  ],
+  "research_mode": "RESEARCH_PARALLEL_LANES_V1_MODE_A; NO_INDEPENDENT_AI_AGENTS",
+  "source_docs_verified": true,
+  "provider_api_calls": 0,
+  "provider_data_persisted": false,
+  "empirical_edge_verified": false,
+  "synthetic_regression_only": true,
+  "research_only": true,
+  "execution_permission": false,
+  "model_promotion_permission": false,
+  "existing_queue_next_action_preserved": "FIRST_FORWARD_PONS_BUYER_QUALITY_CASE_V1",
+  "note": "04_RESEARCH_LAB/external_specialist_dissection/2026-11-07__BIRDEYE_RELAY_PUBLIC_METHOD_AND_RELAY_CONFLICT_GATE_v1.md"
+}
