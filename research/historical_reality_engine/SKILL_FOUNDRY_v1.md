@@ -42,6 +42,17 @@ A new skill may be proposed when an actually repeated historical research proced
 - A skill from the HRE folder must follow the same quality gate as any other skill; HRE does not create a bypass.
 - Repository-level indexing is validated on current main after merge; external chats must actually load the repository route.
 
+## Actual native source-clock learning, November 7 2026
+
+Verified origin is native PR #2010 and #2012 with readback and source SHA. The first reusable improvement is the **existing registered** `research-parallel-lanes` skill's new reference:
+`.agents/skills/research-parallel-lanes/references/HRE_REPLAY_SOURCE_CLOCK_FAILSAFE.md`.
+It is usable by another repository-aware thread after loading the active skill, without adding a new global skill, identity or agent.
+
+A *separately proposed* skill is staged as a **CANDIDATE ONLY**:
+`07_PROMPTS_AND_AGENTS/skill_quality_gate/candidates/hre/historical-replay-clock-integrity/SKILL.md`.
+
+This candidate is **STATIC_ONLY** at first publication. Deterministic source/authority/regression tests can prove basic safety/routing, but a measured **incremental advantage over the existing reference**, no-skill baseline, and independent held-out evaluator is **NOT_RUN**. Accordingly it MUST NOT be entered into `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md` or `SKILL_ROUTING_INDEX.json` or installed as an automatically active skill. The HRE plan cannot promote its own skill candidate. The existing quality-gate owner may reject as redundant and retain the updated reference if no additional benefit is shown.
+
 ## Durable tracking
 
 Store proposed recipe, evaluation matrix, negative results and source SHA in the existing skill-quality-gate candidate/receipt structure, plus a short pointer in the relevant HRE original research finding. Do not create a second skill registry or shadow service. The HRE queue may reference skill-founding task HR-013, but the official registry alone says what is active.
