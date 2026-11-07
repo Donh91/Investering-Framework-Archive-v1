@@ -49,7 +49,7 @@ async function observePR(fetcher,p){
   if(r[3].status==='fulfilled'&&Array.isArray(r[3].value?.workflow_runs)){
     const runs=r[3].value.workflow_runs;
     p.runObserved=runs.length<100;
-    p.runs=runs.filter(x=>x.head_sha===p.head).map(x=>({id:x.id,name:x.name,head_sha:x.head_sha,status:x.status,conclusion:x.conclusion,event:x.event}));
+    p.runs=runs.filter(x=>x.head_sha===p.head).map(x=>({id:x.id,name:x.name,head_sha:x.head_sha,status:x.status,conclusion:x.conclusion,event:x.event,pr_numbers:(x.pull_requests||[]).map(pr=>pr.number)}));
     if(!p.runObserved)errors.push('WORKFLOW_RUNS_PAGINATION_INCOMPLETE');
   }
   p.risk=core.risk(p);
