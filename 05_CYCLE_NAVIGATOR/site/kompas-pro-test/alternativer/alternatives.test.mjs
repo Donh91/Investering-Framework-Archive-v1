@@ -86,3 +86,20 @@ test("design is isolated to separate QA directory, original Github renderer is t
  assert.doesNotMatch(app,/createChart\(/);
  assert.doesNotMatch(html,/appdeploy/);
 });
+
+test("Nordic daily source ranges are seven unconnected translucent frames, never a connected fake path",()=>{
+ const html=readFileSync(fileURLToPath(new URL("./index.html",import.meta.url)),"utf8");
+ const css=readFileSync(fileURLToPath(new URL("./styles.css",import.meta.url)),"utf8");
+ const app=readFileSync(fileURLToPath(new URL("./app.mjs",import.meta.url)),"utf8");
+ assert.match(source,/const nordic=m\.designQa==='nordic'/);
+ assert.match(source,/const tint=c\.createLinearGradient/);
+ assert.match(source,/const gap=spacing\.length\?Math\.min/);
+ assert.match(source,/m\.days\.forEach\(d=>\{/);
+ assert.match(source,/if\(nordic\)\{/);
+ assert.match(html,/id="daily-values-fold"/);
+ assert.match(html,/id="nordic-range-explanation"/);
+ assert.match(css,/body\[data-concept=nordic\] \.range-explanation/);
+ assert.match(app,/nordicFullDetailsOpen/);
+ assert.equal(forecastFingerprint(),stable);
+ for(const a of ["BTC","ETH"])assert.equal(expectedDaily(a).length,7);
+});

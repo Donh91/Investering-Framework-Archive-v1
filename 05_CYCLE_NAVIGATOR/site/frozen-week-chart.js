@@ -141,15 +141,41 @@
             atelier:{fill:'rgba(67,102,167,.105)',stroke:'rgba(67,102,167,.33)'},
             signal:{fill:'rgba(19,95,197,.105)',stroke:'rgba(19,95,197,.35)'}
           }[m.designQa];
+          // The owner-selected Nordic preview receives seven softly engraved
+          // daily low/high fields instead of thin whiskers. These are SOURCE
+          // bounds only, not probabilities, interpolated prices or connected
+          // uncertainty polygons. Official Graph B is unchanged without QA.
+          const coords=m.days.map(d=>x(d.closeTime));
+          const spacing=coords.slice(1).map((v,i)=>Math.abs(v-coords[i]))
+            .filter(v=>Number.isFinite(v)&&v>0);
+          const gap=spacing.length?Math.min(...spacing):48;
           if(colors)m.days.forEach(d=>{
             const xx=x(d.closeTime),high=y(d.forecast?.high),low=y(d.forecast?.low);
             if([xx,high,low].some(v=>v===null||!Number.isFinite(v)))return;
-            const w=m.designQa==='signal'?15:m.designQa==='nordic'?11:7;
+            const nordic=m.designQa==='nordic';
+            const w=nordic?Math.max(16,Math.min(64,gap*.64)):
+              m.designQa==='signal'?15:7;
             const top=Math.min(high,low),height=Math.max(1,Math.abs(low-high));
-            c.fillStyle=colors.fill;c.fillRect(xx-w/2,top,w,height);
-            c.strokeStyle=colors.stroke;c.lineWidth=1;
-            c.beginPath();c.moveTo(xx-w/2,top);c.lineTo(xx+w/2,top);
-            c.moveTo(xx-w/2,top+height);c.lineTo(xx+w/2,top+height);c.stroke();
+            if(nordic){
+              // A subtle per-day frosted frame with a translucent center and
+              // hairline low/high edges, separately defined for every UTC day.
+              const tint=c.createLinearGradient(0,top,0,top+height);
+              tint.addColorStop(0,'rgba(54,108,224,.145)');
+              tint.addColorStop(.46,'rgba(54,108,224,.055)');
+              tint.addColorStop(1,'rgba(54,108,224,.115)');
+              c.fillStyle=tint;c.fillRect(xx-w/2,top,w,height);
+              c.strokeStyle='rgba(54,108,224,.145)';c.lineWidth=.8;
+              c.strokeRect(xx-w/2+.4,top+.4,w-.8,Math.max(.1,height-.8));
+              c.strokeStyle='rgba(54,108,224,.38)';c.lineWidth=1;
+              c.beginPath();c.moveTo(xx-w*.35,top);c.lineTo(xx+w*.35,top);
+              c.moveTo(xx-w*.35,top+height);c.lineTo(xx+w*.35,top+height);
+              c.stroke();
+            }else{
+              c.fillStyle=colors.fill;c.fillRect(xx-w/2,top,w,height);
+              c.strokeStyle=colors.stroke;c.lineWidth=1;
+              c.beginPath();c.moveTo(xx-w/2,top);c.lineTo(xx+w/2,top);
+              c.moveTo(xx-w/2,top+height);c.lineTo(xx+w/2,top+height);c.stroke();
+            }
           });
         }else{
         const upper=m.days.map(d=>[x(d.closeTime),y(d.forecast.high)]),lower=m.days.map(d=>[x(d.closeTime),y(d.forecast.low)]).reverse();
