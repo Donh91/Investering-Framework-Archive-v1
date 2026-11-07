@@ -21,6 +21,14 @@ Immutable original source Git blobs at the new on-demand audit:
 
 The read-only code reconstructs original 168 UTC hours, excludes **six pre-freeze hour-close observations**, and compares only the **162 completed hourly outcomes from Oct26 07:00 through Nov2 00:00 UTC inclusive**. It fails closed if original source SHA, time ordering, source gap, first valid time, B1 original independent status or prior W44 official scorecard change. No historical score or published range is rewritten.
 
+## Source-clock correction discovered by native PR CI, 7 November 2026
+
+The original on-branch CI failed with `MISSING_OR_DUPLICATE_HOURLY_SOURCE`. This was a **research clock interpretation defect**, not proven missing market hours. `source_window_end_utc` is the hourly collector's **batch request-window end**, which may repeat for multiple distinct completed hourly candles. It is **not** an individual candle close, first known provider publication, collector detection, nor user delivery. This is independently documented by the original `scripts/research/task2_hourly_source_window_clocks_v1.py` (Git blob `59b34fc2f862d1774dca37429e31762da5f0538e`) and `scripts/daily_capture/build_weekly_calibration.py` (Git blob `b1f5349847d4ef9e3e0446db4387baaf80a83fa8`) whose week/hourly-gap identity is `timestamp_utc`.
+
+A fresh source readback found **168/168** unique, contiguous canonical nominal UTC-hourly candle opens, but **55/168** rows had collector batch windows ending later than the corresponding nominal candle. Those 55 batch-clock differences are **not 55 missing hourly candles**; the batch end spans 1–6 hours after nominal start across this frozen W44 source. The prior code improperly used this repeated batch field as its unique hourly timeline and native CI correctly rejected it. The repaired source-locked code now derives nominal completed candle end as `timestamp_utc + 1 hour`, validates uninterrupted first/last 168h and enforces that each collector batch end remains whole-hour and between nominal +1h and +24h. It does not rewrite original CSV, original CN/B1 or scorecard; does not claim source first-known or actual delivery; and retains the original six pre-issuance completed-hour exclusions and 162 post-issue observed candle endpoints.
+
+The native new positive/adversarial fixture suite separately tests legitimate repeated batch timestamps, deliberately premature and implausibly late batch ends, misaligned subhour timestamps and the exact known 55-count. This is an actual methodology repair, **not** a new market edge or increased independence. Record source-clock inference as corrected only if the *new PR-head CI* completes successfully; prior failed CI remains a preserved negative case.
+
 ## Empirical match on 162 eligible post-issue hours
 
 | Model | BTC range | BTC full LOW+HIGH inside? | Width % of previous-close anchor | Jaccard of actual LOW/HIGH |
