@@ -1,20 +1,36 @@
 # Operations Dashboard
 
-Overall: **RED**
-Generated: `2026-11-07T11:35:58.850107Z`
+Overall: **AMBER**
+Generated: `2026-11-07T11:44:28.502711Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 4.396 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 9.334 |
-| `weekly_output` | **GREEN** | FRESH | 123.349 |
-| `automation_health` | **RED** | RED | 0.377 |
-| `architecture_health` | **GREEN** | GREEN | 0.325 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 2.599 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 2.7 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.226 |
+| `daily_capture` | **GREEN** | FRESH | 0.016 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 9.475 |
+| `weekly_output` | **GREEN** | FRESH | 123.49 |
+| `automation_health` | **AMBER** | AMBER | 0.067 |
+| `architecture_health` | **GREEN** | GREEN | 0.034 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 2.741 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 2.841 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.368 |
+
+## Source coverage (advisory, not producer/consumer acceptance)
+
+| Lane | Cadence | Source state | Schedule observation | Source age (h) | Consumer |
+|---|---|---|---|---:|---|
+| hourly | HOURLY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 1.741 | UNKNOWN |
+| daily_live_anchor | SIX_PER_LOCAL_DAY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_NOT_SUCCESS | 0.016 | UNKNOWN |
+| settled_etf | SETTLED_SESSION_DAILY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 20.762 | UNKNOWN |
+| stablecoin_liquidity | DAILY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 21.305 | UNKNOWN |
+| market_breadth | CHECKPOINT | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 1.516 | UNKNOWN |
+| btc_dominance | DAILY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 21.165 | UNKNOWN |
+| news_intelligence | DAILY_DISCOVERY | MISSING_OR_DEGRADED (NEWS_DISCOVERY_NOT_VERIFIED) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 20.667 | UNKNOWN |
+| entry_signals | EVENT_AND_HOURLY_FALLBACK | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 1.523 | UNKNOWN |
+| edge_research | PROSPECTIVE_EVENT_DRIVEN | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | NATIVE_SCHEDULE_UNVERIFIED | 2.741 | UNKNOWN |
+
+A successful schedule does not prove a complete source, verified news, point-in-time first-known, consumer readback or financial edge.
 
 ## AI and learning activity
 
@@ -51,7 +67,7 @@ A gateway PASS alone is not measured downstream value or investment edge.
 
 ## Required actions
 
-- **P0** `automation_health` - ['remediation-maturation.yml:LATEST_RUN_FAILED', 'remediation-maturation.yml:SCHEDULE_STALE']
+- **P1** `automation_health` - SEMANTIC_STATUS_AMBER
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `92ea6aa1ddf13c7961436ee54705d966e58f699b5c5f4ba666281124406ebf43`
+Dashboard SHA-256: `d91fcbf65fc5c3c9854620ebfe09d1e978ba6d4c7dd580328edc8109408bcea8`
