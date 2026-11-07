@@ -86,6 +86,62 @@ def count_bh_exploratory(table: list[dict], alpha: float = .05) -> dict:
         "after_selection_discovery_or_edge_claim":False,
     }
 
+
+def exposed_binary_decision_cost_frontier(models: dict) -> dict:
+    """Pure algebra on EXPOSED binary sign labels, never economic trading cost.
+
+    Mistaking these unit costs for executable dollars or an optimized
+    false-positive penalty would manufacture edge. This is a test of whether
+    model ranking is identified by accuracy alone, and nothing more.
+    """
+    names=("B0_ALWAYS_POSITIVE","C02_BREADTH","C07_SIMPLE_3")
+    if any(name not in models for name in names):
+        raise ValueError("FROZEN_COMPARATOR_ABSENT")
+    baseline=models[names[0]]
+    n=baseline["n"]
+    if n<1 or any(models[name]["n"]!=n for name in names):
+        raise ValueError("UNMATCHED_OR_EMPTY_COHORT")
+    if any(models[name]["fp"]+models[name]["fn"]+
+           models[name]["tp"]+models[name]["tn"]!=n for name in names):
+        raise ValueError("MALFORMED_ORIGINAL_CONFUSION_MATRIX")
+    results={}
+    for name in names[1:]:
+        x=models[name]
+        denominator=baseline["fp"]-x["fp"]
+        numerator=x["fn"]-baseline["fn"]
+        ratio=round(numerator/denominator,6) if denominator>0 else None
+        results[name]={
+            "break_even_false_positive_over_false_negative_cost_ratio":ratio,
+            "ratio_identified_in_exposed_binary_labels_only":ratio is not None,
+            "baseline_false_positive_n":baseline["fp"],
+            "candidate_false_positive_n":x["fp"],
+            "baseline_false_negative_n":baseline["fn"],
+            "candidate_false_negative_n":x["fn"],
+            "comparator_utility_proven":False,
+        }
+    illustration={}
+    for relative_fp_penalty in (1,5,7,10,20):
+        illustration[str(relative_fp_pen)]={
+            name: models[name]["fp"]*relative_fp_penalty+models[name]["fn"]
+            for name in names
+        }
+    c02,c07=models["C02_BREADTH"],models["C07_SIMPLE_3"]
+    return {
+        "scope":"DESCRIPTIVE_EXPOSED_BINARY_ETHBTC_LABEL_LOSS_NOT_DKK_NOT_TRADING",
+        "n_matched_matured_7d":n,
+        "base_rate_positive_pct":round(100*(baseline["tp"]+baseline["fn"])/n,3),
+        "false_negative_unit_cost":1,
+        "break_even_thresholds":results,
+        "illustrative_cost_units":illustration,
+        "C02_weakly_dominates_C07_on_exposed_binary_errors":
+            c02["fp"]<=c07["fp"] and c02["fn"]<=c07["fn"]
+            and (c02["fp"]<c07["fp"] or c02["fn"]<c07["fn"]),
+        "unobserved_regime_generalization_proven":False,
+        "real_after_cost_executable_hold_sell_outcomes":False,
+        "optimal_policy_or_model_selected":False,
+        "source_first_known_vendor_verified":False
+    }
+
 def build(root: Path = ROOT) -> dict:
     root = Path(root).resolve()
     values = {}
@@ -170,6 +226,7 @@ def build(root: Path = ROOT) -> dict:
                 "state":"CORRELATED_EX_POST_DEVELOPMENT_ONLY"
             },
             "L04_shared_row":{
+                "exposed_cost_frontier":exposed_binary_decision_cost_frontier(later["models"]),
                 "frozen_earlier_7d":{key:measures(old[key]) for key in ("C02_BREADTH","C07_SIMPLE_3","B0_ALWAYS_POSITIVE")},
                 "frozen_later_7d":{key:measures(new[key]) for key in ("C02_BREADTH","C07_SIMPLE_3","B0_ALWAYS_POSITIVE")},
                 "independent_28d_blocks":later["fixed_28d_block_n"],
