@@ -60,7 +60,14 @@ export function composeBrief(context,projection,observedAt){
   throw Error('UNTRUSTED_SOURCE_AUTHORITY_CLAIM');
  const repo=projection.source_repositories?.find(s=>s.repo===MAIN_REPO);
  const alignment=SHA40.test(context.main_sha||'')&&repo&&repo.main_sha===context.main_sha&&repo.observed===true;
- const safe=alignment&&!context.partial&&!projection.partial;
+ const verifiedBase=Boolean(alignment&&!context.partial);
+ const safe=verifiedBase&&!projection.partial;
+ const sampleOnly=verifiedBase&&projection.partial&&
+   Array.isArray(repo?.source_issues)&&repo.source_issues.length>0&&
+   repo.source_issues.every(x=>x==='PR_DISCOVERY_SAMPLED_NOT_COMPLETE')&&
+   Array.isArray(projection.items)&&projection.items.every(x=>
+     Array.isArray(x.source_issues)&&x.source_issues.every(y=>y==='PR_DISCOVERY_SAMPLED_NOT_COMPLETE'));
+ const classification=safe?'OBSERVED_ADVISORY':sampleOnly?'OBSERVED_ADVISORY_SAMPLED':'PARTIAL_OR_STALE_RECHECK';
  const op=admittedSource(context,'operations');
  const codex=admittedSource(context,'codex_ready');
  const normalized=Array.isArray(projection.items)?projection.items.filter(p=>p.repo===MAIN_REPO&&Number.isSafeInteger(p.pr_number)&&p.pr_number>0):[];
@@ -80,7 +87,8 @@ export function composeBrief(context,projection,observedAt){
   original_context_main_sha:context.main_sha||null,
   original_pr_main_sha:repo?.main_sha||null,
   source_alignment:alignment?'MATCHED':'UNOBSERVED',
-  state:safe?'OBSERVED_ADVISORY':'PARTIAL_OR_STALE_RECHECK',
+  state:classification,
+  source_scope:sampleOnly?'VERIFIED_PUBLIC_PR_SAMPLE_NOT_EXHAUSTIVE':safe?'SOURCE_SET_OBSERVED':'PARTIAL_OR_UNVERIFIED',
   source_coverage:{canonical_sources:context.source_files?.map(s=>({id:s.id,status:s.status,freshness:s.freshness,source_ref:s.source_url,blob_sha:s.blob_sha||null}))||[],
     public_github_repository:repo||null,
     private_bridge:'UNOBSERVED',private_alpha_lab:'UNOBSERVED',independent_recovery:'UNOBSERVED'},
