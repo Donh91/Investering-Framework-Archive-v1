@@ -111,8 +111,10 @@ def verify_frozen_72_source_sha(receipts,registry):
             if month in expected:raise ValueError("DUPLICATE_FROZEN_MONTH")
             expected[month]=dict(zip(families,parts[1:]))
     if set(expected)!=set(MONTHS):raise ValueError("FROZEN_SOURCE_REGISTRY_MONTH_COVERAGE_MISMATCH")
+    keys=[(r["month"],r["family"]) for r in receipts]
+    if len(keys)!=72 or len(set(keys))!=len(keys):
+        raise ValueError("ACTUAL_SOURCE_FILE_COVERAGE_MISMATCH")
     actual={(r["month"],r["family"]):r["actual_sha256"] for r in receipts}
-    if len(actual)!=72:raise ValueError("ACTUAL_SOURCE_FILE_COVERAGE_MISMATCH")
     for month in MONTHS:
         for family in families:
             if actual.get((month,family))!=expected[month][family]:
