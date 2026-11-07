@@ -99,10 +99,10 @@ class SourceIntegrity(unittest.TestCase):
         rows=hre.parse_binance_hourly(make_zip(month="2021-03"),"BTCUSDT-1h-2021-03.csv","2021-03")
         days=list(hre.daily_candles(rows).items())
         # March 2021 has enough complete prior days and 7 future days for last Monday March 29? 
-        # Use March 2021 Monday 29 with a longer synthetic April tail.
+        # Use April 2021 Monday 5 with a full preceding 29-day input window.
         extra=hre.parse_binance_hourly(make_zip(month="2021-04"),"BTCUSDT-1h-2021-04.csv","2021-04")
         ds=list(hre.daily_candles(rows+extra).items())
-        ix=next(i for i,(d,_) in enumerate(ds) if str(d)=="2021-03-29")
+        ix=next(i for i,(d,_) in enumerate(ds) if str(d)=="2021-04-05")
         original=hre.frozen_week_forecast(ds,ix)
         changed=copy.deepcopy(ds)
         for j in range(ix,len(changed)):
