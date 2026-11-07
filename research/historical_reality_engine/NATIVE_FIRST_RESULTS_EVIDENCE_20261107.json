@@ -1,0 +1,175 @@
+{
+  "contract": "HRE_NATIVE_FIRST_RESULTS_EVIDENCE_V1",
+  "as_of_utc": "2026-11-07T16:24:00Z",
+  "evidence_state": "ACTUAL_NATIVE_GITHUB_ACTIONS_COMPLETED_AND_ORIGINAL_PR_MERGED",
+  "scope": "RETROSPECTIVE_PRICE_ONLY_BASELINES_NOT_ORIGINAL_KOMPAS_ISSUANCE",
+  "source_provider": "Binance Public Data",
+  "source_documentation": "https://github.com/binance/binance-public-data",
+  "source_quote": "USDT",
+  "source_origination_pit": "NOT_VERIFIED_FOR_ORIGINAL_PERIOD",
+  "source_file_integrity": "EIGHT_OR_TEN_SHA256_CHECKSUM_FILES_VERIFIED_PER_LANE_AT_RUNTIME",
+  "invariants": [
+    "OHLC nominal UTC close derived from full-hour boundary, not raw provider intrabar last-trade field",
+    "Small missing vendor hourly candles preserved, no synthetic fills",
+    "Any crisis input/outcome window spanning missing bar abstains",
+    "Original 2026 issuances and retrospective 2020/2021 models remain distinct",
+    "No source change, risk threshold change, official forecast or portfolio trade",
+    "72h forward labels overlap across sampled daily cutoffs, not independent event counts"
+  ],
+  "original_owner_issue": 1596,
+  "s1_owner_issue": 1156,
+  "cn_owner_issue": 1516,
+  "risk_owner_issue": 1553,
+  "native_run": {
+    "id": 42390995602,
+    "url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42390995602",
+    "pr_number": 2010,
+    "pr_merge_sha": "c07f0030856619fed0c402bf745a0be091376faf",
+    "exact_qualified_pr_head": "2d687a92d1975f0a4a242157444e87f08aab0c31",
+    "pr_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2010",
+    "combined_workflows_at_exact_head": "5/5 SUCCESS",
+    "skill_workflow_jobs": "6/6 SUCCESS",
+    "source_unit_tests": "15/15 PASS",
+    "artifacts": [
+      {
+        "id": 13581378037,
+        "name": "hre-retrospective-source-qa",
+        "digest": "sha256:c240822926c7350b0c8bb7d27f82e1a584f916f7d42b0c255d21e13bfc75fee6",
+        "job_id": 128458333205
+      },
+      {
+        "id": 13581134154,
+        "name": "hre-retrospective-crisis-baselines",
+        "digest": "sha256:73f6b2077987cfe3c8e3eee171632209576bd20788635fd4a577de4e5ec5f691",
+        "job_id": 128458333220
+      },
+      {
+        "id": 13581601360,
+        "name": "hre-retrospective-weekly-ranges",
+        "digest": "sha256:6f87a32fb3055a9c5e08a92161f16e02ca72ffa56c0e4afe308c695bf55b58cd",
+        "job_id": 128458333234
+      }
+    ]
+  },
+  "source_qa": {
+    "BTCUSDT_2020_FebMar": {
+      "observed_hourly": 1433,
+      "expected_hourly": 1440,
+      "missing_hourly": 7
+    },
+    "ETHUSDT_2020_FebMar": {
+      "observed_hourly": 1433,
+      "expected_hourly": 1440,
+      "missing_hourly": 7
+    },
+    "BTCUSDT_2025_SepOct": {
+      "observed_hourly": 1464,
+      "expected_hourly": 1464,
+      "missing_hourly": 0
+    },
+    "ETHUSDT_2025_SepOct": {
+      "observed_hourly": 1464,
+      "expected_hourly": 1464,
+      "missing_hourly": 0
+    }
+  },
+  "crisis_diagnostic": {
+    "definition": "Forward 72h low <= -8% of last fully closed hour at daily midnight UTC cutoff. Price baseline: prior24h <= -5%. Fixed price-only alternative: prior24h <= -3% and prior72h high/low >=8%.",
+    "day_cutoffs_overlap_72h_outcomes": true,
+    "BTCUSDT_2020": {
+      "daily_cutoffs": 60,
+      "baseline": {
+        "tp": 2,
+        "fp": 7,
+        "fn": 15,
+        "tn": 36
+      },
+      "candidate": {
+        "tp": 2,
+        "fp": 7,
+        "fn": 15,
+        "tn": 36
+      }
+    },
+    "ETHUSDT_2020": {
+      "daily_cutoffs": 60,
+      "baseline": {
+        "tp": 5,
+        "fp": 6,
+        "fn": 18,
+        "tn": 31
+      },
+      "candidate": {
+        "tp": 7,
+        "fp": 10,
+        "fn": 16,
+        "tn": 27
+      }
+    },
+    "BTCUSDT_2025": {
+      "daily_cutoffs": 55,
+      "baseline": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 4,
+        "tn": 50
+      },
+      "candidate": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 4,
+        "tn": 50
+      }
+    },
+    "ETHUSDT_2025": {
+      "daily_cutoffs": 55,
+      "baseline": {
+        "tp": 2,
+        "fp": 2,
+        "fn": 11,
+        "tn": 40
+      },
+      "candidate": {
+        "tp": 2,
+        "fp": 3,
+        "fn": 11,
+        "tn": 39
+      }
+    }
+  },
+  "weekly_benchmark": {
+    "definition": "2021 March-May sample, each verified Monday 00:00 UTC freeze, seven individual expected closes and separate low/high ranges, no original 2021 CN issuance",
+    "BTCUSDT_2021": {
+      "eligible_weekly_freezes": 2,
+      "daily_points": 14,
+      "fixed_2pct_sqrtday_full_range_covered": 4,
+      "adaptive_28d_median_vol_full_range_covered": 10,
+      "same_naive_expected_close_mae_pct": 2.6394
+    },
+    "ETHUSDT_2021": {
+      "eligible_weekly_freezes": 2,
+      "daily_points": 14,
+      "fixed_2pct_sqrtday_full_range_covered": 2,
+      "adaptive_28d_median_vol_full_range_covered": 8,
+      "same_naive_expected_close_mae_pct": 5.5336
+    },
+    "comparison_limits": [
+      "Only two eligible weeks per asset due to complete-history day restrictions and source gaps",
+      "Adaptive range coverage cannot prove superiority without width/sharpness and independent holdout",
+      "Both arms issue same persistence expected close",
+      "Original prospective 2026 CN acceptance not established"
+    ]
+  },
+  "science_disposition": "FIRST_PILOT_COMPLETED_SOURCE_QA_VERIFIED; NO_PREDICTIVE_EDGE_SUPPORTED",
+  "skill_disposition": "Candidate vintage/nominal-hour-source-gate justified for skill-quality comparison, NOT ACTIVE",
+  "next_bounded_action": {
+    "owner": "Task2 #1596 with CN #1516 and Risk #1553",
+    "objective": "Expand frozen event universe, validate source gap coverage and create matched quiet controls / event-independent 72h clusters; exact historical model version original source behavior required before claiming Kompas historical performance",
+    "trigger": "Latest main merged HRE pilot and actual source SHA/artifact inspection",
+    "implementation": "Original-owner PR, existing Research Parallel Lanes read-only Actions; S1 natural consumption separate and UNPROVEN"
+  },
+  "s1_natural_autonomy": "NOT_VERIFIED",
+  "grok_bridge_native_review": "NOT_YET_REQUESTED_OR_VERIFIED",
+  "sol_max_native_paid_call": "NOT_DISPATCHED",
+  "raw_archival_status": "GITHUB_30_DAY_ARTIFACTS_ONLY_T3_NOT_CONFIRMED"
+}
