@@ -51,7 +51,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import {writeFileSync,existsSync} from 'node:fs';
-          import {buildAgentBrief} from './tools/s1-release-control/agent-brief-v1.mjs';
+          import {buildAgentBrief,buildReadbackStatus} from './tools/s1-release-control/agent-brief-v1.mjs';
           import {validateAgentBriefArtifact} from './tools/s1-release-control/verify-agent-brief-v1.mjs';
           const b=await buildAgentBrief({sources:['handoff','codex_ready'],maxPerRepo:1});
           const report={
@@ -108,22 +108,10 @@ jobs:
             }
           }
           const admitted=existsSync('/tmp/s1-release-control-agent-brief-v1.json');
-          const diagnostic={
-            contract:'S1_AGENT_BRIEF_ADMISSION_STATUS_v1',
-            candidate_pr_head_sha:process.env.S1_CANDIDATE_HEAD,
-            observed_at_utc:b.observed_at_utc,
-            original_main_sha:b.archive_main_sha,
-            status:admitted?'ADMITTED_SOURCE_IDENTITIES_ONLY':'WITHHELD_RECHECK_ORIGINAL_SOURCE',
-            source_statuses:report.original_sources.map(x=>({id:x.id,status:x.status,freshness:x.freshness,blob_sha:x.blob_sha})),
-            source_issues:report.source_issues,
-            original_codex_ready_hint_count:admitted?report.original_codex_ready_hint_count:null,
-            merge_authorized:false,eligible_for_original_action:false,
-            natural_s1_execution_proven:false,independent_recovery_verified:false,
-            private_bridge:'UNOBSERVED',production_verified:false
-          };
+          const diagnostic=buildReadbackStatus(b,process.env.S1_CANDIDATE_HEAD,{admitted});
           writeFileSync('/tmp/s1-agent-readback-status.json',JSON.stringify(diagnostic,null,2)+'\n');
           console.log('S1_AGENT_READBACK_STATUS',JSON.stringify({
-            status:diagnostic.status,stale_sources:diagnostic.source_statuses.filter(x=>x.freshness!=='FRESH_ADVISORY').map(x=>x.id)
+            status:diagnostic.status,stale_sources:diagnostic.source_statuses.filter(x=>x.freshness!=='FRESH_ADVISORY').map(x=>x.id),source_only_original_codex_pointers:diagnostic.read_only_original_codex_candidate_pointers.length
           }));
           NODE
           if test -f /tmp/s1-release-control-agent-brief-v1.json; then
