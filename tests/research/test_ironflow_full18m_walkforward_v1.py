@@ -67,6 +67,10 @@ class Full18mWalkForwardTests(unittest.TestCase):
         bad[0]["actual_sha256"]="0"*64
         with self.assertRaisesRegex(ValueError,"FROZEN_ORIGINAL_SOURCE_SHA256_MISMATCH"):
             verify_frozen_72_source_sha(bad,registry)
+        # Duplicate source receipt fails even with identical digest.
+        # A dict keyed by (month,family) previously masked 73 supplied receipts.
+        with self.assertRaisesRegex(ValueError,"ACTUAL_SOURCE_FILE_COVERAGE_MISMATCH"):
+            verify_frozen_72_source_sha(records+[dict(records[0])],registry)
     def test_no_valid_months_fails_closed(self):
         s=summarize([{"status":"INSUFFICIENT_SOURCE_ANCHORS"}])
         self.assertEqual(s["status"],"NO_VALID_MONTHS")
