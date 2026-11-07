@@ -134,8 +134,15 @@ def parse_binance_hourly(blob: bytes, expected_name: str, expected_month: str) -
         # A last trade at minute 35 does not make a one-hour candle complete.
         # The earliest research availability is AFTER the nominal UTC hour end.
         candles.append(Candle(opened, opened + 3_600_000 - 1, closed, o, h, l, c, vol))
-    if len(candles) < 24 * 27 or gaps:
-        raise ValueError(f"incomplete hourly month: candles={len(candles)}, gaps={len(gaps)}")
+    year, month = [int(part) for part in expected_month.split("-")]
+    next_month = dt.datetime(year + (month == 12), 1 if month == 12 else month + 1, 1, tzinfo=TZ)
+    first_month = dt.datetime(year, month, 1, tzinfo=TZ)
+    expected_hours = int((next_month-first_month).total_seconds()//3600)
+    missing_hours = expected_hours - len(candles)
+    if missing_hours < 0 or missing_hours > max(1, int(expected_hours * .05)) or not candles:
+        raise ValueError(f"unacceptable hourly source coverage: observed={len(candles)}, expected={expected_hours}, missing={missing_hours}")
+    # A small vendor gap is real UNKNOWN, never a synthetic price.
+    # Any model window crossing such a gap must abstain, not interpolate.
     return candles
 
 
@@ -159,6 +166,8 @@ def load_month(symbol: str, month: str, fetch=_limited_get):
         "sha256": digest, "zip_bytes": len(raw),
         "expected_sha256": expected.group(1).lower(),
         "observations": len(data),
+        "expected_month_hourly_candles": int((dt.datetime(int(month[:4])+(int(month[5:])==12), 1 if int(month[5:])==12 else int(month[5:])+1, 1, tzinfo=TZ)-dt.datetime(int(month[:4]), int(month[5:]), 1, tzinfo=TZ)).total_seconds()//3600),
+        "missing_hourly_candles": int((dt.datetime(int(month[:4])+(int(month[5:])==12), 1 if int(month[5:])==12 else int(month[5:])+1, 1, tzinfo=TZ)-dt.datetime(int(month[:4]), int(month[5:]), 1, tzinfo=TZ)).total_seconds()//3600)-len(data),
         "provider_close_pre_nominal_bucket_end_count": sum(c.provider_last_trade_ms < c.close_ms for c in data),
         "completion_time_policy": "NOMINAL_HOUR_END_NOT_PROVIDER_LAST_TRADE_TIME",
         "first_open_utc": dt.datetime.fromtimestamp(data[0].open_ms/1000, TZ).isoformat(),
@@ -180,9 +189,8 @@ def load_dataset(symbols: list[str], months: list[str], fetch=_limited_get):
         data.sort(key=lambda x: x.open_ms)
         if len({c.open_ms for c in data}) != len(data):
             raise ValueError("duplicate candles across months")
-        for prev, cur in zip(data, data[1:]):
-            if cur.open_ms - prev.open_ms != 3_600_000:
-                raise ValueError("cross-month gap")
+        # Preserve all gaps in data. Original monthly file reports hold source counts;
+        # scoring functions must reject any noncontiguous lookback or target window.
         series[symbol] = data
     return series, evidence
 
@@ -192,16 +200,25 @@ def closed_as_of(rows: list[Candle], ref_ms: int) -> list[Candle]:
     return [c for c in rows if c.close_ms < ref_ms]
 
 
+def consecutive_hourly(rows: list[Candle]) -> bool:
+    return all(b.open_ms-a.open_ms == 3_600_000 for a,b in zip(rows,rows[1:]))
+
+
 def score_crisis(rows: list[Candle]):
     positives = {"baseline": {"tp": 0, "fp": 0, "fn": 0, "tn": 0},
                  "challenger": {"tp": 0, "fp": 0, "fn": 0, "tn": 0}}
     daily = []
+    abstained_gapped_daily = 0
     for i in range(72, len(rows) - 72):
         ref = rows[i]
         # Decisions are made after this entire completed hour. Use daily midnight
         # UTC settlement, never hourly overlapping labels as independent events.
         decision_ms = ref.close_ms + 1
         if decision_ms % 86_400_000:
+            continue
+        window = rows[i-72:i+73]
+        if not consecutive_hourly(window):
+            abstained_gapped_daily += 1
             continue
         last24 = rows[i - 24]
         past72 = rows[i - 71:i + 1]
@@ -222,6 +239,7 @@ def score_crisis(rows: list[Candle]):
                       "price_baseline_warning": b,
                       "price_challenger_warning": challenger})
     return {"rules": FIXED_CRISIS_RULES, "daily_cutoffs": len(daily),
+            "abstained_daily_due_to_gapped_lookback_or_outcome": abstained_gapped_daily,
             "overlap_warning": "Rolling 72h labels overlap: daily rows are not independent events.",
             "confusion_descriptive": positives, "sample_first": daily[:3],
             "worst_future_event": min(daily, key=lambda x:x["forward_72h_worst_from_ref"], default=None),
@@ -287,9 +305,13 @@ def frozen_week_forecast(ordered_days: list[tuple], idx: int):
 def score_weekly(rows: list[Candle]):
     days = list(daily_candles(rows).items())
     forecasts = []
+    abstained_weeks = 0
     for i, (date, _) in enumerate(days):
         if date.weekday() == 0 and i >= 29 and i + 7 <= len(days):
-            forecasts.append(frozen_week_forecast(days, i))
+            try:
+                forecasts.append(frozen_week_forecast(days, i))
+            except ValueError:
+                abstained_weeks += 1  # No invented bar, no fill across missing UTC days.
     if not forecasts:
         raise ValueError("not enough complete historical Mondays")
     all_d = [d for w in forecasts for d in w["days"]]
@@ -297,6 +319,7 @@ def score_weekly(rows: list[Candle]):
         "rules": FIXED_WEEKLY_RULES,
         "weekly_freezes": len(forecasts),
         "daily_points": len(all_d),
+        "abstained_weekly_freezes_due_to_gaps": abstained_weeks,
         "naive_full_range_coverage": sum(d["naive_full_range_covered"] for d in all_d)/len(all_d),
         "alternative_full_range_coverage": sum(d["alternative_full_range_covered"] for d in all_d)/len(all_d),
         "naive_mean_relative_interval_width": statistics.mean((d["naive_high"]-d["naive_low"])/d["frozen_expected_close"] for d in all_d),
