@@ -617,6 +617,20 @@ await writeFile(resolve(legacyDir,"index.html"),preserveLegacyShell(index),"utf8
 // sources. No second writer, service, forecast or provider is introduced.
 const premiumShell=await readFile(resolve(vnextDir,"index.html"),"utf8");
 await writeFile(indexPath,releasePremiumShell(premiumShell),"utf8");
+// Separate read-only S1 cockpit on the EXISTING Pages host.
+// CN root and its producer remain unchanged. S1 absence cannot block CN publication.
+try {
+  const cockpitSource=resolve(repoRoot,"tools/s1-release-control");
+  const cockpitTarget=resolve(outputDir,"s1-release-control");
+  await mkdir(cockpitTarget,{recursive:true});
+  for(const file of ["index.html","release-core.js"]){
+    await copyFile(resolve(cockpitSource,file),resolve(cockpitTarget,file));
+  }
+  console.log("S1_RELEASE_CONTROL_STATIC_STAGED: /s1-release-control/");
+} catch(error) {
+  await rm(resolve(outputDir,"s1-release-control"),{recursive:true,force:true});
+  console.warn("S1_RELEASE_CONTROL_UNAVAILABLE: optional cockpit not staged; CN remains canonical",error.code||error.message);
+}
 console.log("CN premium v1.0 root released in bundle; legacy rollback at /legacy/");
 console.log(`Cycle Navigator public v2 built: issue #${pkg.issue_number}; Compass ${compass.compass_id||compass.data_status}`);
 
