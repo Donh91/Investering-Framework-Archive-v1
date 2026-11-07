@@ -65,7 +65,7 @@ export function composeBrief(context,projection,observedAt){
  const codex=admittedSource(context,'codex_ready');
  const normalized=Array.isArray(projection.items)?projection.items.filter(p=>p.repo===MAIN_REPO&&Number.isSafeInteger(p.pr_number)&&p.pr_number>0):[];
  const ranked=normalized.slice().sort((a,b)=>{
-  const priority=v=>v.provisional_disposition==='BLOCKED'?5:v.risk==='HIGH'?4:v.release_disposition==='HOLD'?3:2;
+  const priority=v=>v.release_disposition==='BLOCKED'?5:v.risk==='HIGH'?4:v.release_disposition==='HOLD'?3:2;
   return priority(b)-priority(a)||a.pr_number-b.pr_number;
  });
  const originalActions=op?.summary?.original_required_actions?.slice(0,8).map(a=>mapRequiredAction(a,op))||[];
