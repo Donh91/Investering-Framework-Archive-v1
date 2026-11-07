@@ -1,0 +1,48 @@
+name: Research Parallel Lanes Skill Contract CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.agents/skills/research-parallel-lanes/**'
+      - '.agents/skills/skill-quality-gate/agents/openai.yaml'
+      - '.agents/skills/typesafe-ai/agents/openai.yaml'
+      - '.agents/skills/s1-pr-repair-learning/agents/openai.yaml'
+      - '00_ARCHIVE_CONTROL/SKILL_REGISTRY.md'
+      - '00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json'
+      - 'scripts/research/validate_parallel_research_manifest_v1.py'
+      - 'tests/agent_skills/test_research_parallel_lanes_manifest_v1.py'
+      - '.github/workflows/research-parallel-lanes-skill-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  routing-architecture-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Existing canonical skill registry and routing validator
+        run: python scripts/agent_skills/validate_skill_architecture.py
+      - name: Validate example 3-lane research plan
+        run: |
+          python scripts/research/validate_parallel_research_manifest_v1.py \
+            .agents/skills/research-parallel-lanes/references/EXAMPLE_MISSION.json
+
+  scientific-evidence-and-boundary-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Adversarial manifest, timing and authority regressions
+        run: |
+          python -m unittest discover \
+            -s tests/agent_skills \
+            -p test_research_parallel_lanes_manifest_v1.py -v
