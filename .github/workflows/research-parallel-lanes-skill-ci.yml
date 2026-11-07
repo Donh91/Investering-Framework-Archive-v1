@@ -12,6 +12,9 @@ on:
       - '00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json'
       - 'scripts/research/validate_parallel_research_manifest_v1.py'
       - 'tests/agent_skills/test_research_parallel_lanes_manifest_v1.py'
+      - 'research/historical_reality_engine/**'
+      - 'scripts/research/validate_historical_reality_program_v1.py'
+      - 'tests/research/test_historical_reality_program_v1.py'
       - '.github/workflows/research-parallel-lanes-skill-ci.yml'
 
 permissions:
@@ -46,3 +49,16 @@ jobs:
           python -m unittest discover \
             -s tests/agent_skills \
             -p test_research_parallel_lanes_manifest_v1.py -v
+
+  hre-owner-gated-program-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate historical replay program source, authority and dependency safety
+        run: python scripts/research/validate_historical_reality_program_v1.py
+      - name: Adversarial tests for fake execution, future leakage, self-authorization and fabricated outcomes
+        run: python -m unittest discover -s tests/research -p test_historical_reality_program_v1.py -v
