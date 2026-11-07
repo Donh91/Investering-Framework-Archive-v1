@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 8248,
-  "generated_at_utc": "2026-11-07T10:39:18.640837Z",
+  "episode_count": 8251,
+  "generated_at_utc": "2026-11-07T11:18:30.204888Z",
   "rows": [
     {
       "changed_paths": [
@@ -143339,10 +143339,10 @@
         "tests/skill_quality_gate/test_adaptive_analysis_pilot_invocation.py"
       ],
       "compatibility": {
-        "changed": 1,
+        "changed": 2,
         "checked": 7,
         "removed": 0,
-        "same": 6,
+        "same": 5,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": ".agents",
@@ -222827,11 +222827,11 @@
         "tests/agents/test_s1_pr_repair_learning_skill.py"
       ],
       "compatibility": {
-        "changed": 4,
+        "changed": 5,
         "checked": 5,
         "removed": 0,
-        "same": 1,
-        "status": "PARTIAL"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": ".agents",
       "episode_id": "OE-fe122c65f604a75e",
@@ -222839,7 +222839,7 @@
       "failure_signature": "feat-s1-verified-pr-learning-skill-1906",
       "newer_related_episode": null,
       "operation_type": "FIX",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "fe122c65f604a75eb015c0289fc704803ae24114",
       "source_timestamp": "2026-11-04T19:01:29-05:00",
       "task_class": "RESEARCH_ARCHIVE",
@@ -233980,10 +233980,10 @@
         "research/architecture_health/history/42298652762-attempt-1.json"
       ],
       "compatibility": {
-        "changed": 2,
+        "changed": 7,
         "checked": 9,
         "removed": 0,
-        "same": 7,
+        "same": 2,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -234275,11 +234275,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 3,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 4,
-        "status": "PARTIAL"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-4033e6d0991ec315",
@@ -234287,7 +234287,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "4033e6d0991ec315dba6e9b07a868f8616483e0c",
       "source_timestamp": "2026-11-06T21:56:52Z",
       "task_class": "GENERAL_FRAMEWORK",
@@ -235365,11 +235365,11 @@
         "research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-152b7042fb477f49",
@@ -235624,6 +235624,27 @@
       "source_timestamp": "2026-11-07T03:19:29Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: daily machine throughput 2026-11-06 42333256762"
+    },
+    {
+      "changed_paths": [],
+      "compatibility": {
+        "changed": 0,
+        "checked": 0,
+        "removed": 0,
+        "same": 0,
+        "status": "UNKNOWN"
+      },
+      "dominant_path_prefix": null,
+      "episode_id": "OE-5e812dd8723c2915",
+      "episode_path": "episodes/2026/11/OE-5e812dd8723c2915.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "5e812dd8723c2915e9b86541840f811c9f47e9f8",
+      "source_timestamp": "2026-11-07T06:15:21-05:00",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "Merge #1990: Research Parallel Lanes registered skill and verified contract"
     },
     {
       "changed_paths": [
@@ -236245,11 +236266,11 @@
         "research/experiment_lifecycle/receipts/XR-041652a7c1a68c8c2b31.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 25,
         "removed": 0,
-        "same": 25,
-        "status": "EXACT"
+        "same": 23,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-7ffa04c814873768",
@@ -236504,7 +236525,68 @@
       "source_timestamp": "2026-11-07T10:15:19Z",
       "task_class": "MARKET_STATE",
       "task_summary": "learning: official daily Compass 42363121700"
+    },
+    {
+      "changed_paths": [
+        "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-42367213571-attempt-1.md",
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/LATEST_HOURLY_SOURCE_7D.json",
+        "research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json",
+        "research/architecture_health/history/42367213571-attempt-1.json",
+        "research/architecture_health/hourly_source_sla/daily/2026-11-06.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 10,
+        "removed": 0,
+        "same": 10,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-21febc38defb640d",
+      "episode_path": "episodes/2026/11/OE-21febc38defb640d.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "21febc38defb640d1a3603d165a4b00f01a6d15a",
+      "source_timestamp": "2026-11-07T11:16:33Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 42367213571"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-44c49e556a7683dc",
+      "episode_path": "episodes/2026/11/OE-44c49e556a7683dc.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "44c49e556a7683dcf860e70f4284f4a2fcbc4727",
+      "source_timestamp": "2026-11-07T11:17:35Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 42367488450"
     }
   ],
-  "source_head_sha": "5deb24076bb4bcd1c6a31530d374d63f3d1b82c6"
+  "source_head_sha": "44c49e556a7683dcf860e70f4284f4a2fcbc4727"
 }
