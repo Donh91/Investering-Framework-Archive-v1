@@ -584,6 +584,9 @@ await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"\n");
 for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolve(outputDir,file));}
+// Read-only owner visual acceptance page. Deliberately isolated from real forecasts and the canonical site.
+const kompasTestDir=resolve(outputDir,"kompas-pro-test"); await mkdir(kompasTestDir,{recursive:true});
+for(const file of ["index.html","graf.html"]) await copyFile(resolve(siteDir,"kompas-pro-test",file),resolve(kompasTestDir,file));
  // vNext is a read-only first-party *candidate*, deployed below /vnext/
  // on the EXISTING Pages host. Canonical /index.html remains untouched.
  const vnextDir=resolve(outputDir,"vnext"); await mkdir(vnextDir,{recursive:true});
