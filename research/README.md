@@ -63,6 +63,10 @@ Use health objects as observability, then inspect their owners and evidence befo
 
 Use `historical_research_vault/` as the index and governed collection surface for replay-grade historical data. Reuse existing owner datasets before adding sources, keep bulk payloads out of ordinary Git history, and require source/license/storage admission before durable promotion.
 
+### 8. Historical Reality Engine (HRE, 2020-2026)
+
+The owner-gated historical replay and continuous learning project is at `historical_reality_engine/README.md`. It provides the original-owner research plan, 14-work-item non-authoritative dependency DAG, 18 candidate historical event/control windows, Research Parallel Lanes execution proposal, skill foundry proposal and /GOAL consent. Its **DESIGN_STAGED_OWNER_APPROVAL_PENDING** status does not prove any native research job, historical prediction, autonomous S1 handoff or API activation. Current scientific owner: Task2 #1596; eligible code closure only through existing S1 #1156.
+
 ## Current live seed from 2026-09-04
 
 At the time this README was created, the root dashboard reported a large experiment/forecast/remediation backlog and an automation-health RED caused by `daily-slow-cycle-shadow.yml` latest/repeated failures.
