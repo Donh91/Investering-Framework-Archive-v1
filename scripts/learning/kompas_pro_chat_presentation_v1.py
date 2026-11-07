@@ -86,6 +86,8 @@ def validate_analysis_overlay(analyst: Mapping[str, Any], *, as_of_utc: str) -> 
         assessed_at = _parse_utc(row.get("assessed_at_utc"))
         if not (observed_at <= assessed_at <= now) or (horizon_id in SHORT_HORIZONS and (now - observed_at).total_seconds() > 24 * 3600):
             raise ValueError("ANALYST_SOURCE_FUTURE_OR_STALE")
+        if (now - assessed_at).total_seconds() > 7 * 86400:
+            raise ValueError("ANALYST_ASSESSMENT_EXPIRED")
         evidence = row.get("source_refs")
         if not isinstance(evidence, list) or not evidence or any(not isinstance(v, str) or not v.startswith("https://") or "Donh91/secrets" in v for v in evidence):
             raise ValueError("ANALYST_SOURCE_REFERENCES_REQUIRED")
@@ -137,9 +139,10 @@ def _official_current(official: Mapping[str, Any], pointer: Mapping[str, Any] | 
         return False
     try:
         age = (now - _parse_utc(official.get("issued_at_utc"))).total_seconds()
+        observed_age = (now - _parse_utc((official.get("market_reference") or {}).get("observation_open_utc"))).total_seconds()
     except ValueError:
         return False
-    return 0 <= age <= 10800
+    return 0 <= age <= 10800 and 0 <= observed_age <= 10800
 
 
 def _price_range(pair: tuple[float, float], quote: str) -> str:
@@ -220,7 +223,7 @@ def render_chat(ledger: Mapping[str, Any], official: Mapping[str, Any], *,
             r = rows.get(hid)
             if not r:
                 continue
-            hdr.append(f"- {hid}: bear {_price_range(r['cases']['bear'], r['quote'])}, base {_price_range(r['cases']['base'], r['quote'])}, bull {_price_range(r['cases']['bull'], r['quote'])}. {r['method']}. Ugyldiggøres hvis: {_inline(r['falsifier'])}. Kilder: {', '.join(_inline(ref) for ref in r['source_refs'])}.")
+            hdr.append(f"- {hid}: bear {_price_range(r['cases']['bear'], r['quote'])}, base {_price_range(r['cases']['base'], r['quote'])}, bull {_price_range(r['cases']['bull'], r['quote'])}. {r['method']}. Ugyldiggøres hvis: {_inline(r['falsifier'])}. Kilder: {', '.join(_inline(ref) for ref in r['source_refs'])}. Kildeobserveret {r['source_observed_at_utc']}; analyseret {r['assessed_at_utc']}.")
     if not isinstance(interpretation, str) or not interpretation.strip():
         raise ValueError("ANALYST_INTERPRETATION_REQUIRED")
     hdr.extend(["", "## 🧠 MIN FORTOLKNING · NÆSTE 1–3 DAGE", _inline(interpretation.strip())])
