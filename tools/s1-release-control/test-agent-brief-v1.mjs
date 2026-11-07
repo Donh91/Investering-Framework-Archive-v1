@@ -162,8 +162,8 @@ test('stale handoff with fresh canonical Codex keeps read-only original pointers
  assert.equal(d.read_only_original_codex_candidate_pointers[0].candidate_file_revalidated,false);
  assert.equal(d.read_only_original_codex_candidate_pointers[0].action_permission,false);
  assert.equal(d.read_only_original_codex_candidate_pointers[0].source_ledger_sha256,'d'.repeat(64));
- const handoff=d.source_statuses.find(x=>x.id==='handoff');
- assert.equal(handoff.freshness,'STALE');
+ const observedHandoff=d.source_statuses.find(x=>x.id==='handoff');
+ assert.equal(observedHandoff.freshness,'STALE');
  assert.equal(d.source_statuses.find(x=>x.id==='codex_ready').freshness,'FRESH_ADVISORY');
 });
 test('no codex pointers when original source identity, recency, main alignment or path is invalid',()=>{
