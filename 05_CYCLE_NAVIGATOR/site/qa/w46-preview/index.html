@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Kompas PRO · W46 · GitHub-kildetest</title>
+  <style>
+    :root { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; background:#f6f7f8; color:#07172f; }
+    * { box-sizing:border-box; }
+    body { margin:0; }
+    a { color:#285cae; }
+    button { font:inherit; cursor:pointer; }
+    button:focus-visible, a:focus-visible { outline:3px solid #2f6fda; outline-offset:3px; }
+    .qa-top { background:#fff; border-bottom:1px solid #dce5ef; }
+    .qa-shell { max-width:1280px; margin:auto; padding:17px clamp(12px,3vw,28px); }
+    .qa-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:13px; }
+    .qa-head strong { font-size:15px; letter-spacing:-.02em; }
+    .qa-head small { font-size:11px; color:#64758b; }
+    .qa-safety { font-size:11px; padding:9px 12px; border:1px solid #c7daf5; color:#1a4a88; background:#edf4ff; border-radius:8px; font-weight:750; }
+    h1 { font-size:clamp(22px,4vw,31px); margin:20px 0 7px; letter-spacing:-.04em; }
+    p { color:#61738a; font-size:13px; line-height:1.6; margin:0 0 14px; }
+    .qa-options { display:flex; flex-wrap:wrap; gap:9px; margin:16px 0 13px; }
+    .qa-options button { border:1px solid #cfdaea; min-height:44px; padding:10px 13px; border-radius:9px; color:#385476; background:white; font-size:12px; font-weight:700; }
+    .qa-options button[aria-pressed="true"] { background:#eaf2ff; color:#2059a9; border-color:#97b8e7; }
+    .qa-caption { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; border-top:1px solid #e1e7ef; padding-top:13px; color:#64758b; font-size:11px; line-height:1.6; }
+    .qa-caption strong { color:#0c315e; }
+    .qa-frame { width:100%; border:0; display:block; background:#f5f7fa; min-height:800px; }
+    .qa-error { color:#9b372b; background:#fff1ee; border:1px solid #eac4ba; padding:18px; margin:14px 0; border-radius:10px; }
+    footer { max-width:1280px; margin:18px auto 35px; padding:0 18px; font-size:11px; line-height:1.7; color:#76869a; }
+    @media(max-width:500px) {
+      .qa-options { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+      .qa-options button { font-size:11px; padding:9px 7px; }
+      .qa-shell { padding:13px 12px; }
+      .qa-caption { font-size:10px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="qa-top">
+    <div class="qa-shell qa-head">
+      <strong>KOMPAS PRO · GITHUB-KILDETEST</strong>
+      <span class="qa-safety">FIKTIVE W46-PRISER · ISOLERET FRA PRODUKTION</span>
+    </div>
+  </header>
+  <main>
+    <div class="qa-shell">
+      <h1>Mandagens frosne prognose</h1>
+      <p>Dette er det <strong>rigtige GitHub-byggede Kompas PRO-site</strong> indlæst i en isoleret testvisning. Det ændrer ikke det officielle site eller dets datakilder. Kun testpriser og simuleret klokkeslæt er opfundet.</p>
+      <div class="qa-options" role="group" aria-label="Vælg testtilstand">
+        <button type="button" data-scene="mandag">Mandag 9/11</button>
+        <button type="button" data-scene="onsdag">Onsdag 11/11</button>
+        <button type="button" data-scene="afstaar">0/7, ingen prognose</button>
+        <button type="button" data-scene="valutafejl">USD/USDT-afvisning</button>
+        <button type="button" data-view="graf">Ugens graf</button>
+        <button type="button" data-view="historik">Uddybende grafhistorik</button>
+      </div>
+      <div class="qa-caption">
+        <span id="status" role="status">Indlæser det originale GitHub-site…</span>
+        <span>Original Graph B og grafhistorik · <a href="https://github.com/Donh91/Investering-Framework-Archive-v1/tree/main/05_CYCLE_NAVIGATOR/site" target="_blank" rel="noopener noreferrer">Se den rigtige site-kode på GitHub</a></span>
+      </div>
+    </div>
+    <iframe id="site" class="qa-frame" title="GitHub Pages, original Kompas PRO-kode med fiktive W46-data"></iframe>
+    <div id="error" class="qa-error qa-shell" hidden></div>
+  </main>
+  <footer>
+    Kildegrænse: Ægte offentlig Pages-kode og originale site-stylesheets, men alene syntetiske data inde i denne test-iframe. Den blå 7-dageslinje fremstilles kun, hvis den eksisterende kildeadapter accepterer testkontrakten. Ingen ændringer i den officielle `/data/latest.json`, GitHub-forecast-freezes eller Master Monday. W46 7/7 i testen er aldrig bevis for en ægte udstedt prognose.
+  </footer>
+  <script type="module">
+    import { buildFixture, historyFixture } from './fixture.mjs';
+    const frame = document.getElementById('site');
+    const status = document.getElementById('status');
+    const error = document.getElementById('error');
+    const choices = ['mandag', 'onsdag', 'afstaar', 'valutafejl'];
+    const current = new URL(location.href);
+    let scene = choices.includes(current.searchParams.get('scene')) ? current.searchParams.get('scene') : 'mandag';
+    let view = current.searchParams.get('view') === 'historik' ? 'historik' : 'graf';
+    const root = new URL('../../', location.href);
+    const urlFor = path => new URL(path, root);
+    const sourceHtml = view => urlFor(view === 'historik' ? 'graph-history/index.html' : 'index.html');
+    const baseHref = view => urlFor(view === 'historik' ? 'graph-history/' : 'vnext/').href;
+    const q = s => document.querySelector(s);
+
+    function updateControls() {
+      document.querySelectorAll('button[data-scene]').forEach(b => {
+        b.setAttribute('aria-pressed', String(b.dataset.scene === scene));
+      });
+      document.querySelectorAll('button[data-view]').forEach(b => {
+        b.setAttribute('aria-pressed', String(b.dataset.view === view));
+      });
+    }
+
+    function scriptFor(fixture, history) {
+      // Classic inline script executes before the native site's module scripts.
+      // It is injected only into this about:srcdoc iframe, never the real Page.
+      const values = JSON.stringify({ nowUtc: fixture.nowUtc, snapshot: fixture.snapshot, lineage: fixture.lineage, history });
+      return `
+        (() => {
+          'use strict';
+          const fixture = ${values};
+          const RealDate = window.Date;
+          class QAClock extends RealDate {
+            constructor(...args) { super(...(args.length ? args : [fixture.nowUtc])); }
+            static now() { return RealDate.parse(fixture.nowUtc); }
+          }
+          window.Date = QAClock;
+          const nativeFetch = window.fetch.bind(window);
+          window.fetch = async (resource, options) => {
+            const url = new URL(resource instanceof Request ? resource.url : String(resource), document.baseURI);
+            let response = null;
+            if (url.pathname.endsWith('/data/latest.json')) response = fixture.snapshot;
+            if (url.pathname.endsWith('/data/publication-lineage.json')) response = fixture.lineage;
+            if (url.pathname.endsWith('/data/graph-history/timeline.json')) response = fixture.history;
+            if (response !== null) {
+              return new Response(JSON.stringify(response), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+            // No other real market feeds may mix into this fictional test session.
+            if (url.pathname.includes('/data/')) {
+              return new Response('Unavailable in GitHub-only visual QA', { status: 503 });
+            }
+            return nativeFetch(resource, options);
+          };
+          Object.defineProperty(window, '__CN_QA_ISOLATED__', { value: true, writable: false });
+        })();
+      `;
+    }
+
+    function resizeFrame() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        const height = Math.min(8500, Math.max(820, doc.documentElement.scrollHeight, doc.body?.scrollHeight || 0));
+        if (Math.abs(frame.offsetHeight - height) > 10) frame.style.height = height + 'px';
+      } catch {
+        status.textContent = 'Kunne ikke måle GitHub-sidens højde';
+      }
+    }
+
+    async function render() {
+      updateControls();
+      status.textContent = 'Indlæser original ' + (view === 'historik' ? 'grafhistorik' : 'Kompas PRO') + ' fra samme GitHub Pages…';
+      error.hidden = true;
+      try {
+        const fixture = buildFixture(scene);
+        const history = await historyFixture(fixture);
+        const original = sourceHtml(view);
+        const response = await fetch(original, { cache: 'no-store' });
+        if (!response.ok) throw Error('GITHUB_PAGES_SOURCE_HTTP_' + response.status);
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        if (!doc.body || !doc.head) throw Error('GITHUB_SITE_DOCUMENT_MISSING');
+        const required = view === 'graf' ? 'variant-panel' : 'plot';
+        if (!doc.getElementById(required)) throw Error('GITHUB_SITE_EXPECTED_COMPONENT_MISSING_' + required);
+        let base = doc.querySelector('base');
+        if (!base) {
+          base = doc.createElement('base');
+          doc.head.prepend(base);
+        }
+        base.setAttribute('href', baseHref(view));
+        const injected = doc.createElement('script');
+        injected.textContent = scriptFor(fixture, history);
+        doc.head.insertBefore(injected, base.nextSibling);
+        frame.onload = () => {
+          try {
+            if (view === 'graf') {
+              const graphTab = frame.contentDocument.querySelector('[data-premium-nav="graph"]');
+              if (graphTab) graphTab.click();
+              // Prevent the optional nested live-history embed from displaying
+              // actual non-fixture prices inside this fake-market comparison.
+              const nested = frame.contentDocument.getElementById('cn-graph-history-preview');
+              if (nested) nested.remove();
+            }
+            resizeFrame();
+            new ResizeObserver(resizeFrame).observe(frame.contentDocument.body);
+            status.textContent = 'Original GitHub-site indlæst · ' +
+              (scene === 'onsdag' ? 'onsdag, grøn historik udvidet' :
+              scene === 'mandag' ? 'mandag, blå prognose frosset' :
+              scene === 'afstaar' ? 'ingen original 7/7, korrekt afståelse' :
+              'valuta ikke sammenlignelig, blå prognose skjult');
+          } catch (e) { status.textContent = 'QA visningskontrol: ' + String(e); }
+        };
+        frame.srcdoc = '<!doctype html>\n' + doc.documentElement.outerHTML;
+      } catch (e) {
+        frame.removeAttribute('srcdoc');
+        frame.src = 'about:blank';
+        error.hidden = false;
+        error.textContent = 'Den originale GitHub-side er ikke tilgængelig. Ingen erstatningsgraf genereres. ' + String(e);
+        status.textContent = 'Original GitHub-kode ikke tilgængelig';
+      }
+    }
+    function choose(key, value) {
+      if (key === 'scene') scene = value;
+      else view = value;
+      const url = new URL(location.href);
+      url.searchParams.set('scene', scene);
+      url.searchParams.set('view', view);
+      history.replaceState(null, '', url);
+      render();
+    }
+    document.querySelectorAll('[data-scene]').forEach(b =>
+      b.addEventListener('click', () => choose('scene', b.dataset.scene)));
+    document.querySelectorAll('[data-view]').forEach(b =>
+      b.addEventListener('click', () => choose('view', b.dataset.view)));
+    render();
+  </script>
+</body>
+</html>

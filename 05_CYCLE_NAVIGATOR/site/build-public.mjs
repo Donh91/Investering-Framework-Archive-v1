@@ -584,6 +584,12 @@ await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"\n");
 for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolve(outputDir,file));}
+// Owner-approved GitHub-only, separately labeled and non-indexed VISUAL QA.
+// Fixture files are only reachable under /qa/w46-preview/ and never enter /data/.
+const githubQaDir=resolve(outputDir,'qa/w46-preview');
+await mkdir(githubQaDir,{recursive:true});
+for(const name of ['index.html','fixture.mjs'])
+  await copyFile(resolve(siteDir,'qa/w46-preview',name),resolve(githubQaDir,name));
  // vNext is a read-only first-party *candidate*, deployed below /vnext/
  // on the EXISTING Pages host. Canonical /index.html remains untouched.
  const vnextDir=resolve(outputDir,"vnext"); await mkdir(vnextDir,{recursive:true});

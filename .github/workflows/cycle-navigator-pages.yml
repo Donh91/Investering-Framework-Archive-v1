@@ -215,6 +215,11 @@ jobs:
           ! grep -q 'HANDLEKOMPAS ·' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -q 'MASTER MONDAY →' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+      - name: Test GitHub-only isolated W46 preview against original Graph B source adapter
+        run: |
+          node --test 05_CYCLE_NAVIGATOR/site/qa/w46-preview/preview.test.mjs
+          test -f 05_CYCLE_NAVIGATOR/site/dist/qa/w46-preview/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/qa/w46-preview/fixture.mjs
       - name: Stage verified isolated NEXT, preserving all canonical public assets
         run: node 05_CYCLE_NAVIGATOR/site/premium-v2/stage-next.mjs
       - name: Promote one original Graph B and source-owned Kompas PRO to root with rollback
