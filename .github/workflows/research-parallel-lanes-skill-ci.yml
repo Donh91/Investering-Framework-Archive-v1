@@ -17,6 +17,7 @@ on:
       - 'research/historical_reality_engine/**'
       - 'scripts/research/validate_historical_reality_program_v1.py'
       - 'tests/research/test_historical_reality_program_v1.py'
+      - 'tests/research/test_hre_shadow_transfer_v1.py'
       - 'scripts/research/hre_native_replay_pilot_v1.py'
       - 'tests/research/test_hre_native_replay_pilot_v1.py'
       - '.github/workflows/research-parallel-lanes-skill-ci.yml'
@@ -77,6 +78,8 @@ jobs:
         run: python scripts/research/validate_historical_reality_program_v1.py
       - name: Adversarial tests for fake execution, future leakage, self-authorization and fabricated outcomes
         run: python -m unittest discover -s tests/research -p test_historical_reality_program_v1.py -v
+      - name: Verify future shadow transfer and bounded paid model control are not prematurely activated
+        run: python -m unittest discover -s tests/research -p test_hre_shadow_transfer_v1.py -v
 
   hre-replay-source-qa:
     if: startsWith(github.event.pull_request.title, 'research(hre):')
