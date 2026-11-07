@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/tools/s1-release-control/schemas/agent-brief-v1.schema.json",
+  "title": "S1 Agent Operations Brief v1, source-derived original-owner triage without authority",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "mode",
+    "observed_at_utc",
+    "source_alignment",
+    "state",
+    "source_coverage",
+    "original_actions",
+    "original_codex_ready_hints",
+    "public_pr_triage",
+    "existing_s1_action_limit",
+    "invariant",
+    "existing_actors",
+    "handoff"
+  ],
+  "properties": {
+    "schema": {
+      "const": "S1_AGENT_OPERATIONS_BRIEF_v1"
+    },
+    "mode": {
+      "const": "PUBLIC_READ_ONLY_ORIGINAL_SOURCE_TRIAGE"
+    },
+    "observed_at_utc": {
+      "type": "string",
+      "minLength": 10
+    },
+    "archive_main_sha": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{40}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source_alignment": {
+      "enum": [
+        "MATCHED",
+        "UNOBSERVED"
+      ]
+    },
+    "state": {
+      "enum": [
+        "OBSERVED_ADVISORY",
+        "PARTIAL_OR_STALE_RECHECK"
+      ]
+    },
+    "source_coverage": {
+      "type": "object",
+      "required": [
+        "canonical_sources",
+        "public_github_repository",
+        "private_bridge",
+        "private_alpha_lab",
+        "independent_recovery"
+      ],
+      "properties": {
+        "private_bridge": {
+          "const": "UNOBSERVED"
+        },
+        "private_alpha_lab": {
+          "const": "UNOBSERVED"
+        },
+        "independent_recovery": {
+          "const": "UNOBSERVED"
+        }
+      }
+    },
+    "original_actions": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "original_source_ref",
+          "allowed_next",
+          "release_permission"
+        ],
+        "properties": {
+          "kind": {
+            "const": "CANONICAL_SYSTEM_ACTION_HINT"
+          },
+          "release_permission": {
+            "const": false
+          },
+          "allowed_next": {
+            "const": "ORIGINAL_OWNER_READBACK_AND_TRIAGE"
+          }
+        }
+      }
+    },
+    "original_codex_ready_hints": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "original_owner",
+          "original_source_ref",
+          "code_executed_proven",
+          "release_permission"
+        ],
+        "properties": {
+          "kind": {
+            "const": "EXISTING_CODEX_READY_HINT"
+          },
+          "code_executed_proven": {
+            "const": false
+          },
+          "release_permission": {
+            "const": false
+          }
+        }
+      }
+    },
+    "public_pr_triage": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "repo",
+          "pr_number",
+          "head_sha",
+          "original_source_ref",
+          "eligible_for_merge_from_brief",
+          "natural_S1_execution_proven",
+          "pr_dependencies_verified"
+        ],
+        "properties": {
+          "kind": {
+            "const": "EXISTING_ORIGINAL_PR"
+          },
+          "head_sha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "eligible_for_merge_from_brief": {
+            "const": false
+          },
+          "natural_S1_execution_proven": {
+            "const": false
+          },
+          "pr_dependencies_verified": {
+            "const": false
+          }
+        }
+      }
+    },
+    "queue_slots_visible": {
+      "const": 8
+    },
+    "existing_s1_action_limit": {
+      "const": 3
+    },
+    "parallel_original_PR_independence_proven": {
+      "const": false
+    },
+    "invariant": {
+      "type": "object",
+      "required": [
+        "no_new_scheduler",
+        "no_new_canonical_queue",
+        "no_new_identity",
+        "release_permission",
+        "no_real_trading",
+        "no_model_spend",
+        "no_private_source_publication",
+        "action_cap_per_existing_s1_tick",
+        "monday_0930_1030_copenhagen_read_only",
+        "interactive_work_is_natural_S1_completion"
+      ],
+      "properties": {
+        "no_new_scheduler": {
+          "const": true
+        },
+        "no_new_canonical_queue": {
+          "const": true
+        },
+        "no_new_identity": {
+          "const": true
+        },
+        "release_permission": {
+          "const": false
+        },
+        "no_real_trading": {
+          "const": true
+        },
+        "no_model_spend": {
+          "const": true
+        },
+        "no_private_source_publication": {
+          "const": true
+        },
+        "action_cap_per_existing_s1_tick": {
+          "const": 3
+        },
+        "monday_0930_1030_copenhagen_read_only": {
+          "const": true
+        },
+        "interactive_work_is_natural_S1_completion": {
+          "const": false
+        }
+      }
+    },
+    "existing_actors": {
+      "type": "object",
+      "required": [
+        "S1",
+        "Strategist",
+        "Codex",
+        "Grok"
+      ]
+    },
+    "handoff": {
+      "type": "string",
+      "minLength": 20
+    }
+  }
+}
