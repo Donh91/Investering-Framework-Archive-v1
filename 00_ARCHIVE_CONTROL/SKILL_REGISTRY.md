@@ -21,6 +21,7 @@ Skills are process instructions. They do not own market truth, framework doctrin
 | prospective-evidence-ledger | `.agents/skills/prospective-evidence-ledger/SKILL.md` | PILOT_ACTIVE_V0_1 | freeze input, forward row, actual, maturity, M3, FRLP, FNP, Transmission Matrix, lineage, coverage | Govern evidence-row lifecycle; no scoring or promotion authority |
 | archive-governance | `.agents/skills/archive-governance/SKILL.md` | PILOT_ACTIVE_V0_1_1 | archive, save, GitHub update, canonical, index, place this, preserve this | Classify and govern writes, subject to repository policy |
 | research-lab-red-team | `.agents/skills/research-lab-red-team/SKILL.md` | PILOT_ACTIVE | audit, red team, Claude/Grok review, framework proposal, evidence, falsify | Evaluate and classify, no self-promotion |
+| research-parallel-lanes | `.agents/skills/research-parallel-lanes/SKILL.md` | PILOT_ACTIVE_OPERATIONAL_HELPER_V1 | explicit Research Parallel Lanes, parallel deep research, 2-10 tracks in one thread, Task 2 multi-lane | Coordinate bounded studies, independent jobs and evidence-only synthesis; does not create agents, cron, API authority, trading or merge permissions |
 | codex-intake | `.agents/skills/codex-intake/SKILL.md` | ACTIVE_OPERATIONAL_V1 | queue for Codex, bounded code defect, research-to-code handoff, CODEX candidate | Prepare/deduplicate bounded research intake only; no CODEX_READY, merge, market or framework authority |
 | developer-source-research | `.agents/skills/developer-source-research/SKILL.md` | PILOT_ACTIVE_READ_ONLY_V0_1 | external API/library behavior, errors, upstream issues/PRs, repository or agent-skill discovery | Retrieve and verify public developer sources only; no code, market or portfolio authority |
 | skill-quality-gate | `.agents/skills/skill-quality-gate/SKILL.md` | PILOT_ACTIVE_READ_ONLY_V0_1 | create/modify/audit skill, trigger tuning, regression review, prove candidate value, retirement review | Read-only meta-evaluation; no authoring, registry mutation, promotion, merge, disable or delete authority |
@@ -41,6 +42,20 @@ canonical-context-router
 -> codex-intake only when a reproducible bounded code defect should enter remediation
 -> archive-governance before repository writes
 ```
+
+For **explicit parallel research** in any repository-aware thread (not automatic multi-agent execution):
+
+```text
+canonical-context-router
+-> research-parallel-lanes (explicit invocation only)
+-> original domain owner and frozen source/maturity preflight
+-> independent research tools OR GitHub Actions jobs OR existing separately authorized agent runtime
+-> each native run/job/artifact readback
+-> original owner research synthesis and research-lab-red-team when promotion claims exist
+-> archive-governance before repository writes; normal exact-head release gates
+```
+
+The user can say `Kør Research Parallel Lanes v1 på Task 2 med seks spor`. The skill coordinates the **current** conversation but cannot independently fork ChatGPT models or keep agents running after a turn. A simultaneous GitHub Actions job is not an AI agent, and no new automation is implied. `research-parallel-lanes` owns method and receipt layout only, never a competing domain queue or live research engine.
 
 For active test and ledger work:
 
