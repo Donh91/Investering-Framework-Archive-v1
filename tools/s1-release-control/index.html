@@ -151,7 +151,7 @@ async function enrich(p){
  if(!p.headMoved){p.changedFiles=results[0].value.changed_files;p.base=results[0].value.base&&results[0].value.base.sha||p.base;p.draft=!!results[0].value.draft;}
  if(results[1].status==='fulfilled'&&Array.isArray(results[1].value)){p.files=results[1].value;p.filesObserved=!p.headMoved&&p.files.length<100&&p.files.length===p.changedFiles;}
  if(results[2].status==='fulfilled'&&Array.isArray(results[2].value)){p.reviews=results[2].value;p.reviewsObserved=!p.headMoved&&p.reviews.length<100;}
- if(results[3].status==='fulfilled'&&Array.isArray(results[3].value.workflow_runs)){var runs=results[3].value.workflow_runs;p.runObserved=!p.headMoved&&runs.length<100;p.runs=runs.filter(function(r){return r.head_sha===p.head;}).map(function(r){return {id:r.id,name:r.name,conclusion:r.conclusion,status:r.status,event:r.event,head_sha:r.head_sha};});}
+ if(results[3].status==='fulfilled'&&Array.isArray(results[3].value.workflow_runs)){var runs=results[3].value.workflow_runs;p.runObserved=!p.headMoved&&runs.length<100;p.runs=runs.filter(function(r){return r.head_sha===p.head;}).map(function(r){return {id:r.id,name:r.name,conclusion:r.conclusion,status:r.status,event:r.event,head_sha:r.head_sha,pr_numbers:(r.pull_requests||[]).map(function(x){return x.number;})};});}
  p.risk=risk(p);return p;
 }
 async function fetchRepo(repo){
