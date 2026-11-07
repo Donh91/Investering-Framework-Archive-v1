@@ -6,7 +6,7 @@ const SHA='a'.repeat(40), ALT='b'.repeat(40), SRC='https://github.com/Donh91/Inv
 const REPO='Donh91/Investering-Framework-Archive-v1';
 function src(id,summary={}){return {
  id,status:'OBSERVED',freshness:'FRESH_ADVISORY',owner:'ORIGINAL_'+id.toUpperCase(),
- main_sha:SHA,blob_sha:'c'.repeat(40),source_url:SRC,observed_at_utc:'2026-11-07T13:00:00Z',
+ main_sha:SHA,blob_sha:'c'.repeat(40),sha256:'d'.repeat(64),bytes:1092,source_path:'LATEST_OPERATIONS_DASHBOARD.json',source_url:SRC,observed_at_utc:'2026-11-07T13:00:00Z',
  summary,release_authority:false
 };}
 const ctx=()=>({
@@ -37,6 +37,8 @@ test('advisory brief preserves exact source owner hints and 3 PR cap without mer
  assert.equal(a.state,'OBSERVED_ADVISORY');
  assert.equal(a.original_actions[0].reason,'SOURCE_AMBER');
  assert.equal(a.original_actions[0].original_source_ref,SRC);
+ assert.equal(a.source_coverage.canonical_sources[0].sha256,'d'.repeat(64));
+ assert.equal(a.source_coverage.canonical_sources[0].bytes,1092);
  assert.equal(a.original_codex_ready_hints[0].candidate_id,'case1');
  assert.equal(a.public_pr_triage[0].pr_number,1877);
  assert.equal(a.existing_s1_action_limit,3);
