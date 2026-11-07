@@ -53,7 +53,8 @@ FIXED_WEEKLY_RULES = {
 @dataclass(frozen=True)
 class Candle:
     open_ms: int
-    close_ms: int
+    close_ms: int  # nominal completed UTC hour boundary minus 1ms
+    provider_last_trade_ms: int  # original source close-time field, may be intrabar
     o: float
     h: float
     l: float
@@ -68,8 +69,8 @@ def _month_from_date(day: dt.datetime) -> str:
 def _decode_epoch(raw: str) -> int:
     n = int(raw)
     if n > 100_000_000_000_000:  # Binance spot from Jan 2025: microseconds
-        if n % 1000 not in (0, 999):  # final microsecond of closed bar may end in 999
-            raise ValueError("non-millisecond-aligned microseconds")
+        # Provider close-time may be a LAST-TRADE timestamp with arbitrary microseconds.
+        # Opening time is checked separately for exact hour alignment.
         return n // 1000
     if n < 1_500_000_000_000:
         raise ValueError("invalid epoch milliseconds")
@@ -117,10 +118,10 @@ def parse_binance_hourly(blob: bytes, expected_name: str, expected_month: str) -
         o, h, l, c, vol = vals
         if o <= 0 or l <= 0 or h < max(o, c) or l > min(o, c):
             raise ValueError("invalid OHLC candle")
-        if opened in seen or opened % 3_600_000 or not 3_599_998 <= closed - opened <= 3_599_999:
+        if opened in seen or opened % 3_600_000 or not 0 <= closed - opened < 3_600_000:
             raise ValueError(
-                f"duplicate/bad timeframe/candle close, month={expected_month}, "
-                f"raw_open={row[0]}, raw_close={row[6]}, open_ms={opened}, close_ms={closed}, "
+                f"duplicate/bad hour or source close time, month={expected_month}, "
+                f"raw_open={row[0]}, raw_close={row[6]}, open_ms={opened}, provider_close_ms={closed}, "
                 f"delta_ms={closed-opened}, mod_hour_ms={opened%3_600_000}, duplicate={opened in seen}"
             )
         if _month_from_date(dt.datetime.fromtimestamp(opened / 1000, tz=TZ)) != expected_month:
@@ -130,7 +131,9 @@ def parse_binance_hourly(blob: bytes, expected_name: str, expected_month: str) -
         if candles and opened - candles[-1].open_ms != 3_600_000:
             gaps.append((candles[-1].open_ms, opened))
         seen.add(opened)
-        candles.append(Candle(opened, closed, o, h, l, c, vol))
+        # A last trade at minute 35 does not make a one-hour candle complete.
+        # The earliest research availability is AFTER the nominal UTC hour end.
+        candles.append(Candle(opened, opened + 3_600_000 - 1, closed, o, h, l, c, vol))
     if len(candles) < 24 * 27 or gaps:
         raise ValueError(f"incomplete hourly month: candles={len(candles)}, gaps={len(gaps)}")
     return candles
@@ -156,6 +159,8 @@ def load_month(symbol: str, month: str, fetch=_limited_get):
         "sha256": digest, "zip_bytes": len(raw),
         "expected_sha256": expected.group(1).lower(),
         "observations": len(data),
+        "provider_close_pre_nominal_bucket_end_count": sum(c.provider_last_trade_ms < c.close_ms for c in data),
+        "completion_time_policy": "NOMINAL_HOUR_END_NOT_PROVIDER_LAST_TRADE_TIME",
         "first_open_utc": dt.datetime.fromtimestamp(data[0].open_ms/1000, TZ).isoformat(),
         "last_close_utc": dt.datetime.fromtimestamp((data[-1].close_ms+1)/1000, TZ).isoformat(),
         "source_first_known_at_original_market_time": None,
