@@ -2,7 +2,7 @@
 
 **Source-backed methodology** from actual HRE Task2 native GitHub Actions [run 42390995602](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42390995602), [PR #2010](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2010) and cross-era [run 42391907367](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42391907367), [PR #2012](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2012).
 **Authority:** METHOD_REFERENCE_ONLY. No new agents, paid dispatch, historical prediction truth, market/portfolio promotion, source redistribution or scheduling permission.
-**Original research owner:** Task2 #1596. [Complete source/results ledger](../../../research/historical_reality_engine/README.md) (the canonical path from repo root is `research/historical_reality_engine/README.md`).
+**Original research owner:** Task2 #1596. [Complete source/results ledger](../../../../research/historical_reality_engine/README.md) (the canonical path from repo root is `research/historical_reality_engine/README.md`).
 
 ## What the live data actually revealed
 
