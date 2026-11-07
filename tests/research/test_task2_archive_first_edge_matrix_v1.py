@@ -182,6 +182,8 @@ def load_tests(loader, standard_tests, pattern):
     # against unauthorized API/workflow/risk promotion or forged agent receipts.
     from tests.research.test_kompas_scientific_edge_program_v2_1 import KompasScientificProgramContractTests
     standard_tests.addTests(loader.loadTestsFromTestCase(KompasScientificProgramContractTests))
+    from tests.research.test_task2_cn_w44_postfreeze_paired_v1 import Task2W44PostfreezeTests
+    standard_tests.addTests(loader.loadTestsFromTestCase(Task2W44PostfreezeTests))
     return standard_tests
 
 

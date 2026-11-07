@@ -2,6 +2,11 @@
 
 - [**KOMPAS PRO · SCIENTIFIC EDGE & VERIFIED EXECUTION v2.1, OWNER APPROVAL PACKAGE**](kompas_scientific_edge_program_v2_1/README.md), ten original owner-bound research tracks, W46 first, three waves, independent PIT/after-cost gates, actual research-to-PR/CI/main/SITE closure, native S1/Grok/Sol boundaries, inert machine manifest and existing PR-only validator. **OWNER APPROVED 7 Nov 2026, merge/release still separately gated by current GitHub rules.**
 
+
+## Task 2, RPL8 Wave 4 (7 November 2026), new matured W44 post-freeze CN/B1 pair
+
+- [Original W44 CN vs independently preissued B1 on 162 completed post-issue hours](TASK2_RPL8_WAVE4_CN_W44_POSTFREEZE_WIDTH_PAIRED_20261107.md), 2/2 vs 0/2 joint containment, but B1 has better width-adjusted overlap on both assets, no source-legal predictive edge. Offline immutable source tester `scripts/research/task2_cn_w44_postfreeze_paired_v1.py`, no new workflow or model.
+
 - [Task 2 on-demand Wave 3 action/HOLD and eight-lane asymmetric loss sensitivity (7 Nov 2026)](TASK2_RPL_WAVE3_ACTION_VALUE_AND_8_LANE_SYNTHESES_20261107.md), reproducible counterfactual source research, original 23-row sample, delivery-gap falsification, no live authority.
 - [Task 2 first-known R1 forecast and Round 3 cadence/budget source preflight (7 Nov 2026)](TASK2_R1_FIRST_KNOWN_AND_R3_CADENCE_OWNER_AUDIT_20261107.md), all historical admission limitations retained; source-only replay and eight new owner CI negative tests.
 
