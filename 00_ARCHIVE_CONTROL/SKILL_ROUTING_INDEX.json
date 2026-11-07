@@ -314,7 +314,8 @@
         "existing framework authority preserved"
       ],
       "allow_implicit_invocation": false,
-      "portability_notes": "Exact upstream skill installed project-locally. External guidance only; framework governance and scientific gates remain authoritative."
+      "portability_notes": "Exact upstream skill installed project-locally. External guidance only; framework governance and scientific gates remain authoritative.",
+      "agents_metadata_path": ".agents/skills/typesafe-ai/agents/openai.yaml"
     },
     {
       "name": "adaptive-analysis-methods",
@@ -399,6 +400,81 @@
       ],
       "allow_implicit_invocation": false,
       "portability_notes": "Repository-local skill, not a ChatGPT-wide installed plugin; explicit text invocation in another GitHub-connected thread must read exact SKILL.md. GitHub Actions jobs are parallel compute, not independent AI agents."
+    },
+    {
+      "name": "skill-quality-gate",
+      "category": "read-only-agent-skill-evaluation",
+      "maturity": "PILOT_ACTIVE_READ_ONLY_V0_1",
+      "skill_path": ".agents/skills/skill-quality-gate/SKILL.md",
+      "agents_metadata_path": ".agents/skills/skill-quality-gate/agents/openai.yaml",
+      "purpose": "Read-only meta-evaluation of repository skills against frozen baseline, negative cases, authority and outcome honesty.",
+      "triggers": [
+        "create skill",
+        "modify skill",
+        "skill regression",
+        "skill quality gate",
+        "baseline comparison"
+      ],
+      "do_not_use_for": [
+        "writing skills",
+        "registering skills",
+        "merging",
+        "market rule promotion"
+      ],
+      "default_side_effect_level": "READ_ONLY",
+      "side_effect_level": "READ_ONLY_EVALUATION",
+      "requires_credentials": false,
+      "primary_outputs": [
+        "SKILL_EVALUATION_VERDICT",
+        "EVIDENCE_BOUND_BASELINE_COMPARISON"
+      ],
+      "validation_expectations": [
+        "frozen baseline",
+        "representative negative trigger cases",
+        "independent verdict",
+        "no skill self-promotion"
+      ],
+      "allow_implicit_invocation": false,
+      "portability_notes": "Read-only evaluator, not an author or signer. Existing repository-local routing only."
+    },
+    {
+      "name": "s1-pr-repair-learning",
+      "category": "existing-S1-repair-procedure",
+      "maturity": "PILOT_ACTIVE_AFTER_GOVERNED_MERGE",
+      "skill_path": ".agents/skills/s1-pr-repair-learning/SKILL.md",
+      "agents_metadata_path": ".agents/skills/s1-pr-repair-learning/agents/openai.yaml",
+      "purpose": "Preserve original owner PR closure procedure with source QA, exact-head CI and actual main/consumer readback.",
+      "triggers": [
+        "stalled S1 PR",
+        "original PR repeated HOLD",
+        "branch merge conflict",
+        "Sol patch handoff",
+        "S1 learning casebook"
+      ],
+      "do_not_use_for": [
+        "new supervisor",
+        "new schedule",
+        "new GitHub identity",
+        "paid API without authorization",
+        "automatic self-merge",
+        "market or portfolio authority"
+      ],
+      "default_side_effect_level": "READ_ONLY",
+      "side_effect_level": "BOUNDED_GOVERNED_REPAIR_ONLY",
+      "requires_credentials": false,
+      "primary_outputs": [
+        "ROOT_CAUSE_AND_SMALLEST_REPAIR",
+        "ORIGINAL_PR_RECEIPT",
+        "MAIN_READBACK"
+      ],
+      "validation_expectations": [
+        "original owner and current S1 task",
+        "native evidence",
+        "binding gates",
+        "no fictional autonomous S1 action"
+      ],
+      "allow_implicit_invocation": false,
+      "portability_notes": "Only explicit, authenticated authorized original PR process. No new executor or merge authority."
     }
   ],
   "astra_followup": {
