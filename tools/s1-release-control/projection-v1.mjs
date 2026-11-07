@@ -67,13 +67,16 @@ async function readRepository(fetcher,repo,limit){
   if(pulls.status!=='fulfilled'||!Array.isArray(pulls.value))issues.push('PR_LIST_UNAVAILABLE');
   const list=pulls.status==='fulfilled'&&Array.isArray(pulls.value)?pulls.value:[];
   if(list.length===100)issues.push('PR_PAGINATION_INCOMPLETE');
+  if(list.length>limit)issues.push('PR_DISCOVERY_SAMPLED_NOT_COMPLETE');
   const raw=list.filter(p=>p&&Number.isInteger(p.number)&&SHA40.test(p.head?.sha||'')).slice(0,limit).map(p=>mapPR(repo,p));
   const detail=await Promise.all(raw.map(p=>observePR(fetcher,p)));
   const end=await Promise.allSettled([getJson(fetcher,repo,'/branches/main')]);
   const main2=end[0].status==='fulfilled'?end[0].value?.commit?.sha:null;
   if(main&&main2&&main!==main2)issues.push('MAIN_CHANGED_DURING_READBACK');
   if(!SHA40.test(main2||''))issues.push('FINAL_MAIN_UNOBSERVED');
-  return {repo,main_sha:main2===main?main:null,observed:issues.length===0,source_issues:issues,
+  return {repo,main_sha:main2===main?main:null,
+    observed:!issues.some(x=>x!=='PR_DISCOVERY_SAMPLED_NOT_COMPLETE'),
+    discovery_complete:!issues.length,source_issues:issues,
     prs:detail.map(x=>({pr:x.pr,errors:x.errors}))};
 }
 export async function buildProjection({fetcher=fetch, clock=()=>new Date().toISOString(), repositories=PUBLIC, maxPerRepo=3}={}){
@@ -85,18 +88,22 @@ export async function buildProjection({fetcher=fetch, clock=()=>new Date().toISO
   const items=[];
   for(let i=0;i<repositories.length;i++){
     const entry=all[i].status==='fulfilled'?all[i].value:{repo:repositories[i],main_sha:null,observed:false,source_issues:['REPOSITORY_READ_FAILED']};
-    sources.push({repo:entry.repo,main_sha:entry.main_sha||null,observed:entry.observed,source_issues:entry.source_issues});
+    sources.push({repo:entry.repo,main_sha:entry.main_sha||null,observed:entry.observed,
+      discovery_complete:entry.discovery_complete===true,source_issues:entry.source_issues});
     for(const row of entry.prs||[]){
       let p=row.pr;
       if(!entry.observed){p.risk='UNKNOWN';p.runObserved=false;p.reviewsObserved=false;}
       const out=core.project(p,entry.main_sha,observedAt);
       out.source_issues=[...entry.source_issues,...row.errors];
-      if(row.errors.length)out.evidence_class='UNOBSERVED';
+      if(row.errors.length){
+        out.evidence_class='UNOBSERVED';
+        out.release_disposition=p.draft||p.risk==='HIGH'?'HOLD':'UNOBSERVED';
+      }
       items.push(out);
     }
   }
   return {schema:core.schema,mode:'READ_ONLY_PUBLIC_GITHUB',generated_at:clock(),observed_at:observedAt,
-    source_repositories:sources,partial:sources.some(x=>!x.observed)||items.some(x=>x.source_issues.length>0),
+    source_repositories:sources,partial:sources.some(x=>!x.observed||!x.discovery_complete)||items.some(x=>x.source_issues.length>0),
     items,queue_plan:items.filter(x=>x.release_disposition!=='MERGED'&&x.release_disposition!=='CLOSED').slice(0,8).map(x=>({repo:x.repo,pr_number:x.pr_number,head_sha:x.head_sha,next_action:x.next_action})),
     queue_capacity:8,existing_s1_action_limit:3,source_authority:false,release_authority:false,
     formal_approval:false,unattended_s1_closure_proven:false,
