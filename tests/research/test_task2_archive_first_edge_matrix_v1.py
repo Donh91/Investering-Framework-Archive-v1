@@ -178,6 +178,10 @@ def load_tests(loader, standard_tests, pattern):
     standard_tests.addTests(loader.loadTestsFromTestCase(FirstKnownR1AndCadenceTests))
     from tests.research.test_task2_rpl_wave3_action_value_sensitivity_v1 import Task2Wave3ActionValueTests
     standard_tests.addTests(loader.loadTestsFromTestCase(Task2Wave3ActionValueTests))
+    # Task2 original PR-only research validation also protects the v2.1 plan
+    # against unauthorized API/workflow/risk promotion or forged agent receipts.
+    from tests.research.test_kompas_scientific_edge_program_v2_1 import KompasScientificProgramContractTests
+    standard_tests.addTests(loader.loadTestsFromTestCase(KompasScientificProgramContractTests))
     return standard_tests
 
 
