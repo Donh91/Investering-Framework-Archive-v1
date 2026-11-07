@@ -19,6 +19,7 @@
   "default_composition": [
     "canonical-context-router",
     "task-specific reasoning or extraction",
+    "research-parallel-lanes only on explicit multi-lane request; use original owner and real execution receipts",
     "developer-source-research only for material external technical uncertainty",
     "prospective-evidence-ledger only for registered prospective evidence lifecycle work",
     "research-lab-red-team when claims, survival, falsification or promotion are evaluated",
@@ -354,10 +355,55 @@
       ],
       "allow_implicit_invocation": false,
       "portability_notes": "Read-only conditional method selection; does not implicitly invoke existing explicit-only skills."
+    },
+    {
+      "name": "research-parallel-lanes",
+      "category": "bounded-multi-lane-research-orchestration",
+      "maturity": "PILOT_ACTIVE_OPERATIONAL_HELPER_V1",
+      "skill_path": ".agents/skills/research-parallel-lanes/SKILL.md",
+      "agents_metadata_path": ".agents/skills/research-parallel-lanes/agents/openai.yaml",
+      "purpose": "Plan and verify multiple independent research lanes in one thread using actual supported tools, GitHub Actions jobs or existing separately authorized agent runtime, with original owner synthesis.",
+      "triggers": [
+        "Research Parallel Lanes",
+        "/research-parallel-lanes",
+        "parallel deep research",
+        "Task 2 multi-track",
+        "flere forskningsspor i samme tråd",
+        "Ironflow independent GitHub jobs"
+      ],
+      "do_not_use_for": [
+        "one-question quick answers",
+        "routine status",
+        "ordinary PR merge",
+        "unrequested agent creation",
+        "new schedules",
+        "market signal or trading authorization"
+      ],
+      "default_side_effect_level": "READ_ONLY_PLANNING",
+      "side_effect_level": "BOUNDED_RESEARCH_WRITE_ONLY_WITH_EXPLICIT_AUTHORITY",
+      "requires_credentials": false,
+      "primary_outputs": [
+        "ORIGINAL_OWNER_LANE_MANIFEST",
+        "NATIVE_PARALLEL_JOB_RECEIPTS",
+        "CONSOLIDATED_SCIENTIFIC_SYNTHESIS",
+        "EVIDENCED_FAILURE_AND_BLOCKER_LEDGER"
+      ],
+      "validation_expectations": [
+        "existing domain owner and source snapshot read",
+        "independent 2-10 hypotheses and baselines",
+        "parallel executor type honestly classified",
+        "no new scheduler or extra agent identity",
+        "exact head and run/job/artifact receipts when claiming execution",
+        "negative and null findings preserved",
+        "read-only science kept separate from portfolio authority"
+      ],
+      "allow_implicit_invocation": false,
+      "portability_notes": "Repository-local skill, not a ChatGPT-wide installed plugin; explicit text invocation in another GitHub-connected thread must read exact SKILL.md. GitHub Actions jobs are parallel compute, not independent AI agents."
     }
   ],
   "astra_followup": {
     "mission_path": "07_PROMPTS_AND_AGENTS/astra/2026-09-06__agent-legibility-and-skill-compression-audit-v1.md",
     "goal": "Audit discoverability, authority visibility, context locality, impact predictability, hidden knowledge and progressive-disclosure opportunities before any broad rewrite of the six active skills."
-  }
+  },
+  "routing_index_updated_date": "2026-11-07"
 }
