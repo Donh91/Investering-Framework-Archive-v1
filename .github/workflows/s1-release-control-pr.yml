@@ -38,6 +38,23 @@ jobs:
         run: node --test tools/s1-release-control/test-projection-v1.mjs
       - name: Verify immutable canonical agent source packet and adversarial negatives
         run: node --test tools/s1-release-control/test-agent-context-v1.mjs
+      - name: Public canonical agent context, original source SHA proof
+        continue-on-error: true
+        run: |
+          node --input-type=module <<'NODE'
+          import {buildAgentContext} from './tools/s1-release-control/agent-context-v1.mjs';
+          const packet=await buildAgentContext({sources:['handoff','codex_ready']});
+          console.log('S1_AGENT_CONTEXT_LIVE_READBACK',JSON.stringify({
+            contract:packet.schema,
+            main_sha:packet.main_sha,
+            source_readback_verified:packet.source_readback_verified,
+            sources:packet.source_files.map(s=>({id:s.id,status:s.status,freshness:s.freshness,sha:s.blob_sha,bytes:s.bytes})),
+            private_bridge:packet.workflow_boundaries.private_bridge,
+            merge_authority:packet.merge_authorized,
+            failure_codes:packet.source_errors
+          }));
+          if(!packet.source_readback_verified||packet.partial)process.exitCode=1;
+          NODE
       - name: Public GitHub live readback, advisory and quota-aware
         continue-on-error: true
         run: |
@@ -78,12 +95,28 @@ jobs:
       - name: Actual Chrome desktop and mobile behavior with API unavailable
         run: node tools/s1-release-control/test-browser.mjs
       - name: Prepare standalone public bundle only
+        env:
+          GITHUB_HEAD_REF_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           mkdir -p /tmp/s1-site
           cp tools/s1-release-control/index.html /tmp/s1-site/index.html
           cp tools/s1-release-control/release-core.js /tmp/s1-site/release-core.js
           touch /tmp/s1-site/.nojekyll
-          (cd /tmp/s1-site && sha256sum index.html release-core.js > SHA256SUMS)
+          node --input-type=module <<'NODE'
+          import {writeFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          import {readFileSync} from 'node:fs';
+          const sourceHead=process.env.GITHUB_HEAD_REF_SHA;
+          if(!/^[a-f0-9]{40}$/i.test(sourceHead||''))throw Error('SOURCE_HEAD_SHA40_MISSING');
+          const files=['index.html','release-core.js'];
+          const bytes=Object.fromEntries(files.map(file=>[file,createHash('sha256')
+             .update(readFileSync('/tmp/s1-site/'+file)).digest('hex')]));
+          const packet={contract:'S1_STANDALONE_STATIC_BUNDLE_v1',source_repo:'Donh91/Investering-Framework-Archive-v1',
+            source_head_sha:sourceHead,content_sha256:bytes,read_only:true,agent_authority:false,
+            production_deployed:false,private_data_included:false};
+          writeFileSync('/tmp/s1-site/release-identity.json',JSON.stringify(packet,null,2)+'\\n');
+          NODE
+          (cd /tmp/s1-site && sha256sum index.html release-core.js release-identity.json > SHA256SUMS)
           test -f /tmp/s1-site/SHA256SUMS
       - name: Attach independent GitHub Pages candidate, not deployed
         uses: actions/upload-artifact@v4
