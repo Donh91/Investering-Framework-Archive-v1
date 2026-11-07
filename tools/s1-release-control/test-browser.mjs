@@ -108,6 +108,10 @@ try{
   const reports=[];
   for(const [width,height] of [[390,844],[430,932],[1440,900]]){
     await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<800});
+    // Separate independent screen-width observations. Do not allow the
+    // prior viewport's localStorage cache to masquerade as fresh API fetch.
+    // The product correctly labels restored cache as NOT LIVE.
+    if(mockSuccess&&reports.length)await evaluate('localStorage.clear()');
     await send('Page.navigate',{url:pageUrl});
     let ready=false;
     for(let n=0;n<75;n++){
@@ -163,6 +167,21 @@ try{
     assert.match(report.queue,/^\d+\/3$/);
     reports.push(report);
     if(mockSuccess)await evaluate('localStorage.removeItem("s1-release-control-public-v1")');
+  }
+  if(mockSuccess){
+    // Verify the opposite control: an ordinary reload of cached public data
+    // must display an explicitly non-live cache label and NOT claim a new
+    // source observation.
+    await send('Page.navigate',{url:pageUrl});
+    let cacheLabel='';
+    for(let i=0;i<40;i++){
+      await delay(100);
+      cacheLabel=await evaluate('document.getElementById("freshness")?.textContent || ""');
+      if(cacheLabel.startsWith('Snapshot, IKKE live'))break;
+    }
+    assert.ok(cacheLabel.startsWith('Snapshot, IKKE live'),
+      'PUBLIC_API_CACHE_MUST_NOT_PRETEND_LIVE '+cacheLabel);
+    console.log('S1_BROWSER_CACHE_NOT_LIVE '+cacheLabel);
   }
   assert.deepEqual(exceptions,[],'JS_RUNTIME_EXCEPTIONS');
   if(mockSuccess){
