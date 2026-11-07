@@ -96,6 +96,10 @@ jobs:
           ! grep -q "s1-release-control" 05_CYCLE_NAVIGATOR/site/build-public.mjs
       - name: Actual Chrome desktop and mobile behavior with API unavailable
         run: node tools/s1-release-control/test-browser.mjs
+      - name: Actual Chrome desktop and mobile behavior with deterministic GitHub success
+        env:
+          S1_BROWSER_MODE: mock
+        run: node tools/s1-release-control/test-browser.mjs
       - name: Prepare standalone public bundle only
         env:
           GITHUB_HEAD_REF_SHA: ${{ github.event.pull_request.head.sha }}
