@@ -52,6 +52,7 @@ jobs:
           node --input-type=module <<'NODE'
           import {writeFileSync} from 'node:fs';
           import {buildAgentBrief} from './tools/s1-release-control/agent-brief-v1.mjs';
+          import {validateAgentBriefArtifact} from './tools/s1-release-control/verify-agent-brief-v1.mjs';
           const b=await buildAgentBrief({sources:['handoff','codex_ready'],maxPerRepo:1});
           const report={
             schema:b.schema,
@@ -71,8 +72,15 @@ jobs:
           console.log('S1_PUBLIC_AGENT_BRIEF_READBACK',JSON.stringify(report));
           // This is an advisory source observation, not a required CI/merge gate.
           // For an accessible exact-source sample, require a real canonical blob.
-          if(b.source_alignment!=='MATCHED'||report.original_sources.some(x=>x.status!=='OBSERVED')||
-             report.original_pr_sample_count<1)process.exitCode=1;
+          if(!['OBSERVED_ADVISORY','OBSERVED_ADVISORY_SAMPLED'].includes(b.state)||
+             b.source_alignment!=='MATCHED'||
+             report.original_sources.some(x=>x.status!=='OBSERVED'||x.freshness!=='FRESH_ADVISORY')||
+             report.original_pr_sample_count<1){
+            console.log('S1_AGENT_BRIEF_WITHHELD',JSON.stringify({
+              reason:'SOURCE_NOT_FRESH_OR_COMPLETE',state:b.state,source_issues:report.source_issues,
+              stale_sources:report.original_sources.filter(x=>x.freshness!=='FRESH_ADVISORY').map(x=>x.id)
+            }));
+          }
           else {
             const sourceHead=process.env.S1_CANDIDATE_HEAD;
             if(!/^[a-f0-9]{40}$/i.test(sourceHead||''))throw Error('PR_HEAD_SHA_INVALID');
@@ -87,7 +95,17 @@ jobs:
               public_only:true,
               brief:b
             };
-            writeFileSync('/tmp/s1-release-control-agent-brief-v1.json',JSON.stringify(packet,null,2)+'\n');
+            const checked=validateAgentBriefArtifact(packet,sourceHead);
+            if(checked.status!=='ADVISORY_SOURCE_IDENTITIES_VERIFIED'){
+              console.log('S1_AGENT_BRIEF_WITHHELD',JSON.stringify({reason:'SOURCE_IDENTITY_REJECTED',failures:checked.failures}));
+            }else{
+              writeFileSync('/tmp/s1-release-control-agent-brief-v1.json',JSON.stringify(packet,null,2)+'\n');
+              console.log('S1_AGENT_BRIEF_ADMITTED',JSON.stringify({
+                exact_source_head:sourceHead,origin_main:b.archive_main_sha,
+                eligible_for_original_action:checked.eligible_for_original_action,
+                read_only:true
+              }));
+            }
           }
           NODE
           if test -f /tmp/s1-release-control-agent-brief-v1.json; then
