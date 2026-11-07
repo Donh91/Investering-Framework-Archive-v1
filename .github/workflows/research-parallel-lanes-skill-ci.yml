@@ -15,6 +15,8 @@ on:
       - 'research/historical_reality_engine/**'
       - 'scripts/research/validate_historical_reality_program_v1.py'
       - 'tests/research/test_historical_reality_program_v1.py'
+      - 'scripts/research/hre_native_replay_pilot_v1.py'
+      - 'tests/research/test_hre_native_replay_pilot_v1.py'
       - '.github/workflows/research-parallel-lanes-skill-ci.yml'
 
 permissions:
@@ -62,3 +64,68 @@ jobs:
         run: python scripts/research/validate_historical_reality_program_v1.py
       - name: Adversarial tests for fake execution, future leakage, self-authorization and fabricated outcomes
         run: python -m unittest discover -s tests/research -p test_historical_reality_program_v1.py -v
+
+  hre-replay-source-qa:
+    if: startsWith(github.event.pull_request.title, 'research(hre):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify no-lookahead and source safety with native tests
+        run: python -m unittest discover -s tests/research -p test_hre_native_replay_pilot_v1.py -v
+      - name: Validate SHA256 upstream Binance spot hourly February/March 2020 and September/October 2025
+        run: |
+          mkdir -p "$RUNNER_TEMP/hre"
+          python scripts/research/hre_native_replay_pilot_v1.py --lane source --output "$RUNNER_TEMP/hre/source_receipt.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hre-retrospective-source-qa
+          path: ${{ runner.temp }}/hre/source_receipt.json
+          retention-days: 30
+          if-no-files-found: warn
+
+  hre-replay-crisis-baselines:
+    if: startsWith(github.event.pull_request.title, 'research(hre):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independently replay March 2020 and October 2025 price-only risk controls
+        run: |
+          mkdir -p "$RUNNER_TEMP/hre"
+          python scripts/research/hre_native_replay_pilot_v1.py --lane crisis --output "$RUNNER_TEMP/hre/crisis_receipt.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hre-retrospective-crisis-baselines
+          path: ${{ runner.temp }}/hre/crisis_receipt.json
+          retention-days: 30
+          if-no-files-found: warn
+
+  hre-replay-cn-weekly-controls:
+    if: startsWith(github.event.pull_request.title, 'research(hre):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independently benchmark frozen 7 daily close and low/high ranges in 2021
+        run: |
+          mkdir -p "$RUNNER_TEMP/hre"
+          python scripts/research/hre_native_replay_pilot_v1.py --lane weekly --output "$RUNNER_TEMP/hre/weekly_receipt.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hre-retrospective-weekly-ranges
+          path: ${{ runner.temp }}/hre/weekly_receipt.json
+          retention-days: 30
+          if-no-files-found: warn
