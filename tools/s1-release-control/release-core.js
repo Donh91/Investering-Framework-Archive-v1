@@ -21,7 +21,7 @@
   }
   function ci(p){
     if(p.headMoved||!safeSha(p.head)||!p.runObserved||!Array.isArray(p.runs))return {status:"UNOBSERVED",n:0,label:"exact-HEAD ukendt"};
-    var runs=p.runs.filter(function(r){return r&&r.head_sha===p.head&&Number.isSafeInteger(r.id);});
+    var runs=p.runs.filter(function(r){return r&&r.head_sha===p.head&&r.event==='pull_request'&&Array.isArray(r.pr_numbers)&&r.pr_numbers.includes(p.number)&&Number.isSafeInteger(r.id);});
     if(!runs.length)return {status:"UNOBSERVED",n:0,label:"ingen exact-HEAD runs"};
     var good=runs.filter(function(r){return r.status==="completed"&&r.conclusion==="success";}).length;
     var fail=runs.some(function(r){return ["failure","cancelled","timed_out","action_required"].includes(r.conclusion);});
