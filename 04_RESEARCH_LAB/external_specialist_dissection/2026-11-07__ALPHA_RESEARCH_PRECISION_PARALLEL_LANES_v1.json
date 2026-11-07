@@ -190,12 +190,24 @@
       "original_owner_approval_required": true
     },
     {
-      "status": "PLANNED",
+      "status": "RUNNING",
       "budget_usd": 0,
-      "run_evidence": {},
+      "run_evidence": {
+        "research_receipt_path": "04_RESEARCH_LAB/external_specialist_dissection/alpha_precision_20261107/results/L05_HISTORICAL_BALANCE_SEIZURE_CORROBORATION_v1.md",
+        "original_alpha_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/200",
+        "owner_comment": "https://github.com/Donh91/Meme-Alpha-Lab/pull/200#issuecomment-6714309009",
+        "alpha_owner_issue": "https://github.com/Donh91/Meme-Alpha-Lab/issues/98",
+        "first_party_contract": "https://eth.blockscout.com/address/0x434D77C660c39bd2c4a2230b7e8d66dec9f8c458?tab=contract",
+        "first_party_tx_count_independently_read_in_current_session": 3,
+        "historical_first_machine_seen": "UNKNOWN",
+        "code_deployed": false,
+        "predictive_lift_verified": false,
+        "incremental_provider_spend_usd": 0,
+        "original_github_jobs_started": 0
+      },
       "data_rights": "PUBLIC_VERIFIABLE_OR_ADMITTED_PRIVATE_BINDING_ONLY",
-      "approval_state": "OWNER_APPROVED_NOT_DISPATCHED",
-      "evidence_class": "HYPOTHESIS_NOT_RUN",
+      "approval_state": "OWNER_APPROVED",
+      "evidence_class": "HISTORICAL_NEGATIVE_ONCHAIN_CONFIRMED_NO_PREDICTIVE_LIFT",
       "id": "L05",
       "name": "SAFE static checks versus actual sized executable exit",
       "question": "Do V4 reserve-side and onchain route capacity outperform provider static SAFE or TVL labels?",
@@ -271,12 +283,26 @@
       "original_owner_approval_required": true
     },
     {
-      "status": "PLANNED",
+      "status": "BLOCKED",
       "budget_usd": 0,
-      "run_evidence": {},
+      "run_evidence": {
+        "original_alpha_pr": "https://github.com/Donh91/Meme-Alpha-Lab/pull/178",
+        "original_pr_head_sha": "2bd3570ea6a2c3e26dc35e94671baa7c594714fe",
+        "original_pr_owner_comment": "https://github.com/Donh91/Meme-Alpha-Lab/pull/178#issuecomment-6714318840",
+        "old_ci_runs": [
+          40914598897,
+          40914599048,
+          40914598878
+        ],
+        "ci_conclusion": "failure",
+        "job_log_readback": "BLOB_NOT_FOUND_404",
+        "stop_reason": "No complete original eligible denominator+first-machine-clock+full sized execution proof; old exact-head CI failed; source cause unknown",
+        "resume_trigger": "Original owner verifies source clocks, matched all-case denom, current Actions usage and exact-head targeted CI",
+        "predictive_lift_verified": false
+      },
       "data_rights": "PUBLIC_VERIFIABLE_OR_ADMITTED_PRIVATE_BINDING_ONLY",
-      "approval_state": "OWNER_APPROVED_NOT_DISPATCHED",
-      "evidence_class": "HYPOTHESIS_NOT_RUN",
+      "approval_state": "OWNER_APPROVED",
+      "evidence_class": "NATIVE_ORIGINAL_OWNER_DRAFT_PR_WITH_FAILED_HEAD_CI_NO_ALPHA_LIFT",
       "id": "L08",
       "name": "Scanner recall and cross-framework point in time validation",
       "question": "Can combined candidate changes improve eligible Alpha precision and missed winner cost with no lookahead and transferable source integrity?",
@@ -328,5 +354,13 @@
   "implementation_policy": "ONLY_AFTER_APPROVAL_AND_STRATEGIST_ADJUDICATION_EXISTING_ORIGINAL_OWNER_PR_AND_CI",
   "document_path": "04_RESEARCH_LAB/external_specialist_dissection/2026-11-07__ALPHA_RESEARCH_PRECISION_MISSION_APPROVAL_PACKET_v1.md",
   "approval_scope": "PHASES_A_TO_E_EXISTING_OWNERS_NO_EXTRA_PAID_APIS_NO_NEW_SCHEDULERS_OR_IDENTITIES",
-  "alpha_source_snapshot_sha": "eb24295358b5f4884e1d0a5b7383c491e84c830f"
+  "alpha_source_snapshot_sha": "eb24295358b5f4884e1d0a5b7383c491e84c830f",
+  "scientific_checkpoint_20261108": {
+    "state": "HISTORICAL_SOURCE_CORROBORATION_ONLY",
+    "notes": "L05 direct EVM source + 3 transactions verified with Blockscout in present session. L08 existing original owner #178 CI failures established; root cause not established because native logs returned BlobNotFound. Neither is prospective alpha edge, original Round3 firewall unchanged.",
+    "max_handoffs": 3,
+    "original_owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+    "paid_api_spend_usd": 0,
+    "research_jobs_started": 0
+  }
 }
