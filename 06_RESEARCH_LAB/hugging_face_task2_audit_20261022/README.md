@@ -1,6 +1,10 @@
 # Hugging Face × Framework Task 2, research and execution gateway
 - [Task 2 first-known R1 forecast and Round 3 cadence/budget source preflight (7 Nov 2026)](TASK2_R1_FIRST_KNOWN_AND_R3_CADENCE_OWNER_AUDIT_20261107.md), all historical admission limitations retained; source-only replay and eight new owner CI negative tests.
 
+## Task 2, RPL8 Wave 3 (7 November 2026), descriptive error costs and private capture health
+
+- [Matched Shared Row false-positive/false-negative cost sensitivity, no new market policy, and immutable private collection cadence metadata](TASK2_RPL8_WAVE3_COST_RATIO_AND_PRIVATE_SOURCE_CLOCK_20261107.md). Offline source replay tests only, no Round3 outcome analysis or extra automation.
+
 ## Task 2, Research Parallel Lanes v1, on-demand second wave (7 November 2026)
 
 - [Eight-lane source-bound falsification, original PIT/72h coverage, 44 M1 comparisons, Shared Row balanced accuracy, CFGI clocks, Ironflow and alert-to-action denominators](TASK2_RPL8_FALSIFICATION_WAVE2_SOURCE_COUNTERFACTUALS_20261107.md).
