@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate proposal-only original Task2 Kompas scientific program, no execution.
+"""Validate owner-approved plan; never grant real execution permissions by manifest.
 
 Does NOT run research, authenticate sources, permit GitHub merge, trigger
 agents or API paid work, change market authority, attest a first-known market
@@ -61,7 +61,10 @@ def validate_manifest(j:dict)->list[str]:
     errors=[]
     if not isinstance(j,dict):return ["program_not_object"]
     if j.get("contract")!="KOMPAS_PRO_SCIENTIFIC_EDGE_PROGRAM_V2_1": errors.append("wrong_contract")
-    if j.get("proposal_state")!="OWNER_APPROVAL_PENDING_NO_LIVE_ACTIVATION": errors.append("not_proposal_only")
+    if j.get("proposal_state")!="OWNER_APPROVED_PLAN_RELEASE_GATED": errors.append("not_authorized_plan")
+    if j.get("owner_approval_receipt")!="https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6711560934":errors.append("missing_authenticated_owner_approval_record")
+    if j.get("owner_approval_utc_date")!="2026-11-07":errors.append("owner_approval_date_mismatch")
+    if j.get("program_authorization_scope")!="SOURCE_SAFE_EXISTING_ORIGINAL_OWNER_RESEARCH_AND_QUALIFIED_PR_ACTION_ONLY; DOES_NOT_AUTHORIZE_SCHEDULE_API_PAYMENT_OR_MARKET_CHANGE":errors.append("scope_authority_changed")
     if j.get("original_scientific_owner")!="https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596":errors.append("changed_science_owner")
     if j.get("execution_owner")!="https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156":errors.append("changed_s1_owner")
     if j.get("existing_s1_task_id")!="6ae5fd466b48819187abc224ec0f1c5f":errors.append("changed_saved_s1")
