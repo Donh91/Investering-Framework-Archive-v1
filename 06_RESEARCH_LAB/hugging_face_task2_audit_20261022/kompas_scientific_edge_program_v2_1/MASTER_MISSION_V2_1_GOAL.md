@@ -4,7 +4,7 @@
 **Original science:** [Task 2 #1596](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596)  
 **Original execution and closure:** Existing [Chat S1 #1156](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156), unchanged sole automation `6ae5fd466b48819187abc224ec0f1c5f`  
 **Execution model:** existing Research Parallel Lanes v1, original domain owners, existing GitHub Actions, original S1, existing Grok Bridge, separately governed Research Lab Sol MAX.  
-**Current state:** PROPOSED_NOT_YET_APPROVED_FOR_THIS_V2_1_PROGRAM. Prior Task2 PR merges and HRE research do not imply this specific program is already activated.
+**Current state:** OWNER_APPROVED_PLAN_RELEASE_GATED, source: [original Task2 #1596 owner approval receipt](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6711560934). Actual deployment, native research jobs, S1 autonomous activity, science admission and paid Sol remain separately gated and unproven until verified.
 
 ## /GOAL
 
