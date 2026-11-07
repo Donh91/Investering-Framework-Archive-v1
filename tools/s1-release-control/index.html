@@ -128,6 +128,7 @@ body+=gateRow(p.draft?'BLOCKED':'UNOBSERVED',p.draft?'Draft PR, må ikke merges 
 body+=gateRow(c.status,'Branch-specifik Actions, '+c.label+'. Kun præcis PR HEAD eller markeret ældre observation.',null);
 body+=gateRow(review(p),'Formelle GitHub APPROVED-reviews fra anden identitet på denne SHA (ikke universelt krav ved ejerautoriseret single-account release): '+(review(p)==='PROVEN'?'observeret':'ikke bevist'));
 body+=gateRow(p.risk==='HIGH'?'BLOCKED':'UNOBSERVED',p.risk==='HIGH'?'HIGH_IMPACT: kræver uafhængig safepoint, recovery, rettighedsadskillelse og releasegate':'HIGH_IMPACT gennemgang og branch rules kræver særskilt verifikation');
+body+=gateRow('UNOBSERVED','Det komplette sæt mandatory/required checks er ikke bevist alene ved at observere grønne Actions-runs');
 body+=gateRow('UNOBSERVED','Aktuel ejerautorisation, faktisk branch/ruleset-status og uafhængigt teknisk review skal vurderes efter AGENTS.md; ingen ekstra GitHub-identitet påstås nødvendig');body+=gateRow('UNOBSERVED','Uafhængigt restore/readback bundet til aktuel HEAD, Vault separation og main-after-merge er ikke dokumenteret i dette panel');
 body+=gateRow('UNOBSERVED','API-allowlist, charge-once og faktisk providerbill kontrolleres kun via kanoniske, eksterne receipts. Ingen betaling udføres her');
 body+=gateRow('UNOBSERVED','Dependencies og supersession er ikke bevist af titler, teksthenvisninger eller advisory-PR alene');
@@ -148,7 +149,7 @@ async function enrich(p){
  var root=p.repo+'/pulls/'+p.number;
  var results=await Promise.allSettled([api(root),api(root+'/files?per_page=100'),api(root+'/reviews?per_page=100'),api(p.repo+'/actions/runs?head_sha='+encodeURIComponent(p.head)+'&per_page=100')]);
  p.headMoved=results[0].status!=='fulfilled'||results[0].value.head&&results[0].value.head.sha!==p.head;
- if(!p.headMoved){p.changedFiles=results[0].value.changed_files;p.base=results[0].value.base&&results[0].value.base.sha||p.base;p.draft=!!results[0].value.draft;}
+ if(!p.headMoved){var native=results[0].value;p.changedFiles=native.changed_files;p.base=native.base&&native.base.sha||p.base;p.draft=!!native.draft;p.state=native.state;p.merged=!!native.merged_at;p.merge_commit_sha=native.merge_commit_sha||null;}
  if(results[1].status==='fulfilled'&&Array.isArray(results[1].value)){p.files=results[1].value;p.filesObserved=!p.headMoved&&p.files.length<100&&p.files.length===p.changedFiles;}
  if(results[2].status==='fulfilled'&&Array.isArray(results[2].value)){p.reviews=results[2].value;p.reviewsObserved=!p.headMoved&&p.reviews.length<100;}
  if(results[3].status==='fulfilled'&&Array.isArray(results[3].value.workflow_runs)){var runs=results[3].value.workflow_runs;p.runObserved=!p.headMoved&&runs.length<100;p.runs=runs.filter(function(r){return r.head_sha===p.head;}).map(function(r){return {id:r.id,name:r.name,conclusion:r.conclusion,status:r.status,event:r.event,head_sha:r.head_sha,pr_numbers:(r.pull_requests||[]).map(function(x){return x.number;})};});}
@@ -168,7 +169,7 @@ async function fetchRepo(repo){
 }
 async function refresh(force){var now=Date.now();if(!force){try{var saved=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(saved&&saved.at&&now-saved.at<TTL){state.repos=saved.repos;state.items=saved.items;state.observedAt=saved.observedAt;state.live=false;state.stale=false;state.notice='Seneste offentlige GitHub-readback er cachelagret. '+age(state.observedAt)+' gammel. Ingen betalings- eller skriverettigheder.';state.queue=[];state.manual=false;state.selected=state.items[0]?id(state.items[0]):'';render();return;}}catch(e){}}
 byId('refresh').disabled=true;notice('Henter offentlige GitHub branches og PR’er. Ingen tokens, privatdata eller ændringer.',false);
-try{var all=await Promise.all(PUBLIC.map(fetchRepo));var repos=all.map(function(x){return x.repo;});var items=all.flatMap(function(x){return x.items;});if(!repos.some(function(x){return CORE.safeSha(x.main);}))throw new Error('Ingen verificeret offentlig main-readback');var work=rank(items).slice(0,12);await Promise.all(work.map(enrich));items.forEach(function(p){p.risk=risk(p);});
+try{var all=await Promise.all(PUBLIC.map(fetchRepo));var repos=all.map(function(x){return x.repo;});var items=all.flatMap(function(x){return x.items;});if(!repos.some(function(x){return CORE.safeSha(x.main);}))throw new Error('Ingen verificeret offentlig main-readback');var work=rank(items).slice(0,state.view==='all'?8:12);if(state.view==='all')work=work.concat(items.filter(function(p){return p.state!=='open';}).slice(0,4));await Promise.all(work.map(enrich));items.forEach(function(p){p.risk=risk(p);});
  var refs=await Promise.allSettled(repos.map(function(r){return api(r.repo+'/branches/main');}));
  repos.forEach(function(r,i){var latest=refs[i].status==='fulfilled'&&refs[i].value.commit&&refs[i].value.commit.sha;
   if(!latest||latest!==r.main){r.issue='MAIN_CHANGED_OR_UNAVAILABLE_DURING_READBACK';r.main=null;r.ok=false;}
