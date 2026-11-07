@@ -16,23 +16,23 @@ def week_packet():
         "target_end_utc": "2026-11-16T00:00:00Z",
         "preissue_anchor_price": 100.,
         "anchor_source": {"immutable_sha": "d"*40, "quote": "USDT",
-                          "first_known_utc": "2026-11-08T22:00:00Z"},
-        "original": {"issue_utc": "2026-11-08T23:00:00Z",
-                     "vendor_first_known_utc": "2026-11-08T22:00:00Z",
+                          "first_known_utc": "2026-11-09T06:30:00Z"},
+        "original": {"issue_utc": "2026-11-09T06:57:49Z",
+                     "vendor_first_known_utc": "2026-11-09T06:30:00Z",
                      "immutable_sha": "a"*40, "quote": "USDT"},
         "models": {
-            "ORIGINAL": {"issue_utc": "2026-11-08T23:00:00Z",
-                         "vendor_first_known_utc": "2026-11-08T22:00:00Z",
+            "ORIGINAL": {"issue_utc": "2026-11-09T06:57:49Z",
+                         "vendor_first_known_utc": "2026-11-09T06:30:00Z",
                          "immutable_sha": "b"*40, "quote": "USDT",
                          "low": 80., "high": 120.},
-            "B1": {"issue_utc": "2026-11-08T23:00:00Z",
-                   "vendor_first_known_utc": "2026-11-08T22:00:00Z",
+            "B1": {"issue_utc": "2026-11-09T06:57:49Z",
+                   "vendor_first_known_utc": "2026-11-09T06:30:00Z",
                    "immutable_sha": "c"*40, "quote": "USDT",
                    "low": 90., "high": 110.}},
         "outcome": {"matured_at_utc": "2026-11-16T01:00:00Z", "quote": "USDT",
                     "low": 88., "high": 111.,
-                    "source": {"immutable_sha": "e"*40, "closed_hour_count": 168,
-                               "first_closed_utc": "2026-11-09T00:00:00Z",
+                    "source": {"immutable_sha": "e"*40, "closed_hour_count": 162,
+                               "first_closed_utc": "2026-11-09T07:00:00Z",
                                "last_closed_utc": "2026-11-16T00:00:00Z"}}}
 
 
@@ -108,6 +108,15 @@ class Task2WaveBScientificGatesTests(unittest.TestCase):
         self.assertFalse(r["statistical_edge_admitted"])
         self.assertIsNone(r["scores"]["B1"]["probabilistic_interval_score"])
 
+    def test_monday_original_freeze_excludes_all_preissued_candle_closes(self):
+        r = mod.score_weekly_pair(week_packet())
+        self.assertEqual(r["postfreeze_first_eligible_closed_hour_utc"], "2026-11-09T07:00:00Z")
+        self.assertEqual(r["postfreeze_eligible_completed_hours"], 162)
+        p = week_packet()
+        p["outcome"]["source"]["first_closed_utc"] = "2026-11-09T06:00:00Z"
+        p["outcome"]["source"]["closed_hour_count"] = 163
+        self.assertEqual(mod.score_weekly_pair(p)["status"], "OUTCOME_COVERAGE_UNVERIFIED")
+
     def test_quote_usd_vs_usdt_blocks_scoring(self):
         p = week_packet()
         p["original"]["quote"] = "USD"
@@ -118,7 +127,7 @@ class Task2WaveBScientificGatesTests(unittest.TestCase):
         p["original"]["vendor_first_known_utc"] = None
         self.assertEqual(mod.score_weekly_pair(p)["status"], "PIT_UNVERIFIED")
         p = week_packet()
-        p["models"]["B1"]["vendor_first_known_utc"] = "2026-11-09T06:00:00Z"
+        p["models"]["B1"]["vendor_first_known_utc"] = "2026-11-09T08:00:00Z"
         self.assertEqual(mod.score_weekly_pair(p)["status"], "CHALLENGER_PIT_UNVERIFIED")
 
     def test_anchor_and_outcome_contiguity_are_required(self):
@@ -126,7 +135,7 @@ class Task2WaveBScientificGatesTests(unittest.TestCase):
         p["anchor_source"]["first_known_utc"] = None
         self.assertEqual(mod.score_weekly_pair(p)["status"], "ANCHOR_PIT_UNVERIFIED")
         p = week_packet()
-        p["outcome"]["source"]["closed_hour_count"] = 167
+        p["outcome"]["source"]["closed_hour_count"] = 161
         self.assertEqual(mod.score_weekly_pair(p)["status"], "OUTCOME_COVERAGE_UNVERIFIED")
 
     def test_no_early_maturity_or_post_issuance_challenger(self):
@@ -134,7 +143,7 @@ class Task2WaveBScientificGatesTests(unittest.TestCase):
         p["outcome"]["matured_at_utc"] = "2026-11-14T00:00:00Z"
         self.assertEqual(mod.score_weekly_pair(p)["status"], "NOT_MATURED")
         p = week_packet()
-        p["models"]["B1"]["issue_utc"] = "2026-11-09T00:01:00Z"
+        p["models"]["B1"]["issue_utc"] = "2026-11-09T07:01:00Z"
         self.assertEqual(mod.score_weekly_pair(p)["status"], "CHALLENGER_ISSUED_TOO_LATE")
 
     def test_bad_prices_fail(self):
