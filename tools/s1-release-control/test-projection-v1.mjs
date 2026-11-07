@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import core from './release-core.js';
@@ -104,4 +105,38 @@ test('no deployment, execution, auth or model route in sources',()=>{
     assert.doesNotMatch(source,/api\.openai\.com|ghp_|github_pat_|sk-proj-/);
     assert.doesNotMatch(source,/trade\s*\(|mergePullRequest\s*\(/);
   }
+});
+
+test('mutation negative: removing HIGH_IMPACT hold changes expected safety verdict',()=>{
+  const source=readFileSync(new URL('./release-core.js',import.meta.url),'utf8');
+  const clause='if(p.draft||p.risk==="HIGH")return "HOLD";';
+  assert.ok(source.includes(clause),'cannot silently skip mutation coverage');
+  const context={module:{exports:{}},globalThis:{}};
+  runInNewContext(source.replace(clause,'/* MUTATED: removed HIGH_IMPACT guard */'),context);
+  const mutant=context.module.exports;
+  const candidate=pr({risk:'HIGH'});
+  assert.equal(core.disposition(candidate),'HOLD','original critical policy guard');
+  assert.notEqual(mutant.disposition(candidate),'HOLD','the negative test detects removal of guard');
+});
+test('mutation negative: removing exact run SHA condition invalidates cross-commit CI proof',()=>{
+  const source=readFileSync(new URL('./release-core.js',import.meta.url),'utf8');
+  const clause='r&&r.head_sha===p.head&&Number.isSafeInteger(r.id)';
+  assert.ok(source.includes(clause),'cannot silently skip SHA mutation coverage');
+  const context={module:{exports:{}},globalThis:{}};
+  runInNewContext(source.replace(clause,'r&&Number.isSafeInteger(r.id)'),context);
+  const mutant=context.module.exports;
+  const wrong=pr({runs:[{id:123,head_sha:SHA_B,status:'completed',conclusion:'success'}]});
+  assert.equal(core.ci(wrong).status,'UNOBSERVED');
+  assert.equal(mutant.ci(wrong).status,'PROVEN','the negative test detects cross-commit admission');
+});
+test('mutation negative: stale formal approvals must not pass',()=>{
+  const source=readFileSync(new URL('./release-core.js',import.meta.url),'utf8');
+  const clause='r.commit_id===p.head';
+  assert.ok(source.includes(clause),'cannot silently skip review mutation coverage');
+  const context={module:{exports:{}},globalThis:{}};
+  runInNewContext(source.replace(clause,'true'),context);
+  const mutant=context.module.exports;
+  const wrong=pr({reviews:[{user:{login:'reviewer'},submitted_at:'2026-11-07T01:00:00Z',commit_id:SHA_B,state:'APPROVED'}]});
+  assert.equal(core.review(wrong),'UNOBSERVED');
+  assert.equal(mutant.review(wrong),'PROVEN','the negative test detects stale-review admission');
 });
