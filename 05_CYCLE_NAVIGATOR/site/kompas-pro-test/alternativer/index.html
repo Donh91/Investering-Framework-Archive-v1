@@ -72,8 +72,16 @@
   </section>
 
   <section class="data-section">
-    <div class="section-header"><div><span class="panel-kicker">03 / HVER DAG TÆLLER</span><h2>Syv frosne prognosedage</h2></div><span class="table-label">Kun fiktive USDT-kurser · originalt prisformat</span></div>
-    <div class="week-table"><table><thead><tr><th>Dag</th><th>Prognose</th><th>Low</th><th>High</th><th>Observeret dagsluk</th></tr></thead><tbody id="daily-rows"></tbody></table></div>
+    <div class="section-header"><div><span class="panel-kicker">03 / KILDEBUNDNE DAGSINTERVALLER</span><h2 id="daily-section-title">Syv frosne prognosedage</h2></div><span class="table-label">Kun fiktive USDT-kurser · originalt prisformat</span></div>
+    <div class="range-explanation" id="nordic-range-explanation">
+      <span class="range-glyph" aria-hidden="true"><i></i><b>⋯</b></span>
+      <div><strong>Syv let tonede prisrammer, én frossen prognoselinje</strong>
+      <p>Hvert lodret felt i grafen går fra dagens forventede <b>low</b> til <b>high</b>. Den blå stiplede linje viser forventet dagsluk. Tryk på en dag i grafen for de præcise tal. Ingen felter forbindes til en kunstig prisflade.</p></div>
+    </div>
+    <details id="daily-values-fold" class="day-values-fold" open>
+      <summary><span>Vis alle syv dagsværdier</span><small>Prognose, low, high og observeret luk</small></summary>
+      <div class="week-table"><table><thead><tr><th>Dag</th><th>Prognose</th><th>Low</th><th>High</th><th>Observeret dagsluk</th></tr></thead><tbody id="daily-rows"></tbody></table></div>
+    </details>
     <div class="data-explainer"><span class="explainer-icon">↗</span><p><strong>Samme forventninger mandag og søndag.</strong> Du bedømmer først grafens design på en hel fiktiv uge. En rigtig prognose skal stadig valideres og fryses af den eksisterende mandagspipeline, ikke af denne test.</p></div>
   </section>
   <section class="concept-footer"><div><strong id="footer-design">Design 01 · Nordic Editorial</strong><p>Ingen af de tre alternativer bliver standard uden din godkendelse. Den oprindelige Kompas PRO-graf er uændret.</p></div><a href="../graf.html?finish=original">Sammenlign med oprindelig graf</a></section>
