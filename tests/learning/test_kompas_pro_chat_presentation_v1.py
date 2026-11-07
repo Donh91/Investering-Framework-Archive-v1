@@ -78,6 +78,7 @@ class TestKompasProChatView(unittest.TestCase):
         self.assertIn("| BTC | BEARISH | HOLD |", text)
         self.assertIn("| MICROCAPS | MIXED | HARD_WAIT |", text)
         self.assertIn("H1_3M: bear", text)
+        self.assertIn("Kildeobserveret 2026-11-07T14:00:00Z", text)
         self.assertTrue(text.rstrip().endswith("Neutral to cautious short-term interpretation."))
         horizon_lines = text.split("## Horisonter, BTC\n")[1].split("\n## Mit taktiske Kompas")[0]
         self.assertEqual(sum(s.startswith("|") and len(s.split("|")) > 2 and s.split("|")[1].strip() in HORIZON_IDS for s in horizon_lines.splitlines()), 14)
@@ -104,6 +105,20 @@ class TestKompasProChatView(unittest.TestCase):
         x = render_chat(ledger(), official(), official_pointer=bad_pointer, as_of_utc=AS_OF)
         self.assertIn("Official DEGRADED/EXPIRED", x)
         self.assertNotIn("| BTC | BEARISH | HOLD |", x)
+
+    def test_stale_actual_market_observation_cannot_keep_official_action_alive(self):
+        x = official()
+        x["market_reference"]["observation_open_utc"] = "2026-11-07T11:00:00Z"
+        text = render_chat(ledger(), x, official_pointer=pointer(), as_of_utc=AS_OF)
+        self.assertIn("Official DEGRADED/EXPIRED", text)
+        self.assertNotIn("**Officiel handling:** HOLD_WAIT", text)
+
+    def test_older_weekly_analyst_assessment_cannot_be_current(self):
+        x = row("CONDITIONAL_MACRO_CYCLE")
+        x["assessed_at_utc"] = "2026-10-27T15:14:00Z"
+        x["source_observed_at_utc"] = "2026-10-27T14:00:00Z"
+        with self.assertRaisesRegex(ValueError, "ASSESSMENT_EXPIRED"):
+            validate_analysis_overlay({"H9_12M": x}, as_of_utc=AS_OF)
 
     def test_private_source_reference_rejected(self):
         x = row()
