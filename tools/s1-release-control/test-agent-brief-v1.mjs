@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import {composeBrief} from './agent-brief-v1.mjs';
 const SHA='a'.repeat(40), ALT='b'.repeat(40), SRC='https://github.com/Donh91/Investering-Framework-Archive-v1/blob/'+SHA+'/LATEST_OPERATIONS_DASHBOARD.json';
@@ -91,4 +92,18 @@ test('PR hints never exceed 8 or S1 limit 3',()=>{
  assert.equal(a.existing_s1_action_limit,3);
  assert.equal(a.queue_slots_visible,8);
  assert.equal(a.parallel_original_PR_independence_proven,false);
+});
+
+test('versioned shared JSON schema explicitly prohibits release authority and false autonomy',()=>{
+ const schema=JSON.parse(readFileSync(new URL('./schemas/agent-brief-v1.schema.json',import.meta.url),'utf8'));
+ assert.equal(schema.properties.schema.const,'S1_AGENT_OPERATIONS_BRIEF_v1');
+ assert.equal(schema.properties.existing_s1_action_limit.const,3);
+ assert.equal(schema.properties.queue_slots_visible.const,8);
+ assert.equal(schema.properties.invariant.properties.no_new_scheduler.const,true);
+ assert.equal(schema.properties.invariant.properties.release_permission.const,false);
+ assert.equal(schema.properties.invariant.properties.no_private_source_publication.const,true);
+ assert.equal(schema.properties.public_pr_triage.items.properties.eligible_for_merge_from_brief.const,false);
+ assert.equal(schema.properties.public_pr_triage.items.properties.natural_S1_execution_proven.const,false);
+ for(const x of ['private_bridge','private_alpha_lab','independent_recovery'])
+  assert.equal(schema.properties.source_coverage.properties[x].const,'UNOBSERVED');
 });
