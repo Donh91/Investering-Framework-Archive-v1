@@ -1,12 +1,12 @@
 # KOMPAS PRO v2.1 | Owner approval, finite acceptance and exact phase progression
 
-**As of 2026-11-07:** OWNER_APPROVAL_PENDING_FOR_THIS_SPECIFIC_PROGRAM. This is a durable consent request, not an activated new research service. Existing earlier Task2 #1596/HRE approvals are respected but not misrepresented as approval for this exact new package.
+**As of 2026-11-07:** OWNER_APPROVED_PLAN_RELEASE_GATED via [original Task2 #1596 native approval receipt](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6711560934). User approved the full package in chat. Real GitHub release, W46 original issuance, research execution, natural S1 automation and any paid API POST require separate actual evidence/authorization.
 
-## Exact user approval phrase
+## Recorded exact user approval phrase
 
 > **GODKENDT · /GOAL KOMPAS PRO SCIENTIFIC EDGE & VERIFIED EXECUTION v2.1. Jeg godkender missionen i dens fulde omfang, inklusive ti originale forskningsspor, den tre-bølge prioritet med W46 først, originale GitHub-praksisser, sikre kvalificerede PR-rettelser, real CI/merge/main/SITE readback og de eksisterende tilladte Research Parallel Lanes, S1, Grok Bridge og native governed Sol MAX. Ingen nye automations, kontrolplaner eller trading. Betalte Sol-kørsler kræver fortsat separat original native one-shot release. Gennemfør alle legitimt eksekverbare handlinger og afslut rester med evidensbundne ejere og genstartstriggere.**
 
-This acceptance authorizes source-first research and eligible bounded original-owner code within already enforced rules, not bypass of provider rights, full private Round3 outcome scoring, token/key changes, live trades, GitHub branch protection or native Sol payment authorizations. Any changed current rules or account budgets override older claims.
+The owner's confirmed approval authorizes source-first research and eligible bounded original-owner code within already enforced rules, not bypass of provider rights, full private Round3 outcome scoring, token/key changes, live trades, GitHub branch protection or native Sol payment authorizations. Any changed current rules or account budgets override older claims.
 
 ## Five release stages, no endless analysis
 
@@ -36,7 +36,7 @@ This acceptance authorizes source-first research and eligible bounded original-o
 
 | Result | Required authentic proof | Valid absence state |
 |---|---|---|
-| Design | All ten lane hypotheses/owners, strict authorizations, deterministic negative CI | PROPOSAL_NOT_APPROVED |
+| Design | All ten lane hypotheses/owners, strict authorizations, deterministic negative CI | OWNER_APPROVED_PLAN_RELEASE_GATED, main merge pending |
 | Original forecast | Source-qualified original issue and immutable bytes, W46 7×BTC and 7×ETH, actual public consumer | NOT_ISSUED / SOURCE_REPAIR |
 | Scientific prediction | PIT-admitted first-known+outcome, same-clock baselines, dependence-adjusted N, true holdout | PIT_UNVERIFIED / INSUFFICIENT_POWER |
 | Warning quality | Genuine pre-event evidence, original delivered warning, complete no-warning controls, lead/false alert | DELIVERY_UNKNOWN / UNIDENTIFIABLE |
