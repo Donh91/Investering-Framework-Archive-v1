@@ -121,7 +121,7 @@ def exposed_binary_decision_cost_frontier(models: dict) -> dict:
         }
     illustration={}
     for relative_fp_penalty in (1,5,7,10,20):
-        illustration[str(relative_fp_pen)]={
+        illustration[str(relative_fp_penalty)]={
             name: models[name]["fp"]*relative_fp_penalty+models[name]["fn"]
             for name in names
         }
