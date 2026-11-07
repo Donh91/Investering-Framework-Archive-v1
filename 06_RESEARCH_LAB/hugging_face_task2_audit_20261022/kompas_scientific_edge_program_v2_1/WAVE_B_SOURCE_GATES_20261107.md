@@ -20,12 +20,14 @@ Test the complete original hourly pre-event decision slots against **independent
 
 Same original week, same target hours and same quote/instrument for original CN, existing preissued B1, and future separately frozen price persistence/momentum/volatility if actually available. Each original/candidate needs a pre-target issue, source-first-known and Git object; each comparison also needs a preissue anchor and a matured, source-identified contiguous outcome. Require original and observed quote parity; **USD vs USDT blocks numerical comparison**, no silent conversion. Report joint low/high containment, interval width relative to genuine preissue anchor, total extrema overshoot and Jaccard overlap separately. Neither Jaccard nor this two-tail diagnostic is a proper probabilistic interval score for joint weekly extrema.
 
+**Monday issuance boundary:** A valid original weekly forecast may freeze after Monday 00:00 UTC, as W44 did at 06:57:49Z. The scorer therefore requires contiguous outcome candle closes starting at the first hourly close strictly after the actual issue, not 168 fabricated post-issue hours. For a Monday 06:57:49Z issue, 07:00Z through next Monday 00:00Z is exactly 162 eligible closed-hour outcomes. All earlier hours are excluded. This is a synthetic fixture demonstrating the timing gate, not a live W46 issuance.
+
 **No W46 values issued in this PR.** No retrospective baseline fitting on W44; no winner or model weight changes. Any currently unavailable W46 issued forecast, real 168-hour prior-source continuity, quote parity, first-known, frozen target or GitHub Pages consumption remains **UNVERIFIED/NOT_MATURED**. Full W46 issuer/readback belongs to existing #1516/#1593, after natural Monday 2026-11-09 events.
 
 ## Engineering and actual test limits
 
 - Pure deterministic module: scripts/research/task2_wave_b_scientific_gates_v1.py.
-- 12 adversarial synthetic unit tests: tests/research/test_task2_wave_b_scientific_gates_v1.py.
+- 13 adversarial synthetic unit tests: tests/research/test_task2_wave_b_scientific_gates_v1.py.
 - Executes via the existing original Task2 PR-only Data Architecture and Framework Learning tests loaded from tests/research/test_task2_archive_first_edge_matrix_v1.py. **No new workflow, schedule, GitHub identity, paid API, market state, public forecast, original source overwrite, portfolio or trading permission.**
 - A syntactically valid 40-character Git SHA in a caller-supplied packet is **not itself authenticated ancestry**. Original domain owner must independently verify the actual exact blob, first-known and delivery receipts before deriving any historical or prospective conclusion. The pure gate enforces shape, chronology, abstention and denominators, not those external attestations.
 - Design scope intentionally small: one eligible source-/quote-qualified actual new cohort unlocks next paired score; one actual original risk/control ledger unlocks original source-grounded warning atlas; otherwise record a precise block and stop, not fabricate results.
