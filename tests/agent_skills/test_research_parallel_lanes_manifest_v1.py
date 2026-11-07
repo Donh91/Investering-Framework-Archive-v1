@@ -44,6 +44,7 @@ class ResearchParallelLanesManifestContract(unittest.TestCase):
         self.assertTrue(any("artifact_sha256" in x for x in mod.validate(d)))
     def test_accept_complete_job_receipt_schema_but_not_claim_authenticity(self):
         d=self.sample()
+        d["status"]="IN_PROGRESS"
         d["lanes"][0]["status"]="COMPLETE_VERIFIED"
         d["lanes"][0]["run_evidence"]={
             "workflow_run_id":12,"job_id":34,"artifact_id":56,
