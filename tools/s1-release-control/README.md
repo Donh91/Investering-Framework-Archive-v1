@@ -45,6 +45,18 @@ Canonical policies:
 - S1, Strategist and Codex can consume this object only through their **existing authorized** execution routes. Grok reads this public contract and original issue references, but Bridge advice remains separately authenticated through the existing private Bridge. A GitHub comment about the contract is not proof Grok executed or that S1 naturally consumed it.
 - `merge_authorized:false`, `execution_provenance:INTERACTIVE_OR_ON_DEMAND_READ_ONLY_NOT_SCHEDULED_S1`, no new supervisor and no extra rights are permanent invariants. Verify source currentness again before taking an original GitHub action.
 
+## Single low-friction agent brief
+
+For an existing agent that needs the smallest useful operational handoff, use:
+
+```sh
+node tools/s1-release-control/agent-brief-v1.mjs --stdout
+```
+
+`S1_AGENT_OPERATIONS_BRIEF_v1` composes the original source-bound canonical context with a bounded public-PR view (max 3 PR details per repo per readback). It retains `original_source_ref`, owner, source alignment, SHA, freshness, real first next action, material gate gaps, and existing Codex READY references. No new task identity or canonical queue is introduced. Missing sources and unequal main snapshots are explicitly `PARTIAL_OR_STALE_RECHECK`. It cannot authorize release, claim a natural S1 merge, assume PR independence or treat Bridge as formal approval.
+
+The versioned schema is `schemas/agent-brief-v1.schema.json`. Run `node --test tools/s1-release-control/test-agent-brief-v1.mjs` for positive, stale, forged-permission, wrong-main and bounded-queue negatives. This is **on-demand read-only code**, not proof that existing S1 has naturally consumed it. S1 and Grok Bridge receive original source-bound handoffs; they retain their original mandates and execution routes.
+
 ## Shared classification and agent projection
 
 - `release-core.js` is the single conservative classification engine for browser and Node. Its `PROVEN` label means a specific source observation, **not** verified required checks, branch protection or release authorization.
