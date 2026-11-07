@@ -140,6 +140,9 @@ test('one source error beyond intended sampling invalidates advisory sample qual
 test('stale handoff with fresh canonical Codex keeps read-only original pointers, never admits a full brief',()=>{
  const c=ctx();c.partial=true;
  c.source_files.find(x=>x.id==='handoff').freshness='STALE';
+ const handoff=c.source_files.find(x=>x.id==='handoff');
+ handoff.source_path='LATEST_HANDOFF.json';
+ handoff.source_url='https://github.com/'+REPO+'/blob/'+SHA+'/LATEST_HANDOFF.json';
  const codex=c.source_files.find(x=>x.id==='codex_ready');
  codex.source_path='LATEST_CODEX_READY_TASKS.json';
  codex.source_url='https://github.com/'+REPO+'/blob/'+SHA+'/LATEST_CODEX_READY_TASKS.json';
@@ -165,6 +168,9 @@ test('stale handoff with fresh canonical Codex keeps read-only original pointers
 });
 test('no codex pointers when original source identity, recency, main alignment or path is invalid',()=>{
  const c=ctx();c.partial=true;c.source_files.find(x=>x.id==='handoff').freshness='STALE';
+ const handoff=c.source_files.find(x=>x.id==='handoff');
+ handoff.source_path='LATEST_HANDOFF.json';
+ handoff.source_url='https://github.com/'+REPO+'/blob/'+SHA+'/LATEST_HANDOFF.json';
  const source=c.source_files.find(x=>x.id==='codex_ready');
  source.source_path='LATEST_CODEX_READY_TASKS.json';
  source.source_url='https://github.com/'+REPO+'/blob/'+SHA+'/LATEST_CODEX_READY_TASKS.json';
