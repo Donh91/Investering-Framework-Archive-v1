@@ -36,6 +36,8 @@ jobs:
           node-version: '22'
       - name: Verify source-bound fail-closed projection
         run: node --test tools/s1-release-control/test-projection-v1.mjs
+      - name: Verify immutable canonical agent source packet and adversarial negatives
+        run: node --test tools/s1-release-control/test-agent-context-v1.mjs
       - name: Public GitHub live readback, advisory and quota-aware
         continue-on-error: true
         run: |
