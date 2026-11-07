@@ -33,6 +33,13 @@ KNOWN_MONTHS = {
     "crisis": ["2020-02", "2020-03", "2020-04", "2025-09", "2025-10"],
     "weekly": ["2021-02", "2021-03", "2021-04", "2021-05"],
 }
+EXTENDED_EPISODES = {
+    "terra_2022": {"months": ["2022-04", "2022-05", "2022-06"], "anchor": "2022-05-08T00:00:00Z"},
+    "ftx_2022": {"months": ["2022-10", "2022-11", "2022-12"], "anchor": "2022-11-06T00:00:00Z"},
+    "usdc_2023": {"months": ["2023-02", "2023-03", "2023-04"], "anchor": "2023-03-10T00:00:00Z"},
+    "aug_2024": {"months": ["2024-07", "2024-08", "2024-09"], "anchor": "2024-08-05T00:00:00Z"},
+    "feb_2026": {"months": ["2026-01", "2026-02", "2026-03"], "anchor": "2026-02-12T00:00:00Z"},
+}
 FIXED_CRISIS_RULES = {
     "label": "forward_72h_low_from_closed_price_le_-8pct",
     "baseline_signal": "past_24h_close_return_le_-5pct",
@@ -204,7 +211,7 @@ def consecutive_hourly(rows: list[Candle]) -> bool:
     return all(b.open_ms-a.open_ms == 3_600_000 for a,b in zip(rows,rows[1:]))
 
 
-def score_crisis(rows: list[Candle]):
+def score_crisis(rows: list[Candle], event_anchor_utc: str | None = None):
     positives = {"baseline": {"tp": 0, "fp": 0, "fn": 0, "tn": 0},
                  "challenger": {"tp": 0, "fp": 0, "fn": 0, "tn": 0}}
     daily = []
@@ -238,7 +245,20 @@ def score_crisis(rows: list[Candle]):
                       "severe_next_72h": severe,
                       "price_baseline_warning": b,
                       "price_challenger_warning": challenger})
+    anchor_context = None
+    if event_anchor_utc is not None:
+        anchor = dt.datetime.fromisoformat(event_anchor_utc.replace("Z","+00:00"))
+        selected = [
+            d for d in daily
+            if anchor - dt.timedelta(days=7) <= dt.datetime.fromisoformat(d["cutoff_utc"]) <= anchor
+        ]
+        anchor_context = {
+            "externally_preselected_anchor_utc": event_anchor_utc,
+            "pre_anchor_7d_eligible_cutoffs": selected,
+            "warning": "Anchor is an ex-post chosen case-study date; no claimed pre-event prediction or independent test."
+        }
     return {"rules": FIXED_CRISIS_RULES, "daily_cutoffs": len(daily),
+            "preselected_case_context": anchor_context,
             "abstained_daily_due_to_gapped_lookback_or_outcome": abstained_gapped_daily,
             "overlap_warning": "Rolling 72h labels overlap: daily rows are not independent events.",
             "confusion_descriptive": positives, "sample_first": daily[:3],
@@ -331,10 +351,15 @@ def score_weekly(rows: list[Candle]):
     }
 
 
-def run(lane: str) -> dict:
-    if lane not in KNOWN_MONTHS:
-        raise ValueError("unsupported lane")
-    months = KNOWN_MONTHS[lane]
+def run(lane: str, episode: str | None = None) -> dict:
+    if lane == "extended":
+        if episode not in EXTENDED_EPISODES:
+            raise ValueError("extended lane requires preselected episode")
+        months = EXTENDED_EPISODES[episode]["months"]
+    elif lane in KNOWN_MONTHS and episode is None:
+        months = KNOWN_MONTHS[lane]
+    else:
+        raise ValueError("unsupported lane or extra episode input")
     symbols = ["BTCUSDT", "ETHUSDT"]
     output = {"contract": "HRE_NATIVE_RESEARCH_PILOT_V1", "lane": lane,
               "source_class": SOURCE_CLASS, "scientific_class": INFERENCE_CLASS,
@@ -342,6 +367,8 @@ def run(lane: str) -> dict:
               "scientific_edge_admitted": False, "live_authority": False,
               "source_historical_revision_after_outcome": True,
               "months": months, "assets": symbols,
+              "episode_id": episode,
+              "preselected_anchor_utc": EXTENDED_EPISODES[episode]["anchor"] if episode else None,
               "verified_file_receipts": [], "results": {}, "execution_state": "SUCCESS_WITH_RETROSPECTIVE_LIMITS"}
     # Two historical periods are independent sequences, never bridge a 2020
     # candle directly to a 2025 candle as if missing hours were a quiet market.
@@ -361,8 +388,8 @@ def run(lane: str) -> dict:
                     "closed_candle_at_reference_test": len(closed_as_of(series, series[72].open_ms)),
                     "source_admission": "POSTHOC_PUBLIC_PRICE_SOURCE_QA_ONLY"
                 }
-            elif lane == "crisis":
-                output["results"][key] = score_crisis(series)
+            elif lane in ("crisis", "extended"):
+                output["results"][key] = score_crisis(series, EXTENDED_EPISODES[episode]["anchor"] if episode else None)
             else:
                 output["results"][key] = score_weekly(series)
     return output
@@ -370,10 +397,11 @@ def run(lane: str) -> dict:
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--lane", choices=sorted(KNOWN_MONTHS), required=True)
+    p.add_argument("--lane", choices=sorted(KNOWN_MONTHS) + ["extended"], required=True)
+    p.add_argument("--episode", choices=sorted(EXTENDED_EPISODES))
     p.add_argument("--output", required=True)
     a = p.parse_args()
-    result = run(a.lane)
+    result = run(a.lane, a.episode)
     path = Path(a.output)
     path.parent.mkdir(parents=True, exist_ok=True)
     result["receipt_sha256_without_self_digest"] = hashlib.sha256(
@@ -382,7 +410,7 @@ def main():
     path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"HRE_NATIVE_LANE_COMPLETE lane={a.lane} source_files={len(result['verified_file_receipts'])} output={path}")
     for key, row in result["results"].items():
-        if a.lane == "crisis":
+        if a.lane in ("crisis", "extended"):
             print(f"HRE_DESCRIPTIVE_CRISIS {key} cutoffs={row['daily_cutoffs']} price_baseline={row['confusion_descriptive']['baseline']} candidate={row['confusion_descriptive']['challenger']}")
         elif a.lane == "weekly":
             print(f"HRE_DESCRIPTIVE_WEEKLY {key} freezes={row['weekly_freezes']} daily_points={row['daily_points']} naive_coverage={row['naive_full_range_coverage']:.4f} alternative_coverage={row['alternative_full_range_coverage']:.4f} close_mae_pct={row['mean_abs_expected_close_error_pct']:.4f}")
