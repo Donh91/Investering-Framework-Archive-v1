@@ -144,6 +144,13 @@ class OpportunityTests(unittest.TestCase):
                                      issue_inventory_complete=True)
         self.assertEqual(result["mode"], "DISCOVER")
         self.assertGreater(result["invalid_or_wrong_kind_inputs"], 0)
+        null_url = {**CASE, "original_url": None}
+        malformed_url = {**CASE, "original_url": "https://github.com/Donh91/repo/pull/[bad"}
+        for bad in (null_url, malformed_url):
+            outcome = recommend_work_mode([bad], [], pr_inventory_complete=True,
+                                          issue_inventory_complete=True)
+            self.assertEqual(outcome["mode"], "DISCOVER")
+            self.assertGreater(outcome["invalid_or_wrong_kind_inputs"], 0)
 
     def test_mode_issue_disguised_as_pr_cannot_trigger_execute(self):
         wrong = {**CASE, "original_url": URL.replace("/pull/", "/issues/")}
