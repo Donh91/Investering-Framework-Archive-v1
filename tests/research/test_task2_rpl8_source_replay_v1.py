@@ -70,6 +70,38 @@ class Task2RPL8ReplayTests(unittest.TestCase):
         self.assertAlmostEqual(m["C_family_30d_reported_exploratory_p"],.006)
         self.assertLess(m["one_more_day_deployment_return_delta_pp"],0)
 
+    def test_exposed_binary_cost_frontier_falsifies_accuracy_only_ranking(self):
+        f=self.report["lanes"]["L04_shared_row"]["exposed_cost_frontier"]
+        self.assertEqual(f["n_matched_matured_7d"],23)
+        self.assertEqual(f["break_even_thresholds"]["C02_BREADTH"][
+            "break_even_false_positive_over_false_negative_cost_ratio"],7.0)
+        self.assertEqual(f["break_even_thresholds"]["C07_SIMPLE_3"][
+            "break_even_false_positive_over_false_negative_cost_ratio"],10.5)
+        self.assertEqual(f["illustrative_cost_units"]["1"],
+                         {"B0_ALWAYS_POSITIVE":2,"C02_BREADTH":14,"C07_SIMPLE_3":21})
+        self.assertEqual(f["illustrative_cost_units"]["7"]["B0_ALWAYS_POSITIVE"],
+                         f["illustrative_cost_units"]["7"]["C02_BREADTH"])
+        self.assertEqual(f["illustrative_cost_units"]["10"]["B0_ALWAYS_POSITIVE"],20)
+        self.assertEqual(f["illustrative_cost_units"]["10"]["C02_BREADTH"],14)
+        self.assertTrue(f["C02_weakly_dominates_C07_on_exposed_binary_errors"])
+        self.assertFalse(f["optimal_policy_or_model_selected"])
+        self.assertFalse(f["real_after_cost_executable_hold_sell_outcomes"])
+        self.assertFalse(f["source_first_known_vendor_verified"])
+
+    def test_cost_frontier_no_matched_population_or_forged_confusion_fails(self):
+        src=self.report["lanes"]["L04_shared_row"]["frozen_later_7d"]
+        matched={k:{
+            "n":src[k]["n"],"tp":src[k]["tp"],"tn":src[k]["tn"],
+            "fp":src[k]["fp"],"fn":src[k]["fn"]
+        } for k in ("B0_ALWAYS_POSITIVE","C02_BREADTH","C07_SIMPLE_3")}
+        matched["C02_BREADTH"]["n"]+=1
+        with self.assertRaisesRegex(ValueError,"UNMATCHED_OR_EMPTY_COHORT"):
+            rpl.exposed_binary_decision_cost_frontier(matched)
+        matched["C02_BREADTH"]["n"]-=1
+        matched["C07_SIMPLE_3"]["fn"]+=1
+        with self.assertRaisesRegex(ValueError,"MALFORMED_ORIGINAL_CONFUSION_MATRIX"):
+            rpl.exposed_binary_decision_cost_frontier(matched)
+
     def test_invalid_confusion_matrix_fails_closed(self):
         self.assertEqual(rpl.balanced({"tp":7,"fn":14,"tn":2,"fp":0}),66.667)
         with self.assertRaisesRegex(ValueError,"MATRIX_DENOMINATOR_MISMATCH"):
