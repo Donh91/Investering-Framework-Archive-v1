@@ -311,21 +311,28 @@ def run(lane: str) -> dict:
               "source_historical_revision_after_outcome": True,
               "months": months, "assets": symbols,
               "verified_file_receipts": [], "results": {}, "execution_state": "SUCCESS_WITH_RETROSPECTIVE_LIMITS"}
-    data, receipts = load_dataset(symbols, months)
-    output["verified_file_receipts"] = receipts
-    for symbol, series in data.items():
-        if lane == "source":
-            output["results"][symbol] = {
-                "hourly_candles": len(series),
-                "min_low": min(c.l for c in series),
-                "max_high": max(c.h for c in series),
-                "closed_candle_at_reference_test": len(closed_as_of(series, series[72].open_ms)),
-                "source_admission": "POSTHOC_PUBLIC_PRICE_SOURCE_QA_ONLY"
-            }
-        elif lane == "crisis":
-            output["results"][symbol] = score_crisis(series)
-        else:
-            output["results"][symbol] = score_weekly(series)
+    # Two historical periods are independent sequences, never bridge a 2020
+    # candle directly to a 2025 candle as if missing hours were a quiet market.
+    groups = {}
+    for month in months:
+        groups.setdefault(month[:4], []).append(month)
+    for year, group_months in sorted(groups.items()):
+        data, receipts = load_dataset(symbols, group_months)
+        output["verified_file_receipts"].extend(receipts)
+        for symbol, series in data.items():
+            key = f"{symbol}_{year}"
+            if lane == "source":
+                output["results"][key] = {
+                    "hourly_candles": len(series),
+                    "min_low": min(c.l for c in series),
+                    "max_high": max(c.h for c in series),
+                    "closed_candle_at_reference_test": len(closed_as_of(series, series[72].open_ms)),
+                    "source_admission": "POSTHOC_PUBLIC_PRICE_SOURCE_QA_ONLY"
+                }
+            elif lane == "crisis":
+                output["results"][key] = score_crisis(series)
+            else:
+                output["results"][key] = score_weekly(series)
     return output
 
 
