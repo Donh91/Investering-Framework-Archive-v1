@@ -93,7 +93,7 @@ class SourceIntegrity(unittest.TestCase):
         lines[12]=",".join(chosen)
         buf=io.BytesIO()
         with zipfile.ZipFile(buf,"w",compression=zipfile.ZIP_DEFLATED) as z:
-            z.writestr(name,"\\n".join(lines))
+            z.writestr(name,"\n".join(lines))
         entries=hre.parse_binance_hourly(buf.getvalue(),name,"2020-03")
         self.assertEqual(entries[12].provider_last_trade_ms,opened+2_132_286)
         self.assertEqual(entries[12].close_ms,opened+3_599_999)
