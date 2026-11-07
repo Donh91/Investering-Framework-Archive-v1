@@ -162,6 +162,7 @@ try{
     if(!mockSuccess)assert.ok(report.fallbackNotLive,'HISTORICAL_FALLBACK_MISLABELED_LIVE');
     assert.match(report.queue,/^\d+\/3$/);
     reports.push(report);
+    if(mockSuccess)await evaluate('localStorage.removeItem("s1-release-control-public-v1")');
   }
   assert.deepEqual(exceptions,[],'JS_RUNTIME_EXCEPTIONS');
   if(mockSuccess){
