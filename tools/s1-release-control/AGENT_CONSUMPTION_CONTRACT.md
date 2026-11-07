@@ -45,3 +45,33 @@ Do not use the cockpit as a public proxy for private `Donh91/secrets`, Bridge or
 All positive local tests and actual Actions runs must be tied to the **current** PR exact HEAD. A passing run for an earlier HEAD is historical. The existing original PR #1996 remains the code owner; the original S1 issue #1156 remains the workflow owner. GitHub read-only PR comments/Bridge advisory notices are discovery aids, not native execution receipts.
 
 A separate public Pages repository is required for a genuinely distinct GitHub Pages product URL. None is asserted as created or deployed until actual native repo/main/Pages/CDN readback. S1 browser tests operate on standalone `tools/s1-release-control` without invoking CN.
+
+## Source cadence, partial-source intelligence and fail-closed action
+
+The original `.github/workflows/operations-dashboard.yml` currently schedules its
+`LATEST_HANDOFF.json` producer for **06:00 and 18:00 Europe/Copenhagen**, plus
+`workflow_dispatch`. The S1 read-only observer separately imposes a **180-minute
+handoff freshness limit**. Because those cadences differ, a 3+ hour old handoff
+can be expected between scheduled refreshes; this alone does not prove that
+the producer failed. It also must **never** be promoted to fresh merely to
+satisfy the original 12-hour cadence. Diagnose expected schedule vs actual
+GitHub workflow-run evidence through the original producer before any repair.
+
+The original PR-only validation always attempts a
+`S1_AGENT_BRIEF_ADMISSION_STATUS_v1` artifact. When a full agent brief cannot
+be admitted, a SHA/byte/digest-bound **fresh original Codex ledger** may still
+yield up to eight *public, original* `read_only_original_codex_candidate_pointers`.
+These are exclusively browsing references to `research/codex/intake/` in the
+frozen Archive main, not alternative queue items, task dispatches or a reason
+to act. Each pointer explicitly declares `candidate_file_revalidated:false`,
+`original_intake_recheck_required:true` and `action_permission:false`.
+Invalid/misaligned source SHA, stale Codex, or nonpublic paths produce **zero**
+candidate pointers, not fallback guesses.
+
+The diagnostic declares `full_brief_admitted` and
+`requires_live_original_source_recheck:true`; it does not verify original
+producer cadence within the packet, a *current* main read at time of use,
+current original candidate-file status, HIGH_IMPACT permission, cost,
+independent recovery or scheduled S1 consumption. Treat an expired artifact
+as historical only. Existing S1 action cap of 3 original PRs per eligible tick,
+existing separate owner and Monday read-only window are unchanged.
