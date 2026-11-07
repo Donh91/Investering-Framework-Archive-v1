@@ -65,44 +65,32 @@ jobs:
           console.log('S1_AGENT_BRIEF_LIVE_READBACK',JSON.stringify(receipt));
           if(brief.state!=='OBSERVED_ADVISORY'||brief.invariant.release_permission!==false)process.exitCode=1;
           NODE
-      - name: Public canonical agent context, original source SHA proof
+      - name: Source-bound live S1 agent brief, public GET only and advisory
         continue-on-error: true
         run: |
           node --input-type=module <<'NODE'
-          import {buildAgentContext} from './tools/s1-release-control/agent-context-v1.mjs';
-          const packet=await buildAgentContext({sources:['handoff','codex_ready']});
-          console.log('S1_AGENT_CONTEXT_LIVE_READBACK',JSON.stringify({
-            contract:packet.schema,
-            main_sha:packet.main_sha,
-            source_readback_verified:packet.source_readback_verified,
-            sources:packet.source_files.map(s=>({id:s.id,status:s.status,freshness:s.freshness,sha:s.blob_sha,bytes:s.bytes})),
-            private_bridge:packet.workflow_boundaries.private_bridge,
-            merge_authority:packet.merge_authorized,
-            failure_codes:packet.source_errors
-          }));
-          if(!packet.source_readback_verified||packet.partial)process.exitCode=1;
-          NODE
-      - name: Public GitHub live readback, advisory and quota-aware
-        continue-on-error: true
-        run: |
-          node --input-type=module <<'NODE'
-          import {buildProjection} from './tools/s1-release-control/projection-v1.mjs';
-          const report=await buildProjection({
-            repositories:['Donh91/Investering-Framework-Archive-v1'],
-            maxPerRepo:1
-          });
-          const x=report.source_repositories[0];
-          console.log('S1_PUBLIC_LIVE_SOURCE_READBACK',JSON.stringify({
-            observed:x.observed,
-            main_sha:x.main_sha,
-            observed_at:report.observed_at,
-            item_count:report.items.length,
-            source_issues:x.source_issues,
-            partial:report.partial,
-            credential_mode:'ANONYMOUS_GET_ONLY',
-            merge_authority:report.release_authority
-          }));
-          if(!x.observed||report.partial||!report.items.length)process.exitCode=1;
+          import {buildAgentBrief} from './tools/s1-release-control/agent-brief-v1.mjs';
+          const b=await buildAgentBrief({sources:['handoff','codex_ready'],maxPerRepo:1});
+          const report={
+            schema:b.schema,
+            source_alignment:b.source_alignment,
+            state:b.state,
+            archive_main_sha:b.archive_main_sha,
+            observed_at_utc:b.observed_at_utc,
+            original_sources:b.source_coverage.canonical_sources.map(x=>({id:x.id,status:x.status,freshness:x.freshness,blob_sha:x.blob_sha})),
+            original_codex_ready_hint_count:b.original_codex_ready_hints.length,
+            original_pr_sample_count:b.public_pr_triage.length,
+            source_issues:b.source_coverage.public_github_repository?.source_issues||[],
+            strict_action_limit:b.existing_s1_action_limit,
+            standalone_release_permission:b.invariant.release_permission,
+            private_bridge:b.source_coverage.private_bridge,
+            natural_s1_proven:b.existing_actors.S1.natural_closure_proven
+          };
+          console.log('S1_PUBLIC_AGENT_BRIEF_READBACK',JSON.stringify(report));
+          // This is an advisory source observation, not a required CI/merge gate.
+          // For an accessible exact-source sample, require a real canonical blob.
+          if(b.source_alignment!=='MATCHED'||report.original_sources.some(x=>x.status!=='OBSERVED')||
+             report.original_pr_sample_count<1)process.exitCode=1;
           NODE
 
   standalone-browser-and-artifact:
