@@ -29,6 +29,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 
 | Addendum or routing anchor | Domain | Discovery status |
 |---|---|---|
+| `00_ARCHIVE_CONTROL/2026-11-07__index-addendum-autonomous-research-portfolio-v1.md` | ARP v1, 5 source-audited bounded original-owner research packages, ranked machine queue, evidence + top 10 handoffs | REGISTRY_DISCOVERABLE · NAVIGATION_ONLY · RESEARCH_DESIGN_ONLY |
 | `00_ARCHIVE_CONTROL/2026-11-07__index-addendum-historical-reality-engine-v1.md` | Historical Reality Engine, 2020-2026 replay, source-vintage controls, continuous Task2 learning and proposed skill foundry | DESIGN_STAGED_OWNER_APPROVAL_PENDING · NAVIGATION_ONLY |
 | `00_ARCHIVE_CONTROL/2026-11-05__index-addendum-altseason-source-atlas-v1.md` | **Altseason Research Atlas**, microcap early / largecap distribution, original source SHA inventory and Deep Research TOC | REGISTRY_DISCOVERABLE · NAVIGATION_ONLY |
 | `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` | cross-repository control/restricted/credential boundary | REGISTRY_DISCOVERABLE |
