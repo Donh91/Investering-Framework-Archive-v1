@@ -110,7 +110,7 @@ try{
   }
   assert.equal(new Set(colors).size,3,"THREE_LIGHT_CHART_BACKGROUNDS_NOT_DIFFERENT "+JSON.stringify(colors));
   const frozen=await evaluate('[...document.querySelectorAll("#daily-rows tr")].map(r=>r.cells[1].textContent)');
-  await evaluate('document.querySelector("[data-stage=\"16\"]").click();true');
+  await evaluate('document.querySelector("[data-stage]").click();true');
   const monday=await evaluate('(()=>({prices:[...document.querySelectorAll("#daily-rows tr")].map(r=>r.cells[1].textContent),observed:document.querySelector("#observed-hours").textContent,actual:[...document.querySelectorAll("#daily-rows tr")].filter(r=>!r.cells[4].textContent.includes("Afventer")).length,chart:document.querySelectorAll("#native-chart .fw-canvas canvas").length,error:!document.querySelector("#graph-error").hidden}))()');
   assert.equal(JSON.stringify(monday.prices),JSON.stringify(frozen),"FROZEN_FORECAST_MUTATED");
   assert.equal(monday.observed,"16 / 168");
