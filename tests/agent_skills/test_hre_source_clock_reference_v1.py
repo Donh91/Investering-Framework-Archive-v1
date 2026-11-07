@@ -12,7 +12,7 @@ ROUTING = ROOT / "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json"
 class HistoricalClockReferenceTests(unittest.TestCase):
     def test_active_research_parallel_lanes_routes_reference(self):
         self.assertIn("references/HRE_REPLAY_SOURCE_CLOCK_FAILSAFE.md", ACTIVE.read_text())
-        self.assertIn("nominal", ACTIVE.read_text())
+        self.assertIn("completed-bar clock", ACTIVE.read_text())
 
     def test_reproducible_clock_trap_is_cited(self):
         ref=REF.read_text()
@@ -30,8 +30,7 @@ class HistoricalClockReferenceTests(unittest.TestCase):
 
     def test_candidate_explicit_negative_triggers_and_authority(self):
         c=CANDIDATE.read_text()
-        for s in ("Negative:", "no-skill", "Astra", "paid", "original", "source", "missing", "Self"):
-            if s in ("Astra","Self"): continue
+        for s in ("Negative:", "baseline", "without", "paid", "original", "source", "missing"):
             self.assertIn(s.lower(),c.lower())
         self.assertIn("no new", REF.read_text().lower())
 
