@@ -65,7 +65,7 @@ export function composeBrief(context,projection,observedAt){
  const sampleOnly=verifiedBase&&projection.partial&&
    Array.isArray(repo?.source_issues)&&repo.source_issues.length>0&&
    repo.source_issues.every(x=>x==='PR_DISCOVERY_SAMPLED_NOT_COMPLETE')&&
-   Array.isArray(projection.items)&&projection.items.every(x=>
+   Array.isArray(projection.items)&&projection.items.length>0&&projection.items.every(x=>
      Array.isArray(x.source_issues)&&x.source_issues.every(y=>y==='PR_DISCOVERY_SAMPLED_NOT_COMPLETE'));
  const classification=safe?'OBSERVED_ADVISORY':sampleOnly?'OBSERVED_ADVISORY_SAMPLED':'PARTIAL_OR_STALE_RECHECK';
  const op=admittedSource(context,'operations');
