@@ -74,7 +74,7 @@ The versioned schema is `schemas/agent-brief-v1.schema.json`. Run `node --test t
 `node --test tools/s1-release-control/test-agent-context-v1.mjs` checks frozen source SHA, SHA-256/byte integrity, changed main, source denial, stale pointers, source allowlist and no private access. No Cycle Navigator build is involved.
 `node tools/s1-release-control/test-browser.mjs` uses actual Chrome CDP at 390px, 430px and 1440px with the GitHub API deliberately blocked to prove honest fallback and mobile/desktop behavior. It is **not** iPhone Safari testing.
 
-A PR-only GitHub Actions workflow runs independent static, adversarial and standalone Chrome/artifact jobs, with least-privilege read permissions, no cron, no new supervisor and no paid API. Each run must be bound to its actual PR HEAD.
+The historical PR-only GitHub Actions validation at `0e5ceee5c1121cfcf1edb8994f1d20cf0ba38358` ran independent static, adversarial and Chrome/artifact jobs successfully. The workflow was deliberately **excluded from the initial merge scope** because modifying `.github/workflows/` requires stronger recovery/release evidence. The exact audited workflow remains a non-executable source template at `deployment-template/pr-only-validation-workflow.yml`. Future activation needs a separately authorized workflow release. The original read-only source tests remain in this folder.
 
 ## Separate-product GitHub Pages boundary
 
@@ -84,9 +84,9 @@ The existing Archive Pages site is already assigned to Cycle Navigator. GitHub P
 
 The existing GitHub connector can edit original PRs but does not currently expose a repository-creation or Pages-settings/deployment action. A separate repository has **not** been created and no Pages deployment was attempted. Preserve this exact operational blocker `SEPARATE_GITHUB_PAGES_REPOSITORY_CREATION_UNAVAILABLE`; do not repurpose CN, issue a fake URL, or consume unapproved paid web-browser access to bypass it.
 
-An authenticated repository-owner route capable of creating and configuring a public repo is needed once, then the original S1 release workflow can export exactly `index.html`, `release-core.js` and a source-bound manifest into the dedicated site without any private records or new scheduler. A Pages publish in that repository still requires a real run, exact source-commit readback, HTTPS/CDN bytes verification and browser checks. The current standalone PR-only job supplies an independent SHA256SUMS-bearing artifact for review, **not** a production deployment.
+An authenticated repository-owner route capable of creating and configuring a public repo is needed once, then the original S1 release workflow can export exactly `index.html`, `release-core.js` and a source-bound manifest into the dedicated site without any private records or new scheduler. A Pages publish in that repository still requires a real run, exact source-commit readback, HTTPS/CDN bytes verification and browser checks. The historical SHA-bound PR-only job supplied a SHA256SUMS-bearing artifact, **not** a GitHub Pages deployment. The browser is separately hosted read-only at https://s1-release-control-4e0h9r.v2.appdeploy.ai/, with AppDeploy QA reporting READY; this external public staging host is not an original GitHub Pages release, merge receipt, or source-bound Vault proof.
 
-Production acceptance remains `UNOBSERVED` until a real published URL and independent readback exist. No release permission can be inferred from PR success, browser-loopback success, a source safepoint or an unrelated Vault restore.
+The separate AppDeploy read-only site is observed READY, but canonical GitHub Pages and original repo release acceptance remain `UNOBSERVED`. No release permission can be inferred from browser hosting. No release permission can be inferred from PR success, browser-loopback success, a source safepoint or an unrelated Vault restore.
 
 ## Explicit non-goals
 
@@ -103,7 +103,7 @@ the producer failed. It also must **never** be promoted to fresh merely to
 satisfy the original 12-hour cadence. Diagnose expected schedule vs actual
 GitHub workflow-run evidence through the original producer before any repair.
 
-The original PR-only validation always attempts a
+The historical PR-only validation (before narrowing release scope) attempted a
 `S1_AGENT_BRIEF_ADMISSION_STATUS_v1` artifact. When a full agent brief cannot
 be admitted, a SHA/byte/digest-bound **fresh original Codex ledger** may still
 yield up to eight *public, original* `read_only_original_codex_candidate_pointers`.
