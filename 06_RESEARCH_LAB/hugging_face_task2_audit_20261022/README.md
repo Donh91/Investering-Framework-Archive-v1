@@ -1,4 +1,6 @@
 # Hugging Face × Framework Task 2, research and execution gateway
+
+- [Task 2 on-demand Wave 3 action/HOLD and eight-lane asymmetric loss sensitivity (7 Nov 2026)](TASK2_RPL_WAVE3_ACTION_VALUE_AND_8_LANE_SYNTHESES_20261107.md), reproducible counterfactual source research, original 23-row sample, delivery-gap falsification, no live authority.
 - [Task 2 first-known R1 forecast and Round 3 cadence/budget source preflight (7 Nov 2026)](TASK2_R1_FIRST_KNOWN_AND_R3_CADENCE_OWNER_AUDIT_20261107.md), all historical admission limitations retained; source-only replay and eight new owner CI negative tests.
 
 ## Task 2, RPL8 Wave 3 (7 November 2026), descriptive error costs and private capture health

@@ -176,6 +176,8 @@ def load_tests(loader, standard_tests, pattern):
     standard_tests.addTests(loader.loadTestsFromTestCase(Task2RPL8ReplayTests))
     from tests.research.test_task2_r1_first_known_and_cadence_preflight_v1 import FirstKnownR1AndCadenceTests
     standard_tests.addTests(loader.loadTestsFromTestCase(FirstKnownR1AndCadenceTests))
+    from tests.research.test_task2_rpl_wave3_action_value_sensitivity_v1 import Task2Wave3ActionValueTests
+    standard_tests.addTests(loader.loadTestsFromTestCase(Task2Wave3ActionValueTests))
     return standard_tests
 
 
