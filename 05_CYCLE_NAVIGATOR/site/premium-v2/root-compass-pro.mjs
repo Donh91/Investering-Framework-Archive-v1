@@ -13,6 +13,7 @@ import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForwar
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
+import {verifiedOriginalWeekPrices} from './original-week-price-readback.mjs';
 import {kompasSourceClockReadback} from './kompas-clock-readback.mjs';
 import {cycleSourceReadback} from './cycle-source-readback.mjs';
 import {
@@ -541,8 +542,12 @@ function renderHorizonStatus(){
   trace=sourceTrace(feeds?.latest,feeds?.compass,view);
   strategic=forwardOutlook(feeds?.latest,feeds?.compass,trace);
  }catch{strategic=null;trace=null}
+ const originalWeekPrice=verifiedOriginalWeekPrices({
+  latest:feeds?.latest,publicationLineage:feeds?.publicationLineage,
+  nowUtc:new Date().toISOString()
+ });
  const matrix=kompasHorizonStatusRows({
-  compass:feeds?.compass,view,lang,strategic,trace,
+  compass:feeds?.compass,view,lang,strategic,trace,originalWeekPrice,
   observationCurrent:clock.state==='FRESH_OBSERVATION'
  });
  const fragment=document.createDocumentFragment();
@@ -740,12 +745,19 @@ async function load(){
  const controller=new AbortController();
  const timeout=setTimeout(()=>controller.abort(),10000);
  try{
-  const [latest,compass]=await Promise.all(assets.map(async url=>{
+  const source=async url=>{
    const r=await fetch(url,{cache:'no-store',redirect:'error',credentials:'omit',signal:controller.signal});
    if(!r.ok)throw Error('CN_OFFICIAL_PUBLIC_SOURCE_UNAVAILABLE');
    return r.json();
-  }));
-  if(my===request){feeds={latest,compass};failed=false}
+  };
+  // Original CN release lineage is INDEPENDENT and optional to the daily
+  // Official readback. A failed lineage GET must suppress only the weekly
+  // numeric summary, never turn a valid Kompas action into a data outage.
+  const [[latest,compass],publicationLineage]=await Promise.all([
+   Promise.all(assets.map(source)),
+   source(new URL('../../data/publication-lineage.json',import.meta.url)).catch(()=>null)
+  ]);
+  if(my===request){feeds={latest,compass,publicationLineage};failed=false}
  }catch{
   if(my===request){feeds=null;failed=true}
  }finally{
