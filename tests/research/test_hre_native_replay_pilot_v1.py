@@ -27,7 +27,7 @@ def make_zip(symbol="BTCUSDT",month="2020-03", missing=None):
     out=io.StringIO()
     w=csv.writer(out)
     for i in range(count):
-        if i==missing:
+        if i==missing or (isinstance(missing, set) and i in missing):
             continue
         ts=int(start.timestamp()*1000)+i*3_600_000
         val=100+i*0.015
@@ -44,9 +44,15 @@ class SourceIntegrity(unittest.TestCase):
         self.assertEqual(len(x),31*24)
         self.assertEqual(x[0].close_ms+1,x[1].open_ms)
 
-    def test_missing_candle_fails(self):
-        with self.assertRaisesRegex(ValueError,"incomplete hourly"):
-            hre.parse_binance_hourly(make_zip(missing=7),"BTCUSDT-1h-2020-03.csv","2020-03")
+    def test_missing_hour_is_preserved_not_filled(self):
+        entries=hre.parse_binance_hourly(make_zip(missing=7),"BTCUSDT-1h-2020-03.csv","2020-03")
+        self.assertEqual(len(entries),743)
+        self.assertFalse(hre.consecutive_hourly(entries))
+        self.assertEqual(entries[7].open_ms-entries[6].open_ms,7_200_000)
+
+    def test_excessive_missing_hours_rejected(self):
+        with self.assertRaisesRegex(ValueError,"unacceptable hourly source coverage"):
+            hre.parse_binance_hourly(make_zip(missing=set(range(90,150))),"BTCUSDT-1h-2020-03.csv","2020-03")
 
     def test_wrong_quote_and_zip_path_fail(self):
         with self.assertRaises(ValueError):
