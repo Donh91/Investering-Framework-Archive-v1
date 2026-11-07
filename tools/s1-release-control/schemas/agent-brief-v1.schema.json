@@ -17,7 +17,8 @@
     "existing_s1_action_limit",
     "invariant",
     "existing_actors",
-    "handoff"
+    "handoff",
+    "source_scope"
   ],
   "properties": {
     "schema": {
@@ -50,6 +51,7 @@
     "state": {
       "enum": [
         "OBSERVED_ADVISORY",
+        "OBSERVED_ADVISORY_SAMPLED",
         "PARTIAL_OR_STALE_RECHECK"
       ]
     },
@@ -233,6 +235,13 @@
     "handoff": {
       "type": "string",
       "minLength": 20
+    },
+    "source_scope": {
+      "enum": [
+        "SOURCE_SET_OBSERVED",
+        "VERIFIED_PUBLIC_PR_SAMPLE_NOT_EXHAUSTIVE",
+        "PARTIAL_OR_UNVERIFIED"
+      ]
     }
   }
 }
