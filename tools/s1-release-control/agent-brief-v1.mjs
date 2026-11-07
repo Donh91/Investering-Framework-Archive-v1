@@ -89,7 +89,13 @@ export function composeBrief(context,projection,observedAt){
   source_alignment:alignment?'MATCHED':'UNOBSERVED',
   state:classification,
   source_scope:sampleOnly?'VERIFIED_PUBLIC_PR_SAMPLE_NOT_EXHAUSTIVE':safe?'SOURCE_SET_OBSERVED':'PARTIAL_OR_UNVERIFIED',
-  source_coverage:{canonical_sources:context.source_files?.map(s=>({id:s.id,status:s.status,freshness:s.freshness,source_ref:s.source_url,blob_sha:s.blob_sha||null}))||[],
+  source_coverage:{canonical_sources:context.source_files?.map(s=>({
+    id:s.id,status:s.status,freshness:s.freshness,
+    source_ref:s.source_url,source_path:s.source_path,
+    main_sha:s.main_sha||null,blob_sha:s.blob_sha||null,
+    sha256:s.sha256||null,bytes:Number.isSafeInteger(s.bytes)&&s.bytes>0?s.bytes:null,
+    generated_at_utc:s.generated_at_utc||null,observed_at_utc:s.observed_at_utc||null
+  }))||[],
     public_github_repository:repo||null,
     private_bridge:'UNOBSERVED',private_alpha_lab:'UNOBSERVED',independent_recovery:'UNOBSERVED'},
   original_actions:originalActions,
