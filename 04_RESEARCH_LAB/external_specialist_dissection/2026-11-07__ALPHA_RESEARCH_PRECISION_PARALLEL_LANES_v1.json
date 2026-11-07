@@ -1,12 +1,12 @@
 {
   "contract": "RESEARCH_PARALLEL_LANES_V1",
-  "status": "PLANNED",
+  "status": "IN_PROGRESS",
   "mission_id": "ALPHA_RESEARCH_LAB_PRECISION_HARVEST_20261107_OWNER_APPROVAL_PENDING",
   "original_owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
   "project_repo": "Donh91/Investering-Framework-Archive-v1",
   "objective": "Test 8 bounded third-party specialist method transfers against native Alpha Lab and cross-framework evidence, prioritizing true predictive and investor decision precision without overfitting, duplicate engines, vendor rights violations, or false source-clock claims.",
   "source_manifest_path": "04_RESEARCH_LAB/external_specialist_dissection/2026-11-07__TG_SCANNER_METHOD_TRANSFER_MATRIX_v1.json",
-  "source_snapshot_sha": "d0e26071746c8dba0390cb87339e1d5b7fde3343",
+  "source_snapshot_sha": "cf9dc8d83a7494be6a196fd16dfcd71c1c810b60",
   "source_eligibility": "UNKNOWN",
   "data_classification": "PUBLIC_ONLY",
   "parallel_job_cap": 3,
@@ -14,8 +14,8 @@
   "no_new_scheduler": true,
   "no_new_agent_identity": true,
   "no_trading_authority": true,
-  "approved_execution": false,
-  "owner_approval_state": "PENDING",
+  "approved_execution": true,
+  "owner_approval_state": "OWNER_EXPLICIT_APPROVAL_RECEIVED_2026_11_08_COPENHAGEN",
   "new_paid_api_usd": 0,
   "original_source_clock_required": true,
   "preserve_canonical_queue": true,
@@ -47,7 +47,7 @@
     "cmc-crypto-research"
   ],
   "serial_preflight": {
-    "status": "NOT_EXECUTED",
+    "status": "PARTIAL_PUBLIC_SOURCE_QUALIFICATION",
     "requirements": [
       "cross_repo_data_plane",
       "original_owner_PR_and_S1_state",
@@ -57,16 +57,37 @@
       "budget_remaining_and_API_limits",
       "original_round3_firewall"
     ],
-    "run_evidence": {}
+    "run_evidence": {
+      "archive_main_sha": "cf9dc8d83a7494be6a196fd16dfcd71c1c810b60",
+      "alpha_main_sha": "eb24295358b5f4884e1d0a5b7383c491e84c830f",
+      "source_boundary": "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md",
+      "owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+      "approval_evidence": "Explicit owner ChatGPT /GOAL approval dated 2026-11-08 Europe/Copenhagen; corresponding native issue comment to follow",
+      "budget_constraint": "Account GitHub Actions usage UNKNOWN as of 2026-11-07 resource_budget/LATEST.json; no new billable jobs dispatched",
+      "actual_parallel_github_jobs": 0
+    }
   },
   "lanes": [
     {
-      "status": "PLANNED",
+      "status": "RUNNING",
       "budget_usd": 0,
-      "run_evidence": {},
+      "run_evidence": {
+        "source_readback": "04_RESEARCH_LAB/external_specialist_dissection/alpha_precision_20261107/results/L01_SOURCE_RIGHTS_RESEARCH_RESULT_v1.md",
+        "source_urls": [
+          "https://docs.sourcify.dev/docs/api/index.html",
+          "https://docs.dexscreener.com/api/reference",
+          "https://docs.honeypot.is/ishoneypot",
+          "https://docs.gopluslabs.io/reference/support",
+          "https://support.coingecko.com/articles/6867086195-does-geckoterminal-have-an-api",
+          "https://developers.uniswap.org/docs/protocols/v4/concepts/poolmanager"
+        ],
+        "original_owner": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+        "observed_job_id": null,
+        "external_api_calls": 0
+      },
       "data_rights": "PUBLIC_VERIFIABLE_OR_ADMITTED_PRIVATE_BINDING_ONLY",
-      "approval_state": "PENDING_OWNER_APPROVAL",
-      "evidence_class": "HYPOTHESIS_NOT_RUN",
+      "approval_state": "OWNER_APPROVED",
+      "evidence_class": "OFFICIAL_PUBLIC_DOCS_REVIEWED_INCREMENTAL_LIFT_UNPROVEN",
       "id": "L01",
       "name": "Public source rights and reproducible licensed code",
       "question": "Which third-party scanner methods can be legally reproduced with authorized first-party data?",
@@ -92,7 +113,7 @@
       "budget_usd": 0,
       "run_evidence": {},
       "data_rights": "PUBLIC_VERIFIABLE_OR_ADMITTED_PRIVATE_BINDING_ONLY",
-      "approval_state": "PENDING_OWNER_APPROVAL",
+      "approval_state": "OWNER_APPROVED_NOT_DISPATCHED",
       "evidence_class": "HYPOTHESIS_NOT_RUN",
       "id": "L02",
       "name": "Monsta social account history to qualified wallet conversion",
@@ -119,7 +140,7 @@
       "budget_usd": 0,
       "run_evidence": {},
       "data_rights": "PUBLIC_VERIFIABLE_OR_ADMITTED_PRIVATE_BINDING_ONLY",
-      "approval_state": "PENDING_OWNER_APPROVAL",
+      "approval_state": "OWNER_APPROVED_NOT_DISPATCHED",
       "evidence_class": "HYPOTHESIS_NOT_RUN",
       "id": "L03",
       "name": "PIRB first buyers airdrop and entity clusters",
@@ -146,7 +167,7 @@
       "budget_usd": 0,
       "run_evidence": {},
       "data_rights": "PUBLIC_VERIFIABLE_OR_ADMITTED_PRIVATE_BINDING_ONLY",
-      "approval_state": "PENDING_OWNER_APPROVAL",
+      "approval_state": "OWNER_APPROVED_NOT_DISPATCHED",
       "evidence_class": "HYPOTHESIS_NOT_RUN",
       "id": "L04",
       "name": "PIRB cross-token wallet overlap and reproducible skill",
@@ -173,7 +194,7 @@
       "budget_usd": 0,
       "run_evidence": {},
       "data_rights": "PUBLIC_VERIFIABLE_OR_ADMITTED_PRIVATE_BINDING_ONLY",
-      "approval_state": "PENDING_OWNER_APPROVAL",
+      "approval_state": "OWNER_APPROVED_NOT_DISPATCHED",
       "evidence_class": "HYPOTHESIS_NOT_RUN",
       "id": "L05",
       "name": "SAFE static checks versus actual sized executable exit",
@@ -200,7 +221,7 @@
       "budget_usd": 0,
       "run_evidence": {},
       "data_rights": "PUBLIC_VERIFIABLE_OR_ADMITTED_PRIVATE_BINDING_ONLY",
-      "approval_state": "PENDING_OWNER_APPROVAL",
+      "approval_state": "OWNER_APPROVED_NOT_DISPATCHED",
       "evidence_class": "HYPOTHESIS_NOT_RUN",
       "id": "L06",
       "name": "Historical ROCCO CYBERFINE counterfactual distribution checks",
@@ -227,7 +248,7 @@
       "budget_usd": 0,
       "run_evidence": {},
       "data_rights": "PUBLIC_VERIFIABLE_OR_ADMITTED_PRIVATE_BINDING_ONLY",
-      "approval_state": "PENDING_OWNER_APPROVAL",
+      "approval_state": "OWNER_APPROVED_NOT_DISPATCHED",
       "evidence_class": "HYPOTHESIS_NOT_RUN",
       "id": "L07",
       "name": "Utility LARP versus real token economic claims",
@@ -254,7 +275,7 @@
       "budget_usd": 0,
       "run_evidence": {},
       "data_rights": "PUBLIC_VERIFIABLE_OR_ADMITTED_PRIVATE_BINDING_ONLY",
-      "approval_state": "PENDING_OWNER_APPROVAL",
+      "approval_state": "OWNER_APPROVED_NOT_DISPATCHED",
       "evidence_class": "HYPOTHESIS_NOT_RUN",
       "id": "L08",
       "name": "Scanner recall and cross-framework point in time validation",
@@ -305,5 +326,7 @@
   "no_unproven_agent_claims": true,
   "case_memory_append_only_original_writer": true,
   "implementation_policy": "ONLY_AFTER_APPROVAL_AND_STRATEGIST_ADJUDICATION_EXISTING_ORIGINAL_OWNER_PR_AND_CI",
-  "document_path": "04_RESEARCH_LAB/external_specialist_dissection/2026-11-07__ALPHA_RESEARCH_PRECISION_MISSION_APPROVAL_PACKET_v1.md"
+  "document_path": "04_RESEARCH_LAB/external_specialist_dissection/2026-11-07__ALPHA_RESEARCH_PRECISION_MISSION_APPROVAL_PACKET_v1.md",
+  "approval_scope": "PHASES_A_TO_E_EXISTING_OWNERS_NO_EXTRA_PAID_APIS_NO_NEW_SCHEDULERS_OR_IDENTITIES",
+  "alpha_source_snapshot_sha": "eb24295358b5f4884e1d0a5b7383c491e84c830f"
 }
