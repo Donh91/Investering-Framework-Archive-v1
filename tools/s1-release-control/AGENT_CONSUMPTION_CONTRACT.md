@@ -5,6 +5,7 @@
 ## Precise entrypoints
 
 - Source metadata: `node tools/s1-release-control/agent-context-v1.mjs --stdout`, contract `S1_AGENT_OPERATIONS_CONTEXT_v1`.
+- **Prioritized agent brief:** `node tools/s1-release-control/agent-brief-v1.mjs --stdout`, contract `S1_AGENT_OPERATIONS_BRIEF_v1`, checked by `schemas/agent-brief-v1.schema.json` and negative tests. This is a bounded summary of original-source hints, not a new canonical queue.
 - Public GitHub PR projection: `node tools/s1-release-control/projection-v1.mjs --stdout`, contract `S1_RELEASE_PROJECTION_v1`.
 - Shared human/machine fail-closed rules: `tools/s1-release-control/release-core.js`.
 - Positive, negative, mutation and source-bound tests: `test-static.mjs`, `test-projection-v1.mjs`, `test-agent-context-v1.mjs`.
@@ -14,7 +15,7 @@
 
 1. Confirm current canonical `AGENTS.md`, public/restricted boundary, original S1 mission and current source authority.
 2. Run `agent-context-v1.mjs` when a public system overview is necessary. Inspect `main_preflight_sha`, `main_final_sha`, every source blob SHA, source digest, status, clock and `partial`. Any unknown or invalidation stays UNOBSERVED.
-3. Read `LATEST_CODEX_READY_TASKS.json` as the **sole original READY authority** if Codex work is relevant. Execution-state is observability only. The packet's small `task_refs` are bounded pointers, not new work orders or permissions.
+3. Use the read-only agent brief to locate original owner and original SHA-bound source, then read `LATEST_CODEX_READY_TASKS.json` as the **sole original READY authority** if Codex work is relevant. Execution-state is observability only. The packet's small `task_refs` are bounded pointers, not new work orders or permissions.
 4. Run `projection-v1.mjs` only where current public PR evidence improves a specific original decision. Even `ci_observation.status=PROVEN` means **some exact-head PR-associated runs are successful**, not required-check completeness, review authority, independence, billing, restore or merge permission. Unknown and partial sources forbid PASS.
 5. Select up to three legitimate original PRs for the existing S1 tick, subject to existing policies and original owner contracts. Preserve Monday 09:30–10:30 Europe/Copenhagen READ-ONLY. Do not promote queue_plan to a job queue.
 6. Re-read native HEAD, main, real platform rules and exact mandatory CI/reviews. HIGH_IMPACT remains blocked without independent source-bound recovery/custody, actual separate release assessment and destructive-authority separation. The cockpit never signs off.
