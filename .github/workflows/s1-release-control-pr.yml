@@ -42,29 +42,6 @@ jobs:
         run: node --test tools/s1-release-control/test-agent-context-v1.mjs
       - name: Verify agent-first action brief never grants release or autonomous S1 credit
         run: node --test tools/s1-release-control/test-agent-brief-v1.mjs
-      - name: Real integrated original-owner agent brief readback, advisory-only
-        continue-on-error: true
-        run: |
-          node --input-type=module <<'NODE'
-          import {buildAgentBrief} from './tools/s1-release-control/agent-brief-v1.mjs';
-          const brief=await buildAgentBrief();
-          const receipt={
-            schema:brief.schema,
-            state:brief.state,
-            source_alignment:brief.source_alignment,
-            archive_main_sha:brief.archive_main_sha,
-            canonical_source_count:brief.source_coverage.canonical_sources.length,
-            original_action_hint_count:brief.original_actions.length,
-            codex_ready_hint_count:brief.original_codex_ready_hints.length,
-            pr_triage_count:brief.public_pr_triage.length,
-            original_s1_action_limit:brief.existing_s1_action_limit,
-            release_authority:brief.invariant.release_permission,
-            natural_S1_closure_proven:brief.existing_actors.S1.natural_closure_proven,
-            bridge:brief.source_coverage.private_bridge
-          };
-          console.log('S1_AGENT_BRIEF_LIVE_READBACK',JSON.stringify(receipt));
-          if(brief.state!=='OBSERVED_ADVISORY'||brief.invariant.release_permission!==false)process.exitCode=1;
-          NODE
       - name: Source-bound live S1 agent brief, public GET only and advisory
         continue-on-error: true
         run: |
