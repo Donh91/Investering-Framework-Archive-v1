@@ -55,7 +55,9 @@ Use only **existing connected and authorized** Research Lab/Strategist/Sol/Codex
 
 A qualified mission ends with one synthesis keyed to original task, counting: `PLANNED`, `RUNNING`, `COMPLETE_VERIFIED`, `FAILED_EVIDENCED`, `BLOCKED`, `NOT_EXECUTED`. Record **actual simultaneous job evidence** when claiming parallel execution. Distinguish (1) source QA, (2) simulation/replay validity, (3) prediction/causal edge, (4) economic utility and (5) production admission, never collapse them to a single green CI status.
 
-Use `references/INVOCATION_AND_HANDOFF.md` for owner-ready prompts and a one-screen synthesis contract. When work cannot actually be continued in the current tool session, leave an exact PR/issue/run/blocker handoff under existing owners, not an assertion of silent background execution.
+Use `references/INVOCATION_AND_HANDOFF.md` for owner-ready prompts and a one-screen synthesis contract.
+
+For historical 2020-2026 crisis/rotation/CN replay, also load `references/HRE_REPLAY_SOURCE_CLOCK_FAILSAFE.md`. The HRE Task2 pilot actually caught vendor intrabar `close_time` values, missing hourly buckets, 2025 timestamp-unit conversion and 72h overlapping label pseudo-independence. This is an observed **source/time safety method**, not a separately installed skill or evidence of investment edge. Before activating a replay lane freeze the native source revision, true completed-bar clock, original-vs-retrospective classification, missingness abstentions, era-specific feature availability, matched controls and interval sharpness. Reuse the existing original HRE Task2 research owner and `research/historical_reality_engine/` evidence archive, rather than creating a new research/agent owner. When work cannot actually be continued in the current tool session, leave an exact PR/issue/run/blocker handoff under existing owners, not an assertion of silent background execution.
 
 ## Validation / retire
 
