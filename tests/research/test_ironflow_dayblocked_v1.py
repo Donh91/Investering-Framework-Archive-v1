@@ -33,6 +33,13 @@ class DayBlockedLeakageFixtures(unittest.TestCase):
         self.f.loc[40:50,"funding_rate"]=float("nan")
         x=self.anchors()
         self.assertEqual(len(x),1)
+    def test_full_day_missing_oi_excludes_that_day_and_next_day_lookback(self):
+        # Missing OI invalidates both the affected day and the following
+        # day's lagged OI observation; never silently impute zero.
+        self.o.loc[24:47,"open_interest_usd"]=float("nan")
+        x=self.anchors()
+        self.assertEqual(len(x),1)
+        self.assertEqual(x.iloc[0].timestamp,pd.Timestamp("2026-10-04T23:00:00Z"))
     def test_missing_hour_cannot_form_invalid_future(self):
         for name in ("c","o","f"):
             setattr(self,name,getattr(self,name).drop(90))
