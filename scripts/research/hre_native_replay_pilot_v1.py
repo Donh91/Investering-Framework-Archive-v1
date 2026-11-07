@@ -118,7 +118,11 @@ def parse_binance_hourly(blob: bytes, expected_name: str, expected_month: str) -
         if o <= 0 or l <= 0 or h < max(o, c) or l > min(o, c):
             raise ValueError("invalid OHLC candle")
         if opened in seen or opened % 3_600_000 or not 3_599_998 <= closed - opened <= 3_599_999:
-            raise ValueError("duplicate, bad timeframe, or invalid candle close")
+            raise ValueError(
+                f"duplicate/bad timeframe/candle close, month={expected_month}, "
+                f"raw_open={row[0]}, raw_close={row[6]}, open_ms={opened}, close_ms={closed}, "
+                f"delta_ms={closed-opened}, mod_hour_ms={opened%3_600_000}, duplicate={opened in seen}"
+            )
         if _month_from_date(dt.datetime.fromtimestamp(opened / 1000, tz=TZ)) != expected_month:
             raise ValueError("candle outside filename month")
         if candles and opened <= candles[-1].open_ms:
