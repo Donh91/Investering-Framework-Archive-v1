@@ -1,0 +1,303 @@
+{
+  "contract": "RESEARCH_LAB_EXTERNAL_SPECIALIST_TG_BOTS_TRANSFER_V1",
+  "asof_utc_date": "2026-11-07",
+  "authority": "RESEARCH_ONLY_SHADOW_NO_NEW_SCANNER_NO_TRADES_NO_NEW_SCHEDULER",
+  "owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+  "original_queue": "04_RESEARCH_LAB/external_specialist_dissection/QUEUE_V1.json",
+  "queue_changed": false,
+  "source_classes": {
+    "SCREENSHOT_ONLY": "User-uploaded Telegram screenshot metadata, cannot prove user activity/reliability.",
+    "VENDOR_DOC": "First-party official docs claim, capability NOT independently executed.",
+    "OFFICIAL_API_DOC": "First-party documented public API or public repository source, not necessarily deployed into Framework.",
+    "INDEPENDENT_CODE": "Verified public source repository and license, no borrowing from proprietary bot.",
+    "RESEARCH_HYPOTHESIS": "Bounded falsifiable conceptual method, not a production scanner feature."
+  },
+  "bots": [
+    {
+      "id": "MONSTA",
+      "tg": "https://t.me/MonstaScanBot",
+      "docs": "https://docs.monstalabs.io/",
+      "source_code_public_verified": false,
+      "public_automatable_api_verified": false,
+      "pricing": {
+        "free_core_claim": "VENDOR_DOC",
+        "premium": "PRICE_UNVERIFIED"
+      },
+      "primary_value": "Verified-source early CA social chronology + X account reuse, not quote safety",
+      "priority": "P1_RESEARCH_AS_S7_CHALLENGER",
+      "disposition": "METHOD_ONLY_TRANSFER_ADAPTER_GAP",
+      "capabilities": [
+        {
+          "method": "X_FIRST_CA_MENTIONS",
+          "command": "/mention {CA}",
+          "source": "https://docs.monstalabs.io/core-features/x-twitter-tools",
+          "source_class": "VENDOR_DOC",
+          "owner": "S7",
+          "unknowns": [
+            "authenticated post publication UTC",
+            "original first-machine-observed UTC",
+            "complete X source coverage",
+            "X handle historical numeric ID"
+          ]
+        },
+        {
+          "method": "X_DELETED_AND_RECYCLED_POST_HISTORY",
+          "command": "/del {handle}; /x {handle}; /prev {handle}",
+          "source": "https://docs.monstalabs.io/core-features/x-twitter-tools",
+          "source_class": "VENDOR_DOC",
+          "owner": "S7/#126",
+          "unknowns": [
+            "original archived post proof",
+            "privacy/ToS rights"
+          ]
+        },
+        {
+          "method": "BUNDLE_HELD_SOLD",
+          "command": "/bundle {CA}",
+          "source": "https://docs.monstalabs.io/core-features/bundles-taxs-and-wallets",
+          "source_class": "VENDOR_DOC",
+          "owner": "S3/#88",
+          "unknowns": [
+            "wallet independence",
+            "same timestamp provider/source state"
+          ]
+        },
+        {
+          "method": "LP_DEXPAID_CTO_ALERT",
+          "command": "automatic from scans",
+          "source": "https://docs.monstalabs.io/core-features/smart-alerts",
+          "source_class": "VENDOR_DOC",
+          "owner": "S1/S7",
+          "unknowns": [
+            "true upstream event time",
+            "real alert delivery time"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "PIRBVIEW",
+      "tg": "https://t.me/PirbViewBot",
+      "docs": "https://pirb.tech/",
+      "source_code_public_verified": false,
+      "public_automatable_api_verified": false,
+      "pricing": {
+        "free_bot": "FEATURES_DOC_VERIFIED_NO_API",
+        "pro_eth_per_month_vendor_claim": 0.1,
+        "pro_token_min_vendor_claim": 34710
+      },
+      "primary_value": "Early-50 buyers, Airdrop and BubbleMaps, cross-CA holder overlap, last-15-wallet PnL biased challenger",
+      "priority": "P1_RESEARCH_AS_S3_S2_CHALLENGER",
+      "disposition": "METHOD_ONLY_TRANSFER_DEDUPED",
+      "capabilities": [
+        {
+          "method": "EARLY_50_BUYERS",
+          "command": "/e {CA}",
+          "source": "https://pirb.medium.com/pirbview-contract-scanner-by-pirb-dd219120c2de",
+          "source_class": "VENDOR_DOC",
+          "owner": "S3/S4",
+          "unknowns": [
+            "independent funding",
+            "original source block/clock"
+          ]
+        },
+        {
+          "method": "AIR_DROP_MAP_AND_RECIPIENT_EGRESS",
+          "command": "/a {CA}",
+          "source": "https://telemetr.io/es/channels/2328990747-pirbviewguide/posts",
+          "source_class": "VENDOR_DOC",
+          "owner": "S3/#88",
+          "unknowns": [
+            "transfer vs swap",
+            "beneficial control"
+          ]
+        },
+        {
+          "method": "BUBBLE_ENTITY_CLUSTER",
+          "command": "/b {CA}",
+          "source": "https://pirb.medium.com/pirbview-contract-scanner-by-pirb-dd219120c2de",
+          "source_class": "VENDOR_DOC",
+          "owner": "S3",
+          "unknowns": [
+            "source graph semantics",
+            "routers/exchange exclusion"
+          ]
+        },
+        {
+          "method": "CROSS_CA_TOP80_OVERLAP",
+          "command": "/o {CA1} {CA2}",
+          "source": "https://telemetr.io/es/channels/2328990747-pirbviewguide/posts",
+          "source_class": "VENDOR_DOC",
+          "owner": "S3",
+          "unknowns": [
+            "top80 holder snapshot times",
+            "base rate",
+            "survivorship"
+          ]
+        },
+        {
+          "method": "WALLET_LAST15_PNL",
+          "command": "/pnl {wallet} {chain}",
+          "source": "https://telemetr.io/es/channels/2328990747-pirbviewguide/posts",
+          "source_class": "VENDOR_DOC",
+          "owner": "S2",
+          "unknowns": [
+            "complete losers",
+            "realized cost basis",
+            "copyability"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SAFE_ANALYZER",
+      "tg": "https://t.me/SafeAnalyzerbot",
+      "docs": "https://www.dexanalyzer.io/docs/safeanalyzerbot",
+      "source_code_public_verified": false,
+      "public_automatable_api_verified": true,
+      "api_docs": "https://www.dexanalyzer.io/api",
+      "api_price_monthly_entry_usd": 999,
+      "requires_paid_access": true,
+      "priority": "P2_EXTERNAL_CHALLENGER_NO_BUDGET",
+      "disposition": "PAID_API_NO_GO",
+      "primary_value": "Compare static safety owner/tax/LP flags with realized notional-specific exit",
+      "capabilities": [
+        {
+          "method": "CONTRACT_RUG_HONEYPOT_LP_REPORT",
+          "command": "/safe {CA}",
+          "source": "https://www.dexanalyzer.io/docs/safeanalyzerbot",
+          "source_class": "VENDOR_DOC",
+          "owner": "S1/X0",
+          "unknowns": [
+            "independent simulation evidence",
+            "coverage Ethereum V4",
+            "actual API payload and tokens"
+          ]
+        }
+      ]
+    }
+  ],
+  "independent_public_code_reference": [
+    {
+      "repo": "networkx/networkx",
+      "sha": "e59d71890e745effb3724dc4b5620b23f92e0ee3",
+      "license": "BSD-3-Clause",
+      "purpose": "S3 temporal graph and holder overlap",
+      "method": "LOCAL_LIBRARY_WITH_LICENSE",
+      "copied": false
+    },
+    {
+      "repo": "sourcifyeth/sourcify",
+      "sha": "d9fc09b1fa81be715b9b76634e77b612f9506689",
+      "license": "MIT",
+      "purpose": "S1 source/bytecode reproducibility, current API v2",
+      "method": "DOC_API_OR_REUSE_WITH_LICENSE",
+      "copied": false
+    },
+    {
+      "repo": "crytic/slither",
+      "sha": "97c1d10d8107e76a9426dd484c03c1afd846c186",
+      "license": "AGPL-3.0",
+      "purpose": "S1 Solidity static security supplemental",
+      "method": "REFERENCE_WITH_LICENSE_AUDIT",
+      "copied": false
+    },
+    {
+      "repo": "blockscout/blockscout",
+      "sha": "5e22da2f0427ff11b99736d5ede34cccfb168878",
+      "license": "LicenseRef-Blockscout v1.0 2026-04-22",
+      "purpose": "S3/S1 explorer public API",
+      "method": "PUBLIC_API_ONLY_NO_CODE_COPY",
+      "copied": false
+    },
+    {
+      "repo": "Uniswap/v4-core",
+      "sha": "bea7f6d1c11cd5dc4f0d5151ffa37a1c239feee6",
+      "license": "UNVERIFIED_REQUIRES_CONTRACT_LEVEL_CHECK",
+      "purpose": "S1 event semantics and pool ID versus exact CA",
+      "method": "READ_PUBLIC_PROTOCOL_CODE_NO_COPY",
+      "copied": false
+    }
+  ],
+  "internal_owner_map": [
+    {
+      "lane": "S1_EXECUTABLE_SELLABILITY_TRUTH_V1",
+      "sources": [
+        "SAFE",
+        "Monsta"
+      ],
+      "value": "Static/provider SAFE vs real quote roundtrip; reuse original owner"
+    },
+    {
+      "lane": "S2_WALLET_SKILL_TRUTH_TOURNAMENT_V1",
+      "sources": [
+        "PIRBVIEW"
+      ],
+      "value": "last-15 PnL challenger but full portfolio loss/exit skill dominates"
+    },
+    {
+      "lane": "S3_ENTITY_ADJUSTED_CLUSTER_AND_BUNDLE_V1",
+      "sources": [
+        "PIRBVIEW",
+        "MONSTA"
+      ],
+      "value": "early50, airdrop, bubble, top80 overlap, funder and neutral-router adjustments"
+    },
+    {
+      "lane": "S7_ATTENTION_CONVERSION_CURVE_V1",
+      "sources": [
+        "MONSTA"
+      ],
+      "value": "X earliest CA mentions and recycled handles with first-published versus first-observed guard"
+    },
+    {
+      "lane": "X0_DISAGREEMENT_ALPHA_V1",
+      "sources": [
+        "SAFE",
+        "PIRBVIEW",
+        "MONSTA"
+      ],
+      "value": "external/internal disagreements on exact cutoff only"
+    }
+  ],
+  "falsifiable_experiments": [
+    {
+      "id": "E1",
+      "owner": "S7/#126",
+      "name": "social post clock / qualified buyer response",
+      "requires_original_pit": true,
+      "kill": "No incremental early source or conversion beyond native boosts after matched controls"
+    },
+    {
+      "id": "E2",
+      "owner": "S3/#88",
+      "name": "top-N holder overlap independent actor comparison",
+      "requires_original_pit": true,
+      "kill": "No prospective discrimination beyond simple holder concentration + retention"
+    },
+    {
+      "id": "E3",
+      "owner": "S1/#194/#98",
+      "name": "provider static SAFE vs $100/$500/$1000 sized sellability",
+      "requires_original_pit": true,
+      "kill": "Provider adds nothing beyond native raw quote/simulation"
+    }
+  ],
+  "negative_cases": [
+    "ROCCO_20261106_COORDINATED_DUMP_ASOF_GUARDS",
+    "CYBERFINE_20261029_CREATOR_FIVE_WAY_ALLOC",
+    "NONRUG_INDEPENDENT_SAME_SECOND_BOT_COHORT",
+    "UTILITY_PUBLIC_CODE_WITH_NO_TOKEN_CAPTURE"
+  ],
+  "limits": [
+    "No actual live Telegram bot executed",
+    "No independent bot accuracy test",
+    "No external source runtime integration",
+    "No API expenditure",
+    "No wallet or signing actions",
+    "No first-machine seen inferred from historical posts",
+    "No queue priority promotion",
+    "No canonical Case Memory write"
+  ],
+  "state": "RESEARCH_DOCUMENTED_PENDING_ORIGINAL_OWNER_FALSIFICATION"
+}
