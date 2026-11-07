@@ -23,6 +23,7 @@ const headFor=(path,sha)=>HTTPS+'/blob/'+sha+'/'+path;
 function safeCount(v){return Number.isSafeInteger(v)&&v>=0?v:null;}
 function jsonSafe(s){if(typeof s!=='string'||s.length>2e6)throw Error('SOURCE_BYTES_UNBOUNDED');return JSON.parse(s)}
 function digest(bytes){return createHash('sha256').update(bytes).digest('hex')}
+function gitBlobSha1(bytes){return createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex')}
 function ageOf(sourceTime,observedAt,maxAgeMinutes){
  const t=Date.parse(sourceTime),n=Date.parse(observedAt);
  if(!Number.isFinite(t)||!Number.isFinite(n)||t>n+60000)return {status:'UNOBSERVED',minutes:null};
@@ -105,6 +106,7 @@ async function readFrozenSource(fetcher,main,id,observedAt){
    if(!SHA40.test(body.sha||'')||body.encoding!=='base64'||typeof body.content!=='string')throw Error('SOURCE_CONTENT_IDENTITY_INVALID');
    const bytes=Buffer.from(body.content.replace(/\s/g,''),'base64');
    if(bytes.length===0||bytes.length>2e6||bytes.length!==body.size)throw Error('SOURCE_BYTE_COUNT_INVALID');
+   if(gitBlobSha1(bytes)!==body.sha)throw Error('SOURCE_BLOB_SHA_MISMATCH');
    const data=jsonSafe(bytes.toString('utf8'));
    const generated=typeof data.generated_at_utc==='string'?data.generated_at_utc:null;
    const age=ageOf(generated,observedAt,spec.maxAgeMinutes);
