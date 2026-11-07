@@ -349,6 +349,13 @@ def main():
     ).hexdigest()
     path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"HRE_NATIVE_LANE_COMPLETE lane={a.lane} source_files={len(result['verified_file_receipts'])} output={path}")
+    for key, row in result["results"].items():
+        if a.lane == "crisis":
+            print(f"HRE_DESCRIPTIVE_CRISIS {key} cutoffs={row['daily_cutoffs']} price_baseline={row['confusion_descriptive']['baseline']} candidate={row['confusion_descriptive']['challenger']}")
+        elif a.lane == "weekly":
+            print(f"HRE_DESCRIPTIVE_WEEKLY {key} freezes={row['weekly_freezes']} daily_points={row['daily_points']} naive_coverage={row['naive_full_range_coverage']:.4f} alternative_coverage={row['alternative_full_range_coverage']:.4f} close_mae_pct={row['mean_abs_expected_close_error_pct']:.4f}")
+        else:
+            print(f"HRE_SOURCE_QA {key} observations={row['hourly_candles']} admission={row['source_admission']}")
     print("SCIENCE_GATE: RETROSPECTIVE_ONLY_NOT_ORIGINAL_FORECAST_NOT_PROVEN_EDGE")
 
 
