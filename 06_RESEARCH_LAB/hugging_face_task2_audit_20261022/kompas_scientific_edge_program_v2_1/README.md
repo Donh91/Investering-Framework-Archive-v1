@@ -1,6 +1,6 @@
 # KOMPAS PRO · Scientific Edge & Verified Execution Program v2.1
 
-**Program state:** PROPOSAL_STAGED_OWNER_APPROVAL_PENDING. **Date:** 2026-11-07.  
+**Program state:** OWNER_APPROVED_PLAN_RELEASE_GATED. **Date:** 2026-11-07. **Native Task2 approval receipt:** https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6711560934. The approval authorizes no new paid, market or scheduler capabilities and does not prove any live run.  
 **Scientific authority:** original [Task 2 #1596](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596), **not** a new owner, research queue authority, model, scheduler or Time Machine.  
 **Execution:** original domain owners / existing single S1 [#1156](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156); read-only Research Parallel Lanes, existing permitted PR-native GitHub Actions, existing Grok Bridge and separately governed Research Lab Sol MAX #1476. No app deploy, only GitHub for product design, tests and releases.
 
@@ -67,7 +67,7 @@ Nine requested artifacts are generated **only when their underlying data is real
 ## File map
 
 - `MASTER_MISSION_V2_1_GOAL.md` final complete owner approval/execution instruction.
-- `PROGRAM_MANIFEST_v1.json` ten scientific lanes, owners, bounded time/cost, hypothesis falsifiers, dependencies and current proposal state, navigation only.
+- `PROGRAM_MANIFEST_v1.json` ten scientific lanes, owners, bounded time/cost, hypothesis falsifiers, dependencies and owner-approved, release-gated state, navigation only.
 - `EXECUTION_CONTRACT_v1.md` precise waves, existing GitHub Actions / Grok / Sol / S1 paths, handoff contract, original per-lane acceptance and budget.
 - `RECEIPT_TEMPLATE_v1.json` example contract only, NOT a result or currently active queue.
 - `OWNER_APPROVAL_AND_ACCEPTANCE_v1.md` final authorization to approve and stage classification, release/exit definitions.
