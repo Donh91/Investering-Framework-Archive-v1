@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": true,
+  "$id": "https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/tools/s1-release-control/schemas/release-projection-v1.schema.json",
+  "title": "S1 Release Projection v1 · public GitHub observations only",
+  "required": [
+    "schema",
+    "mode",
+    "observed_at",
+    "source_repositories",
+    "partial",
+    "items",
+    "queue_plan",
+    "existing_s1_action_limit",
+    "release_authority",
+    "source_authority",
+    "formal_approval",
+    "unattended_s1_closure_proven"
+  ],
+  "properties": {
+    "schema": {
+      "const": "S1_RELEASE_PROJECTION_v1"
+    },
+    "mode": {
+      "const": "READ_ONLY_PUBLIC_GITHUB"
+    },
+    "observed_at": {
+      "type": "string"
+    },
+    "source_repositories": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "partial": {
+      "type": "boolean"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "repo",
+          "pr_number",
+          "head_sha",
+          "main_sha",
+          "risk",
+          "evidence_class",
+          "required_gates",
+          "next_action",
+          "source_ref",
+          "observed_at",
+          "release_disposition",
+          "execution_provenance",
+          "merge_authorized",
+          "production_verified"
+        ],
+        "properties": {
+          "repo": {
+            "type": "string"
+          },
+          "pr_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "head_sha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "main_sha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "risk": {
+            "enum": [
+              "HIGH",
+              "MEDIUM",
+              "LOW",
+              "UNKNOWN"
+            ]
+          },
+          "evidence_class": {
+            "enum": [
+              "SOURCE_OBSERVED_PARTIAL_GATES",
+              "UNOBSERVED"
+            ]
+          },
+          "required_gates": {
+            "type": "object",
+            "required": [
+              "required_checks",
+              "branch_rules",
+              "separation",
+              "recovery",
+              "billing",
+              "owner_release"
+            ]
+          },
+          "next_action": {
+            "type": "object"
+          },
+          "source_ref": {
+            "type": "string"
+          },
+          "observed_at": {
+            "type": "string"
+          },
+          "release_disposition": {
+            "enum": [
+              "MERGED",
+              "CLOSED",
+              "HOLD",
+              "BLOCKED",
+              "UNOBSERVED",
+              "PROPOSED"
+            ]
+          },
+          "execution_provenance": {
+            "type": "string"
+          },
+          "merge_authorized": {
+            "const": false
+          },
+          "production_verified": {
+            "const": false
+          }
+        }
+      }
+    },
+    "queue_plan": {
+      "type": "array",
+      "maxItems": 8
+    },
+    "existing_s1_action_limit": {
+      "const": 3
+    },
+    "release_authority": {
+      "const": false
+    },
+    "source_authority": {
+      "const": false
+    },
+    "formal_approval": {
+      "const": false
+    },
+    "unattended_s1_closure_proven": {
+      "const": false
+    }
+  }
+}
