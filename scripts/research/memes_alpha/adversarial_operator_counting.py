@@ -136,19 +136,30 @@ def decode_privileged_surface(event: dict[str, Any]) -> dict[str, Any]:
 
 
 def infra_state(event: dict[str, Any]) -> str:
+    """Fail closed on contradictory infra evidence, especially Relay/solver routing.
+
+    The explicit flag and class labels are independent claims, not a priority list.
+    If any two known claims disagree, neither may establish operator lineage.
+    Unknown classifications remain unknown rather than negative or benign proof.
+    """
+    observations: set[str] = set()
     explicit = event.get("benign_infra_excluded")
     if explicit is True:
-        return "NON_BENIGN"
-    if explicit is False:
-        return "BENIGN_INFRA"
-    klass = event.get("lineage_class") or event.get("common_funder_class")
-    if isinstance(klass, str):
-        k = klass.strip().upper()
-        if k in BENIGN_CLASSES:
-            return "BENIGN_INFRA"
-        if k in NON_BENIGN_CLASSES:
-            return "NON_BENIGN"
-    return "UNKNOWN"
+        observations.add("NON_BENIGN")
+    elif explicit is False:
+        observations.add("BENIGN_INFRA")
+
+    for key in ("lineage_class", "common_funder_class"):
+        value = event.get(key)
+        if not isinstance(value, str):
+            continue
+        klass = value.strip().upper()
+        if klass in BENIGN_CLASSES:
+            observations.add("BENIGN_INFRA")
+        elif klass in NON_BENIGN_CLASSES:
+            observations.add("NON_BENIGN")
+
+    return next(iter(observations)) if len(observations) == 1 else "UNKNOWN"
 
 
 def classify_event(event: dict[str, Any]) -> dict[str, Any]:
