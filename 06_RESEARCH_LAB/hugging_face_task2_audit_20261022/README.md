@@ -1,4 +1,5 @@
 # Hugging Face × Framework Task 2, research and execution gateway
+- [Task 2 first-known R1 forecast and Round 3 cadence/budget source preflight (7 Nov 2026)](TASK2_R1_FIRST_KNOWN_AND_R3_CADENCE_OWNER_AUDIT_20261107.md), all historical admission limitations retained; source-only replay and eight new owner CI negative tests.
 
 ## Task 2, Research Parallel Lanes v1, on-demand second wave (7 November 2026)
 
