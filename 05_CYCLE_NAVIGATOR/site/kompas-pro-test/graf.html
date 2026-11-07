@@ -17,6 +17,19 @@ button,select{font:inherit}button{cursor:pointer}a{color:inherit}.shell{width:mi
 body.detail .intro{padding:37px 0 20px}body.detail .intro h1{font-size:clamp(33px,4vw,49px)}body.detail .instrument{margin-top:15px}body.detail .fw-canvas{height:min(65vh,560px)!important;min-height:380px}body.detail .navigate,body.detail .confirm{display:none}
 @media(max-width:740px){.shell{width:calc(100% - 26px)}.masthead{flex-wrap:wrap;padding:16px 0}.masthead nav{gap:16px}.intro{padding:35px 0 23px}.intro p{font-size:13px}.confirm{padding:13px;gap:8px 14px;font-size:10px}.instrument{padding:14px 11px}.head h2{font-size:24px}.pill{font-size:9px;padding:7px}.controls{margin:20px 0 12px}.seg{width:100%;justify-content:space-between}.seg button{font-size:11px;padding:0 8px;flex:1}.scenarios p{margin:0;text-align:left}.fw-canvas{height:300px!important;min-height:280px}.states{gap:7px}.states strong{font-size:12px}.states small{font-size:9px}.section{margin-top:31px}.section-header>span{display:none}.ranges{grid-template-columns:1fr;gap:9px}.range{padding:17px}.numbers{margin-top:11px}.numbers b{font-size:17px}.navigate{display:block;padding:20px}.navigate a{display:inline-block;margin-top:12px;white-space:normal}.data-view,.accept{padding:19px;margin-top:25px}body.detail .fw-canvas{height:385px!important}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* iPhone-compatible full-viewport graph mode, no separate chart implementation. */
+#fullscreen-btn{border:1px solid #d7e1eb;background:#fff;border-radius:8px;min-height:44px;padding:0 15px;font-size:12px;font-weight:700;color:#20578d}
+#fullscreen-close{display:none}
+#chart-wrap.fullscreen-mode{position:fixed;inset:0;z-index:10000;overflow-y:auto;overflow-x:hidden;background:#07172f;padding:58px 12px 12px;overscroll-behavior:contain}
+#chart-wrap.fullscreen-mode #fullscreen-close{display:block;position:fixed;z-index:10005;top:max(8px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));border:1px solid #516e92;color:#fff;background:#13395e;border-radius:7px;min-height:42px;padding:0 16px;font-weight:700;cursor:pointer}
+#chart-wrap.fullscreen-mode .fw-canvas{height:max(280px,calc(100dvh - 300px))!important}
+#chart-wrap.fullscreen-mode .frozen-week-chart{border-radius:0!important;box-shadow:none!important}
+@media(max-width:740px){
+ #fullscreen-btn{width:100%}
+ #chart-wrap.fullscreen-mode{padding:55px 4px 8px}
+ #chart-wrap.fullscreen-mode .fw-canvas{height:max(280px,calc(100dvh - 340px))!important}
+}
 </style>
 <script defer src="../vendor/lightweight-charts-5.2.0.js"></script><script defer src="../frozen-week-chart.js"></script></head>
 <body>
@@ -27,9 +40,9 @@ body.detail .intro{padding:37px 0 20px}body.detail .intro h1{font-size:clamp(33p
 <div class="confirm"><b>DESIGNAFSTEMNING</b><span>✓ Blå frosset prognose</span><span>✓ Grøn faktisk kurs</span><span>✓ 3-dages high/low</span><span>✓ Hele ugen til søndag</span><span>✓ Datakvalitet og fallback</span><span>✓ Uforandret ugentlig struktur</span></div>
 <section class="instrument" aria-label="Funktionel ugegraf"><div class="head"><div><span class="kicker">KOMPAS PRO / BTC</span><h2>Ugens prisgraf</h2><p id="week-label">Simuleret uge 45 · mandag til søndag</p></div><span class="pill" id="status">TEST · IKKE LIVE</span></div>
 <div class="controls"><div class="seg" role="group" aria-label="Grafvisning"><button type="button" data-view="forecast" aria-pressed="true">Prognose</button><button type="button" data-view="actual" aria-pressed="false">Faktisk</button><button type="button" data-view="history" aria-pressed="false">Historik</button><button type="button" data-view="data" aria-pressed="false">Testdata</button></div>
-<div class="seg" role="group" aria-label="Tidspunkt"><button type="button" data-stage="monday" aria-pressed="false">Mandag</button><button type="button" data-stage="wednesday" aria-pressed="true">Onsdag</button><button type="button" data-stage="future" aria-pressed="false">Uge 46</button></div></div>
+<div class="seg" role="group" aria-label="Tidspunkt"><button type="button" data-stage="monday" aria-pressed="false">Mandag</button><button type="button" data-stage="wednesday" aria-pressed="true">Onsdag</button><button type="button" data-stage="future" aria-pressed="false">Uge 46</button></div><button id="fullscreen-btn" type="button" aria-controls="chart-wrap" aria-pressed="false">Fuld skærm ⛶</button></div>
 <div class="scenarios"><label for="scenario">Testkilde</label><select id="scenario"><option value="valid">Normal simulering</option><option value="stale">Forældet observation</option><option value="gap">Hul i timeserien</option><option value="incomplete">7/7 prognose mangler</option><option value="quote">Forkert USD/USDT</option><option value="missing">Kilde helt væk</option></select><p id="context" aria-live="polite">Samme syv dagspunkter fastholdes, observationer er adskilt.</p></div>
-<div id="chart-wrap"><div class="chart-area" data-approved-design="B"><div id="chart" class="frozen-week-chart"></div></div><div id="fallback" class="fallback" hidden role="alert"></div></div>
+<div id="chart-wrap"><button id="fullscreen-close" type="button" aria-label="Luk fuldskærm">Luk ✕</button><div class="chart-area" data-approved-design="B"><div id="chart" class="frozen-week-chart"></div></div><div id="fallback" class="fallback" hidden role="alert"></div></div>
 <div class="states"><article><span>Frysestatus</span><strong id="freeze">DEMO 7/7</strong><small>Testdata, ikke hashbundet mandagsfrysning</small></article><article><span>Observeret</span><strong id="observed">AFVENTER</strong><small>Kun originale tidsstempler fra fixture</small></article><article><span>Seneste kilde / alder</span><strong id="age">IKKE LIVE</strong><small id="age-detail">Observeret tidspunkt er ikke frysningstidspunkt</small></article></div></section>
 <section class="section" aria-label="Prognoseintervaller"><div class="section-header"><div><span class="kicker">PRISINTERVALLER / LOW & HIGH</span><h2>Næste 3 dage</h2></div><span>BTC / USDT · simulerede værdier</span></div><div id="ranges" class="ranges"></div><div class="remaining"><strong>Dag 4–7 · torsdag til søndag</strong><span id="end-week">Ingen kilde</span></div></section>
 <section id="data-view" class="data-view" hidden><span class="kicker">TESTDATA / SAMME KONTRAKT</span><h2>Datapakken til den eksisterende graf</h2><p>JSON er en virkelig anvendt testfixture med korrekte feltnavne til <code>CNWeekChart.model</code>, men med opfundne priser. Ingen produktionskilde, API, score eller frysning manipuleres.</p><pre id="json" tabindex="0"></pre></section>
@@ -92,6 +105,19 @@ function render(){
 document.querySelectorAll("[data-view]").forEach(function(b){b.addEventListener("click",function(){state.view=b.dataset.view;if(state.view==="history"&&state.stage==="future")state.stage="wednesday";render();});});
 document.querySelectorAll("[data-stage]").forEach(function(b){b.addEventListener("click",function(){state.stage=b.dataset.stage;render();});});
 $("scenario").addEventListener("change",function(e){state.scenario=e.target.value;render();});
+
+function toggleFullscreen(force){
+ var target=$("chart-wrap"),on=typeof force==="boolean"?force:!target.classList.contains("fullscreen-mode");
+ target.classList.toggle("fullscreen-mode",on);
+ document.body.style.overflow=on?"hidden":"";
+ $("fullscreen-btn").setAttribute("aria-pressed",String(on));
+ $("fullscreen-btn").textContent=on?"Fuld skærm aktiv":"Fuld skærm ⛶";
+ render();
+ if(on){$("fullscreen-close").focus();}else{$("fullscreen-btn").focus();}
+}
+$("fullscreen-btn").addEventListener("click",function(){toggleFullscreen();});
+$("fullscreen-close").addEventListener("click",function(){toggleFullscreen(false);});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("chart-wrap").classList.contains("fullscreen-mode"))toggleFullscreen(false);});
 if(location.pathname.endsWith("/graf.html")){
  document.body.classList.add("detail");$("home-link").classList.remove("active");$("detail-link").classList.add("active");
  $("page-title").textContent="Én graf. Hele forklaringen.";
