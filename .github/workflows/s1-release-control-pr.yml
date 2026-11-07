@@ -24,6 +24,8 @@ jobs:
           node-version: '22'
       - name: Validate read-only browser boundaries
         run: node --test tools/s1-release-control/test-static.mjs
+      - name: Assert read-only versioned machine schemas
+        run: node --test tools/s1-release-control/test-contract-schema-v1.mjs
       - name: Validate eight research lanes contract without dispatch
         run: python3 scripts/research/validate_parallel_research_manifest_v1.py tools/s1-release-control/RESEARCH_PARALLEL_LANES_V1.json
   projection-adversarial:
