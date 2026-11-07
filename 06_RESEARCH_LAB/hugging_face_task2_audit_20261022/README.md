@@ -1,5 +1,11 @@
 # Hugging Face × Framework Task 2, research and execution gateway
 
+## Task 2, Research Parallel Lanes v1, on-demand second wave (7 November 2026)
+
+- [Eight-lane source-bound falsification, original PIT/72h coverage, 44 M1 comparisons, Shared Row balanced accuracy, CFGI clocks, Ironflow and alert-to-action denominators](TASK2_RPL8_FALSIFICATION_WAVE2_SOURCE_COUNTERFACTUALS_20261107.md).
+- Executable offline `scripts/research/task2_rpl8_source_replay_v1.py` and original native PR-gate research tests; no eight-AI-agent or new workflow claim. Original Task 2 #1596 remains the only scientific owner.
+
+
 ## Ironflow full 18-month follow-on, 7 November 2026
 
 **New, actual source replay** from [PR #1989](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1989), initially verified [run #42313211239](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42313211239): **72/72** exact pinned Parquet files, **374,343,275 bytes**, all four historical source families across **18 months**, **14,572,946** combined raw rows. Matched BTC/ETH/HYPE 37,758 completed hours and 1,545 day anchors; expanding monthly chronological experiment trained on six prior months and evaluated **12 out-of-time months**.

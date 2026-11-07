@@ -168,5 +168,14 @@ class ArchiveFirstTask2Tests(unittest.TestCase):
         self.assertEqual(e2["target"], "ETHBTC_7D_FORWARD_RETURN_POSITIVE_NOT_BROAD_ALTSEASON")
 
 
+def load_tests(loader, standard_tests, pattern):
+    # The original owner has a native read-only PR gate. Reuse it to execute
+    # the separate eight-lane source/negative-control fixture suite without
+    # introducing another workflow, runner, scheduler, or owner.
+    from tests.research.test_task2_rpl8_source_replay_v1 import Task2RPL8ReplayTests
+    standard_tests.addTests(loader.loadTestsFromTestCase(Task2RPL8ReplayTests))
+    return standard_tests
+
+
 if __name__ == "__main__":
     unittest.main()
