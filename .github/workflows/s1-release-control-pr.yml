@@ -172,7 +172,24 @@ jobs:
           const packet={contract:'S1_STANDALONE_STATIC_BUNDLE_v1',source_repo:'Donh91/Investering-Framework-Archive-v1',
             source_head_sha:sourceHead,content_sha256:bytes,read_only:true,agent_authority:false,
             production_deployed:false,private_data_included:false};
-          writeFileSync('/tmp/s1-site/release-identity.json',JSON.stringify(packet,null,2)+'\\n');
+          writeFileSync('/tmp/s1-site/release-identity.json',JSON.stringify(packet,null,2)+'\n');
+          NODE
+          # Reject malformed or forged manifest before artifact checksum/publishing.
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          const sourceHead=process.env.GITHUB_HEAD_REF_SHA;
+          const v=JSON.parse(readFileSync('/tmp/s1-site/release-identity.json','utf8'));
+          if(v.contract!=='S1_STANDALONE_STATIC_BUNDLE_v1'||
+             v.source_head_sha!==sourceHead||v.source_repo!=='Donh91/Investering-Framework-Archive-v1'||
+             v.read_only!==true||v.agent_authority!==false||
+             v.production_deployed!==false||v.private_data_included!==false)
+             throw Error('STANDALONE_RELEASE_MANIFEST_INTEGRITY_INVALID');
+          for(const filename of ['index.html','release-core.js']){
+            const check=createHash('sha256').update(readFileSync('/tmp/s1-site/'+filename)).digest('hex');
+            if(v.content_sha256?.[filename]!==check)throw Error('SITE_FILE_SHA256_MISMATCH_'+filename);
+          }
+          console.log('S1_SITE_MANIFEST_JSON_AND_CONTENT_SHA_VERIFIED',sourceHead);
           NODE
           (cd /tmp/s1-site && sha256sum index.html release-core.js release-identity.json > SHA256SUMS)
           test -f /tmp/s1-site/SHA256SUMS
