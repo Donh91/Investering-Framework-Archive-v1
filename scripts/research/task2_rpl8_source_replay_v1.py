@@ -174,7 +174,7 @@ def build(root: Path = ROOT) -> dict:
                 "frozen_later_7d":{key:measures(new[key]) for key in ("C02_BREADTH","C07_SIMPLE_3","B0_ALWAYS_POSITIVE")},
                 "independent_28d_blocks":later["fixed_28d_block_n"],
                 "newly_matured":later["matured_7d_rows"]-earlier["matured_7d_rows"],
-                "candidate_accuracy_change_not_candidate_signal_rewrite":True,
+                "no_upward_delta_in_C02_correct_total":True,
                 "state":"SOURCE_MATCHED_DESCRIPTIVE_NOT_INDEPENDENT_EDGE"
             },
             "L05_breadth_ETF":{
