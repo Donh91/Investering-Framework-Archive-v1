@@ -76,7 +76,7 @@ async function readRepository(fetcher,repo,limit){
   return {repo,main_sha:main2===main?main:null,observed:issues.length===0,source_issues:issues,
     prs:detail.map(x=>({pr:x.pr,errors:x.errors}))};
 }
-export async function buildProjection({fetcher=fetch, clock=()=>new Date().toISOString(), repositories=PUBLIC, maxPerRepo=8}={}){
+export async function buildProjection({fetcher=fetch, clock=()=>new Date().toISOString(), repositories=PUBLIC, maxPerRepo=3}={}){
   if(!Array.isArray(repositories)||repositories.some(r=>!safeUrl(r)))throw Error('REPOSITORY_NOT_IN_PUBLIC_ALLOWLIST');
   if(!Number.isInteger(maxPerRepo)||maxPerRepo<1||maxPerRepo>15)throw Error('BOUNDED_LIMIT_REQUIRED');
   const observedAt=clock();
