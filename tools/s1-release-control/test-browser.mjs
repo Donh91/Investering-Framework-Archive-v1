@@ -16,7 +16,8 @@ assert.ok(existsSync(join(dist,'s1-release-control/index.html')),'S1_BUNDLE_NOT_
 const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.json':'application/json','.css':'text/css'};
 const server=createServer((req,res)=>{
   let pathname;try{pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname)}catch{res.writeHead(400).end();return}
-  const full=resolve(dist,'.'+(pathname==='/'?'/index.html':pathname));
+  const targetPath=pathname.endsWith('/')?pathname+'index.html':pathname;
+  const full=resolve(dist,'.'+targetPath);
   if(!full.startsWith(dist+sep)){res.writeHead(403).end();return}
   try{const bytes=readFileSync(full);res.setHeader('Content-Type',mime[extname(full)]||'text/plain');res.setHeader('Cache-Control','no-store');res.writeHead(200).end(bytes)}
   catch(error){if(!res.headersSent){res.writeHead(404).end('missing')}else{res.end();console.error('S1_STATIC_SERVER_POST_HEADER_ERROR',String(error.message||error))}}
@@ -71,6 +72,10 @@ try{
     for(let n=0;n<75;n++){
       await delay(100);
       if(await evaluate('document.readyState==="complete" && !!document.getElementById("m-open") && document.getElementById("m-open").textContent!=="–"')){ready=true;break}
+    }
+    if(!ready){
+      const debug=await evaluate('({url:location.href,title:document.title,ready:document.readyState,text:document.body?.textContent?.slice(0,350),notice:document.getElementById("sync-notice")?.textContent,open:document.getElementById("m-open")?.textContent})');
+      console.error('S1_BROWSER_STARTUP_DIAGNOSTIC',JSON.stringify({width,debug,exceptions}));
     }
     assert.ok(ready,'S1_BROWSER_NOT_READY '+width);
     const report=await evaluate(`(()=>{
