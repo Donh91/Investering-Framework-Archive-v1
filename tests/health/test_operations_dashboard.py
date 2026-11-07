@@ -300,4 +300,7 @@ class OperationsDashboardTests(unittest.TestCase):
                 '09_SOURCE_QA/incidents/resolutions/invalid.json'
             ])
 
+# Include the adversarial coverage cases in the EXISTING Operations Dashboard PR gate.
+from tests.health.test_source_coverage_matrix import SourceCoverageObserverTests
+
 if __name__=='__main__':unittest.main()

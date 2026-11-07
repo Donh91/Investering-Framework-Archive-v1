@@ -200,6 +200,138 @@ def upstream_health_system(value,error,reference):
     }
 
 
+
+# Advisory source-coverage readback. No producer, market, forecast or release authority.
+# Each lane retains its own observed source clock. A successful scheduled workflow
+# is NOT a successful source, verified event, consumer ACK or trading edge.
+SOURCE_COVERAGE_LANES = (
+    ('hourly', 'hourly-sequence-capture.yml', 'HOURLY', '03_DAILY_CAPTURE_LOGS/hourly/LATEST.json',
+     'HOURLY_SEQUENCE_LATEST_POINTER_v2_2', ('window_end_utc',), 3),
+    ('daily_live_anchor', 'daily-raw-owner-capture.yml', 'SIX_PER_LOCAL_DAY', '03_DAILY_CAPTURE_LOGS/captures/LATEST.json',
+     'DAILY_LIVE_ANCHOR_LATEST_POINTER_v1', ('captured_at_utc',), 10),
+    ('settled_etf', 'daily-settled-etf-calibration.yml', 'SETTLED_SESSION_DAILY', '03_DAILY_CAPTURE_LOGS/etf/LATEST.json',
+     'DAILY_SETTLED_ETF_LATEST_POINTER_v2', ('verification_completed_at_utc', 'retrieved_at_utc'), 72),
+    ('stablecoin_liquidity', 'daily-stablecoin-liquidity.yml', 'DAILY', '03_DAILY_CAPTURE_LOGS/stablecoin_liquidity/LATEST.json',
+     'DEFILLAMA_STABLECOIN_LIQUIDITY_OWNER_v1_1', ('retrieved_at_utc',), 48),
+    ('market_breadth', 'rich-breadth-checkpoint.yml', 'CHECKPOINT', '03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json',
+     'RICH_BREADTH_CHECKPOINT_v1', ('retrieved_at_utc',), 48),
+    ('btc_dominance', 'research-owner-btcd-daily.yml', 'DAILY', '03_DAILY_CAPTURE_LOGS/btc_d_cmc/latest/BTC_D_CMC_RAW_SOURCE.json',
+     None, ('status.timestamp',), 48),
+    ('news_intelligence', 'situation-room-daily-static.yml', 'DAILY_DISCOVERY', '03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/LATEST.json',
+     'SITUATION_ROOM_DAILY_OWNER_LATEST_POINTER_v1', (), 48),
+    ('entry_signals', 'entry-signal-ledger.yml', 'EVENT_AND_HOURLY_FALLBACK', '04_MARKET_LEARNING/entry_signals/LATEST.json',
+     'ENTRY_SIGNAL_LATEST_v1', ('generated_at_utc',), 4),
+    ('edge_research', None, 'PROSPECTIVE_EVENT_DRIVEN', 'research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json',
+     'EXPERIMENT_LIFECYCLE_REGISTRY_v1', ('generated_at_utc',), 72),
+)
+
+
+def source_coverage_snapshot(root, reference, automation):
+    """Non-authoritative source/cron/consumer separation, read-only and fail-closed."""
+    observed_workflows = {
+        x.get('workflow'): x for x in (automation or {}).get('workflows', [])
+        if isinstance(x, dict) and isinstance(x.get('workflow'), str)
+    }
+    rows = []
+    for lane, workflow, cadence, rel, contract, clock_keys, max_age_hours in SOURCE_COVERAGE_LANES:
+        row, error = read_json(root / rel)
+        clock = None
+        if row is not None:
+            for key in clock_keys:
+                v = row
+                for part in key.split('.'):
+                    v = v.get(part) if isinstance(v, dict) else None
+                clock = parse_time(v)
+                if clock is not None:
+                    break
+            if lane == 'news_intelligence':
+                # News pointer has a separate dated discovery row. A 6/6 fetch
+                # is NEVER evidence of 6/6 event recall/verified news.
+                key = row.get('path')
+                prefix = '03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/'
+                if isinstance(key, str) and key.startswith(prefix) and '..' not in key.split('/'):
+                    source, source_error = read_json(root / key)
+                    clock = first_time(source, ('detection_time_utc',)) if source else None
+                    if source_error or not source or source.get('run_id') != row.get('run_id'):
+                        error = 'NEWS_DATED_SOURCE_OR_BINDING_INVALID'
+                    elif (source.get('run_status') != 'PASS' or
+                          source.get('daily_result') not in {'PASS', 'READY', 'NO_VERIFIED_EVENTS_COMPLETE_COVERAGE'}):
+                        error = 'NEWS_DISCOVERY_NOT_VERIFIED'
+                else:
+                    error = 'NEWS_OWNER_DATED_PATH_INVALID'
+        # No inferred PASS from transport or success on the schedule.
+        if error or row is None:
+            source_state = 'MISSING_OR_DEGRADED'
+            reason = error or 'MISSING'
+        elif contract is not None and row.get('contract') != contract:
+            source_state, reason = 'MISSING_OR_DEGRADED', 'OWNER_CONTRACT_MISMATCH'
+        elif lane == 'hourly' and (
+            row.get('status') != 'COMPLETE' or
+            type(row.get('requested_hours')) is not int or
+            any(type(row.get(k)) is not int or row[k] < row['requested_hours']
+                for k in ('spot_complete_hours', 'spot_flow_complete_hours',
+                          'long_short_complete_hours', 'derivatives_oi_complete_hours'))
+        ):
+            source_state, reason = 'MISSING_OR_DEGRADED', 'HOURLY_COMPLETENESS_UNPROVEN'
+        elif lane == 'daily_live_anchor' and (
+            row.get('status') != 'COMPLETE' or
+            row.get('anchor_core_passed') != row.get('anchor_core_planned') or
+            not row.get('anchor_core_planned')
+        ):
+            source_state, reason = 'MISSING_OR_DEGRADED', 'DAILY_ANCHOR_INCOMPLETE'
+        elif lane == 'settled_etf' and row.get('status') != 'PASS':
+            source_state, reason = 'MISSING_OR_DEGRADED', 'SETTLED_ETF_NOT_PASS'
+        elif lane == 'btc_dominance' and (
+            not isinstance(row.get('status'), dict) or
+            str(row['status'].get('error_code')) != '0'
+        ):
+            source_state, reason = 'MISSING_OR_DEGRADED', 'BTC_D_OWNER_ERROR'
+        elif lane == 'entry_signals' and (
+            not isinstance(row.get('authority'), dict) or
+            row['authority'].get('portfolio_execution') is not False
+        ):
+            source_state, reason = 'MISSING_OR_DEGRADED', 'ENTRY_AUTHORITY_INVALID'
+        else:
+            source_state, reason = 'OBSERVED_SOURCE', 'SOURCE_ROW_PRESENT'
+        if source_state == 'OBSERVED_SOURCE' and clock is None:
+            source_state, reason = 'UNKNOWN_TIME', 'SOURCE_CLOCK_UNAVAILABLE'
+        age_hours = None
+        if clock is not None:
+            age_hours = round((reference - clock).total_seconds() / 3600, 3)
+            if age_hours < -0.0834:
+                source_state, reason = 'UNKNOWN_TIME', 'SOURCE_CLOCK_IN_FUTURE'
+            elif source_state == 'OBSERVED_SOURCE' and age_hours > max_age_hours:
+                source_state, reason = 'DELAYED_SOURCE', 'BEYOND_OBSERVATIONAL_AGE_WINDOW'
+        workflow_row = observed_workflows.get(workflow) if workflow else None
+        scheduled = (workflow_row or {}).get('live', {}).get('latest_scheduled_run')
+        if not isinstance(scheduled, dict):
+            schedule_state = 'NATIVE_SCHEDULE_UNVERIFIED'
+        elif scheduled.get('event') != 'schedule':
+            schedule_state = 'NATIVE_SCHEDULE_UNVERIFIED'
+        elif scheduled.get('conclusion') == 'success':
+            schedule_state = 'LAST_SCHEDULE_SUCCESS_NOT_COVERAGE'
+        else:
+            schedule_state = 'LAST_SCHEDULE_NOT_SUCCESS'
+        rows.append({
+            'lane': lane, 'cadence': cadence, 'workflow': workflow,
+            'source_path': rel, 'source_state': source_state, 'reason': reason,
+            'source_age_hours': age_hours,
+            'source_observation_utc': clock.isoformat().replace('+00:00', 'Z') if clock else None,
+            'last_native_schedule_state': schedule_state,
+            'consumer_delivery': 'NOT_ATTESTED_BY_THIS_SNAPSHOT',
+            'source_first_known': 'NOT_ATTESTED_BY_THIS_SNAPSHOT',
+            'science_or_edge_admission': 'NOT_ATTESTED_BY_THIS_SNAPSHOT',
+        })
+    return {
+        'contract': 'OPERATIONS_SOURCE_COVERAGE_OBSERVER_v1',
+        'authority': 'READ_ONLY_ADVISORY_NO_MODEL_OR_RELEASE_AUTHORITY',
+        'generated_at_utc': reference.isoformat().replace('+00:00', 'Z'),
+        'source_count': len(rows),
+        'rows': rows,
+        'semantics': 'A fetched source, complete rolling window, scheduled workflow SUCCESS, verified event, consumer ACK and scientific admission are separate claims. UNKNOWN is not zero.',
+    }
+
+
 def build_dashboard(repo_root,reference=None):
     reference=reference or datetime.now(UTC); handoff,handoff_error=read_json(repo_root/'LATEST_HANDOFF.json'); automation,automation_error=read_json(repo_root/'research/architecture_health/LATEST_AUTOMATION_HEALTH.json'); architecture,architecture_error=read_json(repo_root/'research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json'); pointers=handoff.get('pointers',{}) if handoff else {}
     capture_pointer=pointer_entry(repo_root,pointers.get('latest_capture')); director_pointer=pointer_entry(repo_root,pointers.get('latest_director_output')); weekly_pointer=pointer_entry(repo_root,pointers.get('latest_weekly_output')); capture=pointer_object(repo_root,capture_pointer); director=pointer_object(repo_root,director_pointer); weekly=pointer_object(repo_root,weekly_pointer); director_receipt,director_receipt_path=paired_director_receipt(repo_root,director_pointer); weekly_target,weekly_target_path,weekly_target_hash_status=verified_weekly_target(repo_root,weekly)
@@ -226,12 +358,19 @@ def build_dashboard(repo_root,reference=None):
     for system in systems.values(): overall=combine_status(overall,system['status'])
     dispatch=read_json(repo_root/'research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json')[0] or {}
     dashboard={'contract':'OPERATIONS_DASHBOARD_v1_2','authority':'OPERATIONAL_OBSERVABILITY_ONLY','generated_at_utc':reference.isoformat().replace('+00:00','Z'),'overall_status':overall,'source_status':{'latest_handoff':handoff_error or 'PASS','automation_health':automation_error or 'PASS','architecture_health':architecture_error or 'PASS'},'systems':systems,'agent_activity':{'openai_api':collect_api_usage(repo_root,reference),'pending_forecast_candidates':len(handoff.get('pending_forecast_candidates',[])) if handoff else 0,'experiments':{'candidate_count':(experiment or {}).get('candidate_count',0),'state_counts':(experiment or {}).get('state_counts',{}),'dispatch_request_count':dispatch.get('request_count',0)},'remediation':{'codex_ready':((remediation or {}).get('summary') or {}).get('codex_ready',0),'needs_more_evidence':((remediation or {}).get('summary') or {}).get('needs_more_evidence',0),'automatic_code_write':(remediation or {}).get('automatic_code_write',False),'automatic_merge':(remediation or {}).get('automatic_merge',False)}},'incidents':{'open_count':len(handoff.get('open_incidents',[])) if handoff else 0,'paths':handoff.get('open_incidents',[]) if handoff else [],'truncated':handoff.get('open_incidents_truncated') if handoff else None,'incident_file_count':handoff.get('incident_file_count') if handoff else None,'resolved_count':handoff.get('resolved_incident_count') if handoff else None,'invalid_resolution_receipts':handoff.get('invalid_incident_resolution_receipts',[]) if handoff else []},'required_actions':actions}
+    dashboard['source_coverage']=source_coverage_snapshot(repo_root,reference,automation)
     canonical=json.dumps(dashboard,sort_keys=True,separators=(',',':')).encode(); dashboard['dashboard_sha256']=hashlib.sha256(canonical).hexdigest(); return dashboard
 
 
 def render_markdown(data):
     lines=['# Operations Dashboard','',f"Overall: **{data['overall_status']}**",f"Generated: `{data['generated_at_utc']}`",'','## Systems','','| System | Status | Detail | Age hours |','|---|---:|---|---:|']
     for name,system in data['systems'].items(): lines.append(f"| `{name}` | **{system['status']}** | {system.get('reason') or system.get('semantic_status') or '-'} | {system.get('age_hours') if system.get('age_hours') is not None else '-'} |")
+    coverage=data.get('source_coverage') or {}
+    if coverage.get('rows'):
+        lines+=['','## Source coverage (advisory, not producer/consumer acceptance)','','| Lane | Cadence | Source state | Schedule observation | Source age (h) | Consumer |','|---|---|---|---|---:|---|']
+        for item in coverage['rows']:
+            lines.append(f"| {item['lane']} | {item['cadence']} | {item['source_state']} ({item['reason']}) | {item['last_native_schedule_state']} | {item['source_age_hours'] if item['source_age_hours'] is not None else '-'} | UNKNOWN |")
+        lines+=['','A successful schedule does not prove a complete source, verified news, point-in-time first-known, consumer readback or financial edge.']
     usage=data['agent_activity']['openai_api']; exp=data['agent_activity']['experiments']; rem=data['agent_activity']['remediation']; cost_label=(f"${usage['cost_usd']:.6f} known subtotal, {usage.get('unknown_cost_receipt_count',0)} unknown-cost receipts" if usage.get('unknown_cost_receipt_count') else f"${usage['cost_usd']:.6f} from receipts"); lines+=['','## AI and learning activity','',f"- OpenAI receipts this month: **{usage['receipt_count']}**",f"- OpenAI estimated cost this month: **{cost_label}**",f"- Pending forecast candidates: **{data['agent_activity']['pending_forecast_candidates']}**",f"- Experiment candidates: **{exp['candidate_count']}**",f"- Experiment dispatch requests: **{exp['dispatch_request_count']}**",f"- Codex-ready remediation tasks: **{rem['codex_ready']}**",f"- Needs-more-evidence items: **{rem['needs_more_evidence']}**",'','## Incidents','',f"Open incident references: **{data['incidents']['open_count']}**"]
     if usage.get('spend_by_task'):
         lines+=['','### API spend by task (receipt estimates only)','',
