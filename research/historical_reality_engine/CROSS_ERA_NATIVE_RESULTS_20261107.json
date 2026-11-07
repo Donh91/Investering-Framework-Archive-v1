@@ -1,0 +1,249 @@
+{
+  "contract": "HRE_CROSS_ERA_NATIVE_RESULTS_V1",
+  "state": "ACTUAL_GITHUB_JOBS_AND_MAIN_MERGE_VERIFIED",
+  "date_utc": "2026-11-07",
+  "original_owner_issue": "Archive#1596",
+  "source": "Binance Public SPOT 1h BTCUSDT/ETHUSDT monthly ZIP verified against upstream .CHECKSUM during native Actions",
+  "historical_source_class": "POSTHOC_PRICE_TRUTH_TAPE_NOT_ORIGINAL_PROVIDER_FIRST_KNOWN",
+  "quote_unit": "USDT",
+  "time_integrity": "Nominal completed UTC hour; source last-trade timestamp is NOT candle availability; missing hourly data preserves abstentions",
+  "replay_rules": "Same unchanged fixed 72h -8% downside label and 24h price-only fixed baseline and candidate as R1 prior experiment; source-era hindsight acknowledged",
+  "native_run_id": 42391907367,
+  "native_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42391907367",
+  "source_pr": 2012,
+  "merged_main_sha": "aea48ec8b9c3f07fde3b04cc60e0759ffef10e88",
+  "exact_head_sha": "6bdecfbdaec8eb34d7dd6531c629defbe9f775a4",
+  "observed_relevant_workflows": "5/5 SUCCESS",
+  "native_jobs": [
+    {
+      "id": 128461050873,
+      "name": "hre-extended-2022-terra-ftx",
+      "status": "SUCCESS",
+      "artifact_id": 13581583044,
+      "artifact_zip_sha256": "11acf7d455804812860a3c3583ff17752ba3e5be84c7aa54f63be11d99835448"
+    },
+    {
+      "id": 128461051004,
+      "name": "hre-extended-2023-2024-2026",
+      "status": "SUCCESS",
+      "artifact_id": 13581123842,
+      "artifact_zip_sha256": "d727ab80af695f62cf985f61ef8f77a909713fdedcb106bd3911540ae4085667"
+    }
+  ],
+  "tested_source_files_per_era": 6,
+  "total_sha256_verified_original_files_fetched_in_native_job_receipts": 30,
+  "unit_tests_at_run": "18/18 PASS",
+  "episodic_results": [
+    {
+      "episode_id": "terra_2022",
+      "utc_daily_cutoffs_per_asset": 85,
+      "BTCUSDT": {
+        "price_baseline": {
+          "tp": 5,
+          "fp": 7,
+          "fn": 15,
+          "tn": 58
+        },
+        "price_candidate": {
+          "tp": 6,
+          "fp": 8,
+          "fn": 14,
+          "tn": 57
+        }
+      },
+      "ETHUSDT": {
+        "price_baseline": {
+          "tp": 8,
+          "fp": 10,
+          "fn": 23,
+          "tn": 44
+        },
+        "price_candidate": {
+          "tp": 10,
+          "fp": 13,
+          "fn": 21,
+          "tn": 41
+        }
+      },
+      "source_zip_per_episode": 6,
+      "first_known_of_vendor_archive_in_original_era": "UNKNOWN",
+      "scientific_claim": "RETROSPECTIVE_DESCRIPTIVE_WITH_72H_OVERLAPPING_LABELS_NOT_ORIGINAL_KOMPAS"
+    },
+    {
+      "episode_id": "ftx_2022",
+      "utc_daily_cutoffs_per_asset": 86,
+      "BTCUSDT": {
+        "price_baseline": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 3,
+          "tn": 81
+        },
+        "price_candidate": {
+          "tp": 1,
+          "fp": 4,
+          "fn": 3,
+          "tn": 78
+        }
+      },
+      "ETHUSDT": {
+        "price_baseline": {
+          "tp": 1,
+          "fp": 3,
+          "fn": 10,
+          "tn": 72
+        },
+        "price_candidate": {
+          "tp": 2,
+          "fp": 6,
+          "fn": 9,
+          "tn": 69
+        }
+      },
+      "source_zip_per_episode": 6,
+      "first_known_of_vendor_archive_in_original_era": "UNKNOWN",
+      "scientific_claim": "RETROSPECTIVE_DESCRIPTIVE_WITH_72H_OVERLAPPING_LABELS_NOT_ORIGINAL_KOMPAS"
+    },
+    {
+      "episode_id": "usdc_2023",
+      "utc_daily_cutoffs_per_asset": 77,
+      "BTCUSDT": {
+        "price_baseline": {
+          "tp": 0,
+          "fp": 3,
+          "fn": 4,
+          "tn": 70
+        },
+        "price_candidate": {
+          "tp": 0,
+          "fp": 4,
+          "fn": 4,
+          "tn": 69
+        }
+      },
+      "ETHUSDT": {
+        "price_baseline": {
+          "tp": 0,
+          "fp": 3,
+          "fn": 7,
+          "tn": 67
+        },
+        "price_candidate": {
+          "tp": 0,
+          "fp": 4,
+          "fn": 7,
+          "tn": 66
+        }
+      },
+      "source_zip_per_episode": 6,
+      "first_known_of_vendor_archive_in_original_era": "UNKNOWN",
+      "scientific_claim": "RETROSPECTIVE_DESCRIPTIVE_WITH_72H_OVERLAPPING_LABELS_NOT_ORIGINAL_KOMPAS"
+    },
+    {
+      "episode_id": "aug_2024",
+      "utc_daily_cutoffs_per_asset": 86,
+      "BTCUSDT": {
+        "price_baseline": {
+          "tp": 1,
+          "fp": 3,
+          "fn": 7,
+          "tn": 75
+        },
+        "price_candidate": {
+          "tp": 2,
+          "fp": 5,
+          "fn": 6,
+          "tn": 73
+        }
+      },
+      "ETHUSDT": {
+        "price_baseline": {
+          "tp": 3,
+          "fp": 3,
+          "fn": 13,
+          "tn": 67
+        },
+        "price_candidate": {
+          "tp": 4,
+          "fp": 8,
+          "fn": 12,
+          "tn": 62
+        }
+      },
+      "source_zip_per_episode": 6,
+      "first_known_of_vendor_archive_in_original_era": "UNKNOWN",
+      "scientific_claim": "RETROSPECTIVE_DESCRIPTIVE_WITH_72H_OVERLAPPING_LABELS_NOT_ORIGINAL_KOMPAS"
+    },
+    {
+      "episode_id": "feb_2026",
+      "utc_daily_cutoffs_per_asset": 84,
+      "BTCUSDT": {
+        "price_baseline": {
+          "tp": 1,
+          "fp": 2,
+          "fn": 9,
+          "tn": 72
+        },
+        "price_candidate": {
+          "tp": 2,
+          "fp": 4,
+          "fn": 8,
+          "tn": 70
+        }
+      },
+      "ETHUSDT": {
+        "price_baseline": {
+          "tp": 3,
+          "fp": 5,
+          "fn": 20,
+          "tn": 56
+        },
+        "price_candidate": {
+          "tp": 6,
+          "fp": 8,
+          "fn": 17,
+          "tn": 53
+        }
+      },
+      "source_zip_per_episode": 6,
+      "first_known_of_vendor_archive_in_original_era": "UNKNOWN",
+      "scientific_claim": "RETROSPECTIVE_DESCRIPTIVE_WITH_72H_OVERLAPPING_LABELS_NOT_ORIGINAL_KOMPAS"
+    }
+  ],
+  "scientific_disposition": "PRICE_ONLY_CONTROL_LOWER_TAIL_SENSITIVITY_LOW; NO_INCREMENTAL_KOMPAS_EDGE_ADMITTED; NO_RULE_PROMOTION",
+  "limitations": [
+    "Five retrospectively selected event families; no independent causal crosscycle model test",
+    "Daily 72h target labels overlap heavily and event family N remains at most five, not hundreds",
+    "Simple price thresholds are baselines and candidates, not actual 2022-2026 Kompas",
+    "Current ZIP checksum cannot prove original first-known availability when market event happened",
+    "No altseason breadth/universe, macro vintage, news chronology, ETF, derivatives or liquidation features yet admissible",
+    "No transaction-cost / fill analysis or independent forward holdout",
+    "No new paid Sol API or Grok independent report, nor unattended S1 completion"
+  ],
+  "actual_next_owner_work": [
+    {
+      "id": "HR-003",
+      "owner": "Archive#1553",
+      "next": "Evaluate source-legal 2022 Terra/FTX pre-event fragility against matched false alarms and current fixed price-only baseline"
+    },
+    {
+      "id": "HR-005",
+      "owner": "Archive#1596",
+      "next": "Admit period-valid March2023 stablecoin vintage and news/event first-seen, compare with matched no-depeg controls"
+    },
+    {
+      "id": "HR-006",
+      "owner": "Archive#1516",
+      "next": "August2024 price-to-CN response and source-legal ETF era vs pre-2024; weekly 7-day bands and sharpness"
+    },
+    {
+      "id": "HR-014",
+      "owner": "Archive#1156",
+      "next": "Observe authentic natural S1 run consuming HRE owner work or document precise original blocker"
+    }
+  ],
+  "durable_raw_data": "GITHUB_ACTIONS_30_DAY_ARTIFACTS; T3 NOT_VERIFIED",
+  "paid_sol_status": "NO_POST",
+  "grok_status": "NOT_PROVEN_CONSUMED",
+  "s1_natural_status": "UNPROVEN"
+}
