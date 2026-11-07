@@ -81,7 +81,7 @@ test("design is isolated to separate QA directory, original Github renderer is t
  assert.match(html,/data-concept-choice="nordic"/);
  assert.match(html,/data-concept-choice="atelier"/);
  assert.match(html,/data-concept-choice="signal"/);
- assert.match(html,/full-week-fixture/);
+ assert.match(app,/full-week-fixture/);
  assert.match(app,/CNWeekChart\.mount/);
  assert.doesNotMatch(app,/createChart\(/);
  assert.doesNotMatch(html,/appdeploy/);
