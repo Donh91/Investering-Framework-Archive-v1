@@ -1,0 +1,64 @@
+# TEMPLATE ONLY, intentionally outside .github/workflows in the Archive.
+# Install ONLY in the separate authorized public S1 site repo after repo creation
+# and original source/recovery/release qualification.
+name: S1 Release Control · Standalone GitHub Pages
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s1-standalone-pages
+  cancel-in-progress: false
+
+jobs:
+  verify-bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify immutable release package
+        run: |
+          cd public
+          sha256sum -c SHA256SUMS
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          const id=JSON.parse(readFileSync('release-identity.json','utf8'));
+          if(id.contract!=='S1_STANDALONE_STATIC_BUNDLE_v1'||!id.read_only||id.agent_authority!==false)
+            throw Error('INVALID_STANDALONE_RELEASE_IDENTITY');
+          if(!/^[a-f0-9]{40}$/i.test(id.source_head_sha||''))throw Error('MISSING_EXACT_SOURCE_SHA');
+          for(const file of ['index.html','release-core.js']){
+            const hash=createHash('sha256').update(readFileSync(file)).digest('hex');
+            if(hash!==id.content_sha256?.[file])throw Error('SOURCE_BYTES_DO_NOT_MATCH:'+file);
+          }
+          if(id.production_deployed!==false)throw Error('PREDEPLOY_MUST_NOT_PRETEND_RELEASE');
+          NODE
+      - name: Upload isolated S1 public site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public/
+
+  deploy:
+    needs: verify-bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Publish independent S1 site
+        id: deployment
+        uses: actions/deploy-pages@v4
