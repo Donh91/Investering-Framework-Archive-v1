@@ -52,7 +52,7 @@ test('closure is attributable only to native state, never scheduled S1',()=>{
   assert.equal(row.production_verified,false);
   assert.equal(row.merge_authorized,false);
 });
-function mkFetch({main=SHA_B,afterMain=SHA_B,runHead=SHA_A,denyFiles=false,denyBranch=false,fileCount=1}={}){
+function mkFetch({main=SHA_B,afterMain=SHA_B,runHead=SHA_A,denyFiles=false,denyReviews=false,denyBranch=false,fileCount=1,extraListing=false}={}){
   let branchCalls=0;
   const sample={number:1996,title:'S1 Release Control',state:'open',draft:false,user:{login:'Donh91'},head:{sha:SHA_A},base:{sha:SHA_C},changed_files:fileCount,labels:[]};
   return async (url,opts)=>{
@@ -60,10 +60,10 @@ function mkFetch({main=SHA_B,afterMain=SHA_B,runHead=SHA_A,denyFiles=false,denyB
     assert.equal(opts.headers.Authorization,undefined);
     let value,status=200;
     if(url===root+'/branches/main'){branchCalls++;if(denyBranch)status=403;value={commit:{sha:branchCalls===1?main:afterMain}};}
-    else if(url===root+'/pulls?state=open&sort=updated&direction=desc&per_page=100')value=[sample];
+    else if(url===root+'/pulls?state=open&sort=updated&direction=desc&per_page=100')value=extraListing?[sample,{...sample,number:1997}]:[sample];
     else if(url===root+'/pulls/1996')value=sample;
     else if(url===root+'/pulls/1996/files?per_page=100'){value=[{filename:'tools/s1-release-control/index.html'}];if(denyFiles)status=403;}
-    else if(url===root+'/pulls/1996/reviews?per_page=100')value=[];
+    else if(url===root+'/pulls/1996/reviews?per_page=100'){value=[];if(denyReviews)status=403;}
     else if(url===root+'/actions/runs?head_sha='+SHA_A+'&per_page=100')value={workflow_runs:[{id:123,head_sha:runHead,conclusion:'success',status:'completed',event:'pull_request',pull_requests:[{number:1996}],name:'Static'}]};
     else throw Error('UNEXPECTED_URL: '+url);
     return {ok:status===200,status,json:async()=>value};
@@ -146,4 +146,22 @@ test('scheduled or unrelated PR run is never counted as exact-PR CI',()=>{
   const unrelated=pr({runs:[{...base.runs[0],pr_numbers:[100]}]});
   assert.equal(core.ci(scheduled).status,'UNOBSERVED');
   assert.equal(core.ci(unrelated).status,'UNOBSERVED');
+});
+
+test('sampled PR universe is visibly partial without fabricating individual PR gates',async()=>{
+  const report=await buildProjection({fetcher:mkFetch({extraListing:true}),repositories:[owner],maxPerRepo:1});
+  assert.equal(report.partial,true);
+  assert.equal(report.source_repositories[0].observed,true);
+  assert.equal(report.source_repositories[0].discovery_complete,false);
+  assert.ok(report.source_repositories[0].source_issues.includes('PR_DISCOVERY_SAMPLED_NOT_COMPLETE'));
+  assert.equal(report.items.length,1);
+  assert.equal(report.items[0].release_disposition,'PROPOSED');
+  assert.equal(report.items[0].merge_authorized,false);
+});
+test('partially denied review readback cannot be advertised as a candidate',async()=>{
+  const report=await buildProjection({fetcher:mkFetch({denyReviews:true}),repositories:[owner]});
+  assert.equal(report.items[0].ci_observation.status,'PROVEN');
+  assert.equal(report.items[0].evidence_class,'UNOBSERVED');
+  assert.equal(report.items[0].release_disposition,'UNOBSERVED');
+  assert.equal(report.items[0].merge_authorized,false);
 });
