@@ -5,6 +5,7 @@ on:
     paths:
       - "tools/s1-release-control/**"
       - ".github/workflows/s1-release-control-pr.yml"
+      - "05_CYCLE_NAVIGATOR/site/build-public.mjs"
 
 permissions:
   contents: read
@@ -34,3 +35,23 @@ jobs:
           node-version: '22'
       - name: Verify source-bound fail-closed projection
         run: node --test tools/s1-release-control/test-projection-v1.mjs
+  pages-isolation-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build existing Cycle Navigator without publishing
+        run: node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+      - name: Assert isolated S1 bundle and unchanged CN routes
+        run: |
+          test -f 05_CYCLE_NAVIGATOR/site/dist/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/vnext/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/release-core.js
+          cmp tools/s1-release-control/index.html 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/index.html
+          cmp tools/s1-release-control/release-core.js 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/release-core.js
+          grep -q 'RELEASE CONTROL' 05_CYCLE_NAVIGATOR/site/dist/s1-release-control/index.html
