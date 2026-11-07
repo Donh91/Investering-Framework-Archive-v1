@@ -98,6 +98,8 @@ test('versioned shared JSON schema explicitly prohibits release authority and fa
  const schema=JSON.parse(readFileSync(new URL('./schemas/agent-brief-v1.schema.json',import.meta.url),'utf8'));
  assert.equal(schema.properties.schema.const,'S1_AGENT_OPERATIONS_BRIEF_v1');
  assert.equal(schema.properties.existing_s1_action_limit.const,3);
+ assert.ok(schema.properties.state.enum.includes('OBSERVED_ADVISORY_SAMPLED'));
+ assert.ok(schema.properties.source_scope.enum.includes('VERIFIED_PUBLIC_PR_SAMPLE_NOT_EXHAUSTIVE'));
  assert.equal(schema.properties.queue_slots_visible.const,8);
  assert.equal(schema.properties.invariant.properties.no_new_scheduler.const,true);
  assert.equal(schema.properties.invariant.properties.release_permission.const,false);
@@ -106,4 +108,29 @@ test('versioned shared JSON schema explicitly prohibits release authority and fa
  assert.equal(schema.properties.public_pr_triage.items.properties.natural_S1_execution_proven.const,false);
  for(const x of ['private_bridge','private_alpha_lab','independent_recovery'])
   assert.equal(schema.properties.source_coverage.properties[x].const,'UNOBSERVED');
+});
+
+test('verified bounded PR sample remains usable for research but never claims full coverage',()=>{
+ const r=rel();
+ r.partial=true;
+ r.source_repositories[0].discovery_complete=false;
+ r.source_repositories[0].source_issues=['PR_DISCOVERY_SAMPLED_NOT_COMPLETE'];
+ r.items=r.items.map(p=>({...p,source_issues:['PR_DISCOVERY_SAMPLED_NOT_COMPLETE']}));
+ const a=composeBrief(ctx(),r,'2026-11-07T13:02:00Z');
+ assert.equal(a.source_alignment,'MATCHED');
+ assert.equal(a.state,'OBSERVED_ADVISORY_SAMPLED');
+ assert.equal(a.source_scope,'VERIFIED_PUBLIC_PR_SAMPLE_NOT_EXHAUSTIVE');
+ assert.equal(a.parallel_original_PR_independence_proven,false);
+ assert.ok(a.public_pr_triage.every(p=>p.discovery_complete===false));
+ assert.ok(a.public_pr_triage.every(p=>p.eligible_for_merge_from_brief===false));
+});
+test('one source error beyond intended sampling invalidates advisory sample qualification',()=>{
+ const r=rel();
+ r.partial=true;
+ r.source_repositories[0].source_issues=['PR_DISCOVERY_SAMPLED_NOT_COMPLETE'];
+ r.items=r.items.map(p=>({...p,source_issues:['PR_DISCOVERY_SAMPLED_NOT_COMPLETE']}));
+ r.items[0].source_issues.push('RUNS_RATE_LIMITED');
+ const a=composeBrief(ctx(),r,'2026-11-07T13:02:00Z');
+ assert.equal(a.state,'PARTIAL_OR_STALE_RECHECK');
+ assert.equal(a.source_scope,'PARTIAL_OR_UNVERIFIED');
 });
