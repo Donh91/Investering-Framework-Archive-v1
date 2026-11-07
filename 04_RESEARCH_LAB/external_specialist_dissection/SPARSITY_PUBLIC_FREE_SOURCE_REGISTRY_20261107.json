@@ -1,0 +1,192 @@
+{
+  "contract": "ALPHA_LAB_PUBLIC_SOURCE_METHOD_INTAKE_20261107",
+  "status": "SOURCE_DOCS_VERIFIED_EMPIRICAL_ALPHA_UNPROVEN",
+  "as_of_date_utc": "2026-11-07",
+  "owner": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+  "research_note": "04_RESEARCH_LAB/external_specialist_dissection/2026-11-07__SPARSITY_HOLDER_FLOWS_FREE_SOURCE_METHOD_AUDIT_v1.md",
+  "source_snapshot_commit": "dc652a31437478db41bd386f973fb282c6094800",
+  "research_runtime": "ONE_COORDINATING_CHAT_PARALLEL_READ_ONLY_SOURCE_REQUESTS",
+  "actual_ai_agent_concurrency": "UNAVAILABLE_NOT_CLAIMED",
+  "actions_performed": [
+    "PUBLIC_SOURCE_READS",
+    "METHOD_OVERLAP_AUDIT",
+    "INDEPENDENT_HYPOTHESIS_DESIGN",
+    "GITHUB_RESEARCH_NOTE"
+  ],
+  "actions_not_performed": [
+    "NO_HISTORICAL_REPLAY",
+    "NO_OUTCOME_TEST",
+    "NO_REAL_TRADING",
+    "NO_PRODUCTION_COLLECTOR",
+    "NO_MODEL_CHANGES",
+    "NO_PAID_SUBSCRIPTIONS",
+    "NO_NEW_SCHEDULER"
+  ],
+  "sources": [
+    {
+      "id": "SPARSITY_HOLDER",
+      "url": "https://sparsitydata.com/holderstrength",
+      "source_class": "VENDOR_PUBLIC_METHOD",
+      "free_access": "READ_ONLY_NO_REUSE_RIGHTS",
+      "admission": "MODEL_INPUT_PROHIBITED_ABSENT_WRITTEN_PERMISSION",
+      "interpretation": "Holder cohort conceptual source, daily as-of, early coin missingness",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "SPARSITY_FLOWS",
+      "url": "https://sparsitydata.com/flows",
+      "source_class": "VENDOR_PUBLIC_METHOD",
+      "free_access": "READ_ONLY_NO_REUSE_RIGHTS",
+      "admission": "MODEL_INPUT_PROHIBITED_ABSENT_WRITTEN_PERMISSION",
+      "interpretation": "Start-or-end week max holdings cohort; intraperiod PIT leakage risk",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "SPARSITY_BOTTOM",
+      "url": "https://sparsitydata.com/bottoming",
+      "source_class": "VENDOR_PUBLIC_METHOD",
+      "free_access": "READ_ONLY_NO_REUSE_RIGHTS",
+      "admission": "MODEL_INPUT_PROHIBITED_ABSENT_WRITTEN_PERMISSION",
+      "interpretation": "Ordered sequence; pool and cost-basis coverage caveats",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "SPARSITY_CHAIN",
+      "url": "https://sparsitydata.com/sentiment",
+      "source_class": "VENDOR_PUBLIC_METHOD",
+      "free_access": "READ_ONLY_NO_REUSE_RIGHTS",
+      "admission": "MODEL_INPUT_PROHIBITED_ABSENT_WRITTEN_PERMISSION",
+      "interpretation": "Holder score introduced 2026-09-27, history definition break",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "SPARSITY_TERMS",
+      "url": "https://sparsitydata.com/terms",
+      "source_class": "VENDOR_TERMS",
+      "free_access": "READ_ONLY_NO_REUSE_RIGHTS",
+      "admission": "LEGAL_HARD_BLOCK_FOR_BULK_OR_MODEL_DERIVATION",
+      "interpretation": "Written consent required for site-data model/dataset/product",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "DEXSCREENER_API",
+      "url": "https://docs.dexscreener.com/api/reference",
+      "source_class": "OFFICIAL_API_DOCUMENTATION",
+      "free_access": "FREE_PUBLIC_RATE_LIMITED",
+      "admission": "SOURCE_CONTRACT_AND_TERMS_REVIEW_BEFORE_ADAPTER",
+      "interpretation": "Market/pair/liquidity context, not authoritative wallet history",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "GECKOTERMINAL_API",
+      "url": "https://apiguide.geckoterminal.com/",
+      "source_class": "OFFICIAL_API_DOCUMENTATION",
+      "free_access": "FREE_PUBLIC_BETA_RATE_LIMITED",
+      "admission": "SOURCE_CONTRACT_AND_VERSION_REVIEW_BEFORE_ADAPTER",
+      "interpretation": "Market price/volume/liquidity and historic OHLCV candidate",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "DUNE_RATE",
+      "url": "https://docs.dune.com/api-reference/overview/rate-limits",
+      "source_class": "OFFICIAL_API_DOCUMENTATION",
+      "free_access": "FREE_VIEW_ONLY_NO_API",
+      "admission": "NOT_A_FREE_AUTOMATED_SOURCE",
+      "interpretation": "Public exploration only; paid/trial API excluded",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "CRIUS_HOLDERS",
+      "url": "https://docs.crius.sh/reference/holders/",
+      "source_class": "OFFICIAL_API_DOCUMENTATION",
+      "free_access": "FREE_CREDIT_LIMITED_ROBINHOOD_ONLY",
+      "admission": "NO_PURCHASE_NO_RUNTIME_DEPENDENCY",
+      "interpretation": "Historical holder snapshots, cohorts require Starter",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "KENDU_CONVICTION",
+      "url": "https://kenduconviction.com/developers",
+      "source_class": "OFFICIAL_CC_BY_DATA_API",
+      "free_access": "FREE_CC_BY_4_0_ATTRIBUTION_REQUIRED",
+      "admission": "LICENSED_ONE_TOKEN_RESEARCH_FIXTURE_CANDIDATE",
+      "interpretation": "Source metadata, historical snapshots with hashes; KENDU only",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "DEFILLAMA_API",
+      "url": "https://api-docs.defillama.com/",
+      "source_class": "OFFICIAL_API_DOCUMENTATION",
+      "free_access": "SELECT_PUBLIC_ENDPOINTS_FREE",
+      "admission": "MARKET_CONTEXT_ONLY_UNTIL_TERMS_REVIEW",
+      "interpretation": "Aggregate DeFi context, not wallet ledger",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "BITQUERY_FREE",
+      "url": "https://bitquery.io/blog/how-to-conduct-blockchain-analysis-for-free",
+      "source_class": "PROVIDER_GUIDE",
+      "free_access": "EXPLORER_FREE_API_TEMPORARY_TRIAL",
+      "admission": "NO_RECURRING_FREE_API_BASELINE",
+      "interpretation": "One-off public verification, not permanent API",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "GMGN_OPEN_CODE",
+      "url": "https://github.com/GMGNAI/gmgn-skills",
+      "source_class": "MIT_CODE_ONLY",
+      "free_access": "REPO_CODE_OPEN_API_ENTITLEMENTS_SEPARATE",
+      "admission": "EXISTING_S2_OWNER_REFERENCE",
+      "interpretation": "No hosted proprietary data rights implied",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    },
+    {
+      "id": "HOLDTECH_OPEN_CODE",
+      "url": "https://github.com/co-numina/holdtech",
+      "source_class": "MIT_CODE_ONLY",
+      "free_access": "REPO_CODE_OPEN_HELIUS_DEPENDENCY",
+      "admission": "LOWER_PRIORITY_S3_METHOD_CANDIDATE",
+      "interpretation": "No hosted product entitlement implied",
+      "api_or_capture_test": "NOT_EXECUTED_UNLESS_PUBLIC_DOCUMENTATION_IS_TREATED_AS_EVIDENCE_OF_CAPABILITY"
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "P1_ENTITY_ADJUSTED_DRAWDOWN_HOLDER_RESILIENCE",
+      "owner": "S3_ENTITY_ADJUSTED_CLUSTER_AND_BUNDLE_V1",
+      "status": "SOURCE_HYPOTHESIS_ONLY",
+      "baseline": "EXISTING_S3_S4_AGE_LIQUIDITY_G2",
+      "next_gate": "STRATEGIST_OVERLAP_AND_SOURCE_FEASIBILITY"
+    },
+    {
+      "id": "P2_PRE_FROZEN_COHORT_QUOTE_NET_FLOWS",
+      "owner": "S6_DISTRIBUTION_EGRESS_AND_EXCHANGE_FLOW_V1",
+      "status": "SOURCE_HYPOTHESIS_ONLY",
+      "baseline": "EXISTING_S6_PRICE_LIQUIDITY",
+      "next_gate": "NO_AFTER_WINDOW_LABELS"
+    },
+    {
+      "id": "P3_REENTRY_BOTTOM_STATE_MACHINE",
+      "owner": "S4_LAUNCH_TRAJECTORY_AND_RETENTION_V1",
+      "status": "SOURCE_HYPOTHESIS_ONLY",
+      "baseline": "EXISTING_G2_M6_S4",
+      "next_gate": "COST_BASIS_COVERAGE_AND_NO_FINAL_TROUGH_LEAKAGE"
+    },
+    {
+      "id": "P4_CHAIN_ACTIVITY_HOLDER_BREADTH",
+      "owner": "S7_ATTENTION_CONVERSION_CURVE_V1",
+      "status": "SOURCE_HYPOTHESIS_ONLY",
+      "baseline": "EXISTING_S7_ALTSEASON_BREADTH",
+      "next_gate": "STRUCTURAL_BREAK_CONTROL"
+    }
+  ],
+  "data_policy": {
+    "public_control_plane_only": true,
+    "proprietary_vendor_values_persisted": false,
+    "user_wallet_data_persisted": false,
+    "replay_or_scoring_claimed": false
+  },
+  "primary_actionable_delta": "P1_ENTITY_ADJUSTED_DRAWDOWN_HOLDER_RESILIENCE",
+  "next_action": "STRATEGIST_ADJUDICATION_ONLY_THEN_EXISTING_OWNER_BOUNDED_TEST_IF_ELIGIBLE",
+  "current_queue_next_action_unchanged": "FIRST_FORWARD_PONS_BUYER_QUALITY_CASE_V1"
+}
