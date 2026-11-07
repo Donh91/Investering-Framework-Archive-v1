@@ -5,10 +5,11 @@ import {readFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 const SHA=/^[a-f0-9]{40}$/i;
 const HEX64=/^[a-f0-9]{64}$/i;
-export function validateAgentBriefArtifact(packet,expectedPrHead){
+export function validateAgentBriefArtifact(packet,expectedPrHead,{now=new Date().toISOString(),maxAgeMinutes=90}={}){
  const failures=[];
  const fail=(code)=>failures.push(code);
  if(!SHA.test(expectedPrHead||''))fail('EXPECTED_HEAD_REQUIRED');
+ if(!Number.isFinite(Date.parse(now))||!Number.isInteger(maxAgeMinutes)||maxAgeMinutes<1||maxAgeMinutes>1440)fail('INVALID_VERIFICATION_CLOCK_OR_TTL');
  if(!packet||typeof packet!=='object'||Array.isArray(packet))return {status:'REJECTED',failures:[...failures,'PACKET_NOT_OBJECT'],merge_authorized:false};
  if(packet.contract!=='S1_AGENT_BRIEF_CI_ARTIFACT_v1')fail('ARTIFACT_CONTRACT_MISMATCH');
  if(!SHA.test(packet.candidate_pr_head_sha||'')||packet.candidate_pr_head_sha!==expectedPrHead)fail('CANDIDATE_PR_HEAD_MISMATCH');
@@ -20,6 +21,10 @@ export function validateAgentBriefArtifact(packet,expectedPrHead){
  const main=b.archive_main_sha;
  if(!SHA.test(main||'')||packet.original_source_main_sha!==main||b.original_context_main_sha!==main||b.original_pr_main_sha!==main)fail('SOURCE_MAIN_BINDING_MISMATCH');
  if(!b.observed_at_utc||packet.source_observed_at_utc!==b.observed_at_utc||!Number.isFinite(Date.parse(b.observed_at_utc)))fail('SOURCE_CLOCK_BINDING_INVALID');
+ else {
+   const ageMs=Date.parse(now)-Date.parse(b.observed_at_utc);
+   if(!Number.isFinite(ageMs)||ageMs < -60000||ageMs > maxAgeMinutes*60000)fail('ARTIFACT_SOURCE_STALE_OR_FUTURE');
+ }
  if(!b.invariant||b.invariant.release_permission!==false||b.invariant.no_new_scheduler!==true||b.invariant.no_new_canonical_queue!==true||b.invariant.no_new_identity!==true||b.invariant.action_cap_per_existing_s1_tick!==3)fail('ORIGINAL_AUTHORITY_OR_ACTION_CAP_INVALID');
  if(b.existing_s1_action_limit!==3||b.queue_slots_visible!==8||b.existing_actors?.S1?.natural_closure_proven!=='UNOBSERVED'||b.existing_actors?.Grok?.formal_approval_proven!==false)fail('AUTONOMY_OR_APPROVAL_MISREPRESENTED');
  const cov=b.source_coverage;
@@ -41,7 +46,9 @@ export function validateAgentBriefArtifact(packet,expectedPrHead){
  if(b.state==='OBSERVED_ADVISORY_SAMPLED'){
    if(prSource?.discovery_complete!==false||!Array.isArray(prSource.source_issues)||!prSource.source_issues.includes('PR_DISCOVERY_SAMPLED_NOT_COMPLETE'))fail('SAMPLED_DISCOVERY_MISCLASSIFIED');
  }else if(prSource?.discovery_complete!==true)fail('COMPLETE_DISCOVERY_UNVERIFIED');
- return {status:failures.length?'REJECTED':'ADVISORY_SOURCE_IDENTITIES_VERIFIED',failures,merge_authorized:false,production_verified:false,natural_S1_proven:false};
+ return {status:failures.length?'REJECTED':'ADVISORY_SOURCE_IDENTITIES_VERIFIED',failures,
+   current_main_rechecked:false,eligible_for_original_action:false,
+   merge_authorized:false,production_verified:false,natural_S1_proven:false};
 }
 async function main(){
  const args=process.argv.slice(2);
