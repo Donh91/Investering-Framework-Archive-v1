@@ -1,7 +1,7 @@
 # Task 2 #1596 | Research Parallel Lanes v1, on-demand wave 2
 
 **Dato:** 2026-11-07  
-**Status:** HISTORICAL_SOURCE_BOUND_EXPLORATORY / PR_NATIVE_REPLAY_PENDING  
+**Status:** HISTORICAL_SOURCE_BOUND_EXPLORATORY / NATIVE_FIRST_HEAD_VERIFIED / MERGE_PENDING  
 **Område:** Research Lab / Task 2 and Task 1.5 original scientific preflight  
 **Primary folder:** `06_RESEARCH_LAB/hugging_face_task2_audit_20261022/`  
 **Owner:** [Archive #1596](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596), Derivatives #387 remains separate  
@@ -63,6 +63,20 @@ Source `06_RESEARCH_LAB/hugging_face_task2_audit_20261022/IRONFLOW_FULL18M_EMBAR
 Original Task 1.5 receipt distinguishes **824 retrospective matched forecast/price pairs** from **814 originally registered outcome receipts**: **500 originally CENSORED**, **314 originally MATURED**, **10 NO ORIGINAL RECEIPT**. Relative to 824 pairs: censored **60.68%**, matured **38.11%**, absent **1.21%**. Retrospective later-available price outcomes CANNOT silently fix original censored states. Without original actually delivered warning and after-cost executable SELL/fill or HOLD comparison, **neither warning effectiveness nor investment utility is proven**. This is an action-chain bottleneck, not merely a model feature shortage.
 
 Source: `04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK_1_5_EDGE_ADMISSION_GATE_v1.json`, blob `b7e3dc8c1b1e8f948df72ef32fa762e7667a6bde`.
+
+## Actual native source replay, first exact tested PR HEAD
+
+Native first-tested branch HEAD `8217b3aaf6be29c1af8e8ec2b12e06416169b245`, existing [Framework Learning PR run #42372661961](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42372661961), `validate_edge` job `128403803125` **SUCCESS**. Existing [Data Architecture Gate #42372662011](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42372662011), job `128403802959` **SUCCESS**. Original Storage Health run `42372662280`, job `128403804171` **SUCCESS**. Existing production `operate` correctly SKIPPED on PR, not an unattended main writer.
+
+The new `Task2RPL8ReplayTests` ran **6/6 PASS** inside original Archive-first suite, the latter **18/18 PASS**; the native GitHub log actually contains each named test and the `TASK2_ARCHIVE_FIRST_OWNER_RECEIPT_SENSITIVITY_PASS` statement. An independent separate native runner is not proof of an independent AI reviewer.
+
+**Additional concrete CFGI audit data read from the same native logged existing owner:**
+
+- Seven-day original public source clock QA: **42 captures / 126 symbol metadata rows**, **1 clock-skewed capture**, maximum cross-symbol skew **934 seconds** (15m34s). This is public capture metadata only, not original provider-publication permission.
+- Original 64-day descriptive 4H same-price opportunity comparison: 746 BTC+ETH joined observations, **10 calendar weeks, zero independently certified market event families**. It is not a preregistered out-of-sample model test.
+- Existing chronologically split CFGI+price/vol Brier in the **inspected-history test** (12 UTC days, **72 BTC and 72 ETH** rows): BTC price/vol **0.24820408** vs +CFGI **0.24896596**, price-minus-augmented Brier **-0.00076188**. ETH price/vol **0.25094020** vs +CFGI **0.25097554**, delta **-0.00003534**. Both effects are negative/small; no verified original vendor knowledge-time, no independent shock-power and no economic edge. The positive train-only metric for BTC does not override adverse later inspected-history diagnostics. The test was already described as exposed/inspected; no untouched holdout is claimed.
+
+Native logs and run SHA provide executable readback for this branch's research controls, not proof of market source first publication. Any subsequent HEAD change requires fresh CI before merge and an exact `main` blob readback afterward.
 
 ## Adversarial verdict and original-owner next admissions
 
