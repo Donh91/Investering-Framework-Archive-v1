@@ -30,6 +30,13 @@ body.detail .intro{padding:37px 0 20px}body.detail .intro h1{font-size:clamp(33p
  #chart-wrap.fullscreen-mode{padding:55px 4px 8px}
  #chart-wrap.fullscreen-mode .fw-canvas{height:max(280px,calc(100dvh - 340px))!important}
 }
+
+/* Visual QA finish, only opt-in; the canonical public site is unchanged. */
+.qa-finish{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0;color:#698099;font-size:11px}
+.qa-finish button{padding:8px 11px;min-height:42px;border:1px solid #cbd9ea;border-radius:8px;background:#fff;color:#315b84;font-size:11px;font-weight:700}
+.qa-finish button[aria-pressed="true"]{background:#e6efff;color:#184b94;border-color:#8ab2ed}
+.chart-area[data-kompas-precision-qa] .fw-legend .forecast{border-top-color:#86bbff}
+.chart-area[data-kompas-precision-qa] .fw-canvas{border-color:rgba(128,163,201,.12)}
 </style>
 <script defer src="../vendor/lightweight-charts-5.2.0.js"></script><script defer src="../frozen-week-chart.js"></script></head>
 <body>
@@ -42,6 +49,7 @@ body.detail .intro{padding:37px 0 20px}body.detail .intro h1{font-size:clamp(33p
 <div class="controls"><div class="seg" role="group" aria-label="Grafvisning"><button type="button" data-view="forecast" aria-pressed="true">Prognose</button><button type="button" data-view="actual" aria-pressed="false">Faktisk</button><button type="button" data-view="history" aria-pressed="false">Historik</button><button type="button" data-view="data" aria-pressed="false">Testdata</button></div>
 <div class="seg" role="group" aria-label="Tidspunkt"><button type="button" data-stage="monday" aria-pressed="false">Mandag</button><button type="button" data-stage="wednesday" aria-pressed="true">Onsdag</button><button type="button" data-stage="future" aria-pressed="false">Uge 46</button></div><button id="fullscreen-btn" type="button" aria-controls="chart-wrap" aria-pressed="false">Fuld skærm ⛶</button></div>
 <div class="scenarios"><label for="scenario">Testkilde</label><select id="scenario"><option value="valid">Normal simulering</option><option value="stale">Forældet observation</option><option value="gap">Hul i timeserien</option><option value="incomplete">7/7 prognose mangler</option><option value="quote">Forkert USD/USDT</option><option value="missing">Kilde helt væk</option></select><p id="context" aria-live="polite">Samme syv dagspunkter fastholdes, observationer er adskilt.</p></div>
+<div class="qa-finish" role="group" aria-label="Visuel designfinpudsning"><span>Prognoselinje</span><button type="button" data-qa-finish="precision" aria-pressed="true">Precision Edition</button><button type="button" data-qa-finish="original" aria-pressed="false">Nuværende original</button><span>Kun testdesign, samme prognosepunkter</span></div>
 <div id="chart-wrap"><button id="fullscreen-close" type="button" aria-label="Luk fuldskærm">Luk ✕</button><div class="chart-area" data-approved-design="B"><div id="chart" class="frozen-week-chart"></div></div><div id="fallback" class="fallback" hidden role="alert"></div></div>
 <div class="states"><article><span>Frysestatus</span><strong id="freeze">DEMO 7/7</strong><small>Testdata, ikke hashbundet mandagsfrysning</small></article><article><span>Observeret</span><strong id="observed">AFVENTER</strong><small>Kun originale tidsstempler fra fixture</small></article><article><span>Seneste kilde / alder</span><strong id="age">IKKE LIVE</strong><small id="age-detail">Observeret tidspunkt er ikke frysningstidspunkt</small></article></div></section>
 <section class="section" aria-label="Prognoseintervaller"><div class="section-header"><div><span class="kicker">PRISINTERVALLER / LOW & HIGH</span><h2>Næste 3 dage</h2></div><span>BTC / USDT · simulerede værdier</span></div><div id="ranges" class="ranges"></div><div class="remaining"><strong>Dag 4–7 · torsdag til søndag</strong><span id="end-week">Ingen kilde</span></div></section>
@@ -124,6 +132,10 @@ if(location.pathname.endsWith("/graf.html")){
  $("page-description").textContent="Fuldskærmsorienteret uddybning af den originale prognosegraf. Kun testdata, med adskilt source- og observationstid og kildefejl, som fejler lukket.";
  document.querySelector(".navigate").hidden=true;
 }else{$("home-link").classList.add("active");}
+var finishMode=new URLSearchParams(location.search).get("finish")==="original"?"original":"precision";
+function applyFinish(){var chartShell=document.querySelector('.chart-area[data-approved-design="B"]');chartShell?.toggleAttribute("data-kompas-precision-qa",finishMode==="precision");document.querySelectorAll("[data-qa-finish]").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.qaFinish===finishMode));});}
+document.querySelectorAll("[data-qa-finish]").forEach(function(b){b.addEventListener("click",function(){finishMode=b.dataset.qaFinish;applyFinish();render();});});
+applyFinish();
 render();
 window.KompasAcceptance={build:build,render:render,state:state,forecastFixture:points};
 });
