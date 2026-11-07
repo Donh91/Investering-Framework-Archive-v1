@@ -85,7 +85,7 @@ jobs:
               public_only:true,
               brief:b
             };
-            writeFileSync('/tmp/s1-release-control-agent-brief-v1.json',JSON.stringify(packet,null,2)+'\\n');
+            writeFileSync('/tmp/s1-release-control-agent-brief-v1.json',JSON.stringify(packet,null,2)+'\n');
           }
           NODE
       - name: Upload immutable-candidate agent brief for existing S1/Grok readback
