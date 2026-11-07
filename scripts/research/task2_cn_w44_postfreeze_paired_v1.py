@@ -63,6 +63,24 @@ def utc(value:str)->datetime:
         raise ValueError("SOURCE_CLOCK_NOT_UTC")
     return d.astimezone(timezone.utc)
 
+def validated_hourly_candle_clocks(row:dict)->tuple[datetime,datetime,bool]:
+    """Return nominal candle start/end, independently validate batch window.
+
+    The batch request window may close multiple hours AFTER the candle; it
+    is NOT the first-known clock of the provider or the time first delivered.
+    """
+    nominal=utc(row["timestamp_utc"])
+    batch_end=utc(row["source_window_end_utc"])
+    end=nominal+timedelta(hours=1)
+    if (nominal.minute or nominal.second or nominal.microsecond
+        or batch_end.minute or batch_end.second or batch_end.microsecond):
+        raise ValueError("NON_HOURLY_CANONICAL_SOURCE_CLOCK")
+    delay=batch_end-nominal
+    if delay<timedelta(hours=1) or delay>timedelta(hours=24):
+        raise ValueError("INVALID_COLLECTOR_BATCH_WINDOW_SPAN")
+    return nominal,end,batch_end>end
+
+
 def joint_score(lo:float,hi:float,actual_lo:float,actual_hi:float,anchor:float)->dict:
     if not all(math.isfinite(x) for x in (lo,hi,actual_lo,actual_hi,anchor)):
         raise ValueError("NONFINITE_W44_RANGE")
@@ -118,18 +136,30 @@ def build(root:Path=ROOT)->dict:
         raise ValueError("W44_DAILY_PRICE_PATH_WAS_NOT_PUBLISHED")
     csvrows=list(csv.DictReader(raw["hourly"].decode().splitlines()))
     if len(csvrows)!=168:raise ValueError("ORIGINAL_W44_HOURLY_ROW_COUNT_DRIFT")
+    # The canonical UTC hourly candle OPEN is timestamp_utc.  The field
+    # source_window_end_utc denotes the collector's BATCH REQUEST END, not
+    # an individual candle close, original first-known or user delivery.
+    # Repeated batch ends are expected: see the original research owner
+    # scripts/research/task2_hourly_source_window_clocks_v1.py.
     seen=set()
     qualifying=[]
+    later_batch_window_count=0
     last=None
     for row in csvrows:
-        t=utc(row["source_window_end_utc"])
-        if t in seen or (last and t-last!=timedelta(hours=1)):
+        nominal,candle_end,batch_later=validated_hourly_candle_clocks(row)
+        if nominal in seen or (last is not None and nominal-last!=timedelta(hours=1)):
             raise ValueError("MISSING_OR_DUPLICATE_HOURLY_SOURCE")
-        seen.add(t)
-        last=t
-        if cut<=t<=DAY_END:
+        seen.add(nominal)
+        last=nominal
+        later_batch_window_count+=int(batch_later)
+        if cut<=candle_end<=DAY_END:
             qualifying.append(row)
-    if len(qualifying)!=162 or utc(qualifying[0]["source_window_end_utc"])!=cut or utc(qualifying[-1]["source_window_end_utc"])!=DAY_END:
+    if (utc(csvrows[0]["timestamp_utc"])!=DAY_OPEN
+        or last!=DAY_END-timedelta(hours=1)):
+        raise ValueError("W44_WEEKLY_NOMINAL_CANDLE_BOUNDARIES_CHANGED")
+    if (len(qualifying)!=162
+        or utc(qualifying[0]["timestamp_utc"])+timedelta(hours=1)!=cut
+        or utc(qualifying[-1]["timestamp_utc"])+timedelta(hours=1)!=DAY_END):
         raise ValueError("W44_POSTFREEZE_ELIGIBLE_SOURCE_COUNT_CHANGED")
     output={}
     for asset in ("BTC","ETH"):
@@ -161,6 +191,9 @@ def build(root:Path=ROOT)->dict:
        "source_identity":identities,
        "issue_at_utc":issue.isoformat(),"postfreeze_first_eligible_hour_utc":cut.isoformat(),
        "full_week_completed_hours":168,"postfreeze_eligible_hours":len(qualifying),
+       "time_series_clock":"TIMESTAMP_UTC_CANONICAL_CANDLE_OPEN_PLUS_ONE_COMPLETED_HOUR",
+       "batch_request_end_is_not_first_known":True,
+       "batch_window_after_candle_end_rows":later_batch_window_count,
        "last_eligible_complete_hour_end_utc":DAY_END.isoformat(),
        "currency_semantics":INSTRUMENT_NOTE,
        "results":output,
