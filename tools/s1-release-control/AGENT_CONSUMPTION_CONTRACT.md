@@ -57,7 +57,7 @@ the producer failed. It also must **never** be promoted to fresh merely to
 satisfy the original 12-hour cadence. Diagnose expected schedule vs actual
 GitHub workflow-run evidence through the original producer before any repair.
 
-The original PR-only validation always attempts a
+The historical PR-only validation before scope reduction attempted a
 `S1_AGENT_BRIEF_ADMISSION_STATUS_v1` artifact. When a full agent brief cannot
 be admitted, a SHA/byte/digest-bound **fresh original Codex ledger** may still
 yield up to eight *public, original* `read_only_original_codex_candidate_pointers`.
