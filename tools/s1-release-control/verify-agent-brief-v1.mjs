@@ -32,7 +32,9 @@ export function validateAgentBriefArtifact(packet,expectedPrHead,{now=new Date()
  const sources=Array.isArray(cov?.canonical_sources)?cov.canonical_sources:[];
  if(!sources.length)fail('ORIGINAL_CANONICAL_SOURCES_MISSING');
  for(const x of sources){
-   if(!x||x.status!=='OBSERVED'||x.freshness!=='FRESH_ADVISORY'||!SHA.test(x.blob_sha||'')||
+   if(!x||x.status!=='OBSERVED'||x.freshness!=='FRESH_ADVISORY'||
+       x.main_sha!==main||!SHA.test(x.blob_sha||'')||!HEX64.test(x.sha256||'')||
+       !Number.isSafeInteger(x.bytes)||x.bytes<=0||
        typeof x.source_ref!=='string'||!x.source_ref.startsWith('https://github.com/Donh91/Investering-Framework-Archive-v1/blob/'+main+'/'))
      fail('ORIGINAL_SOURCE_IDENTITY_UNVERIFIED');
  }
