@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": true,
+  "$id": "https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/tools/s1-release-control/schemas/agent-context-v1.schema.json",
+  "title": "S1 Agent Operations Context v1 · public source metadata, not authority",
+  "required": [
+    "schema",
+    "mode",
+    "observed_at_utc",
+    "main_sha",
+    "source_files",
+    "partial",
+    "existing_owners",
+    "workflow_boundaries",
+    "consumer_instructions",
+    "merge_authorized",
+    "production_verified",
+    "execution_provenance"
+  ],
+  "properties": {
+    "schema": {
+      "const": "S1_AGENT_OPERATIONS_CONTEXT_v1"
+    },
+    "mode": {
+      "const": "PUBLIC_CANONICAL_METADATA_READ_ONLY"
+    },
+    "observed_at_utc": {
+      "type": "string"
+    },
+    "main_sha": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{40}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "owner",
+          "main_sha",
+          "source_path",
+          "source_url",
+          "release_authority"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OBSERVED",
+              "UNOBSERVED"
+            ]
+          },
+          "freshness": {
+            "type": "string",
+            "enum": [
+              "FRESH_ADVISORY",
+              "STALE",
+              "UNOBSERVED"
+            ]
+          },
+          "owner": {
+            "type": "string"
+          },
+          "main_sha": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{40}$"
+          },
+          "blob_sha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "source_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_url": {
+            "type": "string",
+            "pattern": "^https://github.com/Donh91/Investering-Framework-Archive-v1/blob/"
+          },
+          "release_authority": {
+            "const": false
+          }
+        }
+      }
+    },
+    "partial": {
+      "type": "boolean"
+    },
+    "source_readback_verified": {
+      "type": "boolean"
+    },
+    "source_errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "existing_owners": {
+      "type": "object",
+      "required": [
+        "S1",
+        "Strategist",
+        "Codex",
+        "Grok"
+      ]
+    },
+    "workflow_boundaries": {
+      "type": "object",
+      "required": [
+        "existing_s1_issue",
+        "s1_max_original_prs_per_tick",
+        "new_scheduler",
+        "new_identity",
+        "new_authority"
+      ],
+      "properties": {
+        "s1_max_original_prs_per_tick": {
+          "const": 3
+        },
+        "new_scheduler": {
+          "const": false
+        },
+        "new_identity": {
+          "const": false
+        },
+        "new_authority": {
+          "const": false
+        }
+      }
+    },
+    "consumer_instructions": {
+      "type": "object",
+      "required": [
+        "first",
+        "second",
+        "third",
+        "forbidden"
+      ]
+    },
+    "merge_authorized": {
+      "const": false
+    },
+    "production_verified": {
+      "const": false
+    },
+    "execution_provenance": {
+      "const": "INTERACTIVE_OR_ON_DEMAND_READ_ONLY_NOT_SCHEDULED_S1"
+    }
+  }
+}
