@@ -1,6 +1,6 @@
 # S1 Release Control, standalone GitHub Pages release contract v1
 
-Status: `SEPARATE_REPOSITORY_NOT_CREATED`. Original code owner: Archive PR #1996. Canonical S1 owner: Archive issue #1156. This file is a bounded publication procedure, not a workflow, repository-creation permission, S1 scheduler or claim of release.
+Status: `SEPARATE_GITHUB_PAGES_REPOSITORY_NOT_CREATED`; separate AppDeploy read-only staging is live at https://s1-release-control-4e0h9r.v2.appdeploy.ai/ (READY in host QA, not GitHub Pages, not release/custody authority). Original code owner: Archive PR #1996. Canonical S1 owner: Archive issue #1156. This file is a bounded publication procedure, not a workflow, repository-creation permission, S1 scheduler or claim of release.
 
 ## Target separation
 
@@ -14,7 +14,7 @@ GitHub reference: https://docs.github.com/en/pages/getting-started-with-github-p
 
 ## Reproducible build at current source HEAD
 
-The PR-only workflow `.github/workflows/s1-release-control-pr.yml` creates `s1-standalone-site-<exact-head-sha>` with:
+The historical PR-only workflow on tested source HEAD `0e5ceee5c1121cfcf1edb8994f1d20cf0ba38358` created `s1-standalone-site-<exact-head-sha>` with the following bytes; the executable workflow is **out of this narrowed initial PR release**. Its preserved, inactive reference template is `tools/s1-release-control/deployment-template/pr-only-validation-workflow.yml`, requiring an independently qualified workflow-change release before activation:
 - `index.html`
 - `release-core.js`
 - `.nojekyll`
