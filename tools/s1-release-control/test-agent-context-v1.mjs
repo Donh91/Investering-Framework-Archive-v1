@@ -25,7 +25,7 @@ function fake({mainAfter=S,deny=false,badBlob=false,spoofBlob=false,untrusted=fa
    const body={...data,generated_at_utc:stale?'2026-10-01T00:00:00Z':data.generated_at_utc};
    const content=Buffer.from(JSON.stringify(body),'utf8');
    return makeResponse({encoding:'base64',content:content.toString('base64'),
-     sha:badBlob?'short':spoofBlob?B:createHash('sha1').update('blob '+content.length+'\\0').update(content).digest('hex'),size:untrusted?content.length+1:content.length});
+     sha:badBlob?'short':spoofBlob?B:createHash('sha1').update('blob '+content.length+'\0').update(content).digest('hex'),size:untrusted?content.length+1:content.length});
   }
   throw Error('EXTRA_OR_PRIVATE_ROUTE:'+url);
  };
