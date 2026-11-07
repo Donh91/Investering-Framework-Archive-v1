@@ -176,6 +176,8 @@ def load_tests(loader, standard_tests, pattern):
     standard_tests.addTests(loader.loadTestsFromTestCase(Task2RPL8ReplayTests))
     from tests.research.test_task2_r1_first_known_and_cadence_preflight_v1 import FirstKnownR1AndCadenceTests
     standard_tests.addTests(loader.loadTestsFromTestCase(FirstKnownR1AndCadenceTests))
+    from tests.research.test_task2_cn_w44_postfreeze_paired_v1 import Task2W44PostfreezeTests
+    standard_tests.addTests(loader.loadTestsFromTestCase(Task2W44PostfreezeTests))
     return standard_tests
 
 
