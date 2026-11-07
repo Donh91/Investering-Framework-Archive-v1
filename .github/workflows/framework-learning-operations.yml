@@ -31,6 +31,9 @@ on:
       - 'tests/research/test_task2_price_window_robustness_v1.py'
       - 'scripts/research/task2_archive_first_edge_matrix_v1.py'
       - 'tests/research/test_task2_archive_first_edge_matrix_v1.py'
+      - 'scripts/research/validate_kompas_scientific_edge_program_v2_1.py'
+      - 'tests/research/test_kompas_scientific_edge_program_v2_1.py'
+      - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/**'
       - 'scripts/research/task2_cfgi_price_expost_4h_v1.py'
       - 'tests/research/test_task2_cfgi_price_expost_4h_v1.py'
       - 'scripts/research/task2_cfgi_64d_expost_cohorts_v1.py'
@@ -79,6 +82,7 @@ jobs:
         run: |
           python -m py_compile scripts/research/task2_archive_first_edge_matrix_v1.py
           python -m unittest tests.research.test_task2_archive_first_edge_matrix_v1 -v
+          python scripts/research/validate_kompas_scientific_edge_program_v2_1.py
       - name: Task2 archived price-only 1152-cell ex-post stress, research only
         run: |
           python -m unittest tests.research.test_task2_archive_price_only_stress_v1 -v

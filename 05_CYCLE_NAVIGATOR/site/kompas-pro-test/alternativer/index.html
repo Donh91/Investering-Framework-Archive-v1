@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#f7f9fc">
+<title>Kompas PRO · tre designalternativer · GitHub visual QA</title>
+<meta name="description" content="Tre fulde, interaktive GitHub-only designalternativer med fiktive syv-dages BTC- og ETH-kurser og oprindelig TradingView-grafmotor.">
+<link rel="stylesheet" href="../../frozen-week-chart.css">
+<link rel="stylesheet" href="./styles.css">
+<script>window.CNI18n={language:'da'};</script>
+<script src="../../vendor/lightweight-charts-5.2.0.js" defer></script>
+<script src="../../frozen-week-chart.js" defer></script>
+<script type="module" src="./app.mjs"></script>
+</head>
+<body data-concept="nordic">
+<div class="qa-banner"><strong>VISUEL DESIGNTEST</strong><span>Fiktiv uge · ingen ægte prognose, ingen produktionstal</span><a href="../index.html">Tilbage til oprindelig test</a></div>
+<header class="topbar">
+  <a class="brand" href="../../"><span class="brand-symbol" aria-hidden="true">⌁</span><span class="brand-word">KOMPAS<span class="brand-pro">PRO</span><small>CYCLE NAVIGATOR</small></span></a>
+  <div class="top-actions"><span class="top-issue">Uge 46 · 9. til 15. november 2026</span><a href="../../" class="top-link">Oprindelige site</a></div>
+</header>
+<main class="page">
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="overline" id="concept-number">DESIGN 01 / 03 · NORDIC EDITORIAL</div>
+      <h1 id="concept-title">Ugens retning.<br><em>Helt klart.</em></h1>
+      <p id="concept-description">En rolig, lys og præcis måde at følge mandagens fastfrosne prognose hele ugen. Kun de vigtige informationer i første lag.</p>
+    </div>
+    <div class="hero-figure"><span>FIKTIVT FORVENTET BTC-SØNDAGSLUK</span><strong id="sunday-close">105.580</strong><small>USDT · frosset mandag</small></div>
+  </section>
+
+  <nav class="concept-switch" aria-label="Vælg visuelt design">
+    <button type="button" data-concept-choice="nordic" aria-pressed="true">
+      <span class="design-index">01</span><strong>Nordic Editorial</strong><small>Let, lyst, kurven i centrum</small>
+    </button>
+    <button type="button" data-concept-choice="atelier" aria-pressed="false">
+      <span class="design-index">02</span><strong>Atelier</strong><small>Varmt papir, eksklusiv ro</small>
+    </button>
+    <button type="button" data-concept-choice="signal" aria-pressed="false">
+      <span class="design-index">03</span><strong>Signal Desk</strong><small>Moderne analyseflade</small>
+    </button>
+  </nav>
+
+  <div class="section-rule"><span>01 / DYNAMISK MARKEDSGRAF</span><span>ORIGINAL GITHUB / TRADINGVIEW 5.2.0</span></div>
+  <section class="workspace" aria-label="Original ugegraf i tre visuelle designs">
+    <div class="graph-panel">
+      <div class="graph-intro"><div><div class="graph-kicker">BTC / USDT · FROZEN FORECAST</div><h2>Mandagens prognose, målt mod virkeligheden</h2><p>Blå stiplet prognose · Grøn faktisk kurs · Syv selvstændige low/high-intervaller</p></div><span class="issue-chip">SIMULERET · W46</span></div>
+      <div class="chart-area" data-approved-design="B" data-kompas-alternative="nordic">
+        <div id="native-chart" class="frozen-week-chart" aria-label="Original GitHub TradingView grafmotor"></div>
+      </div>
+      <div id="graph-error" role="alert" hidden>Den originale GitHub-grafmotor kunne ikke indlæses. Ingen erstatningsgraf opfindes.</div>
+      <div class="graph-foot"><span>Forecast: <strong>7 originale testpunkter, aldrig omskrevet</strong></span><span>Faktisk serie: <strong id="observation-time">—</strong></span></div>
+    </div>
+    <aside class="insight-panel">
+      <div class="insight-header"><span class="panel-kicker">UDSTEDT / SIMULERET</span><span class="freeze-indicator">● Frosset</span></div>
+      <div class="big-week">09 <span>/</span> 15 <small>November 2026</small></div>
+      <div class="insight-body">
+        <div class="metric-row"><span>7-dagesprognose</span><strong>7 / 7</strong></div>
+        <div class="metric-row"><span>Frosset ved</span><strong>Man 9/11 kl. 08.00</strong></div>
+        <div class="metric-row"><span>Grønne timer</span><strong id="observed-hours">168 / 168</strong></div>
+        <div class="metric-row"><span>Aktuel simulering</span><strong id="as-of-label">Søndag</strong></div>
+        <div class="metric-row"><span>Quote</span><strong>USDT / USDT</strong></div>
+      </div>
+      <div class="insight-note"><span>i</span><p>Den blå kurve og alle syv dagsintervaller er uændrede fra mandag. De grønne observationer kan udvikle sig frem til søndag.</p></div>
+    </aside>
+  </section>
+
+  <section class="timeline">
+    <div class="timeline-title"><div><span class="panel-kicker">02 / UGEN FOLDES UD</span><h2>Se hvordan grafen udvikler sig</h2></div><div class="time-presets" role="group" aria-label="Vælg tidspunkt"><button type="button" data-stage="16">Mandag</button><button type="button" data-stage="64">Onsdag</button><button type="button" data-stage="168" aria-pressed="true">Søndag · hele ugen</button></div></div>
+    <div class="scrub"><label for="time-slider">Fiktive markedsobservationer <strong id="slider-caption">168 af 168 timer</strong></label><input id="time-slider" type="range" min="8" max="168" step="1" value="168"><div class="slider-days"><span>Man</span><span>Tir</span><span>Ons</span><span>Tor</span><span>Fre</span><span>Lør</span><span>Søn</span></div></div>
+  </section>
+
+  <section class="data-section">
+    <div class="section-header"><div><span class="panel-kicker">03 / KILDEBUNDNE DAGSINTERVALLER</span><h2 id="daily-section-title">Syv frosne prognosedage</h2></div><span class="table-label">Kun fiktive USDT-kurser · originalt prisformat</span></div>
+    <div class="range-explanation" id="nordic-range-explanation">
+      <span class="range-glyph" aria-hidden="true"><i></i><b>⋯</b></span>
+      <div><strong>Syv let tonede prisrammer, én frossen prognoselinje</strong>
+      <p>Hvert lodret felt i grafen går fra dagens forventede <b>low</b> til <b>high</b>. Den blå stiplede linje viser forventet dagsluk. Tryk på en dag i grafen for de præcise tal. Ingen felter forbindes til en kunstig prisflade.</p></div>
+    </div>
+    <details id="daily-values-fold" class="day-values-fold" open>
+      <summary><span>Vis alle syv dagsværdier</span><small>Prognose, low, high og observeret luk</small></summary>
+      <div class="week-table"><table><thead><tr><th>Dag</th><th>Prognose</th><th>Low</th><th>High</th><th>Observeret dagsluk</th></tr></thead><tbody id="daily-rows"></tbody></table></div>
+    </details>
+    <div class="data-explainer"><span class="explainer-icon">↗</span><p><strong>Samme forventninger mandag og søndag.</strong> Du bedømmer først grafens design på en hel fiktiv uge. En rigtig prognose skal stadig valideres og fryses af den eksisterende mandagspipeline, ikke af denne test.</p></div>
+  </section>
+  <section class="concept-footer"><div><strong id="footer-design">Design 01 · Nordic Editorial</strong><p>Ingen af de tre alternativer bliver standard uden din godkendelse. Den oprindelige Kompas PRO-graf er uændret.</p></div><a href="../graf.html?finish=original">Sammenlign med oprindelig graf</a></section>
+</main>
+<footer class="global-footer"><span>© KOMPAS PRO · VISUEL GITHUB QA</span><span>Kun eksisterende GitHub Pages · Original TradingView/CNWeekChart · Ingen ny prognosemotor</span></footer>
+</body>
+</html>

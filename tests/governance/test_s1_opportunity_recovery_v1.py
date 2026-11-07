@@ -1,7 +1,7 @@
 """Opportunity, research reactivation and Strategist governance tests."""
 import unittest
 from scripts.governance.s1_opportunity_recovery_v1 import (
-    AdvisoryInputError, reactivated, select_cases, select_cases_isolated, strategic_question,
+    AdvisoryInputError, reactivated, select_cases, select_cases_isolated, recommend_work_mode, strategic_question,
 )
 
 URL = "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1877"
@@ -104,6 +104,68 @@ class OpportunityTests(unittest.TestCase):
         selected = select_cases([p0, CASE])
         self.assertEqual(len(selected), 1)
         self.assertEqual(selected[0]["case_id"], CASE["case_id"])
+
+
+
+    def test_mode_execute_one_actionable_original_pr_even_with_blocked_p0(self):
+        blocked = {**blocker(), "priority": "P0"}
+        actionable = {**CASE, "priority": "P1"}
+        result = recommend_work_mode([blocked, actionable])
+        self.assertEqual(result["mode"], "EXECUTE")
+        self.assertEqual(len(result["selected_original_prs"]), 1)
+        self.assertFalse(result["release_authority"])
+        self.assertFalse(result["externally_authenticated"])
+
+    def test_mode_empty_pr_and_missing_issue_census_forces_discovery(self):
+        result = recommend_work_mode([], pr_inventory_complete=True)
+        self.assertEqual(result["mode"], "DISCOVER")
+        self.assertEqual(result["next_action"], "COMPLETE_AUTHORIZED_SOURCE_CENSUS")
+
+    def test_mode_blocked_pr_and_actionable_original_issue_forces_discovery(self):
+        original_issue = {**CASE, "original_url": URL.replace("/pull/", "/issues/"),
+                          "case_id": "issue-original", "priority": "P0"}
+        result = recommend_work_mode([blocker()], [original_issue],
+            pr_inventory_complete=True, issue_inventory_complete=True)
+        self.assertEqual(result["mode"], "DISCOVER")
+        self.assertEqual(result["selected_original_issues"][0]["case_id"], "issue-original")
+        self.assertFalse(result["dispatch_authority"])
+
+    def test_mode_complete_empty_census_allows_quiet_observation(self):
+        result = recommend_work_mode([], [], pr_inventory_complete=True,
+                                     issue_inventory_complete=True)
+        self.assertEqual(result["mode"], "OBSERVE_AND_LEARN")
+        self.assertEqual(result["next_action"], "CHEAP_MATERIAL_TRIGGER_CHECK")
+
+    def test_mode_partial_or_malformed_evidence_cannot_claim_idle(self):
+        for kw in (dict(pr_inventory_complete=True, issue_inventory_complete=False),
+                   dict(pr_inventory_complete=False, issue_inventory_complete=True)):
+            self.assertEqual(recommend_work_mode([], [], **kw)["mode"], "DISCOVER")
+        result = recommend_work_mode([{}], [], pr_inventory_complete=True,
+                                     issue_inventory_complete=True)
+        self.assertEqual(result["mode"], "DISCOVER")
+        self.assertGreater(result["invalid_or_wrong_kind_inputs"], 0)
+        null_url = {**CASE, "original_url": None}
+        malformed_url = {**CASE, "original_url": "https://github.com/Donh91/repo/pull/[bad"}
+        for bad in (null_url, malformed_url):
+            outcome = recommend_work_mode([bad], [], pr_inventory_complete=True,
+                                          issue_inventory_complete=True)
+            self.assertEqual(outcome["mode"], "DISCOVER")
+            self.assertGreater(outcome["invalid_or_wrong_kind_inputs"], 0)
+
+    def test_mode_issue_disguised_as_pr_cannot_trigger_execute(self):
+        wrong = {**CASE, "original_url": URL.replace("/pull/", "/issues/")}
+        result = recommend_work_mode([wrong], [], pr_inventory_complete=True,
+                                     issue_inventory_complete=True)
+        self.assertEqual(result["mode"], "DISCOVER")
+        self.assertFalse(result["selected_original_prs"])
+
+    def test_mode_invalid_census_types_fail_closed(self):
+        with self.assertRaises(AdvisoryInputError):
+            recommend_work_mode([], [], pr_inventory_complete="yes")
+        with self.assertRaises(AdvisoryInputError):
+            recommend_work_mode([], [], maximum=4)
+        with self.assertRaises(AdvisoryInputError):
+            recommend_work_mode({}, [])
 
 
 if __name__ == "__main__":

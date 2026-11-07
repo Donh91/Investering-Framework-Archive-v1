@@ -587,6 +587,11 @@ for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolv
 // Read-only owner visual acceptance page. Deliberately isolated from real forecasts and the canonical site.
 const kompasTestDir=resolve(outputDir,"kompas-pro-test"); await mkdir(kompasTestDir,{recursive:true});
 for(const file of ["index.html","graf.html"]) await copyFile(resolve(siteDir,"kompas-pro-test",file),resolve(kompasTestDir,file));
+// Three GitHub-only visual design candidates; synthetic fixtures never enter /data/.
+const alternativesDir=resolve(kompasTestDir,"alternativer");
+await mkdir(alternativesDir,{recursive:true});
+for(const file of ["index.html","styles.css","app.mjs","full-week-fixture.mjs"])
+  await copyFile(resolve(siteDir,"kompas-pro-test/alternativer",file),resolve(alternativesDir,file));
  // vNext is a read-only first-party *candidate*, deployed below /vnext/
  // on the EXISTING Pages host. Canonical /index.html remains untouched.
  const vnextDir=resolve(outputDir,"vnext"); await mkdir(vnextDir,{recursive:true});

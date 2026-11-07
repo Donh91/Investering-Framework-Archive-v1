@@ -12,6 +12,14 @@ on:
       - '00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json'
       - 'scripts/research/validate_parallel_research_manifest_v1.py'
       - 'tests/agent_skills/test_research_parallel_lanes_manifest_v1.py'
+      - '07_PROMPTS_AND_AGENTS/skill_quality_gate/candidates/hre/**'
+      - 'tests/agent_skills/test_hre_source_clock_reference_v1.py'
+      - 'research/historical_reality_engine/**'
+      - 'scripts/research/validate_historical_reality_program_v1.py'
+      - 'tests/research/test_historical_reality_program_v1.py'
+      - 'tests/research/test_hre_shadow_transfer_v1.py'
+      - 'scripts/research/hre_native_replay_pilot_v1.py'
+      - 'tests/research/test_hre_native_replay_pilot_v1.py'
       - '.github/workflows/research-parallel-lanes-skill-ci.yml'
 
 permissions:
@@ -33,6 +41,17 @@ jobs:
           python scripts/research/validate_parallel_research_manifest_v1.py \
             .agents/skills/research-parallel-lanes/references/EXAMPLE_MISSION.json
 
+  hre-clock-reference-and-candidate-static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check source-clock method and strictly unregistered shadow candidate
+        run: python -m unittest discover -s tests/agent_skills -p test_hre_source_clock_reference_v1.py -v
+
   scientific-evidence-and-boundary-fixtures:
     runs-on: ubuntu-latest
     timeout-minutes: 8
@@ -46,3 +65,129 @@ jobs:
           python -m unittest discover \
             -s tests/agent_skills \
             -p test_research_parallel_lanes_manifest_v1.py -v
+
+  hre-owner-gated-program-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate historical replay program source, authority and dependency safety
+        run: python scripts/research/validate_historical_reality_program_v1.py
+      - name: Adversarial tests for fake execution, future leakage, self-authorization and fabricated outcomes
+        run: python -m unittest discover -s tests/research -p test_historical_reality_program_v1.py -v
+      - name: Verify future shadow transfer and bounded paid model control are not prematurely activated
+        run: python -m unittest discover -s tests/research -p test_hre_shadow_transfer_v1.py -v
+
+  hre-replay-source-qa:
+    if: startsWith(github.event.pull_request.title, 'research(hre):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify no-lookahead and source safety with native tests
+        run: python -m unittest discover -s tests/research -p test_hre_native_replay_pilot_v1.py -v
+      - name: Validate SHA256 upstream Binance spot hourly February/March 2020 and September/October 2025
+        run: |
+          mkdir -p "$RUNNER_TEMP/hre"
+          python scripts/research/hre_native_replay_pilot_v1.py --lane source --output "$RUNNER_TEMP/hre/source_receipt.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hre-retrospective-source-qa
+          path: ${{ runner.temp }}/hre/source_receipt.json
+          retention-days: 30
+          if-no-files-found: warn
+
+  hre-replay-crisis-baselines:
+    if: startsWith(github.event.pull_request.title, 'research(hre):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independently replay March 2020 and October 2025 price-only risk controls
+        run: |
+          mkdir -p "$RUNNER_TEMP/hre"
+          python scripts/research/hre_native_replay_pilot_v1.py --lane crisis --output "$RUNNER_TEMP/hre/crisis_receipt.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hre-retrospective-crisis-baselines
+          path: ${{ runner.temp }}/hre/crisis_receipt.json
+          retention-days: 30
+          if-no-files-found: warn
+
+  hre-replay-cn-weekly-controls:
+    if: startsWith(github.event.pull_request.title, 'research(hre):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independently benchmark frozen 7 daily close and low/high ranges in 2021
+        run: |
+          mkdir -p "$RUNNER_TEMP/hre"
+          python scripts/research/hre_native_replay_pilot_v1.py --lane weekly --output "$RUNNER_TEMP/hre/weekly_receipt.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hre-retrospective-weekly-ranges
+          path: ${{ runner.temp }}/hre/weekly_receipt.json
+          retention-days: 30
+          if-no-files-found: warn
+
+  hre-extended-2022-terra-ftx:
+    if: startsWith(github.event.pull_request.title, 'research(hre2):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independent Terra and FTX source-verified historical daily crisis controls
+        run: |
+          mkdir -p "$RUNNER_TEMP/hre"
+          python -m unittest discover -s tests/research -p test_hre_native_replay_pilot_v1.py -v
+          python scripts/research/hre_native_replay_pilot_v1.py --lane extended --episode terra_2022 --output "$RUNNER_TEMP/hre/terra_2022.json"
+          python scripts/research/hre_native_replay_pilot_v1.py --lane extended --episode ftx_2022 --output "$RUNNER_TEMP/hre/ftx_2022.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hre-retrospective-2022-terra-ftx
+          path: ${{ runner.temp }}/hre/*.json
+          retention-days: 30
+          if-no-files-found: warn
+
+  hre-extended-2023-2024-2026:
+    if: startsWith(github.event.pull_request.title, 'research(hre2):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independent USDC, August volatility and February risk historical controls
+        run: |
+          mkdir -p "$RUNNER_TEMP/hre"
+          python scripts/research/hre_native_replay_pilot_v1.py --lane extended --episode usdc_2023 --output "$RUNNER_TEMP/hre/usdc_2023.json"
+          python scripts/research/hre_native_replay_pilot_v1.py --lane extended --episode aug_2024 --output "$RUNNER_TEMP/hre/aug_2024.json"
+          python scripts/research/hre_native_replay_pilot_v1.py --lane extended --episode feb_2026 --output "$RUNNER_TEMP/hre/feb_2026.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hre-retrospective-2023-2024-2026
+          path: ${{ runner.temp }}/hre/*.json
+          retention-days: 30
+          if-no-files-found: warn

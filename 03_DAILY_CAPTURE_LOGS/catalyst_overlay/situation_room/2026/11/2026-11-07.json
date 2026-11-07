@@ -1,0 +1,199 @@
+{
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "collection_route": "SITUATION_ROOM_STATIC_DATED_OWNER_v1",
+  "contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "current_unverified_discoveries": [
+    {
+      "detection_time_utc": "2026-11-07T14:03:34Z",
+      "event_time_precision": "TIMESTAMP",
+      "event_time_utc": "2026-11-07T06:00:19.837000Z",
+      "source_id": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 136220,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-07T14:03:35Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-07T14:03:36Z",
+        "role": "DISCOVERY_ONLY",
+        "sha256": "f3908b638d0020bc4693d6f59198abcb37d7ed7cd6b37ae5a38ef04de10ea1eb",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-11-07"
+      },
+      "source_role": "DISCOVERY_ONLY",
+      "title": "Treasury sanctions eight Canadian firms over Iran ties tighten crypto rails \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-11-07",
+      "verification_status": "DISCOVERY_UNVERIFIED"
+    }
+  ],
+  "daily_result": "MATERIAL_CATALYSTS_FOUND",
+  "detection_time_utc": "2026-11-07T14:03:34Z",
+  "events": [
+    {
+      "affected_framework_lanes": [
+        "MACRO_RISK",
+        "BTC",
+        "ETH",
+        "LEVERAGE"
+      ],
+      "catalyst_subtype": "MACRO_OR_GEOPOLITICAL_SHOCK",
+      "causal_authority": "NONE",
+      "classification": "SYSTEMIC",
+      "confidence": "HIGH_PRIMARY_SOURCE",
+      "detection_time_utc": "2026-11-07T14:03:34Z",
+      "event_family_id": "EVF_72729e178bb104fd",
+      "event_id": "EVT_098f97c9e56b229d6ce4",
+      "event_time_precision": "TIMESTAMP",
+      "event_time_utc": "2026-11-06T20:05:00Z",
+      "expected_duration": "DAYS_TO_WEEKS",
+      "source_receipts": [
+        {
+          "bytes": 80092,
+          "error_class": null,
+          "fetched_at_utc": "2026-11-07T14:03:37Z",
+          "http_status": 200,
+          "retrieval_end_utc": "2026-11-07T14:03:37Z",
+          "role": "PRIMARY",
+          "sha256": "200ffad318f031ad7d014aae3eaa2250a59044fc1408ac3165ebee857dff5a78",
+          "source_id": "TREASURY",
+          "status": "PASS",
+          "url": "https://home.treasury.gov/news/press-releases/sb0686/"
+        }
+      ],
+      "title": "Operation Economic Outcast Sanctions Eight Canadian Money Services Businesses Enabling Iranian Regime",
+      "verification_status": "PRIMARY_SOURCE_VERIFIED"
+    }
+  ],
+  "market_reaction_observations": [],
+  "market_reaction_separate_from_event": true,
+  "market_state_effect": false,
+  "observation_date_utc": "2026-11-07",
+  "portfolio_effect": false,
+  "retrieval": {
+    "dynamic_archive_shell_not_required": true,
+    "situation_room_archive_url": "https://situationroom.space/briefings",
+    "situation_room_daily_url": "https://situationroom.space/briefing/2026-11-07",
+    "strategy": "DETERMINISTIC_STATIC_DAILY_BRIEFING"
+  },
+  "retroactive_candidate_eligibility": false,
+  "run_id": "SRDO_6368763695ca3184",
+  "run_status": "PASS",
+  "shared_row_tournament_eligible": false,
+  "situation_room_role": "DISCOVERY_ONLY",
+  "source_coverage": {
+    "primary_pass": 6,
+    "primary_total": 6,
+    "receipts": [
+      {
+        "bytes": 136220,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-07T14:03:34Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-07T14:03:35Z",
+        "role": "DISCOVERY_ONLY",
+        "sha256": "f3908b638d0020bc4693d6f59198abcb37d7ed7cd6b37ae5a38ef04de10ea1eb",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-11-07"
+      },
+      {
+        "bytes": 97174,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-07T14:03:36Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-07T14:03:36Z",
+        "role": "PRIMARY",
+        "sha256": "1b361cc896204b7858f210cfa6549eb99d96466d2d8f2bc2498d8ffe6054e7cf",
+        "source_id": "SEC",
+        "status": "PASS",
+        "url": "https://www.sec.gov/newsroom/press-releases"
+      },
+      {
+        "bytes": 71630,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-07T14:03:36Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-07T14:03:37Z",
+        "role": "PRIMARY",
+        "sha256": "8b2fb584937d2336b02ad3d8714797cf567088229fe37d711b5a33b79c676bfa",
+        "source_id": "TREASURY",
+        "status": "PASS",
+        "url": "https://home.treasury.gov/news/press-releases"
+      },
+      {
+        "bytes": 60864,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-07T14:03:37Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-07T14:03:37Z",
+        "role": "PRIMARY",
+        "sha256": "60edb54c69e78ba83773f2c59178fe17fea5031f257d7cd30b4050e00e042f83",
+        "source_id": "OCC",
+        "status": "PASS",
+        "url": "https://www.occ.gov/news-events/index-news-events.html"
+      },
+      {
+        "bytes": 292777,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-07T14:03:38Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-07T14:03:38Z",
+        "role": "PRIMARY",
+        "sha256": "137c534ca89054173f4646714d5e9cca716bf9788371714bb41e78d6d8b58cf9",
+        "source_id": "WHITE_HOUSE",
+        "status": "PASS",
+        "url": "https://www.whitehouse.gov/news/"
+      },
+      {
+        "bytes": 65174,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-07T14:03:38Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-07T14:03:38Z",
+        "role": "PRIMARY",
+        "sha256": "c097607eefbdc1e092b9deb960e16a091e35ff18c5118c3e215c4449925dd76b",
+        "source_id": "CFTC",
+        "status": "PASS",
+        "url": "https://www.cftc.gov/PressRoom/PressReleases"
+      },
+      {
+        "bytes": 87548,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-07T14:03:38Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-07T14:03:38Z",
+        "role": "PRIMARY",
+        "sha256": "af31a467187e0730f78b8171e54bf773dd78e756a23aef5d799f16dfde35be86",
+        "source_id": "FEDERAL_RESERVE",
+        "status": "PASS",
+        "url": "https://www.federalreserve.gov/newsevents/pressreleases.htm"
+      }
+    ]
+  },
+  "unresolved_candidates": [],
+  "unverified_discoveries": [
+    {
+      "detection_time_utc": "2026-11-07T14:03:34Z",
+      "event_time_precision": "TIMESTAMP",
+      "event_time_utc": "2026-11-07T06:00:19.837000Z",
+      "source_id": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 136220,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-07T14:03:35Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-07T14:03:36Z",
+        "role": "DISCOVERY_ONLY",
+        "sha256": "f3908b638d0020bc4693d6f59198abcb37d7ed7cd6b37ae5a38ef04de10ea1eb",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-11-07"
+      },
+      "source_role": "DISCOVERY_ONLY",
+      "title": "Treasury sanctions eight Canadian firms over Iran ties tighten crypto rails \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-11-07",
+      "verification_status": "DISCOVERY_UNVERIFIED"
+    }
+  ]
+}

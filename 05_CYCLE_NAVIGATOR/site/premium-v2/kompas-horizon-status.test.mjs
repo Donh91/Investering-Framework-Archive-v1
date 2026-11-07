@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {KOMPAS_HORIZONS,kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
+// Exercise the new source-issued weekly price companion on the existing required CI path.
+import './original-week-price-readback.test.mjs';
 
 const compass={
   contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'OK',compass_id:'CMP-TEST-1',
