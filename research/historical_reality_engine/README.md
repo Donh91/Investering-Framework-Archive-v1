@@ -45,6 +45,13 @@ The first real public-source study has now run and is source-integrity verified:
 
 The current dependency-ready research next steps and blockers live in [RESEARCH_QUEUE_v1.json](RESEARCH_QUEUE_v1.json). This is an evidence-linked navigation DAG, not an autonomous second dispatcher, workflow or paid API authority.
 
+### Cross-era research extension, 2022-2026
+
+- [Native five-event crisis and non-event results](CROSS_ERA_RESULTS_20261107.md) and [machine digest+artifact receipt](CROSS_ERA_NATIVE_RESULTS_20261107.json).
+- [PR #2012](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2012) merged `aea48ec8b9c3f07fde3b04cc60e0759ffef10e88`; [GitHub Actions run 42391907367](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42391907367) successfully executed two independent source-verifying compute jobs, 30 monthly source ZIPs, 18/18 unit tests.
+- The new five retrospective case cohorts preserve 72h overlapping outcomes and quote/vintage uncertainty, not genuine original Kompas forecasts or model edge. Strong emphasis on false-alarm tradeoffs before proposing Risk changes.
+- The original research DAG records next evidentiary blockers; no second scheduler, routine, paid model dispatcher or live trading.
+
 ## First three truly useful outcomes
 
 1. A reproducible pilot for March 2020 market shock + matched false-alarm weeks, using only period-available source families and simple-price baseline.
