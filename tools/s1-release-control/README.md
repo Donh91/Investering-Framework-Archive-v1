@@ -1,6 +1,6 @@
 # S1 Release Control · read-only release workspace
 
-**Status:** integrated release candidate on draft PR #1996; actual deployment and recovery acceptance not yet asserted. This is not a release authority, new Supervisor, new queue backend, scheduled job, paid model trigger or change to the existing Cycle Navigator site.
+**Status:** standalone, agent-first source-controlled release candidate on draft PR #1996. Separate GitHub Pages repository and deployment acceptance remain unresolved. This is not a release authority, new Supervisor, new queue backend, scheduled job, paid model trigger or change to the existing Cycle Navigator site.
 
 ## Scope and sources
 
@@ -36,6 +36,15 @@ Canonical policies:
 - [S1 mission](../../00_FMOS/S1/MISSION.md)
 - [Cross-repo data boundary](../../00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md)
 
+## Machine-first canonical context for S1, Strategist, Codex and Grok
+
+- Run `node tools/s1-release-control/agent-context-v1.mjs --stdout` for `S1_AGENT_OPERATIONS_CONTEXT_v1`, or `--output /tmp/s1-agent-context.json` for a reproducible noncanonical local JSON snapshot. No scheduling, writing, GitHub token or private-source access is involved.
+- It reads **seven existing public canonical owners** by freezing current Archive `main` SHA40, fetching original paths at that exact commit, validating returned Git blob SHA and byte length, producing independent SHA-256 digests, reporting source-generated timestamps and advisory freshness, and rechecking `main` at the end. Changed `main`, stale/failed/private sources and unverified outcomes fail closed.
+- Bounded summaries include original dashboard/incident coverage, handoff, Codex READY, Codex execution-state (not queue authority), remediation, automation health and architecture health. Full original records stay with their owners; no new ledger is authoritative.
+- A `source_files[]` record carries `owner`, `source_path`, `main_sha`, `blob_sha`, `sha256`, `bytes`, `source_contract`, `generated_at_utc`, `observed_at_utc` and a pinned native GitHub source URL. `source_readback_verified` does not mean release permission or predictive edge.
+- S1, Strategist and Codex can consume this object only through their **existing authorized** execution routes. Grok reads this public contract and original issue references, but Bridge advice remains separately authenticated through the existing private Bridge. A GitHub comment about the contract is not proof Grok executed or that S1 naturally consumed it.
+- `merge_authorized:false`, `execution_provenance:INTERACTIVE_OR_ON_DEMAND_READ_ONLY_NOT_SCHEDULED_S1`, no new supervisor and no extra rights are permanent invariants. Verify source currentness again before taking an original GitHub action.
+
 ## Shared classification and agent projection
 
 - `release-core.js` is the single conservative classification engine for browser and Node. Its `PROVEN` label means a specific source observation, **not** verified required checks, branch protection or release authorization.
@@ -48,16 +57,22 @@ Canonical policies:
 
 `node --test tools/s1-release-control/test-static.mjs` checks read-only and same-origin contracts.
 `node --test tools/s1-release-control/test-projection-v1.mjs` uses deterministic public-API fixtures for stale HEAD, changed main, stale review, denied access, incomplete file readback, cross-commit CI and false autonomy.
-`node 05_CYCLE_NAVIGATOR/site/build-public.mjs` builds the normal CN public bundle and optionally stages the isolated cockpit at `dist/s1-release-control/`.
+`node --test tools/s1-release-control/test-agent-context-v1.mjs` checks frozen source SHA, SHA-256/byte integrity, changed main, source denial, stale pointers, source allowlist and no private access. No Cycle Navigator build is involved.
 `node tools/s1-release-control/test-browser.mjs` uses actual Chrome CDP at 390px, 430px and 1440px with the GitHub API deliberately blocked to prove honest fallback and mobile/desktop behavior. It is **not** iPhone Safari testing.
 
-A PR-only GitHub Actions workflow runs independent static, adversarial and Pages-isolation jobs, with least-privilege read permissions, no cron, no new supervisor and no paid API. Each run must be bound to its actual PR HEAD.
+A PR-only GitHub Actions workflow runs independent static, adversarial and standalone Chrome/artifact jobs, with least-privilege read permissions, no cron, no new supervisor and no paid API. Each run must be bound to its actual PR HEAD.
 
-## Controlled deployment boundary
+## Separate-product GitHub Pages boundary
 
-The existing `.github/workflows/cycle-navigator-pages.yml` still publishes only `05_CYCLE_NAVIGATOR/site/dist`. A bounded change to `05_CYCLE_NAVIGATOR/site/build-public.mjs` now **stages** `/s1-release-control/` inside that same bundle. Existing CN root, `/legacy/`, and `/vnext/` are not rewritten for this feature, and a missing cockpit file is an explicit optional-build warning, never a reason to forge success.
+**S1 is NOT part of the Cycle Navigator site.** The earlier experimental change to `05_CYCLE_NAVIGATOR/site/build-public.mjs` has been entirely reverted in PR #1996, and the PR workflow no longer runs or publishes the CN build. No code path modifies the CN root, `/legacy/`, `/vnext/` or its Pages workflow.
 
-This does **not** mean publication already occurred. A real live URL requires exact HEAD tests, governance/recovery qualification, merge, Pages run success, and a real CDN/browser readback. Private-source publication and additional scheduler architecture are not part of this PR. If the external Vault/recovery or actual platform rules cannot be independently verified, release remains HOLD regardless of passing tests.
+The existing Archive Pages site is already assigned to Cycle Navigator. GitHub Pages provides one project site per repository. The durable deployment target is therefore **a separately owned PUBLIC repository dedicated to S1**, e.g. `Donh91/S1-Release-Control`, with its own project Pages address after actual creation, configuration, commit and deployment. This proposed name and URL are **not** a claim of an existing repository or live site.
+
+The existing GitHub connector can edit original PRs but does not currently expose a repository-creation or Pages-settings/deployment action. A separate repository has **not** been created and no Pages deployment was attempted. Preserve this exact operational blocker `SEPARATE_GITHUB_PAGES_REPOSITORY_CREATION_UNAVAILABLE`; do not repurpose CN, issue a fake URL, or consume unapproved paid web-browser access to bypass it.
+
+An authenticated repository-owner route capable of creating and configuring a public repo is needed once, then the original S1 release workflow can export exactly `index.html`, `release-core.js` and a source-bound manifest into the dedicated site without any private records or new scheduler. A Pages publish in that repository still requires a real run, exact source-commit readback, HTTPS/CDN bytes verification and browser checks. The current standalone PR-only job supplies an independent SHA256SUMS-bearing artifact for review, **not** a production deployment.
+
+Production acceptance remains `UNOBSERVED` until a real published URL and independent readback exist. No release permission can be inferred from PR success, browser-loopback success, a source safepoint or an unrelated Vault restore.
 
 ## Explicit non-goals
 
