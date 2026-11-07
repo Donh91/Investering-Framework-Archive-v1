@@ -12,6 +12,8 @@ on:
       - '00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json'
       - 'scripts/research/validate_parallel_research_manifest_v1.py'
       - 'tests/agent_skills/test_research_parallel_lanes_manifest_v1.py'
+      - '07_PROMPTS_AND_AGENTS/skill_quality_gate/candidates/hre/**'
+      - 'tests/agent_skills/test_hre_source_clock_reference_v1.py'
       - 'research/historical_reality_engine/**'
       - 'scripts/research/validate_historical_reality_program_v1.py'
       - 'tests/research/test_historical_reality_program_v1.py'
@@ -37,6 +39,17 @@ jobs:
         run: |
           python scripts/research/validate_parallel_research_manifest_v1.py \
             .agents/skills/research-parallel-lanes/references/EXAMPLE_MISSION.json
+
+  hre-clock-reference-and-candidate-static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check source-clock method and strictly unregistered shadow candidate
+        run: python -m unittest discover -s tests/agent_skills -p test_hre_source_clock_reference_v1.py -v
 
   scientific-evidence-and-boundary-fixtures:
     runs-on: ubuntu-latest
