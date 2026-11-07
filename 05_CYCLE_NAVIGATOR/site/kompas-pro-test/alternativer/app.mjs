@@ -12,6 +12,7 @@ const query=new URLSearchParams(location.search);
 let concept=DESIGNS[query.get("design")]?query.get("design"):"nordic";
 let hours=Math.max(8,Math.min(168,Number(query.get("hours"))||168));
 let asset="BTC";
+let nordicFullDetailsOpen=false;
 const $=id=>document.getElementById(id);
 const fmt=n=>typeof n==="number"?n.toLocaleString("da-DK",{minimumFractionDigits:0,maximumFractionDigits:0}):"—";
 const dayNames=["Mandag","Tirsdag","Onsdag","Torsdag","Fredag","Lørdag","Søndag"];
@@ -41,6 +42,11 @@ function updateDescription(){
  $("concept-title").innerHTML=d.title;
  $("concept-description").textContent=d.description;
  $("footer-design").textContent="Design "+d.index+" · "+d.label;
+ const fold=$("daily-values-fold");
+ if(fold)fold.open=concept==="nordic"?nordicFullDetailsOpen:true;
+ const title=$("daily-section-title");
+ if(title)title.textContent=concept==="nordic"?
+   "Syv prisfelter, direkte på grafen":"Syv frosne prognosedage";
  $("sunday-close").textContent=fmt(ASSETS[asset].close[6]);
  for(const b of document.querySelectorAll("[data-concept-choice]")){
    b.setAttribute("aria-pressed",String(b.dataset.conceptChoice===concept));
@@ -91,6 +97,9 @@ function render(){
  u.searchParams.set("design",concept);u.searchParams.set("hours",String(hours));
  history.replaceState(null,"",u);
 }
+$("daily-values-fold")?.addEventListener("toggle",e=>{
+ if(concept==="nordic")nordicFullDetailsOpen=e.currentTarget.open;
+});
 document.querySelectorAll("[data-concept-choice]").forEach(b=>b.addEventListener("click",()=>{
  concept=b.dataset.conceptChoice;render();
 }));
