@@ -26,6 +26,7 @@ No intervention, source, indicator, forecast, alert or portfolio-action performa
 - SKILL_FOUNDRY_v1.md: useful procedures become candidate skills; independent quality gate, registration, rollback, not automated self-promotion.
 - APPROVAL_AND_RELEASE_v1.md: explicit owner-gated rollout and acceptance checks; do not confuse approval of design with launch completion.
 - scripts/research/validate_historical_reality_program_v1.py: deterministic plan/episode contract validator, paired with tests.
+- NATIVE_PILOT_METHOD_v1.md: real native checksum-verified public source and 3-lane retrospective first-phase protocol, with original PIT limits.
 
 ## Operating principle: no manual 'what next?' ritual
 
