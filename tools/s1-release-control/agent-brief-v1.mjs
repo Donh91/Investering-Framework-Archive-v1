@@ -104,10 +104,11 @@ export function composeBrief(context,projection,observedAt){
   handoff:'Read all source refs on actual original SHA at action time. This brief cannot approve, merge, close, schedule, attest external custody or prove autonomous execution.'
  };
 }
-export async function buildAgentBrief({fetcher=fetch,clock=()=>new Date().toISOString()}={}){
+export async function buildAgentBrief({fetcher=fetch,clock=()=>new Date().toISOString(),
+  sources=SCOPED_SOURCES,maxPerRepo=3}={}){
  const [context,projection]=await Promise.all([
-   buildAgentContext({fetcher,clock,sources:SCOPED_SOURCES}),
-   buildProjection({fetcher,clock,repositories:[MAIN_REPO],maxPerRepo:3})
+   buildAgentContext({fetcher,clock,sources}),
+   buildProjection({fetcher,clock,repositories:[MAIN_REPO],maxPerRepo})
  ]);
  return composeBrief(context,projection,clock());
 }
