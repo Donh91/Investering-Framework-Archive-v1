@@ -4,6 +4,7 @@ import {validateAgentBriefArtifact} from './verify-agent-brief-v1.mjs';
 const H='a'.repeat(40),M='b'.repeat(40),B='c'.repeat(40);
 const REPO='Donh91/Investering-Framework-Archive-v1';
 const now='2026-11-07T13:00:00Z';
+const verify=(p,h=H)=>validateAgentBriefArtifact(p,h,{now});
 const packet=()=>({
  contract:'S1_AGENT_BRIEF_CI_ARTIFACT_v1',
  candidate_pr_head_sha:H,original_source_main_sha:M,source_observed_at_utc:now,
@@ -27,7 +28,7 @@ const packet=()=>({
  }
 });
 test('bounded original source evidence is admitted only as read-only advisory',()=>{
- const r=validateAgentBriefArtifact(packet(),H);
+ const r=verify(packet(),H);
  assert.equal(r.status,'ADVISORY_SOURCE_IDENTITIES_VERIFIED');
  assert.deepEqual(r.failures,[]);
  assert.equal(r.merge_authorized,false);
@@ -35,8 +36,8 @@ test('bounded original source evidence is admitted only as read-only advisory',(
 });
 test('wrong or missing exact PR head fail closed',()=>{
  const p=packet();
- assert.ok(validateAgentBriefArtifact(p,'f'.repeat(40)).failures.includes('CANDIDATE_PR_HEAD_MISMATCH'));
- assert.ok(validateAgentBriefArtifact(p,'short').failures.includes('EXPECTED_HEAD_REQUIRED'));
+ assert.ok(verify(p,'f'.repeat(40)).failures.includes('CANDIDATE_PR_HEAD_MISMATCH'));
+ assert.ok(verify(p,'short').failures.includes('EXPECTED_HEAD_REQUIRED'));
 });
 test('source main, clock and source locator must be coherent',()=>{
  for(const tamper of [
@@ -47,7 +48,7 @@ test('source main, clock and source locator must be coherent',()=>{
   p=>p.brief.source_coverage.canonical_sources[0].blob_sha='short'
  ]){
   const p=packet();tamper(p);
-  assert.equal(validateAgentBriefArtifact(p,H).status,'REJECTED');
+  assert.equal(verify(p,H).status,'REJECTED');
  }
 });
 test('false permissions, S1 autonomy and Grok formal approval cannot pass',()=>{
@@ -63,14 +64,14 @@ test('false permissions, S1 autonomy and Grok formal approval cannot pass',()=>{
   p=>p.brief.source_coverage.private_bridge='AVAILABLE'
  ]){
   const p=packet();tamper(p);
-  assert.equal(validateAgentBriefArtifact(p,H).status,'REJECTED');
+  assert.equal(verify(p,H).status,'REJECTED');
  }
 });
 test('sampled PR inventory must never masquerade as complete',()=>{
  const p=packet();p.brief.source_coverage.public_github_repository.discovery_complete=true;
- assert.ok(validateAgentBriefArtifact(p,H).failures.includes('SAMPLED_DISCOVERY_MISCLASSIFIED'));
+ assert.ok(verify(p,H).failures.includes('SAMPLED_DISCOVERY_MISCLASSIFIED'));
  const q=packet();q.brief.state='OBSERVED_ADVISORY';
- assert.ok(validateAgentBriefArtifact(q,H).failures.includes('COMPLETE_DISCOVERY_UNVERIFIED'));
+ assert.ok(verify(q,H).failures.includes('COMPLETE_DISCOVERY_UNVERIFIED'));
 });
 test('missing body, source, or original PR is not admissible',()=>{
  for(const mutate of [
@@ -80,14 +81,37 @@ test('missing body, source, or original PR is not admissible',()=>{
   p=>p.brief.source_coverage.public_github_repository.observed=false
  ]){
   const p=packet();mutate(p);
-  assert.equal(validateAgentBriefArtifact(p,H).status,'REJECTED');
+  assert.equal(verify(p,H).status,'REJECTED');
  }
 });
 test('matched complete public discovery is allowed without merge permission',()=>{
  const p=packet();p.brief.state='OBSERVED_ADVISORY';
  p.brief.source_coverage.public_github_repository.discovery_complete=true;
  p.brief.source_coverage.public_github_repository.source_issues=[];
- const r=validateAgentBriefArtifact(p,H);
+ const r=verify(p,H);
  assert.equal(r.status,'ADVISORY_SOURCE_IDENTITIES_VERIFIED');
  assert.equal(r.merge_authorized,false);
+});
+
+test('historical replay is invalid after 90 minutes although source SHA matches',()=>{
+ const sample=packet();
+ const stale=validateAgentBriefArtifact(sample,H,{now:'2026-11-07T15:00:01Z'});
+ assert.equal(stale.status,'REJECTED');
+ assert.ok(stale.failures.includes('ARTIFACT_SOURCE_STALE_OR_FUTURE'));
+ assert.equal(stale.current_main_rechecked,false);
+ assert.equal(stale.eligible_for_original_action,false);
+});
+test('future source clock outside bounded drift fails closed',()=>{
+ const sample=packet();
+ const future=validateAgentBriefArtifact(sample,H,{now:'2026-11-07T12:57:00Z'});
+ assert.equal(future.status,'REJECTED');
+ assert.ok(future.failures.includes('ARTIFACT_SOURCE_STALE_OR_FUTURE'));
+});
+test('fresh archive proof remains advisory and never becomes current main readback',()=>{
+ const sample=packet();
+ const good=validateAgentBriefArtifact(sample,H,{now:'2026-11-07T13:00:01Z'});
+ assert.equal(good.status,'ADVISORY_SOURCE_IDENTITIES_VERIFIED');
+ assert.equal(good.current_main_rechecked,false);
+ assert.equal(good.eligible_for_original_action,false);
+ assert.equal(good.merge_authorized,false);
 });
