@@ -67,6 +67,14 @@ def evaluate(anchors):
     for months,test_month in segments:
         train=anchors[anchors.month.isin(months)].copy()
         test=anchors[anchors.month==test_month].copy()
+        # The 24h future-low label completes at anchor t + 25h, NOT at t.
+        # The last train month's outcome may otherwise include test-month
+        # price lows. Purge any training outcome not matured before test start.
+        embargo_start=pd.Timestamp(test_month+"-01T00:00:00Z")
+        train["target_matures_at_utc"]=train.timestamp+pd.Timedelta(hours=25)
+        excluded=len(train)
+        train=train[train.target_matures_at_utc<embargo_start].copy()
+        excluded-=len(train)
         if train.empty or test.empty:raise ValueError("no train/test rows")
         y=test.drawdown_2pct_next_day.to_numpy(dtype=int)
         pconstant=np.full(len(y),train.drawdown_2pct_next_day.mean())
@@ -75,6 +83,9 @@ def evaluate(anchors):
         out.append({
             "train_months":months,"test_month":test_month,
             "n_train":len(train),"n_test":len(test),
+            "purged_unmatured_training_labels":int(excluded),
+            "max_training_target_maturity_utc":train.target_matures_at_utc.max().isoformat(),
+            "test_month_start_utc":embargo_start.isoformat(),
             "clock":"at 00:00UTC after 23:00 completed hour",
             "baseline_constant":scores(y,pconstant),
             "baseline_price_vol_market":scores(y,pprice),
