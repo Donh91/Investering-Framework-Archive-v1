@@ -133,6 +133,62 @@ def select_cases(cases, maximum=3):
     } for _, item in result]
 
 
+
+def recommend_work_mode(pr_cases, issue_cases=None, *,
+                        pr_inventory_complete=False,
+                        issue_inventory_complete=False, maximum=3):
+    """ADVISORY ONLY: choose a bounded S1 operating mode from untrusted candidates.
+
+    Native caller MUST separately verify repository pagination, original owners,
+    leases, permissions, source and exact HEAD/CI. No execution or release rights.
+    Missing issue census must never become a healthy/idle conclusion.
+    """
+    if (not isinstance(pr_cases, list)
+            or (issue_cases is not None and not isinstance(issue_cases, list))
+            or type(pr_inventory_complete) is not bool
+            or type(issue_inventory_complete) is not bool):
+        raise AdvisoryInputError("explicit lists and boolean census completeness required")
+    if type(maximum) is not int or not 1 <= maximum <= 3:
+        raise AdvisoryInputError("maximum must be 1-3")
+
+    def typed(rows, kind):
+        accepted, wrong_kind = [], 0
+        for item in rows:
+            path = urlparse(item.get("original_url", "")).path.strip("/").split("/") if isinstance(item, dict) else []
+            if len(path) == 4 and path[2] == kind:
+                accepted.append(item)
+            else:
+                wrong_kind += 1
+        evaluated = select_cases_isolated(accepted, maximum=maximum)
+        return evaluated, wrong_kind
+
+    prs, wrong_prs = typed(pr_cases, "pull")
+    owners, wrong_issues = typed(issue_cases or [], "issues")
+    unknown_count = (wrong_prs + wrong_issues + len(prs["invalid_cases"])
+                     + len(owners["invalid_cases"]))
+    if prs["selected"]:
+        mode, action = "EXECUTE", "VERIFY_ORIGINAL_PR_GATES"
+    elif owners["selected"]:
+        mode, action = "DISCOVER", "VERIFY_ORIGINAL_ISSUE_OWNER_AND_FALSIFIER"
+    elif (pr_inventory_complete and issue_inventory_complete
+          and issue_cases is not None and unknown_count == 0):
+        mode, action = "OBSERVE_AND_LEARN", "CHEAP_MATERIAL_TRIGGER_CHECK"
+    else:
+        mode, action = "DISCOVER", "COMPLETE_AUTHORIZED_SOURCE_CENSUS"
+
+    return {
+        "mode": mode, "next_action": action,
+        "selected_original_prs": prs["selected"],
+        "selected_original_issues": owners["selected"] if mode == "DISCOVER" else [],
+        "pr_inventory_complete_claim": pr_inventory_complete,
+        "issue_inventory_complete_claim": issue_inventory_complete,
+        "invalid_or_wrong_kind_inputs": unknown_count,
+        "native_scope_verified": False,
+        "release_authority": False, "dispatch_authority": False,
+        "externally_authenticated": False,
+    }
+
+
 def strategic_question(item, brief, *, source_root=None, now=None):
     """Correlate offline advice only after the existing source reader accepts it.
 
