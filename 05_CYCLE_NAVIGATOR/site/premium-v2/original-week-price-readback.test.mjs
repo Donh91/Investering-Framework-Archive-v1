@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildWeek} from '../kompas-pro-test/alternativer/full-week-fixture.mjs';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import {verifiedOriginalWeekPrices,originalWeekPriceLabel} from './original-week-price-readback.mjs';
 import {KOMPAS_HORIZONS,kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
 
@@ -123,4 +125,14 @@ test('private source or fake daily research scenarios are never inferred from or
  assert.ok(!('official_action' in val));
  assert.ok(!('forecast' in val));
  assert.ok(!('issued_prediction' in val));
+});
+
+
+test('eight-lane Research Parallel Lanes manifest passes original deterministic schema guard, no agent dispatch',()=>{
+ const validator=fileURLToPath(new URL('../../../scripts/research/validate_parallel_research_manifest_v1.py',import.meta.url));
+ const manifest=fileURLToPath(new URL('../../../04_MARKET_LEARNING/handlekompas/research/kompas_pro_elite_20261107/RESEARCH_PARALLEL_LANES_V1_MISSION.json',import.meta.url));
+ const output=JSON.parse(execFileSync('python3',[validator,manifest],{encoding:'utf8'}));
+ assert.equal(output.status,'PASS_SCHEMA_ONLY');
+ assert.equal(output.lanes,8);
+ assert.equal(output.does_not_dispatch_agents_or_jobs,true);
 });
