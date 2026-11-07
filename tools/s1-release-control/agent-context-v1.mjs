@@ -44,8 +44,12 @@ function publicSafeSummary(id,data){
  if(id==='operations')return {
    overall_status:typeof data.overall_status==='string'?data.overall_status:null,
    openai_api_spend_estimate_usd:null, // private/sensitive billing and charge-once authority intentionally excluded
-   incident_count:safeCount(data.incidents?.open_count)||null,
-   source_coverage:typeof data.source_coverage==='string'?data.source_coverage:null
+   incident_count:safeCount(data.incidents?.open_count)??null,
+   source_coverage:typeof data.source_coverage==='string'?data.source_coverage:null,
+   original_required_actions:Array.isArray(data.required_actions)?data.required_actions.slice(0,8)
+     .filter(x=>x&&typeof x.priority==='string'&&typeof x.reason==='string'&&typeof x.system==='string')
+     .map(x=>({priority:x.priority,reason:x.reason,system:x.system,owner:'ORIGINAL_OPERATIONS_DASHBOARD',advisory_only:true})):[]
+
  };
  if(id==='handoff')return {
    codex_ready_task_count:safeCount(data.codex_ready_task_count),
@@ -60,7 +64,12 @@ function publicSafeSummary(id,data){
      owner:'EXISTING_CODEX_INTAKE',
      route:typeof t.route==='string'?t.route:'UNOBSERVED',
      state:typeof t.lifecycle_state==='string'?t.lifecycle_state:'UNOBSERVED',
-     source_path:typeof t.candidate_path==='string'&&!t.candidate_path.includes('..')?t.candidate_path:null
+     source_path:typeof t.candidate_path==='string'&&t.candidate_path.startsWith('research/codex/intake/')&&!t.candidate_path.includes('..')?t.candidate_path:null,
+     finding:typeof t.finding==='string'?t.finding.slice(0,200):null,
+     original_signature:typeof t.signature==='string'?t.signature.slice(0,80):null,
+     observed_at_utc:typeof t.last_observed_at_utc==='string'?t.last_observed_at_utc:null,
+     risk_class:typeof t.risk_class==='string'?t.risk_class:null,
+     source_is_remediation_authority:false,code_execution_proven:false
    })):[]
  };
  if(id==='codex_execution')return {
@@ -99,12 +108,16 @@ async function readFrozenSource(fetcher,main,id,observedAt){
    const data=jsonSafe(bytes.toString('utf8'));
    const generated=typeof data.generated_at_utc==='string'?data.generated_at_utc:null;
    const age=ageOf(generated,observedAt,spec.maxAgeMinutes);
+   const summary=publicSafeSummary(id,data);
+   if(id==='codex_ready'&&Array.isArray(summary.task_refs))summary.task_refs=summary.task_refs.map(task=>({
+     ...task,source_url:task.source_path?headFor(task.source_path,main):null
+   }));
    return {id,status:age.status==='UNOBSERVED'?'UNOBSERVED':'OBSERVED',freshness:age.status,
      age_minutes:age.minutes,source_contract:typeof data.contract==='string'?data.contract:null,
      owner:spec.owner,main_sha:main,blob_sha:body.sha,sha256:digest(bytes),
      bytes:bytes.length,source_path:spec.path,source_url:pinnedUrl,
      generated_at_utc:generated,observed_at_utc:observedAt,
-     summary:publicSafeSummary(id,data),release_authority:false};
+     summary,release_authority:false};
  }catch(err){
    return {id,status:'UNOBSERVED',freshness:'UNOBSERVED',owner:spec.owner,
      main_sha:main,source_path:spec.path,source_url:pinnedUrl,
