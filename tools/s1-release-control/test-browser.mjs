@@ -166,7 +166,7 @@ try{
     if(!mockSuccess)assert.ok(report.fallbackNotLive,'HISTORICAL_FALLBACK_MISLABELED_LIVE');
     assert.match(report.queue,/^\d+\/3$/);
     reports.push(report);
-    if(mockSuccess)await evaluate('localStorage.removeItem("s1-release-control-public-v1")');
+    // Keep only the final viewport cache to validate non-live reload handling.\n    if(mockSuccess&&reports.length<3)await evaluate('localStorage.removeItem("s1-release-control-public-v1")');
   }
   if(mockSuccess){
     // Verify the opposite control: an ordinary reload of cached public data
