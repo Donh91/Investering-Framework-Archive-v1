@@ -1,4 +1,4 @@
-/* Actual headless Chrome smoke, existing Pages staging only.
+/* Actual headless Chrome smoke for the standalone S1 product only.
  * CDP mobile emulation is not a claim about iOS Safari or production CDN.
  */
 import assert from 'node:assert/strict';
@@ -9,10 +9,10 @@ import { resolve,dirname,extname,join,sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { setTimeout as delay } from 'node:timers/promises';
-const dist=resolve(dirname(fileURLToPath(import.meta.url)),'../../05_CYCLE_NAVIGATOR/site/dist');
+const dist=dirname(fileURLToPath(import.meta.url));
 const chrome=[process.env.CHROME_BIN,'/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser'].find(x=>x&&existsSync(x));
 assert.ok(chrome,'S1_BROWSER_CHROME_UNAVAILABLE');
-assert.ok(existsSync(join(dist,'s1-release-control/index.html')),'S1_BUNDLE_NOT_STAGED');
+assert.ok(existsSync(join(dist,'index.html')),'S1_BUNDLE_NOT_STAGED');
 const mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.json':'application/json','.css':'text/css'};
 const server=createServer((req,res)=>{
   let pathname;try{pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname)}catch{res.writeHead(400).end();return}
@@ -23,7 +23,7 @@ const server=createServer((req,res)=>{
   catch(error){if(!res.headersSent){res.writeHead(404).end('missing')}else{res.end();console.error('S1_STATIC_SERVER_POST_HEADER_ERROR',String(error.message||error))}}
 });
 await new Promise((ok,no)=>server.once('error',no).listen(0,'127.0.0.1',ok));
-const pageUrl='http://127.0.0.1:'+server.address().port+'/s1-release-control/';
+const pageUrl='http://127.0.0.1:'+server.address().port+'/';
 let profile=null,browser=null,ws=null;
 try{
   let port=0;
