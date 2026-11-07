@@ -52,6 +52,32 @@ class AdversarialOperatorCountingTests(unittest.TestCase):
         self.assertFalse(row["stage1_qualified"])
         self.assertEqual(row["classification"], "FALSE_POSITIVE_INFRA")
 
+    def test_relay_class_conflicts_with_explicit_non_benign_fails_closed(self) -> None:
+        event = base_event(common_funder_class="RELAY", benign_infra_excluded=True)
+        row = m.classify_event(event)
+        self.assertTrue(row["raw_fire"])
+        self.assertEqual(row["infra_state"], "UNKNOWN")
+        self.assertEqual(row["classification"], "UNKNOWN_INFRA")
+        self.assertFalse(row["stage1_qualified"])
+        self.assertFalse(row["stage2_qualified"])
+
+    def test_non_benign_class_conflicts_with_explicit_infra_fails_closed(self) -> None:
+        event = base_event(common_funder_class="NON_BENIGN", benign_infra_excluded=False)
+        row = m.classify_event(event)
+        self.assertEqual(row["classification"], "UNKNOWN_INFRA")
+        self.assertFalse(row["stage1_qualified"])
+
+    def test_relay_lineage_conflicts_with_non_benign_funder_fails_closed(self) -> None:
+        event = base_event(lineage_class="RELAY", common_funder_class="NON_BENIGN")
+        row = m.classify_event(event)
+        self.assertEqual(row["infra_state"], "UNKNOWN")
+        self.assertFalse(row["stage1_qualified"])
+
+    def test_non_conflicting_relay_signals_still_excluded(self) -> None:
+        row = m.classify_event(base_event(common_funder_class="RELAY", benign_infra_excluded=False))
+        self.assertEqual(row["classification"], "FALSE_POSITIVE_INFRA")
+        self.assertFalse(row["stage1_qualified"])
+
     def test_unknown_infra_stays_unknown(self) -> None:
         event = base_event()
         event.pop("common_funder_class")
