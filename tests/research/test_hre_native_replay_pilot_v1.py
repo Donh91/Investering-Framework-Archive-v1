@@ -148,6 +148,26 @@ class SourceIntegrity(unittest.TestCase):
                          [d["alternative_high"] for d in again["days"]])
         self.assertNotEqual(original["days"][0]["actual_close"],again["days"][0]["actual_close"])
 
+    def test_extended_episode_predefined_and_no_future_original_claim(self):
+        self.assertEqual(len(hre.EXTENDED_EPISODES),5)
+        self.assertEqual(hre.EXTENDED_EPISODES["terra_2022"]["months"],["2022-04","2022-05","2022-06"])
+        self.assertIn("original",hre.SOURCE_CLASS.lower())
+        self.assertIn("NOT_OFFICIAL",hre.INFERENCE_CLASS)
+
+    def test_extended_requires_preselected_case(self):
+        with self.assertRaisesRegex(ValueError,"requires preselected"):
+            hre.run("extended")
+        with self.assertRaisesRegex(ValueError,"unsupported"):
+            hre.run("source","terra_2022")
+
+    def test_case_context_only_contains_preanchor_information(self):
+        rows=hre.parse_binance_hourly(make_zip(month="2021-03"),"BTCUSDT-1h-2021-03.csv","2021-03")
+        x=hre.score_crisis(rows,event_anchor_utc="2021-03-20T00:00:00Z")
+        cases=x["preselected_case_context"]["pre_anchor_7d_eligible_cutoffs"]
+        self.assertGreater(len(cases),0)
+        self.assertTrue(all(d["cutoff_utc"] <= "2021-03-20T00:00:00+00:00" for d in cases))
+        self.assertIn("ex-post",x["preselected_case_context"]["warning"])
+
     def test_weekly_fail_insufficient_history(self):
         with self.assertRaisesRegex(ValueError,"insufficient"):
             hre.frozen_week_forecast([],0)
