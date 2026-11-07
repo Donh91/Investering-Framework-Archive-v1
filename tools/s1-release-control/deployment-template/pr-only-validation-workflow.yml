@@ -1,0 +1,203 @@
+name: S1 Release Control PR validation
+
+on:
+  pull_request:
+    paths:
+      - "tools/s1-release-control/**"
+      - ".github/workflows/s1-release-control-pr.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s1-release-control-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  static-and-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate read-only browser boundaries
+        run: node --test tools/s1-release-control/test-static.mjs
+      - name: Assert read-only versioned machine schemas
+        run: node --test tools/s1-release-control/test-contract-schema-v1.mjs
+      - name: Verify public agent artifact positive and tamper-negative controls
+        run: node --test tools/s1-release-control/test-verify-agent-brief-v1.mjs
+      - name: Validate eight research lanes contract without dispatch
+        run: python3 scripts/research/validate_parallel_research_manifest_v1.py tools/s1-release-control/RESEARCH_PARALLEL_LANES_V1.json
+  projection-adversarial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source-bound fail-closed projection
+        run: node --test tools/s1-release-control/test-projection-v1.mjs
+      - name: Verify immutable canonical agent source packet and adversarial negatives
+        run: node --test tools/s1-release-control/test-agent-context-v1.mjs
+      - name: Verify agent-first action brief never grants release or autonomous S1 credit
+        run: node --test tools/s1-release-control/test-agent-brief-v1.mjs
+      - name: Source-bound live S1 agent brief, public GET only and advisory
+        continue-on-error: true
+        env:
+          S1_CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          import {writeFileSync,existsSync} from 'node:fs';
+          import {buildAgentBrief,buildReadbackStatus} from './tools/s1-release-control/agent-brief-v1.mjs';
+          import {validateAgentBriefArtifact} from './tools/s1-release-control/verify-agent-brief-v1.mjs';
+          const b=await buildAgentBrief({sources:['handoff','codex_ready'],maxPerRepo:1});
+          const report={
+            schema:b.schema,
+            source_alignment:b.source_alignment,
+            state:b.state,
+            archive_main_sha:b.archive_main_sha,
+            observed_at_utc:b.observed_at_utc,
+            original_sources:b.source_coverage.canonical_sources.map(x=>({id:x.id,status:x.status,freshness:x.freshness,blob_sha:x.blob_sha})),
+            original_codex_ready_hint_count:b.original_codex_ready_hints.length,
+            original_pr_sample_count:b.public_pr_triage.length,
+            source_issues:b.source_coverage.public_github_repository?.source_issues||[],
+            strict_action_limit:b.existing_s1_action_limit,
+            standalone_release_permission:b.invariant.release_permission,
+            private_bridge:b.source_coverage.private_bridge,
+            natural_s1_proven:b.existing_actors.S1.natural_closure_proven
+          };
+          console.log('S1_PUBLIC_AGENT_BRIEF_READBACK',JSON.stringify(report));
+          // This is an advisory source observation, not a required CI/merge gate.
+          // For an accessible exact-source sample, require a real canonical blob.
+          if(!['OBSERVED_ADVISORY','OBSERVED_ADVISORY_SAMPLED'].includes(b.state)||
+             b.source_alignment!=='MATCHED'||
+             report.original_sources.some(x=>x.status!=='OBSERVED'||x.freshness!=='FRESH_ADVISORY')||
+             report.original_pr_sample_count<1){
+            console.log('S1_AGENT_BRIEF_WITHHELD',JSON.stringify({
+              reason:'SOURCE_NOT_FRESH_OR_COMPLETE',state:b.state,source_issues:report.source_issues,
+              stale_sources:report.original_sources.filter(x=>x.freshness!=='FRESH_ADVISORY').map(x=>x.id)
+            }));
+          }
+          else {
+            const sourceHead=process.env.S1_CANDIDATE_HEAD;
+            if(!/^[a-f0-9]{40}$/i.test(sourceHead||''))throw Error('PR_HEAD_SHA_INVALID');
+            const packet={
+              contract:'S1_AGENT_BRIEF_CI_ARTIFACT_v1',
+              candidate_pr_head_sha:sourceHead,
+              original_source_main_sha:b.archive_main_sha,
+              github_action_run_id:process.env.GITHUB_RUN_ID||null,
+              source_observed_at_utc:b.observed_at_utc,
+              authority:'ADVISORY_READ_ONLY',
+              can_merge:false,can_schedule:false,can_spend:false,
+              public_only:true,
+              brief:b
+            };
+            const checked=validateAgentBriefArtifact(packet,sourceHead);
+            if(checked.status!=='ADVISORY_SOURCE_IDENTITIES_VERIFIED'){
+              console.log('S1_AGENT_BRIEF_WITHHELD',JSON.stringify({reason:'SOURCE_IDENTITY_REJECTED',failures:checked.failures}));
+            }else{
+              writeFileSync('/tmp/s1-release-control-agent-brief-v1.json',JSON.stringify(packet,null,2)+'\n');
+              console.log('S1_AGENT_BRIEF_ADMITTED',JSON.stringify({
+                exact_source_head:sourceHead,origin_main:b.archive_main_sha,
+                eligible_for_original_action:checked.eligible_for_original_action,
+                read_only:true
+              }));
+            }
+          }
+          const admitted=existsSync('/tmp/s1-release-control-agent-brief-v1.json');
+          const diagnostic=buildReadbackStatus(b,process.env.S1_CANDIDATE_HEAD,{admitted});
+          writeFileSync('/tmp/s1-agent-readback-status.json',JSON.stringify(diagnostic,null,2)+'\n');
+          console.log('S1_AGENT_READBACK_STATUS',JSON.stringify({
+            status:diagnostic.status,stale_sources:diagnostic.source_statuses.filter(x=>x.freshness!=='FRESH_ADVISORY').map(x=>x.id),source_only_original_codex_pointers:diagnostic.read_only_original_codex_candidate_pointers.length
+          }));
+          NODE
+          if test -f /tmp/s1-release-control-agent-brief-v1.json; then
+            node tools/s1-release-control/verify-agent-brief-v1.mjs /tmp/s1-release-control-agent-brief-v1.json "$S1_CANDIDATE_HEAD"
+          fi
+      - name: Upload read-only source diagnostic for existing S1/Grok
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-agent-readback-status-${{ github.event.pull_request.head.sha }}
+          path: /tmp/s1-agent-readback-status.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload immutable-candidate agent brief for existing S1/Grok readback
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-agent-brief-${{ github.event.pull_request.head.sha }}
+          path: /tmp/s1-release-control-agent-brief-v1.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  standalone-browser-and-artifact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate S1 standalone source, independent from Cycle Navigator
+        run: |
+          test -f tools/s1-release-control/index.html
+          test -f tools/s1-release-control/release-core.js
+          ! grep -q "05_CYCLE_NAVIGATOR/site/dist" tools/s1-release-control/test-browser.mjs
+          ! grep -q "s1-release-control" 05_CYCLE_NAVIGATOR/site/build-public.mjs
+      - name: Actual Chrome desktop and mobile behavior with API unavailable
+        run: node tools/s1-release-control/test-browser.mjs
+      - name: Actual Chrome desktop and mobile behavior with deterministic GitHub success
+        env:
+          S1_BROWSER_MODE: mock
+        run: node tools/s1-release-control/test-browser.mjs
+      - name: Prepare standalone public bundle only
+        env:
+          GITHUB_HEAD_REF_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p /tmp/s1-site
+          cp tools/s1-release-control/index.html /tmp/s1-site/index.html
+          cp tools/s1-release-control/release-core.js /tmp/s1-site/release-core.js
+          touch /tmp/s1-site/.nojekyll
+          node --input-type=module <<'NODE'
+          import {writeFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          import {readFileSync} from 'node:fs';
+          const sourceHead=process.env.GITHUB_HEAD_REF_SHA;
+          if(!/^[a-f0-9]{40}$/i.test(sourceHead||''))throw Error('SOURCE_HEAD_SHA40_MISSING');
+          const files=['index.html','release-core.js'];
+          const bytes=Object.fromEntries(files.map(file=>[file,createHash('sha256')
+             .update(readFileSync('/tmp/s1-site/'+file)).digest('hex')]));
+          const packet={contract:'S1_STANDALONE_STATIC_BUNDLE_v1',source_repo:'Donh91/Investering-Framework-Archive-v1',
+            source_head_sha:sourceHead,content_sha256:bytes,read_only:true,agent_authority:false,
+            production_deployed:false,private_data_included:false};
+          writeFileSync('/tmp/s1-site/release-identity.json',JSON.stringify(packet,null,2)+'\n');
+          NODE
+          # Reject malformed or forged manifest before artifact checksum/publishing.
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          const sourceHead=process.env.GITHUB_HEAD_REF_SHA;
+          const v=JSON.parse(readFileSync('/tmp/s1-site/release-identity.json','utf8'));
+          if(v.contract!=='S1_STANDALONE_STATIC_BUNDLE_v1'||
+             v.source_head_sha!==sourceHead||v.source_repo!=='Donh91/Investering-Framework-Archive-v1'||
+             v.read_only!==true||v.agent_authority!==false||
+             v.production_deployed!==false||v.private_data_included!==false)
+             throw Error('STANDALONE_RELEASE_MANIFEST_INTEGRITY_INVALID');
+          for(const filename of ['index.html','release-core.js']){
+            const check=createHash('sha256').update(readFileSync('/tmp/s1-site/'+filename)).digest('hex');
+            if(v.content_sha256?.[filename]!==check)throw Error('SITE_FILE_SHA256_MISMATCH_'+filename);
+          }
+          console.log('S1_SITE_MANIFEST_JSON_AND_CONTENT_SHA_VERIFIED',sourceHead);
+          NODE
+          (cd /tmp/s1-site && sha256sum index.html release-core.js release-identity.json > SHA256SUMS)
+          test -f /tmp/s1-site/SHA256SUMS
+      - name: Attach independent GitHub Pages candidate, not deployed
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-standalone-site-${{ github.event.pull_request.head.sha }}
+          path: /tmp/s1-site/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
