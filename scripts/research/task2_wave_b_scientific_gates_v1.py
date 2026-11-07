@@ -64,9 +64,19 @@ def score_weekly_pair(packet):
     issue = utc(original["issue_utc"])
     begin = utc(packet["target_start_utc"])
     end = utc(packet["target_end_utc"])
-    if (begin <= issue or end <= begin or end - begin > timedelta(days=7)
-            or (end - begin).total_seconds() % 3600 != 0):
+    if (issue >= end or end <= begin or end - begin != timedelta(days=7)
+            or issue < begin - timedelta(days=1)
+            or any(x.minute or x.second or x.microsecond for x in (begin, end))):
         raise ValueError("ORIGINAL_TARGET_CLOCK_INVALID")
+    # Weekly original is often issued MONDAY AFTER the target week starts.
+    # Score only completed hour-close outcomes STRICTLY AFTER issue,
+    # never the hours before the genuine source freeze.
+    first_eligible_close = max(
+        begin + timedelta(hours=1),
+        issue.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1),
+    )
+    if first_eligible_close > end:
+        raise ValueError("NO_PROSPECTIVE_COMPLETE_HOUR")
     if not _is_sha(original.get("immutable_sha")):
         return {"status": "ORIGINAL_FREEZE_NOT_VERIFIED", "scores": {}, "contract": CONTRACT}
     if original.get("vendor_first_known_utc") is None:
@@ -89,10 +99,10 @@ def score_weekly_pair(packet):
             or utc(anchor_meta["first_known_utc"]) > issue):
         return {"status": "ANCHOR_PIT_UNVERIFIED", "scores": {}, "contract": CONTRACT}
     observation_meta = outcome.get("source", {})
-    expected_bars = int((end - begin).total_seconds() // 3600)
+    expected_bars = int((end - first_eligible_close).total_seconds() // 3600) + 1
     if (not _is_sha(observation_meta.get("immutable_sha"))
             or observation_meta.get("closed_hour_count") != expected_bars
-            or observation_meta.get("first_closed_utc") != packet["target_start_utc"]
+            or observation_meta.get("first_closed_utc") != first_eligible_close.strftime("%Y-%m-%dT%H:%M:%SZ")
             or observation_meta.get("last_closed_utc") != packet["target_end_utc"]):
         return {"status": "OUTCOME_COVERAGE_UNVERIFIED", "scores": {}, "contract": CONTRACT}
     anchor = _finite_positive(packet["preissue_anchor_price"])
@@ -125,6 +135,9 @@ def score_weekly_pair(packet):
         "independent_event_families": None, "statistical_edge_admitted": False,
         "production_model_change": False, "execution_or_investor_utility": False,
         "asset": asset, "target_week": week,
+        "issue_utc": original["issue_utc"],
+        "postfreeze_first_eligible_closed_hour_utc": first_eligible_close.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "postfreeze_eligible_completed_hours": expected_bars,
     }
 
 
