@@ -32,6 +32,19 @@ No intervention, source, indicator, forecast, alert or portfolio-action performa
 
 After owner-approved release, existing research owners and scheduled S1 should follow **verified, original-owner** machine-readable task handoffs rather than chat prompting. Re-evaluate only when new code/source/outcome, a due date, CI completion, peer review or a new objective blocker changes. Avoid re-running identical failed work. A queued status is NOT execution; only an authenticated native Actions run and readback counts. S1 natural unattended consumption must be specifically demonstrated and remains UNPROVEN until observed.
 
+## Latest verified native research (7 November 2026)
+
+The first real public-source study has now run and is source-integrity verified:
+- [Original HRE native first results](NATIVE_FIRST_RESULTS_20261107.md)
+- [Machine evidence receipt and exact three research artifact IDs](NATIVE_FIRST_RESULTS_EVIDENCE_20261107.json)
+- [PR #2010 merged](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2010), exact merge `c07f0030856619fed0c402bf745a0be091376faf`
+- [Real GitHub Actions research run 42390995602](https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42390995602): 3 independent successful datasets/forecast baseline jobs, 15/15 source adversarial tests, per-artifact SHA256.
+- Source QA found intrabar raw Binance close timestamps and genuine missing hourly buckets; the source code now uses nominal completed UTC hour end and does not fill gaps.
+- Scientific outcome: price-only historical crisis warning misses and very small, source-filtered 2021 daily low/high baselines. No Official Kompas historical edge or actual 2021 CN issue proven. No Sol MAX paid POST.
+- Existing S1 `6ae5fd466b48819187abc224ec0f1c5f` was updated in its SAME saved prompt to discover this owner-linked HRE work, schedule unchanged. A genuine **natural unattended S1 completion is still UNPROVEN**.
+
+The current dependency-ready research next steps and blockers live in [RESEARCH_QUEUE_v1.json](RESEARCH_QUEUE_v1.json). This is an evidence-linked navigation DAG, not an autonomous second dispatcher, workflow or paid API authority.
+
 ## First three truly useful outcomes
 
 1. A reproducible pilot for March 2020 market shock + matched false-alarm weeks, using only period-available source families and simple-price baseline.
