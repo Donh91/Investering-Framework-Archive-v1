@@ -1,0 +1,204 @@
+{
+  "contract": "RESEARCH_PARALLEL_LANES_V1",
+  "status": "IN_PROGRESS",
+  "mission_id": "TASK2-1596-EIGHT-RESEARCH-LANES-20261107",
+  "original_owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+  "project_repo": "Donh91/Investering-Framework-Archive-v1",
+  "objective": "Eight mutually distinct falsifiable owner research studies; source-first existing evidence, then new original PIT and after-cost admission only if actually qualified.",
+  "source_manifest_path": "research/altseason_atlas/SOURCE_MANIFEST_v1.json",
+  "source_snapshot_sha": "55cbc763c98da88cef82dca5b89a82cca65d9bc2",
+  "source_eligibility": "HISTORICAL_TRUTH_ONLY",
+  "data_classification": "PUBLIC_ONLY",
+  "parallel_job_cap": 3,
+  "approved_budget_usd": 0,
+  "no_new_scheduler": true,
+  "no_new_agent_identity": true,
+  "no_trading_authority": true,
+  "source_readback_semantics": "Eight independent connected GitHub source reads on 2026-11-07; historical PR and Actions runs are REUSED_NOT_NEW; no independently invoked AI agent.",
+  "original_PIT_first_known_certified": false,
+  "related_existing_gitHub_actions": {
+    "actual_prior_parallel_run": 42311443044,
+    "actual_prior_corrected_3_job_run": 42314816983,
+    "artifact_ids": [
+      13548452685,
+      13548283807,
+      13550078533,
+      13549684489,
+      13549534811
+    ],
+    "retention_end_utc": "2026-12-06",
+    "fresh_20261107_dispatch": "NOT_EXECUTED_BROWSER_WALLET_OUT_OF_FUNDS",
+    "github_workflow": "ironflow-task2-source-pilot.yml",
+    "existing_reuse_only": true
+  },
+  "lanes": [
+    {
+      "id": "L01",
+      "name": "Historical original PIT and source-first-known admission",
+      "question": "Are original R1 forecast inputs lawful at issue-time across all 11 original cases?",
+      "hypothesis": "All original field vintages, issue and publication clocks can be authenticated.",
+      "baseline": "Same-clock prior-close, missing/no-forecast and original R1 admission null.",
+      "falsifier": "Any missing original provider first-publication or independent event-family proof blocks admission.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json@9e728b835de294e5777222c171a89874a69dae95",
+      "max_minutes": 25,
+      "budget_usd": 0,
+      "output_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/TASK2_RPL_L01_RESEARCH_OUTCOME_20261107.md",
+      "status": "BLOCKED",
+      "run_evidence": {
+        "existing_owner_source_path": "04_MARKET_LEARNING/handlekompas/research/2026-10-15__TASK2_R1_NATIVE_V3_ORIGINAL_ADMISSION_v2.json",
+        "source_readback_blob_sha": "9e728b835de294e5777222c171a89874a69dae95",
+        "new_agent_run": false,
+        "new_actions_run": false
+      }
+    },
+    {
+      "id": "L02",
+      "name": "Official horizon freeze, 12H persistence and abstention",
+      "question": "Does Official forward sign beat same-issue persistence rather than reproduce present direction?",
+      "hypothesis": "Original Official timing changes predict mature future 12H outcomes prospectively.",
+      "baseline": "Same-clock preceding market direction and always-ABSTAIN.",
+      "falsifier": "Identical sign and equal accuracy to persistence refute incremental sign skill; unjoined 72/168H are UNKNOWN.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/29_FULL_70_ORIGINAL_AS_ISSUED_HORIZON_COVERAGE_20261023.json@f00883a8ffcfd5929040a4eefa98b8380f8c2612",
+      "max_minutes": 25,
+      "budget_usd": 0,
+      "output_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/TASK2_RPL_L02_RESEARCH_OUTCOME_20261107.md",
+      "status": "PLANNED",
+      "run_evidence": {
+        "existing_owner_source_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/29_FULL_70_ORIGINAL_AS_ISSUED_HORIZON_COVERAGE_20261023.json",
+        "source_readback_blob_sha": "f00883a8ffcfd5929040a4eefa98b8380f8c2612",
+        "new_agent_run": false,
+        "new_actions_run": false
+      }
+    },
+    {
+      "id": "L03",
+      "name": "M1 early-warning event lead and action-latency erosion",
+      "question": "Does M1 C-family warning survive matched random controls and actual operational delay?",
+      "hypothesis": "Independent event-family lead remains after 1d delivery delay.",
+      "baseline": "Frequency-matched random warning and no-alert events, clustered by shock.",
+      "falsifier": "Individual M1 C2 becomes null or lead disappears at legal delivery clock.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "research/framework_memory/task2_archive_first/LATEST.json@00b8d0839d69e375e584e10e033e9a57d99bcb56",
+      "max_minutes": 25,
+      "budget_usd": 0,
+      "output_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/TASK2_RPL_L03_RESEARCH_OUTCOME_20261107.md",
+      "status": "PLANNED",
+      "run_evidence": {
+        "existing_owner_source_path": "research/framework_memory/task2_archive_first/LATEST.json",
+        "source_readback_blob_sha": "00b8d0839d69e375e584e10e033e9a57d99bcb56",
+        "new_agent_run": false,
+        "new_actions_run": false
+      }
+    },
+    {
+      "id": "L04",
+      "name": "Shared Row C02/C07 challenge against class-prevalence null",
+      "question": "Can frozen C02/C07 distinguish ETHBTC sign beyond always-UP when all absences included?",
+      "hypothesis": "A candidate improves over always-UP on independent future event families.",
+      "baseline": "ALWAYS_POSITIVE 18/20 plus ALWAYS_NEGATIVE 2/20 on identical matured rows.",
+      "falsifier": "No improvement or one dependent 28d family rules out selection or promotion.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "research/framework_memory/task2_archive_first/LATEST.json@00b8d0839d69e375e584e10e033e9a57d99bcb56",
+      "max_minutes": 25,
+      "budget_usd": 0,
+      "output_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/TASK2_RPL_L04_RESEARCH_OUTCOME_20261107.md",
+      "status": "PLANNED",
+      "run_evidence": {
+        "existing_owner_source_path": "research/framework_memory/task2_archive_first/LATEST.json",
+        "source_readback_blob_sha": "00b8d0839d69e375e584e10e033e9a57d99bcb56",
+        "new_agent_run": false,
+        "new_actions_run": false
+      }
+    },
+    {
+      "id": "L05",
+      "name": "Breadth and ETF information after price and release latency",
+      "question": "Do external ETF and breadth sensors add incremental predictive decision value?",
+      "hypothesis": "Matched price/vol and legally delayed ETF/breadth inputs improve cluster-scored outcomes.",
+      "baseline": "Price-only/price-plus-vol and zero ETF/breadth gates at same UTC knowledge clock.",
+      "falsifier": "No stable positive cohort lift or unavailable release-time data falsifies usable edge.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md@36852db52b33f6b1ea3cbe773b9797cc948ea245",
+      "max_minutes": 25,
+      "budget_usd": 0,
+      "output_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/TASK2_RPL_L05_RESEARCH_OUTCOME_20261107.md",
+      "status": "PLANNED",
+      "run_evidence": {
+        "existing_owner_source_path": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
+        "source_readback_blob_sha": "36852db52b33f6b1ea3cbe773b9797cc948ea245",
+        "new_agent_run": false,
+        "new_actions_run": false
+      }
+    },
+    {
+      "id": "L06",
+      "name": "CFGI actual capture and retrospective temporal-contamination test",
+      "question": "Can CFGI composite source actually be known before decision and add price-vol lift?",
+      "hypothesis": "Source vintages, hour close and provider release times prove legally known signal plus lift.",
+      "baseline": "Price-vol chronological baseline with same availability, missing and censored cases.",
+      "falsifier": "Only batch retrieval upper bounds or inspected-history labels block original PIT skill claim.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "scripts/research/task2_cfgi_capture_clock_audit_v1.py@f46c48e0a7a52b764b190cda8140203be01705ab",
+      "max_minutes": 25,
+      "budget_usd": 0,
+      "output_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/TASK2_RPL_L06_RESEARCH_OUTCOME_20261107.md",
+      "status": "BLOCKED",
+      "run_evidence": {
+        "existing_owner_source_path": "scripts/research/task2_cfgi_capture_clock_audit_v1.py",
+        "source_readback_blob_sha": "f46c48e0a7a52b764b190cda8140203be01705ab",
+        "new_agent_run": false,
+        "new_actions_run": false
+      }
+    },
+    {
+      "id": "L07",
+      "name": "Ironflow 18-month derivatives 25h embargo and Feb negative regime",
+      "question": "Do lagged liquidation, OI and funding beat price-vol on independent monthly cohorts?",
+      "hypothesis": "Corrected purge and source SHA preserve replicated monthly positive Brier lift.",
+      "baseline": "Fixed price-vol/market Brier baseline across 12 chronologically tested months.",
+      "falsifier": "Nonpositive month-mean lift, Feb OI selection gaps, or source post-publication block promotion.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/IRONFLOW_FULL18M_EMBARGO_CORRECTED_SCIENCE_V2_20261107.md@6ca645a89fb4b10f6652b430d37b628f991699f2",
+      "max_minutes": 25,
+      "budget_usd": 0,
+      "output_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/TASK2_RPL_L07_RESEARCH_OUTCOME_20261107.md",
+      "status": "PLANNED",
+      "run_evidence": {
+        "existing_owner_source_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/IRONFLOW_FULL18M_EMBARGO_CORRECTED_SCIENCE_V2_20261107.md",
+        "source_readback_blob_sha": "6ca645a89fb4b10f6652b430d37b628f991699f2",
+        "new_agent_run": false,
+        "new_actions_run": false
+      }
+    },
+    {
+      "id": "L08",
+      "name": "Warning-to-action-to-delivery and after-cost investment utility",
+      "question": "Does an early warning actually change user-available actions before severe drawdown?",
+      "hypothesis": "Freeze to actual consumer receipt and executable action has positive after-cost utility.",
+      "baseline": "Always-HOLD/no warning, same-clock available action and explicit false alarms.",
+      "falsifier": "Missing message-delivery, approved SELL owner, or investable quotes blocks utility inference.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK_1_5_EDGE_ADMISSION_GATE_v1.json@b7e3dc8c1b1e8f948df72ef32fa762e7667a6bde",
+      "max_minutes": 25,
+      "budget_usd": 0,
+      "output_path": "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/TASK2_RPL_L08_RESEARCH_OUTCOME_20261107.md",
+      "status": "BLOCKED",
+      "run_evidence": {
+        "existing_owner_source_path": "04_MARKET_LEARNING/handlekompas/research/2026-10-13__TASK_1_5_EDGE_ADMISSION_GATE_v1.json",
+        "source_readback_blob_sha": "b7e3dc8c1b1e8f948df72ef32fa762e7667a6bde",
+        "new_agent_run": false,
+        "new_actions_run": false
+      }
+    }
+  ]
+}
