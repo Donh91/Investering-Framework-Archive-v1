@@ -44,8 +44,11 @@ jobs:
         run: node --test tools/s1-release-control/test-agent-brief-v1.mjs
       - name: Source-bound live S1 agent brief, public GET only and advisory
         continue-on-error: true
+        env:
+          S1_CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           node --input-type=module <<'NODE'
+          import {writeFileSync} from 'node:fs';
           import {buildAgentBrief} from './tools/s1-release-control/agent-brief-v1.mjs';
           const b=await buildAgentBrief({sources:['handoff','codex_ready'],maxPerRepo:1});
           const report={
@@ -68,7 +71,30 @@ jobs:
           // For an accessible exact-source sample, require a real canonical blob.
           if(b.source_alignment!=='MATCHED'||report.original_sources.some(x=>x.status!=='OBSERVED')||
              report.original_pr_sample_count<1)process.exitCode=1;
+          else {
+            const sourceHead=process.env.S1_CANDIDATE_HEAD;
+            if(!/^[a-f0-9]{40}$/i.test(sourceHead||''))throw Error('PR_HEAD_SHA_INVALID');
+            const packet={
+              contract:'S1_AGENT_BRIEF_CI_ARTIFACT_v1',
+              candidate_pr_head_sha:sourceHead,
+              original_source_main_sha:b.archive_main_sha,
+              github_action_run_id:process.env.GITHUB_RUN_ID||null,
+              source_observed_at_utc:b.observed_at_utc,
+              authority:'ADVISORY_READ_ONLY',
+              can_merge:false,can_schedule:false,can_spend:false,
+              public_only:true,
+              brief:b
+            };
+            writeFileSync('/tmp/s1-release-control-agent-brief-v1.json',JSON.stringify(packet,null,2)+'\\n');
+          }
           NODE
+      - name: Upload immutable-candidate agent brief for existing S1/Grok readback
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-agent-brief-${{ github.event.pull_request.head.sha }}
+          path: /tmp/s1-release-control-agent-brief-v1.json
+          if-no-files-found: warn
+          retention-days: 7
 
   standalone-browser-and-artifact:
     runs-on: ubuntu-latest
