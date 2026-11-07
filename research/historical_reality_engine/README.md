@@ -52,6 +52,12 @@ The current dependency-ready research next steps and blockers live in [RESEARCH_
 - The new five retrospective case cohorts preserve 72h overlapping outcomes and quote/vintage uncertainty, not genuine original Kompas forecasts or model edge. Strong emphasis on false-alarm tradeoffs before proposing Risk changes.
 - The original research DAG records next evidentiary blockers; no second scheduler, routine, paid model dispatcher or live trading.
 
+### Future shadow learning and controlled API delegation
+
+- [Source-bound shadow hypotheses](SHADOW_LEARNING_TRANSFER_CANDIDATES_v1.json) links actual first 7 historical calendar-era research cohorts to four falsifiable original-owner lessons: completed-bar integrity, crisis fragility vs false alarms, width-adjusted 7-day range forecasts, and altseason recovery/rotation. These **do not activate a live shadow outcome scorer, Round3 testing, official Kompas rules or portfolio decisions**. Existing CRE/S4 due-only owners and source/issuance gates remain binding.
+- [Sol MAX bounded delegation feasibility](SOL_MAX_FINITE_RESEARCH_DELEGATION_FEASIBILITY_v1.md) compares current safe one-shot owner-released paid pathway, possible future finite native authenticated preauthorization, and rejected unrestricted bot billing. **Current one-shot original #1476 release remains mandatory; no new Sol paid request has been sent and no preauthorization mechanism was deployed.**
+- Existing S1 original-owner discovery plus Research Parallel Lanes workflow/action changes continue only with source-bound receipts and actual qualified original releases. No duplicate scheduler or self-authorized continuation.
+
 ## First three truly useful outcomes
 
 1. A reproducible pilot for March 2020 market shock + matched false-alarm weeks, using only period-available source families and simple-price baseline.
