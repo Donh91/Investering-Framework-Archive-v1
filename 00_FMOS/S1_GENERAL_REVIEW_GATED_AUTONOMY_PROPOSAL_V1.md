@@ -47,3 +47,28 @@ D3: owner-authorized governed merge and only if necessary a scoped existing-task
 D4: natural scheduled S1 execution proof, independent consumer and 7/28-day outcome measurements.
 
 Explicitly NOT DONE: autonomous code repair, Grok review, native GitHub approval, release, saved-task mutation, natural unattended closure.
+
+## Independent review reconciliation, 2026-11-08 (CHANGES_REQUIRED, ACTIVATION NO-GO)
+
+Owner supplied Grok's summary of Bridge PR #160: authenticated owner delegation, executed test coverage, concurrent action/HEAD change/partial mutation controls; 89 existing tests and 19 independent checks reportedly passed, while seven new #2040 tests reportedly skipped. **Bridge PR #160 returned 404 to the current GitHub connector; this summary is UNVERIFIED_EXTERNAL_REPORT, not authenticated Grok receipt.** No claim of independent native review approval.
+
+### Mandatory implementation deltas before D1/D2 acceptance
+1. **Authenticated mandate:** Bind each proposed write to current exact original owner, live saved S1 task identity, owner-approved scope, live AGENTS, actual GitHub identity/effective permissions and original PR HEAD/main. Explicit owner text alone does not confer GitHub permissions, independent approval or custody. Reject missing, expired, mismatched or superseded authority. No separate identity or privileged bypass.
+2. **Executed test proof:** Maintain an explicit required-test manifest per changed behavior (test identifier -> PR-event workflow -> job -> executed step -> result -> exact HEAD). Detect title/path filters and skipped jobs; seven added HRE tests on #2040 remain NOT_EXECUTED until a hosted exact-HEAD run proves otherwise. 89 prior tests and 19 advisory checks cannot replace missing new test execution. Negative fixture must force a false-green CI scenario and be rejected.
+3. **Atomicity and concurrency:** Re-read original PR HEAD, main, owner/editor lease, current protection and required CI immediately before any write and again before merge. Treat stale SHA, competing writer, ambiguous API timeout or partial mutation as STOP_AND_RECONCILE. Read back actual remote file/blob and native action receipts before retrying. Never assume a GitHub multi-step sequence is atomic; use existing expected-head merge, contents SHA compare-and-swap and non-force branch writes where available.
+4. **Partial-execution recovery:** Define states PREPARED -> WRITE_ATTEMPTED -> REMOTE_CONFIRMED -> CI_EXECUTED -> RELEASE_ELIGIBLE -> MERGED_VERIFIED -> CONSUMER_VERIFIED. Unknown outcome => UNKNOWN_REMOTE_STATE, read-only reconciliation first. No duplicate PR, duplicate receipt, force-push or blind retry. Keep a bounded rollback/revert-PR plan.
+5. **Adversarial review:** ChatGPT independent pass must reproduce the above failure cases from source; Grok review must bind to exact changed HEAD and digest and arrive through current authorized Bridge. A report on the old HEAD does not certify a modified HEAD. Two AI passes remain advisory, never required native separate GitHub identity or bypass.
+6. **Activation gate:** Remain draft, no task mutation, no merge, no general privilege escalation until exact-HEAD substantial hosted CI and original policy gates are proved. Any high-impact change additionally needs existing independent custody/separation proof. After a future authorized merge, prove natural scheduled execution separately.
+
+### Additional adversarial acceptance matrix
+- Stale owner mandate / wrong original / revoked scope => REJECT.
+- HEAD changed between review and write => STOP_AND_RECONCILE.
+- Main advanced after green tests => REVALIDATE.
+- Two editors update same path => reject stale content SHA.
+- API write times out after remote success => read remote before any retry.
+- Branch file committed but PR/CI not created => PARTIAL_REMOTE_STATE, no claim of closure.
+- Hosted CI green but required test skipped => RELEASE_CI_NOT_EXECUTED.
+- Grok review references old HEAD => REVIEW_STALE.
+- Private Bridge inaccessible => REVIEW_UNVERIFIED, never fabricate receipt.
+- Custody or separate principal missing on high-impact => fail closed.
+- No required native review under current rules + all actual gates satisfied => do not invent another identity requirement.
