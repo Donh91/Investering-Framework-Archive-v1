@@ -23,6 +23,26 @@ class Task2W44PostfreezeTests(unittest.TestCase):
         self.assertEqual(out["last_eligible_complete_hour_end_utc"],"2026-11-02T00:00:00+00:00")
         self.assertEqual(out["original_publishing_git_commit"],w44.ISSUE_COMMIT)
 
+    def test_full_postissue_ohlc_sensitivity_keeps_original_162_unchanged(self):
+        out=self.replay
+        self.assertEqual(out["postfreeze_eligible_hours"],162)
+        self.assertEqual(out["whole_candle_postissue_hours"],161)
+        self.assertTrue(out["first_retained_completed_candle_opened_preissue"])
+        self.assertEqual(out["first_whole_candle_postissue_open_utc"],
+                         "2026-10-26T07:00:00+00:00")
+        for symbol in ("BTC","ETH"):
+            original=out["results"][symbol]["postfreeze_hourly_extrema"]
+            sensitivity=out["results"][symbol]["whole_candle_postissue_sensitivity"]
+            self.assertEqual(sensitivity["hours"],161)
+            self.assertGreaterEqual(sensitivity["low"],original["low"])
+            self.assertLessEqual(sensitivity["high"],original["high"])
+            self.assertEqual(sensitivity["min_changed_from_locked_162"],
+                             sensitivity["low"]!=original["low"])
+            self.assertEqual(sensitivity["max_changed_from_locked_162"],
+                             sensitivity["high"]!=original["high"])
+            self.assertFalse(sensitivity["same_quote_or_vendor_first_known_proven"])
+            self.assertFalse(sensitivity["statistical_edge_admitted"])
+
     def test_both_frozen_original_cn_contain_and_narrower_b1_miss(self):
         out=self.replay["results"]
         for symbol in ("BTC","ETH"):
