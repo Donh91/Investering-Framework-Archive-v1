@@ -35,6 +35,7 @@ jobs:
           python scripts/research/validate_independent_research_adversarial_sentinel.py
           python scripts/research/validate_research_meta_orchestrator.py
           python scripts/research/validate_research_governance_integration.py
+          python -m unittest discover -s tests/research -p test_alpha_precision_harvest_observer_v1.py -v
       - name: Memory and novelty gate
         run: python scripts/research/research_memory_novelty_gate.py
       - name: Decision-impact and VOI route
@@ -43,6 +44,8 @@ jobs:
         run: python scripts/research/independent_research_adversarial_sentinel.py
       - name: Meta-orchestrate surviving research work
         run: python scripts/research/research_meta_orchestrator.py
+      - name: Observe Alpha Precision existing owners without spending or dispatch
+        run: python scripts/research/alpha_precision_harvest_observer_v1.py
       - name: Verify binding-aware governance state before commit
         run: |
           python - <<'PY'

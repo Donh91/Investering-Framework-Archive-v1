@@ -165,14 +165,19 @@ with tempfile.TemporaryDirectory() as td, tempfile.TemporaryDirectory() as exter
     print("PASS symlinked_source_directory_escape_rejected")
 
 
-# Real canonical nine-method intake regression: source-only observations.
+# Current bounded canonical method-intake regression: source-only observations.
 # This test explicitly exercises X0 / News / M7 original owners and prevents
 # either a permissive wildcard owner or note-path exception from creeping in.
 import copy
 with tempfile.TemporaryDirectory() as td:
     whole=Path(td)
     source_queue=json.loads((ROOT/o.SPECIALIST_QUEUE_REL).read_text())
-    assert len(source_queue["method_intakes"])==9
+    intake_count=len(source_queue["method_intakes"])
+    required_original={"HEYASKR_EXTERNAL_METHOD_REFERENCE_20261028",
+                       "NEWS_OSS_EVENT_FAMILY_CHALLENGER_20261104",
+                       "FRAMEWORK_WIDE_OPEN_SOURCE_REVERSE_ENGINEERING_20261105"}
+    assert 9 <= intake_count <= o.MAX_METHOD_INTAKES
+    assert required_original.issubset({x["id"] for x in source_queue["method_intakes"]})
     for rel in {item["evidence_note"] for item in source_queue["method_intakes"]}:
         dest=whole/rel
         dest.parent.mkdir(parents=True,exist_ok=True)
@@ -188,20 +193,20 @@ with tempfile.TemporaryDirectory() as td:
              "-m","real canonical method intake regression")
         _git(whole,"update-ref","refs/remotes/origin/main","HEAD")
     commit_real_queue()
-    all_nine=o.specialist_intake_handoff(whole)
-    assert all_nine["status"]=="PUBLIC_NOTES_READ_ONLY", all_nine
-    assert len(all_nine["entries"])==9, all_nine
-    assert all(x["status"]=="NOTE_PRESENT_NOT_SOURCE_ADMITTED" for x in all_nine["entries"])
+    all_intakes=o.specialist_intake_handoff(whole)
+    assert all_intakes["status"]=="PUBLIC_NOTES_READ_ONLY", all_intakes
+    assert len(all_intakes["entries"])==intake_count, all_intakes
+    assert all(x["status"]=="NOTE_PRESENT_NOT_SOURCE_ADMITTED" for x in all_intakes["entries"])
     assert all(not x["market_source_admitted"] and not x["automatic_promotion"]
-               for x in all_nine["entries"])
+               for x in all_intakes["entries"])
     original=o.orchestrate(pol,{}, {},voi,{"verdict":"PASS"})
     observed=o.attach_specialist_intakes(original,whole)
-    assert observed["queue_n"]==original["queue_n"]+9
+    assert observed["queue_n"]==original["queue_n"]+intake_count
     assert observed["primary_action"]==original["primary_action"]
     assert observed["active_heavy_workstreams"]==original["active_heavy_workstreams"]
     assert all(x["canonical_effect"] is False and x["paid_data_authorized"] is False
-               and x["portfolio_execution"] is False for x in observed["queue"][-9:])
-    print("PASS real_nine_specialist_methods_observed_without_authority")
+               and x["portfolio_execution"] is False for x in observed["queue"][-intake_count:])
+    print("PASS current_bounded_specialist_methods_observed_without_authority")
 
     # Each invalid cross-domain mutation still rejects the ENTIRE queue.
     invalids=(
@@ -247,7 +252,7 @@ with tempfile.TemporaryDirectory() as td:
     assert dirty["status"]=="PUBLIC_NOTES_READ_ONLY"
     assert sum(x["status"]=="NOTE_NOT_MERGED_OR_MISSING" for x in dirty["entries"])==1
     attached=o.attach_specialist_intakes(original,whole)
-    assert attached["queue_n"]==original["queue_n"]+8
+    assert attached["queue_n"]==original["queue_n"]+intake_count-1
     print("PASS dirty_cross_domain_note_cannot_be_admitted")
 
 print("RESEARCH_SPECIALIST_HANDOFF_GATE_v1 PASS")

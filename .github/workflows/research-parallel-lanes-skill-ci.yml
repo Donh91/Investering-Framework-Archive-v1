@@ -20,6 +20,11 @@ on:
       - 'tests/research/test_hre_shadow_transfer_v1.py'
       - 'scripts/research/hre_native_replay_pilot_v1.py'
       - 'tests/research/test_hre_native_replay_pilot_v1.py'
+      - 'scripts/research/alpha_precision_harvest_observer_v1.py'
+      - 'tests/research/test_alpha_precision_harvest_observer_v1.py'
+      - '04_RESEARCH_LAB/external_specialist_dissection/alpha_precision_20261107/OWNER_ROUTING_V1.json'
+      - '04_RESEARCH_LAB/external_specialist_dissection/2026-11-07__ALPHA_RESEARCH_PRECISION_PARALLEL_LANES_v1.json'
+      - '.github/workflows/autonomous-research-governance-loop.yml'
       - '.github/workflows/research-parallel-lanes-skill-ci.yml'
 
 permissions:
@@ -40,6 +45,20 @@ jobs:
         run: |
           python scripts/research/validate_parallel_research_manifest_v1.py \
             .agents/skills/research-parallel-lanes/references/EXAMPLE_MISSION.json
+
+  alpha-precision-owner-handoff-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Static manifest, no autonomous dispatch, no scientific promotion
+        run: |
+          python scripts/research/validate_parallel_research_manifest_v1.py 04_RESEARCH_LAB/external_specialist_dissection/2026-11-07__ALPHA_RESEARCH_PRECISION_PARALLEL_LANES_v1.json
+          python -m unittest discover -s tests/research -p test_alpha_precision_harvest_observer_v1.py -v
+          python scripts/research/alpha_precision_harvest_observer_v1.py --output "$RUNNER_TEMP/alpha-precision-owner-observation.json"
 
   hre-clock-reference-and-candidate-static:
     runs-on: ubuntu-latest
