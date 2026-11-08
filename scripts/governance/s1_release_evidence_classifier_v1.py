@@ -183,7 +183,8 @@ def classify_pr_disposition(record):
                                "Exact-head completed native pull_request job")
             step_ids = matches[0].get("executed_test_ids")
             if (not isinstance(step_ids, list)
-                    or any(type(t) is not str or not t.strip() for t in step_ids)):
+                    or any(type(t) is not str or not t.strip() or t != t.strip() for t in step_ids)
+                    or len(set(step_ids)) != len(step_ids)):
                 return blocked("CI_NOT_EXECUTED", "S1_GENERAL_NATIVE_TEST_IDS_UNVERIFIED",
                                "Native run/job/step bound substantive executed test IDs")
             observed.update(step_ids)
