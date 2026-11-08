@@ -747,7 +747,7 @@
     {
       "sequence": 25,
       "mission_id": "ARP04-MICROCAP-SURVIVAL-EXECUTABLE-ALPHA-SOL61-MAX-20261107",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_GET_ONLY_RECOVERED_NO_REPOST",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-07__ARP04_MICROCAP_SURVIVAL_EXECUTABLE_ALPHA_SOL61_MAX_v1.json",
       "context_status": "ARP04_DISTINCT_POST_ARP0203_VERIFIED_SUCCESS_FROZEN_PUBLIC_RESEARCH_ONLY",
       "context_paths": [
@@ -768,14 +768,21 @@
       ],
       "release_gate": "NATIVE_OWNER_UNIQUE_SIGNED_SHA_PUBLIC30D_CONSENT_USD3_MAX_WITH_SINGLE_ONE_SHOT",
       "pass_scope": "MICROCAP_FIRST_SIGHTING_PIT_WALLET_LABEL_LICENSE_AND_FULL_POSITION_SELLABILITY_FALSIFICATION_ONLY",
-      "new_paid_attempts_authorized": true,
+      "new_paid_attempts_authorized": false,
       "max_paid_attempts": 1,
       "no_automatic_retry": true,
       "owner_issue": 1156,
       "requested_effort": "max",
       "public_storage_consent_30_days": true,
       "previous_distinct_completed_mission": "ARP0203-RISK-TRANSITION-UTILITY-SOL61-MAX-20261107",
-      "owner_authorization_note": "Explicit 2026-11-08 continuation of previously approved bounded ARP04 mission. Queue row alone never releases provider payment; distinct signed original owner SHA #1476 comment required after fresh-main qualified merge and budget. No private wallets or direct trading."
+      "owner_authorization_note": "Explicit 2026-11-08 continuation of previously approved bounded ARP04 mission. Queue row alone never releases provider payment; distinct signed original owner SHA #1476 comment required after fresh-main qualified merge and budget. No private wallets or direct trading.",
+      "original_paid_run_id": 42470902520,
+      "result_run_id": 42471573553,
+      "result_owner_comment_id": 6720273819,
+      "result_receipt_path": "research/api_agent/outputs/research_lab_sol/ARP04-MICROCAP-SURVIVAL-EXECUTABLE-ALPHA-SOL61-MAX-20261107/issue-1476/comment-6720273819/receipt.json",
+      "result_estimated_cost_usd": 0.314662,
+      "result_status": "PASS_RESEARCH_VERDICT_INSUFFICIENT_EVIDENCE_NO_EXECUTABLE_MICROCAP_ALPHA",
+      "owner_hold_reason": "Original owner #1476 comment 6720273819 / bot unique claim 6720280970. Native paid Actions #42470902520 failed after durable response handle; original authenticated GET-only recovery #42471573553 SUCCESS. Immutable receipt PASS, gpt-6.1-sol MAX, one paid POST, $0.314662 gateway-estimated; scientific INSUFFICIENT_EVIDENCE. NO REPOST. Original public source fixes PR #2039 and #2041 have separate exact CI and do not prove investable alpha."
     }
   ],
   "authority": {
@@ -788,7 +795,32 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "ARP04-MICROCAP-SURVIVAL-EXECUTABLE-ALPHA-SOL61-MAX-20261107",
-  "program_phase": "ARP04_OWNER_APPROVED_DISTINCT_ONE_SHOT_EXACT_NATIVE_RELEASE_REQUIRED",
-  "terminal_report": "06_RESEARCH_LAB/mission_packets/2026-11-06__FIVE_SOL_MAX_MISSIONS_TERMINAL_EVIDENCE_v1.md"
+  "active_mission": null,
+  "program_phase": "ARP_V1_ARP01_TO_ARP04_COMPLETE_ADVISORY_NO_ACTIVE",
+  "terminal_report": "06_RESEARCH_LAB/mission_packets/2026-11-06__FIVE_SOL_MAX_MISSIONS_TERMINAL_EVIDENCE_v1.md",
+  "arp_v1_terminal_report": {
+    "status": "COMPLETE_ALL_RELEASED_ARP01_ARP0203_ARP04_NO_ACTIVE_PAID_MISSIONS",
+    "original_owner_issue": 1156,
+    "paid_one_shots": 3,
+    "arps": [
+      "ARP01-FORECAST-EDGE-CALIBRATION-SOL61-MAX-20261107",
+      "ARP0203-RISK-TRANSITION-UTILITY-SOL61-MAX-20261107",
+      "ARP04-MICROCAP-SURVIVAL-EXECUTABLE-ALPHA-SOL61-MAX-20261107"
+    ],
+    "immutable_receipts": 3,
+    "api_estimated_new_usd": 0.938224,
+    "provider_invoice_verified": false,
+    "original_runs": [
+      42423476167,
+      42451618195,
+      42470902520
+    ],
+    "authenticated_get_only_recoveries": [
+      42449099667,
+      42471573553
+    ],
+    "scientific_verdict": "INSUFFICIENT_EVIDENCE; incremental source-safety fixes, no admitted predictive or sellable edge",
+    "zero_new_paid_missions": true,
+    "next": "ARP05 source-first original News #1888 / Situation Room #1563 audit with existing public and free artifacts only, no new API, watcher or model source authority. A distinct paid mission would require separately qualified owner-approved packet, main, signature, native budget and source audit."
+  }
 }
