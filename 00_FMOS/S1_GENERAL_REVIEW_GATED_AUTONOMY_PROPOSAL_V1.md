@@ -1,0 +1,49 @@
+# S1 General: review-gated autonomous closure (DRAFT, NO AUTHORITY CHANGE)
+
+Owner: existing Archive #1156. Sole scheduled task: `6ae5fd466b48819187abc224ec0f1c5f`.
+Status: REVIEW_ONLY. This file grants no permissions, does not change the task, AGENTS, branch rules, GitHub identity, workflows, credentials or release gates.
+
+## Problem and measurable target
+S1 must autonomously finish qualified original work rather than repeatedly announce HOLD. Recent original PR #2040 has green PR workflows but a targeted HRE test was not executed. A branch-protection endpoint returned 403; that is evidence of an inaccessible endpoint, not evidence that the PR is mergeable or protected. Codex and Grok are technical advisers, not native independent GitHub APPROVED identities.
+
+## Authority boundaries
+- Owner delegates **operational prioritization and low-risk authorized repair/release** to the one existing S1. Strategist retains its original strategic lane; original domain owners retain scientific/source admission.
+- Existing native GitHub rules, required approvals, source PIT, immutable forecast, budget, recovery and separation of destructive authority remain binding. No AI self-review can substitute for another principal where required.
+- Never modify Vault, secrets, credentials, branch protections, wallet/trade policy or recovery custody; never merge security/workflow/billing/recovery high-impact changes without independently proven current gates.
+- Never create another supervisor, runtime, identity, queue, workflow, recurring cost, or new task schedule. Monday 09:30-10:30 Copenhagen read-only.
+
+## One bounded operating cycle (existing S1)
+1. **PREFLIGHT:** Read current saved task, exact main SHA, AGENTS, existing original owner and one-editor lease, current native PR HEAD/diff, rules, review threads, actual hosted CI run/job/steps, and changed source receipts. A 403 triggers allowed alternative native ruleset/PR reads, never a bypass. Unknown rule => HOLD that PR, pivot to another safe original.
+2. **DISCOVER:** Scan original open PRs including drafts and existing owner issues within accessible estate. Incomplete coverage => UNKNOWN. Select at most three distinct actionable originals, not three repetitions of one HOLD.
+3. **REPAIR:** Only existing original non-default branch, no force push, no competing editor. Fix smallest reproducible defect. For #2040 verify whether the title-filtered HRE job actually runs; prefer an existing CI route or scoped test integration without weakening security. Add positive and guard-removal negative tests.
+4. **SECOND EYES:** Freeze review packet containing exact repo, main SHA, HEAD SHA, changed paths, threat model, failing/passing test IDs, rollback and source class. S1 self-audit pass A checks functionality and evidence, pass B adversarially tries to falsify authority, test coverage and source claims. Grok reviews through existing Bridge only if genuine authenticated report/receipt is observed. Codex can provide a bounded code review when available. Two AI opinions never create a separate GitHub approval.
+5. **RELEASE:** For this proposal, STOP BEFORE ANY MERGE. In normal future operation only, re-read exact HEAD/main, enforced rules, required approvals, actual exact-HEAD hosted test steps, owner/source/science/custody and rollback. If all binding gates pass, existing S1 may perform native expected-HEAD merge in same eligible tick. Read back merged PR, actor, merge SHA, fresh main and blobs. Production proof remains separate.
+6. **LEARN:** One deduplicated material receipt in existing #1156 after a real transition. Never claim an interactive repair, prompt change, staged Grok request or external actor merge proves scheduled unattended closure. Observe next natural scheduled run and 7/28-day closure metrics.
+
+## PR #2040 targeted acceptance test
+- Assert the named HRE test actually executes in an exact-HEAD pull_request job (not SKIPPED, zero-step, dispatch-only, or unrelated green job).
+- Negative: rename PR title or alter job condition and show missing HRE execution is detected as RELEASE_CI_NOT_EXECUTED.
+- Negative: branch protection read 403 while ruleset read succeeds => do not infer no rules; compare actual enforced policy.
+- Negative: required review absent => fail closed, even with Grok and Codex agreement.
+- Negative: main moves between preflight and merge => re-evaluate HEAD/main and gates.
+- Negative: original editor lease active => do not overwrite.
+- Negative: research-only result => no scientific or economic admission.
+- Positive: all native gates proven, expected-HEAD merge succeeds, changed blobs on main verified => MERGED_VERIFIED only.
+- Positive: later natural producer/consumer and Pages/CDN parity verified => separate PROD_VERIFIED.
+- Negative: custody unattested on high-impact => affected original blocked, unrelated low-risk work continues.
+
+## Independent review protocol
+**Review A (ChatGPT, adversarial):** independently inspect exact branch/main diff, runbook, AGENTS, existing owner #1156, native CI steps, current rules, scope creep, false authority, missing tests, and rollback. Produce APPROVE / CHANGES_REQUIRED with line-specific evidence.
+
+**Review B (Grok Bridge, separate):** existing provider submits source-HEAD/digest-bound report through currently authorized Bridge lifecycle. No fabricated delivery/ACK. Review: self-approval, permission bypass, CI green-without-test, race conditions, high-impact custody, private-data leakage, unintended task mutation, and anti-loop behavior.
+
+**Review convergence:** reconcile findings into the SAME draft branch under original owner. No merge or saved-task update until genuine review and native release gates; absence of Grok report is REVIEW_PENDING, not APPROVED.
+
+## Delivery phases (not yet executed)
+D0: this review-only specification on an original-owner draft PR.
+D1: independently reviewed minimal implementation in existing S1 owner code/runbook with executable positive/negative tests.
+D2: exact-HEAD hosted CI, readback, Grok Bridge review if available.
+D3: owner-authorized governed merge and only if necessary a scoped existing-task change with before/after readback and #1156 receipt.
+D4: natural scheduled S1 execution proof, independent consumer and 7/28-day outcome measurements.
+
+Explicitly NOT DONE: autonomous code repair, Grok review, native GitHub approval, release, saved-task mutation, natural unattended closure.
