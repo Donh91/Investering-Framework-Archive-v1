@@ -3,6 +3,7 @@
  */
 import {inventory, REPOS, EXCLUDED} from './discovery-inventory-v1.mjs';
 const KNOWN_PRIVATE = new Set(REPOS.filter(([, privateRepo])=>privateRepo).map(([repo])=>repo.toLowerCase()));
+const KNOWN_PUBLIC = new Set(REPOS.filter(([, privateRepo])=>!privateRepo).map(([repo])=>repo.toLowerCase()));
 const EXCLUDED_NORMALIZED = new Set([...EXCLUDED].map(repo=>repo.toLowerCase()));
 
 const SCHEMA='S1_AGENT_WORK_HUB_v1';
@@ -55,17 +56,22 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
     if(EXCLUDED_NORMALIZED.has(normalized))continue;
     if(!/^Donh91\/[a-z0-9._-]+$/i.test(repo.repo)){coverage=false;continue;}
     const knownPrivate=KNOWN_PRIVATE.has(normalized);
-    // Unknown visibility is NOT public. A known-private repo cannot be downgraded
-    // by an incomplete or contradictory source object.
+    const knownPublic=KNOWN_PUBLIC.has(normalized);
+    // Dynamic repositories require explicit native owner-enumeration provenance.
+    // A self-declared PUBLIC field alone does not authorize public output.
+    const verifiedDynamic=repo.visibility_source==='AUTHENTICATED_OWNER_ENUMERATION'&&
+      input.repository_coverage==='AUTHENTICATED_OWNER_ENUMERATION'&&
+      input.repository_enumeration_complete===true;
     const visibility=knownPrivate?'PRIVATE':
       repo.visibility==='PUBLIC'||repo.visibility==='PRIVATE'?repo.visibility:'UNKNOWN';
-    const visibilityProven=visibility!=='UNKNOWN'&&(!knownPrivate||repo.visibility==='PRIVATE');
+    const visibilityProven=visibility!=='UNKNOWN'&&
+      (knownPrivate?repo.visibility==='PRIVATE':knownPublic||verifiedDynamic);
     if(!repo.complete||!visibilityProven)coverage=false;
     const readable=visibilityProven&&(visibility==='PUBLIC'||(visibility==='PRIVATE'&&includePrivate));
-    repo_summary.push({repo:visibilityProven?repo.repo:null,visibility,
+    repo_summary.push({repo:readable?repo.repo:null,visibility,
       source_complete:repo.complete===true&&visibilityProven,
-      open_pr_count:visibilityProven&&Number.isInteger(repo.open_pr_count)?repo.open_pr_count:null,
-      open_issue_count:visibilityProven&&Number.isInteger(repo.open_issue_count)?repo.open_issue_count:null,
+      open_pr_count:readable&&Number.isInteger(repo.open_pr_count)?repo.open_pr_count:null,
+      open_issue_count:readable&&Number.isInteger(repo.open_issue_count)?repo.open_issue_count:null,
       details:readable?'AS_AVAILABLE':'REDACTED'});
     if(!readable||!Array.isArray(repo.items))continue;
     const sourceItems=repo.items.concat(includeClosedParked&&Array.isArray(repo.closed_parked_candidates)?repo.closed_parked_candidates:[]);
@@ -99,8 +105,10 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
     else unassigned++;
   }
   return {...POLICY,schema:SCHEMA,status:coverage?'OBSERVED_COMPLETE_WITHIN_CREDENTIAL_SCOPE':'PARTIAL',
-    generated_at:input.generated_at||null,source_inventory_schema:input.schema,
-    repository_scope:input.coverage_scope||'UNKNOWN',coverage_complete:coverage,
+    generated_at:/^\\d{4}-\\d{2}-\\d{2}T/.test(input.generated_at||'')?input.generated_at:null,
+    source_inventory_schema:input.schema,
+    repository_scope:input.coverage_scope==='CREDENTIAL_ACCESSIBLE_OWNER_REPOS_ONLY'?
+      input.coverage_scope:'UNKNOWN',coverage_complete:coverage,
     source_warnings:safeSourceWarnings(input.warnings),
     repo_summary,counts:{open_work_items_observed:work.length-closedResearchHints,
       closed_research_hints:closedResearchHints,
