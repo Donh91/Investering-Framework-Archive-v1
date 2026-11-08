@@ -103,7 +103,8 @@ def classify_pr_disposition(record):
                   "pr_jobs", "independent_review_required", "review", "review_requires_current_main",
                   "physical_site_review_required", "physical_site_review_passed",
                   "owner_physical_review_waiver", "recovery", "release_assessment", "recovery_max_age_seconds",
-                  "safepoint_source", "owner_authorized")
+                  "safepoint_source", "owner_authorized",
+                  "s1_general_preflight_required", "s1_general_preflight")
         def material_value(value):
             if isinstance(value, dict):
                 return {k: material_value(v) for k, v in value.items()
@@ -163,6 +164,24 @@ def classify_pr_disposition(record):
                 or r.get("risk") not in ("LOW", "HIGH")):
             return blocked("EXTERNAL_DEPENDENCY", "S1_GENERAL_NATIVE_BINDING_MISMATCH",
                            "Exact PR HEAD/main and path-derived risk agreement")
+        # A caller-selected LOW risk label is not sufficient for source/workflow
+        # changes. This is a conservative path falsifier, not a GitHub census:
+        # the original caller MUST independently authenticate the complete
+        # changed paths against the current PR head before using this advice.
+        changed_paths = r.get("expected_changed_paths")
+        if (not isinstance(changed_paths, list) or not changed_paths
+                or any(type(p) is not str or not p.strip() or p != p.strip()
+                       or p.startswith("/") or ".." in p.split("/") for p in changed_paths)
+                or len(set(changed_paths)) != len(changed_paths)):
+            return blocked("EXTERNAL_DEPENDENCY", "S1_GENERAL_NATIVE_PATH_CENSUS_MISSING",
+                           "Complete native exact-head changed paths")
+        if r["risk"] == "LOW" and any(
+                p == "AGENTS.md" or p.startswith(".github/workflows/")
+                or p.startswith("01_CORE_FRAMEWORK/governance/")
+                or p.startswith("00_ARCHIVE_CONTROL/")
+                for p in changed_paths):
+            return blocked("SOURCE_OR_SCIENCE_GATE", "HIGH_IMPACT_PATH_MARKED_LOW",
+                           "Existing source/workflow governance and independent recovery gates")
         jobs = r.get("pr_jobs")
         names = r.get("required_pr_job_names")
         if (not isinstance(names, list) or not names
@@ -182,7 +201,7 @@ def classify_pr_disposition(record):
                 return blocked("CI_NOT_EXECUTED", "S1_GENERAL_NATIVE_JOB_NOT_EXECUTED",
                                "Exact-head completed native pull_request job")
             step_ids = matches[0].get("executed_test_ids")
-            if (not isinstance(step_ids, list)
+            if (not isinstance(step_ids, list) or not step_ids
                     or any(type(t) is not str or not t.strip() or t != t.strip() for t in step_ids)
                     or len(set(step_ids)) != len(step_ids)):
                 return blocked("CI_NOT_EXECUTED", "S1_GENERAL_NATIVE_TEST_IDS_UNVERIFIED",
