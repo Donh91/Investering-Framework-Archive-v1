@@ -49,3 +49,15 @@ titles, issue identifiers, repository names and per-repo counts do not appear
 in default public-only output. Default warning strings and source scope fields
 are allowlisted. `--private-details` remains restricted to an authorized
 private nonlogging runtime, never website, public issue, or app server.
+
+
+### Same-process provenance hardening
+The dynamic-repository flag is additionally checked against a **module-private
+`WeakSet` of objects that the local `inventory()` call actually returned**.
+Serialized and reconstructed input cannot retain that identity, even if it
+copies every textual source marker. This is a local accidental-ingest security
+guard, **not** cryptographic proof of a network identity and not protection from
+malicious code already executing inside the authorized process. Only the
+already-authorized GitHub client controls live source authority. Tests reject
+forged markers and JSON round trips while admitting real same-process native
+enumeration. Known-public default-scope fixture tests remain advisory only.
