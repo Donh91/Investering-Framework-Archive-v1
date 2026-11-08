@@ -67,6 +67,7 @@ async function inventory({fetcher=fetch,token=process.env.GITHUB_TOKEN,
   const d=await discoverRepositories({fetcher,token,maxPages});
   const out={schema:'S1_DISCOVERY_INVENTORY_v1',authority:'READ_ONLY_ADVISORY',
     generated_at:new Date().toISOString(),repository_coverage:d.source,
+    coverage_scope:'CREDENTIAL_ACCESSIBLE_OWNER_REPOS_ONLY',
     repository_enumeration_complete:d.complete,complete:d.complete,
     release_permission:false,repos:[],warnings:d.warning?[d.warning]:[]};
   for (const [repo,isPrivate] of d.repos) {
