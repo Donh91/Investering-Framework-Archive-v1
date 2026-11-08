@@ -58,6 +58,21 @@ class Task2WaveBScientificGatesTests(unittest.TestCase):
         self.assertIsNone(r["lead_hours_from_first_proven_delivery"])
         self.assertFalse(r["risk_policy_change"])
 
+    def test_declared_window_origin_is_not_overwritten_by_slot_source_clock(self):
+        p = episode()
+        expected_start = p["observation_start_utc"]
+        self.assertNotEqual(p["slots"][-1]["source_first_known_utc"], expected_start)
+        r = mod.audit_pullback_episode(p)
+        self.assertEqual(r["declared_observation_start_utc"], expected_start)
+        self.assertEqual(r["expected_decision_slots"], 4)
+        # Missing final source provenance must not replace the declared
+        # window origin with None or alter the explicit denominator.
+        p["slots"][-1]["source_first_known_utc"] = None
+        r = mod.audit_pullback_episode(p)
+        self.assertEqual(r["declared_observation_start_utc"], expected_start)
+        self.assertEqual(r["uncertified_recorded_slots"], 1)
+        self.assertEqual(r["expected_decision_slots"], 4)
+
     def test_early_proven_delivery_and_false_alarm_control(self):
         p = episode()
         p["slots"][1]["severity"] = 4
