@@ -7,11 +7,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import average_precision_score, roc_auc_score
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import RobustScaler
+# Train/evaluate-only scikit-learn is imported inside evaluate(). This module
+# must remain importable by global repository test collectors without sklearn.
+# The existing specialized native ablation workflow installs sklearn explicitly.
 
 EXPERIMENT = "TRENCHES_POINT_IN_TIME_G2_SOURCE_G3_ABLATION_v1_1"
 
@@ -67,6 +65,12 @@ def evaluate(train: pd.DataFrame, test: pd.DataFrame, features: list[str], targe
             "status": "INSUFFICIENT", "n_features": len(features), "n_train": int(len(tr)),
             "n_test": int(len(te)), "train_positives": int(ytr.sum()), "test_positives": int(yte.sum()),
         }
+    from sklearn.impute import SimpleImputer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import average_precision_score, roc_auc_score
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import RobustScaler
+
     pipe = Pipeline([
         ("impute", SimpleImputer(strategy="median", add_indicator=True)),
         ("scale", RobustScaler(with_centering=False)),
