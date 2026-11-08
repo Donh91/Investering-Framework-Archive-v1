@@ -71,3 +71,39 @@ test('closed parked research is opt-in and excluded from active work',()=>{
  assert.equal(extended.work.find(x=>x.kind==='CLOSED_ISSUE').lane_hint,'CLOSED_RESEARCH_HINT_NOT_ACTIVE');
  assert.equal(extended.can_block_actions,false);
 });
+
+// Security regression: malformed or forged visibility cannot expose private work.
+test('unknown visibility never defaults to public; counts are unknown',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repos.push({repo:'Donh91/Unclassified-New-Repo',visibility:'UNKNOWN',complete:true,
+   open_pr_count:1,open_issue_count:0,items:[{...classify(native,'PR'),title:'SECRET_UNKNOWN'}]});
+ const h=buildHub(data);
+ assert.equal(h.coverage_complete,false);
+ assert.equal(JSON.stringify(h).includes('SECRET_UNKNOWN'),false);
+ const summary=h.repo_summary.find(x=>x.visibility==='UNKNOWN');
+ assert.equal(summary.repo,null);
+ assert.equal(summary.open_pr_count,null);
+});
+test('known private source cannot be downgraded by PUBLIC claim or a private-details flag',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repos[1].visibility='PUBLIC';
+ const h=buildHub(data,{includePrivate:true});
+ assert.equal(h.coverage_complete,false);
+ assert.equal(JSON.stringify(h).includes('PRIVATE_WORK'),false);
+ assert.equal(h.repo_summary[1].details,'REDACTED');
+});
+test('restricted data-plane name is excluded case-insensitively, including opt-in',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repos[2].repo='DONH91/SECRETS';
+ const h=buildHub(data,{includePrivate:true,includeClosedParked:true});
+ assert.equal(JSON.stringify(h).includes('DO_NOT_EXPOSE'),false);
+ assert.equal(h.repo_summary.some(x=>/secrets/i.test(x.repo||'')),false);
+});
+test('non-owner repo is not an admissible source',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repos.push({repo:'OtherOwner/public',visibility:'PUBLIC',complete:true,
+   items:[{...classify(native,'PR'),title:'FOREIGN_SOURCE'}]});
+ const h=buildHub(data);
+ assert.equal(h.coverage_complete,false);
+ assert.equal(JSON.stringify(h).includes('FOREIGN_SOURCE'),false);
+});
