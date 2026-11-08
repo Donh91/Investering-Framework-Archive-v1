@@ -209,8 +209,10 @@ def audit_pullback_episode(packet):
         if type(level) is not int or not 0 <= level <= 5:
             raise ValueError("INVALID_SEVERITY")
         issued = utc(slot["decision_utc"])
-        first = slot.get("source_first_known_utc")
-        if first is None or utc(first) > issued:
+        # Keep the independently declared window start untouched for the
+        # returned provenance receipt; each slot has its own source clock.
+        slot_first_known = slot.get("source_first_known_utc")
+        if slot_first_known is None or utc(slot_first_known) > issued:
             uncertified += 1
             continue
         risk3_count += level == 3
