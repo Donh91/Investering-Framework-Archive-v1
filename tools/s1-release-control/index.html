@@ -87,9 +87,21 @@
    </div></div>
   </div>
  </div>
+ <div class="panel" id="compare-panel" style="margin-top:20px">
+  <div class="panel-head"><h2>Sammenlign to offentlige PR’er</h2><p class="small">To faktiske kildeobservationer fra samme browser-readback. Ingen releaseautorisation.</p></div>
+  <div class="queue-controls" style="padding:0 20px 16px;display:flex;gap:10px;flex-wrap:wrap">
+   <select id="compare-left" aria-label="Første PR"></select><select id="compare-right" aria-label="Anden PR"></select>
+  </div><div id="compare-content" class="detail" aria-live="polite">Vælg to PR’er.</div>
+ </div>
+ <div class="panel" id="history-panel" style="margin-top:20px">
+  <div class="panel-head"><h2>Lokal offentlig PR-historik</h2><p class="small">Kun verificerede offentlige readbacks i denne browser. Historik er ikke immutable, ikke komplet cross-repo og ikke maskinens fælles ledger.</p>
+   <button type="button" id="history-clear" class="btn">Ryd lokal historik</button></div>
+  <div id="history-content" class="detail" aria-live="polite">Ingen lokale observationer.</div>
+ </div>
  <div class="foot">S1 Release Control · Read-only prototype på faktiske offentlige GitHub-kilder. Beslutningsstatus er en konservativ beregning, ikke en erstatning for AGENTS.md, branch protection, kvalificeret review eller sikker release. Et snapshot kan være forældet. Private kilder og ikke-bindende rapporttekst tæller aldrig som verificerede gates.</div>
 </main></div>
 <script src="./release-core.js"></script>
+<script src="./history-core.js"></script>
 <script>
 (function(){
 'use strict';
@@ -97,6 +109,7 @@ var PUBLIC=['Donh91/Investering-Framework-Archive-v1','Donh91/Eksperimenter-fram
 var RESTRICTED=['Investering-AI-Audit-Bridge','Meme-Alpha-Lab'];
 var BASE='https://api.github.com/repos/';
 var CORE=globalThis.S1ReleaseCore;
+var HISTORY=globalThis.S1PublicHistory,HISTORY_KEY="s1-release-public-history-v1";
 var CACHE_KEY='s1-release-control-public-v1',TTL=20*60*1000;
 var state={repos:[],items:[],selected:'',limit:8,queue:[],manual:false,view:'open',observedAt:null,live:false,stale:false,notice:''};
 var byId=function(id){return document.getElementById(id);};
@@ -143,7 +156,7 @@ byId('detail').innerHTML=body;}
 function renderQueue(){var candidates=rank(state.items);if(!state.manual){state.queue=candidates.slice(0,state.limit).map(id);}else{state.queue=state.queue.filter(function(k){return candidates.some(function(p){return id(p)===k;});}).slice(0,state.limit);}var selected=state.queue.map(function(k){return state.items.find(function(p){return id(p)===k;});}).filter(Boolean);byId('queue-list').innerHTML=selected.length?selected.map(function(p,i){return '<div class="queue-item"><span class="rank">'+(i+1)+'</span><div style="flex:1;min-width:0"><div class="queue-name">'+esc(p.repo.split('/')[1]+' #'+p.number)+'</div><div class="queue-reason">'+esc(next(p).label)+'</div><div class="sub mono">'+esc(short(p.head))+'</div></div><button class="queue-toggle added" data-remove="'+esc(id(p))+'" type="button">Fjern</button></div>';}).join(''):'<div class="empty" style="padding:14px 0">Ingen observerede PR’er i køen</div>';var remaining=candidates.filter(function(p){return !state.queue.includes(id(p));}).slice(0,12);if(remaining.length&&selected.length<state.limit){byId('queue-list').innerHTML+='<div class="section-line" style="margin-top:6px"><div class="small">Ledige kandidater</div>'+remaining.map(function(p){return '<div class="queue-item"><div style="flex:1"><div class="queue-name">'+esc(p.repo.split('/')[1]+' #'+p.number)+'</div><div class="queue-reason">'+esc(next(p).label)+'</div></div><button class="queue-toggle" type="button" data-add="'+esc(id(p))+'">Tilføj</button></div>';}).join('')+'</div>';}byId('m-queue').textContent=selected.length+'/'+state.limit;}
 function renderRepos(){byId('repo-list').innerHTML=state.repos.map(function(r){return '<div class="repo-line"><span class="repo-name">'+esc(r.repo.split('/')[1])+'</span><span class="chip '+(r.ok?'good':'unknown')+'">'+(r.ok?'PUBLIC':'UNOBSERVED')+'</span></div>';}).join('')+RESTRICTED.map(function(n){return '<div class="repo-line"><span class="repo-name">'+esc(n)+'</span><span class="chip unknown">PRIVATE · UNOBSERVED</span></div>';}).join('');}
 function notice(msg,type){byId('sync-notice').className='notice'+(type?' warning':'');byId('sync-notice').innerHTML='<span>●</span><div>'+esc(msg)+'</div>';}
-function render(){selectOptions();renderRows();renderQueue();renderDetail();renderRepos();byId('m-open').textContent=state.items.filter(function(p){return p.state==='open';}).length;byId('m-ci').textContent=state.items.filter(function(p){return p.state==='open'&&ci(p).status==='PROVEN';}).length;byId('m-hold').textContent=state.items.filter(function(p){return p.state==='open'&&['HOLD','BLOCKED'].includes(disposition(p));}).length;byId('freshness').textContent=(state.live?'GitHub readback · ':'Snapshot, IKKE live · ')+'kilde-alder: '+age(state.observedAt)+(state.stale?' · STALE':'');if(state.notice)notice(state.notice,!state.live);}
+function render(){selectOptions();renderRows();renderQueue();renderDetail();renderRepos();renderHistoryCompare();byId('m-open').textContent=state.items.filter(function(p){return p.state==='open';}).length;byId('m-ci').textContent=state.items.filter(function(p){return p.state==='open'&&ci(p).status==='PROVEN';}).length;byId('m-hold').textContent=state.items.filter(function(p){return p.state==='open'&&['HOLD','BLOCKED'].includes(disposition(p));}).length;byId('freshness').textContent=(state.live?'GitHub readback · ':'Snapshot, IKKE live · ')+'kilde-alder: '+age(state.observedAt)+(state.stale?' · STALE':'');if(state.notice)notice(state.notice,!state.live);}
 function mapPR(repo,p){return {repo:repo,number:p.number,title:p.title,author:p.user&&p.user.login||'unknown',state:p.state,merged:!!p.merged_at,draft:!!p.draft,head:p.head&&p.head.sha||'',base:p.base&&p.base.sha||'',updated:p.updated_at,merge_commit_sha:p.merge_commit_sha||null,changedFiles:p.changed_files,labels:(p.labels||[]).map(function(x){return x.name;}),filesObserved:false,runObserved:false,reviewsObserved:false,files:[],runs:[],reviews:[],seed:false};}
 async function enrich(p){
  var root=p.repo+'/pulls/'+p.number;
@@ -174,8 +187,42 @@ try{var all=await Promise.all(PUBLIC.map(fetchRepo));var repos=all.map(function(
  repos.forEach(function(r,i){var latest=refs[i].status==='fulfilled'&&refs[i].value.commit&&refs[i].value.commit.sha;
   if(!latest||latest!==r.main){r.issue='MAIN_CHANGED_OR_UNAVAILABLE_DURING_READBACK';r.main=null;r.ok=false;}
  });
- state.repos=repos;state.items=items;state.observedAt=new Date().toISOString();state.live=repos.every(function(x){return x.ok;});state.stale=false;state.notice='Offentlig GitHub-REST aflæst. '+items.length+' PR’er observeret. '+repos.filter(function(x){return !x.ok;}).length+' public repos uden komplet readback. Private repos er ikke læst.';state.queue=[];state.manual=false;state.selected=items[0]?id(items[0]):'';try{localStorage.setItem(CACHE_KEY,JSON.stringify({at:Date.now(),observedAt:state.observedAt,repos:state.repos,items:state.items}));}catch(e){}render();}catch(e){state.live=false;state.stale=true;state.notice='GitHub-readback lykkedes ikke ('+String(e.message||e)+'). Historisk snapshot vises, IKKE en aktuel releasebekræftelse. Ingen data opfindes.';render();}finally{byId('refresh').disabled=false;}}
+ state.repos=repos;state.items=items;state.observedAt=new Date().toISOString();state.live=repos.every(function(x){return x.ok;});state.stale=false;state.notice='Offentlig GitHub-REST aflæst. '+items.length+' PR’er observeret. '+repos.filter(function(x){return !x.ok;}).length+' public repos uden komplet readback. Private repos er ikke læst.';state.queue=[];state.manual=false;state.selected=items[0]?id(items[0]):'';persistPublicHistory();try{localStorage.setItem(CACHE_KEY,JSON.stringify({at:Date.now(),observedAt:state.observedAt,repos:state.repos,items:state.items}));}catch(e){}render();}catch(e){state.live=false;state.stale=true;state.notice='GitHub-readback lykkedes ikke ('+String(e.message||e)+'). Historisk snapshot vises, IKKE en aktuel releasebekræftelse. Ingen data opfindes.';render();}finally{byId('refresh').disabled=false;}}
+function readPublicHistory(){try{return HISTORY.clean(JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'));}catch(e){return [];}}
+function persistPublicHistory(){if(!state.live||state.stale)return;
+ var o=HISTORY.capture(state.repos,state.items,state.observedAt);if(!o)return;
+ try{localStorage.setItem(HISTORY_KEY,JSON.stringify(HISTORY.append(readPublicHistory(),o)));}catch(e){}}
+function renderHistoryCompare(){
+ var list=readPublicHistory(),rows=list.slice(-8).reverse();
+ byId('history-content').innerHTML=rows.length?rows.map(function(r,i){
+  var prev=list.filter(function(p){return new Date(p.observed_at)<new Date(r.observed_at);}).slice(-1)[0];
+  var diff=HISTORY.delta(prev,r);
+  return '<div class="repo-line"><span class="mono">'+esc(r.observed_at)+'</span><span>'+
+   esc(r.prs.length+' offentlige PR-observationer · '+(diff.changed===null?'ingen sammenlignelig forgænger':diff.changed+' ændrede PR-observationer')+
+   ' · '+(diff.main_changed===null?'main-delta ukendt':diff.main_changed+' ændrede main-SHA'))+'</span></div>';
+ }).join(''):'<p class="note">Ingen kvalificerede lokale offentlige GitHub-readbacks gemt endnu.</p>';
+ var options=state.items.filter(function(p){return HISTORY.PUBLIC.includes(p.repo);});
+ function selection(name,defaultId){var e=byId(name),prior=e.value;
+  e.innerHTML=options.map(function(p){return '<option value="'+esc(id(p))+'">'+esc(p.repo.split('/')[1]+' #'+p.number)+'</option>';}).join('');
+  e.value=options.some(function(p){return id(p)===prior;})?prior:defaultId;}
+ selection('compare-left',options[0]?id(options[0]):'');
+ selection('compare-right',options[1]?id(options[1]):options[0]?id(options[0]):'');
+ var l=options.find(function(p){return id(p)===byId('compare-left').value;}),
+     r=options.find(function(p){return id(p)===byId('compare-right').value;});
+ if(!l||!r){byId('compare-content').textContent='Ingen sammenlignelige offentlige PR’er observeret';return;}
+ function cell(p){return '<div style="min-width:0;flex:1;padding:12px;border:1px solid #dde5df;border-radius:12px">'+
+ '<strong>'+esc(p.repo.split('/')[1]+' #'+p.number)+'</strong><div class="small">'+esc(p.title)+'</div>'+
+ '<div class="small mono">HEAD '+esc(p.head||'UNOBSERVED')+'</div>'+
+ '<div class="small">CI '+esc(ci(p).status)+' · '+esc(ci(p).label)+'</div>'+
+ '<div class="small">Risiko '+esc(p.risk||'UNKNOWN')+' · '+esc(disposition(p))+'</div>'+
+ '<div class="small">Næste: '+esc(next(p).label)+'</div></div>';}
+ byId('compare-content').innerHTML='<div style="display:flex;gap:12px;flex-wrap:wrap">'+cell(l)+cell(r)+'</div>'+
+ '<p class="note">Kun afledte observationer. Sammenligning kan ikke bevise policies, dependencies, restore eller mergepermission.</p>';
+}
 function snapshot(){var selected=state.queue.map(function(k){return state.items.find(function(p){return id(p)===k;});}).filter(Boolean);return {schema:'S1_READONLY_RELEASE_QUEUE_V1',algorithm:'s1-risk-priority-v1',generated_at:new Date().toISOString(),source_observed_at:state.observedAt,live_readback:state.live,stale:state.stale,capacity:state.limit,action_limit_per_existing_S1_tick:3,no_release_authority:true,source_repos:state.repos.map(function(r){return {repo:r.repo,main_sha:r.main,observed:r.ok};}),items:selected.map(function(p,i){return {rank:i+1,repo:p.repo,pr:p.number,head_sha:p.head,base_sha:p.base,observed_ci:ci(p).status,risk:p.risk,disposition:disposition(p),next:next(p).label,provenance_url:'https://github.com/'+p.repo+'/pull/'+p.number};}),gates:{owner_release_authority:'NOT_ASSERTED',independent_recovery:'UNOBSERVED',billing_actual:'UNOBSERVED',api_allowlist:'UNOBSERVED'}};}
+byId('history-clear').addEventListener('click',function(){try{localStorage.removeItem(HISTORY_KEY);}catch(e){}renderHistoryCompare();});
+byId('compare-left').addEventListener('change',renderHistoryCompare);
+byId('compare-right').addEventListener('change',renderHistoryCompare);
 byId('refresh').addEventListener('click',function(){refresh(true);});
 ['f-repo','f-risk','f-owner','f-status','f-next','f-view','f-search'].forEach(function(k){byId(k).addEventListener(k==='f-search'?'input':'change',function(){if(k==='f-view'){state.view=byId('f-view').value;refresh(true);}else{renderRows();renderDetail();}});});
 byId('rows').addEventListener('click',function(e){var r=e.target.closest('tr[data-id]');if(r){state.selected=r.getAttribute('data-id');renderRows();renderDetail();}});
