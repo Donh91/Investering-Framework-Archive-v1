@@ -195,7 +195,7 @@ function persistPublicHistory(){if(!state.live||state.stale)return;
 function renderHistoryCompare(){
  var list=readPublicHistory(),rows=list.slice(-8).reverse();
  byId('history-content').innerHTML=rows.length?rows.map(function(r,i){
-  var prev=list.find(function(p){return new Date(p.observed_at)<new Date(r.observed_at);});
+  var prev=list.filter(function(p){return new Date(p.observed_at)<new Date(r.observed_at);}).slice(-1)[0];
   var diff=HISTORY.delta(prev,r);
   return '<div class="repo-line"><span class="mono">'+esc(r.observed_at)+'</span><span>'+
    esc(r.prs.length+' offentlige PR-observationer · '+(diff.changed===null?'ingen sammenlignelig forgænger':diff.changed+' ændrede PR-observationer')+
