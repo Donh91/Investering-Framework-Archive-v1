@@ -80,7 +80,11 @@ async function inventory({fetcher=fetch,token=process.env.GITHUB_TOKEN,
     release_permission:false,repos:[],warnings:d.warning?[d.warning]:[]};
   for (const [repo,isPrivate] of d.repos) {
     if (EXCLUDED.has(repo)) continue;
-    const entry={repo,visibility:isPrivate?'PRIVATE':'PUBLIC',complete:true,
+    const fromKnownScope=REPOS.some(([name])=>name.toLowerCase()===repo.toLowerCase());
+    const visibility_source=fromKnownScope?'KNOWN_SCOPE_POLICY':
+      d.complete&&d.source==='AUTHENTICATED_OWNER_ENUMERATION'?
+        'AUTHENTICATED_OWNER_ENUMERATION':'UNVERIFIED';
+    const entry={repo,visibility:isPrivate?'PRIVATE':'PUBLIC',visibility_source,complete:true,
       open_pr_count:null,open_issue_count:null,parked_hint_count:null,items:[]};
     try {
       const base='https://api.github.com/repos/'+repo+'/';
