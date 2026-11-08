@@ -1,6 +1,6 @@
 # S1 Release Control · read-only release workspace
 
-**Status:** standalone, agent-first source-controlled release candidate on draft PR #1996. Separate GitHub Pages repository and deployment acceptance remain unresolved. This is not a release authority, new Supervisor, new queue backend, scheduled job, paid model trigger or change to the existing Cycle Navigator site.
+**Status (8 November 2026):** source PR #1996 is MERGED; follow-ups #2033, #2034, #2035 and #2036 are MERGED. The public read-only AppDeploy staging is READY, but full browser acceptance, byte-level release-core source parity, separately governed GitHub Pages release and natural scheduled S1 adoption remain UNPROVEN. Recheck current native GitHub and host before treating any status as current. This is not a release authority, new Supervisor, new queue backend, scheduled job, paid model trigger or change to the existing Cycle Navigator site.
 
 ## Scope and sources
 
