@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildHub,ownerOf,laneOf} from './agent-work-hub-v1.mjs';
-import {classify} from './discovery-inventory-v1.mjs';
+import {classify,inventory} from './discovery-inventory-v1.mjs';
 
 const native={
   number:4,title:'Repair orphan task',state:'open',html_url:'https://github.com/Donh91/Archive/pull/4',
@@ -127,18 +127,31 @@ test('forged dynamically named PUBLIC repo is not admitted without native proven
  assert.equal(JSON.stringify(h).includes('FORGED_PUBLIC_DATA'),false);
  assert.equal(h.repo_summary.find(x=>x.visibility==='PUBLIC'&&x.repo===null).open_pr_count,null);
 });
-test('dynamic public repo only appears with actual owner-enumeration provenance marker',()=>{
+test('a forged provenance marker cannot unlock dynamically named public data',()=>{
  const data=base([classify(native,'PR')]);
  data.repository_coverage='AUTHENTICATED_OWNER_ENUMERATION';
  data.repos.push({repo:'Donh91/NewPublic',visibility:'PUBLIC',
    visibility_source:'AUTHENTICATED_OWNER_ENUMERATION',complete:true,
-   open_pr_count:1,open_issue_count:0,items:[{...classify(native,'PR'),title:'AUTHENTICATED_PUBLIC_DATA'}]});
+   open_pr_count:1,open_issue_count:0,items:[{...classify(native,'PR'),title:'FORGED_MARKER_DATA'}]});
  const h=buildHub(data);
- assert.equal(h.coverage_complete,true);
- assert.equal(h.work.some(x=>x.title==='AUTHENTICATED_PUBLIC_DATA'),true);
- data.repository_enumeration_complete=false;
- const invalid=buildHub(data);
- assert.equal(JSON.stringify(invalid).includes('AUTHENTICATED_PUBLIC_DATA'),false);
+ assert.equal(h.coverage_complete,false);
+ assert.equal(JSON.stringify(h).includes('FORGED_MARKER_DATA'),false);
+});
+test('new public repo only appears from live same-process native inventory',async()=>{
+ const fetcher=async url=>({
+  ok:true,
+  json:async()=>url.includes('/user/repos')?
+   [{full_name:'Donh91/NewPublic',private:false,owner:{login:'Donh91'}}]:
+   url.includes('/pulls?')?[native]:[]
+ });
+ const discovered=await inventory({fetcher,token:'test-token'});
+ const nativeHub=buildHub(discovered);
+ assert.equal(nativeHub.work.some(x=>x.source_repo==='Donh91/NewPublic'),true);
+ assert.equal(nativeHub.coverage_complete,true);
+ const serialized=JSON.parse(JSON.stringify(discovered));
+ const forged=buildHub(serialized);
+ assert.equal(forged.coverage_complete,false);
+ assert.equal(forged.work.some(x=>x.source_repo==='Donh91/NewPublic'),false);
 });
 test('default hub redacts private repository names and counts from every surface',()=>{
  const data=base([classify(native,'PR')]);
