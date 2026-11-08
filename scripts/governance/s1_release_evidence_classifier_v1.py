@@ -103,7 +103,8 @@ def classify_pr_disposition(record):
                   "pr_jobs", "independent_review_required", "review", "review_requires_current_main",
                   "physical_site_review_required", "physical_site_review_passed",
                   "owner_physical_review_waiver", "recovery", "release_assessment", "recovery_max_age_seconds",
-                  "safepoint_source", "owner_authorized")
+                  "safepoint_source", "owner_authorized",
+                  "s1_general_preflight_required", "s1_general_preflight")
         def material_value(value):
             if isinstance(value, dict):
                 return {k: material_value(v) for k, v in value.items()
@@ -139,6 +140,77 @@ def classify_pr_disposition(record):
 
     if not r or not all(_sha(current.get(k)) for k in ("head", "main", "policy", "source")):
         return blocked("INTERNAL_REPAIRABLE", "CURRENT_BINDING_MISSING", "Current exact HEAD/main/policy/source SHA census")
+    # Opt-in adapter for the existing S1 General source-bound preflight.
+    # Existing historical callers remain compatible. A declared S1 General
+    # release cannot silently omit the supplementary evidence guard.
+    general_required = r.get("s1_general_preflight_required")
+    if "s1_general_preflight" in r and general_required is not True:
+        return blocked("EXTERNAL_DEPENDENCY", "S1_GENERAL_OPT_IN_UNVERIFIED",
+                       "Explicit opt-in and complete native current evidence")
+    if general_required is not None and type(general_required) is not bool:
+        return blocked("EXTERNAL_DEPENDENCY", "S1_GENERAL_OPT_IN_INVALID",
+                       "Exact boolean S1 General preflight requirement")
+    if general_required is True:
+        from scripts.governance.s1_general_release_evidence_v1 import classify as classify_general
+        snapshot = r.get("s1_general_preflight")
+        advisory = classify_general(snapshot)
+        if advisory["status"] != "EVIDENCE_COMPLETE_RECHECK_NATIVE":
+            return blocked("EXTERNAL_DEPENDENCY",
+                           "S1_GENERAL_" + advisory["reason"],
+                           "Current authenticated owner, source, rule, review and executed-test evidence")
+        if (snapshot["head"] != current["head"]
+                or snapshot["main"] != current["main"]
+                or snapshot["high_impact"] != (r.get("risk") == "HIGH")
+                or r.get("risk") not in ("LOW", "HIGH")):
+            return blocked("EXTERNAL_DEPENDENCY", "S1_GENERAL_NATIVE_BINDING_MISMATCH",
+                           "Exact PR HEAD/main and path-derived risk agreement")
+        # A caller-selected LOW risk label is not sufficient for source/workflow
+        # changes. This is a conservative path falsifier, not a GitHub census:
+        # the original caller MUST independently authenticate the complete
+        # changed paths against the current PR head before using this advice.
+        changed_paths = r.get("expected_changed_paths")
+        if (not isinstance(changed_paths, list) or not changed_paths
+                or any(type(p) is not str or not p.strip() or p != p.strip()
+                       or p.startswith("/") or ".." in p.split("/") for p in changed_paths)
+                or len(set(changed_paths)) != len(changed_paths)):
+            return blocked("EXTERNAL_DEPENDENCY", "S1_GENERAL_NATIVE_PATH_CENSUS_MISSING",
+                           "Complete native exact-head changed paths")
+        if r["risk"] == "LOW" and any(
+                p == "AGENTS.md" or p.startswith(".github/workflows/")
+                or p.startswith("01_CORE_FRAMEWORK/governance/")
+                or p.startswith("00_ARCHIVE_CONTROL/")
+                for p in changed_paths):
+            return blocked("SOURCE_OR_SCIENCE_GATE", "HIGH_IMPACT_PATH_MARKED_LOW",
+                           "Existing source/workflow governance and independent recovery gates")
+        jobs = r.get("pr_jobs")
+        names = r.get("required_pr_job_names")
+        if (not isinstance(names, list) or not names
+                or any(type(n) is not str or not n.strip() for n in names)
+                or len(set(names)) != len(names)
+                or not isinstance(jobs, list)):
+            return blocked("CI_NOT_EXECUTED", "S1_GENERAL_NATIVE_CI_MANIFEST_MISSING",
+                           "Policy-derived unique required PR jobs and exact HEAD")
+        observed = set()
+        for name in names:
+            matches = [j for j in jobs if isinstance(j, dict) and j.get("name") == name]
+            if (len(matches) != 1
+                    or matches[0].get("head") != current["head"]
+                    or matches[0].get("event") != "pull_request"
+                    or matches[0].get("status") != "completed"
+                    or matches[0].get("conclusion") != "success"):
+                return blocked("CI_NOT_EXECUTED", "S1_GENERAL_NATIVE_JOB_NOT_EXECUTED",
+                               "Exact-head completed native pull_request job")
+            step_ids = matches[0].get("executed_test_ids")
+            if (not isinstance(step_ids, list) or not step_ids
+                    or any(type(t) is not str or not t.strip() or t != t.strip() for t in step_ids)
+                    or len(set(step_ids)) != len(step_ids)):
+                return blocked("CI_NOT_EXECUTED", "S1_GENERAL_NATIVE_TEST_IDS_UNVERIFIED",
+                               "Native run/job/step bound substantive executed test IDs")
+            observed.update(step_ids)
+        if observed != set(snapshot["executed_tests"]):
+            return blocked("CI_NOT_EXECUTED", "S1_GENERAL_TEST_PROOF_MISMATCH",
+                           "Exact same named executed tests in native jobs and S1 preflight")
+
     if r.get("platform_denied") is True:
         return blocked("EXTERNAL_DEPENDENCY", "PLATFORM_ACTION_DENIED", "GitHub/platform approval enforcement", "PLATFORM_CONTROL_OWNER", "Authorized platform control explicitly permits the exact action; no alternate-route evasion")
     if r.get("merged") is True:
