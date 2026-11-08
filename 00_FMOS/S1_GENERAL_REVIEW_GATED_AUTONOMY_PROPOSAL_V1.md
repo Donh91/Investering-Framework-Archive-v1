@@ -72,3 +72,20 @@ Owner supplied Grok's summary of Bridge PR #160: authenticated owner delegation,
 - Private Bridge inaccessible => REVIEW_UNVERIFIED, never fabricate receipt.
 - Custody or separate principal missing on high-impact => fail closed.
 - No required native review under current rules + all actual gates satisfied => do not invent another identity requirement.
+
+## D1 implementation delta, same original PR, 2026-11-08
+
+D1 now adds **optional, fail-closed integration into the EXISTING S1 operator classifier**, not a new controller. The original CLI `scripts/governance/s1_release_evidence_classifier_v1.py` accepts a record with `s1_general_preflight_required: true`, one `s1_general_preflight` snapshot and `pr_jobs[].executed_test_ids` for every required PR job. The original output remains advisory (`authorized=false` and `externally_authenticated=false`). Existing unrelated/legacy callers without this opt-in are preserved.
+
+The additional integration verifies:
+- The supplementary snapshot passes strict owner/permissions/rules/review/source-risk/partial-write/test identity screening, without self-authenticating those booleans.
+- Snapshot HEAD and main match original `current`, and `high_impact` agrees with path-derived LOW/HIGH. An unknown or mismatched risk fails closed.
+- Each required unique native PR job is bound to the same HEAD, `pull_request` event, completed status and successful conclusion. Any missing, duplicated, failed or skipped job fails closed.
+- Job `executed_test_ids` aggregate must EXACTLY agree with the supplemental `executed_tests` list. Test identities are externally sourced and must be checked against real completed native job logs/artifacts, not invented from a green check mark.
+- Missing opted-in supplemental evidence cannot silently downgrade to legacy mode. Native source/actor, permission, reviewer, lease, cost and custody still require fresh authenticated external checks at each write/merge boundary. This is an extra internal consistency falsifier, not a native API attestation or transaction lock.
+
+**Actual implementation paths:** `scripts/governance/s1_general_release_evidence_v1.py`, `scripts/governance/s1_release_evidence_classifier_v1.py`, `tests/governance/test_s1_general_release_evidence_v1.py`, and `tests/governance/test_s1_release_evidence_classifier_v1.py`.
+
+**Run exact code:** `python -m pytest -q --import-mode=importlib tests/governance/test_s1_general_release_evidence_v1.py tests/governance/test_s1_release_evidence_classifier_v1.py`, then the existing complete governance suite. Native `pull_request` job and test steps must complete at the NEW integration HEAD. No new workflow, API, queue, scheduler, GitHub identity or separate writer. No mutable source first-known, portfolio policy, funding, branch protection or recovery contract changes.
+
+**Status:** code staged on this draft PR; no governed merge, saved task mutation, genuine natural S1 integration, native merge proof, consumer proof, independent recent-HEAD Grok acceptance, or paid Sol MAX execution is implied. Activation remains NO-GO until separately proven. Grok Bridge #160/#162 apply to older exact heads; request updated adjudication if policy requires it.
