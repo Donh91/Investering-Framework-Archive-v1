@@ -1,7 +1,7 @@
 /* S1 advisory agent-to-agent discovery: local, optional, never a release gate.
  * Private details may be printed ONLY in an already-authorized private runtime.
  */
-import {inventory, REPOS, EXCLUDED} from './discovery-inventory-v1.mjs';
+import {inventory, REPOS, EXCLUDED, isNativeInventory} from './discovery-inventory-v1.mjs';
 const KNOWN_PRIVATE = new Set(REPOS.filter(([, privateRepo])=>privateRepo).map(([repo])=>repo.toLowerCase()));
 const KNOWN_PUBLIC = new Set(REPOS.filter(([, privateRepo])=>!privateRepo).map(([repo])=>repo.toLowerCase()));
 const EXCLUDED_NORMALIZED = new Set([...EXCLUDED].map(repo=>repo.toLowerCase()));
@@ -59,7 +59,8 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
     const knownPublic=KNOWN_PUBLIC.has(normalized);
     // Dynamic repositories require explicit native owner-enumeration provenance.
     // A self-declared PUBLIC field alone does not authorize public output.
-    const verifiedDynamic=repo.visibility_source==='AUTHENTICATED_OWNER_ENUMERATION'&&
+    const verifiedDynamic=isNativeInventory(input)&&
+      repo.visibility_source==='AUTHENTICATED_OWNER_ENUMERATION'&&
       input.repository_coverage==='AUTHENTICATED_OWNER_ENUMERATION'&&
       input.repository_enumeration_complete===true;
     const visibility=knownPrivate?'PRIVATE':
