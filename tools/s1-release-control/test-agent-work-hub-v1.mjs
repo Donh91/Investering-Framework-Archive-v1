@@ -107,3 +107,13 @@ test('non-owner repo is not an admissible source',()=>{
  assert.equal(h.coverage_complete,false);
  assert.equal(JSON.stringify(h).includes('FOREIGN_SOURCE'),false);
 });
+
+test('untrusted item URLs and source warnings cannot create private egress links',()=>{
+ const data=base([{...classify(native,'PR'),url:'https://example.invalid/leaked-private'}]);
+ data.warnings=['PRIVATE_WORK','Donh91/Investering-AI-Audit-Bridge: UNAVAILABLE_COUNTS_UNKNOWN'];
+ const h=buildHub(data);
+ assert.equal(h.work[0].source_url,'https://github.com/Donh91/Investering-Framework-Archive-v1/pull/4');
+ assert.equal(JSON.stringify(h).includes('example.invalid'),false);
+ assert.equal(JSON.stringify(h).includes('PRIVATE_WORK'),false);
+ assert.ok(h.source_warnings.includes('SOURCE_WARNING_REDACTED'));
+});
