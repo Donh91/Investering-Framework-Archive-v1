@@ -673,7 +673,7 @@
     {
       "sequence": 23,
       "mission_id": "ARP01-FORECAST-EDGE-CALIBRATION-SOL61-MAX-20261107",
-      "state": "ACTIVE_RELEASED",
+      "state": "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_GET_ONLY_RECOVERED_NO_REPOST",
       "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-07__ARP01_FORECAST_EDGE_CALIBRATION_SOL61_MAX_v1.json",
       "context_status": "ARP01_DISTINCT_CHAT_APPROVED_PRE_SIGNED_NATIVE_NEW_API_ONE_SHOT_SOURCE_VERIFIED_AT_PR_HEAD",
       "context_paths": [
@@ -691,14 +691,52 @@
       ],
       "release_gate": "NATIVE_OWNER_UNIQUE_SIGNED_SHA_PUBLIC30D_CONSENT_USD3_MAX_WITH_SINGLE_ONE_SHOT",
       "pass_scope": "ARP01_TASK2_CALIBRATION_PROSPECTIVE_SHADOW_FALSIFICATION_NO_PRODUCTION_NO_TRADING",
-      "new_paid_attempts_authorized": true,
+      "new_paid_attempts_authorized": false,
       "max_paid_attempts": 1,
       "no_automatic_retry": true,
       "owner_issue": 1156,
       "requested_effort": "max",
       "public_storage_consent_30_days": true,
       "previous_distinct_completed_mission": "GOAL5-ALTSEASON-CAPITAL-REALITY-LAB-SOL61-MAX-20261106B",
-      "owner_authorization_note": "Explicit user chat approval 2026-11-07 for bounded ARP01/02+03/04 MAX sequence does not itself release native provider POST. Issue #1476 original authenticated GitHub owner SHA-signed one-shot comment is required after source-qualified main merge."
+      "owner_authorization_note": "Explicit user chat approval 2026-11-07 for bounded ARP01/02+03/04 MAX sequence does not itself release native provider POST. Issue #1476 original authenticated GitHub owner SHA-signed one-shot comment is required after source-qualified main merge.",
+      "result_run_id": 42449099667,
+      "original_paid_run_id": 42423476167,
+      "result_receipt_path": "research/api_agent/outputs/research_lab_sol/ARP01-FORECAST-EDGE-CALIBRATION-SOL61-MAX-20261107/issue-1476/comment-6714216846/receipt.json",
+      "result_owner_comment_id": 6714216846,
+      "result_estimated_cost_usd": 0.310624,
+      "result_status": "PASS_RESEARCH_VERDICT_INSUFFICIENT_EVIDENCE_NO_DEPLOYED_CODE",
+      "owner_hold_reason": "Original one-POST Actions #42423476167 failed after provider handle, GET-only authenticated original recovery Actions #42449099667 SUCCESS. Immutable accepted receipt status PASS $0.310624 estimated, original model scientific INSUFFICIENT_EVIDENCE. NO REPOST, no extra paid attempt."
+    },
+    {
+      "sequence": 24,
+      "mission_id": "ARP0203-RISK-TRANSITION-UTILITY-SOL61-MAX-20261107",
+      "state": "ACTIVE_RELEASED",
+      "mission_packet": "06_RESEARCH_LAB/mission_packets/2026-11-07__ARP0203_RISK_TRANSITION_UTILITY_SOL61_MAX_v1.json",
+      "context_status": "ARP02_03_DISTINCT_POST_ARP01_RECOVERED_SOURCE_FROZEN_GATED_ONE_SHOT",
+      "context_paths": [
+        "research/autonomous_research_portfolio/PRODUCT_RECIPES_v1.md",
+        "research/historical_reality_engine/CROSS_ERA_RESULTS_20261107.md",
+        "research/historical_reality_engine/CROSS_ERA_NATIVE_RESULTS_20261107.json",
+        "research/historical_reality_engine/SHADOW_LEARNING_TRANSFER_CANDIDATES_v1.json",
+        "research/framework_memory/task2_archive_first/LATEST.json",
+        "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/WAVE_B_SOURCE_GATES_20261107.md",
+        "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/2026-11-05__ALTSEASON_SOURCE_FEASIBILITY_EXECUTION_V1.md",
+        "06_RESEARCH_LAB/high_value_edge_research/EDGE-001_TSUNAMI/ALTSEASON_SOURCE_FEASIBILITY_V1.json",
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1/ROUND2_TERMINAL_RESEARCH_DECISION.md",
+        "research/portfolio_compass/CAPITAL_COMMAND_DURABLE_OPERATING_PLAN_V1.md",
+        "research/api_agent/outputs/research_lab_sol/ARP01-FORECAST-EDGE-CALIBRATION-SOL61-MAX-20261107/issue-1476/comment-6714216846/RESEARCH_LAB_SOL_ANALYSIS.json",
+        "scripts/research/task2_wave_b_scientific_gates_v1.py"
+      ],
+      "release_gate": "NATIVE_OWNER_UNIQUE_SIGNED_SHA_PUBLIC30D_CONSENT_USD3_MAX_WITH_SINGLE_ONE_SHOT",
+      "pass_scope": "RISK3OF5_LIQUIDITY_FRAGILITY_FIRST_KNOWN_AND_AFTER_COST_PAPER_UTILITY_FALSIFICATION_ONLY",
+      "new_paid_attempts_authorized": true,
+      "max_paid_attempts": 1,
+      "no_automatic_retry": true,
+      "owner_issue": 1156,
+      "requested_effort": "max",
+      "public_storage_consent_30_days": true,
+      "previous_distinct_completed_mission": "ARP01-FORECAST-EDGE-CALIBRATION-SOL61-MAX-20261107",
+      "owner_authorization_note": "User explicitly authorized staged ARP Sol MAX program. Distinct native Donh91 signed SHA release in original #1476 mandatory. This queue row alone is not provider payment permission. No active duplicate, no Astra, no trading, no private source."
     }
   ],
   "authority": {
@@ -711,7 +749,7 @@
     "automatic_merge": false,
     "automatic_code_write": false
   },
-  "active_mission": "ARP01-FORECAST-EDGE-CALIBRATION-SOL61-MAX-20261107",
-  "program_phase": "ARP01_OWNER_APPROVED_NEW_MAX_ONE_SHOT_REQUIRES_SIGNED_NATIVE_RELEASE",
+  "active_mission": "ARP0203-RISK-TRANSITION-UTILITY-SOL61-MAX-20261107",
+  "program_phase": "ARP02_03_DISTINCT_CURRENT_ACTIVE_OWNER_SIGNED_NATIVE_RELEASE_REQUIRED",
   "terminal_report": "06_RESEARCH_LAB/mission_packets/2026-11-06__FIVE_SOL_MAX_MISSIONS_TERMINAL_EVIDENCE_v1.md"
 }
