@@ -82,12 +82,24 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
             self.assertTrue(active[0]["new_paid_attempts_authorized"])
             self.assertEqual(active[0]["requested_effort"], "max")
         else:
-            # A fully completed owner-approved five-goal program must have NO
-            # active provider mission. Paid admission remains fail-closed.
-            self.assertEqual(queue.get("program_phase"),
-                             "FIVE_GOAL_MISSIONS_1_TO_5_COMPLETE_ADVISORY_NO_ACTIVE")
+            # No released mission may remain after a fully completed one-shot
+            # owner research program. Historic five-goal and current ARP-v1
+            # closures are separate terminal records, both payment-denied.
+            self.assertIn(queue.get("program_phase"), {
+                "FIVE_GOAL_MISSIONS_1_TO_5_COMPLETE_ADVISORY_NO_ACTIVE",
+                "ARP_V1_ARP01_TO_ARP04_COMPLETE_ADVISORY_NO_ACTIVE",
+            })
             self.assertFalse(any(row.get("new_paid_attempts_authorized", False)
                                  for row in queue["missions"]))
+            if queue.get("program_phase") == "ARP_V1_ARP01_TO_ARP04_COMPLETE_ADVISORY_NO_ACTIVE":
+                arps = [row for row in queue["missions"] if row["mission_id"] ==
+                        "ARP04-MICROCAP-SURVIVAL-EXECUTABLE-ALPHA-SOL61-MAX-20261107"]
+                self.assertEqual(len(arps), 1)
+                self.assertEqual(arps[0]["state"],
+                                 "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_GET_ONLY_RECOVERED_NO_REPOST")
+                self.assertEqual(arps[0]["original_paid_run_id"], 42470902520)
+                self.assertEqual(arps[0]["result_run_id"], 42471573553)
+                self.assertEqual(queue["arp_v1_terminal_report"]["paid_one_shots"], 3)
             terminal = [row for row in queue["missions"] if row["mission_id"] ==
                         "GOAL5-ALTSEASON-CAPITAL-REALITY-LAB-SOL61-MAX-20261106B"]
             self.assertEqual(len(terminal), 1)
