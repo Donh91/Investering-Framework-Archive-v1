@@ -51,14 +51,19 @@ async function discoverRepositories({fetcher,token,maxPages=MAX_PAGES}={}) {
   if (!token) return result;
   try {
     const x=await collect(fetcher,'https://api.github.com/user/repos?affiliation=owner&visibility=all',token,maxPages);
+    let visibilityUnknown=false;
     for (const r of x.items) {
       if (r?.owner?.login !== OWNER || !r.full_name?.startsWith(OWNER+'/')) continue;
       if (EXCLUDED.has(r.full_name)) continue;
-      known.set(r.full_name,Boolean(r.private));
+      // A missing visibility bit cannot silently become PUBLIC.
+      if (typeof r.private !== 'boolean'){visibilityUnknown=true;continue;}
+      if (known.get(r.full_name)===true && r.private===false)visibilityUnknown=true;
+      known.set(r.full_name,r.private||known.get(r.full_name)===true);
     }
-    result.complete=x.complete;
+    result.complete=x.complete&&!visibilityUnknown;
     result.source='AUTHENTICATED_OWNER_ENUMERATION';
-    result.warning=x.complete?null:'REPOSITORY_PAGINATION_INCOMPLETE';
+    result.warning=!x.complete?'REPOSITORY_PAGINATION_INCOMPLETE':
+      visibilityUnknown?'REPOSITORY_VISIBILITY_UNOBSERVED':null;
   } catch (err) {
     result.warning='REPOSITORY_ENUMERATION_'+redactError(err);
   }
