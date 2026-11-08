@@ -10,6 +10,10 @@ const REPOS = Object.freeze([
   ['Donh91/Meme-Alpha-Lab', true]
 ]);
 const EXCLUDED = new Set(['Donh91/secrets']);
+// Same-process native-discovery identity is deliberately not serializable.
+// A fabricated JSON marker cannot prove an authenticated GitHub response.
+const NATIVE_INVENTORIES = new WeakSet();
+function isNativeInventory(value){ return Boolean(value&&typeof value==='object'&&NATIVE_INVENTORIES.has(value)); }
 const MAX_PAGES = 10;
 function headers(token) {
   const h = {Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
@@ -124,9 +128,10 @@ async function inventory({fetcher=fetch,token=process.env.GITHUB_TOKEN,
     out.repos.push(entry);
   }
   out.warning='OPEN or parked does not imply READY. Closed parked candidates are hints, never auto-reopened. No public private content, new tasks, approvals, merges or schedules are authorized.';
+  NATIVE_INVENTORIES.add(out);
   return out;
 }
-export {OWNER,REPOS,EXCLUDED,MAX_PAGES,collect,discoverRepositories,inventory,classify};
+export {OWNER,REPOS,EXCLUDED,MAX_PAGES,collect,discoverRepositories,inventory,classify,isNativeInventory};
 if (process.argv[1] && import.meta.url === 'file://' + process.argv[1]) {
   const privateDetails=process.argv.includes('--private-details');
   const includeClosedParked=process.argv.includes('--closed-parked');
