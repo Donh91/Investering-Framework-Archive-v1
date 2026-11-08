@@ -31,6 +31,16 @@ function laneOf(item){
   if(item?.kind==='ISSUE')return 'OPEN_ISSUE_ACTIVITY_UNVERIFIED';
   return 'UNOBSERVED';
 }
+function safeSourceWarnings(warnings){
+  if(!Array.isArray(warnings))return [];
+  return warnings.map(value=>{
+    if(typeof value!=='string')return 'SOURCE_WARNING_REDACTED';
+    if(/^(?:AUTHENTICATED_REPOSITORY_ENUMERATION_UNAVAILABLE|REPOSITORY_PAGINATION_INCOMPLETE|REPOSITORY_VISIBILITY_UNOBSERVED)$/.test(value))return value;
+    if(/^REPOSITORY_ENUMERATION_GITHUB_HTTP_\d{3}$/.test(value))return value;
+    const match=value.match(/^Donh91\/[a-z0-9._-]+:\s*(OPEN_PAGINATION_INCOMPLETE|CLOSED_RESEARCH_SCAN_INCOMPLETE|UNAVAILABLE_COUNTS_UNKNOWN)$/i);
+    return match?'REPO_'+match[1].toUpperCase():'SOURCE_WARNING_REDACTED';
+  });
+}
 function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
   if(!input||input.schema!=='S1_DISCOVERY_INVENTORY_v1'||!Array.isArray(input.repos)){
     return {...POLICY,schema:SCHEMA,status:'UNAVAILABLE',coverage_complete:false,
@@ -64,7 +74,7 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
       if(!Number.isInteger(item.number)||item.number<1)continue;
       work.push({
         source_repo:repo.repo,visibility,kind:item.kind,number:item.number,
-        source_url:item.url||'https://github.com/'+repo.repo+'/'+(item.kind==='PR'?'pull':'issues')+'/'+item.number,
+        source_url:'https://github.com/'+repo.repo+'/'+(item.kind==='PR'?'pull':'issues')+'/'+item.number,
         title:typeof item.title==='string'?item.title:null,
         author_not_owner:item.author||null,
         owner:ownerOf(item),lane_hint:laneOf(item),
@@ -91,7 +101,7 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
   return {...POLICY,schema:SCHEMA,status:coverage?'OBSERVED_COMPLETE_WITHIN_CREDENTIAL_SCOPE':'PARTIAL',
     generated_at:input.generated_at||null,source_inventory_schema:input.schema,
     repository_scope:input.coverage_scope||'UNKNOWN',coverage_complete:coverage,
-    source_warnings:Array.isArray(input.warnings)?input.warnings:[],
+    source_warnings:safeSourceWarnings(input.warnings),
     repo_summary,counts:{open_work_items_observed:work.length-closedResearchHints,
       closed_research_hints:closedResearchHints,
       owner_unobserved:unassigned,
