@@ -92,3 +92,10 @@ test('restricted data plane is excluded even with noncanonical case',async()=>{
  const d=await discoverRepositories({fetcher:f,token:'test-token'});
  assert.equal([...d.repos.keys()].some(x=>x.toLowerCase()==='donh91/secrets'),false);
 });
+
+test('dynamic native discovery carries an explicit local provenance marker',async()=>{
+ const x=await inventory({fetcher:fixture,token:'test-token'});
+ const dynamic=x.repos.find(z=>z.repo==='Donh91/New-Public-Repo');
+ assert.equal(dynamic.visibility_source,'AUTHENTICATED_OWNER_ENUMERATION');
+ assert.equal(x.repos.find(z=>z.repo==='Donh91/Investering-Framework-Archive-v1').visibility_source,'KNOWN_SCOPE_POLICY');
+});
