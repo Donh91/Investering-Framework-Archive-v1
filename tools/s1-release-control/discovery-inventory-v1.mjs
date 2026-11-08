@@ -10,6 +10,10 @@ const REPOS = Object.freeze([
   ['Donh91/Meme-Alpha-Lab', true]
 ]);
 const EXCLUDED = new Set(['Donh91/secrets']);
+// Same-process native-discovery identity is deliberately not serializable.
+// A fabricated JSON marker cannot prove an authenticated GitHub response.
+const NATIVE_INVENTORIES = new WeakSet();
+function isNativeInventory(value){ return Boolean(value&&typeof value==='object'&&NATIVE_INVENTORIES.has(value)); }
 const MAX_PAGES = 10;
 function headers(token) {
   const h = {Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
@@ -51,14 +55,19 @@ async function discoverRepositories({fetcher,token,maxPages=MAX_PAGES}={}) {
   if (!token) return result;
   try {
     const x=await collect(fetcher,'https://api.github.com/user/repos?affiliation=owner&visibility=all',token,maxPages);
+    let visibilityUnknown=false;
     for (const r of x.items) {
       if (r?.owner?.login !== OWNER || !r.full_name?.startsWith(OWNER+'/')) continue;
-      if (EXCLUDED.has(r.full_name)) continue;
-      known.set(r.full_name,Boolean(r.private));
+      if (EXCLUDED.has(r.full_name) || r.full_name.toLowerCase()==='donh91/secrets') continue;
+      // A missing visibility bit cannot silently become PUBLIC.
+      if (typeof r.private !== 'boolean'){visibilityUnknown=true;continue;}
+      if (known.get(r.full_name)===true && r.private===false)visibilityUnknown=true;
+      known.set(r.full_name,r.private||known.get(r.full_name)===true);
     }
-    result.complete=x.complete;
+    result.complete=x.complete&&!visibilityUnknown;
     result.source='AUTHENTICATED_OWNER_ENUMERATION';
-    result.warning=x.complete?null:'REPOSITORY_PAGINATION_INCOMPLETE';
+    result.warning=!x.complete?'REPOSITORY_PAGINATION_INCOMPLETE':
+      visibilityUnknown?'REPOSITORY_VISIBILITY_UNOBSERVED':null;
   } catch (err) {
     result.warning='REPOSITORY_ENUMERATION_'+redactError(err);
   }
@@ -75,7 +84,11 @@ async function inventory({fetcher=fetch,token=process.env.GITHUB_TOKEN,
     release_permission:false,repos:[],warnings:d.warning?[d.warning]:[]};
   for (const [repo,isPrivate] of d.repos) {
     if (EXCLUDED.has(repo)) continue;
-    const entry={repo,visibility:isPrivate?'PRIVATE':'PUBLIC',complete:true,
+    const fromKnownScope=REPOS.some(([name])=>name.toLowerCase()===repo.toLowerCase());
+    const visibility_source=fromKnownScope?'KNOWN_SCOPE_POLICY':
+      d.complete&&d.source==='AUTHENTICATED_OWNER_ENUMERATION'?
+        'AUTHENTICATED_OWNER_ENUMERATION':'UNVERIFIED';
+    const entry={repo,visibility:isPrivate?'PRIVATE':'PUBLIC',visibility_source,complete:true,
       open_pr_count:null,open_issue_count:null,parked_hint_count:null,items:[]};
     try {
       const base='https://api.github.com/repos/'+repo+'/';
@@ -115,9 +128,10 @@ async function inventory({fetcher=fetch,token=process.env.GITHUB_TOKEN,
     out.repos.push(entry);
   }
   out.warning='OPEN or parked does not imply READY. Closed parked candidates are hints, never auto-reopened. No public private content, new tasks, approvals, merges or schedules are authorized.';
+  NATIVE_INVENTORIES.add(out);
   return out;
 }
-export {OWNER,REPOS,EXCLUDED,MAX_PAGES,collect,discoverRepositories,inventory,classify};
+export {OWNER,REPOS,EXCLUDED,MAX_PAGES,collect,discoverRepositories,inventory,classify,isNativeInventory};
 if (process.argv[1] && import.meta.url === 'file://' + process.argv[1]) {
   const privateDetails=process.argv.includes('--private-details');
   const includeClosedParked=process.argv.includes('--closed-parked');

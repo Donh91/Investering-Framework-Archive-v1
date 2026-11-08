@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildHub,ownerOf,laneOf} from './agent-work-hub-v1.mjs';
-import {classify} from './discovery-inventory-v1.mjs';
+import {classify,inventory} from './discovery-inventory-v1.mjs';
 
 const native={
   number:4,title:'Repair orphan task',state:'open',html_url:'https://github.com/Donh91/Archive/pull/4',
@@ -70,4 +70,106 @@ test('closed parked research is opt-in and excluded from active work',()=>{
  assert.equal(extended.counts.closed_research_hints,1);
  assert.equal(extended.work.find(x=>x.kind==='CLOSED_ISSUE').lane_hint,'CLOSED_RESEARCH_HINT_NOT_ACTIVE');
  assert.equal(extended.can_block_actions,false);
+});
+
+// Security regression: malformed or forged visibility cannot expose private work.
+test('unknown visibility never defaults to public; counts are unknown',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repos.push({repo:'Donh91/Unclassified-New-Repo',visibility:'UNKNOWN',complete:true,
+   open_pr_count:1,open_issue_count:0,items:[{...classify(native,'PR'),title:'SECRET_UNKNOWN'}]});
+ const h=buildHub(data);
+ assert.equal(h.coverage_complete,false);
+ assert.equal(JSON.stringify(h).includes('SECRET_UNKNOWN'),false);
+ const summary=h.repo_summary.find(x=>x.visibility==='UNKNOWN');
+ assert.equal(summary.repo,null);
+ assert.equal(summary.open_pr_count,null);
+});
+test('known private source cannot be downgraded by PUBLIC claim or a private-details flag',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repos[1].visibility='PUBLIC';
+ const h=buildHub(data,{includePrivate:true});
+ assert.equal(h.coverage_complete,false);
+ assert.equal(JSON.stringify(h).includes('PRIVATE_WORK'),false);
+ assert.equal(h.repo_summary[1].details,'REDACTED');
+});
+test('restricted data-plane name is excluded case-insensitively, including opt-in',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repos[2].repo='DONH91/SECRETS';
+ const h=buildHub(data,{includePrivate:true,includeClosedParked:true});
+ assert.equal(JSON.stringify(h).includes('DO_NOT_EXPOSE'),false);
+ assert.equal(h.repo_summary.some(x=>/secrets/i.test(x.repo||'')),false);
+});
+test('non-owner repo is not an admissible source',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repos.push({repo:'OtherOwner/public',visibility:'PUBLIC',complete:true,
+   items:[{...classify(native,'PR'),title:'FOREIGN_SOURCE'}]});
+ const h=buildHub(data);
+ assert.equal(h.coverage_complete,false);
+ assert.equal(JSON.stringify(h).includes('FOREIGN_SOURCE'),false);
+});
+
+test('untrusted item URLs and source warnings cannot create private egress links',()=>{
+ const data=base([{...classify(native,'PR'),url:'https://example.invalid/leaked-private'}]);
+ data.warnings=['PRIVATE_WORK','Donh91/Investering-AI-Audit-Bridge: UNAVAILABLE_COUNTS_UNKNOWN'];
+ const h=buildHub(data);
+ assert.equal(h.work[0].source_url,'https://github.com/Donh91/Investering-Framework-Archive-v1/pull/4');
+ assert.equal(JSON.stringify(h).includes('example.invalid'),false);
+ assert.equal(JSON.stringify(h).includes('PRIVATE_WORK'),false);
+ assert.ok(h.source_warnings.includes('SOURCE_WARNING_REDACTED'));
+});
+
+test('forged dynamically named PUBLIC repo is not admitted without native provenance',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repos.push({repo:'Donh91/NewPublic',visibility:'PUBLIC',complete:true,
+   open_pr_count:1,open_issue_count:0,items:[{...classify(native,'PR'),title:'FORGED_PUBLIC_DATA'}]});
+ const h=buildHub(data,{includePrivate:true});
+ assert.equal(h.coverage_complete,false);
+ assert.equal(JSON.stringify(h).includes('FORGED_PUBLIC_DATA'),false);
+ assert.equal(h.repo_summary.find(x=>x.visibility==='PUBLIC'&&x.repo===null).open_pr_count,null);
+});
+test('a forged provenance marker cannot unlock dynamically named public data',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repository_coverage='AUTHENTICATED_OWNER_ENUMERATION';
+ data.repos.push({repo:'Donh91/NewPublic',visibility:'PUBLIC',
+   visibility_source:'AUTHENTICATED_OWNER_ENUMERATION',complete:true,
+   open_pr_count:1,open_issue_count:0,items:[{...classify(native,'PR'),title:'FORGED_MARKER_DATA'}]});
+ const h=buildHub(data);
+ assert.equal(h.coverage_complete,false);
+ assert.equal(JSON.stringify(h).includes('FORGED_MARKER_DATA'),false);
+});
+test('new public repo only appears from live same-process native inventory',async()=>{
+ const fetcher=async url=>({
+  ok:true,
+  json:async()=>url.includes('/user/repos')?
+   [{full_name:'Donh91/NewPublic',private:false,owner:{login:'Donh91'}}]:
+   url.includes('/pulls?')?[native]:[]
+ });
+ const discovered=await inventory({fetcher,token:'test-token'});
+ const nativeHub=buildHub(discovered);
+ assert.equal(nativeHub.work.some(x=>x.source_repo==='Donh91/NewPublic'),true);
+ assert.equal(nativeHub.coverage_complete,true);
+ const serialized=JSON.parse(JSON.stringify(discovered));
+ const forged=buildHub(serialized);
+ assert.equal(forged.coverage_complete,false);
+ assert.equal(forged.work.some(x=>x.source_repo==='Donh91/NewPublic'),false);
+});
+test('default hub redacts private repository names and counts from every surface',()=>{
+ const data=base([classify(native,'PR')]);
+ data.warnings=['Donh91/Investering-AI-Audit-Bridge: UNAVAILABLE_COUNTS_UNKNOWN'];
+ data.coverage_scope='Donh91/PRIVATE_SECRET_DATA';
+ data.generated_at='PRIVATE_SECRET_DATA';
+ const h=buildHub(data);
+ assert.equal(JSON.stringify(h).includes('Donh91/Investering-AI-Audit-Bridge'),false);
+ assert.equal(JSON.stringify(h).includes('PRIVATE_SECRET_DATA'),false);
+ assert.equal(h.repo_summary.find(x=>x.visibility==='PRIVATE').open_pr_count,null);
+ assert.equal(h.repository_scope,'UNKNOWN');
+ assert.equal(h.generated_at,null);
+});
+
+test('validated UTC provenance is retained, malformed text is suppressed',()=>{
+ const data=base([classify(native,'PR')]);
+ const good=buildHub(data);
+ assert.equal(good.generated_at,'2026-11-08T08:20:00Z');
+ data.generated_at='private/SECRET';
+ assert.equal(buildHub(data).generated_at,null);
 });

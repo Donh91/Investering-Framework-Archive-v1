@@ -1,7 +1,10 @@
 /* S1 advisory agent-to-agent discovery: local, optional, never a release gate.
  * Private details may be printed ONLY in an already-authorized private runtime.
  */
-import {inventory} from './discovery-inventory-v1.mjs';
+import {inventory, REPOS, EXCLUDED, isNativeInventory} from './discovery-inventory-v1.mjs';
+const KNOWN_PRIVATE = new Set(REPOS.filter(([, privateRepo])=>privateRepo).map(([repo])=>repo.toLowerCase()));
+const KNOWN_PUBLIC = new Set(REPOS.filter(([, privateRepo])=>!privateRepo).map(([repo])=>repo.toLowerCase()));
+const EXCLUDED_NORMALIZED = new Set([...EXCLUDED].map(repo=>repo.toLowerCase()));
 
 const SCHEMA='S1_AGENT_WORK_HUB_v1';
 const POLICY=Object.freeze({
@@ -29,6 +32,16 @@ function laneOf(item){
   if(item?.kind==='ISSUE')return 'OPEN_ISSUE_ACTIVITY_UNVERIFIED';
   return 'UNOBSERVED';
 }
+function safeSourceWarnings(warnings){
+  if(!Array.isArray(warnings))return [];
+  return warnings.map(value=>{
+    if(typeof value!=='string')return 'SOURCE_WARNING_REDACTED';
+    if(/^(?:AUTHENTICATED_REPOSITORY_ENUMERATION_UNAVAILABLE|REPOSITORY_PAGINATION_INCOMPLETE|REPOSITORY_VISIBILITY_UNOBSERVED)$/.test(value))return value;
+    if(/^REPOSITORY_ENUMERATION_GITHUB_HTTP_\d{3}$/.test(value))return value;
+    const match=value.match(/^Donh91\/[a-z0-9._-]+:\s*(OPEN_PAGINATION_INCOMPLETE|CLOSED_RESEARCH_SCAN_INCOMPLETE|UNAVAILABLE_COUNTS_UNKNOWN)$/i);
+    return match?'REPO_'+match[1].toUpperCase():'SOURCE_WARNING_REDACTED';
+  });
+}
 function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
   if(!input||input.schema!=='S1_DISCOVERY_INVENTORY_v1'||!Array.isArray(input.repos)){
     return {...POLICY,schema:SCHEMA,status:'UNAVAILABLE',coverage_complete:false,
@@ -37,14 +50,29 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
   const work=[],repo_summary=[];
   let coverage=Boolean(input.complete&&input.repository_enumeration_complete);
   for(const repo of input.repos){
-    if(!repo||typeof repo.repo!=='string'||repo.repo==='Donh91/secrets')continue;
-    const isPrivate=repo.visibility==='PRIVATE';
-    if(!repo.complete)coverage=false;
-    const readable=!isPrivate||includePrivate;
-    repo_summary.push({repo:repo.repo,visibility:repo.visibility,
-      source_complete:repo.complete===true,
-      open_pr_count:Number.isInteger(repo.open_pr_count)?repo.open_pr_count:null,
-      open_issue_count:Number.isInteger(repo.open_issue_count)?repo.open_issue_count:null,
+    if(!repo||typeof repo.repo!=='string'){coverage=false;continue;}
+    const normalized=repo.repo.toLowerCase();
+    // Never surface restricted data-plane work, even when the source uses mixed case.
+    if(EXCLUDED_NORMALIZED.has(normalized))continue;
+    if(!/^Donh91\/[a-z0-9._-]+$/i.test(repo.repo)){coverage=false;continue;}
+    const knownPrivate=KNOWN_PRIVATE.has(normalized);
+    const knownPublic=KNOWN_PUBLIC.has(normalized);
+    // Dynamic repositories require explicit native owner-enumeration provenance.
+    // A self-declared PUBLIC field alone does not authorize public output.
+    const verifiedDynamic=isNativeInventory(input)&&
+      repo.visibility_source==='AUTHENTICATED_OWNER_ENUMERATION'&&
+      input.repository_coverage==='AUTHENTICATED_OWNER_ENUMERATION'&&
+      input.repository_enumeration_complete===true;
+    const visibility=knownPrivate?'PRIVATE':
+      repo.visibility==='PUBLIC'||repo.visibility==='PRIVATE'?repo.visibility:'UNKNOWN';
+    const visibilityProven=visibility!=='UNKNOWN'&&
+      (knownPrivate?repo.visibility==='PRIVATE':knownPublic||verifiedDynamic);
+    if(!repo.complete||!visibilityProven)coverage=false;
+    const readable=visibilityProven&&(visibility==='PUBLIC'||(visibility==='PRIVATE'&&includePrivate));
+    repo_summary.push({repo:readable?repo.repo:null,visibility,
+      source_complete:repo.complete===true&&visibilityProven,
+      open_pr_count:readable&&Number.isInteger(repo.open_pr_count)?repo.open_pr_count:null,
+      open_issue_count:readable&&Number.isInteger(repo.open_issue_count)?repo.open_issue_count:null,
       details:readable?'AS_AVAILABLE':'REDACTED'});
     if(!readable||!Array.isArray(repo.items))continue;
     const sourceItems=repo.items.concat(includeClosedParked&&Array.isArray(repo.closed_parked_candidates)?repo.closed_parked_candidates:[]);
@@ -52,8 +80,8 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
       if(!['PR','ISSUE','CLOSED_ISSUE'].includes(item?.kind))continue;
       if(!Number.isInteger(item.number)||item.number<1)continue;
       work.push({
-        source_repo:repo.repo,visibility:repo.visibility,kind:item.kind,number:item.number,
-        source_url:item.url||'https://github.com/'+repo.repo+'/'+(item.kind==='PR'?'pull':'issues')+'/'+item.number,
+        source_repo:repo.repo,visibility,kind:item.kind,number:item.number,
+        source_url:'https://github.com/'+repo.repo+'/'+(item.kind==='PR'?'pull':'issues')+'/'+item.number,
         title:typeof item.title==='string'?item.title:null,
         author_not_owner:item.author||null,
         owner:ownerOf(item),lane_hint:laneOf(item),
@@ -78,9 +106,11 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
     else unassigned++;
   }
   return {...POLICY,schema:SCHEMA,status:coverage?'OBSERVED_COMPLETE_WITHIN_CREDENTIAL_SCOPE':'PARTIAL',
-    generated_at:input.generated_at||null,source_inventory_schema:input.schema,
-    repository_scope:input.coverage_scope||'UNKNOWN',coverage_complete:coverage,
-    source_warnings:Array.isArray(input.warnings)?input.warnings:[],
+    generated_at:/^\d{4}-\d{2}-\d{2}T/.test(input.generated_at||'')?input.generated_at:null,
+    source_inventory_schema:input.schema,
+    repository_scope:input.coverage_scope==='CREDENTIAL_ACCESSIBLE_OWNER_REPOS_ONLY'?
+      input.coverage_scope:'UNKNOWN',coverage_complete:coverage,
+    source_warnings:safeSourceWarnings(input.warnings),
     repo_summary,counts:{open_work_items_observed:work.length-closedResearchHints,
       closed_research_hints:closedResearchHints,
       owner_unobserved:unassigned,
