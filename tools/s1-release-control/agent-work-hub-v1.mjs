@@ -29,7 +29,7 @@ function laneOf(item){
   if(item?.kind==='ISSUE')return 'OPEN_ISSUE_ACTIVITY_UNVERIFIED';
   return 'UNOBSERVED';
 }
-function buildHub(input,{includePrivate=false}={}){
+function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
   if(!input||input.schema!=='S1_DISCOVERY_INVENTORY_v1'||!Array.isArray(input.repos)){
     return {...POLICY,schema:SCHEMA,status:'UNAVAILABLE',coverage_complete:false,
       warning:'SOURCE_INVALID_USE_NATIVE_GITHUB',work:[],repo_summary:[]};
@@ -47,8 +47,9 @@ function buildHub(input,{includePrivate=false}={}){
       open_issue_count:Number.isInteger(repo.open_issue_count)?repo.open_issue_count:null,
       details:readable?'AS_AVAILABLE':'REDACTED'});
     if(!readable||!Array.isArray(repo.items))continue;
-    for(const item of repo.items){
-      if(!['PR','ISSUE'].includes(item?.kind))continue;
+    const sourceItems=repo.items.concat(includeClosedParked&&Array.isArray(repo.closed_parked_candidates)?repo.closed_parked_candidates:[]);
+    for(const item of sourceItems){
+      if(!['PR','ISSUE','CLOSED_ISSUE'].includes(item?.kind))continue;
       if(!Number.isInteger(item.number)||item.number<1)continue;
       work.push({
         source_repo:repo.repo,visibility:repo.visibility,kind:item.kind,number:item.number,
@@ -68,8 +69,9 @@ function buildHub(input,{includePrivate=false}={}){
   work.sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||''))||
     a.source_repo.localeCompare(b.source_repo)||a.number-b.number);
   const owners={};
-  let unassigned=0,multiple=0;
+  let unassigned=0,multiple=0,closedResearchHints=0;
   for(const item of work){
+    if(item.kind==='CLOSED_ISSUE'){closedResearchHints++;continue;}
     if(item.owner.status==='ASSIGNED_ON_GITHUB'){
       const login=item.owner.logins[0];owners[login]=(owners[login]||0)+1;
     }else if(item.owner.status==='MULTIPLE_GITHUB_ASSIGNEES')multiple++;
@@ -79,7 +81,9 @@ function buildHub(input,{includePrivate=false}={}){
     generated_at:input.generated_at||null,source_inventory_schema:input.schema,
     repository_scope:input.coverage_scope||'UNKNOWN',coverage_complete:coverage,
     source_warnings:Array.isArray(input.warnings)?input.warnings:[],
-    repo_summary,counts:{work_items_observed:work.length,owner_unobserved:unassigned,
+    repo_summary,counts:{open_work_items_observed:work.length-closedResearchHints,
+      closed_research_hints:closedResearchHints,
+      owner_unobserved:unassigned,
       multiple_assignees:multiple,by_assignee:owners},
     work,adoption:'UNPROVEN_UNTIL_NATURAL_AGENT_RUN_RECEIPT',
     note:'Hints are not ownership ratification, CI review, merge permission, or a new queue. If unavailable or stale, skip hub and work from original GitHub.'};
@@ -90,7 +94,7 @@ if(process.argv[1]&&import.meta.url==='file://'+process.argv[1]){
   const closed=process.argv.includes('--closed-parked');
   try{
     const result=await inventory({privateDetails:includePrivate,includeClosedParked:closed});
-    process.stdout.write(JSON.stringify(buildHub(result,{includePrivate}),null,2)+'\n');
+    process.stdout.write(JSON.stringify(buildHub(result,{includePrivate,includeClosedParked:closed}),null,2)+'\n');
   }catch(_error){
     process.stdout.write(JSON.stringify({...POLICY,schema:SCHEMA,status:'UNAVAILABLE',
       coverage_complete:false,warning:'OPTIONAL_HUB_ERROR_CONTINUE_WITH_NATIVE_GITHUB'},null,2)+'\n');

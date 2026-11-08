@@ -58,3 +58,16 @@ test('Open and parked status are only hints, not actual activity proof or READY'
  assert.match(laneOf(w),/HINT/);
  assert.equal(buildHub(base([w])).work[0].original_source_recheck_required,true);
 });
+
+test('closed parked research is opt-in and excluded from active work',()=>{
+ const rec=classify({number:91,title:'PARKED shadow revisit',state:'closed',labels:[]},'CLOSED_ISSUE');
+ const data=base([classify(native,'PR')]);
+ data.repos[0].closed_parked_candidates=[rec];
+ const normal=buildHub(data),extended=buildHub(data,{includeClosedParked:true});
+ assert.equal(normal.counts.open_work_items_observed,1);
+ assert.equal(normal.counts.closed_research_hints,0);
+ assert.equal(extended.counts.open_work_items_observed,1);
+ assert.equal(extended.counts.closed_research_hints,1);
+ assert.equal(extended.work.find(x=>x.kind==='CLOSED_ISSUE').lane_hint,'CLOSED_RESEARCH_HINT_NOT_ACTIVE');
+ assert.equal(extended.can_block_actions,false);
+});

@@ -26,3 +26,5 @@ Default output never contains private titles/IDs even if a caller passes a priva
 `S1_AGENT_WORK_HUB_v1` carries `can_block_actions:false`, `release_permission:false`, `fallback`, completeness flags and `adoption:UNPROVEN_UNTIL_NATURAL_AGENT_RUN_RECEIPT`. Only a future actual native run consuming source SHA, using a concrete original owner decision, and recording run/PR/main outcome proves agent adoption. Neither creating this file nor saying "the agents use it" does. Use original S1 #1156 for a materially new verified natural outcome, not repetitive status comments. Tests: `node --test tools/s1-release-control/test-agent-work-hub-v1.mjs`.
 
 **Security:** Public webapp stays PUBLIC_ONLY and never accesses Bridge/Alpha/secret tokens. No new API endpoints or public ingest. Repo enumeration is credential-scope bounded. No private details in public logs, PRs, receipts or site.
+
+**Closed research scan:** `--closed-parked` is opt-in only. When explicitly requested, results appear as `CLOSED_RESEARCH_HINT_NOT_ACTIVE` and are counted separately from open work. Never perform broad closed-history scans as a routine hourly hub preflight.
