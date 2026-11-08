@@ -98,3 +98,18 @@ This README does not itself prove improved S1 outcomes. Use existing `skill-qual
 ## 9. Runtime task change control and cross-thread handoffs
 
 Proposed formal owner protocol: [`S1_TASK_CHANGE_CONTROL_V1.md`](./S1_TASK_CHANGE_CONTROL_V1.md). **Delegating work to S1 means updating the EXISTING original domain owner issue/PR, NOT appending the delegation to ChatGPT's saved S1 task prompt.** Runtime task edits require an explicit owner request, small diff, current-task readback, preserved schedule/enabled/security, and a distinct deduplicated `S1_TASK_CONFIG_CHANGE_V1` configuration receipt on the EXISTING #1156 owner. GitHub PR changes become normative only after governed merge; tool-level task updates have no proven cross-thread edit lock. Log and investigate unexpected drift, do not invent prevention or self-rollback. Preserve active owner missions and all natural-run evidence gates.
+
+
+## 10. S1 General optional evidence crosswalk, owner #1156, adoption AFTER merge only
+
+The ORIGINAL source-first S1 operator remains `scripts/governance/s1_release_evidence_classifier_v1.py`. No second approval authority, workflow, controller, task, identity or writer exists. The supplementary `s1_general_release_evidence_v1.py` is read-only and never issues permission.
+
+For an owner-authorized S1 General original-PR action that can actually collect and authenticate native evidence, include `s1_general_preflight_required: true` and `s1_general_preflight` in the SAME existing per-PR JSON record. Populate `pr_jobs[].executed_test_ids` from the native exact-HEAD PR-run/job/test log or verified artifact, using names derived from the existing original-owner required test manifest. Do not invent names from a green check or PR title; unknown test coverage stays blocked. Head/main and path-derived HIGH/LOW risk must match both inputs; source/policy/review/custody are still enforced by the original classifier and real native APIs. Any missing or contradictory S1 General evidence blocks ONLY that case and allows independent originals to proceed.
+
+The ordinary advisory batch CLI, with no alternative release path, remains:
+```sh
+python scripts/governance/s1_release_evidence_classifier_v1.py < current-authenticated-pr-evidence.json
+```
+A return of READY_TO_MERGE is **not** GitHub permission. The current authorized actor must re-fetch native HEAD/main/protection/reviews/CI/source/lease, use exact expected-head merge only when all binding gates pass and verify actual main blobs. Partial/timeout operations are UNKNOWN until readback, never blindly retried. Producer/consumer proof and measured natural S1 autonomy are separate. Source-only code/CI PASS must not be reported as scheduled task execution.
+
+This method is PROPOSED until the existing original PR #2044 is governed, reviewed, qualified, merged and main-readback verified. The saved Chat S1 task ID/schedule/permissions and original owners remain unchanged. Postmerge verify the first actual natural S1 record before calling the method ADOPTED_BY_SCHEDULED_RUNTIME. If native executed-test identity material is unavailable, treat the new adapter as optional read-only diagnostics and do not assert integration authority.
