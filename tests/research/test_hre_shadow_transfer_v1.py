@@ -44,5 +44,39 @@ class ShadowTransferRules(unittest.TestCase):
         self.assertIn("1596",self.d["source_owner"])
         self.assertTrue(all(h["source_evidence"].startswith("research/historical_reality_engine/") for h in self.d["hypotheses"]))
 
+
+class ARP02OriginalOwnerNativeCostControl(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from scripts.research import arp02_hre_price_control_cost_sensitivity_v1 as cost
+        cls.cost = cost
+        cls.observation = cost.build(ROOT)
+
+    def test_source_pin_and_actual_original_owner(self):
+        self.assertEqual(self.observation["original_owner"], "Archive#1553")
+        self.assertEqual(self.observation["source_blob_sha1"],
+                         "2f46169590ae208f724d783c70a545bfceb228fb")
+        self.assertEqual(self.observation["market_event_families_selected_retrospectively"], 5)
+        self.assertTrue(self.observation["overlapping_cutoffs_are_not_independent"])
+
+    def test_original_hre_false_alarm_vs_missed_window_cost_arithmetic(self):
+        btc = self.observation["assets"]["BTCUSDT"]
+        eth = self.observation["assets"]["ETHUSDT"]
+        self.assertEqual((btc["extra_false_alarms"], btc["fewer_missed_outcome_windows"]), (9, 3))
+        self.assertEqual((eth["extra_false_alarms"], eth["fewer_missed_outcome_windows"]), (15, 7))
+        self.assertEqual((btc["delta_equal_unit_classification_loss"],
+                          eth["delta_equal_unit_classification_loss"]), (6, 8))
+        self.assertEqual((btc["overlapping_daily_cutoff_count"],
+                          eth["overlapping_daily_cutoff_count"]), (418, 418))
+
+    def test_original_study_never_promotes_risk_trading_or_independence(self):
+        o = self.observation
+        self.assertTrue(o["unit_loss_is_not_trade_cost"])
+        self.assertFalse(o["actual_issued_warning_or_delivery_proven"])
+        self.assertFalse(o["economic_paper_outcome_proven"])
+        self.assertFalse(o["official_threshold_or_model_change_authorized"])
+        self.assertIsNone(o["number_of_independent_market_shocks_certified"])
+
+
 if __name__=="__main__":
     unittest.main()
