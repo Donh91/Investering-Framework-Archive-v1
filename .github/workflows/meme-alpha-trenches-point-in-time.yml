@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'research/api_agent/meme_alpha/experiments/trenches_point_in_time_ablation_v1.py'
+      - 'tests/research/test_meme_alpha_trenches_trainonly_v1.py'
       - 'research/api_agent/meme_alpha/experiments/CLEAN_G3_SOURCE_CAPABILITY_MATRIX_v1.json'
       - 'research/api_agent/meme_alpha/contracts/SOLANA_PUMPFUN_REGIME_PROFILE_2026Q3_v1.json'
       - '.github/workflows/meme-alpha-trenches-point-in-time.yml'
@@ -29,6 +30,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install 'pandas>=2.2,<3' 'numpy>=2,<3' 'pyarrow>=17,<22' 'scikit-learn>=1.5,<2'
+
+      - name: Fail closed on train/test leakage before any external data downloads
+        run: |
+          python -m py_compile research/api_agent/meme_alpha/experiments/trenches_point_in_time_ablation_v1.py tests/research/test_meme_alpha_trenches_trainonly_v1.py
+          python -m unittest tests.research.test_meme_alpha_trenches_trainonly_v1 -v
 
       - name: Download published forward-capture artifacts
         shell: bash
