@@ -393,3 +393,91 @@ class DeterministicDispositionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class S1GeneralIntegrationTests(unittest.TestCase):
+    """A single existing S1 advisory CLI, not a second permission engine."""
+
+    def packet(self):
+        r = decision_fixture("LOW")
+        r["independent_review_required"] = False
+        h = r["current"]["head"]
+        m = r["current"]["main"]
+        r["s1_general_preflight_required"] = True
+        r["s1_general_preflight"] = {
+            "head": h, "main": m, "review_head": h, "owner_head": h,
+            "ci_head": h, "owner_authenticated": True,
+            "effective_write": True, "one_editor_lease": True,
+            "rules_verified": True, "native_reviews_satisfied": True,
+            "source_and_science_satisfied": True, "high_impact": False,
+            "remote_write_state": "CONFIRMED", "main_unchanged": True,
+            "required_tests": ["positive", "guard-removal"],
+            "executed_tests": ["positive", "guard-removal"],
+            "ci_pr_event": True, "ci_success": True,
+        }
+        r["pr_jobs"][0]["executed_test_ids"] = ["positive", "guard-removal"]
+        return r
+
+    def check(self, mutate, reason):
+        record = self.packet()
+        mutate(record)
+        result = classify_pr_disposition(record)
+        self.assertEqual(result["reason"], reason)
+        self.assertFalse(result["authorized"])
+
+    def test_matched_native_jobs_still_only_advisory(self):
+        result = classify_pr_disposition(self.packet())
+        self.assertEqual(result["disposition"], "READY_TO_MERGE")
+        self.assertFalse(result["authorized"])
+        self.assertFalse(result["externally_authenticated"])
+
+    def test_missing_preflight_must_fail_closed(self):
+        self.check(lambda r: r.pop("s1_general_preflight"), "S1_GENERAL_INVALID_SNAPSHOT")
+
+    def test_stale_main_must_fail_closed(self):
+        self.check(lambda r: r["s1_general_preflight"].update(main="c"*40),
+                   "S1_GENERAL_NATIVE_BINDING_MISMATCH")
+
+    def test_inconsistent_risk_cannot_downgrade_custody(self):
+        self.check(lambda r: r["s1_general_preflight"].update(high_impact=True, independent_custody=True),
+                   "S1_GENERAL_NATIVE_BINDING_MISMATCH")
+
+    def test_forged_extra_executed_test(self):
+        self.check(lambda r: r["s1_general_preflight"]["executed_tests"].append("extra"),
+                   "S1_GENERAL_TEST_PROOF_MISMATCH")
+
+    def test_required_test_absent_in_native_jobs(self):
+        self.check(lambda r: r["pr_jobs"][0].update(executed_test_ids=["positive"]),
+                   "S1_GENERAL_TEST_PROOF_MISMATCH")
+
+    def test_duplicate_native_job_refused(self):
+        self.check(lambda r: r["pr_jobs"].append(dict(r["pr_jobs"][0])),
+                   "S1_GENERAL_NATIVE_JOB_NOT_EXECUTED")
+
+    def test_stale_native_job_refused(self):
+        self.check(lambda r: r["pr_jobs"][0].update(head="c"*40),
+                   "S1_GENERAL_NATIVE_JOB_NOT_EXECUTED")
+
+    def test_skipped_job_is_not_evidence(self):
+        self.check(lambda r: r["pr_jobs"][0].update(conclusion="skipped"),
+                   "S1_GENERAL_NATIVE_JOB_NOT_EXECUTED")
+
+    def test_invalid_native_test_identity(self):
+        for invalid in (None, 7, "", [], {}):
+            with self.subTest(invalid=invalid):
+                self.check(lambda r, value=invalid: r["pr_jobs"][0].update(executed_test_ids=[value]),
+                           "S1_GENERAL_NATIVE_TEST_IDS_UNVERIFIED")
+
+    def test_untrusted_opt_in_type(self):
+        self.check(lambda r: r.update(s1_general_preflight_required=1),
+                   "S1_GENERAL_OPT_IN_UNVERIFIED")
+
+    def test_no_preflight_optin_cannot_silently_skip(self):
+        self.check(lambda r: r.update(s1_general_preflight_required=False),
+                   "S1_GENERAL_OPT_IN_UNVERIFIED")
+
+    def test_legacy_existing_calls_preserved(self):
+        r = self.packet()
+        del r["s1_general_preflight"]
+        del r["s1_general_preflight_required"]
+        self.assertEqual(classify_pr_disposition(r)["disposition"], "READY_TO_MERGE")
