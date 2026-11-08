@@ -1,7 +1,9 @@
 /* S1 advisory agent-to-agent discovery: local, optional, never a release gate.
  * Private details may be printed ONLY in an already-authorized private runtime.
  */
-import {inventory} from './discovery-inventory-v1.mjs';
+import {inventory, REPOS, EXCLUDED} from './discovery-inventory-v1.mjs';
+const KNOWN_PRIVATE = new Set(REPOS.filter(([, privateRepo])=>privateRepo).map(([repo])=>repo.toLowerCase()));
+const EXCLUDED_NORMALIZED = new Set([...EXCLUDED].map(repo=>repo.toLowerCase()));
 
 const SCHEMA='S1_AGENT_WORK_HUB_v1';
 const POLICY=Object.freeze({
@@ -37,14 +39,23 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
   const work=[],repo_summary=[];
   let coverage=Boolean(input.complete&&input.repository_enumeration_complete);
   for(const repo of input.repos){
-    if(!repo||typeof repo.repo!=='string'||repo.repo==='Donh91/secrets')continue;
-    const isPrivate=repo.visibility==='PRIVATE';
-    if(!repo.complete)coverage=false;
-    const readable=!isPrivate||includePrivate;
-    repo_summary.push({repo:repo.repo,visibility:repo.visibility,
-      source_complete:repo.complete===true,
-      open_pr_count:Number.isInteger(repo.open_pr_count)?repo.open_pr_count:null,
-      open_issue_count:Number.isInteger(repo.open_issue_count)?repo.open_issue_count:null,
+    if(!repo||typeof repo.repo!=='string'){coverage=false;continue;}
+    const normalized=repo.repo.toLowerCase();
+    // Never surface restricted data-plane work, even when the source uses mixed case.
+    if(EXCLUDED_NORMALIZED.has(normalized))continue;
+    if(!/^Donh91\/[a-z0-9._-]+$/i.test(repo.repo)){coverage=false;continue;}
+    const knownPrivate=KNOWN_PRIVATE.has(normalized);
+    // Unknown visibility is NOT public. A known-private repo cannot be downgraded
+    // by an incomplete or contradictory source object.
+    const visibility=knownPrivate?'PRIVATE':
+      repo.visibility==='PUBLIC'||repo.visibility==='PRIVATE'?repo.visibility:'UNKNOWN';
+    const visibilityProven=visibility!=='UNKNOWN'&&(!knownPrivate||repo.visibility==='PRIVATE');
+    if(!repo.complete||!visibilityProven)coverage=false;
+    const readable=visibilityProven&&(visibility==='PUBLIC'||(visibility==='PRIVATE'&&includePrivate));
+    repo_summary.push({repo:visibilityProven?repo.repo:null,visibility,
+      source_complete:repo.complete===true&&visibilityProven,
+      open_pr_count:visibilityProven&&Number.isInteger(repo.open_pr_count)?repo.open_pr_count:null,
+      open_issue_count:visibilityProven&&Number.isInteger(repo.open_issue_count)?repo.open_issue_count:null,
       details:readable?'AS_AVAILABLE':'REDACTED'});
     if(!readable||!Array.isArray(repo.items))continue;
     const sourceItems=repo.items.concat(includeClosedParked&&Array.isArray(repo.closed_parked_candidates)?repo.closed_parked_candidates:[]);
@@ -52,7 +63,7 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
       if(!['PR','ISSUE','CLOSED_ISSUE'].includes(item?.kind))continue;
       if(!Number.isInteger(item.number)||item.number<1)continue;
       work.push({
-        source_repo:repo.repo,visibility:repo.visibility,kind:item.kind,number:item.number,
+        source_repo:repo.repo,visibility,kind:item.kind,number:item.number,
         source_url:item.url||'https://github.com/'+repo.repo+'/'+(item.kind==='PR'?'pull':'issues')+'/'+item.number,
         title:typeof item.title==='string'?item.title:null,
         author_not_owner:item.author||null,
