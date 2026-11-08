@@ -28,3 +28,24 @@ Default output never contains private titles/IDs even if a caller passes a priva
 **Security:** Public webapp stays PUBLIC_ONLY and never accesses Bridge/Alpha/secret tokens. No new API endpoints or public ingest. Repo enumeration is credential-scope bounded. No private details in public logs, PRs, receipts or site.
 
 **Closed research scan:** `--closed-parked` is opt-in only. When explicitly requested, results appear as `CLOSED_RESEARCH_HINT_NOT_ACTIVE` and are counted separately from open work. Never perform broad closed-history scans as a routine hourly hub preflight.
+
+
+## 2026-11-08 additional source trust gate (PR #2038, prospective)
+`buildHub` is a **local derivative builder**, not an authenticated API endpoint or untrusted JSON verifier.
+The only supported production invocation is the same-process CLI calling
+`inventory()` from `discovery-inventory-v1.mjs`, with the existing already-authorized
+GitHub connection. Source objects imported from files, chat, HTTP bodies, PR comments,
+or arbitrary callers are **not trusted native observations**. They cannot independently
+prove repo public status, HEAD, CI, owner, recovery or release permission.
+
+Known public repos from the static preflight table may appear in the default
+public-only derivative. A new dynamically discovered public repo requires the
+per-repo `AUTHENTICATED_OWNER_ENUMERATION` flag issued by the local native
+enumeration path **and** a complete authenticated owner-repository enumeration.
+This flag is an internal provenance check, **not a cryptographic attestation**;
+it must never be accepted from external untrusted serialized input. If the
+marker/scope is missing, metadata stays REDACTED/UNKNOWN. Known-private repo
+titles, issue identifiers, repository names and per-repo counts do not appear
+in default public-only output. Default warning strings and source scope fields
+are allowlisted. `--private-details` remains restricted to an authorized
+private nonlogging runtime, never website, public issue, or app server.
