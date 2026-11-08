@@ -1,0 +1,30 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": null,
+  "episode_id": "OE-3b73ed794243bd58",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "s1-1156-fail-closed-agent-discovery-exact-head",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Single-account owner-authorized integration of existing PR #2038. 37 native Node regressions and Chrome mock/denied QA on exact PR HEAD f966be9 via Cross Repo Agent Context Gate #42484919822. No GitHub workflows, permissions, secrets or schedules changed. Independent Grok advisory requested via merged Bridge #161; consumer adoption remains a separate post-merge observation.",
+  "reusable_pattern": null,
+  "source_blob_shas": {},
+  "source_commit_sha": "3b73ed794243bd58e1de776bc31344a7d31fd2f9",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-08T08:28:03-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(s1 #1156): fail-closed agent discovery with exact-head Node/Chrome regression tests"
+}
