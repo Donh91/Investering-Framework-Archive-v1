@@ -181,6 +181,87 @@ def test_framework_handoff_separates_receipt_consumers_from_routing_labels(tmp_p
         assert label not in manifest["consumers"]
 
 
+
+class MasterMondaySemanticReadinessShadowTests(unittest.TestCase):
+    """Content usability is separate from a PASS byte-integrity receipt."""
+
+    def _receipt(self, name: str, payload: dict, corrupt_sha: bool = False) -> dict:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rel = "research/source/mm.json"
+            target = root / rel
+            _write_json(target, payload)
+            manifest = _manifest(
+                root, [name], {name: {
+                    "path": rel,
+                    "sha256": "0" * 64 if corrupt_sha else _sha(target),
+                }},
+            )
+            return build_consumer_receipt(root, manifest, "TEST_CONSUMER", [name])
+
+    def test_byte_verified_unavailable_scorecard_is_semantically_not_ready(self) -> None:
+        value = self._receipt("MASTER_MONDAY_CALIBRATION_SCORECARD", {
+            "status": "UNAVAILABLE_API_CONTRACT",
+            "matured_outcome_count": 140,
+            "experiment_registry_status": "AVAILABLE",
+        })
+        self.assertEqual(value["status"], "PASS")
+        self.assertEqual(value["consumption_state"], "VERIFIED")
+        self.assertEqual(value["semantic_readiness"]["status"], "NOT_READY")
+        self.assertEqual(value["semantic_readiness"]["evidence_content_status"]
+                         ["MASTER_MONDAY_CALIBRATION_SCORECARD"]["reason"],
+                         "MM_CONTENT_UNAVAILABLE")
+
+    def test_zero_maturity_pending_is_valid_pending_not_failure(self) -> None:
+        value = self._receipt("MASTER_MONDAY_CALIBRATION_SCORECARD", {
+            "status": "PENDING_MATURED_OUTCOMES",
+            "matured_outcome_count": 0,
+            "experiment_registry_status": "AVAILABLE",
+        })
+        self.assertEqual(value["status"], "PASS")
+        self.assertEqual(value["semantic_readiness"]["status"], "PENDING_VALID")
+
+    def test_inconsistent_pending_is_not_silently_accepted(self) -> None:
+        value = self._receipt("MASTER_MONDAY_CALIBRATION_SCORECARD", {
+            "status": "PENDING_MATURED_OUTCOMES",
+            "matured_outcome_count": 3,
+            "experiment_registry_status": "AVAILABLE",
+        })
+        self.assertEqual(value["semantic_readiness"]["status"], "NOT_READY")
+
+    def test_ready_pointer_cannot_hide_unavailable_scorecard(self) -> None:
+        value = self._receipt("MASTER_MONDAY_DELIVERY_POINTER", {
+            "status": "READY",
+            "scorecard_status": "UNAVAILABLE_API_CONTRACT",
+            "operational_translation_status": "UNAVAILABLE_API_CONTRACT",
+        })
+        self.assertEqual(value["status"], "PASS")
+        self.assertEqual(value["semantic_readiness"]["status"], "NOT_READY")
+
+    def test_corrupt_hash_is_not_interpreted_as_semantic_ready(self) -> None:
+        value = self._receipt("MASTER_MONDAY_OPERATIONAL_TRANSLATION", {
+            "status": "READY",
+        }, corrupt_sha=True)
+        self.assertEqual(value["status"], "PARTIAL")
+        self.assertEqual(value["semantic_readiness"]["status"], "UNKNOWN")
+        self.assertEqual(value["semantic_readiness"]["evidence_content_status"]
+                         ["MASTER_MONDAY_OPERATIONAL_TRANSLATION"]["reason"],
+                         "EVIDENCE_NOT_BYTE_VERIFIED")
+
+    def test_valid_translation_may_be_ready_without_changing_receipt(self) -> None:
+        value = self._receipt("MASTER_MONDAY_OPERATIONAL_TRANSLATION", {
+            "status": "PRODUCED",
+        })
+        self.assertEqual(value["status"], "PASS")
+        self.assertEqual(value["semantic_readiness"]["status"], "READY")
+
+    def test_unrelated_byte_receipts_are_not_treated_as_semantically_ready(self) -> None:
+        value = self._receipt("A", {"status": "READY"})
+        self.assertEqual(value["semantic_readiness"]["status"], "NOT_APPLICABLE")
+        self.assertEqual(value["verified_evidence"]["A"]["path"],
+                         "research/source/mm.json")
+
+
 class ConsumerReceiptModuleFunctionCollectionTests(unittest.TestCase):
     """Unittest compatibility wrappers for the eight module-level tests above."""
 
