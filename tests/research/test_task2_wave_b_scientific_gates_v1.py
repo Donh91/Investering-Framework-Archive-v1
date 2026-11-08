@@ -45,6 +45,8 @@ def episode(kind="PULLBACK"):
         for i in range(4, 0, -1)]
     return {"kind": kind, "episode_id": "synthetic-ep1",
             "family_id": "synthetic-family1", "anchor_utc": stamp(anchor),
+            "observation_start_utc": stamp(anchor-timedelta(hours=4)),
+            "expected_decision_slots": 4,
             "slots": slots}
 
 
@@ -76,6 +78,31 @@ class Task2WaveBScientificGatesTests(unittest.TestCase):
         self.assertEqual(mod.audit_pullback_episode(p)["explicit_non_recorded_slots"], 1)
         p["slots"][1]["severity"] = 4
         with self.assertRaisesRegex(ValueError, "FABRICATION"):
+            mod.audit_pullback_episode(p)
+
+    def test_leading_slot_truncation_fails_against_declared_window(self):
+        p = episode()
+        # Previously, len(slots) silently redefined the full expected window.
+        p["slots"].pop(0)
+        with self.assertRaisesRegex(ValueError, "INCOMPLETE_OR_NONCONTIGUOUS"):
+            mod.audit_pullback_episode(p)
+
+    def test_independent_observation_window_is_mandatory_and_coherent(self):
+        p = episode()
+        p.pop("observation_start_utc")
+        with self.assertRaisesRegex(ValueError, "INDEPENDENT_OBSERVATION_WINDOW_REQUIRED"):
+            mod.audit_pullback_episode(p)
+        p = episode()
+        p["expected_decision_slots"] = 3
+        with self.assertRaisesRegex(ValueError, "INCOMPLETE_OR_NONCONTIGUOUS"):
+            mod.audit_pullback_episode(p)
+        p = episode()
+        p["observation_start_utc"] = "2026-10-08T07:00:00Z"
+        with self.assertRaisesRegex(ValueError, "INCOMPLETE_OR_NONCONTIGUOUS"):
+            mod.audit_pullback_episode(p)
+        p = episode()
+        p["expected_decision_slots"] = True
+        with self.assertRaisesRegex(ValueError, "INDEPENDENT_OBSERVATION_WINDOW_REQUIRED"):
             mod.audit_pullback_episode(p)
 
     def test_unknown_first_known_or_delivery_never_win(self):
@@ -112,6 +139,11 @@ class Task2WaveBScientificGatesTests(unittest.TestCase):
         r = mod.score_weekly_pair(week_packet())
         self.assertEqual(r["postfreeze_first_eligible_closed_hour_utc"], "2026-11-09T07:00:00Z")
         self.assertEqual(r["postfreeze_eligible_completed_hours"], 162)
+        self.assertEqual(r["whole_bar_postissue_first_closed_utc"],
+                         "2026-11-09T08:00:00Z")
+        self.assertEqual(r["whole_bar_postissue_completed_hours"], 161)
+        self.assertFalse(r["completed_endpoint_count_is_full_postissue_extrema_proof"])
+        self.assertFalse(r["existing_outcome_extrema_restricted_to_whole_postissue_bars"])
         p = week_packet()
         p["outcome"]["source"]["first_closed_utc"] = "2026-11-09T06:00:00Z"
         p["outcome"]["source"]["closed_hour_count"] = 163
