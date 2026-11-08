@@ -152,3 +152,11 @@ test('default hub redacts private repository names and counts from every surface
  assert.equal(h.repository_scope,'UNKNOWN');
  assert.equal(h.generated_at,null);
 });
+
+test('validated UTC provenance is retained, malformed text is suppressed',()=>{
+ const data=base([classify(native,'PR')]);
+ const good=buildHub(data);
+ assert.equal(good.generated_at,'2026-11-08T08:20:00Z');
+ data.generated_at='private/SECRET';
+ assert.equal(buildHub(data).generated_at,null);
+});
