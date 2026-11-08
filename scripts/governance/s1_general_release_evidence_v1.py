@@ -27,7 +27,9 @@ def classify(snapshot: dict) -> dict:
         return block("NATIVE_REVIEW_GATE_UNSATISFIED")
     if snapshot.get("source_and_science_satisfied") is not True:
         return block("SOURCE_SCIENCE_UNVERIFIED")
-    if snapshot.get("high_impact") is True and snapshot.get("independent_custody") is not True:
+    if type(snapshot.get("high_impact")) is not bool:
+        return block("INVALID_HIGH_IMPACT_CLASSIFICATION")
+    if snapshot["high_impact"] and snapshot.get("independent_custody") is not True:
         return block("HIGH_IMPACT_CUSTODY_UNATTESTED")
     if snapshot.get("remote_write_state") != "CONFIRMED":
         return block("PARTIAL_OR_UNKNOWN_REMOTE_WRITE")
@@ -35,9 +37,14 @@ def classify(snapshot: dict) -> dict:
         return block("MAIN_MOVED_REVALIDATE")
     required = snapshot.get("required_tests")
     executed = snapshot.get("executed_tests")
-    if not isinstance(required, list) or not required or len(set(required)) != len(required):
+    if (not isinstance(required, list) or not required
+            or any(type(t) is not str or not t.strip() for t in required)
+            or len(set(required)) != len(required)):
         return block("REQUIRED_TEST_MANIFEST_UNVERIFIED")
-    if not isinstance(executed, list) or not set(required).issubset(set(executed)):
+    if (not isinstance(executed, list)
+            or any(type(t) is not str or not t.strip() for t in executed)
+            or len(set(executed)) != len(executed)
+            or not set(required).issubset(set(executed))):
         return block("RELEASE_CI_NOT_EXECUTED")
     if snapshot.get("ci_pr_event") is not True or snapshot.get("ci_success") is not True:
         return block("EXACT_HEAD_PR_CI_UNVERIFIED")
