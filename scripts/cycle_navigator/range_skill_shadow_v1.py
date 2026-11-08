@@ -116,7 +116,7 @@ def evaluate_week(row: Mapping[str, Any], *, alpha: float = 0.10) -> dict[str, A
             k: row[k] for k in ("forecast_source_sha256", "realized_source_sha256",
                                 "first_issue_commit_sha")
         },
-        "claim_class": ("FULL_WEEK_PIT_ELIGIBLE"
+        "claim_class": ("PIT_CLOCK_COMPATIBLE_SOURCE_UNVERIFIED"
                         if first_issued <= start else "DESCRIPTIVE_ONLY_LATE_ISSUE"),
         "cn": _metrics(cn, realized, anchor, float(alpha)),
         "matched_width_naive": _metrics(matched, realized, anchor, float(alpha)),
