@@ -69,3 +69,19 @@ test('parked status is a hint, not a release gate',()=>{
  assert.equal(x.parked_hint,true);
  assert.equal(x.disposition,'UNOBSERVED_NEEDS_ORIGINAL_OWNER_AND_NATIVE_GATES');
 });
+
+test('enumeration missing visibility is PARTIAL, never implicit public',async()=>{
+ const altered=repoPayload.concat({full_name:'Donh91/Visibility-Omitted',owner:{login:'Donh91'}});
+ const f=async url=>({ok:true,json:async()=>url.includes('/user/repos')?altered:[]});
+ const d=await discoverRepositories({fetcher:f,token:'test-token'});
+ assert.equal(d.complete,false);
+ assert.equal(d.warning,'REPOSITORY_VISIBILITY_UNOBSERVED');
+ assert.equal(d.repos.has('Donh91/Visibility-Omitted'),false);
+});
+test('known-private repository cannot be downgraded by contradictory enumeration',async()=>{
+ const altered=repoPayload.map(x=>x.full_name==='Donh91/Investering-AI-Audit-Bridge'?{...x,private:false}:x);
+ const f=async url=>({ok:true,json:async()=>url.includes('/user/repos')?altered:[]});
+ const d=await discoverRepositories({fetcher:f,token:'test-token'});
+ assert.equal(d.complete,false);
+ assert.equal(d.repos.get('Donh91/Investering-AI-Audit-Bridge'),true);
+});
