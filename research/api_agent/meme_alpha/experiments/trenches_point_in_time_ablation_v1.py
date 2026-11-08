@@ -98,6 +98,34 @@ def evaluate(train: pd.DataFrame, test: pd.DataFrame, features: list[str], targe
     return out
 
 
+def first_sighting_rows(features: pd.DataFrame) -> pd.DataFrame:
+    """Fail closed without a valid earliest decision clock for each source row.
+
+    File order, output artifact order or a later source publication timestamp
+    cannot substitute for an original decision clock. This remains a source
+    timing *screen*, not evidence that every field was already first-known.
+    """
+    if "mint" not in features.columns or "decision_ms" not in features.columns:
+        raise RuntimeError("FIRST_SIGHTING_DECISION_CLOCK_REQUIRED")
+    selected = features.copy()
+    clock = pd.to_numeric(selected["decision_ms"], errors="coerce")
+    if not bool(np.isfinite(clock.to_numpy(dtype=float)).all()) or bool((clock <= 0).any()):
+        raise RuntimeError("FIRST_SIGHTING_DECISION_CLOCK_INVALID")
+    selected["decision_ms"] = clock
+    # Multiple different records with the same earliest clock are ambiguous.
+    # Refuse to let a source-file permutation silently choose a different row.
+    selected = selected.sort_values(["mint", "decision_ms"], kind="mergesort")
+    min_clock = selected.groupby("mint", dropna=False)["decision_ms"].transform("min")
+    first = selected[selected["decision_ms"] == min_clock]
+    conflict = first.duplicated("mint", keep=False)
+    if bool(conflict.any()):
+        # Exact repeated rows are harmless; inconsistent tied records are not.
+        first = first.drop_duplicates()
+        if bool(first.duplicated("mint", keep=False).any()):
+            raise RuntimeError("AMBIGUOUS_FIRST_SIGHTING_CLOCK_TIE")
+    return first.sort_values(["decision_ms", "mint"], kind="mergesort").reset_index(drop=True)
+
+
 def train_only_split_and_features(panel: pd.DataFrame, split: dict) -> tuple[pd.DataFrame, pd.DataFrame, list[str], list[str]]:
     """Select admissible feature columns using ONLY training-token observations.
 
@@ -177,10 +205,7 @@ def main() -> None:
     if "mint" not in features or "mint" not in labels or "path_completed" not in labels:
         raise RuntimeError("Expected mint/path_completed schema missing")
 
-    if "decision_ms" in features.columns:
-        features = features.sort_values(["decision_ms", "mint"]).drop_duplicates("mint", keep="first")
-    else:
-        features = features.drop_duplicates("mint", keep="first")
+    features = first_sighting_rows(features)
     panel = features.merge(labels[["mint", "path_completed"]], on="mint", how="inner", validate="one_to_one")
     panel["path_completed"] = panel["path_completed"].astype(float)
 
@@ -200,6 +225,7 @@ def main() -> None:
         "timing_audit": timing_audit(features),
         "g2_features_used": g2,
         "source_captured_g3_features_used": sg3,
+        "first_sighting_clock_guard": "NUMERIC_FINITE_POSITIVE_DECISION_MS_REQUIRED; no file-order fallback or ambiguous tied records",
         "feature_selection_source": "TRAIN_ONLY; test distribution not used to admit a feature",
         "split_leakage_guard": "TRAIN_TEST_MINT_DISJOINT_REQUIRED; chronology/operator groups not independently attested",
         "arms": arms,
