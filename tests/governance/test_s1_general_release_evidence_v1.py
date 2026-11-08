@@ -47,6 +47,23 @@ class TestS1GeneralEvidence(unittest.TestCase):
     def test_green_without_pr_event(self):
         s=valid();s["ci_pr_event"]=False
         self.assertEqual(classify(s)["reason"], "EXACT_HEAD_PR_CI_UNVERIFIED")
+    def test_malformed_high_impact(self):
+        for value in (None, 0, 1, "false", "true", [], {}):
+            with self.subTest(value=value):
+                s=valid();s["high_impact"]=value
+                self.assertEqual(classify(s)["reason"], "INVALID_HIGH_IMPACT_CLASSIFICATION")
+    def test_malformed_test_identities(self):
+        for required, executed, reason in (
+            (["positive", 1], ["positive"], "REQUIRED_TEST_MANIFEST_UNVERIFIED"),
+            (["positive", ""], ["positive"], "REQUIRED_TEST_MANIFEST_UNVERIFIED"),
+            (["positive", None], ["positive"], "REQUIRED_TEST_MANIFEST_UNVERIFIED"),
+            (["positive"], ["positive", 1], "RELEASE_CI_NOT_EXECUTED"),
+            (["positive"], ["positive", "positive"], "RELEASE_CI_NOT_EXECUTED"),
+            (["positive"], ["positive", ""], "RELEASE_CI_NOT_EXECUTED"),
+        ):
+            with self.subTest(required=required,executed=executed):
+                s=valid();s["required_tests"]=required;s["executed_tests"]=executed
+                self.assertEqual(classify(s)["reason"], reason)
     def test_missing_manifest(self):
         s=valid();s["required_tests"]=[]
         self.assertEqual(classify(s)["reason"], "REQUIRED_TEST_MANIFEST_UNVERIFIED")
