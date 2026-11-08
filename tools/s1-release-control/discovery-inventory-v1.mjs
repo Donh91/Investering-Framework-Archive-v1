@@ -54,7 +54,7 @@ async function discoverRepositories({fetcher,token,maxPages=MAX_PAGES}={}) {
     let visibilityUnknown=false;
     for (const r of x.items) {
       if (r?.owner?.login !== OWNER || !r.full_name?.startsWith(OWNER+'/')) continue;
-      if (EXCLUDED.has(r.full_name)) continue;
+      if (EXCLUDED.has(r.full_name) || r.full_name.toLowerCase()==='donh91/secrets') continue;
       // A missing visibility bit cannot silently become PUBLIC.
       if (typeof r.private !== 'boolean'){visibilityUnknown=true;continue;}
       if (known.get(r.full_name)===true && r.private===false)visibilityUnknown=true;
