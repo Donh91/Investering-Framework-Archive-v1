@@ -38,6 +38,78 @@ def parse_time(value: Any) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
+
+# F2/F7: semantic usability is NOT the same as cryptographic consumption.
+# This additive advisory classification never alters CONSUMER_RECEIPT_v1
+# status, consumption_state, source authority, or release eligibility.
+_MM_CONTENT_EVIDENCE = frozenset({
+    "MASTER_MONDAY_CALIBRATION_SCORECARD",
+    "MASTER_MONDAY_OPERATIONAL_TRANSLATION",
+    "MASTER_MONDAY_DELIVERY_POINTER",
+})
+
+
+def _mm_content_state(name: str, payload: dict[str, Any] | None) -> dict[str, str]:
+    if payload is None:
+        return {"status": "UNKNOWN", "reason": "MM_CONTENT_JSON_UNAVAILABLE"}
+    raw = payload.get("status")
+    status = raw.strip().upper() if isinstance(raw, str) else ""
+    if name == "MASTER_MONDAY_DELIVERY_POINTER":
+        if status in {"BLOCKED", "DEGRADED", "FAILED"}:
+            return {"status": "NOT_READY", "reason": "MM_POINTER_NOT_READY"}
+        fields = ("scorecard_status", "operational_translation_status")
+        children = [payload.get(key) for key in fields]
+        if any(isinstance(value, str) and value.upper().startswith("UNAVAILABLE") for value in children):
+            return {"status": "NOT_READY", "reason": "MM_POINTER_CONTENT_UNAVAILABLE"}
+        if status == "READY" and all(
+            isinstance(value, str) and value.upper() in {"READY", "PASS", "COMPLETE", "PRODUCED"}
+            for value in children
+        ):
+            return {"status": "READY", "reason": "MM_POINTER_CONTENT_AVAILABLE"}
+        return {"status": "UNKNOWN", "reason": "MM_POINTER_CONTENT_NOT_ATTESTED"}
+    if status.startswith("UNAVAILABLE") or status in {"BLOCKED", "FAILED", "DEGRADED"}:
+        return {"status": "NOT_READY", "reason": "MM_CONTENT_UNAVAILABLE"}
+    if status == "PENDING_MATURED_OUTCOMES":
+        if (name == "MASTER_MONDAY_CALIBRATION_SCORECARD"
+                and type(payload.get("matured_outcome_count")) is int
+                and payload["matured_outcome_count"] == 0
+                and payload.get("experiment_registry_status") == "AVAILABLE"):
+            return {"status": "PENDING_VALID", "reason": "MM_ZERO_MATURED_OUTCOMES"}
+        return {"status": "NOT_READY", "reason": "MM_PENDING_INCONSISTENT_OR_UNVERIFIED"}
+    if status in {"READY", "PASS", "COMPLETE", "PRODUCED"}:
+        return {"status": "READY", "reason": "MM_CONTENT_PRODUCED"}
+    return {"status": "UNKNOWN", "reason": "MM_CONTENT_STATUS_UNRECOGNIZED"}
+
+
+def _mm_semantic_readiness(repo_root: Path, declared: list[str],
+                           verified: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    relevant = [name for name in declared if name in _MM_CONTENT_EVIDENCE]
+    items: dict[str, dict[str, str]] = {}
+    for name in relevant:
+        bound = verified.get(name)
+        if not bound:
+            items[name] = {"status": "UNKNOWN", "reason": "EVIDENCE_NOT_BYTE_VERIFIED"}
+        else:
+            items[name] = _mm_content_state(name, load_json(repo_root / bound["path"]))
+    states = {value["status"] for value in items.values()}
+    if not items:
+        aggregate = "NOT_APPLICABLE"
+    elif "NOT_READY" in states:
+        aggregate = "NOT_READY"
+    elif "UNKNOWN" in states:
+        aggregate = "UNKNOWN"
+    elif "PENDING_VALID" in states:
+        aggregate = "PENDING_VALID"
+    else:
+        aggregate = "READY"
+    return {
+        "contract": "MASTER_MONDAY_SEMANTIC_READINESS_SHADOW_v1",
+        "status": aggregate,
+        "evidence_content_status": items,
+        "authority": "ADVISORY_ONLY_NO_RELEASE_OR_SCIENCE_GATE",
+        "integrity_receipt_unchanged": True,
+    }
+
 def build_consumer_receipt(
     repo_root: Path,
     manifest_path: Path,
@@ -180,6 +252,7 @@ def build_consumer_receipt(
         "expected_evidence": expected,
         "declared_consumed_evidence": declared,
         "verified_evidence": verified,
+        "semantic_readiness": _mm_semantic_readiness(repo_root, declared, verified),
         "missing_expected_evidence": missing_expected,
         "unavailable_expected_evidence": unavailable_expected,
         "stale_declared_evidence": unverified_declared,
