@@ -403,6 +403,7 @@ class S1GeneralIntegrationTests(unittest.TestCase):
         r["independent_review_required"] = False
         h = r["current"]["head"]
         m = r["current"]["main"]
+        r["expected_changed_paths"] = ["scripts/governance/example.py"]
         r["s1_general_preflight_required"] = True
         r["s1_general_preflight"] = {
             "head": h, "main": m, "review_head": h, "owner_head": h,
@@ -473,6 +474,57 @@ class S1GeneralIntegrationTests(unittest.TestCase):
             with self.subTest(ids=ids):
                 self.check(lambda r, v=ids: r["pr_jobs"][0].update(executed_test_ids=v),
                            "S1_GENERAL_NATIVE_TEST_IDS_UNVERIFIED")
+
+    def test_workflow_marked_low_fails_closed(self):
+        self.check(lambda r: r.update(expected_changed_paths=[".github/workflows/recovery.yml"]),
+                   "HIGH_IMPACT_PATH_MARKED_LOW")
+
+    def test_canonical_governance_marked_low_fails_closed(self):
+        for path in ("AGENTS.md", "01_CORE_FRAMEWORK/governance/policy.md",
+                     "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md"):
+            with self.subTest(path=path):
+                self.check(lambda r, value=path: r.update(expected_changed_paths=[value]),
+                           "HIGH_IMPACT_PATH_MARKED_LOW")
+
+    def test_missing_or_bad_native_path_census(self):
+        for paths in (None, [], ["../escape.py"], ["a.py", "a.py"], [None]):
+            with self.subTest(paths=paths):
+                self.check(lambda r, value=paths: r.update(expected_changed_paths=value),
+                           "S1_GENERAL_NATIVE_PATH_CENSUS_MISSING")
+
+    def test_each_required_substantive_job_needs_native_test_ids(self):
+        def change(r):
+            r["required_pr_job_names"] = ["ci", "guard"]
+            r["pr_jobs"] = [
+                dict(r["pr_jobs"][0], name="ci"),
+                dict(r["pr_jobs"][0], name="guard", executed_test_ids=[]),
+            ]
+        self.check(change, "S1_GENERAL_NATIVE_TEST_IDS_UNVERIFIED")
+
+    def test_general_manifest_change_rekeys_same_advisory_state(self):
+        r = self.packet()
+        initial = classify_pr_disposition(r)
+        self.assertEqual(initial["disposition"], "READY_TO_MERGE")
+        updated = self.packet()
+        updated["s1_general_preflight"]["required_tests"] = ["positive"]
+        updated["previous_fingerprint"] = initial["fingerprint"]
+        result = classify_pr_disposition(updated)
+        self.assertEqual(result["disposition"], "READY_TO_MERGE")
+        self.assertFalse(result["authorized"])
+        self.assertNotEqual(result["fingerprint"], initial["fingerprint"])
+        self.assertTrue(result["emit_receipt"])
+
+    def test_general_opt_in_removed_rekeys_same_advisory_state(self):
+        r = self.packet()
+        initial = classify_pr_disposition(r)
+        legacy = self.packet()
+        del legacy["s1_general_preflight"]
+        del legacy["s1_general_preflight_required"]
+        legacy["previous_fingerprint"] = initial["fingerprint"]
+        result = classify_pr_disposition(legacy)
+        self.assertEqual(result["disposition"], "READY_TO_MERGE")
+        self.assertNotEqual(result["fingerprint"], initial["fingerprint"])
+        self.assertTrue(result["emit_receipt"])
 
     def test_untrusted_opt_in_type(self):
         self.check(lambda r: r.update(s1_general_preflight_required=1),
