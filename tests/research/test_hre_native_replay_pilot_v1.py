@@ -10,6 +10,7 @@ import unittest
 import zipfile
 import datetime as dt
 from pathlib import Path
+from scripts.research import arp02_hre_price_control_cost_sensitivity_v1 as arp02
 
 ROOT=Path(__file__).resolve().parents[2]
 SPEC=importlib.util.spec_from_file_location("hre_pilot",ROOT/"scripts/research/hre_native_replay_pilot_v1.py")
@@ -187,5 +188,74 @@ class SourceIntegrity(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"invalid OHLC"):
             hre.parse_binance_hourly(buf.getvalue(),bad_name,"2020-03")
         
+
+class ARP02HREOriginalControlLossSensitivity(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.source = arp02.read_source(ROOT)
+        cls.result = arp02.evaluate(cls.source)
+
+    def test_source_frozen_original_418_cutoffs_not_418_crises(self):
+        out = self.result
+        self.assertEqual(out["market_event_families_selected_retrospectively"], 5)
+        self.assertTrue(out["overlapping_cutoffs_are_not_independent"])
+        self.assertIsNone(out["number_of_independent_market_shocks_certified"])
+        self.assertEqual(out["historical_source_class"],
+                         "POSTHOC_PRICE_TRUTH_TAPE_NOT_ORIGINAL_PROVIDER_FIRST_KNOWN")
+        self.assertEqual([r["daily_cutoffs_per_asset"] for r in out["per_era"]],
+                         [85, 86, 77, 86, 84])
+
+    def test_btc_original_source_reproduces_extra_alarms_and_cost_crossover(self):
+        btc = self.result["assets"]["BTCUSDT"]
+        self.assertEqual(btc["baseline"], {"tp":8, "fp":16, "fn":38, "tn":356})
+        self.assertEqual(btc["challenger"], {"tp":11, "fp":25, "fn":35, "tn":347})
+        self.assertEqual(btc["overlapping_daily_cutoff_count"], 418)
+        self.assertEqual((btc["fewer_missed_outcome_windows"], btc["extra_false_alarms"]), (3, 9))
+        self.assertEqual(btc["miss_to_false_alarm_cost_ratio_to_break_even"], 3.0)
+        self.assertEqual(btc["candidate_minus_baseline_loss_at_miss_cost_1"], 6)
+        self.assertEqual(btc["candidate_minus_baseline_loss_at_miss_cost_5"], -6)
+
+    def test_eth_original_source_reproduces_extra_alarms_and_cost_crossover(self):
+        eth = self.result["assets"]["ETHUSDT"]
+        self.assertEqual(eth["baseline"], {"tp":15, "fp":24, "fn":73, "tn":306})
+        self.assertEqual(eth["challenger"], {"tp":22, "fp":39, "fn":66, "tn":291})
+        self.assertEqual((eth["fewer_missed_outcome_windows"], eth["extra_false_alarms"]), (7, 15))
+        self.assertAlmostEqual(eth["miss_to_false_alarm_cost_ratio_to_break_even"], 15/7, places=5)
+        self.assertEqual(eth["candidate_minus_baseline_loss_at_miss_cost_1"], 8)
+        self.assertEqual(eth["candidate_minus_baseline_loss_at_miss_cost_5"], -20)
+
+    def test_no_profit_or_warning_delivery_fabricated(self):
+        self.assertTrue(self.result["unit_loss_is_not_trade_cost"])
+        self.assertFalse(self.result["actual_issued_warning_or_delivery_proven"])
+        self.assertFalse(self.result["economic_paper_outcome_proven"])
+        self.assertFalse(self.result["official_threshold_or_model_change_authorized"])
+        self.assertEqual(self.result["scientific_status"],
+                         "RETROSPECTIVE_DESCRIPTIVE_DIAGNOSTIC_ONLY")
+
+    def test_corrupted_matrix_or_missing_episode_fails_closed(self):
+        altered = copy.deepcopy(self.source)
+        altered["episodic_results"][0]["BTCUSDT"]["price_baseline"]["fp"] = -1
+        with self.assertRaisesRegex(ValueError, "INVALID_ORIGINAL_CONFUSION"):
+            arp02.evaluate(altered)
+        altered = copy.deepcopy(self.source)
+        altered["episodic_results"].pop(0)
+        with self.assertRaisesRegex(ValueError, "HRE_EPISODE_ROSTER"):
+            arp02.evaluate(altered)
+
+    def test_hindsight_source_class_cannot_be_upgraded(self):
+        altered = copy.deepcopy(self.source)
+        altered["historical_source_class"] = "ORIGINAL_ISSUED_2022"
+        with self.assertRaisesRegex(ValueError, "HRE_SOURCE_AUTHORITY"):
+            arp02.evaluate(altered)
+
+    def test_revised_source_file_cannot_silently_replace_original(self):
+        import json
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / arp02.SOURCE_PATH
+            target.parent.mkdir(parents=True)
+            target.write_text(json.dumps(self.source, sort_keys=True), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "HRE_NATIVE_SOURCE_BLOB_DRIFT"):
+                arp02.read_source(Path(tmp))
+
 if __name__ == "__main__":
     unittest.main()
