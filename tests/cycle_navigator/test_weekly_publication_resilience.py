@@ -13,6 +13,9 @@ if str(ROOT) not in sys.path:
 
 from scripts.cycle_navigator import build_weekly_cycle_navigator as mod
 
+# Reuse the existing CN PR-only pytest gate for the opt-in F5 shadow tests.
+from tests.cycle_navigator.test_range_skill_shadow_v1 import RangeSkillShadowTests as TestRangeSkillShadowV1
+
 
 class FakeResponse:
     def __init__(self, payload: dict):
