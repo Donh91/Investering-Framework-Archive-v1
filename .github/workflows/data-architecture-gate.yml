@@ -19,6 +19,10 @@ jobs:
         run: |
           python -m py_compile 04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/source_qa_v1.py 04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/test_source_qa_v1.py
           python 04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/test_source_qa_v1.py
+      - name: Verify Situation Room owner-primary fact anchor, original source, and shadow firewall
+        run: |
+          python -m py_compile scripts/data_terminal/situation_room_shadow_bridge.py tests/data_terminal/test_situation_room_source_fact_anchor_v1.py
+          python -m unittest tests.data_terminal.test_situation_room_source_fact_anchor_v1 -v
       - name: Verify offline News OSS event/PIT challenger regression controls
         run: |
           python -m py_compile scripts/research/news_oss_event_challenger.py tests/research/test_news_oss_event_challenger.py

@@ -5,7 +5,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
@@ -165,6 +165,107 @@ def owner_primary_match(discovery: dict, events: list[dict]) -> dict | None:
     }
 
 
+# Research-only, intentionally narrow fact-aware recovery when one ORIGINAL
+# owner-verifiable official event uses a different but equivalent headline.
+# Do not generalize this into fuzzy semantic verification or price authority.
+FACT_ALIASES = {
+    "firm": "businesses", "firms": "businesses",
+    "business": "businesses", "companies": "businesses",
+    "company": "businesses", "iranian": "iran",
+}
+COUNTRY_MARKERS = {
+    "iran", "canadian", "canada", "american", "united", "states",
+    "russia", "russian", "uk", "britain", "british", "china", "chinese",
+    "venezuela", "venezuela", "europe", "eu", "north", "korean",
+}
+COUNT_WORDS = {
+    "one", "two", "three", "four", "five", "six", "seven", "eight",
+    "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+    "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
+}
+
+
+def _fact_tokens(title: str) -> set[str]:
+    return {FACT_ALIASES.get(token, token) for token in tokens(title)}
+
+
+def _count_anchors(words: set[str]) -> set[str]:
+    return {w for w in words if w in COUNT_WORDS or (w.isdigit() and 0 < int(w) <= 20)}
+
+
+def _official_receipt_bound(event: dict) -> bool:
+    receipts = event.get("source_receipts")
+    return isinstance(receipts, list) and any(
+        isinstance(rec, dict)
+        and rec.get("role") == "PRIMARY"
+        and rec.get("status") == "PASS"
+        and isinstance(rec.get("url"), str)
+        and rec.get("url", "").startswith("https://")
+        and trusted_primary(rec["url"])
+        and bool(rec.get("sha256"))
+        and bool(rec.get("retrieval_end_utc"))
+        for rec in receipts
+    )
+
+
+def source_bound_fact_anchor_match(discovery: dict, events: list[dict]) -> dict | None:
+    """Conservative, unique-source fallthrough for near-identical verified facts.
+
+    Original source receipts are mandatory. Both titles must agree on explicit
+    small counts AND geographic anchors, and the official owner source event
+    must predate original secondary detection by at most two days.
+    This never grants original provider/consumer first-known or retroactive PIT.
+    """
+    title = str(discovery.get("title") or "")
+    words = _fact_tokens(title)
+    counts = _count_anchors(words)
+    countries = words & COUNTRY_MARKERS
+    if not counts or len(countries) < 2:
+        return None
+    try:
+        observed = datetime.fromisoformat(str(discovery["detection_time_utc"]).replace("Z", "+00:00"))
+        if observed.utcoffset() != timedelta(0):
+            return None
+    except (KeyError, TypeError, ValueError):
+        return None
+    matched = []
+    for event in events:
+        if not isinstance(event, dict) or event.get("verification_status") != "PRIMARY_SOURCE_VERIFIED":
+            continue
+        if not _official_receipt_bound(event):
+            continue
+        primary_words = _fact_tokens(str(event.get("title") or ""))
+        if (_count_anchors(primary_words) != counts
+                or (primary_words & COUNTRY_MARKERS) != countries):
+            continue
+        common = sorted(primary_words & words)
+        score = len(common) / max(1, min(len(primary_words), len(words)))
+        if len(common) < 5 or score < 0.45:
+            continue
+        try:
+            occurred = datetime.fromisoformat(str(event["event_time_utc"]).replace("Z", "+00:00"))
+            if occurred.utcoffset() != timedelta(0) or not timedelta(0) <= observed - occurred <= timedelta(days=2):
+                continue
+        except (KeyError, TypeError, ValueError):
+            continue
+        matched.append((score, common, event))
+    # Ambiguous same-fact primary events must not be arbitrarily selected.
+    if len(matched) != 1:
+        return None
+    score, common, event = matched[0]
+    return {
+        "verification_method": "OWNER_PRIMARY_EVENT_FACT_ANCHORS",
+        "verification_status": "PRIMARY_EVENT_CORROBORATED",
+        "match_score": round(score, 4),
+        "shared_tokens": common[:20],
+        "primary_event_id": event.get("event_id"),
+        "primary_title": event.get("title"),
+        "primary_event_time_utc": event.get("event_time_utc"),
+        "primary_source_receipts": event.get("source_receipts", []),
+        "fact_anchor_research_only_no_retroactive_pit": True,
+    }
+
+
 def linked_primary_match(discovery: dict, timeout: int) -> dict | None:
     source_url = str(discovery.get("url") or "")
     title = str(discovery.get("title") or "")
@@ -252,6 +353,8 @@ def run(source_root: Path, output_root: Path, timeout: int) -> dict:
     for discovery in discoveries:
         verification = owner_primary_match(discovery, events)
         if verification is None:
+            verification = source_bound_fact_anchor_match(discovery, events)
+        if verification is None:
             verification = linked_primary_match(discovery, timeout)
         record = {
             "shadow_id": stable_id(discovery),
@@ -297,6 +400,7 @@ def run(source_root: Path, output_root: Path, timeout: int) -> dict:
             "automatic_admission_requires_primary_corroboration": True,
             "accepted_methods": [
                 "OWNER_PRIMARY_EVENT_TITLE_OVERLAP",
+                "OWNER_PRIMARY_EVENT_FACT_ANCHORS",
                 "SITUATION_ROOM_LINKED_PRIMARY_SOURCE",
             ],
             "minimum_title_overlap": 0.45,
