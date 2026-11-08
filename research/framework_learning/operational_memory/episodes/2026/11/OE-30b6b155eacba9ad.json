@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/framework-learning-operations.yml",
+    "scripts/research/task2_cn_w44_postfreeze_paired_v1.py",
+    "scripts/research/task2_wave_b_scientific_gates_v1.py",
+    "tests/research/test_task2_cn_w44_postfreeze_paired_v1.py",
+    "tests/research/test_task2_wave_b_scientific_gates_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-30b6b155eacba9ad",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-independently-anchored-risk-windows-w44-full-postissue",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(task2): independently anchor risk-slot denominator and separate full postissue OHLC hours * test(task2): reject leading risk-grid loss, require declared window and OHLC postissue distinction * research(task2): add source-locked 161-whole-candle W44 high/low sensitivity without rewriting 162-row results * test(task2): W44 first partial candle excluded only in separate 161 whole-bar sensitivity * ci(task2): execute new ARP01 risk-grid and W44 161h native tests under existing Framework Learning PR gate",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/framework-learning-operations.yml": "bf91212e0b4b9a8ad3c6b1bd0154e1cb0635a71b",
+    "scripts/research/task2_cn_w44_postfreeze_paired_v1.py": "809b88d90926705ccaefcfe445de1a7ea741f7e1",
+    "scripts/research/task2_wave_b_scientific_gates_v1.py": "81353d45f7b18923ec8ef50f40f69585c1160601",
+    "tests/research/test_task2_cn_w44_postfreeze_paired_v1.py": "fd695f973020d72521e47f1f7ce5e37fb48174ca",
+    "tests/research/test_task2_wave_b_scientific_gates_v1.py": "c576c61cdff9e2f4c6a86a829f3df6680b96b5ee"
+  },
+  "source_commit_sha": "30b6b155eacba9ad615862777e99edc955b4d3b8",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-08T00:36:35-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(task2): independently anchored risk windows and W44 full-postissue candle controls"
+}

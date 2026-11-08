@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/meme_alpha/experiments/trenches_point_in_time_ablation_v1.py",
+    "tests/research/test_meme_alpha_trenches_trainonly_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-0f8ce439ab0d3cd2",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "alpha-deny-file-order-pit-fallback-ambiguous-first",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(alpha-research): fail closed when first-sighting decision clock absent, invalid or tied ambiguously * test(alpha): reject missing/invalid first decision clocks and permutation-dependent tied original rows",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/meme_alpha/experiments/trenches_point_in_time_ablation_v1.py": "e8f59c51b13db4a2e86a65a7eddeab2b22d2058f",
+    "tests/research/test_meme_alpha_trenches_trainonly_v1.py": "8c20351953c78a8a2fe93ad965bd4d15ce2ab563"
+  },
+  "source_commit_sha": "0f8ce439ab0d3cd24d86d2238a555a2b6650e175",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-08T05:35:04-05:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix(alpha-research): deny file-order PIT fallback and ambiguous first decision time"
+}

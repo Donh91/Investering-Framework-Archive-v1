@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/README.md",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/TASK2_RPL8_WAVE4_CN_W44_POSTFREEZE_WIDTH_PAIRED_20261107.md",
+    "scripts/research/task2_cn_w44_postfreeze_paired_v1.py",
+    "tests/research/test_task2_archive_first_edge_matrix_v1.py",
+    "tests/research/test_task2_cn_w44_postfreeze_paired_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-e06762ed4232f877",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-publish-source-corrected-w44-cn-vs-b1",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Source-first RPL8 Wave4 original-owner PR #2002. Resolves older PR merge conflicts without overwriting current Kompas v2.1, corrects batch request-window end (55/168 repeats) vs canonical hourly candle clock, retains 162 genuine post-freeze observations. Nine new adversarial cases; 57 Task2 source-bound tests pass; 3 exact-head native CI jobs success. Original USD/USDT and first-known eligibility remain unproven, no predictive edge or S1 autonomous credit. Owner-authorized interactive merge, no model/forecast/automation/trading changes.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/README.md": "c79da26eaf1a6e99f1fbef66b610b9a5d3f03490",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/TASK2_RPL8_WAVE4_CN_W44_POSTFREEZE_WIDTH_PAIRED_20261107.md": "435a4fa1a21e4cd61f206d37c64bddcbb1f59d44",
+    "scripts/research/task2_cn_w44_postfreeze_paired_v1.py": "1cb43b4e1df37890be2aa9c89197c21a805c8efb",
+    "tests/research/test_task2_archive_first_edge_matrix_v1.py": "7aa316ecbee57c28b2bf04d92ee2e4020b2967e8",
+    "tests/research/test_task2_cn_w44_postfreeze_paired_v1.py": "5100bf0ff7c27f7817849a0c3ade199d56f0453f"
+  },
+  "source_commit_sha": "e06762ed4232f8770d69b0ab3172ad0b235d90b8",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-07T16:09:22-05:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "research(task2): publish source-corrected W44 CN vs B1 original post-freeze falsification"
+}

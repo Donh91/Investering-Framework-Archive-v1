@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/meme-alpha-trenches-point-in-time.yml",
+    "research/api_agent/meme_alpha/experiments/trenches_point_in_time_ablation_v1.py",
+    "tests/research/test_meme_alpha_trenches_trainonly_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-4c8816070cd7b451",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "alpha-train-only-admissibility-disjoint-mint-holdout-native",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(alpha-research): select microcap ablation features train-only and reject shared mint train/test leakage * test(alpha-research): train-only feature selection, test-only label denial and token split overlap adversarial fixtures * ci(alpha): test train-only token split and leakage guard in existing research workflow before dataset access * fix(ci): defer scikit-learn to actual training, preserve global test collector without optional package",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/meme-alpha-trenches-point-in-time.yml": "3c7f0661599df9d507e358d92cbc4681c89e8bcb",
+    "research/api_agent/meme_alpha/experiments/trenches_point_in_time_ablation_v1.py": "ab9b4768572318a75195393ae6de37e9ee2cb910",
+    "tests/research/test_meme_alpha_trenches_trainonly_v1.py": "97bf91c753d5e1bcb0656fd6b7c246660b200059"
+  },
+  "source_commit_sha": "4c8816070cd7b45157c6c04c3c7efaf266369a48",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-08T05:30:08-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(alpha-research): train-only admissibility and disjoint mint holdout with native leakage QA"
+}
