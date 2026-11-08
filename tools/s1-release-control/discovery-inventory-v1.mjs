@@ -37,9 +37,12 @@ async function collect(fetcher, route, token, maxPages=MAX_PAGES) {
 function classify(item,kind) {
   const labels=(item.labels||[]).map(x=>x.name||'');
   const parked=/parked|parking|on.hold|backlog|defer|research|shadow|supersed/i.test((item.title||'')+' '+labels.join(' '));
+  const rawAssignees=Array.isArray(item.assignees)?item.assignees:(item.assignee?[item.assignee]:[]);
+  const assignees=[...new Set(rawAssignees.map(x=>x?.login).filter(x=>typeof x==='string'&&x.length>0))];
   return {kind,number:item.number,title:item.title,url:item.html_url,updated_at:item.updated_at,
     state:item.state||'UNKNOWN',draft:kind==='PR'?Boolean(item.draft):null,
-    labels,parked_hint:parked,
+    labels,parked_hint:parked,assignees,
+    author:typeof item.user?.login==='string'?item.user.login:null,
     disposition:'UNOBSERVED_NEEDS_ORIGINAL_OWNER_AND_NATIVE_GATES'};
 }
 async function discoverRepositories({fetcher,token,maxPages=MAX_PAGES}={}) {
