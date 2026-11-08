@@ -468,6 +468,12 @@ class S1GeneralIntegrationTests(unittest.TestCase):
                 self.check(lambda r, value=invalid: r["pr_jobs"][0].update(executed_test_ids=[value]),
                            "S1_GENERAL_NATIVE_TEST_IDS_UNVERIFIED")
 
+    def test_duplicate_or_padded_native_job_id(self):
+        for ids in (["positive", "positive", "guard-removal"], ["positive ", "guard-removal"]):
+            with self.subTest(ids=ids):
+                self.check(lambda r, v=ids: r["pr_jobs"][0].update(executed_test_ids=v),
+                           "S1_GENERAL_NATIVE_TEST_IDS_UNVERIFIED")
+
     def test_untrusted_opt_in_type(self):
         self.check(lambda r: r.update(s1_general_preflight_required=1),
                    "S1_GENERAL_OPT_IN_UNVERIFIED")
