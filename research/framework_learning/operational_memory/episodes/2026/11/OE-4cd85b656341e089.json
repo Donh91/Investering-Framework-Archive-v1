@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/data-architecture-gate.yml",
+    "scripts/data_terminal/situation_room_shadow_bridge.py",
+    "tests/data_terminal/test_situation_room_source_fact_anchor_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-4cd85b656341e089",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "news-source-bound-treasury-fact-corroboration-existing-shadow",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(news #1888): uniquely corroborate source-bound official fact anchors when titles diverge, without time backdating * test(news #1888): original source title mismatch, fake jurisdiction/count and shadow-only readback regressions * ci(news #1888): execute source-bound shadow verification regressions in existing PR gate",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/data-architecture-gate.yml": "7d3a9e43c49dfc529ddbce1ac25acee9b43d34c0",
+    "scripts/data_terminal/situation_room_shadow_bridge.py": "7f6e106efdd799fb0f986992e4f4e70d24ebe530",
+    "tests/data_terminal/test_situation_room_source_fact_anchor_v1.py": "6d5212453189a1da437f4d8cbebd99a83f23ea20"
+  },
+  "source_commit_sha": "4cd85b656341e08911725b5de1fe9f6db26ac507",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-08T05:56:56-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(news): source-bound Treasury fact corroboration in existing Shadow Bridge"
+}
