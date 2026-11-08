@@ -7,11 +7,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import average_precision_score, roc_auc_score
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import RobustScaler
+# Train/evaluate-only scikit-learn is imported inside evaluate(). This module
+# must remain importable by global repository test collectors without sklearn.
+# The existing specialized native ablation workflow installs sklearn explicitly.
 
 EXPERIMENT = "TRENCHES_POINT_IN_TIME_G2_SOURCE_G3_ABLATION_v1_1"
 
@@ -67,6 +65,12 @@ def evaluate(train: pd.DataFrame, test: pd.DataFrame, features: list[str], targe
             "status": "INSUFFICIENT", "n_features": len(features), "n_train": int(len(tr)),
             "n_test": int(len(te)), "train_positives": int(ytr.sum()), "test_positives": int(yte.sum()),
         }
+    from sklearn.impute import SimpleImputer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import average_precision_score, roc_auc_score
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import RobustScaler
+
     pipe = Pipeline([
         ("impute", SimpleImputer(strategy="median", add_indicator=True)),
         ("scale", RobustScaler(with_centering=False)),
@@ -92,6 +96,35 @@ def evaluate(train: pd.DataFrame, test: pd.DataFrame, features: list[str], targe
         out[f"top_{int(frac*100)}pct_lift"] = precision / max(float(y.mean()), 1e-12)
         out[f"top_{int(frac*100)}pct_recall"] = recall
     return out
+
+
+def train_only_split_and_features(panel: pd.DataFrame, split: dict) -> tuple[pd.DataFrame, pd.DataFrame, list[str], list[str]]:
+    """Select admissible feature columns using ONLY training-token observations.
+
+    The supplied token splits are source-derived. This guard does not certify
+    chronological, operator-independent or pre-decision availability, and the
+    target remains a lifecycle outcome, not economic return.
+    """
+    if not isinstance(split, dict):
+        raise RuntimeError("INVALID_TOKEN_SPLIT")
+    raw_in, raw_out = split.get("in_sample"), split.get("out_of_sample")
+    if (not isinstance(raw_in, list) or not isinstance(raw_out, list)
+            or not raw_in or not raw_out
+            or any(not isinstance(x, str) or not x for x in raw_in + raw_out)):
+        raise RuntimeError("INVALID_TOKEN_SPLIT")
+    in_sample, out_sample = set(raw_in), set(raw_out)
+    if in_sample & out_sample:
+        raise RuntimeError("TRAIN_TEST_MINT_OVERLAP")
+    train = panel[panel["mint"].isin(in_sample)].copy()
+    test = panel[panel["mint"].isin(out_sample)].copy()
+    # Do NOT inspect the out-of-sample distribution to decide feature eligibility.
+    g2 = numericize(train, G2_FIELDS)
+    sg3 = numericize(train, SOURCE_G3_FIELDS)
+    for col in dict.fromkeys(g2 + sg3):
+        raw = test[col]
+        converted = raw.astype(float) if pd.api.types.is_bool_dtype(raw) else pd.to_numeric(raw, errors="coerce")
+        test[col] = converted.replace([np.inf, -np.inf], np.nan)
+    return train, test, g2, sg3
 
 
 def timing_audit(features: pd.DataFrame) -> dict:
@@ -151,13 +184,7 @@ def main() -> None:
     panel = features.merge(labels[["mint", "path_completed"]], on="mint", how="inner", validate="one_to_one")
     panel["path_completed"] = panel["path_completed"].astype(float)
 
-    in_sample, out_sample = set(split.get("in_sample", [])), set(split.get("out_of_sample", []))
-    if not in_sample or not out_sample:
-        raise RuntimeError("split.json missing in_sample/out_of_sample mint lists")
-
-    g2 = numericize(panel, G2_FIELDS)
-    sg3 = numericize(panel, SOURCE_G3_FIELDS)
-    train, test = panel[panel["mint"].isin(in_sample)].copy(), panel[panel["mint"].isin(out_sample)].copy()
+    train, test, g2, sg3 = train_only_split_and_features(panel, split)
     arms = {
         "G2_ONLY": evaluate(train, test, g2, "path_completed"),
         "SOURCE_CAPTURED_G3_ONLY": evaluate(train, test, sg3, "path_completed"),
@@ -173,6 +200,8 @@ def main() -> None:
         "timing_audit": timing_audit(features),
         "g2_features_used": g2,
         "source_captured_g3_features_used": sg3,
+        "feature_selection_source": "TRAIN_ONLY; test distribution not used to admit a feature",
+        "split_leakage_guard": "TRAIN_TEST_MINT_DISJOINT_REQUIRED; chronology/operator groups not independently attested",
         "arms": arms,
         "interpretation_rules": [
             "This is an independent lifecycle/G2 replication, not the preregistered clean-G3 economic-return test.",
