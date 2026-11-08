@@ -105,7 +105,7 @@ function buildHub(input,{includePrivate=false,includeClosedParked=false}={}){
     else unassigned++;
   }
   return {...POLICY,schema:SCHEMA,status:coverage?'OBSERVED_COMPLETE_WITHIN_CREDENTIAL_SCOPE':'PARTIAL',
-    generated_at:/^\\d{4}-\\d{2}-\\d{2}T/.test(input.generated_at||'')?input.generated_at:null,
+    generated_at:/^\d{4}-\d{2}-\d{2}T/.test(input.generated_at||'')?input.generated_at:null,
     source_inventory_schema:input.schema,
     repository_scope:input.coverage_scope==='CREDENTIAL_ACCESSIBLE_OWNER_REPOS_ONLY'?
       input.coverage_scope:'UNKNOWN',coverage_complete:coverage,
