@@ -23,7 +23,7 @@ def sample() -> dict:
 class RangeSkillShadowTests(unittest.TestCase):
     def test_cn_can_outperform_same_width_placement_in_fixture(self) -> None:
         outcome = evaluate_week(sample())
-        self.assertEqual(outcome["claim_class"], "FULL_WEEK_PIT_ELIGIBLE")
+        self.assertEqual(outcome["claim_class"], "PIT_CLOCK_COMPATIBLE_SOURCE_UNVERIFIED")
         self.assertTrue(outcome["cn"]["both_extrema_contained"])
         self.assertFalse(outcome["matched_width_naive"]["both_extrema_contained"])
         self.assertFalse(outcome["naive_is_independent_width_forecast"])
