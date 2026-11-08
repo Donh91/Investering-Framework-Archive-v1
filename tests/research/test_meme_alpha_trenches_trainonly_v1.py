@@ -61,6 +61,38 @@ class TrenchesTrainOnlySplitTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "TRAIN_TEST_MINT_OVERLAP"):
             exp.train_only_split_and_features(panel, split)
 
+    def test_first_sighting_clock_missing_and_invalid_fail_closed(self):
+        panel, _ = synthetic_panel()
+        with self.assertRaisesRegex(RuntimeError, "FIRST_SIGHTING_DECISION_CLOCK_REQUIRED"):
+            exp.first_sighting_rows(panel)
+        for bad in (np.nan, float("inf"), -1.0, "wrong"):
+            source = panel.head(2).copy()
+            source["decision_ms"] = [1794111000000, bad]
+            with self.subTest(bad=bad):
+                with self.assertRaisesRegex(RuntimeError, "FIRST_SIGHTING_DECISION_CLOCK_INVALID"):
+                    exp.first_sighting_rows(source)
+
+    def test_first_sighting_permutation_invariant_with_early_late_records(self):
+        panel = pd.DataFrame([
+            {"mint": "m1", "decision_ms": 2000, "holder_count": 20},
+            {"mint": "m1", "decision_ms": 1000, "holder_count": 10},
+            {"mint": "m2", "decision_ms": 1500, "holder_count": 15},
+        ])
+        first = exp.first_sighting_rows(panel)
+        reversed_first = exp.first_sighting_rows(panel.iloc[::-1])
+        self.assertEqual(first.to_dict(orient="records"), reversed_first.to_dict(orient="records"))
+        self.assertEqual(first.loc[first["mint"] == "m1", "holder_count"].tolist(), [10])
+
+    def test_ambiguous_equal_time_same_mint_disagreement_fails_closed(self):
+        panel = pd.DataFrame([
+            {"mint": "m1", "decision_ms": 1000, "holder_count": 10},
+            {"mint": "m1", "decision_ms": 1000, "holder_count": 20},
+        ])
+        with self.assertRaisesRegex(RuntimeError, "AMBIGUOUS_FIRST_SIGHTING_CLOCK_TIE"):
+            exp.first_sighting_rows(panel)
+        panel.loc[1, "holder_count"] = 10
+        self.assertEqual(len(exp.first_sighting_rows(panel)), 1)
+
     def test_missing_or_malformed_cohort_definition_fail_closed(self):
         panel, split = synthetic_panel()
         for bad in (
