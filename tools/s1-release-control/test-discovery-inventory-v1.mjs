@@ -85,3 +85,10 @@ test('known-private repository cannot be downgraded by contradictory enumeration
  assert.equal(d.complete,false);
  assert.equal(d.repos.get('Donh91/Investering-AI-Audit-Bridge'),true);
 });
+
+test('restricted data plane is excluded even with noncanonical case',async()=>{
+ const changed=repoPayload.concat({full_name:'Donh91/SeCrEtS',private:true,owner:{login:'Donh91'}});
+ const f=async url=>({ok:true,json:async()=>url.includes('/user/repos')?changed:[]});
+ const d=await discoverRepositories({fetcher:f,token:'test-token'});
+ assert.equal([...d.repos.keys()].some(x=>x.toLowerCase()==='donh91/secrets'),false);
+});
