@@ -117,3 +117,38 @@ test('untrusted item URLs and source warnings cannot create private egress links
  assert.equal(JSON.stringify(h).includes('PRIVATE_WORK'),false);
  assert.ok(h.source_warnings.includes('SOURCE_WARNING_REDACTED'));
 });
+
+test('forged dynamically named PUBLIC repo is not admitted without native provenance',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repos.push({repo:'Donh91/NewPublic',visibility:'PUBLIC',complete:true,
+   open_pr_count:1,open_issue_count:0,items:[{...classify(native,'PR'),title:'FORGED_PUBLIC_DATA'}]});
+ const h=buildHub(data,{includePrivate:true});
+ assert.equal(h.coverage_complete,false);
+ assert.equal(JSON.stringify(h).includes('FORGED_PUBLIC_DATA'),false);
+ assert.equal(h.repo_summary.find(x=>x.visibility==='PUBLIC'&&x.repo===null).open_pr_count,null);
+});
+test('dynamic public repo only appears with actual owner-enumeration provenance marker',()=>{
+ const data=base([classify(native,'PR')]);
+ data.repository_coverage='AUTHENTICATED_OWNER_ENUMERATION';
+ data.repos.push({repo:'Donh91/NewPublic',visibility:'PUBLIC',
+   visibility_source:'AUTHENTICATED_OWNER_ENUMERATION',complete:true,
+   open_pr_count:1,open_issue_count:0,items:[{...classify(native,'PR'),title:'AUTHENTICATED_PUBLIC_DATA'}]});
+ const h=buildHub(data);
+ assert.equal(h.coverage_complete,true);
+ assert.equal(h.work.some(x=>x.title==='AUTHENTICATED_PUBLIC_DATA'),true);
+ data.repository_enumeration_complete=false;
+ const invalid=buildHub(data);
+ assert.equal(JSON.stringify(invalid).includes('AUTHENTICATED_PUBLIC_DATA'),false);
+});
+test('default hub redacts private repository names and counts from every surface',()=>{
+ const data=base([classify(native,'PR')]);
+ data.warnings=['Donh91/Investering-AI-Audit-Bridge: UNAVAILABLE_COUNTS_UNKNOWN'];
+ data.coverage_scope='Donh91/PRIVATE_SECRET_DATA';
+ data.generated_at='PRIVATE_SECRET_DATA';
+ const h=buildHub(data);
+ assert.equal(JSON.stringify(h).includes('Donh91/Investering-AI-Audit-Bridge'),false);
+ assert.equal(JSON.stringify(h).includes('PRIVATE_SECRET_DATA'),false);
+ assert.equal(h.repo_summary.find(x=>x.visibility==='PRIVATE').open_pr_count,null);
+ assert.equal(h.repository_scope,'UNKNOWN');
+ assert.equal(h.generated_at,null);
+});
