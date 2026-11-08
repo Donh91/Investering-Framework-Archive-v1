@@ -77,6 +77,15 @@ def score_weekly_pair(packet):
     )
     if first_eligible_close > end:
         raise ValueError("NO_PROSPECTIVE_COMPLETE_HOUR")
+    # A completed bar may have OPENED before the issuance/freeze. Preserve
+    # the existing completed-endpoint diagnostic, but publish a separate
+    # full-candle-after-issue denominator for high/low interpretation.
+    first_whole_bar_close = first_eligible_close
+    if first_whole_bar_close - timedelta(hours=1) < issue:
+        first_whole_bar_close += timedelta(hours=1)
+    whole_bar_count = max(
+        0, int((end - first_whole_bar_close).total_seconds() // 3600) + 1
+    )
     if not _is_sha(original.get("immutable_sha")):
         return {"status": "ORIGINAL_FREEZE_NOT_VERIFIED", "scores": {}, "contract": CONTRACT}
     if original.get("vendor_first_known_utc") is None:
@@ -140,6 +149,15 @@ def score_weekly_pair(packet):
         "issue_utc": original["issue_utc"],
         "postfreeze_first_eligible_closed_hour_utc": first_eligible_close.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "postfreeze_eligible_completed_hours": expected_bars,
+        "whole_bar_postissue_first_closed_utc": (
+            first_whole_bar_close.strftime("%Y-%m-%dT%H:%M:%SZ")
+            if whole_bar_count else None
+        ),
+        "whole_bar_postissue_completed_hours": whole_bar_count,
+        "completed_endpoint_count_is_full_postissue_extrema_proof": (
+            expected_bars == whole_bar_count
+        ),
+        "existing_outcome_extrema_restricted_to_whole_postissue_bars": False,
     }
 
 
@@ -157,7 +175,19 @@ def audit_pullback_episode(packet):
     slots = packet["slots"]
     if not isinstance(slots, list) or not slots:
         raise ValueError("MISSING_NO_WARNING_DENOMINATOR")
-    expected = [anchor - timedelta(hours=n) for n in range(len(slots), 0, -1)]
+    # Independently declared *expected* window, never inferred from the
+    # number of surviving rows. Otherwise removal of the oldest slot leaves
+    # a perfectly contiguous suffix and silently changes the denominator.
+    count = packet.get("expected_decision_slots")
+    first = packet.get("observation_start_utc")
+    if (type(count) is not int or not 1 <= count <= 720
+            or not isinstance(first, str)):
+        raise ValueError("INDEPENDENT_OBSERVATION_WINDOW_REQUIRED")
+    start = utc(first)
+    if (start != anchor - timedelta(hours=count)
+            or len(slots) != count):
+        raise ValueError("INCOMPLETE_OR_NONCONTIGUOUS_DECISION_GRID")
+    expected = [start + timedelta(hours=i) for i in range(count)]
     if [utc(s["decision_utc"]) for s in slots] != expected:
         raise ValueError("INCOMPLETE_OR_NONCONTIGUOUS_DECISION_GRID")
     allowed = {"RECORDED", "ABSTAIN", "NOT_ISSUED", "SOURCE_MISSING"}
@@ -198,7 +228,8 @@ def audit_pullback_episode(packet):
     return {
         "contract": CONTRACT, "episode_id": packet["episode_id"],
         "family_id": packet["family_id"], "classification": "RETROSPECTIVE_DEVELOPMENT_ONLY",
-        "kind": kind, "expected_decision_slots": len(slots),
+        "kind": kind, "expected_decision_slots": count,
+        "declared_observation_start_utc": first,
         "explicit_non_recorded_slots": missing, "uncertified_recorded_slots": uncertified,
         "source_legal_risk3_slots": risk3_count, "issued_high_risk_slots": len(emitted),
         "pre_anchor_delivered_high_risk": bool(qualifying),

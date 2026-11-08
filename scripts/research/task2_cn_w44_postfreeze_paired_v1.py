@@ -143,6 +143,7 @@ def build(root:Path=ROOT)->dict:
     # scripts/research/task2_hourly_source_window_clocks_v1.py.
     seen=set()
     qualifying=[]
+    strict_whole_postissue=[]
     later_batch_window_count=0
     last=None
     for row in csvrows:
@@ -154,6 +155,11 @@ def build(root:Path=ROOT)->dict:
         later_batch_window_count+=int(batch_later)
         if cut<=candle_end<=DAY_END:
             qualifying.append(row)
+            # Completed-endpoint inclusion is the locked 162-row diagnostic.
+            # A whole candle is genuinely post-issuance only if its OPEN is
+            # at or after the 06:57:49Z issue, without mixing preissue OHLC.
+            if nominal>=issue:
+                strict_whole_postissue.append(row)
     if (utc(csvrows[0]["timestamp_utc"])!=DAY_OPEN
         or last!=DAY_END-timedelta(hours=1)):
         raise ValueError("W44_WEEKLY_NOMINAL_CANDLE_BOUNDARIES_CHANGED")
@@ -161,12 +167,20 @@ def build(root:Path=ROOT)->dict:
         or utc(qualifying[0]["timestamp_utc"])+timedelta(hours=1)!=cut
         or utc(qualifying[-1]["timestamp_utc"])+timedelta(hours=1)!=DAY_END):
         raise ValueError("W44_POSTFREEZE_ELIGIBLE_SOURCE_COUNT_CHANGED")
+    if (len(strict_whole_postissue)!=161
+        or utc(strict_whole_postissue[0]["timestamp_utc"])!=cut
+        or utc(strict_whole_postissue[-1]["timestamp_utc"])!=DAY_END-timedelta(hours=1)):
+        raise ValueError("W44_FULL_CANDLE_POSTISSUE_DENOMINATOR_INVALID")
     output={}
     for asset in ("BTC","ETH"):
         a=asset.lower()
         lows=[float(row[a+"_low"]) for row in qualifying]
         highs=[float(row[a+"_high"]) for row in qualifying]
         al=min(lows);ah=max(highs)
+        # Sensitivity study only. Never silently replace source-locked
+        # 162-row retrospective extrema or claim that either is first-known.
+        strictly_postissue_low=min(float(row[a+"_low"]) for row in strict_whole_postissue)
+        strictly_postissue_high=max(float(row[a+"_high"]) for row in strict_whole_postissue)
         anchor=b1["assets"][asset]["anchor_price"]
         cn=joint_score(float(original[a+"_range_low"]),float(original[a+"_range_high"]),al,ah,anchor)
         base=joint_score(float(b1["assets"][asset]["low"]),float(b1["assets"][asset]["high"]),al,ah,anchor)
@@ -177,6 +191,14 @@ def build(root:Path=ROOT)->dict:
             raise ValueError("B1_W44_ORIGINAL_NEGATIVE_CONTROL_DISAPPEARED_"+asset)
         output[asset]={
             "asset":asset,"postfreeze_hourly_extrema":{ "low":al,"high":ah},
+            "whole_candle_postissue_sensitivity": {
+                "hours":len(strict_whole_postissue),
+                "low":strictly_postissue_low,"high":strictly_postissue_high,
+                "min_changed_from_locked_162":strictly_postissue_low!=al,
+                "max_changed_from_locked_162":strictly_postissue_high!=ah,
+                "same_quote_or_vendor_first_known_proven":False,
+                "statistical_edge_admitted":False
+            },
             "CN":cn,"ORIGINAL_PREISSUED_B1":base,
             "CN_width_over_B1_width":round((cn["predicted_high"]-cn["predicted_low"])/(base["predicted_high"]-base["predicted_low"]),6),
             "CN_contained_B1_missed_and_B1_jaccard_higher":
@@ -191,6 +213,11 @@ def build(root:Path=ROOT)->dict:
        "source_identity":identities,
        "issue_at_utc":issue.isoformat(),"postfreeze_first_eligible_hour_utc":cut.isoformat(),
        "full_week_completed_hours":168,"postfreeze_eligible_hours":len(qualifying),
+       "whole_candle_postissue_hours":len(strict_whole_postissue),
+       "first_whole_candle_postissue_open_utc":cut.isoformat(),
+       "first_retained_completed_candle_opened_preissue":(
+           utc(qualifying[0]["timestamp_utc"])<issue
+       ),
        "time_series_clock":"TIMESTAMP_UTC_CANONICAL_CANDLE_OPEN_PLUS_ONE_COMPLETED_HOUR",
        "batch_request_end_is_not_first_known":True,
        "batch_window_after_candle_end_rows":later_batch_window_count,
