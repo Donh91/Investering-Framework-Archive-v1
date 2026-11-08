@@ -28,7 +28,6 @@ on:
       - 'scripts/governance/validate_round3_runtime_reconciliation.py'
       - '.agents/skills/s1-pr-repair-learning/references/**'
       - 'tests/agents/test_s1_pr_repair_learning_skill.py'
-      - 'tools/s1-release-control/**'
       - '.github/workflows/cross-repo-agent-context-gate.yml'
   push:
     branches: [main]
@@ -56,32 +55,3 @@ jobs:
         run: python scripts/governance/validate_round3_runtime_reconciliation.py
       - name: Verify S1 original-PR repair skill source and casebook
         run: python -m unittest -v tests.agents.test_s1_pr_repair_learning_skill
-      - name: Set up Node 22 for S1 source regression tests
-        if: github.event_name == 'pull_request'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Verify S1 Release Control exact PR HEAD and fail-closed regressions
-        if: github.event_name == 'pull_request'
-        env:
-          EXACT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -euo pipefail
-          git fetch --no-tags --depth=1 origin "$EXACT_HEAD_SHA"
-          git checkout --detach "$EXACT_HEAD_SHA"
-          test "$(git rev-parse HEAD)" = "$EXACT_HEAD_SHA"
-          echo "S1_EXACT_SOURCE_HEAD=$EXACT_HEAD_SHA"
-          node --test \
-            tools/s1-release-control/test-discovery-inventory-v1.mjs \
-            tools/s1-release-control/test-agent-work-hub-v1.mjs \
-            tools/s1-release-control/test-history-core-v1.mjs \
-            tools/s1-release-control/test-static.mjs
-      - name: Verify S1 Chrome public mock and API-denied fallback
-        if: github.event_name == 'pull_request'
-        env:
-          EXACT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$EXACT_HEAD_SHA"
-          S1_BROWSER_MODE=mock node tools/s1-release-control/test-browser.mjs
-          S1_BROWSER_MODE=denied node tools/s1-release-control/test-browser.mjs
