@@ -103,7 +103,9 @@ def _claude_review_is_valid(record, current):
     ):
         return False
     risk_map = {"LOW": "LOW", "MEDIUM": "MEDIUM", "HIGH": "HIGH_IMPACT"}
-    risk = risk_map.get(r.get("risk"))
+    if type(r.get("risk")) is not str:
+        return False
+    risk = risk_map.get(r["risk"])
     if risk is None:
         return False
     independent = v.get("independence")
