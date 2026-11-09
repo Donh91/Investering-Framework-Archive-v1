@@ -2,10 +2,26 @@ import './tests/full-stack-readback.test.mjs';
 import './vnext-live/validate.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { resolveInternalPrecision } from './internal-precision-gate.mjs';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 const thisRepoRoot=resolve(fileURLToPath(new URL('.',import.meta.url)),'../..');
+const originalW46Hash='a'.repeat(64), amendedW46Hash='b'.repeat(64);
+const originalInternal={source_public_freeze_sha256:originalW46Hash,issue_number:34,
+ claims:[{claim_id:'CN34-Y2026-W46-btc_range',alias_of:null}]};
+const staleInternal=resolveInternalPrecision(originalInternal,amendedW46Hash,34);
+const boundInternal=resolveInternalPrecision(originalInternal,originalW46Hash,34);
+if(staleInternal.status!=='SOURCE_BINDING_STALE_QUARANTINED'||staleInternal.claims.length!==0)
+ throw Error('Stale internal precision must be quarantined without scoring permission');
+if(boundInternal.status!=='BOUND'||boundInternal.claims.length!==1)
+ throw Error('Genuinely source-bound internal precision must remain eligible');
+if(resolveInternalPrecision(null,amendedW46Hash,34).status!=='NOT_MATERIALIZED')
+ throw Error('Missing internal precision must never block the public forecast');
+let wrongIssueRefused=false;
+try{resolveInternalPrecision(originalInternal,originalW46Hash,33)}catch(e){wrongIssueRefused=String(e).includes('frozen-claim issue mismatch')}
+if(!wrongIssueRefused)throw Error('Bound internal-claim issue mismatches must fail closed');
+
 execFileSync('python3',['scripts/cycle_navigator/check_publication_lineage.py','--self-test'],
   {cwd:thisRepoRoot,stdio:'inherit',timeout:30000});
 

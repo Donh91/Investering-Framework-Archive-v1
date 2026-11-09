@@ -33,6 +33,30 @@ def parse_utc(value: str) -> datetime:
     return stamp.astimezone(timezone.utc)
 
 
+def verified_product_clock(receipt: dict[str, Any], stored_product: dict[str, Any]) -> datetime:
+    """Preserve the exact first-known UTC product clock, including fractions.
+
+    Legacy frozen_unix is second-granular. A same-Monday correction may have
+    fractional precision in the original product receipt; reconstructing its
+    timestamp from Unix seconds would silently change the source receipt.
+    Require both clocks to resolve to the SAME original UTC second before
+    applying the full fail-closed content comparison.
+    """
+    unix = int(receipt.get("frozen_unix", 0) or 0)
+    if unix <= 0:
+        raise ValueError("daily_product_issuance_clock_unavailable")
+    original = stored_product.get("issued_at_utc")
+    if not isinstance(original, str) or not original.endswith("Z"):
+        raise ValueError("daily_product_precise_utc_clock_missing")
+    try:
+        stamp = parse_utc(original)
+    except (ValueError, TypeError, OverflowError) as exc:
+        raise ValueError("daily_product_precise_utc_clock_invalid") from exc
+    if int(stamp.timestamp()) != unix:
+        raise ValueError("daily_product_issuance_clock_conflict")
+    return stamp
+
+
 def interval_score(fl: float, fh: float, al: float, ah: float) -> float:
     inter = max(0.0, min(fh, ah) - max(fl, al))
     actual_width = ah - al
@@ -414,9 +438,11 @@ def main() -> None:
     stored_product = receipt.get("daily_product_acceptance")
     product_readback = None
     if stored_product is not None:
-        if frozen_at is None:
-            raise SystemExit("daily_product_issuance_clock_unavailable")
-        product_readback = daily_product_acceptance(freeze, iso_year, iso_week, frozen_at)
+        try:
+            product_clock = verified_product_clock(receipt, stored_product)
+        except (ValueError, TypeError, OverflowError) as exc:
+            raise SystemExit(str(exc)) from exc
+        product_readback = daily_product_acceptance(freeze, iso_year, iso_week, product_clock)
         if product_readback != stored_product:
             raise SystemExit("daily_product_receipt_source_mismatch")
     snapshot = read_json(dist_latest)
