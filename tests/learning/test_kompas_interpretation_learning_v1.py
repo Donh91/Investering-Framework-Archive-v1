@@ -77,6 +77,20 @@ class KILResearchTests(unittest.TestCase):
             self.assertEqual(register_latest(self.root, T0, T0, dry_run=False), "NOT_PROSPECTIVE_ELIGIBLE")
         self.assertFalse((self.root / OUTPUT).exists())
 
+    def test_degraded_official_source_never_enters_prospective_score_cohort(self):
+        self.original["data_status"] = "DEGRADED"
+        self.original["compass_sha256"] = digest({k: v for k, v in self.original.items() if k != "compass_sha256"})
+        self.write(self.rel, self.original)
+        self.write("04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json", {
+            "contract": "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1",
+            "compass_id": self.cid, "compass_path": self.rel,
+            "compass_sha256": self.original["compass_sha256"],
+            "issued_at_utc": self.original["issued_at_utc"],
+        })
+        with self.patch_git():
+            self.assertEqual(register_latest(self.root, T0, self.activated, dry_run=False), "SOURCE_QUALITY_NOT_OK")
+        self.assertFalse((self.root / OUTPUT).exists())
+
     def test_mutated_source_pointer_and_hash_fail_closed(self):
         self.original["horizons"]["NEXT_1_3D"]["expected_direction"] = "UP"
         self.write(self.rel, self.original)
