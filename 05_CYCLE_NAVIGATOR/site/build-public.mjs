@@ -587,7 +587,7 @@ for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolv
  // CN SITE v2: one source-owned, renderer-neutral graph adapter for future
  // complete visual redesigns. Copy-only, no alternative producer or runtime.
  await mkdir(resolve(outputDir,"source-adapter"),{recursive:true});
- await copyFile(resolve(siteDir,"premium-v2/graph-b/official-source-adapter.mjs"),
+ await copyFile(resolve(siteDir,"source-adapter/official-source-adapter.mjs"),
   resolve(outputDir,"source-adapter/official-source-adapter.mjs"));
  await copyFile(resolve(siteDir,"cn-site-v2-source.mjs"),resolve(outputDir,"cn-site-v2-source.mjs"));
 // Read-only owner visual acceptance page. Deliberately isolated from real forecasts and the canonical site.
