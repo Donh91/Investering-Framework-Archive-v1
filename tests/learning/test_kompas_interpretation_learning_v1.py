@@ -28,7 +28,7 @@ class KILResearchTests(unittest.TestCase):
             "issued_at_utc": self.issue.isoformat().replace("+00:00", "Z"),
             "decision_policy_version": "TEST_V4_1", "data_status": "OK",
             "action_now": "HOLD_WAIT",
-            "market_reference": {"observation_open_utc": "2026-11-10T11:00:00Z"},
+            "market_reference": {"observation_open_utc": "2026-11-10T10:00:00Z"},
             "horizons": {"NEXT_12H": {"semantics": "OBSERVED_MOMENTUM_NOT_FORECAST", "expected_direction": "UP"},
                          "NEXT_1_3D": {"expected_direction": "DOWN", "action_posture": "WAIT",
                                        "expected_path": "Downward retest", "eta": "24-72h"}},
