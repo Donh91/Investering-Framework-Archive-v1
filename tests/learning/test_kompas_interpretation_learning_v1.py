@@ -104,15 +104,15 @@ class KILResearchTests(unittest.TestCase):
             "realized": {"btc_return_pct": -2.0, "eth_return_pct": 1.0},
             "action_utility": {"status": "PROXY_ONLY"},
         }
-        out["outcome_sha256"] = digest(out)
+        out["outcome_sha256"] = digest({k: v for k, v in out.items() if k != "outcome_sha256"})
         source = f"04_MARKET_LEARNING/handlekompas/official/outcomes/2026/11/10/{self.cid}_72h.json"
         self.write(source, out)
         out["matured_at_utc"] = "2026-11-13T10:00:00Z"
-        out["outcome_sha256"] = digest(out)
+        out["outcome_sha256"] = digest({k: v for k, v in out.items() if k != "outcome_sha256"})
         self.write(source, out)
         self.assertEqual(evaluate_one(self.root, p, maturity, dry_run=False), "OUTCOME_CLOCK_INVALID")
         out["matured_at_utc"] = "2026-11-13T11:20:00Z"
-        out["outcome_sha256"] = digest(out)
+        out["outcome_sha256"] = digest({k: v for k, v in out.items() if k != "outcome_sha256"})
         self.write(source, out)
         self.assertEqual(evaluate_one(self.root, p, maturity, dry_run=True), "WOULD_EVALUATE")
         self.assertEqual(evaluate_one(self.root, p, maturity, dry_run=False), "EVALUATED")
