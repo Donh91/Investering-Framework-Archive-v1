@@ -286,8 +286,12 @@ def admitted_w46_amendment(root, item, archived):
     if current_sha == archived["original_source_sha256"]:
         return None
     initial_sha = archived["original_source_sha256"]
-    if initial_sha != item["source_sha256"] or archived["BTC"]["status"] != "UNAVAILABLE" or archived["BTC"]["points"]:
-        raise ValueError("HISTORY_W46_ORIGINAL_NOT_UNAVAILABLE")
+    if initial_sha != item["source_sha256"]:
+        raise ValueError("HISTORY_W46_ORIGINAL_INDEX_BINDING")
+    if archived["BTC"]["status"] != "UNAVAILABLE" or archived["BTC"]["points"]:
+        # Legacy/synthetic recorded forecasts are NOT a 0/7 amendment. The
+        # original generic source-hash guard below must reject their drift.
+        return None
     folder = root / WEEKLY / "2026/W46"
     first_path = folder / "revisions/2026-11-09-first-unavailable/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
     if not first_path.is_file() or digest(first_path.read_bytes()) != initial_sha:
