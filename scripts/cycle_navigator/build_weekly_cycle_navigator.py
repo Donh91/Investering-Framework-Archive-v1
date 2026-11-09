@@ -708,6 +708,14 @@ def main() -> None:
         existing_pointer = read_json(existing_pointer_path)
         pointer_completed_year = int(existing_pointer.get("completed_source_year", existing_pointer.get("iso_year", -1)))
         if pointer_completed_year == completed_year and int(existing_pointer.get("completed_source_week", -1)) == completed_week:
+            if existing_pointer.get("owner_reissue_request") == (
+                "05_CYCLE_NAVIGATOR/weekly/2026/W46/W46_OWNER_REISSUE_REQUEST.json"):
+                # One-shot 2026-W46 owner-authorized original source repair.
+                # A failing raw source proof stops here, never falls back to
+                # unverified model numbers, source bypass or prior-day replay.
+                from scripts.cycle_navigator.w46_owner_same_day_reissue import repair
+                print(json.dumps(repair(repo, mm_ptr, existing_pointer), sort_keys=True))
+                return
             print(json.dumps(existing_pointer, sort_keys=True))
             return
 
