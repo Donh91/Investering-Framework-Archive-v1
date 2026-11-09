@@ -72,6 +72,32 @@ async function run(value,{clientWidth=390,fetchError=false}={}){
   amber:paths.filter(x=>x.attrs.stroke==='#e9ae65'),
   dividers:elements.get('plot').children.filter(x=>x.tag==='line'&&x.attrs.stroke==='#9aa8bb')};
 }
+test('PUBLIC W46-only start removes W45 actual-only weeks without erasing source archive',async()=>{
+ const d=fixture();d.start_week='2026-W46';
+ d.actual.push({time:'2026-11-09T01:00:00Z',close:74600});
+ d.actual.push({time:'2026-11-09T02:00:00Z',close:74500});
+ const r=await run(d);
+ assert.equal(r.elements.get('weeks').textContent,1);
+ assert.equal(r.elements.get('forecasts').textContent,1);
+ assert.equal(r.elements.get('hours').textContent,'2');
+ assert.equal(r.elements.get('archive').children.length,1);
+ assert.equal(r.elements.get('archive').children[0].children[0].textContent,'2026-W46');
+ assert.equal(r.dividers.length,1);
+ assert.equal(r.blue.length,1);
+ assert.equal(r.green.length,1);
+ assert.match(r.elements.get('last-close').textContent,/USDT/);
+ const unavailable=fixture();unavailable.start_week='2026-W46';
+ unavailable.weeks[1].forecast_status='UNAVAILABLE';
+ const absent=await run(unavailable);
+ assert.equal(absent.elements.get('weeks').textContent,0);
+ assert.equal(absent.elements.get('forecasts').textContent,0);
+ assert.equal(absent.elements.get('hours').textContent,'0');
+ assert.equal(absent.blue.length,0);
+ assert.equal(absent.green.length,0);
+ assert.equal(absent.elements.get('archive').children.length,1);
+ assert.match(absent.elements.get('notice').textContent,/Ingen prognosehistorik før mandag 9. november/);
+});
+
 test('W45 0/7 + synthetic W46 7/7 is shown with USDT original blue only, green has hourly gap',async()=>{
  const r=await run(fixture());
  assert.equal(r.elements.get('weeks').textContent,2);
