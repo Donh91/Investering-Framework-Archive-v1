@@ -487,6 +487,13 @@ class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
         out = self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
         self.assertEqual(out["reason"], "REQUIRED_INDEPENDENT_APPROVAL_MISSING_OR_STALE")
 
+    def test_malformed_risk_is_blocked_without_exception(self):
+        for invalid in (None, 0, [], {}, True):
+            with self.subTest(invalid=invalid):
+                r = self.base()
+                r["risk"] = invalid
+                self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
     def test_native_independent_approval_still_works(self):
         r = self.base()
         r["review"] = decision_fixture("LOW")["review"]
