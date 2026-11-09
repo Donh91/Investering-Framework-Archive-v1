@@ -140,8 +140,25 @@
           "value": true
         }
       ]
+    },
+    {
+      "candidate_id": "codex-situation-room-daily-static-root-cause-v1",
+      "predicates": [
+        {
+          "kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+          "workflow": "situation-room-daily-static.yml",
+          "count": 1,
+          "after_sha": "8aebb7d224b77bcacb587f66b58ac4f252c48d13"
+        },
+        {
+          "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
+          "workflow": "situation-room-owner-live-gate.yml",
+          "count": 1,
+          "after_sha": "8aebb7d224b77bcacb587f66b58ac4f252c48d13"
+        }
+      ]
     }
   ],
-  "contract_revision": "1.4.0",
-  "verification_note": "Only explicitly machine-verifiable gates are listed. Adversarial runtime closure is bound to verified production-shaped replay receipts plus mission convergence. Adversarial qualification enrichment is intentionally configured but blocked until a real frozen 88-row enrichment/counting run becomes interpretable or explicitly source-terminal; merged code/tests alone cannot complete it. N_CONSECUTIVE_SUCCESSFUL_RUNS may declare after_sha to reset evidence after a follow-up repair; the anchor must descend from the task merge. N_HEALTH_HISTORY_MATCH consumes immutable distinct-run health receipts bound to observed main HEAD and never infers evidence from mutable LATEST alone. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow."
+  "contract_revision": "1.5.0",
+  "verification_note": "Only explicitly machine-verifiable gates are listed. Adversarial runtime closure is bound to verified production-shaped replay receipts plus mission convergence. Adversarial qualification enrichment is intentionally configured but blocked until a real frozen 88-row enrichment/counting run becomes interpretable or explicitly source-terminal; merged code/tests alone cannot complete it. N_CONSECUTIVE_SUCCESSFUL_RUNS may declare after_sha to reset evidence after a follow-up repair; the anchor must descend from the task merge. N_HEALTH_HISTORY_MATCH consumes immutable distinct-run health receipts bound to observed main HEAD and never infers evidence from mutable LATEST alone. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow. Natural first-attempt schedule evidence and the independent Situation Room live-owner gate are both required after the verified PR #1397 precedence repair. They remain only necessary machine conditions; existing Mission Convergence and semantic truth must still pass."
 }
