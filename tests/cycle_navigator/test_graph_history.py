@@ -99,8 +99,8 @@ class GraphHistoryTest(unittest.TestCase):
         amended = json.loads(freeze_file.read_text())
         for asset in ("BTC", "ETH"):
             if asset == "BTC":
-                rows = [{"day": i, "low": 73000, "expected_close": 74000+i*10,
-                         "high": 76000} for i in range(1, 8)]
+                rows = [{"day": i, "low": 78000, "expected_close": 80000+i*10,
+                         "high": 82000} for i in range(1, 8)]
             else:
                 rows = [{"day": i, "low": 2050, "expected_close": 2100+i,
                          "high": 2200} for i in range(1, 8)]
