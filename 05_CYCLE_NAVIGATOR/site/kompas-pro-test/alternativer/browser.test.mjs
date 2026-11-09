@@ -38,24 +38,50 @@ let browser=null,profile=null,socket=null;
 const errors=[];
 try{
  let port,boot="";
- for(let attempt=1;attempt<=2&&!port;attempt++){
+ const startupFailures=[];
+ // GitHub-hosted Chrome can intermittently fail to create DevToolsActivePort
+ // under runner contention. Retry only the *bootstrap* with a fresh profile,
+ // never bypassing real 390/430/1360 DOM, chart or forecast assertions.
+ for(let attempt=1;attempt<=3&&!port;attempt++){
   profile=mkdtempSync(join(tmpdir(),"kompas-alt-browser-"));
-  browser=spawn(chrome,["--headless=new","--no-sandbox","--disable-gpu","--disable-dev-shm-usage",
-    ...(attempt===1?["--no-zygote"]:[]),"--remote-debugging-port=0",
-    "--user-data-dir="+profile,"about:blank"],{stdio:["ignore","ignore","pipe"]});
-  browser.stderr?.on("data",v=>{boot=(boot+v.toString()).slice(-1800)});
-  for(let i=0;i<120;i++){
-   if(browser.exitCode!==null||browser.signalCode!==null)break;
-   try{const v=Number(readFileSync(join(profile,"DevToolsActivePort"),"utf8").split("\n")[0]);
-     if(v>0){port=v;break}}catch{}
+  let spawnError="";
+  let stderr="";
+  const flags=["--headless=new","--no-sandbox","--disable-gpu",
+    "--disable-dev-shm-usage","--no-first-run","--no-default-browser-check",
+    "--disable-background-networking",
+    ...(attempt===1?["--no-zygote"]:[]),
+    "--remote-debugging-port=0","--user-data-dir="+profile,"about:blank"];
+  browser=spawn(chrome,flags,{
+    stdio:["ignore","ignore","pipe"],
+    // Unusable inherited DBus session addresses do not identify a UI service
+    // in headless Chrome; clear them for deterministic Linux runner startup.
+    env:{...process.env,DBUS_SESSION_BUS_ADDRESS:""}
+  });
+  browser.on("error",error=>{spawnError=String(error?.message||error)});
+  browser.stderr?.on("data",value=>{stderr=(stderr+value.toString()).slice(-3200)});
+  for(let i=0;i<180;i++){
+   if(spawnError||browser.exitCode!==null||browser.signalCode!==null)break;
+   try{
+    const candidate=Number(readFileSync(join(profile,"DevToolsActivePort"),"utf8").split("\n")[0]);
+    if(Number.isInteger(candidate)&&candidate>0){port=candidate;break}
+   }catch{}
    await delay(100);
   }
   if(port)break;
-  if(browser.exitCode===null)browser.kill("SIGTERM");
-  await delay(250);
+  startupFailures.push({attempt,exitCode:browser.exitCode,signal:browser.signalCode,
+    spawnError,stderr:stderr.slice(-1400)});
+  // A failed attempt MUST be fully stopped and its profile destroyed before
+  // trying again. No Chrome failure may silently green-light this release.
+  if(browser.exitCode===null&&browser.signalCode===null){
+   browser.kill("SIGTERM");
+   await Promise.race([new Promise(ok=>browser.once("close",ok)),delay(1200)]);
+   if(browser.exitCode===null&&browser.signalCode===null)browser.kill("SIGKILL");
+  }
   try{rmSync(profile,{recursive:true,force:true})}catch{}
+  browser=null;profile=null;
+  if(attempt<3)await delay(600*attempt);
  }
- assert.ok(port,"ALTERNATIVES_CHROME_BOOT_FAILED "+boot);
+ assert.ok(port,"ALTERNATIVES_CHROME_BOOT_FAILED "+JSON.stringify(startupFailures));
  const tabs=await(await fetch("http://127.0.0.1:"+port+"/json")).json();
  const tab=tabs.find(p=>p.type==="page");
  assert.ok(tab?.webSocketDebuggerUrl,"CHROME_CDP_TAB_MISSING");
