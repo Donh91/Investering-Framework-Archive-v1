@@ -80,28 +80,28 @@ jobs:
           grep '^skip=' runtime_cn_precheck.txt >> "$GITHUB_OUTPUT"
           grep '^mm_sha256=' runtime_cn_precheck.txt >> "$GITHUB_OUTPUT"
 
-      - name: Enforce monthly API cost guard
+      - name: Verify API-free final issuer
         if: steps.precheck.outputs.skip != 'true'
         run: |
-          python scripts/api_agent/check_monthly_cost_guard.py \
-            --receipt-root research/api_agent/outputs \
-            --pending-ledger-root runtime/api-cost-ledger \
-            --hard-stop-usd 40 \
-            --reserve-usd 4.0
+          python - <<'PY'
+          from pathlib import Path
+          code=Path('scripts/cycle_navigator/build_weekly_cycle_navigator.py').read_text()
+          assert 'value = build_offline_value(context, range_forecast, prev_machine,' in code
+          assert 'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)' not in code
+          print('CN_API_FREE_FINAL_ISSUER_SOURCE_BOUND')
+          PY
 
-      - name: Build Cycle Navigator from final Master Monday
+      - name: Build Cycle Navigator from final Master Monday (API-free)
         if: steps.precheck.outputs.skip != 'true'
         shell: bash
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           python scripts/cycle_navigator/build_weekly_cycle_navigator.py \
             --repo-root . \
             --master-monday-pointer research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json \
-            --model gpt-6-sol \
-            --max-output-tokens 12000 | tee runtime_cycle_navigator_pointer.json
+            | tee runtime_cycle_navigator_pointer.json
 
       - name: Bind Cycle Navigator to fresh Master Monday consumption receipt
         if: steps.precheck.outputs.skip != 'true'
