@@ -20,6 +20,7 @@ from scripts.cycle_navigator.daily_price_journey import daily_path_schema, publi
 from scripts.cycle_navigator.daily_path_recovery import recover_daily_path, reject_unverified_initial_daily_quotes, quarantine_late_daily_issuance
 from scripts.cycle_navigator.price_input_attestation import attest_completed_week, PriceEvidenceError, CONTRACT as ORIGINAL_PRICE_CONTRACT
 from scripts.cycle_navigator.deterministic_range_baseline import build_baseline, canonical as range_canonical, score_baseline
+from scripts.cycle_navigator.weekly_offline_issuer import build_offline_value, METHOD as OFFLINE_ISSUER_METHOD
 
 
 
@@ -833,7 +834,15 @@ def main() -> None:
         "an intraday map with Day 1-2, Day 3-4 and Day 5-7, one base case for this week, one base case for 2-3 weeks, an explicit 21-30 day strategic projection with overall direction plus separate BTC, ETH and ETH/BTC directions; BASE/BULL/BEAR uncalibrated scenario weights summing to 100; regime destination, ordered path, action posture and falsification conditions, one 4-8 week cycle direction/action posture, "
         "and an easy-to-read altseason countdown. The public precision section must keep Market / Structure and Price Ranges separate. For the coming week it must publish the five v2 Market / Structure dimensions so they can be scored in the next issue. Every unsupported intraday bucket must be exactly UNAVAILABLE. Use cohesive paragraphs and tables where useful."
     )
-    value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)
+    # The weekly end-product is API-INDEPENDENT. Optional model interpretation
+    # belongs upstream in Master Monday/Research and never gates the seven
+    # immutable day-by-day forecast points or the published report.
+    # This single owner-approved prospective issue records its TRUE clock.
+    value = build_offline_value(context, range_forecast, prev_machine,
+                                target_year, target_week, issue, public_issue)
+    raw = {"id": None, "usage": {"input_tokens": 0, "output_tokens": 0},
+           "status": "completed", "issuer_method": OFFLINE_ISSUER_METHOD,
+           "api_request_performed": False}
     try:
         validate_status_reason_codes(value)
     except ValueError as exc:
@@ -881,7 +890,14 @@ def main() -> None:
             raise SystemExit("machine_frozen_prior_issue_requires_reproducible_score")
         prior_freeze=prev_machine.get("forecast_freeze") or {}
         if prior_freeze.get("structural_calls") and evaluation.get("structural_score") is None:
-            raise SystemExit("structural_score_required_for_frozen_structural_calls")
+            # An offline issuer cannot fabricate a scientific structural
+            # outcome. Null is admissible ONLY when every frozen structural
+            # parameter is explicitly NOT_EVALUABLE, with coverage disclosed.
+            structural_rows = [row for row in parameter_scores
+                               if str(row.get("parameter_id", "")).startswith("structural_call_")]
+            if not structural_rows or any(row.get("status") != "NOT_EVALUABLE" or row.get("score") is not None
+                                          for row in structural_rows):
+                raise SystemExit("structural_score_required_for_evaluable_calls")
         prior_has_range=any(prior_freeze.get(key) is not None for key in ("btc_range_low","btc_range_high","eth_range_low","eth_range_high"))
         if prior_has_range and evaluation.get("price_range_score") is None:
             raise SystemExit("price_range_score_required_for_frozen_range")
@@ -1024,7 +1040,7 @@ def main() -> None:
     daily_product = daily_product_acceptance(
         freeze, target_year, target_week,
         datetime.fromtimestamp(generated_unix, timezone.utc))
-    source_manifest = {"daily_path_issuance": daily_path_issue, "daily_product_acceptance": daily_product, "daily_path_recovery": daily_recovery_receipt, "original_price_product_diagnostic": build_weekly_price_product_diagnostic(context, freeze, daily_product, daily_recovery_receipt), "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
+    source_manifest = {"daily_path_issuance": daily_path_issue, "daily_product_acceptance": daily_product, "daily_path_recovery": daily_recovery_receipt, "original_price_product_diagnostic": build_weekly_price_product_diagnostic(context, freeze, daily_product, daily_recovery_receipt), "issuer_method": OFFLINE_ISSUER_METHOD, "api_request_performed": False, "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
     scoring_valid_from_unix = ((generated_unix + 3599) // 3600) * 3600
     scoring_valid_from_utc = datetime.fromtimestamp(scoring_valid_from_unix, tz=timezone.utc).isoformat().replace("+00:00", "Z")
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": generated_unix, "public_issue_number": public_issue, "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
@@ -1127,7 +1143,7 @@ def main() -> None:
         f.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
 
     usage = raw.get("usage") if isinstance(raw.get("usage"), dict) else {}
-    receipt = {"contract": "CYCLE_NAVIGATOR_API_RECEIPT_v1", "response_id": raw.get("id"), "model": args.model, "input_tokens": int(usage.get("input_tokens", 0) or 0), "output_tokens": int(usage.get("output_tokens", 0) or 0), "output_sha256": sha256_bytes(canonical_bytes(value)), "issue_number": issue, "authority": "PUBLICATION_ONLY_NO_CANONICAL_OR_PORTFOLIO_AUTHORITY"}
+    receipt = {"contract": "CYCLE_NAVIGATOR_API_RECEIPT_v1", "response_id": None, "model": OFFLINE_ISSUER_METHOD, "api_request_performed": False, "input_tokens": int(usage.get("input_tokens", 0) or 0), "output_tokens": int(usage.get("output_tokens", 0) or 0), "output_sha256": sha256_bytes(canonical_bytes(value)), "issue_number": issue, "authority": "PUBLICATION_ONLY_NO_CANONICAL_OR_PORTFOLIO_AUTHORITY"}
     (target_dir / "CYCLE_NAVIGATOR_API_RECEIPT.json").write_bytes(canonical_bytes(receipt))
     print(json.dumps(pointer, sort_keys=True))
 
