@@ -672,6 +672,34 @@ def test_w46_owner_same_day_guard_preserves_original_first_issue_and_has_hard_cu
     mm = json.loads((root / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
     ptr["master_monday_pointer_sha256"] = MISSING
     ptr["owner_reissue_request"] = REQUEST
+    # The same original test runs BOTH before the first owner correction and
+    # after the immutable 0/7 source has been archived. It must never assume
+    # the previously unissued live forecast is still the current artifact.
+    revision = root / BEFORE
+    if revision.exists():
+        import hashlib
+        original_bytes = (revision / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_bytes()
+        prior = json.loads(original_bytes)
+        ledger = json.loads((revision / "BEFORE_INTEGRITY_MANIFEST.json").read_text())
+        assert ledger["original_revision_sha256"] == hashlib.sha256(original_bytes).hexdigest()
+        for name, digest in ledger["files"].items():
+            assert hashlib.sha256((revision / name).read_bytes()).hexdigest() == digest
+        assert all(prior["daily_price_path"][asset]["status"] == "UNAVAILABLE"
+                   and prior["daily_price_path"][asset]["points"] == []
+                   and len(prior["daily_range_plan"][asset]["points"]) == 7
+                   for asset in ("BTC","ETH"))
+        current = json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W46/CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_text())
+        assert all(current["daily_price_path"][asset]["status"] == "PUBLISHED"
+                   and len(current["daily_price_path"][asset]["points"]) == 7
+                   and current["daily_range_plan"][asset] == prior["daily_range_plan"][asset]
+                   for asset in ("BTC","ETH"))
+        # Once corrected, a second same-day rewrite is PROHIBITED, including
+        # a synthetic pointer that tries to reinstate the old request.
+        with pytest.raises(ValueError,match="W46_OWNER_REISSUE_NOT_AUTHORIZED"):
+            _guard(root,ptr,mm,now=datetime(2026,11,9,11,0,tzinfo=timezone.utc))
+        with pytest.raises(ValueError,match="W46_OWNER_REISSUE_NOT_AUTHORIZED"):
+            _guard(root,ptr,mm,now=datetime(2026,11,10,0,0,tzinfo=timezone.utc))
+        return
     target, request, original, original_pointer, receipt = _guard(
         root, ptr, mm, now=datetime(2026,11,9,11,0,tzinfo=timezone.utc))
     assert original["daily_price_path"]["BTC"]["status"] == "UNAVAILABLE"
