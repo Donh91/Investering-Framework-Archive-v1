@@ -86,6 +86,10 @@ class GraphHistoryTest(unittest.TestCase):
         pointer = json.loads(pointer_file.read_text())
         pointer["forecast_freeze_sha256"] = first_sha
         put(pointer_file, pointer)
+        original_receipt_file = folder / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+        original_receipt = json.loads(original_receipt_file.read_text())
+        original_receipt["source_forecast_freeze_sha256"] = first_sha
+        put(original_receipt_file, original_receipt)
         first_index = archive(self.root, W46)
         self.assertEqual(first_index["weeks"][-1]["source_sha256"], first_sha)
         archived_bytes = (self.root / ROOT / "weeks/2026/W46/forecast-reference.json").read_bytes()
@@ -93,9 +97,13 @@ class GraphHistoryTest(unittest.TestCase):
         old_path.parent.mkdir(parents=True, exist_ok=True)
         old_path.write_bytes(freeze_file.read_bytes())
         amended = json.loads(freeze_file.read_text())
-        rows = [{"day": i, "low": 73000, "expected_close": 74000+i*10,
-                 "high": 76000} for i in range(1, 8)]
         for asset in ("BTC", "ETH"):
+            if asset == "BTC":
+                rows = [{"day": i, "low": 73000, "expected_close": 74000+i*10,
+                         "high": 76000} for i in range(1, 8)]
+            else:
+                rows = [{"day": i, "low": 2050, "expected_close": 2100+i,
+                         "high": 2200} for i in range(1, 8)]
             amended["daily_price_path"][asset] = {
                 "status": "PUBLISHED", "reason": "source-bound deterministic hypothesis",
                 "points": rows,
