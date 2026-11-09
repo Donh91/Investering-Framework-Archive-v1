@@ -17,27 +17,14 @@
   "decision": "FALSIFY",
   "decision_reason": "Resolve deterministic integrity/cohort blockers before scoring or external interpretation.",
   "deltas": [
-    "m6_event_count:242->248",
-    "feature_row_count:242->248",
-    "pit_verified_feature_rows:227->232",
-    "pit_unverified_feature_rows:15->16",
-    "matured_event_counts.14d:112->125",
-    "matured_event_counts.24h:235->242",
-    "matured_event_counts.72h:224->231",
-    "matured_event_counts.7d:199->206",
-    "unknown_horizon_counts.14d:0->1",
-    "unknown_horizon_counts.24h:1->0",
-    "unknown_horizon_counts.72h:0->1",
-    "unknown_horizon_counts.7d:0->2",
-    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED",
-    "M6_MATURED_PAYLOAD_INTEGRITY_CHANGED"
+    "unknown_horizon_counts.24h:0->1"
   ],
   "external_routing": {
     "automatic_dispatch": false,
     "claude_recommended": false,
     "sol_recommended": false
   },
-  "generated_at_utc": "2026-11-09T09:45:11.191381Z",
+  "generated_at_utc": "2026-11-09T09:57:55.627324Z",
   "material_delta": true,
   "prior_false_bootstrap_supersession": null,
   "rules": {
@@ -46,7 +33,7 @@
     "raw_external_output_canonical": false,
     "warning_is_sell": false
   },
-  "semantic_fingerprint": "ec2aad161ca2ea1770c7bb08e8dfc7351e34db7fdfa2b3c1fcfde8125ee67b88",
+  "semantic_fingerprint": "a4e6d3cad5dd8ae3aa3e8756bee8b2c20eb4842979da3370fcdf6718dbe07b0a",
   "semantic_state": {
     "blockers": [
       "PIT_UNVERIFIED_FEATURE_ROWS"
@@ -105,7 +92,7 @@
     },
     "unknown_horizon_counts": {
       "14d": 1,
-      "24h": 0,
+      "24h": 1,
       "30d": 0,
       "72h": 1,
       "7d": 2
@@ -115,7 +102,7 @@
   "source_bindings": {
     "calibration": {
       "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-      "sha256": "ba4214d44ae9e91dc89b3aeae53766c9bfb6fec32f387dd87c12a56d6613eac8",
+      "sha256": "b32378a15d08b630e45a88b19e27c48a371eca9485276599c9eadd24114b01d3",
       "status": "PASS"
     },
     "compass_freeze": {
@@ -142,7 +129,7 @@
     },
     "m6_events": {
       "path": "research/framework_memory/m6_warning_events/LATEST.json",
-      "sha256": "8122155abd8b187df53daa80491d00b0ab7eb2133097ee9eb3906eacd3dfa846",
+      "sha256": "930829c5e5146380a158688ba54da84625b69d0a613a7cfeb2b77ae069557991",
       "status": "PASS"
     },
     "task15_gate": {
