@@ -624,8 +624,18 @@ try{
      'ROOT_OVERVIEW_STRUCTURE_OR_RAW_STATE:'+JSON.stringify(report));
    const verifiedSource=sourceAt(new Date().toISOString());
    if(verifiedSource.permit_path_live_gates===true){
-     assert.ok(report.rotationRows>0&&report.horizonOverview.every(x=>x.valid==='true'&&
-       !/Ingen aktuel vurdering|No current outlook/.test(x.direction)),
+     // Source freshness of the Official 1–3d and CN 5–7d views does NOT
+     // make a separate unissued 2–3w source valid. Positive source proof
+     // and explicit horizon-specific unavailable proof must coexist.
+     const [shortH,weeklyH,longH]=report.horizonOverview;
+     const validH=x=>x?.valid==='true'&&
+       !/Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
+       x.arrow&&x.arrow!=='?';
+     const unavailableH=x=>x?.valid==='false'&&x.arrow==='?'&&
+       /Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
+       /Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance);
+     assert.ok(report.rotationRows>0&&validH(shortH)&&validH(weeklyH)&&
+       (validH(longH)||unavailableH(longH)),
        'ROOT_VERIFIED_SOURCE_BOUND_OVERVIEW_NOT_VISIBLE:'+JSON.stringify(report));
    }else{
      assert.ok(builtOfficial?.contract==='PUBLIC_COMPASS_PROJECTION_v1'&&
