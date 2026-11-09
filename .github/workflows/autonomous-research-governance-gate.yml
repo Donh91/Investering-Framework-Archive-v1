@@ -9,6 +9,8 @@ on:
       - 'scripts/research/research_decision_impact_router.py'
       - 'scripts/research/independent_research_adversarial_sentinel.py'
       - 'scripts/research/research_meta_orchestrator.py'
+      - 'scripts/research/build_claude_advisory_feed_v1.py'
+      - 'tests/research/test_claude_advisory_feed_v1.py'
       - 'scripts/research/validate_research_*'
       - 'scripts/research/validate_independent_research_adversarial_sentinel.py'
       - '.github/workflows/autonomous-research-governance-*.yml'
@@ -72,6 +74,8 @@ jobs:
       - run: python -m py_compile scripts/research/research_meta_orchestrator.py scripts/research/validate_research_meta_orchestrator.py
       - run: python scripts/research/validate_research_meta_orchestrator.py
       - run: python scripts/research/research_meta_orchestrator.py --dry-run
+      - run: python -m unittest discover -s tests/research -p test_claude_advisory_feed_v1.py -v
+      - run: python scripts/research/build_claude_advisory_feed_v1.py --dry-run
 
   integration-gate:
     needs: [binding-integrity-gate, memory-novelty-gate, decision-impact-gate, adversarial-sentinel-gate, meta-orchestrator-gate]
