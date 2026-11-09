@@ -216,8 +216,10 @@ def test_existing_weekly_api_owns_conditional_daily_scenario_without_extra_call(
     assert "do NOT fabricate price evidence".lower() in source.lower()
     assert "daily_path_issue_summary(freeze.get(\"daily_price_path\")" in source
     assert '"daily_path_issuance": daily_path_issue' in source
-    # The original single call remains before source/receipt production.
-    assert source.count("value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)") == 1
+    # Owner-authorized original final publication is API-free; optional analysis stays upstream.
+    assert source.count("value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)") == 0
+    assert source.count("value = build_offline_value(context, range_forecast, prev_machine,") == 1
+    assert 'api_request_performed": False' in source
     workflow = (ROOT / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
     assert "python scripts/cycle_navigator/build_weekly_cycle_navigator.py" in workflow
     assert "--model gpt-6-sol" in workflow
