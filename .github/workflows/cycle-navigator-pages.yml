@@ -96,6 +96,8 @@ jobs:
           python3 -m unittest discover -s tests/research -p test_w45_rehearsal_outcomes.py
           python3 -m unittest discover -s tests/research -p test_w45_thursday_selftest_outcomes.py
           node --test 05_CYCLE_NAVIGATOR/site/research-w45/preview.test.mjs
+      - name: Verify Graph History fail-closed fallback without changing real data
+        run: node --test 05_CYCLE_NAVIGATOR/site/graph-history/unavailable.test.mjs
       - name: Build continuous BTC graph history from frozen source only
         id: graph_history
         continue-on-error: true
@@ -106,8 +108,8 @@ jobs:
       - name: Quarantine failed optional Graph History bundle without blocking canonical Pages
         if: steps.graph_history.outcome == 'failure'
         run: |
-          rm -f 05_CYCLE_NAVIGATOR/site/dist/data/graph-history/timeline.json
-          rm -f 05_CYCLE_NAVIGATOR/site/dist/graph-history/index.html
+          node 05_CYCLE_NAVIGATOR/site/graph-history/unavailable.mjs
+          echo "::warning::GRAPH_HISTORY_SOURCE_UNAVAILABLE: no history dataset was published; status page serves instead of a 404"
           echo "::warning::GRAPH_HISTORY_STALLED: optional timeline build failed; canonical site publishing continues"
           echo "GRAPH_HISTORY_STALLED: optional timeline unavailable, not a source or forecast success" >> "$GITHUB_STEP_SUMMARY"
       - name: Verify actual hourly capture reaches public bundle without fabrication
