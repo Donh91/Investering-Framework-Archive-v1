@@ -127,6 +127,21 @@ def orchestrate(policy:Dict[str,Any], states:Dict[str,Dict[str,Any]], memory:Dic
         "primary_target":primary.get("target"),"primary_execution_mode":primary.get("execution_mode"),
         "reason":primary.get("reason"),"queue":queue,"queue_n":len(queue),
         "active_heavy_workstreams":active,"max_concurrent_heavy_workstreams":maxheavy,
+        # This orchestrator builds priority decisions. It does not execute the
+        # selected experiment, validate GitHub PR reviews, or score an outcome.
+        # "active_heavy_workstreams" is a RESERVED CAPACITY list, not proof of
+        # started local work. Never let another consumer infer execution from it.
+        "execution_proof":{
+            "contract":"RESEARCH_META_EXECUTION_PROOF_v1",
+            "status":"QUEUED_NOT_EXECUTED_HERE" if active else "NO_WORK_SELECTED",
+            "reserved_workstream_count":len(active),
+            "selected_action_is_execution":False,
+            "native_run_id":None,"original_owner_pr":None,
+            "independent_review":None,"main_readback":None,
+            "scientific_outcome":None,"learning_calibration_applied":False,
+            "required_next_proof":"ORIGINAL_OWNER_NATIVE_EXECUTION_AND_MATURATION_RECEIPT" if active else "NONE",
+            "canonical_effect":False,"portfolio_execution":False,
+        },
         "sentinel_verdict":sv,"controller_conflicts":conflicts,
         "binding_integrity":binding_report.get("binding_integrity","UNKNOWN"),
         "binding_report":binding_report,
@@ -303,10 +318,37 @@ def attach_specialist_intakes(state:dict,root:Path=ROOT)->dict:
     })
     return updated
 
+def primary_action_receipt_key(state):
+    """Stable identity for the selected ORIGINAL source item, not global noise.
+
+    The prior global governance fingerprint changed when unrelated specialists
+    settled, spawning fresh ledger rows for the same unresolved evaluator.
+    Only a well-formed source fingerprint is trusted for stable dedupe; otherwise
+    preserve conservative legacy global-fingerprint identity.
+    """
+    primary_fp = None
+    for item in state.get("queue", []):
+        if (item.get("orchestrator_action") == state.get("primary_action")
+                and item.get("source") == state.get("primary_source")
+                and item.get("target") == state.get("primary_target")):
+            candidate = item.get("evidence_fingerprint")
+            if (isinstance(candidate, str) and len(candidate) == 64
+                    and all(c in "0123456789abcdef" for c in candidate)):
+                primary_fp = candidate
+            break
+    basis = "|".join((
+        str(state.get("primary_action")),
+        str(state.get("primary_source")),
+        str(state.get("primary_target")),
+        primary_fp or str(state.get("evidence_fingerprint")),
+    ))
+    return hashlib.sha256(basis.encode()).hexdigest()[:20]
+
+
 def persist(state):
     persist_json(STATE,state)
-    persist_json(QUEUE,{"contract":"RESEARCH_META_EXECUTION_QUEUE_v1","authority":"RESEARCH_ONLY_NON_CANONICAL","queue":state["queue"],"active_heavy_workstreams":state["active_heavy_workstreams"],"binding_integrity":state["binding_integrity"],"canonical_effect":False})
-    aid=hashlib.sha256((state["primary_action"]+"|"+str(state["primary_source"])+"|"+str(state["primary_target"])+"|"+state["evidence_fingerprint"]).encode()).hexdigest()[:20]
+    persist_json(QUEUE,{"contract":"RESEARCH_META_EXECUTION_QUEUE_v1","authority":"RESEARCH_ONLY_NON_CANONICAL","queue":state["queue"],"active_heavy_workstreams":state["active_heavy_workstreams"],"execution_proof":state["execution_proof"],"binding_integrity":state["binding_integrity"],"canonical_effect":False})
+    aid=primary_action_receipt_key(state)
     append_csv(LEDGER,["action_id","primary_action","primary_source","primary_target","execution_mode","sentinel_verdict","binding_integrity","evidence_fingerprint","canonical_effect"],{
         "action_id":aid,"primary_action":state["primary_action"],"primary_source":state["primary_source"],
         "primary_target":state["primary_target"],"execution_mode":state["primary_execution_mode"],
