@@ -190,7 +190,9 @@ def test_publication_workflow_does_not_mask_builder_failure():
     build = build.split("- name: Validate publication contract", 1)[0]
     assert "shell: bash" in build
     assert "set -euo pipefail" in build
-    assert "--max-output-tokens 12000" in build
+    assert "--max-output-tokens 12000" not in build
+    assert "OPENAI_API_KEY:" not in build
+    assert "Verify API-free final issuer" not in build  # separate prior gate
     assert "| tee runtime_cycle_navigator_pointer.json" in build
 
 
