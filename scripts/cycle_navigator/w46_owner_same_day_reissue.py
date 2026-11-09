@@ -118,7 +118,7 @@ def _guard(repo, pointer, mm_ptr, *, now):
             or original_pointer.get("master_monday_pointer_sha256") !=
                 _sha((repo / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json").read_bytes())
             or original_receipt.get("daily_product_acceptance", {}).get("status") != "INCOMPLETE"
-            or not (date.fromtimestamp(original_receipt.get("frozen_unix"),tz=timezone.utc) == date(2026,11,9))
+            or not (datetime.fromtimestamp(original_receipt.get("frozen_unix"),timezone.utc).date() == date(2026,11,9))
             or _read(target / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").get("public_issue_number") != 33
             or source.get("original_price_product_diagnostic", {}).get(
                 "pre_model_original_price_attestation", {}).get("reason") != "SOURCE_ARTIFACT_AUTH_UNAVAILABLE"):
