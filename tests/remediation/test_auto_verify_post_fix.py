@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.remediation.auto_verify_post_fix import verify
+from scripts.remediation.auto_verify_post_fix import verify, evaluate_predicate
 from scripts.health.automation_health_resolution import record_status
 
 
@@ -371,3 +371,53 @@ def test_auto_verifier_surfaces_unconfigured_post_fix_debt(tmp_path: Path):
         "reason": "NO_MACHINE_VERIFICATION_SPEC",
     }]
     assert report["blocked"][0]["candidate_id"] == "configured"
+
+
+def test_natural_scheduled_postfix_rejects_manual_rerun_branch_and_latest_failure(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "probe.txt").write_text("base")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    merge_sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {"merge_commit_sha": merge_sha}
+    spec = {"kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+            "workflow": "situation-room-daily-static.yml", "count": 1}
+    good = {"id": 42, "event": "schedule", "run_attempt": 1,
+            "head_branch": "main", "head_sha": merge_sha,
+            "status": "completed", "conclusion": "success",
+            "created_at": "2026-11-09T08:20:00Z"}
+
+    def assess(rows, selected=spec):
+        return evaluate_predicate(tmp_path, task, selected, lambda _workflow: rows)
+
+    assert assess([good])[0] is True
+    for delta in (
+        {"event": "workflow_dispatch"}, {"event": "workflow_run"}, {"event": None},
+        {"run_attempt": 2}, {"run_attempt": True}, {"run_attempt": None},
+        {"head_branch": "research"}, {"head_sha": "0" * 40},
+        {"status": "queued"}, {"id": None}, {"id": True},
+        {"conclusion": "failure"},
+    ):
+        assert assess([{**good, **delta}])[0] is False, delta
+    failed_later = {**good, "id": 43, "conclusion": "failure",
+                    "created_at": "2026-11-09T09:20:00Z"}
+    assert assess([good, failed_later])[0] is False
+    assert assess([good, good], {**spec, "count": 2})[0] is False
+    assert assess([good], {**spec, "count": 0})[0] is False
+
+
+def test_natural_scheduled_postfix_rejects_invalid_evidence_floor(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "probe.txt").write_text("base")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    task = {"merge_commit_sha": git(tmp_path, "rev-parse", "HEAD")}
+    spec = {"kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+            "workflow": "x.yml", "count": 1, "after_sha": "0" * 40}
+    valid, evidence = evaluate_predicate(tmp_path, task, spec, lambda _workflow: [])
+    assert valid is False
+    assert "INVALID_EVIDENCE_FLOOR" in evidence
