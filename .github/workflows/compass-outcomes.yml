@@ -62,6 +62,8 @@ jobs:
         run: |
           python -m py_compile scripts/learning/compass_outcomes.py scripts/learning/strategic_compass.py scripts/learning/strategic_compass_outcomes.py scripts/learning/shadow_compass_v2_outcomes.py scripts/learning/shadow_compass_v2_compare.py
           python -m unittest tests.learning.test_compass_outcomes -v
+          python -m unittest tests.learning.test_kompas_interpretation_learning_v1 -v
+          python scripts/learning/kompas_interpretation_learning_v1.py --dry-run > /tmp/kil-research-dry-run.json
           python -m unittest tests.learning.test_compass_rolling_14d_audit -v
           python -m unittest tests.learning.test_strategic_compass -v
           python -m unittest tests.learning.test_strategic_compass_outcomes -v
@@ -191,6 +193,15 @@ jobs:
               if p.stat().st_size > 8_000_000:
                   raise SystemExit("OVERSIZE_RESEARCH_REPORT")
           PY
+      - name: KIL v1 due-only interpretation-learning research (optional)
+        # KIL uses existing Official source and outcome writer; never a new market authority.
+        # A research error may not block original immutable outcome maturation.
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest tests.learning.test_kompas_interpretation_learning_v1 -v
+          python scripts/learning/kompas_interpretation_learning_v1.py | tee /tmp/kil-research-run.json
       - name: Verify forecasts were not rewritten
         shell: bash
         run: |
@@ -236,6 +247,9 @@ jobs:
           if [ -d 04_MARKET_LEARNING/handlekompas/research/rolling_14d/all_history ]; then
             find 04_MARKET_LEARNING/handlekompas/research/rolling_14d/all_history -type f -name '*_FULL_HISTORY.json' -print0 | xargs -0 -r git add --
           fi
+          if [ -d 04_MARKET_LEARNING/handlekompas/research/interpretation_learning_v1 ]; then
+            find 04_MARKET_LEARNING/handlekompas/research/interpretation_learning_v1 -type f -name '*.json' -print0 | xargs -0 -r git add --
+          fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "learning: mature Compass outcomes ${GITHUB_RUN_ID}"
           pushed=false
@@ -258,6 +272,8 @@ jobs:
             /tmp/shadow-official-comparison.json
             /tmp/compass-rolling14.json
             /tmp/compass-all-history.json
+            /tmp/kil-research-run.json
+            /tmp/kil-research-dry-run.json
           retention-days: 30
           if-no-files-found: warn
 
