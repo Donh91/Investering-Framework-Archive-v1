@@ -41,6 +41,10 @@ assert first["execution_proof"]["scientific_outcome"] is None
 different={"queue":[{**stable_voi["queue"][0],"evidence_fingerprint":"b"*64}]}
 third=o.orchestrate(pol,{},{"noise":"new"},different,{"verdict":"PASS"})
 assert o.primary_action_receipt_key(third)!=o.primary_action_receipt_key(first)
+priority_changed={"queue":[{**stable_voi["queue"][0],"impact_tier":"HIGH"}]}
+priority=o.orchestrate(pol,{},{"noise":"old"},priority_changed,{"verdict":"PASS"})
+assert o.primary_action_receipt_key(priority)!=o.primary_action_receipt_key(first)
+
 empty=o.orchestrate(pol,{}, {}, {"queue":[]},{"verdict":"PASS"})
 assert empty["execution_proof"]["status"]=="NO_WORK_SELECTED"
 assert empty["execution_proof"]["reserved_workstream_count"]==0
