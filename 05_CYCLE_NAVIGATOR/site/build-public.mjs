@@ -584,6 +584,12 @@ await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"\n");
 for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolve(outputDir,file));}
+ // CN SITE v2: one source-owned, renderer-neutral graph adapter for future
+ // complete visual redesigns. Copy-only, no alternative producer or runtime.
+ await mkdir(resolve(outputDir,"source-adapter"),{recursive:true});
+ await copyFile(resolve(siteDir,"source-adapter/official-source-adapter.mjs"),
+  resolve(outputDir,"source-adapter/official-source-adapter.mjs"));
+ await copyFile(resolve(siteDir,"cn-site-v2-source.mjs"),resolve(outputDir,"cn-site-v2-source.mjs"));
 // Read-only owner visual acceptance page. Deliberately isolated from real forecasts and the canonical site.
 const kompasTestDir=resolve(outputDir,"kompas-pro-test"); await mkdir(kompasTestDir,{recursive:true});
 for(const file of ["index.html","graf.html"]) await copyFile(resolve(siteDir,"kompas-pro-test",file),resolve(kompasTestDir,file));
