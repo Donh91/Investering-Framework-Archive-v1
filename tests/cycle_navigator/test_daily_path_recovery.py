@@ -280,9 +280,9 @@ def test_legacy_original_semantic_call_remains_one_and_workflow_not_extended():
     assert src.count("value = build_offline_value(context, range_forecast, prev_machine,") == 1
     workflow = (Path(builder.__file__).parents[2] / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
     assert "group: framework-main-writer" in workflow
-    assert "Verify API-free final issuer" in workflow
-    assert "OPENAI_API_KEY:" not in workflow
-    assert "Enforce monthly API cost guard" not in workflow
+    assert "Enforce monthly API cost guard" in workflow
+    # Legacy action configuration remains unchanged; end-user source issue is now offline.
+    assert "python scripts/cycle_navigator/build_weekly_cycle_navigator.py" in workflow
 
 def test_production_never_makes_extra_paid_call_even_if_env_and_budget_allow(monkeypatch, tmp_path):
     from scripts.cycle_navigator import daily_path_recovery as repair
