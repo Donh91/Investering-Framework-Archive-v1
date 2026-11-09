@@ -186,6 +186,8 @@ def load_tests(loader, standard_tests, pattern):
     standard_tests.addTests(loader.loadTestsFromTestCase(Task2W44PostfreezeTests))
     from tests.research.test_task2_wave_b_scientific_gates_v1 import Task2WaveBScientificGatesTests
     standard_tests.addTests(loader.loadTestsFromTestCase(Task2WaveBScientificGatesTests))
+    from tests.research.test_task2_cn_w45_postfreeze_paired_v1 import Task2W45PostissueTests
+    standard_tests.addTests(loader.loadTestsFromTestCase(Task2W45PostissueTests))
     return standard_tests
 
 
