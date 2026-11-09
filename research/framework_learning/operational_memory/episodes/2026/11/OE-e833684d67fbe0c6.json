@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/autonomous-research-governance-gate.yml",
+    ".github/workflows/autonomous-research-governance-loop.yml",
+    "00_ARCHIVE_CONTROL/research_governance_v1/claude_advisory_feed/README.md",
+    "scripts/research/build_claude_advisory_feed_v1.py",
+    "tests/research/test_claude_advisory_feed_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-e833684d67fbe0c6",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(governance): derive source-pinned read-only Claude audit candidate feed * test(governance): source-locked Claude advisory feed must never dispatch or invent execution * ci(governance): append read-only Claude candidate feed to existing daily loop * test(governance): validate Claude feed against fail-closed source and anti-execution checks * docs(governance): read-only Claude advisory feed authority, tests and original owner boundaries",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/autonomous-research-governance-gate.yml": "89ac034d6b077747d2e87ea6e22341f85ff8c26d",
+    ".github/workflows/autonomous-research-governance-loop.yml": "d6060effab67534e2b49076d363a3f62634d7093",
+    "00_ARCHIVE_CONTROL/research_governance_v1/claude_advisory_feed/README.md": "4569f93de3bdd38c998df963b1e6d9a316a5ac8b",
+    "scripts/research/build_claude_advisory_feed_v1.py": "c53b3b8c0ec0c49515dabbc1ba462b898634ba13",
+    "tests/research/test_claude_advisory_feed_v1.py": "894faa78f4303618d6c58b3491f068aab1d2a1f9"
+  },
+  "source_commit_sha": "e833684d67fbe0c6576b4d040d0ee98ffbc9d7cc",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-09T08:23:38-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "feat(governance): source-bound Claude advisory feed in existing research loop"
+}

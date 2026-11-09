@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/autonomous-research-governance-loop.yml",
+    "00_ARCHIVE_CONTROL/research_governance_v1/claude_advisory_feed/NONBLOCKING_OPTIONAL_BOUNDARY_20261109.md"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-246c58a112ab1d6e",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "governance-optional-claude-feed-cannot-block-canonical-pipeline",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(governance): optional Claude feed failure must not stall canonical research writer * docs(governance): explain fail-closed optional feed and no stuck core pipeline",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/autonomous-research-governance-loop.yml": "09d65907af5b5515c161555b5a662a603911b525",
+    "00_ARCHIVE_CONTROL/research_governance_v1/claude_advisory_feed/NONBLOCKING_OPTIONAL_BOUNDARY_20261109.md": "6c9cbeff9f9fa2965455e06d9bac5e47decb8048"
+  },
+  "source_commit_sha": "246c58a112ab1d6eb1ccceefd1be6a44deede040",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-09T08:27:49-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(governance): optional Claude feed cannot block canonical research pipeline"
+}
