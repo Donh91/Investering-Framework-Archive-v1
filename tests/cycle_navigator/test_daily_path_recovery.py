@@ -627,3 +627,38 @@ def test_api_free_owner_issuer_produces_seven_both_and_stays_source_fail_closed(
     bad["completed_week_hourly_capture"]["hourly_gap_diagnostics"]["observed_hours"] = 167
     with pytest.raises(ValueError, match="CN_OFFLINE_SOURCE_UNQUALIFIED"):
         build_offline_value(bad, baseline, prior, 2026, 46, 34, 33)
+
+
+def test_real_W45_source_builds_W46_seven_day_product_without_model_call():
+    """Adversarial integration on native public finished-week source, not fixture prices."""
+    from scripts.cycle_navigator.deterministic_range_baseline import build_baseline
+    from scripts.cycle_navigator.weekly_offline_issuer import build_offline_value
+    from scripts.cycle_navigator.daily_price_journey import daily_product_acceptance
+    root = Path(builder.__file__).resolve().parents[2]
+    completed = json.loads((root / "03_DAILY_CAPTURE_LOGS/weekly/2026/W45.json").read_text())
+    ptr = json.loads((root / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
+    previous = json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").read_text())
+    assert completed["iso_week"] == ptr["iso_week"] == 45
+    assert completed["hourly_gap_diagnostics"]["observed_hours"] == 168
+    assert completed["hourly_gap_diagnostics"]["missing_hour_count"] == 0
+    assert ptr["status"] == "READY"
+    baseline = build_baseline(root, target_year=2026, target_week=46)
+    assert baseline["anchor_contiguous"] and baseline["status"] == "READY"
+    value = build_offline_value(
+        {"completed_week_hourly_capture":completed,"master_monday_pointer":ptr},
+        baseline, previous, 2026, 46, 34, 33)
+    builder.validate_status_reason_codes(value)
+    assert value["evaluation"]["score_status"] == "REPRODUCIBLE"
+    old_ids = builder.expected_score_parameter_ids(previous)
+    assert [r["parameter_id"] for r in value["evaluation"]["parameter_scores"]] == old_ids
+    freeze = value["forecast_freeze"]
+    for asset in ("BTC","ETH"):
+        points = freeze["daily_price_path"][asset]["points"]
+        intervals = freeze["daily_range_plan"][asset]["points"]
+        assert len(points) == len(intervals) == 7
+        assert len(set(point["expected_close"] for point in points)) >= 4
+        assert all(point["low"] <= point["expected_close"] <= point["high"] for point in points)
+    product = daily_product_acceptance(
+        freeze, 2026, 46, datetime(2026,11,9,11,0,tzinfo=timezone.utc))
+    assert product["status"] == "COMPLETE"
+    assert "2026-11-15" in value["readable_markdown"]
