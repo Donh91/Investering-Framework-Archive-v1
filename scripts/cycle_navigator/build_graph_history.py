@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Append-only CN weekly graph archive and source-only public BTC timeline.
 
-No model, market decision or forecast is created here. W45 is the first
-eligible week; immutable source freezes are never rewritten.
+No model, market decision or forecast is created here. The immutable archive
+retains W45, while the public forecast-history display starts with true W46
+prospective issuance. Original and amended W46 versions are never rewritten.
 """
 from __future__ import annotations
 
@@ -265,6 +266,102 @@ def _read_index_or_fail_missing_history(root):
     return None
 
 
+
+def admitted_w46_amendment(root, item, archived):
+    """Admit only the separately timestamped, owner-approved first W46 7/7 amendment.
+
+    The original immutable W46 0/7 archive and its source hash NEVER change.
+    A public projection may reference the corrected file only after checking
+    the preserved prior bytes, both identical revision receipts, the current
+    frozen bytes, the explicit issue time and genuine source daily contracts.
+    This does not confer scoring or trading authority.
+    """
+    label = item["forecast_week"]
+    if label != "2026-W46" or archived is None:
+        return None
+    source_path = root / archived["original_source_path"]
+    if not source_path.is_file():
+        raise ValueError("HISTORY_W46_SOURCE_MISSING")
+    current_sha = digest(source_path.read_bytes())
+    if current_sha == archived["original_source_sha256"]:
+        return None
+    initial_sha = archived["original_source_sha256"]
+    if initial_sha != item["source_sha256"] or archived["BTC"]["status"] != "UNAVAILABLE" or archived["BTC"]["points"]:
+        raise ValueError("HISTORY_W46_ORIGINAL_NOT_UNAVAILABLE")
+    folder = root / WEEKLY / "2026/W46"
+    first_path = folder / "revisions/2026-11-09-first-unavailable/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+    if not first_path.is_file() or digest(first_path.read_bytes()) != initial_sha:
+        raise ValueError("HISTORY_W46_ORIGINAL_REVISION_MISSING")
+    manifest_file = folder / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json"
+    receipt_file = folder / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+    try:
+        manifest, receipt = read(manifest_file), read(receipt_file)
+        revision = manifest["owner_approved_same_day_revision"]
+        first = receipt["owner_approved_same_day_revision"]
+        accepted = receipt["daily_product_acceptance"]
+        path = json.loads(source_path.read_bytes())
+        price_path = validate_daily_path(path.get("daily_price_path"), path, 2026, 46)
+        issued = dt(revision["after_issued_utc"])
+        initial = dt(revision["before_issued_utc"])
+        eligible = dt(receipt["scoring_valid_from_utc"])
+        monday = datetime(2026, 11, 9, tzinfo=UTC)
+        if not (
+            revision == first and
+            revision["contract"] == "CN_OWNER_APPROVED_W46_SAME_DAY_REISSUE_v1" and
+            revision["forecast_week"] == label and
+            revision["before_forecast_sha256"] == initial_sha and
+            revision["after_forecast_sha256"] == current_sha and
+            revision["before_daily_expected_close_points"] == {"BTC": 0, "ETH": 0} and
+            revision["after_daily_expected_close_points"] == {"BTC": 7, "ETH": 7} and
+            revision["no_api_request"] is True and
+            revision["no_portfolio_execution"] is True and
+            revision["scoring_policy"] == "FIRST_KNOWN_AMENDED_ISSUANCE_NO_HINDSIGHT_OR_RESCORING" and
+            archived["issued_at_utc"] == revision["before_issued_utc"] and
+            manifest["public_issue_number"] == archived["public_issue_number"] == receipt["public_issue_number"] == revision["public_issue_number"] and
+            receipt["source_forecast_freeze_sha256"] == current_sha and
+            accepted["contract"] == "CN_MONDAY_SEVEN_DAY_PRODUCT_ACCEPTANCE_v1" and
+            accepted["forecast_week"] == label and
+            accepted["status"] == "COMPLETE" and
+            accepted["issued_at_utc"] == revision["after_issued_utc"] and
+            accepted["no_backward_reconstruction"] is True and
+            monday <= initial < issued < eligible < monday + timedelta(days=1) and
+            path["daily_price_path"]["forecast_week"] == label and
+            path["price_quote"] == {"BTC": "USDT", "ETH": "USDT"} and
+            price_path is not None
+        ):
+            raise ValueError("HISTORY_W46_REVISION_EVIDENCE")
+        assets = {}
+        for asset in ("BTC", "ETH"):
+            row, product = price_path[asset], accepted["assets"][asset]
+            if not (row["status"] == "PUBLISHED" and len(row["points"]) == 7 and
+                    product["status"] == "COMPLETE" and
+                    product["expected_close_points"] == 7 and
+                    product["low_high_range_points"] == 7 and
+                    product["model_declared_quote"] == "USDT"):
+                raise ValueError("HISTORY_W46_REVISION_SEVEN_DAY_INCOMPLETE")
+            assets[asset] = {
+                "status": "PUBLISHED", "reason": "FIRST_KNOWN_AMENDED_ISSUANCE_NO_HINDSIGHT_OR_RESCORING",
+                "points": [
+                    {"day": p["day"], "expected_close": p["expected_close"],
+                     "low": p["low"], "high": p["high"]}
+                    for p in row["points"]
+                ],
+            }
+    except (KeyError, TypeError, AttributeError, OSError, json.JSONDecodeError) as exc:
+        raise ValueError("HISTORY_W46_REVISION_BINDING_MISMATCH") from exc
+    return {
+        **archived,
+        "original_source_sha256": current_sha,
+        "issued_at_utc": iso(issued),
+        "first_eligible_utc": iso(eligible),
+        "forecast_quote_unit": "USDT",
+        "revision_kind": "OWNER_APPROVED_SAME_DAY_FIRST_KNOWN",
+        "initial_unavailable_sha256": initial_sha,
+        "initial_issued_at_utc": archived["issued_at_utc"],
+        "BTC": assets["BTC"], "ETH": assets["ETH"],
+    }
+
+
 def archive(root, target):
     if target < START:
         return {"contract": CONTRACT, "status": "NOT_STARTED", "weeks": []}
@@ -286,7 +383,14 @@ def archive(root, target):
         original = None if prior and prior["status"] == "MISSING_FREEZE" else load_original(root, cursor)
         if prior and prior["status"] == "RECORDED" and (
                 original is None or original["original_source_sha256"] != prior["source_sha256"]):
-            raise ValueError(f"INDEX_HISTORY_REWRITE:{label}")
+            # Same-Monday W46 correction is a separate public first-known
+            # forecast. Keep the old 0/7 index and its original bytes forever.
+            archived_file = read(forecast_file) if forecast_file.is_file() else None
+            if (label == "2026-W46" and original is not None and archived_file is not None and
+                    admitted_w46_amendment(root, prior, archived_file) is not None):
+                original = archived_file
+            else:
+                raise ValueError(f"INDEX_HISTORY_REWRITE:{label}")
         if original is not None:
             if prior and cursor == START and forecast_file.is_file():
                 # Pre-fix W45 used a static USD tag in its immutable reference
@@ -463,7 +567,7 @@ def first_honest_midweek_history(root, weeks):
         return None
 
 
-def publish(root):
+def publish(root, *, public_only=False):
     index_file = root / ROOT / "index.json"
     index = _read_index_or_fail_missing_history(root) or {"contract": CONTRACT, "weeks": []}
     if index_file.exists():
@@ -477,6 +581,9 @@ def publish(root):
         past = read(root / item["actual_path"]) if item.get("actual_path") else None
         if prediction and prediction.get("original_source_sha256") != item["source_sha256"]:
             raise ValueError(f"HISTORY_SOURCE_HASH_MISMATCH:{label}")
+        amendment = admitted_w46_amendment(root, item, prediction)
+        if amendment is not None:
+            prediction = amendment
         # The original W45 freeze does not declare a quote. Historical
         # forecast-reference.json is immutable and contains a legacy USD
         # label; the PUBLIC quote cannot inherit that unproven default.
@@ -491,7 +598,9 @@ def publish(root):
                 declared_quote = original_quote["BTC"]
         weeks.append({"week": label, "status": item["status"],
                       "forecast_model_declared_quote": declared_quote,
-                      "source_sha256": item.get("source_sha256"),
+                      "source_sha256": prediction["original_source_sha256"] if prediction else item.get("source_sha256"),
+                      "immutable_archive_source_sha256": item.get("source_sha256"),
+                      "revision_kind": prediction.get("revision_kind") if prediction else None,
                       "public_issue_number": prediction["public_issue_number"] if prediction else None,
                       "issued_at_utc": prediction["issued_at_utc"] if prediction else None,
                       "first_eligible_utc": prediction["first_eligible_utc"] if prediction else None,
@@ -502,6 +611,33 @@ def publish(root):
                       "observed_hours": past["observed_hours"] if past else 0})
         if past:
             actual.extend({"time": p["observed_at_utc"], "close": p["BTC"]} for p in past["points"])
+    if public_only:
+        # Presentation-only projection: no W45 green-only chart, no week with
+        # an unissued, malformed or currency-incomparable BLUE seven-day path.
+        # Immutable indexed history remains untouched and independently audited.
+        public_start = "2026-W46"
+        weeks = [
+            w for w in weeks
+            if w["week"] >= public_start and
+               w["forecast_status"] == "PUBLISHED" and
+               w["forecast_model_declared_quote"] == "USDT" and
+               len(w["forecast"]) == 7 and
+               isinstance(w["source_sha256"], str) and
+               len(w["source_sha256"]) == 64 and
+               w["issued_at_utc"] and w["first_eligible_utc"] and
+               dt(w["issued_at_utc"]) < dt(w["first_eligible_utc"])
+        ]
+        shown = [
+            (datetime.combine(date.fromisocalendar(int(w["week"][:4]), int(w["week"][6:]), 1),
+                              datetime.min.time(), UTC),
+             datetime.combine(date.fromisocalendar(int(w["week"][:4]), int(w["week"][6:]), 1),
+                              datetime.min.time(), UTC) + timedelta(days=7))
+            for w in weeks
+        ]
+        actual = [
+            p for p in actual
+            if any(start < dt(p["time"]) <= end for start, end in shown)
+        ]
     # The site's existing LIVE source is the only owner for current-week points.
     live_file = root / PUBLIC / "latest.json"
     if weeks and live_file.exists():
@@ -538,12 +674,13 @@ def publish(root):
             current["actual_status"] = "LIVE"
             current["observed_hours"] = len(prices.get("BTC", []))
     actual.sort(key=lambda p: p["time"])
-    payload = {"contract": "CN_GRAPH_HISTORY_TIMELINE_v1", "start_week": "2026-W45",
+    payload = {"contract": "CN_GRAPH_HISTORY_TIMELINE_v1",
+               "start_week": "2026-W46" if public_only else "2026-W45",
                "forecast_unit": "PER_WEEK_DECLARED_OR_UNAVAILABLE", "actual_unit": "USDT",
                "comparison_precision_eligible": False,
                "comparison_caveat": "Forecast quote is source-declared per week or unavailable; observed native Binance spot is USDT. No automatic currency conversion or calibrated accuracy claim.",
                "weeks": weeks, "actual": actual,
-               "first_honest_midweek_research": first_honest_midweek_history(root, weeks)}
+               "first_honest_midweek_research": None if public_only else first_honest_midweek_history(root, weeks)}
     dist = root / PUBLIC / "graph-history"
     write(dist / "timeline.json", payload)
     preview = root / "05_CYCLE_NAVIGATOR/site/graph-history/index.html"
@@ -571,7 +708,7 @@ def main():
         print(json.dumps({"mode": "archive", "status": "PASS", "weeks": len(result["weeks"]),
                           "target_week": week_label(target)[0]}, sort_keys=True))
     else:
-        result = publish(root)
+        result = publish(root, public_only=True)
         print(json.dumps({"mode": "public", "status": "PASS", "weeks": len(result["weeks"]),
                           "actual_hours": len(result["actual"])}, sort_keys=True))
 
