@@ -222,8 +222,10 @@ def test_existing_weekly_api_owns_conditional_daily_scenario_without_extra_call(
     assert 'api_request_performed": False' in source
     workflow = (ROOT / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
     assert "python scripts/cycle_navigator/build_weekly_cycle_navigator.py" in workflow
-    assert "--model gpt-6-sol" in workflow
-    assert "--max-output-tokens 12000" in workflow
+    assert "--model gpt-6-sol" not in workflow
+    assert "--max-output-tokens 12000" not in workflow
+    assert "Verify API-free final issuer" in workflow
+    assert "OPENAI_API_KEY:" not in workflow
 
 
 
