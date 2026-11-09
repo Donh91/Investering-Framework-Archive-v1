@@ -21,6 +21,34 @@ canon={"queue":[{"source":"CYCLE_NAVIGATOR","action":"CANONICAL_REVIEW_JUSTIFIED
 r=o.orchestrate(pol,{}, {}, canon, {"verdict":"PASS"})
 assert r["primary_action"]=="PREPARE_CANONICAL_REVIEW" and r["primary_execution_mode"]=="REQUIRES_CANONICAL_REVIEW"; print("PASS canonical_review_packet_only")
 assert len(r["active_heavy_workstreams"])<=1 and r["canonical_effect"] is False and r["paid_data_authorized"] is False
+
+# Same unresolved source problem is NOT a freshly executed experiment just
+# because the unrelated global governance fingerprint changes the next day.
+stable_voi={"queue":[{"source":"SHADOW_REGISTRY","action":"RECOVER_EVALUATOR",
+   "target":"CYCLE_NAVIGATOR_RESEARCH_FAMILY","impact_tier":"MEDIUM",
+   "decision_surface":"SENSOR_PORTFOLIO_QUALITY",
+   "evidence_fingerprint":"a"*64,"reason":"original exact evaluator still missing"}]}
+first=o.orchestrate(pol,{},{"noise":"old"},stable_voi,{"verdict":"PASS"})
+later=o.orchestrate(pol,{},{"noise":"new"},stable_voi,{"verdict":"PASS"})
+assert first["evidence_fingerprint"]!=later["evidence_fingerprint"]
+assert o.primary_action_receipt_key(first)==o.primary_action_receipt_key(later)
+assert first["execution_proof"]["status"]=="QUEUED_NOT_EXECUTED_HERE"
+assert first["execution_proof"]["reserved_workstream_count"]==1
+assert first["execution_proof"]["selected_action_is_execution"] is False
+assert first["execution_proof"]["native_run_id"] is None
+assert first["execution_proof"]["learning_calibration_applied"] is False
+assert first["execution_proof"]["scientific_outcome"] is None
+different={"queue":[{**stable_voi["queue"][0],"evidence_fingerprint":"b"*64}]}
+third=o.orchestrate(pol,{},{"noise":"new"},different,{"verdict":"PASS"})
+assert o.primary_action_receipt_key(third)!=o.primary_action_receipt_key(first)
+empty=o.orchestrate(pol,{}, {}, {"queue":[]},{"verdict":"PASS"})
+assert empty["execution_proof"]["status"]=="NO_WORK_SELECTED"
+assert empty["execution_proof"]["reserved_workstream_count"]==0
+blocked=o.orchestrate(pol,{}, {}, stable_voi,{"verdict":"FIREWALL_BREACH"})
+assert blocked["execution_proof"]["status"]=="NO_WORK_SELECTED"
+assert blocked["execution_proof"]["scientific_outcome"] is None
+print("PASS source_stable_dedupe_and_truthful_queue_not_execution")
+
 print("RESEARCH_META_ORCHESTRATOR_GATE_v1 PASS")
 
 # Specialist intake bridge: no PR-only, outside-repo, untracked or mutable source notes.
