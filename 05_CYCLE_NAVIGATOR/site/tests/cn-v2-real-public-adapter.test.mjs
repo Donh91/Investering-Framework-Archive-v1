@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 import {readOfficialGraphB,replayObservedUntil} from '../premium-v2/graph-b/official-source-adapter.mjs';
 
 const site=resolve(dirname(fileURLToPath(import.meta.url)),'..');
@@ -20,6 +20,23 @@ const latest=json(latestPath),lineage=json(lineagePath);
 const live=latest.public_live_precision;
 const now=new Date(Math.max(Date.now(),Date.parse(latest.generated_at)||0)).toISOString();
 const untrustedCopy=()=>structuredClone(latest);
+
+test('v2 DEPLOYED MODULE: redesigned site can import the very same validated source logic',async()=>{
+ const publicEntry=resolve(site,'dist/cn-site-v2-source.mjs');
+ const implementation=resolve(site,'dist/source-adapter/official-source-adapter.mjs');
+ assert.ok(existsSync(publicEntry),'PUBLIC_ADAPTER_ENTRYPOINT_NOT_PACKAGED');
+ assert.ok(existsSync(implementation),'PUBLIC_ADAPTER_IMPLEMENTATION_NOT_PACKAGED');
+ const shipped=await import(pathToFileURL(publicEntry).href);
+ assert.equal(typeof shipped.readOfficialGraphB,'function');
+ assert.equal(typeof shipped.replayObservedUntil,'function');
+ for(const asset of ['BTC','ETH']){
+  const args={now_utc:now,publication_lineage:lineage};
+  const shippedResult=shipped.readOfficialGraphB(latest,asset,args);
+  const canonicalResult=readOfficialGraphB(latest,asset,args);
+  assert.deepEqual(shippedResult,canonicalResult,'SOURCE_ADAPTER_CHANGED_WHEN_SHIPPED');
+  assert.equal(shippedResult.source_status,'SOURCE_BOUNDED');
+ }
+});
 
 test('v2 REAL SITE: original publication proof and source ownership, no second writer',()=>{
  assert.equal(latest.schema,'CN_PUBLIC_SNAPSHOT_V2');
