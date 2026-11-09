@@ -45,6 +45,8 @@ jobs:
       - name: Meta-orchestrate surviving research work
         run: python scripts/research/research_meta_orchestrator.py
       - name: Publish deterministic Claude research audit candidates, no dispatch
+        id: claude_advisory_feed
+        continue-on-error: true
         run: |
           python -m unittest discover -s tests/research -p test_claude_advisory_feed_v1.py -v
           python scripts/research/build_claude_advisory_feed_v1.py
@@ -62,6 +64,14 @@ jobs:
           assert x['candidate_count']==len(x['candidates'])
           print('CLAUDE_ADVISORY_RESEARCH_ONLY_READBACK_PASS',x['candidate_count'])
           PY
+      - name: Fail closed optional Claude advisory source when unavailable
+        if: steps.claude_advisory_feed.outcome == 'failure'
+        shell: bash
+        run: |
+          # The advisory-only feature must NEVER block canonical daily
+          # novelty/VOI/sentinel/meta or leave a stale trusted feed on main.
+          rm -f 00_ARCHIVE_CONTROL/research_governance_v1/claude_advisory_feed/LATEST.json
+          echo "::warning::CLAUDE_ADVISORY_FEED_UNAVAILABLE; original Research Governance continues. Never mark Claude invoked."
       - name: Observe Alpha Precision existing owners without spending or dispatch
         run: python scripts/research/alpha_precision_harvest_observer_v1.py
       - name: Verify binding-aware governance state before commit
