@@ -594,3 +594,34 @@ def test_w46_diagnostic_is_additive_new_source_manifest_only_and_old_w45_untouch
     old = json.loads((Path(builder.__file__).resolve().parents[2] /
         "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_SOURCE_MANIFEST.json").read_text())
     assert "original_price_product_diagnostic" not in old
+
+
+def test_api_free_owner_issuer_produces_seven_both_and_stays_source_fail_closed():
+    """Run the NEW owner issuer in the EXISTING hosted CN contract gate."""
+    from tests.cycle_navigator.test_weekly_offline_issuer import fixtures
+    from scripts.cycle_navigator.weekly_offline_issuer import build_offline_value
+    from scripts.cycle_navigator.daily_price_journey import (
+        validate_daily_path, validate_daily_range_plan, daily_product_acceptance)
+    import copy
+    context, baseline, prior = fixtures()
+    old = copy.deepcopy(prior)
+    value = build_offline_value(context, baseline, prior, 2026, 46, 34, 33)
+    freeze = value["forecast_freeze"]
+    validate_daily_path(freeze["daily_price_path"], freeze, 2026, 46)
+    validate_daily_range_plan(freeze["daily_range_plan"], freeze, 2026, 46)
+    assert prior == old  # W45 original untouched.
+    assert len(freeze["daily_price_path"]["BTC"]["points"]) == 7
+    assert len(freeze["daily_price_path"]["ETH"]["points"]) == 7
+    assert value["evaluation"]["structural_score"] is None
+    assert daily_product_acceptance(freeze, 2026, 46,
+        datetime(2026, 11, 9, 11, 0, tzinfo=timezone.utc))["status"] == "COMPLETE"
+    # The independent original price-quote attestation is STILL required
+    # outside this pure issuer: no model/spot-label self-certification.
+    gate = Path(builder.__file__).read_text()
+    assert "trusted_price_source = attest_completed_week(" in gate
+    assert "value = reject_unverified_initial_daily_quotes(" in gate
+    assert 'api_request_performed": False' in gate
+    bad = copy.deepcopy(context)
+    bad["completed_week_hourly_capture"]["hourly_gap_diagnostics"]["observed_hours"] = 167
+    with pytest.raises(ValueError, match="CN_OFFLINE_SOURCE_UNQUALIFIED"):
+        build_offline_value(bad, baseline, prior, 2026, 46, 34, 33)
