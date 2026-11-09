@@ -10,7 +10,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {readOfficialGraphB,replayObservedUntil} from '../premium-v2/graph-b/official-source-adapter.mjs';
 
 const site=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-const repo=resolve(site,'../../..');
+const repo=resolve(site,'../..');
 const json=p=>JSON.parse(readFileSync(p,'utf8'));
 const latestPath=resolve(site,'dist/data/latest.json');
 const lineagePath=resolve(site,'dist/data/publication-lineage.json');
