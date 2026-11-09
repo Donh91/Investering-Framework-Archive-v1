@@ -37,7 +37,7 @@ await new Promise((ok,fail)=>srv.once("error",fail).listen(0,"127.0.0.1",ok));
 let browser=null,profile=null,socket=null;
 const errors=[];
 try{
- let port,boot="";
+ let port;
  const startupFailures=[];
  // GitHub-hosted Chrome can intermittently fail to create DevToolsActivePort
  // under runner contention. Retry only the *bootstrap* with a fresh profile,
