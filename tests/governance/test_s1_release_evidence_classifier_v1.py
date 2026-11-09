@@ -391,6 +391,110 @@ class DeterministicDispositionTests(unittest.TestCase):
         self.check(r, "INDEPENDENT_RECOVERY_UNVERIFIED", "RECOVERY_IDENTITY_INCOMPLETE")
 
 
+
+class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
+    """Source-bound Claude advisory can meet S1's INTERNAL review only, not platform rules."""
+
+    def base(self, risk="LOW", independence="INDEPENDENT"):
+        r = decision_fixture(risk)
+        r["review"] = {}
+        r["repo_full_name"] = "Donh91/Investering-Framework-Archive-v1"
+        r["pr_number"] = 2057
+        r["native_rules_verified"] = True
+        r["native_approval_required"] = False
+        h = r["current"]["head"]
+        r["claude_review"] = {
+            "contract": "CLAUDE_REVIEW_v1",
+            "verdict": "APPROVE", "repo": r["repo_full_name"], "pr": r["pr_number"],
+            "head_sha": h, "requested_head_sha": h,
+            "risk_class": "HIGH_IMPACT" if risk == "HIGH" else risk,
+            "report_sha256": "c" * 64, "body_sha256": "d" * 64,
+            "independence": independence,
+            "comment_id": 111111,
+            "comment_url": "https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/173#issuecomment-111111",
+            "body_readback_verified": True, "report_readback_verified": True,
+        }
+        return r
+
+    def assert_still_advisory(self, r, expected):
+        out = classify_pr_disposition(r)
+        self.assertEqual(out["disposition"], expected, out)
+        self.assertFalse(out["authorized"])
+        self.assertFalse(out["externally_authenticated"])
+        return out
+
+    def test_independent_low_approved_exact_head(self):
+        self.assert_still_advisory(self.base(), "READY_TO_MERGE")
+
+    def test_self_authored_low_owner_exception_only(self):
+        self.assert_still_advisory(self.base(independence="SELF_AUTHORED_DESIGN"), "READY_TO_MERGE")
+        self.assert_still_advisory(self.base("MEDIUM", "SELF_AUTHORED_DESIGN"), "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_independent_medium_all_other_gates_remain(self):
+        self.assert_still_advisory(self.base("MEDIUM"), "READY_TO_MERGE")
+
+    def test_native_branch_approvals_never_replaced(self):
+        for val in (True, None, "false", 0):
+            r = self.base()
+            r["native_approval_required"] = val
+            self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_native_rules_not_verified_fails_closed(self):
+        r = self.base()
+        r["native_rules_verified"] = False
+        self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_changed_head_and_mismatched_request_fail_closed(self):
+        for field in ("head_sha", "requested_head_sha"):
+            r = self.base()
+            r["claude_review"][field] = "f" * 40
+            self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_missing_or_fake_attestations_fail_closed(self):
+        for field, value in (("report_sha256", "short"), ("body_sha256", None),
+                             ("body_readback_verified", False),
+                             ("report_readback_verified", "true"),
+                             ("comment_url", "https://github.com.evil/pull/173#issuecomment-111111"),
+                             ("verdict", "REQUEST_CHANGES"), ("pr", 2050)):
+            r = self.base()
+            r["claude_review"][field] = value
+            self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_high_impact_needs_owner_ok_in_addition_to_custody(self):
+        r = self.base("HIGH")
+        self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+        r["high_impact_owner_approval"] = True
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+        r["recovery"]["independent_custody"] = False
+        self.assert_still_advisory(r, "INDEPENDENT_RECOVERY_UNVERIFIED")
+
+    def test_ci_and_source_gates_cannot_be_bypassed(self):
+        r = self.base()
+        r["pr_jobs"][0]["executed_test_steps"] = 0
+        self.assert_still_advisory(r, "CI_NOT_EXECUTED")
+        r = self.base()
+        r["source_science_gate"] = "UNKNOWN"
+        self.assert_still_advisory(r, "SOURCE_OR_SCIENCE_GATE")
+
+    def test_review_identity_absent_routes_to_owner_without_waiver(self):
+        r = self.base()
+        r["claude_review"] = {}
+        r["independent_reviewer_available"] = False
+        out = self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+        self.assertEqual(out["reason"], "INDEPENDENT_REVIEWER_IDENTITY_ABSENT")
+        self.assertEqual(out["responsible_owner"], "REPOSITORY_OWNER")
+        r["independent_reviewer_available"] = None
+        out = self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+        self.assertEqual(out["reason"], "REQUIRED_INDEPENDENT_APPROVAL_MISSING_OR_STALE")
+
+    def test_native_independent_approval_still_works(self):
+        r = self.base()
+        r["review"] = decision_fixture("LOW")["review"]
+        r["claude_review"] = None
+        r["native_approval_required"] = True
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+
+
 if __name__ == "__main__":
     unittest.main()
 
