@@ -44,6 +44,24 @@ jobs:
         run: python scripts/research/independent_research_adversarial_sentinel.py
       - name: Meta-orchestrate surviving research work
         run: python scripts/research/research_meta_orchestrator.py
+      - name: Publish deterministic Claude research audit candidates, no dispatch
+        run: |
+          python -m unittest discover -s tests/research -p test_claude_advisory_feed_v1.py -v
+          python scripts/research/build_claude_advisory_feed_v1.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('00_ARCHIVE_CONTROL/research_governance_v1/claude_advisory_feed/LATEST.json')
+          x=json.loads(p.read_text())
+          assert x['contract']=='CLAUDE_ORIGINAL_OWNER_ADVISORY_FEED_v1'
+          assert x['automatic_execution'] is False
+          assert x['automatic_paid_dispatch'] is False
+          assert x['claude_invoked'] is False
+          assert x['canonical_effect'] is False
+          assert x['portfolio_execution'] is False
+          assert x['candidate_count']==len(x['candidates'])
+          print('CLAUDE_ADVISORY_RESEARCH_ONLY_READBACK_PASS',x['candidate_count'])
+          PY
       - name: Observe Alpha Precision existing owners without spending or dispatch
         run: python scripts/research/alpha_precision_harvest_observer_v1.py
       - name: Verify binding-aware governance state before commit
