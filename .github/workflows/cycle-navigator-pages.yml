@@ -115,6 +115,9 @@ jobs:
           python3 scripts/cycle_navigator/check_publication_lineage.py --self-test
           python3 scripts/cycle_navigator/check_publication_lineage.py
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/publication-lineage.json
+      - name: Enforce CN v2 source-first design-free readback on real built public data
+        run: |
+          node --test 05_CYCLE_NAVIGATOR/site/tests/cn-v2-design-data-boundary.test.mjs 05_CYCLE_NAVIGATOR/site/tests/cn-v2-real-public-adapter.test.mjs
       - name: Build and verify social preview
         run: node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
       - name: Verify browser failures cannot bypass mobile release gate
