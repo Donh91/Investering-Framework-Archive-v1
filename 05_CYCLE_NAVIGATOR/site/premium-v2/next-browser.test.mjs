@@ -631,7 +631,10 @@ try{
      const validH=x=>x?.valid==='true'&&
        !/Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
        x.arrow&&x.arrow!=='?';
-     const unavailableH=x=>x?.valid==='false'&&x.arrow==='?'&&
+     // data-source-current is the underlying weekly source freshness flag,
+     // not proof that the distinct 2–3w directional forecast was issued.
+     // The visible question mark and zero evidence MUST remain truthful.
+     const unavailableH=x=>['true','false'].includes(x?.valid)&&x.arrow==='?'&&
        /Ingen aktuel vurdering|No current outlook/.test(x.direction)&&
        /Ingen verificeret evidensbalance|No verified evidence balance/.test(x.balance);
      assert.ok(report.rotationRows>0&&validH(shortH)&&validH(weeklyH)&&
