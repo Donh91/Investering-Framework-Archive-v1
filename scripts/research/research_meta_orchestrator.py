@@ -335,6 +335,13 @@ def primary_action_receipt_key(state):
             if (isinstance(candidate, str) and len(candidate) == 64
                     and all(c in "0123456789abcdef" for c in candidate)):
                 primary_fp = candidate
+                # Preserve a fresh receipt when the selected work changes in
+                # scientific priority, execution class, or novelty disposition,
+                # even if its immutable source blob itself has not changed.
+                primary_fp += "|" + "|".join(str(item.get(k)) for k in (
+                    "impact_tier", "execution_mode", "decision_surface",
+                    "novelty_verdict",
+                ))
             break
     basis = "|".join((
         str(state.get("primary_action")),
