@@ -9,8 +9,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -79,14 +81,26 @@ def git_first_added(repo: Path, relative_path: str) -> tuple[str, datetime] | No
 
 
 def write_once(path: Path, record: dict[str, Any]) -> bool:
+    """Durable full JSON only. Temporary bytes cannot be staged as official .json."""
     path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        return False
+    tmp_name = None
     try:
-        with path.open("xb") as f:
-            f.write(canonical(record))
+        with tempfile.NamedTemporaryFile(mode="wb", prefix=path.name + ".",
+                                         suffix=".tmp", dir=path.parent, delete=False) as tmp:
+            tmp_name = tmp.name
+            tmp.write(canonical(record))
+            tmp.flush()
+            os.fsync(tmp.fileno())
+        # Atomic no-replace publication, safe if a second process beat this one.
+        os.link(tmp_name, path)
         return True
     except FileExistsError:
-        # Never rewrite a prior registration, mature outcome or report.
         return False
+    finally:
+        if tmp_name is not None:
+            Path(tmp_name).unlink(missing_ok=True)
 
 
 def registration_path(start_day: str) -> Path:
@@ -128,6 +142,8 @@ def register_latest(repo: Path, now: datetime, activated: datetime, *, dry_run: 
         return "SOURCE_POINTER_CONTRACT_INVALID"
     if original.get("contract") != "OFFICIAL_DAILY_COMPASS_v1":
         return "SOURCE_CONTRACT_INVALID"
+    if original.get("data_status") != "OK":
+        return "SOURCE_QUALITY_NOT_OK"
     issued = utc(original.get("issued_at_utc"))
     if pointer.get("issued_at_utc") != original.get("issued_at_utc"):
         return "ISSUE_CLOCK_MISMATCH"
