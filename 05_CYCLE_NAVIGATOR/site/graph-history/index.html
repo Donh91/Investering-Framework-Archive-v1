@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>CN Time Machine | Grafhistorik</title>
-<meta name="description" content="Bitcoin-kurser mod Cycle Navigators oprindelige, frosne mandagsprognoser. Fra uge 45 i 2026.">
+<meta name="description" content="Bitcoin-kurser mod kildeudstedte, frosne dagsprognoser. Prognosehistorikken begynder mandag 9. november 2026, uge 46.">
 <style>
 :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17263e;background:#f6f8fc}
 *{box-sizing:border-box}body{margin:0}main{max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,36px)}
@@ -83,7 +83,7 @@ html.cn-embedded-history,html.cn-embedded-history body{background:transparent;ov
 <a class="back" href="../" aria-label="Tilbage til Kompas Pro">‹ Tilbage til Kompas Pro</a>
 <div class="eyebrow" style="margin-top:26px">CYCLE NAVIGATOR / GRAFARKIV</div>
 <h1>CN Time Machine</h1>
-<p class="intro">Én sammenhængende Bitcoin-kurslinje. Hver blå prognose er den oprindelige, uændrede mandagsprognose for netop sin uge. Start: 2. november 2026.</p>
+<p class="intro">Én sammenhængende Bitcoin-kurslinje. Hver blå, stiplet prognose er den faktisk udstedte syvdagesprissti fra netop sin uge. Start: mandag 9. november 2026 (W46).</p>
 <section class="panel panel-primary" aria-label="Historisk Bitcoin-graf">
 <div class="toolbar">
 <div><strong style="font-size:19px">BTC · Faktisk vs. prognose</strong><div class="note">UTC · Historiske originale kilder</div>
@@ -96,13 +96,13 @@ html.cn-embedded-history,html.cn-embedded-history body{background:transparent;ov
 <div id="scroll" role="region" aria-label="Vandret scrollbar for historiske kurser" tabindex="0"><svg id="plot" role="img" aria-label="Historiske Bitcoin-kurser og kildeudstedte ugeprognoser"></svg></div>
 <div id="notice" aria-live="polite">Indlæser verificeret historik…</div>
 <div class="metrics">
-<div class="metric"><b id="weeks">0</b><small>Arkiverede uger</small></div>
+<div class="metric"><b id="weeks">0</b><small>Uger med udstedt prognose fra W46</small></div>
 <div class="metric"><b id="forecasts">0</b><small>Uger med sammenlignelig original prognose</small></div>
 <div class="metric"><b id="hours">0</b><small>Verificerede timeluk</small></div>
 </div>
 </section>
 <section class="panel"><h2>Ugearkiv</h2><div class="scrolltable"><table><thead><tr><th>Uge</th><th>CN-prognose</th><th>Faktiske data</th></tr></thead><tbody id="archive"><tr><td colspan="3">Afventer kilde</td></tr></tbody></table></div></section>
-<p class="note custody">Den blå officielle historik bygger kun på det oprindelige CN-freeze og afsluttede Hourly Capture-kurser. En separat W45-forskningsvurdering blev først udstedt torsdag 5. november kl. 20.11 UTC, ikke mandag. Den er ikke en original mandagsprognose og indgår derfor ikke som en ekstra grafkurve. Manglende prognoser og databrud udfyldes aldrig kunstigt. Prognosens valuta vises kun, når den er deklareret i den originale frosne kilde. Observerede Binance Spot-kurser er i USDT. Ingen automatisk USD/USDT-omregning, og ingen godkendt præcisionsscore eller handelssignal.</p>
+<p class="note custody">Den officielle prognosehistorik begynder 9. november 2026 med den særskilt tidsstemplede, ejerautoriserede W46-korrektion. Første 0/7-version og ældre W45-observationer er bevaret i det uændrede kildearkiv, men vises ikke som en prognosehistorik. Kun kildebundne og udstedte syvdagespunkter tegnes blåt, faktiske timesluk tegnes grønt. W46-korrektionen blev udstedt kl. 10.52 UTC, ikke ved midnat. Der foretages ingen tilbagedatering, udfyldning af datahuller eller påstand om dokumenteret prognosefordel. Sammenligning kræver samme deklarerede USDT-enhed.</p>
 </main>
 <script type="module">
 const URL='../data/graph-history/timeline.json';
@@ -192,9 +192,9 @@ function draw(){
  const wide=Math.max(320, scroll.clientWidth||0, selected.length*260),height=440, left=78,right=25,top=34,bottom=55;
  svg.setAttribute('width',wide);svg.setAttribute('viewBox',`0 0 ${wide} ${height}`);
  if(!selected.length||!values.length){
-  svgText(36,140,'Ingen originale historiske kurser endnu',21);
-  svgText(36,175,'Uge 45 åbner, når mandagens originale data foreligger.',14);
-  $('notice').textContent='Ingen prognosekurve konstrueres uden syv originale, frosne dagspriser.';
+  svgText(36,140,'Historikken starter med verificeret W46-prognose',21);
+  svgText(36,175,'Ingen tidligere kurve vises uden original, udstedt syvdagesprognose.',14);
+  $('notice').textContent='Ingen prognosehistorik før mandag 9. november 2026. Manglende, ugyldige eller kildeusikre prognoser vises ikke.';
   return;
  }
  const min=Math.min(...values),max=Math.max(...values),pad=Math.max(70,(max-min)*.10),lo=min-pad,hi=max+pad;
@@ -230,7 +230,7 @@ function table(){
    const td=document.createElement('td');td.textContent=value;tr.append(td);}
   body.append(tr);
  }
- if(!data.weeks.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=3;td.textContent='Starter med den første ægte W45-freeze';tr.append(td);body.append(tr);}
+ if(!data.weeks.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=3;td.textContent='Starter mandag 9. november 2026 med første kildeverificerede W46-dagsprognose';tr.append(td);body.append(tr);}
 }
 $('period').addEventListener('change',draw);
 try {
@@ -238,7 +238,18 @@ try {
  if(!resp.ok)throw Error('Kildedata kan ikke hentes');
  const value=await resp.json();
  if(value?.contract!=='CN_GRAPH_HISTORY_TIMELINE_v1'||!Array.isArray(value.weeks)||!Array.isArray(value.actual))throw Error('Ugyldig historikkontrakt');
- data=value;table();draw();scroll.scrollLeft=scroll.scrollWidth-scroll.clientWidth;
+ data=value;
+ // Only a weekly source-issued BLUE 7/7 forecast earns a place in the site
+ // history. Older actual-only weeks remain in the immutable archive, not UI.
+ if(data.start_week==='2026-W46'){
+  const visible=data.weeks.filter(w=>w.week>='2026-W46'&&comparableOriginal(w));
+  data={...data,weeks:visible,first_honest_midweek_research:null,
+   actual:data.actual.filter(p=>visible.some(w=>{
+    const t=Date.parse(p.time),start=isoWeekStart(w.week);
+    return Number.isFinite(t)&&t>start&&t<=start+7*DAY;
+   }))};
+ }
+ table();draw();scroll.scrollLeft=scroll.scrollWidth-scroll.clientWidth;
 }catch(error){$('notice').textContent='Grafhistorikken er utilgængelig. Sidste verificerede data er ikke blevet erstattet med estimerede kurser.'; svgText(28,100,'Kildedata utilgængelige',18);}
 </script>
 </body>
