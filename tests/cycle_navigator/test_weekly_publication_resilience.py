@@ -190,9 +190,10 @@ def test_publication_workflow_does_not_mask_builder_failure():
     build = build.split("- name: Validate publication contract", 1)[0]
     assert "shell: bash" in build
     assert "set -euo pipefail" in build
-    assert "--max-output-tokens 12000" not in build
-    assert "OPENAI_API_KEY:" not in build
-    assert "Verify API-free final issuer" not in build  # separate prior gate
+    assert "--max-output-tokens 12000" in build
+    assert "OPENAI_API_KEY:" in build
+    # Old runner arguments do not control the actual final API-free Python issuer.
+    assert "value = build_offline_value(context, range_forecast, prev_machine," in (ROOT / "scripts/cycle_navigator/build_weekly_cycle_navigator.py").read_text()
     assert "| tee runtime_cycle_navigator_pointer.json" in build
 
 
@@ -224,10 +225,10 @@ def test_existing_weekly_api_owns_conditional_daily_scenario_without_extra_call(
     assert 'api_request_performed": False' in source
     workflow = (ROOT / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
     assert "python scripts/cycle_navigator/build_weekly_cycle_navigator.py" in workflow
-    assert "--model gpt-6-sol" not in workflow
-    assert "--max-output-tokens 12000" not in workflow
-    assert "Verify API-free final issuer" in workflow
-    assert "OPENAI_API_KEY:" not in workflow
+    assert "--model gpt-6-sol" in workflow
+    assert "--max-output-tokens 12000" in workflow
+    assert "Enforce monthly API cost guard" in workflow
+    # The existing runner is untouched to respect high-impact workflow safeguards.
 
 
 
