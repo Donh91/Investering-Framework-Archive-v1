@@ -26,7 +26,9 @@ test('AppDeploy B/C is archived EXACT source, but not approved runtime forecast 
 test('V2 source-first B view preserves original anatomy, removes demo, includes honest source reader',async()=>{
  const v=await from('./graph-b/source-graph-b.html');
  const runtime=await from('./graph-b/source-graph-b.mjs');
- const adapter=await from('./graph-b/official-source-adapter.mjs');
+ const adapter=await from('../source-adapter/official-source-adapter.mjs');
+ const compatibility=await from('./graph-b/official-source-adapter.mjs');
+ assert.match(compatibility,/\.\.\/\.\.\/source-adapter\/official-source-adapter\.mjs/);
  for(const id of ['variant-panel','chart','range-band','range-upper','range-lower','forecast','actual','hour-slider','playhead'])
   assert.ok(v.includes('id="'+id+'"'));
  assert.doesNotMatch(v,/id="missing"/); // studio synthetic forecast restore switch
