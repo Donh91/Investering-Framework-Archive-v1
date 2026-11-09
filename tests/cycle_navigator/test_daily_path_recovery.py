@@ -662,3 +662,100 @@ def test_real_W45_source_builds_W46_seven_day_product_without_model_call():
         freeze, 2026, 46, datetime(2026,11,9,11,0,tzinfo=timezone.utc))
     assert product["status"] == "COMPLETE"
     assert "2026-11-15" in value["readable_markdown"]
+
+
+def test_w46_owner_same_day_guard_preserves_original_first_issue_and_has_hard_cutoff():
+    """Real checked-in original W46 0/7 receipt is an auditable correction only."""
+    from scripts.cycle_navigator.w46_owner_same_day_reissue import _guard, MISSING, REQUEST, BEFORE
+    root = Path(builder.__file__).resolve().parents[2]
+    ptr = json.loads((root / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json").read_text())
+    mm = json.loads((root / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
+    ptr["master_monday_pointer_sha256"] = MISSING
+    ptr["owner_reissue_request"] = REQUEST
+    target, request, original, original_pointer, receipt = _guard(
+        root, ptr, mm, now=datetime(2026,11,9,11,0,tzinfo=timezone.utc))
+    assert original["daily_price_path"]["BTC"]["status"] == "UNAVAILABLE"
+    assert original["daily_price_path"]["ETH"]["status"] == "UNAVAILABLE"
+    assert request["original_forecast_sha256"] == original_pointer["forecast_freeze_sha256"]
+    assert len(original["daily_range_plan"]["BTC"]["points"]) == 7
+    assert len(original["daily_range_plan"]["ETH"]["points"]) == 7
+    assert not (root / BEFORE).exists()
+    assert receipt["daily_product_acceptance"]["status"] == "INCOMPLETE"
+    with pytest.raises(ValueError,match="W46_OWNER_REISSUE_NOT_AUTHORIZED"):
+        _guard(root,ptr,mm,now=datetime(2026,11,10,0,0,tzinfo=timezone.utc))
+    with pytest.raises(ValueError,match="W46_OWNER_REISSUE_NOT_AUTHORIZED"):
+        _guard(root,{**ptr,"owner_reissue_request":"WRONG"},mm,
+               now=datetime(2026,11,9,11,0,tzinfo=timezone.utc))
+    with pytest.raises(ValueError,match="W46_OWNER_REISSUE_NOT_AUTHORIZED"):
+        _guard(root,{**ptr,"public_issue_number":34},mm,
+               now=datetime(2026,11,9,11,0,tzinfo=timezone.utc))
+
+
+def test_w46_actual_prior_source_and_independent_proof_class_qualify_both_closes():
+    """Real W45 source, prior W45 freeze and W46 benchmark, with synthetic proof."""
+    from scripts.cycle_navigator.weekly_offline_issuer import build_offline_value
+    from scripts.cycle_navigator.price_input_attestation import OriginalSpotPriceProof
+    from scripts.cycle_navigator.daily_path_recovery import (
+        reject_unverified_initial_daily_quotes, _sha)
+    from scripts.cycle_navigator.daily_price_journey import daily_product_acceptance
+    root=Path(builder.__file__).resolve().parents[2]
+    weekly=json.loads((root / "03_DAILY_CAPTURE_LOGS/weekly/2026/W45.json").read_text())
+    mm=json.loads((root / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
+    mm_machine=json.loads((root / "research/api_agent/outputs/weekly/2026/W45/MASTER_MONDAY_MACHINE_PACKAGE.json").read_text())
+    old=json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").read_text())
+    old["forecast_freeze"]=json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_text())
+    baseline=json.loads((root / "05_CYCLE_NAVIGATOR/range_baselines/forecasts/2026/W46.json").read_text())
+    original=json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W46/CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_text())
+    original_copy=copy.deepcopy(original)
+    now=datetime(2026,11,9,11,0,tzinfo=timezone.utc)
+    ctx={"completed_week_hourly_capture":weekly,"master_monday_pointer":mm,
+         "master_monday_machine_package":mm_machine,
+         "weekly_envelope_quote":{"BTC":"USDT","ETH":"USDT"}}
+    proof=OriginalSpotPriceProof(completed_week="2026-W45",
+        completed_capture_sha256=_sha(weekly),weekly_ohlc_sha256="a"*64,
+        verified_assets=("BTC","ETH"),source_run_ids=(123,),
+        attested_at_utc="2026-11-09T10:59:00Z")
+    value=build_offline_value(ctx,baseline,old,2026,46,34,33)
+    value=reject_unverified_initial_daily_quotes(value,ctx,
+        year=2026,week=46,issued_at=now,trusted_price_source=proof)
+    candidate=value["forecast_freeze"]
+    for k in ("btc_range_low","btc_range_high","eth_range_low","eth_range_high",
+              "intraday_map","price_quote","daily_range_plan"):
+        assert candidate[k] == original[k]
+    assert all(candidate["daily_price_path"][a]["status"]=="PUBLISHED"
+               and len(candidate["daily_price_path"][a]["points"]) == 7
+               for a in ("BTC","ETH"))
+    assert daily_product_acceptance(candidate,2026,46,now)["status"]=="COMPLETE"
+    assert original == original_copy
+    # A one-asset proof is not falsely upgraded to 14 source-qualified closes.
+    one=OriginalSpotPriceProof(completed_week="2026-W45",
+        completed_capture_sha256=_sha(weekly),weekly_ohlc_sha256="a"*64,
+        verified_assets=("BTC",),source_run_ids=(123,),
+        attested_at_utc="2026-11-09T10:59:00Z")
+    unqualified=reject_unverified_initial_daily_quotes(
+        build_offline_value(ctx,baseline,old,2026,46,34,33),ctx,
+        year=2026,week=46,issued_at=now,trusted_price_source=one)
+    assert unqualified["forecast_freeze"]["daily_price_path"]["ETH"]["status"]=="UNAVAILABLE"
+
+
+def test_w46_checkout_token_is_ephemeral_scoped_and_never_usable_outside_actions(monkeypatch):
+    import base64
+    from types import SimpleNamespace
+    from scripts.cycle_navigator.w46_owner_same_day_reissue import _checkout_read_token
+    from scripts.cycle_navigator.price_input_attestation import PriceEvidenceError
+    root=Path(builder.__file__).resolve().parents[2]
+    monkeypatch.delenv("GITHUB_TOKEN",raising=False)
+    monkeypatch.delenv("GITHUB_ACTIONS",raising=False)
+    monkeypatch.setenv("GITHUB_REPOSITORY","Donh91/Investering-Framework-Archive-v1")
+    with pytest.raises(PriceEvidenceError,match="SOURCE_ARTIFACT_AUTH_UNAVAILABLE"):
+        _checkout_read_token(root)
+    monkeypatch.setenv("GITHUB_ACTIONS","true")
+    dummy="ghs_"+"c"*55
+    encoded=base64.b64encode(("x-access-token:"+dummy).encode()).decode()
+    monkeypatch.setattr("scripts.cycle_navigator.w46_owner_same_day_reissue.subprocess.run",
+        lambda *args,**kwargs: SimpleNamespace(returncode=0,
+            stdout="AUTHORIZATION: basic "+encoded+"\n",stderr=""))
+    assert _checkout_read_token(root)==dummy
+    monkeypatch.setenv("GITHUB_REPOSITORY","other/repo")
+    with pytest.raises(PriceEvidenceError,match="SOURCE_ARTIFACT_AUTH_UNAVAILABLE"):
+        _checkout_read_token(root)
