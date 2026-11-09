@@ -29,9 +29,24 @@ const canonicalFiles=[
   'data/latest.json',
   'data/compass.json',
   'data/compass-event.json',
-  'data/publication-lineage.json'
+  'data/publication-lineage.json',
+  'graph-history/index.html'
 ];
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+/**
+ * A valid public history must have both a real timeline and renderer.
+ * If the optional builder failed, only an explicit UNAVAILABLE status page
+ * may remain. Never silently deploy a 404, or an old/stale timeline as live.
+ */
+async function graphHistoryParityAssets(root){
+ const html=await readFile(resolve(root,'graph-history/index.html'),'utf8');
+ let hasTimeline=false;
+ try{await readFile(resolve(root,'data/graph-history/timeline.json'));hasTimeline=true}
+ catch(error){if(error.code!=='ENOENT')throw error}
+ const unavailable=html.includes('data-cn-history-status="UNAVAILABLE"');
+ if(unavailable===hasTimeline)throw Error('GRAPH_HISTORY_ROUTE_DATA_STATUS_MISMATCH');
+ return ['graph-history/index.html',...(hasTimeline?['data/graph-history/timeline.json']:[])];
+}
 const safePath=path=>{
   assert.equal(typeof path,'string','PUBLIC_ASSET_PATH_INVALID');
   assert.match(path,/^[A-Za-z0-9._/-]+$/,'PUBLIC_ASSET_PATH_INVALID');
@@ -116,6 +131,21 @@ if(process.argv.includes('--self-test')){
   try{
     await mkdir(resolve(temporary,'next/assets'),{recursive:true});
     await mkdir(resolve(temporary,'next/graph-b'),{recursive:true});
+    await mkdir(resolve(temporary,'graph-history'),{recursive:true});
+    await mkdir(resolve(temporary,'data/graph-history'),{recursive:true});
+    await writeFile(resolve(temporary,'graph-history/index.html'),'<html><main>Valid original historical chart</main></html>');
+    await writeFile(resolve(temporary,'data/graph-history/timeline.json'),'{"contract":"CN_GRAPH_HISTORY_TIMELINE_v1"}');
+    assert.deepEqual(await graphHistoryParityAssets(temporary),[
+      'graph-history/index.html','data/graph-history/timeline.json'
+    ]);
+    await rm(resolve(temporary,'data/graph-history/timeline.json'));
+    await assert.rejects(graphHistoryParityAssets(temporary),/GRAPH_HISTORY_ROUTE_DATA_STATUS_MISMATCH/);
+    await writeFile(resolve(temporary,'graph-history/index.html'),
+      '<html><main data-cn-history-status="UNAVAILABLE">No verified history</main></html>');
+    assert.deepEqual(await graphHistoryParityAssets(temporary),['graph-history/index.html']);
+    await writeFile(resolve(temporary,'data/graph-history/timeline.json'),'{"contract":"fake"}');
+    await assert.rejects(graphHistoryParityAssets(temporary),/GRAPH_HISTORY_ROUTE_DATA_STATUS_MISMATCH/);
+    await rm(resolve(temporary,'data/graph-history/timeline.json'));
     await writeFile(resolve(temporary,'next/index.html'),'next');
     await writeFile(resolve(temporary,'next/assets/app-A1.css'),'css');
     await writeFile(resolve(temporary,'next/graph-b/source-graph-b.html'),'graph');
@@ -182,7 +212,8 @@ if(process.argv.includes('--self-test')){
   let discoveryError=null;
   try{
     const nextFiles=await discoverFiles(dist,'next');
-    files=[...new Set([...canonicalFiles,...nextFiles])];
+    const historyFiles=await graphHistoryParityAssets(dist);
+    files=[...new Set([...canonicalFiles,...historyFiles,...nextFiles])];
   }catch(error){
     // Do not expose local paths or exception text. NEXT should exist because the
     // current workflow stages it before upload; absence is a release failure.
