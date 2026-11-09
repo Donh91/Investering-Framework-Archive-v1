@@ -28,3 +28,6 @@ No verified 2–3-week numeric price path or confirmed broad altcoin rotation; n
 
 ## 4–8 weeks
 4–8-week price sequence and established market cycle phase remain UNAVAILABLE.
+
+## Same-day revision · 9 November 2026
+The first W46 issue at 2026-11-09T10:33:42Z had seven daily high/low intervals but **NO source-admitted BTC/ETH daily expected closes**. The owner approved a same-day amendment, issued 2026-11-09T10:52:34.925867Z, now with 7 BTC and 7 ETH source-attested expected closes. Original 0/7 freeze and every original artifact remain available in 05_CYCLE_NAVIGATOR/weekly/2026/W46/revisions/2026-11-09-first-unavailable. There is no backdating, duplicate week, reassignment of prior precision, model certainty, calibrated probabilities or trading authority. New first-known clock governs future daily precision.
