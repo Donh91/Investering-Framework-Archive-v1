@@ -133,7 +133,9 @@ test('Quiet Precision v2 keeps the 12h nowcast distinct from 1–3d official hor
  assert.ok(runtimeSource>=0&&chartSource>runtimeSource);
 });
 test('design keeps W44 without invented daily forecast, and source-issued 7d path available',async()=>{
- const adapter=await read('./graph-b/official-source-adapter.mjs');
+ const adapter=await read('../source-adapter/official-source-adapter.mjs');
+  const compatibility=await read('./graph-b/official-source-adapter.mjs');
+  assert.match(compatibility,/source-adapter\/official-source-adapter\.mjs/);
  const graph=await read('./graph-b/source-graph-b.mjs');
  const runtime=await read('./root-compass-pro.mjs');
  const style=await read('./premium-overhaul.css');
