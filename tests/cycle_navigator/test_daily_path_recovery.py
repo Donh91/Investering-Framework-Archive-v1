@@ -276,10 +276,13 @@ def test_source_manifest_holds_attempt_and_canonical_scoring_is_untouched():
 
 def test_legacy_original_semantic_call_remains_one_and_workflow_not_extended():
     src = Path(builder.__file__).read_text()
-    assert src.count("value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)") == 1
+    assert "value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)" not in src
+    assert src.count("value = build_offline_value(context, range_forecast, prev_machine,") == 1
     workflow = (Path(builder.__file__).parents[2] / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
     assert "group: framework-main-writer" in workflow
     assert "Enforce monthly API cost guard" in workflow
+    # Legacy action configuration remains unchanged; end-user source issue is now offline.
+    assert "python scripts/cycle_navigator/build_weekly_cycle_navigator.py" in workflow
 
 def test_production_never_makes_extra_paid_call_even_if_env_and_budget_allow(monkeypatch, tmp_path):
     from scripts.cycle_navigator import daily_path_recovery as repair
@@ -447,7 +450,7 @@ def test_production_uses_current_source_clock_and_late_publication_check():
     assert "issued_at=datetime.now(timezone.utc)," in src
     assert "trusted_price_source=trusted_price_source" in src
     assert src.index("trusted_price_source = attest_completed_week(") < src.index(
-        "value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)")
+        "value = build_offline_value(context, range_forecast, prev_machine,")
     assert "value = quarantine_late_daily_issuance(" in src
     assert "publication_clock=datetime.fromtimestamp(generated_unix, tz=timezone.utc)" in src
     assert src.index("value = quarantine_late_daily_issuance(") < src.index("daily_path_issue = daily_path_issue_summary(")
@@ -498,9 +501,9 @@ def test_primary_seven_day_model_gets_bounded_premodel_source_observation():
     assert 'DAILY HIGH/LOW FIRST:' in source
     assert 'A MIXED market is not itself grounds to abstain' in source
     assert source.index('context["pre_model_spot_quote_observation"]') < source.index(
-        'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
+        'value = build_offline_value(context, range_forecast, prev_machine,')
     assert source.index('value = reject_unverified_initial_daily_quotes(') > source.index(
-        'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
+        'value = build_offline_value(context, range_forecast, prev_machine,')
     assert 'context["weekly_envelope_quote"] = freeze.get("price_quote")' in source
 
 
@@ -584,10 +587,78 @@ def test_w46_diagnostic_is_additive_new_source_manifest_only_and_old_w45_untouch
     source = Path(builder.__file__).read_text()
     assert source.count('"original_price_product_diagnostic": build_weekly_price_product_diagnostic(') == 1
     assert source.index('context["pre_model_original_price_attestation"]') < source.index(
-        'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
+        'value = build_offline_value(context, range_forecast, prev_machine,')
     assert source.index('"original_price_product_diagnostic": build_weekly_price_product_diagnostic(') > source.index(
         'value = quarantine_late_daily_issuance(')
-    assert source.count("value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)") == 1
+    assert "value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)" not in source
+    assert source.count("value = build_offline_value(context, range_forecast, prev_machine,") == 1
+    assert 'api_request_performed": False' in source
     old = json.loads((Path(builder.__file__).resolve().parents[2] /
         "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_SOURCE_MANIFEST.json").read_text())
     assert "original_price_product_diagnostic" not in old
+
+
+def test_api_free_owner_issuer_produces_seven_both_and_stays_source_fail_closed():
+    """Run the NEW owner issuer in the EXISTING hosted CN contract gate."""
+    from tests.cycle_navigator.test_weekly_offline_issuer import fixtures
+    from scripts.cycle_navigator.weekly_offline_issuer import build_offline_value
+    from scripts.cycle_navigator.daily_price_journey import (
+        validate_daily_path, validate_daily_range_plan, daily_product_acceptance)
+    import copy
+    context, baseline, prior = fixtures()
+    old = copy.deepcopy(prior)
+    value = build_offline_value(context, baseline, prior, 2026, 46, 34, 33)
+    freeze = value["forecast_freeze"]
+    validate_daily_path(freeze["daily_price_path"], freeze, 2026, 46)
+    validate_daily_range_plan(freeze["daily_range_plan"], freeze, 2026, 46)
+    assert prior == old  # W45 original untouched.
+    assert len(freeze["daily_price_path"]["BTC"]["points"]) == 7
+    assert len(freeze["daily_price_path"]["ETH"]["points"]) == 7
+    assert value["evaluation"]["structural_score"] is None
+    assert daily_product_acceptance(freeze, 2026, 46,
+        datetime(2026, 11, 9, 11, 0, tzinfo=timezone.utc))["status"] == "COMPLETE"
+    # The independent original price-quote attestation is STILL required
+    # outside this pure issuer: no model/spot-label self-certification.
+    gate = Path(builder.__file__).read_text()
+    assert "trusted_price_source = attest_completed_week(" in gate
+    assert "value = reject_unverified_initial_daily_quotes(" in gate
+    assert 'api_request_performed": False' in gate
+    bad = copy.deepcopy(context)
+    bad["completed_week_hourly_capture"]["hourly_gap_diagnostics"]["observed_hours"] = 167
+    with pytest.raises(ValueError, match="CN_OFFLINE_SOURCE_UNQUALIFIED"):
+        build_offline_value(bad, baseline, prior, 2026, 46, 34, 33)
+
+
+def test_real_W45_source_builds_W46_seven_day_product_without_model_call():
+    """Adversarial integration on native public finished-week source, not fixture prices."""
+    from scripts.cycle_navigator.deterministic_range_baseline import build_baseline
+    from scripts.cycle_navigator.weekly_offline_issuer import build_offline_value
+    from scripts.cycle_navigator.daily_price_journey import daily_product_acceptance
+    root = Path(builder.__file__).resolve().parents[2]
+    completed = json.loads((root / "03_DAILY_CAPTURE_LOGS/weekly/2026/W45.json").read_text())
+    ptr = json.loads((root / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
+    previous = json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").read_text())
+    assert completed["iso_week"] == ptr["iso_week"] == 45
+    assert completed["hourly_gap_diagnostics"]["observed_hours"] == 168
+    assert completed["hourly_gap_diagnostics"]["missing_hour_count"] == 0
+    assert ptr["status"] == "READY"
+    baseline = build_baseline(root, target_year=2026, target_week=46)
+    assert baseline["anchor_contiguous"] and baseline["status"] == "READY"
+    value = build_offline_value(
+        {"completed_week_hourly_capture":completed,"master_monday_pointer":ptr},
+        baseline, previous, 2026, 46, 34, 33)
+    builder.validate_status_reason_codes(value)
+    assert value["evaluation"]["score_status"] == "REPRODUCIBLE"
+    old_ids = builder.expected_score_parameter_ids(previous)
+    assert [r["parameter_id"] for r in value["evaluation"]["parameter_scores"]] == old_ids
+    freeze = value["forecast_freeze"]
+    for asset in ("BTC","ETH"):
+        points = freeze["daily_price_path"][asset]["points"]
+        intervals = freeze["daily_range_plan"][asset]["points"]
+        assert len(points) == len(intervals) == 7
+        assert len(set(point["expected_close"] for point in points)) >= 4
+        assert all(point["low"] <= point["expected_close"] <= point["high"] for point in points)
+    product = daily_product_acceptance(
+        freeze, 2026, 46, datetime(2026,11,9,11,0,tzinfo=timezone.utc))
+    assert product["status"] == "COMPLETE"
+    assert "2026-11-15" in value["readable_markdown"]
