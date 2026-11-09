@@ -72,6 +72,93 @@ class GraphHistoryTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_public_forecast_history_w46_owner_revision_start_without_rewriting_archive(self):
+        # First W46 issue was honestly 0/7, later authorized SAME Monday 7/7
+        # is a different, explicitly timestamped public reference.
+        folder = source(self.root, W46, status="UNAVAILABLE",
+                        issued="2026-11-09T10:33:42Z")
+        freeze_file = folder / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+        original = json.loads(freeze_file.read_text())
+        original["price_quote"] = {"BTC": "USDT", "ETH": "USDT"}
+        put(freeze_file, original)
+        first_sha = digest(freeze_file.read_bytes())
+        pointer_file = folder / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json"
+        pointer = json.loads(pointer_file.read_text())
+        pointer["forecast_freeze_sha256"] = first_sha
+        put(pointer_file, pointer)
+        first_index = archive(self.root, W46)
+        self.assertEqual(first_index["weeks"][-1]["source_sha256"], first_sha)
+        archived_bytes = (self.root / ROOT / "weeks/2026/W46/forecast-reference.json").read_bytes()
+        old_path = folder / "revisions/2026-11-09-first-unavailable/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+        old_path.parent.mkdir(parents=True, exist_ok=True)
+        old_path.write_bytes(freeze_file.read_bytes())
+        amended = json.loads(freeze_file.read_text())
+        rows = [{"day": i, "low": 73000, "expected_close": 74000+i*10,
+                 "high": 76000} for i in range(1, 8)]
+        for asset in ("BTC", "ETH"):
+            amended["daily_price_path"][asset] = {
+                "status": "PUBLISHED", "reason": "source-bound deterministic hypothesis",
+                "points": rows,
+            }
+        put(freeze_file, amended)
+        new_sha = digest(freeze_file.read_bytes())
+        pointer["forecast_freeze_sha256"] = new_sha
+        put(pointer_file, pointer)
+        issued = "2026-11-09T10:52:34.925867Z"
+        revision = {
+            "contract": "CN_OWNER_APPROVED_W46_SAME_DAY_REISSUE_v1",
+            "forecast_week": "2026-W46",
+            "before_forecast_sha256": first_sha,
+            "after_forecast_sha256": new_sha,
+            "before_issued_utc": "2026-11-09T10:33:42Z",
+            "after_issued_utc": issued,
+            "before_daily_expected_close_points": {"BTC": 0, "ETH": 0},
+            "after_daily_expected_close_points": {"BTC": 7, "ETH": 7},
+            "no_api_request": True,
+            "no_portfolio_execution": True,
+            "scoring_policy": "FIRST_KNOWN_AMENDED_ISSUANCE_NO_HINDSIGHT_OR_RESCORING",
+            "public_issue_number": 32,
+        }
+        acceptance = {
+            "contract": "CN_MONDAY_SEVEN_DAY_PRODUCT_ACCEPTANCE_v1",
+            "forecast_week": "2026-W46",
+            "status": "COMPLETE", "issued_at_utc": issued,
+            "no_backward_reconstruction": True,
+            "assets": {
+                asset: {"status": "COMPLETE", "expected_close_points": 7,
+                        "low_high_range_points": 7, "model_declared_quote": "USDT"}
+                for asset in ("BTC", "ETH")
+            },
+        }
+        put(folder / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json", {
+            "public_issue_number": 32,
+            "owner_approved_same_day_revision": revision,
+        })
+        receipt_file = folder / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+        receipt = json.loads(receipt_file.read_text())
+        receipt["source_forecast_freeze_sha256"] = new_sha
+        receipt["owner_approved_same_day_revision"] = revision
+        receipt["daily_product_acceptance"] = acceptance
+        put(receipt_file, receipt)
+        # Immutable index and originally archived 0/7 source stay byte-identical.
+        self.assertEqual(archive(self.root, W46), first_index)
+        self.assertEqual((self.root / ROOT / "weeks/2026/W46/forecast-reference.json").read_bytes(), archived_bytes)
+        projected = publish(self.root, public_only=True)
+        self.assertEqual(projected["start_week"], "2026-W46")
+        self.assertEqual(len(projected["weeks"]), 1)
+        self.assertEqual(projected["weeks"][0]["week"], "2026-W46")
+        self.assertEqual(projected["weeks"][0]["source_sha256"], new_sha)
+        self.assertEqual(projected["weeks"][0]["immutable_archive_source_sha256"], first_sha)
+        self.assertEqual(projected["weeks"][0]["issued_at_utc"], issued)
+        self.assertEqual(len(projected["weeks"][0]["forecast"]), 7)
+        self.assertEqual(projected["actual"], [])
+        self.assertIsNone(projected["first_honest_midweek_research"])
+        # Missing evidence is not permission to retime or promote a blue curve.
+        receipt["owner_approved_same_day_revision"] = {**revision, "after_issued_utc": "2026-11-10T10:52:34Z"}
+        put(receipt_file, receipt)
+        with self.assertRaisesRegex(ValueError, "HISTORY_W46_REVISION_EVIDENCE"):
+            publish(self.root, public_only=True)
+
     def test_start_boundary_and_no_preissuance_backfill(self):
         self.assertEqual(archive(self.root, date(2026, 10, 26))["weeks"], [])
         source(self.root)
