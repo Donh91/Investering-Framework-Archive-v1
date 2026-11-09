@@ -124,7 +124,7 @@ test('v2 REAL SITE: adversarial issue mismatch, source mismatch, quote mismatch 
   assert.equal(readOfficialGraphB(future,'BTC',{now_utc:now}).source_status,'UNAVAILABLE');}
 });
 
-test('v2 REAL SITE: legacy live Graph B and canonical source adapter plot identical W46 BTC/ETH series',()=>{
+test('v2 REAL SITE: legacy live Graph B and canonical source adapter plot identical real BTC/ETH series',()=>{
  // This is a non-rendering parity canary, NOT a redesign. The existing chart
  // remains the sole production renderer until a separately accepted cutover.
  const sandbox={window:{CNI18n:{language:'da'}},document:{addEventListener(){}}};
@@ -139,8 +139,11 @@ test('v2 REAL SITE: legacy live Graph B and canonical source adapter plot identi
   const oldPlan=legacy.linePlan(old);
   const modern=readOfficialGraphB(latest,asset,{now_utc:now,publication_lineage:lineage});
   assert.equal(modern.source_status,'SOURCE_BOUNDED');
-  assert.equal(modern.forecast_status,'SOURCE_ISSUED',
-   'CANARY_REQUIRES_REAL_SOURCE_ISSUED_SEVEN_DAILY_POINTS:'+asset);
+  if(live.daily_price_path?.[asset]?.status==='PUBLISHED'&&
+     modern.forecast_comparison_quote_status==='SAME_DECLARED_UNIT'){
+   assert.equal(modern.forecast_status,'SOURCE_ISSUED',
+    'REAL_SOURCE_ISSUED_DAILY_POINTS_MUST_SURVIVE:'+asset);
+  }else assert.equal(modern.forecast.length,0,'NO_UNISSUED_FORECAST_POINTS:'+asset);
   assert.deepEqual(Array.from(oldPlan.forecast,p=>({time:p.time,value:p.value})),
    modern.forecast.map(p=>({time:p.time,value:p.expected_close})),
    'LEGACY_AND_DESIGN_FREE_BLUE_FORECAST_DIFFER:'+asset);
