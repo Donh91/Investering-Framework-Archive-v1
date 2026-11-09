@@ -276,7 +276,8 @@ def test_source_manifest_holds_attempt_and_canonical_scoring_is_untouched():
 
 def test_legacy_original_semantic_call_remains_one_and_workflow_not_extended():
     src = Path(builder.__file__).read_text()
-    assert src.count("value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)") == 1
+    assert src.count("value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)") == 0
+    assert src.count("value = build_offline_value(context, range_forecast, prev_machine,") == 1
     workflow = (Path(builder.__file__).parents[2] / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
     assert "group: framework-main-writer" in workflow
     assert "Enforce monthly API cost guard" in workflow
@@ -498,9 +499,9 @@ def test_primary_seven_day_model_gets_bounded_premodel_source_observation():
     assert 'DAILY HIGH/LOW FIRST:' in source
     assert 'A MIXED market is not itself grounds to abstain' in source
     assert source.index('context["pre_model_spot_quote_observation"]') < source.index(
-        'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
+        'value = build_offline_value(context, range_forecast, prev_machine,')
     assert source.index('value = reject_unverified_initial_daily_quotes(') > source.index(
-        'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
+        'value = build_offline_value(context, range_forecast, prev_machine,')
     assert 'context["weekly_envelope_quote"] = freeze.get("price_quote")' in source
 
 
@@ -584,10 +585,12 @@ def test_w46_diagnostic_is_additive_new_source_manifest_only_and_old_w45_untouch
     source = Path(builder.__file__).read_text()
     assert source.count('"original_price_product_diagnostic": build_weekly_price_product_diagnostic(') == 1
     assert source.index('context["pre_model_original_price_attestation"]') < source.index(
-        'value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)')
+        'value = build_offline_value(context, range_forecast, prev_machine,')
     assert source.index('"original_price_product_diagnostic": build_weekly_price_product_diagnostic(') > source.index(
         'value = quarantine_late_daily_issuance(')
-    assert source.count("value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)") == 1
+    assert source.count("value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)") == 0
+    assert source.count("value = build_offline_value(context, range_forecast, prev_machine,") == 1
+    assert 'api_request_performed": False' in source
     old = json.loads((Path(builder.__file__).resolve().parents[2] /
         "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_SOURCE_MANIFEST.json").read_text())
     assert "original_price_product_diagnostic" not in old
