@@ -1,0 +1,7 @@
+# Original governance main-writer nonblocking Claude feed safety note
+
+**Scope:** Source-only adjustment to the existing daily governance workflow. The new Claude advisory feed is optional and non-canonical; a missing or malformed private advisory source MUST NOT stop the original approved novelty/VOI/sentinel/meta and memory writer. Keep existing main-writer and schedule.
+
+The Claude feed step retains all hard source/authority validation and fails closed if it cannot generate a trusted candidate. GitHub records its real step outcome; `continue-on-error: true` is limited solely to the named optional `claude_advisory_feed` step. If it fails, the next step **deletes any stale LATEST.json from the checkout before the original existing `git add 00_ARCHIVE_CONTROL/research_governance_v1`**, thereby preventing the next main read from mistaking previous candidate SHA/issue state for current. Original data and other research gates are not weakened, no fallback contents or synthetic success written. S1/Claude must classify absent LATEST as `ADVISORY_FEED_UNAVAILABLE`, not "nothing to research".
+
+Tests still run through the normal gate; the fallback is a narrow native shell branch. Verify real degraded branch using a bounded manual test in existing workflow ONLY when authorized, and normal successful daily source output on next scheduled run. Do not count this PR as a Claude run, actual queued evaluator or matured outcome.
