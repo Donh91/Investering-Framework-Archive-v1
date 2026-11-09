@@ -787,3 +787,35 @@ def test_w46_checkout_token_is_ephemeral_scoped_and_never_usable_outside_actions
     monkeypatch.setenv("GITHUB_REPOSITORY","other/repo")
     with pytest.raises(PriceEvidenceError,match="SOURCE_ARTIFACT_AUTH_UNAVAILABLE"):
         _checkout_read_token(root)
+
+
+def test_w46_public_product_precise_issue_clock_survives_native_pages_recompute():
+    """Real original product receipt microseconds MUST survive 1-second legacy time."""
+    from scripts.cycle_navigator.build_public_live_precision import verified_product_clock
+    from scripts.cycle_navigator.daily_price_journey import daily_product_acceptance
+    from pathlib import Path
+    import copy
+    root=Path(builder.__file__).resolve().parents[2]
+    week=root/"05_CYCLE_NAVIGATOR/weekly/2026/W46"
+    receipt=json.loads((week/"CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json").read_text())
+    freeze=json.loads((week/"CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_text())
+    stored=receipt["daily_product_acceptance"]
+    exact=verified_product_clock(receipt,stored)
+    assert exact.microsecond > 0  # Actual 2026-11-09 same-day correction.
+    assert int(exact.timestamp()) == receipt["frozen_unix"]
+    assert daily_product_acceptance(freeze,2026,46,exact) == stored
+    # Legacy second rounding is NOT a valid substitute for exact source time.
+    rounded=datetime.fromtimestamp(receipt["frozen_unix"],tz=timezone.utc)
+    assert daily_product_acceptance(freeze,2026,46,rounded) != stored
+    changed=copy.deepcopy(receipt)
+    changed["frozen_unix"] += 1
+    with pytest.raises(ValueError,match="daily_product_issuance_clock_conflict"):
+        verified_product_clock(changed,stored)
+    changed=copy.deepcopy(stored)
+    changed["issued_at_utc"]=changed["issued_at_utc"].replace("Z","+00:00")
+    with pytest.raises(ValueError,match="daily_product_precise_utc_clock_missing"):
+        verified_product_clock(receipt,changed)
+    changed=copy.deepcopy(stored)
+    changed["issued_at_utc"]="not-a-clockZ"
+    with pytest.raises(ValueError,match="daily_product_precise_utc_clock_invalid"):
+        verified_product_clock(receipt,changed)
