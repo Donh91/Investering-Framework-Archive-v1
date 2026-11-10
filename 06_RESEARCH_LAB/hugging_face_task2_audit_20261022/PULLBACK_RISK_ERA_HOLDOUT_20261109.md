@@ -14,7 +14,23 @@ Original source has five hand-selected eras and 418 overlapping daily cutoff obs
 | August 2024 | +7 / 2 | +5 | +10 / 6 | +4 |
 | February 2026 | +7 / 2 | +5 | +12 / 4 | +8 |
 
-All five four-era subsets for both assets therefore preserve higher *hypothetical classification loss* for the more sensitive price-only candidate at equal unit penalties. There is no verified independent sample of 418 crises: daily 72h labels overlap, and original market families were selected after the fact. Leave-one-out of a retrospectively selected era is *not* a clean temporal holdout and establishes neither statistical confidence nor investor trade utility.
+At **equal hypothetical penalties (miss-cost ratio k=1)**, all five four-era subsets for both assets show higher classification loss for the sensitive price-only candidate. This is not a sign-invariant or economic verdict. The comparison changes with the relative cost of a missed severe window versus a false alarm. There is no verified independent sample of 418 crises: daily 72h labels overlap, and original market families were selected after the fact. Leave-one-out of a retrospectively selected era is *not* a clean temporal holdout and establishes neither statistical confidence nor investor trade utility.
+
+## Cost-ratio falsification, independently prompted by Claude Audit-04a
+
+The primary source of this retrospective sensitivity remains the **same immutable HRE matrix**, not a new test set. Denote `k = hypothetical loss of missed severe-window outcome / hypothetical loss of a false alarm`, with false-alarm penalty fixed to one unit. For a four-era subset, challenger minus baseline hypothetical loss is `extra_fp - k × fewer_fn`. Lower is better. **No economic k is predeclared and these units are NOT observed trading costs.** The five selected eras were chosen in hindsight and overlapping cutoffs cannot be counted as independent market shocks.
+
+| Illustrative k | BTC subsets where challenger is strictly better | ETH subsets where challenger is strictly better |
+|---:|---:|---:|
+| 1 | 0/5 | 0/5 |
+| 2 | 0/5 | 1/5 |
+| 3 | 2/5 | 4/5 |
+| 5 | 5/5 | 5/5 |
+| 10 | 5/5 | 5/5 |
+
+The four-era break-even ratio ranges approximately BTC 2–4 and ETH 1.67–3. Therefore **the sign is determined by an assumed cost ratio**, not a robust superiority/inferiority finding. All five subsets are based on only five preselected event families, and BTC improvement is just three additional overlapping true-positive cutoffs over the full 418. The correct conclusion is **INSUFFICIENT_EVIDENCE_FOR_ECONOMIC_EDGE**, not candidate promotion or candidate rejection.
+
+Original baseline BTC caught 8 of 46 severe overlapping-window positives (~17.4% recall), and ETH caught 15 of 88 (~17.0%). The more sensitive price-only challenger caught 11/46 and 22/88 (~23.9% and 25.0%) with higher false-alarm counts. These are NOT real original issued/delivered 3/5 or 4/5 risk levels. The principal new prospective research question is whether independently first-known *non-price* evidence can move issued risk severity in time without unacceptable false positives and missed delivery. A fixed k or preregistered k interval and matched non-stress controls must be frozen **before** scoring forward.
 
 ## Why level 3/5 persisted, what is demonstrably still unknown
 
