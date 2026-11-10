@@ -1,0 +1,257 @@
+{
+  "contract": "RESEARCH_PARALLEL_LANES_V1",
+  "status": "PLANNED",
+  "mission_id": "ZERO_COST_0X_PONS_ALPHA_LAB_EXECUTION_RESEARCH_20261110_V1",
+  "original_owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+  "project_repo": "Donh91/Investering-Framework-Archive-v1",
+  "objective": "Discover and falsify 10 lawful zero-cost onchain quote/exit primitives using 8 bounded independent hypotheses, then connect only source-admitted results to original Alpha Lab Pro site and S1/Claude review.",
+  "source_manifest_path": "04_RESEARCH_LAB/external_specialist_dissection/2026-11-10__ZERO_COST_EXECUTION_SOURCE_ATLAS_V1.md",
+  "source_snapshot_sha": "12a857ec2340acd9d77cedf656ab61f6769d350b",
+  "source_eligibility": "UNKNOWN",
+  "data_classification": "PUBLIC_ONLY",
+  "parallel_job_cap": 3,
+  "approved_budget_usd": 0,
+  "no_new_scheduler": true,
+  "no_new_agent_identity": true,
+  "no_trading_authority": true,
+  "new_paid_api_usd": 0,
+  "external_paid_research_allowed": false,
+  "not_authorized_to_run_new_github_actions": true,
+  "existing_owner_issue_only": true,
+  "run_execution_status": "NOT_DISPATCHED",
+  "tool_dispatch_policy": "Existing GitHub read-only and pre-existing CI only after exact original authorization and free capacity verification",
+  "research_model_policy": {
+    "native_chat_and_existing_connected_github": "NO_INCREMENTAL_CHARGE_CONFIRMED_AS_WORKFLOW_CHOICE",
+    "tinyfish_deep_research": "NO_CALL_BILLED_PER_RUN",
+    "firecrawl_research_agent": "NO_CALL_CREDIT_BACKED",
+    "consensus_deep": "NO_CALL_PAID_PLAN_REQUIRED",
+    "openai_api": "NO_CALL_PAID_METERED",
+    "claude_existing_bridge": "OPTIONAL_EXISTING_SUBSCRIPTION_REVIEW_WITHIN_CURRENT_PLAN_AND_OWN_TASK_PRIORITY; NO_NEW_PROVIDER_TASK",
+    "free_official_docs": "ALLOW_WITH_TERMS",
+    "free_raw_chain": "ALLOW_WHEN_RATE_LIMIT_AND_ARCHIVE_CAPABILITY_VERIFIED"
+  },
+  "current_source_context": {
+    "archive_main_sha_at_plan": "12a857ec2340acd9d77cedf656ab61f6769d350b",
+    "alpha_main_sha_at_plan": "8146980bc1f61f39a0e33db54111949ad6c8a273",
+    "site_original_owner": "#228",
+    "site_state": "D25_PRIVATE_STAGE_PUBLIC_D3_BLOCKED",
+    "claude_bridge": "standing PR #173 DRAFT, audit NOT YET REQUESTED_FOR_THIS_MISSION"
+  },
+  "acceptance": "Each lane must return independently source-pinned finding with artifact SHA and source first-known; missing means UNKNOWN. All lanes planned, not eight agents or jobs.",
+  "lanes": [
+    {
+      "id": "L01",
+      "name": "Provider rights and source capability truth",
+      "question": "Can legal zero-cost sources reproduce every required size/fee/trace primitive without proprietary API data?",
+      "baseline": "Pons/Uniswap/0x official docs and licenses; public chain read contracts",
+      "hypothesis": "A nonproprietary, admissible source exists for each priority P0 primitive.",
+      "falsifier": "Provider access, archive state or licensing is unavailable or inconsistent.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "https://docs.ponsfamily.com/v2",
+      "max_minutes": 20,
+      "budget_usd": 0,
+      "status": "PLANNED",
+      "run_evidence": {},
+      "owner_lane": "Research Lab #1512",
+      "source_clock_type": "ORIGINAL_SOURCE_AS_OF",
+      "required_comparators": [
+        "ORIGINAL_NATIVE",
+        "SIMPLEST_BASELINE",
+        "MATCHED_MISSED_AND_WON_CASES"
+      ],
+      "output_path": "04_RESEARCH_LAB/external_specialist_dissection/zero_cost_execution_20261110/results/L01_RESEARCH_RESULT_v1.md",
+      "stop_rule": "No qualified free source, rights, budget, current original owner, or as-of data => BLOCKED_WITH_EXPLICIT_TRIGGER; no surrogate live claims."
+    },
+    {
+      "id": "L02",
+      "name": "Pons V2 exact-size quote and phase fault cases",
+      "question": "Does the exact integer fee/phase quote replay genuine same-block CurveBuy/CurveSell outputs better than spot proxy?",
+      "baseline": "Public Pons ABI/math, exact block chain RPC and prior CurveSell event",
+      "hypothesis": "Size-aware Pons quote reproduces observed output within source rounding and returns UNKNOWN correctly on phase gap.",
+      "falsifier": "Fails on source-bound actual event or requires nonfree historical state.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [
+        "L01"
+      ],
+      "source_ref": "https://docs.ponsfamily.com/v2",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "status": "PLANNED",
+      "run_evidence": {},
+      "owner_lane": "Alpha #98",
+      "source_clock_type": "ORIGINAL_SOURCE_AS_OF",
+      "required_comparators": [
+        "ORIGINAL_NATIVE",
+        "SIMPLEST_BASELINE",
+        "MATCHED_MISSED_AND_WON_CASES"
+      ],
+      "output_path": "04_RESEARCH_LAB/external_specialist_dissection/zero_cost_execution_20261110/results/L02_RESEARCH_RESULT_v1.md",
+      "stop_rule": "No qualified free source, rights, budget, current original owner, or as-of data => BLOCKED_WITH_EXPLICIT_TRIGGER; no surrogate live claims."
+    },
+    {
+      "id": "L03",
+      "name": "Uniswap V4 hook and pool identity qualification",
+      "question": "Can verified 32-byte PoolId and hook/state source yield a valid sized route after Pons graduation?",
+      "baseline": "Uniswap V4 StateView/Quoter and original pool/hook bytecode",
+      "hypothesis": "Correct post-grad route net quote and contract identity can be reproduced.",
+      "falsifier": "Unknown custom hook or source state makes quote unverifiable.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [
+        "L01"
+      ],
+      "source_ref": "https://developers.uniswap.org/docs/protocols/v4/guides/state-view",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "status": "PLANNED",
+      "run_evidence": {},
+      "owner_lane": "Alpha #98 #194",
+      "source_clock_type": "ORIGINAL_SOURCE_AS_OF",
+      "required_comparators": [
+        "ORIGINAL_NATIVE",
+        "SIMPLEST_BASELINE",
+        "MATCHED_MISSED_AND_WON_CASES"
+      ],
+      "output_path": "04_RESEARCH_LAB/external_specialist_dissection/zero_cost_execution_20261110/results/L03_RESEARCH_RESULT_v1.md",
+      "stop_rule": "No qualified free source, rights, budget, current original owner, or as-of data => BLOCKED_WITH_EXPLICIT_TRIGGER; no surrogate live claims."
+    },
+    {
+      "id": "L04",
+      "name": "Independent observed fill and controlled negative exit",
+      "question": "Can a genuinely observed fill and a controlled failing sell distinguish price proxy, quote, and executable proof?",
+      "baseline": "Original chain receipts, traces when free; Anvil/revm and MIT parser",
+      "hypothesis": "Both positive real tx receipt and negative controlled fork result can be source-pinned without wallet action.",
+      "falsifier": "No free trace/fork source or adverse test with reproducible cause.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [
+        "L01"
+      ],
+      "source_ref": "https://github.com/0xProject/0x-parser",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "status": "PLANNED",
+      "run_evidence": {},
+      "owner_lane": "Alpha #98 #194",
+      "source_clock_type": "ORIGINAL_SOURCE_AS_OF",
+      "required_comparators": [
+        "ORIGINAL_NATIVE",
+        "SIMPLEST_BASELINE",
+        "MATCHED_MISSED_AND_WON_CASES"
+      ],
+      "output_path": "04_RESEARCH_LAB/external_specialist_dissection/zero_cost_execution_20261110/results/L04_RESEARCH_RESULT_v1.md",
+      "stop_rule": "No qualified free source, rights, budget, current original owner, or as-of data => BLOCKED_WITH_EXPLICIT_TRIGGER; no surrogate live claims."
+    },
+    {
+      "id": "L05",
+      "name": "Pons launch and pool historical source completeness",
+      "question": "Are initial launch, migration, swaps and failed observations contiguous and first-known with no upstream silent truncation?",
+      "baseline": "Original Robinhood source, Blockscout 1000-return docs, existing #120 collector and raw receipts",
+      "hypothesis": "Provider-specific partial source is detected; missingness remains explicit.",
+      "falsifier": "Incomplete SOURCE_GAP, silent provider cap or nonverifiable original first-known persists.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "https://github.com/blockscout/docs/blob/main/robinhood-api.mdx",
+      "max_minutes": 35,
+      "budget_usd": 0,
+      "status": "PLANNED",
+      "run_evidence": {},
+      "owner_lane": "Alpha #120 #70",
+      "source_clock_type": "ORIGINAL_SOURCE_AS_OF",
+      "required_comparators": [
+        "ORIGINAL_NATIVE",
+        "SIMPLEST_BASELINE",
+        "MATCHED_MISSED_AND_WON_CASES"
+      ],
+      "output_path": "04_RESEARCH_LAB/external_specialist_dissection/zero_cost_execution_20261110/results/L05_RESEARCH_RESULT_v1.md",
+      "stop_rule": "No qualified free source, rights, budget, current original owner, or as-of data => BLOCKED_WITH_EXPLICIT_TRIGGER; no surrogate live claims."
+    },
+    {
+      "id": "L06",
+      "name": "After-cost capacity curve and economic counterfactual",
+      "question": "Does a sized native quote and controlled no-sell evidence change loss avoidance versus original paper-wallet price proxy?",
+      "baseline": "Existing Alpha frozen #77/#85/#98 execution and approved original source only",
+      "hypothesis": "Matched same-cohort and notional after-cost evaluation can be computed without hindsight.",
+      "falsifier": "No prospective eligible denominator, original B1 or full-size exit coverage.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [
+        "L02",
+        "L03",
+        "L04",
+        "L05"
+      ],
+      "source_ref": "https://github.com/Donh91/Meme-Alpha-Lab/issues/98",
+      "max_minutes": 55,
+      "budget_usd": 0,
+      "status": "PLANNED",
+      "run_evidence": {},
+      "owner_lane": "Alpha #77 #85 #98",
+      "source_clock_type": "ORIGINAL_SOURCE_AS_OF",
+      "required_comparators": [
+        "ORIGINAL_NATIVE",
+        "SIMPLEST_BASELINE",
+        "MATCHED_MISSED_AND_WON_CASES"
+      ],
+      "output_path": "04_RESEARCH_LAB/external_specialist_dissection/zero_cost_execution_20261110/results/L06_RESEARCH_RESULT_v1.md",
+      "stop_rule": "No qualified free source, rights, budget, current original owner, or as-of data => BLOCKED_WITH_EXPLICIT_TRIGGER; no surrogate live claims."
+    },
+    {
+      "id": "L07",
+      "name": "Alpha Lab Pro consumer freshness and private-to-public contract",
+      "question": "Can one public-safe snapshot show source age, route and quote by size without pretending true realtime or releasing restricted Alpha data?",
+      "baseline": "Original #228 D2.5 build state, #196 privacy gates and CN public context",
+      "hypothesis": "Read-only design contract passes privacy/freshness/pinned original cohort negative controls in existing site CI.",
+      "falsifier": "Any private wallet/position/secret/raw provider data leaks or fabricated live Top10/executable claim.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [
+        "L05",
+        "L06"
+      ],
+      "source_ref": "https://github.com/Donh91/Meme-Alpha-Lab/issues/228",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "status": "PLANNED",
+      "run_evidence": {},
+      "owner_lane": "Alpha #228",
+      "source_clock_type": "CONSUMER_SNAPSHOT_AS_OF",
+      "required_comparators": [
+        "ORIGINAL_NATIVE",
+        "SIMPLEST_BASELINE",
+        "MATCHED_MISSED_AND_WON_CASES"
+      ],
+      "output_path": "04_RESEARCH_LAB/external_specialist_dissection/zero_cost_execution_20261110/results/L07_RESEARCH_RESULT_v1.md",
+      "stop_rule": "No qualified free source, rights, budget, current original owner, or as-of data => BLOCKED_WITH_EXPLICIT_TRIGGER; no surrogate live claims."
+    },
+    {
+      "id": "L08",
+      "name": "Independent red-team and decision synthesis",
+      "question": "Which of 10 primitives adds truly independent economic protection after coverage, rights and original science controls?",
+      "baseline": "Source-pinned Atlas and original owner receipts, existing Claude Bridge, Strategist #1157",
+      "hypothesis": "External evidence-based critique and owner decision admit/hold/dedup/kill on unchanged original source snapshot.",
+      "falsifier": "No independent receipt or source-readback, unknown private authority, false performance or fake agent run.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [
+        "L01",
+        "L02",
+        "L03",
+        "L04",
+        "L05",
+        "L06",
+        "L07"
+      ],
+      "source_ref": "https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/173",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "status": "PLANNED",
+      "run_evidence": {},
+      "owner_lane": "Research Lab #1512 Strategist #1157 S1 #1156 and existing Claude",
+      "source_clock_type": "ORIGINAL_SOURCE_AS_OF",
+      "required_comparators": [
+        "ORIGINAL_NATIVE",
+        "SIMPLEST_BASELINE",
+        "MATCHED_MISSED_AND_WON_CASES"
+      ],
+      "output_path": "04_RESEARCH_LAB/external_specialist_dissection/zero_cost_execution_20261110/results/L08_RESEARCH_RESULT_v1.md",
+      "stop_rule": "No qualified free source, rights, budget, current original owner, or as-of data => BLOCKED_WITH_EXPLICIT_TRIGGER; no surrogate live claims."
+    }
+  ]
+}
