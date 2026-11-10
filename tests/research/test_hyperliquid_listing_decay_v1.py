@@ -60,6 +60,14 @@ class ListingDecayResearchTests(unittest.TestCase):
         self.assertEqual(matches["OLD_DIE"]["status"],"CONTROL_EXIT_CENSORED")
         self.assertEqual(r["control_exit_count"],2)
         self.assertLess(r["paired_excess"],0)
+        self.assertFalse(r["complete_control_cohort"])
+        self.assertIsNone(r["paired_excess_complete"])
+        self.assertEqual(self.result["n_paired"],1)
+        self.assertEqual(self.result["n_paired_complete_controls"],0)
+        self.assertEqual(self.result["n_paired_partial_controls"],1)
+        self.assertEqual(self.result["n_missing_control_exits"],1)
+        self.assertIsNone(self.result["median_paired_excess_strict_complete_controls"])
+        self.assertIsNone(self.result["month_cluster_bootstrap_ci_complete_controls"])
 
     def test_same_clock_horizons_and_cost_sensitivity(self):
         r=next(x for x in self.result["rows"] if x["coin"]=="NEW")
@@ -70,6 +78,18 @@ class ListingDecayResearchTests(unittest.TestCase):
                      fee_bps_roundtrip=100,slippage_bps_roundtrip=100)
         rr=next(x for x in high["rows"] if x["coin"]=="NEW")
         self.assertLess(rr["short_unit_net_ex_funding"],r["short_unit_net_ex_funding"])
+
+    def test_complete_control_cohort_recovers_without_rematching(self):
+        # Remove the control that stops trading AFTER the primary's entry.
+        # The retained old controls must be selected ex ante; the complete cohort
+        # now admits strict comparison without changing the eligible primary.
+        data=self.data[self.data["coin"]!="OLD_DIE"].copy()
+        result=m.study(data,minimum_first="2025-07-01",latest_first="2025-08-31")
+        r=next(x for x in result["rows"] if x["coin"]=="NEW")
+        self.assertTrue(r["complete_control_cohort"])
+        self.assertEqual(result["n_paired_complete_controls"],1)
+        self.assertEqual(result["n_paired_partial_controls"],0)
+        self.assertEqual(r["paired_excess"],r["paired_excess_complete"])
 
     def test_control_age_gate(self):
         entry=pd.Timestamp("2025-07-17",tz="UTC")
