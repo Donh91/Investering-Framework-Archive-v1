@@ -74,3 +74,12 @@ Nine requested artifacts are generated **only when their underlying data is real
 - `scripts/research/validate_kompas_scientific_program_v2_1.py` plus adversarial unit tests through the original existing Task2 PR-only read-only CI loader.
 
 **No new scheduler, owner, control plane, governance bypass, agent identity, private source replication, trading or model calibration authority.**
+
+## 14-horizon evidence-research extension (2026-11-10, proposal PR)
+
+- `H14_HISTORICAL_TO_FORWARD_RESEARCH_FOUNDATION_v1.md`: source/PIT, historical-to-forward tests, dependencies and existing-cadence handoff.
+- `H14_EXPERIMENT_CROSSWALK_v1.json`: the 14 canonical IDs mapped to research baselines and falsifiers; **not a second horizon registry or active signal**.
+- `H14_CHATGPT_DEEP_RESEARCH_BRIEF_v1.md`: a read-only ChatGPT Deep Research mission to run in the owner's **same conversation** with connected GitHub scope, return cited report and access gaps.
+- `.agents/skills/research-parallel-lanes/references/KOMPAS_PRO_14_HORIZONS.md`: existing parallel-lanes method specialization, not a new agent.
+
+This extension is additive research design. It does not start/modify the existing CRE task, S1, GitHub Actions, paid models, production Kompas, original forecasts or private Round 3 permissions. Every scientific claim remains subject to real source-age, original issuance, cohort maturity, matched baseline, negative-control and original-owner gates.
