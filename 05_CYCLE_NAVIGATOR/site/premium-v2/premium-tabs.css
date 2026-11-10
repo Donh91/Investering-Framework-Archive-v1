@@ -394,3 +394,85 @@
 @media(prefers-reduced-motion:reduce){
  .cn-source-summary,.cn-source-technical {scroll-behavior:auto}
 }
+
+/* ==== CN SITE v2 · chart design layer (presentation only) ====================
+ * Scope: Graph B on the official root. No data, copy-contract or geometry change.
+ * Encoding: green solid = observed hourly close · blue dashed = original expected
+ * close · blue tinted cells = original frozen daily high/low. */
+.premium-next #variant-panel .chart-surface{
+ --cn2-actual:#3ee0b4;--cn2-forecast:#86b4ff;--cn2-band:#5b8fe6;
+ --cn2-grid:#9db4d3;--cn2-ink:#eaf2fc;--cn2-muted:#a9bdd6;
+ box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 18px 40px -24px rgba(6,20,40,.55)
+}
+.premium-next #variant-panel #range-band{opacity:.17!important;fill:var(--cn2-band)}
+.premium-next #variant-panel #forecast{stroke:var(--cn2-forecast)!important;stroke-width:2.25!important;stroke-dasharray:7 6!important}
+.premium-next #variant-panel #actual{stroke:var(--cn2-actual);stroke-width:2.6}
+.premium-next #variant-panel #grid line{stroke:var(--cn2-grid)}
+.premium-next #variant-panel #playhead{stroke:var(--cn2-muted);stroke-opacity:.5}
+.premium-next #variant-panel .legend > div{color:var(--cn2-muted)}
+.premium-next #variant-panel .legend .swatch-band{
+ background:color-mix(in srgb,var(--cn2-band) 30%,transparent)!important;
+ border:1px solid color-mix(in srgb,var(--cn2-forecast) 55%,transparent)!important
+}
+/* Day axis: labels centred on their UTC day cell (positioned by the renderer). */
+.premium-next #variant-panel .day-axis.cn-v2-aligned{position:relative;display:block!important;min-height:26px!important}
+.premium-next #variant-panel .day-axis.cn-v2-aligned span{
+ position:absolute;top:6px;transform:translateX(-50%);text-align:center!important;
+ width:auto!important;white-space:nowrap;overflow:visible!important
+}
+.premium-next #variant-panel .day-axis span.is-current{color:var(--cn2-ink)!important;font-weight:760}
+.premium-next #variant-panel .day-axis span.is-current::after{
+ content:"";display:block;width:4px;height:4px;border-radius:50%;margin:3px auto 0;background:var(--cn2-actual)
+}
+/* Inspector: crosshair, observed-point marker and tooltip. */
+.premium-next #variant-panel .plot-shell{position:relative;touch-action:pan-y}
+.premium-next #variant-panel .plot-shell #chart{cursor:crosshair}
+.premium-next #variant-panel .cn-v2-crosshair{
+ position:absolute;width:1px;margin-left:-.5px;pointer-events:none;
+ background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--cn2-ink) 55%,transparent) 12%,color-mix(in srgb,var(--cn2-ink) 55%,transparent) 88%,transparent)
+}
+.premium-next #variant-panel .cn-v2-dot{
+ position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;pointer-events:none;
+ background:var(--cn2-actual);box-shadow:0 0 0 2px #0b1a30,0 0 0 6px color-mix(in srgb,var(--cn2-actual) 22%,transparent)
+}
+.premium-next #variant-panel .cn-v2-tip{
+ position:absolute;top:6px;z-index:3;display:flex;flex-direction:column;gap:3px;
+ min-width:168px;max-width:min(300px,calc(100% - 8px));padding:9px 11px;border-radius:10px;pointer-events:none;
+ background:rgba(6,15,30,.94);border:1px solid rgba(157,180,211,.28);
+ box-shadow:0 10px 28px -12px rgba(0,0,0,.6);color:var(--cn2-ink);
+ font-size:11.5px;line-height:1.35;font-variant-numeric:tabular-nums;
+ animation:cn2-tip-in .14s ease-out
+}
+.premium-next #variant-panel .cn-v2-tip[hidden],
+.premium-next #variant-panel .cn-v2-crosshair[hidden],
+.premium-next #variant-panel .cn-v2-dot[hidden]{display:none}
+.premium-next #variant-panel .cn-v2-tip-time{color:var(--cn2-muted);font-size:10.5px;font-weight:650;letter-spacing:.02em}
+.premium-next #variant-panel .cn-v2-tip-actual{font-weight:720;color:#fff}
+.premium-next #variant-panel .cn-v2-tip-actual::before,
+.premium-next #variant-panel .cn-v2-tip-forecast::before,
+.premium-next #variant-panel .cn-v2-tip-band::before{
+ content:"";display:inline-block;width:10px;height:0;margin:0 7px 3px 0;vertical-align:middle;border-top:2px solid var(--cn2-actual)
+}
+.premium-next #variant-panel .cn-v2-tip-forecast::before{border-top:2px dashed var(--cn2-forecast)}
+.premium-next #variant-panel .cn-v2-tip-band::before{height:7px;border:1px solid var(--cn2-forecast);background:color-mix(in srgb,var(--cn2-band) 35%,transparent);margin-bottom:0}
+.premium-next #variant-panel .cn-v2-tip > span{white-space:nowrap}
+.premium-next #variant-panel .cn-v2-tip-muted{color:var(--cn2-muted);font-style:italic;white-space:normal!important}
+/* Research-notes bar sits inside the card instead of bleeding past it. */
+.premium-next #variant-panel .cn-daily-research-notes{border-radius:0 0 12px 12px}
+/* Restrained motion: chart fades in once; nothing loops. */
+@keyframes cn2-tip-in{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+@keyframes cn2-plot-in{from{opacity:0}to{opacity:1}}
+.premium-next #variant-panel .plot-shell #chart{animation:cn2-plot-in .35s ease-out both}
+.premium-next #variant-panel #endpoint-halo{transition:opacity .2s}
+@media (prefers-reduced-motion:reduce){
+ .premium-next #variant-panel .cn-v2-tip,
+ .premium-next #variant-panel .plot-shell #chart{animation:none!important}
+}
+@media (hover:none){
+ .premium-next #variant-panel .cn-v2-tip{font-size:11.5px}
+}
+/* v2 pass 2 (AUDIT F9/F10, S1 feedback 6756619279): AA contrast and a 10px mobile floor
+ * for the Graph B evidence labels. `body` prefix outranks the later-loaded overhaul layer. */
+body.premium-next #variant-panel .cn-range-evidence .cn-evidence-hint{color:#5b6f86!important}
+body.premium-next #variant-panel .cn-frozen-window-day{color:#4f6680!important;font-size:10px!important}
+body.premium-next.premium-home #variant-panel .day-axis span{font-size:10px!important;letter-spacing:0!important}
