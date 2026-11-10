@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=42728111464:success,42625193854:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=42820754685:success,42728111464:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -24,7 +24,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=42819577606:success,42729085199:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=42823590350:success,42819577606:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -99,12 +99,27 @@
           "pass": false
         }
       ]
+    },
+    {
+      "candidate_id": "codex-situation-room-daily-static-root-cause-v1",
+      "checks": [
+        {
+          "evidence": "situation-room-daily-static.yml: first_attempt_schedule_only evidence_floor=8aebb7d224b77bcacb587f66b58ac4f252c48d13 successful_runs=1/1 sampled_runs=42665142079#1:success",
+          "kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+          "pass": true
+        },
+        {
+          "evidence": "situation-room-owner-live-gate.yml: evidence_floor=8aebb7d224b77bcacb587f66b58ac4f252c48d13 successful_runs=0/1 sampled_runs=",
+          "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
+          "pass": false
+        }
+      ]
     }
   ],
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
   "coverage": {
-    "machine_spec_configured": 5,
-    "machine_spec_unconfigured": 34,
+    "machine_spec_configured": 6,
+    "machine_spec_unconfigured": 33,
     "post_fix_total": 39
   },
   "skipped": [
@@ -277,11 +292,6 @@
     {
       "candidate_id": "codex-research-temporal-alignment-readout-v1",
       "post_fix_gate": "TEMPORAL_ALIGNMENT_FIXTURES_PASS_WITH_ONLY_EXISTING_CONTRACT_THRESHOLDS",
-      "reason": "NO_MACHINE_VERIFICATION_SPEC"
-    },
-    {
-      "candidate_id": "codex-situation-room-daily-static-root-cause-v1",
-      "post_fix_gate": "ONE_NATURAL_SCHEDULED_RUN_PLUS_SITUATION_ROOM_OWNER_LIVE_GATE_PASS",
       "reason": "NO_MACHINE_VERIFICATION_SPEC"
     }
   ],
