@@ -407,6 +407,8 @@ class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
             "contract": "CLAUDE_REVIEW_v1",
             "verdict": "APPROVE", "repo": r["repo_full_name"], "pr": r["pr_number"],
             "head_sha": h, "requested_head_sha": h,
+            "head": h, "policy": r["current"]["policy"],
+            "source": r["current"]["source"], "main": r["current"]["main"],
             "risk_class": "HIGH_IMPACT" if risk == "HIGH" else risk,
             "report_sha256": "c" * 64, "body_sha256": "d" * 64,
             "independence": independence,
@@ -431,7 +433,7 @@ class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
         self.assert_still_advisory(self.base("MEDIUM", "SELF_AUTHORED_DESIGN"), "REVIEW_REQUIRED_BY_POLICY")
 
     def test_independent_medium_all_other_gates_remain(self):
-        self.assert_still_advisory(self.base("MEDIUM"), "READY_TO_MERGE")
+        self.assert_still_advisory(self.base("MEDIUM"), "REVIEW_REQUIRED_BY_POLICY")
 
     def test_native_branch_approvals_never_replaced(self):
         for val in (True, None, "false", 0):
@@ -463,7 +465,13 @@ class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
     def test_high_impact_needs_owner_ok_in_addition_to_custody(self):
         r = self.base("HIGH")
         self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
-        r["high_impact_owner_approval"] = True
+        r["high_impact_owner_approval"] = {
+            "approved": True,
+            "repo": r["repo_full_name"],
+            "pr": r["pr_number"],
+            "head_sha": r["current"]["head"],
+            "evidence_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-111111",
+        }
         self.assert_still_advisory(r, "READY_TO_MERGE")
         r["recovery"]["independent_custody"] = False
         self.assert_still_advisory(r, "INDEPENDENT_RECOVERY_UNVERIFIED")
@@ -493,6 +501,55 @@ class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
                 r = self.base()
                 r["risk"] = invalid
                 self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_claude_policy_source_and_main_binding_cannot_go_stale(self):
+        for key in ("policy", "source", "main"):
+            with self.subTest(key=key):
+                r = self.base()
+                r["claude_review"][key] = "f" * 40
+                self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+        r = self.base()
+        r["review_requires_current_main"] = False
+        r["claude_review"]["main"] = "f" * 40
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+        r["claude_review"]["source"] = "f" * 40
+        self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_claude_boolean_pr_is_not_number_one(self):
+        r = self.base()
+        r["pr_number"] = 1
+        r["claude_review"]["pr"] = True
+        self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_unrecognized_medium_risk_cannot_evade_high_impact_guards(self):
+        r = self.base("MEDIUM")
+        self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+        r["review"] = {**r["current"], "state": "APPROVED", "independent": True}
+        self.assert_still_advisory(r, "INTERNAL_REPAIRABLE")
+
+    def test_high_impact_owner_approval_must_bind_repo_pr_head_and_url(self):
+        r = self.base("HIGH")
+        good = {
+            "approved": True, "repo": r["repo_full_name"],
+            "pr": r["pr_number"], "head_sha": r["current"]["head"],
+            "evidence_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-111111",
+        }
+        r["high_impact_owner_approval"] = good
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+        for field, bad in (
+            ("approved", 1), ("repo", "Donh91/other"), ("pr", True),
+            ("pr", 2058), ("head_sha", "f" * 40),
+            ("evidence_url", "https://github.com.evil/Donh91/repo/issues/1")
+        ):
+            with self.subTest(field=field, bad=bad):
+                tampered = copy.deepcopy(r)
+                tampered["high_impact_owner_approval"][field] = bad
+                self.assert_still_advisory(tampered, "REVIEW_REQUIRED_BY_POLICY")
+        for invalid in (True, False, None, "approved", []):
+            with self.subTest(invalid=invalid):
+                tampered = copy.deepcopy(r)
+                tampered["high_impact_owner_approval"] = invalid
+                self.assert_still_advisory(tampered, "REVIEW_REQUIRED_BY_POLICY")
 
     def test_native_independent_approval_still_works(self):
         r = self.base()
