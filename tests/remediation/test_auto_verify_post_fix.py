@@ -421,3 +421,71 @@ def test_natural_scheduled_postfix_rejects_invalid_evidence_floor(tmp_path: Path
     valid, evidence = evaluate_predicate(tmp_path, task, spec, lambda _workflow: [])
     assert valid is False
     assert "INVALID_EVIDENCE_FLOOR" in evidence
+
+
+def test_natural_scheduled_rerun_masks_latest_run_never_passes(tmp_path: Path):
+    """GitHub lists latest attempt per run id, not each first-attempt outcome."""
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "probe.txt").write_text("base")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {"merge_commit_sha": sha}
+    spec = {"kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+            "workflow": "situation-room-daily-static.yml", "count": 1}
+    good = {"id": 42, "event": "schedule", "run_attempt": 1,
+            "head_branch": "main", "head_sha": sha, "status": "completed",
+            "conclusion": "success", "created_at": "2026-11-08T07:20:00Z"}
+    for attempt, conclusion in ((2, "success"), (3, "failure")):
+        later = {**good, "id": 43, "run_attempt": attempt,
+                 "conclusion": conclusion, "created_at": "2026-11-09T07:20:00Z"}
+        allowed, receipt = evaluate_predicate(tmp_path, task, spec, lambda _: [good, later])
+        assert allowed is False
+        assert f"43#{attempt}" in receipt
+
+
+def test_natural_scheduled_rerun_between_two_successes_blocks_count_two(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "probe.txt").write_text("base")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {"merge_commit_sha": sha}
+    spec = {"kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+            "workflow": "situation-room-daily-static.yml", "count": 2}
+    first = {"id": 42, "event": "schedule", "run_attempt": 1,
+             "head_branch": "main", "head_sha": sha, "status": "completed",
+             "conclusion": "success", "created_at": "2026-11-08T07:20:00Z"}
+    middle = {**first, "id": 43, "run_attempt": 2,
+              "created_at": "2026-11-09T07:20:00Z"}
+    latest = {**first, "id": 44, "created_at": "2026-11-10T07:20:00Z"}
+    assert evaluate_predicate(tmp_path, task, spec, lambda _: [first, middle, latest])[0] is False
+    spec["count"] = 1
+    assert evaluate_predicate(tmp_path, task, spec, lambda _: [first, middle, latest])[0] is True
+
+
+def test_natural_scheduled_old_rerun_outside_sample_and_dispatch_ignored(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "probe.txt").write_text("base")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {"merge_commit_sha": sha}
+    spec = {"kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+            "workflow": "situation-room-daily-static.yml", "count": 1}
+    latest = {"id": 43, "event": "schedule", "run_attempt": 1,
+              "head_branch": "main", "head_sha": sha, "status": "completed",
+              "conclusion": "success", "created_at": "2026-11-10T07:20:00Z"}
+    older = {**latest, "id": 42, "run_attempt": 2,
+             "created_at": "2026-11-09T07:20:00Z"}
+    dispatch = {**latest, "id": 44, "event": "workflow_dispatch",
+                "created_at": "2026-11-11T07:20:00Z"}
+    pre_floor = {**latest, "id": 45, "head_sha": "0" * 40,
+                 "created_at": "2026-11-12T07:20:00Z"}
+    assert evaluate_predicate(tmp_path, task, spec, lambda _: [older, latest, dispatch, pre_floor])[0] is True
