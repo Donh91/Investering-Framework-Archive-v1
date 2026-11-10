@@ -91,6 +91,22 @@ class ListingDecayResearchTests(unittest.TestCase):
         self.assertEqual(result["n_paired_partial_controls"],0)
         self.assertEqual(r["paired_excess"],r["paired_excess_complete"])
 
+    def test_exit_hour_future_high_low_not_counted_as_holding_risk(self):
+        start=pd.Timestamp("2025-06-01",tz="UTC")
+        b={"timestamp":[start,start+pd.Timedelta(hours=1),
+                         start+pd.Timedelta(hours=2)],
+           "open":[100.0,110.0,112.0],
+           "high":[105.0,120.0,10000.0],
+           "low":[95.0,100.0,1.0],
+           "close":[103.0,111.0,113.0],
+           "volume":[100.0,100.0,100.0]}
+        p=m.score_path(b,start,start+pd.Timedelta(hours=2))
+        self.assertAlmostEqual(p["return"],0.12)
+        # Exit is at the +2h OPEN. The +2h candle's extreme does not belong
+        # to the held path, and must not manufacture a >99x short squeeze.
+        self.assertAlmostEqual(p["mae_short"],0.20)
+        self.assertAlmostEqual(p["mfe_short"],0.05)
+
     def test_control_age_gate(self):
         entry=pd.Timestamp("2025-07-17",tz="UTC")
         f=m.window_features(self.bars["NEW"],entry,entry-m.DAY)
