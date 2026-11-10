@@ -57,7 +57,23 @@ def evaluate(source: dict) -> dict:
                 or sum(z["fewer_false_negative_daily_cutoffs"] for z in deltas.values()) !=
                 overall["fewer_missed_outcome_windows"]):
             raise ValueError("HRE_CROSS_SOURCE_SENSITIVITY_MISMATCH")
+        # These hypothetical ratios are post-hoc sensitivity probes, NOT
+        # predeclared investor weights or observed economic/after-cost outcomes.
+        hypothetical_k = (1, 2, 3, 5, 10)
         output[asset] = {
+            "break_even_k_by_leave_one_out": [
+                row["hypothetical_missed_to_false_penalty_ratio_break_even"]
+                for row in leave_one_out
+            ],
+            "challenger_better_at_k": {
+                str(k): sum(
+                    row["extra_false_positive_daily_cutoffs"]
+                    - k * row["fewer_false_negative_daily_cutoffs"] < 0
+                    for row in leave_one_out
+                ) for k in hypothetical_k
+            },
+            "evaluated_cost_ratios_are_posthoc_descriptive": True,
+            "investor_miss_cost_predeclared": False,
             "original_deltas_by_selected_era": deltas,
             "leave_one_era_out": leave_one_out,
             "all_five_removals_worse_at_equal_unit_loss":
