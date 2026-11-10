@@ -112,18 +112,24 @@ def evaluate_predicate(
             seen_ids.add(run_id)
             if (
                 row.get("event") != "schedule"
-                or type(row.get("run_attempt")) is not int
-                or row["run_attempt"] != 1
                 or row.get("head_branch") != "main"
                 or row.get("status") != "completed"
                 or not is_ancestor(repo_root, evidence_floor, str(row.get("head_sha") or ""))
             ):
                 continue
+            # The runs API returns only the LATEST attempt for each run id.
+            # A rerun obscures the original result. Keep its chronological slot
+            # and count it NOT successful, never let an older success replace it.
             natural.append(row)
         sample = natural[:count] if count > 0 else []
-        successes = sum(row.get("conclusion") == "success" for row in sample)
+
+        def first_attempt_success(row: dict[str, Any]) -> bool:
+            attempt = row.get("run_attempt")
+            return type(attempt) is int and attempt == 1 and row.get("conclusion") == "success"
+
+        successes = sum(first_attempt_success(row) for row in sample)
         ok = count > 0 and len(sample) == count and successes == count
-        states = ",".join(f"{row['id']}:{row.get('conclusion')}" for row in sample)
+        states = ",".join(f"{row['id']}#{row.get('run_attempt')}:{row.get('conclusion')}" for row in sample)
         return ok, f"{workflow}: first_attempt_schedule_only evidence_floor={evidence_floor} successful_runs={successes}/{count} sampled_runs={states}"
     if kind == "N_HEALTH_HISTORY_MATCH":
         count = int(predicate.get("count") or 0)
