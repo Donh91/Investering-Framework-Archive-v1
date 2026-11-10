@@ -7,13 +7,13 @@
   },
   "clock_anomalies": 0,
   "contract": "TASK2_HOURLY_SOURCE_COMMIT_CLOCK_SLA_v1",
-  "evaluated_at_utc": "2026-11-10T00:23:02Z",
+  "evaluated_at_utc": "2026-11-10T12:53:10Z",
   "evidence_semantics": "GIT_COMMITTER_CLOCK_PROXY_NOT_VERIFIED_PUSH_OR_PROVIDER_FIRST_KNOWN",
   "expected_due_hours": 24,
-  "first_commit_clock_after_90m": 13,
+  "first_commit_clock_after_90m": 14,
   "first_commit_clock_within_90m": 10,
-  "main_first_parent_ref_sha": "0fbfc7778b5b6de1ba8b4c72c52d145ef0f97925",
-  "not_present_in_first_parent_history": 1,
+  "main_first_parent_ref_sha": "97d6f115f6abab1e410212148f2631a707ef0833",
+  "not_present_in_first_parent_history": 0,
   "records": [
     {
       "classification": "FIRST_COMMIT_CLOCK_WITHIN_90M",
@@ -223,11 +223,11 @@
       "source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-09.csv"
     },
     {
-      "classification": "NOT_PRESENT_IN_FIRST_PARENT_HISTORY",
+      "classification": "FIRST_COMMIT_CLOCK_AFTER_90M",
       "due_at_utc": "2026-11-09T23:00:00Z",
-      "first_present_committer_utc": null,
-      "first_present_main_commit": null,
-      "minutes_after_due": null,
+      "first_present_committer_utc": "2026-11-10T00:54:31Z",
+      "first_present_main_commit": "5e94189b89e42bd54a3e04978d608e5a16c26d94",
+      "minutes_after_due": 114.517,
       "source_open_at_utc": "2026-11-09T22:00:00Z",
       "source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-09.csv"
     }
