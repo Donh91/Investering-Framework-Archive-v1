@@ -96,9 +96,14 @@ def score_path(b,entry_t,due_t):
         return None
     ep=b["open"][e]
     xp=b["open"][x]
+    # Entry/exit are modeled at their respective hourly OPENs. The HIGH/LOW
+    # inside the exit candle happen after that modeled exit and are not held.
+    # Include the actual exit OPEN as a boundary, but not its future extrema.
+    held_high=max([ep,xp]+b["high"][e:x])
+    held_low=min([ep,xp]+b["low"][e:x])
     return {"entry":ep,"exit":xp,"return":xp/ep-1,
-            "mae_short":max(b["high"][e:x+1])/ep-1,
-            "mfe_short":1-min(b["low"][e:x+1])/ep,
+            "mae_short":held_high/ep-1,
+            "mfe_short":1-held_low/ep,
             "entry_time":b["timestamp"][e].isoformat(),
             "exit_time":b["timestamp"][x].isoformat()}
 
