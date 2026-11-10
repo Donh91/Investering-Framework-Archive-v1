@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'scripts/research/ironflow_source_preflight_v1.py'
+      - 'scripts/research/hyperliquid_listing_decay_v1.py'
+      - 'tests/research/test_hyperliquid_listing_decay_v1.py'
+      - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/HYPERLIQUID_LISTING_DECAY_20261110_RESEARCH_V1.md'
       - 'scripts/research/ironflow_hourly_stress_v1.py'
       - 'tests/research/test_ironflow_hourly_stress_v1.py'
       - 'tests/research/test_ironflow_dayblocked_v1.py'
@@ -152,6 +155,9 @@ jobs:
       - name: Original synthetic controls and monthly no-lookahead checks
         run: |
           python -m unittest discover -s tests/research -p 'test_ironflow_*_v1.py' -v
+      - name: Listing-decay cohort entry-clock and censoring negative controls
+        run: |
+          python -m unittest discover -s tests/research -p 'test_hyperliquid_listing_decay_v1.py' -v
       - name: Download full four-source common history to ephemeral runner only
         shell: bash
         run: |
@@ -175,6 +181,20 @@ jobs:
       - name: Actual 72-file T1 and expanding 18-month scientific replay
         run: |
           python scripts/research/ironflow_full18m_walkforward_v1.py --root /tmp/ironflow18 --output-dir /tmp/ironflow18-results
+      - name: Hyperliquid listing-decay 1/3/7/14/30d first-trade proxy, public source only
+        run: |
+          python scripts/research/hyperliquid_listing_decay_v1.py --data-dir /tmp/ironflow18/candles --output /tmp/ironflow18-results/LISTING_DECAY_ENTRY0_20BPS.json
+          python scripts/research/hyperliquid_listing_decay_v1.py --data-dir /tmp/ironflow18/candles --output /tmp/ironflow18-results/LISTING_DECAY_ENTRY7_20BPS.json --delay-days 7
+          python scripts/research/hyperliquid_listing_decay_v1.py --data-dir /tmp/ironflow18/candles --output /tmp/ironflow18-results/LISTING_DECAY_ENTRY0_40BPS.json --fee-bps 20 --slippage-bps 20
+      - name: 18-month listing-decay concise evidence print
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          for p in sorted(pathlib.Path('/tmp/ironflow18-results').glob('LISTING_DECAY_*.json')):
+              d=json.loads(p.read_text())
+              print(p.name,'candidates',d['n_first_trade_candidates'],'30d_obs',d['n_30d_exit_observable'],'censored',d['n_censored'],'paired',d['n_paired'],'median_new',d['median_30d_new_return'],'paired_excess',d['median_paired_excess_new_minus_older'],'month_ci',d['month_cluster_bootstrap_ci'])
+          PY
       - name: 18-month wallet liquidation ecology, no wallet addresses exported
         run: |
           python scripts/research/ironflow_18m_wallet_ecology_v1.py --root /tmp/ironflow18 --output /tmp/ironflow18-results/FULL18M_WALLET_ECOLOGY.json
