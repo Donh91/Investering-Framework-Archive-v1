@@ -1,0 +1,34 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/kompas-pro-test/alternativer/browser.test.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-02c9dce6735b4d25",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "ci-improve-autonomous-cn-chrome-bootstrap-reliability-weakening",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Original Public Contract and Pages each encountered intermittent CHROME_BOOT_FAILED on heavy GitHub Actions runners, while rerun PASS confirmed no source/chart logic defect. Keep real 390/430/1360 canvas/data/chart tests unchanged. Bound startup retries to three isolated profiles with clean process termination, stronger diagnostics and no-first-run headless flags. Every failed startup still blocks the gate; no workflow or model changes. Exact-head Product, Contract, Architecture and Compass CI green. Refs SITE #1578, PR #2067.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/kompas-pro-test/alternativer/browser.test.mjs": "e54c1b7de8adefba2c543e176f51d7fae9149544"
+  },
+  "source_commit_sha": "02c9dce6735b4d2530be3b01c5e3ad943acf1fd6",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-09T18:09:24-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(ci): improve autonomous CN Chrome bootstrap reliability without weakening chart gates"
+}

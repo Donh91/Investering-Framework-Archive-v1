@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    "05_CYCLE_NAVIGATOR/site/CN_SITE_V2_DATA_FIRST_CLAUDE_HANDOFF_2026-11-09.md",
+    "05_CYCLE_NAVIGATOR/site/graph-history/unavailable.mjs",
+    "05_CYCLE_NAVIGATOR/site/graph-history/unavailable.test.mjs",
+    "05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-79f7686622bcc227",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cn-keep-honest-graph-history-route-optional-failure",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Existing Pages and CN Product Gate retain their optional-build/uptime policy, but never silently delete the Graph History route. Quarantine an invalid timeline and publish a deterministic, bilingual UNAVAILABLE page with no fake data. Pages parity now requires the History route and verifies original timeline bytes when present. Adversarial fallback tests and native exact-HEAD CI passed; Chrome startup flake retried successfully without relaxing any checks. Refs #1516 #1578 #2066.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "64b4fc86185c1e3514685c4552ee93caac461474",
+    ".github/workflows/cycle-navigator-pages.yml": "a34d1879bc261c97e4fc54291eb2a837d7d47021",
+    "05_CYCLE_NAVIGATOR/site/CN_SITE_V2_DATA_FIRST_CLAUDE_HANDOFF_2026-11-09.md": "ec29105db212e856d8ca3dc4abd62d58cbe2030e",
+    "05_CYCLE_NAVIGATOR/site/graph-history/unavailable.mjs": "94c5bb678fb75b4eacef80db11cef0bb90b6bd1b",
+    "05_CYCLE_NAVIGATOR/site/graph-history/unavailable.test.mjs": "6504df0ba86007f9b53a091b6bca627ce4a0616b",
+    "05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs": "053b04e6678032c37fced5e1a6e8da526c3132bf"
+  },
+  "source_commit_sha": "79f7686622bcc22756b362226beb3de6631b33dc",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-09T18:02:49-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(cn): keep honest Graph History route on optional build failure and verify CDN bytes"
+}

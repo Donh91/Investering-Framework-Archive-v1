@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-11-09T19:08:28Z",
+  "generated_at_utc": "2026-11-10T00:27:53Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -13,13 +13,33 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "luna_triage": null,
+  "luna_triage": {
+    "evidence_against": [
+      "No failure logs, failed-job details, or error signature are supplied to identify a dependency failure or code defect.",
+      "Failure streak and recent failure count are both 1, which does not establish a persistent issue."
+    ],
+    "evidence_for": [
+      "The latest run of cycle-navigator-internal-precision.yml (42687263073) is marked failed.",
+      "The workflow is scheduled and has one recorded recent failure."
+    ],
+    "forecast_candidates": [],
+    "hypotheses": [
+      "cycle-navigator-internal-precision.yml: failure class is undetermined from the supplied status alone. Treat as a single-run failure, potentially transient, rather than evidence of a persistent defect. The existing framework-main-writer owner should inspect the failed run details next."
+    ],
+    "status": "DEGRADED",
+    "summary": "One workflow has a latest-run failure, with no evidence sufficient to distinguish transient execution noise from a dependency issue or code defect. No existing remediation is recorded; do not infer or create remediation authority.",
+    "uncertainties": [
+      "Failed step, error message, and job logs are not supplied.",
+      "Whether a dependency or external service failed is unknown.",
+      "Whether the failure reproduces on a subsequent run is unknown."
+    ]
+  },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "0d5fbc720363c09a2454cf41c539f4dceaa5d1ea0dbbc57d2f2a0aa56e7b6eea",
+  "plan_fingerprint": "aaa2b2527c047f9ce1fb14ac8d55e4ec9aa2a5d1fbf1c0681a80edbe1b0ceb82",
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
     "existing_remediation_count": 0,
-    "luna_triage_count": 0,
+    "luna_triage_count": 1,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
@@ -29,5 +49,5 @@
     "new_diagnosis_eligible": true,
     "remediation": "VALID"
   },
-  "source_health_generated_at_utc": "2026-11-09T13:08:19.064414Z"
+  "source_health_generated_at_utc": "2026-11-10T00:20:37.521936Z"
 }
