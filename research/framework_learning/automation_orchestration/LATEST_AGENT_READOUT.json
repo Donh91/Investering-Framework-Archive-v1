@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-11-10T00:27:53Z",
+  "generated_at_utc": "2026-11-10T11:43:18Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -15,27 +15,30 @@
   },
   "luna_triage": {
     "evidence_against": [
-      "No failure logs, failed-job details, or error signature are supplied to identify a dependency failure or code defect.",
-      "Failure streak and recent failure count are both 1, which does not establish a persistent issue."
+      "Only one recent failure is supplied (failure streak 1), so persistence is not established.",
+      "No run logs, error message, failed step, or dependency status are provided to distinguish transient execution noise from a dependency failure or code defect."
     ],
     "evidence_for": [
-      "The latest run of cycle-navigator-internal-precision.yml (42687263073) is marked failed.",
-      "The workflow is scheduled and has one recorded recent failure."
+      "The workflow cycle-navigator-internal-precision.yml has a latest-run failure (run 42687263073).",
+      "The item is scheduled and reports openai_enabled=true, but this alone does not establish that either was involved in the failure.",
+      "An existing remediation record is already OBSERVED with route OBSERVE; no new remediation authority is indicated."
     ],
     "forecast_candidates": [],
     "hypotheses": [
-      "cycle-navigator-internal-precision.yml: failure class is undetermined from the supplied status alone. Treat as a single-run failure, potentially transient, rather than evidence of a persistent defect. The existing framework-main-writer owner should inspect the failed run details next."
+      "Failure class is undetermined from the supplied evidence; a one-off transient execution failure is possible, but neither transient noise nor a persistent defect can be confirmed.",
+      "The failed step and run logs are needed to assess missing evidence, dependency health, and whether the failure is reproducible.",
+      "The existing writer_group, framework-main-writer, is the supplied owner to inspect the failed run next."
     ],
     "status": "DEGRADED",
-    "summary": "One workflow has a latest-run failure, with no evidence sufficient to distinguish transient execution noise from a dependency issue or code defect. No existing remediation is recorded; do not infer or create remediation authority.",
+    "summary": "One current failure for cycle-navigator-internal-precision.yml, with failure streak 1. Treat as unclassified rather than diagnosing a shared dependency or code defect. Preserve the existing OBSERVED remediation state; framework-main-writer should inspect the run evidence.",
     "uncertainties": [
-      "Failed step, error message, and job logs are not supplied.",
-      "Whether a dependency or external service failed is unknown.",
-      "Whether the failure reproduces on a subsequent run is unknown."
+      "The failure cause and failed workflow step are not supplied.",
+      "No evidence establishes whether the failure is transient, reproducible, or shared with other workflows.",
+      "The supplied writer_group may not identify the workflow maintainer; no other owner is provided."
     ]
   },
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "aaa2b2527c047f9ce1fb14ac8d55e4ec9aa2a5d1fbf1c0681a80edbe1b0ceb82",
+  "plan_fingerprint": "beef9ce1c6849bdfee3ae88355aee4ed36a11489234737345f9ae45b2f91a7e7",
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
     "existing_remediation_count": 0,
