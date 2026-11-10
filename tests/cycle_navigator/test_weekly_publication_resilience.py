@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.cycle_navigator import build_weekly_cycle_navigator as mod
+from scripts.cycle_navigator import materialize_public_scorecard as public_score
 
 # Reuse the existing CN PR-only pytest gate for the opt-in F5 shadow tests.
 from tests.cycle_navigator.test_range_skill_shadow_v1 import RangeSkillShadowTests as TestRangeSkillShadowV1
@@ -282,3 +283,47 @@ def test_single_post_source_guard_has_no_retry_loop():
     posts = [n for n in ast.walk(fn) if isinstance(n, ast.Call)
              and isinstance(n.func, ast.Attribute) and n.func.attr == "urlopen"]
     assert len(posts) == 1
+
+
+# CLAUDE-AUDIT-03b: preserve historical pre-site weeks but NEVER score
+# a missing W40+ site receipt with a fabricated Monday-midnight start.
+def test_missing_site_receipt_fails_closed_from_actual_first_site_freeze(tmp_path):
+    missing = tmp_path / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+    assert not missing.exists()
+    assert public_score.SITE_RECEIPT_REQUIRED_FROM_ISO_WEEK == (2026, 40)
+    for year, week in ((2026, 40), (2026, 41), (2026, 46), (2027, 1)):
+        with pytest.raises(SystemExit, match="public_scorecard_site_receipt_missing_for_attested_week"):
+            public_score.read_site_freeze_receipt(missing, year, week)
+
+
+def test_pre_receipt_legacy_weeks_remain_eligible_only_for_legacy_source(tmp_path):
+    missing = tmp_path / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+    assert public_score.read_site_freeze_receipt(missing, 2026, 39) is None
+    assert not (ROOT / "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json").exists()
+    assert (ROOT / "05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json").is_file()
+
+
+def test_actual_w46_scoring_clock_not_monday_midnight(tmp_path):
+    receipt_path = tmp_path / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+    source = ROOT / "05_CYCLE_NAVIGATOR/weekly/2026/W46/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+    receipt_path.write_bytes(source.read_bytes())
+    receipt = public_score.read_site_freeze_receipt(receipt_path, 2026, 46)
+    assert receipt["contract"] == "CN_SITE_PUBLIC_FREEZE_RECEIPT_v1"
+    assert receipt["scoring_valid_from_utc"] == "2026-11-09T11:00:00Z"
+    start, end = public_score.score_window_bounds(2026, 46, receipt)["day_1_2"]
+    assert start.isoformat() == "2026-11-09T11:00:00+00:00"
+    assert end.isoformat() == "2026-11-11T00:00:00+00:00"
+    assert (end - start).total_seconds() == 37 * 3600
+
+
+def test_site_receipt_symlink_or_non_object_rejected(tmp_path):
+    original = tmp_path / "real.json"
+    original.write_text('{"contract":"CN_SITE_PUBLIC_FREEZE_RECEIPT_v1"}')
+    link = tmp_path / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
+    link.symlink_to(original)
+    with pytest.raises(SystemExit, match="public_scorecard_site_receipt_symlink_rejected"):
+        public_score.read_site_freeze_receipt(link, 2026, 46)
+    link.unlink()
+    link.write_text("[]")
+    with pytest.raises(SystemExit, match="public_scorecard_site_receipt_not_object"):
+        public_score.read_site_freeze_receipt(link, 2026, 46)

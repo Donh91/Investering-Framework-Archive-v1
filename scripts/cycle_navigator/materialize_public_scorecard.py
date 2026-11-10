@@ -61,6 +61,32 @@ def load_hourly_rows(root: Path, iso_year: int, iso_week: int) -> list[dict[str,
     return [rows[k] for k in sorted(rows)]
 
 
+
+# W40 is the first on-repo CN site-freeze receipt. Pre-W40 historical
+# publication used the legacy X proof; from W40 onward a missing site receipt
+# is NOT evidence that the forecast was issued at Monday 00:00Z.
+SITE_RECEIPT_REQUIRED_FROM_ISO_WEEK = (2026, 40)
+
+
+def read_site_freeze_receipt(path: Path, year: int, week: int) -> dict[str, Any] | None:
+    """Fail closed for a missing/redirected receipt in the site-frozen era.
+
+    The actual receipt's source SHA, issue and week are checked by main().
+    This guard prevents loss of the receipt from silently unlocking legacy
+    Monday-midnight scoring for a forecast issued hours later.
+    """
+    if path.is_symlink():
+        raise SystemExit("public_scorecard_site_receipt_symlink_rejected")
+    if not path.is_file():
+        if (year, week) >= SITE_RECEIPT_REQUIRED_FROM_ISO_WEEK:
+            raise SystemExit("public_scorecard_site_receipt_missing_for_attested_week")
+        return None
+    value = read_json(path)
+    if not isinstance(value, dict):
+        raise SystemExit("public_scorecard_site_receipt_not_object")
+    return value
+
+
 def score_window_bounds(year: int, week: int, receipt: dict[str, Any] | None) -> dict[str, tuple[datetime, datetime]]:
     monday = datetime.combine(date.fromisocalendar(year, week, 1), datetime.min.time(), tzinfo=timezone.utc)
     bounds = {
@@ -209,9 +235,8 @@ def main() -> None:
     index = read_json(index_path)
     site_receipt_path = binding_path.parent / "CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json"
     public_proof = None
-    site_receipt = None
-    if site_receipt_path.is_file():
-        site_receipt = read_json(site_receipt_path)
+    site_receipt = read_site_freeze_receipt(site_receipt_path, year, completed_week)
+    if site_receipt is not None:
         freeze_digest = hashlib.sha256(prior_freeze_path.read_bytes()).hexdigest()
         if site_receipt.get("contract") != "CN_SITE_PUBLIC_FREEZE_RECEIPT_v1":
             raise SystemExit("site_public_freeze_receipt_contract_invalid")
