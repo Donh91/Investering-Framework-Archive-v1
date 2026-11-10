@@ -8,7 +8,7 @@ from scripts.research import task2_tehc_trench_backfill_v1 as m
 
 
 START = date(2024, 1, 14)
-AS_OF = datetime(2025, 3, 1, tzinfo=timezone.utc)
+AS_OF = datetime(2025, 2, 20, tzinfo=timezone.utc)
 
 
 def fixture(length: int = 400):
