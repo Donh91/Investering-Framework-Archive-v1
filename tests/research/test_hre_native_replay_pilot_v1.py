@@ -287,6 +287,20 @@ class EraHoldoutRiskTests(unittest.TestCase):
         self.assertTrue(b["all_five_removals_worse_at_equal_unit_loss"])
         self.assertTrue(e["all_five_removals_worse_at_equal_unit_loss"])
 
+    def test_cost_ratio_grid_discloses_sign_reversal_not_robust_negative(self):
+        for asset in era_robustness.ASSETS:
+            r = self.out["assets"][asset]
+            self.assertEqual(r["challenger_better_at_k"]["1"], 0)
+            self.assertEqual(r["challenger_better_at_k"]["5"], 5)
+            self.assertEqual(r["challenger_better_at_k"]["10"], 5)
+            self.assertEqual(len(r["break_even_k_by_leave_one_out"]), 5)
+            self.assertTrue(r["evaluated_cost_ratios_are_posthoc_descriptive"])
+            self.assertFalse(r["investor_miss_cost_predeclared"])
+        btc = self.out["assets"]["BTCUSDT"]["challenger_better_at_k"]
+        eth = self.out["assets"]["ETHUSDT"]["challenger_better_at_k"]
+        self.assertEqual((btc["2"], btc["3"]), (0, 2))
+        self.assertEqual((eth["2"], eth["3"]), (1, 4))
+
     def test_all_eras_are_explicitly_counterfactual_correlated(self):
         for asset in era_robustness.ASSETS:
             rows = self.out["assets"][asset]["leave_one_era_out"]
