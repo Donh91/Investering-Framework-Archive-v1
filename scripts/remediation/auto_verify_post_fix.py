@@ -94,6 +94,43 @@ def evaluate_predicate(
         ok = count > 0 and len(sample) == count and successes == count
         run_states = [f"{row.get('id')}:{row.get('conclusion')}" for row in sample]
         return ok, f"{workflow}: evidence_floor={evidence_floor_sha} successful_runs={successes}/{count} sampled_runs={','.join(run_states)}"
+    if kind == "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS":
+        # Rerunning an old due event is not a fresh natural observation.
+        workflow = str(predicate.get("workflow") or "")
+        count = int(predicate.get("count") or 0)
+        merge_sha = str(task.get("merge_commit_sha") or "")
+        evidence_floor = str(predicate.get("after_sha") or merge_sha)
+        if predicate.get("after_sha") and not is_ancestor(repo_root, merge_sha, evidence_floor):
+            return False, f"{workflow}: INVALID_EVIDENCE_FLOOR after_sha={evidence_floor} task_merge_sha={merge_sha}"
+        runs = sorted(run_provider(workflow), key=lambda row: str(row.get("created_at") or ""), reverse=True)
+        seen_ids: set[int] = set()
+        natural: list[dict[str, Any]] = []
+        for row in runs:
+            run_id = row.get("id")
+            if type(run_id) is not int or run_id <= 0 or run_id in seen_ids:
+                continue
+            seen_ids.add(run_id)
+            if (
+                row.get("event") != "schedule"
+                or row.get("head_branch") != "main"
+                or row.get("status") != "completed"
+                or not is_ancestor(repo_root, evidence_floor, str(row.get("head_sha") or ""))
+            ):
+                continue
+            # The runs API returns only the LATEST attempt for each run id.
+            # A rerun obscures the original result. Keep its chronological slot
+            # and count it NOT successful, never let an older success replace it.
+            natural.append(row)
+        sample = natural[:count] if count > 0 else []
+
+        def first_attempt_success(row: dict[str, Any]) -> bool:
+            attempt = row.get("run_attempt")
+            return type(attempt) is int and attempt == 1 and row.get("conclusion") == "success"
+
+        successes = sum(first_attempt_success(row) for row in sample)
+        ok = count > 0 and len(sample) == count and successes == count
+        states = ",".join(f"{row['id']}#{row.get('run_attempt')}:{row.get('conclusion')}" for row in sample)
+        return ok, f"{workflow}: first_attempt_schedule_only evidence_floor={evidence_floor} successful_runs={successes}/{count} sampled_runs={states}"
     if kind == "N_HEALTH_HISTORY_MATCH":
         count = int(predicate.get("count") or 0)
         task_merge_sha = str(task.get("merge_commit_sha") or "")
