@@ -168,10 +168,16 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
                 row["control_exit_count"]=len(good)
                 row["control_return"]=median(good)
                 row["paired_excess"]=row["return"]-row["control_return"] if good else None
+                # A preselected control that disappears later is still part of the fixed set.
+                # Retain the partial descriptive result, but never call it a complete pair.
+                row["complete_control_cohort"]=bool(controls) and len(good)==len(controls)
+                row["paired_excess_complete"]=row["paired_excess"] if row["complete_control_cohort"] else None
                 row["short_unit_net_ex_funding"]=-row["return"]-(fee_bps_roundtrip+slippage_bps_roundtrip)/10000
         rows.append(row)
     usable=[r for r in rows if r["status"]=="OK"]
     paired=[r for r in usable if r.get("paired_excess") is not None]
+    paired_complete=[r for r in paired if r.get("complete_control_cohort",False)]
+    control_partials=[r for r in paired if not r.get("complete_control_cohort",False)]
     months=defaultdict(list)
     for r in paired: months[r["first_observed_utc"][:7]].append(r["paired_excess"])
     ci=None
@@ -184,6 +190,20 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
             draws.append(median(sample))
         draws.sort()
         ci=[draws[75],draws[2924]]
+    # Repeated month-block sensitivity on STRICT complete-control pairs only.
+    complete_months=defaultdict(list)
+    for r in paired_complete:
+        complete_months[r["first_observed_utc"][:7]].append(r["paired_excess_complete"])
+    complete_ci=None
+    if len(complete_months)>=8:
+        rng=random.Random(20261110)
+        keys=sorted(complete_months)
+        draws=[]
+        for _ in range(3000):
+            sample=[v for _ in keys for v in complete_months[rng.choice(keys)]]
+            draws.append(median(sample))
+        draws.sort()
+        complete_ci=[draws[75],draws[2924]]
     hsummary={}
     for h in (1,3,7,14,30):
         rr=[r["horizons"][str(h)]["return"] for r in rows
@@ -195,11 +215,18 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
        "status":"RETROSPECTIVE_DESCRIPTIVE_FIRST_TRADE_PROXY_NO_TRADING_EDGE",
        "n_first_trade_candidates":len(rows),"n_30d_exit_observable":len(usable),
        "n_censored":len(rows)-len(usable),"n_paired":len(paired),
-       "n_month_clusters":len(months),"horizon_days_summary":hsummary,
+       "n_paired_complete_controls":len(paired_complete),
+       "n_paired_partial_controls":len(control_partials),
+       "n_missing_control_exits":sum(r["match_count"]-r["control_exit_count"] for r in paired),
+       "n_month_clusters":len(months),
+       "n_complete_month_clusters":len(complete_months),"horizon_days_summary":hsummary,
        "fall_fraction":sum(r["return"]<0 for r in usable)/len(usable) if usable else None,
        "median_30d_new_return":median([r["return"] for r in usable]),
        "median_paired_excess_new_minus_older":median([r["paired_excess"] for r in paired]),
+       "paired_excess_legacy_scope":"DESCRIPTIVE_INCLUDES_PARTIAL_CONTROL_EXITS",
+       "median_paired_excess_strict_complete_controls":median([r["paired_excess_complete"] for r in paired_complete]),
        "month_cluster_bootstrap_ci":ci,
+       "month_cluster_bootstrap_ci_complete_controls":complete_ci,
        "median_short_unit_net_ex_funding":median([r["short_unit_net_ex_funding"] for r in usable]),
        "sensitivity":{"fee_bps_roundtrip":fee_bps_roundtrip,
                       "slippage_bps_roundtrip":slippage_bps_roundtrip,"delay_days":delay_days},
