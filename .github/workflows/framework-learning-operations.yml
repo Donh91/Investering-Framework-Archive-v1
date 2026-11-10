@@ -35,6 +35,8 @@ on:
       - 'tests/research/test_task2_wave_b_scientific_gates_v1.py'
       - 'scripts/research/task2_cn_w44_postfreeze_paired_v1.py'
       - 'tests/research/test_task2_cn_w44_postfreeze_paired_v1.py'
+      - 'scripts/research/task2_cn_daily_path_score_v1.py'
+      - 'tests/research/test_task2_cn_daily_path_score_v1.py'
       - 'scripts/research/validate_kompas_scientific_edge_program_v2_1.py'
       - 'tests/research/test_kompas_scientific_edge_program_v2_1.py'
       - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/**'
@@ -92,6 +94,29 @@ jobs:
           python -m py_compile scripts/research/task2_wave_b_scientific_gates_v1.py scripts/research/task2_cn_w44_postfreeze_paired_v1.py tests/research/test_task2_wave_b_scientific_gates_v1.py tests/research/test_task2_cn_w44_postfreeze_paired_v1.py
           python -m unittest tests.research.test_task2_wave_b_scientific_gates_v1 tests.research.test_task2_cn_w44_postfreeze_paired_v1 -v
           python scripts/research/task2_cn_w44_postfreeze_paired_v1.py
+      - name: Task2 W46 original frozen daily close, read-only source and maturity gates
+        if: github.event_name == 'pull_request'
+        run: |
+          python -m py_compile scripts/research/task2_cn_daily_path_score_v1.py tests/research/test_task2_cn_daily_path_score_v1.py
+          python -m unittest tests.research.test_task2_cn_daily_path_score_v1 -v
+          python -m scripts.research.task2_cn_daily_path_score_v1 --as-of-utc 2026-11-10T00:01:00Z > /tmp/task2_w46_day1_descriptive.json
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/task2_w46_day1_descriptive.json'))
+          assert p['contract']=='TASK2_CN_DAILY_PATH_DESCRIPTIVE_SCORE_v1'
+          assert p['maturity_counts']=={'MATURED_DESCRIPTIVE_ONLY':2,'UNMATURED':12}
+          assert p['no_public_score'] and p['no_action_or_pnl_authority']
+          assert all(not r['scientific_edge_admitted'] for r in p['rows'])
+          print('TASK2_W46_DAY1_SOURCE_CLOCK_PIT_NOT_ADMITTED_OK',p['maturity_counts'])
+          PY
+      - name: Retain Task2 W46 first matured daily-close descriptive evidence
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-w46-daily-close-first-maturity
+          path: /tmp/task2_w46_day1_descriptive.json
+          retention-days: 7
+          if-no-files-found: error
       - name: Task2 archived price-only 1152-cell ex-post stress, research only
         run: |
           python -m unittest tests.research.test_task2_archive_price_only_stress_v1 -v
