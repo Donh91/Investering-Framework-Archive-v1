@@ -1,0 +1,156 @@
+{
+  "contract": "KOMPAS_H14_RESEARCH_CROSSWALK_V1",
+  "classification": "NONCANONICAL_RESEARCH_ONLY_NOT_A_FORECAST_OR_SCHEDULER",
+  "created_utc_date": "2026-11-10",
+  "canonical_registry": "07_PROMPTS_AND_AGENTS/action_compass/KOMPAS_PRO_HORIZON_IMPLEMENTATION_LEDGER_v2.json",
+  "canonical_science_owner_issue": 1596,
+  "no_production_signal_change": true,
+  "no_new_automation": true,
+  "no_paid_execution": true,
+  "round3_hypothesis_scoring_allowed": false,
+  "source_claims_must_be_rechecked_at_execution": true,
+  "true_independent_event_sample_not_implied_by_hourly_rows": true,
+  "maturity_and_first_known_must_be_verified_before_scoring": true,
+  "horizon_rows": [
+    {
+      "horizon_id": "NOW",
+      "candidate_research_target": "Observed momentum, source health",
+      "simplest_same_clock_baseline": "Last completed observation",
+      "metric_or_falsifier": "Timestamp/quote freshness, no prospective score",
+      "original_owner_issue": 1827,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H0_12H",
+      "candidate_research_target": "Observed 0-12h nowcast versus independently issued +12h future test",
+      "simplest_same_clock_baseline": "Same-clock momentum persistence",
+      "metric_or_falsifier": "Prospective matched directional skill only if originally issued",
+      "original_owner_issue": 1596,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H24H",
+      "candidate_research_target": "Source-issued +24h close and adverse excursion, if available",
+      "simplest_same_clock_baseline": "Persistence and vol-only",
+      "metric_or_falsifier": "MAE, interval coverage+width, down-miss cost",
+      "original_owner_issue": 1516,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H1_3D",
+      "candidate_research_target": "Official 1-3d direction distinct from any separately issued daily price",
+      "simplest_same_clock_baseline": "Momentum and class prevalence",
+      "metric_or_falsifier": "Paired directional skill, daily terminal-close error",
+      "original_owner_issue": 1596,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H5_7D",
+      "candidate_research_target": "Original W46 7 daily closes and high-low bands versus future actuals",
+      "simplest_same_clock_baseline": "Persistence, independent B1, vol-only matched clock",
+      "metric_or_falsifier": "Daily closes and daily intervals independently from weekly extrema",
+      "original_owner_issue": 1516,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H8_14D",
+      "candidate_research_target": "Prospective 14d price outcome if separately issued",
+      "simplest_same_clock_baseline": "Random walk and vol-only",
+      "metric_or_falsifier": "Out-of-time scaled error, terminal interval sharpness",
+      "original_owner_issue": 1516,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H15_21D",
+      "candidate_research_target": "Prospective 21d price outcome if separately issued",
+      "simplest_same_clock_baseline": "Persistence and vol-only",
+      "metric_or_falsifier": "Proper paired score with purged overlapping labels",
+      "original_owner_issue": 1516,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H2_3W",
+      "candidate_research_target": "Original qualitative 2-3w regime if source-valid",
+      "simplest_same_clock_baseline": "Regime persistence and no-edge",
+      "metric_or_falsifier": "Event-paired directional evaluation, no fabricated price",
+      "original_owner_issue": 1596,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H21_30D",
+      "candidate_research_target": "Original strategic 21-30d anchor",
+      "simplest_same_clock_baseline": "No-edge and last regime",
+      "metric_or_falsifier": "Monthly regime transition vs no-change",
+      "original_owner_issue": 1516,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H4_8W",
+      "candidate_research_target": "Cycle 4-8w research scenario",
+      "simplest_same_clock_baseline": "No-transition and simple trend",
+      "metric_or_falsifier": "Episode family hit/false alarm; censorship",
+      "original_owner_issue": 1516,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H1_3M",
+      "candidate_research_target": "1-3m conditional cycle scenario",
+      "simplest_same_clock_baseline": "Regime persistence",
+      "metric_or_falsifier": "Independent-cycle and cost-sensitive outcomes",
+      "original_owner_issue": 1596,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H3_6M",
+      "candidate_research_target": "3-6m distribution and downside research",
+      "simplest_same_clock_baseline": "No-transition",
+      "metric_or_falsifier": "Missed top and false protection costs",
+      "original_owner_issue": 1553,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H6_9M",
+      "candidate_research_target": "6-9m capital rotation and altseason research",
+      "simplest_same_clock_baseline": "Cycle base rate",
+      "metric_or_falsifier": "Long-cycle coverage and independence power",
+      "original_owner_issue": 1918,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    },
+    {
+      "horizon_id": "H9_12M",
+      "candidate_research_target": "9-12m cycle/re-entry scenario",
+      "simplest_same_clock_baseline": "No-change base rate",
+      "metric_or_falsifier": "Independent cycle and delayed-action utility",
+      "original_owner_issue": 1596,
+      "current_admission": "NOT_ATTESTED_BY_THIS_MAP",
+      "status": "RESEARCH_PLAN_ONLY",
+      "publish_price_or_buy_sell_from_this_file": false
+    }
+  ]
+}
