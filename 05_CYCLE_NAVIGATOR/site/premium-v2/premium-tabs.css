@@ -476,3 +476,55 @@
 body.premium-next #variant-panel .cn-range-evidence .cn-evidence-hint{color:#5b6f86!important}
 body.premium-next #variant-panel .cn-frozen-window-day{color:#4f6680!important;font-size:10px!important}
 body.premium-next.premium-home #variant-panel .day-axis span{font-size:10px!important;letter-spacing:0!important}
+
+/* ==== CN SITE v2.1 · Kompas / Cyklus / Resultater design layer (presentation only) ====
+ * Goal: Graph B v2 standard on the three remaining tabs. WCAG AA text contrast (measured
+ * sweep, see Bridge v2/tabs/TESTS.md), >=10px text on mobile, visible keyboard focus,
+ * reduced motion. No copy, data, ids or DOM changes. `body` prefix outranks the later
+ * premium-overhaul layer; tokens stay local to the three panels. */
+body.premium-next :is(#compass-pro,#official-path-view,#proof-explorer){
+ --cn21-label:#4f6379;   /* kickers, eyebrows: 5.5:1 on the lightest panel surface */
+ --cn21-muted:#55697f;   /* secondary copy: >=5.0:1 */
+ --cn21-dormant:#5d7086; /* not-reached / unverified states: >=4.5:1 */
+ --cn21-focus:#2f6fda;
+}
+/* Kompas */
+body.premium-next #compass-pro .small-kicker{font-size:10px!important;color:var(--cn21-label)!important}
+body.premium-next #compass-pro :is(.cn-pro-intro p,#cn-source-explanation,#cn-short-meaning,#cn-overview-subtitle,#cn-overview-foot,#cn-rotation-disclaimer){color:var(--cn21-muted)!important}
+body.premium-next #compass-pro :is(#cn-horizon-13-label,.cn-horizon-card small,#cn-risk-quick-label,#cn-risk-quick-note){color:var(--cn21-label)!important}
+/* light decision cells only; the dark 'Handling nu' cell keeps its light-on-navy text */
+body.premium-next #compass-pro .product-decision .product-cell:not(:first-child) small{color:var(--cn21-label)!important}
+body.premium-next #compass-pro #cn-horizon-13-posture{color:var(--cn21-muted)!important}
+body.premium-next #compass-pro .product-first > .product-kicker{color:var(--cn21-label)!important}
+/* F10: risk ladder labels 8.5px -> 10px; "not reached" keeps its meaning via a dashed rail, not low contrast */
+body.premium-next #compass-pro .cn-risk-quick .risk-step{font-size:10px!important;letter-spacing:-.015em!important;color:var(--cn21-dormant)!important;overflow-wrap:normal!important;hyphens:none!important;white-space:nowrap!important;min-width:0}
+body.premium-next #compass-pro .cn-risk-quick .risk-step:last-child:not([data-current=true]):not([data-prior=true]){opacity:1!important;border-top-style:dashed!important}
+@media (max-width:360px){body.premium-next #compass-pro .cn-risk-quick .risk-step{white-space:normal!important;overflow-wrap:anywhere!important}}
+body.premium-next #compass-pro .cn-risk-quick .risk-step[data-current=true]{color:#174f90!important}
+body.premium-next #compass-pro .cn-risk-quick .risk-step[data-prior=true]{color:var(--cn21-label)!important}
+/* Cyklus / PATH */
+body.premium-next #official-path-view :is(.eyebrow,.path-kicker,.path-evidence-label){color:var(--cn21-label)!important}
+body.premium-next #official-path-view :is(#cn-cycle-reason,.path-section-intro,.path-legend span,#premium-path-explainer,.path-alt-milestone p,.path-evidence-note,.path-next-panel small){color:var(--cn21-muted)!important}
+body.premium-next #official-path-view .path-hero :is(small,#premium-path-source){color:var(--cn21-dormant)!important}
+body.premium-next #official-path-view :is(.rotation-tier strong,.path-rotation-scope){color:var(--cn21-dormant)!important}
+/* Unverified phases: de-emphasised by weight, marker and colour (AA) instead of 0.38-0.55 opacity */
+body.premium-next #official-path-view .path-node:not([data-kind=reference]):not([data-kind=next]){opacity:1!important}
+body.premium-next #official-path-view .path-node:not([data-kind=reference]):not([data-kind=next]) .path-number,
+body.premium-next #official-path-view .path-node:not([data-kind=reference]):not([data-kind=next]) :is(small,.path-phase-state){color:var(--cn21-dormant)!important}
+body.premium-next #official-path-view .path-node:not([data-kind=reference]):not([data-kind=next]) strong{color:var(--cn21-label)!important;font-weight:560!important}
+body.premium-next #official-path-view .path-node[data-kind=unverified]:is([data-phase=DISTRIBUTION],[data-phase=PROTECTION]){opacity:1!important}
+body.premium-next #official-path-view .path-node[data-kind=unverified]:is([data-phase=DISTRIBUTION],[data-phase=PROTECTION])::before{border-style:dashed!important}
+body.premium-next #official-path-view .path-node[data-kind=unverified]:is([data-phase=DISTRIBUTION],[data-phase=PROTECTION]) strong{font-weight:500!important;font-style:italic}
+/* Resultater / Proof */
+body.premium-next #proof-explorer :is(.proof-eyebrow,#proof-status,.proof-kicker){color:var(--cn21-label)!important}
+body.premium-next #proof-explorer :is(.proof-head p,.proof-window p,#proof-method){color:var(--cn21-muted)!important}
+body.premium-next #proof-explorer .proof-steps span{color:#4f6a86!important}
+body.premium-next #proof-explorer .proof-steps [aria-pressed=true] span,
+body.premium-next #proof-explorer .proof-steps [aria-selected=true] span{color:inherit!important}
+/* Keyboard focus, all three panels */
+body.premium-next :is(#compass-pro,#official-path-view,#proof-explorer) :is(a,button,summary,[tabindex]):focus-visible{
+ outline:2px solid var(--cn21-focus)!important;outline-offset:2px!important;border-radius:6px
+}
+@media (prefers-reduced-motion:reduce){
+ body.premium-next :is(#compass-pro,#official-path-view,#proof-explorer) *{transition-duration:.01ms!important;animation:none!important;scroll-behavior:auto!important}
+}
