@@ -1,5 +1,5 @@
 # Hyperliquid new-listing decay: independent audit and falsification study v1
-**Owner:** existing Task 2 #1596 / Ironflow source program #1747, derivatives #387. Cross-domain beneficiary: Meme Alpha Lab #22, its existing Spot/Perp Flow Divergence benchmark. **2026-11-10.**
+> **EXECUTED RESULT OVERRIDE (2026-11-10):** Actual 18m native run #42874238160 SUCCESS, 34 first-trade proxy candidates, 31/34 (91.2%) declining at 30d, median -37.21%, median matched excess -19.00pp. See `HYPERLIQUID_LISTING_DECAY_20261110_ACTUAL_RESULTS_V1.md` for hash-bound completed evidence, interim short risk and follow-up. Statements below about research requested/CI pending are the earlier plan, NOT the current execution status. Newer PR HEAD still requires its own exact-head gates.\n\n**Owner:** existing Task 2 #1596 / Ironflow source program #1747, derivatives #387. Cross-domain beneficiary: Meme Alpha Lab #22, its existing Spot/Perp Flow Divergence benchmark. **2026-11-10.**
 **Status:** `RESEARCH_ONLY / SHADOW / AGGREGATE_CLAIMS_CHECKED / EMPIRICAL_18M_REPLAY_REQUESTED_ON_THIS_PR`.
 **Authoritative truth:** native PR exact-head CI and attached bounded artifact after it exists. No current market prediction, Alpha score, investment advice or live trading authority.
 
