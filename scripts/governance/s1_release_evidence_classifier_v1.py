@@ -102,7 +102,8 @@ def _claude_review_is_valid(record, current):
         f"https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/173#issuecomment-{cid}"
     ):
         return False
-    risk_map = {"LOW": "LOW", "MEDIUM": "MEDIUM", "HIGH": "HIGH_IMPACT"}
+    risk_map = {"LOW": "LOW", "HIGH": "HIGH_IMPACT"}
+    # MEDIUM has no reviewed custody semantics. Reject it until defined.
     if type(r.get("risk")) is not str:
         return False
     risk = risk_map.get(r["risk"])
@@ -111,15 +112,25 @@ def _claude_review_is_valid(record, current):
     independent = v.get("independence")
     if independent != "INDEPENDENT" and not (risk == "LOW" and independent == "SELF_AUTHORED_DESIGN"):
         return False
-    if risk == "HIGH_IMPACT" and r.get("high_impact_owner_approval") is not True:
-        return False
+    if risk == "HIGH_IMPACT":
+        owner = r.get("high_impact_owner_approval")
+        if (not isinstance(owner, dict)
+                or owner.get("approved") is not True
+                or owner.get("repo") != r["repo_full_name"]
+                or type(owner.get("pr")) is not int or owner["pr"] != pr
+                or owner.get("head_sha") != current["head"]
+                or not _github(owner.get("evidence_url"))):
+            return False
     if (v.get("contract") != "CLAUDE_REVIEW_v1"
             or v.get("verdict") != "APPROVE"
             or v.get("repo") != r["repo_full_name"]
-            or v.get("pr") != pr
+            or type(v.get("pr")) is not int or v.get("pr") != pr
             or v.get("head_sha") != current["head"]
             or v.get("requested_head_sha") != current["head"]
             or v.get("risk_class") != risk
+            or any(v.get(k) != current[k] for k in (
+                ("head", "policy", "source") +
+                (() if r.get("review_requires_current_main") is False else ("main",))))
             or v.get("body_readback_verified") is not True
             or v.get("report_readback_verified") is not True
             or re.fullmatch(r"[a-f0-9]{64}", str(v.get("report_sha256", ""))) is None
@@ -352,7 +363,7 @@ def classify_pr_disposition(record):
                            "EXISTING_REVIEW_OWNER")
     if r.get("physical_site_review_required") is True and r.get("physical_site_review_passed") is not True and r.get("owner_physical_review_waiver") is not True:
         return blocked("EXTERNAL_DEPENDENCY", "PHYSICAL_REVIEW_REQUIRED", "Applicable physical SITE review policy", "EXISTING_SITE_OWNER")
-    if r.get("risk") not in ("LOW", "MEDIUM", "HIGH"):
+    if r.get("risk") not in ("LOW", "HIGH"):
         return blocked("INTERNAL_REPAIRABLE", "RISK_CLASSIFICATION_MISSING", "Changed-file/domain risk classification")
     if r["risk"] == "HIGH":
         recovery = r.get("recovery") or {}
