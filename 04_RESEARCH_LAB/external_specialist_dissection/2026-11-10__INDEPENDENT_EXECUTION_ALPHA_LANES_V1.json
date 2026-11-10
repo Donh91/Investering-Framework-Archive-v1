@@ -1,0 +1,298 @@
+{
+  "contract": "RESEARCH_PARALLEL_LANES_V1",
+  "mission_id": "RESEARCH_ZERO_COST_EXECUTABLE_ALPHA_20261110_V1",
+  "date_utc": "2026-11-10",
+  "status": "SOURCE_PREPARED_OWNER_ROUTING_PENDING",
+  "authority": "RESEARCH_ONLY_NO_TRADING_NO_PUBLICATION",
+  "original_owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+  "source_atlas": "04_RESEARCH_LAB/external_specialist_dissection/2026-11-10__INDEPENDENT_EXECUTION_ALPHA_ATLAS_V1.md",
+  "site_mapping": "04_RESEARCH_LAB/external_specialist_dissection/2026-11-10__ALPHA_PRO_EXECUTION_SITE_BRIDGE_V1.md",
+  "source_preflight_archive_main_sha": "418e437a1016aaafdddde203b565ebc5938010a1",
+  "source_preflight_alpha_agent_blob": "040b706c1af06e7b8662b416e1ffe25dc337bae8",
+  "source_preflight_site_state_blob": "de17f1fd9e050d8fa1e868730f1758b774e36c3b",
+  "planning_tracks": 9,
+  "actual_independent_ai_agents": 0,
+  "actual_native_research_jobs": 0,
+  "actual_scientific_tests_executed_by_this_packet": 0,
+  "paid_api_usd": 0,
+  "zero_incremental_budget_required": true,
+  "no_new_scheduler": true,
+  "no_new_model_client": true,
+  "no_new_identity": true,
+  "active_heavy_science_lane_cap": 1,
+  "parallel_existing_compute_jobs_max_if_authorized": 2,
+  "default_executor": "ORIGINAL_DOMAIN_OWNER",
+  "model_route": "FIRST_PARTY_CODE_AND_GITHUB_THEN_EXISTING_CLAUDE_AUDIT_NO_PAID_API",
+  "initial_priority": [
+    "X01",
+    "X05",
+    "X04",
+    "X03",
+    "X02",
+    "X06",
+    "X07",
+    "X08",
+    "X09"
+  ],
+  "site_not_live_until_source_and_publication_gates": true,
+  "not_authorized_as_source_or_market_truth": true,
+  "lanes": [
+    {
+      "id": "X01",
+      "name": "PONS_PHASE_AWARE_EXACT_QUOTE",
+      "original_owner": "Donh91/Meme-Alpha-Lab#98",
+      "priority": "P0",
+      "method_ranks": [
+        1
+      ],
+      "dependencies": [],
+      "hypothesis": "Same-block exact-integer sized curve buy/sell estimate outperforms marginal reserve proxy in predicting observed receipt amounts and false sellability.",
+      "baseline": "Existing reserve-price proxy and original CurveSell/CurveBuy receipt.",
+      "source": [
+        "https://docs.ponsfamily.com/v2"
+      ],
+      "falsifier": "Independent native events disagree after justified fee/rounding or necessary source state is unrecoverable.",
+      "acceptance": "New prospective source-bound or valid past event with exact block/source, sell quantity, phase/snipe/fees and negative tests; no retroactive alpha credit.",
+      "site_candidate": "TOKEN_DOSSIER_EXIT_LADDER",
+      "execution_status": "PLANNED_NOT_EXECUTED",
+      "budget_usd": 0,
+      "source_identity_authority": "PUBLIC_SOURCE_ONLY",
+      "trading_authority": false,
+      "model_promotion_allowed": false,
+      "new_scheduler_allowed": false
+    },
+    {
+      "id": "X02",
+      "name": "V4_POOL_HOOK_QUOTER",
+      "original_owner": "Donh91/Meme-Alpha-Lab#98",
+      "support_owner": "Donh91/Meme-Alpha-Lab#194",
+      "priority": "P0",
+      "method_ranks": [
+        2
+      ],
+      "dependencies": [
+        "X01"
+      ],
+      "hypothesis": "Native V4 quoter+hook fee and poolId improve postgraduation full-size exit assessment.",
+      "baseline": "Reserve ratio and simple current pool depth.",
+      "source": [
+        "https://developers.uniswap.org/docs/protocols/v4/guides/state-view"
+      ],
+      "falsifier": "No verified ABI/pool-key/hook state, no reliable quote, or native V4 outputs no incremental accuracy.",
+      "acceptance": "Exact chain+CA+poolId+block/hash plus both-way full-size source-only quote negative controls.",
+      "site_candidate": "LIQUIDITY_PHASE_AND_ROUTE",
+      "execution_status": "PLANNED_NOT_EXECUTED",
+      "budget_usd": 0,
+      "source_identity_authority": "PUBLIC_SOURCE_ONLY",
+      "trading_authority": false,
+      "model_promotion_allowed": false,
+      "new_scheduler_allowed": false
+    },
+    {
+      "id": "X03",
+      "name": "NEGATIVE_EXIT_LOCAL_FORK",
+      "original_owner": "Donh91/Meme-Alpha-Lab#98",
+      "priority": "P0",
+      "method_ranks": [
+        3
+      ],
+      "dependencies": [],
+      "hypothesis": "Read-only local forks recover reproducible SELL reverts for cases where safety providers report SAFE.",
+      "baseline": "Current GoPlus normalized label and Alpha mechanics ledger.",
+      "source": [
+        "https://getfoundry.sh/anvil/index.html",
+        "https://github.com/bluealloy/revm"
+      ],
+      "falsifier": "Free archive state unavailable or simulated revert not reproducible given exact source block.",
+      "acceptance": "At least one controlled original negative and benign control, no signing or broadcast, classified failure vs unknown.",
+      "site_candidate": "EXECUTION_RISK_EVIDENCE",
+      "execution_status": "PLANNED_NOT_EXECUTED",
+      "budget_usd": 0,
+      "source_identity_authority": "PUBLIC_SOURCE_ONLY",
+      "trading_authority": false,
+      "model_promotion_allowed": false,
+      "new_scheduler_allowed": false
+    },
+    {
+      "id": "X04",
+      "name": "ACTUAL_SWAP_RECEIPT_TRUTH",
+      "original_owner": "Donh91/Meme-Alpha-Lab#98",
+      "support_owner": "Donh91/Meme-Alpha-Lab#77",
+      "priority": "P0",
+      "method_ranks": [
+        4
+      ],
+      "dependencies": [],
+      "hypothesis": "First-party receipt deltas quantify actual feasible execution and source discrepancies better than chart prices.",
+      "baseline": "Chart quote and price proxy.",
+      "source": [
+        "https://github.com/0xProject/0x-parser",
+        "https://github.com/blockscout/docs/blob/main/robinhood-api.mdx"
+      ],
+      "falsifier": "No free permitted trace/transaction or cashflow attribution impossible for sampled source.",
+      "acceptance": "Exact confirmed original actual executed tx and size/time wallet/token/quote movements with gas/tax and source coverage; buyer vs recipient separated.",
+      "site_candidate": "EVIDENCE_TIMELINE",
+      "execution_status": "PLANNED_NOT_EXECUTED",
+      "budget_usd": 0,
+      "source_identity_authority": "PUBLIC_SOURCE_ONLY",
+      "trading_authority": false,
+      "model_promotion_allowed": false,
+      "new_scheduler_allowed": false
+    },
+    {
+      "id": "X05",
+      "name": "SOURCE_CONTINUITY_AND_CAP",
+      "original_owner": "Donh91/Meme-Alpha-Lab#120",
+      "priority": "P0",
+      "method_ranks": [
+        5
+      ],
+      "dependencies": [],
+      "hypothesis": "Source-specific log limits and gaps may censor eligibility and invalidate earliest clock even when provider responds 200.",
+      "baseline": "Existing canonical Pons cursor and bounded public HOT/COLD source custody.",
+      "source": [
+        "https://github.com/blockscout/docs/blob/main/robinhood-api.mdx",
+        "https://github.com/ponder-sh/ponder"
+      ],
+      "falsifier": "Current collectors already source-attest complete windows or missing data cannot be recovered at zero added cost.",
+      "acceptance": "Provider-specific cap=1000 (not universal) plus malicious 429/silent partial fixtures; contiguous windows, safe cursor and two natural source receipts where applicable.",
+      "site_candidate": "SOURCE_HEALTH_CLOCK",
+      "execution_status": "PLANNED_NOT_EXECUTED",
+      "budget_usd": 0,
+      "source_identity_authority": "PUBLIC_SOURCE_ONLY",
+      "trading_authority": false,
+      "model_promotion_allowed": false,
+      "new_scheduler_allowed": false
+    },
+    {
+      "id": "X06",
+      "name": "SIZE_FX_AND_MINI_ROUTE",
+      "original_owner": "Donh91/Meme-Alpha-Lab#98",
+      "support_owner": "Donh91/Meme-Alpha-Lab#194",
+      "priority": "P1",
+      "method_ranks": [
+        6,
+        7,
+        8
+      ],
+      "dependencies": [
+        "X01",
+        "X02"
+      ],
+      "hypothesis": "Same-block size-dependent route/fee and quote-currency-aware estimates are more useful than a single pair spot price.",
+      "baseline": "Single-venue quote/marginal ratio and nominal USD assumption.",
+      "source": [
+        "https://docs.ponsfamily.com/v2",
+        "https://api-docs.defillama.com/"
+      ],
+      "falsifier": "Free source currency/route coverage missing or added calculation does not change qualified outcomes.",
+      "acceptance": "Size ladder 50/100/250/500/1000 plus whole hypothetical position, USD as-of source or UNKNOWN and 25/50/80% sensitivity scenario.",
+      "site_candidate": "POSITION_CAPACITY_STRESS",
+      "execution_status": "PLANNED_NOT_EXECUTED",
+      "budget_usd": 0,
+      "source_identity_authority": "PUBLIC_SOURCE_ONLY",
+      "trading_authority": false,
+      "model_promotion_allowed": false,
+      "new_scheduler_allowed": false
+    },
+    {
+      "id": "X07",
+      "name": "PIT_EXECUTABLE_OUTCOME_ABLATION",
+      "original_owner": "Donh91/Meme-Alpha-Lab#77",
+      "support_owner": "Donh91/Meme-Alpha-Lab#228",
+      "priority": "P1",
+      "method_ranks": [
+        9
+      ],
+      "dependencies": [
+        "X01",
+        "X04",
+        "X05"
+      ],
+      "hypothesis": "Frozen Alpha strategies have different true net-after-cost outcomes from chart-only winners.",
+      "baseline": "Four strategy families and eight frozen shadow arms, simple price/fixed liquidity benchmark.",
+      "source": [
+        "https://github.com/Donh91/Meme-Alpha-Lab/blob/main/research/alpha_audit/strategy_arena/README.md"
+      ],
+      "falsifier": "No matched eligible cohort, no original T0 source clock, no quote-at-decision or no improvement over cheapest baseline.",
+      "acceptance": "Original immutable one-universe cohorts with nonentry/failed/censored rows; due 15m/1h/6h/24h/72h/7d without hindsight, positive/negative source coverage.",
+      "site_candidate": "STRATEGY_ARENA_INTERNAL_ONLY",
+      "execution_status": "PLANNED_NOT_EXECUTED",
+      "budget_usd": 0,
+      "source_identity_authority": "PUBLIC_SOURCE_ONLY",
+      "trading_authority": false,
+      "model_promotion_allowed": false,
+      "new_scheduler_allowed": false
+    },
+    {
+      "id": "X08",
+      "name": "SITE_DATA_PRIVACY_AND_FRESHNESS",
+      "original_owner": "Donh91/Meme-Alpha-Lab#228",
+      "priority": "P1",
+      "method_ranks": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        9
+      ],
+      "dependencies": [],
+      "hypothesis": "Private research outcomes can be projected to genuinely usable read-only near-live site instruments without leaking private sources or calling stale data LIVE.",
+      "baseline": "Existing D2.5 private staging and static source-unavailable Trust Desk.",
+      "source": [
+        "https://github.com/Donh91/Meme-Alpha-Lab/blob/main/handoff/ALPHA_LAB_PRO_BUILD_STATE_V1.json"
+      ],
+      "falsifier": "No original public-safe approval, backend provenance or native Safari QA; source cadence slower than displayed label.",
+      "acceptance": "Owner-approved allowlist-only privacy filter, tests for secret/wallet leakage, source time/TTL label, immutable frozen rows, private mobile UI preview and real source publish/Pages readback before LIVE.",
+      "site_candidate": "SOURCE_SAFE_SITE_CONSUMER",
+      "execution_status": "PLANNED_NOT_EXECUTED",
+      "budget_usd": 0,
+      "source_identity_authority": "PUBLIC_SOURCE_ONLY",
+      "trading_authority": false,
+      "model_promotion_allowed": false,
+      "new_scheduler_allowed": false
+    },
+    {
+      "id": "X09",
+      "name": "CLAUDE_INDEPENDENT_RED_TEAM",
+      "original_owner": "Donh91/Investering-Framework-Archive-v1#1512",
+      "support_owner": "Donh91/Investering-Framework-Archive-v1#1156",
+      "priority": "P1",
+      "method_ranks": [
+        1,
+        2,
+        3,
+        5,
+        8,
+        9
+      ],
+      "dependencies": [],
+      "hypothesis": "Independent source-grounded adversarial review can find one material overlooked false SAFE, license, Pons graduation or website privacy/latency flaw.",
+      "baseline": "Atlas plus current owner code/receipts with independent negative tests.",
+      "source": [
+        "https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/173"
+      ],
+      "falsifier": "No incremental reproducible finding or Claude queue priority blocks reading.",
+      "acceptance": "One native claude/log report SHA with exact original source refs, reproducible fault or NO_INCREMENTAL_VALUE; S1 independently adjudicates without fake approval.",
+      "site_candidate": "NONE",
+      "execution_status": "PLANNED_NOT_EXECUTED",
+      "budget_usd": 0,
+      "source_identity_authority": "PUBLIC_SOURCE_ONLY",
+      "trading_authority": false,
+      "model_promotion_allowed": false,
+      "new_scheduler_allowed": false
+    }
+  ],
+  "required_outcome_proof": [
+    "ORIGINAL_OWNER_NATIVE_RECEIPT",
+    "EXACT_SOURCE_CLOCK",
+    "SOURCE_COVERAGE_DENOMINATOR",
+    "PIT_NO_HINDSIGHT",
+    "PRE_REGISTERED_MATCHED_CONTROL",
+    "RESEARCH_ONLY",
+    "PUBLIC_SAFE_PROJECTION_IF_SITE",
+    "EXACT_HEAD_CI_AND_MAIN_READBACK_FOR_CODE"
+  ],
+  "frozen_science_note": "This coordination manifest preserves hypothesis and owner mapping only; a completed issue comment, source doc, or green synthetic test does NOT mean execution, real-time availability, trade or economic edge."
+}
