@@ -14,6 +14,7 @@ const $=id=>document.getElementById(id);
 const SVG='http://www.w3.org/2000/svg',HOUR=3600000,DAY=86400000;
 const SOURCE_RECHECK_MS=5*60*1000;
 let asset='BTC',language='da',model=null,sliderHour=0,playTimer=null,staleTimer=null,requestGeneration=0;
+let inspectView=null,inspectHour=null;
 const s=(n)=>typeof n==='number'&&Number.isFinite(n)&&n>0;
 const t=(da,en)=>language==='da'?da:en;
 const utc=ms=>new Date(ms).toLocaleString(language==='da'?'da-DK':'en-GB',{
@@ -101,9 +102,11 @@ function textLabels(){
    t('DESIGN QA · IKKE PRODUKTION','DESIGN QA · NOT PRODUCTION')]
  ];
  for(const [selector,value] of staticLabels){const n=document.querySelector(selector);if(n)n.textContent=value}
+ // v2 (AUDIT F18): premium-tabs.mjs owns the tablist label; do not overwrite it on every plot().
  for(const [selector,value] of [
   ['.asset-select',t('Aktiv','Asset')],
-  ['.premium-entry-navigation',t('Premium sektioner','Premium sections')],
+  ...(document.querySelector('[role="tablist"].premium-entry-navigation')?[]:
+   [['.premium-entry-navigation',t('Premium sektioner','Premium sections')]]),
   ['#hour-slider',t('Time for den observerede kurve','Hour of the observed curve')]
  ]){const n=document.querySelector(selector);if(n)n.setAttribute('aria-label',value)}
  set('play-text',playTimer===null?t('Afspil uge','Play week'):t('Stop','Pause'));
@@ -155,6 +158,7 @@ function paintActualDailyRanges(days,x,y){
  if(!parent){
   parent=document.createElementNS(SVG,'g');
   parent.setAttribute('data-actual-daily-ranges','');
+  parent.setAttribute('role','group');
   parent.setAttribute('aria-label','Observed daily high and low');
   svg.append(parent);
  }
@@ -214,6 +218,7 @@ function plot(){
   $('playhead').setAttribute('visibility','hidden');
   $('endpoint')?.setAttribute('visibility','hidden');$('endpoint-halo')?.setAttribute('visibility','hidden');
   set('feed-status',t('Afventer gyldige officielle CN-data. Ingen prognose eller pris vises.','No valid official CN source. No forecast or price shown.'));
+  inspectView=null;hideInspector();
   return;
  }
  const bands=model.bands||[],hourly=model.hourly_observations||[];
@@ -381,6 +386,132 @@ function plot(){
  set('chart-description',t('Mandagens tre originale prognoseintervaller vises for dag 1–2, 3–4 og 5–7. Den grønne observerede kurs brydes ved manglende timer. Blå stiplet forventet dagskurs kræver syv udstedte punkter.',
  'Verified hourly prices only; missing hours break the path. Blue daily forecasts require original published points.'));
  document.querySelectorAll('[data-asset]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.asset===asset)));
+ // v2 presentation only: hand the already-validated, already-drawn values to the
+ // read-only inspector. No new values, no interpolation, no extra fetch.
+ inspectView={start,end,lo,hi,cursor,observed:visible,
+  forecast:model.forecast_status==='SOURCE_ISSUED'&&quoteComparable?model.forecast:null,
+  unit:model.actual_quote_unit,forecastUnit:model.forecast_declared_quote_unit,stale};
+ alignDayAxis(cursor,start);
+ refreshInspector();
+}
+/* ---- CN SITE v2: read-only chart inspector (presentation only) ----------------
+ * Crosshair + tooltip + keyboard value text for the existing Graph B SVG.
+ * It ONLY reads values plot() has already validated and drawn (inspectView).
+ * Observed price is shown solely for an actual source hour (no interpolation,
+ * gaps stay gaps). Forecast values are shown only when plot() drew the original
+ * source-issued, quote-comparable daily path. Text via textContent only.
+ */
+let inspectMode=null,inspectNodes=null;
+function alignDayAxis(cursor,start){
+ const current=Math.max(0,Math.min(6,Math.floor((cursor-start)/DAY)));
+ const svg=$('chart'),axis=document.querySelector('#variant-panel .day-axis');
+ const geo=axis&&svg&&typeof svg.getBoundingClientRect==='function'?
+  [svg.getBoundingClientRect(),axis.getBoundingClientRect()]:null;
+ // Day labels sit at the centre of the SAME UTC day cell the SVG draws
+ // (x = 14 + (i + .5) * 972/7 in viewBox units), at every breakpoint.
+ if(geo&&geo[0].width>0)axis.classList?.add('cn-v2-aligned');
+ document.querySelectorAll('.day-axis [data-day]').forEach((n,i)=>{
+  n.classList?.toggle('is-current',i===current);
+  if(geo&&geo[0].width>0&&n.style)n.style.left=
+   (geo[0].left-geo[1].left+(14+(i+.5)*972/7)/1000*geo[0].width).toFixed(1)+'px';
+ });
+}
+function inspectorNodes(){
+ if(inspectNodes)return inspectNodes;
+ const shell=document.querySelector('#variant-panel .plot-shell');
+ const svg=$('chart');
+ if(!shell||!svg||typeof svg.getBoundingClientRect!=='function')return null;
+ const make=(cls,hidden)=>{const n=document.createElement('div');n.className=cls;
+  if(hidden)n.setAttribute('aria-hidden','true');n.hidden=true;shell.append(n);return n};
+ const line=make('cn-v2-crosshair',true),dot=make('cn-v2-dot',true),tip=make('cn-v2-tip',false);
+ tip.setAttribute('role','tooltip');tip.id='cn-v2-tip';
+ inspectNodes={shell,svg,line,dot,tip};
+ return inspectNodes;
+}
+function hideInspector(){
+ inspectMode=null;inspectHour=null;
+ const n=inspectNodes;if(!n)return;
+ for(const k of ['line','dot','tip'])n[k].hidden=true;
+ n.shell.classList?.remove('is-inspecting');
+}
+function inspectLines(hourMs){
+ const v=inspectView;if(!v)return null;
+ const lines=[[utc(hourMs),'cn-v2-tip-time']];
+ const hit=v.observed.find(p=>Math.abs(p.time*1000-hourMs)<HOUR/2);
+ if(hit)lines.push([t('Faktisk kurs ','Observed ')+num(hit.value,v.unit),'cn-v2-tip-actual']);
+ else if(hourMs>v.cursor)lines.push([t('Ikke observeret endnu','Not observed yet'),'cn-v2-tip-muted']);
+ else lines.push([t('Ingen verificeret timeobservation','No verified hourly observation'),'cn-v2-tip-muted']);
+ const day=Math.floor((hourMs-v.start)/DAY);
+ const f=v.forecast&&day>=0&&day<7?v.forecast[day]:null;
+ if(f){
+  lines.push([t('Dag ','Day ')+(day+1)+' · '+t('forventet luk ','expected close ')+num(f.expected_close,v.forecastUnit),'cn-v2-tip-forecast']);
+  if(s(f.low)&&s(f.high))lines.push([t('Frosset interval ','Frozen range ')+
+   new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0}).format(f.low)+' – '+
+   new Intl.NumberFormat(language==='da'?'da-DK':'en-US',{maximumFractionDigits:0}).format(f.high),'cn-v2-tip-band']);
+ }
+ if(hit&&v.stale)lines.push([t('Forældet observation · ikke aktuel kurs','Stale observation · not a current price'),'cn-v2-tip-muted']);
+ return {lines,hit};
+}
+function showInspectorAt(hourMs){
+ const v=inspectView,n=inspectorNodes();
+ if(!v||!n||!(hourMs>=v.start&&hourMs<=v.end)){hideInspector();return}
+ const info=inspectLines(hourMs);if(!info){hideInspector();return}
+ const r=n.svg.getBoundingClientRect(),sr=n.shell.getBoundingClientRect();
+ if(!r.width||!r.height)return;
+ const sx=14+((hourMs-v.start)/(v.end-v.start))*972;
+ const px=r.left-sr.left+sx/1000*r.width;
+ n.line.style.left=px.toFixed(1)+'px';
+ n.line.style.top=(r.top-sr.top+28/405*r.height).toFixed(1)+'px';
+ n.line.style.height=(344/405*r.height).toFixed(1)+'px';
+ n.line.hidden=false;
+ if(info.hit){
+  const sy=28+((v.hi-info.hit.value)/(v.hi-v.lo))*344;
+  n.dot.style.left=px.toFixed(1)+'px';
+  n.dot.style.top=(r.top-sr.top+sy/405*r.height).toFixed(1)+'px';
+  n.dot.hidden=false;
+ }else n.dot.hidden=true;
+ n.tip.replaceChildren(...info.lines.map(([text,cls])=>{
+  const row=document.createElement('span');row.className=cls;row.textContent=text;return row}));
+ n.tip.hidden=false;
+ const w=n.tip.offsetWidth||180,room=sr.width;
+ let left=px+14;if(left+w>room-4)left=px-14-w;
+ n.tip.style.left=Math.max(4,left).toFixed(1)+'px';
+ n.shell.classList?.add('is-inspecting');
+}
+function refreshInspector(){
+ const v=inspectView;
+ const slider=$('hour-slider');
+ // Keyboard / screen-reader parity: the slider announces the same values.
+ if(v&&slider){
+  const info=inspectLines(Math.floor(v.cursor/HOUR)*HOUR);
+  if(info)slider.setAttribute('aria-valuetext',info.lines.map(x=>x[0]).join(' · '));
+ }
+ if(!v){hideInspector();return}
+ if(inspectMode==='slider')showInspectorAt(Math.floor(v.cursor/HOUR)*HOUR);
+ else if(inspectMode==='pointer'&&inspectHour!==null)showInspectorAt(inspectHour);
+}
+function installInspector(){
+ const n=inspectorNodes();if(!n)return;
+ const fromPointer=e=>{
+  const v=inspectView;if(!v)return;
+  const r=n.svg.getBoundingClientRect();if(!r.width)return;
+  const sx=(e.clientX-r.left)/r.width*1000;
+  const ms=v.start+Math.max(0,Math.min(1,(sx-14)/972))*(v.end-v.start);
+  inspectMode='pointer';inspectHour=Math.round(ms/HOUR)*HOUR;
+  showInspectorAt(inspectHour);
+ };
+ n.svg.addEventListener('pointermove',fromPointer);
+ n.svg.addEventListener('pointerdown',fromPointer);
+ n.svg.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')hideInspector()});
+ document.addEventListener('pointerdown',e=>{if(inspectMode==='pointer'&&!n.svg.contains(e.target))hideInspector()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')hideInspector()});
+ const slider=$('hour-slider');
+ slider?.addEventListener('focus',()=>{inspectMode='slider';refreshInspector()});
+ slider?.addEventListener('blur',()=>{if(inspectMode==='slider')hideInspector()});
+ const relayout=()=>{if(inspectView)alignDayAxis(inspectView.cursor,inspectView.start);if(inspectMode)refreshInspector()};
+ window.addEventListener('resize',relayout);
+ // Tabs, fonts and scrollbars change the SVG width after plot(); keep labels on their day cells.
+ if(typeof ResizeObserver==='function')new ResizeObserver(relayout).observe(n.svg);
 }
 async function getJson(url){
  const r=await fetch(url,{cache:'no-store',credentials:'omit',redirect:'error',
@@ -453,8 +584,9 @@ $('hour-slider')?.addEventListener('input',e=>{clearPlaying();sliderHour=Number(
 $('play')?.addEventListener('click',()=>{
  if(playTimer!==null){clearPlaying();return}
  if(!model||model.source_status!=='SOURCE_BOUNDED'||$('hour-slider').disabled)return;
- if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  const end=Number($('hour-slider').max);
+ // v2 (AUDIT F14): reduced motion jumps straight to the latest observed hour instead of doing nothing.
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){sliderHour=end;plot();return}
  if(sliderHour>=end)sliderHour=0;
  set('play-text',t('Stop','Pause'));
  playTimer=setInterval(()=>{sliderHour=Math.min(end,sliderHour+1);plot();if(sliderHour>=end)clearPlaying()},135);
@@ -467,5 +599,6 @@ window.addEventListener('pagehide',clearPlaying);
 // Pages can publish a new source bundle while the iPhone tab stays open.
 // Re-read the public files; never extend a quote's freshness from a local timer.
 const sourceRecheck=setInterval(()=>{if(!document.hidden&&playTimer===null)refresh({background:true})},SOURCE_RECHECK_MS);
+try{installInspector()}catch{/* presentation layer must never block the source chart */}
 window.addEventListener('pagehide',()=>clearInterval(sourceRecheck));
 refresh();
