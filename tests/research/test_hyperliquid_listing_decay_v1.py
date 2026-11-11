@@ -144,6 +144,34 @@ class ListingDecayResearchTests(unittest.TestCase):
         self.assertEqual(result["n_missing_control_exits"],3)
         self.assertEqual(result["n_30d_exit_observable"],1)
 
+
+    def test_0d_vs_7d_delay_keep_identical_frozen_entrants(self):
+        # A later entrant near the Oct 31 source maturity cutoff can mature
+        # at delay 0 but not at delay 7. Such an entrant must belong to
+        # neither cohort in the published comparison.
+        source=self.data.copy()
+        late=source.loc[(source["coin"]=="OLD") &
+                        (source["timestamp"]>=pd.Timestamp("2025-08-25T00:00:00Z"))].copy()
+        late["coin"]="LATE_COUPLED"
+        source=pd.concat([source,late],ignore_index=True)
+        base=m.study(source,minimum_first="2025-07-01",latest_first="2025-08-31",
+                     delay_days=0)
+        delayed=m.study(source,minimum_first="2025-07-01",latest_first="2025-08-31",
+                        delay_days=7)
+        entries0={r["coin"] for r in base["rows"]}
+        entries7={r["coin"] for r in delayed["rows"]}
+        self.assertEqual(entries0,entries7)
+        self.assertNotIn("LATE_COUPLED",entries0)
+        self.assertIn("NEW",entries0)
+        self.assertEqual(base["cohort_max_comparison_delay_days"],7)
+        self.assertEqual(delayed["cohort_max_comparison_delay_days"],7)
+        self.assertEqual(base["cohort_last_first_trade_utc"],
+                         delayed["cohort_last_first_trade_utc"])
+
+    def test_unregistered_entry_delay_fails_closed(self):
+        with self.assertRaisesRegex(ValueError,"UNREGISTERED_ENTRY_DELAY"):
+            m.study(self.data,delay_days=10)
+
     def test_control_age_gate(self):
         entry=pd.Timestamp("2025-07-17",tz="UTC")
         f=m.window_features(self.bars["NEW"],entry,entry-m.DAY)

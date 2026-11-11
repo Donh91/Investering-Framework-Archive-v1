@@ -142,7 +142,13 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
     first_floor=min(firsts.values())
     observed_last=max(b["timestamp"][-1] for b in bars.values())
     start=max(pd.Timestamp(minimum_first,tz="UTC"),first_floor+45*DAY)
-    last=min(pd.Timestamp(latest_first,tz="UTC"),observed_last-(32+delay_days)*DAY)
+    # All published ENTRY0 vs ENTRY7 comparisons must share the same ex-ante
+    # eligible entrant cohort. Without this guard, the shorter-delay analysis
+    # includes markets not yet mature enough for the 7-day delayed analysis.
+    if delay_days not in (0,1,3,7):
+        raise ValueError("UNREGISTERED_ENTRY_DELAY")
+    max_comparison_delay_days=7
+    last=min(pd.Timestamp(latest_first,tz="UTC"),observed_last-(32+max_comparison_delay_days)*DAY)
     rows=[]
     for coin,b in sorted(bars.items(),key=lambda kv:kv[1]["timestamp"][0]):
         first=firsts[coin]
@@ -220,7 +226,10 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
                          "fraction_falling":sum(v<0 for v in rr)/len(rr) if rr else None}
     return {
        "status":"RETROSPECTIVE_DESCRIPTIVE_FIRST_TRADE_PROXY_NO_TRADING_EDGE",
-       "n_first_trade_candidates":len(rows),"n_30d_exit_observable":len(usable),
+       "n_first_trade_candidates":len(rows),
+       "cohort_max_comparison_delay_days":max_comparison_delay_days,
+       "cohort_last_first_trade_utc":last.isoformat(),
+       "n_30d_exit_observable":len(usable),
        "n_censored":len(rows)-len(usable),"n_paired":len(paired),
        "n_paired_complete_controls":len(paired_complete),
        "n_paired_partial_controls":len(control_partials),
