@@ -9,16 +9,16 @@
   "automatic_escalation_required": false,
   "candidate_revalidation_count": 3,
   "compatibility_counts": {
-    "DRIFTED": 1196,
+    "DRIFTED": 1197,
     "EXACT": 931,
-    "PARTIAL": 6675,
+    "PARTIAL": 6676,
     "REMOVED": 11,
     "UNKNOWN": 140
   },
   "contract": "OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT_v1",
-  "episode_count": 8953,
+  "episode_count": 8955,
   "failures": [],
-  "generated_at_utc": "2026-11-11T11:27:24.883936Z",
+  "generated_at_utc": "2026-11-11T12:08:36.717563Z",
   "materialized_candidate_count": 30,
   "measurement": {
     "failed_task_rate": "BASELINE_ACCUMULATING",
@@ -29,30 +29,12 @@
     "useful_retrieval_precision": 1.0
   },
   "memory_reuse_allowed": true,
-  "new_episode_count": 90,
+  "new_episode_count": 2,
   "procedural_candidate_count": 30,
   "recommended_action": "CONTINUE_SHADOW_AND_ACCUMULATE_BASELINE",
   "retrieval_probe": {
     "probe_count": 12,
     "results": [
-      {
-        "episode_id": "OE-6c47cccc5e61ac53",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-213aae511b988275",
-        "expected_task_class": "MARKET_STATE",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "MARKET_STATE"
-      },
       {
         "episode_id": "OE-e177017504157178",
         "expected_task_class": "GENERAL_FRAMEWORK",
@@ -142,14 +124,32 @@
         "selected_count": 5,
         "top_class_match": true,
         "top_task_class": "GENERAL_FRAMEWORK"
+      },
+      {
+        "episode_id": "OE-5cdee48707cad823",
+        "expected_task_class": "GENERAL_FRAMEWORK",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "GENERAL_FRAMEWORK"
+      },
+      {
+        "episode_id": "OE-0b566e551bf50b9a",
+        "expected_task_class": "GENERAL_FRAMEWORK",
+        "reusable_count": 1,
+        "revalidation_count": 4,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "GENERAL_FRAMEWORK"
       }
     ],
     "stale_reuse_violations": 0,
     "top_task_class_hits": 12,
     "top_task_class_precision": 1.0
   },
-  "source_head_sha": "122f6a0d3dfa453da930ce2380b574fc670230c0",
-  "stale_share": 0.1348,
+  "source_head_sha": "0b566e551bf50b9ab5f58f2b050fae9f34b5d4b5",
+  "stale_share": 0.1349,
   "status": "WARN",
   "warnings": [
     "candidate_requires_revalidation:3"
