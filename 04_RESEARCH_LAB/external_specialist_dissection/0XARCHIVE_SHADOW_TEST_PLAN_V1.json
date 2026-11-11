@@ -101,7 +101,7 @@
       "baseline": "ideal_fill_vs_spread_fee_vs_latency_partial_fill",
       "primary_metric": "after_cost_result_and_whole_exit_fill_rate",
       "kill": "no added execution fidelity, untradeable size, worse than native source",
-      "next_action": "freeze common cutoff and synthetic controls before real data"
+      "next_action": "Do not assume 0xbt does L4 realistic execution; start with existing HRE owner and explicitly modeled synthetic bid/ask/latency/no-fill controls"
     },
     {
       "id": "OXA-E2",
@@ -126,7 +126,7 @@
       "baseline": "existing_HRE_trial_holdout_clock_null_method",
       "primary_metric": "hash_stability_and_no_holdout_leak_on_synthetic_fixtures",
       "kill": "method duplicate, dependency risk, holdout leakage, irreproducible receipts",
-      "next_action": "pin source and audit Rust, Python, prompts and dependency chain without plugin install"
+      "next_action": "Audit sealed holdout bypass via raw Parquet, study reset, byte-hash provenance, 0.3.2 build pin, and 2bp fixed slippage on absent book; sandbox only"
     },
     {
       "id": "OXA-E4",
@@ -176,5 +176,20 @@
   "cross_repo": "public control + private data plane Donh91/secrets + runtime credentials; no raw in public",
   "promotion": "existing owner PR + exact-head CI + independent review + governed merge + main readback + prospective proof",
   "notes": "Provider published comparative and example backtest metrics are not independent evidence. No real provider API requests or market data processed in this audit.",
-  "report_path": "04_RESEARCH_LAB/external_specialist_dissection/0XARCHIVE_SHADOW_SOURCE_AUDIT_2026-11-11.md"
+  "report_path": "04_RESEARCH_LAB/external_specialist_dissection/0XARCHIVE_SHADOW_SOURCE_AUDIT_2026-11-11.md",
+  "engine_verified_limitations": {
+    "source": "https://github.com/0xArchiveIO/0xarchive-quant/blob/3ff0c83409525ad9cd74f76a7cfd6fe0aa3bdc51/skills/backtest/references/data.md",
+    "strategy_grain": "one_minute_hyperliquid_core_perps",
+    "price_history_starts_vendor_documented": "2025-03-22",
+    "supports_lighter_in_backtester": false,
+    "supports_HIP3_HIP4_spot_in_backtester": false,
+    "book_and_liquidation_level_columns_in_backtest_dataset": "ALWAYS_NULL",
+    "fill_slippage_fallback_bps": 2,
+    "model_is_true_orderbook_queue_simulator": false,
+    "sealed_holdout_bypassable_by_out_of_engine_parquet_access": true,
+    "study_trial_ledger_scope": "study_directory_not_system_wide",
+    "exact_dataset_byte_hash_in_receipt_struct": "NOT_PROVED",
+    "claimed_quant_edge_by_our_framework": "NONE",
+    "dependency_pin_in_skill": "0.3.2_VERIFY_ARTIFACT_BEFORE_INSTALL"
+  }
 }
