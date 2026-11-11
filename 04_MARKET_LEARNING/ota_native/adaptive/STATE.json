@@ -1,16 +1,17 @@
 {
   "active_signal_signature": [
     "breadth_material_delta",
+    "breadth_regime_change",
     "classified_evidential",
     "classified_new_information"
   ],
-  "adaptive_score": 2.8375,
+  "adaptive_score": 4.475,
   "adaptive_score_threshold": 3.0,
   "attention_weights": {
-    "breadth_material_delta": 1.0,
-    "breadth_regime_change": 1.0,
-    "classified_evidential": 1.1,
-    "classified_new_information": 1.15,
+    "breadth_material_delta": 1.05,
+    "breadth_regime_change": 1.05,
+    "classified_evidential": 1.15,
+    "classified_new_information": 1.2,
     "framework_data_gap": 0.7,
     "research_novelty": 0.8,
     "settled_transition": 1.25
@@ -24,35 +25,34 @@
     "portfolio_execution": false,
     "threshold_change": false
   },
-  "blockers": [
-    "ADAPTIVE_SCORE_BELOW_THRESHOLD"
-  ],
+  "blockers": [],
   "canonical_effect": false,
   "classified_delta_counts": {
-    "CONTEXT_ONLY": 0,
+    "CONTEXT_ONLY": 1,
     "EVIDENTIAL": 1,
     "NEW_INFORMATION": 1
   },
   "contract": "NATIVE_OTA_ADAPTIVE_GATE_v1",
-  "decision": "NO_ADAPTIVE_FULL_OTA",
-  "decision_hash_sha256": "1b014cc9c0e495bb5645c5b6a1c62d870bfe1a97427ae4df92401d22455f1587",
+  "decision": "RUN_ADAPTIVE_FULL_OTA",
+  "decision_hash_sha256": "1e02e2f05da01af1416e67742ca130e8e2eca079618f0bd128d52d220ff15f2e",
   "framework_data_gap_count": 0,
   "full_ota_runs_this_iso_week_before_decision": 0,
-  "generated_at_utc": "2026-11-04T01:40:33.467084Z",
+  "generated_at_utc": "2026-11-11T01:29:25.837303Z",
   "hours_since_latest_full_ota": null,
-  "latest_breadth_advance_ratio": 0.5,
+  "latest_breadth_advance_ratio": 0.26,
   "latest_full_ota_utc": null,
   "learning_update": "BOOST_NOVEL_ACTIVE_SIGNALS",
   "market_semantics_changed": false,
   "portfolio_rules_changed": false,
-  "previous_adaptive_breadth_advance_ratio": 0.7,
+  "previous_adaptive_breadth_advance_ratio": 0.5,
   "reasons": [
     "breadth_material_delta",
+    "breadth_regime_change",
     "classified_evidential",
     "classified_new_information"
   ],
   "research_primary_action": "QUEUE_BOUNDED_RESEARCH",
-  "run_full_ota": false,
+  "run_full_ota": true,
   "schema_version": 1,
   "self_development_scope": [
     "ADAPTIVE_CADENCE",
@@ -61,15 +61,15 @@
     "NOVELTY_WEIGHTING"
   ],
   "signal_contributions": {
-    "breadth_material_delta": 0.95,
-    "breadth_regime_change": 0.0,
-    "classified_evidential": 0.7875,
-    "classified_new_information": 1.1,
+    "breadth_material_delta": 1.0,
+    "breadth_regime_change": 1.5,
+    "classified_evidential": 0.825,
+    "classified_new_information": 1.15,
     "framework_data_gap": 0.0,
     "research_novelty": 0.0,
     "settled_transition": 0.0
   },
   "source_policy": "READ_EXISTING_GITHUB_OWNERS_ONLY_NO_NEW_MARKET_SOURCE_CALLS",
-  "state_hash_sha256": "4f8193ee30139799b860867fb33b176dda63ee28b79715d2f27ec29d76be44f4",
+  "state_hash_sha256": "96332f8da877c44e4189c3711a2449fd7f6aa87319297a85a2f734e30c2bb306",
   "thresholds_changed": false
 }
