@@ -1,0 +1,56 @@
+{
+  "authority": "SHADOW_RESEARCH_ONLY_NON_CANONICAL",
+  "authority_firewall": {
+    "canonical_effect": false,
+    "execution_authority": false,
+    "market_state_effect": false,
+    "portfolio_effect": false,
+    "topup_authority": false
+  },
+  "contract": "SITUATION_ROOM_VERIFICATION_SHADOW_BRIDGE_v1",
+  "generated_at_utc": "2026-11-11T15:14:14Z",
+  "observation_date_utc": "2026-11-11",
+  "pending_verification": [
+    {
+      "canonical_effect": false,
+      "detection_time_utc": "2026-11-11T15:13:08Z",
+      "event_time_utc": "2026-11-11T06:00:39.186000Z",
+      "market_state_effect": false,
+      "portfolio_effect": false,
+      "shadow_admission": "NOT_ADMITTED_PENDING_VERIFICATION",
+      "shadow_id": "SRSH_4059185344e218c2e07b",
+      "source": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 174876,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-11T15:13:09Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-11T15:13:10Z",
+        "role": "DISCOVERY_ONLY",
+        "sha256": "08432f444d64002591c30c13b97d71281f815a124b4495921a305fd6a4e0f0a6",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-11-11"
+      },
+      "title": "Nvidia board retains Wachtell Lipton for Huang probe \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-11-11",
+      "verification_status": "PENDING_PRIMARY_VERIFICATION"
+    }
+  ],
+  "source_owner_contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "source_owner_path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/2026/11/2026-11-11.json",
+  "source_run_id": "SRDO_f9739e4ae5cfaf76",
+  "status": "PENDING_VERIFICATION",
+  "verification_policy": {
+    "accepted_methods": [
+      "OWNER_PRIMARY_EVENT_TITLE_OVERLAP",
+      "OWNER_PRIMARY_EVENT_FACT_ANCHORS",
+      "SITUATION_ROOM_LINKED_PRIMARY_SOURCE"
+    ],
+    "automatic_admission_requires_primary_corroboration": true,
+    "minimum_shared_tokens": 2,
+    "minimum_title_overlap": 0.45,
+    "situation_room_is_discovery_only": true
+  },
+  "verified_shadow_context": []
+}
