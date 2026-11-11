@@ -37,7 +37,7 @@ Required `OXARCHIVE_E0_SOURCE_RECEIPT_V1` fields are exactly those in `inspect()
 - `window_start <= event_max < window_end <= decision_cutoff`, and both source first-known and provider available timestamps must lie between the event and the cutoff. A later retrieval is *allowed* but cannot establish first-known.
 - `availability_evidence=IMMUTABLE_PRIOR_PUBLICATION_RECEIPT` is required as a **declaration only**. Another layer must independently validate that immutable prior proof, not merely trust the string.
 - `quality_state=COMPLETE_WINDOW`, zero gaps, finalized rows, nonzero row count, schema digest and private dataset binding metadata are required. An accepted shape cannot waive independent gap, clock or file-hash audits.
-- `rights_state=INTERNAL_RESEARCH_RIGHTS_REVIEWED` is a caller declaration. Before real use, first retrieve and verify the binding 0xArchive Data License and Terms against intended outputs. Provider's developer data-rights summary is NOT the controlling contract.
+- `rights_state=INTERNAL_RESEARCH_RIGHTS_REVIEWED` is a caller declaration. The binding public Data License (2026-10-28, https://0xarchive.io/policies/data-license) and Terms (2026-11-05, https://0xarchive.io/terms) have been retrieved independently for the source audit PR #2085. The declaration alone still proves neither a user's account entitlement nor permission for the specific output; source-policy review remains an external admission gate. The developer data-rights summary is NOT the controlling contract.
 - Private binding references `Donh91/secrets`, SHA-1 Git commit ID, SHA-256 data hash, byte count and private path. Data bytes stay restricted; API keys stay only in approved runtime secret storage.
 
 ## Scientific-method transfer and nonduplication
