@@ -24,7 +24,25 @@
     "commit": "3ff0c83409525ad9cd74f76a7cfd6fe0aa3bdc51",
     "skill_blob": "9450a2b0aff2fc969b1db661d45a695453713f14",
     "code_license": "MIT",
-    "data_license_primary_text": "NOT_INDEPENDENTLY_RETRIEVED"
+    "data_license_primary_text": "PUBLIC_PAGE_VERIFIED_2026-11-11_NOT_ACCOUNT_ENTITLEMENT",
+    "license_primary": "https://0xarchive.io/policies/data-license",
+    "terms_primary": "https://0xarchive.io/terms",
+    "data_license_last_updated": "2026-10-28",
+    "terms_last_updated": "2026-11-05",
+    "public_capabilities_url": "https://api.0xarchive.io/v1/capabilities",
+    "public_capabilities_retrieved_utc_date": "2026-11-11",
+    "public_capabilities_success": true,
+    "public_capabilities_rows": 111,
+    "public_capabilities_family_names": [
+      "hyperliquid",
+      "hip3",
+      "hip4",
+      "spot",
+      "lighter",
+      "rh-lighter"
+    ],
+    "public_capabilities_proof_scope": "DECLARED_ROUTE_METADATA_ONLY_NOT_SYMBOL_COVERAGE_OR_FIRST_KNOWN",
+    "public_capabilities_data_values_collected": false
   },
   "limits": {
     "free_usd_month": 0,
@@ -77,7 +95,7 @@
       "id": "OXA-E0",
       "owner_repo": "Donh91/Investering-Framework-Archive-v1",
       "owner_issue": 1514,
-      "stage": "BLOCKED_KEY_OR_ACCESS",
+      "stage": "PARTIAL_PUBLIC_CAPABILITIES_VERIFIED_PRIVATE_SYMBOL_QUALITY_BLOCKED",
       "hypothesis": "vendor_clock_and_coverage_fit_for_scientific_replay",
       "asset_scope": [
         "BTC",
@@ -87,7 +105,7 @@
       "primary_metric": "gaps_and_first_known_semantics_per_market",
       "required_proof": "two bounded request and quality receipts; exact symbol/version; parity vs native",
       "kill": "unknown availability timestamps, failed gaps, unlawful data use",
-      "next_action": "access/rights proof then bounded free source QA"
+      "next_action": "Sourced public capabilities and primary contract verified. Still need authorized authenticated Free key and legal entitlement before per-symbol quality/PIT records; preserve UNKNOWN if historical first-known cannot be proved."
     },
     {
       "id": "OXA-E1",
@@ -175,7 +193,7 @@
   "no_hindsight": "2023_core_L2_does_not_imply_2023_L4; retroactive data availability is not historical first-known",
   "cross_repo": "public control + private data plane Donh91/secrets + runtime credentials; no raw in public",
   "promotion": "existing owner PR + exact-head CI + independent review + governed merge + main readback + prospective proof",
-  "notes": "Provider published comparative and example backtest metrics are not independent evidence. No real provider API requests or market data processed in this audit.",
+  "notes": "2026-11-11 independently inspected public capabilities (111 declared routes across 6 namespace families), binding Data License and Terms. No vendor market rows or symbol QA collected, no key, no spend, no scientific edge.",
   "report_path": "04_RESEARCH_LAB/external_specialist_dissection/0XARCHIVE_SHADOW_SOURCE_AUDIT_2026-11-11.md",
   "engine_verified_limitations": {
     "source": "https://github.com/0xArchiveIO/0xarchive-quant/blob/3ff0c83409525ad9cd74f76a7cfd6fe0aa3bdc51/skills/backtest/references/data.md",
@@ -191,5 +209,6 @@
     "exact_dataset_byte_hash_in_receipt_struct": "NOT_PROVED",
     "claimed_quant_edge_by_our_framework": "NONE",
     "dependency_pin_in_skill": "0.3.2_VERIFY_ARTIFACT_BEFORE_INSTALL"
-  }
+  },
+  "required_publication_legal_gate": "Do not publish 0xArchive-derived benchmark/index or reconstructable raw values without rights review and provider written permission where required."
 }
