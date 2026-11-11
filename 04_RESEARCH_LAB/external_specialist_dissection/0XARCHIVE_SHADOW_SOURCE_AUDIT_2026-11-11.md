@@ -12,6 +12,25 @@ GO for a bounded, free, read-only source feasibility and method extraction study
 
 0xArchive is primarily a normalized event/market-data vendor for Hyperliquid and Lighter. Its unusual comparative value is full depth/order-lifecycle and wallet-attributed activity, plus long-lived market records and reproducibility-oriented tooling. These are provider claims until independently checked on exact symbols and windows. Hyperliquid core historical L2/books and perps data are more mature than order-level L4; Lighter and HIP-3/4 have differing clocks and starts. It is NOT a universal EVM/Base/Solana DEX microcap record.
 
+## 2026-11-11 public capabilities + binding legal primary-source addendum
+
+This section supersedes the earlier "binding terms not retrieved" caveat **for publicly readable text only**. The provider API remains UNAUTHENTICATED for market data; no account rights/entitlement, symbol-specific depth, record continuity, first-known-vintage or actual fills have been verified.
+
+**Live public metadata proof (zero credentials, zero paid credits):** `GET https://api.0xarchive.io/v1/capabilities` returned `success:true`, **111 declared capability rows** in six venue-family namespaces: `hyperliquid`, `hip3`, `hip4`, `spot`, `lighter`, `rh-lighter`. Examples of `available_from` **policy floors**, NOT independently checked data completeness or historic first publication:
+- Hyperliquid core L2 from 2023-04-15; core trades from 2023-04-15T03:31Z; core funding/OI from 2023-05-20T02:50Z.
+- Hyperliquid core L4 orderbook checkpoint from 2026-03-11T01:03Z. L4 orderbook route metadata is `live:false/replay:false` but **L4 diffs stream metadata is live/replay true**; distinguish snapshots from diff streams and reconstruction.
+- Hyperliquid core candle route policy floor 2025-03-22T12:00Z even though trades have an earlier public route. This is separate from the upstream 0xbt minute-dataset statement; do not infer any unsupported earlier engine backtest.
+- Lighter mainnet trades from 2025-01-17T08:43Z, L3 orderbook from 2026-03-05T03:33Z. Lighter Robinhood Chain L2 floor 2026-08-22T18:43Z.
+- Each family/data type has separate `live`, `replay`, cadence and page-limit constraints; a capability row is a catalog descriptor, not a source-health receipt or per-symbol contract.
+
+**Binding Data License read directly**: https://0xarchive.io/policies/data-license, updated 2026-10-28. Covers 0xArchive-obtained website/API/stream/export records, NOT peering data received from one's own Hyperliquid node. Permits internal research, backtesting, model training, risk management and materially transformed charts/analytics/customer-facing outputs subject to entitlement. Written permission is required for benchmarks, indices, financial products, raw redistributions, substitute feeds and white-label/OEM delivery. Downloaded entitled data can be retained subject to the same license after cancellation. Publishing derived outputs that reasonably reconstruct records remains prohibited.
+
+**Terms of Service read directly**: https://0xarchive.io/terms, updated 2026-11-05. Explicitly incorporates the Data License and states no guarantee of completeness, accuracy or timeliness; API keys are nontransferable; contractual rate limits apply. For data-use conflicts the Data License controls. Terms restrict reverse engineering proprietary service source code, but the separately MIT-licensed public `0xarchive-quant` repository remains a distinct software rights object; do not conflate these rights.
+
+**Regulatory/public-display boundary:** Our public Proof section could plausibly be interpreted as a benchmark/indicator depending on design, so keep explicit `PUBLICATION_RIGHTS_REVIEW` before publishing any provider-derived benchmark or vendor-reconstructable datapoints. Do not categorically assume an internal experimental score is permitted for public index use.
+
+**Updated E0 stage:** `PUBLIC_CAPABILITIES_METADATA_VERIFIED` only. The actual BTC/ETH symbol-level quality/coverage windows, API response schema, availability timestamps, incidents, request IDs, vendor rights/entitlement and bytes remain unverified; E0 cannot pass source admission. No account, free-key signup, paid subscription or raw API pull performed.
+
 ## Source inventory and fact grades
 
 - Product and data taxonomy: https://0xarchive.io/ and https://docs.0xarchive.io/venue-coverage
