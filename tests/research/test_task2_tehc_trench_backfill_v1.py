@@ -154,6 +154,24 @@ class TehcHeatOfflineTests(unittest.TestCase):
                          "CURRENT_REPLAY_BYTES_ONLY_NOT_HISTORICAL_FIRST_KNOWN")
         self.assertFalse(parsed["original_point_in_time_source_attested"])
 
+
+    def test_reconstruction_never_reads_future_source_or_vendor_days(self):
+        pads, bots, trench, prices = fixture()
+        historical_as_of = datetime(2025, 1, 20, tzinfo=timezone.utc)
+        past = m.evaluate(pads, bots, trench, prices, as_of=historical_as_of)
+        self.assertEqual(past["reconstruction"]["last_day"], "2025-01-19")
+        self.assertLess(past["reconstruction"]["n"], 35)
+        self.assertIsNone(past["outcomes"]["first_day"])
+        # Subsequent as-of future values must not change past diagnostics.
+        pads["series"][0]["volume_usd"][-1] *= 100000
+        bots["series"][0]["fees_usd"][-1] *= 100000
+        trench["history"][-1]["score"] = 0
+        trench["today"]["score"] = 0
+        after = m.evaluate(pads, bots, trench, prices, as_of=historical_as_of)
+        self.assertEqual(past["reconstruction"], after["reconstruction"])
+        self.assertEqual(past["outcomes"], after["outcomes"])
+        self.assertFalse(after["predictive_edge_admitted"])
+
     def test_no_prospective_or_market_authority(self):
         pads, bots, trench, kraken = fixture()
         output = m.evaluate(pads, bots, trench, kraken, as_of=AS_OF)

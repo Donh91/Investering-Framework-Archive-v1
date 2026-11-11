@@ -219,7 +219,11 @@ def evaluate(pads: dict, bots: dict, trench: dict, price: dict[str, dict], *,
         raise ValueError("AS_OF_UTC_REQUIRED")
     own = own_history(pads, bots, ties=ties)
     vendor = vendor_history(trench)
-    aligned = [dict(x, vendor=vendor[x["day"]]) for x in own if x["day"] in vendor]
+    # Retrospective snapshot data can extend beyond the requested observation
+    # clock. A UTC source day is only completed after its midnight boundary.
+    # Keep future source/vendor rows out of ALL diagnostics, not just prices.
+    aligned = [dict(x, vendor=vendor[x["day"]]) for x in own
+               if x["day"] in vendor and valid_date(x["day"]) < as_of.date()]
     if not aligned:
         raise ValueError("NO_VENDOR_RECONSTRUCTION_OVERLAP")
     kraken = {sym: kraken_daily(price[sym], as_of) for sym in ("btc", "eth", "sol")}
