@@ -1,0 +1,204 @@
+{
+  "contract": "RESEARCH_PARALLEL_LANES_V1",
+  "status": "PLANNED",
+  "mission_id": "KOMPAS_PRO_2_20261111_OWNER_APPROVED_RPL_10_TRACKS",
+  "original_owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1516",
+  "project_repo": "Donh91/Investering-Framework-Archive-v1",
+  "objective": "Falsify the incremental forecast calibration and Alpha market-regime value of a source-frozen market fingerprint versus existing canonical and cheap baselines.",
+  "source_manifest_path": "research/autonomous_research_portfolio/PORTFOLIO_MANIFEST_v1.json",
+  "source_snapshot_sha": "56187d1057b9e487163d1d39378759cb015812dc",
+  "source_eligibility": "UNKNOWN",
+  "data_classification": "PUBLIC_ONLY",
+  "parallel_job_cap": 3,
+  "approved_budget_usd": 3,
+  "no_new_scheduler": true,
+  "no_new_agent_identity": true,
+  "no_trading_authority": true,
+  "lanes": [
+    {
+      "id": "L01",
+      "name": "Source lineage and original-owner census",
+      "question": "Which current original clocks and source paths actually govern issuance?",
+      "hypothesis": "A source-native ledger can distinguish absent from censored and late.",
+      "baseline": "Current original source declarations, no synthetic fill",
+      "falsifier": "Unverifiable first-known or original issuer identity",
+      "source_ref": "Archive #1596 #1827 original source and API ledger",
+      "depends_on": [],
+      "max_minutes": 30,
+      "executor_kind": "READ_ONLY_TOOL",
+      "budget_usd": 0,
+      "output_path": "research/autonomous_research_portfolio/kompas_pro_2/lanes/L01_RESULT.md",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L02",
+      "name": "Frozen W46 and daily-close integrity",
+      "question": "Were seven Monday-frozen per-day targets actually issued and scored honestly?",
+      "hypothesis": "W46 daily close eligibility can be determined without rewriting snapshots.",
+      "baseline": "Original frozen week and naïve last-close baseline",
+      "falsifier": "Missing issue, target mismatch, quote mismatch or incomplete horizon",
+      "source_ref": "Archive #1516 #1596 PR #2073",
+      "depends_on": [
+        "L01"
+      ],
+      "max_minutes": 30,
+      "executor_kind": "READ_ONLY_TOOL",
+      "budget_usd": 0,
+      "output_path": "research/autonomous_research_portfolio/kompas_pro_2/lanes/L02_RESULT.md",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L03",
+      "name": "Proper-score benchmark tournament",
+      "question": "Does any canonical issued score beat fixed no-change, bands and abstain?",
+      "hypothesis": "Width-sensitive paired scoring improves diagnostic truth.",
+      "baseline": "PIT no-change, sigma-scaled bands, HOLD, abstain",
+      "falsifier": "No baseline lift or no issued nominal distribution",
+      "source_ref": "Archive ARP01 Sol and #1596 scorer",
+      "depends_on": [
+        "L01",
+        "L02"
+      ],
+      "max_minutes": 40,
+      "executor_kind": "READ_ONLY_TOOL",
+      "budget_usd": 0,
+      "output_path": "research/autonomous_research_portfolio/kompas_pro_2/lanes/L03_RESULT.md",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L04",
+      "name": "Regime fingerprint source-safe ablation",
+      "question": "Does a fixed small market-regime fingerprint add stable information?",
+      "hypothesis": "PIT liquidity, trend and breadth have nonredundant effect.",
+      "baseline": "Price-only drift and realized-volatility regime",
+      "falsifier": "Same-clock conditional lift vanishes or features unavailable",
+      "source_ref": "Market Anticipation Research Contract and ARP03",
+      "depends_on": [
+        "L01"
+      ],
+      "max_minutes": 45,
+      "executor_kind": "READ_ONLY_TOOL",
+      "budget_usd": 0,
+      "output_path": "research/autonomous_research_portfolio/kompas_pro_2/lanes/L04_RESULT.md",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L05",
+      "name": "Probabilistic path calibrator",
+      "question": "Can a source-frozen path improve sharpness and true nominal coverage?",
+      "hypothesis": "Quantile or density forecast is better calibrated after source gates.",
+      "baseline": "Rolling-vol quantile band and no-change median",
+      "falsifier": "No prospective nominal quantiles or poor proper score",
+      "source_ref": "Archive #1516 current Forward Path owner",
+      "depends_on": [
+        "L01",
+        "L02"
+      ],
+      "max_minutes": 45,
+      "executor_kind": "READ_ONLY_TOOL",
+      "budget_usd": 0,
+      "output_path": "research/autonomous_research_portfolio/kompas_pro_2/lanes/L05_RESULT.md",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L06",
+      "name": "Capital rotation falsification",
+      "question": "Does lead/lag rotation survive ETHBTC-only and clock placebo tests?",
+      "hypothesis": "Preknown breadth and liquidities precede segment divergence.",
+      "baseline": "ETHBTC leadership and shuffled-clock placebo",
+      "falsifier": "No surviving lead after cluster and temporal controls",
+      "source_ref": "Existing transition program ARP03 and #1530",
+      "depends_on": [
+        "L01"
+      ],
+      "max_minutes": 40,
+      "executor_kind": "READ_ONLY_TOOL",
+      "budget_usd": 0,
+      "output_path": "research/autonomous_research_portfolio/kompas_pro_2/lanes/L06_RESULT.md",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L07",
+      "name": "Alpha cohort survival context",
+      "question": "Does CN PUBLIC_TO_PRIVATE regime add predecision token survival signal?",
+      "hypothesis": "Safe known-at CN context adds beyond existing Alpha G2.",
+      "baseline": "Current Alpha G2 and token age liquidity controls",
+      "falsifier": "No full survivor/rug denominator or no independent lift",
+      "source_ref": "Meme-Alpha-Lab #22 #228 and public-context CONTRACT_V2",
+      "depends_on": [
+        "L01",
+        "L04"
+      ],
+      "max_minutes": 50,
+      "executor_kind": "READ_ONLY_TOOL",
+      "budget_usd": 0,
+      "output_path": "research/autonomous_research_portfolio/kompas_pro_2/lanes/L07_RESULT.md",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L08",
+      "name": "Paper fill feasibility and utility",
+      "question": "Do predicted opportunities remain sellable at realistic full-position cost?",
+      "hypothesis": "Net utility and missed winners jointly improve over HOLD.",
+      "baseline": "Always HOLD, no signal, existing Alpha base",
+      "falsifier": "Rug, failed-route and slippage wipe out edge",
+      "source_ref": "Meme-Alpha-Lab original paper and sellability owners",
+      "depends_on": [
+        "L07"
+      ],
+      "max_minutes": 50,
+      "executor_kind": "READ_ONLY_TOOL",
+      "budget_usd": 0,
+      "output_path": "research/autonomous_research_portfolio/kompas_pro_2/lanes/L08_RESULT.md",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L09",
+      "name": "Sol MAX independent cross-model adversary",
+      "question": "What smallest nonduplicate model survives existing ARP01 and ARP04 critique?",
+      "hypothesis": "One bounded paid critique can kill weak extra complexity.",
+      "baseline": "Current ARP01 and ARP04 Sol outputs and simplest models",
+      "falsifier": "No new falsifiable test or already-solved defects",
+      "source_ref": "Existing #1156 #1476 gated owner Sol lane",
+      "depends_on": [],
+      "max_minutes": 20,
+      "executor_kind": "EXISTING_AI_AGENT",
+      "budget_usd": 3,
+      "output_path": "research/autonomous_research_portfolio/kompas_pro_2/lanes/L09_RESULT.md",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L10",
+      "name": "Claude Fable engineering and reviewer experiment",
+      "question": "Can current original source and bounded patches survive Claude Fable scrutiny?",
+      "hypothesis": "Independent adversarial reviewer finds reproducible contract weaknesses.",
+      "baseline": "Existing tests, negative cases and no Fable intervention",
+      "falsifier": "No authenticated native Claude run or no incremental finding",
+      "source_ref": "Existing Bridge Claude log PR #173 and native reports",
+      "depends_on": [
+        "L09"
+      ],
+      "max_minutes": 45,
+      "executor_kind": "EXISTING_AI_AGENT",
+      "budget_usd": 0,
+      "output_path": "research/autonomous_research_portfolio/kompas_pro_2/lanes/L10_RESULT.md",
+      "status": "PLANNED",
+      "run_evidence": {}
+    }
+  ],
+  "notes": [
+    "Planning manifest, not 10 spawned AI agents or run receipts.",
+    "Private Alpha data remain in its own authorized plane; public Archive only contains approved public-safe descriptions.",
+    "The sole $3 maximum is governed Sol research, not advance charging or Fable API authorization.",
+    "Production promotion and W46 snapshot rewriting prohibited."
+  ]
+}
