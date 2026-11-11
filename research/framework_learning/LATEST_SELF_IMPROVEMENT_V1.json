@@ -8,7 +8,7 @@
     "portfolio_action": false,
     "type": "ADVISORY_DERIVED_READ_ONLY"
   },
-  "candidate_count": 734,
+  "candidate_count": 738,
   "challengers": [
     {
       "automatic_promotion": false,
@@ -340,10 +340,10 @@
     "adaptive_evolution": 1157,
     "self_healing": 1156
   },
-  "generated_at_utc": "2026-11-11T12:05:39.609798Z",
+  "generated_at_utc": "2026-11-11T22:59:13.024744Z",
   "health_consistency": "OK",
   "health_live_coverage": 0.9901,
-  "incident_count": 14,
+  "incident_count": 11,
   "incident_history": [
     {
       "automatic_code_write_allowed": false,
@@ -654,8 +654,8 @@
       ],
       "fingerprint": "6df5191b581360d09ffb8a0211e3c035bfd97174e2467f0392cd171df2357a12",
       "first_seen_at_utc": "2026-10-29T10:59:28.308974Z",
-      "last_seen_at_utc": "2026-11-11T11:59:30.995175Z",
-      "observation_count": 12,
+      "last_seen_at_utc": "2026-11-11T22:53:39.105279Z",
+      "observation_count": 13,
       "observed_keys": [
         "run:40770856669",
         "run:41238169627",
@@ -668,9 +668,10 @@
         "run:42521695261",
         "run:42625193854",
         "run:42728111464",
-        "run:42909855359"
+        "run:42909855359",
+        "run:43018404488"
       ],
-      "observed_run_id": 42909855359,
+      "observed_run_id": 43018404488,
       "owner_issue": 1156,
       "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
       "route": "EXISTING_REMEDIATION_OWNER",
@@ -850,12 +851,13 @@
       ],
       "fingerprint": "87a527e427b45f23392dc728175250780905bd6d044ab69b17f72fe369700eb3",
       "first_seen_at_utc": "2026-11-08T20:39:48.884422Z",
-      "last_seen_at_utc": "2026-11-08T20:39:48.884422Z",
-      "observation_count": 1,
+      "last_seen_at_utc": "2026-11-11T22:53:39.105279Z",
+      "observation_count": 2,
       "observed_keys": [
-        "run:42516378393"
+        "run:42516378393",
+        "run:43109743562"
       ],
-      "observed_run_id": 42516378393,
+      "observed_run_id": 43109743562,
       "owner_issue": 1156,
       "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
       "route": "EXISTING_REMEDIATION_OWNER",
@@ -1176,12 +1178,13 @@
       ],
       "fingerprint": "d1bcd0bb61954772a8f1a14b0b4ee8797982081d6aa430a1cec3449e67a31278",
       "first_seen_at_utc": "2026-11-10T12:50:15.336073Z",
-      "last_seen_at_utc": "2026-11-10T12:50:15.336073Z",
-      "observation_count": 1,
+      "last_seen_at_utc": "2026-11-11T22:53:39.105279Z",
+      "observation_count": 2,
       "observed_keys": [
-        "run:42757566796"
+        "run:42757566796",
+        "run:43058366346"
       ],
-      "observed_run_id": 42757566796,
+      "observed_run_id": 43058366346,
       "owner_issue": 1156,
       "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
       "route": "EXISTING_REMEDIATION_OWNER",
@@ -1284,13 +1287,14 @@
       ],
       "fingerprint": "e4c8047e086700f4e15ba6d7eb59e929f8158758db643b700c3aeda6713f6804",
       "first_seen_at_utc": "2026-11-02T23:38:29.107614Z",
-      "last_seen_at_utc": "2026-11-10T00:20:37.521936Z",
-      "observation_count": 2,
+      "last_seen_at_utc": "2026-11-11T22:53:39.105279Z",
+      "observation_count": 3,
       "observed_keys": [
         "run:41348582116",
-        "run:42521567261"
+        "run:42521567261",
+        "run:42909558060"
       ],
-      "observed_run_id": 42521567261,
+      "observed_run_id": 42909558060,
       "owner_issue": 1156,
       "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
       "route": "EXISTING_REMEDIATION_OWNER",
@@ -1414,6 +1418,53 @@
       "automatic_code_write_allowed": false,
       "automatic_retry_allowed": false,
       "classification": "UNKNOWN",
+      "counted_in_this_snapshot": true,
+      "findings": [
+        "SCHEDULE_STALE"
+      ],
+      "fingerprint": "e4c8047e086700f4e15ba6d7eb59e929f8158758db643b700c3aeda6713f6804",
+      "first_seen_at_utc": "2026-11-02T23:38:29.107614Z",
+      "last_seen_at_utc": "2026-11-11T22:53:39.105279Z",
+      "observation_count": 3,
+      "observed_keys": [
+        "run:41348582116",
+        "run:42521567261",
+        "run:42909558060"
+      ],
+      "observed_run_id": 42909558060,
+      "owner_issue": 1156,
+      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
+      "route": "EXISTING_REMEDIATION_OWNER",
+      "severity": "AMBER",
+      "workflow": "backtest-wave1-4-prospective.yml"
+    },
+    {
+      "automatic_code_write_allowed": false,
+      "automatic_retry_allowed": false,
+      "classification": "UNKNOWN",
+      "counted_in_this_snapshot": true,
+      "findings": [
+        "SCHEDULE_STALE"
+      ],
+      "fingerprint": "d1bcd0bb61954772a8f1a14b0b4ee8797982081d6aa430a1cec3449e67a31278",
+      "first_seen_at_utc": "2026-11-10T12:50:15.336073Z",
+      "last_seen_at_utc": "2026-11-11T22:53:39.105279Z",
+      "observation_count": 2,
+      "observed_keys": [
+        "run:42757566796",
+        "run:43058366346"
+      ],
+      "observed_run_id": 43058366346,
+      "owner_issue": 1156,
+      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
+      "route": "EXISTING_REMEDIATION_OWNER",
+      "severity": "AMBER",
+      "workflow": "compass-outcomes.yml"
+    },
+    {
+      "automatic_code_write_allowed": false,
+      "automatic_retry_allowed": false,
+      "classification": "UNKNOWN",
       "counted_in_this_snapshot": false,
       "findings": [
         "LATEST_RUN_FAILED"
@@ -1431,64 +1482,6 @@
       "route": "EXISTING_REMEDIATION_OWNER",
       "severity": "RED",
       "workflow": "cycle-navigator-internal-precision.yml"
-    },
-    {
-      "automatic_code_write_allowed": false,
-      "automatic_retry_allowed": false,
-      "classification": "UNKNOWN",
-      "counted_in_this_snapshot": true,
-      "findings": [
-        "SCHEDULE_STALE"
-      ],
-      "fingerprint": "d6525472ab3892c2749709b708a91cc1222e4705ffb90361d0d55d6c9b2467d4",
-      "first_seen_at_utc": "2026-11-02T12:42:35.319123Z",
-      "last_seen_at_utc": "2026-11-11T11:59:30.995175Z",
-      "observation_count": 8,
-      "observed_keys": [
-        "run:41373905913",
-        "run:41573427692",
-        "run:41761753175",
-        "run:41956811356",
-        "run:42152226138",
-        "run:42547757774",
-        "run:42754707794",
-        "run:42943820492"
-      ],
-      "observed_run_id": 42943820492,
-      "owner_issue": 1156,
-      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
-      "route": "EXISTING_REMEDIATION_OWNER",
-      "severity": "AMBER",
-      "workflow": "daily-director-shadow.yml"
-    },
-    {
-      "automatic_code_write_allowed": false,
-      "automatic_retry_allowed": false,
-      "classification": "UNKNOWN",
-      "counted_in_this_snapshot": true,
-      "findings": [
-        "SCHEDULE_STALE"
-      ],
-      "fingerprint": "f5e79c31878877ec12c9869eeb93ebaf36d08281a8a5e717fab31aceab125143",
-      "first_seen_at_utc": "2026-11-02T12:42:35.319123Z",
-      "last_seen_at_utc": "2026-11-11T11:59:30.995175Z",
-      "observation_count": 8,
-      "observed_keys": [
-        "run:41304330191",
-        "run:41456099824",
-        "run:41640202087",
-        "run:41836231737",
-        "run:42035937862",
-        "run:42478913769",
-        "run:42633098226",
-        "run:42827188208"
-      ],
-      "observed_run_id": 42827188208,
-      "owner_issue": 1156,
-      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
-      "route": "EXISTING_REMEDIATION_OWNER",
-      "severity": "AMBER",
-      "workflow": "daily-slow-cycle-shadow.yml"
     },
     {
       "automatic_code_write_allowed": false,
@@ -1519,87 +1512,23 @@
       "counted_in_this_snapshot": true,
       "findings": [
         "HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H",
-        "LATEST_SCHEDULED_RUN_CANCELLED"
+        "LATEST_RUN_CANCELLED",
+        "REPEATED_CONSECUTIVE_CANCELLATIONS"
       ],
-      "fingerprint": "9accb0e55b0269847b3fdeb17a8a34eda2ffb6332ea4563f013efa4a7d3c75c4",
-      "first_seen_at_utc": "2026-11-10T21:52:10.542382Z",
-      "last_seen_at_utc": "2026-11-11T11:59:30.995175Z",
+      "fingerprint": "87a527e427b45f23392dc728175250780905bd6d044ab69b17f72fe369700eb3",
+      "first_seen_at_utc": "2026-11-08T20:39:48.884422Z",
+      "last_seen_at_utc": "2026-11-11T22:53:39.105279Z",
       "observation_count": 2,
       "observed_keys": [
-        "run:42902425417",
-        "run:43001289604"
+        "run:42516378393",
+        "run:43109743562"
       ],
-      "observed_run_id": 43001289604,
+      "observed_run_id": 43109743562,
       "owner_issue": 1156,
       "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
       "route": "EXISTING_REMEDIATION_OWNER",
       "severity": "AMBER",
       "workflow": "hourly-sequence-capture.yml"
-    },
-    {
-      "automatic_code_write_allowed": false,
-      "automatic_retry_allowed": false,
-      "classification": "UNKNOWN",
-      "counted_in_this_snapshot": true,
-      "findings": [
-        "SCHEDULE_STALE"
-      ],
-      "fingerprint": "7492710a483511d1304553bc472425b82d2cbd94cb2e2076c99ad32a39bd71cd",
-      "first_seen_at_utc": "2026-11-01T11:24:16.537042Z",
-      "last_seen_at_utc": "2026-11-11T11:59:30.995175Z",
-      "observation_count": 10,
-      "observed_keys": [
-        "run:41194733205",
-        "run:41303712623",
-        "run:41453562126",
-        "run:41638822957",
-        "run:41834061287",
-        "run:42033774360",
-        "run:42369433366",
-        "run:42477933084",
-        "run:42629682203",
-        "run:42824852978"
-      ],
-      "observed_run_id": 42824852978,
-      "owner_issue": 1156,
-      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
-      "route": "EXISTING_REMEDIATION_OWNER",
-      "severity": "AMBER",
-      "workflow": "monthly-ai-learning-council.yml"
-    },
-    {
-      "automatic_code_write_allowed": false,
-      "automatic_retry_allowed": false,
-      "classification": "UNKNOWN",
-      "counted_in_this_snapshot": true,
-      "findings": [
-        "SCHEDULE_STALE"
-      ],
-      "fingerprint": "e12ad115791d54daa5f29fd7d16e9a0f4721ca34287ec5f5533685cbc290c0e6",
-      "first_seen_at_utc": "2026-11-01T11:24:16.537042Z",
-      "last_seen_at_utc": "2026-11-11T11:59:30.995175Z",
-      "observation_count": 13,
-      "observed_keys": [
-        "run:41238681561",
-        "run:41349484604",
-        "run:41451361189",
-        "run:41548064472",
-        "run:41728677036",
-        "run:41925200684",
-        "run:42122442416",
-        "run:42300741928",
-        "run:42412169471",
-        "run:42522727952",
-        "run:42627778378",
-        "run:42729085199",
-        "run:42911770616"
-      ],
-      "observed_run_id": 42911770616,
-      "owner_issue": 1156,
-      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
-      "route": "EXISTING_REMEDIATION_OWNER",
-      "severity": "AMBER",
-      "workflow": "operations-dashboard.yml"
     },
     {
       "automatic_code_write_allowed": false,
@@ -1699,8 +1628,8 @@
       ],
       "fingerprint": "6df5191b581360d09ffb8a0211e3c035bfd97174e2467f0392cd171df2357a12",
       "first_seen_at_utc": "2026-10-29T10:59:28.308974Z",
-      "last_seen_at_utc": "2026-11-11T11:59:30.995175Z",
-      "observation_count": 12,
+      "last_seen_at_utc": "2026-11-11T22:53:39.105279Z",
+      "observation_count": 13,
       "observed_keys": [
         "run:40770856669",
         "run:41238169627",
@@ -1713,44 +1642,15 @@
         "run:42521695261",
         "run:42625193854",
         "run:42728111464",
-        "run:42909855359"
+        "run:42909855359",
+        "run:43018404488"
       ],
-      "observed_run_id": 42909855359,
+      "observed_run_id": 43018404488,
       "owner_issue": 1156,
       "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
       "route": "EXISTING_REMEDIATION_OWNER",
       "severity": "AMBER",
       "workflow": "remediation-maturation.yml"
-    },
-    {
-      "automatic_code_write_allowed": false,
-      "automatic_retry_allowed": false,
-      "classification": "UNKNOWN",
-      "counted_in_this_snapshot": true,
-      "findings": [
-        "SCHEDULE_STALE"
-      ],
-      "fingerprint": "75ffc748c7e3d14d78fd8b3ceca6d23045b6597727f27b0e1a1c8e4d8ed504d2",
-      "first_seen_at_utc": "2026-11-02T12:42:35.319123Z",
-      "last_seen_at_utc": "2026-11-11T11:59:30.995175Z",
-      "observation_count": 9,
-      "observed_keys": [
-        "run:41379370863",
-        "run:41549977319",
-        "run:41766460013",
-        "run:41963525822",
-        "run:42157996051",
-        "run:42553955833",
-        "run:42634114343",
-        "run:42731532232",
-        "run:42950352601"
-      ],
-      "observed_run_id": 42950352601,
-      "owner_issue": 1156,
-      "reason": "Health status alone cannot establish transient cause, reproduce a deterministic defect or authorize a repair",
-      "route": "EXISTING_REMEDIATION_OWNER",
-      "severity": "AMBER",
-      "workflow": "shared-row-prospective-evidence-loop.yml"
     },
     {
       "automatic_code_write_allowed": false,
@@ -1791,13 +1691,13 @@
   "scoreboard": {
     "DOCUMENTED_IMPROVEMENT": 0,
     "FALSIFIED": 0,
-    "INSUFFICIENT_EVIDENCE": 698,
+    "INSUFFICIENT_EVIDENCE": 702,
     "KILLED": 0,
     "REGRESSED": 0,
     "UNPROVEN": 36
   },
   "source_generated_at_utc": {
-    "automation_health": "2026-11-11T11:59:30.995175Z"
+    "automation_health": "2026-11-11T22:53:39.105279Z"
   },
   "source_observation_counted": true,
   "source_paths": {
@@ -1805,8 +1705,8 @@
     "experiment_registry": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
   },
   "source_sha256": {
-    "automation_health": "7fad010b2f2ec9c8ba84579fa64ed43454df17ba934fb4c4b853d89d0a9c2e1d",
-    "experiment_registry": "1f640190de41c2c6b606eabcb8aa84a98f1135b26846c1ef8613f1c061adfd96"
+    "automation_health": "6e5088ba75e0f12a0763dc7b153f499bcdeb7ba0f75e6e844299f84f583d9af6",
+    "experiment_registry": "385a30ac428e8f7bc508d3905080713f0e0e4c5284727e83e941be456404be2f"
   },
   "workflow_census_count": 202
 }
