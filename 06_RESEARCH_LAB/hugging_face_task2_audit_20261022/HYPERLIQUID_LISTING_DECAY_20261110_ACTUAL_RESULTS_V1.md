@@ -2,6 +2,10 @@
 **Date:** 2026-11-10. **Status:** `EXECUTED_NATIVE_CI / DESCRIPTIVE_RETROSPECTIVE / NO_PROVEN_TRADING_EDGE / SHADOW_ONLY`.
 **Original domain owners:** Task 2 #1596, Ironflow #1747, derivatives #387; downstream: Meme Alpha Lab #22.
 
+## 2026-11-11 release validation addendum: path-completeness re-evaluation
+
+**SOURCE-BOUND HOLD, NOT A CLAIM OF NEW EXECUTED RESULTS.** The excursion figures in the red-team section below (including FOGO +912.65%, 16/34 above 25% and +23.35% median adverse short path) were calculated at historical executed HEAD 1736dc4b, before the subsequent partial-hourly-path defect was fixed. They are retained solely as an explicitly *unrevalidated historical observation*. **Do not quote or admit those values as validated current-head excursion outcomes** until a native same-HEAD full18m run reports and preserves the actual per-market hourly-coverage census. A 30-day endpoint can be observed despite incomplete intervening candles; endpoint-return counts MUST remain independent of risk-path completeness. The current code produces n_30d_complete_hourly_paths, n_30d_gapped_hourly_paths, median_mae_short_complete_paths and n_complete_paths_short_adverse_gt25pct with a strict COMPLETE_HOURLY_PATHS_ONLY denominator. On incomplete paths MAE/MFE are NULL, never a zero-risk observation. If the actual complete-only sample is too small or gapped, abstain on quantitative excursion statistics and require independent clock/source verification before scientific admission. This addendum does not backdate or fabricate an independent source-data readback.
+
 ## Native verification and source receipt
 - Original PR: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2078
 - Executed HEAD: `1736dc4ba606b493c9e74fd2b7677fe31877f172` at native test time.

@@ -198,6 +198,10 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
                 row["paired_excess_complete"]=row["paired_excess"] if row["complete_control_cohort"] else None
         rows.append(row)
     usable=[r for r in rows if r.get("return") is not None]
+    # Endpoint return may be observed even when the intervening hourly risk
+    # path is incomplete. Count coverage before any excursion summary.
+    complete_path=[r for r in usable if r.get("path_coverage_complete") is True]
+    gapped_path=[r for r in usable if r.get("path_coverage_complete") is False]
     paired=[r for r in usable if r.get("paired_excess") is not None]
     paired_complete=[r for r in paired if r.get("complete_control_cohort",False)]
     control_partials=[r for r in paired if not r.get("complete_control_cohort",False)]
@@ -240,6 +244,11 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
        "cohort_max_comparison_delay_days":max_comparison_delay_days,
        "cohort_last_first_trade_utc":last.isoformat(),
        "n_30d_exit_observable":len(usable),
+       "n_30d_complete_hourly_paths":len(complete_path),
+       "n_30d_gapped_hourly_paths":len(gapped_path),
+       "short_excursion_population":"COMPLETE_HOURLY_PATHS_ONLY",
+       "median_mae_short_complete_paths":median([r["mae_short"] for r in complete_path]),
+       "n_complete_paths_short_adverse_gt25pct":sum(r["mae_short"]>0.25 for r in complete_path),
        "n_censored":len(rows)-len(usable),"n_paired":len(paired),
        "n_paired_complete_controls":len(paired_complete),
        "n_paired_partial_controls":len(control_partials),

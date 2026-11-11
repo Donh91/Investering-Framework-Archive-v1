@@ -173,6 +173,33 @@ class ListingDecayResearchTests(unittest.TestCase):
             m.study(self.data,delay_days=10)
 
 
+
+    def test_study_counts_gapped_risk_paths_without_censoring_endpoints(self):
+        # Remove one intermediate NEW candle, retaining executable entry and exit.
+        gap=pd.Timestamp("2025-07-30T12:00:00Z")
+        source=self.data.loc[~((self.data["coin"]=="NEW") &
+                               (self.data["timestamp"]==gap))].copy()
+        out=m.study(source,minimum_first="2025-07-01",latest_first="2025-08-31")
+        row=next(r for r in out["rows"] if r["coin"]=="NEW")
+        self.assertIsNotNone(row["return"])
+        self.assertEqual(row["path_coverage_status"],"GAPPED_NO_EXCURSION_CLAIM")
+        self.assertIsNone(row["mae_short"])
+        self.assertEqual(out["n_30d_exit_observable"],1)
+        self.assertEqual(out["n_30d_complete_hourly_paths"],0)
+        self.assertEqual(out["n_30d_gapped_hourly_paths"],1)
+        self.assertIsNone(out["median_mae_short_complete_paths"])
+        self.assertEqual(out["n_complete_paths_short_adverse_gt25pct"],0)
+
+    def test_complete_path_coverage_receipt_matches_observed_returns(self):
+        out=self.result
+        self.assertEqual(out["n_30d_complete_hourly_paths"]+
+                         out["n_30d_gapped_hourly_paths"],
+                         out["n_30d_exit_observable"])
+        self.assertEqual(out["short_excursion_population"],
+                         "COMPLETE_HOURLY_PATHS_ONLY")
+        self.assertEqual(out["n_30d_gapped_hourly_paths"],0)
+        self.assertIsNotNone(out["median_mae_short_complete_paths"])
+
     def test_gapped_hourly_holding_path_cannot_claim_full_excursions(self):
         start=pd.Timestamp("2025-06-01T00:00:00Z")
         finish=start+30*m.DAY
