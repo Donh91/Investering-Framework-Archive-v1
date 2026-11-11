@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -157,8 +158,13 @@ def kraken_daily(data: dict[str, Any], as_of: datetime) -> dict[str, float]:
     if len(found) != 1:
         raise ValueError("KRAKEN_SINGLE_PAIR_REQUIRED")
     ret = {}
-    for row in found[0]:
-        if len(row) < 5:
+    # Kraken's LAST row is always an uncommitted interval at snapshot capture,
+    # even when this archival JSON is replayed days/months later.
+    candles = found[0]
+    if not candles:
+        raise ValueError("KRAKEN_CANDLES_REQUIRED")
+    for row in candles[:-1]:
+        if not isinstance(row, list) or len(row) < 5:
             raise ValueError("KRAKEN_CANDLE_MALFORMED")
         t = datetime.fromtimestamp(int(row[0]), tz=timezone.utc)
         if t.hour or t.minute or t.second:
@@ -166,7 +172,14 @@ def kraken_daily(data: dict[str, Any], as_of: datetime) -> dict[str, float]:
         d = t.date().isoformat()
         if d in ret:
             raise ValueError("KRAKEN_DUPLICATE_DAY")
-        price = value(row[4])
+        # Kraken's public OHLC JSON encodes its close field as a decimal
+        # string. Tehc's own numeric series intentionally stay stricter.
+        raw_close = row[4]
+        if isinstance(raw_close, str):
+            if not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?", raw_close):
+                raise ValueError("KRAKEN_CLOSE_STRING_INVALID")
+            raw_close = float(raw_close)
+        price = value(raw_close)
         if price <= 0:
             raise ValueError("KRAKEN_NONPOSITIVE_CLOSE")
         if t + timedelta(days=1) <= as_of:
@@ -223,7 +236,7 @@ def evaluate(pads: dict, bots: dict, trench: dict, price: dict[str, dict], *,
         targets.append({
             "day": row["day"], "vendor": row["vendor"],
             "own_raw": row["own_raw"], "own_cool": row["own_cool"],
-            "delta": row["vendor"] - (vendor.get(plus(row["day"], -1)) or row["vendor"]),
+            "delta": row["vendor"] - vendor.get(plus(row["day"], -1), row["vendor"]),
             "sol3": r3, "sol7": 100 * (sol7 / sol0 - 1),
             "sol_btc3": 100 * ((sol3 / sol0) / (btc3 / btc0) - 1),
             "severe_down": int(r3 <= -5),

@@ -92,6 +92,38 @@ class TehcHeatOfflineTests(unittest.TestCase):
         self.assertNotIn((START + timedelta(days=399)).isoformat(), rows)
         self.assertNotIn((START + timedelta(days=400)).isoformat(), rows)
 
+
+    def test_real_kraken_decimal_string_close_and_bad_strings(self):
+        _, _, _, price = fixture()
+        series = price["sol"]["result"]["FAKE_PAIR"]
+        day = (START + timedelta(days=398)).isoformat()
+        series[398][4] = "123.45670000"
+        out = m.kraken_daily(price["sol"], AS_OF)
+        self.assertAlmostEqual(out[day], 123.4567)
+        for invalid in ("NaN", "Infinity", " 123 ", "-1", "1,234", "", "0e999"):
+            with self.subTest(invalid=invalid):
+                series[398][4] = invalid
+                with self.assertRaises((ValueError, OverflowError)):
+                    m.kraken_daily(price["sol"], AS_OF)
+
+    def test_last_kraken_provider_row_is_partial_even_after_archive_matures(self):
+        _, _, _, price = fixture()
+        series = price["sol"]["result"]["FAKE_PAIR"]
+        last_day = (START + timedelta(days=len(series)-1)).isoformat()
+        much_later = datetime(2027, 1, 1, tzinfo=timezone.utc)
+        out = m.kraken_daily(price["sol"], much_later)
+        self.assertIn((START + timedelta(days=len(series)-2)).isoformat(), out)
+        self.assertNotIn(last_day, out)
+
+    def test_vendor_zero_score_to_positive_warming_not_silently_lost(self):
+        pads, bots, trench, prices = fixture()
+        for entry in trench["history"]:
+            entry["score"] = 0
+        trench["history"][371]["score"] = 10
+        trench["today"]["score"] = 0
+        out = m.evaluate(pads, bots, trench, prices, as_of=AS_OF)
+        self.assertEqual(out["outcomes"]["groups"]["cold_warming_delta_gte5"]["n"], 1)
+
     def test_no_prospective_or_market_authority(self):
         pads, bots, trench, kraken = fixture()
         output = m.evaluate(pads, bots, trench, kraken, as_of=AS_OF)
