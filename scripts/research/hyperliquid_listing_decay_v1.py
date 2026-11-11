@@ -71,7 +71,8 @@ def before(b,t,tolerance_hours=2):
 
 
 def window_features(b, entry_t, pre_t):
-    e=after(b,entry_t,0)
+    # Use the actual fill within one hour; only earlier bars enter features.
+    e=after(b,entry_t,1)
     p=before(b,pre_t,2)
     if e is None or p is None or p>=e:
         return None
@@ -161,12 +162,14 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
              "source_label":"FIRST_OBSERVED_TRADE_PROXY_NOT_VERIFIED_LISTING",
              "horizons":horizon}
         if p:
+            # Price outcome does not depend on whether controls can be matched.
+            row.update(p)
+            row["short_unit_net_ex_funding"]=-row["return"]-(fee_bps_roundtrip+slippage_bps_roundtrip)/10000
             f=window_features(b,entry_t,entry_t-DAY)
             if f is None:
                 row["status"]="INSUFFICIENT_ENTRY_FEATURES"
             else:
                 controls=matched_controls(coin,bars,firsts,entry_t,due_t,f)
-                row.update(p)
                 row["controls"]=controls
                 good=[c["return"] for c in controls if c["return"] is not None]
                 row["match_count"]=len(controls)
@@ -177,9 +180,8 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
                 # Retain the partial descriptive result, but never call it a complete pair.
                 row["complete_control_cohort"]=bool(controls) and len(good)==len(controls)
                 row["paired_excess_complete"]=row["paired_excess"] if row["complete_control_cohort"] else None
-                row["short_unit_net_ex_funding"]=-row["return"]-(fee_bps_roundtrip+slippage_bps_roundtrip)/10000
         rows.append(row)
-    usable=[r for r in rows if r["status"]=="OK"]
+    usable=[r for r in rows if r.get("return") is not None]
     paired=[r for r in usable if r.get("paired_excess") is not None]
     paired_complete=[r for r in paired if r.get("complete_control_cohort",False)]
     control_partials=[r for r in paired if not r.get("complete_control_cohort",False)]
@@ -222,7 +224,7 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
        "n_censored":len(rows)-len(usable),"n_paired":len(paired),
        "n_paired_complete_controls":len(paired_complete),
        "n_paired_partial_controls":len(control_partials),
-       "n_missing_control_exits":sum(r["match_count"]-r["control_exit_count"] for r in paired),
+       "n_missing_control_exits":sum(r["match_count"]-r["control_exit_count"] for r in rows if "match_count" in r),
        "n_month_clusters":len(months),
        "n_complete_month_clusters":len(complete_months),"horizon_days_summary":hsummary,
        "fall_fraction":sum(r["return"]<0 for r in usable)/len(usable) if usable else None,

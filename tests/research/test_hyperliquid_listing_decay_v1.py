@@ -107,6 +107,43 @@ class ListingDecayResearchTests(unittest.TestCase):
         self.assertAlmostEqual(p["mae_short"],0.20)
         self.assertAlmostEqual(p["mfe_short"],0.05)
 
+
+    def test_one_hour_late_entry_preserves_price_and_matching(self):
+        target=pd.Timestamp("2025-07-17T00:00:00Z")
+        mask=(self.data["coin"]=="NEW") & (self.data["timestamp"]==target)
+        result=m.study(self.data.loc[~mask].copy(),minimum_first="2025-07-01",latest_first="2025-08-31")
+        r=next(x for x in result["rows"] if x["coin"]=="NEW")
+        self.assertEqual(r["status"],"OK")
+        self.assertEqual(r["entry_time"],"2025-07-17T01:00:00+00:00")
+        self.assertEqual(result["n_30d_exit_observable"],1)
+        self.assertEqual(result["n_paired"],1)
+        self.assertEqual(result["n_censored"],1)
+
+    def test_missing_entry_features_cannot_censor_observable_price(self):
+        start=pd.Timestamp("2025-07-16T05:00:00Z")
+        end=pd.Timestamp("2025-07-17T00:00:00Z")
+        mask=(self.data["coin"]=="NEW") & (self.data["timestamp"]>=start) & (self.data["timestamp"]<end)
+        result=m.study(self.data.loc[~mask].copy(),minimum_first="2025-07-01",latest_first="2025-08-31")
+        r=next(x for x in result["rows"] if x["coin"]=="NEW")
+        self.assertEqual(r["status"],"INSUFFICIENT_ENTRY_FEATURES")
+        self.assertIsNotNone(r["return"])
+        self.assertIn("short_unit_net_ex_funding",r)
+        self.assertEqual(result["n_30d_exit_observable"],1)
+        self.assertEqual(result["n_censored"],1)
+        self.assertEqual(result["n_paired"],0)
+
+    def test_all_selected_control_exits_censored_are_counted(self):
+        cutoff=pd.Timestamp("2025-07-30T00:00:00Z")
+        mask=self.data["coin"].isin(["OLD","OLD2","OLD_DIE"]) & (self.data["timestamp"]>=cutoff)
+        result=m.study(self.data.loc[~mask].copy(),minimum_first="2025-07-01",latest_first="2025-08-31")
+        r=next(x for x in result["rows"] if x["coin"]=="NEW")
+        self.assertEqual(r["match_count"],3)
+        self.assertEqual(r["control_exit_count"],0)
+        self.assertIsNone(r["paired_excess"])
+        self.assertEqual(result["n_paired"],0)
+        self.assertEqual(result["n_missing_control_exits"],3)
+        self.assertEqual(result["n_30d_exit_observable"],1)
+
     def test_control_age_gate(self):
         entry=pd.Timestamp("2025-07-17",tz="UTC")
         f=m.window_features(self.bars["NEW"],entry,entry-m.DAY)
