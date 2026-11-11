@@ -582,6 +582,8 @@ class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
         r = self.base("LOW", "SELF_AUTHORED_DESIGN")
         self.assert_still_advisory(r, "READY_TO_MERGE")
         for path in ("AGENTS.md", ".github/workflows/risky.yml",
+                     ".github/actions/intraday-execution/action.yml",
+                     ".github/CODEOWNERS",
                      "01_CORE_FRAMEWORK/governance/guard.md",
                      "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
                      "scripts/governance/s1_release_evidence_classifier_v1.py",
@@ -697,6 +699,11 @@ class S1GeneralIntegrationTests(unittest.TestCase):
     def test_workflow_marked_low_fails_closed(self):
         self.check(lambda r: r.update(expected_changed_paths=[".github/workflows/recovery.yml"]),
                    "HIGH_IMPACT_PATH_MARKED_LOW")
+
+    def test_composite_action_marked_low_fails_closed_with_general_preflight(self):
+        self.check(lambda r: r.update(
+            expected_changed_paths=[".github/actions/intraday-execution/action.yml"]),
+            "HIGH_IMPACT_PATH_MARKED_LOW")
 
     def test_canonical_governance_marked_low_fails_closed(self):
         for path in ("AGENTS.md", "01_CORE_FRAMEWORK/governance/policy.md",

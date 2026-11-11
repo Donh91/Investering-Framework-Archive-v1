@@ -84,7 +84,7 @@ def _owner_approval_comment_url(value, repo, pr):
 
 
 def _release_sensitive_path(path):
-    return (path == "AGENTS.md" or path.startswith(".github/workflows/")
+    return (path == "AGENTS.md" or path.startswith(".github/")
             or path.startswith("01_CORE_FRAMEWORK/governance/")
             or path.startswith("00_ARCHIVE_CONTROL/")
             or path.startswith("scripts/governance/s1_")
