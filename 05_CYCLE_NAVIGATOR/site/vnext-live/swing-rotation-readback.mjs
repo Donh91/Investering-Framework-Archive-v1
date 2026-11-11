@@ -9,10 +9,10 @@ const HORIZONS=[
  {key:'NEXT_2_3W',da:'2–3 uger',en:'2–3 weeks'}
 ];
 const GROUPS=[
- {key:'LARGE_CAPS',da:'Large caps',en:'Large caps'},
- {key:'MID_CAPS',da:'Mid caps',en:'Mid caps'},
- {key:'SMALL_CAPS',da:'Small caps',en:'Small caps'},
- {key:'MICROCAPS',da:'Microcaps',en:'Microcaps'}
+ {key:'LARGE_CAPS',da:'Large caps',en:'Large caps',size:'≥ $10B'},
+ {key:'MID_CAPS',da:'Mid caps',en:'Mid caps',size:'$1B–10B'},
+ {key:'SMALL_CAPS',da:'Small caps',en:'Small caps',size:'$100M–1B'},
+ {key:'MICROCAPS',da:'Microcaps',en:'Microcaps',size:'< $100M'}
 ];
 const DIRECTIONS=new Set(['UP','DOWN','MIXED','SIDEWAYS']);
 const ACTIONS=new Set(['HOLD','WAIT','HARD_WAIT','UNAVAILABLE','WATCH','PREPARE','PREPARE_BUY','BUY','PREPARE_SELL','REDUCE','SELL']);
@@ -58,7 +58,7 @@ export function readSwingRotation(view,official,{lang='da'}={}){
   const raw=matches.length===1&&matches[0]?.action===matches[0]?.status
    &&ACTIONS.has(matches[0]?.status)?matches[0].status:'UNAVAILABLE';
   return {
-   key:g.key,label:lang==='en'?g.en:g.da,
+   key:g.key,label:lang==='en'?g.en:g.da,sizeReference:g.size,
    sourceAction:raw,nowLabel:labelAction(raw,lang),
    verified:valid&&raw!=='UNAVAILABLE',
    isMicro:g.key==='MICROCAPS',
@@ -118,8 +118,8 @@ export function renderSwingRotation(container,model,{lang='da'}={}){
   line.setAttribute('role','row');
   const label=make('div','swing-group');
   label.setAttribute('role','rowheader');
-  label.append(make('strong','',row.label));
-  if(row.isMicro) label.append(make('small','',t('Under $1 mio.: forskningsspor','Under $1m: research cohort')));
+  label.append(make('strong','',row.label),make('small','',row.sizeReference));
+  if(row.isMicro) label.append(make('small','swing-micro-cohort',t('Alpha Lab: $200k–2m undersøges','Alpha Lab: $200k–2m proposed')));
   line.append(label);
   const status=make('div','swing-now');
   const text=make('strong','swing-action swing-action-'+row.sourceAction.toLowerCase().replaceAll('_','-'),row.nowLabel);
@@ -137,6 +137,6 @@ export function renderSwingRotation(container,model,{lang='da'}={}){
  ledger.append(grid);
  container.append(ledger);
  container.append(make('p','swing-explainer',
-  t('Øverst: officiel markedsretning for 1–3 dage, 5–7 dage og 2–3 uger. Nederst: hver kapitalgruppes aktuelle status, ikke en prognose. De 12 gruppespecifikke fremtidssignaler er ikke udstedt. Microcaps er den brede kildekategori; under $1 mio. har endnu ikke et separat verificeret signal. Memes er fortsat en særskilt kategori.',
-    'Top: official market-wide direction for 1–3 days, 5–7 days and 2–3 weeks. Below: each group’s current status, not a forecast. The 12 group-specific forward signals are not issued. Microcaps is the broad source category; under $1m has no separate verified signal. Memes remains separate.')));
+  t('Øverst: officiel markedsretning for 1–3 dage, 5–7 dage og 2–3 uger. Nederst: hver kapitalgruppes aktuelle status, ikke en prognose. De 12 gruppespecifikke fremtidssignaler er ikke udstedt. Størrelsesintervallerne er kun branchemæssige pejlemærker, ikke kildens officielle grænser. Alpha Lab undersøger cyklusafhængige filtergrænser fra bl.a. $200k–2m, men ingen sådan model er valideret. Memes har fortsat eget signal.',
+    'Top: official market-wide direction for 1–3 days, 5–7 days and 2–3 weeks. Below: each group’s current status, not a forecast. The 12 group-specific forward signals are not issued. Size ranges are industry references, not source-owner thresholds. Alpha Lab is researching cycle-dependent selection bands including $200k–2m; no such model is validated. Memes remains independent.')));
 }
