@@ -124,7 +124,7 @@ def inspect(document: Any) -> dict[str, Any]:
             errors.add("FAMILY_INVALID")
         if not isinstance(datatype, str) or datatype not in ALLOWED_TYPES:
             errors.add("DATATYPE_INVALID")
-        if family in {"hyperliquid_spot", "hyperliquid_hip4"} and datatype == "funding":
+        if isinstance(family, str) and family in {"hyperliquid_spot", "hyperliquid_hip4"} and datatype == "funding":
             errors.add("FAMILY_DATATYPE_INCOMPATIBLE")
         if datatype == "l3_orderbook" and family != "lighter_mainnet":
             errors.add("FAMILY_DATATYPE_INCOMPATIBLE")
