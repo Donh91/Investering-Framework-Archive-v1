@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
+import stat
 from collections import Counter
 from pathlib import Path
 
@@ -21,12 +23,34 @@ FNP = "research/framework_memory/fnp_forward_rows/LATEST.json"
 CN_STATE = "05_CYCLE_NAVIGATOR/autonomous_calibration_v1/STATE.json"
 CN_LEDGER = "05_CYCLE_NAVIGATOR/forward_range_ledger/FORWARD_RANGE_LEDGER_v0_1.csv"
 SOURCE_GATE = "scripts/experiments/source_git_anchor.py"
+# Native Git blob of the observed exact main source gate. Deliberately pinned:
+# ANY implementation change must be re-reviewed before the diagnostic may
+# positively attest its temporal behavior. This is not an admission grant.
+PINNED_SOURCE_GATE_GIT_BLOB_SHA1 = "247913a2cd8bfdd5e3e8154dc372876077992192"
+
+
+def checked_path(root: Path, relative: str) -> Path:
+    """Refuse symlinked ancestors/leaves, special files and out-of-root paths."""
+    base = root.resolve(strict=True)
+    rel = Path(relative)
+    if rel.is_absolute() or not rel.parts or ".." in rel.parts:
+        raise ValueError("SOURCE_MISSING_OR_UNTRUSTED:" + relative)
+    target = base
+    for part in rel.parts:
+        target = target / part
+        if target.is_symlink():
+            raise ValueError("SOURCE_MISSING_OR_UNTRUSTED:" + relative)
+    try:
+        if (not target.resolve(strict=True).is_relative_to(base)
+                or not stat.S_ISREG(target.stat(follow_symlinks=False).st_mode)):
+            raise ValueError("SOURCE_MISSING_OR_UNTRUSTED:" + relative)
+    except (OSError, RuntimeError) as exc:
+        raise ValueError("SOURCE_MISSING_OR_UNTRUSTED:" + relative) from exc
+    return target
 
 
 def load(root: Path, relative: str) -> dict:
-    target = root / relative
-    if target.is_symlink() or not target.is_file() or not target.resolve().is_relative_to(root.resolve()):
-        raise ValueError("SOURCE_MISSING_OR_UNTRUSTED:" + relative)
+    target = checked_path(root, relative)
     value = json.loads(target.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
         raise ValueError("INVALID_JSON_OBJECT:" + relative)
@@ -38,15 +62,15 @@ def audit(root: Path) -> dict:
     registry, admission = load(root, REGISTRY), load(root, ADMISSION)
     nxt, run = load(root, SHARED_NEXT), load(root, SHARED_RUNTIME)
     fnp, cn = load(root, FNP), load(root, CN_STATE)
-    source_code_path = root / SOURCE_GATE
-    if source_code_path.is_symlink() or not source_code_path.is_file():
-        raise ValueError("SOURCE_GATE_UNAVAILABLE")
-    source_code = source_code_path.read_text(encoding="utf-8")
-    # Diagnostic of this exact code revision, not a substitute for authoritative tests.
-    deliberate_gate = (
-        "if accepted_before is not None or accepted_after is not None:" in source_code
-        and "No authenticated server-side acceptance clock exists" in source_code
-    )
+    # Pin the *actual bytes*, not just comments and an if-condition that could
+    # have its body changed to `return True`. Any new gate code => NOT_ATTESTED.
+    try:
+        source_code = checked_path(root, SOURCE_GATE).read_bytes()
+    except ValueError as exc:
+        raise ValueError("SOURCE_GATE_UNAVAILABLE") from exc
+    git_blob = b"blob " + str(len(source_code)).encode("ascii") + b"\0" + source_code
+    actual_git_blob_sha1 = hashlib.sha1(git_blob).hexdigest()
+    deliberate_gate = actual_git_blob_sha1 == PINNED_SOURCE_GATE_GIT_BLOB_SHA1
     candidates = registry.get("candidates")
     rows = admission.get("candidates")
     if not isinstance(candidates, list) or not isinstance(rows, list):
@@ -60,6 +84,11 @@ def audit(root: Path) -> dict:
     ids = [x.get("candidate_id") for x in candidates]
     if any(not isinstance(x, str) or not x for x in ids) or len(ids) != len(set(ids)):
         raise ValueError("CANDIDATE_ID_DRIFT")
+    admission_ids = [x.get("candidate_id") for x in rows]
+    if (any(not isinstance(x, str) or not x for x in admission_ids)
+            or len(admission_ids) != len(set(admission_ids))
+            or set(admission_ids) != set(ids)):
+        raise ValueError("ADMISSION_CANDIDATE_ID_DRIFT")
     status_counts = dict(Counter(x.get("status", "UNKNOWN") for x in rows))
     if status_counts != admission.get("status_counts"):
         raise ValueError("ADMISSION_STATUS_COUNT_DRIFT")
@@ -74,7 +103,7 @@ def audit(root: Path) -> dict:
         raise ValueError("OUTCOME_COUNT_INVARIANT_BROKEN")
     raw_rows = nxt.get("evidence_summary", {}).get("eligible_rows_total")
     runtime_rows = run.get("eligible_prospective_rows")
-    with (root / CN_LEDGER).open(newline="", encoding="utf-8") as f:
+    with checked_path(root, CN_LEDGER).open(newline="", encoding="utf-8") as f:
         ledger_rows = list(csv.DictReader(f))
     if not isinstance(raw_rows, int) or not isinstance(runtime_rows, int):
         raise ValueError("SHARED_ROW_COUNTER_UNAVAILABLE")
@@ -102,6 +131,8 @@ def audit(root: Path) -> dict:
                 "EXPLICIT_FAIL_CLOSED_WITHOUT_TRUSTED_SERVER_ACCEPTANCE_CLOCK"
                 if deliberate_gate else "NOT_ATTESTED_SOURCE_CHANGED"
             ),
+            "source_gate_actual_git_blob_sha1": actual_git_blob_sha1,
+            "source_gate_expected_git_blob_sha1": PINNED_SOURCE_GATE_GIT_BLOB_SHA1,
             "timed_anchor_correction_authorized": False,
             "next": "PROVE_TRUSTED_PROSPECTIVE_SERVER_ACCEPTANCE_CLOCK_OR_RETAIN_ZERO"
         },
