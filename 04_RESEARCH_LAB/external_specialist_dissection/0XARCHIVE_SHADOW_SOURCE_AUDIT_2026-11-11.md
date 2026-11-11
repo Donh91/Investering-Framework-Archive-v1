@@ -50,6 +50,19 @@ No 2020-2022 Hyperliquid market-microstructure replay is possible from data that
 6. External specialist queue: existing 04_RESEARCH_LAB/external_specialist_dissection/QUEUE_V1.json owns prioritization, one heavy lane at a time and deduplication. This is an additive S5/HRE source feasibility memo, NOT another top-level S11 or separate priority queue.
 7. Existing S1 #1156 and Claude/Grok Bridge have review/routing roles only; no new identity, schedule, cron, writer, credential or unconditional merge privilege.
 
+## Source-code correction: vendor raw archive != 0xbt fill engine
+
+Verified against upstream at pinned commit, especially skills/backtest/references/data.md and skills/backtest/references/gauntlet.md (not merely vendor marketing).
+
+1. **The currently documented 0xbt strategy dataset is minute bars for Hyperliquid core perps only.** It does not backtest HIP-3, HIP-4, Spot, Lighter or sub-minute order streams. The upstream data.md says actual tradable price/volume rows in that path start 2025-03-22. Thus the provider's 2023 L2 market archive does not itself give 0xbt a 2023 tradeable-backtest window.
+2. **Book columns are always null in the 0xbt data-pull parquet files.** The vendor states best_bid/best_ask/spread/depth/imbalance and liquidation-level fields are null in *every* data-pull month; the API has other more granular routes, but the engine's minute dataset does not integrate them. Its fill model uses a fixed fallback slippage of 2 basis points when actual depth is absent, configurable for stress tests. An 0xbt performance result is therefore NOT a proved orderbook/L3/L4 queue-position fill simulation.
+3. **Sealed holdout is a process guard, not an access-control boundary.** Upstream gauntlet.md explicitly states engine reads after holdout start raise Sealed, while reading Parquet through another library can bypass it. A copied/new study directory or independent analyst access also requires separate governance: study-level ledger is not necessarily global trial accounting. Independent sandbox permission + immutable trial registry + authorized reveal must enforce our claims.
+4. **Data receipt strength needs tests.** The Rust Receipt DatasetRef holds market, month and dataset_version, and the result record holds hash; this struct alone does not show a byte-level Parquet SHA binding. Check dataset manifests and replay hashing separately before calling a receipt fully independently reproducible. Do not allege tampering based on absence from this one struct.
+5. **Method reuse is the immediate value.** Source-level designs for nulls, trial ledger, moving clock phases, deflated Sharpe and walk-forward are worth comparison; not yet justification for replacing HRE or Alpha paper fill engine.
+6. **Version/provenance gate:** upstream skill currently instructs pip pin 0xarchive-backtest[curated]==0.3.2; separately verify PyPI artifact, exact release commit, source/wheel attestation, Cargo.lock and executable identity before code execution. No install was made.
+
+Practical consequence: E0 should separate provider granular API quality from **0xbt minute-engine** capabilities. E1 must not imply this ready-made engine already implements execution-realistic L4 replay. If realistic order-level simulation is needed, first evidence a minimal adapter into our EXISTING HRE/paper economics owner and test with actual book snapshots and immutable timestamps; do not silently patch vendor engine or build a parallel engine.
+
 ## High-value candidate primitives
 
 P0a - Data-quality-aware shadow candidate: capture exact venue+family+symbol+datatype coverage, known gaps, ingestion lag, request_id, first-known clock and checksum at each cutoff; label quality UNKNOWN / COMPLETE_WINDOW / GAP / STALE / NOT_SUPPORTED. Stop rather than silently fill. Distinguish provider metadata claims from measured record completeness.
