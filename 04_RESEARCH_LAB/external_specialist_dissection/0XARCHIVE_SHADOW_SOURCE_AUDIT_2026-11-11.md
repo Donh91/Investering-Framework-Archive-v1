@@ -31,6 +31,18 @@ This section supersedes the earlier "binding terms not retrieved" caveat **for p
 
 **Updated E0 stage:** `PUBLIC_CAPABILITIES_METADATA_VERIFIED` only. The actual BTC/ETH symbol-level quality/coverage windows, API response schema, availability timestamps, incidents, request IDs, vendor rights/entitlement and bytes remain unverified; E0 cannot pass source admission. No account, free-key signup, paid subscription or raw API pull performed.
 
+## 2026-11-11 additional PUBLIC service-quality check (not authenticated market data)
+
+Read-only, no-key GET public endpoints returned:
+- `https://api.0xarchive.io/v1/status/coverage`: public provider coverage/status descriptors and a specific historical orderbook quality notice.
+- `https://api.0xarchive.io/v1/data-quality/status`: `success:true`, service `status:"degraded"`, `active_incidents:1`, snapshot `updated_at:2026-11-11T20:41:18.897532620Z`, provider `meta.request_id:07a93706-7e57-4342-bc8f-2112752ede09`. It separately describes six venue-family substatuses as `operational`. This is a provider-reported snapshot, NOT independent diagnosis. No actual root cause was returned.
+- Public coverage metadata reports Hyperliquid `orderbook` source `node` snapshots between **2026-07-25T17:23:00Z and 2026-10-01T21:20:00Z** could depict a book several minutes earlier at busy times; source `venue` snapshots and trades/candles/L4 data for the same period are claimed unaffected. This is **a material warning** for naive L2 point-in-time or execution assumptions. Require per-record source, event clock, availability clock, and reject unsafe intervals unless independently reconciled.
+- Public coverage `historical_coverage:0.4` occurs in some rows alongside `completeness:99.9` or `100.0`. Without the field definition/denominator, do NOT interpret 0.4 as 40% record coverage or 60% missing; record `UNINTERPRETED_PROVIDER_METRIC`.
+- Endpoints `/v1/data-quality/coverage/hyperliquid/BTC`, `/v1/data-quality/incidents`, `/v1/data-quality/latency` return **HTTP 401 without credentials**. Thus no independently observed exact BTC coverage, incident detail or data-type latency test was completed. Do not bypass access requirements.
+- No trading quotes, raw provider trades, prices, book depth, wallets, model output or vendor paid data were fetched. Only public capability and source-health metadata.
+
+**Source decision:** `PUBLIC_CAPABILITIES_AND_STATUS_VERIFIED`, `VENDOR_GLOBAL_STATUS_DEGRADED`, `SYMBOL_SOURCE_QUALITY_UNVERIFIED`, `ACTIVE_INCIDENT_DETAIL_AUTH_REQUIRED`, `PROVIDER_DATA_ACCESS_NOT_AUTHORIZED`. E0 stays **HOLD** for data-source admission and scientific performance testing. Public metadata must never become a proof of independent historical first-known.
+
 ## Source inventory and fact grades
 
 - Product and data taxonomy: https://0xarchive.io/ and https://docs.0xarchive.io/venue-coverage
