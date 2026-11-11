@@ -172,6 +172,41 @@ class ListingDecayResearchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"UNREGISTERED_ENTRY_DELAY"):
             m.study(self.data,delay_days=10)
 
+
+    def test_gapped_hourly_holding_path_cannot_claim_full_excursions(self):
+        start=pd.Timestamp("2025-06-01T00:00:00Z")
+        finish=start+30*m.DAY
+        bars={"timestamp":[start,finish],
+              "open":[100.0,90.0],
+              "high":[110.0,95.0],
+              "low":[95.0,85.0],
+              "close":[101.0,91.0],
+              "volume":[1000.0,1000.0]}
+        p=m.score_path(bars,start,finish)
+        self.assertAlmostEqual(p["return"],-0.10)
+        self.assertIsNone(p["mae_short"])
+        self.assertIsNone(p["mfe_short"])
+        self.assertFalse(p["path_coverage_complete"])
+        self.assertEqual(p["path_coverage_status"],"GAPPED_NO_EXCURSION_CLAIM")
+        self.assertEqual(p["path_observed_hourly"],2)
+        self.assertEqual(p["path_expected_hourly"],721)
+
+    def test_contiguous_hourly_path_keeps_excursions_available(self):
+        start=pd.Timestamp("2025-06-01T00:00:00Z")
+        hours=pd.date_range(start,periods=25,freq="h")
+        bars={"timestamp":list(hours),
+              "open":[100.0]*25,
+              "high":[120.0]*25,
+              "low":[80.0]*25,
+              "close":[100.0]*25,
+              "volume":[1000.0]*25}
+        p=m.score_path(bars,start,start+m.DAY)
+        self.assertTrue(p["path_coverage_complete"])
+        self.assertEqual(p["path_observed_hourly"],25)
+        self.assertEqual(p["path_expected_hourly"],25)
+        self.assertAlmostEqual(p["mae_short"],0.2)
+        self.assertAlmostEqual(p["mfe_short"],0.2)
+
     def test_control_age_gate(self):
         entry=pd.Timestamp("2025-07-17",tz="UTC")
         f=m.window_features(self.bars["NEW"],entry,entry-m.DAY)

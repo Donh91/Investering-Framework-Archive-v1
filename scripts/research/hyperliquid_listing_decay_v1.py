@@ -102,9 +102,18 @@ def score_path(b,entry_t,due_t):
     # Include the actual exit OPEN as a boundary, but not its future extrema.
     held_high=max([ep,xp]+b["high"][e:x])
     held_low=min([ep,xp]+b["low"][e:x])
+    path_times=b["timestamp"][e:x+1]
+    path_complete=all(t2-t1==HOUR for t1,t2 in zip(path_times,path_times[1:]))
+    expected_observations=int((path_times[-1]-path_times[0])/HOUR)+1
+    # A sparse hourly path still supports the two observed OPEN endpoint
+    # prices, NOT a trustworthy full-holding excursion or liquidation claim.
     return {"entry":ep,"exit":xp,"return":xp/ep-1,
-            "mae_short":held_high/ep-1,
-            "mfe_short":1-held_low/ep,
+            "mae_short":held_high/ep-1 if path_complete else None,
+            "mfe_short":1-held_low/ep if path_complete else None,
+            "path_coverage_complete":path_complete,
+            "path_coverage_status":"COMPLETE_HOURLY" if path_complete else "GAPPED_NO_EXCURSION_CLAIM",
+            "path_observed_hourly":len(path_times),
+            "path_expected_hourly":expected_observations,
             "entry_time":b["timestamp"][e].isoformat(),
             "exit_time":b["timestamp"][x].isoformat()}
 
@@ -160,7 +169,8 @@ def study(data, minimum_first="2025-07-09",latest_first="2026-09-29",
             p=score_path(b,entry_t,entry_t+h*DAY)
             horizon[str(h)]={"status":"OBSERVED" if p else "CENSORED",
                              "return":p["return"] if p else None,
-                             "mae_short":p["mae_short"] if p else None}
+                             "mae_short":p["mae_short"] if p else None,
+                             "path_coverage_status":p["path_coverage_status"] if p else "NO_EXECUTABLE_EXIT"}
         p=score_path(b,entry_t,due_t)
         row={"coin":coin,"first_observed_utc":first.isoformat(),
              "entry_target_utc":entry_t.isoformat(),"due_utc":due_t.isoformat(),
