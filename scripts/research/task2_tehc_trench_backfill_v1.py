@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
 import math
 import re
 from datetime import date, datetime, timedelta, timezone
@@ -306,10 +307,17 @@ def main() -> None:
     p.add_argument("--ties", choices=("inclusive", "midrank"), default="inclusive")
     a = p.parse_args()
     t = datetime.fromisoformat(a.as_of_utc.replace("Z", "+00:00"))
-    source = {k: json.loads(getattr(a, k).read_text(encoding="utf-8"))
-              for k in ("pads", "bots", "trench", "btc", "eth", "sol")}
+    snapshot_bytes = {k: getattr(a, k).read_bytes()
+                      for k in ("pads", "bots", "trench", "btc", "eth", "sol")}
+    source = {k: json.loads(data) for k, data in snapshot_bytes.items()}
     result = evaluate(source["pads"], source["bots"], source["trench"],
                       {k: source[k] for k in ("btc", "eth", "sol")}, as_of=t, ties=a.ties)
+    # Exact replay-byte hashes make new results inspectable; they DO NOT
+    # retroactively attest provider availability, provenance or Nov10 inputs.
+    result["snapshot_input_sha256"] = {
+        k: hashlib.sha256(data).hexdigest() for k, data in snapshot_bytes.items()
+    }
+    result["snapshot_hash_scope"] = "CURRENT_REPLAY_BYTES_ONLY_NOT_HISTORICAL_FIRST_KNOWN"
     print(json.dumps(result, sort_keys=True, indent=2))
 
 

@@ -2,6 +2,14 @@
 from __future__ import annotations
 
 import unittest
+import hashlib
+import io
+import json
+import sys
+import tempfile
+from contextlib import redirect_stdout
+from pathlib import Path
+from unittest.mock import patch
 from datetime import date, datetime, timedelta, timezone
 
 from scripts.research import task2_tehc_trench_backfill_v1 as m
@@ -123,6 +131,28 @@ class TehcHeatOfflineTests(unittest.TestCase):
         trench["today"]["score"] = 0
         out = m.evaluate(pads, bots, trench, prices, as_of=AS_OF)
         self.assertEqual(out["outcomes"]["groups"]["cold_warming_delta_gte5"]["n"], 1)
+
+
+    def test_cli_emits_exact_current_input_sha256_without_pit_claim(self):
+        pads, bots, trench, kraken = fixture()
+        source = {"pads": pads, "bots": bots, "trench": trench, **kraken}
+        output = io.StringIO()
+        with tempfile.TemporaryDirectory() as td:
+            flags = ["tehc-replay", "--as-of-utc", AS_OF.isoformat()]
+            hashes = {}
+            for key, data in source.items():
+                path = Path(td) / (key + ".json")
+                raw = json.dumps(data, sort_keys=True).encode("utf-8")
+                path.write_bytes(raw)
+                hashes[key] = hashlib.sha256(raw).hexdigest()
+                flags += ["--" + key, str(path)]
+            with patch.object(sys, "argv", flags), redirect_stdout(output):
+                m.main()
+            parsed = json.loads(output.getvalue())
+        self.assertEqual(parsed["snapshot_input_sha256"], hashes)
+        self.assertEqual(parsed["snapshot_hash_scope"],
+                         "CURRENT_REPLAY_BYTES_ONLY_NOT_HISTORICAL_FIRST_KNOWN")
+        self.assertFalse(parsed["original_point_in_time_source_attested"])
 
     def test_no_prospective_or_market_authority(self):
         pads, bots, trench, kraken = fixture()
