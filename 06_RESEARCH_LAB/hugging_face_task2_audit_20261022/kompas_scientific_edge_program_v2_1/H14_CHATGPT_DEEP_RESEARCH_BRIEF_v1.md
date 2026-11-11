@@ -1,0 +1,47 @@
+# Deep Research | Kompas Pro 14 horizons, historical evidence atlas and skill design
+
+**RUN MODE:** Copy this mission into **ChatGPT Deep Research in the SAME conversation** containing the owner's request, preferably with the already connected GitHub source enabled. This is an evidence-gathering mission, **not a request to deploy a new agent, background task, repo writer or model**. A separate research feature may create its own visible result, but report it back into this conversation. Do not claim to have read a repository without real tool access. If Deep Research cannot access some connected source, label that exact scope NOT_ACCESSED and carry on with accessible evidence.
+
+## Objective
+
+Perform an exhaustive, source-cited, adversarial **public/repository accessible** audit of how the existing Investering Framework could improve factual forecast skill and decision quality across all 14 **canonical** Kompas Pro horizons, without reissuing historical forecasts or changing the production model. The goal is the smallest set of scientifically validated improvements, not 14 invented numerical predictions.
+
+### Canonical entrypoint and repositories
+
+Read `AGENTS.md`, `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`, `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`, current operational cockpit and owners before concluding anything. Main repo: `Donh91/Investering-Framework-Archive-v1`, latest verified main at read time. Relevant externally available adviser: `Donh91/Investering-AI-Audit-Bridge` standing branch `claude/log`, PR #173, `reports/claude/STATUS.md`, audit reports and review log. Other repos may be examined *read-only* only when actually accessible and necessary (e.g. Alpha Lab, Cycle Navigator pages, source archives); never assume a URL means a repo exists or is canonical.
+
+**Private boundary:** `Donh91/secrets` is a restricted data plane. Do not retrieve, copy, quote, upload, paste or infer raw/normalized private values into Deep Research or public GitHub; only authorized public, value-free binding metadata if independently permitted. Round 3 `PROSPECTIVE_COLLECTION_ONLY`, hypothesis/outcome scoring OFF. Protect provider license and dated original source availability.
+
+### Must-read existing program, avoid duplicating
+
+- `07_PROMPTS_AND_AGENTS/action_compass/KOMPAS_PRO_HORIZON_IMPLEMENTATION_LEDGER_v2.json`, the EXACT 14 IDs; `05_CYCLE_NAVIGATOR/site/premium-v2/kompas-horizon-status.mjs`; `04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json` and immutable target.
+- Task2 original issue #1596, `06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/` current program and `H14_HISTORICAL_TO_FORWARD_RESEARCH_FOUNDATION_v1.md` plus `H14_EXPERIMENT_CROSSWALK_v1.json`.
+- `06_RESEARCH_LAB/compass_research_engine_v1/`, including draft/accepted protocol and prospective gate; Research Parallel Lanes skill; `06_RESEARCH_LAB/shared_row_model_tournament_v1/`; `06_RESEARCH_LAB/historical_altseason_pullback_v1/`.
+- Task2 RPL8 waves and W44 CN versus B1, PR #2002; Ironflow full-18m **embargo corrected** report, actual native run/artifact receipts, missing OI Feb 12 and censor Feb 13; source first-known and delivery studies. Avoid citing superseded *unembargoed* scores as final.
+- W46 original `05_CYCLE_NAVIGATOR/weekly/2026/W46/` forecast freeze, original revision and per-day lows/highs/expected closes, score receipts, 05_CYCLE_NAVIGATOR public series/Graph History, site source gating and actual deployed-site verification if accessible.
+- Claude Bridge audit `CLAUDE-AUDIT-03/03b/04a/04b`, independent review and any newest material audit; corroborate with original GitHub native source instead of trusting adviser prose alone. Claude's Oct 4-9 breadth collapse 0.83→0.08 and 33 stale risk levels should inspire a preregistered shadow test, **not** a retrospective chosen production threshold.
+- Relevant Research Lab M1-M7 / phase4 / prospective tests, risk #1553, indicator incremental gain #1530, source #1827, cycle #1516, site #1578 and any actual reviewable original PRs. Distinguish claims about model architecture from evidence of published outputs.
+
+### Research procedure: exhaustive within accessible scope, no false full-coverage claim
+
+1. Build a **repository inventory**: every repo actually accessed, default branch/ref, exact SHA, data path, file type, time span, source first-known proof, quality/license/access. Traverse appropriate subfolders and pagination; include manifest of files actually inspected and representative samples; report excluded/unreadable areas separately. A handful of search matches is NOT an exhaustive scan.
+2. Build an **evidence graph** for 14 horizon IDs: source observation -> provider publication -> collector receipt -> original issued forecast -> actual user delivery if needed -> target maturity -> outcome truth -> same-clock baseline -> independent event cluster -> scoring -> reviewed owner/PR -> main consumer. Distinguish `OBSERVED_NOWCAST`, `ORIGINAL_ISSUED`, `RECONSTRUCTED_RETROSPECTIVE`, `CHALLENGER_DEVELOPMENT`, `FORWARD_TEST`, `PUBLIC_PRODUCTION`, `NO_EDGE`, `UNAVAILABLE`.
+3. Design **8 or fewer independent research questions** under the already-approved Task2 RPL8. For each: hypothesis, falsifier, eligible data, source clock, cheapest control, leakage control, outcome clock, N independent cycles/days/weeks, negative controls, missingness, costs, target/metric, expected owner, evidence link and stop rule. Identify hypotheses that require entirely new prospective cohort rather than stretching archived data.
+4. For BTC numeric price targets: score daily close MAE/scaled error separately from daily high/low interval coverage and from weekly extrema. Penalize wide ranges with width/overlap. Only score probabilities when truly issued probabilities existed; public bear 7/10 is not 70%.
+5. For risk: reconstruct every official *issued* warning vs future drawdown onset and matched quiet windows, including false negatives, false positives, alert delivery latency, delayed alert, investor decision value. Explicitly test miss-cost k and episode clustering. Do not infer SELL from WARNING.
+6. For 1-12m cycles: check how many genuinely independent market cycles and uninterrupted feature-history windows exist. Preserve the 2022-2024 gap and survival/delisting bias; do not promise a 12-month forecast from 14 correlated weekly snapshots.
+7. Review scientific literature or authoritative open-source methodology *only where useful*: walk-forward with purged+embargoed overlapping labels, temporal data leakage, proper scores, calibration, conformal/quantile interval methods, Bayesian uncertainty, change-point and regime models, forecast combination, decision-cost-sensitive warnings. Provide real citations, paper dates, tested applicability and no ungrounded implementation claims.
+8. Rank **smallest 10 concrete interventions**, against existing open PRs and current main. For each: original issue, exact target files and functions if seen, test fixture, expected benefit, falsifier, no-work condition, cost, risk class and gate. Strongly prefer fewer features where ablations do not show benefit.
+
+### Output in this SAME conversation
+
+A. One-screen executive decision: what is already real, missing, wrong, duplicated or misleading; top 3 highest-value actions.
+B. Full 14-row matrix: current real product state and source, available history, research readiness, baseline/score, blind spot, scientific admission and next evidence trigger. Mark unknown, no interpolation.
+C. Historical skills atlas: original vs reconstructed forecast quality; dates, denominator, clock integrity, independent effective N, accepted nulls and severity/lead-time false negatives. Note missing 7-daily-close scorer if still absent.
+D. Prioritized `FIX_NOW`, `BUILD_SHADOW`, `SOURCE_REPAIR`, `AWAIT_MATURITY`, `REJECTED` candidates, with concrete original owner, artifact and minimal PR-ready positive/adversarial tests. **Do not create a second queue.**
+E. A 30/60/90-day prospective *research order*, not a new scheduled task or promised production launch, using existing CRE/S2/Task2/S1 when actually active and eligible.
+F. Separate **Claude/Grok disagreement matrix** and external-source citations with immutable native GitHub URLs; list every area not actually inspected.
+G. A machine-readable handoff proposal or JSON-shaped summary: `{source_sha, original_owner, horizon_id, hypothesis, baseline, falsifier, missing_receipt, decision, next_native_trigger, test_files, risk_class}` for each top finding. Do not fabricate source SHA or review APPROVE.
+H. Final verdict by horizon: `SOURCE_GAP`, `REPLAY_ONLY`, `PROSPECTIVE_COLLECT`, `MATURING`, `PIT_ADMITTED`, `EDGE_UNPROVEN`, `QUALIFIED_FOR_OWNER_REVIEW`. No direct production action.
+
+Use the same conversation to ask the owner only about genuine policy/paid-access exceptions, not for repo browsing instructions already available. **Research is read-only**; do not merge, alter main, start new automatic tasks, use paid model APIs, create cron, release market thresholds, move secrets or place real trades. Return a complete cited report here; any later governed GitHub PR will be constructed by the original owner in this conversation or existing S1/Task2 process. An accessible source of only partial files must be disclosed as partial coverage.
