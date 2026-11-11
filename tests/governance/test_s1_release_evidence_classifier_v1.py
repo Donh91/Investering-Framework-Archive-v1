@@ -584,7 +584,12 @@ class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
         for path in ("AGENTS.md", ".github/workflows/risky.yml",
                      "01_CORE_FRAMEWORK/governance/guard.md",
                      "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
-                     "scripts/governance/s1_release_evidence_classifier_v1.py"):
+                     "scripts/governance/s1_release_evidence_classifier_v1.py",
+                     "scripts/governance/s1_general_release_evidence_v1.py",
+                     "scripts/governance/s1_native_handoff_auth_v1.py",
+                     "scripts/governance/s1_agent_handoff_receipts_v1.py",
+                     "scripts/governance/check_codex_review_finality.py",
+                     "tests/governance/test_s1_general_release_evidence_v1.py"):
             with self.subTest(path=path):
                 x = copy.deepcopy(r)
                 x["expected_changed_paths"] = [path]

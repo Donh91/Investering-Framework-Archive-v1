@@ -87,8 +87,9 @@ def _release_sensitive_path(path):
     return (path == "AGENTS.md" or path.startswith(".github/workflows/")
             or path.startswith("01_CORE_FRAMEWORK/governance/")
             or path.startswith("00_ARCHIVE_CONTROL/")
-            or path.startswith("scripts/governance/s1_release")
-            or path.startswith("tests/governance/test_s1_release"))
+            or path.startswith("scripts/governance/s1_")
+            or path.startswith("tests/governance/test_s1_")
+            or path == "scripts/governance/check_codex_review_finality.py")
 
 
 def _stamp(value):
