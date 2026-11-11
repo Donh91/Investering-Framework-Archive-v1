@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -115,6 +116,56 @@ class EvidenceConversionPreflightTest(unittest.TestCase):
         (self.root / "scripts/experiments/source_git_anchor.py").unlink()
         with self.assertRaisesRegex(ValueError, "SOURCE_GATE_UNAVAILABLE"):
             audit(self.root)
+
+    def test_admission_duplicate_id_with_unchanged_status_counts_fails_closed(self):
+        path = "research/experiment_lifecycle/LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json"
+        value = json.loads((self.root / path).read_text())
+        value["candidates"][1]["candidate_id"] = "a"
+        write(self.root, path, value)
+        with self.assertRaisesRegex(ValueError, "ADMISSION_CANDIDATE_ID_DRIFT"):
+            audit(self.root)
+
+    def test_admission_replaced_id_with_unchanged_status_counts_fails_closed(self):
+        path = "research/experiment_lifecycle/LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json"
+        value = json.loads((self.root / path).read_text())
+        value["candidates"][1]["candidate_id"] = "not-in-original-registry"
+        write(self.root, path, value)
+        with self.assertRaisesRegex(ValueError, "ADMISSION_CANDIDATE_ID_DRIFT"):
+            audit(self.root)
+
+    def test_external_csv_symlink_is_rejected(self):
+        path = self.root / "05_CYCLE_NAVIGATOR/forward_range_ledger/FORWARD_RANGE_LEDGER_v0_1.csv"
+        with tempfile.TemporaryDirectory() as outside:
+            external = Path(outside) / "external.csv"
+            external.write_text("forecast_id,notes\\nFAKE,EXAMPLE_ONLY\\n")
+            path.unlink()
+            path.symlink_to(external)
+            with self.assertRaisesRegex(ValueError, "SOURCE_MISSING_OR_UNTRUSTED"):
+                audit(self.root)
+
+    def test_parent_directory_symlink_is_rejected(self):
+        folder = self.root / "scripts/experiments"
+        actual = self.root / "scripts/real_gate"
+        folder.rename(actual)
+        folder.symlink_to(actual, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "SOURCE_GATE_UNAVAILABLE"):
+            audit(self.root)
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "POSIX FIFO support required")
+    def test_nonregular_fifo_csv_is_rejected_before_open(self):
+        path = self.root / "05_CYCLE_NAVIGATOR/forward_range_ledger/FORWARD_RANGE_LEDGER_v0_1.csv"
+        path.unlink()
+        os.mkfifo(path)
+        with self.assertRaisesRegex(ValueError, "SOURCE_MISSING_OR_UNTRUSTED"):
+            audit(self.root)
+
+    def test_modified_temporal_guard_body_cannot_be_attested(self):
+        path = "scripts/experiments/source_git_anchor.py"
+        value = (self.root / path).read_text()
+        self.assertIn("return False", value)
+        write(self.root, path, value.replace("return False", "return True"))
+        self.assertEqual(audit(self.root)["experiment"]["timed_git_anchor_policy"],
+                         "NOT_ATTESTED_SOURCE_CHANGED")
 
 
 if __name__ == "__main__":
