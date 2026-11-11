@@ -120,9 +120,9 @@ def inspect(document: Any) -> dict[str, Any]:
             errors.add("PROVIDER_INVALID")
         family = receipt.get("family")
         datatype = receipt.get("datatype")
-        if family not in ALLOWED_FAMILIES:
+        if not isinstance(family, str) or family not in ALLOWED_FAMILIES:
             errors.add("FAMILY_INVALID")
-        if datatype not in ALLOWED_TYPES:
+        if not isinstance(datatype, str) or datatype not in ALLOWED_TYPES:
             errors.add("DATATYPE_INVALID")
         if family in {"hyperliquid_spot", "hyperliquid_hip4"} and datatype == "funding":
             errors.add("FAMILY_DATATYPE_INCOMPATIBLE")
