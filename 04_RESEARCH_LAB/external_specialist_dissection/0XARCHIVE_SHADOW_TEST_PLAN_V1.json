@@ -42,7 +42,23 @@
       "rh-lighter"
     ],
     "public_capabilities_proof_scope": "DECLARED_ROUTE_METADATA_ONLY_NOT_SYMBOL_COVERAGE_OR_FIRST_KNOWN",
-    "public_capabilities_data_values_collected": false
+    "public_capabilities_data_values_collected": false,
+    "public_service_status": {
+      "observed_at_provider_utc": "2026-11-11T20:41:18.897532620Z",
+      "status": "degraded",
+      "active_incidents": 1,
+      "request_id": "07a93706-7e57-4342-bc8f-2112752ede09",
+      "coverage_url": "https://api.0xarchive.io/v1/status/coverage",
+      "status_url": "https://api.0xarchive.io/v1/data-quality/status",
+      "data_market_rows_requested": false,
+      "detailed_incidents": "AUTH_401",
+      "btc_coverage": "AUTH_401",
+      "latency_detail": "AUTH_401",
+      "historical_node_l2_warning_start": "2026-07-25T17:23:00Z",
+      "historical_node_l2_warning_end": "2026-10-01T21:20:00Z",
+      "historical_node_l2_warning_claim": "up_to_minutes_behind_at_busy_periods; venue_book_not_affected_claimed",
+      "ambiguous_historical_coverage_ratio": "0.4_UNINTERPRETED_PROVIDER_FIELD"
+    }
   },
   "limits": {
     "free_usd_month": 0,
@@ -95,7 +111,7 @@
       "id": "OXA-E0",
       "owner_repo": "Donh91/Investering-Framework-Archive-v1",
       "owner_issue": 1514,
-      "stage": "PARTIAL_PUBLIC_CAPABILITIES_VERIFIED_PRIVATE_SYMBOL_QUALITY_BLOCKED",
+      "stage": "PUBLIC_CAPABILITIES_VERIFIED_SOURCE_HEALTH_DEGRADED_AUTH_REQUIRED",
       "hypothesis": "vendor_clock_and_coverage_fit_for_scientific_replay",
       "asset_scope": [
         "BTC",
@@ -105,7 +121,7 @@
       "primary_metric": "gaps_and_first_known_semantics_per_market",
       "required_proof": "two bounded request and quality receipts; exact symbol/version; parity vs native",
       "kill": "unknown availability timestamps, failed gaps, unlawful data use",
-      "next_action": "Sourced public capabilities and primary contract verified. Still need authorized authenticated Free key and legal entitlement before per-symbol quality/PIT records; preserve UNKNOWN if historical first-known cannot be proved."
+      "next_action": "Do not admit provider rows. Global service is DEGRADED with one active incident (2026-11-11) and historical source=node L2 staleness warning; per-symbol coverage/incident details return 401 without key. Need licensed authorized source QA and independent first-known before any source PASS."
     },
     {
       "id": "OXA-E1",
@@ -193,7 +209,7 @@
   "no_hindsight": "2023_core_L2_does_not_imply_2023_L4; retroactive data availability is not historical first-known",
   "cross_repo": "public control + private data plane Donh91/secrets + runtime credentials; no raw in public",
   "promotion": "existing owner PR + exact-head CI + independent review + governed merge + main readback + prospective proof",
-  "notes": "2026-11-11 independently inspected public capabilities (111 declared routes across 6 namespace families), binding Data License and Terms. No vendor market rows or symbol QA collected, no key, no spend, no scientific edge.",
+  "notes": "2026-11-11 independently inspected public capabilities (111 declared routes across 6 namespace families), binding Data License and Terms. No vendor market rows or symbol QA collected, no key, no spend, no scientific edge. Public unauthenticated source health status DEGRADED, 1 active incident, prior historical node-L2 staleness; no per-symbol authenticated quality.",
   "report_path": "04_RESEARCH_LAB/external_specialist_dissection/0XARCHIVE_SHADOW_SOURCE_AUDIT_2026-11-11.md",
   "engine_verified_limitations": {
     "source": "https://github.com/0xArchiveIO/0xarchive-quant/blob/3ff0c83409525ad9cd74f76a7cfd6fe0aa3bdc51/skills/backtest/references/data.md",
