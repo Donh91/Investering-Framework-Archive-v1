@@ -1,0 +1,180 @@
+{
+  "contract": "OXARCHIVE_SHADOW_TEST_PLAN_V1",
+  "source_id": "EXT-OXA-20261111",
+  "status": "SCREENED_SOURCE_CHALLENGER_NO_EDGE_PROVEN",
+  "approved_for": "FREE_READ_ONLY_FEASIBILITY_SUBJECT_TO_KEY_AND_RIGHTS",
+  "forbidden": [
+    "PAID_ACCESS",
+    "AUTO_TRADING",
+    "PUBLIC_RAW_DATA",
+    "LIVE_COMPASS_AUTHORITY",
+    "NEW_SUPERVISOR",
+    "NEW_SCHEDULER",
+    "PRIVILEGED_THIRD_PARTY_SKILL_INSTALL",
+    "PRIVATE_DATA_IN_PUBLIC_REPO"
+  ],
+  "captured_at": "2026-11-11",
+  "source": {
+    "website": "https://0xarchive.io/",
+    "docs": "https://docs.0xarchive.io/",
+    "pricing": "https://0xarchive.io/pricing",
+    "rights": "https://docs.0xarchive.io/data-rights",
+    "quality": "https://docs.0xarchive.io/data-quality",
+    "repo": "https://github.com/0xArchiveIO/0xarchive-quant",
+    "commit": "3ff0c83409525ad9cd74f76a7cfd6fe0aa3bdc51",
+    "skill_blob": "9450a2b0aff2fc969b1db661d45a695453713f14",
+    "code_license": "MIT",
+    "data_license_primary_text": "NOT_INDEPENDENTLY_RETRIEVED"
+  },
+  "limits": {
+    "free_usd_month": 0,
+    "free_history_rolling_days": 30,
+    "free_api_credits_per_month": 50000,
+    "build_usd_monthly": 49,
+    "pro_usd_monthly": 199,
+    "no_spend_authorized": true
+  },
+  "vendor_claim_coverage": [
+    {
+      "venue_family": "hyperliquid_core",
+      "datatype": "L2",
+      "start_date": "2023-04-15",
+      "independently_verified": false
+    },
+    {
+      "venue_family": "hyperliquid_core",
+      "datatype": "funding_OI",
+      "start_date": "2023-05-20",
+      "independently_verified": false
+    },
+    {
+      "venue_family": "hyperliquid_core",
+      "datatype": "liquidations",
+      "start_date": "2025-12-22",
+      "independently_verified": false
+    },
+    {
+      "venue_family": "hyperliquid_core",
+      "datatype": "L4_wallet_order",
+      "start_date": "2026-03-11",
+      "independently_verified": false
+    },
+    {
+      "venue_family": "lighter_mainnet",
+      "datatype": "trades",
+      "start_date": "2025-01-17",
+      "independently_verified": false
+    },
+    {
+      "venue_family": "lighter_mainnet",
+      "datatype": "L3",
+      "start_date": "2026-03-05",
+      "independently_verified": false
+    }
+  ],
+  "experiments": [
+    {
+      "id": "OXA-E0",
+      "owner_repo": "Donh91/Investering-Framework-Archive-v1",
+      "owner_issue": 1514,
+      "stage": "BLOCKED_KEY_OR_ACCESS",
+      "hypothesis": "vendor_clock_and_coverage_fit_for_scientific_replay",
+      "asset_scope": [
+        "BTC",
+        "ETH"
+      ],
+      "baseline": "venue_native_bounded_records",
+      "primary_metric": "gaps_and_first_known_semantics_per_market",
+      "required_proof": "two bounded request and quality receipts; exact symbol/version; parity vs native",
+      "kill": "unknown availability timestamps, failed gaps, unlawful data use",
+      "next_action": "access/rights proof then bounded free source QA"
+    },
+    {
+      "id": "OXA-E1",
+      "owner_repo": "Donh91/Investering-Framework-Archive-v1",
+      "owner_issue": 1596,
+      "stage": "WAIT_E0",
+      "depends": [
+        "OXA-E0"
+      ],
+      "hypothesis": "book_based_costs_change_realizable_paper_outcomes",
+      "baseline": "ideal_fill_vs_spread_fee_vs_latency_partial_fill",
+      "primary_metric": "after_cost_result_and_whole_exit_fill_rate",
+      "kill": "no added execution fidelity, untradeable size, worse than native source",
+      "next_action": "freeze common cutoff and synthetic controls before real data"
+    },
+    {
+      "id": "OXA-E2",
+      "owner_repo": "Donh91/Investering-Framework-Archive-v1",
+      "owner_issue": 1514,
+      "stage": "WAIT_E0_AND_PROSPECTIVE_DATA",
+      "depends": [
+        "OXA-E0"
+      ],
+      "hypothesis": "microstructure_improves_existing_S5_prospective_M6_risk",
+      "baseline": "price_OI_funding_vs_taker_vs_full_vector",
+      "primary_metric": "BTC_ETH_separate_24h_72h_risk_discrimination_with_uncertainty_and_false_alarm_cost",
+      "kill": "no net incremental value or mismatched event clocks",
+      "next_action": "preregister matched episode definitions and negative controls"
+    },
+    {
+      "id": "OXA-E3",
+      "owner_repo": "Donh91/Investering-Framework-Archive-v1",
+      "owner_issue": 1596,
+      "stage": "METHOD_ONLY_CAN_PREPARE",
+      "hypothesis": "upstream_gauntlet_has_missing_internal_reproducible_primitives",
+      "baseline": "existing_HRE_trial_holdout_clock_null_method",
+      "primary_metric": "hash_stability_and_no_holdout_leak_on_synthetic_fixtures",
+      "kill": "method duplicate, dependency risk, holdout leakage, irreproducible receipts",
+      "next_action": "pin source and audit Rust, Python, prompts and dependency chain without plugin install"
+    },
+    {
+      "id": "OXA-E4",
+      "owner_repo": "Donh91/Investering-Framework-Archive-v1",
+      "owner_issue": 1514,
+      "stage": "DEFERRED",
+      "depends": [
+        "OXA-E0"
+      ],
+      "hypothesis": "Hyperliquid_Lighter_divergence_leads_risk_net_of_common_market_factor",
+      "baseline": "existing_S5_and_BTC_common_factor",
+      "primary_metric": "prospective_M6_utility_after_fees",
+      "kill": "staleness, common shocks, no stable effect",
+      "next_action": "require paired comparable first-known and venues"
+    }
+  ],
+  "all_runs_require": [
+    "market_family_symbol_datatype_identity",
+    "dataset_coverage_by_type",
+    "event_clock_and_first_known",
+    "provider_availability_at_cutoff",
+    "collection_time",
+    "quality_freshness_incidents",
+    "request_id",
+    "schema_version",
+    "point_in_time_universe",
+    "gap_count",
+    "opaque_pagination_chain",
+    "source_code_commit",
+    "private_sha256_or_binding",
+    "realistic_fees_slippage_no_fill",
+    "frozen_baseline_and_kill_condition",
+    "negative_results_retained"
+  ],
+  "evidence_states": [
+    "DISCOVERED",
+    "SOURCE_SCREENED",
+    "ACCESS_VERIFIED",
+    "HISTORICAL_REPLAY",
+    "FORWARD_TEST",
+    "SUPPORTED",
+    "REJECTED",
+    "SOURCE_GAP"
+  ],
+  "current": "SOURCE_SCREENED",
+  "no_hindsight": "2023_core_L2_does_not_imply_2023_L4; retroactive data availability is not historical first-known",
+  "cross_repo": "public control + private data plane Donh91/secrets + runtime credentials; no raw in public",
+  "promotion": "existing owner PR + exact-head CI + independent review + governed merge + main readback + prospective proof",
+  "notes": "Provider published comparative and example backtest metrics are not independent evidence. No real provider API requests or market data processed in this audit.",
+  "report_path": "04_RESEARCH_LAB/external_specialist_dissection/0XARCHIVE_SHADOW_SOURCE_AUDIT_2026-11-11.md"
+}
