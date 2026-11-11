@@ -7,6 +7,7 @@ import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfid
 import {forwardOutlook} from './forward-outlook.mjs';
 import {chartSourceFingerprint} from './chart-source-key.mjs';
 import {renderProductExperience,initProductExperience,presentOfficialAction} from './premium-experience.mjs';
+import {readSwingRotation,renderSwingRotation} from './swing-rotation-readback.mjs';
 const $=id=>document.getElementById(id),keys=['overview','compass','path','results'];
 const H=[['NEXT_12H','CURRENT_MOMENTUM'],['NEXT_1_3D','1–3d'],['NEXT_5_7D','5–7d'],['NEXT_2_3W','2–3u'],['CYCLE_ALTCOINS_3_8W','3–8u']];
 const T=['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS','MEMES'];
@@ -233,6 +234,7 @@ function refresh(){
  document.querySelectorAll('[data-t]').forEach(e=>{if(dict[lang][e.dataset.t])e.textContent=dict[lang][e.dataset.t]});
  document.querySelectorAll('[data-lang]').forEach(e=>e.setAttribute('aria-pressed',String(e.dataset.lang===lang)));
  drawStatus();drawOverview();drawCompass();drawResults();renderProductExperience(view,feeds,lang);
+ renderSwingRotation($('swing-rotation-overview'),readSwingRotation(view,feeds?.compass,{lang}),{lang});
 }
 let loading=false;
 async function load(){
