@@ -400,6 +400,7 @@ class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
         r["review"] = {}
         r["repo_full_name"] = "Donh91/Investering-Framework-Archive-v1"
         r["pr_number"] = 2057
+        r["expected_changed_paths"] = ["scripts/research/nonproduction_evidence.py"]
         r["native_rules_verified"] = True
         r["native_approval_required"] = False
         h = r["current"]["head"]
@@ -550,6 +551,51 @@ class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
                 tampered = copy.deepcopy(r)
                 tampered["high_impact_owner_approval"] = invalid
                 self.assert_still_advisory(tampered, "REVIEW_REQUIRED_BY_POLICY")
+
+
+    def test_grok_g1_owner_comment_url_must_be_original_or_canonical(self):
+        r = self.base("HIGH")
+        r["high_impact_owner_approval"] = {
+            "approved": True, "repo": r["repo_full_name"],
+            "pr": r["pr_number"], "head_sha": r["current"]["head"],
+            "evidence_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-111111",
+        }
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+        invalid = (
+            "https://github.com/Donh91/unrelated-repo/blob/main/README.md",
+            r["claude_review"]["comment_url"],
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2058#issuecomment-111111",
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156",
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-0",
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156?foo=bar#issuecomment-111111",
+        )
+        for url in invalid:
+            with self.subTest(url=url):
+                x = copy.deepcopy(r)
+                x["high_impact_owner_approval"]["evidence_url"] = url
+                self.assert_still_advisory(x, "REVIEW_REQUIRED_BY_POLICY")
+        r["high_impact_owner_approval"]["evidence_url"] = (
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2057#issuecomment-111111")
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+
+    def test_grok_g2_low_risk_self_authored_path_guard_without_general_optin(self):
+        r = self.base("LOW", "SELF_AUTHORED_DESIGN")
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+        for path in ("AGENTS.md", ".github/workflows/risky.yml",
+                     "01_CORE_FRAMEWORK/governance/guard.md",
+                     "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
+                     "scripts/governance/s1_release_evidence_classifier_v1.py"):
+            with self.subTest(path=path):
+                x = copy.deepcopy(r)
+                x["expected_changed_paths"] = [path]
+                self.assert_still_advisory(x, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_claude_advisory_path_census_must_exist_and_be_well_formed(self):
+        for paths in (None, [], ["../escape.py"], ["safe.py", "safe.py"], [None]):
+            with self.subTest(paths=paths):
+                r = self.base()
+                r["expected_changed_paths"] = paths
+                self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
 
     def test_native_independent_approval_still_works(self):
         r = self.base()

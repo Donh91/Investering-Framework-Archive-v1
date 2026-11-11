@@ -70,6 +70,27 @@ def _github(value):
             and not any(s in (".", "..") for s in unquote(u.path).replace(chr(92), "/").split("/")))
 
 
+def _owner_approval_comment_url(value, repo, pr):
+    """Check owner-evidence URL structure; caller MUST verify comment author/body."""
+    if not _github(value) or repo != "Donh91/Investering-Framework-Archive-v1":
+        return False
+    u = urlparse(value)
+    allowed_paths = {
+        f"/Donh91/Investering-Framework-Archive-v1/pull/{pr}",
+        "/Donh91/Investering-Framework-Archive-v1/issues/1156",
+    }
+    return (u.path in allowed_paths and not u.query and
+            re.fullmatch(r"issuecomment-[1-9][0-9]*", u.fragment) is not None)
+
+
+def _release_sensitive_path(path):
+    return (path == "AGENTS.md" or path.startswith(".github/workflows/")
+            or path.startswith("01_CORE_FRAMEWORK/governance/")
+            or path.startswith("00_ARCHIVE_CONTROL/")
+            or path.startswith("scripts/governance/s1_release")
+            or path.startswith("tests/governance/test_s1_release"))
+
+
 def _stamp(value):
     if not isinstance(value, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z", value) is None:
         return None
@@ -112,6 +133,15 @@ def _claude_review_is_valid(record, current):
     independent = v.get("independence")
     if independent != "INDEPENDENT" and not (risk == "LOW" and independent == "SELF_AUTHORED_DESIGN"):
         return False
+    # A caller-supplied LOW label cannot down-classify changed release controls.
+    # S1 must independently authenticate the entire native exact-HEAD path list.
+    paths = r.get("expected_changed_paths")
+    if (not isinstance(paths, list) or not paths
+            or any(type(p) is not str or not p.strip() or p != p.strip()
+                   or p.startswith("/") or ".." in p.split("/") for p in paths)
+            or len(set(paths)) != len(paths)
+            or (risk == "LOW" and any(_release_sensitive_path(p) for p in paths))):
+        return False
     if risk == "HIGH_IMPACT":
         owner = r.get("high_impact_owner_approval")
         if (not isinstance(owner, dict)
@@ -119,7 +149,8 @@ def _claude_review_is_valid(record, current):
                 or owner.get("repo") != r["repo_full_name"]
                 or type(owner.get("pr")) is not int or owner["pr"] != pr
                 or owner.get("head_sha") != current["head"]
-                or not _github(owner.get("evidence_url"))):
+                or not _owner_approval_comment_url(owner.get("evidence_url"), r["repo_full_name"], pr)
+                or owner.get("evidence_url") == v.get("comment_url")):
             return False
     if (v.get("contract") != "CLAUDE_REVIEW_v1"
             or v.get("verdict") != "APPROVE"
@@ -239,10 +270,7 @@ def classify_pr_disposition(record):
             return blocked("EXTERNAL_DEPENDENCY", "S1_GENERAL_NATIVE_PATH_CENSUS_MISSING",
                            "Complete native exact-head changed paths")
         if r["risk"] == "LOW" and any(
-                p == "AGENTS.md" or p.startswith(".github/workflows/")
-                or p.startswith("01_CORE_FRAMEWORK/governance/")
-                or p.startswith("00_ARCHIVE_CONTROL/")
-                for p in changed_paths):
+                _release_sensitive_path(p) for p in changed_paths):
             return blocked("SOURCE_OR_SCIENCE_GATE", "HIGH_IMPACT_PATH_MARKED_LOW",
                            "Existing source/workflow governance and independent recovery gates")
         jobs = r.get("pr_jobs")
