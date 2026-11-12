@@ -75,6 +75,11 @@ export function buildUnifiedRootHtml(graphSource,proSource){
       '<span id="cn-alt-milestone-state">Ikke bekræftet</span>'+
       '</div>');
 
+  // Extract the ONE source-owned Swing placeholder into the canonical first fold,
+  // outside the optional PRO disclosure. Both routes reuse the same renderer.
+  const swingOverview='<section id="swing-rotation-overview" class="swing-rotation-overview" aria-label="Swing Kompas" data-contract="CN_SWING_ROTATION_READBACK_V1"></section>';
+  unique(core,swingOverview,'swing-overview-source');
+
   // The original PRO product's one official action is visible immediately.
   // Risk, trading lenses and longer official horizons stay within the same
   // semantic PRO component behind accessible disclosure, never cloned.
@@ -185,7 +190,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<small id="cn-source-explanation">Kursgraf og Kompas er forskellige kilder.</small></section>'+
     '<details class="cn-source-technical"><summary id="cn-source-technical-label">Udgivelse og kildegrundlag</summary>'+
     '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p></details>'+
-    compactCore.replace('<details class="cn-pro-more">',
+    compactCore.replace(swingOverview,'').replace('<details class="cn-pro-more">',
       '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
       '<p id="cn-short-meaning" class="cn-short-meaning">12 timer viser målt momentum. En selvstændig 24-timersprognose er ikke udstedt.</p>'+
       horizonStrip+
@@ -247,6 +252,10 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<script type="module" src="./premium-tabs.mjs"></script>');
   if(!html.includes('</head>'))throw Error('CN_TAB_NAV_MISSING_HEAD');
   html=html.replace('</head>','<link rel="stylesheet" href="./premium-tabs.css"></head>');
+  unique(html,'id="swing-rotation-overview"','single visible Swing overview');
+  if(html.indexOf('id="swing-rotation-overview"')>
+     html.indexOf('<details class="cn-pro-more">'))
+    throw Error('CN_UNIFIED_ROOT_SWING_BURIED_IN_DISCLOSURE');
   // The source ports remain available as nonpromoted historical rollback.
   for(const x of [
     'id="variant-panel"','id="chart"','id="forecast"','id="actual"',
