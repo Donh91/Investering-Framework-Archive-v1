@@ -34,15 +34,18 @@ TEXT_SUFFIXES = (
 )
 KNOWN_SECRET_OR_RESTRICTED_DESIGN = (
     ("PRIVATE_KEY_BLOCK", re.compile(r"-----BEGIN (?:OPENSSH |RSA |EC |DSA )?PRIVATE KEY-----", re.I)),
-    ("API_KEY_LITERAL", re.compile(r"\b(?:ghp_|gho_|github_pat_|sk-proj-|sk-[A-Za-z0-9]{20,})[A-Za-z0-9_-]{12,}", re.I)),
-    ("AWS_ACCESS_KEY", re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b")),
+    # Token prefixes use an alphanumeric-only left boundary: "_" and "-" are common
+    # filename/identifier separators (backup_sk-proj-..., my_api_key=...), and the
+    # regex word boundary \b does not fire between "_" and a letter (Codex P2, #2091).
+    ("API_KEY_LITERAL", re.compile(r"(?<![A-Za-z0-9])(?:ghp_|gho_|github_pat_|sk-proj-|sk-[A-Za-z0-9]{20,})[A-Za-z0-9_-]{12,}", re.I)),
+    ("AWS_ACCESS_KEY", re.compile(r"(?<![A-Za-z0-9])(?:AKIA|ASIA)[A-Z0-9]{16}(?![A-Za-z0-9])")),
     ("SIGNED_URL", re.compile(r"\b(?:X-Amz-Signature|X-Goog-Signature|Signature=)[A-Za-z0-9%_-]{8,}", re.I)),
     ("EXPLICIT_PRIVATE_DESIGN", re.compile(
         r"\b(?:PRIVATE[_ -]ALPHA[_ -](?:DESIGN|STRATEGY|ARCHITECTURE|MODEL)"
         r"|INTERNAL[_ -]ONLY|OWNER[_ -]ONLY|NOT[_ -]FOR[_ -]PUBLICATION"
         r"|CONFIDENTIAL[_ -]RESEARCH|PRIVATE[_ -]RESEARCH[_ -]DESIGN)\b", re.I)),
     ("CREDENTIAL_ASSIGNMENT", re.compile(
-        r"(?i)\b(?:api[_-]?key|access[_-]?token|secret[_-]?key|private[_-]?key)\b['\"]?"
+        r"(?i)(?<![A-Za-z0-9])(?:api[_-]?key|access[_-]?token|secret[_-]?key|private[_-]?key)(?![A-Za-z0-9])['\"]?"
         r"\s*[:=]\s*['\"]?[A-Za-z0-9_+./=-]{18,}")),
     ("MNEMONIC_EXPOSURE", re.compile(r"(?i)\b(?:seed phrase|mnemonic phrase)\s*[:=]\s*\w+(?:\s+\w+){5,}")),
 )
