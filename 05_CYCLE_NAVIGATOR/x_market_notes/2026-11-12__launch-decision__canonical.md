@@ -3,7 +3,7 @@
 **Dato:** 2026-11-12  
 **Status:** CANONICAL  
 **Område:** Redaktionel ny X-serie, eksisterende Cycle Navigator  
-**Primary folder:** \`05_CYCLE_NAVIGATOR/x_market_notes/\`  
+**Primary folder:** `05_CYCLE_NAVIGATOR/x_market_notes/`  
 **Supersedes:** For fremtidige nye X-opslag, den tidligere standard om obligatoriske prispræcisionsopslag; ikke historisk dokumentation.
 
 ## Godkendt af ejer
