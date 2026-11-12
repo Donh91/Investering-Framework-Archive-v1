@@ -71,8 +71,15 @@ class TestTypeResidual(unittest.TestCase):  # Fable M7 residual inside RP1 (foun
         self.assertEqual(act(code_with("tests/research/conftest.py", scope="tests/elsewhere")),
                          ("HOLD", "CHANGED_TESTS_NOT_EXECUTED"))
 
-    def test_nested_conftest_covered_by_dir_scope_ready(self):
-        self.assertEqual(act(code_with("tests/research/conftest.py"))[0], "READY")
+    def test_nested_conftest_dir_scope_without_verified_load_id_holds(self):
+        # Discovery -p can exclude a suite even when the directory exists.
+        # A conftest/fixture is not a collected test file by default.
+        self.assertEqual(act(code_with("tests/research/conftest.py")),
+                         ("HOLD", "CHANGED_TESTS_NOT_EXECUTED"))
+
+    def test_nested_conftest_exact_native_load_id_can_qualify(self):
+        path = "tests/research/conftest.py"
+        self.assertEqual(act(code_with(path, ids=[path]))[0], "READY")
 
     def test_shell_test_not_covered_by_pytest_scope_holds(self):
         for p in ("tests/research/run_x.sh", "scripts/research/test_x.sh"):
