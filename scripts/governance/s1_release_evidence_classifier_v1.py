@@ -180,8 +180,15 @@ def _changed_test_execution_issue(record, current):
     Removed tests require no impossible execution receipt; rename destinations do.
     """
     paths = record.get("expected_changed_paths")
+    # If the caller claims to provide IC-1 native file evidence, omitting the
+    # expected-path manifest must NEVER silently skip the test-execution gate.
+    native_claimed = any(k in record for k in (
+        "changed_file_statuses", "changed_file_statuses_source",
+        "changed_file_statuses_head_sha", "pr_changed_files_count",
+        "pr_changed_files_count_head_sha"))
     if not isinstance(paths, list):
-        return None  # Existing general/Claude path-census gates remain separate.
+        return ("CHANGED_TEST_NATIVE_STATUS_UNVERIFIED" if native_claimed else None)
+        # Legacy callers with no IC-1 metadata remain advisory-only.
     # Untrusted JSON can contain nested lists/objects. Reject per-PR before set(paths).
     # The native path census is independently authenticated by S1, never by this input.
     if any(type(p) is not str or not p or p != p.strip()
