@@ -38,7 +38,7 @@ def examine(cn: dict[str, Any], compass: dict[str, Any]) -> dict[str, Any]:
     if compass.get("contract") != "PUBLIC_COMPASS_PROJECTION_v1":
         raise ValueError("PUBLIC_COMPASS_CONTRACT_MISMATCH")
     live = cn.get("public_live_precision") or {}
-    if live.get("contract") != "CN_PUBLIC_LIVE_PRECISION_v1":
+    if live.get("contract") != "CN_PUBLIC_LIVE_PRICE_PRECISION_v1":
         raise ValueError("CN_LIVE_PRECISION_CONTRACT_MISMATCH")
     issue = utc(live["frozen_at_utc"])
     observed_through = utc(live["live_as_of_utc"]) if live.get("live_as_of_utc") else None
