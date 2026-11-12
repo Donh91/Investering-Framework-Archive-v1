@@ -52,7 +52,9 @@ def code_ready():
     r = ready([{"path": "scripts/research/x_v1.py", "status": "added"},
                {"path": "tests/research/test_x_v1.py", "status": "added"}])
     r["source_science_gate"] = "PASS"
-    r["pr_jobs"][0].update(executed_scope_paths=["tests/research"], executed_scope_unmasked=True)
+    r["pr_jobs"][0].update(executed_scope_paths=["tests/research"], executed_scope_unmasked=True,
+                          executed_scope_patterns_complete=True,
+                          executed_scope_discovery_patterns=["test_*.py", "*_test.py"])
     return r
 
 
@@ -193,6 +195,42 @@ class Negative(unittest.TestCase):
         self.assertAction(r, "HOLD", "CHANGED_TESTS_NOT_EXECUTED")
         r["pr_jobs"][1].update(executed_scope_paths=["06_RESEARCH_LAB/tool/x.test.mjs"], executed_scope_unmasked=True)
         self.assertEqual(out(r)["release_action"], "READY")
+
+    def test_p1_unittest_directory_scope_not_equal_to_executed_pattern(self):
+        r = ready([{"path": "tests/learning/test_legacy_knowledge_bootstrap.py", "status": "added"}])
+        r["source_science_gate"] = "PASS"
+        r["pr_jobs"][0].update(executed_scope_paths=["tests/learning"],
+                               executed_scope_unmasked=True,
+                               executed_scope_patterns_complete=True,
+                               executed_scope_discovery_patterns=["test_forecast_*.py"])
+        self.assertAction(r, "HOLD", "CHANGED_TESTS_NOT_EXECUTED")
+        r["pr_jobs"][0]["executed_scope_discovery_patterns"] = ["test_legacy_*.py"]
+        self.assertEqual(out(r)["release_action"], "READY")
+
+    def test_p1_directory_scope_without_complete_patterns_cannot_ready(self):
+        for fields in ({}, {"executed_scope_discovery_patterns": ["test_*.py"]},
+                       {"executed_scope_patterns_complete": True},
+                       {"executed_scope_patterns_complete": True,
+                        "executed_scope_discovery_patterns": ["test_other_*.py"]}):
+            with self.subTest(fields=fields):
+                r = code_ready()
+                r["pr_jobs"][0].pop("executed_scope_patterns_complete", None)
+                r["pr_jobs"][0].pop("executed_scope_discovery_patterns", None)
+                r["pr_jobs"][0].update(fields)
+                self.assertAction(r, "HOLD", "CHANGED_TESTS_NOT_EXECUTED")
+
+    def test_p1_paid_api_budget_enforcer_never_low(self):
+        for path in ("scripts/api_agent/check_api_lane_budget.py",
+                     "scripts/api_agent/research_lab_sol_dispatch.py",
+                     "tests/api_agent/test_api_lane_budget.py"):
+            with self.subTest(path=path):
+                r = ready([{"path": path, "status": "modified"}])
+                self.assertAction(r, "HOLD", "HIGH_IMPACT_PATH_MARKED_LOW")
+
+    def test_p1_independent_review_cannot_substitute_for_privacy_scan(self):
+        r = ready()
+        r["privacy_check"]["method"] = "EXACT_HEAD_INDEPENDENT_REVIEW"
+        self.assertAction(r, "HOLD", "RP1_PRIVACY_CHECK_MISSING")
 
     def test_privacy_check_required_unattended(self):  # #2084 shape
         for pc in (None, {"head": "d" * 40, "result": "NO_RESTRICTED_CONTENT", "method": "S1_DIFF_SCAN_V1"},
