@@ -42,7 +42,7 @@ KNOWN_SECRET_OR_RESTRICTED_DESIGN = (
         r"|INTERNAL[_ -]ONLY|OWNER[_ -]ONLY|NOT[_ -]FOR[_ -]PUBLICATION"
         r"|CONFIDENTIAL[_ -]RESEARCH|PRIVATE[_ -]RESEARCH[_ -]DESIGN)\b", re.I)),
     ("CREDENTIAL_ASSIGNMENT", re.compile(
-        r"(?i)\b(?:api[_-]?key|access[_-]?token|secret[_-]?key|private[_-]?key)"
+        r"(?i)\b(?:api[_-]?key|access[_-]?token|secret[_-]?key|private[_-]?key)\b['\"]?"
         r"\s*[:=]\s*['\"]?[A-Za-z0-9_+./=-]{18,}")),
     ("MNEMONIC_EXPOSURE", re.compile(r"(?i)\b(?:seed phrase|mnemonic phrase)\s*[:=]\s*\w+(?:\s+\w+){5,}")),
 )
@@ -51,7 +51,13 @@ def _sha(s: Any) -> bool:
     return type(s) is str and SHA40.fullmatch(s) is not None
 
 def _path(p: Any) -> bool:
-    return (type(p) is str and bool(p) and len(p) < 500 and
+    if type(p) is not str:
+        return False
+    try:
+        p.encode("utf-8")  # reject lone surrogates rather than exposing them
+    except UnicodeEncodeError:
+        return False
+    return (bool(p) and len(p) < 500 and
             p == p.strip() and not p.startswith(("/", "./", "\\")) and
             "\\" not in p and "//" not in p and
             all(part not in ("", ".", "..") for part in p.split("/")))
@@ -59,12 +65,27 @@ def _path(p: Any) -> bool:
 def _is_text_path(p: str) -> bool:
     return p.lower().endswith(TEXT_SUFFIXES)
 
+def _blocked_path(p: str) -> bool:
+    low = p.lower()
+    basename = low.rsplit("/", 1)[-1]
+    return (basename in {x.lower() for x in BLOCKED_BASENAMES}
+            or any(low.startswith(prefix.lower()) for prefix in BLOCKED_PREFIXES)
+            or low.endswith((".pem", ".p12", ".pfx", ".key")))
+
 def _result(head: Any, value: str, findings: list[dict[str, str]],
             input_sha256: str | None) -> dict[str, Any]:
+    # Even an invalid filename or head can contain private data. Findings carry
+    # only a deterministic path fingerprint and a fixed rule ID, never raw input.
+    sanitized = []
+    for item in findings:
+        label = str(item.get("path", ""))
+        ref = hashlib.sha256(label.encode("utf-8", errors="backslashreplace")).hexdigest()[:16]
+        sanitized.append({"path_sha256_16": ref, "reason": item["reason"]})
     return {
         "contract": CONTRACT, "method": CONTRACT, "rules_version": RULES_VERSION,
-        "head": head, "result": value, "findings_count": len(findings),
-        "findings": findings, "input_sha256": input_sha256,
+        "head": head if _sha(head) else None, "result": value,
+        "findings_count": len(sanitized),
+        "findings": sanitized, "input_sha256": input_sha256,
         "authority": "ADVISORY_ONLY", "externally_authenticated": False,
     }
 
@@ -119,10 +140,7 @@ def scan_pr(record: Any) -> dict[str, Any]:
             uncertain(path, "DUPLICATE_PATH")
             continue
         all_paths.add(path)
-        path_lower = path.lower()
-        if (path_lower in {x.lower() for x in BLOCKED_BASENAMES} or
-                any(path_lower.startswith(prefix.lower()) for prefix in BLOCKED_PREFIXES) or
-                path_lower.endswith((".pem", ".p12", ".pfx", ".key"))):
+        if _blocked_path(path):
             fail(path, "HIGH_IMPACT_OR_PRIVATE_PATH")
         if not _is_text_path(path):
             uncertain(path, "FILE_TYPE_NOT_ALLOWLISTED")
@@ -149,15 +167,23 @@ def scan_pr(record: Any) -> dict[str, Any]:
                 uncertain(path, "CURRENT_BLOB_TEXT_UNVERIFIED")
                 content = ""
         for field, value in (("patch", patch), ("content", content)):
-            if len(value.encode("utf-8")) > MAX_TEXT_BYTES:
+            try:
+                size = len(value.encode("utf-8"))
+            except UnicodeEncodeError:
+                uncertain(path, f"{field.upper()}_TEXT_NOT_UTF8")
+                continue
+            if size > MAX_TEXT_BYTES:
                 uncertain(path, f"{field.upper()}_EXCEEDS_SAFE_SIZE")
                 continue
             for reason, pattern in KNOWN_SECRET_OR_RESTRICTED_DESIGN:
                 if pattern.search(value):
                     fail(path, reason)
         if status == "renamed":
-            if not _path(item.get("previous_filename")) or item["previous_filename"] == path:
+            previous = item.get("previous_filename")
+            if not _path(previous) or previous == path:
                 uncertain(path, "RENAME_SOURCE_UNVERIFIED")
+            elif _blocked_path(previous):
+                fail(previous, "HIGH_IMPACT_RENAME_SOURCE")
         if path.startswith("05_CYCLE_NAVIGATOR/site/"):
             # Public site/build outputs are a separate consumer and not guaranteed
             # to match source diff bytes. Until an authenticated native generation
@@ -167,7 +193,12 @@ def scan_pr(record: Any) -> dict[str, Any]:
     for field in ("title", "body"):
         value = r.get(field)
         if type(value) is str:
-            if len(value.encode("utf-8")) > MAX_TEXT_BYTES:
+            try:
+                size = len(value.encode("utf-8"))
+            except UnicodeEncodeError:
+                uncertain("(conversation)", "PR_TEXT_NOT_UTF8")
+                continue
+            if size > MAX_TEXT_BYTES:
                 uncertain("(conversation)", "PR_TEXT_OVERSIZE")
                 continue
             for reason, pattern in KNOWN_SECRET_OR_RESTRICTED_DESIGN:
