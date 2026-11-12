@@ -190,8 +190,24 @@ def _changed_test_execution_issue(record, current):
     tests = [p for p in paths if isinstance(p, str) and p.endswith(".py")
              and (p.rsplit("/", 1)[-1].startswith("test_")
                   or p.rsplit("/", 1)[-1].endswith("_test.py"))]
-    if not tests:
-        return None
+    # IC-1 G3: a truncated but internally consistent native PR-files manifest
+    # can omit an unexecuted changed test and falsely produce READY. The S1
+    # producer must independently read ALL pages plus GET /pulls/{n} changed_files
+    # bound to the SAME current HEAD. These supplied fields are not authentication.
+    has_native_census = any(k in record for k in (
+        "changed_file_statuses", "changed_file_statuses_source",
+        "changed_file_statuses_head_sha", "pr_changed_files_count",
+        "pr_changed_files_count_head_sha"))
+    if not tests and not has_native_census:
+        return None  # legacy docs-only records without an IC-1 native census
+    if has_native_census and (
+            type(record.get("pr_changed_files_count")) is not int
+            or record["pr_changed_files_count"] <= 0
+            or record["pr_changed_files_count"] > 3000
+            or record.get("pr_changed_files_count_head_sha") != current.get("head")
+            or record["pr_changed_files_count"] != len(paths)
+            or len(set(paths)) != len(paths)):
+        return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
     entries = record.get("changed_file_statuses")
     if (record.get("changed_file_statuses_source") != "GITHUB_PR_FILES"
             or record.get("changed_file_statuses_head_sha") != current.get("head")
@@ -206,7 +222,7 @@ def _changed_test_execution_issue(record, current):
         exists = entry.get("head_exists")
         if (type(path) is not str or path not in paths or path in statuses
                 or type(status) is not str
-                or status not in {"added", "modified", "renamed", "copied", "removed", "deleted"}
+                or status not in {"added", "modified", "changed", "renamed", "copied", "removed", "deleted"}
                 or type(exists) is not bool):
             return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
         if status in {"removed", "deleted"}:
@@ -221,6 +237,8 @@ def _changed_test_execution_issue(record, current):
         statuses[path] = status
     if set(statuses) != set(paths):
         return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
+    if not tests:
+        return None  # complete native file census checked; no changed runnable Python test
 
     required_jobs = []
     for name in record.get("required_pr_job_names") or []:
@@ -280,7 +298,8 @@ def classify_pr_disposition(record):
         # changed disposition/reason (e.g. expired proof) IS a material change.
         fields = ("current", "evaluated", "risk", "platform_denied", "merged", "merge",
                   "expected_changed_paths", "changed_file_statuses", "changed_file_statuses_source",
-                  "changed_file_statuses_head_sha", "production", "closed", "supersession",
+                  "changed_file_statuses_head_sha", "pr_changed_files_count",
+                   "pr_changed_files_count_head_sha", "production", "closed", "supersession",
                   "active_writer_lease", "merge_state", "required_rules_enforced", "rule_census",
                   "unresolved_p0_p1", "source_science_gate", "required_pr_job_names",
                   "pr_jobs", "independent_review_required", "review", "review_requires_current_main",
