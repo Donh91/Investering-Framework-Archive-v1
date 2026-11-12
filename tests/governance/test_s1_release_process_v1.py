@@ -333,6 +333,20 @@ class Negative(unittest.TestCase):
                               "method": "S1_DIFF_SCAN_V1"}
         self.assertAction(r, "HOLD", "RP1_PRIVACY_CHECK_MISSING")
 
+    def test_p2_malformed_scanner_files_cannot_abort_independent_pr(self):
+        from scripts.governance.s1_release_evidence_classifier_v1 import classify_pr_batch
+        for bad in (None, [], {}, 14):
+            with self.subTest(bad=repr(bad)):
+                r = code_ready()
+                r["privacy_scan_input"]["files"][0]["path"] = bad
+                rs = classify_pr_batch([r, ready()])
+                self.assertEqual(rs[0]["reason"], "RP1_PRIVACY_CHECK_MISSING")
+                self.assertNotEqual(rs[0]["release_action"], "READY")
+                self.assertEqual(rs[1]["release_action"], "READY")
+        r = code_ready()
+        r["privacy_scan_input"]["files"][0]["previous_filename"] = []
+        self.assertEqual(out(r)["reason"], "RP1_PRIVACY_CHECK_MISSING")
+
     def test_p1_scan_without_separate_independent_review_is_not_ready(self):
         r = ready()
         r["independent_review_required"] = False
