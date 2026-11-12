@@ -263,6 +263,44 @@ class Negative(unittest.TestCase):
                 r["pr_jobs"][0].update(fields)
                 self.assertAction(r, "HOLD", "CHANGED_TESTS_NOT_EXECUTED")
 
+    def test_p1_strategist_monthly_liability_guard_requires_owner(self):
+        for path in ("scripts/framework_intelligence/strategist_budget_claim_v1.py",
+                     "tests/framework_intelligence/test_strategist_budget_claim_v1.py"):
+            with self.subTest(path=path):
+                r = ready([{"path": path, "status": "modified"}])
+                self.assertAction(r, "HOLD", "HIGH_IMPACT_PATH_MARKED_LOW")
+
+    def test_p2_malformed_primary_ruleset_ids_do_not_abort_batch(self):
+        from scripts.governance.s1_release_evidence_classifier_v1 import classify_pr_batch
+        for invalid in ([], {}, True, -1, "77", None):
+            with self.subTest(id=repr(invalid)):
+                bad = ready()
+                bad["native_rule_reads"]["rulesets"][0]["enforcement"] = "active"
+                bad["native_rule_reads"]["rulesets"][0]["id"] = invalid
+                bad["native_rule_reads"]["effective_rules_http"] = 200
+                bad["native_rule_reads"]["effective_rules"] = []
+                outcomes = classify_pr_batch([bad, ready()])
+                self.assertEqual(outcomes[0]["release_action"], "RECHECK")
+                self.assertEqual(outcomes[0]["reason"], "RULE_CENSUS_UNAVAILABLE")
+                self.assertEqual(outcomes[1]["release_action"], "READY")
+
+    def test_p2_first_owner_escalation_creates_receipt_once(self):
+        r = ready()
+        r["pr_run_census"]["pending"] = 2
+        first = out(r)
+        self.assertEqual(first["release_action"], "RECHECK")
+        r["previous_fingerprint"] = first["fingerprint"]
+        r["consecutive_rechecks"] = 3
+        escalation = out(r)
+        self.assertEqual(escalation["release_action"], "ESCALATE_OWNER")
+        self.assertTrue(escalation["emit_receipt"])
+        self.assertNotEqual(escalation["fingerprint"], first["fingerprint"])
+        r["previous_fingerprint"] = escalation["fingerprint"]
+        r["consecutive_rechecks"] = 4
+        repeated = out(r)
+        self.assertEqual(repeated["release_action"], "ESCALATE_OWNER")
+        self.assertFalse(repeated["emit_receipt"])
+
     def test_p1_paid_api_budget_enforcer_never_low(self):
         for path in ("scripts/api_agent/check_api_lane_budget.py",
                      "scripts/api_agent/research_lab_sol_dispatch.py",
