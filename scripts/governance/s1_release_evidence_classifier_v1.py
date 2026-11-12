@@ -286,7 +286,12 @@ _RP1_JS_TEST_SUFFIXES = (".test.mjs", ".test.js", ".test.cjs", ".test.ts", ".spe
 _RP1_RESTRICTED_SEGMENTS = {"secrets", "secret", "credentials", "credential", "wallet", "wallets",
                             "orders", "payments", "payment", "vault", "private"}
 _RP1_RESTRICTED_PREFIXES = ("research/api_agent/", "scripts/api_agent/", "tests/api_agent/",
-                            "scripts/billing/", "scripts/payment/", "scripts/paid/")
+                            "scripts/billing/", "scripts/payment/", "scripts/paid/",
+                            "scripts/framework_intelligence/strategist_budget_",
+                            "tests/framework_intelligence/test_strategist_budget_",
+                            "scripts/framework_intelligence/liability_",
+                            "scripts/framework_intelligence/billing_",
+                            "scripts/framework_intelligence/cost_")
 _RP1_GOVERNANCE_PREFIXES = (".github/", ".agents/", "00_ARCHIVE_CONTROL/", "00_FMOS/",
                             "01_CORE_FRAMEWORK/governance/", "01_CORE_FRAMEWORK/architecture/",
                             "scripts/governance/", "tests/governance/", "scripts/security/",
@@ -477,9 +482,12 @@ def rp1_rule_census_report(reads):
     if not isinstance(rulesets, list):
         return fail("RULESETS_MALFORMED")
     census = []
+    known_ids = set()
     for rs in rulesets:
-        if not isinstance(rs, dict) or rs.get("enforcement") not in ("active", "evaluate", "disabled"):
-            return fail("RULESET_MALFORMED")
+        if (not isinstance(rs, dict) or rs.get("enforcement") not in ("active", "evaluate", "disabled")
+                or type(rs.get("id")) is not int or rs["id"] <= 0 or rs["id"] in known_ids):
+            return fail("RULESET_MALFORMED")  # untrusted []/{} ruleset ID must never abort batch
+        known_ids.add(rs["id"])
         if "target" in rs and rs["target"] not in _RP1_RULESET_TARGETS:
             return fail("RULESET_TARGET_UNKNOWN")
         if rs["enforcement"] == "disabled":
@@ -816,13 +824,16 @@ def classify_pr_disposition(record):
                                  separators=(",", ":"), allow_nan=False)
         except (TypeError, ValueError):
             encoded = json.dumps([current.get("head"), disposition, reason], default=str)
-        fingerprint = hashlib.sha256(encoded.encode()).hexdigest()
-        same = r.get("previous_fingerprint") == fingerprint
         touches = r.get("material_touches", 0)
         blocked = disposition not in ("READY_TO_MERGE", "MERGED_VERIFIED", "CLOSED_SUPERSEDED")
         terminal = blocked and type(touches) is int and touches >= 4
+        action = rp1_release_action(disposition, reason, r, terminal)
+        # The first RECHECK -> ESCALATE_OWNER transition is a material receipt,
+        # even with identical source fields and timestamp-stripped record body.
+        fingerprint = hashlib.sha256((encoded + "\n" + action).encode()).hexdigest()
+        same = r.get("previous_fingerprint") == fingerprint
         out = {
-            "release_action": rp1_release_action(disposition, reason, r, terminal),
+            "release_action": action,
             "release_class": rp1_class_holder[0],
             "contract": "S1_PR_DISPOSITION_ADVISORY_V1",
             "disposition": disposition, "reason": reason,
