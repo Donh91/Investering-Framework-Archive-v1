@@ -702,12 +702,44 @@ def _rp1_gate(r, current):
     if census["failed"] > 0:
         return ("CI_NOT_EXECUTED", "REQUIRED_CI_FAILED", "Every exact-HEAD pull_request run concluded success", "EXISTING_CI_OWNER"), cls
     if lane == "UNATTENDED_S1":
+        # Both controls are mandatory under proposed staged-D2 §0.2c.
+        # A review comment NEVER substitutes for the scanner, and a scanner
+        # report NEVER substitutes for an independently vetted reviewer.
+        if r.get("independent_review_required") is not True:
+            return ("REVIEW_REQUIRED_BY_POLICY", "RP1_STAGED_REVIEW_REQUIRED",
+                    "Exact-HEAD independent advisory review under proposed staged-D2 policy",
+                    "EXISTING_REVIEW_OWNER"), cls
         pc = r.get("privacy_check")
-        if (not isinstance(pc, dict) or pc.get("head") != current["head"]
-                or pc.get("result") != "NO_RESTRICTED_CONTENT"
-                or pc.get("method") != "S1_DIFF_SCAN_V1"):
+        scan_input = r.get("privacy_scan_input")
+        from scripts.governance.s1_diff_scan_v1 import scan_pr
+        if not isinstance(scan_input, dict) or not isinstance(pc, dict):
             return ("SOURCE_OR_SCIENCE_GATE", "RP1_PRIVACY_CHECK_MISSING",
-                    "Exact-HEAD public/private boundary check of the full diff", "EXISTING_PR_OWNER"), cls
+                    "Independently obtained complete original PR native diff + scanner report",
+                    "EXISTING_PR_OWNER"), cls
+        native_items = sorted((f.get("path"), f.get("status"), f.get("previous_filename"))
+                              for f in files)
+        scanned_items = scan_input.get("files")
+        if (not isinstance(scanned_items, list)
+                or any(not isinstance(f, dict) for f in scanned_items)
+                or sorted((f.get("path"), f.get("status"), f.get("previous_filename"))
+                          for f in scanned_items) != native_items
+                or scan_input.get("changed_files_count") != len(paths)
+                or scan_input.get("head") != current["head"]
+                or scan_input.get("pr_head_sha") != current["head"]
+                or scan_input.get("changed_files_count_head_sha") != current["head"]):
+            return ("SOURCE_OR_SCIENCE_GATE", "RP1_PRIVACY_CHECK_MISSING",
+                    "Scanner inputs match entire native PR files census and exact HEAD",
+                    "EXISTING_PR_OWNER"), cls
+        scan = scan_pr(scan_input)  # recompute inside the classifier, don't trust a claimed result
+        if (scan.get("result") != "NO_RESTRICTED_CONTENT" or scan.get("head") != current["head"]
+                or scan.get("method") != "S1_DIFF_SCAN_V1"
+                or pc != scan):
+            return ("SOURCE_OR_SCIENCE_GATE", "RP1_PRIVACY_CHECK_MISSING",
+                    "Actual source-bound S1_DIFF_SCAN_V1 output on full exact-HEAD diff",
+                    "EXISTING_PR_OWNER"), cls
+        # scan_pr() itself is pure/advisory; the S1 caller still must source the
+        # input from authenticated native GitHub PR/files/patch/blob reads. No
+        # booleans/hashes inside a caller-created record establish external proof.
     if r.get("review_requires_current_main") is False:
         drift = r.get("main_drift")
         review_main = None
