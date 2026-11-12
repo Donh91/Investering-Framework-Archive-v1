@@ -558,6 +558,12 @@ try{
       balance:el.querySelector('.cn-evidence small')?.textContent,
       summary:el.querySelector('p')?.textContent
      })),
+     noDial:(()=>{
+      const hero=document.querySelector('#compass-pro .product-decision>.product-cell');
+      return {needle:document.querySelectorAll('.cn-needle,.cn-needle-svg,[class*="kompas-dial"]').length,
+       heroSvg:hero?hero.querySelectorAll('svg').length:-1,
+       heroLogo:hero?hero.querySelectorAll('img').length:-1};
+     })(),
      swing:(()=>{
       const el=document.getElementById('swing-rotation-overview');
       return {
@@ -626,6 +632,9 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   // v2.6 r3: no needle, dial or logo mark anywhere in the Kompas hero (owner rule L20).
+   assert.ok(report.noDial.needle===0&&report.noDial.heroSvg===0&&report.noDial.heroLogo===0,
+     'ROOT_KOMPAS_DIAL_PRESENT:'+JSON.stringify(report.noDial));
    assert.ok(report.swing.exists&&report.swing.visible&&report.swing.outsideDisclosure&&
      report.swing.contract==='CN_SWING_ROTATION_READBACK_V1'&&
      report.swing.groupRows===4&&report.swing.pendingCells===12&&
