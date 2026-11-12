@@ -731,13 +731,24 @@ def _rp1_gate(r, current):
             return ("SOURCE_OR_SCIENCE_GATE", "RP1_PRIVACY_CHECK_MISSING",
                     "Independently obtained complete original PR native diff + scanner report",
                     "EXISTING_PR_OWNER"), cls
-        native_items = sorted((f.get("path"), f.get("status"), f.get("previous_filename"))
-                              for f in files)
         scanned_items = scan_input.get("files")
+        def valid_scan_item(item):
+            return (isinstance(item, dict)
+                    and type(item.get("path")) is str and bool(item["path"])
+                    and type(item.get("status")) is str and bool(item["status"])
+                    and (item.get("previous_filename") is None
+                         or type(item["previous_filename"]) is str))
+        # Never sorted() untrusted None/list/object alongside strings: it can
+        # raise TypeError and block every independent PR in a batch.
         if (not isinstance(scanned_items, list)
-                or any(not isinstance(f, dict) for f in scanned_items)
-                or sorted((f.get("path"), f.get("status"), f.get("previous_filename"))
-                          for f in scanned_items) != native_items
+                or not all(valid_scan_item(x) for x in scanned_items)
+                or not all(valid_scan_item(x) for x in files)):
+            return ("SOURCE_OR_SCIENCE_GATE", "RP1_PRIVACY_CHECK_MISSING",
+                    "Typed scanner file paths/statuses and full HEAD census", "EXISTING_PR_OWNER"), cls
+        native_items = sorted((f["path"], f["status"], f.get("previous_filename") or "") for f in files)
+        observed_items = sorted((f["path"], f["status"], f.get("previous_filename") or "")
+                                for f in scanned_items)
+        if (observed_items != native_items
                 or scan_input.get("changed_files_count") != len(paths)
                 or scan_input.get("head") != current["head"]
                 or scan_input.get("pr_head_sha") != current["head"]
