@@ -702,6 +702,13 @@ def _rp1_gate(r, current):
     if census["failed"] > 0:
         return ("CI_NOT_EXECUTED", "REQUIRED_CI_FAILED", "Every exact-HEAD pull_request run concluded success", "EXISTING_CI_OWNER"), cls
     if lane == "UNATTENDED_S1":
+        # Reject missing/unexecuted changed tests BEFORE evaluating privacy.
+        # Stale or malformed privacy inputs must not mask the precise G1/G3 reason.
+        changed_test_issue = _changed_test_execution_issue(r, current)
+        if changed_test_issue:
+            return ("CI_NOT_EXECUTED", changed_test_issue,
+                    "Exact-HEAD native changed-test execution, statuses and selectors",
+                    "EXISTING_CI_OWNER"), cls
         # Both controls are mandatory under proposed staged-D2 §0.2c.
         # A review comment NEVER substitutes for the scanner, and a scanner
         # report NEVER substitutes for an independently vetted reviewer.
