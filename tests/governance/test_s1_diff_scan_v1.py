@@ -117,7 +117,7 @@ class PrivacyScan(unittest.TestCase):
 
     def test_codex_p2_nested_blocked_basename(self):
         self.check(sample([f("docs/AGENTS.md", content="policy note")]), "RESTRICTED_CONTENT")
-        self.check(sample([f("docs/subfolder/Id_RSA.txt", content="reference")]), "UNKNOWN")
+        self.check(sample([f("docs/subfolder/.env", content="reference")]), "RESTRICTED_CONTENT")
 
     def test_codex_p2_rename_from_private_directory(self):
         self.check(sample([f("docs/moved.md", status="renamed",
