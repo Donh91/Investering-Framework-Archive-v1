@@ -119,9 +119,10 @@ def scan_pr(record: Any) -> dict[str, Any]:
             uncertain(path, "DUPLICATE_PATH")
             continue
         all_paths.add(path)
-        if (path in BLOCKED_BASENAMES or
-                any(path.startswith(prefix) for prefix in BLOCKED_PREFIXES) or
-                path.lower().endswith((".pem", ".p12", ".pfx", ".key"))):
+        path_lower = path.lower()
+        if (path_lower in {x.lower() for x in BLOCKED_BASENAMES} or
+                any(path_lower.startswith(prefix.lower()) for prefix in BLOCKED_PREFIXES) or
+                path_lower.endswith((".pem", ".p12", ".pfx", ".key"))):
             fail(path, "HIGH_IMPACT_OR_PRIVATE_PATH")
         if not _is_text_path(path):
             uncertain(path, "FILE_TYPE_NOT_ALLOWLISTED")
@@ -158,8 +159,10 @@ def scan_pr(record: Any) -> dict[str, Any]:
             if not _path(item.get("previous_filename")) or item["previous_filename"] == path:
                 uncertain(path, "RENAME_SOURCE_UNVERIFIED")
         if path.startswith("05_CYCLE_NAVIGATOR/site/"):
-            if r.get("generated_site_outputs_complete") is not True:
-                uncertain(path, "GENERATED_PUBLIC_OUTPUT_UNVERIFIED")
+            # Public site/build outputs are a separate consumer and not guaranteed
+            # to match source diff bytes. Until an authenticated native generation
+            # + served output scan exists, this path is NEVER scanner-green.
+            uncertain(path, "GENERATED_PUBLIC_OUTPUT_NEEDS_SEPARATE_READBACK")
 
     for field in ("title", "body"):
         value = r.get(field)
