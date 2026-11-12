@@ -67,3 +67,9 @@ jobs:
           name: storage-telemetry-${{ github.run_id }}
           path: storage-telemetry.json
           retention-days: 7
+      - name: S1 native privacy scan of the PR diff (S1_DIFF_SCAN_V1, exact head blobs)
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 5
+        env:
+          S1_PRIVACY_SCAN_MODE: shadow
+        run: python scripts/governance/s1_native_privacy_scan_step_v1.py
