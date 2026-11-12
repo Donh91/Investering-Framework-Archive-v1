@@ -140,6 +140,12 @@ def scan_pr(record: Any) -> dict[str, Any]:
             uncertain(path, "DUPLICATE_PATH")
             continue
         all_paths.add(path)
+        # A filename is published metadata too. An exposed credential or
+        # restricted-design marker in the path must be treated as disclosure
+        # even when the file body and patch are harmless.
+        for reason, pattern in KNOWN_SECRET_OR_RESTRICTED_DESIGN:
+            if pattern.search(path):
+                fail(path, reason + "_IN_FILENAME")
         if _blocked_path(path):
             fail(path, "HIGH_IMPACT_OR_PRIVATE_PATH")
         if not _is_text_path(path):
@@ -182,8 +188,12 @@ def scan_pr(record: Any) -> dict[str, Any]:
             previous = item.get("previous_filename")
             if not _path(previous) or previous == path:
                 uncertain(path, "RENAME_SOURCE_UNVERIFIED")
-            elif _blocked_path(previous):
-                fail(previous, "HIGH_IMPACT_RENAME_SOURCE")
+            else:
+                if _blocked_path(previous):
+                    fail(previous, "HIGH_IMPACT_RENAME_SOURCE")
+                for reason, pattern in KNOWN_SECRET_OR_RESTRICTED_DESIGN:
+                    if pattern.search(previous):
+                        fail(previous, reason + "_IN_RENAME_SOURCE")
         if path.startswith("05_CYCLE_NAVIGATOR/site/"):
             # Public site/build outputs are a separate consumer and not guaranteed
             # to match source diff bytes. Until an authenticated native generation
