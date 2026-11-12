@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/data_ping/compass_event_refresh.py",
+    "tests/data_ping/test_compass_event_refresh.py",
+    "tests/data_ping/test_compass_source_continuity_standing.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-d411b05cf2ecae85",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "compass-standing-source-continuity-fable52-1a-medium-pilot",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(compass): restore 45min source-continuity as standing * test(compass): adapt expiry assertions to standing source continuity * test(compass): source continuity positive, negative and rollback controls * test(compass): execute Fable standing-continuity negatives in existing native unittest gate",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/data_ping/compass_event_refresh.py": "698a1579046205aa7e9470cf19149987f46725fd",
+    "tests/data_ping/test_compass_event_refresh.py": "d6e2352067c6dc3eaf2f06d6bf4978170fc81e6c",
+    "tests/data_ping/test_compass_source_continuity_standing.py": "f5fd9f5da70c2c12cea5b5930b355397eac84b99"
+  },
+  "source_commit_sha": "d411b05cf2ecae85767546b1447c898466856cf2",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-12T09:58:27-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(compass): standing source continuity, Fable52 P-1a MEDIUM pilot (#2093)"
+}
