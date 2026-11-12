@@ -49,10 +49,16 @@ NON_PROTECTIVE_COOLDOWN_SECONDS = 3 * 60 * 60
 SCHEDULE_PROXIMITY_SECONDS = 30 * 60
 # Delay window is a dispatch-liveness grace period, NOT a forecast backdate.
 MISSING_SLOT_GRACE_SECONDS = 45 * 60
-# Temporary, owner-approved public Actions continuity bridge.
-# Expires on 2026-11-01 in Europe/Copenhagen; never backdate a forecast.
+# Source-continuity re-issue: when the ORIGINAL Official freshness deadline is
+# within the lead window AND a genuinely newer completed market hour exists,
+# request a current-time reassessment. It never extends a deadline, never
+# backdates a forecast and never re-issues over the same observation hour.
+# First owner-approved as a 22-31 Oct bridge (708e08df). The bounded end date
+# made Kompas validity fall from ~80 % to ~47 % of the time after 1 Nov
+# (Bridge FABLE52-SHIPPABLE T5 P-1a). SOURCE_CONTINUITY_END = None keeps the
+# same rule standing; set a date again to re-bound it (rollback: date(2026, 11, 1)).
 SOURCE_CONTINUITY_START = date(2026, 10, 22)
-SOURCE_CONTINUITY_END = date(2026, 11, 1)
+SOURCE_CONTINUITY_END: date | None = None
 SOURCE_CONTINUITY_LEAD_SECONDS = 45 * 60
 ACTION_RANK = {
     "HOLD_WAIT_DATA_DEGRADED": 0,
@@ -266,6 +272,14 @@ def _official_source_expiry(compass: Mapping[str, Any], now: datetime) -> dateti
     return deadline if issued <= deadline else None
 
 
+def _continuity_active(now: datetime) -> bool:
+    """True inside the continuity window; open-ended when END is None."""
+    local_day = now.astimezone(ZoneInfo("Europe/Copenhagen")).date()
+    if local_day < SOURCE_CONTINUITY_START:
+        return False
+    return SOURCE_CONTINUITY_END is None or local_day < SOURCE_CONTINUITY_END
+
+
 def _public_refresh_message(cause_codes: Any) -> str:
     """Distinguish missed scheduled output from a genuine market event."""
     causes = set(cause_codes or [])
@@ -442,11 +456,10 @@ def evaluate(
         auto_state, action, market, cn_package, as_of=now, prior_compass=latest_compass
     )
 
-    # Owner-approved 22-31 Oct public continuity bridge. Preserve the original
+    # Standing source-continuity rule (see constants). Preserve the original
     # Official source clock and require genuinely newer completed market data.
     source_expiry = _official_source_expiry(latest_compass, now)
-    continuity_active = SOURCE_CONTINUITY_START <= now.astimezone(
-        ZoneInfo("Europe/Copenhagen")).date() < SOURCE_CONTINUITY_END
+    continuity_active = _continuity_active(now)
     prior_open = parse_utc(nh.nested(latest_compass, "market_now", "market_observation_open_utc"))
     current_open = parse_utc(market.get("market_observation_open_utc"))
     expiry_due = bool(
@@ -581,7 +594,8 @@ def evaluate(
             "active": continuity_active,
             "expiry_at_utc": source_expiry.isoformat().replace("+00:00", "Z") if source_expiry else None,
             "refresh_admitted": expiry_due,
-            "expires_local_date": SOURCE_CONTINUITY_END.isoformat(),
+            "expires_local_date": SOURCE_CONTINUITY_END.isoformat() if SOURCE_CONTINUITY_END else None,
+            "policy": "BOUNDED_WINDOW" if SOURCE_CONTINUITY_END else "STANDING_UNTIL_REBOUNDED",
             "semantics": "SOURCE_FRESHNESS_MAINTENANCE_ONLY_NO_MARKET_OR_PORTFOLIO_ACTION",
         },
         "last_request_age_seconds": cooldown_age,

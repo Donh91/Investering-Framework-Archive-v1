@@ -683,7 +683,7 @@ class CompassEventRefreshTests(unittest.TestCase):
         out = evaluate(**self._source_continuity_case())
         self.assertTrue(out["dispatch"])
         self.assertIn("OFFICIAL_SOURCE_REFRESH_DUE", out["cause_codes"])
-        self.assertEqual(out["temporary_source_continuity"]["expires_local_date"], "2026-11-01")
+        self.assertIsNone(out["temporary_source_continuity"]["expires_local_date"])
         self.assertFalse(out["authority"]["forecast_change"])
         self.assertFalse(out["authority"]["portfolio_execution"])
         self.assertIn("does not imply a material market move",
@@ -716,9 +716,15 @@ class CompassEventRefreshTests(unittest.TestCase):
                 self.assertNotIn("OFFICIAL_SOURCE_REFRESH_DUE",
                                  evaluate(**kw).get("cause_codes", []))
 
-    def test_temporary_source_continuity_expires_november_first(self):
+    def test_source_continuity_rebounded_window_expires(self):
+        # P-1a: the standing rule has no end date. A re-bounded window must
+        # still expire exactly as the original 1 Nov bridge did.
+        from datetime import date
+        from unittest import mock
+        from scripts.data_ping import compass_event_refresh as cer
         nov = datetime(2026, 11, 1, 12, 0, tzinfo=timezone.utc)
-        out = evaluate(**self._source_continuity_case(now=nov))
+        with mock.patch.object(cer, "SOURCE_CONTINUITY_END", date(2026, 11, 1)):
+            out = evaluate(**self._source_continuity_case(now=nov))
         self.assertNotIn("OFFICIAL_SOURCE_REFRESH_DUE", out.get("cause_codes", []))
         self.assertFalse(out["temporary_source_continuity"]["active"])
 
@@ -752,6 +758,21 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertTrue(out["dispatch"])
         self.assertIn("PRIOR_REQUEST_NOT_BOUND_RETRY", out["cause_codes"])
         self.assertIn("MARKET_STATE_CHANGED", out["cause_codes"])
+
+
+def load_tests(loader, standard_tests, pattern):
+    """Execute source-continuity standing guards in the existing native CI job.
+
+    The original Compass Event Refresh workflow runs only this module via
+    python -m unittest. The new source-bound Fable test module is explicitly
+    included without a new workflow, schedule or runner. Keep all native
+    tests on the current PR HEAD, not merely collect-only.
+    """
+    from tests.data_ping import test_compass_source_continuity_standing as standing
+    combined = unittest.TestSuite()
+    combined.addTests(standard_tests)
+    combined.addTests(loader.loadTestsFromModule(standing))
+    return combined
 
 
 if __name__ == "__main__":
