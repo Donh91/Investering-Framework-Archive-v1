@@ -57,9 +57,17 @@ For all future Cycle Navigator issues, use:
 
 `protocols/2026-09-28__weekly-cycle-navigator-publication-contract-v1-3.md`
 
-### Binding X-publication continuity
+### Separate editorial X series, owner-approved 2026-11-12
 
-Cycle Navigator on X is one continuing public series. When the user asks for `Cycle Navigator til X`, `CN til X`, `CN til publicering`, or equivalent, always resolve the latest **actually published and archived** CN post first and use it as the style/structure/tone/numbering/narrative baseline. Then update that continuing format with the current canonical CN evidence.
+The owner has created **Cycle Navigator / Market Notes** as a distinct new X editorial line: \`x_market_notes/README.md\` and \`x_market_notes/2026-11-12__editorial-charter-v1__canonical.md\`.
+
+**New default for future X writing:** requests for \`ugens CN X-opslag\`, \`Cycle Navigator til X\`, \`CN Market Notes\` or equivalent route to Market Notes, unless the user explicitly asks for the former forecast/precision X format. The editorial edition uses \`CN-MN-001\`, then \`002\`; the old \`CN #...\` public and machine series are not renumbered. No legacy X files are rewritten. All old forecast scoring and the public site remain unchanged.
+
+The new editorial line is not a forecast issuer or an X autopublisher. Owner must attest actual X publication of each exact version.
+
+### Binding X-publication continuity (legacy forecast / precision X series only)
+
+The **legacy forecast/precision Cycle Navigator X series** remains one continuing public series. When the user explicitly requests the old forecast/precision X format, resolve the latest **actually published and archived** legacy CN post first and preserve that older style, structure, numbering and narrative continuity. Otherwise, future editorial X requests route to the separately owner-approved `x_market_notes/` series above. Current canonical CN evidence remains the facts source for both.
 
 `CYCLE_NAVIGATOR_X_READY.md` is current evidence/content input, not publication-style authority when a prior published post exists. Never restart the X format from scratch merely because a new weekly X-ready artifact exists. This rule applies across chats and Kompas/Handlekompas threads.
 
