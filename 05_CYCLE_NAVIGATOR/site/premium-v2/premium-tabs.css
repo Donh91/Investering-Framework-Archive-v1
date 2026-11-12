@@ -505,7 +505,8 @@ body.premium-next #compass-pro .cn-risk-quick .risk-step[data-prior=true]{color:
 /* Cyklus / PATH */
 body.premium-next #official-path-view :is(.eyebrow,.path-kicker,.path-evidence-label){color:var(--cn21-label)!important}
 body.premium-next #official-path-view :is(#cn-cycle-reason,.path-section-intro,.path-legend span,#premium-path-explainer,.path-alt-milestone p,.path-evidence-note,.path-next-panel small){color:var(--cn21-muted)!important}
-body.premium-next #official-path-view .path-hero :is(small,#premium-path-source){color:var(--cn21-dormant)!important}
+/* only in the light 'no verified phase' state; the dark hero keeps its own light-on-navy text (7.7:1) */
+body.premium-next #official-path-view[data-reference-kind="NO_VERIFIED_PHASE"] .path-hero :is(small,#premium-path-source){color:var(--cn21-dormant)!important}
 body.premium-next #official-path-view :is(.rotation-tier strong,.path-rotation-scope){color:var(--cn21-dormant)!important}
 /* Unverified phases: de-emphasised by weight, marker and colour (AA) instead of 0.38-0.55 opacity */
 body.premium-next #official-path-view .path-node:not([data-kind=reference]):not([data-kind=next]){opacity:1!important}
@@ -528,3 +529,385 @@ body.premium-next :is(#compass-pro,#official-path-view,#proof-explorer) :is(a,bu
 @media (prefers-reduced-motion:reduce){
  body.premium-next :is(#compass-pro,#official-path-view,#proof-explorer) *{transition-duration:.01ms!important;animation:none!important;scroll-behavior:auto!important}
 }
+
+/* ==== CN SITE v2.2b · Kompas information architecture (presentation only) ====================
+ * Owner direction: keep the v2.1 look and underline tabs; Kompas answers "what do I do, how risky,
+ * what do the horizons say" in one screen; fewer duplicates and entry points; discreet touches.
+ * DOM order of every validator-locked element is unchanged (unified-root.test order markers);
+ * the grid only re-places them visually. `.product-decision` uses display:contents so its three
+ * cells (action, Nu, 1–3d) join the Kompas grid next to the risk card. */
+body.premium-next.cn-tabbed-ui #compass-pro{
+ --k-ink:#0b2742;--k-muted:#4f6379;--k-line:#e3e9f0;--k-tile:#f8fafc;--k-accent:#2f6fda;--k-warn-bg:#fff6e8;--k-warn-ink:#7a4a12;
+ --k-ease:cubic-bezier(.23,1,.32,1);
+}
+body.premium-next.cn-tabbed-ui #compass-pro :is(strong,small,span,p){font-variant-numeric:tabular-nums}
+/* intro: one calm line */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-pro-intro{gap:4px!important;margin-bottom:10px!important}
+body.premium-next.cn-tabbed-ui #compass-pro #pro-heading{font-size:clamp(26px,3.4vw,34px)!important;letter-spacing:-.03em!important;line-height:1.08!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-pro-intro>p{font-size:13px!important;max-width:62ch!important;margin:0!important}
+/* ONE freshness chip (validity + price basis). Its detail line stays, quieter. */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-source-summary{
+ display:flex!important;flex-wrap:wrap;align-items:baseline;gap:2px 10px!important;
+ padding:9px 14px!important;margin:0 0 14px!important;border:1px solid var(--k-line)!important;border-radius:12px!important;background:#fbfcfe!important
+}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-source-summary:is([data-tone="qualified"],[data-tone="expired"]){background:var(--k-warn-bg)!important;border-color:#f0dcbc!important}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-source-headline{font-size:14px!important;color:var(--k-ink)!important}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-source-context{font-size:13px!important;margin:0!important}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-source-explanation{flex-basis:100%;font-size:12px!important;color:var(--k-muted)!important}
+/* the Kompas grid */
+body.premium-next.cn-tabbed-ui #compass-pro .product-first{
+ display:grid!important;gap:12px!important;grid-template-columns:repeat(2,minmax(0,1fr));
+ grid-template-areas:"action action" "nu h13" "risk risk" "strip strip" "gate gate" "rot rot" "btc btc" "explain explain";
+ margin-top:0!important;padding-top:0!important;border-top:0!important
+}
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision{display:contents!important}
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(1){grid-area:action}
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(2){grid-area:nu}
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(3){grid-area:h13}
+body.premium-next.cn-tabbed-ui #compass-pro #pro-next-gate{grid-area:gate;margin:0!important;padding:0!important;border:0!important;font-size:13px!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview{grid-area:strip;margin:4px 0 0!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-quick{grid-area:risk;margin:0!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-rotation-peek{grid-area:rot;margin:4px 0 0!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain{grid-area:explain}
+@media (min-width:760px){
+ body.premium-next.cn-tabbed-ui #compass-pro .product-first{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.15fr);
+  grid-template-areas:"action action risk" "nu h13 risk" "strip strip strip" "gate gate gate" "rot rot btc" "explain explain explain"
+ }
+}
+/* the decision: AFVENT + one reason line + reassessment window. The redundant code line and the
+ * outer label (both repeat the tile's own words) are hidden visually, kept for assistive tech. */
+body.premium-next.cn-tabbed-ui #compass-pro :is(.product-first>.product-kicker,#premium-action-code){
+ position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;
+ clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important
+}
+body.premium-next.cn-tabbed-ui #compass-pro .product-first{position:relative}
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(1){min-height:0!important;padding:18px 20px!important;border-radius:16px!important;justify-content:center}
+body.premium-next.cn-tabbed-ui #compass-pro #premium-action-meaning{max-width:52ch!important;width:auto!important}
+/* Nu + 1–3d: two compact facts under the decision (kept visible: first-fold gate) */
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:is(:nth-child(2),:nth-child(3)){
+ min-height:0!important;padding:10px 14px!important;border-radius:12px!important;gap:2px!important;border:1px solid var(--k-line)!important;background:var(--k-tile)!important
+}
+body.premium-next.cn-tabbed-ui #compass-pro :is(#premium-now-direction,#cn-horizon-13){font-size:17px!important;line-height:1.25!important;letter-spacing:-.01em}
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell :is(small,#cn-horizon-13-posture){font-size:12px!important}
+/* risk card: second most important fact, beside the decision */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-quick{border-radius:16px!important;padding:16px 18px!important;display:flex;flex-direction:column;gap:8px}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-risk-quick-state{font-size:clamp(18px,2vw,22px)!important;line-height:1.2!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-quick-brief{margin:0!important;font-size:13px!important}
+/* main horizons: ONE compact table (0–12 t · 1–3 d · 5–7 d · 2–3 u · 4–8 u altcoins).
+ * The three official cards keep their markup (validator contract); each becomes a row.
+ * Rationale opens inline under its row; an unissued horizon is a quiet row. */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-heading{margin-bottom:8px!important;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:0!important;border:1px solid var(--k-line);border-radius:14px;background:#fff;overflow:hidden}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>:is(.cn-horizon-card,.cn-horizon-row){
+ display:grid!important;align-items:center!important;column-gap:14px!important;row-gap:4px!important;min-height:0!important;margin:0!important;
+ grid-template-columns:minmax(6.5rem,.8fr) minmax(0,1.2fr) minmax(0,1.1fr) minmax(0,1fr) auto!important;
+ grid-template-areas:"label dir ev pos more" "why why why why why";
+ padding:10px 16px!important;border:0!important;border-top:1px solid var(--k-line)!important;border-radius:0!important;
+ background:transparent!important;box-shadow:none!important;transition:background-color .2s ease
+}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>:first-child{border-top:0!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>.cn-horizon-card:hover{background:#f8fafd!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>*>*{width:auto!important;max-width:100%!important;min-width:0!important;margin:0!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>*>small:first-child{grid-area:label;font-size:13px!important;font-weight:650!important;color:var(--k-ink)!important;letter-spacing:0!important;text-transform:none!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-direction{grid-area:dir;display:flex!important;flex-direction:row!important;align-items:center!important;gap:8px!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-direction strong{font-size:15px!important;line-height:1.25!important;text-align:left!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-arrow{width:24px!important;height:24px!important;flex:none}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-evidence{grid-area:ev;display:grid!important;gap:3px!important;padding:0!important;min-height:0!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-evidence small{font-size:11.5px!important;color:var(--k-muted)!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-position{grid-area:pos;font-size:13px!important;font-weight:600!important;color:var(--k-ink)!important;text-align:left!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-more{grid-area:more}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-card>p{grid-area:why;display:none!important;font-size:13px!important;line-height:1.5!important;color:var(--k-muted)!important;padding:2px 0 4px!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-card[data-expanded="true"]{background:#f8fafd!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-card[data-expanded="true"]>p{display:block!important;animation:k-reveal .18s var(--k-ease) both}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-row .cn-horizon-direction strong{font-weight:600!important;color:var(--k-ink)!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-row[data-tone="missing"] .cn-horizon-direction strong,body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-row .cn-horizon-position{color:var(--k-muted)!important;font-weight:500!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-row .cn-horizon-position{grid-column:pos/more}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-more{
+ justify-self:end;min-height:32px;padding:4px 10px;border:0;border-radius:8px;background:transparent;white-space:nowrap;
+ color:var(--k-accent);font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background-color .15s ease,transform .1s ease-out
+}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-more::after{content:"";display:inline-block;width:6px;height:6px;margin:0 0 2px 7px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg);transition:transform .2s var(--k-ease)}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-more[aria-expanded="true"]::after{transform:rotate(-135deg);margin-bottom:-1px}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-more:hover{background:#eef3fb}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-more:active{transform:scale(.97)}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-more:focus-visible{outline:2px solid var(--k-accent);outline-offset:2px}
+/* an unissued horizon: quiet text, no bar, no rationale button; its stated stance stays */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-card[data-quiet="true"] :is(.cn-evidence,.cn-horizon-more,p){display:none!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-card[data-quiet="true"] .cn-horizon-arrow{display:none!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-card[data-quiet="true"] .cn-horizon-direction strong{font-size:14px!important;color:var(--k-muted)!important;font-weight:500!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-card[data-quiet="true"] .cn-horizon-position{grid-column:pos/more;color:var(--k-muted)!important;font-weight:500!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-foot{font-size:12px!important;margin-top:8px!important}
+/* Vigtig status: one line inside the status chip */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-important-status{flex-basis:100%;margin:4px 0 0!important;padding-top:6px;border-top:1px solid rgba(122,74,18,.16);font-size:13px!important;line-height:1.45!important;color:var(--k-ink)!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-important-status[hidden]{display:none!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-important-status strong{font-weight:700}
+/* rotation: one row per official segment */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-rotation-classes{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important;gap:6px!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-rotation-class{padding:8px 11px!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-rotation-class strong{font-size:12px!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-rotation-class span{font-size:12px!important;color:#3f566d!important}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-rotation-disclaimer{display:block;margin-top:8px;font-size:12px!important;color:var(--k-ink)!important;font-weight:600}
+/* BTC · next three days (original frozen forecast) */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-days{grid-area:btc;border:1px solid var(--k-line);border-radius:14px;padding:14px 16px;background:#fff;display:grid;gap:8px;align-content:start}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-days[data-available="false"] .cn-btc-days-rows{display:none}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-btc-days-heading{margin:0;font-size:15px;color:var(--k-ink)}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-days-rows{display:grid;gap:0}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-day{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:0;padding:7px 0;border-top:1px solid var(--k-line)}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-day:first-child{border-top:0}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-day span{font-size:12.5px;color:var(--k-muted)}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-day strong{font-size:14px;color:var(--k-ink);text-align:right;white-space:nowrap}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-day small{grid-column:2;font-size:11.5px;color:var(--k-muted);text-align:right}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-week{border-top:1px solid #cdd8e4!important;margin-top:2px}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-week span{color:var(--k-ink);font-weight:600}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-btc-days-caption{font-size:11.5px;color:var(--k-muted);line-height:1.4}
+/* ONE accordion for explanation, longer horizons and sources */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain{border:1px solid var(--k-line);border-radius:14px;background:#fff;margin-top:6px}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain>summary{
+ list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:0 18px;
+ cursor:pointer;font-weight:650;color:var(--k-ink);border-radius:14px
+}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain>summary::-webkit-details-marker{display:none}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain>summary::after{content:"";width:8px;height:8px;border-right:1.8px solid currentColor;border-bottom:1.8px solid currentColor;transform:rotate(45deg);transition:transform .2s var(--k-ease);margin-right:4px}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain[open]>summary::after{transform:rotate(-135deg)}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain>summary:focus-visible{outline:2px solid var(--k-accent);outline-offset:2px}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body{display:grid;gap:4px;padding:0 18px 14px}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain[open] .cn-explain-body{animation:k-reveal .2s var(--k-ease) both}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body>:is(details,p){margin:0!important;border-top:1px solid var(--k-line)!important;border-radius:0!important;background:transparent!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body>p{padding:12px 0!important;font-size:13px!important;color:var(--k-muted)!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body>.cn-horizon-status{order:-1;margin:0!important;padding:4px 0 14px!important;border-top:0!important}
+/* phone first screen = decision, risk, horizon strip: compact the chrome around them.
+ * Hidden lines are kept for assistive tech (same visually-hidden pattern as above). */
+@media (max-width:759px){
+ body.premium-next.cn-tabbed-ui #compass-pro :is(.cn-pro-intro>p,#cn-source-explanation,#cn-risk-quick-note,.cn-risk-quick-brief,#premium-action-meaning,#cn-overview-subtitle),
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-card:not([data-expanded="true"]) .cn-evidence small{
+  position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;
+  clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important
+ }
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-pro-intro{margin-bottom:6px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro #pro-heading{font-size:24px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-source-summary{padding:8px 12px!important;margin-bottom:10px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro :is(#cn-source-headline,#cn-source-context){font-size:12.5px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-important-status{font-size:12.5px!important;line-height:1.4!important;padding-top:5px}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-first{gap:8px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(1){padding:12px 16px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro #premium-now-action{font-size:28px!important;line-height:1.05!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:is(:nth-child(2),:nth-child(3)){padding:7px 12px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell :is(small){font-size:11px!important;line-height:1.3!important;letter-spacing:0!important}
+ body.premium-next.cn-tabbed-ui #compass-pro :is(#premium-now-direction,#cn-horizon-13){font-size:14.5px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(3) .cn-horizon-arrow{width:22px!important;height:22px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-quick{padding:10px 14px!important;gap:5px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro #cn-risk-quick-state{font-size:16px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-more{margin-top:0!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-more>summary{min-height:30px!important;padding-block:2px!important;font-size:12.5px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-quick-head{gap:2px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview{margin-top:0!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-heading{margin-bottom:5px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro #cn-overview-heading{font-size:16px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>:is(.cn-horizon-card,.cn-horizon-row){
+  grid-template-columns:minmax(4.6rem,.75fr) minmax(0,1.25fr) minmax(0,1fr) 32px!important;
+  grid-template-areas:"label dir pos more" "label ev pos more" "why why why why";
+  column-gap:10px!important;row-gap:3px!important;padding:7px 10px 7px 12px!important
+ }
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>*>small:first-child{font-size:12px!important;line-height:1.25!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-direction{gap:6px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-direction strong{font-size:13.5px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-arrow{width:20px!important;height:20px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-position{font-size:12px!important;line-height:1.25!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-row .cn-horizon-position{grid-column:pos/-1}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-evidence-rail{height:4px!important;max-width:120px}
+ /* the row's chevron is the control; its words stay its accessible name */
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-more{font-size:0!important;width:32px;height:32px;padding:0!important;display:grid;place-items:center}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-more::after{margin:0 0 3px!important;width:7px;height:7px}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-more[aria-expanded="true"]::after{margin:3px 0 0!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-foot{font-size:11px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-rotation-classes{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-btc-days{padding:12px 14px}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-pro-intro>.small-kicker{display:none!important}
+ body.premium-next.cn-tabbed-ui #compass-pro #cn-source-context{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-important-status{border-top:0!important;padding-top:2px!important;margin-top:2px!important;font-size:12px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(1){padding:10px 16px!important;gap:0!important}
+ body.premium-next.cn-tabbed-ui #compass-pro #premium-now-action{font-size:26px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:is(:nth-child(2),:nth-child(3)){padding:6px 10px!important;gap:1px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell :is(small){font-size:10.5px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(3) .cn-direction-inline{gap:6px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro #cn-horizon-13-posture{font-size:11px!important;margin:0!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-quick .risk-class-rail{margin:2px 0 0!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-quick .risk-step span{font-size:10px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>:is(.cn-horizon-card,.cn-horizon-row){padding-block:6px!important}
+ /* phone: each horizon row = label | direction (full width) / stance + bar */
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>:is(.cn-horizon-card,.cn-horizon-row){
+  grid-template-columns:4.4rem minmax(0,1fr) 64px 30px!important;
+  grid-template-areas:"label dir dir more" "label pos ev more" "why why why why"!important;
+  row-gap:1px!important;padding:6px 8px 6px 12px!important
+ }
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-evidence{align-self:center}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-evidence-rail{max-width:64px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-row .cn-horizon-position,body.premium-next.cn-tabbed-ui #compass-pro .cn-horizon-card[data-quiet="true"] .cn-horizon-position{grid-column:pos/-1!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-position{font-size:11.5px!important;font-weight:500!important;color:var(--k-muted)!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-direction strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards .cn-horizon-arrow{width:18px!important;height:18px!important}
+ /* compact decision facts; the 1–3d stance repeats in the table row, so it is visually hidden here */
+ body.premium-next.cn-tabbed-ui #compass-pro #cn-horizon-13-posture{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:is(:nth-child(2),:nth-child(3)){min-height:0!important;justify-content:flex-start!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:is(:nth-child(2),:nth-child(3)) small{font-size:10.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(1){padding:8px 16px 10px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro #premium-now-action{font-size:24px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-quick .risk-step{font-size:0!important;line-height:0!important;padding-top:0!important;min-height:0!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-quick .risk-class-rail{min-height:0!important;row-gap:0!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-risk-quick{padding:9px 14px 4px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-first{gap:7px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-source-summary{margin-bottom:8px!important;padding:7px 12px!important}
+}
+/* the 14 horizons inside the accordion: one compact list; the repeated "no separate price
+ * forecast" boilerplate is hidden on rows without an issued direction (still in the DOM) */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body .cn-horizon-status-rows{gap:0!important;border:1px solid var(--k-line);border-radius:12px;overflow:hidden;background:#fff}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body .cn-horizon-status-row{border:0!important;border-top:1px solid var(--k-line)!important;border-radius:0!important;background:transparent!important;padding:8px 12px!important;align-items:center!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body .cn-horizon-status-row:first-child{border-top:0!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body .cn-horizon-status-row[data-tone="missing"] .cn-horizon-status-reading small{display:none!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body .cn-horizon-status-identity{gap:1px!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body .cn-horizon-status-identity strong{font-size:13px!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body .cn-horizon-status-direction{font-size:12.5px!important}
+@media (min-width:761px){body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body .cn-horizon-status-row:nth-child(2){border-top:0!important}body.premium-next.cn-tabbed-ui #compass-pro .cn-explain-body .cn-horizon-status-row:nth-child(even){border-left:1px solid var(--k-line)!important}}
+/* :is(...,#cn-x) lifts specificity over the v2.1 :is(#id,…) label rule */
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>*>small:is(:first-child,#cn-overview-label-x){color:var(--k-ink)!important;font-weight:650!important}
+@media (max-width:759px){
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>.cn-horizon-card[data-expanded="true"]{grid-template-areas:"label dir dir more" "label pos pos more" "ev ev ev ev" "why why why why"!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>.cn-horizon-card[data-expanded="true"] .cn-evidence{grid-template-columns:64px auto;align-items:center;column-gap:10px;padding-top:4px!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>.cn-horizon-card[data-expanded="true"] .cn-evidence-rail{grid-row:1}
+}
+/* v2.2b first screen: the status line replaces the generic chip explanation; intro is one heading */
+body.premium-next.cn-tabbed-ui #compass-pro :is(.cn-pro-intro>p,#cn-source-explanation){position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-important-status-lead{display:inline!important;font-weight:700!important;color:var(--k-ink)!important}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-important-status-text{display:inline!important;font-weight:500!important;color:var(--k-ink)!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-source-summary{row-gap:0!important}
+@media (min-width:760px){
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(1){padding:14px 20px!important}
+body.premium-next.cn-tabbed-ui #compass-pro #premium-now-action{font-size:clamp(28px,3.4vw,40px)!important;line-height:1.05!important}
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:is(:nth-child(2),:nth-child(3)){padding:8px 14px!important}
+body.premium-next.cn-tabbed-ui #compass-pro .cn-overview-cards>:is(.cn-horizon-card,.cn-horizon-row){padding-block:7px!important}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-risk-quick-state{font-size:clamp(17px,1.7vw,20px)!important}
+}
+@keyframes k-reveal{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+ body.premium-next.cn-tabbed-ui #compass-pro :is(.cn-horizon-card,.cn-horizon-row,.cn-horizon-card>p,.cn-horizon-more,.cn-horizon-more::after,.cn-explain-body,.cn-explain>summary::after){animation:none!important;transition:none!important}
+}
+
+/* ==== CN SITE v2.3 · Markedscyklus timeline polish (presentation only) ==========================
+ * One authored moment on first view of the tab: the neutral track draws (scaleY, 280 ms), the ten
+ * phase rows settle in (opacity + 6 px, 220 ms, 35 ms stagger), each marker scales in (0.6 → 1).
+ * transform/opacity only, ease-out, no layout animation, no loop or blink. It runs once
+ * (data-cn-reveal run → done) and re-renders never replay it. Data honesty: unverified phases keep the
+ * v2.1 dimmed colours. v2.3-final honesty fix (owner-accepted): NO progress segment and no "passed"
+ * colouring before a verified phase; only a source-verified phase (data-kind=reference) gets its
+ * marker and a calm halo, and the track stays neutral grey. With no verified phase nothing changes.
+ * Reduced motion: no animation at all; the static final state is identical to the non-JS state. */
+body.premium-next.cn-tabbed-ui #official-path-view {--cn-ease:cubic-bezier(.23,1,.32,1)}
+body.premium-next.cn-tabbed-ui #official-path-view .path-node[data-kind=reference]::before{box-shadow:0 0 0 4px #eaf2fc,0 0 0 10px rgba(52,111,174,.07)!important}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]::before{transform-origin:top;animation:cn23-draw .28s var(--cn-ease) both}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node>*{animation:cn23-rise .22s var(--cn-ease) var(--cn-d,0ms) both}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node::before{animation:cn23-mark .22s var(--cn-ease) var(--cn-d,0ms) both}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(1){--cn-d:60ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(2){--cn-d:95ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(3){--cn-d:130ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(4){--cn-d:165ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(5){--cn-d:200ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(6){--cn-d:235ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(7){--cn-d:270ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(8){--cn-d:305ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(9){--cn-d:340ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(10){--cn-d:375ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(11){--cn-d:410ms}
+body.premium-next.cn-tabbed-ui #official-path-view .path-route[data-cn-reveal="run"]>.path-node:nth-child(12){--cn-d:445ms}
+@media (hover:hover){
+ body.premium-next.cn-tabbed-ui #official-path-view .path-node{transition:none}
+ body.premium-next.cn-tabbed-ui #official-path-view .path-node::before{transition:border-color .18s ease,transform .18s var(--cn-ease)}
+ body.premium-next.cn-tabbed-ui #official-path-view .path-node:hover::before{transform:scale(1.12);border-color:#8fa7c2}
+ body.premium-next.cn-tabbed-ui #official-path-view .path-node:hover .path-number{color:#3d5a78!important;transition:color .18s ease}
+ body.premium-next.cn-tabbed-ui #official-path-view .path-node:hover .path-phase-label{color:#0f2a45!important;transition:color .18s ease}
+}
+/* the track: an older rule pinned it to height:2px, so the "one connected journey" line was
+ * invisible; it now runs from the first to the last marker centre (same colour #e1e8f0, same x). */
+body.premium-next.cn-tabbed-ui #official-path-view .path-route::before{height:auto!important;top:36px!important;bottom:36px!important}
+@keyframes cn23-draw{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes cn23-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes cn23-mark{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+ body.premium-next.cn-tabbed-ui #official-path-view .path-route::before,body.premium-next.cn-tabbed-ui #official-path-view .path-node,body.premium-next.cn-tabbed-ui #official-path-view .path-node>*,body.premium-next.cn-tabbed-ui #official-path-view .path-node::before{animation:none!important;transition:none!important}
+ body.premium-next.cn-tabbed-ui #official-path-view .path-node:hover::before{transform:none}
+}
+
+/* ==== CN SITE v2.4G · Graph B visual refinement (owner: "mere sexy", thinner line, calmer surface) ====
+ * VISUAL ONLY: stroke widths, colours, surface, grid/axis tint, band opacity. Data, points, ranges,
+ * geometry, labels, copy and the inspector are untouched. Light editorial surface; AA-checked tones. */
+body.premium-next.cn-tabbed-ui #variant-panel .chart-surface{
+ --cn2-actual:#0e8a63;--cn2-forecast:#2f6fda;--cn2-band:#2f6fda;--cn2-grid:#9fb2c7;
+ --cn2-ink:#0b2742;--cn2-muted:#4f6379;--card-surface:#ffffff;
+ background:#ffffff!important;color:var(--cn2-ink)!important;
+ box-shadow:inset 0 0 0 1px #e3e9f0,0 1px 2px rgba(11,39,66,.04),0 14px 36px -24px rgba(11,39,66,.22)!important
+}
+body.premium-next.cn-tabbed-ui #variant-panel .chart-surface :is(span,small,p,label,em,i,div,dt,dd){color:var(--cn2-muted)}
+body.premium-next.cn-tabbed-ui #variant-panel .chart-surface :is(strong,b,h2,h3,#observed-value,#time-label){color:var(--cn2-ink)!important}
+body.premium-next.cn-tabbed-ui #variant-panel .chart-surface #pair{color:var(--cn2-muted)!important}
+body.premium-next.cn-tabbed-ui #variant-panel .chart-surface .day-axis span{color:var(--cn2-muted)!important}
+body.premium-next.cn-tabbed-ui #variant-panel .chart-surface .day-axis span.is-current{color:var(--cn2-ink)!important}
+body.premium-next.cn-tabbed-ui #variant-panel .chart-surface .y-axis span,body.premium-next.cn-tabbed-ui #variant-panel .chart-surface [class*="axis"] span{color:var(--cn2-muted)!important}
+body.premium-next.cn-tabbed-ui #variant-panel .chart-surface .legend > div{color:var(--cn2-muted)!important}
+body.premium-next.cn-tabbed-ui #variant-panel #actual{stroke:var(--cn2-actual)!important;stroke-width:1.75!important}
+body.premium-next.cn-tabbed-ui #variant-panel #forecast{stroke:var(--cn2-forecast)!important;stroke-width:1.5!important;stroke-dasharray:6 6!important;stroke-opacity:.9}
+body.premium-next.cn-tabbed-ui #variant-panel #range-band{fill:var(--cn2-band)!important;opacity:.07!important}
+body.premium-next.cn-tabbed-ui #variant-panel .range-edge{stroke:#8aa6cc!important;stroke-opacity:.7!important;stroke-width:1!important}
+body.premium-next.cn-tabbed-ui #variant-panel #grid line{stroke:var(--cn2-grid)!important;stroke-opacity:.32!important}
+body.premium-next.cn-tabbed-ui #variant-panel [data-actual-day] line{stroke:var(--cn2-actual)!important;stroke-width:1.5!important}
+body.premium-next.cn-tabbed-ui #variant-panel #playhead{stroke:#8aa0b8!important;stroke-opacity:.6!important}
+body.premium-next.cn-tabbed-ui #variant-panel #endpoint{fill:var(--cn2-actual)!important;stroke:#ffffff!important;stroke-width:2!important}
+body.premium-next.cn-tabbed-ui #variant-panel #endpoint-halo{fill:var(--cn2-actual)!important}
+body.premium-next.cn-tabbed-ui #variant-panel .cn-v2-dot{background:var(--cn2-actual)!important;box-shadow:0 0 0 2px #fff,0 0 0 6px color-mix(in srgb,var(--cn2-actual) 18%,transparent)!important}
+body.premium-next.cn-tabbed-ui #variant-panel .legend .swatch-band{background:color-mix(in srgb,var(--cn2-band) 12%,transparent)!important;border:1px solid color-mix(in srgb,var(--cn2-forecast) 40%,transparent)!important}
+body.premium-next.cn-tabbed-ui #variant-panel .cn-daily-research-notes{background:#f6f8fb!important;color:#24384d!important;border-top:1px solid #e3e9f0!important}
+body.premium-next.cn-tabbed-ui #variant-panel .cn-daily-research-notes :is(summary,p,span,small,li,strong,h3,h4,dt,dd,div){color:#24384d!important}
+body.premium-next.cn-tabbed-ui #variant-panel .cn-daily-research-notes .cn-daily-note{background:#ffffff!important;border:1px solid #e3e9f0!important}
+body.premium-next.cn-tabbed-ui #variant-panel .chart-surface{--actual:var(--cn2-actual);--forecast:var(--cn2-forecast);--grid:var(--cn2-grid)}
+body.premium-next.cn-tabbed-ui #variant-panel .legend .swatch-actual{border-top:2px solid var(--cn2-actual)!important}
+body.premium-next.cn-tabbed-ui #variant-panel .legend .swatch-forecast{border-top:2px dashed var(--cn2-forecast)!important}
+body.premium-next.cn-tabbed-ui #variant-panel .instrument-foot{border-top-color:#e3e9f0!important}
+/* AA on the Prognose tab (colour only; the 5 header/slider items failed before v2.4G too) */
+body.premium-next.cn-tabbed-ui #variant-panel .chart-surface small{color:var(--cn2-muted)!important}
+body.premium-next.cn-tabbed-ui #variant-panel :is(.small-kicker,.card-desc){color:#4f6379!important}
+body.premium-next.cn-tabbed-ui #variant-panel .asset-select button:not([aria-pressed="true"]):not(.is-active){color:#4f6379!important}
+body.premium-next.cn-tabbed-ui #variant-panel :is(.slider-labels,.timeline-labels,.scrub-labels) span,body.premium-next.cn-tabbed-ui #variant-panel input#hour-slider ~ * span{color:#4f6379!important}
+
+/* ==== CN SITE v2.4S · site cleanup and polish (presentation only) =================================
+ * 1 logo: one calm settle of the existing mark per session (transform/opacity, 520 ms), never blocking.
+ * 2 Cyklus: say each thing once. With no verified phase the orientation is ONE honest card; the
+ *   rotation duplicate is hidden (Kompas owns rotation) with a one-line link; one sources block.
+ * 4 Kompas: the "Nu" and "1–3 dage" first-fold cards are removed visually. The main-horizon table
+ *   carries both (owner-approved first-fold test update). DOM ids/order are kept for the validators. */
+body.premium-next.cn-tabbed-ui .dev-brand img{transform-origin:9% 50%}
+body.premium-next.cn-tabbed-ui .dev-brand.cn-logo-settle img{animation:cn24-logo .52s cubic-bezier(.23,1,.32,1) both}
+@keyframes cn24-logo{from{opacity:.35;transform:rotate(-8deg) scale(.985)}60%{opacity:1;transform:rotate(1.2deg)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){body.premium-next.cn-tabbed-ui .dev-brand.cn-logo-settle img{animation:none!important}}
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:is(:nth-child(2),:nth-child(3)){display:none!important}
+body.premium-next.cn-tabbed-ui #compass-pro .product-first{grid-template-areas:"action action" "risk risk" "strip strip" "gate gate" "rot rot" "btc btc" "explain explain"!important}
+@media (min-width:760px){
+ body.premium-next.cn-tabbed-ui #compass-pro .product-first{grid-template-areas:"action action risk" "strip strip strip" "gate gate gate" "rot rot btc" "explain explain explain"!important}
+ body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(1){min-height:100%!important}
+}
+body.premium-next.cn-tabbed-ui #official-path-view [data-reference-kind="NO_VERIFIED_PHASE"] .path-orientation-grid,
+body.premium-next.cn-tabbed-ui #official-path-view[data-reference-kind="NO_VERIFIED_PHASE"] .path-orientation-grid{grid-template-columns:minmax(0,1fr)!important}
+body.premium-next.cn-tabbed-ui #official-path-view[data-reference-kind="NO_VERIFIED_PHASE"] :is(.path-hero,.path-next-panel){display:none!important}
+body.premium-next.cn-tabbed-ui #official-path-view .path-rotation-section{display:none!important}
+body.premium-next.cn-tabbed-ui #official-path-view .cn-path-rotation-link{margin:8px 0 0;padding:14px 18px;border:1px solid #e3e9f0;border-radius:14px;background:#fff;font-size:14px}
+body.premium-next.cn-tabbed-ui #official-path-view .cn-path-rotation-link a{color:#245a91;font-weight:650;text-decoration:none}
+body.premium-next.cn-tabbed-ui #official-path-view .cn-path-rotation-link a:hover{text-decoration:underline}
+body.premium-next.cn-tabbed-ui #official-path-view .cn-path-rotation-link a:focus-visible{outline:2px solid #2f6fda;outline-offset:2px;border-radius:4px}
+body.premium-next.cn-tabbed-ui[data-cn-site-view="path"] .premium-meta{display:none!important}
+body.premium-next.cn-tabbed-ui #official-path-view[data-reference-kind="NO_VERIFIED_PHASE"] .path-orientation-grid{display:block!important;margin-top:14px!important;min-height:0!important}
+body.premium-next.cn-tabbed-ui #official-path-view[data-reference-kind="NO_VERIFIED_PHASE"] .path-orientation-grid>.cn-cycle-truth{margin:0!important}
+
+/* ==== CN SITE v2.4G2 · forecast reading aids (visual only; no new data) ======================
+ * Dots mark the 7 source-issued expected closes, so it reads as 7 forecasts, not a continuous path.
+ * The frozen daily high/low cells carry the "expected volatility" and are slightly more present. */
+body.premium-next.cn-tabbed-ui #variant-panel #forecast-points{fill:none;stroke:var(--cn2-forecast)!important;stroke-width:5.5!important;stroke-linecap:round!important;vector-effect:non-scaling-stroke}
+body.premium-next.cn-tabbed-ui #variant-panel #range-band{opacity:.11!important}
+body.premium-next.cn-tabbed-ui #variant-panel .range-edge{stroke-opacity:.85!important}

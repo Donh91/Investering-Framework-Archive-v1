@@ -574,8 +574,10 @@ try{
      firstFold:{
       viewport:innerHeight,
       actionTop:Math.round(document.getElementById('premium-now-action')?.getBoundingClientRect().top??9999),
-      h12Bottom:Math.round(document.getElementById('premium-now-direction')?.closest('.product-cell')?.getBoundingClientRect().bottom??9999),
-      h13Bottom:Math.round(document.getElementById('cn-horizon-13')?.closest('.product-cell')?.getBoundingClientRect().bottom??9999),
+      // Owner-approved v2.4S (OWNER_DECISION_SITE_AND_SPLIT_v1, #173 6771519709): the duplicate "Nu" and
+      // "1–3 dage" first-fold cards are removed; the same official facts are the main-horizon table rows.
+      h12Bottom:Math.round(document.querySelector('[data-cn-overview-extra="h12"]')?.getBoundingClientRect().bottom||9999),
+      h13Bottom:Math.round(document.querySelector('[data-cn-overview="d13"]')?.getBoundingClientRect().bottom||9999),
       sourceVisible:getComputedStyle(document.getElementById('pro-source-status')).display!=='none',
       navSingleRow:Math.round(document.querySelector('.premium-entry-navigation')?.getBoundingClientRect().height??9999)<=50,
       navFits:document.querySelector('.premium-entry-navigation').scrollWidth<=document.querySelector('.premium-entry-navigation').clientWidth+2,

@@ -117,6 +117,13 @@
                       stroke-linecap="round"
                     ></path>
                     <path
+                      id="forecast-points"
+                      fill="none"
+                      stroke="var(--forecast)"
+                      stroke-linecap="round"
+                      aria-hidden="true"
+                    ></path>
+                    <path
                       id="actual"
                       fill="none"
                       stroke="var(--actual)"
@@ -152,7 +159,7 @@
                 <div id="cn-frozen-window-ledger" class="cn-frozen-window-ledger" aria-label="Mandagens frosne prisprognoser" aria-live="polite"></div>
               </details>
               <details id="cn-daily-research-notes" class="cn-daily-research-notes" hidden>
-               <summary>7 daglige high/low-prognoser · kilder og begrundelser</summary>
+               <summary>7 daglige høj/lav-prognoser · kilder og begrundelser</summary>
                <div id="cn-daily-research-rows" class="cn-daily-research-rows"></div>
               </details>
                               <div class="interaction">
@@ -188,7 +195,7 @@
 
 <section id="proof-explorer" class="proof-explorer" aria-labelledby="proof-title">
  <header class="proof-head"><div>
-  <span class="proof-eyebrow">RESULTATER / ORIGINAL → OBSERVERET → SCORE</span>
+  <span class="proof-eyebrow">RESULTATER / OPRINDELIG → OBSERVERET → SCORE</span>
   <h2 id="proof-title">Efterkontrol. Prognose først, resultat bagefter.</h2>
   <p>Sammenlign den oprindelige prognose med verificerede markedsobservationer. Manglende data tæller ikke som et korrekt resultat.</p>
  </div><span id="proof-status" class="proof-status" role="status">Henter offentlige kilder…</span></header>
@@ -204,7 +211,7 @@
  <details class="proof-source-details"><summary>Originale GitHub-kilder og metode</summary>
   <div id="proof-sources">Afventer kildehenvisninger.</div></details>
  <div class="proof-foot">
-  <a href="https://github.com/Donh91/CycleNavigator-scores" target="_blank" rel="noopener noreferrer">Åbn offentligt Proof-arkiv ↗</a>
+  <a href="https://github.com/Donh91/CycleNavigator-scores" target="_blank" rel="noopener noreferrer">Åbn offentligt bevisarkiv ↗</a>
   <button type="button" id="proof-copy-audit">Kopiér auditinstruktion</button>
   <span id="proof-copy-status" role="status"></span>
  </div>

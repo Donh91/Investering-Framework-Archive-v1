@@ -72,7 +72,7 @@ function renderWindows(){
 function renderSources(){
  const host=$('proof-sources');host.replaceChildren();
  const intro=node('p','',local(
-  'GitHub-commits er navigations- og byte-referencer. Uden uafhængigt tidsvidne er disse forecast-mirrors foreløbige, ikke VERIFIED.',
+  'GitHub-commits er navigations- og byte-referencer. Uden uafhængigt tidsvidne er disse prognosekopier foreløbige og ikke verificerede.',
   'GitHub commit SHAs identify bytes, not independent pre-outcome attestation. These mirrors remain provisional.'));
  host.append(intro);
  if(!links.length){host.append(node('p','',local('Ingen godkendt præcis kildebinding.','No eligible exact source binding.')));return}
@@ -92,16 +92,16 @@ function renderSources(){
 function localizeProof(){
  const en=document.documentElement.lang==='en';
  const eyebrow=document.querySelector('.proof-eyebrow');if(eyebrow)eyebrow.textContent=en?
-  'RESULTS / ORIGINAL → OBSERVED → SCORE':'RESULTATER / ORIGINAL → OBSERVERET → SCORE';
+  'RESULTS / ORIGINAL → OBSERVED → SCORE':'RESULTATER / OPRINDELIG → OBSERVERET → SCORE';
  const steps=document.querySelector('.proof-steps');if(steps)steps.setAttribute('aria-label',en?'Proof steps':'Proof-trin');
  $('proof-windows').setAttribute('aria-label',en?'Three weekly price windows':'Tre ugentlige prisvinduer');
  const heading=$('proof-title');if(heading)heading.textContent=en?
-  'Proof. Check what was actually forecast.':'Proof. Se hvad der faktisk blev forudsagt.';
+  'Proof. Check what was actually forecast.':'Bevis. Se, hvad der faktisk blev forudsagt.';
  const sub=document.querySelector('.proof-head p');if(sub)sub.textContent=en?
   'Frozen original source, observed outcomes, and an inspectable method. No rewriting.':
   'Frosne kilder, observerede udfald, åben metode. Ingen omskrivning.';
  const map={freeze:en?'Original freeze':'Frossen kilde',
- observed:en?'Observed':'Observation',assess:en?'Score & source':'Score & kilde'};
+ observed:en?'Observed':'Observation',assess:en?'Score & source':'Score og kilde'};
  for(const button of document.querySelectorAll('[data-proof-step]')){
   const key=button.dataset.proofStep,id=key==='freeze'?'01':key==='observed'?'02':'03';
   button.replaceChildren(node('span','',id),document.createTextNode(map[key]||key));
@@ -109,7 +109,7 @@ function localizeProof(){
  const summary=document.querySelector('.proof-source-details summary');
  if(summary)summary.textContent=en?'Original GitHub sources and method':'Originale GitHub-kilder og metode';
  const link=document.querySelector('.proof-foot a');if(link)link.textContent=en?
-  'Open public Proof archive ↗':'Åbn offentligt Proof-arkiv ↗';
+  'Open public Proof archive ↗':'Åbn offentligt bevisarkiv ↗';
  const copy=$('proof-copy-audit');if(copy)copy.textContent=en?'Copy audit prompt':'Kopiér auditinstruktion';
 }
 
@@ -134,7 +134,7 @@ function display(){
   local('FORELØBIG · '+view.forecast_week,'PROVISIONAL · '+view.forecast_week):
   local('KILDE MANGLER','SOURCE MISSING');
  $('proof-method').textContent=local(
-  'Price Range 70 % containment + 30 % Jaccard. D1–2/D3–4/D5–7 er kildeberegnede tal til dato; Direction/Edge forbliver en separat ABSTAIN-/Proof-familie. Ingen afkastgaranti.',
+  'Prisinterval: 70 % dækning + 30 % Jaccard. D1–2/D3–4/D5–7 er kildeberegnede tal til dato; retning og fordel er en separat familie, som i dag afstår (ABSTAIN). Ingen afkastgaranti.',
   'Price Range: 70% containment + 30% Jaccard. D1–2/D3–4/D5–7 are source-reported interim readings; Direction/Edge is a separate ABSTAIN/Proof family. Not a return prediction.'
  );
  document.querySelectorAll('[data-proof-step]').forEach(button=>{

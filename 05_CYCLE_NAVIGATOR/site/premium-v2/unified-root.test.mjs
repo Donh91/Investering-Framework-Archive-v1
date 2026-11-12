@@ -201,7 +201,9 @@ test('premium finish: fabricated W44 midpoint curve and large test explanation d
  assert.match(renderer,/paintDailyResearchNotes/);
  assert.match(renderer,/edge\('forecast_high'\)/);
  assert.match(renderer,/edge\('forecast_low'\)/);
- assert.match(renderer,/attr\('forecast','d',movePath\(f\.map\(xy\)\)\)/);
+ // v2.4G2b (owner-approval pending): monotone cubic through the same 7 source points.
+ assert.match(renderer,/attr\('forecast','d',monotonePath\(f\.map\(xy\)\)\)/);
+ assert.match(renderer,/const monotonePath=/);
 });
 
 test('premium finish: visual proof screenshots are captured on exact tested root',async()=>{

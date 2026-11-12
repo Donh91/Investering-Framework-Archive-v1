@@ -383,7 +383,8 @@ const pathDa=inspectOfficialPublicFeeds(pathLatest,pathCompass,{nowUtc:now,lang:
 const pathEn=inspectOfficialPublicFeeds(pathLatest,pathCompass,{nowUtc:now,lang:'en'});
 assert.equal(pathDa.path.state,'SOURCE_BOUND');
 assert.equal(pathEn.path.next_gate,'Next gate not documented');
-assert.equal(pathDa.path.next_gate,'Næste gate ikke dokumenteret');
+// Owner-approved v2.4S-final wording (OWNER_DECISION_CN_SITE_v3, #173 6777536479): plain Danish.
+assert.equal(pathDa.path.next_gate,'Ikke dokumenteret endnu');
 assert.deepEqual(pathEn.compass,pathDa.compass);
 assert.match(client,/inspectOfficialPublicFeeds\(feeds\.latest,feeds\.compass,\{lang\}\)/);
 

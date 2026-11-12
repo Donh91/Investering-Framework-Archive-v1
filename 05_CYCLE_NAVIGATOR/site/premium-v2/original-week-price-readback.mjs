@@ -68,6 +68,10 @@ export function verifiedOriginalWeekPrices({
     expected_last_daily_close:closes[6],
     week_daily_low_min:Math.min(...lows),
     week_daily_high_max:Math.max(...highs),
+    // The SAME verified original 7 points (no interpolation, no new values),
+    // exposed so Kompas can show today and the next two source-issued days.
+    original_daily:Object.freeze(original.forecast.map(x=>Object.freeze({
+      day:x.day,low:x.low,high:x.high,expected_close:x.expected_close}))),
     last_observed_at_utc:original.last_observed_at_utc,
     actual_price_freshness:original.live_freshness,
     price_quote:'USDT'
