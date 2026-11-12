@@ -5,7 +5,7 @@ import copy
 import unittest
 
 from scripts.governance.s1_release_evidence_classifier_v1 import classify_pr_disposition, rp1_rule_census
-from tests.governance.test_s1_release_process_v1 import H, ready, code_ready
+from tests.governance.test_s1_release_process_v1 import H, ready, code_ready, refresh_privacy
 
 ESC = ("ESCALATE_OWNER", "RP1_ACTIVE_RULES_REQUIRE_NATIVE_COMPLIANCE")
 RCK = ("RECHECK", "RULE_CENSUS_UNAVAILABLE")
@@ -208,6 +208,8 @@ class G1ChangedStatus(unittest.TestCase):
             for k in ("release_process", "release_lane", "draft", "owner_mandate", "native_rule_reads",
                       "merge_layers", "writer_lease", "pr_run_census", "privacy_check"):
                 r.pop(k)
+        if rp1:
+            refresh_privacy(r)
         return r
 
     def test_rp1_changed_mode_status_with_head_exists_ready(self):
