@@ -171,6 +171,69 @@ def _claude_review_is_valid(record, current):
     return True
 
 
+def _changed_test_execution_issue(record, current):
+    """IC-1: source-supplied native PR file statuses, not name-only deletion guesses.
+
+    This is advisory, never a GitHub authenticator. The S1 caller MUST read
+    the changed-file status list from the original PR at the exact current HEAD.
+    Absent or conflicting status for a changed Python test fails closed.
+    Removed tests require no impossible execution receipt; rename destinations do.
+    """
+    paths = record.get("expected_changed_paths")
+    if not isinstance(paths, list):
+        return None  # Existing general/Claude path-census gates remain separate.
+    tests = [p for p in paths if isinstance(p, str) and p.endswith(".py")
+             and (p.rsplit("/", 1)[-1].startswith("test_")
+                  or p.rsplit("/", 1)[-1].endswith("_test.py"))]
+    if not tests:
+        return None
+    entries = record.get("changed_file_statuses")
+    if (record.get("changed_file_statuses_source") != "GITHUB_PR_FILES"
+            or record.get("changed_file_statuses_head_sha") != current.get("head")
+            or not isinstance(entries, list)):
+        return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
+    statuses = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
+        path = entry.get("path")
+        status = entry.get("status")
+        exists = entry.get("head_exists")
+        if (type(path) is not str or path not in tests or path in statuses
+                or status not in {"added", "modified", "renamed", "copied", "removed", "deleted"}
+                or type(exists) is not bool):
+            return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
+        if status in {"removed", "deleted"}:
+            if exists:
+                return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
+        elif not exists:
+            return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
+        if status == "renamed":
+            previous = entry.get("previous_filename")
+            if type(previous) is not str or not previous or previous == path:
+                return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
+        statuses[path] = status
+    if set(statuses) != set(tests):
+        return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
+
+    executed = set()
+    for name in record.get("required_pr_job_names") or []:
+        for job in record.get("pr_jobs") or []:
+            if isinstance(job, dict) and job.get("name") == name:
+                ids = job.get("executed_test_ids")
+                if isinstance(ids, list):
+                    executed.update(test_id for test_id in ids if type(test_id) is str)
+    for path, status in statuses.items():
+        if status in {"removed", "deleted"}:
+            continue
+        dotted = path[:-3].replace("/", ".")
+        if not any(test_id == path or test_id.startswith(path + "::")
+                   or test_id == dotted or test_id.startswith(dotted + ".")
+                   for test_id in executed):
+            return "CHANGED_TESTS_NOT_EXECUTED"
+    return None
+
+
 def classify_pr_disposition(record):
     """Classify supplied evidence for ONE PR; never grant release authority.
 
@@ -189,7 +252,8 @@ def classify_pr_disposition(record):
         # Observation clocks cannot create a new receipt on every tick. A
         # changed disposition/reason (e.g. expired proof) IS a material change.
         fields = ("current", "evaluated", "risk", "platform_denied", "merged", "merge",
-                  "expected_changed_paths", "production", "closed", "supersession",
+                  "expected_changed_paths", "changed_file_statuses", "changed_file_statuses_source",
+                  "changed_file_statuses_head_sha", "production", "closed", "supersession",
                   "active_writer_lease", "merge_state", "required_rules_enforced", "rule_census",
                   "unresolved_p0_p1", "source_science_gate", "required_pr_job_names",
                   "pr_jobs", "independent_review_required", "review", "review_requires_current_main",
@@ -390,6 +454,12 @@ def classify_pr_disposition(record):
             return blocked("REVIEW_REQUIRED_BY_POLICY", "REQUIRED_INDEPENDENT_APPROVAL_MISSING_OR_STALE",
                            "Native approval or qualified exact-head Claude review under owner policy",
                            "EXISTING_REVIEW_OWNER")
+    changed_test_issue = _changed_test_execution_issue(r, current)
+    if changed_test_issue:
+        return blocked("CI_NOT_EXECUTED", changed_test_issue,
+                       "Native exact-HEAD changed-test status and actually executed tests, "
+                       "excluding removed sources and using rename destinations",
+                       "EXISTING_CI_OWNER")
     if r.get("physical_site_review_required") is True and r.get("physical_site_review_passed") is not True and r.get("owner_physical_review_waiver") is not True:
         return blocked("EXTERNAL_DEPENDENCY", "PHYSICAL_REVIEW_REQUIRED", "Applicable physical SITE review policy", "EXISTING_SITE_OWNER")
     if r.get("risk") not in ("LOW", "HIGH"):
