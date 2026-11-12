@@ -17,6 +17,8 @@ def make_record(changes, executed=()):
     record["changed_file_statuses_source"] = "GITHUB_PR_FILES"
     record["changed_file_statuses_head_sha"] = H
     record["changed_file_statuses"] = changes
+    record["pr_changed_files_count"] = len(changes)
+    record["pr_changed_files_count_head_sha"] = H
     record["pr_jobs"][0]["executed_test_ids"] = list(executed)
     return record
 
@@ -172,6 +174,51 @@ class IC1ChangedTestStatusTests(unittest.TestCase):
     def test_pytest_fixture_not_a_test_module(self):
         r = make_record([row("tests/conftest.py")])
         self.result(r, "READY_TO_MERGE")
+
+
+    def test_g3_truncated_but_consistent_census_falsifies_ready(self):
+        r = make_record([row("scripts/example.py")])
+        r["pr_changed_files_count"] = 2  # hidden test in another PR-files page
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+        r = make_record([row("tests/a/test_a.py")],
+                        executed=["tests/a/test_a.py::test_a"])
+        r["pr_changed_files_count"] = 2
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+
+    def test_g3_missing_or_malformed_counts_and_stale_head_fail(self):
+        for bad in (None, True, -1, 0, "2", [], {}, 3001):
+            with self.subTest(count=repr(bad)):
+                r = make_record([row("tests/a/test_a.py")],
+                                executed=["tests/a/test_a.py::test_a"])
+                r["pr_changed_files_count"] = bad
+                self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+        r = make_record([row("tests/a/test_a.py")],
+                        executed=["tests/a/test_a.py::test_a"])
+        del r["pr_changed_files_count"]
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+        r = make_record([row("tests/a/test_a.py")],
+                        executed=["tests/a/test_a.py::test_a"])
+        r["pr_changed_files_count_head_sha"] = "f" * 40
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+
+    def test_g1_mode_changed_status_requires_test_execution(self):
+        r = make_record([row("tests/a/test_a.py", "changed")])
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TESTS_NOT_EXECUTED")
+        r["pr_jobs"][0]["executed_test_ids"] = ["tests/a/test_a.py::test_a"]
+        self.result(r, "READY_TO_MERGE")
+        r["changed_file_statuses"][0]["head_exists"] = False
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+
+    def test_g1_unchanged_is_not_valid_github_pr_status(self):
+        r = make_record([row("tests/a/test_a.py", "unchanged")],
+                        executed=["tests/a/test_a.py::test_a"])
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+
+    def test_g3_native_non_test_census_cannot_silently_drop_file(self):
+        r = make_record([row("scripts/example.py")])
+        self.result(r, "READY_TO_MERGE")
+        r["changed_file_statuses"].clear()
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
 
     def test_docs_only_does_not_gain_new_test_requirement(self):
         r = decision_fixture("LOW")
