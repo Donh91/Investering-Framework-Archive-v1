@@ -23,7 +23,8 @@ def fixture():
                 asset: {"points": [
                     {"day": 1, "low": 95, "high": 105, "expected_close": 100},
                     {"day": 2, "low": 90, "high": 100, "expected_close": 95},
-                ]} for asset in ("BTC", "ETH")
+                ] + [{"day": day, "low": 90, "high": 110, "expected_close": 100}
+                     for day in range(3, 8)]} for asset in ("BTC", "ETH")
             },
             "daily_observations": {
                 asset: [
@@ -33,7 +34,10 @@ def fixture():
                     {"day": 2, "date": "2026-11-10", "status": "LIVE",
                      "low": 88, "high": 101, "close": 89,
                      "observed_hours": 12, "as_of_utc": "2026-11-10T12:00:00Z"},
-                ] for asset in ("BTC", "ETH")
+                ] + [{"day": day, "date": f"2026-11-{8+day:02d}",
+                      "status": "NOT_STARTED", "low": None, "high": None,
+                      "close": None, "observed_hours": 0, "as_of_utc": None}
+                     for day in range(3, 8)] for asset in ("BTC", "ETH")
             },
         },
         "public_scorecard": {
@@ -118,7 +122,13 @@ class ScientificClosurePreflightTests(unittest.TestCase):
             examine(cn, compass)
         cn, compass = fixture()
         cn["public_live_precision"]["daily_price_path"]["ETH"]["points"].pop()
-        with self.assertRaisesRegex(ValueError, "ISSUED_DAILY_POINT_MISSING"):
+        with self.assertRaisesRegex(ValueError, "FROZEN_SEVEN_DAY_PATH_INVALID"):
+            examine(cn, compass)
+
+    def test_duplicate_observation_day_rejected(self):
+        cn, compass = fixture()
+        cn["public_live_precision"]["daily_observations"]["ETH"][2]["day"] = 2
+        with self.assertRaisesRegex(ValueError, "DAILY_OBSERVATION_GRID_INVALID"):
             examine(cn, compass)
 
     def test_expired_on_issuance_not_repaired_by_ui(self):
