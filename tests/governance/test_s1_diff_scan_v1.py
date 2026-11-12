@@ -90,11 +90,15 @@ class PrivacyScan(unittest.TestCase):
         self.check(sample([f(status="renamed", previous_filename="docs/old.md")]),
                    "NO_RESTRICTED_CONTENT")
 
-    def test_site_generated_output_evidence_required(self):
+    def test_site_generated_output_cannot_be_self_attested(self):
         r = sample([f("05_CYCLE_NAVIGATOR/site/safe.mjs")])
         self.check(r, "UNKNOWN")
         r["generated_site_outputs_complete"] = True
-        self.check(r, "NO_RESTRICTED_CONTENT")
+        self.check(r, "UNKNOWN")  # boolean is not live served-output evidence
+
+    def test_uppercase_private_prefix_is_also_blocked(self):
+        self.check(sample([f("PRIVATE/strategy.py", content="x=1")]), "RESTRICTED_CONTENT")
+        self.check(sample([f(".GITHUB/workflows/ci.yml", content="x=1")]), "RESTRICTED_CONTENT")
 
     def test_restricted_evidence_overrides_incomplete_unknown(self):
         r = sample([f(content="PRIVATE_ALPHA_STRATEGY internal note", binary=True)])
