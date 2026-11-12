@@ -1,58 +1,51 @@
-# Kompas Pro 2.0 | Visible Swing Matrix and Cycle-Adaptive Market-Cap Audit
-Date: 2026-11-11. Writer: CHATGPT_INTERACTIVE. Original public product owner: Archive #1516. Related original private Alpha product: Meme-Alpha-Lab #228 and research PR #266.
+# Kompas Pro 2.0 | Public Swing Matrix Source and Release Audit
 
-VERDICT: GO WITH CHANGES for one visible read-only matrix. GO for private comparative research of cycle-adaptive cap filters. NO GO for 12 invented class-by-horizon forecasts, actual dynamic trading classifications, new market authority, public private-data export, or strategy edge claims.
+Date: 2026-11-11. Public product owner: Archive #1516. Reviewed as a source-bound, presentation-only feature.
 
-## 1. Separate two taxonomies
+**Decision: GO WITH RELEASE GATES.** One compact, always-visible Swing overview is within the existing Kompas product. This document contains only the public presentation contract, not unpublished research or private product specifications.
 
-Broad, descriptive capitalization references, based on [CoinMarketCap market-cap glossary](https://coinmarketcap.com/academy/glossary/market-capitalization-market-cap-mcap), [CoinGecko](https://www.coingecko.com/learn/what-is-market-cap-in-crypto), and [Binance Academy](https://www.binance.com/en/academy/articles/crypto-market-capitalization-explained):
-- LARGE: circulating market cap >= $10 billion.
-- MID: $1 billion to < $10 billion.
-- SMALL: $100 million to < $1 billion.
-- MICRO: < $100 million. The broader source category sometimes uses < $50 million; no universally standardized convention exists.
+## 1. Public capitalization references
 
-These are NON-OVERLAPPING analyst reference labels, not official source thresholds. Never change source-owned capitalization_ladder by this UI convention. Classification is based on circulating supply x contemporary source-time price. FDV, total supply, max supply, pool quote liquidity and free-float evidence remain separate. [DEX Screener](https://docs.dexscreener.com/token-listing) describes why its market-cap and FDV figures can differ. Unknown circulating supply, exact chain+token+pool identity or contemporaneous price => MCAP_UNVERIFIED, never infer a tiny cap from FDV.
+Approximate descriptive *circulating* market capitalization classes, not thresholds issued by the Official Compass source:
 
-Alpha Lab's tactical, ultra-micro research window of $200,000 to $2 million is INSIDE the broader MICRO class. It is not the canonical definition of "microcap" and not currently a validated filter. The prior under-$1M PR #266 and new $200k–$2M cohort are two distinct preregistered experiments; do not retroactively pool their decisions or outcomes.
+| Reference class | Approximate circulating cap |
+| --- | --- |
+| Large | USD 10 billion or more |
+| Mid | USD 1 billion to below 10 billion |
+| Small | USD 100 million to below 1 billion |
+| Micro | Below USD 100 million |
 
-## 2. Cycle-adaptive tactical windows to test, not rules to deploy
+These conventional analyst reference labels are not universal and must **not** overwrite the canonical source-owned capitalization_ladder or imply token eligibility. Circulating cap is contemporary price times circulating supply. Unknown circulating supply, token/pool identity or source-time price means market cap is **unverified**; FDV, total supply, pool liquidity and realizable execution are different quantities. References: [CoinMarketCap market capitalization](https://coinmarketcap.com/academy/glossary/market-capitalization-market-cap-mcap), [CoinGecko explanation](https://www.coingecko.com/learn/what-is-market-cap-in-crypto) and [Binance Academy](https://www.binance.com/en/academy/articles/crypto-market-capitalization-explained).
 
-| Regime, recorded before token decision | Trial cap window (USD) | Hypothesis (not measured) |
-|---|---:|---|
-| BEAR / RISK-OFF | $100k – $1M | Smaller early discoveries, but higher liquidity/rug/exit failure |
-| MIXED / TRANSITION | $200k – $2M | Owner-proposed tactical baseline |
-| BULL / RISK-ON | $500k – $5M | More capacity at higher cap, still asymmetric returns |
-| MANIA / EUPHORIA | $1M – $10M | Stress-only late cycle; higher risk of overpaying/manipulation |
+## 2. Canonical public site and displayed information
 
-These figures are NOT learned, optimized, calibrated or independently verified. Fixed $200k–$2M and fixed <$1M control cohorts must continue in parallel so apparent lift from moving thresholds is not simply posthoc selection. More defensible future alternative: pre-registered percentile bands from the full prospective chain-age-eligible launch distribution, pinned to an exogenous historic regime before entry, with strict caps and per-vintage cohort completeness. Publish an adapted band only after forward holdouts, matched baseline and adverse controls pass. No browser-side multiplier on current BTC/ETH direction. Do not assume bear->smaller or bull->larger creates edge.
+The official production homepage is the existing canonical unified root, not an independent page or a competing forecasting service. A single Swing Kompas should be visible on the existing Kompas Pro surface without requiring the user to open the optional details panel.
 
-At minimum, stratify by chain, pool/bonding-curve lifecycle, exact token age, creator/operator cluster, circulating-supply quality, quote depth, gas/fees/tax, source lag, market shocks, listing mechanism and realizable full-size sellability ($100/$500/$1k/$5k). Unknown is NOT zero, an apparent 10x mark is not a realizable 10x fill. Count all dead, no-pool, unquoted, rejected, rugged, never-discovered and delayed-source cases in original candidate denominator.
+- **Three source-issued market-wide directional windows:** 1–3 days, 5–7 days and 2–3 weeks. Each is shown strictly according to the currently eligible original source.
+- **Four source-issued capitalization NOW statuses:** Large, Mid, Small and Micro. These are present-time states, not forward class-specific predictions.
+- **Twelve class-by-horizon future cells:** all explicitly NOT_ISSUED until the canonical source actually supplies independently issued group forecasts. Never create forecasts or BUY/SELL actions by multiplying the three overall windows by the four current class states.
+- MEMES stays a distinct source category, never silently substituted for the Micro group.
+- Existing detailed tables can remain optional. No new backend, scanner, writer, scheduler or trading authority is introduced.
 
-## 3. Existing production site, exact UI contract
+The site must use the original PUBLIC_COMPASS_PROJECTION_v1 source, the source-owned current data_status, matching source/compass identity, unexpired validity, an action echo and exactly one known status per group. Stale, missing, duplicated, contradictory or unrecognized input shows **UNAVAILABLE** with no inferred buy/sell signal, model confidence, position, ETA or price prediction.
 
-The canonical premium homepage is based on the existing vnext-live source shell after premium-release cutover, not legacy market-compass-premium.js. Only the existing root Kompas tab is affected.
+## 3. Release and regression gates
 
-This PR adds a visible Swing Kompas under the official current action. Top line: THREE actual official MARKET-WIDE horizon directions (1–3d, 5–7d, 2–3w). Bottom line: FOUR existing capitalization ladder NOW actions (large, mid, small, micro). The 12 class-specific future matrix cells say "Afventer", because the source currently has no distinct 4 x 3 official segment forecast contract. Never cross-join market-wide direction + cap NOW status into an invented cap×horizon BUY/SELL. MEMES remain separate, not proxy MICROCAPS. BTC/ETH retain market-wide context.
+1. On the **canonical unified-root output**, assert one Swing overview exists outside the optional cn-pro-more disclosure and is actually connected to the root runtime's source reader. A working standalone vnext preview is insufficient.
+2. Fail closed for stale expiry, wrong source identity, missing tiers, duplicate tier keys, MEMES-as-Micro and any attempted class-specific forecast synthesis.
+3. Verify original SITE build allowlist, immutable PATH/CSS root contracts, existing Graph B, original official action and rollback without duplicate roots or modules.
+4. Run exact-head native site validation and real-browser 390/430 px tests for visibility, accessibility, text legibility and absence of overflow. Green unrelated CI does not replace those steps.
+5. Obtain independent exact-head technical/security review and **public/private boundary** review; verify native branch rules, applicable HIGH_IMPACT gates and source/Vault recovery and custody separation before qualified merge.
+6. After any qualified release, verify main blobs, the actual published GitHub Pages artifact and natural browser render. A merged PR alone does not prove publication.
 
-The UI includes only an explicitly labeled proposed "Alpha Lab $200k–2m" MICRO research window. Conventional broad ranges are visual references, not source-owned thresholds or evidence of per-segment eligibility. Original standalone horizon and capitalization raw tables remain behind optional native HTML details, making the decision overview one-glance with no dropdown interaction required. Styling follows Quiet Precision and mobile 390/430px; verify real screenshots, Safari behavior and no horizontal overflow before release.
+## 4. Research boundary
 
-Source gates: valid original PUBLIC_COMPASS_PROJECTION_v1, official current data_status OK, existing joined public identity and unexpired source, source-owned action echo, exactly one known status/action per tier. Stale/wrong ID/duplicate tier/missing class or unrecognized direction -> UNAVAILABLE, no source-side recalculation, no model confidence or new user positions. Original policy under SITE_CONTRACT and #1516 unchanged.
+Any non-public strategy designs, tactical capitalization experiments, private issue references, internal cohorts, filters, research arms or experimental methodology belong exclusively to their existing restricted owners. **None are reproduced, endorsed or exported in this public report or site UI.** The public presentation does not claim class-specific forecast precision or trading edge.
 
-## 4. Audit protocol and falsifiers
+The 12 unavailable cells may be condensed later through a separate product review if they impair readability, but that does not license creation of missing predictions. Prospective research cannot retroactively turn today's preliminary display into a validated signal.
 
-1. Source continuity / selection: original Alpha #120/#70 and #77/#85 plus Archive #1340 prove real prospectively frozen eligible denominator. Unproven -> zero scientific band claim.
-2. Identity: Alpha #126/#194 prove exact chain, token, pool and circulating MCAP, not FDV substitution.
-3. Executability: Alpha #98 proves buy and full-position sell quote at each size; invalid/unknown cannot count as profit.
-4. Regime: source-pinned official CN regime must be known before every selected token decision; never leak Monday updates backwards.
-5. Same-clock controls: original 8-arm Strategy Arena compares fixed $200k–2M, fixed <$1M and candidate dynamic bands against original unchanged B0 plus abstain/first-eligible controls, same sample/decision time; age-selected 24h survivors cannot be compared naively to T0.
-6. Independent tests: walk-forward blocked time/chain/cluster holdouts, negative controls for failed exits/boosted volume, cofounder clusters and broad shocks; reject adaptive gain disappearing on holdout. Learning Firewall V2 and independent review required but its minimal case counts alone are not statistical proof.
-7. UX and release: exact-head source regressions for 3x4 matrix, no invented forward class signal, wrong identity, stale source, excluded MEMES, absent cap classification / no private token data, 390/430 screenshots, keyboard, translation, native main and Pages readback.
-8. Product audit: If 12 pending cells feel excessive, retain the always-visible three market-wide horizon tiles and four current capital actions, and defer the empty columns until original source-issued forward cells exist. Do not add a dropdown as the default solution.
+## 5. Product conclusion
 
-Original repos and controls: public Archive #1516 official Kompas; private Alpha Lab #228 research and site, upstream #120/#70, #77/#85, #98/#194/#126; one-way CN -> Alpha context only. S1 remains sole supervisor; no new scanner, scheduler, identity, paid API, paper-wallet trade, public Alpha export, market-state engine, or unattended auto-merge.
+A compact three-horizon overview plus four capital-group current statuses is supported by the existing public source contract. Twelve independent per-class forward signals **are not issued**. Release status remains **HOLD** until native exact-head CI, independent review, public/private boundary audit and original source/custody rules pass.
 
-## 5. Owner/product conclusion
-
-User intent is served by a visible combined Swing Kompas. The current official published data supports **one general three-horizon direction + four tier NOW statuses**, not 12 predictive cross-cells. Fix broad cap labels for comparability, separately test $200k–$2M and prospective BEAR/MIXED/BULL/MANIA research windows. Do not change canonical classifications or trade actions without original source-issued sector-specific outputs and independent out-of-sample evidence.
-
-Scientific decision: RESEARCH_SHADOW_ACCEPTED, OFFICIAL_SEGMENT_FORECASTS_NOT_ISSUED, PRIVATE_ALPHA_DATA_DO_NOT_EXPORT, PUBLIC_SITE_RELEASE_GATED.
+`PUBLIC_SITE_RELEASE_GATED` · `OFFICIAL_SEGMENT_FORECASTS_NOT_ISSUED` · `NO_PRIVATE_RESEARCH_EXPORT`
