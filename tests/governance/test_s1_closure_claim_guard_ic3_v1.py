@@ -46,6 +46,21 @@ class TestIC3ReceiptFields(unittest.TestCase):
         case["ci"]["executed_test_ids"] = ["a", "a"]
         self.assertIn("EXECUTED_TEST_IDS_NOT_SUPPLIED", inspect_claim(case)["reasons"])
 
+    def test_non_string_source_labels_are_rejected_not_crashes(self):
+        for label in ([], {}, ["AUTOMATIONS_RUN_DETAILS"], {"x": True}, 42):
+            for field, reason in (("task_provenance_source", "TASK_PROVENANCE_SOURCE_NOT_DECLARED"),
+                                  ("merge_state_check", "MERGE_STATE_SOURCE_NOT_BOUND")):
+                with self.subTest(label=repr(label), field=field):
+                    case = complete_shape()
+                    if field == "task_provenance_source":
+                        case[field] = label
+                    else:
+                        case[field]["source"] = label
+                    out = inspect_claim(case)
+                    self.assertIn(reason, out["reasons"])
+                    self.assertFalse(out["candidate_for_native_check"])
+                    self.assertFalse(out["s1_own_merged_verified"])
+
     def test_self_attested_provenance_never_verifies(self):
         out = inspect_claim(complete_shape())
         self.assertEqual(out["classification"], "NATIVE_PROVENANCE_READBACK_REQUIRED")
