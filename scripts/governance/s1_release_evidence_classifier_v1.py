@@ -285,7 +285,8 @@ _RP1_DOC_SUFFIXES = (".md", ".txt", ".rst")
 _RP1_JS_TEST_SUFFIXES = (".test.mjs", ".test.js", ".test.cjs", ".test.ts", ".spec.mjs", ".spec.js", ".spec.ts")
 _RP1_RESTRICTED_SEGMENTS = {"secrets", "secret", "credentials", "credential", "wallet", "wallets",
                             "orders", "payments", "payment", "vault", "private"}
-_RP1_RESTRICTED_PREFIXES = ("research/api_agent/",)
+_RP1_RESTRICTED_PREFIXES = ("research/api_agent/", "scripts/api_agent/", "tests/api_agent/",
+                            "scripts/billing/", "scripts/payment/", "scripts/paid/")
 _RP1_GOVERNANCE_PREFIXES = (".github/", ".agents/", "00_ARCHIVE_CONTROL/", "00_FMOS/",
                             "01_CORE_FRAMEWORK/governance/", "01_CORE_FRAMEWORK/architecture/",
                             "scripts/governance/", "tests/governance/", "scripts/security/",
@@ -324,13 +325,25 @@ def _scope_covers(job, path):
         return False
     if path.endswith(".sh"):
         return False  # a pytest/node dir scope does not execute shell tests; require an exact executed ID
+    # Unittest -s with a narrow -p does NOT run all tests under -s. A complete
+    # filename-selector census from the exact executed CI step is required for
+    # directory scopes. A caller-supplied directory alone cannot prove execution.
+    patterns = job.get("executed_scope_discovery_patterns")
+    patterns_complete = job.get("executed_scope_patterns_complete") is True
     for s in scopes:
         if (type(s) is not str or not s or s in (".", "./") or s.startswith("/")
                 or ".." in s.split("/") or s != s.strip()):
             continue
         s = s.rstrip("/")
-        if path == s or path.startswith(s + "/"):
-            return True
+        if path == s:
+            return True  # exact test FILE was named by the executed step
+        if path.startswith(s + "/") and patterns_complete and isinstance(patterns, list) and patterns:
+            import fnmatch
+            name = path.rsplit("/", 1)[-1]
+            if all(type(p) is str and bool(p) and "/" not in p and "\\" not in p
+                   and ".." not in p for p in patterns):
+                if any(fnmatch.fnmatchcase(name, p) for p in patterns):
+                    return True
     return False
 
 
@@ -692,7 +705,7 @@ def _rp1_gate(r, current):
         pc = r.get("privacy_check")
         if (not isinstance(pc, dict) or pc.get("head") != current["head"]
                 or pc.get("result") != "NO_RESTRICTED_CONTENT"
-                or pc.get("method") not in ("S1_DIFF_SCAN_V1", "EXACT_HEAD_INDEPENDENT_REVIEW")):
+                or pc.get("method") != "S1_DIFF_SCAN_V1"):
             return ("SOURCE_OR_SCIENCE_GATE", "RP1_PRIVACY_CHECK_MISSING",
                     "Exact-HEAD public/private boundary check of the full diff", "EXISTING_PR_OWNER"), cls
     if r.get("review_requires_current_main") is False:
