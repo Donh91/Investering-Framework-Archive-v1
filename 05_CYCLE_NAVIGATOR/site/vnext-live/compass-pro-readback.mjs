@@ -142,7 +142,7 @@ export function compassProLabels(lang='da'){
   stage:'RISIKOTRIN · KATEGORI',quality:'EVIDENSKVALITET',eta:'PULLBACK ETA',
   depth:'FORVENTET FALDDYBDE',window:'KILDEVINDUE',review:'NÆSTE VURDERING',
   guidance:'DIN HANDLING NU · VEJLEDENDE PLAN',guidanceCaveat:'Forslag til risikoberedskab. Ingen ny automatisk BUY/SELL-tilladelse eller personlig porteføljeordre.',
-  priceTitle:'PRICE RANGE NAVIGATOR',priceWeek:'FROSSET UGEINTERVAL',
+  priceTitle:'PRISINTERVALLER',priceWeek:'FROSSET UGEINTERVAL',
   btc:'BTC',eth:'ETH',rangeCaveat:'Ugeintervallet gælder den angivne CN-uge, ikke en særskilt kommende 1–3-dages prognose. Ingen langsigtede priser konstrueres.',
   longTitle:'FREMTIDIGE INTERVALLER · BTC / ETH',horizon:'Tid',
   rangeUnavailable:'Ikke udstedt',

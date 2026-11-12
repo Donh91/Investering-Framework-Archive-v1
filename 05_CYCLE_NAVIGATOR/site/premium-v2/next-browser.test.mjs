@@ -558,6 +558,17 @@ try{
       balance:el.querySelector('.cn-evidence small')?.textContent,
       summary:el.querySelector('p')?.textContent
      })),
+     swing:(()=>{
+      const el=document.getElementById('swing-rotation-overview');
+      return {
+       exists:!!el,visible:!!el&&!el.hidden&&getComputedStyle(el).display!=='none',
+       outsideDisclosure:!!el&&!el.closest('.cn-pro-more'),
+       sourceState:el?.dataset.sourceState,
+       groupRows:el?.querySelectorAll('.swing-grid-row').length||0,
+       pendingCells:el?.querySelectorAll('.swing-unknown').length||0,
+       contract:el?.dataset.contract
+      };
+     })(),
      riskCollapsed:!document.querySelector('.cn-risk-more')?.open,
      readerCollapsed:!document.querySelector('.cn-reader-expand')?.open,
      positionsCollapsed:!document.querySelector('.cn-position-guide')?.open,
@@ -574,8 +585,10 @@ try{
      firstFold:{
       viewport:innerHeight,
       actionTop:Math.round(document.getElementById('premium-now-action')?.getBoundingClientRect().top??9999),
-      h12Bottom:Math.round(document.getElementById('premium-now-direction')?.closest('.product-cell')?.getBoundingClientRect().bottom??9999),
-      h13Bottom:Math.round(document.getElementById('cn-horizon-13')?.closest('.product-cell')?.getBoundingClientRect().bottom??9999),
+      // Owner-approved v2.4S (OWNER_DECISION_SITE_AND_SPLIT_v1, #173 6771519709): the duplicate "Nu" and
+      // "1–3 dage" first-fold cards are removed; the same official facts are the main-horizon table rows.
+      h12Bottom:Math.round(document.querySelector('[data-cn-overview-extra="h12"]')?.getBoundingClientRect().bottom||9999),
+      h13Bottom:Math.round(document.querySelector('[data-cn-overview="d13"]')?.getBoundingClientRect().bottom||9999),
       sourceVisible:getComputedStyle(document.getElementById('pro-source-status')).display!=='none',
       navSingleRow:Math.round(document.querySelector('.premium-entry-navigation')?.getBoundingClientRect().height??9999)<=50,
       navFits:document.querySelector('.premium-entry-navigation').scrollWidth<=document.querySelector('.premium-entry-navigation').clientWidth+2,
@@ -613,6 +626,12 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   assert.ok(report.swing.exists&&report.swing.visible&&report.swing.outsideDisclosure&&
+     report.swing.contract==='CN_SWING_ROTATION_READBACK_V1'&&
+     report.swing.groupRows===4&&report.swing.pendingCells===12&&
+     ['OFFICIAL_NOW_CONTEXT_ONLY','UNAVAILABLE'].includes(report.swing.sourceState),
+     'ROOT_SWING_CANONICAL_NOT_RENDERED:'+JSON.stringify(report.swing));
+
    // Separate the genuine live-source positive path from the genuine
    // degraded-source negative path. NEVER mark an old/unqualified Official as
    // fresh just so the smoke test passes, and never delete the positive case.

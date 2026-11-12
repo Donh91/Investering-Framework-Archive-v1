@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/governance/s1_release_evidence_classifier_v1.py",
+    "tests/governance/test_s1_release_evidence_classifier_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-3a7332da9843893c",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(s1): admit source-bound exact-head Claude review only when native approval not required * test(s1): adversarial controls for Claude review origin, risk, CI and native-rule boundary * fix(s1): fail closed on unhashable Claude review risk input * test(s1): reject malformed risk before review admission * fix(s1 #2064): fail closed on Claude risk, source-binding and scoped owner approval * test(s1 #2064): adversarial Claude review source, risk and scoped-owner guards * fix(s1): fail closed on Grok owner-proof and risk-downclass falsifiers * fix(s1): classify all S1 release-control dependenc",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/governance/s1_release_evidence_classifier_v1.py": "05d4a1b4fb72038fc1f94efa02666d5d443c98d7",
+    "tests/governance/test_s1_release_evidence_classifier_v1.py": "c978594ec23fd5c2edac990193cb1b6716a23db5"
+  },
+  "source_commit_sha": "3a7332da9843893cf8e051c010fbde4630a9890f",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-11T15:17:54-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "feat(s1 #1156): source-bound Claude review evidence with native-approval firewall (#2064)"
+}
