@@ -58,6 +58,14 @@ Immutable evidence:
 
 For any future prompt, execute the same original-owner path, first check for an existing in-progress run, freeze the *then-current* Archive SHA, confirm append-only source/Vault principal separation, dispatch at most once, verify immutable remote receipt and restore, then compare the present Archive main to the frozen source. Never silently infer latest-main coverage from a green historical run.
 
+## Run #88: blocked by a required-path validation failure (2026-11-12)
+
+The existing workflow was manually dispatched once after verifying that run #87 was the latest and no equivalent backup was running. The explicit source was Archive `161063feabc7b44f1248d6ed00f39d1f83dbcd02`, 41 commits ahead of #87's frozen source.
+
+- [Vault Actions #88](https://github.com/Donh91/Investering-Framework-Vault/actions/runs/43293588094) finished **FAILURE**. The [snapshot job](https://github.com/Donh91/Investering-Framework-Vault/actions/runs/43293588094/job/131445884321) failed during “Freeze source and create unique append-only Vault branch” with `Required recovery paths missing: CN-MN-001`. Receipt publication was skipped. This run established no new snapshot or restore evidence.
+- At the frozen source, `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md` describes `CN-MN-001` as an editorial identifier. The identifier is absent as a repository-root file path. Review required-path extraction with the source and Vault owners, keeping validation of genuine file references intact.
+- Retry only after a reviewed fix demonstrates that the identifier is classified correctly and real missing recovery paths still stop the run. Freeze the then-current source and check for an active or newer verified backup before any retry. Run #87 remains the last verified frozen-source snapshot.
+
 ## Mandatory compact receipt to return to owner
 
 ```yaml
