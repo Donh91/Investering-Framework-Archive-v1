@@ -558,6 +558,17 @@ try{
       balance:el.querySelector('.cn-evidence small')?.textContent,
       summary:el.querySelector('p')?.textContent
      })),
+     swing:(()=>{
+      const el=document.getElementById('swing-rotation-overview');
+      return {
+       exists:!!el,visible:!!el&&!el.hidden&&getComputedStyle(el).display!=='none',
+       outsideDisclosure:!!el&&!el.closest('.cn-pro-more'),
+       sourceState:el?.dataset.sourceState,
+       groupRows:el?.querySelectorAll('.swing-grid-row').length||0,
+       pendingCells:el?.querySelectorAll('.swing-unknown').length||0,
+       contract:el?.dataset.contract
+      };
+     })(),
      riskCollapsed:!document.querySelector('.cn-risk-more')?.open,
      readerCollapsed:!document.querySelector('.cn-reader-expand')?.open,
      positionsCollapsed:!document.querySelector('.cn-position-guide')?.open,
@@ -613,6 +624,12 @@ try{
    assert.equal(report.en,'Compass PRO','ROOT_PRO_EN');
    assert.equal(report.da,'Kompas PRO','ROOT_PRO_DA');
    assert.equal(report.micro,'true','ROOT_MICRO_LENS');
+   assert.ok(report.swing.exists&&report.swing.visible&&report.swing.outsideDisclosure&&
+     report.swing.contract==='CN_SWING_ROTATION_READBACK_V1'&&
+     report.swing.groupRows===4&&report.swing.pendingCells===12&&
+     ['OFFICIAL_NOW_CONTEXT_ONLY','UNAVAILABLE'].includes(report.swing.sourceState),
+     'ROOT_SWING_CANONICAL_NOT_RENDERED:'+JSON.stringify(report.swing));
+
    // Separate the genuine live-source positive path from the genuine
    // degraded-source negative path. NEVER mark an old/unqualified Official as
    // fresh just so the smoke test passes, and never delete the positive case.
