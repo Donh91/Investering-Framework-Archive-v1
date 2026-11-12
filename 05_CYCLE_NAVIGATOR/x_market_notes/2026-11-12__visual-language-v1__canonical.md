@@ -3,7 +3,7 @@
 **Dato:** 2026-11-12  
 **Status:** CANONICAL  
 **Område:** Valgfrit X-cover og evidensgraf  
-**Primary folder:** \`05_CYCLE_NAVIGATOR/x_market_notes/\`
+**Primary folder:** `05_CYCLE_NAVIGATOR/x_market_notes/`
 
 ## Udtryk
 Som en kort markedsnote fra en finansskribent. Ikke krypto-neon, dashboardmockup eller investeringsreklame.
@@ -13,7 +13,7 @@ Som en kort markedsnote fra en finansskribent. Ikke krypto-neon, dashboardmockup
 - Én graf ved behov. Med kilde, enhed, periode og synlig usikkerhed eller geografisk-/venue-begrænsning.
 - Ingen tomme KPI-kort, scorebrikker eller illustrerede grafer med opfundne data.
 - Test læsbarhed på mobil før graf frigives; tekst alene er fuldt acceptabelt.
-- Fast afsender: \`CYCLE NAVIGATOR / MARKET NOTES\`; eget serienummer \`001\`.
+- Fast afsender: `CYCLE NAVIGATOR / MARKET NOTES`; eget serienummer `001`.
 
 ## Tekst og visual skal sige det samme
 Titel forankres i det faktisk målte. Et billede uden dokumenteret datakilde må ikke fremstilles som research. Aldrig bruge forecastgrafen fra CN-sitet som dekorativt screenshot; offentliggørelse af sitet er en særskilt ejerbeslutning.
