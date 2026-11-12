@@ -920,3 +920,36 @@ body.premium-next.cn-tabbed-ui #compass-pro #swing-rotation-overview{grid-area:s
 @media (min-width:760px){
  body.premium-next.cn-tabbed-ui #compass-pro .product-first{grid-template-areas:"action action risk" "strip strip strip" "gate gate gate" "rot rot btc" "swing swing swing" "explain explain explain"!important}
 }
+/* CN SITE v2.7 · first-visit motion for Prognose (P1 "Tidssweep") and Cyklus (C1 "Stien").
+ * Same language as Kompas: ease cubic-bezier(.23,1,.32,1), .22/.34/.38/.64 s, transform/opacity only,
+ * once per visit per tab (play-once.mjs), static under reduced motion. Reveal only: the end state is today's.
+ * Numbers are never partly covered: the price axis sits above the curtain and fades in whole. */
+@media (prefers-reduced-motion:no-preference){
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .instrument-header{animation:cn27-rise .34s cubic-bezier(.23,1,.32,1) both}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .legend{animation:cn27-rise .34s cubic-bezier(.23,1,.32,1) .06s both}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .plot-shell::after{content:"";position:absolute;inset:-2px;z-index:1;background:#fff;transform-origin:100% 50%;pointer-events:none;animation:cn27-curtain .64s cubic-bezier(.23,1,.32,1) .12s both}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .chart-price-axis{z-index:2;animation:cn27-fade .3s cubic-bezier(.23,1,.32,1) .5s both}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .day-axis>*{animation:cn27-fade .22s cubic-bezier(.23,1,.32,1) both}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .day-axis>*:nth-child(1){animation-delay:.16s}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .day-axis>*:nth-child(2){animation-delay:.24s}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .day-axis>*:nth-child(3){animation-delay:.32s}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .day-axis>*:nth-child(4){animation-delay:.40s}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .day-axis>*:nth-child(5){animation-delay:.48s}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .day-axis>*:nth-child(6){animation-delay:.56s}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .day-axis>*:nth-child(7){animation-delay:.64s}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter :is(#endpoint,#endpoint-halo){transform-box:fill-box;transform-origin:center;animation:cn27-settle .22s cubic-bezier(.23,1,.32,1) .62s both}
+ body.premium-next.cn-tabbed-ui #variant-panel.cn-prognose-enter .instrument-foot{animation:cn27-fade .34s cubic-bezier(.23,1,.32,1) .5s both}
+ body.premium-next.cn-tabbed-ui #official-path-view.cn-cyklus-enter .path-page-head{animation:cn27-rise .34s cubic-bezier(.23,1,.32,1) both}
+ body.premium-next.cn-tabbed-ui #official-path-view.cn-cyklus-enter .path-orientation{animation:cn27-rise .38s cubic-bezier(.23,1,.32,1) .08s both}
+ body.premium-next.cn-tabbed-ui #official-path-view.cn-cyklus-enter :is(.cn-path-rotation-link,.path-rotation-section,.path-source-disclosure){animation:cn27-fade .34s cubic-bezier(.23,1,.32,1) .56s both}
+}
+@keyframes cn27-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes cn27-fade{from{opacity:0}to{opacity:1}}
+@keyframes cn27-curtain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@keyframes cn27-settle{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+/* v2.7 static polish S1–S5 (presentation only). */
+body.premium-next.cn-tabbed-ui #variant-panel #time-label{white-space:nowrap}
+body.premium-next.cn-tabbed-ui #variant-panel :is(.cn-range-evidence,.cn-daily-research-notes){border:1px solid #dfe7ef!important;border-radius:14px!important;background:#fff!important}
+body.premium-next.cn-tabbed-ui #official-path-view .path-page-head .intro{font-size:15px!important;line-height:1.55!important}
+body.premium-next.cn-tabbed-ui #official-path-view .path-evidence-label{white-space:nowrap}
+body.premium-next.cn-tabbed-ui #official-path-view :is(h1,h2){text-wrap:balance}

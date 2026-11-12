@@ -1,3 +1,4 @@
+import {playOnce} from './play-once.mjs';
 /**
  * SITE #1578. Only the UI: four accessible public panels, no new market owner.
  * Fail open to ordinary anchor navigation when the source DOM is incomplete.
@@ -129,6 +130,9 @@ if (nav && nodes.every(x => x.link && x.panel)) {
       else x.link.removeAttribute('aria-current');
     }
     document.body.dataset.cnSiteView=selected.key;
+    // v2.7 first-visit motion (once per visit per tab; reveal only, end state unchanged).
+    if (selected.key === 'graph') playOnce('cnPrognoseEntered', selected.panel, 'cn-prognose-enter');
+    if (selected.key === 'path') playOnce('cnCyklusEntered', selected.panel, 'cn-cyklus-enter');
     revealSelected(selected.link);
     if (changeUrl) history.pushState({cnSiteView:selected.key},'', '#'+selected.id);
   };
