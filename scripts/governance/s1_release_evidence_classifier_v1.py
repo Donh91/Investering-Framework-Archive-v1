@@ -200,6 +200,7 @@ def _changed_test_execution_issue(record, current):
         status = entry.get("status")
         exists = entry.get("head_exists")
         if (type(path) is not str or path not in tests or path in statuses
+                or type(status) is not str
                 or status not in {"added", "modified", "renamed", "copied", "removed", "deleted"}
                 or type(exists) is not bool):
             return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
