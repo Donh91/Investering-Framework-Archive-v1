@@ -7,8 +7,8 @@
     "portfolio_execution": false
   },
   "contract": "OPERATIONAL_MEMORY_INDEX_v1",
-  "episode_count": 9104,
-  "generated_at_utc": "2026-11-12T11:46:06.932780Z",
+  "episode_count": 9109,
+  "generated_at_utc": "2026-11-12T13:07:41.357083Z",
   "rows": [
     {
       "changed_paths": [
@@ -259070,10 +259070,10 @@
         "research/architecture_health/history/43115373861-attempt-1.json"
       ],
       "compatibility": {
-        "changed": 2,
+        "changed": 7,
         "checked": 9,
         "removed": 0,
-        "same": 7,
+        "same": 2,
         "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
@@ -259238,11 +259238,11 @@
         "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
       ],
       "compatibility": {
-        "changed": 3,
+        "changed": 7,
         "checked": 7,
         "removed": 0,
-        "same": 4,
-        "status": "PARTIAL"
+        "same": 0,
+        "status": "DRIFTED"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-6a591698e9c80f75",
@@ -259250,7 +259250,7 @@
       "failure_signature": null,
       "newer_related_episode": null,
       "operation_type": "UPDATE",
-      "retrieval_tier": "WARM",
+      "retrieval_tier": "REVALIDATE",
       "source_commit_sha": "6a591698e9c80f7529f1be574145171a24d2073c",
       "source_timestamp": "2026-11-11T23:19:08Z",
       "task_class": "GENERAL_FRAMEWORK",
@@ -260333,11 +260333,11 @@
         "research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 4,
         "removed": 0,
-        "same": 4,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-d0627d6fbe2537e0",
@@ -260384,11 +260384,11 @@
         "09_SOURCE_QA/native_market_recovery/decisions/2026/11/12/035722_6cad6232174f.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 3,
         "removed": 0,
-        "same": 3,
-        "status": "EXACT"
+        "same": 1,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "09_SOURCE_QA",
       "episode_id": "OE-32953155aa06df33",
@@ -261311,11 +261311,11 @@
         "research/framework_memory/m6_warning_events/LATEST.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 3,
         "checked": 16,
         "removed": 0,
-        "same": 16,
-        "status": "EXACT"
+        "same": 13,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "research",
       "episode_id": "OE-ec1fc348808316d3",
@@ -261358,11 +261358,11 @@
         "03_DAILY_CAPTURE_LOGS/hourly/superseded/f426f0a47d0853bd5466bb994101da91d1566d1e3138e43aa4a9dd2964f9c561.json"
       ],
       "compatibility": {
-        "changed": 0,
+        "changed": 2,
         "checked": 25,
         "removed": 0,
-        "same": 25,
-        "status": "EXACT"
+        "same": 23,
+        "status": "PARTIAL"
       },
       "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
       "episode_id": "OE-4cd06a711a3607e2",
@@ -261458,7 +261458,172 @@
       "source_timestamp": "2026-11-12T11:15:56Z",
       "task_class": "GENERAL_FRAMEWORK",
       "task_summary": "ops: adaptive cadence observation 43207545705"
+    },
+    {
+      "changed_paths": [
+        "09_SOURCE_QA/native_market_recovery/LATEST.json",
+        "09_SOURCE_QA/native_market_recovery/STATE.json",
+        "09_SOURCE_QA/native_market_recovery/decisions/2026/11/12/130008_a2f091730548.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 3,
+        "removed": 0,
+        "same": 3,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "09_SOURCE_QA",
+      "episode_id": "OE-ef8c3f0655740ba2",
+      "episode_path": "episodes/2026/11/OE-ef8c3f0655740ba2.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "ef8c3f0655740ba2b83b34c8957e8bd7ef47e07f",
+      "source_timestamp": "2026-11-12T13:00:10Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: native market recovery 43222991022"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-12.csv",
+        "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/11/12/130055_HOURLY_SEQUENCE_20261112T130055Z_07ce57c2037e.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/0b2201d1abce7183a7f298179a5af0d6e561dfa96b5163394b537f8b83c358f6.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/0d516eed60086881030bd9de18311998f1e73831a02f28fb52cbf7d82b65ed53.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/2228ae71e15efe0acdff8d71ff6a46a13f6a86d1992ae983dce092fe4597cff6.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/284db87c341e5dbfdbd69b334238567f0bc12ea2fe0d6155c28a00e47248304c.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/2b3b940ea88bd218030f31a423fa0366686e50fd5505f574df72433d1e932c05.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/33ff899ec6cbf29efa7803404dc3d99aac4751f1f68d3acbd10f8c4c6b1204be.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/3ff7c1b1cac4af800f59adafa79f4fc376cd3d2bde147e6c24478b9fd451146a.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/462796c5464bdbbf6f6d80357b21de15b6a28930f25cf788bf27dd67107e9ccc.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/5009d272bb1b8730dab658c2240b7c1f2046bc106a90f516c498f2843bb0cf5d.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/539c761c0cccbacfea73eb8fdab4b8dc6fbb6962c5ecbb00433cce5ce116cecc.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/7a6d79cd6f5f631a3f6baa63a599c52d2a2c009a49166d54472b9bbb5c95bc61.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/7f2acdebc14bda0942f62ae2b8255fa55c4d7babcc2c202527ae6a65c6d61b9b.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/86b66e6d912c780e1e987815baac3da3b659bac2adffa1b460b89c3440e0ffd6.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/8c04c3f803e455cd21b9e41d1ea9ff8378851a8a4184a7d691b498c029276a22.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/a3a278dda09e364f7997660f55f7cef87ef1f1d0845f7c509344dc355e9cbcff.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/b21bd76e366cbd3bdf8c3935e12df1e41206923b89d32768a8f7ded07c68cc1b.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/c29c951c886114a92167ec01eb65996a0f47a093c94d5eef9a343a29ab49d2fc.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/c62ef98c306012e514710f158687e4ed96f4e8f0b0b85c97065114ffcd122609.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/cf3b6bc2ed4c13cad723e63b5beeea7266acd4da14d9f3077b0fe4beff45173f.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/d3de2bae10633d0b9dba7d4fa6f1d79ecca4945fba0d8757ead264e82e176667.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/da61ac6e1b1252b808cf999195cd6f12a420d2abd1b001b38a2ba445d326428b.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/superseded/deff12c2b1e68cad226b5c087002b8d68a7cfcccf09844736010fc262665e583.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 25,
+        "removed": 0,
+        "same": 25,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "03_DAILY_CAPTURE_LOGS",
+      "episode_id": "OE-acce7bd50f181493",
+      "episode_path": "episodes/2026/11/OE-acce7bd50f181493.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "acce7bd50f1814934ce379da0b232364f4f86692",
+      "source_timestamp": "2026-11-12T13:01:00Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "data: materialize hourly sequence 43223114334"
+    },
+    {
+      "changed_paths": [
+        "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-43223019126-attempt-1.md",
+        "research/architecture_health/LATEST_ACTIONS_BUDGET.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.md",
+        "research/architecture_health/LATEST_HOURLY_SOURCE_7D.json",
+        "research/architecture_health/LATEST_HOURLY_SOURCE_SLA.json",
+        "research/architecture_health/history/43223019126-attempt-1.json",
+        "research/architecture_health/hourly_source_sla/daily/2026-11-11.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 10,
+        "removed": 0,
+        "same": 10,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-21fa30c43a326f88",
+      "episode_path": "episodes/2026/11/OE-21fa30c43a326f88.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "RESEARCH",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "21fa30c43a326f88666572a7951310091913292e",
+      "source_timestamp": "2026-11-12T13:04:51Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "health: audit automation production state 43223019126"
+    },
+    {
+      "changed_paths": [
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/11/05/CMP-20261105-4ca61feba844_168h.json",
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/11/05/CMP-20261105-d639edd5485e_168h.json",
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/11/05/CMP-20261105-ee693f8b0d3e_168h.json",
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/11/09/CMP-20261109-0cd621de59c8_72h.json",
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/11/09/CMP-20261109-25d5e0ba04d3_72h.json",
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/11/09/CMP-20261109-3cf86c13329f_72h.json",
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/11/09/CMP-20261109-ce21d5d6aeea_72h.json",
+        "04_MARKET_LEARNING/handlekompas/official/outcomes/2026/11/09/CMP-20261109-fe01d1375658_72h.json",
+        "04_MARKET_LEARNING/handlekompas/research/interpretation_learning_v1/reports/2026/11/2026-11-12_KIL_REPORT.json",
+        "04_MARKET_LEARNING/handlekompas/shadow_v2/outcomes/2026/11/12/SCV2-20261112-013615-958c7faa26df_12h.json"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 10,
+        "removed": 0,
+        "same": 10,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "04_MARKET_LEARNING",
+      "episode_id": "OE-db3a5106fc196564",
+      "episode_path": "episodes/2026/11/OE-db3a5106fc196564.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "db3a5106fc1965640777ba237cafe4bfe8f4dfe9",
+      "source_timestamp": "2026-11-12T13:05:51Z",
+      "task_class": "MARKET_STATE",
+      "task_summary": "learning: mature Compass outcomes 43223537221"
+    },
+    {
+      "changed_paths": [
+        "03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv",
+        "LATEST_HANDOFF.json",
+        "LATEST_HANDOFF.md",
+        "LATEST_OPERATIONS_DASHBOARD.json",
+        "LATEST_OPERATIONS_DASHBOARD.md",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json",
+        "research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md"
+      ],
+      "compatibility": {
+        "changed": 0,
+        "checked": 7,
+        "removed": 0,
+        "same": 7,
+        "status": "EXACT"
+      },
+      "dominant_path_prefix": "research",
+      "episode_id": "OE-012ea1eb1d6577ed",
+      "episode_path": "episodes/2026/11/OE-012ea1eb1d6577ed.json",
+      "failure_signature": null,
+      "newer_related_episode": null,
+      "operation_type": "UPDATE",
+      "retrieval_tier": "WARM",
+      "source_commit_sha": "012ea1eb1d6577ed6f16fdb3c56b92330e87dfb4",
+      "source_timestamp": "2026-11-12T13:06:35Z",
+      "task_class": "GENERAL_FRAMEWORK",
+      "task_summary": "ops: refresh operations dashboard 43223868554"
     }
   ],
-  "source_head_sha": "0a93902fff97d1653b28f5a2757880d19c913a72"
+  "source_head_sha": "012ea1eb1d6577ed6f16fdb3c56b92330e87dfb4"
 }
