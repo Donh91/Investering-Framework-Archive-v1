@@ -399,9 +399,9 @@ function plot(){
    (frozenDay?' · '+t('oprindeligt forventet luk','original expected close')+
      ' '+num(frozenDay.expected_close,model.forecast_declared_quote_unit):''));
  }
- set('chart-title',t('Mandagens intraday-intervaller mod faktisk kurs','Monday intraday forecast ranges versus observed price'));
- set('chart-description',t('Mandagens tre originale prognoseintervaller vises for dag 1–2, 3–4 og 5–7. Den grønne observerede kurs brydes ved manglende timer. Blå stiplet forventet dagskurs kræver syv udstedte punkter.',
- 'Verified hourly prices only; missing hours break the path. Blue daily forecasts require original published points.'));
+ set('chart-title',t('Mandagens syv frosne dagsintervaller mod faktisk kurs','Monday’s seven frozen daily ranges versus observed price'));
+ set('chart-description',t('Mandagens syv frosne høj/lav-intervaller, ét pr. UTC-døgn. Den grønne observerede kurs brydes ved manglende timer. Blå stiplet forventet dagskurs kræver syv udstedte punkter.',
+ 'Monday’s seven frozen high/low ranges, one per UTC day. Verified hourly prices only; missing hours break the path. Blue daily forecasts require seven original published points.'));
  document.querySelectorAll('[data-asset]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.asset===asset)));
  // v2 presentation only: hand the already-validated, already-drawn values to the
  // read-only inspector. No new values, no interpolation, no extra fetch.
@@ -548,7 +548,8 @@ async function refresh({background=false}={}){
   model=null;sliderHour=0;plot();
  }
  try{
-  const [snapshot,lineage]=await Promise.all([getJson(sourceUrl),getJson(lineageUrl)]);
+  // v2.5.1: lineage is optional in the adapter; a missing/invalid lineage file must not blank the chart.
+  const [snapshot,lineage]=await Promise.all([getJson(sourceUrl),getJson(lineageUrl).catch(()=>null)]);
   if(request!==requestGeneration||selected!==asset)return;
   const next=readOfficialGraphB(snapshot,selected,{now_utc:new Date().toISOString(),publication_lineage:lineage});
   if(next.asset!==asset)return;
