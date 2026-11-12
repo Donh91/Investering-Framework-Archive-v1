@@ -10,6 +10,7 @@ import unittest
 from scripts.governance.s1_release_evidence_classifier_v1 import (
     classify_pr_disposition, derive_release_class, rp1_merge_state, rp1_rule_census)
 from scripts.governance.s1_closure_claim_guard_v1 import inspect_claim
+from scripts.governance.s1_diff_scan_v1 import scan_pr
 from tests.governance.test_s1_closure_claim_guard_v1 import complete_shape
 
 H, M, P, M0 = "a" * 40, "b" * 40, "c" * 40, "e" * 40
@@ -21,7 +22,7 @@ def ready(files=None):
     statuses = [{"path": f["path"], "status": f["status"], "head_exists": f["status"] not in ("removed", "deleted"),
                  **({"previous_filename": f["previous_filename"]} if f.get("previous_filename") else {})} for f in files]
     cur = {"head": H, "main": M, "policy": P, "source": H}
-    return {
+    r = {
         "release_process": "S1_RP_V1", "release_lane": "UNATTENDED_S1", "draft": False,
         "current": dict(cur), "evaluated": dict(cur), "risk": "LOW",
         "expected_changed_paths": paths, "changed_file_statuses": statuses,
@@ -42,10 +43,28 @@ def ready(files=None):
         "required_pr_job_names": ["Data Architecture Gate", "Storage Health Gate"],
         "pr_jobs": [{"name": n, "head": H, "event": "pull_request", "status": "completed", "conclusion": "success",
                      "executed_test_steps": 2} for n in ("Data Architecture Gate", "Storage Health Gate")],
-        "privacy_check": {"head": H, "result": "NO_RESTRICTED_CONTENT", "method": "S1_DIFF_SCAN_V1"},
         "unresolved_p0_p1": False, "source_science_gate": "NOT_APPLICABLE_BY_PATH",
-        "independent_review_required": False,
+        "independent_review_required": True,
+        "review": {"state": "APPROVED", "independent": True,
+                   "head": H, "policy": P, "source": H, "main": M},
     }
+    inp = {
+        "repo": "Donh91/Investering-Framework-Archive-v1",
+        "head": H, "pr_head_sha": H, "changed_files_count_head_sha": H,
+        "changed_files_count": len(files), "pages_complete": True,
+        "title": "Public documentation", "body": "Public original PR, synthetic fixture",
+        "files": [{
+            "path": f["path"], "status": f["status"], "head_sha": H,
+            "previous_filename": f.get("previous_filename"),
+            "patch_complete": True, "patch": "+Public synthetic test fixture",
+            "binary": False, "is_symlink": False,
+            "content": None if f["status"] in ("removed", "deleted") else "Public content",
+            "content_head_sha": H,
+        } for f in files],
+    }
+    r["privacy_scan_input"] = inp
+    r["privacy_check"] = scan_pr(inp)
+    return r
 
 
 def code_ready():
@@ -238,6 +257,31 @@ class Negative(unittest.TestCase):
             with self.subTest(pc=pc):
                 r = ready(); r["privacy_check"] = pc
                 self.assertAction(r, "HOLD", "RP1_PRIVACY_CHECK_MISSING")
+
+    def test_p1_forged_privacy_result_without_real_scan_is_not_ready(self):
+        r = ready()
+        del r["privacy_scan_input"]
+        self.assertAction(r, "HOLD", "RP1_PRIVACY_CHECK_MISSING")
+        r = ready()
+        r["privacy_scan_input"]["files"][0]["content"] = "PRIVATE_ALPHA_DESIGN"
+        self.assertAction(r, "HOLD", "RP1_PRIVACY_CHECK_MISSING")
+        r = ready()
+        r["privacy_check"] = {"head": H, "result": "NO_RESTRICTED_CONTENT",
+                              "method": "S1_DIFF_SCAN_V1"}
+        self.assertAction(r, "HOLD", "RP1_PRIVACY_CHECK_MISSING")
+
+    def test_p1_scan_without_separate_independent_review_is_not_ready(self):
+        r = ready()
+        r["independent_review_required"] = False
+        self.assertAction(r, "HOLD", "RP1_STAGED_REVIEW_REQUIRED")
+        r = ready()
+        r["review"]["head"] = "d" * 40
+        self.assertAction(r, "HOLD", "REQUIRED_INDEPENDENT_APPROVAL_MISSING_OR_STALE")
+
+    def test_p1_native_scanner_inputs_must_match_full_original_manifest(self):
+        r = ready()
+        r["privacy_scan_input"]["files"][0]["status"] = "renamed"
+        self.assertAction(r, "HOLD", "RP1_PRIVACY_CHECK_MISSING")
 
     def test_main_drift_must_be_disjoint_complete_and_low(self):
         base = ready()
