@@ -190,7 +190,6 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<small id="cn-source-explanation">Kursgraf og Kompas er forskellige kilder.</small></section>'+
     '<details class="cn-source-technical"><summary id="cn-source-technical-label">Udgivelse og kildegrundlag</summary>'+
     '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p></details>'+
-    swingOverview+
     compactCore.replace(swingOverview,'').replace('<details class="cn-pro-more">',
       '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
       '<p id="cn-short-meaning" class="cn-short-meaning">12 timer viser målt momentum. En selvstændig 24-timersprognose er ikke udstedt.</p>'+
