@@ -77,6 +77,20 @@ class IC1ChangedTestStatusTests(unittest.TestCase):
                         executed=["tests/research/test_old.py::test_old"])
         self.result(r, "CI_NOT_EXECUTED", "CHANGED_TESTS_NOT_EXECUTED")
 
+    def test_malformed_json_status_type_never_crashes(self):
+        for invalid in ([], {}, ["modified"], 7, True):
+            with self.subTest(status=repr(invalid)):
+                r = make_record([row("tests/research/test_x.py")])
+                r["changed_file_statuses"][0]["status"] = invalid
+                self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+
+    def test_malformed_previous_filename_does_not_qualify_rename(self):
+        for bad in ([], {}, "tests/research/test_new.py", None):
+            with self.subTest(previous=repr(bad)):
+                r = make_record([row("tests/research/test_new.py", "renamed", True)])
+                r["changed_file_statuses"][0]["previous_filename"] = bad
+                self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+
     def test_missing_native_change_status_fails_not_false_test_hold(self):
         r = make_record([row("tests/research/test_x.py")])
         del r["changed_file_statuses"]
