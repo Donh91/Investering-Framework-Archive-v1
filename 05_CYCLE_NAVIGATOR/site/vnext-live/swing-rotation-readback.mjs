@@ -119,7 +119,7 @@ export function renderSwingRotation(container,model,{lang='da'}={}){
   const label=make('div','swing-group');
   label.setAttribute('role','rowheader');
   label.append(make('strong','',row.label),make('small','',row.sizeReference));
-  if(row.isMicro) label.append(make('small','swing-micro-cohort',t('Alpha Lab: $200k–2m undersøges','Alpha Lab: $200k–2m proposed')));
+  // Public UI does not publish restricted tactical selection cohorts.
   line.append(label);
   const status=make('div','swing-now');
   const text=make('strong','swing-action swing-action-'+row.sourceAction.toLowerCase().replaceAll('_','-'),row.nowLabel);
@@ -137,6 +137,6 @@ export function renderSwingRotation(container,model,{lang='da'}={}){
  ledger.append(grid);
  container.append(ledger);
  container.append(make('p','swing-explainer',
-  t('Øverst: officiel markedsretning for 1–3 dage, 5–7 dage og 2–3 uger. Nederst: hver kapitalgruppes aktuelle status, ikke en prognose. De 12 gruppespecifikke fremtidssignaler er ikke udstedt. Størrelsesintervallerne er kun branchemæssige pejlemærker, ikke kildens officielle grænser. Alpha Lab undersøger cyklusafhængige filtergrænser fra bl.a. $200k–2m, men ingen sådan model er valideret. Memes har fortsat eget signal.',
-    'Top: official market-wide direction for 1–3 days, 5–7 days and 2–3 weeks. Below: each group’s current status, not a forecast. The 12 group-specific forward signals are not issued. Size ranges are industry references, not source-owner thresholds. Alpha Lab is researching cycle-dependent selection bands including $200k–2m; no such model is validated. Memes remains independent.')));
+  t('Øverst: officiel markedsretning for 1–3 dage, 5–7 dage og 2–3 uger. Nederst: hver kapitalgruppes aktuelle status, ikke en prognose. De 12 gruppespecifikke fremtidssignaler er ikke udstedt. Størrelsesintervallerne er kun branchemæssige pejlemærker, ikke kildens officielle grænser. Memes har fortsat eget signal.',
+    'Top: official market-wide direction for 1–3 days, 5–7 days and 2–3 weeks. Below: each group’s current status, not a forecast. The 12 group-specific forward signals are not issued. Size ranges are industry references, not source-owner thresholds. Memes remains independent.')));
 }
