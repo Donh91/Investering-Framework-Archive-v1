@@ -55,7 +55,10 @@ export function sourceOnlyPriceRangeProof(snapshot,{now_utc}={}){
    window:id,state:complete?'WINDOW_OBSERVED_COMPLETE':phase==='LIVE'?'WINDOW_IN_PROGRESS':'PENDING',
    start_utc:w.window_start_utc,end_utc:w.window_end_utc,
    frozen_sequence_text:typeof w.frozen_sequence_text==='string'?w.frozen_sequence_text:'',
-   original_ranges:rows.map(row=>({asset:row.asset,low:row.forecast_low,high:row.forecast_high})),
+   // v2.5.1: quote unit comes ONLY from the source's own declared label; never assumed.
+   original_ranges:rows.map(row=>({asset:row.asset,low:row.forecast_low,high:row.forecast_high,
+    quote:/^[A-Z]{3,5}$/.test(m.price_quote_labels?.forecast_model_declared?.[row.asset]||'')?
+     m.price_quote_labels.forecast_model_declared[row.asset]:null})),
    observed_hours:count,expected_hours_final:expected,
    coverage_ratio:count/expected,
    observed_complete:complete,

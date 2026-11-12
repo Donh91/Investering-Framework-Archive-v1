@@ -43,7 +43,7 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     heading.textContent='Grafhistorik';
     const note=document.createElement('p');
     note.id='cn-graph-history-note';
-    note.textContent='Fra uge 45 (2026). Faktisk BTC-kurs fra verificerede timer; kun forhåndsudstedte dagsprognoser vises som blå kurve.';
+    note.textContent='Fra uge 45 (2026). Faktisk BTC-kurs fra verificerede timer; kun kildeudstedte dagsprognoser vises som blå kurve.';
     description.append(heading,note);
     const link=document.createElement('a');
     link.id='cn-graph-history-link';
@@ -104,8 +104,8 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     }
     for (const x of nodes) if(x.link.textContent!==names[x.key]) x.link.textContent=names[x.key];
     // This link stays inside the weekly graph panel, never becomes a fifth tab.
-    const historyCopy=lang()==='en'?{title:'Graph history',note:'One continuous BTC price line with week boundaries. Green = observed prices; dashed blue = original forecast issued before outcomes.',link:'Explore detailed history'}:
-      {title:'Grafhistorik',note:'Én sammenhængende BTC-kurve med ugeadskillelser. Grøn = faktiske kurser, stiplet blå = original forhåndsudstedt ugeprognose.',link:'Se detaljeret grafhistorik'};
+    const historyCopy=lang()==='en'?{title:'Graph history',note:'One continuous BTC price line with week boundaries. Green = observed prices; dashed blue = original source-issued weekly forecast. Issue time and any same-day correction are shown in the detailed history.',link:'Explore detailed history'}:
+      {title:'Grafhistorik',note:'Én sammenhængende BTC-kurve med ugeadskillelser. Grøn = faktiske kurser, stiplet blå = original kildeudstedt ugeprognose. Udstedelsestid og evt. korrektion samme dag står i den detaljerede grafhistorik.',link:'Se detaljeret grafhistorik'};
     const preview=document.getElementById('cn-graph-history-preview');
     if(preview)preview.title=lang()==='en'?'Historical BTC prices and original weekly forecasts':'Grafhistorik med faktiske BTC-kurser og originale ugeprognoser';
     for(const [id,value] of [['cn-graph-history-title',historyCopy.title],['cn-graph-history-note',historyCopy.note],['cn-graph-history-link',historyCopy.link]]){
