@@ -14,12 +14,13 @@ const GROUPS=[
  {key:'SMALL_CAPS',da:'Small caps',en:'Small caps',size:'$100M–1B'},
  {key:'MICROCAPS',da:'Microcaps',en:'Microcaps',size:'< $100M'}
 ];
-const DIRECTIONS=new Set(['UP','DOWN','MIXED','SIDEWAYS']);
+const DIRECTIONS=new Set(['UP','DOWN','MIXED','SIDEWAYS','NO_EDGE']);
 const ACTIONS=new Set(['HOLD','WAIT','HARD_WAIT','UNAVAILABLE','WATCH','PREPARE','PREPARE_BUY','BUY','PREPARE_SELL','REDUCE','SELL']);
 const tr=(lang,da,en)=>lang==='en'?en:da;
 const labelDirection=(v,lang)=>({
  UP:tr(lang,'Stigende','Rising'),DOWN:tr(lang,'Faldende','Falling'),
- MIXED:tr(lang,'Blandet','Mixed'),SIDEWAYS:tr(lang,'Sideværts','Sideways')
+ MIXED:tr(lang,'Blandet','Mixed'),SIDEWAYS:tr(lang,'Sideværts','Sideways'),
+ NO_EDGE:tr(lang,'Ingen dokumenteret fordel','No proven edge')
 })[v]||tr(lang,'Ingen vurdering','No reading');
 const labelAction=(v,lang)=>({
  HOLD:tr(lang,'Behold','Hold'),WAIT:tr(lang,'Afvent','Wait'),
