@@ -760,5 +760,20 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertIn("MARKET_STATE_CHANGED", out["cause_codes"])
 
 
+def load_tests(loader, standard_tests, pattern):
+    """Execute source-continuity standing guards in the existing native CI job.
+
+    The original Compass Event Refresh workflow runs only this module via
+    python -m unittest. The new source-bound Fable test module is explicitly
+    included without a new workflow, schedule or runner. Keep all native
+    tests on the current PR HEAD, not merely collect-only.
+    """
+    from tests.data_ping import test_compass_source_continuity_standing as standing
+    combined = unittest.TestSuite()
+    combined.addTests(standard_tests)
+    combined.addTests(loader.loadTestsFromModule(standing))
+    return combined
+
+
 if __name__ == "__main__":
     unittest.main()
