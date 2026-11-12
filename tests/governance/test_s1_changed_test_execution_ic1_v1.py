@@ -3,6 +3,7 @@
 A GitHub file-status receipt is still untrusted until the original S1 operator
 independently re-reads the actual PR at its exact HEAD. No release authority.
 """
+import hashlib
 import unittest
 
 from scripts.governance.s1_release_evidence_classifier_v1 import classify_pr_disposition, classify_pr_batch
@@ -11,8 +12,49 @@ from tests.governance.test_s1_release_evidence_classifier_v1 import decision_fix
 H = "a" * 40
 
 
-def make_record(changes, executed=()):
+def source_receipt(path, cases, head=H):
+    """Exact-head source receipt for ONE changed Python test module.
+
+    IC-1 full execution (Codex P2, review thread 4549672840): every test case
+    in the changed module's source must be executed, so each fixture now states
+    which cases its changed module contains. `cases` is [(class or None, name)].
+    """
+    by_class = {}
+    for cls, name in cases:
+        by_class.setdefault(cls, []).append(name)
+    chunks = []
+    for cls, names in by_class.items():
+        if cls is None:
+            chunks.extend(f"def {name}():\n    pass\n" for name in names)
+        else:
+            chunks.append(f"class {cls}:\n" + "".join(
+                f"    def {name}(self):\n        pass\n" for name in names))
+    text = "\n".join(chunks)
+    data = text.encode("utf-8")
+    return {"path": path, "head_sha": head, "text": text,
+            "blob_sha": hashlib.sha1(b"blob %d\x00" % len(data) + data).hexdigest()}
+
+
+def _cases_named_by(executed):
+    """Pre-existing fixtures model a one-case module: the case their executed ID names
+    (or `test_case` when nothing ran). Multi-case modules are covered in
+    test_s1_changed_test_full_execution_v1.py."""
+    cases = []
+    for test_id in executed:
+        parts = test_id.split("::") if "::" in test_id else test_id.split(".")
+        cls = parts[-2] if len(parts) > 1 and parts[-2][:1].isupper() else None
+        cases.append((cls, parts[-1]))
+    return cases or [(None, "test_case")]
+
+
+def make_record(changes, executed=(), cases=None):
     record = decision_fixture("LOW")
+    record["changed_test_sources"] = [
+        source_receipt(change["path"], cases or _cases_named_by(executed))
+        for change in changes
+        if change["path"].endswith(".py")
+        and change["path"].rsplit("/", 1)[-1].startswith("test_")
+        and change["status"] not in ("removed", "deleted")]
     record["expected_changed_paths"] = [change["path"] for change in changes]
     record["changed_file_statuses_source"] = "GITHUB_PR_FILES"
     record["changed_file_statuses_head_sha"] = H
@@ -210,7 +252,7 @@ class IC1ChangedTestStatusTests(unittest.TestCase):
         self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
 
     def test_g1_mode_changed_status_requires_test_execution(self):
-        r = make_record([row("tests/a/test_a.py", "changed")])
+        r = make_record([row("tests/a/test_a.py", "changed")], cases=[(None, "test_a")])
         self.result(r, "CI_NOT_EXECUTED", "CHANGED_TESTS_NOT_EXECUTED")
         r["pr_jobs"][0]["executed_test_ids"] = ["tests/a/test_a.py::test_a"]
         self.result(r, "READY_TO_MERGE")

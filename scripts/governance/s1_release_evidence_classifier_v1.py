@@ -1,5 +1,6 @@
 """Read-only evidence stage classifier for S1 post-merge observations."""
 
+import ast
 import re
 import hashlib
 import json
@@ -95,6 +96,50 @@ def _release_sensitive_path(path):
             or path == "scripts/governance/check_codex_review_finality.py")
 
 
+def _low_lane_sensitive_path(paths, manifest_paths=None):
+    """Fable R4 B1: True when a LOW record names a release-sensitive path.
+
+    Checked as the FIRST gate of the open-PR lane, before any review logic, so
+    it does not depend on the review policy: with ``independent_review_required:
+    false`` (the D2 waiver state) or a native APPROVED review, a LOW label still
+    cannot carry a governance path. ``manifest_paths`` is the optional
+    ``required_job_executed_paths`` list the caller read from the manifest blob
+    on current main (Fable R4 B2). Malformed lists are left to
+    ``_low_lane_path_census_issue``. Advisory: the caller authenticates the
+    complete native path list.
+    """
+    extra = {p for p in manifest_paths if type(p) is str} if isinstance(manifest_paths, list) else set()
+    return isinstance(paths, list) and any(
+        type(p) is str and (_release_sensitive_path(p) or p in extra) for p in paths)
+
+
+def _low_lane_paths_with_rename_sources(record):
+    """R5RT-F1: a rename or copy SOURCE leaves (or duplicates) its path on main, so it is a changed path too."""
+    paths = record.get("expected_changed_paths")
+    if not isinstance(paths, list):
+        return paths
+    sources = [e.get("previous_filename") for e in (record.get("changed_file_statuses") or [])
+               if isinstance(e, dict) and e.get("status") in ("renamed", "copied")]
+    return paths + [p for p in sources if type(p) is str]
+
+
+def _low_lane_path_census_issue(paths, manifest_paths=None):
+    """Last gate before READY for every LOW record: a clean, complete path list is mandatory.
+
+    Returns None or a reason code. Without it the path guard has nothing to test.
+    """
+    def clean(values, allow_empty):
+        return (isinstance(values, list) and (allow_empty or bool(values))
+                and not any(type(p) is not str or not p.strip() or p != p.strip()
+                            or p.startswith("/") or ".." in p.split("/") for p in values)
+                and len(set(values)) == len(values))
+    if not clean(paths, False):
+        return "LOW_NATIVE_PATH_CENSUS_MISSING"
+    if manifest_paths is not None and not clean(manifest_paths, True):
+        return "GOVERNANCE_MANIFEST_PATHS_UNUSABLE"
+    return None
+
+
 def _stamp(value):
     if not isinstance(value, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z", value) is None:
         return None
@@ -174,6 +219,82 @@ def _claude_review_is_valid(record, current):
     return True
 
 
+_IC1_JS_TEST_SUFFIXES = (".test.mjs", ".test.js", ".test.cjs", ".test.ts",
+                         ".spec.mjs", ".spec.js", ".spec.cjs", ".spec.ts")
+_IC1_MAX_TEST_SOURCE_BYTES = 2 * 1024 * 1024
+
+
+def _changed_test_kind(path):
+    """"py": Python test module, every derived test case must be executed.
+    "exact": non-Python runnable test (JS/shell), needs its exact path as an executed ID.
+    None: not a runnable test file (conftest.py and helpers keep #2088 semantics)."""
+    name = path.rsplit("/", 1)[-1]
+    if path.endswith(".py") and (name.startswith("test_") or name.endswith("_test.py")):
+        return "py"
+    if (name.endswith(_IC1_JS_TEST_SUFFIXES)
+            or (name.endswith((".mjs", ".js", ".cjs", ".ts")) and name.startswith(("test-", "test_")))
+            or (name.endswith(".sh") and (name.startswith(("test_", "test-"))
+                                          or "/tests/" in "/" + path))):
+        return "exact"
+    return None
+
+
+def _git_blob_sha(text):
+    data = text.encode("utf-8")
+    return hashlib.sha1(b"blob %d\x00" % len(data) + data).hexdigest()
+
+
+def _derived_test_cases(text):
+    """Minimum required test cases of one changed Python test module, from its source.
+
+    Deterministic and static (ast only, the file is never imported or run):
+    module-level `def test_*` and `test*` methods written in module-level classes.
+    Inherited, generated or load_tests-wired cases are NOT derived, so this is a
+    lower bound of what must run, never proof that nothing else should have run.
+    Returns None when the source cannot be parsed."""
+    try:
+        tree = ast.parse(text)
+    except (SyntaxError, ValueError, RecursionError, MemoryError):
+        return None
+    cases = []
+    funcs = (ast.FunctionDef, ast.AsyncFunctionDef)
+    for node in tree.body:
+        if isinstance(node, funcs) and node.name.startswith("test_"):
+            cases.append((None, node.name))
+        elif isinstance(node, ast.ClassDef):
+            cases.extend((node.name, item.name) for item in node.body
+                         if isinstance(item, funcs) and item.name.startswith("test"))
+    return sorted(set(cases), key=lambda c: (c[0] or "", c[1]))
+
+
+def _test_case_executed(jobs, path, cls, name):
+    """True only for an executed ID naming this exact case (IC-1 Codex P2 on #2088).
+
+    A file-, module- or class-level ID, or the ID of a sibling case, never credits.
+    Parametrized `[..]` and unittest subtest ` (..)` suffixes of the same case do."""
+    dotted = path[:-3].replace("/", ".")
+    tail = f"{cls}.{name}" if cls else name
+    for job in jobs:
+        ids = job.get("executed_test_ids")
+        if not isinstance(ids, list):
+            continue
+        bases = [f"{path}::{cls}::{name}" if cls else f"{path}::{name}", f"{dotted}.{tail}"]
+        # Native unittest discovery -s tests/learning without -t uses
+        # module IDs relative to its discovery root. Bind the root to the
+        # native CI job, never trust an unscoped basename match.
+        scope = job.get("test_discovery_root")
+        if (type(scope) is str and scope and scope == scope.strip("/")
+                and ".." not in scope.split("/") and path.startswith(scope + "/")):
+            bases.append(path[len(scope) + 1:-3].replace("/", ".") + "." + tail)
+        for test_id in ids:
+            if type(test_id) is not str:
+                continue
+            if any(test_id == b or test_id.startswith(b + "[") or test_id.startswith(b + " (")
+                   for b in bases):
+                return True
+    return False
+
+
 def _changed_test_execution_issue(record, current):
     """IC-1: source-supplied native PR file statuses, not name-only deletion guesses.
 
@@ -188,7 +309,7 @@ def _changed_test_execution_issue(record, current):
     native_claimed = any(k in record for k in (
         "changed_file_statuses", "changed_file_statuses_source",
         "changed_file_statuses_head_sha", "pr_changed_files_count",
-        "pr_changed_files_count_head_sha"))
+        "pr_changed_files_count_head_sha", "changed_test_sources"))
     if not isinstance(paths, list):
         return ("CHANGED_TEST_NATIVE_STATUS_UNVERIFIED" if native_claimed else None)
         # Legacy callers with no IC-1 metadata remain advisory-only.
@@ -197,9 +318,7 @@ def _changed_test_execution_issue(record, current):
     if any(type(p) is not str or not p or p != p.strip()
            or p.startswith("/") or ".." in p.split("/") for p in paths):
         return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
-    tests = [p for p in paths if isinstance(p, str) and p.endswith(".py")
-             and (p.rsplit("/", 1)[-1].startswith("test_")
-                  or p.rsplit("/", 1)[-1].endswith("_test.py"))]
+    tests = [p for p in paths if _changed_test_kind(p) is not None]
     # IC-1 G3: a truncated but internally consistent native PR-files manifest
     # can omit an unexecuted changed test and falsely produce READY. The S1
     # producer must independently read ALL pages plus GET /pulls/{n} changed_files
@@ -207,7 +326,7 @@ def _changed_test_execution_issue(record, current):
     has_native_census = any(k in record for k in (
         "changed_file_statuses", "changed_file_statuses_source",
         "changed_file_statuses_head_sha", "pr_changed_files_count",
-        "pr_changed_files_count_head_sha"))
+        "pr_changed_files_count_head_sha", "changed_test_sources"))
     if not tests and not has_native_census:
         return None  # legacy docs-only records without an IC-1 native census
     if has_native_census and (
@@ -256,35 +375,52 @@ def _changed_test_execution_issue(record, current):
             job for job in record.get("pr_jobs") or []
             if isinstance(job, dict) and job.get("name") == name
         )
+    # Codex P2 on #2088 (review thread 4549672840): one executed ID with a matching
+    # module prefix credited the WHOLE changed module. Every test case derived from
+    # the changed file's exact-head source must now be executed. The source is
+    # caller-supplied and therefore untrusted: S1 must read the blob at the exact
+    # HEAD natively; the blob-sha check here only binds text to the claimed blob.
+    sources = record.get("changed_test_sources")
+    texts = {}
+    if sources is not None:
+        if not isinstance(sources, list):
+            return "CHANGED_TEST_SOURCE_UNVERIFIED"
+        for src in sources:
+            if not isinstance(src, dict):
+                return "CHANGED_TEST_SOURCE_UNVERIFIED"
+            src_path, text = src.get("path"), src.get("text")
+            if (type(src_path) is not str or src_path not in statuses or src_path in texts
+                    or statuses[src_path] in {"removed", "deleted"}
+                    or src.get("head_sha") != current.get("head")
+                    or type(text) is not str):
+                return "CHANGED_TEST_SOURCE_UNVERIFIED"
+            try:
+                oversize = len(text.encode("utf-8")) > _IC1_MAX_TEST_SOURCE_BYTES
+            except UnicodeEncodeError:
+                return "CHANGED_TEST_SOURCE_UNVERIFIED"
+            if oversize or src.get("blob_sha") != _git_blob_sha(text):
+                return "CHANGED_TEST_SOURCE_UNVERIFIED"
+            texts[src_path] = text
     for path in tests:
         if statuses[path] in {"removed", "deleted"}:
             continue
-        dotted = path[:-3].replace("/", ".")
-        found = False
-        for job in required_jobs:
-            ids = job.get("executed_test_ids")
-            if not isinstance(ids, list):
-                continue
-            # Native unittest discovery -s tests/learning without -t uses
-            # module IDs relative to its discovery root. Bind the root to the
-            # native CI job, never trust an unscoped basename match.
-            scope = job.get("test_discovery_root")
-            scoped = None
-            if (type(scope) is str and scope and scope == scope.strip("/")
-                    and ".." not in scope.split("/") and path.startswith(scope + "/")):
-                scoped = path[len(scope) + 1:-3].replace("/", ".")
-            for test_id in ids:
-                if type(test_id) is not str:
-                    continue
-                if (test_id == path or test_id.startswith(path + "::")
-                        or test_id == dotted or test_id.startswith(dotted + ".")
-                        or (scoped is not None and
-                            (test_id == scoped or test_id.startswith(scoped + ".")))):
-                    found = True
-                    break
-            if found:
-                break
-        if not found:
+        if _changed_test_kind(path) == "exact":
+            # Non-Python runnable tests have no derivable case list: the exact
+            # file must be named by an executed ID; a directory scope is not proof.
+            if not any(type(test_id) is str and (test_id == path or test_id.startswith(path + "::"))
+                       for job in required_jobs
+                       for test_id in (job.get("executed_test_ids")
+                                       if isinstance(job.get("executed_test_ids"), list) else [])):
+                return "CHANGED_TESTS_NOT_EXECUTED"
+            continue
+        if path not in texts:
+            return "CHANGED_TEST_SOURCE_UNVERIFIED"
+        cases = _derived_test_cases(texts[path])
+        if not cases:
+            # Unparseable, or a changed "test" module with no statically visible
+            # case: nothing can be compared, so nothing is credited.
+            return "CHANGED_TEST_CASES_NOT_DERIVABLE"
+        if not all(_test_case_executed(required_jobs, path, cls, name) for cls, name in cases):
             return "CHANGED_TESTS_NOT_EXECUTED"
     return None
 
@@ -319,7 +455,8 @@ def classify_pr_disposition(record):
                   "physical_site_review_required", "physical_site_review_passed",
                   "owner_physical_review_waiver", "recovery", "release_assessment", "recovery_max_age_seconds",
                   "safepoint_source", "owner_authorized",
-                  "s1_general_preflight_required", "s1_general_preflight")
+                  "s1_general_preflight_required", "s1_general_preflight",
+                  "governance_paths_from_main_manifest")
         def material_value(value):
             if isinstance(value, dict):
                 return {k: material_value(v) for k, v in value.items()
@@ -458,6 +595,10 @@ def classify_pr_disposition(record):
         if isinstance(replacement, dict) and _github(replacement.get("url")) and replacement.get("verified") is True and _sha(replacement.get("commit")):
             return finish("CLOSED_SUPERSEDED", "EXACT_REPLACEMENT_EVIDENCE_SUPPLIED", "Original owner verified replacement", "EXISTING_PR_OWNER", "New contrary evidence")
         return blocked("EXTERNAL_DEPENDENCY", "CLOSED_WITHOUT_SUPERSESSION_PROOF", "Closed PR is not proof of resolved defect")
+    if r.get("risk") == "LOW" and _low_lane_sensitive_path(
+            _low_lane_paths_with_rename_sources(r), r.get("governance_paths_from_main_manifest")):
+        return blocked("SOURCE_OR_SCIENCE_GATE", "HIGH_IMPACT_PATH_MARKED_LOW",
+                       "Existing source/workflow governance and independent recovery gates")
     if any(evaluated.get(k) != current[k] for k in ("head", "main", "policy", "source")):
         return blocked("INTERNAL_REPAIRABLE", "EVALUATION_BINDING_CHANGED", "Revalidate changed HEAD/main/policy/source before merge")
     if r.get("active_writer_lease") is not False:
@@ -553,6 +694,13 @@ def classify_pr_disposition(record):
             return blocked("INDEPENDENT_RECOVERY_UNVERIFIED", "RELEASE_ASSESSMENT_STALE", "Current independent release assessment at use", "EXISTING_RECOVERY_CUSTODIAN")
         if r.get("safepoint_source") != current["source"]:
             return blocked("INDEPENDENT_RECOVERY_UNVERIFIED", "IMMEDIATE_SAFEPOINT_MISSING", "Verified immediate safepoint for exact source", "EXISTING_SOURCE_OWNER")
+    if r["risk"] == "LOW":
+        census_issue = _low_lane_path_census_issue(
+            r.get("expected_changed_paths"), r.get("governance_paths_from_main_manifest"))
+        if census_issue:
+            return blocked("EXTERNAL_DEPENDENCY", census_issue,
+                           "Complete native exact-head changed paths for every LOW record, and the "
+                           "manifest path list exactly as read from current main when supplied")
     return finish("READY_TO_MERGE", "CURRENT_REQUIRED_EVIDENCE_SUPPLIED", "Authenticated owner mandate and fresh native enforcement still required", "EXISTING_AUTHORIZED_INTEGRATOR", "Any change of HEAD/main/policy/source or binding evidence requires reevaluation")
 
 
