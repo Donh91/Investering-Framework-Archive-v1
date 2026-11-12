@@ -193,7 +193,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     compactCore.replace(swingOverview,'').replace('<details class="cn-pro-more">',
       '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
       '<p id="cn-short-meaning" class="cn-short-meaning">12 timer viser målt momentum. En selvstændig 24-timersprognose er ikke udstedt.</p>'+
-      horizonStrip+
+      horizonStrip+swingOverview+
       '<section class="cn-risk-quick" aria-label="Pullback classification">'+
       '<div class="cn-risk-quick-head"><div><small id="cn-risk-quick-label">RISIKO FOR YDERLIGERE FALD</small>'+
       '<strong id="cn-risk-quick-state">— / 5 · afventer nye data</strong></div>'+
