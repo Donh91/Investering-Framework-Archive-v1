@@ -5,7 +5,7 @@ independently re-reads the actual PR at its exact HEAD. No release authority.
 """
 import unittest
 
-from scripts.governance.s1_release_evidence_classifier_v1 import classify_pr_disposition
+from scripts.governance.s1_release_evidence_classifier_v1 import classify_pr_disposition, classify_pr_batch
 from tests.governance.test_s1_release_evidence_classifier_v1 import decision_fixture
 
 H = "a" * 40
@@ -108,6 +108,31 @@ class IC1ChangedTestStatusTests(unittest.TestCase):
                              previous="tests/research/test_old.py")],
                         executed=["tests/research/test_old.py::test_old"])
         self.result(r, "CI_NOT_EXECUTED", "CHANGED_TESTS_NOT_EXECUTED")
+
+    def test_malformed_changed_paths_fail_closed_without_crashing_other_prs(self):
+        for malformed in ([], {}, ["nested"], {"path": "test_x.py"}, 7, True):
+            with self.subTest(path=repr(malformed)):
+                bad = make_record([row("tests/research/test_x.py")],
+                                  executed=["tests/research/test_x.py::test_ok"])
+                bad["expected_changed_paths"].append(malformed)
+                good = make_record([row("tests/research/test_y.py")],
+                                   executed=["tests/research/test_y.py::test_ok"])
+                out = classify_pr_batch([bad, good])
+                self.assertEqual(len(out), 2)
+                self.assertEqual(out[0]["disposition"], "CI_NOT_EXECUTED")
+                self.assertEqual(out[0]["reason"], "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+                self.assertEqual(out[1]["disposition"], "READY_TO_MERGE")
+                self.assertTrue(all(not x["authorized"] for x in out))
+
+    def test_malformed_changed_path_spellings_rejected(self):
+        for malformed in ("", " tests/test_x.py", "/tests/test_x.py",
+                          "tests/../test_x.py"):
+            with self.subTest(path=repr(malformed)):
+                r = make_record([row("tests/research/test_x.py")],
+                                executed=["tests/research/test_x.py::test_ok"])
+                r["expected_changed_paths"].append(malformed)
+                self.result(r, "CI_NOT_EXECUTED",
+                            "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
 
     def test_malformed_json_status_type_never_crashes(self):
         for invalid in ([], {}, ["modified"], 7, True):
