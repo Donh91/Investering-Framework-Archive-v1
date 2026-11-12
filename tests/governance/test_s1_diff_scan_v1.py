@@ -115,6 +115,17 @@ class PrivacyScan(unittest.TestCase):
         self.check(sample([f("config.json", content=synthetic, patch="+ " + synthetic)]),
                    "RESTRICTED_CONTENT")
 
+    def test_codex_p2_credential_in_filename_or_rename_source(self):
+        synthetic = "sk-proj-" + "A" * 32
+        record = sample([f("docs/" + synthetic + ".md", content="public", patch="+public")])
+        out = self.check(record, "RESTRICTED_CONTENT")
+        self.assertNotIn(synthetic, str(out))
+        record = sample([f("docs/safe.md", status="renamed",
+                           previous_filename="docs/" + synthetic + ".md",
+                           content="public", patch="+public")])
+        out = self.check(record, "RESTRICTED_CONTENT")
+        self.assertNotIn(synthetic, str(out))
+
     def test_codex_p2_nested_blocked_basename(self):
         self.check(sample([f("docs/AGENTS.md", content="policy note")]), "RESTRICTED_CONTENT")
         self.check(sample([f("docs/subfolder/.env", content="reference")]), "RESTRICTED_CONTENT")
