@@ -118,7 +118,7 @@ function paint(model){
  h.replaceChildren();
  let restoreSummary=null;
  const translations={NEXT_12H:'12H',NEXT_1_3D:'1–3D',NEXT_5_7D:'5–7D',
- NEXT_2_3W:lang('2–3U','2–3W'),CYCLE_ALTCOINS_3_8W:lang('3–8U','3–8W')};
+ NEXT_2_3W:lang('2–3U','2–3W'),CYCLE_ALTCOINS_3_8W:lang('4–8U','4–8W')};
  for(const w of model.horizons){
   const c=make('article','official-pilot-horizon');
   c.dataset.sourceState=now?'current':'expired';
