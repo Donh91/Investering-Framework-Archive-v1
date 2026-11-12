@@ -1,9 +1,12 @@
-"""Strict S1 owner-native UI comment validator, read-only advisory.
+"""S1 native NON-APP comment shape validator, read-only advisory.
 
-The supplied record is UNTRUSTED. Existing S1 must independently retrieve the
-original native GitHub comment REST resource and verify provenance, head,
-policy blob, comment ID and body at action time. This helper cannot authorize a
-merge, enable unattended S1 or authenticate itself.
+Critical limitation: performed_via_github_app == null does NOT prove a human
+used the GitHub website: a direct PAT REST call can also produce null. This
+module can never authorize release, attest human presence, or bootstrap an
+unattended policy. Human owner authorization must instead be direct and
+contemporaneous in a human-interactive owner session (not scheduled S1), or
+independently verified offline owner-signed approval from a protected key.
+Caller-supplied GitHub JSON must be re-read natively by a trusted operator.
 """
 from __future__ import annotations
 
@@ -47,6 +50,7 @@ def classify_native_ui_comment(
     head_sha: str,
     policy_blob_sha: str,
     decision: str,
+    auditor_evidence_url: str | None = None,
 ) -> dict[str, Any]:
     """Check GitHub REST *shape* only. Never trust this as proof of native fetch."""
     if (type(pr_number) is not int or pr_number < 1 or
@@ -54,6 +58,18 @@ def classify_native_ui_comment(
             type(policy_blob_sha) is not str or not SHA.fullmatch(policy_blob_sha) or
             decision not in ALLOWED_DECISIONS):
         return _deny("EXPECTED_SCOPE_INVALID")
+    waiver = decision.startswith("APPROVE_D2_WAIVER_")
+    if waiver:
+        if not isinstance(auditor_evidence_url, str):
+            return _deny("INDEPENDENT_AUDITOR_EVIDENCE_REQUIRED")
+        audit_url = urlparse(auditor_evidence_url)
+        if (audit_url.scheme != "https" or audit_url.netloc != "github.com"
+                or audit_url.path != f"/{REPO}/issues/1156"
+                or audit_url.query
+                or re.fullmatch(r"issuecomment-[1-9][0-9]*", audit_url.fragment or "") is None):
+            return _deny("INDEPENDENT_AUDITOR_EVIDENCE_INVALID")
+    elif auditor_evidence_url is not None:
+        return _deny("UNEXPECTED_AUDITOR_EVIDENCE")
     if not isinstance(record, dict):
         return _deny("NATIVE_RECORD_MISSING")
     user = record.get("user")
@@ -90,21 +106,25 @@ def classify_native_ui_comment(
         f"head={head_sha}\n"
         f"policy_blob={policy_blob_sha}\n"
         f"decision={decision}"
+        + (f"\nauditor_evidence_url={auditor_evidence_url}" if waiver else "")
     )
     body = record.get("body")
     if type(body) is not str or body != expected_body:
         return _deny("OWNER_DECISION_SCOPE_OR_EXACT_HEAD_MISMATCH")
-    # Even a well-formed record could be forged before this helper is called.
-    # All positive results remain *candidates*, with no release authorization.
+    # A null App field is NOT an independently verified human-only factor.
+    # An owner PAT can create exactly the same native comment. Never treat
+    # a positive candidate as interactive user approval or a release grant.
     body_hash = hashlib.sha256(body.encode("utf-8")).hexdigest()
     return {
         "contract": CONTRACT,
-        "status": "UI_COMMENT_CANDIDATE_REQUIRES_INDEPENDENT_NATIVE_READBACK",
-        "reason": "SYNTAX_AND_DECLARED_UI_PROVENANCE_MATCH",
+        "status": "NON_APP_COMMENT_CANDIDATE_NOT_OWNER_AUTHORIZATION",
+        "reason": "NATIVE_SHAPE_MATCHES_BUT_PAT_OR_UI_INDISCERNIBLE",
         "comment_id": comment_id,
         "head_sha": head_sha,
         "policy_blob_sha": policy_blob_sha,
         "decision": decision,
+        "auditor_evidence_url": auditor_evidence_url if waiver else None,
+        "human_only_factor_verified": False,
         "created_at": record["created_at"],
         "updated_at": record["updated_at"],
         "body_sha256": body_hash,
