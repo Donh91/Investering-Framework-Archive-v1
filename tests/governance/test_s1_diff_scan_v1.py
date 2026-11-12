@@ -50,7 +50,8 @@ class PrivacyScan(unittest.TestCase):
     def test_api_and_private_key_markers_redacted(self):
         out = self.check(sample([f(content="-----BEGIN PRIVATE KEY-----\n(redacted)\n")]), "RESTRICTED_CONTENT")
         self.assertNotIn("BEGIN PRIVATE KEY", str(out))
-        self.check(sample(body="token sk-proj-ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789"),
+        synthetic_suffix = "A" * 35
+        self.check(sample(body="token sk-proj-" + synthetic_suffix),
                    "RESTRICTED_CONTENT")
 
     def test_private_path_blocks_even_with_no_secret_literal(self):
