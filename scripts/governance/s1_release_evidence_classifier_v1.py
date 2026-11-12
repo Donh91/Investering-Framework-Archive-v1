@@ -199,7 +199,7 @@ def _changed_test_execution_issue(record, current):
         path = entry.get("path")
         status = entry.get("status")
         exists = entry.get("head_exists")
-        if (type(path) is not str or path not in tests or path in statuses
+        if (type(path) is not str or path not in paths or path in statuses
                 or type(status) is not str
                 or status not in {"added", "modified", "renamed", "copied", "removed", "deleted"}
                 or type(exists) is not bool):
@@ -214,23 +214,44 @@ def _changed_test_execution_issue(record, current):
             if type(previous) is not str or not previous or previous == path:
                 return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
         statuses[path] = status
-    if set(statuses) != set(tests):
+    if set(statuses) != set(paths):
         return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
 
-    executed = set()
+    required_jobs = []
     for name in record.get("required_pr_job_names") or []:
-        for job in record.get("pr_jobs") or []:
-            if isinstance(job, dict) and job.get("name") == name:
-                ids = job.get("executed_test_ids")
-                if isinstance(ids, list):
-                    executed.update(test_id for test_id in ids if type(test_id) is str)
-    for path, status in statuses.items():
-        if status in {"removed", "deleted"}:
+        required_jobs.extend(
+            job for job in record.get("pr_jobs") or []
+            if isinstance(job, dict) and job.get("name") == name
+        )
+    for path in tests:
+        if statuses[path] in {"removed", "deleted"}:
             continue
         dotted = path[:-3].replace("/", ".")
-        if not any(test_id == path or test_id.startswith(path + "::")
-                   or test_id == dotted or test_id.startswith(dotted + ".")
-                   for test_id in executed):
+        found = False
+        for job in required_jobs:
+            ids = job.get("executed_test_ids")
+            if not isinstance(ids, list):
+                continue
+            # Native unittest discovery -s tests/learning without -t uses
+            # module IDs relative to its discovery root. Bind the root to the
+            # native CI job, never trust an unscoped basename match.
+            scope = job.get("test_discovery_root")
+            scoped = None
+            if (type(scope) is str and scope and scope == scope.strip("/")
+                    and ".." not in scope.split("/") and path.startswith(scope + "/")):
+                scoped = path[len(scope) + 1:-3].replace("/", ".")
+            for test_id in ids:
+                if type(test_id) is not str:
+                    continue
+                if (test_id == path or test_id.startswith(path + "::")
+                        or test_id == dotted or test_id.startswith(dotted + ".")
+                        or (scoped is not None and
+                            (test_id == scoped or test_id.startswith(scoped + ".")))):
+                    found = True
+                    break
+            if found:
+                break
+        if not found:
             return "CHANGED_TESTS_NOT_EXECUTED"
     return None
 
