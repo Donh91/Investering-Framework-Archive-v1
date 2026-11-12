@@ -1,0 +1,43 @@
+{
+  "contract": "S1_REQUIRED_PR_JOBS_POLICY_V1",
+  "status": "PROPOSED_INACTIVE_UNTIL_MAIN",
+  "origin": "original_S1_1156",
+  "authority": "POLICY_SOURCE_ONLY_NOT_NATIVE_JOB_PROOF",
+  "classes": {
+    "DOCS_ONLY": [
+      {
+        "workflow_path": ".github/workflows/data-architecture-gate.yml",
+        "job_id": "gate",
+        "event": "pull_request",
+        "executed_test_steps_min": 1
+      },
+      {
+        "workflow_path": ".github/workflows/storage-health-gate.yml",
+        "job_id": "storage-health",
+        "event": "pull_request",
+        "executed_test_steps_min": 1
+      }
+    ],
+    "LOW_CODE": [
+      {
+        "workflow_path": ".github/workflows/data-architecture-gate.yml",
+        "job_id": "gate",
+        "event": "pull_request",
+        "executed_test_steps_min": 1
+      },
+      {
+        "workflow_path": ".github/workflows/storage-health-gate.yml",
+        "job_id": "storage-health",
+        "event": "pull_request",
+        "executed_test_steps_min": 1
+      }
+    ]
+  },
+  "additional_low_code_requirement": "RUNNABLE_CHANGED_TESTS_EXECUTED_AT_EXACT_HEAD_IN_NATIVE_REQUIRED_PR_EVENT_JOB_WITH_AUTHENTICATED_RUN_SHA_WORKFLOW_SOURCE",
+  "other_required_checks": "ALL_APPLICABLE_NATIVE_GITHUB_BRANCH_OR_RULESET_CHECKS_AND_DOMAIN_SPECIFIC_ORIGINAL_POLICY",
+  "failure_rule": "MISSING_PATH_JOB_ID_SCOPE_NON_SUCCESS_STALE_SHA_OR_UNVERIFIED_TEST_STEPS => HOLD_NOT_READY",
+  "qualification": "Manifest is a MINIMUM per class, not permission and not evidence of execution. Compare native workflow_run.path + exact job id, event pull_request, checked-out code HEAD and actual executed steps. Conditional job absence is not silently optional. Re-read current main manifest SHA.",
+  "duplication_rule": "Do not key solely by display name: e.g. multiple validate jobs across workflows are distinct.",
+  "owner_policy_sha_source": "CURRENT_MAIN_AGENTS_BLOB",
+  "activation_gate": "POLICY_PR_2089_MERGED_AFTER_OWNER_UI_APPROVAL_AND_RP1_SOURCE_PRODUCER_IMPLEMENTED_AND_SHADOW_DONE"
+}
