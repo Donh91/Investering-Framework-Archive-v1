@@ -228,6 +228,38 @@ class IC1ChangedTestStatusTests(unittest.TestCase):
         r["changed_file_statuses"].clear()
         self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
 
+    def test_f2_release_governance_paths_never_downgrade_to_low(self):
+        from scripts.governance.s1_release_evidence_classifier_v1 import _release_sensitive_path
+        blocked = [
+            "AGENTS.md", "CLAUDE.md",
+            "00_FMOS/S1_NATIVE_RULE_CENSUS_AND_RELEASE_RECIPE_V1.md",
+            "00_FMOS/S1_CLOSURE_ASSURANCE_STRATEGIC_RECOVERY_V1.md",
+            ".agents/skills/s1-pr-repair-learning/SKILL.md",
+            "schemas/S1_CLOSURE_ASSURANCE_V1.schema.json",
+            ".github/workflows/critical.yml",
+            "scripts/governance/s1_release_evidence_classifier_v1.py",
+        ]
+        for path in blocked:
+            with self.subTest(path=path):
+                self.assertTrue(_release_sensitive_path(path))
+        self.assertFalse(_release_sensitive_path("docs/public-typo.md"))
+
+    def test_f2_governance_pr_marked_low_is_rejected_by_native_general_gate(self):
+        from scripts.governance.s1_general_release_evidence_v1 import classify
+        from tests.governance.test_s1_general_release_evidence_v1 import valid
+        for path in ("00_FMOS/S1_NATIVE_RULE_CENSUS_AND_RELEASE_RECIPE_V1.md",
+                     ".agents/skills/s1-pr-repair-learning/SKILL.md",
+                     "schemas/S1_CLOSURE_ASSURANCE_V1.schema.json"):
+            with self.subTest(path=path):
+                r = make_record([row(path)])
+                r["s1_general_preflight_required"] = True
+                r["s1_general_preflight"] = valid()
+                # source/evidence IDs must actually agree for General preflight
+                r["pr_jobs"][0]["executed_test_ids"] = ["positive", "guard-removal"]
+                out = classify_pr_disposition(r)
+                self.assertEqual(out["disposition"], "SOURCE_OR_SCIENCE_GATE")
+                self.assertEqual(out["reason"], "HIGH_IMPACT_PATH_MARKED_LOW")
+
     def test_docs_only_does_not_gain_new_test_requirement(self):
         r = decision_fixture("LOW")
         r["expected_changed_paths"] = ["README.md"]
