@@ -55,6 +55,10 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<section id="view-path"', '<section id="view-results"', 'pro-path')
     .replace('<section id="view-path" class="view path-editorial" hidden role="tabpanel" aria-labelledby="tab-path">',
       '<section id="official-path-view" class="cn-path-source path-editorial" aria-label="PATH · kildebaseret markedsforløb">')
+    // v2.4S: rotation lives on Kompas; one line points there (the PATH tier list stays in the DOM).
+    .replace('<section class="section path-rotation-section"',
+      '<p class="cn-path-rotation-link" id="cn-path-rotation-link"><a href="#compass-pro">Kapitalrotation pr. segment står på Kompas →</a></p>'+
+      '<section class="section path-rotation-section"')
     .replace('<div class="path-hero">',
       '<section class="cn-cycle-truth" aria-label="Cyklus kildegrundlag">'+
       '<strong id="cn-cycle-health">Kontrollerer ugegrundlag</strong>'+
@@ -113,13 +117,25 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<div class="cn-evidence"><div class="cn-evidence-rail" aria-hidden="true">'+
     '<span id="cn-overview-'+id+'-bar"></span></div>'+
     '<small id="cn-overview-'+id+'-balance">Evidensbalance afventer</small></div>'+
+    '<button type="button" class="cn-horizon-more" aria-expanded="false" aria-controls="cn-overview-'+id+'-summary">Begrundelse</button>'+
     '<p id="cn-overview-'+id+'-summary">Afventer offentliggjort analyse.</p></article>';
+  // v2.2b: the two further main horizons as compact rows (not horizon cards;
+  // values are painted only from already-verified official readbacks).
+  const horizonExtra=(id,label)=>'<article class="cn-horizon-row" data-cn-overview-extra="'+id+'" data-tone="missing">'+
+    '<small id="cn-overview-'+id+'-label">'+label+'</small><div class="cn-horizon-direction">'+
+    '<strong id="cn-overview-'+id+'-direction">Afventer data</strong></div>'+
+    '<span class="cn-horizon-position" id="cn-overview-'+id+'-position">—</span></article>';
+  const btcDays='<section class="cn-btc-days" id="cn-btc-days" aria-labelledby="cn-btc-days-heading" data-available="false">'+
+    '<h3 id="cn-btc-days-heading">BTC · de næste tre dage</h3>'+
+    '<div id="cn-btc-days-rows" class="cn-btc-days-rows" role="list"></div>'+
+    '<small id="cn-btc-days-caption">Kontrollerer original prognose …</small></section>';
   const horizonStrip='<section class="cn-overview" aria-labelledby="cn-overview-heading">'+
     '<div class="cn-overview-heading"><h3 id="cn-overview-heading">Kompasforløb</h3>'+
     '<small id="cn-overview-subtitle">Tre selvstændige prognosehorisonter</small></div>'+
     '<div class="cn-overview-cards">'+
+    horizonExtra('h12','0–12 timer')+
     horizonCard('d13','1–3 dage')+horizonCard('d57','5–7 dage')+
-    horizonCard('w23','2–3 uger')+'</div>'+
+    horizonCard('w23','2–3 uger')+horizonExtra('c38','4–8 uger · altcoins')+'</div>'+
     '<p class="cn-overview-foot" id="cn-overview-foot">Pilene angiver kildevurderet retning i hver periode, ikke kursrækkefølge. Bull/Bear er evidenspoint, ikke sandsynlighed.</p>'+
     '</section>';
   const rotationPeek='<section class="cn-rotation-peek" aria-labelledby="cn-rotation-heading">'+
@@ -144,7 +160,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<button type="button" data-cn-reader-horizon="NEXT_1_3D" aria-pressed="true">1–3 dage</button>'+
     '<button type="button" data-cn-reader-horizon="NEXT_5_7D" aria-pressed="false">5–7 dage</button>'+
     '<button type="button" data-cn-reader-horizon="NEXT_2_3W" aria-pressed="false">2–3 uger</button>'+
-    '<button type="button" data-cn-reader-horizon="CYCLE_ALTCOINS_3_8W" aria-pressed="false">3–8 uger</button></div>'+
+    '<button type="button" data-cn-reader-horizon="CYCLE_ALTCOINS_3_8W" aria-pressed="false">4–8 uger</button></div>'+
     '<div class="cn-reader-outlook">'+
     '<div class="cn-reader-signal"><strong id="cn-reader-direction">Afventer nye data</strong>'+
     '<span id="cn-reader-posture">Ingen aktuel handling</span></div>'+
@@ -162,7 +178,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<tr><th id="cn-reader-term-1" scope="row">AFVENT</th><td id="cn-reader-definition-1">Nyt køb/salg er ikke bekræftet. Prisen kan stadig bevæge sig.</td></tr>'+
     '<tr><th id="cn-reader-term-2" scope="row">BLANDET</th><td id="cn-reader-definition-2">Tegn peger begge veje; ikke en 50/50-sandsynlighed.</td></tr>'+
     '<tr><th id="cn-reader-term-3" scope="row">HOLD</th><td id="cn-reader-definition-3">Afvent ændring i den officielle vurdering; ikke et nyt køb.</td></tr>'+
-    '<tr><th id="cn-reader-term-4" scope="row">INGEN EDGE</th><td id="cn-reader-definition-4">Ingen dokumenteret prognosefordel.</td></tr>'+
+    '<tr><th id="cn-reader-term-4" scope="row">INGEN FORDEL</th><td id="cn-reader-definition-4">Ingen dokumenteret prognosefordel.</td></tr>'+
     '<tr><th id="cn-reader-term-5" scope="row">MANGLER DATA</th><td id="cn-reader-definition-5">Ingen gyldig aktuel vurdering; tidligere signal gælder ikke.</td></tr>'+
     '</tbody></table></details></section>';
 
@@ -182,12 +198,11 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<section class="cn-source-summary" aria-labelledby="cn-source-headline" data-tone="missing">'+
     '<strong id="cn-source-headline">Kompas · afventer kilde</strong>'+
     '<p id="cn-source-context">Kontrollerer seneste prisgrundlag.</p>'+
-    '<small id="cn-source-explanation">Kursgraf og Kompas er forskellige kilder.</small></section>'+
-    '<details class="cn-source-technical"><summary id="cn-source-technical-label">Udgivelse og kildegrundlag</summary>'+
-    '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p></details>'+
+    '<small id="cn-source-explanation">Kursgraf og Kompas er forskellige kilder.</small>'+
+    '<p id="cn-important-status" class="cn-important-status" data-tone="missing" hidden>'+
+    '<strong id="cn-important-status-lead">Vigtig status: </strong><span id="cn-important-status-text"></span></p></section>'+
     compactCore.replace('<details class="cn-pro-more">',
       '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
-      '<p id="cn-short-meaning" class="cn-short-meaning">12 timer viser målt momentum. En selvstændig 24-timersprognose er ikke udstedt.</p>'+
       horizonStrip+
       '<section class="cn-risk-quick" aria-label="Pullback classification">'+
       '<div class="cn-risk-quick-head"><div><small id="cn-risk-quick-label">RISIKO FOR YDERLIGERE FALD</small>'+
@@ -200,9 +215,17 @@ export function buildUnifiedRootHtml(graphSource,proSource){
       '<p><small id="cn-risk-quick-meaning-label">HVAD BETYDER DET?</small><span id="cn-risk-quick-meaning">Afventer opdateret risikovurdering</span></p>'+
       '<p><small id="cn-risk-quick-action-label">SÅDAN FORHOLDER DU DIG</small><span id="cn-risk-quick-action">Afvent opdateret Kompas før nye beslutninger</span></p>'+
       '<div class="cn-risk-quick-foot"><span id="cn-risk-quick-quality">Evidenskvalitet: ukendt</span><span id="cn-risk-quick-onset">Starttidspunkt: ikke dokumenteret</span></div>'+
-      '</div></details></section>'+rotationPeek+positions+
+      '</div></details></section>'+rotationPeek+btcDays+
+      // ONE place for explanation, longer horizons and sources (presentation only;
+      // every inner disclosure, id and order is unchanged and still collapsed).
+      '<details class="cn-explain"><summary id="cn-explain-title">Alle 14 horisonter, forklaring og kilder</summary><div class="cn-explain-body">'+
+      '<details class="cn-source-technical"><summary id="cn-source-technical-label">Udgivelse og kildegrundlag</summary>'+
+      '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p></details>'+
+      '<p id="cn-short-meaning" class="cn-short-meaning">12 timer viser målt momentum. En selvstændig 24-timersprognose er ikke udstedt.</p>'+
+      positions+
       '<details class="cn-reader-expand"><summary id="cn-reader-expand-title">Flere horisonter, Swing/HODL og dokumentation</summary>'+
-      reader+horizonStatus+'</details><details class="cn-pro-more">')+'</section>';
+      reader+'</details>'+horizonStatus+'<details class="cn-pro-more">').replace(/<\/details>\n<\/section>$/,'</details></div></details>\n</section>')+'</section>';
+  if(!pro.includes('</details></div></details>\n</section></section>'))throw Error('CN_EXPLAIN_ACCORDION_CLOSE_FAILED');
 
   const oldDecision='<section class="official-product-pilot premium-decision-summary"';
   const graph='<section id="variant-panel"';

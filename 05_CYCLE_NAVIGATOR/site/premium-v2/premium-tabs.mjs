@@ -162,3 +162,74 @@ if (nav && nodes.every(x => x.link && x.panel)) {
   new MutationObserver(paintLabels).observe(nav,{subtree:true,childList:true,characterData:true});
   window.addEventListener('resize',paintLabels);
 }
+
+/* CN SITE v2.2b · Kompas horizon strip: inline rationale on demand, quiet state for an
+ * unissued horizon. Presentation only: reads text the PRO runtime already painted,
+ * never changes it, never navigates. Fails open (rationale stays reachable). */
+(() => {
+  const cards = [...document.querySelectorAll('#compass-pro .cn-horizon-card')];
+  if (!cards.length) return;
+  const en = () => (document.documentElement.lang || 'da').startsWith('en');
+  const paint = () => {
+    for (const card of cards) {
+      const arrow = card.querySelector('.cn-horizon-arrow')?.textContent.trim();
+      const quiet = arrow === '?' || arrow === '';
+      if (card.dataset.quiet !== String(quiet)) card.dataset.quiet = String(quiet);
+      const button = card.querySelector('.cn-horizon-more');
+      if (!button) continue;
+      const open = button.getAttribute('aria-expanded') === 'true';
+      const label = open ? (en() ? 'Hide rationale' : 'Skjul begrundelse') : (en() ? 'Rationale' : 'Begrundelse');
+      if (button.textContent !== label) button.textContent = label;
+    }
+    const title = document.getElementById('cn-explain-title');
+    const words = en() ? 'All 14 horizons, explanation and sources' : 'Alle 14 horisonter, forklaring og kilder';
+    if (title && title.textContent !== words) title.textContent = words;
+  };
+  for (const card of cards) {
+    const button = card.querySelector('.cn-horizon-more');
+    if (!button) continue;
+    button.addEventListener('click', () => {
+      const open = button.getAttribute('aria-expanded') !== 'true';
+      button.setAttribute('aria-expanded', String(open));
+      card.dataset.expanded = String(open);
+      paint();
+    });
+  }
+  paint();
+  const compass = document.getElementById('compass-pro');
+  if (compass) new MutationObserver(paint).observe(compass, {subtree:true, childList:true, characterData:true});
+  document.addEventListener('cn:languagechange', paint);
+})();
+
+/* CN SITE v2.3 · Markedscyklus timeline: one reveal on first view. Presentation only:
+ * reads the rail the PATH runtime painted, never changes its text or data, never fetches,
+ * never draws progress (v2.3-final honesty fix). Fails open (static final state). */
+(() => {
+  const view = document.getElementById('official-path-view');
+  const rail = document.getElementById('premium-path-rail');
+  if (!view || !rail || typeof IntersectionObserver !== 'function') return;
+  const reduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches:true};
+  let started = false;
+  const start = () => {
+    if (started || !rail.querySelector('.path-node') || !rail.getClientRects().length) return;
+    started = true;
+    if (reduce.matches) { rail.dataset.cnReveal = 'done'; return; }
+    rail.dataset.cnReveal = 'run';
+    window.setTimeout(() => { rail.dataset.cnReveal = 'done'; }, 1000);
+  };
+  new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) start(); }).observe(rail);
+  new MutationObserver(start).observe(rail, {childList:true});
+})();
+
+/* CN SITE v2.4S · logo: one calm settle per session, never blocking, off under reduced motion. */
+(() => {
+  const brand = document.querySelector('.dev-brand');
+  if (!brand) return;
+  try {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (sessionStorage.getItem('cnLogoSettled') === '1') return;
+    sessionStorage.setItem('cnLogoSettled', '1');
+  } catch { return; }
+  brand.classList.add('cn-logo-settle');
+  window.setTimeout(() => brand.classList.remove('cn-logo-settle'), 700);
+})();
