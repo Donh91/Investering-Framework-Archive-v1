@@ -31,6 +31,46 @@ def _utc(value: object) -> datetime | None:
         return None
 
 
+_SHA256 = re.compile(r"^[a-f0-9]{64}$")
+_MERGE_STATE_SOURCES = {"GITHUB_REST", "GITHUB_GRAPHQL", "LOCAL_GIT_MERGE_TREE"}
+
+
+def _ic3_receipt_reasons(record: Mapping[str, Any], pr: Mapping[str, Any], ci: Mapping[str, Any]) -> list[str]:
+    """IC-3 (Grok S1 pilot 2026-11-11; ChatGPT #1156 6816178550): receipt fields that make a
+    scheduled S1 decision joinable and replayable. Strictly additive reasons: can only demote a
+    candidate, never authenticate it. Supplied values stay untrusted until native readback."""
+    out: list[str] = []
+    sched = _utc(record.get("scheduled_for_utc"))
+    start = _utc(record.get("task_started_at"))
+    if sched is None:
+        out.append("MISSING_SCHEDULED_FOR_UTC")
+    elif start is not None and start < sched:
+        out.append("TASK_STARTED_BEFORE_SCHEDULE")
+    if record.get("task_provenance_source") not in {"AUTOMATIONS_RUN_DETAILS", "SELF_ATTESTED"}:
+        out.append("TASK_PROVENANCE_SOURCE_NOT_DECLARED")
+    lease = record.get("writer_lease")
+    lease = lease if isinstance(lease, Mapping) else {}
+    if lease.get("active") is not False or not isinstance(lease.get("ref"), str) or not lease["ref"].strip():
+        out.append("WRITER_LEASE_STATE_NOT_SUPPLIED")
+    msc = record.get("merge_state_check")
+    msc = msc if isinstance(msc, Mapping) else {}
+    if (msc.get("source") not in _MERGE_STATE_SOURCES or _utc(msc.get("checked_at_utc")) is None
+            or msc.get("head_sha") != pr.get("head_sha")):
+        out.append("MERGE_STATE_SOURCE_NOT_BOUND")
+    cls = record.get("classifier")
+    cls = cls if isinstance(cls, Mapping) else {}
+    if not (_sha(cls.get("blob_sha")) and isinstance(cls.get("disposition"), str)
+            and isinstance(cls.get("output_sha256"), str) and _SHA256.fullmatch(cls["output_sha256"])):
+        out.append("CLASSIFIER_IO_NOT_BOUND")
+    ids = ci.get("executed_test_ids")
+    if (not isinstance(ids, list) or not ids or any(type(t) is not str or not t.strip() for t in ids)
+            or len(set(ids)) != len(ids)):
+        out.append("EXECUTED_TEST_IDS_NOT_SUPPLIED")
+    if not isinstance(pr.get("merged_by"), str) or not pr["merged_by"].strip():
+        out.append("MERGE_ACTOR_NOT_SUPPLIED")
+    return out
+
+
 def inspect_claim(record: Mapping[str, Any]) -> dict[str, Any]:
     """Check untrusted reported evidence for obvious false-positive claims.
 
@@ -97,6 +137,7 @@ def inspect_claim(record: Mapping[str, Any]) -> dict[str, Any]:
     merge_time = _utc(pr.get("merged_at"))
     if not (task_start and merge_time and task_end and task_start <= merge_time <= task_end):
         reasons.append("NATIVE_MERGE_TIME_NOT_WITHIN_SCHEDULED_RUN")
+    reasons.extend(_ic3_receipt_reasons(record, pr, ci))
 
     # A complete shape is a candidate ONLY, never native authority.
     candidate = not reasons
