@@ -176,6 +176,14 @@ class IC1ChangedTestStatusTests(unittest.TestCase):
         self.result(r, "READY_TO_MERGE")
 
 
+    def test_g3_missing_entire_path_manifest_with_claimed_native_evidence_fails(self):
+        r = make_record([row("tests/a/test_a.py")],
+                        executed=["tests/a/test_a.py::test_a"])
+        del r["expected_changed_paths"]
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+        r["expected_changed_paths"] = None
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+
     def test_g3_truncated_but_consistent_census_falsifies_ready(self):
         r = make_record([row("scripts/example.py")])
         r["pr_changed_files_count"] = 2  # hidden test in another PR-files page
