@@ -88,3 +88,11 @@ test('NOT_STARTED cannot conceal any score, actual observation, or spoofed phase
  v=sourceOnlyPriceRangeProof(a,{now_utc:'2026-10-22T12:30:00Z'});
  assert.equal(v.reason,'WINDOW_PHASE_INVALID');
 });
+test('v2.5.1 quote unit comes only from the source label, never assumed',()=>{
+ const a=make();
+ assert.ok(sourceOnlyPriceRangeProof(a,{now_utc:'2026-10-23T17:30:00Z'}).window_items[0].original_ranges.every(r=>r.quote===null),'no label → no unit');
+ a.public_live_precision.price_quote_labels={forecast_model_declared:{BTC:'USDT',ETH:'USDT'}};
+ assert.deepEqual(sourceOnlyPriceRangeProof(a,{now_utc:'2026-10-23T17:30:00Z'}).window_items[0].original_ranges.map(r=>r.quote),['USDT','USDT']);
+ a.public_live_precision.price_quote_labels.forecast_model_declared.ETH='usd<script>';
+ assert.equal(sourceOnlyPriceRangeProof(a,{now_utc:'2026-10-23T17:30:00Z'}).window_items[0].original_ranges[1].quote,null);
+});
