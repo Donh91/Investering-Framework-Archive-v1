@@ -7,6 +7,21 @@
 
 ---
 
+## Cycle Navigator / Market Notes - new separate X editorial line (2026-11-12)
+
+Owner-approved independent publishing lane. New drafts are short source-backed market notes, not precision scorecards or frozen forecast X mirrors. **First planned regular edition: W47, Monday 2026-11-16.** Its numbering \`CN-MN-001\` is independent from legacy public CN \`#33\` and machine issue numbers. No X post is confirmed by this index entry.
+
+Canonical routing:
+- \`05_CYCLE_NAVIGATOR/x_market_notes/README.md\`
+- \`05_CYCLE_NAVIGATOR/x_market_notes/2026-11-12__editorial-charter-v1__canonical.md\`
+- \`05_CYCLE_NAVIGATOR/x_market_notes/2026-11-12__editorial-publication-v1__canonical.md\`
+- \`05_CYCLE_NAVIGATOR/x_market_notes/2026-11-12__visual-language-v1__canonical.md\`
+- \`05_CYCLE_NAVIGATOR/x_market_notes/EDITION_INDEX.json\`
+
+The previous X forecast publication protocol stays authoritative **only for the explicitly requested legacy forecast/precision series**. Canonical forecast issuance, scoring, site and current market owners do not change.
+
+---
+
 ## How to use this index
 
 ```text
