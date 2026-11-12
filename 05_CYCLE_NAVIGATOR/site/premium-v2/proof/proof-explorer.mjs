@@ -39,7 +39,7 @@ function focus(){
  const rows=view.window_items;
  let text=local(...label[step]);
  if(step==='freeze')text+=' '+rows.map(w=>{
-  const r=w.original_ranges.map(x=>x.asset+' '+integer(x.low)+'–'+integer(x.high)+' USD').join(' / ');
+  const r=w.original_ranges.map(x=>x.asset+' '+integer(x.low)+'–'+integer(x.high)+(x.quote?' '+x.quote:'')).join(' / ');
   return windowName[w.window]+': '+r;
  }).join(' · ');
  if(step==='observed')text+=' '+rows.map(w=>
@@ -47,7 +47,7 @@ function focus(){
   'h').join(' · ');
  if(step==='assess')text+=' '+rows.map(w=>
   windowName[w.window]+' '+score(w.source_reported_score_to_date)+' · '+
-  (w.observed_complete?local('afsluttet','closed'):local('foreløbig','provisional'))).join(' / ')+
+  (w.observed_complete?local('afsluttet','closed'):w.state==='PENDING'?local('ikke startet','not started'):local('foreløbig','provisional'))).join(' / ')+
   '. '+local('Ingen af tallene er uafhængigt Proof-seglet.',
              'None of these readings is independently proof-sealed.');
  host.textContent=text;
@@ -56,15 +56,17 @@ function renderWindows(){
  const host=$('proof-windows');host.replaceChildren();
  if(view?.status!=='PROVISIONAL_SOURCE_READBACK')return;
  for(const w of view.window_items){
-  const card=node('article','proof-window');card.dataset.status=w.observed_complete?'complete':'live';
+  const pending=w.state==='PENDING';
+  const card=node('article','proof-window');card.dataset.status=w.observed_complete?'complete':pending?'pending':'live';
   card.setAttribute('title',w.state);
   card.append(node('span','proof-kicker',windowName[w.window]+' · '+(w.observed_complete?
-   local('AFSLUTTET','CLOSED'):local('FORELØBIG','PROVISIONAL'))));
+   local('AFSLUTTET','CLOSED'):pending?local('IKKE STARTET','NOT STARTED'):local('FORELØBIG','PROVISIONAL'))));
   card.append(node('strong','proof-score',score(w.source_reported_score_to_date)));
   card.append(node('p','',w.observed_hours+'/'+w.expected_hours_final+'h · '+
     local('observeret kildedækning','observed source coverage')));
   card.append(node('p','',w.observed_complete?
-   local('Kildedækning afsluttet','Source coverage complete'):
+   local('Kildedækning afsluttet','Source coverage complete'):pending?
+   local('Vinduet er ikke startet','Window has not started'):
    local('Observation fortsætter','Observation ongoing')));
   host.append(card);
  }
