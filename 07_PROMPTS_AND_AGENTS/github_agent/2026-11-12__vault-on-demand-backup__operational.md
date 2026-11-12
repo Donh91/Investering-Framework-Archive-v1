@@ -1,12 +1,12 @@
 # Vault On-Demand Backup: Prompt-to-Verified-Recovery Runbook v0.1
 
 **Dato:** 2026-11-12  
-**Status:** OPERATIONAL_CANDIDATE · PENDING_RUN_87_FINAL_EVIDENCE  
+**Status:** OPERATIONAL_CANDIDATE · RUN_87_SNAPSHOT_AND_RESTORE_VERIFIED · INDEPENDENT_CUTOVER_NOT_ATTESTED  
 **Område:** Source/Vault recovery, on-demand GitHub execution, agent handover  
 **Primary folder:** `07_PROMPTS_AND_AGENTS/github_agent/`  
 **Depends on:** `AGENTS.md`, `.agents/skills/archive-governance/SKILL.md`, `01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md`, `01_CORE_FRAMEWORK/governance/2026-07-11__external-vault-activation-and-snapshot-contract-v1-1__canonical.md`
 
-> **Evidence boundary:** This is a reproducible procedure, NOT proof that the 2026-11-12 backup finished. The observed run #87 was still `in_progress` at last readback. Only native terminal GitHub evidence, an exact source-bound manifest/receipt and a verified recovery readback can promote the result. No governance or runtime permissions change is authorized by this document.
+> **Evidence boundary:** The original Vault workflow run #87 completed SUCCESS on 2026-11-12. Native snapshot job and immutable receipt verify a frozen Archive SHA, 319,373 paths with zero unresolved, remote readback PASS and restore-drill PASS. This demonstrates recoverability of that frozen revision, **not** a current-main backup, complete Git mirror, production recovery cutover authorization or independent destructive-custody attestation. No governance or runtime permissions change is authorized by this document.
 
 ## User invocation
 
@@ -40,15 +40,23 @@ This runbook never authorizes source/Vault deletion, force pushes, history rewri
 9. **Report exact product.** `PASS_CANONICAL_SNAPSHOT` only when native completion, required paths, source SHA, manifest, receipt and recovery readback agree. Use `PARTIAL_CANONICAL_SNAPSHOT` when bounded unresolved paths are listed, `FAIL` on definitive failure, `PENDING` while running and `UNVERIFIED` when access/proof is absent. Never say `FULL_GIT_MIRROR` without branch/tag/history proof. A newer Archive `main` after the frozen SHA requires a clearly labeled post-backup delta, not a retroactive claim.
 10. **Archive learning with real evidence.** Once (and only once) the run meets the success gate, update the current Archive operating owner through an isolated `agent/task-YYYYMMDD-...` branch and governed PR, link the exact run/receipt and finalize this runbook as an observed operational method. Preserve the existing S1 and archive ownership; do not create a second supervisor, workflow, schedule, agent identity or permanent private-data backdoor.
 
-## Run #87: observed, **not promoted** (2026-11-12)
+## Run #87: verification outcome (2026-11-12, source-frozen backup)
 
-- Owner-requested original run: [Vault Actions #87](https://github.com/Donh91/Investering-Framework-Vault/actions/runs/43241155043).
-- Vault workflow HEAD shown: `d8bf61048dccf32884f50bf6782a09059fead281`. **This is not yet an authenticated frozen Archive snapshot SHA.**
-- Archive main was `bee079d7a755874dc6c71a0292c3d3e86db30531` when the internal backup branch was created; it subsequently advanced. That safepoint is `backup-safepoint/2026-11-12-manual-vault-request`, compare identical at that point.
-- Prioritized access finding: connector returned `404` for private Vault, but the existing authenticated GitHub browser could read Vault and trigger the already-present manual workflow. Do not interpret 404 as proof Vault is gone.
-- Last owner-session inspection observed run `IN_PROGRESS` with `snapshot` running for ~14 minutes, freeze/readback step active; validation/receipt jobs not verified terminal. A previous earlier observation had ambiguous job state; latest native state wins.
-- Required for promotion: terminal native run/job evidence; snapshot/receipt paths and actual Vault commits; *Archive* frozen SHA; counts/digests; restore/readback `PASS`; source coverage relative to post-run `main`.
-- **Current result:** `BACKUP_PENDING_TERMINAL_VERIFICATION`, `EXTERNAL_BACKUP_PASS=FALSE`, `FULL_GIT_MIRROR=NOT_PROVEN`.
+The workflow **completed SUCCESS** after 31m59s, with `snapshot` PASSED in 30m06s and `publish_archive_receipt` PASSED in 1m46s. `validate_recovery_pr` and `verify_archive_receipt` were SKIPPED by workflow conditions: they are not independently claimed as PASSED.
+
+Immutable evidence:
+- Original [Vault Actions #87](https://github.com/Donh91/Investering-Framework-Vault/actions/runs/43241155043) and [snapshot job](https://github.com/Donh91/Investering-Framework-Vault/actions/runs/43241155043/job/131261595157).
+- Verified [remote-verification JSON receipt](https://github.com/Donh91/Investering-Framework-Vault/blob/8ed85c3a383131d60f39be3e6c5638fde6d0004a/receipts/2026-11-12-run-43241155043-1__remote-verification.json), committed to a Vault **task branch**, not verified merged to Vault main. Git commit `8ed85c3a383131d60f39be3e6c5638fde6d0004a`.
+- Frozen source **Archive** `source_sha=bee079d7a755874dc6c71a0292c3d3e86db30531`; Vault workflow execution `d8bf61048dccf32884f50bf6782a09059fead281`; Vault snapshot destination SHA `989d58fb68e743871401e8ae14b4cf63570332b1`; never substitute one for another.
+- Manifest SHA-256 `3c0e2b66edaef6ad60207b2bef853fd294cb5666c6b4c9f1942762d692e3b92a`, schema v2, 16 shards; `verified_paths=319373`, `unresolved_paths=[]`.
+- `remote_readback=PASS`; `restore_drill=PASS_ALL_FILES_AND_GIT_TREE`; source tree SHA `77ef95d946409b23442b620e60bd492296638a94`.
+- Original internal safepoint `backup-safepoint/2026-11-12-manual-vault-request` was verified identical to source `bee079d7...` when created.
+- Independently verified Archive `main` subsequently advanced to `47bf787ea8d32c15687a4d7bb68caa71792e5cef`, **36 commits ahead** of the frozen backed-up revision at the time of the follow-up comparison. These later 36 commits are **not covered by this snapshot**; a later backup/delta needs its own source SHA and receipt.
+- Receipt says `separation_result=REQUIRES_INDEPENDENT_OWNER_EVIDENCE` and `release_permission=false`. Therefore successful **data restore drill** must never be represented as approval of production cutover, merge or independent source/Vault custody.
+- Private repo authenticated browser access succeeded despite GitHub App `404`, a reusable authorization boundary finding, not a reason to broaden access.
+- Backup result: **VERIFIED_FROZEN_SOURCE_SNAPSHOT_AND_RESTORE**. `CURRENT_OWNER_VERSION_BACKUP=PENDING_POST_MERGE_DELTA`; `FULL_GIT_MIRROR=NOT_PROVEN`; `INDEPENDENT_CUTOVER_AUTHORIZATION=BLOCKED_PENDING_OWNER_EVIDENCE`.
+
+For any future prompt, execute the same original-owner path, first check for an existing in-progress run, freeze the *then-current* Archive SHA, confirm append-only source/Vault principal separation, dispatch at most once, verify immutable remote receipt and restore, then compare the present Archive main to the frozen source. Never silently infer latest-main coverage from a green historical run.
 
 ## Mandatory compact receipt to return to owner
 
