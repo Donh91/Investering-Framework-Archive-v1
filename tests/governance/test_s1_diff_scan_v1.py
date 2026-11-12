@@ -110,6 +110,50 @@ class PrivacyScan(unittest.TestCase):
             self.assertNotEqual(out["result"], "NO_RESTRICTED_CONTENT")
             self.assertFalse(out["externally_authenticated"])
 
+    def test_codex_p2_quoted_json_api_key_marker(self):
+        synthetic = '{"api_key":"SYNTHETIC_EXAMPLE_01234567890123456789"}'
+        self.check(sample([f("config.json", content=synthetic, patch="+ " + synthetic)]),
+                   "RESTRICTED_CONTENT")
+
+    def test_codex_p2_nested_blocked_basename(self):
+        self.check(sample([f("docs/AGENTS.md", content="policy note")]), "RESTRICTED_CONTENT")
+        self.check(sample([f("docs/subfolder/Id_RSA.txt", content="reference")]), "UNKNOWN")
+
+    def test_codex_p2_rename_from_private_directory(self):
+        self.check(sample([f("docs/moved.md", status="renamed",
+                             previous_filename="private/design.md")]), "RESTRICTED_CONTENT")
+
+    def test_codex_p2_surrogates_are_unknown_not_crashes(self):
+        value = "\ud800"
+        for field in ("patch", "content"):
+            row = f()
+            row[field] = value
+            self.check(sample([row]), "UNKNOWN")
+        for field in ("title", "body"):
+            data = sample()
+            data[field] = value
+            self.check(data, "UNKNOWN")
+        self.check(sample([f("docs/" + value + ".md")]), "UNKNOWN")
+
+    def test_codex_p2_untrusted_head_never_leaks_original_value(self):
+        bad = {"head": {"body": "PRIVATE_ALPHA_DESIGN synthetic-sensitive-prose"}}
+        out = scan_pr(bad)
+        self.assertEqual(out["result"], "UNKNOWN")
+        self.assertIsNone(out["head"])
+        self.assertNotIn("PRIVATE_ALPHA_DESIGN", str(out))
+        bad = sample()
+        bad["head"] = "PRIVATE_ALPHA_DESIGN synthetic-sensitive-prose"
+        out = scan_pr(bad)
+        self.assertEqual(out["result"], "UNKNOWN")
+        self.assertIsNone(out["head"])
+        self.assertNotIn("PRIVATE_ALPHA_DESIGN", str(out))
+
+    def test_findings_never_emit_private_path_literal(self):
+        bad = sample([f("private/PRIVATE_ALPHA_DESIGN_0123.md")])
+        out = self.check(bad, "RESTRICTED_CONTENT")
+        self.assertNotIn("PRIVATE_ALPHA_DESIGN", str(out))
+        self.assertIn("path_sha256_16", str(out))
+
     def test_run_is_deterministic_and_never_emits_excerpt(self):
         r = sample([f(content="PRIVATE_RESEARCH_DESIGN do not publish")])
         a, b = scan_pr(copy.deepcopy(r)), scan_pr(copy.deepcopy(r))
