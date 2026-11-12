@@ -72,8 +72,13 @@ def examine(cn: dict[str, Any], compass: dict[str, Any]) -> dict[str, Any]:
     days = []
     for asset in ("BTC", "ETH"):
         entries = ((paths.get(asset) or {}).get("points") or [])
+        if len(entries) != 7 or {x.get("day") for x in entries} != set(range(1, 8)):
+            raise ValueError("FROZEN_SEVEN_DAY_PATH_INVALID:" + asset)
         by_day = {x.get("day"): x for x in entries}
-        for observed in observations.get(asset, []):
+        observed_entries = observations.get(asset) or []
+        if len(observed_entries) != 7 or {x.get("day") for x in observed_entries} != set(range(1, 8)):
+            raise ValueError("DAILY_OBSERVATION_GRID_INVALID:" + asset)
+        for observed in observed_entries:
             day = observed.get("day")
             expected = by_day.get(day)
             if expected is None:
