@@ -46,7 +46,8 @@ def _ic3_receipt_reasons(record: Mapping[str, Any], pr: Mapping[str, Any], ci: M
         out.append("MISSING_SCHEDULED_FOR_UTC")
     elif start is not None and start < sched:
         out.append("TASK_STARTED_BEFORE_SCHEDULE")
-    if record.get("task_provenance_source") not in {"AUTOMATIONS_RUN_DETAILS", "SELF_ATTESTED"}:
+    provenance_source = record.get("task_provenance_source")
+    if type(provenance_source) is not str or provenance_source not in {"AUTOMATIONS_RUN_DETAILS", "SELF_ATTESTED"}:
         out.append("TASK_PROVENANCE_SOURCE_NOT_DECLARED")
     lease = record.get("writer_lease")
     lease = lease if isinstance(lease, Mapping) else {}
@@ -54,7 +55,9 @@ def _ic3_receipt_reasons(record: Mapping[str, Any], pr: Mapping[str, Any], ci: M
         out.append("WRITER_LEASE_STATE_NOT_SUPPLIED")
     msc = record.get("merge_state_check")
     msc = msc if isinstance(msc, Mapping) else {}
-    if (msc.get("source") not in _MERGE_STATE_SOURCES or _utc(msc.get("checked_at_utc")) is None
+    merge_source = msc.get("source")
+    if (type(merge_source) is not str or merge_source not in _MERGE_STATE_SOURCES
+            or _utc(msc.get("checked_at_utc")) is None
             or msc.get("head_sha") != pr.get("head_sha")):
         out.append("MERGE_STATE_SOURCE_NOT_BOUND")
     cls = record.get("classifier")
