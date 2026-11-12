@@ -33,6 +33,8 @@ def _utc(value: object) -> datetime | None:
 
 _SHA256 = re.compile(r"^[a-f0-9]{64}$")
 _MERGE_STATE_SOURCES = {"GITHUB_REST", "GITHUB_GRAPHQL", "LOCAL_GIT_MERGE_TREE"}
+# A scheduled run may start late, but not hours after its slot; S1 runs hourly.
+_MAX_SCHEDULE_LAG_SECONDS = 3600
 
 
 def _ic3_receipt_reasons(record: Mapping[str, Any], pr: Mapping[str, Any], ci: Mapping[str, Any]) -> list[str]:
@@ -46,6 +48,8 @@ def _ic3_receipt_reasons(record: Mapping[str, Any], pr: Mapping[str, Any], ci: M
         out.append("MISSING_SCHEDULED_FOR_UTC")
     elif start is not None and start < sched:
         out.append("TASK_STARTED_BEFORE_SCHEDULE")
+    elif start is not None and (start - sched).total_seconds() > _MAX_SCHEDULE_LAG_SECONDS:
+        out.append("TASK_START_NOT_BOUND_TO_SCHEDULE")
     provenance_source = record.get("task_provenance_source")
     if type(provenance_source) is not str or provenance_source not in {"AUTOMATIONS_RUN_DETAILS", "SELF_ATTESTED"}:
         out.append("TASK_PROVENANCE_SOURCE_NOT_DECLARED")
@@ -56,10 +60,16 @@ def _ic3_receipt_reasons(record: Mapping[str, Any], pr: Mapping[str, Any], ci: M
     msc = record.get("merge_state_check")
     msc = msc if isinstance(msc, Mapping) else {}
     merge_source = msc.get("source")
+    checked = _utc(msc.get("checked_at_utc"))
     if (type(merge_source) is not str or merge_source not in _MERGE_STATE_SOURCES
-            or _utc(msc.get("checked_at_utc")) is None
+            or checked is None
             or msc.get("head_sha") != pr.get("head_sha")):
         out.append("MERGE_STATE_SOURCE_NOT_BOUND")
+    else:
+        # The merge-state check must be fresh evidence from THIS run, taken before the merge.
+        merged = _utc(pr.get("merged_at"))
+        if start is None or merged is None or not (start <= checked <= merged):
+            out.append("MERGE_STATE_CHECK_STALE_OR_AFTER_MERGE")
     cls = record.get("classifier")
     cls = cls if isinstance(cls, Mapping) else {}
     if not (_sha(cls.get("blob_sha")) and isinstance(cls.get("disposition"), str)
