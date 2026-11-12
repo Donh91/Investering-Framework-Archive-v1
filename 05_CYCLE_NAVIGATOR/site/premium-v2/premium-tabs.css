@@ -911,3 +911,12 @@ body.premium-next.cn-tabbed-ui #official-path-view[data-reference-kind="NO_VERIF
 body.premium-next.cn-tabbed-ui #variant-panel #forecast-points{fill:none;stroke:var(--cn2-forecast)!important;stroke-width:5.5!important;stroke-linecap:round!important;vector-effect:non-scaling-stroke}
 body.premium-next.cn-tabbed-ui #variant-panel #range-band{opacity:.11!important}
 body.premium-next.cn-tabbed-ui #variant-panel .range-edge{stroke-opacity:.85!important}
+/* CN SITE v2.5 · Swing Kompas (#2084) in the Kompas grid. Presentation only.
+ * Full width after "Positionering og rotation" and "BTC · de næste tre dage",
+ * before the optional accordion; never inside a disclosure (unified-root guard).
+ * The approved first fold (status → AFVENT → risk → Hovedhorisonter) is unchanged. */
+body.premium-next.cn-tabbed-ui #compass-pro .product-first{grid-template-areas:"action action" "risk risk" "strip strip" "gate gate" "rot rot" "btc btc" "swing swing" "explain explain"!important}
+body.premium-next.cn-tabbed-ui #compass-pro #swing-rotation-overview{grid-area:swing;margin:4px 0 0!important;border-color:var(--k-line,#dbe4ee)!important;border-radius:14px!important;min-width:0}
+@media (min-width:760px){
+ body.premium-next.cn-tabbed-ui #compass-pro .product-first{grid-template-areas:"action action risk" "strip strip strip" "gate gate gate" "rot rot btc" "swing swing swing" "explain explain explain"!important}
+}

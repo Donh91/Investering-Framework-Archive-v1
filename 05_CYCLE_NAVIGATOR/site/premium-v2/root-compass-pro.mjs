@@ -17,6 +17,7 @@ import {verifiedOriginalWeekPrices} from './original-week-price-readback.mjs';
 import {kompasSourceClockReadback} from './kompas-clock-readback.mjs';
 import {importantStatusLine,btcNextDays,extraHorizonRows} from './kompas-owner-brief.mjs';
 import {cycleSourceReadback} from './cycle-source-readback.mjs';
+import {readSwingRotation,renderSwingRotation} from '../vnext-live/swing-rotation-readback.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -723,6 +724,7 @@ function paint(){
  // Official source gate remains upstream. An expired issuer can never be
  // refreshed via a newer Pages bundle timestamp or cached prior DOM text.
  renderProductExperience(view,feeds,lang);
+ renderSwingRotation($('swing-rotation-overview'),readSwingRotation(view,feeds?.compass,{lang}),{lang});
  renderCycleSource();
  renderSourceClocks();
  renderQuickDecision();

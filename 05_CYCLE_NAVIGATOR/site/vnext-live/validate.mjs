@@ -2,6 +2,7 @@
 // Runs in current SITE gate; synthetic source fixtures NEVER reach public dist.
 import assert from 'node:assert/strict';
 import './test-premium-experience.mjs';
+import './test-swing-rotation-readback.mjs';
 import './test-path-editorial.mjs';
 import {readFileSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
@@ -17,6 +18,11 @@ const dir=dirname(fileURLToPath(import.meta.url));
 const read=name=>readFileSync(resolve(dir,name),'utf8');
 const site=readFileSync(resolve(dir,'../build-public.mjs'),'utf8');
 const html=read('index.html'),client=read('app.mjs'),css=read('premium.css');
+assert.equal((html.match(/id="swing-rotation-overview"/g)||[]).length,1,'one visible Swing Kompas');
+assert.ok(html.indexOf('id="swing-rotation-overview"')<html.indexOf('id="horizon-body"'),'Swing matrix before source details');
+assert.match(client,/renderSwingRotation\(\$\('swing-rotation-overview'\)/,'real official source consumer wired');
+assert.match(read('premium-experience.css'),/\.swing-grid-header/,'mobile matrix styling missing');
+
 const now='2026-10-19T09:00:00Z';
 const windows=['day_1_2','day_3_4','day_5_7'];
 const rows=windows.flatMap((window,i)=>['BTC','ETH'].map((asset)=>({
