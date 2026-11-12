@@ -39,16 +39,54 @@ def check(rec, **kwargs):
         head_sha=kwargs.get("head_sha", H),
         policy_blob_sha=kwargs.get("policy_blob_sha", P),
         decision=kwargs.get("decision", DECISION),
+        auditor_evidence_url=kwargs.get("auditor_evidence_url"),
     )
 
 class NativeUI(unittest.TestCase):
     def test_ui_looking_comment_is_never_authorization(self):
         got = check(native_fixture())
         self.assertEqual(got["contract"], CONTRACT)
-        self.assertTrue(got["status"].startswith("UI_COMMENT_CANDIDATE"))
+        self.assertTrue(got["status"].startswith("NON_APP_COMMENT_CANDIDATE"))
         self.assertFalse(got["authorized"])
         self.assertFalse(got["externally_authenticated"])
         self.assertEqual(len(got["body_sha256"]), 64)
+
+    def test_p1_null_app_field_does_not_prove_human_ui_vs_pat(self):
+        # Both GitHub UI and a personal-access-token API call can have app=null.
+        # The helper must never report human attestation on either.
+        x = native_fixture()
+        result = check(x)
+        self.assertTrue(result["status"].startswith("NON_APP_COMMENT_CANDIDATE"))
+        self.assertIs(result["human_only_factor_verified"], False)
+        self.assertIs(result["authorized"], False)
+
+    def test_p2_waiver_requires_independent_auditor_receipt(self):
+        audit = f"https://github.com/{REPO}/issues/1156#issuecomment-9999"
+        x = native_fixture()
+        x["body"] = x["body"].replace(
+            "decision=APPROVE_STAGED_S",
+            "decision=APPROVE_D2_WAIVER_DOCS_ONLY\nauditor_evidence_url=" + audit,
+        )
+        missing = check(x, decision="APPROVE_D2_WAIVER_DOCS_ONLY")
+        self.assertEqual(missing["reason"], "INDEPENDENT_AUDITOR_EVIDENCE_REQUIRED")
+        matched = check(x, decision="APPROVE_D2_WAIVER_DOCS_ONLY", auditor_evidence_url=audit)
+        self.assertTrue(matched["status"].startswith("NON_APP_COMMENT_CANDIDATE"))
+        self.assertFalse(matched["authorized"])
+        self.assertEqual(matched["auditor_evidence_url"], audit)
+        wrong = check(x, decision="APPROVE_D2_WAIVER_DOCS_ONLY",
+                      auditor_evidence_url="https://example.com/other")
+        self.assertEqual(wrong["reason"], "INDEPENDENT_AUDITOR_EVIDENCE_INVALID")
+        bad_body = native_fixture()
+        bad_body["body"] = bad_body["body"].replace(
+            "decision=APPROVE_STAGED_S", "decision=APPROVE_D2_WAIVER_DOCS_ONLY")
+        self.assertEqual(check(bad_body, decision="APPROVE_D2_WAIVER_DOCS_ONLY",
+                               auditor_evidence_url=audit)["reason"],
+                         "OWNER_DECISION_SCOPE_OR_EXACT_HEAD_MISMATCH")
+
+    def test_non_waiver_cannot_attach_unauthenticated_auditor_url(self):
+        url = f"https://github.com/{REPO}/issues/1156#issuecomment-9999"
+        self.assertEqual(check(native_fixture(), auditor_evidence_url=url)["reason"],
+                         "UNEXPECTED_AUDITOR_EVIDENCE")
 
     def test_real_observed_chatgpt_app_comment_must_not_authorize(self):
         x = native_fixture()
@@ -79,7 +117,7 @@ class NativeUI(unittest.TestCase):
     def test_bounded_issue_location_can_be_used(self):
         x = native_fixture()
         x["html_url"] = f"https://github.com/{REPO}/issues/1156#issuecomment-{ID}"
-        self.assertTrue(check(x)["status"].startswith("UI_COMMENT_CANDIDATE"))
+        self.assertTrue(check(x)["status"].startswith("NON_APP_COMMENT_CANDIDATE"))
 
     def test_external_repository_or_wrong_comment_id_rejected(self):
         x = native_fixture(); x["html_url"] = f"https://github.com/other/repo/issues/1156#issuecomment-{ID}"
@@ -100,7 +138,7 @@ class NativeUI(unittest.TestCase):
 
     def test_ui_comment_from_api_shape_roundtrip_is_a_candidate_only(self):
         obj = json.loads(json.dumps(native_fixture()))
-        self.assertTrue(check(obj)["status"].startswith("UI_COMMENT_CANDIDATE"))
+        self.assertTrue(check(obj)["status"].startswith("NON_APP_COMMENT_CANDIDATE"))
         self.assertFalse(check(obj)["externally_authenticated"])
 
 class RequiredJobsManifest(unittest.TestCase):
