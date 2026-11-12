@@ -252,7 +252,10 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<script type="module" src="./premium-tabs.mjs"></script>');
   if(!html.includes('</head>'))throw Error('CN_TAB_NAV_MISSING_HEAD');
   html=html.replace('</head>','<link rel="stylesheet" href="./premium-tabs.css"></head>');
-  unique(html,'id="swing-rotation-overview"','single visible Swing overview');
+  const swingIdCount=(html.match(/id="swing-rotation-overview"/g)||[]).length;
+  if(swingIdCount!==1)
+    throw Error('CN_UNIFIED_ROOT_SWING_SINGLETON_COUNT:'+swingIdCount);
+
   if(html.indexOf('id="swing-rotation-overview"')>
      html.indexOf('<details class="cn-pro-more">'))
     throw Error('CN_UNIFIED_ROOT_SWING_BURIED_IN_DISCLOSURE');
