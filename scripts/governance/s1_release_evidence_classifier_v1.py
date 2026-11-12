@@ -84,11 +84,14 @@ def _owner_approval_comment_url(value, repo, pr):
 
 
 def _release_sensitive_path(path):
-    return (path == "AGENTS.md" or path.startswith(".github/")
-            or path.startswith("01_CORE_FRAMEWORK/governance/")
-            or path.startswith("00_ARCHIVE_CONTROL/")
-            or path.startswith("scripts/governance/s1_")
-            or path.startswith("tests/governance/test_s1_")
+    # Fable Round3 F2: self-modifying release policy must NEVER be a LOW
+    # documentation release, including its recipe, skills and machine schemas.
+    # This is advisory classification; the caller authenticates the full diff.
+    return (path in ("AGENTS.md", "CLAUDE.md")
+            or path.startswith((".github/", ".agents/", "00_FMOS/",
+                                "01_CORE_FRAMEWORK/governance/",
+                                "00_ARCHIVE_CONTROL/", "schemas/S1_",
+                                "scripts/governance/s1_", "tests/governance/test_s1_"))
             or path == "scripts/governance/check_codex_review_finality.py")
 
 
