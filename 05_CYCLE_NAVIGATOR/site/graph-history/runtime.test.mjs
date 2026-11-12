@@ -223,3 +223,22 @@ test('original approved light History styling and compact route use one verified
  assert.equal(r.dividers.length,1,'VISIBLE_WEEK_BOUNDARY_REQUIRED');
  assert.equal(r.blue.length,0,'W45_MISSING_FORECAST_MUST_REMAIN_UNPLOTTED');
 });
+
+// v2.4G2b: the blue curve passes through the 7 original points (+-0.5 px) and never
+// overshoots a neighbouring pair; the 7 dots sit on the knots. TEST-ONLY prices.
+test('original blue curve passes through all 7 points without overshoot; dots on knots',async()=>{
+ const d=fixture();const closes=[77150,78900,78020,80840,79280,82300,80760];
+ d.weeks[1].forecast=d.weeks[1].forecast.map((p,i)=>({...p,expected_close:closes[i]}));
+ const r=await run(d);
+ assert.equal(r.blue.length,1);
+ const path=r.blue[0].attrs.d;
+ const knots=[...path.matchAll(/[MC]([^MC]*)/g)].map(m=>m[1].trim().split(/[ ,]+/).map(Number)).map(n=>[n.at(-2),n.at(-1)]);
+ const segs=[...path.matchAll(/C([^MC]*)/g)].map(m=>m[1].trim().split(/[ ,]+/).map(Number));
+ const dots=r.elements.get('plot').children.filter(x=>x.tag==='circle'&&x.attrs.class==='forecast-point').map(c=>[+c.attrs.cx,+c.attrs.cy]);
+ assert.equal(knots.length,7,'BLUE_NOT_SEVEN_KNOTS');
+ assert.equal(dots.length,7,'BLUE_DOTS_NOT_SEVEN');
+ knots.forEach((k,i)=>assert.ok(Math.abs(k[0]-dots[i][0])<=0.5&&Math.abs(k[1]-dots[i][1])<=0.5,'BLUE_CURVE_MISSES_POINT_'+i));
+ segs.forEach((c,i)=>{const p0=knots[i],[,y1,,y2,,y3]=c,lo=Math.min(p0[1],y3)-0.5,hi=Math.max(p0[1],y3)+0.5;
+  for(let j=0;j<=50;j++){const s=j/50,u=1-s,y=u*u*u*p0[1]+3*u*u*s*y1+3*u*s*s*y2+s*s*s*y3;assert.ok(y>=lo&&y<=hi,'BLUE_OVERSHOOT_'+i)}});
+ const ys=closes.map((_,i)=>dots[i][1]);assert.equal(new Set(ys).size,7);
+});

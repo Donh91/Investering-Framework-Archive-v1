@@ -70,6 +70,28 @@ def _github(value):
             and not any(s in (".", "..") for s in unquote(u.path).replace(chr(92), "/").split("/")))
 
 
+def _owner_approval_comment_url(value, repo, pr):
+    """Check owner-evidence URL structure; caller MUST verify comment author/body."""
+    if not _github(value) or repo != "Donh91/Investering-Framework-Archive-v1":
+        return False
+    u = urlparse(value)
+    allowed_paths = {
+        f"/Donh91/Investering-Framework-Archive-v1/pull/{pr}",
+        "/Donh91/Investering-Framework-Archive-v1/issues/1156",
+    }
+    return (u.path in allowed_paths and not u.query and
+            re.fullmatch(r"issuecomment-[1-9][0-9]*", u.fragment) is not None)
+
+
+def _release_sensitive_path(path):
+    return (path == "AGENTS.md" or path.startswith(".github/")
+            or path.startswith("01_CORE_FRAMEWORK/governance/")
+            or path.startswith("00_ARCHIVE_CONTROL/")
+            or path.startswith("scripts/governance/s1_")
+            or path.startswith("tests/governance/test_s1_")
+            or path == "scripts/governance/check_codex_review_finality.py")
+
+
 def _stamp(value):
     if not isinstance(value, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z", value) is None:
         return None
@@ -77,6 +99,76 @@ def _stamp(value):
         return datetime.fromisoformat(value[:-1] + "+00:00").astimezone(timezone.utc)
     except ValueError:
         return None
+
+
+def _claude_review_is_valid(record, current):
+    """Owner-admitted advisory review, NEVER a native GitHub approval or merge permit.
+
+    All *_verified evidence must be independently read back from native GitHub
+    and the private Bridge by S1 before this deterministic classifier is called.
+    Claimed booleans / supplied hashes have no authentication power here.
+    """
+    r = record
+    v = r.get("claude_review")
+    if not isinstance(v, dict):
+        return False
+    if r.get("native_rules_verified") is not True or r.get("native_approval_required") is not False:
+        return False  # unknown or required native approval: fail closed
+    if r.get("repo_full_name") != "Donh91/Investering-Framework-Archive-v1":
+        return False
+    pr = r.get("pr_number")
+    cid = v.get("comment_id")
+    if type(pr) is not int or pr < 1 or type(cid) is not int or cid < 1:
+        return False
+    if v.get("comment_url") != (
+        f"https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/173#issuecomment-{cid}"
+    ):
+        return False
+    risk_map = {"LOW": "LOW", "HIGH": "HIGH_IMPACT"}
+    # MEDIUM has no reviewed custody semantics. Reject it until defined.
+    if type(r.get("risk")) is not str:
+        return False
+    risk = risk_map.get(r["risk"])
+    if risk is None:
+        return False
+    independent = v.get("independence")
+    if independent != "INDEPENDENT" and not (risk == "LOW" and independent == "SELF_AUTHORED_DESIGN"):
+        return False
+    # A caller-supplied LOW label cannot down-classify changed release controls.
+    # S1 must independently authenticate the entire native exact-HEAD path list.
+    paths = r.get("expected_changed_paths")
+    if (not isinstance(paths, list) or not paths
+            or any(type(p) is not str or not p.strip() or p != p.strip()
+                   or p.startswith("/") or ".." in p.split("/") for p in paths)
+            or len(set(paths)) != len(paths)
+            or (risk == "LOW" and any(_release_sensitive_path(p) for p in paths))):
+        return False
+    if risk == "HIGH_IMPACT":
+        owner = r.get("high_impact_owner_approval")
+        if (not isinstance(owner, dict)
+                or owner.get("approved") is not True
+                or owner.get("repo") != r["repo_full_name"]
+                or type(owner.get("pr")) is not int or owner["pr"] != pr
+                or owner.get("head_sha") != current["head"]
+                or not _owner_approval_comment_url(owner.get("evidence_url"), r["repo_full_name"], pr)
+                or owner.get("evidence_url") == v.get("comment_url")):
+            return False
+    if (v.get("contract") != "CLAUDE_REVIEW_v1"
+            or v.get("verdict") != "APPROVE"
+            or v.get("repo") != r["repo_full_name"]
+            or type(v.get("pr")) is not int or v.get("pr") != pr
+            or v.get("head_sha") != current["head"]
+            or v.get("requested_head_sha") != current["head"]
+            or v.get("risk_class") != risk
+            or any(v.get(k) != current[k] for k in (
+                ("head", "policy", "source") +
+                (() if r.get("review_requires_current_main") is False else ("main",))))
+            or v.get("body_readback_verified") is not True
+            or v.get("report_readback_verified") is not True
+            or re.fullmatch(r"[a-f0-9]{64}", str(v.get("report_sha256", ""))) is None
+            or re.fullmatch(r"[a-f0-9]{64}", str(v.get("body_sha256", ""))) is None):
+        return False
+    return True
 
 
 def classify_pr_disposition(record):
@@ -101,6 +193,9 @@ def classify_pr_disposition(record):
                   "active_writer_lease", "merge_state", "required_rules_enforced", "rule_census",
                   "unresolved_p0_p1", "source_science_gate", "required_pr_job_names",
                   "pr_jobs", "independent_review_required", "review", "review_requires_current_main",
+                  "claude_review", "native_rules_verified", "native_approval_required",
+                  "repo_full_name", "pr_number", "independent_reviewer_available",
+                  "high_impact_owner_approval",
                   "physical_site_review_required", "physical_site_review_passed",
                   "owner_physical_review_waiver", "recovery", "release_assessment", "recovery_max_age_seconds",
                   "safepoint_source", "owner_authorized",
@@ -176,10 +271,7 @@ def classify_pr_disposition(record):
             return blocked("EXTERNAL_DEPENDENCY", "S1_GENERAL_NATIVE_PATH_CENSUS_MISSING",
                            "Complete native exact-head changed paths")
         if r["risk"] == "LOW" and any(
-                p == "AGENTS.md" or p.startswith(".github/workflows/")
-                or p.startswith("01_CORE_FRAMEWORK/governance/")
-                or p.startswith("00_ARCHIVE_CONTROL/")
-                for p in changed_paths):
+                _release_sensitive_path(p) for p in changed_paths):
             return blocked("SOURCE_OR_SCIENCE_GATE", "HIGH_IMPACT_PATH_MARKED_LOW",
                            "Existing source/workflow governance and independent recovery gates")
         jobs = r.get("pr_jobs")
@@ -284,8 +376,20 @@ def classify_pr_disposition(record):
         review_keys = ("head", "policy", "source")
         if r.get("review_requires_current_main") is not False:
             review_keys += ("main",)
-        if not isinstance(review, dict) or review.get("state") != "APPROVED" or review.get("independent") is not True or any(review.get(k) != current[k] for k in review_keys):
-            return blocked("REVIEW_REQUIRED_BY_POLICY", "REQUIRED_INDEPENDENT_APPROVAL_MISSING_OR_STALE", "Independent approval when required by current policy", "EXISTING_REVIEW_OWNER")
+        native_ok = (isinstance(review, dict) and review.get("state") == "APPROVED"
+                     and review.get("independent") is True
+                     and all(review.get(k) == current[k] for k in review_keys))
+        if not native_ok and not _claude_review_is_valid(r, current):
+            # Claude's Audit-02b: a proven absent reviewer identity is an OWNER
+            # resolution, never an excuse to remove a binding approval gate.
+            if r.get("independent_reviewer_available") is False:
+                return blocked("REVIEW_REQUIRED_BY_POLICY", "INDEPENDENT_REVIEWER_IDENTITY_ABSENT",
+                               "Independent approval required but no non-author native reviewer exists",
+                               "REPOSITORY_OWNER",
+                               "Owner supplies independent reviewer or admissible source-bound Claude advisory review with native-rule verification")
+            return blocked("REVIEW_REQUIRED_BY_POLICY", "REQUIRED_INDEPENDENT_APPROVAL_MISSING_OR_STALE",
+                           "Native approval or qualified exact-head Claude review under owner policy",
+                           "EXISTING_REVIEW_OWNER")
     if r.get("physical_site_review_required") is True and r.get("physical_site_review_passed") is not True and r.get("owner_physical_review_waiver") is not True:
         return blocked("EXTERNAL_DEPENDENCY", "PHYSICAL_REVIEW_REQUIRED", "Applicable physical SITE review policy", "EXISTING_SITE_OWNER")
     if r.get("risk") not in ("LOW", "HIGH"):

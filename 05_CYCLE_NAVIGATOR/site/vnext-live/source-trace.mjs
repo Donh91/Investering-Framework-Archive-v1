@@ -36,13 +36,13 @@ const PUBLIC_STATUS_LABELS=Object.freeze({
  PARTIAL_ANALYTICS:['Delvis analyse','Partial analytics'],
  UNAVAILABLE_API_CONTRACT:['API-analyse ikke tilgængelig','API analysis unavailable'],
  AVAILABLE_SHADOW_ONLY:['Kun shadow-research','Shadow research only'],
- NO_EDGE:['Ingen dokumenteret edge','No proven edge']
+ NO_EDGE:['Ingen dokumenteret fordel','No proven edge']
 });
 const LONG_DIRECTION_LABELS=Object.freeze({
  UP:['Op','Up'],DOWN:['Ned','Down'],MIXED:['Blandet','Mixed'],
  SIDEWAYS:['Sideværts','Sideways'],UNCLEAR:['Uafklaret','Unclear'],
  LEAN_BEARISH:['Tendens ned','Leaning bearish'],LEAN_BULLISH:['Tendens op','Leaning bullish'],
- NO_EDGE:['Ingen dokumenteret edge','No proven edge'],
+ NO_EDGE:['Ingen dokumenteret fordel','No proven edge'],
  UNAVAILABLE:['Ikke verificeret','Not verified']
 });
 export function displayPublicStatus(value,lang='da'){

@@ -391,6 +391,227 @@ class DeterministicDispositionTests(unittest.TestCase):
         self.check(r, "INDEPENDENT_RECOVERY_UNVERIFIED", "RECOVERY_IDENTITY_INCOMPLETE")
 
 
+
+class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
+    """Source-bound Claude advisory can meet S1's INTERNAL review only, not platform rules."""
+
+    def base(self, risk="LOW", independence="INDEPENDENT"):
+        r = decision_fixture(risk)
+        r["review"] = {}
+        r["repo_full_name"] = "Donh91/Investering-Framework-Archive-v1"
+        r["pr_number"] = 2057
+        r["expected_changed_paths"] = ["scripts/research/nonproduction_evidence.py"]
+        r["native_rules_verified"] = True
+        r["native_approval_required"] = False
+        h = r["current"]["head"]
+        r["claude_review"] = {
+            "contract": "CLAUDE_REVIEW_v1",
+            "verdict": "APPROVE", "repo": r["repo_full_name"], "pr": r["pr_number"],
+            "head_sha": h, "requested_head_sha": h,
+            "head": h, "policy": r["current"]["policy"],
+            "source": r["current"]["source"], "main": r["current"]["main"],
+            "risk_class": "HIGH_IMPACT" if risk == "HIGH" else risk,
+            "report_sha256": "c" * 64, "body_sha256": "d" * 64,
+            "independence": independence,
+            "comment_id": 111111,
+            "comment_url": "https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/173#issuecomment-111111",
+            "body_readback_verified": True, "report_readback_verified": True,
+        }
+        return r
+
+    def assert_still_advisory(self, r, expected):
+        out = classify_pr_disposition(r)
+        self.assertEqual(out["disposition"], expected, out)
+        self.assertFalse(out["authorized"])
+        self.assertFalse(out["externally_authenticated"])
+        return out
+
+    def test_independent_low_approved_exact_head(self):
+        self.assert_still_advisory(self.base(), "READY_TO_MERGE")
+
+    def test_self_authored_low_owner_exception_only(self):
+        self.assert_still_advisory(self.base(independence="SELF_AUTHORED_DESIGN"), "READY_TO_MERGE")
+        self.assert_still_advisory(self.base("MEDIUM", "SELF_AUTHORED_DESIGN"), "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_independent_medium_all_other_gates_remain(self):
+        self.assert_still_advisory(self.base("MEDIUM"), "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_native_branch_approvals_never_replaced(self):
+        for val in (True, None, "false", 0):
+            r = self.base()
+            r["native_approval_required"] = val
+            self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_native_rules_not_verified_fails_closed(self):
+        r = self.base()
+        r["native_rules_verified"] = False
+        self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_changed_head_and_mismatched_request_fail_closed(self):
+        for field in ("head_sha", "requested_head_sha"):
+            r = self.base()
+            r["claude_review"][field] = "f" * 40
+            self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_missing_or_fake_attestations_fail_closed(self):
+        for field, value in (("report_sha256", "short"), ("body_sha256", None),
+                             ("body_readback_verified", False),
+                             ("report_readback_verified", "true"),
+                             ("comment_url", "https://github.com.evil/pull/173#issuecomment-111111"),
+                             ("verdict", "REQUEST_CHANGES"), ("pr", 2050)):
+            r = self.base()
+            r["claude_review"][field] = value
+            self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_high_impact_needs_owner_ok_in_addition_to_custody(self):
+        r = self.base("HIGH")
+        self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+        r["high_impact_owner_approval"] = {
+            "approved": True,
+            "repo": r["repo_full_name"],
+            "pr": r["pr_number"],
+            "head_sha": r["current"]["head"],
+            "evidence_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-111111",
+        }
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+        r["recovery"]["independent_custody"] = False
+        self.assert_still_advisory(r, "INDEPENDENT_RECOVERY_UNVERIFIED")
+
+    def test_ci_and_source_gates_cannot_be_bypassed(self):
+        r = self.base()
+        r["pr_jobs"][0]["executed_test_steps"] = 0
+        self.assert_still_advisory(r, "CI_NOT_EXECUTED")
+        r = self.base()
+        r["source_science_gate"] = "UNKNOWN"
+        self.assert_still_advisory(r, "SOURCE_OR_SCIENCE_GATE")
+
+    def test_review_identity_absent_routes_to_owner_without_waiver(self):
+        r = self.base()
+        r["claude_review"] = {}
+        r["independent_reviewer_available"] = False
+        out = self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+        self.assertEqual(out["reason"], "INDEPENDENT_REVIEWER_IDENTITY_ABSENT")
+        self.assertEqual(out["responsible_owner"], "REPOSITORY_OWNER")
+        r["independent_reviewer_available"] = None
+        out = self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+        self.assertEqual(out["reason"], "REQUIRED_INDEPENDENT_APPROVAL_MISSING_OR_STALE")
+
+    def test_malformed_risk_is_blocked_without_exception(self):
+        for invalid in (None, 0, [], {}, True):
+            with self.subTest(invalid=invalid):
+                r = self.base()
+                r["risk"] = invalid
+                self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_claude_policy_source_and_main_binding_cannot_go_stale(self):
+        for key in ("policy", "source", "main"):
+            with self.subTest(key=key):
+                r = self.base()
+                r["claude_review"][key] = "f" * 40
+                self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+        r = self.base()
+        r["review_requires_current_main"] = False
+        r["claude_review"]["main"] = "f" * 40
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+        r["claude_review"]["source"] = "f" * 40
+        self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_claude_boolean_pr_is_not_number_one(self):
+        r = self.base()
+        r["pr_number"] = 1
+        r["claude_review"]["pr"] = True
+        self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_unrecognized_medium_risk_cannot_evade_high_impact_guards(self):
+        r = self.base("MEDIUM")
+        self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+        r["review"] = {**r["current"], "state": "APPROVED", "independent": True}
+        self.assert_still_advisory(r, "INTERNAL_REPAIRABLE")
+
+    def test_high_impact_owner_approval_must_bind_repo_pr_head_and_url(self):
+        r = self.base("HIGH")
+        good = {
+            "approved": True, "repo": r["repo_full_name"],
+            "pr": r["pr_number"], "head_sha": r["current"]["head"],
+            "evidence_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-111111",
+        }
+        r["high_impact_owner_approval"] = good
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+        for field, bad in (
+            ("approved", 1), ("repo", "Donh91/other"), ("pr", True),
+            ("pr", 2058), ("head_sha", "f" * 40),
+            ("evidence_url", "https://github.com.evil/Donh91/repo/issues/1")
+        ):
+            with self.subTest(field=field, bad=bad):
+                tampered = copy.deepcopy(r)
+                tampered["high_impact_owner_approval"][field] = bad
+                self.assert_still_advisory(tampered, "REVIEW_REQUIRED_BY_POLICY")
+        for invalid in (True, False, None, "approved", []):
+            with self.subTest(invalid=invalid):
+                tampered = copy.deepcopy(r)
+                tampered["high_impact_owner_approval"] = invalid
+                self.assert_still_advisory(tampered, "REVIEW_REQUIRED_BY_POLICY")
+
+
+    def test_grok_g1_owner_comment_url_must_be_original_or_canonical(self):
+        r = self.base("HIGH")
+        r["high_impact_owner_approval"] = {
+            "approved": True, "repo": r["repo_full_name"],
+            "pr": r["pr_number"], "head_sha": r["current"]["head"],
+            "evidence_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-111111",
+        }
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+        invalid = (
+            "https://github.com/Donh91/unrelated-repo/blob/main/README.md",
+            r["claude_review"]["comment_url"],
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2058#issuecomment-111111",
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156",
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-0",
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156?foo=bar#issuecomment-111111",
+        )
+        for url in invalid:
+            with self.subTest(url=url):
+                x = copy.deepcopy(r)
+                x["high_impact_owner_approval"]["evidence_url"] = url
+                self.assert_still_advisory(x, "REVIEW_REQUIRED_BY_POLICY")
+        r["high_impact_owner_approval"]["evidence_url"] = (
+            "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2057#issuecomment-111111")
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+
+    def test_grok_g2_low_risk_self_authored_path_guard_without_general_optin(self):
+        r = self.base("LOW", "SELF_AUTHORED_DESIGN")
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+        for path in ("AGENTS.md", ".github/workflows/risky.yml",
+                     ".github/actions/intraday-execution/action.yml",
+                     ".github/CODEOWNERS",
+                     "01_CORE_FRAMEWORK/governance/guard.md",
+                     "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
+                     "scripts/governance/s1_release_evidence_classifier_v1.py",
+                     "scripts/governance/s1_general_release_evidence_v1.py",
+                     "scripts/governance/s1_native_handoff_auth_v1.py",
+                     "scripts/governance/s1_agent_handoff_receipts_v1.py",
+                     "scripts/governance/check_codex_review_finality.py",
+                     "tests/governance/test_s1_general_release_evidence_v1.py"):
+            with self.subTest(path=path):
+                x = copy.deepcopy(r)
+                x["expected_changed_paths"] = [path]
+                self.assert_still_advisory(x, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_claude_advisory_path_census_must_exist_and_be_well_formed(self):
+        for paths in (None, [], ["../escape.py"], ["safe.py", "safe.py"], [None]):
+            with self.subTest(paths=paths):
+                r = self.base()
+                r["expected_changed_paths"] = paths
+                self.assert_still_advisory(r, "REVIEW_REQUIRED_BY_POLICY")
+
+    def test_native_independent_approval_still_works(self):
+        r = self.base()
+        r["review"] = decision_fixture("LOW")["review"]
+        r["claude_review"] = None
+        r["native_approval_required"] = True
+        self.assert_still_advisory(r, "READY_TO_MERGE")
+
+
 if __name__ == "__main__":
     unittest.main()
 
@@ -478,6 +699,11 @@ class S1GeneralIntegrationTests(unittest.TestCase):
     def test_workflow_marked_low_fails_closed(self):
         self.check(lambda r: r.update(expected_changed_paths=[".github/workflows/recovery.yml"]),
                    "HIGH_IMPACT_PATH_MARKED_LOW")
+
+    def test_composite_action_marked_low_fails_closed_with_general_preflight(self):
+        self.check(lambda r: r.update(
+            expected_changed_paths=[".github/actions/intraday-execution/action.yml"]),
+            "HIGH_IMPACT_PATH_MARKED_LOW")
 
     def test_canonical_governance_marked_low_fails_closed(self):
         for path in ("AGENTS.md", "01_CORE_FRAMEWORK/governance/policy.md",

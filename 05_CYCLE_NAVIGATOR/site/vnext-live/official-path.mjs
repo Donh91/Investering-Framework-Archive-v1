@@ -9,19 +9,19 @@ export const PATH_CONTRACT = 'CN_PATH_SOURCE_PRESENTATION_v1';
 const PHASES = Object.freeze([
   ['BTC','BTC leadership','BTC-lederskab'],
   ['ETH','Ethereum leadership','ETH-lederskab'],
-  ['LARGE_MID','Large + mid rotation','Large + mid-rotation'],
+  ['LARGE_MID','Large + mid rotation','Rotation til large og mid caps'],
   ['ALT_IGNITION','Altseason ignition','Altseason begynder'],
-  ['MICRO','Micro acceleration','Micro-acceleration'],
+  ['MICRO','Micro acceleration','Microcaps accelererer'],
   ['BROAD','Broad altseason','Bred altseason'],
-  ['MANIA','Mania / euphoria','Mani / eufori'],
+  ['MANIA','Mania / euphoria','Mani og eufori'],
   ['DISTRIBUTION','Distribution','Distribution'],
-  ['PROTECTION','Exit / protection','Exit / beskyttelse'],
-  ['REENTRY','Cooldown / re-entry','Afkøling / re-entry']
+  ['PROTECTION','Exit / protection','Exit og beskyttelse'],
+  ['REENTRY','Cooldown / re-entry','Afkøling og re-entry']
 ]);
 const LABEL = Object.freeze({
   da:{
     noSource:'Kilde utilgængelig',archived:'Arkiv · ikke live',observed:'Dokumenteret reference',
-    noPoint:'Aktuel fase ikke verificeret',next:'Næste betingelse',noGate:'Næste gate ikke dokumenteret',
+    noPoint:'Aktuel fase ikke verificeret',next:'Næste betingelse',noGate:'Ikke dokumenteret endnu',
     etaUnknown:'Ingen verificeret ETA',condition:'Betinget kildevindue, ikke nedtælling',
     window:'Kildevindue',watch:'Watch · ikke bekræftet',paused:'Afventer bekræftelse',
     noAlt:'Ingen bekræftet bred altseason',btc:'BTC ledte den senest afsluttede uge',
@@ -32,7 +32,7 @@ const LABEL = Object.freeze({
     source:'Frosset uge',step:'Strukturel reference',later:'Ikke verificeret',
     unavailable:'UTILGÆNGELIG',notConfirmed:'IKKE BEKRÆFTET',
     hold:'HOLD',waitAction:'AFVENT',hardWait:'HARD WAIT',unavailableAction:'UTILGÆNGELIG',
-    altTitle:'Altseason-watch',sourceCaveat:'Tidsrum er observationsvinduer, ikke sikre fase-startdatoer.'
+    altTitle:'Altseason-overvågning',sourceCaveat:'Tidsrum er observationsvinduer, ikke sikre fase-startdatoer.'
   },
   en:{
     noSource:'Source unavailable',archived:'Archived · not live',observed:'Documented reference',

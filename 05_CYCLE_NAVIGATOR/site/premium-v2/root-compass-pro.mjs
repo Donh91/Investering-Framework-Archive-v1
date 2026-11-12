@@ -15,7 +15,9 @@ import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
 import {verifiedOriginalWeekPrices} from './original-week-price-readback.mjs';
 import {kompasSourceClockReadback} from './kompas-clock-readback.mjs';
+import {importantStatusLine,btcNextDays,extraHorizonRows} from './kompas-owner-brief.mjs';
 import {cycleSourceReadback} from './cycle-source-readback.mjs';
+import {readSwingRotation,renderSwingRotation} from '../vnext-live/swing-rotation-readback.mjs';
 import {
   renderProductExperience,initProductExperience
 } from '../vnext-live/premium-experience.mjs';
@@ -25,7 +27,7 @@ const CLOCK_RECHECK_MS=60*1000;
 const H=[
  ['NEXT_12H','CURRENT MOMENTUM'],['NEXT_1_3D','1–3d'],
  ['NEXT_5_7D','5–7d'],['NEXT_2_3W','2–3w'],
- ['CYCLE_ALTCOINS_3_8W','3–8w']
+ ['CYCLE_ALTCOINS_3_8W','4–8w']
 ];
 const $=id=>document.getElementById(id);
 const safe=s=>typeof s==='string'&&s.trim()?s.trim().slice(0,180):'UNAVAILABLE';
@@ -55,8 +57,8 @@ function renderOverview(){
  const en=lang==='en';
  const model=publicOverview({latest:feeds?.latest,compass:feeds?.compass,view,lang});
  const keys=['d13','d57','w23'];
- set('cn-overview-heading',en?'Compass outlook':'Kompasforløb');
- set('cn-overview-subtitle',en?'Three independent forecast windows':'Tre selvstændige prognosehorisonter');
+ set('cn-overview-heading',en?'Main horizons':'Hovedhorisonter');
+ set('cn-overview-subtitle',en?'Official direction · evidence points, not probabilities':'Officiel retning · evidenspoint, ikke sandsynligheder');
  set('cn-overview-foot',en?
   'Arrows show source-issued direction for each window, not the order of price moves. Bull/Bear are coarse evidence points, not probabilities.':
   'Pilene viser retning pr. periode, ikke rækkefølgen af kursbevægelser. Bull/Bear er grove evidenspoint, ikke sandsynligheder.');
@@ -109,11 +111,12 @@ function renderOverview(){
   return same?{name:label,stance:rows[0].stance,source:rows[0].sourceAction}:
    rows.map(x=>({name:x.name,stance:x.stance,source:x.sourceAction}));
  };
- const groups=rotation.valid?[
-  group('BTC / ETH',['BTC','ETH']),
-  group(en?'Large / Mid / Small':'Store / Mellem / Små',['LARGE_CAPS','MID_CAPS','SMALL_CAPS']),
-  group(en?'Microcaps':'Mikroaktiver',['MICROCAPS']),group('Memes',['MEMES'])
- ].flatMap(x=>Array.isArray(x)?x:x?[x]:[]):[];
+ // v2.2b: one row per official segment (owner brief), same source stance.
+ const segmentName={LARGE_CAPS:en?'Large caps':'Store',MID_CAPS:en?'Mid caps':'Mellem',
+  SMALL_CAPS:en?'Small caps':'Små',MICROCAPS:en?'Microcaps':'Mikroaktiver'};
+ void group;
+ const groups=rotation.valid?rotation.rows.map(x=>({name:segmentName[x.id]||x.name,
+  stance:x.stance,source:x.sourceAction})):[];
  if(list)for(const g of groups){
   const row=document.createElement('div');row.className='cn-rotation-class';
   row.setAttribute('role','listitem');row.dataset.action=g.source;
@@ -370,7 +373,7 @@ function renderReader(){
   ['AFVENT','Nyt køb/salg er ikke bekræftet. Prisen kan stadig bevæge sig.'],
   ['BLANDET','Tegn peger begge veje; ikke en 50/50-sandsynlighed.'],
   ['HOLD','Afvent ændring i officiel vurdering; ikke et nyt køb.'],
-  ['INGEN EDGE','Ingen dokumenteret prognosefordel.'],
+  ['INGEN FORDEL','Ingen dokumenteret prognosefordel.'],
   ['MANGLER DATA','Ingen gyldig aktuel vurdering; gamle signaler gælder ikke.']
  ];
  entries.forEach(([term,definition],index)=>{
@@ -412,7 +415,7 @@ function renderForward(){
   value==='DOWN'?say('NED','DOWN'):
   value==='MIXED'?say('BLANDET','MIXED'):
   value==='SIDEWAYS'?say('SIDEVÆRTS','SIDEWAYS'):
-  value==='NO_EDGE'?say('INGEN PÅVIST EDGE','NO DEMONSTRATED EDGE'):say('UTILGÆNGELIG','UNAVAILABLE');
+  value==='NO_EDGE'?say('INGEN PÅVIST FORDEL','NO DEMONSTRATED EDGE'):say('UTILGÆNGELIG','UNAVAILABLE');
  let out=null;
  try{
    const trace=sourceTrace(feeds?.latest,feeds?.compass,view);
@@ -578,6 +581,7 @@ function renderHorizonStatus(){
  }
  host.replaceChildren(fragment);
  host.dataset.officialSourceCurrent=String(matrix.officialSourceCurrent);
+ renderOwnerBrief(matrix,originalWeekPrice,lang);
  set('cn-horizon-status-heading',lang==='en'?
   'Compass PRO · 14 horizons':'Kompas PRO · 14 tidshorisonter');
  set('cn-horizon-status-caption',lang==='en'?
@@ -588,12 +592,65 @@ function renderHorizonStatus(){
   'Manglende kursmål, udbudte prognoser og handelssignaler udledes aldrig her.');
 }
 
+// v2.2b owner brief: 0–12 h / 4–8 w rows in the main horizon table and the
+// BTC next-3-days readback. Only already-verified fields; never a new call.
+function renderOwnerBrief(matrix,originalWeekPrice,lang){
+ let reading=null;
+ try{reading=readHorizon({latest:feeds?.latest,compass:feeds?.compass,view,lang,id:'CYCLE_ALTCOINS_3_8W'})}
+ catch{reading=null}
+ const extra=extraHorizonRows({matrix,reading:reading?.current?reading:null,lang});
+ for(const key of ['h12','c38']){
+  set('cn-overview-'+key+'-direction',extra[key].direction);
+  set('cn-overview-'+key+'-position',extra[key].position);
+  const row=document.querySelector('[data-cn-overview-extra="'+key+'"]');
+  if(row)row.dataset.tone=extra[key].tone;
+ }
+ set('cn-overview-h12-label',lang==='en'?'0–12 hours':'0–12 timer');
+ // Owner decision 2026-11-10 (OWNER_DECISION_CN_SITE_v1, DCM Q10): the lane is
+ // labelled after its source text (projection.weeks_4_8); the bundle key is unchanged.
+ set('cn-overview-c38-label',lang==='en'?'4–8 weeks · altcoins':'4–8 uger · altcoins');
+ const host=$('cn-btc-days');
+ if(!host)return;
+ const days=btcNextDays({readback:originalWeekPrice,view,nowUtc:new Date().toISOString(),lang});
+ set('cn-btc-days-heading',lang==='en'?'BTC · next three days':'BTC · de næste tre dage');
+ const list=$('cn-btc-days-rows');
+ if(list){
+  const fragment=document.createDocumentFragment();
+  for(const d of days?.rows||[]){
+   const row=document.createElement('div');row.className='cn-btc-day';row.setAttribute('role','listitem');
+   const name=document.createElement('span');name.textContent=d.label;
+   const range=document.createElement('strong');range.textContent=d.range;
+   const close=document.createElement('small');close.textContent=d.close;
+   row.append(name,range,close);fragment.append(row);
+  }
+  if(days?.weekRange){
+   const row=document.createElement('div');row.className='cn-btc-day cn-btc-week';row.setAttribute('role','listitem');
+   const name=document.createElement('span');name.textContent=lang==='en'?'Frozen week interval':'Frosset ugeinterval';
+   const range=document.createElement('strong');range.textContent=days.weekRange;
+   row.append(name,range);fragment.append(row);
+  }
+  list.replaceChildren(fragment);
+ }
+ set('cn-btc-days-caption',days?days.caption:(lang==='en'?
+  'No verified original BTC forecast for these days.':'Ingen verificeret original BTC-prognose for disse dage.'));
+ host.dataset.available=String(!!days?.rows?.length);
+}
+
 // Official issuance/freshness and latest completed market observation are
 // deliberately separate clocks. Never use site rebuild time as market time.
 function renderSourceClocks(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  const reading=kompasSourceClockReadback({compass:feeds?.compass,view,lang});
  set('cn-source-headline',reading.headline);
+ const important=importantStatusLine({compass:feeds?.compass,view,lang});
+ const line=$('cn-important-status');
+ if(line){
+  line.hidden=!important;
+  const lead=$('cn-important-status-lead'),body=$('cn-important-status-text');
+  if(lead)lead.textContent=lang==='en'?'Important status: ':'Vigtig status: ';
+  if(body)body.textContent=important?.text||'';
+  line.dataset.tone=important?.tone||'missing';
+ }
  set('cn-source-context',reading.context);
  set('cn-source-explanation',reading.explanation);
  set('cn-source-technical-label',lang==='en'?
@@ -667,6 +724,7 @@ function paint(){
  // Official source gate remains upstream. An expired issuer can never be
  // refreshed via a newer Pages bundle timestamp or cached prior DOM text.
  renderProductExperience(view,feeds,lang);
+ renderSwingRotation($('swing-rotation-overview'),readSwingRotation(view,feeds?.compass,{lang}),{lang});
  renderCycleSource();
  renderSourceClocks();
  renderQuickDecision();
