@@ -3,7 +3,7 @@
 **Dato:** 2026-11-12  
 **Status:** CANONICAL  
 **Område:** Separat X-redaktion, ikke forecastmaskine  
-**Primary folder:** \`05_CYCLE_NAVIGATOR/x_market_notes/\`  
+**Primary folder:** `05_CYCLE_NAVIGATOR/x_market_notes/`  
 **Supersedes:** Ingen. Opretter ny serie uden at erstatte gammel X-præcisionsserie.
 
 ## Hvorfor nogen skal læse det
