@@ -67,6 +67,30 @@ def ready(files=None):
     return r
 
 
+def refresh_privacy(r):
+    """Align synthetic test scan with deliberate changes to native file status.
+
+    Unit fixture only, NOT authenticated GitHub provenance or merge authority.
+    """
+    inp = r["privacy_scan_input"]
+    by_path = {f["path"]: f for f in inp["files"]}
+    new_files = []
+    for entry in r["changed_file_statuses"]:
+        row = dict(by_path.get(entry["path"], {
+            "path": entry["path"], "head_sha": H, "patch_complete": True,
+            "patch": "+Public synthetic fixture", "binary": False,
+            "is_symlink": False, "content": "Public", "content_head_sha": H}))
+        row["status"] = entry["status"]
+        row["previous_filename"] = entry.get("previous_filename")
+        if entry["status"] in ("removed", "deleted"):
+            row["content"] = None
+        new_files.append(row)
+    inp["files"] = new_files
+    inp["changed_files_count"] = len(new_files)
+    r["privacy_check"] = scan_pr(inp)
+    return r
+
+
 def code_ready():
     r = ready([{"path": "scripts/research/x_v1.py", "status": "added"},
                {"path": "tests/research/test_x_v1.py", "status": "added"}])
@@ -107,6 +131,7 @@ class Positive(unittest.TestCase):
     def test_rename_destination_executed(self):
         r = code_ready()
         r["changed_file_statuses"][1].update(status="renamed", previous_filename="tests/research/test_old.py")
+        refresh_privacy(r)
         self.assertEqual(out(r)["release_action"], "READY")
 
 
