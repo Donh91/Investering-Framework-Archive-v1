@@ -47,6 +47,38 @@ class IC1ChangedTestStatusTests(unittest.TestCase):
                         executed=["tests/research/test_x.py::Check::test_safety"])
         self.result(r, "READY_TO_MERGE")
 
+    def test_complete_manifest_mixed_implementation_and_tests_is_accepted(self):
+        r = make_record([
+            row("scripts/example.py"),
+            row("tests/test_example.py")
+        ], executed=["tests/test_example.py::test_ok"])
+        self.result(r, "READY_TO_MERGE")
+
+    def test_complete_manifest_cannot_omit_implementation_entry(self):
+        r = make_record([
+            row("scripts/example.py"),
+            row("tests/test_example.py")
+        ], executed=["tests/test_example.py::test_ok"])
+        r["changed_file_statuses"] = [row("tests/test_example.py")]
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+
+    def test_unittest_discovery_relative_to_native_start_directory(self):
+        r = make_record([row("tests/learning/test_forecast_skill_study_v132.py")],
+                        executed=["test_forecast_skill_study_v132.ForecastTests.test_ready"])
+        r["pr_jobs"][0]["test_discovery_root"] = "tests/learning"
+        self.result(r, "READY_TO_MERGE")
+
+    def test_unittest_discovery_wrong_root_is_not_proof(self):
+        r = make_record([row("tests/learning/test_forecast_skill_study_v132.py")],
+                        executed=["test_forecast_skill_study_v132.ForecastTests.test_ready"])
+        r["pr_jobs"][0]["test_discovery_root"] = "tests/other"
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TESTS_NOT_EXECUTED")
+
+    def test_subdir_discovery_bare_unscoped_id_is_not_proof(self):
+        r = make_record([row("tests/learning/test_forecast_skill_study_v132.py")],
+                        executed=["test_forecast_skill_study_v132.ForecastTests.test_ready"])
+        self.result(r, "CI_NOT_EXECUTED", "CHANGED_TESTS_NOT_EXECUTED")
+
     def test_unittest_dotted_case_is_accepted(self):
         r = make_record([row("tests/research/test_x.py")],
                         executed=["tests.research.test_x.Check.test_safety"])
