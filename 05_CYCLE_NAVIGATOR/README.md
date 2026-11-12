@@ -59,9 +59,9 @@ For all future Cycle Navigator issues, use:
 
 ### Separate editorial X series, owner-approved 2026-11-12
 
-The owner has created **Cycle Navigator / Market Notes** as a distinct new X editorial line: \`x_market_notes/README.md\` and \`x_market_notes/2026-11-12__editorial-charter-v1__canonical.md\`.
+The owner has created **Cycle Navigator / Market Notes** as a distinct new X editorial line: `x_market_notes/README.md` and `x_market_notes/2026-11-12__editorial-charter-v1__canonical.md`.
 
-**New default for future X writing:** requests for \`ugens CN X-opslag\`, \`Cycle Navigator til X\`, \`CN Market Notes\` or equivalent route to Market Notes, unless the user explicitly asks for the former forecast/precision X format. The editorial edition uses \`CN-MN-001\`, then \`002\`; the old \`CN #...\` public and machine series are not renumbered. No legacy X files are rewritten. All old forecast scoring and the public site remain unchanged.
+**New default for future X writing:** requests for `ugens CN X-opslag`, `Cycle Navigator til X`, `CN Market Notes` or equivalent route to Market Notes, unless the user explicitly asks for the former forecast/precision X format. The editorial edition uses `CN-MN-001`, then `002`; the old `CN #...` public and machine series are not renumbered. No legacy X files are rewritten. All old forecast scoring and the public site remain unchanged.
 
 The new editorial line is not a forecast issuer or an X autopublisher. Owner must attest actual X publication of each exact version.
 
