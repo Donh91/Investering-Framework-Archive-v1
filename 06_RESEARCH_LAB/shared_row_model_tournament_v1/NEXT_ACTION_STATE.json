@@ -4,8 +4,8 @@
   "calendar_only_verdict_forbidden": true,
   "canonical_effect": false,
   "consumer_integrity_filter": {
-    "eligible_divergences": 156,
-    "eligible_rows": 46,
+    "eligible_divergences": 162,
+    "eligible_rows": 47,
     "excluded": {
       "divergence_decision": 0,
       "divergence_outcome": 0,
@@ -19,11 +19,11 @@
       "runtime_inactive": 0,
       "source_binding": 0
     },
-    "raw_divergences": 156,
-    "raw_rows": 46
+    "raw_divergences": 162,
+    "raw_rows": 47
   },
   "contract": "RESEARCH_NEXT_ACTION_PACKET_v1",
-  "decision_fingerprint": "9d61bd83231da3e8e2283a61faea5aca8ddf272d9d8f0b1fad1417d56e3c1f37",
+  "decision_fingerprint": "514b4a86f9b291b89050f683d9bc178135c7aecdcb195a879fbcd5dfef2887c5",
   "deep_research_authorized": false,
   "evidence_summary": {
     "candidate_divergence_stats_7d": {
@@ -32,11 +32,11 @@
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
-        "errors": 18,
-        "false_positive_adverse_mae_mean": null,
-        "false_positive_adverse_mae_n": 0,
-        "resolved_divergences": 24,
-        "unique_failures": 18,
+        "errors": 22,
+        "false_positive_adverse_mae_mean": 8.32504146,
+        "false_positive_adverse_mae_n": 4,
+        "resolved_divergences": 28,
+        "unique_failures": 22,
         "unique_wins": 6
       },
       "C02_BREADTH": {
@@ -44,105 +44,122 @@
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
-        "errors": 8,
-        "false_positive_adverse_mae_mean": 1.97747598,
-        "false_positive_adverse_mae_n": 8,
-        "resolved_divergences": 60,
-        "unique_failures": 8,
+        "errors": 12,
+        "false_positive_adverse_mae_mean": 4.09333114,
+        "false_positive_adverse_mae_n": 12,
+        "resolved_divergences": 64,
+        "unique_failures": 12,
         "unique_wins": 52
       },
       "C03_BTCD": {
-        "correct": 16,
+        "correct": 19,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
         "errors": 14,
         "false_positive_adverse_mae_mean": 1.97747598,
         "false_positive_adverse_mae_n": 8,
-        "resolved_divergences": 30,
+        "resolved_divergences": 33,
         "unique_failures": 14,
-        "unique_wins": 16
+        "unique_wins": 19
       },
       "C04_ETHBTC_BREADTH": {
         "correct": 6,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
-        "errors": 18,
-        "false_positive_adverse_mae_mean": null,
-        "false_positive_adverse_mae_n": 0,
-        "resolved_divergences": 24,
-        "unique_failures": 18,
+        "errors": 22,
+        "false_positive_adverse_mae_mean": 8.32504146,
+        "false_positive_adverse_mae_n": 4,
+        "resolved_divergences": 28,
+        "unique_failures": 22,
         "unique_wins": 6
       },
       "C05_ETHBTC_BTCD": {
-        "correct": 6,
+        "correct": 9,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
         "errors": 18,
         "false_positive_adverse_mae_mean": null,
         "false_positive_adverse_mae_n": 0,
-        "resolved_divergences": 24,
+        "resolved_divergences": 27,
         "unique_failures": 18,
-        "unique_wins": 6
+        "unique_wins": 9
       },
       "C06_BREADTH_BTCD": {
-        "correct": 16,
+        "correct": 19,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
         "errors": 14,
         "false_positive_adverse_mae_mean": 1.97747598,
         "false_positive_adverse_mae_n": 8,
-        "resolved_divergences": 30,
+        "resolved_divergences": 33,
         "unique_failures": 14,
-        "unique_wins": 16
+        "unique_wins": 19
       },
       "C07_SIMPLE_3": {
-        "correct": 6,
+        "correct": 9,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
         "errors": 18,
         "false_positive_adverse_mae_mean": null,
         "false_positive_adverse_mae_n": 0,
-        "resolved_divergences": 24,
+        "resolved_divergences": 27,
         "unique_failures": 18,
-        "unique_wins": 6
+        "unique_wins": 9
       }
     },
-    "divergences_total": 156,
-    "eligible_rows_total": 46,
+    "divergences_total": 162,
+    "eligible_rows_total": 47,
     "excluded_pre_repair_rows": 0,
     "excluded_unbound_divergences": 0,
     "matured_divergences": {
       "24h": 150,
-      "72h": 132,
-      "7d": 108
+      "72h": 138,
+      "7d": 120
     },
     "matured_rows": {
-      "24h": 43,
-      "72h": 40,
-      "7d": 32
+      "24h": 44,
+      "72h": 41,
+      "7d": 33
     },
     "pairwise_vs_baseline_7d": {
+      "C01_ETHBTC": {
+        "baseline_false_positive_mae_mean": null,
+        "baseline_false_positive_mae_n": 0,
+        "baseline_unique_wins": 1,
+        "distinct_prospective_blocks": 1,
+        "distinct_regimes": 1,
+        "net_unique_wins": -1,
+        "resolved": 1,
+        "tail_non_deterioration": false,
+        "target_false_positive_mae_mean": 8.32504146,
+        "target_false_positive_mae_n": 1,
+        "target_unique_wins": 0,
+        "unique_resolution_n": 1,
+        "unique_win_share": 0.0,
+        "wilson_lower": 0.0,
+        "wilson_upper": 0.7934567085261071
+      },
       "C02_BREADTH": {
         "baseline_false_positive_mae_mean": null,
         "baseline_false_positive_mae_n": 0,
-        "baseline_unique_wins": 2,
+        "baseline_unique_wins": 3,
         "distinct_prospective_blocks": 1,
         "distinct_regimes": 1,
-        "net_unique_wins": 8,
-        "resolved": 12,
+        "net_unique_wins": 7,
+        "resolved": 13,
         "tail_non_deterioration": false,
-        "target_false_positive_mae_mean": 1.97747598,
-        "target_false_positive_mae_n": 2,
+        "target_false_positive_mae_mean": 4.09333114,
+        "target_false_positive_mae_n": 3,
         "target_unique_wins": 10,
-        "unique_resolution_n": 12,
-        "unique_win_share": 0.8333333333333334,
-        "wilson_lower": 0.5519636426153274,
-        "wilson_upper": 0.9530358523851776
+        "unique_resolution_n": 13,
+        "unique_win_share": 0.7692307692307693,
+        "wilson_lower": 0.49743126004873084,
+        "wilson_upper": 0.918206209075343
       },
       "C03_BTCD": {
         "baseline_false_positive_mae_mean": null,
@@ -160,6 +177,23 @@
         "unique_win_share": 0.6666666666666666,
         "wilson_lower": 0.29998832134152864,
         "wilson_upper": 0.9032306674407831
+      },
+      "C04_ETHBTC_BREADTH": {
+        "baseline_false_positive_mae_mean": null,
+        "baseline_false_positive_mae_n": 0,
+        "baseline_unique_wins": 1,
+        "distinct_prospective_blocks": 1,
+        "distinct_regimes": 1,
+        "net_unique_wins": -1,
+        "resolved": 1,
+        "tail_non_deterioration": false,
+        "target_false_positive_mae_mean": 8.32504146,
+        "target_false_positive_mae_n": 1,
+        "target_unique_wins": 0,
+        "unique_resolution_n": 1,
+        "unique_win_share": 0.0,
+        "wilson_lower": 0.0,
+        "wilson_upper": 0.7934567085261071
       },
       "C06_BREADTH_BTCD": {
         "baseline_false_positive_mae_mean": null,
@@ -180,7 +214,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-11-11T23:44:08Z",
+  "generated_at_utc": "2026-11-12T04:21:50Z",
   "paid_data_authorized": false,
   "policy_contract": "RESEARCH_NEXT_ACTION_POLICY_v1",
   "primary_action": "INVESTIGATE_DIVERGENCE",
