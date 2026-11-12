@@ -953,3 +953,35 @@ body.premium-next.cn-tabbed-ui #variant-panel :is(.cn-range-evidence,.cn-daily-r
 body.premium-next.cn-tabbed-ui #official-path-view .path-page-head .intro{font-size:15px!important;line-height:1.55!important}
 body.premium-next.cn-tabbed-ui #official-path-view .path-evidence-label{white-space:nowrap}
 body.premium-next.cn-tabbed-ui #official-path-view :is(h1,h2){text-wrap:balance}
+/* CN SITE v2.6 r3 · owner-approved O1 Tilstandslys + O2 Rolig ankomst. No needle, dial or logo mark (L20).
+ * O1 keys off the page's own .cn-source-summary[data-official-status]. O2 runs once per visit via
+ * play-once.mjs (cnKompasEntered), same motion language as v2.7, static under reduced motion. */
+body.premium-next.cn-tabbed-ui #compass-pro .product-decision>.product-cell:nth-child(1){position:relative}
+body.premium-next.cn-tabbed-ui #compass-pro:has(.cn-source-summary[data-official-status="CURRENT"]) .product-decision>.product-cell:nth-child(1){
+ background-color:#0a2647!important;background-image:radial-gradient(130% 150% at 0% 0%,#15406f 0%,#0a2647 46%,#071c35 100%)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 14px 30px -20px rgba(7,28,53,.6)!important}
+body.premium-next.cn-tabbed-ui #compass-pro:has(.cn-source-summary[data-official-status="CURRENT"]) .product-decision>.product-cell:nth-child(1)::after{
+ content:"";position:absolute;top:16px;right:18px;width:8px;height:8px;border-radius:50%;background:#3fc596;box-shadow:0 0 0 0 rgba(63,197,150,.45);pointer-events:none}
+body.premium-next.cn-tabbed-ui #compass-pro:not(:has(.cn-source-summary[data-official-status="CURRENT"])) .product-decision>.product-cell:nth-child(1){
+ background-color:#f1f5f8!important;background-image:linear-gradient(180deg,#f4f7fa,#eef2f6)!important;border:1px solid #d6dee8!important;box-shadow:inset 3px 0 0 #b7791f!important}
+body.premium-next.cn-tabbed-ui #compass-pro:not(:has(.cn-source-summary[data-official-status="CURRENT"])) .product-decision>.product-cell:nth-child(1) #premium-now-action{color:var(--k-ink)!important;letter-spacing:-.01em}
+body.premium-next.cn-tabbed-ui #compass-pro:not(:has(.cn-source-summary[data-official-status="CURRENT"])) .product-decision>.product-cell:nth-child(1) :is(small,span){color:var(--k-muted)!important}
+body.premium-next.cn-tabbed-ui #compass-pro:not(:has(.cn-source-summary[data-official-status="CURRENT"])) .product-decision>.product-cell:nth-child(1)::after{
+ content:"";position:absolute;top:18px;right:20px;width:10px;height:12px;pointer-events:none;
+ background:linear-gradient(90deg,#8a6a3a 0 3px,transparent 3px 7px,#8a6a3a 7px 10px)}
+@media (prefers-reduced-motion:no-preference){
+ /* The only loop: the small fresh-data dot, shown only while the source is CURRENT. */
+ body.premium-next.cn-tabbed-ui #compass-pro:has(.cn-source-summary[data-official-status="CURRENT"]) .product-decision>.product-cell:nth-child(1)::after{animation:cn26-fresh 3.2s cubic-bezier(.23,1,.32,1) infinite}
+ body.premium-next.cn-tabbed-ui #compass-pro.cn-kompas-enter .cn-source-summary{animation:cn27-rise .34s cubic-bezier(.23,1,.32,1) both}
+ body.premium-next.cn-tabbed-ui #compass-pro.cn-kompas-enter .product-decision>.product-cell:nth-child(1){animation:cn27-rise .38s cubic-bezier(.23,1,.32,1) .06s both}
+ body.premium-next.cn-tabbed-ui #compass-pro.cn-kompas-enter .cn-risk-quick{animation:cn27-rise .38s cubic-bezier(.23,1,.32,1) .12s both}
+ body.premium-next.cn-tabbed-ui #compass-pro.cn-kompas-enter .cn-overview{animation:cn27-rise .38s cubic-bezier(.23,1,.32,1) .18s both}
+ body.premium-next.cn-tabbed-ui #compass-pro.cn-kompas-enter .cn-risk-quick .risk-step:is([data-current=true],[data-prior=true]){transform-origin:0 0;animation:cn26-draw .22s cubic-bezier(.23,1,.32,1) both}
+ body.premium-next.cn-tabbed-ui #compass-pro.cn-kompas-enter .cn-risk-quick .risk-step:nth-child(1){animation-delay:.2s}
+ body.premium-next.cn-tabbed-ui #compass-pro.cn-kompas-enter .cn-risk-quick .risk-step:nth-child(2){animation-delay:.23s}
+ body.premium-next.cn-tabbed-ui #compass-pro.cn-kompas-enter .cn-risk-quick .risk-step:nth-child(3){animation-delay:.26s}
+ body.premium-next.cn-tabbed-ui #compass-pro.cn-kompas-enter .cn-risk-quick .risk-step:nth-child(4){animation-delay:.29s}
+ body.premium-next.cn-tabbed-ui #compass-pro.cn-kompas-enter .cn-risk-quick .risk-step:nth-child(5){animation-delay:.32s}
+}
+@keyframes cn26-fresh{0%{box-shadow:0 0 0 0 rgba(63,197,150,.45)}70%,100%{box-shadow:0 0 0 7px rgba(63,197,150,0)}}
+@keyframes cn26-draw{from{transform:scaleX(.02)}to{transform:none}}
