@@ -182,6 +182,11 @@ def _changed_test_execution_issue(record, current):
     paths = record.get("expected_changed_paths")
     if not isinstance(paths, list):
         return None  # Existing general/Claude path-census gates remain separate.
+    # Untrusted JSON can contain nested lists/objects. Reject per-PR before set(paths).
+    # The native path census is independently authenticated by S1, never by this input.
+    if any(type(p) is not str or not p or p != p.strip()
+           or p.startswith("/") or ".." in p.split("/") for p in paths):
+        return "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED"
     tests = [p for p in paths if isinstance(p, str) and p.endswith(".py")
              and (p.rsplit("/", 1)[-1].startswith("test_")
                   or p.rsplit("/", 1)[-1].endswith("_test.py"))]
