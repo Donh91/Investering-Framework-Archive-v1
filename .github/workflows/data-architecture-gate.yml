@@ -60,6 +60,10 @@ jobs:
           python -m unittest discover -s 04_RESEARCH_LAB/external_specialist_dissection/onchain_options_2026_11 -p 'test_sector_metrics.py' -v 2>&1 | tee /tmp/options-rea-tests.log
           grep -Eq '^Ran 13 tests in ' /tmp/options-rea-tests.log
           grep -qx 'OK' /tmp/options-rea-tests.log
+      - name: Verify 0xArchive E0 offline source-clock and privacy admission cases
+        run: |
+          python -m py_compile scripts/research/oxarchive_e0_source_preflight_v1.py tests/research/test_oxarchive_e0_source_preflight_v1.py
+          python -m unittest tests.research.test_oxarchive_e0_source_preflight_v1 -v
       - run: python -m unittest tests.data_storage.test_durable_promotion_controller tests.data_storage.test_storage_telemetry
       - run: python scripts/data_storage/storage_telemetry.py --root . --output storage-telemetry.json
       - uses: actions/upload-artifact@v4
