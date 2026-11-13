@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 import subprocess
+import sys
 import time
 import tempfile
 import unittest
@@ -707,6 +708,27 @@ class W46SameMondayInternalPrecisionAmendmentTests(unittest.TestCase):
         tampered = json.loads(json.dumps(self.internal))
         tampered["claims"][0]["forecast"] = "fabricated after market outcome"
         self.assertFalse(self.allowed(internal=tampered))
+
+    def test_direct_workflow_validator_entrypoint_can_import_original_claim_builder(self):
+        # No PYTHONPATH setup, executed as GitHub Actions actually invokes it.
+        # The minimal fixture deliberately has no W45 history; reaching that
+        # explicit later missing-history gate proves the W46 import/guard ran.
+        ptr = self.repo / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+        ptr.write_text(json.dumps({
+            "iso_year": 2026, "iso_week": 46, "completed_source_week": 45,
+            "issue_number": 34,
+            "week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W46",
+        }))
+        script = self.repo_source / "scripts/cycle_navigator/validate_internal_precision.py"
+        env = os.environ.copy()
+        env.pop("PYTHONPATH", None)
+        run = subprocess.run(
+            [sys.executable, str(script), "--repo-root", str(self.repo)],
+            cwd=self.repo, env=env, text=True, capture_output=True, timeout=20,
+        )
+        self.assertNotEqual(run.returncode, 0)
+        self.assertIn("INTERNAL_PRECISION_PRIOR_FREEZE_MISSING", run.stderr)
+        self.assertNotIn("ModuleNotFoundError", run.stderr)
 
     def test_tampered_owner_scope_cannot_trigger_amendment(self):
         p = self.root / "W46_OWNER_REISSUE_REQUEST.json"
