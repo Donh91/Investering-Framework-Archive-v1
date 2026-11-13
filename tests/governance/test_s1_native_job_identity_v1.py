@@ -30,6 +30,7 @@ def build_fixture():
                    "executed_test_steps_min": 1},
                   {"workflow_path": PATH2, "job_id": "storage-health", "event": "pull_request",
                    "executed_test_steps_min": 1}]}}
+    policy["classes"]["LOW_CODE"] = copy.deepcopy(policy["classes"]["DOCS_ONLY"])
     raw = json.dumps(policy).encode()
     sha = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
     urls = {
@@ -264,7 +265,7 @@ class NativeIdentityTests(unittest.TestCase):
             "scripts/data_governance/storage_health_gate.py")
         self.assertEqual(verify_native_required_jobs(
             lambda path: copy.deepcopy(x[path]), REPO, 9, HEAD, "LOW_CODE")["reason"],
-            "POLICY_REQUIRED_JOBS_UNVERIFIED" if False else "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
+            "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
 
     def test_renamed_policy_file_into_docs_rejected(self):
         x = build_fixture()
