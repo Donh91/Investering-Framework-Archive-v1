@@ -77,20 +77,29 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     # eventually expires. It stays in the global monthly exposure until an
     # independently reviewed native settlement removes it.
     reservations = value.get("owner_reservations", [])
-    if not isinstance(reservations, list) or len(reservations) > 1:
+    if not isinstance(reservations, list) or len(reservations) > 2:
         raise ValueError("OWNER_RESERVATION_LEDGER_INVALID")
+    reserved_work_ids = set()
     for reservation in reservations:
         if (not isinstance(reservation, dict)
-                or reservation.get("work_id") != "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"
                 or reservation.get("created_month_utc") != "2026-11"
                 or reservation.get("status") != "OWNER_RESERVED_PREHTTP"
-                or reservation.get("upper_usd") != 3
                 or reservation.get("lower_usd") != 0
                 or reservation.get("source") != "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596"
                 or reservation.get("one_paid_post_max") != 1
                 or reservation.get("reconciliation_required") is not True):
             raise ValueError("ASTRA_OWNER_RESERVATION_UNVERIFIED")
-        high += 3.0
+        work = reservation.get("work_id")
+        if work in reserved_work_ids:
+            raise ValueError("DUPLICATE_OWNER_RESERVATION")
+        reserved_work_ids.add(work)
+        allowed = {
+            "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE": 3,
+            "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE": 10,
+        }
+        if work not in allowed or reservation.get("upper_usd") != allowed[work]:
+            raise ValueError("UNKNOWN_OWNER_RESERVED_MODEL_OR_COST")
+        high += float(allowed[work])
     reservation_count = len(reservations)
     missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
     if missing:
