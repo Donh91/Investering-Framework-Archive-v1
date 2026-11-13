@@ -41,9 +41,9 @@ KNOWN_SECRET_OR_RESTRICTED_DESIGN = (
     ("AWS_ACCESS_KEY", re.compile(r"(?<![A-Za-z0-9])(?:AKIA|ASIA)[A-Z0-9]{16}(?![A-Za-z0-9])")),
     ("SIGNED_URL", re.compile(r"\b(?:X-Amz-Signature|X-Goog-Signature|Signature=)[A-Za-z0-9%_-]{8,}", re.I)),
     ("EXPLICIT_PRIVATE_DESIGN", re.compile(
-        r"\b(?:PRIVATE[_ -]ALPHA[_ -](?:DESIGN|STRATEGY|ARCHITECTURE|MODEL)"
+        r"(?<![A-Za-z0-9])(?:PRIVATE[_ -]ALPHA[_ -](?:DESIGN|STRATEGY|ARCHITECTURE|MODEL)"
         r"|INTERNAL[_ -]ONLY|OWNER[_ -]ONLY|NOT[_ -]FOR[_ -]PUBLICATION"
-        r"|CONFIDENTIAL[_ -]RESEARCH|PRIVATE[_ -]RESEARCH[_ -]DESIGN)\b", re.I)),
+        r"|CONFIDENTIAL[_ -]RESEARCH|PRIVATE[_ -]RESEARCH[_ -]DESIGN)(?![A-Za-z0-9])", re.I)),
     ("CREDENTIAL_ASSIGNMENT", re.compile(
         r"(?i)(?<![A-Za-z0-9])(?:api[_-]?key|access[_-]?token|secret[_-]?key|private[_-]?key)(?![A-Za-z0-9])['\"]?"
         r"\s*[:=]\s*['\"]?[A-Za-z0-9_+./=-]{18,}")),
