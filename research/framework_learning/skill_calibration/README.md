@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-13  
 **Owner:** existing Framework Learning Supervisor, Strategist and Skill Quality Gate #1157.  
-**Status:** deterministic code candidate pending native tests, governed merge and natural Monday run.  
+**Status:** weekly calibration implementation merged via Archive PR #2111 on 2026-11-13; actual natural Monday production and real-agent skill use remain unverified until original run receipts.  
 **Authority:** ADVISORY_ONLY, no market, portfolio, signal, release, skill-promotion or autonomous code-change authority.
 
 ## Why this is an evolving weekly loop, not a new watcher
@@ -74,6 +74,29 @@ Original-domain owners may provide a limited, public-safe advisory sidecar under
 }
 ```
 
+### Original-run witness integrity, required for any reported use
+
+A hash-match to an arbitrary existing JSON file is insufficient to count even a source-bound skill-use self-report. The existing original owner must include the following **additional, truthful fields inside its own original JSON run receipt** (stored at `execution_receipt_path`, within the existing allowlisted public-safe source domains):
+
+```json
+{
+  "contract": "EXISTING_ORIGINAL_OWNER_RUN_CONTRACT",
+  "native_run_id": "same-id-as-observation.invocation_id",
+  "skill_use": {
+    "skill_name": "canonical-context-router",
+    "skill_sha256": "same-SHA256-as-observation.skill_sha256",
+    "use_phase": "READ_CONFIRMED",
+    "observed_at_utc": "2026-11-12T12:45:00Z",
+    "source_read_confirmed": true,
+    "original_action_ref": null
+  }
+}
+```
+
+This is a protocol illustration and **not evidence that any actual native run emitted such fields**. For `PROCEDURE_APPLIED`, the original witness must also provide a nonempty `original_action_ref` to the original owner action. `SUGGESTED_ONLY` must not claim a read merely because a shortlist was emitted. Original `native_run_id`, skill name, skill digest, phase and observation timestamp must match the observation. Absent or mismatching fields are rejected from the source-bound count. If original source changes, the observation's SHA-256 must be refreshed from real evidence rather than inferred.
+
+**Two levels remain distinct:** (1) original-run source witness plus matching hash is `SOURCE_BOUND_SELF_REPORTS_NOT_INDEPENDENT_PROOF`; (2) `verified_native_skill_usage_count` stays null until separately authenticated original-host run and tool-read evidence. A matching self-report, even with an action reference, is not independent proof, improvement, saved API cost or causal effect. No consumer is required to fabricate, convert or backfill prior receipts. Skill-version drift currently fails closed (the exact old source skill blob needs independent preservation before historic-version support).
+
 This is a **schema example, not an existing execution claim**. Do not commit placeholders. Observation files can be created only by already authorized original-owner writers from real run evidence. A self-report with hash matching is still labeled `SOURCE_BOUND_SELF_REPORTS_NOT_INDEPENDENT_PROOF`. Native job/use attestation and actual incremental-effect evaluation must occur through existing owners before any metrics become VERIFIED. Maximum 200 observations/week, no private material, no arbitrary paths, duplicate/invalid receipts do not improve performance denominator.
 
 ## Weekly deterministic calibration and improvement action
@@ -87,7 +110,7 @@ This is a **schema example, not an existing execution claim**. Do not commit pla
 
 ## Success and stop
 
-After four qualified weeks, review: rate of real native skill receipts, independent comparison completion, justified priority corrections, useful code/PR closures, false activation, missed useful skill, repeated duplicate research, and measured costs. The objective is **more verified useful work per cost**, not more skills or more reports. A missing native denominator is an instrumentation gap, never success.
+**Prospective value/sunset decision:** Within the first 10 actual eligible original-agent cases and at least four independent qualified weekly samples (whichever is later), test whether the native witness is supplied without extra manual work and whether at least one baseline-comparable case shows a verified change in decision, original PR closure or avoided rework. If no real consumer ever supplies the evidence, keep the calibration as a cheap metadata-only report or retire this optional observation adapter rather than expanding instrumentation. Security/integrity checks are retained regardless of outcome.\n\nAfter four qualified weeks, review: rate of real native skill receipts, independent comparison completion, justified priority corrections, useful code/PR closures, false activation, missed useful skill, repeated duplicate research, and measured costs. The objective is **more verified useful work per cost**, not more skills or more reports. A missing native denominator is an instrumentation gap, never success.
 
 Stop/narrow if the new reading causes significant existing-S1 closure delay, any pilot is activated without permission, repeated scans give no measurable value or the meta-layer becomes a second repair queue. Changes to a skill require normal branch/PR/CI and independent skill-quality-gate; no automatic release, trading or scientific promotion.
 
