@@ -12,17 +12,23 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: dry-run or explicit live owner-bound Director call
+        description: dry-run, explicit live Director, or single owner-only Astra High Task2 call
         required: true
         default: dry-run
         type: choice
-        options: [dry-run, live]
+        options: [dry-run, live, astra-high-task2]
+      owner_confirm:
+        description: 'Required only for Astra High: ASTRA-TASK2-1596-ONE-POST'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   director:
+    if: github.event_name == 'pull_request' || inputs.mode != 'astra-high-task2'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -33,6 +39,8 @@ jobs:
       - name: Test and compile
         run: |
           python -m unittest tests.api_agent.test_owner_bound_director_context
+          python -m unittest tests.api_agent.test_manual_astra_task2_high_v1 -v
+          python -m py_compile scripts/api_agent/manual_astra_task2_high_v1.py
           python -m py_compile scripts/api_agent/build_owner_bound_director_context.py scripts/api_agent/check_delta_ready.py scripts/api_agent/materialize_forecast_candidates.py scripts/api_agent/api_gateway.py scripts/daily_capture/persist_raw_payloads.py
       - name: Build owner-bound context
         run: |
@@ -75,3 +83,87 @@ jobs:
             owner-bound-director-output/
           retention-days: 14
           if-no-files-found: error
+
+  astra-high-task2:
+    # Owner-launched one-shot. Existing Director and autonomous Sol routes remain separate.
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.mode == 'astra-high-task2' &&
+      inputs.owner_confirm == 'ASTRA-TASK2-1596-ONE-POST' &&
+      github.actor == 'Donh91' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    concurrency:
+      group: manual-astra-high-task2-20261113-once
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test one-shot safety and compile without billing
+        run: |
+          python -m py_compile scripts/api_agent/manual_astra_task2_high_v1.py
+          python -m unittest tests.api_agent.test_manual_astra_task2_high_v1 -v
+      - name: Enforce existing monthly OpenAI budget and reserve before paid operation
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --hard-stop-usd 40 --reserve-usd 4
+          --new-request-upper-usd 5
+      - name: Prepare immutable public-only source bundle and price bound
+        run: python scripts/api_agent/manual_astra_task2_high_v1.py prepare --output-dir runtime/astra-task2
+      - name: Verify owner, native claim census and project model GET; reserve once
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }
+          GITHUB_TOKEN: ${{ github.token }
+          ASTRA_OWNER_CONFIRM: ${{ inputs.owner_confirm }
+        run: python scripts/api_agent/manual_astra_task2_high_v1.py reserve --output-dir runtime/astra-task2
+      - name: Persist nonbillable one-use claim BEFORE any paid POST
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-task2-20261113-one-paid-attempt-claim
+          path: |
+            runtime/astra-task2/claim.json
+            runtime/astra-task2/source_manifest.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Submit exactly ONE paid Astra High background Responses API call
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }
+        run: python scripts/api_agent/manual_astra_task2_high_v1.py submit --output-dir runtime/astra-task2
+      - name: Persist attempt and response handle even on ambiguous failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-task2-20261113-attempt-${{ github.run_id }
+          path: |
+            runtime/astra-task2/attempt.json
+            runtime/astra-task2/response_handle.json
+            runtime/astra-task2/source_manifest.json
+          retention-days: 90
+          if-no-files-found: warn
+      - name: GET-only collection, no paid retry or duplicate POST
+        if: success()
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }
+        run: python scripts/api_agent/manual_astra_task2_high_v1.py collect --output-dir runtime/astra-task2
+      - name: Preserve public research output, source hashes and cost receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-task2-20261113-research-${{ github.run_id }
+          path: |
+            runtime/astra-task2/source_manifest.json
+            runtime/astra-task2/response_handle.json
+            runtime/astra-task2/receipt.json
+            runtime/astra-task2/research_output.md
+          retention-days: 90
+          if-no-files-found: warn
