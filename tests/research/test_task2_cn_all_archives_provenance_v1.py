@@ -25,6 +25,14 @@ class AllArchiveCensusTests(unittest.TestCase):
         self.assertFalse(engine.valid_number(None))
         self.assertTrue(engine.valid_number(79500))
 
+    def test_outcome_index_has_same_pinned_git_tree_as_source_index(self):
+        """Outcome and CN inventories identify one independently checked Git tree."""
+        src = engine.load_json(engine.ROOT / engine.SOURCE_INDEX)
+        outcome = engine.load_json(engine.ROOT / engine.OUTCOME_INDEX)
+        self.assertRegex(src["source_tree_sha_at_inventory"], r"^[0-9a-f]{40}$")
+        self.assertEqual(outcome["source_main_tree"], src["source_tree_sha_at_inventory"])
+        self.assertEqual(outcome["entry_count"], 53)
+
     def test_pinned_source_index_covers_all_research(self):
         result = engine.check_inventory(engine.ROOT)
         self.assertGreaterEqual(result["source_file_count"], 2559)

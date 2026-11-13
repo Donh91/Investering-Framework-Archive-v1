@@ -43,7 +43,7 @@ def pinned_source_map(root: str) -> dict[str, str]:
         raise ValueError("PINNED_SOURCE_INDEX_UNAVAILABLE")
     if git_blob_sha((base / SOURCE_INDEX).read_bytes()) != "9027def6ed9db61b607841acaf046330a3a2c6e7":
         raise ValueError("SOURCE_INDEX_BLOB_CHANGED")
-    if git_blob_sha((base / OUTCOME_INDEX).read_bytes()) != "9e3abc0d03709f033c091e9068a49d1edf474665":
+    if git_blob_sha((base / OUTCOME_INDEX).read_bytes()) != "91e6057780bc0c682cf2ad0513978d2a45e145ad":
         raise ValueError("OUTCOME_INDEX_BLOB_CHANGED")
     if src.get("source_tree_sha_at_inventory") != result.get("source_main_tree"):
         raise ValueError("SOURCE_TREE_IDENTITY_MISMATCH")
