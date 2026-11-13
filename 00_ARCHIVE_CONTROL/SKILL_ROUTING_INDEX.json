@@ -475,6 +475,51 @@
       ],
       "allow_implicit_invocation": false,
       "portability_notes": "Only explicit, authenticated authorized original PR process. No new executor or merge authority."
+    },
+    {
+      "name": "conclusion-challenge-loop",
+      "category": "bounded-post-conclusion-review",
+      "maturity": "PILOT_CANDIDATE_READ_ONLY_V1",
+      "skill_path": ".agents/skills/conclusion-challenge-loop/SKILL.md",
+      "agents_metadata_path": ".agents/skills/conclusion-challenge-loop/agents/openai.yaml",
+      "purpose": "After a provisional material high-value conclusion, verify source/assumption transfer, existing-owner overlap, strong countercase and actual decision/priority value; preserve original and explicitly revise only when justified.",
+      "triggers": [
+        "post-conclusion high-value research priority",
+        "material model/research finding",
+        "self-correction of prior assessment",
+        "surprising external source with proposed build",
+        "high-cost or high-impact recommendation"
+      ],
+      "do_not_use_for": [
+        "routine status",
+        "simple factual answers",
+        "translation",
+        "already authorized original execution with current gates",
+        "live market decisions",
+        "portfolio actions",
+        "skill self-acceptance",
+        "automatic scheduling, model spending or repository writes"
+      ],
+      "default_side_effect_level": "READ_ONLY",
+      "side_effect_level": "READ_ONLY_SELF_CHALLENGE",
+      "requires_credentials": false,
+      "primary_outputs": [
+        "post-conclusion delta verdict",
+        "original vs revised priority",
+        "bounded original-owner next action or explicit no action",
+        "trigger for re-review"
+      ],
+      "validation_expectations": [
+        "original conclusion preserved",
+        "primary source and current original owner verified",
+        "strongest countercase and false-negative cost considered",
+        "negative triggers skip activation",
+        "single bounded pass, no recursion",
+        "no implicit skill acceptance or release authority",
+        "independent skill-quality-gate before active default"
+      ],
+      "allow_implicit_invocation": false,
+      "portability_notes": "Read-only high-value pilot. Current default invocation is disabled until independent evaluation of trigger precision and incremental value over existing red-team; original owner remains authority."
     }
   ],
   "astra_followup": {
