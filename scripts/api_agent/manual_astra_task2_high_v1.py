@@ -24,9 +24,9 @@ EFFORT = "high"
 MISSION = "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"
 CLAIM_ARTIFACT = "astra-task2-20261113-one-paid-attempt-claim"
 OWNER_CONFIRM = "ASTRA-TASK2-1596-ONE-POST"
-MAX_OUTPUT_TOKENS = 50000
-MAX_PROMPT_BYTES = 190000
-MAX_THEORETICAL_COST_USD = 5.0
+MAX_OUTPUT_TOKENS = 43000
+MAX_PROMPT_BYTES = 80000
+MAX_THEORETICAL_COST_USD = 3.0
 INPUT_USD_PER_M = 10.0
 OUTPUT_USD_PER_M = 50.0
 ROOT = Path(__file__).resolve().parents[2]
@@ -43,6 +43,8 @@ SOURCE_FILES = (
 )
 API = "https://api.openai.com/v1"
 RESPONSE_ID = re.compile(r"resp_[A-Za-z0-9_-]{4,180}\Z")
+CLAIM_MARKER = 'ASTRA_TASK2_PAID_CLAIM_V1 mission=' + MISSION
+OWNER_RESERVATION_LEDGER = ROOT / 'research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json'
 
 def canonical(value):
     return (json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
@@ -175,6 +177,49 @@ def check_claim_artifacts(token, repo):
     if any(x.get("name") == CLAIM_ARTIFACT and x.get("expired") is not True for x in data["artifacts"]):
         raise ValueError("PAID_CLAIM_ALREADY_EXISTS_NO_REPOST")
 
+def check_owner_reservation():
+    ledger = read(OWNER_RESERVATION_LEDGER)
+    rows = ledger.get("owner_reservations") or []
+    eligible = [x for x in rows if isinstance(x, dict)
+                and x.get("work_id") == MISSION
+                and x.get("status") == "OWNER_RESERVED_PREHTTP"
+                and x.get("upper_usd") == MAX_THEORETICAL_COST_USD
+                and x.get("source") == "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596"]
+    if len(eligible) != 1:
+        raise ValueError("ASTRA_SHARED_BUDGET_RESERVATION_UNAVAILABLE")
+
+
+def check_native_claim_comments(token, repo):
+    # Durable GitHub issue history, independent of short-lived Actions artifacts.
+    for page in range(1, 11):
+        url = ("https://api.github.com/repos/" + repo
+               + "/issues/1596/comments?per_page=100&page=" + str(page))
+        comments = http_json("GET", url, github_token=token, timeout=40)
+        if not isinstance(comments, list):
+            raise ValueError("ASTRA_CLAIM_ISSUE_CENSUS_UNAVAILABLE")
+        for row in comments:
+            if isinstance(row, dict) and CLAIM_MARKER in str(row.get("body", "")):
+                raise ValueError("ASTRA_CLAIM_ALREADY_CONSUMED_NO_REPOST")
+        if len(comments) < 100:
+            return
+    raise ValueError("ASTRA_ISSUE_CENSUS_TRUNCATED_FAIL_CLOSED")
+
+
+def persist_native_claim(token, repo, claim):
+    body = (CLAIM_MARKER + " run=" + claim["github_run_id"]
+            + " source_main_sha=" + claim["source_main_sha"]
+            + " request_sha256=" + claim["request_sha256"]
+            + " max_exposure_usd=3.00"
+            + " no_retry=true owner_manual=true")
+    result = http_json("POST", "https://api.github.com/repos/" + repo
+                       + "/issues/1596/comments",
+                       github_token=token, body={"body": body}, timeout=45)
+    native_id = result.get("id") if isinstance(result, dict) else None
+    if type(native_id) is not int or native_id <= 0:
+        raise ValueError("ASTRA_DURABLE_NATIVE_CLAIM_UNATTESTED_NO_REPOST")
+    return native_id
+
+
 def reserve(folder: Path):
     if required_env("GITHUB_ACTOR") != "Donh91" or required_env("GITHUB_REF") != "refs/heads/main":
         raise ValueError("OWNER_MAIN_GATE_FAILED")
@@ -183,6 +228,8 @@ def reserve(folder: Path):
     token = required_env("GITHUB_TOKEN")
     repo = required_env("GITHUB_REPOSITORY")
     check_claim_artifacts(token, repo)
+    check_native_claim_comments(token, repo)
+    check_owner_reservation()
     manifest = read(folder / "source_manifest.json")
     if manifest["request_sha256"] != sha(canonical(read(folder / "payload.json"))):
         raise ValueError("PAYLOAD_MANIFEST_MISMATCH")
@@ -190,14 +237,18 @@ def reserve(folder: Path):
     model = http_json("GET", API + "/models/" + MODEL, api_key=required_env("OPENAI_API_KEY"), timeout=35)
     if model.get("id") != MODEL:
         raise ValueError("ASTRA_MODEL_NOT_AVAILABLE_FOR_PROJECT")
-    write_once(folder / "claim.json", {
+    claim = {
       "contract": "OWNER_MANUAL_ASTRA_TASK2_ONE_USE_CLAIM_V1",
       "mission": MISSION, "request_sha256": manifest["request_sha256"],
       "source_main_sha": manifest["source_main_sha"],
       "github_run_id": required_env("GITHUB_RUN_ID"),
       "owner": "Donh91", "max_paid_posts": 1,
       "created_at_utc": datetime.now(timezone.utc).isoformat()
-    })
+    }
+    # An owner-visible durable native issue claim is written before the API POST.
+    # Its presence blocks replay even after the artifact's 90-day retention ends.
+    claim["original_issue_comment_id"] = persist_native_claim(token, repo, claim)
+    write_once(folder / "claim.json", claim)
     print("ASTRA_ONE_USE_CLAIM_CREATED_NO_POST", manifest["request_sha256"])
 
 def submit(folder: Path):
