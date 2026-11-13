@@ -80,6 +80,19 @@ class RenameSourceBypassesB1(unittest.TestCase):
                 self.assertFalse(C._release_sensitive_path(dst))
                 self.assertNotEqual(disp(native_rename_record(src, dst))[0], "READY_TO_MERGE")
 
+    def test_malformed_native_rename_status_manifest_rejects_only_affected_pr(self):
+        for invalid in (1, True, {}, "renamed", None):
+            with self.subTest(invalid=invalid):
+                bad = native_rename_record("docs/private.md", "docs/public.md")
+                bad["changed_file_statuses"] = invalid
+                good = native_rename_record("docs/from.md", "docs/to.md")
+                result = C.classify_pr_batch([bad, good])
+                self.assertEqual(len(result), 2)
+                self.assertEqual(result[0]["reason"], "CHANGED_TEST_NATIVE_STATUS_UNVERIFIED")
+                self.assertNotEqual(result[0]["disposition"], "READY_TO_MERGE")
+                self.assertEqual(result[1]["disposition"], "READY_TO_MERGE")
+                self.assertFalse(result[1]["authorized"])
+
     def test_rename_out_of_a_manifest_executed_path_is_never_ready(self):
         r = native_rename_record(EXECUTED, "scripts/research/old_storage_health_gate.py",
                                  governance_paths_from_main_manifest=[EXECUTED])
