@@ -611,5 +611,90 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
             http.assert_not_called()
 
 
+
+class W46SameMondayInternalPrecisionAmendmentTests(unittest.TestCase):
+    """Real committed W46 fixture plus adversarial fail-closed mutations."""
+
+    def setUp(self):
+        import shutil
+        self.repo_source = Path(__file__).resolve().parents[2]
+        self.t = tempfile.TemporaryDirectory()
+        self.addCleanup(self.t.cleanup)
+        self.repo = Path(self.t.name)
+        self.root = self.repo / "05_CYCLE_NAVIGATOR/weekly/2026/W46"
+        origin = self.repo_source / "05_CYCLE_NAVIGATOR/weekly/2026/W46"
+        self.root.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(origin, self.root)
+        self.public_path = self.root / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+        self.machine_path = self.root / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+        self.internal_path = self.root / "CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
+        self.internal = json.loads(self.internal_path.read_text())
+        self.original_internal_bytes = self.internal_path.read_bytes()
+
+    def allowed(self, **overrides):
+        return cn.authorized_w46_reissue_preserving_original_claims(
+            overrides.get("repo", self.repo),
+            overrides.get("root", self.root),
+            overrides.get("internal", self.internal),
+            overrides.get("public_path", self.public_path),
+            overrides.get("machine_path", self.machine_path),
+        )
+
+    def test_real_w46_owner_approved_amendment_accepts_only_existing_claims(self):
+        self.assertTrue(self.allowed())
+        self.assertEqual(self.internal_path.read_bytes(), self.original_internal_bytes)
+        self.assertEqual(self.internal["source_public_freeze_sha256"],
+                         "990d518786ad841d52c5fe41fe267b4c823c996b468383b3d0d356350ff6243b")
+
+    def test_generalized_or_wrong_week_would_fail_closed(self):
+        fake = self.repo / "05_CYCLE_NAVIGATOR/weekly/2026/W47"
+        self.assertFalse(self.allowed(root=fake))
+
+    def test_missing_archived_original_is_not_authorized(self):
+        (self.root / "revisions/2026-11-09-first-unavailable/CYCLE_NAVIGATOR_FORECAST_FREEZE.json").unlink()
+        self.assertFalse(self.allowed())
+
+    def test_modified_amended_daily_path_cannot_gain_revised_claim_authority(self):
+        f = json.loads(self.public_path.read_text())
+        f["daily_price_path"]["BTC"]["points"][0]["expected_close"] += 100
+        self.public_path.write_text(json.dumps(f, sort_keys=True))
+        self.assertFalse(self.allowed())
+
+    def test_modified_archived_original_cannot_be_relabelled_owner_approved(self):
+        f = self.root / "revisions/2026-11-09-first-unavailable/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+        f.write_text("{}")
+        self.assertFalse(self.allowed())
+
+    def test_changed_original_internal_claim_binding_is_rejected(self):
+        tampered = json.loads(json.dumps(self.internal))
+        tampered["claims"][0]["source_public_freeze_sha256"] = "0" * 64
+        self.assertFalse(self.allowed(internal=tampered))
+
+    def test_changed_original_machine_horizon_text_is_rejected(self):
+        m = json.loads(self.machine_path.read_text())
+        m["base_case_2_3_weeks"] = "post-outcome hindsight text"
+        self.machine_path.write_text(json.dumps(m))
+        self.assertFalse(self.allowed())
+
+    def test_original_authorization_timestamp_cannot_be_rewritten(self):
+        p = self.root / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json"
+        m = json.loads(p.read_text())
+        m["owner_approved_same_day_revision"]["after_issued_utc"] = "2026-11-13T08:00:00Z"
+        p.write_text(json.dumps(m))
+        self.assertFalse(self.allowed())
+
+    def test_extra_duplicate_internal_claims_cannot_be_silently_scored(self):
+        tampered = json.loads(json.dumps(self.internal))
+        tampered["claims"].append(dict(tampered["claims"][0]))
+        self.assertFalse(self.allowed())
+
+    def test_tampered_owner_scope_cannot_trigger_amendment(self):
+        p = self.root / "W46_OWNER_REISSUE_REQUEST.json"
+        m = json.loads(p.read_text())
+        m["owner_scope"] = "2026-W47"
+        p.write_text(json.dumps(m))
+        self.assertFalse(self.allowed())
+
+
 if __name__ == "__main__":
     unittest.main()
