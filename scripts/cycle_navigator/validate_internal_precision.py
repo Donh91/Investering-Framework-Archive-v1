@@ -59,6 +59,9 @@ def authorized_w46_reissue_preserving_original_claims(
             or amendment.get("no_portfolio_execution") is not True
             or amendment.get("scoring_policy") != "FIRST_KNOWN_AMENDED_ISSUANCE_NO_HINDSIGHT_OR_RESCORING"
             or archive.get("contract") != "CN_W46_BEFORE_ARCHIVE_v1"
+            # The archived BEFORE manifest is independently frozen original
+            # evidence, unlike the replaceable current source manifest.
+            or archive.get("amendment") != amendment
             or internal.get("contract") != "CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE_v2"
             or internal.get("issue_number") != 34
             or internal.get("iso_year") != 2026
@@ -78,7 +81,7 @@ def authorized_w46_reissue_preserving_original_claims(
             or before != archive.get("files", {}).get("CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
             or before != sha256_path(old_public_path)
             or after != sha256_path(public_freeze_path)
-            or after != source.get("owner_approved_same_day_revision", {}).get("after_forecast_sha256")
+            or after != archive.get("amendment", {}).get("after_forecast_sha256")
             or archive.get("files", {}).get("CYCLE_NAVIGATOR_MACHINE_PACKAGE.json") != sha256_path(old_machine_path)
             or internal.get("source_machine_package_sha256_at_materialization") != sha256_path(old_machine_path)
             or amendment.get("before_issued_utc") != "2026-11-09T10:33:42Z"
