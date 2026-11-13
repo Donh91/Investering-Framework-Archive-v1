@@ -17,6 +17,14 @@ ROOT = "/repos/" + REPO
 def build_fixture():
     policy = {"contract": "S1_REQUIRED_PR_JOBS_POLICY_V1",
               "lane_state": "SHADOW", "review_optional_classes": [],
+              "governance_exact_paths": ["AGENTS.md", "CLAUDE.md"],
+              "governance_prefixes": [".github/", ".agents/", "00_FMOS/",
+                                      "00_ARCHIVE_CONTROL/", "01_CORE_FRAMEWORK/governance/",
+                                      "scripts/governance/s1_", "tests/governance/test_s1_",
+                                      "research/api_agent/", "private/", "secrets/", "vault/"],
+              "required_job_executed_paths": [
+                  "scripts/data_governance/storage_health_gate.py",
+                  "tests/data_governance/test_storage_health_gate.py"],
               "classes": {"DOCS_ONLY": [
                   {"workflow_path": PATH1, "job_id": "gate", "event": "pull_request",
                    "executed_test_steps_min": 1},
@@ -237,6 +245,31 @@ class NativeIdentityTests(unittest.TestCase):
         x[ROOT + "/pulls/9/files?per_page=100&page=1"][0].update(
             {"filename": "docs/harmless.md", "previous_filename": PATH2,
              "status": "renamed"})
+        self.assertEqual(verify(x)["reason"], "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
+
+    def test_exact_agents_policy_cannot_pass_as_docs(self):
+        x = build_fixture()
+        x[ROOT + "/pulls/9/files?per_page=100&page=1"][0]["filename"] = "AGENTS.md"
+        self.assertEqual(verify(x)["reason"], "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
+
+    def test_governance_canonical_directory_cannot_pass_as_docs(self):
+        x = build_fixture()
+        x[ROOT + "/pulls/9/files?per_page=100&page=1"][0]["filename"] = (
+            "01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md")
+        self.assertEqual(verify(x)["reason"], "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
+
+    def test_required_job_implemented_file_cannot_pass_as_low_code(self):
+        x = build_fixture()
+        x[ROOT + "/pulls/9/files?per_page=100&page=1"][0]["filename"] = (
+            "scripts/data_governance/storage_health_gate.py")
+        self.assertEqual(verify_native_required_jobs(
+            lambda path: copy.deepcopy(x[path]), REPO, 9, HEAD, "LOW_CODE")["reason"],
+            "POLICY_REQUIRED_JOBS_UNVERIFIED" if False else "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
+
+    def test_renamed_policy_file_into_docs_rejected(self):
+        x = build_fixture()
+        x[ROOT + "/pulls/9/files?per_page=100&page=1"][0].update({
+            "filename": "docs/renamed.md", "previous_filename": "AGENTS.md", "status": "renamed"})
         self.assertEqual(verify(x)["reason"], "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
 
     def test_forced_high_class_not_applicable(self):
