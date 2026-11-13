@@ -29,6 +29,7 @@ Skills are process instructions. They do not own market truth, framework doctrin
 
 | adaptive-analysis-methods | `.agents/skills/adaptive-analysis-methods/SKILL.md` | PILOT_CANDIDATE_READ_ONLY_V1 | deep audit, repeated failure, uncertain research, high-consequence review | Read-only method selection only; no model, queue, write, market or portfolio authority |
 | s1-pr-repair-learning | `.agents/skills/s1-pr-repair-learning/SKILL.md` | PILOT_ACTIVE_AFTER_GOVERNED_MERGE | original S1 PR repeatedly HOLD, merge conflict, Sol MAX patch handoff, closure proof, operational memory reuse | Procedure and evidence only; no new agent, scheduler, paid call, release, market or portfolio authority |
+| conclusion-challenge-loop | `.agents/skills/conclusion-challenge-loop/SKILL.md` | PILOT_CANDIDATE_READ_ONLY_V1, NOT ACTIVE_DEFAULT | post-conclusion high-value finding, material priority change, self-correction, surprising external source; skip routine or frozen execution | Bounded self-challenge and before/after priority correction only; no scientific approval, model call, trade, write, merge or scheduling authority |
 
 ## 3. Default composition
 
@@ -42,6 +43,8 @@ canonical-context-router
 -> codex-intake only when a reproducible bounded code defect should enter remediation
 -> archive-governance before repository writes
 ```
+
+**Proposed post-conclusion extension, pilot only (not part of the active default stack):** After forming a provisional high-value framework finding or major priority recommendation, the bounded `conclusion-challenge-loop` may be used to verify the original source, existing owner, strongest countercase, decision/economic impact and priority delta. Skip routine status and already approved execution. This proposal requires independent `skill-quality-gate` evaluation before automatic default adoption; no new task/engine/scheduler/agent or active release authority is created. Evaluation fixtures: `07_PROMPTS_AND_AGENTS/skill_evals/2026-11-13__conclusion-challenge-loop-v1-eval-cases.json`.
 
 For **explicit parallel research** in any repository-aware thread (not automatic multi-agent execution):
 
@@ -495,6 +498,8 @@ validation_loop: Existing skill-quality-gate with positive and negative trigger 
 authority_boundary: Read-only selection; no automatic other-skill invocation, API/model routing, workflows, writes, market or portfolio authority.
 kill_criterion: Any critical authority violation, recurrent analysis loops, or no measured improvement over baseline after representative qualified uses.
 ```
+
+The proposed post-conclusion candidate `conclusion-challenge-loop` is a **read-only pilot design, not yet default active**. Owner request 2026-11-13: high-value conclusions should face a bounded after-conclusion review that may downgrade or withdraw a previously compelling interpretation. Distinct from existing pre-conclusion Research Lab red-team and skill-quality-gate. Initial documented regression seed: arXiv 2608.00885, P2-to-P3 downgrade after CLOB-to-DEX assumption check. Trial requires ten material real uses, negative-trigger controls and separate evaluator before activation; no additional automation, spending, framework promotion or release authority.
 
 ## 13. Current status
 
