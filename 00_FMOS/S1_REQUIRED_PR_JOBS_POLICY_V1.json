@@ -1,0 +1,158 @@
+{
+  "contract": "S1_REQUIRED_PR_JOBS_POLICY_V1",
+  "status": "EFFECTIVE_ONLY_AS_THE_BLOB_ON_CURRENT_MAIN",
+  "lane_state": "SHADOW",
+  "lane_state_values": {
+    "SHADOW": "no unattended merge of any class",
+    "DOCS_ONLY": "unattended DOCS_ONLY merges may be qualified",
+    "LOW_CODE": "unattended DOCS_ONLY and LOW_CODE merges may be qualified"
+  },
+  "review_optional_classes": [],
+  "standing_decision_rule": "Only this blob as reachable from current main carries a standing owner decision (lane_state, review_optional_classes). A comment, chat mandate, PR-branch copy, relay or model summary never does. Changing either field is a HIGH_IMPACT governance PR that needs the owner-present interactive decision of AGENTS.md section 0.2c at its exact head. Missing, unknown or unparsable values read as SHADOW and no optional review.",
+  "origin": "original_S1_1156",
+  "authority": "POLICY_SOURCE_ONLY_NOT_NATIVE_JOB_PROOF",
+  "classes": {
+    "DOCS_ONLY": [
+      {
+        "workflow_path": ".github/workflows/data-architecture-gate.yml",
+        "job_id": "gate",
+        "event": "pull_request",
+        "executed_test_steps_min": 1
+      },
+      {
+        "workflow_path": ".github/workflows/storage-health-gate.yml",
+        "job_id": "storage-health",
+        "event": "pull_request",
+        "executed_test_steps_min": 1
+      }
+    ],
+    "LOW_CODE": [
+      {
+        "workflow_path": ".github/workflows/data-architecture-gate.yml",
+        "job_id": "gate",
+        "event": "pull_request",
+        "executed_test_steps_min": 1
+      },
+      {
+        "workflow_path": ".github/workflows/storage-health-gate.yml",
+        "job_id": "storage-health",
+        "event": "pull_request",
+        "executed_test_steps_min": 1
+      }
+    ]
+  },
+  "additional_low_code_requirement": "RUNNABLE_CHANGED_TESTS_EXECUTED_AT_EXACT_HEAD_IN_NATIVE_REQUIRED_PR_EVENT_JOB_WITH_AUTHENTICATED_RUN_SHA_WORKFLOW_SOURCE",
+  "other_required_checks": "ALL_APPLICABLE_NATIVE_GITHUB_BRANCH_OR_RULESET_CHECKS_AND_DOMAIN_SPECIFIC_ORIGINAL_POLICY",
+  "failure_rule": "MISSING_PATH_JOB_ID_SCOPE_NON_SUCCESS_STALE_SHA_OR_UNVERIFIED_TEST_STEPS => HOLD_NOT_READY",
+  "qualification": "Manifest is a MINIMUM per class, not permission and not evidence of execution. Compare native workflow_run.path + exact job id, event pull_request, checked-out code HEAD and actual executed steps. Conditional job absence is not silently optional. Re-read current main manifest SHA.",
+  "duplication_rule": "Do not key solely by display name: e.g. multiple validate jobs across workflows are distinct.",
+  "owner_policy_sha_source": "CURRENT_MAIN_AGENTS_BLOB",
+  "activation_gate": "POLICY_PR_2089_MERGED_AFTER_OWNER_PRESENT_INTERACTIVE_DECISION_AND_RP1_SOURCE_PRODUCER_IMPLEMENTED_AND_SHADOW_DONE",
+  "governance_rule": "Every file a required job of this manifest executes is GOVERNANCE and never unattended LOW: the workflow files, required_job_executed_paths, governance_exact_paths and everything under governance_prefixes. required_job_executed_paths is derived, not hand-kept: scripts/governance/s1_standing_policy_v1.py --check must pass.",
+  "governance_prefixes": [
+    ".github/",
+    ".agents/",
+    "00_FMOS/",
+    "schemas/S1_",
+    "scripts/governance/s1_",
+    "tests/governance/test_s1_",
+    "00_ARCHIVE_CONTROL/",
+    "01_CORE_FRAMEWORK/governance/",
+    "scripts/governance/",
+    "research/api_agent/",
+    "private/",
+    "secrets/",
+    "vault/",
+    "config/private/",
+    "data/private/",
+    "08_SOURCE_MATERIAL/private/"
+  ],
+  "governance_exact_paths": [
+    "AGENTS.md",
+    "CLAUDE.md"
+  ],
+  "required_job_executed_paths": [
+    "04_MARKET_LEARNING/handlekompas/research/2026-10-14__task2_r0_git_object_reconcile_v1_1.test.mjs",
+    "04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/source_qa_v1.py",
+    "04_RESEARCH_LAB/auto_trading/research_inputs/2026-10-18_dexpaprika_archify_source_qa/test_source_qa_v1.py",
+    "04_RESEARCH_LAB/external_specialist_dissection/onchain_options_2026_11/sector_metrics.py",
+    "04_RESEARCH_LAB/external_specialist_dissection/onchain_options_2026_11/test_sector_metrics.py",
+    "05_CYCLE_NAVIGATOR/site/research-w45/preview.test.mjs",
+    "scripts/api_agent/meme_alpha_blockscout.py",
+    "scripts/cycle_navigator/daily_price_journey.py",
+    "scripts/data_governance/storage_health_gate.py",
+    "scripts/data_ping/native_handlekompas.py",
+    "scripts/data_storage/durable_promotion_controller.py",
+    "scripts/data_storage/storage_telemetry.py",
+    "scripts/data_terminal/situation_room_shadow_bridge.py",
+    "scripts/governance/s1_diff_scan_v1.py",
+    "scripts/governance/s1_native_privacy_scan_step_v1.py",
+    "scripts/learning/kompas_pro_chat_presentation_v1.py",
+    "scripts/learning/kompas_pro_horizon_readback_v2.py",
+    "scripts/learning/kompas_pro_source_gap_report_v1.py",
+    "scripts/research/core_shared_row_materializer.py",
+    "scripts/research/memes_alpha/adversarial_operator_counting.py",
+    "scripts/research/memes_alpha/adversarial_operator_enrichment.py",
+    "scripts/research/news_oss_event_challenger.py",
+    "scripts/research/oxarchive_e0_source_preflight_v1.py",
+    "scripts/research/prospective_evidence_controller.py",
+    "scripts/research/shared_row_outcome_receipt_gate.py",
+    "scripts/research/task2_archive_first_edge_matrix_v1.py",
+    "scripts/research/task2_cfgi_capture_clock_audit_v1.py",
+    "scripts/research/task2_cn_equal_width_sidecar_v1.py",
+    "scripts/research/task2_cn_w44_postfreeze_paired_v1.py",
+    "scripts/research/task2_hourly_source_window_clocks_v1.py",
+    "scripts/research/task2_r1_first_known_and_cadence_preflight_v1.py",
+    "scripts/research/task2_r1_original_admission.py",
+    "scripts/research/task2_r1_original_causal_source_matrix_v1.py",
+    "scripts/research/task2_r1_original_publication_recovery_v1.py",
+    "scripts/research/task2_r1_scoped_readiness_v1.py",
+    "scripts/research/task2_rpl8_source_replay_v1.py",
+    "scripts/research/task2_rpl_wave3_action_value_sensitivity_v1.py",
+    "scripts/research/task2_wave_b_scientific_gates_v1.py",
+    "scripts/research/validate_kompas_scientific_edge_program_v2_1.py",
+    "tests/data_governance/test_storage_health_gate.py",
+    "tests/data_storage/test_durable_promotion_controller.py",
+    "tests/data_storage/test_storage_telemetry.py",
+    "tests/data_terminal/test_situation_room_source_fact_anchor_v1.py",
+    "tests/learning/test_kompas_pro_chat_presentation_v1.py",
+    "tests/learning/test_kompas_pro_internal_horizon_v2.py",
+    "tests/learning/test_kompas_pro_source_gap_report_v1.py",
+    "tests/research/memes_alpha/test_adversarial_operator_counting.py",
+    "tests/research/memes_alpha/test_adversarial_operator_enrichment.py",
+    "tests/research/test_frameworkwide_oss_source_snapshot.py",
+    "tests/research/test_kompas_scientific_edge_program_v2_1.py",
+    "tests/research/test_news_oss_event_challenger.py",
+    "tests/research/test_oxarchive_e0_source_preflight_v1.py",
+    "tests/research/test_task2_archive_first_edge_matrix_v1.py",
+    "tests/research/test_task2_cn_equal_width_sidecar_v1.py",
+    "tests/research/test_task2_cn_w44_postfreeze_paired_v1.py",
+    "tests/research/test_task2_r1_first_known_and_cadence_preflight_v1.py",
+    "tests/research/test_task2_rpl8_source_replay_v1.py",
+    "tests/research/test_task2_rpl_wave3_action_value_sensitivity_v1.py",
+    "tests/research/test_task2_wave_b_scientific_gates_v1.py"
+  ],
+  "science_gated_prefixes": [
+    "04_MARKET_LEARNING/",
+    "04_RESEARCH_LAB/",
+    "05_CYCLE_NAVIGATOR/",
+    "06_RESEARCH_LAB/",
+    "research/"
+  ],
+  "review_reuse": {
+    "rule": "D3. An exact-head independent review made at review-time main may be reused at current main iff (a) the complete native change census between the two mains is disjoint from every PR path and rename source, (b) no path in policy_blob_paths, no required workflow file and no required_job_executed_paths entry is in that census, and (c) each of those blobs is proven identical at both mains. The class of the drift paths is not tested.",
+    "classes": [
+      "DOCS_ONLY"
+    ],
+    "low_code": "ALWAYS_REREVIEW_ON_CURRENT_MAIN",
+    "policy_blob_paths": [
+      "AGENTS.md",
+      "00_FMOS/S1_NATIVE_RULE_CENSUS_AND_RELEASE_RECIPE_V1.md",
+      "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json",
+      "scripts/governance/s1_release_evidence_classifier_v1.py",
+      "scripts/governance/s1_diff_scan_v1.py",
+      "scripts/governance/s1_standing_policy_v1.py"
+    ],
+    "evaluator": "scripts/governance/s1_standing_policy_v1.py::review_reuse_decision"
+  }
+}
