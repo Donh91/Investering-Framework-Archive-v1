@@ -195,6 +195,45 @@ class RealdataAstraV2Tests(unittest.TestCase):
         self.assertEqual(m.read(self.out/"cancel_unverified.json")["provider_cancellation"],"UNKNOWN")
         self.assertFalse((self.out/"cancel_confirmation.json").exists())
 
+    def test_completed_python_trace_preserves_actual_code_and_logs(self):
+        self._fake_bundle()
+        rid = "resp_SYNTHETIC5678"
+        m.write_once(self.out/"response_handle.json", {
+            "response_id":rid, "source_main_sha":"a"*40,
+            "archive_sha256":m.checksum(self.out/m.ZIP_NAME),
+            "payload_sha256":"b"*64})
+        call={"type":"code_interpreter_call", "id":"ci_native_123",
+              "status":"completed", "code":"print(17*19)",
+              "outputs":[{"type":"logs","logs":"323"}]}
+        resp={"id":rid, "model":m.MODEL, "status":"completed",
+              "output":[call, {"type":"message", "content":[{"type":"output_text",
+                "text":"Independent source audit and results. "*20}]}],
+              "usage":{"input_tokens":2000,"output_tokens":5000}}
+        with patch.object(m,"http",return_value=resp):
+            self.assertEqual(m.collect(self.out),0)
+        trace=m.read(self.out/"code_interpreter_trace.json")
+        self.assertEqual(trace["call_count"],1)
+        self.assertEqual(trace["code_interpreter_calls"][0]["code"],"print(17*19)")
+        self.assertEqual(trace["code_interpreter_calls"][0]["outputs"][0]["logs"],"323")
+        self.assertEqual(trace["source_main_sha"],"a"*40)
+        self.assertEqual(m.read(self.out/"receipt.json")["tool_execution_verified"],True)
+
+    def test_provider_trace_secret_indicator_refused(self):
+        self._fake_bundle()
+        rid="resp_SYNTHETIC5678"
+        m.write_once(self.out/"response_handle.json",{
+            "response_id":rid,"source_main_sha":"a"*40,
+            "archive_sha256":m.checksum(self.out/m.ZIP_NAME),
+            "payload_sha256":"b"*64})
+        resp={"id":rid,"model":m.MODEL,"status":"completed",
+              "output":[{"type":"code_interpreter_call","status":"completed",
+                "code":"print('sk-proj-SYNTHETIC-NOT-REAL')"}],
+              "usage":{"input_tokens":100,"output_tokens":200}}
+        with patch.object(m,"http",return_value=resp):
+            with self.assertRaisesRegex(ValueError,"NATIVE_PYTHON_TRACE_UNSAFE_OR_TOO_LARGE"):
+                m.collect(self.out)
+        self.assertFalse((self.out/"code_interpreter_trace.json").exists())
+
     def test_source_private_key_denied(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td)
