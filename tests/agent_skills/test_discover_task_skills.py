@@ -67,7 +67,9 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_specific_phrase_outranks_generic_keyword(self):
         r = MODULE.discover(fixture(), "Review current version of framework")
-        self.assertEqual(r["recommendations"][0]["matched_triggers"], ["current version"])
+        self.assertEqual(r["recommendations"][0]["matched_triggers"],
+                         ["current version", "framework"])
+        self.assertEqual(r["recommendations"][0]["score"], 2)
 
     def test_pilot_excluded_unless_explicitly_inspected(self):
         r = MODULE.discover(fixture(), "high value conclusion")
