@@ -241,7 +241,7 @@ class NativePrivacyScanStep(unittest.TestCase):
         fx = Fixture(
             self.tmp,
             lambda f: git(f.repo, "--literal-pathspecs", "rm", "-q", "--", magic),
-            base_files={magic: "Private " + MARKER + " evidence.\\n"},
+            base_files={magic: "Private " + MARKER + " evidence.\n"},
         )
         code, out, details = fx.cli()
         self.assertEqual((code, out["result"]), (1, "RESTRICTED_CONTENT"), details)
@@ -250,14 +250,14 @@ class NativePrivacyScanStep(unittest.TestCase):
 
     def test_original_pr_three_dot_patch_is_scanned_after_parallel_main_edit(self):
         def remove_marker_and_add_public_note(f):
-            f.write("README.md", "Header\\nFooter\\nPublic note\\n")
+            f.write("README.md", "Header\nFooter\nPublic note\n")
 
         def main_also_removes_marker(f):
-            f.write("README.md", "Header\\nFooter\\n")
+            f.write("README.md", "Header\nFooter\n")
 
         fx = Fixture(
             self.tmp, remove_marker_and_add_public_note,
-            base_files={"README.md": "Header\\n" + MARKER + "\\nFooter\\n"},
+            base_files={"README.md": "Header\n" + MARKER + "\nFooter\n"},
             main_changes=main_also_removes_marker,
         )
         self.assertNotEqual(fx.base, git(fx.repo, "merge-base", fx.base, fx.head))
