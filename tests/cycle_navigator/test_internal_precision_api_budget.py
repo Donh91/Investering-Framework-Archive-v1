@@ -660,6 +660,21 @@ class W46SameMondayInternalPrecisionAmendmentTests(unittest.TestCase):
         self.public_path.write_text(json.dumps(f, sort_keys=True))
         self.assertFalse(self.allowed())
 
+    def test_coordinated_current_source_and_manifest_rewrite_cannot_forge_amendment(self):
+        # A later producer can alter its current public bytes and manifest,
+        # but not inherit the BEFORE archive's already pinned after-hash.
+        import hashlib
+        f = json.loads(self.public_path.read_text())
+        f["daily_price_path"]["BTC"]["points"][0]["expected_close"] += 125
+        self.public_path.write_text(json.dumps(f, sort_keys=True))
+        mpath = self.root / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json"
+        m = json.loads(mpath.read_text())
+        m["owner_approved_same_day_revision"]["after_forecast_sha256"] = hashlib.sha256(
+            self.public_path.read_bytes()
+        ).hexdigest()
+        mpath.write_text(json.dumps(m))
+        self.assertFalse(self.allowed())
+
     def test_modified_archived_original_cannot_be_relabelled_owner_approved(self):
         f = self.root / "revisions/2026-11-09-first-unavailable/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
         f.write_text("{}")
