@@ -9,6 +9,7 @@ from scripts.governance.s1_native_job_identity_v1 import verify_native_required_
 REPO = "Donh91/Investering-Framework-Archive-v1"
 HEAD = "a" * 40
 MAIN = "b" * 40
+MERGE = "c" * 40
 PATH1 = ".github/workflows/data-architecture-gate.yml"
 PATH2 = ".github/workflows/storage-health-gate.yml"
 ROOT = "/repos/" + REPO
@@ -63,20 +64,40 @@ def build_fixture():
         yaml = ("name: Native test\non: pull_request\njobs:\n  " + jobid +
                 ":\n    runs-on: ubuntu-latest\n    steps:\n      - run: python -m unittest\n").encode()
         blob = hashlib.sha1(b"blob " + str(len(yaml)).encode() + b"\0" + yaml).hexdigest()
-        for ref in (MAIN, HEAD):
+        for ref in (MAIN, HEAD, MERGE):
             urls[ROOT + "/contents/" + path + "?ref=" + ref] = {
                 "encoding": "base64", "sha": blob, "content": base64.b64encode(yaml).decode()}
     runs = urls[ROOT + "/actions/runs?head_sha=" + HEAD +
                 "&event=pull_request&per_page=100&page=1"]["workflow_runs"]
     for run in runs:
         urls[ROOT + "/actions/runs/" + str(run["id"])] = copy.deepcopy(run)
+    urls[ROOT + "/commits/" + MERGE] = {
+        "sha": MERGE, "parents": [{"sha": MAIN}, {"sha": HEAD}],
+        "commit": {"message": "Merge " + HEAD + " into " + MAIN}}
+    # Native actions/checkout section, with exact Git merge SHA and parents.
+    # User-authored step output is intentionally absent from this log fixture.
+    checkout_log = "\n".join([
+        "2026-11-13T19:12:34Z ##[group]Checking out the ref",
+        "2026-11-13T19:12:34Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/9/merge",
+        "2026-11-13T19:12:50Z HEAD is now at " + MERGE[:10] + " Merge " + HEAD + " into " + MAIN,
+        "2026-11-13T19:12:50Z ##[endgroup]",
+        "2026-11-13T19:12:50Z [command]/usr/bin/git log -1 --format=%H",
+        "2026-11-13T19:12:50Z " + MERGE,
+    ])
+    urls["__job_logs__"] = {1123: checkout_log, 1124: checkout_log}
     return urls
+
+
+def _reader_with_logs(reader, urls):
+    reader.job_log = lambda repo, jobid: urls["__job_logs__"][jobid]
+    return reader
 
 
 def verify(urls):
     def native_get(path):
         return copy.deepcopy(urls[path])
-    return verify_native_required_jobs(native_get, REPO, 9, HEAD, "DOCS_ONLY")
+    return verify_native_required_jobs(
+        _reader_with_logs(native_get, urls), REPO, 9, HEAD, "DOCS_ONLY")
 
 
 class NativeIdentityTests(unittest.TestCase):
@@ -133,7 +154,7 @@ class NativeIdentityTests(unittest.TestCase):
                 count[0] += 1
                 return {"commit": {"sha": MAIN if count[0] == 1 else "c" * 40}}
             return copy.deepcopy(x[path])
-        self.assertEqual(verify_native_required_jobs(reader, REPO, 9, HEAD, "DOCS_ONLY")["reason"],
+        self.assertEqual(verify_native_required_jobs(_reader_with_logs(reader, x), REPO, 9, HEAD, "DOCS_ONLY")["reason"],
                          "MAIN_DRIFT_RECHECK")
 
     def test_pr_head_drift_fails_closed(self):
@@ -145,7 +166,7 @@ class NativeIdentityTests(unittest.TestCase):
                 if count[0] > 1:
                     return {"head": {"sha": "c" * 40}}
             return copy.deepcopy(x[path])
-        self.assertEqual(verify_native_required_jobs(reader, REPO, 9, HEAD, "DOCS_ONLY")["reason"],
+        self.assertEqual(verify_native_required_jobs(_reader_with_logs(reader, x), REPO, 9, HEAD, "DOCS_ONLY")["reason"],
                          "PR_HEAD_OR_STATE_DRIFT")
 
     def test_incomplete_job_pagination_fails_closed(self):
@@ -212,7 +233,7 @@ class NativeIdentityTests(unittest.TestCase):
                     altered["workflow_runs"][0]["conclusion"] = "failure"
                     return altered
             return copy.deepcopy(x[path])
-        self.assertEqual(verify_native_required_jobs(reader, REPO, 9, HEAD, "DOCS_ONLY")["reason"],
+        self.assertEqual(verify_native_required_jobs(_reader_with_logs(reader, x), REPO, 9, HEAD, "DOCS_ONLY")["reason"],
                          "NATIVE_RUN_CENSUS_DRIFT")
 
     def test_pr_workflow_source_mismatch_fails_closed(self):
@@ -272,6 +293,37 @@ class NativeIdentityTests(unittest.TestCase):
         x[ROOT + "/pulls/9/files?per_page=100&page=1"][0].update({
             "filename": "docs/renamed.md", "previous_filename": "AGENTS.md", "status": "renamed"})
         self.assertEqual(verify(x)["reason"], "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
+
+    def test_missing_native_checkout_log_holds_instead_of_pass(self):
+        x = build_fixture()
+        x["__job_logs__"][1123] = "unrelated step output\n"
+        self.assertEqual(verify(x)["reason"], "RUN_EXECUTED_WORKFLOW_SOURCE_UNVERIFIED")
+
+    def test_checkout_from_other_pr_holds(self):
+        x = build_fixture()
+        x["__job_logs__"][1123] = x["__job_logs__"][1123].replace(
+            "refs/remotes/pull/9/merge", "refs/remotes/pull/10/merge")
+        self.assertEqual(verify(x)["reason"], "RUN_EXECUTED_WORKFLOW_SOURCE_UNVERIFIED")
+
+    def test_native_merge_parent_must_match_current_base(self):
+        x = build_fixture()
+        x[ROOT + "/commits/" + MERGE]["parents"][0]["sha"] = "d" * 40
+        self.assertEqual(verify(x)["reason"], "RUN_EXECUTED_WORKFLOW_SOURCE_UNVERIFIED")
+
+    def test_executed_merge_workflow_blob_must_match_main(self):
+        x = build_fixture()
+        route = ROOT + "/contents/" + PATH1 + "?ref=" + MERGE
+        raw = b"jobs:\n  gate:\n    name: unsafe substituted workflow\n"
+        blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+        x[route] = {"encoding": "base64", "sha": blob,
+                    "content": base64.b64encode(raw).decode()}
+        self.assertEqual(verify(x)["reason"], "RUN_EXECUTED_WORKFLOW_SOURCE_UNVERIFIED")
+
+    def test_native_log_route_unavailable_fails_closed(self):
+        x = build_fixture()
+        self.assertEqual(verify_native_required_jobs(
+            lambda path: copy.deepcopy(x[path]), REPO, 9, HEAD, "DOCS_ONLY")["reason"],
+            "RUN_EXECUTED_WORKFLOW_SOURCE_UNVERIFIED")
 
     def test_forced_high_class_not_applicable(self):
         self.assertEqual(verify_native_required_jobs(lambda p: {}, REPO, 9, HEAD, "HIGH")["reason"],

@@ -36,6 +36,25 @@ class GithubNativeRead:
         with urlopen(req, timeout=20) as resp:
             return json.load(resp)
 
+    def job_log(self, repo, job_id):
+        """Read the native job log, never print or persist raw contents."""
+        if (not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo)
+                or type(job_id) is not int or job_id < 1):
+            raise ValueError("JOB_LOG_ROUTE_UNVERIFIED")
+        headers = {"Accept": "application/vnd.github+json",
+                   "X-GitHub-Api-Version": "2022-11-28",
+                   "User-Agent": "S1-native-job-identity-v1"}
+        if self.token:
+            headers["Authorization"] = "Bearer " + self.token
+        req = Request("https://api.github.com/repos/" + repo +
+                      "/actions/jobs/" + str(job_id) + "/logs", headers=headers, method="GET")
+        with urlopen(req, timeout=25) as resp:
+            raw = resp.read(8 * 1024 * 1024 + 1)
+        if len(raw) > 8 * 1024 * 1024:
+            raise ValueError("JOB_LOG_SIZE_UNVERIFIED")
+        return raw.decode("utf-8")
+
+
 
 def _hold(reason, **extra):
     return {"contract": "S1_NATIVE_REQUIRED_JOB_IDENTITY_V1",
@@ -139,6 +158,60 @@ def _census_fingerprint(runs, paths, head):
                                 if isinstance(a, dict) and type(a.get("number")) is int)))
                   for x in runs if isinstance(x, dict) and x.get("path") in paths
                   and x.get("head_sha") == head and x.get("event") == "pull_request")
+
+
+def _verified_executed_merge_source(read, url, repo, pr_number, head, main_sha,
+                                    job_id, workflow_path, required_blob):
+    """Authenticate the event merge checkout from native checkout-step logs.
+
+    Pin the full Git merge SHA via GitHub's immutable commit object and parents.
+    Job command logs are not evidence for test semantics, only the trusted
+    actions/checkout provenance segment; fail closed on missing/ambiguous output.
+    """
+    reader = getattr(read, "job_log", None)
+    if not callable(reader):
+        return None
+    log = reader(repo, job_id)
+    if not isinstance(log, str) or not log or len(log) > 8 * 1024 * 1024:
+        return None
+    lines = [line.split("Z ", 1)[-1] for line in log.splitlines()]
+    group = [i for i, line in enumerate(lines) if "##[group]Checking out the ref" in line]
+    if len(group) != 1:
+        return None
+    start = group[0]
+    end = next((i for i in range(start + 1, len(lines))
+                if "##[endgroup]" in lines[i]), None)
+    if end is None:
+        return None
+    segment = lines[start:end]
+    expected_checkout = "git checkout --progress --force refs/remotes/pull/" + str(pr_number) + "/merge"
+    if not any(expected_checkout in line for line in segment):
+        return None
+    match = [re.search(
+        r"HEAD is now at ([a-f0-9]{7,12}) Merge ([a-f0-9]{40}) into ([a-f0-9]{40})", line)
+        for line in segment]
+    match = [m for m in match if m]
+    if len(match) != 1 or match[0].group(2) != head or match[0].group(3) != main_sha:
+        return None
+    short = match[0].group(1)
+    # This git log call is executed by trusted actions/checkout directly after
+    # the checkout group; do not accept a similar line in arbitrary user tests.
+    next_lines = lines[end + 1:end + 8]
+    git_log_positions = [i for i, line in enumerate(next_lines)
+                         if "[command]/usr/bin/git log -1 --format=%H" in line]
+    if len(git_log_positions) != 1 or git_log_positions[0] + 1 >= len(next_lines):
+        return None
+    full = next_lines[git_log_positions[0] + 1].strip()
+    if not SHA40.fullmatch(full) or not full.startswith(short):
+        return None
+    commit = read(url + "/commits/" + full)
+    if (commit.get("sha") != full
+            or [x.get("sha") for x in commit.get("parents", [])] != [main_sha, head]):
+        return None
+    merge_bytes, merge_blob = _verified_content(read, url, full, workflow_path)
+    if merge_blob != required_blob:
+        return None
+    return {"merge_sha": full, "merge_workflow_blob_sha": merge_blob}
 
 
 def _safe_changed_paths(files, release_class, policy):
@@ -268,6 +341,11 @@ def verify_native_required_jobs(read, repo, pr_number, head, release_class):
                           and s.get("started_at") and s.get("completed_at")]
             if len(meaningful) < item["executed_test_steps_min"]:
                 return _hold("REQUIRED_JOB_STEPS_UNVERIFIED", workflow_path=path, job_id=job_id)
+            executed = _verified_executed_merge_source(
+                read, url, repo, pr_number, head, main_sha, job["id"], path, main_blob)
+            if executed is None:
+                return _hold("RUN_EXECUTED_WORKFLOW_SOURCE_UNVERIFIED",
+                             workflow_path=path, job_id=job_id)
             current_run = read(url + "/actions/runs/" + str(rid))
             if (current_run.get("id") != rid or current_run.get("run_attempt") != attempt
                     or current_run.get("head_sha") != head or current_run.get("path") != path
@@ -277,7 +355,9 @@ def verify_native_required_jobs(read, repo, pr_number, head, release_class):
                 return _hold("NATIVE_RUN_ATTEMPT_DRIFT", workflow_path=path, job_id=job_id)
             proofs.append({"workflow_path": path, "job_id": job_id, "head": head,
                            "run_id": rid, "run_attempt": attempt, "native_job_id": job["id"],
-                           "workflow_blob_sha": head_blob, "observed_named_steps": len(meaningful)})
+                           "workflow_blob_sha": head_blob,
+                           "executed_merge_sha": executed["merge_sha"],
+                           "observed_named_steps": len(meaningful)})
         fresh_runs = _page_all(read, run_route, "workflow_runs")
         if _census_fingerprint(fresh_runs, required_paths, head) != _census_fingerprint(runs, required_paths, head):
             return _hold("NATIVE_RUN_CENSUS_DRIFT")
