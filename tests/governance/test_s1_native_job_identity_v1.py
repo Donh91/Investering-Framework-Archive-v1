@@ -40,16 +40,16 @@ def build_fixture():
         ROOT + "/branches/main": {"commit": {"sha": MAIN}},
         ROOT + "/contents/00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json?ref=" + MAIN:
             {"encoding": "base64", "content": base64.b64encode(raw).decode(), "sha": sha},
-        ROOT + "/pulls/9": {"head": {"sha": HEAD}, "base": {"ref": "main"}, "state": "open",
+        ROOT + "/pulls/9": {"head": {"sha": HEAD, "ref": "feature"}, "base": {"ref": "main"}, "state": "open",
                              "draft": False, "changed_files": 1},
         ROOT + "/pulls/9/files?per_page=100&page=1":
             [{"filename": "README.md", "status": "modified"}],
         ROOT + "/actions/runs?head_sha=" + HEAD + "&event=pull_request&per_page=100&page=1":
             {"total_count": 2, "workflow_runs": [
-                {"path": PATH1, "head_sha": HEAD, "event": "pull_request",
+                {"path": PATH1, "head_sha": HEAD, "head_branch": "feature", "event": "pull_request",
                  "id": 123, "run_attempt": 1, "status": "completed", "conclusion": "success",
                  "pull_requests": [{"number": 9, "base": {"ref": "main"}}]},
-                {"path": PATH2, "head_sha": HEAD, "event": "pull_request",
+                {"path": PATH2, "head_sha": HEAD, "head_branch": "feature", "event": "pull_request",
                  "id": 124, "run_attempt": 1, "status": "completed", "conclusion": "success",
                  "pull_requests": [{"number": 9, "base": {"ref": "main"}}]}]},
     }
@@ -112,6 +112,38 @@ class NativeIdentityTests(unittest.TestCase):
         self.assertFalse(result["authorized"])
         self.assertFalse(result["externally_authenticated"])
         self.assertFalse(result["test_commands_and_logs_verified"])
+
+
+    def test_native_empty_association_with_verified_checkout_passes_advisory(self):
+        x = build_fixture()
+        runs = x[ROOT + "/actions/runs?head_sha=" + HEAD +
+                 "&event=pull_request&per_page=100&page=1"]["workflow_runs"]
+        for run in runs:
+            run["pull_requests"] = []
+            x[ROOT + "/actions/runs/" + str(run["id"])]["pull_requests"] = []
+        result = verify(x)
+        self.assertEqual(result["status"], "JOB_IDENTITY_PASS_ADVISORY")
+        self.assertFalse(result["authorized"])
+
+    def test_native_empty_association_wrong_branch_fails_closed(self):
+        x = build_fixture()
+        runs = x[ROOT + "/actions/runs?head_sha=" + HEAD +
+                 "&event=pull_request&per_page=100&page=1"]["workflow_runs"]
+        for run in runs:
+            run["pull_requests"] = []
+            run["head_branch"] = "foreign-branch"
+        self.assertEqual(verify(x)["reason"], "PR_RUN_ASSOCIATION_UNVERIFIED")
+
+    def test_native_empty_association_wrong_checkout_fails_closed(self):
+        x = build_fixture()
+        runs = x[ROOT + "/actions/runs?head_sha=" + HEAD +
+                 "&event=pull_request&per_page=100&page=1"]["workflow_runs"]
+        for run in runs:
+            run["pull_requests"] = []
+            x[ROOT + "/actions/runs/" + str(run["id"])]["pull_requests"] = []
+        x["__job_logs__"][1123] = x["__job_logs__"][1123].replace(
+            "refs/remotes/pull/9/merge", "refs/remotes/pull/10/merge")
+        self.assertEqual(verify(x)["reason"], "RUN_EXECUTED_WORKFLOW_SOURCE_UNVERIFIED")
 
     def test_misnamed_green_check_not_job_identity(self):
         x = build_fixture()

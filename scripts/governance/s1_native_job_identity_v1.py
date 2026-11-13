@@ -174,12 +174,22 @@ def _unambiguous_job_id(workflow, required_id):
     return required_id in jobs
 
 
-def _correct_pr_association(run, pr_number):
+def _correct_pr_association(run, pr_number, source_branch=None):
+    """Native association or bounded fallback when GitHub reports an empty PR list.
+
+    A branch match is ONLY preliminary. The native checkout log and immutable
+    merge-commit parents still MUST bind the original PR, HEAD and workflow.
+    """
     prs = run.get("pull_requests")
-    return (isinstance(prs, list)
-            and any(isinstance(x, dict) and x.get("number") == pr_number
-                    and isinstance(x.get("base"), dict) and x["base"].get("ref") == "main"
-                    for x in prs))
+    if not isinstance(prs, list):
+        return False
+    if prs:
+        return any(isinstance(x, dict) and x.get("number") == pr_number
+                   and isinstance(x.get("base"), dict) and x["base"].get("ref") == "main"
+                   for x in prs)
+    return (isinstance(source_branch, str) and bool(source_branch)
+            and run.get("event") == "pull_request"
+            and run.get("head_branch") == source_branch)
 
 
 def _census_fingerprint(runs, paths, head):
@@ -349,7 +359,7 @@ def verify_native_required_jobs(read, repo, pr_number, head, release_class):
                    for x in matching_runs):
                 return _hold("NATIVE_RUN_ATTEMPT_UNVERIFIED", workflow_path=path, job_id=job_id)
             newest = max(matching_runs, key=lambda x: (x["id"], x["run_attempt"]))
-            if not _correct_pr_association(newest, pr_number):
+            if not _correct_pr_association(newest, pr_number, pr["head"].get("ref")):
                 return _hold("PR_RUN_ASSOCIATION_UNVERIFIED", workflow_path=path, job_id=job_id)
             if newest.get("status") != "completed" or newest.get("conclusion") != "success":
                 return _hold("REQUIRED_WORKFLOW_NOT_SUCCESS", workflow_path=path, job_id=job_id)
@@ -384,7 +394,7 @@ def verify_native_required_jobs(read, repo, pr_number, head, release_class):
                     or current_run.get("head_sha") != head or current_run.get("path") != path
                     or current_run.get("event") != "pull_request"
                     or current_run.get("status") != "completed" or current_run.get("conclusion") != "success"
-                    or not _correct_pr_association(current_run, pr_number)):
+                    or not _correct_pr_association(current_run, pr_number, pr["head"].get("ref"))):
                 return _hold("NATIVE_RUN_ATTEMPT_DRIFT", workflow_path=path, job_id=job_id)
             proofs.append({"workflow_path": path, "job_id": job_id, "head": head,
                            "run_id": rid, "run_attempt": attempt, "native_job_id": job["id"],
