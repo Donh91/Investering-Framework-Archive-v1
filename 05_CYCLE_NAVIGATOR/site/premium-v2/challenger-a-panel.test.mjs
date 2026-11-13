@@ -32,7 +32,11 @@ test('reject missing issuer, missing source, future clocks and retroactive publi
   p=>{p.source.first_in_main_utc='2026-11-16T12:00:00Z'},
   p=>{p.issuance.issue_clock_utc='2026-11-21T12:00:00Z'},
   p=>{p.issuance.assets.ETH.days.pop()},
-  p=>{p.issuance.assets.BTC.days[0].band.range['0.8']=[82000,67000]}
+  p=>{p.issuance.assets.BTC.days[0].band.range['0.8']=[82000,67000]},
+  p=>{p.issuance.assets.BTC.days[1].scored_from_utc='2026-11-01T11:00:00Z';p.issuance.assets.BTC.days[1].end_utc='2026-11-02T00:00:00Z'},
+  p=>{p.issuance.assets.ETH.days[5].scored_from_utc='2026-11-18T00:00:00Z'},
+  p=>{p.issuance.assets.ETH.days[0].scored_from_utc='2026-11-16T10:30:00Z'},
+  p=>{p.issuance.issue_clock_utc='2026-11-15T23:00:00Z'}
  ]){const p=mk();mutate(p);assert.equal(validateChallengerPublic(p,now).ok,false)}
  assert.equal(validateChallengerPublic(null,now).ok,false);
 });
