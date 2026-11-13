@@ -1,0 +1,48 @@
+# S10 · DeFiLlama Revenue-Origin Truth · source audit 2026-11-13
+
+**Status:** SOURCE_SEMANTICS_VERIFIED / LIVE_FLOW_AMOUNTS_NOT_INDEPENDENTLY_REPLAYED / RESEARCH_ONLY.  
+**Canonical:** existing Research Lab #1512, S10_PROTOCOL_VALUE_CAPTURE_TRUTH_V1. Downstream original Alpha utility/Microcap/FUSE owner and Alpha Lab Pro #228. Existing Fable roadmap in Bridge #173.  
+**Authority:** no new data collector, scheduler, scanner, signal, paid API, public site claim, trade or separate Fable run.
+
+## Exactly pinned primary evidence
+
+- [Public DeFiLlama Nullmask fees adapter @ a8a9d012](https://github.com/DefiLlama/dimension-adapters/blob/a8a9d01297b4da8a0e4c67850b49ae3a99cf4653/fees/nullmask/index.ts), fetched Git blob `8550982b382a22ff36045e6027b0264a8506dc01`. The source is code evidence, not a transaction replay.
+- [Official metric definitions](https://docs.llama.fi/analysts/data-definitions), [API docs](https://api-docs.defillama.com/), [free endpoint schema](https://github.com/DefiLlama/api-docs/blob/main/llms-free.txt), [protocol page](https://defillama.com/protocol/nullmask).
+- Internal owner [Research Lab queue](https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/04_RESEARCH_LAB/external_specialist_dissection/QUEUE_V1.json) = S10 P2 CONDITIONAL, existing Microcap/FUSE product/value-capture research documented in Meme Alpha `research/packages/RESEARCH_LAB_PACKAGE_MAP_2026-10-05.md`.
+- [Alpha Pro roadmap, 2026-11-12](https://github.com/Donh91/Meme-Alpha-Lab/blob/main/research/alpha_audit/2026-11-12_ALPHA_LAB_PRO_ROADMAP_AND_RESEARCH_STATUS_V2.md), [original #228](https://github.com/Donh91/Meme-Alpha-Lab/issues/228). Current Fable `claude/log/tasks/claude/FABLE_ROADMAP_v1.md` already has source-gated external-method challengers and future R6/R7/R8/R9, NOT a booked source-forensics run.
+
+## Material finding: the headline revenue is not a clean adoption signal
+
+1. On EVM chains, contract `0xd64EF1417EB047ed0b54736a5a41F01178C391c6` provides `ProtocolFeeCharged` events; the adapter exposes the SAME accumulated balances as `dailyFees`, `dailyRevenue` and `dailyProtocolRevenue`. These fields are different accounting presentations of the same flow, not three separate revenue streams.
+2. On Solana, it records shielded pool fee events AND ZEC rewards sent by a distributor to the protocol team's MASK-holding wallet `FrXTvkebakR2oNctgsHz1yeijmu9wTZifL3FmffJP5xJ`. Such transfers are labelled `MASK Holder Rewards` in the adapter and are included in all three protocol accounting fields above. These are rewards to the **team wallet**, NOT independently verified cashflow attributable to every MASK holder or proof of paid privacy-service usage.
+3. The adapter does **not** emit `dailyHoldersRevenue`. A provider display of $0 under that category does not establish that no tokenholder ever receives value; nor does an external reward to the team prove broad investor value capture.
+4. The adapter covers eight chains with distinct start dates from 2026-09-23 to 2026-11-06, uses an Allium dependency for Solana and has `pullHourly: true`. Additions to covered chains and changing adapter logic can create growth/coverage discontinuities. Polling cadence does not prove original-time API publication history.
+5. The user-supplied screenshot shows approximately $1.06m 30d revenue against ~$187k TVL. **The actual share derived from user-paid service fees versus team-wallet ZEC receipts is UNKNOWN here.** Do not infer adoption, net earnings, token undervaluation or a trade from the revenue/TVL ratio. No independent live block-by-block recomputation was executed by this audit.
+
+**Falsification example:** A ranking by `revenue_30d / TVL` might reward a protocol mainly because of external rewards to a project-controlled wallet; as a result an apparent revenue breakout might not be a genuine demand breakout. Test source origin before using the number.
+
+## Incremental opportunities, not duplicate engines
+
+- **S10/P1: source-origin classification.** Normalize and prove discrete `USER_PAID_PRODUCT_FEES`, `TEAM_EXTERNAL_REWARDS`, `SUPPLY_SIDE`, `TREASURY`, `TOKEN_HOLDER_DISTRIBUTION`, `UNKNOWN` flows with unique tx/event IDs, recipient, asset, chain, UTC effective date and pinned adapter epoch. Check parent vs child double-counting. A missing classification is UNKNOWN, not zero or user adoption.
+- **Alpha utility/P1: product-to-token value capture.** Verify the chain `product use -> independent paying user -> fees -> protocol residual -> executable buyback/burn/distribution -> exact token holder rights and supply -> price/exit`. Distinguish accrual from real payout, and treasury holdings from holder distributions. A meme with no economic use should not be ranked for this factor.
+- **Research/P1: point-in-time fundamental repricing.** Once actual paired data exists, freeze a full eligible universe including failures, exact protocol/token CA, `observed_at`, `source_available_at`, `decision_cutoff`, adapter commit, release/settlement timing. Today's historical chart is NOT proof the data was available at that historical decision time. Compare origin-adjusted user-fee growth vs raw revenue growth, TVL change, price momentum and an unconditional baseline, with costs and saleability, over preregistered 7/30/90d horizons. Count independent token/asset clusters, not daily rows as independent N.
+- **Framework/P2: sector and liquidity breadth.** Reuse the EXISTING DeFiLlama stablecoin and chain TVL owners. Evaluate actual incremental value vs current rotation/Compass baselines, never infer altseason from sector table alone.
+- **Source/P1: API and data rights.** Free TVL/protocol/fees/volume endpoints still documented. Free yield `/pools` and `/chart/{pool}` ended 2026-11-13 and paid v1/v2 replaces them. Exact code search for `api.llama.fi/pools` and `yields/v1` in Alpha and Archive main found no direct matches, NOT a complete dependency clearance. API tier is $300/mo, the $49/mo dashboard Pro does not grant API rights. **Pilot: $0.** Check source use/retention terms before durable raw collection.
+
+## Targeted Fable clean-room experiment, future only
+
+**Unique question:** Can a source-origin corrected fee and value-capture factor add true incremental, after-cost prospective edge beyond a standard DeFiLlama revenue growth leaderboard? **First milestone is source-quality reproduction, NOT price modelling.**
+
+- **R0, available now, $0:** Source-map the pinned public Nullmask adapter: EVM fee events, Solana fee/check events, and Solana ZEC-to-team rewards; exact event IDs, beneficiary and accounting treatment. Inspect a genuine event and a negative control with authorized public chain evidence, or record `SOURCE_EVIDENCE_GAP`. Never reverse-engineer proprietary dashboards, authenticated content or restricted labels.
+- **R1, source-gated:** Independently reconstruct ONE closed UTC day on ONE chain from raw first-party events, then compare to provider dailyFees/dailyRevenue with method, asset decimals, pricing, event de-dup, recipient and publication timing. Include a valid-fee day and a no-fee day, and a falsifier that source API/adapter version changed.
+- **R2, cohort-gated:** Compare equivalent semantics for ALL eligible Privacy protocols, with Nullmask as a potential negative control. Railgun, Tornado Cash, Privacy Cash, Privacy Pools may be candidate comparisons; confirm same taxonomy, tradable token and eligible universe before including. No cherry-picking ranked winners; protocols without real tokenholder capture are negatives, not automatically excluded.
+- **R3, science-gated:** Pre-register cohort, cutoff, baselines and minimum independently scorable N; measure forward 7d/30d/90d outcomes after gas, slippage, pool depth, full exits, adverse/zero data and delistings. Negative controls: artificial reward spikes, new-chain indexing, circular treasury transfers, duplicate parent-child metrics, one-off launch bursts, later-added protocol history. A weak or negative after-cost incremental lift = REJECT / METHOD_ONLY, not a feature launch.
+
+**Stop/kill:** no first-known time; unresolved exact token; no permission to retain/query data; no source event/recipient reconciliation; no practical sellability; duplicate current owner; no incremental value. Emit SOURCE_BLOCKED, REJECTED, or FORWARD_TEST only after qualified evidence.
+
+**Fable coordination:** The current Bridge roadmap explicitly pauses broad Fable rounds until prior R1-R3 findings are shipped. Fable may consume this *as a future frozen R6/R7/R8 sub-question*, subject to source availability, independent review, a separate one-off owner GO and the existing cost cap. Do NOT renumber the rounds, create a new agent, interrupt current S1/Vault/CN work, or claim Fable ran. R9 bot remains separate and hard-gated.
+
+## Decision, single original-owner delta
+
+`EXISTING_OWNER_EXTEND / S10_SOURCE_SEMANTICS_VERIFIED / LIVE_REPLAY_PENDING / NOT_PROMOTED`.  
+Archive #1512 owns next qualified source reconciliation and Strategist #1157 verdict. Original Alpha utility/CA owner may consume only an attributed, timestamped economic receipt. Existing S1 #1156 performs approved code closure. Alpha Pro #228 may eventually show *Fundamental Evidence* after its original D3 source/privacy gates, never a live score from this audit. No new paid API, scheduler, wallet bot, model run or trading authority.
