@@ -13,6 +13,9 @@ on:
       - 'scripts/research/validate_parallel_research_manifest_v1.py'
       - 'scripts/research/task2_realdata_challenger_w39_w46_v1.py'
       - 'tests/research/test_task2_realdata_challenger_w39_w46_v1.py'
+      - 'scripts/research/task2_cn_all_archives_provenance_v1.py'
+      - 'tests/research/test_task2_cn_all_archives_provenance_v1.py'
+      - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/ASTRA_HIGH_*'
       - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/TASK2_REALDATA_*'
       - 'tests/agent_skills/test_research_parallel_lanes_manifest_v1.py'
       - '07_PROMPTS_AND_AGENTS/skill_quality_gate/candidates/hre/**'
@@ -290,6 +293,35 @@ jobs:
           name: task2-realdata-risk-native
           path: ${{ runner.temp }}/task2-realdata-risk/
           retention-days: 30
+          if-no-files-found: warn
+  task2-cn-all-archives-provenance:
+    if: startsWith(github.event.pull_request.title, 'research(cnarchive):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run all 10 fail-closed CN, legacy and Task2 history source tests
+        run: |
+          python -m py_compile scripts/research/task2_cn_all_archives_provenance_v1.py
+          python -m unittest discover -s tests/research -p 'test_task2_cn_all_archives_provenance_v1.py' -v
+      - name: Generate actual source-pinned early CN and Master Monday census
+        run: |
+          mkdir -p "$RUNNER_TEMP/cnarchive"
+          python scripts/research/task2_cn_all_archives_provenance_v1.py --asof "2026-11-13T12:59:00Z" --output "$RUNNER_TEMP/cnarchive/all_cn_census.json"
+      - name: Preserve historical original issues and all data quality exclusions
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-cn-all-archives-source-census
+          path: ${{ runner.temp }}/cnarchive/all_cn_census.json
+          retention-days: 90
           if-no-files-found: warn
 
   task2-w46-sealed-comparator-native-tests:
