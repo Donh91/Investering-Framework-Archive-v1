@@ -77,8 +77,9 @@ class AllArchiveCensusTests(unittest.TestCase):
             src = engine.load_json(root / engine.SOURCE_INDEX)
             original = [
                 row["path"] for row in src["entries"]
-                if row["path"].startswith("05_CYCLE_NAVIGATOR/weekly/2026/")
-                and row["path"].endswith("/CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
+                if engine.re.fullmatch(
+                    r"05_CYCLE_NAVIGATOR/weekly/[0-9]{4}/W[0-9]{2}/CYCLE_NAVIGATOR_FORECAST_FREEZE[.]json",
+                    row["path"])
             ]
             self.assertEqual(len(original), 11)
             for rel in original:
@@ -100,8 +101,9 @@ class AllArchiveCensusTests(unittest.TestCase):
             src = engine.load_json(root / engine.SOURCE_INDEX)
             original = [
                 row["path"] for row in src["entries"]
-                if row["path"].startswith("05_CYCLE_NAVIGATOR/weekly/2026/")
-                and row["path"].endswith("/CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
+                if engine.re.fullmatch(
+                    r"05_CYCLE_NAVIGATOR/weekly/[0-9]{4}/W[0-9]{2}/CYCLE_NAVIGATOR_FORECAST_FREEZE[.]json",
+                    row["path"])
             ]
             for rel in original:
                 p = root / rel
