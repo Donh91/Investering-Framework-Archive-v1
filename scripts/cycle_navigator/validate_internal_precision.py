@@ -3,8 +3,16 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+# GitHub Actions invokes this as `python scripts/cycle_navigator/validate_internal_precision.py`.
+# That entrypoint otherwise lacks repository root on sys.path. Without it, the
+# provenance-only original W46 claim reconstruction cannot import its owner.
+_REPO_PACKAGE_ROOT = str(Path(__file__).resolve().parents[2])
+if _REPO_PACKAGE_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_PACKAGE_ROOT)
 
 
 def read_json(path: Path) -> dict[str, Any]:
