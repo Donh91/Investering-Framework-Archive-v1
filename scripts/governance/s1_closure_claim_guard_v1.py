@@ -79,6 +79,10 @@ def _ic3_receipt_reasons(record: Mapping[str, Any], pr: Mapping[str, Any], ci: M
     if (not isinstance(ids, list) or not ids or any(type(t) is not str or not t.strip() for t in ids)
             or len(set(ids)) != len(ids)):
         out.append("EXECUTED_TEST_IDS_NOT_SUPPLIED")
+    elif type(ci.get("executed_test_count")) is not int or len(ids) != ci["executed_test_count"]:
+        # A partial or inflated test-ID list cannot stand in for the claimed count.
+        # This is structural only; native CI provenance still needs independent readback.
+        out.append("EXECUTED_TEST_IDS_COUNT_MISMATCH")
     if not isinstance(pr.get("merged_by"), str) or not pr["merged_by"].strip():
         out.append("MERGE_ACTOR_NOT_SUPPLIED")
     return out
