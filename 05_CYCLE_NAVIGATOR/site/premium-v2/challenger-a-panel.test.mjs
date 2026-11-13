@@ -40,7 +40,7 @@ test('source-only integration into Prognose tab and no official graph mutation',
  const tabs=await readFile(new URL('./premium-tabs.mjs',import.meta.url),'utf8');
  const css=await readFile(new URL('./premium-tabs.css',import.meta.url),'utf8');
  assert.match(tabs,/mountChallengerA\(graphPanel/);
- assert.match(tabs,/selected\.key === 'graph'.*challengerPanel\.refresh\(\)/);
+ assert.match(tabs,/selected\.key === 'graph'.*challengerPanel\?\.refresh\(\)/);
  assert.match(css,/\.cn-challenger-a/);
  assert.doesNotMatch(tabs,/Math\.sin|forecast_low|forecast_high/);
 });
