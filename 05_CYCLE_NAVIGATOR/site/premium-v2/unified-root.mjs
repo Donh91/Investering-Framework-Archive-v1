@@ -115,7 +115,9 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   // Three actual official prospective horizons and exact coarse 0–10
   // bull/bear evidence. These are independent windows, NOT an intraday path.
   const horizonCard=(id,label)=>'<article class="cn-horizon-card" data-cn-overview="'+id+'">'+
-    '<small>'+label+'</small><div class="cn-horizon-direction">'+
+    '<small>'+label+'</small>'+
+    '<small class="cn-overview-window" id="cn-overview-'+id+'-window">Afventer tidsanker</small>'+
+    '<div class="cn-horizon-direction">'+
     '<span class="cn-horizon-arrow" id="cn-overview-'+id+'-arrow" aria-hidden="true">?</span>'+
     '<strong id="cn-overview-'+id+'-direction">Afventer data</strong></div>'+
     '<span class="cn-horizon-position" id="cn-overview-'+id+'-position">—</span>'+
@@ -137,8 +139,9 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   const horizonStrip='<section class="cn-overview" aria-labelledby="cn-overview-heading">'+
     '<div class="cn-overview-heading"><h3 id="cn-overview-heading">Kompasforløb</h3>'+
     '<small id="cn-overview-subtitle">Tre selvstændige prognosehorisonter</small></div>'+
+    '<p class="cn-overview-asof" id="cn-overview-asof" role="status">Kontrollerer udstedelsestidspunkt …</p>'+
     '<div class="cn-overview-cards">'+
-    horizonExtra('h12','0–12 timer')+
+    horizonExtra('h12','Aktuelt momentum')+
     horizonCard('d13','1–3 dage')+horizonCard('d57','5–7 dage')+
     horizonCard('w23','2–3 uger')+horizonExtra('c38','4–8 uger · altcoins')+'</div>'+
     '<p class="cn-overview-foot" id="cn-overview-foot">Pilene angiver kildevurderet retning i hver periode, ikke kursrækkefølge. Bull/Bear er evidenspoint, ikke sandsynlighed.</p>'+
