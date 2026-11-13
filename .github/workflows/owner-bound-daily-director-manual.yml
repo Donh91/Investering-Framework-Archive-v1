@@ -56,7 +56,7 @@ jobs:
       - name: Run explicit live call
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}}
         run: python scripts/api_agent/api_gateway.py --task DAILY_DIRECTOR_SHADOW --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file owner-bound-director-input/prompt.txt --context-file owner-bound-director-input/context.json --output-dir owner-bound-director-output --intended-write-prefix research/api_agent/outputs/daily/
       - name: Verify owner binding and authority
         run: |
@@ -77,7 +77,7 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: owner-bound-daily-director-${{ github.run_id }}
+          name: owner-bound-daily-director-${{ github.run_id }}}
           path: |
             owner-bound-director-input/context.json
             owner-bound-director-output/
@@ -103,7 +103,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }
+          ref: ${{ github.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -122,9 +122,9 @@ jobs:
         run: python scripts/api_agent/manual_astra_task2_high_v1.py prepare --output-dir runtime/astra-task2
       - name: Verify owner, native claim census and project model GET; reserve once
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }
-          GITHUB_TOKEN: ${{ github.token }
-          ASTRA_OWNER_CONFIRM: ${{ inputs.owner_confirm }
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          ASTRA_OWNER_CONFIRM: ${{ inputs.owner_confirm }}
         run: python scripts/api_agent/manual_astra_task2_high_v1.py reserve --output-dir runtime/astra-task2
       - name: Persist nonbillable one-use claim BEFORE any paid POST
         uses: actions/upload-artifact@v4
@@ -137,13 +137,13 @@ jobs:
           if-no-files-found: error
       - name: Submit exactly ONE paid Astra High background Responses API call
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/api_agent/manual_astra_task2_high_v1.py submit --output-dir runtime/astra-task2
       - name: Persist attempt and response handle even on ambiguous failure
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: astra-task2-20261113-attempt-${{ github.run_id }
+          name: astra-task2-20261113-attempt-${{ github.run_id }}
           path: |
             runtime/astra-task2/attempt.json
             runtime/astra-task2/response_handle.json
@@ -153,13 +153,13 @@ jobs:
       - name: GET-only collection, no paid retry or duplicate POST
         if: success()
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/api_agent/manual_astra_task2_high_v1.py collect --output-dir runtime/astra-task2
       - name: Preserve public research output, source hashes and cost receipt
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: astra-task2-20261113-research-${{ github.run_id }
+          name: astra-task2-20261113-research-${{ github.run_id }}
           path: |
             runtime/astra-task2/source_manifest.json
             runtime/astra-task2/response_handle.json
