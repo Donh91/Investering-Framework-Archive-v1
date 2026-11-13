@@ -528,9 +528,17 @@ def main():
     # automation, paid call, external supervisor or independent writer.
     skill_calibration = None
     try:
-        from scripts.framework_intelligence.weekly_skill_calibration_v1 import build as _weekly_skill_build
+        from scripts.framework_intelligence.weekly_skill_calibration_v1 import (
+            build as _weekly_skill_build,
+            load_frozen_last_completed_week as _load_skill_frozen,
+            frozen_scorecard_sha256 as _skill_scorecard_sha,
+        )
     except ModuleNotFoundError:
-        from weekly_skill_calibration_v1 import build as _weekly_skill_build
+        from weekly_skill_calibration_v1 import (
+            build as _weekly_skill_build,
+            load_frozen_last_completed_week as _load_skill_frozen,
+            frozen_scorecard_sha256 as _skill_scorecard_sha,
+        )
     skill_weekly_candidate = _weekly_skill_build(root, now)
     if skill_weekly_candidate is not None:
         week_key = skill_weekly_candidate["evaluated_week"]
@@ -546,12 +554,28 @@ def main():
             skill_calibration = earlier
         else:
             skill_calibration = skill_weekly_candidate
+    else:
+        # Daily runs carry the last completed frozen weekly proof forward.
+        # Never treat re-reading the SAME weekly record as a new observation.
+        skill_calibration = _load_skill_frozen(out_root, now)
     if skill_calibration is not None:
+        finalized = bool(skill_calibration.get("source_final_sha256")) and (
+            skill_calibration.get("status") not in {
+                "WAIT_FOR_FINAL_WEEKLY_SOURCE", "CATALOG_BLOCKED"
+            }
+        )
+        weekly_rel = ("skill_calibration/weeks/" +
+                      skill_calibration["evaluated_week"] + ".json")
+        scorecard_ref = (out_root / weekly_rel if finalized
+                         else out_root / "LATEST_SKILL_CALIBRATION.json")
         skill_advisory = {
             "contract": "WEEKLY_SKILL_CALIBRATION_v1",
             "status": skill_calibration["status"],
             "evaluated_week": skill_calibration["evaluated_week"],
-            "output_path": str((out_root / "LATEST_SKILL_CALIBRATION.json").relative_to(root)),
+            "output_path": str(scorecard_ref.relative_to(root)),
+            "source_scorecard_sha256": _skill_scorecard_sha(skill_calibration),
+            "evidence_state": ("FROZEN_COMPLETED_WEEK_ADVISORY"
+                               if finalized else "SOURCE_INCOMPLETE_NO_FROZEN_WEEK"),
             "original_owner": "Framework Learning Supervisor / #1157",
             "action_code": skill_calibration.get("action", {}).get("code"),
             "independent_value_proven": False,
@@ -582,7 +606,8 @@ def main():
     if skill_calibration is not None:
         docs["LATEST_SKILL_CALIBRATION.json"] = skill_calibration
         # Freeze one published calibrated week; do not freeze incomplete source.
-        if (skill_calibration.get("source_final_sha256") and
+        if (skill_weekly_candidate is not None and
+                skill_calibration.get("source_final_sha256") and
                 skill_calibration.get("status") not in {"WAIT_FOR_FINAL_WEEKLY_SOURCE", "CATALOG_BLOCKED"}):
             weekly_rel = "skill_calibration/weeks/" + skill_calibration["evaluated_week"] + ".json"
             docs[weekly_rel] = skill_calibration
