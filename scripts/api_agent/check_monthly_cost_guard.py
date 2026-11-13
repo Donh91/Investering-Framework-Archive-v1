@@ -292,15 +292,20 @@ def main() -> None:
         errors.append({"path": "OWNER_EXCEPTIONAL_CAP",
                        "reason": "OWNER_GLOBAL_50_USD_CAP_EXCEEDED"})
     effective_hard_stop = min(args.hard_stop_usd, OWNER_GLOBAL_HARD_STOP_USD)
-    # The owner approved no reserve waiver, including for a USD45/50 caller.
-    effective_reserve = max(args.reserve_usd, OWNER_GLOBAL_RESERVE_USD)
+    # Existing small lane caps (e.g. CN 9.4/0.1) retain their LOCAL
+    # reserve; USD4 remains protected at the GLOBAL ACCOUNT envelope.
+    # All normal prior USD40 and new USD50 callers keep at least USD4
+    # in their own source-bound admission as before.
+    effective_reserve = (max(args.reserve_usd, OWNER_GLOBAL_RESERVE_USD)
+                         if args.hard_stop_usd >= 40.0 else args.reserve_usd)
     exposure_lower = total + pending_low if total is not None else None
     exposure_upper = total + pending_high + new_upper if total is not None else None
     remaining = effective_hard_stop - exposure_upper if exposure_upper is not None else None
     owner_remaining = OWNER_GLOBAL_HARD_STOP_USD - exposure_upper if exposure_upper is not None else None
     normal_remaining = OWNER_GLOBAL_TARGET_USD - exposure_upper if exposure_upper is not None else None
     status = ("BLOCKED" if errors or remaining is None or owner_remaining is None
-              or remaining < effective_reserve or owner_remaining < 0 else "PASS")
+              or remaining < effective_reserve
+              or owner_remaining < OWNER_GLOBAL_RESERVE_USD else "PASS")
     result = {
         "status": status,
         "month": now.strftime("%Y-%m"),
