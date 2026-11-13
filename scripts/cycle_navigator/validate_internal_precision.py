@@ -15,6 +15,119 @@ def sha256_path(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+
+def authorized_w46_reissue_preserving_original_claims(
+    repo: Path, root: Path, internal: dict[str, Any],
+    public_freeze_path: Path, machine_path: Path,
+) -> bool:
+    """Accept only W46's original, immutable internal claims after its approved
+    same-Monday public daily-path repair. Never rewrite the historical freeze,
+    treat a new issue as its predecessor, or use this for any other week.
+    """
+    try:
+        expected_root = repo / "05_CYCLE_NAVIGATOR/weekly/2026/W46"
+        if root.resolve() != expected_root.resolve():
+            return False
+        base = root / "revisions/2026-11-09-first-unavailable"
+        request = read_json(root / "W46_OWNER_REISSUE_REQUEST.json")
+        source = read_json(root / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json")
+        archive = read_json(base / "BEFORE_INTEGRITY_MANIFEST.json")
+        old_public_path = base / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+        old_machine_path = base / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+        old_public = read_json(old_public_path)
+        new_public = read_json(public_freeze_path)
+        old_machine = read_json(old_machine_path)
+        new_machine = read_json(machine_path)
+        amendment = source.get("owner_approved_same_day_revision")
+        if not isinstance(amendment, dict):
+            return False
+        if (
+            request.get("contract") != "CN_OWNER_APPROVED_W46_SAME_DAY_REISSUE_v1"
+            or request.get("owner_scope") != "2026-W46"
+            or request.get("original_machine_issue_number") != 34
+            or request.get("original_public_issue_number") != 33
+            or request.get("original_daily_product_status") != "INCOMPLETE"
+            or request.get("keep_original_revision") is not True
+            or request.get("no_backdating") is not True
+            or request.get("no_hindsight") is not True
+            or request.get("only_before_2026_11_10_utc") is not True
+            or amendment.get("contract") != request["contract"]
+            or amendment.get("forecast_week") != "2026-W46"
+            or amendment.get("machine_issue_number") != 34
+            or amendment.get("public_issue_number") != 33
+            or amendment.get("no_api_request") is not True
+            or amendment.get("no_portfolio_execution") is not True
+            or amendment.get("scoring_policy") != "FIRST_KNOWN_AMENDED_ISSUANCE_NO_HINDSIGHT_OR_RESCORING"
+            or archive.get("contract") != "CN_W46_BEFORE_ARCHIVE_v1"
+            or internal.get("contract") != "CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE_v2"
+            or internal.get("issue_number") != 34
+            or internal.get("iso_year") != 2026
+            or internal.get("iso_week") != 46
+            or internal.get("rules", {}).get("no_hindsight_rewrite") is not True
+        ):
+            return False
+        before = amendment.get("before_forecast_sha256")
+        after = amendment.get("after_forecast_sha256")
+        if (
+            not isinstance(before, str) or len(before) != 64
+            or not isinstance(after, str) or len(after) != 64
+            or before == after
+            or before != request.get("original_forecast_sha256")
+            or before != internal.get("source_public_freeze_sha256")
+            or before != archive.get("original_revision_sha256")
+            or before != archive.get("files", {}).get("CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
+            or before != sha256_path(old_public_path)
+            or after != sha256_path(public_freeze_path)
+            or after != source.get("owner_approved_same_day_revision", {}).get("after_forecast_sha256")
+            or archive.get("files", {}).get("CYCLE_NAVIGATOR_MACHINE_PACKAGE.json") != sha256_path(old_machine_path)
+            or internal.get("source_machine_package_sha256_at_materialization") != sha256_path(old_machine_path)
+            or amendment.get("before_issued_utc") != "2026-11-09T10:33:42Z"
+            or amendment.get("after_issued_utc") != "2026-11-09T10:52:34.925867Z"
+        ):
+            return False
+
+        # The exact original scientific claims must be unchanged. The amendment
+        # issued previously unavailable DAILY points, not a new risk thesis.
+        public_claim_fields = (
+            "btc_range_low", "btc_range_high", "eth_range_low",
+            "eth_range_high", "ethbtc_condition", "breadth_condition",
+            "structural_calls", "intraday_map",
+        )
+        machine_claim_fields = ("base_case_2_3_weeks", "base_case_4_8_weeks")
+        if any(old_public.get(k) != new_public.get(k) for k in public_claim_fields):
+            return False
+        if any(old_machine.get(k) != new_machine.get(k) for k in machine_claim_fields):
+            return False
+        for asset in ("BTC", "ETH"):
+            old_path = (old_public.get("daily_price_path") or {}).get(asset) or {}
+            new_path = (new_public.get("daily_price_path") or {}).get(asset) or {}
+            if (
+                old_path.get("status") != "UNAVAILABLE"
+                or old_path.get("points") != []
+                or new_path.get("status") != "PUBLISHED"
+                or not isinstance(new_path.get("points"), list)
+                or len(new_path["points"]) != 7
+            ):
+                return False
+        claims = internal.get("claims")
+        if not isinstance(claims, list) or len(claims) != 14:
+            return False
+        ids = [c.get("claim_id") for c in claims if isinstance(c, dict)]
+        if len(ids) != 14 or len(set(ids)) != 14:
+            return False
+        if any(
+            not c["claim_id"].startswith("CN34-Y2026-W46-")
+            or c.get("source_public_freeze_sha256") != before
+            or c.get("source_machine_package_sha256_at_materialization") != sha256_path(old_machine_path)
+            for c in claims
+        ):
+            return False
+        return True
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return False
+
+
+
 def nonempty(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip()) and value.strip().upper() != "UNAVAILABLE"
 
