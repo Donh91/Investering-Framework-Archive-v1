@@ -56,6 +56,7 @@ REQUIRED_FILES = (
 )
 SOURCE_GLOBS = (
     "03_DAILY_CAPTURE_LOGS/weekly/2026/W[3-4][0-9].json",
+    "03_DAILY_CAPTURE_LOGS/weekly/2026/W39/WEEKLY_HOURLY_ENRICHED.csv",
     "03_DAILY_CAPTURE_LOGS/weekly/2026/W4[0-6]/WEEKLY_HOURLY_ENRICHED.csv",
     "04_MARKET_LEARNING/handlekompas/official/daily/2026/10/0[4-9]/*.json",
     "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/0[8-9]/*.json",
