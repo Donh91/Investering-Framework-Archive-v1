@@ -77,20 +77,34 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     # eventually expires. It stays in the global monthly exposure until an
     # independently reviewed native settlement removes it.
     reservations = value.get("owner_reservations", [])
-    if not isinstance(reservations, list) or len(reservations) > 1:
+    if not isinstance(reservations, list) or len(reservations) > 2:
         raise ValueError("OWNER_RESERVATION_LEDGER_INVALID")
+    # Exception approved separately and explicitly by the owner for ONE
+    # source-bound Astra High + Code Interpreter research call, 2026-11-13.
+    # The usual USD3 single-request ceiling stays unchanged for all
+    # autonomous Sol and other tasks. The old consumed Astra claim remains
+    # reserved until independent provider reconciliation.
+    fixed_owner_approvals = {
+        "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE": 3,
+        "ASTRA-HIGH-TASK2-REALDATA-V2-20261113-ONE": 10,
+    }
+    owner_ids = set()
     for reservation in reservations:
-        if (not isinstance(reservation, dict)
-                or reservation.get("work_id") != "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"
+        if not isinstance(reservation, dict):
+            raise ValueError("ASTRA_OWNER_RESERVATION_UNVERIFIED")
+        work_id = reservation.get("work_id")
+        budget = fixed_owner_approvals.get(work_id)
+        if (budget is None or work_id in owner_ids
                 or reservation.get("created_month_utc") != "2026-11"
                 or reservation.get("status") != "OWNER_RESERVED_PREHTTP"
-                or reservation.get("upper_usd") != 3
+                or reservation.get("upper_usd") != budget
                 or reservation.get("lower_usd") != 0
                 or reservation.get("source") != "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596"
                 or reservation.get("one_paid_post_max") != 1
                 or reservation.get("reconciliation_required") is not True):
             raise ValueError("ASTRA_OWNER_RESERVATION_UNVERIFIED")
-        high += 3.0
+        owner_ids.add(work_id)
+        high += float(budget)
     reservation_count = len(reservations)
     missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
     if missing:
