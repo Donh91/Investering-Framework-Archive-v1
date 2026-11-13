@@ -29,6 +29,16 @@ class AstraOneShotTests(unittest.TestCase):
             f.parent.mkdir(parents=True, exist_ok=True)
             f.write_text("Synthetic, public-only research fixture " + source, encoding="utf-8")
         self.out = self.root / "out"
+        reservation = self.root / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
+        reservation.parent.mkdir(parents=True, exist_ok=True)
+        reservation.write_text(json.dumps({"owner_reservations": [{
+            "work_id": m.MISSION, "status": "OWNER_RESERVED_PREHTTP",
+            "upper_usd": m.MAX_THEORETICAL_COST_USD,
+            "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+        }]}))
+        reserve_patch = patch.object(m, "OWNER_RESERVATION_LEDGER", reservation)
+        reserve_patch.start()
+        self.addCleanup(reserve_patch.stop)
         self.root_patch = patch.object(m, "ROOT", self.root)
         self.root_patch.start()
         self.addCleanup(self.root_patch.stop)
@@ -41,8 +51,8 @@ class AstraOneShotTests(unittest.TestCase):
         self.assertEqual(p["model"], "gpt-6-astra")
         self.assertEqual(p["reasoning"]["effort"], "high")
         self.assertTrue(p["background"] and p["store"])
-        self.assertEqual(p["max_output_tokens"], 50000)
-        self.assertLessEqual(manifest["worst_case_token_estimate_usd"], 5.0)
+        self.assertEqual(p["max_output_tokens"], 43000)
+        self.assertLessEqual(manifest["worst_case_token_estimate_usd"], 3.0)
         self.assertEqual(len(manifest["source_files"]), len(m.SOURCE_FILES))
         self.assertEqual(manifest["source_main_sha"], HEAD)
         self.assertFalse(manifest["private_source"])
@@ -71,9 +81,10 @@ class AstraOneShotTests(unittest.TestCase):
     def test_model_access_checked_before_paid_claim(self):
         m.prepare(self.out)
         def mock_http(method, url, **kwargs):
-            if "api.github.com" in url:
-                return {"artifacts": []}
-            return {"id": "no-such-model"}
+            if "/actions/artifacts?" in url: return {"artifacts": []}
+            if "/issues/1596/comments?" in url: return []
+            if "/models/" in url: return {"id": "no-such-model"}
+            raise AssertionError((method, url))
         with patch.object(m, "http_json", side_effect=mock_http):
             with self.assertRaisesRegex(ValueError, "ASTRA_MODEL_NOT_AVAILABLE"):
                 m.reserve(self.out)
@@ -82,11 +93,29 @@ class AstraOneShotTests(unittest.TestCase):
     def _prepare_and_claim(self):
         m.prepare(self.out)
         def mocked(method, url, **kwargs):
-            if "api.github.com" in url: return {"artifacts": []}
+            if "/actions/artifacts?" in url: return {"artifacts": []}
+            if "/issues/1596/comments?" in url and method == "GET": return []
+            if url.endswith("/issues/1596/comments") and method == "POST": return {"id": 123456789}
             if "/models/" in url: return {"id": m.MODEL}
-            raise AssertionError("unexpected request")
+            raise AssertionError((method, url))
         with patch.object(m, "http_json", side_effect=mocked):
             m.reserve(self.out)
+
+    def test_durable_claim_fails_closed_after_artifact_expiration(self):
+        with patch.object(m, "http_json", return_value=[
+            {"body": m.CLAIM_MARKER + " existing run", "id": 771}
+        ]):
+            with self.assertRaisesRegex(ValueError, "ASTRA_CLAIM_ALREADY_CONSUMED"):
+                m.check_native_claim_comments("inert", ENV["GITHUB_REPOSITORY"])
+
+    def test_missing_shared_budget_reservation_blocks_before_claim(self):
+        m.OWNER_RESERVATION_LEDGER.write_text(json.dumps({"owner_reservations": []}))
+        m.prepare(self.out)
+        with patch.object(m, "http_json", side_effect=lambda method, url, **kw:
+                {"artifacts": []} if "/actions/artifacts?" in url else []):
+            with self.assertRaisesRegex(ValueError, "ASTRA_SHARED_BUDGET_RESERVATION_UNAVAILABLE"):
+                m.reserve(self.out)
+        self.assertFalse((self.out / "claim.json").exists())
 
     def test_exactly_one_paid_post_and_no_retry(self):
         self._prepare_and_claim()
