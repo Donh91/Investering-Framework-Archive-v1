@@ -8,10 +8,10 @@ This module cannot authorize or execute a merge.
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import re
-from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
@@ -80,10 +80,65 @@ def _page_files(read, root, expected_count):
         if len(files) >= expected_count:
             if len(files) != expected_count:
                 raise ValueError("PR_FILES_PAGINATION_UNVERIFIED")
+            names = [x.get("filename") if isinstance(x, dict) else None for x in files]
+            if any(not isinstance(n, str) or not n for n in names) or len(set(names)) != len(names):
+                raise ValueError("PR_FILES_DUPLICATE_OR_MALFORMED")
             return files
         if len(chunk) != 100:
             raise ValueError("PR_FILES_PAGINATION_UNVERIFIED")
     raise ValueError("PR_FILES_PAGINATION_UNVERIFIED")
+
+
+def _verified_content(read, url, ref, path):
+    """Native Git blob check, at a specific immutable commit."""
+    item = read(url + "/contents/" + path + "?ref=" + ref)
+    if item.get("encoding") != "base64" or not isinstance(item.get("content"), str):
+        raise ValueError("SOURCE_UNVERIFIED")
+    raw = base64.b64decode(item["content"])
+    sha = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+    if item.get("sha") != sha:
+        raise ValueError("SOURCE_UNVERIFIED")
+    return raw, sha
+
+
+def _unambiguous_job_id(workflow, required_id):
+    """Conservative literal YAML subset: no job-level display-name aliases."""
+    lines = workflow.decode("utf-8").splitlines()
+    positions = [i for i, line in enumerate(lines)
+                 if re.fullmatch(r"jobs:\s*(?:#.*)?", line)]
+    if len(positions) != 1 or not re.fullmatch(r"[A-Za-z0-9_-]+", required_id):
+        return False
+    jobs, selected = set(), None
+    for line in lines[positions[0] + 1:]:
+        if line and not line[0].isspace() and not line.startswith("#"):
+            break
+        match = re.fullmatch(r"  ([A-Za-z0-9_-]+):\s*(?:#.*)?", line)
+        if match:
+            selected = match.group(1)
+            if selected in jobs:
+                return False
+            jobs.add(selected)
+        elif selected is not None and re.match(r"^    name\s*:", line):
+            # An unrelated 'jobs.decoy.name: gate' can impersonate YAML jobs.gate.
+            return False
+    return required_id in jobs
+
+
+def _correct_pr_association(run, pr_number):
+    prs = run.get("pull_requests")
+    return (isinstance(prs, list)
+            and any(isinstance(x, dict) and x.get("number") == pr_number
+                    and isinstance(x.get("base"), dict) and x["base"].get("ref") == "main"
+                    for x in prs))
+
+
+def _census_fingerprint(runs, paths, head):
+    return sorted((x.get("id"), x.get("run_attempt"), x.get("status"), x.get("conclusion"),
+                   x.get("path"), _correct_pr_association(x, -1),
+                   tuple(sorted(a.get("number") for a in x.get("pull_requests", [])
+                                if isinstance(a, dict) and type(a.get("number")) is int)))
+                  for x in runs if isinstance(x, dict) and x.get("path") in paths
+                  and x.get("head_sha") == head and x.get("event") == "pull_request")
 
 
 def verify_native_required_jobs(read, repo, pr_number, head, release_class):
@@ -105,14 +160,9 @@ def verify_native_required_jobs(read, repo, pr_number, head, release_class):
         main_sha = main["commit"]["sha"]
         if not SHA40.fullmatch(main_sha):
             return _hold("MAIN_UNVERIFIED")
-        pinned = read(url + "/contents/" + PATH + "?ref=" + main_sha)
-        if pinned.get("encoding") != "base64" or not isinstance(pinned.get("content"), str):
-            return _hold("POLICY_BLOB_UNVERIFIED")
-        raw = base64.b64decode(pinned["content"], validate=False)
-        # Exact Git blob verification is mandatory, not caller-supplied sha.
-        import hashlib
-        blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
-        if pinned.get("sha") != blob:
+        try:
+            raw, blob = _verified_content(read, url, main_sha, PATH)
+        except ValueError:
             return _hold("POLICY_BLOB_UNVERIFIED")
         policy = json.loads(raw)
         if policy.get("contract") != "S1_REQUIRED_PR_JOBS_POLICY_V1":
@@ -142,22 +192,36 @@ def verify_native_required_jobs(read, repo, pr_number, head, release_class):
         if not all(isinstance(x, dict) and isinstance(x.get("filename"), str)
                    and isinstance(x.get("status"), str) for x in files):
             return _hold("PR_FILES_METADATA_UNVERIFIED")
-        runs = _page_all(read, url + "/actions/runs?head_sha=" + head +
-                         "&event=pull_request", "workflow_runs")
+        run_route = url + "/actions/runs?head_sha=" + head + "&event=pull_request"
+        runs = _page_all(read, run_route, "workflow_runs")
         proofs = []
+        required_paths = {e["workflow_path"] for e in expected}
         for item in expected:
             path, job_id = item["workflow_path"], item["job_id"]
+            try:
+                head_workflow, head_blob = _verified_content(read, url, head, path)
+                main_workflow, main_blob = _verified_content(read, url, main_sha, path)
+            except ValueError:
+                return _hold("WORKFLOW_SOURCE_UNVERIFIED", workflow_path=path)
+            if head_workflow != main_workflow or head_blob != main_blob or not _unambiguous_job_id(head_workflow, job_id):
+                return _hold("WORKFLOW_YAML_JOB_ID_UNVERIFIED", workflow_path=path, job_id=job_id)
             matching_runs = [x for x in runs if isinstance(x, dict)
                              and x.get("path") == path and x.get("head_sha") == head
                              and x.get("event") == "pull_request"
                              and type(x.get("id")) is int]
             if not matching_runs:
                 return _hold("REQUIRED_WORKFLOW_MISSING", workflow_path=path, job_id=job_id)
-            newest = max(matching_runs, key=lambda x: (x["id"], x.get("run_attempt", 0)))
+            if any(type(x.get("run_attempt")) is not int or x["run_attempt"] < 1
+                   for x in matching_runs):
+                return _hold("NATIVE_RUN_ATTEMPT_UNVERIFIED", workflow_path=path, job_id=job_id)
+            newest = max(matching_runs, key=lambda x: (x["id"], x["run_attempt"]))
+            if not _correct_pr_association(newest, pr_number):
+                return _hold("PR_RUN_ASSOCIATION_UNVERIFIED", workflow_path=path, job_id=job_id)
             if newest.get("status") != "completed" or newest.get("conclusion") != "success":
                 return _hold("REQUIRED_WORKFLOW_NOT_SUCCESS", workflow_path=path, job_id=job_id)
-            rid = newest["id"]
-            jobs = _page_all(read, url + "/actions/runs/" + str(rid) + "/jobs", "jobs")
+            rid, attempt = newest["id"], newest["run_attempt"]
+            jobs = _page_all(read, url + "/actions/runs/" + str(rid) +
+                             "/attempts/" + str(attempt) + "/jobs", "jobs")
             match = [x for x in jobs if isinstance(x, dict) and x.get("name") == job_id
                      and x.get("run_id") == rid and x.get("head_sha") == head
                      and type(x.get("id")) is int]
@@ -176,9 +240,19 @@ def verify_native_required_jobs(read, repo, pr_number, head, release_class):
                           and s.get("started_at") and s.get("completed_at")]
             if len(meaningful) < item["executed_test_steps_min"]:
                 return _hold("REQUIRED_JOB_STEPS_UNVERIFIED", workflow_path=path, job_id=job_id)
+            current_run = read(url + "/actions/runs/" + str(rid))
+            if (current_run.get("id") != rid or current_run.get("run_attempt") != attempt
+                    or current_run.get("head_sha") != head or current_run.get("path") != path
+                    or current_run.get("event") != "pull_request"
+                    or current_run.get("status") != "completed" or current_run.get("conclusion") != "success"
+                    or not _correct_pr_association(current_run, pr_number)):
+                return _hold("NATIVE_RUN_ATTEMPT_DRIFT", workflow_path=path, job_id=job_id)
             proofs.append({"workflow_path": path, "job_id": job_id, "head": head,
-                           "run_id": rid, "native_job_id": job["id"],
-                           "observed_named_steps": len(meaningful)})
+                           "run_id": rid, "run_attempt": attempt, "native_job_id": job["id"],
+                           "workflow_blob_sha": head_blob, "observed_named_steps": len(meaningful)})
+        fresh_runs = _page_all(read, run_route, "workflow_runs")
+        if _census_fingerprint(fresh_runs, required_paths, head) != _census_fingerprint(runs, required_paths, head):
+            return _hold("NATIVE_RUN_CENSUS_DRIFT")
         if read(url + "/pulls/" + str(pr_number))["head"]["sha"] != head:
             return _hold("PR_HEAD_OR_STATE_DRIFT")
         if read(url + "/branches/main")["commit"]["sha"] != main_sha:
