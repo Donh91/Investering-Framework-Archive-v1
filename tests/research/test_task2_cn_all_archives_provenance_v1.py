@@ -115,6 +115,24 @@ class AllArchiveCensusTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "FROZEN_WEEKLY_SOURCE_SET_DRIFT"):
                 engine.week_census(root, dt.datetime(2026, 11, 13, tzinfo=dt.timezone.utc))
 
+    def test_master_monday_missing_indexed_file_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original = "03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md"
+            with patch.object(engine, "pinned_source_map", return_value={original: "a" * 40}):
+                with self.assertRaisesRegex(ValueError, "FROZEN_MASTER_MONDAY_SOURCE_SET_DRIFT"):
+                    engine.archive_membership(root)
+
+    def test_master_monday_extra_unindexed_file_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            extra = root / "03_WEEKLY_OPERATIONS/master_monday/unauthorized.md"
+            extra.parent.mkdir(parents=True, exist_ok=True)
+            extra.write_text("not in frozen inventory")
+            with patch.object(engine, "pinned_source_map", return_value={}):
+                with self.assertRaisesRegex(ValueError, "FROZEN_MASTER_MONDAY_SOURCE_SET_DRIFT"):
+                    engine.archive_membership(root)
+
     def test_no_maturity_before_week_close(self):
         asof = dt.datetime(2026, 11, 8, 23, 59, tzinfo=dt.timezone.utc)
         rows = engine.week_census(engine.ROOT, asof)

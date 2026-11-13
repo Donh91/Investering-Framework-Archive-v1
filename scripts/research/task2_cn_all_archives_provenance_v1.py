@@ -235,8 +235,22 @@ def legacy_census(repo_root: Path) -> list[dict]:
 
 def archive_membership(repo_root: Path) -> dict:
     def members(pat):
-        return sorted(p.relative_to(repo_root).as_posix()
-                      for p in repo_root.glob(pat) if p.is_file())
+        actual = sorted(p.relative_to(repo_root).as_posix()
+                        for p in repo_root.glob(pat)
+                        if p.is_file() and not p.is_symlink())
+        if pat == "03_WEEKLY_OPERATIONS/master_monday/**/*":
+            # Historical coverage is only defined by the frozen Git source set.
+            # Live filesystem traversal must never silently drop or add an issue.
+            frozen = pinned_source_map(str(repo_root.resolve()))
+            expected = {
+                rel for rel in frozen
+                if rel.startswith("03_WEEKLY_OPERATIONS/master_monday/")
+            }
+            if set(actual) != expected:
+                raise ValueError("FROZEN_MASTER_MONDAY_SOURCE_SET_DRIFT")
+            for rel in actual:
+                pinned_bytes(repo_root / rel, repo_root)
+        return actual
     return {
         "original_monday_documents": members("03_WEEKLY_OPERATIONS/master_monday/**/*"),
         "older_official_forecast_ledgers": members("03_WEEKLY_OPERATIONS/forecast_ledger/**/*"),
