@@ -178,7 +178,15 @@ def main() -> None:
     current = read_json(root / "CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json")
     public = read_json(root / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
     if current.get("source_public_freeze_sha256") != sha256_path(root / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json"):
-        raise SystemExit("INTERNAL_PRECISION_CURRENT_FREEZE_HASH_MISMATCH")
+        if not authorized_w46_reissue_preserving_original_claims(
+            repo, root, current,
+            root / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+            root / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json",
+        ):
+            raise SystemExit("INTERNAL_PRECISION_CURRENT_FREEZE_HASH_MISMATCH")
+        # Historical CN34 internal claims are the first-issued science record.
+        # Do not silently rebind their source hash to the revised public path.
+        print("INTERNAL_PRECISION_W46_REISSUE_ORIGINAL_CLAIMS_RETAINED")
     ids = [c.get("claim_id") for c in current.get("claims", [])]
     if not ids or len(ids) != len(set(ids)) or any(not x for x in ids):
         raise SystemExit("INTERNAL_PRECISION_CURRENT_CLAIM_IDS_INVALID")
