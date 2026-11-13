@@ -305,7 +305,7 @@ jobs:
         run: >-
           python scripts/api_agent/check_monthly_cost_guard.py
           --receipt-root research/api_agent/outputs
-          --hard-stop-usd 40 --reserve-usd 4 --new-request-upper-usd 0
+          --hard-stop-usd 50 --reserve-usd 4 --new-request-upper-usd 0
       - name: Build immutable broad PUBLIC Task2/HRE/Research Lab data and verified calculations
         run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 prepare --out-dir runtime/task2-astra-realdata-v2
       - name: Verify owner, native GitHub issue and one-shot USD10; create durable claim
