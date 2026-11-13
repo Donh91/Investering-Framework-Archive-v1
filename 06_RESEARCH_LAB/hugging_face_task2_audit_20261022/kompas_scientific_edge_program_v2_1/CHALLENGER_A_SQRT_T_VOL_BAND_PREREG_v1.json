@@ -1,0 +1,92 @@
+{
+  "contract": "TASK2_CHALLENGER_A_SQRT_T_VOL_BAND_v1",
+  "formula_version": "A1",
+  "status": "PREREGISTERED_WHEN_MERGED_BEFORE_W47_CN_ISSUE",
+  "owner_issue": 1596,
+  "track": "Forecast Intelligence (track 1)",
+  "question": "Does a band that widens with sqrt(time), recalibrated weekly on the four prior weeks, score better than the frozen Cycle Navigator daily bands on the same issue clock and data?",
+  "params": {
+    "sigma_window_hours": 168,
+    "calibration_weeks": 4,
+    "fallback_calibration_weeks": 8,
+    "calibration_min_rows": 40,
+    "calibration_issue_proxy_utc": "Monday 08:00",
+    "quantiles": [
+      0.5,
+      0.8,
+      0.95
+    ],
+    "primary_quantile": 0.8,
+    "alpha_primary": 0.2,
+    "min_scored_bars_per_day": 6,
+    "assets": [
+      "BTC",
+      "ETH"
+    ]
+  },
+  "seed_z": {
+    "range": {
+      "0.5": 0.966374,
+      "0.8": 1.506929,
+      "0.95": 2.168776
+    },
+    "close": {
+      "0.5": 0.639317,
+      "0.8": 1.062982,
+      "0.95": 1.572239
+    }
+  },
+  "model": {
+    "P0": "last hourly close fully closed at or before T0",
+    "sigma": "sample std of the last 168 hourly log returns ending at P0",
+    "h_k": "hours from T0 to the end of UTC day k",
+    "band": "P0*exp(+-z_q*sigma*sqrt(h_k)); families: range (day low/high) and close",
+    "z": "q-quantile of needed z over completed asset-days of the 4 prior ISO weeks (proxy issue Monday 08:00Z), >=40 rows else 8 weeks else seed"
+  },
+  "issue_clock": "T0 = first-in-main time of 05_CYCLE_NAVIGATOR/weekly/YYYY/Www/CYCLE_NAVIGATOR_FORECAST_FREEZE.json (same clock as CN). Days are scored only on bars opening at or after T0, for both A and CN.",
+  "scoring": {
+    "primary": "mean close interval score at alpha=0.2 over paired matured asset-days, as a fraction of P0 (lower is better)",
+    "secondary": [
+      "full-day range containment (A q80 vs CN band)",
+      "close-in-band",
+      "mean width",
+      "A calibration: empirical coverage at q50/q80/q95 for range and close"
+    ],
+    "cluster": "ISO week (BTC and ETH share weeks)"
+  },
+  "decision_rule": {
+    "min_weeks": 8,
+    "first_prospective_week": "2026-W47",
+    "win": "A has the lower weekly mean primary score in >=6 of the first 8 prospective weeks AND the two-sided exact sign test over all prospective weeks so far has p<0.05",
+    "else": "CN stays official; A continues as a shadow challenger",
+    "never": [
+      "replace or edit a frozen past CN issue",
+      "promote on fewer than 8 prospective weeks",
+      "change params, seed or formula without a new version and a new pre-registration"
+    ]
+  },
+  "design_selection_disclosure": "Estimator and window were chosen from 9 variants (sigma 168h / EWMA 24h / EWMA 48h x expanding / rolling 6w / rolling 4w) on prospective-simulated W39-W46 (N=90 asset-days): sigma 168h + rolling 4w had the best interval score (0.1216 of P0) and coverage closest to 80% (close 81.1%, range 78.9%). W46 therefore informed the design choice and is reported as an out-of-calibration check, not as prospective evidence.",
+  "w46_check": {
+    "issue_clock": "2026-11-09T10:33:42Z",
+    "calibration": "ROLLING_4W, 56 rows (W42-W45)",
+    "matured_days_1_4": {
+      "A_range_q80_covered": "8/8",
+      "CN_range_covered": "0/8",
+      "mean_interval_score_A": 0.079046,
+      "mean_interval_score_CN": 0.09815
+    }
+  },
+  "authority": {
+    "research_only": true,
+    "official_forecast": false,
+    "trading": false,
+    "promotion": false,
+    "paid_api": false
+  },
+  "code": {
+    "module": "scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py",
+    "tests": "tests/research/test_task2_challenger_a_sqrt_t_vol_band_v1.py",
+    "ci": ".github/workflows/data-architecture-gate.yml step 'Validate Task2 Challenger A sqrt-time volatility band'"
+  },
+  "weekly_operation": "After each CN week matures (Monday), run `score --week YYYY-Www` (T0 from git); write the score JSON next to the week's CN settlement. Integration into the existing weekly settlement is a separate reviewed change."
+}
