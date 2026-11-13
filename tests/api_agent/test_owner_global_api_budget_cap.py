@@ -113,6 +113,19 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertIn("OWNER_GLOBAL_50_USD_CAP_EXCEEDED",
                       str(state["cost_evidence_errors"]))
 
+    def test_existing_small_lane_reserve_does_not_override_global_four_dollars(self):
+        # Regression for the native CN 9.4/0.1 partial-spend lane. Its
+        # source-bound local reserve remains 0.1; global USD4 still binds.
+        rc, state = run_guard(0.12, cap=9.4, reserve=0.1)
+        self.assertEqual(rc, 0, state)
+        self.assertEqual(state["pending_liability_upper_usd"], 9)
+        self.assertEqual(state["exposure_range_max_usd"], 9.12)
+        self.assertEqual(state["reserve_usd"], 0.1)
+        self.assertGreaterEqual(state["owner_global_remaining_usd_after_risk"], 4)
+        rc, state = run_guard(0.12, cap=9.2, reserve=0.1)
+        self.assertNotEqual(rc, 0)
+        self.assertEqual(state["status"], "BLOCKED")
+
     def test_one_request_usd3_limit_remains_even_under_new_50_global_cap(self):
         for value in ("3.01","4","10"):
             rc, state=run_guard(1,cap=50,reserve=4,
