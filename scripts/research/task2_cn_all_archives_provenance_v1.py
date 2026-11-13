@@ -31,7 +31,7 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 def git_blob_sha(raw: bytes) -> str:
-    return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\\x00" + raw).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\x00" + raw).hexdigest()
 
 
 @lru_cache(maxsize=8)
