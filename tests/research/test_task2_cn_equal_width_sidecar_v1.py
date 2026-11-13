@@ -53,6 +53,13 @@ class EqualWidthSidecarTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate independent"):
             s.compute([base(), base()])
 
+    def test_duplicate_equivalent_zero_padded_week_rejected(self):
+        # Codex P2: W39 and W039 must count as ONE independent week.
+        with self.assertRaisesRegex(ValueError, "duplicate independent"):
+            s.compute([base(week="39"), base(week="039")])
+        with self.assertRaisesRegex(ValueError, "duplicate independent"):
+            s.compute([base(week="0039"), base(week="39")])
+
     def test_week_asset_separation(self):
         x = s.compute([base(), base(asset="ETH")])
         self.assertEqual(x["summary_by_asset"]["BTC"]["independent_week_count"], 1)
