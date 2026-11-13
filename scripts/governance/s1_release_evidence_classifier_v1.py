@@ -118,7 +118,13 @@ def _low_lane_paths_with_rename_sources(record):
     paths = record.get("expected_changed_paths")
     if not isinstance(paths, list):
         return paths
-    sources = [e.get("previous_filename") for e in (record.get("changed_file_statuses") or [])
+    entries = record.get("changed_file_statuses")
+    # This early LOW path check is not a parser for untrusted native metadata.
+    # Defer malformed census input to _changed_test_execution_issue, which
+    # rejects this PR without aborting unrelated PRs in the same batch.
+    if not isinstance(entries, list):
+        return paths
+    sources = [e.get("previous_filename") for e in entries
                if isinstance(e, dict) and e.get("status") in ("renamed", "copied")]
     return paths + [p for p in sources if type(p) is str]
 
