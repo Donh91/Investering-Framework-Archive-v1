@@ -316,6 +316,12 @@ def hourly_study(root: Path):
             day += timedelta(days=1)
             continue
         i = idx[-1]
+        # An outcome anchor must be the fully completed bar at the precise
+        # decision cutoff, not an earlier last-eligible (stale) source price.
+        if rows[i]["_end"] != cutoff:
+            refused["NO_SAME_CUTOFF_SOURCE_ELIGIBLE_BAR"] += 1
+            day += timedelta(days=1)
+            continue
         # Both 24h and 4h windows must predate cutoff and be consecutive.
         if i < 24 or not all(rows[z]["_source_window_end"] <= cutoff for z in range(i-24,i+1)):
             refused["INCOMPLETE_24H_PREKNOWN_LOOKBACK"] += 1
@@ -343,6 +349,8 @@ def hourly_study(root: Path):
                     "decision_utc": cutoff.isoformat().replace("+00:00","Z"),
                     "asset":asset.upper(),"rule":name,
                     "lookback_source_utc": rows[i]["_source_window_end"].isoformat().replace("+00:00","Z"),
+                    "decision_anchor_bar_end_utc": rows[i]["_end"].isoformat().replace("+00:00","Z"),
+                    "decision_anchor_source_window_end_utc": rows[i]["_source_window_end"].isoformat().replace("+00:00","Z"),
                     "provider_first_published_utc": None,
                     "claim_class": "RETROSPECTIVE_SOURCE_WINDOW_PROXY_NOT_ISSUED_COMPASS",
                     "anchor_price":now,"pct24":round(pct24,5),"pct4":round(pct4,5),
