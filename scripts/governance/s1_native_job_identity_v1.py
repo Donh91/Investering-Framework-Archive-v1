@@ -12,11 +12,32 @@ import hashlib
 import json
 import os
 import re
-from urllib.request import Request, urlopen
+from urllib.parse import urlsplit
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 PATH = "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json"
 MAX_PAGES = 10
+
+
+class _SafeGithubLogRedirect(HTTPRedirectHandler):
+    """Only GitHub HTTPS log storage; NEVER forward source auth across hosts."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        target = urlsplit(newurl)
+        host = target.hostname or ""
+        if target.scheme != "https" or not (
+                host == "api.github.com" or host.endswith(".githubusercontent.com")):
+            raise ValueError("JOB_LOG_REDIRECT_HOST_UNVERIFIED")
+        follow = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if follow is not None and host != "api.github.com":
+            # urllib's standard handler otherwise forwards Authorization when
+            # GitHub redirects /actions/jobs/{id}/logs to signed object storage.
+            for name in ("Authorization", "authorization", "Proxy-Authorization"):
+                follow.remove_header(name)
+        return follow
+
+
 
 
 class GithubNativeRead:
@@ -48,7 +69,7 @@ class GithubNativeRead:
             headers["Authorization"] = "Bearer " + self.token
         req = Request("https://api.github.com/repos/" + repo +
                       "/actions/jobs/" + str(job_id) + "/logs", headers=headers, method="GET")
-        with urlopen(req, timeout=25) as resp:
+        with build_opener(_SafeGithubLogRedirect()).open(req, timeout=25) as resp:
             raw = resp.read(8 * 1024 * 1024 + 1)
         if len(raw) > 8 * 1024 * 1024:
             raise ValueError("JOB_LOG_SIZE_UNVERIFIED")

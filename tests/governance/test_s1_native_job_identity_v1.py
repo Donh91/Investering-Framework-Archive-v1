@@ -4,7 +4,9 @@ import copy
 import hashlib
 import json
 import unittest
-from scripts.governance.s1_native_job_identity_v1 import verify_native_required_jobs
+from urllib.request import Request
+from scripts.governance.s1_native_job_identity_v1 import (
+    verify_native_required_jobs, _SafeGithubLogRedirect)
 
 REPO = "Donh91/Investering-Framework-Archive-v1"
 HEAD = "a" * 40
@@ -324,6 +326,33 @@ class NativeIdentityTests(unittest.TestCase):
         self.assertEqual(verify_native_required_jobs(
             lambda path: copy.deepcopy(x[path]), REPO, 9, HEAD, "DOCS_ONLY")["reason"],
             "RUN_EXECUTED_WORKFLOW_SOURCE_UNVERIFIED")
+
+    def test_log_redirect_drops_github_bearer_token(self):
+        req = Request("https://api.github.com/repos/owner/repo/actions/jobs/123/logs",
+                      headers={"Authorization": "Bearer NEVER_SEND_TO_OBJECT_STORE"})
+        nxt = _SafeGithubLogRedirect().redirect_request(
+            req, None, 302, "Found", {},
+            "https://pipelines.actions.githubusercontent.com/results/legitimate?sig=abc")
+        self.assertIsNotNone(nxt)
+        self.assertNotIn("Authorization", nxt.headers)
+        self.assertNotIn("NEVER_SEND", str(nxt.headers))
+        self.assertEqual(nxt.full_url.split("/")[2],
+                         "pipelines.actions.githubusercontent.com")
+
+    def test_log_redirect_to_untrusted_host_is_rejected(self):
+        req = Request("https://api.github.com/repos/owner/repo/actions/jobs/123/logs",
+                      headers={"Authorization": "Bearer NEVER_SEND"})
+        with self.assertRaisesRegex(ValueError, "JOB_LOG_REDIRECT_HOST_UNVERIFIED"):
+            _SafeGithubLogRedirect().redirect_request(
+                req, None, 302, "Found", {}, "https://attacker.example/collect")
+
+    def test_log_redirect_must_use_https(self):
+        req = Request("https://api.github.com/repos/owner/repo/actions/jobs/123/logs",
+                      headers={"Authorization": "Bearer NEVER_SEND"})
+        with self.assertRaisesRegex(ValueError, "JOB_LOG_REDIRECT_HOST_UNVERIFIED"):
+            _SafeGithubLogRedirect().redirect_request(
+                req, None, 302, "Found", {},
+                "http://pipelines.actions.githubusercontent.com/results/unsafe")
 
     def test_forced_high_class_not_applicable(self):
         self.assertEqual(verify_native_required_jobs(lambda p: {}, REPO, 9, HEAD, "HIGH")["reason"],
