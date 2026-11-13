@@ -65,14 +65,14 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         rc, state = run_guard(17)
         self.assertEqual(rc, 0, state)
         self.assertEqual(state["status"], "PASS")
-        self.assertEqual(state["owner_normal_target_usd"], 40)
+        self.assertEqual(state["owner_normal_target_usd"], 50)
         self.assertEqual(state["effective_hard_stop_usd"], 40)
         self.assertEqual(state["pending_liability_count"], 3)
         self.assertEqual(state["pending_liability_lower_usd"], 0)
         self.assertEqual(state["pending_liability_upper_usd"], 9)
         self.assertEqual(state["exposure_range_min_usd"], 17)
         self.assertEqual(state["exposure_range_max_usd"], 26)
-        self.assertEqual(state["normal_remaining_usd"], 14)
+        self.assertEqual(state["normal_remaining_usd"], 24)
 
     def test_routine_zero_reserve_argument_does_not_remove_four_dollar_buffer(self):
         rc, state = run_guard(26, cap=40, reserve=0)
@@ -82,22 +82,56 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertNotEqual(rc, 0, state)
         self.assertEqual(state["status"], "BLOCKED")
 
-    def test_usd45_tolerance_needs_real_native_authority_not_arbitrary_cli(self):
+    def test_owner_50_total_with_four_reserve_and_unchanged_old_caller_caps(self):
+        # An original caller passing 40 still has its own stricter ceiling.
         rc, state = run_guard(26, cap=40, reserve=0)
         self.assertEqual(rc, 0, state)
+        self.assertEqual(state["effective_hard_stop_usd"], 40)
         self.assertEqual(state["reserve_usd"], 4)
-        # A naked local --hard-stop-usd 45 is NOT an authenticated, reviewed
-        # owner-bound payment capability. It must not unlock exceptional spend.
-        for spent in (26, 33, 36.01):
-            rc, state = run_guard(spent, cap=45, reserve=0,
-                                  extra=["--new-request-upper-usd", "3"])
-            self.assertNotEqual(rc, 0)
-            self.assertEqual(state["status"], "BLOCKED")
-            self.assertIn("EXCEPTIONAL_45_NATIVE_SOURCE_CAPABILITY_REQUIRED",
-                          str(state["cost_evidence_errors"]))
-        rc, state = run_guard(36.01, cap=45, reserve=0,
-                              extra=["--new-request-upper-usd", "3"])
-        self.assertGreater(state["exposure_range_max_usd"], 45)
+        # If an existing caller requests 45, the same protected four applies.
+        rc, state = run_guard(26, cap=45, reserve=0,
+                              extra=["--new-request-upper-usd","3"])
+        self.assertEqual(rc, 0, state)
+        self.assertEqual(state["reserve_usd"], 4)
+        self.assertEqual(state["exposure_range_max_usd"], 38)
+        # The new total cap is 50, NOT 50 plus a separate exceptional 5.
+        rc, state = run_guard(33, cap=50, reserve=0,
+                              extra=["--new-request-upper-usd","3"])
+        self.assertEqual(rc, 0, state)
+        self.assertEqual(state["effective_hard_stop_usd"], 50)
+        self.assertEqual(state["reserve_usd"], 4)
+        self.assertEqual(state["exposure_range_max_usd"], 45)
+        self.assertEqual(state["remaining_usd"], 5)
+        rc, state = run_guard(36.01, cap=50, reserve=0,
+                              extra=["--new-request-upper-usd","3"])
+        self.assertNotEqual(rc, 0)
+        self.assertEqual(state["status"],"BLOCKED")
+        self.assertLess(state["remaining_usd"],4)
+        # A client cannot increase the globally authorized amount via CLI.
+        rc, state = run_guard(1, cap=50.01, reserve=0)
+        self.assertNotEqual(rc, 0)
+        self.assertIn("OWNER_GLOBAL_50_USD_CAP_EXCEEDED",
+                      str(state["cost_evidence_errors"]))
+
+    def test_one_request_usd3_limit_remains_even_under_new_50_global_cap(self):
+        for value in ("3.01","4","10"):
+            rc, state=run_guard(1,cap=50,reserve=4,
+                                extra=["--new-request-upper-usd",value])
+            self.assertNotEqual(rc,0)
+            self.assertEqual(state["status"],"BLOCKED")
+
+    def test_mismatched_explicit_owner_ledger_ceiling_is_blocked(self):
+        from scripts.api_agent.check_monthly_cost_guard import pending_risk
+        with tempfile.TemporaryDirectory() as td:
+            original=json.loads((ROOT/"research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json").read_text())
+            self.assertEqual(original["normal_budget_usd"],50)
+            self.assertEqual(original["absolute_budget_usd"],50)
+            p=Path(td)/"ledger.json"
+            for key,value in (("normal_budget_usd",40),("absolute_budget_usd",45)):
+                bad={**original,key:value}
+                p.write_text(json.dumps(bad))
+                with self.assertRaisesRegex(ValueError,"LIABILITY_LEDGER_CONTRACT_INVALID"):
+                    pending_risk(p)
 
     def test_stricter_original_caller_reserve_and_lane_still_bind(self):
         rc, state = run_guard(17, cap=30, reserve=12)
