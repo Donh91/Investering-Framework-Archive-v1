@@ -12,6 +12,7 @@ import datetime as dt
 import hashlib
 import json
 import re
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -28,6 +29,57 @@ def load_json(path: Path):
     if not path.is_file() or path.is_symlink():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+def git_blob_sha(raw: bytes) -> str:
+    return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\\x00" + raw).hexdigest()
+
+
+@lru_cache(maxsize=8)
+def pinned_source_map(root: str) -> dict[str, str]:
+    base = Path(root)
+    src = load_json(base / SOURCE_INDEX)
+    result = load_json(base / OUTCOME_INDEX)
+    if not isinstance(src, dict) or not isinstance(result, dict):
+        raise ValueError("PINNED_SOURCE_INDEX_UNAVAILABLE")
+    if git_blob_sha((base / SOURCE_INDEX).read_bytes()) != "9027def6ed9db61b607841acaf046330a3a2c6e7":
+        raise ValueError("SOURCE_INDEX_BLOB_CHANGED")
+    if git_blob_sha((base / OUTCOME_INDEX).read_bytes()) != "9e3abc0d03709f033c091e9068a49d1edf474665":
+        raise ValueError("OUTCOME_INDEX_BLOB_CHANGED")
+    if src.get("source_tree_sha_at_inventory") != result.get("source_main_tree"):
+        raise ValueError("SOURCE_TREE_IDENTITY_MISMATCH")
+    values = {}
+    for row in src.get("entries", []):
+        key, blob = row["path"], row["blob"]
+        if key in values: raise ValueError("DUPLICATE_SOURCE_PATH")
+        values[key] = blob
+    for row in result.get("entries", []):
+        if row.get("type") != "file": continue
+        key, blob = row["path"], row["blob_or_tree"]
+        if key in values and values[key] != blob:
+            raise ValueError("CONFLICTED_SOURCE_BLOB")
+        values[key] = blob
+    return values
+
+
+def pinned_bytes(path: Path, repo_root: Path) -> bytes | None:
+    rel = path.relative_to(repo_root).as_posix()
+    expected = pinned_source_map(str(repo_root.resolve())).get(rel)
+    if expected is None:
+        if path.exists():
+            raise ValueError("CURRENT_FILE_NOT_IN_FROZEN_INDEX:" + rel)
+        return None
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("FROZEN_SOURCE_MISSING_OR_UNSAFE:" + rel)
+    raw = path.read_bytes()
+    if git_blob_sha(raw) != expected:
+        raise ValueError("FROZEN_SOURCE_BYTES_DRIFT:" + rel)
+    return raw
+
+
+def pinned_json(path: Path, repo_root: Path):
+    raw = pinned_bytes(path, repo_root)
+    return json.loads(raw) if raw is not None else None
+
 
 def next_monday(year: int, week: int) -> dt.datetime:
     d = dt.date.fromisocalendar(year, week, 1) + dt.timedelta(days=7)
@@ -75,17 +127,17 @@ def week_census(repo_root: Path, asof: dt.datetime) -> list[dict]:
                 continue
             week = int(m.group(1))
             forecast_file = wdir / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
-            forecast = load_json(forecast_file)
+            forecast = pinned_json(forecast_file, repo_root)
             if forecast is None:
                 continue
             internal_path = wdir / "CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
-            internal = load_json(internal_path)
+            internal = pinned_json(internal_path, repo_root)
             source_file = wdir / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json"
-            source = load_json(source_file)
+            source = pinned_json(source_file, repo_root)
             pointer_file = wdir / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json"
-            delivery = load_json(pointer_file)
+            delivery = pinned_json(pointer_file, repo_root)
             actual_file = repo_root / f"03_DAILY_CAPTURE_LOGS/weekly/{year}/{wdir.name}.json"
-            actual = load_json(actual_file)
+            actual = pinned_json(actual_file, repo_root)
             seq = (actual or {}).get("hourly_sequence") or {}
             observed = seq.get("observed_hourly_rows")
             expected = seq.get("expected_hourly_rows")
@@ -143,13 +195,20 @@ def week_census(repo_root: Path, asof: dt.datetime) -> list[dict]:
 def legacy_census(repo_root: Path) -> list[dict]:
     root = repo_root / "05_CYCLE_NAVIGATOR/published/2026"
     result = []
+    expected = {p for p in pinned_source_map(str(repo_root.resolve()))
+                if p.startswith("05_CYCLE_NAVIGATOR/published/2026/")}
+    current = {p.relative_to(repo_root).as_posix() for p in root.glob("*")
+               if p.is_file() and p.suffix in {".md", ".json"}}
+    if current != expected:
+        raise ValueError("LEGACY_ARCHIVE_SOURCE_SET_DRIFT")
     for path in sorted(root.glob("*")):
         if not path.is_file() or path.suffix not in {".md", ".json"}:
             continue
         name = path.name
+        pinned_raw = pinned_bytes(path, repo_root)
         result.append({
             "path": path.relative_to(repo_root).as_posix(),
-            "sha256": sha256(path),
+            "sha256": hashlib.sha256(pinned_raw).hexdigest(),
             "recovered": "_RECOVERED" in name or "RECOVERY" in name,
             "publication_issue_time": "UNKNOWN_NOT_PROVEN",
             "numeric_forecast_eligible": False,
