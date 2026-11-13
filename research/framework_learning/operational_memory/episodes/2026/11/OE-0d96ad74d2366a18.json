@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/cycle_navigator/build_internal_precision.py",
+    "scripts/cycle_navigator/validate_internal_precision.py",
+    "tests/cycle_navigator/test_internal_precision_api_budget.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-0d96ad74d2366a18",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cn-w46-internal-freeze-across-authorized-same-monday",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(cn): verify W46 amended source without rewriting immutable internal freeze * fix(cn): continue internal precision only for proof-bound W46 same-day amendment * test(cn): validate approved W46 revision with immutable original internal claims * test(cn): prove only original W46 claim-preserving amendment passes ten offline negatives * fix(cn): reconstruct archived original claim set to reject semantic tampering * test(cn): correct duplicate fixture and add original claim-text tamper negative * fix(cn): pin amended W46 source to archived BEFORE amendment hash, never manifest self-check * te",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/cycle_navigator/build_internal_precision.py": "51bed39d5ec988774dfec45664b5f3eea74d4101",
+    "scripts/cycle_navigator/validate_internal_precision.py": "c4716b1f77f1d375c92658a37cc81b2bbf67ec2d",
+    "tests/cycle_navigator/test_internal_precision_api_budget.py": "7a19800cdbc539dc468ebe08b94abd5706ff3d5a"
+  },
+  "source_commit_sha": "0d96ad74d2366a181d756ed188bf7e233b3ceea0",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T13:25:10-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(cn): preserve W46 internal freeze across authorized same-Monday revision (#2104)"
+}

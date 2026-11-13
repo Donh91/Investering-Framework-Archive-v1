@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/challenger-a-panel.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/challenger-a-panel.test.mjs",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/package.json",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/premium-tabs.css",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/premium-tabs.mjs"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-469c9bb339511ee6",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(cn-site): show source-gated Challenger A in Prognose tab (shadow only) * fix(site): initialize language before mounting challenger shadow panel * test(site): match guarded Challenger refresh call used in real tab * fix(site): serve honest Challenger unavailable first-party receipt instead of 404 * test(site): prove honest source-unavailable data artifact is built * fix(site): reject any post-publication or out-of-week shadow forecast day; reuse source line * test(site): reject retroactive, overlapping and wrong-week shadow source windows",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs": "ed37ed6500ec1d1f5ea399be1dccc8ace1a70e78",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/challenger-a-panel.mjs": "2219ff821711cc8f5e6d441e14e57c8ca73f5926",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/challenger-a-panel.test.mjs": "5e7b169fb94273859e00f63025c4690531ce1570",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/package.json": "ea431b6ccf1ca303cdc63c0ca82c4aec1f2c3fa5",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/premium-tabs.css": "8d563d4d40aa5017ac7d43a3597c1fde90a8ba62",
+    "05_CYCLE_NAVIGATOR/site/premium-v2/premium-tabs.mjs": "eced75617a84f22b848d97a74df61890d496e09f"
+  },
+  "source_commit_sha": "469c9bb339511ee6b35daf0ce94d8d0f716e2556",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T16:09:30-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "feat(site): read-only Challenger A research benchmark in Prognose"
+}

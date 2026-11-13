@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health-gate.yml",
+    "00_FMOS/S1/ACTION_LOOP.md",
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "AGENTS.md",
+    "tests/governance/test_s1_runtime_contract_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-51408eac8fd4bf90",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* governance(s1): pin GitHub-rooted runtime bootstrap and action-loop contract * fix(ci): trigger S1 runtime governance tests on S1 file changes",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health-gate.yml": "ebf4772f3dc86784f55ae3251bc3c61107bf7ee5",
+    "00_FMOS/S1/ACTION_LOOP.md": "44a3755afc431299c2b0a63f475cc8a2f5745e4c",
+    "00_FMOS/S1/BOOTSTRAP.txt": "51e2cccf2a527c7768bd9c930eead3d8bc3d2c64",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "3b16f9d722b613124ed7702f65cc5a71c6c74477",
+    "AGENTS.md": "61d636a9f913443dac61b7665bb57e0c98ec6bd0",
+    "tests/governance/test_s1_runtime_contract_v1.py": "3327e8fe5bc5b550b30ecf946618034a6f70ba5e"
+  },
+  "source_commit_sha": "51408eac8fd4bf906598812da9a9345a9aabeaaa",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T13:39:20-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "governance(s1): GitHub-rooted action loop and runtime contract (#2121)"
+}

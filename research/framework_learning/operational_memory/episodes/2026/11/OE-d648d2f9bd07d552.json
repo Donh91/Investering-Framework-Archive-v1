@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/governance/s1_closure_claim_guard_v1.py",
+    "tests/governance/test_s1_closure_claim_guard_ic3_freshness_v1.py",
+    "tests/governance/test_s1_closure_claim_guard_ic3_v1.py",
+    "tests/governance/test_s1_closure_claim_guard_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-d648d2f9bd07d552",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "s1-1156-fail-closed-replayable-closure-receipt-evidence",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* test(s1): bind closure claim guard to replayable run/CI provenance * test(s1): bind closure claim guard to replayable run/CI provenance * test(s1): adversarial IC-3 untrusted receipt fields from reproducible pilot * fix(s1 IC-3): reject non-string untrusted provenance labels without TypeError * test(s1 IC-3): malformed source arrays and objects fail closed * fix(s1): bind closure evidence to the scheduled merge window * fix(s1 ic3): reject inconsistent native executed-test counts * test(s1 ic3): adversarial executed-test ID count mismatches",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/governance/s1_closure_claim_guard_v1.py": "3e445d07adf4a73b68f8db565195e174c2055598",
+    "tests/governance/test_s1_closure_claim_guard_ic3_freshness_v1.py": "f01c33248fbbe8416ec213bd855e260d7a9a566d",
+    "tests/governance/test_s1_closure_claim_guard_ic3_v1.py": "bab1b2594c1ee589d19c9a1967d542b0e2e94b4a",
+    "tests/governance/test_s1_closure_claim_guard_v1.py": "cb19a3ffa5d10729f4a162e8fc7c7010e97a72a5"
+  },
+  "source_commit_sha": "d648d2f9bd07d5522305d17494468f02639dd808",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T11:39:13-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(s1 #1156): fail-closed replayable closure receipt evidence (IC-3) (#2087)"
+}
