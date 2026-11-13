@@ -32,6 +32,9 @@ on:
       - '04_RESEARCH_LAB/external_specialist_dissection/2026-11-07__ALPHA_RESEARCH_PRECISION_PARALLEL_LANES_v1.json'
       - '.github/workflows/autonomous-research-governance-loop.yml'
       - '.github/workflows/research-parallel-lanes-skill-ci.yml'
+      - '04_MARKET_LEARNING/handlekompas/research/2026-11-13__W46_PULLBACK_FAILURE_RPL_V1.*'
+      - 'scripts/research/w46_independent_research_comparator_v1.py'
+      - 'tests/research/test_w46_independent_research_comparator_v1.py'
 
 permissions:
   contents: read
@@ -286,3 +289,34 @@ jobs:
           path: ${{ runner.temp }}/task2-realdata-risk/
           retention-days: 30
           if-no-files-found: warn
+
+  task2-w46-sealed-comparator-native-tests:
+    # Research only, CI cannot dispatch reviewers, models or alter official risk.
+    if: startsWith(github.event.pull_request.title, 'research(task2):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate research-only lane metadata
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('04_MARKET_LEARNING/handlekompas/research/2026-11-13__W46_PULLBACK_FAILURE_RPL_V1.json')
+          j=json.loads(p.read_text())
+          assert j['contract']=='RESEARCH_PARALLEL_LANES_V1'
+          assert j['status']=='PLANNED' and j['approved_budget_usd']==0
+          assert j['source_snapshot_sha']=='a4504580273bc4396f20395ac9cd272656dc4454'
+          assert len(j['lanes'])==7 and j['no_trading_authority'] is True
+          assert j['no_new_scheduler'] and j['constraints']['live_warning_threshold_unchanged']
+          print('W46_RESEARCH_NO_PAID_DISPATCH_CONTRACT_PASS')
+          PY
+      - name: Run all 12 original W46 source-bound negative controls
+        run: |
+          python -m py_compile scripts/research/w46_independent_research_comparator_v1.py
+          python -m unittest discover -s tests/research -p 'test_w46_independent_research_comparator_v1.py' -v
