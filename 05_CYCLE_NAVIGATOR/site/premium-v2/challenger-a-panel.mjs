@@ -30,8 +30,13 @@ export function validateChallengerPublic(payload, now = Date.now()) {
   const t=typeof now==='number'?now:Date.parse(now);
   if (!Number.isFinite(t) || known < issue || known > t || issue > t)
     return refuse('NON_CAUSAL_ISSUANCE_CLOCK');
-  // One exact weekly issuance, seven forward days for BOTH assets. Missing
-  // or retroactively added days must never be drawn as credible observations.
+  // One exact ISO week, not seven arbitrarily labeled historical windows.
+  const [year,week]=i.week.split('-W').map(Number);
+  const jan4=Date.UTC(year,0,4);
+  const monday=jan4-(((new Date(jan4).getUTCDay()+6)%7)*86400000)+(week-1)*7*86400000;
+  if(issue<monday || issue>=monday+7*86400000) return refuse('WRONG_ISSUE_WEEK');
+  // One exact weekly issuance, seven chronologically ordered forward days
+  // for BOTH assets, never post-outcome "prospective" windows.
   const days={};
   for (const asset of ['BTC','ETH']) {
     const a=i.assets?.[asset];
@@ -40,8 +45,11 @@ export function validateChallengerPublic(payload, now = Date.now()) {
     const good=[];
     for (let k=1;k<=7;k++) {
       const d=a.days[k-1],range=d?.band?.range?.['0.8'],close=d?.band?.close?.['0.8'];
+      const start=Date.parse(d?.scored_from_utc),end=Date.parse(d?.end_utc);
+      const expectedDayStart=monday+(k-1)*86400000,expectedEnd=expectedDayStart+86400000;
       if (d?.day!==k || !date(d.scored_from_utc) || !date(d.end_utc) ||
-          !(Date.parse(d.end_utc)>Date.parse(d.scored_from_utc)) ||
+          end!==expectedEnd || start<expectedDayStart || start>=end ||
+          start<known || start<issue ||
           !Array.isArray(range) || !Array.isArray(close) ||
           range.length!==2 || close.length!==2 ||
           !numeric(range[0]) || !numeric(range[1]) || range[0]>=range[1] ||
@@ -51,10 +59,6 @@ export function validateChallengerPublic(payload, now = Date.now()) {
     }
     days[asset]=good;
   }
-  // Source publication must precede the first scoring window, otherwise
-  // an alleged prospective issue could have seen the outcome already.
-  if (known > Math.min(...['BTC','ETH'].map(x => Date.parse(i.assets[x].days[0].scored_from_utc))))
-    return refuse('LATE_FIRST_PUBLICATION');
   return {ok:true,week:i.week,issue_utc:i.issue_clock_utc,known_utc:src.first_in_main_utc,
     source_commit:src.first_in_main_commit,source_sha:src.sha256,issuance_sha:i.issuance_sha256,
     days,prices:{BTC:i.assets.BTC.P0,ETH:i.assets.ETH.P0}};
@@ -151,7 +155,7 @@ export function mountChallengerA(graphPanel,getLang=()=>document.documentElement
    }
    table.append(body);article.append(assetHeading,sub,table);grids.append(article);
   }
-  let source=grids.querySelector('.cn-challenger-a-provenance');
+  let source=data.querySelector('.cn-challenger-a-provenance');
   if (!source) {source=element('p','cn-challenger-a-provenance');data.append(source)}
   source.textContent=t.source+': '+validated.source_commit.slice(0,12)+
     ' · SHA256 '+validated.issuance_sha.slice(0,16)+'…';
