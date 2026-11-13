@@ -686,7 +686,12 @@ class W46SameMondayInternalPrecisionAmendmentTests(unittest.TestCase):
     def test_extra_duplicate_internal_claims_cannot_be_silently_scored(self):
         tampered = json.loads(json.dumps(self.internal))
         tampered["claims"].append(dict(tampered["claims"][0]))
-        self.assertFalse(self.allowed())
+        self.assertFalse(self.allowed(internal=tampered))
+
+    def test_forged_original_claim_text_cannot_keep_first_issue_authority(self):
+        tampered = json.loads(json.dumps(self.internal))
+        tampered["claims"][0]["forecast"] = "fabricated after market outcome"
+        self.assertFalse(self.allowed(internal=tampered))
 
     def test_tampered_owner_scope_cannot_trigger_amendment(self):
         p = self.root / "W46_OWNER_REISSUE_REQUEST.json"
