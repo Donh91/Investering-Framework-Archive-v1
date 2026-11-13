@@ -17,6 +17,11 @@ def complete_shape():
         "task_run_id": "task-run-native-crosscheck-pending",
         "task_started_at": "2026-11-05T21:14:41Z",
         "task_completed_at": "2026-11-05T21:15:39Z",
+        "scheduled_for_utc": "2026-11-05T21:14:00Z",
+        "task_provenance_source": "SELF_ATTESTED",
+        "writer_lease": {"active": False, "ref": "lease-released-crosscheck-pending"},
+        "merge_state_check": {"source": "GITHUB_REST", "checked_at_utc": "2026-11-05T21:14:55Z", "head_sha": H},
+        "classifier": {"blob_sha": "c" * 40, "disposition": "READY_TO_MERGE", "output_sha256": "d" * 64},
         "pr": {
             "number": 1946,
             "original": True,
@@ -27,12 +32,14 @@ def complete_shape():
             "main_blob_readback": True,
             "review_rules_checked": True,
             "merged_at": "2026-11-05T21:15:04Z",
+            "merged_by": "Donh91",
         },
         "ci": {
             "event": "pull_request",
             "head_sha": H,
             "conclusion": "success",
             "executed_test_count": 18,
+            "executed_test_ids": ["tests/governance/test_x.py::t%d" % i for i in range(18)],
         },
         # Untrusted shape labels must NEVER prove real native execution.
         "S1_VERIFIED": True,
