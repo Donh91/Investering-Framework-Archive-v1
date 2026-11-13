@@ -838,6 +838,7 @@ test('first fold shows official source clock and individual date origins',async(
  const js=await read('./root-compass-pro.mjs');
  assert.match(js,/sourceHorizonClock/);
  assert.match(js,/cn-overview-asof/);
+ assert.match(js,/Aktuelt momentum · måling/);
 });
 
 test('official horizon clock anchors to issuance, never silently rolls on page refresh',()=>{
