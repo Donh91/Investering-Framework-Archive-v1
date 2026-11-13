@@ -28,6 +28,15 @@ class OriginalCNRealdataTests(unittest.TestCase):
             self.assertGreater(row["anchor_last_known"], 0)
             self.assertGreater(row["forecast_high"], row["forecast_low"])
 
+    def test_paired_uncertainty_clustering_and_null_includes_zero(self):
+        summary, rows = m.forecast_study(ROOT)
+        b = summary["paired_week_bootstrap"]["PREV_CLOSE_FULL_WIDTH"]
+        self.assertEqual(b["independent_week_block_n"], 7)
+        self.assertLess(b["mean_CN_minus_baseline_penalty"], 0)
+        self.assertLess(b["bootstrap_ci_95_pct_penalty"][0], 0)
+        self.assertGreater(b["bootstrap_ci_95_pct_penalty"][1], 0)
+        self.assertEqual(b["status"], "EXPLORATORY_DEVELOPMENT_NOT_PRE_REGISTERED_SKILL")
+
     def test_range_coverage_correct_and_nonprobabilistic(self):
         r=m.range_score(95.,105.,100.,106.,100.)
         self.assertFalse(r["full_extreme_containment"])
