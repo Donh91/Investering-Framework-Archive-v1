@@ -32,6 +32,12 @@ Historical SHA references are investigation hints, never current release permiss
 | Real bounded code defect from research | `codex-intake` only if its actual existing owner rules qualify | Intake alone is not CODEX_READY, an executed job or merge |
 | Changes to release governance | Existing archive governance owner, AGENTS and current #1156 | No direct-main governance bypass or new scheduler |
 
+### Skill discovery as a cheap exception, not an hourly bottleneck
+
+The existing Skill Registry and derived `00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json` are **discovery metadata, not execution instructions**. After current authority and original-owner resolution, inspect metadata **only** on a new material defect, unfamiliar specialist task or changed evidence that defeats the existing method. With a local checkout, `python scripts/agent_skills/discover_task_skills.py --task "<sanitized precise task>"` emits a short shortlist; without a local checkout, read the existing routing-index metadata directly. Resolve only the matching SKILL.md from current authorized source. Never infer the script ran merely because its path appears in this runbook.
+
+**Do not run a whole skill inventory scan for every hourly S1 tick.** A qualified original PR with completed current native release gates takes precedence and must not be held for skill search or self-challenge. No-match, unchanged blocked work and routine status are no-op. `allow_implicit_invocation=false` and any pilot status are admission barriers, not prompts to bypass with a clever model. Reference `07_PROMPTS_AND_AGENTS/github_agent/2026-11-13__task-first-skill-discovery-adoption-v1.md` for the receipt shape, always within the existing S1 #1156 owner. This runbook does not change the saved task, grant a release, demand tokens or establish runtime adoption. Real applied-skill credit requires an actual read/usage receipt, and real closure requires the original GitHub/consumer proof.
+
 **Learning loop:** reproduce -> bounded repair -> adversarial falsifier -> native merge readback -> natural consumer evidence -> existing owner Operational Memory / #1156 receipt. Reuse only source-matched lessons; an historical episode is not valid merely because its solution sounds familiar. Generated `LATEST` files must never be forged or hand-edited.
 
 ## 3. The hourly action-first decision engine

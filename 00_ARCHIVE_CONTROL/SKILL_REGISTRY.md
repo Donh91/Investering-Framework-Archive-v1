@@ -33,6 +33,12 @@ Skills are process instructions. They do not own market truth, framework doctrin
 
 ## 3. Default composition
 
+### Task-first skill-discovery discipline, bounded and nonblocking
+
+For a **new substantive framework task** or material evidence change, resolve the current original owner first, then shortlist relevant existing skills using the derived `00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json` metadata, optionally through `scripts/agent_skills/discover_task_skills.py` when a local checkout is available. Read **only** the relevant actual `.agents/skills/*/SKILL.md` after checking current status and its own invocation rules; a shortlist is not proof that a skill was applied. Do not load the entire skills library or automatically invoke any pilot or `allow_implicit_invocation=false` skill.
+
+This is a low-cost discovery procedure, **not** a new skill, model, agent, workflow, memory store or authorization. Skip ordinary status, small tasks and already-authorized executable original PR closures; S1's saved task and real release gates remain controlling. No automatic API spending, external reviewer, GitHub writer or trading permission. Record real usage/effect only in existing original-owner receipts and existing contribution-ledger shadow taxonomy when source/clock proof exists. A useful non-selection is a valid outcome. Method and negative-control contract: `07_PROMPTS_AND_AGENTS/github_agent/2026-11-13__task-first-skill-discovery-adoption-v1.md`.
+
 For general framework work:
 
 ```text
