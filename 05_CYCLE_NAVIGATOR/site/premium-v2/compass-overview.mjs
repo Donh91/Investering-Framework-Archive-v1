@@ -232,3 +232,33 @@ export function shortVsForward({compass,view,lang='da',now=Date.now()}){
   text:trc('Kilderne giver ikke en tydelig fælles retning. Rækkefølge og tidspunkt for næste kursbevægelse er ikke kendt.',
      'The sources do not establish one clear direction. The order and timing of the next move are unknown.')};
 }
+
+/**
+ * Source-time provenance only. 1–3d and 5–7d calendar hints start at the
+ * eligible Official Compass issuance, never at page-open or Monday's freeze.
+ */
+export function sourceHorizonClock({issuedAt,valid,lang='da'}={}){
+ const en=lang==='en';
+ const unavailable={state:'UNAVAILABLE',
+  asOf:en?'No fresh verified Compass issuance. Date ranges unavailable.':
+    'Ingen frisk, verificeret Kompas-udstedelse. Datointervaller afventer.',
+  windows:{d13:en?'Date unavailable':'Dato afventer',
+           d57:en?'Date unavailable':'Dato afventer',
+           w23:en?'Source not current':'Kilde ikke aktuel'}};
+ if(!valid||typeof issuedAt!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/.test(issuedAt))return unavailable;
+ const ms=Date.parse(issuedAt);
+ if(!Number.isFinite(ms)||new Date(ms).toISOString()!==new Date(issuedAt).toISOString())return unavailable;
+ const locale=en?'en-GB':'da-DK',zone='Europe/Copenhagen';
+ const format=(options,value)=>new Intl.DateTimeFormat(locale,{timeZone:zone,...options}).format(value);
+ const stamp=format({day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZoneName:'short'},new Date(ms));
+ const day=n=>format({day:'numeric',month:'short'},new Date(ms+n*86400000));
+ return {state:'VERIFIED_SOURCE_TIME',
+  asOf:en?'Official Compass issued '+stamp+'. Horizons are anchored to this issuance, not your page visit or Monday’s frozen forecast.':
+   'Officielt Kompas udstedt '+stamp+'. Horisonterne er knyttet til denne udstedelse, ikke sidevisning eller mandagens frosne prognose.',
+  windows:{
+   d13:day(1)+' – '+day(3)+(en?' · days 1–3 from issuance':' · dag 1–3 fra udstedelse'),
+   d57:day(5)+' – '+day(7)+(en?' · days 5–7 from issuance':' · dag 5–7 fra udstedelse'),
+   w23:en?'2–3-week source outlook · exact calendar dates not issued':
+    '2–3 ugers kildevurdering · præcise datoer ikke udstedt'
+  }};
+}

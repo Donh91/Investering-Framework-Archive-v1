@@ -17,6 +17,15 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
+# Direct script execution and importlib-loaded regression tests share one safe
+# source-only W46 amendment check. This does not import a forecast producer.
+_REPO_ROOT = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+from scripts.cycle_navigator.validate_internal_precision import (
+    authorized_w46_reissue_preserving_original_claims,
+)
+
 AUTHORITY = "INTERNAL_ACCOUNTABILITY_ONLY_NO_PORTFOLIO_AUTHORITY"
 FREEZE_CONTRACT = "CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE_v2"
 SCORECARD_CONTRACT = "CYCLE_NAVIGATOR_INTERNAL_PRECISION_SCORECARD_v2"
@@ -1051,7 +1060,14 @@ def main() -> None:
     if current_internal_path.exists():
         current_internal = read_json(current_internal_path)
         if current_internal.get("source_public_freeze_sha256") != public_freeze_sha:
-            raise SystemExit("INTERNAL_PRECISION_EXISTING_FREEZE_SOURCE_CHANGED")
+            if not authorized_w46_reissue_preserving_original_claims(
+                repo, root, current_internal, public_freeze_path, machine_path
+            ):
+                raise SystemExit("INTERNAL_PRECISION_EXISTING_FREEZE_SOURCE_CHANGED")
+            # The W46 first-issued internal claims remain byte-for-byte frozen.
+            # Only the explicitly owner-approved new public daily-path source
+            # is accepted. No original risk claim, score or ledger is rewritten.
+            print("INTERNAL_PRECISION_W46_REISSUE_ORIGINAL_CLAIMS_RETAINED", file=sys.stderr)
     else:
         current_internal = build_current_freeze(machine, public_freeze, issue, target_year, target_week, public_freeze_sha, machine_sha)
         write_json(current_internal_path, current_internal)

@@ -108,6 +108,8 @@ def decision_fixture(risk="HIGH"):
     current = dict(head="a" * 40, main="b" * 40, policy="c" * 40, source="b" * 40)
     return {
         "current": current, "evaluated": dict(current), "risk": risk,
+        # Fable R4 B1: every LOW record must carry its native path census.
+        "expected_changed_paths": ["scripts/research/nonproduction_evidence.py"],
         "active_writer_lease": False, "merge_state": "clean",
         "required_rules_enforced": True, "rule_census": [], "unresolved_p0_p1": False, "owner_authorized": True,
         "source_science_gate": "PASS", "independent_review_required": True,
@@ -595,7 +597,9 @@ class ClaudeOwnerReviewAdmissionTests(unittest.TestCase):
             with self.subTest(path=path):
                 x = copy.deepcopy(r)
                 x["expected_changed_paths"] = [path]
-                self.assert_still_advisory(x, "REVIEW_REQUIRED_BY_POLICY")
+                # Fable R4 B1: the LOW-lane path guard now answers first, with the precise reason.
+                out = self.assert_still_advisory(x, "SOURCE_OR_SCIENCE_GATE")
+                self.assertEqual(out["reason"], "HIGH_IMPACT_PATH_MARKED_LOW")
 
     def test_claude_advisory_path_census_must_exist_and_be_well_formed(self):
         for paths in (None, [], ["../escape.py"], ["safe.py", "safe.py"], [None]):

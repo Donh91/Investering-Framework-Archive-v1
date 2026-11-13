@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {buildUnifiedRootHtml} from './unified-root.mjs';
 import {buildPremiumRootHtml} from './premium-root.mjs';
 import {VIEWS,currentCompass,expiredOfficial,sourceTranslation,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,sourceHorizonClock} from './compass-overview.mjs';
 import {vectorKind,enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {displayPublicStatus,displayLongDirection} from '../vnext-live/source-trace.mjs';
 
@@ -828,4 +828,35 @@ test('weekly forecast tab embeds History at its end with one detailed route',asy
  assert.match(history,/Faktisk timekurs/);
  assert.match(history,/Ugegrænser/);
  assert.equal((runtime.match(/createElement\('iframe'\)/g)||[]).length,1);
+});
+
+test('first fold shows official source clock and individual date origins',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ assert.equal(id(html,'cn-overview-asof'),1);
+ for(const key of ['d13','d57','w23'])assert.equal(id(html,'cn-overview-'+key+'-window'),1);
+ assert.match(html,/Aktuelt momentum/);
+ const js=await read('./root-compass-pro.mjs');
+ assert.match(js,/sourceHorizonClock/);
+ assert.match(js,/cn-overview-asof/);
+ assert.match(js,/Aktuelt momentum · måling/);
+});
+
+test('official horizon clock anchors to issuance, never silently rolls on page refresh',()=>{
+ const clock=sourceHorizonClock({issuedAt:'2026-11-13T18:45:00Z',valid:true});
+ assert.equal(clock.state,'VERIFIED_SOURCE_TIME');
+ assert.match(clock.asOf,/13\. nov/);
+ assert.match(clock.windows.d13,/14\. nov/);
+ assert.match(clock.windows.d13,/16\. nov/);
+ assert.match(clock.windows.d57,/18\. nov/);
+ assert.match(clock.windows.d57,/20\. nov/);
+ assert.match(clock.windows.w23,/præcise datoer ikke udstedt/);
+ for(const source of [
+  {issuedAt:'2026-11-13T18:45:00Z',valid:false},
+  {issuedAt:'INVALID',valid:true},
+  {issuedAt:null,valid:true}
+ ]){
+  const expired=sourceHorizonClock(source);
+  assert.equal(expired.state,'UNAVAILABLE');
+  assert.match(expired.windows.d13,/afventer/);
+ }
 });
