@@ -1,0 +1,85 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-compass-sentiment-false-pass-v1",
+  "submitted_at_utc": "2026-11-13T16:01:15.714Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "Kompas original P0 provenance #1827, owner-authorized 2026-11-13",
+    "source_paths": [
+      "scripts/data_ping/auto_market_state.py",
+      "scripts/data_ping/native_handlekompas.py",
+      "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/11/09/224533_3b8c80cbc645.json",
+      "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/11/13/132734_4bf307cd2027.json",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1827"
+    ]
+  },
+  "title": "Reject incomplete CFGI symbols before auto-market sentiment source health can say PASS",
+  "objective": "Fix ONLY existing auto_market_state source-health completeness classification. At Archive main 20fc2cca, assemble() sets health['sentiment'].status PASS for any truthy sentiment wrapper, including {'cfgi':{}}. Public original 2026-11-09 22:45 packet has source_health.sentiment.status PASS and normalized_state.sentiment.cfgi={}, while downstream Official Compass requires MARKET classification and MARKET/BTC/ETH numeric scores, generating FAIL_PASS_LANE_MISSING_VALUE. Distinguish missing required CFD/CFGI fields as UNAVAILABLE with a stable source-specific classification, without inventing values or weakening downstream fail-closed gates. Preserve valid 2026-11-13 packet status and contents. This repairs false source-health assertions, NOT underlying missing CFGI collection, chronic 61.64% source validity, time-lag, signal accuracy or production consumer delivery. Do not modify market direction, weights, alert severity or official trading authority. After code review/merge, verify genuinely issued next producer and Official / Pages source status separately.",
+  "finding_key": "auto-market-state:sentiment-wrapper-truthy-false-pass-when-cfgi-symbols-absent-v1",
+  "primary_target": "scripts/data_ping/auto_market_state.py",
+  "allowed_change_scope": [
+    "scripts/data_ping/auto_market_state.py",
+    "tests/data_ping/test_auto_market_state_integrity.py",
+    "tests/data_ping/test_auto_market_state_sentiment_completeness.py"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/data_ping/auto_market_state.py @ git blob 2d21525c7d11ae95ffd8ae14eccf4cb409005b7a",
+      "summary": "At assemble near source health sentiment: 'PASS' if sentiment else 'UNAVAILABLE' (a non-empty wrapper is truthy regardless of nested CFGI content)."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/data_ping/native_handlekompas.py @ git blob 111572ac6b7e4934e16a7d267d3b2365c63556de",
+      "summary": "Official 24-feature snapshot requires actual nested cfgi.symbols.MARKET classification + MARKET/BTC/ETH score; blank fields under upstream PASS become FAIL_PASS_LANE_MISSING_VALUE."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/11/09/224533_3b8c80cbc645.json @ git blob ff27cc761a17f4566d1c3acc29a48cf48d7247dc",
+      "summary": "Observed frozen original public packet: source_health.sentiment = PASS, normalized_state.sentiment = {'cfgi':{}}; directly verifies false-health semantics for this incident."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/11/13/132734_4bf307cd2027.json @ git blob 5f453ccc00b339cd18a5575a4305d87e796063a8",
+      "summary": "Positive real public control: three MARKET/BTC/ETH symbols, finite numerical scores and MARKET classification all present, upstream sentiment PASS; valid input must retain PASS."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1827#issuecomment-6754017969",
+      "summary": "Original 2026-11-09 source-quality diagnosis and ownership contract; not a new authority or owner."
+    }
+  ],
+  "reproduction": "Pin Archive main 20fc2ccabc75165257215d5c4ee255ecb55dac59. Read exact original public packet in evidence: 2026-11-09 normalized_state.sentiment.cfgi={} and source_health.sentiment.status='PASS'. From current scripts/data_ping/auto_market_state.py line near assemble, Python truthiness: bool({'cfgi':{}}) == True, hence PASS despite no cfgi.symbols. Independently read native_handlekompas.py evidence_snapshot, which maps MARKET classification and MARKET/BTC/ETH scores and marks missing value in PASS lane. Counterexample 2026-11-13 packet on same main has 3 complete symbols and PASS. Freeze original code/packet blob hashes above; do not silently rewrite them or claim all days failed. Implement deterministic negative/positive tests against actual helper and where practical an isolated auto-state assemble fixture. Only mark ready once source ownership/duplication/current code and the direct class mismatch are independently reproduced.",
+  "acceptance_tests": {
+    "positive": [
+      "A complete input with cfgi.symbols.MARKET/BTC/ETH Mapping objects and valid finite numeric scores, plus MARKET classification, retains health PASS and current normalized market values byte-compatible apart from source-health metadata.",
+      "An absent sentiment source remains UNAVAILABLE; a genuine valid original 2026-11-13 public shape remains source PASS; downstream Official consumes genuine values without an invented last-known fallback.",
+      "Run existing auto-market-state integrity suite with nonzero test count and exact-head native CI, plus a source→Official→public consumer observation AFTER qualifying merge before claiming production closure."
+    ],
+    "negative": [
+      "Regression fixture {'cfgi':{}} fails PASS deterministically, classification MUST NOT say live sentiment complete. Also cases missing cfgi, no symbols, MARKET missing, BTC missing, ETH missing, missing/empty MARKET classification, nonfinite/string/bool scores, malformed containers, outer truthy unrelated sentiment keys.",
+      "Mutant that replaces completeness guard with prior `bool(sentiment)` must fail one or more of the negative tests. Regressions cannot be satisfied by mocking a source-health result alone.",
+      "Do not let absent CFGI be silently filled from stale previous packets, proxy sentiment, arbitrary 0, or private sources. No change to downstream native_handlekompas FAIL_PASS_LANE_MISSING_VALUE guard or source freshness policy.",
+      "No new workflow, provider call, schedule, secret, credentials, market thresholds, model weights, sell/buy action, historical rewrite or false production-success declaration."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical frozen forecasts, packets or scoring",
+    "private/restricted data copying",
+    "CFGI provider configuration, payment or credential changes",
+    "workflows, schedulers, new agents or sources",
+    "official action/sell/portfolio authorization"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "Original owner #1827/#1593 and S1 #1156; exact original-source and positive/negative test evidence, independent Codex review and qualified owner CI release, no unsafe merge before governance gates. Real next auto_market_state producer must label a missing sentiment wrapper UNAVAILABLE not PASS; Official must stay DEGRADED if genuinely absent; true valid input retains PASS; read through public Pages independently. Keep POST_FIX_OBSERVATION until natural post-merge producer/consumer proof."
+}
