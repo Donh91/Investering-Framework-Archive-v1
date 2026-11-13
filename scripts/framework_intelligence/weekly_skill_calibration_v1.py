@@ -98,16 +98,42 @@ def _safe_receipt(root: Path, path: Path, skills: dict[str, dict], week: str) ->
         return None
     if not isinstance(proof, str) or not re.fullmatch(r"[a-f0-9]{64}", proof):
         return None
-    # This check binds bytes, NOT the asserted semantic content or the actor.
+    # Hash match alone is not proof of a skill read: reject arbitrary native
+    # source files with no skill identity or task-specific witness. This is
+    # still a SELF-REPORT, not an independently authenticated host run.
     original = root / src
-    if (original.is_symlink() or not original.is_file()
+    if (original.suffix != ".json" or original.is_symlink() or not original.is_file()
             or not original.resolve().is_relative_to(root.resolve())
             or original == path):
         return None
-    raw = original.read_bytes()
-    if len(raw) > 1_000_000 or digest(raw) != proof:
+    try:
+        raw = original.read_bytes()
+        if len(raw) > 1_000_000 or digest(raw) != proof:
+            return None
+        source = json.loads(raw)
+    except (OSError, ValueError, UnicodeDecodeError):
         return None
-    # Never accept a skill path from an untrusted receipt.
+    if not isinstance(source, dict) or source.get("native_run_id") != invocation:
+        return None
+    witness = source.get("skill_use")
+    if not isinstance(witness, dict):
+        return None
+    if (witness.get("skill_name") != skill
+            or witness.get("skill_sha256") != observation.get("skill_sha256")
+            or witness.get("use_phase") != phase
+            or witness.get("observed_at_utc") != observation.get("observed_at_utc")):
+        return None
+    if phase in {"READ_CONFIRMED", "PROCEDURE_APPLIED"}:
+        # This source-reported read must be present before we even count an
+        # *unverified* read claim. Original-host attestation is still separate.
+        if witness.get("source_read_confirmed") is not True:
+            return None
+    if phase == "PROCEDURE_APPLIED":
+        action = witness.get("original_action_ref")
+        if not isinstance(action, str) or not 4 <= len(action) <= 256:
+            return None
+    # The current skill bytes must still match the claimed version. A historic
+    # version that is no longer present remains missing/UNKNOWN in V1.
     metadata = skills[skill]
     current_skill = root / metadata["skill_path"]
     if (current_skill.is_symlink() or not current_skill.is_file()
