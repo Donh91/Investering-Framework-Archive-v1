@@ -100,9 +100,20 @@ class OriginalCNRealdataTests(unittest.TestCase):
         for row in rows:
             self.assertIn(row["rule"],m.RISK_RULES)
             self.assertLessEqual(row["lookback_source_utc"],row["decision_utc"])
+            self.assertEqual(row["decision_anchor_bar_end_utc"], row["decision_utc"])
+            self.assertLessEqual(row["decision_anchor_source_window_end_utc"], row["decision_utc"])
             self.assertIsNone(row["provider_first_published_utc"])
             self.assertEqual(row["claim_class"],"RETROSPECTIVE_SOURCE_WINDOW_PROXY_NOT_ISSUED_COMPASS")
             self.assertNotIn("2026-11-16",row["decision_utc"])
+
+    def test_stale_noon_anchor_refused_prevents_false_outcome(self):
+        summary, rows = m.hourly_study(ROOT)
+        self.assertGreater(summary["refusals"].get("NO_SAME_CUTOFF_SOURCE_ELIGIBLE_BAR",0), 0)
+        # 7 Oct 2026 noon has a delayed source window and was previously
+        # mislabelled as an 8-percent ETH drawdown from a stale quote.
+        self.assertFalse(any(
+            r["decision_utc"] == "2026-10-07T12:00:00Z" for r in rows
+        ))
 
     def test_risk_source_missing_stops_not_fills(self):
         with tempfile.TemporaryDirectory() as td:
