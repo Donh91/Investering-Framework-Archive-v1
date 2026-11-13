@@ -56,7 +56,7 @@ jobs:
       - name: Run explicit live call
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/api_agent/api_gateway.py --task DAILY_DIRECTOR_SHADOW --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file owner-bound-director-input/prompt.txt --context-file owner-bound-director-input/context.json --output-dir owner-bound-director-output --intended-write-prefix research/api_agent/outputs/daily/
       - name: Verify owner binding and authority
         run: |
@@ -97,6 +97,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      issues: write
     concurrency:
       group: manual-astra-high-task2-20261113-once
       cancel-in-progress: false
@@ -117,7 +118,7 @@ jobs:
           python scripts/api_agent/check_monthly_cost_guard.py
           --receipt-root research/api_agent/outputs
           --hard-stop-usd 40 --reserve-usd 4
-          --new-request-upper-usd 5
+          --new-request-upper-usd 0  # USD3 Astra pre-reserved in shared ledger
       - name: Prepare immutable public-only source bundle and price bound
         run: python scripts/api_agent/manual_astra_task2_high_v1.py prepare --output-dir runtime/astra-task2
       - name: Verify owner, native claim census and project model GET; reserve once
