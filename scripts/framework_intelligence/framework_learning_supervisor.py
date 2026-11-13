@@ -524,6 +524,40 @@ def main():
         "weekly_forensics_delta": src["weekly_forensics"].get("master_monday_delta") if src["weekly_forensics"].get("contract") == "WEEKLY_FORENSICS_PACK_v1" and src["weekly_forensics"].get("mode") == "FINAL" else None,
         "weekly_forensics_authority": "ADVISORY_ONLY",
     }
+    # Existing Monday Supervisor owns the skill-learning loop. No new
+    # automation, paid call, external supervisor or independent writer.
+    skill_calibration = None
+    try:
+        from scripts.framework_intelligence.weekly_skill_calibration_v1 import build as _weekly_skill_build
+    except ModuleNotFoundError:
+        from weekly_skill_calibration_v1 import build as _weekly_skill_build
+    skill_weekly_candidate = _weekly_skill_build(root, now)
+    if skill_weekly_candidate is not None:
+        week_key = skill_weekly_candidate["evaluated_week"]
+        frozen = out_root / "skill_calibration" / "weeks" / f"{week_key}.json"
+        earlier = load_json(frozen, None)
+        if earlier is not None:
+            # Prior weekly receipts remain unchanged, even if the latest source
+            # or candidate method changes on a later Monday retry.
+            if (not isinstance(earlier, dict) or
+                    earlier.get("contract") != "WEEKLY_SKILL_CALIBRATION_v1" or
+                    earlier.get("evaluated_week") != week_key):
+                raise ValueError("SKILL_WEEKLY_FROZEN_RECEIPT_INVALID")
+            skill_calibration = earlier
+        else:
+            skill_calibration = skill_weekly_candidate
+    if skill_calibration is not None:
+        skill_advisory = {
+            "contract": "WEEKLY_SKILL_CALIBRATION_v1",
+            "status": skill_calibration["status"],
+            "evaluated_week": skill_calibration["evaluated_week"],
+            "output_path": str((out_root / "LATEST_SKILL_CALIBRATION.json").relative_to(root)),
+            "original_owner": "Framework Learning Supervisor / #1157",
+            "action_code": skill_calibration.get("action", {}).get("code"),
+            "independent_value_proven": False,
+            "live_execution_allowed": False,
+        }
+        packet["skill_calibration_advisory"] = skill_advisory
     orchestration = src.get("automation_orchestration") or {}
     orchestration_summary = orchestration.get("routing_summary") if orchestration.get("contract") == "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1" else None
     supervisor = {
@@ -534,6 +568,7 @@ def main():
         "next_best_existing_experiment": src["next_best"], "compounding_learning_backlog_reference": "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/LEARNING_BACKLOG.json",
         "compute_policy": "DETERMINISTIC_FIRST_LUNA_FOR_ROUTINE_GPT6_1_SOL_FOR_DIFFICULT_ASTRA_FOR_AGENTIC_EXTREME", "automation_orchestration": orchestration_summary, "canonical_effect": False, "portfolio_execution": False, "master_monday_live_influence": False,
         "strategist_advisory": read_strategist_advisory(root, now),
+        "skill_calibration": skill_advisory if skill_calibration is not None else None,
     }
     docs = {
         "LATEST_LEARNING_MEMORY.json": memory,
@@ -544,6 +579,13 @@ def main():
         "LATEST_SUPERVISOR_STATE.json": supervisor,
         "LATEST_DELEGATION_QUEUE.json": {"contract": "FRAMEWORK_LEARNING_DELEGATION_QUEUE_v1", "authority": "PROPOSAL_ONLY", "generated_at_utc": generated, "items": queue},
     }
+    if skill_calibration is not None:
+        docs["LATEST_SKILL_CALIBRATION.json"] = skill_calibration
+        # Freeze one published calibrated week; do not freeze incomplete source.
+        if (skill_calibration.get("source_final_sha256") and
+                skill_calibration.get("status") not in {"WAIT_FOR_FINAL_WEEKLY_SOURCE", "CATALOG_BLOCKED"}):
+            weekly_rel = "skill_calibration/weeks/" + skill_calibration["evaluated_week"] + ".json"
+            docs[weekly_rel] = skill_calibration
     for name, value in docs.items():
         write_json(out_root / name, value)
     snapshot = out_root / "snapshots" / str(year) / f"W{week:02d}" / now.strftime("%Y%m%dT%H%M%SZ")
