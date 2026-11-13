@@ -28,6 +28,19 @@ class SeparatorBoundaryTests(unittest.TestCase):
             with self.subTest(text=text[:20]):
                 self.assertEqual(self.verdict(sample([f(content=text)])), "RESTRICTED_CONTENT")
 
+    def test_private_design_separator_markers_in_paths_and_renames(self):
+        for marker in ("OWNER_ONLY", "PRIVATE_ALPHA_DESIGN",
+                       "INTERNAL_ONLY", "CONFIDENTIAL_RESEARCH"):
+            for path in (f"docs/backup_{marker}.md", f"docs/backup-{marker}.md"):
+                with self.subTest(marker=marker, path=path):
+                    self.assertEqual(self.verdict(sample([f(path)])), "RESTRICTED_CONTENT")
+                    old = f("docs/renamed.md", status="renamed", previous_filename=path)
+                    self.assertEqual(self.verdict(sample([old])), "RESTRICTED_CONTENT")
+
+    def test_private_design_glued_alphanumeric_is_not_a_marker(self):
+        self.assertEqual(self.verdict(sample([f(content="preOWNER_ONLYpost is not a marker")])),
+                         "NO_RESTRICTED_CONTENT")
+
     def test_plain_public_text_stays_clean(self):
         self.assertEqual(self.verdict(sample([f(content="Public docs: rotate keys via the vault UI.")])),
                          "NO_RESTRICTED_CONTENT")
