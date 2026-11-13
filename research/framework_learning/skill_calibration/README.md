@@ -15,13 +15,23 @@
 
 The actual producer is the existing script `scripts/framework_intelligence/framework_learning_supervisor.py`, which invokes `scripts/framework_intelligence/weekly_skill_calibration_v1.py` only on Monday in `Europe/Copenhagen`.
 
-- `research/framework_learning/LATEST_SKILL_CALIBRATION.json` updates on the Monday existing Supervisor run.
+- `research/framework_learning/LATEST_SKILL_CALIBRATION.json` is produced on Monday and continues to point at the same frozen completed-week report on subsequent daily Supervisor runs, without counting those re-reads as new observations.
 - `research/framework_learning/skill_calibration/weeks/YYYY-Www.json` freezes a completed report. No historic overwrite on later re-runs.
 - `research/framework_learning/LATEST_SUPERVISOR_STATE.json:skill_calibration` gets a compact read-only status/owner/action link.
-- `research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json:skill_calibration_advisory` surfaces a shadow-only item, never a live CN or trading instruction.
+- `research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json:skill_calibration_advisory` carries the completed-week scorecard path and exact SHA256, with status and original owner, including later daily runs. This is shadow-only, never a live CN or trading instruction. A hash-bound field in a packet is **not** proof that the GitHub Master Monday publisher or the separate S2 Chat task actually consumed it.
 - The existing workflow's `git add research/framework_learning` already persists it, with existing main-readback procedures for its canonical output files. No new workflow edit.
 
 A report is never a scheduled-run receipt until genuine workflow execution/commit and main readback are checked.
+
+### Native Master Monday timing and genuine consumption
+
+Existing source-confirmed schedules (Europe/Copenhagen): `sunday-market-close-and-cfgi.yml` has Monday 02:05 FINAL; `weekly-api-calibration-shadow.yml` begins Monday 02:40 and may publish the GitHub Master Monday machine package; `framework-learning-supervisor.yml` has Monday 04:35 and 09:35 runs. The separate Chat S2 Master Monday is scheduled 10:00. Github Actions may be delayed. **A scorecard produced at 04:35/09:35 cannot retroactively influence a Master Monday machine forecast frozen earlier at 02:40.** No artificial lookahead or reissuing the original weekly forecast.
+
+The advisory packet preserves the exact source and SHA256 for the separate S2 10:00 consumer or a later independent Master Monday post-issuance report. S2's **actual saved task prompt and authenticated source readback** must be separately verified. If its run occurred before this week's scorecard was durably published to main, show `ADVISORY_UNAVAILABLE_AT_S2_CUTOFF`, do not infer completion and do not edit a frozen forecast. Actual S2 receipt with original packet SHA + read timestamp is required to claim `S2_CONSUMED`; until then `S2_CONSUMPTION=UNKNOWN`.
+
+The existing GitHub Master Monday publisher `scripts/master_monday/publish_master_monday_outputs.py` reads the learning packet for its separate `LEARNING_DECISION_IMPACT_v1` shadow assessment. **It does not currently independently attest consumption of the new nested skill advisory**. That potential consumer adapter is a separate guarded original-owner task, not falsely described as complete.
+
+
 
 ## KPI definitions, source quality first
 
