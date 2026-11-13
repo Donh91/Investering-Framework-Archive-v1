@@ -141,6 +141,31 @@ def _census_fingerprint(runs, paths, head):
                   and x.get("head_sha") == head and x.get("event") == "pull_request")
 
 
+def _safe_changed_paths(files, release_class):
+    """Reject governance, workflow, authentication and non-doc paths for LOW lanes.
+
+    Include rename-source paths, which could otherwise smuggle a protected
+    workflow or manifest out to an ordinary-looking filename.
+    """
+    sensitive = (".github/", ".agents/", "00_FMOS/", "00_ARCHIVE_CONTROL/",
+                 "scripts/governance/", "tests/governance/",
+                 "scripts/api_agent/", "research/api_agent/", "secrets/",
+                 "private/", "wallet/", "payments/", "orders/", "vault/")
+    for row in files:
+        if not isinstance(row, dict):
+            return False
+        paths = [row.get("filename")]
+        if row.get("status") == "renamed":
+            paths.append(row.get("previous_filename"))
+        if any(not isinstance(path, str) or not path
+               or path.startswith("/") or ".." in path.split("/")
+               or path.startswith(sensitive)
+               or (release_class == "DOCS_ONLY" and not path.lower().endswith((".md", ".txt", ".rst")))
+               for path in paths):
+            return False
+    return True
+
+
 def verify_native_required_jobs(read, repo, pr_number, head, release_class):
     """Perform native GETs, not checks on a caller-fabricated evidence object.
 
@@ -192,6 +217,8 @@ def verify_native_required_jobs(read, repo, pr_number, head, release_class):
         if not all(isinstance(x, dict) and isinstance(x.get("filename"), str)
                    and isinstance(x.get("status"), str) for x in files):
             return _hold("PR_FILES_METADATA_UNVERIFIED")
+        if not _safe_changed_paths(files, release_class):
+            return _hold("REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
         run_route = url + "/actions/runs?head_sha=" + head + "&event=pull_request"
         runs = _page_all(read, run_route, "workflow_runs")
         proofs = []

@@ -215,6 +215,30 @@ class NativeIdentityTests(unittest.TestCase):
                    "content": base64.b64encode(yaml).decode()}
         self.assertEqual(verify(x)["reason"], "WORKFLOW_YAML_JOB_ID_UNVERIFIED")
 
+    def test_workflow_source_change_in_docs_lane_fails_closed(self):
+        x = build_fixture()
+        x[ROOT + "/pulls/9/files?per_page=100&page=1"][0]["filename"] = PATH1
+        self.assertEqual(verify(x)["reason"], "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
+
+    def test_policy_source_change_in_docs_lane_fails_closed(self):
+        x = build_fixture()
+        x[ROOT + "/pulls/9/files?per_page=100&page=1"][0]["filename"] = (
+            "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json")
+        self.assertEqual(verify(x)["reason"], "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
+
+    def test_verifier_self_change_in_docs_lane_fails_closed(self):
+        x = build_fixture()
+        x[ROOT + "/pulls/9/files?per_page=100&page=1"][0]["filename"] = (
+            "scripts/governance/s1_native_job_identity_v1.py")
+        self.assertEqual(verify(x)["reason"], "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
+
+    def test_renamed_workflow_source_into_docs_is_blocked(self):
+        x = build_fixture()
+        x[ROOT + "/pulls/9/files?per_page=100&page=1"][0].update(
+            {"filename": "docs/harmless.md", "previous_filename": PATH2,
+             "status": "renamed"})
+        self.assertEqual(verify(x)["reason"], "REQUIRED_WORKFLOW_SOURCE_CHANGED_BY_PR")
+
     def test_forced_high_class_not_applicable(self):
         self.assertEqual(verify_native_required_jobs(lambda p: {}, REPO, 9, HEAD, "HIGH")["reason"],
                          "INVALID_INPUT")
