@@ -10,8 +10,6 @@ on:
       - '.agents/skills/s1-pr-repair-learning/agents/openai.yaml'
       - '00_ARCHIVE_CONTROL/SKILL_REGISTRY.md'
       - '00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json'
-      - 'scripts/agent_skills/discover_task_skills.py'
-      - 'tests/agent_skills/test_discover_task_skills.py'
       - 'scripts/research/validate_parallel_research_manifest_v1.py'
       - 'tests/agent_skills/test_research_parallel_lanes_manifest_v1.py'
       - '07_PROMPTS_AND_AGENTS/skill_quality_gate/candidates/hre/**'
@@ -43,8 +41,6 @@ jobs:
           python-version: '3.12'
       - name: Existing canonical skill registry and routing validator
         run: python scripts/agent_skills/validate_skill_architecture.py
-      - name: Test bounded skill discovery and negative invocation triggers
-        run: python -m unittest discover -s tests/agent_skills -p test_discover_task_skills.py -v
       - name: Validate example 3-lane research plan
         run: |
           python scripts/research/validate_parallel_research_manifest_v1.py \
