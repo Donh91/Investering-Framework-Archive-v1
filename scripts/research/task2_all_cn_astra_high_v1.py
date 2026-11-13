@@ -16,6 +16,10 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Script entrypoints run with scripts/research as sys.path[0]; anchor repo root first.
+REPO_IMPORT_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_IMPORT_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_IMPORT_ROOT))
 from scripts.api_agent import manual_astra_task2_high_v1 as core
 
 MODEL = "gpt-6-astra"
@@ -134,8 +138,11 @@ def source_bundle(analysis_dir):
          SOURCE_FABLE.read_text(encoding="utf-8"))
     return text,raw,s,source_list
 
-def prepare(out,analysis):
-    owner_event()
+def prepare(out,analysis,owner_required=True):
+    # CI preview is a strictly nonbillable request-bound check; reserve/submit
+    # remain protected by native owner event, durable one-use claim and budget.
+    if owner_required:
+        owner_event()
     check_reserve()
     empirical,contract,summary,sources=source_bundle(analysis)
     mission=(
@@ -322,12 +329,13 @@ def collect(out):
 
 def main():
     ap=argparse.ArgumentParser()
-    ap.add_argument("stage",choices=("prepare","reserve","submit","collect"))
+    ap.add_argument("stage",choices=("preview","prepare","reserve","submit","collect"))
     ap.add_argument("--out",type=Path,default=Path("runtime/astra-allcn"))
     ap.add_argument("--analysis-dir",type=Path,default=Path("runtime/task2-allcn"))
     a=ap.parse_args()
     a.out.mkdir(parents=True,exist_ok=True)
-    fun={"prepare":lambda:prepare(a.out,a.analysis_dir),
+    fun={"preview":lambda:prepare(a.out,a.analysis_dir,owner_required=False),
+         "prepare":lambda:prepare(a.out,a.analysis_dir),
          "reserve":lambda:reserve(a.out),
          "submit":lambda:submit(a.out),
          "collect":lambda:collect(a.out)}[a.stage]

@@ -47,6 +47,7 @@ jobs:
           python -m unittest tests.research.test_task2_all_cn_historical_replay_v1 -v
           python -m unittest tests.research.test_task2_all_cn_astra_high_v1 -v
           python scripts/research/task2_all_cn_historical_replay_v1.py --out runtime/task2-allcn-pr-ci
+          python scripts/research/task2_all_cn_astra_high_v1.py preview --out runtime/astra-allcn-preflight-ci --analysis-dir runtime/task2-allcn-pr-ci
           python -m py_compile scripts/api_agent/manual_astra_task2_high_v1.py
           python -m py_compile scripts/api_agent/build_owner_bound_director_context.py scripts/api_agent/check_delta_ready.py scripts/api_agent/materialize_forecast_candidates.py scripts/api_agent/api_gateway.py scripts/daily_capture/persist_raw_payloads.py
       - name: Build owner-bound context
