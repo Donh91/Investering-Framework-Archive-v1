@@ -84,7 +84,7 @@ def _safe_receipt(root: Path, path: Path, skills: dict[str, dict], week: str) ->
     if not isinstance(skill, str) or skill not in skills:
         return None
     phase = observation.get("use_phase")
-    if phase not in PHASES:
+    if not isinstance(phase, str) or phase not in PHASES:
         return None
     invocation = observation.get("invocation_id")
     if not isinstance(invocation, str) or not re.fullmatch(r"[a-zA-Z0-9._:-]{4,96}", invocation):
@@ -135,26 +135,36 @@ def _scan_observations(root: Path, skills: dict[str, dict], week: str) -> dict[s
         return {"state": "UNBOUNDED_OR_INVALID_FILES", "reported": None, "invalid": None,
                 "duplicate": None, "pilots_reported_applied": None, "by_phase": None,
                 "source_paths": []}
-    valid, invalid, duplicate, pilots = {}, 0, 0, 0
+    valid, invalid, duplicate = {}, 0, 0
+    phase_conflicts: set[str] = set()
+    pilot_applied_keys: set[str] = set()
+    source_paths: set[str] = set()
     for p in files:
         row = _safe_receipt(root, p, skills, week)
         if row is None:
             invalid += 1
-        elif row["key"] in valid:
-            # Repeated assertions never increase the denominator.
-            duplicate += 1
-        else:
+            continue
+        source_paths.add(row["source_path"])
+        if row["pilot"] and row["phase"] == "PROCEDURE_APPLIED":
+            # A qualifying, *self-reported* pilot-use claim is always surfaced
+            # for original-native review, even if another row contradicts it.
+            pilot_applied_keys.add(row["key"])
+        if row["key"] not in valid:
             valid[row["key"]] = row
-            if row["pilot"] and row["phase"] == "PROCEDURE_APPLIED":
-                pilots += 1
+        elif row["phase"] != valid[row["key"]]["phase"]:
+            phase_conflicts.add(row["key"])
+        else:
+            duplicate += 1
     return {
         "state": "SOURCE_BOUND_SELF_REPORTS_NOT_INDEPENDENT_PROOF",
         "reported": len(valid),
         "invalid": invalid,
         "duplicate": duplicate,
-        "pilots_reported_applied": pilots,
-        "by_phase": {x: sum(row["phase"] == x for row in valid.values()) for x in sorted(PHASES)},
-        "source_paths": sorted({row["source_path"] for row in valid.values()})[:15],
+        "phase_conflicts": len(phase_conflicts),
+        "pilots_reported_applied": len(pilot_applied_keys),
+        "by_phase": {x: sum(row["phase"] == x and key not in phase_conflicts
+                            for key, row in valid.items()) for x in sorted(PHASES)},
+        "source_paths": sorted(source_paths)[:15],
     }
 
 
@@ -326,7 +336,8 @@ def build(root: Path, now: datetime) -> dict[str, Any] | None:
     elif usage["state"] == "ABSENT":
         action = ("P1", "INSTRUMENT_NATIVE_SKILL_USAGE",
                   "Bind one genuine existing S1/Research native run to an authenticated skill read/use receipt; compare against no-skill baseline")
-    elif usage["state"] != "SOURCE_BOUND_SELF_REPORTS_NOT_INDEPENDENT_PROOF" or usage["invalid"]:
+    elif (usage["state"] != "SOURCE_BOUND_SELF_REPORTS_NOT_INDEPENDENT_PROOF"
+          or usage["invalid"] or usage.get("phase_conflicts")):
         action = ("P1", "REPAIR_SKILL_RECEIPT_INTEGRITY",
                   "Repair the original source/first-known or receipt hash, without counting rejected observations as a zero-benefit outcome")
     else:
