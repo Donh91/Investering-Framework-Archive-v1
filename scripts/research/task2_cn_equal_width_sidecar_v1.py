@@ -65,12 +65,15 @@ def compute(input_rows, alpha=0.2):
     for index, source in enumerate(input_rows, 1):
         if not isinstance(source, dict):
             raise ValueError("input row is not an object")
-        key = (str(source.get("week", "")), str(source.get("asset", "")))
+        raw_week = str(source.get("week", ""))
+        asset = str(source.get("asset", ""))
+        if asset not in ("BTC", "ETH") or not raw_week.isascii() or not raw_week.isdecimal() or not 1 <= int(raw_week) <= 53:
+            raise ValueError(f"unsupported week/asset: {(raw_week, asset)}")
+        # Normalize accepted numeric spellings BEFORE dedupe, e.g. 39 == 039.
+        key = (int(raw_week), asset)
         if key in seen:
             raise ValueError(f"duplicate independent week/asset: {key}")
         seen.add(key)
-        if key[1] not in ("BTC", "ETH") or not key[0].isdigit() or not 1 <= int(key[0]) <= 53:
-            raise ValueError(f"unsupported week/asset: {key}")
         eligible = [_yes(source.get(k)) for k in ("target_mature", "forecast_available", "prior_week_available")]
         if eligible != [True, True, True]:
             excluded.append({"week": int(key[0]), "asset": key[1], "reason": "NOT_MATURE_OR_MISSING_MATCHED_BASELINE"})
