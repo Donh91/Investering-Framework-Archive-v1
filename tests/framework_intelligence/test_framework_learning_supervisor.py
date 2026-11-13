@@ -409,6 +409,56 @@ class WeeklySkillCalibrationTest(unittest.TestCase):
         self.assertEqual(r["status"], "CATALOG_BLOCKED")
         self.assertIsNone(r["metrics"])
 
+    def test_frozen_week_carries_through_daily_supervisor_and_master_packet(self):
+        """A real Monday build persists a W46 receipt, Tuesday reuses same bytes."""
+        from unittest.mock import patch
+        import sys
+        import hashlib
+        out = self.root / "research/framework_learning"
+        args = ["supervisor", "--repo-root", str(self.root), "--as-of-utc", "2026-11-16T08:35:00Z"]
+        with patch.object(sys, "argv", args):
+            mod.main()
+        frozen = out / "skill_calibration/weeks/2026-W46.json"
+        self.assertTrue(frozen.is_file())
+        first = frozen.read_bytes()
+        scorecard = json.loads(first)
+        self.assertEqual(scorecard["evaluated_week"], "2026-W46")
+        packet = json.loads((out / "LATEST_MASTER_MONDAY_LEARNING_PACKET.json").read_text())
+        advisory = packet["skill_calibration_advisory"]
+        self.assertEqual(advisory["source_scorecard_sha256"], hashlib.sha256(first).hexdigest())
+        self.assertEqual(advisory["output_path"],
+                         "research/framework_learning/skill_calibration/weeks/2026-W46.json")
+        with patch.object(sys, "argv", ["supervisor", "--repo-root", str(self.root),
+                                        "--as-of-utc", "2026-11-17T08:35:00Z"]):
+            mod.main()
+        self.assertEqual(frozen.read_bytes(), first)
+        latest = json.loads((out / "LATEST_SKILL_CALIBRATION.json").read_text())
+        self.assertEqual(latest["evaluated_week"], "2026-W46")
+        tuesday_packet = json.loads((out / "LATEST_MASTER_MONDAY_LEARNING_PACKET.json").read_text())
+        self.assertEqual(tuesday_packet["skill_calibration_advisory"]["source_scorecard_sha256"],
+                         advisory["source_scorecard_sha256"])
+        self.assertFalse(tuesday_packet["live_consumption_allowed"])
+        tuesday_state = json.loads((out / "LATEST_SUPERVISOR_STATE.json").read_text())
+        self.assertFalse(tuesday_state["master_monday_live_influence"])
+        self.assertEqual(tuesday_state["skill_calibration"]["evaluated_week"], "2026-W46")
+
+    def test_frozen_wrong_week_or_future_timestamp_not_reused(self):
+        self.observation()
+        self.put("research/framework_learning/skill_calibration/weeks/2026-W46.json", {
+            **self.report(), "calibrated_at_utc": "2099-11-16T08:35:00Z",
+        })
+        self.assertIsNone(self.impl.load_frozen_last_completed_week(
+            self.root / "research/framework_learning", self.monday
+        ))
+        path = self.root / "research/framework_learning/skill_calibration/weeks/2026-W46.json"
+        data = json.loads(path.read_text())
+        data["calibrated_at_utc"] = "2026-11-16T08:35:00Z"
+        data["auto_skill_activation"] = True
+        path.write_text(json.dumps(data))
+        self.assertIsNone(self.impl.load_frozen_last_completed_week(
+            self.root / "research/framework_learning", self.monday
+        ))
+
     def test_weekly_comparison_is_not_benefit_claim(self):
         prev = self.impl._previous(self.root, "2026-W46")
         self.assertIsNone(prev)
