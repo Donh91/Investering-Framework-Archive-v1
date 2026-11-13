@@ -373,6 +373,33 @@ class WeeklySkillCalibrationTest(unittest.TestCase):
         self.assertEqual(report["action"]["code"], "INDEPENDENT_SKILL_QUALITY_COMPARISON")
         self.assertFalse(report["scientific_or_performance_promotion"])
 
+    def test_nonstring_phase_in_optional_receipt_does_not_abort_supervisor(self):
+        p = self.observation()
+        for bad in ({"unexpected": "object"}, ["PROCEDURE_APPLIED"]):
+            with self.subTest(phase_type=type(bad).__name__):
+                r = json.loads(p.read_text())
+                r["use_phase"] = bad
+                p.write_text(json.dumps(r))
+                score = self.report()
+                self.assertEqual(score["metrics"]["observations"]["invalid"], 1)
+                self.assertEqual(score["metrics"]["observations"]["reported"], 0)
+                self.assertEqual(score["action"]["code"], "REPAIR_SKILL_RECEIPT_INTEGRITY")
+
+    def test_conflicting_phases_never_hide_pilot_use_alert(self):
+        first = self.observation(skill="conclusion-challenge-loop",
+                                 phase="SUGGESTED_ONLY")
+        applied = json.loads(first.read_text())
+        applied["use_phase"] = "PROCEDURE_APPLIED"
+        extra = self.root / "research/framework_learning/skill_usage/observations/2026-W46/z.json"
+        extra.write_text(json.dumps(applied))
+        r = self.report()
+        observation = r["metrics"]["observations"]
+        self.assertEqual(observation["reported"], 1)
+        self.assertEqual(observation["phase_conflicts"], 1)
+        self.assertEqual(observation["pilots_reported_applied"], 1)
+        self.assertEqual(observation["by_phase"]["PROCEDURE_APPLIED"], 0)
+        self.assertEqual(r["action"]["code"], "INVESTIGATE_UNAUTHORIZED_PILOT_USE")
+
     def test_tampered_original_source_fails_closed(self):
         self.observation()
         original = self.root / "research/framework_learning/operational_memory/native-original.json"
