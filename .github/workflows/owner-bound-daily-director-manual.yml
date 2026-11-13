@@ -211,12 +211,12 @@ jobs:
           --receipt-root research/api_agent/outputs
           --hard-stop-usd 40 --reserve-usd 4 --new-request-upper-usd 0
       - name: Build immutable broad PUBLIC Task2/HRE/Research Lab data and verified calculations
-        run: python scripts/api_agent/manual_astra_task2_realdata_v2.py prepare --out-dir runtime/task2-astra-realdata-v2
+        run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 prepare --out-dir runtime/task2-astra-realdata-v2
       - name: Verify owner, native GitHub issue and one-shot USD10; create durable claim
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
-        run: python scripts/api_agent/manual_astra_task2_realdata_v2.py reserve --out-dir runtime/task2-astra-realdata-v2
+        run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 reserve --out-dir runtime/task2-astra-realdata-v2
       - name: Persist original owner one-use claim BEFORE upload and paid Responses POST
         uses: actions/upload-artifact@v4
         with:
@@ -229,11 +229,11 @@ jobs:
       - name: Upload PUBLIC research ZIP as Code Interpreter file once
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python scripts/api_agent/manual_astra_task2_realdata_v2.py upload --out-dir runtime/task2-astra-realdata-v2
+        run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 upload --out-dir runtime/task2-astra-realdata-v2
       - name: Submit exactly ONE Astra High + Code Interpreter research POST
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python scripts/api_agent/manual_astra_task2_realdata_v2.py submit --out-dir runtime/task2-astra-realdata-v2
+        run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 submit --out-dir runtime/task2-astra-realdata-v2
       - name: Persist response/attempt handles even if ambiguous HTTP network result
         if: always()
         uses: actions/upload-artifact@v4
@@ -247,14 +247,24 @@ jobs:
             runtime/task2-astra-realdata-v2/source_manifest.json
           retention-days: 90
           if-no-files-found: warn
-      - name: Retrieve same existing response via GET only; Python tool evidence required
+      - name: Retrieve or cancel existing response even if attempt-artifact upload failed
+        # An artifact upload failure may not abandon a billable background response.
+        if: always()
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python scripts/api_agent/manual_astra_task2_realdata_v2.py collect --out-dir runtime/task2-astra-realdata-v2
+        run: |
+          if test -s runtime/task2-astra-realdata-v2/response_handle.json; then
+            python -m scripts.api_agent.manual_astra_task2_realdata_v2 collect --out-dir runtime/task2-astra-realdata-v2
+          elif test -f runtime/task2-astra-realdata-v2/paid_post_attempt.json; then
+            echo 'PAID_POST_OUTCOME_UNKNOWN_NO_RESPONSE_HANDLE_NO_RETRY' >&2
+            exit 1
+          else
+            echo 'NO_PAID_POST_ATTEMPT_NO_PROVIDER_RESPONSE'
+          fi
       - name: Publish source-bound native completion receipt to original Task2 owner
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python scripts/api_agent/manual_astra_task2_realdata_v2.py notify --out-dir runtime/task2-astra-realdata-v2
+        run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 notify --out-dir runtime/task2-astra-realdata-v2
       - name: Preserve FULL source ZIP, manifest, prompt, actual receipts and report
         if: always()
         uses: actions/upload-artifact@v4
