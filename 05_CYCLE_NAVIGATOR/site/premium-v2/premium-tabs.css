@@ -991,3 +991,36 @@ body.premium-next.cn-tabbed-ui #compass-pro:not(:has(.cn-source-summary[data-off
  padding:5px 0 5px 10px;color:#284e70;font-size:12px;line-height:1.5}
 .cn-tabbed-ui .cn-overview-window{display:block;color:#456b8b;font-size:11px;
  font-weight:620;line-height:1.45;letter-spacing:0}
+
+
+/* Challenger A, strictly subordinated to the frozen official CN chart. */
+.cn-tabbed-ui .cn-challenger-a{
+ margin:28px 0 20px;padding:clamp(18px,3vw,30px);
+ background:#f8fafc;color:#122a43;border:1px solid #d6e1ed;
+ border-radius:17px;box-shadow:0 8px 28px rgba(9,35,61,.04);
+}
+.cn-challenger-a-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.cn-challenger-a-lead h3{font-size:clamp(21px,2.6vw,29px);margin:4px 0 0;letter-spacing:-.035em;color:#0c2844}
+.cn-challenger-a-eyebrow{font-size:10px;letter-spacing:.12em;font-weight:750;color:#59728b}
+.cn-challenger-a-badge{flex:none;padding:7px 11px;border:1px solid #b7cce0;border-radius:999px;
+ font-size:10px;letter-spacing:.1em;font-weight:800;color:#27587e;background:#edf5fb}
+.cn-challenger-a-intro{max-width:66ch;line-height:1.6;margin:12px 0 19px;font-size:14px;color:#415a73}
+.cn-challenger-a-status{border:1px dashed #b9cbdc;border-radius:12px;background:#f0f5fa;padding:16px 18px}
+.cn-challenger-a-status strong{display:block;font-size:14px;color:#163954}
+.cn-challenger-a-status p{font-size:13px;line-height:1.55;color:#52677e;margin:8px 0 0}
+.cn-challenger-a-meta{font-size:12px;color:#52677e;margin:0 0 14px;line-height:1.6}
+.cn-challenger-a-assets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cn-challenger-a-asset{min-width:0;background:#fff;border:1px solid #dbe4ec;border-radius:12px;padding:15px;overflow-x:auto}
+.cn-challenger-a-asset h4{font-size:16px;font-weight:750;margin:0;color:#133754}
+.cn-challenger-a-asset-sub{font-size:12px;color:#5a6f83;margin:5px 0 11px}
+.cn-challenger-a-table{width:100%;border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums}
+.cn-challenger-a-table th{text-align:left;color:#506981;font-weight:700;border-bottom:1px solid #dce5ef;padding:8px 5px}
+.cn-challenger-a-table td{white-space:nowrap;border-bottom:1px solid #edf1f5;padding:10px 5px;color:#183a57}
+.cn-challenger-a-table tr:last-child td{border-bottom:0}
+.cn-challenger-a-footnote{font-size:11px;line-height:1.65;color:#586f86;margin:17px 0 9px}
+.cn-challenger-a-link{display:inline-flex;align-items:center;min-height:44px;color:#0c537f;
+ text-underline-offset:4px;font-size:12px;font-weight:700;max-width:100%}
+.cn-challenger-a-provenance{font-family:ui-monospace,monospace;overflow-wrap:anywhere;font-size:10px;color:#536a82}
+@media(max-width:740px){.cn-challenger-a-assets{grid-template-columns:1fr}}
+@media(max-width:440px){.cn-tabbed-ui .cn-challenger-a{padding:17px 13px;border-radius:12px}
+ .cn-challenger-a-table{font-size:10px}.cn-challenger-a-asset{padding:12px}}
