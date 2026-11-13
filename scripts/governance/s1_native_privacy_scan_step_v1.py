@@ -95,8 +95,26 @@ def ensure_merge_parents(git: Git) -> tuple[str | None, str | None, str | None]:
     return merge, git.rev("HEAD^1"), git.rev("HEAD^2")
 
 
+def original_pr_base(git: Git, base_parent: str, head: str, merge: str) -> str | None:
+    """Three-dot PR ancestor. Never substitute merge-output delta for original diff."""
+    def candidate() -> str | None:
+        raw = git.run("merge-base", base_parent, head, check=False)
+        value = raw.decode("ascii", "replace").strip() if raw else ""
+        return value if SHA40.fullmatch(value) else None
+
+    ancestor = candidate()
+    if ancestor is None:
+        shallow = git.run("rev-parse", "--is-shallow-repository", check=False)
+        if shallow is not None and shallow.strip() == b"true":
+            # Bounded deepen for checkout@v4 default shallow PR-merge checkout.
+            # If ancestry is still unavailable, classify UNKNOWN rather than green.
+            git.run("fetch", "--no-tags", "--deepen=64", "origin", merge, check=False)
+            ancestor = candidate()
+    return ancestor
+
+
 def changed_entries(git: Git, base: str, merge: str) -> list[tuple[str, str, str | None]]:
-    """(status_letter, path, previous_path) from ``git diff --name-status -M``."""
+    """(status_letter, path, previous_path) from original three-dot PR diff."""
     raw = git.run("diff", "--name-status", "-M", "-z", base, merge) or b""
     parts = raw.split(b"\x00")
     out: list[tuple[str, str, str | None]] = []
@@ -125,9 +143,11 @@ def build_record(git: Git, event: dict[str, Any], repo_name: Any, merge: str, ba
     entries = changed_entries(git, base, merge)
     for letter, path, previous in entries:
         pathspec = ["--", path] if previous is None else ["--", previous, path]
-        numstat = git.run("diff", "--numstat", "-M", base, merge, *pathspec) or b""
+        # Git filename bytes may begin with :(...), which is pathspec magic.
+        # Disable pathspec interpretation so deletion patches cannot disappear.
+        numstat = git.run("--literal-pathspecs", "diff", "--numstat", "-M", base, merge, *pathspec) or b""
         binary = numstat.startswith(b"-\t-\t")
-        patch_bytes = git.run("diff", "-M", base, merge, *pathspec) or b""
+        patch_bytes = git.run("--literal-pathspecs", "diff", "-M", base, merge, *pathspec) or b""
         try:
             patch, patch_ok = patch_bytes.decode("utf-8"), True
         except UnicodeDecodeError:
@@ -144,7 +164,7 @@ def build_record(git: Git, event: dict[str, Any], repo_name: Any, merge: str, ba
         if letter == "D":
             row["content"] = None
         else:
-            tree = git.run("ls-tree", "-z", head, "--", path, check=False) or b""
+            tree = git.run("--literal-pathspecs", "ls-tree", "-z", head, "--", path, check=False) or b""
             meta = tree.split(b"\t", 1)[0].split()
             mode = meta[0].decode() if len(meta) == 3 else ""
             native_blob = meta[2].decode() if len(meta) == 3 else None
@@ -230,8 +250,13 @@ def run_step(repo: str, env: dict[str, str],
             out["wrapper_reasons"] = ["CHECKOUT_IS_NOT_MERGE_OF_EVENT_HEAD"]
             return out
         out["scan_code"] = scan_code_blobs(git, merge, base)
+        pr_base = original_pr_base(git, base, head, merge)
+        out["original_pr_merge_base_sha"] = pr_base
+        if pr_base is None:
+            out["wrapper_reasons"] = ["ORIGINAL_PR_MERGE_BASE_UNAVAILABLE"]
+            return out
         repo_name = env.get("GITHUB_REPOSITORY")
-        record, binding, reasons = build_record(git, event, repo_name, merge, base, head, reader)
+        record, binding, reasons = build_record(git, event, repo_name, head, pr_base, head, reader)
     except RuntimeError:
         out["wrapper_reasons"] = ["GIT_READ_FAILED"]
         return out
