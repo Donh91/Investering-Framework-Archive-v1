@@ -199,6 +199,50 @@ def _previous(root: Path, week: str) -> dict[str, Any] | None:
     return row
 
 
+def load_frozen_last_completed_week(out_root: Path, now: datetime) -> dict[str, Any] | None:
+    """Reuse only a hash-verifiable, previously published weekly scorecard.
+
+    This makes the Monday result visible in the existing daily Supervisor
+    without counting each daily execution as a new independent observation.
+    """
+    if now.tzinfo is None:
+        raise ValueError("CALIBRATION_CLOCK_MUST_BE_AWARE")
+    local = now.astimezone(ZoneInfo("Europe/Copenhagen"))
+    # Previous Sunday is the last closed weekly period on *every* weekday.
+    completed = _week(local - timedelta(days=local.weekday() + 1))
+    path = out_root / "skill_calibration" / "weeks" / f"{completed}.json"
+    if (path.is_symlink() or not path.is_file()
+            or not path.resolve().is_relative_to(out_root.resolve())):
+        return None
+    try:
+        raw = path.read_bytes()
+        if len(raw) > 100_000:
+            return None
+        row = json.loads(raw)
+        if (not isinstance(row, dict) or
+                row.get("contract") != CONTRACT or
+                row.get("authority") != "ADVISORY_ONLY" or
+                row.get("evaluated_week") != completed or
+                row.get("auto_skill_activation") is not False or
+                row.get("scientific_or_performance_promotion") is not False or
+                row.get("new_agent_or_scheduler") is not False or
+                row.get("automatic_model_calls") is not False):
+            return None
+        timestamp = _time(row.get("calibrated_at_utc"))
+        if timestamp is None or timestamp > now.astimezone(timezone.utc):
+            return None
+        if not re.fullmatch(r"[0-9a-f]{64}", str(row.get("source_final_sha256", ""))):
+            return None
+        return row
+    except (OSError, ValueError, TypeError, UnicodeDecodeError):
+        return None
+
+
+def frozen_scorecard_sha256(row: dict[str, Any]) -> str:
+    """Match the existing Supervisor write_json byte format exactly."""
+    return digest((json.dumps(row, indent=2, sort_keys=True) + "\n").encode("utf-8"))
+
+
 def build(root: Path, now: datetime) -> dict[str, Any] | None:
     """Monday-only deterministic scoring of the PREVIOUS completed ISO week."""
     week = _eligible_week(now)
@@ -245,6 +289,15 @@ def build(root: Path, now: datetime) -> dict[str, Any] | None:
     prev = _previous(root, week)
     prior_metrics = prev.get("metrics") if isinstance(prev, dict) else None
     report["prior_comparison_status"] = "PREVIOUS_WEEK_PRESENT" if isinstance(prior_metrics, dict) else "UNKNOWN"
+    prior_action = prev.get("action") if isinstance(prev, dict) else None
+    prior_code = prior_action.get("code") if isinstance(prior_action, dict) else None
+    report["prior_action_followup"] = {
+        "previous_code": prior_code,
+        "previous_week": prev.get("evaluated_week") if isinstance(prev, dict) else None,
+        "native_resolution_verified": None,
+        "actual_incremental_benefit_verified": None,
+        "evidence_status": "UNKNOWN_UNLESS_ORIGINAL_OWNER_OUTCOME_IS_READ_BACK",
+    }
     delta = None
     if isinstance(prior_metrics, dict):
         old = prior_metrics.get("catalog")
@@ -279,6 +332,12 @@ def build(root: Path, now: datetime) -> dict[str, Any] | None:
     else:
         action = ("P2", "INDEPENDENT_SKILL_QUALITY_COMPARISON",
                   "Run one original-owner skill-quality-gate baseline comparison; source-bound self-report cannot establish marginal utility")
+    report["action_fingerprint"] = digest(
+        f"SKILL_CALIBRATION|{action[1]}|Framework Learning Supervisor / #1157".encode()
+    )[:20]
+    report["prior_action_followup"]["same_open_action_as_previous_week"] = (
+        prior_code == action[1] if prior_code is not None else None
+    )
     report["action"] = {"priority": action[0], "code": action[1],
                         "owner": "Existing Framework Learning Supervisor + Skill Quality Gate / #1157",
                         "bounded_next_action": action[2],
