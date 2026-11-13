@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/owner-bound-daily-director-manual.yml",
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json",
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "scripts/api_agent/manual_astra_task2_high_v1.py",
+    "tests/api_agent/test_manual_astra_task2_high_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-698a557cbcdf5bac",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(research): bounded manual Astra High one-shot Responses API transport with native claim and GET-only recovery * test(research): adversarial Astra one-use owner, budget, model GET and no-repost cases * ci(research): add isolated owner-only Astra High Task2 one-shot to existing manual API workflow * fix(ci): close GitHub expression braces in manual Astra one-shot job * fix(astra): preserve Director API key, use prepaid $3 shared budget reservation and durable owner issue claim * fix(astra): cap $3 and persist owner issue claim beyond artifact lifetime, bind shared reservation * fix(budget",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/owner-bound-daily-director-manual.yml": "80632003d861d6b937a4ccffe43600e84152e94e",
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json": "fc7984184571d01631c1ec3bb45b344716bb240d",
+    "scripts/api_agent/check_monthly_cost_guard.py": "8398ba8e0cee1a355e3c620731465c6a5b317930",
+    "scripts/api_agent/manual_astra_task2_high_v1.py": "12245333b637f553c7f3bc1e1250210f9a559a3a",
+    "tests/api_agent/test_manual_astra_task2_high_v1.py": "c8bcca884c7cc8e07a8316e30cae96889a4a5f2c"
+  },
+  "source_commit_sha": "698a557cbcdf5bac018dac634346ba3041eb3754",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T06:37:32-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "feat(task2): owner-approved $3 one-shot Astra High manual API route (#2110)"
+}

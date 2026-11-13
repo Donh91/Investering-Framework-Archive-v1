@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/framework_learning/skill_calibration/README.md",
+    "scripts/framework_intelligence/framework_learning_supervisor.py",
+    "scripts/framework_intelligence/weekly_skill_calibration_v1.py",
+    "tests/framework_intelligence/test_framework_learning_supervisor.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-15d25ca240bab064",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(learning): calculate bounded weekly skill-adoption and outcome calibration from existing supervisor sources * feat(supervisor): use existing Monday cycle for frozen weekly skill calibration and shadow advisory * test(learning): 8 real weekly calibration regressions including clock, evidence, pilot and rate unknown * docs(learning): set weekly skill KPI definitions, measurement unknowns, freeze and owner actions * fix(learning): preserve source-verified weekly scorecard in daily Supervisor and track repeated improvement actions * fix(supervisor): retain frozen weekly skill calibration in",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/framework_learning/skill_calibration/README.md": "cf1bcfc0c1fbcfecc4facc83289f469838bf06ef",
+    "scripts/framework_intelligence/framework_learning_supervisor.py": "83e58072e516ff1b5646912c9a74e2742609b567",
+    "scripts/framework_intelligence/weekly_skill_calibration_v1.py": "96e41a7c5174b2df85bc090ba1f1e614966e36b7",
+    "tests/framework_intelligence/test_framework_learning_supervisor.py": "d9e258f30e2f76e28ca88febfe5edfa5e87af2b0"
+  },
+  "source_commit_sha": "15d25ca240bab064a259e38de0b1a02f7b1a6c86",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T06:33:47-05:00",
+  "task_class": "FRAMEWORK_LEARNING",
+  "task_summary": "feat(learning): weekly skill calibration under existing Supervisor (#2111)"
+}
