@@ -321,10 +321,20 @@ class WeeklySkillCalibrationTest(unittest.TestCase):
 
     def observation(self, *, skill="canonical-context-router",
                     phase="PROCEDURE_APPLIED", invocation="run-20261112-a"):
-        original = self.put("research/framework_learning/operational_memory/native-original.json", {
-            "contract": "EXISTING_ORIGINAL_OWNER_EVIDENCE", "run": invocation
-        })
         skill_file = self.root / ".agents/skills" / skill / "SKILL.md"
+        witness = {
+            "skill_name": skill,
+            "skill_sha256": self.impl.digest(skill_file.read_bytes()),
+            "use_phase": phase,
+            "observed_at_utc": "2026-11-12T12:45:00Z",
+            "source_read_confirmed": phase in {"READ_CONFIRMED", "PROCEDURE_APPLIED"},
+            "original_action_ref": "source-owner-original-pr-123" if phase == "PROCEDURE_APPLIED" else None,
+        }
+        original = self.put("research/framework_learning/operational_memory/native-original.json", {
+            "contract": "EXISTING_ORIGINAL_OWNER_EVIDENCE",
+            "native_run_id": invocation,
+            "skill_use": witness,
+        })
         item = {
             "contract": "SKILL_USE_OBSERVATION_v1", "authority": "ADVISORY_SELF_REPORT_ONLY",
             "automatic_skill_activation": False, "week": "2026-W46",
@@ -390,6 +400,17 @@ class WeeklySkillCalibrationTest(unittest.TestCase):
                                  phase="SUGGESTED_ONLY")
         applied = json.loads(first.read_text())
         applied["use_phase"] = "PROCEDURE_APPLIED"
+        # A later original-run source witness is separately bound to the same
+        # invocation. Only its real original receipt can support the new phase.
+        source = self.root / "research/framework_learning/operational_memory/native-original.json"
+        native_followup = json.loads(source.read_text())
+        native_followup["skill_use"]["use_phase"] = "PROCEDURE_APPLIED"
+        native_followup["skill_use"]["source_read_confirmed"] = True
+        native_followup["skill_use"]["original_action_ref"] = "original-pr-checked-123"
+        second = self.put("research/framework_learning/operational_memory/native-followup.json",
+                          native_followup)
+        applied["execution_receipt_path"] = second.relative_to(self.root).as_posix()
+        applied["execution_receipt_sha256"] = self.impl.digest(second.read_bytes())
         extra = self.root / "research/framework_learning/skill_usage/observations/2026-W46/z.json"
         extra.write_text(json.dumps(applied))
         r = self.report()
@@ -399,6 +420,60 @@ class WeeklySkillCalibrationTest(unittest.TestCase):
         self.assertEqual(observation["pilots_reported_applied"], 1)
         self.assertEqual(observation["by_phase"]["PROCEDURE_APPLIED"], 0)
         self.assertEqual(r["action"]["code"], "INVESTIGATE_UNAUTHORIZED_PILOT_USE")
+
+    def test_unrelated_hashed_source_does_not_prove_skill_use(self):
+        observation = self.observation()
+        source = self.root / "research/framework_learning/operational_memory/native-original.json"
+        native = json.loads(source.read_text())
+        native.pop("skill_use")
+        source.write_text(json.dumps(native))
+        record = json.loads(observation.read_text())
+        record["execution_receipt_sha256"] = self.impl.digest(source.read_bytes())
+        observation.write_text(json.dumps(record))
+        report = self.report()
+        self.assertEqual(report["metrics"]["observations"]["reported"], 0)
+        self.assertEqual(report["metrics"]["observations"]["invalid"], 1)
+        self.assertIsNone(report["verified_native_skill_usage_count"])
+        self.assertEqual(report["action"]["code"], "REPAIR_SKILL_RECEIPT_INTEGRITY")
+
+    def test_mismatched_claim_versus_original_read_blocks(self):
+        observation = self.observation()
+        original = self.root / "research/framework_learning/operational_memory/native-original.json"
+        native = json.loads(original.read_text())
+        native["skill_use"]["skill_name"] = "unrelated-skill"
+        original.write_text(json.dumps(native))
+        rec = json.loads(observation.read_text())
+        rec["execution_receipt_sha256"] = self.impl.digest(original.read_bytes())
+        observation.write_text(json.dumps(rec))
+        report = self.report()
+        self.assertEqual(report["metrics"]["observations"]["invalid"], 1)
+        self.assertEqual(report["metrics"]["observations"]["reported"], 0)
+
+    def test_applied_claim_requires_original_action_reference(self):
+        observation = self.observation()
+        original = self.root / "research/framework_learning/operational_memory/native-original.json"
+        native = json.loads(original.read_text())
+        native["skill_use"]["original_action_ref"] = None
+        original.write_text(json.dumps(native))
+        rec = json.loads(observation.read_text())
+        rec["execution_receipt_sha256"] = self.impl.digest(original.read_bytes())
+        observation.write_text(json.dumps(rec))
+        r = self.report()
+        self.assertEqual(r["metrics"]["observations"]["invalid"], 1)
+        self.assertEqual(r["metrics"]["observations"]["reported"], 0)
+
+    def test_reported_read_requires_original_source_read_claim(self):
+        observation = self.observation(phase="READ_CONFIRMED")
+        native_path = self.root / "research/framework_learning/operational_memory/native-original.json"
+        native = json.loads(native_path.read_text())
+        native["skill_use"]["source_read_confirmed"] = False
+        native_path.write_text(json.dumps(native))
+        rec = json.loads(observation.read_text())
+        rec["execution_receipt_sha256"] = self.impl.digest(native_path.read_bytes())
+        observation.write_text(json.dumps(rec))
+        r = self.report()
+        self.assertEqual(r["metrics"]["observations"]["invalid"], 1)
+        self.assertEqual(r["metrics"]["observations"]["reported"], 0)
 
     def test_tampered_original_source_fails_closed(self):
         self.observation()
