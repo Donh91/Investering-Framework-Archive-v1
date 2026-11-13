@@ -61,6 +61,30 @@ class TestIC3ReceiptFields(unittest.TestCase):
                     self.assertFalse(out["candidate_for_native_check"])
                     self.assertFalse(out["s1_own_merged_verified"])
 
+    def test_executed_test_id_census_matches_native_count(self):
+        for count, ids in (
+            (18, ["only-one-test"]),
+            (1, [f"test_{i}" for i in range(18)]),
+            (19, [f"test_{i}" for i in range(18)]),
+            (0, [f"test_{i}" for i in range(18)]),
+            (True, [f"test_{i}" for i in range(18)]),
+        ):
+            with self.subTest(count=count, id_count=len(ids)):
+                case = complete_shape()
+                case["ci"]["executed_test_count"] = count
+                case["ci"]["executed_test_ids"] = ids
+                out = inspect_claim(case)
+                self.assertIn("EXECUTED_TEST_IDS_COUNT_MISMATCH", out["reasons"])
+                self.assertFalse(out["candidate_for_native_check"])
+                self.assertFalse(out["s1_own_merged_verified"])
+
+    def test_complete_test_id_census_is_only_candidate(self):
+        case = complete_shape()
+        out = inspect_claim(case)
+        self.assertNotIn("EXECUTED_TEST_IDS_COUNT_MISMATCH", out["reasons"])
+        self.assertTrue(out["candidate_for_native_check"])
+        self.assertFalse(out["s1_own_merged_verified"])
+
     def test_self_attested_provenance_never_verifies(self):
         out = inspect_claim(complete_shape())
         self.assertEqual(out["classification"], "NATIVE_PROVENANCE_READBACK_REQUIRED")
