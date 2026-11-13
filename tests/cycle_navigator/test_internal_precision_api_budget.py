@@ -676,6 +676,25 @@ class W46SameMondayInternalPrecisionAmendmentTests(unittest.TestCase):
         mpath.write_text(json.dumps(m))
         self.assertFalse(self.allowed())
 
+    def test_triple_coordinated_public_source_and_archive_rewrite_is_rejected(self):
+        # Adversarial provenance case from independent Claude review #2104:
+        # synchronized edits to the public freeze, current source manifest and
+        # BEFORE archive manifest must never authorize a hindsight daily path.
+        import hashlib
+        public = json.loads(self.public_path.read_text())
+        public["daily_price_path"]["BTC"]["points"][0]["expected_close"] += 5000
+        self.public_path.write_text(json.dumps(public, sort_keys=True))
+        rewritten = hashlib.sha256(self.public_path.read_bytes()).hexdigest()
+        current_manifest = self.root / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json"
+        current = json.loads(current_manifest.read_text())
+        current["owner_approved_same_day_revision"]["after_forecast_sha256"] = rewritten
+        current_manifest.write_text(json.dumps(current))
+        before_manifest = self.root / "revisions/2026-11-09-first-unavailable/BEFORE_INTEGRITY_MANIFEST.json"
+        before = json.loads(before_manifest.read_text())
+        before["amendment"]["after_forecast_sha256"] = rewritten
+        before_manifest.write_text(json.dumps(before))
+        self.assertFalse(self.allowed())
+
     def test_modified_archived_original_cannot_be_relabelled_owner_approved(self):
         f = self.root / "revisions/2026-11-09-first-unavailable/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
         f.write_text("{}")
