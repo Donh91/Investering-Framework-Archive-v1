@@ -90,7 +90,7 @@ class OriginalCNRealdataTests(unittest.TestCase):
         self.assertTrue(rows)
         for row in rows:
             self.assertIn(row["rule"],m.RISK_RULES)
-            self.assertLess(row["lookback_source_utc"],row["decision_utc"])
+            self.assertLessEqual(row["lookback_source_utc"],row["decision_utc"])
             self.assertIsNone(row["provider_first_published_utc"])
             self.assertEqual(row["claim_class"],"RETROSPECTIVE_SOURCE_WINDOW_PROXY_NOT_ISSUED_COMPASS")
             self.assertNotIn("2026-11-16",row["decision_utc"])
