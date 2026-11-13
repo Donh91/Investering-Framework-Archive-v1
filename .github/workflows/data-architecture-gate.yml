@@ -31,6 +31,10 @@ jobs:
         run: |
           python -m py_compile scripts/research/memes_alpha/adversarial_operator_counting.py scripts/research/memes_alpha/adversarial_operator_enrichment.py tests/research/memes_alpha/test_adversarial_operator_counting.py tests/research/memes_alpha/test_adversarial_operator_enrichment.py
           python -m unittest -v tests.research.memes_alpha.test_adversarial_operator_counting tests.research.memes_alpha.test_adversarial_operator_enrichment
+      - name: Validate Task2 Challenger A sqrt-time volatility band (research only)
+        run: |
+          python -m py_compile scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py tests/research/test_task2_challenger_a_sqrt_t_vol_band_v1.py
+          python -m unittest -v tests.research.test_task2_challenger_a_sqrt_t_vol_band_v1
       - name: Validate Task 2 archive-first E1/E2/E3 diagnostics and evidence firewall
         run: |
           python -m py_compile scripts/research/task2_archive_first_edge_matrix_v1.py tests/research/test_task2_archive_first_edge_matrix_v1.py
