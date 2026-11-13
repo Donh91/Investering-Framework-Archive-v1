@@ -87,7 +87,7 @@ function renderOverview(){
   if(root){
    root.dataset.sourceCurrent=String(model.valid);
    root.dataset.direction=card.sourceDirection;
-   root.setAttribute('aria-label',card.title+': '+card.direction+'. '+card.position+
+   root.setAttribute('aria-label',card.title+': '+sourceClock.windows[key]+'. '+card.direction+'. '+card.position+
     '. '+(card.evidence?'Bull '+card.evidence.bull+', Bear '+card.evidence.bear+'. ':'')+
     card.summary.text);
   }
@@ -608,7 +608,7 @@ function renderOwnerBrief(matrix,originalWeekPrice,lang){
   const row=document.querySelector('[data-cn-overview-extra="'+key+'"]');
   if(row)row.dataset.tone=extra[key].tone;
  }
- set('cn-overview-h12-label',lang==='en'?'0–12 hours':'0–12 timer');
+ set('cn-overview-h12-label',lang==='en'?'Current momentum · observation':'Aktuelt momentum · måling');
  // Owner decision 2026-11-10 (OWNER_DECISION_CN_SITE_v1, DCM Q10): the lane is
  // labelled after its source text (projection.weeks_4_8); the bundle key is unchanged.
  set('cn-overview-c38-label',lang==='en'?'4–8 weeks · altcoins':'4–8 uger · altcoins');
