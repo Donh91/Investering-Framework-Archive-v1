@@ -118,6 +118,23 @@ def check_inventory(repo_root: Path) -> dict:
 
 def week_census(repo_root: Path, asof: dt.datetime) -> list[dict]:
     weeks_dir = repo_root / "05_CYCLE_NAVIGATOR/weekly"
+    # A missing WHOLE weekly directory must not shrink the scientific denominator:
+    # frozen source membership, not a live glob, defines the original universe.
+    indexed = pinned_source_map(str(repo_root.resolve()))
+    expected_forecasts = {
+        path for path in indexed
+        if re.fullmatch(
+            r"05_CYCLE_NAVIGATOR/weekly/[0-9]{4}/W[0-9]{2}/CYCLE_NAVIGATOR_FORECAST_FREEZE[.]json",
+            path)
+    }
+    actual_forecasts = {
+        path.relative_to(repo_root).as_posix()
+        for path in weeks_dir.glob(
+            "[0-9][0-9][0-9][0-9]/W[0-9][0-9]/CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
+        if path.is_file()
+    }
+    if not expected_forecasts or actual_forecasts != expected_forecasts:
+        raise ValueError("FROZEN_WEEKLY_SOURCE_SET_DRIFT")
     result = []
     for year_dir in sorted(weeks_dir.glob("[0-9][0-9][0-9][0-9]")):
         year = int(year_dir.name)

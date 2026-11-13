@@ -65,6 +65,54 @@ class AllArchiveCensusTests(unittest.TestCase):
         self.assertEqual(byweek["2026-W45"]["consumer_first_delivered"], "UNKNOWN")
         self.assertGreater(byweek["2026-W40"]["internal_claim_count"], 0)
 
+    def test_missing_indexed_week_directory_fails_closed_before_scoring(self):
+        # Mutation-sensitive: without the frozen-directory census, glob silently
+        # omits W39 and only reaches FROZEN_SOURCE_BYTES_DRIFT for other mock weeks.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for rel in (engine.SOURCE_INDEX, engine.OUTCOME_INDEX):
+                path = root / rel
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes((engine.ROOT / rel).read_bytes())
+            src = engine.load_json(root / engine.SOURCE_INDEX)
+            original = [
+                row["path"] for row in src["entries"]
+                if row["path"].startswith("05_CYCLE_NAVIGATOR/weekly/2026/")
+                and row["path"].endswith("/CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
+            ]
+            self.assertEqual(len(original), 11)
+            for rel in original:
+                if "/W39/" in rel:
+                    continue  # simulate silent disappearance of entire W39
+                p = root / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text("{}")
+            with self.assertRaisesRegex(ValueError, "FROZEN_WEEKLY_SOURCE_SET_DRIFT"):
+                engine.week_census(root, dt.datetime(2026, 11, 13, tzinfo=dt.timezone.utc))
+
+    def test_extra_unindexed_week_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for rel in (engine.SOURCE_INDEX, engine.OUTCOME_INDEX):
+                p = root / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_bytes((engine.ROOT / rel).read_bytes())
+            src = engine.load_json(root / engine.SOURCE_INDEX)
+            original = [
+                row["path"] for row in src["entries"]
+                if row["path"].startswith("05_CYCLE_NAVIGATOR/weekly/2026/")
+                and row["path"].endswith("/CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
+            ]
+            for rel in original:
+                p = root / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text("{}")
+            extra = root / "05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+            extra.parent.mkdir(parents=True, exist_ok=True)
+            extra.write_text("{}")
+            with self.assertRaisesRegex(ValueError, "FROZEN_WEEKLY_SOURCE_SET_DRIFT"):
+                engine.week_census(root, dt.datetime(2026, 11, 13, tzinfo=dt.timezone.utc))
+
     def test_no_maturity_before_week_close(self):
         asof = dt.datetime(2026, 11, 8, 23, 59, tzinfo=dt.timezone.utc)
         rows = engine.week_census(engine.ROOT, asof)
