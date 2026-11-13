@@ -9,7 +9,7 @@ import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfid
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,sourceHorizonClock} from './compass-overview.mjs';
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
@@ -57,7 +57,9 @@ function renderOverview(){
  const en=lang==='en';
  const model=publicOverview({latest:feeds?.latest,compass:feeds?.compass,view,lang});
  const keys=['d13','d57','w23'];
- set('cn-overview-heading',en?'Main horizons':'Hovedhorisonter');
+ const sourceClock=sourceHorizonClock({issuedAt:model.issued,valid:model.valid,lang});
+ set('cn-overview-asof',sourceClock.asOf);
+ set('cn-overview-heading',en?'Current Compass horizons':'Aktuelle Kompas-horisonter');
  set('cn-overview-subtitle',en?'Official direction · evidence points, not probabilities':'Officiel retning · evidenspoint, ikke sandsynligheder');
  set('cn-overview-foot',en?
   'Arrows show source-issued direction for each window, not the order of price moves. Bull/Bear are coarse evidence points, not probabilities.':
@@ -70,6 +72,7 @@ function renderOverview(){
  }
  keys.forEach((key,i)=>{
   const card=model.cards[i];
+  set('cn-overview-'+key+'-window',sourceClock.windows[key]);
   set('cn-overview-'+key+'-arrow',card.arrow);
   enhanceLegacyArrow(document,$('cn-overview-'+key+'-arrow'),card.sourceDirection);
   set('cn-overview-'+key+'-direction',card.direction);
