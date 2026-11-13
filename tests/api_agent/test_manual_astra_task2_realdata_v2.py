@@ -100,7 +100,7 @@ class RealdataAstraV2Tests(unittest.TestCase):
 
     def test_file_upload_exactly_one_and_id_verified(self):
         self._fake_bundle()
-        with patch.object(m, "http", return_value={"id":"file_SYNTHETIC5678","purpose":"assistants"}) as call:
+        with patch.object(m, "http", return_value={"id":"file-SYNTHETIC5678","purpose":"assistants"}) as call:
             m.multipart_upload(self.out)
             self.assertEqual(call.call_args[0][0],"POST")
             self.assertEqual(call.call_args[0][1],m.API+"/files")
@@ -111,21 +111,21 @@ class RealdataAstraV2Tests(unittest.TestCase):
     def test_model_always_gets_real_zip_and_mandatory_python(self):
         self._fake_bundle()
         m.write_once(self.out/"file_handle.json",{"archive_sha256":m.checksum(self.out/m.ZIP_NAME),
-                                                   "file_id":"file_SYNTHETIC5678"})
+                                                   "file_id":"file-SYNTHETIC5678"})
         payload, price = m.make_payload(self.out)
         self.assertEqual(payload["model"],"gpt-6-astra")
         self.assertEqual(payload["reasoning"]["effort"],"high")
         self.assertEqual(payload["tool_choice"],"required")
         self.assertEqual(payload["tools"][0]["type"],"code_interpreter")
         self.assertEqual(payload["tools"][0]["container"]["memory_limit"],"1g")
-        self.assertEqual(payload["tools"][0]["container"]["file_ids"],["file_SYNTHETIC5678"])
+        self.assertEqual(payload["tools"][0]["container"]["file_ids"],["file-SYNTHETIC5678"])
         self.assertEqual(payload["max_output_tokens"],90_000)
         self.assertLess(price,8.0)
 
     def test_paid_post_never_retries(self):
         self._fake_bundle()
         m.write_once(self.out/"file_handle.json",{"archive_sha256":m.checksum(self.out/m.ZIP_NAME),
-                                                   "file_id":"file_SYNTHETIC5678"})
+                                                   "file_id":"file-SYNTHETIC5678"})
         with patch.object(m,"http",return_value={
             "id":"resp_SYNTHETIC5678","status":"in_progress","model":m.MODEL}) as call:
             m.submit(self.out)
@@ -138,7 +138,7 @@ class RealdataAstraV2Tests(unittest.TestCase):
     def test_ambiguous_post_is_permanently_one_attempt(self):
         self._fake_bundle()
         m.write_once(self.out/"file_handle.json",{"archive_sha256":m.checksum(self.out/m.ZIP_NAME),
-                                                   "file_id":"file_SYNTHETIC5678"})
+                                                   "file_id":"file-SYNTHETIC5678"})
         with patch.object(m,"http",side_effect=TimeoutError("Synthetic")):
             with self.assertRaises(TimeoutError):
                 m.submit(self.out)
