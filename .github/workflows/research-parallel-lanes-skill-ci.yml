@@ -11,6 +11,9 @@ on:
       - '00_ARCHIVE_CONTROL/SKILL_REGISTRY.md'
       - '00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json'
       - 'scripts/research/validate_parallel_research_manifest_v1.py'
+      - 'scripts/research/task2_realdata_challenger_w39_w46_v1.py'
+      - 'tests/research/test_task2_realdata_challenger_w39_w46_v1.py'
+      - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/TASK2_REALDATA_*'
       - 'tests/agent_skills/test_research_parallel_lanes_manifest_v1.py'
       - '07_PROMPTS_AND_AGENTS/skill_quality_gate/candidates/hre/**'
       - 'tests/agent_skills/test_hre_source_clock_reference_v1.py'
@@ -208,5 +211,61 @@ jobs:
         with:
           name: hre-retrospective-2023-2024-2026
           path: ${{ runner.temp }}/hre/*.json
+          retention-days: 30
+          if-no-files-found: warn
+
+  task2-native-price-range-baselines:
+    if: startsWith(github.event.pull_request.title, 'research(task2):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test original frozen CN range, no-hindsight clock, interval width and risk source contracts
+        run: |
+          python -m py_compile scripts/research/task2_realdata_challenger_w39_w46_v1.py
+          python -m unittest discover -s tests/research -p 'test_task2_realdata_challenger_w39_w46_v1.py' -v
+      - name: Execute original 2026 W39-W45 versus same-clock baseline ranges
+        run: |
+          mkdir -p "$RUNNER_TEMP/task2-realdata-forecast"
+          python scripts/research/task2_realdata_challenger_w39_w46_v1.py --repo-root . --lane forecast --out-dir "$RUNNER_TEMP/task2-realdata-forecast"
+      - name: Preserve original price-range evidence and source hashes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-realdata-range-native
+          path: ${{ runner.temp }}/task2-realdata-forecast/
+          retention-days: 30
+          if-no-files-found: warn
+
+  task2-native-hourly-risk-negatives:
+    if: startsWith(github.event.pull_request.title, 'research(task2):')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Execute actual 1176-hour source-qualified BTC/ETH counterfactual replay
+        run: |
+          mkdir -p "$RUNNER_TEMP/task2-realdata-risk"
+          python scripts/research/task2_realdata_challenger_w39_w46_v1.py --repo-root . --lane risk --out-dir "$RUNNER_TEMP/task2-realdata-risk"
+      - name: Preserve independent actual controls and decisions
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-realdata-risk-native
+          path: ${{ runner.temp }}/task2-realdata-risk/
           retention-days: 30
           if-no-files-found: warn
