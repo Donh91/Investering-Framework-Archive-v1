@@ -120,6 +120,7 @@ class RealdataAstraV2Tests(unittest.TestCase):
         self.assertEqual(payload["tools"][0]["container"]["memory_limit"],"1g")
         self.assertEqual(payload["tools"][0]["container"]["file_ids"],["file-SYNTHETIC5678"])
         self.assertEqual(payload["max_output_tokens"],90_000)
+        self.assertEqual(payload["max_tool_calls"],3)
         self.assertLess(price,8.0)
 
     def test_paid_post_never_retries(self):
@@ -159,6 +160,40 @@ class RealdataAstraV2Tests(unittest.TestCase):
         receipt=m.read(self.out/"receipt.json")
         self.assertFalse(receipt["tool_execution_verified"])
         self.assertEqual(receipt["code_interpreter_call_count"],0)
+
+    def test_pending_background_response_is_cancelled_once_at_deadline(self):
+        self._fake_bundle()
+        rid = "resp_SYNTHETIC5678"
+        m.write_once(self.out/"response_handle.json", {
+            "response_id": rid, "source_main_sha": "a"*40,
+            "archive_sha256": m.checksum(self.out/m.ZIP_NAME),
+            "payload_sha256": "b"*64})
+        replies = [{"id": rid, "model": m.MODEL, "status": "in_progress"},
+                   {"id": rid, "status": "cancelled"}]
+        with patch.object(m, "http", side_effect=replies) as gateway:
+            self.assertEqual(m.collect(self.out,max_seconds=0),2)
+            self.assertEqual(gateway.call_count,2)
+            self.assertEqual(gateway.call_args_list[0].args[0],"GET")
+            self.assertEqual(gateway.call_args_list[1].args[0],"POST")
+            self.assertTrue(gateway.call_args_list[1].args[1].endswith("/responses/"+rid+"/cancel"))
+        self.assertEqual(m.read(self.out/"cancel_attempt.json")["attempts"],1)
+        self.assertEqual(m.read(self.out/"cancel_confirmation.json")["provider_status"],"cancelled")
+        with self.assertRaisesRegex(ValueError,"ONE_USE_REPLAY_BLOCKED"):
+            m.cancel_background(self.out,rid,"SECOND_CANCEL_FORBIDDEN")
+
+    def test_failed_provider_cancel_keeps_unknown_state_not_success(self):
+        self._fake_bundle()
+        rid = "resp_SYNTHETIC5678"
+        m.write_once(self.out/"response_handle.json", {
+            "response_id": rid, "source_main_sha": "a"*40,
+            "archive_sha256": m.checksum(self.out/m.ZIP_NAME),
+            "payload_sha256": "b"*64})
+        with patch.object(m,"http",side_effect=[
+            {"id":rid,"model":m.MODEL,"status":"in_progress"},
+            TimeoutError("synthetic cancel outage")]):
+            self.assertEqual(m.collect(self.out,max_seconds=0),2)
+        self.assertEqual(m.read(self.out/"cancel_unverified.json")["provider_cancellation"],"UNKNOWN")
+        self.assertFalse((self.out/"cancel_confirmation.json").exists())
 
     def test_source_private_key_denied(self):
         with tempfile.TemporaryDirectory() as td:
