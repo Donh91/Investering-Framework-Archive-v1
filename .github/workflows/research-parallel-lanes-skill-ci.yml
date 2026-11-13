@@ -25,6 +25,9 @@ on:
       - 'tests/research/test_hre_native_replay_pilot_v1.py'
       - 'scripts/research/alpha_precision_harvest_observer_v1.py'
       - 'tests/research/test_alpha_precision_harvest_observer_v1.py'
+      - 'scripts/research/task2_tehc_trench_backfill_v1.py'
+      - 'tests/research/test_task2_tehc_trench_backfill_v1.py'
+      - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/TEHC_TRENCH_RETROSPECTIVE_20261110.md'
       - '04_RESEARCH_LAB/external_specialist_dissection/alpha_precision_20261107/OWNER_ROUTING_V1.json'
       - '04_RESEARCH_LAB/external_specialist_dissection/2026-11-07__ALPHA_RESEARCH_PRECISION_PARALLEL_LANES_v1.json'
       - '.github/workflows/autonomous-research-governance-loop.yml'
@@ -87,6 +90,20 @@ jobs:
           python -m unittest discover \
             -s tests/agent_skills \
             -p test_research_parallel_lanes_manifest_v1.py -v
+
+  task2-tehc-retrospective-source-contract:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Offline as-of heat and historical source-boundary adversarial tests
+        run: |
+          python -m py_compile scripts/research/task2_tehc_trench_backfill_v1.py tests/research/test_task2_tehc_trench_backfill_v1.py
+          python -m unittest discover -s tests/research -p test_task2_tehc_trench_backfill_v1.py -v
 
   hre-owner-gated-program-contract:
     runs-on: ubuntu-latest
