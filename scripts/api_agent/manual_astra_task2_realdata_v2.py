@@ -577,6 +577,25 @@ def collect(folder: Path, max_seconds=MAX_COLLECT_SECONDS):
         "no_forecast_promotion": True, "no_trade": True,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
     }
+    # Preserve the real provider Python call records, not merely a model-authored
+    # narrative or a success boolean. This is PUBLIC-source evidence only.
+    transcript = {
+        "contract": "TASK2_ASTRA_REALDATA_V2_NATIVE_PYTHON_TRACE",
+        "response_id": rid,
+        "source_main_sha": handle["source_main_sha"],
+        "archive_sha256": handle["archive_sha256"],
+        "payload_sha256": handle["payload_sha256"],
+        "model": resp.get("model"),
+        "response_status": resp.get("status"),
+        "code_interpreter_calls": tool_calls,
+        "call_count": len(tool_calls),
+    }
+    trace_bytes = canonical(transcript)
+    if len(trace_bytes) > 2_000_000 or any(marker in trace_bytes for marker in (
+        b"sk-proj-", b"-----BEGIN PRIVATE KEY-----", b"ghp_", b"github_pat_"
+    )):
+        raise ValueError("NATIVE_PYTHON_TRACE_UNSAFE_OR_TOO_LARGE")
+    write_once(folder / "code_interpreter_trace.json", transcript)
     write_once(folder / "receipt.json", receipt)
     if text:
         (folder / "research_output.md").write_text(text, encoding="utf-8")
