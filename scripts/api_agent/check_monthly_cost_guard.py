@@ -13,11 +13,13 @@ if str(SCRIPTS_ROOT) not in sys.path:
 from api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
 from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegative, json_evidence_paths, load_evidence
 
-# Owner approval: normal USD40, account-wide exceptional ceiling USD45.
+# Owner explicit interactive approval 2026-11-13: account-wide USD50 per month
+# with protected USD4 headroom. Existing caller-specific USD40 or lower caps
+# and original per-task USD3 single-request limits remain binding.
 # Legacy caller-specific smaller caps/reserves remain binding; this code never
 # grants a paid POST or lowers a lane's independent ceiling.
-OWNER_GLOBAL_TARGET_USD = 40.0
-OWNER_GLOBAL_HARD_STOP_USD = 45.0
+OWNER_GLOBAL_TARGET_USD = 50.0
+OWNER_GLOBAL_HARD_STOP_USD = 50.0
 OWNER_GLOBAL_RESERVE_USD = 4.0  # Routine paths retain existing protected headroom.
 OWNER_SINGLE_REQUEST_CAP_USD = 3.0
 # Exact unresolved native POSTs. Missing/removed rows must never silently
@@ -41,6 +43,10 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     """
     value = json.loads(path.read_text(encoding="utf-8"))
     if (not isinstance(value, dict)
+            or ("normal_budget_usd" in value and
+                value["normal_budget_usd"] != OWNER_GLOBAL_TARGET_USD)
+            or ("absolute_budget_usd" in value and
+                value["absolute_budget_usd"] != OWNER_GLOBAL_HARD_STOP_USD)
             or value.get("contract") != "API_PENDING_BILLING_RISK_V1"
             or value.get("no_retry_original_ids") is not True
             or value.get("requires_reconciliation_before_releasing_reserve") is not True
@@ -278,20 +284,16 @@ def main() -> None:
                        "reason": "MODEL_APPROVAL_BLOCKED:" + str(exc)[:100]})
     if new_upper > OWNER_SINGLE_REQUEST_CAP_USD:
         errors.append({"path": "MAX_NEW_REQUEST", "reason": "MAX_SINGLE_REQUEST_CEILING_EXCEEDED"})
-    # OWNER_APPROVED 45 is a tolerance, not a bearer capability. No native
-    # caller-specific exceptional authorization has been merged yet.
-    # A naked --hard-stop-usd 45 --reserve-usd 0 is NOT an owner claim.
-    # Fail closed here until a separately reviewed exact-work-id, source-HEAD,
-    # actual-event proof is bound to the existing paid caller.
+    # USD50 is the total authenticated owner-approved monthly envelope, NOT
+    # independent authority to purchase a model call. Existing paid runners
+    # must still enforce original owner-event, model, one-POST and lane rules.
+    # A local CLI preview with a matching number is never release consent.
     if args.hard_stop_usd > OWNER_GLOBAL_TARGET_USD:
         errors.append({"path": "OWNER_EXCEPTIONAL_CAP",
-                       "reason": "EXCEPTIONAL_45_NATIVE_SOURCE_CAPABILITY_REQUIRED"})
+                       "reason": "OWNER_GLOBAL_50_USD_CAP_EXCEEDED"})
     effective_hard_stop = min(args.hard_stop_usd, OWNER_GLOBAL_HARD_STOP_USD)
-    # Only an explicitly reviewed 45-cap caller can use the exceptional
-    # USD5 tolerance; normal callers must retain USD4 minimum headroom.
-    effective_reserve = (max(args.reserve_usd, OWNER_GLOBAL_RESERVE_USD)
-                         if args.hard_stop_usd == OWNER_GLOBAL_TARGET_USD
-                         else args.reserve_usd)
+    # The owner approved no reserve waiver, including for a USD45/50 caller.
+    effective_reserve = max(args.reserve_usd, OWNER_GLOBAL_RESERVE_USD)
     exposure_lower = total + pending_low if total is not None else None
     exposure_upper = total + pending_high + new_upper if total is not None else None
     remaining = effective_hard_stop - exposure_upper if exposure_upper is not None else None
