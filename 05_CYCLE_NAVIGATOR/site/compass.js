@@ -5,7 +5,7 @@
   const horizonOrder = [
     ['NEXT_1_3D', 'Next 1–3d'],
     ['NEXT_5_7D', 'Next 5–7d'],
-    ['CYCLE_ALTCOINS_3_8W', 'Cycle / altcoins · 3–8w'],
+    ['CYCLE_ALTCOINS_3_8W', 'Cycle / altcoins · 4–8w'],
   ];
 
   function node(tag, className, text) {

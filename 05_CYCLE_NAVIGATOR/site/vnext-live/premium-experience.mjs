@@ -19,17 +19,17 @@ const TXT={
  da:{
   unavailable:'UTILGÆNGELIG',action:'Handling nu',direction:'Aktuelt momentum · ikke prognose',bull:'Bull',bear:'Bear',
   balance:'Officiel evidensbalance, ikke sandsynlighed eller handelssignal',
-  risk:'Pullback · officiel risikoklasse',severity:'Trin i fem kategorier, ikke procent eller sandsynlighed',
+  risk:'Tilbagefald · officiel risikoklasse',severity:'Trin i fem kategorier, ikke procent eller sandsynlighed',
   sell:'SELL / TRIM',distribution:'Distribution',window:'Muligt kildevindue',quality:'Evidenskvalitet',
   impact:'Påvirkning på BTC, ETH, large, mid, small, micro og memes er ikke individuelt verificeret',
   noSell:'Pullback er ikke en selvstændig salgstilladelse',
   holder:'HODL / beskyttelse',active:'Aktiv / swing',micro:'Micro / meme',
-  holderNote:'Følg officiel SELL-vurdering, distribution og pullback. En watch-status er ikke automatisk exit.',
+  holderNote:'Følg den officielle salgsvurdering, distribution og risikoen for tilbagefald. En overvågningsstatus er ikke automatisk et salgssignal.',
   activeNote:'Adskil aktuelt momentum fra officiel handling. Kontrollér kildevindue og ugyldiggørelse før positionering.',
   microNote:'Høj beta kræver særskilt aktivering. Microcaps kan aldrig give MEMES en handelstilladelse; afvent egne kildesignalers status.',
   info:'Visningsfokus ændrer kun forklaring, ikke signal, risikomodel eller kilde.',
-  pathNow:'Aktuelt checkpoint',pathNext:'Næste bekræftelse',pathWatch:'Altseason-watch',
-  pathUnavailable:'Aktuel cyklusfase ikke verificeret',pathNote:'Blå: kun kildeunderbygget reference. Rav: ubekræftet næste gate. Grå: ingen dokumenteret progression.',
+  pathNow:'Aktuelt checkpoint',pathNext:'Næste bekræftelse',pathWatch:'Altseason-overvågning',
+  pathUnavailable:'Aktuel cyklusfase ikke verificeret',pathNote:'Blå: kun kildeunderbygget reference. Rav: ubekræftet næste betingelse. Grå: ingen dokumenteret progression.',
   pathGate:'Næste kildebetingelse',pathNoEta:'Ingen verificeret ETA',pathFrozen:'Frossen ugereference, ikke bekræftet faseovergang',
   rotation:'Denne uges kapitalrotation',wait:'Ikke bekræftet',source:'Kilde',
   rangeFamily:'Price Range · kildescore',directionFamily:'Direction / Flow / Rotation',pullbackFamily:'Pullback Edge',rangeEligible:'Officielt scorecard · ikke uafhængigt forseglet',rangeUnavailable:'Ingen færdig kildekontrolleret score',edgeUnavailable:'Ingen verificeret offentlig Edge-score',
@@ -400,7 +400,8 @@ export function renderProductExperience(view,feeds,lang='da'){
  const publicSource=pathSourceReadback(view,feeds?.latest,lang);
  set('premium-path-now',path.now);set('premium-path-next',path.next);
  set('premium-path-gate',path.gate);set('premium-path-alt',path.alt);
- set('premium-path-alt-status',path.altStatus);
+ // v2.4S-final: display label only; the UNAVAILABLE enum is unchanged in data, validators and tests.
+ set('premium-path-alt-status',path.altStatus==='UNAVAILABLE'?(lang==='en'?'Unavailable':'Ikke tilgængelig'):path.altStatus);
  set('premium-path-source',path.eligible?t.pathFrozen:t.pathUnavailable);
  set('premium-path-source-summary',publicSource.weekly);
  set('premium-path-observed',publicSource.observed);

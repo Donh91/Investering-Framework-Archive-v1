@@ -1,0 +1,86 @@
+{
+  "contract": "S10_DEFILLAMA_REVENUE_ORIGIN_V1",
+  "created_utc_date": "2026-11-13",
+  "authority": "RESEARCH_ONLY",
+  "disposition": "EXISTING_OWNER_EXTEND_SOURCE_SEMANTICS_VERIFIED_LIVE_REPLAY_PENDING",
+  "archive_owner": "Donh91/Investering-Framework-Archive-v1#1512:S10",
+  "alpha_owner": "Donh91/Meme-Alpha-Lab#228:EXISTING_MICROCAP_FUSE_UTILITY",
+  "fable_owner": "Donh91/Investering-AI-Audit-Bridge#173:EXISTING_FABLE_ROADMAP_R6_R7_R8",
+  "source": {
+    "provider": "DeFiLlama",
+    "public_adapter_commit": "a8a9d01297b4da8a0e4c67850b49ae3a99cf4653",
+    "adapter_path": "fees/nullmask/index.ts",
+    "adapter_blob_sha": "8550982b382a22ff36045e6027b0264a8506dc01",
+    "evidence_class": "OPEN_SOURCE_CODE_NOT_ONCHAIN_REPLAY",
+    "documentation": "https://api-docs.defillama.com/"
+  },
+  "nullmask_negative_control": {
+    "protocol": "nullmask",
+    "evm_fee_pool": "0xd64EF1417EB047ed0b54736a5a41F01178C391c6",
+    "solana_team_wallet": "FrXTvkebakR2oNctgsHz1yeijmu9wTZifL3FmffJP5xJ",
+    "origin_channels": [
+      "EVM_USER_PAID_POOL_FEES",
+      "SOLANA_USER_PAID_POOL_FEES_AND_CHECK_FEES",
+      "SOLANA_ZEC_REWARDS_TO_MASK_HOLDING_TEAM_WALLET"
+    ],
+    "adapter_accounting_fields": [
+      "dailyFees",
+      "dailyRevenue",
+      "dailyProtocolRevenue"
+    ],
+    "emits_dailyHoldersRevenue": false,
+    "independent_flow_amounts_verified": false,
+    "token_holder_entitlement_verified": false,
+    "user_paid_fee_fraction": null,
+    "net_holder_value": null
+  },
+  "tests": [
+    {
+      "id": "T0",
+      "description": "Adapter code and metric origin mapping pinned",
+      "requirement": "unique event and recipient classes",
+      "state": "SOURCE_VERIFIED"
+    },
+    {
+      "id": "T1",
+      "description": "One closed UTC day raw chain replay",
+      "requirement": "actual first-party event receipts, no double count, correct decimals",
+      "state": "PENDING_SOURCE"
+    },
+    {
+      "id": "T2",
+      "description": "Comparable full category cohort",
+      "requirement": "fixed original universe including missing, inactive, delisted and negatives",
+      "state": "PENDING_SOURCE"
+    },
+    {
+      "id": "T3",
+      "description": "Prospective after-cost incremental value",
+      "requirement": "PIT clocks, complete exits, frozen controls and matured outcomes",
+      "state": "DATA_GATED"
+    }
+  ],
+  "allowed_fee_classes": [
+    "USER_PAID_PRODUCT_FEES",
+    "SUPPLY_SIDE_FEES",
+    "TEAM_EXTERNAL_REWARDS",
+    "TREASURY_RECEIPTS",
+    "TOKEN_HOLDER_DISTRIBUTIONS",
+    "UNKNOWN"
+  ],
+  "disallowed_inferences": [
+    "reported revenue is independent user demand",
+    "team MASK reward is proven broader holder cashflow",
+    "revenue to TVL ratio proves undervaluation",
+    "historical chart proves historical first-known",
+    "source code inspection proves investment edge"
+  ],
+  "constraints": {
+    "no_new_scheduler": true,
+    "no_api_subscription": true,
+    "no_autotrading": true,
+    "no_scanner_signal": true,
+    "no_fable_session_dispatched": true,
+    "retain_vendor_data_only_after_terms_review": true
+  }
+}

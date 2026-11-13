@@ -21,7 +21,7 @@ const PROSPECTIVE_RANGE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_PROSPEC
 const PUBLIC_SERIES_INDEX_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json");
 const PUBLIC_SITE_FILES=["index.html","styles.css","scoreboard.css","motion.css","journey.css","vibe.css","app.js","compass.js","compass-product-v5.js","compass-product-v5.css","history-scoreboard.js","history-scoreboard.json","motion.js","journey.js","live-context.js","favicon.svg","apple-touch-icon.png","manifest.webmanifest","social-card.svg"];
 const pick=(obj,keys)=>Object.fromEntries(keys.filter(k=>Object.prototype.hasOwnProperty.call(obj||{},k)).map(k=>[k,obj[k]]));
-const sanitizePointer=p=>pick(p,["iso_year","iso_week","completed_source_year","completed_source_week","issue_number","publication_status","status"]);
+const sanitizePointer=p=>pick(p,["iso_year","iso_week","completed_source_year","completed_source_week","issue_number","public_issue_number","publication_status","status"]);
 function sanitizeDecisionProjection(dp){
   if(!dp||dp.contract!=="CYCLE_NAVIGATOR_DECISION_PROJECTION_v1")return null;
   return {
@@ -601,7 +601,7 @@ for(const file of ["index.html","styles.css","app.mjs","full-week-fixture.mjs"])
  // vNext is a read-only first-party *candidate*, deployed below /vnext/
  // on the EXISTING Pages host. Canonical /index.html remains untouched.
  const vnextDir=resolve(outputDir,"vnext"); await mkdir(vnextDir,{recursive:true});
- for(const file of ["index.html","CN_LOGO.svg","premium.css","premium-experience.css","app.mjs","premium-experience.mjs","compass-pro-readback.mjs","chart-source-key.mjs","forward-outlook.mjs","monday-public-bridge.mjs","source-trace.mjs","official-bullbear.mjs",
+ for(const file of ["index.html","CN_LOGO.svg","premium.css","premium-experience.css","app.mjs","premium-experience.mjs","swing-rotation-readback.mjs","compass-pro-readback.mjs","chart-source-key.mjs","forward-outlook.mjs","monday-public-bridge.mjs","source-trace.mjs","official-bullbear.mjs",
   "official-pullback-eta.mjs","official-pullback-stage.mjs","official-pullback-investor-view.mjs",
   "official-path.mjs","official-feed-parity.mjs"])
    await copyFile(resolve(siteDir,"vnext-live",file),resolve(vnextDir,file));

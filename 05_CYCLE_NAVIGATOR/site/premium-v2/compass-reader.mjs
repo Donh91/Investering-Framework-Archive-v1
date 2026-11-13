@@ -7,7 +7,7 @@ export const VIEWS = Object.freeze([
   {id:'NEXT_1_3D',da:'1–3 dage',en:'1–3 days'},
   {id:'NEXT_5_7D',da:'5–7 dage',en:'5–7 days'},
   {id:'NEXT_2_3W',da:'2–3 uger',en:'2–3 weeks'},
-  {id:'CYCLE_ALTCOINS_3_8W',da:'3–8 uger',en:'3–8 weeks'}
+  {id:'CYCLE_ALTCOINS_3_8W',da:'4–8 uger',en:'4–8 weeks'}
 ]);
 const DIRECTION={
   UP:['Stigende','Rising'],DOWN:['Faldende','Falling'],

@@ -39,7 +39,7 @@ function focus(){
  const rows=view.window_items;
  let text=local(...label[step]);
  if(step==='freeze')text+=' '+rows.map(w=>{
-  const r=w.original_ranges.map(x=>x.asset+' '+integer(x.low)+'–'+integer(x.high)+' USD').join(' / ');
+  const r=w.original_ranges.map(x=>x.asset+' '+integer(x.low)+'–'+integer(x.high)+(x.quote?' '+x.quote:'')).join(' / ');
   return windowName[w.window]+': '+r;
  }).join(' · ');
  if(step==='observed')text+=' '+rows.map(w=>
@@ -47,7 +47,7 @@ function focus(){
   'h').join(' · ');
  if(step==='assess')text+=' '+rows.map(w=>
   windowName[w.window]+' '+score(w.source_reported_score_to_date)+' · '+
-  (w.observed_complete?local('afsluttet','closed'):local('foreløbig','provisional'))).join(' / ')+
+  (w.observed_complete?local('afsluttet','closed'):w.state==='PENDING'?local('ikke startet','not started'):local('foreløbig','provisional'))).join(' / ')+
   '. '+local('Ingen af tallene er uafhængigt Proof-seglet.',
              'None of these readings is independently proof-sealed.');
  host.textContent=text;
@@ -56,15 +56,17 @@ function renderWindows(){
  const host=$('proof-windows');host.replaceChildren();
  if(view?.status!=='PROVISIONAL_SOURCE_READBACK')return;
  for(const w of view.window_items){
-  const card=node('article','proof-window');card.dataset.status=w.observed_complete?'complete':'live';
+  const pending=w.state==='PENDING';
+  const card=node('article','proof-window');card.dataset.status=w.observed_complete?'complete':pending?'pending':'live';
   card.setAttribute('title',w.state);
   card.append(node('span','proof-kicker',windowName[w.window]+' · '+(w.observed_complete?
-   local('AFSLUTTET','CLOSED'):local('FORELØBIG','PROVISIONAL'))));
+   local('AFSLUTTET','CLOSED'):pending?local('IKKE STARTET','NOT STARTED'):local('FORELØBIG','PROVISIONAL'))));
   card.append(node('strong','proof-score',score(w.source_reported_score_to_date)));
   card.append(node('p','',w.observed_hours+'/'+w.expected_hours_final+'h · '+
     local('observeret kildedækning','observed source coverage')));
   card.append(node('p','',w.observed_complete?
-   local('Kildedækning afsluttet','Source coverage complete'):
+   local('Kildedækning afsluttet','Source coverage complete'):pending?
+   local('Vinduet er ikke startet','Window has not started'):
    local('Observation fortsætter','Observation ongoing')));
   host.append(card);
  }
@@ -72,7 +74,7 @@ function renderWindows(){
 function renderSources(){
  const host=$('proof-sources');host.replaceChildren();
  const intro=node('p','',local(
-  'GitHub-commits er navigations- og byte-referencer. Uden uafhængigt tidsvidne er disse forecast-mirrors foreløbige, ikke VERIFIED.',
+  'GitHub-commits er navigations- og byte-referencer. Uden uafhængigt tidsvidne er disse prognosekopier foreløbige og ikke verificerede.',
   'GitHub commit SHAs identify bytes, not independent pre-outcome attestation. These mirrors remain provisional.'));
  host.append(intro);
  if(!links.length){host.append(node('p','',local('Ingen godkendt præcis kildebinding.','No eligible exact source binding.')));return}
@@ -92,16 +94,16 @@ function renderSources(){
 function localizeProof(){
  const en=document.documentElement.lang==='en';
  const eyebrow=document.querySelector('.proof-eyebrow');if(eyebrow)eyebrow.textContent=en?
-  'RESULTS / ORIGINAL → OBSERVED → SCORE':'RESULTATER / ORIGINAL → OBSERVERET → SCORE';
+  'RESULTS / ORIGINAL → OBSERVED → SCORE':'RESULTATER / OPRINDELIG → OBSERVERET → SCORE';
  const steps=document.querySelector('.proof-steps');if(steps)steps.setAttribute('aria-label',en?'Proof steps':'Proof-trin');
  $('proof-windows').setAttribute('aria-label',en?'Three weekly price windows':'Tre ugentlige prisvinduer');
  const heading=$('proof-title');if(heading)heading.textContent=en?
-  'Proof. Check what was actually forecast.':'Proof. Se hvad der faktisk blev forudsagt.';
+  'Proof. Check what was actually forecast.':'Bevis. Se, hvad der faktisk blev forudsagt.';
  const sub=document.querySelector('.proof-head p');if(sub)sub.textContent=en?
   'Frozen original source, observed outcomes, and an inspectable method. No rewriting.':
   'Frosne kilder, observerede udfald, åben metode. Ingen omskrivning.';
  const map={freeze:en?'Original freeze':'Frossen kilde',
- observed:en?'Observed':'Observation',assess:en?'Score & source':'Score & kilde'};
+ observed:en?'Observed':'Observation',assess:en?'Score & source':'Score og kilde'};
  for(const button of document.querySelectorAll('[data-proof-step]')){
   const key=button.dataset.proofStep,id=key==='freeze'?'01':key==='observed'?'02':'03';
   button.replaceChildren(node('span','',id),document.createTextNode(map[key]||key));
@@ -109,7 +111,7 @@ function localizeProof(){
  const summary=document.querySelector('.proof-source-details summary');
  if(summary)summary.textContent=en?'Original GitHub sources and method':'Originale GitHub-kilder og metode';
  const link=document.querySelector('.proof-foot a');if(link)link.textContent=en?
-  'Open public Proof archive ↗':'Åbn offentligt Proof-arkiv ↗';
+  'Open public Proof archive ↗':'Åbn offentligt bevisarkiv ↗';
  const copy=$('proof-copy-audit');if(copy)copy.textContent=en?'Copy audit prompt':'Kopiér auditinstruktion';
 }
 
@@ -134,7 +136,7 @@ function display(){
   local('FORELØBIG · '+view.forecast_week,'PROVISIONAL · '+view.forecast_week):
   local('KILDE MANGLER','SOURCE MISSING');
  $('proof-method').textContent=local(
-  'Price Range 70 % containment + 30 % Jaccard. D1–2/D3–4/D5–7 er kildeberegnede tal til dato; Direction/Edge forbliver en separat ABSTAIN-/Proof-familie. Ingen afkastgaranti.',
+  'Prisinterval: 70 % dækning + 30 % Jaccard. D1–2/D3–4/D5–7 er kildeberegnede tal til dato; retning og fordel er en separat familie, som i dag afstår (ABSTAIN). Ingen afkastgaranti.',
   'Price Range: 70% containment + 30% Jaccard. D1–2/D3–4/D5–7 are source-reported interim readings; Direction/Edge is a separate ABSTAIN/Proof family. Not a return prediction.'
  );
  document.querySelectorAll('[data-proof-step]').forEach(button=>{

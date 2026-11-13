@@ -403,3 +403,10 @@ test('A live original deadline masks horizons despite an unresolved periodic ref
  assert.equal(mutated.get('official-pilot-horizons').children[0].children[3].tagName,'DETAILS',
   'negative control must retain stale source disclosure');
 });
+
+test('v2.5.1 optional publication lineage 404 does not blank Graph B',async()=>{
+ const latest=snapshot();
+ const h=await harness('./graph-b/source-graph-b.mjs',{latest,fetcher:url=>String(url).endsWith('publication-lineage.json')?
+  Promise.resolve({ok:false,status:404,json:async()=>null}):Promise.resolve({ok:true,json:async()=>latest})});
+ assert.match(h.get('observed-value').textContent,/80[.,]/,'chart still renders observed price without lineage');
+});

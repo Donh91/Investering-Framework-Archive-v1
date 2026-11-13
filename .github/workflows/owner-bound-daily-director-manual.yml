@@ -9,20 +9,30 @@ on:
       - '04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1/**'
       - '.github/workflows/owner-bound-daily-director-manual.yml'
       - 'research/api_agent/**'
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       mode:
-        description: dry-run or explicit live owner-bound Director call
+        description: dry-run, explicit live Director, or single owner-only Astra High Task2 call
         required: true
         default: dry-run
         type: choice
-        options: [dry-run, live]
+        options: [dry-run, live, astra-high-task2]
+      owner_confirm:
+        description: 'Required only for Astra High: ASTRA-TASK2-1596-ONE-POST'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   director:
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' && inputs.mode != 'astra-high-task2')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -33,6 +43,12 @@ jobs:
       - name: Test and compile
         run: |
           python -m unittest tests.api_agent.test_owner_bound_director_context
+          python -m unittest tests.api_agent.test_manual_astra_task2_high_v1 -v
+          python -m unittest tests.research.test_task2_all_cn_historical_replay_v1 -v
+          python -m unittest tests.research.test_task2_all_cn_astra_high_v1 -v
+          python scripts/research/task2_all_cn_historical_replay_v1.py --out runtime/task2-allcn-pr-ci
+          python scripts/research/task2_all_cn_astra_high_v1.py preview --out runtime/astra-allcn-preflight-ci --analysis-dir runtime/task2-allcn-pr-ci
+          python -m py_compile scripts/api_agent/manual_astra_task2_high_v1.py
           python -m py_compile scripts/api_agent/build_owner_bound_director_context.py scripts/api_agent/check_delta_ready.py scripts/api_agent/materialize_forecast_candidates.py scripts/api_agent/api_gateway.py scripts/daily_capture/persist_raw_payloads.py
       - name: Build owner-bound context
         run: |
@@ -69,9 +85,184 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: owner-bound-daily-director-${{ github.run_id }}
+          name: owner-bound-daily-director-${{ github.run_id }}}
           path: |
             owner-bound-director-input/context.json
             owner-bound-director-output/
           retention-days: 14
           if-no-files-found: error
+
+  astra-high-task2:
+    # Owner-launched one-shot. Existing Director and autonomous Sol routes remain separate.
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.mode == 'astra-high-task2' &&
+      inputs.owner_confirm == 'ASTRA-TASK2-1596-ONE-POST' &&
+      github.actor == 'Donh91' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    concurrency:
+      group: manual-astra-high-task2-20261113-once
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test one-shot safety and compile without billing
+        run: |
+          python -m py_compile scripts/api_agent/manual_astra_task2_high_v1.py
+          python -m unittest tests.api_agent.test_manual_astra_task2_high_v1 -v
+      - name: Enforce existing monthly OpenAI budget and reserve before paid operation
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --hard-stop-usd 40 --reserve-usd 4
+          --new-request-upper-usd 0  # USD3 Astra pre-reserved in shared ledger
+      - name: Prepare immutable public-only source bundle and price bound
+        run: python scripts/api_agent/manual_astra_task2_high_v1.py prepare --output-dir runtime/astra-task2
+      - name: Verify owner, native claim census and project model GET; reserve once
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          ASTRA_OWNER_CONFIRM: ${{ inputs.owner_confirm }}
+        run: python scripts/api_agent/manual_astra_task2_high_v1.py reserve --output-dir runtime/astra-task2
+      - name: Persist nonbillable one-use claim BEFORE any paid POST
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-task2-20261113-one-paid-attempt-claim
+          path: |
+            runtime/astra-task2/claim.json
+            runtime/astra-task2/source_manifest.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Submit exactly ONE paid Astra High background Responses API call
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/api_agent/manual_astra_task2_high_v1.py submit --output-dir runtime/astra-task2
+      - name: Persist attempt and response handle even on ambiguous failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-task2-20261113-attempt-${{ github.run_id }}
+          path: |
+            runtime/astra-task2/attempt.json
+            runtime/astra-task2/response_handle.json
+            runtime/astra-task2/source_manifest.json
+          retention-days: 90
+          if-no-files-found: warn
+      - name: GET-only collection, no paid retry or duplicate POST
+        if: success()
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/api_agent/manual_astra_task2_high_v1.py collect --output-dir runtime/astra-task2
+      - name: Preserve public research output, source hashes and cost receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-task2-20261113-research-${{ github.run_id }}
+          path: |
+            runtime/astra-task2/source_manifest.json
+            runtime/astra-task2/response_handle.json
+            runtime/astra-task2/receipt.json
+            runtime/astra-task2/research_output.md
+          retention-days: 90
+          if-no-files-found: warn
+
+  astra-all-cn-research:
+    # Single original owner comment trigger, not a scheduler or new workflow.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.action == 'created' &&
+      github.event.issue.number == 1596 &&
+      github.event.comment.user.login == 'Donh91' &&
+      github.actor == 'Donh91' &&
+      github.event.comment.body == 'OWNER_LAUNCH_ASTRA_HIGH_ALL_CN_20261113_BUDGET_10USD_ONE_SHOT' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    concurrency:
+      group: owner-task2-allcn-astra-high-20261113-one
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify all archive sources, backtest and adverse tests BEFORE API
+        run: |
+          python -m py_compile scripts/research/task2_all_cn_historical_replay_v1.py scripts/research/task2_all_cn_astra_high_v1.py
+          python -m unittest tests.research.test_task2_all_cn_historical_replay_v1 -v
+          python -m unittest tests.research.test_task2_all_cn_astra_high_v1 -v
+          python scripts/research/task2_all_cn_historical_replay_v1.py --out runtime/task2-allcn
+      - name: Account-wide existing monthly USD40, reserve USD4, pending owner USD10
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --hard-stop-usd 40 --reserve-usd 4
+          --new-request-upper-usd 0
+      - name: Pin all empirical inputs and conservative USD10 Astra payload
+        run: python scripts/research/task2_all_cn_astra_high_v1.py prepare --out runtime/astra-allcn --analysis-dir runtime/task2-allcn
+      - name: Durable native one-use claim BEFORE paid call
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/task2_all_cn_astra_high_v1.py reserve --out runtime/astra-allcn
+      - name: Persist claimed unique owner request before API POST
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-allcn-20261113-one-use-claim
+          path: |
+            runtime/astra-allcn/claim.json
+            runtime/astra-allcn/prepared.json
+            runtime/task2-allcn/summary.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: One gpt-6-astra High paid Responses API POST
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/task2_all_cn_astra_high_v1.py submit --out runtime/astra-allcn
+      - name: Preserve no-replay attempt and API handle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-allcn-20261113-attempt-${{ github.run_id }}
+          path: |
+            runtime/astra-allcn/claim.json
+            runtime/astra-allcn/attempt.json
+            runtime/astra-allcn/response_handle.json
+            runtime/astra-allcn/prepared.json
+          retention-days: 90
+          if-no-files-found: warn
+      - name: GET-only collect original research, never replay a paid POST
+        if: success()
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/task2_all_cn_astra_high_v1.py collect --out runtime/astra-allcn
+      - name: Preserve full empirical dataset, native source and frozen Astra report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-allcn-20261113-empirical-astra-report-${{ github.run_id }}
+          path: |
+            runtime/astra-allcn/response_handle.json
+            runtime/astra-allcn/receipt.json
+            runtime/astra-allcn/ASTRA_HIGH_ALL_CN_FULL_HISTORICAL_RESEARCH.md
+            runtime/task2-allcn/
+          retention-days: 90
+          if-no-files-found: warn

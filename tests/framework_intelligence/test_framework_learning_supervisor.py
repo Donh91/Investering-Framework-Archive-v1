@@ -268,5 +268,312 @@ class FrameworkLearningSupervisorTest(unittest.TestCase):
 
 
 
+
+class WeeklySkillCalibrationTest(unittest.TestCase):
+    """Exercises the real Monday-only code path used by existing S1-independent FMOS."""
+
+    def setUp(self):
+        import tempfile
+        from datetime import datetime, timezone
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+        self.monday = datetime(2026, 11, 16, 8, 35, tzinfo=timezone.utc)
+        spec = importlib.util.spec_from_file_location(
+            "weekly_skill_calibration_v1",
+            Path("scripts/framework_intelligence/weekly_skill_calibration_v1.py"),
+        )
+        self.impl = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.impl)
+        self.put("research/framework_learning/weekly_forensics/LATEST.json", {
+            "contract": "WEEKLY_FORENSICS_PACK_v1", "authority": "RESEARCH_ONLY_NON_CANONICAL",
+            "mode": "FINAL", "iso_year": 2026, "iso_week": 46,
+            "generated_at_utc": "2026-11-16T08:00:00Z",
+        })
+        self.put("00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json", {
+            "status": "DERIVED_ROUTING_ONLY", "authority": "NONE_BY_ITSELF",
+            "canonical_owner": "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md",
+            "skills": [{
+                "name": "canonical-context-router",
+                "maturity": "PILOT_ACTIVE",
+                "skill_path": ".agents/skills/canonical-context-router/SKILL.md",
+                "allow_implicit_invocation": True,
+            }, {
+                "name": "conclusion-challenge-loop",
+                "maturity": "PILOT_CANDIDATE_READ_ONLY_V1",
+                "skill_path": ".agents/skills/conclusion-challenge-loop/SKILL.md",
+                "allow_implicit_invocation": False,
+            }],
+        })
+        for skill in ("canonical-context-router", "conclusion-challenge-loop"):
+            path = self.root / ".agents/skills" / skill / "SKILL.md"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("# " + skill + "\n")
+
+    def put(self, rel, obj):
+        p = self.root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(obj, sort_keys=True) + "\n")
+        return p
+
+    def report(self):
+        return self.impl.build(self.root, self.monday)
+
+    def observation(self, *, skill="canonical-context-router",
+                    phase="PROCEDURE_APPLIED", invocation="run-20261112-a"):
+        skill_file = self.root / ".agents/skills" / skill / "SKILL.md"
+        witness = {
+            "skill_name": skill,
+            "skill_sha256": self.impl.digest(skill_file.read_bytes()),
+            "use_phase": phase,
+            "observed_at_utc": "2026-11-12T12:45:00Z",
+            "source_read_confirmed": phase in {"READ_CONFIRMED", "PROCEDURE_APPLIED"},
+            "original_action_ref": "source-owner-original-pr-123" if phase == "PROCEDURE_APPLIED" else None,
+        }
+        original = self.put("research/framework_learning/operational_memory/native-original.json", {
+            "contract": "EXISTING_ORIGINAL_OWNER_EVIDENCE",
+            "native_run_id": invocation,
+            "skill_use": witness,
+        })
+        item = {
+            "contract": "SKILL_USE_OBSERVATION_v1", "authority": "ADVISORY_SELF_REPORT_ONLY",
+            "automatic_skill_activation": False, "week": "2026-W46",
+            "observed_at_utc": "2026-11-12T12:45:00Z",
+            "invocation_id": invocation, "skill_name": skill, "use_phase": phase,
+            "execution_receipt_path": original.relative_to(self.root).as_posix(),
+            "execution_receipt_sha256": self.impl.digest(original.read_bytes()),
+            "skill_sha256": self.impl.digest(skill_file.read_bytes()),
+        }
+        return self.put(f"research/framework_learning/skill_usage/observations/2026-W46/{invocation}.json", item)
+
+    def test_only_monday_targets_completed_week(self):
+        from datetime import timedelta
+        self.assertIsNone(self.impl.build(self.root, self.monday - timedelta(days=1)))
+        x = self.report()
+        self.assertEqual(x["evaluated_week"], "2026-W46")
+        self.assertEqual(x["status"], "BASELINE_ONLY_NATIVE_USAGE_UNKNOWN")
+        self.assertIsNone(x["verified_native_skill_usage_count"])
+        self.assertIsNone(x["metrics"]["observations"]["reported"])
+        self.assertFalse(x["auto_skill_activation"])
+        self.assertEqual(x["action"]["code"], "INSTRUMENT_NATIVE_SKILL_USAGE")
+
+    def test_source_not_final_or_mismatched_week_is_not_calibration(self):
+        final = self.root / "research/framework_learning/weekly_forensics/LATEST.json"
+        item = json.loads(final.read_text())
+        item["mode"] = "PRELIMINARY"
+        final.write_text(json.dumps(item))
+        self.assertEqual(self.report()["status"], "WAIT_FOR_FINAL_WEEKLY_SOURCE")
+        item["mode"] = "FINAL"
+        item["iso_week"] = 45
+        final.write_text(json.dumps(item))
+        self.assertEqual(self.report()["status"], "WAIT_FOR_FINAL_WEEKLY_SOURCE")
+        item["iso_week"] = 46
+        item["generated_at_utc"] = "2026-11-12T00:00:00Z"
+        final.write_text(json.dumps(item))
+        self.assertEqual(self.report()["status"], "WAIT_FOR_FINAL_WEEKLY_SOURCE")
+
+    def test_source_bound_report_is_not_native_or_value_proof(self):
+        self.observation()
+        report = self.report()
+        self.assertEqual(report["status"], "SOURCE_BOUND_REPORTS_ADVISORY_ONLY")
+        self.assertEqual(report["metrics"]["observations"]["reported"], 1)
+        self.assertEqual(report["metrics"]["observations"]["by_phase"]["PROCEDURE_APPLIED"], 1)
+        self.assertIsNone(report["metrics"]["false_positive_rate"])
+        self.assertIsNone(report["independent_skill_effect_rate"])
+        self.assertEqual(report["action"]["code"], "INDEPENDENT_SKILL_QUALITY_COMPARISON")
+        self.assertFalse(report["scientific_or_performance_promotion"])
+
+    def test_nonstring_phase_in_optional_receipt_does_not_abort_supervisor(self):
+        p = self.observation()
+        for bad in ({"unexpected": "object"}, ["PROCEDURE_APPLIED"]):
+            with self.subTest(phase_type=type(bad).__name__):
+                r = json.loads(p.read_text())
+                r["use_phase"] = bad
+                p.write_text(json.dumps(r))
+                score = self.report()
+                self.assertEqual(score["metrics"]["observations"]["invalid"], 1)
+                self.assertEqual(score["metrics"]["observations"]["reported"], 0)
+                self.assertEqual(score["action"]["code"], "REPAIR_SKILL_RECEIPT_INTEGRITY")
+
+    def test_conflicting_phases_never_hide_pilot_use_alert(self):
+        first = self.observation(skill="conclusion-challenge-loop",
+                                 phase="SUGGESTED_ONLY")
+        applied = json.loads(first.read_text())
+        applied["use_phase"] = "PROCEDURE_APPLIED"
+        # A later original-run source witness is separately bound to the same
+        # invocation. Only its real original receipt can support the new phase.
+        source = self.root / "research/framework_learning/operational_memory/native-original.json"
+        native_followup = json.loads(source.read_text())
+        native_followup["skill_use"]["use_phase"] = "PROCEDURE_APPLIED"
+        native_followup["skill_use"]["source_read_confirmed"] = True
+        native_followup["skill_use"]["original_action_ref"] = "original-pr-checked-123"
+        second = self.put("research/framework_learning/operational_memory/native-followup.json",
+                          native_followup)
+        applied["execution_receipt_path"] = second.relative_to(self.root).as_posix()
+        applied["execution_receipt_sha256"] = self.impl.digest(second.read_bytes())
+        extra = self.root / "research/framework_learning/skill_usage/observations/2026-W46/z.json"
+        extra.write_text(json.dumps(applied))
+        r = self.report()
+        observation = r["metrics"]["observations"]
+        self.assertEqual(observation["reported"], 1)
+        self.assertEqual(observation["phase_conflicts"], 1)
+        self.assertEqual(observation["pilots_reported_applied"], 1)
+        self.assertEqual(observation["by_phase"]["PROCEDURE_APPLIED"], 0)
+        self.assertEqual(r["action"]["code"], "INVESTIGATE_UNAUTHORIZED_PILOT_USE")
+
+    def test_unrelated_hashed_source_does_not_prove_skill_use(self):
+        observation = self.observation()
+        source = self.root / "research/framework_learning/operational_memory/native-original.json"
+        native = json.loads(source.read_text())
+        native.pop("skill_use")
+        source.write_text(json.dumps(native))
+        record = json.loads(observation.read_text())
+        record["execution_receipt_sha256"] = self.impl.digest(source.read_bytes())
+        observation.write_text(json.dumps(record))
+        report = self.report()
+        self.assertEqual(report["metrics"]["observations"]["reported"], 0)
+        self.assertEqual(report["metrics"]["observations"]["invalid"], 1)
+        self.assertIsNone(report["verified_native_skill_usage_count"])
+        self.assertEqual(report["action"]["code"], "REPAIR_SKILL_RECEIPT_INTEGRITY")
+
+    def test_mismatched_claim_versus_original_read_blocks(self):
+        observation = self.observation()
+        original = self.root / "research/framework_learning/operational_memory/native-original.json"
+        native = json.loads(original.read_text())
+        native["skill_use"]["skill_name"] = "unrelated-skill"
+        original.write_text(json.dumps(native))
+        rec = json.loads(observation.read_text())
+        rec["execution_receipt_sha256"] = self.impl.digest(original.read_bytes())
+        observation.write_text(json.dumps(rec))
+        report = self.report()
+        self.assertEqual(report["metrics"]["observations"]["invalid"], 1)
+        self.assertEqual(report["metrics"]["observations"]["reported"], 0)
+
+    def test_applied_claim_requires_original_action_reference(self):
+        observation = self.observation()
+        original = self.root / "research/framework_learning/operational_memory/native-original.json"
+        native = json.loads(original.read_text())
+        native["skill_use"]["original_action_ref"] = None
+        original.write_text(json.dumps(native))
+        rec = json.loads(observation.read_text())
+        rec["execution_receipt_sha256"] = self.impl.digest(original.read_bytes())
+        observation.write_text(json.dumps(rec))
+        r = self.report()
+        self.assertEqual(r["metrics"]["observations"]["invalid"], 1)
+        self.assertEqual(r["metrics"]["observations"]["reported"], 0)
+
+    def test_reported_read_requires_original_source_read_claim(self):
+        observation = self.observation(phase="READ_CONFIRMED")
+        native_path = self.root / "research/framework_learning/operational_memory/native-original.json"
+        native = json.loads(native_path.read_text())
+        native["skill_use"]["source_read_confirmed"] = False
+        native_path.write_text(json.dumps(native))
+        rec = json.loads(observation.read_text())
+        rec["execution_receipt_sha256"] = self.impl.digest(native_path.read_bytes())
+        observation.write_text(json.dumps(rec))
+        r = self.report()
+        self.assertEqual(r["metrics"]["observations"]["invalid"], 1)
+        self.assertEqual(r["metrics"]["observations"]["reported"], 0)
+
+    def test_tampered_original_source_fails_closed(self):
+        self.observation()
+        original = self.root / "research/framework_learning/operational_memory/native-original.json"
+        original.write_text('{"changed":true}')
+        score = self.report()
+        self.assertEqual(score["metrics"]["observations"]["reported"], 0)
+        self.assertEqual(score["metrics"]["observations"]["invalid"], 1)
+        self.assertEqual(score["action"]["code"], "REPAIR_SKILL_RECEIPT_INTEGRITY")
+
+    def test_pilot_claim_requires_review_not_autonomous_activation(self):
+        self.observation(skill="conclusion-challenge-loop")
+        r = self.report()
+        self.assertEqual(r["metrics"]["catalog"]["pilot_count"], 1)
+        self.assertEqual(r["metrics"]["observations"]["pilots_reported_applied"], 1)
+        self.assertEqual(r["action"]["priority"], "P0")
+        self.assertEqual(r["action"]["code"], "INVESTIGATE_UNAUTHORIZED_PILOT_USE")
+        self.assertFalse(r["action"]["auto_execute"])
+        self.assertIsNone(r["verified_native_skill_usage_count"])
+
+    def test_duplicate_source_bound_invocation_is_not_independent_n(self):
+        original = self.observation()
+        other = self.root / "research/framework_learning/skill_usage/observations/2026-W46/b.json"
+        other.write_bytes(original.read_bytes())
+        r = self.report()
+        self.assertEqual(r["metrics"]["observations"]["reported"], 1)
+        self.assertEqual(r["metrics"]["observations"]["duplicate"], 1)
+
+    def test_catalog_implicit_pilot_violation_blocked(self):
+        p = self.root / "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json"
+        index = json.loads(p.read_text())
+        index["skills"][1]["allow_implicit_invocation"] = True
+        p.write_text(json.dumps(index))
+        r = self.report()
+        self.assertEqual(r["status"], "CATALOG_BLOCKED")
+        self.assertIsNone(r["metrics"])
+
+    def test_frozen_week_carries_through_daily_supervisor_and_master_packet(self):
+        """A real Monday build persists a W46 receipt, Tuesday reuses same bytes."""
+        from unittest.mock import patch
+        import sys
+        import hashlib
+        out = self.root / "research/framework_learning"
+        args = ["supervisor", "--repo-root", str(self.root), "--as-of-utc", "2026-11-16T08:35:00Z"]
+        with patch.object(sys, "argv", args):
+            mod.main()
+        frozen = out / "skill_calibration/weeks/2026-W46.json"
+        self.assertTrue(frozen.is_file())
+        first = frozen.read_bytes()
+        scorecard = json.loads(first)
+        self.assertEqual(scorecard["evaluated_week"], "2026-W46")
+        packet = json.loads((out / "LATEST_MASTER_MONDAY_LEARNING_PACKET.json").read_text())
+        advisory = packet["skill_calibration_advisory"]
+        self.assertEqual(advisory["source_scorecard_sha256"], hashlib.sha256(first).hexdigest())
+        self.assertEqual(advisory["output_path"],
+                         "research/framework_learning/skill_calibration/weeks/2026-W46.json")
+        with patch.object(sys, "argv", ["supervisor", "--repo-root", str(self.root),
+                                        "--as-of-utc", "2026-11-17T08:35:00Z"]):
+            mod.main()
+        self.assertEqual(frozen.read_bytes(), first)
+        latest = json.loads((out / "LATEST_SKILL_CALIBRATION.json").read_text())
+        self.assertEqual(latest["evaluated_week"], "2026-W46")
+        tuesday_packet = json.loads((out / "LATEST_MASTER_MONDAY_LEARNING_PACKET.json").read_text())
+        self.assertEqual(tuesday_packet["skill_calibration_advisory"]["source_scorecard_sha256"],
+                         advisory["source_scorecard_sha256"])
+        self.assertFalse(tuesday_packet["live_consumption_allowed"])
+        tuesday_state = json.loads((out / "LATEST_SUPERVISOR_STATE.json").read_text())
+        self.assertFalse(tuesday_state["master_monday_live_influence"])
+        self.assertEqual(tuesday_state["skill_calibration"]["evaluated_week"], "2026-W46")
+
+    def test_frozen_wrong_week_or_future_timestamp_not_reused(self):
+        self.observation()
+        self.put("research/framework_learning/skill_calibration/weeks/2026-W46.json", {
+            **self.report(), "calibrated_at_utc": "2099-11-16T08:35:00Z",
+        })
+        self.assertIsNone(self.impl.load_frozen_last_completed_week(
+            self.root / "research/framework_learning", self.monday
+        ))
+        path = self.root / "research/framework_learning/skill_calibration/weeks/2026-W46.json"
+        data = json.loads(path.read_text())
+        data["calibrated_at_utc"] = "2026-11-16T08:35:00Z"
+        data["auto_skill_activation"] = True
+        path.write_text(json.dumps(data))
+        self.assertIsNone(self.impl.load_frozen_last_completed_week(
+            self.root / "research/framework_learning", self.monday
+        ))
+
+    def test_weekly_comparison_is_not_benefit_claim(self):
+        prev = self.impl._previous(self.root, "2026-W46")
+        self.assertIsNone(prev)
+        self.put("research/framework_learning/skill_calibration/weeks/2026-W45.json", {
+            "contract": self.impl.CONTRACT, "evaluated_week": "2026-W45",
+            "metrics": {"catalog": {"catalog_total": 1}}
+        })
+        r = self.report()
+        self.assertEqual(r["prior_comparison_status"], "PREVIOUS_WEEK_PRESENT")
+        self.assertEqual(r["metrics"]["catalog_change_vs_prior_week"], 1)
+        self.assertIsNone(r["independent_skill_effect_rate"])
+
+
+
 if __name__ == '__main__':
     unittest.main()

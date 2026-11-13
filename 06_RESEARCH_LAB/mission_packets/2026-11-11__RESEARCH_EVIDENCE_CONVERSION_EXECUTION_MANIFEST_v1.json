@@ -1,0 +1,209 @@
+{
+  "contract": "RESEARCH_EVIDENCE_TO_DECISION_CONVERSION_EXECUTION_MANIFEST_v1",
+  "version": "1.0",
+  "created_date_utc": "2026-11-11",
+  "status": "OWNER_AUTHORIZED_SOURCE_SAFE_INITIAL_PR_OPENING",
+  "evidence_class": "CURRENT_MAIN_PUBLIC_REGISTRY_SNAPSHOT_PLUS_SOURCE_CODE_READBACK",
+  "primary_verdict": "MODIFY_EXISTING_TEST",
+  "owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1157",
+  "research_router_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512",
+  "scheduled_release_owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156",
+  "existing_s1_task_id": "6ae5fd466b48819187abc224ec0f1c5f",
+  "original_task2": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+  "proposal": "06_RESEARCH_LAB/mission_packets/2026-11-11__RESEARCH_EVIDENCE_CONVERSION_EXECUTION_PACKAGE_v1.md",
+  "initial_diagnostic_module": "scripts/research/research_lab_evidence_conversion_preflight_v1.py",
+  "initial_negative_tests": "tests/research/test_research_lab_evidence_conversion_preflight_v1.py",
+  "run_commands": [
+    "python -m unittest tests.research.test_research_lab_evidence_conversion_preflight_v1 -v",
+    "python -m scripts.research.research_lab_evidence_conversion_preflight_v1 --repo-root ."
+  ],
+  "actual_native_actions_run_for_this_pr": "UNVERIFIED_UNTIL_PR_CI_READBACK",
+  "no_duplicate_schedulers": true,
+  "new_worker_or_agent": false,
+  "new_source_contract": false,
+  "new_paid_api": false,
+  "authority": {
+    "research_only": true,
+    "automatic_model_promotion": false,
+    "automatic_forecast_changes": false,
+    "portfolio_execution": false,
+    "rewrite_frozen_source": false,
+    "retroactive_scoring": false
+  },
+  "original_evidence": {
+    "experiment_registry_blob": "4d5f0185cbd7b618cdc1ab1ec389f0904d7c84f0",
+    "scientific_admission_blob": "9ce559dd1cb02c04c6d76159c61bd72ac41738a4",
+    "timed_source_anchor_blob": "247913a2cd8bfdd5e3e8154dc372876077992192",
+    "experiment_lifecycle_blob": "e18fb0388369d2fb503452972fe11ddfbf925ae2",
+    "shared_next_action_blob": "3cc81f67e8292f62e62570ea429ee0cd7058254e",
+    "shared_runtime_blob": "2e2d136710962e6ce6726f8410d92c82481f41a4",
+    "fnp_latest_blob": "a563d8251cda6518df6f1c31504c62b81b28a401",
+    "summary": {
+      "candidate_count": 735,
+      "admitted_for_forward_test_candidate_count": 337,
+      "matured_candidate_summed_nonindependent": 1504,
+      "science_score_eligible_candidate_summed_nonindependent": 0,
+      "shared_next_action_rows": 45,
+      "shared_runtime_rows": 0,
+      "fnp_rows": 0
+    },
+    "dangerous_inference": "DO_NOT_DISABLE_TIME_GUARD_TO_CREATE_SCOREABLE_ROWS",
+    "source_clock_policy": "TIMED_ANCHOR_REJECTED_BY_DESIGN_UNTIL_TRUSTED_SERVER_ACCEPTANCE"
+  },
+  "dependency_priority": [
+    "EC-00",
+    "EC-01",
+    "EC-02",
+    "EC-03",
+    "EC-04",
+    "EC-05",
+    "EC-06"
+  ],
+  "implementation_slots": 3,
+  "missions": [
+    {
+      "id": "EC-00",
+      "priority": "P0",
+      "original_owner": "Archive#1512",
+      "status": "IMPLEMENTED_IN_INITIAL_PR_UNVERIFIED_NATIVE_CI",
+      "assigned": "ChatGPT+Codex",
+      "next": "Native PR readback, unit tests, PR qualified review/merge; report only native commands actually run",
+      "falsifier": "Mismatch or missing original registry/source",
+      "done": "Read-only output, native test receipt, qualified merge and main hash"
+    },
+    {
+      "id": "EC-01",
+      "priority": "P0",
+      "original_owner": "Archive#1157",
+      "status": "SOURCE_CLOCK_BLOCKED_UNTIL_PROVEN",
+      "assigned": "Codex+Claude+Grok",
+      "next": "Prove one trusted prospective first-published server receipt and reject all forged clocks",
+      "falsifier": "No trustworthy first-known clock or source/custody cannot be authenticated",
+      "done": "Exact-head FAIL/PASS safe provenance tests and first new due qualified future outcome; no backfill"
+    },
+    {
+      "id": "EC-02",
+      "priority": "P0",
+      "original_owner": "Archive#1478",
+      "status": "SOURCE_PRODUCER_DIAGNOSTIC_REQUIRED",
+      "assigned": "Codex+Claude",
+      "next": "Trace existing observer observe/mature/coverage-health native invocation and persisted original owner receipts",
+      "falsifier": "Alternative valid producer already exists or zero divergence truly documented",
+      "done": "Real original scheduled native run proves source-eligible divergence or zero denominator with authenticated health"
+    },
+    {
+      "id": "EC-03",
+      "priority": "P1",
+      "original_owner": "Archive#1596",
+      "status": "ONE_PROSPECTIVE_BLOCK_ONLY",
+      "assigned": "ChatGPT+Grok",
+      "next": "Reconcile Shared Row semantic grains and compare C02/C07 to all-positive baseline on same eligible event cohort",
+      "falsifier": "Fails naive baseline or dependency survives holdout",
+      "done": "Independent-block matched outcome and FNP/tail scorecard, no premature winner"
+    },
+    {
+      "id": "EC-04",
+      "priority": "P1",
+      "original_owner": "Archive#1516",
+      "status": "W47_PLUS_PROSPECTIVE_REQUIRED",
+      "assigned": "Codex+Claude",
+      "next": "Attach existing CN forecast source to width-aware original naive baseline at true first-issued Monday clock",
+      "falsifier": "Score benefit attributable entirely to band width or source/issue not authentic",
+      "done": "First verified prospective matured matched CN-vs-B1 unit, no W41-W46 forward credit"
+    },
+    {
+      "id": "EC-05",
+      "priority": "P2_CONDITIONAL",
+      "original_owner": "Meme-Alpha-Lab#228",
+      "status": "AFTER_REAL_SOURCE_ELIGIBILITY_ONLY",
+      "assigned": "Original private Alpha owner+Grok",
+      "next": "Test existing Paper Wallet v4/Strategy Arena full-sized executable exits against no-trade and matched simple strategy",
+      "falsifier": "No real exit quote/route or no incremental after-cost value",
+      "done": "One immutable first-known qualified paper event, censored/rug retained, after-cost paired outcome"
+    },
+    {
+      "id": "EC-06",
+      "priority": "P1",
+      "original_owner": "Archive#1157",
+      "status": "CLOSE_REAL_DELTA_NOT_REPORTS",
+      "assigned": "S1",
+      "next": "Route one material original task, exact-native PR/test/review, fresh-main readback, later measured impact",
+      "falsifier": "Only documentation, model opinion, green code test or self-report",
+      "done": "Verified source consumer and post-merge outcome, or exact scientific rejection"
+    }
+  ],
+  "fable": {
+    "selected_existing_package_commit": "351a0567cb454590f9e8ba6218cf456ce5f08131",
+    "frozen_package_blob": "435b8385a3d2c1d98ddde07e41d25270e7e10e2b",
+    "claude_audit_bridge_comment_id": 6797741043,
+    "claude_audit_verdict": "GO_WITH_4_OPERATIONAL_NOTES",
+    "execution_status": "NOT_VERIFIED_STARTED",
+    "separate_native_owner_approval_and_served_model_required": true,
+    "change_to_frozen_scope": false,
+    "mix_estimate": {
+      "directly_relevant_percent_range": [
+        20,
+        30
+      ],
+      "independent_research_percent_range": [
+        70,
+        80
+      ],
+      "measurement_type": "QUALITATIVE_SCOPE_ALLOCATION_NOT_STATISTIC"
+    },
+    "include_only": [
+      "RL-F1_DAILY_FIRST_KNOWN_STALE_WEEKLY_STATE_CONTRACT",
+      "RL-F2_HEALTHY_PARITY_NO_DECISION_ECONOMIC_HONESTY"
+    ],
+    "exclude": [
+      "EC-01",
+      "EC-02",
+      "EC-03_FULL",
+      "EC-04",
+      "EC-05_IMPLEMENTATION",
+      "SCIENTIFIC_CONVERSION_AUDIT_DEFERRED",
+      "NEW_ENGINE",
+      "FABLE_AUTOMATIC_RUN",
+      "SOL_MAX_2080"
+    ]
+  },
+  "s1_decision_required": {
+    "contract": "S1_RESEARCH_CONVERSION_DECISION_v1",
+    "fields": [
+      "original_owner",
+      "ec_id",
+      "current_main_sha",
+      "original_pr_exact_head",
+      "role",
+      "source_clock",
+      "decision",
+      "review_receipt",
+      "native_test_receipt",
+      "next_trigger"
+    ],
+    "legal_decisions": [
+      "EXECUTE_NOW",
+      "DELEGATE_CODEX",
+      "CLAUDE_REVIEW",
+      "GROK_FALSIFY",
+      "SOURCE_BLOCKED",
+      "DUPLICATE_KILLED",
+      "NOOP"
+    ],
+    "priority_note": "P0 safety/production PRs first, then smallest source-ready step; max 3 original PRs per tick; no new supervisor",
+    "bridge_inputs": [
+      "Donh91/Investering-AI-Audit-Bridge#173",
+      "Donh91/Investering-AI-Audit-Bridge#177"
+    ],
+    "Monday_read_only_exception": "09:30-10:30 Europe/Copenhagen"
+  },
+  "stop": [
+    "MISSING_OR_UNVERIFIED_FIRST_KNOWN",
+    "SOURCE_RIGHTS_UNKNOWN",
+    "ROUND3_FIREWALL",
+    "SAME_SOURCE_DUPLICATE",
+    "EXACT_HEAD_CI_NOT_VERIFIED",
+    "RECOVERY_AUTHORITY_UNVERIFIED_HIGH_IMPACT",
+    "NO_NEW_MATERIAL_EVIDENCE_AFTER_TWO_ATTEMPTS"
+  ]
+}

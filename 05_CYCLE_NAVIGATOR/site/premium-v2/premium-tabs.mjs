@@ -1,3 +1,4 @@
+import {playOnce} from './play-once.mjs';
 /**
  * SITE #1578. Only the UI: four accessible public panels, no new market owner.
  * Fail open to ordinary anchor navigation when the source DOM is incomplete.
@@ -43,7 +44,7 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     heading.textContent='Grafhistorik';
     const note=document.createElement('p');
     note.id='cn-graph-history-note';
-    note.textContent='Fra uge 45 (2026). Faktisk BTC-kurs fra verificerede timer; kun forhåndsudstedte dagsprognoser vises som blå kurve.';
+    note.textContent='Fra uge 45 (2026). Faktisk BTC-kurs fra verificerede timer; kun kildeudstedte dagsprognoser vises som blå kurve.';
     description.append(heading,note);
     const link=document.createElement('a');
     link.id='cn-graph-history-link';
@@ -104,8 +105,8 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     }
     for (const x of nodes) if(x.link.textContent!==names[x.key]) x.link.textContent=names[x.key];
     // This link stays inside the weekly graph panel, never becomes a fifth tab.
-    const historyCopy=lang()==='en'?{title:'Graph history',note:'One continuous BTC price line with week boundaries. Green = observed prices; dashed blue = original forecast issued before outcomes.',link:'Explore detailed history'}:
-      {title:'Grafhistorik',note:'Én sammenhængende BTC-kurve med ugeadskillelser. Grøn = faktiske kurser, stiplet blå = original forhåndsudstedt ugeprognose.',link:'Se detaljeret grafhistorik'};
+    const historyCopy=lang()==='en'?{title:'Graph history',note:'One continuous BTC price line with week boundaries. Green = observed prices; dashed blue = original source-issued weekly forecast. Issue time and any same-day correction are shown in the detailed history.',link:'Explore detailed history'}:
+      {title:'Grafhistorik',note:'Én sammenhængende BTC-kurve med ugeadskillelser. Grøn = faktiske kurser, stiplet blå = original kildeudstedt ugeprognose. Udstedelsestid og evt. korrektion samme dag står i den detaljerede grafhistorik.',link:'Se detaljeret grafhistorik'};
     const preview=document.getElementById('cn-graph-history-preview');
     if(preview)preview.title=lang()==='en'?'Historical BTC prices and original weekly forecasts':'Grafhistorik med faktiske BTC-kurser og originale ugeprognoser';
     for(const [id,value] of [['cn-graph-history-title',historyCopy.title],['cn-graph-history-note',historyCopy.note],['cn-graph-history-link',historyCopy.link]]){
@@ -129,6 +130,10 @@ if (nav && nodes.every(x => x.link && x.panel)) {
       else x.link.removeAttribute('aria-current');
     }
     document.body.dataset.cnSiteView=selected.key;
+    // v2.7 first-visit motion (once per visit per tab; reveal only, end state unchanged).
+    if (selected.key === 'compass') playOnce('cnKompasEntered', selected.panel, 'cn-kompas-enter');
+    if (selected.key === 'graph') playOnce('cnPrognoseEntered', selected.panel, 'cn-prognose-enter');
+    if (selected.key === 'path') playOnce('cnCyklusEntered', selected.panel, 'cn-cyklus-enter');
     revealSelected(selected.link);
     if (changeUrl) history.pushState({cnSiteView:selected.key},'', '#'+selected.id);
   };
@@ -162,3 +167,74 @@ if (nav && nodes.every(x => x.link && x.panel)) {
   new MutationObserver(paintLabels).observe(nav,{subtree:true,childList:true,characterData:true});
   window.addEventListener('resize',paintLabels);
 }
+
+/* CN SITE v2.2b · Kompas horizon strip: inline rationale on demand, quiet state for an
+ * unissued horizon. Presentation only: reads text the PRO runtime already painted,
+ * never changes it, never navigates. Fails open (rationale stays reachable). */
+(() => {
+  const cards = [...document.querySelectorAll('#compass-pro .cn-horizon-card')];
+  if (!cards.length) return;
+  const en = () => (document.documentElement.lang || 'da').startsWith('en');
+  const paint = () => {
+    for (const card of cards) {
+      const arrow = card.querySelector('.cn-horizon-arrow')?.textContent.trim();
+      const quiet = arrow === '?' || arrow === '';
+      if (card.dataset.quiet !== String(quiet)) card.dataset.quiet = String(quiet);
+      const button = card.querySelector('.cn-horizon-more');
+      if (!button) continue;
+      const open = button.getAttribute('aria-expanded') === 'true';
+      const label = open ? (en() ? 'Hide rationale' : 'Skjul begrundelse') : (en() ? 'Rationale' : 'Begrundelse');
+      if (button.textContent !== label) button.textContent = label;
+    }
+    const title = document.getElementById('cn-explain-title');
+    const words = en() ? 'All 14 horizons, explanation and sources' : 'Alle 14 horisonter, forklaring og kilder';
+    if (title && title.textContent !== words) title.textContent = words;
+  };
+  for (const card of cards) {
+    const button = card.querySelector('.cn-horizon-more');
+    if (!button) continue;
+    button.addEventListener('click', () => {
+      const open = button.getAttribute('aria-expanded') !== 'true';
+      button.setAttribute('aria-expanded', String(open));
+      card.dataset.expanded = String(open);
+      paint();
+    });
+  }
+  paint();
+  const compass = document.getElementById('compass-pro');
+  if (compass) new MutationObserver(paint).observe(compass, {subtree:true, childList:true, characterData:true});
+  document.addEventListener('cn:languagechange', paint);
+})();
+
+/* CN SITE v2.3 · Markedscyklus timeline: one reveal on first view. Presentation only:
+ * reads the rail the PATH runtime painted, never changes its text or data, never fetches,
+ * never draws progress (v2.3-final honesty fix). Fails open (static final state). */
+(() => {
+  const view = document.getElementById('official-path-view');
+  const rail = document.getElementById('premium-path-rail');
+  if (!view || !rail || typeof IntersectionObserver !== 'function') return;
+  const reduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches:true};
+  let started = false;
+  const start = () => {
+    if (started || !rail.querySelector('.path-node') || !rail.getClientRects().length) return;
+    started = true;
+    if (reduce.matches) { rail.dataset.cnReveal = 'done'; return; }
+    rail.dataset.cnReveal = 'run';
+    window.setTimeout(() => { rail.dataset.cnReveal = 'done'; }, 1000);
+  };
+  new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) start(); }).observe(rail);
+  new MutationObserver(start).observe(rail, {childList:true});
+})();
+
+/* CN SITE v2.4S · logo: one calm settle per session, never blocking, off under reduced motion. */
+(() => {
+  const brand = document.querySelector('.dev-brand');
+  if (!brand) return;
+  try {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (sessionStorage.getItem('cnLogoSettled') === '1') return;
+    sessionStorage.setItem('cnLogoSettled', '1');
+  } catch { return; }
+  brand.classList.add('cn-logo-settle');
+  window.setTimeout(() => brand.classList.remove('cn-logo-settle'), 700);
+})();

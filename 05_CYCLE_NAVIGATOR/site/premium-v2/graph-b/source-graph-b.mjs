@@ -26,6 +26,19 @@ const num=(value,unit)=>s(value)?new Intl.NumberFormat(language==='da'?'da-DK':'
 const set=(id,value)=>{const n=$(id);if(n)n.textContent=String(value)};
 const attr=(id,key,value)=>{const n=$(id);if(n)n.setAttribute(key,String(value))};
 const movePath=pts=>pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ');
+// v2.4G2b PROPOSAL: monotone cubic (Fritsch–Carlson, = d3.curveMonotoneX) through the SAME
+// source points. Passes exactly through every point and never leaves the y-range of each
+// neighbouring pair (no implied highs/lows). Used only for the 7 daily expected closes.
+const monotonePath=pts=>{
+ const n=pts.length;if(n<3)return movePath(pts);
+ const dx=[],m=[];for(let i=0;i<n-1;i++){dx[i]=pts[i+1].x-pts[i].x;m[i]=(pts[i+1].y-pts[i].y)/dx[i]}
+ const t=[m[0]];for(let i=1;i<n-1;i++)t[i]=m[i-1]*m[i]<=0?0:(3*(dx[i-1]+dx[i]))/((2*dx[i]+dx[i-1])/m[i-1]+(dx[i]+2*dx[i-1])/m[i]);
+ t[n-1]=m[n-2];
+ for(let i=0;i<n-1;i++){if(m[i]===0){t[i]=0;t[i+1]=0;continue}const a=t[i]/m[i],b=t[i+1]/m[i],h=a*a+b*b;if(h>9){const k=3/Math.sqrt(h);t[i]=k*a*m[i];t[i+1]=k*b*m[i]}}
+ let d='M'+pts[0].x.toFixed(2)+','+pts[0].y.toFixed(2);
+ for(let i=0;i<n-1;i++){const h=dx[i]/3;d+=' C'+(pts[i].x+h).toFixed(2)+','+(pts[i].y+t[i]*h).toFixed(2)+' '+(pts[i+1].x-h).toFixed(2)+','+(pts[i+1].y-t[i+1]*h).toFixed(2)+' '+pts[i+1].x.toFixed(2)+','+pts[i+1].y.toFixed(2)}
+ return d;
+};
 const sourceUrl=new URL('../../data/latest.json',import.meta.url);
 const lineageUrl=new URL('../../data/publication-lineage.json',import.meta.url);
 function clearPlaying(){
@@ -72,7 +85,7 @@ function textLabels(){
   cnSource:'Cycle Navigator ↗',compassSource:'Compass ↗',scoreArchive:'Results archive ↗'
  }:{
   title:'Ugens prognose. Faktiske kurser.',
-  intro:'Mandagens frosne high/low mod den faktiske kursudvikling.',
+  intro:'Mandagens frosne høj/lav-intervaller mod den faktiske kursudvikling.',
   disclaimer:officialHome?'Kildebaseret · Oprindelige intervaller og observerede kurser.':'Forhåndsvisning · Kildebaseret, uden demonstrationskurser.',
   graph:'Ugens graf',compass:'Kompas',pro:'Kompas PRO ↗',path:'PATH',proof:officialHome?'Resultater':'Resultat og metode',official:officialHome?'Arkiv ↗':'Officiel side ↗',meta:'KILDER & METODE',metaTitle:'Dokumenteret, ikke antaget.',
   metaCopy:'Offentlig Cycle Navigator, officielt Kompas og observerede markedspriser. Ingen konstruerede prognoser eller udfald.',
@@ -209,7 +222,7 @@ function plot(){
  if(!model||model.source_status!=='SOURCE_BOUNDED'){
   paintFrozenWindowLedger([]);
   paintDailyResearchNotes([]);
-  ['range-band','range-upper','range-lower','forecast','actual'].forEach(id=>attr(id,'d',''));
+  ['range-band','range-upper','range-lower','forecast','forecast-points','actual'].forEach(id=>attr(id,'d',''));
   $('chart')?.querySelector('[data-actual-daily-ranges]')?.replaceChildren();
   $('price-axis')?.replaceChildren();$('grid')?.replaceChildren();
   set('observed-value','—');set('time-label','—');set('timeline-label','—');
@@ -227,7 +240,7 @@ function plot(){
  const hasDailyRanges=model.daily_range_status==='SOURCE_ISSUED'&&model.daily_ranges?.length===7;
  paintDailyResearchNotes(hasDailyRanges?model.daily_ranges:[]);
  const rlabel=document.querySelector('.swatch-band + span');
- if(rlabel&&hasDailyRanges)rlabel.textContent=t('7 daglige frosne high/low-intervaller','7 original daily high/low ranges');
+ if(rlabel&&hasDailyRanges)rlabel.textContent=t('7 daglige frosne høj/lav-intervaller','7 original daily high/low ranges');
  const start=Date.parse(bands[0].window_start_utc),end=Date.parse(bands.at(-1).window_end_utc);
  if(!Number.isFinite(start)||!Number.isFinite(end)||end-start!==7*DAY){model=null;plot();return}
  const availableMax=hourly.length?Math.max(0,Math.min(168,Math.floor((hourly.at(-1).time*1000-start)/HOUR))):0;
@@ -252,9 +265,13 @@ function plot(){
  const xy=p=>({x:x(p.time*1000),y:y(p.value)});
  const area=arr=>movePath(arr.map(p=>({x:x(p.time*1000),y:y(p.high)})))+' '+
    movePath(arr.slice().reverse().map(p=>({x:x(p.time*1000),y:y(p.low)}))).replace(/^M/,'L')+' Z';
+ attr('forecast-points','d','');
  if(model.forecast_status==='SOURCE_ISSUED'){
   const f=model.forecast.map(p=>({time:p.time,value:p.expected_close}));
-  attr('forecast','d',movePath(f.map(xy)));
+  attr('forecast','d',monotonePath(f.map(xy)));
+  // v2.4G2: a dot on each of the 7 source-issued expected closes (zero-length round-cap
+  // subpaths stay circular under the non-uniform viewBox). Same points, nothing added.
+  attr('forecast-points','d',f.map(xy).map(p=>'M'+p.x.toFixed(2)+','+p.y.toFixed(2)+' l0,0').join(' '));
   // Each source-issued daily high/low belongs to its original UTC day cell.
   // The seven forecast close points stay at their original end-of-day timestamps.
   const cells=model.forecast.map((p,i)=>({
@@ -382,9 +399,9 @@ function plot(){
    (frozenDay?' · '+t('oprindeligt forventet luk','original expected close')+
      ' '+num(frozenDay.expected_close,model.forecast_declared_quote_unit):''));
  }
- set('chart-title',t('Mandagens intraday-intervaller mod faktisk kurs','Monday intraday forecast ranges versus observed price'));
- set('chart-description',t('Mandagens tre originale prognoseintervaller vises for dag 1–2, 3–4 og 5–7. Den grønne observerede kurs brydes ved manglende timer. Blå stiplet forventet dagskurs kræver syv udstedte punkter.',
- 'Verified hourly prices only; missing hours break the path. Blue daily forecasts require original published points.'));
+ set('chart-title',t('Mandagens syv frosne dagsintervaller mod faktisk kurs','Monday’s seven frozen daily ranges versus observed price'));
+ set('chart-description',t('Mandagens syv frosne høj/lav-intervaller, ét pr. UTC-døgn. Den grønne observerede kurs brydes ved manglende timer. Blå stiplet forventet dagskurs kræver syv udstedte punkter.',
+ 'Monday’s seven frozen high/low ranges, one per UTC day. Verified hourly prices only; missing hours break the path. Blue daily forecasts require seven original published points.'));
  document.querySelectorAll('[data-asset]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.asset===asset)));
  // v2 presentation only: hand the already-validated, already-drawn values to the
  // read-only inspector. No new values, no interpolation, no extra fetch.
@@ -531,7 +548,8 @@ async function refresh({background=false}={}){
   model=null;sliderHour=0;plot();
  }
  try{
-  const [snapshot,lineage]=await Promise.all([getJson(sourceUrl),getJson(lineageUrl)]);
+  // v2.5.1: lineage is optional in the adapter; a missing/invalid lineage file must not blank the chart.
+  const [snapshot,lineage]=await Promise.all([getJson(sourceUrl),getJson(lineageUrl).catch(()=>null)]);
   if(request!==requestGeneration||selected!==asset)return;
   const next=readOfficialGraphB(snapshot,selected,{now_utc:new Date().toISOString(),publication_lineage:lineage});
   if(next.asset!==asset)return;

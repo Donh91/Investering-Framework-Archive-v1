@@ -40,6 +40,20 @@ test('isolated unified candidate contains ONE original B, ONE original Kompas PR
  assert.match(html,/name="robots" content="noindex,nofollow"/);
 });
 
+test('canonical Swing overview is single, visible before disclosure and source-bound',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ assert.equal(id(html,'swing-rotation-overview'),1,'only one Swing overview');
+ const begin=html.indexOf('id="swing-rotation-overview"');
+ const disclosure=html.indexOf('<details class="cn-pro-more">');
+ const after=html.indexOf('id="compass-pro"');
+ assert.ok(begin>after&&begin<disclosure,'Swing must be visible before the optional disclosure');
+ assert.match(html,/data-contract="CN_SWING_ROTATION_READBACK_V1"/);
+ const runtime=await read('./root-compass-pro.mjs');
+ assert.ok(runtime.includes('swing-rotation-readback.mjs'));
+ assert.ok(runtime.includes("renderSwingRotation($('swing-rotation-overview')"));
+ assert.ok(runtime.includes('readSwingRotation(view,feeds?.compass'));
+});
+
 test('unified root must preserve the approved original B renderer and forecast refusal',()=>{
  const html=buildUnifiedRootHtml(original,pro);
  const originalB=original.slice(original.indexOf('<section id="variant-panel"'),
@@ -201,7 +215,9 @@ test('premium finish: fabricated W44 midpoint curve and large test explanation d
  assert.match(renderer,/paintDailyResearchNotes/);
  assert.match(renderer,/edge\('forecast_high'\)/);
  assert.match(renderer,/edge\('forecast_low'\)/);
- assert.match(renderer,/attr\('forecast','d',movePath\(f\.map\(xy\)\)\)/);
+ // v2.4G2b (owner-approval pending): monotone cubic through the same 7 source points.
+ assert.match(renderer,/attr\('forecast','d',monotonePath\(f\.map\(xy\)\)\)/);
+ assert.match(renderer,/const monotonePath=/);
 });
 
 test('premium finish: visual proof screenshots are captured on exact tested root',async()=>{

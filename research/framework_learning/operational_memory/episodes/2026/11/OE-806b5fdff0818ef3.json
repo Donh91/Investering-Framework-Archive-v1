@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md",
+    "00_FMOS/CHAT_S1_ELITE_RUNBOOK.md",
+    "07_PROMPTS_AND_AGENTS/github_agent/2026-11-13__task-first-skill-discovery-adoption-v1.md",
+    "scripts/agent_skills/discover_task_skills.py",
+    "tests/agent_skills/test_discover_task_skills.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_ARCHIVE_CONTROL",
+  "episode_id": "OE-806b5fdff0818ef3",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(skills): add bounded read-only task-first skill discovery selector * test(skills): verify bounded discovery, pilot exclusion and negative triggers * docs(skills): define task-first metadata discovery and native adoption proof * docs(s1): adopt nonblocking task-first skill discovery and proof semantics * ci(skills): run read-only discovery unit regressions in existing PR gate * fix(skills): rank matched evidence by trigger specificity * test(skills): assert specific trigger comes first without hiding broad match * docs(skills): make bounded skill discovery discoverable in canonical defau",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md": "b050bfaef876a082ee8af6d8a64dfc45b9237f09",
+    "00_FMOS/CHAT_S1_ELITE_RUNBOOK.md": "424c5bdca33e7ab6d04371c2dd99cfd801bcbc75",
+    "07_PROMPTS_AND_AGENTS/github_agent/2026-11-13__task-first-skill-discovery-adoption-v1.md": "129ef5ff32067a3759cf2f3da70d3e1bfae9c7d8",
+    "scripts/agent_skills/discover_task_skills.py": "523788704535da2d56d5dc672c9ab23bfec1b0c9",
+    "tests/agent_skills/test_discover_task_skills.py": "75cd0a3a71cf9d54a2f972faf8140091d2147d68"
+  },
+  "source_commit_sha": "806b5fdff0818ef3a2235471b184ae466fefa73d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T06:06:52-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "feat(skills): bounded task-first discovery and S1 adoption guide (#2108)"
+}

@@ -72,6 +72,35 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
         seen.add(rid)
         low += float(lo)
         high += float(hi)
+    # The explicitly owner-authorized one-shot Astra liability is reserved
+    # BEFORE HTTP, even if the API response is lost or the Actions artifact
+    # eventually expires. It stays in the global monthly exposure until an
+    # independently reviewed native settlement removes it.
+    reservations = value.get("owner_reservations", [])
+    if not isinstance(reservations, list) or len(reservations) > 2:
+        raise ValueError("OWNER_RESERVATION_LEDGER_INVALID")
+    reserved_work_ids = set()
+    for reservation in reservations:
+        if (not isinstance(reservation, dict)
+                or reservation.get("created_month_utc") != "2026-11"
+                or reservation.get("status") != "OWNER_RESERVED_PREHTTP"
+                or reservation.get("lower_usd") != 0
+                or reservation.get("source") != "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596"
+                or reservation.get("one_paid_post_max") != 1
+                or reservation.get("reconciliation_required") is not True):
+            raise ValueError("ASTRA_OWNER_RESERVATION_UNVERIFIED")
+        work = reservation.get("work_id")
+        if work in reserved_work_ids:
+            raise ValueError("DUPLICATE_OWNER_RESERVATION")
+        reserved_work_ids.add(work)
+        allowed = {
+            "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE": 3,
+            "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE": 10,
+        }
+        if work not in allowed or reservation.get("upper_usd") != allowed[work]:
+            raise ValueError("UNKNOWN_OWNER_RESERVED_MODEL_OR_COST")
+        high += float(allowed[work])
+    reservation_count = len(reservations)
     missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
     if missing:
         raise ValueError("KNOWN_UNSETTLED_NATIVE_POST_MISSING")
@@ -81,7 +110,7 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             raise ValueError("KNOWN_UNSETTLED_NATIVE_POST_UNDER_RESERVED")
     if not math.isfinite(high) or high > OWNER_GLOBAL_HARD_STOP_USD:
         raise ValueError("LIABILITY_TOTAL_INVALID")
-    return low, high, len(seen)
+    return low, high, len(seen) + reservation_count
 
 
 def model_quote(args: argparse.Namespace) -> tuple[float, dict | None]:
