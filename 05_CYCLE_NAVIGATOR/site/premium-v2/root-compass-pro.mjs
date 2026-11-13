@@ -9,7 +9,7 @@ import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfid
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,sourceHorizonClock} from './compass-overview.mjs';
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
@@ -57,7 +57,9 @@ function renderOverview(){
  const en=lang==='en';
  const model=publicOverview({latest:feeds?.latest,compass:feeds?.compass,view,lang});
  const keys=['d13','d57','w23'];
- set('cn-overview-heading',en?'Main horizons':'Hovedhorisonter');
+ const sourceClock=sourceHorizonClock({issuedAt:model.issued,valid:model.valid,lang});
+ set('cn-overview-asof',sourceClock.asOf);
+ set('cn-overview-heading',en?'Current Compass horizons':'Aktuelle Kompas-horisonter');
  set('cn-overview-subtitle',en?'Official direction · evidence points, not probabilities':'Officiel retning · evidenspoint, ikke sandsynligheder');
  set('cn-overview-foot',en?
   'Arrows show source-issued direction for each window, not the order of price moves. Bull/Bear are coarse evidence points, not probabilities.':
@@ -70,6 +72,7 @@ function renderOverview(){
  }
  keys.forEach((key,i)=>{
   const card=model.cards[i];
+  set('cn-overview-'+key+'-window',sourceClock.windows[key]);
   set('cn-overview-'+key+'-arrow',card.arrow);
   enhanceLegacyArrow(document,$('cn-overview-'+key+'-arrow'),card.sourceDirection);
   set('cn-overview-'+key+'-direction',card.direction);
@@ -84,7 +87,7 @@ function renderOverview(){
   if(root){
    root.dataset.sourceCurrent=String(model.valid);
    root.dataset.direction=card.sourceDirection;
-   root.setAttribute('aria-label',card.title+': '+card.direction+'. '+card.position+
+   root.setAttribute('aria-label',card.title+': '+sourceClock.windows[key]+'. '+card.direction+'. '+card.position+
     '. '+(card.evidence?'Bull '+card.evidence.bull+', Bear '+card.evidence.bear+'. ':'')+
     card.summary.text);
   }
@@ -605,7 +608,7 @@ function renderOwnerBrief(matrix,originalWeekPrice,lang){
   const row=document.querySelector('[data-cn-overview-extra="'+key+'"]');
   if(row)row.dataset.tone=extra[key].tone;
  }
- set('cn-overview-h12-label',lang==='en'?'0–12 hours':'0–12 timer');
+ set('cn-overview-h12-label',lang==='en'?'Current momentum · observation':'Aktuelt momentum · måling');
  // Owner decision 2026-11-10 (OWNER_DECISION_CN_SITE_v1, DCM Q10): the lane is
  // labelled after its source text (projection.weeks_4_8); the bundle key is unchanged.
  set('cn-overview-c38-label',lang==='en'?'4–8 weeks · altcoins':'4–8 uger · altcoins');
