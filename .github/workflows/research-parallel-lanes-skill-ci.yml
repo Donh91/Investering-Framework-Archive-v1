@@ -35,6 +35,8 @@ on:
       - '04_MARKET_LEARNING/handlekompas/research/2026-11-13__W46_PULLBACK_FAILURE_RPL_V1.*'
       - 'scripts/research/w46_independent_research_comparator_v1.py'
       - 'tests/research/test_w46_independent_research_comparator_v1.py'
+      - 'scripts/research/w46_official_issuance_census_v1.py'
+      - 'tests/research/test_w46_official_issuance_census_v1.py'
 
 permissions:
   contents: read
@@ -299,6 +301,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for exact frozen historic Git object readback.
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -316,7 +320,20 @@ jobs:
           assert j['no_new_scheduler'] and j['constraints']['live_warning_threshold_unchanged']
           print('W46_RESEARCH_NO_PAID_DISPATCH_CONTRACT_PASS')
           PY
-      - name: Run all 12 original W46 source-bound negative controls
+      - name: Run sealed reviewer comparison tests and issuance-census adversarial cases
         run: |
-          python -m py_compile scripts/research/w46_independent_research_comparator_v1.py
+          python -m py_compile scripts/research/w46_independent_research_comparator_v1.py scripts/research/w46_official_issuance_census_v1.py
           python -m unittest discover -s tests/research -p 'test_w46_independent_research_comparator_v1.py' -v
+          python -m unittest discover -s tests/research -p 'test_w46_official_issuance_census_v1.py' -v
+      - name: Reproduce full original W46 issuer census from exact historical Git commit
+        run: |
+          mkdir -p "$RUNNER_TEMP/w46-issuance-research"
+          python -m scripts.research.w46_official_issuance_census_v1 --repo-root . --ref a4504580273bc4396f20395ac9cd272656dc4454 --out-dir "$RUNNER_TEMP/w46-issuance-research"
+      - name: Preserve read-only source-bound W46 count and all original issuer rows
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: w46-original-issuer-census-native
+          path: ${{ runner.temp }}/w46-issuance-research/
+          retention-days: 30
+          if-no-files-found: warn
