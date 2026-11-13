@@ -146,7 +146,7 @@ def forecast_study(root: Path):
         if week > MAX_LAST_COMPLETED_WEEK:
             refusals["UNMATURED_W46"] += 1
             continue
-        if asset not in {"BTC", "ETH"} or window not in WINDOWS | {"weekly"}:
+        if asset not in {"BTC", "ETH"} or window not in (set(WINDOWS) | {"weekly"}):
             refusals["UNSUPPORTED_ASSET_OR_WINDOW"] += 1
             continue
         if type(issue) is not int:
