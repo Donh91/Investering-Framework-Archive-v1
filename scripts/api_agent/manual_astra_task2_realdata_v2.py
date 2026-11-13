@@ -37,6 +37,8 @@ MAX_ONE_SOURCE_BYTES = 650_000
 MAX_SOURCE_FILES = 510
 MAX_PROMPT_BYTES = 100_000
 MAX_OUTPUT_TOKENS = 90_000
+MAX_TOOL_CALLS = 3  # Enforced by Responses API across all built-in tools.
+MAX_COLLECT_SECONDS = 900  # Leave time for authenticated cancel before runner timeout.
 RESERVED_BUDGET_USD = 10.0
 IN_PRICE = 10.0
 OUT_PRICE = 50.0
@@ -444,7 +446,8 @@ def make_payload(folder: Path):
     prompt = (folder / "prompt.txt").read_text(encoding="utf-8")
     payload = {
         "model": MODEL, "reasoning": {"effort": EFFORT},
-        "max_output_tokens": MAX_OUTPUT_TOKENS, "background": True, "store": True,
+        "max_output_tokens": MAX_OUTPUT_TOKENS, "max_tool_calls": MAX_TOOL_CALLS,
+        "background": True, "store": True,
         "tools": [{"type": "code_interpreter",
                    "container": {"type": "auto", "memory_limit": "1g",
                                  "file_ids": [handle["file_id"]]}}],
@@ -498,7 +501,37 @@ def extract_text(resp):
     return "\n\n".join(dict.fromkeys(texts))
 
 
-def collect(folder: Path, max_seconds=1250):
+def cancel_background(folder: Path, response_id: str, reason: str) -> None:
+    """Single explicit cancellation; never mislabel an uncertain cancel as success.
+
+    A background model response may keep consuming resources after the runner exits.
+    Persist the attempt before the API cancellation call. Do not repeat either POST.
+    """
+    write_once(folder / "cancel_attempt.json", {
+        "response_id": response_id, "reason": reason, "attempts": 1,
+        "no_retry": True, "created_at_utc": datetime.now(timezone.utc).isoformat(),
+    })
+    try:
+        result = http("POST", API + "/responses/" + response_id + "/cancel",
+                      key=required("OPENAI_API_KEY"), timeout=45)
+        status = result.get("status")
+        if result.get("id") != response_id or status not in {
+            "cancelled", "completed", "failed", "incomplete", "queued", "in_progress"
+        }:
+            raise ValueError("CANCEL_RESPONSE_BINDING_UNVERIFIED")
+        write_once(folder / "cancel_confirmation.json", {
+            "response_id": response_id, "provider_status": status,
+            "is_terminal": status in {"cancelled", "completed", "failed", "incomplete"},
+            "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        })
+    except Exception as exc:
+        write_once(folder / "cancel_unverified.json", {
+            "response_id": response_id, "reason": type(exc).__name__,
+            "provider_cancellation": "UNKNOWN", "no_additional_paid_POST": True,
+        })
+
+
+def collect(folder: Path, max_seconds=MAX_COLLECT_SECONDS):
     handle = read(folder / "response_handle.json")
     rid = handle.get("response_id")
     if not isinstance(rid, str) or not RESP_ID.fullmatch(rid):
@@ -506,13 +539,19 @@ def collect(folder: Path, max_seconds=1250):
     key = required("OPENAI_API_KEY")
     deadline = time.monotonic() + max_seconds
     while True:
-        resp = http("GET", API + "/responses/" + rid, key=key, timeout=60)
+        try:
+            resp = http("GET", API + "/responses/" + rid, key=key, timeout=60)
+        except Exception:
+            cancel_background(folder, rid, "GET_FAILED_AFTER_PAID_HANDLE")
+            print("ASTRA_REALDATA_V2_CANCEL_REQUEST_ON_GET_FAILURE", rid)
+            return 2
         if resp.get("id") != rid or resp.get("model") not in {None, MODEL}:
             raise ValueError("PROVIDER_RESPONSE_BINDING_MISMATCH")
         if resp.get("status") not in {"queued", "in_progress"}:
             break
         if time.monotonic() + 12 >= deadline:
-            print("ASTRA_REALDATA_V2_PENDING_GET_ONLY", rid)
+            cancel_background(folder, rid, "COLLECT_DEADLINE")
+            print("ASTRA_REALDATA_V2_COLLECT_DEADLINE_CANCEL_ATTEMPTED", rid)
             return 2
         time.sleep(12)
     tool_calls = [x for x in resp.get("output", []) if x.get("type") == "code_interpreter_call"]
