@@ -75,6 +75,32 @@ class AllArchiveCensusTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "REALDATA_ARTIFACT_HASH_MISMATCH"):
                 engine.optional_realdata(Path(tmp))
 
+    def test_changed_forecast_bytes_rejected_against_source_index(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for rel in (engine.SOURCE_INDEX, engine.OUTCOME_INDEX):
+                p = root / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_bytes((engine.ROOT / rel).read_bytes())
+            rel = "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+            altered = root / rel
+            altered.parent.mkdir(parents=True, exist_ok=True)
+            altered.write_text('{"btc_range_low": 1, "btc_range_high": 99999999}')
+            with self.assertRaisesRegex(ValueError, "FROZEN_SOURCE_BYTES_DRIFT"):
+                engine.pinned_bytes(altered, root)
+
+    def test_source_index_self_rewrite_rejected_even_if_content_valid_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for rel in (engine.SOURCE_INDEX, engine.OUTCOME_INDEX):
+                p = root / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_bytes((engine.ROOT / rel).read_bytes())
+            src = root / engine.SOURCE_INDEX
+            src.write_bytes(src.read_bytes() + b" ")
+            with self.assertRaisesRegex(ValueError, "SOURCE_INDEX_BLOB_CHANGED"):
+                engine.pinned_source_map(str(root.resolve()))
+
     def test_duplicate_inventory_paths_rejected(self):
         index = json.loads((engine.ROOT / engine.SOURCE_INDEX).read_text())
         outcomes = json.loads((engine.ROOT / engine.OUTCOME_INDEX).read_text())
