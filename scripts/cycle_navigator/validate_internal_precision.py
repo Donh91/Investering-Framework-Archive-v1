@@ -10,6 +10,13 @@ from typing import Any
 # GitHub Actions invokes this as `python scripts/cycle_navigator/validate_internal_precision.py`.
 # That entrypoint otherwise lacks repository root on sys.path. Without it, the
 # provenance-only original W46 claim reconstruction cannot import its owner.
+# Reviewed W46 same-Monday original/amended snapshots. These code-pinned
+# SHA-256 values cannot be rewritten through ordinary mutable source manifests.
+# W47+ amendments must use their own owner-reviewed evidence and code.
+W46_BEFORE_FORECAST_SHA256 = "990d518786ad841d52c5fe41fe267b4c823c996b468383b3d0d356350ff6243b"
+W46_AFTER_FORECAST_SHA256 = "1cee0508f21b7974f3200f60dc65ea51c81c536f7f9c155c89e58fec39ba7f0b"
+W46_BEFORE_ARCHIVE_MANIFEST_SHA256 = "76ae647181e16704d3eaee1f2f51072e387601249200c0cadb68d56218d65c54"
+
 _REPO_PACKAGE_ROOT = str(Path(__file__).resolve().parents[2])
 if _REPO_PACKAGE_ROOT not in sys.path:
     sys.path.insert(0, _REPO_PACKAGE_ROOT)
@@ -83,6 +90,9 @@ def authorized_w46_reissue_preserving_original_claims(
             not isinstance(before, str) or len(before) != 64
             or not isinstance(after, str) or len(after) != 64
             or before == after
+            or before != W46_BEFORE_FORECAST_SHA256
+            or after != W46_AFTER_FORECAST_SHA256
+            or sha256_path(base / "BEFORE_INTEGRITY_MANIFEST.json") != W46_BEFORE_ARCHIVE_MANIFEST_SHA256
             or before != request.get("original_forecast_sha256")
             or before != internal.get("source_public_freeze_sha256")
             or before != archive.get("original_revision_sha256")
