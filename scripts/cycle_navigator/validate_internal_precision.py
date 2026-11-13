@@ -122,6 +122,17 @@ def authorized_w46_reissue_preserving_original_claims(
             for c in claims
         ):
             return False
+        # Stronger than a same-hash assertion: reconstruct the complete first
+        # internal issuance from its separately archived exact original inputs.
+        # This catches altered claim texts, reordered/missing claims, changed
+        # maturity and alias mappings, not just changed claimed SHA fields.
+        from scripts.cycle_navigator.build_internal_precision import build_current_freeze
+        original_rebuilt = build_current_freeze(
+            old_machine, old_public, 34, 2026, 46,
+            before, sha256_path(old_machine_path),
+        )
+        if internal != original_rebuilt:
+            return False
         return True
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         return False
