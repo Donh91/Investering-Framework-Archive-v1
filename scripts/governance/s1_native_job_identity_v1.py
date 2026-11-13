@@ -26,15 +26,25 @@ class _SafeGithubLogRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         target = urlsplit(newurl)
         host = target.hostname or ""
-        if target.scheme != "https" or not (
-                host == "api.github.com" or host.endswith(".githubusercontent.com")):
+        # Only known GitHub Actions result-storage account pattern on Azure,
+        # never arbitrary *.blob.core.windows.net (tenant-controlled host).
+        azure_results = re.fullmatch(
+            r"productionresultssa[0-9]{1,3}[.]blob[.]core[.]windows[.]net", host) is not None
+        if (target.scheme != "https" or target.username is not None
+                or target.password is not None or target.port not in (None, 443)
+                or not (host == "api.github.com"
+                        or host.endswith(".githubusercontent.com")
+                        or azure_results)):
             raise ValueError("JOB_LOG_REDIRECT_HOST_UNVERIFIED")
         follow = super().redirect_request(req, fp, code, msg, headers, newurl)
-        if follow is not None and host != "api.github.com":
-            # urllib's standard handler otherwise forwards Authorization when
-            # GitHub redirects /actions/jobs/{id}/logs to signed object storage.
-            for name in ("Authorization", "authorization", "Proxy-Authorization"):
-                follow.remove_header(name)
+        if follow is not None and host != urlsplit(req.full_url).hostname:
+            # urllib normalizes Proxy-Authorization to Proxy-authorization;
+            # Request.remove_header() is case-sensitive. Strip both stores
+            # by casefold, including a NO_PROXY/bypass-proxy destination.
+            for store in (follow.headers, follow.unredirected_hdrs):
+                for key in list(store):
+                    if key.casefold() in ("authorization", "proxy-authorization", "cookie"):
+                        del store[key]
         return follow
 
 
@@ -306,7 +316,9 @@ def verify_native_required_jobs(read, repo, pr_number, head, release_class):
                 return _hold("POLICY_DUPLICATE_JOB")
             keys.add(key)
         pr = read(url + "/pulls/" + str(pr_number))
-        if pr["head"]["sha"] != head or pr.get("state") != "open" or pr.get("draft") is not False:
+        if (pr["head"]["sha"] != head or pr.get("state") != "open"
+                or pr.get("draft") is not False
+                or pr.get("base", {}).get("ref") != "main"):
             return _hold("PR_HEAD_OR_STATE_DRIFT")
         files = _page_files(read, url + "/pulls/" + str(pr_number) + "/files", pr.get("changed_files"))
         if not all(isinstance(x, dict) and isinstance(x.get("filename"), str)
@@ -382,7 +394,12 @@ def verify_native_required_jobs(read, repo, pr_number, head, release_class):
         fresh_runs = _page_all(read, run_route, "workflow_runs")
         if _census_fingerprint(fresh_runs, required_paths, head) != _census_fingerprint(runs, required_paths, head):
             return _hold("NATIVE_RUN_CENSUS_DRIFT")
-        if read(url + "/pulls/" + str(pr_number))["head"]["sha"] != head:
+        fresh_pr = read(url + "/pulls/" + str(pr_number))
+        if (fresh_pr["head"]["sha"] != head
+                or fresh_pr.get("state") != "open"
+                or fresh_pr.get("draft") is not False
+                or fresh_pr.get("base", {}).get("ref") != "main"
+                or fresh_pr.get("changed_files") != pr.get("changed_files")):
             return _hold("PR_HEAD_OR_STATE_DRIFT")
         if read(url + "/branches/main")["commit"]["sha"] != main_sha:
             return _hold("MAIN_DRIFT_RECHECK")

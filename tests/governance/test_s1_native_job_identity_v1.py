@@ -339,6 +339,62 @@ class NativeIdentityTests(unittest.TestCase):
         self.assertEqual(nxt.full_url.split("/")[2],
                          "pipelines.actions.githubusercontent.com")
 
+    def test_log_redirect_strips_normalized_proxy_credentials(self):
+        req = Request("https://api.github.com/repos/o/r/actions/jobs/1/logs",
+                      headers={"Authorization": "Bearer SECRET_TOKEN",
+                               "Proxy-Authorization": "Basic SECRET_PROXY"})
+        self.assertTrue(any(k.lower() == "proxy-authorization" for k in req.headers))
+        nxt = _SafeGithubLogRedirect().redirect_request(
+            req, None, 302, "Found", {},
+            "https://productionresultssa32.blob.core.windows.net/results/log?sig=x")
+        self.assertIsNotNone(nxt)
+        for store in (nxt.headers, nxt.unredirected_hdrs):
+            self.assertFalse(any(k.casefold() in ("authorization", "proxy-authorization")
+                                 for k in store))
+        self.assertNotIn("SECRET_", str(nxt.headers) + str(nxt.unredirected_hdrs))
+
+    def test_log_redirect_github_azure_results_accepted_without_credentials(self):
+        req = Request("https://api.github.com/repos/o/r/actions/jobs/1/logs",
+                      headers={"Authorization": "Bearer SECRET_TOKEN"})
+        nxt = _SafeGithubLogRedirect().redirect_request(
+            req, None, 302, "Found", {},
+            "https://productionresultssa32.blob.core.windows.net/results/log?sig=x")
+        self.assertEqual(nxt.full_url.split("/")[2],
+                         "productionresultssa32.blob.core.windows.net")
+        self.assertNotIn("SECRET_TOKEN", str(nxt.headers))
+
+    def test_log_redirect_rejects_unverified_azure_account_or_port(self):
+        req = Request("https://api.github.com/repos/o/r/actions/jobs/1/logs")
+        for url in ("https://attacker.blob.core.windows.net/collect",
+                    "https://evilproductionresultssa32.blob.core.windows.net/collect",
+                    "https://productionresultssa32.blob.core.windows.net.evil.example/x",
+                    "https://productionresultssa32.blob.core.windows.net:444/x",
+                    "http://productionresultssa32.blob.core.windows.net/x",
+                    "https://attacker@productionresultssa32.blob.core.windows.net/x"):
+            with self.subTest(url=url):
+                with self.assertRaisesRegex(ValueError, "JOB_LOG_REDIRECT_HOST_UNVERIFIED"):
+                    _SafeGithubLogRedirect().redirect_request(req, None, 302, "Found", {}, url)
+
+    def test_original_pr_retargeted_before_check_must_hold(self):
+        x = build_fixture()
+        x[ROOT + "/pulls/9"]["base"]["ref"] = "release"
+        self.assertEqual(verify(x)["reason"], "PR_HEAD_OR_STATE_DRIFT")
+
+    def test_original_pr_retargeted_mid_check_must_hold(self):
+        x = build_fixture()
+        reads = [0]
+        def native_get(route):
+            response = copy.deepcopy(x[route])
+            if route == ROOT + "/pulls/9":
+                reads[0] += 1
+                if reads[0] == 2:
+                    response["base"]["ref"] = "release"
+            return response
+        result = verify_native_required_jobs(
+            _reader_with_logs(native_get, x), REPO, 9, HEAD, "DOCS_ONLY")
+        self.assertEqual(reads[0], 2)
+        self.assertEqual(result["reason"], "PR_HEAD_OR_STATE_DRIFT")
+
     def test_log_redirect_to_untrusted_host_is_rejected(self):
         req = Request("https://api.github.com/repos/owner/repo/actions/jobs/123/logs",
                       headers={"Authorization": "Bearer NEVER_SEND"})
