@@ -16,6 +16,10 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Script entrypoints run with scripts/research as sys.path[0]; anchor repo root first.
+REPO_IMPORT_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_IMPORT_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_IMPORT_ROOT))
 from scripts.api_agent import manual_astra_task2_high_v1 as core
 
 MODEL = "gpt-6-astra"
