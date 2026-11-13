@@ -44,3 +44,10 @@ test('source-only integration into Prognose tab and no official graph mutation',
  assert.match(css,/\.cn-challenger-a/);
  assert.doesNotMatch(tabs,/Math\.sin|forecast_low|forecast_high/);
 });
+
+test('build publishes an explicit unavailable research data receipt instead of a 404',async()=>{
+ const build=await readFile(new URL('../build-public.mjs',import.meta.url),'utf8');
+ assert.match(build,/CN_CHALLENGER_A_PUBLIC_SHADOW_v1/);
+ assert.match(build,/NO_GOVERNED_IMMUTABLE_ISSUANCE_ON_MAIN/);
+ assert.match(build,/resolve\(dataDir,"challenger-a"\)/);
+});
