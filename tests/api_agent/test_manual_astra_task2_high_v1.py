@@ -169,6 +169,23 @@ class AstraOneShotTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "RETRIEVED_RESPONSE_ID_OR_MODEL_MISMATCH"):
                 m.collect(self.out)
 
+    def test_canonical_shared_budget_carries_astra_reservation(self):
+        from scripts.api_agent.check_monthly_cost_guard import pending_risk
+        ledger = Path(__file__).resolve().parents[2] / (
+            "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
+        low, high, n = pending_risk(ledger)
+        self.assertGreaterEqual(high, 12.0)
+        self.assertGreaterEqual(n, 4)
+        self.assertGreaterEqual(high-low, m.MAX_THEORETICAL_COST_USD)
+
+    def test_original_director_live_secret_not_corrupted(self):
+        yml = (Path(__file__).resolve().parents[2] /
+               ".github/workflows/owner-bound-daily-director-manual.yml").read_text()
+        exact = "$" + "{{ secrets.OPENAI_API_KEY }}"
+        malformed = exact + "}"
+        self.assertIn(exact, yml)
+        self.assertNotIn(malformed, yml)
+
     def test_oversize_source_does_not_construct_api_payload(self):
         source = self.root / m.SOURCE_FILES[0]
         source.write_text("A"*50001)
