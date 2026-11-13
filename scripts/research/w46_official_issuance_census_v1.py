@@ -33,7 +33,7 @@ def load_frozen(root: Path, ref: str = PIN) -> tuple[list[tuple[str, bytes]], by
     names = git_output(root, "ls-tree", "-r", "--name-only", ref, "--", PREFIX).decode().splitlines()
     paths = sorted(n for n in names
                    if n.startswith(PREFIX) and n.endswith(".json") and
-                   len(n.split("/")) == 9 and
+                   len(n.split("/")) == 8 and
                    n.split("/")[-2] in VALID_DAYS and
                    FILENAME.fullmatch(n.split("/")[-1]))
     # No silently truncated denominator, and no unrelated or later November issuances.
