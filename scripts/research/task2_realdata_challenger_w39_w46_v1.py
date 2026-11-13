@@ -13,6 +13,7 @@ import csv
 import hashlib
 import json
 import math
+import random
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -232,6 +233,37 @@ def forecast_study(root: Path):
             "mean_width_pct_anchor": round(sum(x["normalized_width_pct"] for x in item) / len(item), 6),
             "containment_pct": round(100 * sum(x["full_extreme_containment"] for x in item)/len(item), 6),
             "mean_jaccard": round(sum(x["range_jaccard"] for x in item)/len(item), 6),
+        }
+    # Decision-time horizons within one source week are correlated.
+    # Bootstrap pairs of four asset/windows BY ORIGINAL FORECAST WEEK, never by row.
+    origin_weeks = sorted(weeks_checked)
+    block = {}
+    for w in origin_weeks:
+        block[w] = {}
+        for model in MODELS:
+            z = [r["width_penalty_a10_diagnostic"] for r in rows
+                 if r["forecast_week"] == w and r["model"] == model]
+            if len(z) != 4:
+                raise ValueError("INCOMPLETE_ORIGINAL_WEEK_BLOCK")
+            block[w][model] = sum(z) / len(z)
+    summary["paired_week_bootstrap"] = {}
+    for alternative in MODELS[1:]:
+        delta = [block[w]["ORIGINAL_CN"] - block[w][alternative] for w in origin_weeks]
+        if len(delta) < 4:
+            continue
+        rnd = random.Random(1309)
+        simulations = sorted(
+            sum(rnd.choices(delta, k=len(delta))) / len(delta)
+            for _ in range(5000)
+        )
+        summary["paired_week_bootstrap"][alternative] = {
+            "independent_week_block_n": len(delta),
+            "mean_CN_minus_baseline_penalty": round(sum(delta)/len(delta), 6),
+            "CN_better_week_count": sum(v < 0 for v in delta),
+            "bootstrap_ci_95_pct_penalty": [
+                round(simulations[125], 6), round(simulations[4875], 6)],
+            "status": "EXPLORATORY_DEVELOPMENT_NOT_PRE_REGISTERED_SKILL",
+            "method": "fixed-seed 5000 resamples of seven weekly paired averages",
         }
     return summary, rows
 
