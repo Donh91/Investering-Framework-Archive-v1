@@ -81,12 +81,12 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     entry.append(description,frame,link);
     graphPanel.append(entry);
   }
-  const challengerPanel=mountChallengerA(graphPanel,()=>lang());
   const translations = {
     da:{compass:'Kompas',graph:'Ugens prognose',path:'Markedscyklus',proof:'Resultater'},
     en:{compass:'Compass',graph:'Weekly forecast',path:'Market cycle',proof:'Results'}
   };
   const lang = () => document.querySelector('[data-lang][aria-pressed="true"]')?.getAttribute('data-lang') === 'en' ? 'en' : 'da';
+  const challengerPanel=mountChallengerA(graphPanel,()=>lang());
   // Keep the selected tab discoverable when browser zoom makes the rail scroll.
   // Change only the rail's horizontal position, never the page scroll or tab model.
   const revealSelected = link => {
