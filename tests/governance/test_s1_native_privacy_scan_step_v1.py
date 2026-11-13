@@ -34,7 +34,7 @@ class Fixture:
     """base commit on main, one PR commit, one --no-ff merge commit checked out."""
 
     def __init__(self, tmp, pr_changes, base_files=None, title="Update public notes",
-                 body="Public documentation fix."):
+                 body="Public documentation fix.", main_changes=None):
         self.repo = Path(tmp) / "origin"
         self.repo.mkdir()
         git(self.repo, "init", "-q", "-b", "main")
@@ -54,9 +54,16 @@ class Fixture:
         git(self.repo, "commit", "-q", "-m", "pr change")
         self.head = git(self.repo, "rev-parse", "HEAD")
         git(self.repo, "checkout", "-q", "main")
+        if main_changes is not None:
+            main_changes(self)
+            git(self.repo, "add", "-A")
+            git(self.repo, "commit", "-q", "-m", "independent main change")
+            self.base = git(self.repo, "rev-parse", "HEAD")
+        original_base = git(self.repo, "merge-base", self.base, self.head)
         git(self.repo, "merge", "-q", "--no-ff", "-m", "merge pr", "pr")
         self.merge = git(self.repo, "rev-parse", "HEAD")
-        files = git(self.repo, "diff", "--name-status", "-M", self.base, self.merge).splitlines()
+        # GitHub PR changed_files counts original three-dot diff, not merge output.
+        files = git(self.repo, "diff", "--name-status", "-M", original_base, self.head).splitlines()
         self.event = {"number": 7, "pull_request": {
             "number": 7, "title": title, "body": body, "changed_files": len(files),
             "head": {"sha": self.head}, "base": {"sha": self.base}}}
@@ -228,6 +235,38 @@ class NativePrivacyScanStep(unittest.TestCase):
                      base_files={"00_FMOS/RULE.md": "A public rule text.\n" * 20})
         code, out, _ = fx.cli()
         self.assertEqual((code, out["result"]), (1, "RESTRICTED_CONTENT"), out)
+
+    def test_literal_git_pathspec_filename_cannot_hide_deleted_private_marker(self):
+        magic = ":(exclude)*.md"
+        fx = Fixture(
+            self.tmp,
+            lambda f: git(f.repo, "rm", "-q", "--", magic),
+            base_files={magic: "Private " + MARKER + " evidence.\\n"},
+        )
+        code, out, details = fx.cli()
+        self.assertEqual((code, out["result"]), (1, "RESTRICTED_CONTENT"), details)
+        self.assertEqual(out["files_count"], 1)
+        self.assertEqual(out["wrapper_reasons"], [])
+
+    def test_original_pr_three_dot_patch_is_scanned_after_parallel_main_edit(self):
+        def remove_marker_and_add_public_note(f):
+            f.write("README.md", "Header\\nFooter\\nPublic note\\n")
+
+        def main_also_removes_marker(f):
+            f.write("README.md", "Header\\nFooter\\n")
+
+        fx = Fixture(
+            self.tmp, remove_marker_and_add_public_note,
+            base_files={"README.md": "Header\\n" + MARKER + "\\nFooter\\n"},
+            main_changes=main_also_removes_marker,
+        )
+        self.assertNotEqual(fx.base, git(fx.repo, "merge-base", fx.base, fx.head))
+        code, out, details = fx.cli()
+        self.assertEqual((code, out["result"]), (1, "RESTRICTED_CONTENT"), details)
+        self.assertEqual(out["files_count"], 1)
+        self.assertEqual(out["wrapper_reasons"], [])
+        self.assertEqual(out["original_pr_merge_base_sha"],
+                         git(fx.repo, "merge-base", fx.base, fx.head))
 
     def test_binary_or_symlink_is_never_green(self):
         fx = Fixture(self.tmp, lambda f: f.write("docs/pic.md", b"\x00\x01\x02\xff binary"))
