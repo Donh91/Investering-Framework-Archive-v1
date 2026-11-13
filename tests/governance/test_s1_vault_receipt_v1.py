@@ -93,7 +93,7 @@ class VaultReceiptTest(unittest.TestCase):
 
     def test_classifier_uses_native_result_and_keeps_custody_separate(self):
         from scripts.governance.s1_release_evidence_classifier_v1 import classify_pr_disposition
-        from test_s1_release_evidence_classifier_v1 import decision_fixture
+        from tests.governance.test_s1_release_evidence_classifier_v1 import decision_fixture
 
         receipt, native = fixture()
         record = decision_fixture()
