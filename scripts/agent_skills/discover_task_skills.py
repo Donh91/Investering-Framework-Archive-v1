@@ -99,6 +99,7 @@ def discover(index: dict[str, Any], task: str, *,
         matching = [t for t in trigger_list if phrase_matches(t, text)]
         if not matching:
             continue
+        matching.sort(key=lambda t: (-len(norm(t).split()), -len(norm(t)), norm(t)))
         # A more specific matching phrase outranks a generic one-word keyword.
         # This is an inspectable lexical shortlist, NOT semantic authorization.
         score = max(1 + min(4, len(norm(t).split()) - 1) for t in matching)
