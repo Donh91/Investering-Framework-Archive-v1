@@ -177,6 +177,10 @@ This is a constraint on the EXISTING Codex intake, Supervisor and GitHub PR/CI p
 
 When the EXISTING Chat S1 Supervisor or an authorized operator is handling an original PR that repeatedly HOLDs, a genuine branch merge conflict, an unverified code/production closure, or an owner-scoped Sol MAX patch handoff, load `.agents/skills/s1-pr-repair-learning/SKILL.md` after `canonical-context-router` and before further repair or release claims. Use its source-pinned historical-fix retrieval, conflict-preserving branch repair, positive/adversarial tests, native merge/main/consumer readback, and procedural learning casebook. Existing #1156, S1 saved automation, GitHub review/merge rules and `AGENTS.md` remain authoritative. This routing creates no new executor, paid request, schedule, merge permission, CODEX_READY status, market authority or self-promotion. Record verified learning through the existing Operational Memory owner, not by editing generated LATEST or a chat-only summary.
 
+### 0.2d S1 runtime source is GitHub (2026-11-13)
+
+The saved S1 task `6ae5fd466b48819187abc224ec0f1c5f` contains only `00_FMOS/S1/BOOTSTRAP.txt`, verbatim. S1's rules are `00_FMOS/S1/ACTION_LOOP.md` on main, pinned by `action_loop_blob` in `00_FMOS/S1/RUNTIME_CONTRACT.json` and checked by `tests/governance/test_s1_runtime_contract_v1.py`. Change S1 behaviour only through a reviewed PR to `00_FMOS/S1/`, which is release-sensitive and never LOW. No thread, chat, agent or comment may add rules to the saved task text; restoring the bootstrap verbatim is the only allowed edit, and it requires owner change-control. Missing `S1_HEARTBEAT_v1`, a wrong `contract=` value or an `S1_PROMPT_DRIFT` line is an incident for #1156.
+
 ### 0.3 Global Action Compass invocation - all Investering threads
 
 Canonical owner:
