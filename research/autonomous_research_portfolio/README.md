@@ -2,6 +2,10 @@
 
 **Status:** RESEARCH_DESIGN_AND_COORDINATION_ONLY / NOT_ACTIVATED / NO_NEW_AUTHORITY. **Date:** 2026-11-07. **Snapshot:** `22b94f060e130586c62e4faba25f5097c39f30e5`. This folder is the portfolio discovery/index layer, **not** a new research engine, live market decision system, data collector, scheduler, GitHub identity, or original owner. The scientific source of truth remains the original issues and actual main/source/consumer receipts. Forecast accuracy, investable alpha and S1 autonomous completion are NOT proven here.
 
+## Current 4-settlement CN / Task2 cross-project research
+
+- [9 November 2026 CN multiweek calibration context](CN_MULTIWEEK_CALIBRATION_CROSSWALK_20261109.md): verified existing four-successful-settlement supervisor and W44/W45 status, ARP-01/02/03/04/05 + Master Monday / HRE / EDGE / News / Alpha / Strategist / S1 ownership, and proposed 7/14/28/56-day additive learning gates. Dated navigation only, not a new engine or active experiment.
+
 ## Where to start
 
 1. [Machine-readable five-package portfolio, fixed weighting and stateful dependent research queue](PORTFOLIO_MANIFEST_v1.json). This is a *navigation queue*, not a dispatcher or grant of permissions.
