@@ -1,0 +1,156 @@
+{
+  "contract": "RESEARCH_PARALLEL_LANES_V1",
+  "status": "PLANNED",
+  "mission_id": "W46-PULLBACK-EVIDENCE-FIRST-20261113",
+  "original_owner_issue": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+  "project_repo": "Donh91/Investering-Framework-Archive-v1",
+  "objective": "Audit the 2026-W46 downside miss, source time, lag, warning severity, price range and risk-to-action translation, with independent Grok/Fable review and a separately gated ONE-SHOT Sol MAX cross-exam. No trading or new production model.",
+  "source_manifest_path": "04_MARKET_LEARNING/handlekompas/research/2026-11-13__W46_PULLBACK_FAILURE_RPL_V1.md",
+  "source_snapshot_sha": "a4504580273bc4396f20395ac9cd272656dc4454",
+  "source_eligibility": "UNKNOWN",
+  "data_classification": "PUBLIC_ONLY",
+  "parallel_job_cap": 3,
+  "approved_budget_usd": 0,
+  "no_new_scheduler": true,
+  "no_new_agent_identity": true,
+  "no_trading_authority": true,
+  "constraints": {
+    "sol_existing_active_mission": "KOMPAS2-FINGERPRINT-ALPHA-CROSS-EXAM-SOL61-MAX-20261111",
+    "sol_paid_dispatch": "BLOCKED_PENDING_ONE_ACTIVE_QUEUE_AND_NEW_NATIVE_OWNER_RELEASE",
+    "existing_fable_and_grok": "ADVISORY_ONLY_NO_MODEL_RUN_CLAIM",
+    "site_forecast_unchanged": true,
+    "live_warning_threshold_unchanged": true,
+    "alpha_private_data": "NEVER_COPY_TO_PUBLIC_SOL_OR_GROK",
+    "Round3": "PROSPECTIVE_COLLECTION_ONLY"
+  },
+  "lanes": [
+    {
+      "id": "L01",
+      "name": "Original PIT timeline and availability",
+      "question": "Which exact original issue, source capture, published delivery and accepted warning existed before each market candle?",
+      "hypothesis": "Missing first-known clocks and stale source exposure explain a material share of unusable warnings.",
+      "baseline": "Direct native frozen issuance records and observed completed hourly bars; UNKNOWN as abstention.",
+      "falsifier": "Complete verified early warnings survive corrected provenance and coverage is sufficient.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [],
+      "source_ref": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/ and 05_CYCLE_NAVIGATOR/weekly/2026/W46/",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "output_path": "04_MARKET_LEARNING/handlekompas/research/W46_CROSS_EXAM/L01_PIT_CLOCK_AND_COVERAGE.json",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L02",
+      "name": "Warning severity versus actual action translation",
+      "question": "Did a verified ELEVATED state ever escalate to HIGH or CONFIRMED, and which existing producer or gate prevented it?",
+      "hypothesis": "The CN protection projection is inherited by the Official Compass without price-breach-driven escalation.",
+      "baseline": "Unchanged ELEVATED 3/5 and constant HOLD vs verified state-machine episode controls.",
+      "falsifier": "Producer independently emits correctly timed HIGH or prospective replay shows no relevant lead-time gain.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [
+        "L01"
+      ],
+      "source_ref": "scripts/data_ping/native_handlekompas.py and 04_MARKET_LEARNING/handlekompas/PROTECTION_TRACKER_CONTRACT_v1.md",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "output_path": "04_MARKET_LEARNING/handlekompas/research/W46_CROSS_EXAM/L02_RISK_ACTION_TRACE.json",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L03",
+      "name": "Point-in-time bearish range and tail stress",
+      "question": "Would preknown simple volatility bands and equal-width price-only benchmarks have given more truthful downside intervals before the Friday shock?",
+      "hypothesis": "The W46 deterministic expected-close path was too centered and too narrow despite bearish regime evidence.",
+      "baseline": "Frozen CN vs width-equated first-known control, close-only, no-change, simple EWMA or ATR if preknown.",
+      "falsifier": "Candidate fails on matched time, W39-W45 clustered weeks, postissuance leakage, or future untouched W47+ holdout.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [
+        "L01"
+      ],
+      "source_ref": "05_CYCLE_NAVIGATOR/weekly/2026/W46/CYCLE_NAVIGATOR_FORECAST_FREEZE.json and scripts/research/task2_cn_equal_width_sidecar_v1.py",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "output_path": "04_MARKET_LEARNING/handlekompas/research/W46_CROSS_EXAM/L03_INTERVAL_ABLATIONS.json",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L04",
+      "name": "Grok independent catalyst and fragility red team",
+      "question": "What legally first-known public liquidity, flow, leverage, breadth and news features preceded the visible downside, and what are negative controls?",
+      "hypothesis": "At most a small subset adds lead time beyond price/volatility after all source and publication lags.",
+      "baseline": "Price-only and nominally contemporaneous public signals; matched quiet weeks and shuffled source timestamps.",
+      "falsifier": "No eligible original clock, concentrated rumor source, post-event narrative or no incremental discrimination.",
+      "executor_kind": "EXISTING_AI_AGENT",
+      "depends_on": [
+        "L01"
+      ],
+      "source_ref": "Existing Grok Bridge #186 advisory lane, public-source only and no X read expansion without source authority",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "output_path": "04_MARKET_LEARNING/handlekompas/research/W46_CROSS_EXAM/L04_GROK_SEALED_RESULT.json",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L05",
+      "name": "Sol 6.1 MAX source-bounded adversarial synthesis",
+      "question": "Which smallest existing-owner model repair, if any, changes pre-shock warning utility after comparing all PIT features and simple baselines?",
+      "hypothesis": "A source integrity plus risk escalation audit outperforms speculative multi-indicator fusion in marginal value.",
+      "baseline": "Current KOMPAS2 active Sol mission and prior ARP01/ARP04 MAX plus no-change price-only controls.",
+      "falsifier": "No distinct material question, pending active queue, budget fail, unavailable public PIT or zero incremental utility.",
+      "executor_kind": "EXISTING_AI_AGENT",
+      "depends_on": [
+        "L01",
+        "L02",
+        "L03"
+      ],
+      "source_ref": "Research Lab Sol original #1156/#1476 gate and current ACTIVE_RELEASED KOMPAS2 mission",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "output_path": "04_MARKET_LEARNING/handlekompas/research/W46_CROSS_EXAM/L05_SOL61MAX_SEALED_RESULT.json",
+      "status": "BLOCKED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L06",
+      "name": "Fable 5.2 blind independent methodological audit",
+      "question": "Can an independent reviewer falsify source cuts, warning transition evidence, market usefulness and competing explanations?",
+      "hypothesis": "An adversarial audit finds clock or falsifier errors before any claimed model improvement is accepted.",
+      "baseline": "Claude full-CN W39-W45 equality-width and #1596 first-known audits; identical frozen source references.",
+      "falsifier": "Independently reproduced controls agree and no surviving incremental edge claim appears.",
+      "executor_kind": "EXISTING_AI_AGENT",
+      "depends_on": [
+        "L01"
+      ],
+      "source_ref": "Existing Claude Bridge #173 Fable 5.2 review channel, no model run assumed",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "output_path": "04_MARKET_LEARNING/handlekompas/research/W46_CROSS_EXAM/L06_FABLE_SEALED_RESULT.json",
+      "status": "PLANNED",
+      "run_evidence": {}
+    },
+    {
+      "id": "L07",
+      "name": "Deterministic evidence-bound cross-model adjudication",
+      "question": "Where do Grok and Sol disagree on the same claim and source and does Fable replicate or falsify the dispute?",
+      "hypothesis": "Hash-bound claims expose source-clock disagreements and unsupported model-consensus claims.",
+      "baseline": "Literal report-byte SHA256 checks, claim-ID identity, unchanged source SHA and independent baseline rows.",
+      "falsifier": "Any missing model receipt, mutated source, insufficient evidence or incompatible claims yields PENDING or DISAGREEMENT, never verified edge.",
+      "executor_kind": "READ_ONLY_TOOL",
+      "depends_on": [
+        "L04",
+        "L05",
+        "L06"
+      ],
+      "source_ref": "scripts/research/w46_independent_research_comparator_v1.py",
+      "max_minutes": 45,
+      "budget_usd": 0,
+      "output_path": "04_MARKET_LEARNING/handlekompas/research/W46_CROSS_EXAM/L07_COMPARISON_RECEIPT.json",
+      "status": "BLOCKED",
+      "run_evidence": {}
+    }
+  ]
+}
