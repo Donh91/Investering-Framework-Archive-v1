@@ -174,7 +174,7 @@ def archive_membership(repo_root: Path) -> dict:
 def optional_realdata(extra: Path | None) -> dict:
     expected = {
         "forecast_rows.csv": ("50cfcf031b788a9105b7867d43271fa0a3b1206c1949626421311ddd253c89f0", 112),
-        "risk_rows.csv": ("1ca7bf42e4051f565fdb729f41dff901e40849f079297ecc421cd0b9b04eebe8", 270),
+        "risk_rows.csv": ("325912c52444893cb7c2d6821a7d98212418c22345162e9e1facdfcd40f54f57", 96),
     }
     result = {}
     for name, (digest, nrows) in expected.items():
