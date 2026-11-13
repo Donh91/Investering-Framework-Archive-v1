@@ -42,6 +42,8 @@ jobs:
         run: |
           python -m unittest tests.api_agent.test_owner_bound_director_context
           python -m unittest tests.api_agent.test_manual_astra_task2_high_v1 -v
+          python -m unittest tests.api_agent.test_manual_astra_task2_realdata_v2 -v
+          python -m py_compile scripts/api_agent/manual_astra_task2_realdata_v2.py
           python -m py_compile scripts/api_agent/manual_astra_task2_high_v1.py
           python -m py_compile scripts/api_agent/build_owner_bound_director_context.py scripts/api_agent/check_delta_ready.py scripts/api_agent/materialize_forecast_candidates.py scripts/api_agent/api_gateway.py scripts/daily_capture/persist_raw_payloads.py
       - name: Build owner-bound context
