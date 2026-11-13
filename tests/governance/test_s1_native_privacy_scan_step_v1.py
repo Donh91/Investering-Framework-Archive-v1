@@ -240,7 +240,7 @@ class NativePrivacyScanStep(unittest.TestCase):
         magic = ":(exclude)*.md"
         fx = Fixture(
             self.tmp,
-            lambda f: git(f.repo, "rm", "-q", "--", magic),
+            lambda f: git(f.repo, "--literal-pathspecs", "rm", "-q", "--", magic),
             base_files={magic: "Private " + MARKER + " evidence.\\n"},
         )
         code, out, details = fx.cli()
