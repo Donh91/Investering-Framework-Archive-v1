@@ -583,6 +583,19 @@ const compassEvent=await buildCompassEventSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"\n");
+
+// Research-only first-party source slot for Challenger A. This is deliberately
+// an explicit NO-DATA receipt until a separately governed, immutable W47+
+// issuance is produced and proven before outcomes. Never compute a new shadow
+// forecast here or reuse today's data for a frozen past week.
+const challengerDirectory=resolve(dataDir,"challenger-a");
+await mkdir(challengerDirectory,{recursive:true});
+await writeFile(resolve(challengerDirectory,"latest.json"),
+  JSON.stringify({contract:"CN_CHALLENGER_A_PUBLIC_SHADOW_v1",
+    publication_status:"UNAVAILABLE",visibility:"SHADOW_ONLY",
+    reason:"NO_GOVERNED_IMMUTABLE_ISSUANCE_ON_MAIN",
+    authority:{official_forecast:false,portfolio_execution:false,trading:false,promotion:false}},null,2)+"\n");
+
 for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolve(outputDir,file));}
  // CN SITE v2: one source-owned, renderer-neutral graph adapter for future
  // complete visual redesigns. Copy-only, no alternative producer or runtime.

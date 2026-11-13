@@ -1,4 +1,5 @@
 import {playOnce} from './play-once.mjs';
+import {mountChallengerA} from './challenger-a-panel.mjs';
 /**
  * SITE #1578. Only the UI: four accessible public panels, no new market owner.
  * Fail open to ordinary anchor navigation when the source DOM is incomplete.
@@ -85,6 +86,7 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     en:{compass:'Compass',graph:'Weekly forecast',path:'Market cycle',proof:'Results'}
   };
   const lang = () => document.querySelector('[data-lang][aria-pressed="true"]')?.getAttribute('data-lang') === 'en' ? 'en' : 'da';
+  const challengerPanel=mountChallengerA(graphPanel,()=>lang());
   // Keep the selected tab discoverable when browser zoom makes the rail scroll.
   // Change only the rail's horizontal position, never the page scroll or tab model.
   const revealSelected = link => {
@@ -116,6 +118,7 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     const navName=lang()==='en'?'Choose market view':'Vælg markedsvisning';
     if(nav.getAttribute('aria-label')!==navName)nav.setAttribute('aria-label',navName);
     const active=nodes.find(x=>x.link.getAttribute('aria-selected')==='true');
+    challengerPanel?.paint();
     if(active)revealSelected(active.link);
   };
   const fromHash = () => nodes.find(x => '#'+x.id === location.hash)?.key;
@@ -132,7 +135,7 @@ if (nav && nodes.every(x => x.link && x.panel)) {
     document.body.dataset.cnSiteView=selected.key;
     // v2.7 first-visit motion (once per visit per tab; reveal only, end state unchanged).
     if (selected.key === 'compass') playOnce('cnKompasEntered', selected.panel, 'cn-kompas-enter');
-    if (selected.key === 'graph') playOnce('cnPrognoseEntered', selected.panel, 'cn-prognose-enter');
+    if (selected.key === 'graph') { playOnce('cnPrognoseEntered', selected.panel, 'cn-prognose-enter'); challengerPanel?.refresh(); }
     if (selected.key === 'path') playOnce('cnCyklusEntered', selected.panel, 'cn-cyklus-enter');
     revealSelected(selected.link);
     if (changeUrl) history.pushState({cnSiteView:selected.key},'', '#'+selected.id);
