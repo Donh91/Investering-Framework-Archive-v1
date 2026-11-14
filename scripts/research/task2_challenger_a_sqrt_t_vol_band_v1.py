@@ -338,6 +338,10 @@ def first_in_main(root: Path, path: str) -> dict:
         first = next(sha for sha in commits if subprocess.run(
             ["git", "-C", str(root), "cat-file", "-e", sha + ":" + path],
             capture_output=True).returncode == 0)
+        # Immutable first-main issue and original CN freeze cannot be edited,
+        # even when later restored to their original bytes after outcomes.
+        if len(commits) != 1:
+            raise ValueError("original main source path was changed after first issue")
         blob = _git(root, "rev-parse", first + ":" + path)
         current_blob = _git(root, "rev-parse", "refs/heads/main:" + path)
         clock = utc(_git(root, "show", "-s", "--format=%cI", first))
