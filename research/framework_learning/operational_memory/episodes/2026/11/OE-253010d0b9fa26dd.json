@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/data-architecture-gate.yml",
+    "04_RESEARCH_LAB/external_specialist_dissection/0XARCHIVE_E0_PREFLIGHT_IMPLEMENTATION_2026-11-11.md",
+    "scripts/research/oxarchive_e0_source_preflight_v1.py",
+    "tests/research/test_oxarchive_e0_source_preflight_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-253010d0b9fa26dd",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research: add metadata-only E0 0xArchive source/clock preflight without any vendor API dependency * test: adversarial E0 clock, provenance, privacy and source coverage cases * test hardening: malformed unhashable JSON fields fail closed * hardening: reject malformed family values without raising TypeError * research: record anti-hindsight method transfer, E0 safety contract and exact regression command * ci: run offline E0 source-clock and privacy tests in existing data architecture gate * research: source-level audit trial ledger deduplication, missing-study fail-open and effective-N separa",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/data-architecture-gate.yml": "24962497c946ad78dc08c5167f35c6ad145033bc",
+    "04_RESEARCH_LAB/external_specialist_dissection/0XARCHIVE_E0_PREFLIGHT_IMPLEMENTATION_2026-11-11.md": "48402056383f6286e250eb9f4753a32e79040907",
+    "scripts/research/oxarchive_e0_source_preflight_v1.py": "2f5b712293f2961a2f22a08349e295db954433dc",
+    "tests/research/test_oxarchive_e0_source_preflight_v1.py": "cac737a12f700219f359d8ddf0ab4463375679ce"
+  },
+  "source_commit_sha": "253010d0b9fa26ddadd31e3dc89aff79c104e228",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T12:12:58-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research: offline 0xArchive E0 first-known, coverage and private-source preflight (#2086)"
+}

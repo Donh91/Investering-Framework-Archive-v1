@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/S1_NATIVE_RULE_CENSUS_AND_RELEASE_RECIPE_V1.md",
+    "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json",
+    "AGENTS.md",
+    "scripts/governance/s1_owner_ui_attestation_v1.py",
+    "scripts/governance/s1_standing_policy_v1.py",
+    "tests/governance/test_s1_governance_table_superset_v1.py",
+    "tests/governance/test_s1_owner_ui_attestation_v1.py",
+    "tests/governance/test_s1_standing_policy_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-b4e4efd7d4900c25",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* governance(s1): propose bounded native-rule-evidenced LOW release policy * docs(s1): source-bound native ruleset census and release falsifiers * governance(s1): propose staged D2 independent review and complete privacy/census/rollback gates * docs(s1): align native fallback, RP1 G3 and phased owner-gated shadow release * fix(s1 policy): distinguish active ruleset-only protection from nonexistent classic branch settings * docs(s1): prevent false HOLD for ruleset-only protected branch; add adversarial R19 * governance(s1): close Fable F1/F3/F4/F5/F7/F8/F9/F10 owner provenance and release evide",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/S1_NATIVE_RULE_CENSUS_AND_RELEASE_RECIPE_V1.md": "ecc276f54deaafca6e4b6ef157ca02ebcfa59ee8",
+    "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json": "a267107a82641e16cffc918d995f0f662269f9ec",
+    "AGENTS.md": "80620a59dff17f9500cf079b7ff0bbb1029d8619",
+    "scripts/governance/s1_owner_ui_attestation_v1.py": "31460555ca1cd226b2e462bbca45c544a1eaa200",
+    "scripts/governance/s1_standing_policy_v1.py": "0e444054d01ece90b247ddd5403a1efc541638dd",
+    "tests/governance/test_s1_governance_table_superset_v1.py": "6b6e49f7a7ab26072a09d46dee5d932c838cc47b",
+    "tests/governance/test_s1_owner_ui_attestation_v1.py": "b19049224765f9450004d5ffcc02f2df80e851c9",
+    "tests/governance/test_s1_standing_policy_v1.py": "e0f345e6036a515bf18efe87d1e909af95ca4e00"
+  },
+  "source_commit_sha": "b4e4efd7d4900c255afabac75e8cf45f405e2ac1",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T13:49:08-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "governance(s1): bounded native release policy v3 in SHADOW (#2089)"
+}

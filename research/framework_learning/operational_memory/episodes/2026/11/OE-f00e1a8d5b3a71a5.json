@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/TASK2_CN_EQUALWIDTH_REPLAY_20261113_v1.md",
+    "scripts/research/task2_cn_equal_width_sidecar_v1.py",
+    "tests/research/test_task2_archive_first_edge_matrix_v1.py",
+    "tests/research/test_task2_cn_equal_width_sidecar_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-f00e1a8d5b3a71a5",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(task2): add non-promotional width-matched CN baseline sidecar * test(task2): adversarial equal-width, timing, maturity, denominator and alpha controls * research(task2): freeze W39-W45 source-pinned equal-width empirical readout * fix(task2): normalize ISO weeks before independent cohort dedupe * test(task2): reject equivalent zero-padded week cohorts before weighting * test(task2): execute equal-width 11-case regressions in existing native gate",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/TASK2_CN_EQUALWIDTH_REPLAY_20261113_v1.md": "3446d9502f90acb23f280ec2d8011d0991f30e7c",
+    "scripts/research/task2_cn_equal_width_sidecar_v1.py": "7cfca39a9e50d45d3f29762017cdfc6c0b821341",
+    "tests/research/test_task2_archive_first_edge_matrix_v1.py": "a36bca1039074c5b352b6ace4bfeefc075f4ab94",
+    "tests/research/test_task2_cn_equal_width_sidecar_v1.py": "824755d81ec7590f73a03f1fde6a53ad4671afa9"
+  },
+  "source_commit_sha": "f00e1a8d5b3a71a5f8ba41e0e8c14fd7e57f4eb1",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T11:10:30-05:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "research(task2 #1596): equal-width CN baseline with 10 adversarial guards, no PIT promotion (#2118)"
+}

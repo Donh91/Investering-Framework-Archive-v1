@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/governance/s1_release_evidence_classifier_v1.py",
+    "tests/governance/test_s1_changed_test_execution_ic1_v1.py",
+    "tests/governance/test_s1_changed_test_full_execution_v1.py",
+    "tests/governance/test_s1_low_lane_path_guard_b1_v1.py",
+    "tests/governance/test_s1_low_lane_rename_source_f1_v1.py",
+    "tests/governance/test_s1_release_evidence_classifier_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-096e6adc56088368",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "s1-1156-ic-changed-test-ci-proof-deleted",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(s1): require head-existing changed tests, not deleted/rename source paths * test(s1): IC-1 exact-head status-aware deleted/renamed test regression matrix * fix(s1 IC-1): fail closed on malformed native changed-file status types * test(s1 IC-1): malformed JSON statuses and rename provenance * fix(s1 IC-1): handle complete native PR manifest and root-scoped unittest IDs * test(s1 IC-1): Codex P2 mixed manifests and discovery-root negative controls * fix(s1 ic1): reject malformed native changed paths before set conversion * test(s1 ic1): guard nested path lists and batch isolation * fix(s1 ",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/governance/s1_release_evidence_classifier_v1.py": "6d2989a9f902052c1d59704c2b9155ff5f93d2ce",
+    "tests/governance/test_s1_changed_test_execution_ic1_v1.py": "cf7583d3b2516324dd226153a838026c9347cc6a",
+    "tests/governance/test_s1_changed_test_full_execution_v1.py": "ab5072b13c8b957a1a1ff1f00f961b6fcffc9b2c",
+    "tests/governance/test_s1_low_lane_path_guard_b1_v1.py": "07050d654e71881b14cbbb87dc1b492e521d30fc",
+    "tests/governance/test_s1_low_lane_rename_source_f1_v1.py": "8213cbdd9f8f50b941a2f187c55a95a4cb5ee26b",
+    "tests/governance/test_s1_release_evidence_classifier_v1.py": "915e03f2590102281bd496f27cfed2da3321236f"
+  },
+  "source_commit_sha": "096e6adc56088368e8d0164eeea0e09932990334",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T11:37:43-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(s1 #1156): IC-1 changed-test CI proof with deleted/renamed status guards (#2088)"
+}
