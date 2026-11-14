@@ -203,7 +203,7 @@ class ChallengerBTest(unittest.TestCase):
             root = Path(d)
             day = self.t0.date()
             rel = (Path(B.PARAMS["packet_dir"]) / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}" / "CMP-valid-but-missing.json").as_posix()
-            with patch.object(B.subprocess, "run", return_value=Mock(returncode=0, stdout=rel+"\n")):
+            with patch.object(B.subprocess, "run", side_effect=lambda cmd, **kw: Mock(returncode=0, stdout="false\n" if "--is-shallow-repository" in cmd else rel+"\n")):
                 with self.assertRaisesRegex(ValueError, "missing from working tree"):
                     B.git_candidates(root, self.t0, "main")
 
@@ -226,11 +226,44 @@ class ChallengerBTest(unittest.TestCase):
             folder.mkdir(parents=True)
             (folder/"CMP-corrupt.json").write_text("{}")
             rel=(folder/"CMP-corrupt.json").relative_to(root).as_posix()
-            with patch.object(B.subprocess, "run", return_value=Mock(returncode=0, stdout=rel+"\n")):
+            with patch.object(B.subprocess, "run", side_effect=lambda cmd, **kw: Mock(returncode=0, stdout="false\n" if "--is-shallow-repository" in cmd else rel+"\n")):
                 with patch.object(B.A, "first_in_main", side_effect=ValueError("original main source path was changed after first issue")):
                     with self.assertRaisesRegex(ValueError, "changed after first issue"):
                         B.git_candidates(root, self.t0, "main")
 
+
+    def test_deleted_original_main_packet_is_fatal_in_history_census(self):
+        """Codex P1 4572618575: deletion cannot erase an issued original packet."""
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def git(*args):
+                return subprocess.run(["git", "-C", str(root), *args],
+                                      check=True, capture_output=True, text=True)
+            git("init", "-b", "main")
+            git("config", "user.name", "research-test")
+            git("config", "user.email", "research-test@example.invalid")
+            day = self.t0.date()
+            rel = (Path(B.PARAMS["packet_dir"]) /
+                   f"{day:%Y}" / f"{day:%m}" / f"{day:%d}" /
+                   "CMP-published-then-deleted.json").as_posix()
+            p = root / rel
+            p.parent.mkdir(parents=True)
+            p.write_text('{"source": "original"}', encoding="utf-8")
+            git("add", "--", rel)
+            git("commit", "-m", "first main issue")
+            git("rm", "--", rel)
+            git("commit", "-m", "deleted after first main issue")
+            with self.assertRaisesRegex(ValueError, "missing from working tree"):
+                B.git_candidates(root, self.t0, "main")
+
+    def test_shallow_history_is_fatal_before_packet_selection(self):
+        from unittest.mock import Mock, patch
+        with patch.object(B.subprocess, "run",
+                          return_value=Mock(returncode=0, stdout="true\\n")):
+            with self.assertRaisesRegex(ValueError, "shallow main history"):
+                B.git_candidates(Path("/fixture"), self.t0, "main")
 
 if __name__ == "__main__":
     unittest.main()
