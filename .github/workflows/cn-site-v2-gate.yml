@@ -11,6 +11,9 @@ on:
       - '05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl'
       - '05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SITE_PUBLIC_FREEZE_RECEIPT.json'
       - 'scripts/cycle_navigator/build_public_live_precision.py'
+      - 'scripts/cycle_navigator/build_kompas_live_path.py'
+      - 'tests/cycle_navigator/test_build_kompas_live_path.py'
+      - '06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/CHALLENGER_B_KOMPAS_TILT_PREREG_v1.json'
       - 'scripts/cycle_navigator/build_graph_history.py'
       - 'tests/cycle_navigator/test_graph_history.py'
       - '05_CYCLE_NAVIGATOR/graph_history/**'
@@ -37,6 +40,10 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs --self-test
       - name: Verify Premium v2.1 isolated source contracts (no dependencies)
         run: npm test --prefix 05_CYCLE_NAVIGATOR/site/premium-v2
+      - name: Verify Kompas live path producer (Challenger B formula, fail-closed, no Compass probability)
+        run: |
+          python3 -m py_compile scripts/cycle_navigator/build_kompas_live_path.py
+          python3 -m unittest tests.cycle_navigator.test_build_kompas_live_path -v
       - name: Validate and build
         run: |
           python3 scripts/cycle_navigator/validate_public_series.py
@@ -53,6 +60,8 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
           python3 scripts/cycle_navigator/build_public_live_precision.py
+          python3 scripts/cycle_navigator/build_kompas_live_path.py --repo-root . --latest-json 05_CYCLE_NAVIGATOR/site/dist/data/latest.json --output 05_CYCLE_NAVIGATOR/site/dist/data/kompas-live.json
+          grep -q '"contract": "KOMPAS_LIVE_PATH_v1"' 05_CYCLE_NAVIGATOR/site/dist/data/kompas-live.json
           python3 scripts/cycle_navigator/check_publication_lineage.py --self-test
           python3 scripts/cycle_navigator/check_publication_lineage.py
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs

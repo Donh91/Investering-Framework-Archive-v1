@@ -30,6 +30,7 @@ const canonicalFiles=[
   'data/compass.json',
   'data/compass-event.json',
   'data/publication-lineage.json',
+  'data/kompas-live.json',
   'graph-history/index.html'
 ];
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');

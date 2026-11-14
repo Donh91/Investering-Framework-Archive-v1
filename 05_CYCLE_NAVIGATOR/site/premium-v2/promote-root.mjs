@@ -81,7 +81,8 @@ export function promoteUnifiedHtml(input){
  const required=[
   'variant-panel','chart','forecast','actual','proof-explorer','compass-pro',
   'premium-now-action','premium-risk-steps','pro-reentry-state',
-  'cn-forward-source-status','official-path-view','premium-path-rail'
+  'cn-forward-source-status','official-path-view','premium-path-rail',
+  'cn-live-forecast'
  ];
  for(const id of required){
   const n=input.split('id="'+id+'"').length-1;
