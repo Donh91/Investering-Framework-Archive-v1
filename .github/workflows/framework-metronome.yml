@@ -4,7 +4,8 @@ name: Framework Metronome
 # runs and daily crons run 5-8 h late, while dispatched runs start within seconds. This loop
 # waits in the `framework-metronome` environment (owner-set wait timer; no runner is held while
 # waiting), runs one tick, and dispatches its own next iteration. It only dispatches allowlisted
-# existing owners (hourly capture, Master Monday); their own preflights stay authoritative.
+# existing owners (hourly capture, market recovery, Sunday close, Master Monday after the final close);
+# their own preflights stay authoritative.
 # Mode lives in 00_FMOS/METRONOME_MODE_v1.json (anything but ACTIVE = SHADOW = log only).
 
 on:
