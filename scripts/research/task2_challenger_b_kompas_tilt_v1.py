@@ -178,6 +178,10 @@ def score(b: dict, bars: dict, *, a_issuance_first_main_utc: str | None = None) 
         asset in bars[final_closed_hour] for asset in b["assets"])
     if not weekly_matured:
         winner = "PENDING"
+    elif len(rows) < A.DECISION["min_paired_rows_per_week"]:
+        # The pre-registered 8-week sample is by mature and adequately paired
+        # weekly clusters, never by two unusually favorable asset-days.
+        winner = "MISSING"
     elif mean is None or all(r["p_up"] == 0.5 for r in rows):
         winner = "TIE"
     else:

@@ -169,6 +169,20 @@ class ChallengerBTest(unittest.TestCase):
         self.assertEqual(r["week_winner"], "PENDING")
         self.assertEqual(B.decide([dict(x, weekly_matured=False) for x in self._weekly(["B"] * 8)])["status"], "PENDING")
 
+    def test_mature_week_with_fewer_than_eight_paired_days_is_missing(self):
+        b = B.issue(self.a, B.select_views(self.cands, self.t0))
+        # Keep the final hour so the week is complete by clock, but remove the
+        # second-to-last source day: missing census must not become a winner.
+        partial = {t:r for t,r in self.bars.items()
+                   if t < self.monday + 7 * A.DAY and
+                   not (self.monday + 2*A.DAY <= t < self.monday + 7*A.DAY - A.HOUR)}
+        result = B.score(b, partial)
+        self.assertTrue(result["weekly_matured"])
+        self.assertLess(result["n"], A.DECISION["min_paired_rows_per_week"])
+        self.assertEqual(result["week_winner"], "MISSING")
+        self.assertEqual(B.decide([dict(week="2026-W47", weekly_matured=True,
+                                        week_winner=result["week_winner"])])["status"], "PENDING")
+
     def test_forged_b_views_with_self_digest_cannot_be_scored(self):
         proof = {"first_main_commit":"a"*40, "first_main_blob_sha":"b"*40,
                  "issuance_first_main_utc":A.iso(self.t0 + dt.timedelta(hours=3))}
