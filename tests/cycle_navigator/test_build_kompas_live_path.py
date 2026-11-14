@@ -5,6 +5,7 @@ import datetime as dt
 import io
 import json
 import math
+import hashlib
 import tempfile
 import unittest
 from contextlib import redirect_stdout, redirect_stderr
@@ -61,14 +62,38 @@ class Repo:
         def h(v):
             return {"status": "OK", "bull": v[0], "bear": v[1]} if v else {"status": "UNAVAILABLE", "bull": None, "bear": None}
         doc = {"contract": "OFFICIAL_DAILY_COMPASS_v1", "issued_at_utc": issued.strftime("%Y-%m-%dT%H:%M:%SZ"),
-               "compass_sha256": f"sha-{issued:%d%H%M}",
+               "data_status": "OK", "compass_id": (name or f"CMP-{issued:%Y%m%d}-{issued:%H%M%S}.json").removesuffix(".json"),
+               "source_bindings": {"auto_market_state": {"packet_sha256": "source-hash-fixture"}},
                "bull_bear_scale": {"contract": contract, "semantics": semantics,
                                    "horizons": {"1_3d": h(b13), "5_7d": h(b57), "2_3w": h(None)}},
                "horizons": {"NEXT_1_3D": {"expected_direction": d13}, "NEXT_5_7D": {"expected_direction": d57}}}
         p = (self.root / K.PACKET_DIR / f"{issued:%Y}" / f"{issued:%m}" / f"{issued:%d}" /
              (name or f"CMP-{issued:%Y%m%d}-{issued:%H%M%S}.json"))
         p.parent.mkdir(parents=True, exist_ok=True)
+        doc["compass_sha256"] = K.digest(doc)
         p.write_text(json.dumps(doc), encoding="utf-8")
+        # Test the actual public pointer -> original bytes -> public projection custody chain.
+        # This helper always advances the current pointer to the newest authored fixture.
+        public = {"contract": "PUBLIC_COMPASS_PROJECTION_v1", "compass_id": doc["compass_id"],
+                  "issued_at_utc": doc["issued_at_utc"], "data_status": "OK",
+                  "source_compass_sha256": doc["compass_sha256"]}
+        public["projection_sha256"] = K.digest(public)
+        public_rel = f"{K.PUBLIC_PROJECTION_DIR}/{issued:%Y}/{issued:%m}/{issued:%d}/{doc['compass_id']}.json"
+        q = self.root / public_rel
+        q.parent.mkdir(parents=True, exist_ok=True)
+        q.write_text(json.dumps(public), encoding="utf-8")
+        pointer = {"contract": "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1", "data_status": "OK",
+                   "compass_id": doc["compass_id"], "issued_at_utc": doc["issued_at_utc"],
+                   "compass_path": p.relative_to(self.root).as_posix(),
+                   "compass_sha256": doc["compass_sha256"],
+                   "compass_content_sha256": K.sha256_bytes(p.read_bytes()),
+                   "public_projection_path": public_rel,
+                   "public_projection_sha256": public["projection_sha256"],
+                   "public_projection_content_sha256": K.sha256_bytes(q.read_bytes()),
+                   "source_packet_sha256": "source-hash-fixture"}
+        pointer_path = self.root / K.OFFICIAL_POINTER_PATH
+        pointer_path.parent.mkdir(parents=True, exist_ok=True)
+        pointer_path.write_text(json.dumps(pointer), encoding="utf-8")
         return p
 
     def prereg(self, **over):
@@ -81,9 +106,9 @@ class Repo:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps(doc), encoding="utf-8")
 
-    def latest(self, year=2026, week=46, btc=(69000.0, 71000.0), eth=(1900.0, 2100.0)) -> Path:
+    def latest(self, year=2026, week=46, btc=(69000.0, 71000.0), eth=(1900.0, 2100.0), quote="USDT") -> Path:
         doc = {"pointer": {"iso_year": year, "iso_week": week},
-               "package": {"forecast_freeze": {"btc_range_low": btc[0], "btc_range_high": btc[1],
+               "package": {"forecast_freeze": {"price_quote": quote, "btc_range_low": btc[0], "btc_range_high": btc[1],
                                                "eth_range_low": eth[0], "eth_range_high": eth[1]}}}
         p = self.root / "dist" / "latest.json"
         p.parent.mkdir(parents=True, exist_ok=True)
@@ -206,8 +231,10 @@ class KompasLivePathTests(unittest.TestCase):
         self.repo.packet(NOW - 1 * H, b13=(0, 10), contract="OTHER", name="CMP-c.json")
         self.repo.packet(NOW - 30 * dt.timedelta(minutes=1), b13=(2, 7), name="CMP-d.json")  # sums to 9
         doc = self.build()
-        self.assertEqual(doc["kompas_views"]["1_3d"]["path"], older.relative_to(self.repo.root).as_posix())
-        self.assertEqual(doc["kompas_views"]["1_3d"]["bull"], 3)
+        # A forged/invalid current pointer must NEVER fall back to the old valid daily packet.
+        self.assertEqual(doc["status"], "UNAVAILABLE")
+        self.assertEqual(doc["reasons"], ["OFFICIAL_POINTER_PACKAGE_MISMATCH"])
+        self.assertIsNone(doc["kompas_views"]["1_3d"])
 
     def test_no_valid_packet_in_window_is_unavailable(self):
         self.repo.prereg()
@@ -215,7 +242,7 @@ class KompasLivePathTests(unittest.TestCase):
         self.repo.packet(NOW - H, semantics="PROBABILITY")
         doc = self.build()
         self.assertEqual(doc["status"], "UNAVAILABLE")
-        self.assertEqual(doc["reasons"], ["NO_VALID_OFFICIAL_PACKET_24H"])
+        self.assertEqual(doc["reasons"], ["OFFICIAL_POINTER_PACKAGE_MISMATCH"])
         self.assertNotIn("days", doc["assets"]["BTC"])
 
     def test_valid_packet_without_ok_view_is_no_view_not_outage(self):
@@ -383,6 +410,54 @@ class KompasLivePathTests(unittest.TestCase):
         self.assertEqual({e["deviation"]["state"] for e in a["events"]}, {"NO_ZONE"})
         self.assertFalse([e for e in a["events"] if e["kind"] == "ZONE_BREAK"])
 
+
+    def test_pointer_required_even_with_historical_valid_packet(self):
+        self.repo.prereg()
+        self.repo.packet(NOW - H)
+        pointer = self.repo.root / K.OFFICIAL_POINTER_PATH
+        pointer.unlink()
+        doc = self.build()
+        self.assertEqual(doc["status"], "UNAVAILABLE")
+        self.assertEqual(doc["reasons"], ["OFFICIAL_POINTER_MISSING"])
+        self.assertIsNone(doc["kompas_views"]["1_3d"])
+
+    def test_pointer_and_public_package_hashes_fail_closed(self):
+        self.repo.prereg()
+        current = self.repo.packet(NOW - H)
+        ptr = self.repo.root / K.OFFICIAL_POINTER_PATH
+        initial = ptr.read_bytes()
+        def check(expected):
+            self.assertEqual(self.build()["reasons"], [expected])
+            self.assertEqual(self.build()["status"], "UNAVAILABLE")
+        candidate = json.loads(initial)
+        candidate["compass_content_sha256"] = "0" * 64
+        ptr.write_text(json.dumps(candidate), encoding="utf-8")
+        check("OFFICIAL_POINTER_CONTENT_MISMATCH")
+        ptr.write_bytes(initial)
+        current.write_text(current.read_text() + " ", encoding="utf-8")
+        check("OFFICIAL_POINTER_CONTENT_MISMATCH")
+        self.repo.packet(NOW - H)
+        candidate = json.loads(ptr.read_text())
+        candidate["public_projection_content_sha256"] = "0" * 64
+        ptr.write_text(json.dumps(candidate), encoding="utf-8")
+        check("OFFICIAL_POINTER_CONTENT_MISMATCH")
+        ptr.write_bytes(initial)
+        candidate = json.loads(initial)
+        candidate["compass_sha256"] = "forged"
+        ptr.write_text(json.dumps(candidate), encoding="utf-8")
+        check("OFFICIAL_POINTER_PACKAGE_MISMATCH")
+
+    def test_wrong_quote_or_unknown_quote_never_calculates_weekly_zone_events(self):
+        self.repo.prereg()
+        self.repo.packet(NOW - H)
+        for quote in ("USD", None):
+            doc = self.build(latest=self.repo.latest(quote=quote))
+            self.assertEqual(doc["inputs"]["frozen_zone"]["reason"], "FROZEN_ZONE_QUOTE_MISMATCH")
+            for asset in ("BTC", "ETH"):
+                self.assertIsNone(doc["assets"][asset]["frozen_zone"])
+                self.assertTrue(all(e["deviation"]["state"] == "NO_ZONE" for e in doc["assets"][asset]["events"]))
+                self.assertFalse(any(e["kind"] == "ZONE_BREAK" for e in doc["assets"][asset]["events"]))
+
     def test_chips_and_points(self):
         self.repo.prereg()
         self.repo.packet(NOW - H)
@@ -432,7 +507,7 @@ class KompasLivePathTests(unittest.TestCase):
         self.assertEqual((auth["research_only"], auth["official_forecast"], auth["compass_probability_claim"],
                           auth["trading"], auth["promotion"], auth["site_synthesis"]),
                          (True, False, False, False, False, False))
-        self.assertEqual((auth["line_label"], auth["frames_label"]), ("Challenger B (forsøg)", "Challenger A (forsøg)"))
+        self.assertEqual((auth["line_label"], auth["frames_label"]), ("live, Challenger B\u0027s formel (forsøg)", "live, beregnet hver time med Challenger A\u0027s formel"))
         text = json.dumps(doc, ensure_ascii=False)
         for word in ("Donh91", "Investering-Framework-Archive-v1", "week_dir", "wallet", str(self.repo.root)):
             self.assertNotIn(word, text)
