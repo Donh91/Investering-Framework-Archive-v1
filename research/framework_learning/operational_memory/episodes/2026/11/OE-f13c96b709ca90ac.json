@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/data-architecture-gate.yml",
+    "scripts/governance/s1_diff_scan_v1.py",
+    "scripts/governance/s1_native_privacy_scan_step_v1.py",
+    "tests/governance/test_s1_diff_scan_v1.py",
+    "tests/governance/test_s1_diff_scan_v1_separator_boundary.py",
+    "tests/governance/test_s1_native_privacy_scan_step_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-f13c96b709ca90ac",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(s1): additive fail-closed shadow privacy diff scan for proposed RP1 * test(s1): negative privacy, provenance, truncation and public-doc controls * fix(s1 privacy): case-insensitive high-impact paths; fail closed on unproven served site outputs * test(s1 privacy): mixed-case private paths and fake generated-output attestation * fix(s1 privacy): red-team five Codex P2 bypass and output-leak cases * test(s1 privacy): quoted credentials, nested paths, rename origin, invalid UTF8 and output redaction * test(s1 privacy): nested blocked basename `.env` must fail closed * fix(s1 privacy): detec",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/data-architecture-gate.yml": "77710a86d6ef77638b3d960de540efc596668bb5",
+    "scripts/governance/s1_diff_scan_v1.py": "dee5d307ee60312059b8a04fa136f4842f7b8254",
+    "scripts/governance/s1_native_privacy_scan_step_v1.py": "12c6943d3eb3da5938950c288b71399c8ee85602",
+    "tests/governance/test_s1_diff_scan_v1.py": "5b3279b2e38943bb42a5f5f35e99477821253740",
+    "tests/governance/test_s1_diff_scan_v1_separator_boundary.py": "2ada799245bc59193437846e255c8931d9eb34d2",
+    "tests/governance/test_s1_native_privacy_scan_step_v1.py": "fb29efc4146f6166aac4171308a24ace3cd8639b"
+  },
+  "source_commit_sha": "f13c96b709ca90ac489a26f81128cf1841d09faf",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T11:38:39-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "feat(s1 #1156): shadow-only full-diff public/private privacy guard for RP1 (#2091)"
+}

@@ -44,6 +44,8 @@ jobs:
         run: |
           python -m unittest tests.api_agent.test_owner_bound_director_context
           python -m unittest tests.api_agent.test_manual_astra_task2_high_v1 -v
+          python -m unittest tests.api_agent.test_manual_astra_task2_realdata_v2 -v
+          python -m py_compile scripts/api_agent/manual_astra_task2_realdata_v2.py
           python -m unittest tests.research.test_task2_all_cn_historical_replay_v1 -v
           python -m unittest tests.research.test_task2_all_cn_astra_high_v1 -v
           python scripts/research/task2_all_cn_historical_replay_v1.py --out runtime/task2-allcn-pr-ci
@@ -264,5 +266,123 @@ jobs:
             runtime/astra-allcn/receipt.json
             runtime/astra-allcn/ASTRA_HIGH_ALL_CN_FULL_HISTORICAL_RESEARCH.md
             runtime/task2-allcn/
+          retention-days: 90
+          if-no-files-found: warn
+
+  astra-realdata-task2-v2:
+    # SAFETY HOLD (2026-11-14): original Alpha v4 costed decision->fill->exit
+    # records have 0 rows and Code Interpreter token re-ingestion has no
+    # provider-enforced USD10 total cost bound. Must be RE-REVIEWED in a
+    # separate owner-authorized HIGH_IMPACT PR before re-enabling this job.
+    # A signed-looking GitHub comment cannot override a literal false here.
+    if: >-
+      false &&
+      github.event_name == 'issue_comment' &&
+      github.event.issue.number == 1596 &&
+      github.event.comment.author_association == 'OWNER' &&
+      github.event.comment.user.login == 'Donh91' &&
+      github.actor == 'Donh91' &&
+      contains(github.event.comment.body, '[TASK2_ASTRA_REALDATA_V2_20261113]') &&
+      contains(github.event.comment.body, 'owner_go=TASK2-ASTRA-V2-10USD')
+    runs-on: ubuntu-latest
+    timeout-minutes: 42
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    concurrency:
+      group: owner-one-shot-astra-task2-realdata-v2-20261113
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify real sources, 14 replay tests, and 12 paid-attempt safety tests
+        run: |
+          python -m py_compile scripts/api_agent/manual_astra_task2_realdata_v2.py
+          python -m unittest tests.api_agent.test_manual_astra_task2_realdata_v2 -v
+          python -m unittest discover -s tests/research -p 'test_task2_realdata_challenger_w39_w46_v1.py' -v
+      - name: Enforce canonical shared budget including full USD10 reservation
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --hard-stop-usd 50 --reserve-usd 4 --new-request-upper-usd 0
+      - name: Build immutable broad PUBLIC Task2/HRE/Research Lab data and verified calculations
+        run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 prepare --out-dir runtime/task2-astra-realdata-v2
+      - name: Verify owner, native GitHub issue and one-shot USD10; create durable claim
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 reserve --out-dir runtime/task2-astra-realdata-v2
+      - name: Persist original owner one-use claim BEFORE upload and paid Responses POST
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-astra-realdata-v2-owner-claim
+          path: |
+            runtime/task2-astra-realdata-v2/source_manifest.json
+            runtime/task2-astra-realdata-v2/claim.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Upload PUBLIC research ZIP as Code Interpreter file once
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 upload --out-dir runtime/task2-astra-realdata-v2
+      - name: Submit exactly ONE Astra High + Code Interpreter research POST
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 submit --out-dir runtime/task2-astra-realdata-v2
+      - name: Persist response/attempt handles even if ambiguous HTTP network result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-astra-realdata-v2-attempt-${{ github.run_id }}
+          path: |
+            runtime/task2-astra-realdata-v2/file_upload_attempt.json
+            runtime/task2-astra-realdata-v2/file_handle.json
+            runtime/task2-astra-realdata-v2/paid_post_attempt.json
+            runtime/task2-astra-realdata-v2/response_handle.json
+            runtime/task2-astra-realdata-v2/source_manifest.json
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Retrieve or cancel existing response even if attempt-artifact upload failed
+        # An artifact upload failure may not abandon a billable background response.
+        if: always()
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if test -s runtime/task2-astra-realdata-v2/response_handle.json; then
+            python -m scripts.api_agent.manual_astra_task2_realdata_v2 collect --out-dir runtime/task2-astra-realdata-v2
+          elif test -f runtime/task2-astra-realdata-v2/paid_post_attempt.json; then
+            echo 'PAID_POST_OUTCOME_UNKNOWN_NO_RESPONSE_HANDLE_NO_RETRY' >&2
+            exit 1
+          else
+            echo 'NO_PAID_POST_ATTEMPT_NO_PROVIDER_RESPONSE'
+          fi
+      - name: Publish source-bound native completion receipt to original Task2 owner
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m scripts.api_agent.manual_astra_task2_realdata_v2 notify --out-dir runtime/task2-astra-realdata-v2
+      - name: Preserve FULL source ZIP, manifest, prompt, actual receipts and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-astra-realdata-v2-evidence-${{ github.run_id }}
+          path: |
+            runtime/task2-astra-realdata-v2/task2_astra_realdata_public_bundle_v2.zip
+            runtime/task2-astra-realdata-v2/source_manifest.json
+            runtime/task2-astra-realdata-v2/prompt.txt
+            runtime/task2-astra-realdata-v2/claim.json
+            runtime/task2-astra-realdata-v2/file_handle.json
+            runtime/task2-astra-realdata-v2/response_handle.json
+            runtime/task2-astra-realdata-v2/cancel_attempt.json
+            runtime/task2-astra-realdata-v2/cancel_confirmation.json
+            runtime/task2-astra-realdata-v2/cancel_unverified.json
+            runtime/task2-astra-realdata-v2/code_interpreter_trace.json
+            runtime/task2-astra-realdata-v2/receipt.json
+            runtime/task2-astra-realdata-v2/research_output.md
           retention-days: 90
           if-no-files-found: warn

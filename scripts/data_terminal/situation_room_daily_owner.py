@@ -521,6 +521,85 @@ def record_displaced(root, previous, incoming):
         path.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n")
 
 
+def prospective_intake_for_verified_event(event: dict, result: dict) -> dict | None:
+    """Source-first forward-test INTAKE, never a frozen B0/B1/B2 forecast.
+
+    First local usable clock is the later of capture start and primary fetch
+    completion. Provider publication and HTTP first delivery remain UNKNOWN.
+    Incomplete provenance cannot create prospective candidate credit.
+    """
+    if (event.get("verification_status") != "PRIMARY_SOURCE_VERIFIED"
+            or not event.get("event_id") or not event.get("event_family_id")):
+        return None
+
+    def parse_clock(value: object):
+        if not isinstance(value, str) or not value.endswith("Z"):
+            return None
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        return parsed.astimezone(timezone.utc) if parsed.tzinfo else None
+
+    detected = parse_clock(result.get("detection_time_utc"))
+    event_detected = parse_clock(event.get("detection_time_utc"))
+    if detected is None or event_detected is None or detected != event_detected:
+        return None
+    primary = [
+        r for r in event.get("source_receipts", [])
+        if isinstance(r, dict) and r.get("role") == "PRIMARY"
+        and r.get("status") == "PASS" and r.get("sha256")
+        and r.get("source_id") and r.get("url")
+        and parse_clock(r.get("retrieval_end_utc")) is not None
+    ]
+    if not primary:
+        return None
+    # The earliest completed, independently source-backed primary receipt is
+    # an owner clock, not proof of the provider's or consumer's first-known time.
+    receipt = min(primary, key=lambda r: parse_clock(r["retrieval_end_utc"]))
+    usable = max(detected, parse_clock(receipt["retrieval_end_utc"]))
+    event_time = event.get("event_time_utc")
+    if not isinstance(event_time, str) or not event_time:
+        return None
+    if event_time[:10] > usable.date().isoformat():
+        return None
+    if event.get("event_time_precision") == "TIMESTAMP":
+        timestamp = parse_clock(event_time)
+        if timestamp is None or timestamp > usable:
+            return None
+    if event.get("event_time_precision") not in {"TIMESTAMP", "DATE_ONLY"}:
+        return None
+    return {
+        "contract": "NEWS_INTELLIGENCE_PROSPECTIVE_INTAKE_v1",
+        "authority": "RESEARCH_ONLY_NON_CANONICAL",
+        "kind": "FUTURE_FORWARD_CARD_FREEZE_CANDIDATE_ONLY",
+        "event_id": event["event_id"],
+        "event_family_id": event["event_family_id"],
+        "source_run_id": result.get("run_id"),
+        "observed_date_utc": result.get("observation_date_utc"),
+        "event_time_utc": event_time,
+        "event_time_precision": event.get("event_time_precision"),
+        "detected_utc": result["detection_time_utc"],
+        "primary_retrieval_end_utc": receipt["retrieval_end_utc"],
+        "first_local_evidence_usable_utc": usable.isoformat().replace("+00:00", "Z"),
+        "primary_source_id": receipt["source_id"],
+        "primary_source_url": receipt["url"],
+        "primary_source_sha256": receipt["sha256"],
+        "provider_first_known_utc": "UNKNOWN",
+        "first_http_delivery_utc": "UNKNOWN",
+        "first_consumer_use_utc": "UNKNOWN",
+        "B0_HEADLINE_POLARITY": None,
+        "B1_VERIFIED_FACT_IMMEDIATE_REACTION": None,
+        "B2_NEWS_EVIDENCE_CARD": None,
+        "baseline_freeze_state": "UNSET_REQUIRES_FUTURE_TIMELY_FROZEN_CARD",
+        "admitted_to_N50": False,
+        "outcome_scoring_authorized": False,
+        "official_compass_effect": False,
+        "market_or_portfolio_effect": False,
+        "horizons_after_frozen_T0": ["T+4H", "T+24H", "T+3D", "T+7D"],
+    }
+
+
 def write_outputs(root: Path, result: dict) -> dict:
     date_utc = result["observation_date_utc"]
     year, month, _ = date_utc.split("-")
@@ -563,15 +642,49 @@ def write_outputs(root: Path, result: dict) -> dict:
                     existing.add(str(row["event_id"]))
             except json.JSONDecodeError:
                 continue
+    # One intake per truly NEW verified event family, never backfilled from
+    # previously persisted events. The owner daily writer already owns the
+    # append-only ledger, so no new scheduler, model, writer or engine is made.
+    family_seen: set[str] = set()
+    if ledger.exists():
+        for line in ledger.read_text(encoding="utf-8").splitlines():
+            try:
+                historical = json.loads(line)
+                if historical.get("event_id") in existing and historical.get("event_family_id"):
+                    family_seen.add(historical["event_family_id"])
+            except json.JSONDecodeError:
+                continue
+    intake = root / "NEWSFT_PROSPECTIVE_INTAKE.jsonl"
+    intake_families: set[str] = set()
+    if intake.exists():
+        for line in intake.read_text(encoding="utf-8").splitlines():
+            try:
+                seen_row = json.loads(line)
+                if seen_row.get("event_family_id"):
+                    intake_families.add(seen_row["event_family_id"])
+            except json.JSONDecodeError:
+                continue
+    intake_rows = []
     with ledger.open("a", encoding="utf-8") as fh:
         for event in result["events"]:
             if event["event_id"] in existing:
                 continue
+            candidate = prospective_intake_for_verified_event(event, result)
+            # A previous occurrence of this family is NOT a fresh opportunity.
+            if candidate and event["event_family_id"] not in family_seen and event["event_family_id"] not in intake_families:
+                intake_rows.append(candidate)
+                intake_families.add(event["event_family_id"])
             row = dict(event)
             row["ledger_recorded_at_utc"] = result["detection_time_utc"]
             row["shared_row_tournament_eligible"] = False
             fh.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
             existing.add(event["event_id"])
+            if event.get("event_family_id"):
+                family_seen.add(event["event_family_id"])
+    if intake_rows:
+        with intake.open("a", encoding="utf-8") as fh:
+            for candidate in intake_rows:
+                fh.write(json.dumps(candidate, sort_keys=True, separators=(",", ":")) + "\n")
 
     return {
         "status": "WROTE_INCOMING_RECORD",

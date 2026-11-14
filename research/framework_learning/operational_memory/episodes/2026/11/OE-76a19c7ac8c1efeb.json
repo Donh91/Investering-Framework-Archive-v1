@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/mission_packets/2026-11-11__RESEARCH_EVIDENCE_CONVERSION_EXECUTION_MANIFEST_v1.json",
+    "06_RESEARCH_LAB/mission_packets/2026-11-11__RESEARCH_EVIDENCE_CONVERSION_EXECUTION_PACKAGE_v1.md",
+    "scripts/research/research_lab_evidence_conversion_preflight_v1.py",
+    "tests/research/test_research_lab_evidence_conversion_preflight_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-76a19c7ac8c1efeb",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research: add read-only evidence conversion diagnostic without admission bypass * test: regression controls for zero-score evidence and provenance guardrails * research: source-bound scientific conversion execution package and Fable scope crosswalk * research: register executable owner-linked evidence conversion manifest * fix(research #2082): fail-close all input paths, reconcile admissions and pin gate implementation * test(research #2082): cover three Codex P2 regressions",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/mission_packets/2026-11-11__RESEARCH_EVIDENCE_CONVERSION_EXECUTION_MANIFEST_v1.json": "12351edb37ea00b367636cc410aa4ee70f901e13",
+    "06_RESEARCH_LAB/mission_packets/2026-11-11__RESEARCH_EVIDENCE_CONVERSION_EXECUTION_PACKAGE_v1.md": "74cac0adb0800fb3c96f06eac87a8721b3c4b37f",
+    "scripts/research/research_lab_evidence_conversion_preflight_v1.py": "c2c7ddc3f473bc033ec94d97b33f7b06df5a79d8",
+    "tests/research/test_research_lab_evidence_conversion_preflight_v1.py": "dbedabed300528fbe5d7a0e556b8adb79098f258"
+  },
+  "source_commit_sha": "76a19c7ac8c1efeb56e3e52e03b2378c21ccbef6",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T12:09:09-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "Research Lab: evidence-to-decision execution package + source-safe diagnostic (S1 owner handoff) (#2082)"
+}

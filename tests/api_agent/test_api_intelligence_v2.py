@@ -90,7 +90,11 @@ class ApiIntelligenceV2Tests(unittest.TestCase):
     def test_policy_and_registry_keep_zero_authority(self) -> None:
         policy = json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
         registry = json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
-        self.assertEqual(policy['monthly_hard_stop_usd'], 40.0)
+        self.assertEqual(policy['monthly_hard_stop_usd'], 50.0)
+        # Existing routine registry remains stricter at USD40. The owner
+        # approves a global envelope, not automatic expansion of paid jobs.
+        self.assertEqual(policy['owner_exceptional_budget']['absolute_ceiling_usd'], 50.0)
+        self.assertEqual(policy['global_reserve_usd'], 4)
         self.assertTrue(all(value is False for value in policy['authority'].values()))
         self.assertEqual(registry['tasks']['DAILY_DIRECTOR_SHADOW']['model'], 'gpt-6-luna')
         self.assertEqual(registry['tasks']['DAILY_CONFLICT_REVIEW']['model'], 'gpt-5.6-terra')

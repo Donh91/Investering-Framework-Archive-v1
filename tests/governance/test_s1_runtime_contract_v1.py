@@ -63,8 +63,32 @@ class S1RuntimeContractTest(unittest.TestCase):
         for needle in ("H1 Monday 09:30-10:30", "H2 No HIGH/EXTREME merge", "H3 Never enable live trading",
                        "H4 Never publish private-plane data", "H5 ", "H6 ", "H7 ", "H8 ",
                        "CHANGE CONTROL", "S1_PROMPT_DRIFT", "HEARTBEAT", "S1_HEARTBEAT_v1",
-                       "contract=<first 8 of action_loop_blob>", "Never dispatch, rerun or pass inputs to any Vault workflow"):
+                       "contract=<first 8 of action_loop_blob>", "Never dispatch, rerun or pass inputs to any Vault workflow",
+                       "CLAUDE_PROACTIVE_PREVIEW_v1", "ticks_24h=", "last_noop=",
+                       "WAITING_ONLY_FOR_OWNER"):
+
             self.assertIn(needle, loop)
+
+    def test_proactive_review_cannot_deadlock_rule_three(self):
+        loop = (S1 / "ACTION_LOOP.md").read_text(encoding="utf-8")
+        self.assertIn("Ignore ALL PROACTIVE receipts for rule-3 deduplication", loop)
+        self.assertIn("prior exact-head S1_REVIEW_REQUEST_v1", loop)
+        self.assertIn("never blocks rule 3", loop)
+
+    def test_daily_heartbeat_not_suppressed_by_interactive_posts(self):
+        loop = (S1 / "ACTION_LOOP.md").read_text(encoding="utf-8")
+        self.assertIn("EVERY Copenhagen calendar day", loop)
+        self.assertIn("regardless of ANY owner-interactive, RUN_NOW", loop)
+        self.assertIn("Deduplicate only against today's prior S1_HEARTBEAT_v1", loop)
+        self.assertIn("ticks_24h=UNKNOWN", loop)
+        self.assertIn("last_noop", loop)
+
+    def test_high_batch_requires_all_gates_and_owner_answer(self):
+        loop = (S1 / "ACTION_LOOP.md").read_text(encoding="utf-8")
+        for token in ("HIGH EVIDENCE below all PASS", "exact-head independently solicited Claude APPROVE",
+                      "native exact-head green required CI", "ONE deduplicated owner-present yes/no list",
+                      "WAITING_ONLY_FOR_OWNER", "S1 still never merges HIGH"):
+            self.assertIn(token, loop)
 
 
 if __name__ == "__main__":
