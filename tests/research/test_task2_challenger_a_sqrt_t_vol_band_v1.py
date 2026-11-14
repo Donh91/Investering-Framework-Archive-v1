@@ -390,6 +390,95 @@ class ChallengerATest(unittest.TestCase):
         return subprocess.run(["git","-C",str(root),*args],
                               capture_output=True,text=True,check=True,env=env).stdout.strip()
 
+    def test_missing_original_issuance_freezes_a_true_first_maturity_denominator(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._git(root, "init", "-b", "main")
+            self._git(root, "config", "user.name", "Task2 CI")
+            self._git(root, "config", "user.email", "task2-tests@example.invalid")
+            (root / "README").write_text("canonical main\\n")
+            self._git(root, "add", "README")
+            self._git(root, "commit", "-m", "init",
+                      date="2026-11-15T00:00:00+00:00")
+            after_maturity = A.week_monday(2026, 47) + 7 * A.DAY + A.HOUR
+            row = A.no_issuance_missing_score(root, 2026, 47, as_of_utc=after_maturity)
+            self.assertEqual(row["week_winner_interval_score"], "MISSING")
+            self.assertEqual(row["missing_reason"], "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY")
+            self.assertIsNone(row["issuance_sha256"])
+            path = root / A.SCORE_PATH.format(year=2026, week=47)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(row, sort_keys=True) + "\\n")
+            self._git(root, "add", str(path.relative_to(root)))
+            self._git(root, "commit", "-m", "first-maturity absent source",
+                      date="2026-11-23T01:10:00+00:00")
+            saved, proof = A.read_first_main_weekly_score(root, 2026, 47)
+            self.assertEqual(saved["week_winner_interval_score"], "MISSING")
+            self.assertTrue(proof["no_issuance_verified"])
+            self.assertEqual(A.confirmatory_decision_from_main(root, "2026-W47")["status"], "PENDING")
+
+            # Even a later issue cannot replace the first originally missing week.
+            rel = A.ISSUANCE_PATH.format(year=2026, week=47)
+            issue_path = root / rel
+            issue_path.parent.mkdir(parents=True, exist_ok=True)
+            issue_path.write_text('{"later":"not prospective"}\\n')
+            self._git(root, "add", rel)
+            self._git(root, "commit", "-m", "late source cannot change denominator",
+                      date="2026-11-23T02:00:00+00:00")
+            self.assertEqual(A.read_first_main_weekly_score(root, 2026, 47)[0]["week_winner_interval_score"], "MISSING")
+            with self.assertRaisesRegex(ValueError, "first 48h"):
+                A.no_issuance_missing_score(root, 2026, 48, as_of_utc=after_maturity)
+            changed = json.loads(path.read_text())
+            changed["paired_rows"] = 8
+            path.write_text(json.dumps(changed, sort_keys=True) + "\\n")
+            with self.assertRaisesRegex(ValueError, "first-main score mutated"):
+                A.read_first_main_weekly_score(root, 2026, 47)
+
+    def test_no_issuance_denominator_rejects_deleted_original_main_history(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._git(root, "init", "-b", "main")
+            self._git(root, "config", "user.name", "Task2 CI")
+            self._git(root, "config", "user.email", "task2-tests@example.invalid")
+            rel = A.ISSUANCE_PATH.format(year=2026, week=47)
+            source = root / rel
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_text('{"original":"present"}\\n')
+            self._git(root, "add", rel)
+            self._git(root, "commit", "-m", "original issuance",
+                      date="2026-11-16T10:00:00+00:00")
+            source.unlink()
+            self._git(root, "add", "-u")
+            self._git(root, "commit", "-m", "attempt to delete original",
+                      date="2026-11-22T01:00:00+00:00")
+            maturity = A.week_monday(2026, 47) + 7 * A.DAY + A.HOUR
+            with self.assertRaisesRegex(ValueError, "historical or current A issuance"):
+                A.no_issuance_missing_score(root, 2026, 47, as_of_utc=maturity)
+
+    def test_first_eight_valid_skip_proven_missing_and_ignore_later_corruption(self):
+        rows = self._confirmatory_rows(10)
+        rows[0]["paired_rows"] = 0
+        rows[0]["week_winner_interval_score"] = "MISSING"
+        calls = []
+        by_week = {r["week"]: r for r in rows[:9]}
+
+        def first_score(root, year, week):
+            label = f"{year}-W{week:02d}"
+            calls.append(label)
+            if label not in by_week:
+                raise ValueError("irrelevant corrupted score after eighth valid week")
+            return by_week[label], {
+                "first_main_commit": "score_commit",
+                "first_main_blob_sha": "score_blob",
+                "first_main_utc": "2027-02-01T00:00:00Z",
+                "eligible_first_maturity": True,
+            }
+
+        with mock.patch.object(A, "read_first_main_weekly_score", side_effect=first_score):
+            decision = A.confirmatory_decision_from_main(Path("."), rows[-1]["week"])
+        self.assertEqual(decision["status"], "A_PASSES_SHADOW_CONFIRMATORY")
+        self.assertEqual(decision["weeks"], [r["week"] for r in rows[1:9]])
+        self.assertEqual(calls, [r["week"] for r in rows[:9]])
+
     def test_first_main_history_and_persisted_issuance_integrity(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d)
