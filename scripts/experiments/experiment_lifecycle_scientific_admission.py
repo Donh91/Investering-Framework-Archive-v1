@@ -25,11 +25,14 @@ QUALIFIED = "QUALIFIED_FOR_FORWARD_TEST"
 # episode created ~4 identical requests per candidate per day (63,219 requests for 319 candidates
 # by 2026-11-14) and broke the storage-health gate. Only an episode START is dispatched.
 FIRED_STATES = {"FIRED", "FIRED_NO_TARGET"}
+# Missing/unknown observations are not observed evidence that a fire episode has ended.
+# Only an observed false condition can re-arm a previously firing candidate.
+DEFINITIVE_EPISODE_STATES = FIRED_STATES | {"OBSERVED_NOT_FIRED"}
 DISPATCH_LISTING_RULE = "PENDING_UNRECEIPTED_QUALIFIED_ONLY"
 
 
 def prior_observation_status(observation_root: Path, candidate_id: str, before_utc: str) -> str | None:
-    """Evaluation status of the candidate's latest observation strictly before `before_utc` (None if none)."""
+    """Last DEFINITIVE earlier episode state; unknown/missing observations do not re-arm."""
     best: tuple[str, str] | None = None
     folder = observation_root / candidate_id
     for path in folder.glob("*.json") if folder.is_dir() else []:
@@ -40,8 +43,11 @@ def prior_observation_status(observation_root: Path, candidate_id: str, before_u
         if not isinstance(value, dict) or value.get("contract") != "EXPERIMENT_OBSERVATION_v1":
             continue
         observed = str(value.get("observed_at_utc") or "")
+        status = str(value.get("evaluation_status") or "")
+        if status not in DEFINITIVE_EPISODE_STATES:
+            continue  # WAITING_FOR_DATA, mapping gaps and invalid/unknown states are not a false signal
         if observed and observed < before_utc and (best is None or observed > best[0]):
-            best = (observed, str(value.get("evaluation_status") or ""))
+            best = (observed, status)
     return best[1] if best else None
 
 
