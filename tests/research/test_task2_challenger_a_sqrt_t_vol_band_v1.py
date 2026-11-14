@@ -221,6 +221,7 @@ class ChallengerATest(unittest.TestCase):
         # Later losses never enter the single scheduled 8-cluster test.
         self.assertEqual(A.fixed_horizon_decision(data)["status"],"A_PASSES_SHADOW_CONFIRMATORY")
         self.assertEqual(A.sign_test_p(7,1),.0703125)
+        self.assertEqual(A.fixed_horizon_decision(data+data[:1])["status"],"INCONCLUSIVE_DUPLICATE_WEEK")
 
     @staticmethod
     def _git(root,*args,date=None):
