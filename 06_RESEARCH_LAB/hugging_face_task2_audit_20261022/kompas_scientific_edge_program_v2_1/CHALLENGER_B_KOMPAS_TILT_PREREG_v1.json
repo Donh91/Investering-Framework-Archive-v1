@@ -1,0 +1,69 @@
+{
+  "contract": "TASK2_CHALLENGER_B_KOMPAS_TILT_v1",
+  "formula_version": "B1",
+  "status": "PREREGISTERED_SHADOW_RESEARCH",
+  "question": "Does the Official Compass bull/bear evidence balance carry usable direction for BTC/ETH over the next 1-7 days, beyond a no-direction forecast?",
+  "authority": {
+    "research_only": true,
+    "official_compass": false,
+    "site_label_required": "Challenger B (forsøg) with its running track record; never presented as an Official Compass output or probability",
+    "respects": "OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1 semantics EVIDENCE_BALANCE_NOT_PROBABILITY and site_synthesis_allowed=false: the mapping to a probability is B's registered model, computed server-side, not a site synthesis and not a Compass claim",
+    "trading": false,
+    "promotion": false
+  },
+  "inputs": {
+    "a_issuance": "the committed, digest-verified Challenger A weekly issuance (P0, sigma_hourly, day windows, T0)",
+    "kompas_packet": "per horizon, the latest Official Compass packet issued in (T0-24h, T0] that also entered main (first-parent) by T0 and has status OK with integer bull+bear=10; otherwise no view"
+  },
+  "formula": {
+    "drift_per_day": "g_h = tilt * (bull_h - bear_h)/10 * sigma_hourly * sqrt(24)",
+    "log_shift": "m(h) = g_13*min(h,72)/24 + g_57*max(h-72,0)/24",
+    "centre": "P0*exp(m(h_k))",
+    "p_up": "Phi(m(h_k)/(sigma_hourly*sqrt(h_k)))"
+  },
+  "params": {
+    "tilt": 0.5,
+    "short_horizon_hours": 72,
+    "packet_dir": "04_MARKET_LEARNING/handlekompas/official/daily",
+    "packet_contract": "OFFICIAL_COMPASS_BULL_BEAR_DISPLAY_v1",
+    "packet_semantics": "EVIDENCE_BALANCE_NOT_PROBABILITY",
+    "packet_lookback_hours": 24,
+    "horizons": {
+      "1_3d": "g13",
+      "5_7d": "g57"
+    },
+    "baseline_brier": 0.25
+  },
+  "tilt_note": "tilt=0.5 is a registered prior, frozen for the whole confirmatory period. It is NOT tuned on outcomes. An exploratory fit of the best tilt may be reported but can only seed a new pre-registered B2.",
+  "scoring": {
+    "unit": "asset-day (BTC, ETH; days 1-7 of the ISO week after T0)",
+    "outcome": "1[close at day end > P0]; a close equal to P0 is skipped",
+    "maturity": "full hourly census of the day window, as in Challenger A",
+    "metric": "Brier (p_up - outcome)^2",
+    "baseline": "0.25 (no-direction forecast p_up=0.5, i.e. Challenger A's untilted centre)",
+    "week_winner": "B if the week's mean Brier < 0.25, BASE if > 0.25, else TIE (also TIE when B had no view)",
+    "secondary_descriptive": [
+      "log score",
+      "hit rate of the direction call",
+      "reliability by p_up bucket",
+      "comparison with naive 24h momentum"
+    ]
+  },
+  "decision_rule": {
+    "first_prospective_week": "2026-W47",
+    "confirmatory_week_clusters": 8,
+    "one_sided_alpha": 0.05,
+    "confirmatory_analysis": "ONE analysis at exactly the first 8 non-tied prospective weeks; exact one-sided sign test in B's favour; B_HAS_DIRECTION iff >=7 of 8 (p=0.0352). Interim weeks descriptive only.",
+    "ties": "excluded; a week where B has no view (all p_up = 0.5) is a tie",
+    "else": "NO_PROVEN_DIRECTION: the live card keeps the line flat and says 'Ingen påvist retning'",
+    "never": [
+      "tune tilt or the packet rule after W47 starts",
+      "use packets that entered main after T0",
+      "score a day without full hourly census",
+      "present B as the Official Compass"
+    ]
+  },
+  "point_in_time_argument": "B is a pure function of the frozen A issuance and packets already in main at T0, and this registration is committed (Bridge claude/log, timestamped) before the W47 T0. A B issuance computed later from those frozen inputs is therefore identical to one computed at T0; no outcome can enter it.",
+  "round3_firewall": "not touched; no outcome scoring was run",
+  "falsification": "If after 8 non-tied weeks B wins fewer than 7, the Kompas evidence balance has no proven 1-7 day direction at tilt 0.5, and the live card must not tilt the line."
+}
