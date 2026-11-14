@@ -236,19 +236,16 @@ class KompasLivePathTests(unittest.TestCase):
         self.repo.packet(NOW - 1 * H, b13=(0, 10), contract="OTHER", name="CMP-c.json")
         self.repo.packet(NOW - 30 * dt.timedelta(minutes=1), b13=(2, 7), name="CMP-d.json")  # sums to 9
         doc = self.build()
-        # A forged/invalid current pointer must NEVER fall back to the old valid daily packet.
-        self.assertEqual(doc["status"], "UNAVAILABLE")
-        self.assertEqual(doc["reasons"], ["OFFICIAL_POINTER_PACKAGE_MISMATCH"])
-        self.assertIsNone(doc["kompas_views"]["1_3d"])
+        # A forged/invalid current pointer must NEVER fall back to the old valid daily packet:
+        # the old 3/7 view is not used, so the path is untilted.
+        self.assert_untilted(doc, "OFFICIAL_POINTER_PACKAGE_MISMATCH")
 
     def test_no_valid_packet_in_window_is_unavailable(self):
         self.repo.prereg()
         self.repo.packet(NOW - 30 * H, b13=(3, 7))
         self.repo.packet(NOW - H, semantics="PROBABILITY")
         doc = self.build()
-        self.assertEqual(doc["status"], "UNAVAILABLE")
-        self.assertEqual(doc["reasons"], ["OFFICIAL_POINTER_PACKAGE_MISMATCH"])
-        self.assertNotIn("days", doc["assets"]["BTC"])
+        self.assert_untilted(doc, "OFFICIAL_POINTER_PACKAGE_MISMATCH")
 
     def test_valid_packet_without_ok_view_is_no_view_not_outage(self):
         self.repo.prereg()
@@ -257,6 +254,23 @@ class KompasLivePathTests(unittest.TestCase):
         self.assertEqual(a["status"], "OK")
         self.assertEqual(a["headline"]["3"]["reason"], "NO_VIEW")
         self.assertTrue(all(d["centre"] == a["p0"] for d in a["days"]))
+
+    def assert_untilted(self, doc, reason):
+        """A missing/expired/mismatched Kompas removes only the tilt: live card, zero drift, reason kept."""
+        self.assertEqual(doc["status"], "OK")
+        self.assertEqual(doc["reasons"], [])
+        self.assertEqual(doc["kompas_view_state"], {"status": "NONE", "reason": reason, "valid_until_utc": None})
+        self.assertIsNone(doc["official_source_valid_until_utc"])
+        self.assertEqual(doc["kompas_views"], {"1_3d": None, "5_7d": None})
+        for asset in ("BTC", "ETH"):
+            a = doc["assets"][asset]
+            self.assertEqual(a["status"], "OK")
+            self.assertEqual(a["drift_per_day"], {"g13": 0.0, "g57": 0.0})
+            self.assertTrue(all(d["centre"] == round(a["p0"], 2) for d in a["days"]))
+            self.assertEqual(a["headline"]["3"]["reason"], "NO_VIEW")
+            fb = doc["no_kompas_view"]["assets"][asset]
+            self.assertEqual(fb["days"], a["days"])
+            self.assertNotIn("challenger_b", fb)
 
     # ---- fail closed ---------------------------------------------------
     def test_stale_hourly_is_unavailable_and_90_minutes_is_fresh(self):
@@ -426,10 +440,13 @@ class KompasLivePathTests(unittest.TestCase):
         # Fresh hourly and <24h since issuance are NOT sufficient after original source TTL.
         self.repo.hourly(dt.datetime(2026, 10, 13, tzinfo=UTC), NOW + 3 * H)
         expired = self.build(now=NOW + 2 * H)
-        self.assertEqual(expired["status"], "UNAVAILABLE")
-        self.assertEqual(expired["reasons"], ["OFFICIAL_POINTER_SOURCE_EXPIRED"])
-        self.assertIsNone(expired["official_source_valid_until_utc"])
-        self.assertEqual(self.build(now=NOW + H + dt.timedelta(minutes=59))["status"], "OK")
+        self.assert_untilted(expired, "OFFICIAL_POINTER_SOURCE_EXPIRED")
+        before = self.build(now=NOW + H + dt.timedelta(minutes=59))
+        self.assertEqual(before["kompas_view_state"]["status"], "VERIFIED")
+        self.assertNotEqual(before["assets"]["BTC"]["drift_per_day"]["g13"], 0.0)
+        # The untilted fallback is published next to the tilted path for the browser deadline switch.
+        self.assertTrue(all(d["centre"] == before["no_kompas_view"]["assets"]["BTC"]["p0"]
+                            for d in before["no_kompas_view"]["assets"]["BTC"]["days"]))
 
     def test_original_source_missing_freshness_rejects_signed_pointer_too(self):
         self.repo.prereg()
@@ -451,8 +468,7 @@ class KompasLivePathTests(unittest.TestCase):
         pointer["public_projection_content_sha256"] = K.sha256_bytes(public_path.read_bytes())
         pointer_file.write_text(json.dumps(pointer))
         failed = self.build()
-        self.assertEqual(failed["status"], "UNAVAILABLE")
-        self.assertEqual(failed["reasons"], ["OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID"])
+        self.assert_untilted(failed, "OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID")
 
     def test_one_shorter_source_check_stops_website_even_if_another_survives(self):
         self.repo.prereg()
@@ -473,7 +489,7 @@ class KompasLivePathTests(unittest.TestCase):
         pointer["public_projection_sha256"] = public["projection_sha256"]
         pointer["public_projection_content_sha256"] = K.sha256_bytes(public_path.read_bytes())
         pointer_file.write_text(json.dumps(pointer))
-        self.assertEqual(self.build()["reasons"], ["OFFICIAL_POINTER_SOURCE_EXPIRED"])
+        self.assert_untilted(self.build(), "OFFICIAL_POINTER_SOURCE_EXPIRED")
 
     def test_pointer_required_even_with_historical_valid_packet(self):
         self.repo.prereg()
@@ -481,9 +497,7 @@ class KompasLivePathTests(unittest.TestCase):
         pointer = self.repo.root / K.OFFICIAL_POINTER_PATH
         pointer.unlink()
         doc = self.build()
-        self.assertEqual(doc["status"], "UNAVAILABLE")
-        self.assertEqual(doc["reasons"], ["OFFICIAL_POINTER_MISSING"])
-        self.assertIsNone(doc["kompas_views"]["1_3d"])
+        self.assert_untilted(doc, "OFFICIAL_POINTER_MISSING")
 
     def test_pointer_and_public_package_hashes_fail_closed(self):
         self.repo.prereg()
@@ -491,8 +505,7 @@ class KompasLivePathTests(unittest.TestCase):
         ptr = self.repo.root / K.OFFICIAL_POINTER_PATH
         initial = ptr.read_bytes()
         def check(expected):
-            self.assertEqual(self.build()["reasons"], [expected])
-            self.assertEqual(self.build()["status"], "UNAVAILABLE")
+            self.assert_untilted(self.build(), expected)
         candidate = json.loads(initial)
         candidate["compass_content_sha256"] = "0" * 64
         ptr.write_text(json.dumps(candidate), encoding="utf-8")
@@ -521,6 +534,28 @@ class KompasLivePathTests(unittest.TestCase):
                 self.assertIsNone(doc["assets"][asset]["frozen_zone"])
                 self.assertTrue(all(e["deviation"]["state"] == "NO_ZONE" for e in doc["assets"][asset]["events"]))
                 self.assertFalse(any(e["kind"] == "ZONE_BREAK" for e in doc["assets"][asset]["events"]))
+
+    def test_per_asset_quote_dict_and_public_quote_labels_enable_the_zone(self):
+        """The real freeze declares price_quote per asset, and the public sanitizer drops it."""
+        self.repo.prereg()
+        self.repo.packet(NOW - H)
+        doc = self.build(latest=self.repo.latest(quote={"BTC": "USDT", "ETH": "USDT"}))
+        self.assertEqual(doc["inputs"]["frozen_zone"]["status"], "OK")
+        self.assertEqual(doc["assets"]["BTC"]["frozen_zone"]["low"], 69000.0)
+        latest = self.repo.latest(quote=None)  # sanitized package: key absent
+        d = json.loads(latest.read_text())
+        d["public_live_precision"] = {"price_quote_labels": {"contract": "CN_PUBLIC_PRICE_QUOTE_LABELS_v1",
+                                                             "forecast_model_declared": {"BTC": "USDT", "ETH": "UNAVAILABLE"}}}
+        latest.write_text(json.dumps(d))
+        doc = self.build(latest=latest)
+        self.assertEqual(doc["inputs"]["frozen_zone"]["freeze_quote"], {"BTC": "USDT", "ETH": "UNAVAILABLE"})
+        self.assertIsNotNone(doc["assets"]["BTC"]["frozen_zone"])
+        self.assertIsNone(doc["assets"]["ETH"]["frozen_zone"])  # per asset, fail closed
+        d["public_live_precision"]["price_quote_labels"]["contract"] = "OTHER"
+        latest.write_text(json.dumps(d))
+        self.assertEqual(self.build(latest=latest)["inputs"]["frozen_zone"]["reason"], "FROZEN_ZONE_QUOTE_MISMATCH")
+        doc = self.build(latest=self.repo.latest(quote={"BTC": "USD", "ETH": "USD"}))
+        self.assertEqual(doc["inputs"]["frozen_zone"]["reason"], "FROZEN_ZONE_QUOTE_MISMATCH")
 
     def test_chips_and_points(self):
         self.repo.prereg()

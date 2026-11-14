@@ -49,6 +49,7 @@ const UNAVAILABLE_REASON={
  NO_VALID_OFFICIAL_PACKET_24H:['Der er ingen gyldig Kompas-udgave fra de seneste 24 timer.','There is no valid Compass issue from the last 24 hours.'],
  OFFICIAL_POINTER_SOURCE_EXPIRED:['Kompas-kildens gyldighed er udløbet.','The verified Compass source has expired.'],
  OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID:['Kompas-kildens gyldighed kan ikke verificeres.','The Compass source freshness cannot be verified.'],
+ OFFICIAL_POINTER_NONE:['Der er ingen verificeret Kompas-udgave lige nu.','There is no verified Compass issue right now.'],
  STALE_IN_BROWSER:['Siden har ikke fået nye live-data i over 3 timer.','The page has had no new live data for more than 3 hours.'],
  PRODUCER_ERROR:['Live-beregningen fejlede ved seneste opdatering.','The live computation failed at the latest update.'],
  SOURCE:['Live-data kunne ikke indlæses eller er ugyldige.','Live data could not be loaded or are invalid.']
@@ -60,7 +61,7 @@ const NONE_REASON={
  BALANCED:['Kompas’ evidens er i balance for perioden.','Compass evidence is balanced for the period.']
 };
 
-function labels(lang,flat){
+function labels(lang,flat,noView=false){
  return {
   heading:tr(lang,'Kompas live · de næste dage','Compass live · the next days'),
   assetGroup:tr(lang,'Vælg aktiv','Choose asset'),
@@ -82,12 +83,14 @@ function labels(lang,flat){
   author:tr(lang,'Automatisk','Automatic'),
   since:tr(lang,'Siden','Since'),
   footer:tr(lang,
-   'Statistisk forsøgsvisning, ikke en officiel prognose. '+(flat?
+   'Statistisk forsøgsvisning, ikke en officiel prognose. '+(noView?
+    'Den blå linje er det forventede luk uden hældning, fordi der ikke er en gyldig, verificeret Kompas-udgave lige nu. ':flat?
     'Den blå linje er det forventede luk uden hældning; Challenger B (forsøg) er endnu ikke registreret i denne udgave. ':
     'Den blå linje er Challenger B (forsøg): en registreret forskningsmodel, der lader kursbanen hælde efter Kompas’ egne horisonter (1–3 og 5–7 dage). ')+
    'Kompas’ bull/bear er evidenspoint, ikke sandsynligheder. Rammerne beregnes live med Challenger A’s formel (50 %). '+
    'Disse timeberegnede kurver er ikke originale, fastfrosne A/B-udstedelser og må ikke indgå som original score. Kommentarerne er skrevet automatisk af kode. Visningen er ikke en købs- eller salgsanbefaling.',
-   'Statistical trial display, not an official forecast. '+(flat?
+   'Statistical trial display, not an official forecast. '+(noView?
+    'The blue line is the expected close without tilt, because there is no valid, verified Compass issue right now. ':flat?
     'The blue line is the expected close without tilt; Challenger B (trial) is not registered in this build yet. ':
     'The blue line is Challenger B (trial): a registered research model that tilts the path along Compass’s own horizons (1–3 and 5–7 days). ')+
    'Compass bull/bear are evidence points, not probabilities. The frames are calculated live using Challenger A’s formula (50%). '+
@@ -158,8 +161,13 @@ export function liveViewModel(json,{lang='da',hz=3,asset='BTC',nowMs=Date.now(),
  lang=lang==='en'?'en':'da';
  hz=LIVE_HORIZONS.includes(Number(hz))?Number(hz):3;
  asset=LIVE_ASSETS.includes(asset)?asset:'BTC';
- const flat=json?.models?.line?.line==='FLAT'||json?.models?.line?.applied===false;
- const L=labels(lang,flat);
+ // After the verified Official Compass deadline (or when the producer had none) the TILT is withdrawn:
+ // the card switches to the producer's untilted blocks (Challenger B's registered no-view case). The
+ // browser never computes a path and never keeps a tilt past the deadline.
+ const sourceDeadline=ms(json?.official_source_valid_until_utc);
+ const noView=!!json&&(!Number.isFinite(sourceDeadline)||nowMs>=sourceDeadline);
+ const flat=noView||json?.models?.line?.line==='FLAT'||json?.models?.line?.applied===false;
+ const L=labels(lang,flat,noView);
  const base={contract:LIVE_CONTRACT,lang,hz,asset,labels:L,
   hzButtons:LIVE_HORIZONS.map(n=>({hz:n,label:L.hz[n],pressed:n===hz})),
   assetButtons:LIVE_ASSETS.map(a=>({asset:a,label:a,pressed:a===asset})),footer:L.footer};
@@ -167,10 +175,10 @@ export function liveViewModel(json,{lang='da',hz=3,asset='BTC',nowMs=Date.now(),
   unavailable:{title:L.loading,text:'',note:''},asOf:{text:L.loading,label:L.loading}};
  if(!sourceIsValid(json))return unavailableModel(base,'SOURCE',lang);
  if(json.status==='UNAVAILABLE')return unavailableModel(base,(json.reasons||[])[0]||'SOURCE',lang);
- const sourceDeadline=ms(json.official_source_valid_until_utc);
- if(!Number.isFinite(sourceDeadline))return unavailableModel(base,'OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID',lang);
- if(nowMs>=sourceDeadline)return unavailableModel(base,'OFFICIAL_POINTER_SOURCE_EXPIRED',lang);
- const a=json.assets[asset];
+ const kompasReason=!noView?null:Number.isFinite(sourceDeadline)?'OFFICIAL_POINTER_SOURCE_EXPIRED':
+  String(json.kompas_view_state?.reason||'OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID');
+ const a=noView?json.no_kompas_view?.assets?.[asset]:json.assets[asset];
+ if(noView&&json.no_kompas_view?.line!=='UNTILTED_NO_KOMPAS_VIEW')return unavailableModel(base,kompasReason,lang);
  if(!a||a.status!=='OK')return unavailableModel(base,a?.reason||'SOURCE',lang);
  if(!validAssetBlock(a))return unavailableModel(base,'SOURCE',lang);
  const asOf=ms(a.as_of_utc),issued=ms(json.generated_at_utc);
@@ -193,6 +201,8 @@ export function liveViewModel(json,{lang='da',hz=3,asset='BTC',nowMs=Date.now(),
    label:tr(lang,'dagsudsving','daily move')+level,tone:'neutral'});
  }
  const headline=headlineModel(head,asset,lang,flat);
+ if(noView)headline.sub=reasonText(/_(EXPIRED|FRESHNESS_INVALID)$/.test(kompasReason)?kompasReason:'OFFICIAL_POINTER_NONE',lang)+' '+tr(lang,'Kursbanen vises uden Kompas-hældning, indtil en ny Kompas-udgave er verificeret.',
+  'The path is shown without Compass tilt until a new Compass issue is verified.');
  const nowText=a.events.find(e=>e.kind==='NOW')?.text_by_horizon?.[String(hz)]?.[lang];
  const order={NOW:3,ZONE_BREAK:2,KOMPAS_1_3D_CHANGE:1,WEEK_START:0};
  const feed=a.events.filter(e=>e&&order[e.kind]!==undefined&&Number.isFinite(ms(e.t_utc)))
@@ -217,7 +227,7 @@ export function liveViewModel(json,{lang='da',hz=3,asset='BTC',nowMs=Date.now(),
   lastDay?tr(lang,'Typisk dagsspænd til sidst ','Typical daily span at the end ')+formatInt(lastDay.lo,lang)+'–'+formatInt(lastDay.hi,lang)+'.':'',
   zone?tr(lang,'Ugens frosne prognose ','This week’s frozen forecast ')+formatInt(zone.lo,lang)+'–'+formatInt(zone.hi,lang)+'.':''
  ].filter(Boolean).join(' ');
- return {...base,state:'OK',reason:null,unavailable:null,
+ return {...base,state:'OK',reason:null,unavailable:null,kompas:{view:noView?'NONE':'VERIFIED',reason:kompasReason},
   price:{value:a.p0,text:formatInt(a.p0,lang),quote:a.quote||'USDT'},
   asOf:{text:'Live '+timeText,label:tr(lang,'Seneste timekurs kl. ','Latest hourly price at ')+timeText+tr(lang,' dansk tid',' Copenhagen time')},
   chips,headline,legend,feed,

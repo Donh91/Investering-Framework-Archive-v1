@@ -269,3 +269,55 @@ test('light-only tokens meet WCAG AA, focus is visible and the pulse respects re
  assert.doesNotMatch(css,/prefers-color-scheme|data-theme/);
  assert.match(css,/min-height:40px/);
 });
+
+// ---- untilted fallback: an expired or absent Kompas withdraws only the tilt -------------------
+function withFallback(doc){
+ const fb={};
+ for(const [k,a] of Object.entries(doc.assets)){
+  const u=asset(a.p0,{down:false});delete u.challenger_b;
+  for(const h of ['1','3','7'])u.headline[h]={...u.headline[h],direction:'NONE',reason:'NO_VIEW',strength:null,tilting_views:[]};
+  fb[k]=u;
+ }
+ return {...doc,kompas_view_state:{status:'VERIFIED',reason:null,valid_until_utc:doc.official_source_valid_until_utc},
+  no_kompas_view:{line:'UNTILTED_NO_KOMPAS_VIEW',assets:fb}};
+}
+
+test('after the Kompas deadline the card stays live, untilted, and says why; the tilt is never kept',()=>{
+ const doc=withFallback({...fixture(),official_source_valid_until_utc:iso(NOW+H)});
+ const before=liveViewModel(doc,{nowMs:NOW});
+ assert.equal(before.state,'OK');
+ assert.equal(before.kompas.view,'VERIFIED');
+ assert.equal(before.headline.direction,'DOWN');
+ for(const lang of ['da','en']){
+  const after=liveViewModel(doc,{nowMs:NOW+H,lang});
+  assert.equal(after.state,'OK');
+  assert.deepEqual(after.kompas,{view:'NONE',reason:'OFFICIAL_POINTER_SOURCE_EXPIRED'});
+  assert.equal(after.headline.direction,'NONE');
+  assert.equal(after.chart.flat,true);
+  assert.ok(after.chart.days.every(d=>d.centre===doc.no_kompas_view.assets.BTC.p0));
+  assert.match(after.headline.sub,lang==='da'?/udløbet.*uden Kompas-hældning/:/expired.*without Compass tilt/);
+  assert.match(after.footer,lang==='da'?/gyldig, verificeret Kompas-udgave lige nu/:/no valid, verified Compass issue/);
+  assert.equal(after.legend.find(x=>x.key==='line').label,lang==='da'?'Forventet luk · uden hældning':'Expected close · no tilt');
+  assert.doesNotMatch(allText(after),/0\.3141/);  // no B probability
+  assert.doesNotMatch(after.headline.source,/Faldende|Falling|Challenger B/);  // no current Kompas word or tilt claim
+ }
+});
+
+test('a build without a verified Kompas publishes untilted blocks and names no expiry',()=>{
+ const doc=withFallback({...fixture(),official_source_valid_until_utc:null});
+ doc.kompas_view_state={status:'NONE',reason:'OFFICIAL_POINTER_MISSING',valid_until_utc:null};
+ doc.assets=doc.no_kompas_view.assets;
+ const m=liveViewModel(doc,{nowMs:NOW});
+ assert.equal(m.state,'OK');
+ assert.deepEqual(m.kompas,{view:'NONE',reason:'OFFICIAL_POINTER_MISSING'});
+ assert.match(m.headline.sub,/ingen verificeret Kompas-udgave/);
+ assert.doesNotMatch(m.headline.sub,/udløbet/);
+});
+
+test('fallback is fail-closed: wrong marker, invalid block or stale hourly still blanks the card',()=>{
+ const base=withFallback({...fixture(),official_source_valid_until_utc:iso(NOW-1)});
+ assert.equal(liveViewModel({...base,no_kompas_view:{...base.no_kompas_view,line:'TILTED'}},{nowMs:NOW}).state,'UNAVAILABLE');
+ const bad=JSON.parse(JSON.stringify(base));bad.no_kompas_view.assets.BTC.days[0].lo=-1;
+ assert.equal(liveViewModel(bad,{nowMs:NOW}).reason,'SOURCE');
+ assert.equal(liveViewModel(base,{nowMs:NOW+4*H}).reason,'STALE_IN_BROWSER');
+});

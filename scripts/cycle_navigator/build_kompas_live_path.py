@@ -40,6 +40,7 @@ HOURLY_DIR = "03_DAILY_CAPTURE_LOGS/hourly"
 PACKET_DIR = "04_MARKET_LEARNING/handlekompas/official/daily"
 OFFICIAL_POINTER_PATH = "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json"
 PUBLIC_PROJECTION_DIR = "04_MARKET_LEARNING/handlekompas/official/public"
+NO_VIEWS = {"1_3d": None, "5_7d": None}
 B_PREREG_PATH = ("06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/"
                  "CHALLENGER_B_KOMPAS_TILT_PREREG_v1.json")
 B_CONTRACT = "TASK2_CHALLENGER_B_KOMPAS_TILT_v1"
@@ -503,13 +504,29 @@ def frozen_zones(latest_path: Path | None, now: dt.datetime) -> tuple[dict, dict
     if pointer.get("iso_year") != year or pointer.get("iso_week") != week:
         return {}, {**status, "status": "UNAVAILABLE", "reason": "FROZEN_WEEK_NOT_CURRENT"}
     # A weekly freeze without verified quote provenance must not be overlaid onto USDT spot bars.
-    # The current public sanitizer may omit price_quote; absence is deliberately unavailable.
-    quote = freeze.get("price_quote")
-    status["freeze_quote"] = quote
-    if not isinstance(quote, str) or quote != QUOTE:
+    # The original freeze declares price_quote PER ASSET ({"BTC": "USDT", "ETH": "USDT"}). The public
+    # sanitizer drops that key from package.forecast_freeze but republishes it, unconverted, as
+    # public_live_precision.price_quote_labels.forecast_model_declared. Either source must say USDT
+    # for that asset; anything else (absent, USD, malformed) keeps that asset's zone unavailable.
+    labels = (latest.get("public_live_precision") or {}).get("price_quote_labels") or {}
+    declared = labels.get("forecast_model_declared") if labels.get("contract") == "CN_PUBLIC_PRICE_QUOTE_LABELS_v1" else None
+    raw = freeze.get("price_quote")
+
+    def quote_for(asset: str) -> Any:
+        if isinstance(raw, dict):
+            return raw.get(asset)
+        if raw is not None:
+            return raw
+        return declared.get(asset) if isinstance(declared, dict) else None
+
+    quotes = {asset: quote_for(asset) for asset in ASSETS}
+    status["freeze_quote"] = {a: (q if isinstance(q, str) else None) for a, q in quotes.items()}
+    if not any(isinstance(q, str) and q == QUOTE for q in quotes.values()):
         return {}, {**status, "status": "UNAVAILABLE", "reason": "FROZEN_ZONE_QUOTE_MISMATCH"}
     zones = {}
     for asset in ASSETS:
+        if not (isinstance(quotes[asset], str) and quotes[asset] == QUOTE):
+            continue
         lo, hi = positive(freeze.get(f"{asset.lower()}_range_low")), positive(freeze.get(f"{asset.lower()}_range_high"))
         if lo is not None and hi is not None and lo < hi:
             zones[asset] = {"low": lo, "high": hi, "week": label}
@@ -821,6 +838,8 @@ def base_document(now: dt.datetime) -> dict:
         "inputs": {},
         "models": {},
         "kompas_views": {"1_3d": None, "5_7d": None},
+        "kompas_view_state": {"status": "NONE", "reason": None, "valid_until_utc": None},
+        "no_kompas_view": None,
         "assets": {},
     }
 
@@ -855,21 +874,33 @@ def build(root: Path, latest_json: Path | None, now: dt.datetime) -> dict:
                      "challenger_a_issuance": {"path": frames["a_issuance_path"], "sha256": frames["a_issuance_sha256"],
                                                "used": frames["z_source"] == "CHALLENGER_A_FROZEN_ISSUANCE"},
                      "frozen_zone": zone_status, "official_compass": official_binding}
-    reasons = []
-    if not in_window:
-        reasons.append(official_binding["reason"] or "OFFICIAL_POINTER_PACKAGE_UNAVAILABLE")
+    # A missing, expired or mismatched Official Compass removes ONLY the Kompas tilt. The live price,
+    # the Challenger A frames and the untilted line need no Kompas input, and an untilted line is exactly
+    # Challenger B's registered no-view case (zero drift). No historical packet substitutes for the
+    # pointer and no deadline is extended: the tilt is simply absent.
+    kompas_reason = None if in_window else (official_binding["reason"] or "OFFICIAL_POINTER_PACKAGE_UNAVAILABLE")
+    doc["kompas_view_state"] = {"status": "VERIFIED" if in_window else "NONE", "reason": kompas_reason,
+                                "valid_until_utc": doc["official_source_valid_until_utc"]}
+    fallback: dict[str, Any] = {}
     for asset in ASSETS:
-        if reasons:
-            doc["assets"][asset] = {"status": "UNAVAILABLE", "reason": reasons[0], "quote": QUOTE}
-            continue
         try:
-            doc["assets"][asset] = asset_block(asset, series[asset], now, views, model, frames,
-                                               zones.get(asset), packets, week_start)
+            no_view = asset_block(asset, series[asset], now, NO_VIEWS, model, frames,
+                                  zones.get(asset), packets, week_start)
         except Unavailable as exc:
             doc["assets"][asset] = {"status": "UNAVAILABLE", "reason": str(exc), "quote": QUOTE}
+            continue
+        if in_window:
+            doc["assets"][asset] = asset_block(asset, series[asset], now, views, model, frames,
+                                               zones.get(asset), packets, week_start)
+        else:
+            doc["assets"][asset] = json.loads(json.dumps(no_view))
+        no_view.pop("challenger_b", None)  # p_up lives only under assets.*.challenger_b
+        fallback[asset] = no_view
+    # The browser switches to these untilted blocks at official_source_valid_until_utc (or at once when null).
+    doc["no_kompas_view"] = {"line": "UNTILTED_NO_KOMPAS_VIEW", "assets": fallback} if fallback else None
     ok = [a for a, b in doc["assets"].items() if b["status"] == "OK"]
     doc["status"] = "OK" if len(ok) == len(ASSETS) else ("PARTIAL" if ok else "UNAVAILABLE")
-    doc["reasons"] = sorted({b["reason"] for b in doc["assets"].values() if b.get("reason")} | set(reasons))
+    doc["reasons"] = sorted({b["reason"] for b in doc["assets"].values() if b.get("reason")})
     return doc
 
 
