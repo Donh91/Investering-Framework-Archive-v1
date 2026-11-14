@@ -78,6 +78,31 @@ class DispatchEpisodeTest(unittest.TestCase):
             self.assertEqual(len(requests(repo)), 1)  # base: 4
             self.assertEqual(len(list((repo / f"{ROOT}/observations").rglob("*.json"))), 4)  # evidence kept
 
+    def test_missing_data_does_not_rearm_an_unresolved_fire_episode(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, "2026-08-23T04:00:00Z", advancers=60)  # definitively FIRED
+            run(repo, "2026-08-23T10:00:00Z", advancers=None)  # UNKNOWN, not NOT_FIRED
+            summary = run(repo, "2026-08-23T16:00:00Z", advancers=60)  # still same episode
+            self.assertEqual(summary["episode_continuations_not_dispatched"], 1)
+            self.assertEqual(len(requests(repo)), 1)
+            observed = sorted((repo / f"{ROOT}/observations").rglob("*.json"))
+            self.assertEqual(len(observed), 3)  # all immutable observations retained
+            statuses = [json.loads(path.read_text())["evaluation_status"] for path in observed]
+            self.assertCountEqual(statuses, ["FIRED", "WAITING_FOR_DATA", "FIRED"])
+
+    def test_unknown_chain_then_observed_false_rearms_exactly_once(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, "2026-08-23T04:00:00Z", advancers=60)
+            run(repo, "2026-08-23T08:00:00Z", advancers=None)
+            run(repo, "2026-08-23T12:00:00Z", advancers=None)
+            run(repo, "2026-08-23T16:00:00Z", advancers=50)  # genuine NOT_FIRED
+            run(repo, "2026-08-23T20:00:00Z", advancers=None)
+            run(repo, "2026-08-23T22:00:00Z", advancers=60)
+            self.assertEqual(len(requests(repo)), 2)
+            self.assertEqual(len(list((repo / f"{ROOT}/observations").rglob("*.json"))), 6)
+
     def test_fire_stop_fire_starts_a_new_episode(self):
         with tempfile.TemporaryDirectory() as td:
             repo = Path(td)
