@@ -41,7 +41,7 @@ function asset(p0,{down=true}={}){
   ]};
 }
 function fixture({down=true,flat=false,status='OK',reasons=[],eth=null}={}){
- return {contract:'KOMPAS_LIVE_PATH_v1',generated_at_utc:iso(NOW),status,reasons,
+ return {contract:'KOMPAS_LIVE_PATH_v1',generated_at_utc:iso(NOW),official_source_valid_until_utc:iso(NOW+4*H),status,reasons,
   authority:{research_only:true,official_forecast:false,compass_probability_claim:false,trading:false,promotion:false,site_synthesis:false},
   display_rules:{freshness_sla_minutes:90,client_stale_after_minutes:180},
   week:{iso_week:'2026-W46',start_utc:'2026-11-09T00:00:00Z',end_utc:'2026-11-16T00:00:00Z'},
@@ -113,6 +113,20 @@ test('unavailable producer, asset, contract and stale tab are calm states withou
  const broken=fixture();broken.assets.BTC.days[0].lo=broken.assets.BTC.days[0].hi+1;
  assert.equal(liveViewModel(broken,{nowMs:NOW}).state,'UNAVAILABLE');
  assert.match(liveViewModel(fixture({status:'UNAVAILABLE',reasons:['PRODUCER_ERROR:KeyError']}),{nowMs:NOW}).unavailable.text,/fejlede/);
+});
+
+test('source deadline independently expires live forecasts even in already-open browser with fresh price',()=>{
+ const original=fixture();
+ assert.equal(liveViewModel(original,{nowMs:NOW+3*H}).state,'OK');
+ const shorter={...original,official_source_valid_until_utc:iso(NOW+H)};
+ assert.equal(liveViewModel(shorter,{nowMs:NOW}).state,'OK');
+ const atExpiry=liveViewModel(shorter,{nowMs:NOW+H});
+ assert.equal(atExpiry.state,'UNAVAILABLE');
+ assert.equal(atExpiry.reason,'OFFICIAL_POINTER_SOURCE_EXPIRED');
+ assert.equal(atExpiry.chart,null);
+ assert.equal(liveChartSvg(atExpiry),'');
+ assert.equal(liveViewModel({...original,official_source_valid_until_utc:null},{nowMs:NOW}).reason,
+  'OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID');
 });
 
 test('frames per horizon follow the producer horizon ends; one frosted frame per UTC day',()=>{
