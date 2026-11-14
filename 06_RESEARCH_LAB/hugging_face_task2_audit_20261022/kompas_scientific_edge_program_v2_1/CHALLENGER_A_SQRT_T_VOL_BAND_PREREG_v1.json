@@ -1,0 +1,103 @@
+{
+  "contract": "TASK2_CHALLENGER_A_SQRT_T_VOL_BAND_v1",
+  "formula_version": "A1",
+  "status": "PREREGISTERED_ONLY_AFTER_REVIEWED_MAIN_MERGE_BEFORE_W47_ISSUE",
+  "owner_issue": 1596,
+  "track": "Forecast Intelligence (track 1)",
+  "question": "Does a band that widens with sqrt(time), recalibrated weekly on the four prior weeks, score better than the frozen Cycle Navigator daily bands on the same issue clock and data?",
+  "params": {
+    "sigma_window_hours": 168,
+    "calibration_weeks": 4,
+    "fallback_calibration_weeks": 8,
+    "calibration_min_rows": 40,
+    "calibration_issue_proxy_utc": "Monday 08:00",
+    "quantiles": [
+      0.5,
+      0.8,
+      0.95
+    ],
+    "primary_quantile": 0.8,
+    "alpha_primary": 0.2,
+    "min_scored_bars_per_day": 6,
+    "assets": [
+      "BTC",
+      "ETH"
+    ]
+  },
+  "seed_z": {
+    "range": {
+      "0.5": 0.966374,
+      "0.8": 1.506929,
+      "0.95": 2.168776
+    },
+    "close": {
+      "0.5": 0.639317,
+      "0.8": 1.062982,
+      "0.95": 1.572239
+    }
+  },
+  "model": {
+    "P0": "last hourly close fully closed at or before T0",
+    "sigma": "sample std of the last 168 hourly log returns ending at P0",
+    "h_k": "hours from T0 to the end of UTC day k",
+    "band": "P0*exp(+-z_q*sigma*sqrt(h_k)); families: range (day low/high) and close",
+    "z": "q-quantile of needed z over completed asset-days of the 4 prior ISO weeks (proxy issue Monday 08:00Z), >=40 rows else 8 weeks else seed"
+  },
+  "issue_clock": "T0 = first introduction of the original CN weekly freeze path along verified main first-parent history using Git committer timestamp as an availability proxy. The separately frozen Challenger issuance has its own issuance_first_main_utc and cannot retrospectively score any asset-day whose scored_from_utc precedes it (ABSTAIN_PRE_ISSUANCE). Never rebuild original issuance at score time. First HTTP delivery remains UNKNOWN.",
+  "scoring": {
+    "primary": "mean CLOSE interval score at alpha=0.2 over identical paired matured asset-days A vs CN source-issued daily RANGE band evaluated against close (a proxy comparison, not proof CN issued a close forecast). Separate A-all calibration stats and paired A/CN scores; never mix denominators.",
+    "secondary": [
+      "Full-day RANGE containment A q80 vs CN source-issued range, on same paired complete hourly days",
+      "Close-in-band A/CN on paired complete days",
+      "Mean width A/CN and prior-week-close-centered equal-width CN benchmark (#2118), on same clock/asset/day",
+      "A calibration: empirical coverage q50/q80/q95 for range and close, separately labelled A-only"
+    ],
+    "cluster": "ISO week, BTC+ETH up to seven complete UTC days; at least eight paired asset-days (same original A/CN) and an A/CN non-tied weekly primary score make a valid confirmatory cluster. MISSING and TIE weeks are skipped."
+  },
+  "decision_rule": {
+    "first_week": "2026-W47",
+    "confirmatory_valid_weeks": 8,
+    "one_sided_alpha": 0.05,
+    "min_paired_rows_per_week": 8,
+    "sign_test": "ONE_SIDED_EXACT_SIGN_TEST",
+    "validity": "AT_LEAST_8_PAIRED_ASSET_DAYS_AND_A_OR_CN_WEEK_WINNER",
+    "incomplete_tied_missing": "SKIP_AND_USE_NEXT_VALID_WEEK",
+    "duplicate": "INCONCLUSIVE_DUPLICATE_WEEK",
+    "promotion_allowed": false
+  },
+  "design_selection_disclosure": "The estimator/window were selected among 9 alternatives on W39-W46 retrospective/simulated data, N=90 asset-days; W46 itself was selection-exposed, not independent holdout. Any W46 score is descriptive, not proof of forward edge.",
+  "w46_check": {
+    "issue_clock": "2026-11-09T10:33:42Z",
+    "calibration": "ROLLING_4W, 56 rows (W42-W45)",
+    "matured_days_1_4": {
+      "A_range_q80_covered": "8/8",
+      "CN_range_covered": "0/8",
+      "mean_interval_score_A": 0.079046,
+      "mean_interval_score_CN": 0.09815
+    }
+  },
+  "authority": {
+    "research_only": true,
+    "official_forecast": false,
+    "trading": false,
+    "promotion": false,
+    "paid_api": false
+  },
+  "code": {
+    "module": "scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py",
+    "tests": "tests/research/test_task2_challenger_a_sqrt_t_vol_band_v1.py",
+    "ci": ".github/workflows/data-architecture-gate.yml step 'Validate Task2 Challenger A sqrt-time volatility band'"
+  },
+  "weekly_operation": "Two governed phases on existing owner workflow: (1) after original CN freeze first enters main, run ISSUE once using current eligible PIT hourly data and source/clock proof, store and merge immutable frozen Challenger JSON on main as soon as possible after first-main CN freeze; every scored day started before first-main issuance is ABSTAIN_PRE_ISSUANCE; no later reissuance or backfill. (2) only after days mature, run SCORE, which reads original first-main JSON and checks source ancestry; write score alongside settlement. Both integration and public site producer are separate, reviewed, no additional schedule; absence of issuer yields ABSTAIN.",
+  "observation_integrity": {
+    "range_and_close_day": "All expected hourly bars from ceiling(T0) to UTC day-end must exist exactly once. Minimum six bars remains a lower bound, not permission for gaps.",
+    "missing_hour": "ABSTAIN day, no range or close score, not imputed.",
+    "calibration": "Exclude any prior-week asset-day with an incomplete expected hourly census."
+  },
+  "source_integrity": {
+    "immutable_issuance": "Original Challenger issuance must remain byte-identical to its first main Git blob; late arrival is not a retroactive issuance and all already-started asset-days are ABSTAIN_PRE_ISSUANCE. Score only originally issued forecasts from their later availability clock.",
+    "authoritative_clock": "First-parent refs/heads/main Git commit committer time, NOT independent external delivery confirmation.",
+    "data_quality": "Source hourly files may be revised; the issued bands MUST NEVER be recreated from later CSV during scoring; complete daily UTC census required.",
+    "public_site": "Site Prognose Challenger A is SHADOW/PENDING until a separately reviewed public producer proves original source first-main issuance and readback. The site never promotes this model to official."
+  }
+}
