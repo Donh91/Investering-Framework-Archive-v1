@@ -10,6 +10,7 @@ import subprocess
 import copy
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -271,6 +272,39 @@ class ChallengerATest(unittest.TestCase):
         return [{"week": f"{(self.monday+k*7*A.DAY).isocalendar().year}-W{(self.monday+k*7*A.DAY).isocalendar().week:02d}",
                  "week_winner_interval_score": "A", "paired_rows": 8, "matured_rows": 8}
                 for k in range(n)]
+
+    def test_first_main_one_look_never_scans_unrelated_future_weeks(self):
+        # The source reader is deliberately mocked here: later weeks may not
+        # exist, or may be corrupt, AFTER eight source-verified valid weeks.
+        # The separately exercised real-Git tests still guard each original.
+        for losses, expected in ((1, "A_PASSES_SHADOW_CONFIRMATORY"),
+                                 (2, "A_NOT_PROVEN")):
+            rows = self._confirmatory_rows(10)
+            for row in rows[8-losses:8]:
+                row["week_winner_interval_score"] = "CN"
+            calls = []
+            by_week = {r["week"]: r for r in rows[:8]}
+
+            def original_first_main(root, year, week):
+                label = f"{year}-W{week:02d}"
+                calls.append(label)
+                if label not in by_week:
+                    raise ValueError("future, unverified or corrupt score")
+                return by_week[label], {
+                    "first_main_commit": "immutable_commit",
+                    "first_main_blob_sha": "immutable_blob",
+                    "first_main_utc": "2027-01-20T00:00:00Z",
+                    "eligible_first_maturity": True,
+                }
+
+            with mock.patch.object(A, "read_first_main_weekly_score",
+                                   side_effect=original_first_main):
+                decision = A.confirmatory_decision_from_main(Path("."), rows[-1]["week"])
+            self.assertEqual(decision["status"], expected)
+            self.assertEqual(decision["weeks"], [r["week"] for r in rows[:8]])
+            self.assertEqual(calls, [r["week"] for r in rows[:8]])
+            self.assertEqual(len(decision["first_main_score_census"]), 8)
+            self.assertFalse(decision["promotion_allowed"])
 
     def test_confirmatory_seven_of_eight_one_sided_passes(self):
         rows = self._confirmatory_rows()
