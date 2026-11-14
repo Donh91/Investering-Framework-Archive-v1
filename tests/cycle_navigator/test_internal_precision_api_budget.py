@@ -150,8 +150,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
         self.assertEqual(policy["lane_caps_usd"]["CN_INTERNAL_LONG_HORIZON_SCORER"], 1)
         dest = self.root / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json"
         dest.write_bytes(source.read_bytes())
-        with patch("subprocess.run",return_value=subprocess.CompletedProcess([],0)) as guard, \\
-             patch("urllib.request.urlopen") as api:
+        with patch("subprocess.run",return_value=subprocess.CompletedProcess([],0)) as guard, patch("urllib.request.urlopen") as api:
             cn._cost_preflight(self.root, "gpt-5.6-terra", b"offline source-bound prompt", 5000)
             api.assert_not_called()
             self.assertEqual(guard.call_count, 2)
