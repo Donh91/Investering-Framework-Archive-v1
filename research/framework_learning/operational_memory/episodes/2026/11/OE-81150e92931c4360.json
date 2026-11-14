@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/S1/ACTION_LOOP.md",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "tests/governance/test_s1_runtime_contract_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-81150e92931c4360",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "s1-proactive-safe-reviews-daily-heartbeat-batched-high",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE exact head 2ec2664792003dc97577c734ad8ec066615dbb03. Native CI 3/3 success, Claude exact head APPROVE #173/6873631610, Codex no major issues at head, S1 ACTION_LOOP pinned to RUNTIME_CONTRACT blob 6e14ab60a8f6b73b87327463c3c3ffa92c1ec52f. Fresh safepoint Archive #1156/6874289088 from main 70b83912451153c30bfbb457c0f42808ae95ce1c. No S1 autonomous HIGH, no Vault dispatch.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/S1/ACTION_LOOP.md": "6e14ab60a8f6b73b87327463c3c3ffa92c1ec52f",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "a6892414cbfd897b195552a679523e9afe44838a",
+    "tests/governance/test_s1_runtime_contract_v1.py": "22490a5d74eef0e8ab2845d5e12fd3766e7e2077"
+  },
+  "source_commit_sha": "81150e92931c436020b9ebba2f319f6d5e32e437",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-14T03:06:28-05:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "fix(s1): proactive-safe reviews, daily heartbeat, batched HIGH owner decisions (#2127)"
+}
