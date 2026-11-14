@@ -1,7 +1,7 @@
 {
   "contract": "TASK2_CHALLENGER_A_SQRT_T_VOL_BAND_v1",
   "formula_version": "A1",
-  "status": "PREREGISTERED_WHEN_MERGED_BEFORE_W47_CN_ISSUE",
+  "status": "PREREGISTERED_ONLY_AFTER_REVIEWED_MAIN_MERGE_BEFORE_W47_ISSUE",
   "owner_issue": 1596,
   "track": "Forecast Intelligence (track 1)",
   "question": "Does a band that widens with sqrt(time), recalibrated weekly on the four prior weeks, score better than the frozen Cycle Navigator daily bands on the same issue clock and data?",
@@ -43,29 +43,35 @@
     "band": "P0*exp(+-z_q*sigma*sqrt(h_k)); families: range (day low/high) and close",
     "z": "q-quantile of needed z over completed asset-days of the 4 prior ISO weeks (proxy issue Monday 08:00Z), >=40 rows else 8 weeks else seed"
   },
-  "issue_clock": "T0 = first-in-main time of 05_CYCLE_NAVIGATOR/weekly/YYYY/Www/CYCLE_NAVIGATOR_FORECAST_FREEZE.json (same clock as CN). Days are scored only on bars opening at or after T0, for both A and CN.",
+  "issue_clock": "T0 = first introduction of the original CN weekly freeze path along verified main first-parent history, using commit committer timestamp as Git availability proxy ONLY; first actual HTTP/consumer delivery remains UNKNOWN until independently evidenced. A branch-only or shallow-history path is rejected. The Challenger issuance must additionally be on main, byte-identical to its original blob, before the first outcome observation. No reconstruction at scoring.",
   "scoring": {
-    "primary": "mean close interval score at alpha=0.2 over paired matured asset-days, as a fraction of P0 (lower is better)",
+    "primary": "mean CLOSE interval score at alpha=0.2 over identical paired matured asset-days A vs CN source-issued daily RANGE band evaluated against close (a proxy comparison, not proof CN issued a close forecast). Separate A-all calibration stats and paired A/CN scores; never mix denominators.",
     "secondary": [
-      "full-day range containment (A q80 vs CN band)",
-      "close-in-band",
-      "mean width",
-      "A calibration: empirical coverage at q50/q80/q95 for range and close"
+      "Full-day RANGE containment A q80 vs CN source-issued range, on same paired complete hourly days",
+      "Close-in-band A/CN on paired complete days",
+      "Mean width A/CN and prior-week-close-centered equal-width CN benchmark (#2118), on same clock/asset/day",
+      "A calibration: empirical coverage q50/q80/q95 for range and close, separately labelled A-only"
     ],
     "cluster": "ISO week (BTC and ETH share weeks)"
   },
   "decision_rule": {
     "min_weeks": 8,
+    "max_weeks": 8,
     "first_prospective_week": "2026-W47",
-    "win": "A has the lower weekly mean primary score in >=6 of the first 8 prospective weeks AND the two-sided exact sign test over all prospective weeks so far has p<0.05",
-    "else": "CN stays official; A continues as a shadow challenger",
+    "last_prospective_week": "2027-W01",
+    "confirmatory_look": "Exactly one, after eight consecutive scheduled ISO week clusters W47 2026 to W01 2027 have complete paired evaluable outcomes. Do not test significance during intermediate weeks and do not extend the horizon to rescue a result.",
+    "win": "A passes SHADOW-only confirmatory test iff exactly 8 of 8 scheduled non-tied weekly paired primary scores favor A; two-sided exact sign p=0.0078125. Seven of eight wins gives p=0.0703125, not a pass. CN or tied/missing weeks preclude acceptance.",
+    "ties_and_missing": "Any missing pair or tied weekly primary winner at the fixed analysis cut results in INCONCLUSIVE, never a pass; no optional extension or replacing a missing scheduled week.",
+    "multiple_looks": "Fixed-sample 8-week single look, no sequential alpha-spending needed because no repeat p-value testing. Weekly scores may be monitored descriptively without inferential threshold checks.",
+    "else": "CN stays official; A remains SHADOW (revisions require independently reviewed preregistration before a NEW prospective series).",
     "never": [
-      "replace or edit a frozen past CN issue",
-      "promote on fewer than 8 prospective weeks",
-      "change params, seed or formula without a new version and a new pre-registration"
+      "change an original frozen CN or Challenger issuance after the first main blob",
+      "promote on <8 prospective weeks, a partial or tied week, or a reversed significance result",
+      "post-select later weeks, data or stop time to improve p",
+      "change params, seed or formula without a separately preregistered version"
     ]
   },
-  "design_selection_disclosure": "Estimator and window were chosen from 9 variants (sigma 168h / EWMA 24h / EWMA 48h x expanding / rolling 6w / rolling 4w) on prospective-simulated W39-W46 (N=90 asset-days): sigma 168h + rolling 4w had the best interval score (0.1216 of P0) and coverage closest to 80% (close 81.1%, range 78.9%). W46 therefore informed the design choice and is reported as an out-of-calibration check, not as prospective evidence.",
+  "design_selection_disclosure": "The estimator/window were selected among 9 alternatives on W39-W46 retrospective/simulated data, N=90 asset-days; W46 itself was selection-exposed, not independent holdout. Any W46 score is descriptive, not proof of forward edge.",
   "w46_check": {
     "issue_clock": "2026-11-09T10:33:42Z",
     "calibration": "ROLLING_4W, 56 rows (W42-W45)",
@@ -88,5 +94,16 @@
     "tests": "tests/research/test_task2_challenger_a_sqrt_t_vol_band_v1.py",
     "ci": ".github/workflows/data-architecture-gate.yml step 'Validate Task2 Challenger A sqrt-time volatility band'"
   },
-  "weekly_operation": "After each CN week matures (Monday), run `score --week YYYY-Www` (T0 from git); write the score JSON next to the week's CN settlement. Integration into the existing weekly settlement is a separate reviewed change."
+  "weekly_operation": "Two governed phases on existing owner workflow: (1) after original CN freeze first enters main, run ISSUE once using current eligible PIT hourly data and source/clock proof, store and merge immutable frozen Challenger JSON on main BEFORE day-one outcomes; no later reissuance or backfill. (2) only after days mature, run SCORE, which reads original first-main JSON and checks source ancestry; write score alongside settlement. Both integration and public site producer are separate, reviewed, no additional schedule; absence of issuer yields ABSTAIN.",
+  "observation_integrity": {
+    "range_and_close_day": "All expected hourly bars from ceiling(T0) to UTC day-end must exist exactly once. Minimum six bars remains a lower bound, not permission for gaps.",
+    "missing_hour": "ABSTAIN day, no range or close score, not imputed.",
+    "calibration": "Exclude any prior-week asset-day with an incomplete expected hourly census."
+  },
+  "source_integrity": {
+    "immutable_issuance": "Persist original issue JSON in 06_RESEARCH_LAB/task2_challenger_a/issued/YYYY/Www/CHALLENGER_A_FROZEN_ISSUANCE.json, merge on main before outcomes; score ONLY original first-main bytes, verifying issuer SHA, freeze SHA/commit/clock and that neither has changed.",
+    "authoritative_clock": "First-parent refs/heads/main Git commit committer time, NOT independent external delivery confirmation.",
+    "data_quality": "Source hourly files may be revised; the issued bands MUST NEVER be recreated from later CSV during scoring; complete daily UTC census required.",
+    "public_site": "Site Prognose Challenger A is SHADOW/PENDING until a separately reviewed public producer proves original source first-main issuance and readback. The site never promotes this model to official."
+  }
 }
