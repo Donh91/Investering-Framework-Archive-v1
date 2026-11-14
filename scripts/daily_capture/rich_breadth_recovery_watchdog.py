@@ -9,6 +9,20 @@ MAX_AGE = dt.timedelta(hours=5)
 ACTIVE = {"queued", "in_progress", "pending", "waiting", "requested"}
 
 
+def extract_timestamp(payload):
+    """Read the timestamp exposed by either official Rich Breadth publisher."""
+    if not isinstance(payload, dict):
+        raise ValueError("BREADTH_PAYLOAD_INVALID")
+    for key in ("retrieved_at_utc", "retrieval_timestamp"):
+        value = payload.get(key)
+        if value is not None:
+            return value
+    observation = payload.get("observation")
+    if observation is not None and not isinstance(observation, dict):
+        raise ValueError("BREADTH_OBSERVATION_INVALID")
+    return (observation or {}).get("retrieval_timestamp_utc")
+
+
 def decision(timestamp, now, statuses):
     if not isinstance(timestamp, str):
         raise ValueError("BREADTH_TIMESTAMP_MISSING")
@@ -34,7 +48,7 @@ def run(args):
 def main():
     run(["git", "fetch", "origin", "main"])
     payload = json.loads(run(["git", "show", "origin/main:03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json"]))
-    stamp = payload.get("retrieved_at_utc")
+    stamp = extract_timestamp(payload)
     now = dt.datetime.now(dt.timezone.utc)
     # Check freshness first, then query native GitHub runs only if stale.
     if decision(stamp, now, []) == "FRESH":

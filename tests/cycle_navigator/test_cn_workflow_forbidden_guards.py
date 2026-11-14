@@ -74,6 +74,16 @@ class TestWorkflowForbiddenGuards(unittest.TestCase):
                         self.assertNotEqual(result.returncode, 0, (path, pattern))
                         self.assertNotIn("STEP_COMPLETED", result.stdout)
                         p.write_text("", encoding="utf-8")
+                # A grep I/O error (for example missing generated output) is
+                # an error, not proof that forbidden text is absent.
+                for f in paths:
+                    with self.subTest(workflow=path, missing_file=f):
+                        p = root / f
+                        p.unlink()
+                        result = run()
+                        self.assertNotEqual(result.returncode, 0, (path, f))
+                        self.assertNotIn("STEP_COMPLETED", result.stdout)
+                        p.write_text("", encoding="utf-8")
 
 if __name__ == "__main__":
     unittest.main()
