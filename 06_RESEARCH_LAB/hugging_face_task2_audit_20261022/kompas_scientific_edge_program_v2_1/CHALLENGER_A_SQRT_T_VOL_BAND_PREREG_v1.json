@@ -52,16 +52,16 @@
       "Mean width A/CN and prior-week-close-centered equal-width CN benchmark (#2118), on same clock/asset/day",
       "A calibration: empirical coverage q50/q80/q95 for range and close, separately labelled A-only"
     ],
-    "cluster": "ISO week (BTC and ETH share weeks)"
+    "cluster": "ISO week, BTC+ETH seven complete UTC days = one correlated cluster; only a complete original 14-row paired week qualifies in the eight-week confirmatory sign test."
   },
   "decision_rule": {
     "min_weeks": 8,
     "max_weeks": 8,
     "first_prospective_week": "2026-W47",
     "last_prospective_week": "2027-W01",
-    "confirmatory_look": "Exactly one, after eight consecutive scheduled ISO week clusters W47 2026 to W01 2027 have complete paired evaluable outcomes. Do not test significance during intermediate weeks and do not extend the horizon to rescue a result.",
+    "confirmatory_look": "Exactly one after eight consecutive scheduled ISO week clusters W47 2026 to W01 2027, EACH with 14 complete paired asset-days (BTC and ETH, all seven UTC days). A week with fewer paired rows is INCONCLUSIVE, never a win. Do not test intermediate significance or extend the horizon.",
     "win": "A passes SHADOW-only confirmatory test iff exactly 8 of 8 scheduled non-tied weekly paired primary scores favor A; two-sided exact sign p=0.0078125. Seven of eight wins gives p=0.0703125, not a pass. CN or tied/missing weeks preclude acceptance.",
-    "ties_and_missing": "Any missing pair or tied weekly primary winner at the fixed analysis cut results in INCONCLUSIVE, never a pass; no optional extension or replacing a missing scheduled week.",
+    "ties_and_missing": "Each scheduled week requires matured_rows=14 and paired_rows=14, same original A/CN source and full hourly census; any missing asset-day, unmatched forecast, tie or duplicate week at fixed cut is INCONCLUSIVE, never a pass; no replacing a missing scheduled week.",
     "multiple_looks": "Fixed-sample 8-week single look, no sequential alpha-spending needed because no repeat p-value testing. Weekly scores may be monitored descriptively without inferential threshold checks.",
     "else": "CN stays official; A remains SHADOW (revisions require independently reviewed preregistration before a NEW prospective series).",
     "never": [
