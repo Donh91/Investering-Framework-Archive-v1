@@ -46,7 +46,7 @@ def max_liability(root: Path, runtime: Path) -> float:
     cfg = registry["tasks"][TASK]
     if (cfg["model"] != MODEL or cfg["max_attempts"] != 1
             or cfg["max_output_tokens"] != 5400
-            or policy["monthly_hard_stop_usd"] != 40
+            or policy["monthly_hard_stop_usd"] != 50
             or policy["global_reserve_usd"] != 4
             or policy["lane_caps_usd"][TASK] != CAP_USD
             or MODEL not in PRICES_PER_MILLION):

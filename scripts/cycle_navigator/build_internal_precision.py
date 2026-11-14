@@ -369,8 +369,11 @@ def _cost_preflight(repo: Path, model: str, request_bytes: bytes, max_output_tok
         raise RuntimeError("CN_API_POLICY_UNREADABLE_NO_SPEND") from exc
     if not isinstance(policy, dict):
         raise RuntimeError("CN_API_POLICY_INVALID_SHAPE_NO_SPEND")
+    # Owner approved USD50 as the ACCOUNT ceiling. This CN scorer retains its
+    # original narrower USD40 CLI admission and USD1 monthly lane; only the
+    # policy identity must match the current approved account policy.
     if (policy.get("status") != "ACTIVE_SHADOW_ONLY" or
-            policy.get("monthly_hard_stop_usd") != 40 or
+            policy.get("monthly_hard_stop_usd") != 50 or
             policy.get("global_reserve_usd") != 4):
         raise RuntimeError("CN_API_POLICY_UNVERIFIED")
     caps = policy.get("lane_caps_usd")

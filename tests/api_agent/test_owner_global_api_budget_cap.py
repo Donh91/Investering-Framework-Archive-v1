@@ -65,14 +65,14 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         rc, state = run_guard(17)
         self.assertEqual(rc, 0, state)
         self.assertEqual(state["status"], "PASS")
-        self.assertEqual(state["owner_normal_target_usd"], 40)
+        self.assertEqual(state["owner_normal_target_usd"], 50)
         self.assertEqual(state["effective_hard_stop_usd"], 40)
         self.assertEqual(state["pending_liability_count"], 3)
         self.assertEqual(state["pending_liability_lower_usd"], 0)
         self.assertEqual(state["pending_liability_upper_usd"], 9)
         self.assertEqual(state["exposure_range_min_usd"], 17)
         self.assertEqual(state["exposure_range_max_usd"], 26)
-        self.assertEqual(state["normal_remaining_usd"], 14)
+        self.assertEqual(state["normal_remaining_usd"], 24)
 
     def test_routine_zero_reserve_argument_does_not_remove_four_dollar_buffer(self):
         rc, state = run_guard(26, cap=40, reserve=0)
@@ -82,22 +82,69 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertNotEqual(rc, 0, state)
         self.assertEqual(state["status"], "BLOCKED")
 
-    def test_usd45_tolerance_needs_real_native_authority_not_arbitrary_cli(self):
+    def test_owner_50_total_with_four_reserve_and_unchanged_old_caller_caps(self):
+        # An original caller passing 40 still has its own stricter ceiling.
         rc, state = run_guard(26, cap=40, reserve=0)
         self.assertEqual(rc, 0, state)
+        self.assertEqual(state["effective_hard_stop_usd"], 40)
         self.assertEqual(state["reserve_usd"], 4)
-        # A naked local --hard-stop-usd 45 is NOT an authenticated, reviewed
-        # owner-bound payment capability. It must not unlock exceptional spend.
-        for spent in (26, 33, 36.01):
-            rc, state = run_guard(spent, cap=45, reserve=0,
-                                  extra=["--new-request-upper-usd", "3"])
-            self.assertNotEqual(rc, 0)
-            self.assertEqual(state["status"], "BLOCKED")
-            self.assertIn("EXCEPTIONAL_45_NATIVE_SOURCE_CAPABILITY_REQUIRED",
-                          str(state["cost_evidence_errors"]))
-        rc, state = run_guard(36.01, cap=45, reserve=0,
-                              extra=["--new-request-upper-usd", "3"])
-        self.assertGreater(state["exposure_range_max_usd"], 45)
+        # If an existing caller requests 45, the same protected four applies.
+        rc, state = run_guard(26, cap=45, reserve=0,
+                              extra=["--new-request-upper-usd","3"])
+        self.assertEqual(rc, 0, state)
+        self.assertEqual(state["reserve_usd"], 4)
+        self.assertEqual(state["exposure_range_max_usd"], 38)
+        # The new total cap is 50, NOT 50 plus a separate exceptional 5.
+        rc, state = run_guard(33, cap=50, reserve=0,
+                              extra=["--new-request-upper-usd","3"])
+        self.assertEqual(rc, 0, state)
+        self.assertEqual(state["effective_hard_stop_usd"], 50)
+        self.assertEqual(state["reserve_usd"], 4)
+        self.assertEqual(state["exposure_range_max_usd"], 45)
+        self.assertEqual(state["remaining_usd"], 5)
+        rc, state = run_guard(36.01, cap=50, reserve=0,
+                              extra=["--new-request-upper-usd","3"])
+        self.assertNotEqual(rc, 0)
+        self.assertEqual(state["status"],"BLOCKED")
+        self.assertLess(state["remaining_usd"],4)
+        # A client cannot increase the globally authorized amount via CLI.
+        rc, state = run_guard(1, cap=50.01, reserve=0)
+        self.assertNotEqual(rc, 0)
+        self.assertIn("OWNER_GLOBAL_50_USD_CAP_EXCEEDED",
+                      str(state["cost_evidence_errors"]))
+
+    def test_existing_small_lane_reserve_does_not_override_global_four_dollars(self):
+        # Regression for the native CN 9.4/0.1 partial-spend lane. Its
+        # source-bound local reserve remains 0.1; global USD4 still binds.
+        rc, state = run_guard(0.12, cap=9.4, reserve=0.1)
+        self.assertEqual(rc, 0, state)
+        self.assertEqual(state["pending_liability_upper_usd"], 9)
+        self.assertEqual(state["exposure_range_max_usd"], 9.12)
+        self.assertEqual(state["reserve_usd"], 0.1)
+        self.assertGreaterEqual(state["owner_global_remaining_usd_after_risk"], 4)
+        rc, state = run_guard(0.12, cap=9.2, reserve=0.1)
+        self.assertNotEqual(rc, 0)
+        self.assertEqual(state["status"], "BLOCKED")
+
+    def test_one_request_usd3_limit_remains_even_under_new_50_global_cap(self):
+        for value in ("3.01","4","10"):
+            rc, state=run_guard(1,cap=50,reserve=4,
+                                extra=["--new-request-upper-usd",value])
+            self.assertNotEqual(rc,0)
+            self.assertEqual(state["status"],"BLOCKED")
+
+    def test_mismatched_explicit_owner_ledger_ceiling_is_blocked(self):
+        from scripts.api_agent.check_monthly_cost_guard import pending_risk
+        with tempfile.TemporaryDirectory() as td:
+            original=json.loads((ROOT/"research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json").read_text())
+            self.assertEqual(original["normal_budget_usd"],50)
+            self.assertEqual(original["absolute_budget_usd"],50)
+            p=Path(td)/"ledger.json"
+            for key,value in (("normal_budget_usd",40),("absolute_budget_usd",45)):
+                bad={**original,key:value}
+                p.write_text(json.dumps(bad))
+                with self.assertRaisesRegex(ValueError,"LIABILITY_LEDGER_CONTRACT_INVALID"):
+                    pending_risk(p)
 
     def test_stricter_original_caller_reserve_and_lane_still_bind(self):
         rc, state = run_guard(17, cap=30, reserve=12)
@@ -173,6 +220,50 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertNotEqual(rc, 0)
         self.assertIn("MAX_APPROVAL_ID_OR_EFFORT_INVALID",
                       str(state["cost_evidence_errors"]))
+
+    def test_canonical_ledger_keeps_existing_40_4_lanes_live(self):
+        # Run against REAL canonical receipts and canonical persistent ledger.
+        # Synthetic fixtures hid the rejected-P1 USD10 reservation regression.
+        cmd = [
+            sys.executable, str(SCRIPT),
+            "--receipt-root", str(ROOT / "research/api_agent/outputs"),
+            "--liability-ledger", str(ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"),
+            "--hard-stop-usd", "40", "--reserve-usd", "4",
+            "--new-request-upper-usd", "0",
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True,
+                                check=False, timeout=25, cwd=ROOT)
+        self.assertTrue(result.stdout.strip(), result.stderr)
+        state = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 0, state)
+        self.assertEqual(state["status"], "PASS", state)
+        self.assertEqual(state["pending_liability_upper_usd"], 22.0)
+        self.assertGreaterEqual(state["remaining_usd"], 4.0)
+        self.assertEqual(state["effective_hard_stop_usd"], 40.0)
+
+    def test_native_caller_caps_above_40_only_in_hard_disabled_astra_v2_job(self):
+        import re
+        workflow = ROOT / ".github/workflows/owner-bound-daily-director-manual.yml"
+        source = workflow.read_text(encoding="utf-8")
+        marker = "\n  astra-realdata-task2-v2:\n"
+        self.assertEqual(source.count(marker), 1)
+        astra_job = source.split(marker, 1)[1]
+        self.assertRegex(astra_job, r"(?m)^    if: >-\s*\n      false &&\s*$")
+        candidates = list(ROOT.glob(".github/workflows/*.yml")) + list(ROOT.glob("scripts/**/*.py"))
+        high_values = []
+        for path in candidates:
+            data = path.read_text(encoding="utf-8")
+            for match in re.finditer(r"--hard-stop-usd\s+(\d+(?:\.\d+)?)", data):
+                amount = float(match.group(1))
+                if amount > 40:
+                    high_values.append((path.relative_to(ROOT).as_posix(), amount, match.start()))
+        self.assertEqual(len(high_values), 1, high_values)
+        path, amount, offset = high_values[0]
+        self.assertEqual(path, workflow.relative_to(ROOT).as_posix())
+        self.assertEqual(amount, 50.0)
+        self.assertGreater(offset, source.index(marker))
+        # Removing the false && on the only elevated-cap job must fail tests.
+        self.assertFalse(json.loads((ROOT / "research/api_agent/coordination/ASTRA_TASK2_REALDATA_V2_ADMISSION_V1.json").read_text())["authorized_paid_dispatch"])
 
     def test_no_unbounded_or_nan_new_api_reservation(self):
         for value in ("4", "-1", "NaN", "Infinity"):

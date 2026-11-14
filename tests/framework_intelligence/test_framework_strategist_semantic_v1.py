@@ -87,7 +87,7 @@ class SemanticTest(unittest.TestCase):
 
     def test_existing_strategist_model_spend_caps_are_not_expanded(self):
         policy = json.loads(Path("research/api_agent/API_INTELLIGENCE_POLICY_v2.json").read_text())
-        self.assertEqual(policy["monthly_hard_stop_usd"], 40)
+        self.assertEqual(policy["monthly_hard_stop_usd"], 50)
         self.assertEqual(policy["global_reserve_usd"], 4)
         self.assertEqual(policy["lane_caps_usd"][TASK], 0.75)
         self.assertFalse(policy["framework_strategist_semantic"]["no_automatic_escalation"] is False)

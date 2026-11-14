@@ -919,7 +919,7 @@ jobs:
           assert task['automatic_code_write'] is False
           assert task['automatic_merge'] is False
           assert registry['single_run_hard_stop_usd']==3.0
-          assert policy['monthly_hard_stop_usd']==40.0
+          assert policy['monthly_hard_stop_usd']==50.0
           assert policy['lane_caps_usd']['SENIOR_REPAIR_AUDIT']==10.0
           assert policy['senior_repair_audit']['periodic_schedule'] is False
           PY
@@ -1082,7 +1082,7 @@ jobs:
           assert task['automatic_code_write'] is False
           assert task['automatic_merge'] is False
           assert registry['single_run_hard_stop_usd']==3.0
-          assert policy['monthly_hard_stop_usd']==40.0
+          assert policy['monthly_hard_stop_usd']==50.0
           assert policy['lane_caps_usd']['FMOS_AUTONOMOUS_MISSION_LOOP_AUDIT']==6
           assert policy['fmos_autonomous_mission_loop_audit']['maximum_runs_per_mission']==3
           PY
