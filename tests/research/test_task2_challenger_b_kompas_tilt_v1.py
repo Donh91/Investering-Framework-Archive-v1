@@ -324,6 +324,57 @@ class ChallengerBTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "missing from working tree"):
                 B.git_candidates(root, self.t0, "main")
 
+    def test_root_added_packet_under_show_root_false_is_not_omitted(self):
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def git(*args):
+                return subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True, text=True)
+            git("init", "-b", "main")
+            git("config", "user.name", "research-test")
+            git("config", "user.email", "research-test@example.invalid")
+            day = self.t0.date()
+            rel = (Path(B.PARAMS["packet_dir"]) / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}" / "CMP-root.json").as_posix()
+            p = root / rel
+            p.parent.mkdir(parents=True)
+            p.write_text('{"source":"original"}', encoding="utf-8")
+            git("add", "--", rel)
+            git("commit", "-m", "root packet")
+            git("config", "log.showRoot", "false")
+            self.assertEqual([c["path"] for c in B.git_candidates(root, self.t0, "main")], [rel])
+            git("rm", "--", rel)
+            git("commit", "-m", "delete original")
+            with self.assertRaisesRegex(ValueError, "missing from working tree"):
+                B.git_candidates(root, self.t0, "main")
+
+    def test_packet_copied_into_canonical_path_is_not_omitted(self):
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def git(*args):
+                return subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True, text=True)
+            git("init", "-b", "main")
+            git("config", "user.name", "research-test")
+            git("config", "user.email", "research-test@example.invalid")
+            git("config", "diff.renames", "copies")
+            day = self.t0.date()
+            folder = Path(B.PARAMS["packet_dir"]) / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}"
+            (root / folder).mkdir(parents=True)
+            draft, issued = (folder / "draft.json").as_posix(), (folder / "CMP-copied.json").as_posix()
+            (root / draft).write_text('{"source":"original"}', encoding="utf-8")
+            git("add", "--", draft)
+            git("commit", "-m", "draft")
+            (root / issued).write_bytes((root / draft).read_bytes())
+            git("add", "--", issued)
+            git("commit", "-m", "copy original")
+            self.assertEqual([c["path"] for c in B.git_candidates(root, self.t0, "main")], [issued])
+            git("rm", "--", issued)
+            git("commit", "-m", "delete original")
+            with self.assertRaisesRegex(ValueError, "missing from working tree"):
+                B.git_candidates(root, self.t0, "main")
+
     def test_shallow_history_is_fatal_before_packet_selection(self):
         from unittest.mock import Mock, patch
         with patch.object(B.subprocess, "run",
