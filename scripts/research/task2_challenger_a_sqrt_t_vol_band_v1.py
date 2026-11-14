@@ -28,6 +28,7 @@ import hashlib
 import json
 import math
 import subprocess
+import copy
 from pathlib import Path
 from typing import Iterable
 
@@ -53,6 +54,7 @@ SEED_Z = {
 }
 HOURLY_DIR = "03_DAILY_CAPTURE_LOGS/hourly"
 FREEZE_PATH = "05_CYCLE_NAVIGATOR/weekly/{year}/W{week:02d}/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+ISSUANCE_PATH = "06_RESEARCH_LAB/task2_challenger_a/issued/{year}/W{week:02d}/CHALLENGER_A_FROZEN_ISSUANCE.json"
 HOUR = dt.timedelta(hours=1)
 DAY = dt.timedelta(days=1)
 COLS = {"BTC": ("btc_close", "btc_high", "btc_low"), "ETH": ("eth_close", "eth_high", "eth_low")}
@@ -139,8 +141,11 @@ def day_windows(monday: dt.datetime, t0: dt.datetime) -> list[tuple[int, dt.date
 
 def realized(bars: dict, asset: str, start: dt.datetime, end: dt.datetime):
     rows = [(t, bars[t][asset]) for t in sorted(bars) if start <= t < end and asset in bars[t]]
-    if len(rows) < PARAMS["min_scored_bars_per_day"] or rows[-1][0] + HOUR != end:
-        return None  # immature or incomplete day: never scored, never used for calibration
+    expected = int((end - start).total_seconds() / 3600)
+    if (start.minute or start.second or start.microsecond or end.minute or end.second or end.microsecond
+            or expected < PARAMS["min_scored_bars_per_day"] or len(rows) != expected
+            or any(t != start + i * HOUR for i, (t, _) in enumerate(rows))):
+        return None  # missing ANY expected hour invalidates range and close; no partial-day coverage
     return {"low": min(r[2] for _, r in rows), "high": max(r[1] for _, r in rows), "close": rows[-1][1][0], "bars": len(rows)}
 
 
@@ -191,7 +196,7 @@ def _digest(obj) -> str:
     return hashlib.sha256(json.dumps(obj, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def issue(bars: dict, year: int, week: int, t0: dt.datetime) -> dict:
+def issue(bars: dict, year: int, week: int, t0: dt.datetime, provenance: dict | None = None) -> dict:
     """Frozen weekly issuance. Uses only bars closed by T0 and days completed before the week."""
     monday = week_monday(year, week)
     if not monday <= t0 < monday + 7 * DAY:
@@ -207,9 +212,15 @@ def issue(bars: dict, year: int, week: int, t0: dt.datetime) -> dict:
             band = {fam: {q: [round(p0 * math.exp(-z * s), 2), round(p0 * math.exp(z * s), 2)]
                           for q, z in cal["z"][fam].items()} for fam in ("range", "close")}
             days.append({"day": k, "scored_from_utc": iso(start), "end_utc": iso(end), "h": round(h, 4), "band": band})
-        assets[asset] = {"P0": p0, "P0_bar_open_utc": p0_bar, "sigma_hourly": round(sd, 8), "days": days}
+        prior = past.get(monday - HOUR, {}).get(asset)
+        # Frozen before T0, never reconstructed from post-outcome bars during scoring.
+        assets[asset] = {"P0": p0, "P0_bar_open_utc": p0_bar, "sigma_hourly": round(sd, 8),
+                         "prior_week_close": prior[0] if prior else None,
+                         "prior_week_close_bar_open_utc": iso(monday - HOUR) if prior else None,
+                         "days": days}
     body = {"contract": CONTRACT, "formula_version": FORMULA_VERSION, "week": f"{year}-W{week:02d}",
             "issue_clock_utc": iso(t0), "calibration": cal, "assets": assets,
+            "source": provenance if provenance is not None else {"clock_class": "FIXTURE_NOT_MAIN_ATTESTED"},
             "authority": {"research_only": True, "official_forecast": False, "trading": False, "promotion": False}}
     body["issuance_sha256"] = _digest(body)
     return body
@@ -257,23 +268,40 @@ def score(issuance: dict, bars: dict, freeze: dict | None = None) -> dict:
                 row["CN_interval_score"] = interval_score(lo, hi, r["close"], alpha) / p0
                 row["CN_width"] = (hi - lo) / p0
                 row["CN_range_covered"] = int(lo <= r["low"] and r["high"] <= hi)
+                row["CN_close_covered"] = int(lo <= r["close"] <= hi)
+                prior_close = a.get("prior_week_close")
+                if isinstance(prior_close, (int, float)) and math.isfinite(prior_close) and prior_close > 0:
+                    width = hi - lo
+                    control_lo, control_hi = prior_close - width / 2, prior_close + width / 2
+                    if control_lo > 0:
+                        row["EQW_PRIOR_interval_score"] = interval_score(control_lo, control_hi, r["close"], alpha) / p0
+                        row["EQW_PRIOR_width"] = width / p0
+                        row["EQW_PRIOR_range_covered"] = int(control_lo <= r["low"] and r["high"] <= control_hi)
+                        row["EQW_PRIOR_close_covered"] = int(control_lo <= r["close"] <= control_hi)
             rows.append(row)
-    agg = {}
-    if rows:
-        keys = sorted({k for r in rows for k in r if k.endswith(("_covered", "_score", "_width"))})
-        for k in keys:
-            vals = [r[k] for r in rows if k in r]
-            agg[k] = {"n": len(vals), "mean": round(sum(vals) / len(vals), 6)}
+    def aggregate(items):
+        result = {}
+        if items:
+            keys = sorted({k for r in items for k in r if k.endswith(("_covered", "_score", "_width"))})
+            for k in keys:
+                vals = [r[k] for r in items if k in r]
+                result[k] = {"n": len(vals), "mean": round(sum(vals) / len(vals), 6)}
+        return result
     both = [r for r in rows if "CN_interval_score" in r]
+    # Critical: A and CN PRIMARY means must use exactly the SAME paired asset-days.
+    paired = aggregate(both)
+    challenger_all = aggregate([{k:v for k,v in r.items() if k.startswith("A_")} for r in rows])
     week_winner = None
     if both:
         a_m = sum(r["A_interval_score"] for r in both) / len(both)
         c_m = sum(r["CN_interval_score"] for r in both) / len(both)
         week_winner = "A" if a_m < c_m else ("CN" if c_m < a_m else "TIE")
     return {"contract": CONTRACT + "_SCORE", "week": issuance["week"], "issuance_sha256": issuance["issuance_sha256"],
-            "matured_rows": len(rows), "rows": rows, "aggregate": agg,
+            "matured_rows": len(rows), "rows": rows, "aggregate": paired,
+            "aggregate_primary_paired": paired, "aggregate_challenger_all": challenger_all,
             "paired_rows": len(both), "week_winner_interval_score": week_winner,
-            "note": "Research score. One week is one cluster; no promotion before the registered decision rule."}
+            "comparison_caveat": "CN is a source-issued daily RANGE interval evaluated against the daily CLOSE, not an independently calibrated close interval. EQW_PRIOR is equal-width prior-week close control; compare like-for-like and never claim edge from range coverage alone.",
+            "note": "Research score. One week is one cluster; fixed eight-week confirmatory horizon; no automatic promotion."}
 
 
 def sign_test_p(wins: int, losses: int) -> float:
@@ -286,14 +314,104 @@ def sign_test_p(wins: int, losses: int) -> float:
     return min(1.0, 2 * p)
 
 
+def _git(root: Path, *args: str) -> str:
+    p = subprocess.run(["git", "-C", str(root), *args],
+                       capture_output=True, text=True, check=True)
+    return p.stdout.strip()
+
+
+def first_in_main(root: Path, path: str) -> dict:
+    """First commit on LOCAL main first-parent carrying a path, never PR HEAD.
+
+    Git committer time is a history clock, NOT independently verified first
+    HTTP delivery. Caller must fetch complete main history; a shallow
+    checkout is rejected instead of silently inventing provenance.
+    """
+    if not path or path.startswith("/") or ".." in Path(path).parts:
+        raise ValueError("unsafe source path")
+    try:
+        _git(root, "rev-parse", "--verify", "refs/heads/main")
+        _git(root, "cat-file", "-e", "refs/heads/main:" + path)
+        commits = _git(root, "log", "--first-parent", "--reverse",
+                       "--format=%H", "refs/heads/main", "--", path).splitlines()
+        first = next(sha for sha in commits if subprocess.run(
+            ["git", "-C", str(root), "cat-file", "-e", sha + ":" + path],
+            capture_output=True).returncode == 0)
+        blob = _git(root, "rev-parse", first + ":" + path)
+        clock = utc(_git(root, "show", "-s", "--format=%cI", first))
+        # No pretend first-known from stale PR branch / date of author commit.
+        return {"path": path, "first_main_commit": first,
+                "first_main_blob_sha": blob, "first_main_utc": iso(clock),
+                "clock_class": "MAIN_FIRST_PARENT_COMMITTER_CLOCK_NOT_HTTP_DELIVERY"}
+    except (subprocess.CalledProcessError, StopIteration) as e:
+        raise ValueError("main source missing, or complete main history unavailable: " + path) from e
+
+
 def t0_from_git(root: Path, year: int, week: int) -> dt.datetime:
-    """First-in-main time of the CN week freeze; requires full git history."""
-    path = FREEZE_PATH.format(year=year, week=week)
-    out = subprocess.run(["git", "-C", str(root), "log", "--diff-filter=A", "--format=%cI", "--", path],
-                         capture_output=True, text=True, check=True).stdout.split()
-    if not out:
-        raise ValueError(f"no git history for {path}")
-    return min(utc(x) for x in out)
+    """CN freeze's first introduction on main, not an unmerged branch."""
+    return utc(first_in_main(root, FREEZE_PATH.format(year=year, week=week))["first_main_utc"])
+
+
+def verify_issuance_digest(issuance: dict) -> None:
+    if not isinstance(issuance, dict) or issuance.get("contract") != CONTRACT or issuance.get("formula_version") != FORMULA_VERSION:
+        raise ValueError("invalid issuance contract/version")
+    content = {k: v for k, v in issuance.items() if k != "issuance_sha256"}
+    if issuance.get("issuance_sha256") != _digest(content):
+        raise ValueError("original issuance digest mismatch")
+
+
+def read_frozen_main_issuance(root: Path, year: int, week: int) -> tuple[dict, dict]:
+    """Load source-verified frozen issuance. No recalculation from modern CSV."""
+    path = ISSUANCE_PATH.format(year=year, week=week)
+    proof = first_in_main(root, path)
+    current_path = root / path
+    try:
+        raw = current_path.read_bytes()
+        original = subprocess.run(["git", "-C", str(root), "show",
+                                   proof["first_main_commit"] + ":" + path],
+                                  capture_output=True, check=True).stdout
+        current_sha = _git(root, "rev-parse", "refs/heads/main:" + path)
+    except (OSError, subprocess.CalledProcessError) as e:
+        raise ValueError("cannot verify immutable original issuance bytes") from e
+    if raw != original or current_sha != proof["first_main_blob_sha"]:
+        raise ValueError("issuance altered after first-main: refuse retrospective reforecast")
+    doc = json.loads(original)
+    verify_issuance_digest(doc)
+    if doc.get("week") != f"{year}-W{week:02d}" or doc.get("source", {}).get("clock_class") != "MAIN_FIRST_PARENT_COMMITTER_CLOCK_NOT_HTTP_DELIVERY":
+        raise ValueError("unattested issue week/source; fixture is never scoreable")
+    freeze = first_in_main(root, FREEZE_PATH.format(year=year, week=week))
+    if doc["source"].get("freeze_first_main_commit") != freeze["first_main_commit"] or doc["source"].get("freeze_blob_sha") != freeze["first_main_blob_sha"]:
+        raise ValueError("issuance/CN freeze source ancestry differs")
+    if utc(doc["issue_clock_utc"]) != utc(freeze["first_main_utc"]):
+        raise ValueError("issuance clock not identical to frozen CN first-main clock")
+    first_end = min(utc(d["scored_from_utc"]) for a in doc["assets"].values() for d in a["days"])
+    if utc(proof["first_main_utc"]) > first_end:
+        raise ValueError("original issuance reached main after outcomes began")
+    return doc, proof
+
+
+def fixed_horizon_decision(weekly: list[dict]) -> dict:
+    """Only one confirmatory look, after all eight chronological ISO weeks.
+
+    No optional stopping, no later-week rescue, ties/missing are non-wins.
+    """
+    start = week_monday(2026, 47)
+    expected = [f"{(start + n * 7 * DAY).isocalendar().year}-W{(start + n * 7 * DAY).isocalendar().week:02d}"
+                for n in range(8)]
+    by_week = {r["week"]: r for r in weekly if r.get("week") in expected}
+    if len(weekly) < 8 or len(by_week) < 8:
+        return {"status": "PENDING_FIXED_HORIZON", "weeks": expected, "p_value": None}
+    outcomes = [by_week[w].get("week_winner_interval_score") for w in expected]
+    if any(x not in ("A", "CN") for x in outcomes):
+        return {"status": "INCONCLUSIVE_MISSING_OR_TIED_WEEK", "weeks": expected, "p_value": None}
+    wins = outcomes.count("A")
+    losses = outcomes.count("CN")
+    p = sign_test_p(wins, losses)
+    accepted = wins == 8 and losses == 0 and p < .05
+    return {"status": "A_PASSES_SHADOW_CONFIRMATORY" if accepted else "A_NOT_PROVEN",
+            "weeks": expected, "wins_A": wins, "wins_CN": losses,
+            "p_value": p, "decision_horizon": "ONE_FIXED_EIGHT_WEEK_LOOK",
+            "promotion_allowed": False}
 
 
 def _parse_week(s: str) -> tuple[int, int]:
@@ -306,20 +424,45 @@ def main(argv: Iterable[str] | None = None) -> int:
     ap.add_argument("command", choices=["issue", "score"])
     ap.add_argument("--repo-root", default=".")
     ap.add_argument("--week", required=True, help="ISO week, e.g. 2026-W47")
-    ap.add_argument("--t0", help="issue clock (ISO-8601 UTC); default: CN freeze first-in-main")
+    ap.add_argument("--t0", help="fixture clock only, never accepted as main-origin evidence")
+    ap.add_argument("--synthetic-fixture-clock", action="store_true")
     ap.add_argument("--output", required=True)
     a = ap.parse_args(list(argv) if argv is not None else None)
     root = Path(a.repo_root)
     year, week = _parse_week(a.week)
-    t0 = utc(a.t0) if a.t0 else t0_from_git(root, year, week)
     monday = week_monday(year, week)
-    bars = load_hourly(root, monday - 70 * DAY, monday + 7 * DAY)
-    result = issue(bars, year, week, t0)
-    if a.command == "score":
-        fp = root / FREEZE_PATH.format(year=year, week=week)
-        freeze = json.loads(fp.read_text(encoding="utf-8")) if fp.is_file() else None
-        result = score(result, bars, freeze)
-    Path(a.output).write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output = Path(a.output)
+    if a.command == "issue":
+        if a.t0 and not a.synthetic_fixture_clock:
+            raise ValueError("manual issue clock cannot claim first-in-main")
+        if a.synthetic_fixture_clock and not a.t0:
+            raise ValueError("fixture mode requires an explicit test clock")
+        t0 = utc(a.t0) if a.synthetic_fixture_clock else t0_from_git(root, year, week)
+        source = {"clock_class": "SYNTHETIC_FIXTURE_ONLY"} if a.synthetic_fixture_clock else None
+        if source is None:
+            proof = first_in_main(root, FREEZE_PATH.format(year=year, week=week))
+            source = {"clock_class": proof["clock_class"],
+                      "freeze_first_main_commit": proof["first_main_commit"],
+                      "freeze_blob_sha": proof["first_main_blob_sha"],
+                      "freeze_first_main_utc": proof["first_main_utc"],
+                      "first_http_delivery": "UNKNOWN"}
+        bars = load_hourly(root, monday - 70 * DAY, monday + 7 * DAY)
+        result = issue(bars, year, week, t0, source)
+    else:
+        if a.t0 or a.synthetic_fixture_clock:
+            raise ValueError("score forbids fixture clocks and post-hoc rebuilding")
+        if output.resolve() == (root / ISSUANCE_PATH.format(year=year, week=week)).resolve():
+            raise ValueError("score must not overwrite the original frozen issuance")
+        issuance, original = read_frozen_main_issuance(root, year, week)
+        bars = load_hourly(root, monday, monday + 7 * DAY)
+        freeze_path = root / FREEZE_PATH.format(year=year, week=week)
+        freeze = json.loads(freeze_path.read_text(encoding="utf-8")) if freeze_path.is_file() else None
+        result = score(issuance, bars, freeze)
+        result["first_main_issuance"] = original
+        result["first_http_delivery"] = "UNKNOWN"
+        result["decision_status"] = "SHADOW_ONLY_NO_PROMOTION"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"contract": result["contract"], "week": result["week"]}))
     return 0
 
