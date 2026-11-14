@@ -5,6 +5,9 @@ import json
 import math
 import random
 import sys
+import os
+import subprocess
+import copy
 import tempfile
 import unittest
 from pathlib import Path
@@ -153,14 +156,172 @@ class ChallengerATest(unittest.TestCase):
         self.assertEqual(A.sign_test_p(0, 0), 1.0)
         self.assertAlmostEqual(A.sign_test_p(4, 4), 1.0)
 
+    def test_gapped_ranges_never_score_or_calibrate(self):
+        first=self.monday+10*A.HOUR
+        complete={t:r for t,r in self.bars.items() if first<=t<self.monday+A.DAY}
+        self.assertEqual(A.realized(complete,"BTC",first,self.monday+A.DAY)["bars"],14)
+        gapped=dict(complete)
+        del gapped[first+5*A.HOUR]  # still 13 bars, still the final hour: must ABSTAIN
+        self.assertIsNone(A.realized(gapped,"BTC",first,self.monday+A.DAY))
+        a=A.issue(self.bars,self.YEAR,self.WEEK,self.t0)
+        all_gaps=dict(self.bars)
+        del all_gaps[first+5*A.HOUR]
+        scored=A.score(a,all_gaps)
+        self.assertFalse(any(x["day"]==1 and x["asset"]=="BTC" for x in scored["rows"]))
+        prior_week=self.monday-A.DAY*7
+        cal_gap=dict(self.bars)
+        for k in range(7):
+            # Make every calibration day fail independently, not a false 80% range hit.
+            del cal_gap[prior_week+k*A.DAY+12*A.HOUR]
+        before=A.needed_z_rows(self.bars,*(prior_week.isocalendar()[:2]))
+        after=A.needed_z_rows(cal_gap,*(prior_week.isocalendar()[:2]))
+        self.assertLess(len(after),len(before))
+
+    def test_primary_comparison_uses_identical_paired_denominator(self):
+        a=A.issue(self.bars,self.YEAR,self.WEEK,self.t0)
+        f={"daily_range_plan":{"BTC":{"points":[{"day":k,"low":1.0,"high":2.0} for k in range(1,8)]}}}
+        scored=A.score(a,self.bars,f)
+        self.assertEqual(scored["paired_rows"],7)
+        self.assertEqual(scored["aggregate_primary_paired"]["A_interval_score"]["n"],7)
+        self.assertEqual(scored["aggregate_primary_paired"]["CN_interval_score"]["n"],7)
+        self.assertEqual(scored["aggregate_challenger_all"]["A_interval_score"]["n"],14)
+        self.assertNotIn("CN_interval_score",scored["aggregate_challenger_all"])
+
+    def test_equal_width_prior_control_is_source_issued_not_posthoc(self):
+        a=A.issue(self.bars,self.YEAR,self.WEEK,self.t0)
+        original=a["assets"]["BTC"]["prior_week_close"]
+        self.assertGreater(original,0)
+        f={"daily_range_plan":{"BTC":{"points":[{"day":k,"low":100.0,"high":200.0} for k in range(1,8)]}}}
+        scored=A.score(a,self.bars,f)
+        b=[x for x in scored["rows"] if x["asset"]=="BTC"]
+        self.assertEqual(scored["aggregate_primary_paired"]["EQW_PRIOR_width"]["n"],7)
+        self.assertAlmostEqual(b[0]["EQW_PRIOR_width"],b[0]["CN_width"])
+        self.assertEqual(b[0]["EQW_PRIOR_close_covered"],0 if original>200 else b[0]["EQW_PRIOR_close_covered"])
+        # Erasing the originally issued prior close removes the control, it may
+        # NOT substitute the observed future close or newly queried bars.
+        missing=copy.deepcopy(a)
+        missing["assets"]["BTC"]["prior_week_close"]=None
+        s=A.score(missing,self.bars,f)
+        self.assertFalse(any("EQW_PRIOR_interval_score" in x for x in s["rows"] if x["asset"]=="BTC"))
+
+    def test_one_fixed_confirmation_at_eight_weeks_no_optional_stopping(self):
+        weeks=[f"{(self.monday+k*7*A.DAY).isocalendar().year}-W{(self.monday+k*7*A.DAY).isocalendar().week:02d}" for k in range(8)]
+        self.assertEqual(weeks[-1],"2027-W01")
+        data=[{"week":w,"week_winner_interval_score":"A"} for w in weeks]
+        self.assertEqual(A.fixed_horizon_decision(data[:7])["status"],"PENDING_FIXED_HORIZON")
+        x=A.fixed_horizon_decision(data)
+        self.assertEqual(x["status"],"A_PASSES_SHADOW_CONFIRMATORY")
+        self.assertEqual(x["p_value"],2/256)
+        self.assertFalse(x["promotion_allowed"])
+        data[-1]["week_winner_interval_score"]="CN"
+        self.assertEqual(A.fixed_horizon_decision(data)["status"],"A_NOT_PROVEN")
+        data[-1]["week_winner_interval_score"]="TIE"
+        self.assertEqual(A.fixed_horizon_decision(data)["status"],"INCONCLUSIVE_MISSING_OR_TIED_WEEK")
+        data[-1]["week_winner_interval_score"]="A"
+        data += [{"week":f"2027-W0{k}","week_winner_interval_score":"CN"} for k in range(2,9)]
+        # Later losses never enter the single scheduled 8-cluster test.
+        self.assertEqual(A.fixed_horizon_decision(data)["status"],"A_PASSES_SHADOW_CONFIRMATORY")
+        self.assertEqual(A.sign_test_p(7,1),.0703125)
+
+    @staticmethod
+    def _git(root,*args,date=None):
+        env=os.environ.copy()
+        if date:
+            env.update({"GIT_AUTHOR_DATE":date,"GIT_COMMITTER_DATE":date})
+        return subprocess.run(["git","-C",str(root),*args],
+                              capture_output=True,text=True,check=True,env=env).stdout.strip()
+
+    def test_first_main_history_and_persisted_issuance_integrity(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            self._git(root,"init","-b","main")
+            self._git(root,"config","user.name","Task2 CI")
+            self._git(root,"config","user.email","task2-tests@example.invalid")
+            (root/"README").write_text("source fixture\n")
+            self._git(root,"add","README")
+            self._git(root,"commit","-m","init",date="2026-11-15T00:00:00+00:00")
+            self._git(root,"checkout","-b","draft")
+            freeze_rel=A.FREEZE_PATH.format(year=self.YEAR,week=self.WEEK)
+            freeze_path=root/freeze_rel
+            freeze_path.parent.mkdir(parents=True,exist_ok=True)
+            freeze_path.write_text('{"daily_range_plan":{}}\n')
+            self._git(root,"add",freeze_rel)
+            self._git(root,"commit","-m","branch source not yet in main",date="2026-11-16T08:00:00+00:00")
+            with self.assertRaises(ValueError):
+                A.first_in_main(root,freeze_rel)
+            self._git(root,"checkout","main")
+            freeze_path.parent.mkdir(parents=True,exist_ok=True)
+            freeze_path.write_text('{"daily_range_plan":{}}\n')
+            self._git(root,"add",freeze_rel)
+            self._git(root,"commit","-m","actual main freeze",date="2026-11-16T09:17:00+00:00")
+            info=A.first_in_main(root,freeze_rel)
+            self.assertEqual(info["first_main_utc"],"2026-11-16T09:17:00Z")
+            self.assertNotEqual(info["first_main_commit"],self._git(root,"rev-parse","draft"))
+            self.assertEqual(A.t0_from_git(root,self.YEAR,self.WEEK),self.t0)
+            provenance={"clock_class":info["clock_class"],"freeze_first_main_commit":info["first_main_commit"],
+                        "freeze_blob_sha":info["first_main_blob_sha"],"freeze_first_main_utc":info["first_main_utc"],
+                        "first_http_delivery":"UNKNOWN"}
+            issued=A.issue(self.bars,self.YEAR,self.WEEK,self.t0,provenance)
+            issue_rel=A.ISSUANCE_PATH.format(year=self.YEAR,week=self.WEEK)
+            fp=root/issue_rel
+            fp.parent.mkdir(parents=True,exist_ok=True)
+            fp.write_text(json.dumps(issued,sort_keys=True)+"\n")
+            with self.assertRaises(ValueError):
+                A.read_frozen_main_issuance(root,self.YEAR,self.WEEK)
+            self._git(root,"add",issue_rel)
+            self._git(root,"commit","-m","immutable issue first in main",date="2026-11-16T09:30:00+00:00")
+            read,proof=A.read_frozen_main_issuance(root,self.YEAR,self.WEEK)
+            self.assertEqual(read["issuance_sha256"],issued["issuance_sha256"])
+            self.assertEqual(proof["first_main_utc"],"2026-11-16T09:30:00Z")
+            fp.write_text(json.dumps({**issued,"week":"2099-W47"})+"\n")
+            with self.assertRaises(ValueError):
+                A.read_frozen_main_issuance(root,self.YEAR,self.WEEK)
+            fp.write_text(json.dumps(issued,sort_keys=True)+"\n")
+            self._git(root,"add",issue_rel)
+            self._git(root,"commit","-m","restore original file",date="2026-11-16T09:40:00+00:00")
+            # Recovered exactly original first-main bytes: must stay acceptable.
+            self.assertEqual(A.read_frozen_main_issuance(root,self.YEAR,self.WEEK)[0]["week"],"2026-W47")
+            freeze_path.write_text('{"daily_range_plan":{"BTC":{}}}\n')
+            with self.assertRaises(ValueError):
+                A.read_frozen_main_issuance(root,self.YEAR,self.WEEK)
+
+    def test_prospective_source_must_reach_main_before_first_outcome(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            self._git(root,"init","-b","main")
+            self._git(root,"config","user.name","Task2 CI")
+            self._git(root,"config","user.email","task2-tests@example.invalid")
+            rel=A.FREEZE_PATH.format(year=2026,week=47)
+            freeze=root/rel
+            freeze.parent.mkdir(parents=True,exist_ok=True)
+            freeze.write_text("{}\n")
+            self._git(root,"add",rel)
+            self._git(root,"commit","-m","freeze",date="2026-11-16T09:17:00+00:00")
+            info=A.first_in_main(root,rel)
+            issued=A.issue(self.bars,2026,47,self.t0,{
+                "clock_class":info["clock_class"],"freeze_first_main_commit":info["first_main_commit"],
+                "freeze_blob_sha":info["first_main_blob_sha"],"freeze_first_main_utc":info["first_main_utc"]})
+            rel=A.ISSUANCE_PATH.format(year=2026,week=47)
+            fp=root/rel
+            fp.parent.mkdir(parents=True,exist_ok=True)
+            fp.write_text(json.dumps(issued,sort_keys=True)+"\n")
+            self._git(root,"add",rel)
+            self._git(root,"commit","-m","published after day1 started",date="2026-11-16T11:30:00+00:00")
+            with self.assertRaises(ValueError):
+                A.read_frozen_main_issuance(root,2026,47)
+
     def test_cli_round_trip_on_synthetic_repo(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
             write_repo(root, self.bars)
             out = root / "o.json"
-            self.assertEqual(A.main(["issue", "--repo-root", d, "--week", "2026-W47", "--t0", A.iso(self.t0), "--output", str(out)]), 0)
+            self.assertEqual(A.main(["issue", "--repo-root", d, "--week", "2026-W47", "--t0", A.iso(self.t0), "--synthetic-fixture-clock", "--output", str(out)]), 0)
             j = json.loads(out.read_text())
-            self.assertEqual(j["issuance_sha256"], A.issue(A.load_hourly(root, self.monday - 70 * A.DAY, self.monday + 7 * A.DAY), 2026, 47, self.t0)["issuance_sha256"])
+            expected=A.issue(A.load_hourly(root, self.monday - 70 * A.DAY, self.monday + 7 * A.DAY), 2026, 47, self.t0, {"clock_class":"SYNTHETIC_FIXTURE_ONLY"})
+            self.assertEqual(j["issuance_sha256"], expected["issuance_sha256"])
+            self.assertEqual(j["source"]["clock_class"], "SYNTHETIC_FIXTURE_ONLY")
+            with self.assertRaises(ValueError):
+                A.main(["score", "--repo-root", d, "--week", "2026-W47", "--t0", A.iso(self.t0), "--output", str(root/"score.json")])
 
 
 class NativeW46Test(unittest.TestCase):
