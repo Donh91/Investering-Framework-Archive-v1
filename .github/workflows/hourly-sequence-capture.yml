@@ -81,6 +81,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ "$(date -u +%u)" != 1 ]; then
+            echo "CHALLENGER_A_NOT_MONDAY_NOOP"
+            exit 0
+          fi
           # This is part of the EXISTING hourly sequence owner writer lock.
           # Only retry after an original CN freeze has landed on main.
           # Missing bars fail closed; future hourly runs retry on Monday only.

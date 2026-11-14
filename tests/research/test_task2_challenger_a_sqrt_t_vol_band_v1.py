@@ -485,7 +485,7 @@ class ChallengerATest(unittest.TestCase):
         late[expected]=self.bars[expected]
         issued=A.issue(late,self.YEAR,self.WEEK,self.t0)
         scored=A.score(issued,self.bars,issuance_first_main_utc=A.iso(self.t0+dt.timedelta(hours=3)))
-        self.assertEqual(scored["paired_rows"],12)
+        self.assertEqual(scored["matured_rows"],12)
         self.assertEqual({r["day"] for r in scored["rows"]},set(range(2,8)))
         self.assertEqual({r["day"] for r in scored["abstentions"]},{1})
         self.assertEqual({r["status"] for r in scored["abstentions"]},{"ABSTAIN_PRE_ISSUANCE"})
@@ -501,6 +501,7 @@ class ChallengerATest(unittest.TestCase):
         step=hourly[start:end]
         for guard in ("continue-on-error: true","git pull --ff-only origin main",
                       "CHALLENGER_ISSUE_OUTSIDE_ORIGINAL_MONDAY_NO_BACKFILL",
+                      "CHALLENGER_A_NOT_MONDAY_NOOP",
                       "CHALLENGER_ISSUE_NO_ORIGINAL_CN_FREEZE",
                       "CHALLENGER_A_ALREADY_ON_MAIN_NOOP",
                       "git cat-file -e \"origin/main:${ISSUE_REL}\"",
