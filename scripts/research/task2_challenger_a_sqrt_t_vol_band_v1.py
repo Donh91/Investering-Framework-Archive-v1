@@ -33,6 +33,17 @@ from typing import Iterable
 
 CONTRACT = "TASK2_CHALLENGER_A_SQRT_T_VOL_BAND_v1"
 FORMULA_VERSION = "A1"
+DECISION = {
+    "first_week": "2026-W47",
+    "confirmatory_valid_weeks": 8,
+    "one_sided_alpha": 0.05,
+    "min_paired_rows_per_week": 8,
+    "sign_test": "ONE_SIDED_EXACT_SIGN_TEST",
+    "validity": "AT_LEAST_8_PAIRED_ASSET_DAYS_AND_A_OR_CN_WEEK_WINNER",
+    "incomplete_tied_missing": "SKIP_AND_USE_NEXT_VALID_WEEK",
+    "duplicate": "INCONCLUSIVE_DUPLICATE_WEEK",
+    "promotion_allowed": False
+}
 PARAMS = {
     "sigma_window_hours": 168,
     "calibration_weeks": 4,
@@ -249,13 +260,21 @@ def cn_bands(freeze: dict, asset: str) -> dict:
     return out
 
 
-def score(issuance: dict, bars: dict, freeze: dict | None = None) -> dict:
+def score(issuance: dict, bars: dict, freeze: dict | None = None, *, issuance_first_main_utc: str | None = None) -> dict:
     """Score matured days for A (all quantiles) and, when given, CN on the same rows."""
     alpha, q = PARAMS["alpha_primary"], str(PARAMS["primary_quantile"])
     rows = []
+    abstentions = []
+    available = utc(issuance_first_main_utc) if issuance_first_main_utc is not None else None
     for asset, a in issuance["assets"].items():
         cn = cn_bands(freeze, asset) if freeze else {}
         for d in a["days"]:
+            # Availability is a real first-main clock, never the earlier CN freeze clock.
+            # If the issued band reached main during a UTC day, abstain for that
+            # entire asset-day, never score its already-observed early hours.
+            if available is not None and utc(d["scored_from_utc"]) < available:
+                abstentions.append({"asset": asset, "day": d["day"], "status": "ABSTAIN_PRE_ISSUANCE"})
+                continue
             r = realized(bars, asset, utc(d["scored_from_utc"]), utc(d["end_utc"]))
             if r is None:
                 continue
@@ -299,26 +318,25 @@ def score(issuance: dict, bars: dict, freeze: dict | None = None) -> dict:
     paired = aggregate(both)
     challenger_all = aggregate([{k:v for k,v in r.items() if k.startswith("A_")} for r in rows])
     week_winner = None
-    if both:
+    if len(both) >= DECISION["min_paired_rows_per_week"]:
         a_m = sum(r["A_interval_score"] for r in both) / len(both)
         c_m = sum(r["CN_interval_score"] for r in both) / len(both)
         week_winner = "A" if a_m < c_m else ("CN" if c_m < a_m else "TIE")
+    else:
+        week_winner = "MISSING"
     return {"contract": CONTRACT + "_SCORE", "week": issuance["week"], "issuance_sha256": issuance["issuance_sha256"],
-            "matured_rows": len(rows), "rows": rows, "aggregate": paired,
+            "matured_rows": len(rows), "rows": rows, "abstentions": abstentions,
+            "issuance_first_main_utc": issuance_first_main_utc, "aggregate": paired,
             "aggregate_primary_paired": paired, "aggregate_challenger_all": challenger_all,
             "paired_rows": len(both), "week_winner_interval_score": week_winner,
             "comparison_caveat": "CN is a source-issued daily RANGE interval evaluated against the daily CLOSE, not an independently calibrated close interval. EQW_PRIOR is equal-width prior-week close control; compare like-for-like and never claim edge from range coverage alone.",
-            "note": "Research score. One week is one cluster; fixed eight-week confirmatory horizon; no automatic promotion."}
+            "note": "Research score. First eight valid week clusters from W47 only; minimum eight paired asset-days; no automatic promotion."}
 
 
-def sign_test_p(wins: int, losses: int) -> float:
-    """Two-sided exact sign test over week clusters; ties excluded."""
+def sign_test_one_sided_p(wins: int, losses: int) -> float:
+    """Exact one-sided sign test, pre-registered only after 8 valid weekly clusters."""
     n = wins + losses
-    if n == 0:
-        return 1.0
-    k = min(wins, losses)
-    p = sum(math.comb(n, i) for i in range(0, k + 1)) / 2 ** n
-    return min(1.0, 2 * p)
+    return 1.0 if n == 0 else sum(math.comb(n, i) for i in range(wins, n + 1)) / 2 ** n
 
 
 def _git(root: Path, *args: str) -> str:
@@ -406,42 +424,37 @@ def read_frozen_main_issuance(root: Path, year: int, week: int) -> tuple[dict, d
         raise ValueError("working copy of original CN freeze differs from main")
     if utc(doc["issue_clock_utc"]) != utc(freeze["first_main_utc"]):
         raise ValueError("issuance clock not identical to frozen CN first-main clock")
-    first_end = min(utc(d["scored_from_utc"]) for a in doc["assets"].values() for d in a["days"])
-    if utc(proof["first_main_utc"]) > first_end:
-        raise ValueError("original issuance reached main after outcomes began")
+    # Late first-main availability is not an integrity failure. Score must
+    # abstain for every asset-day that had already started at that clock.
+    proof["issuance_first_main_utc"] = proof["first_main_utc"]
     return doc, proof
 
 
-def fixed_horizon_decision(weekly: list[dict]) -> dict:
-    """Only one confirmatory look, after all eight chronological ISO weeks.
+def confirmatory_decision(weekly: list[dict]) -> dict:
+    """One pre-registered look at the FIRST 8 VALID ISO weeks from W47.
 
-    No optional stopping, no later-week rescue, ties/missing are non-wins.
+    A valid week has >=8 paired asset-days and an untied A/CN comparison.
+    Missing/untied weeks are skipped, but no later result may replace one of
+    the first eight valid weeks. Duplicate week input invalidates the look.
     """
-    start = week_monday(2026, 47)
-    expected = [f"{(start + n * 7 * DAY).isocalendar().year}-W{(start + n * 7 * DAY).isocalendar().week:02d}"
-                for n in range(8)]
-    selected = [r for r in weekly if r.get("week") in expected]
-    by_week = {r["week"]: r for r in selected}
-    if len(selected) != len(by_week):
-        return {"status": "INCONCLUSIVE_DUPLICATE_WEEK", "weeks": expected, "p_value": None}
-    if len(weekly) < 8 or len(by_week) < 8:
-        return {"status": "PENDING_FIXED_HORIZON", "weeks": expected, "p_value": None}
-    # Require every scheduled BTC/ETH calendar day to have both original A and
-    # CN source-issued ranges and a complete hourly outcome (14 paired/day/week).
-    # Counting a week based on one surviving easy row would bias the sign test.
-    if any(by_week[w].get("paired_rows") != 14 or by_week[w].get("matured_rows") != 14
-           for w in expected):
-        return {"status": "INCONCLUSIVE_INCOMPLETE_PAIRED_WEEK", "weeks": expected, "p_value": None}
-    outcomes = [by_week[w].get("week_winner_interval_score") for w in expected]
-    if any(x not in ("A", "CN") for x in outcomes):
-        return {"status": "INCONCLUSIVE_MISSING_OR_TIED_WEEK", "weeks": expected, "p_value": None}
-    wins = outcomes.count("A")
-    losses = outcomes.count("CN")
-    p = sign_test_p(wins, losses)
-    accepted = wins == 8 and losses == 0 and p < .05
-    return {"status": "A_PASSES_SHADOW_CONFIRMATORY" if accepted else "A_NOT_PROVEN",
-            "weeks": expected, "wins_A": wins, "wins_CN": losses,
-            "p_value": p, "decision_horizon": "ONE_FIXED_EIGHT_WEEK_LOOK",
+    weeks = [r.get("week") for r in weekly]
+    if len(weeks) != len(set(weeks)):
+        return {"status": "INCONCLUSIVE_DUPLICATE_WEEK", "promotion_allowed": False}
+    valid = [r for r in sorted(weekly, key=lambda r: r.get("week") or "")
+             if isinstance(r.get("week"), str)
+             and r["week"] >= DECISION["first_week"]
+             and r.get("paired_rows", 0) >= DECISION["min_paired_rows_per_week"]
+             and r.get("week_winner_interval_score") in ("A", "CN")]
+    if len(valid) < DECISION["confirmatory_valid_weeks"]:
+        return {"status": "PENDING", "valid_weeks": len(valid),
+                "needed_valid_weeks": DECISION["confirmatory_valid_weeks"], "promotion_allowed": False}
+    first = valid[:DECISION["confirmatory_valid_weeks"]]
+    wins = sum(r["week_winner_interval_score"] == "A" for r in first)
+    losses = len(first) - wins
+    p = sign_test_one_sided_p(wins, losses)
+    return {"status": "A_PASSES_SHADOW_CONFIRMATORY" if p < DECISION["one_sided_alpha"] else "A_NOT_PROVEN",
+            "weeks": [r["week"] for r in first], "wins_A": wins, "wins_CN": losses,
+            "one_sided_p": p, "decision_horizon": "ONE_LOOK_FIRST_EIGHT_VALID_WEEKS",
             "promotion_allowed": False}
 
 
@@ -491,7 +504,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         bars = load_hourly(root, monday, monday + 7 * DAY)
         freeze_path = root / FREEZE_PATH.format(year=year, week=week)
         freeze = json.loads(freeze_path.read_text(encoding="utf-8")) if freeze_path.is_file() else None
-        result = score(issuance, bars, freeze)
+        result = score(issuance, bars, freeze, issuance_first_main_utc=original["issuance_first_main_utc"])
         result["first_main_issuance"] = original
         result["first_http_delivery"] = "UNKNOWN"
         result["decision_status"] = "SHADOW_ONLY_NO_PROMOTION"

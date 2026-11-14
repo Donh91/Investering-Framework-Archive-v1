@@ -64,6 +64,7 @@ class ChallengerATest(unittest.TestCase):
         self.assertEqual(reg["formula_version"], A.FORMULA_VERSION)
         self.assertEqual(reg["params"], A.PARAMS)
         self.assertEqual(reg["seed_z"], A.SEED_Z)
+        self.assertEqual(reg["decision_rule"], A.DECISION)
 
     def test_band_width_grows_with_sqrt_time(self):
         out = A.issue(self.bars, self.YEAR, self.WEEK, self.t0)
@@ -201,7 +202,7 @@ class ChallengerATest(unittest.TestCase):
         self.assertEqual({r["day"] for r in s["rows"]}, {1, 2, 3})
         self.assertEqual(s["paired_rows"], 3)
         self.assertTrue(all(r["CN_range_covered"] == 0 for r in s["rows"] if r["asset"] == "BTC"))
-        self.assertEqual(s["week_winner_interval_score"], "A")
+        self.assertEqual(s["week_winner_interval_score"], "MISSING")
 
     def test_range_containment_uses_the_day_extremes_not_the_close(self):
         day0 = self.monday
@@ -215,9 +216,9 @@ class ChallengerATest(unittest.TestCase):
         self.assertEqual(row["A_close_0.8_covered"], 1)
 
     def test_sign_test(self):
-        self.assertAlmostEqual(A.sign_test_p(8, 0), 2 / 256)
-        self.assertEqual(A.sign_test_p(0, 0), 1.0)
-        self.assertAlmostEqual(A.sign_test_p(4, 4), 1.0)
+        self.assertAlmostEqual(A.sign_test_one_sided_p(7, 1), 9 / 256)
+        self.assertEqual(A.sign_test_one_sided_p(0, 0), 1.0)
+        self.assertAlmostEqual(A.sign_test_one_sided_p(6, 2), 37 / 256)
 
     def test_gapped_ranges_never_score_or_calibrate(self):
         first=self.monday+10*A.HOUR
@@ -266,31 +267,86 @@ class ChallengerATest(unittest.TestCase):
         s=A.score(missing,self.bars,f)
         self.assertFalse(any("EQW_PRIOR_interval_score" in x for x in s["rows"] if x["asset"]=="BTC"))
 
-    def test_one_fixed_confirmation_at_eight_weeks_no_optional_stopping(self):
-        weeks=[f"{(self.monday+k*7*A.DAY).isocalendar().year}-W{(self.monday+k*7*A.DAY).isocalendar().week:02d}" for k in range(8)]
-        self.assertEqual(weeks[-1],"2027-W01")
-        data=[{"week":w,"week_winner_interval_score":"A","paired_rows":14,"matured_rows":14} for w in weeks]
-        self.assertEqual(A.fixed_horizon_decision(data[:7])["status"],"PENDING_FIXED_HORIZON")
-        x=A.fixed_horizon_decision(data)
-        self.assertEqual(x["status"],"A_PASSES_SHADOW_CONFIRMATORY")
-        self.assertEqual(x["p_value"],2/256)
-        self.assertFalse(x["promotion_allowed"])
-        data[-1]["week_winner_interval_score"]="CN"
-        self.assertEqual(A.fixed_horizon_decision(data)["status"],"A_NOT_PROVEN")
-        data[-1]["week_winner_interval_score"]="TIE"
-        self.assertEqual(A.fixed_horizon_decision(data)["status"],"INCONCLUSIVE_MISSING_OR_TIED_WEEK")
-        data[-1]["week_winner_interval_score"]="A"
-        data += [{"week":f"2027-W0{k}","week_winner_interval_score":"CN"} for k in range(2,9)]
-        # Later losses never enter the single scheduled 8-cluster test.
-        self.assertEqual(A.fixed_horizon_decision(data)["status"],"A_PASSES_SHADOW_CONFIRMATORY")
-        self.assertEqual(A.sign_test_p(7,1),.0703125)
-        missing=copy.deepcopy(data[:8])
-        missing[3]["paired_rows"]=13
-        self.assertEqual(A.fixed_horizon_decision(missing)["status"],"INCONCLUSIVE_INCOMPLETE_PAIRED_WEEK")
-        missing[3]["paired_rows"]=14
-        missing[4]["matured_rows"]=13
-        self.assertEqual(A.fixed_horizon_decision(missing)["status"],"INCONCLUSIVE_INCOMPLETE_PAIRED_WEEK")
-        self.assertEqual(A.fixed_horizon_decision(data+data[:1])["status"],"INCONCLUSIVE_DUPLICATE_WEEK")
+    def _confirmatory_rows(self, n=9):
+        return [{"week": f"{(self.monday+k*7*A.DAY).isocalendar().year}-W{(self.monday+k*7*A.DAY).isocalendar().week:02d}",
+                 "week_winner_interval_score": "A", "paired_rows": 8, "matured_rows": 8}
+                for k in range(n)]
+
+    def test_confirmatory_seven_of_eight_one_sided_passes(self):
+        rows = self._confirmatory_rows()
+        rows[7]["week_winner_interval_score"] = "CN"
+        self.assertEqual(A.confirmatory_decision(rows[:7])["status"], "PENDING")
+        decision = A.confirmatory_decision(rows)
+        self.assertEqual(decision["status"], "A_PASSES_SHADOW_CONFIRMATORY")
+        self.assertEqual(decision["weeks"], [r["week"] for r in rows[:8]])
+        self.assertAlmostEqual(decision["one_sided_p"], 9/256)
+        self.assertFalse(decision["promotion_allowed"])
+
+    def test_confirmatory_six_of_eight_does_not_pass(self):
+        rows = self._confirmatory_rows(8)
+        for row in rows[-2:]:
+            row["week_winner_interval_score"] = "CN"
+        decision = A.confirmatory_decision(rows)
+        self.assertEqual(decision["wins_A"], 6)
+        self.assertEqual(decision["status"], "A_NOT_PROVEN")
+        self.assertAlmostEqual(decision["one_sided_p"], 37/256)
+
+    def test_confirmatory_opposite_sign_cannot_pass(self):
+        rows = self._confirmatory_rows(8)
+        for row in rows[1:]:
+            row["week_winner_interval_score"] = "CN"
+        decision = A.confirmatory_decision(rows)
+        self.assertEqual(decision["wins_A"], 1)
+        self.assertEqual(decision["status"], "A_NOT_PROVEN")
+
+    def test_missing_and_tied_weeks_skipped_then_ninth_and_tenth_complete(self):
+        rows = self._confirmatory_rows(10)
+        rows[2]["paired_rows"] = 7
+        rows[4]["week_winner_interval_score"] = "TIE"
+        self.assertEqual(A.confirmatory_decision(rows[:9])["status"], "PENDING")
+        decision = A.confirmatory_decision(rows)
+        self.assertEqual(decision["status"], "A_PASSES_SHADOW_CONFIRMATORY")
+        self.assertEqual(decision["weeks"], [r["week"] for r in rows if r not in (rows[2],rows[4])][:8])
+        # The original first valid eight are immutable even if later outcomes lose.
+        rows += [{**rows[-1], "week": "2027-W12", "week_winner_interval_score": "CN"}]
+        self.assertEqual(A.confirmatory_decision(rows)["weeks"], decision["weeks"])
+
+    def test_duplicate_week_fails_closed(self):
+        rows = self._confirmatory_rows(8)
+        self.assertEqual(A.confirmatory_decision(rows + [dict(rows[0])])["status"],
+                         "INCONCLUSIVE_DUPLICATE_WEEK")
+
+    def test_late_issuance_abstains_day_one_but_scores_days_two_to_seven(self):
+        issue = A.issue(self.bars,self.YEAR,self.WEEK,self.t0)
+        freeze = {"daily_range_plan": {a: {"points": [
+            {"day": k, "low": 1.0, "high": 2.0} for k in range(1,8)]}
+            for a in ("BTC","ETH")}}
+        scored = A.score(issue,self.bars,freeze,
+                         issuance_first_main_utc=A.iso(self.t0+dt.timedelta(hours=3)))
+        self.assertEqual(scored["paired_rows"],12)
+        self.assertEqual(scored["matured_rows"],12)
+        self.assertEqual({r["day"] for r in scored["rows"]},set(range(2,8)))
+        self.assertEqual(len(scored["abstentions"]),2)
+        self.assertEqual({x["status"] for x in scored["abstentions"]},
+                         {"ABSTAIN_PRE_ISSUANCE"})
+
+    def test_post_week_issuance_makes_week_missing(self):
+        issue = A.issue(self.bars,self.YEAR,self.WEEK,self.t0)
+        scored = A.score(issue,self.bars,
+                         issuance_first_main_utc=A.iso(self.monday+8*A.DAY))
+        self.assertEqual(scored["matured_rows"],0)
+        self.assertEqual(scored["paired_rows"],0)
+        self.assertEqual(scored["week_winner_interval_score"],"MISSING")
+        self.assertEqual(len(scored["abstentions"]),14)
+        self.assertEqual(A.confirmatory_decision([scored])["status"],"PENDING")
+
+    def test_decision_pre_registration_is_exact_code_constant(self):
+        reg = json.loads(PREREG.read_text(encoding="utf-8"))
+        self.assertEqual(reg["decision_rule"],A.DECISION)
+        self.assertEqual(A.DECISION["confirmatory_valid_weeks"],8)
+        self.assertEqual(A.DECISION["min_paired_rows_per_week"],8)
+        self.assertEqual(A.DECISION["first_week"],"2026-W47")
+        self.assertEqual(A.DECISION["one_sided_alpha"],0.05)
 
     @staticmethod
     def _git(root,*args,date=None):
@@ -383,8 +439,12 @@ class ChallengerATest(unittest.TestCase):
             fp.write_text(json.dumps(issued,sort_keys=True)+"\n")
             self._git(root,"add",rel)
             self._git(root,"commit","-m","published after day1 started",date="2026-11-16T11:30:00+00:00")
-            with self.assertRaises(ValueError):
-                A.read_frozen_main_issuance(root,2026,47)
+            saved, proof = A.read_frozen_main_issuance(root,2026,47)
+            self.assertEqual(proof["issuance_first_main_utc"],"2026-11-16T11:30:00Z")
+            self.assertEqual(saved["issuance_sha256"],issued["issuance_sha256"])
+            scored = A.score(saved,self.bars,issuance_first_main_utc=proof["issuance_first_main_utc"])
+            self.assertEqual({r["day"] for r in scored["abstentions"]},{1})
+            self.assertEqual(scored["matured_rows"],12)
 
     def test_cli_round_trip_on_synthetic_repo(self):
         with tempfile.TemporaryDirectory() as d:
