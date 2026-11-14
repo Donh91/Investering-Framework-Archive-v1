@@ -257,10 +257,14 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                 self.assertNotIn(name, row)
         with tempfile.TemporaryDirectory() as td:
             f = Path(td) / "settlement.json"
-            for mutation in ("missing_evidence", "dropped_entry", "duplicate_unresolved"):
+            for mutation in ("missing_evidence", "wrong_commit", "wrong_bytes", "dropped_entry", "duplicate_unresolved"):
                 bad = json.loads(json.dumps(ledger))
                 if mutation == "missing_evidence":
                     bad["provider_settlement_evidence"]["sha256"] = "forged"
+                elif mutation == "wrong_commit":
+                    bad["provider_settlement_evidence"]["commit_sha"] = "0" * 40
+                elif mutation == "wrong_bytes":
+                    bad["provider_settlement_evidence"]["bytes"] = 0
                 elif mutation == "dropped_entry":
                     bad["settled"].pop()
                 else:
