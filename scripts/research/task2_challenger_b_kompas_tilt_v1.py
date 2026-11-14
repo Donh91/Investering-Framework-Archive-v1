@@ -127,6 +127,15 @@ def verify_issuance(b: dict) -> None:
         raise ValueError("B issuance digest mismatch or wrong contract")
 
 
+def verify_against_frozen_sources(b: dict, a_issuance: dict, views: dict) -> None:
+    """Refuse self-hashed post-outcome B forecasts not deterministically bound to PIT main."""
+    verify_issuance(b)
+    A.verify_issuance_digest(a_issuance)
+    expected = issue(a_issuance, views)
+    if b != expected:
+        raise ValueError("B issuance not identical to original A and main-by-T0 Compass views")
+
+
 def score(b: dict, bars: dict, *, eligible_days: set[tuple[str, int]] | None = None) -> dict:
     """Brier per matured asset-day. A day counts only with its full hourly census and a close != P0."""
     verify_issuance(b)
@@ -147,13 +156,20 @@ def score(b: dict, bars: dict, *, eligible_days: set[tuple[str, int]] | None = N
                          "brier": round((d["p_up"] - y) ** 2, 8)})
     base = PARAMS["baseline_brier"]
     mean = sum(r["brier"] for r in rows) / len(rows) if rows else None
-    if mean is None or all(r["p_up"] == 0.5 for r in rows):
+    year, week = A._parse_week(b["week"])
+    last_closed = A.week_monday(year, week) + 7 * A.DAY - A.HOUR
+    week_mature = any(t >= last_closed for t in bars)
+    if not week_mature:
+        winner = "PENDING"  # descriptive Brier only; never feed an unfinished week to decide()
+    elif len(rows) < A.DECISION["min_paired_rows_per_week"]:
+        winner = "MISSING"  # no small-denominator selection from an incomplete source week
+    elif mean is None or all(r["p_up"] == 0.5 for r in rows):
         winner = "TIE"
     else:
         winner = "B" if mean < base - 1e-12 else "BASE" if mean > base + 1e-12 else "TIE"
     return {"contract": CONTRACT + "_SCORE", "week": b["week"], "issuance_sha256": b["issuance_sha256"],
             "rows": rows, "n": len(rows), "mean_brier": None if mean is None else round(mean, 8),
-            "baseline_brier": base, "week_winner": winner}
+            "baseline_brier": base, "week_mature": week_mature, "week_winner": winner}
 
 
 def decide(week_winners: list[str]) -> dict:
@@ -220,6 +236,9 @@ def main(argv: Iterable[str] | None = None) -> int:
         a, proof = A.read_frozen_main_issuance(root, year, week)
         if b["a_issuance_sha256"] != a["issuance_sha256"]:
             raise ValueError("B score must use the exact original A source issuance")
+        t0 = A.utc(a["issue_clock_utc"])
+        frozen_views = select_views(git_candidates(root, t0, "refs/heads/main"), t0)
+        verify_against_frozen_sources(b, a, frozen_views)
         bars = A.load_hourly(root, monday, monday + 7 * A.DAY)
         freeze_path = root / A.FREEZE_PATH.format(year=year, week=week)
         freeze = json.loads(freeze_path.read_text(encoding="utf-8")) if freeze_path.is_file() else None

@@ -147,6 +147,34 @@ class ChallengerBTest(unittest.TestCase):
         bars[shifted] = bars.pop(missing)
         self.assertNotIn(2, {r["day"] for r in B.score(b, bars)["rows"]})
 
+    def test_score_refuses_self_hashed_b_with_post_t0_or_rewritten_views(self):
+        true_views = B.select_views(self.cands, self.t0)
+        genuine = B.issue(self.a, true_views)
+        B.verify_against_frozen_sources(genuine, self.a, true_views)
+        evil = dict(true_views)
+        evil["1_3d"] = {**evil["1_3d"], "bull": 10, "bear": 0}
+        tampered = B.issue(self.a, evil)  # new mathematically valid self-computed digest
+        with self.assertRaisesRegex(ValueError, "not identical"):
+            B.verify_against_frozen_sources(tampered, self.a, true_views)
+        forged = json.loads(json.dumps(genuine))
+        forged["assets"]["BTC"]["days"][0]["p_up"] = 0.99
+        forged["issuance_sha256"] = B._digest({k: v for k, v in forged.items() if k != "issuance_sha256"})
+        with self.assertRaisesRegex(ValueError, "not identical"):
+            B.verify_against_frozen_sources(forged, self.a, true_views)
+
+    def test_unfinished_week_is_not_a_confirmatory_winner(self):
+        b = B.issue(self.a, B.select_views(self.cands, self.t0))
+        bearish = self._bars_with_path(-1)
+        partial = {t: r for t, r in bearish.items() if t < self.monday + A.DAY}
+        mid = B.score(b, partial)
+        self.assertEqual(mid["week_winner"], "PENDING")
+        self.assertFalse(mid["week_mature"])
+        self.assertLess(mid["n"], 8)
+        self.assertEqual(B.decide(["PENDING"] * 8)["status"], "PENDING")
+        full = B.score(b, bearish)
+        self.assertTrue(full["week_mature"])
+        self.assertEqual(full["week_winner"], "B")
+
     def test_decision_rule(self):
         self.assertEqual(B.decide(["B"] * 7 + ["BASE"])["status"], "B_HAS_DIRECTION")
         self.assertEqual(B.decide(["B"] * 6 + ["BASE"] * 2)["status"], "NO_PROVEN_DIRECTION")
