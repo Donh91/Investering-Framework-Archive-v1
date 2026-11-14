@@ -85,6 +85,7 @@ def _positive(value) -> float | None:
 def load_hourly(root: Path, start: dt.datetime, end: dt.datetime) -> dict:
     """{open_time: {asset: (close, high, low)}} for bars with start <= open < end."""
     bars: dict = {}
+    seen: set = set()
     day = start.replace(hour=0, minute=0, second=0, microsecond=0)
     while day < end:
         path = root / HOURLY_DIR / f"{day:%Y}" / f"{day:%m}" / f"{day:%Y-%m-%d}.csv"
@@ -97,6 +98,9 @@ def load_hourly(root: Path, start: dt.datetime, end: dt.datetime) -> dict:
                         continue
                     if not start <= t < end:
                         continue
+                    if t in seen:
+                        raise ValueError(f"duplicate hourly source timestamp {iso(t)}; do not silently overwrite excursions")
+                    seen.add(t)
                     rec = {}
                     for asset, (c, h, l) in COLS.items():
                         vals = (_positive(row.get(c)), _positive(row.get(h)), _positive(row.get(l)))
@@ -113,8 +117,9 @@ def sigma_at(bars: dict, asset: str, t0: dt.datetime) -> tuple[float, float, str
     n = PARAMS["sigma_window_hours"]
     times = sorted(t for t, r in bars.items() if t + HOUR <= t0 and asset in r)
     times = times[-(n + 1):]
-    if len(times) != n + 1 or times[-1] - times[0] != n * HOUR:
-        raise ValueError(f"{asset}: need {n + 1} consecutive closed hourly bars before {iso(t0)}")
+    last_expected = (t0 - HOUR).replace(minute=0, second=0, microsecond=0)
+    if len(times) != n + 1 or times[-1] != last_expected or times[-1] - times[0] != n * HOUR:
+        raise ValueError(f"{asset}: need {n + 1} consecutive bars through last expected closed hour {iso(last_expected)} before {iso(t0)}")
     closes = [bars[t][asset][0] for t in times]
     rets = [math.log(closes[i] / closes[i - 1]) for i in range(1, len(closes))]
     mean = sum(rets) / len(rets)
