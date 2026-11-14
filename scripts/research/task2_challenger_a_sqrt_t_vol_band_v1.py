@@ -28,7 +28,6 @@ import hashlib
 import json
 import math
 import subprocess
-import copy
 from pathlib import Path
 from typing import Iterable
 
@@ -386,7 +385,8 @@ def read_frozen_main_issuance(root: Path, year: int, week: int) -> tuple[dict, d
     freeze = first_in_main(root, FREEZE_PATH.format(year=year, week=week))
     if (freeze["current_main_blob_sha"] != freeze["first_main_blob_sha"]
             or doc["source"].get("freeze_first_main_commit") != freeze["first_main_commit"]
-            or doc["source"].get("freeze_blob_sha") != freeze["first_main_blob_sha"]):
+            or doc["source"].get("freeze_blob_sha") != freeze["first_main_blob_sha"]
+            or doc["source"].get("freeze_first_main_utc") != freeze["first_main_utc"]):
         raise ValueError("original CN freeze mutated or issuance ancestry differs")
     original_freeze = subprocess.run(["git", "-C", str(root), "show",
         freeze["first_main_commit"] + ":" + freeze["path"]], capture_output=True, check=True).stdout
@@ -408,7 +408,10 @@ def fixed_horizon_decision(weekly: list[dict]) -> dict:
     start = week_monday(2026, 47)
     expected = [f"{(start + n * 7 * DAY).isocalendar().year}-W{(start + n * 7 * DAY).isocalendar().week:02d}"
                 for n in range(8)]
-    by_week = {r["week"]: r for r in weekly if r.get("week") in expected}
+    selected = [r for r in weekly if r.get("week") in expected]
+    by_week = {r["week"]: r for r in selected}
+    if len(selected) != len(by_week):
+        return {"status": "INCONCLUSIVE_DUPLICATE_WEEK", "weeks": expected, "p_value": None}
     if len(weekly) < 8 or len(by_week) < 8:
         return {"status": "PENDING_FIXED_HORIZON", "weeks": expected, "p_value": None}
     outcomes = [by_week[w].get("week_winner_interval_score") for w in expected]
