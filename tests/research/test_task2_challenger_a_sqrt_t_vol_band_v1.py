@@ -288,6 +288,15 @@ class ChallengerATest(unittest.TestCase):
             freeze_path.write_text('{"daily_range_plan":{"BTC":{}}}\n')
             with self.assertRaises(ValueError):
                 A.read_frozen_main_issuance(root,self.YEAR,self.WEEK)
+            # Even a later revert to identical bytes is a real revision of
+            # an immutable first-main original. Reject it, never relabel.
+            self._git(root,"add",freeze_rel)
+            self._git(root,"commit","-m","illicit original freeze edit",date="2026-11-16T09:45:00+00:00")
+            freeze_path.write_text('{"daily_range_plan":{}}\n')
+            self._git(root,"add",freeze_rel)
+            self._git(root,"commit","-m","restored original after edit",date="2026-11-16T09:50:00+00:00")
+            with self.assertRaises(ValueError):
+                A.read_frozen_main_issuance(root,self.YEAR,self.WEEK)
 
     def test_prospective_source_must_reach_main_before_first_outcome(self):
         with tempfile.TemporaryDirectory() as d:
