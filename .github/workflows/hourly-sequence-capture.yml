@@ -75,6 +75,104 @@ jobs:
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
           echo "source_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Catch up immutable Challenger A SHADOW after hourly main readback
+        continue-on-error: true
+        timeout-minutes: 6
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$(date -u +%u)" != 1 ]; then
+            echo "CHALLENGER_A_NOT_MONDAY_NOOP"
+            exit 0
+          fi
+          # This is part of the EXISTING hourly sequence owner writer lock.
+          # Only retry after an original CN freeze has landed on main.
+          # Missing bars fail closed; future hourly runs retry on Monday only.
+          git fetch origin main
+          git pull --ff-only origin main
+          ISO_WEEK="$(python - <<'PY'
+          import datetime as dt,json
+          from pathlib import Path
+          p=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
+          year,week=int(p['iso_year']),int(p['iso_week'])
+          expected=Path(f'05_CYCLE_NAVIGATOR/weekly/{year}/W{week:02d}')
+          if Path(p['week_dir'])!=expected:
+              raise SystemExit('CHALLENGER_ISSUE_POINTER_WEEK_PATH_MISMATCH')
+          now=dt.datetime.now(dt.timezone.utc)
+          if now.isoweekday()!=1 or (now.isocalendar().year,now.isocalendar().week)!=(year,week):
+              raise SystemExit('CHALLENGER_ISSUE_OUTSIDE_ORIGINAL_MONDAY_NO_BACKFILL')
+          if p.get('status') not in ('READY','DEGRADED'):
+              raise SystemExit('CHALLENGER_ISSUE_INVALID_CN_SOURCE_STATUS')
+          if not (expected/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').is_file():
+              raise SystemExit('CHALLENGER_ISSUE_NO_ORIGINAL_CN_FREEZE')
+          print(f'{year}-W{week:02d}')
+          PY
+          )"
+          YEAR="${ISO_WEEK%%-W*}"
+          WEEK="${ISO_WEEK##*-W}"
+          ISSUE_REL="06_RESEARCH_LAB/task2_challenger_a/issued/${YEAR}/W${WEEK}/CHALLENGER_A_FROZEN_ISSUANCE.json"
+          if git cat-file -e "origin/main:${ISSUE_REL}" 2>/dev/null; then
+            # Never amend or relabel a first-published original.
+            echo "CHALLENGER_A_ALREADY_ON_MAIN_NOOP:${ISO_WEEK}"
+            exit 0
+          fi
+          if [ -e "${ISSUE_REL}" ]; then
+            echo "CHALLENGER_A_LOCAL_UNATTESTED_FILE_NO_OVERWRITE:${ISSUE_REL}" >&2
+            exit 1
+          fi
+          python scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py issue \
+            --repo-root . --week "${ISO_WEEK}" --output "${ISSUE_REL}"
+          python - "${ISSUE_REL}" "${ISO_WEEK}" <<'PY'
+          import json,sys
+          from pathlib import Path
+          r=json.loads(Path(sys.argv[1]).read_text())
+          if (r.get('contract')!='TASK2_CHALLENGER_A_SQRT_T_VOL_BAND_v1'
+              or r.get('week')!=sys.argv[2]
+              or r.get('source',{}).get('clock_class')!='MAIN_FIRST_PARENT_COMMITTER_CLOCK_NOT_HTTP_DELIVERY'
+              or r.get('source',{}).get('first_http_delivery')!='UNKNOWN'):
+              raise SystemExit('CHALLENGER_A_ISSUANCE_SOURCE_CONTRACT_FAIL')
+          PY
+          git config user.name framework-cycle-navigator-bot
+          git config user.email framework-cycle-navigator-bot@users.noreply.github.com
+          git add -- "${ISSUE_REL}"
+          if git diff --cached --quiet; then
+            echo 'CHALLENGER_A_ISSUE_EMPTY_UNEXPECTED' >&2
+            exit 1
+          fi
+          git commit -m "research(task2): freeze Challenger A first-main ${ISO_WEEK} shadow issuance"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              pushed=true
+              break
+            fi
+            sleep $((attempt*5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          python - "${ISSUE_REL}" "${ISO_WEEK}" <<'PY'
+          import json,subprocess,sys
+          from pathlib import Path
+          sys.path.insert(0,'scripts/research')
+          from task2_challenger_a_sqrt_t_vol_band_v1 import read_frozen_main_issuance
+          rel,week=sys.argv[1:]
+          y,w=map(int,week.split('-W'))
+          original,proof=read_frozen_main_issuance(Path('.'),y,w)
+          remote=subprocess.run(['git','show','origin/main:'+rel],check=True,capture_output=True).stdout
+          local=Path(rel).read_bytes()
+          if local!=remote or original['week']!=week:
+              raise SystemExit('CHALLENGER_A_REMOTE_MAIN_ORIGINAL_READBACK_FAIL')
+          Path('runtime_challenger_a_issue_receipt.json').write_text(
+              json.dumps({'contract':'CHALLENGER_A_FIRST_MAIN_ISSUER_RECEIPT_v1',
+                          'week':week,'first_main_commit':proof['first_main_commit'],
+                          'first_main_blob_sha':proof['first_main_blob_sha'],
+                          'first_main_utc':proof['first_main_utc'],
+                          'first_http_delivery':'UNKNOWN',
+                          'authority':'SHADOW_ONLY_NO_PROMOTION'},sort_keys=True)+'\n')
+          PY
+          echo "CHALLENGER_A_FIRST_MAIN_ISSUE_SOURCE_READBACK_PASS:${ISO_WEEK}"
+
       - name: Preflight actual newly completed owner hour
         id: hourly_public_hour
         continue-on-error: true
