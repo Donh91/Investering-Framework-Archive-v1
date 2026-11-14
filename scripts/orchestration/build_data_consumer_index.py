@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from datetime import datetime, timezone
@@ -35,6 +36,25 @@ def build_index(root: Path, manifest_path: Path) -> dict[str, Any]:
         ref = evidence[name] if isinstance(evidence[name], dict) else {}
         path = root / str(ref.get("path") or "")
         current = path.is_file()
+        observed_sha256 = None
+        if current:
+            try:
+                observed_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+            except OSError:
+                pass
+        declared_sha256 = ref.get("sha256")
+        if not current:
+            binding_state = "MISSING"
+        elif observed_sha256 is None:
+            binding_state = "UNREADABLE"
+        elif not isinstance(declared_sha256, str) or not (
+            len(declared_sha256) == 64 and all(c in "0123456789abcdef" for c in declared_sha256)
+        ):
+            binding_state = "INVALID_DECLARED_DIGEST"
+        elif observed_sha256 != declared_sha256:
+            binding_state = "DIGEST_MISMATCH"
+        else:
+            binding_state = "MATCH"
         consumer_names = sorted(set(reverse[name]))
         rows.append({
             "artifact": name,
@@ -42,15 +62,19 @@ def build_index(root: Path, manifest_path: Path) -> dict[str, Any]:
             "producer_state": "PRESENT" if current else "MISSING",
             "consumer_count": len(consumer_names),
             "consumers": consumer_names,
-            "use_state": "CONSUMED" if consumer_names else "NO_REGISTERED_CONSUMER",
-            "freshness_use_state": "CURRENT_BINDING" if current else "STALE_OR_MISSING_POINTER",
-            "sha256": ref.get("sha256"),
+            # Registered routes alone do not prove that runtime consumption occurred.
+            "use_state": "REGISTERED_CONSUMER" if consumer_names else "NO_REGISTERED_CONSUMER",
+            "freshness_use_state": "CURRENT_BINDING" if binding_state == "MATCH" else "STALE_OR_MISSING_POINTER",
+            "binding_state": binding_state,
+            "sha256": declared_sha256,
+            "observed_sha256": observed_sha256,
         })
     return {
         "contract": CONTRACT,
         "generated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "source_manifest_path": str(manifest_path.relative_to(root)),
         "source_manifest_generated_at_utc": manifest.get("generated_at_utc"),
+        "source_manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
         "rows": rows,
         "summary": {
             "artifact_count": len(rows),
