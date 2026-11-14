@@ -104,7 +104,7 @@ class MonthlyLiabilityTest(unittest.TestCase):
         (self.runtime / 'prompt.txt').write_text('bounded')
         p = self.root / 'research/api_agent/API_INTELLIGENCE_POLICY_v2.json'
         value = json.loads(p.read_text())
-        value['monthly_hard_stop_usd'] = 50
+        value['monthly_hard_stop_usd'] = 40
         p.write_text(json.dumps(value))
         with self.assertRaisesRegex(ValueError, 'policy_or_pricing_drift'):
             self.payload()
@@ -148,7 +148,7 @@ class BudgetClaimTests(unittest.TestCase):
             TASK: {"model": MODEL, "max_attempts": 1, "max_output_tokens": 5400,
                    "governed_instruction": "Bounded"}}})
         save("research/api_agent/API_INTELLIGENCE_POLICY_v2.json", {
-            "monthly_hard_stop_usd": 40, "global_reserve_usd": 4,
+            "monthly_hard_stop_usd": 50, "global_reserve_usd": 4,
             "lane_caps_usd": {TASK: CAP_USD}})
         (self.runtime / "prompt.txt").write_text("Read-only.")
         (self.runtime / "context.json").write_text('{"source":[]}')
