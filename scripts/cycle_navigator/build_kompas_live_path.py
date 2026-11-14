@@ -314,6 +314,38 @@ def structurally_valid(packet: Any) -> bool:
 
 
 
+
+def source_expiry(packet: dict, issued: dt.datetime, now: dt.datetime) -> dt.datetime:
+    """Exact original Official Compass owner deadline, not its 24h publication lookback.
+
+    Matches the existing public builder's owner policy: minimum timestamp + max_age_seconds
+    over all PASS checks. No site-side TTL extension, backfill or substitution.
+    """
+    freshness = ((packet.get("source_bindings") or {}).get("auto_market_state") or {}).get("freshness") or {}
+    checks = freshness.get("checks")
+    if freshness.get("status") != "PASS" or not isinstance(checks, list) or not checks:
+        raise ValueError("OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID")
+    deadlines: list[dt.datetime] = []
+    for row in checks:
+        if not isinstance(row, dict) or row.get("status") != "PASS":
+            raise ValueError("OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID")
+        seconds = row.get("max_age_seconds")
+        if (not isinstance(seconds, (int, float)) or isinstance(seconds, bool) or
+                not math.isfinite(seconds) or not 0 < seconds <= 31 * 24 * 3600):
+            raise ValueError("OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID")
+        try:
+            stamp = utc(row.get("timestamp"))
+        except (ValueError, TypeError, OverflowError):
+            raise ValueError("OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID") from None
+        if stamp > issued:
+            raise ValueError("OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID")
+        deadlines.append(stamp + dt.timedelta(seconds=seconds))
+    deadline = min(deadlines)
+    if now >= deadline:
+        raise ValueError("OFFICIAL_POINTER_SOURCE_EXPIRED")
+    return deadline
+
+
 def bound_official_packet(root: Path, now: dt.datetime) -> tuple[dict | None, dict]:
     """Use ONLY the current Official Compass pointer, its hash-bound original and public projection.
 
@@ -361,12 +393,13 @@ def bound_official_packet(root: Path, now: dt.datetime) -> tuple[dict | None, di
                 any(((packet.get("bull_bear_scale", {}).get("horizons", {}).get(h) or {}).get("status") == "OK" and
                      scale_view(packet, h) is None) for h, _ in VIEW_HORIZONS)):
             raise ValueError("OFFICIAL_POINTER_PACKAGE_MISMATCH")
+        deadline = source_expiry(packet, issued, now)
         candidate = {"path": rel, "sha256": sha256_bytes(raw), "issued": issued, "packet": packet}
         return candidate, {"pointer": OFFICIAL_POINTER_PATH, "status": "VERIFIED", "reason": None,
                            "pointer_sha256": sha256_bytes(pointer_bytes), "compass_path": rel,
                            "compass_content_sha256": sha256_bytes(raw),
                            "public_projection_content_sha256": sha256_bytes(public_raw),
-                           "issued_at_utc": iso(issued)}
+                           "issued_at_utc": iso(issued), "valid_until_utc": iso(deadline)}
     except (OSError, KeyError, TypeError, AttributeError, ValueError, json.JSONDecodeError) as error:
         code = str(error) if isinstance(error, ValueError) else "OFFICIAL_POINTER_PACKAGE_UNAVAILABLE"
         # Never publish private paths, raw payloads or exception detail into the public JSON.
@@ -771,6 +804,7 @@ def base_document(now: dt.datetime) -> dict:
         "generated_at_utc": iso(now),
         "status": "UNAVAILABLE",
         "reasons": [],
+        "official_source_valid_until_utc": None,
         "authority": {"research_only": True, "official_forecast": False, "compass_probability_claim": False,
                       "trading": False, "promotion": False, "site_synthesis": False,
                       "line_label": "live, Challenger B\u0027s formel (forsøg)", "frames_label": "live, beregnet hver time med Challenger A\u0027s formel"},
@@ -806,6 +840,7 @@ def build(root: Path, latest_json: Path | None, now: dt.datetime) -> dict:
     bound, official_binding = bound_official_packet(root, now)
     packets = load_packets(root, min(now - PACKET_LOOKBACK_HOURS * HOUR, week_start - 2 * DAY), now)
     in_window = [bound] if bound is not None else []
+    doc["official_source_valid_until_utc"] = official_binding.get("valid_until_utc") if bound else None
     # A discovered historical daily packet NEVER substitutes for the current canonical pointer.
     views = select_views(in_window, now)
     doc["kompas_views"] = views
