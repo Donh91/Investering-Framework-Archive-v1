@@ -11,9 +11,17 @@ Loop: framework-metronome.yml waits in the GitHub Environment `framework-metrono
 next iteration. A sparse cron only restarts a dead loop.
 
 Targets (deliberately minimal; everything else already chains from these):
-  HOURLY   hourly-sequence-capture.yml (chain_entry_signal=true) once per UTC hour from :05.
-  MONDAY   weekly-api-calibration-shadow.yml (Master Monday) once per Monday from 02:40 Copenhagen;
-           CN Weekly Publication follows by its existing workflow_run trigger.
+  HOURLY     hourly-sequence-capture.yml (chain_entry_signal=true) once per UTC hour from :05.
+  RECOVERY   native-market-recovery.yml once per UTC hour from :35 (the only repair loop for the
+             Live Anchor/ETF/BTC.D/stablecoin/Entry owners; it has its own cooldowns).
+  PRECLOSE   sunday-market-close-and-cfgi.yml mode=preclose, Sunday 23:35-23:59 Copenhagen
+             (a preclose after midnight fails WEEKLY_CLOSE_SCHEDULED_WEEK_ROLLOVER_UNBOUND).
+  FINAL      sunday-market-close-and-cfgi.yml mode=final, Monday from 02:05 Copenhagen, until a
+             run created after 02:00 Monday has SUCCEEDED (a late-firing preclose cron fails and
+             does not count).
+  MONDAY     weekly-api-calibration-shadow.yml (Master Monday) once per Monday from 02:40 Copenhagen,
+             and ONLY after FINAL succeeded (Master Monday hard-requires the final close);
+             CN Weekly Publication follows by its existing workflow_run trigger.
 
 Fail-closed rules:
   - mode is read from 00_FMOS/METRONOME_MODE_v1.json on main; anything but ACTIVE is SHADOW
@@ -47,9 +55,15 @@ ACTIVE_STATUSES = {"queued", "in_progress", "waiting", "requested", "pending"}
 
 HOURLY = {"key": "HOURLY", "workflow": "hourly-sequence-capture.yml",
           "inputs": {"chain_entry_signal": "true"}, "from_minute": 5}
+RECOVERY = {"key": "RECOVERY", "workflow": "native-market-recovery.yml", "inputs": {}, "from_minute": 35}
+CLOSE_WORKFLOW = "sunday-market-close-and-cfgi.yml"
+PRECLOSE = {"key": "PRECLOSE", "workflow": CLOSE_WORKFLOW, "inputs": {"mode": "preclose"},
+            "local_weekday": 6, "local_time": (23, 35)}
+FINAL = {"key": "FINAL", "workflow": CLOSE_WORKFLOW, "inputs": {"mode": "final"},
+         "local_weekday": 0, "local_time": (2, 5)}
 MONDAY = {"key": "MONDAY", "workflow": "weekly-api-calibration-shadow.yml", "inputs": {},
           "local_weekday": 0, "local_time": (2, 40)}
-DISPATCH_ALLOWLIST = {HOURLY["workflow"], MONDAY["workflow"], SELF_WORKFLOW}
+DISPATCH_ALLOWLIST = {HOURLY["workflow"], RECOVERY["workflow"], CLOSE_WORKFLOW, MONDAY["workflow"], SELF_WORKFLOW}
 
 
 def utc(value: str) -> dt.datetime:
@@ -75,19 +89,77 @@ def any_active(runs: Iterable[dict], exclude_id: int | None = None) -> bool:
                for r in runs or [])
 
 
-def hourly_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
+def hourly_due(now: dt.datetime, runs: list[dict], target: dict = HOURLY) -> tuple[bool, str]:
     hour = now.replace(minute=0, second=0, microsecond=0)
-    if now.minute < HOURLY["from_minute"]:
-        return False, "BEFORE_MINUTE_%02d" % HOURLY["from_minute"]
+    if now.minute < target["from_minute"]:
+        return False, "BEFORE_MINUTE_%02d" % target["from_minute"]
     if any_active(runs):
         return False, "TARGET_ACTIVE"
-    # Any run (cron, chain or metronome) created in this hour after :03 already serves it.
-    if any(t >= hour + dt.timedelta(minutes=3) for t in created(runs)):
+    # Any run (cron, chain or metronome) created in this hour after (from_minute - 2) already serves it.
+    if any(t >= hour + dt.timedelta(minutes=target["from_minute"] - 2) for t in created(runs)):
         return False, "ALREADY_RAN_THIS_HOUR"
     return True, "DUE"
 
 
-def monday_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
+def recovery_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
+    return hourly_due(now, runs, RECOVERY)
+
+
+def succeeded_since(runs: Iterable[dict], since: dt.datetime) -> bool:
+    for r in runs or []:
+        try:
+            if utc(r["created_at"]) >= since and r.get("status") == "completed" and r.get("conclusion") == "success":
+                return True
+        except (KeyError, TypeError, ValueError):
+            continue
+    return False
+
+
+def _local_slot(now: dt.datetime, target: dict) -> tuple[dt.datetime, dt.datetime] | None:
+    local = now.astimezone(CPH)
+    if local.weekday() != target["local_weekday"]:
+        return None
+    h, m = target["local_time"]
+    return local, local.replace(hour=h, minute=m, second=0, microsecond=0)
+
+
+def preclose_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
+    slot = _local_slot(now, PRECLOSE)
+    if slot is None:
+        return False, "NOT_SUNDAY_CPH"
+    local, start = slot
+    if local < start:
+        return False, "BEFORE_PRECLOSE_SLOT"
+    if local >= local.replace(hour=23, minute=59, second=0, microsecond=0):
+        return False, "TOO_CLOSE_TO_MIDNIGHT"  # never risk a rollover-unbound preclose
+    if any_active(runs):
+        return False, "TARGET_ACTIVE"
+    if any(t >= (start - dt.timedelta(minutes=5)).astimezone(dt.timezone.utc) for t in created(runs)):
+        return False, "ALREADY_RAN_THIS_SLOT"
+    return True, "DUE"
+
+
+def final_done(now: dt.datetime, runs: list[dict]) -> bool:
+    local = now.astimezone(CPH)
+    since = local.replace(hour=2, minute=0, second=0, microsecond=0).astimezone(dt.timezone.utc)
+    return local.weekday() == FINAL["local_weekday"] and succeeded_since(runs, since)
+
+
+def final_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
+    slot = _local_slot(now, FINAL)
+    if slot is None:
+        return False, "NOT_MONDAY_CPH"
+    local, start = slot
+    if local < start:
+        return False, "BEFORE_FINAL_SLOT"
+    if final_done(now, runs):
+        return False, "FINAL_SUCCEEDED_THIS_MONDAY"
+    if any_active(runs):
+        return False, "TARGET_ACTIVE"  # e.g. a late preclose cron still running; it will fail and not count
+    return True, "DUE"
+
+
+def monday_due(now: dt.datetime, runs: list[dict], close_runs: list[dict] | None = None) -> tuple[bool, str]:
     local = now.astimezone(CPH)
     if local.weekday() != MONDAY["local_weekday"]:
         return False, "NOT_MONDAY_CPH"
@@ -100,6 +172,8 @@ def monday_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
     day_start = local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(dt.timezone.utc)
     if any(t >= day_start for t in created(runs)):
         return False, "ALREADY_RAN_THIS_MONDAY"
+    if not final_done(now, close_runs or []):
+        return False, "WAITING_FOR_SUNDAY_FINAL"
     return True, "DUE"
 
 
@@ -118,13 +192,22 @@ def wait_minutes(environment: Any) -> int | None:
 
 
 def decide(now: dt.datetime, *, mode: str, hourly_runs: list[dict], monday_runs: list[dict],
-           self_runs: list[dict], self_run_id: int | None, environment: Any) -> dict:
+           self_runs: list[dict], self_run_id: int | None, environment: Any,
+           recovery_runs: list[dict] | None = None, close_runs: list[dict] | None = None) -> dict:
     """Pure decision. Returns dispatches (may be empty), would_dispatch and loop decision."""
     plan: dict[str, Any] = {"contract": CONTRACT, "now_utc": iso(now), "mode": mode,
                             "targets": {}, "dispatch": [], "would_dispatch": [], "next_tick": False,
                             "next_tick_reason": None}
-    for target, runs, fn in ((HOURLY, hourly_runs, hourly_due), (MONDAY, monday_runs, monday_due)):
-        due, reason = fn(now, runs)
+    close_runs = close_runs or []
+    checks = (
+        (HOURLY, lambda: hourly_due(now, hourly_runs)),
+        (RECOVERY, lambda: recovery_due(now, recovery_runs or [])),
+        (PRECLOSE, lambda: preclose_due(now, close_runs)),
+        (FINAL, lambda: final_due(now, close_runs)),
+        (MONDAY, lambda: monday_due(now, monday_runs, close_runs)),
+    )
+    for target, fn in checks:
+        due, reason = fn()
         plan["targets"][target["key"]] = reason
         if due:
             item = {"workflow": target["workflow"], "inputs": target["inputs"]}
@@ -195,7 +278,8 @@ class Github:
 def run(gh, now: dt.datetime, self_run_id: int | None) -> dict:
     plan = decide(now, mode=read_mode(gh.mode()), hourly_runs=gh.runs(HOURLY["workflow"]),
                   monday_runs=gh.runs(MONDAY["workflow"]), self_runs=gh.runs(SELF_WORKFLOW),
-                  self_run_id=self_run_id, environment=gh.environment())
+                  self_run_id=self_run_id, environment=gh.environment(),
+                  recovery_runs=gh.runs(RECOVERY["workflow"]), close_runs=gh.runs(CLOSE_WORKFLOW))
     errors = []
     for item in plan["dispatch"]:
         try:
