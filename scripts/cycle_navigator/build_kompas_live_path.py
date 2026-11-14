@@ -357,7 +357,9 @@ def bound_official_packet(root: Path, now: dt.datetime) -> tuple[dict | None, di
                 packet.get("issued_at_utc") != pointer["issued_at_utc"] or
                 public.get("issued_at_utc") != pointer["issued_at_utc"] or
                 (packet.get("source_bindings") or {}).get("auto_market_state", {}).get("packet_sha256") != pointer.get("source_packet_sha256") or
-                not structurally_valid(packet)):
+                not structurally_valid(packet) or
+                any(((packet.get("bull_bear_scale", {}).get("horizons", {}).get(h) or {}).get("status") == "OK" and
+                     scale_view(packet, h) is None) for h, _ in VIEW_HORIZONS)):
             raise ValueError("OFFICIAL_POINTER_PACKAGE_MISMATCH")
         candidate = {"path": rel, "sha256": sha256_bytes(raw), "issued": issued, "packet": packet}
         return candidate, {"pointer": OFFICIAL_POINTER_PATH, "status": "VERIFIED", "reason": None,
