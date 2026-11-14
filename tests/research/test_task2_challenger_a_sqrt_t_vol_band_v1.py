@@ -396,7 +396,7 @@ class ChallengerATest(unittest.TestCase):
             self._git(root, "init", "-b", "main")
             self._git(root, "config", "user.name", "Task2 CI")
             self._git(root, "config", "user.email", "task2-tests@example.invalid")
-            (root / "README").write_text("canonical main\\n")
+            (root / "README").write_text("canonical main\n")
             self._git(root, "add", "README")
             self._git(root, "commit", "-m", "init",
                       date="2026-11-15T00:00:00+00:00")
@@ -407,7 +407,7 @@ class ChallengerATest(unittest.TestCase):
             self.assertIsNone(row["issuance_sha256"])
             path = root / A.SCORE_PATH.format(year=2026, week=47)
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps(row, sort_keys=True) + "\\n")
+            path.write_text(json.dumps(row, sort_keys=True) + "\n")
             self._git(root, "add", str(path.relative_to(root)))
             self._git(root, "commit", "-m", "first-maturity absent source",
                       date="2026-11-23T01:10:00+00:00")
@@ -420,7 +420,7 @@ class ChallengerATest(unittest.TestCase):
             rel = A.ISSUANCE_PATH.format(year=2026, week=47)
             issue_path = root / rel
             issue_path.parent.mkdir(parents=True, exist_ok=True)
-            issue_path.write_text('{"later":"not prospective"}\\n')
+            issue_path.write_text('{"later":"not prospective"}\n')
             self._git(root, "add", rel)
             self._git(root, "commit", "-m", "late source cannot change denominator",
                       date="2026-11-23T02:00:00+00:00")
@@ -429,7 +429,7 @@ class ChallengerATest(unittest.TestCase):
                 A.no_issuance_missing_score(root, 2026, 48, as_of_utc=after_maturity)
             changed = json.loads(path.read_text())
             changed["paired_rows"] = 8
-            path.write_text(json.dumps(changed, sort_keys=True) + "\\n")
+            path.write_text(json.dumps(changed, sort_keys=True) + "\n")
             with self.assertRaisesRegex(ValueError, "first-main score mutated"):
                 A.read_first_main_weekly_score(root, 2026, 47)
 
@@ -442,7 +442,7 @@ class ChallengerATest(unittest.TestCase):
             rel = A.ISSUANCE_PATH.format(year=2026, week=47)
             source = root / rel
             source.parent.mkdir(parents=True, exist_ok=True)
-            source.write_text('{"original":"present"}\\n')
+            source.write_text('{"original":"present"}\n')
             self._git(root, "add", rel)
             self._git(root, "commit", "-m", "original issuance",
                       date="2026-11-16T10:00:00+00:00")
