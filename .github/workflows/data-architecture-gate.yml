@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -35,6 +37,12 @@ jobs:
         run: |
           python -m py_compile scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py tests/research/test_task2_challenger_a_sqrt_t_vol_band_v1.py
           python -m unittest -v tests.research.test_task2_challenger_a_sqrt_t_vol_band_v1
+      - name: Validate Task2 Challenger B Kompas evidence tilt (research only)
+        run: |
+          python -m py_compile scripts/research/task2_challenger_b_kompas_tilt_v1.py tests/research/test_task2_challenger_b_kompas_tilt_v1.py
+          python -m unittest -v tests.research.test_task2_challenger_b_kompas_tilt_v1
+      - name: Derive and verify S1 required-job paths from full checkout
+        run: python scripts/governance/s1_standing_policy_v1.py --check
       - name: Validate Task 2 archive-first E1/E2/E3 diagnostics and evidence firewall
         run: |
           python -m py_compile scripts/research/task2_archive_first_edge_matrix_v1.py tests/research/test_task2_archive_first_edge_matrix_v1.py
