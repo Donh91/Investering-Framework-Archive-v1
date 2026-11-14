@@ -328,6 +328,19 @@ The temporary candidate must not be committed. Commit only the generated receipt
 - No portfolio action may be produced from DATA PING alone.
 - No public website may create an independent market-state or short-horizon forecast engine.
 
+### Bounded canonical exception: Kompas live research display
+
+The prohibitions on new engines and independent website forecasts in this section have one narrowly scoped exception for the Kompas live research display. The only registered owner is `scripts/cycle_navigator/build_kompas_live_path.py`. It may use only formulas registered in the Challenger A/B pre-registrations, the verified Official Compass pointer under its original source-expiry clock, and public hourly spot data. No other packet may influence the line. Missing, invalid, stale or expired inputs retain their fail-closed handling; the source deadline must never be extended. Retain the existing "live formula" labels.
+
+This display is research-only. It is never an official forecast, never scored, and never an input to decisions, promotion or trading. The exception is void and the display must be disabled if any of the following occurs:
+
+- A tilt is shown after `official_source_valid_until_utc`.
+- Any packet other than the verified pointer influences the line.
+- Any number reaches a decision or scoring lane.
+- Private data reaches the public JSON.
+
+This exception changes no other rule, including Vault, credentials, trading, publication, private-data boundaries or paid API rules. It takes effect only after this policy change is reviewed and merged to main; a PR or relay is not authority.
+
 ## 5. Prospective evidence discipline
 
 For active forward tests and ledgers:
