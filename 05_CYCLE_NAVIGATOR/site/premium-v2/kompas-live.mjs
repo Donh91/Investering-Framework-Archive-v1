@@ -47,6 +47,8 @@ const UNAVAILABLE_REASON={
  SIGMA_WINDOW_GAP:['Der mangler timekurser i de seneste 7 døgn, så udsvinget kan ikke beregnes.','Hourly prices are missing in the last 7 days, so volatility cannot be computed.'],
  SIGMA_NOT_POSITIVE:['Udsvinget kan ikke beregnes ud fra de seneste timekurser.','Volatility cannot be computed from the latest hourly prices.'],
  NO_VALID_OFFICIAL_PACKET_24H:['Der er ingen gyldig Kompas-udgave fra de seneste 24 timer.','There is no valid Compass issue from the last 24 hours.'],
+ OFFICIAL_POINTER_SOURCE_EXPIRED:['Kompas-kildens gyldighed er udløbet.','The verified Compass source has expired.'],
+ OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID:['Kompas-kildens gyldighed kan ikke verificeres.','The Compass source freshness cannot be verified.'],
  STALE_IN_BROWSER:['Siden har ikke fået nye live-data i over 3 timer.','The page has had no new live data for more than 3 hours.'],
  PRODUCER_ERROR:['Live-beregningen fejlede ved seneste opdatering.','The live computation failed at the latest update.'],
  SOURCE:['Live-data kunne ikke indlæses eller er ugyldige.','Live data could not be loaded or are invalid.']
@@ -165,6 +167,9 @@ export function liveViewModel(json,{lang='da',hz=3,asset='BTC',nowMs=Date.now(),
   unavailable:{title:L.loading,text:'',note:''},asOf:{text:L.loading,label:L.loading}};
  if(!sourceIsValid(json))return unavailableModel(base,'SOURCE',lang);
  if(json.status==='UNAVAILABLE')return unavailableModel(base,(json.reasons||[])[0]||'SOURCE',lang);
+ const sourceDeadline=ms(json.official_source_valid_until_utc);
+ if(!Number.isFinite(sourceDeadline))return unavailableModel(base,'OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID',lang);
+ if(nowMs>=sourceDeadline)return unavailableModel(base,'OFFICIAL_POINTER_SOURCE_EXPIRED',lang);
  const a=json.assets[asset];
  if(!a||a.status!=='OK')return unavailableModel(base,a?.reason||'SOURCE',lang);
  if(!validAssetBlock(a))return unavailableModel(base,'SOURCE',lang);
