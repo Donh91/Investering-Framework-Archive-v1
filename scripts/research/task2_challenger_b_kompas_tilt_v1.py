@@ -243,14 +243,21 @@ def decide(weekly: list[dict]) -> dict:
 
 
 def git_candidates(root: Path, t0: dt.datetime, main_ref: str) -> list[dict]:
-    """Enumerate original Compass packets from canonical main TREE, never a mutable checkout glob."""
+    """Enumerate historically introduced main packets, including deleted or renamed paths."""
     if main_ref not in ("main", "refs/heads/main"):
         raise ValueError("B packet evidence must come from local canonical main")
+    shallow = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--is-shallow-repository"],
+        check=True, capture_output=True, text=True).stdout.strip()
+    if shallow != "false":
+        raise ValueError("shallow main history cannot establish frozen Compass packet census")
     out, lo = [], t0 - dt.timedelta(hours=PARAMS["packet_lookback_hours"])
     for day in {lo.date(), t0.date()}:
         folder_rel = (Path(PARAMS["packet_dir"]) / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}").as_posix()
         listing = subprocess.run(
-            ["git", "-C", str(root), "ls-tree", "-r", "--name-only",
+            # A current-tree census overlooks a source deleted after publication.
+            ["git", "-C", str(root), "log", "--first-parent", "-m",
+             "--diff-filter=A", "--name-only", "--format=",
              "refs/heads/main", "--", folder_rel],
             check=True, capture_output=True, text=True).stdout
         for rel in sorted(set(listing.splitlines())):
