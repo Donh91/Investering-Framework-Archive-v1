@@ -119,6 +119,39 @@ class ChallengerATest(unittest.TestCase):
         with self.assertRaises(ValueError):
             A.sigma_at(gap, "BTC", self.t0)
 
+    def test_latest_expected_closed_hour_is_mandatory_even_with_older_history(self):
+        t0=self.t0
+        expected=(t0-A.HOUR).replace(minute=0,second=0,microsecond=0)
+        no_latest={t:r for t,r in self.bars.items() if t<expected}
+        self.assertGreater(len(no_latest),169)
+        with self.assertRaisesRegex(ValueError,"last expected closed hour"):
+            A.sigma_at(no_latest,"BTC",t0)
+        with self.assertRaisesRegex(ValueError,"last expected closed hour"):
+            A.issue(no_latest,self.YEAR,self.WEEK,t0)
+        self.assertEqual(A.sigma_at(self.bars,"BTC",t0)[2],A.iso(expected))
+
+    def test_duplicate_csv_hour_rejected_before_it_can_hide_outlier(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            full_day=self.monday + A.DAY
+            bars={t:r for t,r in self.bars.items() if full_day<=t<full_day+A.DAY}
+            write_repo(root,bars)
+            file=root/A.HOURLY_DIR/f"{full_day:%Y}"/f"{full_day:%m}"/f"{full_day:%Y-%m-%d}.csv"
+            with file.open("a",newline="") as fh:
+                w=csv.writer(fh)
+                r=bars[full_day+5*A.HOUR]
+                w.writerow([A.iso(full_day+5*A.HOUR),r["BTC"][0],
+                            999999.0,r["BTC"][2],*r["ETH"]])
+            with self.assertRaisesRegex(ValueError,"duplicate hourly source timestamp"):
+                A.load_hourly(root,full_day,full_day+A.DAY)
+            # A malformed first row followed by a repaired same-hour duplicate
+            # is also a duplicate, never an accepted source revision.
+            fcontents=file.read_text()
+            fcontents=fcontents.replace("999999.0","1.0",1)
+            file.write_text(fcontents)
+            with self.assertRaisesRegex(ValueError,"duplicate hourly"):
+                A.load_hourly(root,full_day,full_day+A.DAY)
+
     def test_issue_clock_must_be_inside_the_week(self):
         with self.assertRaises(ValueError):
             A.issue(self.bars, self.YEAR, self.WEEK, self.monday - A.HOUR)
