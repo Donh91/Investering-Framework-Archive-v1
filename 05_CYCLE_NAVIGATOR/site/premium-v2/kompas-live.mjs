@@ -7,8 +7,8 @@
  * bull/bear scale is EVIDENCE_BALANCE_NOT_PROBABILITY and the site keeps
  * site_synthesis_allowed === false. This module only selects, formats and lays out.
  *
- * Labels: the tilted line is "Challenger B (forsøg)", the day frames are
- * "Challenger A (forsøg)". The official Kompas direction word is shown attributed to
+ * Labels identify the blue line as a live hourly calculation using Challenger B\u0027s trial formula
+ * and day frames as live hourly calculations using Challenger A\u0027s formula, NOT the frozen A/B issuances. The official Kompas direction word is shown attributed to
  * Kompas. The comment track is code-written ("Automatisk"); ai_text stays unused here.
  * No DOM, no fetch, no timers. Danish first; English when lang === 'en'.
  */
@@ -68,8 +68,8 @@ function labels(lang,flat){
   legend:{
    actual:tr(lang,'Faktisk kurs','Actual price'),
    line:flat?tr(lang,'Forventet luk · uden hældning','Expected close · no tilt'):
-    tr(lang,'Challenger B (forsøg) · forventet luk','Challenger B (trial) · expected close'),
-   frames:tr(lang,'Challenger A (forsøg) · typisk dagsspænd','Challenger A (trial) · typical daily span'),
+    tr(lang,"live, Challenger B's formel (forsøg)","live, Challenger B's formula (trial)"),
+   frames:tr(lang,"live, beregnet hver time med Challenger A's formel","live, calculated hourly using Challenger A's formula"),
    zone:tr(lang,'Frossen ugeprognose','Frozen weekly forecast')
   },
   feedHeading:tr(lang,'Kommentarspor','Comment track'),
@@ -83,13 +83,13 @@ function labels(lang,flat){
    'Statistisk forsøgsvisning, ikke en officiel prognose. '+(flat?
     'Den blå linje er det forventede luk uden hældning; Challenger B (forsøg) er endnu ikke registreret i denne udgave. ':
     'Den blå linje er Challenger B (forsøg): en registreret forskningsmodel, der lader kursbanen hælde efter Kompas’ egne horisonter (1–3 og 5–7 dage). ')+
-   'Kompas’ bull/bear er evidenspoint, ikke sandsynligheder. Rammerne er Challenger A (forsøg): dagens typiske spænd (50 %). '+
-   'Begge modeller scores løbende. Kommentarerne er skrevet automatisk af kode. Visningen er ikke en købs- eller salgsanbefaling.',
+   'Kompas’ bull/bear er evidenspoint, ikke sandsynligheder. Rammerne beregnes live med Challenger A’s formel (50 %). '+
+   'Disse timeberegnede kurver er ikke originale, fastfrosne A/B-udstedelser og må ikke indgå som original score. Kommentarerne er skrevet automatisk af kode. Visningen er ikke en købs- eller salgsanbefaling.',
    'Statistical trial display, not an official forecast. '+(flat?
     'The blue line is the expected close without tilt; Challenger B (trial) is not registered in this build yet. ':
     'The blue line is Challenger B (trial): a registered research model that tilts the path along Compass’s own horizons (1–3 and 5–7 days). ')+
-   'Compass bull/bear are evidence points, not probabilities. The frames are Challenger A (trial): the typical daily span (50%). '+
-   'Both models are scored continuously. The comments are written automatically by code. This display is not a buy or sell recommendation.'),
+   'Compass bull/bear are evidence points, not probabilities. The frames are calculated live using Challenger A’s formula (50%). '+
+   'These hourly-calculated paths are not original frozen A/B issuances and must not be scored as such. Comments are written automatically by code. This display is not a buy or sell recommendation.'),
   unavailableTitle:tr(lang,'Kompas live er midlertidigt utilgængelig','Compass live is temporarily unavailable'),
   unavailableNote:tr(lang,'Der vises ingen kursbane, når data ikke er friske og gyldige.','No price path is shown when data are not fresh and valid.'),
   loading:tr(lang,'Henter live-data …','Loading live data …')
@@ -125,7 +125,7 @@ function headlineModel(head,asset,lang,flat){
   .map(([k,l])=>officialWord(head.official_direction?.[k],lang)?l+': '+officialWord(head.official_direction[k],lang):null)
   .filter(Boolean);
  const kompas=words.length?tr(lang,'Kompas ','Compass ')+words.join(' · '):null;
- const model=flat?tr(lang,'Forventet luk uden hældning','Expected close without tilt'):tr(lang,'Challenger B (forsøg)','Challenger B (trial)');
+ const model=flat?tr(lang,'Forventet luk uden hældning','Expected close without tilt'):tr(lang,"live, Challenger B's formel (forsøg)","live, Challenger B's formula (trial)");
  const source=[model,kompas].filter(Boolean).join(' · ');
  if(head.direction==='UP'||head.direction==='DOWN'){
   const down=head.direction==='DOWN';
