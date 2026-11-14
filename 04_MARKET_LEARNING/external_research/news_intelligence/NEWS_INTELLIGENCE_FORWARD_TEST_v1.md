@@ -88,3 +88,11 @@ At N=50:
 ## First live row
 
 `NEWSFT-20261007-001` - Michael Burry stock-market "denial / crash" warning.
+
+## Restart checkpoint, existing owner intake (2026-11-14)
+
+The existing Situation Room daily owner (Archive #1888/#1563) may append `NEWSFT_PROSPECTIVE_INTAKE.jsonl` alongside its original event ledger on a **new**, primary-verified event family with attested native retrieval completion and detection clocks. The first local usable clock is the later of the two; provider first-known and first HTTP delivery remain UNKNOWN. No historical ledger event is backfilled. Secondary discoveries and missing, ambiguous or future source clocks remain ineligible.
+
+This is **an intake queue, not a frozen NEWSFT row**. Its B0, B1 and B2 baseline fields remain null, `admitted_to_N50=false` and `outcome_scoring_authorized=false`. A qualified independent original-owner research review must freeze actual B0/B1/B2 hypotheses before post-T0 outcomes are inspected. If this cannot be done in time, the candidate is explicitly missed or abstained, not rescued retrospectively. The existing 50-event strata and all horizons remain unchanged; no new workflow, paid collector, model, trading signal or canonical Compass effect is authorized.
+
+Activation requires qualified merge to main and a **natural** Situation Room daily run readback that actually writes an intake on a newly verified source family. Until such evidence exists, the forward test remains **N=1**, rather than being falsely marked resumed.
