@@ -2,7 +2,10 @@
 import datetime as dt
 import json
 import math
+import os
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -174,6 +177,33 @@ class ChallengerBTest(unittest.TestCase):
         full = B.score(b, bearish)
         self.assertTrue(full["week_mature"])
         self.assertEqual(full["week_winner"], "B")
+
+    def test_mutable_worktree_cannot_change_canonical_view_selection(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def git(*args, env=None):
+                subprocess.run(["git", *args], cwd=root, env=env, check=True,
+                               capture_output=True, text=True)
+            git("init", "-b", "main")
+            git("config", "user.name", "B-source-test")
+            git("config", "user.email", "test@example.invalid")
+            target = root / B.PARAMS["packet_dir"] / "2026" / "11" / "16"
+            target.mkdir(parents=True)
+            earlier = target / "CMP-earlier.json"
+            later = target / "CMP-later.json"
+            earlier.write_text(json.dumps(packet(A.iso(self.t0 - 5*A.HOUR), b13=3, r13=7)))
+            later.write_text(json.dumps(packet(A.iso(self.t0 - A.HOUR), b13=7, r13=3)))
+            git("add", ".")
+            env = {**os.environ, "GIT_AUTHOR_DATE": "2026-11-16T07:00:00+00:00",
+                   "GIT_COMMITTER_DATE": "2026-11-16T07:00:00+00:00"}
+            git("commit", "-m", "canonical Compass packets", env=env)
+            first = B.select_views(B.git_candidates(root, self.t0, "refs/heads/main"), self.t0)
+            self.assertEqual(first["1_3d"]["bull"], 7)
+            later.write_text(json.dumps(packet(A.iso(self.t0-A.HOUR), b13=0, r13=10)))
+            earlier.unlink()  # absent working file must not censor a canonical source
+            repeated = B.select_views(B.git_candidates(root, self.t0, "refs/heads/main"), self.t0)
+            self.assertEqual(repeated, first)
+            self.assertEqual(repeated["1_3d"]["bull"], 7)
 
     def test_decision_rule(self):
         self.assertEqual(B.decide(["B"] * 7 + ["BASE"])["status"], "B_HAS_DIRECTION")

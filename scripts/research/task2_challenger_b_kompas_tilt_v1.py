@@ -184,28 +184,30 @@ def decide(week_winners: list[str]) -> dict:
 
 
 def git_candidates(root: Path, t0: dt.datetime, main_ref: str) -> list[dict]:
-    """Packets issued in the lookback window, with the time each first entered main (first-parent)."""
+    """Read only committed canonical main tree, never caller's mutable worktree.
+
+    A tracked main packet that cannot be verified is fatal. Silently skipping it
+    could change the selected horizon or censor the registered experiment.
+    """
     if main_ref != "refs/heads/main":
         raise ValueError("Challenger B requires complete local canonical main ref")
     out, lo = [], t0 - dt.timedelta(hours=PARAMS["packet_lookback_hours"])
-    for day in {lo.date(), t0.date()}:
-        folder = root / PARAMS["packet_dir"] / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}"
-        for p in sorted(folder.glob("CMP-*.json")):
-            rel = p.relative_to(root).as_posix()
-            try:
-                proof = A.first_in_main(root, rel)
-                in_main = A.utc(proof["first_main_utc"])
-                committed = subprocess.run(["git", "-C", str(root), "show",
-                                            "refs/heads/main:" + rel],
-                                           check=True, capture_output=True).stdout
-                if p.read_bytes() != committed:
-                    continue  # Never use a modified working-tree packet.
-                packet = json.loads(committed)
-            except (ValueError, OSError, subprocess.CalledProcessError, json.JSONDecodeError):
+    for day in sorted({lo.date(), t0.date()}):
+        prefix = f'{PARAMS["packet_dir"]}/{day:%Y}/{day:%m}/{day:%d}'
+        listing = subprocess.run(["git", "-C", str(root), "ls-tree", "-r",
+                                  "--name-only", main_ref, "--", prefix],
+                                 capture_output=True, text=True, check=True)
+        for rel in sorted(listing.stdout.splitlines()):
+            if not rel.startswith(prefix + "/") or not Path(rel).name.startswith("CMP-") or not rel.endswith(".json"):
                 continue
+            proof = A.first_in_main(root, rel)  # fail closed on mutation/history gaps
+            in_main = A.utc(proof["first_main_utc"])
+            committed = subprocess.run(["git", "-C", str(root), "show",
+                                        main_ref + ":" + rel],
+                                       check=True, capture_output=True).stdout
+            packet = json.loads(committed)  # bad canonical packet cannot silently disappear
             out.append({"path": rel, "packet": packet, "in_main_utc": in_main})
     return out
-
 
 def main(argv: Iterable[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
