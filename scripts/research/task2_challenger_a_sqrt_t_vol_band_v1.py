@@ -527,6 +527,11 @@ def confirmatory_decision_from_main(root: Path, through_week: str) -> dict:
                               "first_main_blob_sha": proof["first_main_blob_sha"],
                               "first_main_utc": proof["first_main_utc"],
                               "eligible_first_maturity": proof["eligible_first_maturity"]})
+        # The pre-registered look is over the FIRST eight valid weeks only.
+        # A later missing/corrupt score must never revoke a completed look.
+        decision = confirmatory_decision(records)
+        if decision["status"] in ("A_PASSES_SHADOW_CONFIRMATORY", "A_NOT_PROVEN"):
+            break
         monday += 7 * DAY
     decision = confirmatory_decision(records)
     decision["source_class"] = "IMMUTABLE_FIRST_MAIN_WEEKLY_SCORES_ONLY"
