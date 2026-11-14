@@ -31,6 +31,7 @@ OWNER_TRIGGER = "[TASK2_ASTRA_REALDATA_V2_20261113]"
 OWNER_CONFIRM = "owner_go=TASK2-ASTRA-V2-10USD"
 CLAIM_MARKER = "TASK2_ASTRA_REALDATA_V2_PAID_CLAIM_20261113"
 PUBLIC_ISSUE = "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596"
+RELEASE_GATE_PATH = "research/api_agent/coordination/ASTRA_TASK2_REALDATA_V2_ADMISSION_V1.json"
 ZIP_NAME = "task2_astra_realdata_public_bundle_v2.zip"
 MAX_TOTAL_SOURCE_BYTES = 14_000_000
 MAX_ONE_SOURCE_BYTES = 650_000
@@ -374,7 +375,29 @@ def check_claims(token: str, repo: str):
     raise ValueError("CLAIM_CENSUS_TRUNCATED")
 
 
+
+def require_original_paid_release_gate():
+    """No native owner claim, upload or paid POST without reviewed source+cost gate.
+
+    A GitHub issue comment or existing USD10 reservation is not sufficient.
+    The public source gate is currently explicitly HOLD. This function checks
+    BOTH economic source readiness and actual provider-enforced billing safety.
+    """
+    gate = read(ROOT / RELEASE_GATE_PATH)
+    if gate.get("contract") != "ASTRA_TASK2_REALDATA_V2_ADMISSION_V1" or gate.get("work_id") != MISSION:
+        raise ValueError("ORIGINAL_PAYMENT_GATE_CONTRACT_INVALID")
+    if gate.get("authorized_paid_dispatch") is not True:
+        raise ValueError("ASTRA_REALDATA_V2_PAID_HOLD_SOURCE_AND_COST")
+    if gate.get("source_readiness") != "COMPLETE_SOURCE_PINNED_ALPHA_V4_ECONOMICS":
+        raise ValueError("ALPHA_V4_DECISION_FILL_EXIT_COST_RECEIPTS_REQUIRED")
+    if gate.get("tool_billing_status") != "PROVIDER_ENFORCED_TOTAL_UPPER_BOUND":
+        raise ValueError("ASTRA_10USD_TOOL_TOKEN_COST_NOT_PROVEN")
+    if not gate.get("reviewed_source_commit_sha") or not gate.get("reviewed_head_sha"):
+        raise ValueError("OWNER_REVIEWED_SOURCE_HEAD_REQUIRED")
+
+
 def reserve(folder: Path):
+    require_original_paid_release_gate()
     check_trigger()
     check_shared_reservation()
     sha_repo = original_sha()
@@ -408,6 +431,7 @@ def reserve(folder: Path):
 
 
 def multipart_upload(folder: Path):
+    require_original_paid_release_gate()
     claim = read(folder / "claim.json")
     bundle = folder / ZIP_NAME
     if checksum(bundle) != claim["archive_sha256"]:
@@ -457,6 +481,8 @@ def make_payload(folder: Path):
     data = canonical(payload)
     if len(data) > MAX_PROMPT_BYTES:
         raise ValueError("REQUEST_TOO_LARGE")
+    # DIAGNOSTIC ONLY: excludes unbounded model re-ingestion of Code Interpreter
+    # outputs and non-token container charges. NOT a provider USD10 hard cap.
     theoretical = ((len(data) * IN_PRICE) + (MAX_OUTPUT_TOKENS * OUT_PRICE)) / 1_000_000
     if theoretical > 8.0:
         raise ValueError("MODEL_TOKEN_ESTIMATE_TOO_HIGH")
@@ -464,13 +490,15 @@ def make_payload(folder: Path):
 
 
 def submit(folder: Path):
+    require_original_paid_release_gate()
     claim = read(folder / "claim.json")
     payload, estimate = make_payload(folder)
     write_once(folder / "paid_post_attempt.json", {
         "mission": MISSION, "run_id": claim["run_id"],
         "archive_sha256": claim["archive_sha256"],
         "payload_sha256": sha(canonical(payload)), "post_attempts": 1,
-        "bounded_standard_token_price_upper_usd": round(estimate, 5),
+        "initial_payload_plus_output_token_estimate_usd": round(estimate, 5),
+        "does_not_cap_code_interpreter_input_or_container_fees": True,
         "total_owner_liability_reserve_usd": RESERVED_BUDGET_USD,
         "network_ambiguous_means_never_retry": True,
         "created_at_utc": datetime.now(timezone.utc).isoformat()})
