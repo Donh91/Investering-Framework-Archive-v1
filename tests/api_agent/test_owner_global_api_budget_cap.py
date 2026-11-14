@@ -221,6 +221,50 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertIn("MAX_APPROVAL_ID_OR_EFFORT_INVALID",
                       str(state["cost_evidence_errors"]))
 
+    def test_canonical_ledger_keeps_existing_40_4_lanes_live(self):
+        # Run against REAL canonical receipts and canonical persistent ledger.
+        # Synthetic fixtures hid the rejected-P1 USD10 reservation regression.
+        cmd = [
+            sys.executable, str(SCRIPT),
+            "--receipt-root", str(ROOT / "research/api_agent/outputs"),
+            "--liability-ledger", str(ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"),
+            "--hard-stop-usd", "40", "--reserve-usd", "4",
+            "--new-request-upper-usd", "0",
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True,
+                                check=False, timeout=25, cwd=ROOT)
+        self.assertTrue(result.stdout.strip(), result.stderr)
+        state = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 0, state)
+        self.assertEqual(state["status"], "PASS", state)
+        self.assertEqual(state["pending_liability_upper_usd"], 22.0)
+        self.assertGreaterEqual(state["remaining_usd"], 4.0)
+        self.assertEqual(state["effective_hard_stop_usd"], 40.0)
+
+    def test_native_caller_caps_above_40_only_in_hard_disabled_astra_v2_job(self):
+        import re
+        workflow = ROOT / ".github/workflows/owner-bound-daily-director-manual.yml"
+        source = workflow.read_text(encoding="utf-8")
+        marker = "\n  astra-realdata-task2-v2:\n"
+        self.assertEqual(source.count(marker), 1)
+        astra_job = source.split(marker, 1)[1]
+        self.assertRegex(astra_job, r"(?m)^    if: >-\s*\n      false &&\s*$")
+        candidates = list(ROOT.glob(".github/workflows/*.yml")) + list(ROOT.glob("scripts/**/*.py"))
+        high_values = []
+        for path in candidates:
+            data = path.read_text(encoding="utf-8")
+            for match in re.finditer(r"--hard-stop-usd\s+(\d+(?:\.\d+)?)", data):
+                amount = float(match.group(1))
+                if amount > 40:
+                    high_values.append((path.relative_to(ROOT).as_posix(), amount, match.start()))
+        self.assertEqual(len(high_values), 1, high_values)
+        path, amount, offset = high_values[0]
+        self.assertEqual(path, workflow.relative_to(ROOT).as_posix())
+        self.assertEqual(amount, 50.0)
+        self.assertGreater(offset, source.index(marker))
+        # Removing the false && on the only elevated-cap job must fail tests.
+        self.assertFalse(json.loads((ROOT / "research/api_agent/coordination/ASTRA_TASK2_REALDATA_V2_ADMISSION_V1.json").read_text())["authorized_paid_dispatch"])
+
     def test_no_unbounded_or_nan_new_api_reservation(self):
         for value in ("4", "-1", "NaN", "Infinity"):
             with self.subTest(value=value):
