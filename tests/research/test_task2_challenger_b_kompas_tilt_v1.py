@@ -196,6 +196,26 @@ class ChallengerBTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "point-in-time"):
             B.require_frozen_source_binding(forged, self.a, views, proof)
 
+    def test_canonical_packet_missing_from_worktree_refuses_instead_of_flattening(self):
+        from unittest.mock import Mock, patch
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            day = self.t0.date()
+            rel = (Path(B.PARAMS["packet_dir"]) / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}" / "CMP-valid-but-missing.json").as_posix()
+            with patch.object(B.subprocess, "run", return_value=Mock(returncode=0, stdout=rel+"\n")):
+                with self.assertRaisesRegex(ValueError, "missing from working tree"):
+                    B.git_candidates(root, self.t0, "main")
+
+    def test_unresolved_earlier_week_cannot_be_skipped_by_later_winners(self):
+        rows = self._weekly(["BASE", "BASE"] + ["B"] * 7)
+        rows[0]["weekly_matured"] = False
+        self.assertEqual(B.decide(rows)["status"], "PENDING")
+        self.assertEqual(B.decide(rows)["blocked_week"], "2026-W47")
+        self.assertEqual(B.decide(rows[1:])["status"], "PENDING")
+        rows[0]["weekly_matured"] = True
+        self.assertEqual(B.decide(rows)["status"], "NO_PROVEN_DIRECTION")
+
     def test_modified_original_packet_is_fatal_instead_of_skipped(self):
         from unittest.mock import Mock, patch
         import tempfile
@@ -205,7 +225,8 @@ class ChallengerBTest(unittest.TestCase):
             folder = root / B.PARAMS["packet_dir"] / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}"
             folder.mkdir(parents=True)
             (folder/"CMP-corrupt.json").write_text("{}")
-            with patch.object(B.subprocess, "run", return_value=Mock(returncode=0)):
+            rel=(folder/"CMP-corrupt.json").relative_to(root).as_posix()
+            with patch.object(B.subprocess, "run", return_value=Mock(returncode=0, stdout=rel+"\n")):
                 with patch.object(B.A, "first_in_main", side_effect=ValueError("original main source path was changed after first issue")):
                     with self.assertRaisesRegex(ValueError, "changed after first issue"):
                         B.git_candidates(root, self.t0, "main")

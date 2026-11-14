@@ -192,11 +192,11 @@ def score(b: dict, bars: dict, *, a_issuance_first_main_utc: str | None = None) 
 
 
 def decide(weekly: list[dict]) -> dict:
-    """First 8 distinct mature non-tied prospective ISO weeks, never duplicate one observation."""
+    """First 8 *resolved* distinct ISO week clusters, no future-winner lookahead."""
     n = DECISION["confirmatory_week_clusters"]
     if not isinstance(weekly, list):
         return {"status": "INCONCLUSIVE_INVALID_WEEK_INPUT"}
-    seen, eligible = set(), []
+    by_date = {}
     for row in weekly:
         if not isinstance(row, dict) or not isinstance(row.get("week"), str):
             return {"status": "INCONCLUSIVE_INVALID_WEEK_INPUT"}
@@ -205,47 +205,63 @@ def decide(weekly: list[dict]) -> dict:
             return {"status": "INCONCLUSIVE_INVALID_WEEK_ID"}
         try:
             year, week = A._parse_week(week_id)
-            A.week_monday(year, week)
+            monday = A.week_monday(year, week)
         except (ValueError, TypeError):
             return {"status": "INCONCLUSIVE_INVALID_WEEK_ID"}
-        if (year, week) < (2026, 47):
+        if monday < A.week_monday(2026, 47):
             return {"status": "INCONCLUSIVE_NONPROSPECTIVE_WEEK"}
-        if week_id in seen:
+        if monday in by_date:
             return {"status": "INCONCLUSIVE_DUPLICATE_WEEK"}
-        seen.add(week_id)
+        by_date[monday] = row
+    chosen = []
+    first = A.week_monday(2026, 47)
+    latest = max(by_date, default=first)
+    current = first
+    while current <= latest:
+        row = by_date.get(current)
+        # Missing or immature earlier weeks can still alter the registered FIRST
+        # eight non-tied clusters, so later victories cannot yield a decision.
+        if row is None or row.get("weekly_matured") is not True:
+            return {"status": "PENDING", "reason": "EARLIER_WEEK_UNRESOLVED",
+                    "non_tied_weeks": len(chosen), "required": n,
+                    "blocked_week": f"{current.isocalendar().year}-W{current.isocalendar().week:02d}"}
         winner = row.get("week_winner")
-        if row.get("weekly_matured") is not True:
-            continue
         if winner in ("B", "BASE"):
-            eligible.append((year, week, winner, week_id))
+            chosen.append((current, winner, row["week"]))
+            if len(chosen) == n:
+                wins = sum(item[1] == "B" for item in chosen)
+                p = A.sign_test_one_sided_p(wins, n - wins)
+                return {"status": "B_HAS_DIRECTION" if wins >= 7 and p < DECISION["one_sided_alpha"] else "NO_PROVEN_DIRECTION",
+                        "b_wins": wins, "n": n, "weeks": [item[2] for item in chosen],
+                        "one_sided_p": round(p, 6)}
         elif winner not in ("TIE", "MISSING"):
             return {"status": "INCONCLUSIVE_INVALID_WINNER"}
-    eligible.sort()
-    chosen = eligible[:n]
-    if len(chosen) < n:
-        return {"status": "PENDING", "non_tied_weeks": len(chosen), "required": n,
-                "weeks": [row[3] for row in chosen]}
-    wins = sum(row[2] == "B" for row in chosen)
-    p = A.sign_test_one_sided_p(wins, n-wins)
-    return {"status": "B_HAS_DIRECTION" if wins >= 7 and p < DECISION["one_sided_alpha"] else "NO_PROVEN_DIRECTION",
-            "b_wins": wins, "n": n, "weeks": [row[3] for row in chosen],
-            "one_sided_p": round(p, 6)}
+        current += A.DAY * 7
+    return {"status": "PENDING", "non_tied_weeks": len(chosen), "required": n,
+            "weeks": [item[2] for item in chosen]}
+
 
 
 def git_candidates(root: Path, t0: dt.datetime, main_ref: str) -> list[dict]:
-    """Use original first-main packet bytes and their first-parent clocks, never a PR branch."""
+    """Enumerate original Compass packets from canonical main TREE, never a mutable checkout glob."""
     if main_ref not in ("main", "refs/heads/main"):
         raise ValueError("B packet evidence must come from local canonical main")
     out, lo = [], t0 - dt.timedelta(hours=PARAMS["packet_lookback_hours"])
     for day in {lo.date(), t0.date()}:
-        folder = root / PARAMS["packet_dir"] / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}"
-        for p in sorted(folder.glob("CMP-*.json")):
-            rel = p.relative_to(root).as_posix()
-            # Only absent/non-main files are ignored. A changed source is a fatal refusal.
-            exists = subprocess.run(["git", "-C", str(root), "cat-file", "-e",
-                                     "refs/heads/main:" + rel], capture_output=True)
-            if exists.returncode != 0:
+        folder_rel = (Path(PARAMS["packet_dir"]) / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}").as_posix()
+        listing = subprocess.run(
+            ["git", "-C", str(root), "ls-tree", "-r", "--name-only",
+             "refs/heads/main", "--", folder_rel],
+            check=True, capture_output=True, text=True).stdout
+        for rel in sorted(set(listing.splitlines())):
+            if not rel.startswith(folder_rel + "/"):
                 continue
+            filename = Path(rel).name
+            if not (filename.startswith("CMP-") and filename.endswith(".json")):
+                continue
+            p = root / rel
+            if not p.is_file():
+                raise ValueError("canonical main Compass packet missing from working tree: " + rel)
             proof = A.first_in_main(root, rel)
             if proof["current_main_blob_sha"] != proof["first_main_blob_sha"]:
                 raise ValueError("official packet changed after first-main; refuse B point-in-time selection")
