@@ -42,7 +42,7 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
         policy.parent.mkdir(parents=True)
         policy.write_text(json.dumps({
             "status": "ACTIVE_SHADOW_ONLY",
-            "monthly_hard_stop_usd": 40,
+            "monthly_hard_stop_usd": 50,
             "global_reserve_usd": 4,
             "lane_caps_usd": {"CN_INTERNAL_LONG_HORIZON_SCORER": 1},
         }))
@@ -139,6 +139,37 @@ class CNLongHorizonApiBudgetTests(unittest.TestCase):
                 self.call()
             http.assert_not_called()
             self.assertFalse(self.receipt().exists())
+
+    def test_original_policy_fifty_keeps_cn_stricter_forty_and_one(self):
+        # Use the ACTUAL policy file, not only a hand-written synthetic
+        # fixture. Owner-approved account cap USD50 must not disable CN.
+        source = Path(__file__).resolve().parents[2] / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json"
+        policy = json.loads(source.read_text())
+        self.assertEqual(policy["monthly_hard_stop_usd"], 50)
+        self.assertEqual(policy["global_reserve_usd"], 4)
+        self.assertEqual(policy["lane_caps_usd"]["CN_INTERNAL_LONG_HORIZON_SCORER"], 1)
+        dest = self.root / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json"
+        dest.write_bytes(source.read_bytes())
+        with patch("subprocess.run",return_value=subprocess.CompletedProcess([],0)) as guard, \\
+             patch("urllib.request.urlopen") as api:
+            cn._cost_preflight(self.root, "gpt-5.6-terra", b"offline source-bound prompt", 5000)
+            api.assert_not_called()
+            self.assertEqual(guard.call_count, 2)
+            cmd1,cmd2=[c.args[0] for c in guard.call_args_list]
+            self.assertEqual(cmd1[cmd1.index("--hard-stop-usd")+1], "40")
+            self.assertEqual(cmd2[cmd2.index("--cap-usd")+1], "1")
+            self.assertIn("--reserve-usd",cmd1)
+
+    def test_old_account_policy_forty_is_stale_and_fails_closed(self):
+        path = self.root / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json"
+        policy = json.loads(path.read_text())
+        policy["monthly_hard_stop_usd"]=40
+        path.write_text(json.dumps(policy))
+        with patch("subprocess.run") as guard, patch("urllib.request.urlopen") as api:
+            with self.assertRaisesRegex(RuntimeError,"CN_API_POLICY_UNVERIFIED"):
+                self.call()
+            guard.assert_not_called()
+            api.assert_not_called()
 
     def test_source_budget_policy_must_match_governed_contract(self):
         path = self.root / "research/api_agent/API_INTELLIGENCE_POLICY_v2.json"
