@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    "tests/cycle_navigator/test_cn_workflow_forbidden_guards.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-cee2d5dccac0539f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "ci-fail-cn-forbidden-checks-grep-errors-2138",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-interactive exact-head release. Safepoint receipt #1156/6879837574. Claude APPROVE Bridge #173/6879718913. No Vault access or dispatch.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "12e558667c66d897f0e8fe74392ab4318c3061d6",
+    ".github/workflows/cycle-navigator-pages.yml": "db5e8555f0cd2d525e31014af5ae59eca433c6b3",
+    "tests/cycle_navigator/test_cn_workflow_forbidden_guards.py": "431b83e1dd7ab58f15ed89a7bf653629f6769301"
+  },
+  "source_commit_sha": "cee2d5dccac0539f276336301123e3080593a8fe",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-14T10:35:30-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(ci): fail CN forbidden checks on grep errors (#2138)"
+}
