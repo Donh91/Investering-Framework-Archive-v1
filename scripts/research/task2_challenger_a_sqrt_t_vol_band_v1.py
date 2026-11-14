@@ -414,6 +414,12 @@ def fixed_horizon_decision(weekly: list[dict]) -> dict:
         return {"status": "INCONCLUSIVE_DUPLICATE_WEEK", "weeks": expected, "p_value": None}
     if len(weekly) < 8 or len(by_week) < 8:
         return {"status": "PENDING_FIXED_HORIZON", "weeks": expected, "p_value": None}
+    # Require every scheduled BTC/ETH calendar day to have both original A and
+    # CN source-issued ranges and a complete hourly outcome (14 paired/day/week).
+    # Counting a week based on one surviving easy row would bias the sign test.
+    if any(by_week[w].get("paired_rows") != 14 or by_week[w].get("matured_rows") != 14
+           for w in expected):
+        return {"status": "INCONCLUSIVE_INCOMPLETE_PAIRED_WEEK", "weeks": expected, "p_value": None}
     outcomes = [by_week[w].get("week_winner_interval_score") for w in expected]
     if any(x not in ("A", "CN") for x in outcomes):
         return {"status": "INCONCLUSIVE_MISSING_OR_TIED_WEEK", "weeks": expected, "p_value": None}
