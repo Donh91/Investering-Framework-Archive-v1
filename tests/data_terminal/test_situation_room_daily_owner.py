@@ -270,6 +270,72 @@ class SituationRoomOwnerTests(unittest.TestCase):
             self.assertFalse(rows[0]["shared_row_tournament_eligible"])
 
 
+    def test_forward_intake_is_append_only_new_family_and_not_n50(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            receipt = {
+                "source_id": "TREASURY", "role": "PRIMARY", "status": "PASS",
+                "retrieval_end_utc": "2026-11-16T10:00:06Z",
+                "sha256": "a" * 64,
+                "url": "https://home.treasury.gov/news/press-releases/test",
+            }
+            event = {
+                "event_id": "EVT_FRESH", "event_family_id": "EVF_NEW",
+                "verification_status": "PRIMARY_SOURCE_VERIFIED",
+                "detection_time_utc": "2026-11-16T10:00:00Z",
+                "event_time_utc": "2026-11-16T09:00:00Z",
+                "event_time_precision": "TIMESTAMP",
+                "source_receipts": [receipt],
+            }
+            daily = {
+                "observation_date_utc": "2026-11-16", "detection_time_utc": "2026-11-16T10:00:00Z",
+                "daily_result": "MATERIAL_CATALYSTS_FOUND", "run_status": "PASS",
+                "run_id": "R1", "events": [event],
+            }
+            owner.write_outputs(root, daily)
+            intake = root / "NEWSFT_PROSPECTIVE_INTAKE.jsonl"
+            rows = [json.loads(line) for line in intake.read_text().splitlines()]
+            self.assertEqual(len(rows), 1)
+            row = rows[0]
+            self.assertEqual(row["first_local_evidence_usable_utc"], "2026-11-16T10:00:06Z")
+            self.assertEqual(row["event_family_id"], "EVF_NEW")
+            self.assertEqual(row["provider_first_known_utc"], "UNKNOWN")
+            self.assertFalse(row["admitted_to_N50"])
+            self.assertFalse(row["outcome_scoring_authorized"])
+            self.assertIsNone(row["B2_NEWS_EVIDENCE_CARD"])
+            # Re-running same evidence and later same-family event cannot expand N.
+            daily["observation_date_utc"] = "2026-11-17"
+            daily["run_id"] = "R2"
+            daily["events"] = [{**event, "event_id": "EVT_SAME_FAMILY"}]
+            owner.write_outputs(root, daily)
+            self.assertEqual(len(intake.read_text().splitlines()), 1)
+
+    def test_forward_intake_drops_unknown_clock_unverified_and_future_claims(self):
+        base = {
+            "event_id": "EVT_X", "event_family_id": "EVF_X",
+            "verification_status": "PRIMARY_SOURCE_VERIFIED",
+            "detection_time_utc": "2026-11-16T10:00:00Z",
+            "event_time_utc": "2026-11-16T09:00:00Z",
+            "event_time_precision": "TIMESTAMP",
+            "source_receipts": [{
+                "source_id": "TREASURY", "role": "PRIMARY", "status": "PASS",
+                "sha256": "a" * 64,
+                "url": "https://home.treasury.gov/news/press-releases/test",
+                "retrieval_end_utc": "2026-11-16T10:00:06Z",
+            }],
+        }
+        result = {"detection_time_utc": "2026-11-16T10:00:00Z",
+                  "run_id": "R1", "observation_date_utc": "2026-11-16"}
+        self.assertIsNotNone(owner.prospective_intake_for_verified_event(base, result))
+        self.assertIsNone(owner.prospective_intake_for_verified_event(
+            {**base, "verification_status": "DISCOVERY_UNVERIFIED"}, result))
+        self.assertIsNone(owner.prospective_intake_for_verified_event(
+            {**base, "source_receipts": [{**base["source_receipts"][0], "retrieval_end_utc": None}]}, result))
+        self.assertIsNone(owner.prospective_intake_for_verified_event(
+            {**base, "event_time_utc": "2026-11-18T09:00:00Z"}, result))
+        self.assertIsNone(owner.prospective_intake_for_verified_event(
+            {**base, "detection_time_utc": "2026-11-15T10:00:00Z"}, result))
+
     def test_midterm_headline_is_not_lost_before_article_fetch(self):
         text = "Democrats win House and Senate in US midterm elections"
         self.assertTrue(owner.relevant(text))
