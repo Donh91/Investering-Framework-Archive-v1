@@ -63,7 +63,12 @@ class Repo:
             return {"status": "OK", "bull": v[0], "bear": v[1]} if v else {"status": "UNAVAILABLE", "bull": None, "bear": None}
         doc = {"contract": "OFFICIAL_DAILY_COMPASS_v1", "issued_at_utc": issued.strftime("%Y-%m-%dT%H:%M:%SZ"),
                "data_status": "OK", "compass_id": (name or f"CMP-{issued:%Y%m%d}-{issued:%H%M%S}.json").removesuffix(".json"),
-               "source_bindings": {"auto_market_state": {"packet_sha256": "source-hash-fixture"}},
+               "source_bindings": {"auto_market_state": {"packet_sha256": "source-hash-fixture",
+                   "freshness": {"status": "PASS", "checks": [
+                       {"lane": "pointer_freshness", "status": "PASS",
+                        "timestamp": issued.strftime("%Y-%m-%dT%H:%M:%SZ"), "max_age_seconds": 10800},
+                       {"lane": "source_observation_freshness", "status": "PASS",
+                        "timestamp": issued.strftime("%Y-%m-%dT%H:%M:%SZ"), "max_age_seconds": 10800}]} }},
                "bull_bear_scale": {"contract": contract, "semantics": semantics,
                                    "horizons": {"1_3d": h(b13), "5_7d": h(b57), "2_3w": h(None)}},
                "horizons": {"NEXT_1_3D": {"expected_direction": d13}, "NEXT_5_7D": {"expected_direction": d57}}}
@@ -410,6 +415,65 @@ class KompasLivePathTests(unittest.TestCase):
         self.assertEqual({e["deviation"]["state"] for e in a["events"]}, {"NO_ZONE"})
         self.assertFalse([e for e in a["events"] if e["kind"] == "ZONE_BREAK"])
 
+
+
+    def test_original_source_expiry_preempts_24h_packet_window(self):
+        self.repo.prereg()
+        packet = self.repo.packet(NOW - H)
+        self.assertEqual(self.build()["status"], "OK")
+        until = self.build()["official_source_valid_until_utc"]
+        self.assertEqual(until, "2026-11-13T20:00:00Z")
+        # Fresh hourly and <24h since issuance are NOT sufficient after original source TTL.
+        self.repo.hourly(dt.datetime(2026, 10, 13, tzinfo=UTC), NOW + 3 * H)
+        expired = self.build(now=NOW + 2 * H)
+        self.assertEqual(expired["status"], "UNAVAILABLE")
+        self.assertEqual(expired["reasons"], ["OFFICIAL_POINTER_SOURCE_EXPIRED"])
+        self.assertIsNone(expired["official_source_valid_until_utc"])
+        self.assertEqual(self.build(now=NOW + H + dt.timedelta(minutes=59))["status"], "OK")
+
+    def test_original_source_missing_freshness_rejects_signed_pointer_too(self):
+        self.repo.prereg()
+        packet = self.repo.packet(NOW - H)
+        source = json.loads(packet.read_text())
+        del source["source_bindings"]["auto_market_state"]["freshness"]
+        source["compass_sha256"] = K.digest(source)
+        packet.write_text(json.dumps(source), encoding="utf-8")
+        pointer_file = self.repo.root / K.OFFICIAL_POINTER_PATH
+        pointer = json.loads(pointer_file.read_text())
+        pointer["compass_sha256"] = source["compass_sha256"]
+        pointer["compass_content_sha256"] = K.sha256_bytes(packet.read_bytes())
+        public_path = self.repo.root / pointer["public_projection_path"]
+        public = json.loads(public_path.read_text())
+        public["source_compass_sha256"] = source["compass_sha256"]
+        public["projection_sha256"] = K.digest({k:v for k,v in public.items() if k != "projection_sha256"})
+        public_path.write_text(json.dumps(public))
+        pointer["public_projection_sha256"] = public["projection_sha256"]
+        pointer["public_projection_content_sha256"] = K.sha256_bytes(public_path.read_bytes())
+        pointer_file.write_text(json.dumps(pointer))
+        failed = self.build()
+        self.assertEqual(failed["status"], "UNAVAILABLE")
+        self.assertEqual(failed["reasons"], ["OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID"])
+
+    def test_one_shorter_source_check_stops_website_even_if_another_survives(self):
+        self.repo.prereg()
+        packet = self.repo.packet(NOW - H)
+        d = json.loads(packet.read_text())
+        d["source_bindings"]["auto_market_state"]["freshness"]["checks"][0]["max_age_seconds"] = 3600
+        d["compass_sha256"] = K.digest({k:v for k,v in d.items() if k != "compass_sha256"})
+        packet.write_text(json.dumps(d))
+        pointer_file = self.repo.root / K.OFFICIAL_POINTER_PATH
+        pointer = json.loads(pointer_file.read_text())
+        pointer["compass_sha256"] = d["compass_sha256"]
+        pointer["compass_content_sha256"] = K.sha256_bytes(packet.read_bytes())
+        public_path = self.repo.root / pointer["public_projection_path"]
+        public = json.loads(public_path.read_text())
+        public["source_compass_sha256"] = d["compass_sha256"]
+        public["projection_sha256"] = K.digest({k:v for k,v in public.items() if k != "projection_sha256"})
+        public_path.write_text(json.dumps(public))
+        pointer["public_projection_sha256"] = public["projection_sha256"]
+        pointer["public_projection_content_sha256"] = K.sha256_bytes(public_path.read_bytes())
+        pointer_file.write_text(json.dumps(pointer))
+        self.assertEqual(self.build()["reasons"], ["OFFICIAL_POINTER_SOURCE_EXPIRED"])
 
     def test_pointer_required_even_with_historical_valid_packet(self):
         self.repo.prereg()
