@@ -88,8 +88,16 @@ class ScientificAdmissionLifecycleTest(unittest.TestCase):
             self.assertEqual(admissions["status_counts"]["QUALIFIED_FOR_FORWARD_TEST"], 1)
             self.assertEqual(admissions["status_counts"]["SEMANTIC_DUPLICATE_KEEP_SHADOW"], 1)
             manifest = json.loads((repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json").read_text())
-            self.assertEqual(manifest["contract"], "EXPERIMENT_DISPATCH_MANIFEST_v2_SCIENTIFIC_ADMISSION")
-            self.assertTrue(all(row["candidate_id"] for row in manifest["requests"]))
+            self.assertEqual(manifest["contract"], "EXPERIMENT_DISPATCH_MANIFEST_v3_PAGED_SCIENTIFIC_ADMISSION")
+            self.assertEqual(manifest["request_count"], sum(p["request_count"] for p in manifest["pages"]))
+            self.assertTrue(manifest["pages"])
+            all_requests = []
+            for page in manifest["pages"]:
+                chunk = json.loads((repo / page["path"]).read_text())
+                self.assertEqual(chunk["contract"], "EXPERIMENT_DISPATCH_PAGE_v3")
+                self.assertEqual(chunk["request_count"], page["request_count"])
+                all_requests.extend(chunk["requests"])
+            self.assertTrue(all(row["candidate_id"] for row in all_requests))
 
     def test_scientific_admission_writer_does_not_recreate_same_candidate_across_months(self):
         with tempfile.TemporaryDirectory() as td:
