@@ -78,8 +78,14 @@ export function promoteHtml(input){
 export function promoteUnifiedHtml(input){
  if(typeof input!=='string'||input.length<2000)
   throw Error('UNIFIED_PROMOTION_SOURCE_MISSING');
+ const required=[
+  'variant-panel','chart','forecast','actual','proof-explorer','compass-pro',
+  'premium-now-action','premium-risk-steps','pro-reentry-state',
   'cn-forward-source-status','official-path-view','premium-path-rail',
   'cn-live-forecast'
+ ];
+ for(const id of required){
+  const n=input.split('id="'+id+'"').length-1;
   if(n!==1)throw Error('UNIFIED_PROMOTION_SINGLETON_MISSING:'+id+':'+n);
  }
  for(const legacy of ['official-product-pilot','official-pilot-action',

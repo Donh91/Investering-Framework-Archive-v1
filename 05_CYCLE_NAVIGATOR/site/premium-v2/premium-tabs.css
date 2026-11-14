@@ -1021,6 +1021,9 @@ body.premium-next.cn-tabbed-ui #compass-pro:not(:has(.cn-source-summary[data-off
 .cn-challenger-a-link{display:inline-flex;align-items:center;min-height:44px;color:#0c537f;
  text-underline-offset:4px;font-size:12px;font-weight:700;max-width:100%}
 .cn-challenger-a-provenance{font-family:ui-monospace,monospace;overflow-wrap:anywhere;font-size:10px;color:#536a82}
+@media(max-width:740px){.cn-challenger-a-assets{grid-template-columns:1fr}}
+@media(max-width:440px){.cn-tabbed-ui .cn-challenger-a{padding:17px 13px;border-radius:12px}
+ .cn-challenger-a-table{font-size:10px}.cn-challenger-a-asset{padding:12px}}
 /* CN SITE v2.8 · Kompas live (design v7, Challenger B/A trial) in the Kompas grid. Presentation only.
  * Directly after the approved first fold (status → AFVENT → risk → horizons → next gate). DOM order
  * equals visual order: the card follows the risk card in the DOM and precedes swing, rotation, BTC days

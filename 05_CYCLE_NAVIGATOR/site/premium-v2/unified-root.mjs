@@ -133,6 +133,9 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<strong id="cn-overview-'+id+'-direction">Afventer data</strong></div>'+
     '<span class="cn-horizon-position" id="cn-overview-'+id+'-position">—</span></article>';
   const btcDays='<section class="cn-btc-days" id="cn-btc-days" aria-labelledby="cn-btc-days-heading" data-available="false">'+
+    '<h3 id="cn-btc-days-heading">BTC · de næste tre dage</h3>'+
+    '<div id="cn-btc-days-rows" class="cn-btc-days-rows" role="list"></div>'+
+    '<small id="cn-btc-days-caption">Kontrollerer original prognose …</small></section>';
   // v2.8 Kompas live (design v7). Static Danish shell only; every number is painted from
   // data/kompas-live.json (server-side KOMPAS_LIVE_PATH_v1) by root-compass-pro.mjs. The
   // tilted line is Challenger B (forsøg), the frames Challenger A (forsøg): no Kompas probability.
@@ -165,6 +168,9 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<p class="cn-live-foot" id="cn-live-foot">Statistisk forsøgsvisning, ikke en officiel prognose. '+
     'Kompas’ bull/bear er evidenspoint, ikke sandsynligheder. Visningen er ikke en købs- eller salgsanbefaling.</p>'+
     '</section>';
+  const horizonStrip='<section class="cn-overview" aria-labelledby="cn-overview-heading">'+
+    '<div class="cn-overview-heading"><h3 id="cn-overview-heading">Kompasforløb</h3>'+
+    '<small id="cn-overview-subtitle">Tre selvstændige prognosehorisonter</small></div>'+
     '<p class="cn-overview-asof" id="cn-overview-asof" role="status">Kontrollerer udstedelsestidspunkt …</p>'+
     '<div class="cn-overview-cards">'+
     horizonExtra('h12','Aktuelt momentum')+
@@ -246,7 +252,13 @@ export function buildUnifiedRootHtml(graphSource,proSource){
       '<p id="cn-risk-quick-brief" class="cn-risk-quick-brief">Afventer risikovurdering.</p>'+
       '<details class="cn-risk-more"><summary id="cn-risk-more-title">Læs risikovurderingen</summary>'+
       '<div class="cn-risk-quick-guidance">'+
+      '<p><small id="cn-risk-quick-meaning-label">HVAD BETYDER DET?</small><span id="cn-risk-quick-meaning">Afventer opdateret risikovurdering</span></p>'+
+      '<p><small id="cn-risk-quick-action-label">SÅDAN FORHOLDER DU DIG</small><span id="cn-risk-quick-action">Afvent opdateret Kompas før nye beslutninger</span></p>'+
+      '<div class="cn-risk-quick-foot"><span id="cn-risk-quick-quality">Evidenskvalitet: ukendt</span><span id="cn-risk-quick-onset">Starttidspunkt: ikke dokumenteret</span></div>'+
       '</div></details></section>'+liveForecast+swingOverview+rotationPeek+btcDays+
+      // ONE place for explanation, longer horizons and sources (presentation only;
+      // every inner disclosure, id and order is unchanged and still collapsed).
+      '<details class="cn-explain"><summary id="cn-explain-title">Alle 14 horisonter, forklaring og kilder</summary><div class="cn-explain-body">'+
       '<details class="cn-source-technical"><summary id="cn-source-technical-label">Udgivelse og kildegrundlag</summary>'+
       '<p id="pro-source-status" class="cn-pro-source" role="status">Kontrollerer officiel kilde og gyldighed…</p></details>'+
       '<p id="cn-short-meaning" class="cn-short-meaning">12 timer viser målt momentum. En selvstændig 24-timersprognose er ikke udstedt.</p>'+
@@ -308,7 +320,11 @@ export function buildUnifiedRootHtml(graphSource,proSource){
   // The source ports remain available as nonpromoted historical rollback.
   for(const x of [
     'id="variant-panel"','id="chart"','id="forecast"','id="actual"',
+    'id="compass-pro"','id="premium-now-action"','id="pro-guidance"',
+    'id="premium-risk-steps"','id="pro-forward-rows"',
+    'id="official-path-view"','id="premium-path-rail"',
     'id="proof-explorer"','id="cn-live-forecast"'
+  ])unique(html,x,'singleton '+x);
   // DOM order = visual order for the live card (WCAG 1.3.2 / 2.4.3). It is rendered directly after
   // the first fold (decision, risk, horizons, next gate) and before swing, rotation, BTC days and the
   // accordion, so it must sit after every block shown above it and before every block shown below it.
@@ -317,6 +333,9 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     if(html.indexOf(above)>liveAt)throw Error('CN_UNIFIED_ROOT_LIVE_FORECAST_ORDER:'+above);
   for(const below of ['id="swing-rotation-overview"','id="cn-rotation-heading"','id="cn-btc-days"','<details class="cn-explain">','<details class="cn-pro-more">'])
     if(html.indexOf(below)<liveAt)throw Error('CN_UNIFIED_ROOT_LIVE_FORECAST_ORDER:'+below);
+  for(const x of [
+    'id="official-product-pilot"','id="official-pilot-action"',
+    'id="official-pilot-horizons"','id="official-pilot-rotation"',
     'id="official-pilot-path"','id="official-path-chart"'
   ])if(html.includes(x))throw Error('CN_UNIFIED_ROOT_LEGACY_DUPLICATE:'+x);
   // The original B root shipped anchor CSS for the now-retired legacy pilot.

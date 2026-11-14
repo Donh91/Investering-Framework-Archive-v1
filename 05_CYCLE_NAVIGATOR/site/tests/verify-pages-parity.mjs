@@ -27,7 +27,13 @@ const canonicalFiles=[
   'frozen-week-chart.js',
   'frozen-week-chart.css',
   'data/latest.json',
+  'data/compass.json',
+  'data/compass-event.json',
+  'data/publication-lineage.json',
   'data/kompas-live.json',
+  'graph-history/index.html'
+];
+const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 /**
  * A valid public history must have both a real timeline and renderer.
  * If the optional builder failed, only an explicit UNAVAILABLE status page
