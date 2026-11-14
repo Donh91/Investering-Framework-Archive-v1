@@ -256,7 +256,7 @@ def git_candidates(root: Path, t0: dt.datetime, main_ref: str) -> list[dict]:
         folder_rel = (Path(PARAMS["packet_dir"]) / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}").as_posix()
         listing = subprocess.run(
             # A current-tree census overlooks a source deleted after publication.
-            ["git", "-C", str(root), "log", "--first-parent", "-m",
+            ["git", "-C", str(root), "log", "--first-parent", "--diff-merges=first-parent", "--no-renames",
              "--diff-filter=A", "--name-only", "--format=",
              "refs/heads/main", "--", folder_rel],
             check=True, capture_output=True, text=True).stdout

@@ -258,6 +258,72 @@ class ChallengerBTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "missing from working tree"):
                 B.git_candidates(root, self.t0, "main")
 
+
+    def test_merge_added_then_deleted_packet_under_combined_diff_config(self):
+        """A merge-added packet cannot disappear under caller Git config."""
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def git(*args):
+                return subprocess.run(["git", "-C", str(root), *args],
+                                      check=True, capture_output=True, text=True)
+            git("init", "-b", "main")
+            git("config", "user.name", "research-test")
+            git("config", "user.email", "research-test@example.invalid")
+            (root / "base").write_text("base")
+            git("add", "base")
+            git("commit", "-m", "base")
+            git("checkout", "-b", "feature")
+            day = self.t0.date()
+            rel = (Path(B.PARAMS["packet_dir"]) / f"{day:%Y}" / f"{day:%m}" /
+                   f"{day:%d}" / "CMP-merge-then-delete.json").as_posix()
+            p = root / rel
+            p.parent.mkdir(parents=True)
+            p.write_text('{"source":"original"}', encoding="utf-8")
+            git("add", "--", rel)
+            git("commit", "-m", "add on feature")
+            git("checkout", "main")
+            (root / "base").write_text("diverged")
+            git("commit", "-am", "main diverges")
+            git("merge", "--no-ff", "feature", "-m", "merge packet")
+            git("rm", "--", rel)
+            git("commit", "-m", "delete original")
+            git("config", "log.diffMerges", "combined")
+            with self.assertRaisesRegex(ValueError, "missing from working tree"):
+                B.git_candidates(root, self.t0, "main")
+
+    def test_packet_renamed_into_canonical_path_is_not_omitted(self):
+        """Rename detection must not hide an original CMP path."""
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def git(*args):
+                return subprocess.run(["git", "-C", str(root), *args],
+                                      check=True, capture_output=True, text=True)
+            git("init", "-b", "main")
+            git("config", "user.name", "research-test")
+            git("config", "user.email", "research-test@example.invalid")
+            day = self.t0.date()
+            folder = (Path(B.PARAMS["packet_dir"]) / f"{day:%Y}" /
+                      f"{day:%m}" / f"{day:%d}")
+            (root / folder).mkdir(parents=True)
+            draft = (folder / "draft.json").as_posix()
+            issued = (folder / "CMP-renamed.json").as_posix()
+            (root / draft).write_text('{"source":"original"}', encoding="utf-8")
+            git("add", "--", draft)
+            git("commit", "-m", "draft")
+            git("mv", "--", draft, issued)
+            git("commit", "-m", "publish original")
+            git("config", "log.follow", "true")
+            candidates = B.git_candidates(root, self.t0, "main")
+            self.assertEqual([c["path"] for c in candidates], [issued])
+            git("rm", "--", issued)
+            git("commit", "-m", "delete original")
+            with self.assertRaisesRegex(ValueError, "missing from working tree"):
+                B.git_candidates(root, self.t0, "main")
+
     def test_shallow_history_is_fatal_before_packet_selection(self):
         from unittest.mock import Mock, patch
         with patch.object(B.subprocess, "run",
