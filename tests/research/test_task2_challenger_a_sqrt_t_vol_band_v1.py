@@ -206,7 +206,7 @@ class ChallengerATest(unittest.TestCase):
     def test_one_fixed_confirmation_at_eight_weeks_no_optional_stopping(self):
         weeks=[f"{(self.monday+k*7*A.DAY).isocalendar().year}-W{(self.monday+k*7*A.DAY).isocalendar().week:02d}" for k in range(8)]
         self.assertEqual(weeks[-1],"2027-W01")
-        data=[{"week":w,"week_winner_interval_score":"A"} for w in weeks]
+        data=[{"week":w,"week_winner_interval_score":"A","paired_rows":14,"matured_rows":14} for w in weeks]
         self.assertEqual(A.fixed_horizon_decision(data[:7])["status"],"PENDING_FIXED_HORIZON")
         x=A.fixed_horizon_decision(data)
         self.assertEqual(x["status"],"A_PASSES_SHADOW_CONFIRMATORY")
@@ -221,6 +221,12 @@ class ChallengerATest(unittest.TestCase):
         # Later losses never enter the single scheduled 8-cluster test.
         self.assertEqual(A.fixed_horizon_decision(data)["status"],"A_PASSES_SHADOW_CONFIRMATORY")
         self.assertEqual(A.sign_test_p(7,1),.0703125)
+        missing=copy.deepcopy(data[:8])
+        missing[3]["paired_rows"]=13
+        self.assertEqual(A.fixed_horizon_decision(missing)["status"],"INCONCLUSIVE_INCOMPLETE_PAIRED_WEEK")
+        missing[3]["paired_rows"]=14
+        missing[4]["matured_rows"]=13
+        self.assertEqual(A.fixed_horizon_decision(missing)["status"],"INCONCLUSIVE_INCOMPLETE_PAIRED_WEEK")
         self.assertEqual(A.fixed_horizon_decision(data+data[:1])["status"],"INCONCLUSIVE_DUPLICATE_WEEK")
 
     @staticmethod
