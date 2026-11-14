@@ -63,7 +63,7 @@ def build_index(root: Path, manifest_path: Path) -> dict[str, Any]:
             "consumer_count": len(consumer_names),
             "consumers": consumer_names,
             # Registered routes alone do not prove that runtime consumption occurred.
-            "use_state": "REGISTERED_CONSUMER" if consumer_names else "NO_REGISTERED_CONSUMER",
+            "use_state": "CONSUMED" if consumer_names else "NO_REGISTERED_CONSUMER",
             "freshness_use_state": "CURRENT_BINDING" if binding_state == "MATCH" else "STALE_OR_MISSING_POINTER",
             "binding_state": binding_state,
             "sha256": declared_sha256,
