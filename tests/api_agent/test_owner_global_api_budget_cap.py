@@ -221,13 +221,26 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertIn("MAX_APPROVAL_ID_OR_EFFORT_INVALID",
                       str(state["cost_evidence_errors"]))
 
-    def test_canonical_ledger_keeps_existing_40_4_lanes_live(self):
-        # Run against REAL canonical receipts and canonical persistent ledger.
-        # Synthetic fixtures hid the rejected-P1 USD10 reservation regression.
+    def test_canonical_ledger_reserves_w46_unknown_and_respects_budget_hold(self):
+        # Canonical W46 liability is not a provider bill or authority to retry.
+        # Normal spend may rise later; an earned BLOCKED state is allowed.
+        from scripts.api_agent.check_monthly_cost_guard import pending_risk
+        canonical = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
+        ledger = json.loads(canonical.read_text())
+        target = [row for row in ledger["unresolved"] if row["run_id"] == "42587617928"]
+        self.assertEqual(len(target), 1)
+        self.assertEqual(target[0]["status"], "POST_OUTCOME_UNKNOWN")
+        self.assertEqual(target[0]["lower_usd"], 0)
+        self.assertEqual(target[0]["upper_usd"], 3)
+        low, high, count = pending_risk(canonical)
+        self.assertEqual(low, 0)
+        self.assertEqual(high, 25)
+        self.assertEqual(count, 4)
+
         cmd = [
             sys.executable, str(SCRIPT),
             "--receipt-root", str(ROOT / "research/api_agent/outputs"),
-            "--liability-ledger", str(ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"),
+            "--liability-ledger", str(canonical),
             "--hard-stop-usd", "40", "--reserve-usd", "4",
             "--new-request-upper-usd", "0",
         ]
@@ -235,11 +248,16 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                                 check=False, timeout=25, cwd=ROOT)
         self.assertTrue(result.stdout.strip(), result.stderr)
         state = json.loads(result.stdout)
-        self.assertEqual(result.returncode, 0, state)
-        self.assertEqual(state["status"], "PASS", state)
-        self.assertEqual(state["pending_liability_upper_usd"], 22.0)
-        self.assertGreaterEqual(state["remaining_usd"], 4.0)
+        self.assertEqual(state["pending_liability_upper_usd"], 25.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
+        self.assertEqual(state["reserve_usd"], 4.0)
+        if result.returncode == 0:
+            self.assertEqual(state["status"], "PASS")
+            self.assertGreaterEqual(state["remaining_usd"], 4.0)
+        else:
+            self.assertEqual(state["status"], "BLOCKED")
+            # Do not weaken the guard just because ongoing receipts exhaust 40/4.
+            self.assertTrue(state["cost_evidence_errors"] or state["remaining_usd"] < 4)
 
     def test_native_caller_caps_above_40_only_in_hard_disabled_astra_v2_job(self):
         import re
