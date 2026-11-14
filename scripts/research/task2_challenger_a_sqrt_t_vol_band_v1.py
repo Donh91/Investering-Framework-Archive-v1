@@ -27,6 +27,7 @@ import datetime as dt
 import hashlib
 import json
 import math
+import re
 import subprocess
 from pathlib import Path
 from typing import Iterable
@@ -65,6 +66,8 @@ SEED_Z = {
 HOURLY_DIR = "03_DAILY_CAPTURE_LOGS/hourly"
 FREEZE_PATH = "05_CYCLE_NAVIGATOR/weekly/{year}/W{week:02d}/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
 ISSUANCE_PATH = "06_RESEARCH_LAB/task2_challenger_a/issued/{year}/W{week:02d}/CHALLENGER_A_FROZEN_ISSUANCE.json"
+SCORE_PATH = "06_RESEARCH_LAB/task2_challenger_a/scored/{year}/W{week:02d}/CHALLENGER_A_FIRST_MATURE_SCORE.json"
+SCORE_FIRST_MATURITY_GRACE = dt.timedelta(hours=48)  # source availability bound, not a hypothesis look
 HOUR = dt.timedelta(hours=1)
 DAY = dt.timedelta(days=1)
 COLS = {"BTC": ("btc_close", "btc_high", "btc_low"), "ETH": ("eth_close", "eth_high", "eth_low")}
@@ -430,6 +433,107 @@ def read_frozen_main_issuance(root: Path, year: int, week: int) -> tuple[dict, d
     return doc, proof
 
 
+def read_first_main_weekly_score(root: Path, year: int, week: int) -> tuple[dict, dict]:
+    """Read ONLY the first committed weekly score on full main first-parent history.
+
+    Re-scored/revised working files, an edit-then-restore history, missing
+    first-main lineage or post-grace publication cannot produce a valid win.
+    Git committer time is an availability proxy, never HTTP first-known proof.
+    """
+    rel = SCORE_PATH.format(year=year, week=week)
+    proof = first_in_main(root, rel)
+    path = root / rel
+    try:
+        first_bytes = subprocess.run(
+            ["git", "-C", str(root), "show", proof["first_main_commit"] + ":" + rel],
+            capture_output=True, check=True).stdout
+        now_bytes = path.read_bytes()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise ValueError("first-main score inaccessible") from exc
+    if now_bytes != first_bytes or proof["current_main_blob_sha"] != proof["first_main_blob_sha"]:
+        raise ValueError("first-main score mutated: later backfill cannot rewrite confirmatory evidence")
+    try:
+        row = json.loads(first_bytes)
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise ValueError("invalid immutable score JSON") from exc
+    expected_week = f"{year}-W{week:02d}"
+    if (row.get("contract") != CONTRACT + "_SCORE" or row.get("week") != expected_week
+            or row.get("decision_status") != "SHADOW_ONLY_NO_PROMOTION"
+            or row.get("first_http_delivery") != "UNKNOWN"):
+        raise ValueError("score lacks canonical research-only provenance")
+    issued, issue_proof = read_frozen_main_issuance(root, year, week)
+    if (row.get("issuance_sha256") != issued["issuance_sha256"]
+            or row.get("issuance_first_main_utc") != issue_proof["issuance_first_main_utc"]):
+        raise ValueError("score does not bind the original first-main issuance")
+    attested = row.get("first_main_issuance")
+    if not isinstance(attested, dict) or any(
+        attested.get(key) != issue_proof[key] for key in
+        ("first_main_commit", "first_main_blob_sha", "issuance_first_main_utc")
+    ):
+        raise ValueError("score's issuance proof was replaced or omitted")
+    paired = row.get("paired_rows")
+    winner = row.get("week_winner_interval_score")
+    if (type(paired) is not int or not 0 <= paired <= 14
+            or winner not in ("A", "CN", "TIE", "MISSING")):
+        raise ValueError("unusable first-main score result")
+    maturity = week_monday(year, week) + 7 * DAY
+    first_clock = utc(proof["first_main_utc"])
+    if first_clock < maturity:
+        raise ValueError("score was committed before complete ISO week matured")
+    # A first-published score after the frozen 48h opportunity cannot be
+    # admitted as a retrospectively backfilled valid week. Keep its provenance
+    # but force this week to MISSING regardless of later CSV improvements.
+    accepted = first_clock <= maturity + SCORE_FIRST_MATURITY_GRACE
+    result = dict(row)
+    if not accepted:
+        result["paired_rows"] = 0
+        result["week_winner_interval_score"] = "MISSING"
+    proof["eligible_first_maturity"] = accepted
+    proof["first_maturity_deadline_utc"] = iso(maturity + SCORE_FIRST_MATURITY_GRACE)
+    return result, proof
+
+
+def confirmatory_decision_from_main(root: Path, through_week: str) -> dict:
+    """Only first-main weekly scores may enter the pre-registered sign test.
+
+    Every intervening week must carry an immutable first-maturity score,
+    including explicit MISSING results. Absence is not silently skipped, since
+    a later backfill could otherwise insert a prior week into the first eight.
+    """
+    through_y, through_w = _parse_week(through_week)
+    start_y, start_w = _parse_week(DECISION["first_week"])
+    monday = week_monday(start_y, start_w)
+    through = week_monday(through_y, through_w)
+    if through < monday:
+        return {"status": "PENDING", "valid_weeks": 0, "promotion_allowed": False}
+    if (through - monday).days > 7 * 260:
+        raise ValueError("unbounded confirmatory score census")
+    records, source_proofs = [], []
+    while monday <= through:
+        week_string = f"{monday.isocalendar().year}-W{monday.isocalendar().week:02d}"
+        try:
+            row, proof = read_first_main_weekly_score(
+                root, monday.isocalendar().year, monday.isocalendar().week)
+        except ValueError as exc:
+            # A missing or corrupt historical original must not be skipped.
+            return {"status": "INCONCLUSIVE_FIRST_SCORE_SOURCE",
+                    "first_unverified_week": week_string,
+                    "source_error": str(exc),
+                    "verified_weeks_before_gap": len(records),
+                    "promotion_allowed": False}
+        records.append(row)
+        source_proofs.append({"week": week_string,
+                              "first_main_commit": proof["first_main_commit"],
+                              "first_main_blob_sha": proof["first_main_blob_sha"],
+                              "first_main_utc": proof["first_main_utc"],
+                              "eligible_first_maturity": proof["eligible_first_maturity"]})
+        monday += 7 * DAY
+    decision = confirmatory_decision(records)
+    decision["source_class"] = "IMMUTABLE_FIRST_MAIN_WEEKLY_SCORES_ONLY"
+    decision["first_main_score_census"] = source_proofs
+    return decision
+
+
 def confirmatory_decision(weekly: list[dict]) -> dict:
     """One pre-registered look at the FIRST 8 VALID ISO weeks from W47.
 
@@ -437,7 +541,14 @@ def confirmatory_decision(weekly: list[dict]) -> dict:
     Missing/untied weeks are skipped, but no later result may replace one of
     the first eight valid weeks. Duplicate week input invalidates the look.
     """
-    weeks = [r.get("week") for r in weekly]
+    if any(not isinstance(r, dict) or not isinstance(r.get("week"), str) for r in weekly):
+        return {"status": "INCONCLUSIVE_INVALID_WEEK", "promotion_allowed": False}
+    try:
+        for r in weekly:
+            _parse_week(r["week"])
+    except ValueError:
+        return {"status": "INCONCLUSIVE_INVALID_WEEK", "promotion_allowed": False}
+    weeks = [r["week"] for r in weekly]
     if len(weeks) != len(set(weeks)):
         return {"status": "INCONCLUSIVE_DUPLICATE_WEEK", "promotion_allowed": False}
     valid = [r for r in sorted(weekly, key=lambda r: r.get("week") or "")
@@ -459,13 +570,21 @@ def confirmatory_decision(weekly: list[dict]) -> dict:
 
 
 def _parse_week(s: str) -> tuple[int, int]:
-    y, w = s.split("-W")
-    return int(y), int(w)
+    if not isinstance(s, str) or re.fullmatch(r"[0-9]{4}-W[0-9]{2}", s) is None:
+        raise ValueError("ISO week must be canonical YYYY-Www")
+    y, w = int(s[:4]), int(s[6:])
+    try:
+        monday = week_monday(y, w)
+    except ValueError as exc:
+        raise ValueError("invalid ISO week") from exc
+    if f"{monday.isocalendar().year}-W{monday.isocalendar().week:02d}" != s:
+        raise ValueError("noncanonical ISO week")
+    return y, w
 
 
 def main(argv: Iterable[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("command", choices=["issue", "score"])
+    ap.add_argument("command", choices=["issue", "score", "decide"])
     ap.add_argument("--repo-root", default=".")
     ap.add_argument("--week", required=True, help="ISO week, e.g. 2026-W47")
     ap.add_argument("--t0", help="fixture clock only, never accepted as main-origin evidence")
@@ -476,7 +595,11 @@ def main(argv: Iterable[str] | None = None) -> int:
     year, week = _parse_week(a.week)
     monday = week_monday(year, week)
     output = Path(a.output)
-    if a.command == "issue":
+    if a.command == "decide":
+        if a.t0 or a.synthetic_fixture_clock:
+            raise ValueError("confirmatory decision requires immutable main sources")
+        result = confirmatory_decision_from_main(root, a.week)
+    elif a.command == "issue":
         expected_output = (root / ISSUANCE_PATH.format(year=year, week=week)).resolve()
         if not a.synthetic_fixture_clock and output.resolve() != expected_output:
             raise ValueError("canonical issue must only write the dedicated research issuance path")
@@ -500,6 +623,9 @@ def main(argv: Iterable[str] | None = None) -> int:
             raise ValueError("score forbids fixture clocks and post-hoc rebuilding")
         if output.resolve() == (root / ISSUANCE_PATH.format(year=year, week=week)).resolve():
             raise ValueError("score must not overwrite the original frozen issuance")
+        canonical_score = (root / SCORE_PATH.format(year=year, week=week)).resolve()
+        if output.resolve() == canonical_score and canonical_score.is_file():
+            raise ValueError("first-maturity canonical score already exists; no in-place re-score")
         issuance, original = read_frozen_main_issuance(root, year, week)
         bars = load_hourly(root, monday, monday + 7 * DAY)
         freeze_path = root / FREEZE_PATH.format(year=year, week=week)
@@ -510,7 +636,8 @@ def main(argv: Iterable[str] | None = None) -> int:
         result["decision_status"] = "SHADOW_ONLY_NO_PROMOTION"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"contract": result["contract"], "week": result["week"]}))
+    print(json.dumps({"contract": result.get("contract", "TASK2_CHALLENGER_A_IMMUTABLE_DECISION_v1"),
+                      "week": result.get("week", a.week), "status": result.get("status", "WRITTEN")}))
     return 0
 
 
