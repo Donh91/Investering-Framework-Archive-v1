@@ -139,12 +139,62 @@ class ChallengerBTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "canonical main"):
             B.git_candidates(ROOT, self.t0, "feature/late-backfill")
 
+    def _weekly(self, winners, matured=True):
+        result = []
+        for i, winner in enumerate(winners):
+            cal = (self.monday + dt.timedelta(days=7*i)).isocalendar()
+            result.append({"week": f"{cal.year}-W{cal.week:02d}",
+                           "week_winner": winner, "weekly_matured": matured})
+        return result
+
     def test_decision_rule(self):
-        self.assertEqual(B.decide(["B"] * 7 + ["BASE"])["status"], "B_HAS_DIRECTION")
-        self.assertEqual(B.decide(["B"] * 6 + ["BASE"] * 2)["status"], "NO_PROVEN_DIRECTION")
-        self.assertEqual(B.decide(["TIE"] * 5 + ["B"] * 7)["status"], "PENDING")
-        self.assertEqual(B.decide(["B"] + ["BASE"] * 7)["status"], "NO_PROVEN_DIRECTION")
-        self.assertEqual(B.decide(["TIE", "B", "B", "B", "B", "B", "B", "B", "BASE"])["n"], 8)
+        self.assertEqual(B.decide(self._weekly(["B"] * 7 + ["BASE"]))["status"], "B_HAS_DIRECTION")
+        self.assertEqual(B.decide(self._weekly(["B"] * 6 + ["BASE"] * 2))["status"], "NO_PROVEN_DIRECTION")
+        self.assertEqual(B.decide(self._weekly(["TIE"] * 5 + ["B"] * 7))["status"], "PENDING")
+        self.assertEqual(B.decide(self._weekly(["B"] + ["BASE"] * 7))["status"], "NO_PROVEN_DIRECTION")
+        self.assertEqual(B.decide(self._weekly(["TIE", "B", "B", "B", "B", "B", "B", "B", "BASE"]))["n"], 8)
+
+    def test_duplicate_and_nonprospective_weeks_cannot_win(self):
+        one = self._weekly(["B"])[0]
+        self.assertEqual(B.decide([one] * 8)["status"], "INCONCLUSIVE_DUPLICATE_WEEK")
+        self.assertEqual(B.decide([dict(one, week="2026-W46")] + self._weekly(["B"] * 8))["status"], "INCONCLUSIVE_NONPROSPECTIVE_WEEK")
+        self.assertEqual(B.decide(["B"] * 8)["status"], "INCONCLUSIVE_INVALID_WEEK_INPUT")
+        self.assertEqual(B.decide([dict(one, week="2026-W99")])["status"], "INCONCLUSIVE_INVALID_WEEK_ID")
+
+    def test_immature_week_cannot_qualify_as_a_win(self):
+        b = B.issue(self.a, B.select_views(self.cands, self.t0))
+        partial = {t:r for t,r in self.bars.items() if t < self.monday + 3 * A.DAY}
+        r = B.score(b, partial)
+        self.assertFalse(r["weekly_matured"])
+        self.assertEqual(r["week_winner"], "PENDING")
+        self.assertEqual(B.decide([dict(x, weekly_matured=False) for x in self._weekly(["B"] * 8)])["status"], "PENDING")
+
+    def test_forged_b_views_with_self_digest_cannot_be_scored(self):
+        proof = {"first_main_commit":"a"*40, "first_main_blob_sha":"b"*40,
+                 "issuance_first_main_utc":A.iso(self.t0 + dt.timedelta(hours=3))}
+        views = B.select_views(self.cands, self.t0)
+        original = B.bind_frozen_a_source(self.a, views, proof)
+        B.require_frozen_source_binding(original, self.a, views, proof)
+        forged = json.loads(json.dumps(original))
+        forged["views"]["1_3d"]["bull"] = 10
+        forged["issuance_sha256"] = B._digest({k:v for k,v in forged.items() if k != "issuance_sha256"})
+        B.verify_issuance(forged)
+        with self.assertRaisesRegex(ValueError, "point-in-time"):
+            B.require_frozen_source_binding(forged, self.a, views, proof)
+
+    def test_modified_original_packet_is_fatal_instead_of_skipped(self):
+        from unittest.mock import Mock, patch
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            day = self.t0.date()
+            folder = root / B.PARAMS["packet_dir"] / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}"
+            folder.mkdir(parents=True)
+            (folder/"CMP-corrupt.json").write_text("{}")
+            with patch.object(B.subprocess, "run", return_value=Mock(returncode=0)):
+                with patch.object(B.A, "first_in_main", side_effect=ValueError("original main source path was changed after first issue")):
+                    with self.assertRaisesRegex(ValueError, "changed after first issue"):
+                        B.git_candidates(root, self.t0, "main")
 
 
 if __name__ == "__main__":

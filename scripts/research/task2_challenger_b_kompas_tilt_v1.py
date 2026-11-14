@@ -25,6 +25,7 @@ import datetime as dt
 import hashlib
 import json
 import math
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -127,6 +128,25 @@ def verify_issuance(b: dict) -> None:
         raise ValueError("B issuance digest mismatch or wrong contract")
 
 
+def bind_frozen_a_source(a_issuance: dict, views: dict, proof: dict) -> dict:
+    """Bind signed B output to S1's independently verified original A provenance."""
+    out = issue(a_issuance, views)
+    out["a_main_proof"] = {
+        "first_main_commit": proof["first_main_commit"],
+        "first_main_blob_sha": proof["first_main_blob_sha"],
+        "issuance_first_main_utc": proof["issuance_first_main_utc"],
+    }
+    out["issuance_sha256"] = _digest({k:v for k,v in out.items() if k != "issuance_sha256"})
+    return out
+
+
+def require_frozen_source_binding(b: dict, a_issuance: dict, views: dict, proof: dict) -> None:
+    """Reject forged B forecasts even when their self-generated digest is valid."""
+    verify_issuance(b)
+    if b != bind_frozen_a_source(a_issuance, views, proof):
+        raise ValueError("B issuance differs from original A and point-in-time main Compass views")
+
+
 def score(b: dict, bars: dict, *, a_issuance_first_main_utc: str | None = None) -> dict:
     """Brier per matured asset-day. A day counts only with its full hourly census and a close != P0."""
     verify_issuance(b)
@@ -152,24 +172,60 @@ def score(b: dict, bars: dict, *, a_issuance_first_main_utc: str | None = None) 
                          "brier": round((d["p_up"] - y) ** 2, 8)})
     base = PARAMS["baseline_brier"]
     mean = sum(r["brier"] for r in rows) / len(rows) if rows else None
-    if mean is None or all(r["p_up"] == 0.5 for r in rows):
+    year, week = A._parse_week(b["week"])
+    final_closed_hour = A.week_monday(year, week) + 7 * A.DAY - A.HOUR
+    weekly_matured = final_closed_hour in bars and all(
+        asset in bars[final_closed_hour] for asset in b["assets"])
+    if not weekly_matured:
+        winner = "PENDING"
+    elif mean is None or all(r["p_up"] == 0.5 for r in rows):
         winner = "TIE"
     else:
         winner = "B" if mean < base - 1e-12 else "BASE" if mean > base + 1e-12 else "TIE"
     return {"contract": CONTRACT + "_SCORE", "week": b["week"], "issuance_sha256": b["issuance_sha256"],
             "rows": rows, "abstentions": abstentions, "n": len(rows), "mean_brier": None if mean is None else round(mean, 8),
-            "baseline_brier": base, "week_winner": winner}
+            "baseline_brier": base, "weekly_matured": weekly_matured, "week_winner": winner}
 
 
-def decide(week_winners: list[str]) -> dict:
+def decide(weekly: list[dict]) -> dict:
+    """First 8 distinct mature non-tied prospective ISO weeks, never duplicate one observation."""
     n = DECISION["confirmatory_week_clusters"]
-    decided = [w for w in week_winners if w in ("B", "BASE")][:n]
-    if len(decided) < n:
-        return {"status": "PENDING", "non_tied_weeks": len(decided), "required": n}
-    wins = decided.count("B")
-    p = A.sign_test_one_sided_p(wins, n - wins)
-    return {"status": "B_HAS_DIRECTION" if p < DECISION["one_sided_alpha"] else "NO_PROVEN_DIRECTION",
-            "b_wins": wins, "n": n, "one_sided_p": round(p, 6)}
+    if not isinstance(weekly, list):
+        return {"status": "INCONCLUSIVE_INVALID_WEEK_INPUT"}
+    seen, eligible = set(), []
+    for row in weekly:
+        if not isinstance(row, dict) or not isinstance(row.get("week"), str):
+            return {"status": "INCONCLUSIVE_INVALID_WEEK_INPUT"}
+        week_id = row["week"]
+        if not re.fullmatch(r"\d{4}-W\d{2}", week_id):
+            return {"status": "INCONCLUSIVE_INVALID_WEEK_ID"}
+        try:
+            year, week = A._parse_week(week_id)
+            A.week_monday(year, week)
+        except (ValueError, TypeError):
+            return {"status": "INCONCLUSIVE_INVALID_WEEK_ID"}
+        if (year, week) < (2026, 47):
+            return {"status": "INCONCLUSIVE_NONPROSPECTIVE_WEEK"}
+        if week_id in seen:
+            return {"status": "INCONCLUSIVE_DUPLICATE_WEEK"}
+        seen.add(week_id)
+        winner = row.get("week_winner")
+        if row.get("weekly_matured") is not True:
+            continue
+        if winner in ("B", "BASE"):
+            eligible.append((year, week, winner, week_id))
+        elif winner not in ("TIE", "MISSING"):
+            return {"status": "INCONCLUSIVE_INVALID_WINNER"}
+    eligible.sort()
+    chosen = eligible[:n]
+    if len(chosen) < n:
+        return {"status": "PENDING", "non_tied_weeks": len(chosen), "required": n,
+                "weeks": [row[3] for row in chosen]}
+    wins = sum(row[2] == "B" for row in chosen)
+    p = A.sign_test_one_sided_p(wins, n-wins)
+    return {"status": "B_HAS_DIRECTION" if wins >= 7 and p < DECISION["one_sided_alpha"] else "NO_PROVEN_DIRECTION",
+            "b_wins": wins, "n": n, "weeks": [row[3] for row in chosen],
+            "one_sided_p": round(p, 6)}
 
 
 def git_candidates(root: Path, t0: dt.datetime, main_ref: str) -> list[dict]:
@@ -181,10 +237,12 @@ def git_candidates(root: Path, t0: dt.datetime, main_ref: str) -> list[dict]:
         folder = root / PARAMS["packet_dir"] / f"{day:%Y}" / f"{day:%m}" / f"{day:%d}"
         for p in sorted(folder.glob("CMP-*.json")):
             rel = p.relative_to(root).as_posix()
-            try:
-                proof = A.first_in_main(root, rel)
-            except (ValueError, subprocess.CalledProcessError):
+            # Only absent/non-main files are ignored. A changed source is a fatal refusal.
+            exists = subprocess.run(["git", "-C", str(root), "cat-file", "-e",
+                                     "refs/heads/main:" + rel], capture_output=True)
+            if exists.returncode != 0:
                 continue
+            proof = A.first_in_main(root, rel)
             if proof["current_main_blob_sha"] != proof["first_main_blob_sha"]:
                 raise ValueError("official packet changed after first-main; refuse B point-in-time selection")
             original = subprocess.run(
@@ -221,17 +279,15 @@ def main(argv: Iterable[str] | None = None) -> int:
         if requested["issuance_sha256"] != a["issuance_sha256"]:
             raise ValueError("A issuance differs from S1 first-main verification")
         t0 = A.utc(a["issue_clock_utc"])
-        out = issue(a, select_views(git_candidates(root, t0, args.main_ref), t0))
-        out["a_main_proof"] = {"first_main_commit": proof["first_main_commit"],
-                               "first_main_blob_sha": proof["first_main_blob_sha"],
-                               "issuance_first_main_utc": proof["issuance_first_main_utc"]}
-        out["issuance_sha256"] = _digest({k:v for k,v in out.items() if k != "issuance_sha256"})
+        out = bind_frozen_a_source(a, select_views(git_candidates(root, t0, args.main_ref), t0), proof)
     else:
         b = json.loads(Path(args.issuance).read_text(encoding="utf-8"))
         year, week = A._parse_week(b["week"])
         a, proof = A.read_frozen_main_issuance(root, year, week)
         if b.get("a_issuance_sha256") != a["issuance_sha256"]:
             raise ValueError("B score not bound to S1 original A issuance")
+        t0 = A.utc(a["issue_clock_utc"])
+        require_frozen_source_binding(b, a, select_views(git_candidates(root, t0, "main"), t0), proof)
         monday = A.week_monday(year, week)
         out = score(b, A.load_hourly(root, monday, monday + 7 * A.DAY),
                     a_issuance_first_main_utc=proof["issuance_first_main_utc"])
