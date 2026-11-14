@@ -38,6 +38,8 @@ from typing import Any
 CONTRACT = "KOMPAS_LIVE_PATH_v1"
 HOURLY_DIR = "03_DAILY_CAPTURE_LOGS/hourly"
 PACKET_DIR = "04_MARKET_LEARNING/handlekompas/official/daily"
+OFFICIAL_POINTER_PATH = "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json"
+PUBLIC_PROJECTION_DIR = "04_MARKET_LEARNING/handlekompas/official/public"
 B_PREREG_PATH = ("06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/"
                  "CHALLENGER_B_KOMPAS_TILT_PREREG_v1.json")
 B_CONTRACT = "TASK2_CHALLENGER_B_KOMPAS_TILT_v1"
@@ -311,6 +313,64 @@ def structurally_valid(packet: Any) -> bool:
     return isinstance(s, dict) and s.get("contract") == PACKET_CONTRACT and s.get("semantics") == PACKET_SEMANTICS
 
 
+
+def bound_official_packet(root: Path, now: dt.datetime) -> tuple[dict | None, dict]:
+    """Use ONLY the current Official Compass pointer, its hash-bound original and public projection.
+
+    The source repository is checked out at main in the Pages producer. A historical daily file
+    discovered by directory traversal is never eligible to replace a missing or mismatched pointer.
+    """
+    info: dict[str, Any] = {"pointer": OFFICIAL_POINTER_PATH, "status": "UNAVAILABLE", "reason": "OFFICIAL_POINTER_MISSING"}
+    pointer_file = root / OFFICIAL_POINTER_PATH
+    if not pointer_file.is_file():
+        return None, info
+    try:
+        pointer_bytes = pointer_file.read_bytes()
+        pointer = json.loads(pointer_bytes)
+        if not isinstance(pointer, dict) or pointer.get("contract") != "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1" or pointer.get("data_status") != "OK":
+            raise ValueError("OFFICIAL_POINTER_INVALID")
+        rel, public_rel = pointer["compass_path"], pointer["public_projection_path"]
+        # Both source paths must be rooted under their exact public-plane owner.
+        for candidate, prefix in ((rel, PACKET_DIR), (public_rel, PUBLIC_PROJECTION_DIR)):
+            if not isinstance(candidate, str) or not candidate.startswith(prefix + "/") or any(
+                    segment in ("", ".", "..") for segment in candidate.split("/")) or not candidate.endswith(".json"):
+                raise ValueError("OFFICIAL_POINTER_PATH_INVALID")
+        if not (Path(rel).stem == pointer["compass_id"] == Path(public_rel).stem):
+            raise ValueError("OFFICIAL_POINTER_ID_MISMATCH")
+        raw = (root / rel).read_bytes()
+        public_raw = (root / public_rel).read_bytes()
+        if (sha256_bytes(raw) != pointer.get("compass_content_sha256") or
+                sha256_bytes(public_raw) != pointer.get("public_projection_content_sha256")):
+            raise ValueError("OFFICIAL_POINTER_CONTENT_MISMATCH")
+        packet, public = json.loads(raw), json.loads(public_raw)
+        issued = utc(pointer["issued_at_utc"])
+        if issued > now or issued <= now - PACKET_LOOKBACK_HOURS * HOUR:
+            raise ValueError("OFFICIAL_POINTER_STALE")
+        if (packet.get("contract") != "OFFICIAL_DAILY_COMPASS_v1" or
+                public.get("contract") != "PUBLIC_COMPASS_PROJECTION_v1" or
+                packet.get("data_status") != "OK" or public.get("data_status") != "OK" or
+                packet.get("compass_id") != pointer["compass_id"] or
+                public.get("compass_id") != pointer["compass_id"] or
+                packet.get("compass_sha256") != pointer.get("compass_sha256") or
+                public.get("source_compass_sha256") != pointer.get("compass_sha256") or
+                public.get("projection_sha256") != pointer.get("public_projection_sha256") or
+                packet.get("issued_at_utc") != pointer["issued_at_utc"] or
+                public.get("issued_at_utc") != pointer["issued_at_utc"] or
+                (packet.get("source_bindings") or {}).get("auto_market_state", {}).get("packet_sha256") != pointer.get("source_packet_sha256") or
+                not structurally_valid(packet)):
+            raise ValueError("OFFICIAL_POINTER_PACKAGE_MISMATCH")
+        candidate = {"path": rel, "sha256": sha256_bytes(raw), "issued": issued, "packet": packet}
+        return candidate, {"pointer": OFFICIAL_POINTER_PATH, "status": "VERIFIED", "reason": None,
+                           "pointer_sha256": sha256_bytes(pointer_bytes), "compass_path": rel,
+                           "compass_content_sha256": sha256_bytes(raw),
+                           "public_projection_content_sha256": sha256_bytes(public_raw),
+                           "issued_at_utc": iso(issued)}
+    except (OSError, KeyError, TypeError, AttributeError, ValueError, json.JSONDecodeError) as error:
+        code = str(error) if isinstance(error, ValueError) else "OFFICIAL_POINTER_PACKAGE_UNAVAILABLE"
+        # Never publish private paths, raw payloads or exception detail into the public JSON.
+        return None, {**info, "reason": code if code.startswith("OFFICIAL_POINTER_") else "OFFICIAL_POINTER_PACKAGE_UNAVAILABLE"}
+
+
 def load_packets(root: Path, start: dt.datetime, now: dt.datetime) -> list[dict]:
     """Packets issued in (start, now], sorted by issue time. Unreadable files are skipped."""
     out = []
@@ -394,7 +454,7 @@ def load_a_z(root: Path, now: dt.datetime) -> dict:
 def frozen_zones(latest_path: Path | None, now: dt.datetime) -> tuple[dict, dict]:
     year, week, _ = now.isocalendar()
     label = f"{year}-W{week:02d}"
-    status: dict[str, Any] = {"week": label, "source": "data/latest.json package.forecast_freeze", "sha256": None}
+    status: dict[str, Any] = {"week": label, "source": "data/latest.json package.forecast_freeze", "sha256": None, "observed_quote": QUOTE}
     if latest_path is None or not latest_path.is_file():
         return {}, {**status, "status": "UNAVAILABLE", "reason": "LATEST_JSON_ABSENT"}
     data = latest_path.read_bytes()
@@ -407,6 +467,12 @@ def frozen_zones(latest_path: Path | None, now: dt.datetime) -> tuple[dict, dict
         return {}, {**status, "status": "UNAVAILABLE", "reason": "LATEST_JSON_INVALID"}
     if pointer.get("iso_year") != year or pointer.get("iso_week") != week:
         return {}, {**status, "status": "UNAVAILABLE", "reason": "FROZEN_WEEK_NOT_CURRENT"}
+    # A weekly freeze without verified quote provenance must not be overlaid onto USDT spot bars.
+    # The current public sanitizer may omit price_quote; absence is deliberately unavailable.
+    quote = freeze.get("price_quote")
+    status["freeze_quote"] = quote
+    if not isinstance(quote, str) or quote != QUOTE:
+        return {}, {**status, "status": "UNAVAILABLE", "reason": "FROZEN_ZONE_QUOTE_MISMATCH"}
     zones = {}
     for asset in ASSETS:
         lo, hi = positive(freeze.get(f"{asset.lower()}_range_low")), positive(freeze.get(f"{asset.lower()}_range_high"))
@@ -705,7 +771,7 @@ def base_document(now: dt.datetime) -> dict:
         "reasons": [],
         "authority": {"research_only": True, "official_forecast": False, "compass_probability_claim": False,
                       "trading": False, "promotion": False, "site_synthesis": False,
-                      "line_label": "Challenger B (forsøg)", "frames_label": "Challenger A (forsøg)"},
+                      "line_label": "live, Challenger B\u0027s formel (forsøg)", "frames_label": "live, beregnet hver time med Challenger A\u0027s formel"},
         "display_rules": {"freshness_sla_minutes": FRESHNESS_SLA_MINUTES,
                           "client_stale_after_minutes": CLIENT_STALE_AFTER_MINUTES,
                           "min_display_move_pct": MIN_DISPLAY_MOVE_PCT, "horizons_days": list(HORIZONS),
@@ -735,10 +801,11 @@ def build(root: Path, latest_json: Path | None, now: dt.datetime) -> dict:
     frames = {"name": "Challenger A", "status": "TRIAL", **load_a_z(root, now)}
     doc["models"] = {"line": model, "frames": frames}
     week_start = week_monday(now)
+    bound, official_binding = bound_official_packet(root, now)
     packets = load_packets(root, min(now - PACKET_LOOKBACK_HOURS * HOUR, week_start - 2 * DAY), now)
-    in_window = [c for c in packets if now - PACKET_LOOKBACK_HOURS * HOUR < c["issued"] <= now
-                 and structurally_valid(c["packet"])]
-    views = select_views(packets, now)
+    in_window = [bound] if bound is not None else []
+    # A discovered historical daily packet NEVER substitutes for the current canonical pointer.
+    views = select_views(in_window, now)
     doc["kompas_views"] = views
     zones, zone_status = frozen_zones(latest_json, now)
     start = now - (max(SIGMA_WINDOW_HOURS + 1, NORM_WINDOW_HOURS, DISPLAY_BACK_HOURS, (now - week_start) // HOUR + 2) + 2) * HOUR
@@ -750,10 +817,10 @@ def build(root: Path, latest_json: Path | None, now: dt.datetime) -> dict:
                      "challenger_b_prereg": prereg,
                      "challenger_a_issuance": {"path": frames["a_issuance_path"], "sha256": frames["a_issuance_sha256"],
                                                "used": frames["z_source"] == "CHALLENGER_A_FROZEN_ISSUANCE"},
-                     "frozen_zone": zone_status}
+                     "frozen_zone": zone_status, "official_compass": official_binding}
     reasons = []
     if not in_window:
-        reasons.append("NO_VALID_OFFICIAL_PACKET_24H")
+        reasons.append(official_binding["reason"] or "OFFICIAL_POINTER_PACKAGE_UNAVAILABLE")
     for asset in ASSETS:
         if reasons:
             doc["assets"][asset] = {"status": "UNAVAILABLE", "reason": reasons[0], "quote": QUOTE}
