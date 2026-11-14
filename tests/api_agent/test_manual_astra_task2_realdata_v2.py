@@ -81,14 +81,33 @@ class RealdataAstraV2Tests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"DURABLE_CLAIM_ALREADY_EXISTS"):
                 m.check_claims("INERT_GH_TOKEN","Donh91/Investering-Framework-Archive-v1")
 
-    def test_shared_10usd_owner_reservation_native(self):
-        m.check_shared_reservation()
-        with patch.object(m,"ROOT",self.out):
-            p=self.out/"research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
-            p.parent.mkdir(parents=True,exist_ok=True)
-            p.write_text('{"owner_reservations":[]}')
-            with self.assertRaisesRegex(ValueError,"OWNER_10USD_RESERVATION_MISSING"):
-                m.check_shared_reservation()
+    def test_disabled_v2_defers_reservation_until_owner_reviewed_reenable(self):
+        gate = m.read(ROOT / m.RELEASE_GATE_PATH)
+        self.assertIs(gate["authorized_paid_dispatch"], False)
+        ledger = m.read(ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
+        self.assertFalse(any(row.get("work_id") == m.MISSION
+                             for row in ledger["owner_reservations"]))
+        with self.assertRaisesRegex(ValueError, "OWNER_10USD_RESERVATION_MISSING"):
+            m.check_shared_reservation()
+        # A later independently reviewed paid-release PR must add a reservation
+        # BEFORE any owner claim, upload or billable POST. No real ledger mutation.
+        with patch.object(m, "ROOT", self.out):
+            p = self.out / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(json.dumps({"owner_reservations": [{
+                "work_id": m.MISSION, "status": "OWNER_RESERVED_PREHTTP",
+                "source": m.PUBLIC_ISSUE, "upper_usd": m.RESERVED_BUDGET_USD,
+                "one_paid_post_max": 1}]}))
+            m.check_shared_reservation()
+
+    def test_disabled_paid_job_must_remain_literal_false_and(self):
+        gate = m.read(ROOT / m.RELEASE_GATE_PATH)
+        self.assertIs(gate["authorized_paid_dispatch"], False)
+        workflow = (ROOT / ".github/workflows/owner-bound-daily-director-manual.yml").read_text()
+        marker = "\n  astra-realdata-task2-v2:\n"
+        self.assertEqual(workflow.count(marker), 1)
+        job = workflow.split(marker, 1)[1]
+        self.assertRegex(job, r"(?m)^    if: >-\s*\n      false &&\s*$")
 
     def _fake_bundle(self):
         (self.out/m.ZIP_NAME).write_bytes(b"INERT_SYNTHETIC_ZIP")
