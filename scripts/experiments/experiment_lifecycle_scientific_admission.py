@@ -31,6 +31,76 @@ def digest(value: Any) -> str:
     return hashlib.sha256(canonical(value)).hexdigest()
 
 
+PAGE_CONTRACT = "EXPERIMENT_DISPATCH_PAGE_v3"
+MANIFEST_V3 = "EXPERIMENT_DISPATCH_MANIFEST_v3_PAGED_SCIENTIFIC_ADMISSION"
+PAGE_SIZE = 256
+MAX_PAGE_BYTES = 2_000_000
+
+
+def write_paged_dispatch_manifest(
+    requests: list[dict[str, Any]], *, repo_root: Path, manifest_output: Path,
+    source_repository: str, source_branch: str, generated_at_utc: str,
+) -> dict[str, Any]:
+    """Full, deterministic, SHA-covered manifest, never silently truncated.
+
+    Immutable request source files and their canonical scientific admission are
+    unchanged. Every enumerated qualified request appears exactly once.
+    """
+    ordered = sorted(requests, key=lambda item: item["request_id"])
+    ids = [str(item["request_id"]) for item in ordered]
+    if len(ids) != len(set(ids)):
+        raise ValueError("DUPLICATE_DISPATCH_REQUEST_ID")
+    if any(not item["request_id"].startswith("ER-") for item in ordered):
+        raise ValueError("INVALID_DISPATCH_REQUEST_ID")
+    if source_repository != "Donh91/Investering-Framework-Archive-v1" or source_branch != "main":
+        raise ValueError("PAGED_MANIFEST_SOURCE_NOT_MAIN")
+    page_root = manifest_output.parent / "dispatch_manifest_pages"
+    page_root.mkdir(parents=True, exist_ok=True)
+    pages = []
+    for sequence, offset in enumerate(range(0, len(ordered), PAGE_SIZE)):
+        batch = ordered[offset:offset + PAGE_SIZE]
+        page = {"contract": PAGE_CONTRACT, "sequence": sequence, "request_count": len(batch), "requests": batch}
+        body = canonical(page)
+        if len(body) > MAX_PAGE_BYTES:
+            raise ValueError(f"DISPATCH_PAGE_OVER_HARD_LIMIT:{sequence}:{len(body)}")
+        path = page_root / f"part-{sequence:06d}.json"
+        tmp = page_root / f".part-{sequence:06d}.json.tmp"
+        tmp.write_bytes(body)
+        tmp.replace(path)
+        if path.read_bytes() != body:
+            raise ValueError(f"DISPATCH_PAGE_READBACK_MISMATCH:{sequence}")
+        rel = base.rel(repo_root, path)
+        pages.append({
+            "sequence": sequence,
+            "path": rel,
+            "sha256": hashlib.sha256(body).hexdigest(),
+            "request_count": len(batch),
+            "first_request_id": batch[0]["request_id"],
+            "last_request_id": batch[-1]["request_id"],
+            "raw_url": f"https://raw.githubusercontent.com/{source_repository}/{source_branch}/{rel}",
+        })
+    index = {
+        "contract": MANIFEST_V3,
+        "generated_at_utc": generated_at_utc,
+        "source_repository": source_repository,
+        "source_branch": source_branch,
+        "request_count": len(ordered),
+        "pages": pages,
+        "admission_required": QUALIFIED,
+        "authority": "SHADOW_ONLY_CROSS_REPO_DISPATCH",
+    }
+    manifest_output.parent.mkdir(parents=True, exist_ok=True)
+    body = canonical(index)
+    if len(body) > MAX_PAGE_BYTES:
+        raise ValueError("DISPATCH_INDEX_OVER_HARD_LIMIT")
+    tmp = manifest_output.with_suffix(".json.tmp")
+    tmp.write_bytes(body)
+    tmp.replace(manifest_output)
+    if manifest_output.read_bytes() != body or sum(p["request_count"] for p in pages) != len(ordered):
+        raise ValueError("DISPATCH_MANIFEST_INDEX_READBACK_MISMATCH")
+    return index
+
+
 def apply_exact_settlement_contract(frozen: dict[str, Any]) -> dict[str, Any]:
     """Freeze exact settlement only for newly created supported price forecasts."""
     metric_path = str(frozen.get("metric_path") or "")
@@ -358,9 +428,13 @@ def main() -> None:
             continue
         relative_path = base.rel(root, path)
         requests.append({"request_id": value["request_id"], "candidate_id": value["candidate_id"], "path": relative_path, "sha256": base.sha(value), "raw_url": f"https://raw.githubusercontent.com/{args.repository}/{args.branch}/{relative_path}"})
-    manifest = {"contract": "EXPERIMENT_DISPATCH_MANIFEST_v2_SCIENTIFIC_ADMISSION", "generated_at_utc": now, "source_repository": args.repository, "source_branch": args.branch, "request_count": len(requests), "requests": sorted(requests, key=lambda item: item["request_id"]), "admission_required": QUALIFIED, "authority": "SHADOW_ONLY_CROSS_REPO_DISPATCH"}
-    args.manifest_output.parent.mkdir(parents=True, exist_ok=True)
-    args.manifest_output.write_bytes(base.canon(manifest))
+    # No monolithic LATEST requests array; the receiver must have v3 page
+    # support merged and read back before this producer is activated.
+    write_paged_dispatch_manifest(
+        requests, repo_root=root, manifest_output=args.manifest_output,
+        source_repository=args.repository, source_branch=args.branch,
+        generated_at_utc=now,
+    )
     print(json.dumps({"candidate_count": reg["candidate_count"], "new_candidate_count": len(new_ids), "new_forecasts": new_forecasts, "dispatch_created": dispatch, "admission_status_counts": admission_registry["status_counts"], "rejected": rejected}, sort_keys=True))
 
 
