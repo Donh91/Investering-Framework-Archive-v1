@@ -15,12 +15,8 @@ import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
 import {verifiedOriginalWeekPrices} from './original-week-price-readback.mjs';
 import {kompasSourceClockReadback} from './kompas-clock-readback.mjs';
-import {importantStatusLine,btcNextDays,extraHorizonRows} from './kompas-owner-brief.mjs';
-import {cycleSourceReadback} from './cycle-source-readback.mjs';
-import {readSwingRotation,renderSwingRotation} from '../vnext-live/swing-rotation-readback.mjs';
-import {
-  renderProductExperience,initProductExperience
-} from '../vnext-live/premium-experience.mjs';
+import {liveViewModel,liveChart} from './kompas-live.mjs';
+import './kompas-live.css';
 
 const SOURCE_RECHECK_MS=5*60*1000;
 const CLOCK_RECHECK_MS=60*1000;
@@ -31,12 +27,7 @@ const H=[
 ];
 const $=id=>document.getElementById(id);
 const safe=s=>typeof s==='string'&&s.trim()?s.trim().slice(0,180):'UNAVAILABLE';
-const t=(da,en)=>document.documentElement.lang==='en'?en:da;
-let feeds=null,view=null,failed=false,request=0,inflight=false;
-let selectedReaderHorizon='NEXT_1_3D',selectedReaderLens='swing';
-const assets=[
- new URL('../../data/latest.json',import.meta.url),
- new URL('../../data/compass.json',import.meta.url)
+let liveAsset='BTC',liveHz=3;
 ];
 function set(id,value){const e=$(id);if(e)e.textContent=String(value??'—')}
 function time(utc){
@@ -636,12 +627,94 @@ function renderOwnerBrief(matrix,originalWeekPrice,lang){
  }
  set('cn-btc-days-caption',days?days.caption:(lang==='en'?
   'No verified original BTC forecast for these days.':'Ingen verificeret original BTC-prognose for disse dage.'));
- host.dataset.available=String(!!days?.rows?.length);
+// v2.8 Kompas live (design v7). Renders ONLY data/kompas-live.json (server-side
+// KOMPAS_LIVE_PATH_v1): no tilt, band or probability is computed in the browser.
+// The pure kompas-live.mjs builds the view model and the SVG description; this
+// function only writes text, attributes and SVG nodes (no HTML string parsing).
+const SVG_NS='http://www.w3.org/2000/svg';
+function svgNode(spec){
+ const node=document.createElementNS(SVG_NS,spec.tag);
+ for(const [key,value] of Object.entries(spec.attrs||{}))if(key!=='xmlns')node.setAttribute(key,String(value));
+ if(spec.text!=null)node.textContent=spec.text;
+ for(const child of spec.children||[])node.append(svgNode(child));
+ return node;
+}
+function liveSpan(className,text,attrs={}){
+ const span=document.createElement('span');span.className=className;span.textContent=text;
+ for(const [key,value] of Object.entries(attrs))span.setAttribute(key,value);
+ return span;
+}
+function renderLiveForecast(){
+ const host=$('cn-live-forecast');
+ if(!host)return;
+ const lang=document.documentElement.lang==='en'?'en':'da';
+ const model=liveViewModel(feeds?.kompasLive??null,{lang,hz:liveHz,asset:liveAsset,nowMs:Date.now(),pending:!feeds&&!failed});
+ host.dataset.state=model.state;host.dataset.asset=model.asset;host.dataset.hz=String(model.hz);
+ set('cn-live-heading',model.labels.heading);
+ $('cn-live-assets')?.setAttribute('aria-label',model.labels.assetGroup);
+ $('cn-live-hz')?.setAttribute('aria-label',model.labels.hzGroup);
+ $('cn-live-legend')?.setAttribute('aria-label',model.labels.legendTitle);
+ for(const b of model.assetButtons){
+  const button=document.querySelector('[data-cn-live-asset="'+b.asset+'"]');
+  if(button)button.setAttribute('aria-pressed',String(b.pressed));
+ }
+ for(const b of model.hzButtons){
+  const button=document.querySelector('[data-cn-live-hz="'+b.hz+'"]');
+  if(button){button.textContent=b.label;button.setAttribute('aria-pressed',String(b.pressed))}
+ }
+ const asOf=$('cn-live-asof');
+ if(asOf){asOf.textContent=model.asOf.text;asOf.setAttribute('title',model.asOf.label)}
+ set('cn-live-feed-heading',model.labels.feedHeading);
+ set('cn-live-feed-pill',model.labels.feedPill);
+ set('cn-live-feed-sub',model.labels.feedSub);
+ $('cn-live-feed')?.setAttribute('aria-label',model.labels.feedHeading);
+ set('cn-live-foot',model.footer);
+ const notice=$('cn-live-unavailable');
+ const chartHost=$('cn-live-chart');
+ const feedList=$('cn-live-feed');
+ if(model.state!=='OK'){
+  if(notice)notice.hidden=false;
+  set('cn-live-unavailable-title',model.unavailable?.title||'');
+  set('cn-live-unavailable-text',[model.unavailable?.text,model.unavailable?.note].filter(Boolean).join(' '));
+  chartHost?.replaceChildren();feedList?.replaceChildren();$('cn-live-chips')?.replaceChildren();
+  $('cn-live-legend')?.replaceChildren();
+  set('cn-live-price','—');set('cn-live-dir-title',model.unavailable?.title||'');
+  set('cn-live-dir-sub','');set('cn-live-dir-source','');
+  return;
+ }
+ if(notice)notice.hidden=true;
+ set('cn-live-price',model.price.text);set('cn-live-quote',model.price.quote);
+ $('cn-live-chips')?.replaceChildren(...model.chips.map(c=>{
+  const chip=liveSpan('cn-live-chip',c.text,{'data-tone':c.tone});
+  const label=document.createElement('small');label.textContent=c.label;chip.append(label);return chip;
+ }));
+ const dir=$('cn-live-dir');if(dir)dir.dataset.tone=model.headline.tone;
+ set('cn-live-arrow',model.headline.arrow);
+ set('cn-live-dir-title',model.headline.title);
+ set('cn-live-dir-sub',model.headline.sub);
+ set('cn-live-dir-source',model.headline.source);
+ $('cn-live-legend')?.replaceChildren(...model.legend.map(item=>{
+  const li=document.createElement('li');
+  li.append(liveSpan('cn-live-swatch','',{'data-key':item.key,'aria-hidden':'true'}),document.createTextNode(item.label));
+  return li;
+ }));
+ const chart=chartHost?liveChart(model,{width:chartHost.clientWidth||360}):null;
+ chartHost?.replaceChildren(...(chart?[svgNode(chart.root)]:[]));
+ feedList?.replaceChildren(...model.feed.map(item=>{
+  const li=document.createElement('li');li.className='cn-live-cm';li.dataset.now=String(item.now);li.dataset.kind=item.kind;
+  li.append(liveSpan('cn-live-dot','',{'aria-hidden':'true'}));
+  const head=document.createElement('div');head.className='cn-live-cm-head';
+  head.append(liveSpan('cn-live-when',item.when));
+  if(item.deviation.text)head.append(liveSpan('cn-live-dev',item.deviation.text,{'data-tone':item.deviation.tone}));
+  const text=document.createElement('p');text.textContent=item.text;
+  const foot=document.createElement('div');foot.className='cn-live-cm-foot';
+  if(item.since)foot.append(liveSpan('cn-live-since',item.since.text,{'data-tone':item.since.tone}));
+  foot.append(liveSpan('cn-live-author',item.author));
+  li.append(head,text,foot);
+  return li;
+ }));
 }
 
-// Official issuance/freshness and latest completed market observation are
-// deliberately separate clocks. Never use site rebuild time as market time.
-function renderSourceClocks(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  const reading=kompasSourceClockReadback({compass:feeds?.compass,view,lang});
  set('cn-source-headline',reading.headline);
@@ -738,12 +811,7 @@ function paint(){
  renderAltMilestone();
  horizons();
  renderForward();
- renderReentry();
- sourceRows();
- mondayReadback();
- const c=view?.compass,w=view?.weekly;
- const fresh=c?.state==='FRESH'&&c?.permit_path_live_gates===true;
- const weekly=w?.state==='DEGRADED'?t(' · Ugens datagrundlag er ufuldstændigt',' · Weekly data is incomplete'):
+ renderLiveForecast();
    w?.state==='OK'?'':t(' · Ugens data er ikke tilgængelige',' · Weekly data is unavailable');
  const expires=feeds?.compass?.full_stack?.official_freshness?.valid_until_utc;
  const deadline=Date.parse(expires);
@@ -811,17 +879,12 @@ async function load(){
    if(!r.ok)throw Error('CN_OFFICIAL_PUBLIC_SOURCE_UNAVAILABLE');
    return r.json();
   };
-  // Original CN release lineage is INDEPENDENT and optional to the daily
-  // Official readback. A failed lineage GET must suppress only the weekly
-  // numeric summary, never turn a valid Kompas action into a data outage.
-  const [[latest,compass],publicationLineage]=await Promise.all([
-   Promise.all(assets.map(source)),
-   source(new URL('../../data/publication-lineage.json',import.meta.url)).catch(()=>null)
-  ]);
-  if(my===request){feeds={latest,compass,publicationLineage};failed=false}
- }catch{
-  if(my===request){feeds=null;failed=true}
- }finally{
+  // Kompas live (KOMPAS_LIVE_PATH_v1) is optional too: a missing or failed GET shows
+  // only the calm live-card UNAVAILABLE state, never an Official Compass outage.
+  const [[latest,compass],publicationLineage,kompasLive]=await Promise.all([
+   source(new URL('../../data/publication-lineage.json',import.meta.url)).catch(()=>null),
+   source(new URL('../../data/kompas-live.json',import.meta.url)).catch(()=>null)
+  if(my===request){feeds={latest,compass,publicationLineage,kompasLive};failed=false}
   clearTimeout(timeout);inflight=false;paint();
  }
 }
@@ -847,12 +910,25 @@ document.querySelectorAll('[data-cn-reader-lens]').forEach(button=>
  button.addEventListener('click',()=>{
    const lens=button.getAttribute('data-cn-reader-lens');
    if(lens==='swing'||lens==='hodl'){selectedReaderLens=lens;paint()}
+document.querySelectorAll('[data-cn-live-asset]').forEach(button=>
+ button.addEventListener('click',()=>{
+   const asset=button.getAttribute('data-cn-live-asset');
+   if(asset==='BTC'||asset==='ETH'){liveAsset=asset;renderLiveForecast()}
  }));
-document.querySelectorAll('[data-investor-lens]').forEach(button=>
- button.addEventListener('click',paint));
-document.addEventListener('cn:languagechange',paint);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
-window.addEventListener('focus',()=>{if(!document.hidden)load()});
+document.querySelectorAll('[data-cn-live-hz]').forEach(button=>
+ button.addEventListener('click',()=>{
+   const hz=Number(button.getAttribute('data-cn-live-hz'));
+   if([1,3,7].includes(hz)){liveHz=hz;renderLiveForecast()}
+ }));
+// Redraw the live chart at its real width (also when the Kompas tab becomes visible).
+let liveWidth=0;
+const liveChartHost=$('cn-live-chart');
+if(liveChartHost&&typeof ResizeObserver==='function'){
+ new ResizeObserver(entries=>{
+  const width=Math.round(entries[0]?.contentRect?.width||0);
+  if(width&&width!==liveWidth){liveWidth=width;renderLiveForecast()}
+ }).observe(liveChartHost);
+}
 const clock=setInterval(paint,CLOCK_RECHECK_MS);
 const refresh=setInterval(()=>{if(!document.hidden)load()},SOURCE_RECHECK_MS);
 window.addEventListener('pagehide',()=>{clearInterval(clock);clearInterval(refresh)});

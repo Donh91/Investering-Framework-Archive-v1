@@ -1021,6 +1021,12 @@ body.premium-next.cn-tabbed-ui #compass-pro:not(:has(.cn-source-summary[data-off
 .cn-challenger-a-link{display:inline-flex;align-items:center;min-height:44px;color:#0c537f;
  text-underline-offset:4px;font-size:12px;font-weight:700;max-width:100%}
 .cn-challenger-a-provenance{font-family:ui-monospace,monospace;overflow-wrap:anywhere;font-size:10px;color:#536a82}
-@media(max-width:740px){.cn-challenger-a-assets{grid-template-columns:1fr}}
-@media(max-width:440px){.cn-tabbed-ui .cn-challenger-a{padding:17px 13px;border-radius:12px}
- .cn-challenger-a-table{font-size:10px}.cn-challenger-a-asset{padding:12px}}
+/* CN SITE v2.8 · Kompas live (design v7, Challenger B/A trial) in the Kompas grid. Presentation only.
+ * Directly after the approved first fold (status → AFVENT → risk → horizons → next gate). DOM order
+ * equals visual order: the card follows the risk card in the DOM and precedes swing, rotation, BTC days
+ * and the accordion (unified-root guard, WCAG 1.3.2 / 2.4.3). Card styles: kompas-live.css. */
+body.premium-next.cn-tabbed-ui #compass-pro .product-first{grid-template-areas:"action action" "risk risk" "strip strip" "gate gate" "live live" "rot rot" "btc btc" "swing swing" "explain explain"!important}
+body.premium-next.cn-tabbed-ui #compass-pro #cn-live-forecast{grid-area:live;margin:4px 0 0!important}
+@media (min-width:760px){
+ body.premium-next.cn-tabbed-ui #compass-pro .product-first{grid-template-areas:"action action risk" "strip strip strip" "gate gate gate" "live live live" "rot rot btc" "swing swing swing" "explain explain explain"!important}
+}
