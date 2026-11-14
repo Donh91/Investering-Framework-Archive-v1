@@ -42,6 +42,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Recover stale Rich Breadth using existing hourly owner
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/daily_capture/rich_breadth_recovery_watchdog.py
       - name: Materialize last 26 completed hours
         run: |
           python scripts/daily_capture/build_hourly_sequence.py \

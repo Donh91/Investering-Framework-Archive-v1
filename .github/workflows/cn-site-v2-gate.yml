@@ -31,6 +31,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
+      - name: Verify Rich Breadth recovery watchdog
+        run: python tests/daily_capture/test_rich_breadth_recovery_watchdog.py
       - name: Verify CN workflow forbidden-content guards fail closed
         run: python3 tests/cycle_navigator/test_cn_workflow_forbidden_guards.py
       - name: Verify Hourly-to-public-CDN source provenance and fail-closed negative controls
