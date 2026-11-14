@@ -31,6 +31,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
+      - name: Verify CN workflow forbidden-content guards fail closed
+        run: python3 tests/cycle_navigator/test_cn_workflow_forbidden_guards.py
       - name: Verify Hourly-to-public-CDN source provenance and fail-closed negative controls
         run: python3 scripts/cycle_navigator/verify_hourly_pages_handoff.py --self-test
       - name: Verify public homepage alias and exact CDN parity negative controls
@@ -102,8 +104,8 @@ jobs:
           grep -q 'id="view-results"' 05_CYCLE_NAVIGATOR/site/dist/index.html
           grep -q 'href="../legacy/"' 05_CYCLE_NAVIGATOR/site/dist/index.html
           grep -q 'src="./app.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
-          ! grep -q 'PREMIUM PREVIEW' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          ! grep -q 'src="./app.js"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          if grep -q 'PREMIUM PREVIEW' 05_CYCLE_NAVIGATOR/site/dist/index.html; then echo "::error::Forbidden content detected"; exit 1; fi
+          if grep -q 'src="./app.js"' 05_CYCLE_NAVIGATOR/site/dist/index.html; then echo "::error::Forbidden content detected"; exit 1; fi
           test -f 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
@@ -116,10 +118,10 @@ jobs:
           grep -q 'FROZEN PRICE RANGES' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'FROZEN MONDAY PATH' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
           grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          ! grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js
+          if grep -q 'WEEKLY TRACK RECORD' 05_CYCLE_NAVIGATOR/site/dist/precision-accountability.js; then echo "::error::Forbidden content detected"; exit 1; fi
           grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"freshness_sla_minutes": 90' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
-          ! grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
+          if grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html; then echo "::error::Forbidden content detected"; exit 1; fi
           grep -q 'data-tab="now"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
@@ -138,7 +140,7 @@ jobs:
           grep -q 'CURRENT CHECKPOINT' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'path-overview-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'NO STRUCTURED LONG-CYCLE PHASE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          ! grep -q "source:'MONDAY BASE CASE'" 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          if grep -q "source:'MONDAY BASE CASE'" 05_CYCLE_NAVIGATOR/site/dist/public-product.js; then echo "::error::Forbidden content detected"; exit 1; fi
           grep -q 'Mania / euphoria' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Distribution' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Exit / protection' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
@@ -152,12 +154,12 @@ jobs:
           grep -q 'cycle-journey-step.next' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'rotation-line-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'cycle-watch-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
-          ! grep -q 'DECISION WINDOWS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          ! grep -q '3 · ALTCOIN CYCLE TIMER' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          if grep -q 'DECISION WINDOWS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js; then echo "::error::Forbidden content detected"; exit 1; fi
+          if grep -q '3 · ALTCOIN CYCLE TIMER' 05_CYCLE_NAVIGATOR/site/dist/public-product.js; then echo "::error::Forbidden content detected"; exit 1; fi
           grep -q 'rotation-readout-v3' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'cycle-journey-rail' 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           grep -q 'workflow_dispatch:' .github/workflows/cycle-navigator-pages.yml
-          ! grep -q 'workflow_run:' .github/workflows/cycle-navigator-pages.yml
+          if grep -q 'workflow_run:' .github/workflows/cycle-navigator-pages.yml; then echo "::error::Forbidden content detected"; exit 1; fi
           grep -q 'gh workflow run cycle-navigator-pages.yml --ref main' .github/workflows/native-handlekompas.yml
           grep -q 'NO SUPPORTED ETA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/compass.json
@@ -165,15 +167,15 @@ jobs:
           grep -q 'SINCE LAST CN' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'WHY THIS CALL' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'LAST COMPLETED FORECAST' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          ! grep -q 'HISTORICAL WEEKLY AVERAGE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          if grep -q 'HISTORICAL WEEKLY AVERAGE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js; then echo "::error::Forbidden content detected"; exit 1; fi
           grep -q 'Price Range' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'MARKET / STRUCTURE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Analysis only' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'Waiting for evidence' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           grep -q 'What the system actually watches' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          ! grep -q 'HANDLEKOMPAS ·' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          ! grep -q 'MASTER MONDAY →' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+          if grep -q 'HANDLEKOMPAS ·' 05_CYCLE_NAVIGATOR/site/dist/public-product.js; then echo "::error::Forbidden content detected"; exit 1; fi
+          if grep -q 'MASTER MONDAY →' 05_CYCLE_NAVIGATOR/site/dist/public-product.js; then echo "::error::Forbidden content detected"; exit 1; fi
+          if grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json; then echo "::error::Forbidden content detected"; exit 1; fi
       - name: Promote one original Graph B and source-owned Kompas PRO to root with rollback
         run: node 05_CYCLE_NAVIGATOR/site/premium-v2/promote-root.mjs
       - name: Verify one original Graph B and one Kompas PRO on 390/430 canonical Chrome
