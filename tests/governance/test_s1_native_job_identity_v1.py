@@ -6,7 +6,7 @@ import json
 import unittest
 from urllib.request import Request
 from scripts.governance.s1_native_job_identity_v1 import (
-    verify_native_required_jobs, _SafeGithubLogRedirect)
+    verify_native_required_jobs, _SafeGithubLogRedirect, _SafeGithubApiRedirect)
 
 REPO = "Donh91/Investering-Framework-Archive-v1"
 HEAD = "a" * 40
@@ -358,6 +358,55 @@ class NativeIdentityTests(unittest.TestCase):
         self.assertEqual(verify_native_required_jobs(
             lambda path: copy.deepcopy(x[path]), REPO, 9, HEAD, "DOCS_ONLY")["reason"],
             "RUN_EXECUTED_WORKFLOW_SOURCE_UNVERIFIED")
+
+    def test_rest_api_redirect_rejects_cross_host_with_auth(self):
+        req = Request("https://api.github.com/repos/owner/repo/pulls/9",
+                      headers={"Authorization": "Bearer NEVER_LEAK"})
+        for bad_url in (
+                "https://attacker.example/steal",
+                "https://api.github.com.attacker.example/steal",
+                "http://api.github.com/repos/owner/repo/pulls/9",
+                "https://attacker@api.github.com/repos/owner/repo/pulls/9",
+                "https://api.github.com:444/repos/owner/repo/pulls/9"):
+            with self.subTest(bad_url=bad_url):
+                with self.assertRaisesRegex(ValueError, "NATIVE_API_REDIRECT_HOST_UNVERIFIED"):
+                    _SafeGithubApiRedirect().redirect_request(
+                        req, None, 302, "Found", {}, bad_url)
+
+    def test_rest_api_same_host_redirect_keeps_authenticated_context(self):
+        req = Request("https://api.github.com/repos/owner/repo/pulls/9",
+                      headers={"Authorization": "Bearer SAFE_SAME_HOST"})
+        next_req = _SafeGithubApiRedirect().redirect_request(
+            req, None, 302, "Found", {},
+            "https://api.github.com/repos/owner/repo/pulls/9?page=1")
+        self.assertIsNotNone(next_req)
+        self.assertEqual(next_req.full_url.split("/")[2], "api.github.com")
+        self.assertEqual(next_req.headers.get("Authorization"), "Bearer SAFE_SAME_HOST")
+
+    def test_native_run_census_pr_base_drift_is_detected(self):
+        x = build_fixture()
+        route = ROOT + "/actions/runs?head_sha=" + HEAD + "&event=pull_request&per_page=100&page=1"
+        reads = [0]
+        def native_get(path):
+            result = copy.deepcopy(x[path])
+            if path == route:
+                reads[0] += 1
+                if reads[0] == 2:
+                    result["workflow_runs"][0]["pull_requests"][0]["base"]["ref"] = "other"
+            return result
+        result = verify_native_required_jobs(
+            _reader_with_logs(native_get, x), REPO, 9, HEAD, "DOCS_ONLY")
+        self.assertEqual(reads[0], 2)
+        self.assertEqual(result["reason"], "NATIVE_RUN_CENSUS_DRIFT")
+
+    def test_forged_second_checkout_group_must_fail_closed(self):
+        x = build_fixture()
+        x["__job_logs__"][1123] += (
+            "\n2026-11-13T20:00:00Z ##[group]Checking out the ref"
+            "\n2026-11-13T20:00:00Z [command]/usr/bin/git checkout --progress --force"
+            " refs/remotes/pull/9/merge"
+            "\n2026-11-13T20:00:00Z ##[endgroup]")
+        self.assertEqual(verify(x)["reason"], "RUN_EXECUTED_WORKFLOW_SOURCE_UNVERIFIED")
 
     def test_log_redirect_drops_github_bearer_token(self):
         req = Request("https://api.github.com/repos/owner/repo/actions/jobs/123/logs",

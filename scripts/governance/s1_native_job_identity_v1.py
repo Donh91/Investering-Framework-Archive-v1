@@ -13,7 +13,7 @@ import json
 import os
 import re
 from urllib.parse import urlsplit
-from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 PATH = "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json"
@@ -50,6 +50,20 @@ class _SafeGithubLogRedirect(HTTPRedirectHandler):
 
 
 
+class _SafeGithubApiRedirect(HTTPRedirectHandler):
+    """Prevent GITHUB_TOKEN disclosure via native REST JSON API redirects."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        origin = urlsplit(req.full_url)
+        target = urlsplit(newurl)
+        if (origin.scheme != "https" or origin.hostname != "api.github.com"
+                or target.scheme != "https" or target.hostname != "api.github.com"
+                or target.username is not None or target.password is not None
+                or target.port not in (None, 443)):
+            raise ValueError("NATIVE_API_REDIRECT_HOST_UNVERIFIED")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 class GithubNativeRead:
     """Read-only GitHub REST transport; response content is never logged."""
     def __init__(self, token=None):
@@ -64,7 +78,7 @@ class GithubNativeRead:
         if self.token:
             headers["Authorization"] = "Bearer " + self.token
         req = Request("https://api.github.com" + route, headers=headers, method="GET")
-        with urlopen(req, timeout=20) as resp:
+        with build_opener(_SafeGithubApiRedirect()).open(req, timeout=20) as resp:
             return json.load(resp)
 
     def job_log(self, repo, job_id):
@@ -194,9 +208,13 @@ def _correct_pr_association(run, pr_number, source_branch=None):
 
 def _census_fingerprint(runs, paths, head):
     return sorted((x.get("id"), x.get("run_attempt"), x.get("status"), x.get("conclusion"),
-                   x.get("path"), _correct_pr_association(x, -1),
-                   tuple(sorted(a.get("number") for a in x.get("pull_requests", [])
-                                if isinstance(a, dict) and type(a.get("number")) is int)))
+                   x.get("path"), x.get("head_branch"),
+                   tuple(sorted((a.get("number"), a.get("base", {}).get("ref"))
+                                for a in x.get("pull_requests", [])
+                                if (isinstance(a, dict)
+                                    and type(a.get("number")) is int
+                                    and isinstance(a.get("base"), dict)
+                                    and isinstance(a["base"].get("ref"), str)))))
                   for x in runs if isinstance(x, dict) and x.get("path") in paths
                   and x.get("head_sha") == head and x.get("event") == "pull_request")
 
