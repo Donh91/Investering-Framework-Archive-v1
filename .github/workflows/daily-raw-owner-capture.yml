@@ -119,6 +119,13 @@ jobs:
           run_owner okx_swap python scripts/data_terminal/okx_swap_owner_collector.py --output-dir okx-swap-owner-output
           run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py --output-dir top100-breadth-owner-output
 
+          # One separate daily public sentiment observation; never a CFGI substitute.
+          if [ "${RUN_SLOW_LANE}" = "true" ]; then
+            run_owner alternative_me_sentiment python scripts/data_terminal/alternative_me_sentiment.py --output-dir alternative-me-sentiment-output
+          else
+            record_code alternative_me_sentiment 78
+          fi
+
           # CFGI is a permanent shadow sentiment owner. It is collected on the 4H tactical cadence when the API secret is valid.
           CFGI_FIELDS="score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders"
           run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH --timeframe 4h --fields "${CFGI_FIELDS}" --limit 1
@@ -248,6 +255,7 @@ jobs:
             top100-breadth-owner-output/
             cfgi-owner-output/
             cfgi-1d-owner-output/
+            alternative-me-sentiment-output/
             collector-status.json
             03_DAILY_CAPTURE_LOGS/raw/incidents/
             03_DAILY_CAPTURE_LOGS/pullback_forensics/LATEST.json

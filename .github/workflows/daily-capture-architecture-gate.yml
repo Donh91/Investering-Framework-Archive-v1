@@ -91,6 +91,8 @@ jobs:
             tests.backtest_engine.test_blind_dual_run_v2 \
             tests.research.test_rebound_quality_shadow \
             tests.research.test_rqs_five_lanes_expost -v
+      - name: Test separate Alternative.me research observation
+        run: python -m unittest discover -s tests/daily_capture -p 'test_alternative_me_sentiment.py' -v
       - name: Compile capture, Situation Room, Pullback Forensics, verification-scope and Master Monday modules
         run: |
           python -m py_compile \

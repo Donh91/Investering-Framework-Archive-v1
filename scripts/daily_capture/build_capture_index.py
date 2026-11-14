@@ -315,6 +315,14 @@ def extract_metrics(root: Path) -> dict[str, Any]:
 
     metrics["macro"] = latest_fred_values(root / "fred-owner-output")
     metrics["sentiment"]["cfgi"] = extract_cfgi(root / "cfgi-owner-output")
+    # Separate research lane: never make an Alternative.me reading look like CFGI.
+    alternate = read_json(root / "alternative-me-sentiment-output" / "owner_snapshot.json")
+    if (isinstance(alternate, dict)
+            and alternate.get("contract") == "ALTERNATIVE_ME_SENTIMENT_OBSERVATION_v1"
+            and alternate.get("source") == "ALTERNATIVE_ME_FNG"
+            and alternate.get("not_cfgi") is True
+            and alternate.get("authority") == "RESEARCH_ONLY_NOT_OFFICIAL_NOT_DECISION_INPUT"):
+        metrics["research_context"] = {"alternative_me_sentiment": alternate}
     return metrics
 
 
