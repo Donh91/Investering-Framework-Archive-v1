@@ -152,6 +152,36 @@ class ChallengerATest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"duplicate hourly"):
                 A.load_hourly(root,full_day,full_day+A.DAY)
 
+    def test_offgrid_interior_timestamp_never_counts_as_an_hourly_return(self):
+        expected=(self.t0-A.HOUR).replace(minute=0,second=0,microsecond=0)
+        interior=expected-30*A.HOUR
+        moved=dict(self.bars)
+        moved[interior+dt.timedelta(minutes=30)]=moved.pop(interior)
+        # Count, total span and last expected bar still appear valid.
+        selected=sorted(t for t in moved if t+A.HOUR<=self.t0)[-169:]
+        self.assertEqual(len(selected),169)
+        self.assertEqual(selected[-1],expected)
+        self.assertEqual(selected[-1]-selected[0],168*A.HOUR)
+        with self.assertRaisesRegex(ValueError,"exact UTC hourly slots"):
+            A.sigma_at(moved,"BTC",self.t0)
+        with self.assertRaisesRegex(ValueError,"exact UTC hourly slots"):
+            A.issue(moved,self.YEAR,self.WEEK,self.t0)
+
+    def test_offgrid_csv_source_is_not_silently_rounded_to_hour(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            day=self.monday+A.DAY
+            bars={t:r for t,r in self.bars.items() if day<=t<day+A.DAY}
+            write_repo(root,bars)
+            path=root/A.HOURLY_DIR/f"{day:%Y}"/f"{day:%m}"/f"{day:%Y-%m-%d}.csv"
+            text=path.read_text()
+            expected=A.iso(day+3*A.HOUR)
+            offgrid=A.iso(day+3*A.HOUR+dt.timedelta(minutes=30))
+            self.assertEqual(text.count(expected),1)
+            path.write_text(text.replace(expected,offgrid,1))
+            with self.assertRaisesRegex(ValueError,"off-grid hourly source"):
+                A.load_hourly(root,day,day+A.DAY)
+
     def test_issue_clock_must_be_inside_the_week(self):
         with self.assertRaises(ValueError):
             A.issue(self.bars, self.YEAR, self.WEEK, self.monday - A.HOUR)
