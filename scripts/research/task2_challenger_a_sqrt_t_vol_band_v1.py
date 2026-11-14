@@ -433,6 +433,85 @@ def read_frozen_main_issuance(root: Path, year: int, week: int) -> tuple[dict, d
     return doc, proof
 
 
+
+def no_issuance_missing_score(root: Path, year: int, week: int,
+                              *, as_of_utc: dt.datetime | None = None) -> dict:
+    """Freeze an explicitly absent A issue as MISSING, never as a retrospective loss.
+
+    Only the canonical score command calls this with the real UTC clock.
+    The optional clock is solely for deterministic synthetic-Git tests.
+    """
+    maturity = week_monday(year, week) + 7 * DAY
+    now = as_of_utc if as_of_utc is not None else dt.datetime.now(dt.timezone.utc)
+    if now.tzinfo is None or not maturity <= now <= maturity + SCORE_FIRST_MATURITY_GRACE:
+        raise ValueError("no-issuance MISSING requires the first 48h after full week maturity")
+    rel = ISSUANCE_PATH.format(year=year, week=week)
+    _git(root, "rev-parse", "--verify", "refs/heads/main")
+    if _git(root, "rev-parse", "--is-shallow-repository") != "false":
+        raise ValueError("no-issuance MISSING cannot trust shallow main history")
+    # A removed or renamed first-main issuance MUST NOT turn into 'never issued'.
+    additions = _git(root, "log", "--first-parent", "-m", "--diff-filter=A",
+                     "--name-only", "--format=", "refs/heads/main", "--", rel)
+    current = subprocess.run(["git", "-C", str(root), "cat-file", "-e",
+                              "refs/heads/main:" + rel], capture_output=True)
+    if rel in additions.splitlines() or current.returncode == 0:
+        raise ValueError("historical or current A issuance exists; no-issuance certificate refused")
+    main_sha = _git(root, "rev-parse", "refs/heads/main")
+    return {
+        "contract": CONTRACT + "_SCORE", "week": f"{year}-W{week:02d}",
+        "issuance_sha256": None, "issuance_first_main_utc": None,
+        "first_main_issuance": None, "matured_rows": 0, "paired_rows": 0,
+        "rows": [], "abstentions": [], "aggregate": {}, "aggregate_primary_paired": {},
+        "aggregate_challenger_all": {}, "week_winner_interval_score": "MISSING",
+        "missing_reason": "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY",
+        "no_issuance_provenance": {
+            "contract": "TASK2_A_FIRST_MATURITY_NO_ISSUANCE_v1",
+            "canonical_path": rel, "checked_main_sha": main_sha,
+            "checked_at_utc": iso(now), "first_parent_historical_additions": 0},
+        "first_http_delivery": "UNKNOWN", "decision_status": "SHADOW_ONLY_NO_PROMOTION",
+        "note": "Immutable no-issuance denominator. Not a win, not a forecast, no promotion."
+    }
+
+
+def verify_no_issuance_first_main(root: Path, row: dict, proof: dict,
+                                  year: int, week: int) -> None:
+    """Prove the first committed MISSING row predated any original A issue."""
+    maturity = week_monday(year, week) + 7 * DAY
+    first_clock = utc(proof["first_main_utc"])
+    certificate = row.get("no_issuance_provenance")
+    rel = ISSUANCE_PATH.format(year=year, week=week)
+    if (row.get("missing_reason") != "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY"
+            or row.get("issuance_sha256") is not None
+            or row.get("issuance_first_main_utc") is not None
+            or row.get("first_main_issuance") is not None
+            or row.get("paired_rows") != 0
+            or row.get("matured_rows") != 0
+            or row.get("rows") != []
+            or row.get("week_winner_interval_score") != "MISSING"
+            or not isinstance(certificate, dict)
+            or certificate.get("contract") != "TASK2_A_FIRST_MATURITY_NO_ISSUANCE_v1"
+            or certificate.get("canonical_path") != rel
+            or certificate.get("first_parent_historical_additions") != 0):
+        raise ValueError("invalid no-issuance MISSING certificate")
+    checked = utc(certificate.get("checked_at_utc"))
+    if not maturity <= checked <= first_clock <= maturity + SCORE_FIRST_MATURITY_GRACE:
+        raise ValueError("no-issuance first-maturity clock out of bounds")
+    pin = certificate.get("checked_main_sha")
+    if not isinstance(pin, str) or len(pin) != 40 or any(c not in "0123456789abcdef" for c in pin):
+        raise ValueError("invalid no-issuance main ancestry pin")
+    subprocess.run(["git", "-C", str(root), "merge-base", "--is-ancestor",
+                    pin, proof["first_main_commit"]], check=True, capture_output=True)
+    # Audit all history up to the first score commit, not just current main:
+    # a genuine early issue cannot be deleted and recast as absent.
+    introductions = _git(root, "log", "--first-parent", "-m", "--diff-filter=A",
+                         "--name-only", "--format=", proof["first_main_commit"], "--", rel)
+    exists = subprocess.run(["git", "-C", str(root), "cat-file", "-e",
+                             proof["first_main_commit"] + ":" + rel], capture_output=True)
+    if rel in introductions.splitlines() or exists.returncode == 0:
+        raise ValueError("issued A source was present before first MISSING score")
+
+
+
 def read_first_main_weekly_score(root: Path, year: int, week: int) -> tuple[dict, dict]:
     """Read ONLY the first committed weekly score on full main first-parent history.
 
@@ -461,16 +540,20 @@ def read_first_main_weekly_score(root: Path, year: int, week: int) -> tuple[dict
             or row.get("decision_status") != "SHADOW_ONLY_NO_PROMOTION"
             or row.get("first_http_delivery") != "UNKNOWN"):
         raise ValueError("score lacks canonical research-only provenance")
-    issued, issue_proof = read_frozen_main_issuance(root, year, week)
-    if (row.get("issuance_sha256") != issued["issuance_sha256"]
-            or row.get("issuance_first_main_utc") != issue_proof["issuance_first_main_utc"]):
-        raise ValueError("score does not bind the original first-main issuance")
-    attested = row.get("first_main_issuance")
-    if not isinstance(attested, dict) or any(
-        attested.get(key) != issue_proof[key] for key in
-        ("first_main_commit", "first_main_blob_sha", "issuance_first_main_utc")
-    ):
-        raise ValueError("score's issuance proof was replaced or omitted")
+    if row.get("missing_reason") == "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY":
+        verify_no_issuance_first_main(root, row, proof, year, week)
+        proof["no_issuance_verified"] = True
+    else:
+        issued, issue_proof = read_frozen_main_issuance(root, year, week)
+        if (row.get("issuance_sha256") != issued["issuance_sha256"]
+                or row.get("issuance_first_main_utc") != issue_proof["issuance_first_main_utc"]):
+            raise ValueError("score does not bind the original first-main issuance")
+        attested = row.get("first_main_issuance")
+        if not isinstance(attested, dict) or any(
+            attested.get(key) != issue_proof[key] for key in
+            ("first_main_commit", "first_main_blob_sha", "issuance_first_main_utc")
+        ):
+            raise ValueError("score's issuance proof was replaced or omitted")
     paired = row.get("paired_rows")
     winner = row.get("week_winner_interval_score")
     if (type(paired) is not int or not 0 <= paired <= 14
@@ -631,14 +714,23 @@ def main(argv: Iterable[str] | None = None) -> int:
         canonical_score = (root / SCORE_PATH.format(year=year, week=week)).resolve()
         if output.resolve() == canonical_score and canonical_score.is_file():
             raise ValueError("first-maturity canonical score already exists; no in-place re-score")
-        issuance, original = read_frozen_main_issuance(root, year, week)
-        bars = load_hourly(root, monday, monday + 7 * DAY)
-        freeze_path = root / FREEZE_PATH.format(year=year, week=week)
-        freeze = json.loads(freeze_path.read_text(encoding="utf-8")) if freeze_path.is_file() else None
-        result = score(issuance, bars, freeze, issuance_first_main_utc=original["issuance_first_main_utc"])
-        result["first_main_issuance"] = original
-        result["first_http_delivery"] = "UNKNOWN"
-        result["decision_status"] = "SHADOW_ONLY_NO_PROMOTION"
+        try:
+            issuance, original = read_frozen_main_issuance(root, year, week)
+        except ValueError:
+            # This is NOT a generic fallback for malformed/altered sources:
+            # the helper proves that no original issuance ever reached main.
+            # It also refuses backfilled missing scores after first maturity.
+            if output.resolve() != canonical_score:
+                raise ValueError("no-issuance MISSING must be committed to the canonical first score path")
+            result = no_issuance_missing_score(root, year, week)
+        else:
+            bars = load_hourly(root, monday, monday + 7 * DAY)
+            freeze_path = root / FREEZE_PATH.format(year=year, week=week)
+            freeze = json.loads(freeze_path.read_text(encoding="utf-8")) if freeze_path.is_file() else None
+            result = score(issuance, bars, freeze, issuance_first_main_utc=original["issuance_first_main_utc"])
+            result["first_main_issuance"] = original
+            result["first_http_delivery"] = "UNKNOWN"
+            result["decision_status"] = "SHADOW_ONLY_NO_PROMOTION"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"contract": result.get("contract", "TASK2_CHALLENGER_A_IMMUTABLE_DECISION_v1"),
