@@ -257,5 +257,76 @@ class ARP02HREOriginalControlLossSensitivity(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "HRE_NATIVE_SOURCE_BLOB_DRIFT"):
                 arp02.read_source(Path(tmp))
 
+
+from scripts.research import arp02_hre_era_holdout_sensitivity_v1 as era_robustness
+
+
+class EraHoldoutRiskTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.source = arp02.read_source()
+        cls.out = era_robustness.evaluate(cls.source)
+
+    def test_original_native_source_pinned_and_nothing_promoted(self):
+        r = era_robustness.build()
+        self.assertEqual(r["input_git_blob_sha1"], arp02.SOURCE_BLOB_SHA1)
+        self.assertEqual(r["retrospectively_selected_era_count"], 5)
+        self.assertIsNone(r["independent_shock_count_certified"])
+        self.assertFalse(r["original_user_warning_issued_or_delivered_proven"])
+        self.assertFalse(r["original_risk_3_of_5_timing_explained"])
+        self.assertFalse(r["live_risk_threshold_changed"])
+        self.assertFalse(r["trading_or_portfolio_authority"])
+
+    def test_all_original_four_era_removals_preserve_equal_cost_negative(self):
+        b = self.out["assets"]["BTCUSDT"]
+        e = self.out["assets"]["ETHUSDT"]
+        self.assertEqual([x["delta_equal_unit_misclassification_loss"] for x in
+                          b["leave_one_era_out"]], [6, 3, 5, 5, 5])
+        self.assertEqual([x["delta_equal_unit_misclassification_loss"] for x in
+                          e["leave_one_era_out"]], [7, 6, 7, 4, 8])
+        self.assertTrue(b["all_five_removals_worse_at_equal_unit_loss"])
+        self.assertTrue(e["all_five_removals_worse_at_equal_unit_loss"])
+
+    def test_cost_ratio_grid_discloses_sign_reversal_not_robust_negative(self):
+        for asset in era_robustness.ASSETS:
+            r = self.out["assets"][asset]
+            self.assertEqual(r["challenger_better_at_k"]["1"], 0)
+            self.assertEqual(r["challenger_better_at_k"]["5"], 5)
+            self.assertEqual(r["challenger_better_at_k"]["10"], 5)
+            self.assertEqual(len(r["break_even_k_by_leave_one_out"]), 5)
+            self.assertTrue(r["evaluated_cost_ratios_are_posthoc_descriptive"])
+            self.assertFalse(r["investor_miss_cost_predeclared"])
+        btc = self.out["assets"]["BTCUSDT"]["challenger_better_at_k"]
+        eth = self.out["assets"]["ETHUSDT"]["challenger_better_at_k"]
+        self.assertEqual((btc["2"], btc["3"]), (0, 2))
+        self.assertEqual((eth["2"], eth["3"]), (1, 4))
+
+    def test_all_eras_are_explicitly_counterfactual_correlated(self):
+        for asset in era_robustness.ASSETS:
+            rows = self.out["assets"][asset]["leave_one_era_out"]
+            self.assertEqual([x["held_out_era"] for x in rows], list(era_robustness.ERAS))
+            for x in rows:
+                self.assertEqual(x["retained_era_count"], 4)
+                self.assertEqual(x["claim"],
+                                 "CORRELATED_RETROSPECTIVE_DAILY_CUTOFFS_NOT_FORWARD_HOLDOUT")
+                self.assertGreater(x["hypothetical_missed_to_false_penalty_ratio_break_even"], 1)
+
+    def test_missing_original_episode_fails_closed(self):
+        tampered = copy.deepcopy(self.source)
+        tampered["episodic_results"].pop(0)
+        with self.assertRaisesRegex(ValueError, "HRE_EPISODE_ROSTER"):
+            era_robustness.evaluate(tampered)
+
+    def test_forged_authority_and_negative_confusion_fail_closed(self):
+        tampered = copy.deepcopy(self.source)
+        tampered["historical_source_class"] = "ORIGINAL_ISSUED"
+        with self.assertRaisesRegex(ValueError, "HRE_SOURCE_AUTHORITY"):
+            era_robustness.evaluate(tampered)
+        tampered = copy.deepcopy(self.source)
+        tampered["episodic_results"][0]["ETHUSDT"]["price_candidate"]["fp"] = -2
+        with self.assertRaisesRegex(ValueError, "INVALID_ORIGINAL_CONFUSION"):
+            era_robustness.evaluate(tampered)
+
+
 if __name__ == "__main__":
     unittest.main()
