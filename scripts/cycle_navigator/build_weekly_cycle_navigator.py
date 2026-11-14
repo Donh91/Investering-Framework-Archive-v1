@@ -533,6 +533,8 @@ def _output_text(raw: dict[str, Any]) -> str:
 
 
 def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tokens: int) -> tuple[dict[str, Any], dict[str, Any]]:
+    if os.environ.get("CN_OFFLINE_ONLY") == "1":
+        raise RuntimeError("CN_OFFLINE_ONLY_API_POST_FORBIDDEN")
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise SystemExit("OPENAI_API_KEY_missing")
