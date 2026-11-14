@@ -331,6 +331,8 @@ def first_in_main(root: Path, path: str) -> dict:
         raise ValueError("unsafe source path")
     try:
         _git(root, "rev-parse", "--verify", "refs/heads/main")
+        if _git(root, "rev-parse", "--is-shallow-repository") != "false":
+            raise ValueError("shallow main history cannot establish first-in-main")
         _git(root, "cat-file", "-e", "refs/heads/main:" + path)
         commits = _git(root, "log", "--first-parent", "--reverse",
                        "--format=%H", "refs/heads/main", "--", path).splitlines()
@@ -338,10 +340,12 @@ def first_in_main(root: Path, path: str) -> dict:
             ["git", "-C", str(root), "cat-file", "-e", sha + ":" + path],
             capture_output=True).returncode == 0)
         blob = _git(root, "rev-parse", first + ":" + path)
+        current_blob = _git(root, "rev-parse", "refs/heads/main:" + path)
         clock = utc(_git(root, "show", "-s", "--format=%cI", first))
         # No pretend first-known from stale PR branch / date of author commit.
         return {"path": path, "first_main_commit": first,
-                "first_main_blob_sha": blob, "first_main_utc": iso(clock),
+                "first_main_blob_sha": blob, "current_main_blob_sha": current_blob,
+                "first_main_utc": iso(clock),
                 "clock_class": "MAIN_FIRST_PARENT_COMMITTER_CLOCK_NOT_HTTP_DELIVERY"}
     except (subprocess.CalledProcessError, StopIteration) as e:
         raise ValueError("main source missing, or complete main history unavailable: " + path) from e
@@ -380,8 +384,14 @@ def read_frozen_main_issuance(root: Path, year: int, week: int) -> tuple[dict, d
     if doc.get("week") != f"{year}-W{week:02d}" or doc.get("source", {}).get("clock_class") != "MAIN_FIRST_PARENT_COMMITTER_CLOCK_NOT_HTTP_DELIVERY":
         raise ValueError("unattested issue week/source; fixture is never scoreable")
     freeze = first_in_main(root, FREEZE_PATH.format(year=year, week=week))
-    if doc["source"].get("freeze_first_main_commit") != freeze["first_main_commit"] or doc["source"].get("freeze_blob_sha") != freeze["first_main_blob_sha"]:
-        raise ValueError("issuance/CN freeze source ancestry differs")
+    if (freeze["current_main_blob_sha"] != freeze["first_main_blob_sha"]
+            or doc["source"].get("freeze_first_main_commit") != freeze["first_main_commit"]
+            or doc["source"].get("freeze_blob_sha") != freeze["first_main_blob_sha"]):
+        raise ValueError("original CN freeze mutated or issuance ancestry differs")
+    original_freeze = subprocess.run(["git", "-C", str(root), "show",
+        freeze["first_main_commit"] + ":" + freeze["path"]], capture_output=True, check=True).stdout
+    if (root / freeze["path"]).read_bytes() != original_freeze:
+        raise ValueError("working copy of original CN freeze differs from main")
     if utc(doc["issue_clock_utc"]) != utc(freeze["first_main_utc"]):
         raise ValueError("issuance clock not identical to frozen CN first-main clock")
     first_end = min(utc(d["scored_from_utc"]) for a in doc["assets"].values() for d in a["days"])
@@ -433,6 +443,9 @@ def main(argv: Iterable[str] | None = None) -> int:
     monday = week_monday(year, week)
     output = Path(a.output)
     if a.command == "issue":
+        expected_output = (root / ISSUANCE_PATH.format(year=year, week=week)).resolve()
+        if not a.synthetic_fixture_clock and output.resolve() != expected_output:
+            raise ValueError("canonical issue must only write the dedicated research issuance path")
         if a.t0 and not a.synthetic_fixture_clock:
             raise ValueError("manual issue clock cannot claim first-in-main")
         if a.synthetic_fixture_clock and not a.t0:
