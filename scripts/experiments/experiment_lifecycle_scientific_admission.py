@@ -21,6 +21,34 @@ UTC = timezone.utc
 ADMISSION_CONTRACT = "EXPERIMENT_SCIENTIFIC_ADMISSION_v1"
 ADMISSION_REGISTRY_CONTRACT = "EXPERIMENT_SCIENTIFIC_ADMISSION_REGISTRY_v1"
 QUALIFIED = "QUALIFIED_FOR_FORWARD_TEST"
+# A persistent sensor condition is ONE fire episode. Replicating every observation of the same
+# episode created ~4 identical requests per candidate per day (63,219 requests for 319 candidates
+# by 2026-11-14) and broke the storage-health gate. Only an episode START is dispatched.
+FIRED_STATES = {"FIRED", "FIRED_NO_TARGET"}
+# Missing/unknown observations are not observed evidence that a fire episode has ended.
+# Only an observed false condition can re-arm a previously firing candidate.
+DEFINITIVE_EPISODE_STATES = FIRED_STATES | {"OBSERVED_NOT_FIRED"}
+DISPATCH_LISTING_RULE = "PENDING_UNRECEIPTED_QUALIFIED_ONLY"
+
+
+def prior_observation_status(observation_root: Path, candidate_id: str, before_utc: str) -> str | None:
+    """Last DEFINITIVE earlier episode state; unknown/missing observations do not re-arm."""
+    best: tuple[str, str] | None = None
+    folder = observation_root / candidate_id
+    for path in folder.glob("*.json") if folder.is_dir() else []:
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(value, dict) or value.get("contract") != "EXPERIMENT_OBSERVATION_v1":
+            continue
+        observed = str(value.get("observed_at_utc") or "")
+        status = str(value.get("evaluation_status") or "")
+        if status not in DEFINITIVE_EPISODE_STATES:
+            continue  # WAITING_FOR_DATA, mapping gaps and invalid/unknown states are not a false signal
+        if observed and observed < before_utc and (best is None or observed > best[0]):
+            best = (observed, status)
+    return best[1] if best else None
 
 
 def canonical(value: Any) -> bytes:
@@ -301,6 +329,7 @@ def main() -> None:
 
     new_forecasts = 0
     dispatch = 0
+    episode_continuations = 0
     candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
     candidate_rows.sort(key=lambda item: (0 if item[1].get("spec", {}).get("kind") == "FORECAST_TEST" else 1, str(item[1].get("candidate_id") or "")))
     for spec_path, candidate in candidate_rows:
@@ -336,7 +365,11 @@ def main() -> None:
             if base.write_new(args.forecast_root / when.strftime("%Y/%m") / f"{forecast_id}.json", frozen):
                 new_forecasts += 1
 
-        if admitted and is_new and (candidate["candidate_id"] in new_ids or fired):
+        episode_start = candidate["candidate_id"] in new_ids or (
+            fired and prior_observation_status(args.observation_root, candidate["candidate_id"], captured) not in FIRED_STATES)
+        if admitted and is_new and fired and not episode_start:
+            episode_continuations += 1  # same fire episode: the observation is kept, no new request
+        if admitted and is_new and episode_start:
             request_id = "ER-" + base.sha({"candidate_id": candidate["candidate_id"], "observation_id": observation_id})[:20]
             request = {"contract": "EXPERIMENT_REQUEST_v1", "request_id": request_id, "candidate_id": candidate["candidate_id"], "created_at_utc": now, "request_type": "SENSOR_FIRE_REPLICATION" if fired else "SPEC_REGISTRATION", "spec": spec, "embedded_observation": observation, "local_frozen_forecast_id": forecast_id, "scientific_admission_status": admission.get("status"), "scientific_admission_sha256": digest(admission), "source_spec_path": base.rel(root, spec_path), "source_spec_sha256": base.sha(candidate), "authority": {"automatic_trade": False, "canonical_promotion": False, "portfolio_action": False}}
             dispatch += int(base.write_new(args.dispatch_root / when.strftime("%Y/%m/%d") / f"{request_id}.json", request))
@@ -352,16 +385,27 @@ def main() -> None:
     args.registry_output.parent.mkdir(parents=True, exist_ok=True)
     args.registry_output.write_bytes(base.canon(reg))
 
+    # LATEST lists only qualified requests that have no execution receipt yet. Every request and
+    # receipt file stays immutable on disk; the consumer builds its receipt manifest from its own
+    # receipt files, so receipted requests never need to be listed again.
+    receipted = {str(value.get("request_id")) for _, value in base.jsons(args.receipt_root, "EXPERIMENT_EXECUTION_RECEIPT_v1")
+                 if value.get("request_id")}
     requests = []
+    total_qualified = 0
     for path, value in base.jsons(args.dispatch_root, "EXPERIMENT_REQUEST_v1"):
         if value.get("scientific_admission_status") != QUALIFIED:
             continue
+        total_qualified += 1
+        if value.get("request_id") in receipted:
+            continue
         relative_path = base.rel(root, path)
         requests.append({"request_id": value["request_id"], "candidate_id": value["candidate_id"], "path": relative_path, "sha256": base.sha(value), "raw_url": f"https://raw.githubusercontent.com/{args.repository}/{args.branch}/{relative_path}"})
-    manifest = {"contract": "EXPERIMENT_DISPATCH_MANIFEST_v2_SCIENTIFIC_ADMISSION", "generated_at_utc": now, "source_repository": args.repository, "source_branch": args.branch, "request_count": len(requests), "requests": sorted(requests, key=lambda item: item["request_id"]), "admission_required": QUALIFIED, "authority": "SHADOW_ONLY_CROSS_REPO_DISPATCH"}
+    manifest = {"contract": "EXPERIMENT_DISPATCH_MANIFEST_v2_SCIENTIFIC_ADMISSION", "generated_at_utc": now, "source_repository": args.repository, "source_branch": args.branch, "request_count": len(requests), "requests": sorted(requests, key=lambda item: item["request_id"]), "admission_required": QUALIFIED, "authority": "SHADOW_ONLY_CROSS_REPO_DISPATCH",
+                "listing_rule": DISPATCH_LISTING_RULE, "total_qualified_request_count": total_qualified,
+                "receipted_request_count": total_qualified - len(requests), "history_root": base.rel(root, args.dispatch_root)}
     args.manifest_output.parent.mkdir(parents=True, exist_ok=True)
     args.manifest_output.write_bytes(base.canon(manifest))
-    print(json.dumps({"candidate_count": reg["candidate_count"], "new_candidate_count": len(new_ids), "new_forecasts": new_forecasts, "dispatch_created": dispatch, "admission_status_counts": admission_registry["status_counts"], "rejected": rejected}, sort_keys=True))
+    print(json.dumps({"candidate_count": reg["candidate_count"], "new_candidate_count": len(new_ids), "new_forecasts": new_forecasts, "dispatch_created": dispatch, "episode_continuations_not_dispatched": episode_continuations, "admission_status_counts": admission_registry["status_counts"], "rejected": rejected}, sort_keys=True))
 
 
 if __name__ == "__main__":
