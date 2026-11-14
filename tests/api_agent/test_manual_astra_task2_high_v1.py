@@ -169,14 +169,32 @@ class AstraOneShotTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "RETRIEVED_RESPONSE_ID_OR_MODEL_MISMATCH"):
                 m.collect(self.out)
 
-    def test_canonical_shared_budget_carries_astra_reservation(self):
+    def test_canonical_shared_budget_honors_provider_settlement_and_future_reservations(self):
         from scripts.api_agent.check_monthly_cost_guard import pending_risk
         ledger = Path(__file__).resolve().parents[2] / (
             "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
         low, high, n = pending_risk(ledger)
-        self.assertGreaterEqual(high, 12.0)
-        self.assertGreaterEqual(n, 4)
-        self.assertGreaterEqual(high-low, m.MAX_THEORETICAL_COST_USD)
+        self.assertEqual((low, high, n), (0.0, 0.0, 0))
+        value = json.loads(ledger.read_text(encoding="utf-8"))
+        self.assertEqual(len(value["settled"]), 5)
+        self.assertEqual(value["provider_settlement_evidence"]["sha256"],
+                         "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8")
+        self.assertFalse(value["owner_reservations"])
+        # A NEW source-bound, unspent Astra owner claim must still be counted.
+        value["owner_reservations"] = [{
+            "work_id": "ASTRA-HIGH-TASK2-REALDATA-V2-20261113-ONE",
+            "created_month_utc": "2026-11",
+            "status": "OWNER_RESERVED_PREHTTP",
+            "lower_usd": 0,
+            "upper_usd": 10,
+            "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+            "one_paid_post_max": 1,
+            "reconciliation_required": True,
+        }]
+        probe = self.root / "future-liability.json"
+        probe.write_text(json.dumps(value), encoding="utf-8")
+        future_low, future_high, future_count = pending_risk(probe)
+        self.assertEqual((future_low, future_high, future_count), (0.0, 10.0, 1))
 
     def test_original_director_live_secret_not_corrupted(self):
         yml = (Path(__file__).resolve().parents[2] /
