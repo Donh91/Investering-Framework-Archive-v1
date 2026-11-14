@@ -6,11 +6,8 @@
     "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
   },
   "cause_codes": [
-    "DATA_HEALTH_CHANGED",
-    "ACTION_STATE_CHANGED",
-    "MARKET_STATE_CHANGED",
-    "CAPITALIZATION_LADDER_CHANGED",
-    "PROTECTION_STATE_CHANGED"
+    "OFFICIAL_SOURCE_REFRESH_DUE",
+    "MARKET_HEAT_ENTERED"
   ],
   "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
   "cooldown_seconds": 10800,
@@ -48,16 +45,16 @@
   ],
   "current_market_state": {
     "action_permission": "HOLD_WAIT",
-    "btc_delta_pct": -0.20652106353156174,
-    "directional_state": "BEARISH",
-    "eth_delta_pct": -0.15782514854899565,
-    "eth_relative_state": "STRENGTHENING",
-    "ethbtc_delta_pct": 0.07047216349542751,
-    "market_observation_open_utc": "2026-11-14T11:00:00Z",
-    "new_price_observation": true,
-    "predecessor_market_observation_open_utc": "2026-11-14T09:00:00Z",
-    "regime": "BEARISH",
-    "summary": "BTC and ETH are both declining over the latest governed comparison interval; this does not create sell authority."
+    "btc_delta_pct": 0.0,
+    "directional_state": "UNCHANGED_NO_NEW_OBSERVATION",
+    "eth_delta_pct": 0.0,
+    "eth_relative_state": "NO_NEW_OBSERVATION",
+    "ethbtc_delta_pct": 0.0,
+    "market_observation_open_utc": "2026-11-14T13:00:00Z",
+    "new_price_observation": false,
+    "predecessor_market_observation_open_utc": "2026-11-14T13:00:00Z",
+    "regime": "NO_NEW_OBSERVATION",
+    "summary": "The price owner repeated the same completed hourly observation; no fresh directional market claim is made."
   },
   "current_protection_tracker": {
     "authority": {
@@ -74,7 +71,7 @@
     "distribution_risk": "UNKNOWN",
     "eta_window": "UNAVAILABLE",
     "invalidation": "Source-bound recovery and durable improved breadth weaken downside concern.",
-    "last_material_change_at": "2026-11-14T12:34:29Z",
+    "last_material_change_at": "2026-11-14T12:35:23Z",
     "public_explanation": {
       "action_authority": false,
       "contract": "CN_PUBLIC_PROTECTION_COPY_v1",
@@ -94,33 +91,33 @@
     "reentry_state": "INACTIVE"
   },
   "dispatch": true,
-  "evaluated_at_utc": "2026-11-14T12:34:29Z",
+  "evaluated_at_utc": "2026-11-14T14:35:55Z",
   "heat_detail": {
-    "btc_return_24h_pct": -3.27024,
+    "btc_return_24h_pct": -4.30421,
     "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
-    "eth_return_24h_pct": -2.77661,
+    "eth_return_24h_pct": -4.1803,
     "existing_entry_temperature": "NORMAL",
-    "median_return_24h_pct": -3.26326
+    "median_return_24h_pct": -4.694465
   },
-  "heat_state": "NORMAL",
-  "last_request_age_seconds": 6386.0,
-  "last_requested_source_sha": "eeb65fea11dac2ac848e82aaa31cdffefade0944701cfb96d74889094b626901",
-  "latest_compass_source_packet_sha256": "eeb65fea11dac2ac848e82aaa31cdffefade0944701cfb96d74889094b626901",
+  "heat_state": "HOT_DOWNSIDE_REASSESSMENT",
+  "last_request_age_seconds": 7286.0,
+  "last_requested_source_sha": "eb2cf03ed30844daf14c5285bd9b51fc3aaf95f1bde2a57fcebbd73cef63365b",
+  "latest_compass_source_packet_sha256": "eb2cf03ed30844daf14c5285bd9b51fc3aaf95f1bde2a57fcebbd73cef63365b",
   "missing_freeze_observation_only": true,
   "missing_scheduled_freeze": null,
   "protective_bypass": true,
   "reason": "MATERIAL_REASSESSMENT_REQUIRED",
   "request_retry_seconds": 1200,
   "scheduled_slot_proximity_seconds": 1800,
-  "seconds_to_next_scheduled_compass": 24151.0,
-  "source_packet_sha256": "eb2cf03ed30844daf14c5285bd9b51fc3aaf95f1bde2a57fcebbd73cef63365b",
+  "seconds_to_next_scheduled_compass": 16865.0,
+  "source_packet_sha256": "1c6a964354efd195c5b71f95f031469b726b6eb3f76fbe68e42b93a1ef373165",
   "suppressed_cause_codes": [],
   "temporary_source_continuity": {
     "active": true,
     "expires_local_date": null,
-    "expiry_at_utc": null,
+    "expiry_at_utc": "2026-11-14T15:00:00Z",
     "policy": "STANDING_UNTIL_REBOUNDED",
-    "refresh_admitted": false,
+    "refresh_admitted": true,
     "semantics": "SOURCE_FRESHNESS_MAINTENANCE_ONLY_NO_MARKET_OR_PORTFOLIO_ACTION"
   },
   "upstream_refresh_required": false
