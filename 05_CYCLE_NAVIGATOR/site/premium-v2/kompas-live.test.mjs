@@ -63,11 +63,11 @@ test('down headline in Danish and English attributes the direction word to Kompa
  assert.deepEqual([da.headline.arrow,da.headline.tone,da.headline.direction],['↘','down','DOWN']);
  assert.equal(da.headline.title,'Ned mod ca. 68.100');
  assert.equal(da.headline.sub,'−1,2 % ved mandagens lukning · moderat hældning');
- assert.equal(da.headline.source,'Challenger B (forsøg) · Kompas 1–3 d: Faldende');
+ assert.equal(da.headline.source,"live, Challenger B's formel (forsøg) · Kompas 1–3 d: Faldende");
  const en=liveViewModel(fixture(),{lang:'en',hz:3,nowMs:NOW});
  assert.equal(en.headline.title,'Down toward approx. 68,100');
  assert.equal(en.headline.sub,'−1.2% by Monday\'s close · moderate tilt');
- assert.equal(en.headline.source,'Challenger B (trial) · Compass 1–3 d: Falling');
+ assert.equal(en.headline.source,"live, Challenger B's formula (trial) · Compass 1–3 d: Falling");
  assert.equal(liveViewModel(fixture(),{lang:'da',hz:1,nowMs:NOW}).headline.sub,'−0,6 % ved lørdagens lukning · moderat hældning');
  assert.equal(liveViewModel(fixture(),{lang:'da',hz:7,nowMs:NOW}).headline.sub,'−1,3 % ved fredagens lukning · moderat hældning');
 });
@@ -83,7 +83,7 @@ test('flat line without a registered Challenger B and a balanced Kompas read as 
  assert.deepEqual([en.headline.title,en.headline.sub],['No clear direction','Challenger B is not registered yet, so the line is flat.']);
  const balanced=liveViewModel(fixture({down:false}),{lang:'da',nowMs:NOW});
  assert.equal(balanced.headline.sub,'Kompas’ evidens er i balance for perioden.');
- assert.equal(balanced.headline.source,'Challenger B (forsøg) · Kompas 1–3 d: Blandet');
+ assert.equal(balanced.headline.source,"live, Challenger B's formel (forsøg) · Kompas 1–3 d: Blandet");
 });
 
 test('unavailable producer, asset, contract and stale tab are calm states without a chart',()=>{
@@ -145,11 +145,13 @@ test('comment track is newest first, starts with Nu, follows the horizon and kee
 test('trial labels, footer disclaimer and no probability claim on behalf of Kompas',()=>{
  const da=liveViewModel(fixture(),{lang:'da',nowMs:NOW});
  const en=liveViewModel(fixture(),{lang:'en',nowMs:NOW});
- assert.match(da.legend.find(x=>x.key==='line').label,/Challenger B \(forsøg\)/);
- assert.match(da.legend.find(x=>x.key==='frames').label,/Challenger A \(forsøg\)/);
- assert.match(en.legend.find(x=>x.key==='line').label,/Challenger B \(trial\)/);
- assert.match(en.legend.find(x=>x.key==='frames').label,/Challenger A \(trial\)/);
+ assert.equal(da.legend.find(x=>x.key==='line').label,"live, Challenger B's formel (forsøg)");
+ assert.equal(da.legend.find(x=>x.key==='frames').label,"live, beregnet hver time med Challenger A's formel");
+ assert.equal(en.legend.find(x=>x.key==='line').label,"live, Challenger B's formula (trial)");
+ assert.equal(en.legend.find(x=>x.key==='frames').label,"live, calculated hourly using Challenger A's formula");
  assert.match(da.footer,/ikke en købs- eller salgsanbefaling/);
+ assert.match(da.footer,/ikke originale, fastfrosne A\/B-udstedelser/);
+ assert.doesNotMatch(da.footer,/Begge modeller scores løbende/);
  assert.match(da.footer,/ikke en officiel prognose/);
  assert.match(en.footer,/not a buy or sell recommendation/);
  for(const m of [da,en,liveViewModel(flatFixture(),{nowMs:NOW}),liveViewModel(fixture({status:'UNAVAILABLE',reasons:['HOURLY_STALE']}),{nowMs:NOW})]){
