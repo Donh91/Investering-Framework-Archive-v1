@@ -10,13 +10,20 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 ENV_OK = {"protection_rules": [{"type": "wait_timer", "wait_timer": 10}]}
 
 
-def run(created, status="completed", rid=1):
-    return {"id": rid, "status": status, "created_at": created.strftime("%Y-%m-%dT%H:%M:%SZ")}
+def run(created, status="completed", rid=1, conclusion="success"):
+    return {"id": rid, "status": status, "conclusion": conclusion if status == "completed" else None,
+            "created_at": created.strftime("%Y-%m-%dT%H:%M:%SZ")}
 
 
-def plan(now, mode="ACTIVE", hourly=(), monday=(), self_runs=(), env=ENV_OK, self_id=99):
+FINAL_OK_W47 = run(dt.datetime(2026, 11, 16, 1, 7, tzinfo=UTC))  # 02:07 CET Monday, succeeded
+
+
+def plan(now, mode="ACTIVE", hourly=(), monday=(), self_runs=(), env=ENV_OK, self_id=99, recovery=(), close=None):
+    if close is None:
+        close = [FINAL_OK_W47]
     return M.decide(now, mode=mode, hourly_runs=list(hourly), monday_runs=list(monday),
-                    self_runs=list(self_runs), self_run_id=self_id, environment=env)
+                    self_runs=list(self_runs), self_run_id=self_id, environment=env,
+                    recovery_runs=list(recovery), close_runs=list(close))
 
 
 class MetronomeTest(unittest.TestCase):
@@ -35,18 +42,64 @@ class MetronomeTest(unittest.TestCase):
         self.assertEqual(plan(winter)["targets"]["MONDAY"], "DUE")
         self.assertEqual(plan(winter - dt.timedelta(minutes=2))["targets"]["MONDAY"], "BEFORE_MONDAY_SLOT")
         summer = dt.datetime(2026, 6, 1, 0, 41, tzinfo=UTC)  # 02:41 CEST
-        self.assertEqual(plan(summer)["targets"]["MONDAY"], "DUE")
+        final_summer = run(dt.datetime(2026, 6, 1, 0, 10, tzinfo=UTC))  # 02:10 CEST
+        self.assertEqual(plan(summer, close=[final_summer])["targets"]["MONDAY"], "DUE")
         self.assertEqual(plan(winter + dt.timedelta(days=1))["targets"]["MONDAY"], "NOT_MONDAY_CPH")
         ran = run(dt.datetime(2026, 11, 15, 23, 30, tzinfo=UTC))  # 00:30 CET Monday counts
         self.assertEqual(plan(winter, monday=[ran])["targets"]["MONDAY"], "ALREADY_RAN_THIS_MONDAY")
         last_week = run(dt.datetime(2026, 11, 9, 8, 37, tzinfo=UTC))
         self.assertEqual(plan(winter, monday=[last_week])["targets"]["MONDAY"], "DUE")
 
+    def test_recovery_hourly_from_minute_35(self):
+        now = dt.datetime(2026, 11, 15, 10, 36, tzinfo=UTC)
+        self.assertEqual(plan(now)["targets"]["RECOVERY"], "DUE")
+        self.assertEqual(plan(now.replace(minute=30))["targets"]["RECOVERY"], "BEFORE_MINUTE_35")
+        self.assertEqual(plan(now, recovery=[run(now.replace(minute=33))])["targets"]["RECOVERY"], "ALREADY_RAN_THIS_HOUR")
+
+    def test_sunday_preclose_window_before_midnight_only(self):
+        sun = dt.datetime(2026, 11, 15, 22, 36, tzinfo=UTC)  # 23:36 CET Sunday
+        p = plan(sun, close=[])
+        self.assertEqual(p["targets"]["PRECLOSE"], "DUE")
+        self.assertIn({"workflow": M.CLOSE_WORKFLOW, "inputs": {"mode": "preclose"}}, p["dispatch"])
+        self.assertEqual(plan(sun.replace(minute=20), close=[])["targets"]["PRECLOSE"], "BEFORE_PRECLOSE_SLOT")
+        self.assertEqual(plan(sun.replace(minute=59), close=[])["targets"]["PRECLOSE"], "TOO_CLOSE_TO_MIDNIGHT")
+        self.assertEqual(plan(sun, close=[run(sun.replace(minute=35))])["targets"]["PRECLOSE"], "ALREADY_RAN_THIS_SLOT")
+        self.assertEqual(plan(sun - dt.timedelta(days=1), close=[])["targets"]["PRECLOSE"], "NOT_SUNDAY_CPH")
+
+    def test_final_close_then_master_monday_strictly_in_order(self):
+        t0205 = dt.datetime(2026, 11, 16, 1, 6, tzinfo=UTC)  # 02:06 CET Monday
+        p = plan(t0205, close=[])
+        self.assertEqual(p["targets"]["FINAL"], "DUE")
+        self.assertIn({"workflow": M.CLOSE_WORKFLOW, "inputs": {"mode": "final"}}, p["dispatch"])
+        self.assertEqual(plan(t0205.replace(minute=0), close=[])["targets"]["FINAL"], "BEFORE_FINAL_SLOT")
+        t0241 = t0205.replace(minute=41)
+        # Master Monday waits until FINAL has SUCCEEDED this Monday.
+        self.assertEqual(plan(t0241, close=[])["targets"]["MONDAY"], "WAITING_FOR_SUNDAY_FINAL")
+        running = run(t0205, "in_progress")
+        self.assertEqual(plan(t0241, close=[running])["targets"]["MONDAY"], "WAITING_FOR_SUNDAY_FINAL")
+        self.assertEqual(plan(t0241, close=[running])["targets"]["FINAL"], "TARGET_ACTIVE")
+        self.assertEqual(plan(t0241)["targets"]["FINAL"], "FINAL_SUCCEEDED_THIS_MONDAY")
+        self.assertEqual(plan(t0241)["targets"]["MONDAY"], "DUE")
+
+    def test_late_preclose_cron_on_monday_never_counts_as_final(self):
+        """GitHub fires the Sunday 23:35 preclose cron ~7 h late; on Monday it fails (rollover unbound)."""
+        t = dt.datetime(2026, 11, 16, 6, 0, tzinfo=UTC)  # 07:00 CET Monday
+        late_preclose_failed = run(dt.datetime(2026, 11, 16, 5, 50, tzinfo=UTC), conclusion="failure")
+        p = plan(t, close=[late_preclose_failed])
+        self.assertEqual(p["targets"]["FINAL"], "DUE")
+        self.assertEqual(p["targets"]["MONDAY"], "WAITING_FOR_SUNDAY_FINAL")
+        sunday_preclose_ok = run(dt.datetime(2026, 11, 15, 22, 40, tzinfo=UTC))  # Sunday's own preclose
+        self.assertEqual(plan(t, close=[sunday_preclose_ok])["targets"]["MONDAY"], "WAITING_FOR_SUNDAY_FINAL")
+        # A success between Monday 00:00 and 02:00 CET is not the final close either.
+        early_ok = run(dt.datetime(2026, 11, 16, 0, 30, tzinfo=UTC))  # 01:30 CET Monday
+        self.assertEqual(plan(t, close=[early_ok])["targets"]["FINAL"], "DUE")
+
     def test_shadow_mode_dispatches_nothing_but_the_loop(self):
         now = dt.datetime(2026, 11, 16, 1, 45, tzinfo=UTC)
         p = plan(now, mode="SHADOW")
         self.assertEqual(p["dispatch"], [])
-        self.assertEqual(len(p["would_dispatch"]), 2)
+        self.assertEqual([d["workflow"] for d in p["would_dispatch"]],
+                         ["hourly-sequence-capture.yml", "native-market-recovery.yml", "weekly-api-calibration-shadow.yml"])
         self.assertTrue(p["next_tick"])
         self.assertEqual(M.read_mode({"mode": "ACTIVE"}), "ACTIVE")
         for doc in (None, {}, {"mode": "active"}, {"mode": "ON"}, "ACTIVE"):
@@ -91,7 +144,7 @@ class MetronomeTest(unittest.TestCase):
                 return {"mode": "ACTIVE"}
 
             def runs(self, wf):
-                return []
+                return [FINAL_OK_W47] if wf == M.CLOSE_WORKFLOW else []
 
             def environment(self):
                 return ENV_OK
@@ -104,7 +157,8 @@ class MetronomeTest(unittest.TestCase):
         now = dt.datetime(2026, 11, 16, 1, 45, tzinfo=UTC)
         gh = Fake()
         p = M.run(gh, now, 99)
-        self.assertEqual(gh.calls, ["hourly-sequence-capture.yml", "weekly-api-calibration-shadow.yml", "framework-metronome.yml"])
+        self.assertEqual(gh.calls, ["hourly-sequence-capture.yml", "native-market-recovery.yml",
+                                    "weekly-api-calibration-shadow.yml", "framework-metronome.yml"])
         self.assertEqual(p["errors"], [])
         gh = Fake(fail={"hourly-sequence-capture.yml"})
         p = M.run(gh, now, 99)
