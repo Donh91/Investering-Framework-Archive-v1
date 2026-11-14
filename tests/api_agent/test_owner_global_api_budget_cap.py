@@ -162,14 +162,9 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertNotEqual(rc, 0)
         self.assertIn("LIABILITY_EVIDENCE_UNAVAILABLE",
                       str(state["cost_evidence_errors"]))
+        # Settled canonical items do not create a permanent floor. Fresh
+        # synthetic unresolved liabilities still reject malformed exposures.
         for rows in (
-            [],
-            [risk_row(41870364609)],
-            [risk_row(41949497953)],
-            [risk_row(41870364609), risk_row(41949497953)],
-            [risk_row(41870364609), risk_row(41949497953), risk_row(42204120988, upper=2.99)],
-            [risk_row(41870364609, upper=2.99), risk_row(41949497953)],
-            [risk_row(41870364609), risk_row(41949497953, upper=2.99)],
             [risk_row(41870364609), risk_row(41870364609)],
             [risk_row(41870364609, upper=4)],
             [risk_row(41870364609, upper=0)],
@@ -237,9 +232,42 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         state = json.loads(result.stdout)
         self.assertEqual(result.returncode, 0, state)
         self.assertEqual(state["status"], "PASS", state)
-        self.assertEqual(state["pending_liability_upper_usd"], 22.0)
+        self.assertEqual(state["pending_liability_upper_usd"], 0.0)
+        self.assertEqual(state["pending_liability_count"], 0)
         self.assertGreaterEqual(state["remaining_usd"], 4.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
+
+    def test_canonical_provider_settlement_is_evidence_bound_and_private(self):
+        from scripts.api_agent.check_monthly_cost_guard import (
+            pending_risk, UNRESOLVED_NATIVE_POST_FLOOR_USD,
+        )
+        p = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
+        ledger = json.loads(p.read_text(encoding="utf-8"))
+        self.assertEqual(UNRESOLVED_NATIVE_POST_FLOOR_USD, {})
+        self.assertEqual(ledger["unresolved"], [])
+        self.assertEqual(ledger["owner_reservations"], [])
+        self.assertEqual(pending_risk(p), (0.0, 0.0, 0))
+        self.assertEqual(len(ledger["settled"]), 5)
+        self.assertEqual(ledger["provider_settlement_evidence"]["sha256"],
+                         "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8")
+        self.assertTrue(ledger["provider_settlement_evidence"]["path"].startswith(
+            "reports/claude/automated/2026/11/CLAUDE-API-BUDGET-PROVIDER-RECONCILIATION-"))
+        for row in ledger["settled"]:
+            for name in ("lower_usd", "upper_usd", "amount_usd", "billed_usd"):
+                self.assertNotIn(name, row)
+        with tempfile.TemporaryDirectory() as td:
+            f = Path(td) / "settlement.json"
+            for mutation in ("missing_evidence", "dropped_entry", "duplicate_unresolved"):
+                bad = json.loads(json.dumps(ledger))
+                if mutation == "missing_evidence":
+                    bad["provider_settlement_evidence"]["sha256"] = "forged"
+                elif mutation == "dropped_entry":
+                    bad["settled"].pop()
+                else:
+                    bad["unresolved"] = [risk_row(41870364609)]
+                f.write_text(json.dumps(bad), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "PROVIDER_SETTLE"):
+                    pending_risk(f)
 
     def test_native_caller_caps_above_40_only_in_hard_disabled_astra_v2_job(self):
         import re

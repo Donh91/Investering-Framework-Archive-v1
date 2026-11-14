@@ -1,66 +1,62 @@
 {
   "contract": "API_PENDING_BILLING_RISK_V1",
-  "status": "OWNER_APPROVED_RANGE_ESTIMATE_NOT_PROVIDER_INVOICE",
+  "status": "PROVIDER_RECONCILED_SETTLED_WITH_SOURCE_BOUND_EVIDENCE",
   "owner_reference": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6680520240",
   "normal_budget_usd": 50,
   "absolute_budget_usd": 50,
-  "method": "Account for all still-ambiguous previous HTTP POSTs as nonzero reserved upper exposure. USD3 is the authenticated original per-run admission limit, a conservative risk estimate, not independently verified provider billing. Never repeat an old POST or release its reserve without external receipt and owner/source-bound reconciliation. Owner's Nov 13 interactive approval raises total monthly ceiling to USD50, does not cancel liabilities or raise one-shot prices; hold USD4 headroom.",
-  "unresolved": [
-    {
-      "run_id": "41870364609",
-      "created_month_utc": "2026-11",
-      "status": "POST_OUTCOME_UNKNOWN",
-      "lower_usd": 0,
-      "upper_usd": 3,
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41870364609",
-      "basis": "Original FMOS Sol call timed out at pass1 after admitted account/lane budget check. Governed API task registry single_run_hard_stop_usd=3.0. No provider invoice or durable response ID."
-    },
-    {
-      "run_id": "41949497953",
-      "created_month_utc": "2026-11",
-      "status": "POST_OUTCOME_UNKNOWN",
-      "lower_usd": 0,
-      "upper_usd": 3,
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41949497953",
-      "basis": "Original Research Lab MAX job disconnected after claimed POST; original native pre-HTTP claim #6647190305 capped at USD3. No durable provider response ID."
-    },
-    {
-      "run_id": "42204120988",
-      "created_month_utc": "2026-11",
-      "status": "POST_OUTCOME_UNKNOWN",
-      "lower_usd": 0,
-      "upper_usd": 3,
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42204120988",
-      "basis": "Native original one-use bot claim #6682901859 capped at USD3. Provider terminal INCOMPLETE after 39650 input / 16000 reasoning-only output tokens. Native GET-only diagnostic #42206207249, no final result, no provider invoice. Never replay original POST."
-    }
-  ],
+  "method": "Reserve genuinely unresolved future POSTs and owner-authorized pre-HTTP work until independently reviewed provider reconciliation. The identified November events are no longer pending; their metadata is preserved without billing amounts in settled. Never replay their original POST IDs; retain per-request and monthly admission limits and the owner reserve.",
+  "unresolved": [],
   "no_retry_original_ids": true,
   "requires_reconciliation_before_releasing_reserve": true,
   "no_api_authority": true,
-  "owner_reservations": [
+  "owner_reservations": [],
+  "owner_budget_explicit_approval": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6864310705",
+  "owner_budget_reserve_usd": 4,
+  "settled": [
     {
-      "work_id": "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
+      "kind": "NATIVE_POST",
+      "run_id": "41870364609",
       "created_month_utc": "2026-11",
-      "status": "OWNER_RESERVED_PREHTTP",
-      "lower_usd": 0,
-      "upper_usd": 3,
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
-      "one_paid_post_max": 1,
-      "reconciliation_required": true,
-      "basis": "Owner explicitly authorizes one manual Astra High research API call on 2026-11-13; conservatively reserve USD3 before any possible POST until original response usage and native GitHub issue claim are independently reconciled."
+      "status": "PROVIDER_PERIOD_RECONCILED",
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41870364609",
+      "no_retry": true
     },
     {
+      "kind": "NATIVE_POST",
+      "run_id": "41949497953",
+      "created_month_utc": "2026-11",
+      "status": "PROVIDER_PERIOD_RECONCILED",
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41949497953",
+      "no_retry": true
+    },
+    {
+      "kind": "NATIVE_POST",
+      "run_id": "42204120988",
+      "created_month_utc": "2026-11",
+      "status": "PROVIDER_PERIOD_RECONCILED",
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42204120988",
+      "no_retry": true
+    },
+    {
+      "kind": "ASTRA_PREHTTP_RESERVATION",
+      "work_id": "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
+      "created_month_utc": "2026-11",
+      "status": "PROVIDER_PERIOD_RECONCILED",
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+      "no_retry": true
+    },
+    {
+      "kind": "ASTRA_PREHTTP_RESERVATION",
       "work_id": "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
       "created_month_utc": "2026-11",
-      "status": "OWNER_RESERVED_PREHTTP",
-      "lower_usd": 0,
-      "upper_usd": 10,
+      "status": "PROVIDER_PERIOD_RECONCILED",
       "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
-      "one_paid_post_max": 1,
-      "reconciliation_required": true,
-      "basis": "Owner explicitly approved on Nov13 2026 a distinct extraordinary Astra High empirical historical comparison across ALL archived Master Mondays and CN and real market data, with upper USD10 for exactly one POST; conservatively holds USD10 across uncertain POST and monthly rollover until separately verified usage/settlement. No reuse of consumed Astra text-only mission and no added scheduler."
+      "no_retry": true
     }
   ],
-  "owner_budget_explicit_approval": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6864310705",
-  "owner_budget_reserve_usd": 4
+  "provider_settlement_evidence": {
+    "repository": "Donh91/Investering-AI-Audit-Bridge",
+    "path": "reports/claude/automated/2026/11/CLAUDE-API-BUDGET-PROVIDER-RECONCILIATION-20261115T001000Z/evidence/openai_platform_readback_20261115T0007CPH.png",
+    "sha256": "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8"
+  }
 }

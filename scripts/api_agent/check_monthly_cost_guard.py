@@ -22,13 +22,20 @@ OWNER_GLOBAL_TARGET_USD = 50.0
 OWNER_GLOBAL_HARD_STOP_USD = 50.0
 OWNER_GLOBAL_RESERVE_USD = 4.0  # Routine paths retain existing protected headroom.
 OWNER_SINGLE_REQUEST_CAP_USD = 3.0
-# Exact unresolved native POSTs. Missing/removed rows must never silently
-# become zero risk. This immutable floor may only change with separately
-# reviewed provider-settlement evidence, NEVER by editing a JSON ledger alone.
-UNRESOLVED_NATIVE_POST_FLOOR_USD = {
-    "41870364609": 3.0,
-    "41949497953": 3.0,
-    "42204120988": 3.0,  # Provider terminal incomplete, native 3 USD one-use claim.
+# Previous source-bound liabilities were provider-reconciled against private
+# evidence, without adding account billing amounts to the public Archive.
+# A new unresolved POST must still carry a bounded live ledger row; releasing
+# future reservations requires separate independent provider-settlement evidence.
+UNRESOLVED_NATIVE_POST_FLOOR_USD = {}
+PROVIDER_SETTLEMENT_EVIDENCE = {
+    "repository": "Donh91/Investering-AI-Audit-Bridge",
+    "path": "reports/claude/automated/2026/11/CLAUDE-API-BUDGET-PROVIDER-RECONCILIATION-20261115T001000Z/evidence/openai_platform_readback_20261115T0007CPH.png",
+    "sha256": "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8",
+}
+SETTLED_NATIVE_POST_IDS = {"41870364609", "41949497953", "42204120988"}
+SETTLED_ASTRA_WORK_IDS = {
+    "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
+    "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
 }
 CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
     "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
@@ -52,6 +59,28 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             or value.get("requires_reconciliation_before_releasing_reserve") is not True
             or not isinstance(value.get("unresolved"), list)):
         raise ValueError("LIABILITY_LEDGER_CONTRACT_INVALID")
+    # Canonical released liabilities need immutable, private-source evidence;
+    # test fixtures with future unknown POSTs may omit the settlement block.
+    if path.resolve() == CANONICAL_LIABILITY_LEDGER.resolve() or "settled" in value:
+        if value.get("provider_settlement_evidence") != PROVIDER_SETTLEMENT_EVIDENCE:
+            raise ValueError("PROVIDER_SETTLEMENT_EVIDENCE_INVALID")
+        settled = value.get("settled")
+        if not isinstance(settled, list) or len(settled) != 5:
+            raise ValueError("PROVIDER_SETTLED_SET_INVALID")
+        post_ids, work_ids = set(), set()
+        for entry in settled:
+            if not isinstance(entry, dict) or entry.get("status") != "PROVIDER_PERIOD_RECONCILED" or entry.get("no_retry") is not True or any(k in entry for k in ("lower_usd", "upper_usd", "amount_usd", "billed_usd")):
+                raise ValueError("PROVIDER_SETTLED_ROW_INVALID")
+            if entry.get("kind") == "NATIVE_POST":
+                post_ids.add(entry.get("run_id"))
+            elif entry.get("kind") == "ASTRA_PREHTTP_RESERVATION":
+                work_ids.add(entry.get("work_id"))
+            else:
+                raise ValueError("PROVIDER_SETTLED_KIND_INVALID")
+        if post_ids != SETTLED_NATIVE_POST_IDS or work_ids != SETTLED_ASTRA_WORK_IDS:
+            raise ValueError("PROVIDER_SETTLED_ID_SET_MISMATCH")
+        if any(row.get("run_id") in post_ids for row in value["unresolved"]) or any(row.get("work_id") in work_ids for row in value.get("owner_reservations", [])):
+            raise ValueError("PROVIDER_SETTLED_REINTRODUCED_PENDING")
     low, high, seen = 0.0, 0.0, set()
     for row in value["unresolved"]:
         if not isinstance(row, dict):
