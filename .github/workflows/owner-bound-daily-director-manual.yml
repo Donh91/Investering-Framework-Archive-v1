@@ -270,8 +270,13 @@ jobs:
           if-no-files-found: warn
 
   astra-realdata-task2-v2:
-    # Explicit one-time owner issue_comment. No new schedulers, no TinyFish.
+    # SAFETY HOLD (2026-11-14): original Alpha v4 costed decision->fill->exit
+    # records have 0 rows and Code Interpreter token re-ingestion has no
+    # provider-enforced USD10 total cost bound. Must be RE-REVIEWED in a
+    # separate owner-authorized HIGH_IMPACT PR before re-enabling this job.
+    # A signed-looking GitHub comment cannot override a literal false here.
     if: >-
+      false &&
       github.event_name == 'issue_comment' &&
       github.event.issue.number == 1596 &&
       github.event.comment.author_association == 'OWNER' &&
