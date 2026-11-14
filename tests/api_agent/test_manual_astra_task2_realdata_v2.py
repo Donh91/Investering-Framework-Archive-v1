@@ -98,15 +98,53 @@ class RealdataAstraV2Tests(unittest.TestCase):
                                           "source_main_sha":"a"*40,"run_id":"TEST_RUN123"})
         (self.out/"prompt.txt").write_text("Execute independent Python checks of real source CSV/JSON.")
 
+    def test_original_source_and_payment_gate_blocks_without_network(self):
+        # Latest original Alpha V4 ledgers have zero real fills and cost rows.
+        gate = m.read(ROOT / m.RELEASE_GATE_PATH)
+        self.assertFalse(gate["authorized_paid_dispatch"])
+        self.assertEqual(gate["observed_v4_rows"]["events"], 0)
+        self.assertEqual(gate["observed_v4_rows"]["execution_shadow"], 0)
+        with patch.object(m,"http") as api:
+            with self.assertRaisesRegex(ValueError,"ASTRA_REALDATA_V2_PAID_HOLD_SOURCE_AND_COST"):
+                m.reserve(self.out)
+            api.assert_not_called()
+        self._fake_bundle()
+        with patch.object(m,"http") as api:
+            for native in (m.multipart_upload, m.submit):
+                with self.assertRaisesRegex(ValueError,"ASTRA_REALDATA_V2_PAID_HOLD_SOURCE_AND_COST"):
+                    native(self.out)
+            api.assert_not_called()
+        self.assertFalse((self.out / "paid_post_attempt.json").exists())
+        self.assertFalse((self.out / "file_upload_attempt.json").exists())
+
+    def test_release_flag_alone_cannot_bypass_economic_or_cost_proof(self):
+        gate = m.read(ROOT / m.RELEASE_GATE_PATH)
+        with patch.object(m,"ROOT",self.out):
+            p = self.out / m.RELEASE_GATE_PATH
+            p.parent.mkdir(parents=True,exist_ok=True)
+            p.write_text(json.dumps({**gate, "authorized_paid_dispatch":True}))
+            with self.assertRaisesRegex(ValueError,"ALPHA_V4_DECISION_FILL_EXIT_COST_RECEIPTS_REQUIRED"):
+                m.require_original_paid_release_gate()
+            p.write_text(json.dumps({**gate, "authorized_paid_dispatch":True,
+                "source_readiness":"COMPLETE_SOURCE_PINNED_ALPHA_V4_ECONOMICS"}))
+            with self.assertRaisesRegex(ValueError,"ASTRA_10USD_TOOL_TOKEN_COST_NOT_PROVEN"):
+                m.require_original_paid_release_gate()
+            p.write_text(json.dumps({**gate,"authorized_paid_dispatch":True,
+                "source_readiness":"COMPLETE_SOURCE_PINNED_ALPHA_V4_ECONOMICS",
+                "tool_billing_status":"PROVIDER_ENFORCED_TOTAL_UPPER_BOUND"}))
+            with self.assertRaisesRegex(ValueError,"OWNER_REVIEWED_SOURCE_HEAD_REQUIRED"):
+                m.require_original_paid_release_gate()
+
     def test_file_upload_exactly_one_and_id_verified(self):
         self._fake_bundle()
-        with patch.object(m, "http", return_value={"id":"file-SYNTHETIC5678","purpose":"assistants"}) as call:
+        with patch.object(m,"require_original_paid_release_gate"), patch.object(m, "http", return_value={"id":"file-SYNTHETIC5678","purpose":"assistants"}) as call:
             m.multipart_upload(self.out)
             self.assertEqual(call.call_args[0][0],"POST")
             self.assertEqual(call.call_args[0][1],m.API+"/files")
             self.assertIn(b"INERT_SYNTHETIC_ZIP",call.call_args.kwargs["data"])
-        with self.assertRaisesRegex(ValueError,"ONE_USE_REPLAY_BLOCKED"):
-            m.multipart_upload(self.out)
+        with patch.object(m,"require_original_paid_release_gate"):
+            with self.assertRaisesRegex(ValueError,"ONE_USE_REPLAY_BLOCKED"):
+                m.multipart_upload(self.out)
 
     def test_model_always_gets_real_zip_and_mandatory_python(self):
         self._fake_bundle()
@@ -127,24 +165,26 @@ class RealdataAstraV2Tests(unittest.TestCase):
         self._fake_bundle()
         m.write_once(self.out/"file_handle.json",{"archive_sha256":m.checksum(self.out/m.ZIP_NAME),
                                                    "file_id":"file-SYNTHETIC5678"})
-        with patch.object(m,"http",return_value={
+        with patch.object(m,"require_original_paid_release_gate"), patch.object(m,"http",return_value={
             "id":"resp_SYNTHETIC5678","status":"in_progress","model":m.MODEL}) as call:
             m.submit(self.out)
             self.assertEqual(call.call_args[0][0],"POST")
             self.assertEqual(call.call_args[0][1],m.API+"/responses")
-        with self.assertRaisesRegex(ValueError,"ONE_USE_REPLAY_BLOCKED"):
-            m.submit(self.out)
+        with patch.object(m,"require_original_paid_release_gate"):
+            with self.assertRaisesRegex(ValueError,"ONE_USE_REPLAY_BLOCKED"):
+                m.submit(self.out)
         self.assertEqual(m.read(self.out/"paid_post_attempt.json")["post_attempts"],1)
 
     def test_ambiguous_post_is_permanently_one_attempt(self):
         self._fake_bundle()
         m.write_once(self.out/"file_handle.json",{"archive_sha256":m.checksum(self.out/m.ZIP_NAME),
                                                    "file_id":"file-SYNTHETIC5678"})
-        with patch.object(m,"http",side_effect=TimeoutError("Synthetic")):
+        with patch.object(m,"require_original_paid_release_gate"), patch.object(m,"http",side_effect=TimeoutError("Synthetic")):
             with self.assertRaises(TimeoutError):
                 m.submit(self.out)
-        with self.assertRaisesRegex(ValueError,"ONE_USE_REPLAY_BLOCKED"):
-            m.submit(self.out)
+        with patch.object(m,"require_original_paid_release_gate"):
+            with self.assertRaisesRegex(ValueError,"ONE_USE_REPLAY_BLOCKED"):
+                m.submit(self.out)
         self.assertFalse((self.out/"response_handle.json").exists())
 
     def test_completed_api_response_requires_real_code_interpreter_call(self):
