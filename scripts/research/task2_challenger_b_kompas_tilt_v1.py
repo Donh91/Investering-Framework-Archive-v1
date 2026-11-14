@@ -25,6 +25,7 @@ import datetime as dt
 import hashlib
 import json
 import math
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -47,6 +48,8 @@ PARAMS = {
 }
 DECISION = {"confirmatory_week_clusters": 8, "one_sided_alpha": 0.05,
             "ties": "excluded; a week where B has no view (all p_up = 0.5) is a tie"}
+
+SOURCE_BINDING = 'VERIFIED_ORIGINAL_A_AND_CANONICAL_COMPASS_MAIN_BY_T0'
 
 
 def phi(x: float) -> float:
@@ -172,15 +175,65 @@ def score(b: dict, bars: dict, *, eligible_days: set[tuple[str, int]] | None = N
             "baseline_brier": base, "week_mature": week_mature, "week_winner": winner}
 
 
-def decide(week_winners: list[str]) -> dict:
+def decide(weekly: list[dict]) -> dict:
+    """First 8 distinct, mature, source-verified non-tied prospective W47+ weeks.
+
+    An earlier missing/pending week can still become eligible and displace a later
+    week, so it cannot be skipped until independently finalized. An unbound or
+    duplicated source cannot be silently treated as a confirmatory cluster.
+    """
     n = DECISION["confirmatory_week_clusters"]
-    decided = [w for w in week_winners if w in ("B", "BASE")][:n]
-    if len(decided) < n:
-        return {"status": "PENDING", "non_tied_weeks": len(decided), "required": n}
-    wins = decided.count("B")
-    p = A.sign_test_one_sided_p(wins, n - wins)
-    return {"status": "B_HAS_DIRECTION" if p < DECISION["one_sided_alpha"] else "NO_PROVEN_DIRECTION",
-            "b_wins": wins, "n": n, "one_sided_p": round(p, 6)}
+    start = A.week_monday(2026, 47)
+    by_week = {}
+    for row in weekly:
+        if not isinstance(row, dict):
+            return {"status": "INCONCLUSIVE_INVALID_RECORD", "promotion_allowed": False}
+        label = row.get("week")
+        if not isinstance(label, str) or not re.fullmatch(r"\d{4}-W\d{2}", label):
+            return {"status": "INCONCLUSIVE_INVALID_WEEK", "promotion_allowed": False}
+        try:
+            y, w = A._parse_week(label)
+            monday = A.week_monday(y, w)
+        except (ValueError, TypeError):
+            return {"status": "INCONCLUSIVE_INVALID_WEEK", "promotion_allowed": False}
+        if (monday.isocalendar().year, monday.isocalendar().week) != (y, w):
+            return {"status": "INCONCLUSIVE_INVALID_WEEK", "promotion_allowed": False}
+        if label in by_week:
+            return {"status": "INCONCLUSIVE_DUPLICATE_WEEK", "promotion_allowed": False}
+        if monday >= start:
+            by_week[label] = row
+
+    selected = []
+    cursor = start
+    for _ in range(len(by_week) + 1):
+        y, w, _ = cursor.isocalendar()
+        label = f"{y}-W{w:02d}"
+        row = by_week.get(label)
+        if row is None:
+            return {"status": "PENDING", "reason": "EARLIER_WEEK_NOT_FROZEN",
+                    "first_unresolved_week": label, "valid_weeks": len(selected),
+                    "required": n, "promotion_allowed": False}
+        if row.get("week_mature") is not True or row.get("source_binding") != SOURCE_BINDING:
+            return {"status": "PENDING", "reason": "WEEK_OR_PIT_SOURCE_UNVERIFIED",
+                    "first_unresolved_week": label, "valid_weeks": len(selected),
+                    "required": n, "promotion_allowed": False}
+        winner = row.get("week_winner")
+        if winner in ("B", "BASE"):
+            selected.append((label, winner))
+            if len(selected) == n:
+                wins = sum(v == "B" for _, v in selected)
+                p = A.sign_test_one_sided_p(wins, n - wins)
+                return {"status": "B_HAS_DIRECTION" if p < DECISION["one_sided_alpha"] else "NO_PROVEN_DIRECTION",
+                        "weeks": [week for week, _ in selected],
+                        "b_wins": wins, "n": n, "one_sided_p": round(p, 6),
+                        "promotion_allowed": False}
+        elif winner != "TIE":
+            return {"status": "PENDING", "reason": "EARLIER_WEEK_UNRESOLVED",
+                    "first_unresolved_week": label, "valid_weeks": len(selected),
+                    "required": n, "promotion_allowed": False}
+        cursor += 7 * A.DAY
+    return {"status": "PENDING", "reason": "FEWER_THAN_EIGHT_FINAL_NON_TIED_WEEKS",
+            "valid_weeks": len(selected), "required": n, "promotion_allowed": False}
 
 
 def git_candidates(root: Path, t0: dt.datetime, main_ref: str) -> list[dict]:
@@ -248,6 +301,8 @@ def main(argv: Iterable[str] | None = None) -> int:
                           issuance_first_main_utc=proof["issuance_first_main_utc"])
         eligible = {(r["asset"], r["day"]) for r in a_score["rows"]}
         out = score(b, bars, eligible_days=eligible)
+        out["source_binding"] = SOURCE_BINDING
+        out["a_first_main_commit"] = proof["first_main_commit"]
     Path(args.output).write_text(json.dumps(out, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"contract": out["contract"], "week": out["week"]}))
     return 0

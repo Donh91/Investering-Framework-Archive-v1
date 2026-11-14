@@ -173,7 +173,8 @@ class ChallengerBTest(unittest.TestCase):
         self.assertEqual(mid["week_winner"], "PENDING")
         self.assertFalse(mid["week_mature"])
         self.assertLess(mid["n"], 8)
-        self.assertEqual(B.decide(["PENDING"] * 8)["status"], "PENDING")
+        self.assertEqual(B.decide([{"week": "2026-W47", "week_winner": "PENDING",
+                                    "week_mature": False, "source_binding": "UNVERIFIED"}])["status"], "PENDING")
         full = B.score(b, bearish)
         self.assertTrue(full["week_mature"])
         self.assertEqual(full["week_winner"], "B")
@@ -205,12 +206,40 @@ class ChallengerBTest(unittest.TestCase):
             self.assertEqual(repeated, first)
             self.assertEqual(repeated["1_3d"]["bull"], 7)
 
+    def _week_record(self, i, winner, *, mature=True, source=True):
+        iso_week = (self.monday + i * 7 * A.DAY).isocalendar()
+        return {"week": f"{iso_week.year}-W{iso_week.week:02d}",
+                "week_winner": winner, "week_mature": mature,
+                "source_binding": B.SOURCE_BINDING if source else "UNVERIFIED"}
+
     def test_decision_rule(self):
-        self.assertEqual(B.decide(["B"] * 7 + ["BASE"])["status"], "B_HAS_DIRECTION")
-        self.assertEqual(B.decide(["B"] * 6 + ["BASE"] * 2)["status"], "NO_PROVEN_DIRECTION")
-        self.assertEqual(B.decide(["TIE"] * 5 + ["B"] * 7)["status"], "PENDING")
-        self.assertEqual(B.decide(["B"] + ["BASE"] * 7)["status"], "NO_PROVEN_DIRECTION")
-        self.assertEqual(B.decide(["TIE", "B", "B", "B", "B", "B", "B", "B", "BASE"])["n"], 8)
+        win7 = [self._week_record(i, "B") for i in range(7)]
+        self.assertEqual(B.decide(win7 + [self._week_record(7, "BASE")])["status"], "B_HAS_DIRECTION")
+        six = [self._week_record(i, "B") for i in range(6)] + [self._week_record(i, "BASE") for i in range(6, 8)]
+        self.assertEqual(B.decide(six)["status"], "NO_PROVEN_DIRECTION")
+        self.assertEqual(B.decide([self._week_record(i, "TIE") for i in range(5)] +
+                                  [self._week_record(i, "B") for i in range(5, 12)])["status"], "PENDING")
+        self.assertEqual(B.decide([self._week_record(0, "TIE")] +
+                                  [self._week_record(i, "B") for i in range(1, 9)])["n"], 8)
+        self.assertEqual(B.decide([self._week_record(0, "B")] * 8)["status"],
+                         "INCONCLUSIVE_DUPLICATE_WEEK")
+        self.assertEqual(B.decide(["B"] * 8)["status"], "INCONCLUSIVE_INVALID_RECORD")
+
+    def test_earlier_pending_or_missing_week_blocks_later_confirmatory_selection(self):
+        future = [self._week_record(i, "B" if i != 3 else "BASE") for i in range(1, 9)]
+        pending = B.decide([self._week_record(0, "PENDING", mature=False)] + future)
+        self.assertEqual(pending["status"], "PENDING")
+        self.assertEqual(pending["first_unresolved_week"], "2026-W47")
+        self.assertEqual(B.decide(future)["status"], "PENDING")
+        settled = B.decide([self._week_record(0, "BASE")] + future)
+        self.assertEqual(settled["status"], "NO_PROVEN_DIRECTION")
+        self.assertEqual(settled["b_wins"], 6)
+        self.assertEqual(settled["n"], 8)
+        self.assertEqual(B.decide([self._week_record(0, "B", source=False)] + future)["status"], "PENDING")
+        self.assertEqual(B.decide([self._week_record(0, "MISSING")] + future)["status"], "PENDING")
+        bad = [self._week_record(i, "B") for i in range(8)]
+        bad[0]["week"] = "2026-W4"
+        self.assertEqual(B.decide(bad)["status"], "INCONCLUSIVE_INVALID_WEEK")
 
 
 if __name__ == "__main__":
