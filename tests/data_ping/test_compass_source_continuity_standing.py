@@ -74,6 +74,20 @@ class StandingSourceContinuityTests(unittest.TestCase):
         self.assertIsNone(out["temporary_source_continuity"]["expires_local_date"])
         self.assertEqual(out["temporary_source_continuity"]["policy"], "STANDING_UNTIL_REBOUNDED")
 
+    def test_75_minute_lead_admits_fifty_minute_remaining_clock(self):  # OWNER_2026_11_14
+        # With an original 3h source clock, 130m old leaves exactly 50m.
+        # Former 45m lead would not admit this refresh, new 75m lead must.
+        now = NOV
+        self.assertEqual(cer.SOURCE_CONTINUITY_LEAD_SECONDS, 75 * 60)
+        out = cer.evaluate(**case(now=now, original_minutes_old=130))
+        self.assertTrue(out["dispatch"])
+        self.assertIn("OFFICIAL_SOURCE_REFRESH_DUE", out["cause_codes"])
+        self.assertEqual(cer.parse_utc(out["temporary_source_continuity"]["expiry_at_utc"]),
+                         now + timedelta(minutes=50))  # never alter original deadline
+        # 80m remaining still outside the bounded lead window.
+        distant = cer.evaluate(**case(now=now, original_minutes_old=100))
+        self.assertNotIn("OFFICIAL_SOURCE_REFRESH_DUE", distant.get("cause_codes", []))
+
     def test_same_observation_hour_never_admits_refresh(self):  # INVARIANT
         kw = case(now=NOV, original_minutes_old=270)
         kw["auto_state"]["normalized_state"]["live_market"]["observation_open_utc"] = (
