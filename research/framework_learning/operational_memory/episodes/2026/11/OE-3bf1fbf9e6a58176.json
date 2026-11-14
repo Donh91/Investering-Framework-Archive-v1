@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/research-parallel-lanes-skill-ci.yml",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/TASK2_REALDATA_W39_W45_SOURCE_AND_EXECUTION_20261113_v1.md",
+    "scripts/research/task2_realdata_challenger_w39_w46_v1.py",
+    "tests/research/test_task2_realdata_challenger_w39_w46_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-3bf1fbf9e6a58176",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-native-original-w39-w45-cn-vs-controls",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research(task2): replay actual W39-W45 frozen CN bands against 3 same-clock baselines and 1h downside controls * fix(research): normalize windows dict keys before union in frozen comparator * test(task2): native source maturity, no-lookahead, denominator, interval sharpness and 1h downside replay cases * ci(task2): independent W39-45 native range and hourly risk replay artifacts, no new workflow * test(task2): completed source window at exact decision cutoff is admissible * research(task2): add origin-week-block paired bootstrap uncertainty, preserve W41 shock outlier * test(task2): enforce ",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/research-parallel-lanes-skill-ci.yml": "22ccf9aabb9c9316ea7497bd0a00a4a7c41a4ce9",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/TASK2_REALDATA_W39_W45_SOURCE_AND_EXECUTION_20261113_v1.md": "ec89106ae82b55506218447f9291f338536081f7",
+    "scripts/research/task2_realdata_challenger_w39_w46_v1.py": "f63e87c3a3b5d35ce115aadf234fa9e42ad712cf",
+    "tests/research/test_task2_realdata_challenger_w39_w46_v1.py": "1804e75c4e91d1afd9989810767565634d6bf99b"
+  },
+  "source_commit_sha": "3bf1fbf9e6a58176518d1965de1a21f15a41fd9c",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-13T08:32:24-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(task2): native original W39-W45 CN-vs-controls with audited stale-anchor fix (#2113)"
+}

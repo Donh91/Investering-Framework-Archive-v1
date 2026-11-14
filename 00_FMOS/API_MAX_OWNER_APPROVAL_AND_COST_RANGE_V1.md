@@ -1,5 +1,30 @@
 # API MAX, enkel ejergodkendelse og sikkert usikkerhedsinterval · v1
 
+## Aktuel eksplicit ejerbeslutning, 13. november 2026
+
+**OVERRIDER KUN BELØBENE for det samlede API-månedsbudget i de
+historiske afsnit nedenfor:** Ejeren har i interaktiv chat udtrykkeligt
+godkendt et nyt kontoomfattende budget på **50 USD pr. UTC-måned i alt**
+i stedet for 40 USD normalt / 45 USD absolut. Det er ikke et tillæg.
+Kildekvittering: https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6864310705
+
+**Uændret:** mindst 4 USD beskyttet reserve (betalingsadgang kun når
+forbrug + gamle usikre POST-upper + alle bindende engangsreservationer
++ ny reservation er højst 46 USD), eksisterende 3 USD pr. generisk
+kald, strengere gamle rute-/lane-caps, tidligere usikre POSTs uden
+genforsøg og autoriseret konkret ejerevent. Den særskilte Task2 Astra
+High real-data undtagelse er præcis én 10 USD-reservation efter
+kvalificeret high-impact review af eksisterende PR #2115. Ingen
+ekstra scheduler, ny betalingsautoritet, automatisk Astra, handler
+eller ophævelse af uafklarede forpligtelser.
+
+Budget-CLI, en GitHub-kommentar eller denne dokumenttekst udløser
+aldrig alene betaling. Koden i
+`scripts/api_agent/check_monthly_cost_guard.py` og den komplette
+binding til eksisterende workflow er den testbare kontrol. Felter
+og historiske tal længere nede er arkiv, ikke gældende beløbsgrænse.
+
+
 **Ejer:** original Archive #1156 og Research Lab Sol #1476. **Status:** Source-only operator contract, ikke et ekstra workflow, en ny agent eller en betalingsgodkendelse i sig selv.
 
 ## 1. Hvad ejeren behøver skrive fremover

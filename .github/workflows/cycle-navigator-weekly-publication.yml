@@ -367,6 +367,7 @@ jobs:
           # Never run before CN is durable on main, never issue from a PR
           # branch, and never obstruct the official Compass handoff.
           git fetch origin main
+          git pull --ff-only origin main
           ISO_WEEK="$(python - <<'PY'
           import datetime as dt,json
           from pathlib import Path

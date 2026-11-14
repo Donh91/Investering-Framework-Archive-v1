@@ -476,6 +476,45 @@ class ChallengerATest(unittest.TestCase):
         # No failure of this advisory research lane can block existing
         # official CN publication or final Official Compass handoff.
 
+    def test_late_hourly_capture_requires_pre_t0_bar_then_abstains_day_one(self):
+        expected=(self.t0-A.HOUR).replace(minute=0,second=0,microsecond=0)
+        incomplete={t:r for t,r in self.bars.items() if t!=expected}
+        with self.assertRaisesRegex(ValueError,"last expected closed hour"):
+            A.issue(incomplete,self.YEAR,self.WEEK,self.t0)
+        late=dict(incomplete)
+        late[expected]=self.bars[expected]
+        issued=A.issue(late,self.YEAR,self.WEEK,self.t0)
+        scored=A.score(issued,self.bars,issuance_first_main_utc=A.iso(self.t0+dt.timedelta(hours=3)))
+        self.assertEqual(scored["paired_rows"],12)
+        self.assertEqual({r["day"] for r in scored["rows"]},set(range(2,8)))
+        self.assertEqual({r["day"] for r in scored["abstentions"]},{1})
+        self.assertEqual({r["status"] for r in scored["abstentions"]},{"ABSTAIN_PRE_ISSUANCE"})
+
+    def test_hourly_catchup_is_monday_only_and_source_gated(self):
+        weekly=(ROOT/".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
+        hourly=(ROOT/".github/workflows/hourly-sequence-capture.yml").read_text()
+        step_name="Catch up immutable Challenger A SHADOW after hourly main readback"
+        self.assertEqual(hourly.count(step_name),1)
+        start=hourly.index("      - name: "+step_name)
+        end=hourly.index("      - name: Preflight actual newly completed owner hour",start)
+        self.assertLess(hourly.index("      - name: Commit compact hourly sequence with verified readback"),start)
+        step=hourly[start:end]
+        for guard in ("continue-on-error: true","git pull --ff-only origin main",
+                      "CHALLENGER_ISSUE_OUTSIDE_ORIGINAL_MONDAY_NO_BACKFILL",
+                      "CHALLENGER_ISSUE_NO_ORIGINAL_CN_FREEZE",
+                      "CHALLENGER_A_ALREADY_ON_MAIN_NOOP",
+                      "git cat-file -e \"origin/main:${ISSUE_REL}\"",
+                      "read_frozen_main_issuance(Path('.'),y,w)",
+                      "CHALLENGER_A_FIRST_MAIN_ISSUE_SOURCE_READBACK_PASS"):
+            self.assertIn(guard,step)
+        self.assertNotIn("steps.precheck.outputs.skip",step)
+        self.assertNotIn("--synthetic-fixture-clock",step)
+        self.assertNotIn("--t0",step)
+        self.assertNotIn("OPENAI_API_KEY",step)
+        self.assertIn("git pull --ff-only origin main",weekly)
+        self.assertEqual(hourly.count("cron: '12 * * * *'"),1)
+        self.assertEqual(weekly.count("cron: '5 9 * * 1'"),1)
+
     def test_cli_round_trip_on_synthetic_repo(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
