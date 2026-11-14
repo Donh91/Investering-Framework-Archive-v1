@@ -210,7 +210,7 @@ class KompasLivePathTests(unittest.TestCase):
         self.repo.prereg()
         self.repo.packet(NOW + 10 * dt.timedelta(minutes=1), b13=(1, 9), name="CMP-future.json")
         self.repo.packet(NOW - 25 * H, b13=(1, 9), name="CMP-old.json")
-        kept = self.repo.packet(NOW - 3 * H, b13=(5, 5), d13="MIXED", name="CMP-kept.json")
+        kept = self.repo.packet(NOW - 2 * H, b13=(5, 5), d13="MIXED", name="CMP-kept.json")
         doc = self.build()
         self.assertEqual(doc["kompas_views"]["1_3d"]["path"], kept.relative_to(self.repo.root).as_posix())
         self.assertEqual(doc["assets"]["BTC"]["headline"]["3"]["reason"], "BALANCED")
@@ -218,7 +218,7 @@ class KompasLivePathTests(unittest.TestCase):
         future = self.repo.root / K.PACKET_DIR / "2026/11/13/CMP-future.json"
         old = self.repo.root / K.PACKET_DIR / "2026/11/12/CMP-old.json"
         cands = [{"path": p.relative_to(self.repo.root).as_posix(), "sha256": "x", "issued": t, "packet": json.loads(p.read_text())}
-                 for p, t in ((future, NOW + 10 * dt.timedelta(minutes=1)), (old, NOW - 25 * H), (kept, NOW - 3 * H))]
+                 for p, t in ((future, NOW + 10 * dt.timedelta(minutes=1)), (old, NOW - 25 * H), (kept, NOW - 2 * H))]
         self.assertEqual(K.select_views(cands, NOW)["1_3d"]["bull"], 5)
 
     def test_older_than_24h_view_is_not_used_when_the_window_has_no_view(self):
