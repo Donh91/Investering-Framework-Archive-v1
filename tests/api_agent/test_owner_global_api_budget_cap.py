@@ -235,7 +235,8 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         low, high, count = pending_risk(canonical)
         self.assertEqual(low, 0)
         self.assertEqual(high, 25)
-        self.assertEqual(count, 4)
+        # pending_risk count includes four unresolved POSTs and two owner reservations.
+        self.assertEqual(count, 6)
 
         cmd = [
             sys.executable, str(SCRIPT),
