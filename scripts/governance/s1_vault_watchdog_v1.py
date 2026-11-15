@@ -48,6 +48,7 @@ def is_heartbeat(c: dict) -> bool:
 
 
 RECEIPT_MARKER = re.compile(r"<!-- VAULT_FINAL_REF_RECEIPT_v1:(\d+)-(\d+) -->")
+NATIVE_RECEIPT_MARKER = re.compile(r"<!-- VAULT_NATIVE_RECEIPT_V1:(\d+)-(\d+) -->")
 JSON_BLOCK = re.compile(r"~~~json\s*\n(.*?)\n~~~", re.S)
 FINAL_REF = re.compile(r"^refs/heads/backup/vault-final-\d{8}-(\d+)-(\d+)$")
 
@@ -62,6 +63,11 @@ def is_app_comment(c: dict) -> bool:
 
 def is_receipt_comment(c: dict) -> bool:
     return is_app_comment(c) and RECEIPT_MARKER.search(str(c.get("body", ""))) is not None
+
+
+def is_native_receipt_comment(c: dict) -> bool:
+    """Distinct native recovery proof, not final-ref authority."""
+    return is_app_comment(c) and NATIVE_RECEIPT_MARKER.search(str(c.get("body", ""))) is not None
 
 
 def valid_seal(body: str) -> bool:
@@ -98,7 +104,11 @@ def evaluate(s1_comments: list[dict], vault_comments: list[dict], now: dt.dateti
         causes.append({"cause": "S1_HEARTBEAT_STALE", "last": hb["created_at"]})
     vr = newest(vault_comments, is_receipt_comment)  # the NEWEST App receipt decides, never an older one
     if vr is None:
-        causes.append({"cause": "VAULT_APP_RECEIPT_MISSING", "last": None})
+        native = newest(vault_comments, is_native_receipt_comment)
+        if native is not None:
+            causes.append({"cause": "VAULT_APP_FINAL_REF_MISSING", "last": native["created_at"]})
+        else:
+            causes.append({"cause": "VAULT_APP_RECEIPT_MISSING", "last": None})
     elif not valid_seal(str(vr.get("body", ""))):
         causes.append({"cause": "VAULT_RECEIPT_INVALID", "last": vr["created_at"]})
     elif now - utc(vr["created_at"]) > dt.timedelta(hours=VAULT_MAX_AGE_H):
@@ -115,8 +125,9 @@ def alert_body(cause: dict, now: dt.datetime) -> str:
     fixes = {
         "S1_HEARTBEAT_MISSING": "Open the S1 task in ChatGPT and check its run history; restore the task text to 00_FMOS/S1/BOOTSTRAP.txt verbatim if it drifted.",
         "S1_HEARTBEAT_STALE": "Open the S1 task in ChatGPT and check its run history; restore the task text to 00_FMOS/S1/BOOTSTRAP.txt verbatim if it drifted.",
-        "VAULT_APP_RECEIPT_MISSING": "Start 'Vault canonical snapshot and restore' in the Vault repo yourself, with no inputs. Agents never dispatch it.",
-        "VAULT_RECEIPT_STALE": "Start 'Vault canonical snapshot and restore' in the Vault repo yourself, with no inputs. Agents never dispatch it. HIGH merges stay on hold until a fresh receipt exists.",
+        "VAULT_APP_RECEIPT_MISSING": "Neither an App-authored native receipt nor an App-authored final-ref receipt is visible. Have the independent Vault owner inspect the normal scheduled run and publisher before considering any further backup. Agents never dispatch Vault.",
+        "VAULT_APP_FINAL_REF_MISSING": "A genuine App-authored native recovery receipt exists, but no App-authored FINAL REF seal is visible. Investigate the finalizer job, protected ref, App installation-token POST identity and 403/429 errors. Do not re-run the snapshot as the first remedy. HIGH merges remain on HOLD.",
+        "VAULT_RECEIPT_STALE": "The App-authored final-ref seal is stale. Have the independent Vault owner inspect newer natural backup and finalizer receipts before considering another run. HIGH merges remain on HOLD.",
         "VAULT_RECEIPT_INVALID": "The newest Vault receipt is not a valid seal (schema, state, ref or hashes do not check out). Open the Vault Actions run named in it and the #1593 comment; HIGH merges stay on hold.",
     }
     return (f"{ALERT_TAG} {cause['cause']} {now:%Y-%m-%d}\n\n{OWNER_MENTION} last seen: {cause['last'] or 'never'}. "

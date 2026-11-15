@@ -111,6 +111,21 @@ class WatchdogTest(unittest.TestCase):
         causes = W.evaluate([HB], [forged, no_app, other_app, user_typed], NOW)
         self.assertEqual([x["cause"] for x in causes], ["VAULT_APP_RECEIPT_MISSING"])
 
+    def test_native_app_receipt_without_final_ref_identifies_finalizer_gap(self):
+        native = bot("<!-- VAULT_NATIVE_RECEIPT_V1:43657764359-1 -->\\nTechnical restore PASS, not final-ref authority.", 1)
+        old_owner_final = c(REAL_RECEIPT, 2)  # owner account is not independent App
+        causes = W.evaluate([HB], [native, old_owner_final], NOW)
+        self.assertEqual([x["cause"] for x in causes], ["VAULT_APP_FINAL_REF_MISSING"])
+        diagnostic = W.alert_body(causes[0], NOW)
+        self.assertIn("finalizer job", diagnostic)
+        self.assertIn("Do not re-run the snapshot", diagnostic)
+        self.assertNotIn("Start \'Vault canonical snapshot", diagnostic)
+
+    def test_lookalike_native_receipt_cannot_satisfy_app_identity(self):
+        forged_native = c("<!-- VAULT_NATIVE_RECEIPT_V1:43657764359-1 -->", 1)
+        causes = W.evaluate([HB], [forged_native], NOW)
+        self.assertEqual([x["cause"] for x in causes], ["VAULT_APP_RECEIPT_MISSING"])
+
     def test_missing_heartbeat(self):
         causes = W.evaluate([c("S1_TICK NOOP", 1)], [bot(REAL_RECEIPT, 1)], NOW)
         self.assertEqual([x["cause"] for x in causes], ["S1_HEARTBEAT_MISSING"])
