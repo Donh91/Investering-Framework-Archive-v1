@@ -205,6 +205,127 @@ class MetronomeTest(unittest.TestCase):
         client.runs(M.RECOVERY["workflow"])
         self.assertTrue(routes[0].endswith("/runs?per_page=30&branch=main"))
 
+    def test_transient_target_read_fails_closed_but_preserves_single_loop(self):
+        class Fake:
+            calls = []
+
+            def mode(self):
+                return {"mode": "ACTIVE"}
+
+            def runs(self, wf):
+                if wf == M.HOURLY["workflow"]:
+                    raise TimeoutError("temporary failure")
+                return [FINAL_OK_W47] if wf == M.CLOSE_WORKFLOW else []
+
+            def environment(self):
+                return ENV_OK
+
+            def dispatch(self, wf, inputs):
+                self.calls.append(wf)
+
+        fake = Fake()
+        result = M.run(fake, dt.datetime(2026, 11, 16, 1, 45, tzinfo=UTC), 99)
+        self.assertEqual(fake.calls, [M.SELF_WORKFLOW])
+        self.assertEqual(result["dispatch"], [])
+        self.assertEqual(result["read_status"], "DEGRADED")
+        self.assertIn("HOURLY", result["failed_reads"])
+        self.assertTrue(result["next_tick"])
+        self.assertIn("READ_HOURLY:TimeoutError", result["errors"])
+
+    def test_missing_self_census_or_wait_timer_never_restarts_unverified(self):
+        class Fake:
+            calls = []
+
+            def mode(self):
+                return {"mode": "ACTIVE"}
+
+            def runs(self, wf):
+                if wf == M.SELF_WORKFLOW:
+                    raise ConnectionError("self census unavailable")
+                return []
+
+            def environment(self):
+                return ENV_OK
+
+            def dispatch(self, wf, inputs):
+                self.calls.append(wf)
+
+        fake = Fake()
+        result = M.run(fake, dt.datetime(2026, 11, 15, 10, 10, tzinfo=UTC), 99)
+        self.assertEqual(fake.calls, [])
+        self.assertFalse(result["next_tick"])
+        self.assertEqual(result["next_tick_reason"], "LOOP_SAFETY_READ_UNVERIFIED")
+
+        class BadEnv(Fake):
+            def runs(self, wf):
+                return []
+
+            def environment(self):
+                raise TimeoutError("wait timer unavailable")
+
+        fake2 = BadEnv()
+        result2 = M.run(fake2, dt.datetime(2026, 11, 15, 10, 10, tzinfo=UTC), 99)
+        self.assertFalse(result2["next_tick"])
+        self.assertEqual(fake2.calls, [])
+
+    def test_unreadable_active_mode_degrades_to_shadow_and_next_tick(self):
+        class Fake:
+            calls = []
+
+            def mode(self):
+                raise TimeoutError("mode read unavailable")
+
+            def runs(self, wf):
+                return []
+
+            def environment(self):
+                return ENV_OK
+
+            def dispatch(self, wf, inputs):
+                self.calls.append(wf)
+
+        fake = Fake()
+        result = M.run(fake, dt.datetime(2026, 11, 15, 10, 10, tzinfo=UTC), 99)
+        self.assertEqual(result["mode"], "SHADOW")
+        self.assertEqual(result["dispatch"], [])
+        self.assertEqual(fake.calls, [M.SELF_WORKFLOW])
+
+    def test_retry_get_only_never_post(self):
+        from unittest import mock
+        import io
+        import urllib.error
+
+        route = f"/repos/{M.REPO}/actions/workflows/{M.HOURLY['workflow']}/runs?per_page=30&branch=main"
+        class Resp:
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                return False
+            def read(self):
+                return b'{"workflow_runs": []}'
+
+        gh = M.Github("placeholder")
+        calls = []
+        def fake_urlopen(req, timeout):
+            calls.append(req.get_method())
+            if len(calls) < 3:
+                raise urllib.error.HTTPError(req.full_url, 503, "retry", {}, io.BytesIO())
+            return Resp()
+        with mock.patch.object(M.urllib.request, "urlopen", side_effect=fake_urlopen), mock.patch.object(M.time, "sleep") as sleep:
+            self.assertEqual(gh._req("GET", route), {"workflow_runs": []})
+        self.assertEqual(calls, ["GET", "GET", "GET"])
+        self.assertEqual(sleep.call_count, 2)
+
+        calls.clear()
+        def fail_post(req, timeout):
+            calls.append(req.get_method())
+            raise urllib.error.HTTPError(req.full_url, 503, "ambiguous", {}, io.BytesIO())
+        with mock.patch.object(M.urllib.request, "urlopen", side_effect=fail_post), mock.patch.object(M.time, "sleep") as sleep:
+            with self.assertRaises(urllib.error.HTTPError):
+                gh._req("POST", f"/repos/{M.REPO}/actions/workflows/{M.SELF_WORKFLOW}/dispatches", {"ref": "main", "inputs": {}})
+        self.assertEqual(calls, ["POST"])
+        sleep.assert_not_called()
+
     def test_workflow_is_bounded_and_minimal(self):
         wf = (ROOT / ".github/workflows/framework-metronome.yml").read_text(encoding="utf-8")
         self.assertIn("environment: framework-metronome", wf)
