@@ -31,7 +31,6 @@ class ClockReviewFixtures(unittest.TestCase):
                 ["available_at", "value_date"], kind="stable"
             ).groupby("available_at").last()["z"].iloc[0]
         )
-        self.assertEqual(unsafe, 44)  # pandas 2.2.3 observed, version-sensitive
         self.assertEqual(fixed, 99)
         self.assertNotEqual(unsafe, fixed)
 
