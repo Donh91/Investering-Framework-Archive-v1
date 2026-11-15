@@ -40,3 +40,5 @@ The **Bridge intake function only** may enter logical `DORMANT_IDLE` after **240
 **Rollback:** revert qualified source by a normal reviewed PR, never force-push; restore the exact prior prompt only to the same authorized task if an independently observable source/authority regression occurs. A rollback never overrides newer security rules.
 
 **Safety invariant:** no Vault access or dual destructive keys, no private data in public Archive, no automatic paid model/trading, no additional GitHub identities. SHA authenticates bytes, not authority.
+
+Provenance (2026-11-15): every file in 00_FMOS/S1/ changes only through a squash-merged PR; see AGENTS.md section 0.2e and BOOTSTRAP step 3b.
