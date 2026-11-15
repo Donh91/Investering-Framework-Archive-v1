@@ -14,6 +14,8 @@ on:
       - 'tests/health/**'
       - 'tests/remediation/**'
       - 'tests/governance/**'
+      # Any new test file must be genuinely executed, not merely collected.
+      - 'tests/**'
       - 'tests/lib/**'
       - '00_FMOS/S1/**'
       - '09_SOURCE_QA/incidents/**'
@@ -26,7 +28,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,6 +54,7 @@ jobs:
             scripts/remediation/write_codex_research_completion_receipt.py \
             scripts/governance/check_append_only_evidence.py \
             scripts/governance/check_test_collection_truth.py \
+            scripts/governance/check_test_execution_truth.py \
             scripts/architecture/build_latest_handoff.py \
             scripts/orchestration/build_framework_handoff_manifest.py
       - name: Enforce append-only evidence history
@@ -70,6 +73,19 @@ jobs:
           python scripts/governance/check_test_collection_truth.py \
             --repo-root . \
             --collection-file /tmp/repository-test-collection.txt \
+            --root tests
+      - name: Execute full repository tests (no collect-only)
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 18
+        run: |
+          python -m pytest -q --import-mode=importlib -p no:cacheprovider --junitxml=/tmp/full-repository-tests.xml tests
+      - name: Verify real per-file execution coverage
+        if: github.event_name == 'pull_request'
+        run: |
+          python scripts/governance/check_test_execution_truth.py \
+            --repo-root . \
+            --workflow .github/workflows/automation-production-health-gate.yml \
+            --junit-xml /tmp/full-repository-tests.xml \
             --root tests
       - name: Execute critical governance tests
         run: |
