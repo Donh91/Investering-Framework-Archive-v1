@@ -32,9 +32,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile hardening modules
-        run: python -m py_compile scripts/master_monday/build_preflight_package_v2.py scripts/master_monday/build_preflight_package_v3.py scripts/master_monday/publish_master_monday_outputs.py scripts/orchestration/consumer_receipt.py scripts/orchestration/build_framework_handoff_manifest.py scripts/orchestration/verify_durable_readback.py scripts/orchestration/weekly_orchestration_controller.py scripts/api_agent/build_weekly_calibration_context.py
+        run: python -m py_compile scripts/master_monday/build_preflight_package_v2.py scripts/master_monday/build_preflight_package_v3.py scripts/master_monday/publish_master_monday_outputs.py scripts/orchestration/consumer_receipt.py scripts/orchestration/build_framework_handoff_manifest.py scripts/orchestration/verify_durable_readback.py scripts/orchestration/weekly_orchestration_controller.py scripts/api_agent/build_weekly_calibration_context.py scripts/master_monday/weekly_publication_idempotency.py
       - name: Run contract and durability tests
-        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 tests.master_monday.test_durable_repairs tests.orchestration.test_consumer_receipt tests.daily_capture.test_master_monday_final_correction tests.api_agent.test_weekly_calibration_context_v4 tests.daily_capture.test_weekly_market_close_package -v
+        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 tests.master_monday.test_durable_repairs tests.orchestration.test_consumer_receipt tests.daily_capture.test_master_monday_final_correction tests.api_agent.test_weekly_calibration_context_v4 tests.daily_capture.test_weekly_market_close_package tests.master_monday.test_weekly_publication_idempotency -v
       - name: Verify production integration
         run: |
           grep -q 'build_preflight_package_v3.py' .github/workflows/weekly-api-calibration-shadow.yml
