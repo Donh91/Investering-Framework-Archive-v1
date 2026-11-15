@@ -42,3 +42,5 @@ The **Bridge intake function only** may enter logical `DORMANT_IDLE` after **240
 **Safety invariant:** no Vault access or dual destructive keys, no private data in public Archive, no automatic paid model/trading, no additional GitHub identities. SHA authenticates bytes, not authority.
 
 Provenance (2026-11-15): every file in 00_FMOS/S1/ changes only through a squash-merged PR; see AGENTS.md section 0.2e and BOOTSTRAP step 3b.
+
+Source PR (BOOTSTRAP v2, 2026-11-15): every PR that changes 00_FMOS/S1/ sets `source_pr` in RUNTIME_CONTRACT.json to its own PR number and is squash-merged up to date with main. BOOTSTRAP step 3b then compares the files directly in 00_FMOS/S1/ on main with that PR's head, blob by blob. A direct push, a stale `source_pr` or a PR that was not up to date makes S1 stop with SOURCE_UNVERIFIED.

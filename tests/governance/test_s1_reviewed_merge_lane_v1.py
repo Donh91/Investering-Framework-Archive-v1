@@ -1,6 +1,6 @@
 """S1 reviewed-merge lane (AGENTS.md section 0.2e): the owner's standing decision is a blob on main.
 
-Chain of trust: saved task == BOOTSTRAP.txt (per-file PR provenance, merged_by Donh91) -> ACTION_LOOP
+Chain of trust: saved task == BOOTSTRAP.txt (S1 files on main == the head of PR source_pr) -> ACTION_LOOP
 (blob-pinned by RUNTIME_CONTRACT) -> LANE INTEGRITY content pins over AGENTS.md, the S1 job manifest and
 the .github / scripts/governance / scripts/health / 07_PROMPTS_AND_AGENTS trees. Section 0.2e, the
 bootstrap and the critical ACTION_LOOP lines are pinned by hash here, so any rewording fails CI.
@@ -19,7 +19,7 @@ AGENTS = ROOT / "AGENTS.md"
 MANIFEST = ROOT / "00_FMOS" / "S1_REQUIRED_PR_JOBS_POLICY_V1.json"
 
 SECTION_SHA256 = "5ffac556ad0f58f96668c5fc4c8cb1fedd2ac262982027841e32a12fa2a5ce1f"
-BOOTSTRAP_SHA256 = "79d2dce865b8ae619ef0fc4884753dd44ac0bd2e1913c6cff822e77b5e01b1b8"
+BOOTSTRAP_SHA256 = "5a26ed4ce86bc26735f65782d51cc24e3c267790bb8070f9df42bab649331bb9"
 LINE_PINS = {'CC_ONLY': 'ee27bee9fc9404a603c57425f93e0a840caf15c7a3b929456f8d04cebd4803d1', 'CC_PR': '85bf8e3655a52a657d20f2992ccb40acc0d69cc7f3ae182a8401550e0f22e423', 'H1': '90b9d0a439ea6fcb5d2b45ba7d601eaa3946f39863d38540452326a85333f87e', 'H2': '9a265f4ba6bda93bf8f22bbc23b63f9f2f672c2de1f14ee51d4c978544fcc078', 'H3': 'a9fb6bc830284ee5e0e38d1fc80283037274248fd109b502c13edde79dd5af5f', 'H4': 'd47f6f701a0744ad1e8076b4c4bbdd7ed77578c4e3d014800d7ad11b6909da7e', 'H5': '234a31fb00136d622cc195983ed3a4e7b6d402a3ba11bfddfe75cd48922e681e', 'H6': '61b6d3338a124fd1985686cf28ff130a56244bc22b57c0c72361b6ef651d598e', 'H7': '73981c63af506f153556961808dcac7d35bacb20d510c241e5565c6bb022d4ea', 'H8': '0343db2e8f9173b68600baaa0f8cbaf75eb2fe7247d243fdff7bb1948fea9b0b', 'LADDER': '7f9b1a7201709722314fc01237450d0ce680c0c367a3d67a5b3892f341b55ab8', 'LANE_INTEGRITY': '4b0161fe0bd9a9753a6bebf7ac8cad2bac79ed938d4612260ce4c8693166ab62', 'RULE4': '32a5dfffd81b605332ae484e31246b6142b567cc2b3d85489271d039ad210550'}
 PINNED = ("AGENTS.md", "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json", ".github", ".agents", "scripts/governance",
           "scripts/health", "07_PROMPTS_AND_AGENTS", "01_CORE_FRAMEWORK/governance")
@@ -35,12 +35,14 @@ class PinTest(unittest.TestCase):
     def test_section_text_is_pinned(self):
         self.assertEqual(hashlib.sha256(section_0_2e().encode("utf-8")).hexdigest(), SECTION_SHA256)
 
-    def test_bootstrap_is_pinned_and_checks_per_file_provenance(self):
+    def test_bootstrap_is_pinned_and_checks_source_pr_content_provenance(self):
         boot = (S1 / "BOOTSTRAP.txt").read_bytes()
         self.assertEqual(hashlib.sha256(boot).hexdigest(), BOOTSTRAP_SHA256)
         text = boot.decode("utf-8")
-        for token in ("3b. For each file directly in 00_FMOS/S1/, the newest main commit touching it must have a subject ending (#N)",
-                      "PR N must be merged by Donh91 (type User) with merge_commit_sha equal to that commit",
+        for token in ("3b. Read PR source_pr (a number in RUNTIME_CONTRACT.json); it must show merged true with base branch main.",
+                      "If the PR response shows merged_by, it must be Donh91 with type User.",
+                      "List the entries directly in 00_FMOS/S1/ at the main SHA from step 1 and at that PR's head SHA: both lists must hold the same file names with the same Git blob SHAs, and any subdirectory fails.",
+                      "If any of this fails or cannot be read: write no GitHub change",
                       "Only a squash PR that the owner approves in person, restoring known-good files, ends this."):
             self.assertIn(token, text)
 
@@ -73,10 +75,11 @@ class ContentPinsTest(unittest.TestCase):
 
 class LegacyProvenanceTest(unittest.TestCase):
     def test_every_s1_file_is_touched_by_this_reviewed_pr_generation(self):
-        # Bootstrap 3b checks the newest commit of every file directly in 00_FMOS/S1/; the legacy files carry the
-        # provenance note so the owner's squash merge of this PR becomes their newest commit.
+        # Bootstrap v2 step 3b compares the files directly in 00_FMOS/S1/ (no subdirectories) on main with the head
+        # of PR source_pr. The provenance notes stay; the README states the source_pr convention.
         for name in ("MISSION.md", "README.md"):
             self.assertIn("Provenance (2026-11-15)", (S1 / name).read_text(encoding="utf-8"))
+        self.assertIn("sets `source_pr` in RUNTIME_CONTRACT.json to its own PR number", (S1 / "README.md").read_text(encoding="utf-8"))
         self.assertEqual(sorted(p.name for p in S1.iterdir() if p.is_dir()), [])
 
 
