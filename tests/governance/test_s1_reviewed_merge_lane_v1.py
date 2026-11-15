@@ -19,7 +19,7 @@ AGENTS = ROOT / "AGENTS.md"
 MANIFEST = ROOT / "00_FMOS" / "S1_REQUIRED_PR_JOBS_POLICY_V1.json"
 
 SECTION_SHA256 = "5ffac556ad0f58f96668c5fc4c8cb1fedd2ac262982027841e32a12fa2a5ce1f"
-BOOTSTRAP_SHA256 = "4ae6037b098cf9e81a431f3f8b63475b2f927823bf52603a446e9099990b3d0d"
+BOOTSTRAP_SHA256 = "dbc5df37aceed6727cfd7d8271890a8aa11747ca4fd3a8c093985bd37c2ff812"
 LINE_PINS = {'CC_ONLY': 'ee27bee9fc9404a603c57425f93e0a840caf15c7a3b929456f8d04cebd4803d1', 'CC_PR': '85bf8e3655a52a657d20f2992ccb40acc0d69cc7f3ae182a8401550e0f22e423', 'H1': '90b9d0a439ea6fcb5d2b45ba7d601eaa3946f39863d38540452326a85333f87e', 'H2': '9a265f4ba6bda93bf8f22bbc23b63f9f2f672c2de1f14ee51d4c978544fcc078', 'H3': 'a9fb6bc830284ee5e0e38d1fc80283037274248fd109b502c13edde79dd5af5f', 'H4': 'd47f6f701a0744ad1e8076b4c4bbdd7ed77578c4e3d014800d7ad11b6909da7e', 'H5': '234a31fb00136d622cc195983ed3a4e7b6d402a3ba11bfddfe75cd48922e681e', 'H6': '7aa5c467a3ee785d017a9ff8a0b7d017c9fbfeccb53e777d0a196a4585e78144', 'H7': '73981c63af506f153556961808dcac7d35bacb20d510c241e5565c6bb022d4ea', 'H8': '0343db2e8f9173b68600baaa0f8cbaf75eb2fe7247d243fdff7bb1948fea9b0b', 'LADDER': '7f9b1a7201709722314fc01237450d0ce680c0c367a3d67a5b3892f341b55ab8', 'LANE_INTEGRITY': 'd3d4818152a356742bed34c9b3216cceaa7b83cd503ba357ea726b90e03db140', 'RULE4': '32a5dfffd81b605332ae484e31246b6142b567cc2b3d85489271d039ad210550'}
 PINNED = ("AGENTS.md", "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json", ".github", ".agents", "scripts/governance",
           "scripts/health", "07_PROMPTS_AND_AGENTS", "01_CORE_FRAMEWORK/governance")
@@ -76,7 +76,7 @@ class Rule4ChecklistTest(unittest.TestCase):
                       "move to the next rule-4 candidate", "continue the LADDER with rules 2 and 3",
                       "previous_filename", "none found means NOT PROVEN", "post one S1_LANE_HALTED on #1156",
                       "C11 Batch", "disjoint from every PR merged in this run", "if NO merge has happened in this run",
-                      "if a merge already happened, the batch stops", "run H6 and rule 1 (ANSWER)",
+                      "if a merge already happened, the batch stops", "run H6 and rule 1 (ANSWER)", "path reports/claude/STATUS.md, ref claude/log", "live on Bridge PR #173", "never on the Archive PRs",
                       "is a halt trigger: post one S1_LANE_HALTED", "is an ancestor of (or equal to) Bridge branch claude/log", "read AGENTS.md in full",
                       "INDEPENDENT_DETACHED if H implements a Claude package", "created_at equals updated_at"):
             self.assertIn(token, loop)
