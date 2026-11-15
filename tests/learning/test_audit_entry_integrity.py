@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.entry_signal import entry_signal_ledger as ledger
+from scripts.entry_signal import entry_signal_ledger_core as ledger
 
 START = datetime(2026, 8, 20, 10, tzinfo=timezone.utc)
 
@@ -21,6 +21,9 @@ def market(stamp=START, price=100):
 
 @pytest.fixture
 def root(tmp_path, monkeypatch):
+    # The public entry_signal_ledger.py is a star-import wrapper. Its globals
+    # are NOT the globals read by main/update_outcomes/build_summary in core.
+    assert ledger.main.__globals__ is vars(ledger)
     for name, path in {'EVENTS': 'events', 'OUTCOMES': 'outcomes', 'STATE': 'STATE.json',
                        'LATEST': 'LATEST.json', 'SUMMARY': 'SUMMARY.json'}.items():
         monkeypatch.setattr(ledger, name, tmp_path / path)
