@@ -232,10 +232,10 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         state = json.loads(result.stdout)
         self.assertEqual(result.returncode, 0, state)
         self.assertEqual(state["status"], "PASS", state)
-        # Native POSTs settled by the aggregate readback; the consumed Astra
-        # one-shots settled by the separately bound per-model readback (WO-5).
-        self.assertEqual(state["pending_liability_upper_usd"], 0.0)
-        self.assertEqual(state["pending_liability_count"], 0)
+        # Native POSTs are provider-settled; the consumed Astra reservations
+        # (3 + 10) stay counted until per-model provider evidence (WO-5).
+        self.assertEqual(state["pending_liability_upper_usd"], 13.0)
+        self.assertEqual(state["pending_liability_count"], 2)
         self.assertGreaterEqual(state["remaining_usd"], 4.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
 
@@ -247,14 +247,13 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         ledger = json.loads(p.read_text(encoding="utf-8"))
         self.assertEqual(UNRESOLVED_NATIVE_POST_FLOOR_USD, {})
         self.assertEqual(ledger["unresolved"], [])
-        self.assertEqual(ledger["owner_reservations"], [])
-        self.assertEqual(pending_risk(p), (0.0, 0.0, 0))
-        self.assertEqual(len(ledger["settled"]), 5)
-        self.assertEqual(sorted(r["work_id"] for r in ledger["settled"] if r["kind"] == "ASTRA_PREHTTP_RESERVATION"),
-                         ["ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
-                          "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"])
-        self.assertEqual(ledger["astra_per_model_settlement_evidence"]["sha256"],
-                         "1f10e9356316179500c6193f10527c7fdf99c77a758f64a4c418b13abc2ea32a")
+        self.assertEqual(
+            sorted(r["work_id"] for r in ledger["owner_reservations"]),
+            ["ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
+             "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"])
+        self.assertEqual(pending_risk(p), (0.0, 13.0, 2))
+        self.assertEqual(len(ledger["settled"]), 3)
+        self.assertEqual({r["kind"] for r in ledger["settled"]}, {"NATIVE_POST"})
         self.assertEqual(ledger["provider_settlement_evidence"]["sha256"],
                          "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8")
         self.assertTrue(ledger["provider_settlement_evidence"]["path"].startswith(
@@ -279,27 +278,18 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                 f.write_text(json.dumps(bad), encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, "PROVIDER_SETTLE"):
                     pending_risk(f)
-            # The Astra settlement needs its own per-model evidence binding,
-            # cannot lose a row, and a settled Astra claim can never re-enter.
-            for mutation, code in (("astra_evidence_forged", "ASTRA_SETTLEMENT_EVIDENCE_INVALID"),
-                                   ("astra_evidence_missing", "ASTRA_SETTLEMENT_EVIDENCE_INVALID"),
-                                   ("astra_row_dropped", "PROVIDER_SETTLED_SET_INVALID"),
-                                   ("astra_reintroduced", "PROVIDER_SETTLED_REINTRODUCED_PENDING")):
+            # The consumed Astra reservations can neither be settled by this
+            # aggregate evidence nor silently dropped from the ledger.
+            for mutation, code in (("astra_settled", "PROVIDER_SETTLED_SET_INVALID"),
+                                   ("astra_dropped", "RETAINED_ASTRA_RESERVATION_MISSING")):
                 bad = json.loads(json.dumps(ledger))
-                if mutation == "astra_evidence_forged":
-                    bad["astra_per_model_settlement_evidence"]["git_blob_sha"] = "0" * 40
-                elif mutation == "astra_evidence_missing":
-                    del bad["astra_per_model_settlement_evidence"]
-                elif mutation == "astra_row_dropped":
-                    bad["settled"] = [r for r in bad["settled"]
-                                      if r.get("work_id") != "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE"]
-                else:
-                    bad["owner_reservations"] = [{
-                        "work_id": "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
-                        "created_month_utc": "2026-11", "status": "OWNER_RESERVED_PREHTTP",
-                        "lower_usd": 0, "upper_usd": 10,
-                        "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
-                        "one_paid_post_max": 1, "reconciliation_required": True}]
+                astra = bad["owner_reservations"].pop()
+                if mutation == "astra_settled":
+                    bad["settled"].append({"kind": "ASTRA_PREHTTP_RESERVATION",
+                                           "work_id": astra["work_id"],
+                                           "created_month_utc": "2026-11",
+                                           "status": "PROVIDER_PERIOD_RECONCILED",
+                                           "source": astra["source"], "no_retry": True})
                 f.write_text(json.dumps(bad), encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, code):
                     pending_risk(f)
