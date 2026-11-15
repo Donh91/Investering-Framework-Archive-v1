@@ -6,8 +6,20 @@ from unittest import mock
 from scripts.data_terminal import cfgi_owner_collector as C
 from scripts.data_terminal import top100_breadth_owner_collector as B
 from scripts.data_ping.auto_market_state import (
-    live_cfgi_has_observation, live_altseason_has_observation,
+    derivatives_source_health, live_altseason_has_observation, sentiment_source_health,
 )
+
+COMPLETE = {"MARKET": {"score": 22.5, "classification": "Fear", "owner_status": "PASS", "stale": False},
+            "BTC": {"score": 15, "classification": "Extreme Fear", "owner_status": "PASS", "stale": False},
+            "ETH": {"score": 17.5, "classification": "Extreme Fear", "owner_status": "PASS", "stale": False}}
+
+
+def cfgi(symbols):
+    return {"cfgi": {"symbols": symbols}}
+
+
+def swaps(btc, eth):
+    return {"BTC-USDT-SWAP": {"funding": {"funding_rate": btc}}, "ETH-USDT-SWAP": {"funding": {"funding_rate": eth}}}
 
 
 class Response:
@@ -65,14 +77,43 @@ class EmptyRecoveryTests(unittest.TestCase):
         sleep.assert_not_called()
 
     def test_empty_or_metadata_shell_never_passes_market_state(self):
-        self.assertFalse(live_cfgi_has_observation({"cfgi":{"symbols":{}}}))
-        self.assertFalse(live_cfgi_has_observation({"cfgi":{"symbols":{"BTC":{"owner_status":"PASS","score":None}}}}))
-        self.assertFalse(live_cfgi_has_observation({"cfgi":{"symbols":{"BTC":{"owner_status":"STALE","score":55}}}}))
-        self.assertTrue(live_cfgi_has_observation({"cfgi":{"symbols":{"BTC":{"owner_status":"PASS","score":0}}}}))
+        # Sentiment reuses #2142's single sentiment_source_health(); #2153 adds the stale exclusion.
+        self.assertEqual(sentiment_source_health(cfgi(COMPLETE))["status"], "PASS")
+        self.assertEqual(sentiment_source_health(cfgi({}))["status"], "UNAVAILABLE")
+        for symbol in ("MARKET", "BTC", "ETH"):
+            for change in ({"owner_status": "STALE"}, {"stale": True}, {"score": None}):
+                with self.subTest(symbol=symbol, change=change):
+                    rows = json.loads(json.dumps(COMPLETE))
+                    rows[symbol].update(change)
+                    self.assertEqual(sentiment_source_health(cfgi(rows))["status"], "UNAVAILABLE")
+        legacy = {k: {"score": v["score"], "classification": v["classification"]} for k, v in COMPLETE.items()}
+        self.assertEqual(sentiment_source_health(cfgi(legacy))["status"], "PASS")  # #2142 fixtures stay valid
         self.assertFalse(live_altseason_has_observation({"blockchaincenter_altcoin_season":{"status":"PASS","horizons":{}}}))
         self.assertFalse(live_altseason_has_observation({"coinmarketcap_altcoin_season":{"status":"PASS","published_score":None}}))
         self.assertTrue(live_altseason_has_observation({"blockchaincenter_altcoin_season":{"status":"PASS","horizons":{"90":{"published_score":0}}}}))
         self.assertTrue(live_altseason_has_observation({"coinmarketcap_altcoin_season":{"status":"PASS","published_score":0}}))
+
+    def test_derivatives_truthy_wrapper_is_not_a_pass(self):  # WO-3, auto_market_state :598
+        self.assertEqual(derivatives_source_health(swaps(-3.08e-05, -8.17e-05))["status"], "PASS")
+        self.assertEqual(derivatives_source_health(swaps(0, 0))["status"], "PASS")  # a zero rate is a real observation
+        for bad in ({}, {"BTC-USDT-SWAP": {}, "ETH-USDT-SWAP": {}}, swaps(-3e-05, None),
+                    swaps(float("nan"), 1e-05), swaps(True, 1e-05), swaps("-3e-05", 1e-05), []):
+            with self.subTest(bad=bad):
+                health = derivatives_source_health(bad)
+                self.assertEqual(health["status"], "UNAVAILABLE")
+                self.assertEqual(health["classification"], "LIVE_ANCHOR_DERIVATIVES_FUNDING_REQUIRED_FIELDS_MISSING")
+
+
+    def test_assemble_is_wired_to_all_three_completeness_checks(self):
+        import inspect
+        from scripts.data_ping import auto_market_state as A
+        src = inspect.getsource(A.assemble)
+        self.assertIn('health["derivatives"] = derivatives_source_health(derivatives)', src)
+        self.assertIn('health["sentiment"] = sentiment_source_health(sentiment)', src)
+        self.assertIn("live_altseason_has_observation(altseason)", src)
+        self.assertNotIn('"PASS" if sentiment else', src)
+        self.assertNotIn("and derivatives else", src)
+        self.assertNotIn('"PASS" if altseason else', src)
 
 
 if __name__ == "__main__":

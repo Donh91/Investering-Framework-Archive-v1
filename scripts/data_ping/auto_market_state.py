@@ -580,19 +580,35 @@ def delta(current: Any, predecessor: Any) -> dict[str, Any] | None:
     return {"absolute": current_value - predecessor_value, "pct": None if predecessor_value == 0 else (current_value / predecessor_value - 1) * 100}
 
 
-def live_cfgi_has_observation(sentiment: Any) -> bool:
-    """Metadata-only CFGI shells are never valid observations."""
-    if not isinstance(sentiment, Mapping):
-        return False
-    cfgi = sentiment.get("cfgi")
-    symbols = cfgi.get("symbols") if isinstance(cfgi, Mapping) else None
-    if not isinstance(symbols, Mapping):
-        return False
-    for row in symbols.values():
-        if (isinstance(row, Mapping) and row.get("owner_status") == "PASS"
-                and num(row.get("score")) is not None):
-            return True
-    return False
+def sentiment_source_health(sentiment: Any) -> dict[str, str]:
+    """PASS only for the original Official Compass required CFGI fields.
+
+    A truthy wrapper such as {"cfgi": {}} is incomplete, not a healthy
+    source. This does not invent a score, change a trading rule or impose
+    a new age/threshold policy on the referenced source.
+    """
+    symbols = nested(sentiment, "cfgi", "symbols")
+    complete = isinstance(symbols, Mapping) and all(
+        isinstance(symbols.get(symbol), Mapping)
+        and num(symbols[symbol].get("score")) is not None
+        # A row the owner collector marked stale is not a current observation (#2153).
+        and symbols[symbol].get("owner_status", "PASS") == "PASS"
+        and symbols[symbol].get("stale") is not True
+        for symbol in ("MARKET", "BTC", "ETH")
+    )
+    market = symbols.get("MARKET") if isinstance(symbols, Mapping) else None
+    complete = bool(
+        complete
+        and isinstance(market.get("classification"), str)
+        and market["classification"].strip()
+    )
+    return {
+        "status": "PASS" if complete else "UNAVAILABLE",
+        "classification": (
+            "LIVE_ANCHOR_SENTIMENT"
+            if complete else "LIVE_ANCHOR_SENTIMENT_CFGI_REQUIRED_FIELDS_MISSING"
+        ),
+    }
 
 
 def live_altseason_has_observation(altseason: Any) -> bool:
@@ -612,6 +628,25 @@ def live_altseason_has_observation(altseason: Any) -> bool:
                 and num(cmc.get("published_score")) is not None)
 
 
+def derivatives_source_health(derivatives: Any) -> dict[str, str]:
+    """PASS only when the live-anchor funding rates that Kompas consumes are numeric.
+
+    A truthy wrapper such as {"BTC-USDT-SWAP": {}} is incomplete, not healthy.
+    Open interest stays owned by the hourly row (hourly_status), unchanged.
+    """
+    complete = isinstance(derivatives, Mapping) and all(
+        num(nested(derivatives, instrument, "funding", "funding_rate")) is not None
+        for instrument in ("BTC-USDT-SWAP", "ETH-USDT-SWAP")
+    )
+    return {
+        "status": "PASS" if complete else "UNAVAILABLE",
+        "classification": (
+            "LIVE_ANCHOR_DERIVATIVES"
+            if complete else "LIVE_ANCHOR_DERIVATIVES_FUNDING_REQUIRED_FIELDS_MISSING"
+        ),
+    }
+
+
 def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> dict[str, Any]:
     now = (now_utc or datetime.now(timezone.utc)).astimezone(timezone.utc)
     snapshot = ti.GitCliSnapshot.open_repo(repo_root, repository=REPO, ref="HEAD")
@@ -627,8 +662,8 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     live_breadth_reference = market_metrics.get("breadth") or {}
     sentiment = market_metrics.get("sentiment") or {}
     altseason = market_metrics.get("altseason_context") or market_metrics.get("rotation_context") or {}
-    health["derivatives"] = {"status": "PASS" if isinstance(derivatives, Mapping) and derivatives else "UNAVAILABLE", "classification": "LIVE_ANCHOR_DERIVATIVES"}
-    health["sentiment"] = {"status": "PASS" if live_cfgi_has_observation(sentiment) else "UNAVAILABLE", "classification": "LIVE_ANCHOR_SENTIMENT"}
+    health["derivatives"] = derivatives_source_health(derivatives)
+    health["sentiment"] = sentiment_source_health(sentiment)
     health["altseason_context"] = {"status": "PASS" if live_altseason_has_observation(altseason) else "UNAVAILABLE", "classification": "LIVE_ANCHOR_ALTSEASON_CONTEXT"}
     breadth_raw, breadth_read_health = read_json(snapshot, BREADTH_OWNER)
     breadth, breadth_normalization_health = normalize_breadth(breadth_raw, now_utc=now)
