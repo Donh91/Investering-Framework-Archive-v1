@@ -18,7 +18,7 @@
 
 The new source reports (i) previous BTC local bottom at 74–76k and ETH at roughly 2.1–2.3k were broken by lows near 62k and 1.71k; (ii) revised local zones of 60–64k and 1.6–1.8k; (iii) expectation of a fast rebound, higher low, then renewed upside; (iv) BTC 3-day Supertrend might turn positive again above approximately 77k within an unspecified 'few' 3-day candles; (v) ETH 3-day RSI near 24, described as a six-year low tie; (vi) a 2023 BTC structural analogy, 2025 ETH fractal, and DXY/USDT.D lag analogy; (vii) a weekly USDT.D RSI retest and total-cap inverse-head-and-shoulders hypothesis; and (viii) an existing ETHU leveraged fund position with an approximately 85-dollar target in 2027-H1. Those are **author claims**, not verified independent model signals.
 
-The PDF charts were inspected visually. BTC analog uses two side-by-side prior-ATH retests, ETH uses an earlier fractal and RSI panel, and USDT.D/DXY plus total-cap/USDT.D/RSI panels support the narrative. The charts do **not** visibly specify a preregistered lag, quantified pattern-match tolerance, objective wedge recognition algorithm, a test denominator, or non-matching examples. Thus the claimed 'backtest' is a chart comparison, not an independently reproducible out-of-sample performance estimate.
+The source's pattern comparisons and claimed 'backtest' remain **non-reproducible research hypotheses** until the methodology supplies a frozen comparison universe, alignment/lag parameters, objective acceptance and rejection criteria, and negative controls. This public summary intentionally omits the subscriber-only charts and their descriptive reconstruction.
 
 Nuance: A failed *local price zone* does not mathematically disprove a *higher time-frame bullish thesis*. Equally, declaring the larger thesis intact does not validate the new local zone. Mark `INVALIDATION_DRIFT` only after comparing the original prior-issue invalidation rule; until then it is a candidate, not a finding.
 
@@ -50,9 +50,9 @@ Nuance: A failed *local price zone* does not mathematically disprove a *higher t
 ### 4. ETF-era transmission, actionable recovery vs mechanical bounce
 Sharp ETH oversold + BTC support tests may occur even while BTC.D is high, ETF flows negative and ETH/BTC weak. The framework's existing `BTC survival != ecosystem health` and ETH/BTC + breadth + deployment survival gates remain valid candidates, not truths immune to F12 falsification. Avoid self-fulfilling research: if a broad durable rebound occurs without existing gates, the false-negative/opportunity-cost ledger must record it as a miss, rather than reclassify the market to protect the default theory.
 
-## D. ETHU trade audit is distinct from ETH market prognosis
+## D. Leveraged ETH-linked products require separate analysis
 
-The article reports an ETHU rebuy near 21 USD, subsequent approximate price 15 USD and target 85 USD in 2027-H1. On those **author-reported, not independently verified trade prices**, the current position is about -28.6% relative to the cited entry, and reaching 85 from 15 requires about +466.7% on the fund. ETHU is daily-reset leveraged exposure with path/volatility drag; these fund numbers **cannot** be translated linearly into an ETH price target over months. Previous profitable trades, if true, do not independently validate the current trade. Do not infer portfolio suitability or copy the trade.
+A daily-reset leveraged product cannot be translated mechanically into a long-horizon Ethereum price forecast. When T7 assesses a subscriber-reported trade claim, evaluate its underlying instrument and path dependence separately from the ETH spot thesis, using the original frozen source and independently sourced outcome data. Exact subscriber-reported trade levels are intentionally not repeated in this public prose. Do not infer portfolio suitability or copy an analyst's trade.
 
 ## E. Forward research package, preconditions and stop rules
 
