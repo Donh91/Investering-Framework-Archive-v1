@@ -30,7 +30,7 @@ def workflow_executes_tests(source: str) -> bool:
     lines = [line.strip() for line in block.splitlines()]
     if "if: github.event_name == 'pull_request'" not in lines:
         return False
-    if "continue-on-error: true" in lines or "timeout-minutes: 18" not in lines:
+    if any(line.startswith("continue-on-error:") for line in lines) or "timeout-minutes: 18" not in lines:
         return False
     if EXECUTE_COMMAND not in lines:
         return False

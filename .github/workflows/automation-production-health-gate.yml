@@ -1,25 +1,10 @@
 name: Automation Production Health Gate
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/**'
-      - 'scripts/health/**'
-      - 'scripts/remediation/**'
-      - 'scripts/governance/**'
-      - 'scripts/architecture/**'
-      - 'scripts/orchestration/build_framework_handoff_manifest.py'
-      - 'research/codex/**'
-      - '.agents/skills/codex-intake/**'
-      - 'tests/health/**'
-      - 'tests/remediation/**'
-      - 'tests/governance/**'
-      # Any new test file must be genuinely executed, not merely collected.
-      - 'tests/**'
-      - 'tests/lib/**'
-      - '00_FMOS/S1/**'
-      - '09_SOURCE_QA/incidents/**'
-      - 'research/architecture_health/GITHUB_ACTIONS_USAGE_SNAPSHOT.json'
+  # Run the true full-suite and per-file JUnit proof on EVERY PR, not just
+  # PRs in selected paths. Filtered source-only changes could silently ship
+  # without the exact CI truth gate. No new trigger or paid action is added.
+  pull_request: {}
   workflow_dispatch:
 
 permissions:

@@ -30,6 +30,11 @@ def test_real_execution_step_required_not_collect_only():
         sample_workflow(EXECUTE_COMMAND.replace("--junitxml=/tmp/full-repository-tests.xml ", "")),
         sample_workflow(enabled=False),
         sample_workflow().replace("timeout-minutes: 18", "continue-on-error: true"),
+        sample_workflow().replace("        run: |", "        continue-on-error: true\n        run: |"),
+        sample_workflow().replace("        run: |", "        continue-on-error: ${{ github.event_name == 'pull_request' }}\n        run: |"),
+        sample_workflow() + sample_workflow(),
+        sample_workflow().replace("        run: |", "        run: |\n          " + EXECUTE_COMMAND + " || true"),
+
         sample_workflow().replace(WORKFLOW_STEP, "- name: Only collect test names"),
     ):
         assert not workflow_executes_tests(bad)
@@ -76,3 +81,28 @@ def test_missing_or_corrupt_xml_fails_closed(tmp_path: Path):
 def test_actual_workflow_has_real_runner():
     wf = Path(".github/workflows/automation-production-health-gate.yml").read_text(encoding="utf-8")
     assert workflow_executes_tests(wf)
+
+
+def test_truth_gate_runs_on_every_pr_not_just_selected_source_directories():
+    """P2: a scripts/learning-only PR must not bypass native pytest execution."""
+    wf = Path(".github/workflows/automation-production-health-gate.yml").read_text(encoding="utf-8")
+    event_section = wf.split("\npermissions:", 1)[0]
+    assert "on:\n" in event_section
+    assert "  pull_request: {}" in event_section
+    assert "    paths:" not in event_section
+    assert "    paths-ignore:" not in event_section
+    assert "  workflow_dispatch:" in event_section
+
+
+def test_existing_fail_closed_exec_guards_reject_duplicate_and_dynamic_continue():
+    """P3: duplicate steps and dynamic continue-on-error must fail the exact source check."""
+    baseline = sample_workflow()
+    assert workflow_executes_tests(baseline)
+    duplicate = baseline + baseline
+    assert not workflow_executes_tests(duplicate)
+    for value in ("true", "false", "${{ github.event_name == 'pull_request' }}"):
+        mutated = baseline.replace(
+            "        timeout-minutes: 18",
+            "        continue-on-error: " + value + "\n        timeout-minutes: 18",
+        )
+        assert not workflow_executes_tests(mutated)
