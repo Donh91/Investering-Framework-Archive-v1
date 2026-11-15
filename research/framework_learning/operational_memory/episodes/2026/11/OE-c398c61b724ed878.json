@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/data-architecture-gate.yml",
+    "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/CHALLENGER_A_SQRT_T_VOL_BAND_PREREG_v1.json",
+    "scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py",
+    "tests/research/test_task2_challenger_a_sqrt_t_vol_band_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-c398c61b724ed878",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE; exact head be5cdb7c; Codex exact-head review requested, pending at merge; Claude advisory APPROVE 6872992994; no known unmitigated P0/P1; P2 score-lock follow-up #2129; immediate safepoint receipt Archive #1156/6873715779.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/data-architecture-gate.yml": "401a8d73690457c00b547b0bcf5a1dad6af32f70",
+    "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json": "dd40ae0ad808839684dbbf99fd8c282a680ef1f6",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/CHALLENGER_A_SQRT_T_VOL_BAND_PREREG_v1.json": "d9ce59d7012f23c9cdeac69be29d88d0712eeca3",
+    "scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py": "7e2d48d96d6753182b37d92c3e052cf3a4f470a9",
+    "tests/research/test_task2_challenger_a_sqrt_t_vol_band_v1.py": "ff1707dc3fdbcd0b894d24aa3d1354758237df0d"
+  },
+  "source_commit_sha": "c398c61b724ed878203459346e7834e39609d06f",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-14T02:25:46-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(task2): preregister Challenger A sqrt-time volatility bands for W47 (#2124)"
+}

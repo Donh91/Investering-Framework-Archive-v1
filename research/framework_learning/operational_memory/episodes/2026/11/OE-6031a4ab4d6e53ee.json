@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/data-architecture-gate.yml",
+    "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/CHALLENGER_B_KOMPAS_TILT_PREREG_v1.json",
+    "scripts/research/task2_challenger_b_kompas_tilt_v1.py",
+    "tests/research/test_task2_challenger_b_kompas_tilt_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-6031a4ab4d6e53ee",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "SINGLE_ACCOUNT_OWNER_AUTHORIZED_MERGE | OWNER_INTERACTIVE 2026-11-14 | exact head 4262cd46552f027d663515eb06c10298bad0ffa1 | Claude Bridge #173/6875241317 APPROVE | recovery PASS #173/6858875473, expiry 22:32Z | internal safepoint backup-safepoint/2026-11-14-owner-present-pr2131",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/data-architecture-gate.yml": "792981127dc1befb562cbf8b59e5e2daf1029c6a",
+    "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json": "21e60a72a5447bd8f7955210936c18f9c0b6f6f7",
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/CHALLENGER_B_KOMPAS_TILT_PREREG_v1.json": "7ec3bf430d58bfc3aba6e4676535452176c74873",
+    "scripts/research/task2_challenger_b_kompas_tilt_v1.py": "61dc0acc4754ec8bee1cb5d45cd358dc8cfef55b",
+    "tests/research/test_task2_challenger_b_kompas_tilt_v1.py": "3593b58e89704d829e615c331084052786a10f80"
+  },
+  "source_commit_sha": "6031a4ab4d6e53eed745f589909f2fa3fa4c0801",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-14T05:24:56-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(task2): preregister Challenger B evidence-balance tilt for W47 (#2131)"
+}

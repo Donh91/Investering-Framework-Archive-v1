@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health-gate.yml",
+    "scripts/governance/check_test_execution_truth.py",
+    "scripts/learning/build_model_calibration_ledger.py",
+    "tests/governance/test_test_execution_truth.py",
+    "tests/learning/test_audit_entry_integrity.py",
+    "tests/learning/test_entry_signal_measurement_validity.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-6d6cb06511e881d1",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(api): evidence-bound provider settlement for previously unknown November posts HIGH independent review required. Provider billing amounts stay private Bridge. Existing code hard cap and provider cap unchanged, no new paid call. * test(api): update Astra shared reserve assertions for provider-settled evidence * test(workflows): require fail-closed Astra preview after provider settlement * fix(api): bind private provider settlement to immutable commit, blob, schema and completeness * fix(api): validate full value-free private settlement binding before releasing floor * test(api): forbid mi",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health-gate.yml": "2932012c101ac76f8bbe1d0b83acbbd59db50902",
+    "scripts/governance/check_test_execution_truth.py": "cd61e544f03c880d6c4fbc75d93787d172c788c7",
+    "scripts/learning/build_model_calibration_ledger.py": "0db1dfd7f35db9c0e3b9341723d8c6e544d161e3",
+    "tests/governance/test_test_execution_truth.py": "50ee3eb84bee3b5eafd22aef9f67103336e76903",
+    "tests/learning/test_audit_entry_integrity.py": "de3ee3f3a0e3b186e06212efa63b87426fdee663",
+    "tests/learning/test_entry_signal_measurement_validity.py": "b09c0a489ac28e141592c271074c38cff32051df"
+  },
+  "source_commit_sha": "6d6cb06511e881d1c0f090e206c93461e195e43b",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T06:19:49-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "test(ci truth): execute all pytest files and verify real native JUnit coverage (#2170)"
+}

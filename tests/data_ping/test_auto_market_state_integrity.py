@@ -6,6 +6,37 @@ from scripts.data_ping.auto_market_state import capitalization_transmission_prox
 
 
 class AutoMarketStateIntegrityTests(unittest.TestCase):
+    def test_sentiment_original_false_pass_packet_now_unavailable(self):
+        import json
+        from pathlib import Path
+        from scripts.data_ping.auto_market_state import sentiment_source_health
+        root = Path(__file__).resolve().parents[2]
+        packet_path = root / "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/11/09/224533_3b8c80cbc645.json"
+        packet = json.loads(packet_path.read_text(encoding="utf-8"))
+        self.assertEqual(packet["source_health"]["sentiment"]["status"], "PASS")
+        self.assertEqual(packet["normalized_state"]["sentiment"], {"cfgi": {}})
+        self.assertEqual(sentiment_source_health(packet["normalized_state"]["sentiment"])["status"], "UNAVAILABLE")
+
+    def test_sentiment_positive_complete_and_missing_scores(self):
+        import copy
+        from scripts.data_ping.auto_market_state import sentiment_source_health
+        state = {"cfgi": {"symbols": {
+            "MARKET": {"classification": "Fear", "score": 36.5},
+            "BTC": {"score": 26.5},
+            "ETH": {"score": 35.5},
+        }}}
+        self.assertEqual(sentiment_source_health(state), {
+            "status": "PASS", "classification": "LIVE_ANCHOR_SENTIMENT",
+        })
+        for symbol, value in (("MARKET", True), ("BTC", None), ("ETH", float("nan"))):
+            with self.subTest(symbol=symbol):
+                mutated = copy.deepcopy(state)
+                mutated["cfgi"]["symbols"][symbol]["score"] = value
+                self.assertEqual(sentiment_source_health(mutated)["status"], "UNAVAILABLE")
+        missing_class = copy.deepcopy(state)
+        missing_class["cfgi"]["symbols"]["MARKET"].pop("classification")
+        self.assertEqual(sentiment_source_health(missing_class)["status"], "UNAVAILABLE")
+
     @staticmethod
     def _predecessor_snapshot(tmp_root, *, scenario):
         import json

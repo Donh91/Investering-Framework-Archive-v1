@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-11-13T22:12:52Z",
+  "generated_at_utc": "2026-11-15T12:20:01Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -35,7 +35,7 @@
         "private source publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 19427e2aa5b87c1b2426 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-13T22:12:52Z",
+      "last_observed_at_utc": "2026-11-15T12:20:01Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -110,7 +110,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-13T22:12:52Z",
+      "last_observed_at_utc": "2026-11-15T12:20:01Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -182,7 +182,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-13T22:12:52Z",
+      "last_observed_at_utc": "2026-11-15T12:20:01Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -243,7 +243,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a369f29837aa0a0c3c82 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-13T22:12:52Z",
+      "last_observed_at_utc": "2026-11-15T12:20:01Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -275,70 +275,6 @@
       "transition_receipt_path": "research/codex/transitions/a369f29837aa0a0c3c82.json",
       "transition_receipt_required": true,
       "workflow": "research-intake/codex-research-cn-w44-range-bridge-target-mismatch-v1"
-    },
-    {
-      "allowed_change_scope": [
-        "scripts/data_ping/auto_market_state.py",
-        "tests/data_ping/test_auto_market_state_integrity.py",
-        "tests/data_ping/test_auto_market_state_sentiment_completeness.py"
-      ],
-      "candidate_id": "codex-research-compass-sentiment-false-pass-v1",
-      "candidate_path": "research/codex/intake/2026/11/codex-research-compass-sentiment-false-pass-v1.json",
-      "candidate_sha256": "f3f544583497fd5d564c55f55ecf5790dbf0d5c08137df99bb6067b6986df5f7",
-      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
-      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "auto-market-state:sentiment-wrapper-truthy-false-pass-when-cfgi-symbols-absent-v1",
-      "first_observed_at_utc": "2026-11-13T16:01:15.714Z",
-      "forbidden_changes": [
-        "API budget",
-        "CFGI provider configuration, payment or credential changes",
-        "canonical authority",
-        "historical frozen forecasts, packets or scoring",
-        "market gates",
-        "model weights",
-        "new policy semantics",
-        "official action/sell/portfolio authorization",
-        "portfolio logic",
-        "private/restricted data copying",
-        "workflows, schedulers, new agents or sources"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c643b40c2b89cad6128e --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-13T22:12:52Z",
-      "latest_run_id": null,
-      "latest_run_url": null,
-      "lifecycle_state": "ACTIVE",
-      "objective": "Fix ONLY existing auto_market_state source-health completeness classification. At Archive main 20fc2cca, assemble() sets health['sentiment'].status PASS for any truthy sentiment wrapper, including {'cfgi':{}}. Public original 2026-11-09 22:45 packet has source_health.sentiment.status PASS and normalized_state.sentiment.cfgi={}, while downstream Official Compass requires MARKET classification and MARKET/BTC/ETH numeric scores, generating FAIL_PASS_LANE_MISSING_VALUE. Distinguish missing required CFD/CFGI fields as UNAVAILABLE with a stable source-specific classification, without inventing values or weakening downstream fail-closed gates. Preserve valid 2026-11-13 packet status and contents. This repairs false source-health assertions, NOT underlying missing CFGI collection, chronic 61.64% source validity, time-lag, signal accuracy or production consumer delivery. Do not modify market direction, weights, alert severity or official trading authority. After code review/merge, verify genuinely issued next producer and Official / Pages source status separately.",
-      "observations": 1,
-      "post_fix_gate": "Original owner #1827/#1593 and S1 #1156; exact original-source and positive/negative test evidence, independent Codex review and qualified owner CI release, no unsafe merge before governance gates. Real next auto_market_state producer must label a missing sentiment wrapper UNAVAILABLE not PASS; Official must stay DEGRADED if genuinely absent; true valid input retains PASS; read through public Pages independently. Keep POST_FIX_OBSERVATION until natural post-merge producer/consumer proof.",
-      "precondition": "Candidate codex-research-compass-sentiment-false-pass-v1 still exists on main at research/codex/intake/2026/11/codex-research-compass-sentiment-false-pass-v1.json with SHA-256 f3f544583497fd5d564c55f55ecf5790dbf0d5c08137df99bb6067b6986df5f7, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
-      "requested_priority": "EXPEDITED",
-      "required_evidence": [
-        "scripts/data_ping/auto_market_state.py @ git blob 2d21525c7d11ae95ffd8ae14eccf4cb409005b7a",
-        "scripts/data_ping/native_handlekompas.py @ git blob 111572ac6b7e4934e16a7d267d3b2365c63556de",
-        "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/11/09/224533_3b8c80cbc645.json @ git blob ff27cc761a17f4566d1c3acc29a48cf48d7247dc",
-        "04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/11/13/132734_4bf307cd2027.json @ git blob 5f453ccc00b339cd18a5575a4305d87e796063a8",
-        "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1827#issuecomment-6754017969",
-        "reproduction",
-        "positive and negative acceptance tests"
-      ],
-      "risk_class": "B_CODEX_PR_RESEARCH",
-      "route": "CODEX_PR",
-      "signature": "c643b40c2b89cad6128e",
-      "source_type": "RESEARCH_INTAKE",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
-      "submitted_at_utc": "2026-11-13T16:01:15.714Z",
-      "success_evidence": [
-        "candidate-linked reproduction",
-        "positive and negative acceptance tests",
-        "Original owner #1827/#1593 and S1 #1156; exact original-source and positive/negative test evidence, independent Codex review and qualified owner CI release, no unsafe merge before governance gates. Real next auto_market_state producer must label a missing sentiment wrapper UNAVAILABLE not PASS; Official must stay DEGRADED if genuinely absent; true valid input retains PASS; read through public Pages independently. Keep POST_FIX_OBSERVATION until natural post-merge producer/consumer proof."
-      ],
-      "success_streak": 0,
-      "task_contract_sha256": "0ff9b53baa0378cdfa43c370ba21a1fb38a79834b15d3f281d57e496e1b768ac",
-      "transition_receipt_path": "research/codex/transitions/c643b40c2b89cad6128e.json",
-      "transition_receipt_required": true,
-      "workflow": "research-intake/codex-research-compass-sentiment-false-pass-v1"
     }
   ]
 }
