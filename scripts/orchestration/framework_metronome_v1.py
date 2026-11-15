@@ -24,7 +24,7 @@ Targets (deliberately minimal; everything else already chains from these):
              CN Weekly Publication follows by its existing workflow_run trigger.
 
 Fail-closed rules:
-  - mode is read from 00_FMOS/METRONOME_MODE_v1.json on main; anything but ACTIVE is SHADOW
+  - mode is read from 00_FMOS/METRONOME_MODE_v1.json on main; ACTIVE, ACTIVE_DATA (hourly data owners only) or else SHADOW
     (logs WOULD_DISPATCH, dispatches nothing but its own next tick).
   - the next tick is dispatched only if the environment's wait timer is >= MIN_WAIT_MINUTES
     and no other metronome run is queued/waiting/in progress (exactly one loop).
@@ -57,7 +57,10 @@ PRODUCTION_BRANCH = "main"
 
 HOURLY = {"key": "HOURLY", "workflow": "hourly-sequence-capture.yml",
           "inputs": {"chain_entry_signal": "true"}, "from_minute": 5}
-RECOVERY = {"key": "RECOVERY", "workflow": "native-market-recovery.yml", "inputs": {}, "from_minute": 35}
+# Recovery's own cron fires at :24; from minute 26 an on-time cron run (created >= :24) already serves the hour,
+# so the metronome adds no second run then. A cron run that starts late, after the metronome dispatched, can still
+# double up; recovery's concurrency group serialises the two, and its (possibly credit-billed) repairs keep their cooldowns.
+RECOVERY = {"key": "RECOVERY", "workflow": "native-market-recovery.yml", "inputs": {}, "from_minute": 26}
 CLOSE_WORKFLOW = "sunday-market-close-and-cfgi.yml"
 PRECLOSE = {"key": "PRECLOSE", "workflow": CLOSE_WORKFLOW, "inputs": {"mode": "preclose"},
             "local_weekday": 6, "local_time": (23, 35)}
@@ -191,8 +194,20 @@ def monday_due(now: dt.datetime, runs: list[dict], close_runs: list[dict] | None
     return True, "DUE"
 
 
+# ACTIVE_DATA dispatches only the hourly data owners (hourly capture: free public candles; market recovery:
+# bounded, cooldown-limited repairs). The Sunday close and the paid Master Monday stay log-only.
+# Anything but an exact known mode is SHADOW.
+MODES = ("ACTIVE", "ACTIVE_DATA")
+DATA_TARGET_KEYS = frozenset({"HOURLY", "RECOVERY"})
+
+
 def read_mode(doc: Any) -> str:
-    return "ACTIVE" if isinstance(doc, dict) and doc.get("mode") == "ACTIVE" else "SHADOW"
+    mode = doc.get("mode") if isinstance(doc, dict) else None
+    return mode if mode in MODES else "SHADOW"
+
+
+def dispatches(mode: str, target_key: str) -> bool:
+    return mode == "ACTIVE" or (mode == "ACTIVE_DATA" and target_key in DATA_TARGET_KEYS)
 
 
 def wait_minutes(environment: Any) -> int | None:
@@ -225,7 +240,7 @@ def decide(now: dt.datetime, *, mode: str, hourly_runs: list[dict], monday_runs:
         plan["targets"][target["key"]] = reason
         if due:
             item = {"workflow": target["workflow"], "inputs": target["inputs"]}
-            (plan["dispatch"] if mode == "ACTIVE" else plan["would_dispatch"]).append(item)
+            (plan["dispatch"] if dispatches(mode, target["key"]) else plan["would_dispatch"]).append(item)
     wait = wait_minutes(environment)
     plan["wait_timer_minutes"] = wait
     if wait is None or not MIN_WAIT_MINUTES <= wait <= MAX_WAIT_MINUTES:
@@ -244,8 +259,11 @@ def decide(now: dt.datetime, *, mode: str, hourly_runs: list[dict], monday_runs:
 class Github:
     """Minimal client: GET runs/environment/mode file, POST workflow dispatches. Nothing else."""
 
-    def __init__(self, token: str, repo: str = REPO):
+    READ_BUDGET_SECONDS = 90  # total wall-clock budget for all reads in one tick (fail closed when spent)
+
+    def __init__(self, token: str, repo: str = REPO, budget_seconds: float | None = None):
         self.token, self.repo = token, repo
+        self.deadline = time.monotonic() + (self.READ_BUDGET_SECONDS if budget_seconds is None else budget_seconds)
 
     def _req(self, method: str, route: str, payload: dict | None = None) -> Any:
         allowed = (
@@ -265,8 +283,11 @@ class Github:
         # GET-only bounded retry. Never retry a POST: an ambiguous dispatch might
         # have succeeded and repeating it could duplicate a workflow or paid call.
         for attempt in range(3):
+            remaining = self.deadline - time.monotonic()
+            if method == "GET" and remaining <= 0:
+                raise TimeoutError("READ_BUDGET_EXCEEDED")  # never act on reads from minutes ago
             try:
-                with urllib.request.urlopen(req, timeout=30) as r:
+                with urllib.request.urlopen(req, timeout=max(1.0, min(30.0, remaining)) if method == "GET" else 30) as r:
                     body = r.read()
                 return json.loads(body) if body else None
             except urllib.error.HTTPError as exc:
@@ -286,11 +307,19 @@ class Github:
         rows = doc["workflow_runs"]
         if any(not isinstance(row, dict) for row in rows):
             raise ValueError("WORKFLOW_RUNS_INVALID_ITEM")
+        # Every row must carry the fields the decision reads; an unreadable row could hide a run in flight.
+        for row in rows:
+            if type(row.get("id")) is not int or not isinstance(row.get("status"), str) \
+                    or not isinstance(row.get("created_at"), str):
+                raise ValueError("WORKFLOW_RUNS_INVALID_ITEM")
+            try:
+                dt.datetime.fromisoformat(row["created_at"].replace("Z", "+00:00"))
+            except ValueError:
+                raise ValueError("WORKFLOW_RUNS_INVALID_ITEM") from None
         count = doc.get("total_count")
-        if count is not None and (
-            type(count) is not int or count < len(rows) or (count > 0 and not rows)
-        ):
-            raise ValueError("WORKFLOW_RUNS_COUNT_CONTRADICTION")
+        # total_count is required, and a page must hold exactly min(total_count, per_page=30) rows.
+        if type(count) is not int or count < 0 or len(rows) != min(count, 30):
+            raise ValueError(f"WORKFLOW_RUNS_COUNT_CONTRADICTION:count={count!r}:len={len(rows)}")
         return rows
 
     def environment(self) -> Any:
@@ -312,7 +341,10 @@ class Github:
                   {"ref": "main", "inputs": inputs})
 
 
-def run(gh, now: dt.datetime, self_run_id: int | None) -> dict:
+CLOCK_DRIFT_MAX = dt.timedelta(seconds=30)
+
+
+def run(gh, now: dt.datetime, self_run_id: int | None, clock=None) -> dict:
     # Reads are not authority. On a partial or transient GitHub read failure,
     # never interpret missing evidence as "no run exists" and dispatch a target.
     # The self-loop may continue only if its native concurrency census and wait
@@ -329,27 +361,40 @@ def run(gh, now: dt.datetime, self_run_id: int | None) -> dict:
         except Exception as exc:
             failed_reads.add(name)
             errors.append(f"READ_{name}:{type(exc).__name__}")
+            detail = str(exc)[:80].replace(" ", "_")  # keep the cause visible in the tick log
+            if detail:
+                errors.append(f"READ_{name}_DETAIL:{detail}")
             return fallback
 
+    # Loop-safety reads (wait timer, mode, own census) come first: a slow API spends the read budget on the
+    # targets, which then fail closed, never on the reads that keep the loop alive.
+    environment = read("ENVIRONMENT", gh.environment, {})
     mode_doc = read("MODE", gh.mode, {})
     raw_runs = {}
     for name, workflow in (
+        ("SELF", SELF_WORKFLOW),
         ("HOURLY", HOURLY["workflow"]),
         ("RECOVERY", RECOVERY["workflow"]),
         ("MONDAY", MONDAY["workflow"]),
         ("CLOSE", CLOSE_WORKFLOW),
-        ("SELF", SELF_WORKFLOW),
     ):
         raw_runs[name] = read(name, lambda wf=workflow: gh.runs(wf), [])
         if not isinstance(raw_runs[name], list):
             failed_reads.add(name)
             errors.append(f"READ_{name}:INVALID_SHAPE")
             raw_runs[name] = []
-    environment = read("ENVIRONMENT", gh.environment, {})
     if not isinstance(environment, dict):
         failed_reads.add("ENVIRONMENT")
         errors.append("READ_ENVIRONMENT:INVALID_SHAPE")
         environment = {}
+
+    # Decide on the clock as it is after the reads; slow reads must not dispatch on a stale "now".
+    if clock is not None:
+        later = clock()
+        if later - now > CLOCK_DRIFT_MAX:
+            failed_reads.add("CLOCK")
+            errors.append(f"READ_CLOCK:DRIFT_{int((later - now).total_seconds())}S")
+        now = later
 
     # Fail closed for ALL targets if even one data source is unverified.
     mode = "SHADOW" if failed_reads else read_mode(mode_doc)
@@ -393,7 +438,8 @@ def main(argv: Iterable[str] | None = None) -> int:
     if not token:
         print(json.dumps({"contract": CONTRACT, "status": "SKIPPED_NO_TOKEN"}))
         return 0
-    plan = run(Github(token), dt.datetime.now(dt.timezone.utc), args.self_run_id)
+    clock = lambda: dt.datetime.now(dt.timezone.utc)  # noqa: E731
+    plan = run(Github(token), clock(), args.self_run_id, clock=clock)
     print(CONTRACT + " " + json.dumps(plan, sort_keys=True))
     # A dead loop or a failed dispatch must be visible as a failed run.
     return 1 if plan["errors"] or not plan["next_tick"] and plan["next_tick_reason"] != "ANOTHER_METRONOME_RUN_ACTIVE" else 0
