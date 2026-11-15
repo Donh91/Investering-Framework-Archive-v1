@@ -192,8 +192,9 @@ def test_publication_workflow_does_not_mask_builder_failure():
     assert "shell: bash" in build
     assert "set -euo pipefail" in build
     assert "--max-output-tokens 12000" in build
-    assert "OPENAI_API_KEY:" in build
-    # Old runner arguments do not control the actual final API-free Python issuer.
+    assert "OPENAI_API_KEY:" not in build
+    assert "CN_OFFLINE_ONLY: '1'" in build
+    # A future accidental paid call must fail closed, not inherit a provider key.
     assert "value = build_offline_value(context, range_forecast, prev_machine," in (ROOT / "scripts/cycle_navigator/build_weekly_cycle_navigator.py").read_text()
     assert "| tee runtime_cycle_navigator_pointer.json" in build
 
@@ -228,8 +229,9 @@ def test_existing_weekly_api_owns_conditional_daily_scenario_without_extra_call(
     assert "python scripts/cycle_navigator/build_weekly_cycle_navigator.py" in workflow
     assert "--model gpt-6-sol" in workflow
     assert "--max-output-tokens 12000" in workflow
-    assert "Enforce monthly API cost guard" in workflow
-    # The existing runner is untouched to respect high-impact workflow safeguards.
+    assert "Enforce monthly API cost guard" not in workflow
+    assert "CN_OFFLINE_ONLY: '1'" in workflow
+    # Offline publishing cannot be vetoed by the separate paid API budget guard.
 
 
 
