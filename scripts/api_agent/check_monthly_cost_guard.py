@@ -41,9 +41,15 @@ PROVIDER_SETTLEMENT_EVIDENCE = {
     "completeness": "NOVEMBER_MTD_ACCOUNT_AGGREGATE_ONLY_NOT_PER_REQUEST",
     "coverage_assertion": "PUBLIC_ESTIMATED_RECEIPTS_AT_CAPTURE_EXCEEDED_PRIVATE_PROVIDER_ACCOUNT_TOTAL",
     "coverage_authority": "INDEPENDENT_CLAUDE_RECONCILIATION_6885728883",
+    "coverage_scope": "NATIVE_POST_IDS_ONLY_ASTRA_RESERVATIONS_RETAINED",
 }
 SETTLED_NATIVE_POST_IDS = {"41870364609", "41949497953", "42204120988"}
-SETTLED_ASTRA_WORK_IDS = {
+# The consumed Nov 13 Astra one-shots have no receipt in the guard receipt root
+# and were not visible in the private provider aggregate at capture. Their
+# pre-HTTP reservations stay counted (and may not silently disappear from the
+# canonical ledger) until per-model provider evidence settles them (WO-5).
+SETTLED_ASTRA_WORK_IDS: set[str] = set()
+RETAINED_ASTRA_RESERVATION_WORK_IDS = {
     "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
     "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
 }
@@ -71,11 +77,12 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
         raise ValueError("LIABILITY_LEDGER_CONTRACT_INVALID")
     # Canonical released liabilities need immutable, private-source evidence;
     # test fixtures with future unknown POSTs may omit the settlement block.
-    if path.resolve() == CANONICAL_LIABILITY_LEDGER.resolve() or "settled" in value:
+    settlement_bound = path.resolve() == CANONICAL_LIABILITY_LEDGER.resolve() or "settled" in value
+    if settlement_bound:
         if value.get("provider_settlement_evidence") != PROVIDER_SETTLEMENT_EVIDENCE:
             raise ValueError("PROVIDER_SETTLEMENT_EVIDENCE_INVALID")
         settled = value.get("settled")
-        if not isinstance(settled, list) or len(settled) != 5:
+        if not isinstance(settled, list) or len(settled) != len(SETTLED_NATIVE_POST_IDS) + len(SETTLED_ASTRA_WORK_IDS):
             raise ValueError("PROVIDER_SETTLED_SET_INVALID")
         post_ids, work_ids = set(), set()
         for entry in settled:
@@ -147,6 +154,8 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             raise ValueError("UNKNOWN_OWNER_RESERVED_MODEL_OR_COST")
         high += float(allowed[work])
     reservation_count = len(reservations)
+    if settlement_bound and not RETAINED_ASTRA_RESERVATION_WORK_IDS <= reserved_work_ids:
+        raise ValueError("RETAINED_ASTRA_RESERVATION_MISSING")
     missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
     if missing:
         raise ValueError("KNOWN_UNSETTLED_NATIVE_POST_MISSING")

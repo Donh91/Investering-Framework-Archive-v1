@@ -1,15 +1,38 @@
 {
   "contract": "API_PENDING_BILLING_RISK_V1",
-  "status": "PROVIDER_RECONCILED_SETTLED_WITH_SOURCE_BOUND_EVIDENCE",
+  "status": "PROVIDER_RECONCILED_NATIVE_POSTS_SETTLED_ASTRA_RESERVATIONS_RETAINED",
   "owner_reference": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6680520240",
   "normal_budget_usd": 50,
   "absolute_budget_usd": 50,
-  "method": "Reserve genuinely unresolved future POSTs and owner-authorized pre-HTTP work until independently reviewed provider reconciliation. The identified November events are no longer pending; their metadata is preserved without billing amounts in settled. Never replay their original POST IDs; retain per-request and monthly admission limits and the owner reserve.",
+  "method": "Reserve genuinely unresolved future POSTs and owner-authorized pre-HTTP work until independently reviewed provider reconciliation. The three identified November native POSTs are no longer pending; their metadata is preserved without billing amounts in settled. The two consumed November Astra one-shots have no receipt in the guard receipt root and were not visible in the private provider aggregate at capture, so their pre-HTTP reservations stay counted until per-model provider evidence (WO-5) settles them. Never replay original POST IDs; retain per-request and monthly admission limits and the owner reserve.",
   "unresolved": [],
   "no_retry_original_ids": true,
   "requires_reconciliation_before_releasing_reserve": true,
   "no_api_authority": true,
-  "owner_reservations": [],
+  "owner_reservations": [
+    {
+      "work_id": "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
+      "created_month_utc": "2026-11",
+      "status": "OWNER_RESERVED_PREHTTP",
+      "lower_usd": 0,
+      "upper_usd": 3,
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+      "one_paid_post_max": 1,
+      "reconciliation_required": true,
+      "basis": "Owner explicitly authorizes one manual Astra High research API call on 2026-11-13; conservatively reserve USD3 before any possible POST until original response usage and native GitHub issue claim are independently reconciled."
+    },
+    {
+      "work_id": "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
+      "created_month_utc": "2026-11",
+      "status": "OWNER_RESERVED_PREHTTP",
+      "lower_usd": 0,
+      "upper_usd": 10,
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+      "one_paid_post_max": 1,
+      "reconciliation_required": true,
+      "basis": "Owner explicitly approved on Nov13 2026 a distinct extraordinary Astra High empirical historical comparison across ALL archived Master Mondays and CN and real market data, with upper USD10 for exactly one POST; conservatively holds USD10 across uncertain POST and monthly rollover until separately verified usage/settlement. No reuse of consumed Astra text-only mission and no added scheduler."
+    }
+  ],
   "owner_budget_explicit_approval": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6864310705",
   "owner_budget_reserve_usd": 4,
   "settled": [
@@ -36,22 +59,6 @@
       "status": "PROVIDER_PERIOD_RECONCILED",
       "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42204120988",
       "no_retry": true
-    },
-    {
-      "kind": "ASTRA_PREHTTP_RESERVATION",
-      "work_id": "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
-      "created_month_utc": "2026-11",
-      "status": "PROVIDER_PERIOD_RECONCILED",
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
-      "no_retry": true
-    },
-    {
-      "kind": "ASTRA_PREHTTP_RESERVATION",
-      "work_id": "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
-      "created_month_utc": "2026-11",
-      "status": "PROVIDER_PERIOD_RECONCILED",
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
-      "no_retry": true
     }
   ],
   "provider_settlement_evidence": {
@@ -67,6 +74,7 @@
     "schema": "image/png; owner recording frames manually reviewed",
     "completeness": "NOVEMBER_MTD_ACCOUNT_AGGREGATE_ONLY_NOT_PER_REQUEST",
     "coverage_assertion": "PUBLIC_ESTIMATED_RECEIPTS_AT_CAPTURE_EXCEEDED_PRIVATE_PROVIDER_ACCOUNT_TOTAL",
-    "coverage_authority": "INDEPENDENT_CLAUDE_RECONCILIATION_6885728883"
+    "coverage_authority": "INDEPENDENT_CLAUDE_RECONCILIATION_6885728883",
+    "coverage_scope": "NATIVE_POST_IDS_ONLY_ASTRA_RESERVATIONS_RETAINED"
   }
 }
