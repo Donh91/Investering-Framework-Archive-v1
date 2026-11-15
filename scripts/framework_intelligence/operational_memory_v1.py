@@ -16,17 +16,26 @@ def load(p,d=None):
 def write(p,v,compact=False):
     p=Path(p);p.parent.mkdir(parents=True,exist_ok=True)
     p.write_text((json.dumps(v,separators=(",",":"),sort_keys=True) if compact else json.dumps(v,indent=2,sort_keys=True))+"\n")
-# WO-2c hot-set bound: routine data-writer episodes (UPDATE/RESEARCH) stay immutable in episodes/
-# (the cold store) but only the last HOT_WINDOW_DAYS of them are in LATEST_OPERATIONAL_MEMORY_INDEX.
-# Engineering episodes (FIX/HARDEN/BUILD/ARCHIVE, ~6.5 KiB/day) are always kept.
+# WO-2c hot-set bound: routine automated data-writer episodes stay immutable in episodes/ (the cold
+# store) but only the last HOT_WINDOW_DAYS of them are in LATEST_OPERATIONAL_MEMORY_INDEX.
+# operation_type alone is too coarse (human "feat(...)"/"test(...)" PRs are typed UPDATE), so a row
+# rolls off only if it is UPDATE/RESEARCH AND its subject has the automated data-writer shape
+# ("<writer>: ... <Actions run id>" or a known bot phrase) AND it names no PR. Everything else is kept.
 ROLLING_OPERATION_TYPES = {"UPDATE","RESEARCH"}
 HOT_WINDOW_DAYS = 14
+ROUTINE_SUBJECT = re.compile(r"^(learning|data|ops|ai|evidence|health|research|remediation)(\([^)]*\))?: .*\s\d{9,12}$")
+ROUTINE_PHRASES = ("research: accumulate prospective","data: persist research","research: advance autonomous")
+PR_REF = re.compile(r"\(#\d+\)")
+def routine(row):
+    s=str(row.get("task_summary","")).strip()
+    if row.get("operation_type") not in ROLLING_OPERATION_TYPES or PR_REF.search(s):return False
+    return ROUTINE_SUBJECT.match(s) is not None or s.lower().startswith(ROUTINE_PHRASES)
 def utc_ts(s):
     try:t=datetime.fromisoformat(str(s).replace("Z","+00:00"))
     except ValueError:return None
     return t if t.tzinfo else None
 def in_hot_set(row,cutoff):
-    if cutoff is None or row.get("operation_type") not in ROLLING_OPERATION_TYPES:return True
+    if cutoff is None or not routine(row):return True
     t=utc_ts(row.get("source_timestamp"))
     return t is None or t>=cutoff  # an unknown timestamp is kept, never silently dropped
 def git(root,*args,check=True):
@@ -126,7 +135,7 @@ def index(root,eps,when):
         rows.append({"episode_id":e["episode_id"],"source_commit_sha":e["source_commit_sha"],"source_timestamp":e["source_timestamp"],"task_class":e["task_class"],"operation_type":e["operation_type"],"task_summary":e["task_summary"],"failure_signature":e.get("failure_signature"),"dominant_path_prefix":e.get("dominant_path_prefix"),"changed_paths":e.get("changed_paths",[])[:25],"compatibility":cp,"retrieval_tier":tier,"newer_related_episode":newer,"episode_path":e["_path"]})
     total=len(rows);now=utc_ts(when);cutoff=now-timedelta(days=HOT_WINDOW_DAYS) if now else None
     rows=[r for r in rows if in_hot_set(r,cutoff)]
-    return {"contract":"OPERATIONAL_MEMORY_INDEX_v1","authority":AUTH,"generated_at_utc":when,"source_head_sha":head(root),"episode_count":len(rows),"total_episode_count":total,"hot_set_policy":{"rolling_operation_types":sorted(ROLLING_OPERATION_TYPES),"rolling_window_days":HOT_WINDOW_DAYS,"always_kept":"ALL_OTHER_OPERATION_TYPES","cold_store":"episodes/ immutable, unchanged"},"rows":rows}
+    return {"contract":"OPERATIONAL_MEMORY_INDEX_v1","authority":AUTH,"generated_at_utc":when,"source_head_sha":head(root),"episode_count":len(rows),"total_episode_count":total,"hot_set_policy":{"rolling_rule":"UPDATE/RESEARCH automated data-writer subject (writer prefix + Actions run id, or known bot phrase), no PR reference","rolling_operation_types":sorted(ROLLING_OPERATION_TYPES),"routine_subject_pattern":ROUTINE_SUBJECT.pattern,"routine_phrases":list(ROUTINE_PHRASES),"rolling_window_days":HOT_WINDOW_DAYS,"always_kept":"ALL_OTHER_ROWS","cold_store":"episodes/ immutable, unchanged"},"rows":rows}
 def candidates(idx,when):
     g=defaultdict(list)
     for r in idx["rows"]:
@@ -162,11 +171,11 @@ def preflight(idx,task,qpaths,fail=None,top=5):
     return {"contract":"OPERATIONAL_MEMORY_PREFLIGHT_v1","authority":AUTH,"task":task,"task_class":task_class(task,qpaths),"query_paths":qpaths,"source_index_head_sha":idx["source_head_sha"],"candidate_count":len(ranked),"selected_count":len(sel),"reusable_prior_work":[{"episode_id":x["episode_id"],"source_commit_sha":x["source_commit_sha"],"task_summary":x["task_summary"],"episode_path":x["episode_path"],"compatibility":x["compatibility"]["status"],"retrieval_score":x["retrieval_score"]} for x in sel if x["compatibility"]["status"] in {"EXACT","PARTIAL"}],"revalidation_required":[{"episode_id":x["episode_id"],"reason":x["compatibility"]["status"],"source_commit_sha":x["source_commit_sha"]} for x in sel if x["compatibility"]["status"] in {"DRIFTED","REMOVED"}],"known_failure_patterns":[{"episode_id":x["episode_id"],"failure_signature":x["failure_signature"],"task_summary":x["task_summary"]} for x in sel if x.get("failure_signature")],"selected":sel,"usage_instruction":"Acceleration context only. Re-read current authoritative files before acting. Memory never overrides current main.","telemetry":{"context_savings_baseline_status":"BASELINE_REQUIRED","repeated_investigation_baseline_status":"BASELINE_REQUIRED","no_savings_claim_without_measurement":True}}
 def health(idx,cand,when):
     ids=[r["episode_id"] for r in idx["rows"]];dups=[k for k,v in Counter(ids).items() if v>1];bad=[r["episode_id"] for r in idx["rows"] if not r.get("source_commit_sha")]
-    return {"contract":"OPERATIONAL_MEMORY_HEALTH_v1","generated_at_utc":when,"status":"PASS" if not dups and not bad else "FAIL","authority":AUTH,"episode_count":len(ids),"compatibility_counts":dict(Counter(r["compatibility"]["status"] for r in idx["rows"])),"procedural_candidate_count":cand["candidate_count"],"duplicate_episode_ids":dups,"episodes_missing_source_commit":bad,"retrieval_policy":"DETERMINISTIC_FIRST_NO_VECTOR_DB_NO_MODEL_CALLS","source_of_truth":"CURRENT_GITHUB_MAIN","memory_role":"DERIVED_ACCELERATION_LAYER_ONLY"}
+    return {"contract":"OPERATIONAL_MEMORY_HEALTH_v1","generated_at_utc":when,"status":"PASS" if not dups and not bad else "FAIL","authority":AUTH,"episode_count":len(ids),"total_episode_count":idx.get("total_episode_count",len(ids)),"compatibility_counts":dict(Counter(r["compatibility"]["status"] for r in idx["rows"])),"procedural_candidate_count":cand["candidate_count"],"duplicate_episode_ids":dups,"episodes_missing_source_commit":bad,"retrieval_policy":"DETERMINISTIC_FIRST_NO_VECTOR_DB_NO_MODEL_CALLS","source_of_truth":"CURRENT_GITHUB_MAIN","memory_role":"DERIVED_ACCELERATION_LAYER_ONLY"}
 def do_harvest(a):
     root=Path(a.repo_root);out=root/a.output_root;made,sk=harvest(root,out,a.max_commits);when=datetime.now(timezone.utc).isoformat().replace("+00:00","Z");idx=index(root,episodes(out),when);cand=candidates(idx,when);h=health(idx,cand,when)
     write(out/"LATEST_OPERATIONAL_MEMORY_INDEX.json",idx,compact=True);write(out/"LATEST_PROCEDURAL_CANDIDATES.json",cand);write(out/"LATEST_OPERATIONAL_MEMORY_HEALTH.json",h)
-    state={"contract":"OPERATIONAL_MEMORY_AND_RETRIEVAL_v1","generated_at_utc":when,"status":h["status"],"source_head_sha":idx["source_head_sha"],"new_episode_count":len(made),"episode_count":idx["episode_count"],"procedural_candidate_count":cand["candidate_count"],"self_generated_commits_skipped":sk,"authority":AUTH};write(out/"LATEST_OPERATIONAL_MEMORY_STATE.json",state);print(json.dumps(state,sort_keys=True))
+    state={"contract":"OPERATIONAL_MEMORY_AND_RETRIEVAL_v1","generated_at_utc":when,"status":h["status"],"source_head_sha":idx["source_head_sha"],"new_episode_count":len(made),"episode_count":idx["episode_count"],"total_episode_count":idx.get("total_episode_count",idx["episode_count"]),"hot_window_days":HOT_WINDOW_DAYS,"procedural_candidate_count":cand["candidate_count"],"self_generated_commits_skipped":sk,"authority":AUTH};write(out/"LATEST_OPERATIONAL_MEMORY_STATE.json",state);print(json.dumps(state,sort_keys=True))
 def do_preflight(a):
     root=Path(a.repo_root);out=root/a.output_root;idx=load(out/"LATEST_OPERATIONAL_MEMORY_INDEX.json",{})
     if idx.get("contract")!="OPERATIONAL_MEMORY_INDEX_v1":raise SystemExit("operational memory index missing; run harvest first")
