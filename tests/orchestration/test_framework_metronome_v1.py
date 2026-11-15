@@ -326,6 +326,36 @@ class MetronomeTest(unittest.TestCase):
         self.assertEqual(calls, ["POST"])
         sleep.assert_not_called()
 
+    def test_malformed_200_run_census_fails_closed(self):
+        gh = M.Github("t")
+        for invalid in (
+            None, [], {"total_count": 1}, {"workflow_runs": None},
+            {"workflow_runs": {}, "total_count": 0},
+            {"workflow_runs": [1]}, {"workflow_runs": [], "total_count": 1},
+            {"workflow_runs": [{"id": 1}], "total_count": 0},
+        ):
+            with self.subTest(invalid=invalid):
+                gh._req = lambda method, route, payload=None, body=invalid: body
+                with self.assertRaises(ValueError):
+                    gh.runs(M.HOURLY["workflow"])
+        gh._req = lambda method, route, payload=None: {"workflow_runs": [], "total_count": 0}
+        self.assertEqual(gh.runs(M.SELF_WORKFLOW), [])
+
+    def test_post_ambiguous_network_errors_are_never_retried(self):
+        import urllib.error
+        from unittest import mock
+
+        gh = M.Github("t")
+        route = f"/repos/{M.REPO}/actions/workflows/{M.SELF_WORKFLOW}/dispatches"
+        for err in (urllib.error.URLError("unknown POST result"), TimeoutError("ambiguous")):
+            with self.subTest(error=type(err).__name__):
+                with mock.patch.object(M.urllib.request, "urlopen", side_effect=err) as request:
+                    with mock.patch.object(M.time, "sleep") as sleep:
+                        with self.assertRaises(type(err)):
+                            gh._req("POST", route, {"ref": "main", "inputs": {}})
+                    self.assertEqual(request.call_count, 1)
+                    sleep.assert_not_called()
+
     def test_native_main_shadow_end_to_end_and_ci_runner_contract(self):
         import io
         from contextlib import redirect_stdout
@@ -350,13 +380,25 @@ class MetronomeTest(unittest.TestCase):
 
         fake = Fake()
         output = io.StringIO()
-        with mock.patch.object(M, "Github", return_value=fake):
-            with mock.patch.dict(M.os.environ, {"GITHUB_TOKEN": "synthetic-token"}):
-                with redirect_stdout(output):
-                    code = M.main([])
+        # Pin the Sunday -> Monday timeline, rather than accidentally
+        # passing a 'would_dispatch' mutant based on the runner's wall clock.
+        fixed = dt.datetime(2026, 11, 16, 1, 45, tzinfo=UTC)
+        class FrozenDatetime(dt.datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed.astimezone(tz) if tz is not None else fixed
+        with mock.patch.object(M.dt, "datetime", FrozenDatetime):
+            with mock.patch.object(M, "Github", return_value=fake):
+                with mock.patch.dict(M.os.environ, {"GITHUB_TOKEN": "synthetic-token"}):
+                    with redirect_stdout(output):
+                        code = M.main([])
         self.assertEqual(code, 0, output.getvalue())
         self.assertEqual(fake.calls, [M.SELF_WORKFLOW])
         self.assertIn('"mode": "SHADOW"', output.getvalue())
+        plan = M.json.loads(output.getvalue().split(" ", 1)[1])
+        self.assertEqual(plan["dispatch"], [])
+        self.assertEqual([item["workflow"] for item in plan["would_dispatch"]],
+                         [M.HOURLY["workflow"], M.RECOVERY["workflow"], M.CLOSE_WORKFLOW])
         self.assertNotIn("synthetic-token", output.getvalue())
 
         wf = (ROOT / ".github/workflows/master-monday-preflight-gate.yml").read_text(encoding="utf-8")

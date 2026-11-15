@@ -279,8 +279,19 @@ class Github:
         raise RuntimeError("GET_RETRY_EXHAUSTED")
 
     def runs(self, workflow: str) -> list[dict]:
-        return (self._req("GET", f"/repos/{self.repo}/actions/workflows/{workflow}/runs?per_page=30&branch={PRODUCTION_BRANCH}") or {}).get(
-            "workflow_runs", [])
+        doc = self._req("GET", f"/repos/{self.repo}/actions/workflows/{workflow}/runs?per_page=30&branch={PRODUCTION_BRANCH}")
+        # A malformed HTTP 200 is not evidence that no workflow is in flight.
+        if not isinstance(doc, dict) or not isinstance(doc.get("workflow_runs"), list):
+            raise ValueError("WORKFLOW_RUNS_INVALID_SHAPE")
+        rows = doc["workflow_runs"]
+        if any(not isinstance(row, dict) for row in rows):
+            raise ValueError("WORKFLOW_RUNS_INVALID_ITEM")
+        count = doc.get("total_count")
+        if count is not None and (
+            type(count) is not int or count < len(rows) or (count > 0 and not rows)
+        ):
+            raise ValueError("WORKFLOW_RUNS_COUNT_CONTRADICTION")
+        return rows
 
     def environment(self) -> Any:
         try:
