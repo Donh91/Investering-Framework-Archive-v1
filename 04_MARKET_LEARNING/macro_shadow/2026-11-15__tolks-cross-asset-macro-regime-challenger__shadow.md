@@ -3,8 +3,8 @@
 **Date:** 2026-11-15
 **Status:** SHADOW_ONLY / SOURCE_BACKED_RESEARCH_INTAKE / HYPOTHESES_NOT_TESTED
 **Area:** macro shadow, cross-asset transmission, long-horizon Compass, Cycle Navigator, Task 2
-**Primary folder:** \`04_MARKET_LEARNING/macro_shadow/\`
-**Related folders:** \`04_MARKET_LEARNING/external_research/\`, \`04_MARKET_LEARNING/handlekompas/research/\`, \`06_RESEARCH_LAB/\`
+**Primary folder:** `04_MARKET_LEARNING/macro_shadow/`
+**Related folders:** `04_MARKET_LEARNING/external_research/`, `04_MARKET_LEARNING/handlekompas/research/`, `06_RESEARCH_LAB/`
 **Supersedes:** Nothing.
 **Depends on:** existing FRED targeted/vintage macro owner; Sep 21 late-hike rotation note; Oct 18 PAICE cross-asset early-warning design; global-liquidity causal-chain preregistration; W46 pullback falsification; existing Task 2 #1596, risk #1553 and CN #1516; AGENTS.md and cross-repository source boundary.
 
@@ -38,7 +38,7 @@ A second question is symmetric: **Can the same framework reliably distinguish a 
 Coinbase Institutional, **2026-11-13**, "Weekly: From Hack to Hawk":
 https://www.coinbase.com/institutional/research-insights/research/weekly-market-commentary/weekly-2026-11-13
 - Futures reportedly priced about **64 bps of Fed hikes over the coming 12 months**, versus about 37 bps earlier in November. This is a **forward market expectation**, not an enacted FOMC policy path.
-- Broad dollar index is reported about **102.9**, highest since April 2025; methodology/time must be preserved. FRED \`DTWEXBGS\` is a **different** broad dollar index and must not be presented as a mathematically identical DXY series.
+- Broad dollar index is reported about **102.9**, highest since April 2025; methodology/time must be preserved. FRED `DTWEXBGS` is a **different** broad dollar index and must not be presented as a mathematically identical DXY series.
 - 30-day supply change reportedly **-$11.5 billion** for USDT/USDC/DAI. Treat as a published sample-specific estimate, not an all-stablecoin network total.
 - U.S. spot BTC ETF net outflow reportedly about **$1.44 billion** over five trading sessions ending November 11; not equivalent to total investor capital flows or instantaneous BTC spot sales.
 - Coinbase also notes crypto-specific amplifiers such as index treatment of Strategy, persistent derivatives positioning, Coinbase premium and BTC technical levels. Those must be retained as alternative and interacting drivers, not explained away by macro.
@@ -49,27 +49,27 @@ These measure aggregate financial conditions across credit, risk and leverage. *
 ## Conflict discovered in existing canonical archive
 
 Existing 2026-09-21 external research:
-\`04_MARKET_LEARNING/external_research/2026-09-21__late-hike-rotation-regime__shadow.md\`
+`04_MARKET_LEARNING/external_research/2026-09-21__late-hike-rotation-regime__shadow.md`
 - H_LATE_HIKE_BREADTH_TRANSMISSION: rates can remain elevated while growth, ample reserves, steady long yields/credit and eventual equity breadth allow later risk transmission.
 - Clearly labels this as SHADOW_NOTE_NOT_ACTIVE_TEST and gives no crypto deploy permission.
 
 Existing 2026-10-18 PAICE external macro research:
-\`04_MARKET_LEARNING/macro_shadow/2026-10-18__paice-equity-earnings-inflation-credit-crypto-drawdown-pit__shadow.md\`
+`04_MARKET_LEARNING/macro_shadow/2026-10-18__paice-equity-earnings-inflation-credit-crypto-drawdown-pit__shadow.md`
 - H1 proposed that adverse earnings-expectation revisions, credit/financing and inflation/valuation interaction might give advance notice of equity drawdowns and later crypto stress; **TEST_NOT_RUN**.
 - Explicitly requires as-known-then vintage, no-warning denominators and price controls.
 
 Existing causal-chain methodology:
-\`04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/research/global_liquidity_causal_chain_v1/PREREGISTERED_ANALYSIS_CONTRACT_v1.md\`
+`04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/research/global_liquidity_causal_chain_v1/PREREGISTERED_ANALYSIS_CONTRACT_v1.md`
 - Already specifies requirement vs delivered liquidity, DXY/real yields/credit/volatility transmission, multiple eras, real-time vintage, expanding walk-forward, a final holdout, ablations, and kill criteria.
 
 **Novel contribution is NOT a fresh list of macro data feeds.** It is a falsifiable *two-sided conditional scenario contest*, especially the distinction between actual policy rate and policy-path repricing in the weeks before a decision. It cross-links existing source owners rather than duplicating them.
 
 ## Candidate competing scenarios, no live state assignment
 
-1. \`GROWTH_RESILIENT_HIKE\`: policy rates elevated/higher while growth, credit, reserve liquidity and breadth hold. A subsequent small-cap and crypto broadening is *possible*, never automatic.
-2. \`POLICY_REPRICING_RISK_OFF\`: expected rate path and real yields/dollar tighten, credit/risk and equity breadth weaken; later BTC/ETH/alt stress is the hypothesis.
-3. \`GROWTH_SHOCK_EASING\`: projected cuts and falling nominal yields coincide with earnings/credit deterioration. "Fed will cut" is not intrinsically bullish.
-4. \`CRYPTO_IDIOSYNCRATIC_STRESS\`: crypto ETF, stablecoin, issuer/index, miner or derivatives stress dominates while broad financial conditions remain relatively stable. This is an essential negative control against attributing all shocks to macro.
+1. `GROWTH_RESILIENT_HIKE`: policy rates elevated/higher while growth, credit, reserve liquidity and breadth hold. A subsequent small-cap and crypto broadening is *possible*, never automatic.
+2. `POLICY_REPRICING_RISK_OFF`: expected rate path and real yields/dollar tighten, credit/risk and equity breadth weaken; later BTC/ETH/alt stress is the hypothesis.
+3. `GROWTH_SHOCK_EASING`: projected cuts and falling nominal yields coincide with earnings/credit deterioration. "Fed will cut" is not intrinsically bullish.
+4. `CRYPTO_IDIOSYNCRATIC_STRESS`: crypto ETF, stablecoin, issuer/index, miner or derivatives stress dominates while broad financial conditions remain relatively stable. This is an essential negative control against attributing all shocks to macro.
 
 All four must have pre-known, explicit entry and exit conditions *before future evaluation* and may legitimately return UNKNOWN/INCONCLUSIVE. They cannot be fitted to November 2026 after observing its outcome.
 
@@ -79,20 +79,20 @@ All four must have pre-known, explicit entry and exit conditions *before future 
 |---|---|---|
 | Actual policy | Fed FOMC statements + FRED DFF | Decision-publication clock |
 | Expected policy | timestamped futures probability / curve if legitimately available | Exchange market timestamp, no ex-post SEP substitution |
-| Real and nominal duration price | FRED \`DGS2\`, \`DGS10\`, \`DFII10\`, \`T10Y2Y\` | As-of daily closings and publication lag |
-| Dollar | FRED \`DTWEXBGS\`, separately licensed DXY only if available | Never equate index methodologies |
-| Credit/funding | \`BAMLH0A0HYM2\`, \`BAMLC0A0CM\`, \`NFCI\`, \`ANFCI\` | Release/vintage and shared-component correlation |
-| Actual monetary balance | \`WALCL\`, \`WRESBAL\`, \`WTREGEN\`, \`RRPONTSYD\` | TGA/RRP decomposition, units and weekly release |
+| Real and nominal duration price | FRED `DGS2`, `DGS10`, `DFII10`, `T10Y2Y` | As-of daily closings and publication lag |
+| Dollar | FRED `DTWEXBGS`, separately licensed DXY only if available | Never equate index methodologies |
+| Credit/funding | `BAMLH0A0HYM2`, `BAMLC0A0CM`, `NFCI`, `ANFCI` | Release/vintage and shared-component correlation |
+| Actual monetary balance | `WALCL`, `WRESBAL`, `WTREGEN`, `RRPONTSYD` | TGA/RRP decomposition, units and weekly release |
 | Inflation/slow activity | CPI/PCE/payroll/growth, exact BLS/FRED release vintages | No slow-macro values before their release |
 | Equity transmission | Nasdaq and S&P equal-weight, Russell vs large caps, semiconductors, market breadth | Exact index composition, point-in-time series availability |
 | AI leverage/capex | issuer filings/issuer credit or earnings revisions if sourced | SOURCE_UNAVAILABLE until release-bound and legitimate |
 | Crypto transmission | existing approved BTC/ETH prices, ETF/stablecoin/ETHBTC/breadth & risk output | Private raw market data stays in restricted plane |
 
-**No new collector is authorized.** First output should be an availability/clock matrix for the original approved source owners. All market data sources not point-in-time admissible remain \`SOURCE_BLOCKED\`.
+**No new collector is authorized.** First output should be an availability/clock matrix for the original approved source owners. All market data sources not point-in-time admissible remain `SOURCE_BLOCKED`.
 
 ## Long-horizon Compass scientific design, not executable yet
 
-- Research endpoints: **4 weeks, 13 weeks, 26 weeks, and 52 weeks**, plus an explicitly separate 1-3/5-7/2-3-week risk warning lane. These are candidate test horizons, not currently available priced forecasts. The existing \`scripts/learning/forward_price_admission_horizon_guard.py\` explicitly marks 30d/56d priced models \`PRICE_MODEL_NOT_IMPLEMENTED\`, so no long-horizon price target or calibrated probability can be claimed from this note.
+- Research endpoints: **4 weeks, 13 weeks, 26 weeks, and 52 weeks**, plus an explicitly separate 1-3/5-7/2-3-week risk warning lane. These are candidate test horizons, not currently available priced forecasts. The existing `scripts/learning/forward_price_admission_horizon_guard.py` explicitly marks 30d/56d priced models `PRICE_MODEL_NOT_IMPLEMENTED`, so no long-horizon price target or calibrated probability can be claimed from this note.
 - Compare exactly matched forecast timestamps and available feature clocks. Current 2026-11 case is an **exposed development example**; an untouched future cohort is required.
 - Competing baselines: B0 price-only/40-week trend; B1 current Macro Shadow/FRED; B2 B1 plus *rate-path repricing*, not merely the funds-rate level; B3 B1 plus independent equity/credit contagion; B4 existing crypto ETF/stablecoin/breadth inputs; B5 interaction model after redundant features are removed.
 - Outcome families: directional 4/13/26/52-week BTC and ETH returns, drawdown / drawdown-onset from forecast timestamp, realized risk, BTC-vs-alt participation and risk-warning lead time. Define event thresholds and loss costs **before** outcome inspection. Distinguish regime scoring from range-price scoring and investor after-cost utility.
@@ -105,7 +105,7 @@ All four must have pre-known, explicit entry and exit conditions *before future 
 
 ## November W46 diagnostic, not a new scored sample
 
-Existing \`04_MARKET_LEARNING/handlekompas/research/2026-11-13__W46_PULLBACK_FAILURE_RPL_V1.md\` identifies a Friday BTC price below issued Friday and weekly lower bounds (partial-week snapshot), a static ELEVATED risk pass-through and incomplete long-horizon original source coverage. The file prescribes existing original Task 2, risk and CN owners, and has already rejected repeated generic studies.
+Existing `04_MARKET_LEARNING/handlekompas/research/2026-11-13__W46_PULLBACK_FAILURE_RPL_V1.md` identifies a Friday BTC price below issued Friday and weekly lower bounds (partial-week snapshot), a static ELEVATED risk pass-through and incomplete long-horizon original source coverage. The file prescribes existing original Task 2, risk and CN owners, and has already rejected repeated generic studies.
 
 This macro challenger should therefore ask:
 - Did *before-issuance* policy-path repricing and broad risk transmission contain nonredundant information absent from the issuer?
@@ -126,7 +126,7 @@ No asserted answer is allowed until admitted data and real prospective outcomes 
 
 ## Disposition and next finite action
 
-- **Preserve** this bounded source-aware hypothesis with status \`SHADOW_ONLY / NOT_EXECUTED\`.
+- **Preserve** this bounded source-aware hypothesis with status `SHADOW_ONLY / NOT_EXECUTED`.
 - **Deduplicate** within existing Macro Shadow/Research Lab, especially Sep 21 late-hike, Oct 18 PAICE, Global Liquidity causal-chain, Task 2 #1596 and W46 risk #1553.
 - **Next action for existing research owner only:** produce a one-page as-of availability/first-known matrix and a pre-registered, signed competing scenario spec; review before any analysis. If covered by existing owners, append the new conditional policy-path distinction there, do not start a second experiment.
 - **No new automation, workflow, API spend, model agent, source collector, release authority, public site output, state alteration, threshold, or merge is requested or granted.**
