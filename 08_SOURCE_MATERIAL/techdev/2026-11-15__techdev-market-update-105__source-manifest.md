@@ -12,7 +12,7 @@
 - SHA-256 PDF: `532a22112031d2bf6687d95cd85ca7282ec49e16fd060f805f7b6165f0c9b2de`
 - PDF structure: 1 long screenshot page, 402 x 14178 PDF points, Safari Quartz export
 - PDF creation timestamp: 2026-11-15T20:08:26Z (artifact creation, **not** author publication time)
-- Local `pdftotext -layout` extraction SHA-256: `751e0a68a938f5dbd089b215a29f5a68c399de4d7d8f2a8c4aa03ef217d`
+- Local `pdftotext -layout` extraction SHA-256: `751e0a68a938f5dbd089b215a29f5a68c399de4d7d8f2a8c4aa3a4aa03ef217d`
 - Exact original publication timestamp: **NOT VERIFIED**; issue-date 2026-11-15 inferred from PDF capture and article metadata
 - Source availability: original owner's uploaded PDF; **not stored in GitHub**
 - Public control-plane rule: **HASH_AND_POINTER_ONLY**; do not reproduce article text, charts, screenshots or subscriber-only source content
