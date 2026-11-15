@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "tests/api_agent/test_audit_budget_integrity.py",
+    "tests/api_agent/test_audit_director_freshness.py",
+    "tests/daily_capture/test_at004_persistence.py",
+    "tests/daily_capture/test_cfgi_credit_efficiency.py",
+    "tests/daily_capture/test_rich_breadth_sampling_provenance.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-f465e5fb60ee1895",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "ci-truth-orphan-tests-fail-closed-budget-reserve",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(api): evidence-bound provider settlement for previously unknown November posts HIGH independent review required. Provider billing amounts stay private Bridge. Existing code hard cap and provider cap unchanged, no new paid call. * test(api): update Astra shared reserve assertions for provider-settled evidence * test(workflows): require fail-closed Astra preview after provider settlement * fix(api): bind private provider settlement to immutable commit, blob, schema and completeness * fix(api): validate full value-free private settlement binding before releasing floor * test(api): forbid mi",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/api_agent/check_monthly_cost_guard.py": "bf50d617c7976db8d37487cdf73313e2a82448b9",
+    "tests/api_agent/test_audit_budget_integrity.py": "07bea8332d582efbb173625979443eec299c0fba",
+    "tests/api_agent/test_audit_director_freshness.py": "15e51607d9ac6206e12cb6b833591caf8f1b6df4",
+    "tests/daily_capture/test_at004_persistence.py": "ee2450ca2da4edb069d66c2db03a8c797250a7cc",
+    "tests/daily_capture/test_cfgi_credit_efficiency.py": "f91eb100cd45929269e4068c525ecdb1ea7c1be1",
+    "tests/daily_capture/test_rich_breadth_sampling_provenance.py": "2d222509fe285a4ba0bac6a2735b7821f2a7299c"
+  },
+  "source_commit_sha": "f465e5fb60ee1895feeae90f28e7e33e73ffc299",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T05:20:32-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(ci truth): repair orphan tests and fail closed at budget reserve boundary (stacked on #2160) (#2167)"
+}

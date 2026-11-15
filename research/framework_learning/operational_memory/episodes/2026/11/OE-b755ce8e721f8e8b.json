@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py",
+    "tests/experiments/test_dispatch_episode_and_pending_manifest.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-b755ce8e721f8e8b",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "experiments-fire-episodes-across-missing-data-2156",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-present approved P0 #2152 stabilisation. Exact head a3302fdb79f573d12ac85f6d74f280a842319231; Claude independent APPROVE Bridge #173/6885244657; Codex no unresolved findings; all native CI GREEN. Safepoint backup-safepoint/2026-11-14-2156-p0 @ 53e2d8e6f250a847f3a65f792c9794958ba2350c. No Vault, paid or manual dispatch.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py": "8ecf62048baa8ff67b2f73e8c9b57ab3c8c97aaa",
+    "tests/experiments/test_dispatch_episode_and_pending_manifest.py": "565d3759dbb2a3e2a73915de2eae4b0bc02e6162"
+  },
+  "source_commit_sha": "b755ce8e721f8e8b77c5aa4c25915a7ac25a5a5e",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-14T17:42:57-05:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "fix(experiments): preserve fire episodes across missing data (#2156)"
+}

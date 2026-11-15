@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json",
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "tests/api_agent/test_manual_astra_task2_high_v1.py",
+    "tests/api_agent/test_owner_global_api_budget_cap.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-1f7dafe5b13ab4c7",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "api-settle-native-posts-retain-unverified-astra-reservations",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(api): evidence-bound provider settlement for previously unknown November posts HIGH independent review required. Provider billing amounts stay private Bridge. Existing code hard cap and provider cap unchanged, no new paid call. * test(api): update Astra shared reserve assertions for provider-settled evidence * test(workflows): require fail-closed Astra preview after provider settlement * fix(api): bind private provider settlement to immutable commit, blob, schema and completeness * fix(api): validate full value-free private settlement binding before releasing floor * test(api): forbid mi",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json": "9e754386e1203b9b6cebe1d92d99bcfa54ba0eae",
+    "scripts/api_agent/check_monthly_cost_guard.py": "9d63d6f9ab3d9fb765fa59e5718e864b22a56565",
+    "tests/api_agent/test_manual_astra_task2_high_v1.py": "5439f747ff24c6e54ae14b39caec026fe8c2b22f",
+    "tests/api_agent/test_owner_global_api_budget_cap.py": "7beffd6a3f1d29bfa79eb360c48f26630d9ffde2"
+  },
+  "source_commit_sha": "1f7dafe5b13ab4c7b1c0905db41a85994e99cd0a",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T04:58:53-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(api): settle native POSTs, retain unverified Astra reservations (#2160)"
+}

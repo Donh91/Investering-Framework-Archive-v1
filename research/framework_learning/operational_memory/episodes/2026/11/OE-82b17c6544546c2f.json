@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/OPERATIONAL_MEMORY_AND_RETRIEVAL_v1.md",
+    "scripts/framework_intelligence/operational_memory_v1.py",
+    "tests/framework_intelligence/test_operational_memory_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-82b17c6544546c2f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "memory-bounded-operational-hot-set-immutable-episode-history",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(memory): bound operational hot index without deleting historical episodes Apply byte-exact Claude WO-2c producer and tests, retain all immutable episodes. Pre-merge CI, consumer compatibility audit and exact-head review required; Archive #2157. * fix: retain engineering history in operational memory hot set",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/OPERATIONAL_MEMORY_AND_RETRIEVAL_v1.md": "4ee052a1a200e68f1c7176ba4a17e1ef8bad021d",
+    "scripts/framework_intelligence/operational_memory_v1.py": "eecedc566839f4b3367476565d10fac1ae0b4399",
+    "tests/framework_intelligence/test_operational_memory_v1.py": "7a4289f876ecc69663de87ef5ca86c05bbe4d8d4"
+  },
+  "source_commit_sha": "82b17c6544546c2fa14fdd223259428c83d19b94",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T06:21:13-05:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "fix(memory): bounded operational hot set, preserve immutable episode history (WO-2c #2157) (#2165)"
+}

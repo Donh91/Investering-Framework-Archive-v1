@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cycle-navigator-weekly-publication.yml",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "tests/cycle_navigator/test_cn_offline_budget_isolation.py",
+    "tests/cycle_navigator/test_daily_path_recovery.py",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-efe72c7a4d3dd504",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cn-offline-weekly-publication-must-survive-paid-api",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(cn): isolate offline weekly issuance from paid API guard * fix(cn): isolate offline weekly issuance from paid API guard * test(cn): prove offline weekly issuer cannot contact paid API * test(cn): update legacy guards to enforce API-free publication * test(cn): update legacy guards to enforce API-free publication",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cycle-navigator-weekly-publication.yml": "6f7ef5f811c4ee50df5b24a07009bc197ba41f76",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py": "7c3ef6f999660dac09b7909d22d4a6591efdaccd",
+    "tests/cycle_navigator/test_cn_offline_budget_isolation.py": "2cc35e0ada5fd6fb1b068373aa979674a1e12cd6",
+    "tests/cycle_navigator/test_daily_path_recovery.py": "c608ba415a82b01c591b7c5778fff1818aab59d9",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py": "c09667ec5c2a0cda22198a9547d1ffdb470450b6"
+  },
+  "source_commit_sha": "efe72c7a4d3dd504126fdf391a755fb8a3436be2",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T04:57:32-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(cn): offline weekly publication must survive paid-API budget HOLD (#2148)"
+}

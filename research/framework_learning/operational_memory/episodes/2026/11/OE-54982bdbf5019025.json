@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/data_ping/compass_event_refresh.py",
+    "tests/data_ping/test_compass_source_continuity_standing.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-54982bdbf5019025",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "compass-75-minute-continuity-lead-original-source-clock",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(compass): lead continuity refresh by 75 minutes without extending source TTL * test(compass): falsify 45 minute lead with 50 minute remaining source TTL",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/data_ping/compass_event_refresh.py": "31110cf227f879f66aacc046e460cb631fa4cc74",
+    "tests/data_ping/test_compass_source_continuity_standing.py": "58f708353d546314933160411629364de5d97ab8"
+  },
+  "source_commit_sha": "54982bdbf50190251111ffd6aa2b0344de93d423",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T05:01:15-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(compass): 75-minute continuity lead and original source-clock falsifier (#2147)"
+}
