@@ -52,6 +52,7 @@ MIN_WAIT_MINUTES = 5
 MAX_WAIT_MINUTES = 30
 CPH = ZoneInfo("Europe/Copenhagen")
 ACTIVE_STATUSES = {"queued", "in_progress", "waiting", "requested", "pending"}
+PRODUCTION_BRANCH = "main"
 
 HOURLY = {"key": "HOURLY", "workflow": "hourly-sequence-capture.yml",
           "inputs": {"chain_entry_signal": "true"}, "from_minute": 5}
@@ -82,6 +83,18 @@ def created(runs: Iterable[dict]) -> list[dt.datetime]:
         except (KeyError, TypeError, ValueError):
             continue
     return out
+
+
+def production_runs(runs: Iterable[dict]) -> list[dict]:
+    """Only main-branch, non-PR runs can serve or occupy a production slot.
+
+    Target workflows skip production off main, and native-market-recovery.yml also runs on
+    pull_request. Such runs must neither count as "already ran" nor as "target active".
+    A run without branch/event metadata is kept (conservative: it suppresses, never doubles).
+    """
+    return [r for r in runs or [] if isinstance(r, dict)
+            and r.get("head_branch", PRODUCTION_BRANCH) == PRODUCTION_BRANCH
+            and r.get("event") != "pull_request"]
 
 
 def any_active(runs: Iterable[dict], exclude_id: int | None = None) -> bool:
@@ -253,7 +266,7 @@ class Github:
         return json.loads(body) if body else None
 
     def runs(self, workflow: str) -> list[dict]:
-        return (self._req("GET", f"/repos/{self.repo}/actions/workflows/{workflow}/runs?per_page=30") or {}).get(
+        return (self._req("GET", f"/repos/{self.repo}/actions/workflows/{workflow}/runs?per_page=30&branch={PRODUCTION_BRANCH}") or {}).get(
             "workflow_runs", [])
 
     def environment(self) -> Any:
@@ -276,10 +289,11 @@ class Github:
 
 
 def run(gh, now: dt.datetime, self_run_id: int | None) -> dict:
-    plan = decide(now, mode=read_mode(gh.mode()), hourly_runs=gh.runs(HOURLY["workflow"]),
-                  monday_runs=gh.runs(MONDAY["workflow"]), self_runs=gh.runs(SELF_WORKFLOW),
+    plan = decide(now, mode=read_mode(gh.mode()), hourly_runs=production_runs(gh.runs(HOURLY["workflow"])),
+                  monday_runs=production_runs(gh.runs(MONDAY["workflow"])), self_runs=gh.runs(SELF_WORKFLOW),
                   self_run_id=self_run_id, environment=gh.environment(),
-                  recovery_runs=gh.runs(RECOVERY["workflow"]), close_runs=gh.runs(CLOSE_WORKFLOW))
+                  recovery_runs=production_runs(gh.runs(RECOVERY["workflow"])),
+                  close_runs=production_runs(gh.runs(CLOSE_WORKFLOW)))
     errors = []
     for item in plan["dispatch"]:
         try:

@@ -170,6 +170,41 @@ class MetronomeTest(unittest.TestCase):
         self.assertEqual(p["next_tick_reason"], "SELF_DISPATCH_FAILED")
         self.assertEqual(p["errors"], ["framework-metronome.yml:RuntimeError"])
 
+    def test_only_main_non_pr_runs_serve_or_occupy_a_slot(self):  # Codex P2 on #2146
+        now = dt.datetime(2026, 11, 16, 1, 45, tzinfo=UTC)
+        recent = now - dt.timedelta(minutes=5)
+        pr_run = dict(run(recent, status="in_progress", rid=7), head_branch="fix-x", event="pull_request")
+        branch_run = dict(run(recent, rid=8), head_branch="fix-x", event="workflow_dispatch")
+        main_run = dict(run(recent, rid=9), head_branch="main", event="schedule")
+        self.assertEqual(M.production_runs([pr_run, branch_run, main_run, "junk"]), [main_run])
+
+        class Fake:
+            calls: list = []
+
+            def mode(self):
+                return {"mode": "ACTIVE"}
+
+            def runs(self, wf):
+                if wf == M.SELF_WORKFLOW:
+                    return []  # the loop's own runs stay unfiltered: exactly one loop, conservatively
+                return [FINAL_OK_W47] if wf == M.CLOSE_WORKFLOW else [pr_run, branch_run]
+
+            def environment(self):
+                return ENV_OK
+
+            def dispatch(self, wf, inputs):
+                self.calls.append(wf)
+
+        gh = Fake()
+        M.run(gh, now, 99)
+        self.assertEqual(gh.calls, ["hourly-sequence-capture.yml", "native-market-recovery.yml",
+                                    "weekly-api-calibration-shadow.yml", "framework-metronome.yml"])
+        routes = []
+        client = M.Github("t")
+        client._req = lambda method, route, payload=None: routes.append(route) or {"workflow_runs": []}
+        client.runs(M.RECOVERY["workflow"])
+        self.assertTrue(routes[0].endswith("/runs?per_page=30&branch=main"))
+
     def test_workflow_is_bounded_and_minimal(self):
         wf = (ROOT / ".github/workflows/framework-metronome.yml").read_text(encoding="utf-8")
         self.assertIn("environment: framework-metronome", wf)
