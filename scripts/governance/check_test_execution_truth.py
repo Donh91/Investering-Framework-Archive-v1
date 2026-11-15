@@ -29,7 +29,10 @@ def workflow_executes_tests(source: str) -> bool:
     if EXECUTE_COMMAND not in lines:
         return False
     cmd = lines[lines.index(EXECUTE_COMMAND)]
-    if any(x in cmd for x in ("--collect-only", "--ignore", "|| true", " -k ", " -m ", "--deselect", "; true")):
+    if any(x in cmd for x in ("--collect-only", "--ignore", "|| true", " -k ", "--deselect", "; true")):
+        return False
+    # `python -m pytest` is module invocation, NOT a pytest `-m marker` filter.
+    if " -m " in cmd.split("pytest", 1)[1]:
         return False
     return True
 

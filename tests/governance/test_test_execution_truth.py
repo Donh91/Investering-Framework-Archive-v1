@@ -26,6 +26,7 @@ def test_real_execution_step_required_not_collect_only():
         sample_workflow("python -m pytest --collect-only -q tests"),
         sample_workflow(EXECUTE_COMMAND + " || true"),
         sample_workflow(EXECUTE_COMMAND.replace(" tests", " -k smoke tests")),
+        sample_workflow(EXECUTE_COMMAND.replace(" tests", " -m smoke tests")),
         sample_workflow(EXECUTE_COMMAND.replace("--junitxml=/tmp/full-repository-tests.xml ", "")),
         sample_workflow(enabled=False),
         sample_workflow().replace("timeout-minutes: 18", "continue-on-error: true"),

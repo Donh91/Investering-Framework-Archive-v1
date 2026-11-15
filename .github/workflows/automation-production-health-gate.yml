@@ -37,7 +37,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install test dependency
-        run: python -m pip install --disable-pip-version-check pytest 'pandas>=2.2,<3' 'jsonschema>=4.22,<5' 'rfc3339-validator>=0.1.4,<1'
+        run: python -m pip install --disable-pip-version-check pytest 'pandas>=2.2,<3' 'jsonschema>=4.22,<5' 'rfc3339-validator>=0.1.4,<1' 'PyYAML>=6,<7' 'scikit-learn>=1.5,<2'
       - name: Compile health, remediation and handoff code
         run: |
           python -m py_compile \
@@ -80,7 +80,7 @@ jobs:
         run: |
           python -m pytest -q --import-mode=importlib -p no:cacheprovider --junitxml=/tmp/full-repository-tests.xml tests
       - name: Verify real per-file execution coverage
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         run: |
           python scripts/governance/check_test_execution_truth.py \
             --repo-root . \
