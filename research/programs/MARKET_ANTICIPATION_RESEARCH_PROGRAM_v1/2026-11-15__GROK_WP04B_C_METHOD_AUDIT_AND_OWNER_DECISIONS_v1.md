@@ -112,6 +112,20 @@ This report deliberately **downgrades** Grok's unqualified REJECT/KILL for 14-21
 - Kill expansion when: PIT is unavailable; venue lineage fails owner admission; pre-registered sample is too small; C does not beat B0 and B1; result flips under clock revision; placebo matches effect; or after-cost action advantage fails against SMA200 + buy/hold. Negative results count as completed evidence, not empty research.
 - Resource cap: zero new paid calls, no new workflows, no forced research dispatch until existing Claude tier 0-2 foundation is proven. A deterministic source-clock repair has higher priority than model complexity. No silent future execution is claimed.
 
+## Measurable owner goals, without a new score engine
+
+| Gate | Success definition | Owner / priority |
+|---|---|---|
+| G0 Documentation | Original Grok evidence remains immutable; one original-owner-linked method packet; zero new duplicate research owner, workflow or API calls | MAR #209, now |
+| G1 Source clocks | Every eligible row has a value date, independently justified first-known timestamp and a deterministic tie resolution; no invented same-day availability | MAR #209 and #1827, prerequisite |
+| G2 Replay parity | Before/after delta reconciliation for **all** reported macro and leverage events, clustered counts, missing data and censored rows, across strict and as-of modes; independent execution receipt | MAR #209 and existing HRE/Task2, prerequisite |
+| G3 Forecast skill | Corrected model compared against B0 climatology and B1 price-only, 14/21d direction and DD, original frozen splits, full error/calibration distributions, Holm plus regime uncertainty; retain negative outcomes | Task2 #1596 / #2162, after foundation gates |
+| G4 Early warning | Lead time measured **before** shock recognition, false alarms per eligible period, missed warnings, 24h/72h correlated outcomes, delivery latency and counterfactual cost against price-only warning | MAR #209 / risk #1553, future pre-registration only |
+| G5 Economic utility | No claim without next-fill accounting, costs and opportunity cost; matched buy/hold and SMA200 BTC baselines; no microcap inference from BTC | Risk #1553, no current deployment |
+| G6 Controlled adoption | Zero new live forecasts, alert triggers, portfolio rules, wallet fills, schedules or new engines until a separate original-owner, independent review and valid prospective evidence gate | All existing owners |
+
+A gate is **blocked**, not failed, when original PIT/OKX source is unavailable. Success of G0 does not imply G1-G6 are achieved.
+
 ## Self-critical review and limitations
 
 1. **Independent calculation scope:** Verified arithmetic from Grok's published summary and reproduced synthetic flaw classes. NOT independently re-run the exact 2015-2026/2018-2026 raw datasets. No independent confidence interval or causal-effect claim.
