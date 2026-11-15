@@ -38,6 +38,7 @@ import datetime as dt
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from typing import Any, Iterable
@@ -261,13 +262,36 @@ class Github:
         req = urllib.request.Request("https://api.github.com" + route, data=data, method=method, headers={
             "Accept": "application/vnd.github+json", "Authorization": "Bearer " + self.token,
             "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "framework-metronome-v1"})
-        with urllib.request.urlopen(req, timeout=30) as r:
-            body = r.read()
-        return json.loads(body) if body else None
+        # GET-only bounded retry. Never retry a POST: an ambiguous dispatch might
+        # have succeeded and repeating it could duplicate a workflow or paid call.
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    body = r.read()
+                return json.loads(body) if body else None
+            except urllib.error.HTTPError as exc:
+                if method != "GET" or exc.code not in {429, 500, 502, 503, 504} or attempt == 2:
+                    raise
+            except (urllib.error.URLError, TimeoutError):
+                if method != "GET" or attempt == 2:
+                    raise
+            time.sleep(2 ** attempt)
+        raise RuntimeError("GET_RETRY_EXHAUSTED")
 
     def runs(self, workflow: str) -> list[dict]:
-        return (self._req("GET", f"/repos/{self.repo}/actions/workflows/{workflow}/runs?per_page=30&branch={PRODUCTION_BRANCH}") or {}).get(
-            "workflow_runs", [])
+        doc = self._req("GET", f"/repos/{self.repo}/actions/workflows/{workflow}/runs?per_page=30&branch={PRODUCTION_BRANCH}")
+        # A malformed HTTP 200 is not evidence that no workflow is in flight.
+        if not isinstance(doc, dict) or not isinstance(doc.get("workflow_runs"), list):
+            raise ValueError("WORKFLOW_RUNS_INVALID_SHAPE")
+        rows = doc["workflow_runs"]
+        if any(not isinstance(row, dict) for row in rows):
+            raise ValueError("WORKFLOW_RUNS_INVALID_ITEM")
+        count = doc.get("total_count")
+        if count is not None and (
+            type(count) is not int or count < len(rows) or (count > 0 and not rows)
+        ):
+            raise ValueError("WORKFLOW_RUNS_COUNT_CONTRADICTION")
+        return rows
 
     def environment(self) -> Any:
         try:
@@ -289,12 +313,62 @@ class Github:
 
 
 def run(gh, now: dt.datetime, self_run_id: int | None) -> dict:
-    plan = decide(now, mode=read_mode(gh.mode()), hourly_runs=production_runs(gh.runs(HOURLY["workflow"])),
-                  monday_runs=production_runs(gh.runs(MONDAY["workflow"])), self_runs=gh.runs(SELF_WORKFLOW),
-                  self_run_id=self_run_id, environment=gh.environment(),
-                  recovery_runs=production_runs(gh.runs(RECOVERY["workflow"])),
-                  close_runs=production_runs(gh.runs(CLOSE_WORKFLOW)))
-    errors = []
+    # Reads are not authority. On a partial or transient GitHub read failure,
+    # never interpret missing evidence as "no run exists" and dispatch a target.
+    # The self-loop may continue only if its native concurrency census and wait
+    # timer were both read successfully. Otherwise rely on the sparse restart cron.
+    errors: list[str] = []
+    failed_reads: set[str] = set()
+
+    def read(name: str, fn, fallback):
+        try:
+            value = fn()
+            if value is None:
+                raise ValueError("EMPTY_READ")
+            return value
+        except Exception as exc:
+            failed_reads.add(name)
+            errors.append(f"READ_{name}:{type(exc).__name__}")
+            return fallback
+
+    mode_doc = read("MODE", gh.mode, {})
+    raw_runs = {}
+    for name, workflow in (
+        ("HOURLY", HOURLY["workflow"]),
+        ("RECOVERY", RECOVERY["workflow"]),
+        ("MONDAY", MONDAY["workflow"]),
+        ("CLOSE", CLOSE_WORKFLOW),
+        ("SELF", SELF_WORKFLOW),
+    ):
+        raw_runs[name] = read(name, lambda wf=workflow: gh.runs(wf), [])
+        if not isinstance(raw_runs[name], list):
+            failed_reads.add(name)
+            errors.append(f"READ_{name}:INVALID_SHAPE")
+            raw_runs[name] = []
+    environment = read("ENVIRONMENT", gh.environment, {})
+    if not isinstance(environment, dict):
+        failed_reads.add("ENVIRONMENT")
+        errors.append("READ_ENVIRONMENT:INVALID_SHAPE")
+        environment = {}
+
+    # Fail closed for ALL targets if even one data source is unverified.
+    mode = "SHADOW" if failed_reads else read_mode(mode_doc)
+    plan = decide(now, mode=mode,
+                  hourly_runs=production_runs(raw_runs["HOURLY"]),
+                  monday_runs=production_runs(raw_runs["MONDAY"]),
+                  self_runs=raw_runs["SELF"], self_run_id=self_run_id,
+                  environment=environment,
+                  recovery_runs=production_runs(raw_runs["RECOVERY"]),
+                  close_runs=production_runs(raw_runs["CLOSE"]))
+    plan["read_status"] = "DEGRADED" if failed_reads else "PASS"
+    plan["failed_reads"] = sorted(failed_reads)
+    if failed_reads:
+        plan["dispatch"] = []
+        plan["would_dispatch"] = []  # unknown evidence is NOT a forecast
+    if "SELF" in failed_reads or "ENVIRONMENT" in failed_reads:
+        plan["next_tick"] = False
+        plan["next_tick_reason"] = "LOOP_SAFETY_READ_UNVERIFIED"
+
     for item in plan["dispatch"]:
         try:
             gh.dispatch(item["workflow"], item["inputs"])
