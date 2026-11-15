@@ -98,14 +98,21 @@ jobs:
 
       - name: One paid calibration and one publication per ISO week (idempotency)
         id: idempotency
+        # Fail CLOSED: pipefail makes a guard crash fail this step; every later gate
+        # requires a positive skip == 'false', so a missing output can never proceed.
+        shell: bash
+        env:
+          # force_reissue is honoured only on the repository owner's own manual dispatch.
+          FORCE_REISSUE: ${{ (github.event_name == 'workflow_dispatch' && github.actor == github.repository_owner && inputs.force_reissue) || false }}
         run: |
+          set -euo pipefail
           python scripts/master_monday/weekly_publication_idempotency.py \
             --week-dir "$(cat runtime/week_dir.txt)" \
-            --force-reissue "${{ inputs.force_reissue || 'false' }}" | tee -a "$GITHUB_OUTPUT"
+            --force-reissue "${FORCE_REISSUE}" | tee -a "$GITHUB_OUTPUT"
 
       - name: Commit deterministic freeze before API
         id: commit
-        if: steps.idempotency.outputs.skip != 'true'
+        if: steps.idempotency.outputs.skip == 'false'
         run: |
           git config user.name framework-freeze-agent
           git config user.email framework-freeze-agent@users.noreply.github.com
@@ -123,7 +130,7 @@ jobs:
           echo "freeze_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: File-level remote durable readback
-        if: steps.idempotency.outputs.skip != 'true'
+        if: steps.idempotency.outputs.skip == 'false'
         run: |
           python - <<'PY'
           import hashlib,json,subprocess
@@ -153,7 +160,7 @@ jobs:
 
   calibration:
     needs: freeze
-    if: needs.freeze.result == 'success' && needs.freeze.outputs.skip != 'true'
+    if: needs.freeze.result == 'success' && needs.freeze.outputs.skip == 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -238,7 +245,7 @@ jobs:
 
   publish:
     needs: [freeze, calibration]
-    if: always() && github.ref == 'refs/heads/main' && needs.freeze.result == 'success' && needs.freeze.outputs.skip != 'true'
+    if: always() && github.ref == 'refs/heads/main' && needs.freeze.result == 'success' && needs.freeze.outputs.skip == 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

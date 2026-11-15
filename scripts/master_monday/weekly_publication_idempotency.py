@@ -23,7 +23,7 @@ from pathlib import Path
 FROZEN_PREFIX = "research/master_monday_preflight/frozen/"
 OUTPUT_ROOT = "research/api_agent/outputs/weekly"
 POINTER_NAME = "MASTER_MONDAY_DELIVERY_POINTER.json"
-WEEK_DIR = re.compile(r"^research/master_monday_preflight/frozen/(\d{4})/W(\d{2})$")
+WEEK_DIR = re.compile(r"^research/master_monday_preflight/frozen/([0-9]{4})/W([0-9]{2})$")  # ASCII digits only
 
 
 def decide(repo_root: Path, week_dir: str, force_reissue: bool) -> dict:

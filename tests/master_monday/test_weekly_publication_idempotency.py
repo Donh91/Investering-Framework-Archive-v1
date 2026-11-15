@@ -74,11 +74,31 @@ class WorkflowWiringTest(unittest.TestCase):
         self.assertLess(self.text.index("id: idempotency"), self.text.index("id: commit"))
         self.assertIn("skip: ${{ steps.idempotency.outputs.skip }}", self.text)
         commit = self.text[self.text.index("id: commit"):self.text.index("run:", self.text.index("id: commit"))]
-        self.assertIn("if: steps.idempotency.outputs.skip != 'true'", commit)
+        self.assertIn("if: steps.idempotency.outputs.skip == 'false'", commit)
         for job in ("  calibration:\n", "  publish:\n"):
             head = self.text[self.text.index(job):self.text.index("runs-on:", self.text.index(job))]
-            self.assertIn("needs.freeze.outputs.skip != 'true'", head)
+            self.assertIn("needs.freeze.outputs.skip == 'false'", head)
         self.assertIn("weekly_publication_idempotency.py", self.text)
+
+    def test_guard_step_fails_closed_and_no_gate_uses_a_negative_skip_check(self):
+        step = self.text[self.text.index("id: idempotency"):self.text.index("- name:", self.text.index("id: idempotency"))]
+        self.assertIn("shell: bash", step)          # bash -eo pipefail: a guard crash fails the step
+        self.assertIn("set -euo pipefail", step)
+        self.assertNotIn("${{ inputs.force_reissue", step.split("run:")[1])  # passed via env, never inlined
+        self.assertIn("github.actor == github.repository_owner", step)
+        self.assertNotIn("skip != 'true'", self.text)  # an empty/missing skip must never mean "proceed"
+
+    def test_crashing_guard_under_the_step_shell_fails_and_writes_no_skip(self):
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "out"
+            cmd = (f'set -euo pipefail; "{sys.executable}" "{SCRIPT}" --repo-root "{td}" '
+                   f'--week-dir research/master_monday_preflight/frozen/2026/46 --force-reissue false | tee -a "{out}"')
+            proc = subprocess.run(["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", cmd],
+                                  capture_output=True, text=True)
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertNotIn("skip=", out.read_text() if out.exists() else "")
+            with self.assertRaises(ValueError):
+                I.decide(Path(td), "research/master_monday_preflight/frozen/\u0662\u0660\u0662\u0666/W46", False)
 
 
 if __name__ == "__main__":
