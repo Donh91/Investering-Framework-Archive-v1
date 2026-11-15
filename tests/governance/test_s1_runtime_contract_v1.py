@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 S1 = ROOT / "00_FMOS" / "S1"
 KEYS = ["contract", "task_id", "owner_issue", "schedule", "bootstrap_path",
-        "bootstrap_version", "action_loop_path", "action_loop_blob"]
+        "bootstrap_version", "action_loop_path", "action_loop_blob", "source_pr"]
 
 
 def _no_dupes(pairs):
@@ -36,9 +36,14 @@ class S1RuntimeContractTest(unittest.TestCase):
         self.assertEqual(self.c["contract"], "S1_RUNTIME_CONTRACT_v1")
         self.assertEqual(self.c["task_id"], "6ae5fd466b48819187abc224ec0f1c5f")
         self.assertEqual(self.c["owner_issue"], 1156)
-        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v1")
+        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v2")
         self.assertEqual(self.c["bootstrap_path"], "00_FMOS/S1/BOOTSTRAP.txt")
         self.assertEqual(self.c["action_loop_path"], "00_FMOS/S1/ACTION_LOOP.md")
+
+    def test_source_pr_names_a_pr_after_the_lane_merge(self):
+        # BOOTSTRAP v2 step 3b reads PR source_pr; it must be the PR that last changed 00_FMOS/S1/ (its own number).
+        self.assertIs(type(self.c["source_pr"]), int)
+        self.assertGreater(self.c["source_pr"], 2172, "set source_pr to this PR's own number")
 
     def test_task_id_matches_shadow_locator(self):
         shadow = json.loads((S1 / "OPERATING_MANIFEST.json").read_text(encoding="utf-8"))
@@ -52,7 +57,7 @@ class S1RuntimeContractTest(unittest.TestCase):
     def test_bootstrap_is_thin_and_points_only_to_github(self):
         boot = (ROOT / self.c["bootstrap_path"]).read_text(encoding="utf-8")
         self.assertLessEqual(len(boot), 1500)
-        for needle in ("S1 BOOTSTRAP v1", "00_FMOS/S1/RUNTIME_CONTRACT.json",
+        for needle in ("S1 BOOTSTRAP v2", "00_FMOS/S1/RUNTIME_CONTRACT.json",
                        "00_FMOS/S1/ACTION_LOOP.md", "SOURCE_UNVERIFIED", "only instruction set"):
             self.assertIn(needle, boot)
         for forbidden in ("LADDER", "MERGE", "HARD STOPS", "owner-present"):
