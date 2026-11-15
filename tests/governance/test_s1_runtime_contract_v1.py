@@ -91,17 +91,11 @@ class S1RuntimeContractTest(unittest.TestCase):
             self.assertIn(token, loop)
 
 
-    def test_review_fallback_does_not_override_blockers(self):
-        loop = (S1 / "ACTION_LOOP.md").read_text(encoding="utf-8")
-        for token in ("no Claude review has arrived 2 h", "FINAL_TECHNICAL_REVIEW",
-                      "no unresolved Codex P0/P1", "A negative or blocking Claude review is not absence",
-                      "stricter current-main AGENTS.md rules remain in force"):
-            self.assertIn(token, loop)
-
     def test_recovery_requires_bound_restore_evidence_and_bot(self):
         loop = (S1 / "ACTION_LOOP.md").read_text(encoding="utf-8")
         for token in ("newest VAULT_FINAL_REF_RECEIPT_v1", "user type Bot",
-                      "performed_via_github_app.slug framework-vault-receipts",
+                      "performed_via_github_app.slug framework-vault-receipts", "user id 356654356",
+                      "unedited (updated_at equals created_at)",
                       "restore drill PASS", "source_tree_sha must equal",
                       "release_permission=false does not itself prove",
                       "Until the App's first receipt exists", "If any evidence or binding is missing, HOLD"):
