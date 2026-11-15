@@ -49,6 +49,10 @@ def scan(root: Path, policy: dict) -> dict:
     if level == "RED": violations.append({"reason": "REPO_SIZE_RED", "mib": round(mib, 3)})
     return {"contract":"STORAGE_HEALTH_REPORT_v1","repo_bytes":total,"repo_mib":round(mib,3),"file_count":files,"level":level,"warnings":warnings,"early_warnings":early_warnings,"violations":violations,"status":"PASS" if not violations else "FAIL"}
 
+def _wc(value: object) -> str:
+    """Escape a workflow-command message so untrusted paths cannot start a new command line."""
+    return str(value).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", type=Path, default=Path("."))
@@ -63,7 +67,7 @@ def main() -> int:
         args.output.write_text(payload, encoding="utf-8")
     print(payload, end="")
     for item in report["early_warnings"]:  # visible on every PR, never blocking
-        print(f"::warning title=Storage early warning::{item['reason']} {item['path']} {item['bytes']} bytes")
+        print(f"::warning title=Storage early warning::{_wc(item['reason'])} {_wc(item['path'])} {item['bytes']} bytes")
     return 0 if report["status"] == "PASS" else 2
 
 if __name__ == "__main__":

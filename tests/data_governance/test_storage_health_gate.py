@@ -1,5 +1,7 @@
 from __future__ import annotations
-import importlib.util, json, tempfile, unittest
+import importlib.util, json, tempfile, unittest, io, sys
+from contextlib import redirect_stdout
+from unittest import mock
 from pathlib import Path
 
 P = Path("scripts/data_governance/storage_health_gate.py")
@@ -8,7 +10,8 @@ M = importlib.util.module_from_spec(S)
 assert S.loader
 S.loader.exec_module(M)
 
-POLICY = json.loads(Path("research/data_governance/STORAGE_HEALTH_POLICY_FREE_v1.json").read_text())
+DEFAULT_POLICY_ABS = Path("research/data_governance/STORAGE_HEALTH_POLICY_FREE_v1.json").resolve()
+POLICY = json.loads(DEFAULT_POLICY_ABS.read_text())
 
 class StorageHealthGateTests(unittest.TestCase):
     def test_small_text_repo_passes(self):
@@ -65,6 +68,40 @@ class StorageHealthGateTests(unittest.TestCase):
             self.assertEqual(r["status"], "FAIL")
             self.assertNotIn(("LATEST_BIG.json", "PRE_LIMIT_GROWTH_RISK"), {(x["path"], x["reason"]) for x in r["early_warnings"]})
 
+
+
+    def test_warning_annotation_escapes_hostile_path(self):
+        """A hostile PR file path must not inject a second GHA workflow command."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            hostile = root / "LATEST_x\n::stop-commands::tok"
+            with hostile.open("wb") as f:
+                f.truncate(5 * 1024 * 1024 + 1)
+            capture = io.StringIO()
+            argv = ["storage_health_gate.py", "--root", str(root), "--policy", str(DEFAULT_POLICY_ABS)]
+            with mock.patch.object(sys, "argv", argv), redirect_stdout(capture):
+                code = M.main()
+            self.assertEqual(code, 0)
+            command_lines = [line for line in capture.getvalue().splitlines() if line.startswith("::")]
+            self.assertEqual(len(command_lines), 1, command_lines)
+            self.assertTrue(command_lines[0].startswith("::warning "))
+            self.assertIn("%0A", command_lines[0])
+            self.assertNotIn("\n::stop-commands::", command_lines[0])
+
+    def test_main_exit_code_early_warning_vs_hard_limit(self):
+        """Early warnings never block, while the existing hard-limit remains fatal."""
+        hard = POLICY["git_file_limits_mib"]["hard_block"] * 1024 * 1024
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            with (root / "LATEST_GROWING.json").open("wb") as f:
+                f.truncate(5 * 1024 * 1024 + 1)
+            argv = ["storage_health_gate.py", "--root", str(root), "--policy", str(DEFAULT_POLICY_ABS)]
+            with mock.patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()):
+                self.assertEqual(M.main(), 0)
+            with (root / "VIOLATION.json").open("wb") as f:
+                f.truncate(hard + 1)
+            with mock.patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()):
+                self.assertEqual(M.main(), 2)
 
 if __name__ == "__main__":
     unittest.main()
