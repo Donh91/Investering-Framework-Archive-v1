@@ -457,7 +457,7 @@ def main() -> None:
         "score_window_policy": str(receipt.get("score_window_policy") or "LEGACY_WEEK_BOUNDARY_v1"),
         "scoring_valid_from_utc": receipt.get("scoring_valid_from_utc"),
         "freshness_sla_minutes": 90,
-        "refresh_cadence": "HOURLY_OWNER_CHAIN",
+        "refresh_cadence": "BEST_EFFORT_EVENT_CHAIN",
         "freeze_record_kind": "MIGRATED_VERIFIED_FREEZE" if receipt.get("migration_note") else "SITE_NATIVE_SOURCE_OF_RECORD",
         "running_price_precision_pct": running,
         "running_score_semantics": "SAME_FORMULA_AS_FINAL_PUBLIC_PRICE_RANGE_PRECISION_APPLIED_TO_COMPLETE_OBSERVED_DATA_TO_DATE",

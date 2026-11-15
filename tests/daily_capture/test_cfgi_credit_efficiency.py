@@ -6,10 +6,16 @@ from scripts.daily_capture.build_weekly_cfgi_summary import cfgi_from_capture
 
 class CfgiCreditEfficiencyTests(unittest.TestCase):
     def test_daily_tiered_fields(self):
+        # The Aug 2026 tiering (score-only plus one rich 23:11 run) was replaced on purpose by the
+        # adaptive research profile (79f738d788): 10 fields x 3 symbols x limit 1 per 4H run, plus a
+        # score-only 1D call on the slow lane. Pin that bound so credit use cannot silently grow.
         text = Path('.github/workflows/daily-raw-owner-capture.yml').read_text()
-        self.assertIn('CFGI_FIELDS="score"', text)
-        self.assertIn('score,whales,orders,technical,volatility', text)
-        self.assertIn('11 23 * * *', text)
+        self.assertIn('CFGI_FIELDS="score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders"', text)
+        self.assertEqual(text.count('cfgi_owner_collector.py'), 2)
+        self.assertIn('--symbols MARKET,BTC,ETH --timeframe 4h --fields "${CFGI_FIELDS}" --limit 1', text)
+        self.assertIn('--symbols MARKET,BTC,ETH --timeframe 1d --fields score --limit 1', text)
+        slow = text.index('if [ "${RUN_SLOW_LANE}" = "true" ]; then\n            python scripts/data_terminal/cfgi_owner_collector.py')
+        self.assertLess(slow, text.index('--timeframe 1d --fields score'))
 
     def test_weekly_summary_adds_no_api_calls(self):
         workflow = Path('.github/workflows/sunday-market-close-and-cfgi.yml').read_text()

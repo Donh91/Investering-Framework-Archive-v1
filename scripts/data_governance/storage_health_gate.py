@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, json, os
+import argparse, json, os, secrets
 from pathlib import Path
 
 DEFAULT_POLICY = Path("research/data_governance/STORAGE_HEALTH_POLICY_FREE_v1.json")
 SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__"}
 BULK_SUFFIXES = {".zip", ".gz", ".7z", ".parquet", ".feather", ".db", ".sqlite", ".png", ".jpg", ".jpeg", ".pdf"}
+# Early warnings (FRAMEWORK_INCIDENT_LEARNING_v1 rules 3 and 6, Archive #2152): detect growth BEFORE the hard
+# limit blocks unrelated PRs. They never fail the gate, never raise a limit and never bypass anything.
+EARLY_WARNING_DEFAULTS = {"pre_limit_fraction": 0.5, "hot_file_prefix": "LATEST_", "hot_file_budget_mib": 5}
 
 def scan(root: Path, policy: dict) -> dict:
     total = 0
@@ -14,6 +17,10 @@ def scan(root: Path, policy: dict) -> dict:
     violations = []
     soft = policy["git_file_limits_mib"]["soft_warn"] * 1024 * 1024
     hard = policy["git_file_limits_mib"]["hard_block"] * 1024 * 1024
+    early = {**EARLY_WARNING_DEFAULTS, **(policy.get("early_warning") or {})}
+    pre_limit = hard * float(early["pre_limit_fraction"])
+    hot_budget = float(early["hot_file_budget_mib"]) * 1024 * 1024
+    early_warnings = []
     for path in root.rglob("*"):
         if not path.is_file() or any(part in SKIP_DIRS for part in path.parts):
             continue
@@ -25,6 +32,12 @@ def scan(root: Path, policy: dict) -> dict:
             violations.append({"path": rel, "bytes": size, "reason": "FILE_OVER_HARD_LIMIT"})
         elif size > soft:
             warnings.append({"path": rel, "bytes": size, "reason": "FILE_OVER_SOFT_LIMIT"})
+        if pre_limit < size <= hard:
+            early_warnings.append({"path": rel, "bytes": size, "reason": "PRE_LIMIT_GROWTH_RISK",
+                                   "hard_limit_bytes": hard, "pct_of_hard_limit": round(100 * size / hard, 1)})
+        if path.name.startswith(early["hot_file_prefix"]) and size > hot_budget:
+            early_warnings.append({"path": rel, "bytes": size, "reason": "HOT_ACTIVE_SET_OVER_BUDGET",
+                                   "budget_bytes": int(hot_budget)})
         if path.suffix.lower() in BULK_SUFFIXES and size > soft:
             violations.append({"path": rel, "bytes": size, "reason": "BULK_BINARY_IN_GIT"})
     mib = total / 1024 / 1024
@@ -34,7 +47,11 @@ def scan(root: Path, policy: dict) -> dict:
     elif mib <= t["orange_max"]: level = "ORANGE"
     else: level = "RED"
     if level == "RED": violations.append({"reason": "REPO_SIZE_RED", "mib": round(mib, 3)})
-    return {"contract":"STORAGE_HEALTH_REPORT_v1","repo_bytes":total,"repo_mib":round(mib,3),"file_count":files,"level":level,"warnings":warnings,"violations":violations,"status":"PASS" if not violations else "FAIL"}
+    return {"contract":"STORAGE_HEALTH_REPORT_v1","repo_bytes":total,"repo_mib":round(mib,3),"file_count":files,"level":level,"warnings":warnings,"early_warnings":early_warnings,"violations":violations,"status":"PASS" if not violations else "FAIL"}
+
+def _wc(value: object) -> str:
+    """Escape a workflow-command message so untrusted paths cannot start a new command line."""
+    return str(value).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -48,7 +65,14 @@ def main() -> int:
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(payload, encoding="utf-8")
+    # The JSON echo can contain untrusted file paths. Suspend workflow-command parsing
+    # (both the "::" and the legacy "##[" formats) while it is printed.
+    resume = secrets.token_hex(16)
+    print(f"::stop-commands::{resume}")
     print(payload, end="")
+    print(f"::{resume}::")
+    for item in report["early_warnings"]:  # visible on every PR, never blocking
+        print(f"::warning title=Storage early warning::{_wc(item['reason'])} {_wc(item['path'])} {item['bytes']} bytes")
     return 0 if report["status"] == "PASS" else 2
 
 if __name__ == "__main__":

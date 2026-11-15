@@ -328,6 +328,19 @@ The temporary candidate must not be committed. Commit only the generated receipt
 - No portfolio action may be produced from DATA PING alone.
 - No public website may create an independent market-state or short-horizon forecast engine.
 
+### 4a. Producer growth, idempotency and active sets (FRAMEWORK_INCIDENT_LEARNING_v1, Archive #2152)
+
+Origin: on 2026-11-14 an experiment producer re-dispatched 319 candidates about 4×/day until its hot manifest held 63,219 rows (26.3 MB). That broke `storage-health` on every PR. Fixed by #2155/#2156. Each rule below is marked **[ENFORCED: <blocking CI check>]**, **[DETECTED: <non-blocking CI signal>]** or **[POLICY]**. ENFORCED means a check that a PR workflow actually executes and that fails the PR. DETECTED means a CI signal that is visible on every PR but never blocks. A POLICY rule binds reviewers but is not automatically checked. Neither DETECTED nor POLICY may be described as enforced.
+
+1. Any PR that adds or changes a producer, writer, collector, forecast, dispatch or receipt path must map producer → persisted data → manifest/index → receiver → final consumer → CI gate → retention, across repositories. The review checks that consumption actually happens end to end. **[POLICY; reviewer checklist]**
+2. Such a PR states the expected growth at 7, 30 and 90 days: bytes, distinct entities, records per run, duplicate ratio and pending backlog. **[POLICY]**
+3. Immutable history and the compact active set are separate. A `LATEST_*` file holds the active set, not the full history. No silent cap, truncation, deletion, fake PASS, raised limit or CI bypass. **[DETECTED: storage-health early warning `HOT_ACTIVE_SET_OVER_BUDGET` for `LATEST_*` files above 5 MiB, non-blocking. ENFORCED only at the unchanged hard limit `FILE_OVER_HARD_LIMIT`. A full-history `LATEST_*` below 5 MiB is not detected: POLICY]**
+4. Work is semantically idempotent. A clock or source tick alone never creates new work; dispatch needs a semantic change or a documented state transition, proven by negative tests. **[POLICY. The regression test `tests/experiments/test_dispatch_episode_and_pending_manifest.py` exists, but no PR workflow executes it yet (it is only collected; see #2163). It becomes ENFORCED for experiment dispatch only when a PR gate runs it]**
+5. A producer contract change ships only after the receiver is ready, with bounded reads, path containment, checksums and a rollback. **[POLICY]**
+6. Growth is visible before it blocks: any file above 50 % of the hard limit is flagged on every PR. A red `storage-health` is a P0 incident routed to #1156 / #2152. **[DETECTED: storage-health early warning `PRE_LIMIT_GROWTH_RISK`, non-blocking. Routing: POLICY until the S1 DISCOVER lane or watchdog reads it]**
+7. Done means native CI green on an unrelated PR, a producer → receiver replay with counts, no lost evidence, 72 h stable growth, independent review, and exact-head merge plus main readback. **[POLICY]**
+8. Do not say "resolved", "autonomous", "monitored" or "learned" unless a GitHub-native instruction, CI step, test or automation changed and was read back. An issue comment is evidence, not enforcement. **[POLICY]**
+
 ## 5. Prospective evidence discipline
 
 For active forward tests and ledgers:

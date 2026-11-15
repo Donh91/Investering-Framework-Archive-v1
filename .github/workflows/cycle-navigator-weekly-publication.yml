@@ -80,20 +80,14 @@ jobs:
           grep '^skip=' runtime_cn_precheck.txt >> "$GITHUB_OUTPUT"
           grep '^mm_sha256=' runtime_cn_precheck.txt >> "$GITHUB_OUTPUT"
 
-      - name: Enforce monthly API cost guard
-        if: steps.precheck.outputs.skip != 'true'
-        run: |
-          python scripts/api_agent/check_monthly_cost_guard.py \
-            --receipt-root research/api_agent/outputs \
-            --pending-ledger-root runtime/api-cost-ledger \
-            --hard-stop-usd 40 \
-            --reserve-usd 4.0
-
+      # The weekly CN publisher is an API-free deterministic issuer.
+      # A paid-lane budget HOLD must never suppress this offline publication.
+      # Any future paid CN path must have a distinct workflow and its own guard.
       - name: Build Cycle Navigator from final Master Monday
         if: steps.precheck.outputs.skip != 'true'
         shell: bash
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CN_OFFLINE_ONLY: '1'
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
