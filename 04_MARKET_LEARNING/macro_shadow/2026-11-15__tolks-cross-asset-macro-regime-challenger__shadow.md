@@ -131,3 +131,12 @@ No asserted answer is allowed until admitted data and real prospective outcomes 
 - **Next action for existing research owner only:** produce a one-page as-of availability/first-known matrix and a pre-registered, signed competing scenario spec; review before any analysis. If covered by existing owners, append the new conditional policy-path distinction there, do not start a second experiment.
 - **No new automation, workflow, API spend, model agent, source collector, release authority, public site output, state alteration, threshold, or merge is requested or granted.**
 - Source note is suitable for reviewer consideration. An approved paper is not a successful backtest; a PR is not a merged source of truth.
+
+
+## Academic cross-check: macro sensitivity does not establish predictable lead time
+
+- IMF Working Paper 2023/163, *The Crypto Cycle and US Monetary Policy*: https://www.imf.org/en/publications/wp/issues/2023/08/04/the-crypto-cycle-and-us-monetary-policy-534834 . The study reports that a common crypto factor explained around 80% of variation in prices in its sample and that US monetary contraction negatively affected that factor through risk taking. These are *sample-specific empirical findings*, **not** 2026-out-of-sample results or a calibrated long-horizon Bitcoin forecast.
+- IMF Global Financial Stability Note 2022, *Cryptic Connections*: https://www.imf.org/en/publications/global-financial-stability-notes/issues/2022/01/10/cryptic-connections-511776 . Equity-crypto spillovers became more pronounced after the pandemic. The co-movement is potentially **bidirectional**; a falling Nasdaq does not by itself prove Nasdaq caused the next Bitcoin fall.
+- IMF Working Paper 2023/213, *New Evidence on Spillovers Between Crypto Assets and Financial Markets*: https://www.imf.org/en/publications/wp/issues/2023/09/30/new-evidence-on-spillovers-between-crypto-assets-and-financial-markets-539476 . Cross-market spillover direction and intensity vary in financial stress periods, so static correlation/cross-asset risk flags may mislead.
+
+**Implication:** retain bidirectional and common-driver null hypotheses. Study **incremental before-event lead time** against price-only and existing financial-condition controls, not retrospective correlation. An econometric finding for 2017-2023 cannot be imported as a verified 2024-2026 ETF-era predictive coefficient without revalidation.
