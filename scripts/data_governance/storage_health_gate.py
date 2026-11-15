@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, json, os
+import argparse, json, os, secrets
 from pathlib import Path
 
 DEFAULT_POLICY = Path("research/data_governance/STORAGE_HEALTH_POLICY_FREE_v1.json")
@@ -65,7 +65,12 @@ def main() -> int:
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(payload, encoding="utf-8")
+    # The JSON echo can contain untrusted file paths. Suspend workflow-command parsing
+    # (both the "::" and the legacy "##[" formats) while it is printed.
+    resume = secrets.token_hex(16)
+    print(f"::stop-commands::{resume}")
     print(payload, end="")
+    print(f"::{resume}::")
     for item in report["early_warnings"]:  # visible on every PR, never blocking
         print(f"::warning title=Storage early warning::{_wc(item['reason'])} {_wc(item['path'])} {item['bytes']} bytes")
     return 0 if report["status"] == "PASS" else 2

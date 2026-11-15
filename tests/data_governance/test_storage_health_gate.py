@@ -82,11 +82,60 @@ class StorageHealthGateTests(unittest.TestCase):
             with mock.patch.object(sys, "argv", argv), redirect_stdout(capture):
                 code = M.main()
             self.assertEqual(code, 0)
-            command_lines = [line for line in capture.getvalue().splitlines() if line.startswith("::")]
+            command_lines, open_token = self._active_command_lines(capture.getvalue())
+            self.assertIsNone(open_token)
             self.assertEqual(len(command_lines), 1, command_lines)
             self.assertTrue(command_lines[0].startswith("::warning "))
             self.assertIn("%0A", command_lines[0])
             self.assertNotIn("\n::stop-commands::", command_lines[0])
+
+    def _run_main(self, root):
+        capture = io.StringIO()
+        argv = ["storage_health_gate.py", "--root", str(root), "--policy", str(DEFAULT_POLICY_ABS)]
+        with mock.patch.object(sys, "argv", argv), redirect_stdout(capture):
+            code = M.main()
+        return code, capture.getvalue()
+
+    def _active_command_lines(self, out):
+        """Lines the runner would treat as commands: everything outside a stop-commands block."""
+        active, token = [], None
+        for line in out.splitlines():
+            if token is not None:
+                if line == f"::{token}::":
+                    token = None
+                continue
+            if line.startswith("::stop-commands::"):
+                token = line[len("::stop-commands::"):]
+                continue
+            if line.startswith("::") or "##[" in line:
+                active.append(line)
+        return active, token
+
+    def test_lone_cr_percent_and_legacy_commands_cannot_inject(self):
+        for name in ("LATEST_a\r::stop-commands::x", "LATEST_b%0A::error::forged", "LATEST_c##[stop-commands]tok",
+                     "LATEST_d##[error title=forged]x"):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                with (root / name).open("wb") as f:
+                    f.truncate(5 * 1024 * 1024 + 1)
+                code, out = self._run_main(root)
+                self.assertEqual(code, 0)
+                active, open_token = self._active_command_lines(out)
+                self.assertIsNone(open_token)  # the JSON block is always resumed
+                self.assertEqual(len(active), 1, active)
+                self.assertTrue(active[0].startswith("::warning title=Storage early warning::"))
+                self.assertNotIn("\r", active[0])
+                if "%0A" in name:
+                    self.assertIn("%250A", active[0])  # a literal %0A stays literal
+
+    def test_hot_budget_boundary_and_prefix_only(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            for name, size in (("LATEST_AT_BUDGET.json", 5 * 1024 * 1024), ("not_LATEST_big.json", 5 * 1024 * 1024 + 1)):
+                with (root / name).open("wb") as f:
+                    f.truncate(size)
+            report = M.scan(root, POLICY)
+            self.assertEqual(report["early_warnings"], [])  # exactly at the budget, and a non-prefix name, are not hot-set warnings
 
     def test_main_exit_code_early_warning_vs_hard_limit(self):
         """Early warnings never block, while the existing hard-limit remains fatal."""
