@@ -68,6 +68,17 @@ class ReceiptParsing(unittest.TestCase):
             with self.subTest(body=body[:80]):
                 self.assertFalse(W.valid_seal(body))
 
+
+    def test_syntactically_valid_nonobject_json_fails_closed(self):
+        # Non-object App-authored JSON must alert rather than crash in continue-on-error CI.
+        prefix = REAL_RECEIPT.partition("~~~json")[0]
+        for payload in ("[]", "null", "42", "true", "false"):
+            body = prefix + "~~~json" + chr(10) + payload + chr(10) + "~~~" + chr(10)
+            with self.subTest(payload=payload):
+                self.assertFalse(W.valid_seal(body))
+                causes = W.evaluate([HB], [bot(body, 1)], NOW)
+                self.assertEqual([x["cause"] for x in causes], ["VAULT_RECEIPT_INVALID"])
+
     def test_malformed_json_is_not_a_seal(self):
         self.assertFalse(W.valid_seal(REAL_RECEIPT.replace('"schema"', '"schema" "')))
         self.assertFalse(W.valid_seal(REAL_RECEIPT.replace("~~~json", "~~~text")))

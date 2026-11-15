@@ -74,9 +74,10 @@ def valid_seal(body: str) -> bool:
         r = json.loads(block.group(1))
     except ValueError:
         return False
+    if not isinstance(r, dict):
+        return False
     ref = FINAL_REF.match(str(r.get("final_ref", "")))
-    return (isinstance(r, dict)
-            and r.get("schema") == "VAULT_FINAL_REF_RECEIPT_v1"
+    return (r.get("schema") == "VAULT_FINAL_REF_RECEIPT_v1"
             and r.get("final_state") == "CREATED_BY_THIS_FINALIZER"
             and r.get("release_permission") is False
             and ref is not None
