@@ -28,6 +28,7 @@ REPO = "Donh91/Investering-Framework-Archive-v1"
 S1_ISSUE, VAULT_ISSUE = 1156, 1593
 HEARTBEAT_MAX_AGE_H = 26
 VAULT_MAX_AGE_H = 30
+SEAL_AFTER_NATIVE_GRACE_H = 6  # a native receipt must be followed by its seal within this time
 OWNER_MENTION = "@Donh91"
 VAULT_APP_SLUG = "framework-vault-receipts"  # set once the owner has created the App
 VAULT_APP_BOT_USER_ID = 356654356  # framework-vault-receipts[bot], read back on Archive #1593
@@ -51,10 +52,15 @@ def unedited(c: dict) -> bool:
     return isinstance(c.get("created_at"), str) and c.get("updated_at") == c.get("created_at")
 
 
+HEARTBEAT_TOKEN = re.compile(r"S1_HEARTBEAT_v1(?:\s|$)")
+
+
 def is_heartbeat(c: dict) -> bool:
-    """Only S1's own account counts; anyone can comment on a public issue, so a body prefix alone is not enough."""
+    """Only S1's own account counts; anyone can comment on a public issue, so a body prefix alone is not enough.
+    An edited comment never counts, so a writer cannot turn an older S1 comment into a fresh heartbeat."""
     user = c.get("user") if isinstance(c.get("user"), dict) else {}
-    return user.get("login") == S1_LOGIN and str(c.get("body", "")).lstrip().startswith("S1_HEARTBEAT_v1")
+    return (user.get("login") == S1_LOGIN and unedited(c)
+            and HEARTBEAT_TOKEN.match(str(c.get("body", "")).lstrip()) is not None)
 
 
 RECEIPT_MARKER = re.compile(r"<!-- VAULT_FINAL_REF_RECEIPT_v1:(\d+)-(\d+) -->")
@@ -76,10 +82,9 @@ def is_app_comment(c: dict) -> bool:
     return is_app_identity(c) and unedited(c)
 
 
-def is_edited_app_receipt(c: dict) -> bool:
-    body = str(c.get("body", ""))
-    return (is_app_identity(c) and not unedited(c)
-            and (RECEIPT_MARKER.search(body) is not None or NATIVE_RECEIPT_MARKER.search(body) is not None))
+def is_edited_app_comment(c: dict) -> bool:
+    """Any edit of an App-authored comment counts, whatever the body says now: an edit can remove the marker."""
+    return is_app_identity(c) and not unedited(c)
 
 
 def is_receipt_comment(c: dict) -> bool:
@@ -147,11 +152,16 @@ def evaluate(s1_comments: list[dict], vault_comments: list[dict], now: dt.dateti
         # A fresh comment must also seal a fresh run. The ref day is the UTC day the sealed attempt ran,
         # so it may trail the comment by at most one day; an App re-post of an old run is stale.
         day = seal_day(str(vr.get("body", "")))
-        if day is None or day > now.date():
+        posted = utc(vr["created_at"])
+        native = newest(vault_comments, is_native_receipt_comment)
+        if day is None or day > now.date() or day > posted.date():
             causes.append({"cause": "VAULT_RECEIPT_INVALID", "last": vr["created_at"]})
-        elif day < (now - dt.timedelta(hours=VAULT_MAX_AGE_H + 24)).date():
+        elif day < (posted - dt.timedelta(hours=24)).date():
             causes.append({"cause": "VAULT_RECEIPT_STALE", "last": vr["created_at"]})
-    edited = newest([x for x in vault_comments if is_edited_app_receipt(x) and isinstance(x.get("updated_at"), str)
+        elif native is not None and utc(native["created_at"]) - posted > dt.timedelta(hours=SEAL_AFTER_NATIVE_GRACE_H):
+            # A newer native snapshot that was never sealed: the finalizer is broken or a seal was deleted.
+            causes.append({"cause": "VAULT_APP_FINAL_REF_MISSING", "last": native["created_at"]})
+    edited = newest([x for x in vault_comments if is_edited_app_comment(x) and isinstance(x.get("updated_at"), str)
                      and now - utc(x["updated_at"]) <= dt.timedelta(hours=VAULT_MAX_AGE_H)], lambda _x: True)
     if edited is not None:
         causes.append({"cause": "VAULT_APP_RECEIPT_EDITED", "last": edited["updated_at"]})
@@ -162,8 +172,10 @@ def already_alerted(s1_comments: list[dict], cause: str, now: dt.datetime) -> bo
     """Only an alert this workflow itself posted can suppress a repeat; any other author's line cannot."""
     day = now.strftime("%Y-%m-%d")
     def by_watchdog(c: dict) -> bool:
+        # Writers can edit a bot comment, so only an unedited alert created today may suppress a repeat.
         user = c.get("user") if isinstance(c.get("user"), dict) else {}
-        return user.get("login") == ALERT_LOGIN and user.get("type") == "Bot"
+        return (user.get("login") == ALERT_LOGIN and user.get("type") == "Bot" and unedited(c)
+                and utc(c["created_at"]).date() == now.date())
     return any(isinstance(c, dict) and by_watchdog(c)
                and str(c.get("body", "")).startswith(f"{ALERT_TAG} {cause} {day}") for c in s1_comments)
 
@@ -176,7 +188,7 @@ def alert_body(cause: dict, now: dt.datetime) -> str:
         "VAULT_APP_FINAL_REF_MISSING": "A genuine App-authored native recovery receipt exists, but no App-authored FINAL REF seal is visible. Investigate the finalizer job, protected ref, App installation-token POST identity and 403/429 errors. Do not re-run the snapshot as the first remedy. HIGH merges remain on HOLD.",
         "VAULT_RECEIPT_STALE": "The App-authored final-ref seal is stale. Have the independent Vault owner inspect newer natural backup and finalizer receipts before considering another run. HIGH merges remain on HOLD.",
         "VAULT_RECEIPT_INVALID": "The newest Vault receipt is not a valid seal (schema, state, ref or hashes do not check out). Open the Vault Actions run named in it and the #1593 comment; HIGH merges stay on hold.",
-        "VAULT_APP_RECEIPT_EDITED": "An App-authored Vault receipt on #1593 was edited after the App posted it. Edited receipts never count. Check the comment's edit history; HIGH merges stay on hold.",
+        "VAULT_APP_RECEIPT_EDITED": "An App-authored comment on #1593 was edited after the App posted it. Edited App comments never count. Check the comment's edit history; HIGH merges stay on hold.",
         "WATCHDOG_ERROR": "The watchdog itself failed and could not evaluate S1 or the Vault. Open the Automation Production Health run log; treat the state as unverified.",
     }
     return (f"{ALERT_TAG} {cause['cause']} {now:%Y-%m-%d}\n\n{OWNER_MENTION} last seen: {cause['last'] or 'never'}. "
@@ -234,6 +246,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     args = ap.parse_args(list(argv) if argv is not None else None)
     token = os.environ.get("GITHUB_TOKEN", "")
     if not token:
+        print("::warning title=S1 Vault watchdog::SKIPPED_NO_TOKEN")
         print(json.dumps({"status": "SKIPPED_NO_TOKEN"}))
         return 0
     now = dt.datetime.now(dt.timezone.utc)

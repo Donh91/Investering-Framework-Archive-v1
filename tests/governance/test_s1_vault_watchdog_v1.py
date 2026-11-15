@@ -81,6 +81,8 @@ class ReceiptParsing(unittest.TestCase):
             edit(final_ref="refs/heads/agent/task-x"), edit(run_id="999"), edit(run_attempt="9"),
             edit(snapshot_commit="xyz"), edit(source_sha=None), edit(source_tree_sha="0" * 39),
             edit(verified_files=0), edit(verified_files=True), edit(verified_files="331011"),
+            edit(release_permission=None),
+            REAL_RECEIPT.replace("VAULT_FINAL_REF_RECEIPT_v1:43578373086-2", "VAULT_FINAL_REF_RECEIPT_v1:11111111111-2"),
         ]
         for body in bad:
             with self.subTest(body=body[:80]):
@@ -201,6 +203,41 @@ class AdversarialIdentity(unittest.TestCase):
                 gh = FakeGithub([forged], [bot(REAL_RECEIPT, 1)])
                 self.assertEqual(W.run(gh, NOW, dry_run=False)["posted"], ["S1_HEARTBEAT_MISSING"])
 
+    def test_edited_or_lookalike_heartbeat_does_not_count(self):
+        for hb in (c("S1_HEARTBEAT_v1 ok", 1, edited_hours_ago=0), c("S1_HEARTBEAT_v1x", 1)):
+            with self.subTest(body=hb["body"]):
+                causes = W.evaluate([hb], [bot(REAL_RECEIPT, 1)], NOW)
+                self.assertEqual([x["cause"] for x in causes], ["S1_HEARTBEAT_MISSING"])
+        self.assertEqual(W.evaluate([c("S1_HEARTBEAT_v1", 1)], [bot(REAL_RECEIPT, 1)], NOW), [])
+
+    def test_edited_or_old_bot_alert_does_not_silence(self):
+        line = f"{W.ALERT_TAG} S1_HEARTBEAT_MISSING {NOW:%Y-%m-%d}"
+        edited = c(line, 30, login="github-actions[bot]", typ="Bot", uid=41898282, edited_hours_ago=0)
+        yesterday = c(line, NOW.hour + 1, login="github-actions[bot]", typ="Bot", uid=41898282)
+        # today's alert for another cause, edited to name this cause
+        edited_today = c(line, 1, login="github-actions[bot]", typ="Bot", uid=41898282, edited_hours_ago=0)
+        for forged in (edited, yesterday, edited_today):
+            with self.subTest(created=forged["created_at"], updated=forged["updated_at"]):
+                gh = FakeGithub([forged], [bot(REAL_RECEIPT, 1)])
+                self.assertEqual(W.run(gh, NOW, dry_run=False)["posted"], ["S1_HEARTBEAT_MISSING"])
+
+    def test_edit_that_removes_the_marker_is_still_reported(self):
+        redacted = bot("redacted", 1, edited_hours_ago=0.5)
+        causes = [x["cause"] for x in W.evaluate([HB], [bot(REAL_RECEIPT, 10), redacted], NOW)]
+        self.assertEqual(causes, ["VAULT_APP_RECEIPT_EDITED"])
+
+    def test_each_identity_field_alone_is_checked(self):
+        forged = [
+            c(REAL_RECEIPT, 1, login=BOT, typ="Bot", app={"slug": "other"}, uid=W.VAULT_APP_BOT_USER_ID),
+            c(REAL_RECEIPT, 1, login=BOT, typ="User", app=APP, uid=W.VAULT_APP_BOT_USER_ID),
+            c(REAL_RECEIPT, 1, login="other[bot]", typ="Bot", app=APP, uid=W.VAULT_APP_BOT_USER_ID),
+            c(REAL_RECEIPT, 1, login=BOT, typ="Bot", app=None, uid=W.VAULT_APP_BOT_USER_ID),
+        ]
+        for f in forged:
+            with self.subTest(user=f["user"], app=f["performed_via_github_app"]):
+                self.assertFalse(W.is_app_identity(f))
+                self.assertEqual([x["cause"] for x in W.evaluate([HB], [f], NOW)], ["VAULT_APP_RECEIPT_MISSING"])
+
     def test_heartbeat_boundary(self):
         self.assertEqual(W.evaluate([c("S1_HEARTBEAT_v1", W.HEARTBEAT_MAX_AGE_H)], [bot(REAL_RECEIPT, 1)], NOW), [])
         stale = W.evaluate([c("S1_HEARTBEAT_v1", W.HEARTBEAT_MAX_AGE_H + 0.01)], [bot(REAL_RECEIPT, 1)], NOW)
@@ -216,12 +253,24 @@ class SealFreshness(unittest.TestCase):
         causes = W.evaluate([HB], [bot(sealed_day("20261116"), 1)], NOW)
         self.assertEqual([x["cause"] for x in causes], ["VAULT_RECEIPT_INVALID"])
 
-    def test_day_window_boundary(self):
-        edge = (NOW - dt.timedelta(hours=W.VAULT_MAX_AGE_H + 24)).strftime("%Y%m%d")
-        before = (NOW - dt.timedelta(hours=W.VAULT_MAX_AGE_H + 48)).strftime("%Y%m%d")
+    def test_day_window_is_bound_to_the_comment(self):
+        posted = NOW - dt.timedelta(hours=1)
+        edge = (posted - dt.timedelta(hours=24)).strftime("%Y%m%d")
+        before = (posted - dt.timedelta(hours=48)).strftime("%Y%m%d")
         self.assertEqual(W.evaluate([HB], [bot(sealed_day(edge), 1)], NOW), [])
         stale = W.evaluate([HB], [bot(sealed_day(before), 1)], NOW)
         self.assertEqual([x["cause"] for x in stale], ["VAULT_RECEIPT_STALE"])
+        # A 20 h old comment cannot seal a run from the day after it was posted.
+        later = (NOW - dt.timedelta(hours=20) + dt.timedelta(days=1)).strftime("%Y%m%d")
+        self.assertEqual([x["cause"] for x in W.evaluate([HB], [bot(sealed_day(later), 20)], NOW)],
+                         ["VAULT_RECEIPT_INVALID"])
+
+    def test_unsealed_newer_native_snapshot_is_reported(self):
+        native = "<!-- VAULT_NATIVE_RECEIPT_V1:43657764359-1 -->"
+        late = W.evaluate([HB], [bot(REAL_RECEIPT, 20), bot(native, 20 - W.SEAL_AFTER_NATIVE_GRACE_H - 1)], NOW)
+        self.assertEqual([x["cause"] for x in late], ["VAULT_APP_FINAL_REF_MISSING"])
+        ok = W.evaluate([HB], [bot(native, 20.5), bot(REAL_RECEIPT, 20)], NOW)
+        self.assertEqual(ok, [])
 
     def test_vault_age_boundary(self):
         self.assertEqual(W.evaluate([HB], [bot(REAL_RECEIPT, W.VAULT_MAX_AGE_H)], NOW), [])
@@ -277,6 +326,12 @@ class FailClosedErrors(unittest.TestCase):
         rc, out = self._main(NoPost([], []))
         self.assertEqual(rc, 0)
         self.assertIn("::error title=S1 Vault watchdog::POST_ERRORS", out)
+
+    def test_missing_token_is_visible(self):
+        out = io.StringIO()
+        with mock.patch.dict(os.environ, {"GITHUB_TOKEN": ""}), contextlib.redirect_stdout(out):
+            self.assertEqual(W.main([]), 0)
+        self.assertIn("::warning title=S1 Vault watchdog::SKIPPED_NO_TOKEN", out.getvalue())
 
     def test_healthy_main_prints_no_annotation(self):
         rc, out = self._main(FakeGithub([HB], [bot(REAL_RECEIPT, 1)]))

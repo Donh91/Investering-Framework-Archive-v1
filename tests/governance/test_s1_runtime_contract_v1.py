@@ -98,7 +98,9 @@ class S1RuntimeContractTest(unittest.TestCase):
                       "unedited (updated_at equals created_at)",
                       "restore drill PASS", "source_tree_sha must equal",
                       "release_permission=false does not itself prove",
-                      "Until the App's first receipt exists", "If any evidence or binding is missing, HOLD"):
+                      "Until the App's first VAULT_FINAL_REF_RECEIPT_v1 exists", "If any evidence or binding is missing, HOLD",
+                      "comments by any other author are ignored", "Watchdog silence alone proves none of these",
+                      "Any App-authored comment on #1593 edited within 30 h means HOLD"):
             self.assertIn(token, loop)
 
 
