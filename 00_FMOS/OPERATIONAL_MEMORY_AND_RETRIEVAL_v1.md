@@ -91,6 +91,8 @@ GitHub-native automation covers detection, quarantine, incident lifecycle, bound
 
 ## Retention
 
+Hot set (WO-2c, Archive #2157): `LATEST_OPERATIONAL_MEMORY_INDEX.json` is written compact and holds every episode except routine automated data-writer episodes older than 14 days. A row is routine only if it is UPDATE/RESEARCH, its subject has the data-writer shape (`learning|data|ops|ai|evidence|health|research|remediation: … <Actions run id>` or one of three known bot phrases) and it names no PR. Human PRs, merges and all engineering episodes are always kept. `episode_count` is the hot count; `total_episode_count` (index, state, health) is the full count. Preflight and research routing see the hot set; the immutable `episodes/` cold store keeps everything.
+
 Operational evidence is not deleted because of age. Old or drifted episodes become cold/revalidation context. Forgetting means retrieval suppression, not destructive deletion.
 
 ## Safety
