@@ -8,6 +8,7 @@ import json
 import math
 import re
 import statistics
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -182,6 +183,18 @@ def fetch(url: str, timeout: int = 20, *, accept: str = "application/json") -> b
     if len(payload) > MAX_SOURCE_BYTES:
         raise E("SOURCE_TOO_LARGE", f"source exceeded {MAX_SOURCE_BYTES} bytes")
     return payload
+
+
+def fetch_optional_html_with_empty_retry(url: str, timeout: int = 20) -> bytes:
+    """Bounded two-retry public-HTML recovery; never retry HTTP/quota/schema errors."""
+    for attempt in range(3):
+        try:
+            return fetch(url, timeout=timeout, accept="text/html,application/xhtml+xml")
+        except E as exc:
+            if exc.status != "EMPTY_RESPONSE" or attempt == 2:
+                raise
+            time.sleep(30)
+    raise AssertionError("unreachable")
 
 
 def parse_optional_return_windows(row: dict[str, Any]) -> dict[str, float | None]:
@@ -800,7 +813,7 @@ def main() -> int:
             ):
                 if contexts[payload_key] is None:
                     try:
-                        contexts[payload_key] = fetch(url, timeout=args.timeout, accept="text/html,application/xhtml+xml")
+                        contexts[payload_key] = fetch_optional_html_with_empty_retry(url, timeout=args.timeout)
                     except E as exc:
                         contexts[error_key] = {"failure_state": exc.status, "message": str(exc)}
         owner = run(payload, args.output_dir, retrieval, include_extra_windows=not bool(args.fixture), **contexts)

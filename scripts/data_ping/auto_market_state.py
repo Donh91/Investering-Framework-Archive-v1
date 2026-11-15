@@ -591,6 +591,9 @@ def sentiment_source_health(sentiment: Any) -> dict[str, str]:
     complete = isinstance(symbols, Mapping) and all(
         isinstance(symbols.get(symbol), Mapping)
         and num(symbols[symbol].get("score")) is not None
+        # A row the owner collector marked stale is not a current observation (#2153).
+        and symbols[symbol].get("owner_status", "PASS") == "PASS"
+        and symbols[symbol].get("stale") is not True
         for symbol in ("MARKET", "BTC", "ETH")
     )
     market = symbols.get("MARKET") if isinstance(symbols, Mapping) else None
@@ -604,6 +607,42 @@ def sentiment_source_health(sentiment: Any) -> dict[str, str]:
         "classification": (
             "LIVE_ANCHOR_SENTIMENT"
             if complete else "LIVE_ANCHOR_SENTIMENT_CFGI_REQUIRED_FIELDS_MISSING"
+        ),
+    }
+
+
+def live_altseason_has_observation(altseason: Any) -> bool:
+    """At least one PASS public altseason family with a numeric source score."""
+    if not isinstance(altseason, Mapping):
+        return False
+    bc = altseason.get("blockchaincenter_altcoin_season")
+    if isinstance(bc, Mapping) and bc.get("status") == "PASS":
+        horizons = bc.get("horizons")
+        if isinstance(horizons, Mapping) and any(
+            isinstance(row, Mapping) and num(row.get("published_score")) is not None
+            for row in horizons.values()
+        ):
+            return True
+    cmc = altseason.get("coinmarketcap_altcoin_season")
+    return bool(isinstance(cmc, Mapping) and cmc.get("status") == "PASS"
+                and num(cmc.get("published_score")) is not None)
+
+
+def derivatives_source_health(derivatives: Any) -> dict[str, str]:
+    """PASS only when the live-anchor funding rates that Kompas consumes are numeric.
+
+    A truthy wrapper such as {"BTC-USDT-SWAP": {}} is incomplete, not healthy.
+    Open interest stays owned by the hourly row (hourly_status), unchanged.
+    """
+    complete = isinstance(derivatives, Mapping) and all(
+        num(nested(derivatives, instrument, "funding", "funding_rate")) is not None
+        for instrument in ("BTC-USDT-SWAP", "ETH-USDT-SWAP")
+    )
+    return {
+        "status": "PASS" if complete else "UNAVAILABLE",
+        "classification": (
+            "LIVE_ANCHOR_DERIVATIVES"
+            if complete else "LIVE_ANCHOR_DERIVATIVES_FUNDING_REQUIRED_FIELDS_MISSING"
         ),
     }
 
@@ -623,9 +662,9 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     live_breadth_reference = market_metrics.get("breadth") or {}
     sentiment = market_metrics.get("sentiment") or {}
     altseason = market_metrics.get("altseason_context") or market_metrics.get("rotation_context") or {}
-    health["derivatives"] = {"status": "PASS" if isinstance(derivatives, Mapping) and derivatives else "UNAVAILABLE", "classification": "LIVE_ANCHOR_DERIVATIVES"}
+    health["derivatives"] = derivatives_source_health(derivatives)
     health["sentiment"] = sentiment_source_health(sentiment)
-    health["altseason_context"] = {"status": "PASS" if altseason else "UNAVAILABLE", "classification": "LIVE_ANCHOR_ALTSEASON_CONTEXT"}
+    health["altseason_context"] = {"status": "PASS" if live_altseason_has_observation(altseason) else "UNAVAILABLE", "classification": "LIVE_ANCHOR_ALTSEASON_CONTEXT"}
     breadth_raw, breadth_read_health = read_json(snapshot, BREADTH_OWNER)
     breadth, breadth_normalization_health = normalize_breadth(breadth_raw, now_utc=now)
     current_breadth = select_current_breadth(breadth, live_breadth_reference)
