@@ -326,6 +326,43 @@ class MetronomeTest(unittest.TestCase):
         self.assertEqual(calls, ["POST"])
         sleep.assert_not_called()
 
+    def test_native_main_shadow_end_to_end_and_ci_runner_contract(self):
+        import io
+        from contextlib import redirect_stdout
+        from unittest import mock
+
+        class Fake:
+            calls = []
+
+            def mode(self):
+                return {"mode": "SHADOW"}
+
+            def runs(self, wf):
+                return []
+
+            def environment(self):
+                return ENV_OK
+
+            def dispatch(self, wf, inputs):
+                if wf != M.SELF_WORKFLOW:
+                    raise AssertionError("SHADOW_MUST_NOT_DISPATCH_TARGET")
+                self.calls.append(wf)
+
+        fake = Fake()
+        output = io.StringIO()
+        with mock.patch.object(M, "Github", return_value=fake):
+            with mock.patch.dict(M.os.environ, {"GITHUB_TOKEN": "synthetic-token"}):
+                with redirect_stdout(output):
+                    code = M.main([])
+        self.assertEqual(code, 0, output.getvalue())
+        self.assertEqual(fake.calls, [M.SELF_WORKFLOW])
+        self.assertIn('"mode": "SHADOW"', output.getvalue())
+        self.assertNotIn("synthetic-token", output.getvalue())
+
+        wf = (ROOT / ".github/workflows/master-monday-preflight-gate.yml").read_text(encoding="utf-8")
+        self.assertIn("python -m unittest -v tests.orchestration.test_framework_metronome_v1", wf)
+        self.assertNotIn("python -m unittest --collect-only -v tests.orchestration.test_framework_metronome_v1", wf)
+
     def test_workflow_is_bounded_and_minimal(self):
         wf = (ROOT / ".github/workflows/framework-metronome.yml").read_text(encoding="utf-8")
         self.assertIn("environment: framework-metronome", wf)
