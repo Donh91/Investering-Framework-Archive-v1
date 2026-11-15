@@ -182,18 +182,25 @@ def main():
     for path in args.forecast_root.rglob("*.json") if args.forecast_root.exists() else []:
         value = load(path)
         if value and value.get("contract") == "FROZEN_FORECAST_v1":
-            # Noncanonical fixture inputs have no scientific authority, but
-            # cannot count a schema-incomplete JSON object as a ratified cohort.
-            if not required_fields_present(value, required_forecast_fields):
-                invalid_frozen_forecast_count += 1
-                continue
             if strict_population_roots:
+                if not required_fields_present(value, required_forecast_fields):
+                    invalid_frozen_forecast_count += 1
+                    continue
                 try:
                     validate_frozen_forecast_record(value)
                 except ValueError:
                     invalid_frozen_forecast_count += 1
                     continue
-            elif not isinstance(value.get("forecast_id"), str) or not value.get("forecast_id", "").strip():
+            elif (
+                not isinstance(value.get("forecast_id"), str)
+                or not value.get("forecast_id", "").strip()
+                or not isinstance(value.get("metric_path"), str)
+                or not value.get("metric_path", "").strip()
+            ):
+                # Historical isolated fixtures intentionally retain descriptive
+                # CSV compatibility with older (noncanonical) forecast schemas.
+                # An unbound metric target, however, cannot form even a
+                # descriptive cohort. No fixture gains scientific authority.
                 invalid_frozen_forecast_count += 1
                 continue
             forecasts[value.get("forecast_id")] = value
