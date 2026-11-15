@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-MODULE_PATH = ROOT / "scripts" / "entry_signal" / "entry_signal_ledger.py"
+MODULE_PATH = ROOT / "scripts" / "entry_signal" / "entry_signal_ledger_core.py"
 
 spec = importlib.util.spec_from_file_location("entry_signal_ledger", MODULE_PATH)
 ledger = importlib.util.module_from_spec(spec)

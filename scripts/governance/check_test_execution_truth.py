@@ -8,8 +8,14 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
 import xml.etree.ElementTree as ET
 
+# A direct 'python scripts/governance/...' CLI starts with scripts/governance
+# on sys.path, unlike 'python -m pytest'. Support both without a second parser.
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 from scripts.governance.check_test_collection_truth import test_files
 
 WORKFLOW_STEP = "- name: Execute full repository tests (no collect-only)"
