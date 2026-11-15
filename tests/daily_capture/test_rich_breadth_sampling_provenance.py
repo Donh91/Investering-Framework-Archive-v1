@@ -95,11 +95,17 @@ def test_adaptive_main_writes_self_describing_checkpoint(tmp_path, monkeypatch):
     parent = write_parent(tmp_path)
     monkeypatch.setenv("GITHUB_RUN_ID", "42")
     monkeypatch.setenv("GITHUB_RUN_ATTEMPT", "3")
-    monkeypatch.setattr(runtime.owner, "fetch", lambda _url: b"fixture")
+    # Since #1715 the checkpoint re-reads the raw payload for the optional 7/30/200d
+    # window receipt, so the fixture must be a real (minimal) source JSON list.
+    monkeypatch.setattr(runtime.owner, "fetch", lambda _url: b'[{"id": "bitcoin"}]')
     monkeypatch.setattr(
         runtime.owner,
         "parse",
-        lambda _raw: ([{"asset_id": "bitcoin"}], [], {"advance_ratio": 0.5}),
+        # parse() takes include_extra_windows since #1715 (optional 7/30/200d source windows).
+        lambda _raw, include_extra_windows=False: (
+            [{"asset_id": "bitcoin", "source_rank": 1, "filtered_rank": 1,
+              "extra_return_windows_pct": {d: None for d in runtime.owner.EXTRA_RETURN_WINDOWS}}],
+            [], {"advance_ratio": 0.5}),
     )
     monkeypatch.setattr(
         runtime.owner,
@@ -130,6 +136,7 @@ def test_adaptive_main_writes_self_describing_checkpoint(tmp_path, monkeypatch):
     assert payload["sampling_provenance"]["sampling_mode"] == "ADAPTIVE_BOOST"
     assert payload["sampling_provenance"]["capture_run_id"] == "gh-42-3"
     assert payload["authority"]["binding"] is False
+    assert payload["extra_return_capture"]["status"] == "SOURCE_FIELDS_ABSENT_OPTIONAL_ONLY"
 
 
 def test_workflow_preserves_thresholds_and_binds_boost_capture_to_gate_run():

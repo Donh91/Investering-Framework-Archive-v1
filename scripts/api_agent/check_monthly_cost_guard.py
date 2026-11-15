@@ -352,7 +352,7 @@ def main() -> None:
     owner_remaining = OWNER_GLOBAL_HARD_STOP_USD - exposure_upper if exposure_upper is not None else None
     normal_remaining = OWNER_GLOBAL_TARGET_USD - exposure_upper if exposure_upper is not None else None
     status = ("BLOCKED" if errors or remaining is None or owner_remaining is None
-              or remaining < effective_reserve
+              or remaining <= effective_reserve  # the reserve is never spendable, as in the lane guard
               or owner_remaining < OWNER_GLOBAL_RESERVE_USD else "PASS")
     result = {
         "status": status,
