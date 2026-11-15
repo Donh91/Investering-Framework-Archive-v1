@@ -7,7 +7,6 @@
 
 ## Local owner-supplied artifact
 - Original filename: `TechDev Newsletter - Market Update Issue #105.pdf`
-- Original conversation-upload identifier: `file_00000000daa08210aabbc4752970e786`
 - PDF byte length: `3248971`
 - SHA-256 PDF: `532a22112031d2bf6687d95cd85ca7282ec49e16fd060f805f7b6165f0c9b2de`
 - PDF structure: 1 long screenshot page, 402 x 14178 PDF points, Safari Quartz export
