@@ -44,30 +44,14 @@ PROVIDER_SETTLEMENT_EVIDENCE = {
     "coverage_scope": "NATIVE_POST_IDS_ONLY_ASTRA_RESERVATIONS_RETAINED",
 }
 SETTLED_NATIVE_POST_IDS = {"41870364609", "41949497953", "42204120988"}
-# The consumed Nov 13 Astra one-shots have no receipt in the guard receipt root.
-# They were not visible in the first (aggregate) capture, so they were retained
-# until a later private per-model readback recorded gpt-6-astra usage inside the
-# reconciled, dominated period (WO-5). They are settled only with that second,
-# separately bound evidence; never by editing the JSON ledger alone.
-SETTLED_ASTRA_WORK_IDS = {
+# The consumed Nov 13 Astra one-shots have no receipt in the guard receipt root
+# and were not visible in the private provider aggregate at capture. Their
+# pre-HTTP reservations stay counted (and may not silently disappear from the
+# canonical ledger) until per-model provider evidence settles them (WO-5).
+SETTLED_ASTRA_WORK_IDS: set[str] = set()
+RETAINED_ASTRA_RESERVATION_WORK_IDS = {
     "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
     "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
-}
-RETAINED_ASTRA_RESERVATION_WORK_IDS: set[str] = set()
-ASTRA_PER_MODEL_SETTLEMENT_EVIDENCE = {
-    "repository": "Donh91/Investering-AI-Audit-Bridge",
-    "commit_sha": "1b759f2f4847f3f755160216a46ed23369fb62b7",
-    "path": "reports/claude/automated/2026/11/CLAUDE-API-BUDGET-ASTRA-PER-MODEL-SETTLEMENT-20261115T063100Z/evidence/openai_platform_per_model_readback_20261115T0730CPH.png",
-    "bytes": 480256,
-    "git_blob_sha": "5aa32105af05ae37153ad3ddfc31a349d838b0a8",
-    "sha256": "1f10e9356316179500c6193f10527c7fdf99c77a758f64a4c418b13abc2ea32a",
-    "source_contract_id": "OWNER_OPENAI_PLATFORM_PER_MODEL_READBACK_v1",
-    "captured_at_local": "2026-11-15T07:28-07:30 Europe/Copenhagen (minute precision)",
-    "committed_at_utc": "2026-11-15T06:31:52Z",
-    "schema": "image/png; owner screenshots manually reviewed; per-file sha256 in Bridge SHA256SUMS.txt",
-    "completeness": "PER_MODEL_NOV1_TO_NOV15_AND_GROUPED_BY_MODEL_NOV12_TO_NOV15",
-    "coverage_assertion": "GPT_6_ASTRA_USAGE_RECORDED_IN_PERIOD_AND_INCLUDED_IN_DOMINATED_PROVIDER_AGGREGATE",
-    "coverage_authority": "INDEPENDENT_CLAUDE_RECONCILIATION_CLAUDE_ASTRA_PER_MODEL_SETTLEMENT_20261115T063100Z",
 }
 CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
     "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
@@ -97,8 +81,6 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     if settlement_bound:
         if value.get("provider_settlement_evidence") != PROVIDER_SETTLEMENT_EVIDENCE:
             raise ValueError("PROVIDER_SETTLEMENT_EVIDENCE_INVALID")
-        if SETTLED_ASTRA_WORK_IDS and value.get("astra_per_model_settlement_evidence") != ASTRA_PER_MODEL_SETTLEMENT_EVIDENCE:
-            raise ValueError("ASTRA_SETTLEMENT_EVIDENCE_INVALID")
         settled = value.get("settled")
         if not isinstance(settled, list) or len(settled) != len(SETTLED_NATIVE_POST_IDS) + len(SETTLED_ASTRA_WORK_IDS):
             raise ValueError("PROVIDER_SETTLED_SET_INVALID")
