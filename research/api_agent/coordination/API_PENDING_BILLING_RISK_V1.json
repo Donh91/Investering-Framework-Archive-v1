@@ -1,38 +1,15 @@
 {
   "contract": "API_PENDING_BILLING_RISK_V1",
-  "status": "PROVIDER_RECONCILED_NATIVE_POSTS_SETTLED_ASTRA_RESERVATIONS_RETAINED",
+  "status": "PROVIDER_RECONCILED_SETTLED_WITH_SOURCE_BOUND_EVIDENCE",
   "owner_reference": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6680520240",
   "normal_budget_usd": 50,
   "absolute_budget_usd": 50,
-  "method": "Reserve genuinely unresolved future POSTs and owner-authorized pre-HTTP work until independently reviewed provider reconciliation. The three identified November native POSTs are no longer pending; their metadata is preserved without billing amounts in settled. The two consumed November Astra one-shots have no receipt in the guard receipt root and were not visible in the private provider aggregate at capture, so their pre-HTTP reservations stay counted until per-model provider evidence (WO-5) settles them. Never replay original POST IDs; retain per-request and monthly admission limits and the owner reserve.",
+  "method": "Reserve genuinely unresolved future POSTs and owner-authorized pre-HTTP work until independently reviewed provider reconciliation. The three November native POSTs were settled by the aggregate readback; the two consumed November Astra one-shots were settled by a later per-model readback that records gpt-6-astra usage inside the reconciled period. Metadata is preserved without billing amounts in settled. Never replay original POST IDs; retain per-request and monthly admission limits and the owner reserve.",
   "unresolved": [],
   "no_retry_original_ids": true,
   "requires_reconciliation_before_releasing_reserve": true,
   "no_api_authority": true,
-  "owner_reservations": [
-    {
-      "work_id": "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
-      "created_month_utc": "2026-11",
-      "status": "OWNER_RESERVED_PREHTTP",
-      "lower_usd": 0,
-      "upper_usd": 3,
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
-      "one_paid_post_max": 1,
-      "reconciliation_required": true,
-      "basis": "Owner explicitly authorizes one manual Astra High research API call on 2026-11-13; conservatively reserve USD3 before any possible POST until original response usage and native GitHub issue claim are independently reconciled."
-    },
-    {
-      "work_id": "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
-      "created_month_utc": "2026-11",
-      "status": "OWNER_RESERVED_PREHTTP",
-      "lower_usd": 0,
-      "upper_usd": 10,
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
-      "one_paid_post_max": 1,
-      "reconciliation_required": true,
-      "basis": "Owner explicitly approved on Nov13 2026 a distinct extraordinary Astra High empirical historical comparison across ALL archived Master Mondays and CN and real market data, with upper USD10 for exactly one POST; conservatively holds USD10 across uncertain POST and monthly rollover until separately verified usage/settlement. No reuse of consumed Astra text-only mission and no added scheduler."
-    }
-  ],
+  "owner_reservations": [],
   "owner_budget_explicit_approval": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6864310705",
   "owner_budget_reserve_usd": 4,
   "settled": [
@@ -59,6 +36,24 @@
       "status": "PROVIDER_PERIOD_RECONCILED",
       "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42204120988",
       "no_retry": true
+    },
+    {
+      "kind": "ASTRA_PREHTTP_RESERVATION",
+      "work_id": "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
+      "created_month_utc": "2026-11",
+      "status": "PROVIDER_PERIOD_RECONCILED",
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+      "no_retry": true,
+      "evidence": "astra_per_model_settlement_evidence"
+    },
+    {
+      "kind": "ASTRA_PREHTTP_RESERVATION",
+      "work_id": "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
+      "created_month_utc": "2026-11",
+      "status": "PROVIDER_PERIOD_RECONCILED",
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+      "no_retry": true,
+      "evidence": "astra_per_model_settlement_evidence"
     }
   ],
   "provider_settlement_evidence": {
@@ -76,5 +71,20 @@
     "coverage_assertion": "PUBLIC_ESTIMATED_RECEIPTS_AT_CAPTURE_EXCEEDED_PRIVATE_PROVIDER_ACCOUNT_TOTAL",
     "coverage_authority": "INDEPENDENT_CLAUDE_RECONCILIATION_6885728883",
     "coverage_scope": "NATIVE_POST_IDS_ONLY_ASTRA_RESERVATIONS_RETAINED"
+  },
+  "astra_per_model_settlement_evidence": {
+    "repository": "Donh91/Investering-AI-Audit-Bridge",
+    "commit_sha": "1b759f2f4847f3f755160216a46ed23369fb62b7",
+    "path": "reports/claude/automated/2026/11/CLAUDE-API-BUDGET-ASTRA-PER-MODEL-SETTLEMENT-20261115T063100Z/evidence/openai_platform_per_model_readback_20261115T0730CPH.png",
+    "bytes": 480256,
+    "git_blob_sha": "5aa32105af05ae37153ad3ddfc31a349d838b0a8",
+    "sha256": "1f10e9356316179500c6193f10527c7fdf99c77a758f64a4c418b13abc2ea32a",
+    "source_contract_id": "OWNER_OPENAI_PLATFORM_PER_MODEL_READBACK_v1",
+    "captured_at_local": "2026-11-15T07:28-07:30 Europe/Copenhagen (minute precision)",
+    "committed_at_utc": "2026-11-15T06:31:52Z",
+    "schema": "image/png; owner screenshots manually reviewed; per-file sha256 in Bridge SHA256SUMS.txt",
+    "completeness": "PER_MODEL_NOV1_TO_NOV15_AND_GROUPED_BY_MODEL_NOV12_TO_NOV15",
+    "coverage_assertion": "GPT_6_ASTRA_USAGE_RECORDED_IN_PERIOD_AND_INCLUDED_IN_DOMINATED_PROVIDER_AGGREGATE",
+    "coverage_authority": "INDEPENDENT_CLAUDE_RECONCILIATION_CLAUDE_ASTRA_PER_MODEL_SETTLEMENT_20261115T063100Z"
   }
 }

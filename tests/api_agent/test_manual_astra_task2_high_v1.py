@@ -174,14 +174,13 @@ class AstraOneShotTests(unittest.TestCase):
         ledger = Path(__file__).resolve().parents[2] / (
             "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
         low, high, n = pending_risk(ledger)
-        # Native POSTs settled; consumed Astra one-shots stay reserved (3 + 10).
-        self.assertEqual((low, high, n), (0.0, 13.0, 2))
-        self.assertGreaterEqual(high-low, m.MAX_THEORETICAL_COST_USD)
+        # Native POSTs and the consumed Astra one-shots are provider-settled.
+        self.assertEqual((low, high, n), (0.0, 0.0, 0))
         value = json.loads(ledger.read_text(encoding="utf-8"))
-        self.assertEqual(len(value["settled"]), 3)
+        self.assertEqual(len(value["settled"]), 5)
         self.assertEqual(value["provider_settlement_evidence"]["sha256"],
                          "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8")
-        self.assertEqual(len(value["owner_reservations"]), 2)
+        self.assertEqual(value["owner_reservations"], [])
         # A NEW source-bound, unspent Astra owner claim must still be counted.
         value["owner_reservations"] += [{
             "work_id": "ASTRA-HIGH-TASK2-REALDATA-V2-20261113-ONE",
@@ -196,7 +195,8 @@ class AstraOneShotTests(unittest.TestCase):
         probe = self.root / "future-liability.json"
         probe.write_text(json.dumps(value), encoding="utf-8")
         future_low, future_high, future_count = pending_risk(probe)
-        self.assertEqual((future_low, future_high, future_count), (0.0, 23.0, 3))
+        self.assertEqual((future_low, future_high, future_count), (0.0, 10.0, 1))
+        self.assertGreaterEqual(future_high - future_low, m.MAX_THEORETICAL_COST_USD)
 
     def test_original_director_live_secret_not_corrupted(self):
         yml = (Path(__file__).resolve().parents[2] /
