@@ -1298,7 +1298,17 @@ def horizon_map(
                 "confidence": None,
             }
             if d23_source not in {"NO_EDGE", "UNAVAILABLE"}
-            else _unavailable_horizon("Structured Cycle Navigator 2-3 week decision projection is unavailable.")
+            else ({
+                "expected_direction": "NO_EDGE",
+                "label": "NO_EDGE",
+                "expected_path": "Ingen klar fordel. " + (s23_source or "Ingen dokumenteret 2-3-ugers retningsmæssig fordel."),
+                "action_posture": "WAIT",
+                "confirmation_trigger": confirm,
+                "invalidation_trigger": invalidate,
+                "eta": None,
+                "confidence": None,
+            } if d23_source == "NO_EDGE"
+            else _unavailable_horizon("Structured Cycle Navigator 2-3 week decision projection is unavailable."))
         ),
         "CYCLE_ALTCOINS_3_8W": _altcoin_cycle_lane(cn_package, posture, as_of or datetime.now(timezone.utc)),
     }
