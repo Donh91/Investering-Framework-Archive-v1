@@ -2,7 +2,7 @@
 from __future__ import annotations
 import argparse, hashlib, json, re, subprocess
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 AUTH = {"canonical_effect":False,"portfolio_execution":False,"automatic_promotion":False,"automatic_skill_activation":False,"automatic_repository_write":False}
@@ -13,8 +13,22 @@ ACTIONS={"fix","repair","correct","harden","hardening","close","retire","reconci
 def load(p,d=None):
     try:return json.loads(Path(p).read_text())
     except Exception:return d
-def write(p,v):
-    p=Path(p);p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(v,indent=2,sort_keys=True)+"\n")
+def write(p,v,compact=False):
+    p=Path(p);p.parent.mkdir(parents=True,exist_ok=True)
+    p.write_text((json.dumps(v,separators=(",",":"),sort_keys=True) if compact else json.dumps(v,indent=2,sort_keys=True))+"\n")
+# WO-2c hot-set bound: routine data-writer episodes (UPDATE/RESEARCH) stay immutable in episodes/
+# (the cold store) but only the last HOT_WINDOW_DAYS of them are in LATEST_OPERATIONAL_MEMORY_INDEX.
+# Engineering episodes (FIX/HARDEN/BUILD/ARCHIVE, ~6.5 KiB/day) are always kept.
+ROLLING_OPERATION_TYPES = {"UPDATE","RESEARCH"}
+HOT_WINDOW_DAYS = 14
+def utc_ts(s):
+    try:t=datetime.fromisoformat(str(s).replace("Z","+00:00"))
+    except ValueError:return None
+    return t if t.tzinfo else None
+def in_hot_set(row,cutoff):
+    if cutoff is None or row.get("operation_type") not in ROLLING_OPERATION_TYPES:return True
+    t=utc_ts(row.get("source_timestamp"))
+    return t is None or t>=cutoff  # an unknown timestamp is kept, never silently dropped
 def git(root,*args,check=True):
     r=subprocess.run(["git","-C",str(root),*args],text=True,capture_output=True)
     if check and r.returncode: raise RuntimeError(r.stderr.strip())
@@ -110,7 +124,9 @@ def index(root,eps,when):
         newer=latest.get(k) if k[1] and latest.get(k)!=e["episode_id"] else None
         tier="REVALIDATE" if cp["status"] in {"DRIFTED","REMOVED"} else "WARM"
         rows.append({"episode_id":e["episode_id"],"source_commit_sha":e["source_commit_sha"],"source_timestamp":e["source_timestamp"],"task_class":e["task_class"],"operation_type":e["operation_type"],"task_summary":e["task_summary"],"failure_signature":e.get("failure_signature"),"dominant_path_prefix":e.get("dominant_path_prefix"),"changed_paths":e.get("changed_paths",[])[:25],"compatibility":cp,"retrieval_tier":tier,"newer_related_episode":newer,"episode_path":e["_path"]})
-    return {"contract":"OPERATIONAL_MEMORY_INDEX_v1","authority":AUTH,"generated_at_utc":when,"source_head_sha":head(root),"episode_count":len(rows),"rows":rows}
+    total=len(rows);now=utc_ts(when);cutoff=now-timedelta(days=HOT_WINDOW_DAYS) if now else None
+    rows=[r for r in rows if in_hot_set(r,cutoff)]
+    return {"contract":"OPERATIONAL_MEMORY_INDEX_v1","authority":AUTH,"generated_at_utc":when,"source_head_sha":head(root),"episode_count":len(rows),"total_episode_count":total,"hot_set_policy":{"rolling_operation_types":sorted(ROLLING_OPERATION_TYPES),"rolling_window_days":HOT_WINDOW_DAYS,"always_kept":"ALL_OTHER_OPERATION_TYPES","cold_store":"episodes/ immutable, unchanged"},"rows":rows}
 def candidates(idx,when):
     g=defaultdict(list)
     for r in idx["rows"]:
@@ -149,7 +165,7 @@ def health(idx,cand,when):
     return {"contract":"OPERATIONAL_MEMORY_HEALTH_v1","generated_at_utc":when,"status":"PASS" if not dups and not bad else "FAIL","authority":AUTH,"episode_count":len(ids),"compatibility_counts":dict(Counter(r["compatibility"]["status"] for r in idx["rows"])),"procedural_candidate_count":cand["candidate_count"],"duplicate_episode_ids":dups,"episodes_missing_source_commit":bad,"retrieval_policy":"DETERMINISTIC_FIRST_NO_VECTOR_DB_NO_MODEL_CALLS","source_of_truth":"CURRENT_GITHUB_MAIN","memory_role":"DERIVED_ACCELERATION_LAYER_ONLY"}
 def do_harvest(a):
     root=Path(a.repo_root);out=root/a.output_root;made,sk=harvest(root,out,a.max_commits);when=datetime.now(timezone.utc).isoformat().replace("+00:00","Z");idx=index(root,episodes(out),when);cand=candidates(idx,when);h=health(idx,cand,when)
-    write(out/"LATEST_OPERATIONAL_MEMORY_INDEX.json",idx);write(out/"LATEST_PROCEDURAL_CANDIDATES.json",cand);write(out/"LATEST_OPERATIONAL_MEMORY_HEALTH.json",h)
+    write(out/"LATEST_OPERATIONAL_MEMORY_INDEX.json",idx,compact=True);write(out/"LATEST_PROCEDURAL_CANDIDATES.json",cand);write(out/"LATEST_OPERATIONAL_MEMORY_HEALTH.json",h)
     state={"contract":"OPERATIONAL_MEMORY_AND_RETRIEVAL_v1","generated_at_utc":when,"status":h["status"],"source_head_sha":idx["source_head_sha"],"new_episode_count":len(made),"episode_count":idx["episode_count"],"procedural_candidate_count":cand["candidate_count"],"self_generated_commits_skipped":sk,"authority":AUTH};write(out/"LATEST_OPERATIONAL_MEMORY_STATE.json",state);print(json.dumps(state,sort_keys=True))
 def do_preflight(a):
     root=Path(a.repo_root);out=root/a.output_root;idx=load(out/"LATEST_OPERATIONAL_MEMORY_INDEX.json",{})

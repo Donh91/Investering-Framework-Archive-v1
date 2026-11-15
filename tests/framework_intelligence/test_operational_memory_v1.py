@@ -73,5 +73,36 @@ class OperationalMemoryV1Test(unittest.TestCase):
             pf=mod.preflight(idx,'fix cycle navigator binding',['05_CYCLE_NAVIGATOR/a.txt'])
             self.assertTrue(pf['reusable_prior_work'])
 
+    def test_hot_set_bounds_routine_data_episodes_only(self):  # WO-2c, Archive #2157
+        def ep(i, op, ts):
+            return {'episode_id': f'OE-{i}', 'source_commit_sha': str(i) * 40, 'source_timestamp': ts,
+                    'task_class': 'GENERAL_FRAMEWORK', 'operation_type': op, 'task_summary': f'episode {i}',
+                    'failure_signature': None, 'dominant_path_prefix': 'x', 'changed_paths': ['x/a'],
+                    'source_blob_shas': {}, '_path': f'episodes/OE-{i}.json'}
+        when = '2026-11-15T00:00:00Z'
+        eps = [ep(1, 'UPDATE', '2026-10-01T00:00:00Z'),    # old routine data: cold store only
+               ep(2, 'RESEARCH', '2026-10-31T23:59:59Z'),  # just outside 14 days
+               ep(3, 'UPDATE', '2026-11-01T00:00:00Z'),    # exactly at the cutoff: kept
+               ep(4, 'FIX', '2026-09-01T00:00:00Z'),       # engineering: always kept
+               ep(5, 'BUILD', '2026-09-02T00:00:00Z'),
+               ep(6, 'UPDATE', 'not-a-timestamp')]         # unknown time: kept, never silently dropped
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            subprocess.run(['git', 'init', str(root)], check=True, capture_output=True)
+            subprocess.run(['git', '-C', str(root), '-c', 'user.email=t@e.x', '-c', 'user.name=T',
+                            'commit', '--allow-empty', '-m', 'root'], check=True, capture_output=True)
+            idx = mod.index(root, eps, when)
+            self.assertEqual([r['episode_id'] for r in idx['rows']], ['OE-3', 'OE-4', 'OE-5', 'OE-6'])
+            self.assertEqual((idx['episode_count'], idx['total_episode_count']), (4, 6))
+            self.assertEqual(idx['hot_set_policy']['rolling_window_days'], 14)
+            health = mod.health(idx, mod.candidates(idx, when), when)
+            self.assertEqual(health['episode_count'], idx['episode_count'])  # post-production audit invariant
+            out = root / 'LATEST_OPERATIONAL_MEMORY_INDEX.json'
+            mod.write(out, idx, compact=True)
+            text = out.read_text()
+            self.assertNotIn('\n  ', text)
+            import json
+            self.assertEqual(json.loads(text), idx)
+
 if __name__ == '__main__':
     unittest.main()
