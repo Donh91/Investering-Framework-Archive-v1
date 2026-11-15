@@ -12,9 +12,15 @@ from scripts.api_agent import check_director_freshness as freshness
 NOW = datetime(2026, 9, 9, 0, 0, tzinfo=timezone.utc)
 
 
-def write_context(path: Path, run_id: str = "RUN_NEW", captured_at_utc: object = "2026-09-08T23:00:00Z") -> None:
+def write_context(path: Path, run_id: str = "RUN_NEW", captured_at_utc: object = "2026-09-08T23:00:00Z",
+                  market_delta: bool = True) -> None:
+    # Since #1734 a new owner run is Director-eligible only with a material market
+    # delta (comparable numeric metrics and DELTA_READY); the fixture states it explicitly.
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"latest_capture": {"run_id": run_id, "captured_at_utc": captured_at_utc}}))
+    doc = {"latest_capture": {"run_id": run_id, "captured_at_utc": captured_at_utc}}
+    if market_delta:
+        doc.update({"coverage": {"comparable_numeric_metrics": 3}, "delta_status": "DELTA_READY"})
+    path.write_text(json.dumps(doc))
 
 
 class DirectorFreshnessAuditTests(unittest.TestCase):
@@ -37,8 +43,18 @@ class DirectorFreshnessAuditTests(unittest.TestCase):
             write_context(root / "outputs" / "old" / "context.json", "RUN_DUP", "2026-09-08T22:00:00Z")
             result = freshness.evaluate(context, root / "outputs", NOW)
             self.assertFalse(result["fresh_ready"])
-            self.assertEqual(result["fresh_reason"], "OWNER_RUN_ALREADY_ANALYZED")
+            self.assertEqual(result["fresh_reason"], "OWNER_RUN_AND_NEWS_ALREADY_ANALYZED")
             self.assertFalse(result["identity_unseen"])
+
+    def test_unseen_owner_run_without_market_delta_is_not_fresh(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            context = root / "context.json"
+            write_context(context, market_delta=False)
+            result = freshness.evaluate(context, root / "outputs", NOW)
+            self.assertTrue(result["identity_unseen"])
+            self.assertFalse(result["fresh_ready"])
+            self.assertEqual(result["fresh_reason"], "OWNER_RUN_AND_NEWS_ALREADY_ANALYZED")
 
     def test_unseen_ancient_capture_is_not_fresh(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
