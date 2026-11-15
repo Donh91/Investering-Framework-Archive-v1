@@ -32,9 +32,16 @@ def workflow_executes_tests(source: str) -> bool:
         return False
     if any(line.startswith("continue-on-error:") for line in lines) or "timeout-minutes: 18" not in lines:
         return False
-    if EXECUTE_COMMAND not in lines:
+    # The run block must consist of the one exact non-filtered command.
+    # An added shell line before or after pytest can otherwise poison CI
+    # without altering the separately-present approved command.
+    if lines.count("run: |") != 1:
         return False
-    cmd = lines[lines.index(EXECUTE_COMMAND)]
+    run_start = lines.index("run: |")
+    executable_lines = [line for line in lines[run_start + 1:] if line]
+    if executable_lines != [EXECUTE_COMMAND]:
+        return False
+    cmd = executable_lines[0]
     if any(x in cmd for x in ("--collect-only", "--ignore", "|| true", " -k ", "--deselect", "; true")):
         return False
     # `python -m pytest` is module invocation, NOT a pytest `-m marker` filter.
