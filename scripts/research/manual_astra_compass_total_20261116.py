@@ -198,6 +198,17 @@ def submit(out: Path):
             or request.get("tools") or request["model"] != MODEL
             or request["reasoning"]["effort"] != "high"):
         fail("PAID_POST_VALIDATION_FAILED")
+    # Exclusive irreversible marker before network I/O. A second invocation,
+    # including after ambiguous timeout or missing handle, cannot call POST again.
+    # The x-mode creation is atomic even with concurrent local submit processes.
+    started = out / "submission_started.json"
+    with started.open("x", encoding="utf-8") as marker:
+        json.dump({"mission": MISSION, "request_sha256": claim["request_sha256"],
+                   "run_id": attempt["run_id"], "attempt_count": 1,
+                   "repost_forbidden": True,
+                   "started_at": datetime.now(timezone.utc).isoformat()}, marker)
+        marker.flush()
+        os.fsync(marker.fileno())
     response = core.http_json("POST", core.API + "/responses",
                               api_key=core.required_env("OPENAI_API_KEY"),
                               body=request, timeout=115)

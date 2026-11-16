@@ -60,3 +60,24 @@ class Tests(unittest.TestCase):
   rows=[line.strip().split("group: ",1)[1] for line in wf.splitlines() if line.strip().startswith("group: owner-astra-high-20261116-")]
   self.assertEqual(len(rows),5)
   self.assertEqual(len(set(rows)),5)
+
+
+ def test_submit_twice_bills_at_most_one_http(self):
+  # Reproduce Codex P1 regression with a mocked paid provider. Never network.
+  for m in (a,b,c,d,e):
+   with self.subTest(mission=m.MISSION),tempfile.TemporaryDirectory() as d:
+    out=Path(d)
+    request={"model":m.MODEL,"reasoning":{"effort":"high"}}
+    m.core.write_once(out/"request.json",request)
+    digest=m.digest(m.core.canonical(request))
+    m.core.write_once(out/"claim.json",{"mission":m.MISSION,"request_sha256":digest,
+      "source_main_sha":"a"*40,"run_id":"123"})
+    m.mark_attempt(out)
+    with mock.patch.dict(os.environ,{"OPENAI_API_KEY":"synthetic_no_network"}):
+     with mock.patch.object(m.core,"http_json",return_value={"id":"resp_SYNTHETIC123456",
+       "model":m.MODEL,"status":"in_progress"}) as http:
+      m.submit(out)
+      with self.assertRaises(FileExistsError):m.submit(out)
+      self.assertEqual(http.call_count,1)
+      self.assertEqual(http.call_args[0][0],"POST")
+    self.assertTrue((out/"submission_started.json").is_file())
