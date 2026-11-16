@@ -74,7 +74,8 @@ def owner_event() -> dict:
 def check_reservation():
     ledger = core.read(LEDGER)
     rows = ledger.get("owner_reservations")
-    if ledger.get("absolute_budget_usd") != 50 or not isinstance(rows, list):
+    if (ledger.get("absolute_budget_usd") != 100 or not isinstance(rows, list)
+            or ledger.get("owner_astra_program_budget_authorization") != "OWNER_INTERACTIVE_2026-11-16_FIVE_ASTRA_HIGH_V1"):
         fail("CANONICAL_SHARED_BUDGET_UNVERIFIED")
     good = [x for x in rows if isinstance(x, dict)
             and x.get("work_id") == MISSION

@@ -34,10 +34,12 @@ class Tests(unittest.TestCase):
     m.mark_attempt(p)
     with self.assertRaises(Exception):m.mark_attempt(p)
 
- def test_real_paid_path_requires_future_distinct_prehttp_reservation(self):
-  for m in (a,b):
+ def test_real_paid_path_requires_distinct_prehttp_reservation(self):
+  for m in (a,b,c,d,e):
+   m.check_reservation()  # Five individually whitelisted owner approvals exist.
    with self.assertRaisesRegex(ValueError,'DISTINCT_ASTRA_10USD_RESERVATION_REQUIRED'):
-    m.check_reservation()
+    with unittest.mock.patch.object(m, 'MISSION', 'FAKE-UNRESERVED-MISSION'):
+     m.check_reservation()
 
  def test_exact_one_work_id_for_all_five_in_ledger(self):
   from scripts.api_agent.check_monthly_cost_guard import pending_risk

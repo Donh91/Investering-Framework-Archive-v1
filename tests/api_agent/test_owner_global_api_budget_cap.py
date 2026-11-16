@@ -67,7 +67,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(state["status"], "PASS")
         self.assertEqual(state["owner_normal_target_usd"], 50)
         self.assertEqual(state["effective_hard_stop_usd"], 40)
-        self.assertEqual(state["pending_liability_count"], 8)
+        self.assertEqual(state["pending_liability_count"], 3)
         self.assertEqual(state["pending_liability_lower_usd"], 0)
         self.assertEqual(state["pending_liability_upper_usd"], 9)
         self.assertEqual(state["exposure_range_min_usd"], 17)
@@ -138,7 +138,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             original=json.loads((ROOT/"research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json").read_text())
             self.assertEqual(original["normal_budget_usd"],50)
-            self.assertEqual(original["absolute_budget_usd"],50)
+            self.assertEqual(original["absolute_budget_usd"],100)
             p=Path(td)/"ledger.json"
             for key,value in (("normal_budget_usd",40),("absolute_budget_usd",45)):
                 bad={**original,key:value}
