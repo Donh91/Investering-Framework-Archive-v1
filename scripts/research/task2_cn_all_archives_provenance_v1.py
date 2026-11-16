@@ -31,6 +31,15 @@ POST_INDEX_FORECAST_BLOBS = {
         "1e72eb62e2da2f164a0da4108a4cf5f51b910f41",
 }
 
+# The 2026-11-13 index pinned W46 before its capture matured. The current
+# live W46 pack has advanced. Historical replay uses the exact ORIGINAL
+# Git blob at a separate path, never rewrites the old index or inserts a later
+# W46 outcome into a source vintage where it did not exist.
+PINNED_VINTAGE_REPLAY = {
+    "03_DAILY_CAPTURE_LOGS/weekly/2026/W46.json":
+        "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/source_vintages/W46_WEEKLY_CAPTURE_AS_OF_20261113.json",
+}
+
 def verified_post_index_forecast(path: str, raw: bytes) -> bool:
     expected = POST_INDEX_FORECAST_BLOBS.get(path)
     return bool(expected and git_blob_sha(raw) == expected)
@@ -45,6 +54,16 @@ def load_json(path: Path):
 
 def git_blob_sha(raw: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\x00" + raw).hexdigest()
+
+
+def has_symlink_component(path: Path, root: Path) -> bool:
+    """Reject a symlink at any component within the requested root."""
+    current = root
+    for part in path.relative_to(root).parts:
+        current = current / part
+        if current.is_symlink():
+            return True
+    return False
 
 
 @lru_cache(maxsize=8)
@@ -81,9 +100,15 @@ def pinned_bytes(path: Path, repo_root: Path) -> bytes | None:
         if path.exists():
             raise ValueError("CURRENT_FILE_NOT_IN_FROZEN_INDEX:" + rel)
         return None
-    if path.is_symlink() or not path.is_file():
+    if not path.is_file() or has_symlink_component(path, repo_root):
         raise ValueError("FROZEN_SOURCE_MISSING_OR_UNSAFE:" + rel)
-    raw = path.read_bytes()
+    # Source vintage substitution is explicit and byte-checked against the
+    # ORIGINAL sealed index. Never use the evolving W46 live bytes for replay.
+    vintage_rel = PINNED_VINTAGE_REPLAY.get(rel)
+    replay_path = repo_root / vintage_rel if vintage_rel else path
+    if not replay_path.is_file() or has_symlink_component(replay_path, repo_root):
+        raise ValueError("FROZEN_VINTAGE_SOURCE_MISSING_OR_UNSAFE:" + rel)
+    raw = replay_path.read_bytes()
     if git_blob_sha(raw) != expected:
         raise ValueError("FROZEN_SOURCE_BYTES_DRIFT:" + rel)
     return raw
@@ -153,7 +178,7 @@ def week_census(repo_root: Path, asof: dt.datetime) -> list[dict]:
         raise ValueError("FROZEN_WEEKLY_SOURCE_SET_DRIFT")
     for later_path in actual_forecasts - expected_forecasts:
         later_file = repo_root / later_path
-        if (later_file.is_symlink()
+        if (has_symlink_component(later_file, repo_root)
                 or not verified_post_index_forecast(later_path, later_file.read_bytes())):
             raise ValueError("FROZEN_WEEKLY_SOURCE_SET_DRIFT")
     result = []
@@ -179,7 +204,8 @@ def week_census(repo_root: Path, asof: dt.datetime) -> list[dict]:
             pointer_file = wdir / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json"
             delivery = pinned_json(pointer_file, repo_root)
             actual_file = repo_root / f"03_DAILY_CAPTURE_LOGS/weekly/{year}/{wdir.name}.json"
-            actual = pinned_json(actual_file, repo_root)
+            actual_raw = pinned_bytes(actual_file, repo_root)
+            actual = json.loads(actual_raw) if actual_raw is not None else None
             seq = (actual or {}).get("hourly_sequence") or {}
             observed = seq.get("observed_hourly_rows")
             expected = seq.get("expected_hourly_rows")
@@ -215,7 +241,7 @@ def week_census(repo_root: Path, asof: dt.datetime) -> list[dict]:
                 "source_forecast_sha256": sha256(forecast_file),
                 "source_internal_sha256": sha256(internal_path) if internal_path.exists() else None,
                 "source_manifest_sha256": sha256(source_file) if source_file.exists() else None,
-                "source_actual_sha256": sha256(actual_file) if actual_file.exists() else None,
+                "source_actual_sha256": hashlib.sha256(actual_raw).hexdigest() if actual_raw is not None else None,
                 "issue_number": (source or {}).get("issue_number"),
                 "source_master_monday_dir": (source or {}).get("master_monday_dir"),
                 "delivery_status": (delivery or {}).get("status", "UNKNOWN"),
