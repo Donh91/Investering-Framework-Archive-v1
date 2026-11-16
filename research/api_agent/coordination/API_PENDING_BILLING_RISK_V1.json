@@ -1,39 +1,11 @@
 {
   "contract": "API_PENDING_BILLING_RISK_V1",
-  "status": "OWNER_APPROVED_RANGE_ESTIMATE_NOT_PROVIDER_INVOICE",
+  "status": "PROVIDER_RECONCILED_NATIVE_POSTS_SETTLED_ASTRA_RESERVATIONS_RETAINED",
   "owner_reference": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6680520240",
   "normal_budget_usd": 50,
   "absolute_budget_usd": 50,
-  "method": "Account for all still-ambiguous previous HTTP POSTs as nonzero reserved upper exposure. USD3 is the authenticated original per-run admission limit, a conservative risk estimate, not independently verified provider billing. Never repeat an old POST or release its reserve without external receipt and owner/source-bound reconciliation. Owner's Nov 13 interactive approval raises total monthly ceiling to USD50, does not cancel liabilities or raise one-shot prices; hold USD4 headroom.",
-  "unresolved": [
-    {
-      "run_id": "41870364609",
-      "created_month_utc": "2026-11",
-      "status": "POST_OUTCOME_UNKNOWN",
-      "lower_usd": 0,
-      "upper_usd": 3,
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41870364609",
-      "basis": "Original FMOS Sol call timed out at pass1 after admitted account/lane budget check. Governed API task registry single_run_hard_stop_usd=3.0. No provider invoice or durable response ID."
-    },
-    {
-      "run_id": "41949497953",
-      "created_month_utc": "2026-11",
-      "status": "POST_OUTCOME_UNKNOWN",
-      "lower_usd": 0,
-      "upper_usd": 3,
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41949497953",
-      "basis": "Original Research Lab MAX job disconnected after claimed POST; original native pre-HTTP claim #6647190305 capped at USD3. No durable provider response ID."
-    },
-    {
-      "run_id": "42204120988",
-      "created_month_utc": "2026-11",
-      "status": "POST_OUTCOME_UNKNOWN",
-      "lower_usd": 0,
-      "upper_usd": 3,
-      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42204120988",
-      "basis": "Native original one-use bot claim #6682901859 capped at USD3. Provider terminal INCOMPLETE after 39650 input / 16000 reasoning-only output tokens. Native GET-only diagnostic #42206207249, no final result, no provider invoice. Never replay original POST."
-    }
-  ],
+  "method": "Reserve genuinely unresolved future POSTs and owner-authorized pre-HTTP work until independently reviewed provider reconciliation. The three identified November native POSTs are no longer pending; their metadata is preserved without billing amounts in settled. The two consumed November Astra one-shots have no receipt in the guard receipt root and were not visible in the private provider aggregate at capture, so their pre-HTTP reservations stay counted until per-model provider evidence (WO-5) settles them. Never replay original POST IDs; retain per-request and monthly admission limits and the owner reserve.",
+  "unresolved": [],
   "no_retry_original_ids": true,
   "requires_reconciliation_before_releasing_reserve": true,
   "no_api_authority": true,
@@ -62,5 +34,47 @@
     }
   ],
   "owner_budget_explicit_approval": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6864310705",
-  "owner_budget_reserve_usd": 4
+  "owner_budget_reserve_usd": 4,
+  "settled": [
+    {
+      "kind": "NATIVE_POST",
+      "run_id": "41870364609",
+      "created_month_utc": "2026-11",
+      "status": "PROVIDER_PERIOD_RECONCILED",
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41870364609",
+      "no_retry": true
+    },
+    {
+      "kind": "NATIVE_POST",
+      "run_id": "41949497953",
+      "created_month_utc": "2026-11",
+      "status": "PROVIDER_PERIOD_RECONCILED",
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/41949497953",
+      "no_retry": true
+    },
+    {
+      "kind": "NATIVE_POST",
+      "run_id": "42204120988",
+      "created_month_utc": "2026-11",
+      "status": "PROVIDER_PERIOD_RECONCILED",
+      "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42204120988",
+      "no_retry": true
+    }
+  ],
+  "provider_settlement_evidence": {
+    "repository": "Donh91/Investering-AI-Audit-Bridge",
+    "commit_sha": "6a916cc41ef351926349736d0611d160f9ff700f",
+    "path": "reports/claude/automated/2026/11/CLAUDE-API-BUDGET-PROVIDER-RECONCILIATION-20261115T001000Z/evidence/openai_platform_readback_20261115T0007CPH.png",
+    "bytes": 451083,
+    "git_blob_sha": "d7ceee216b98a7daf7852963ef4ecbf47ddad691",
+    "sha256": "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8",
+    "source_contract_id": "OWNER_OPENAI_PLATFORM_BILLING_READBACK_v1",
+    "captured_at_local": "2026-11-15T00:07 Europe/Copenhagen (minute precision)",
+    "committed_at_utc": "2026-11-14T23:13:55Z",
+    "schema": "image/png; owner recording frames manually reviewed",
+    "completeness": "NOVEMBER_MTD_ACCOUNT_AGGREGATE_ONLY_NOT_PER_REQUEST",
+    "coverage_assertion": "PUBLIC_ESTIMATED_RECEIPTS_AT_CAPTURE_EXCEEDED_PRIVATE_PROVIDER_ACCOUNT_TOTAL",
+    "coverage_authority": "INDEPENDENT_CLAUDE_RECONCILIATION_6885728883",
+    "coverage_scope": "NATIVE_POST_IDS_ONLY_ASTRA_RESERVATIONS_RETAINED"
+  }
 }

@@ -136,6 +136,38 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     '<h3 id="cn-btc-days-heading">BTC · de næste tre dage</h3>'+
     '<div id="cn-btc-days-rows" class="cn-btc-days-rows" role="list"></div>'+
     '<small id="cn-btc-days-caption">Kontrollerer original prognose …</small></section>';
+  // v2.8 Kompas live (design v7). Static Danish shell only; every number is painted from
+  // data/kompas-live.json (server-side KOMPAS_LIVE_PATH_v1) by root-compass-pro.mjs. The
+  // tilted line is Challenger B (forsøg), the frames Challenger A (forsøg): no Kompas probability.
+  const liveForecast='<section class="cn-live-forecast" id="cn-live-forecast" aria-labelledby="cn-live-heading" data-state="LOADING" data-contract="KOMPAS_LIVE_PATH_v1">'+
+    '<div class="cn-live-main">'+
+    '<h3 id="cn-live-heading">Kompas live · de næste dage</h3>'+
+    '<div class="cn-live-head"><div class="cn-live-seg" role="group" id="cn-live-assets" aria-label="Vælg aktiv">'+
+    '<button type="button" data-cn-live-asset="BTC" aria-pressed="true">BTC</button>'+
+    '<button type="button" data-cn-live-asset="ETH" aria-pressed="false">ETH</button></div>'+
+    '<span class="cn-live-asof" id="cn-live-asof">Henter live-data …</span></div>'+
+    '<p class="cn-live-price"><strong id="cn-live-price">—</strong><small id="cn-live-quote">USDT</small></p>'+
+    '<div class="cn-live-chips" id="cn-live-chips"></div>'+
+    '<div class="cn-live-dir" id="cn-live-dir" data-tone="none" aria-live="polite">'+
+    '<span class="cn-live-arrow" id="cn-live-arrow" aria-hidden="true">→</span>'+
+    '<div class="cn-live-dir-text"><strong id="cn-live-dir-title">Afventer live-data</strong>'+
+    '<small id="cn-live-dir-sub"></small><small id="cn-live-dir-source"></small></div></div>'+
+    '<div class="cn-live-seg cn-live-hz" role="group" id="cn-live-hz" aria-label="Horisont frem">'+
+    '<button type="button" data-cn-live-hz="1" aria-pressed="false">1 dag</button>'+
+    '<button type="button" data-cn-live-hz="3" aria-pressed="true">3 dage</button>'+
+    '<button type="button" data-cn-live-hz="7" aria-pressed="false">7 dage</button></div>'+
+    '<ul class="cn-live-legend" id="cn-live-legend" aria-label="Signaturforklaring"></ul>'+
+    '<figure class="cn-live-chart" id="cn-live-chart"></figure>'+
+    '<p class="cn-live-unavailable" id="cn-live-unavailable" role="status" hidden>'+
+    '<strong id="cn-live-unavailable-title"></strong><span id="cn-live-unavailable-text"></span></p></div>'+
+    '<section class="cn-live-feed cn-live-side" aria-labelledby="cn-live-feed-heading">'+
+    '<div class="cn-live-feed-head"><h4 id="cn-live-feed-heading">Kommentarspor</h4>'+
+    '<span class="cn-live-pill" id="cn-live-feed-pill">AUTOMATISK</span></div>'+
+    '<p id="cn-live-feed-sub">Skrevet af kode ud fra offentlige data. Afstanden er målt mod ugens frosne prognose.</p>'+
+    '<ol id="cn-live-feed" aria-label="Kommentarspor"></ol></section>'+
+    '<p class="cn-live-foot" id="cn-live-foot">Statistisk forsøgsvisning, ikke en officiel prognose. '+
+    'Kompas’ bull/bear er evidenspoint, ikke sandsynligheder. Visningen er ikke en købs- eller salgsanbefaling.</p>'+
+    '</section>';
   const horizonStrip='<section class="cn-overview" aria-labelledby="cn-overview-heading">'+
     '<div class="cn-overview-heading"><h3 id="cn-overview-heading">Kompasforløb</h3>'+
     '<small id="cn-overview-subtitle">Tre selvstændige prognosehorisonter</small></div>'+
@@ -223,7 +255,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
       '<p><small id="cn-risk-quick-meaning-label">HVAD BETYDER DET?</small><span id="cn-risk-quick-meaning">Afventer opdateret risikovurdering</span></p>'+
       '<p><small id="cn-risk-quick-action-label">SÅDAN FORHOLDER DU DIG</small><span id="cn-risk-quick-action">Afvent opdateret Kompas før nye beslutninger</span></p>'+
       '<div class="cn-risk-quick-foot"><span id="cn-risk-quick-quality">Evidenskvalitet: ukendt</span><span id="cn-risk-quick-onset">Starttidspunkt: ikke dokumenteret</span></div>'+
-      '</div></details></section>'+swingOverview+rotationPeek+btcDays+
+      '</div></details></section>'+liveForecast+swingOverview+rotationPeek+btcDays+
       // ONE place for explanation, longer horizons and sources (presentation only;
       // every inner disclosure, id and order is unchanged and still collapsed).
       '<details class="cn-explain"><summary id="cn-explain-title">Alle 14 horisonter, forklaring og kilder</summary><div class="cn-explain-body">'+
@@ -291,8 +323,16 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     'id="compass-pro"','id="premium-now-action"','id="pro-guidance"',
     'id="premium-risk-steps"','id="pro-forward-rows"',
     'id="official-path-view"','id="premium-path-rail"',
-    'id="proof-explorer"'
+    'id="proof-explorer"','id="cn-live-forecast"'
   ])unique(html,x,'singleton '+x);
+  // DOM order = visual order for the live card (WCAG 1.3.2 / 2.4.3). It is rendered directly after
+  // the first fold (decision, risk, horizons, next gate) and before swing, rotation, BTC days and the
+  // accordion, so it must sit after every block shown above it and before every block shown below it.
+  const liveAt=html.indexOf('id="cn-live-forecast"');
+  for(const above of ['id="premium-now-action"','id="pro-next-gate"','id="cn-overview-heading"','id="cn-risk-quick-brief"'])
+    if(html.indexOf(above)>liveAt)throw Error('CN_UNIFIED_ROOT_LIVE_FORECAST_ORDER:'+above);
+  for(const below of ['id="swing-rotation-overview"','id="cn-rotation-heading"','id="cn-btc-days"','<details class="cn-explain">','<details class="cn-pro-more">'])
+    if(html.indexOf(below)<liveAt)throw Error('CN_UNIFIED_ROOT_LIVE_FORECAST_ORDER:'+below);
   for(const x of [
     'id="official-product-pilot"','id="official-pilot-action"',
     'id="official-pilot-horizons"','id="official-pilot-rotation"',

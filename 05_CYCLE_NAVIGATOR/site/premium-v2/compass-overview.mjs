@@ -16,7 +16,9 @@ const directions={
  MIXED:{arrow:'↗/↘',da:'Blandet',en:'Mixed'},
  SIDEWAYS:{arrow:'→',da:'Sideværts',en:'Sideways'},
  LEAN_BEARISH:{arrow:'↘ ?',da:'Hældning mod fald',en:'Leaning down'},
- LEAN_BULLISH:{arrow:'↗ ?',da:'Hældning mod stigning',en:'Leaning up'}
+ LEAN_BULLISH:{arrow:'↗ ?',da:'Hældning mod stigning',en:'Leaning up'},
+ // An explicit, governed source NO_EDGE is a stance, not missing data: never show it as "no current reading".
+ NO_EDGE:{arrow:'–',da:'Ingen klar fordel',en:'No clear edge'}
 };
 const postures={
  HOLD:{da:'Behold eksisterende',en:'Hold existing'},

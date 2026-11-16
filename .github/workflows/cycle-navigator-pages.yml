@@ -16,6 +16,8 @@ on:
       - "tests/cycle_navigator/test_graph_history.py"
       - "05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl"
       - "scripts/cycle_navigator/build_public_live_precision.py"
+      - "scripts/cycle_navigator/build_kompas_live_path.py"
+      - "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/CHALLENGER_B_KOMPAS_TILT_PREREG_v1.json"
       - "05_CYCLE_NAVIGATOR/published/**"
       - "05_CYCLE_NAVIGATOR/public_series/**"
       - "05_CYCLE_NAVIGATOR/public_scorecards/**"
@@ -87,6 +89,17 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
       - name: Build public live Price Range precision
         run: python3 scripts/cycle_navigator/build_public_live_precision.py
+      - name: Build Kompas live path (Challenger B/A research display; always written, UNAVAILABLE when not fresh)
+        run: |
+          python3 scripts/cycle_navigator/build_kompas_live_path.py --repo-root . \
+            --latest-json 05_CYCLE_NAVIGATOR/site/dist/data/latest.json \
+            --output 05_CYCLE_NAVIGATOR/site/dist/data/kompas-live.json
+          grep -q '"contract": "KOMPAS_LIVE_PATH_v1"' 05_CYCLE_NAVIGATOR/site/dist/data/kompas-live.json
+          grep -q '"compass_probability_claim": false' 05_CYCLE_NAVIGATOR/site/dist/data/kompas-live.json
+          # explicit if/exit: a mid-script `! grep` is ignored by bash -e
+          if grep -q 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/kompas-live.json; then
+            echo "::error::KOMPAS_LIVE_PRIVATE_OR_REPOSITORY_STRING"; exit 1
+          fi
       - name: Enforce immutable Graph History regression before optional Pages build
         run: python3 tests/cycle_navigator/test_graph_history.py
       - name: Execute Graph History same-quote original-blue W45/W46 browser runtime guard
@@ -158,7 +171,7 @@ jobs:
           grep -q 'CN_PUBLICATION_LINEAGE_RELEASE_RECEIPT_v1' 05_CYCLE_NAVIGATOR/site/dist/data/publication-lineage.json
           grep -q 'CN_PUBLIC_LIVE_PRICE_PRECISION_v1' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           grep -q '"freshness_sla_minutes": 90' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
-          grep -q '"refresh_cadence": "HOURLY_OWNER_CHAIN"' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+          grep -q '"refresh_cadence": "BEST_EFFORT_EVENT_CHAIN"' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           if grep -q 'weekly-score.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html; then echo "::error::Forbidden content detected"; exit 1; else status=$?; if [ "$status" -ne 1 ]; then echo "::error::Forbidden-content check failed"; exit "$status"; fi; fi
           grep -q 'market-compass-premium.js' 05_CYCLE_NAVIGATOR/site/dist/legacy/index.html
           grep -q 'CYCLE NAVIGATOR · CONCLUSION' 05_CYCLE_NAVIGATOR/site/dist/market-compass-premium.js

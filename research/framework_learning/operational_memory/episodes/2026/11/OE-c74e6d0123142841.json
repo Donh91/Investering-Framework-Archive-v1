@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py",
+    "tests/experiments/test_dispatch_episode_and_pending_manifest.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-c74e6d0123142841",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "experiments-stop-duplicate-dispatch-episodes-compact-pending-latest",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-present P0 exception before F4. Claude independent APPROVE #173/6885120072; exact head 3cc23f9f; safety ref backup-safepoint/2026-11-14-2155-p0 @ 1e93324a. Native gate/validate/exact-settlement-owner PASS. Inherited storage-health FILE_OVER_HARD_LIMIT (26,299,430 bytes) on base-identical generated LATEST, to recover after first natural Daily Director run. No manual/paid dispatch. Codex review was still pending at final preflight; no findings yet published.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py": "768769aa1abbcba47cea80235029661e385fd4c6",
+    "tests/experiments/test_dispatch_episode_and_pending_manifest.py": "80494f15d954fe6103a5bc50760bc1a387c96ed9"
+  },
+  "source_commit_sha": "c74e6d0123142841a6e5a874a52dd3d85e4e1fc2",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-14T17:24:15-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(experiments): stop duplicate dispatch episodes and compact pending LATEST (#2155)"
+}

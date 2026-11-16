@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "AGENTS.md",
+    "scripts/data_governance/storage_health_gate.py",
+    "tests/data_governance/test_storage_health_gate.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "AGENTS.md",
+  "episode_id": "OE-205a1fbca8c31600",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "governance-enforce-incident-learning-storage-early-warnings-agents",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(storage): incident-learning early warnings and explicit policy truth Add reviewed draft AGENTS \u00a74a and nonblocking prelimit/hot-set warnings with tests. No hard limit change. HIGH_IMPACT, requires owner-present release and exact-head review. * fix(storage): escape workflow-command annotations and test main exit gates Escape untrusted file paths in GitHub Action warning output. Add hostile newline command-injection test and main() exit-code positive and negative tests. Addresses independent Claude P2 #173/6890912953. No policy limit or AGENTS governance changes. * fix(storage): label enfo",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "AGENTS.md": "90836242d54f5c2a354b47fae515c29af50f1249",
+    "scripts/data_governance/storage_health_gate.py": "ec1b636c6df816b35505cbcbba812ae34b5f136d",
+    "tests/data_governance/test_storage_health_gate.py": "174ac887466e284017e7e8b561e548af3f2d261c"
+  },
+  "source_commit_sha": "205a1fbca8c316004f154571e8188afaa15583f5",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T05:04:29-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(governance): enforce incident-learning storage early warnings and AGENTS \u00a74a (#2166)"
+}

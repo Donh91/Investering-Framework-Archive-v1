@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=43516987347:success,43459009700:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=43762695440:success,43713151929:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -24,7 +24,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=43591243672:success,43518853231:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=43763904317:success,43762199016:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -54,7 +54,7 @@
       "candidate_id": "codex-automation-health-workflow-pagination-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=43590969146,43516039263 checks=PASS",
+          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=43761903965,43712064698 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -69,7 +69,7 @@
       "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=43590969146,43516039263 checks=PASS",
+          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=43761903965,43712064698 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -104,7 +104,7 @@
       "candidate_id": "codex-situation-room-daily-static-root-cause-v1",
       "checks": [
         {
-          "evidence": "situation-room-daily-static.yml: first_attempt_schedule_only evidence_floor=8aebb7d224b77bcacb587f66b58ac4f252c48d13 successful_runs=1/1 sampled_runs=43452176679#1:success",
+          "evidence": "situation-room-daily-static.yml: first_attempt_schedule_only evidence_floor=8aebb7d224b77bcacb587f66b58ac4f252c48d13 successful_runs=1/1 sampled_runs=43726062897#1:success",
           "kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -119,8 +119,8 @@
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
   "coverage": {
     "machine_spec_configured": 6,
-    "machine_spec_unconfigured": 33,
-    "post_fix_total": 39
+    "machine_spec_unconfigured": 34,
+    "post_fix_total": 40
   },
   "skipped": [
     {
@@ -157,6 +157,11 @@
     {
       "candidate_id": "codex-research-audit-director-freshness-v1",
       "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-compass-sentiment-false-pass-v1",
+      "post_fix_gate": "Original owner #1827/#1593 and S1 #1156; exact original-source and positive/negative test evidence, independent Codex review and qualified owner CI release, no unsafe merge before governance gates. Real next auto_market_state producer must label a missing sentiment wrapper UNAVAILABLE not PASS; Official must stay DEGRADED if genuinely absent; true valid input retains PASS; read through public Pages independently. Keep POST_FIX_OBSERVATION until natural post-merge producer/consumer proof.",
       "reason": "NO_MACHINE_VERIFICATION_SPEC"
     },
     {

@@ -493,6 +493,21 @@ test('official horizon evidence and capital ladder remain source-bound, not prob
  assert.equal(source.cards[1].summary.text,'Source issued bearish weekly context.');
  assert.equal(directionVisual('MIXED','da').text,'Blandet');
  assert.equal(directionVisual('NOT_A_REAL_DIRECTION','da').arrow,'?');
+ // An official NO_EDGE stance stays typed, never collapses into 'Ingen aktuel vurdering' (#2151 site follow-up).
+ assert.equal(directionVisual('NO_EDGE','da').text,'Ingen klar fordel');
+ assert.equal(directionVisual('NO_EDGE','en').text,'No clear edge');
+ assert.equal(directionVisual('NO_EDGE','da').source,'NO_EDGE');
+ assert.notEqual(directionVisual('NO_EDGE','da').arrow,'?');
+ // NO_EDGE is shown only for a valid compass that issues it; missing, expired or invalid data stays 'no reading'.
+ const withNoEdge={...compass,horizons:{...compass.horizons,NEXT_2_3W:{...compass.horizons.NEXT_2_3W,expected_direction:'NO_EDGE'}}};
+ const shown=publicOverview({compass:withNoEdge,latest:{},view,now,lang:'da'}).cards[2];
+ assert.deepEqual([shown.arrow,shown.direction,shown.sourceDirection],['–','Ingen klar fordel','NO_EDGE']);
+ const absent={...compass,horizons:{...compass.horizons,NEXT_2_3W:undefined}};
+ const gone=publicOverview({compass:absent,latest:{},view,now,lang:'da'}).cards[2];
+ assert.deepEqual([gone.arrow,gone.direction,gone.sourceDirection],['?','Ingen aktuel vurdering','UNAVAILABLE']);
+ const expired=publicOverview({compass:withNoEdge,latest:{},view,now:Date.parse('2099-01-01T00:00:00Z'),lang:'da'});
+ assert.equal(expired.valid,false);
+ assert.deepEqual(expired.cards.map(x=>[x.arrow,x.sourceDirection]),[['?','UNAVAILABLE'],['?','UNAVAILABLE'],['?','UNAVAILABLE']]);
  const rot=readRotation({compass,view,now,lang:'da'});
  assert.equal(rot.valid,true);
  assert.deepEqual(rot.rows.map(x=>x.sourceAction),segments.map(x=>x[1]));

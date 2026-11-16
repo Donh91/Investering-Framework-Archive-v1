@@ -162,14 +162,9 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertNotEqual(rc, 0)
         self.assertIn("LIABILITY_EVIDENCE_UNAVAILABLE",
                       str(state["cost_evidence_errors"]))
+        # Settled canonical items do not create a permanent floor. Fresh
+        # synthetic unresolved liabilities still reject malformed exposures.
         for rows in (
-            [],
-            [risk_row(41870364609)],
-            [risk_row(41949497953)],
-            [risk_row(41870364609), risk_row(41949497953)],
-            [risk_row(41870364609), risk_row(41949497953), risk_row(42204120988, upper=2.99)],
-            [risk_row(41870364609, upper=2.99), risk_row(41949497953)],
-            [risk_row(41870364609), risk_row(41949497953, upper=2.99)],
             [risk_row(41870364609), risk_row(41870364609)],
             [risk_row(41870364609, upper=4)],
             [risk_row(41870364609, upper=0)],
@@ -237,9 +232,67 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         state = json.loads(result.stdout)
         self.assertEqual(result.returncode, 0, state)
         self.assertEqual(state["status"], "PASS", state)
-        self.assertEqual(state["pending_liability_upper_usd"], 22.0)
+        # Native POSTs are provider-settled; the consumed Astra reservations
+        # (3 + 10) stay counted until per-model provider evidence (WO-5).
+        self.assertEqual(state["pending_liability_upper_usd"], 13.0)
+        self.assertEqual(state["pending_liability_count"], 2)
         self.assertGreaterEqual(state["remaining_usd"], 4.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
+
+    def test_canonical_provider_settlement_is_evidence_bound_and_private(self):
+        from scripts.api_agent.check_monthly_cost_guard import (
+            pending_risk, UNRESOLVED_NATIVE_POST_FLOOR_USD,
+        )
+        p = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
+        ledger = json.loads(p.read_text(encoding="utf-8"))
+        self.assertEqual(UNRESOLVED_NATIVE_POST_FLOOR_USD, {})
+        self.assertEqual(ledger["unresolved"], [])
+        self.assertEqual(
+            sorted(r["work_id"] for r in ledger["owner_reservations"]),
+            ["ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
+             "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"])
+        self.assertEqual(pending_risk(p), (0.0, 13.0, 2))
+        self.assertEqual(len(ledger["settled"]), 3)
+        self.assertEqual({r["kind"] for r in ledger["settled"]}, {"NATIVE_POST"})
+        self.assertEqual(ledger["provider_settlement_evidence"]["sha256"],
+                         "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8")
+        self.assertTrue(ledger["provider_settlement_evidence"]["path"].startswith(
+            "reports/claude/automated/2026/11/CLAUDE-API-BUDGET-PROVIDER-RECONCILIATION-"))
+        for row in ledger["settled"]:
+            for name in ("lower_usd", "upper_usd", "amount_usd", "billed_usd"):
+                self.assertNotIn(name, row)
+        with tempfile.TemporaryDirectory() as td:
+            f = Path(td) / "settlement.json"
+            for mutation in ("missing_evidence", "wrong_commit", "wrong_bytes", "dropped_entry", "duplicate_unresolved"):
+                bad = json.loads(json.dumps(ledger))
+                if mutation == "missing_evidence":
+                    bad["provider_settlement_evidence"]["sha256"] = "forged"
+                elif mutation == "wrong_commit":
+                    bad["provider_settlement_evidence"]["commit_sha"] = "0" * 40
+                elif mutation == "wrong_bytes":
+                    bad["provider_settlement_evidence"]["bytes"] = 0
+                elif mutation == "dropped_entry":
+                    bad["settled"].pop()
+                else:
+                    bad["unresolved"] = [risk_row(41870364609)]
+                f.write_text(json.dumps(bad), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "PROVIDER_SETTLE"):
+                    pending_risk(f)
+            # The consumed Astra reservations can neither be settled by this
+            # aggregate evidence nor silently dropped from the ledger.
+            for mutation, code in (("astra_settled", "PROVIDER_SETTLED_SET_INVALID"),
+                                   ("astra_dropped", "RETAINED_ASTRA_RESERVATION_MISSING")):
+                bad = json.loads(json.dumps(ledger))
+                astra = bad["owner_reservations"].pop()
+                if mutation == "astra_settled":
+                    bad["settled"].append({"kind": "ASTRA_PREHTTP_RESERVATION",
+                                           "work_id": astra["work_id"],
+                                           "created_month_utc": "2026-11",
+                                           "status": "PROVIDER_PERIOD_RECONCILED",
+                                           "source": astra["source"], "no_retry": True})
+                f.write_text(json.dumps(bad), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, code):
+                    pending_risk(f)
 
     def test_native_caller_caps_above_40_only_in_hard_disabled_astra_v2_job(self):
         import re

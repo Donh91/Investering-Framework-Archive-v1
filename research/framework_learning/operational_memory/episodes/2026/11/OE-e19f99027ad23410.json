@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/master-monday-preflight-gate.yml",
+    ".github/workflows/weekly-api-calibration-shadow.yml",
+    "scripts/master_monday/weekly_publication_idempotency.py",
+    "tests/master_monday/test_weekly_publication_idempotency.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-e19f99027ad23410",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "master-monday-enforce-one-paid-publication-per-iso",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(master-monday): enforce one publication per ISO week before paid calibration Claude exact four-file patch; safe default, explicit force_reissue owner input, CI negative tests. No current permission or credential changes. * fix(master-monday): fail closed when weekly idempotency guard fails Apply Claude detached independent P1 repair from #173/6891275534. Enforce pipefail and positive skip gating, owner-only force_reissue, ASCII week digits; include subprocess adversarial regression test. No paid runs or merges.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/master-monday-preflight-gate.yml": "2107e4ad7949e30eabcbed278344053d94ae0764",
+    ".github/workflows/weekly-api-calibration-shadow.yml": "86fdd15ca8ee12d2dbe794c77d9d026d8fab2ce5",
+    "scripts/master_monday/weekly_publication_idempotency.py": "f27c82f0301c3db7c508104104fd6a8662b13860",
+    "tests/master_monday/test_weekly_publication_idempotency.py": "d17ce1d95e49530e03a45b59368459dacbadb063"
+  },
+  "source_commit_sha": "e19f99027ad23410ea4281205b4356909e64fd5d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T04:56:12-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(master-monday): enforce one paid publication per ISO week (#2158)"
+}
