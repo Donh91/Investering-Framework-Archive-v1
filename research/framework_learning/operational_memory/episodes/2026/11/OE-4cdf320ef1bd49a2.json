@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/master-monday-preflight-gate.yml",
+    "scripts/orchestration/framework_metronome_v1.py",
+    "tests/orchestration/test_framework_metronome_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-4cdf320ef1bd49a2",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "metronome-fail-closed-transient-github-reads-while-preserving",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(fmos): add byte-exact SHADOW metronome .github/workflows/framework-metronome.yml * feat(fmos): add byte-exact SHADOW metronome scripts/orchestration/framework_metronome_v1.py * feat(fmos): add byte-exact SHADOW metronome tests/orchestration/test_framework_metronome_v1.py * feat(fmos): add byte-exact SHADOW metronome 00_FMOS/METRONOME_MODE_v1.json * fix(metronome): v1.1 bind Monday dispatch to Sunday final close (1/3) * fix(metronome): v1.1 bind Monday dispatch to Sunday final close (2/3) * fix(metronome): v1.1 bind Monday dispatch to Sunday final close (3/3) * fix(metronome): filter tar",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/master-monday-preflight-gate.yml": "bc96ceceed27c98175bd38139b3907f191cca2cd",
+    "scripts/orchestration/framework_metronome_v1.py": "65461dba8359594651f7584e8c518dcaa79f8649",
+    "tests/orchestration/test_framework_metronome_v1.py": "1d196cd3fbedeb1fe0bd061b38c28652ae17bc55"
+  },
+  "source_commit_sha": "4cdf320ef1bd49a296d5517c5f6699f6a1fee1b5",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T06:22:03-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(metronome): fail closed on transient GitHub reads while preserving safe SHADOW loop (#2169)"
+}

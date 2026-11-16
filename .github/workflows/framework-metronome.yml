@@ -1,0 +1,58 @@
+name: Framework Metronome
+
+# A reliable clock for the data chain. GitHub starts only ~25 % of this account's scheduled
+# runs and daily crons run 5-8 h late, while dispatched runs start within seconds. This loop
+# waits in the `framework-metronome` environment (owner-set wait timer; no runner is held while
+# waiting), runs one tick, and dispatches its own next iteration. It only dispatches allowlisted
+# existing owners (hourly capture, market recovery, Sunday close, Master Monday after the final close);
+# their own preflights stay authoritative.
+# Mode lives in 00_FMOS/METRONOME_MODE_v1.json (anything but ACTIVE = SHADOW = log only).
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Restart-only fallback for a dead loop. Late or skipped firings are harmless.
+    - cron: '23 */3 * * *'
+      timezone: 'UTC'
+
+permissions:
+  actions: write
+  contents: read
+  deployments: read
+
+concurrency:
+  group: framework-metronome
+  cancel-in-progress: false
+
+jobs:
+  wait:
+    if: github.repository == 'Donh91/Investering-Framework-Archive-v1' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    environment: framework-metronome
+    steps:
+      - name: Wait timer elapsed
+        run: echo "FRAMEWORK_METRONOME_WAIT_DONE run=${GITHUB_RUN_ID}"
+
+  tick:
+    needs: [wait]
+    if: >-
+      always() &&
+      github.repository == 'Donh91/Investering-Framework-Archive-v1' && github.ref == 'refs/heads/main' &&
+      (needs.wait.result == 'success' || github.event_name == 'schedule')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          sparse-checkout: |
+            scripts/orchestration/framework_metronome_v1.py
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Tick (dispatch due owners, then the next tick)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/orchestration/framework_metronome_v1.py --self-run-id "${GITHUB_RUN_ID}"

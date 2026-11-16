@@ -22,13 +22,36 @@ OWNER_GLOBAL_TARGET_USD = 50.0
 OWNER_GLOBAL_HARD_STOP_USD = 50.0
 OWNER_GLOBAL_RESERVE_USD = 4.0  # Routine paths retain existing protected headroom.
 OWNER_SINGLE_REQUEST_CAP_USD = 3.0
-# Exact unresolved native POSTs. Missing/removed rows must never silently
-# become zero risk. This immutable floor may only change with separately
-# reviewed provider-settlement evidence, NEVER by editing a JSON ledger alone.
-UNRESOLVED_NATIVE_POST_FLOOR_USD = {
-    "41870364609": 3.0,
-    "41949497953": 3.0,
-    "42204120988": 3.0,  # Provider terminal incomplete, native 3 USD one-use claim.
+# Previous source-bound liabilities were provider-reconciled against private
+# evidence, without adding account billing amounts to the public Archive.
+# A new unresolved POST must still carry a bounded live ledger row; releasing
+# future reservations requires separate independent provider-settlement evidence.
+UNRESOLVED_NATIVE_POST_FLOOR_USD = {}
+PROVIDER_SETTLEMENT_EVIDENCE = {
+    "repository": "Donh91/Investering-AI-Audit-Bridge",
+    "commit_sha": "6a916cc41ef351926349736d0611d160f9ff700f",
+    "path": "reports/claude/automated/2026/11/CLAUDE-API-BUDGET-PROVIDER-RECONCILIATION-20261115T001000Z/evidence/openai_platform_readback_20261115T0007CPH.png",
+    "bytes": 451083,
+    "git_blob_sha": "d7ceee216b98a7daf7852963ef4ecbf47ddad691",
+    "sha256": "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8",
+    "source_contract_id": "OWNER_OPENAI_PLATFORM_BILLING_READBACK_v1",
+    "captured_at_local": "2026-11-15T00:07 Europe/Copenhagen (minute precision)",
+    "committed_at_utc": "2026-11-14T23:13:55Z",
+    "schema": "image/png; owner recording frames manually reviewed",
+    "completeness": "NOVEMBER_MTD_ACCOUNT_AGGREGATE_ONLY_NOT_PER_REQUEST",
+    "coverage_assertion": "PUBLIC_ESTIMATED_RECEIPTS_AT_CAPTURE_EXCEEDED_PRIVATE_PROVIDER_ACCOUNT_TOTAL",
+    "coverage_authority": "INDEPENDENT_CLAUDE_RECONCILIATION_6885728883",
+    "coverage_scope": "NATIVE_POST_IDS_ONLY_ASTRA_RESERVATIONS_RETAINED",
+}
+SETTLED_NATIVE_POST_IDS = {"41870364609", "41949497953", "42204120988"}
+# The consumed Nov 13 Astra one-shots have no receipt in the guard receipt root
+# and were not visible in the private provider aggregate at capture. Their
+# pre-HTTP reservations stay counted (and may not silently disappear from the
+# canonical ledger) until per-model provider evidence settles them (WO-5).
+SETTLED_ASTRA_WORK_IDS: set[str] = set()
+RETAINED_ASTRA_RESERVATION_WORK_IDS = {
+    "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
+    "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
 }
 CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
     "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
@@ -52,6 +75,29 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             or value.get("requires_reconciliation_before_releasing_reserve") is not True
             or not isinstance(value.get("unresolved"), list)):
         raise ValueError("LIABILITY_LEDGER_CONTRACT_INVALID")
+    # Canonical released liabilities need immutable, private-source evidence;
+    # test fixtures with future unknown POSTs may omit the settlement block.
+    settlement_bound = path.resolve() == CANONICAL_LIABILITY_LEDGER.resolve() or "settled" in value
+    if settlement_bound:
+        if value.get("provider_settlement_evidence") != PROVIDER_SETTLEMENT_EVIDENCE:
+            raise ValueError("PROVIDER_SETTLEMENT_EVIDENCE_INVALID")
+        settled = value.get("settled")
+        if not isinstance(settled, list) or len(settled) != len(SETTLED_NATIVE_POST_IDS) + len(SETTLED_ASTRA_WORK_IDS):
+            raise ValueError("PROVIDER_SETTLED_SET_INVALID")
+        post_ids, work_ids = set(), set()
+        for entry in settled:
+            if not isinstance(entry, dict) or entry.get("status") != "PROVIDER_PERIOD_RECONCILED" or entry.get("no_retry") is not True or any(k in entry for k in ("lower_usd", "upper_usd", "amount_usd", "billed_usd")):
+                raise ValueError("PROVIDER_SETTLED_ROW_INVALID")
+            if entry.get("kind") == "NATIVE_POST":
+                post_ids.add(entry.get("run_id"))
+            elif entry.get("kind") == "ASTRA_PREHTTP_RESERVATION":
+                work_ids.add(entry.get("work_id"))
+            else:
+                raise ValueError("PROVIDER_SETTLED_KIND_INVALID")
+        if post_ids != SETTLED_NATIVE_POST_IDS or work_ids != SETTLED_ASTRA_WORK_IDS:
+            raise ValueError("PROVIDER_SETTLED_ID_SET_MISMATCH")
+        if any(row.get("run_id") in post_ids for row in value["unresolved"]) or any(row.get("work_id") in work_ids for row in value.get("owner_reservations", [])):
+            raise ValueError("PROVIDER_SETTLED_REINTRODUCED_PENDING")
     low, high, seen = 0.0, 0.0, set()
     for row in value["unresolved"]:
         if not isinstance(row, dict):
@@ -108,6 +154,8 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             raise ValueError("UNKNOWN_OWNER_RESERVED_MODEL_OR_COST")
         high += float(allowed[work])
     reservation_count = len(reservations)
+    if settlement_bound and not RETAINED_ASTRA_RESERVATION_WORK_IDS <= reserved_work_ids:
+        raise ValueError("RETAINED_ASTRA_RESERVATION_MISSING")
     missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
     if missing:
         raise ValueError("KNOWN_UNSETTLED_NATIVE_POST_MISSING")
@@ -304,7 +352,7 @@ def main() -> None:
     owner_remaining = OWNER_GLOBAL_HARD_STOP_USD - exposure_upper if exposure_upper is not None else None
     normal_remaining = OWNER_GLOBAL_TARGET_USD - exposure_upper if exposure_upper is not None else None
     status = ("BLOCKED" if errors or remaining is None or owner_remaining is None
-              or remaining < effective_reserve
+              or remaining <= effective_reserve  # the reserve is never spendable, as in the lane guard
               or owner_remaining < OWNER_GLOBAL_RESERVE_USD else "PASS")
     result = {
         "status": status,

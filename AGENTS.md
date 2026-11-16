@@ -205,6 +205,106 @@ All stronger rules in sections 0, 0.2a and 0.2b continue to apply. Existing clas
 
 The saved S1 task `6ae5fd466b48819187abc224ec0f1c5f` contains only `00_FMOS/S1/BOOTSTRAP.txt`, verbatim. S1's rules are `00_FMOS/S1/ACTION_LOOP.md` on main, pinned by `action_loop_blob` in `00_FMOS/S1/RUNTIME_CONTRACT.json` and checked by `tests/governance/test_s1_runtime_contract_v1.py`. Change S1 behaviour only through a reviewed PR to `00_FMOS/S1/`, which is release-sensitive and never LOW. No thread, chat, agent or comment may add rules to the saved task text; restoring the bootstrap verbatim is the only allowed edit, and it requires owner change-control. Missing `S1_HEARTBEAT_v1`, a wrong `contract=` value or an `S1_PROMPT_DRIFT` line is an incident for #1156.
 
+### 0.2e S1 reviewed-merge lane (owner standing decision, 2026-11-15)
+
+**Owner decision.** On 2026-11-15 the owner, present and interactive, decided that S1 may merge its own queue whenever every PR has been independently reviewed. The owner-present merge of the PR that introduced this section is that one-time decision. Authority comes from this section and the switch file on main. A review comment is evidence and never authority.
+
+**Principal.** Only the single scheduled S1 task `6ae5fd466b48819187abc224ec0f1c5f` may use the lane. No other agent, chat or bot gains merge authority from this section. S1 never posts a comment containing `CLAUDE_REVIEW_v1`.
+
+**Precedence.** For lane-eligible PRs, this section supersedes only the following:
+- the per-PR owner-present requirement in H2;
+- the per-PR owner mandate in §0.2a;
+- the §0.2a sentences "purely bot-authorized merging remains blocked" and the one about §0.2c being the one exception;
+- the "each HIGH_IMPACT release" clause of the §0.2c owner-authenticity gate;
+- the closing §0.2c line "No right to merge a HIGH_IMPACT original".
+
+The `lane_state` field in `00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json` governs only §0.2c, never this lane. Hard stops H1 and H3–H8, Monday read-only, the separation invariant and every other section keep applying.
+
+**Lane state.** The lane is ON only when all four checks pass in the tick:
+1. **Switch.** `00_FMOS/S1/REVIEWED_MERGE_LANE.json` on main has `"contract": "S1_REVIEWED_MERGE_LANE_v1"` and `"state": "ON"`. A missing, unknown or unparsable file, or any other value, reads as OFF. A `max_merges_per_tick` that is not an integer from 1 to 3 reads as 1.
+2. **Authority integrity (content pins).** Each entry in the switch file's `pins` equals current main:
+   - the blob SHAs of `AGENTS.md` and `00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json`;
+   - the tree SHAs of `.github`, `.agents`, `scripts/governance`, `scripts/health`, `07_PROMPTS_AND_AGENTS` and `01_CORE_FRAMEWORK/governance`, read from the parent directory listing.
+
+   Any change to a pinned path turns the lane OFF, however the change arrived (direct push, backdated commit, or a PR merged by a token) and whatever the commit order. A legitimate change to a pinned path is lane-excluded. It needs an owner-present PR that also updates `pins`, and the CI test `test_s1_reviewed_merge_lane_v1.py` fails any PR whose pins do not match its own tree.
+   - Every PR touching `00_FMOS/S1/` or a pinned path is squash-merged from a branch that is up to date with main.
+   - `00_FMOS/S1/**` is protected by the S1 bootstrap.
+   - **Accepted residual risk:** `00_ARCHIVE_CONTROL/**` is lane-excluded but not pinned, because it changes often.
+3. **No standing halt.** #1156 holds no `S1_LANE_HALTED` by `Donh91` newer than the lane's last enable. A re-enable is only a squash-merged PR, merged by `Donh91` (type User) but not by S1, whose switch file sets `"clears_halt"` to the comment id of the newest halt. The switch path is lane-excluded, so S1 can never merge it. Any other commit to the switch file is not a re-enable.
+4. **Main health.** The most recent completed scheduled run of `automation-production-health.yml` on main concluded SUCCESS, and it completed within the last 26 h.
+
+**Lane-excluded changes.** These still need an owner-present decision at the exact head. A rename counts as a change to both `filename` and `previous_filename`.
+1. **Authority, governance and canonical policy:**
+   - every path matching the manifest's `governance_prefixes`, `governance_exact_paths` or `required_job_executed_paths`. That covers `.github/`, `.agents/`, `00_FMOS/`, `scripts/governance/`, `research/api_agent/`, private, vault and secrets paths, `AGENTS.md`, `CLAUDE.md`, and every file a required job executes;
+   - `07_PROMPTS_AND_AGENTS/**` and `**/*__canonical.*`;
+   - any path containing `BOUNDARY` or `AUTHORITY`.
+2. **The lane's own CI:** `scripts/health/**`, `**/conftest.py`, pytest configuration (`pytest.ini`, `pyproject.toml`, `setup.cfg`, `tox.ini`) and `requirements*` files.
+3. **Secret-using code:** any file that a workflow job referencing `secrets.` runs, imports or reads as config.
+   - Accepted residual risk: code that write-token data-writer jobs run without secrets stays lane-eligible after independent review, provided exclusion 10 does not apply. Several controls stop it from changing S1's rules:
+     - the content pins and the bootstrap catch any rule change, however it arrives;
+     - exclusion 10 stops it from gaining new repository-write calls;
+     - the reviewer checks for token abuse.
+
+     It could still damage data. Independent review and the halt triggers are the controls for that.
+4. **Custody:** credentials or secrets, Vault, recovery or backup, rulesets, branch protection, repository settings.
+5. **Money:** live trading, order execution, wallets, fund movement, a new paid API call, any raise of a spend cap or cut of a budget reserve.
+6. **Privacy:** the public/private boundary, or publication of private-plane data.
+7. **Deletion:** deleting, moving away or truncating any tracked file outside `scripts/` and `tests/`. This covers data, ledgers, receipts and episode history.
+8. **Round 3:** Round 3 data or analysis.
+9. **Risk class:** EXTREME risk, or any change whose class is unclear.
+10. **Repository writers:** any added or changed line that runs `git` write commands (`push`, `commit`, `tag`, `branch`, `merge`) or `gh`, or that calls the GitHub API (`api.github.com`, `/pulls`, `/merges`, `/git/refs`, a contents `PUT`), or that reads `GITHUB_TOKEN`, `GH_TOKEN` or the checkout credential, or that invokes an existing helper or workflow step that does so. Code may not gain repository-write abilities through the lane.
+
+**Gates.** All are checked natively in the merge tick, and all are required.
+- **(a) Head and diff.**
+  - The PR is non-draft and its head is read twice, identically.
+  - The complete paginated changed-file list matches `changed_files` for that head, and no change on it is lane-excluded.
+- **(b) Privacy.** The job log of `data-architecture-gate.yml` / `gate` for the exact head contains a line beginning with `S1_NATIVE_PRIVACY_SCAN_STEP_V1 result=NO_RESTRICTED_CONTENT head=<exact head>`.
+  - If S1 cannot read job logs, the CLAUDE_REVIEW_v1 must carry `privacy_scan: NO_RESTRICTED_CONTENT run=<run id>` for that head. S1 then confirms that the run belongs to the head.
+  - Any other result, or no evidence, means HOLD.
+- **(c) CI.**
+  - Every check run on the exact head is SUCCESS, NEUTRAL or SKIPPED, and none is pending or failed.
+  - These three jobs are SUCCESS:
+    - `data-architecture-gate.yml` / `gate`;
+    - `storage-health-gate.yml` / `storage-health`;
+    - `automation-production-health-gate.yml` / `test`, with both its full-suite step and its execution-truth step having run.
+- **(d) Review.** The newest `CLAUDE_REVIEW_v1` for the exact 40-character head meets all of the following:
+  - it is on Bridge #173 and authored by `Donh91`;
+  - its verdict is APPROVE;
+  - it answers an earlier exact-head `S1_REVIEW_REQUEST_v1` and cites that request's comment id;
+  - it states `lane_eligible: YES`, which is the reviewer's own check against the exclusions above;
+  - it states `INDEPENDENT_DETACHED` when the head implements a Claude-authored package, meaning a separately launched reviewer that did not author the content;
+  - it is unedited (`updated_at` equals `created_at`);
+  - it cites `report_blob` and `bridge_commit`, and the report at that blob on Bridge `claude/log` names the same head with verdict APPROVE and `lane_eligible: YES`;
+  - it is re-read immediately before the merge with an identical body.
+
+  A native GitHub `CHANGES_REQUESTED` review on that head voids the review.
+
+  **Accepted residual risk:** this authentication is behavioural, not cryptographic. Claude, S1, ChatGPT threads, Codex and Grok can all post as the owner account.
+- **(e) Findings.** There is no unresolved P0/P1 from any reviewer, Codex included.
+- **(f) HIGH evidence.** For HIGH or HIGH_IMPACT risk, HIGH EVIDENCE (Recovery and Separation) passes at merge time.
+- **(g) Merge and readback.**
+  - Before merging, perform the §0.2c F3 ruleset census twice.
+  - Merge through the native API with `sha=<expected head>`, squash, and no bypass. A 405 or 409 is STOP.
+  - Read back the merge commit, current main, every changed blob against the approved head, and the rule-bypass evidence. Any bypass is a halt trigger.
+  - If GitHub requires a branch update, the new head needs a new review.
+
+**Batch.** Up to `max_merges_per_tick` merges per tick, one after another. Each merge after the first needs a changed-file set disjoint from every PR already merged in this tick, and needs all gates re-proven against the new main. Otherwise the batch stops.
+
+**Halt triggers.** On any of the following, S1 posts one `S1_LANE_HALTED` on #1156 and stops all lane merges:
+- a readback mismatch;
+- a rule bypass;
+- a revert of a lane merge;
+- a P0/P1 later found in a lane-merged change;
+- a main regression traced to a lane merge;
+- a failed main-health run after a lane merge.
+
+**Receipts.** For a lane merge, one `S1_LANE_MERGE_v1` on #1156 replaces the normal rule-4 receipt. It records:
+- the PR and head;
+- the Claude receipt id, `report_blob` and `bridge_commit`;
+- the privacy evidence and the CI run ids;
+- main before and after, and the blob match;
+- `contract=`.
+
 ### 0.3 Global Action Compass invocation - all Investering threads
 
 Canonical owner:
@@ -327,6 +427,32 @@ The temporary candidate must not be committed. Commit only the generated receipt
 - Keep BTC permission and alt permission as separate evidence lanes.
 - No portfolio action may be produced from DATA PING alone.
 - No public website may create an independent market-state or short-horizon forecast engine.
+
+### Bounded canonical exception: Kompas live research display
+
+The prohibitions on new engines and independent website forecasts in this section have one narrowly scoped exception for the Kompas live research display. The only registered owner is `scripts/cycle_navigator/build_kompas_live_path.py`. It may use only formulas registered in the Challenger A/B pre-registrations, the verified Official Compass pointer under its original source-expiry clock, and public hourly spot data. No other packet may influence the line. Missing, invalid, stale or expired inputs retain their fail-closed handling; the source deadline must never be extended. Retain the existing "live formula" labels.
+
+This display is research-only. It is never an official forecast, never scored, and never an input to decisions, promotion or trading. The exception is void and the display must be disabled if any of the following occurs:
+
+- A tilt is shown after `official_source_valid_until_utc`.
+- Any packet other than the verified pointer influences the line.
+- Any number reaches a decision or scoring lane.
+- Private data reaches the public JSON.
+
+This exception changes no other rule, including Vault, credentials, trading, publication, private-data boundaries or paid API rules. It takes effect only after this policy change is reviewed and merged to main; a PR or relay is not authority.
+
+### 4a. Producer growth, idempotency and active sets (FRAMEWORK_INCIDENT_LEARNING_v1, Archive #2152)
+
+Origin: on 2026-11-14 an experiment producer re-dispatched 319 candidates about 4×/day until its hot manifest held 63,219 rows (26.3 MB). That broke `storage-health` on every PR. Fixed by #2155/#2156. Each rule below is marked **[ENFORCED: <blocking CI check>]**, **[DETECTED: <non-blocking CI signal>]** or **[POLICY]**. ENFORCED means a check that a PR workflow actually executes and that fails the PR. DETECTED means a CI signal that is visible on every PR but never blocks. A POLICY rule binds reviewers but is not automatically checked. Neither DETECTED nor POLICY may be described as enforced.
+
+1. Any PR that adds or changes a producer, writer, collector, forecast, dispatch or receipt path must map producer → persisted data → manifest/index → receiver → final consumer → CI gate → retention, across repositories. The review checks that consumption actually happens end to end. **[POLICY; reviewer checklist]**
+2. Such a PR states the expected growth at 7, 30 and 90 days: bytes, distinct entities, records per run, duplicate ratio and pending backlog. **[POLICY]**
+3. Immutable history and the compact active set are separate. A `LATEST_*` file holds the active set, not the full history. No silent cap, truncation, deletion, fake PASS, raised limit or CI bypass. **[DETECTED: storage-health early warning `HOT_ACTIVE_SET_OVER_BUDGET` for `LATEST_*` files above 5 MiB, non-blocking. ENFORCED only at the unchanged hard limit `FILE_OVER_HARD_LIMIT`. A full-history `LATEST_*` below 5 MiB is not detected: POLICY]**
+4. Work is semantically idempotent. A clock or source tick alone never creates new work; dispatch needs a semantic change or a documented state transition, proven by negative tests. **[POLICY. The regression test `tests/experiments/test_dispatch_episode_and_pending_manifest.py` exists, but no PR workflow executes it yet (it is only collected; see #2163). It becomes ENFORCED for experiment dispatch only when a PR gate runs it]**
+5. A producer contract change ships only after the receiver is ready, with bounded reads, path containment, checksums and a rollback. **[POLICY]**
+6. Growth is visible before it blocks: any file above 50 % of the hard limit is flagged on every PR. A red `storage-health` is a P0 incident routed to #1156 / #2152. **[DETECTED: storage-health early warning `PRE_LIMIT_GROWTH_RISK`, non-blocking. Routing: POLICY until the S1 DISCOVER lane or watchdog reads it]**
+7. Done means native CI green on an unrelated PR, a producer → receiver replay with counts, no lost evidence, 72 h stable growth, independent review, and exact-head merge plus main readback. **[POLICY]**
+8. Do not say "resolved", "autonomous", "monitored" or "learned" unless a GitHub-native instruction, CI step, test or automation changed and was read back. An issue comment is evidence, not enforcement. **[POLICY]**
 
 ## 5. Prospective evidence discipline
 

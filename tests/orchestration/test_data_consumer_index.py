@@ -53,3 +53,51 @@ def test_cli_direct_script_execution_resolves_repo_package(tmp_path: Path) -> No
     ], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     assert json.loads(output.read_text())["contract"] == "DATA_CONSUMER_INDEX_v1"
+
+
+def test_existing_changed_bytes_fail_closed_instead_of_current_binding(tmp_path: Path) -> None:
+    source = tmp_path / "source.json"
+    source.write_text('{"value":1}')
+    original_digest = hashlib.sha256(source.read_bytes()).hexdigest()
+    manifest = tmp_path / "research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json"
+    _write(manifest, {
+        "contract": "FRAMEWORK_HANDOFF_MANIFEST_v2",
+        "generated_at_utc": "2026-11-14T11:00:00Z",
+        "evidence": {"ORIGINAL": {"path": "source.json", "sha256": original_digest}},
+        "consumers": {"READER": ["ORIGINAL"]},
+    })
+    good = build_index(tmp_path, manifest)
+    assert good["rows"][0]["freshness_use_state"] == "CURRENT_BINDING"
+    assert good["rows"][0]["binding_state"] == "MATCH"
+    assert good["rows"][0]["use_state"] == "CONSUMED"
+    assert good["source_manifest_sha256"] == hashlib.sha256(manifest.read_bytes()).hexdigest()
+
+    # Producer writes a newer payload, but this manifest remains frozen.
+    source.write_text('{"value":2}')
+    stale = build_index(tmp_path, manifest)
+    row = stale["rows"][0]
+    assert row["producer_state"] == "PRESENT"
+    assert row["use_state"] == "CONSUMED"  # legacy route labels are unchanged
+    assert row["freshness_use_state"] == "STALE_OR_MISSING_POINTER"
+    assert row["binding_state"] == "DIGEST_MISMATCH"
+    assert row["sha256"] == original_digest
+    assert row["observed_sha256"] != original_digest
+    assert stale["summary"]["stale_or_missing_pointer"] == 1
+
+
+def test_absent_or_invalid_digest_never_claims_current_binding(tmp_path: Path) -> None:
+    source = tmp_path / "source.json"
+    source.write_text('{"value":1}')
+    manifest = tmp_path / "research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json"
+    for declared in (None, "", "0" * 64, "Z" * 64):
+        _write(manifest, {
+            "contract": "FRAMEWORK_HANDOFF_MANIFEST_v2",
+            "generated_at_utc": "2026-11-14T11:00:00Z",
+            "evidence": {"ORIGINAL": {"path": "source.json", "sha256": declared}},
+            "consumers": {"READER": ["ORIGINAL"]},
+        })
+        result = build_index(tmp_path, manifest)
+        row = result["rows"][0]
+        assert row["producer_state"] == "PRESENT"
+        assert row["freshness_use_state"] == "STALE_OR_MISSING_POINTER"
+        assert row["binding_state"] in {"INVALID_DECLARED_DIGEST", "DIGEST_MISMATCH"}

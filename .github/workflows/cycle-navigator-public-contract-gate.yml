@@ -225,7 +225,7 @@ jobs:
               raise SystemExit('public_live_precision_x_dependency_regression')
           if int(live_precision.get('freshness_sla_minutes') or 0) != 90:
               raise SystemExit('public_live_precision_freshness_sla_drift')
-          if live_precision.get('refresh_cadence') != 'HOURLY_OWNER_CHAIN':
+          if live_precision.get('refresh_cadence') != 'BEST_EFFORT_EVENT_CHAIN':
               raise SystemExit('public_live_precision_refresh_cadence_drift')
           if not str(live_precision.get('freeze_sha256') or ''):
               raise SystemExit('public_live_precision_freeze_hash_missing')
