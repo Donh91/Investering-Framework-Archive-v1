@@ -638,7 +638,7 @@ def test_real_W45_source_builds_W46_seven_day_product_without_model_call():
     from scripts.cycle_navigator.daily_price_journey import daily_product_acceptance
     root = Path(builder.__file__).resolve().parents[2]
     completed = json.loads((root / "03_DAILY_CAPTURE_LOGS/weekly/2026/W45.json").read_text())
-    ptr = json.loads((root / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
+    ptr = json.loads((root / "research/api_agent/outputs/weekly/2026/W45/MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
     previous = json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").read_text())
     assert completed["iso_week"] == ptr["iso_week"] == 45
     assert completed["hourly_gap_diagnostics"]["observed_hours"] == 168
@@ -730,7 +730,7 @@ def test_w46_actual_prior_source_and_independent_proof_class_qualify_both_closes
     from scripts.cycle_navigator.daily_price_journey import daily_product_acceptance
     root=Path(builder.__file__).resolve().parents[2]
     weekly=json.loads((root / "03_DAILY_CAPTURE_LOGS/weekly/2026/W45.json").read_text())
-    mm=json.loads((root / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
+    mm=json.loads((root / "research/api_agent/outputs/weekly/2026/W45/MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
     mm_machine=json.loads((root / "research/api_agent/outputs/weekly/2026/W45/MASTER_MONDAY_MACHINE_PACKAGE.json").read_text())
     old=json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").read_text())
     old["forecast_freeze"]=json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_text())
