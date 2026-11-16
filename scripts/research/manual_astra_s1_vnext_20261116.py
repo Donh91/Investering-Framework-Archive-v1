@@ -142,7 +142,22 @@ def claims(token: str):
             github_token=token, timeout=45)
         if not isinstance(rows, list):
             fail("DURABLE_CLAIM_CENSUS_INVALID")
-        if any(CLAIM_MARKER in str(v.get("body", "")) for v in rows if isinstance(v, dict)):
+        for row in rows:
+            if not isinstance(row, dict):
+                fail("DURABLE_CLAIM_ROW_UNVERIFIED")
+            body = row.get("body")
+            # Public commenters may quote the marker. Only a native one-use
+            # claim posted by GitHub Actions is an authenticated consumption.
+            if not isinstance(body, str) or not body.startswith(CLAIM_MARKER + " run="):
+                continue
+            who = row.get("user") or {}
+            if not isinstance(who, dict) or who.get("login") != "github-actions[bot]":
+                continue
+            if not re.fullmatch(
+                    re.escape(CLAIM_MARKER)
+                    + r" run=[0-9]+ request_sha256=[0-9a-f]{64}"
+                    + r" no_retry=true research_only=true", body):
+                fail("AUTHENTIC_BOT_CLAIM_MALFORMED_FAIL_CLOSED")
             fail("ASTRA_ONE_USE_CLAIM_ALREADY_CONSUMED")
         if len(rows) < 100:
             return

@@ -111,3 +111,22 @@ class Tests(unittest.TestCase):
    text=True,capture_output=True,cwd=root,timeout=30)
   self.assertNotEqual(bad.returncode,0)
   self.assertIn("BLOCKED",bad.stdout)
+
+
+ def test_public_claim_quote_cannot_deny_owner_launch(self):
+  # Codex P2: never count an unauthenticated public discussion as a paid claim.
+  for m in (a,b,c,d,e):
+   with self.subTest(mission=m.MISSION):
+    fake=[{"body":"I quoted "+m.CLAIM_MARKER+" run=123 request_sha256="+"a"*64,
+           "user":{"login":"random_commenter"}}]
+    with mock.patch.object(m.core,"http_json",return_value=fake):
+     m.claims("synthetic_token")
+    quoted=[{"body":m.CLAIM_MARKER+" run=123 request_sha256="+"a"*64+" no_retry=true research_only=true",
+             "user":{"login":"random_commenter"}}]
+    with mock.patch.object(m.core,"http_json",return_value=quoted):
+     m.claims("synthetic_token")
+    real=[{"body":m.CLAIM_MARKER+" run=123 request_sha256="+"a"*64+" no_retry=true research_only=true",
+           "user":{"login":"github-actions[bot]"}}]
+    with mock.patch.object(m.core,"http_json",return_value=real):
+     with self.assertRaisesRegex(ValueError,"ASTRA_ONE_USE_CLAIM_ALREADY_CONSUMED"):
+      m.claims("synthetic_token")
