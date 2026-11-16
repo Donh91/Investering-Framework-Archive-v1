@@ -77,7 +77,7 @@ class TestAstraPublicOneShot(unittest.TestCase):
             p=Path(d)/"ledger.json"
             p.write_text(json.dumps({"absolute_budget_usd":50,
                 "owner_reservations":[{"work_id":a.MISSION,"status":"OWNER_RESERVED_PREHTTP",
-                    "upper_usd":10,"one_paid_post_max":1,"reconciliation_required":True}]}))
+                    "upper_usd":11,"one_paid_post_max":1,"reconciliation_required":True}]}))
             with mock.patch.object(a,"LEDGER",p):
                 with self.assertRaisesRegex(ValueError,"10USD_RESERVATION_REQUIRED"):
                     a.check_reservation()
