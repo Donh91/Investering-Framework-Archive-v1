@@ -12,7 +12,7 @@
 Owner explicitly requested immediate Astra HIGH model run with newly relevant pre-W47 content. This was technically audited. **The original V2 route cannot execute.**
 - `.github/workflows/owner-bound-daily-director-manual.yml`, original `astra-realdata-task2-v2` job starts with literal `false &&`. An apparently correct owner issue_comment trigger therefore CANNOT launch it. Do not write a paid-looking trigger comment and claim success.
 - Original `research/api_agent/coordination/ASTRA_TASK2_REALDATA_V2_ADMISSION_V1.json` has `authorized_paid_dispatch=false`, `source_readiness=MISSING_VERIFIED_ALPHA_V4_DECISION_FILL_EXIT_COST_RECEIPTS` and `tool_billing_status=NOT_PROVEN_BOUNDED_BY_OWNER_10USD_RESERVATION`. No source/legal/cost gate proof to reverse it.
-- Original PR [#2115](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2115) is **CLOSED, UNMERGED** (verified 15 Nov). Two older Astra HIGH runs 43419077122/43436726016 already completed and are reviewed in `2026-11-14_ASTRA_HIGH_AUDITED_RESULTS_REGISTER_v1.md`; NEVER rerun their consumed IDs, nor claim this research is Astra.
+- Original PR [#2115](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2115) was **MERGED 2026-11-14T07:28:39Z**, merge commit `99d0ea7f0a9f60df5cf0786c0d9b8ead23e832b1`, verified by GitHub on 16 Nov. That merge did **not** override the literal `false &&` or `authorized_paid_dispatch=false` gates. Two older Astra HIGH runs 43419077122/43436726016 already completed and are reviewed in `2026-11-14_ASTRA_HIGH_AUDITED_RESULTS_REGISTER_v1.md`; NEVER rerun their consumed IDs, nor claim this research is Astra.
 - Global API $50/month owner ceiling, $4 reserve and original $40 code guard are separate. Existing canonical risk ledger still conservatively holds the two historical Astra liabilities ($3 + $10) pending independently verified per-model provider reconciliation. It is NOT a real invoice. The distinct new paid attempt has no approved budget admission or safe runnable executor. **NO MODEL POST, NO RESERVATION, NO BILLING, NO RETRY.**
 - One cannot technically override an actual literal false safety block through a GitHub comment. To re-enable a new safe source-only Astra route would require its OWN reviewed exact-head HIGH_IMPACT change, enforceable provider total spend and source/custody/prerequisite checks. Do not bypass the original finance/security closure. An owner wanting Astra via a separate native model session must truly run that session; this chat cannot label itself as Astra.
 
@@ -26,10 +26,10 @@ Original CN W46 was issued **Mon 9 Nov 10:52:34.925867 UTC**, after separate ori
 
 | Asset | CN forecast-closing MAE, Tue-Sat | Same-clock B0 MAE | CN close in original band | Equal-width B0 close in band | Result |
 | --- | ---: | ---: | ---: | ---: | --- |
-| BTC | **4,145.08 USDT** | **3,940.96 USDT** | 2/5 | 2/5 | CN worse in point MAE; same close coverage |
-| ETH | **146.93 USDT** | **143.24 USDT** | 0/5 | 0/5 | CN worse in point MAE; neither band adapted |
+| BTC | **4,145.08 USDT** | **3,940.96 USDT** | 2/5 | 2/5 | `NO_SKILL_DEMONSTRATED_vs_B0` (descriptive higher MAE, same coverage, one week) |
+| ETH | **146.93 USDT** | **143.24 USDT** | 0/5 | 0/5 | `NO_SKILL_DEMONSTRATED_vs_B0` (descriptive higher MAE, one week) |
 
-The 5-day negative result is **one W46 outcome**, not an independent proof of generic lack of forecast skill. This result remains untrusted for official scoring because source first-published, consumer first-delivered, exact original provider and full source capture are not sealed. It is nonetheless a concrete material **falsification candidate**: additional forecast sophistication did not beat this simplest preknown price on these five original closing targets.
+The descriptive five-day MAE difference is **one correlated W46 week (independent n=1)**, not independent evidence of absent or positive predictive skill. This result remains untrusted for official scoring because source first-published, consumer first-delivered, exact original provider and full source capture are not sealed. It is nonetheless a concrete material **falsification candidate**: additional forecast sophistication did not beat this simplest preknown price on these five original closing targets.
 
 | UTC target close | BTC actual Binance | BTC original CN | ETH actual Binance | ETH original CN |
 | --- | ---: | ---: | ---: | ---: |
@@ -39,7 +39,7 @@ The 5-day negative result is **one W46 outcome**, not an independent proof of ge
 | 13 Nov | 68,314.00 | 74,633.72 | 1,929.88 | 2,118.42 |
 | 14 Nov | 64,150.00 | 74,943.51 | 1,769.20 | 2,131.20 |
 
-This table records original *expected close* vs independent retrospective Binance completed UTC daily closes, not original official market capture. It does not combine range min/max scoring or uncalibrated evidence balance into probabilities.
+This table records original *expected close* vs independent retrospective Binance completed UTC daily closes, not original official market capture. Mapping original forecast point `day: 1..7` to calendar dates is `ASSUMED_UTC_ISO_WEEKDAY` until the original CN issue contract explicitly proves its timezone and weekday semantics. No inferred source or consumer first-known from filenames. It does not combine range min/max scoring or uncalibrated evidence balance into probabilities.
 
 **Frozen weekly lower breach timestamps (hour-level, not tick level):**
 - BTC original weekly low `71,289.02`. First postissue Binance 1h bar with LOW below floor: **2026-11-12 15:00 UTC**, bar low `71,255.02`. Lowest observed since issuance through captured completed hours: `62,006.00`.
@@ -57,7 +57,7 @@ Public external context as first observed by the researcher 15 Nov, to be source
 | $1.07bn US spot BTC ETF weekly outflows, two successive >$1bn weeks; seven-day $1.91bn run | [The Block, 2026-11-14](https://www.theblock.co/news/markets/2026-11-14-bitcoin-etfs-lose-1-billion-for-the-second-week-in-a-row-as-crypto-funds-except-one-continue-bleeding-440337) | Persisting institutional spot selling can condition drawdown episodes only where original settlement/publication times are qualified |
 | USDT/USDC/DAI 30d supply contraction **$11.5bn**, US ETF outflows earlier period | [Coinbase Institutional, 2026-11-13](https://www.coinbase.com/institutional/research-insights/research/weekly-market-commentary/weekly-2026-11-13) | Test absolute stablecoin supply and ETF flow persistence separate from USDT.D ratio and Bitcoin price. No dual counting same upstream data |
 | US retail sales and Industrial Production Tue Nov17, FOMC minutes Wed Nov18 2pm ET = **20:00 CET** | [Federal Reserve, November 2026 calendar](https://www.federalreserve.gov/newsevents/2026-November.htm), [US Bank Nov13 week-ahead calendar](https://www.usbank.com/content/dam/usbank/en/documents/pdfs/corporate-and-commercial-banking/econ-weekly-pdf-11-13-26.pdf) | Event-time/first-publication safeguards, stress scenario and exception freshness, NOT knowledge of outcomes or an assertion that macro events will be bearish |
-| Weekend volatility and BTC near $64k–$65k in dated reports | [15 Nov timestamped morning report](https://charliedesk.com/market/report/2026-11-15), checked against independent Binance 1h spot | Potential gap risk between last equities/ETF session and Monday reopening; avoid late Fri ETF data relabelled as weekend net flow |
+| Weekend volatility and BTC near $64k–$65k in dated reports | [15 Nov timestamped morning report](https://charliedesk.com/market/report/2026-11-15), `LOW_TRUST_CONTEXT`, not eligible as a model feature or independent PIT source | Potential gap risk between last equities/ETF session and Monday reopening; avoid late Fri ETF data relabelled as weekend net flow |
 
 **Important unique W47 design:** separate original W46 negative data and hindsight from W47 prospective:
 - W46 remains calibration **development/failure analysis**. The Sunday official close/weekly outcome must mature only after `2026-11-16T00:00:00Z`.
