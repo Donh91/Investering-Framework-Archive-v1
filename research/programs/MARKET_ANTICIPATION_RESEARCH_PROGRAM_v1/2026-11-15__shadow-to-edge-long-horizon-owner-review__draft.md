@@ -1,8 +1,13 @@
 # SHADOW -> EDGE -> LONG-RANGE KOMPAS v1.0
-## Single-owner, falsification-first research mandate, ready for owner review
+
+> **2026-11-16 execution disposition: SUPERSEDED_BY_G1_RECEIPT.** This is the preserved November 15 broad design, not an ACTIVE authority for G2-G5 or a second Market Anticipation program. Owner approved only source-safe G0/G1 on PR #2162. The operationally narrowed source, original-anchor and maturity findings are the same PR's `2026-11-15__G1_SOURCE_FIRST_KNOWN_FEASIBILITY_AND_GAP_RECEIPT_v1.md` and `2026-11-15__G1_STRATEGIC_ORIGINAL_ISSUANCE_CENSUS_CORRECTION_v1.md`, as corrected after Claude's v3 method review on Bridge #173/6904588535. For execution, these G1 receipts and original owners #209/#1596/#1827/#1516 supersede this design where inconsistent.
+>
+> **Scope freeze:** The candidate families C1-C5 and phases G2-G5 below are a historical hypothesis menu, NOT five active workstreams. Any new economics requires a separately frozen *single* confirmatory question, one primary endpoint, original-eligible same-clock rows, a time-bounded 8-independent-cluster minimum or `INSUFFICIENT_EVIDENCE`, a matched B0, strict ETF D5 and Round3 prohibitions, completed Claude foundation tier0-2 natural-run proofs and original owner authorization. Everything else is exploratory. C2 and C3 retire if they fail to beat C1 on identical eligible rows; C4 is `CONTEXT_ONLY` absent a native first-known Fed policy expectation-path source. The 4-8W T+28 sparse-vs-B0 endpoint is only a *suggested future preregistration*, NOT currently scoreable or executable because all inspected original 4-8W directions are `UNAVAILABLE`. No automatic production promotion or spending.
+
+## Historical design, source audit now owner-approved for G0/G1 only
 
 **Date:** 2026-11-15 Europe/Copenhagen
-**Status:** OWNER_APPROVAL_REQUESTED / DESIGN_AND_SOURCE_AUDIT_ONLY / NOT_DISPATCHED
+**Status:** OWNER_APPROVED_FOR_G0_G1_ONLY / SUPERSEDED_BY_G1_RECEIPT_FOR_EXECUTION / NO_G2_G5_AUTHORITY
 **Primary owner:** Existing Market Anticipation Research Program, Archive issue #209; scientific Task 2 owner #1596.
 **Supporting owners:** #1827 source/integrity, #1516 Forward Path and Cycle Navigator, #1553 risk-to-action, #1157 scientific adjudication, #1156 S1 bounded closure.
 **Review channel:** Claude Bridge #173, independent advisory review only.
@@ -32,7 +37,7 @@ Do not repeat W46 seven-lane research, the previous eight RPL lanes, ARP studies
 
 ### Hard release precedence from latest Bridge
 
-Claude Bridge claude/log STATUS.md, blob 1b4ce64a2a743dde7415ef3671a905ec1566e251, states owner-delegated sequence: tier0 delivery/CI, tier1 no false PASS, tier2 S1 closure, then tier4 new research. Archive F4 PR #2140 is still OPEN/DRAFT at the latest observed issue read. Source status can age; reread before acting. Until the foundation has independently verified tier0-2 natural producer/consumer evidence, permitted activity is **public read-only audit, deduplication, source-clock planning, preregistration draft, review comments and isolated DRAFT PR only**. Do not trigger new economic tests, new paid agents or research workflows. Existing W47 preregistered work stays under its original owner.
+Claude Bridge claude/log STATUS.md, blob 1b4ce64a2a743dde7415ef3671a905ec1566e251, states owner-delegated sequence: tier0 delivery/CI, tier1 no false PASS, tier2 S1 closure, then tier4 new research. Archive F4 PR #2140 was OPEN/DRAFT in the November 15 source snapshot but has since closed; remaining tier0-2 natural-run proof is NOT thereby automatically established. Source status can age; reread before acting. Until the foundation has independently verified tier0-2 natural producer/consumer evidence, permitted activity is **public read-only audit, deduplication, source-clock planning, preregistration draft, review comments and isolated DRAFT PR only**. Do not trigger new economic tests, new paid agents or research workflows. Existing W47 preregistered work stays under its original owner.
 
 ### Skills actually inspected and method
 
@@ -153,4 +158,4 @@ A future specific paid native one-shot, new market weight, threshold, provider l
 
 "Jeg godkender SHADOW -> EDGE -> LONG-RANGE KOMPAS v1.0 som én source-safe research-only mission under eksisterende MAR #209 og Task2 #1596. G0/G1 må forberedes nu, økonomiske/videnskabelige tests først efter Claude tier0-2 og oprindelige source/holdout gates. Genbrug eksisterende skills, HRE, Shared Row og research runners. Ingen nye automations, handler, betalte modelkald, Vault-adgang eller direkte Kompas-promotion. Claude reviewer metodikken først; gennemfør derefter kun en efterprøvbar original-owner closure."
 
-**Proof state of this artifact:** FROZEN DESIGN ON ISOLATED BRANCH / OWNER_APPROVAL_PENDING / NO NEW NATIVE EXPERIMENT / NO EDGE CLAIM / NO LIVE EFFECT.
+**Proof state of this artifact (updated 2026-11-16):** OWNER_APPROVED_G0_G1_ONLY / HISTORICAL_DESIGN_SUPERSEDED_BY_SOURCE_G1_RECEIPTS / G2_TO_G5_NOT_AUTHORIZED / NO NEW NATIVE EXPERIMENT / NO EDGE CLAIM / NO LIVE EFFECT. Owner's earlier quoted approval-request text is preserved as historical provenance, not a new request.
