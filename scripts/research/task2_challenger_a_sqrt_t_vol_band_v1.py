@@ -562,17 +562,65 @@ def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_cloc
         used.add(key)
         if utc(allowed[key]["scored_from_utc"]) < first:
             raise ValueError("frozen paired rows before original first-main issue")
-        if (type(r.get("bars")) is not int
-                or not PARAMS["min_scored_bars_per_day"] <= r["bars"] <= 24
+        issued_day = allowed[key]
+        try:
+            scored_start = utc(issued_day["scored_from_utc"])
+            scored_end = utc(issued_day["end_utc"])
+            p0 = issuance["assets"][r["asset"]]["P0"]
+            close_band = issued_day["band"]["close"][str(PARAMS["primary_quantile"])]
+            issued_width = (close_band[1] - close_band[0]) / p0
+            max_bars = int((scored_end - scored_start).total_seconds() / HOUR.total_seconds())
+        except (KeyError, IndexError, TypeError, ValueError, ZeroDivisionError) as exc:
+            raise ValueError("frozen paired rows invalid issued-band source") from exc
+        if (not finite_number(p0, positive=True)
+                or not finite_number(issued_width, positive=True)
+                or not 1 <= max_bars <= 24
+                or type(r.get("bars")) is not int
+                or not PARAMS["min_scored_bars_per_day"] <= r["bars"] <= max_bars
                 or not finite_number(r.get("A_interval_score"))
-                or not finite_number(r.get("A_width"), positive=True)):
-            raise ValueError("frozen paired rows invalid A score or bars")
+                or not finite_number(r.get("A_width"), positive=True)
+                or not math.isclose(r["A_width"], issued_width, rel_tol=1e-10, abs_tol=1e-10)
+                or r["A_interval_score"] < r["A_width"]):
+            raise ValueError("frozen paired rows invalid A score, width or bars")
+        # Every A family/quantile and A full-range observation must have a
+        # binary outcome. bool is NOT a valid integer outcome for an issuer.
+        a_flags = [f"A_{family}_{q}_covered"
+                   for family in ("range", "close")
+                   for q in map(str, PARAMS["quantiles"])]
+        a_flags.append("A_range_covered")
+        if any(type(r.get(k)) is not int or r[k] not in (0, 1) for k in a_flags):
+            raise ValueError("frozen paired rows missing or nonbinary A coverage")
+        a_close = r[f"A_close_{PARAMS['primary_quantile']}_covered"]
+        if ((a_close == 1 and not math.isclose(
+                r["A_interval_score"], r["A_width"], rel_tol=1e-10, abs_tol=1e-10))
+                or (a_close == 0 and r["A_interval_score"] <= r["A_width"])):
+            raise ValueError("frozen paired rows A score contradicts coverage")
         if "CN_interval_score" in r:
-            if not (finite_number(r["CN_interval_score"])
-                    and finite_number(r.get("CN_width"), positive=True)):
-                raise ValueError("frozen paired rows invalid CN score")
+            if (not finite_number(r["CN_interval_score"])
+                    or not finite_number(r.get("CN_width"), positive=True)
+                    or r["CN_interval_score"] < r["CN_width"]
+                    or any(type(r.get(k)) is not int or r[k] not in (0, 1)
+                           for k in ("CN_range_covered", "CN_close_covered"))):
+                raise ValueError("frozen paired rows incomplete or impossible CN pair")
+            c_close = r["CN_close_covered"]
+            if ((c_close == 1 and not math.isclose(
+                    r["CN_interval_score"], r["CN_width"], rel_tol=1e-10, abs_tol=1e-10))
+                    or (c_close == 0 and r["CN_interval_score"] <= r["CN_width"])):
+                raise ValueError("frozen paired rows CN score contradicts coverage")
+            eqw = ("EQW_PRIOR_interval_score", "EQW_PRIOR_width",
+                   "EQW_PRIOR_range_covered", "EQW_PRIOR_close_covered")
+            if any(k in r for k in eqw):
+                if (not all(k in r for k in eqw)
+                        or not finite_number(r["EQW_PRIOR_interval_score"])
+                        or not finite_number(r["EQW_PRIOR_width"], positive=True)
+                        or r["EQW_PRIOR_interval_score"] < r["EQW_PRIOR_width"]
+                        or any(type(r.get(k)) is not int or r[k] not in (0, 1)
+                               for k in eqw[2:])):
+                    raise ValueError("frozen paired rows incomplete equal-width control")
             paired.append(r)
-        elif any(k in r for k in ("CN_width", "CN_range_covered", "CN_close_covered")):
+        elif any(k in r for k in ("CN_width", "CN_range_covered", "CN_close_covered",
+                                   "EQW_PRIOR_interval_score", "EQW_PRIOR_width",
+                                   "EQW_PRIOR_range_covered", "EQW_PRIOR_close_covered")):
             raise ValueError("frozen paired rows incomplete CN pair")
     winner = "MISSING"
     if len(paired) >= DECISION["min_paired_rows_per_week"]:
