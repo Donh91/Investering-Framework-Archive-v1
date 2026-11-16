@@ -1,0 +1,54 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/owner-bound-daily-director-manual.yml",
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json",
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "scripts/research/task2_astra_public_w46w47_v1.py",
+    "tests/api_agent/test_manual_astra_task2_high_v1.py",
+    "tests/api_agent/test_owner_global_api_budget_cap.py",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py",
+    "tests/research/test_task2_astra_public_w46w47_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-cb1012918a78bfe9",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Owner-present 2026-11-16 authorization to execute Astra HIGH via native GitHub Actions. Distinct one-use public text-only research, USD10 reserved upper, no Code Interpreter or trading. 8/8 native exact-head CI SUCCESS; 1 disjoint official data main commit after PR branch sync. Claude independent review pending, no claim of approval. Retain existing separate recovery, source/consumer and budget gates. S1 bootstrap must be updated byte-exact after main readback.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/owner-bound-daily-director-manual.yml": "01f90d7729987c2c92e254e9ffcf8cd9a6f1ea2d",
+    "00_FMOS/S1/BOOTSTRAP.txt": "b4d76de0059782ccab060f725032716d85d594d6",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "5cde59041ea5facf3a8faaaffc0b0c44858e82af",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "4ef1bee7d045b4b09b0d8f745c21c856d2704d7e",
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json": "4d977fb6df6f8f2af5b56e44737b0642c834ebb6",
+    "scripts/api_agent/check_monthly_cost_guard.py": "2458401e42ba57064a1c44580b3307c11d1cece9",
+    "scripts/research/task2_astra_public_w46w47_v1.py": "04f31328ed355a8b2c76a76cf1d7869efc37a23b",
+    "tests/api_agent/test_manual_astra_task2_high_v1.py": "44eaeb75cd1084611a284639da85f9bf45744121",
+    "tests/api_agent/test_owner_global_api_budget_cap.py": "0b9559726da3265fc03197626dc92d163b687549",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py": "74e8e07b302a24e98b0480b6b8a0779343f48201",
+    "tests/research/test_task2_astra_public_w46w47_v1.py": "17c9e2b435fceb6c0cf29b2966b54117807cba15"
+  },
+  "source_commit_sha": "cb1012918a78bfe9d1d29aef0c2fb0523ee0d2a9",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-16T07:00:26-05:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research(api): owner-authorized Astra HIGH public W46/W47 one-shot (#2189)"
+}

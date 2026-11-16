@@ -379,6 +379,11 @@ def live_workflows(
                 for run in runs
                 if run.get("head_branch") == default_branch
                 and run.get("event") in PRODUCTION_EVENTS
+                # workflow_run may carry a fork's branch called "main". Only
+                # original-repository upstream runs belong to production.
+                and (run.get("event") != "workflow_run"
+                     or (isinstance(run.get("head_repository"), dict)
+                         and run["head_repository"].get("full_name") == repo))
                 and not (run.get("event") == "workflow_run"
                          and run.get("conclusion") == "skipped")
             ]

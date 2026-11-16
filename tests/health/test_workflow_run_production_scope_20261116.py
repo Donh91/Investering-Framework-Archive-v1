@@ -12,6 +12,7 @@ spec.loader.exec_module(health)
 
 def run(i, kind, conclusion, minute, branch="main"):
     return {"id": i, "event": kind, "head_branch": branch, "status": "completed",
+            "head_repository": {"full_name": "Donh91/Investering-Framework-Archive-v1"},
             "conclusion": conclusion, "run_attempt": 1,
             "created_at": f"2026-11-16T10:{minute:02d}:00Z",
             "updated_at": f"2026-11-16T10:{minute:02d}:30Z"}
@@ -85,3 +86,34 @@ def test_skipped_schedule_remains_visible_but_workflow_run_skipped_excluded(monk
     assert x["latest_run"]["id"] == 106
     assert x["recent_conclusions"] == ["skipped","failure"]
     assert x["recent_failure_count"] == 1
+
+
+def test_fork_named_main_cannot_create_false_red(monkeypatch):
+    # Fork-triggered workflow_run uses the fork's head_branch; the same name
+    # as the default branch must not turn unrelated CI failures into red.
+    fork_a = run(202,"workflow_run","failure",30)
+    fork_b = run(201,"workflow_run","failure",20)
+    fork_a["head_repository"]={"full_name":"untrusted/Investering-Framework-Archive-v1"}
+    fork_b["head_repository"]={"full_name":"untrusted/Investering-Framework-Archive-v1"}
+    own = run(200,"schedule","success",10)
+    view=live(monkeypatch,[fork_a,fork_b,own])
+    assert view["latest_run"]["id"] == 200
+    assert view["failure_streak"] == 0
+    assert view["recent_failure_count"] == 0
+
+
+def test_missing_workflow_run_origin_fails_closed_but_keeps_schedule(monkeypatch):
+    unknown = run(204,"workflow_run","failure",30)
+    unknown.pop("head_repository")
+    scheduled = run(203,"schedule","success",20)
+    view=live(monkeypatch,[unknown,scheduled])
+    assert view["latest_run"]["id"] == 203
+    assert view["recent_failure_count"] == 0
+
+
+def test_own_main_workflow_run_failure_remains_counted(monkeypatch):
+    own = run(205,"workflow_run","failure",35)
+    view=live(monkeypatch,[own],scheduled=[])
+    assert view["latest_run"]["id"] == 205
+    assert view["failure_streak"] == 1
+    assert view["recent_failure_count"] == 1
