@@ -177050,7 +177050,134 @@
           "target_at_utc": "2026-11-29T09:36:21Z"
         },
         "24h": {
-          "maturity_state": "PENDING",
+          "BTC": {
+            "adverse_barriers": {
+              "-10.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -1.672305235261362,
+              "mfe_pct": 0.6889617234815626,
+              "price": 65350.51,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -1.3550927146551817,
+              "timestamp": "2026-11-15T10:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": "2026-11-15T23:00:00Z",
+              "observation_end_at_utc": "2026-11-16T09:00:00Z",
+              "observed_trough_at_utc": "2026-11-15T17:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": false,
+              "status": "OBSERVED_FIRST_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": 6.0,
+              "time_to_first_close_reclaim_hours": 13.394167
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -1.4695013493621123,
+              "mfe_pct": 0.8966357948969605,
+              "price": 65216.0,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -1.1516345682041296,
+              "time_to_mae_hours": 7.394166666666667,
+              "time_to_mfe_hours": 4.394166666666667
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 64464.95,
+              "timestamp": "2026-11-16T09:00:00Z"
+            }
+          },
+          "ETH": {
+            "adverse_barriers": {
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-30.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -1.5401920438957495,
+              "mfe_pct": 1.1165980795610375,
+              "price": 1822.5,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -0.9020576131687275,
+              "timestamp": "2026-11-15T10:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": "2026-11-15T17:00:00Z",
+              "observation_end_at_utc": "2026-11-16T09:00:00Z",
+              "observed_trough_at_utc": "2026-11-15T15:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": false,
+              "status": "OBSERVED_FIRST_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": 2.0,
+              "time_to_first_close_reclaim_hours": 7.394167
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -0.9379381921365559,
+              "mfe_pct": 1.7351028474898111,
+              "price": 1811.42,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -0.2959004537876453,
+              "time_to_mae_hours": 5.394166666666667,
+              "time_to_mfe_hours": 14.394166666666667
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 1806.06,
+              "timestamp": "2026-11-16T09:00:00Z"
+            }
+          },
+          "coverage": {
+            "first_close": "2026-11-15T10:00:00Z",
+            "last_close": "2026-11-16T09:00:00Z",
+            "max_gap_hours": 1.0,
+            "reason": "COMPLETE_HOURLY_CLOSE_GRID",
+            "row_count": 24
+          },
+          "maturity_state": "MATURED",
           "target_at_utc": "2026-11-16T09:36:21Z"
         },
         "30d": {
@@ -177997,7 +178124,7 @@
       "within_family_warning_index": 298
     }
   ],
-  "generated_at_utc": "2026-11-16T09:30:51Z",
+  "generated_at_utc": "2026-11-16T09:53:04Z",
   "integrity_revision": "v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
   "live_exit_rule": "NONE",
   "primary_warning_states": [
