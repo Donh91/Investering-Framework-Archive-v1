@@ -53,3 +53,10 @@ class Tests(unittest.TestCase):
   self.assertNotIn("false &&", w)
   for m in (a,b,c,d,e):
    self.assertEqual(w.count("github.event.comment.body == '"+m.TRIGGER+"'"),1)
+
+ def test_five_distinct_native_concurrency_groups(self):
+  from pathlib import Path
+  wf=(Path(__file__).resolve().parents[2]/".github/workflows/owner-astra-research-program-20261116.yml").read_text()
+  rows=[line.strip().split("group: ",1)[1] for line in wf.splitlines() if line.strip().startswith("group: owner-astra-high-20261116-")]
+  self.assertEqual(len(rows),5)
+  self.assertEqual(len(set(rows)),5)
