@@ -28,6 +28,7 @@ jobs:
 
   paid-s1-vnext:
     if: >-
+      false &&
       github.event_name == 'issue_comment' &&
       github.event.action == 'created' &&
       github.event.issue.number == 1156 &&
@@ -55,7 +56,7 @@ jobs:
       - name: Owner bounded source tests
         run: python -m unittest tests.research.test_manual_astra_research_program_20261116 -v
       - name: Existing shared USD50 gate protects USD4 and previous reservations
-        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 50 --reserve-usd 4 --new-request-upper-usd 0
+        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 40 --reserve-usd 4 --new-request-upper-usd 0
       - name: Prepare public model prompt and maximum cost
         run: python scripts/research/manual_astra_s1_vnext_20261116.py prepare --out runtime/astra-s1_vnext
       - name: Verify event, independent budget, model GET, and one original claim
@@ -104,6 +105,7 @@ jobs:
 
   paid-compass-total:
     if: >-
+      false &&
       github.event_name == 'issue_comment' &&
       github.event.action == 'created' &&
       github.event.issue.number == 1827 &&
@@ -131,7 +133,7 @@ jobs:
       - name: Owner bounded source tests
         run: python -m unittest tests.research.test_manual_astra_research_program_20261116 -v
       - name: Existing shared USD50 gate protects USD4 and previous reservations
-        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 50 --reserve-usd 4 --new-request-upper-usd 0
+        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 40 --reserve-usd 4 --new-request-upper-usd 0
       - name: Prepare public model prompt and maximum cost
         run: python scripts/research/manual_astra_compass_total_20261116.py prepare --out runtime/astra-compass_total
       - name: Verify event, independent budget, model GET, and one original claim
