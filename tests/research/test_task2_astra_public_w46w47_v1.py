@@ -16,7 +16,7 @@ class TestAstraPublicOneShot(unittest.TestCase):
         self.assertNotEqual(a.MISSION, "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE")
         self.assertNotEqual(a.MISSION, "ASTRA-HIGH-TASK2-REALDATA-V2-20261113-ONE")
         self.assertEqual(a.MODEL, "gpt-6-astra")
-        self.assertEqual(a.MAX_COST, 15)
+        self.assertEqual(a.MAX_COST, 10)
         self.assertEqual(a.ISSUE, 1596)
 
     def test_cost_upper_bound_and_no_tools(self):
@@ -79,7 +79,7 @@ class TestAstraPublicOneShot(unittest.TestCase):
                 "owner_reservations":[{"work_id":a.MISSION,"status":"OWNER_RESERVED_PREHTTP",
                     "upper_usd":10,"one_paid_post_max":1,"reconciliation_required":True}]}))
             with mock.patch.object(a,"LEDGER",p):
-                with self.assertRaisesRegex(ValueError,"15USD_RESERVATION_REQUIRED"):
+                with self.assertRaisesRegex(ValueError,"10USD_RESERVATION_REQUIRED"):
                     a.check_reservation()
 
     def test_claim_and_attempt_one_use_binding(self):
