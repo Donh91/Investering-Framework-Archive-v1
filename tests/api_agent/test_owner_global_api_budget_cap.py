@@ -232,10 +232,10 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         state = json.loads(result.stdout)
         self.assertEqual(result.returncode, 0, state)
         self.assertEqual(state["status"], "PASS", state)
-        # Native POSTs are provider-settled; the consumed Astra reservations
-        # (3 + 10) stay counted until per-model provider evidence (WO-5).
-        self.assertEqual(state["pending_liability_upper_usd"], 13.0)
-        self.assertEqual(state["pending_liability_count"], 2)
+        # Native POSTs are settled; retain consumed USD3+10 and distinct USD10
+        # owner-approved (not yet consumed) public research reservation.
+        self.assertEqual(state["pending_liability_upper_usd"], 23.0)
+        self.assertEqual(state["pending_liability_count"], 3)
         self.assertGreaterEqual(state["remaining_usd"], 4.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
 
@@ -250,8 +250,9 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(
             sorted(r["work_id"] for r in ledger["owner_reservations"]),
             ["ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
+             "ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE",
              "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"])
-        self.assertEqual(pending_risk(p), (0.0, 13.0, 2))
+        self.assertEqual(pending_risk(p), (0.0, 23.0, 3))
         self.assertEqual(len(ledger["settled"]), 3)
         self.assertEqual({r["kind"] for r in ledger["settled"]}, {"NATIVE_POST"})
         self.assertEqual(ledger["provider_settlement_evidence"]["sha256"],
@@ -283,7 +284,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
             for mutation, code in (("astra_settled", "PROVIDER_SETTLED_SET_INVALID"),
                                    ("astra_dropped", "RETAINED_ASTRA_RESERVATION_MISSING")):
                 bad = json.loads(json.dumps(ledger))
-                astra = bad["owner_reservations"].pop()
+                astra = bad["owner_reservations"].pop(0)
                 if mutation == "astra_settled":
                     bad["settled"].append({"kind": "ASTRA_PREHTTP_RESERVATION",
                                            "work_id": astra["work_id"],

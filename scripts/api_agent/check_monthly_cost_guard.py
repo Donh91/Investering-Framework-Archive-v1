@@ -149,6 +149,7 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE": 3,
             "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE": 10,
             "ASTRA-HIGH-TASK2-REALDATA-V2-20261113-ONE": 10,
+            "ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE": 10,
         }
         if work not in allowed or reservation.get("upper_usd") != allowed[work]:
             raise ValueError("UNKNOWN_OWNER_RESERVED_MODEL_OR_COST")

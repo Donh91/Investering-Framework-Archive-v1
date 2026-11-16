@@ -174,14 +174,18 @@ class AstraOneShotTests(unittest.TestCase):
         ledger = Path(__file__).resolve().parents[2] / (
             "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
         low, high, n = pending_risk(ledger)
-        # Native POSTs settled; consumed Astra one-shots stay reserved (3 + 10).
-        self.assertEqual((low, high, n), (0.0, 13.0, 2))
+        # Native POSTs settled; consumed one-shots (3 + 10) AND new reviewed-only one-shot hold (10).
+        self.assertEqual((low, high, n), (0.0, 23.0, 3))
         self.assertGreaterEqual(high-low, m.MAX_THEORETICAL_COST_USD)
         value = json.loads(ledger.read_text(encoding="utf-8"))
         self.assertEqual(len(value["settled"]), 3)
         self.assertEqual(value["provider_settlement_evidence"]["sha256"],
                          "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8")
-        self.assertEqual(len(value["owner_reservations"]), 2)
+        self.assertEqual(len(value["owner_reservations"]), 3)
+        # Isolate older two holds before simulating the V2 alternative: the maximum
+        # of 3 concurrent reservations must still fail closed, not allow four.
+        value["owner_reservations"] = [r for r in value["owner_reservations"]
+            if r["work_id"] != "ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE"]
         # A NEW source-bound, unspent Astra owner claim must still be counted.
         value["owner_reservations"] += [{
             "work_id": "ASTRA-HIGH-TASK2-REALDATA-V2-20261113-ONE",
