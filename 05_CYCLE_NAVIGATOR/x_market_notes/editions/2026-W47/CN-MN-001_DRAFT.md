@@ -1,60 +1,64 @@
-# Cycle Navigator / Market Notes 001 - revised editorial draft
+# Cycle Navigator / Market Notes 001 - revised CN-first editorial draft
 
 **Dato:** 2026-11-16
 **Status:** DRAFT_NOT_APPROVED / NOT_PUBLISHED
 **Område:** Ny separat Cycle Navigator X-serie
 **Primary folder:** `05_CYCLE_NAVIGATOR/x_market_notes/editions/2026-W47/`
-**Kilde:** Source week 2026-W46 og original fastfrossen CN 2026-W47 / public CN #34.
-**Historisk redaktionsnote:** v1/v2 ETF-ledede udkast afvist af ejer 2026-11-16 som ikke tro mod CN. Det reviderede v3 erstatter dem i den endnu ikke merged PR; Git-historik bevarer dem.
+**Kilde:** Frossen 2026-W47 Cycle Navigator-prognose / public legacy CN #34 som kilde, men selvstændig editorial serie `CN-MN-001`.
+**Revision:** v4, ejerkrav om tidslinje + rotation + BTC/ETH pricerange dag for dag; erstatter tidligere v1-v3 X-tekst, der ikke var dækkende for CN.
 
-## Hvad CN faktisk siger
-
-- Markedstilstand: `MIXED_WITH_DOWNSIDE_PRESSURE`; pullback-risiko `ELEVATED`, distribution `UNKNOWN`.
-- Afsluttet W46: BTC 74851.44 -> 65351.05 (-12.6923%); ETH 2127.46 -> 1835.35 (-13.7305%); ETH/BTC 0.02842 -> 0.02809 (-1.1612%), så ETH er ikke vedvarende leder.
-- Den offentliggjorte 30-dages Altcoin Season-måling (historisk/retrospektiv rotationsproxy) W46: 24 (2026-11-09) -> 41 (2026-11-13) -> 33 (2026-11-15). **Dette er ikke selvstændigt bevis på kapitalrotation eller fremtidig altseason**.
-- 1-3 dage: `DOWN`, mulighed for nyt testfald.
-- 5-7 dage: `MIXED`, stabilisering/sen rekyl hvis retesten holder, eller fortsat svaghed.
-- 2-3 uger: `NO_EDGE`, ingen verified rotationsprognose.
-- 4-8 uger: `UNAVAILABLE`, fase og tid ikke dokumenteret.
-- Rotation: BTC, ETH, large, mid og micro står alle `UNCONFIRMED` i denne udgave, ikke et bevis for at ingen aktiv nogensinde kan stige.
-- Kildeprodukt `DEGRADED` pga `CONTINUITY_FALLBACK` og `COVERAGE_LIMITATION`, deterministic weekly scenarios er ikke kalibreret model-edge.
-
-## X-udkast v3
+## X-opslag - anbefalet kladde v4
 
 CYCLE NAVIGATOR | MARKET NOTES 001
-16–22 NOV 2026
+NOV 16–22, 2026
 
-Friday's altcoin reading caught my attention. Sunday's made me cautious again.
+The week starts with a test of the lows, not a confirmed recovery.
 
-The 30-day Altcoin Season reading rose from 24 on Monday to 41 by Friday, then ended the week at 33.
+Bitcoin fell 12.7% last week. Ethereum lost 13.7%. Cycle Navigator still leans defensive, although the coming week may be far from a straight line down.
 
-Meanwhile Bitcoin fell 12.7%, Ethereum lost 13.7%, and ETH slipped further against BTC.
+THE WEEK AHEAD
 
-That's not the rotation I've been waiting for.
+Mon–Tue: Another test lower.
+Wed: First attempt to stabilize.
+Thu: Renewed pressure is possible.
+Fri–Sat: Room for a rebound if the lows hold.
+Sun: Some of that recovery may be tested again.
 
-Cycle Navigator enters this week with downside pressure still in place. Another test lower over the next 1–3 days is possible. If the market holds, stabilization and a later rebound are on the table. But a green day in Bitcoin won't tell us much about the rest of the market.
+DAILY PRICE RANGES
 
-I'm watching for two things: ETH holding up against BTC, and strength spreading beyond the biggest names. Neither is confirmed yet.
+BTC / ETH, quoted in USDT
 
-Over the next 2–3 weeks, I don't have enough evidence to call an altcoin rotation. Further out, the cycle phase is still unclear.
+Mon 16: BTC 63,803–65,344 | ETH 1,783–1,844
+Tue 17: BTC 63,134–64,806 | ETH 1,763–1,830
+Wed 18: BTC 63,449–65,251 | ETH 1,771–1,843
+Thu 19: BTC 62,892–64,824 | ETH 1,755–1,832
+Fri 20: BTC 63,804–65,866 | ETH 1,780–1,862
+Sat 21: BTC 64,455–66,648 | ETH 1,797–1,885
+Sun 22: BTC 64,055–66,379 | ETH 1,785–1,878
 
-I'd rather be late to a real change than declare one every time the market bounces.
+The wider weekly scenario allows BTC 61,770–67,199 and ETH 1,687–1,904.
 
-## Source links, original evidence and limits
+CAPITAL ROTATION
 
-1. Completed 2026-W46 market prices, weekly ETH/BTC and 7-day Altcoin Season snapshots:
-   `03_DAILY_CAPTURE_LOGS/weekly/2026/W46.json`
-   Git blob `3d13f097ac42cf0e9aee6446a9cba4e303c50236`.
-   Altseason observations are 30d relative-performance readings, not immediate tradable breadth and not a causal capital flow measure.
-2. Original frozen Monday CN for W47:
-   `05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json`
-   Git blob `9d2e4193e92edb3708e507ac9aac6b919df72e8a`.
-3. Weekly scenario and five qualitative dimensions:
-   `05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json`
-   Git blob `1e72eb62e2da2f164a0da4108a4cf5f51b910f41`.
-4. 2026-W46 Master Monday:
-   `research/api_agent/outputs/weekly/2026/W46/MASTER_MONDAY_REPORT.md`
-   Git blob `04b3e8af098c9ad2db4ae0a6711a0c95f344020c`.
+Bitcoin still needs to find its footing. Ethereum hasn't established a lasting lead over BTC, and a broader move into large, mid and microcaps remains unconfirmed.
 
-### Publication caution
-Draft for review, NOT posted. Monday's frozen CN scenario is NOT a minute-by-minute current price observation. No statistical/profitable edge claimed. No automatic website or portfolio change. Do not advance the new edition index to APPROVED or PUBLISHED without owner-confirmed exact text or post. Legacy forecast-X files untouched.
+The 30-day Altcoin Season reading briefly reached 41 last week before slipping back to 33. Not enough to call a new altcoin cycle.
+
+BEYOND THIS WEEK
+
+Over the next 2–3 weeks, there's still no confirmed rotation. Further out, the 4–8 week cycle picture remains unclear.
+
+The thing I'm watching isn't simply whether Bitcoin bounces. It's whether Ethereum starts outperforming and more of the market follows.
+
+These are Cycle Navigator's Monday scenario ranges, not live prices or guaranteed targets.
+
+## Evidence anchors
+
+- Original W47 forecast freeze: `05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json`, Git blob `1e72eb62e2da2f164a0da4108a4cf5f51b910f41`. Each day is the originally frozen low/high rounded to the nearest whole USDT (BTC and ETH); weekly envelope is a separate broader range, also rounded. Ranges do not imply known price outcomes.
+- Original W47 machine CN package: `05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json`, Git blob `9d2e4193e92edb3708e507ac9aac6b919df72e8a`. `MIXED_WITH_DOWNSIDE_PRESSURE`, `1-3d DOWN`, `5-7d MIXED`, `2-3w NO_EDGE`, `4-8w UNAVAILABLE`; no confirmed ETH/BTC leadership or BTC to microcap rotation.
+- Completed W46 actuals and altcoin season reading: `03_DAILY_CAPTURE_LOGS/weekly/2026/W46.json`, Git blob `3d13f097ac42cf0e9aee6446a9cba4e303c50236`. BTC -12.69%, ETH -13.73%; 30-day altcoin relative performance reading 41 on Nov 13 and 33 on Nov 15. The historical altcoin index is descriptive, not itself proof of tradable rotation.
+- W47 source manifest: `05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_SOURCE_MANIFEST.json`, Git blob `c8581d6e4668db3acae8c67ebd5c4840e3b490aa`. Seven BTC/ETH daily ranges exist, but original issuer is API-free and not proof of calibrated edge.
+- W47 official pointer: `05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json`, Git blob `83bff2d16f6d331da5033a6f7f9e328a2d7a1c50`. CN `DEGRADED` with `CONTINUITY_FALLBACK` and `COVERAGE_LIMITATION`.
+
+## Publication control
+No automatic posting. Draft-only, not owner approved, not published on X. Monday freeze 2026-11-16T08:35:53Z is a static snapshot, not live market state at evening publication. Recheck real-world material invalidation and source freshness before claiming the ranges remain operative. This draft does not revise legacy CN forecast/score/public issue series.
