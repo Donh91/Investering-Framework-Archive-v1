@@ -79,6 +79,23 @@ class PublicForecastGateTests(unittest.TestCase):
         c["source_uri"] = "http://example.org/claim"
         self.assertIn("SOURCE_URI_NOT_HTTPS", mod.audit_case(c)["problems"])
 
+    def test_malformed_https_url_rejects_only_that_row(self):
+        good = valid()
+        malformed = {**valid(), "case_id": "bad-ipv6",
+                     "source_uri": "https://["}
+        other = {**valid(), "case_id": "another-valid"}
+        manifest = {"contract": mod.CONTRACT, "cases": [good, malformed, other]}
+        result = mod.audit_manifest(manifest)
+        self.assertEqual(result["row_count"], 3)
+        self.assertEqual(result["rows"][0]["status"],
+                         "STRUCTURAL_ONLY_INDEPENDENT_PROOF_UNVERIFIED")
+        self.assertEqual(result["rows"][1]["status"], "REJECTED_SCHEMA")
+        self.assertIn("SOURCE_URI_NOT_HTTPS", result["rows"][1]["problems"])
+        self.assertEqual(result["rows"][2]["status"],
+                         "STRUCTURAL_ONLY_INDEPENDENT_PROOF_UNVERIFIED")
+        self.assertEqual(result["scientific_admitted_count"], 0)
+        self.assertEqual(result["forecast_scores_created"], 0)
+
     def test_invalid_digest_rejected(self):
         c = valid()
         c["source_content_sha256"] = "a"

@@ -52,8 +52,17 @@ def audit_case(row: object) -> dict:
     if not isinstance(row.get("asset"), str) or row.get("asset") not in {"BTC", "ETH", "SOL"}:
         problems.append("ASSET_NOT_WHITELISTED")
     uri = row.get("source_uri")
-    if not isinstance(uri, str) or urlparse(uri).scheme != "https" or not urlparse(uri).netloc:
+    # urllib rejects malformed IPv6 bracket syntax with ValueError. A single
+    # hostile row must not abort the entire read-only research manifest.
+    if not isinstance(uri, str):
         problems.append("SOURCE_URI_NOT_HTTPS")
+    else:
+        try:
+            parsed_uri = urlparse(uri)
+            if parsed_uri.scheme != "https" or not parsed_uri.netloc:
+                problems.append("SOURCE_URI_NOT_HTTPS")
+        except ValueError:
+            problems.append("SOURCE_URI_NOT_HTTPS")
     digest = row.get("source_content_sha256")
     if digest is not None and (not isinstance(digest, str) or not HEX_RE.fullmatch(digest)):
         problems.append("MALFORMED_SOURCE_HASH")
