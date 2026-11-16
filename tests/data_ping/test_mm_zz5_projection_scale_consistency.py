@@ -78,6 +78,9 @@ class MMZZ5ContractTest(unittest.TestCase):
         f[0]=copy.deepcopy(f[0])
         f[0]["completed_week_hourly_capture"]["hourly_sequence"]["btc"]["week_range"]["close"]=80500
         f[0]["completed_week_hourly_capture"]["hourly_sequence"]["eth"]["week_range"]["close"]=2350
+        f[1]=copy.deepcopy(f[1])
+        f[1]["assets"]["BTC"]["high"]=82000
+        f[1]["assets"]["ETH"]["high"]=2600
         output=build_offline_value(*f,2026,46,34,33)
         for row in output["forecast_freeze"]["bull_bear_scale"]["horizons"].values():
             self.assertEqual((row["bull"],row["bear"],row["bias"]),(6,4,"LEAN_BULLISH"))
