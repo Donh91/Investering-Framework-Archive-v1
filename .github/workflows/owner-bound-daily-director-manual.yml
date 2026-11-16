@@ -48,6 +48,8 @@ jobs:
           python -m py_compile scripts/api_agent/manual_astra_task2_realdata_v2.py
           python -m unittest tests.research.test_task2_all_cn_historical_replay_v1 -v
           python -m unittest tests.research.test_task2_all_cn_astra_high_v1 -v
+          python -m unittest tests.research.test_task2_astra_public_w46w47_v1 -v
+          python scripts/research/task2_astra_public_w46w47_v1.py preview --out runtime/astra-public-pr-preflight
           python scripts/research/task2_all_cn_historical_replay_v1.py --out runtime/task2-allcn-pr-ci
           python scripts/research/task2_all_cn_astra_high_v1.py preview --out runtime/astra-allcn-preflight-ci --analysis-dir runtime/task2-allcn-pr-ci
           python -m py_compile scripts/api_agent/manual_astra_task2_high_v1.py
@@ -386,3 +388,89 @@ jobs:
             runtime/task2-astra-realdata-v2/research_output.md
           retention-days: 90
           if-no-files-found: warn
+
+  astra-public-w46w47:
+    # DISTINCT owner-only one-use Task2 paid research; no Alpha economics or CI tool charges.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.action == 'created' &&
+      github.event.issue.number == 1596 &&
+      github.event.comment.user.login == 'Donh91' &&
+      github.actor == 'Donh91' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.comment.body == 'OWNER_LAUNCH_ASTRA_TASK2_PUBLIC_W46W47_20261116_ONE_SHOT'
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    concurrency:
+      group: task2-astra-public-w46w47-nov16-one
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify original public source, owner/budget/claim negatives, no API charge
+        run: |
+          python -m py_compile scripts/research/task2_astra_public_w46w47_v1.py
+          python -m unittest tests.research.test_task2_astra_public_w46w47_v1 -v
+      - name: Enforce existing USD50 shared guard and protected USD4 reserve
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --hard-stop-usd 50 --reserve-usd 4 --new-request-upper-usd 0
+      - name: Prepare public-only frozen W46 and W47 text research with conservative USD15 upper
+        run: python scripts/research/task2_astra_public_w46w47_v1.py prepare --out runtime/astra-public-w46w47
+      - name: Verify owner event and no prior claim; native persistent claim before paid request
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/task2_astra_public_w46w47_v1.py reserve --out runtime/astra-public-w46w47
+      - name: Persist claim and source-bound request before any possible billing
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-astra-public-w46w47-claim
+          path: |
+            runtime/astra-public-w46w47/claim.json
+            runtime/astra-public-w46w47/source_manifest.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Mark exactly one billable attempt before POST
+        run: python scripts/research/task2_astra_public_w46w47_v1.py mark_attempt --out runtime/astra-public-w46w47
+      - name: Persist attempt receipt BEFORE HTTP
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-astra-public-w46w47-prepost-attempt
+          path: runtime/astra-public-w46w47/attempt.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Submit ONE Astra High text-only Responses POST, no tools, no retries
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/task2_astra_public_w46w47_v1.py submit --out runtime/astra-public-w46w47
+      - name: Collect by GET only; never replay ambiguous paid POST
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/task2_astra_public_w46w47_v1.py collect --out runtime/astra-public-w46w47
+      - name: Preserve source, actual provider handle, usage, report or failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-astra-public-w46w47-evidence-${{ github.run_id }}
+          path: |
+            runtime/astra-public-w46w47/claim.json
+            runtime/astra-public-w46w47/source_manifest.json
+            runtime/astra-public-w46w47/attempt.json
+            runtime/astra-public-w46w47/handle.json
+            runtime/astra-public-w46w47/pending.json
+            runtime/astra-public-w46w47/receipt.json
+            runtime/astra-public-w46w47/ASTRA_TASK2_PUBLIC_W46W47_RESEARCH.md
+          retention-days: 90
+          if-no-files-found: warn
+
