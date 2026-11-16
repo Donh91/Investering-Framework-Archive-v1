@@ -32,3 +32,8 @@ class Tests(unittest.TestCase):
     m.core.write_once(p/"claim.json",{"mission":m.MISSION,"request_sha256":m.digest(m.core.canonical(req)),"run_id":"1","source_main_sha":"a"*40})
     m.mark_attempt(p)
     with self.assertRaises(Exception):m.mark_attempt(p)
+
+ def test_real_paid_path_requires_future_distinct_prehttp_reservation(self):
+  for m in (a,b):
+   with self.assertRaisesRegex(ValueError,'DISTINCT_ASTRA_10USD_RESERVATION_REQUIRED'):
+    m.check_reservation()
