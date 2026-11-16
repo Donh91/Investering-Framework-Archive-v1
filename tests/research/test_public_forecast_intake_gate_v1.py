@@ -40,6 +40,30 @@ class PublicForecastGateTests(unittest.TestCase):
         c["frozen_at_utc"] = "2026-11-16T08:04:00Z"
         self.assertIn("NONCAUSAL_CLOCK_ORDER", mod.audit_case(c)["problems"])
 
+    def test_missing_observation_does_not_hide_after_outcome_freeze(self):
+        c = valid()
+        c["first_machine_observed_at_utc"] = None
+        c["frozen_at_utc"] = "2026-11-16T08:04:00Z"
+        result = mod.audit_case(c)
+        self.assertEqual(result["status"], "REJECTED_SCHEMA")
+        self.assertIn("NONCAUSAL_CLOCK_ORDER", result["problems"])
+
+    def test_missing_freeze_does_not_hide_seen_after_outcome(self):
+        c = valid()
+        c["frozen_at_utc"] = None
+        c["first_machine_observed_at_utc"] = "2026-11-16T08:04:00Z"
+        result = mod.audit_case(c)
+        self.assertEqual(result["status"], "REJECTED_SCHEMA")
+        self.assertIn("NONCAUSAL_CLOCK_ORDER", result["problems"])
+
+    def test_malformed_unrelated_clock_does_not_hide_known_issue_after_outcome(self):
+        c = valid()
+        c["first_machine_observed_at_utc"] = "invalid"
+        c["source_issued_at_utc"] = "2026-11-16T08:04:00Z"
+        result = mod.audit_case(c)
+        self.assertEqual(result["status"], "REJECTED_SCHEMA")
+        self.assertIn("NONCAUSAL_CLOCK_ORDER", result["problems"])
+
     def test_seen_before_original_issue_rejected(self):
         c = valid()
         c["first_machine_observed_at_utc"] = "2026-11-16T07:59:00Z"

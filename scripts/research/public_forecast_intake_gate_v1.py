@@ -64,10 +64,19 @@ def audit_case(row: object) -> dict:
     for key, value in clocks.items():
         if row.get(key) is not None and value is None:
             problems.append("MALFORMED_" + key.upper())
-    if all(v is not None for v in clocks.values()):
-        issued, seen, frozen, start = clocks.values()
-        if not (issued <= seen <= frozen < start):
-            problems.append("NONCAUSAL_CLOCK_ORDER")
+    # Evaluate every knowable ordering, even when one clock is absent.
+    # Missing observation proof must never mask a known after-outcome freeze.
+    clock_keys = tuple(clocks)
+    for i, left in enumerate(clock_keys):
+        if clocks[left] is None:
+            continue
+        for right in clock_keys[i + 1:]:
+            if clocks[right] is None:
+                continue
+            violation = (clocks[left] >= clocks[right] if right == "outcome_window_start_utc"
+                         else clocks[left] > clocks[right])
+            if violation:
+                problems.append("NONCAUSAL_CLOCK_ORDER")
     if problems:
         return {"case_id": row.get("case_id"), "status": "REJECTED_SCHEMA",
                 "problems": sorted(set(problems)), "scientific_admitted": False,
