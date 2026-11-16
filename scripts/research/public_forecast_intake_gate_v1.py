@@ -43,9 +43,9 @@ def audit_case(row: object) -> dict:
     for key in REQUIRED:
         if key not in row:
             problems.append("MISSING_" + key.upper())
-    if row.get("authority") not in AUTHORITIES:
+    if not isinstance(row.get("authority"), str) or row.get("authority") not in AUTHORITIES:
         problems.append("AUTHORITY_NOT_RESEARCH_ONLY")
-    if row.get("claim_type") not in CLAIM_TYPES:
+    if not isinstance(row.get("claim_type"), str) or row.get("claim_type") not in CLAIM_TYPES:
         problems.append("INVALID_CLAIM_TYPE")
     if not isinstance(row.get("case_id"), str) or not row.get("case_id", "").strip():
         problems.append("INVALID_CASE_ID")
@@ -91,7 +91,7 @@ def audit_manifest(manifest: object) -> dict:
     if not isinstance(cases, list):
         raise ValueError("CASES_NOT_ARRAY")
     ids = [c.get("case_id") for c in cases if isinstance(c, dict)]
-    if len(ids) != len(set(ids)):
+    if len([x for x in ids if isinstance(x, str)]) != len(set(x for x in ids if isinstance(x, str))):
         raise ValueError("DUPLICATE_CASE_ID")
     results = [audit_case(c) for c in cases]
     return {"contract": CONTRACT, "rows": results, "row_count": len(results),
