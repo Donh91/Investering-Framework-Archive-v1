@@ -495,11 +495,10 @@ class ChallengerATest(unittest.TestCase):
                              "INCONCLUSIVE_FIRST_SCORE_SOURCE")
 
     def test_first_main_paired_rows_require_internal_consistency(self):
-        issued = {"assets": {"BTC": {"days": [
-            {"day": 2, "scored_from_utc": "2026-11-17T00:00:00Z"}]}}}
-        sample = {"rows": [{"asset": "BTC", "day": 2, "bars": 24,
-                            "A_interval_score": 0.1, "A_width": 0.2,
-                            "CN_interval_score": 0.4, "CN_width": 0.3}],
+        # Real synthetic issuer/scorer output: the former handwritten positive
+        # row had missing source clocks and an impossible A score below width.
+        issued, genuinely_scored = self._verified_paired_score_fixture()
+        sample = {"rows": [copy.deepcopy(genuinely_scored["rows"][0])],
                   "matured_rows": 1, "paired_rows": 1,
                   "week_winner_interval_score": "MISSING"}
         A.verify_first_main_paired_outcomes(sample, issued, "2026-11-16T09:30:00Z")
