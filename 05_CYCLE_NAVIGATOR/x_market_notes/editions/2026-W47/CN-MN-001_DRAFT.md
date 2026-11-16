@@ -5,52 +5,64 @@
 **Område:** Ny separat Cycle Navigator X-serie
 **Primary folder:** `05_CYCLE_NAVIGATOR/x_market_notes/editions/2026-W47/`
 **Kilde:** Frossen 2026-W47 Cycle Navigator-prognose / public legacy CN #34 som kilde, men selvstændig editorial serie `CN-MN-001`.
-**Revision:** v4, ejerkrav om tidslinje + rotation + BTC/ETH pricerange dag for dag; erstatter tidligere v1-v3 X-tekst, der ikke var dækkende for CN.
+**Revision:** v5, audience-first, one weekly question;, ejerkrav om tidslinje + rotation + BTC/ETH pricerange dag for dag; erstatter tidligere v1-v3 X-tekst, der ikke var dækkende for CN.
 
-## X-opslag - anbefalet kladde v4
+## X-opslag - anbefalet kladde v5
 
-CYCLE NAVIGATOR | MARKET NOTES 001
-NOV 16–22, 2026
+CYCLE NAVIGATOR | 001
+16–22 NOVEMBER 2026
 
-The week starts with a test of the lows, not a confirmed recovery.
+A Bitcoin bounce isn't an altcoin rotation.
 
-Bitcoin fell 12.7% last week. Ethereum lost 13.7%. Cycle Navigator still leans defensive, although the coming week may be far from a straight line down.
+After last week's selloff, that's the distinction I'm watching.
 
-THE WEEK AHEAD
+BTC lost 12.7%. ETH fell 13.7%. The question now is whether buyers can hold the market together through another test of the lows, or whether the next rally fades like the last one.
 
-Mon–Tue: Another test lower.
-Wed: First attempt to stabilize.
-Thu: Renewed pressure is possible.
-Fri–Sat: Room for a rebound if the lows hold.
-Sun: Some of that recovery may be tested again.
+THIS WEEK'S TIMELINE
 
-DAILY PRICE RANGES
+Mon–Tue | Another test of the lows
+Wed | First attempt to stabilize
+Thu | Renewed selling pressure possible
+Fri–Sat | Recovery attempt if support holds
+Sun | Can the rebound survive?
 
-BTC / ETH, quoted in USDT
+The second test matters more to me than the first green day.
 
-Mon 16: BTC 63,803–65,344 | ETH 1,783–1,844
-Tue 17: BTC 63,134–64,806 | ETH 1,763–1,830
-Wed 18: BTC 63,449–65,251 | ETH 1,771–1,843
-Thu 19: BTC 62,892–64,824 | ETH 1,755–1,832
-Fri 20: BTC 63,804–65,866 | ETH 1,780–1,862
-Sat 21: BTC 64,455–66,648 | ETH 1,797–1,885
-Sun 22: BTC 64,055–66,379 | ETH 1,785–1,878
+BTC & ETH DAILY PRICE RANGES
 
-The wider weekly scenario allows BTC 61,770–67,199 and ETH 1,687–1,904.
+BTC / ETH, USDT
 
-CAPITAL ROTATION
+Mon 16 | 63,803–65,344 / 1,783–1,844
+Tue 17 | 63,134–64,806 / 1,763–1,830
+Wed 18 | 63,449–65,251 / 1,771–1,843
+Thu 19 | 62,892–64,824 / 1,755–1,832
+Fri 20 | 63,804–65,866 / 1,780–1,862
+Sat 21 | 64,455–66,648 / 1,797–1,885
+Sun 22 | 64,055–66,379 / 1,785–1,878
 
-Bitcoin still needs to find its footing. Ethereum hasn't established a lasting lead over BTC, and a broader move into large, mid and microcaps remains unconfirmed.
+THE ROTATION QUESTION
 
-The 30-day Altcoin Season reading briefly reached 41 last week before slipping back to 33. Not enough to call a new altcoin cycle.
+The 30-day Altcoin Season reading climbed to 41 on Friday, then slipped back to 33 by Sunday.
 
-BEYOND THIS WEEK
+ETH is still losing ground against BTC. There's no convincing handoff to large-cap alts yet, let alone a broader move into midcaps and microcaps.
 
-Over the next 2–3 weeks, there's still no confirmed rotation. Further out, the 4–8 week cycle picture remains unclear.
+The order I'm watching:
 
-The thing I'm watching isn't simply whether Bitcoin bounces. It's whether Ethereum starts outperforming and more of the market follows.
+BTC finds a floor → ETH starts outperforming → larger alts participate → strength reaches further down the market.
 
-These are Cycle Navigator's Monday scenario ranges, not live prices or guaranteed targets.
+That sequence hasn't happened.
+
+WHAT WOULD CHANGE MY MIND?
+
+If Bitcoin holds its next test, ETH/BTC improves and more altcoins start participating, I'll take the recovery more seriously.
+
+If Bitcoin rebounds alone while ETH continues to lag, I'll treat it as another bounce inside a weak market.
+
+For the next 2–3 weeks, a broader rotation remains unconfirmed. Beyond that, I don't have a reliable date for the next cycle phase.
+
+These are the original price ranges set on Monday morning, not live prices.
+
+Next Monday I'll come back to this exact outlook and see what held up, what failed and whether rotation actually began.
 
 ## Evidence anchors
 
