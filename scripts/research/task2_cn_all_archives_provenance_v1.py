@@ -152,7 +152,9 @@ def week_census(repo_root: Path, asof: dt.datetime) -> list[dict]:
     if not expected_forecasts or not expected_forecasts.issubset(actual_forecasts):
         raise ValueError("FROZEN_WEEKLY_SOURCE_SET_DRIFT")
     for later_path in actual_forecasts - expected_forecasts:
-        if not verified_post_index_forecast(later_path, (repo_root / later_path).read_bytes()):
+        later_file = repo_root / later_path
+        if (later_file.is_symlink()
+                or not verified_post_index_forecast(later_path, later_file.read_bytes())):
             raise ValueError("FROZEN_WEEKLY_SOURCE_SET_DRIFT")
     result = []
     for year_dir in sorted(weeks_dir.glob("[0-9][0-9][0-9][0-9]")):
