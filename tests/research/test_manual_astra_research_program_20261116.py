@@ -81,3 +81,33 @@ class Tests(unittest.TestCase):
       self.assertEqual(http.call_count,1)
       self.assertEqual(http.call_args[0][0],"POST")
     self.assertTrue((out/"submission_started.json").is_file())
+
+ def test_all_five_no_bill_source_and_budget_admissions(self):
+  import subprocess,sys
+  root=Path(__file__).resolve().parents[2]
+  for m in (a,b,c,d,e):
+   with self.subTest(mission=m.MISSION),tempfile.TemporaryDirectory() as tmp:
+    with mock.patch.dict(os.environ,{"GITHUB_SHA":"a"*40}),mock.patch.object(m.core,"http_json",side_effect=AssertionError("NETWORK_BLOCKED")):
+     m.prepare(Path(tmp),preview=True)
+    manifest=json.loads((Path(tmp)/"source_manifest.json").read_text())
+    self.assertEqual(manifest["source_count"],len(m.SOURCE))
+    self.assertGreaterEqual(len(m.SOURCE),8)
+    self.assertLessEqual(manifest["worst_case_text_only_usd"],10)
+    command=[sys.executable,str(root/"scripts/api_agent/check_monthly_cost_guard.py"),
+      "--receipt-root",str(root/"research/api_agent/outputs"),
+      "--hard-stop-usd","100","--reserve-usd","4",
+      "--new-request-upper-usd","0",
+      "--owner-astra-program-work-id",m.MISSION]
+    proc=subprocess.run(command,text=True,capture_output=True,cwd=root,timeout=30)
+    self.assertTrue(proc.stdout,proc.stderr)
+    result=json.loads(proc.stdout)
+    self.assertEqual(proc.returncode,0,result)
+    self.assertEqual(result["status"],"PASS",result)
+    self.assertEqual(result["pending_liability_upper_usd"],73.0)
+    self.assertEqual(result["owner_global_hard_stop_usd"],100.0)
+  bad=subprocess.run([sys.executable,str(root/"scripts/api_agent/check_monthly_cost_guard.py"),
+   "--receipt-root",str(root/"research/api_agent/outputs"),
+   "--hard-stop-usd","100","--reserve-usd","4","--owner-astra-program-work-id","FAKE-UNAUTHORISED"],
+   text=True,capture_output=True,cwd=root,timeout=30)
+  self.assertNotEqual(bad.returncode,0)
+  self.assertIn("BLOCKED",bad.stdout)
