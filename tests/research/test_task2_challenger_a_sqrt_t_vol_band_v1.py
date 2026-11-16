@@ -454,6 +454,66 @@ class ChallengerATest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "historical or current A issuance"):
                 A.no_issuance_missing_score(root, 2026, 47, as_of_utc=maturity)
 
+    def test_git_configuration_cannot_hide_deleted_merge_issuance(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._git(root, "init", "-b", "main")
+            self._git(root, "config", "user.name", "Task2 CI")
+            self._git(root, "config", "user.email", "task2-tests@example.invalid")
+            (root / "README").write_text("base\\n")
+            self._git(root, "add", "README")
+            self._git(root, "commit", "-m", "base", date="2026-11-15T00:00:00+00:00")
+            self._git(root, "checkout", "-b", "issued")
+            rel = A.ISSUANCE_PATH.format(year=2026, week=47)
+            f = root / rel
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_text('{"issued":true}\\n')
+            self._git(root, "add", rel)
+            self._git(root, "commit", "-m", "original issued source",
+                      date="2026-11-16T09:30:00+00:00")
+            self._git(root, "checkout", "main")
+            self._git(root, "merge", "--no-ff", "issued", "-m", "merge original",
+                      date="2026-11-16T10:00:00+00:00")
+            f.unlink()
+            self._git(root, "add", "-u")
+            self._git(root, "commit", "-m", "delete original",
+                      date="2026-11-22T01:00:00+00:00")
+            self._git(root, "config", "log.diffMerges", "combined")
+            self._git(root, "config", "log.follow", "true")
+            self._git(root, "config", "diff.renames", "copies")
+            maturity = A.week_monday(2026, 47) + 7 * A.DAY + A.HOUR
+            with self.assertRaisesRegex(ValueError, "historical or current A issuance"):
+                A.no_issuance_missing_score(root, 2026, 47, as_of_utc=maturity)
+
+    def test_forged_first_main_score_summary_cannot_create_a_win(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._commit_score_fixture(root, score_winner="A", paired=8)
+            with self.assertRaisesRegex(ValueError, "frozen paired rows"):
+                A.read_first_main_weekly_score(root, 2026, 47)
+            self.assertEqual(A.confirmatory_decision_from_main(root, "2026-W47")["status"],
+                             "INCONCLUSIVE_FIRST_SCORE_SOURCE")
+
+    def test_first_main_paired_rows_require_internal_consistency(self):
+        issued = {"assets": {"BTC": {"days": [
+            {"day": 2, "scored_from_utc": "2026-11-17T00:00:00Z"}]}}}
+        sample = {"rows": [{"asset": "BTC", "day": 2, "bars": 24,
+                            "A_interval_score": 0.1, "A_width": 0.2,
+                            "CN_interval_score": 0.4, "CN_width": 0.3}],
+                  "matured_rows": 1, "paired_rows": 1,
+                  "week_winner_interval_score": "MISSING"}
+        A.verify_first_main_paired_outcomes(sample, issued, "2026-11-16T09:30:00Z")
+        negatives = [
+            {**sample, "paired_rows": 8, "week_winner_interval_score": "A"},
+            {**sample, "week_winner_interval_score": "A"},
+            {**sample, "rows": [{**sample["rows"][0], "CN_interval_score": float("nan")}]},
+            {**sample, "rows": sample["rows"] * 2, "matured_rows": 2, "paired_rows": 2},
+        ]
+        for bad in negatives:
+            with self.subTest(bad=bad):
+                with self.assertRaisesRegex(ValueError, "frozen paired rows"):
+                    A.verify_first_main_paired_outcomes(bad, issued, "2026-11-16T09:30:00Z")
+
     def test_first_eight_valid_skip_proven_missing_and_ignore_later_corruption(self):
         rows = self._confirmatory_rows(10)
         rows[0]["paired_rows"] = 0
@@ -726,6 +786,7 @@ class ChallengerATest(unittest.TestCase):
             "first_main_issuance": issue_proof,
             "decision_status": "SHADOW_ONLY_NO_PROMOTION",
             "first_http_delivery": "UNKNOWN",
+            "rows": [], "matured_rows": 0,
             "paired_rows": paired, "week_winner_interval_score": score_winner,
         }, sort_keys=True) + "\n")
         self._git(root, "add", score_rel)

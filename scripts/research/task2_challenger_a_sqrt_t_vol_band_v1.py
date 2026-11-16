@@ -450,8 +450,11 @@ def no_issuance_missing_score(root: Path, year: int, week: int,
     if _git(root, "rev-parse", "--is-shallow-repository") != "false":
         raise ValueError("no-issuance MISSING cannot trust shallow main history")
     # A removed or renamed first-main issuance MUST NOT turn into 'never issued'.
-    additions = _git(root, "log", "--first-parent", "-m", "--diff-filter=A",
-                     "--name-only", "--format=", "refs/heads/main", "--", rel)
+    additions = _git(root, "-c", "log.follow=false", "-c", "log.diffMerges=first-parent",
+                     "-c", "diff.renames=false", "log", "--first-parent",
+                     "--diff-merges=first-parent", "--no-renames", "--root",
+                     "--diff-filter=A", "--name-only", "--format=",
+                     "refs/heads/main", "--", rel)
     current = subprocess.run(["git", "-C", str(root), "cat-file", "-e",
                               "refs/heads/main:" + rel], capture_output=True)
     if rel in additions.splitlines() or current.returncode == 0:
@@ -503,13 +506,83 @@ def verify_no_issuance_first_main(root: Path, row: dict, proof: dict,
                     pin, proof["first_main_commit"]], check=True, capture_output=True)
     # Audit all history up to the first score commit, not just current main:
     # a genuine early issue cannot be deleted and recast as absent.
-    introductions = _git(root, "log", "--first-parent", "-m", "--diff-filter=A",
-                         "--name-only", "--format=", proof["first_main_commit"], "--", rel)
+    introductions = _git(root, "-c", "log.follow=false", "-c", "log.diffMerges=first-parent",
+                         "-c", "diff.renames=false", "log", "--first-parent",
+                         "--diff-merges=first-parent", "--no-renames", "--root",
+                         "--diff-filter=A", "--name-only", "--format=",
+                         proof["first_main_commit"], "--", rel)
     exists = subprocess.run(["git", "-C", str(root), "cat-file", "-e",
                              proof["first_main_commit"] + ":" + rel], capture_output=True)
     if rel in introductions.splitlines() or exists.returncode == 0:
         raise ValueError("issued A source was present before first MISSING score")
 
+
+
+
+def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_clock: str) -> None:
+    """Validate immutable scored row evidence, never trust a claimed weekly winner.
+
+    This proves row/summary consistency only. It is not an independent HTTP
+    availability clock or a guarantee that market bars were sealed.
+    """
+    rows = row.get("rows")
+    if not isinstance(rows, list) or len(rows) > 14:
+        raise ValueError("frozen paired rows absent or overfull")
+    if type(row.get("matured_rows")) is not int or row["matured_rows"] != len(rows):
+        raise ValueError("frozen paired rows count inconsistent")
+    assets = issuance.get("assets")
+    if not isinstance(assets, dict):
+        raise ValueError("frozen paired rows issuance assets invalid")
+    allowed = {}
+    for asset, spec in assets.items():
+        if asset not in PARAMS["assets"] or not isinstance(spec, dict):
+            raise ValueError("frozen paired rows unexpected issuance asset")
+        days = spec.get("days")
+        if not isinstance(days, list):
+            raise ValueError("frozen paired rows invalid issued days")
+        for day in days:
+            if (not isinstance(day, dict) or type(day.get("day")) is not int
+                    or not isinstance(day.get("scored_from_utc"), str)):
+                raise ValueError("frozen paired rows invalid issued day")
+            key = (asset, day["day"])
+            if key in allowed:
+                raise ValueError("frozen paired rows duplicate issued day")
+            allowed[key] = day
+    first = utc(first_main_clock)
+    used, paired = set(), []
+    def finite_number(v, positive=False):
+        return (type(v) in (int, float) and math.isfinite(v)
+                and (v > 0 if positive else v >= 0))
+    for r in rows:
+        if not isinstance(r, dict) or type(r.get("day")) is not int:
+            raise ValueError("frozen paired rows invalid outcome")
+        key = (r.get("asset"), r["day"])
+        if key not in allowed or key in used:
+            raise ValueError("frozen paired rows duplicate or unissued asset-day")
+        used.add(key)
+        if utc(allowed[key]["scored_from_utc"]) < first:
+            raise ValueError("frozen paired rows before original first-main issue")
+        if (type(r.get("bars")) is not int
+                or not PARAMS["min_scored_bars_per_day"] <= r["bars"] <= 24
+                or not finite_number(r.get("A_interval_score"))
+                or not finite_number(r.get("A_width"), positive=True)):
+            raise ValueError("frozen paired rows invalid A score or bars")
+        if "CN_interval_score" in r:
+            if not (finite_number(r["CN_interval_score"])
+                    and finite_number(r.get("CN_width"), positive=True)):
+                raise ValueError("frozen paired rows invalid CN score")
+            paired.append(r)
+        elif any(k in r for k in ("CN_width", "CN_range_covered", "CN_close_covered")):
+            raise ValueError("frozen paired rows incomplete CN pair")
+    winner = "MISSING"
+    if len(paired) >= DECISION["min_paired_rows_per_week"]:
+        score_a = sum(r["A_interval_score"] for r in paired)
+        score_cn = sum(r["CN_interval_score"] for r in paired)
+        winner = "A" if score_a < score_cn else ("CN" if score_cn < score_a else "TIE")
+    if (type(row.get("paired_rows")) is not int
+            or row["paired_rows"] != len(paired)
+            or row.get("week_winner_interval_score") != winner):
+        raise ValueError("frozen paired rows winner/count mismatch")
 
 
 def read_first_main_weekly_score(root: Path, year: int, week: int) -> tuple[dict, dict]:
@@ -567,6 +640,8 @@ def read_first_main_weekly_score(root: Path, year: int, week: int) -> tuple[dict
     # admitted as a retrospectively backfilled valid week. Keep its provenance
     # but force this week to MISSING regardless of later CSV improvements.
     accepted = first_clock <= maturity + SCORE_FIRST_MATURITY_GRACE
+    if accepted and row.get("missing_reason") != "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY":
+        verify_first_main_paired_outcomes(row, issued, issue_proof["issuance_first_main_utc"])
     result = dict(row)
     if not accepted:
         result["paired_rows"] = 0
