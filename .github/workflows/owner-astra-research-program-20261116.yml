@@ -55,7 +55,7 @@ jobs:
       - name: Owner bounded source tests
         run: python -m unittest tests.research.test_manual_astra_research_program_20261116 -v
       - name: Existing shared USD50 gate protects USD4 and previous reservations
-        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 100 --reserve-usd 4 --new-request-upper-usd 0 --owner-astra-program-work-id ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE --owner-astra-program-work-id ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE
+        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 100 --reserve-usd 4 --new-request-upper-usd 0 --owner-astra-program-work-id ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE
       - name: Prepare public model prompt and maximum cost
         run: python scripts/research/manual_astra_s1_vnext_20261116.py prepare --out runtime/astra-s1_vnext
       - name: Verify event, independent budget, model GET, and one original claim
@@ -131,7 +131,7 @@ jobs:
       - name: Owner bounded source tests
         run: python -m unittest tests.research.test_manual_astra_research_program_20261116 -v
       - name: Existing shared USD50 gate protects USD4 and previous reservations
-        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 100 --reserve-usd 4 --new-request-upper-usd 0
+        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 100 --reserve-usd 4 --new-request-upper-usd 0 --owner-astra-program-work-id ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE
       - name: Prepare public model prompt and maximum cost
         run: python scripts/research/manual_astra_compass_total_20261116.py prepare --out runtime/astra-compass_total
       - name: Verify event, independent budget, model GET, and one original claim
