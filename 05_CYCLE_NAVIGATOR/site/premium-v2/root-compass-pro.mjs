@@ -281,8 +281,10 @@ function renderRiskQuick(){
  const stage=sourceStage&&/^[1-5]\/5 · /.test(sourceStage)?sourceStage:null;
  set('cn-risk-quick-state',stage||
    (en?'— / 5 · awaiting fresh data':'— / 5 · afventer nye data'));
- set('cn-risk-quick-note',en?'Ordinal risk level, not probability':
-   'Risikoniveau, ikke sandsynlighed');
+ // Evidence gate: no proven pullback edge yet (pullback_learning suspended, 0 closed
+ // episodes). Say so on the card itself instead of implying a calibrated warning.
+ set('cn-risk-quick-note',en?'Research · no proven edge':
+   'Forskning · ikke bevist edge');
  const copy=p?.public_explanation;
  const bounded=copy?.contract==='CN_PUBLIC_PROTECTION_COPY_v1'&&
    copy?.action_authority===false&&copy?.risk_state===p?.pullback_risk_state&&
@@ -316,6 +318,8 @@ function renderRiskQuick(){
    (quality||(en?'unknown':'ukendt')));
  set('cn-risk-quick-onset',(en?'Possible onset: ':'Mulig start: ')+
    (onset||(en?'not established':'ikke dokumenteret')));
+ // No calibrated onset model exists yet: keep the element, never show a start time.
+ {const o=$('cn-risk-quick-onset');if(o)o.hidden=true;}
  // Same official five source stages, never inferred from hourly prices.
  const source=$('premium-risk-steps'),target=$('cn-risk-quick-steps');
  if(source&&target){

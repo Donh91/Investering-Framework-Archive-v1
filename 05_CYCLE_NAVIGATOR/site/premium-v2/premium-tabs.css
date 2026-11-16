@@ -183,6 +183,11 @@
 .cn-risk-quick .cn-risk-quick-brief{font-size:12px;color:#40586d;
  line-height:1.6;margin:8px 0 0}
 .cn-risk-more{margin-top:9px;border-top:1px solid #e1e9f1;padding-top:9px}
+/* Evidence gate: research-only pullback ordinal is one quiet line, never a hero card. */
+.cn-risk-quick[data-evidence="research"]{background:transparent;border-style:dashed;padding:9px 12px;margin:10px 0}
+.cn-risk-quick[data-evidence="research"] #cn-risk-quick-state{font-size:14px;font-weight:650;color:#40586d}
+.cn-risk-quick[data-evidence="research"] #cn-risk-quick-note{font-size:11px;color:#6a7f92}
+.cn-risk-quick[data-evidence="research"] .cn-risk-more{margin-top:6px;padding-top:6px}
 .cn-risk-more>summary{cursor:pointer;min-height:34px;font-size:12px;
  font-weight:720;color:#21527d}
 .cn-risk-more>summary:focus-visible{outline:2px solid #2f6fda;outline-offset:2px}
