@@ -424,8 +424,8 @@ jobs:
         run: >-
           python scripts/api_agent/check_monthly_cost_guard.py
           --receipt-root research/api_agent/outputs
-          --hard-stop-usd 50 --reserve-usd 4 --new-request-upper-usd 0
-      - name: Prepare public-only frozen W46 and W47 text research with conservative USD15 upper
+          --hard-stop-usd 40 --reserve-usd 4 --new-request-upper-usd 0
+      - name: Prepare public-only frozen W46 and W47 text research with conservative USD10 upper
         run: python scripts/research/task2_astra_public_w46w47_v1.py prepare --out runtime/astra-public-w46w47
       - name: Verify owner event and no prior claim; native persistent claim before paid request
         env:
