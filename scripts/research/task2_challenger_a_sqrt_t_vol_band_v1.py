@@ -519,7 +519,8 @@ def verify_no_issuance_first_main(root: Path, row: dict, proof: dict,
 
 
 
-def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_clock: str) -> None:
+def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_clock: str,
+                                      original_cn_freeze: dict | None = None) -> None:
     """Validate immutable scored row evidence, never trust a claimed weekly winner.
 
     This proves row/summary consistency only. It is not an independent HTTP
@@ -549,6 +550,10 @@ def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_cloc
                 raise ValueError("frozen paired rows duplicate issued day")
             allowed[key] = day
     first = utc(first_main_clock)
+    # Only a verified original CN freeze may establish paired CN forecasts.
+    # Without it, every row claiming a CN pair must fail closed.
+    issued_cn = ({asset: cn_bands(original_cn_freeze, asset)
+                  for asset in PARAMS["assets"]} if isinstance(original_cn_freeze, dict) else {})
     used, paired = set(), []
     def finite_number(v, positive=False):
         return (type(v) in (int, float) and math.isfinite(v)
@@ -576,7 +581,8 @@ def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_cloc
                 or not finite_number(issued_width, positive=True)
                 or not 1 <= max_bars <= 24
                 or type(r.get("bars")) is not int
-                or not PARAMS["min_scored_bars_per_day"] <= r["bars"] <= max_bars
+                or max_bars < PARAMS["min_scored_bars_per_day"]
+                or r["bars"] != max_bars
                 or not finite_number(r.get("A_interval_score"))
                 or not finite_number(r.get("A_width"), positive=True)
                 or not math.isclose(r["A_width"], issued_width, rel_tol=1e-10, abs_tol=1e-10)
@@ -596,6 +602,16 @@ def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_cloc
                 or (a_close == 0 and r["A_interval_score"] <= r["A_width"])):
             raise ValueError("frozen paired rows A score contradicts coverage")
         if "CN_interval_score" in r:
+            actual_cn_band = issued_cn.get(r["asset"], {}).get(r["day"])
+            if actual_cn_band is None:
+                raise ValueError("frozen paired rows lack original issued CN band")
+            cn_lo, cn_hi = actual_cn_band
+            expected_cn_width = (cn_hi - cn_lo) / p0
+            if (not finite_number(expected_cn_width, positive=True)
+                    or not finite_number(r.get("CN_width"), positive=True)
+                    or not math.isclose(r["CN_width"], expected_cn_width,
+                                        rel_tol=1e-10, abs_tol=1e-10)):
+                raise ValueError("frozen paired rows CN width disagrees with issued freeze")
             if (not finite_number(r["CN_interval_score"])
                     or not finite_number(r.get("CN_width"), positive=True)
                     or r["CN_interval_score"] < r["CN_width"]
@@ -689,7 +705,22 @@ def read_first_main_weekly_score(root: Path, year: int, week: int) -> tuple[dict
     # but force this week to MISSING regardless of later CSV improvements.
     accepted = first_clock <= maturity + SCORE_FIRST_MATURITY_GRACE
     if accepted and row.get("missing_reason") != "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY":
-        verify_first_main_paired_outcomes(row, issued, issue_proof["issuance_first_main_utc"])
+        # Read bytes from the exact first-main commit already bound and checked
+        # by read_frozen_main_issuance. Never use a mutable working-tree CN file
+        # to manufacture eligible A-versus-CN comparison rows.
+        freeze_rel = FREEZE_PATH.format(year=year, week=week)
+        freeze_commit = issued["source"]["freeze_first_main_commit"]
+        try:
+            freeze_bytes = subprocess.run(
+                ["git", "-C", str(root), "show", freeze_commit + ":" + freeze_rel],
+                capture_output=True, check=True).stdout
+            original_cn = json.loads(freeze_bytes)
+        except (KeyError, TypeError, ValueError, subprocess.CalledProcessError) as exc:
+            raise ValueError("original first-main CN freeze unavailable") from exc
+        if not isinstance(original_cn, dict):
+            raise ValueError("original first-main CN freeze invalid")
+        verify_first_main_paired_outcomes(
+            row, issued, issue_proof["issuance_first_main_utc"], original_cn)
     result = dict(row)
     if not accepted:
         result["paired_rows"] = 0
