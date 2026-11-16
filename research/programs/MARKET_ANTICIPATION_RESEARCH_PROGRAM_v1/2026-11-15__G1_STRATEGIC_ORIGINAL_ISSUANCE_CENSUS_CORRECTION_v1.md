@@ -60,3 +60,24 @@ This document supplements, does not replace, the original G1 source audit and ow
 **Minimum paired cohort gate:** If fewer than 8 non-overlapping source-eligible original issues exist for a fixed horizon by a registered owner-chosen future cutoff, mark B1 `INSUFFICIENT_EVIDENCE` and C4-vs-B1 `SOURCE_BLOCKED`; do not leave a new experiment indefinitely pending. This is a proposed preregistration threshold, not an authorization to score historical rows. C2/C3 must beat C1 on identical predeclared rows or be rejected; C4 is CONTEXT_ONLY without a native source-clock-qualified expected-policy-path series. No premature model selection.
 
 **Next owners:** Task2 #1596 + integrity #1827 + Forward/CN #1516, parent MAR #209. Independent method review remains requested on Claude Bridge #173 with exact PR current head. Zero paid calls / no new automations / no trading / no main merge.
+
+## 3A. New native GitHub server-side receipt audit (independent of runner committer timestamps)
+
+**Actually run on 2026-11-16, G0/G1 READ-ONLY.** GitHub REST `GET /repos/Donh91/Investering-Framework-Archive-v1/commits/{original first-add commit}/check-suites?per_page=100`, seven distinct commits from Claude v3's first-parent census. The check-suite timestamps are GitHub service observations independent of the generating script's own `issued_at_utc` or git committer time. Readback was done from the native API, no model or market data was fetched, no money or original forecast was changed.
+
+| Original | First-add commit (prefix) | Declared issued (UTC) | First GitHub check-suite created (UTC, Claude app) | First GitHub Actions suite created (UTC) | Delta first server suite |
+|---|---|---|---|---|---|
+| W41 | 498b1e7a | 2026-10-05T06:14:07Z | 2026-10-05T06:14:11Z | 2026-10-05T06:14:17Z | +4 s |
+| W42 | 300f8664 | 2026-10-12T06:32:25Z | 2026-10-12T06:32:29Z | 2026-10-12T06:32:30Z | +4 s |
+| W43 | ddad4afe | 2026-10-19T05:19:14Z | 2026-10-19T05:19:18Z | 2026-10-19T05:19:19Z | +4 s |
+| W44 | ca7563d4 | 2026-10-26T06:57:50Z | 2026-10-26T06:57:53Z | 2026-10-26T06:57:54Z | +3 s |
+| W45 | ae6a3b5f | 2026-11-02T08:19:08Z | 2026-11-02T08:19:13Z | 2026-11-02T08:19:14Z | +5 s |
+| W46-v1 | fc0f12f7 | 2026-11-09T10:33:42Z | 2026-11-09T10:33:49Z | 2026-11-09T10:33:50Z | +7 s |
+| W46-v2 | 53315f7a | 2026-11-09T10:52:40Z | 2026-11-09T10:52:45Z | 2026-11-09T10:52:46Z | +5 s |
+
+**Proven narrow result:** All 7 originally frozen anchor commits were visible to GitHub's check-suite service only **3-7 seconds after their declared issue times**. This independently bounds the server receipt time shortly after the declared issue. It does **NOT** prove the user saw the forecast, that the original source data were available earlier, or that the forecast was already on GitHub at the exact second stamped in `issued_at_utc`. The stronger classification is `SERVER_CHECK_SUITE_RECEIPT_PRESENT_AFTER_DECLARED_ISSUE`, not `DELIVERY_VERIFIED`. No original server suite here is days or weeks late; each predates its respective later 21/30-day outcomes. The two W46 versions remain **one** weekly opportunity, with distinct service receipts.
+
+**Remaining missing original owner evidence:** producing workflow run-id, workflow start/end and decision cutoff, original upstream first-known input source, first valid CN consumer/publication receipt and actual user-visible delivery. Until verified, classify `PRODUCER_WORKFLOW_JOIN_UNVERIFIED`, `PROVIDER_FIRST_KNOWN_UNVERIFIED` and `PUBLIC_DELIVERY_UNKNOWN` separately. For strictly instant-as-issued scoring before any original GitHub server receipt, use the server receipt timestamp, never the earlier runner timestamp. If receipt is later than a specific pre-registered decision cutoff, classify not eligible for that cutoff. No historical forecast can be backdated from these records.
+
+**Known limit:** A GitHub check-suite is an independent *server-acceptance lower-bound observation*, not a proof of workflow completion and not a vendor-data timestamp. An eventual G2 model contest still requires separate same-clock source and consumer admission and non-overlapping prospective clusters.
+
