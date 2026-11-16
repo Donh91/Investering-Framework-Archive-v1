@@ -1,0 +1,56 @@
+{
+  "authority": "SHADOW_RESEARCH_ONLY_NON_CANONICAL",
+  "authority_firewall": {
+    "canonical_effect": false,
+    "execution_authority": false,
+    "market_state_effect": false,
+    "portfolio_effect": false,
+    "topup_authority": false
+  },
+  "contract": "SITUATION_ROOM_VERIFICATION_SHADOW_BRIDGE_v1",
+  "generated_at_utc": "2026-11-16T17:04:00Z",
+  "observation_date_utc": "2026-11-16",
+  "pending_verification": [
+    {
+      "canonical_effect": false,
+      "detection_time_utc": "2026-11-16T17:02:47Z",
+      "event_time_utc": "2026-11-16T06:00:43.467000Z",
+      "market_state_effect": false,
+      "portfolio_effect": false,
+      "shadow_admission": "NOT_ADMITTED_PENDING_VERIFICATION",
+      "shadow_id": "SRSH_7c2772bf6e5152d74ade",
+      "source": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 140021,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-16T17:02:49Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-16T17:02:50Z",
+        "role": "DISCOVERY_ONLY",
+        "sha256": "7877a59ccb4610f6fb7761e5d6e42fac7b1e9e3a326c482d417e90777036a0f1",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-11-16"
+      },
+      "title": "900 million dollar put at 60,000 tops Deribit open interest \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-11-16",
+      "verification_status": "PENDING_PRIMARY_VERIFICATION"
+    }
+  ],
+  "source_owner_contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "source_owner_path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/2026/11/2026-11-16.json",
+  "source_run_id": "SRDO_18f5a8c94d357c66",
+  "status": "PENDING_VERIFICATION",
+  "verification_policy": {
+    "accepted_methods": [
+      "OWNER_PRIMARY_EVENT_TITLE_OVERLAP",
+      "OWNER_PRIMARY_EVENT_FACT_ANCHORS",
+      "SITUATION_ROOM_LINKED_PRIMARY_SOURCE"
+    ],
+    "automatic_admission_requires_primary_corroboration": true,
+    "minimum_shared_tokens": 2,
+    "minimum_title_overlap": 0.45,
+    "situation_room_is_discovery_only": true
+  },
+  "verified_shadow_context": []
+}
