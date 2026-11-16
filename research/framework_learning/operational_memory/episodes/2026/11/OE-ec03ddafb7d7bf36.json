@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/source_vintages/W46_WEEKLY_CAPTURE_AS_OF_20261113.json",
+    "scripts/research/task2_cn_all_archives_provenance_v1.py",
+    "tests/cycle_navigator/test_daily_path_recovery.py",
+    "tests/research/test_task2_cn_all_archives_provenance_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-ec03ddafb7d7bf36",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(task2): preserve sealed W36-W46 vintage with exact-blob W47 post-index guard * test(cn): pin W45 replay to immutable W45 Master Monday pointer * fix(task2): reject post-index symlink sources as untrusted * test(task2): prove immutable vintage replay and post-index W47 negative controls * fix(task2): replay byte-sealed W46 vintage and reject symlink ancestors",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/source_vintages/W46_WEEKLY_CAPTURE_AS_OF_20261113.json": "7d89aa6571807ad8f58528d9117a0d5be8d182ad",
+    "scripts/research/task2_cn_all_archives_provenance_v1.py": "c1cb848f8958940852b94adc209492ec9ca50f2b",
+    "tests/cycle_navigator/test_daily_path_recovery.py": "7061970d3411b6a44359e72ed53737cd1c827518",
+    "tests/research/test_task2_cn_all_archives_provenance_v1.py": "85f602a4c3a5bbba243e9d919c1d8fc838c61415"
+  },
+  "source_commit_sha": "ec03ddafb7d7bf364839b6866804b579a1673d16",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-16T05:18:39-05:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "test(task2/cn): replay sealed W36-W46 cohort after W47 and pin historical W45 source (#2187)"
+}
