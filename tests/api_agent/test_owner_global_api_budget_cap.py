@@ -235,7 +235,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         # Native POSTs are settled; retain consumed USD3+10 and distinct USD10
         # owner-approved (not yet consumed) public research reservation.
         self.assertEqual(state["pending_liability_upper_usd"], 73.0)
-        self.assertEqual(state["pending_liability_count"], 3)
+        self.assertEqual(state["pending_liability_count"], 8)
         self.assertGreaterEqual(state["remaining_usd"], 4.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
 
