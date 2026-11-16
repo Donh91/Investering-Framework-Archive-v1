@@ -65,8 +65,8 @@ class Tests(unittest.TestCase):
  def test_submit_twice_bills_at_most_one_http(self):
   # Reproduce Codex P1 regression with a mocked paid provider. Never network.
   for m in (a,b,c,d,e):
-   with self.subTest(mission=m.MISSION),tempfile.TemporaryDirectory() as d:
-    out=Path(d)
+   with self.subTest(mission=m.MISSION),tempfile.TemporaryDirectory() as tempdir:
+    out=Path(tempdir)
     request={"model":m.MODEL,"reasoning":{"effort":"high"}}
     m.core.write_once(out/"request.json",request)
     digest=m.digest(m.core.canonical(request))
