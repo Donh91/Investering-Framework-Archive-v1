@@ -174,8 +174,8 @@ class AstraOneShotTests(unittest.TestCase):
         ledger = Path(__file__).resolve().parents[2] / (
             "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
         low, high, n = pending_risk(ledger)
-        # Native POSTs settled; consumed one-shots (3 + 10) AND new reviewed-only one-shot hold (15).
-        self.assertEqual((low, high, n), (0.0, 28.0, 3))
+        # Native POSTs settled; consumed one-shots (3 + 10) AND new reviewed-only one-shot hold (10).
+        self.assertEqual((low, high, n), (0.0, 23.0, 3))
         self.assertGreaterEqual(high-low, m.MAX_THEORETICAL_COST_USD)
         value = json.loads(ledger.read_text(encoding="utf-8"))
         self.assertEqual(len(value["settled"]), 3)
