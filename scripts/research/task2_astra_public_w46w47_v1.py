@@ -27,8 +27,8 @@ MODEL = "gpt-6-astra"
 MISSION = "ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE"
 TRIGGER = "OWNER_LAUNCH_ASTRA_TASK2_PUBLIC_W46W47_20261116_ONE_SHOT"
 CLAIM_MARKER = "TASK2_ASTRA_PUBLIC_W46W47_PAID_CLAIM_V1 mission=" + MISSION
-MAX_COST = 15.0
-MAX_REQUEST_BYTES = 950_000
+MAX_COST = 10.0
+MAX_REQUEST_BYTES = 500_000
 MAX_OUTPUT_TOKENS = 85_000
 INPUT_USD_M = 10.0
 OUTPUT_USD_M = 50.0
@@ -122,11 +122,11 @@ def check_reservation():
     good = [x for x in rows if isinstance(x, dict)
             and x.get("work_id") == MISSION
             and x.get("status") == "OWNER_RESERVED_PREHTTP"
-            and x.get("upper_usd") == 15
+            and x.get("upper_usd") == 10
             and x.get("one_paid_post_max") == 1
             and x.get("reconciliation_required") is True]
     if len(good) != 1:
-        fail("DISTINCT_AST RA_15USD_RESERVATION_REQUIRED".replace(" ", ""))
+        fail("DISTINCT_AST RA_10USD_RESERVATION_REQUIRED".replace(" ", ""))
 
 def source_packet() -> tuple[str, list[dict]]:
     meta, fragments = [], [INSTRUCTIONS]
@@ -168,7 +168,7 @@ def prepare(out: Path, *, preview: bool):
             "request_sha256": digest(data),
             "request_bytes": len(data), "max_output_tokens": MAX_OUTPUT_TOKENS,
             "worst_case_text_only_usd": round(theoretical, 6),
-            "owner_reservation_usd": 15,
+            "owner_reservation_usd": 10,
             "external_tools": False, "alpha_v4_pnl": "NOT_EVALUABLE",
             "sources": sources, "source_count": len(sources)}
     out.mkdir(parents=True, exist_ok=True)
@@ -210,7 +210,7 @@ def reserve(out: Path):
              "source_main_sha": prepared["source_main_sha"],
              "request_sha256": prepared["request_sha256"],
              "trigger_id": event["comment"].get("id"), "max_post_attempts": 1,
-             "owner_reserved_usd": 15, "created_at": datetime.now(timezone.utc).isoformat()}
+             "owner_reserved_usd": 10, "created_at": datetime.now(timezone.utc).isoformat()}
     text = CLAIM_MARKER + " run=" + claim["run_id"] + " request_sha256=" + claim["request_sha256"] + " no_retry=true research_only=true"
     response = core.http_json("POST", "https://api.github.com/repos/" + REPO + "/issues/1596/comments",
                               github_token=token, body={"body": text}, timeout=45)
