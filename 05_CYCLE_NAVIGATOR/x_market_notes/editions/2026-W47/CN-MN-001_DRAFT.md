@@ -36,8 +36,6 @@ None of this tells us exactly why Bitcoin fell. It does tell me that ETF flow he
 
 For now, I'm watching two things: whether spot buying returns and whether ETH can stop losing ground against BTC. Until that improves, a bounce is only a bounce.
 
-Cycle Navigator / Market Notes 001
-
 ## Kilder og reproduktion
 
 1. W45 marked:
