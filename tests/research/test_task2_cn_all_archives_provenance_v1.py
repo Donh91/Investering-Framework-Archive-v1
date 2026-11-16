@@ -91,6 +91,23 @@ class AllArchiveCensusTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "FROZEN_WEEKLY_SOURCE_SET_DRIFT"):
                 engine.week_census(root, dt.datetime(2026, 11, 13, tzinfo=dt.timezone.utc))
 
+    def test_sealed_vintage_replay_excludes_real_post_index_w47(self):
+        """The original W36-W46 cohort replays, while genuine W47 stays outside it."""
+        rel = "05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+        path = engine.ROOT / rel
+        self.assertTrue(path.is_file())
+        raw = path.read_bytes()
+        self.assertTrue(engine.verified_post_index_forecast(rel, raw))
+        self.assertFalse(engine.verified_post_index_forecast(rel, raw + b"\\n"))
+        self.assertFalse(engine.verified_post_index_forecast(
+            rel.replace("/W47/", "/W48/"), raw))
+        index = engine.pinned_source_map(str(engine.ROOT.resolve()))
+        self.assertNotIn(rel, index)
+        rows = engine.week_census(
+            engine.ROOT, dt.datetime(2026, 11, 13, 12, 59, tzinfo=dt.timezone.utc))
+        self.assertEqual(len(rows), 11)
+        self.assertNotIn("2026-W47", {row["iso_week"] for row in rows})
+
     def test_extra_unindexed_week_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
