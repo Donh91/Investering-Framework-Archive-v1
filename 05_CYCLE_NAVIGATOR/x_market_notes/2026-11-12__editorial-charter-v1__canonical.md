@@ -6,6 +6,20 @@
 **Primary folder:** `05_CYCLE_NAVIGATOR/x_market_notes/`  
 **Supersedes:** Ingen. Opretter ny serie uden at erstatte gammel X-præcisionsserie.
 
+## Ejerændring 2026-11-16, fast Market Notes-format
+
+Ejeren kræver eksplicit tre faste dele i ugens nye X-opslag: **(1) tidslinje**, **(2) kapitalrotation** og **(3) BTC/ETH-prisintervaller dag for dag mandag til søndag**, hentet fra original fastfrossen Cycle Navigator, ikke et nyopfundet manuskript.
+
+- Tidslinje skal følge CN's faktiske daglige scenarier og skelne mulige genopretninger fra dokumenteret faseændring.
+- Rotation skal vise, om BTC→ETH→large/mid→small/micro er verificeret, afvist eller endnu ubekræftet. Ingen tvungen altseason.
+- Priser: alle 7 daterede BTC og ETH daily low/high, originale instrument-/quote-enheder (USDT), normalt afrundet til hele USDT for læsbarhed; overordnet weekly scenario envelope hvis kilden har én. Daily expected closes er ikke obligatoriske.
+- Fortsat ingen offentlige præcisionsscorecards, efterrationaliseret hit-rate eller påstand om kalibreret prediktiv edge.
+- 2-3 uger og 4-8 uger behandles kort, med tydelig "ukendt" hvis CN ikke kan dokumentere dem.
+- Ved `DEGRADED` kildestatus: sig kort, at det er frosne scenarieintervaller, ikke live priser, garantier eller kalibrerede sandsynligheder; vurder aktualitet før posting.
+- Den nye serie `CN-MN-001` fortsætter uafhængigt af den historiske CN X-serie.
+
+Denne ejerændring overstyrer tidligere anbefalinger om ikke at vise 7 daglige prisintervaller. At undgå lange **præcisionsscorecards og en obligatorisk expected-close-tabel** gælder stadig.
+
 ## Hvorfor nogen skal læse det
 Fordi de får en observation om, hvordan kryptomarkedet er ved at ændre sig, som er svær at se ved kun at kigge på BTC-prisen. Ikke fordi skribenten kan love bedre afkast eller gætte næste uges kurs.
 
@@ -27,7 +41,7 @@ Engelsk til X. Rolig, personlig, konkret. Skriv som en investor, der har unders�
 **Gør i stedet:** Start med den konkrete overraskelse. Skriv tal og periode. Forklar datakildens begrænsning. Vær tydelig om hvad en bevægelse ikke beviser. Slut med ét reelt spørgsmål eller en betingelse.
 
 ## Ikke på X som standard
-- Præcisionsscore, bred forecast-vs-actual-tabel, syv daglige lukkepriser, mekanisk 3/7 bull/bear.
+- Præcisionsscore, bred forecast-vs-actual-tabel, mekanisk 3/7 bull/bear og obligatoriske syv daily expected closes. **Syv daglige BTC/ETH low/high-intervaller er nu en fast del af den nye serie.**
 - Skjulte interne scores, shadow-signaler, kildeveje eller tekniske agentnavne.
 - Uunderbyggede påstande om at forudse rotation før markedet, slå BTC, have en økonomisk edge eller opnå trade-performance.
 - Markedsråd der opfattes som direkte købs-/salgstilladelse.
