@@ -40,3 +40,7 @@ The **Bridge intake function only** may enter logical `DORMANT_IDLE` after **240
 **Rollback:** revert qualified source by a normal reviewed PR, never force-push; restore the exact prior prompt only to the same authorized task if an independently observable source/authority regression occurs. A rollback never overrides newer security rules.
 
 **Safety invariant:** no Vault access or dual destructive keys, no private data in public Archive, no automatic paid model/trading, no additional GitHub identities. SHA authenticates bytes, not authority.
+
+Provenance (2026-11-15): every file in 00_FMOS/S1/ changes only through a squash PR that the owner merges in person. Since BOOTSTRAP v3, S1 enforces this for ACTION_LOOP.md, REVIEWED_MERGE_LANE.json (whose pins cover AGENTS.md) and RUNTIME_CONTRACT.json through the owner-pasted contract blob; the other files here are documentation that S1 does not read.
+
+Owner-pasted pin (BOOTSTRAP v3, 2026-11-15): BOOTSTRAP step 3b holds the Git blob SHA of RUNTIME_CONTRACT.json, which pins ACTION_LOOP.md and REVIEWED_MERGE_LANE.json (and through its pins AGENTS.md). Every PR that changes RUNTIME_CONTRACT.json, ACTION_LOOP.md or REVIEWED_MERGE_LANE.json (including any AGENTS.md or pinned-path change, which must update the pins) must also update that value in BOOTSTRAP.txt (CI enforces it), is squash-merged by the owner in person, and takes effect only when the owner pastes the new BOOTSTRAP.txt into the S1 task. Until then S1 stops with SOURCE_UNVERIFIED.

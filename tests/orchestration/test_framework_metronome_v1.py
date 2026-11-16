@@ -50,11 +50,14 @@ class MetronomeTest(unittest.TestCase):
         last_week = run(dt.datetime(2026, 11, 9, 8, 37, tzinfo=UTC))
         self.assertEqual(plan(winter, monday=[last_week])["targets"]["MONDAY"], "DUE")
 
-    def test_recovery_hourly_from_minute_35(self):
+    def test_recovery_hourly_from_minute_26(self):
         now = dt.datetime(2026, 11, 15, 10, 36, tzinfo=UTC)
         self.assertEqual(plan(now)["targets"]["RECOVERY"], "DUE")
-        self.assertEqual(plan(now.replace(minute=30))["targets"]["RECOVERY"], "BEFORE_MINUTE_35")
+        self.assertEqual(plan(now.replace(minute=25))["targets"]["RECOVERY"], "BEFORE_MINUTE_26")
         self.assertEqual(plan(now, recovery=[run(now.replace(minute=33))])["targets"]["RECOVERY"], "ALREADY_RAN_THIS_HOUR")
+        # an on-time :24 recovery cron run already serves the hour: no second, metronome-dispatched recovery
+        self.assertEqual(plan(now.replace(minute=36), recovery=[run(now.replace(minute=24))])["targets"]["RECOVERY"],
+                         "ALREADY_RAN_THIS_HOUR")
 
     def test_sunday_preclose_window_before_midnight_only(self):
         sun = dt.datetime(2026, 11, 15, 22, 36, tzinfo=UTC)  # 23:36 CET Sunday
@@ -102,8 +105,35 @@ class MetronomeTest(unittest.TestCase):
                          ["hourly-sequence-capture.yml", "native-market-recovery.yml", "weekly-api-calibration-shadow.yml"])
         self.assertTrue(p["next_tick"])
         self.assertEqual(M.read_mode({"mode": "ACTIVE"}), "ACTIVE")
+        self.assertEqual(M.read_mode({"mode": "ACTIVE_DATA"}), "ACTIVE_DATA")
+        for doc in ({"mode": "active_data"}, {"mode": "ACTIVE_DATA "}, {"mode": ["ACTIVE_DATA"]}):
+            self.assertEqual(M.read_mode(doc), "SHADOW")
         for doc in (None, {}, {"mode": "active"}, {"mode": "ON"}, "ACTIVE"):
             self.assertEqual(M.read_mode(doc), "SHADOW")
+
+    def test_active_data_dispatches_only_free_hourly_owners(self):
+        # Monday 09:40 CET: Master Monday is due, as are hourly and recovery.
+        now = dt.datetime(2026, 11, 16, 8, 40, tzinfo=UTC)
+        p = plan(now, mode="ACTIVE_DATA", hourly=[run(now - dt.timedelta(hours=2))],
+                 recovery=[run(now - dt.timedelta(hours=2))])
+        sent = {x["workflow"] for x in p["dispatch"]}
+        logged = {x["workflow"] for x in p["would_dispatch"]}
+        self.assertEqual(sent, {M.HOURLY["workflow"], M.RECOVERY["workflow"]})
+        self.assertNotIn(M.MONDAY["workflow"], sent)
+        self.assertTrue(sent.isdisjoint(logged))
+        full = plan(now, mode="ACTIVE", hourly=[run(now - dt.timedelta(hours=2))],
+                    recovery=[run(now - dt.timedelta(hours=2))])
+        self.assertTrue(sent <= {x["workflow"] for x in full["dispatch"]})
+        # Sunday preclose (22:40Z = 23:40 CET) and Monday final close (01:10Z) are due: ACTIVE_DATA logs them only.
+        for t, close in ((dt.datetime(2026, 11, 15, 22, 40, tzinfo=UTC), []),
+                         (dt.datetime(2026, 11, 16, 1, 10, tzinfo=UTC), [])):
+            p = plan(t, mode="ACTIVE_DATA", hourly=[run(t - dt.timedelta(hours=2))],
+                     recovery=[run(t - dt.timedelta(hours=2))], close=close)
+            full = plan(t, mode="ACTIVE", hourly=[run(t - dt.timedelta(hours=2))],
+                        recovery=[run(t - dt.timedelta(hours=2))], close=close)
+            self.assertIn(M.CLOSE_WORKFLOW, {x["workflow"] for x in full["dispatch"]})
+            self.assertNotIn(M.CLOSE_WORKFLOW, {x["workflow"] for x in p["dispatch"]})
+            self.assertIn(M.CLOSE_WORKFLOW, {x["workflow"] for x in p["would_dispatch"]})
 
     def test_never_spins_without_a_valid_wait_timer(self):
         now = dt.datetime(2026, 11, 15, 10, 7, tzinfo=UTC)
@@ -201,7 +231,7 @@ class MetronomeTest(unittest.TestCase):
                                     "weekly-api-calibration-shadow.yml", "framework-metronome.yml"])
         routes = []
         client = M.Github("t")
-        client._req = lambda method, route, payload=None: routes.append(route) or {"workflow_runs": []}
+        client._req = lambda method, route, payload=None: routes.append(route) or {"workflow_runs": [], "total_count": 0}
         client.runs(M.RECOVERY["workflow"])
         self.assertTrue(routes[0].endswith("/runs?per_page=30&branch=main"))
 
@@ -333,6 +363,15 @@ class MetronomeTest(unittest.TestCase):
             {"workflow_runs": {}, "total_count": 0},
             {"workflow_runs": [1]}, {"workflow_runs": [], "total_count": 1},
             {"workflow_runs": [{"id": 1}], "total_count": 0},
+            # independent review P2-1: partial 200s must not read as a good census
+            {"workflow_runs": [{"id": 7}], "total_count": 1},
+            {"workflow_runs": [{"id": 7, "status": None, "created_at": "?"}], "total_count": 1},
+            {"workflow_runs": [{"id": 7, "status": "queued", "created_at": "not-a-time"}], "total_count": 1},
+            {"workflow_runs": [{"id": True, "status": "queued", "created_at": "2026-11-15T10:00:00Z"}], "total_count": 1},
+            {"workflow_runs": [{"id": 7, "status": None, "created_at": "2026-11-15T10:00:00Z"}], "total_count": 1},
+            {"workflow_runs": [run(dt.datetime(2026, 11, 15, 10, tzinfo=UTC))], "total_count": 50},
+            {"workflow_runs": [], "total_count": 1.0},
+            {"workflow_runs": []},
         ):
             with self.subTest(invalid=invalid):
                 gh._req = lambda method, route, payload=None, body=invalid: body
@@ -340,6 +379,99 @@ class MetronomeTest(unittest.TestCase):
                     gh.runs(M.HOURLY["workflow"])
         gh._req = lambda method, route, payload=None: {"workflow_runs": [], "total_count": 0}
         self.assertEqual(gh.runs(M.SELF_WORKFLOW), [])
+        gh._req = lambda method, route, payload=None: {"workflow_runs": [], "total_count": 3}
+        with self.assertRaisesRegex(ValueError, "COUNT_CONTRADICTION:count=3:len=0"):
+            gh.runs(M.SELF_WORKFLOW)
+        good = [run(dt.datetime(2026, 11, 15, 10, tzinfo=UTC), rid=i) for i in range(30)]
+        gh._req = lambda method, route, payload=None: {"workflow_runs": good, "total_count": 75}
+        self.assertEqual(len(gh.runs(M.SELF_WORKFLOW)), 30)
+
+    def test_read_budget_never_blocks_a_post(self):
+        from unittest import mock
+        gh = M.Github("t", budget_seconds=0)
+        calls = []
+
+        class Resp:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+            def read(self):
+                return b""
+        with mock.patch.object(M.urllib.request, "urlopen", side_effect=lambda req, timeout: calls.append(req.get_method()) or Resp()):
+            gh._req("POST", f"/repos/{M.REPO}/actions/workflows/{M.SELF_WORKFLOW}/dispatches", {"ref": "main", "inputs": {}})
+        self.assertEqual(calls, ["POST"])  # the self-dispatch after slow reads must still go out
+
+    def test_loop_safety_reads_come_first(self):
+        order = []
+
+        class Fake:
+            def environment(self):
+                order.append("ENVIRONMENT")
+                return ENV_OK
+
+            def mode(self):
+                order.append("MODE")
+                return {"mode": "SHADOW"}
+
+            def runs(self, wf):
+                order.append(wf)
+                return []
+
+            def dispatch(self, wf, inputs):
+                pass
+        M.run(Fake(), dt.datetime(2026, 11, 15, 12, 7, tzinfo=UTC), 99)
+        self.assertEqual(order[:3], ["ENVIRONMENT", "MODE", M.SELF_WORKFLOW])
+
+    def test_read_budget_and_clock_drift_fail_closed(self):  # independent review P2-2
+        from unittest import mock
+        gh = M.Github("t", budget_seconds=0)
+        route = f"/repos/{M.REPO}/actions/workflows/{M.HOURLY['workflow']}/runs?per_page=30&branch=main"
+        with mock.patch.object(M.urllib.request, "urlopen") as op:
+            with self.assertRaises(TimeoutError):
+                gh._req("GET", route)
+            op.assert_not_called()
+
+        start = dt.datetime(2026, 11, 16, 9, 6, tzinfo=UTC)
+        hourly_due = [run(start - dt.timedelta(hours=2))]
+
+        class Fake:
+            posts = []
+
+            def mode(self):
+                return {"mode": "ACTIVE"}
+
+            def runs(self, wf):
+                return hourly_due if wf == M.HOURLY["workflow"] else []
+
+            def environment(self):
+                return ENV_OK
+
+            def dispatch(self, wf, inputs):
+                self.posts.append(wf)
+
+        late = Fake()
+        p = M.run(late, start, 99, clock=lambda: start + dt.timedelta(seconds=31))
+        self.assertIn("CLOCK", p["failed_reads"])
+        self.assertEqual(p["dispatch"], [])
+        self.assertEqual(p["would_dispatch"], [])
+        self.assertEqual(late.posts, [M.SELF_WORKFLOW])  # the loop survives; no target is dispatched
+
+        ok = Fake()
+        ok.posts = []
+        p = M.run(ok, start, 99, clock=lambda: start + dt.timedelta(seconds=5))
+        self.assertNotIn("CLOCK", p["failed_reads"])
+
+        # The decision uses the re-sampled clock: 09:04:58 is before the hourly slot, 09:05:03 is inside it.
+        edge = dt.datetime(2026, 11, 16, 9, 4, 58, tzinfo=UTC)
+        before = Fake(); before.posts = []
+        M.run(before, edge, 99)
+        after = Fake(); after.posts = []
+        M.run(after, edge, 99, clock=lambda: edge + dt.timedelta(seconds=5))
+        self.assertNotIn(M.HOURLY["workflow"], before.posts)
+        self.assertIn(M.HOURLY["workflow"], after.posts)
 
     def test_post_ambiguous_network_errors_are_never_retried(self):
         import urllib.error

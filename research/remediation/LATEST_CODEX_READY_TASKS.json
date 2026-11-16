@@ -1,13 +1,81 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-11-15T12:20:01Z",
+  "generated_at_utc": "2026-11-15T21:51:53Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
   ],
   "research_intake_enabled": true,
   "tasks": [
+    {
+      "allowed_change_scope": [
+        "scripts/governance/s1_standing_policy_v1.py",
+        "scripts/governance/s1_release_evidence_classifier_v1.py",
+        "scripts/governance/s1_native_job_identity_v1.py",
+        ".github/workflows/data-architecture-gate.yml",
+        "tests/governance/test_s1_postmerge183_shadow_and_superset_v1.py",
+        "tests/governance/test_s1_native_privacy_scan_step_v1.py",
+        "tests/governance/test_s1_release_evidence_classifier_v1.py"
+      ],
+      "candidate_id": "codex-research-s1-grok187-shadow-path-safety-v1",
+      "candidate_path": "research/codex/intake/2026/11/codex-research-s1-grok187-shadow-path-safety-v1.json",
+      "candidate_sha256": "547de00fc000177bde5270ee27c74d49c55757fdfe82a7933f01c290acd708c3",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "S1_R5RT_F2_F4_N1_N2_RELEASE_PATH_GUARD",
+      "first_observed_at_utc": "2026-11-14T10:46:12.552Z",
+      "forbidden_changes": [
+        "API budget",
+        "activation or expansion of LOW_CODE autonomous merge authority",
+        "canonical authority",
+        "market gates",
+        "model weights",
+        "modification of manifest lane_state or review_optional_classes",
+        "new policy semantics",
+        "new repo/recovery/Vault access, Vault dispatch or source-recovery coupling",
+        "new supervisor, scheduler, queue, native writer, token or credential",
+        "portfolio logic",
+        "private market-data disclosure, trading action, model paid call, and history rewriting"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 185ed5354a79d54ff626 --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-11-15T21:51:53Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "In the EXISTING S1 #1156 release-safety owner, repair the reproduced class of false LOW/LOW_CODE path dispositions and the native privacy scan import-shadow bypass, preserving the existing policy rather than granting any new autonomy. Consume Grok #187's source-bound proof and scratch-only patch as a proposal, not an approved code transplant. Ensure added tests/__init__.py, root unittest.py, stdlib-named modules adjacent to required scripts and all manifest governance prefixes are consistently release-sensitive across classifier, manifest reader and #2092 native job identity. Run the native privacy step with isolated imports and trustworthy base evidence, preserving fail-closed handling. No new release class, owner waiver, standing decision, scheduler or automated merge. Current Archive main at inspection 61fe4d6ea3a7e7643e77fe0c62dcbc2c568242be; re-read fresh main and exact files before editing. This is a CODE_REMEDIATION_ONLY intake; merging any resulting HIGH_IMPACT governance/workflow PR remains subject to owner-present gates and independent exact-head review.",
+      "observations": 1,
+      "post_fix_gate": "On one original high-impact S1 code PR: fresh current-main diff+head, deterministic exploit replays red before/green after, adversarial guard mutation kills, all required exact-head native CI PASS, independent Claude/Codex review, owner-present safepoint+expected-head release, verified main blobs, and natural post-fix evidence. No LOW_CODE autonomy activation without separate owner decision.",
+      "precondition": "Candidate codex-research-s1-grok187-shadow-path-safety-v1 still exists on main at research/codex/intake/2026/11/codex-research-s1-grok187-shadow-path-safety-v1.json with SHA-256 547de00fc000177bde5270ee27c74d49c55757fdfe82a7933f01c290acd708c3, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/187",
+        "8a83af3d64a0c3d765cb7f926fec6cfcd85496cd",
+        "61fe4d6ea3a7e7643e77fe0c62dcbc2c568242be",
+        "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json",
+        "https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/183",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "185ed5354a79d54ff626",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-11-14T10:46:12.552Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "On one original high-impact S1 code PR: fresh current-main diff+head, deterministic exploit replays red before/green after, adversarial guard mutation kills, all required exact-head native CI PASS, independent Claude/Codex review, owner-present safepoint+expected-head release, verified main blobs, and natural post-fix evidence. No LOW_CODE autonomy activation without separate owner decision."
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "766b2401c9d6a504300f84c053fd523ecd44caae7cffb314b6bb12ed5127bfa3",
+      "transition_receipt_path": "research/codex/transitions/185ed5354a79d54ff626.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-s1-grok187-shadow-path-safety-v1"
+    },
     {
       "allowed_change_scope": [
         "scripts/governance/s1_native_handoff_auth_v1.py",
@@ -35,7 +103,7 @@
         "private source publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 19427e2aa5b87c1b2426 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-15T12:20:01Z",
+      "last_observed_at_utc": "2026-11-15T21:51:53Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -110,7 +178,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-15T12:20:01Z",
+      "last_observed_at_utc": "2026-11-15T21:51:53Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -182,7 +250,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-15T12:20:01Z",
+      "last_observed_at_utc": "2026-11-15T21:51:53Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -243,7 +311,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a369f29837aa0a0c3c82 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-15T12:20:01Z",
+      "last_observed_at_utc": "2026-11-15T21:51:53Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",

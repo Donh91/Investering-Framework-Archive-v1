@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/README.md",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py",
+    "tests/governance/test_s1_runtime_contract_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-ccdd0ddb09c5eb5e",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "s1-bootstrap-content-provenance-via-source-pr-claude",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "fix(s1): BOOTSTRAP v2.1 content provenance via source_pr (Claude package) (#2175)",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/S1/BOOTSTRAP.txt": "7f017450509eb745cc83a54b6a87673d697f3b3a",
+    "00_FMOS/S1/README.md": "9a95904e7f6de2bd3324483dc06a5539e5f01b1d",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "e86566af8afeea3342dcc3dc1d6fcde7bb7bc357",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py": "7761afacce15c2be690e9884ac9de911cfd19663",
+    "tests/governance/test_s1_runtime_contract_v1.py": "be02af04b4b31eb787313c8340f5605e7ed82fba"
+  },
+  "source_commit_sha": "ccdd0ddb09c5eb5e64e3e22e91b68a5f077ccf4e",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T10:14:05-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(s1): BOOTSTRAP v2.1 content provenance via source_pr (Claude package) (#2175)"
+}

@@ -1,0 +1,88 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-s1-grok187-shadow-path-safety-v1",
+  "submitted_at_utc": "2026-11-14T10:46:12.552Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Owner-requested Grok Bridge triage, postmerge #187 F2/F4/N1/N2",
+    "source_paths": [
+      "https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/187",
+      "reports/grok/automated/2026/11/2026-11-14T080000Z_GROK_ARCHIVE_POSTMERGE183_PR2089_8a83af3d_c00168b2.md",
+      "https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/183",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156"
+    ]
+  },
+  "title": "S1 LOW release guard: close Python import-shadow and manifest-classifier drift",
+  "finding_key": "S1_R5RT_F2_F4_N1_N2_RELEASE_PATH_GUARD",
+  "primary_target": "scripts/governance/s1_standing_policy_v1.py",
+  "objective": "In the EXISTING S1 #1156 release-safety owner, repair the reproduced class of false LOW/LOW_CODE path dispositions and the native privacy scan import-shadow bypass, preserving the existing policy rather than granting any new autonomy. Consume Grok #187's source-bound proof and scratch-only patch as a proposal, not an approved code transplant. Ensure added tests/__init__.py, root unittest.py, stdlib-named modules adjacent to required scripts and all manifest governance prefixes are consistently release-sensitive across classifier, manifest reader and #2092 native job identity. Run the native privacy step with isolated imports and trustworthy base evidence, preserving fail-closed handling. No new release class, owner waiver, standing decision, scheduler or automated merge. Current Archive main at inspection 61fe4d6ea3a7e7643e77fe0c62dcbc2c568242be; re-read fresh main and exact files before editing. This is a CODE_REMEDIATION_ONLY intake; merging any resulting HIGH_IMPACT governance/workflow PR remains subject to owner-present gates and independent exact-head review.",
+  "allowed_change_scope": [
+    "scripts/governance/s1_standing_policy_v1.py",
+    "scripts/governance/s1_release_evidence_classifier_v1.py",
+    "scripts/governance/s1_native_job_identity_v1.py",
+    ".github/workflows/data-architecture-gate.yml",
+    "tests/governance/test_s1_postmerge183_shadow_and_superset_v1.py",
+    "tests/governance/test_s1_native_privacy_scan_step_v1.py",
+    "tests/governance/test_s1_release_evidence_classifier_v1.py"
+  ],
+  "evidence": [
+    {
+      "kind": "PR",
+      "ref": "https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/187",
+      "summary": "Grok postmerge report on Archive main 8a83af3d: F2 still open; F4 scan bypass; N1 classifier governance-prefix mismatch; N2 #2092 LOW_CODE path bypass. Contains local probes and patch sha256 2a7bd4a90be9e0194ccf1901939c7156bca9384b91f4b58a70a2c92f156dca06, not yet native-CI verified."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "8a83af3d64a0c3d765cb7f926fec6cfcd85496cd",
+      "summary": "Exact historical source pin for Grok's 616-test baseline and 627-test scratch patch. Not proof of any new main passing patched CI."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "61fe4d6ea3a7e7643e77fe0c62dcbc2c568242be",
+      "summary": "Fresh Archive main at candidate-intake preflight; standing-policy blob 0e444054, native-job-identity blob 6e9b94ab, scanner workflow still uses non-isolated python script."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json",
+      "summary": "Current main manifest remains lane_state SHADOW and review_optional_classes []. Both fields MUST remain unchanged by this remediation."
+    },
+    {
+      "kind": "PR",
+      "ref": "https://github.com/Donh91/Investering-AI-Audit-Bridge/pull/183",
+      "summary": "Original Fable R5 red-team F2/F4 reproduction, including baseline negative controls."
+    }
+  ],
+  "reproduction": "On a scratch copy of pinned 8a83af3d and again on freshly-read main, use the Grok #187 §6/§7 probes: (1) add tests/__init__.py with os._exit(0) to make a known failing required unittest step green while --check misses it (F2); (2) demonstrate a sibling stdlib json.py intercepts the native privacy-scan script, returning NO_RESTRICTED_CONTENT in enforce mode for a truly restricted fixture (F4); (3) classify LOW records carrying scripts/governance/json.py, private/, secrets/ and research/api_agent/ and show incorrect READY_TO_MERGE even though the manifest declares governance (N1); (4) call _safe_changed_paths with tests/__init__.py and root unittest.py and show incorrectly admitted LOW_CODE (N2). This proves the current gap; Grok's 627 local patched tests do not replace native exact-head CI and independent review. If any original reproduction has already become fixed on current main, reconcile instead of blindly applying patch.",
+  "acceptance_tests": {
+    "positive": [
+      "Ordinary docs/public-notes.md remains eligible under the preexisting LOW classification when all other evidence gates are valid; ordinary scripts/research/new_tool_v1.py can remain LOW_CODE if policy allows.",
+      "Existing F1 rename-source and F3 manifest-superset regressions remain green; no policy relaxation, no permission/schedule/authority changes.",
+      "Data Architecture Gate and all relevant native S1 standing-policy checks run on exact PR head with actual collected test counts, not skipped/zero-test success."
+    ],
+    "negative": [
+      "New tests/__init__.py, tests/data_governance/__init__.py, root unittest.py, and stdlib-shadow modules adjacent to executed job scripts must fail closed for LOW/LOW_CODE; mutated removal of each corresponding guard makes the negative regression fail.",
+      "Every governance_prefixes and governance_exact_paths entry in the current manifest is release-sensitive in S1 classifier and the native job identity guard; test both directions with fixed and renamed source paths.",
+      "Hostile scripts/governance/json.py cannot intercept privacy scan or forge NO_RESTRICTED_CONTENT when enforce-mode test fixture carries restricted text; perform a real temp Git base/PR/merge reproduction of source provenance and bash step.",
+      "Malformed, missing or stale executed-path manifest, missing base scanner blobs, unusual copy/rename source metadata, and noncanonical path inputs fail closed, never produce READY or silently PASS.",
+      "Preserve SHADOW lane and empty review_optional_classes; no automatic merge, Vault dispatch, trading, paid API or private evidence publication. Test mutation sensitivity, not just intact-guard PASS."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "activation or expansion of LOW_CODE autonomous merge authority",
+    "new supervisor, scheduler, queue, native writer, token or credential",
+    "new repo/recovery/Vault access, Vault dispatch or source-recovery coupling",
+    "private market-data disclosure, trading action, model paid call, and history rewriting",
+    "modification of manifest lane_state or review_optional_classes"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "On one original high-impact S1 code PR: fresh current-main diff+head, deterministic exploit replays red before/green after, adversarial guard mutation kills, all required exact-head native CI PASS, independent Claude/Codex review, owner-present safepoint+expected-head release, verified main blobs, and natural post-fix evidence. No LOW_CODE autonomy activation without separate owner decision."
+}

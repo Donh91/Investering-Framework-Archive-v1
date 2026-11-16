@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 S1 = ROOT / "00_FMOS" / "S1"
 KEYS = ["contract", "task_id", "owner_issue", "schedule", "bootstrap_path",
-        "bootstrap_version", "action_loop_path", "action_loop_blob"]
+        "bootstrap_version", "action_loop_path", "action_loop_blob", "lane_switch_path", "lane_switch_blob"]
 
 
 def _no_dupes(pairs):
@@ -36,9 +36,27 @@ class S1RuntimeContractTest(unittest.TestCase):
         self.assertEqual(self.c["contract"], "S1_RUNTIME_CONTRACT_v1")
         self.assertEqual(self.c["task_id"], "6ae5fd466b48819187abc224ec0f1c5f")
         self.assertEqual(self.c["owner_issue"], 1156)
-        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v1")
+        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v3")
         self.assertEqual(self.c["bootstrap_path"], "00_FMOS/S1/BOOTSTRAP.txt")
         self.assertEqual(self.c["action_loop_path"], "00_FMOS/S1/ACTION_LOOP.md")
+
+    def test_lane_switch_blob_pins_the_exact_bytes(self):
+        # The lane switch (state, max merges, clears_halt and the content pins over AGENTS.md etc.) is S1 policy input:
+        # it is pinned here, so a change needs a contract update, a BOOTSTRAP update and an owner paste.
+        self.assertEqual(self.c["lane_switch_path"], "00_FMOS/S1/REVIEWED_MERGE_LANE.json")
+        data = (ROOT / self.c["lane_switch_path"]).read_bytes()
+        self.assertEqual(_git_blob(data), self.c["lane_switch_blob"],
+                         "REVIEWED_MERGE_LANE.json changed without updating lane_switch_blob in RUNTIME_CONTRACT.json")
+        boot = (ROOT / self.c["bootstrap_path"]).read_text(encoding="utf-8")
+        self.assertIn("the Git blob SHA of the file at lane_switch_path must equal lane_switch_blob", boot)
+
+    def test_bootstrap_pins_the_exact_contract_blob(self):
+        # BOOTSTRAP v3 step 3b: the owner-pasted task text holds RUNTIME_CONTRACT.json's Git blob, so any contract or
+        # ACTION_LOOP change without a matching BOOTSTRAP update (and an owner paste) fails CI here.
+        data = (S1 / "RUNTIME_CONTRACT.json").read_bytes()
+        boot = (ROOT / self.c["bootstrap_path"]).read_text(encoding="utf-8")
+        self.assertIn(f"RUNTIME_CONTRACT.json at that same main SHA (as GitHub reports it) must equal {_git_blob(data)}.", boot,
+                      "update the RUNTIME_CONTRACT blob in BOOTSTRAP.txt step 3b")
 
     def test_task_id_matches_shadow_locator(self):
         shadow = json.loads((S1 / "OPERATING_MANIFEST.json").read_text(encoding="utf-8"))
@@ -52,7 +70,7 @@ class S1RuntimeContractTest(unittest.TestCase):
     def test_bootstrap_is_thin_and_points_only_to_github(self):
         boot = (ROOT / self.c["bootstrap_path"]).read_text(encoding="utf-8")
         self.assertLessEqual(len(boot), 1500)
-        for needle in ("S1 BOOTSTRAP v1", "00_FMOS/S1/RUNTIME_CONTRACT.json",
+        for needle in ("S1 BOOTSTRAP v3", "00_FMOS/S1/RUNTIME_CONTRACT.json",
                        "00_FMOS/S1/ACTION_LOOP.md", "SOURCE_UNVERIFIED", "only instruction set"):
             self.assertIn(needle, boot)
         for forbidden in ("LADDER", "MERGE", "HARD STOPS", "owner-present"):
