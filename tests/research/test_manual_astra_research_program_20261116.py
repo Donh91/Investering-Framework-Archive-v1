@@ -2,12 +2,13 @@
 import unittest,tempfile,os,json
 from pathlib import Path
 from unittest import mock
-from scripts.research import manual_astra_s1_vnext_20261116 as a, manual_astra_compass_total_20261116 as b
+from scripts.research import manual_astra_s1_vnext_20261116 as a, manual_astra_compass_total_20261116 as b, manual_astra_compass_edge_20261116 as c, manual_astra_compass_warning_20261116 as d, manual_astra_alpha_lab_20261116 as e
 class Tests(unittest.TestCase):
  def test_ids_and_cost(self):
-  self.assertNotEqual(a.MISSION,b.MISSION)
+  self.assertEqual(len({m.MISSION for m in (a,b,c,d,e)}),5)
+  self.assertEqual(len({m.TRIGGER for m in (a,b,c,d,e)}),5)
   self.assertNotEqual(a.TRIGGER,b.TRIGGER)
-  for m in (a,b):
+  for m in (a,b,c,d,e):
    self.assertEqual(m.MODEL,"gpt-6-astra")
    self.assertLessEqual((m.MAX_REQUEST_BYTES*m.INPUT_USD_M+m.MAX_OUTPUT_TOKENS*m.OUTPUT_USD_M)/1e6,10)
  def test_no_network_source_preparation(self):
@@ -37,3 +38,16 @@ class Tests(unittest.TestCase):
   for m in (a,b):
    with self.assertRaisesRegex(ValueError,'DISTINCT_ASTRA_10USD_RESERVATION_REQUIRED'):
     m.check_reservation()
+
+ def test_exact_one_work_id_for_all_five_in_ledger(self):
+  from scripts.api_agent.check_monthly_cost_guard import pending_risk
+  from pathlib import Path
+  src=Path(__file__).resolve().parents[2]/"research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
+  lo,hi,n=pending_risk(src)
+  self.assertEqual((lo,hi,n),(0.0,73.0,8))
+ def test_paid_workflow_five_unique_issue_owner_events(self):
+  from pathlib import Path
+  w=(Path(__file__).resolve().parents[2]/".github/workflows/owner-astra-research-program-20261116.yml").read_text()
+  self.assertNotIn("false &&", w)
+  for m in (a,b,c,d,e):
+   self.assertEqual(w.count("github.event.comment.body == '"+m.TRIGGER+"'"),1)
