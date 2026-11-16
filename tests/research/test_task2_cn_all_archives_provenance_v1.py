@@ -91,6 +91,65 @@ class AllArchiveCensusTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "FROZEN_WEEKLY_SOURCE_SET_DRIFT"):
                 engine.week_census(root, dt.datetime(2026, 11, 13, tzinfo=dt.timezone.utc))
 
+    def test_sealed_vintage_replay_excludes_real_post_index_w47(self):
+        """The original W36-W46 cohort replays, while genuine W47 stays outside it."""
+        rel = "05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+        path = engine.ROOT / rel
+        self.assertTrue(path.is_file())
+        raw = path.read_bytes()
+        self.assertTrue(engine.verified_post_index_forecast(rel, raw))
+        self.assertFalse(engine.verified_post_index_forecast(rel, raw + b"\\n"))
+        self.assertFalse(engine.verified_post_index_forecast(
+            rel.replace("/W47/", "/W48/"), raw))
+        index = engine.pinned_source_map(str(engine.ROOT.resolve()))
+        self.assertNotIn(rel, index)
+        rows = engine.week_census(
+            engine.ROOT, dt.datetime(2026, 11, 13, 12, 59, tzinfo=dt.timezone.utc))
+        self.assertEqual(len(rows), 11)
+        self.assertNotIn("2026-W47", {row["iso_week"] for row in rows})
+
+    def test_w46_vintage_uses_original_git_bytes_not_mutable_live_capture(self):
+        """A real original W46 blob is replayed, but altered archived bytes fail."""
+        rel = "03_DAILY_CAPTURE_LOGS/weekly/2026/W46.json"
+        vintage_rel = engine.PINNED_VINTAGE_REPLAY[rel]
+        original = (engine.ROOT / vintage_rel).read_bytes()
+        self.assertEqual(engine.git_blob_sha(original),
+                         engine.pinned_source_map(str(engine.ROOT.resolve()))[rel])
+        self.assertEqual(engine.git_blob_sha(original),
+                         "7d89aa6571807ad8f58528d9117a0d5be8d182ad")
+        self.assertNotEqual((engine.ROOT / rel).read_bytes(), original)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            live = root / rel
+            live.parent.mkdir(parents=True)
+            live.write_text('{"live_updated":true}')
+            archive = root / vintage_rel
+            archive.parent.mkdir(parents=True)
+            archive.write_bytes(original)
+            with patch.object(engine, "pinned_source_map",
+                              return_value={rel: engine.git_blob_sha(original)}):
+                self.assertEqual(engine.pinned_bytes(live, root), original)
+                archive.write_bytes(original + b"tamper")
+                with self.assertRaisesRegex(ValueError, "FROZEN_SOURCE_BYTES_DRIFT"):
+                    engine.pinned_bytes(live, root)
+
+    def test_post_index_directory_symlink_ancestor_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            parent = root / "05_CYCLE_NAVIGATOR/weekly/2026"
+            parent.mkdir(parents=True)
+            external = Path(tmp) / "outside"
+            external.mkdir()
+            (external / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").write_bytes(
+                (engine.ROOT / "05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_bytes())
+            link = parent / "W47"
+            link.symlink_to(external, target_is_directory=True)
+            self.assertTrue(engine.has_symlink_component(
+                link / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json", root))
+            self.assertFalse(engine.has_symlink_component(
+                engine.ROOT / "05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+                engine.ROOT))
+
     def test_extra_unindexed_week_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
