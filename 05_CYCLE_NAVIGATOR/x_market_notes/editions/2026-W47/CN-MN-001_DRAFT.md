@@ -17,24 +17,26 @@ Kandidater, fravalgt som hovedhistorie:
 - 30d rotation proxy steg W46 fra 24 til 33, 90d endte på 33: interessant, men ikke verificeret altrotation og næppe stærkt nok alene.
 - Egen forecast-miss: relevant til intern modelaccountability, men strider mod ejerens beslutning om at stoppe scorecard-opslag som hovedformat.
 
-## Endeligt anbefalet X-udkast v1
+## Endeligt anbefalet X-udkast v2
 
 CYCLE NAVIGATOR / MARKET NOTES 001
 16 November 2026
 
-Bitcoin's ETF outflows eased last week. Its price decline got much worse.
+ETF selling slowed. Bitcoin fell harder.
 
-A week earlier, BTC fell 4.5% while US spot Bitcoin ETFs lost $1.28bn. Last week, BTC fell 12.7% even though ETF outflows slowed to $1.07bn.
+BTC lost 4.5% in the first week of November. Last week it lost 12.7%.
 
-Those numbers aren't a contradiction. They show the limits of explaining a 24/7 market through one source of flows.
+But US spot Bitcoin ETF outflows went the other way: $1.28bn, then $1.07bn.
 
-In the BTC spot feed I follow, buy-initiated volume fell from 50.6% to 48.9%. A slight edge for buyers became a slight edge for sellers.
+I checked the BTC spot trading feed I follow. The share of volume initiated by buyers slipped from 50.6% to 48.9%. Not a dramatic change, but the slight buy-side edge had disappeared.
 
-And there's a timing difference. US ETFs stop trading on Friday. Bitcoin doesn't. It touched $62k over the weekend.
+The timing matters, too. ETF numbers cover Monday to Friday. Bitcoin traded down to $62k over the weekend, after those funds had closed.
 
-The rebound deserves attention, but I'm not calling it a recovery yet. I want to see sustained spot buying and ETH gaining ground against BTC before changing that view.
+None of this tells us exactly why Bitcoin fell. It does tell me that ETF flow headlines alone aren't enough.
 
-Cycle Navigator | Market Notes 001
+For now, I'm watching two things: whether spot buying returns and whether ETH can stop losing ground against BTC. Until that improves, a bounce is only a bounce.
+
+Cycle Navigator / Market Notes 001
 
 ## Kilder og reproduktion
 
