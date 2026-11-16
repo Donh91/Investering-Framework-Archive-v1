@@ -105,6 +105,11 @@ class PersistenceTests(unittest.TestCase):
                 result = adapter.run(root, '2026-09-01')
                 self.assertEqual(writer.call_count, 1)
             saved = json.loads((root/'2026/09/2026-09-01.json').read_text())
-            self.assertEqual(saved, result)
+            # Since the dual-writer precedence fix (8aebb7d224) run() returns the persisted
+            # document plus a persistence receipt; the receipt itself is never persisted.
+            receipt = {k: result[k] for k in ('persistence_status', 'authoritative_run_id')}
+            self.assertEqual(saved, {k: v for k, v in result.items() if k not in receipt})
+            self.assertTrue(receipt['persistence_status'])
+            self.assertEqual(receipt['authoritative_run_id'], saved.get('run_id'))
             self.assertEqual(saved['run_status'], 'DEGRADED')
             self.assertEqual(saved['retrieval']['strategy'], 'DETERMINISTIC_STATIC_DAILY_BRIEFING')

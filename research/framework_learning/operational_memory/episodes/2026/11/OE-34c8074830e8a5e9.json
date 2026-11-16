@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/codex/transitions/c643b40c2b89cad6128e.json",
+    "scripts/data_ping/auto_market_state.py",
+    "tests/data_ping/test_auto_market_state_integrity.py",
+    "tests/data_ping/test_auto_market_state_sentiment_completeness.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-34c8074830e8a5e9",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "codex-intake-reject-empty-cfgi-sentiment-before-source",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(auto-state): fail closed incomplete CFGI sentiment before reporting source PASS * test(auto-state): original archived false PASS and complete CFGI controls, negatives * chore(codex): lock source-bound sentiment repair transition receipt * test(auto-state): run archived false PASS and valid CFGI controls in existing native Compass CI",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/codex/transitions/c643b40c2b89cad6128e.json": "966413284d2fc9d0de3e41104e1d51bd88e150e6",
+    "scripts/data_ping/auto_market_state.py": "e14bf35aa45abd5a0688cffbbff151d66232ffd6",
+    "tests/data_ping/test_auto_market_state_integrity.py": "25479322bdbe653219db5d00738aadf633dbb4a6",
+    "tests/data_ping/test_auto_market_state_sentiment_completeness.py": "2dccee65a62f61daa0122daddff7eac2aa55504f"
+  },
+  "source_commit_sha": "34c8074830e8a5e9c4920484dff8539b2130946a",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T05:03:45-05:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "fix(Codex intake): reject empty CFGI sentiment before source-health PASS (#2142)"
+}

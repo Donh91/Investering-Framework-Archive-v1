@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cycle-navigator-pages.yml",
+    ".github/workflows/cycle-navigator-public-contract-gate.yml",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs",
+    "scripts/cycle_navigator/build_public_live_precision.py",
+    "tests/cycle_navigator/test_live_precision_cadence_truth.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-7b2d1d5659d5c797",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cn-label-unproven-hourly-refresh-best-effort-event",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(cn): represent unproven hourly cadence as best effort * fix(cn): represent unproven hourly cadence as best effort * fix(cn): represent unproven hourly cadence as best effort * fix(cn): represent unproven hourly cadence as best effort * test(cn): forbid unproven hourly cadence assertions",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cycle-navigator-pages.yml": "db4323d30c53b18d84104e394a384b397430e4f8",
+    ".github/workflows/cycle-navigator-public-contract-gate.yml": "e6c694e5ee594fd80b65c00a288296730025dd6d",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "b18303f7fc365166c6324008659fb4dd9c471c0c",
+    "scripts/cycle_navigator/build_public_live_precision.py": "e6e24c0cb964e506a6742d32e59d5e4501e771c4",
+    "tests/cycle_navigator/test_live_precision_cadence_truth.py": "94b2fee4e88fe13b527b6d2c129b90bdeaced320"
+  },
+  "source_commit_sha": "7b2d1d5659d5c7971ea991013feb01027c086317",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-15T05:02:35-05:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "fix(cn): label unproven hourly refresh as BEST_EFFORT_EVENT_CHAIN (#2150)"
+}

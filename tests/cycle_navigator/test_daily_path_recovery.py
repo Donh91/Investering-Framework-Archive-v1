@@ -280,8 +280,10 @@ def test_legacy_original_semantic_call_remains_one_and_workflow_not_extended():
     assert src.count("value = build_offline_value(context, range_forecast, prev_machine,") == 1
     workflow = (Path(builder.__file__).parents[2] / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
     assert "group: framework-main-writer" in workflow
-    assert "Enforce monthly API cost guard" in workflow
-    # Legacy action configuration remains unchanged; end-user source issue is now offline.
+    assert "Enforce monthly API cost guard" not in workflow
+    assert "CN_OFFLINE_ONLY: '1'" in workflow
+    assert "OPENAI_API_KEY:" not in workflow
+    # The final issuer is explicitly API-free; paid-lane guards remain with paid owners.
     assert "python scripts/cycle_navigator/build_weekly_cycle_navigator.py" in workflow
 
 def test_production_never_makes_extra_paid_call_even_if_env_and_budget_allow(monkeypatch, tmp_path):
@@ -636,7 +638,7 @@ def test_real_W45_source_builds_W46_seven_day_product_without_model_call():
     from scripts.cycle_navigator.daily_price_journey import daily_product_acceptance
     root = Path(builder.__file__).resolve().parents[2]
     completed = json.loads((root / "03_DAILY_CAPTURE_LOGS/weekly/2026/W45.json").read_text())
-    ptr = json.loads((root / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
+    ptr = json.loads((root / "research/api_agent/outputs/weekly/2026/W45/MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
     previous = json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").read_text())
     assert completed["iso_week"] == ptr["iso_week"] == 45
     assert completed["hourly_gap_diagnostics"]["observed_hours"] == 168
@@ -728,7 +730,7 @@ def test_w46_actual_prior_source_and_independent_proof_class_qualify_both_closes
     from scripts.cycle_navigator.daily_price_journey import daily_product_acceptance
     root=Path(builder.__file__).resolve().parents[2]
     weekly=json.loads((root / "03_DAILY_CAPTURE_LOGS/weekly/2026/W45.json").read_text())
-    mm=json.loads((root / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
+    mm=json.loads((root / "research/api_agent/outputs/weekly/2026/W45/MASTER_MONDAY_DELIVERY_POINTER.json").read_text())
     mm_machine=json.loads((root / "research/api_agent/outputs/weekly/2026/W45/MASTER_MONDAY_MACHINE_PACKAGE.json").read_text())
     old=json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").read_text())
     old["forecast_freeze"]=json.loads((root / "05_CYCLE_NAVIGATOR/weekly/2026/W45/CYCLE_NAVIGATOR_FORECAST_FREEZE.json").read_text())

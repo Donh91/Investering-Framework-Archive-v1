@@ -191,7 +191,16 @@ def main():
                 except ValueError:
                     invalid_frozen_forecast_count += 1
                     continue
-            elif not isinstance(value.get("forecast_id"), str) or not value.get("forecast_id", "").strip():
+            elif (
+                not isinstance(value.get("forecast_id"), str)
+                or not value.get("forecast_id", "").strip()
+                or not isinstance(value.get("metric_path"), str)
+                or not value.get("metric_path", "").strip()
+            ):
+                # Historical isolated fixtures intentionally retain descriptive
+                # CSV compatibility with older (noncanonical) forecast schemas.
+                # An unbound metric target, however, cannot form even a
+                # descriptive cohort. No fixture gains scientific authority.
                 invalid_frozen_forecast_count += 1
                 continue
             forecasts[value.get("forecast_id")] = value

@@ -15,9 +15,19 @@ def receipt(**changes):
             'created_at_utc': datetime.now(timezone.utc).isoformat(), 'estimated_cost_usd': .25, **changes}
 
 
+def isolated_liability_ledger(root):
+    # These tests audit RECEIPT accounting. Isolate them from the canonical, live liability
+    # ledger (its pending rows change with provider settlements) with an empty, valid ledger.
+    path = Path(root).parent / (Path(root).name + '-liabilities.json')
+    path.write_text(json.dumps({'contract': 'API_PENDING_BILLING_RISK_V1', 'unresolved': [], 'owner_reservations': [],
+                                'no_retry_original_ids': True, 'requires_reconciliation_before_releasing_reserve': True}))
+    return path
+
+
 def run_guard(root, kind, *extra):
     script = 'check_api_lane_budget.py' if kind == 'lane' else 'check_monthly_cost_guard.py'
-    options = ['--task', TASK, '--cap-usd', '10'] if kind == 'lane' else ['--hard-stop-usd', '10']
+    options = (['--task', TASK, '--cap-usd', '10'] if kind == 'lane' else
+               ['--hard-stop-usd', '10', '--liability-ledger', str(isolated_liability_ledger(root))])
     proc = subprocess.run([sys.executable, str(ROOT / 'scripts/api_agent' / script), '--receipt-root', str(root),
                            *options, '--reserve-usd', '1', *extra], text=True, capture_output=True)
     def nonfinite(raw):
