@@ -7,7 +7,7 @@ It keeps the existing report contract and static analysis while correcting five
 runtime-observability semantics:
 
 1. scheduled workflow health is derived only from production-eligible runs on
-   the repository default branch (schedule/workflow_dispatch), so task-branch
+   the repository default branch (schedule/workflow_dispatch/workflow_run), so task-branch
    pushes cannot make production look RED;
 2. an empty GitHub Actions workflow registry is treated as one global API
    degradation instead of 100+ independent missing-workflow observations;
@@ -38,7 +38,7 @@ spec.loader.exec_module(base)
 ORIGINAL_CLASSIFY = base.classify
 ORIGINAL_WORKFLOW_STATIC = base.workflow_static
 API_DEGRADED = False
-PRODUCTION_EVENTS = {"schedule", "workflow_dispatch"}
+PRODUCTION_EVENTS = {"schedule", "workflow_dispatch", "workflow_run"}
 PR_EVENTS = {"pull_request", "pull_request_target"}
 CANCELLED_CONCLUSION = "cancelled"
 MAIN_WRITER_RISKS = {
@@ -379,6 +379,8 @@ def live_workflows(
                 for run in runs
                 if run.get("head_branch") == default_branch
                 and run.get("event") in PRODUCTION_EVENTS
+                and not (run.get("event") == "workflow_run"
+                         and run.get("conclusion") == "skipped")
             ]
             scheduled_runs = base.api_json(
                 f"{api_base}/actions/workflows/{wid}/runs?event=schedule&branch={branch_q}&per_page=10",
@@ -431,7 +433,7 @@ def live_workflows(
             "html_url": workflow.get("html_url"),
             "hourly_schedule_utc_day": delivery,
             "production_scope": (
-                f"default_branch:{default_branch};events:schedule,workflow_dispatch"
+                f"default_branch:{default_branch};events:schedule,workflow_dispatch,workflow_run"
                 if is_scheduled
                 else "all_registered_runs"
             ),
