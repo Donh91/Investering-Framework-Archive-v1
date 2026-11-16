@@ -22,6 +22,19 @@ OUTCOME_INDEX = PROGRAM + "/ASTRA_HIGH_OUTCOME_AND_EARLY_WEEK_SOURCE_INDEX_20261
 ISO_RE = re.compile(r"W(\d\d)$")
 RANGE_ASSETS = {"BTC": "btc", "ETH": "eth"}
 
+# Explicitly known post-index source: W47 was published after the sealed
+# 2026-11-13 W36-W46 research inventory. It is NOT part of that vintage.
+# Its exact real Git blob is pinned so an unknown/edited later source still
+# fails closed. Future weeks need a reviewed new vintage, not auto-whitelisting.
+POST_INDEX_FORECAST_BLOBS = {
+    "05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json":
+        "1e72eb62e2da2f164a0da4108a4cf5f51b910f41",
+}
+
+def verified_post_index_forecast(path: str, raw: bytes) -> bool:
+    expected = POST_INDEX_FORECAST_BLOBS.get(path)
+    return bool(expected and git_blob_sha(raw) == expected)
+
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -133,12 +146,22 @@ def week_census(repo_root: Path, asof: dt.datetime) -> list[dict]:
             "[0-9][0-9][0-9][0-9]/W[0-9][0-9]/CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
         if path.is_file()
     }
-    if not expected_forecasts or actual_forecasts != expected_forecasts:
+    # Replay only the ORIGINAL pinned cohort. A new real week must not make
+    # immutable W36-W46 research unreplayable, nor enter its denominator.
+    # Missing originals, unrecognized new weeks, and altered W47 still fail.
+    if not expected_forecasts or not expected_forecasts.issubset(actual_forecasts):
         raise ValueError("FROZEN_WEEKLY_SOURCE_SET_DRIFT")
+    for later_path in actual_forecasts - expected_forecasts:
+        if not verified_post_index_forecast(later_path, (repo_root / later_path).read_bytes()):
+            raise ValueError("FROZEN_WEEKLY_SOURCE_SET_DRIFT")
     result = []
     for year_dir in sorted(weeks_dir.glob("[0-9][0-9][0-9][0-9]")):
         year = int(year_dir.name)
         for wdir in sorted(year_dir.glob("W[0-9][0-9]")):
+            # Later source rows are never silently promoted into v1 science.
+            forecast_rel = (wdir / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").relative_to(repo_root).as_posix()
+            if forecast_rel not in expected_forecasts:
+                continue
             m = ISO_RE.fullmatch(wdir.name)
             if not m:
                 continue
