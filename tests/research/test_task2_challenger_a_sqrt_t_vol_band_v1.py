@@ -539,6 +539,58 @@ class ChallengerATest(unittest.TestCase):
         self.assertEqual(decision["weeks"], [r["week"] for r in rows[1:9]])
         self.assertEqual(calls, [r["week"] for r in rows[:9]])
 
+    def _verified_paired_score_fixture(self):
+        """A real synthetic issuer/scorer result, before first-main admission."""
+        issued = A.issue(self.bars, self.YEAR, self.WEEK, self.t0)
+        freeze = {"daily_range_plan": {}}
+        for asset, spec in issued["assets"].items():
+            p0 = spec["P0"]
+            freeze["daily_range_plan"][asset] = {"points": [
+                {"day": d["day"], "low": round(p0 * 0.8, 2),
+                 "high": round(p0 * 1.2, 2)}
+                for d in spec["days"]
+            ]}
+        row = A.score(issued, self.bars, freeze, issuance_first_main_utc=A.iso(self.t0))
+        self.assertEqual(row["paired_rows"], 14)
+        return issued, row
+
+    def test_first_main_real_scored_pairs_pass_source_row_consistency(self):
+        issued, score = self._verified_paired_score_fixture()
+        A.verify_first_main_paired_outcomes(score, issued, A.iso(self.t0))
+
+    def test_forged_eight_pairs_with_zero_interval_cost_cannot_create_a_win(self):
+        """Interval score must always be >= its positive interval width."""
+        issued = A.issue(self.bars, self.YEAR, self.WEEK, self.t0)
+        rows = [
+            {"asset": asset, "day": d["day"], "bars": 8,
+             "A_interval_score": 0.0, "A_width": 1.0,
+             "CN_interval_score": 2.0, "CN_width": 1.0}
+            for asset in ("BTC", "ETH")
+            for d in issued["assets"][asset]["days"][:4]
+        ]
+        fake = {"rows": rows, "matured_rows": 8, "paired_rows": 8,
+                "week_winner_interval_score": "A"}
+        with self.assertRaisesRegex(ValueError, "frozen paired rows"):
+            A.verify_first_main_paired_outcomes(fake, issued, A.iso(self.t0))
+
+    def test_first_main_paired_rows_reject_impossible_scores_coverage_and_bars(self):
+        issued, score = self._verified_paired_score_fixture()
+        tamper = [
+            ("A_interval_score", 0.0),
+            ("CN_interval_score", 0.0),
+            ("A_close_0.8_covered", 2),
+            ("A_range_0.8_covered", True),
+            ("CN_close_covered", 2),
+            ("CN_range_covered", None),
+            ("bars", 24),
+        ]
+        for field, value in tamper:
+            with self.subTest(field=field):
+                bad = copy.deepcopy(score)
+                bad["rows"][0][field] = value
+                with self.assertRaisesRegex(ValueError, "frozen paired rows"):
+                    A.verify_first_main_paired_outcomes(bad, issued, A.iso(self.t0))
+
     def test_first_main_history_and_persisted_issuance_integrity(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d)
