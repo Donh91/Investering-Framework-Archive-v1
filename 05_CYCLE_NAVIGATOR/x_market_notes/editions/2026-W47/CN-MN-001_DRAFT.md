@@ -5,32 +5,32 @@
 **Område:** Ny separat Cycle Navigator X-serie
 **Primary folder:** `05_CYCLE_NAVIGATOR/x_market_notes/editions/2026-W47/`
 **Kilde:** Frossen 2026-W47 Cycle Navigator-prognose / public legacy CN #34 som kilde, men selvstændig editorial serie `CN-MN-001`.
-**Revision:** v5, audience-first, one weekly question;, ejerkrav om tidslinje + rotation + BTC/ETH pricerange dag for dag; erstatter tidligere v1-v3 X-tekst, der ikke var dækkende for CN.
+**Revision:** v6, plain-language BTC-bounce-versus-rotation story;, ejerkrav om tidslinje + rotation + BTC/ETH pricerange dag for dag; erstatter tidligere v1-v3 X-tekst, der ikke var dækkende for CN.
 
-## X-opslag - anbefalet kladde v5
+## X-opslag - anbefalet kladde v6
 
-CYCLE NAVIGATOR | 001
-16–22 NOVEMBER 2026
+CYCLE NAVIGATOR | WEEK 47
+November 16–22, 2026
 
-A Bitcoin bounce isn't an altcoin rotation.
+Bitcoin could reach $66,000 this weekend. I still wouldn't call that a market recovery.
 
-After last week's selloff, that's the distinction I'm watching.
+Last week was rough. BTC fell 12.7%. ETH lost 13.7%.
 
-BTC lost 12.7%. ETH fell 13.7%. The question now is whether buyers can hold the market together through another test of the lows, or whether the next rally fades like the last one.
+This week's outlook isn't for a straight recovery. There's room for another dip first, followed by a possible rebound toward the weekend.
 
-THIS WEEK'S TIMELINE
+Here's how I'm watching it unfold.
 
-Mon–Tue | Another test of the lows
-Wed | First attempt to stabilize
-Thu | Renewed selling pressure possible
-Fri–Sat | Recovery attempt if support holds
-Sun | Can the rebound survive?
+THE WEEK AHEAD
 
-The second test matters more to me than the first green day.
+Mon–Tue: Sellers may test the lows again.
+Wed: A chance to find some footing.
+Thu: Another difficult day if buying doesn't hold.
+Fri–Sat: The best chance of a rebound.
+Sun: Does that recovery last?
 
-BTC & ETH DAILY PRICE RANGES
+THE PRICE MAP
 
-BTC / ETH, USDT
+BTC / ETH, in USDT
 
 Mon 16 | 63,803–65,344 / 1,783–1,844
 Tue 17 | 63,134–64,806 / 1,763–1,830
@@ -40,29 +40,23 @@ Fri 20 | 63,804–65,866 / 1,780–1,862
 Sat 21 | 64,455–66,648 / 1,797–1,885
 Sun 22 | 64,055–66,379 / 1,785–1,878
 
-THE ROTATION QUESTION
+These ranges were set on Monday morning. I won't change them afterward to make the week look better.
 
-The 30-day Altcoin Season reading climbed to 41 on Friday, then slipped back to 33 by Sunday.
+AND WHAT ABOUT ALTCOINS?
 
-ETH is still losing ground against BTC. There's no convincing handoff to large-cap alts yet, let alone a broader move into midcaps and microcaps.
+That's where I'm more cautious.
 
-The order I'm watching:
+Bitcoin finding a floor would be a start. But I'd want to see ETH gaining against BTC, followed by stronger moves across larger altcoins, before expecting much from midcaps and microcaps.
 
-BTC finds a floor → ETH starts outperforming → larger alts participate → strength reaches further down the market.
+We're not there yet.
 
-That sequence hasn't happened.
+Last week's 30-day Altcoin Season reading briefly climbed to 41, then fell back to 33. ETH also lost ground against BTC.
 
-WHAT WOULD CHANGE MY MIND?
+So even if Bitcoin rallies this weekend, I'm not ready to call a broader rotation. I don't have a reliable date for one over the next few weeks either.
 
-If Bitcoin holds its next test, ETH/BTC improves and more altcoins start participating, I'll take the recovery more seriously.
+What I'm looking for is simple: Bitcoin holds its next test, Ethereum starts doing better than Bitcoin, and the recovery spreads.
 
-If Bitcoin rebounds alone while ETH continues to lag, I'll treat it as another bounce inside a weak market.
-
-For the next 2–3 weeks, a broader rotation remains unconfirmed. Beyond that, I don't have a reliable date for the next cycle phase.
-
-These are the original price ranges set on Monday morning, not live prices.
-
-Next Monday I'll come back to this exact outlook and see what held up, what failed and whether rotation actually began.
+Next Monday, we'll look back at these exact prices and expectations. No moving the goalposts.
 
 ## Evidence anchors
 
