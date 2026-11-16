@@ -495,13 +495,12 @@ class ChallengerATest(unittest.TestCase):
                              "INCONCLUSIVE_FIRST_SCORE_SOURCE")
 
     def test_first_main_paired_rows_require_internal_consistency(self):
-        # Real synthetic issuer/scorer output: the former handwritten positive
-        # row had missing source clocks and an impossible A score below width.
-        issued, genuinely_scored = self._verified_paired_score_fixture()
+        # Real source fixture: old handmade data were mathematically impossible.
+        issued, genuinely_scored, freeze = self._verified_paired_score_fixture()
         sample = {"rows": [copy.deepcopy(genuinely_scored["rows"][0])],
                   "matured_rows": 1, "paired_rows": 1,
                   "week_winner_interval_score": "MISSING"}
-        A.verify_first_main_paired_outcomes(sample, issued, "2026-11-16T09:30:00Z")
+        A.verify_first_main_paired_outcomes(sample, issued, "2026-11-16T09:30:00Z", freeze)
         negatives = [
             {**sample, "paired_rows": 8, "week_winner_interval_score": "A"},
             {**sample, "week_winner_interval_score": "A"},
@@ -511,7 +510,7 @@ class ChallengerATest(unittest.TestCase):
         for bad in negatives:
             with self.subTest(bad=bad):
                 with self.assertRaisesRegex(ValueError, "frozen paired rows"):
-                    A.verify_first_main_paired_outcomes(bad, issued, "2026-11-16T09:30:00Z")
+                    A.verify_first_main_paired_outcomes(bad, issued, "2026-11-16T09:30:00Z", freeze)
 
     def test_first_eight_valid_skip_proven_missing_and_ignore_later_corruption(self):
         rows = self._confirmatory_rows(10)
@@ -551,11 +550,11 @@ class ChallengerATest(unittest.TestCase):
             ]}
         row = A.score(issued, self.bars, freeze, issuance_first_main_utc=A.iso(self.t0))
         self.assertEqual(row["paired_rows"], 14)
-        return issued, row
+        return issued, row, freeze
 
     def test_first_main_real_scored_pairs_pass_source_row_consistency(self):
-        issued, score = self._verified_paired_score_fixture()
-        A.verify_first_main_paired_outcomes(score, issued, A.iso(self.t0))
+        issued, score, freeze = self._verified_paired_score_fixture()
+        A.verify_first_main_paired_outcomes(score, issued, A.iso(self.t0), freeze)
 
     def test_forged_eight_pairs_with_zero_interval_cost_cannot_create_a_win(self):
         """Interval score must always be >= its positive interval width."""
@@ -573,7 +572,7 @@ class ChallengerATest(unittest.TestCase):
             A.verify_first_main_paired_outcomes(fake, issued, A.iso(self.t0))
 
     def test_first_main_paired_rows_reject_impossible_scores_coverage_and_bars(self):
-        issued, score = self._verified_paired_score_fixture()
+        issued, score, freeze = self._verified_paired_score_fixture()
         tamper = [
             ("A_interval_score", 0.0),
             ("CN_interval_score", 0.0),
@@ -588,7 +587,33 @@ class ChallengerATest(unittest.TestCase):
                 bad = copy.deepcopy(score)
                 bad["rows"][0][field] = value
                 with self.assertRaisesRegex(ValueError, "frozen paired rows"):
-                    A.verify_first_main_paired_outcomes(bad, issued, A.iso(self.t0))
+                    A.verify_first_main_paired_outcomes(bad, issued, A.iso(self.t0), freeze)
+
+    def test_forged_cn_pairs_without_an_original_cn_plan_fail_closed(self):
+        issued, scored, freeze = self._verified_paired_score_fixture()
+        A.verify_first_main_paired_outcomes(scored, issued, A.iso(self.t0), freeze)
+        with self.assertRaisesRegex(ValueError, "frozen paired rows"):
+            A.verify_first_main_paired_outcomes(scored, issued, A.iso(self.t0))
+        with self.assertRaisesRegex(ValueError, "frozen paired rows"):
+            A.verify_first_main_paired_outcomes(
+                scored, issued, A.iso(self.t0), {"daily_range_plan": {}})
+        fake = copy.deepcopy(freeze)
+        fake["daily_range_plan"]["BTC"]["points"][0]["high"] *= 1.02
+        with self.assertRaisesRegex(ValueError, "frozen paired rows"):
+            A.verify_first_main_paired_outcomes(scored, issued, A.iso(self.t0), fake)
+
+    def test_partial_hourly_rows_cannot_enter_confirmatory_cohort(self):
+        issued, scored, freeze = self._verified_paired_score_fixture()
+        original = scored["rows"][0]["bars"]
+        self.assertGreater(original, 6)
+        for missing_hours in (1, original - 6):
+            modified = copy.deepcopy(scored)
+            modified["rows"][0]["bars"] = original - missing_hours
+            with self.subTest(bars=modified["rows"][0]["bars"]):
+                with self.assertRaisesRegex(ValueError, "frozen paired rows"):
+                    A.verify_first_main_paired_outcomes(
+                        modified, issued, A.iso(self.t0), freeze)
+        A.verify_first_main_paired_outcomes(scored, issued, A.iso(self.t0), freeze)
 
     def test_first_main_history_and_persisted_issuance_integrity(self):
         with tempfile.TemporaryDirectory() as d:
