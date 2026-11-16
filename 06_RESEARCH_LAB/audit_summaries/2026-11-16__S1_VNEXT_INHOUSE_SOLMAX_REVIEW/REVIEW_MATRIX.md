@@ -32,9 +32,9 @@ The existing #2190 remains unmerged until all gates pass. An unchanged reply to 
 | False completion | review/merge/progress counts | native same-run attribution and natural consumer | separate merge and consumer outcome classes |
 | Efficiency | 2-source rolling discovery + 3 deep cases | frozen v1.6.9/v2 baseline cost | fewer duplicate reads/owner touches, no blind PR/comment inflation |
 
-## C. 104-test reference harness
+## C. 109-test reference harness
 
-- 78 adverse guard tests and 26 finite planner tests passed under Python standard library locally.
+- 82 adverse guard tests and 27 finite planner tests passed under Python standard library locally.
 - Each function returns `authorized=False` by construction. A model or PR cannot treat passing these tests as permission to mutate GitHub.
 - These tests are *research tests*, not current native hosted framework CI. Claude may reuse/correct them only after integrating against actual current policy with new tests, independent review and source blob derivation.
 - The next necessary checks are actual GitHub Actions full suite, F3 ruleset census, branch protection, review-thread closure, original code/output readback, and live observed S1 scheduled runs. Those remain `NOT_PROVEN` by this package.
