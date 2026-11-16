@@ -70,6 +70,18 @@ class PublicForecastGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "DUPLICATE_CASE_ID"):
             mod.audit_manifest({"contract": mod.CONTRACT, "cases": [c, c]})
 
+    def test_unhashable_json_values_fail_closed(self):
+        c = valid()
+        c["authority"] = ["RESEARCH_ONLY"]
+        c["claim_type"] = {"target": "BTC"}
+        self.assertEqual(mod.audit_case(c)["status"], "REJECTED_SCHEMA")
+
+    def test_non_string_duplicate_key_is_rejected_not_crash(self):
+        c = valid()
+        c["case_id"] = {"bad": "id"}
+        result = mod.audit_manifest({"contract": mod.CONTRACT, "cases": [c]})
+        self.assertEqual(result["rows"][0]["status"], "REJECTED_SCHEMA")
+
     def test_no_manifest_can_claim_score_or_promotion(self):
         m = {"contract": mod.CONTRACT, "cases": [valid()]}
         result = mod.audit_manifest(m)
