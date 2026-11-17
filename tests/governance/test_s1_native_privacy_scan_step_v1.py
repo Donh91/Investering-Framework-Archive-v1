@@ -192,8 +192,12 @@ class NativePrivacyScanStep(unittest.TestCase):
     def test_scanner_pattern_is_not_weakened(self):
         # The release renamed its own term instead of weakening the scanner (PR #2200 review).
         rule = dict(step.scanner.KNOWN_SECRET_OR_RESTRICTED_DESIGN)["EXPLICIT_PRIVATE_DESIGN"]
-        for variant in (MARKER, MARKER.lower(), "OWNER" + "-" + "ONLY", "owner" + " " + "only"):
+        # v3: the marker TOKEN still matches in every form a token takes; narrative prose no longer does
+        # (tests/governance/test_s1_diff_scan_marker_precision_v3.py holds the full positive and negative matrix).
+        for variant in (MARKER, MARKER.lower(), "OWNER" + "-" + "ONLY", "OWNER" + " " + "ONLY"):
             self.assertTrue(rule.search(f"x {variant} y"), variant)
+        self.assertTrue(rule.search("## " + "Owner" + " " + "only"))
+        self.assertIsNone(rule.search("the owner" + " " + "only approves this"))
 
     def test_lane_still_requires_no_restricted_content(self):
         loop = (ROOT / "00_FMOS" / "S1" / "ACTION_LOOP.md").read_text(encoding="utf-8")
