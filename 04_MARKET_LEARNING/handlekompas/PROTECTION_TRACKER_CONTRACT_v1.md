@@ -61,6 +61,7 @@ Re-entry is prospective and sequential:
 2. Risk de-escalates after a material warning -> WAIT_FOR_RECLAIM.
 3. REVIEW opens only after the existing Compass confirmation gate is constructive again while risk is no longer elevated.
 4. REVIEW means reviewable re-entry conditions, never automatic BUY or portfolio execution.
+5. During an evidence gap, the current state remains UNAVAILABLE. An optional `reentry_pending_before_gap` field carries only a previously established WAIT_FOR_FLUSH or WAIT_FOR_RECLAIM obligation (a prior REVIEW is reduced to WAIT_FOR_RECLAIM); it is null if no obligation is known. Repeated unavailable observations preserve this bounded memory. It is historical protection context, not a current risk signal, and cannot authorize REVIEW. The first admitted healthy observation after a gap resumes WAIT_FOR_RECLAIM (or WAIT_FOR_FLUSH when current risk is HIGH/CONFIRMED); a later constructive observation is still required for REVIEW. Older unavailable records without carry evidence cannot reconstruct a lost obligation. No historical packet is rewritten.
 
 Stabilization alone is not recovery. Recovery alone is not rotation.
 
