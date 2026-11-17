@@ -162,8 +162,15 @@ class ApiGatewayTests(unittest.TestCase):
     def test_routine_task_retry_cap_remains_legacy_bounded(self):
         data=load_registry(REGISTRY)
         cfg=data['tasks']['DAILY_DIRECTOR_SHADOW']
-        self.assertNotIn('retry_max_output_tokens',cfg)
-        self.assertLessEqual(retry_output_token_limit(cfg),5000)
+        # Give the first pass the previous 4k retry headroom without changing
+        # the model, reasoning tier, or per-attempt ceiling.
+        self.assertEqual(cfg['max_output_tokens'], 4000)
+        self.assertEqual(cfg['retry_max_output_tokens'], 4000)
+        self.assertEqual(retry_output_token_limit(cfg), 4000)
+        self.assertEqual(build_request('DAILY_DIRECTOR_SHADOW', cfg, 'test', {})['max_output_tokens'], 4000)
+        self.assertEqual(cfg['model'], 'gpt-6-luna')
+        self.assertEqual(cfg['reasoning_effort'], 'medium')
+        self.assertEqual(data['single_run_hard_stop_usd'], 3)
 
     def test_invalid_retry_output_limit_fails_closed(self):
         data=load_registry(REGISTRY)
