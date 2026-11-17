@@ -25,6 +25,7 @@ import argparse
 import csv
 import datetime as dt
 import hashlib
+import io
 import json
 import math
 import re
@@ -96,15 +97,34 @@ def _positive(value) -> float | None:
     return x if math.isfinite(x) and x > 0 else None
 
 
-def load_hourly(root: Path, start: dt.datetime, end: dt.datetime) -> dict:
+def load_hourly(root: Path, start: dt.datetime, end: dt.datetime, *, git_ref: str | None = None) -> dict:
     """{open_time: {asset: (close, high, low)}} for bars with start <= open < end."""
     bars: dict = {}
     seen: set = set()
     day = start.replace(hour=0, minute=0, second=0, microsecond=0)
     while day < end:
-        path = root / HOURLY_DIR / f"{day:%Y}" / f"{day:%m}" / f"{day:%Y-%m-%d}.csv"
-        if path.is_file():
-            with path.open(newline="", encoding="utf-8") as fh:
+        rel = f"{HOURLY_DIR}/{day:%Y}/{day:%m}/{day:%Y-%m-%d}.csv"
+        path = root / rel
+        # For canonical scoring, resolve only the commit's own tree. A missing
+        # path is an abstention; a failed Git read is an integrity failure.
+        if git_ref is not None:
+            try:
+                entry = _git(root, "ls-tree", git_ref, "--", rel)
+                if entry:
+                    if not entry.startswith(("100644 blob ", "100755 blob ")):
+                        raise ValueError("hourly source is not a regular committed blob")
+                    raw = subprocess.run(
+                        ["git", "-C", str(root), "show", git_ref + ":" + rel],
+                        capture_output=True, check=True).stdout
+                    stream = io.StringIO(raw.decode("utf-8"), newline="")
+                else:
+                    stream = None
+            except (subprocess.CalledProcessError, UnicodeError) as exc:
+                raise ValueError("cannot read committed hourly source " + rel) from exc
+        else:
+            stream = path.open(newline="", encoding="utf-8") if path.is_file() else None
+        if stream is not None:
+            with stream as fh:
                 for row in csv.DictReader(fh):
                     try:
                         t = utc(row["timestamp_utc"])
@@ -280,6 +300,7 @@ def score(issuance: dict, bars: dict, freeze: dict | None = None, *, issuance_fi
                 continue
             r = realized(bars, asset, utc(d["scored_from_utc"]), utc(d["end_utc"]))
             if r is None:
+                abstentions.append({"asset": asset, "day": d["day"], "status": "ABSTAIN_INCOMPLETE_HOURLY"})
                 continue
             p0 = a["P0"]
             row = {"asset": asset, "day": d["day"], "bars": r["bars"]}
@@ -629,7 +650,9 @@ def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_cloc
                 if (not all(k in r for k in eqw)
                         or not finite_number(r["EQW_PRIOR_interval_score"])
                         or not finite_number(r["EQW_PRIOR_width"], positive=True)
-                        or r["EQW_PRIOR_interval_score"] < r["EQW_PRIOR_width"]
+                        or (r["EQW_PRIOR_interval_score"] < r["EQW_PRIOR_width"]
+                            and not math.isclose(r["EQW_PRIOR_interval_score"], r["EQW_PRIOR_width"],
+                                                 rel_tol=1e-10, abs_tol=1e-10))
                         or any(type(r.get(k)) is not int or r[k] not in (0, 1)
                                for k in eqw[2:])):
                     raise ValueError("frozen paired rows incomplete equal-width control")
@@ -647,6 +670,20 @@ def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_cloc
             or row["paired_rows"] != len(paired)
             or row.get("week_winner_interval_score") != winner):
         raise ValueError("frozen paired rows winner/count mismatch")
+
+
+def verify_replayed_score(row: dict, issuance: dict, first_main_clock: str,
+                          original_cn: dict, bars: dict) -> None:
+    """Require the complete scorer result from immutable hourly data, not claims.
+
+    Every issued asset-day is represented by a scored row or an explicit
+    pre-issuance/incomplete-hourly abstention. Comparing canonical JSON also
+    distinguishes booleans from integer coverage flags and catches forged
+    aggregates, removed CN pairs, substituted rows and invented abstentions.
+    """
+    expected = score(issuance, bars, original_cn, issuance_first_main_utc=first_main_clock)
+    if any(k not in row for k in expected) or _digest({k: row[k] for k in expected}) != _digest(expected):
+        raise ValueError("frozen paired rows differ from complete committed hourly replay")
 
 
 def read_first_main_weekly_score(root: Path, year: int, week: int) -> tuple[dict, dict]:
@@ -721,6 +758,11 @@ def read_first_main_weekly_score(root: Path, year: int, week: int) -> tuple[dict
             raise ValueError("original first-main CN freeze invalid")
         verify_first_main_paired_outcomes(
             row, issued, issue_proof["issuance_first_main_utc"], original_cn)
+        # Independently replay the complete scorer from bars at first score
+        # publication. Later working-tree edits and backfills are irrelevant.
+        monday = week_monday(year, week)
+        bars = load_hourly(root, monday, maturity, git_ref=proof["first_main_commit"])
+        verify_replayed_score(row, issued, issue_proof["issuance_first_main_utc"], original_cn, bars)
     result = dict(row)
     if not accepted:
         result["paired_rows"] = 0
@@ -878,9 +920,13 @@ def main(argv: Iterable[str] | None = None) -> int:
                 raise ValueError("no-issuance MISSING must be committed to the canonical first score path")
             result = no_issuance_missing_score(root, year, week)
         else:
-            bars = load_hourly(root, monday, monday + 7 * DAY)
-            freeze_path = root / FREEZE_PATH.format(year=year, week=week)
-            freeze = json.loads(freeze_path.read_text(encoding="utf-8")) if freeze_path.is_file() else None
+            # Never score mutable/untracked working-copy market bars. Read one
+            # pinned main commit and the original CN freeze; admission will
+            # independently replay the outcome from the score publication tree.
+            main_sha = _git(root, "rev-parse", "refs/heads/main")
+            bars = load_hourly(root, monday, monday + 7 * DAY, git_ref=main_sha)
+            freeze_rel = FREEZE_PATH.format(year=year, week=week)
+            freeze = json.loads(_git(root, "show", issuance["source"]["freeze_first_main_commit"] + ":" + freeze_rel))
             result = score(issuance, bars, freeze, issuance_first_main_utc=original["issuance_first_main_utc"])
             result["first_main_issuance"] = original
             result["first_http_delivery"] = "UNKNOWN"

@@ -826,14 +826,16 @@ class ChallengerATest(unittest.TestCase):
                              "INCONCLUSIVE_FIRST_SCORE_SOURCE")
 
     def _commit_score_fixture(self, root, *, score_clock="2026-11-23T01:00:00+00:00",
-                              score_winner="MISSING", paired=0):
+                              score_winner="MISSING", paired=0, with_bars=False,
+                              mutate=None):
         self._git(root, "init", "-b", "main")
         self._git(root, "config", "user.name", "Task2 CI")
         self._git(root, "config", "user.email", "task2-tests@example.invalid")
         freeze_rel = A.FREEZE_PATH.format(year=2026, week=47)
         freeze = root / freeze_rel
         freeze.parent.mkdir(parents=True, exist_ok=True)
-        freeze.write_text('{"daily_range_plan":{}}\n')
+        freeze_data = self._verified_paired_score_fixture()[2] if with_bars else {"daily_range_plan": {}}
+        freeze.write_text(json.dumps(freeze_data) + "\n")
         self._git(root, "add", freeze_rel)
         self._git(root, "commit", "-m", "first-main CN freeze",
                   date="2026-11-16T09:17:00+00:00")
@@ -855,19 +857,93 @@ class ChallengerATest(unittest.TestCase):
         score_rel = A.SCORE_PATH.format(year=2026, week=47)
         score_file = root / score_rel
         score_file.parent.mkdir(parents=True, exist_ok=True)
-        score_file.write_text(json.dumps({
-            "contract": A.CONTRACT + "_SCORE", "week": "2026-W47",
-            "issuance_sha256": issued["issuance_sha256"],
-            "issuance_first_main_utc": issue_proof["issuance_first_main_utc"],
-            "first_main_issuance": issue_proof,
-            "decision_status": "SHADOW_ONLY_NO_PROMOTION",
-            "first_http_delivery": "UNKNOWN",
-            "rows": [], "matured_rows": 0,
-            "paired_rows": paired, "week_winner_interval_score": score_winner,
-        }, sort_keys=True) + "\n")
+        if with_bars:
+            write_repo(root, {t: r for t, r in self.bars.items() if t >= self.monday})
+            self._git(root, "add", A.HOURLY_DIR)
+        result = A.score(issued, self.bars if with_bars else {}, freeze_data,
+                         issuance_first_main_utc=issue_proof["issuance_first_main_utc"])
+        result.update(first_main_issuance=issue_proof, decision_status="SHADOW_ONLY_NO_PROMOTION",
+                      first_http_delivery="UNKNOWN")
+        if not with_bars:
+            result.update(paired_rows=paired, week_winner_interval_score=score_winner)
+        if mutate is not None:
+            mutate(result)
+        score_file.write_text(json.dumps(result, sort_keys=True) + "\n")
         self._git(root, "add", score_rel)
         self._git(root, "commit", "-m", "first mature weekly score", date=score_clock)
         return issued, score_rel
+
+    def test_equal_width_rounding_real_scorer_multi_seed(self):
+        # Exercise genuine covered control rows with a negative last-bit
+        # difference between normalized CN width and reconstructed band width.
+        rounded_down = 0
+        for seed in range(36):
+            bars = synthetic_bars(self.monday - 70 * A.DAY, 77 * 24, seed=seed)
+            issued = A.issue(bars, 2026, 47, self.t0)
+            freeze = {"daily_range_plan": {
+                asset: {"points": [{"day": d["day"], "low": round(spec["P0"] * .8, 2),
+                                    "high": round(spec["P0"] * 1.2, 2)} for d in spec["days"]]}
+                for asset, spec in issued["assets"].items()}}
+            scored = A.score(issued, bars, freeze, issuance_first_main_utc=A.iso(self.t0))
+            rounded_down += sum(r["EQW_PRIOR_interval_score"] < r["EQW_PRIOR_width"]
+                                for r in scored["rows"])
+            A.verify_first_main_paired_outcomes(scored, issued, A.iso(self.t0), freeze)
+            A.verify_replayed_score(scored, issued, A.iso(self.t0), freeze, bars)
+        self.assertGreater(rounded_down, 0, "fixture must reproduce the strict-comparison bug")
+        forged = copy.deepcopy(scored)
+        forged["rows"][0]["EQW_PRIOR_interval_score"] = forged["rows"][0]["EQW_PRIOR_width"] / 2
+        with self.assertRaisesRegex(ValueError, "equal-width control"):
+            A.verify_first_main_paired_outcomes(forged, issued, A.iso(self.t0), freeze)
+
+    def test_committed_hourly_replay_rejects_dropped_or_forged_rows(self):
+        def recalculate(row):
+            paired = [r for r in row["rows"] if "CN_interval_score" in r]
+            row["matured_rows"] = len(row["rows"])
+            row["paired_rows"] = len(paired)
+            sa = sum(r["A_interval_score"] for r in paired)
+            sc = sum(r["CN_interval_score"] for r in paired)
+            row["week_winner_interval_score"] = ("A" if sa < sc else "CN" if sc < sa else "TIE") if len(paired) >= 8 else "MISSING"
+
+        def drop(row):
+            removed = row["rows"].pop()
+            # Even an explicit but false abstention cannot hide a scored row.
+            row["abstentions"].append({"asset": removed["asset"], "day": removed["day"],
+                                       "status": "ABSTAIN_INCOMPLETE_HOURLY"})
+            recalculate(row)
+
+        def forge(row):
+            r = row["rows"][0]
+            # Internally consistent but invented close loss against original CN band.
+            r["CN_close_covered"] = 0
+            r["CN_interval_score"] = r["CN_width"] + 1.0
+            recalculate(row)
+
+        for mutate in (drop, forge):
+            with self.subTest(mutate=mutate.__name__), tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                issued, rel = self._commit_score_fixture(root, with_bars=True, mutate=mutate)
+                doc = json.loads((root / rel).read_text())
+                freeze = json.loads((root / A.FREEZE_PATH.format(year=2026, week=47)).read_text())
+                # Old consistency-only gate accepts these mutations; the actual
+                # immutable admission path must reject them.
+                A.verify_first_main_paired_outcomes(doc, issued, doc["issuance_first_main_utc"], freeze)
+                with self.assertRaisesRegex(ValueError, "complete committed hourly replay"):
+                    A.read_first_main_weekly_score(root, 2026, 47)
+                self.assertEqual(A.confirmatory_decision_from_main(root, "2026-W47")["status"],
+                                 "INCONCLUSIVE_FIRST_SCORE_SOURCE")
+
+    def test_committed_hourly_replay_ignores_later_worktree_and_main_changes(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._commit_score_fixture(root, with_bars=True)
+            row, proof = A.read_first_main_weekly_score(root, 2026, 47)
+            self.assertEqual(row["paired_rows"], 14)
+            hourly = root / A.HOURLY_DIR / "2026/11/2026-11-17.csv"
+            hourly.write_text("timestamp_utc\n")
+            self.assertEqual(A.read_first_main_weekly_score(root, 2026, 47)[0], row)
+            self._git(root, "add", str(hourly.relative_to(root)))
+            self._git(root, "commit", "-m", "later hourly change", date="2026-11-23T07:00:00+00:00")
+            self.assertEqual(A.read_first_main_weekly_score(root, 2026, 47)[0], row)
 
     def test_missing_weekly_score_is_never_silently_skipped(self):
         with tempfile.TemporaryDirectory() as d:
