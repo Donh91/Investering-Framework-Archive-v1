@@ -1196,6 +1196,7 @@ def horizon_map(
     d13_source = _cn_direction(cn_package, "next_1_3d")
     d57_source = _cn_direction(cn_package, "next_5_7d")
     d23_source = _cn_direction(cn_package, "next_2_3w")
+    s13_source = _cn_projection_summary(cn_package, "next_1_3d")
     s23_source = _cn_projection_summary(cn_package, "next_2_3w")
 
     direction_map = {
@@ -1272,7 +1273,12 @@ def horizon_map(
             _unavailable_horizon("Structured Cycle Navigator 1-3 day decision projection is unavailable.")
             if d13 == "UNAVAILABLE" else {
                 "expected_direction": d13, "label": label(d13),
-                "expected_path": "Short-horizon state is cross-checked against the current weekly regime; transmission must improve before risk moves down-cap.",
+                "expected_path": (
+                    s13_source if s13_source and d13 == d13_source
+                    else "Action posture differs from the source Cycle Navigator direction; no independent 1-3 day forecast upgrade is implied."
+                    if d13 != d13_source
+                    else "No eligible typed Cycle Navigator 1-3 day path is published."
+                ),
                 "action_posture": a13, "confirmation_trigger": confirm, "invalidation_trigger": invalidate,
                 "eta": "24-72h", "confidence": None,
             }

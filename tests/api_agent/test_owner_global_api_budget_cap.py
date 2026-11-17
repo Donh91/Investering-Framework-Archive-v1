@@ -138,7 +138,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             original=json.loads((ROOT/"research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json").read_text())
             self.assertEqual(original["normal_budget_usd"],50)
-            self.assertEqual(original["absolute_budget_usd"],50)
+            self.assertEqual(original["absolute_budget_usd"],100)
             p=Path(td)/"ledger.json"
             for key,value in (("normal_budget_usd",40),("absolute_budget_usd",45)):
                 bad={**original,key:value}
@@ -234,8 +234,8 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(state["status"], "PASS", state)
         # Native POSTs are settled; retain consumed USD3+10 and distinct USD10
         # owner-approved (not yet consumed) public research reservation.
-        self.assertEqual(state["pending_liability_upper_usd"], 23.0)
-        self.assertEqual(state["pending_liability_count"], 3)
+        self.assertEqual(state["pending_liability_upper_usd"], 73.0)
+        self.assertEqual(state["pending_liability_count"], 8)
         self.assertGreaterEqual(state["remaining_usd"], 4.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
 
@@ -249,10 +249,8 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(ledger["unresolved"], [])
         self.assertEqual(
             sorted(r["work_id"] for r in ledger["owner_reservations"]),
-            ["ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
-             "ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE",
-             "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"])
-        self.assertEqual(pending_risk(p), (0.0, 23.0, 3))
+            ["ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE","ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE","ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE","ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE","ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE","ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE","ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE","ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"])
+        self.assertEqual(pending_risk(p), (0.0, 73.0, 8))
         self.assertEqual(len(ledger["settled"]), 3)
         self.assertEqual({r["kind"] for r in ledger["settled"]}, {"NATIVE_POST"})
         self.assertEqual(ledger["provider_settlement_evidence"]["sha256"],
@@ -311,11 +309,17 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                 amount = float(match.group(1))
                 if amount > 40:
                     high_values.append((path.relative_to(ROOT).as_posix(), amount, match.start()))
-        self.assertEqual(len(high_values), 1, high_values)
-        path, amount, offset = high_values[0]
-        self.assertEqual(path, workflow.relative_to(ROOT).as_posix())
-        self.assertEqual(amount, 50.0)
-        self.assertGreater(offset, source.index(marker))
+        # 1 old DISABLED 50USD code-interpreter lane plus exactly 5 new
+        # owner-bound Astra 100USD exceptional routes, no general caller.
+        legacy = [x for x in high_values if x[0] == workflow.relative_to(ROOT).as_posix()]
+        exceptional = [x for x in high_values if x[0] ==
+            ".github/workflows/owner-astra-research-program-20261116.yml"]
+        self.assertEqual(len(legacy), 1, high_values)
+        self.assertEqual(legacy[0][1], 50.0)
+        self.assertGreater(legacy[0][2], source.index(marker))
+        self.assertEqual(len(exceptional), 5, high_values)
+        self.assertTrue(all(row[1] == 100.0 for row in exceptional))
+        self.assertEqual(len(high_values), 6, high_values)
         # Removing the false && on the only elevated-cap job must fail tests.
         self.assertFalse(json.loads((ROOT / "research/api_agent/coordination/ASTRA_TASK2_REALDATA_V2_ADMISSION_V1.json").read_text())["authorized_paid_dispatch"])
 

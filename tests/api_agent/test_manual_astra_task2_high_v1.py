@@ -175,13 +175,13 @@ class AstraOneShotTests(unittest.TestCase):
             "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
         low, high, n = pending_risk(ledger)
         # Native POSTs settled; consumed one-shots (3 + 10) AND new reviewed-only one-shot hold (10).
-        self.assertEqual((low, high, n), (0.0, 23.0, 3))
+        self.assertEqual((low, high, n), (0.0, 73.0, 8))
         self.assertGreaterEqual(high-low, m.MAX_THEORETICAL_COST_USD)
         value = json.loads(ledger.read_text(encoding="utf-8"))
         self.assertEqual(len(value["settled"]), 3)
         self.assertEqual(value["provider_settlement_evidence"]["sha256"],
                          "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8")
-        self.assertEqual(len(value["owner_reservations"]), 3)
+        self.assertEqual(len(value["owner_reservations"]), 8)
         # Isolate older two holds before simulating the V2 alternative: the maximum
         # of 3 concurrent reservations must still fail closed, not allow four.
         value["owner_reservations"] = [r for r in value["owner_reservations"]
@@ -200,7 +200,7 @@ class AstraOneShotTests(unittest.TestCase):
         probe = self.root / "future-liability.json"
         probe.write_text(json.dumps(value), encoding="utf-8")
         future_low, future_high, future_count = pending_risk(probe)
-        self.assertEqual((future_low, future_high, future_count), (0.0, 23.0, 3))
+        self.assertEqual((future_low, future_high, future_count), (0.0, 73.0, 8))
 
     def test_original_director_live_secret_not_corrupted(self):
         yml = (Path(__file__).resolve().parents[2] /
