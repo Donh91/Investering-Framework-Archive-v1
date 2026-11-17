@@ -1,0 +1,41 @@
+S1 REVIEW ADMISSION v2.0 (rubric of 00_FMOS/S1/ACTION_LOOP.md C5 and rule 3; pinned by rubric_blobs in 00_FMOS/S1/RUNTIME_CONTRACT.json; AGENTS.md section 0.2f)
+
+PRINCIPLE
+A merge needs at least one independent exact-head review by a reviewer that did not author the head. Claude is optional wherever Codex can review; a MEDIUM or higher head that Codex authored needs a detached Claude review, or its budget escalates it to the owner. No author reviews its own work. A review is evidence, never authority.
+
+AUTHORSHIP OF A HEAD H (read the complete paginated commit list of the PR; more than 250 commits, or a list S1 cannot read completely, makes H S1_AUTHORED and CODEX_AUTHORED both, which fails closed)
+- S1_AUTHORED: the head branch starts with s1/, or any commit message of the PR carries the line S1-Authored-By: 6ae5fd466b48819187abc224ec0f1c5f, or any S1 receipt or S1_ITEM_v1 on #1156 or on the PR names a commit of the PR as a head S1 wrote (PUSHED, PACKAGE_PR, REENABLE_PR). Exception: a branch-update merge commit that passed the CONTENT-NEUTRAL readback of STEWARD_STATES.md BRANCH UPDATE is ignored for this test, because it adds no content of S1's own.
+- CODEX_AUTHORED: the head branch starts with codex/, or the PR was opened by chatgpt-codex-connector[bot] or via the Codex app (user.login or performed_via_github_app), or any commit of the PR has author or committer login chatgpt-codex-connector[bot], or the PR body or a PR comment says Codex created or addressed it ("@codex address" answered by Codex).
+- CLAUDE_PACKAGE: the PR body says it implements a Bridge package, or the request or a review says H implements a Claude-authored package.
+
+ADMISSIBLE REVIEW KINDS, in this order (C5 takes the first kind that is admissible for H)
+(i) CODEX. Admissible only when H is not CODEX_AUTHORED. Exactly the rule of scripts/governance/check_codex_review_finality.py decision(): a comment "@codex review" on the PR by any user other than Codex; after the newest such request, a comment by user chatgpt-codex-connector[bot] (type Bot, id 199175422) whose codex-review-state JSON has commit_sha equal to H, status completed and has_unresolved_findings false; a later Codex comment "Codex Review: Didn't find any major issues" whose Reviewed commit is a prefix of H; no newer Codex state for H that differs; no later Codex review or inline comment on H naming P0, P1 or P2. Codex is a GitHub App, so its author identity is platform-authenticated, unlike comments by Donh91.
+(ii) CLAUDE. A CLAUDE_REVIEW_v1 on Bridge #173 exactly as ACTION_LOOP.md C5 describes; it must state INDEPENDENT_DETACHED when H is CLAUDE_PACKAGE.
+(iii) SPECIALIST. An S1_SPECIALIST_REVIEW_v1 comment on the PR, written by S1 under rule 3. It is a PREFLIGHT by the merging agent, never an independent review: in the merge run S1 re-derives every RUBRIC item from native reads of H itself (ACTION_LOOP.md C5), so a forged receipt adds nothing. It counts as the review only for the LOW LANE: H is not S1_AUTHORED; the risk class is LOW and no changed path is under tests/ (documentation or research notes only); required CI is green on H; Codex is silent or inadmissible for H (H is CODEX_AUTHORED, or a "@codex review" request posted after H's commit is older than codex_silent_hours of STEWARD_STATES.md with no completed Codex state for H); it is by Donh91, unedited, created after H's commit; it names head: <H>, the skill path and its blob at main, every RUBRIC item below with PASS and one evidence line each, and verdict: APPROVE. Any FAIL item, or any item missing, makes it REQUEST_CHANGES. For MEDIUM, HIGH and HIGH_IMPACT it is preflight only: they need (i) Codex on a head Codex did not author or (ii) a CLAUDE_REVIEW_v1 that states INDEPENDENT_DETACHED; without one the item stays in REVIEW and its budget forces a disposition (PARKED, then PARKED_OWNER_DECISION), never a merge.
+- AUDIT SAMPLE (part of rule 4, inside the same action): when a lane merge's review kind is specialist and it is the fifth, tenth, ... such merge (counted from S1_LANE_MERGE_v1 posts on #1156 with review specialist), the same rule-4 action posts one "@codex review" on that merged PR, or, when Codex authored it, one S1_REVIEW_REQUEST_v1 marked post_merge_audit on Bridge #173, and that merge's S1_LANE_MERGE_v1 carries audit=<comment id>. A merge whose S1_LANE_MERGE_v1 already carries audit= is never sampled again. A finding there becomes a new FIX work item.
+- A newer receipt of any kind for H that says REQUEST_CHANGES or BLOCK voids every earlier APPROVE for H. A native CHANGES_REQUESTED review on H voids every kind.
+- S1 never posts CLAUDE_REVIEW_v1, never posts a Codex review state, and never writes an S1_SPECIALIST_REVIEW_v1 for a head it authored. Neither Claude nor Codex may review a head it authored.
+
+SPECIALIST SKILL BY PATH (the skill whose rubric the specialist reviewer applies on top of the RUBRIC; first match)
+- tests/** only: .agents/skills/s1-pr-repair-learning/SKILL.md
+- scripts/research/**, 04_RESEARCH_LAB/**, 06_RESEARCH_LAB/**, research/**, 04_MARKET_LEARNING/**, 05_CYCLE_NAVIGATOR/** (not site/): .agents/skills/research-lab-red-team/SKILL.md and .agents/skills/conclusion-challenge-loop/SKILL.md
+- other scripts/**: .agents/skills/s1-pr-repair-learning/SKILL.md
+- documentation only (*.md outside the paths above): .agents/skills/canonical-context-router/SKILL.md
+- anything else: no specialist receipt; Codex or Claude only.
+
+RUBRIC (every item must PASS for APPROVE; each with one evidence line)
+- R1 Scope: the diff does what the PR title and body say and nothing else.
+- R2 Paths: no changed path or previous_filename is OWNER_GATED (AGENTS.md section 0.2e exclusions 1 to 11).
+- R3 Tests: every changed runnable file is exercised by an added or changed test, or by an existing test that the CI log shows ran; no test was deleted or weakened.
+- R4 No new repository-write ability, network call, paid API, credential read or wallet, trading or order code.
+- R5 No private-plane data, secret or personal data in the diff, title or body; the privacy line of C3 is NO_RESTRICTED_CONTENT.
+- R6 No gate tampering: nothing writes, prints or edits a gate marker, a job log line, a JUnit file, GITHUB_STEP_SUMMARY, GITHUB_OUTPUT or GITHUB_EVENT_PATH, or imports the gate scripts; no root-level *.py, sitecustomize, usercustomize, *.pth or new __init__.py.
+- R7 Reversible: a revert of the squash commit restores the previous behaviour, and no data, ledger or receipt is rewritten.
+- R8 Science: for research paths, no Round 3 data or analysis, no outcome scoring that a pre-registration forbids, and the conclusion is not stronger than its evidence (the skill's challenge questions answered).
+
+RISK CLASS (set by S1 at TRIAGED, only ever raised; the highest matching class wins)
+- EXTREME or unclear: anything S1 cannot classify. That is OWNER_GATED.
+- HIGH: a path that matches the paths filter of a workflow that writes to the repository or uses secrets, code that a scheduled data writer or producer runs (the #2145 case), site or public publication paths (05_CYCLE_NAVIGATOR/site/**, public outputs), or a change to stored data, ledgers or receipts.
+- HIGH_IMPACT (risk class of AGENTS.md section 0.2a and gate (f)): only when a reviewer receipt or the PR body names the change HIGH_IMPACT; S1's own path classification never produces it (HIGH and HIGH_IMPACT are disjoint: scheduled producer code is HIGH). A PR named HIGH_IMPACT is OWNER_GATED (ACTION_LOOP.md OWNER APPROVAL): S1 never lane-merges it, whatever the review, and lists it for the owner. HIGH and HIGH_IMPACT need HIGH EVIDENCE and a Codex or Claude review; a specialist receipt is never the review for them.
+- MEDIUM: other code under scripts/ or research code.
+- LOW: documentation and tests only.

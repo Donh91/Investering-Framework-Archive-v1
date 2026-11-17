@@ -9,16 +9,16 @@
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "0d5fbc720363c09a2454cf41c539f4dceaa5d1ea0dbbc57d2f2a0aa56e7b6eea",
+  "fingerprint": "21a1b7b79c69bc4bbececda3a62cc0fd8f066de8979818716f380c1749a20399",
   "fleet": {
-    "amber_count": 13,
-    "green_count": 190,
-    "red_count": 0,
+    "amber_count": 32,
+    "green_count": 171,
+    "red_count": 1,
     "scheduled_workflow_count": 57,
-    "workflow_count": 203,
+    "workflow_count": 204,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-11-17T00:27:20Z",
+  "generated_at_utc": "2026-11-17T13:46:41Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -30,11 +30,37 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "items": [],
+  "items": [
+    {
+      "cluster_id": null,
+      "existing_remediation": {
+        "finding": "SCHEDULE_STALE",
+        "route": "CODEX_PR",
+        "signature": "f9538daacc5d375062e7",
+        "state": "CODEX_READY"
+      },
+      "failure_streak": 1,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "SCHEDULE_STALE"
+      ],
+      "latest_head_sha": "642e1d40f240b8d972dcdb0a9035ea3880826ef8",
+      "latest_run_id": 44078863278,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/44078863278",
+      "model_lane": "NONE",
+      "openai_enabled": false,
+      "recent_failure_count": 1,
+      "route": "FOLLOW_EXISTING_REMEDIATION",
+      "scheduled": true,
+      "workflow": "operations-dashboard.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    }
+  ],
   "material_delta": true,
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
-    "existing_remediation_count": 0,
+    "existing_remediation_count": 1,
     "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
@@ -44,6 +70,6 @@
     "new_diagnosis_eligible": true,
     "remediation": "VALID"
   },
-  "source_health_generated_at_utc": "2026-11-17T00:21:42.926239Z",
-  "source_health_status": "AMBER"
+  "source_health_generated_at_utc": "2026-11-17T13:41:52.461295Z",
+  "source_health_status": "RED"
 }
