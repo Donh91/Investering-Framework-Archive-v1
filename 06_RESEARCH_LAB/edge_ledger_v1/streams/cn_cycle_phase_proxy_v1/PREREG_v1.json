@@ -1,0 +1,65 @@
+{
+  "stream_id": "cn_cycle_phase_proxy_v1",
+  "hypothesis": "Source-issued CN macro phase mapping improves four-class realized BTC regime-proxy accuracy over the best same-clock naive baseline; not a test of latent true market phase or trade profitability.",
+  "forecaster_ref": {
+    "path": "06_RESEARCH_LAB/edge_ledger_v1/streams/cn_cycle_phase_proxy_v1/phase_proxy.mjs",
+    "blob": "5aa65f02b503f96ff7c9cb433fbf9efd7184b697",
+    "entrypoint": "forecaster"
+  },
+  "scorer_ref": {
+    "path": "06_RESEARCH_LAB/edge_ledger_v1/streams/cn_cycle_phase_proxy_v1/phase_proxy.mjs",
+    "blob": "5aa65f02b503f96ff7c9cb433fbf9efd7184b697",
+    "entrypoint": "score"
+  },
+  "baselines": [
+    {
+      "name": "prior_week_phase_persistence",
+      "path": "06_RESEARCH_LAB/edge_ledger_v1/streams/cn_cycle_phase_proxy_v1/phase_proxy.mjs",
+      "blob": "5aa65f02b503f96ff7c9cb433fbf9efd7184b697",
+      "entrypoint": "persistence"
+    },
+    {
+      "name": "past_4w_trend",
+      "path": "06_RESEARCH_LAB/edge_ledger_v1/streams/cn_cycle_phase_proxy_v1/phase_proxy.mjs",
+      "blob": "5aa65f02b503f96ff7c9cb433fbf9efd7184b697",
+      "entrypoint": "trend"
+    }
+  ],
+  "data_paths": [
+    "05_CYCLE_NAVIGATOR/weekly/",
+    "05_CYCLE_NAVIGATOR/graph_history/v1/weeks/"
+  ],
+  "outcome": {
+    "definition": "Price-only operational proxy: past=BTC USDT hourly close at Monday 00:00 UTC four weeks earlier, asof=Monday 00:00 UTC close known before official issuance, end=next Monday 00:00 UTC close; trailing and forward sign combinations map down/up accumulation, up/up expansion, up/down distribution, down/down contraction. Ties up. Outcome future at issuance; end windows disjoint; never label true economic cycle.",
+    "eligibility": "Official weekly first issue recorded Monday; same original issue job/run and immutable as-of snapshot for model and both baselines; no reconstructed baseline. All three exactly timed closes, no interpolation, license and timestamp/point-in-time provenance verified."
+  },
+  "loss": "Zero-one multiclass misclassification, abstention=1; missing outcome is readiness failure, not zero loss.",
+  "unit": "ISO_WEEK",
+  "clip_c": 1,
+  "MDE": 0.1,
+  "n_min": 8,
+  "n_max": 26,
+  "family_id": "CN_CYCLE_PHASE_PROXY",
+  "family_k_max": 1,
+  "bootstrap": {
+    "block_length": 4,
+    "replicates": 10000,
+    "seed": 20261117
+  },
+  "kill_rules": [
+    "S1_EDGE_LEDGER_GATES_v1 E4 harm e_reverse>=20",
+    "n>=8 and 90% block-bootstrap upper CI < MDE",
+    "n>=26 inconclusive unless candidate confirmation in progress"
+  ],
+  "readiness_checks": [
+    "No Round 3 or private data",
+    "Public/commercial usage rights explicitly verified for exact graph-history underlying data source",
+    "Original immutable weekly package and receipt at same issuance, all baselines computed in same job from same as-of snapshot",
+    "No selection-exposed weeks including W47 or earlier",
+    "Source licence, assessor and native scorer CI reviewed before collection; absent runner or summary => PARKED/NO CANDIDATE",
+    "Verify conditional-mean null for e-process; fixed lambda=0.5, no outcome-driven selection; report proxy limitations"
+  ],
+  "first_week": "2026-W49",
+  "status": "PREREGISTRATION_CANDIDATE_NOT_ACTIVE",
+  "notes": "E1 merge before 2026-11-30T00:00:00Z. Rubric located on Claude Bridge v3 build, not Archive main at design anchor. No scorer job/ledger rows; this pure scorer is not an integrated weekly scorer. Do not start until reviewed runner and rights are verified. No automatic site promotion."
+}
