@@ -827,7 +827,7 @@ class ChallengerATest(unittest.TestCase):
 
     def _commit_score_fixture(self, root, *, score_clock="2026-11-23T01:00:00+00:00",
                               score_winner="MISSING", paired=0, with_bars=False,
-                              mutate=None):
+                              mutate=None, before_score_commit=None):
         self._git(root, "init", "-b", "main")
         self._git(root, "config", "user.name", "Task2 CI")
         self._git(root, "config", "user.email", "task2-tests@example.invalid")
@@ -860,14 +860,18 @@ class ChallengerATest(unittest.TestCase):
         if with_bars:
             write_repo(root, {t: r for t, r in self.bars.items() if t >= self.monday})
             self._git(root, "add", A.HOURLY_DIR)
-        result = A.score(issued, self.bars if with_bars else {}, freeze_data,
-                         issuance_first_main_utc=issue_proof["issuance_first_main_utc"])
-        result.update(first_main_issuance=issue_proof, decision_status="SHADOW_ONLY_NO_PROMOTION",
-                      first_http_delivery="UNKNOWN")
+            self._git(root, "commit", "-m", "weekly hourly bars before score",
+                      date="2026-11-23T00:10:00+00:00")
+        # Exercise the real CLI rather than inventing a source pin.
+        self.assertEqual(A.main(["score", "--repo-root", str(root), "--week", "2026-W47",
+                                 "--output", str(score_file)]), 0)
+        result = json.loads(score_file.read_text())
         if not with_bars:
             result.update(paired_rows=paired, week_winner_interval_score=score_winner)
         if mutate is not None:
             mutate(result)
+        if before_score_commit is not None:
+            before_score_commit(root, result)
         score_file.write_text(json.dumps(result, sort_keys=True) + "\n")
         self._git(root, "add", score_rel)
         self._git(root, "commit", "-m", "first mature weekly score", date=score_clock)
@@ -944,6 +948,106 @@ class ChallengerATest(unittest.TestCase):
             self._git(root, "add", str(hourly.relative_to(root)))
             self._git(root, "commit", "-m", "later hourly change", date="2026-11-23T07:00:00+00:00")
             self.assertEqual(A.read_first_main_weekly_score(root, 2026, 47)[0], row)
+
+    def test_score_pin_is_prior_commit_and_replay_uses_it_not_score_commit(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def unrelated(root, result):
+                (root / "unrelated").write_text("unrelated main update")
+                self._git(root, "add", "unrelated")
+                self._git(root, "commit", "-m", "unrelated update",
+                          date="2026-11-23T00:20:00+00:00")
+            self._commit_score_fixture(root, with_bars=True, before_score_commit=unrelated)
+            with mock.patch.object(A, "load_hourly", wraps=A.load_hourly) as loader:
+                row, proof = A.read_first_main_weekly_score(root, 2026, 47)
+                self.assertEqual(loader.call_args.kwargs["git_ref"], row["hourly_bars_commit_sha"])
+            pin = row["hourly_bars_commit_sha"]
+            self.assertNotEqual(pin, proof["first_main_commit"])
+            self.assertEqual(pin, proof["hourly_bars_commit_sha"])
+            self.assertEqual(row["paired_rows"], 14)
+            self.assertEqual(row["hourly_replay_scope"], A.HOURLY_REPLAY_SCOPE)
+            self.assertIn("does not prove", A.HOURLY_REPLAY_SCOPE)
+            self.assertEqual(A.main(["preflight-score", "--repo-root", str(root),
+                                    "--week", "2026-W47", "--publication-commit",
+                                    proof["first_main_commit"]]), 0)
+
+    def test_score_pin_rejects_correction_before_publication_and_allows_regeneration(self):
+        def correction(root, result):
+            rel = A.HOURLY_DIR + "/2026/11/2026-11-17.csv"
+            hourly = root / rel
+            lines = hourly.read_text().splitlines()
+            hourly.write_text("\n".join(lines[:-1]) + "\n")
+            self._git(root, "add", rel)
+            self._git(root, "commit", "-m", "correct one hourly source",
+                      date="2026-11-23T00:20:00+00:00")
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._commit_score_fixture(root, with_bars=True, before_score_commit=correction)
+            candidate = self._git(root, "rev-parse", "HEAD")
+            with self.assertRaisesRegex(ValueError, "weekly hourly blobs changed"):
+                A.preflight_hourly_score_publication(root, 2026, 47, candidate)
+            with self.assertRaisesRegex(ValueError, "weekly hourly blobs changed"):
+                A.read_first_main_weekly_score(root, 2026, 47)
+            self.assertEqual(A.confirmatory_decision_from_main(root, "2026-W47")["status"],
+                             "INCONCLUSIVE_FIRST_SCORE_SOURCE")
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def regenerate(root, result):
+                old = result["hourly_bars_commit_sha"]
+                correction(root, result)
+                fresh_main = self._git(root, "rev-parse", "HEAD")
+                with self.assertRaisesRegex(ValueError, "weekly hourly blobs changed"):
+                    A.verify_hourly_bars_pin(root, old, fresh_main, 2026, 47)
+                # Only regenerate an unpublished candidate.
+                output = root / "fresh-candidate.json"
+                self.assertEqual(A.main(["score", "--repo-root", str(root), "--week", "2026-W47",
+                                         "--output", str(output)]), 0)
+                result.clear()
+                result.update(json.loads(output.read_text()))
+                self.assertEqual(result["hourly_bars_commit_sha"], fresh_main)
+            self._commit_score_fixture(root, with_bars=True, before_score_commit=regenerate)
+            row, proof = A.read_first_main_weekly_score(root, 2026, 47)
+            self.assertEqual(row["paired_rows"], 12)
+            self.assertEqual(A.preflight_hourly_score_publication(
+                root, 2026, 47, proof["first_main_commit"])["status"],
+                "HOURLY_SCORE_SOURCE_PREFLIGHT_PASS")
+
+    def test_score_pin_rejects_absent_malformed_missing_and_nonancestor_commits(self):
+        for pin in (None, "main", "f" * 40):
+            with self.subTest(pin=pin), tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                def mutate(result):
+                    if pin is None:
+                        result.pop("hourly_bars_commit_sha")
+                    else:
+                        result["hourly_bars_commit_sha"] = pin
+                self._commit_score_fixture(root, with_bars=True, mutate=mutate)
+                with self.assertRaisesRegex(ValueError, "hourly bars"):
+                    A.read_first_main_weekly_score(root, 2026, 47)
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def nonancestor(root, result):
+                self._git(root, "checkout", "-b", "side")
+                self._git(root, "commit", "--allow-empty", "-m", "side only",
+                          date="2026-11-23T00:20:00+00:00")
+                result["hourly_bars_commit_sha"] = self._git(root, "rev-parse", "HEAD")
+                self._git(root, "checkout", "main")
+            self._commit_score_fixture(root, with_bars=True, before_score_commit=nonancestor)
+            with self.assertRaisesRegex(ValueError, "not an ancestor"):
+                A.read_first_main_weekly_score(root, 2026, 47)
+
+    def test_score_pin_rejects_bars_added_in_same_publication_commit(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            def add_with_score(root, result):
+                write_repo(root, {t: r for t, r in self.bars.items() if t >= self.monday})
+                self._git(root, "add", A.HOURLY_DIR)
+            self._commit_score_fixture(root, before_score_commit=add_with_score)
+            with self.assertRaisesRegex(ValueError, "weekly hourly blobs changed"):
+                A.read_first_main_weekly_score(root, 2026, 47)
 
     def test_missing_weekly_score_is_never_silently_skipped(self):
         with tempfile.TemporaryDirectory() as d:
