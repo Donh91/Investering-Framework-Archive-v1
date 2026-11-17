@@ -14,7 +14,7 @@ S1 = ROOT / "00_FMOS" / "S1"
 KEYS = ["contract", "task_id", "owner_issue", "schedule", "bootstrap_path",
         "bootstrap_version", "action_loop_path", "action_loop_blob", "lane_switch_path", "lane_switch_blob", "rubric_blobs"]
 RUBRICS = ["00_FMOS/S1/STEWARD_STATES.md", "00_FMOS/S1/REVIEW_ADMISSION.md", "00_FMOS/S1/OWNER_VISIBILITY.md",
-           "00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt"]
+           "00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt", "00_FMOS/S1/EVIDENCE_BINDINGS.md", "00_FMOS/S1/EDGE_LEDGER.md"]
 # Every file under 00_FMOS/S1/ is pinned (contract, bootstrap 3b or rubric_blobs) or is a legacy locator file.
 PINNED_BY_CHAIN = {"ACTION_LOOP.md", "BOOTSTRAP.txt", "RUNTIME_CONTRACT.json", "REVIEWED_MERGE_LANE.json"}
 LEGACY = {"MISSION.md", "README.md", "OPERATING_MANIFEST.json"}
@@ -41,7 +41,7 @@ class S1RuntimeContractTest(unittest.TestCase):
         self.assertEqual(self.c["contract"], "S1_RUNTIME_CONTRACT_v1")
         self.assertEqual(self.c["task_id"], "6ae5fd466b48819187abc224ec0f1c5f")
         self.assertEqual(self.c["owner_issue"], 1156)
-        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v4")
+        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v5")
         self.assertEqual(self.c["bootstrap_path"], "00_FMOS/S1/BOOTSTRAP.txt")
         self.assertEqual(self.c["action_loop_path"], "00_FMOS/S1/ACTION_LOOP.md")
 
@@ -97,8 +97,15 @@ class S1RuntimeContractTest(unittest.TestCase):
 
     def test_bootstrap_is_thin_and_points_only_to_github(self):
         boot = (ROOT / self.c["bootstrap_path"]).read_text(encoding="utf-8")
-        self.assertLessEqual(len(boot), 1500)
-        for needle in ("S1 BOOTSTRAP v4", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v4",
+        # v5 (first live v2.2 tick, 2026-11-17: the step-1 fetch was routed into a code sandbox with no network and
+        # the run ended SOURCE_UNVERIFIED): step 1 names the tools. The text grew by one sentence, so the cap is 1750.
+        self.assertLessEqual(len(boot), 1750)
+        for needle in ("Use your web fetch tool or the GitHub connector's branch read of main",
+                       "NEVER the Python or code sandbox (it has no network)",
+                       "If neither tool returns the SHA: SOURCE_UNVERIFIED(3).", "(never a search result)"):
+            self.assertIn(needle, boot)
+        self.assertEqual(boot.count("api.github.com"), 1, "one source of truth for main; no second URL")
+        for needle in ("S1 BOOTSTRAP v5", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v5",
                        "00_FMOS/S1/ACTION_LOOP.md", "SOURCE_UNVERIFIED", "only instruction set"):
             self.assertIn(needle, boot)
         for forbidden in ("LADDER", "MERGE", "HARD STOPS", "owner-present"):
@@ -111,7 +118,8 @@ class S1RuntimeContractTest(unittest.TestCase):
                        "CHANGE CONTROL", "S1_PROMPT_DRIFT", "HEARTBEAT", "S1_HEARTBEAT_v1",
                        "contract=<first 8 of action_loop_blob>", "Never dispatch, rerun or pass inputs to any Vault workflow",
                        "CLAUDE_PROACTIVE_PREVIEW_v1", "ticks_24h=", "last_noop=",
-                       "WAITING_ONLY_FOR_OWNER", "STEWARD_STATES.md", "REVIEW_ADMISSION.md", "OWNER_VISIBILITY.md"):
+                       "WAITING_ONLY_FOR_OWNER", "STEWARD_STATES.md", "REVIEW_ADMISSION.md", "OWNER_VISIBILITY.md",
+                       "EVIDENCE_BINDINGS.md", "EDGE_LEDGER.md", "V3 EVIDENCE BINDINGS", "never a pass"):
 
             self.assertIn(needle, loop)
 

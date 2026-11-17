@@ -13,7 +13,7 @@ import re
 from typing import Any
 
 CONTRACT = "S1_DIFF_SCAN_V1"
-RULES_VERSION = "S1_DIFF_SCAN_RULES_20261112_V1"
+RULES_VERSION = "S1_DIFF_SCAN_RULES_20261117_V2"
 REPO = "Donh91/Investering-Framework-Archive-v1"
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 MAX_FILES = 3000
@@ -32,6 +32,17 @@ TEXT_SUFFIXES = (
     ".ts", ".tsx", ".jsx", ".json", ".jsonl", ".css", ".html",
     ".htm", ".yml", ".yaml", ".toml", ".ini", ".sh",
 )
+_PRIVATE_DESIGN_LABEL_KEYS = (r"(?:classification|confidentiality|sensitivity|visibility|distribution|access|audience"
+                              r"|marking|label|handling)")
+
+
+def _private_design_phrase(sep: str) -> str:
+    """The six restricted-design phrases with the given separator class between their words."""
+    return (r"(?:PRIVATE" + sep + r"ALPHA" + sep + r"(?:DESIGN|STRATEGY|ARCHITECTURE|MODEL)"
+            r"|INTERNAL" + sep + r"ONLY|OWNER" + sep + r"ONLY|NOT" + sep + r"FOR" + sep + r"PUBLICATION"
+            r"|CONFIDENTIAL" + sep + r"RESEARCH|PRIVATE" + sep + r"RESEARCH" + sep + r"DESIGN)")
+
+
 KNOWN_SECRET_OR_RESTRICTED_DESIGN = (
     ("PRIVATE_KEY_BLOCK", re.compile(r"-----BEGIN (?:OPENSSH |RSA |EC |DSA )?PRIVATE KEY-----", re.I)),
     # Token prefixes use an alphanumeric-only left boundary: "_" and "-" are common
@@ -40,10 +51,23 @@ KNOWN_SECRET_OR_RESTRICTED_DESIGN = (
     ("API_KEY_LITERAL", re.compile(r"(?<![A-Za-z0-9])(?:ghp_|gho_|github_pat_|sk-proj-|sk-[A-Za-z0-9]{20,})[A-Za-z0-9_-]{12,}", re.I)),
     ("AWS_ACCESS_KEY", re.compile(r"(?<![A-Za-z0-9])(?:AKIA|ASIA)[A-Z0-9]{16}(?![A-Za-z0-9])")),
     ("SIGNED_URL", re.compile(r"\b(?:X-Amz-Signature|X-Goog-Signature|Signature=)[A-Za-z0-9%_-]{8,}", re.I)),
+    # v3 precision (Claude review of #2204): a marker is a TOKEN or a LABEL, never narrative prose. It matches
+    # (1) the upper-case phrase with "_", "-" or space between its words,
+    # (2) the underscore-joined phrase in any case (prose never uses underscores),
+    # (3) a line that is only the phrase and carries heading, emphasis, quote, bracket or HTML-comment decoration,
+    # (4) the phrase as the value of a classification label (classification, visibility, confidentiality ...), also
+    #     with a quoted key (JSON, YAML) or as the next cell of a table row.
+    # Lower-case or mixed-case prose with spaces or hyphens is not a marker, and a bare undecorated line is not a
+    # label. Only this predicate changed; every credential, key and path rule is unchanged. Examples live in
+    # tests/governance/test_s1_diff_scan_marker_precision_v3.py (built by concatenation, so no file holds a marker).
+    # Every quantifier is a single character class (no nested repetition), so matching stays linear in the input.
     ("EXPLICIT_PRIVATE_DESIGN", re.compile(
-        r"(?<![A-Za-z0-9])(?:PRIVATE[_ -]ALPHA[_ -](?:DESIGN|STRATEGY|ARCHITECTURE|MODEL)"
-        r"|INTERNAL[_ -]ONLY|OWNER[_ -]ONLY|NOT[_ -]FOR[_ -]PUBLICATION"
-        r"|CONFIDENTIAL[_ -]RESEARCH|PRIVATE[_ -]RESEARCH[_ -]DESIGN)(?![A-Za-z0-9])", re.I)),
+        r"(?<![A-Za-z0-9])" + _private_design_phrase("[_ -]") + r"(?![A-Za-z0-9])"
+        r"|(?i:(?<![A-Za-z0-9])" + _private_design_phrase("_") + r"(?![A-Za-z0-9]))"
+        r"|(?i:^[+]?[ \t]*(?:<!--|[#>*_\[(\"'`])[#>*_\[(\"'` \t]*" + _private_design_phrase("[_ -]")
+        + r"[ \t*_\])\"'`:.!>-]*\r?$)"
+        r"|(?i:^[+]?[ \t#>*_|{,-]*[\"']?(?:[A-Za-z0-9]{1,24}[_.-])?" + _PRIVATE_DESIGN_LABEL_KEYS + r"[\"']?[ \t*_`]*[:=|][ \t*_`\"'\[(]*"
+        + _private_design_phrase("[_ -]") + r"(?![A-Za-z0-9]))", re.M)),
     ("CREDENTIAL_ASSIGNMENT", re.compile(
         r"(?i)(?<![A-Za-z0-9])(?:api[_-]?key|access[_-]?token|secret[_-]?key|private[_-]?key)(?![A-Za-z0-9])['\"]?"
         r"\s*[:=]\s*['\"]?[A-Za-z0-9_+./=-]{18,}")),
