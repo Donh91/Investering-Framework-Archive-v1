@@ -12,7 +12,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 S1 = ROOT / "00_FMOS" / "S1"
 KEYS = ["contract", "task_id", "owner_issue", "schedule", "bootstrap_path",
-        "bootstrap_version", "action_loop_path", "action_loop_blob", "lane_switch_path", "lane_switch_blob"]
+        "bootstrap_version", "action_loop_path", "action_loop_blob", "lane_switch_path", "lane_switch_blob", "rubric_blobs"]
+RUBRICS = ["00_FMOS/S1/STEWARD_STATES.md", "00_FMOS/S1/REVIEW_ADMISSION.md", "00_FMOS/S1/OWNER_VISIBILITY.md",
+           "00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt", "00_FMOS/S1/EVIDENCE_BINDINGS.md", "00_FMOS/S1/EDGE_LEDGER.md"]
+# Every file under 00_FMOS/S1/ is pinned (contract, bootstrap 3b or rubric_blobs) or is a legacy locator file.
+PINNED_BY_CHAIN = {"ACTION_LOOP.md", "BOOTSTRAP.txt", "RUNTIME_CONTRACT.json", "REVIEWED_MERGE_LANE.json"}
+LEGACY = {"MISSION.md", "README.md", "OPERATING_MANIFEST.json"}
 
 
 def _no_dupes(pairs):
@@ -36,7 +41,7 @@ class S1RuntimeContractTest(unittest.TestCase):
         self.assertEqual(self.c["contract"], "S1_RUNTIME_CONTRACT_v1")
         self.assertEqual(self.c["task_id"], "6ae5fd466b48819187abc224ec0f1c5f")
         self.assertEqual(self.c["owner_issue"], 1156)
-        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v3")
+        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v5")
         self.assertEqual(self.c["bootstrap_path"], "00_FMOS/S1/BOOTSTRAP.txt")
         self.assertEqual(self.c["action_loop_path"], "00_FMOS/S1/ACTION_LOOP.md")
 
@@ -58,6 +63,29 @@ class S1RuntimeContractTest(unittest.TestCase):
         self.assertIn(f"RUNTIME_CONTRACT.json at that same main SHA (as GitHub reports it) must equal {_git_blob(data)}.", boot,
                       "update the RUNTIME_CONTRACT blob in BOOTSTRAP.txt step 3b")
 
+    def test_rubric_blobs_pin_the_exact_bytes(self):
+        self.assertEqual(list(self.c["rubric_blobs"]), RUBRICS)
+        for path, blob in self.c["rubric_blobs"].items():
+            with self.subTest(path=path):
+                self.assertEqual(_git_blob((ROOT / path).read_bytes()), blob, f"{path} changed without updating rubric_blobs")
+        boot = (ROOT / self.c["bootstrap_path"]).read_text(encoding="utf-8")
+        self.assertIn("every rubric_blobs path must have its listed blob", boot)
+        self.assertIn("every path in its rubric_blobs", boot)
+
+    def test_every_s1_file_is_pinned(self):
+        names = {p.name for p in S1.iterdir()}
+        rubric_names = {Path(p).name for p in self.c["rubric_blobs"]}
+        self.assertEqual(names - PINNED_BY_CHAIN - LEGACY - rubric_names, set(), "pin every new 00_FMOS/S1/ file in rubric_blobs")
+
+    def test_daily_summary_bootstrap_is_thin_and_read_only(self):
+        text = (S1 / "DAILY_SUMMARY_BOOTSTRAP.txt").read_text(encoding="utf-8")
+        self.assertLessEqual(len(text), 1500)
+        for needle in ("Daily at 20:40 Europe/Copenhagen", "Read-only except one comment on Archive issue #1156",
+                       "must equal its entry in rubric_blobs of RUNTIME_CONTRACT.json", "write nothing",
+                       "follow the DAILY SUMMARY section of OWNER_VISIBILITY.md exactly",
+                       "Never merge, close, label, dispatch, review or post anything else"):
+            self.assertIn(needle, text)
+
     def test_task_id_matches_shadow_locator(self):
         shadow = json.loads((S1 / "OPERATING_MANIFEST.json").read_text(encoding="utf-8"))
         self.assertEqual(shadow["task_id"], self.c["task_id"])
@@ -69,8 +97,15 @@ class S1RuntimeContractTest(unittest.TestCase):
 
     def test_bootstrap_is_thin_and_points_only_to_github(self):
         boot = (ROOT / self.c["bootstrap_path"]).read_text(encoding="utf-8")
-        self.assertLessEqual(len(boot), 1500)
-        for needle in ("S1 BOOTSTRAP v3", "00_FMOS/S1/RUNTIME_CONTRACT.json",
+        # v5 (first live v2.2 tick, 2026-11-17: the step-1 fetch was routed into a code sandbox with no network and
+        # the run ended SOURCE_UNVERIFIED): step 1 names the tools. The text grew by one sentence, so the cap is 1750.
+        self.assertLessEqual(len(boot), 1750)
+        for needle in ("Use your web fetch tool or the GitHub connector's branch read of main",
+                       "NEVER the Python or code sandbox (it has no network)",
+                       "If neither tool returns the SHA: SOURCE_UNVERIFIED(3).", "(never a search result)"):
+            self.assertIn(needle, boot)
+        self.assertEqual(boot.count("api.github.com"), 1, "one source of truth for main; no second URL")
+        for needle in ("S1 BOOTSTRAP v5", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v5",
                        "00_FMOS/S1/ACTION_LOOP.md", "SOURCE_UNVERIFIED", "only instruction set"):
             self.assertIn(needle, boot)
         for forbidden in ("LADDER", "MERGE", "HARD STOPS", "owner-present"):
@@ -83,7 +118,8 @@ class S1RuntimeContractTest(unittest.TestCase):
                        "CHANGE CONTROL", "S1_PROMPT_DRIFT", "HEARTBEAT", "S1_HEARTBEAT_v1",
                        "contract=<first 8 of action_loop_blob>", "Never dispatch, rerun or pass inputs to any Vault workflow",
                        "CLAUDE_PROACTIVE_PREVIEW_v1", "ticks_24h=", "last_noop=",
-                       "WAITING_ONLY_FOR_OWNER"):
+                       "WAITING_ONLY_FOR_OWNER", "STEWARD_STATES.md", "REVIEW_ADMISSION.md", "OWNER_VISIBILITY.md",
+                       "EVIDENCE_BINDINGS.md", "EDGE_LEDGER.md", "V3 EVIDENCE BINDINGS", "never a pass"):
 
             self.assertIn(needle, loop)
 
@@ -103,10 +139,18 @@ class S1RuntimeContractTest(unittest.TestCase):
 
     def test_high_batch_requires_all_gates_and_owner_answer(self):
         loop = (S1 / "ACTION_LOOP.md").read_text(encoding="utf-8")
-        for token in ("HIGH EVIDENCE below all PASS", "exact-head independently solicited Claude APPROVE",
-                      "native exact-head green required CI", "ONE deduplicated owner-present yes/no list",
-                      "WAITING_ONLY_FOR_OWNER", "S1 still never merges HIGH"):
+        # Detached review R1 P2-3: every gate of the v1.6.9 owner batch is required again.
+        for token in ("HIGH EVIDENCE below all PASS", "native exact-head green required CI",
+                      "zero unmitigated P0/P1 (H8)", "no CHANGES_REQUESTED on H",
+                      "stating INDEPENDENT_DETACHED when H implements a Claude-authored package",
+                      "WAITING_ONLY_FOR_OWNER", "S1 still never merges an OWNER_GATED PR",
+                      "is HIGH_IMPACT BLOCKED with its first missing gate, never WAITING_ONLY_FOR_OWNER"):
             self.assertIn(token, loop)
+        self.assertNotIn("high_evidence=PASS or HOLD", loop)
+        vis = (S1 / "OWNER_VISIBILITY.md").read_text(encoding="utf-8")
+        for token in ("high_evidence=PASS, and the owner action", "Never repost an identical set", "An entry is never release authority"):
+            self.assertIn(token, vis)
+        self.assertNotIn("PASS or HOLD", vis)
 
 
     def test_recovery_requires_bound_restore_evidence_and_bot(self):

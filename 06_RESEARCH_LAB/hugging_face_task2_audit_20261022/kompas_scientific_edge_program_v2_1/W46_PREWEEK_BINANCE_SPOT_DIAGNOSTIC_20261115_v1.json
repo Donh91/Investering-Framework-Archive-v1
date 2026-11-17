@@ -1,0 +1,156 @@
+{
+  "contract": "TASK2_W46_PREWEEK_PUBLIC_SPOT_DIAGNOSTIC_V1",
+  "authority": "RESEARCH_ONLY_RETROSPECTIVE_SOURCE_COMPARISON_NOT_OFFICIAL_SCORE",
+  "captured_at_utc": "2026-11-15T12:56:33.282Z",
+  "archive_main_source_sha": "ccda63aca7c70d09156ac15f0ecb5c5a2247c13b",
+  "forecast_original_blob_sha": "88032832eb5bf5ebbedcd0dcd5f136c6e2ed2961",
+  "forecast_original_path": "05_CYCLE_NAVIGATOR/weekly/2026/W46/CYCLE_NAVIGATOR_FORECAST_FREEZE.json",
+  "forecast_reissue_utc": "2026-11-09T10:52:34.925867Z",
+  "earlier_unavailable_0_of_7_issue_utc": "2026-11-09T10:33:42Z",
+  "observed_source": {
+    "provider": "BINANCE_PUBLIC_SPOT_KLINES",
+    "source_type": "RETROSPECTIVE_EXTERNAL_EXCHANGE_API",
+    "quote": "USDT",
+    "pairs": [
+      "BTCUSDT",
+      "ETHUSDT"
+    ],
+    "interval": "1h",
+    "request_window_utc": [
+      "2026-11-09T00:00:00Z",
+      "2026-11-15T12:56:33.282Z"
+    ],
+    "api_contract": "GET /api/v3/klines",
+    "api_reference": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints#klinecandlestick-data",
+    "raw_payload_sha256": null,
+    "completeness_claim": "ONLY 5 COMPLETE POSTISSUE COMPARISON DAYS TUE-SAT. Sunday incomplete; no native CN original first-delivery proof.",
+    "collector_first_observed_at_utc": "2026-11-15T12:56:33.282Z",
+    "can_retroactively_credit_pit": false
+  },
+  "benchmark": {
+    "baseline": "B0 prior completed Binance 2026-11-09 09:00-09:59 UTC bar CLOSE held constant for each Tue-Sat target close. No future information. Retrospective first-observed source, NOT original competing issued forecast.",
+    "center_adjustment": "equal-width B0 interval centered on fixed preissue spot close; uses each original day's width. This is development, not prospective test.",
+    "eligibility": "UTC daily close 00:00 next day. Exclude Monday from 5-day comparison to avoid mixed preissue/outcome window; Sunday immature.",
+    "n_complete_days": 5,
+    "n_independent_weeks": 1
+  },
+  "assets": {
+    "BTC": {
+      "market_symbol": "BTCUSDT",
+      "b0_center": 74288.01,
+      "weekly_low": 71289.02,
+      "weekly_high": 76967.74,
+      "first_weekly_low_breach_hour_utc": "2026-11-12T15:00:00Z",
+      "first_weekly_low_breach_bar_low": 71255.02,
+      "lowest_postissuance_bar_low_asof": 62006,
+      "completed_hour_at_utc": "2026-11-15T12:00:00Z",
+      "last_completed_hour_close": 65351,
+      "cn_close_mae_usdt": 4145.08,
+      "b0_close_mae_usdt": 3940.96,
+      "cn_in_daily_band": 2,
+      "b0_in_equal_width_band": 2,
+      "days": [
+        [
+          "2026-11-10",
+          73796.06,
+          74255.12,
+          73380.59,
+          75129.64
+        ],
+        [
+          "2026-11-11",
+          74015.19,
+          74421.08,
+          73478.41,
+          75363.75
+        ],
+        [
+          "2026-11-12",
+          71460,
+          74207.22,
+          73196.41,
+          75218.03
+        ],
+        [
+          "2026-11-13",
+          68314,
+          74633.72,
+          73554.76,
+          75712.67
+        ],
+        [
+          "2026-11-14",
+          64150,
+          74943.51,
+          73796.41,
+          76090.61
+        ]
+      ]
+    },
+    "ETH": {
+      "market_symbol": "ETHUSDT",
+      "b0_center": 2108.92,
+      "weekly_low": 1964.54,
+      "weekly_high": 2206.96,
+      "first_weekly_low_breach_hour_utc": "2026-11-13T03:00:00Z",
+      "first_weekly_low_breach_bar_low": 1917.01,
+      "lowest_postissuance_bar_low_asof": 1711.08,
+      "completed_hour_at_utc": "2026-11-15T12:00:00Z",
+      "last_completed_hour_close": 1823.69,
+      "cn_close_mae_usdt": 146.93,
+      "b0_close_mae_usdt": 143.24,
+      "cn_in_daily_band": 0,
+      "b0_in_equal_width_band": 0,
+      "days": [
+        [
+          "2026-11-10",
+          2053.21,
+          2102.85,
+          2065.51,
+          2140.18
+        ],
+        [
+          "2026-11-11",
+          2056.36,
+          2109.68,
+          2069.44,
+          2149.92
+        ],
+        [
+          "2026-11-12",
+          2019.74,
+          2100.87,
+          2057.71,
+          2144.02
+        ],
+        [
+          "2026-11-13",
+          1929.88,
+          2118.42,
+          2072.36,
+          2164.48
+        ],
+        [
+          "2026-11-14",
+          1769.2,
+          2131.2,
+          2082.23,
+          2180.17
+        ]
+      ]
+    }
+  },
+  "scientific_verdict": {
+    "reproduced_asof_public_spot_math": true,
+    "native_original_pit_source_quality": "UNVERIFIED",
+    "comparison_scope": "RETROSPECTIVE_SOURCE_EXTERNAL_UNSEALED",
+    "official_cn_scoring": false,
+    "week_46_final_close_scored": false,
+    "independent_week_n": 1,
+    "width_matched_one_week_edge": "NOT_PROVEN",
+    "astra_paid_execution": "NOT_RUN_HARD_DISABLED",
+    "model_promotion": false,
+    "risk_4_of_5_issuance": "NOT_ISSUED",
+    "paper_trading_roi": "NOT_EVALUATED"
+  }
+}

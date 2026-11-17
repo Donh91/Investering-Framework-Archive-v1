@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/orchestration/build_data_consumer_index.py",
+    "tests/orchestration/test_data_consumer_index.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-62ba56b4045d1d45",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "fmos-fail-closed-stale-producer-consumer-digest-binding",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(consumer-index): verify on-disk digest before claiming current binding * test-compat: retain legacy consumption label, keep separate digest proof * test(consumer-index): catch hash drift and invalid binding without changing route semantics",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/orchestration/build_data_consumer_index.py": "1deea0b677606b8c06bc5f592f18f62dd3d02d1c",
+    "tests/orchestration/test_data_consumer_index.py": "3a493763a748ca67673b9788e3bf8c57520ab5dc"
+  },
+  "source_commit_sha": "62ba56b4045d1d45793403d473da2b0268ebc6e9",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-16T03:27:36-05:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(fmos): fail closed on stale producer-to-consumer digest binding (#2145)"
+}

@@ -5,7 +5,7 @@
   "automatic_paid_dispatch": false,
   "bridge_home": "https://github.com/Donh91/Investering-AI-Audit-Bridge",
   "bridge_intake_path": "tasks/claude/CLAUDE_MAX_AUDIT_INTAKE_v1.json",
-  "candidate_count": 2,
+  "candidate_count": 1,
   "candidates": [
     {
       "calibration_outcome": null,
@@ -23,31 +23,6 @@
       "source": "SHADOW_REGISTRY",
       "source_evaluator_status": "NEEDS_OWNER_VALIDATION",
       "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
-    },
-    {
-      "checkpoint_sequence": 2,
-      "dispatch": "NO_AUTO_DISPATCH",
-      "id": "CN_4_SETTLEMENT_WEAKNESS_CONTEXT",
-      "last_settled_score_key": "Y2026-W45-CN33",
-      "next_gate": "NEXT_SUCCESSFUL_4_SETTLEMENT_CHECKPOINT_AND_MATCHED_SOURCE_CLOCKS",
-      "original_owner": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1516",
-      "priority": "WATCH_MATURITY",
-      "question": "Review original CN errors versus same-clock width-adjusted baselines only at an eligible checkpoint",
-      "scientific_owner": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
-      "weak_families": [
-        {
-          "family": "intraday_day_5_7",
-          "mean_4w": 66.67,
-          "scoreable_observations": 3,
-          "state": "WATCH"
-        },
-        {
-          "family": "rotation",
-          "mean_4w": 50.0,
-          "scoreable_observations": 3,
-          "state": "PERSISTENT_WEAKNESS"
-        }
-      ]
     }
   ],
   "canonical_effect": false,
@@ -63,26 +38,26 @@
   "notes": "Discovery only. No Claude dispatch, scientific approval or native execution receipt is made here. Recheck source main and original owner before every audit.",
   "portfolio_execution": false,
   "research_queue_is_canonical": false,
-  "semantic_fingerprint": "04fa0a461d92f723545d43d9f85cc8e35b07764c20290d774a087a961ef44233",
-  "source_checkout_sha": "6298188f6843fbcc2ee3f5c414b405a641d63840",
+  "semantic_fingerprint": "af0c21e20fe28781f9f9417e93b2c383f455eec26654307bedd34e040eb02573",
+  "source_checkout_sha": "a065e3a79565f2bb866e685a91a09f114ff15925",
   "source_receipts": {
     "compounding": {
       "basis": "LOCAL_SOURCE_BYTES",
       "contract": "NEXT_BEST_EXPERIMENT_PROPOSAL_v1",
       "path": "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/NEXT_BEST_EXPERIMENT.json",
-      "sha256": "6c1b16c9e5f7b84680cb7c2247df0a27abe7af92dfb0fc7e610ee12639cae658"
+      "sha256": "5e6cce347789615d166338f3418f41b2bf2b13bbe9fdfe4e3d6eccd09a4d01fb"
     },
     "meta": {
       "basis": "LOCAL_SOURCE_BYTES",
       "contract": "RESEARCH_META_ORCHESTRATOR_STATE_v1",
       "path": "00_ARCHIVE_CONTROL/research_governance_v1/meta_orchestrator_v1/STATE.json",
-      "sha256": "315f99d63144d500f63859252f0844726212b21931879c72413f8ec44231f9a1"
+      "sha256": "c49ddd22c5662b6222d79b23bd0d38b6923494eedd1b4453548fb97bfc1a8b41"
     },
     "precision": {
       "basis": "LOCAL_SOURCE_BYTES",
       "contract": "CN_PRECISION_LEARNING_STATE_v1",
       "path": "05_CYCLE_NAVIGATOR/internal_learning/STATE.json",
-      "sha256": "23875f30647e05b42cd95988df12626b7d75b790810a78e4c25feb5791ce4bd3"
+      "sha256": "66517825beabd640e3b74795be7f81826e3efef4bdfa1d85d864428603cc1f14"
     }
   }
 }

@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.data_ping.native_handlekompas import AUTHORITY, build, load_auto_state, owner_freshness, write
+from scripts.data_ping.native_handlekompas import AUTHORITY, build, load_auto_state, owner_freshness, protection_tracker, write
 
 
 class NativeHandlekompasTest(unittest.TestCase):
@@ -248,6 +248,88 @@ class NativeHandlekompasTest(unittest.TestCase):
                 self.assertEqual(pointer["handlekompas_sha256"],result["sha256"])
             finally:
                 _=cwd
+
+
+    def _protection_transition(self, risk, prior=None, *, posture="HOLD_WAIT", direction="MIXED", packet=None):
+        cn = {
+            "decision_projection": {
+                "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+                "protection": {
+                    "pullback_risk_state": risk,
+                    "distribution_risk": "NONE",
+                    "confidence_quality": "MEDIUM",
+                },
+            },
+        }
+        result = protection_tracker(
+            self.packet() if packet is None else packet,
+            {"NOW": posture},
+            {"directional_state": direction},
+            cn, as_of=datetime(2026, 9, 8, 20, 0, tzinfo=timezone.utc),
+            prior_compass={"protection_tracker": prior} if prior is not None else None,
+        )
+        self.assertEqual(result["authority"], {
+            "portfolio_execution": False, "wallet_specific": False,
+            "new_market_classifier": False,
+        })
+        return result
+
+    def test_reclaim_survives_repeated_elevated_observations(self):
+        high = self._protection_transition("HIGH")
+        self.assertEqual(high["reentry_state"], "WAIT_FOR_FLUSH")
+        prior = self._protection_transition("ELEVATED", high)
+        self.assertEqual(prior["reentry_state"], "WAIT_FOR_RECLAIM")
+        for posture, direction in (("HOLD_WAIT", "BEARISH"), ("PREPARE", "BULLISH")):
+            with self.subTest(posture=posture, direction=direction):
+                prior = self._protection_transition("ELEVATED", prior, posture=posture, direction=direction)
+                self.assertEqual(prior["pullback_risk_state"], "ELEVATED")
+                self.assertEqual(prior["reentry_state"], "WAIT_FOR_RECLAIM")
+
+    def test_review_requires_current_constructive_confirmation(self):
+        for risk in ("NORMAL", "BUILDING"):
+            for prior_state in ("WAIT_FOR_RECLAIM", "REVIEW"):
+                for posture, direction, expected in (
+                    ("PREPARE", "BULLISH", "REVIEW"),
+                    ("GRADUATED_TOPUP_ACTIVE", "BULLISH", "REVIEW"),
+                    ("HOLD_WAIT", "BULLISH", "WAIT_FOR_RECLAIM"),
+                    ("HOLD_WAIT_DATA_DEGRADED", "BULLISH", "WAIT_FOR_RECLAIM"),
+                    ("PREPARE", "BEARISH", "WAIT_FOR_RECLAIM"),
+                    ("PREPARE", "MIXED", "WAIT_FOR_RECLAIM"),
+                    ("PREPARE", "SIDEWAYS", "WAIT_FOR_RECLAIM"),
+                    ("PREPARE", "UNAVAILABLE", "WAIT_FOR_RECLAIM"),
+                    ("PREPARE", "UNCHANGED_NO_NEW_OBSERVATION", "WAIT_FOR_RECLAIM"),
+                ):
+                    with self.subTest(risk=risk, prior=prior_state, posture=posture, direction=direction):
+                        out = self._protection_transition(risk, {
+                            "pullback_risk_state": "NORMAL", "reentry_state": prior_state,
+                        }, posture=posture, direction=direction)
+                        self.assertEqual(out["pullback_risk_state"], risk)
+                        self.assertEqual(out["reentry_state"], expected)
+
+    def test_review_cannot_survive_renewed_risk_or_unavailable_evidence(self):
+        prior = {"pullback_risk_state": "NORMAL", "reentry_state": "REVIEW"}
+        for risk, expected in (
+            ("ELEVATED", "WAIT_FOR_RECLAIM"), ("HIGH", "WAIT_FOR_FLUSH"),
+            ("CONFIRMED", "WAIT_FOR_FLUSH"), ("UNAVAILABLE", "UNAVAILABLE"),
+        ):
+            with self.subTest(risk=risk):
+                out = self._protection_transition(risk, prior, posture="PREPARE", direction="BULLISH")
+                self.assertEqual(out["reentry_state"], expected)
+                self.assertEqual(out["pullback_risk_state"], risk)
+        out = self._protection_transition("NORMAL", prior, posture="PREPARE",
+                                          direction="BULLISH", packet=self.packet(validation="FAIL"))
+        self.assertEqual(out["reentry_state"], "UNAVAILABLE")
+
+    def test_no_review_without_prior_protection_sequence(self):
+        for risk in ("NORMAL", "BUILDING", "ELEVATED"):
+            with self.subTest(risk=risk):
+                out = self._protection_transition(risk, posture="PREPARE", direction="BULLISH")
+                self.assertEqual(out["reentry_state"], "INACTIVE")
+        high = self._protection_transition("HIGH")
+        first_reclaim = self._protection_transition("NORMAL", high, posture="PREPARE", direction="BULLISH")
+        self.assertEqual(first_reclaim["reentry_state"], "WAIT_FOR_RECLAIM")
+        self.assertEqual(self._protection_transition("NORMAL", first_reclaim, posture="PREPARE",
+                                                     direction="BULLISH")["reentry_state"], "REVIEW")
 
 
 if __name__=="__main__":

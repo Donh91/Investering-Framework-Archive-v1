@@ -1021,16 +1021,23 @@ def protection_tracker(
     elif prior_risk in {"HIGH", "CONFIRMED"} and risk not in {"UNAVAILABLE"}:
         reentry = "WAIT_FOR_RECLAIM"
         reentry_message = "Risk has eased, but re-entry stays blocked until a governed constructive confirmation is restored."
-    elif prior_reentry == "WAIT_FOR_RECLAIM" and risk in {"NORMAL", "BUILDING"}:
-        if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and direction == "BULLISH":
+    elif prior_reentry in {"WAIT_FOR_RECLAIM", "REVIEW"} and risk in {"NORMAL", "BUILDING", "ELEVATED"}:
+        # The outstanding reclaim requirement survives repeated ELEVATED
+        # observations. REVIEW is conditional, not a latched permission.
+        constructive = (
+            risk in {"NORMAL", "BUILDING"}
+            and posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"}
+            and direction == "BULLISH"
+        )
+        if constructive:
             reentry = "REVIEW"
-            reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
+            if prior_reentry == "REVIEW":
+                reentry_message = "Re-entry review remains open while governed constructive confirmation persists."
+            else:
+                reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
         else:
             reentry = "WAIT_FOR_RECLAIM"
             reentry_message = "Risk has eased, but re-entry watch remains active until governed constructive confirmation arrives."
-    elif prior_reentry == "REVIEW" and risk in {"NORMAL", "BUILDING"}:
-        reentry = "REVIEW"
-        reentry_message = "Re-entry review remains open while governed constructive confirmation persists."
     else:
         reentry = "INACTIVE" if risk != "UNAVAILABLE" else "UNAVAILABLE"
         reentry_message = "No re-entry review is active." if reentry == "INACTIVE" else "Re-entry review is unavailable."
@@ -1196,6 +1203,7 @@ def horizon_map(
     d13_source = _cn_direction(cn_package, "next_1_3d")
     d57_source = _cn_direction(cn_package, "next_5_7d")
     d23_source = _cn_direction(cn_package, "next_2_3w")
+    s13_source = _cn_projection_summary(cn_package, "next_1_3d")
     s23_source = _cn_projection_summary(cn_package, "next_2_3w")
 
     direction_map = {
@@ -1272,7 +1280,12 @@ def horizon_map(
             _unavailable_horizon("Structured Cycle Navigator 1-3 day decision projection is unavailable.")
             if d13 == "UNAVAILABLE" else {
                 "expected_direction": d13, "label": label(d13),
-                "expected_path": "Short-horizon state is cross-checked against the current weekly regime; transmission must improve before risk moves down-cap.",
+                "expected_path": (
+                    s13_source if s13_source and d13 == d13_source
+                    else "Action posture differs from the source Cycle Navigator direction; no independent 1-3 day forecast upgrade is implied."
+                    if d13 != d13_source
+                    else "No eligible typed Cycle Navigator 1-3 day path is published."
+                ),
                 "action_posture": a13, "confirmation_trigger": confirm, "invalidation_trigger": invalidate,
                 "eta": "24-72h", "confidence": None,
             }

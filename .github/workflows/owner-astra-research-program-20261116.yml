@@ -1,0 +1,424 @@
+name: Owner Astra Research Program
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/owner-astra-research-program-20261116.yml'
+      - 'scripts/research/manual_astra_*_20261116.py'
+      - 'tests/research/test_manual_astra_research_program_20261116.py'
+      - '06_RESEARCH_LAB/astra_program_20261116/**'
+      - 'research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json'
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  offline:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: No-network owner and source tests
+        run: |
+          python -m unittest tests.research.test_manual_astra_research_program_20261116 -v
+          python scripts/research/manual_astra_s1_vnext_20261116.py preview --out runtime/astra-s1-pre
+          python scripts/research/manual_astra_compass_total_20261116.py preview --out runtime/astra-cn-pre
+
+  paid-s1-vnext:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.action == 'created' &&
+      github.event.issue.number == 1156 &&
+      github.event.comment.user.login == 'Donh91' &&
+      github.actor == 'Donh91' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.comment.body == 'OWNER_LAUNCH_ASTRA_HIGH_S1_VNEXT_20261116_ONE_SHOT'
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    concurrency:
+      group: owner-astra-high-20261116-s1-vnext
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Owner bounded source tests
+        run: python -m unittest tests.research.test_manual_astra_research_program_20261116 -v
+      - name: Existing shared USD50 gate protects USD4 and previous reservations
+        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 100 --reserve-usd 4 --new-request-upper-usd 0 --owner-astra-program-work-id ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE
+      - name: Prepare public model prompt and maximum cost
+        run: python scripts/research/manual_astra_s1_vnext_20261116.py prepare --out runtime/astra-s1_vnext
+      - name: Verify event, independent budget, model GET, and one original claim
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/manual_astra_s1_vnext_20261116.py reserve --out runtime/astra-s1_vnext
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-s1_vnext-claim
+          path: |
+            runtime/astra-s1_vnext/claim.json
+            runtime/astra-s1_vnext/source_manifest.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Mark exactly one irreversible POST attempt
+        run: python scripts/research/manual_astra_s1_vnext_20261116.py mark_attempt --out runtime/astra-s1_vnext
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-s1_vnext-attempt-before-POST
+          path: runtime/astra-s1_vnext/attempt.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Exactly one paid Astra High no-tools POST
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_s1_vnext_20261116.py submit --out runtime/astra-s1_vnext
+      - name: GET only collection
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_s1_vnext_20261116.py collect --out runtime/astra-s1_vnext
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: program-s1_vnext-evidence-${{ github.run_id }}
+          path: |
+            runtime/astra-s1_vnext/claim.json
+            runtime/astra-s1_vnext/attempt.json
+            runtime/astra-s1_vnext/submission_started.json
+            runtime/astra-s1_vnext/source_manifest.json
+            runtime/astra-s1_vnext/handle.json
+            runtime/astra-s1_vnext/pending.json
+            runtime/astra-s1_vnext/receipt.json
+            runtime/astra-s1_vnext/ASTRA_S1_VNEXT_RESEARCH.md
+          retention-days: 90
+          if-no-files-found: warn
+
+  paid-compass-total:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.action == 'created' &&
+      github.event.issue.number == 1827 &&
+      github.event.comment.user.login == 'Donh91' &&
+      github.actor == 'Donh91' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.comment.body == 'OWNER_LAUNCH_ASTRA_HIGH_COMPASS_TOTAL_20261116_ONE_SHOT'
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    concurrency:
+      group: owner-astra-high-20261116-compass-total
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Owner bounded source tests
+        run: python -m unittest tests.research.test_manual_astra_research_program_20261116 -v
+      - name: Existing shared USD50 gate protects USD4 and previous reservations
+        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 100 --reserve-usd 4 --new-request-upper-usd 0 --owner-astra-program-work-id ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE
+      - name: Prepare public model prompt and maximum cost
+        run: python scripts/research/manual_astra_compass_total_20261116.py prepare --out runtime/astra-compass_total
+      - name: Verify event, independent budget, model GET, and one original claim
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/manual_astra_compass_total_20261116.py reserve --out runtime/astra-compass_total
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-compass_total-claim
+          path: |
+            runtime/astra-compass_total/claim.json
+            runtime/astra-compass_total/source_manifest.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Mark exactly one irreversible POST attempt
+        run: python scripts/research/manual_astra_compass_total_20261116.py mark_attempt --out runtime/astra-compass_total
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-compass_total-attempt-before-POST
+          path: runtime/astra-compass_total/attempt.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Exactly one paid Astra High no-tools POST
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_compass_total_20261116.py submit --out runtime/astra-compass_total
+      - name: GET only collection
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_compass_total_20261116.py collect --out runtime/astra-compass_total
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: program-compass_total-evidence-${{ github.run_id }}
+          path: |
+            runtime/astra-compass_total/claim.json
+            runtime/astra-compass_total/attempt.json
+            runtime/astra-compass_total/submission_started.json
+            runtime/astra-compass_total/source_manifest.json
+            runtime/astra-compass_total/handle.json
+            runtime/astra-compass_total/pending.json
+            runtime/astra-compass_total/receipt.json
+            runtime/astra-compass_total/ASTRA_COMPASS_TOTAL_RESEARCH.md
+          retention-days: 90
+          if-no-files-found: warn
+
+  paid-compass-edge:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.action == 'created' &&
+      github.event.issue.number == 1596 &&
+      github.event.comment.user.login == 'Donh91' &&
+      github.actor == 'Donh91' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.comment.body == 'OWNER_LAUNCH_ASTRA_HIGH_COMPASS_EDGE_20261116_ONE_SHOT'
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    concurrency:
+      group: owner-astra-high-20261116-compass-edge
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Source safety and negative tests
+        run: python -m unittest tests.research.test_manual_astra_research_program_20261116 -v
+      - name: Exceptionally owner-authorized USD100 global with USD4 reserve
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --hard-stop-usd 100 --reserve-usd 4 --new-request-upper-usd 0
+          --owner-astra-program-work-id ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE
+      - name: Prepare immutable public research sources and <=USD10 theoretical upper
+        run: python scripts/research/manual_astra_compass_edge_20261116.py prepare --out runtime/astra-compass_edge
+      - name: Native owner claim and model availability GET
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/manual_astra_compass_edge_20261116.py reserve --out runtime/astra-compass_edge
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-compass_edge-claim
+          path: |
+            runtime/astra-compass_edge/claim.json
+            runtime/astra-compass_edge/source_manifest.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Mark one irreversible POST attempt
+        run: python scripts/research/manual_astra_compass_edge_20261116.py mark_attempt --out runtime/astra-compass_edge
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-compass_edge-attempt-before-POST
+          path: runtime/astra-compass_edge/attempt.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Exactly ONE paid Astra High no-tools POST
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_compass_edge_20261116.py submit --out runtime/astra-compass_edge
+      - name: GET only collection, no duplicate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_compass_edge_20261116.py collect --out runtime/astra-compass_edge
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: program-compass_edge-evidence-${{ github.run_id }}
+          path: |
+            runtime/astra-compass_edge/claim.json
+            runtime/astra-compass_edge/attempt.json
+            runtime/astra-compass_edge/submission_started.json
+            runtime/astra-compass_edge/source_manifest.json
+            runtime/astra-compass_edge/handle.json
+            runtime/astra-compass_edge/pending.json
+            runtime/astra-compass_edge/receipt.json
+            runtime/astra-compass_edge/ASTRA_COMPASS_EDGE_SCIENCE_RESEARCH.md
+          retention-days: 90
+          if-no-files-found: warn
+
+  paid-compass-warning:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.action == 'created' &&
+      github.event.issue.number == 1553 &&
+      github.event.comment.user.login == 'Donh91' &&
+      github.actor == 'Donh91' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.comment.body == 'OWNER_LAUNCH_ASTRA_HIGH_COMPASS_WARNING_20261116_ONE_SHOT'
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    concurrency:
+      group: owner-astra-high-20261116-compass-warning
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Source safety and negative tests
+        run: python -m unittest tests.research.test_manual_astra_research_program_20261116 -v
+      - name: Exceptionally owner-authorized USD100 global with USD4 reserve
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --hard-stop-usd 100 --reserve-usd 4 --new-request-upper-usd 0
+          --owner-astra-program-work-id ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE
+      - name: Prepare immutable public research sources and <=USD10 theoretical upper
+        run: python scripts/research/manual_astra_compass_warning_20261116.py prepare --out runtime/astra-compass_warning
+      - name: Native owner claim and model availability GET
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/manual_astra_compass_warning_20261116.py reserve --out runtime/astra-compass_warning
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-compass_warning-claim
+          path: |
+            runtime/astra-compass_warning/claim.json
+            runtime/astra-compass_warning/source_manifest.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Mark one irreversible POST attempt
+        run: python scripts/research/manual_astra_compass_warning_20261116.py mark_attempt --out runtime/astra-compass_warning
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-compass_warning-attempt-before-POST
+          path: runtime/astra-compass_warning/attempt.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Exactly ONE paid Astra High no-tools POST
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_compass_warning_20261116.py submit --out runtime/astra-compass_warning
+      - name: GET only collection, no duplicate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_compass_warning_20261116.py collect --out runtime/astra-compass_warning
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: program-compass_warning-evidence-${{ github.run_id }}
+          path: |
+            runtime/astra-compass_warning/claim.json
+            runtime/astra-compass_warning/attempt.json
+            runtime/astra-compass_warning/submission_started.json
+            runtime/astra-compass_warning/source_manifest.json
+            runtime/astra-compass_warning/handle.json
+            runtime/astra-compass_warning/pending.json
+            runtime/astra-compass_warning/receipt.json
+            runtime/astra-compass_warning/ASTRA_COMPASS_EARLY_WARNING_RESEARCH.md
+          retention-days: 90
+          if-no-files-found: warn
+
+  paid-alpha-lab:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.action == 'created' &&
+      github.event.issue.number == 1340 &&
+      github.event.comment.user.login == 'Donh91' &&
+      github.actor == 'Donh91' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.comment.body == 'OWNER_LAUNCH_ASTRA_HIGH_ALPHA_LAB_20261116_ONE_SHOT'
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    concurrency:
+      group: owner-astra-high-20261116-alpha-lab
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Source safety and negative tests
+        run: python -m unittest tests.research.test_manual_astra_research_program_20261116 -v
+      - name: Exceptionally owner-authorized USD100 global with USD4 reserve
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --hard-stop-usd 100 --reserve-usd 4 --new-request-upper-usd 0
+          --owner-astra-program-work-id ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE
+      - name: Prepare immutable public research sources and <=USD10 theoretical upper
+        run: python scripts/research/manual_astra_alpha_lab_20261116.py prepare --out runtime/astra-alpha_lab
+      - name: Native owner claim and model availability GET
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/manual_astra_alpha_lab_20261116.py reserve --out runtime/astra-alpha_lab
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-alpha_lab-claim
+          path: |
+            runtime/astra-alpha_lab/claim.json
+            runtime/astra-alpha_lab/source_manifest.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Mark one irreversible POST attempt
+        run: python scripts/research/manual_astra_alpha_lab_20261116.py mark_attempt --out runtime/astra-alpha_lab
+      - uses: actions/upload-artifact@v4
+        with:
+          name: program-alpha_lab-attempt-before-POST
+          path: runtime/astra-alpha_lab/attempt.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Exactly ONE paid Astra High no-tools POST
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_alpha_lab_20261116.py submit --out runtime/astra-alpha_lab
+      - name: GET only collection, no duplicate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_alpha_lab_20261116.py collect --out runtime/astra-alpha_lab
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: program-alpha_lab-evidence-${{ github.run_id }}
+          path: |
+            runtime/astra-alpha_lab/claim.json
+            runtime/astra-alpha_lab/attempt.json
+            runtime/astra-alpha_lab/submission_started.json
+            runtime/astra-alpha_lab/source_manifest.json
+            runtime/astra-alpha_lab/handle.json
+            runtime/astra-alpha_lab/pending.json
+            runtime/astra-alpha_lab/receipt.json
+            runtime/astra-alpha_lab/ASTRA_ALPHA_LAB_PRO_PAPER_EDGE_RESEARCH.md
+          retention-days: 90
+          if-no-files-found: warn
