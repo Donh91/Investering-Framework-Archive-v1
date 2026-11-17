@@ -47,6 +47,9 @@ function makeRootFixture(kind){
  latest.generated_at=utc(now);
  pointer.issue_number=issue;pointer.status='OK';
  pkg.issue_number=issue;pkg.status='OK';
+ pkg.market_cycle_context={current_phase:'UNAVAILABLE',next_gate:'Synthetic fixture gate',why:'No phase established.'};
+ pkg.market_state='Test fixture without confirmed leadership';
+ pkg.rotation_ladder=[{segment:'BTC',status:'UNCONFIRMED'},{segment:'ETH',status:'UNCONFIRMED'}];
  projection.public_issue_number=issue;projection.forecast_week=forecastWeek;
  compass.compass_id='TEST_ONLY_SOURCE_'+kind.toUpperCase();
  compass.issued_at_utc=utc(now-60000);
@@ -981,6 +984,7 @@ try{
    assert.ok(ready&&fixtureRequests['data/latest.json']>0&&
      fixtureRequests['data/compass.json']>0,
      'ROOT_FIXTURE_NOT_LOADED_FROM_HTTP:'+kind+':'+JSON.stringify(fixtureRequests));
+   await evaluate(()=>document.querySelector('[data-premium-nav="path"]')?.click());
    const snapshot=await evaluate(()=>({
     hydrated:document.getElementById('compass-pro')?.dataset.publicFeedHydrated,
     current:document.getElementById('compass-pro')?.dataset.sourceCurrent,

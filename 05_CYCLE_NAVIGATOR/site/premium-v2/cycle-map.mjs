@@ -66,7 +66,7 @@ export function renderCycleMap(doc,{view,latest,lang='da'}={}){
  set('cn-map-dist-label','Distribution');set('cn-map-con-label',t('Kontraktion','Contraction'));
  set('cn-map-large-label',t('Store','Large caps'));set('cn-map-alt-label',t('Mellem / små','Mid / small'));set('cn-map-reset-label','BTC / stables');
  const conf=t('sikkerhed ikke kvantificeret','confidence unquantified');
- set('cn-map-phase-text',m.phase?(m.phase.label==='Expansion'?t('Bull / ekspansion','Bull / expansion'):t('Distribution','Distribution'))+' · '+conf+' · '+m.asOf:t('Aktuel fase ikke dokumenteret.','Current phase not established.'));
+ set('cn-map-phase-text',m.phase?(m.phase.label==='Expansion'?t('Bull / ekspansion','Bull / expansion'):t('Distribution','Distribution'))+' · '+t('ugemodel','weekly model')+' · '+conf+' · '+m.asOf:t('Aktuel fase ikke dokumenteret.','Current phase not established.'));
  set('cn-map-rotation-text',m.rotation?t('BTC · seneste ugereference, ikke live kapitalflow','BTC · previous weekly reference, not live capital flow')+' · '+conf+' · '+m.rotationAsOf:t('Aktuel rotation ikke bekræftet.','Current rotation not confirmed.'));
  set('cn-map-caption',t('Skematisk forløb, ikke pris, tid eller sandsynlighed.','Schematic sequence, not price, time or probability.'));
  set('cn-map-next-label',t('Næste bekræftelse · model view','Next confirmation · model view'));
