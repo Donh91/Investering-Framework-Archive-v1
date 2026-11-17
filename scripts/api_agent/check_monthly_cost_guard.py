@@ -19,7 +19,7 @@ from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegati
 # Legacy caller-specific smaller caps/reserves remain binding; this code never
 # grants a paid POST or lowers a lane's independent ceiling.
 OWNER_GLOBAL_TARGET_USD = 50.0
-OWNER_GLOBAL_HARD_STOP_USD = 50.0
+OWNER_GLOBAL_HARD_STOP_USD = 100.0
 OWNER_GLOBAL_RESERVE_USD = 4.0  # Routine paths retain existing protected headroom.
 OWNER_SINGLE_REQUEST_CAP_USD = 3.0
 # Previous source-bound liabilities were provider-reconciled against private
@@ -52,7 +52,21 @@ SETTLED_ASTRA_WORK_IDS: set[str] = set()
 RETAINED_ASTRA_RESERVATION_WORK_IDS = {
     "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
     "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
+    "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE",
 }
+# Owner-present exceptional Astra program, audited under native high-impact PR.
+# This is a research-only allocation, not a fallback/authority for other callers.
+OWNER_ASTRA_PROGRAM_WORK = {
+    "ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE": 1156,
+    "ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE": 1827,
+    "ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE": 1596,
+    "ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE": 1553,
+    "ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE": 1340,
+    "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE": 937,
+}
+MAEVE_WORK_ID = "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE"
+MAEVE_AUTHORIZATION = "OWNER_INTERACTIVE_2026-11-17_ASTRA_MAEVE_TASK2_PREP_V1_ONE"
+MAEVE_MISSION_BLOB = "9c44bca23d8825c31afbdb1d62ae621285e9354a"
 CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
     "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
 )
@@ -129,7 +143,7 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     # eventually expires. It stays in the global monthly exposure until an
     # independently reviewed native settlement removes it.
     reservations = value.get("owner_reservations", [])
-    if not isinstance(reservations, list) or len(reservations) > 3:
+    if not isinstance(reservations, list) or len(reservations) > 9:
         raise ValueError("OWNER_RESERVATION_LEDGER_INVALID")
     reserved_work_ids = set()
     for reservation in reservations:
@@ -137,7 +151,7 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
                 or reservation.get("created_month_utc") != "2026-11"
                 or reservation.get("status") != "OWNER_RESERVED_PREHTTP"
                 or reservation.get("lower_usd") != 0
-                or reservation.get("source") != "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596"
+                or reservation.get("source") != ("https://github.com/Donh91/Investering-Framework-Archive-v1/issues/" + str(OWNER_ASTRA_PROGRAM_WORK.get(reservation.get("work_id"), 1596)))
                 or reservation.get("one_paid_post_max") != 1
                 or reservation.get("reconciliation_required") is not True):
             raise ValueError("ASTRA_OWNER_RESERVATION_UNVERIFIED")
@@ -150,7 +164,19 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE": 10,
             "ASTRA-HIGH-TASK2-REALDATA-V2-20261113-ONE": 10,
             "ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE": 10,
+            "ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE": 10,
+            "ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE": 10,
+            "ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE": 10,
+            "ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE": 10,
+            "ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE": 10,
+            MAEVE_WORK_ID: 10,
         }
+        if work == MAEVE_WORK_ID and (
+            reservation.get("authorization_id") != MAEVE_AUTHORIZATION
+            or reservation.get("mission") != "ASTRA_MAEVE_TASK2_PREP_V1"
+            or reservation.get("mission_blob") != MAEVE_MISSION_BLOB
+        ):
+            raise ValueError("MAEVE_ONE_USE_AUTHORIZATION_INVALID")
         if work not in allowed or reservation.get("upper_usd") != allowed[work]:
             raise ValueError("UNKNOWN_OWNER_RESERVED_MODEL_OR_COST")
         high += float(allowed[work])
@@ -253,6 +279,7 @@ def main() -> None:
     parser.add_argument("--owner-work-id")
     parser.add_argument("--input-token-upper", type=int)
     parser.add_argument("--output-token-upper", type=int)
+    parser.add_argument("--owner-astra-program-work-id")
     args = parser.parse_args()
     if (not finite_nonnegative(args.hard_stop_usd)
             or not finite_nonnegative(args.reserve_usd)
@@ -333,11 +360,53 @@ def main() -> None:
                        "reason": "MODEL_APPROVAL_BLOCKED:" + str(exc)[:100]})
     if new_upper > OWNER_SINGLE_REQUEST_CAP_USD:
         errors.append({"path": "MAX_NEW_REQUEST", "reason": "MAX_SINGLE_REQUEST_CEILING_EXCEEDED"})
+    # New owner-authorized exceptional program applies ONLY to source-whitelisted
+    # one-shot IDs in the canonical ledger. The native owner issue event + claim
+    # is separately enforced by each runner, not by this quote-only guard.
+    approved_astra_id = args.owner_astra_program_work_id
+    exceptional = (approved_astra_id in OWNER_ASTRA_PROGRAM_WORK
+                   and args.hard_stop_usd == 100.0
+                   and args.reserve_usd >= 4.0
+                   and new_upper == 0.0)
+    if approved_astra_id is not None:
+        if not exceptional:
+            errors.append({"path": "OWNER_ASTRA_PROGRAM",
+                           "reason": "WORK_ID_OR_EXCEPTION_CAP_INVALID"})
+        else:
+            try:
+                lr = json.loads(args.liability_ledger.read_text(encoding="utf-8"))
+                exact = [r for r in lr.get("owner_reservations", [])
+                         if r.get("work_id") == approved_astra_id
+                         and r.get("upper_usd") == 10
+                         and r.get("one_paid_post_max") == 1
+                         and r.get("source") ==
+                           "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/" +
+                           str(OWNER_ASTRA_PROGRAM_WORK[approved_astra_id])]
+                if len(exact) != 1:
+                    raise ValueError("DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED")
+            except (OSError, ValueError, TypeError, KeyError):
+                errors.append({"path": "OWNER_ASTRA_PROGRAM",
+                               "reason": "DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED"})
+    # Prior normal 40/4 callers keep their independent cap. The five owner
+    # exceptional reservations cannot silently consume routine budget, but
+    # DO count against the one global hard stop and its protected USD4.
+    normal_exception_hold = 0.0
+    if not exceptional:
+        try:
+            valid = json.loads(args.liability_ledger.read_text(encoding="utf-8"))
+            normal_exception_hold = sum(
+                float(row.get("upper_usd", 0))
+                for row in valid.get("owner_reservations", [])
+                if row.get("work_id") in OWNER_ASTRA_PROGRAM_WORK
+            )
+        except (OSError, ValueError, TypeError):
+            errors.append({"path": "OWNER_ASTRA_PROGRAM",
+                           "reason": "NORMAL_EXCEPTION_HOLD_UNREADABLE"})
     # USD50 is the total authenticated owner-approved monthly envelope, NOT
     # independent authority to purchase a model call. Existing paid runners
     # must still enforce original owner-event, model, one-POST and lane rules.
     # A local CLI preview with a matching number is never release consent.
-    if args.hard_stop_usd > OWNER_GLOBAL_TARGET_USD:
+    if args.hard_stop_usd > OWNER_GLOBAL_TARGET_USD and not exceptional:
         errors.append({"path": "OWNER_EXCEPTIONAL_CAP",
                        "reason": "OWNER_GLOBAL_50_USD_CAP_EXCEEDED"})
     effective_hard_stop = min(args.hard_stop_usd, OWNER_GLOBAL_HARD_STOP_USD)
@@ -349,9 +418,11 @@ def main() -> None:
                          if args.hard_stop_usd >= 40.0 else args.reserve_usd)
     exposure_lower = total + pending_low if total is not None else None
     exposure_upper = total + pending_high + new_upper if total is not None else None
-    remaining = effective_hard_stop - exposure_upper if exposure_upper is not None else None
+    remaining = (effective_hard_stop - exposure_upper + normal_exception_hold
+                 if exposure_upper is not None else None)
     owner_remaining = OWNER_GLOBAL_HARD_STOP_USD - exposure_upper if exposure_upper is not None else None
-    normal_remaining = OWNER_GLOBAL_TARGET_USD - exposure_upper if exposure_upper is not None else None
+    normal_remaining = (OWNER_GLOBAL_TARGET_USD - exposure_upper + normal_exception_hold
+                        if exposure_upper is not None else None)
     status = ("BLOCKED" if errors or remaining is None or owner_remaining is None
               or remaining <= effective_reserve  # the reserve is never spendable, as in the lane guard
               or owner_remaining < OWNER_GLOBAL_RESERVE_USD else "PASS")
