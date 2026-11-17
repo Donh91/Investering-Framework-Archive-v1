@@ -309,15 +309,26 @@ class GateWorkflowWiring(unittest.TestCase):
             block.append(line)
         return start[0], block
 
-    def test_step_is_in_the_existing_gate_job_and_no_job_was_added(self):
+    def test_step_is_alone_in_its_own_first_job(self):
+        # S1 v2 (detached review R1 P2-1): the scan runs in its own first job, isolated (python -I), so that no
+        # PR-controlled step of the gate job can run before it, overwrite the scanner or print a forged line.
         jobs_at = self.lines.index("jobs:")
         job_ids = [l.strip()[:-1] for l in self.lines[jobs_at + 1:] if re.fullmatch(r"  [A-Za-z0-9_-]+:", l)]
-        self.assertEqual(job_ids, ["gate"])
+        self.assertEqual(job_ids, ["privacy-scan", "gate"])
         at, block = self._step_block()
-        self.assertGreater(at, self.lines.index("  gate:"))
-        self.assertIn("        run: python scripts/governance/s1_native_privacy_scan_step_v1.py", block)
+        start, end = self.lines.index("  privacy-scan:"), self.lines.index("  gate:")
+        self.assertTrue(start < at < end)
+        job = self.lines[start:end]
+        self.assertEqual([l.strip() for l in job if l.startswith("      - ")],
+                         ["- uses: actions/checkout@v4", "- uses: actions/setup-python@v5",
+                          f"- name: {STEP_NAME}"], "nothing else may run in the privacy-scan job")
+        self.assertEqual([l for l in job if l.strip().startswith("run:")],
+                         ["        run: python -I scripts/governance/s1_native_privacy_scan_step_v1.py"])
+        self.assertIn("    if: github.event_name == 'pull_request'", job)
+        self.assertNotIn("s1_native_privacy_scan_step_v1", "\n".join(self.lines[end:]), "the gate job must not run the scan")
+        self.assertIn("        run: python -I scripts/governance/s1_native_privacy_scan_step_v1.py", block)
         self.assertIn("        if: github.event_name == 'pull_request'", block)
-        self.assertIn("          S1_PRIVACY_SCAN_MODE: shadow", block)
+        self.assertIn("          S1_PRIVACY_SCAN_MODE: enforce", block)
 
     def test_step_uses_no_secret_and_no_inline_expression_in_run(self):
         _, block = self._step_block()
