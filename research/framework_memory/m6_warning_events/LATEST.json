@@ -1,7 +1,7 @@
 {
   "contract": "M6_WARNING_EVENT_INDEX_v1",
   "economic_action_scoring_ready": false,
-  "event_count": 326,
+  "event_count": 327,
   "events": [
     {
       "authority": {
@@ -42765,7 +42765,134 @@
           "target_at_utc": "2026-10-19T11:07:35Z"
         },
         "30d": {
-          "maturity_state": "PENDING",
+          "BTC": {
+            "adverse_barriers": {
+              "-10.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-08T22:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              },
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-13T04:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-14T16:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -24.447165166397543,
+              "mfe_pct": 3.4461918476144326,
+              "price": 82069.72,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -21.87554679119169,
+              "timestamp": "2026-10-18T12:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": null,
+              "observation_end_at_utc": "2026-11-17T11:00:00Z",
+              "observed_trough_at_utc": "2026-11-15T02:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": true,
+              "status": "RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": null,
+              "time_to_first_close_reclaim_hours": null
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -24.469280548153783,
+              "mfe_pct": 3.4159116863342165,
+              "price": 82093.75,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -21.898414921964225,
+              "time_to_mae_hours": 662.8736111111111,
+              "time_to_mfe_hours": 77.87361111111112
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 64116.52,
+              "timestamp": "2026-11-17T11:00:00Z"
+            }
+          },
+          "ETH": {
+            "adverse_barriers": {
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-10T14:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-13T04:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              },
+              "-30.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -29.242462462214103,
+              "mfe_pct": 4.482203926011996,
+              "price": 2418.23,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -26.023165703841233,
+              "timestamp": "2026-10-18T12:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": null,
+              "observation_end_at_utc": "2026-11-17T11:00:00Z",
+              "observed_trough_at_utc": "2026-11-15T02:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": true,
+              "status": "RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": null,
+              "time_to_first_close_reclaim_hours": null
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -29.26937147345142,
+              "mfe_pct": 4.442469462414467,
+              "price": 2419.15,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -26.05129900998284,
+              "time_to_mae_hours": 662.8736111111111,
+              "time_to_mfe_hours": 77.87361111111112
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 1788.93,
+              "timestamp": "2026-11-17T11:00:00Z"
+            }
+          },
+          "coverage": {
+            "first_close": "2026-10-18T12:00:00Z",
+            "last_close": "2026-11-17T11:00:00Z",
+            "max_gap_hours": 1.0,
+            "reason": "COMPLETE_HOURLY_CLOSE_GRID",
+            "row_count": 720
+          },
+          "maturity_state": "MATURED",
           "target_at_utc": "2026-11-17T11:07:35Z"
         },
         "72h": {
@@ -43162,7 +43289,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -43455,7 +43582,134 @@
           "target_at_utc": "2026-10-19T11:08:36Z"
         },
         "30d": {
-          "maturity_state": "PENDING",
+          "BTC": {
+            "adverse_barriers": {
+              "-10.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-08T22:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              },
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-13T04:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-14T16:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -24.447165166397543,
+              "mfe_pct": 3.4461918476144326,
+              "price": 82069.72,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -21.87554679119169,
+              "timestamp": "2026-10-18T12:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": null,
+              "observation_end_at_utc": "2026-11-17T11:00:00Z",
+              "observed_trough_at_utc": "2026-11-15T02:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": true,
+              "status": "RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": null,
+              "time_to_first_close_reclaim_hours": null
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -24.469280548153783,
+              "mfe_pct": 3.4159116863342165,
+              "price": 82093.75,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -21.898414921964225,
+              "time_to_mae_hours": 662.8566666666667,
+              "time_to_mfe_hours": 77.85666666666667
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 64116.52,
+              "timestamp": "2026-11-17T11:00:00Z"
+            }
+          },
+          "ETH": {
+            "adverse_barriers": {
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-10T14:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-13T04:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              },
+              "-30.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -29.242462462214103,
+              "mfe_pct": 4.482203926011996,
+              "price": 2418.23,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -26.023165703841233,
+              "timestamp": "2026-10-18T12:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": null,
+              "observation_end_at_utc": "2026-11-17T11:00:00Z",
+              "observed_trough_at_utc": "2026-11-15T02:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": true,
+              "status": "RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": null,
+              "time_to_first_close_reclaim_hours": null
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -29.26937147345142,
+              "mfe_pct": 4.442469462414467,
+              "price": 2419.15,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -26.05129900998284,
+              "time_to_mae_hours": 662.8566666666667,
+              "time_to_mfe_hours": 77.85666666666667
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 1788.93,
+              "timestamp": "2026-11-17T11:00:00Z"
+            }
+          },
+          "coverage": {
+            "first_close": "2026-10-18T12:00:00Z",
+            "last_close": "2026-11-17T11:00:00Z",
+            "max_gap_hours": 1.0,
+            "reason": "COMPLETE_HOURLY_CLOSE_GRID",
+            "row_count": 720
+          },
+          "maturity_state": "MATURED",
           "target_at_utc": "2026-11-17T11:08:36Z"
         },
         "72h": {
@@ -43852,7 +44106,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -44542,7 +44796,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -45232,7 +45486,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -45922,7 +46176,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -46612,7 +46866,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -47298,7 +47552,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -47984,7 +48238,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -48670,7 +48924,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -49356,7 +49610,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -50042,7 +50296,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -50728,7 +50982,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -51414,7 +51668,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -52096,7 +52350,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -52778,7 +53032,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -53460,7 +53714,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -54142,7 +54396,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -54824,7 +55078,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -55506,7 +55760,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -56188,7 +56442,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -56870,7 +57124,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -57552,7 +57806,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -58234,7 +58488,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -58912,7 +59166,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -59590,7 +59844,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -60268,7 +60522,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -60946,7 +61200,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -61624,7 +61878,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -62302,7 +62556,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -62976,7 +63230,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -63650,7 +63904,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -64324,7 +64578,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -64998,7 +65252,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -65672,7 +65926,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -66346,7 +66600,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -67020,7 +67274,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -67694,7 +67948,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -68364,7 +68618,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -69034,7 +69288,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -69704,7 +69958,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -70374,7 +70628,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -71044,7 +71298,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -71714,7 +71968,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -72384,7 +72638,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -73054,7 +73308,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -73724,7 +73978,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -74394,7 +74648,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -75064,7 +75318,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -75730,7 +75984,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -76396,7 +76650,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -77062,7 +77316,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -77728,7 +77982,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -78394,7 +78648,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -79060,7 +79314,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -79726,7 +79980,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -80392,7 +80646,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -81058,7 +81312,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -81720,7 +81974,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -82382,7 +82636,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -83044,7 +83298,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -83706,7 +83960,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -84368,7 +84622,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -85030,7 +85284,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -85692,7 +85946,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -86354,7 +86608,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -87016,7 +87270,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -87678,7 +87932,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -88340,7 +88594,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -89002,7 +89256,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -89664,7 +89918,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -90322,7 +90576,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -90980,7 +91234,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -91638,7 +91892,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -92296,7 +92550,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -92954,7 +93208,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -93612,7 +93866,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -94270,7 +94524,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -94928,7 +95182,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -95586,7 +95840,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -96240,7 +96494,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -96894,7 +97148,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -97548,7 +97802,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -98202,7 +98456,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -98856,7 +99110,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -99510,7 +99764,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -100164,7 +100418,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -100818,7 +101072,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -101472,7 +101726,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -102126,7 +102380,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -102780,7 +103034,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -103434,7 +103688,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -104088,7 +104342,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -104742,7 +104996,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -105392,7 +105646,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -106042,7 +106296,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -106692,7 +106946,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -107342,7 +107596,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -107992,7 +108246,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -108642,7 +108896,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -109292,7 +109546,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -109942,7 +110196,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -110592,7 +110846,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -111242,7 +111496,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -111892,7 +112146,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -112542,7 +112796,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -113192,7 +113446,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -113842,7 +114096,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -114492,7 +114746,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -115138,7 +115392,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -115784,7 +116038,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -116430,7 +116684,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -117076,7 +117330,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -117722,7 +117976,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -118368,7 +118622,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -119014,7 +119268,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -119660,7 +119914,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -120306,7 +120560,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -120952,7 +121206,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -121598,7 +121852,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -122244,7 +122498,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -122890,7 +123144,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -123532,7 +123786,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -124174,7 +124428,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -124816,7 +125070,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -125458,7 +125712,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -126100,7 +126354,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -126742,7 +126996,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -127384,7 +127638,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -128026,7 +128280,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -128668,7 +128922,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -129310,7 +129564,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -129952,7 +130206,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -130594,7 +130848,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -131236,7 +131490,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -131878,7 +132132,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -132520,7 +132774,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -133158,7 +133412,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -133796,7 +134050,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -134434,7 +134688,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -135072,7 +135326,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -135710,7 +135964,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -136348,7 +136602,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -136986,7 +137240,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -137624,7 +137878,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -138262,7 +138516,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -138896,7 +139150,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -139530,7 +139784,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -140164,7 +140418,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -140798,7 +141052,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -141432,7 +141686,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -142066,7 +142320,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -142700,7 +142954,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -143330,7 +143584,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -143960,7 +144214,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -144590,7 +144844,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -145220,7 +145474,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -145850,7 +146104,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -146480,7 +146734,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -147106,7 +147360,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -147732,7 +147986,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -148358,7 +148612,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -148857,7 +149111,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -149356,7 +149610,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -149851,7 +150105,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -150346,7 +150600,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -150841,7 +151095,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -151336,7 +151590,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -151831,7 +152085,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -152326,7 +152580,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -152817,7 +153071,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -153308,7 +153562,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -153799,7 +154053,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -154290,7 +154544,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -154781,7 +155035,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -155272,7 +155526,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -155763,7 +156017,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -156250,7 +156504,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -156737,7 +156991,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -157224,7 +157478,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -157711,7 +157965,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -158198,7 +158452,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -158685,7 +158939,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -159168,7 +159422,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -159651,7 +159905,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -160134,7 +160388,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -160617,7 +160871,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -161100,7 +161354,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -161583,7 +161837,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -162066,7 +162320,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -162545,7 +162799,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -163024,7 +163278,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -163503,7 +163757,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -163982,7 +164236,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -164461,7 +164715,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -164936,7 +165190,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -165411,7 +165665,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -165886,7 +166140,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -166361,7 +166615,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -166836,7 +167090,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -167311,7 +167565,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -167782,7 +168036,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -168253,7 +168507,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -168724,7 +168978,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -169195,7 +169449,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -169539,7 +169793,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -169883,7 +170137,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -170227,7 +170481,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -170571,7 +170825,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -170915,7 +171169,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -171255,7 +171509,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -171595,7 +171849,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -171935,7 +172189,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -172275,7 +172529,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -172615,7 +172869,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -172955,7 +173209,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -173291,7 +173545,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -173627,7 +173881,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -173963,7 +174217,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -174299,7 +174553,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -174635,7 +174889,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -174971,7 +175225,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -175307,7 +175561,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -175643,7 +175897,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -175975,7 +176229,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -176307,7 +176561,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -176639,7 +176893,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -176971,7 +177225,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -177303,7 +177557,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -177635,7 +177889,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -177967,7 +178221,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -178299,7 +178553,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -178631,7 +178885,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -178959,7 +179213,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -179287,7 +179541,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -179615,7 +179869,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -179943,7 +180197,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -180144,7 +180398,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -180345,7 +180599,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -180546,7 +180800,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -180747,7 +181001,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -180948,7 +181202,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -181149,7 +181403,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -181350,7 +181604,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -181547,7 +181801,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -181744,7 +181998,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -181941,7 +182195,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -182138,7 +182392,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -182335,7 +182589,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -182532,7 +182786,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -182729,7 +182983,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -182926,7 +183180,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -183123,7 +183377,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -183320,7 +183574,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -183513,7 +183767,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -183706,7 +183960,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -183899,7 +184153,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -184092,7 +184346,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -184285,7 +184539,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -184478,7 +184732,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -184544,7 +184798,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -184610,7 +184864,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -184676,7 +184930,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -184742,7 +184996,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -184808,7 +185062,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -184874,7 +185128,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -184940,7 +185194,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -185002,7 +185256,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -185064,7 +185318,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -185126,7 +185380,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -185188,7 +185442,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -185250,7 +185504,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -185312,7 +185566,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -185374,7 +185628,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -185436,7 +185690,7 @@
         },
         {
           "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
-          "sha256": "0679224d7b11255053e612a0fbd726eb2d8fe2e89d174658d49db9dcd01c0f62"
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
         }
       ],
       "provider_first_known_verified": false,
@@ -185450,9 +185704,71 @@
       "warning_state": "ELEVATED",
       "warning_timestamp": "2026-11-17T09:29:27Z",
       "within_family_warning_index": 313
+    },
+    {
+      "authority": {
+        "execution_anchor": false,
+        "portfolio_action": false,
+        "research_only": true,
+        "sell": false,
+        "trim": false
+      },
+      "compass_id": "CMP-20261117-aeb376bb59b1",
+      "contract": "M6_WARNING_EVENT_OUTCOME_v1",
+      "data_health_state": "OK",
+      "episode_family_id": "M6F-20261012T064626Z",
+      "episode_family_status": "PROVISIONAL_OPEN_UNTIL_TROUGH_OBSERVED",
+      "event_id": "M6E-ec647840d66c16f7",
+      "horizons": {
+        "14d": {
+          "maturity_state": "PENDING",
+          "target_at_utc": "2026-12-01T11:23:10Z"
+        },
+        "24h": {
+          "maturity_state": "PENDING",
+          "target_at_utc": "2026-11-18T11:23:10Z"
+        },
+        "30d": {
+          "maturity_state": "PENDING",
+          "target_at_utc": "2026-12-17T11:23:10Z"
+        },
+        "72h": {
+          "maturity_state": "PENDING",
+          "target_at_utc": "2026-11-20T11:23:10Z"
+        },
+        "7d": {
+          "maturity_state": "PENDING",
+          "target_at_utc": "2026-11-24T11:23:10Z"
+        }
+      },
+      "independent_family_weight": 0.0,
+      "integrity_revision": "v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
+      "knowledge_clock_semantics": "ISSUED_WITH_COMPLETED_REFERENCE_HOUR_NOT_PROVIDER_FIRST_KNOWN",
+      "knowledge_timestamp": "2026-11-17T11:23:10Z",
+      "outcome_tape_bindings": [
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-16.csv",
+          "sha256": "1343aa899ff8081d8925d906bf4e24300c3be7f9520676b3f921020f72beeece"
+        },
+        {
+          "path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
+          "sha256": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61"
+        }
+      ],
+      "provider_first_known_verified": false,
+      "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+      "source_hash": "c562202014477936599cc1430d33ca594ae4580bc789eb5e58aeb527b22c6bce",
+      "source_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-aeb376bb59b1.json",
+      "start_prices": {
+        "BTC": 64116.52,
+        "ETH": 1788.93
+      },
+      "warning_state": "ELEVATED",
+      "warning_timestamp": "2026-11-17T11:23:10Z",
+      "within_family_warning_index": 314
     }
   ],
-  "generated_at_utc": "2026-11-17T10:49:52Z",
+  "generated_at_utc": "2026-11-17T11:54:25Z",
   "integrity_revision": "v1.2_POST_KNOWLEDGE_BAR_INTEGRITY",
   "live_exit_rule": "NONE",
   "primary_warning_states": [
