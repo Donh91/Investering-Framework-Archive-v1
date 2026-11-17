@@ -25,8 +25,10 @@ import argparse
 import csv
 import datetime as dt
 import hashlib
+import io
 import json
 import math
+import re
 import subprocess
 from pathlib import Path
 from typing import Iterable
@@ -65,6 +67,8 @@ SEED_Z = {
 HOURLY_DIR = "03_DAILY_CAPTURE_LOGS/hourly"
 FREEZE_PATH = "05_CYCLE_NAVIGATOR/weekly/{year}/W{week:02d}/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
 ISSUANCE_PATH = "06_RESEARCH_LAB/task2_challenger_a/issued/{year}/W{week:02d}/CHALLENGER_A_FROZEN_ISSUANCE.json"
+SCORE_PATH = "06_RESEARCH_LAB/task2_challenger_a/scored/{year}/W{week:02d}/CHALLENGER_A_FIRST_MATURE_SCORE.json"
+SCORE_FIRST_MATURITY_GRACE = dt.timedelta(hours=48)  # source availability bound, not a hypothesis look
 HOUR = dt.timedelta(hours=1)
 DAY = dt.timedelta(days=1)
 COLS = {"BTC": ("btc_close", "btc_high", "btc_low"), "ETH": ("eth_close", "eth_high", "eth_low")}
@@ -93,15 +97,34 @@ def _positive(value) -> float | None:
     return x if math.isfinite(x) and x > 0 else None
 
 
-def load_hourly(root: Path, start: dt.datetime, end: dt.datetime) -> dict:
+def load_hourly(root: Path, start: dt.datetime, end: dt.datetime, *, git_ref: str | None = None) -> dict:
     """{open_time: {asset: (close, high, low)}} for bars with start <= open < end."""
     bars: dict = {}
     seen: set = set()
     day = start.replace(hour=0, minute=0, second=0, microsecond=0)
     while day < end:
-        path = root / HOURLY_DIR / f"{day:%Y}" / f"{day:%m}" / f"{day:%Y-%m-%d}.csv"
-        if path.is_file():
-            with path.open(newline="", encoding="utf-8") as fh:
+        rel = f"{HOURLY_DIR}/{day:%Y}/{day:%m}/{day:%Y-%m-%d}.csv"
+        path = root / rel
+        # For canonical scoring, resolve only the commit's own tree. A missing
+        # path is an abstention; a failed Git read is an integrity failure.
+        if git_ref is not None:
+            try:
+                entry = _git(root, "ls-tree", git_ref, "--", rel)
+                if entry:
+                    if not entry.startswith(("100644 blob ", "100755 blob ")):
+                        raise ValueError("hourly source is not a regular committed blob")
+                    raw = subprocess.run(
+                        ["git", "-C", str(root), "show", git_ref + ":" + rel],
+                        capture_output=True, check=True).stdout
+                    stream = io.StringIO(raw.decode("utf-8"), newline="")
+                else:
+                    stream = None
+            except (subprocess.CalledProcessError, UnicodeError) as exc:
+                raise ValueError("cannot read committed hourly source " + rel) from exc
+        else:
+            stream = path.open(newline="", encoding="utf-8") if path.is_file() else None
+        if stream is not None:
+            with stream as fh:
                 for row in csv.DictReader(fh):
                     try:
                         t = utc(row["timestamp_utc"])
@@ -277,6 +300,7 @@ def score(issuance: dict, bars: dict, freeze: dict | None = None, *, issuance_fi
                 continue
             r = realized(bars, asset, utc(d["scored_from_utc"]), utc(d["end_utc"]))
             if r is None:
+                abstentions.append({"asset": asset, "day": d["day"], "status": "ABSTAIN_INCOMPLETE_HOURLY"})
                 continue
             p0 = a["P0"]
             row = {"asset": asset, "day": d["day"], "bars": r["bars"]}
@@ -430,6 +454,370 @@ def read_frozen_main_issuance(root: Path, year: int, week: int) -> tuple[dict, d
     return doc, proof
 
 
+
+def no_issuance_missing_score(root: Path, year: int, week: int,
+                              *, as_of_utc: dt.datetime | None = None) -> dict:
+    """Freeze an explicitly absent A issue as MISSING, never as a retrospective loss.
+
+    Only the canonical score command calls this with the real UTC clock.
+    The optional clock is solely for deterministic synthetic-Git tests.
+    """
+    maturity = week_monday(year, week) + 7 * DAY
+    now = as_of_utc if as_of_utc is not None else dt.datetime.now(dt.timezone.utc)
+    if now.tzinfo is None or not maturity <= now <= maturity + SCORE_FIRST_MATURITY_GRACE:
+        raise ValueError("no-issuance MISSING requires the first 48h after full week maturity")
+    rel = ISSUANCE_PATH.format(year=year, week=week)
+    _git(root, "rev-parse", "--verify", "refs/heads/main")
+    if _git(root, "rev-parse", "--is-shallow-repository") != "false":
+        raise ValueError("no-issuance MISSING cannot trust shallow main history")
+    # A removed or renamed first-main issuance MUST NOT turn into 'never issued'.
+    additions = _git(root, "-c", "log.follow=false", "-c", "log.diffMerges=first-parent",
+                     "-c", "diff.renames=false", "log", "--first-parent",
+                     "--diff-merges=first-parent", "--no-renames", "--root",
+                     "--diff-filter=A", "--name-only", "--format=",
+                     "refs/heads/main", "--", rel)
+    current = subprocess.run(["git", "-C", str(root), "cat-file", "-e",
+                              "refs/heads/main:" + rel], capture_output=True)
+    if rel in additions.splitlines() or current.returncode == 0:
+        raise ValueError("historical or current A issuance exists; no-issuance certificate refused")
+    main_sha = _git(root, "rev-parse", "refs/heads/main")
+    return {
+        "contract": CONTRACT + "_SCORE", "week": f"{year}-W{week:02d}",
+        "issuance_sha256": None, "issuance_first_main_utc": None,
+        "first_main_issuance": None, "matured_rows": 0, "paired_rows": 0,
+        "rows": [], "abstentions": [], "aggregate": {}, "aggregate_primary_paired": {},
+        "aggregate_challenger_all": {}, "week_winner_interval_score": "MISSING",
+        "missing_reason": "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY",
+        "no_issuance_provenance": {
+            "contract": "TASK2_A_FIRST_MATURITY_NO_ISSUANCE_v1",
+            "canonical_path": rel, "checked_main_sha": main_sha,
+            "checked_at_utc": iso(now), "first_parent_historical_additions": 0},
+        "first_http_delivery": "UNKNOWN", "decision_status": "SHADOW_ONLY_NO_PROMOTION",
+        "note": "Immutable no-issuance denominator. Not a win, not a forecast, no promotion."
+    }
+
+
+def verify_no_issuance_first_main(root: Path, row: dict, proof: dict,
+                                  year: int, week: int) -> None:
+    """Prove the first committed MISSING row predated any original A issue."""
+    maturity = week_monday(year, week) + 7 * DAY
+    first_clock = utc(proof["first_main_utc"])
+    certificate = row.get("no_issuance_provenance")
+    rel = ISSUANCE_PATH.format(year=year, week=week)
+    if (row.get("missing_reason") != "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY"
+            or row.get("issuance_sha256") is not None
+            or row.get("issuance_first_main_utc") is not None
+            or row.get("first_main_issuance") is not None
+            or row.get("paired_rows") != 0
+            or row.get("matured_rows") != 0
+            or row.get("rows") != []
+            or row.get("week_winner_interval_score") != "MISSING"
+            or not isinstance(certificate, dict)
+            or certificate.get("contract") != "TASK2_A_FIRST_MATURITY_NO_ISSUANCE_v1"
+            or certificate.get("canonical_path") != rel
+            or certificate.get("first_parent_historical_additions") != 0):
+        raise ValueError("invalid no-issuance MISSING certificate")
+    checked = utc(certificate.get("checked_at_utc"))
+    if not maturity <= checked <= first_clock <= maturity + SCORE_FIRST_MATURITY_GRACE:
+        raise ValueError("no-issuance first-maturity clock out of bounds")
+    pin = certificate.get("checked_main_sha")
+    if not isinstance(pin, str) or len(pin) != 40 or any(c not in "0123456789abcdef" for c in pin):
+        raise ValueError("invalid no-issuance main ancestry pin")
+    subprocess.run(["git", "-C", str(root), "merge-base", "--is-ancestor",
+                    pin, proof["first_main_commit"]], check=True, capture_output=True)
+    # Audit all history up to the first score commit, not just current main:
+    # a genuine early issue cannot be deleted and recast as absent.
+    introductions = _git(root, "-c", "log.follow=false", "-c", "log.diffMerges=first-parent",
+                         "-c", "diff.renames=false", "log", "--first-parent",
+                         "--diff-merges=first-parent", "--no-renames", "--root",
+                         "--diff-filter=A", "--name-only", "--format=",
+                         proof["first_main_commit"], "--", rel)
+    exists = subprocess.run(["git", "-C", str(root), "cat-file", "-e",
+                             proof["first_main_commit"] + ":" + rel], capture_output=True)
+    if rel in introductions.splitlines() or exists.returncode == 0:
+        raise ValueError("issued A source was present before first MISSING score")
+
+
+
+
+def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_clock: str,
+                                      original_cn_freeze: dict | None = None) -> None:
+    """Validate immutable scored row evidence, never trust a claimed weekly winner.
+
+    This proves row/summary consistency only. It is not an independent HTTP
+    availability clock or a guarantee that market bars were sealed.
+    """
+    rows = row.get("rows")
+    if not isinstance(rows, list) or len(rows) > 14:
+        raise ValueError("frozen paired rows absent or overfull")
+    if type(row.get("matured_rows")) is not int or row["matured_rows"] != len(rows):
+        raise ValueError("frozen paired rows count inconsistent")
+    assets = issuance.get("assets")
+    if not isinstance(assets, dict):
+        raise ValueError("frozen paired rows issuance assets invalid")
+    allowed = {}
+    for asset, spec in assets.items():
+        if asset not in PARAMS["assets"] or not isinstance(spec, dict):
+            raise ValueError("frozen paired rows unexpected issuance asset")
+        days = spec.get("days")
+        if not isinstance(days, list):
+            raise ValueError("frozen paired rows invalid issued days")
+        for day in days:
+            if (not isinstance(day, dict) or type(day.get("day")) is not int
+                    or not isinstance(day.get("scored_from_utc"), str)):
+                raise ValueError("frozen paired rows invalid issued day")
+            key = (asset, day["day"])
+            if key in allowed:
+                raise ValueError("frozen paired rows duplicate issued day")
+            allowed[key] = day
+    first = utc(first_main_clock)
+    # Only a verified original CN freeze may establish paired CN forecasts.
+    # Without it, every row claiming a CN pair must fail closed.
+    issued_cn = ({asset: cn_bands(original_cn_freeze, asset)
+                  for asset in PARAMS["assets"]} if isinstance(original_cn_freeze, dict) else {})
+    used, paired = set(), []
+    def finite_number(v, positive=False):
+        return (type(v) in (int, float) and math.isfinite(v)
+                and (v > 0 if positive else v >= 0))
+    for r in rows:
+        if not isinstance(r, dict) or type(r.get("day")) is not int:
+            raise ValueError("frozen paired rows invalid outcome")
+        key = (r.get("asset"), r["day"])
+        if key not in allowed or key in used:
+            raise ValueError("frozen paired rows duplicate or unissued asset-day")
+        used.add(key)
+        if utc(allowed[key]["scored_from_utc"]) < first:
+            raise ValueError("frozen paired rows before original first-main issue")
+        issued_day = allowed[key]
+        try:
+            scored_start = utc(issued_day["scored_from_utc"])
+            scored_end = utc(issued_day["end_utc"])
+            p0 = issuance["assets"][r["asset"]]["P0"]
+            close_band = issued_day["band"]["close"][str(PARAMS["primary_quantile"])]
+            issued_width = (close_band[1] - close_band[0]) / p0
+            max_bars = int((scored_end - scored_start).total_seconds() / HOUR.total_seconds())
+        except (KeyError, IndexError, TypeError, ValueError, ZeroDivisionError) as exc:
+            raise ValueError("frozen paired rows invalid issued-band source") from exc
+        if (not finite_number(p0, positive=True)
+                or not finite_number(issued_width, positive=True)
+                or not 1 <= max_bars <= 24
+                or type(r.get("bars")) is not int
+                or max_bars < PARAMS["min_scored_bars_per_day"]
+                or r["bars"] != max_bars
+                or not finite_number(r.get("A_interval_score"))
+                or not finite_number(r.get("A_width"), positive=True)
+                or not math.isclose(r["A_width"], issued_width, rel_tol=1e-10, abs_tol=1e-10)
+                or r["A_interval_score"] < r["A_width"]):
+            raise ValueError("frozen paired rows invalid A score, width or bars")
+        # Every A family/quantile and A full-range observation must have a
+        # binary outcome. bool is NOT a valid integer outcome for an issuer.
+        a_flags = [f"A_{family}_{q}_covered"
+                   for family in ("range", "close")
+                   for q in map(str, PARAMS["quantiles"])]
+        a_flags.append("A_range_covered")
+        if any(type(r.get(k)) is not int or r[k] not in (0, 1) for k in a_flags):
+            raise ValueError("frozen paired rows missing or nonbinary A coverage")
+        a_close = r[f"A_close_{PARAMS['primary_quantile']}_covered"]
+        if ((a_close == 1 and not math.isclose(
+                r["A_interval_score"], r["A_width"], rel_tol=1e-10, abs_tol=1e-10))
+                or (a_close == 0 and r["A_interval_score"] <= r["A_width"])):
+            raise ValueError("frozen paired rows A score contradicts coverage")
+        if "CN_interval_score" in r:
+            actual_cn_band = issued_cn.get(r["asset"], {}).get(r["day"])
+            if actual_cn_band is None:
+                raise ValueError("frozen paired rows lack original issued CN band")
+            cn_lo, cn_hi = actual_cn_band
+            expected_cn_width = (cn_hi - cn_lo) / p0
+            if (not finite_number(expected_cn_width, positive=True)
+                    or not finite_number(r.get("CN_width"), positive=True)
+                    or not math.isclose(r["CN_width"], expected_cn_width,
+                                        rel_tol=1e-10, abs_tol=1e-10)):
+                raise ValueError("frozen paired rows CN width disagrees with issued freeze")
+            if (not finite_number(r["CN_interval_score"])
+                    or not finite_number(r.get("CN_width"), positive=True)
+                    or r["CN_interval_score"] < r["CN_width"]
+                    or any(type(r.get(k)) is not int or r[k] not in (0, 1)
+                           for k in ("CN_range_covered", "CN_close_covered"))):
+                raise ValueError("frozen paired rows incomplete or impossible CN pair")
+            c_close = r["CN_close_covered"]
+            if ((c_close == 1 and not math.isclose(
+                    r["CN_interval_score"], r["CN_width"], rel_tol=1e-10, abs_tol=1e-10))
+                    or (c_close == 0 and r["CN_interval_score"] <= r["CN_width"])):
+                raise ValueError("frozen paired rows CN score contradicts coverage")
+            eqw = ("EQW_PRIOR_interval_score", "EQW_PRIOR_width",
+                   "EQW_PRIOR_range_covered", "EQW_PRIOR_close_covered")
+            if any(k in r for k in eqw):
+                if (not all(k in r for k in eqw)
+                        or not finite_number(r["EQW_PRIOR_interval_score"])
+                        or not finite_number(r["EQW_PRIOR_width"], positive=True)
+                        or (r["EQW_PRIOR_interval_score"] < r["EQW_PRIOR_width"]
+                            and not math.isclose(r["EQW_PRIOR_interval_score"], r["EQW_PRIOR_width"],
+                                                 rel_tol=1e-10, abs_tol=1e-10))
+                        or any(type(r.get(k)) is not int or r[k] not in (0, 1)
+                               for k in eqw[2:])):
+                    raise ValueError("frozen paired rows incomplete equal-width control")
+            paired.append(r)
+        elif any(k in r for k in ("CN_width", "CN_range_covered", "CN_close_covered",
+                                   "EQW_PRIOR_interval_score", "EQW_PRIOR_width",
+                                   "EQW_PRIOR_range_covered", "EQW_PRIOR_close_covered")):
+            raise ValueError("frozen paired rows incomplete CN pair")
+    winner = "MISSING"
+    if len(paired) >= DECISION["min_paired_rows_per_week"]:
+        score_a = sum(r["A_interval_score"] for r in paired)
+        score_cn = sum(r["CN_interval_score"] for r in paired)
+        winner = "A" if score_a < score_cn else ("CN" if score_cn < score_a else "TIE")
+    if (type(row.get("paired_rows")) is not int
+            or row["paired_rows"] != len(paired)
+            or row.get("week_winner_interval_score") != winner):
+        raise ValueError("frozen paired rows winner/count mismatch")
+
+
+def verify_replayed_score(row: dict, issuance: dict, first_main_clock: str,
+                          original_cn: dict, bars: dict) -> None:
+    """Require the complete scorer result from immutable hourly data, not claims.
+
+    Every issued asset-day is represented by a scored row or an explicit
+    pre-issuance/incomplete-hourly abstention. Comparing canonical JSON also
+    distinguishes booleans from integer coverage flags and catches forged
+    aggregates, removed CN pairs, substituted rows and invented abstentions.
+    """
+    expected = score(issuance, bars, original_cn, issuance_first_main_utc=first_main_clock)
+    if any(k not in row for k in expected) or _digest({k: row[k] for k in expected}) != _digest(expected):
+        raise ValueError("frozen paired rows differ from complete committed hourly replay")
+
+
+def read_first_main_weekly_score(root: Path, year: int, week: int) -> tuple[dict, dict]:
+    """Read ONLY the first committed weekly score on full main first-parent history.
+
+    Re-scored/revised working files, an edit-then-restore history, missing
+    first-main lineage or post-grace publication cannot produce a valid win.
+    Git committer time is an availability proxy, never HTTP first-known proof.
+    """
+    rel = SCORE_PATH.format(year=year, week=week)
+    proof = first_in_main(root, rel)
+    path = root / rel
+    try:
+        first_bytes = subprocess.run(
+            ["git", "-C", str(root), "show", proof["first_main_commit"] + ":" + rel],
+            capture_output=True, check=True).stdout
+        now_bytes = path.read_bytes()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise ValueError("first-main score inaccessible") from exc
+    if now_bytes != first_bytes or proof["current_main_blob_sha"] != proof["first_main_blob_sha"]:
+        raise ValueError("first-main score mutated: later backfill cannot rewrite confirmatory evidence")
+    try:
+        row = json.loads(first_bytes)
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise ValueError("invalid immutable score JSON") from exc
+    expected_week = f"{year}-W{week:02d}"
+    if (row.get("contract") != CONTRACT + "_SCORE" or row.get("week") != expected_week
+            or row.get("decision_status") != "SHADOW_ONLY_NO_PROMOTION"
+            or row.get("first_http_delivery") != "UNKNOWN"):
+        raise ValueError("score lacks canonical research-only provenance")
+    if row.get("missing_reason") == "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY":
+        verify_no_issuance_first_main(root, row, proof, year, week)
+        proof["no_issuance_verified"] = True
+    else:
+        issued, issue_proof = read_frozen_main_issuance(root, year, week)
+        if (row.get("issuance_sha256") != issued["issuance_sha256"]
+                or row.get("issuance_first_main_utc") != issue_proof["issuance_first_main_utc"]):
+            raise ValueError("score does not bind the original first-main issuance")
+        attested = row.get("first_main_issuance")
+        if not isinstance(attested, dict) or any(
+            attested.get(key) != issue_proof[key] for key in
+            ("first_main_commit", "first_main_blob_sha", "issuance_first_main_utc")
+        ):
+            raise ValueError("score's issuance proof was replaced or omitted")
+    paired = row.get("paired_rows")
+    winner = row.get("week_winner_interval_score")
+    if (type(paired) is not int or not 0 <= paired <= 14
+            or winner not in ("A", "CN", "TIE", "MISSING")):
+        raise ValueError("unusable first-main score result")
+    maturity = week_monday(year, week) + 7 * DAY
+    first_clock = utc(proof["first_main_utc"])
+    if first_clock < maturity:
+        raise ValueError("score was committed before complete ISO week matured")
+    # A first-published score after the frozen 48h opportunity cannot be
+    # admitted as a retrospectively backfilled valid week. Keep its provenance
+    # but force this week to MISSING regardless of later CSV improvements.
+    accepted = first_clock <= maturity + SCORE_FIRST_MATURITY_GRACE
+    if accepted and row.get("missing_reason") != "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY":
+        # Read bytes from the exact first-main commit already bound and checked
+        # by read_frozen_main_issuance. Never use a mutable working-tree CN file
+        # to manufacture eligible A-versus-CN comparison rows.
+        freeze_rel = FREEZE_PATH.format(year=year, week=week)
+        freeze_commit = issued["source"]["freeze_first_main_commit"]
+        try:
+            freeze_bytes = subprocess.run(
+                ["git", "-C", str(root), "show", freeze_commit + ":" + freeze_rel],
+                capture_output=True, check=True).stdout
+            original_cn = json.loads(freeze_bytes)
+        except (KeyError, TypeError, ValueError, subprocess.CalledProcessError) as exc:
+            raise ValueError("original first-main CN freeze unavailable") from exc
+        if not isinstance(original_cn, dict):
+            raise ValueError("original first-main CN freeze invalid")
+        verify_first_main_paired_outcomes(
+            row, issued, issue_proof["issuance_first_main_utc"], original_cn)
+        # Independently replay the complete scorer from bars at first score
+        # publication. Later working-tree edits and backfills are irrelevant.
+        monday = week_monday(year, week)
+        bars = load_hourly(root, monday, maturity, git_ref=proof["first_main_commit"])
+        verify_replayed_score(row, issued, issue_proof["issuance_first_main_utc"], original_cn, bars)
+    result = dict(row)
+    if not accepted:
+        result["paired_rows"] = 0
+        result["week_winner_interval_score"] = "MISSING"
+    proof["eligible_first_maturity"] = accepted
+    proof["first_maturity_deadline_utc"] = iso(maturity + SCORE_FIRST_MATURITY_GRACE)
+    return result, proof
+
+
+def confirmatory_decision_from_main(root: Path, through_week: str) -> dict:
+    """Only first-main weekly scores may enter the pre-registered sign test.
+
+    Every intervening week must carry an immutable first-maturity score,
+    including explicit MISSING results. Absence is not silently skipped, since
+    a later backfill could otherwise insert a prior week into the first eight.
+    """
+    through_y, through_w = _parse_week(through_week)
+    start_y, start_w = _parse_week(DECISION["first_week"])
+    monday = week_monday(start_y, start_w)
+    through = week_monday(through_y, through_w)
+    if through < monday:
+        return {"status": "PENDING", "valid_weeks": 0, "promotion_allowed": False}
+    if (through - monday).days > 7 * 260:
+        raise ValueError("unbounded confirmatory score census")
+    records, source_proofs = [], []
+    while monday <= through:
+        week_string = f"{monday.isocalendar().year}-W{monday.isocalendar().week:02d}"
+        try:
+            row, proof = read_first_main_weekly_score(
+                root, monday.isocalendar().year, monday.isocalendar().week)
+        except ValueError as exc:
+            # A missing or corrupt historical original must not be skipped.
+            return {"status": "INCONCLUSIVE_FIRST_SCORE_SOURCE",
+                    "first_unverified_week": week_string,
+                    "source_error": str(exc),
+                    "verified_weeks_before_gap": len(records),
+                    "promotion_allowed": False}
+        records.append(row)
+        source_proofs.append({"week": week_string,
+                              "first_main_commit": proof["first_main_commit"],
+                              "first_main_blob_sha": proof["first_main_blob_sha"],
+                              "first_main_utc": proof["first_main_utc"],
+                              "eligible_first_maturity": proof["eligible_first_maturity"]})
+        # The pre-registered look is over the FIRST eight valid weeks only.
+        # A later missing/corrupt score must never revoke a completed look.
+        decision = confirmatory_decision(records)
+        if decision["status"] in ("A_PASSES_SHADOW_CONFIRMATORY", "A_NOT_PROVEN"):
+            break
+        monday += 7 * DAY
+    decision = confirmatory_decision(records)
+    decision["source_class"] = "IMMUTABLE_FIRST_MAIN_WEEKLY_SCORES_ONLY"
+    decision["first_main_score_census"] = source_proofs
+    return decision
+
+
 def confirmatory_decision(weekly: list[dict]) -> dict:
     """One pre-registered look at the FIRST 8 VALID ISO weeks from W47.
 
@@ -437,7 +825,14 @@ def confirmatory_decision(weekly: list[dict]) -> dict:
     Missing/untied weeks are skipped, but no later result may replace one of
     the first eight valid weeks. Duplicate week input invalidates the look.
     """
-    weeks = [r.get("week") for r in weekly]
+    if any(not isinstance(r, dict) or not isinstance(r.get("week"), str) for r in weekly):
+        return {"status": "INCONCLUSIVE_INVALID_WEEK", "promotion_allowed": False}
+    try:
+        for r in weekly:
+            _parse_week(r["week"])
+    except ValueError:
+        return {"status": "INCONCLUSIVE_INVALID_WEEK", "promotion_allowed": False}
+    weeks = [r["week"] for r in weekly]
     if len(weeks) != len(set(weeks)):
         return {"status": "INCONCLUSIVE_DUPLICATE_WEEK", "promotion_allowed": False}
     valid = [r for r in sorted(weekly, key=lambda r: r.get("week") or "")
@@ -459,13 +854,21 @@ def confirmatory_decision(weekly: list[dict]) -> dict:
 
 
 def _parse_week(s: str) -> tuple[int, int]:
-    y, w = s.split("-W")
-    return int(y), int(w)
+    if not isinstance(s, str) or re.fullmatch(r"[0-9]{4}-W[0-9]{2}", s) is None:
+        raise ValueError("ISO week must be canonical YYYY-Www")
+    y, w = int(s[:4]), int(s[6:])
+    try:
+        monday = week_monday(y, w)
+    except ValueError as exc:
+        raise ValueError("invalid ISO week") from exc
+    if f"{monday.isocalendar().year}-W{monday.isocalendar().week:02d}" != s:
+        raise ValueError("noncanonical ISO week")
+    return y, w
 
 
 def main(argv: Iterable[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("command", choices=["issue", "score"])
+    ap.add_argument("command", choices=["issue", "score", "decide"])
     ap.add_argument("--repo-root", default=".")
     ap.add_argument("--week", required=True, help="ISO week, e.g. 2026-W47")
     ap.add_argument("--t0", help="fixture clock only, never accepted as main-origin evidence")
@@ -476,7 +879,11 @@ def main(argv: Iterable[str] | None = None) -> int:
     year, week = _parse_week(a.week)
     monday = week_monday(year, week)
     output = Path(a.output)
-    if a.command == "issue":
+    if a.command == "decide":
+        if a.t0 or a.synthetic_fixture_clock:
+            raise ValueError("confirmatory decision requires immutable main sources")
+        result = confirmatory_decision_from_main(root, a.week)
+    elif a.command == "issue":
         expected_output = (root / ISSUANCE_PATH.format(year=year, week=week)).resolve()
         if not a.synthetic_fixture_clock and output.resolve() != expected_output:
             raise ValueError("canonical issue must only write the dedicated research issuance path")
@@ -500,17 +907,34 @@ def main(argv: Iterable[str] | None = None) -> int:
             raise ValueError("score forbids fixture clocks and post-hoc rebuilding")
         if output.resolve() == (root / ISSUANCE_PATH.format(year=year, week=week)).resolve():
             raise ValueError("score must not overwrite the original frozen issuance")
-        issuance, original = read_frozen_main_issuance(root, year, week)
-        bars = load_hourly(root, monday, monday + 7 * DAY)
-        freeze_path = root / FREEZE_PATH.format(year=year, week=week)
-        freeze = json.loads(freeze_path.read_text(encoding="utf-8")) if freeze_path.is_file() else None
-        result = score(issuance, bars, freeze, issuance_first_main_utc=original["issuance_first_main_utc"])
-        result["first_main_issuance"] = original
-        result["first_http_delivery"] = "UNKNOWN"
-        result["decision_status"] = "SHADOW_ONLY_NO_PROMOTION"
+        canonical_score = (root / SCORE_PATH.format(year=year, week=week)).resolve()
+        if output.resolve() == canonical_score and canonical_score.is_file():
+            raise ValueError("first-maturity canonical score already exists; no in-place re-score")
+        try:
+            issuance, original = read_frozen_main_issuance(root, year, week)
+        except ValueError:
+            # This is NOT a generic fallback for malformed/altered sources:
+            # the helper proves that no original issuance ever reached main.
+            # It also refuses backfilled missing scores after first maturity.
+            if output.resolve() != canonical_score:
+                raise ValueError("no-issuance MISSING must be committed to the canonical first score path")
+            result = no_issuance_missing_score(root, year, week)
+        else:
+            # Never score mutable/untracked working-copy market bars. Read one
+            # pinned main commit and the original CN freeze; admission will
+            # independently replay the outcome from the score publication tree.
+            main_sha = _git(root, "rev-parse", "refs/heads/main")
+            bars = load_hourly(root, monday, monday + 7 * DAY, git_ref=main_sha)
+            freeze_rel = FREEZE_PATH.format(year=year, week=week)
+            freeze = json.loads(_git(root, "show", issuance["source"]["freeze_first_main_commit"] + ":" + freeze_rel))
+            result = score(issuance, bars, freeze, issuance_first_main_utc=original["issuance_first_main_utc"])
+            result["first_main_issuance"] = original
+            result["first_http_delivery"] = "UNKNOWN"
+            result["decision_status"] = "SHADOW_ONLY_NO_PROMOTION"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"contract": result["contract"], "week": result["week"]}))
+    print(json.dumps({"contract": result.get("contract", "TASK2_CHALLENGER_A_IMMUTABLE_DECISION_v1"),
+                      "week": result.get("week", a.week), "status": result.get("status", "WRITTEN")}))
     return 0
 
 
