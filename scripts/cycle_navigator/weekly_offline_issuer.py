@@ -122,7 +122,7 @@ def build_offline_value(context, baseline, previous, year, week, issue, public_i
     freeze["bull_bear_scale"]={
         "contract":"CN_PUBLIC_BULL_BEAR_SCALE_v1","public_issue_number":public_issue,
         "forecast_week":week_id,"semantics":"EVIDENCE_BALANCE_NOT_PROBABILITY",
-        "horizons":{h:{"bull":3 if bearish else 6,"bear":7 if bearish else 4,
+        "horizons":{h:{"bull":4 if bearish else 6,"bear":6 if bearish else 4,
                        "bias":bias,"summary":week_text if h!="2_3w" else medium}
                     for h in ("1_3d","5_7d","2_3w")},
         "invariants":["Evidence balance not probability.","No independent economic edge."]}

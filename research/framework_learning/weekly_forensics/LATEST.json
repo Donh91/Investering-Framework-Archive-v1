@@ -1,5 +1,5 @@
 {
-  "actionable_count": 2,
+  "actionable_count": 3,
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "automatic_budget_guard_change": false,
   "automatic_market_semantic_change": false,
@@ -44,6 +44,24 @@
       "stop_condition": "stop if provenance/timestamps are incomplete"
     },
     {
+      "acceptance_gate": "EXISTING_TASK_SPECIFIC_POST_FIX_GATE",
+      "cheapest_sufficient_executor": "DETERMINISTIC",
+      "dedup_key": "35071941a3a4782bf873",
+      "evidence_refs": [
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/remediation/LATEST_REMEDIATION_QUEUE.json"
+      ],
+      "fingerprint": "e210dac1182b401d5145",
+      "module": "META_HEALTH",
+      "next_action": "deduplicate against the existing remediation queue and route only unresolved reproducible signatures",
+      "owner": "REMEDIATION_MATURATION",
+      "reason": "automation health contains active RED/blocker evidence (red=1, amber=7, blockers=1)",
+      "root_cause_confidence": "HIGH",
+      "route": "DETERMINISTIC_REPAIR",
+      "severity": "HIGH",
+      "stop_condition": "stop when finding is absent, superseded, already fixed, or requires semantic/budget change"
+    },
+    {
       "acceptance_gate": "MASTER_MONDAY_ADVISORY_FIREWALL_PASS",
       "cheapest_sufficient_executor": "OWNER_OR_SPECIALIST",
       "dedup_key": "0d97fd56080a24a17dfc",
@@ -63,23 +81,23 @@
     {
       "acceptance_gate": "NO_CANONICAL_PROMOTION",
       "cheapest_sufficient_executor": "DETERMINISTIC",
-      "dedup_key": "46ed345acee8f6193499",
+      "dedup_key": "b00571f1d2d62838ea95",
       "evidence_refs": [
         "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/STATE.json"
       ],
-      "fingerprint": "837458f488e66ef5cbbc",
+      "fingerprint": "692d7a3cfadd45a85971",
       "module": "LEARNING_MATURATION",
       "next_action": "retain delta-only learning and negative memory; no automatic promotion",
       "owner": "COMPOUNDING_LEARNING_CONTROLLER",
-      "reason": "weekly maturation snapshot: families=324, matured_outcomes=1329",
+      "reason": "weekly maturation snapshot: families=344, matured_outcomes=1464",
       "root_cause_confidence": "MEDIUM",
       "route": "NO_ACTION",
       "severity": "INFO",
       "stop_condition": "stop if source authority is not research-only"
     }
   ],
-  "generated_at_utc": "2026-11-09T12:02:17.971151Z",
-  "iso_week": 45,
+  "generated_at_utc": "2026-11-16T11:58:54.262494Z",
+  "iso_week": 46,
   "iso_year": 2026,
   "master_monday_delta": {
     "authority": "ADVISORY_ONLY",
@@ -91,13 +109,19 @@
         "severity": "HIGH"
       },
       {
+        "module": "META_HEALTH",
+        "reason": "automation health contains active RED/blocker evidence (red=1, amber=7, blockers=1)",
+        "route": "DETERMINISTIC_REPAIR",
+        "severity": "HIGH"
+      },
+      {
         "module": "CONSUMPTION_HEALTH",
         "reason": "high-value advisory evidence exists but is intentionally/not yet consumed by Master Monday",
         "route": "SOURCE_OWNER",
         "severity": "MEDIUM"
       }
     ],
-    "source_iso_week": 45,
+    "source_iso_week": 46,
     "source_iso_year": 2026,
     "source_mode": "FINAL"
   },

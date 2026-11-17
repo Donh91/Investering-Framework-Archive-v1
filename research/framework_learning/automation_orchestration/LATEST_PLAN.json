@@ -9,16 +9,16 @@
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "beef9ce1c6849bdfee3ae88355aee4ed36a11489234737345f9ae45b2f91a7e7",
+  "fingerprint": "0d5fbc720363c09a2454cf41c539f4dceaa5d1ea0dbbc57d2f2a0aa56e7b6eea",
   "fleet": {
-    "amber_count": 7,
-    "green_count": 194,
-    "red_count": 1,
+    "amber_count": 13,
+    "green_count": 190,
+    "red_count": 0,
     "scheduled_workflow_count": 57,
-    "workflow_count": 202,
+    "workflow_count": 203,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-11-15T21:12:07Z",
+  "generated_at_utc": "2026-11-17T00:27:20Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -30,37 +30,12 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "items": [
-    {
-      "cluster_id": null,
-      "existing_remediation": {
-        "finding": "LATEST_RUN_FAILED",
-        "route": "OBSERVE",
-        "signature": "62534a72b7196e47d955",
-        "state": "OBSERVED"
-      },
-      "failure_streak": 1,
-      "findings": [
-        "LATEST_RUN_FAILED"
-      ],
-      "latest_head_sha": "d980f49e131145fa4478692522f1e95870a4df56",
-      "latest_run_id": 42687263073,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/42687263073",
-      "model_lane": "GPT_6_LUNA",
-      "openai_enabled": true,
-      "recent_failure_count": 1,
-      "route": "LUNA_TRIAGE",
-      "scheduled": true,
-      "workflow": "cycle-navigator-internal-precision.yml",
-      "write_target_class": "DIRECT_MAIN",
-      "writer_group": "framework-main-writer"
-    }
-  ],
-  "material_delta": false,
+  "items": [],
+  "material_delta": true,
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
     "existing_remediation_count": 0,
-    "luna_triage_count": 1,
+    "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
@@ -69,6 +44,6 @@
     "new_diagnosis_eligible": true,
     "remediation": "VALID"
   },
-  "source_health_generated_at_utc": "2026-11-15T21:08:08.173344Z",
-  "source_health_status": "RED"
+  "source_health_generated_at_utc": "2026-11-17T00:21:42.926239Z",
+  "source_health_status": "AMBER"
 }

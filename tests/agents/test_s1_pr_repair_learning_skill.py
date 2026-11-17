@@ -106,6 +106,7 @@ class S1ReleaseControlHostAcceptance(unittest.TestCase):
 
     def test_node_public_privacy_regressions(self):
         output = self._run([
+            "--test-reporter=tap",  # Node 22/24 format-stable, preserves exact TAP assertions
             "--test",
             "tools/s1-release-control/test-discovery-inventory-v1.mjs",
             "tools/s1-release-control/test-agent-work-hub-v1.mjs",
