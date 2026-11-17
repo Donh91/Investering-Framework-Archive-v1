@@ -2,7 +2,7 @@
 
 The model reads its budgets from the machine-readable S1_STEWARD_BUDGETS_v1 block of STEWARD_STATES.md, so a budget
 edit there changes these results. Token tests (test_s1_reviewed_merge_lane_v1.py) pin the wording; these tests pin the
-behaviour: budgets force dispositions, parking terminates, closes need two signals, review needs a non-author, OWNER_ONLY
+behaviour: budgets force dispositions, parking terminates, closes need two signals, review needs a non-author, OWNER_GATED
 never merges, the loop guard fires, Monday is read-only, and S1 keeps working when Claude is silent for 7 days.
 No network, no GitHub, no clock: every scenario uses fixture data and a simulated day counter.
 """
@@ -37,7 +37,7 @@ class Item:
     state: str = "DISCOVERED"
     kind: str = "FIX"
     risk: str = "LOW"
-    owner_only: bool = False
+    owner_gated: bool = False
     attempt: int = 0
     park_count: int = 0
     due: int = 0
@@ -134,14 +134,14 @@ CONTENT = OBJECTIVE | INDEPENDENT   # time and budget facts (stale_*, park_limit
 
 
 def close_allowed(item) -> bool:
-    """D2: CLOSED_NOISE needs >= 2 content signals, one objective, one independent of S1, risk LOW/MEDIUM, not OWNER_ONLY."""
+    """D2: CLOSED_NOISE needs >= 2 content signals, one objective, one independent of S1, risk LOW/MEDIUM, not OWNER_GATED."""
     if isinstance(item, set):
         item = Item("probe", signals=item)
     sig = item.signals & CONTENT
     if "superseded_native" in sig:
         sig = sig - {"superseded"}   # one fact counts once
     return (len(sig) >= B["close_noise_min_signals"] and bool(sig & OBJECTIVE) and bool(sig & INDEPENDENT)
-            and item.risk in ("LOW", "MEDIUM") and not item.owner_only)
+            and item.risk in ("LOW", "MEDIUM") and not item.owner_gated)
 
 
 def counters(comments: list, receipts: set) -> int:
@@ -166,7 +166,7 @@ def main_health(runs, now_h: int, readable: bool = True) -> str:
 
 def forced_disposition(item: Item, today: int, ctx: dict):
     """FORCED DISPOSITION TABLE F1-F7, first match wins. Returns the row id."""
-    if item.owner_only and ctx.get("waiting_only_for_owner", {}).get(item.key):
+    if item.owner_gated and ctx.get("waiting_only_for_owner", {}).get(item.key):
         enter(item, "OWNER_APPROVAL", today, "F1")
         return "F1"
     if item.state == "PARKED":
@@ -240,7 +240,7 @@ def branch_update_readback(base: dict, head: dict, main: dict, new: dict) -> boo
 
 
 def may_merge(item: Item, head: Head, reviews: dict, codex_silent: bool, ctx: dict) -> bool:
-    if item.owner_only or ctx.get("monday_read_only") or ctx.get("lane") != "ON":
+    if item.owner_gated or ctx.get("monday_read_only") or ctx.get("lane") != "ON":
         return False
     if item.kind == "DIRECTION" and ctx.get("strategist", {}).get(item.key) != "CONCUR":
         return False
@@ -456,9 +456,9 @@ class ScenarioTest(unittest.TestCase):
         for kind in ("(i) CODEX", "(ii) CLAUDE", "(iii) SPECIALIST", "never writes an S1_SPECIALIST_REVIEW_v1 for a head it authored"):
             self.assertIn(kind, ADMISSION_MD)
 
-    def test_high_impact_item_is_owner_only(self):
-        """Scenario 5: an OWNER_ONLY PR never merges; it waits for the owner only when every gate passed."""
-        it = Item("pr:8", owner_only=True, risk="HIGH")
+    def test_high_impact_item_is_owner_gated(self):
+        """Scenario 5: an OWNER_GATED PR never merges; it waits for the owner gated when every gate passed."""
+        it = Item("pr:8", owner_gated=True, risk="HIGH")
         self.assertFalse(may_merge(it, Head("f" * 40), {"codex": "APPROVE"}, False, {"lane": "ON"}))
         self.assertTrue(waiting_only_for_owner(True, "codex", False, False, "PASS", False, False))
         for broken in ((False, "codex", False, False, "PASS", False, False), (True, None, False, False, "PASS", False, False),
@@ -473,15 +473,15 @@ class ScenarioTest(unittest.TestCase):
         self.assertEqual(it.state, "OWNER_APPROVAL")
 
     def test_named_high_impact_is_never_lane_merged(self):
-        """R4 P2-1: a PR that a receipt or its body names HIGH_IMPACT is OWNER_ONLY; the lane never replaces the owner for it."""
+        """R4 P2-1: a PR that a receipt or its body names HIGH_IMPACT is OWNER_GATED; the lane never replaces the owner for it."""
         loop = (S1 / "ACTION_LOOP.md").read_text(encoding="utf-8").splitlines()
         h2 = next(l for l in loop if l.startswith("H2 "))
         self.assertNotIn("HIGH or HIGH_IMPACT;", h2)
-        self.assertIn("lane-eligible PRs of risk class HIGH; HIGH_IMPACT (owner-only", h2)
-        owner_only = next(l for l in loop if l.startswith("- A PR is OWNER_ONLY"))
-        self.assertIn("its risk class is HIGH_IMPACT, EXTREME or unclear", owner_only)
-        self.assertIn("A PR named HIGH_IMPACT is OWNER_ONLY", (S1 / "REVIEW_ADMISSION.md").read_text(encoding="utf-8"))
-        it = Item("pr:9", owner_only=True, risk="HIGH_IMPACT")
+        self.assertIn("lane-eligible PRs of risk class HIGH; HIGH_IMPACT (owner-gated", h2)
+        owner_gated = next(l for l in loop if l.startswith("- A PR is OWNER_GATED"))
+        self.assertIn("its risk class is HIGH_IMPACT, EXTREME or unclear", owner_gated)
+        self.assertIn("A PR named HIGH_IMPACT is OWNER_GATED", (S1 / "REVIEW_ADMISSION.md").read_text(encoding="utf-8"))
+        it = Item("pr:9", owner_gated=True, risk="HIGH_IMPACT")
         self.assertFalse(may_merge(it, Head("e" * 40), {"codex": "APPROVE"}, False, {"lane": "ON"}))
 
     def test_every_forced_park_reason_is_in_the_rules(self):
@@ -527,13 +527,13 @@ class ScenarioTest(unittest.TestCase):
         self.assertFalse(close_allowed({"stale_final_park", "park_limit", "cycle_cap", "stale_parked", "no_owner_link"}))
         high = Item("pr:31", risk="HIGH", signals={"duplicate", "strategist_concur", "superseded_native"})
         self.assertFalse(close_allowed(high), "HIGH is never auto-closed")
-        self.assertFalse(close_allowed(Item("pr:32", owner_only=True, signals={"duplicate", "strategist_concur"})))
+        self.assertFalse(close_allowed(Item("pr:32", owner_gated=True, signals={"duplicate", "strategist_concur"})))
         silent = Item("pr:33", signals={"duplicate"})
         park(silent, 0, "x"); park(silent, 1, "x")
         while silent.state == "PARKED":
             forced_disposition(silent, silent.due + 1, {})
         self.assertEqual(silent.state, "PARKED_OWNER_DECISION", "no Strategist answer: escalate, never close")
-        for token in ("TIME AND BUDGET NEVER CLOSE", "receipts=<key>:<comment id>", "HIGH, HIGH_IMPACT, EXTREME, unclear and OWNER_ONLY items are never closed by S1",
+        for token in ("TIME AND BUDGET NEVER CLOSE", "receipts=<key>:<comment id>", "HIGH, HIGH_IMPACT, EXTREME, unclear and OWNER_GATED items are never closed by S1",
                       "at least one is INDEPENDENT of S1", "at least one is OBJECTIVE", "Rows F2 to F7 never close an item",
                       "RESIDUAL: a forged counter or heartbeat can at most move an item to PARKED_OWNER_DECISION", "subject similarity alone is never duplicate"):
             self.assertIn(token, STATES_MD)
@@ -559,6 +559,25 @@ class ScenarioTest(unittest.TestCase):
         self.assertIn("also carries out the AUDIT SAMPLE of REVIEW_ADMISSION.md in this same action", (S1 / "ACTION_LOOP.md").read_text(encoding="utf-8"))
         self.assertFalse(close_allowed({"superseded", "superseded_native"}), "one supersession fact counts once")
         self.assertFalse(close_allowed({"duplicate", "owner_close"}), "a close comment is never an independent signal")
+
+    def test_rule_files_are_privacy_scanner_clean(self):
+        """PR #2200: the S1 rules and their tests must never trip the content rules of the unchanged privacy scanner."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("s1_scan", ROOT / "scripts" / "governance" / "s1_diff_scan_v1.py")
+        scan = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(scan)
+        paths = [S1 / n for n in ("ACTION_LOOP.md", "STEWARD_STATES.md", "REVIEW_ADMISSION.md", "OWNER_VISIBILITY.md",
+                                  "DAILY_SUMMARY_BOOTSTRAP.txt", "BOOTSTRAP.txt", "RUNTIME_CONTRACT.json", "REVIEWED_MERGE_LANE.json")]
+        paths += [ROOT / "AGENTS.md"] + [ROOT / "tests" / "governance" / n for n in (
+            "test_s1_reviewed_merge_lane_v1.py", "test_s1_runtime_contract_v1.py", "test_s1_steward_scenarios_v2.py",
+            "test_s1_native_privacy_scan_step_v1.py")]
+        if (ROOT / "00_FMOS" / "S1_WORKFLOW_ISOLATION_V1.json").exists():   # the github package adds the isolation guard
+            paths.append(ROOT / "tests" / "governance" / "test_s1_workflow_isolation_v1.py")
+        for path in paths:
+            self.assertTrue(path.exists(), path)   # a renamed file must not be skipped silently (R6 P3-2)
+            text = path.read_text(encoding="utf-8")
+            for name, pattern in scan.KNOWN_SECRET_OR_RESTRICTED_DESIGN:
+                self.assertIsNone(pattern.search(text), f"{path.name}: {name}")
 
     def test_loop_guard_forces_disposition(self):
         """Scenario 6: the same NOOP reason three runs in a row forces a disposition, never a fourth NOOP."""

@@ -1,0 +1,128 @@
+name: Owner Astra MAEVE Task2 one-shot
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/owner-astra-maeve-task2-20261117.yml'
+      - 'scripts/research/manual_astra_maeve_task2_20261117.py'
+      - 'tests/research/test_manual_astra_maeve_task2_20261117.py'
+      - 'scripts/api_agent/check_monthly_cost_guard.py'
+      - 'research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json'
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  preflight:
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' && github.event.action == 'created' &&
+       github.event.issue.number == 937 && github.event.comment.user.login == 'Donh91' &&
+       github.actor == 'Donh91' && github.ref == 'refs/heads/main' &&
+       github.run_attempt == 1 &&
+       startsWith(github.event.comment.body, 'OWNER_LAUNCH_ASTRA_HIGH_MAEVE_TASK2_PREP_20261117_ONE_SHOT request_sha256='))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Offline negative and invariant tests
+        run: python -m unittest tests.research.test_manual_astra_maeve_task2_20261117 -v
+      - name: Exact request bytes and SHA256, NO network submission
+        run: |
+          mkdir -p runtime/astra-maeve-preview
+          python scripts/research/manual_astra_maeve_task2_20261117.py preview --out runtime/astra-maeve-preview > runtime/astra-maeve-preview/printed-request.json
+          cmp runtime/astra-maeve-preview/request.json runtime/astra-maeve-preview/printed-request.json
+          sha256sum runtime/astra-maeve-preview/request.json
+      - name: Shared cost guard with separate USD10 reservation + protected USD4
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs --hard-stop-usd 100 --reserve-usd 4
+          --new-request-upper-usd 0 --owner-astra-program-work-id ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: astra-maeve-reviewed-request
+          path: |
+            runtime/astra-maeve-preview/request.json
+            runtime/astra-maeve-preview/source_manifest.json
+          retention-days: 90
+          if-no-files-found: error
+  paid:
+    needs: preflight
+    if: >-
+      github.event_name == 'issue_comment' && github.event.action == 'created' &&
+      github.event.issue.number == 937 && github.event.comment.user.login == 'Donh91' &&
+      github.actor == 'Donh91' && github.ref == 'refs/heads/main' &&
+      github.run_attempt == 1 &&
+      startsWith(github.event.comment.body, 'OWNER_LAUNCH_ASTRA_HIGH_MAEVE_TASK2_PREP_20261117_ONE_SHOT request_sha256=')
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    concurrency:
+      group: owner-astra-high-maeve-task2-20261117-one
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rebuild exact pinned request, verify owner event
+        run: python scripts/research/manual_astra_maeve_task2_20261117.py prepare --out runtime/astra-maeve
+      - name: Recheck canonical budget, provider model GET, durable native claim and readback
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/manual_astra_maeve_task2_20261117.py reserve --out runtime/astra-maeve
+      - name: Preserve pre-POST evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-maeve-claim
+          path: |
+            runtime/astra-maeve/claim.json
+            runtime/astra-maeve/budget_guard.json
+            runtime/astra-maeve/source_manifest.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Mark irreversible single attempt
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/manual_astra_maeve_task2_20261117.py mark_attempt --out runtime/astra-maeve
+      - uses: actions/upload-artifact@v4
+        with:
+          name: astra-maeve-attempt-before-post
+          path: runtime/astra-maeve/attempt.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: ONE Astra HIGH POST, no retry
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/manual_astra_maeve_task2_20261117.py submit --out runtime/astra-maeve
+      - name: GET-only report collection
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/manual_astra_maeve_task2_20261117.py collect --out runtime/astra-maeve
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: astra-maeve-evidence-${{ github.run_id }}
+          path: |
+            runtime/astra-maeve/claim.json
+            runtime/astra-maeve/budget_guard.json
+            runtime/astra-maeve/source_manifest.json
+            runtime/astra-maeve/attempt.json
+            runtime/astra-maeve/submission_started.json
+            runtime/astra-maeve/handle.json
+            runtime/astra-maeve/pending.json
+            runtime/astra-maeve/receipt.json
+            runtime/astra-maeve/ASTRA_MAEVE_TASK2_RAW_REPORT.md
+          retention-days: 90
+          if-no-files-found: warn

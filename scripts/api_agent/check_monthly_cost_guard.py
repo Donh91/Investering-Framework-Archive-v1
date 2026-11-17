@@ -52,6 +52,7 @@ SETTLED_ASTRA_WORK_IDS: set[str] = set()
 RETAINED_ASTRA_RESERVATION_WORK_IDS = {
     "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
     "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
+    "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE",
 }
 # Owner-present exceptional Astra program, audited under native high-impact PR.
 # This is a research-only allocation, not a fallback/authority for other callers.
@@ -61,7 +62,11 @@ OWNER_ASTRA_PROGRAM_WORK = {
     "ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE": 1596,
     "ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE": 1553,
     "ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE": 1340,
+    "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE": 937,
 }
+MAEVE_WORK_ID = "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE"
+MAEVE_AUTHORIZATION = "OWNER_INTERACTIVE_2026-11-17_ASTRA_MAEVE_TASK2_PREP_V1_ONE"
+MAEVE_MISSION_BLOB = "9c44bca23d8825c31afbdb1d62ae621285e9354a"
 CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
     "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
 )
@@ -138,7 +143,7 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     # eventually expires. It stays in the global monthly exposure until an
     # independently reviewed native settlement removes it.
     reservations = value.get("owner_reservations", [])
-    if not isinstance(reservations, list) or len(reservations) > 8:
+    if not isinstance(reservations, list) or len(reservations) > 9:
         raise ValueError("OWNER_RESERVATION_LEDGER_INVALID")
     reserved_work_ids = set()
     for reservation in reservations:
@@ -164,7 +169,14 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             "ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE": 10,
             "ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE": 10,
             "ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE": 10,
+            MAEVE_WORK_ID: 10,
         }
+        if work == MAEVE_WORK_ID and (
+            reservation.get("authorization_id") != MAEVE_AUTHORIZATION
+            or reservation.get("mission") != "ASTRA_MAEVE_TASK2_PREP_V1"
+            or reservation.get("mission_blob") != MAEVE_MISSION_BLOB
+        ):
+            raise ValueError("MAEVE_ONE_USE_AUTHORIZATION_INVALID")
         if work not in allowed or reservation.get("upper_usd") != allowed[work]:
             raise ValueError("UNKNOWN_OWNER_RESERVED_MODEL_OR_COST")
         high += float(allowed[work])

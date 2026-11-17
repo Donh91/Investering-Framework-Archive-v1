@@ -25,7 +25,7 @@ SPECIALIST SKILL BY PATH (the skill whose rubric the specialist reviewer applies
 
 RUBRIC (every item must PASS for APPROVE; each with one evidence line)
 - R1 Scope: the diff does what the PR title and body say and nothing else.
-- R2 Paths: no changed path or previous_filename is OWNER_ONLY (AGENTS.md section 0.2e exclusions 1 to 11).
+- R2 Paths: no changed path or previous_filename is OWNER_GATED (AGENTS.md section 0.2e exclusions 1 to 11).
 - R3 Tests: every changed runnable file is exercised by an added or changed test, or by an existing test that the CI log shows ran; no test was deleted or weakened.
 - R4 No new repository-write ability, network call, paid API, credential read or wallet, trading or order code.
 - R5 No private-plane data, secret or personal data in the diff, title or body; the privacy line of C3 is NO_RESTRICTED_CONTENT.
@@ -34,8 +34,8 @@ RUBRIC (every item must PASS for APPROVE; each with one evidence line)
 - R8 Science: for research paths, no Round 3 data or analysis, no outcome scoring that a pre-registration forbids, and the conclusion is not stronger than its evidence (the skill's challenge questions answered).
 
 RISK CLASS (set by S1 at TRIAGED, only ever raised; the highest matching class wins)
-- EXTREME or unclear: anything S1 cannot classify. That is OWNER_ONLY.
+- EXTREME or unclear: anything S1 cannot classify. That is OWNER_GATED.
 - HIGH: a path that matches the paths filter of a workflow that writes to the repository or uses secrets, code that a scheduled data writer or producer runs (the #2145 case), site or public publication paths (05_CYCLE_NAVIGATOR/site/**, public outputs), or a change to stored data, ledgers or receipts.
-- HIGH_IMPACT (risk class of AGENTS.md section 0.2a and gate (f)): only when a reviewer receipt or the PR body names the change HIGH_IMPACT; S1's own path classification never produces it (HIGH and HIGH_IMPACT are disjoint: scheduled producer code is HIGH). A PR named HIGH_IMPACT is OWNER_ONLY (ACTION_LOOP.md OWNER APPROVAL): S1 never lane-merges it, whatever the review, and lists it for the owner. HIGH and HIGH_IMPACT need HIGH EVIDENCE and a Codex or Claude review; a specialist receipt is never the review for them.
+- HIGH_IMPACT (risk class of AGENTS.md section 0.2a and gate (f)): only when a reviewer receipt or the PR body names the change HIGH_IMPACT; S1's own path classification never produces it (HIGH and HIGH_IMPACT are disjoint: scheduled producer code is HIGH). A PR named HIGH_IMPACT is OWNER_GATED (ACTION_LOOP.md OWNER APPROVAL): S1 never lane-merges it, whatever the review, and lists it for the owner. HIGH and HIGH_IMPACT need HIGH EVIDENCE and a Codex or Claude review; a specialist receipt is never the review for them.
 - MEDIUM: other code under scripts/ or research code.
 - LOW: documentation and tests only.

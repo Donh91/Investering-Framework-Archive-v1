@@ -135,7 +135,7 @@ class S1RuntimeContractTest(unittest.TestCase):
         for token in ("HIGH EVIDENCE below all PASS", "native exact-head green required CI",
                       "zero unmitigated P0/P1 (H8)", "no CHANGES_REQUESTED on H",
                       "stating INDEPENDENT_DETACHED when H implements a Claude-authored package",
-                      "WAITING_ONLY_FOR_OWNER", "S1 still never merges an OWNER_ONLY PR",
+                      "WAITING_ONLY_FOR_OWNER", "S1 still never merges an OWNER_GATED PR",
                       "is HIGH_IMPACT BLOCKED with its first missing gate, never WAITING_ONLY_FOR_OWNER"):
             self.assertIn(token, loop)
         self.assertNotIn("high_evidence=PASS or HOLD", loop)

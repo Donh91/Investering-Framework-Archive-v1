@@ -9,7 +9,7 @@ derivation from .github/workflows, so S1 never has to parse YAML at runtime:
 - secret_on_pr_jobs: jobs that receive a secret and can run on pull_request. Shrink-only debt;
 - gate_isolation: LIVE only when the privacy scan and the execution-truth check run in their own isolated jobs.
 Adding a new secret-on-PR or write-on-PR job fails here until the frozen debt sets below are raised, which is a
-.github + tests/governance change and therefore owner-only.
+.github + tests/governance change and therefore owner-gated.
 """
 import ast
 import json
@@ -234,7 +234,7 @@ class WorkflowIsolationTest(unittest.TestCase):
 
     def test_no_new_secret_job_checks_out_pr_code(self):
         # Pre-existing debt (FROZEN_SECRET_ON_PR_DEBT, e.g. framework-learning-supervisor.yml) checks out the PR head
-        # with secrets; its executed files are exclusion-3 OWNER_ONLY. No other secret job may do so.
+        # with secrets; its executed files are exclusion-3 OWNER_GATED. No other secret job may do so.
         for name, text, doc in workflows():
             self.assertNotIn("pull_request_target", triggers(doc), name)
             for jid, job in (doc.get("jobs") or {}).items():

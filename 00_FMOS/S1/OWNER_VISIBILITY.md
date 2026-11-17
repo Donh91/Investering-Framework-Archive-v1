@@ -2,19 +2,19 @@ S1 OWNER VISIBILITY v2.0 (rubric of 00_FMOS/S1/ACTION_LOOP.md; pinned by rubric_
 
 STATUS LINES (the first three lines of every S1 run's output, before anything else, in capital letters, also in H1 and in SOURCE_UNVERIFIED runs)
 FIRST LINE: OWNER APPROVAL REQUIRED: followed by one entry per item that needs the owner, separated by " ; ", or NONE when there is none, or UNKNOWN (<reason>) when you could not screen the open PRs or the lane. Entries:
-- #<PR> <H8> (<OWNER_ONLY reason>, review <kind> c=<id>) for every WAITING_ONLY_FOR_OWNER PR;
+- #<PR> <H8> (<OWNER_GATED reason>, review <kind> c=<id>) for every WAITING_ONLY_FOR_OWNER PR;
 - LANE_OFF(<halt c=<id> | pins:<path> | main_health | switch>) when the reviewed-merge lane reads OFF for that reason; only an owner-present switch PR clears a halt or a pin mismatch; for a halt, add the re-enable PR that rule 5b opened (LANE_OFF(halt c=<id>, reenable #<PR>)), so the owner's step is one squash merge and one BOOTSTRAP paste;
 - HIGH_EVIDENCE_HOLD(<recovery|separation>:<reason>) while HIGH EVIDENCE does not pass and a HIGH or HIGH_IMPACT item waits for it (it blocks only those items);
-- decide<n> for every PARKED_OWNER_DECISION item and every OWNER_ONLY item that STEWARD_STATES.md would otherwise close (the owner closes or keeps it), the 10 oldest first and then +<k> for the rest;
+- decide<n> for every PARKED_OWNER_DECISION item and every OWNER_GATED item that STEWARD_STATES.md would otherwise close (the owner closes or keeps it), the 10 oldest first and then +<k> for the rest;
 - pkg<id>:manual_only for every Bridge package that rule 5 skipped with reason manual_only and that is younger than 7 days;
 - close<n> for every CLOSED_NOISE item that S1 could not close for lack of a close tool.
-SECOND LINE: HIGH_IMPACT BLOCKED: followed by every other non-draft OWNER_ONLY PR as #<PR> <H8> (<first missing gate>), or NONE.
+SECOND LINE: HIGH_IMPACT BLOCKED: followed by every other non-draft OWNER_GATED PR as #<PR> <H8> (<first missing gate>), or NONE.
 THIRD LINE: DISPOSITIONS TODAY: merged=<n> parked=<n> closed=<n> handed_off=<n> owner=<n>, counted from S1's own S1_ITEM_v1 and S1_LANE_MERGE_v1 posts of the current Copenhagen day (UNKNOWN for a count you could not read).
 - In a SOURCE_UNVERIFIED run the FIRST LINE is OWNER APPROVAL REQUIRED: UNKNOWN (source_unverified) and the other two lines read UNKNOWN.
 
 OWNER_APPROVAL_REQUIRED_v1 (an observability write on #1156)
 - The set is the FIRST LINE's entries keyed on (PR, H) for PRs and on the entry text otherwise.
-- Compare only against the newest OWNER_APPROVAL_REQUIRED_v1 on #1156 that S1 itself posted (author Donh91, created_at equals updated_at, with a contract= line). When the set differs, post one new OWNER_APPROVAL_REQUIRED_v1 listing, for each PR entry: PR, full 40-char head, OWNER_ONLY reason, review kind and id, CI run ids, high_evidence=PASS, and the owner action: Squash and merge PR #<PR> at head <40> (the owner, or a ChatGPT thread the owner directs). For LANE_OFF, pkg and close entries give the exact owner action (the switch PR to merge, the package to open, the PR to close). When the set becomes empty post one OWNER_APPROVAL_REQUIRED_v1 with entries: NONE. Never repost an identical set.
+- Compare only against the newest OWNER_APPROVAL_REQUIRED_v1 on #1156 that S1 itself posted (author Donh91, created_at equals updated_at, with a contract= line). When the set differs, post one new OWNER_APPROVAL_REQUIRED_v1 listing, for each PR entry: PR, full 40-char head, OWNER_GATED reason, review kind and id, CI run ids, high_evidence=PASS, and the owner action: Squash and merge PR #<PR> at head <40> (the owner, or a ChatGPT thread the owner directs). For LANE_OFF, pkg and close entries give the exact owner action (the switch PR to merge, the package to open, the PR to close). When the set becomes empty post one OWNER_APPROVAL_REQUIRED_v1 with entries: NONE. Never repost an identical set.
 - Where: after H6 screening and before RECONCILE; at most once per run; suppressed in H1 and in SOURCE_UNVERIFIED runs; it does not use the ladder's single action. An entry is never release authority.
 
 DAILY SUMMARY (the owner-approved separate ChatGPT task of 00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt follows this section only)

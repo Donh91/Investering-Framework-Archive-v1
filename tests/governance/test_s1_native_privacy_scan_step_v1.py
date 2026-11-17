@@ -143,13 +143,66 @@ class NativePrivacyScanStep(unittest.TestCase):
         self.assertEqual((code, out["result"]), (1, "RESTRICTED_CONTENT"), out)
         self.assertNotIn(MARKER, text)
 
-    def test_blocked_governance_path_fails(self):
+    def test_blocked_governance_path_alone_is_path_only_and_exit_zero(self):
         fx = Fixture(self.tmp, lambda f: f.write("00_FMOS/NOTE.md", "Harmless text.\n"))
-        code, out, _ = fx.cli()
+        code, out, text = fx.cli()
+        self.assertEqual((code, out["result"]), (0, "HIGH_IMPACT_PATH_ONLY"), out)
+        self.assertEqual(out["scanner_result"]["result"], "RESTRICTED_CONTENT", "the scanner itself is unchanged")
+        self.assertIn("result=HIGH_IMPACT_PATH_ONLY ", text.splitlines()[-1])
+
+    def test_blocked_path_with_content_still_fails(self):
+        fx = Fixture(self.tmp, lambda f: f.write("00_FMOS/NOTE.md", f"Draft. {MARKER} design.\n"))
+        code, out, text = fx.cli()
         self.assertEqual((code, out["result"]), (1, "RESTRICTED_CONTENT"), out)
+        self.assertNotIn(MARKER, text)
+
+    def test_private_route_alone_still_fails(self):
+        for rel in ("private/note.md", "private/AGENTS.md", "vault/sub/AGENTS.md"):
+            with self.subTest(rel=rel):
+                tmp = tempfile.mkdtemp(prefix="s1scanpriv-", dir=self.tmp)
+                fx = Fixture(tmp, lambda f, rel=rel: f.write(rel, "Harmless text.\n"))
+                code, out, _ = fx.cli()
+                self.assertEqual((code, out["result"]), (1, "RESTRICTED_CONTENT"), out)
+
+    def test_classify_fails_closed(self):
+        path = {"reason": "HIGH_IMPACT_OR_PRIVATE_PATH"}
+        ren = {"reason": "HIGH_IMPACT_RENAME_SOURCE"}
+        rc = {"result": "RESTRICTED_CONTENT"}
+        self.assertEqual(step.classify(dict(rc, findings=[path]), []), "HIGH_IMPACT_PATH_ONLY")
+        self.assertEqual(step.classify(dict(rc, findings=[path, ren]), []), "RESTRICTED_CONTENT", "a rename out of a blocked path is disclosure")
+        self.assertEqual(step.classify(dict(rc, findings=[path]), [], private=True), "RESTRICTED_CONTENT", "private route")
+        for p in ("private/x.md", "secrets/a.md", "vault/n.md", "data/private/r.json", "config/private/c.yml", ".env", "keys/id.pem",
+                  "private/AGENTS.md", "secrets/AGENTS.md", "vault/sub/AGENTS.md", "docs/AGENTS.md"):
+            self.assertTrue(step.private_route(p), p)
+        for p in ("00_FMOS/S1/ACTION_LOOP.md", ".github/workflows/x.yml", "AGENTS.md", ".agents/skills/s/SKILL.md", "docs/a.md"):
+            self.assertFalse(step.private_route(p), p)
+        self.assertEqual(step.classify(dict(rc, findings=[path]), ["SCAN_CODE_CHANGED_BY_PR_OR_ABSENT_ON_BASE"]), "HIGH_IMPACT_PATH_ONLY")
+        for name, _ in step.scanner.KNOWN_SECRET_OR_RESTRICTED_DESIGN:
+            for reason in (name, name + "_IN_FILENAME", name + "_IN_RENAME_SOURCE"):
+                self.assertEqual(step.classify(dict(rc, findings=[path, {"reason": reason}]), []), "RESTRICTED_CONTENT", reason)
+                self.assertEqual(step.exit_code("RESTRICTED_CONTENT", "enforce"), 1)
+        self.assertEqual(step.classify(dict(rc, findings=[path, {"reason": "FILE_TYPE_NOT_ALLOWLISTED"}]), []), "UNKNOWN")
+        self.assertEqual(step.classify(dict(rc, findings=[path]), ["FILE_CENSUS_MISMATCH_WITH_EVENT"]), "UNKNOWN")
+        self.assertEqual(step.classify(dict(rc, findings=[]), []), "UNKNOWN")
+        self.assertEqual(step.classify({"result": "NO_RESTRICTED_CONTENT", "findings": []}, ["HEAD_BLOB_UNAVAILABLE"]), "UNKNOWN")
+        self.assertEqual(step.classify({"result": "UNKNOWN", "findings": []}, []), "UNKNOWN")
+        self.assertEqual(step.exit_code("HIGH_IMPACT_PATH_ONLY", "enforce"), 0)
+        self.assertEqual(step.exit_code("UNKNOWN", "enforce"), 1)
+
+    def test_scanner_pattern_is_not_weakened(self):
+        # The release renamed its own term instead of weakening the scanner (PR #2200 review).
+        rule = dict(step.scanner.KNOWN_SECRET_OR_RESTRICTED_DESIGN)["EXPLICIT_PRIVATE_DESIGN"]
+        for variant in (MARKER, MARKER.lower(), "OWNER" + "-" + "ONLY", "owner" + " " + "only"):
+            self.assertTrue(rule.search(f"x {variant} y"), variant)
+
+    def test_lane_still_requires_no_restricted_content(self):
+        loop = (ROOT / "00_FMOS" / "S1" / "ACTION_LOOP.md").read_text(encoding="utf-8")
+        self.assertIn("that line starts S1_NATIVE_PRIVACY_SCAN_STEP_V1 result=NO_RESTRICTED_CONTENT head=H", loop)
+        self.assertIn("result=HIGH_IMPACT_PATH_ONLY (path-class findings only, no content finding) keeps the privacy-scan job green", loop)
+        self.assertIn("so it never passes C3.", loop)
 
     def test_shadow_mode_reports_but_does_not_fail(self):
-        fx = Fixture(self.tmp, lambda f: f.write("00_FMOS/NOTE.md", "Harmless text.\n"))
+        fx = Fixture(self.tmp, lambda f: f.write("docs/note.md", f"Draft. {MARKER} design.\n"))
         code, out, _ = fx.cli(S1_PRIVACY_SCAN_MODE="shadow")
         self.assertEqual((code, out["result"], out["mode"]), (0, "RESTRICTED_CONTENT", "shadow"), out)
         code, out, _ = fx.cli(S1_PRIVACY_SCAN_MODE="anything-else")
@@ -285,6 +338,7 @@ class NativePrivacyScanStep(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertIn("SCAN_CODE_CHANGED_BY_PR_OR_ABSENT_ON_BASE", out["wrapper_reasons"])
         self.assertFalse(out["scan_code"]["identical_to_base_parent"])
+        self.assertEqual(out["result"], "UNKNOWN", "a scanner change outside the owner-gated paths is never green")
 
     def test_wrong_repository_name_is_not_green(self):
         fx = Fixture(self.tmp, clean_change)
