@@ -65,6 +65,10 @@ SEED_Z = {
     "close": {"0.5": 0.639317, "0.8": 1.062982, "0.95": 1.572239},
 }
 HOURLY_DIR = "03_DAILY_CAPTURE_LOGS/hourly"
+HOURLY_REPLAY_SCOPE = (
+    "Replay verifies that the score matches the hourly data at the recorded Git commit; "
+    "it does not prove the market data itself is independently sealed or authenticated."
+)
 FREEZE_PATH = "05_CYCLE_NAVIGATOR/weekly/{year}/W{week:02d}/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
 ISSUANCE_PATH = "06_RESEARCH_LAB/task2_challenger_a/issued/{year}/W{week:02d}/CHALLENGER_A_FROZEN_ISSUANCE.json"
 SCORE_PATH = "06_RESEARCH_LAB/task2_challenger_a/scored/{year}/W{week:02d}/CHALLENGER_A_FIRST_MATURE_SCORE.json"
@@ -367,6 +371,72 @@ def _git(root: Path, *args: str) -> str:
     p = subprocess.run(["git", "-C", str(root), *args],
                        capture_output=True, text=True, check=True)
     return p.stdout.strip()
+
+
+def verify_hourly_bars_pin(root: Path, pin: str, publication_commit: str,
+                           year: int, week: int, *, require_prior: bool = True) -> None:
+    """Check score/data consistency, not independent market-data sealing.
+
+    All seven UTC date paths (including absent paths) must have identical
+    Git tree entries at the source and publication commits.
+    """
+    if (not isinstance(pin, str) or re.fullmatch(r"[0-9a-f]{40}", pin) is None
+            or not isinstance(publication_commit, str)
+            or re.fullmatch(r"[0-9a-f]{40}", publication_commit) is None):
+        raise ValueError("hourly bars commit pin must be a full Git commit SHA")
+    if require_prior and pin == publication_commit:
+        raise ValueError("hourly bars commit must precede score publication")
+    monday = week_monday(year, week)
+    dates = [monday + k * DAY for k in range(7)]
+    paths = [f"{HOURLY_DIR}/{day:%Y}/{day:%m}/{day:%Y-%m-%d}.csv" for day in dates]
+    try:
+        if (_git(root, "rev-parse", "--is-shallow-repository") != "false"
+                or _git(root, "cat-file", "-t", pin) != "commit"
+                or _git(root, "cat-file", "-t", publication_commit) != "commit"):
+            raise ValueError("hourly bars source requires complete Git commit history")
+        _git(root, "merge-base", "--is-ancestor", pin, publication_commit)
+        # The generator reads local main, not a source first introduced via
+        # a side parent of the score publication.
+        if pin not in _git(root, "rev-list", "--first-parent", publication_commit).splitlines():
+            raise ValueError("hourly bars source is not on publication first-parent history")
+        source_entries = _git(root, "ls-tree", "--full-tree", pin, "--", *paths)
+        published_entries = _git(root, "ls-tree", "--full-tree", publication_commit, "--", *paths)
+    except subprocess.CalledProcessError as exc:
+        raise ValueError("hourly bars pin is unavailable or not an ancestor of score publication") from exc
+    if source_entries != published_entries:
+        raise ValueError("weekly hourly blobs changed between scoring and publication; regenerate before publishing")
+    if any(not entry.startswith(("100644 blob ", "100755 blob "))
+           for entry in source_entries.splitlines()):
+        raise ValueError("hourly bars pin contains a non-regular source path")
+
+
+def preflight_hourly_score_publication(root: Path, year: int, week: int,
+                                      publication_commit: str) -> dict:
+    """Check an unpublished score commit before a non-force main push.
+
+    Fetch latest main before generating and publishing. If the push loses a
+    race, do not blindly rebase/retry: rebuild the unpublished candidate
+    from fresh main and recheck. Never rewrite a first-main score.
+    No-issuance MISSING uses its separate proof, not an hourly source pin.
+    """
+    if (not isinstance(publication_commit, str)
+            or re.fullmatch(r"[0-9a-f]{40}", publication_commit) is None):
+        raise ValueError("publication commit must be a full Git commit SHA")
+    rel = SCORE_PATH.format(year=year, week=week)
+    try:
+        row = json.loads(_git(root, "show", publication_commit + ":" + rel))
+    except (ValueError, subprocess.CalledProcessError) as exc:
+        raise ValueError("prospective canonical score is inaccessible") from exc
+    if (not isinstance(row, dict) or row.get("week") != f"{year}-W{week:02d}"
+            or row.get("contract") != CONTRACT + "_SCORE"
+            or row.get("decision_status") != "SHADOW_ONLY_NO_PROMOTION"
+            or row.get("hourly_replay_scope") != HOURLY_REPLAY_SCOPE):
+        raise ValueError("prospective score lacks hourly replay provenance")
+    pin = row.get("hourly_bars_commit_sha")
+    verify_hourly_bars_pin(root, pin, publication_commit, year, week)
+    return {"status": "HOURLY_SCORE_SOURCE_PREFLIGHT_PASS",
+            "hourly_bars_commit_sha": pin, "publication_commit": publication_commit,
+            "hourly_replay_scope": HOURLY_REPLAY_SCOPE}
 
 
 def first_in_main(root: Path, path: str) -> dict:
@@ -674,8 +744,9 @@ def verify_first_main_paired_outcomes(row: dict, issuance: dict, first_main_cloc
 
 def verify_replayed_score(row: dict, issuance: dict, first_main_clock: str,
                           original_cn: dict, bars: dict) -> None:
-    """Require the complete scorer result from immutable hourly data, not claims.
+    """Require the complete scorer result from the named Git snapshot, not claims.
 
+    This verifies agreement with those data, not a seal on the market feed.
     Every issued asset-day is represented by a scored row or an explicit
     pre-issuance/incomplete-hourly abstention. Comparing canonical JSON also
     distinguishes booleans from integer coverage flags and catches forged
@@ -758,11 +829,17 @@ def read_first_main_weekly_score(root: Path, year: int, week: int) -> tuple[dict
             raise ValueError("original first-main CN freeze invalid")
         verify_first_main_paired_outcomes(
             row, issued, issue_proof["issuance_first_main_utc"], original_cn)
-        # Independently replay the complete scorer from bars at first score
-        # publication. Later working-tree edits and backfills are irrelevant.
+        # Replay the exact commit actually consumed when scoring, and
+        # require the same hourly blobs at first publication on main.
+        pin = row.get("hourly_bars_commit_sha")
+        if row.get("hourly_replay_scope") != HOURLY_REPLAY_SCOPE:
+            raise ValueError("frozen score lacks honest hourly replay scope")
+        verify_hourly_bars_pin(root, pin, proof["first_main_commit"], year, week)
         monday = week_monday(year, week)
-        bars = load_hourly(root, monday, maturity, git_ref=proof["first_main_commit"])
+        bars = load_hourly(root, monday, maturity, git_ref=pin)
         verify_replayed_score(row, issued, issue_proof["issuance_first_main_utc"], original_cn, bars)
+        proof["hourly_bars_commit_sha"] = pin
+        proof["hourly_replay_scope"] = HOURLY_REPLAY_SCOPE
     result = dict(row)
     if not accepted:
         result["paired_rows"] = 0
@@ -805,7 +882,8 @@ def confirmatory_decision_from_main(root: Path, through_week: str) -> dict:
                               "first_main_commit": proof["first_main_commit"],
                               "first_main_blob_sha": proof["first_main_blob_sha"],
                               "first_main_utc": proof["first_main_utc"],
-                              "eligible_first_maturity": proof["eligible_first_maturity"]})
+                              "eligible_first_maturity": proof["eligible_first_maturity"],
+                              "hourly_bars_commit_sha": proof.get("hourly_bars_commit_sha")})
         # The pre-registered look is over the FIRST eight valid weeks only.
         # A later missing/corrupt score must never revoke a completed look.
         decision = confirmatory_decision(records)
@@ -868,16 +946,24 @@ def _parse_week(s: str) -> tuple[int, int]:
 
 def main(argv: Iterable[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("command", choices=["issue", "score", "decide"])
+    ap.add_argument("command", choices=["issue", "score", "decide", "preflight-score"])
     ap.add_argument("--repo-root", default=".")
     ap.add_argument("--week", required=True, help="ISO week, e.g. 2026-W47")
     ap.add_argument("--t0", help="fixture clock only, never accepted as main-origin evidence")
     ap.add_argument("--synthetic-fixture-clock", action="store_true")
-    ap.add_argument("--output", required=True)
+    ap.add_argument("--output")
+    ap.add_argument("--publication-commit", help="exact prospective score commit for preflight-score")
     a = ap.parse_args(list(argv) if argv is not None else None)
     root = Path(a.repo_root)
     year, week = _parse_week(a.week)
     monday = week_monday(year, week)
+    if a.command == "preflight-score":
+        if not a.publication_commit or a.output or a.t0 or a.synthetic_fixture_clock:
+            ap.error("preflight-score requires --publication-commit and no output or fixture flags")
+        print(json.dumps(preflight_hourly_score_publication(root, year, week, a.publication_commit)))
+        return 0
+    if not a.output or a.publication_commit:
+        ap.error("issue, score and decide require --output and forbid --publication-commit")
     output = Path(a.output)
     if a.command == "decide":
         if a.t0 or a.synthetic_fixture_clock:
@@ -921,13 +1007,19 @@ def main(argv: Iterable[str] | None = None) -> int:
             result = no_issuance_missing_score(root, year, week)
         else:
             # Never score mutable/untracked working-copy market bars. Read one
-            # pinned main commit and the original CN freeze; admission will
-            # independently replay the outcome from the score publication tree.
+            # pinned main commit and original CN freeze. Record the actual
+            # hourly source so admission can replay at that same commit.
             main_sha = _git(root, "rev-parse", "refs/heads/main")
             bars = load_hourly(root, monday, monday + 7 * DAY, git_ref=main_sha)
             freeze_rel = FREEZE_PATH.format(year=year, week=week)
             freeze = json.loads(_git(root, "show", issuance["source"]["freeze_first_main_commit"] + ":" + freeze_rel))
             result = score(issuance, bars, freeze, issuance_first_main_utc=original["issuance_first_main_utc"])
+            result["hourly_bars_commit_sha"] = main_sha
+            result["hourly_replay_scope"] = HOURLY_REPLAY_SCOPE
+            # Catch drift during generation before writing the candidate.
+            # The publisher must also preflight its exact prospective commit.
+            verify_hourly_bars_pin(root, main_sha, _git(root, "rev-parse", "refs/heads/main"),
+                                   year, week, require_prior=False)
             result["first_main_issuance"] = original
             result["first_http_delivery"] = "UNKNOWN"
             result["decision_status"] = "SHADOW_ONLY_NO_PROMOTION"
