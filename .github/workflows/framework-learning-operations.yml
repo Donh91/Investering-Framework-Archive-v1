@@ -457,8 +457,56 @@ jobs:
         run: python -m unittest tests.learning.test_t6_rotation_survival -v
       - name: Run sensor relationship scientific-evidence fail-closed regressions (PR only)
         run: python -m unittest tests.experiments.test_sensor_relationship_compression -v
-  operate:
+  receipt_sync:
+    # Isolated secret job (S1 v2, isolate instead of exclude): the only step that receives a secret runs alone, on a
+    # fresh checkout of main, with python -I, and hands its output to operate as an artifact that is only data there.
     if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Sync independent experiment execution receipts
+        continue-on-error: true
+        env:
+          EXPERIMENT_BRIDGE_TOKEN: ${{ secrets.EXPERIMENT_BRIDGE_TOKEN }}
+        run: |
+          mkdir -p research/experiment_lifecycle/receipts
+          python -I scripts/experiments/sync_experiment_receipts.py \
+            --github-repo Donh91/Eksperimenter-framework- \
+            --github-path experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json \
+            --github-ref main \
+            --receipt-root research/experiment_lifecycle/receipts \
+            --sync-output research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json \
+            --max-source-age-hours 24 \
+            --allow-unavailable
+          python -I - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json')
+          row=json.loads(p.read_text())
+          if row.get('failure_class')=='PRIVATE_SOURCE_AUTH_REQUIRED':
+              print('::warning::Experiment execution plane is not publicly readable. Optional EXPERIMENT_BRIDGE_TOKEN may provide read-only fallback if the repo is private again.')
+          print('EXPERIMENT_RECEIPT_SYNC', row.get('sync_state'), row.get('status'), row.get('source_transport'), row.get('failure_class'))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: experiment-receipt-sync-${{ github.run_id }}
+          path: |
+            research/experiment_lifecycle/receipts/
+            research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json
+          if-no-files-found: ignore
+          retention-days: 1
+  operate:
+    needs: receipt_sync
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 22
     steps:
@@ -525,29 +573,12 @@ jobs:
           mkdir -p "$DEST"
           cp runtime/farside-etf/*.json "$DEST/"
           cp runtime/farside-etf/owner_snapshot.json research/etf_owner/LATEST_FARSIDE_ETF_OWNER.json
-      - name: Sync independent experiment execution receipts
+      - name: Sync independent experiment execution receipts (data from the isolated receipt_sync job)
         continue-on-error: true
-        env:
-          EXPERIMENT_BRIDGE_TOKEN: ${{ secrets.EXPERIMENT_BRIDGE_TOKEN }}
-        run: |
-          mkdir -p research/experiment_lifecycle/receipts
-          python scripts/experiments/sync_experiment_receipts.py \
-            --github-repo Donh91/Eksperimenter-framework- \
-            --github-path experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json \
-            --github-ref main \
-            --receipt-root research/experiment_lifecycle/receipts \
-            --sync-output research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json \
-            --max-source-age-hours 24 \
-            --allow-unavailable
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path('research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json')
-          row=json.loads(p.read_text())
-          if row.get('failure_class')=='PRIVATE_SOURCE_AUTH_REQUIRED':
-              print('::warning::Experiment execution plane is not publicly readable. Optional EXPERIMENT_BRIDGE_TOKEN may provide read-only fallback if the repo is private again.')
-          print('EXPERIMENT_RECEIPT_SYNC', row.get('sync_state'), row.get('status'), row.get('source_transport'), row.get('failure_class'))
-          PY
+        uses: actions/download-artifact@v4
+        with:
+          name: experiment-receipt-sync-${{ github.run_id }}
+          path: research/experiment_lifecycle
       - name: Resolve exact settlement evidence
         run: |
           mkdir -p research/framework_memory/{forecast_memory,outcome_memory,settlement_evidence,settlement_raw,settlement_bindings}
@@ -771,7 +802,7 @@ jobs:
           git config user.email 'framework-operations-bot@users.noreply.github.com'
           git add research/data_ping_bridge research/etf_owner research/framework_memory research/experiment_lifecycle research/architecture_health research/framework_handoffs research/decision_economics 06_RESEARCH_LAB/current_relationship_compression/CURRENT_SENSOR_RELATIONSHIP_COMPRESSION.json
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "ops: update integrated learning and experiment receipts ${GITHUB_RUN_ID}"
+          git -c core.hooksPath=/dev/null commit -m "ops: update integrated learning and experiment receipts ${GITHUB_RUN_ID}"
           pushed=false
           for attempt in 1 2 3; do
             git rebase --abort 2>/dev/null || true

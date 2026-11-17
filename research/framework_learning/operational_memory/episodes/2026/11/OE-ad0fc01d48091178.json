@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/API_TASK_REGISTRY_v1.json",
+    "tests/api_agent/test_api_gateway.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-ad0fc01d48091178",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "api-avoid-repeated-daily-director-output-token-truncation",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(api): give Luna Director previous retry headroom on first pass * test(api): pin Director first-pass cap and bounded retry",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/API_TASK_REGISTRY_v1.json": "1b50e8f9404570534d33b454d883b60ce352f552",
+    "tests/api_agent/test_api_gateway.py": "266c468492bafe7bec0ad2f23b9005f3867a2968"
+  },
+  "source_commit_sha": "ad0fc01d480911788d4d7edfe2cf7df1a2ad4e13",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-17T03:00:09-05:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix(api): avoid repeated Daily Director output-token truncation (#2199)"
+}

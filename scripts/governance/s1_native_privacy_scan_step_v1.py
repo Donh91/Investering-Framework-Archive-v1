@@ -2,8 +2,10 @@
 
 One step of the existing ``gate`` job in ``.github/workflows/data-architecture-gate.yml``.
 It builds the scanner record from the pull_request event payload and the local git
-objects of the checked-out PR merge commit, runs the UNCHANGED ``scan_pr`` and exits
-non-zero unless the verdict is ``NO_RESTRICTED_CONTENT`` (mode ``enforce``).
+objects of the checked-out PR merge commit, runs the UNCHANGED ``scan_pr`` and, in mode ``enforce``, exits
+non-zero on a content finding or an unverifiable scan (``RESTRICTED_CONTENT`` or ``UNKNOWN``). Path-class findings
+alone (an owner-gated route such as ``00_FMOS/`` or ``.github/``, no content finding) give ``HIGH_IMPACT_PATH_ONLY``
+and exit 0. The S1 lane (ACTION_LOOP.md C3) still accepts only ``NO_RESTRICTED_CONTENT``.
 
 What it binds:
 * the scanned commit: second parent of the checked-out merge commit must equal
@@ -39,6 +41,18 @@ SCAN_CODE_PATHS = (
     "scripts/governance/s1_native_privacy_scan_step_v1.py",
     ".github/workflows/data-architecture-gate.yml",
 )
+# Path-class findings on an owner-gated GOVERNANCE route are not disclosed content (PR #2200 review, v2.2). A blocked
+# path outside those routes (private/, secrets/, vault/, .env, key files ...) and any rename out of a blocked path
+# stay disclosure findings, so enforce still fails on them.
+PATH_CLASS_REASONS = frozenset({"HIGH_IMPACT_OR_PRIVATE_PATH"})
+DISCLOSURE_REASONS = frozenset({"HIGH_IMPACT_RENAME_SOURCE"})
+GOVERNANCE_PREFIXES = (".github/", ".agents/", "00_FMOS/", "00_ARCHIVE_CONTROL/", "research/api_agent/")
+GOVERNANCE_EXACT = frozenset({"AGENTS.md"})  # the root file only (R6 P2-1: private/AGENTS.md is private)
+CONTENT_RULES = frozenset(name for name, _ in scanner.KNOWN_SECRET_OR_RESTRICTED_DESIGN)
+# A PR that changes the scan code runs its own scanner, so its result is never lane evidence; with path-class
+# findings only, it is an owner-gated PR and the reason stays listed in wrapper_reasons.
+PATH_ONLY_WRAPPER_REASONS = frozenset({"SCAN_CODE_CHANGED_BY_PR_OR_ABSENT_ON_BASE"})
+EXIT_ZERO_RESULTS = ("NO_RESTRICTED_CONTENT", "SKIPPED_NOT_PR", "HIGH_IMPACT_PATH_ONLY")
 STATUS = {"A": "added", "M": "modified", "D": "removed", "R": "renamed",
           "C": "copied", "T": "changed"}
 
@@ -198,6 +212,40 @@ def build_record(git: Git, event: dict[str, Any], repo_name: Any, merge: str, ba
     return record, binding, sorted(set(reasons))
 
 
+def private_route(path: Any) -> bool:
+    """A path the scanner blocks that is NOT an owner-gated governance route (private data, secrets, key files)."""
+    if type(path) is not str or not scanner._blocked_path(path):
+        return False
+    return not (path.startswith(GOVERNANCE_PREFIXES) or path in GOVERNANCE_EXACT)
+
+
+def is_content_reason(reason: Any) -> bool:
+    """A scanner rule that matched text: in a body, patch, title or body, filename or rename source."""
+    if type(reason) is not str:
+        return False
+    if reason in DISCLOSURE_REASONS:
+        return True
+    for suffix in ("_IN_FILENAME", "_IN_RENAME_SOURCE"):
+        if reason.endswith(suffix) and reason[: -len(suffix)] in CONTENT_RULES:
+            return True
+    return reason in CONTENT_RULES
+
+
+def classify(scan: dict[str, Any], wrapper_reasons: list[str], private: bool = False) -> str:
+    """RESTRICTED_CONTENT on any content finding; HIGH_IMPACT_PATH_ONLY when every finding is path-class and no other
+    wrapper reason exists; NO_RESTRICTED_CONTENT only for a clean scan with no wrapper reason; otherwise UNKNOWN."""
+    reasons = [f.get("reason") if type(f) is dict else None for f in (scan.get("findings") or [])]
+    if scan.get("result") == "RESTRICTED_CONTENT":
+        if private or any(is_content_reason(r) for r in reasons):
+            return "RESTRICTED_CONTENT"
+        if reasons and all(r in PATH_CLASS_REASONS for r in reasons) and set(wrapper_reasons) <= PATH_ONLY_WRAPPER_REASONS:
+            return "HIGH_IMPACT_PATH_ONLY"
+        return "UNKNOWN"
+    if scan.get("result") == "NO_RESTRICTED_CONTENT" and not wrapper_reasons:
+        return "NO_RESTRICTED_CONTENT"
+    return "UNKNOWN"
+
+
 def scan_code_blobs(git: Git, merge: str, base: str | None) -> dict[str, Any]:
     rows = {p: {"merge_blob_sha": git.rev(f"{merge}:{p}"),
                 "base_blob_sha": git.rev(f"{base}:{p}") if base else None}
@@ -270,17 +318,13 @@ def run_step(repo: str, env: dict[str, str],
     out["files_binding_sha256"] = hashlib.sha256(json.dumps(
         binding, sort_keys=True, separators=(",", ":")).encode("ascii")).hexdigest()
     out["wrapper_reasons"] = sorted(set(reasons))
-    if scan.get("result") == "RESTRICTED_CONTENT":
-        out["result"] = "RESTRICTED_CONTENT"
-    elif scan.get("result") == "NO_RESTRICTED_CONTENT" and not reasons:
-        out["result"] = "NO_RESTRICTED_CONTENT"
-    else:
-        out["result"] = "UNKNOWN"
+    private = any(private_route(f.get("path")) or private_route(f.get("previous_filename")) for f in record["files"])
+    out["result"] = classify(scan, out["wrapper_reasons"], private)
     return out
 
 
 def exit_code(result: str, mode: str) -> int:
-    if result in ("NO_RESTRICTED_CONTENT", "SKIPPED_NOT_PR"):
+    if result in EXIT_ZERO_RESULTS:
         return 0
     return 0 if mode == "shadow" else 1
 
