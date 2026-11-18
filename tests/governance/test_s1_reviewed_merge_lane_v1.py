@@ -21,10 +21,11 @@ MANIFEST = ROOT / "00_FMOS" / "S1_REQUIRED_PR_JOBS_POLICY_V1.json"
 RUBRICS = ("STEWARD_STATES.md", "REVIEW_ADMISSION.md", "OWNER_VISIBILITY.md")
 
 SECTION_F_SHA256 = "8aa223b8bd06d884caacc0ea4990599d65a5bd8c2eae515d0e0fcfa9a6a5058b"
-SECTION_SHA256 = "a795b75eb9d1bb79bfc409396864bb2c98b7c9f32e8925395b8a43ba4ffb2a56"
-SECTION_G_SHA256 = "f8acafbf1f619763e734834ed0c7a6f6da137844f1107906e454b6905ee2bcde"
-BOOTSTRAP_TEMPLATE_SHA256 = "2d5116c3bbd0c714551340af128b4ff285ea7fdaddd4bcb03a0dd356ad8f4c8e"
-LINE_PINS = {'C2': 'ff0b1fb2b84c71181c36fa96323d7bb9400e4d4e75e2700158a2f617942b4e63', 'C3': '496ded0833856ec8f55aa9b2504a53653137fa2d96737ccad9c2f5ba61db30d6', 'C5': 'ca220ac7b8aef37344546dee097fa82c7f0861b00344cd6b1a5caabee5e4102c', 'CC_ONLY': 'd07a6e1d1a4cef55abb790edca32e261d15958e5969e4a1fe782165e4329bef7', 'CC_PR': '85bf8e3655a52a657d20f2992ccb40acc0d69cc7f3ae182a8401550e0f22e423', 'H1': '792e808899def4bb84452f7045b25420f330dfc8c0390f5c52a80323f5c8f1cf', 'H2': 'c76bf5513a523db56a0ae05357889cca0365d8b7d11bf3bb8b8b65b70414f815', 'H3': 'a9fb6bc830284ee5e0e38d1fc80283037274248fd109b502c13edde79dd5af5f', 'H4': 'd47f6f701a0744ad1e8076b4c4bbdd7ed77578c4e3d014800d7ad11b6909da7e', 'H5': 'ed6697482618d2cf6a5de633fbae9b5821c7909d40d963305191ab5ce65be311', 'H6': '4d6a43e793d8f6bcfe39028057a586416756febe05c3601c83c0f9a358474d6a', 'H7': '73981c63af506f153556961808dcac7d35bacb20d510c241e5565c6bb022d4ea', 'H8': '0343db2e8f9173b68600baaa0f8cbaf75eb2fe7247d243fdff7bb1948fea9b0b', 'LADDER': '9fe72664e57b9414dc18344a81e031eca57290a4547e4077fd81ffc15705eb40', 'LANE_INTEGRITY': 'd3d4818152a356742bed34c9b3216cceaa7b83cd503ba357ea726b90e03db140', 'LOOP_GUARD': '8487a53dfabae7732002e3adaba9a693a62e46d94997bd23bd9d0670d0a87768', 'OBS': '89dd709d890a6126e1d95259cff720f6f87f5bf8276c482aabf6530b328cf7d4', 'ONE_ACTION': 'c326ce2c2ec993192d095bcda00372812214f5f47c41f99f40fb2b44a65c47fa', 'OWNER_GATED': '5a7c1317ca30993a8e7320ddc06a0ec75d514657b1ff81edcd71a0ba18afc2f8', 'RULE1': '54fd60bdd827ab1a91e6eb08747629c99b0aab5476c4d1e991336bc73f5446d4', 'RULE2': '25583e3b4601cb26582c5d816b9602ffa5538d2f57a48afaf24a3a8acc08ad4c', 'RULE3': 'cc765b466b981ea2106924425de3e9361b8eb958e723bd9c290c2f02c9d72c6f', 'RULE4': '4e29a51f082dda2c14cbdd5bb9b5524bb0a78cd20ed2566df8d736b6becfbeef', 'RULE5': 'abc0f14dab6e7bdd3f940fcbe9a377cb0d2a532c07054755df6f305b1ed40969', 'RULE5B': '20ca2a4429e5ccf31dd4643772f2317243be95aecc0c8b2ca6282d93ad3dec19', 'RULE6': '03d16c79132996d0ae4bf298b9626d06aee80802641068dbb02b5f66c72ad261', 'RULE7': 'c1fc79408a137c8ac96a6d22ee409cf43622db1d5aa910dc014eb6740cb44b25', 'WAITING': '7495b6701b652bca13501fc5ebb8e7eb78c7b6e0f4cd585765ffce87bea173fe'}
+SECTION_SHA256 = "f8b5193a781c767b63a2cfdaa93db689e64aa8e73fe95ce93f68e0e9d7390ba6"
+SECTION_H_SHA256 = "e00df2b0c592d72dbc2fbb85cb28f8b9990e0c7edbfcfa28144a38a6aa2cea54"
+SECTION_G_SHA256 = "15c9cccf64080751106d86452d6ee4c88be3ab81ed3fa5768593f20cc73add0a"
+BOOTSTRAP_TEMPLATE_SHA256 = "a7c1a28e791964acac5b5dcc91060126d98879bbc5f3aaef4211ce839300d5c0"
+LINE_PINS = {'C2': 'ff0b1fb2b84c71181c36fa96323d7bb9400e4d4e75e2700158a2f617942b4e63', 'C3': '496ded0833856ec8f55aa9b2504a53653137fa2d96737ccad9c2f5ba61db30d6', 'C5': 'ca220ac7b8aef37344546dee097fa82c7f0861b00344cd6b1a5caabee5e4102c', 'CC_ONLY': 'd07a6e1d1a4cef55abb790edca32e261d15958e5969e4a1fe782165e4329bef7', 'CC_PR': '85bf8e3655a52a657d20f2992ccb40acc0d69cc7f3ae182a8401550e0f22e423', 'H1': '792e808899def4bb84452f7045b25420f330dfc8c0390f5c52a80323f5c8f1cf', 'H2': 'c76bf5513a523db56a0ae05357889cca0365d8b7d11bf3bb8b8b65b70414f815', 'H3': 'a9fb6bc830284ee5e0e38d1fc80283037274248fd109b502c13edde79dd5af5f', 'H4': 'd47f6f701a0744ad1e8076b4c4bbdd7ed77578c4e3d014800d7ad11b6909da7e', 'H5': 'ed6697482618d2cf6a5de633fbae9b5821c7909d40d963305191ab5ce65be311', 'H6': '4d6a43e793d8f6bcfe39028057a586416756febe05c3601c83c0f9a358474d6a', 'H7': '73981c63af506f153556961808dcac7d35bacb20d510c241e5565c6bb022d4ea', 'H8': '0343db2e8f9173b68600baaa0f8cbaf75eb2fe7247d243fdff7bb1948fea9b0b', 'LADDER': '9fe72664e57b9414dc18344a81e031eca57290a4547e4077fd81ffc15705eb40', 'LANE_INTEGRITY': 'd3d4818152a356742bed34c9b3216cceaa7b83cd503ba357ea726b90e03db140', 'LOOP_GUARD': '8487a53dfabae7732002e3adaba9a693a62e46d94997bd23bd9d0670d0a87768', 'OBS': '89dd709d890a6126e1d95259cff720f6f87f5bf8276c482aabf6530b328cf7d4', 'ONE_ACTION': 'c326ce2c2ec993192d095bcda00372812214f5f47c41f99f40fb2b44a65c47fa', 'OWNER_GATED': '5a7c1317ca30993a8e7320ddc06a0ec75d514657b1ff81edcd71a0ba18afc2f8', 'RULE1': '54fd60bdd827ab1a91e6eb08747629c99b0aab5476c4d1e991336bc73f5446d4', 'RULE2': '25583e3b4601cb26582c5d816b9602ffa5538d2f57a48afaf24a3a8acc08ad4c', 'RULE3': 'cc765b466b981ea2106924425de3e9361b8eb958e723bd9c290c2f02c9d72c6f', 'RULE4': '4e29a51f082dda2c14cbdd5bb9b5524bb0a78cd20ed2566df8d736b6becfbeef', 'RULE5': 'abc0f14dab6e7bdd3f940fcbe9a377cb0d2a532c07054755df6f305b1ed40969', 'RULE5B': '960544bd5c356dbde81dc12346a34086531c2b6b7f49cef3cf77ba150edac885', 'RULE6': '03d16c79132996d0ae4bf298b9626d06aee80802641068dbb02b5f66c72ad261', 'RULE7': 'c1fc79408a137c8ac96a6d22ee409cf43622db1d5aa910dc014eb6740cb44b25', 'WAITING': '7495b6701b652bca13501fc5ebb8e7eb78c7b6e0f4cd585765ffce87bea173fe'}
 PINNED = ("AGENTS.md", "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json", ".github", ".agents", "scripts/governance",
           "scripts/health", "07_PROMPTS_AND_AGENTS", "01_CORE_FRAMEWORK/governance", "00_FMOS/S1_WORKFLOW_ISOLATION_V1.json")
 
@@ -44,6 +45,12 @@ def section_0_2f():
 def section_0_2g():
     text = AGENTS.read_text(encoding="utf-8")
     start = text.index("### 0.2g S1 v3 evidence bindings and edge ledger")
+    return text[start:text.index("### 0.2h ", start)]
+
+
+def section_0_2h():
+    text = AGENTS.read_text(encoding="utf-8")
+    start = text.index("### 0.2h S1 v3.1 tick brief")
     return text[start:text.index("### 0.3 ", start)]
 
 
@@ -55,8 +62,21 @@ class PinTest(unittest.TestCase):
     def test_section_text_is_pinned(self):
         self.assertEqual(hashlib.sha256(section_0_2e().encode("utf-8")).hexdigest(), SECTION_SHA256)
         self.assertEqual(hashlib.sha256(section_0_2f().encode("utf-8")).hexdigest(), SECTION_F_SHA256)
-        # v3 adds section 0.2g after 0.2f; sections 0.2e and 0.2f keep their v2.2 hashes, so v3 reworded neither.
+        # v3 adds section 0.2g after 0.2f; section 0.2f keeps its v2.2 hash. v3.1 rewords exclusion 3 of 0.2e and the
+        # privileged-closure bullet of 0.2g: the path lists are derived at the PR head and at main, not enumerated.
         self.assertEqual(hashlib.sha256(section_0_2g().encode("utf-8")).hexdigest(), SECTION_G_SHA256)
+        self.assertEqual(hashlib.sha256(section_0_2h().encode("utf-8")).hexdigest(), SECTION_H_SHA256)
+
+    def test_key_sentences_0_2h(self):
+        for sentence in ("grants S1 no new merge class, write target, schedule or identity and removes no gate",
+                         "holds read permissions only and never executes PR code", "uses no secret", "Evidence, never authority",
+                         "a later edit by anyone is visible", "at most 45 minutes old", "the second time immediately before the merge",
+                         "the brief never carries a `CLAUDE_REVIEW_v1`", "HIGH EVIDENCE for risk HIGH", "No brief, no census",
+                         "S1 never falls back to rebuilding the reads itself", "no write of any kind", "scans every published byte",
+                         "bound to the same head, merge commit, run and attempt", "a missing, failed or foreign bundle keeps UNKNOWN",
+                         "the review threads, for an unresolved P0/P1 (gate (e))", "main once more immediately before the merge, with the drift rule",
+                         "build code that behaves differently on main than on a pull request is for the reviewer"):
+            self.assertIn(sentence, section_0_2h())
 
     def test_bootstrap_is_pinned_and_pins_the_contract_blob(self):
         # The 3b hex is the only free part (test_s1_runtime_contract_v1 binds it to the real contract blob), so S1's
@@ -245,7 +265,7 @@ class SectionIntentTest(unittest.TestCase):
             "are lane-eligible, because the gates' evidence no longer comes from a job that runs them.",
             "any added Python file whose module name equals a Python standard-library module or an installed top-level package",
             "that a gate-job test puts on `sys.path` (for example `scripts/research/`, `tests/research/`)",
-            "every path in its `secret_job_executed_paths`", "a derived LOWER BOUND", "imports (also through a `sys.path` insert)", "or that reads or writes anything under `.git/` or sets `core.hooksPath`", "A job that receives no secret does not make its files secret-using",
+            "every path in the `secret_job_executed_paths` derived at the PR head and at main by `scripts/governance/s1_workflow_isolation_derive_v1.py`", "the union of both derivations", "published per PR in the S1_TICK_BRIEF_V1 field `isolation`", "without that derivation for main and for the head, unknown is OWNER_GATED", "imports (also through a `sys.path` insert)", "or that reads or writes anything under `.git/` or sets `core.hooksPath`", "A job that receives no secret does not make its files secret-using",
             "isolate instead of exclude", "(no fallback: without that job on main, HOLD)",
             "the isolated job `automation-production-health-gate.yml` / `execution-truth`",
             "it is unedited (`updated_at` equals `created_at`);",
