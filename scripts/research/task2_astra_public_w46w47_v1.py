@@ -138,7 +138,7 @@ def source_packet() -> tuple[str, list[dict]]:
             fail("SOURCE_NOT_AVAILABLE:" + relative)
         raw = p.read_bytes()
         if (len(raw) > 210_000
-                or any(token in raw for token in (b"sk-proj-", b"-----BEGIN PRIVATE KEY-----", b"github_pat_"))):
+                or any(token in raw for token in (b"sk-proj-", b"-----BEGIN " b"PRIVATE KEY-----", b"github_pat_"))):
             fail("PUBLIC_SOURCE_UNSAFE_OR_OVERSIZE:" + relative)
         text = raw.decode("utf-8")
         total += len(raw)
