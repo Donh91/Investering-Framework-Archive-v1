@@ -955,6 +955,23 @@ def protection_tracker(
     """
     issued = (as_of or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(microsecond=0)
     issued_text = issued.isoformat().replace("+00:00", "Z")
+    prior_tracker = (prior_compass or {}).get("protection_tracker") if isinstance(prior_compass, Mapping) else None
+    prior_tracker = prior_tracker if isinstance(prior_tracker, Mapping) else {}
+    prior_risk = str(prior_tracker.get("pullback_risk_state") or "NORMAL")
+    prior_reentry = str(prior_tracker.get("reentry_state") or "INACTIVE")
+    # Preserve only an outstanding protective obligation, never stale REVIEW
+    # permission, while evidence is unavailable. Legacy missing memory is not
+    # reconstructed by guessing from prices, prose, or a corrupt carry value.
+    gap_pending = None
+    if prior_risk in {"HIGH", "CONFIRMED"}:
+        gap_pending = "WAIT_FOR_FLUSH"
+    elif prior_risk in {"NORMAL", "BUILDING", "ELEVATED"} and prior_reentry in {"WAIT_FOR_RECLAIM", "REVIEW"}:
+        gap_pending = "WAIT_FOR_RECLAIM"
+    elif prior_risk == "UNAVAILABLE" and prior_reentry == "UNAVAILABLE":
+        carried = prior_tracker.get("reentry_pending_before_gap")
+        if isinstance(carried, str) and carried in {"WAIT_FOR_FLUSH", "WAIT_FOR_RECLAIM"}:
+            gap_pending = carried
+
     if not _health_ok(auto_state, issued) or not isinstance(cn_package, Mapping):
         return {
             "contract": "COMPASS_PROTECTION_TRACKER_v1",
@@ -968,6 +985,7 @@ def protection_tracker(
             "last_material_change_at": issued_text,
             "data_quality": "DEGRADED",
             "reentry_state": "UNAVAILABLE",
+            "reentry_pending_before_gap": gap_pending,
             "reentry_message": "Re-entry review is unavailable until canonical evidence is healthy.",
             "authority": {"portfolio_execution": False, "wallet_specific": False, "new_market_classifier": False},
         }
@@ -987,6 +1005,7 @@ def protection_tracker(
             "last_material_change_at": issued_text,
             "data_quality": "STRUCTURED_PROTECTION_PROJECTION_UNAVAILABLE",
             "reentry_state": "UNAVAILABLE",
+            "reentry_pending_before_gap": gap_pending,
             "reentry_message": "Re-entry review is unavailable until structured canonical protection evidence exists.",
             "authority": {"portfolio_execution": False, "wallet_specific": False, "new_market_classifier": False},
         }
@@ -1006,10 +1025,6 @@ def protection_tracker(
     drivers_raw = structured.get("drivers")
     drivers = [str(x) for x in drivers_raw[:4]] if isinstance(drivers_raw, list) else []
 
-    prior_tracker = (prior_compass or {}).get("protection_tracker") if isinstance(prior_compass, Mapping) else None
-    prior_tracker = prior_tracker if isinstance(prior_tracker, Mapping) else {}
-    prior_risk = str(prior_tracker.get("pullback_risk_state") or "NORMAL")
-    prior_reentry = str(prior_tracker.get("reentry_state") or "INACTIVE")
     posture = str(action.get("NOW") or "HOLD_WAIT")
     direction = str(market_now.get("directional_state") or "MIXED")
     if direction == "UNCHANGED_NO_NEW_OBSERVATION":
@@ -1018,6 +1033,9 @@ def protection_tracker(
     if risk in {"HIGH", "CONFIRMED"}:
         reentry = "WAIT_FOR_FLUSH"
         reentry_message = "Protection phase. Do not treat stabilization alone as a re-entry signal."
+    elif prior_risk == "UNAVAILABLE" and gap_pending is not None and risk != "UNAVAILABLE":
+        reentry = "WAIT_FOR_RECLAIM"
+        reentry_message = "Evidence is restored; re-entry remains blocked pending a new governed constructive confirmation."
     elif prior_risk in {"HIGH", "CONFIRMED"} and risk not in {"UNAVAILABLE"}:
         reentry = "WAIT_FOR_RECLAIM"
         reentry_message = "Risk has eased, but re-entry stays blocked until a governed constructive confirmation is restored."
@@ -1080,6 +1098,7 @@ def protection_tracker(
         "last_material_change_at": last_change,
         "data_quality": "OK" if risk != "UNAVAILABLE" else "DEGRADED",
         "reentry_state": reentry,
+        **({"reentry_pending_before_gap": gap_pending} if risk == "UNAVAILABLE" else {}),
         "reentry_message": reentry_message,
         "authority": {"portfolio_execution": False, "wallet_specific": False, "new_market_classifier": False},
     }
