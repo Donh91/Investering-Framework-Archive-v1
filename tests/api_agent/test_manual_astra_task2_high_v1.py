@@ -175,7 +175,7 @@ class AstraOneShotTests(unittest.TestCase):
             "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
         low, high, n = pending_risk(ledger)
         # Native POSTs settled; all original holds and the distinct MAEVE hold remain counted.
-        self.assertEqual((low, high, n), (0.0, 0.0, 0))
+        self.assertEqual((low, high, n), (0.0, 20.0, 1))   # the canonical USD20 mission row (#1156)
         value = json.loads(ledger.read_text(encoding="utf-8"))
         self.assertEqual(len(value["settled"]), 3)
         self.assertEqual(value["provider_settlement_evidence"]["sha256"],
@@ -198,7 +198,7 @@ class AstraOneShotTests(unittest.TestCase):
         probe = self.root / "future-liability.json"
         probe.write_text(json.dumps(value), encoding="utf-8")
         future_low, future_high, future_count = pending_risk(probe)
-        self.assertEqual((future_low, future_high, future_count), (0.0, 10.0, 1))
+        self.assertEqual((future_low, future_high, future_count), (0.0, 30.0, 2))   # plus the canonical USD20 mission row
 
     def test_original_director_live_secret_not_corrupted(self):
         yml = (Path(__file__).resolve().parents[2] /

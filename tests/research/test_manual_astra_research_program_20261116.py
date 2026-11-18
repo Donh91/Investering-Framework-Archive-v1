@@ -47,7 +47,7 @@ class Tests(unittest.TestCase):
   from pathlib import Path
   src=Path(__file__).resolve().parents[2]/"research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
   lo,hi,n=pending_risk(src)
-  self.assertEqual((lo,hi,n),(0.0,0.0,0))
+  self.assertEqual((lo,hi,n),(0.0,20.0,1))  # the canonical USD20 mission row (#1156)
  def test_paid_workflow_five_unique_issue_owner_events(self):
   from pathlib import Path
   w=(Path(__file__).resolve().parents[2]/".github/workflows/owner-astra-research-program-20261116.yml").read_text()
@@ -104,7 +104,7 @@ class Tests(unittest.TestCase):
     result=json.loads(proc.stdout)
     self.assertNotEqual(proc.returncode,0,result)
     self.assertEqual(result["status"],"BLOCKED",result)
-    self.assertEqual(result["pending_liability_upper_usd"],0.0)
+    self.assertEqual(result["pending_liability_upper_usd"],20.0)  # the canonical USD20 mission row (#1156)
     self.assertEqual(result["owner_global_hard_stop_usd"],100.0)
   bad=subprocess.run([sys.executable,str(root/"scripts/api_agent/check_monthly_cost_guard.py"),
    "--receipt-root",str(root/"research/api_agent/outputs"),

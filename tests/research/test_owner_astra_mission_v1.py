@@ -19,7 +19,7 @@ from scripts.api_agent import astra_mission_reservations_v1 as res
 
 ROOT = Path(__file__).resolve().parents[2]
 MID = "ASTRA-S1-V32-REDTEAM-20261118-R2"
-BUNDLE_SHA = "5e648ef6b957f574a4af0f5a0f6b0f4d99386be900a7120d46d8896f9fbbb8c1"
+BUNDLE_SHA = "bf77cd0609c0e9e1ce0ac63b4a1c4779c8cb71bb439ca512a6cff2cf3e45d0fc"
 GUARD = ROOT / "scripts/api_agent/check_monthly_cost_guard.py"
 CANONICAL_LEDGER = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
 def checkout_head():
@@ -144,7 +144,7 @@ class TestRequest(Base):
         req, data, meta = a
         self.assertEqual(req["model"], "gpt-6.2-astra")
         self.assertEqual(req["reasoning"], {"effort": "max"})
-        self.assertEqual(req["max_output_tokens"], 64000)
+        self.assertEqual(req["max_output_tokens"], 128000)
         self.assertNotIn("tools", req)
         self.assertEqual(meta["bundle_sha256"], BUNDLE_SHA)
         self.assertEqual(meta["request_sha256"], m.digest(data))
@@ -502,6 +502,8 @@ class TestCostGuard(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.tmp)
         (self.tmp / "receipts").mkdir()
         self.base = json.loads(CANONICAL_LEDGER.read_text())
+        # Fixture rows are explicit per test; the canonical mission row is pinned in test_canonical_mission_row.
+        self.base.pop("astra_mission_reservations", None)
         # The canonical rows as they are: settled/consumed rows hold nothing, active rows count in full.
         self.stop = self.base["absolute_budget_usd"]
 
@@ -516,6 +518,16 @@ class TestCostGuard(unittest.TestCase):
                                "--new-request-upper-usd", "0", "--liability-ledger", str(path), *extra],
                               capture_output=True, text=True, cwd=ROOT, timeout=120)
         return proc.returncode, json.loads(proc.stdout)
+
+    def test_canonical_mission_row(self):
+        rows = json.loads(CANONICAL_LEDGER.read_text()).get("astra_mission_reservations", [])
+        self.assertEqual([(r["work_id"], r["status"], r["lower_usd"], r["upper_usd"], r["one_paid_post_max"]) for r in rows],
+                         [("ASTRA-S1-V32-REDTEAM-20261118-R2", "OWNER_RESERVED_PREHTTP", 0, 20, 1)])
+        proc = subprocess.run([sys.executable, str(GUARD), "--receipt-root", str(self.tmp / "receipts"),
+                               "--hard-stop-usd", str(self.stop), "--reserve-usd", "4", "--new-request-upper-usd", "0",
+                               "--liability-ledger", str(CANONICAL_LEDGER), "--owner-astra-mission-id",
+                               "ASTRA-S1-V32-REDTEAM-20261118-R2"], capture_output=True, text=True, cwd=ROOT, timeout=120)
+        self.assertEqual(proc.returncode, 0, proc.stdout)
 
     def test_mission_passes_and_is_counted(self):
         code0, before = self.guard(None, "--owner-astra-mission-id", MID)
