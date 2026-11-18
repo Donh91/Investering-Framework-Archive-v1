@@ -1,0 +1,210 @@
+# Generic owner Astra mission launcher. ONE paid Responses POST per reviewed mission, never a retry.
+# Launch: the owner (Donh91) posts on issue #1156 exactly
+#   OWNER_LAUNCH_ASTRA_MISSION <mission_id> <bundle_sha256>
+# A mission is a reviewed folder 06_RESEARCH_LAB/astra_missions/<mission_id>/ on main plus its row in
+# research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json astra_mission_reservations. A new mission
+# needs no change here. The comment body is never interpolated into a shell: the script reads the event file.
+# offline: pull_request only, no secrets, no network: tests and an exact preview of every mission.
+# verify:  issue_comment only, no secrets, read-only token: event, mission, bundle hash, model policy, guard.
+# paid:    issue_comment only; secrets. Durable one-use claim on #1156 (comment + mission-named artifact) before the POST.
+# recover: issue_comment OWNER_COLLECT_ASTRA_MISSION <mission_id> <response_id>; secrets; GET only, never a model POST.
+name: Owner Astra mission
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/owner-astra-mission.yml'
+      - 'scripts/research/owner_astra_mission_v1.py'
+      - 'tests/research/test_owner_astra_mission_v1.py'
+      - 'scripts/api_agent/astra_mission_reservations_v1.py'
+      - 'scripts/api_agent/check_monthly_cost_guard.py'
+      - 'scripts/api_agent/api_gateway.py'
+      - 'research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json'
+      - 'research/api_agent/coordination/SOL_MAX_SHARED_MODEL_POLICY_V1.json'
+      - '06_RESEARCH_LAB/astra_missions/**'
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  offline:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: No-network trigger, claim, guard and no-retry tests
+        run: python -m unittest tests.research.test_owner_astra_mission_v1 -v
+      - name: Exact request preview of every mission, NO network
+        run: python scripts/research/owner_astra_mission_v1.py preview-all --out runtime/astra-mission-preview
+
+  verify:
+    if: >-
+      github.event_name == 'issue_comment' && github.event.action == 'created' &&
+      github.event.issue.number == 1156 && github.event.issue.pull_request == null &&
+      github.event.comment.user.login == 'Donh91' && github.actor == 'Donh91' &&
+      github.event.comment.author_association == 'OWNER' &&
+      github.ref == 'refs/heads/main' && github.run_attempt == 1 &&
+      startsWith(github.event.comment.body, 'OWNER_LAUNCH_ASTRA_MISSION ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exact owner event, mission, bundle hash, model policy and cost bound, NO network
+        run: python scripts/research/owner_astra_mission_v1.py prepare --out runtime/astra-mission
+      - name: Shared cost guard with this mission's own reservation
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --hard-stop-usd "$(cat runtime/astra-mission/guard_hard_stop_usd.txt)" --reserve-usd 4
+          --new-request-upper-usd 0
+          --owner-astra-mission-id "$(cat runtime/astra-mission/guard_mission_id.txt)"
+
+  paid:
+    needs: verify
+    if: >-
+      github.event_name == 'issue_comment' && github.event.action == 'created' &&
+      github.event.issue.number == 1156 && github.event.issue.pull_request == null &&
+      github.event.comment.user.login == 'Donh91' && github.actor == 'Donh91' &&
+      github.event.comment.author_association == 'OWNER' &&
+      github.ref == 'refs/heads/main' && github.run_attempt == 1 &&
+      startsWith(github.event.comment.body, 'OWNER_LAUNCH_ASTRA_MISSION ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    concurrency:
+      group: owner-astra-mission
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rebuild exact request, verify owner event, mission and reservation
+        run: python scripts/research/owner_astra_mission_v1.py prepare --out runtime/astra-mission
+      - name: Mission-named claim artifact (durable second consumption record)
+        id: claimname
+        run: python scripts/research/owner_astra_mission_v1.py claim-artifact-name --out runtime/astra-mission
+      - name: Shared cost guard with this mission's own reservation
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --hard-stop-usd "$(cat runtime/astra-mission/guard_hard_stop_usd.txt)" --reserve-usd 4
+          --new-request-upper-usd 0
+          --owner-astra-mission-id "$(cat runtime/astra-mission/guard_mission_id.txt)"
+          > runtime/astra-mission/guard_result.json
+      - name: Guard result, provider model GET, durable one-use claim and readback
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/owner_astra_mission_v1.py reserve --out runtime/astra-mission --guard-json runtime/astra-mission/guard_result.json
+      - name: Preserve pre-POST evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.claimname.outputs.claim_artifact }}
+          path: |
+            runtime/astra-mission/claim.json
+            runtime/astra-mission/budget_guard.json
+            runtime/astra-mission/source_manifest.json
+            runtime/astra-mission/request.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Mark the irreversible single attempt
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/owner_astra_mission_v1.py mark_attempt --out runtime/astra-mission
+      - name: ONE Astra POST, no retry
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/owner_astra_mission_v1.py submit --out runtime/astra-mission
+      - name: GET-only collection
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/research/owner_astra_mission_v1.py collect --out runtime/astra-mission
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: astra-mission-evidence-${{ github.run_id }}
+          path: |
+            runtime/astra-mission/claim.json
+            runtime/astra-mission/budget_guard.json
+            runtime/astra-mission/source_manifest.json
+            runtime/astra-mission/request.json
+            runtime/astra-mission/attempt.json
+            runtime/astra-mission/submission_started.json
+            runtime/astra-mission/handle.json
+            runtime/astra-mission/pending.json
+            runtime/astra-mission/receipt.json
+            runtime/astra-mission/archive/
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Short completion comment on #1156 (claimed runs only, no model text)
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/owner_astra_mission_v1.py report --out runtime/astra-mission
+
+  recover:
+    # GET-only recovery of a paid run that ended before collection. Never POSTs to the model API.
+    if: >-
+      github.event_name == 'issue_comment' && github.event.action == 'created' &&
+      github.event.issue.number == 1156 && github.event.issue.pull_request == null &&
+      github.event.comment.user.login == 'Donh91' && github.actor == 'Donh91' &&
+      github.event.comment.author_association == 'OWNER' &&
+      github.ref == 'refs/heads/main' && github.run_attempt == 1 &&
+      startsWith(github.event.comment.body, 'OWNER_COLLECT_ASTRA_MISSION ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    permissions:
+      contents: read
+      issues: write
+    concurrency:
+      group: owner-astra-mission
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: GET-only recovery collection
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/owner_astra_mission_v1.py recover --out runtime/astra-mission
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: astra-mission-evidence-${{ github.run_id }}
+          path: |
+            runtime/astra-mission/source_manifest.json
+            runtime/astra-mission/handle.json
+            runtime/astra-mission/pending.json
+            runtime/astra-mission/receipt.json
+            runtime/astra-mission/archive/
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Short result comment on #1156 (no model text)
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/research/owner_astra_mission_v1.py report --out runtime/astra-mission
