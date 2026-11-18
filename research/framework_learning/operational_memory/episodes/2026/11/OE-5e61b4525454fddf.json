@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/audit_summaries/2026-11-16__public_forecast_cases_v1.json",
+    "06_RESEARCH_LAB/audit_summaries/2026-11-16__public_forecast_solana_methods_audit_v1.md",
+    "scripts/research/public_forecast_intake_gate_v1.py",
+    "tests/research/test_public_forecast_intake_gate_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-5e61b4525454fddf",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research: add fail-closed public analyst evidence 2026-11-16__public_forecast_solana_methods_audit_v1.md * research: add fail-closed public analyst evidence 2026-11-16__public_forecast_cases_v1.json * research: add fail-closed public analyst evidence public_forecast_intake_gate_v1.py * research: add fail-closed public analyst evidence test_public_forecast_intake_gate_v1.py * test(research): fail closed on malformed JSON input types * test(research): add JSON type confusion negative controls * fix(research): reject provably noncausal forecast clocks with missing evidence * fix(research): reje",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/audit_summaries/2026-11-16__public_forecast_cases_v1.json": "b46a7422d31acb312595d0e91984bcb28c53014a",
+    "06_RESEARCH_LAB/audit_summaries/2026-11-16__public_forecast_solana_methods_audit_v1.md": "1e718f045323d53e2e56d28690326dc508ab42db",
+    "scripts/research/public_forecast_intake_gate_v1.py": "0ec87eedc9b19527dad40c82c26bdef7fd9bccd6",
+    "tests/research/test_public_forecast_intake_gate_v1.py": "479332fe840dfc24f1cc48c29df431022712983f"
+  },
+  "source_commit_sha": "5e61b4525454fddfa2c208d3014480cfa749f546",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-18T10:14:06+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "research: public forecast evidence gate (#2188)"
+}
