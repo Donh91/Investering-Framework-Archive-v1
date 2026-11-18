@@ -47,6 +47,9 @@ function makeRootFixture(kind){
  latest.generated_at=utc(now);
  pointer.issue_number=issue;pointer.status='OK';
  pkg.issue_number=issue;pkg.status='OK';
+ pkg.market_cycle_context={current_phase:'UNAVAILABLE',next_gate:'Synthetic fixture gate',why:'No phase established.'};
+ pkg.market_state='Test fixture without confirmed leadership';
+ pkg.rotation_ladder=[{segment:'BTC',status:'UNCONFIRMED'},{segment:'ETH',status:'UNCONFIRMED'}];
  projection.public_issue_number=issue;projection.forecast_week=forecastWeek;
  compass.compass_id='TEST_ONLY_SOURCE_'+kind.toUpperCase();
  compass.issued_at_utc=utc(now-60000);
@@ -1034,11 +1037,16 @@ try{
    assert.ok(ready&&fixtureRequests['data/latest.json']>0&&
      fixtureRequests['data/compass.json']>0,
      'ROOT_FIXTURE_NOT_LOADED_FROM_HTTP:'+kind+':'+JSON.stringify(fixtureRequests));
+   await evaluate(()=>document.querySelector('[data-premium-nav="path"]')?.click());
    const snapshot=await evaluate(()=>({
     hydrated:document.getElementById('compass-pro')?.dataset.publicFeedHydrated,
     current:document.getElementById('compass-pro')?.dataset.sourceCurrent,
     expiryState:document.getElementById('compass-pro')?.dataset.sourceState,
     source:document.getElementById('pro-source-status')?.textContent||'',
+    cycleMapCount:document.querySelectorAll('#cn-cycle-map').length,
+    cycleMapRotationHidden:document.getElementById('cn-map-rotation-dot')?.hasAttribute('hidden'),
+    cycleMapPhaseHidden:document.getElementById('cn-map-phase-dot')?.hasAttribute('hidden'),
+    cycleMapWidth:document.getElementById('cn-cycle-map')?.getBoundingClientRect().width||0,
     cycleState:document.getElementById('official-path-view')?.dataset.cycleSourceState||'',
     cycleKind:document.getElementById('official-path-view')?.dataset.referenceKind||'',
     cycleMeaning:document.getElementById('cn-cycle-meaning')?.textContent||'',
@@ -1052,6 +1060,10 @@ try{
      balance:el.querySelector('.cn-evidence small')?.textContent||''
     }))
    }));
+   assert.equal(snapshot.cycleMapCount,1,'CYCLE_MAP_MISSING_OR_DUPLICATE');
+   assert.equal(snapshot.cycleMapRotationHidden,true,'CYCLE_MAP_INFERRED_ROTATION');
+   assert.equal(snapshot.cycleMapPhaseHidden,true,'CYCLE_MAP_INFERRED_PHASE');
+   assert.ok(snapshot.cycleMapWidth>0&&snapshot.cycleMapWidth<=390,'CYCLE_MAP_MOBILE_OVERFLOW');
    assert.equal(snapshot.hydrated,'true',
      'ROOT_FIXTURE_UNHYDRATED_SOURCE_WAS_CLASSIFIED:'+kind);
    // Real 390px canonical-root browser checks, using HTTP-served synthetic

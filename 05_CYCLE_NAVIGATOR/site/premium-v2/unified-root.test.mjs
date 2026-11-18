@@ -875,3 +875,5 @@ test('official horizon clock anchors to issuance, never silently rolls on page r
   assert.match(expired.windows.d13,/afventer/);
  }
 });
+
+test('one model-view cycle map precedes detailed PATH rail',()=>{const html=buildUnifiedRootHtml(original,pro);assert.equal(id(html,'cn-cycle-map'),1);assert.ok(html.indexOf('id="official-path-view"')<html.indexOf('id="cn-cycle-map"'));assert.ok(html.indexOf('id="cn-cycle-map"')<html.indexOf('id="premium-path-rail"'));assert.match(html,/data-contract="CN_WHERE_ARE_WE_MAP_v1"/);});
