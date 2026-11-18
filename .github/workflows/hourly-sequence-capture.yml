@@ -220,6 +220,17 @@ jobs:
             echo "ENTRY_SIGNAL_HANDOFF_DISPATCHED source_hourly_run=${GITHUB_RUN_ID}"
           fi
 
+      - name: Publish immutable first-maturity Challenger A SHADOW score
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        timeout-minutes: 6
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Last step of the existing owner writer: an unpublished failed
+          # candidate must never be rebased, reused, or affect downstream jobs.
+          python scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py publish-mature-score --repo-root .
+
 
   intraday:
     # This dependency remains inside the SAME latency-critical market-owner writer lock.
