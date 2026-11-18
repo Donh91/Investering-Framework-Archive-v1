@@ -274,6 +274,23 @@ class PreregistrationTest(unittest.TestCase):
             with self.subTest(change=change):
                 self.assertFalse(amendment_ok(v1, prereg(**change)))
 
+    def test_scored_then_invalid_is_banned_and_never_scored_is_not(self):
+        # v3.1 (R5 P3): a MODEL test of NO RERUN for INVALID_PREREG streams. The ban set is: every stream with a final
+        # decision of KILLED_HARM, KILLED_FUTILITY or CLOSED_INCONCLUSIVE, plus every INVALID_PREREG stream that has at
+        # least one scored week in LEDGER.jsonl. An INVALID_PREREG stream with no scored week never held evidence.
+        def banned(streams):
+            return {(s["hypothesis"], s["forecaster_ref"]) for s in streams
+                    if s["final"] in ("KILLED_HARM", "KILLED_FUTILITY", "CLOSED_INCONCLUSIVE") or (s["final"] == "INVALID_PREREG" and s["scored_weeks"] > 0)}
+        doc = prereg()
+        old = lambda final, weeks: {"hypothesis": doc["hypothesis"], "forecaster_ref": doc["forecaster_ref"], "final": final, "scored_weeks": weeks}
+        self.assertEqual(prereg_status(doc, 1, killed=banned([old("INVALID_PREREG", 0)])), "VALID")                    # a corrected preregistration
+        self.assertEqual(prereg_status(doc, 1, killed=banned([old("INVALID_PREREG", 1)])), "rerun_of_killed")          # scored, then made invalid
+        self.assertEqual(prereg_status(doc, 1, killed=banned([old("INVALID_PREREG", 0), old("INVALID_PREREG", 3)])), "rerun_of_killed")
+        for final in ("KILLED_HARM", "KILLED_FUTILITY", "CLOSED_INCONCLUSIVE"):
+            self.assertEqual(prereg_status(doc, 1, killed=banned([old(final, 0)])), "rerun_of_killed", final)
+        for final in ("PROMOTED", "PARKED"):
+            self.assertEqual(prereg_status(doc, 1, killed=banned([old(final, 5)])), "VALID", final)
+
     def test_no_rerun_and_ratchet(self):
         doc = prereg()
         self.assertEqual(prereg_status(doc, 1, killed={(doc["hypothesis"], doc["forecaster_ref"])}), "rerun_of_killed")

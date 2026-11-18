@@ -16,6 +16,9 @@ PRICES_PER_MILLION = {
     "gpt-5.6-terra": {"input": 2.0, "output": 12.0},
     "gpt-6.1-terra": {"input": 1.0, "output": 5.0},
     "gpt-6.1-sol": {"input": 2.0, "output": 10.0},
+    "gpt-6.2-sol": {"input": 2.0, "output": 10.0},
+    # Astra 6.2 pricing only; this does not admit a paid task.
+    "gpt-6.2-astra": {"input": 8.0, "output": 40.0},
     "gpt-6-sol": {"input": 2.0, "output": 10.0},
     "gpt-6-astra": {"input": 10.0, "output": 50.0},
     # Legacy receipt readback only. Active task registry does not route these IDs.
@@ -36,6 +39,15 @@ def sha256_bytes(value: bytes) -> str:
 
 def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     price = PRICES_PER_MILLION[model]
+    if model in {"gpt-6.2-sol", "gpt-6.2-astra"}:
+        # Conservative upper estimate: 12h cache-write rate, no assumed cache hit.
+        # Long-context rates apply to the entire request above 272k input.
+        input_rate = price["input"] * 2.5
+        output_rate = price["output"]
+        if input_tokens > 272_000:
+            input_rate *= 2
+            output_rate *= 1.5
+        return round((input_tokens * input_rate + output_tokens * output_rate) / 1_000_000, 8)
     return round((input_tokens * price["input"] + output_tokens * price["output"]) / 1_000_000, 8)
 
 
@@ -206,6 +218,17 @@ def build_request(task: str, task_cfg: dict[str, Any], prompt: str, context: dic
             + governed_instruction.strip()
         )
     envelope = {"contract": "UNTRUSTED_ANALYTICAL_INPUT_v1", "task": task, "prompt_data": prompt, "context_data": context}
+    # GPT-6.2 requires a non-none effort; preserve stable developer prefix for caching.
+    if task_cfg["model"] in {"gpt-6.2-sol", "gpt-6.2-astra"}:
+        if task_cfg["reasoning_effort"] not in {"low", "medium", "high", "xhigh", "max"}:
+            raise ValueError("GPT_62_REASONING_EFFORT_NOT_ADMITTED")
+        return {
+            "model": task_cfg["model"], "reasoning": {"effort": task_cfg["reasoning_effort"]},
+            "store": False, "max_output_tokens": task_cfg["max_output_tokens"],
+            "input": [{"role": "developer", "content": instruction},
+                      {"role": "user", "content": [{"type": "input_text", "text": json.dumps(envelope, sort_keys=True)}]}],
+            "text": {"format": {"type": "json_schema", "name": "framework_shadow_output_v3", "strict": True, "schema": output_schema()}},
+        }
     return {
         "model": task_cfg["model"], "reasoning": {"effort": task_cfg["reasoning_effort"], "context": "current_turn"}, "store": False,
         "max_output_tokens": task_cfg["max_output_tokens"], "instructions": instruction,
@@ -302,7 +325,7 @@ def main() -> None:
     if background:
         # An explicit public-source owner release is required before sending
         # anything to a persisted Responses background task. No private data.
-        if (task_cfg.get("model") != "gpt-6.1-sol"
+        if (task_cfg.get("model") not in {"gpt-6.1-sol", "gpt-6.2-sol"}
                 or task_cfg.get("reasoning_effort") != "max"
                 or task_cfg.get("max_attempts") != 1
                 or task_cfg.get("public_background_storage_authorized") is not True
