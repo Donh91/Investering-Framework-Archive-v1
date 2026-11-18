@@ -36,8 +36,9 @@ class Tests(unittest.TestCase):
 
  def test_real_paid_path_requires_distinct_prehttp_reservation(self):
   for m in (a,b,c,d,e):
-   m.check_reservation()  # Five individually whitelisted owner approvals exist.
-   with self.assertRaisesRegex(ValueError,'DISTINCT_ASTRA_10USD_RESERVATION_REQUIRED'):
+   with self.assertRaises(ValueError):
+    m.check_reservation()  # Consumed approvals must never admit another POST.
+   with self.assertRaises(ValueError):
     with unittest.mock.patch.object(m, 'MISSION', 'FAKE-UNRESERVED-MISSION'):
      m.check_reservation()
 
@@ -46,7 +47,7 @@ class Tests(unittest.TestCase):
   from pathlib import Path
   src=Path(__file__).resolve().parents[2]/"research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
   lo,hi,n=pending_risk(src)
-  self.assertEqual((lo,hi,n),(0.0,83.0,9))
+  self.assertEqual((lo,hi,n),(0.0,0.0,0))
  def test_paid_workflow_five_unique_issue_owner_events(self):
   from pathlib import Path
   w=(Path(__file__).resolve().parents[2]/".github/workflows/owner-astra-research-program-20261116.yml").read_text()
@@ -101,10 +102,11 @@ class Tests(unittest.TestCase):
     proc=subprocess.run(command,text=True,capture_output=True,cwd=root,timeout=30)
     self.assertTrue(proc.stdout,proc.stderr)
     result=json.loads(proc.stdout)
-    self.assertEqual(proc.returncode,0,result)
-    self.assertEqual(result["status"],"PASS",result)
-    self.assertEqual(result["pending_liability_upper_usd"],83.0)
-    self.assertEqual(result["owner_global_hard_stop_usd"],100.0)
+    self.assertNotEqual(proc.returncode,0,result)
+    self.assertEqual(result["status"],"BLOCKED",result)
+    self.assertIn("DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED",str(result["cost_evidence_errors"]))
+    self.assertEqual(result["pending_liability_upper_usd"],0.0)
+    self.assertEqual(result["owner_global_hard_stop_usd"],150.0)
   bad=subprocess.run([sys.executable,str(root/"scripts/api_agent/check_monthly_cost_guard.py"),
    "--receipt-root",str(root/"research/api_agent/outputs"),
    "--hard-stop-usd","100","--reserve-usd","4","--owner-astra-program-work-id","FAKE-UNAUTHORISED"],

@@ -19,7 +19,7 @@ from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegati
 # Legacy caller-specific smaller caps/reserves remain binding; this code never
 # grants a paid POST or lowers a lane's independent ceiling.
 OWNER_GLOBAL_TARGET_USD = 50.0
-OWNER_GLOBAL_HARD_STOP_USD = 100.0
+OWNER_GLOBAL_HARD_STOP_USD = 150.0
 OWNER_GLOBAL_RESERVE_USD = 4.0  # Routine paths retain existing protected headroom.
 OWNER_SINGLE_REQUEST_CAP_USD = 3.0
 # Previous source-bound liabilities were provider-reconciled against private
@@ -49,11 +49,9 @@ SETTLED_NATIVE_POST_IDS = {"41870364609", "41949497953", "42204120988"}
 # pre-HTTP reservations stay counted (and may not silently disappear from the
 # canonical ledger) until per-model provider evidence settles them (WO-5).
 SETTLED_ASTRA_WORK_IDS: set[str] = set()
-RETAINED_ASTRA_RESERVATION_WORK_IDS = {
-    "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
-    "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
-    "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE",
-}
+OWNER_SETTLEMENT_20261118 = json.loads("{\"settled_total_usd\":5.41,\"source\":\"owner OpenAI usage dashboard + CSV export 2026-11-18\",\"period_start_utc\":\"2026-11-12T00:00:00Z\",\"captured_at_local\":\"2026-11-18 12:08 Europe/Copenhagen\",\"coverage_end_utc\":\"2026-11-18T11:08:00Z\",\"scope\":\"ALL_MODELS_ACCOUNT_AGGREGATE_NOT_PER_REQUEST_NOT_MTD\",\"csv_astra_request_counts_by_utc_day\":{\"2026-11-13\":2,\"2026-11-16\":6,\"2026-11-17\":1,\"2026-11-18_gpt-6.2-astra\":2},\"accounting\":\"One shared provider aggregate; do not allocate to individual missions; preserve receipt estimates as a conservative floor and count outside-period costs separately.\"}")
+CONSUMED_ASTRA_NATIVE_EVIDENCE = json.loads("{\"ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE\":{\"trigger_event\":\"workflow_dispatch\",\"trigger_comment_url\":null,\"claim_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6851822851\",\"run_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43419077122\",\"run_conclusion\":\"success\",\"run_attempt\":1,\"actor\":\"Donh91\",\"completion_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6852191726\",\"artifact_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43419077122/artifacts/14033562358\",\"archive_pr_url\":null},\"ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE\":{\"trigger_event\":\"issue_comment\",\"trigger_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6854781097\",\"claim_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6854798355\",\"run_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43436726016\",\"run_conclusion\":\"success\",\"run_attempt\":1,\"actor\":\"Donh91\",\"completion_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6855239533\",\"artifact_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43436726016/artifacts/14045101056\",\"archive_pr_url\":null},\"ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE\":{\"trigger_event\":\"issue_comment\",\"trigger_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6915834169\",\"claim_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6915851510\",\"run_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43862850019\",\"run_conclusion\":\"success\",\"run_attempt\":1,\"actor\":\"Donh91\",\"completion_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6925896464\",\"artifact_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43862850019/artifacts/14224547889\",\"archive_pr_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2195\"},\"ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE\":{\"trigger_event\":\"issue_comment\",\"trigger_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6928271522\",\"claim_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6928295238\",\"run_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43949496515\",\"run_conclusion\":\"success\",\"run_attempt\":1,\"actor\":\"Donh91\",\"completion_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6929489944\",\"artifact_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43949496515/artifacts/14268215043\",\"archive_pr_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2204\"},\"ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE\":{\"trigger_event\":\"issue_comment\",\"trigger_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1827#issuecomment-6928297034\",\"claim_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1827#issuecomment-6928319885\",\"run_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43949672635\",\"run_conclusion\":\"success\",\"run_attempt\":1,\"actor\":\"Donh91\",\"completion_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1827#issuecomment-6929491796\",\"artifact_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43949672635/artifacts/14267453073\",\"archive_pr_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2204\"},\"ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE\":{\"trigger_event\":\"issue_comment\",\"trigger_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6928297698\",\"claim_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6928325484\",\"run_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43949678137\",\"run_conclusion\":\"success\",\"run_attempt\":1,\"actor\":\"Donh91\",\"completion_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-6929492756\",\"artifact_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43949678137/artifacts/14268300941\",\"archive_pr_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2204\"},\"ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE\":{\"trigger_event\":\"issue_comment\",\"trigger_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1553#issuecomment-6928298418\",\"claim_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1553#issuecomment-6928316089\",\"run_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43949682325\",\"run_conclusion\":\"success\",\"run_attempt\":1,\"actor\":\"Donh91\",\"completion_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1553#issuecomment-6929493777\",\"artifact_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43949682325/artifacts/14266287659\",\"archive_pr_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2204\"},\"ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE\":{\"trigger_event\":\"issue_comment\",\"trigger_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1340#issuecomment-6928299330\",\"claim_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1340#issuecomment-6928321540\",\"run_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43949688570\",\"run_conclusion\":\"success\",\"run_attempt\":1,\"actor\":\"Donh91\",\"completion_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1340#issuecomment-6929494783\",\"artifact_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/43949688570/artifacts/14268125488\",\"archive_pr_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2204\"},\"ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE\":{\"trigger_event\":\"issue_comment\",\"trigger_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/937#issuecomment-6944827288\",\"claim_comment_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/937#issuecomment-6944866063\",\"run_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/44061041475\",\"run_conclusion\":\"success\",\"run_attempt\":1,\"actor\":\"Donh91\",\"completion_url\":null,\"artifact_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/44061041475/artifacts/14319116037\",\"archive_pr_url\":\"https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2204\"}}")
+RETAINED_ASTRA_RESERVATION_WORK_IDS = set(CONSUMED_ASTRA_NATIVE_EVIDENCE)
 # Owner-present exceptional Astra program, audited under native high-impact PR.
 # This is a research-only allocation, not a fallback/authority for other callers.
 OWNER_ASTRA_PROGRAM_WORK = {
@@ -89,12 +87,15 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             or value.get("requires_reconciliation_before_releasing_reserve") is not True
             or not isinstance(value.get("unresolved"), list)):
         raise ValueError("LIABILITY_LEDGER_CONTRACT_INVALID")
-    # Canonical released liabilities need immutable, private-source evidence;
+    # Canonical released liabilities need immutable, source-bound evidence;
     # test fixtures with future unknown POSTs may omit the settlement block.
     settlement_bound = path.resolve() == CANONICAL_LIABILITY_LEDGER.resolve() or "settled" in value
     if settlement_bound:
         if value.get("provider_settlement_evidence") != PROVIDER_SETTLEMENT_EVIDENCE:
             raise ValueError("PROVIDER_SETTLEMENT_EVIDENCE_INVALID")
+        if (value.get("owner_provider_settlement_20261118") != OWNER_SETTLEMENT_20261118
+                or value.get("settled_total_usd") != 5.41):
+            raise ValueError("PROVIDER_OWNER_AGGREGATE_INVALID")
         settled = value.get("settled")
         if not isinstance(settled, list) or len(settled) != len(SETTLED_NATIVE_POST_IDS) + len(SETTLED_ASTRA_WORK_IDS):
             raise ValueError("PROVIDER_SETTLED_SET_INVALID")
@@ -143,17 +144,17 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     # eventually expires. It stays in the global monthly exposure until an
     # independently reviewed native settlement removes it.
     reservations = value.get("owner_reservations", [])
-    if not isinstance(reservations, list) or len(reservations) > 9:
+    if not isinstance(reservations, list) or len(reservations) > 10:
         raise ValueError("OWNER_RESERVATION_LEDGER_INVALID")
     reserved_work_ids = set()
+    consumed_work_ids = set()
+    reservation_count = 0
     for reservation in reservations:
         if (not isinstance(reservation, dict)
                 or reservation.get("created_month_utc") != "2026-11"
-                or reservation.get("status") != "OWNER_RESERVED_PREHTTP"
                 or reservation.get("lower_usd") != 0
                 or reservation.get("source") != ("https://github.com/Donh91/Investering-Framework-Archive-v1/issues/" + str(OWNER_ASTRA_PROGRAM_WORK.get(reservation.get("work_id"), 1596)))
-                or reservation.get("one_paid_post_max") != 1
-                or reservation.get("reconciliation_required") is not True):
+                or reservation.get("one_paid_post_max") != 1):
             raise ValueError("ASTRA_OWNER_RESERVATION_UNVERIFIED")
         work = reservation.get("work_id")
         if work in reserved_work_ids:
@@ -177,11 +178,43 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             or reservation.get("mission_blob") != MAEVE_MISSION_BLOB
         ):
             raise ValueError("MAEVE_ONE_USE_AUTHORIZATION_INVALID")
-        if work not in allowed or reservation.get("upper_usd") != allowed[work]:
+        if work not in allowed:
+            raise ValueError("UNKNOWN_OWNER_RESERVED_MODEL_OR_COST")
+        state = reservation.get("status")
+        if work in CONSUMED_ASTRA_NATIVE_EVIDENCE:
+            if (not settlement_bound
+                    or state != "CONSUMED_SETTLED_OWNER_PROVIDER_EVIDENCE"
+                    or reservation.get("original_reserved_upper_usd") != allowed[work]
+                    or reservation.get("upper_usd") != 0
+                    or reservation.get("reconciliation_required") is not False
+                    or reservation.get("no_retry") is not True
+                    or reservation.get("native_evidence") != CONSUMED_ASTRA_NATIVE_EVIDENCE[work]):
+                raise ValueError("CONSUMED_ASTRA_EVIDENCE_INVALID")
+            consumed_work_ids.add(work)
+            continue
+        if state == "RELEASED_NEVER_TRIGGERED":
+            # No such row exists in this canonical settlement: all nine ran.
+            # Future release must be an independently reviewed source-bound ledger edit.
+            evidence = reservation.get("native_evidence")
+            if (not settlement_bound or reservation.get("original_reserved_upper_usd") != allowed[work]
+                    or reservation.get("upper_usd") != 0
+                    or reservation.get("reconciliation_required") is not False
+                    or reservation.get("no_retry") is not True
+                    or not isinstance(evidence, dict)
+                    or evidence.get("checked_issue_url") != reservation.get("source")
+                    or "trigger_comment_url" not in evidence or evidence["trigger_comment_url"] is not None
+                    or "run_url" not in evidence or evidence["run_url"] is not None
+                    or evidence.get("native_workflow_scan") != "NO_MATCH"
+                    or not isinstance(evidence.get("review_evidence_url"), str)
+                    or not evidence["review_evidence_url"].startswith("https://github.com/Donh91/Investering-AI-Audit-Bridge/")):
+                raise ValueError("NEVER_TRIGGERED_EVIDENCE_INVALID")
+            continue
+        if (state != "OWNER_RESERVED_PREHTTP" or reservation.get("upper_usd") != allowed[work]
+                or reservation.get("reconciliation_required") is not True):
             raise ValueError("UNKNOWN_OWNER_RESERVED_MODEL_OR_COST")
         high += float(allowed[work])
-    reservation_count = len(reservations)
-    if settlement_bound and not RETAINED_ASTRA_RESERVATION_WORK_IDS <= reserved_work_ids:
+        reservation_count += 1
+    if settlement_bound and consumed_work_ids != RETAINED_ASTRA_RESERVATION_WORK_IDS:
         raise ValueError("RETAINED_ASTRA_RESERVATION_MISSING")
     missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
     if missing:
@@ -290,6 +323,7 @@ def main() -> None:
     now = datetime.now(timezone.utc)
     total = 0.0
     receipts = 0
+    provider_covered_estimate = 0.0
     repriced_api_receipts = 0
     errors = []
     missing_optional_roots = []
@@ -339,6 +373,9 @@ def main() -> None:
             seen[identity] = accounting
             if (created.year, created.month) == (now.year, now.month):
                 total += cost
+                if (datetime.fromisoformat("2026-11-12T00:00:00+00:00") <= created <=
+                        datetime.fromisoformat("2026-11-18T11:08:00+00:00")):
+                    provider_covered_estimate += cost
                 receipts += 1
                 repriced_api_receipts += int(repriced)
 
@@ -348,6 +385,12 @@ def main() -> None:
     pending_low, pending_high, pending_count = 0.0, 0.0, 0
     try:
         pending_low, pending_high, pending_count = pending_risk(args.liability_ledger)
+        # The owner aggregate is a single floor for the covered window, not a
+        # per-mission sum or an addition on top of already counted estimates.
+        risk_value = json.loads(args.liability_ledger.read_text(encoding="utf-8"))
+        if (total is not None and now.strftime("%Y-%m") == "2026-11"
+                and risk_value.get("owner_provider_settlement_20261118") == OWNER_SETTLEMENT_20261118):
+            total += max(0.0, OWNER_SETTLEMENT_20261118["settled_total_usd"] - provider_covered_estimate)
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         errors.append({"path": str(args.liability_ledger),
                        "reason": "LIABILITY_EVIDENCE_UNAVAILABLE:" + str(exc)[:100]})
@@ -377,6 +420,7 @@ def main() -> None:
                 lr = json.loads(args.liability_ledger.read_text(encoding="utf-8"))
                 exact = [r for r in lr.get("owner_reservations", [])
                          if r.get("work_id") == approved_astra_id
+                         and r.get("status") == "OWNER_RESERVED_PREHTTP"
                          and r.get("upper_usd") == 10
                          and r.get("one_paid_post_max") == 1
                          and r.get("source") ==
@@ -398,6 +442,7 @@ def main() -> None:
                 float(row.get("upper_usd", 0))
                 for row in valid.get("owner_reservations", [])
                 if row.get("work_id") in OWNER_ASTRA_PROGRAM_WORK
+                and row.get("status") == "OWNER_RESERVED_PREHTTP"
             )
         except (OSError, ValueError, TypeError):
             errors.append({"path": "OWNER_ASTRA_PROGRAM",

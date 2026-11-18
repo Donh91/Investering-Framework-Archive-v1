@@ -138,7 +138,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             original=json.loads((ROOT/"research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json").read_text())
             self.assertEqual(original["normal_budget_usd"],50)
-            self.assertEqual(original["absolute_budget_usd"],100)
+            self.assertEqual(original["absolute_budget_usd"],150)
             p=Path(td)/"ledger.json"
             for key,value in (("normal_budget_usd",40),("absolute_budget_usd",45)):
                 bad={**original,key:value}
@@ -232,10 +232,10 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         state = json.loads(result.stdout)
         self.assertEqual(result.returncode, 0, state)
         self.assertEqual(state["status"], "PASS", state)
-        # Native POSTs are settled; retain consumed USD3+10 and distinct USD10
-        # owner-approved (not yet consumed) public research reservation.
-        self.assertEqual(state["pending_liability_upper_usd"], 83.0)
-        self.assertEqual(state["pending_liability_count"], 9)
+        # All nine native owner reservations are settled, not re-authorized.
+        self.assertEqual(state["pending_liability_upper_usd"], 0.0)
+        self.assertEqual(state["pending_liability_count"], 0)
+        self.assertEqual(state["owner_global_hard_stop_usd"], 150.0)
         self.assertGreaterEqual(state["remaining_usd"], 4.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
 
@@ -250,7 +250,10 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(
             sorted(r["work_id"] for r in ledger["owner_reservations"]),
             ["ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE","ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE","ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE","ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE","ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE","ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE","ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE","ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE","ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"])
-        self.assertEqual(pending_risk(p), (0.0, 83.0, 9))
+        self.assertEqual(pending_risk(p), (0.0, 0.0, 0))
+        self.assertEqual(ledger["settled_total_usd"], 5.41)
+        self.assertTrue(all(r["status"] == "CONSUMED_SETTLED_OWNER_PROVIDER_EVIDENCE" and r["upper_usd"] == 0 and r["no_retry"] for r in ledger["owner_reservations"]))
+        self.assertEqual(sum(r["original_reserved_upper_usd"] for r in ledger["owner_reservations"]), 83)
         self.assertEqual(len(ledger["settled"]), 3)
         self.assertEqual({r["kind"] for r in ledger["settled"]}, {"NATIVE_POST"})
         self.assertEqual(ledger["provider_settlement_evidence"]["sha256"],
@@ -277,8 +280,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                 f.write_text(json.dumps(bad), encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, "PROVIDER_SETTLE"):
                     pending_risk(f)
-            # The consumed Astra reservations can neither be settled by this
-            # aggregate evidence nor silently dropped from the ledger.
+            # Historical consumed rows cannot be moved, deleted or reactivated.
             for mutation, code in (("astra_settled", "PROVIDER_SETTLED_SET_INVALID"),
                                    ("astra_dropped", "RETAINED_ASTRA_RESERVATION_MISSING")):
                 bad = json.loads(json.dumps(ledger))
@@ -292,6 +294,17 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                 f.write_text(json.dumps(bad), encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, code):
                     pending_risk(f)
+            for key, forged in (("status", "OWNER_RESERVED_PREHTTP"), ("native_evidence", {}), ("upper_usd", 3), ("no_retry", False)):
+                bad = json.loads(json.dumps(ledger))
+                bad["owner_reservations"][0][key] = forged
+                f.write_text(json.dumps(bad))
+                with self.assertRaisesRegex(ValueError, "CONSUMED_ASTRA_EVIDENCE_INVALID"):
+                    pending_risk(f)
+            bad = json.loads(json.dumps(ledger))
+            bad["settled_total_usd"] = 0
+            f.write_text(json.dumps(bad))
+            with self.assertRaisesRegex(ValueError, "PROVIDER_OWNER_AGGREGATE_INVALID"):
+                pending_risk(f)
 
     def test_native_caller_caps_above_40_only_in_hard_disabled_astra_v2_job(self):
         import re

@@ -174,18 +174,14 @@ class AstraOneShotTests(unittest.TestCase):
         ledger = Path(__file__).resolve().parents[2] / (
             "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
         low, high, n = pending_risk(ledger)
-        # Native POSTs settled; all original holds and the distinct MAEVE hold remain counted.
-        self.assertEqual((low, high, n), (0.0, 83.0, 9))
-        self.assertGreaterEqual(high-low, m.MAX_THEORETICAL_COST_USD)
+        # Nine consumed original holds no longer consume pending headroom.
+        self.assertEqual((low, high, n), (0.0, 0.0, 0))
         value = json.loads(ledger.read_text(encoding="utf-8"))
         self.assertEqual(len(value["settled"]), 3)
         self.assertEqual(value["provider_settlement_evidence"]["sha256"],
                          "fb6ba8b50b356a9a48c05915578e77fc16cca3af08694436cc57f4f4335598c8")
         self.assertEqual(len(value["owner_reservations"]), 9)
-        # Replace only the prior public W46/W47 hold in this synthetic V2 probe.
-        # The separate MAEVE hold and all other holds must remain counted.
-        value["owner_reservations"] = [r for r in value["owner_reservations"]
-            if r["work_id"] != "ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE"]
+        # A hypothetical new reservation must not erase any consumed evidence.
         # A NEW source-bound, unspent Astra owner claim must still be counted.
         value["owner_reservations"] += [{
             "work_id": "ASTRA-HIGH-TASK2-REALDATA-V2-20261113-ONE",
@@ -200,7 +196,15 @@ class AstraOneShotTests(unittest.TestCase):
         probe = self.root / "future-liability.json"
         probe.write_text(json.dumps(value), encoding="utf-8")
         future_low, future_high, future_count = pending_risk(probe)
-        self.assertEqual((future_low, future_high, future_count), (0.0, 83.0, 9))
+        self.assertEqual((future_low, future_high, future_count), (0.0, 10.0, 1))
+        row = value["owner_reservations"][-1]
+        row.update(status="RELEASED_NEVER_TRIGGERED", original_reserved_upper_usd=10, upper_usd=0, reconciliation_required=False, no_retry=True, native_evidence={"checked_issue_url":row["source"], "trigger_comment_url":None,"run_url":None,"native_workflow_scan":"NO_MATCH","review_evidence_url":"https://github.com/Donh91/Investering-AI-Audit-Bridge/issues/173"})
+        probe.write_text(json.dumps(value))
+        self.assertEqual(pending_risk(probe), (0.0, 0.0, 0))
+        row["native_evidence"]["run_url"] = "unexpected"
+        probe.write_text(json.dumps(value))
+        with self.assertRaisesRegex(ValueError,"NEVER_TRIGGERED_EVIDENCE_INVALID"):
+            pending_risk(probe)
 
     def test_original_director_live_secret_not_corrupted(self):
         yml = (Path(__file__).resolve().parents[2] /
