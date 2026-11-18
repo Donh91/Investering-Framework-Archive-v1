@@ -6,8 +6,11 @@ permissions:
   contents: read
 jobs:
   privacy-scan:
-    # S1 gate (b) evidence runs in its own job so that no PR-controlled step can run before it or print its line.
-    if: github.event_name == 'pull_request'
+    # S1 gate (b) evidence runs in its own job so that no PR-controlled step can run in it or print its line.
+    # It waits for site-public-build only to read that job's artifact as bytes (S1_SITE_PUBLIC_READBACK_V1); it runs
+    # whatever that job's outcome is, and without the artifact a changed site path stays UNKNOWN.
+    needs: site-public-build
+    if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -15,11 +18,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: s1-site-public-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/s1-site-public
       - name: S1 native privacy scan of the PR diff (S1_DIFF_SCAN_V1, exact head blobs)
         if: github.event_name == 'pull_request'
         timeout-minutes: 5
         env:
           S1_PRIVACY_SCAN_MODE: enforce
+          S1_SITE_PUBLIC_READBACK_DIR: ${{ runner.temp }}/s1-site-public
         run: python -I scripts/governance/s1_native_privacy_scan_step_v1.py
   gate:
     runs-on: ubuntu-latest
@@ -99,3 +108,28 @@ jobs:
           name: storage-telemetry-${{ github.run_id }}
           path: storage-telemetry.json
           retention-days: 7
+  site-public-build:
+    # UNTRUSTED producer for the privacy-scan job. It runs the build steps of cycle-navigator-pages.yml on the PR merge
+    # commit, which is PR-controlled code, so it has its own job: no secret, a read-only token that is not persisted,
+    # and no result line of its own. It stages the generated public bundle only when the PR changes a site path.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build the public site bundle as the Pages workflow does (untrusted input for S1_SITE_PUBLIC_READBACK_V1)
+        env:
+          S1_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 -I scripts/governance/s1_site_public_readback_v1.py build --skip-unless-site-changed --head "$S1_PR_HEAD_SHA" --out "$RUNNER_TEMP/s1-site-public"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s1-site-public-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/s1-site-public
+          if-no-files-found: ignore
+          retention-days: 1
