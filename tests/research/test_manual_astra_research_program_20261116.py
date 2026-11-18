@@ -104,7 +104,7 @@ class Tests(unittest.TestCase):
     result=json.loads(proc.stdout)
     self.assertNotEqual(proc.returncode,0,result)
     self.assertEqual(result["status"],"BLOCKED",result)
-    self.assertEqual(result["pending_liability_upper_usd"],0.0)
+    self.assertEqual(result["pending_liability_upper_usd"],20.0)  # the canonical USD20 mission row (#1156)
     self.assertEqual(result["owner_global_hard_stop_usd"],100.0)
   bad=subprocess.run([sys.executable,str(root/"scripts/api_agent/check_monthly_cost_guard.py"),
    "--receipt-root",str(root/"research/api_agent/outputs"),
