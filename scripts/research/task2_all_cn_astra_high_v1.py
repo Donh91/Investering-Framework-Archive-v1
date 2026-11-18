@@ -143,7 +143,7 @@ def prepare(out,analysis,owner_required=True):
     # remain protected by native owner event, durable one-use claim and budget.
     if owner_required:
         owner_event()
-    check_reserve()
+        check_reserve()
     empirical,contract,summary,sources=source_bundle(analysis)
     mission=(
       "EXECUTE, DON'T JUST DESCRIBE: A full, critical, historical retrospective "
