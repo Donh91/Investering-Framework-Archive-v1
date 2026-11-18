@@ -19,6 +19,11 @@ from scripts.api_agent import astra_mission_reservations_v1 as res
 
 ROOT = Path(__file__).resolve().parents[2]
 MID = "ASTRA-S1-V32-REDTEAM-20261118-R2"
+SOL_MID = "ASTRA-S1-V32-REDTEAM-20261118-R2-SOL"
+ALPHA_MID = "ASTRA-ALPHA-GLOBAL-SPECIALIST-20261118"
+# Wire bytes of the existing Astra missions, pinned before multi-model support: they must never change.
+ASTRA_REQUEST_SHA = {MID: "73ac962b93e6119652ed0b8c39894c0404811c0c1beafb7991f8333d342fee68",
+                     ALPHA_MID: "0eaf6d2a5e79fde610abeb9a5b85d77beb2c4f5ee98ca6a47a4425816e2ddb07"}
 BUNDLE_SHA = "b1b9e7698207dbdbfcad80b9c20a14602e93d4755f22c5879c372e7b2edc802c"
 GUARD = ROOT / "scripts/api_agent/check_monthly_cost_guard.py"
 CANONICAL_LEDGER = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
@@ -31,6 +36,14 @@ def reservation(mid=MID, upper=20):
     return {"work_id": mid, "created_month_utc": "2026-11", "status": "OWNER_RESERVED_PREHTTP", "lower_usd": 0,
             "upper_usd": upper, "source": res.SOURCE, "one_paid_post_max": 1, "reconciliation_required": True,
             "authorization": "test", "basis": "Owner-approved single Astra mission POST reserved before HTTP (test)."}
+
+
+def consumed_row(mid=MID, upper=20, **over):
+    row = dict(reservation(mid, upper), status="CONSUMED_PENDING_INVOICE", consumed_run_id=44386340009,
+               consumed_response_id="resp_0477227a70790153006afe044ec9c487d08ebd44a0466687db",
+               consumed_estimated_upper_usd=3.13212)
+    row.update(over)
+    return row
 
 
 def trigger(mid=MID, sha=BUNDLE_SHA):
@@ -57,11 +70,13 @@ def event(body=None, **over):
 
 class FakeAPI:
     """Routes core.http_json; records every call. No real network."""
-    def __init__(self, comments=None, response=None, post_error=None, artifacts=0, responses=None):
+    def __init__(self, comments=None, response=None, post_error=None, artifacts=0, responses=None, model=m.MODEL,
+                 mid=MID):
         self.calls, self.comments, self.artifacts = [], list(comments or []), artifacts
+        self.model, self.mid = model, mid
         self.keys, self.responses = [], list(responses or [])
         self.next_id = 9000
-        self.response = response or {"id": "resp_test1234", "model": m.MODEL, "status": "completed",
+        self.response = response or {"id": "resp_test1234", "model": model, "status": "completed",
                                      "output": [{"type": "message", "content": [{"type": "output_text",
                                                                                  "text": "# report\nbody\n"}]}],
                                      "usage": {"input_tokens": 90000, "output_tokens": 30000}}
@@ -79,10 +94,10 @@ class FakeAPI:
             self.comments.append(row)
             return row
         if method == "GET" and "/actions/artifacts?" in url:
-            assert url.endswith("&name=astra-mission-claim-" + MID), url
+            assert url.endswith("&name=astra-mission-claim-" + self.mid), url
             return {"total_count": self.artifacts, "artifacts": []}
-        if method == "GET" and url.endswith("/models/" + m.MODEL):
-            return {"id": m.MODEL}
+        if method == "GET" and url.endswith("/models/" + self.model):
+            return {"id": self.model}
         if method == "POST" and url.endswith("/responses"):
             if self.post_error:
                 raise self.post_error
@@ -207,6 +222,73 @@ class TestRequest(Base):
         with self.assertRaisesRegex(ValueError, "UNSAFE_OR_MISSING"):
             m.tracked_bytes("AGENTS.md")
 
+    def test_existing_astra_missions_byte_identical(self):
+        for mid, want in ASTRA_REQUEST_SHA.items():
+            req, data, meta = m.build_request(mid)
+            self.assertEqual((m.digest(data), req["model"], meta["model"]), (want, m.MODEL, m.MODEL), mid)
+            self.assertEqual(meta["model_policy"]["id"], m.MODEL)
+
+    def test_sol_mission_request(self):
+        with mock.patch.object(m.core, "http_json", side_effect=AssertionError("NETWORK_FORBIDDEN")):
+            req, data, meta = m.build_request(SOL_MID)
+        self.assertEqual((req["model"], req["reasoning"], req["max_output_tokens"]), ("gpt-6.2-sol", {"effort": "max"}, 128000))
+        self.assertNotIn("tools", req)
+        self.assertEqual((meta["model"], meta["model_policy"]["id"], meta["max_usd"]), ("gpt-6.2-sol", "gpt-6.2-sol", 3))
+        self.assertEqual(meta["bundle_sha256"], BUNDLE_SHA)
+        self.assertEqual(meta["worst_case_usd"], round(m.estimate_cost("gpt-6.2-sol", len(data) + 20_000, 128000), 6))
+        self.assertLessEqual(meta["worst_case_usd"], 3)
+        sol_dir, r2_dir = ROOT / m.MISSIONS_REL / SOL_MID, ROOT / m.MISSIONS_REL / MID
+        for name in ("BUNDLE_R2.md", "MISSION_R2.md"):
+            self.assertEqual((sol_dir / name).read_bytes(), (r2_dir / name).read_bytes())
+        # the same mission text as R2 except the mission id and the model
+        r2_req = m.build_request(MID)[0]
+        self.assertEqual(req["input"][0]["content"][0]["text"],
+                         r2_req["input"][0]["content"][0]["text"].replace("Mission " + MID + ".", "Mission " + SOL_MID + ".", 1))
+
+    def test_unknown_or_unverified_model_refused(self):
+        mission = json.loads((ROOT / m.MISSIONS_REL / SOL_MID / "mission.json").read_text())
+        real = m.tracked_bytes
+        for model in ("gpt-6.1-sol", "gpt-6-astra", "gpt-6.2-sol-2026-11-01", "GPT-6.2-SOL", "", None, ["gpt-6.2-sol"], 1):
+            raw = json.dumps(dict(mission, model=model)).encode()
+            with mock.patch.object(m, "tracked_bytes",
+                                   side_effect=lambda rel: raw if rel.endswith("mission.json") else real(rel)), \
+                    self.assertRaisesRegex(ValueError, "MISSION_CONTRACT"):
+                m.build_request(SOL_MID)
+        with self.assertRaisesRegex(ValueError, "MODEL_NOT_ALLOWED"):
+            m.model_policy("gpt-6.1-sol")
+        # no "model": the Astra default applies (its cost then exceeds the USD3 cap and fails closed)
+        raw = json.dumps({k: v for k, v in mission.items() if k != "model"}).encode()
+        with mock.patch.object(m, "tracked_bytes", side_effect=lambda rel: raw if rel.endswith("mission.json") else real(rel)):
+            self.assertEqual(m.mission_model(json.loads(raw)), m.MODEL)
+            with self.assertRaisesRegex(ValueError, "COST_CAP"):
+                m.build_request(SOL_MID)
+
+    def test_sol_policy_must_verify(self):
+        policy = json.loads(m.POLICY.read_text())
+        def sol(p):
+            return next(r for r in p["available_verified_sol_models"] if r["id"] == "gpt-6.2-sol")
+        newer = {**copy.deepcopy(sol(policy)), "id": "gpt-6.3-sol", "version": [6, 3]}
+        for mutate in (lambda p: sol(p).update(verified_available=False),
+                       lambda p: sol(p).update(standard_output_usd_per_million=9),
+                       lambda p: sol(p).update(standard_input_usd_per_million=1),
+                       lambda p: sol(p).update(standard_cache_write_12h_usd_per_million=2.5),
+                       lambda p: sol(p).update(long_context_input_multiplier=1),
+                       lambda p: sol(p).update(official_model_spec="https://example.com/gpt-6.2-sol"),
+                       lambda p: sol(p).update(max_output_tokens=64000),
+                       lambda p: p["available_verified_sol_models"].append(copy.deepcopy(newer)),
+                       lambda p: p["forbidden_auto_models"].append("gpt-6.2-sol"),
+                       lambda p: p.update(owner_issue=1)):
+            bad = copy.deepcopy(policy)
+            mutate(bad)
+            path = self.tmp / "policy.json"
+            path.write_text(json.dumps(bad))
+            with mock.patch.object(m, "POLICY", path), self.assertRaisesRegex(ValueError, "SOL_MODEL_POLICY"):
+                m.model_policy("gpt-6.2-sol")
+        with mock.patch.dict(m.PRICES_PER_MILLION, {"gpt-6.2-sol": {"input": 2.0, "output": 12.0}}), \
+                self.assertRaisesRegex(ValueError, "SOL_MODEL_POLICY"):
+            m.model_policy("gpt-6.2-sol")
+        self.assertEqual(m.model_policy("gpt-6.2-sol")["id"], "gpt-6.2-sol")
+
 
 class TestTrigger(Base):
     def assert_rejected(self, ev=None, reason="EXACT_OWNER_TRIGGER_REQUIRED", **env):
@@ -272,6 +354,16 @@ class TestTrigger(Base):
         del ledger["astra_mission_reservations"]
         self.ledger.write_text(json.dumps(ledger))
         self.assert_rejected(reason="MISSION_RESERVATION_REQUIRED")
+
+    def test_consumed_reservation_refused(self):
+        # R2-1: a CONSUMED_PENDING_INVOICE row is counted by the guard but never launches again.
+        ledger = json.loads(self.ledger.read_text())
+        ledger["astra_mission_reservations"] = [consumed_row()]
+        self.ledger.write_text(json.dumps(ledger))
+        with self.assertRaisesRegex(ValueError, "MISSION_RESERVATION_MISMATCH"):
+            m.check_reservation(MID, 20)
+        self.assert_rejected(reason="MISSION_RESERVATION_MISMATCH")
+        self.assertFalse((self.out / "guard_mission_id.txt").exists())
 
 
 class TestClaimAndNoRetry(Base):
@@ -503,6 +595,67 @@ class TestClaimAndNoRetry(Base):
             self.assertEqual(m.report(self.out), 0)
 
 
+class TestSolMission(Base):
+    """A Sol mission uses its own model in the provider GET, the POST body, the identity check and the receipt."""
+    def setUp(self):
+        super().setUp()
+        ledger = json.loads(self.ledger.read_text())
+        ledger["astra_mission_reservations"] = [reservation(SOL_MID, 3)]
+        self.ledger.write_text(json.dumps(ledger))
+
+    def sol_env(self):
+        return self.env(event(body=trigger(mid=SOL_MID)))
+
+    def run_sol(self, api):
+        with self.sol_env(), mock.patch.object(m.core, "http_json", api), contextlib.redirect_stdout(io.StringIO()):
+            m.prepare(self.out, preview=False)
+            m.reserve(self.out, self.guard_pass(mid=SOL_MID))
+            m.mark_attempt(self.out)
+            m.submit(self.out)
+            return m.collect(self.out, sleep=lambda s: None)
+
+    def test_full_sol_flow(self):
+        api = FakeAPI(model="gpt-6.2-sol", mid=SOL_MID)
+        self.assertEqual(self.run_sol(api), 0)
+        self.assertEqual(api.count("GET", "/models/gpt-6.2-sol"), 1)
+        self.assertEqual(api.count("GET", "/models/" + m.MODEL), 0)
+        posted = [c[2] for c in api.calls if c[0] == "POST" and c[1].endswith("/responses")]
+        self.assertEqual(len(posted), 1)
+        self.assertEqual((posted[0]["model"], posted[0]["reasoning"]), ("gpt-6.2-sol", {"effort": "max"}))
+        receipt = json.loads((self.out / "receipt.json").read_text())
+        self.assertEqual((receipt["model"], receipt["provider_model"], receipt["owner_reserved_usd"]),
+                         ("gpt-6.2-sol", "gpt-6.2-sol", 3))
+        self.assertEqual(receipt["estimated_upper_usd"], m.estimate_cost("gpt-6.2-sol", 90000, 30000))
+
+    def test_sol_provider_model_mismatch_refused(self):
+        for reported in (m.MODEL, "gpt-6.1-sol", "gpt-6.2-sol-mini", None):
+            api = FakeAPI(model="gpt-6.2-sol", mid=SOL_MID)
+            api.response = dict(api.response, model=reported)
+            self.out = self.tmp / ("s" + str(len(os.listdir(self.tmp))))
+            with self.assertRaisesRegex(ValueError, "PROVIDER_RESPONSE_IDENTITY_MISMATCH"):
+                self.run_sol(api)
+            self.assertEqual(api.count("POST", "/responses"), 1)
+            self.assertFalse((self.out / "receipt.json").exists())
+        dated = FakeAPI(model="gpt-6.2-sol", mid=SOL_MID)
+        dated.response = dict(dated.response, model="gpt-6.2-sol-2026-11-18")
+        self.out = self.tmp / "dated"
+        self.assertEqual(self.run_sol(dated), 0)
+
+    def test_sol_provider_get_must_name_sol(self):
+        api = FakeAPI(model="gpt-6.2-sol", mid=SOL_MID)
+        real = api.__call__
+
+        def wrong(method, url, **kw):
+            if method == "GET" and url.endswith("/models/gpt-6.2-sol"):
+                return {"id": m.MODEL}
+            return real(method, url, **kw)
+        with self.sol_env(), mock.patch.object(m.core, "http_json", side_effect=wrong):
+            m.prepare(self.out, preview=False)
+            with self.assertRaisesRegex(ValueError, "PROVIDER_MODEL_NOT_VERIFIED"):
+                m.reserve(self.out, self.guard_pass(mid=SOL_MID))
+        self.assertEqual(api.count("POST", "/comments"), 0)
+
+
 class TestCostGuard(unittest.TestCase):
     """The shared guard counts each mission reservation and admits only its own mission."""
     def setUp(self):
@@ -530,12 +683,50 @@ class TestCostGuard(unittest.TestCase):
     def test_canonical_mission_row(self):
         rows = json.loads(CANONICAL_LEDGER.read_text()).get("astra_mission_reservations", [])
         self.assertEqual([(r["work_id"], r["status"], r["lower_usd"], r["upper_usd"], r["one_paid_post_max"]) for r in rows],
-                         [("ASTRA-S1-V32-REDTEAM-20261118-R2", "OWNER_RESERVED_PREHTTP", 0, 20, 1)])
-        proc = subprocess.run([sys.executable, str(GUARD), "--receipt-root", str(self.tmp / "receipts"),
-                               "--hard-stop-usd", str(self.stop), "--reserve-usd", "4", "--new-request-upper-usd", "0",
-                               "--liability-ledger", str(CANONICAL_LEDGER), "--owner-astra-mission-id",
-                               "ASTRA-S1-V32-REDTEAM-20261118-R2"], capture_output=True, text=True, cwd=ROOT, timeout=120)
-        self.assertEqual(proc.returncode, 0, proc.stdout)
+                         [("ASTRA-S1-V32-REDTEAM-20261118-R2", "CONSUMED_PENDING_INVOICE", 0, 20, 1),
+                          ("ASTRA-ALPHA-GLOBAL-SPECIALIST-20261118", "OWNER_RESERVED_PREHTTP", 0, 7, 1),
+                          ("ASTRA-S1-V32-REDTEAM-20261118-R2-SOL", "OWNER_RESERVED_PREHTTP", 0, 3, 1),
+                          ("ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118", "OWNER_RESERVED_PREHTTP", 0, 20, 1)])
+        self.assertEqual((rows[0]["consumed_run_id"], rows[0]["consumed_response_id"],
+                          rows[0]["consumed_estimated_upper_usd"]),
+                         (44386340009, "resp_0477227a70790153006afe044ec9c487d08ebd44a0466687db", 3.13212))
+        self.assertEqual(res.mission_reservations(json.loads(CANONICAL_LEDGER.read_text()), set())[:2], (50.0, 4))
+        for mid in (ALPHA_MID, SOL_MID):
+            proc = subprocess.run([sys.executable, str(GUARD), "--receipt-root", str(self.tmp / "receipts"),
+                                   "--hard-stop-usd", str(self.stop), "--reserve-usd", "4", "--new-request-upper-usd", "0",
+                                   "--liability-ledger", str(CANONICAL_LEDGER), "--owner-astra-mission-id", mid],
+                                  capture_output=True, text=True, cwd=ROOT, timeout=120)
+            self.assertEqual(proc.returncode, 0, proc.stdout)
+            self.assertEqual(json.loads(proc.stdout)["pending_liability_upper_usd"], 50.0)
+        # The consumed R2 row stays counted but can never launch again.
+        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
+            m.check_reservation(MID, 20)
+        for mid, usd in ((ALPHA_MID, 7), (SOL_MID, 3)):
+            with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER):
+                m.check_reservation(mid, usd)
+
+    def test_consumed_row_still_counted_in_full(self):
+        code, result = self.guard([consumed_row()], hard_stop=50)
+        _, without = self.guard([], hard_stop=50)
+        self.assertEqual(code, 0, result)
+        self.assertEqual(result["pending_liability_upper_usd"], without["pending_liability_upper_usd"] + 20)
+        self.assertEqual(res.mission_reservations({"astra_mission_reservations": [consumed_row()]}, set())[:2],
+                         (20.0, 1))
+
+    def test_consumed_rows_validated(self):
+        for bad in (consumed_row(consumed_run_id="44386340009"), consumed_row(consumed_run_id=True),
+                    consumed_row(consumed_run_id=0), consumed_row(consumed_response_id="chatcmpl_x"),
+                    consumed_row(consumed_response_id=None), consumed_row(consumed_estimated_upper_usd=20.01),
+                    consumed_row(consumed_estimated_upper_usd=0), consumed_row(consumed_estimated_upper_usd=float("inf")),
+                    consumed_row(consumed_estimated_upper_usd="3"), consumed_row(status="CONSUMED"),
+                    dict(reservation(), consumed_run_id=1)):
+            with self.assertRaises(ValueError):
+                res.mission_reservations({"astra_mission_reservations": [bad]}, set())
+        for missing in ("consumed_run_id", "consumed_response_id", "consumed_estimated_upper_usd"):
+            row = consumed_row()
+            del row[missing]
+            with self.assertRaises(ValueError):
+                res.mission_reservations({"astra_mission_reservations": [row]}, set())
 
     def test_mission_passes_and_is_counted(self):
         code0, before = self.guard(None, "--owner-astra-mission-id", MID)
