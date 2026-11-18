@@ -246,13 +246,16 @@ export function buildUnifiedRootHtml(graphSource,proSource){
     compactCore.replace(swingOverview,'').replace('<details class="cn-pro-more">',
       '<p id="pro-next-gate" class="cn-pro-next-gate" role="status"></p>'+
       horizonStrip+
-      '<section class="cn-risk-quick" aria-label="Pullback classification">'+
+      // Evidence gate (owner 2026-11-16): pullback research is suspended with 0 closed
+      // episodes, so the ordinal is shown as one muted research line; the rail and the
+      // explanation stay one tap away. Flip data-evidence only after the research gate passes.
+      '<section class="cn-risk-quick" data-evidence="research" aria-label="Pullback classification">'+
       '<div class="cn-risk-quick-head"><div><small id="cn-risk-quick-label">RISIKO FOR YDERLIGERE FALD</small>'+
       '<strong id="cn-risk-quick-state">— / 5 · afventer nye data</strong></div>'+
-      '<span id="cn-risk-quick-note">Risikoniveau, ikke sandsynlighed</span></div>'+
+      '<span id="cn-risk-quick-note">Forskning · ikke bevist edge</span></div>'+
+      '<details class="cn-risk-more"><summary id="cn-risk-more-title">Læs risikovurderingen</summary>'+
       '<div id="cn-risk-quick-steps" class="risk-class-rail" aria-hidden="true"></div>'+
       '<p id="cn-risk-quick-brief" class="cn-risk-quick-brief">Afventer risikovurdering.</p>'+
-      '<details class="cn-risk-more"><summary id="cn-risk-more-title">Læs risikovurderingen</summary>'+
       '<div class="cn-risk-quick-guidance">'+
       '<p><small id="cn-risk-quick-meaning-label">HVAD BETYDER DET?</small><span id="cn-risk-quick-meaning">Afventer opdateret risikovurdering</span></p>'+
       '<p><small id="cn-risk-quick-action-label">SÅDAN FORHOLDER DU DIG</small><span id="cn-risk-quick-action">Afvent opdateret Kompas før nye beslutninger</span></p>'+

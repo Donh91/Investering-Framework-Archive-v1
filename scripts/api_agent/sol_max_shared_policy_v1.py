@@ -97,7 +97,13 @@ def quoted_upper_usd(context_bytes: int, output_tokens: int, row: dict) -> float
     upper_input_tokens = context_bytes + 20_000
     if upper_input_tokens > 272_000:
         raise ValueError("SOL_MAX_LONG_CONTEXT_PRICE_NEEDS_DISTINCT_ADMISSION")
-    upper = ((upper_input_tokens * row["standard_input_usd_per_million"])
+    # 6.2 cache writes can cost more than ordinary input; reserve the 12h upper rate.
+    input_rate = row["standard_input_usd_per_million"]
+    if row["id"] == "gpt-6.2-sol":
+        if row.get("standard_cache_write_12h_usd_per_million") != 5:
+            raise ValueError("SOL_MAX_CACHE_WRITE_PRICE_NOT_PINNED")
+        input_rate = max(input_rate, row["standard_cache_write_12h_usd_per_million"])
+    upper = ((upper_input_tokens * input_rate)
              + (output_tokens * row["standard_output_usd_per_million"])) / 1_000_000
     if upper > MAX_NEW_REQUEST_USD or upper < 0:
         raise ValueError("SOL_MAX_NEW_REQUEST_PRICE_CAP_EXCEEDED")

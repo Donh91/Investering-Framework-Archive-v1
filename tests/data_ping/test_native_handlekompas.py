@@ -332,5 +332,69 @@ class NativeHandlekompasTest(unittest.TestCase):
                                                      direction="BULLISH")["reentry_state"], "REVIEW")
 
 
+    def test_outage_preserves_flush_and_reclaim_obligations(self):
+        high = self._protection_transition("HIGH")
+        reclaim = self._protection_transition("ELEVATED", high)
+        review = self._protection_transition("NORMAL", reclaim, posture="PREPARE", direction="BULLISH")
+        self.assertEqual(review["reentry_state"], "REVIEW")
+        for start, expected_carry in (
+            (high, "WAIT_FOR_FLUSH"), (reclaim, "WAIT_FOR_RECLAIM"),
+            (review, "WAIT_FOR_RECLAIM"),
+        ):
+            with self.subTest(start=start["reentry_state"]):
+                gap = self._protection_transition("UNAVAILABLE", start)
+                self.assertEqual(gap["reentry_state"], "UNAVAILABLE")
+                self.assertEqual(gap["reentry_pending_before_gap"], expected_carry)
+                gap = self._protection_transition("NORMAL", gap, packet=self.packet(validation="FAIL"))
+                self.assertEqual(gap["reentry_state"], "UNAVAILABLE")
+                self.assertEqual(gap["reentry_pending_before_gap"], expected_carry)
+                recovered = self._protection_transition("NORMAL", gap, posture="PREPARE", direction="BULLISH")
+                self.assertEqual(recovered["reentry_state"], "WAIT_FOR_RECLAIM")
+                self.assertNotIn("reentry_pending_before_gap", recovered)
+                self.assertEqual(self._protection_transition("NORMAL", recovered, posture="PREPARE",
+                                                             direction="BULLISH")["reentry_state"], "REVIEW")
+                self.assertEqual(self._protection_transition("HIGH", gap)["reentry_state"], "WAIT_FOR_FLUSH")
+
+    def test_outage_memory_does_not_invent_or_restore_permission(self):
+        priors = [
+            None,
+            {"pullback_risk_state": "UNAVAILABLE", "reentry_state": "UNAVAILABLE"},
+            {"pullback_risk_state": "UNAVAILABLE", "reentry_state": "UNAVAILABLE",
+             "reentry_pending_before_gap": "REVIEW"},
+            {"pullback_risk_state": "UNAVAILABLE", "reentry_state": "UNAVAILABLE",
+             "reentry_pending_before_gap": ["WAIT_FOR_RECLAIM"]},
+            {"pullback_risk_state": "NORMAL", "reentry_state": "INACTIVE",
+             "reentry_pending_before_gap": "WAIT_FOR_FLUSH"},
+        ]
+        for prior in priors:
+            with self.subTest(prior=prior):
+                gap = self._protection_transition("UNAVAILABLE", prior)
+                self.assertIsNone(gap["reentry_pending_before_gap"])
+                self.assertEqual(self._protection_transition("NORMAL", gap, posture="PREPARE",
+                                                             direction="BULLISH")["reentry_state"], "INACTIVE")
+
+    def test_missing_cn_or_projection_preserves_pending_reclaim(self):
+        start = self._protection_transition("ELEVATED", self._protection_transition("HIGH"))
+        for cn in (None, {"decision_projection": {"contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1"}}):
+            with self.subTest(cn=cn):
+                gap = protection_tracker(self.packet(), {"NOW": "PREPARE"},
+                    {"directional_state": "BULLISH"}, cn,
+                    as_of=datetime(2026, 9, 8, 20, 0, tzinfo=timezone.utc),
+                    prior_compass={"protection_tracker": start})
+                self.assertEqual(gap["reentry_state"], "UNAVAILABLE")
+                self.assertEqual(gap["reentry_pending_before_gap"], "WAIT_FOR_RECLAIM")
+                self.assertEqual(self._protection_transition("ELEVATED", gap)["reentry_state"],
+                                 "WAIT_FOR_RECLAIM")
+
+    def test_review_oscillation_after_recovery_never_latches(self):
+        high = self._protection_transition("HIGH")
+        gap = self._protection_transition("UNAVAILABLE", high)
+        prior = self._protection_transition("NORMAL", gap, posture="PREPARE", direction="BULLISH")
+        for risk, expected in (("NORMAL", "REVIEW"), ("ELEVATED", "WAIT_FOR_RECLAIM"),
+                               ("NORMAL", "REVIEW"), ("ELEVATED", "WAIT_FOR_RECLAIM")):
+            prior = self._protection_transition(risk, prior, posture="PREPARE", direction="BULLISH")
+            self.assertEqual(prior["reentry_state"], expected)
+
+
 if __name__=="__main__":
     unittest.main()

@@ -7,11 +7,13 @@ from scripts.api_agent import sol_max_shared_policy_v1 as m
 
 ROOT = Path(__file__).resolve().parents[2]
 POLICY = json.loads((ROOT / m.POLICY_PATH).read_text())
-PRICE = {"gpt-6.1-sol": {"input": 2, "output": 10}}
+PRICE = {"gpt-6.1-sol": {"input": 2, "output": 10},
+         "gpt-6.2-sol": {"input": 2, "output": 10}}
 
 
 def future_policy():
     policy = copy.deepcopy(POLICY)
+    policy["available_verified_sol_models"] = policy["available_verified_sol_models"][:1]
     policy["available_verified_sol_models"].append({
         "id": "gpt-6.2-sol",
         "version": [6, 2],
@@ -27,7 +29,15 @@ def future_policy():
 
 
 class SharedSolOwnerPolicyTests(unittest.TestCase):
-    def test_today_verifies_exactly_six_one(self):
+    def test_official_six_two_requires_project_get(self):
+        self.assertEqual(m.choose_model(POLICY, PRICE, available=lambda model: model == "gpt-6.2-sol")["id"], "gpt-6.2-sol")
+        self.assertEqual(m.choose_model(POLICY, PRICE, available=lambda _: False)["id"], "gpt-6.1-sol")
+        row = m.choose_model(POLICY, PRICE, available=lambda _: True)
+        self.assertEqual(m.quoted_upper_usd(180000, 128000, row), 2.28)
+        with self.assertRaisesRegex(ValueError, "CACHE_WRITE_PRICE_NOT_PINNED"):
+            m.quoted_upper_usd(100, 2048, dict(row, standard_cache_write_12h_usd_per_million=0))
+
+    def test_missing_project_probe_retains_six_one(self):
         self.assertEqual(m.choose_model(POLICY, PRICE)["id"], "gpt-6.1-sol")
         self.assertFalse(POLICY["unverified_next_candidate_enabled"])
         self.assertIn("gpt-6-astra", POLICY["forbidden_auto_models"])
@@ -50,7 +60,7 @@ class SharedSolOwnerPolicyTests(unittest.TestCase):
     def test_unverified_version_price_or_astra_is_never_selected(self):
         policy = future_policy()
         with self.assertRaisesRegex(ValueError, "PRICE_NOT_PINNED"):
-            m.choose_model(policy, PRICE, available=lambda _: True)
+            m.choose_model(policy, {"gpt-6.1-sol": PRICE["gpt-6.1-sol"]}, available=lambda _: True)
         for attack in ("gpt-6-astra", "gpt-6.2-astra",
                        "gpt-6.2-sol-but-private"):
             fake = future_policy()
