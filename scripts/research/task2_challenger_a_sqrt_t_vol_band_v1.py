@@ -1044,15 +1044,22 @@ def publish_mature_score(root: Path) -> dict:
 
 def main(argv: Iterable[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("command", choices=["issue", "score", "decide", "preflight-score"])
+    ap.add_argument("command", choices=["issue", "score", "decide", "preflight-score", "publish-mature-score"])
     ap.add_argument("--repo-root", default=".")
-    ap.add_argument("--week", required=True, help="ISO week, e.g. 2026-W47")
+    ap.add_argument("--week", help="ISO week, e.g. 2026-W47; publisher derives it from real UTC")
     ap.add_argument("--t0", help="fixture clock only, never accepted as main-origin evidence")
     ap.add_argument("--synthetic-fixture-clock", action="store_true")
     ap.add_argument("--output")
     ap.add_argument("--publication-commit", help="exact prospective score commit for preflight-score")
     a = ap.parse_args(list(argv) if argv is not None else None)
     root = Path(a.repo_root)
+    if a.command == "publish-mature-score":
+        if a.week or a.output or a.publication_commit or a.t0 or a.synthetic_fixture_clock:
+            ap.error("publisher only accepts --repo-root; real UTC and canonical paths are mandatory")
+        print(json.dumps(publish_mature_score(root), sort_keys=True))
+        return 0
+    if not a.week:
+        ap.error("--week is required")
     year, week = _parse_week(a.week)
     monday = week_monday(year, week)
     if a.command == "preflight-score":
