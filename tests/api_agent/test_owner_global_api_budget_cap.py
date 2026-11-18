@@ -1,5 +1,6 @@
 """No-network, source-bound financial risk range and future MAX preview tests."""
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -305,6 +306,33 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
             f.write_text(json.dumps(bad))
             with self.assertRaisesRegex(ValueError, "PROVIDER_OWNER_AGGREGATE_INVALID"):
                 pending_risk(f)
+
+    def test_consumed_maeve_only_offline_pr_preflight_can_account(self):
+        from unittest.mock import patch
+        args = [
+            sys.executable, str(SCRIPT),
+            "--receipt-root", str(ROOT / "research/api_agent/outputs"),
+            "--hard-stop-usd", "100", "--reserve-usd", "4",
+            "--owner-astra-program-work-id", "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE",
+        ]
+        env = {"GITHUB_ACTIONS":"true","GITHUB_EVENT_NAME":"pull_request",
+               "GITHUB_REPOSITORY":"Donh91/Investering-Framework-Archive-v1",
+               "GITHUB_JOB":"preflight","GITHUB_WORKFLOW":"Owner Astra MAEVE Task2 one-shot"}
+        with patch.dict(os.environ, env):
+            run = subprocess.run(args, capture_output=True, text=True, cwd=ROOT, timeout=25)
+            value = json.loads(run.stdout)
+            self.assertEqual(run.returncode, 0, value)
+            self.assertTrue(value["historical_ci_preview_only"])
+            self.assertFalse(value["paid_authority"])
+            self.assertEqual(value["pending_liability_count"],0)
+        for key, bad in (("GITHUB_EVENT_NAME","issue_comment"),("GITHUB_JOB","paid"),
+                         ("GITHUB_ACTIONS","false"),("GITHUB_WORKFLOW","unrelated")):
+            with patch.dict(os.environ, {**env,key:bad}):
+                run = subprocess.run(args, capture_output=True, text=True, cwd=ROOT, timeout=25)
+                value = json.loads(run.stdout)
+                self.assertNotEqual(run.returncode,0,value)
+                self.assertFalse(value["historical_ci_preview_only"])
+                self.assertFalse(value["paid_authority"])
 
     def test_native_caller_caps_above_40_only_in_hard_disabled_astra_v2_job(self):
         import re

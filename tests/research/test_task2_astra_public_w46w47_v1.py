@@ -36,8 +36,16 @@ class TestAstraPublicOneShot(unittest.TestCase):
         self.assertTrue(all(len(x["sha256"])==64 and x["bytes"]>0 for x in sources))
 
     def test_preflight_no_network_and_no_provider_post(self):
+        # The consumed canonical mission cannot admit a new reservation.
+        with self.assertRaises(ValueError):
+            a.check_reservation()
+        # Retain source encoding coverage using an isolated historical fixture.
         with tempfile.TemporaryDirectory() as d:
-            with mock.patch.dict(os.environ, {"GITHUB_SHA": "a"*40}):
+            p = Path(d)/"historical_preview_ledger.json"
+            p.write_text(json.dumps({"absolute_budget_usd":50,"owner_reservations":[
+                {"work_id":a.MISSION,"status":"OWNER_RESERVED_PREHTTP","upper_usd":10,
+                 "one_paid_post_max":1,"reconciliation_required":True}]}))
+            with mock.patch.object(a,"LEDGER",p), mock.patch.dict(os.environ, {"GITHUB_SHA": "a"*40}):
                 with mock.patch.object(a.core,"http_json",side_effect=AssertionError("network used")):
                     a.prepare(Path(d),preview=True)
             req=json.loads((Path(d)/"request.json").read_text())

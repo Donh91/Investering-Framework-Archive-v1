@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -407,6 +408,18 @@ def main() -> None:
     # one-shot IDs in the canonical ledger. The native owner issue event + claim
     # is separately enforced by each runner, not by this quote-only guard.
     approved_astra_id = args.owner_astra_program_work_id
+    historical_ci_preview = False
+    # This existing MAEVE PR CI step is an offline accounting preview.
+    # It must never admit a historical mission on any live issue_comment event.
+    maeve_pr_preview = (
+        approved_astra_id == MAEVE_WORK_ID
+        and os.environ.get("GITHUB_ACTIONS") == "true"
+        and os.environ.get("GITHUB_EVENT_NAME") == "pull_request"
+        and os.environ.get("GITHUB_REPOSITORY") == "Donh91/Investering-Framework-Archive-v1"
+        and os.environ.get("GITHUB_JOB") == "preflight"
+        and os.environ.get("GITHUB_WORKFLOW") == "Owner Astra MAEVE Task2 one-shot"
+        and args.liability_ledger.resolve() == CANONICAL_LIABILITY_LEDGER.resolve()
+    )
     exceptional = (approved_astra_id in OWNER_ASTRA_PROGRAM_WORK
                    and args.hard_stop_usd == 100.0
                    and args.reserve_usd >= 4.0
@@ -427,7 +440,14 @@ def main() -> None:
                            "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/" +
                            str(OWNER_ASTRA_PROGRAM_WORK[approved_astra_id])]
                 if len(exact) != 1:
-                    raise ValueError("DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED")
+                    historical = [r for r in lr.get("owner_reservations", [])
+                                  if r.get("work_id") == MAEVE_WORK_ID
+                                  and r.get("status") == "CONSUMED_SETTLED_OWNER_PROVIDER_EVIDENCE"
+                                  and r.get("native_evidence") == CONSUMED_ASTRA_NATIVE_EVIDENCE[MAEVE_WORK_ID]]
+                    if maeve_pr_preview and len(historical) == 1 and not errors:
+                        historical_ci_preview = True
+                    else:
+                        raise ValueError("DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED")
             except (OSError, ValueError, TypeError, KeyError):
                 errors.append({"path": "OWNER_ASTRA_PROGRAM",
                                "reason": "DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED"})
@@ -492,6 +512,8 @@ def main() -> None:
         "exposure_range_max_usd": round(exposure_upper, 8) if exposure_upper is not None else None,
         "normal_remaining_usd": round(normal_remaining, 8) if normal_remaining is not None else None,
         "approval_quote": quoted,
+        "historical_ci_preview_only": historical_ci_preview,
+        "paid_authority": False,
         "owner_global_remaining_usd_after_risk": round(owner_remaining, 8) if owner_remaining is not None else None,
         "owner_remaining_usd": round(owner_remaining, 8) if owner_remaining is not None else None,
         "reserve_usd": effective_reserve,

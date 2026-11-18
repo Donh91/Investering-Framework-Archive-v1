@@ -74,7 +74,7 @@ class Tests(unittest.TestCase):
     m.core.write_once(out/"claim.json",{"mission":m.MISSION,"request_sha256":digest,
       "source_main_sha":"a"*40,"run_id":"123"})
     m.mark_attempt(out)
-    with mock.patch.dict(os.environ,{"OPENAI_API_KEY":"synthetic_no_network"}):
+    with mock.patch.dict(os.environ,{"OPENAI_API_KEY":"mock-test"}):
      with mock.patch.object(m.core,"http_json",return_value={"id":"resp_SYNTHETIC123456",
        "model":m.MODEL,"status":"in_progress"}) as http:
       m.submit(out)

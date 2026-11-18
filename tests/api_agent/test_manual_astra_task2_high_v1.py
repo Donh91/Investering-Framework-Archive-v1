@@ -15,7 +15,7 @@ ENV = {
     "GITHUB_RUN_ID": "43419999999",
     "GITHUB_REPOSITORY": "Donh91/Investering-Framework-Archive-v1",
     "GITHUB_TOKEN": "INERT_SYNTHETIC_TEST",
-    "OPENAI_API_KEY": "INERT_SYNTHETIC_TEST",
+    "OPENAI_API_KEY": "mock-test",
     "ASTRA_OWNER_CONFIRM": m.OWNER_CONFIRM,
 }
 
