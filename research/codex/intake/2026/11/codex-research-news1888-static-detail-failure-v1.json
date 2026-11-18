@@ -1,0 +1,86 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-news1888-static-detail-failure-v1",
+  "submitted_at_utc": "2026-11-17T20:53:16.928Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Owner-approved News Intelligence vNext #1888, 2026-11-17",
+    "source_paths": [
+      "scripts/data_terminal/situation_room_static_daily_adapter.py",
+      "scripts/data_terminal/situation_room_daily_owner.py",
+      "tests/data_terminal/test_situation_room_static_daily_adapter.py",
+      "tests/data_terminal/test_situation_room_daily_owner.py"
+    ]
+  },
+  "title": "NI-G0: fail closed on dated Situation Room detail fetch failure",
+  "finding_key": "NEWS1888_STATIC_DATED_SECOND_FETCH_FALSE_NO_EVENT",
+  "primary_target": "scripts/data_terminal/situation_room_static_daily_adapter.py",
+  "objective": "In the existing dated static Situation Room adapter only, prevent NO_NEW_MATERIAL_CATALYST/PASS when a relevant same-day deterministic briefing was identified but its second (detail) retrieval failed, despite a PASS landing receipt. Preserve real primary events and their original authority and generic owner's intentional independent primary-only semantics. Do not change source membership, workflow cadence or global coverage policy. Scope is original #1888/#1563; distinct from prior cancelled-run repair and schedule-stale signature.",
+  "allowed_change_scope": [
+    "scripts/data_terminal/situation_room_static_daily_adapter.py",
+    "tests/data_terminal/test_situation_room_static_daily_adapter.py"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "af02169f776d4252d5824ba7d6e6caa69c3b026a",
+      "summary": "Direct main commit read at audit; source paths below are pinned to this commit."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/blob/af02169f776d4252d5824ba7d6e6caa69c3b026a/scripts/data_terminal/situation_room_static_daily_adapter.py",
+      "summary": "direct_daily_candidate_links returns the same dated URL; apply_situation_room_retrieval_fail_closed only checks landing receipt and apply_dated_discovery_fail_closed only checks DISCOVERY_UNVERIFIED, not DISCOVERY_FETCH_FAILED."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/blob/af02169f776d4252d5824ba7d6e6caa69c3b026a/scripts/data_terminal/situation_room_daily_owner.py#L313-L443",
+      "summary": "run fetches landing, then fetches candidate independently; failed discovery candidate enters unverified_discoveries and does not enter current_discoveries. With 6/6 primary landings PASS, no events and no unresolved primary candidates, daily_result is NO_NEW_MATERIAL_CATALYST."
+    },
+    {
+      "kind": "TEST",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/blob/af02169f776d4252d5824ba7d6e6caa69c3b026a/tests/data_terminal/test_situation_room_daily_owner.py",
+      "summary": "Existing generic owner's test_discovery_fetch_failure_does_not_veto_clean_primary_no_event intentionally preserves primary-only semantics. Do not change this generic contract; add the narrow static adapter regression."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/blob/af02169f776d4252d5824ba7d6e6caa69c3b026a/tests/data_terminal/test_situation_room_static_daily_adapter.py",
+      "summary": "Existing static tests cover failure of initial landing and missing publication time, not failed second retrieval after successful initial response."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1888",
+      "summary": "Original NI-G0/G2 mission. This is code-derived failure path, not a claimed observed live incident."
+    }
+  ],
+  "reproduction": "On fresh main, add regression before code change. Use actual adapter.run and actual owner.run with mocked owner.fetch: first fetch exact https://situationroom.space/briefing/2026-11-17 returns valid HTML title Bitcoin liquidity briefing PASS; subsequent fetch of that exact URL returns FAIL (e.g. timeout). Return PASS empty landing pages for all six actual primary sources; no primary candidates. Assert persisted dated row and pointer must be REVIEW_REQUIRED_UNVERIFIED_DISCOVERY/DEGRADED and preserve the DISCOVERY_FETCH_FAILED row and its receipts. Existing code path instead returns NO_NEW_MATERIAL_CATALYST/PASS. Static inspection established branch path; actual Python regression execution pending. Do not self-declare CODEX_READY. Compare with distinct schedule-stale remediation dd02bd749c3ef9b2172d and prior August cancellation repair (POST_FIX_OBSERVATION); avoid touching their workflow scope.",
+  "acceptance_tests": {
+    "positive": [
+      "Successful landing + detail and legitimate independent primary no-event preserves current semantics when no unresolved dated discovery exists.",
+      "A genuinely verified primary event remains retained with original timestamps and noncanonical authority even when discovery detail fails.",
+      "Existing generic owner and static adapter full unittest suites pass."
+    ],
+    "negative": [
+      "The exact same-day two-fetch scenario above cannot persist PASS/NO_NEW_MATERIAL_CATALYST; test fails on pre-fix code and under mutation removing the new guard.",
+      "Failed initial landing remains DEGRADED; primary source insufficiency remains UNKNOWN; do not fabricate timestamps or verification.",
+      "No future/foreign URL is promoted into today's verified event, no historical rewrite and never canonical/market/portfolio effect."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "workflow schedule or trigger changes",
+    "new source or provider",
+    "historical artifact rewrite",
+    "generic owner semantics",
+    "self-merge"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "Exact-head native static/owner regression checks plus next natural dated owner readback; do not claim organic failure occurrence or improved event recall from synthetic tests alone."
+}
