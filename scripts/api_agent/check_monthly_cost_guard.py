@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,6 +13,7 @@ SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
 from api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
+from api_agent import astra_mission_reservations_v1 as astra_missions
 from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegative, json_evidence_paths, load_evidence
 
 # Owner explicit interactive approval 2026-11-13: account-wide USD50 per month
@@ -19,7 +22,7 @@ from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegati
 # Legacy caller-specific smaller caps/reserves remain binding; this code never
 # grants a paid POST or lowers a lane's independent ceiling.
 OWNER_GLOBAL_TARGET_USD = 50.0
-OWNER_GLOBAL_HARD_STOP_USD = 100.0
+OWNER_GLOBAL_HARD_STOP_USD = 100.0  # Owner decision 2026-11-18; caller caps unchanged.
 OWNER_GLOBAL_RESERVE_USD = 4.0  # Routine paths retain existing protected headroom.
 OWNER_SINGLE_REQUEST_CAP_USD = 3.0
 # Previous source-bound liabilities were provider-reconciled against private
@@ -49,6 +52,196 @@ SETTLED_NATIVE_POST_IDS = {"41870364609", "41949497953", "42204120988"}
 # pre-HTTP reservations stay counted (and may not silently disappear from the
 # canonical ledger) until per-model provider evidence settles them (WO-5).
 SETTLED_ASTRA_WORK_IDS: set[str] = set()
+# Exact reviewed source evidence for consumed owner reservations. No inferred per-run USD.
+OWNER_CONSUMED_ASTRA_EVIDENCE = {
+    "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE": {
+        "owner_issue": 1596,
+        "owner_trigger_comment_id": None,
+        "owner_event": "workflow_dispatch",
+        "owner_actor": "Donh91",
+        "claim_comment_id": 6851822851,
+        "run_id": "43419077122",
+        "run_conclusion": "success",
+        "artifact_id": "14033562358",
+        "output_sha256": "d244b7f8a6293792fabbd7694bd9f85893f7c724ec7b6458af8c99acbef07709",
+        "archive_pr": 2126,
+        "completion_comment_id": 6852191726,
+        "input_tokens": 17037,
+        "output_tokens": 15497,
+        "estimated_text_model_usd": 0.94522
+    },
+    "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE": {
+        "owner_issue": 1596,
+        "owner_trigger_comment_id": 6854781097,
+        "owner_event": "issue_comment",
+        "owner_actor": "Donh91",
+        "claim_comment_id": 6854798355,
+        "run_id": "43436726016",
+        "run_conclusion": "success",
+        "artifact_id": "14045101056",
+        "output_sha256": "34c77a52cae0f45c78169d84d48506fcc096b11c5ca36e744d3965cca2c56eee",
+        "archive_pr": 2126,
+        "completion_comment_id": 6855239533,
+        "input_tokens": 131489,
+        "output_tokens": 38738,
+        "estimated_text_model_usd": 3.25179
+    },
+    "ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE": {
+        "owner_issue": 1596,
+        "owner_trigger_comment_id": 6915834169,
+        "owner_event": "issue_comment",
+        "owner_actor": "Donh91",
+        "claim_comment_id": 6915851510,
+        "run_id": "43862850019",
+        "run_conclusion": "success",
+        "artifact_id": "14224547889",
+        "output_sha256": "981ce1be3655a031810aba7c7f79044ed923b0c608d509ce54fa3bd9f3bce864",
+        "archive_pr": 2195,
+        "completion_comment_id": 6925700892,
+        "input_tokens": 21561,
+        "output_tokens": 12931,
+        "estimated_text_model_usd": 0.86216
+    },
+    "ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE": {
+        "owner_issue": 1156,
+        "owner_trigger_comment_id": 6928271522,
+        "owner_event": "issue_comment",
+        "owner_actor": "Donh91",
+        "claim_comment_id": 6928295238,
+        "run_id": "43949496515",
+        "run_conclusion": "success",
+        "artifact_id": "14268215043",
+        "output_sha256": "b20e7e940c2cdbb6f6dd4339193eb5295d2be41d4dde6bf9f37cb929c8506785",
+        "archive_pr": 2204,
+        "completion_comment_id": 6929489944,
+        "input_tokens": 49007,
+        "output_tokens": 18488,
+        "estimated_text_model_usd": 1.41447
+    },
+    "ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE": {
+        "owner_issue": 1827,
+        "owner_trigger_comment_id": 6928297034,
+        "owner_event": "issue_comment",
+        "owner_actor": "Donh91",
+        "claim_comment_id": 6928319885,
+        "run_id": "43949672635",
+        "run_conclusion": "success",
+        "artifact_id": "14267453073",
+        "output_sha256": "cf072b3cf7f674e94522a85c7660bad309cd67c57dcb08f2b2ca35e7bffacc45",
+        "archive_pr": 2204,
+        "completion_comment_id": 6929491796,
+        "input_tokens": 66483,
+        "output_tokens": 19945,
+        "estimated_text_model_usd": 1.66208
+    },
+    "ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE": {
+        "owner_issue": 1596,
+        "owner_trigger_comment_id": 6928297698,
+        "owner_event": "issue_comment",
+        "owner_actor": "Donh91",
+        "claim_comment_id": 6928325484,
+        "run_id": "43949678137",
+        "run_conclusion": "success",
+        "artifact_id": "14268300941",
+        "output_sha256": "201c1c6d5e50a67e49d10d406ffc49a436138fb47f7e6649116455fff3161b88",
+        "archive_pr": 2204,
+        "completion_comment_id": None,
+        "input_tokens": 43877,
+        "output_tokens": 19021,
+        "estimated_text_model_usd": 1.38982
+    },
+    "ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE": {
+        "owner_issue": 1553,
+        "owner_trigger_comment_id": 6928298418,
+        "owner_event": "issue_comment",
+        "owner_actor": "Donh91",
+        "claim_comment_id": 6928316089,
+        "run_id": "43949682325",
+        "run_conclusion": "success",
+        "artifact_id": "14266287659",
+        "output_sha256": "c62b860b2359ef08b2a11573028767779a8ee8a08dcac9c0e16cd3793d0bb496",
+        "archive_pr": 2204,
+        "completion_comment_id": 6929493777,
+        "input_tokens": 35520,
+        "output_tokens": 11194,
+        "estimated_text_model_usd": 0.9149
+    },
+    "ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE": {
+        "owner_issue": 1340,
+        "owner_trigger_comment_id": 6928299330,
+        "owner_event": "issue_comment",
+        "owner_actor": "Donh91",
+        "claim_comment_id": 6928321540,
+        "run_id": "43949688570",
+        "run_conclusion": "success",
+        "artifact_id": "14268125488",
+        "output_sha256": "a3c5880525057846dadf80ee90ac40cbfe6a59e8144c398f3323a3a49184a16b",
+        "archive_pr": 2204,
+        "completion_comment_id": 6929494783,
+        "input_tokens": 31078,
+        "output_tokens": 18424,
+        "estimated_text_model_usd": 1.23198
+    },
+    "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE": {
+        "owner_issue": 937,
+        "owner_trigger_comment_id": 6944827288,
+        "owner_event": "issue_comment",
+        "owner_actor": "Donh91",
+        "claim_comment_id": 6944866063,
+        "run_id": "44061041475",
+        "run_conclusion": "success",
+        "artifact_id": "14319116037",
+        "output_sha256": "10bce9dc190b0a55065e971d6f71e04ae186799cba71170f2634e4b5f807d597",
+        "archive_pr": 2204,
+        "completion_comment_id": None,
+        "input_tokens": 29614,
+        "output_tokens": 12825,
+        "estimated_text_model_usd": 0.93739
+    }
+}
+OWNER_ASTRA_PROVIDER_PERIOD_SETTLEMENT = {
+    "contract": "OWNER_ASTRA_PROVIDER_PERIOD_SETTLEMENT_20261118_V1",
+    "source": "owner OpenAI usage dashboard + CSV export 2026-11-18",
+    "screenshot_sha256": "db712eea88dc77b74e48ee2bd682d76c5aca51996a1d449794f13082a815f41b",
+    "usage_csv_sha256": "0b5764bd0e7268425a3682c599a66bfa672b90c73086f7f7b75476d3b75fedf5",
+    "observed_period_start": "2026-11-12",
+    "observed_period_end": "2026-11-18",
+    "capture_local": "2026-11-18 12:08 Europe/Copenhagen",
+    "provider_period_spend_usd": 5.41,
+    "settled_total_usd": 5.41,
+    "amount_scope": "displayed aggregate for wider period; no per-request or per-model USD allocation; not a final invoice",
+    "usage_model": "gpt-6-astra",
+    "usage_by_day_utc": {
+        "2026-11-13": [
+            2,
+            148526,
+            54235
+        ],
+        "2026-11-16": [
+            6,
+            247526,
+            100003
+        ],
+        "2026-11-17": [
+            1,
+            29614,
+            12825
+        ]
+    },
+    "usage_columns": [
+        "requests",
+        "input_tokens",
+        "output_tokens"
+    ],
+    "native_estimated_total_usd": 12.60981,
+    "accounting": "Count once in November upper exposure, conservatively max of observed wider-period dollars and native summed text estimates; no exact per-work billing claim. Native estimates are outside primary guard receipt root; any overlap remains conservative.",
+    "no_replay": True
+}
+# No never-triggered entry in the nine-row census. Any future release needs a reviewed pin.
+OWNER_NEVER_TRIGGERED_EVIDENCE: dict = {}
+CONSUMED_STATUS = "CONSUMED_SETTLED_OWNER_PROVIDER_EVIDENCE"
+RELEASED_STATUS = "RELEASED_NEVER_TRIGGERED"
+ACTIVE_RESERVATION_STATUS = "OWNER_RESERVED_PREHTTP"
 RETAINED_ASTRA_RESERVATION_WORK_IDS = {
     "ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
     "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
@@ -143,17 +336,18 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     # eventually expires. It stays in the global monthly exposure until an
     # independently reviewed native settlement removes it.
     reservations = value.get("owner_reservations", [])
-    if not isinstance(reservations, list) or len(reservations) > 9:
+    if not isinstance(reservations, list) or len(reservations) > 10:
         raise ValueError("OWNER_RESERVATION_LEDGER_INVALID")
     reserved_work_ids = set()
+    consumed_ids = set()
+    active_count = 0
     for reservation in reservations:
         if (not isinstance(reservation, dict)
                 or reservation.get("created_month_utc") != "2026-11"
-                or reservation.get("status") != "OWNER_RESERVED_PREHTTP"
+                or reservation.get("status") not in (ACTIVE_RESERVATION_STATUS, CONSUMED_STATUS, RELEASED_STATUS)
                 or reservation.get("lower_usd") != 0
                 or reservation.get("source") != ("https://github.com/Donh91/Investering-Framework-Archive-v1/issues/" + str(OWNER_ASTRA_PROGRAM_WORK.get(reservation.get("work_id"), 1596)))
-                or reservation.get("one_paid_post_max") != 1
-                or reservation.get("reconciliation_required") is not True):
+                or reservation.get("one_paid_post_max") != 1):
             raise ValueError("ASTRA_OWNER_RESERVATION_UNVERIFIED")
         work = reservation.get("work_id")
         if work in reserved_work_ids:
@@ -179,8 +373,36 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             raise ValueError("MAEVE_ONE_USE_AUTHORIZATION_INVALID")
         if work not in allowed or reservation.get("upper_usd") != allowed[work]:
             raise ValueError("UNKNOWN_OWNER_RESERVED_MODEL_OR_COST")
-        high += float(allowed[work])
-    reservation_count = len(reservations)
+        status = reservation["status"]
+        if status == CONSUMED_STATUS:
+            if (work not in OWNER_CONSUMED_ASTRA_EVIDENCE
+                    or reservation.get("native_settlement_evidence") != OWNER_CONSUMED_ASTRA_EVIDENCE[work]
+                    or reservation.get("settlement_group") != OWNER_ASTRA_PROVIDER_PERIOD_SETTLEMENT["contract"]
+                    or reservation.get("reconciliation_required") is not False
+                    or reservation.get("no_retry") is not True):
+                raise ValueError("ASTRA_CONSUMED_EVIDENCE_INVALID")
+            consumed_ids.add(work)
+        elif status == RELEASED_STATUS:
+            if (work not in OWNER_NEVER_TRIGGERED_EVIDENCE
+                    or reservation.get("native_settlement_evidence") != OWNER_NEVER_TRIGGERED_EVIDENCE[work]
+                    or reservation.get("reconciliation_required") is not False
+                    or reservation.get("no_retry") is not True):
+                raise ValueError("ASTRA_NEVER_TRIGGERED_EVIDENCE_INVALID")
+        else:
+            if (work in OWNER_CONSUMED_ASTRA_EVIDENCE or work in OWNER_NEVER_TRIGGERED_EVIDENCE
+                    or reservation.get("reconciliation_required") is not True):
+                raise ValueError("ASTRA_ACTIVE_RESERVATION_INVALID")
+            active_count += 1
+            high += float(allowed[work])
+    reservation_count = active_count
+    if settlement_bound or consumed_ids or "owner_astra_provider_period_settlement" in value:
+        if (consumed_ids != set(OWNER_CONSUMED_ASTRA_EVIDENCE)
+                or value.get("owner_astra_provider_period_settlement") != OWNER_ASTRA_PROVIDER_PERIOD_SETTLEMENT):
+            raise ValueError("ASTRA_PROVIDER_GROUP_EVIDENCE_INVALID")
+    # Generic owner Astra missions (#1156): a separate append-only ledger key, each row bound to a reviewed mission.
+    mission_high, mission_count, _ = astra_missions.mission_reservations(value, reserved_work_ids)
+    high += mission_high
+    reservation_count += mission_count
     if settlement_bound and not RETAINED_ASTRA_RESERVATION_WORK_IDS <= reserved_work_ids:
         raise ValueError("RETAINED_ASTRA_RESERVATION_MISSING")
     missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
@@ -193,6 +415,19 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     if not math.isfinite(high) or high > OWNER_GLOBAL_HARD_STOP_USD:
         raise ValueError("LIABILITY_TOTAL_INVALID")
     return low, high, len(seen) + reservation_count
+
+
+def settled_owner_cost_upper(path: Path, now: datetime) -> float:
+    """One historical group provision; callers must first validate pending_risk."""
+    value = json.loads(path.read_text(encoding="utf-8"))
+    evidence = value.get("owner_astra_provider_period_settlement")
+    if evidence is None:
+        return 0.0
+    if evidence != OWNER_ASTRA_PROVIDER_PERIOD_SETTLEMENT:
+        raise ValueError("ASTRA_PROVIDER_GROUP_EVIDENCE_INVALID")
+    if (now.year, now.month) != (2026, 11):
+        return 0.0
+    return max(evidence["provider_period_spend_usd"], evidence["native_estimated_total_usd"])
 
 
 def model_quote(args: argparse.Namespace) -> tuple[float, dict | None]:
@@ -280,6 +515,7 @@ def main() -> None:
     parser.add_argument("--input-token-upper", type=int)
     parser.add_argument("--output-token-upper", type=int)
     parser.add_argument("--owner-astra-program-work-id")
+    parser.add_argument("--owner-astra-mission-id")
     args = parser.parse_args()
     if (not finite_nonnegative(args.hard_stop_usd)
             or not finite_nonnegative(args.reserve_usd)
@@ -346,8 +582,10 @@ def main() -> None:
         errors.append({"path": str(args.receipt_root), "reason": "COST_TOTAL_NONFINITE"})
         total = None
     pending_low, pending_high, pending_count = 0.0, 0.0, 0
+    settled_owner_upper = 0.0
     try:
         pending_low, pending_high, pending_count = pending_risk(args.liability_ledger)
+        settled_owner_upper = settled_owner_cost_upper(args.liability_ledger, now)
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         errors.append({"path": str(args.liability_ledger),
                        "reason": "LIABILITY_EVIDENCE_UNAVAILABLE:" + str(exc)[:100]})
@@ -364,6 +602,7 @@ def main() -> None:
     # one-shot IDs in the canonical ledger. The native owner issue event + claim
     # is separately enforced by each runner, not by this quote-only guard.
     approved_astra_id = args.owner_astra_program_work_id
+    historical_pr_audit = False
     exceptional = (approved_astra_id in OWNER_ASTRA_PROGRAM_WORK
                    and args.hard_stop_usd == 100.0
                    and args.reserve_usd >= 4.0
@@ -378,15 +617,49 @@ def main() -> None:
                 exact = [r for r in lr.get("owner_reservations", [])
                          if r.get("work_id") == approved_astra_id
                          and r.get("upper_usd") == 10
+                         and r.get("status") == ACTIVE_RESERVATION_STATUS
                          and r.get("one_paid_post_max") == 1
                          and r.get("source") ==
                            "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/" +
                            str(OWNER_ASTRA_PROGRAM_WORK[approved_astra_id])]
                 if len(exact) != 1:
-                    raise ValueError("DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED")
+                    # The existing MAEVE PR preflight is a read-only check of the
+                    # original packet. It must report an explicit consumed state,
+                    # never PASS for a retired paid route. Actual issue-comment
+                    # launches and local invocations remain blocked.
+                    consumed = [r for r in lr.get("owner_reservations", [])
+                                if r.get("work_id") == approved_astra_id
+                                and r.get("status") == CONSUMED_STATUS
+                                and r.get("native_settlement_evidence") == OWNER_CONSUMED_ASTRA_EVIDENCE.get(approved_astra_id)]
+                    historical_pr_audit = (
+                        not exact and len(consumed) == 1
+                        and approved_astra_id == "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE"
+                        and args.liability_ledger.resolve() == CANONICAL_LIABILITY_LEDGER.resolve()
+                        and os.environ.get("GITHUB_ACTIONS") == "true"
+                        and os.environ.get("GITHUB_EVENT_NAME") == "pull_request"
+                        and re.fullmatch(r"refs/pull/[0-9]+/merge", os.environ.get("GITHUB_REF", "")) is not None)
+                    if not historical_pr_audit:
+                        raise ValueError("DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED")
             except (OSError, ValueError, TypeError, KeyError):
                 errors.append({"path": "OWNER_ASTRA_PROGRAM",
                                "reason": "DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED"})
+    # Generic owner Astra mission (#1156): same exceptional shape, bound to exactly one mission reservation row.
+    mission_id = args.owner_astra_mission_id
+    mission_ok = False
+    if mission_id is not None:
+        try:
+            if (approved_astra_id is not None or args.hard_stop_usd != OWNER_GLOBAL_HARD_STOP_USD
+                    or args.reserve_usd < OWNER_GLOBAL_RESERVE_USD or new_upper != 0.0):
+                raise ValueError("MISSION_EXCEPTION_SHAPE_INVALID")
+            lr = json.loads(args.liability_ledger.read_text(encoding="utf-8"))
+            exact = [r for r in lr.get(astra_missions.KEY, []) if isinstance(r, dict) and r.get("work_id") == mission_id]
+            if len(exact) != 1 or astra_missions.mission_max_usd(mission_id) != exact[0].get("upper_usd"):
+                raise ValueError("DISTINCT_OWNER_ASTRA_MISSION_RESERVATION_REQUIRED")
+            mission_ok = True
+        except (OSError, ValueError, TypeError, KeyError, AttributeError):
+            errors.append({"path": "OWNER_ASTRA_MISSION",
+                           "reason": "DISTINCT_OWNER_ASTRA_MISSION_RESERVATION_REQUIRED"})
+    exceptional = exceptional or mission_ok
     # Prior normal 40/4 callers keep their independent cap. The five owner
     # exceptional reservations cannot silently consume routine budget, but
     # DO count against the one global hard stop and its protected USD4.
@@ -398,7 +671,8 @@ def main() -> None:
                 float(row.get("upper_usd", 0))
                 for row in valid.get("owner_reservations", [])
                 if row.get("work_id") in OWNER_ASTRA_PROGRAM_WORK
-            )
+                and row.get("status") == ACTIVE_RESERVATION_STATUS
+            ) + sum(float(row.get("upper_usd", 0)) for row in valid.get(astra_missions.KEY, []))
         except (OSError, ValueError, TypeError):
             errors.append({"path": "OWNER_ASTRA_PROGRAM",
                            "reason": "NORMAL_EXCEPTION_HOLD_UNREADABLE"})
@@ -417,7 +691,7 @@ def main() -> None:
     effective_reserve = (max(args.reserve_usd, OWNER_GLOBAL_RESERVE_USD)
                          if args.hard_stop_usd >= 40.0 else args.reserve_usd)
     exposure_lower = total + pending_low if total is not None else None
-    exposure_upper = total + pending_high + new_upper if total is not None else None
+    exposure_upper = total + pending_high + settled_owner_upper + new_upper if total is not None else None
     remaining = (effective_hard_stop - exposure_upper + normal_exception_hold
                  if exposure_upper is not None else None)
     owner_remaining = OWNER_GLOBAL_HARD_STOP_USD - exposure_upper if exposure_upper is not None else None
@@ -426,8 +700,12 @@ def main() -> None:
     status = ("BLOCKED" if errors or remaining is None or owner_remaining is None
               or remaining <= effective_reserve  # the reserve is never spendable, as in the lane guard
               or owner_remaining < OWNER_GLOBAL_RESERVE_USD else "PASS")
+    if status == "PASS" and historical_pr_audit:
+        status = "CONSUMED_NO_POST"
     result = {
         "status": status,
+        "historical_pr_audit_only": historical_pr_audit,
+        "paid_authority": False,
         "month": now.strftime("%Y-%m"),
         "receipts": receipts,
         "repriced_api_receipts": repriced_api_receipts,
@@ -439,6 +717,7 @@ def main() -> None:
         "owner_global_hard_stop_usd": OWNER_GLOBAL_HARD_STOP_USD,
         "owner_global_reserve_usd": OWNER_GLOBAL_RESERVE_USD,
         "owner_normal_target_usd": OWNER_GLOBAL_TARGET_USD,
+        "settled_owner_cost_upper_usd": round(settled_owner_upper, 8),
         "pending_liability_count": pending_count,
         "pending_liability_lower_usd": round(pending_low, 8),
         "pending_liability_upper_usd": round(pending_high, 8),
@@ -447,6 +726,7 @@ def main() -> None:
         "exposure_range_max_usd": round(exposure_upper, 8) if exposure_upper is not None else None,
         "normal_remaining_usd": round(normal_remaining, 8) if normal_remaining is not None else None,
         "approval_quote": quoted,
+        "owner_astra_mission_id": mission_id if mission_ok else None,
         "owner_global_remaining_usd_after_risk": round(owner_remaining, 8) if owner_remaining is not None else None,
         "owner_remaining_usd": round(owner_remaining, 8) if owner_remaining is not None else None,
         "reserve_usd": effective_reserve,
@@ -456,7 +736,7 @@ def main() -> None:
         "fail_closed": True,
     }
     print(json.dumps(result, sort_keys=True, allow_nan=False))
-    if status != "PASS":
+    if status not in ("PASS", "CONSUMED_NO_POST"):
         raise SystemExit("monthly_api_cost_guard_blocked")
 
 

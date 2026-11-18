@@ -1,0 +1,56 @@
+{
+  "authority": "SHADOW_RESEARCH_ONLY_NON_CANONICAL",
+  "authority_firewall": {
+    "canonical_effect": false,
+    "execution_authority": false,
+    "market_state_effect": false,
+    "portfolio_effect": false,
+    "topup_authority": false
+  },
+  "contract": "SITUATION_ROOM_VERIFICATION_SHADOW_BRIDGE_v1",
+  "generated_at_utc": "2026-11-18T16:30:04Z",
+  "observation_date_utc": "2026-11-18",
+  "pending_verification": [
+    {
+      "canonical_effect": false,
+      "detection_time_utc": "2026-11-18T16:28:05Z",
+      "event_time_utc": "2026-11-18T06:01:27.714000Z",
+      "market_state_effect": false,
+      "portfolio_effect": false,
+      "shadow_admission": "NOT_ADMITTED_PENDING_VERIFICATION",
+      "shadow_id": "SRSH_8a9a5e862da9127334dd",
+      "source": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 135879,
+        "error_class": null,
+        "fetched_at_utc": "2026-11-18T16:28:06Z",
+        "http_status": 200,
+        "retrieval_end_utc": "2026-11-18T16:28:07Z",
+        "role": "DISCOVERY_ONLY",
+        "sha256": "bf26f52f4419f910fed160e7437774b2bb0fb7c0692b595b07ca27dd3a84e27c",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-11-18"
+      },
+      "title": "US strikes Qeshm Island after Iran hits Kuwait base \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-11-18",
+      "verification_status": "PENDING_PRIMARY_VERIFICATION"
+    }
+  ],
+  "source_owner_contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "source_owner_path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/2026/11/2026-11-18.json",
+  "source_run_id": "SRDO_8b4fc56e9b7bb9a3",
+  "status": "PENDING_VERIFICATION",
+  "verification_policy": {
+    "accepted_methods": [
+      "OWNER_PRIMARY_EVENT_TITLE_OVERLAP",
+      "OWNER_PRIMARY_EVENT_FACT_ANCHORS",
+      "SITUATION_ROOM_LINKED_PRIMARY_SOURCE"
+    ],
+    "automatic_admission_requires_primary_corroboration": true,
+    "minimum_shared_tokens": 2,
+    "minimum_title_overlap": 0.45,
+    "situation_room_is_discovery_only": true
+  },
+  "verified_shadow_context": []
+}
