@@ -41,7 +41,7 @@ class S1RuntimeContractTest(unittest.TestCase):
         self.assertEqual(self.c["contract"], "S1_RUNTIME_CONTRACT_v1")
         self.assertEqual(self.c["task_id"], "6ae5fd466b48819187abc224ec0f1c5f")
         self.assertEqual(self.c["owner_issue"], 1156)
-        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v6")
+        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v7")
         self.assertEqual(self.c["tick_path"], "00_FMOS/S1/TICK.md")
         self.assertEqual(self.c["bootstrap_path"], "00_FMOS/S1/BOOTSTRAP.txt")
         self.assertEqual(self.c["action_loop_path"], "00_FMOS/S1/ACTION_LOOP.md")
@@ -122,7 +122,7 @@ class S1RuntimeContractTest(unittest.TestCase):
             self.assertIn(needle, boot)
         self.assertEqual(boot.count("api.github.com"), 2, "main, and the 00_FMOS/S1 listing at that SHA; no other URL")
         self.assertEqual(boot.count("https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/"), 2)
-        for needle in ("S1 BOOTSTRAP v6", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v6",
+        for needle in ("S1 BOOTSTRAP v7", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v7",
                        "00_FMOS/S1/TICK.md", "ACTION_LOOP.md", "SOURCE_UNVERIFIED", "only instruction set"):
             self.assertIn(needle, boot)
         for forbidden in ("LADDER", "MERGE", "HARD STOPS", "owner-present"):
