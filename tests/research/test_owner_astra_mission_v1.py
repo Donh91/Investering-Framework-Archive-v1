@@ -163,7 +163,15 @@ class TestRequest(Base):
         with contextlib.redirect_stdout(io.StringIO()):
             m.preview_all(self.out)
         rows = json.loads((self.out / "preview_all.json").read_text())
-        self.assertEqual((rows[0]["mission_id"], rows[0]["trigger"]), (MID, trigger()))
+        expected_ids = sorted(p.name for p in m.MISSIONS.iterdir() if p.is_dir())
+        self.assertEqual([row["mission_id"] for row in rows], expected_ids)
+        self.assertEqual(len(expected_ids), len(set(expected_ids)))
+        selected = {row["mission_id"]: row for row in rows}
+        self.assertIn(MID, selected)
+        self.assertEqual(selected[MID]["trigger"], trigger())
+        for mission_id, row in selected.items():
+            mission = json.loads((m.MISSIONS / mission_id / "mission.json").read_text())
+            self.assertEqual(row["trigger"], f"OWNER_LAUNCH_ASTRA_MISSION {mission_id} {mission['bundle_sha256']}")
 
     def test_model_only_from_verified_policy(self):
         policy = json.loads(m.POLICY.read_text())
