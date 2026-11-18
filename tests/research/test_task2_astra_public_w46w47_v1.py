@@ -39,13 +39,12 @@ class TestAstraPublicOneShot(unittest.TestCase):
         # The consumed canonical mission cannot admit a new reservation.
         with self.assertRaises(ValueError):
             a.check_reservation()
-        # Retain source encoding coverage using an isolated historical fixture.
+        # Offline source encoding still works with the settled canonical ledger.
         with tempfile.TemporaryDirectory() as d:
-            p = Path(d)/"historical_preview_ledger.json"
-            p.write_text(json.dumps({"absolute_budget_usd":50,"owner_reservations":[
-                {"work_id":a.MISSION,"status":"OWNER_RESERVED_PREHTTP","upper_usd":10,
-                 "one_paid_post_max":1,"reconciliation_required":True}]}))
-            with mock.patch.object(a,"LEDGER",p), mock.patch.dict(os.environ, {"GITHUB_SHA": "a"*40}):
+            with mock.patch.object(a,"owner_event",return_value=None):
+                with self.assertRaises(ValueError):
+                    a.prepare(Path(d),preview=False)
+            with mock.patch.dict(os.environ, {"GITHUB_SHA": "a"*40}):
                 with mock.patch.object(a.core,"http_json",side_effect=AssertionError("network used")):
                     a.prepare(Path(d),preview=True)
             req=json.loads((Path(d)/"request.json").read_text())

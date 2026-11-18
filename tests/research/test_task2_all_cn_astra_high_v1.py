@@ -59,6 +59,10 @@ class OwnerLongitudinalHighTests(unittest.TestCase):
         a.CANONICAL_LEDGER.write_text(json.dumps({"owner_reservations":[]}))
         with self.assertRaisesRegex(ValueError,"EXACT_ALLCN_10USD_RESERVATION_MISSING"):
             a.check_reserve()
+        a.CANONICAL_LEDGER.write_text(json.dumps({"owner_reservations":[
+            {"work_id":a.MISSION,"status":"CONSUMED_SETTLED_OWNER_PROVIDER_EVIDENCE","upper_usd":0}]}))
+        with self.assertRaisesRegex(ValueError,"EXACT_ALLCN_10USD_RESERVATION_MISSING"):
+            a.check_reserve()
 
     def test_existing_durable_claim_blocks_paid_repeat(self):
         with patch.object(a,"http",return_value=[{"body":a.CLAIM_MARKER+" stored"}]):
