@@ -37,6 +37,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install offline YAML test dependency
+        run: python -m pip install --disable-pip-version-check 'PyYAML>=6,<7'
       - name: No-network trigger, claim, guard and no-retry tests
         run: python -m unittest tests.research.test_owner_astra_mission_v1 -v
       - name: Exact request preview of every mission, NO network

@@ -22,7 +22,9 @@ MID = "ASTRA-S1-V32-REDTEAM-20261118-R2"
 BUNDLE_SHA = "5e648ef6b957f574a4af0f5a0f6b0f4d99386be900a7120d46d8896f9fbbb8c1"
 GUARD = ROOT / "scripts/api_agent/check_monthly_cost_guard.py"
 CANONICAL_LEDGER = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
-HEAD = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+def checkout_head():
+    # Derive at event construction, not collection: full-suite tests can move HEAD.
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
 
 
 def reservation(mid=MID, upper=20):
@@ -110,7 +112,7 @@ class Base(unittest.TestCase):
         path.write_text(json.dumps(ev if ev is not None else event()))
         values = {"GITHUB_EVENT_NAME": "issue_comment", "GITHUB_ACTOR": "Donh91", "GITHUB_REPOSITORY": m.REPO,
                   "GITHUB_REF": "refs/heads/main", "GITHUB_RUN_ATTEMPT": "1", "GITHUB_EVENT_PATH": str(path),
-                  "GITHUB_SHA": HEAD, "GITHUB_RUN_ID": "123456", "GITHUB_TOKEN": "dummy", "OPENAI_API_KEY": "dummy"}
+                  "GITHUB_SHA": checkout_head(), "GITHUB_RUN_ID": "123456", "GITHUB_TOKEN": "dummy", "OPENAI_API_KEY": "dummy"}
         values.update(over)
         return mock.patch.dict(os.environ, values, clear=False)
 
