@@ -13,6 +13,7 @@ SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
 from api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
+from api_agent import astra_mission_reservations_v1 as astra_missions
 from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegative, json_evidence_paths, load_evidence
 
 # Owner explicit interactive approval 2026-11-13: account-wide USD50 per month
@@ -398,6 +399,10 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
         if (consumed_ids != set(OWNER_CONSUMED_ASTRA_EVIDENCE)
                 or value.get("owner_astra_provider_period_settlement") != OWNER_ASTRA_PROVIDER_PERIOD_SETTLEMENT):
             raise ValueError("ASTRA_PROVIDER_GROUP_EVIDENCE_INVALID")
+    # Generic owner Astra missions (#1156): a separate append-only ledger key, each row bound to a reviewed mission.
+    mission_high, mission_count, _ = astra_missions.mission_reservations(value, reserved_work_ids)
+    high += mission_high
+    reservation_count += mission_count
     if settlement_bound and not RETAINED_ASTRA_RESERVATION_WORK_IDS <= reserved_work_ids:
         raise ValueError("RETAINED_ASTRA_RESERVATION_MISSING")
     missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
@@ -510,6 +515,7 @@ def main() -> None:
     parser.add_argument("--input-token-upper", type=int)
     parser.add_argument("--output-token-upper", type=int)
     parser.add_argument("--owner-astra-program-work-id")
+    parser.add_argument("--owner-astra-mission-id")
     args = parser.parse_args()
     if (not finite_nonnegative(args.hard_stop_usd)
             or not finite_nonnegative(args.reserve_usd)
@@ -637,6 +643,23 @@ def main() -> None:
             except (OSError, ValueError, TypeError, KeyError):
                 errors.append({"path": "OWNER_ASTRA_PROGRAM",
                                "reason": "DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED"})
+    # Generic owner Astra mission (#1156): same exceptional shape, bound to exactly one mission reservation row.
+    mission_id = args.owner_astra_mission_id
+    mission_ok = False
+    if mission_id is not None:
+        try:
+            if (approved_astra_id is not None or args.hard_stop_usd != OWNER_GLOBAL_HARD_STOP_USD
+                    or args.reserve_usd < OWNER_GLOBAL_RESERVE_USD or new_upper != 0.0):
+                raise ValueError("MISSION_EXCEPTION_SHAPE_INVALID")
+            lr = json.loads(args.liability_ledger.read_text(encoding="utf-8"))
+            exact = [r for r in lr.get(astra_missions.KEY, []) if isinstance(r, dict) and r.get("work_id") == mission_id]
+            if len(exact) != 1 or astra_missions.mission_max_usd(mission_id) != exact[0].get("upper_usd"):
+                raise ValueError("DISTINCT_OWNER_ASTRA_MISSION_RESERVATION_REQUIRED")
+            mission_ok = True
+        except (OSError, ValueError, TypeError, KeyError, AttributeError):
+            errors.append({"path": "OWNER_ASTRA_MISSION",
+                           "reason": "DISTINCT_OWNER_ASTRA_MISSION_RESERVATION_REQUIRED"})
+    exceptional = exceptional or mission_ok
     # Prior normal 40/4 callers keep their independent cap. The five owner
     # exceptional reservations cannot silently consume routine budget, but
     # DO count against the one global hard stop and its protected USD4.
@@ -649,7 +672,7 @@ def main() -> None:
                 for row in valid.get("owner_reservations", [])
                 if row.get("work_id") in OWNER_ASTRA_PROGRAM_WORK
                 and row.get("status") == ACTIVE_RESERVATION_STATUS
-            )
+            ) + sum(float(row.get("upper_usd", 0)) for row in valid.get(astra_missions.KEY, []))
         except (OSError, ValueError, TypeError):
             errors.append({"path": "OWNER_ASTRA_PROGRAM",
                            "reason": "NORMAL_EXCEPTION_HOLD_UNREADABLE"})
@@ -703,6 +726,7 @@ def main() -> None:
         "exposure_range_max_usd": round(exposure_upper, 8) if exposure_upper is not None else None,
         "normal_remaining_usd": round(normal_remaining, 8) if normal_remaining is not None else None,
         "approval_quote": quoted,
+        "owner_astra_mission_id": mission_id if mission_ok else None,
         "owner_global_remaining_usd_after_risk": round(owner_remaining, 8) if owner_remaining is not None else None,
         "owner_remaining_usd": round(owner_remaining, 8) if owner_remaining is not None else None,
         "reserve_usd": effective_reserve,
