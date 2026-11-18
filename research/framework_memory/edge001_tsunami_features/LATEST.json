@@ -4,7 +4,7 @@
   "integrity_revision": "v1.1_PIT_STRICT",
   "live_exit_rule": "NONE",
   "outcome_joined": false,
-  "row_count": 327,
+  "row_count": 340,
   "rows": [
     {
       "breadth_context": {
@@ -29654,7 +29654,7 @@
         "spot_status": "PASS",
         "state": "OBSERVED"
       },
-      "hourly_source_hash": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61",
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
       "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
       "knowledge_timestamp": "2026-11-17T02:21:08Z",
       "labels": {
@@ -29747,7 +29747,7 @@
         "spot_status": "PASS",
         "state": "OBSERVED"
       },
-      "hourly_source_hash": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61",
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
       "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
       "knowledge_timestamp": "2026-11-17T09:29:27Z",
       "labels": {
@@ -29840,7 +29840,7 @@
         "spot_status": "PASS",
         "state": "OBSERVED"
       },
-      "hourly_source_hash": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61",
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
       "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
       "knowledge_timestamp": "2026-11-17T06:19:56Z",
       "labels": {
@@ -29857,6 +29857,378 @@
       "source_freeze_hash": "04631ce4047f986c7db62609cabacb15c11278d818bb79aef3f22b18ea9f57ae",
       "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-2d1d37c88940.json",
       "warning_issued_at_utc": "2026-11-17T06:19:56Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.57,
+          "advancer_pct": 57,
+          "advancers": 57,
+          "btc_return_24h_pct": -0.62006,
+          "constituent_count": 100,
+          "decliners": 42,
+          "equal_weight_mean_return_24h_pct": 0.327836,
+          "eth_return_24h_pct": -2.07828,
+          "flat": 1,
+          "median_return_24h_pct": 0.04129,
+          "membership_hash": "369e3c8f01ff9f4a24d74a5d4bd99374cb63b0965f4ff9d476ed13abd3a9bad0",
+          "outperforming_btc_count": 72,
+          "outperforming_eth_count": 89
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "3f79beb674d5232f17c6fd11fd04e68de7f2abff",
+          "commit_time_utc": "2026-11-17T16:02:03Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-17T16:01:58.533180Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/2026-11-17/owner_snapshot.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "783d6146e6bc017be2453bb75480be66e4014ade1b294512d66513f26eaf91cb",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261117-4288fd1f3afa",
+      "feature_row_id": "TSUF-14fa8e0173893870",
+      "features": {
+        "btc_price_oi_state": "PRICE_DOWN_OI_UP",
+        "derivatives": {
+          "btc_funding_event_rate": null,
+          "btc_long_short_ratio": 3.04,
+          "btc_oi_change_1h_pct": 0.45018578751,
+          "eth_funding_event_rate": null,
+          "eth_long_short_ratio": 3.31,
+          "eth_oi_change_1h_pct": -0.338450450497
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_UP_OI_DOWN",
+        "knowledge_cutoff_utc": "2026-11-17T19:24:44Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.4122222222222222,
+          "candle_close_utc": "2026-11-17T19:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "1a01343031bf0b9bfdaee73516370fdf5fe7439b",
+            "commit_time_utc": "2026-11-17T19:10:46Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-17T19:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-17T18:00:00Z",
+          "source_window_end_utc": "2026-11-17T19:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 63774.53,
+          "btc_return_1h_pct": -0.0832084657995,
+          "btc_taker_buy_quote_share": 0.48097826852,
+          "eth_close": 1790.11,
+          "eth_return_1h_pct": 0.12136872602,
+          "eth_taker_buy_quote_share": 0.504520701056,
+          "ethbtc_close": 0.02808,
+          "ethbtc_return_1h_pct": 0.249910746162
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
+      "knowledge_timestamp": "2026-11-17T19:24:44Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "8f58ad3f605e59fa6e8b991befe1bab35bc44aff51bf996c0243c93eca5e08e8",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-4288fd1f3afa.json",
+      "warning_issued_at_utc": "2026-11-17T19:24:44Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.76,
+          "advancer_pct": 76,
+          "advancers": 76,
+          "btc_return_24h_pct": 0.70311,
+          "constituent_count": 100,
+          "decliners": 23,
+          "equal_weight_mean_return_24h_pct": 1.837284,
+          "eth_return_24h_pct": 0.67884,
+          "flat": 1,
+          "median_return_24h_pct": 1.228215,
+          "membership_hash": "e8bab2d5b08be03132170413b7d0a2043570855c8e1db9ca3a24e866e755b1ca",
+          "outperforming_btc_count": 59,
+          "outperforming_eth_count": 61
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "808df7983b6739ce363219cb3fa0cd7f75c1f2a4",
+          "commit_time_utc": "2026-11-17T11:59:44Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-17T11:59:42Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/17/115942.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "bf7f9c6ab521e668239ca4dba53b4139fe175fe89d0d4d9dd99cc8226584550e",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261117-689238e95a7b",
+      "feature_row_id": "TSUF-a647af0de14fb1c2",
+      "features": {
+        "btc_price_oi_state": "PRICE_UP_OI_UP",
+        "derivatives": {
+          "btc_funding_event_rate": null,
+          "btc_long_short_ratio": 2.67,
+          "btc_oi_change_1h_pct": 1.09382770929,
+          "eth_funding_event_rate": null,
+          "eth_long_short_ratio": 3.05,
+          "eth_oi_change_1h_pct": -0.126318473225
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_UP_OI_DOWN",
+        "knowledge_cutoff_utc": "2026-11-17T13:40:13Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.6702777777777778,
+          "candle_close_utc": "2026-11-17T13:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "18aeab50ae5d62d27289bea7ada465b22d4edcbc",
+            "commit_time_utc": "2026-11-17T13:14:50Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-17T13:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-17T12:00:00Z",
+          "source_window_end_utc": "2026-11-17T13:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 65064.0,
+          "btc_return_1h_pct": 0.105330304202,
+          "btc_taker_buy_quote_share": 0.497196319829,
+          "eth_close": 1823.48,
+          "eth_return_1h_pct": 0.0653024491162,
+          "eth_taker_buy_quote_share": 0.435683804313,
+          "ethbtc_close": 0.02802,
+          "ethbtc_return_1h_pct": -0.0713266761769
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
+      "knowledge_timestamp": "2026-11-17T13:40:13Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "b52a666e7d0528014d57385b02bd491c1e0fd1675d6efb8ef9e46b2303995afd",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-689238e95a7b.json",
+      "warning_issued_at_utc": "2026-11-17T13:40:13Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.54,
+          "advancer_pct": 54,
+          "advancers": 54,
+          "btc_return_24h_pct": -0.46367,
+          "constituent_count": 100,
+          "decliners": 45,
+          "equal_weight_mean_return_24h_pct": 0.489766,
+          "eth_return_24h_pct": -1.83596,
+          "flat": 1,
+          "median_return_24h_pct": 0.03395,
+          "membership_hash": "7a286cf27180bd824d93e49df99ea5f7667962d32f79a4c1d5e790d23a0c91b2",
+          "outperforming_btc_count": 70,
+          "outperforming_eth_count": 87
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "98f50e4ee10919de1ffebf019ae9a03dcff6a6bf",
+          "commit_time_utc": "2026-11-17T14:39:18Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-17T14:39:17Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/17/143917.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "8d18b77d5917a7096992a2af1d578da77c5d40a96a775b2b557aab7b28070500",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261117-805c1785ac8a",
+      "feature_row_id": "TSUF-9dd9f59595c43dae",
+      "features": {
+        "btc_price_oi_state": "PRICE_DOWN_OI_DOWN",
+        "derivatives": {
+          "btc_funding_event_rate": null,
+          "btc_long_short_ratio": 2.57,
+          "btc_oi_change_1h_pct": -0.621421054808,
+          "eth_funding_event_rate": null,
+          "eth_long_short_ratio": 2.94,
+          "eth_oi_change_1h_pct": 0.194830449399
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_DOWN_OI_UP",
+        "knowledge_cutoff_utc": "2026-11-17T15:23:54Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.3983333333333333,
+          "candle_close_utc": "2026-11-17T15:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "e897059b5ec784ac7ddc2b598f76512ca4241eaf",
+            "commit_time_utc": "2026-11-17T15:10:09Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-17T15:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-17T14:00:00Z",
+          "source_window_end_utc": "2026-11-17T15:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 65018.01,
+          "btc_return_1h_pct": -0.194735210923,
+          "btc_taker_buy_quote_share": 0.606108410828,
+          "eth_close": 1815.2,
+          "eth_return_1h_pct": -0.761021693492,
+          "eth_taker_buy_quote_share": 0.503047038182,
+          "ethbtc_close": 0.02792,
+          "ethbtc_return_1h_pct": -0.569800569801
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
+      "knowledge_timestamp": "2026-11-17T15:23:54Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "c5232275d3709b81996c3c4201de666289334fd2b1e05c9c26227a87e408c83a",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-805c1785ac8a.json",
+      "warning_issued_at_utc": "2026-11-17T15:23:54Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.57,
+          "advancer_pct": 57,
+          "advancers": 57,
+          "btc_return_24h_pct": -0.62006,
+          "constituent_count": 100,
+          "decliners": 42,
+          "equal_weight_mean_return_24h_pct": 0.327836,
+          "eth_return_24h_pct": -2.07828,
+          "flat": 1,
+          "median_return_24h_pct": 0.04129,
+          "membership_hash": "369e3c8f01ff9f4a24d74a5d4bd99374cb63b0965f4ff9d476ed13abd3a9bad0",
+          "outperforming_btc_count": 72,
+          "outperforming_eth_count": 89
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "3f79beb674d5232f17c6fd11fd04e68de7f2abff",
+          "commit_time_utc": "2026-11-17T16:02:03Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-17T16:01:58.533180Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/2026-11-17/owner_snapshot.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "783d6146e6bc017be2453bb75480be66e4014ade1b294512d66513f26eaf91cb",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261117-8ae20b00fb52",
+      "feature_row_id": "TSUF-f17e013b74d233bd",
+      "features": {
+        "btc_price_oi_state": "PRICE_UP_OI_DOWN",
+        "derivatives": {
+          "btc_funding_event_rate": null,
+          "btc_long_short_ratio": 2.97,
+          "btc_oi_change_1h_pct": -2.02996545799,
+          "eth_funding_event_rate": null,
+          "eth_long_short_ratio": 3.26,
+          "eth_oi_change_1h_pct": -0.1159572172
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_UP_OI_DOWN",
+        "knowledge_cutoff_utc": "2026-11-17T18:19:40Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.3277777777777778,
+          "candle_close_utc": "2026-11-17T18:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "f10b9e3d30c0e7326f1957dec044c946292df191",
+            "commit_time_utc": "2026-11-17T18:07:45Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-17T18:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-17T17:00:00Z",
+          "source_window_end_utc": "2026-11-17T18:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 63827.64,
+          "btc_return_1h_pct": 0.12635870908,
+          "btc_taker_buy_quote_share": 0.569228647035,
+          "eth_close": 1787.94,
+          "eth_return_1h_pct": 0.529653869509,
+          "eth_taker_buy_quote_share": 0.498654406418,
+          "ethbtc_close": 0.02801,
+          "ethbtc_return_1h_pct": 0.394265232975
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
+      "knowledge_timestamp": "2026-11-17T18:19:40Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "9e322523b9bb64e718a3f7d4e63003dbb99afdf0e5c1174a86f67d31892b1bcb",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-8ae20b00fb52.json",
+      "warning_issued_at_utc": "2026-11-17T18:19:40Z",
       "warning_state": "ELEVATED"
     },
     {
@@ -29933,7 +30305,7 @@
         "spot_status": "PASS",
         "state": "OBSERVED"
       },
-      "hourly_source_hash": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61",
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
       "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
       "knowledge_timestamp": "2026-11-17T02:28:38Z",
       "labels": {
@@ -30026,7 +30398,7 @@
         "spot_status": "PASS",
         "state": "OBSERVED"
       },
-      "hourly_source_hash": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61",
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
       "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
       "knowledge_timestamp": "2026-11-17T03:23:27Z",
       "labels": {
@@ -30043,6 +30415,99 @@
       "source_freeze_hash": "dbdfccc6fe68d735bf370789d3b2ca8e2ffb8705f4ee264c0870fa8a5d025cd8",
       "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-a22cb0704609.json",
       "warning_issued_at_utc": "2026-11-17T03:23:27Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.57,
+          "advancer_pct": 57,
+          "advancers": 57,
+          "btc_return_24h_pct": -0.62006,
+          "constituent_count": 100,
+          "decliners": 42,
+          "equal_weight_mean_return_24h_pct": 0.327836,
+          "eth_return_24h_pct": -2.07828,
+          "flat": 1,
+          "median_return_24h_pct": 0.04129,
+          "membership_hash": "369e3c8f01ff9f4a24d74a5d4bd99374cb63b0965f4ff9d476ed13abd3a9bad0",
+          "outperforming_btc_count": 72,
+          "outperforming_eth_count": 89
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "3f79beb674d5232f17c6fd11fd04e68de7f2abff",
+          "commit_time_utc": "2026-11-17T16:02:03Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-17T16:01:58.533180Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/2026-11-17/owner_snapshot.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "783d6146e6bc017be2453bb75480be66e4014ade1b294512d66513f26eaf91cb",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261117-a9ff54e75035",
+      "feature_row_id": "TSUF-195f61bf6828ecb6",
+      "features": {
+        "btc_price_oi_state": "PRICE_DOWN_OI_DOWN",
+        "derivatives": {
+          "btc_funding_event_rate": null,
+          "btc_long_short_ratio": 2.93,
+          "btc_oi_change_1h_pct": -0.81118914451,
+          "eth_funding_event_rate": null,
+          "eth_long_short_ratio": 3.52,
+          "eth_oi_change_1h_pct": -0.833161905492
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_DOWN_OI_DOWN",
+        "knowledge_cutoff_utc": "2026-11-17T16:51:52Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.8644444444444445,
+          "candle_close_utc": "2026-11-17T16:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "74e9660c1003371742cf52f223707913a6010750",
+            "commit_time_utc": "2026-11-17T16:12:46Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-17T16:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-17T15:00:00Z",
+          "source_window_end_utc": "2026-11-17T16:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 64115.09,
+          "btc_return_1h_pct": -1.38872290924,
+          "btc_taker_buy_quote_share": 0.460247524308,
+          "eth_close": 1785.45,
+          "eth_return_1h_pct": -1.63893785809,
+          "eth_taker_buy_quote_share": 0.4338998002,
+          "ethbtc_close": 0.02785,
+          "ethbtc_return_1h_pct": -0.250716332378
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
+      "knowledge_timestamp": "2026-11-17T16:51:52Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "4d0b5066ff7638413ede9ed3775e39956cc00a4a8cdb708ac103e2a87d0c9709",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-a9ff54e75035.json",
+      "warning_issued_at_utc": "2026-11-17T16:51:52Z",
       "warning_state": "ELEVATED"
     },
     {
@@ -30119,7 +30584,7 @@
         "spot_status": "PASS",
         "state": "OBSERVED"
       },
-      "hourly_source_hash": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61",
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
       "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
       "knowledge_timestamp": "2026-11-17T11:23:10Z",
       "labels": {
@@ -30212,7 +30677,7 @@
         "spot_status": "PASS",
         "state": "OBSERVED"
       },
-      "hourly_source_hash": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61",
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
       "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
       "knowledge_timestamp": "2026-11-17T04:52:26Z",
       "labels": {
@@ -30305,7 +30770,7 @@
         "spot_status": "PASS",
         "state": "OBSERVED"
       },
-      "hourly_source_hash": "362a788cd211eaf1fd8bd9653831d96e5fd745fdc1a52712099555d42a155d61",
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
       "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
       "knowledge_timestamp": "2026-11-17T08:22:51Z",
       "labels": {
@@ -30415,6 +30880,750 @@
       "source_freeze_hash": "f14ac7132e0834ae2538012d4cfbc8fe41c47ca0c7bdd792c757558a15959aa5",
       "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-db2cae680198.json",
       "warning_issued_at_utc": "2026-11-17T00:28:06Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.57,
+          "advancer_pct": 57,
+          "advancers": 57,
+          "btc_return_24h_pct": -0.62006,
+          "constituent_count": 100,
+          "decliners": 42,
+          "equal_weight_mean_return_24h_pct": 0.327836,
+          "eth_return_24h_pct": -2.07828,
+          "flat": 1,
+          "median_return_24h_pct": 0.04129,
+          "membership_hash": "369e3c8f01ff9f4a24d74a5d4bd99374cb63b0965f4ff9d476ed13abd3a9bad0",
+          "outperforming_btc_count": 72,
+          "outperforming_eth_count": 89
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "3f79beb674d5232f17c6fd11fd04e68de7f2abff",
+          "commit_time_utc": "2026-11-17T16:02:03Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-17T16:01:58.533180Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/2026-11-17/owner_snapshot.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "783d6146e6bc017be2453bb75480be66e4014ade1b294512d66513f26eaf91cb",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261117-f7fe41ebeaa4",
+      "feature_row_id": "TSUF-27639361beb66976",
+      "features": {
+        "btc_price_oi_state": "PRICE_UP_OI_UP",
+        "derivatives": {
+          "btc_funding_event_rate": null,
+          "btc_long_short_ratio": 3.09,
+          "btc_oi_change_1h_pct": 0.272653565503,
+          "eth_funding_event_rate": null,
+          "eth_long_short_ratio": 3.29,
+          "eth_oi_change_1h_pct": -0.118803193692
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_UP_OI_DOWN",
+        "knowledge_cutoff_utc": "2026-11-17T21:29:42Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.495,
+          "candle_close_utc": "2026-11-17T21:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "6aa5377dcc645e071bf17414fd66353ee1e694e1",
+            "commit_time_utc": "2026-11-17T21:15:34Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-17T21:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-17T20:00:00Z",
+          "source_window_end_utc": "2026-11-17T21:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 63997.13,
+          "btc_return_1h_pct": 0.381750093132,
+          "btc_taker_buy_quote_share": 0.544094753888,
+          "eth_close": 1800.72,
+          "eth_return_1h_pct": 0.534854896881,
+          "eth_taker_buy_quote_share": 0.401919916951,
+          "ethbtc_close": 0.02813,
+          "ethbtc_return_1h_pct": 0.142399430402
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
+      "knowledge_timestamp": "2026-11-17T21:29:42Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "c7e4f3f296b84cf1430dfa7e4b54ff3e48482ea19fa7722376ef15acd39048cc",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-f7fe41ebeaa4.json",
+      "warning_issued_at_utc": "2026-11-17T21:29:42Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.67,
+          "advancer_pct": 67,
+          "advancers": 67,
+          "btc_return_24h_pct": -1.01773,
+          "constituent_count": 100,
+          "decliners": 32,
+          "equal_weight_mean_return_24h_pct": 0.628017,
+          "eth_return_24h_pct": -0.91041,
+          "flat": 1,
+          "median_return_24h_pct": 0.535325,
+          "membership_hash": "3319721868c5dca870ebc890159e6cea0a7267c3b002545483af3eecdd191a45",
+          "outperforming_btc_count": 88,
+          "outperforming_eth_count": 86
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "701f55a157e99515db7ed7080672d162efbc9b7b",
+          "commit_time_utc": "2026-11-17T22:54:00Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-17T22:53:58Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/17/225358.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "57e5fa69f8968c13413748601f05cd8a7c5ca18d157a108ceddf7f3d1f1a0d85",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261117-f98b8e5eaf60",
+      "feature_row_id": "TSUF-b7f92ce4b77f7e65",
+      "features": {
+        "btc_price_oi_state": "PRICE_UP_OI_UP",
+        "derivatives": {
+          "btc_funding_event_rate": null,
+          "btc_long_short_ratio": 3.06,
+          "btc_oi_change_1h_pct": 0.713664782553,
+          "eth_funding_event_rate": null,
+          "eth_long_short_ratio": 3.3,
+          "eth_oi_change_1h_pct": -0.39720956713
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_UP_OI_DOWN",
+        "knowledge_cutoff_utc": "2026-11-17T23:23:03Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.38416666666666666,
+          "candle_close_utc": "2026-11-17T23:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "f764d2b5690af3eb3b495459a65550c21b88981f",
+            "commit_time_utc": "2026-11-17T23:09:46Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-17T23:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-17T22:00:00Z",
+          "source_window_end_utc": "2026-11-17T23:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 64731.92,
+          "btc_return_1h_pct": 0.580343644235,
+          "btc_taker_buy_quote_share": 0.711912247852,
+          "eth_close": 1814.52,
+          "eth_return_1h_pct": 0.460635588528,
+          "eth_taker_buy_quote_share": 0.532545606997,
+          "ethbtc_close": 0.02803,
+          "ethbtc_return_1h_pct": -0.142500890631
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "554a74aac54d7dfc5c69f6c3ae71d0d172fad10438f40bd52b41a327032b2629",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-17.csv",
+      "knowledge_timestamp": "2026-11-17T23:23:03Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "81a06dd61afdc78fd90cb1661cb6b14b81f5fc1c095acd77ba76387a715ee399",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/17/CMP-20261117-f98b8e5eaf60.json",
+      "warning_issued_at_utc": "2026-11-17T23:23:03Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.73,
+          "advancer_pct": 73,
+          "advancers": 73,
+          "btc_return_24h_pct": -0.04428,
+          "constituent_count": 100,
+          "decliners": 26,
+          "equal_weight_mean_return_24h_pct": 1.380444,
+          "eth_return_24h_pct": 0.13344,
+          "flat": 1,
+          "median_return_24h_pct": 1.512275,
+          "membership_hash": "79990def69e7f6281f0e09e4cf58003304891940c08711ebba7576372d94c014",
+          "outperforming_btc_count": 81,
+          "outperforming_eth_count": 64
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "50080e002a0a7225fb5606f5ec5013e0553e67fc",
+          "commit_time_utc": "2026-11-17T23:53:04Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-17T23:53:02Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/17/235302.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "78b4669a10a84486a2713d2a2aaee21e9d5809cf0411f40caea1c6c41017d513",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261118-0a43b186d957",
+      "feature_row_id": "TSUF-9014fb7c20ea63bf",
+      "features": {
+        "btc_price_oi_state": "PRICE_DOWN_OI_DOWN",
+        "derivatives": {
+          "btc_funding_event_rate": -1.08871264091e-05,
+          "btc_long_short_ratio": 2.75,
+          "btc_oi_change_1h_pct": -0.392914305401,
+          "eth_funding_event_rate": 1.87954839306e-05,
+          "eth_long_short_ratio": 2.89,
+          "eth_oi_change_1h_pct": 0.383376812797
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_DOWN_OI_UP",
+        "knowledge_cutoff_utc": "2026-11-18T01:29:00Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.48333333333333334,
+          "candle_close_utc": "2026-11-18T01:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "9658726ca0d7d22205c1aa3d7f7a54e93b8e4ee0",
+            "commit_time_utc": "2026-11-18T01:14:47Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-18T01:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-18T00:00:00Z",
+          "source_window_end_utc": "2026-11-18T01:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 64790.78,
+          "btc_return_1h_pct": -0.241072191552,
+          "btc_taker_buy_quote_share": 0.404306823958,
+          "eth_close": 1820.65,
+          "eth_return_1h_pct": -0.231796063303,
+          "eth_taker_buy_quote_share": 0.463844114197,
+          "ethbtc_close": 0.0281,
+          "ethbtc_return_1h_pct": 0.0355998576006
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "ec841b761b97b8e09f32f7f95ab757a2185bc60bf7f21b44ab2ed5e5141aa88b",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-18.csv",
+      "knowledge_timestamp": "2026-11-18T01:29:00Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "a2a47b94d4e5094833e484a2dea159928f1a8895b5383224b55e5e3efd6dfba9",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/18/CMP-20261118-0a43b186d957.json",
+      "warning_issued_at_utc": "2026-11-18T01:29:00Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.73,
+          "advancer_pct": 73,
+          "advancers": 73,
+          "btc_return_24h_pct": -0.04428,
+          "constituent_count": 100,
+          "decliners": 26,
+          "equal_weight_mean_return_24h_pct": 1.380444,
+          "eth_return_24h_pct": 0.13344,
+          "flat": 1,
+          "median_return_24h_pct": 1.512275,
+          "membership_hash": "79990def69e7f6281f0e09e4cf58003304891940c08711ebba7576372d94c014",
+          "outperforming_btc_count": 81,
+          "outperforming_eth_count": 64
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "50080e002a0a7225fb5606f5ec5013e0553e67fc",
+          "commit_time_utc": "2026-11-17T23:53:04Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-17T23:53:02Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/17/235302.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "78b4669a10a84486a2713d2a2aaee21e9d5809cf0411f40caea1c6c41017d513",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261118-1b05ae9890b3",
+      "feature_row_id": "TSUF-3a3386664f64c35b",
+      "features": {
+        "btc_price_oi_state": "PRICE_DOWN_OI_DOWN",
+        "derivatives": {
+          "btc_funding_event_rate": -1.08871264091e-05,
+          "btc_long_short_ratio": 2.75,
+          "btc_oi_change_1h_pct": -0.392914305401,
+          "eth_funding_event_rate": 1.87954839306e-05,
+          "eth_long_short_ratio": 2.89,
+          "eth_oi_change_1h_pct": 0.383376812797
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_DOWN_OI_UP",
+        "knowledge_cutoff_utc": "2026-11-18T01:37:14Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.6205555555555555,
+          "candle_close_utc": "2026-11-18T01:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "9658726ca0d7d22205c1aa3d7f7a54e93b8e4ee0",
+            "commit_time_utc": "2026-11-18T01:14:47Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-18T01:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-18T00:00:00Z",
+          "source_window_end_utc": "2026-11-18T01:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 64790.78,
+          "btc_return_1h_pct": -0.241072191552,
+          "btc_taker_buy_quote_share": 0.404306823958,
+          "eth_close": 1820.65,
+          "eth_return_1h_pct": -0.231796063303,
+          "eth_taker_buy_quote_share": 0.463844114197,
+          "ethbtc_close": 0.0281,
+          "ethbtc_return_1h_pct": 0.0355998576006
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "ec841b761b97b8e09f32f7f95ab757a2185bc60bf7f21b44ab2ed5e5141aa88b",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-18.csv",
+      "knowledge_timestamp": "2026-11-18T01:37:14Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "32b5e31a04bb0a4db8ffb6cfcb8e93b9014fa60412eb98de617eb54e4cca39be",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/18/CMP-20261118-1b05ae9890b3.json",
+      "warning_issued_at_utc": "2026-11-18T01:37:14Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.73,
+          "advancer_pct": 73,
+          "advancers": 73,
+          "btc_return_24h_pct": -0.04428,
+          "constituent_count": 100,
+          "decliners": 26,
+          "equal_weight_mean_return_24h_pct": 1.380444,
+          "eth_return_24h_pct": 0.13344,
+          "flat": 1,
+          "median_return_24h_pct": 1.512275,
+          "membership_hash": "79990def69e7f6281f0e09e4cf58003304891940c08711ebba7576372d94c014",
+          "outperforming_btc_count": 81,
+          "outperforming_eth_count": 64
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "50080e002a0a7225fb5606f5ec5013e0553e67fc",
+          "commit_time_utc": "2026-11-17T23:53:04Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-17T23:53:02Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/17/235302.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "78b4669a10a84486a2713d2a2aaee21e9d5809cf0411f40caea1c6c41017d513",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261118-28364105158e",
+      "feature_row_id": "TSUF-2a70a14f3214f833",
+      "features": {
+        "btc_price_oi_state": "PRICE_UP_OI_DOWN",
+        "derivatives": {
+          "btc_funding_event_rate": null,
+          "btc_long_short_ratio": 2.79,
+          "btc_oi_change_1h_pct": -0.0990152293424,
+          "eth_funding_event_rate": null,
+          "eth_long_short_ratio": 3.07,
+          "eth_oi_change_1h_pct": 0.917880488068
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_UP_OI_UP",
+        "knowledge_cutoff_utc": "2026-11-18T03:22:46Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.3794444444444444,
+          "candle_close_utc": "2026-11-18T03:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "cb3d2b84392069eaae18ccdc0e1a7f005431ff45",
+            "commit_time_utc": "2026-11-18T03:08:48Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-18T03:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-18T02:00:00Z",
+          "source_window_end_utc": "2026-11-18T03:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 64325.49,
+          "btc_return_1h_pct": 0.0339171879432,
+          "btc_taker_buy_quote_share": 0.483619646041,
+          "eth_close": 1803.94,
+          "eth_return_1h_pct": 0.0432573925775,
+          "eth_taker_buy_quote_share": 0.554304335859,
+          "ethbtc_close": 0.02804,
+          "ethbtc_return_1h_pct": 0.0
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "ec841b761b97b8e09f32f7f95ab757a2185bc60bf7f21b44ab2ed5e5141aa88b",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-18.csv",
+      "knowledge_timestamp": "2026-11-18T03:22:46Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "bd8e020aa677aa6b7fe782ca11accbde4e1eca7f1ca5d20d8b6df98961aaa96f",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/18/CMP-20261118-28364105158e.json",
+      "warning_issued_at_utc": "2026-11-18T03:22:46Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.46,
+          "advancer_pct": 46,
+          "advancers": 46,
+          "btc_return_24h_pct": -0.60975,
+          "constituent_count": 100,
+          "decliners": 53,
+          "equal_weight_mean_return_24h_pct": -0.167763,
+          "eth_return_24h_pct": -1.0915,
+          "flat": 1,
+          "median_return_24h_pct": -0.021695,
+          "membership_hash": "58c12518fef4412c73a00cba538a0c691fcb72521328dd45b67a59a83fd29e0a",
+          "outperforming_btc_count": 63,
+          "outperforming_eth_count": 72
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "69c93aa903401f7ea3e0e39261eb63ce41b4de5a",
+          "commit_time_utc": "2026-11-18T04:23:47Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-18T04:23:43Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/18/042343.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "851a7dc3ba1dc38f4ac57f4214655406d272a828465c946f5de6d5ce6c69de4d",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261118-2dc5e8bb3fdf",
+      "feature_row_id": "TSUF-b2f162961532a6d8",
+      "features": {
+        "btc_price_oi_state": "PRICE_DOWN_OI_UP",
+        "derivatives": {
+          "btc_funding_event_rate": null,
+          "btc_long_short_ratio": 2.82,
+          "btc_oi_change_1h_pct": 0.0454698617014,
+          "eth_funding_event_rate": null,
+          "eth_long_short_ratio": 3.12,
+          "eth_oi_change_1h_pct": 0.348580638257
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_DOWN_OI_UP",
+        "knowledge_cutoff_utc": "2026-11-18T05:27:26Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.4572222222222222,
+          "candle_close_utc": "2026-11-18T05:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "b8c4eeae4b22e7afed30303b4d0a86cf14597ff0",
+            "commit_time_utc": "2026-11-18T05:13:34Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-18T05:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-18T04:00:00Z",
+          "source_window_end_utc": "2026-11-18T05:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 64425.17,
+          "btc_return_1h_pct": -0.0508703657392,
+          "btc_taker_buy_quote_share": 0.582775891108,
+          "eth_close": 1804.24,
+          "eth_return_1h_pct": -0.0509650114117,
+          "eth_taker_buy_quote_share": 0.422607690386,
+          "ethbtc_close": 0.02801,
+          "ethbtc_return_1h_pct": 0.0
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "ec841b761b97b8e09f32f7f95ab757a2185bc60bf7f21b44ab2ed5e5141aa88b",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-18.csv",
+      "knowledge_timestamp": "2026-11-18T05:27:26Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "32cc01aca7cff92d3e6f472fcff6910fea6ad638ae3f4439b160f8a030aa6b56",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/18/CMP-20261118-2dc5e8bb3fdf.json",
+      "warning_issued_at_utc": "2026-11-18T05:27:26Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.49,
+          "advancer_pct": 49,
+          "advancers": 49,
+          "btc_return_24h_pct": 0.5699,
+          "constituent_count": 100,
+          "decliners": 50,
+          "equal_weight_mean_return_24h_pct": -0.469882,
+          "eth_return_24h_pct": -0.6024,
+          "flat": 1,
+          "median_return_24h_pct": -0.00253,
+          "membership_hash": "c839eeb3e052f4bbd75f06f06cf2dcf54aaef36da70811d37c4247e75447dc29",
+          "outperforming_btc_count": 31,
+          "outperforming_eth_count": 69
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "1f11d862d65bb99919d77a76c421b610b09ee138",
+          "commit_time_utc": "2026-11-18T08:38:21Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-18T08:38:20Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/18/083820.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "5fb2c5f9b491ffb1226668f5632aad38dec4c2e0ca90be176cba3d9af2a00a75",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261118-985bad8cf070",
+      "feature_row_id": "TSUF-ae7c76f4a637e440",
+      "features": {
+        "btc_price_oi_state": "PRICE_DOWN_OI_UP",
+        "derivatives": {
+          "btc_funding_event_rate": 2.39227616186e-05,
+          "btc_long_short_ratio": 2.68,
+          "btc_oi_change_1h_pct": 0.460090519971,
+          "eth_funding_event_rate": -6.8713789351e-06,
+          "eth_long_short_ratio": 2.99,
+          "eth_oi_change_1h_pct": 0.211243164332
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_DOWN_OI_UP",
+        "knowledge_cutoff_utc": "2026-11-18T09:26:25Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.44027777777777777,
+          "candle_close_utc": "2026-11-18T09:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "5a6a29faa07617357153541dd6513fdb88045a97",
+            "commit_time_utc": "2026-11-18T09:13:09Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-18T09:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-18T08:00:00Z",
+          "source_window_end_utc": "2026-11-18T09:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 64685.33,
+          "btc_return_1h_pct": -0.30620795478,
+          "btc_taker_buy_quote_share": 0.433794206968,
+          "eth_close": 1811.9,
+          "eth_return_1h_pct": -0.293852215448,
+          "eth_taker_buy_quote_share": 0.526335036596,
+          "ethbtc_close": 0.02801,
+          "ethbtc_return_1h_pct": 0.0
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "ec841b761b97b8e09f32f7f95ab757a2185bc60bf7f21b44ab2ed5e5141aa88b",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-18.csv",
+      "knowledge_timestamp": "2026-11-18T09:26:25Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "e50ed19fe724992ddf2b65586e978dde7f466554b961ff5968e80cfb86c159c6",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/18/CMP-20261118-985bad8cf070.json",
+      "warning_issued_at_utc": "2026-11-18T09:26:25Z",
+      "warning_state": "ELEVATED"
+    },
+    {
+      "breadth_context": {
+        "aggregate": {
+          "advance_ratio": 0.46,
+          "advancer_pct": 46,
+          "advancers": 46,
+          "btc_return_24h_pct": -0.60975,
+          "constituent_count": 100,
+          "decliners": 53,
+          "equal_weight_mean_return_24h_pct": -0.167763,
+          "eth_return_24h_pct": -1.0915,
+          "flat": 1,
+          "median_return_24h_pct": -0.021695,
+          "membership_hash": "58c12518fef4412c73a00cba538a0c691fcb72521328dd45b67a59a83fd29e0a",
+          "outperforming_btc_count": 63,
+          "outperforming_eth_count": 72
+        },
+        "canonical_compatible": false,
+        "evidence_role": "PROXY_ONLY",
+        "first_exact_main_commit": {
+          "commit": "69c93aa903401f7ea3e0e39261eb63ce41b4de5a",
+          "commit_time_utc": "2026-11-18T04:23:47Z",
+          "status": "FOUND"
+        },
+        "legal_availability_utc": "2026-11-18T04:23:43Z",
+        "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/18/042343.json",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "scoring_eligible": false,
+        "source_hash": "851a7dc3ba1dc38f4ac57f4214655406d272a828465c946f5de6d5ce6c69de4d",
+        "status": "CONTEXT_ONLY_PIT_VERIFIED"
+      },
+      "compass_id": "CMP-20261118-b04b47fcefd2",
+      "feature_row_id": "TSUF-dbe0a56f7bcd2167",
+      "features": {
+        "btc_price_oi_state": "PRICE_DOWN_OI_DOWN",
+        "derivatives": {
+          "btc_funding_event_rate": null,
+          "btc_long_short_ratio": 2.71,
+          "btc_oi_change_1h_pct": -0.0505083630401,
+          "eth_funding_event_rate": null,
+          "eth_long_short_ratio": 3.01,
+          "eth_oi_change_1h_pct": 0.0132082565291
+        },
+        "derivatives_status": "PASS",
+        "eth_price_oi_state": "PRICE_DOWN_OI_UP",
+        "knowledge_cutoff_utc": "2026-11-18T07:22:24Z",
+        "source_row_integrity": {
+          "age_hours_at_warning": 0.37333333333333335,
+          "candle_close_utc": "2026-11-18T07:00:00Z",
+          "first_exact_main_commit": {
+            "commit": "9994c6afde225ad6c3d6042ff2b86fabd86ba4ab",
+            "commit_time_utc": "2026-11-18T07:08:16Z",
+            "status": "FOUND"
+          },
+          "legal_availability_utc": "2026-11-18T07:00:00Z",
+          "pit_status": "VERIFIED_FIRST_MAIN_COMMIT_PRE_OR_AT_KNOWLEDGE",
+          "point_in_time_feature_capture_eligible": true,
+          "row_timestamp_utc": "2026-11-18T06:00:00Z",
+          "source_window_end_utc": "2026-11-18T07:00:00Z",
+          "status": "OBSERVED"
+        },
+        "spot": {
+          "btc_close": 64608.01,
+          "btc_return_1h_pct": -0.111533445733,
+          "btc_taker_buy_quote_share": 0.375697964046,
+          "eth_close": 1809.52,
+          "eth_return_1h_pct": -0.120880273333,
+          "eth_taker_buy_quote_share": 0.28805724045,
+          "ethbtc_close": 0.02801,
+          "ethbtc_return_1h_pct": 0.0
+        },
+        "spot_status": "PASS",
+        "state": "OBSERVED"
+      },
+      "hourly_source_hash": "ec841b761b97b8e09f32f7f95ab757a2185bc60bf7f21b44ab2ed5e5141aa88b",
+      "hourly_source_path": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-18.csv",
+      "knowledge_timestamp": "2026-11-18T07:22:24Z",
+      "labels": {
+        "A0": "BLOCKED_BINARY",
+        "A1": "BLOCKED_BINARY",
+        "A2": "UNKNOWN_CANONICAL",
+        "A3": "CONTINUOUS_ONLY",
+        "M1": "CONTINUOUS_PARTIAL",
+        "M2": "CONTINUOUS",
+        "M3": "ACTIVE_FAIL_CLOSED"
+      },
+      "outcome_joined": false,
+      "scoring_eligible": false,
+      "source_freeze_hash": "47ea35267516f97ac3225d8cb0edc96d86aa690e896018460497860e35e6bcb2",
+      "source_freeze_path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/18/CMP-20261118-b04b47fcefd2.json",
+      "warning_issued_at_utc": "2026-11-18T07:22:24Z",
       "warning_state": "ELEVATED"
     }
   ],
