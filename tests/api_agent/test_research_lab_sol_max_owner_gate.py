@@ -15,13 +15,14 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         self.base={"tasks":{TASK_NAME:{"model":"gpt-6.1-sol","reasoning_effort":"high","max_attempts":1}}}
         self.packet={"mission_id":MAX_ONESHOT_MISSION,"original_owner_issue":1156,"reasoning_effort":"max","max_runs_for_this_release":1,"max_model_output_tokens_per_new_attempt":48000,"public_storage_consent_30_days":True,"public_storage_consent_comment_id":6683279250,"public_source_only":True,"one_shot_owner_mandate":"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6683279250","review_only_no_code_write":True,"authority":{"portfolio_action":False,"repository_write":False}}
     def test_max_and_no_global_mutation(self):
-        out=effective_registry_for_mission(self.base,self.packet,MAX_ONESHOT_MISSION)
+        out=effective_registry_for_mission(self.base,self.packet,MAX_ONESHOT_MISSION,
+            model_available=lambda name: name == "gpt-6.2-sol")
         self.assertEqual(out["tasks"][TASK_NAME]["reasoning_effort"],"max")
         self.assertEqual(out["tasks"][TASK_NAME]["max_attempts"],1)
         self.assertEqual(out["tasks"][TASK_NAME]["max_output_tokens"],48000)
         self.assertTrue(out["tasks"][TASK_NAME]["recoverable_background"])
         self.assertTrue(out["tasks"][TASK_NAME]["public_background_storage_authorized"])
-        self.assertEqual(out["tasks"][TASK_NAME]["model"], "gpt-6.1-sol")
+        self.assertEqual(out["tasks"][TASK_NAME]["model"], "gpt-6.2-sol")
         self.assertEqual(self.base["tasks"][TASK_NAME]["reasoning_effort"],"high")
     def test_six_two_project_available_frozen_request_and_price(self):
         from scripts.api_agent import api_gateway as gateway
@@ -36,6 +37,11 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         self.assertEqual(gateway.estimate_cost("gpt-6.2-sol", 200000, 128000), 2.28)
         with self.assertRaisesRegex(ValueError, "REASONING_EFFORT_NOT_ADMITTED"):
             gateway.build_request(TASK_NAME, dict(cfg, reasoning_effort="none"), "public test", {})
+
+    def test_native_registry_fails_closed_when_exact_model_unavailable(self):
+        for probe in (None, lambda _: False, lambda name: name == "gpt-6.1-sol"):
+            with self.assertRaisesRegex(ValueError, "REQUIRED_PROJECT_MODEL_UNAVAILABLE"):
+                effective_registry_for_mission(self.base, self.packet, MAX_ONESHOT_MISSION, model_available=probe)
 
     def test_max_without_public_storage_consent_fails_before_paid_post(self):
         packet=dict(self.packet)
@@ -53,7 +59,8 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
                 effective_registry_for_mission(self.base, broken, MAX_ONESHOT_MISSION)
     def test_future_token_limit_128k_and_beyond_bound_rejected(self):
         newer = dict(self.packet, max_model_output_tokens_per_new_attempt=128000)
-        cfg = effective_registry_for_mission(self.base, newer, MAX_ONESHOT_MISSION)
+        cfg = effective_registry_for_mission(self.base, newer, MAX_ONESHOT_MISSION,
+            model_available=lambda name: name == "gpt-6.2-sol")
         self.assertEqual(cfg["tasks"][TASK_NAME]["max_output_tokens"], 128000)
         for out in (0, 128001, 200000, "128000"):
             with self.assertRaisesRegex(ValueError, "MAX_OUTPUT_LIMIT_INVALID"):
@@ -176,14 +183,15 @@ class NativeNewPaidClaimTests(unittest.TestCase):
         self.registry={"tasks":{TASK_NAME:{"model":"gpt-6.1-sol",
                           "reasoning_effort":"high","max_attempts":1}}}
         self.effective = native.effective_registry_for_mission(
-            self.registry, self.packet, MAX_ONESHOT_MISSION)
+            self.registry, self.packet, MAX_ONESHOT_MISSION,
+            model_available=lambda name: name == "gpt-6.2-sol")
         source_policy=json.loads((Path(__file__).resolve().parents[2]/
                                    sol_policy.POLICY_PATH).read_text())
         for path,data in (
             (sol_policy.POLICY_PATH, source_policy),
             (Path("runtime/research-lab-sol/effective_registry.json"), self.effective),
             (Path("runtime/research-lab-sol/context.json"),
-             {"mission_id":MAX_ONESHOT_MISSION, "model":"gpt-6.1-sol"}),
+             {"mission_id":MAX_ONESHOT_MISSION, "model":"gpt-6.2-sol"}),
             (native.QUEUE_PATH, {"missions":[{
                 "mission_id":MAX_ONESHOT_MISSION,"state":"ACTIVE_RELEASED",
                 "mission_packet":self.packetpath}]}),
@@ -262,7 +270,7 @@ class NativeNewPaidClaimTests(unittest.TestCase):
             "mission_id":mid,"state":"ACTIVE_RELEASED",
             "mission_packet":self.packetpath}]}))
         (self.root/"runtime/research-lab-sol/context.json").write_text(
-            json.dumps({"mission_id":mid,"model":"gpt-6.1-sol"}))
+            json.dumps({"mission_id":mid,"model":"gpt-6.2-sol"}))
         digest=native.sha256_bytes((self.root/self.packetpath).read_bytes())
         release=("<!"+"-- SOL_MAX_OWNER_RELEASE_V1 mission="+mid
                  +" packet_sha256="+digest+" -->")
@@ -277,7 +285,7 @@ class NativeNewPaidClaimTests(unittest.TestCase):
         mid=self.configure_future_thread_mission()
         result=self.execute()
         self.assertEqual(result["mission"],mid)
-        self.assertEqual(result["model"],"gpt-6.1-sol")
+        self.assertEqual(result["model"],"gpt-6.2-sol")
         self.assertEqual(self.writes,1)
         with self.assertRaisesRegex(ValueError,"MAX_CLAIM_ALREADY_EXISTS_NO_REPOST"):
             self.execute()

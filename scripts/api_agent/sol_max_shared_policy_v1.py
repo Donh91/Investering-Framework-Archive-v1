@@ -18,6 +18,7 @@ MAX_OUTPUT = 128_000
 MAX_INPUT_EVIDENCE_BYTES = 180_000
 MAX_NEW_REQUEST_USD = 3.0
 LEGACY_SOL = "gpt-6.1-sol"
+REQUIRED_MAX_SOL = "gpt-6.2-sol"
 
 
 def project_model_available(model: str, api_key: str) -> bool:
@@ -43,6 +44,10 @@ def validated_models(policy: dict, prices: dict) -> list[dict]:
             or policy.get("contract") != "SOL_MAX_SHARED_MODEL_POLICY_V1"
             or policy.get("max_output_tokens") != MAX_OUTPUT
             or policy.get("public_only") is not True
+            or policy.get("selection") != "exact_OWNER_REQUIRED_PROJECT_AVAILABLE_SOL_only"
+            or policy.get("required_new_max_model") != REQUIRED_MAX_SOL
+            or policy.get("required_new_research_effort") != "max"
+            or policy.get("allow_model_fallback_for_new_max") is not False
             or "gpt-6-astra" not in policy.get("forbidden_auto_models", [])
             or policy.get("new_models_not_approved_by_name_alone") is not True):
         raise ValueError("SOL_MAX_MODEL_POLICY_INVALID")
@@ -78,12 +83,14 @@ def validated_models(policy: dict, prices: dict) -> list[dict]:
 
 def choose_model(policy: dict, prices: dict, *,
                  available: Callable[[str], bool] | None = None) -> dict:
-    """Prefer newest approved *and project-available* Sol; 6.1 is safe fallback."""
+    """Require the exact owner-selected verified model; never use a fallback."""
     rows = validated_models(policy, prices)
-    for row in rows:
-        if row["id"] == LEGACY_SOL or (available is not None and available(row["id"])):
-            return row
-    raise ValueError("SOL_MAX_NO_PROJECT_AVAILABLE_SOL")
+    row = next((item for item in rows if item["id"] == REQUIRED_MAX_SOL), None)
+    if row is None:
+        raise ValueError("SOL_MAX_REQUIRED_MODEL_NOT_VERIFIED")
+    if available is None or available(REQUIRED_MAX_SOL) is not True:
+        raise ValueError("SOL_MAX_REQUIRED_PROJECT_MODEL_UNAVAILABLE")
+    return row
 
 
 def quoted_upper_usd(context_bytes: int, output_tokens: int, row: dict) -> float:

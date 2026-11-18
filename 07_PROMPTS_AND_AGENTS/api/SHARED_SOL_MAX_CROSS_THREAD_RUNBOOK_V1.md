@@ -92,18 +92,17 @@ PUBLIC SOURCE ONLY; 30 DAYS; max_output_tokens=128000
    A completed research report does NOT automatically merge code or alter
    scientific, market or portfolio rules.
 
-## Model choice, including future 6.2
+## Model choice: exact GPT-6.2 Sol MAX for new missions
 
-Current verified model: `gpt-6.1-sol`, 128k maximum output and the
-source-pinned price/long-context policy. `gpt-6.2-sol` is a FUTURE
-candidate, not an approved or yet verified model (2026-11-06).
-When official 6.2 identifier, price, capability, context and availability
-can actually be verified, the EXISTING S1/Strategist should propose the
-minimal source-reviewed policy + API gateway price update through the
-existing PR/CI lane. Once qualified on main, future runs automatically
-prefer the highest verified/priced Sol, probe project availability by
-nonpaid `GET /v1/models/...`, and fall back to Sol 6.1 if not accessible.
-Never guess an unreleased model's price; if provenance fails, retain 6.1.
+Owner directive 2026-11-18: new owner-bound Research Lab Sol MAX research
+uses `gpt-6.2-sol` with `reasoning_effort=max` only. Verify the existing
+source-reviewed policy, matching gateway prices and a successful
+non-billable project GET for this exact model before the paid claim.
+Unavailable or missing GET fails closed; no fallback to 6.1, a future
+Sol, Astra or a lower reasoning effort. Existing packet identifiers and
+historical receipts are not rewritten. GET-only recovery remains bound
+to its original consumed attempt. This rule does not change legacy HIGH
+reporting tasks or grant a paid release, change budget or reorder the queue.
 
 **ASTRA: ABSOLUTELY NO AUTOMATIC SELECTION OR FALLBACK.** No S1,
 Strategist, background task, Research Lab, model router, other ChatGPT

@@ -86,10 +86,13 @@ one-use pre-HTTP bot claim, and immutable receipts. No background
 cron/new supervisor/extra secrets/automatic paid retry. A thread without
 GitHub write capability can draft but must NOT claim dispatch.
 
-Prefer the newest OFFICIALLY VERIFIED, PRICED and account-accessible Sol
-version, currently 6.1 Sol, with future 6.2 selected only after official
-documentation, gateway price, model-cap, source-reviewed CI and
-non-billable project GET evidence. If not verified, use 6.1 Sol.
+For every new owner-bound Research Lab Sol MAX mission, require exactly
+`gpt-6.2-sol` and `reasoning_effort=max`, with official documentation,
+gateway price, model-cap, source-reviewed CI and successful non-billable
+project GET evidence. If GPT-6.2 Sol is not project-accessible, fail closed
+before a paid claim or POST; no downgrade or automatic fallback to 6.1
+or a later model. Historical receipts and GET-only recovery remain bound
+to the original model; routine legacy HIGH tasks are not changed by this rule.
 **Astra is MANUAL OWNER REQUEST AND APPROVAL ONLY, for all model
 routers/agent roles. NEVER select or fall back to Astra automatically.**
 If no safe Sol route exists, fail closed, never switch to Astra.
