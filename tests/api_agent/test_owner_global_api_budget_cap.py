@@ -302,6 +302,8 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(g.settled_owner_cost_upper(p, datetime(2026, 11, 18, tzinfo=timezone.utc)), 12.60981)
         self.assertEqual(g.settled_owner_cost_upper(p, datetime(2026, 12, 1, tzinfo=timezone.utc)), 0.0)
         self.assertEqual(original["owner_astra_provider_period_settlement"]["provider_period_spend_usd"], 5.41)
+        self.assertEqual(original["owner_astra_provider_period_settlement"]["settled_total_usd"], 5.41)
+        self.assertEqual(original["owner_astra_provider_period_settlement"]["source"], "owner OpenAI usage dashboard + CSV export 2026-11-18")
         with tempfile.TemporaryDirectory() as td:
             probe = Path(td) / "ledger.json"
             for change in ("wrong_run", "wrong_amount", "replay", "invented_release", "drop"):
