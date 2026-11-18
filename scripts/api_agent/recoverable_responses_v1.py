@@ -48,7 +48,7 @@ def _read(path: Path) -> dict:
 
 
 def _validate_payload(payload: dict) -> None:
-    if (payload.get("model") != "gpt-6.1-sol"
+    if (payload.get("model") not in {"gpt-6.1-sol", "gpt-6.2-sol"}
             or (payload.get("reasoning") or {}).get("effort") != "max"
             or payload.get("background") is not True
             or payload.get("store") is not True):
@@ -132,6 +132,8 @@ def collect(payload: dict, api_key: str, output_dir: Path, *,
     body = json.loads(raw)
     if body.get("id") != response_id:
         raise ValueError("BACKGROUND_PROVIDER_RESPONSE_ID_MISMATCH")
+    if payload["model"] == "gpt-6.2-sol" and body.get("model") != payload["model"]:
+        raise ValueError("BACKGROUND_PROVIDER_MODEL_MISMATCH")
     status = body.get("status")
     if status in ("queued", "in_progress"):
         raise PendingResponse("BACKGROUND_RESPONSE_STILL_PENDING_GET_ONLY")

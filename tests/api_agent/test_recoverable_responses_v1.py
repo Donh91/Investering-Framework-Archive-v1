@@ -55,6 +55,18 @@ class RecoveryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "ATTEMPT_EXISTS_NO_REPOST"):
                 t.start(payload(), "fake", root, post=lambda *_: self.fail("duplicate POST"))
 
+    def test_six_two_model_binding_and_get_only(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "attempt"
+            request = dict(payload(), model="gpt-6.2-sol")
+            t.start(request, "fake", root, post=lambda *a, **kw: HttpResult({"id": "resp_abc1234"}))
+            with self.assertRaisesRegex(ValueError, "PROVIDER_MODEL_MISMATCH"):
+                t.collect(request, "fake", root, get=lambda *a, **kw: HttpResult({"id": "resp_abc1234", "status": "completed", "model": "gpt-6.1-sol"}))
+            result = t.submit_or_resume(request, "fake", root, resume=True,
+                post=lambda *a, **kw: self.fail("POST on recovery"),
+                get=lambda *a, **kw: HttpResult({"id": "resp_abc1234", "status": "completed", "model": "gpt-6.2-sol"}))
+            self.assertEqual(result["model"], "gpt-6.2-sol")
+
     def test_remote_disconnect_preserves_unknown_and_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "attempt"

@@ -23,6 +23,20 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         self.assertTrue(out["tasks"][TASK_NAME]["public_background_storage_authorized"])
         self.assertEqual(out["tasks"][TASK_NAME]["model"], "gpt-6.1-sol")
         self.assertEqual(self.base["tasks"][TASK_NAME]["reasoning_effort"],"high")
+    def test_six_two_project_available_frozen_request_and_price(self):
+        from scripts.api_agent import api_gateway as gateway
+        cfg = effective_registry_for_mission(self.base, self.packet, MAX_ONESHOT_MISSION,
+            model_available=lambda name: name == "gpt-6.2-sol")["tasks"][TASK_NAME]
+        self.assertEqual(cfg["model"], "gpt-6.2-sol")
+        self.assertEqual(cfg["max_attempts"], 1)
+        request = gateway.build_request(TASK_NAME, cfg, "public test", {})
+        self.assertEqual(request["model"], "gpt-6.2-sol")
+        self.assertEqual(request["input"][0]["role"], "developer")
+        self.assertNotIn("instructions", request)
+        self.assertEqual(gateway.estimate_cost("gpt-6.2-sol", 200000, 128000), 2.28)
+        with self.assertRaisesRegex(ValueError, "REASONING_EFFORT_NOT_ADMITTED"):
+            gateway.build_request(TASK_NAME, dict(cfg, reasoning_effort="none"), "public test", {})
+
     def test_max_without_public_storage_consent_fails_before_paid_post(self):
         packet=dict(self.packet)
         del packet["public_storage_consent_30_days"]
