@@ -1128,6 +1128,13 @@ class ChallengerATest(unittest.TestCase):
             self.assertEqual(A.publish_mature_score(Path("/nonexistent"))["status"],
                              "CHALLENGER_A_SCORE_NOT_DUE")
 
+    def test_writer_cli_refuses_user_week_and_fixture_clock(self):
+        for args in (["--week", "2026-W47"], ["--t0", "2026-11-23T01:00:00Z"],
+                     ["--synthetic-fixture-clock"], ["--output", "score.json"],
+                     ["--publication-commit", "a" * 40]):
+            with self.subTest(args=args), self.assertRaises(SystemExit):
+                A.main(["publish-mature-score", *args])
+
     def test_writer_real_remote_admission_and_idempotency(self):
         with tempfile.TemporaryDirectory() as d:
             root, bare = Path(d) / "work", Path(d) / "remote.git"
@@ -1241,7 +1248,7 @@ class ChallengerATest(unittest.TestCase):
         self.assertGreater(start, workflow.index("      - name: Dispatch Entry Signal after hourly owner publish"))
         step = workflow[start:end]
         self.assertIn("if: github.event_name == 'schedule'", step)
-        self.assertIn("publish_mature_score(Path('.'))", step)
+        self.assertIn("task2_challenger_a_sqrt_t_vol_band_v1.py publish-mature-score --repo-root .", step)
         self.assertIn("continue-on-error: true", step)
         self.assertEqual(workflow.count("cron: '12 * * * *'"), 1)
 
