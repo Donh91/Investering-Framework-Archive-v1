@@ -19,7 +19,7 @@ from scripts.api_agent import astra_mission_reservations_v1 as res
 
 ROOT = Path(__file__).resolve().parents[2]
 MID = "ASTRA-S1-V32-REDTEAM-20261118-R2"
-BUNDLE_SHA = "5e648ef6b957f574a4af0f5a0f6b0f4d99386be900a7120d46d8896f9fbbb8c1"
+BUNDLE_SHA = "bf77cd0609c0e9e1ce0ac63b4a1c4779c8cb71bb439ca512a6cff2cf3e45d0fc"
 GUARD = ROOT / "scripts/api_agent/check_monthly_cost_guard.py"
 CANONICAL_LEDGER = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
 def checkout_head():
@@ -144,7 +144,7 @@ class TestRequest(Base):
         req, data, meta = a
         self.assertEqual(req["model"], "gpt-6.2-astra")
         self.assertEqual(req["reasoning"], {"effort": "max"})
-        self.assertEqual(req["max_output_tokens"], 64000)
+        self.assertEqual(req["max_output_tokens"], 128000)
         self.assertNotIn("tools", req)
         self.assertEqual(meta["bundle_sha256"], BUNDLE_SHA)
         self.assertEqual(meta["request_sha256"], m.digest(data))
