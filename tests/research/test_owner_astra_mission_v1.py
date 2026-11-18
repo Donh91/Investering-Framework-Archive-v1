@@ -502,11 +502,7 @@ class TestCostGuard(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.tmp)
         (self.tmp / "receipts").mkdir()
         self.base = json.loads(CANONICAL_LEDGER.read_text())
-        # Keep only the retained rows so the fixture fits under the hard stop regardless of the budget PR.
-        self.base["owner_reservations"] = [r for r in self.base["owner_reservations"]
-                                           if r["work_id"] in {"ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE",
-                                                               "ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE",
-                                                               "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE"}]
+        # The canonical rows as they are: settled/consumed rows hold nothing, active rows count in full.
         self.stop = self.base["absolute_budget_usd"]
 
     def guard(self, rows, *extra, hard_stop=None):
@@ -546,11 +542,14 @@ class TestCostGuard(unittest.TestCase):
                          without["owner_global_remaining_usd_after_risk"] - 20)
 
     def test_hard_stop_cannot_be_exceeded(self):
-        self.base["owner_reservations"] = json.loads(CANONICAL_LEDGER.read_text())["owner_reservations"]
-        total = sum(r["upper_usd"] for r in self.base["owner_reservations"])
-        if total + 20 <= self.stop - 4:
-            self.skipTest("ledger already has headroom for this mission")
+        # A current-month receipt that leaves less than USD20 + USD4 reserve under the hard stop blocks the mission.
+        import time
+        spent = self.stop - 4 - 20 + 1
+        (self.tmp / "receipts" / "r.json").write_text(json.dumps({
+            "contract": "TEST_COST_RECEIPT", "task": "test", "run_id": "1", "estimated_cost_usd": spent,
+            "created_unix": time.time()}))
         code, result = self.guard([reservation()], "--owner-astra-mission-id", MID)
+        self.assertEqual(result["spent_usd"], spent, result)
         self.assertNotEqual(code, 0)
         self.assertEqual(result["status"], "BLOCKED")
 

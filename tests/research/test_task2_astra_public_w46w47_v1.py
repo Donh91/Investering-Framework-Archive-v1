@@ -50,6 +50,10 @@ class TestAstraPublicOneShot(unittest.TestCase):
             self.assertEqual(meta["source_count"],len(a.SOURCE))
             self.assertEqual(meta["source_main_sha"],"a"*40)
 
+    def test_consumed_work_remains_blocked_on_paid_path(self):
+        with self.assertRaises(ValueError):
+            a.check_reservation()
+
     def test_unauthenticated_owner_trigger_rejected(self):
         with mock.patch.dict(os.environ, {
             "GITHUB_EVENT_NAME":"issue_comment","GITHUB_ACTOR":"not-owner",

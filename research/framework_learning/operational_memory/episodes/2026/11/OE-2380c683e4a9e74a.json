@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/hourly-sequence-capture.yml",
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py",
+    "tests/research/test_task2_challenger_a_sqrt_t_vol_band_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-2380c683e4a9e74a",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "task2-wire-immutable-first-maturity-challenger-score-existing",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(task2): admit and publish immutable first-maturity score via existing writer * test(task2): exercise real-Git publication, race, no-issuance and maturity guards * fix(task2): wire first-maturity scorer after existing hourly publication * refine(task2): direct guarded publisher CLI and native wiring * refine(task2): direct guarded publisher CLI and native wiring * refine(task2): direct guarded publisher CLI and native wiring * chore(task2): bind proposed workflow tree without changing S1 rules * chore(task2): bind proposed switch blob * chore(task2): bind proposed runtime pin (no active ",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/hourly-sequence-capture.yml": "9bbde88fe8ad403425e1939f08e9d5b8bfee0f3f",
+    "00_FMOS/S1/BOOTSTRAP.txt": "86af8e0cdd9ad768b43f322e78ec0e3c9f12176b",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "766b5c9d380bc0cb02ee2c9eda24aad518d6936f",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "de2e138dc675bc03c8671efbbc204dc4ffd144b0",
+    "scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py": "085386a34adedf8ef799122a347c4b42d2af26c2",
+    "tests/research/test_task2_challenger_a_sqrt_t_vol_band_v1.py": "cef16322b1d620600ae1cf1fc76e0988996ae619"
+  },
+  "source_commit_sha": "2380c683e4a9e74af0ce40d54bd427f34d454471",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-18T10:14:50+01:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix(task2): wire immutable first-maturity Challenger A score into existing hourly writer (#1596) (#2217)"
+}
