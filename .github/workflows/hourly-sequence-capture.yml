@@ -229,12 +229,7 @@ jobs:
           set -euo pipefail
           # Last step of the existing owner writer: an unpublished failed
           # candidate must never be rebased, reused, or affect downstream jobs.
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          from scripts.research.task2_challenger_a_sqrt_t_vol_band_v1 import publish_mature_score
-          print(json.dumps(publish_mature_score(Path('.')), sort_keys=True))
-          PY
+          python scripts/research/task2_challenger_a_sqrt_t_vol_band_v1.py publish-mature-score --repo-root .
 
 
   intraday:
