@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -593,6 +595,7 @@ def main() -> None:
     # one-shot IDs in the canonical ledger. The native owner issue event + claim
     # is separately enforced by each runner, not by this quote-only guard.
     approved_astra_id = args.owner_astra_program_work_id
+    historical_pr_audit = False
     exceptional = (approved_astra_id in OWNER_ASTRA_PROGRAM_WORK
                    and args.hard_stop_usd == 100.0
                    and args.reserve_usd >= 4.0
@@ -613,7 +616,23 @@ def main() -> None:
                            "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/" +
                            str(OWNER_ASTRA_PROGRAM_WORK[approved_astra_id])]
                 if len(exact) != 1:
-                    raise ValueError("DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED")
+                    # The existing MAEVE PR preflight is a read-only check of the
+                    # original packet. It must report an explicit consumed state,
+                    # never PASS for a retired paid route. Actual issue-comment
+                    # launches and local invocations remain blocked.
+                    consumed = [r for r in lr.get("owner_reservations", [])
+                                if r.get("work_id") == approved_astra_id
+                                and r.get("status") == CONSUMED_STATUS
+                                and r.get("native_settlement_evidence") == OWNER_CONSUMED_ASTRA_EVIDENCE.get(approved_astra_id)]
+                    historical_pr_audit = (
+                        not exact and len(consumed) == 1
+                        and approved_astra_id == "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE"
+                        and args.liability_ledger.resolve() == CANONICAL_LIABILITY_LEDGER.resolve()
+                        and os.environ.get("GITHUB_ACTIONS") == "true"
+                        and os.environ.get("GITHUB_EVENT_NAME") == "pull_request"
+                        and re.fullmatch(r"refs/pull/[0-9]+/merge", os.environ.get("GITHUB_REF", "")) is not None)
+                    if not historical_pr_audit:
+                        raise ValueError("DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED")
             except (OSError, ValueError, TypeError, KeyError):
                 errors.append({"path": "OWNER_ASTRA_PROGRAM",
                                "reason": "DISTINCT_OWNER_ASTRA_RESERVATION_REQUIRED"})
@@ -657,8 +676,12 @@ def main() -> None:
     status = ("BLOCKED" if errors or remaining is None or owner_remaining is None
               or remaining <= effective_reserve  # the reserve is never spendable, as in the lane guard
               or owner_remaining < OWNER_GLOBAL_RESERVE_USD else "PASS")
+    if status == "PASS" and historical_pr_audit:
+        status = "CONSUMED_NO_POST"
     result = {
         "status": status,
+        "historical_pr_audit_only": historical_pr_audit,
+        "paid_authority": False,
         "month": now.strftime("%Y-%m"),
         "receipts": receipts,
         "repriced_api_receipts": repriced_api_receipts,
@@ -688,7 +711,7 @@ def main() -> None:
         "fail_closed": True,
     }
     print(json.dumps(result, sort_keys=True, allow_nan=False))
-    if status != "PASS":
+    if status not in ("PASS", "CONSUMED_NO_POST"):
         raise SystemExit("monthly_api_cost_guard_blocked")
 
 

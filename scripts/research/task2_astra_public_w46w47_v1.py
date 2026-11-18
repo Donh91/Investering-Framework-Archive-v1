@@ -152,7 +152,7 @@ def source_packet() -> tuple[str, list[dict]]:
 def prepare(out: Path, *, preview: bool):
     if not preview:
         owner_event()
-    check_reservation()
+        check_reservation()
     body, sources = source_packet()
     sha = git_head()
     prompt = "Source-main " + sha + "\n" + body

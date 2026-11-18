@@ -339,6 +339,24 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
             with patch.dict(g.OWNER_NEVER_TRIGGERED_EVIDENCE, {new["work_id"]: proof}):
                 self.assertEqual(g.pending_risk(probe), (0.0, 0.0, 0))
 
+    def test_maeve_consumed_pr_preflight_never_returns_paid_pass(self):
+        import os
+        work = "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE"
+        cmd = [sys.executable, str(SCRIPT), "--receipt-root", str(ROOT / "research/api_agent/outputs"),
+               "--hard-stop-usd", "100", "--reserve-usd", "4",
+               "--new-request-upper-usd", "0", "--owner-astra-program-work-id", work]
+        for event, ref, expected in [
+            ("pull_request", "refs/pull/2222/merge", "CONSUMED_NO_POST"),
+            ("issue_comment", "refs/heads/main", "BLOCKED"),
+            ("pull_request", "refs/heads/main", "BLOCKED"),
+        ]:
+            env = dict(os.environ, GITHUB_ACTIONS="true", GITHUB_EVENT_NAME=event, GITHUB_REF=ref)
+            proc = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True, timeout=25)
+            state = json.loads(proc.stdout)
+            self.assertEqual(state["status"], expected, state)
+            self.assertFalse(state["paid_authority"])
+            self.assertEqual(proc.returncode == 0, expected == "CONSUMED_NO_POST")
+
     def test_native_caller_caps_above_40_only_in_hard_disabled_astra_v2_job(self):
         import re
         workflow = ROOT / ".github/workflows/owner-bound-daily-director-manual.yml"

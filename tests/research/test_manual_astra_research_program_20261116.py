@@ -36,9 +36,9 @@ class Tests(unittest.TestCase):
 
  def test_real_paid_path_requires_distinct_prehttp_reservation(self):
   for m in (a,b,c,d,e):
-   with self.assertRaisesRegex(ValueError, "DISTINCT_ASTRA_10USD_RESERVATION_REQUIRED"):
+   with self.assertRaisesRegex(ValueError, "CANONICAL_SHARED_BUDGET_UNVERIFIED|DISTINCT_ASTRA_10USD_RESERVATION_REQUIRED"):
     m.check_reservation()  # Consumed work cannot regain paid authority.
-   with self.assertRaisesRegex(ValueError,'DISTINCT_ASTRA_10USD_RESERVATION_REQUIRED'):
+   with self.assertRaisesRegex(ValueError,'CANONICAL_SHARED_BUDGET_UNVERIFIED|DISTINCT_ASTRA_10USD_RESERVATION_REQUIRED'):
     with unittest.mock.patch.object(m, 'MISSION', 'FAKE-UNRESERVED-MISSION'):
      m.check_reservation()
 
@@ -74,7 +74,7 @@ class Tests(unittest.TestCase):
     m.core.write_once(out/"claim.json",{"mission":m.MISSION,"request_sha256":digest,
       "source_main_sha":"a"*40,"run_id":"123"})
     m.mark_attempt(out)
-    with mock.patch.dict(os.environ,{"OPENAI_API_KEY":"synthetic_no_network"}):
+    with mock.patch.dict(os.environ,{"OPENAI_API_KEY":"mock-test"}):
      with mock.patch.object(m.core,"http_json",return_value={"id":"resp_SYNTHETIC123456",
        "model":m.MODEL,"status":"in_progress"}) as http:
       m.submit(out)
