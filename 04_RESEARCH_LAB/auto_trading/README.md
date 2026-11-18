@@ -138,3 +138,7 @@ Trigger the next architecture review when empirical evidence exists:
 - at least one THEORY_LEDGER hypothesis has a reproducible result artifact.
 
 External links may still be logged and screened in the meantime.
+
+## Future product design — Navigator One (2026-11-18)
+
+[Navigator One design seed](navigator_one/README.md) — public-safe navigation to the proposed unified trading/portfolio interface, source audit and gated joint design handoff. Design only; existing owners and scientific admission remain authoritative. No new engine, schedule, runtime, funding or execution authority.
