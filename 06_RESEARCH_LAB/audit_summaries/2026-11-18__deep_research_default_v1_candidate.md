@@ -1,5 +1,5 @@
 # Deep Research Default v1 — proposed extension to the existing Research Lab method
-Date: 2026-11-18. Status: CANDIDATE / NOT ACTIVE DEFAULT UNTIL GOVERNED ACCEPTANCE.
+Date: 2026-11-18. Status: OWNER-APPROVED READ-ONLY CHAT PREFERENCE / FRAMEWORK SKILL CANDIDATE, NOT ACTIVE REGISTRY DEFAULT UNTIL GOVERNED ACCEPTANCE.
 Owner: Research Lab #1512; Strategist #1157 for disposition; existing domain owners and S1 #1156 for handoff. No new skill identity, supervisor, queue, workflow or permission.
 Source: https://learn.chatgpt.com/guides/prompting-gpt-6-2-astra (official OpenAI Learn; accessed 2026-11-18, page title Prompting GPT-6.2 in Codex). Source sections: reasoning effort, subagents, visual iteration, compact agent instructions. This is advice for Codex across its 6.2 family, not evidence of this Chat or API runner's model availability or performance. No source code or long quotations copied. Adaptation, not a provider instruction override.
 
@@ -23,7 +23,7 @@ When the owner asks for a substantive deep dive, reverse engineering, investigat
 - Execution mode, limitations, and artifacts truthful; no automatic permission escalation or duplication.
 
 ## Candidate routing delta (apply only after skill-quality-gate acceptance)
-In 00_ARCHIVE_CONTROL/SKILL_REGISTRY.md section 3, add a brief route before general framework work: substantive owner-requested deep dive of a website, concept, paper, tool or protocol -> canonical-context-router where repo aware -> research-lab-red-team reference DEEP_RESEARCH_DEFAULT_V1 -> existing domain owner, developer-source-research for technical source uncertainty, research-parallel-lanes only on its existing explicit trigger -> synthesis -> archive-governance only on authorized writes. Keep AGENTS.md unchanged and avoid changing derived routing JSON by hand; if metadata regeneration is required, use its existing generator and review. Rename/remove candidate status only in the accepted governed change. No skill loaded globally across ChatGPT merely by merging GitHub.
+In 00_ARCHIVE_CONTROL/SKILL_REGISTRY.md section 3, add a brief route before general framework work: substantive owner-requested deep dive of a website, concept, paper, tool or protocol -> canonical-context-router where repo aware -> research-lab-red-team reference this candidate, after admitted placement and S1 integrity re-pin -> existing domain owner, developer-source-research for technical source uncertainty, research-parallel-lanes only on its existing explicit trigger -> synthesis -> archive-governance only on authorized writes. Keep AGENTS.md unchanged unless a separately reviewed necessity is proven; do not write .agents or 07_PROMPTS_AND_AGENTS without the existing S1 pin-chain procedure. Avoid changing derived routing JSON by hand; if metadata regeneration is required, use its existing generator and review. Rename/remove candidate status only in the accepted governed change. No skill loaded globally across ChatGPT merely by merging GitHub.
  
 ## Evaluation plan — existing skill-quality-gate owner
 Baseline: research-lab-red-team blob 20a990ddd603953b965c17101dad873e603c158b; research-parallel-lanes blob da319dac491c792bcf117212d790d19526141e51; registry blob b050bfaef876a082ee8af6d8a64dfc45b9237f09; base main a21bda45705bda38dbc75be276d3a6698e35031f. Existing gates and baseline cases remain binding. Static candidate review only, no runtime A/B performed. Use identical model/effort, available tools, source snapshot and constraints across arms; blind comparison as supported, use calibrated heldout evaluator if subjective release decision is load-bearing. Include at least these cases:
@@ -37,3 +37,22 @@ Baseline: research-lab-red-team blob 20a990ddd603953b965c17101dad873e603c158b; r
 - Duplicate: existing accepted finding/PR -> reuse existing owner and no new PR.
 - Completion: inaccessible site or partial results -> report native evidence and limitations, no fake complete.
 Acceptance: no deterministic authority/safety regression, accurate trigger/nontrigger behavior, meaningful evidence coverage and decision usefulness improvement over baseline without unjustified cost; keep baseline if not proven. Record missing runtime and evaluator evidence rather than asserting FULL_GATE. No new paid API or automation authorized by this candidate. Route independent review through existing S1/Research Lab/Strategist; never self-approve.
+
+## 2026-11-18 qualification readback (author-side; STATIC_ONLY)
+Owner explicitly approved immediate use as a read-only Chat research preference; this is not registry promotion or independent approval. Original candidate head `8b77e9141608996976e2805ae8853f8baf38c1a7`, blob `fb21178f2e811b3ec435386fc0bec0d94bea0197`. Source freshly verified at https://learn.chatgpt.com/guides/prompting-gpt-6-2-astra (lines 942–969 on retrieved page); four advice areas match the candidate: task-depth selection, bounded independent delegation, visual/interactive verification, lean reusable instructions. This is an adaptation to research, not a tested provider capability. Existing red-team already supplies falsifiers, owner and baseline, so retain those rather than treating them as added value. Incremental hypothesis: tighter deep-dive invocation, source acquisition and partial completion reduce repeated owner prompts, without increasing false activation or unsupported claims. No measured behavioral superiority.
+
+Author ran ten deterministic text-contract assertions against the exact initial candidate, all passed (these are presence/consistency checks, not agent execution or test-case success):
+- Source and method provenance: PASS
+- Positive site/paper/UI triggers: PASS
+- Negative status/simple/execution triggers: PASS
+- Access and privacy: PASS
+- Runtime truth: PASS
+- Scientific baseline/falsifier: PASS
+- Owner/dedup: PASS
+- Write/spend authority: PASS
+- Partial results/completion: PASS
+- Explicit candidate/independent qualification: PASS
+
+Native CI at original head: run 44330559083 test job 134893504613, 6423 passed, 2 failed, 1 skipped. Failures: test_s1_reviewed_merge_lane_v1.py::ContentPinsTest::test_pins_match_this_tree and test_s1_tick_brief_v1.py::CollectReplay::test_replay_builds_a_complete_brief_from_this_checkout; both caused by changed `.agents` tree (expected e93392c3c78294c25d9073193c2405792fb3025c, actual dd790cdfbf6b007f0bab991b7bed981f7e647ccf). `07_PROMPTS_AND_AGENTS` is also pinned, therefore archive this read-only method candidate under existing 06_RESEARCH_LAB/audit_summaries, not either protected tree. No S1 controls modified. Native CI for repaired head remains required.
+
+Gate verdict BLOCKED for official behavioral default: evaluator_separated=NO (same Chat authored candidate); calibrated judge not used; actual isolated baseline/candidate/no-skill runs NOT_EXECUTED; trigger precision/recall, actual correctness/autonomy gains, cost/latency UNKNOWN. Codex review failed due usage limits. Keep existing skill registry active unchanged. For admitted adoption, independently compare frozen baseline and candidate using the listed cases and existing gate; apply registry change under reviewed S1 integrity policy, no fabricated approval. The owner-authorized preference can be used in ordinary read-only conversations now without waiting for registry promotion or changing any execution authority. 
