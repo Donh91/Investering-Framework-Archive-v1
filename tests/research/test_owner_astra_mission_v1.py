@@ -57,8 +57,9 @@ def event(body=None, **over):
 
 class FakeAPI:
     """Routes core.http_json; records every call. No real network."""
-    def __init__(self, comments=None, response=None, post_error=None, artifacts=0):
+    def __init__(self, comments=None, response=None, post_error=None, artifacts=0, responses=None):
         self.calls, self.comments, self.artifacts = [], list(comments or []), artifacts
+        self.keys, self.responses = [], list(responses or [])
         self.next_id = 9000
         self.response = response or {"id": "resp_test1234", "model": m.MODEL, "status": "completed",
                                      "output": [{"type": "message", "content": [{"type": "output_text",
@@ -68,6 +69,7 @@ class FakeAPI:
 
     def __call__(self, method, url, *, api_key=None, github_token=None, body=None, timeout=60):
         self.calls.append((method, url, body))
+        self.keys.append((method, url, api_key))
         if method == "GET" and "/issues/1156/comments" in url:
             page = int(url.rsplit("page=", 1)[1])
             return self.comments[(page - 1) * 100: page * 100]
@@ -86,6 +88,9 @@ class FakeAPI:
                 raise self.post_error
             return {"id": "resp_test1234", "status": "queued"}
         if method == "GET" and "/responses/" in url:
+            if self.responses:
+                nxt = self.responses.pop(0)
+                return nxt if nxt is not None else self.response
             return self.response
         raise AssertionError("UNEXPECTED_HTTP " + method + " " + url)
 
@@ -375,6 +380,20 @@ class TestClaimAndNoRetry(Base):
                     m.reserve(out, self.guard_pass(**over))
             self.assertEqual(api.calls, [])
 
+    def test_every_poll_uses_the_real_api_key(self):
+        # Regression (Claude review #2225 P1): a loop variable once shadowed the API key after the first GET.
+        api = FakeAPI(responses=[{"id": "resp_test1234", "model": m.MODEL, "status": "in_progress"},
+                                 {"id": "resp_test1234", "model": m.MODEL, "status": "in_progress"}, None])
+        self.run_to_claim(api)
+        with self.env(), mock.patch.object(m.core, "http_json", api), contextlib.redirect_stdout(io.StringIO()):
+            want = os.environ["OPENAI_API_KEY"]
+            m.mark_attempt(self.out)
+            m.submit(self.out)
+            m.collect(self.out, sleep=lambda s: None, clock=lambda: 0)
+        polls = [k for meth, url, k in api.keys if meth == "GET" and "/responses/" in url]
+        self.assertGreaterEqual(len(polls), 3)
+        self.assertEqual(set(polls), {want})
+
     def test_collect_pending_and_identity(self):
         api = FakeAPI(response={"id": "resp_test1234", "model": m.MODEL, "status": "in_progress"})
         self.run_to_claim(api)
@@ -570,6 +589,20 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual(on["issue_comment"], {"types": ["created"]})
         self.assertNotIn("pull_request_target", on)
         self.assertNotIn("workflow_dispatch", on)
+
+    def test_paid_path_gate_conditions_are_exact(self):
+        # Regression (Claude review #2225 P1): every guard on a job that can reach the paid key is pinned here,
+        # so dropping or weakening one (e.g. replacing it with `true`) fails CI.
+        common = ["github.event_name == 'issue_comment'", "github.event.action == 'created'",
+                  "github.event.issue.number == 1156", "github.event.issue.pull_request == null",
+                  "github.event.comment.user.login == 'Donh91'", "github.actor == 'Donh91'",
+                  "github.event.comment.author_association == 'OWNER'", "github.ref == 'refs/heads/main'",
+                  "github.run_attempt == 1"]
+        want = {"verify": "OWNER_LAUNCH_ASTRA_MISSION ", "paid": "OWNER_LAUNCH_ASTRA_MISSION ",
+                "recover": "OWNER_COLLECT_ASTRA_MISSION "}
+        for name, prefix in want.items():
+            parts = [p.strip() for p in self.wf["jobs"][name]["if"].split("&&")]
+            self.assertEqual(parts, common + [f"startsWith(github.event.comment.body, '{prefix}')"], name)
 
     def test_comment_body_never_interpolated(self):
         for job in self.wf["jobs"].values():

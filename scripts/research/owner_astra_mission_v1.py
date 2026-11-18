@@ -467,8 +467,8 @@ def collect(out: Path, *, sleep=time.sleep, clock=time.monotonic):
         response = core.http_json("GET", core.API + "/responses/" + rid, api_key=key, timeout=75)
         if response.get("id") != rid or not PROVIDER_MODEL.fullmatch(str(response.get("model"))):
             fail("PROVIDER_RESPONSE_IDENTITY_MISMATCH")
-        for key, want in (("max_output_tokens", meta.get("max_output_tokens")),):
-            if key in response and response[key] != want:
+        for field, want in (("max_output_tokens", meta.get("max_output_tokens")),):
+            if field in response and response[field] != want:
                 fail("PROVIDER_RESPONSE_PARAMETERS_MISMATCH")
         effort = (response.get("reasoning") or {}).get("effort") if isinstance(response.get("reasoning"), dict) else None
         if effort is not None and effort != EFFORT:
