@@ -533,7 +533,7 @@ def no_issuance_missing_score(root: Path, year: int, week: int,
     The optional clock is solely for deterministic synthetic-Git tests.
     """
     maturity = week_monday(year, week) + 7 * DAY
-    now = as_of_utc if as_of_utc is not None else dt.datetime.now(dt.timezone.utc)
+    now = as_of_utc if as_of_utc is not None else _publication_clock()
     if now.tzinfo is None or not maturity <= now <= maturity + SCORE_FIRST_MATURITY_GRACE:
         raise ValueError("no-issuance MISSING requires the first 48h after full week maturity")
     rel = ISSUANCE_PATH.format(year=year, week=week)
@@ -942,6 +942,104 @@ def _parse_week(s: str) -> tuple[int, int]:
     if f"{monday.isocalendar().year}-W{monday.isocalendar().week:02d}" != s:
         raise ValueError("noncanonical ISO week")
     return y, w
+
+
+
+def _publication_clock() -> dt.datetime:
+    return dt.datetime.now(dt.timezone.utc)
+
+
+def mature_publication_week(now: dt.datetime) -> tuple[int, int] | None:
+    """Only the just-ended registered week, during its first maturity window."""
+    if now.tzinfo is None:
+        raise ValueError("publication clock must be timezone-aware")
+    now = now.astimezone(dt.timezone.utc)
+    current = now.isocalendar()
+    maturity = week_monday(current.year, current.week)
+    prior = (maturity - DAY).isocalendar()
+    if ((prior.year, prior.week) < _parse_week(DECISION["first_week"])
+            or now > maturity + SCORE_FIRST_MATURITY_GRACE):
+        return None
+    return prior.year, prior.week
+
+
+def publish_mature_score(root: Path) -> dict:
+    """Existing scheduled hourly writer only: prepare, admit, push, read back.
+
+    The local main candidate is NOT a proven remote publication. No rebasing or
+    retrying that candidate after a race; discard the ephemeral runner checkout
+    and let the next scheduled hourly run generate anew from fresh main.
+    """
+    target = mature_publication_week(_publication_clock())
+    if target is None:
+        return {"status": "CHALLENGER_A_SCORE_NOT_DUE"}
+    year, week = target
+    label = f"{year}-W{week:02d}"
+    root = root.resolve()
+    rel = SCORE_PATH.format(year=year, week=week)
+    path = root / rel
+    if (_git(root, "symbolic-ref", "HEAD") != "refs/heads/main"
+            or _git(root, "rev-parse", "--is-shallow-repository") != "false"
+            or _git(root, "status", "--porcelain", "--untracked-files=no")):
+        raise ValueError("score writer requires clean, complete main checkout")
+    remote_ref = "refs/remotes/origin/main"
+    fetch_ref = "refs/heads/main:" + remote_ref
+    _git(root, "fetch", "origin", fetch_ref)
+    _git(root, "merge", "--ff-only", remote_ref)
+    base = _git(root, "rev-parse", remote_ref)
+    if _git(root, "rev-parse", "HEAD") != base:
+        raise ValueError("unpublished local main exists; regenerate in a fresh checkout")
+    if path.exists() or path.is_symlink():
+        # Read-only no-op only for a genuinely immutable, admitted original.
+        row, proof = read_first_main_weekly_score(root, year, week)
+        if not proof["eligible_first_maturity"]:
+            raise ValueError("existing first score was not timely; never overwrite")
+        return {"status": "CHALLENGER_A_SCORE_ALREADY_ON_MAIN", "week": label,
+                "first_main_commit": proof["first_main_commit"]}
+    if _git(root, "-c", "log.follow=false", "-c", "log.diffMerges=first-parent",
+            "-c", "diff.renames=false", "log", "--first-parent",
+            "--diff-merges=first-parent", "--no-renames", "--root",
+            "--format=%H", base, "--", rel):
+        raise ValueError("historical score path exists; never recreate a deleted original")
+    if mature_publication_week(_publication_clock()) != target:
+        raise ValueError("first maturity window expired before score generation")
+    main(["score", "--repo-root", str(root), "--week", label, "--output", str(path)])
+    row = json.loads(path.read_text(encoding="utf-8"))
+    _git(root, "add", "--", rel)
+    if _git(root, "diff", "--cached", "--name-only") != rel:
+        raise ValueError("score publication must contain exactly its canonical path")
+    _git(root, "commit", "-m", f"research(task2): publish first-maturity {label} shadow score")
+    candidate = _git(root, "rev-parse", "HEAD")
+    if (_git(root, "rev-list", "--parents", "-n", "1", candidate).split() != [candidate, base]
+            or _git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", candidate) != rel):
+        raise ValueError("prospective score commit is not a single score-only child of source main")
+    if row.get("missing_reason") != "NO_ORIGINAL_ISSUANCE_AT_FIRST_MATURITY":
+        preflight_hourly_score_publication(root, year, week, candidate)
+    # Both paths are admitted through the exact canonical replay, including
+    # separate no-issuance proof, first-parent clock, and immutable file check.
+    admitted, proof = read_first_main_weekly_score(root, year, week)
+    if (not proof["eligible_first_maturity"] or proof["first_main_commit"] != candidate
+            or admitted != row):
+        raise ValueError("prospective score admission failed")
+    _git(root, "fetch", "origin", fetch_ref)
+    if (_git(root, "rev-parse", remote_ref) != base
+            or _git(root, "rev-parse", "HEAD") != candidate):
+        raise ValueError("main advanced before publication; regenerate on next hourly run")
+    if mature_publication_week(_publication_clock()) != target:
+        raise ValueError("first maturity window expired before publication")
+    _git(root, "push", "origin", candidate + ":refs/heads/main")
+    _git(root, "fetch", "origin", fetch_ref)
+    remote = _git(root, "rev-parse", remote_ref)
+    _git(root, "merge-base", "--is-ancestor", candidate, remote)
+    _git(root, "merge", "--ff-only", remote_ref)
+    remote_row, remote_proof = read_first_main_weekly_score(root, year, week)
+    if (remote_row != row or not remote_proof["eligible_first_maturity"]
+            or remote_proof["first_main_commit"] != candidate
+            or remote_proof["first_main_blob_sha"] != proof["first_main_blob_sha"]):
+        raise ValueError("remote first-main score readback failed")
+    return {"status": "CHALLENGER_A_FIRST_MATURE_SCORE_READBACK_PASS", "week": label,
+            "first_main_commit": candidate, "first_main_blob_sha": proof["first_main_blob_sha"],
+            "remote_main": remote, "authority": "SHADOW_ONLY_NO_PROMOTION"}
 
 
 def main(argv: Iterable[str] | None = None) -> int:
