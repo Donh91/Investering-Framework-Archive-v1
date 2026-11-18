@@ -19,7 +19,7 @@ from scripts.api_agent import astra_mission_reservations_v1 as res
 
 ROOT = Path(__file__).resolve().parents[2]
 MID = "ASTRA-S1-V32-REDTEAM-20261118-R2"
-BUNDLE_SHA = "bf77cd0609c0e9e1ce0ac63b4a1c4779c8cb71bb439ca512a6cff2cf3e45d0fc"
+BUNDLE_SHA = "b1b9e7698207dbdbfcad80b9c20a14602e93d4755f22c5879c372e7b2edc802c"
 GUARD = ROOT / "scripts/api_agent/check_monthly_cost_guard.py"
 CANONICAL_LEDGER = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
 def checkout_head():
