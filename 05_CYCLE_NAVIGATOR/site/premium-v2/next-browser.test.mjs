@@ -461,6 +461,59 @@ try{
   unified.push({width,source_status:true,one_graph_one_pro:true,interactive:true});
  }
 
+ // Source-honesty regression for the actual mobile tabbed UI and full CSS
+ // cascade. The pre-fix rule clipped this note at widths below 760px even
+ // while the ordinal headline remained readable. Do not accept a standalone
+ // card screenshot that omits body.premium-next.cn-tabbed-ui.
+ for(const width of [390,759,760]){
+  await send('Emulation.setDeviceMetricsOverride',{
+   width,height:844,deviceScaleFactor:1,mobile:width<760
+  });
+  await send('Page.navigate',{url:origin+'next/unified.html'});
+  let ready=false;
+  for(let attempt=0;attempt<100;attempt++){
+   await delay(100);
+   ready=await evaluate(()=>document.readyState==='complete'&&
+    !!document.querySelector('#compass-pro .cn-risk-quick[data-evidence="research"] #cn-risk-quick-note')&&
+    document.body.classList.contains('cn-tabbed-ui'));
+   if(ready)break;
+  }
+  assert.ok(ready,'RESEARCH_WARNING_TABBED_UI_NOT_BOOTED:'+width);
+  const evidence=await evaluate(()=>{
+   const card=document.querySelector('#compass-pro .cn-risk-quick');
+   const note=document.getElementById('cn-risk-quick-note');
+   const snapshot=()=>{
+    const style=getComputedStyle(note),r=note.getBoundingClientRect();
+    return {text:note.textContent.trim(),width:r.width,height:r.height,
+     clip:style.clip,clipPath:style.clipPath,position:style.position,
+     overflow:style.overflow,hidden:note.hidden};
+   };
+   const actual=snapshot();
+   // Negative control: restore the pre-fix behavior by removing the research
+   // qualifier. Only the research card is allowed to override compact hiding.
+   card.dataset.evidence='negative_control';
+   const oldCascade=snapshot();
+   card.dataset.evidence='research';
+   return {viewport:innerWidth,tabbed:document.body.classList.contains('cn-tabbed-ui'),
+    actual,oldCascade,restored:snapshot()};
+  });
+  assert.equal(evidence.viewport,width,'RESEARCH_WARNING_VIEWPORT_MISMATCH');
+  assert.ok(evidence.tabbed,'RESEARCH_WARNING_MOBILE_TABS_MISSING');
+  assert.match(evidence.actual.text,/Forskning|Research/i,
+   'RESEARCH_WARNING_QUALIFIER_CONTENT_MISSING:'+width);
+  assert.ok(evidence.actual.width>20&&evidence.actual.height>8&&
+   evidence.actual.clipPath==='none'&&!evidence.actual.hidden,
+   'RESEARCH_WARNING_VISUALLY_CLIPPED:'+JSON.stringify(evidence));
+  assert.ok(evidence.restored.width>20&&evidence.restored.clipPath==='none',
+   'RESEARCH_WARNING_OVERRIDE_NOT_RESTORED:'+width);
+  if(width<760){
+   assert.ok(evidence.oldCascade.width<=2||
+    evidence.oldCascade.clipPath.includes('inset(50%)'),
+    'RESEARCH_WARNING_NEGATIVE_CONTROL_NOT_KILLED:'+JSON.stringify(evidence));
+  }
+ }
+ console.log('RESEARCH_WARNING_REAL_MOBILE_CSS_CASCADE_390_759_760_PASS');
+
 
  if(rootMode){
   // Real 320 CSS-px Chrome layout proxy for the 200%-zoom reflow.
