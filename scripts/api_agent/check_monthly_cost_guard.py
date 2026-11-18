@@ -21,7 +21,7 @@ from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegati
 # Legacy caller-specific smaller caps/reserves remain binding; this code never
 # grants a paid POST or lowers a lane's independent ceiling.
 OWNER_GLOBAL_TARGET_USD = 50.0
-OWNER_GLOBAL_HARD_STOP_USD = 150.0  # Owner decision 2026-11-18; caller caps unchanged.
+OWNER_GLOBAL_HARD_STOP_USD = 100.0  # Owner decision 2026-11-18; caller caps unchanged.
 OWNER_GLOBAL_RESERVE_USD = 4.0  # Routine paths retain existing protected headroom.
 OWNER_SINGLE_REQUEST_CAP_USD = 3.0
 # Previous source-bound liabilities were provider-reconciled against private

@@ -105,7 +105,7 @@ class Tests(unittest.TestCase):
     self.assertNotEqual(proc.returncode,0,result)
     self.assertEqual(result["status"],"BLOCKED",result)
     self.assertEqual(result["pending_liability_upper_usd"],0.0)
-    self.assertEqual(result["owner_global_hard_stop_usd"],150.0)
+    self.assertEqual(result["owner_global_hard_stop_usd"],100.0)
   bad=subprocess.run([sys.executable,str(root/"scripts/api_agent/check_monthly_cost_guard.py"),
    "--receipt-root",str(root/"research/api_agent/outputs"),
    "--hard-stop-usd","100","--reserve-usd","4","--owner-astra-program-work-id","FAKE-UNAUTHORISED"],
