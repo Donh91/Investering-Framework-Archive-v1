@@ -827,7 +827,7 @@ class ChallengerATest(unittest.TestCase):
 
     def _commit_score_fixture(self, root, *, score_clock="2026-11-23T01:00:00+00:00",
                               score_winner="MISSING", paired=0, with_bars=False,
-                              mutate=None, before_score_commit=None):
+                              mutate=None, before_score_commit=None, prepare_only=False):
         self._git(root, "init", "-b", "main")
         self._git(root, "config", "user.name", "Task2 CI")
         self._git(root, "config", "user.email", "task2-tests@example.invalid")
@@ -862,6 +862,8 @@ class ChallengerATest(unittest.TestCase):
             self._git(root, "add", A.HOURLY_DIR)
             self._git(root, "commit", "-m", "weekly hourly bars before score",
                       date="2026-11-23T00:10:00+00:00")
+        if prepare_only:
+            return issued, score_rel
         # Exercise the real CLI rather than inventing a source pin.
         self.assertEqual(A.main(["score", "--repo-root", str(root), "--week", "2026-W47",
                                  "--output", str(score_file)]), 0)
@@ -1096,6 +1098,152 @@ class ChallengerATest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "already exists"):
                 A.main(["score", "--repo-root", str(root), "--week", "2026-W47",
                         "--output", str(destination)])
+
+
+    def _writer_remote(self, root, bare):
+        self._git(root, "init", "--bare", "--initial-branch=main", str(bare))
+        self._git(root, "remote", "add", "origin", str(bare))
+        self._git(root, "push", "-u", "origin", "main")
+
+    def _writer_clock(self):
+        return mock.patch.object(A, "_publication_clock",
+                                 return_value=A.utc("2026-11-23T01:00:00Z"))
+
+    def _writer_git_date(self):
+        return mock.patch.dict(os.environ, {"GIT_AUTHOR_DATE": "2026-11-23T01:00:00+00:00",
+                                            "GIT_COMMITTER_DATE": "2026-11-23T01:00:00+00:00"})
+
+    def test_writer_maturity_window_and_registered_start(self):
+        for stamp, expected in (
+            ("2026-11-16T01:00:00Z", None),
+            ("2026-11-22T23:59:59Z", None),
+            ("2026-11-23T00:00:00Z", (2026, 47)),
+            ("2026-11-24T23:59:59Z", (2026, 47)),
+            ("2026-11-25T00:00:01Z", None),
+            ("2027-01-04T01:00:00Z", (2026, 53)),
+        ):
+            with self.subTest(stamp=stamp):
+                self.assertEqual(A.mature_publication_week(A.utc(stamp)), expected)
+        with mock.patch.object(A, "_publication_clock", return_value=A.utc("2026-11-22T12:00:00Z")):
+            self.assertEqual(A.publish_mature_score(Path("/nonexistent"))["status"],
+                             "CHALLENGER_A_SCORE_NOT_DUE")
+
+    def test_writer_real_remote_admission_and_idempotency(self):
+        with tempfile.TemporaryDirectory() as d:
+            root, bare = Path(d) / "work", Path(d) / "remote.git"
+            root.mkdir()
+            _, rel = self._commit_score_fixture(root, with_bars=True, prepare_only=True)
+            self._writer_remote(root, bare)
+            with self._writer_clock(), self._writer_git_date(), mock.patch.object(
+                    A, "preflight_hourly_score_publication", wraps=A.preflight_hourly_score_publication) as preflight:
+                result = A.publish_mature_score(root)
+                self.assertEqual(result["status"], "CHALLENGER_A_FIRST_MATURE_SCORE_READBACK_PASS")
+                self.assertEqual(preflight.call_count, 1)
+                candidate = result["first_main_commit"]
+                self.assertEqual(preflight.call_args.args[-1], candidate)
+                self.assertEqual(self._git(bare, "rev-parse", "main"), candidate)
+                row, proof = A.read_first_main_weekly_score(root, 2026, 47)
+                self.assertEqual(row["paired_rows"], 14)
+                self.assertTrue(proof["eligible_first_maturity"])
+                self.assertEqual(A.publish_mature_score(root)["status"],
+                                 "CHALLENGER_A_SCORE_ALREADY_ON_MAIN")
+                self.assertEqual(self._git(bare, "rev-parse", "main"), candidate)
+                self.assertEqual(preflight.call_count, 1)
+
+    def test_writer_preserves_missing_hour_abstention(self):
+        with tempfile.TemporaryDirectory() as d:
+            root, bare = Path(d)/"work", Path(d)/"remote.git"
+            root.mkdir()
+            self._commit_score_fixture(root, with_bars=True, prepare_only=True)
+            rel = A.HOURLY_DIR + "/2026/11/2026-11-17.csv"
+            source = root / rel
+            source.write_text("\n".join(source.read_text().splitlines()[:-1]) + "\n")
+            self._git(root, "add", rel)
+            self._git(root, "commit", "-m", "missing final hour",
+                      date="2026-11-23T00:15:00+00:00")
+            self._writer_remote(root, bare)
+            with self._writer_clock(), self._writer_git_date():
+                A.publish_mature_score(root)
+            row, _ = A.read_first_main_weekly_score(root, 2026, 47)
+            self.assertLess(row["paired_rows"], 14)
+            self.assertTrue(any(x["status"] == "ABSTAIN_INCOMPLETE_HOURLY" for x in row["abstentions"]))
+
+    def test_writer_no_issuance_uses_separate_admission(self):
+        with tempfile.TemporaryDirectory() as d:
+            root, bare = Path(d)/"work", Path(d)/"remote.git"
+            root.mkdir()
+            self._git(root, "init", "-b", "main")
+            self._git(root, "config", "user.name", "Task2 CI")
+            self._git(root, "config", "user.email", "task2-tests@example.invalid")
+            (root/"README").write_text("no issuance\n")
+            self._git(root, "add", "README")
+            self._git(root, "commit", "-m", "init", date="2026-11-16T09:00:00+00:00")
+            self._writer_remote(root, bare)
+            with self._writer_clock(), self._writer_git_date(), mock.patch.object(
+                    A, "preflight_hourly_score_publication", side_effect=AssertionError("wrong proof path")):
+                self.assertEqual(A.publish_mature_score(root)["status"],
+                                 "CHALLENGER_A_FIRST_MATURE_SCORE_READBACK_PASS")
+            row, proof = A.read_first_main_weekly_score(root, 2026, 47)
+            self.assertEqual(row["week_winner_interval_score"], "MISSING")
+            self.assertTrue(proof["no_issuance_verified"])
+
+    def test_writer_rejects_preflight_failure_and_remote_race(self):
+        for race in (False, True):
+            with self.subTest(race=race), tempfile.TemporaryDirectory() as d:
+                root, bare, other = Path(d)/"work", Path(d)/"remote.git", Path(d)/"other"
+                root.mkdir()
+                self._commit_score_fixture(root, with_bars=True, prepare_only=True)
+                self._writer_remote(root, bare)
+                base = self._git(bare, "rev-parse", "main")
+                expected = [base]
+                def probe(*args):
+                    if not race:
+                        raise ValueError("source preflight deliberately rejected")
+                    A_preflight(*args)
+                    self._git(root, "clone", str(bare), str(other))
+                    self._git(other, "config", "user.name", "Concurrent writer")
+                    self._git(other, "config", "user.email", "race@example.invalid")
+                    (other/"unrelated").write_text("concurrent update")
+                    self._git(other, "add", "unrelated")
+                    self._git(other, "commit", "-m", "other writer",
+                              date="2026-11-23T01:00:00+00:00")
+                    self._git(other, "push", "origin", "main")
+                    expected[0] = self._git(bare, "rev-parse", "main")
+                A_preflight = A.preflight_hourly_score_publication
+                with self._writer_clock(), self._writer_git_date(), mock.patch.object(
+                        A, "preflight_hourly_score_publication", side_effect=probe):
+                    with self.assertRaisesRegex(ValueError, "main advanced|preflight deliberately rejected"):
+                        A.publish_mature_score(root)
+                self.assertEqual(self._git(bare, "rev-parse", "main"), expected[0])
+                self.assertNotEqual(self._git(root, "rev-parse", "HEAD"), expected[0])
+
+    def test_writer_rejects_deleted_historical_score(self):
+        with tempfile.TemporaryDirectory() as d:
+            root, bare = Path(d)/"work", Path(d)/"remote.git"
+            root.mkdir()
+            _, rel = self._commit_score_fixture(root, with_bars=True)
+            self._git(root, "rm", rel)
+            self._git(root, "commit", "-m", "deleted score", date="2026-11-23T02:00:00+00:00")
+            self._writer_remote(root, bare)
+            base = self._git(bare, "rev-parse", "main")
+            with self._writer_clock(), self._writer_git_date():
+                with self.assertRaisesRegex(ValueError, "historical score path"):
+                    A.publish_mature_score(root)
+            self.assertEqual(self._git(bare, "rev-parse", "main"), base)
+
+    def test_existing_hourly_writer_wires_score_after_source_and_handoffs(self):
+        workflow = (ROOT / ".github/workflows/hourly-sequence-capture.yml").read_text()
+        name = "Publish immutable first-maturity Challenger A SHADOW score"
+        self.assertEqual(workflow.count(name), 1)
+        start = workflow.index("      - name: " + name)
+        end = workflow.index("\n  intraday:", start)
+        self.assertGreater(start, workflow.index("      - name: Commit compact hourly sequence with verified readback"))
+        self.assertGreater(start, workflow.index("      - name: Dispatch Entry Signal after hourly owner publish"))
+        step = workflow[start:end]
+        self.assertIn("if: github.event_name == 'schedule'", step)
+        self.assertIn("publish_mature_score(Path('.'))", step)
+        self.assertIn("continue-on-error: true", step)
+        self.assertEqual(workflow.count("cron: '12 * * * *'"), 1)
 
 
 class NativeW46Test(unittest.TestCase):
