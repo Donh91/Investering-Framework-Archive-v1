@@ -10,6 +10,7 @@ reader, then the two command-line entry points `build` and `publish`.
 """
 from __future__ import annotations
 
+import base64
 import fnmatch
 import hashlib
 import json
@@ -17,6 +18,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -44,6 +46,20 @@ TASK_ID = "6ae5fd466b48819187abc224ec0f1c5f"
 BEGIN, END = "<!-- S1_TICK_BRIEF_V1 BEGIN -->", "<!-- S1_TICK_BRIEF_V1 END -->"
 MAX_BODY = 60000                      # GitHub refuses an issue body above 65536 characters
 MAX_AGE_MINUTES = 45                  # TICK.md: an older brief is BRIEF_STALE
+FALLBACK_DUE_MINUTES = 55             # a workflow_run (fallback) trigger builds only when NO brief was generated since the
+                                      # previous hourly slot: at most one extra build, and only after a missed cron
+MAX_API_CALLS = 300                   # hard cap per build. The job token's 1,000 requests an hour are shared by EVERY
+                                      # workflow of the repository; one build an hour under this cap leaves them room
+RETRY_AFTER_MAX_SECONDS = 60          # a rate-limit answer is retried once, and only when it asks for at most this wait
+CRON_RECENT_MINUTES = 50              # a cron run of this workflow this recent: the fallback does not build
+BUILD_RECENT_MINUTES = 60             # any run that reached build this recently: the fallback does not build
+COALESCE_MINUTES = 5                  # an older fallback run this young and still running decides; a newer one stops
+JOBS_READS_PER_DUE = 3                # jobs lists read per due check to find a started build
+DUE_API_CALLS = 5                     # run list, brief issue, and at most JOBS_READS_PER_DUE jobs lists
+PUBLISH_API_CALLS = 25                # label read, label create, issue create or update, lock, closing extra issues
+RUN_EVENTS = ("schedule", "workflow_dispatch", "workflow_run", "push")
+FALLBACK_EVENTS = ("workflow_run", "push")   # these two only build after a missed cron; schedule and manual runs always build
+CODEX_LIMIT_HOURS = 24                # a Codex usage-limit answer this recent, with no newer Codex answer: unavailable
 MAX_PATHS_PER_PR = 60
 MAX_DEPTH_PRS = 15                    # same-repository non-draft PRs read in depth per run (API budget), most recently updated
                                       # first; any PR left unread makes the brief complete=false and is listed NOT_READ:depth_cap
@@ -63,6 +79,12 @@ ISOLATION_FILE = "00_FMOS/S1_WORKFLOW_ISOLATION_V1.json"
 BINDINGS_FILE = "00_FMOS/S1/EVIDENCE_BINDINGS.md"
 PRIVACY_PREFIX = "S1_NATIVE_PRIVACY" + "_SCAN_STEP_V1"     # split: this file must never contain the gate marker itself
 SITE_PREFIX = "05_CYCLE_NAVIGATOR/site/"
+# The files that produce the privacy gate's result. When main changed one of them after a PR's merge-base, that PR's
+# gate ran old code: only a branch update lets the current gate run (rule 2c, owner route).
+GATE_FILES = (".github/workflows/data-architecture-gate.yml", "scripts/governance/s1_native_privacy_scan_step_v1.py",
+              "scripts/governance/s1_diff_scan_v1.py", "scripts/governance/s1_site_public_readback_v1.py")
+OWNER_UPDATE_NEXT = "OWNER_BRANCH_UPDATE"
+LIMIT_RE = re.compile(r"(?i)usage limit|reached your .*limit|can(?:'|no)t review|unable to review")
 
 # AGENTS.md section 0.2e exclusions 10 and 11, matched on ADDED lines of the diff. Tokens are assembled so that this
 # file's own text does not carry them.
@@ -77,6 +99,20 @@ TEXT_SUFFIXES = (".py", ".md", ".json", ".yml", ".yaml", ".txt", ".mjs", ".js", 
                  ".cfg", ".ini", ".sh", ".jsonl", ".sql", ".rs", ".tsx", ".jsx", ".xml", ".svg")
 INSTALLED_TOP_LEVEL = frozenset({"pytest", "yaml", "pandas", "numpy", "jsonschema", "sklearn", "rfc3339_validator", "pip",
                                  "setuptools", "requests", "scipy", "_pytest", "pluggy", "iniconfig", "packaging"})
+
+
+class StopReading(RuntimeError):
+    """The build must stop calling the API. The brief that results is INCOMPLETE with `reason`, never a partial brief
+    that reads as complete."""
+    reason = "stopped"
+
+
+class ApiBudget(StopReading):
+    reason = "api_budget"
+
+
+class RateLimited(StopReading):
+    reason = "rate_limited"
 
 
 # ----------------------------------------------------------------------------------------------- small helpers
@@ -406,11 +442,11 @@ def path_exclusions(files, files_complete, policy, gate_isolation_live, isolatio
         outside = not (p.startswith("scripts/") or p.startswith("tests/"))
         prev = f.get("previous_filename") or ""
         if (status == "removed" and outside) or (status == "renamed" and prev and not (prev.startswith("scripts/") or prev.startswith("tests/"))) \
-                or (status == "modified" and outside and (f.get("deletions") or 0) > 0
+                or (status not in ("added", "removed", "renamed") and outside and (f.get("deletions") or 0) > 0
                     and ((f.get("additions") or 0) == 0
                          or ((p.endswith(DATA_SUFFIXES) or RECORD_NAME.search(p)) and (f.get("deletions") or 0) > (f.get("additions") or 0)))):
             add(7, prev or p)
-        elif status == "modified" and outside and f.get("patch") is None and (p.lower().endswith(DATA_SUFFIXES + (".gz", ".zip", ".parquet")) or RECORD_NAME.search(p)):
+        elif status not in ("added", "removed", "renamed") and outside and f.get("patch") is None and (p.lower().endswith(DATA_SUFFIXES + (".gz", ".zip", ".parquet")) or RECORD_NAME.search(p)):
             add(7, p)                                          # a replaced binary record: its line counts say nothing
         patch = f.get("patch")
         if patch is None:
@@ -484,7 +520,7 @@ def codex_review(head, pr, commits, commits_complete, comments, reviews, inline,
             last = max(after)
             out.update(requested_after_head=True, request_age_h=round((now - last).total_seconds() / 3600, 1))
             answers = [c for c in comments if codex_finality.is_codex(c) and stamp(c.get("updated_at") or c.get("created_at")) > last]
-            if any(re.search(r"(?i)usage limit|reached your .*limit|can(?:'|no)t review|unable to review", str(c.get("body") or "")) for c in answers):
+            if any(LIMIT_RE.search(str(c.get("body") or "")) for c in answers):
                 out["status"] = "UNAVAILABLE"
             elif out["request_age_h"] > silent_hours:
                 out["status"] = "SILENT"
@@ -533,30 +569,109 @@ def concurrent_writer(commits, commits_complete, comments, head, now, quiet_minu
     return None
 
 
+ITEM_KINDS = ("FIX", "TEST", "DOCS", "RESEARCH")     # every other kind, or none, reads as DIRECTION (STEWARD_STATES.md)
+ITEM_RISKS = ("LOW", "MEDIUM", "HIGH", "HIGH_IMPACT", "EXTREME")
+
+
 def newest_item(comments):
-    """The newest authentic S1_ITEM_v1 on the PR (a display hint for S1's own S1_ITEM_v1; counters are never trusted)."""
-    for c in sorted(comments, key=lambda c: c.get("id") or 0, reverse=True):
-        if is_owner_unedited(c) and first_line_token(c.get("body")) == "S1_ITEM_v1" and re.search(r"(?m)^\s*contract=[0-9a-f]{8}\b", str(c.get("body"))):
-            f = fields(c.get("body"))
-            return {"c": c["id"], "state": f.get("state"), "attempt": f.get("attempt"), "risk": f.get("risk"), "kind": f.get("kind"),
-                    "due": f.get("due"), "park_count": f.get("park_count")}
-    return None
+    """The newest authentic S1_ITEM_v1 on the PR (a display hint for S1's own S1_ITEM_v1; counters are never trusted).
+    kind and risk are NOT the newest item's: they are the strongest over EVERY authentic item, because both are "only
+    ever raised" (a later item saying kind FIX never lowers an earlier DIRECTION). An unknown kind is DIRECTION; an
+    unknown risk is UNCLEAR, above every class."""
+    items = [fields(c.get("body")) | {"_c": c} for c in sorted(comments, key=lambda c: c.get("id") or 0, reverse=True)
+             if is_owner_unedited(c) and first_line_token(c.get("body")) == "S1_ITEM_v1" and re.search(r"(?m)^\s*contract=[0-9a-f]{8}\b", str(c.get("body")))]
+    if not items:
+        return None
+    f, c = items[0], items[0]["_c"]
+    kinds = [(i.get("kind") or "").strip().upper() for i in items]
+    risks = [(i.get("risk") or "").strip().upper() for i in items]
+    kind = "DIRECTION" if any(k not in ITEM_KINDS for k in kinds) else kinds[0]
+    risk = "UNCLEAR" if any(r not in ITEM_RISKS for r in risks) else max(risks, key=ITEM_RISKS.index)
+    return {"c": c["id"], "state": f.get("state"), "attempt": f.get("attempt"), "risk": risk, "kind": kind,
+            "due": f.get("due"), "park_count": f.get("park_count"), "at": c.get("created_at"),
+            "owner_update": OWNER_UPDATE_NEXT in str(f.get("next") or "")}
+
+
+def codex_availability(comment_lists, now, hours=CODEX_LIMIT_HOURS):
+    """Is Codex known to be unavailable? The NEWEST Codex comment over every PR read in this run decides: a usage-limit
+    answer younger than `hours` means unavailable. Anything unreadable leaves it available (the per-PR rules still
+    apply, and a request that Codex cannot serve costs one comment, never a gate)."""
+    newest = None
+    for comments in comment_lists:
+        for c in comments or []:
+            try:
+                if codex_finality.is_codex(c):
+                    at = stamp(c.get("updated_at") or c.get("created_at"))
+                    if newest is None or at > newest[0]:
+                        newest = (at, c)
+            except (ValueError, TypeError):
+                continue
+    if newest and LIMIT_RE.search(str(newest[1].get("body") or "")) and 0 <= (now - newest[0]).total_seconds() <= hours * 3600:
+        return {"available": False, "why": "usage_limit", "at": iso(newest[0])}
+    return {"available": True}
+
+
+def request_for(head, row):
+    """Is this Bridge comment an S1_REVIEW_REQUEST_v1 for exactly `head`? The head is the VALUE of the request's own
+    head (or head_sha) field. A head that only appears somewhere in the text never counts."""
+    if not isinstance(row, dict) or first_line_token(row.get("body")) != "S1_REVIEW_REQUEST_v1":
+        return False
+    f = fields(row.get("body"))
+    return head in ((f.get("head") or "").strip(), (f.get("head_sha") or "").strip())
+
+
+def receipts_for(head, page):
+    """Every CLAUDE_REVIEW_v1 on the page whose head_sha field is exactly `head`, oldest first, as (comment, fields)."""
+    out = [(c, fields(c.get("body"))) for c in page if first_line_token(c.get("body")) == "CLAUDE_REVIEW_v1"]
+    return sorted(((c, f) for c, f in out if (f.get("head_sha") or "").strip() == head), key=lambda cf: cf[0].get("id") or 0)
+
+
+def cited_request(f, page):
+    """(id named by the receipt's request field, the row with that id on the page or None)."""
+    m = re.search(r"\d{6,}", f.get("request") or "")
+    return (int(m.group(0)) if m else None), next((r for r in page if m and r.get("id") == int(m.group(0))), None)
+
+
+def receipt_state(head, page):
+    """TICK.md T4 for one head and ONE page of Bridge comments, with the same parser F4 uses:
+    veto      a REQUEST_CHANGES or BLOCK by the owner account (edited or not) that no NEWER admissible APPROVE follows.
+              An APPROVE that is itself not approved here (edited, unsolicited, PROACTIVE, another author) never
+              cancels a refusal. Blocks every merge route;
+    approved  an unedited, solicited, non-PROACTIVE APPROVE by the owner account with no newer refusal;
+    page_complete  the page itself shows the request row (for this head, by the owner account, unedited, older than
+                   the receipt) and the three binding fields. Only then may a review request be suppressed."""
+    rows = receipts_for(head, page)
+    out = {"veto": False, "approved": False, "page_complete": False, "fields": None}
+    good = None
+    for c, f in rows:
+        if f.get("verdict") in ("REQUEST_CHANGES", "BLOCK"):
+            if login(c) == OWNER_LOGIN:                          # the same author rule as an approval: the owner account
+                good = None                                      # a newer refusal voids every older approval
+                out["veto"] = True
+            continue
+        rid, row = cited_request(f, page)
+        if f.get("verdict") == "APPROVE" and is_owner_unedited(c) and "PROACTIVE" not in str(c.get("body")) and rid \
+                and (row is None or request_for(head, row)):
+            try:
+                complete = bool(row is not None and is_owner_unedited(row) and stamp(row["created_at"]) < stamp(c["created_at"])
+                                and f.get("report") and SHA40.fullmatch(f.get("report_blob") or "") and SHA40.fullmatch(f.get("bridge_commit") or ""))
+            except (ValueError, KeyError, TypeError):
+                complete = False
+            good = (f, complete)
+            out["veto"] = False                                  # only an admissible approval lifts an older refusal
+    if good:
+        out.update(approved=True, page_complete=good[1], fields=good[0])
+    return out
 
 
 def claude_review(head, bridge_comments):
     """ACTION_LOOP C5 for a CLAUDE_REVIEW_v1 on Bridge #173, as far as comments alone decide it. The workflow cannot
     read the private Bridge, so the brief never carries this; S1 does this read itself. Kept here as the reference
     implementation of the comment checks (tests, and offline dry runs against recorded Bridge comments)."""
-    mine = []
-    for c in bridge_comments:
-        if first_line_token(c.get("body")) != "CLAUDE_REVIEW_v1":
-            continue
-        f = fields(c.get("body"))
-        if f.get("head_sha") == head:
-            mine.append((c, f))
+    mine = receipts_for(head, bridge_comments)
     if not mine:
         return {"status": "NONE"}
-    c, f = max(mine, key=lambda cf: cf[0].get("id") or 0)          # the NEWEST one for H decides, whatever it says
+    c, f = mine[-1]                                              # the NEWEST one for H decides, whatever it says
     why = None
     if not is_owner_unedited(c):
         why = "not_owner_or_edited"
@@ -567,11 +682,8 @@ def claude_review(head, bridge_comments):
     elif not SHA40.fullmatch(f.get("report_blob") or "") or not SHA40.fullmatch(f.get("bridge_commit") or "") or not f.get("report"):
         why = "report_binding_missing"
     else:
-        m = re.search(r"\d{6,}", f.get("request") or "")
-        req = next((r for r in bridge_comments if m and r.get("id") == int(m.group(0))), None)
-        rf = fields(req.get("body")) if req else {}
-        if not req or first_line_token(req.get("body")) != "S1_REVIEW_REQUEST_v1" or head not in str(req.get("body")) \
-                or not is_owner_unedited(req) or stamp(req["created_at"]) >= stamp(c["created_at"]) or not rf:
+        _rid, req = cited_request(f, bridge_comments)
+        if not req or not request_for(head, req) or not is_owner_unedited(req) or stamp(req["created_at"]) >= stamp(c["created_at"]):
             why = "no_prior_exact_head_request"
     out = {"status": "APPROVE" if why is None else "INADMISSIBLE", "c": c.get("id"), "independence": f.get("independence")}
     if why:
@@ -587,7 +699,7 @@ def pr_entry(pr, data, ctx):
     """Everything the brief says about one open non-draft PR. `data` holds the raw reads; a missing read is recorded,
     never guessed. ctx: repo_id, main_sha, policy, tuples, gate_isolation_live, now, budgets, quiet_minutes."""
     head, n = (pr.get("head") or {}).get("sha"), pr.get("number")
-    e = {"n": n, "head": head, "ref": (pr.get("head") or {}).get("ref"), "open": []}
+    e = {"n": n, "head": head, "open": []}
     gate = e["open"].append
     head_repo = (pr.get("head") or {}).get("repo") or {}
     if (pr.get("base") or {}).get("ref") != "main" or ((pr.get("base") or {}).get("repo") or {}).get("id") != ctx["repo_id"]:
@@ -598,6 +710,7 @@ def pr_entry(pr, data, ctx):
         return e
     if not isinstance(head, str) or not SHA40.fullmatch(head) or data.get("error"):
         e["skip"] = f"NOT_READ:{data.get('error') or 'head'}"
+        e["unreadable"] = True                                   # never ranked, never merged; the other PRs are unaffected
         return e
     d1, d2 = data.get("detail") or {}, data.get("detail2") or {}
     if (d1.get("head") or {}).get("sha") != head or (d2.get("head") or {}).get("sha") != head or d1.get("state") != "open" \
@@ -620,6 +733,15 @@ def pr_entry(pr, data, ctx):
     main_changed = set(cmp_.get("main_changed_paths") or [])
     e["behind"] = cmp_.get("behind_by")
     overlap = sorted(main_changed & set(paths)) if cmp_.get("complete") else None
+    # A17: did main change a privacy- or CI-gate file AFTER this head's privacy-scan run was created? data["gate_drift"]
+    # is that list, read from git at the base SHA the run recorded. When the run names no base, the merge-base decides
+    # (older, so never less strict). 
+    gate_files = set(GATE_FILES) | {t["workflow_path"] for t in ctx["tuples"]}
+    drift = data.get("gate_drift")
+    if drift is None:
+        drift = sorted(main_changed & gate_files) if cmp_.get("complete") else []    # unreadable: C2:compare_unreadable already blocks
+    if drift:
+        e["gate_stale"] = sorted(drift)
     e["main_overlap"] = overlap[:5] if overlap is not None else "NOT_PROVEN"
     e["mergeable"] = d2.get("mergeable_state") if d2.get("mergeable") is not None else "UNKNOWN"
     tuples = ci_tuples(head, ctx["repo_id"], data.get("runs") or [], bool(data.get("runs_complete")), data.get("jobs") or {}, ctx["tuples"])
@@ -649,6 +771,14 @@ def pr_entry(pr, data, ctx):
     e["review"] = {"codex": cx, "changes_requested": changes_requested(reviews, head) if rc else None,
                    "unresolved_p0p1": p01 if p01 is not None else "NOT_PROVEN", "claude": "S1_READS_BRIDGE"}
     e["item"] = newest_item(comments) if rc else None
+    try:                                                         # the owner route of rule 2c is announced once per head
+        e["owner_update_noted"] = bool(e["item"] and e["item"].pop("owner_update", False) and cc
+                                       and stamp(e["item"].pop("at", None)) > head_commit_time(commits, head))
+    except (ValueError, KeyError, TypeError):
+        e["owner_update_noted"] = False
+    if e["item"]:
+        e["item"].pop("owner_update", None)
+        e["item"].pop("at", None)
     # ONE REQUEST PER HEAD (EVIDENCE_BINDINGS B2): an address request posted at this head, answered or not, is the only one
     try:
         e["address_at_head"] = (not rc or not cc) or any(
@@ -658,7 +788,7 @@ def pr_entry(pr, data, ctx):
         e["address_at_head"] = True
     # shrinking files the automatic exclusion 7 does not decide: S1 judges them (TICK F2)
     e["shrinks"] = [[f.get("filename"), f.get("additions") or 0, f.get("deletions") or 0] for f in files
-                    if f.get("status") == "modified" and not str(f.get("filename") or "").startswith(("scripts/", "tests/"))
+                    if f.get("status") not in ("added", "removed", "renamed") and not str(f.get("filename") or "").startswith(("scripts/", "tests/"))
                     and (f.get("deletions") or 0) > (f.get("additions") or 0)]
     if len(e["shrinks"]) > 20 or "paths" not in e:               # S1 cannot judge what it cannot see: unclear, OWNER_GATED
         e["shrinks"] = e["shrinks"][:20]
@@ -677,6 +807,8 @@ def pr_entry(pr, data, ctx):
         gate(f"C4:ci_{ci.lower()}")
     elif priv["result"] != "NO_RESTRICTED_CONTENT":
         gate(f"C3:privacy_line:{priv['result'] or priv['why']}")
+    if e.get("gate_stale"):
+        gate("C3:gate_drift")                                    # an old green result never proves the current gate
     if e["review"]["changes_requested"] is not False:
         gate("C5:changes_requested" if e["review"]["changes_requested"] else "C5:reviews_unreadable")
     if p01 != 0:
@@ -685,7 +817,29 @@ def pr_entry(pr, data, ctx):
 
 
 # ----------------------------------------------------------------------------------------------- ranking
-def next_actions(entries, lane, health, intents, max_n=6):
+def owner_update_route(e):
+    """Rule 2c, owner route: main changed a privacy- or CI-gate file after this head's privacy-scan run (gate_stale).
+    Whatever that run said, it does not prove the current gate, and no code fix on the branch can change that: the
+    branch must take main so the current gate runs. S1 cannot update a branch; the owner or ChatGPT does."""
+    return not e.get("skip") and bool(e.get("gate_stale")) and (e.get("behind") or 0) > 0
+
+
+def claude_slots(entries, lane):
+    """Every PR for which an exact-head CLAUDE_REVIEW_v1 APPROVE would be the review (the brief cannot read the private
+    Bridge; S1 reads Bridge #173 once per tick and matches these heads). ready: no open gate and the lane is ON, so
+    the approval makes the PR a rule 4 candidate; not ready: the approval only means no review request is posted.
+    high_evidence is the same flag a MERGE entry carries (risk floor above MEDIUM: S1 proves HIGH EVIDENCE itself)."""
+    out = []
+    for e in entries:
+        if e.get("skip") or e["ci"]["state"] != "GREEN" or e["review"]["codex"]["status"] in ("FINAL", "FINDINGS") \
+                or any(g.startswith("C1:") for g in e["open"]):
+            continue
+        out.append({"pr": e["n"], "head": e["head"], "ready": not e["open"] and lane["state"] == "ON",
+                    "high_evidence": e["lane"]["risk_floor"] not in FAST_RISKS})
+    return out
+
+
+def next_actions(entries, lane, health, intents, codex_ok=True, max_n=6):
     """The ranked list. Entry 0 is THE one next ladder action; the rest are fallbacks if S1's native re-read fails.
     Order: halt trigger, RECONCILE signal, rule 4 (review proven by the brief), rule 4 (review on the Bridge, S1 reads
     it), rule 2, rule 3. Inside a class: fewest open gates, then the lowest PR number (ACTION_LOOP CANDIDATE ORDER)."""
@@ -709,15 +863,22 @@ def next_actions(entries, lane, health, intents, max_n=6):
                                            verify=["head", "checks", "codex_review", "lane_pins", "rulesets", "halts"] + (["high_evidence"] if high else []))))
                 continue
             if cx["status"] != "FINDINGS":
-                other = review_request_kind(e)
+                other = review_request_kind(e, codex_ok)
                 merge_b.append((key, dict(base, action="MERGE_IF_CLAUDE_APPROVE", rule="4", review="CLAUDE_REVIEW_v1 on Bridge #173",
                                            risk_floor=e["lane"]["risk_floor"], high_evidence=high, otherwise=other,
                                            verify=["head", "checks", "claude_review", "lane_pins", "rulesets", "halts"] + (["high_evidence"] if high else []))))
                 continue
         if any(g.startswith("C1:") for g in gates):
             continue                                            # H7: never write to a branch another writer works on
+        if owner_update_route(e):                                # the gate itself is stale: Codex is not the route
+            if not e.get("owner_update_noted"):
+                repair.append((key, dict(base, action="REPAIR", rule="2c", how="BRANCH_UPDATE", by="OWNER", gate_stale=e["gate_stale"][:3],
+                                         verify=["head", "no_owner_update_item"])))
+            continue
         gated = not e["lane"]["eligible"]                        # rule 2: for an OWNER_GATED PR S1 does (c) only
-        asked = e.get("address_at_head", True)                   # one "@codex address" per head, however it was answered
+        # one "@codex address" per head, however it was answered; and none at all while Codex is out of quota (the
+        # single request of this head would be spent on a Codex that cannot answer)
+        asked = e.get("address_at_head", True) or not codex_ok
         if ci == "FAIL" and (gated or asked):
             continue
         if ci == "FAIL":
@@ -736,7 +897,7 @@ def next_actions(entries, lane, health, intents, max_n=6):
         elif ci == "GREEN" and cx["status"] == "FINDINGS" and not gated and not asked and not e["author"].get("s1"):
             repair.append((key, dict(base, action="REPAIR", rule="2b", how="CODEX_ADDRESS", job="the unresolved Codex review findings", verify=["head", "no_open_address"])))
         elif ci == "GREEN":
-            kind = review_request_kind(e)
+            kind = review_request_kind(e, codex_ok)
             if kind and cx["status"] != "FINAL" and (lane["state"] != "ON" or gates):
                 review.append((key, dict(base, action="REQUEST_REVIEW", rule="3", how=kind, verify=["head", "no_request_for_head"])))
     for group in (merge_a, merge_b, repair, review):
@@ -746,13 +907,14 @@ def next_actions(entries, lane, health, intents, max_n=6):
     return out[:max_n]
 
 
-def review_request_kind(e):
+def review_request_kind(e, codex_ok=True):
     """Rule 3: (i) '@codex review' once per head when Codex may review it; (ii) the Bridge request when Codex is
-    inadmissible, unavailable or silent past its budget. None while a Codex request is still inside its budget."""
+    inadmissible, unavailable or silent past its budget. None while a Codex request is still inside its budget.
+    codex_ok false (Codex is known to be out of quota): never a Codex request, and no waiting for one."""
     cx = e["review"]["codex"]
     if cx["status"] == "FINAL":
         return None
-    if e["author"].get("codex") or cx["status"] in ("UNAVAILABLE", "SILENT", "INADMISSIBLE", "FINDINGS"):
+    if e["author"].get("codex") or cx["status"] in ("UNAVAILABLE", "SILENT", "INADMISSIBLE", "FINDINGS") or not codex_ok:
         return "BRIDGE_REQUEST"
     if cx["status"] == "NONE" and not cx.get("requested_after_head"):
         return "CODEX_REVIEW"
@@ -773,6 +935,9 @@ def status_lines(entries, lane, merges, now):
     forks = [e for e in entries if e.get("skip") == "B1:fork_head"]
     if any(e["ci"]["state"] == "GREEN" for e in gated):
         first.append("UNKNOWN (waiting_set_needs_review_and_high_evidence)")
+    update = [e["n"] for e in entries if owner_update_route(e)]
+    if update:
+        first.append("BRANCH_UPDATE(" + " ".join(f"#{n}" for n in update) + ")")
     second = []
     for e in gated:
         missing = next((g for g in e["open"] if g != "C2:owner_gated"), "review_or_high_evidence_not_in_brief")
@@ -829,6 +994,12 @@ def build_brief(snap):
             entries.append(pr_entry(pr, snap["pr"][pr["number"]], ctx))
     rules = ruleset_census(snap.get("rulesets_1") or [], snap.get("rulesets_2") or [], bool(snap.get("rulesets_complete")))
     pulls_ok = bool(snap.get("pulls_complete"))
+    codex = codex_availability([d.get("comments") for d in (snap.get("pr") or {}).values() if isinstance(d, dict)], now)
+    # complete=false is for data that was truly NOT READ. Main moving while the brief is built is not such a case:
+    # the brief describes exactly snap["main_sha"], and S1's drift rule (TICK T3) covers main after it.
+    unread = ([] if pulls_ok else ["pulls_unreadable"]) + ([] if ledger_ok else ["ledger_unreadable"]) \
+        + ([] if identity_ok else ["repository_identity"]) + [str(x) for x in (snap.get("errors") or [])] \
+        + (["depth_cap"] if any(e.get("skip") == "NOT_READ:depth_cap" for e in entries) else [])
     brief = {
         "schema": SCHEMA, "run_id": snap["run"]["id"], "run_attempt": snap["run"]["attempt"], "event": snap["run"]["event"],
         "generated_at": iso(now), "max_age_minutes": MAX_AGE_MINUTES,
@@ -841,9 +1012,16 @@ def build_brief(snap):
         ["OWNER APPROVAL REQUIRED: UNKNOWN (brief_incomplete)", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"],
         "heartbeat_due": heartbeat_due(comments, now) if ledger_ok else False,
         "prs": entries, "drafts": drafts,
-        "next": next_actions(entries, lane, health, intents) if pulls_ok and identity_ok else [],
-        "complete": pulls_ok and ledger_ok and identity_ok and not snap.get("errors") and not any(e.get("skip") == "NOT_READ:depth_cap" for e in entries),
+        "next": next_actions(entries, lane, health, intents, codex["available"]) if pulls_ok and identity_ok else [],
+        "claude_slots": claude_slots(entries, lane) if pulls_ok and identity_ok else [],
+        "codex": codex,
+        "complete": not unread, "incomplete": unread[0] if unread else None,
         "errors": (snap.get("errors") or [])[:8],
+        # A15: a PR that could not be read is listed here and carries unreadable=true; it does not make the brief
+        # incomplete. Only global evidence does (the pulls list, the ledger, identity, the API cap, the depth cap).
+        "pr_errors": (snap.get("pr_errors") or [])[:8], "unreadable": [e["n"] for e in entries if e.get("unreadable")],
+        "ledger_read_at": snap.get("ledger_read_at") or iso(now),
+        "main_moved_during_build": bool(snap.get("main_moved")), "timing": snap.get("timing") or {},
         "not_in_brief": ["rule 1 ANSWER", "rule 5 PACKAGE", "rule 5b REENABLE", "rule 6 STEWARD", "HIGH EVIDENCE",
                          "CLAUDE_REVIEW_v1 (private Bridge)", "exclusions 4,5,6,8,9, the judgment half of 3 and 7 (see shrinks)"],
     }
@@ -881,7 +1059,7 @@ def render(brief):
     if len(body) <= MAX_BODY:
         return body
     b = {k: brief[k] for k in ("schema", "run_id", "run_attempt", "event", "generated_at", "max_age_minutes", "repo", "main", "pins")}
-    b.update(next=[], complete=False, errors=["brief_too_large"], shrunk=3, prs=[], drafts=[], lane={"state": "OFF", "off_reasons": ["brief_too_large"]},
+    b.update(next=[], claude_slots=[], complete=False, incomplete="brief_too_large", errors=["brief_too_large"], shrunk=3, prs=[], drafts=[], lane={"state": "OFF", "off_reasons": ["brief_too_large"]},
              status_lines=["OWNER APPROVAL REQUIRED: UNKNOWN (brief_too_large)", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"], heartbeat_due=False)
     return dump(b)
 
@@ -921,7 +1099,7 @@ def verify_brief(issues, run, now, repo_id=None, max_age=MAX_AGE_MINUTES):
         return bad("body")
     if not isinstance(run, dict) or run.get("id") != brief.get("run_id"):
         return bad("run_id")
-    if run.get("path") != WORKFLOW_PATH or run.get("event") not in ("schedule", "workflow_dispatch") or run.get("event") != brief.get("event") \
+    if run.get("path") != WORKFLOW_PATH or run.get("event") not in RUN_EVENTS or run.get("event") != brief.get("event") \
             or run.get("head_branch") != "main" or (run.get("repository") or {}).get("full_name") != REPO \
             or (run.get("head_repository") or {}).get("full_name") != REPO or run.get("head_sha") != brief.get("main") \
             or run.get("run_attempt") != brief.get("run_attempt"):
@@ -938,33 +1116,151 @@ def verify_brief(issues, run, now, repo_id=None, max_age=MAX_AGE_MINUTES):
     # the body was last written INSIDE the run: any later edit (by anyone) moves updated_at past the run's end
     if not (started <= made <= edited <= ended):
         return bad("edited_outside_run")
+    if (brief.get("pins") or {}).get("ok") is not True:        # the order of TICK.md T2: pins, then age, then completeness
+        return bad("pins")
     age = (now - made).total_seconds() / 60
     if age > max_age or age < -2:
         return (None, f"BRIEF_STALE(age_min={int(age)})")
-    if (brief.get("pins") or {}).get("ok") is not True:
-        return bad("pins")
+    if brief.get("complete") is not True:                      # truly unread data: the tick is a NOOP with this reason
+        return (None, f"BRIEF_INCOMPLETE({brief.get('incomplete') or 'unknown'})")
     return brief, "OK"
 
 
+def brief_is_old(issues, now, minutes=FALLBACK_DUE_MINUTES):
+    """No brief by the Actions bot younger than `minutes` is published. Age and author decide, nothing else: a brief
+    that is incomplete or whose pins are off is retried by the hourly cron run, never by every trigger completion (that
+    would spend the repository's hourly API quota on a state a rebuild cannot change). Anything unreadable is old."""
+    if not isinstance(issues, list):
+        return True
+    rows = [i for i in issues if isinstance(i, dict) and "pull_request" not in i]
+    if len(rows) != 1 or not is_actions_bot(rows[0].get("user")):
+        return True
+    brief = parse_body(rows[0].get("body"))
+    try:
+        age = (now - stamp(brief["generated_at"])).total_seconds() / 60
+    except (ValueError, KeyError, TypeError):
+        return True
+    return not 0 <= age < minutes
+
+
+def build_started(jobs):
+    """A11/A13: did this run start the build job? From its jobs list: a `build` job that was not skipped. A build that
+    failed or was cancelled counts too (it spent the API calls); a run whose jobs cannot be read counts as started."""
+    if not isinstance(jobs, list):
+        return True
+    return any(isinstance(j, dict) and j.get("name") == "build" and j.get("conclusion") != "skipped" for j in jobs)
+
+
+def cooldown_candidates(runs, now, self_run_id, limit=JOBS_READS_PER_DUE):
+    """The fallback runs (workflow_run, push) of the last BUILD_RECENT_MINUTES whose jobs are worth reading, longest
+    first: a run that built lasts minutes, a run that was not due ends after its short due job. At most `limit`."""
+    rows = []
+    for run in runs:
+        try:
+            if run.get("id") == self_run_id or run.get("event") not in FALLBACK_EVENTS:
+                continue
+            created = stamp(run.get("created_at"))
+            if (now - created).total_seconds() / 60 >= BUILD_RECENT_MINUTES:
+                continue
+            end = stamp(run.get("updated_at")) if run.get("status") == "completed" else now
+            rows.append(((end - created).total_seconds(), run.get("id")))
+        except (ValueError, TypeError, AttributeError):
+            rows.append((float("inf"), run.get("id") if isinstance(run, dict) else None))
+    return [rid for _d, rid in sorted(rows, key=lambda x: -x[0])[:limit]]
+
+
+def recent_build(runs, now, self_run_id, jobs_of=None):
+    """True when another run of this workflow makes a fallback build redundant:
+    - a cron run created in the last CRON_RECENT_MINUTES, or a cron or manual run in the last BUILD_RECENT_MINUTES
+      (they always build);
+    - an OLDER fallback run that is still running and was created less than COALESCE_MINUTES ago (A12: it decides;
+      this one stops after the one call that read the run list);
+    - a fallback run of the last BUILD_RECENT_MINUTES whose jobs list shows a started build (jobs_of(run id), at most
+      JOBS_READS_PER_DUE reads). An unreadable row or jobs list counts as a build."""
+    for run in runs:
+        try:
+            if run.get("id") == self_run_id:
+                continue
+            age = (now - stamp(run.get("created_at"))).total_seconds() / 60
+            if age < CRON_RECENT_MINUTES and run.get("event") == "schedule":
+                return True
+            if age < BUILD_RECENT_MINUTES and run.get("event") not in FALLBACK_EVENTS:
+                return True
+            if 0 <= age < COALESCE_MINUTES and run.get("status") != "completed" and isinstance(self_run_id, int) \
+                    and isinstance(run.get("id"), int) and run["id"] < self_run_id:
+                return True
+        except (ValueError, TypeError, AttributeError):
+            return True
+    if jobs_of is None:
+        return False
+    return any(build_started(jobs_of(rid)) for rid in cooldown_candidates(runs, now, self_run_id))
+
+
+def fallback_due(issues, now, runs=None, self_run_id=None, minutes=FALLBACK_DUE_MINUTES, jobs_of=None):
+    """The workflow_run and push triggers are a freshness fallback for a MISSED cron event, not a second schedule (a
+    push to main still happens when GitHub fires no scheduled workflow at all). A fallback run builds only
+    when the published brief is older than `minutes` AND the run list of this workflow shows no recent cron run and no
+    recent build. The run list must be readable: without it the fallback never builds (the cron still does), because
+    the job token's hourly quota is shared by every workflow of the repository."""
+    if not isinstance(runs, list) or recent_build(runs, now, self_run_id):
+        return False
+    if not brief_is_old(issues, now, minutes):
+        return False                                             # the usual case: two calls, no jobs read
+    return not recent_build(runs, now, self_run_id, jobs_of or (lambda rid: None))
+
+
 # ----------------------------------------------------------------------------------------------- GitHub reader
+def rate_limited(exc):
+    """Is this HTTP error a primary or secondary rate limit? 429 always; 403 with Retry-After, with no remaining quota,
+    or with GitHub's secondary-rate-limit text in the body. A plain 403 (a permission) is not."""
+    if exc.code == 429:
+        return True
+    if exc.code != 403:
+        return False
+    headers = exc.headers or {}
+    if headers.get("Retry-After") or str(headers.get("x-ratelimit-remaining")) == "0":
+        return True
+    try:
+        body = exc.read(4096).decode("utf-8", "replace").lower()
+    except Exception:                                            # noqa: BLE001
+        body = ""
+    return "secondary rate limit" in body or "rate limit exceeded" in body
+
+
 class GitHub:
     """Minimal REST reader. GET only, except graphql() (a read query sent by POST) and the two issue writes of publish."""
 
-    def __init__(self, token, repo=REPO, base="https://api.github.com", budget=700):
+    def __init__(self, token, repo=REPO, base="https://api.github.com", budget=MAX_API_CALLS):
         self.token, self.repo, self.base, self.calls, self.budget = token, repo, base, 0, budget
 
     def _request(self, method, url, data=None, accept="application/vnd.github+json"):
-        self.calls += 1
-        if self.calls > self.budget:
-            raise RuntimeError("API_BUDGET_EXHAUSTED")
         req = urllib.request.Request(url, method=method, data=None if data is None else json.dumps(data).encode())
         req.add_header("Accept", accept)
         req.add_header("X-GitHub-Api-Version", "2022-11-28")
         req.add_header("User-Agent", "s1-tick-brief")
         if self.token:
             req.add_header("Authorization", f"Bearer {self.token}")
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            return resp.read(), resp.headers
+        for attempt in (1, 2):                                   # one retry of a read that failed in transport or with a 5xx
+            self.calls += 1                                      # EVERY HTTP attempt counts toward the cap, a retry included
+            if self.calls > self.budget:
+                raise ApiBudget("API_BUDGET_EXHAUSTED")
+            try:
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    return resp.read(), resp.headers
+            except urllib.error.HTTPError as exc:
+                if rate_limited(exc):
+                    # a primary or secondary rate limit: ONE bounded retry when GitHub names a short wait, then stop
+                    wait = str((exc.headers or {}).get("Retry-After") or "")
+                    if method == "GET" and attempt == 1 and wait.isdigit() and int(wait) <= RETRY_AFTER_MAX_SECONDS:
+                        time.sleep(int(wait))
+                        continue
+                    raise RateLimited(f"HTTP_{exc.code}") from exc
+                if method != "GET" or exc.code < 500 or attempt == 2:
+                    raise
+            except (urllib.error.URLError, TimeoutError):
+                if method != "GET" or attempt == 2:
+                    raise
+            time.sleep(2)
 
     def url(self, path, params=None):
         root = path if path.startswith("https://") else f"{self.base}/repos/{self.repo}{'/' if path and not path.startswith('/') else ''}{path}"
@@ -979,14 +1275,19 @@ class GitHub:
         and the bearer token is never sent to the second host (the repository's own handler)."""
         self.calls += 1
         if self.calls > self.budget:
-            raise RuntimeError("API_BUDGET_EXHAUSTED")
+            raise ApiBudget("API_BUDGET_EXHAUSTED")
         req = urllib.request.Request(self.url(path), method="GET")
         req.add_header("Accept", "application/vnd.github+json")
         req.add_header("User-Agent", "s1-tick-brief")
         if self.token:
             req.add_header("Authorization", f"Bearer {self.token}")
-        with urllib.request.build_opener(job_identity._SafeGithubLogRedirect()).open(req, timeout=60) as resp:
-            raw = resp.read(8 * 1024 * 1024 + 1)
+        try:
+            with urllib.request.build_opener(job_identity._SafeGithubLogRedirect()).open(req, timeout=60) as resp:
+                raw = resp.read(8 * 1024 * 1024 + 1)
+        except urllib.error.HTTPError as exc:
+            if rate_limited(exc):                                # the log read stops the build like every other read
+                raise RateLimited(f"HTTP_{exc.code}") from exc
+            raise
         if len(raw) > 8 * 1024 * 1024:
             raise ValueError("JOB_LOG_SIZE_UNVERIFIED")
         return raw.decode("utf-8", "replace")
@@ -1036,8 +1337,90 @@ def read_threads(gh, number):
     return None
 
 
+GIT_ENV = None                         # set by main(): the job token reaches git through the process environment only
+
+
+def token_git_env(token, base=None):
+    """The environment for git: the token as an HTTP header for github.com, passed per process and never written to
+    the checkout's configuration (the checkout step does not persist a credential)."""
+    env = dict(os.environ if base is None else base)
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    if token:
+        n = int(env.get("GIT_CONFIG_COUNT") or 0)
+        cred = base64.b64encode(f"x-access-token:{token}".encode()).decode()
+        env.update({"GIT_CONFIG_COUNT": str(n + 1), f"GIT_CONFIG_KEY_{n}": "http.https://github.com/.extraheader",
+                    f"GIT_CONFIG_VALUE_{n}": f"AUTHORIZATION: basic {cred}"})
+    return env
+
+
 def git(root, *args):
-    return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, check=True).stdout.strip()
+    return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, check=True, env=GIT_ENV).stdout.strip()
+
+
+def fetch_commits(repo, shas, *options):
+    """One fetch for every SHA; when that fails, one fetch per SHA. Returns the SHAs that were fetched."""
+    shas = list(dict.fromkeys(s for s in shas if isinstance(s, str) and SHA40.fullmatch(s)))
+    if not shas:
+        return set()
+    try:
+        git(repo, "fetch", "--quiet", "--no-tags", *options, "origin", *shas)
+        return set(shas)
+    except subprocess.CalledProcessError:
+        got = set()
+        for sha in shas:
+            try:
+                git(repo, "fetch", "--quiet", "--no-tags", *options, "origin", sha)
+                got.add(sha)
+            except subprocess.CalledProcessError:
+                pass
+        return got
+
+
+def read_graph(root, graph_dir, main_sha, heads):
+    """{head: {base, behind_by}} from git COMMIT objects alone: one commits-only fetch (no trees, no blobs) of main's
+    and every head's history into a scratch repository. The REST compare lists at most 300 files and 250 commits, which
+    made every PR far behind a busy main unreadable; a merge-base needs neither. A head that is missing, has no single
+    merge-base with main, or cannot be counted is absent from the result (the caller reads that as NOT PROVEN)."""
+    out = {}
+    try:
+        url = git(root, "remote", "get-url", "origin")
+        Path(graph_dir).mkdir(parents=True, exist_ok=True)
+        git(graph_dir, "init", "--quiet", "--bare")
+        if "origin" not in git(graph_dir, "remote").split():
+            git(graph_dir, "remote", "add", "origin", url)
+        have = fetch_commits(graph_dir, [main_sha, *heads], "--filter=tree:0")
+    except (subprocess.CalledProcessError, OSError):
+        return out
+    if main_sha not in have:
+        return out
+    for head in heads:
+        if head not in have:
+            continue
+        try:
+            bases = git(graph_dir, "merge-base", "--all", main_sha, head).split()
+            if len(bases) != 1 or not SHA40.fullmatch(bases[0]):
+                continue
+            out[head] = {"base": bases[0], "behind_by": int(git(graph_dir, "rev-list", "--count", f"{head}..{main_sha}"))}
+        except (subprocess.CalledProcessError, ValueError):
+            continue
+    return out
+
+
+def on_main(graph_dir, sha, main_sha):
+    """Is `sha` an ancestor of main_sha? From the commits-only graph repository; anything unreadable is no."""
+    try:
+        git(graph_dir, "merge-base", "--is-ancestor", sha, main_sha)
+        return True
+    except (subprocess.CalledProcessError, OSError):
+        return False
+
+
+def changed_between(root, base, main_sha):
+    """Every path main changed after `base`, from the two trees (no file or commit cap). None when unreadable."""
+    try:
+        return [n for n in git(root, "diff", "--name-only", "--no-renames", "-z", base, main_sha).split("\0") if n]
+    except subprocess.CalledProcessError:
+        return None
 
 
 def parse_json_block(text, contract):
@@ -1065,18 +1448,20 @@ def read_pr(gh, pr, ctx, snap_errors, derive_isolation):
         d.update(comments=comments, reviews=reviews, inline=inline, review_reads_complete=c1 and c2 and c3)
         try:
             d["threads"] = read_threads(gh, n)
+        except StopReading:
+            raise
         except Exception:                                        # noqa: BLE001  (unreadable threads are NOT_PROVEN)
             d["threads"] = None
-        cmp_ = gh.get(f"compare/{ctx['main_sha']}...{head}")
-        base = (cmp_.get("merge_base_commit") or {}).get("sha")
-        d["compare"] = {"behind_by": cmp_.get("behind_by"), "complete": False, "main_changed_paths": []}
-        if base and cmp_.get("behind_by") == 0:
+        # The PR's own changed set is the files list above (complete only with changed_files equality, pr_entry). What
+        # main changed since the merge-base comes from git objects: the graph gives the base, two trees give the paths.
+        g = (ctx.get("graph") or {}).get(head)
+        d["compare"] = {"behind_by": g["behind_by"] if g else None, "complete": False, "main_changed_paths": []}
+        if g and g["base"] == ctx["main_sha"] and g["behind_by"] == 0:
             d["compare"]["complete"] = True
-        elif base:
-            back = gh.get(f"compare/{base}...{ctx['main_sha']}")
-            names = [f.get("filename") for f in back.get("files") or []] + [f.get("previous_filename") for f in back.get("files") or [] if f.get("previous_filename")]
-            # GitHub lists at most 300 files on a compare; a longer list is incomplete and the overlap is NOT PROVEN
-            d["compare"].update(main_changed_paths=names, complete=len(back.get("files") or []) < 300 and back.get("status") in ("ahead", "identical"))
+        elif g:
+            names = ctx["main_changed"](g["base"])
+            if names is not None:
+                d["compare"].update(main_changed_paths=names, complete=True)
         runs, rc = gh.pages("actions/runs", {"head_sha": head, "event": "pull_request"}, key="workflow_runs", max_pages=5)
         d["runs"], d["runs_complete"], d["jobs"] = runs, rc, {}
         wanted = {t["workflow_path"] for t in ctx["tuples"]}
@@ -1086,21 +1471,36 @@ def read_pr(gh, pr, ctx, snap_errors, derive_isolation):
                 run = max(kept, key=lambda r: r.get("run_number") or 0)
                 jobs, jc = gh.pages(f"actions/runs/{run['id']}/jobs", {"filter": "latest"}, key="jobs", max_pages=3)
                 d["jobs"][run["id"]] = jobs if jc else None
+        gate_path = next((t["workflow_path"] for t in ctx["tuples"] if t["job"] == "privacy-scan"), None)
+        gate_runs = [r for r in runs if r.get("path") == gate_path and r.get("head_sha") == head]
+        if gate_runs:
+            newest = max(gate_runs, key=lambda r: r.get("run_number") or 0)
+            base_at_run = next(((p.get("base") or {}).get("sha") for p in newest.get("pull_requests") or [] if p.get("number") == n), None)
+            if isinstance(base_at_run, str) and SHA40.fullmatch(base_at_run):
+                d["gate_drift"] = ctx["gate_drift"](base_at_run)  # None when that tree cannot be read: the merge-base decides
         priv = [j for jobs in d["jobs"].values() if jobs for j in jobs if j.get("name") == "privacy-scan" and j.get("conclusion") == "success"]
         d["privacy_log"] = None
         if len(priv) == 1:
             try:
                 d["privacy_log"] = gh.text(f"actions/jobs/{priv[0]['id']}/logs")
+            except StopReading:
+                raise
             except Exception:                                    # noqa: BLE001
                 d["privacy_log"] = None
         checks, k1 = gh.pages(f"commits/{head}/check-runs", key="check_runs", max_pages=5)
         statuses, k2 = gh.pages(f"commits/{head}/statuses", max_pages=3)
         d.update(check_runs=checks, statuses=statuses, checks_complete=k1 and k2)
-        d["isolation"] = derive_isolation(head, [f.get("filename") for f in d["files"]] + [f["previous_filename"] for f in d["files"] if f.get("previous_filename")])
+        changed = [f.get("filename") for f in d["files"]] + [f["previous_filename"] for f in d["files"] if f.get("previous_filename")]
+        # The derivation of a head costs a checkout and about 20 s. It can only ADD exclusion 3 reasons, so a PR that
+        # another diff exclusion already makes OWNER_GATED is not derived (same lane result, no redundant read).
+        already, _floor = path_exclusions(d["files"], bool(d["files_complete"]), ctx["policy"], ctx["gate_isolation_live"], {"owner_gated": [], "high_floor": []})
+        d["isolation"] = {"owner_gated": [], "high_floor": [], "not_derived": "already_owner_gated"} if already else derive_isolation(head, changed)
         d["detail2"] = gh.get(f"pulls/{n}")                    # the second head read, AFTER every other read of this PR
+    except StopReading:
+        raise                                                    # the cap or a rate limit: collect() stops every further read
     except Exception as exc:                                     # noqa: BLE001
         d["error"] = type(exc).__name__
-        snap_errors.append(f"pr{n}:{type(exc).__name__}")
+        snap_errors.append(f"pr{n}:{type(exc).__name__}")       # recorded per PR (brief.pr_errors): NOT a global error
     return d
 
 
@@ -1108,7 +1508,8 @@ def collect(gh, root, head_root, now, run):
     """The snapshot for build_brief(): native reads at one main SHA. `root` is the checkout of that SHA."""
     errors = []
     main_sha = git(root, "rev-parse", "HEAD")
-    snap = {"now": iso(now), "run": run, "main_sha": main_sha, "errors": errors}
+    pr_errors = []
+    snap = {"now": iso(now), "run": run, "main_sha": main_sha, "errors": errors, "pr_errors": pr_errors}
     read = lambda rel: (Path(root) / rel).read_text(encoding="utf-8")
     snap["switch"], snap["contract"] = json.loads(read(SWITCH)), json.loads(read(CONTRACT_FILE))
     snap["policy"] = json.loads(read(POLICY_FILE))
@@ -1124,11 +1525,16 @@ def collect(gh, root, head_root, now, run):
             snap["pins_actual"][path] = git(root, "rev-parse", f"HEAD:{path}")
         except subprocess.CalledProcessError:
             snap["pins_actual"][path] = None
+    clock, timing = time.monotonic(), {}
+    snap["timing"] = timing
     snap["repo"] = gh.get("")
     branch = gh.get("branches/main")
     snap["main_protected"] = branch.get("protected")
-    if (branch.get("commit") or {}).get("sha") != main_sha:
-        errors.append("main_moved_during_checkout")            # informational: S1 handles drift with the C1b compare
+    # The brief is built against ONE pinned SHA, the checked-out main_sha (M0), and says so in `main`. Main moving
+    # meanwhile is expected (data writers commit every few minutes) and is NOT an error: nothing below reads "current
+    # main", and S1 applies the drift rule to the commits after M0 (TICK T3).
+    snap["main_moved"] = (branch.get("commit") or {}).get("sha") != main_sha
+    snap["ledger_read_at"] = iso(datetime.now(timezone.utc))   # BEFORE the read: a halt posted from now on is S1's to see (TICK F5)
     snap["issue_comments"], snap["issue_comments_complete"] = gh.pages(f"issues/{OWNER_ISSUE}/comments", max_pages=120)
     snap["health_runs"], _ = gh.pages(f"actions/workflows/{Path(snap['bindings']['main_health']['workflow_path']).name}/runs",
                                       {"event": "schedule", "branch": "main"}, key="workflow_runs", max_pages=1)
@@ -1137,12 +1543,15 @@ def collect(gh, root, head_root, now, run):
     r2, c2 = gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
     snap.update(rulesets_1=r1, rulesets_2=r2, rulesets_complete=c1 and c2)
     snap["pulls"], snap["pulls_complete"] = gh.pages("pulls", {"state": "open", "sort": "created", "direction": "asc"}, max_pages=5)
+    timing["base_s"] = round(time.monotonic() - clock)
     import s1_workflow_isolation_derive_v1 as iso_mod            # main's code only; it parses, it never executes a head
     main_derivation = iso_mod.derive(Path(root))
 
     def derive_isolation(head, changed):
+        started = time.monotonic()
         try:
-            git(root, "fetch", "--quiet", "--no-tags", "--depth=1", "origin", head)
+            if head not in fetched:
+                git(root, "fetch", "--quiet", "--no-tags", "--depth=1", "origin", head)
             if not (Path(head_root) / ".git").exists():
                 git(root, "worktree", "add", "--quiet", "--detach", str(head_root), head)
             else:
@@ -1152,17 +1561,77 @@ def collect(gh, root, head_root, now, run):
             return iso_mod.lane_classification(changed, [main_derivation, iso_mod.derive(Path(head_root))])
         except Exception:                                        # noqa: BLE001  (not derived: the PR reads OWNER_GATED)
             return None
+        finally:
+            timing["derive_s"] = round(timing.get("derive_s", 0) + time.monotonic() - started)
+            timing["derive_n"] = timing.get("derive_n", 0) + 1
 
-    ctx = {"main_sha": main_sha, "tuples": snap["bindings"]["required_job_tuples"]}
-    snap["pr"] = {}
     same_repo = [p for p in snap["pulls"] if not p.get("draft") and ((p.get("head") or {}).get("repo") or {}).get("id") == snap["repo"].get("id")]
-    for pr in sorted(same_repo, key=lambda p: str(p.get("updated_at") or ""), reverse=True)[:MAX_DEPTH_PRS]:
-        snap["pr"][pr["number"]] = read_pr(gh, pr, ctx, errors, derive_isolation)
+    chosen = sorted(same_repo, key=lambda p: str(p.get("updated_at") or ""), reverse=True)[:MAX_DEPTH_PRS]
+    heads = [(p.get("head") or {}).get("sha") for p in chosen]
+    clock = time.monotonic()
+    graph_dir = Path(str(head_root) + ".graph")
+    graph = read_graph(root, graph_dir, main_sha, [h for h in heads if isinstance(h, str) and SHA40.fullmatch(h)])
+    # one fetch brings the tree of every merge-base and every head (depth 1: one commit each)
+    fetched = fetch_commits(root, sorted({g["base"] for g in graph.values()} - {main_sha}) + heads, "--depth=1")
+    timing["git_s"] = round(time.monotonic() - clock)
+    cache = {}
+
+    def main_changed(base):
+        if base not in cache:                                    # per run: PRs that share a merge-base share the diff
+            cache[base] = changed_between(root, base, main_sha) if base in fetched else None
+        return cache[base]
+
+    gate_files = set(GATE_FILES) | {t["workflow_path"] for t in snap["bindings"]["required_job_tuples"]}
+
+    def gate_drift(base_at_run):
+        """Gate files main changed after the base SHA a privacy run recorded (one more depth-1 fetch per distinct base)."""
+        if base_at_run == main_sha:
+            return []
+        if not on_main(graph_dir, base_at_run, main_sha):
+            return None                                          # not a commit of main: unverified, the merge-base decides
+        if base_at_run not in fetched:
+            fetched.update(fetch_commits(root, [base_at_run], "--depth=1"))
+        names = main_changed(base_at_run)
+        return None if names is None else sorted(set(names) & gate_files)
+
+    ctx = {"main_sha": main_sha, "tuples": snap["bindings"]["required_job_tuples"], "graph": graph, "main_changed": main_changed, "gate_drift": gate_drift,
+           "policy": snap["policy"], "gate_isolation_live": snap.get("gate_isolation") == "LIVE"}
+    snap["pr"] = {}
+    clock = time.monotonic()
+    stopped = None
+    for pr in chosen:
+        if stopped is None:
+            try:
+                snap["pr"][pr["number"]] = read_pr(gh, pr, ctx, pr_errors, derive_isolation)
+                continue
+            except StopReading as exc:                           # api_budget or rate_limited: no further API call in this build
+                stopped = exc.reason
+                errors.insert(0, stopped)
+        snap["pr"][pr["number"]] = {"error": stopped}            # this PR and every later one: NOT_READ, never ranked
+    timing["prs_s"] = round(time.monotonic() - clock)
     return snap
 
 
 # ----------------------------------------------------------------------------------------------- publish
-def publish(gh, body):
+def keep_published(gh, issue, brief, now):
+    """Is the published body a real brief of this workflow, so that an older one must not replace it? All must hold:
+    its generated_at is not in the future and not after the issue's updated_at; its run_id is a run of this workflow
+    in this repository (ONE read); and that run's window contains generated_at. Anything else, or an unreadable run,
+    is overwritten."""
+    try:
+        made = stamp(brief.get("generated_at"))
+        if made > now or made > stamp(issue.get("updated_at")):
+            return False
+        run = gh.get(f"actions/runs/{int(brief.get('run_id'))}")
+        if run.get("path") != WORKFLOW_PATH or (run.get("repository") or {}).get("full_name") != REPO:
+            return False
+        end = stamp(run.get("updated_at")) if run.get("status") == "completed" else now
+        return stamp(run.get("run_started_at")) <= made <= end
+    except Exception:                                            # noqa: BLE001  (not provable: overwrite)
+        return False
+
+
+def publish(gh, body, now=None):
     """Write the one brief issue. Finds it by label; creates the label and the issue on the first run. More than one
     open labelled issue by the Actions bot is repaired by closing the newer ones (never deleted)."""
     if parse_body(body) is None or len(body) > 65000:
@@ -1186,6 +1655,17 @@ def publish(gh, body):
         return number
     for extra in mine[1:]:
         gh._request("PATCH", gh.url(f"issues/{extra['number']}"), {"state": "closed", "state_reason": "not_planned"})
+    # A14: monotonic. A publish that was delayed never replaces a brief that a later build already wrote. But the
+    # published body is kept ONLY when it is provably such a brief (keep_published): a forged or future-dated body
+    # must never stop every later publish.
+    current, new = parse_body(mine[0].get("body")), parse_body(body)
+    try:
+        if current is not None and stamp(current.get("generated_at")) > stamp(new.get("generated_at")) \
+                and keep_published(gh, mine[0], current, now or datetime.now(timezone.utc)):
+            print(f"S1_TICK_BRIEF_PUBLISH_SKIPPED newer_brief_published run={current.get('run_id')}")
+            return mine[0]["number"]
+    except (ValueError, TypeError):
+        pass                                                     # an unreadable current brief is replaced
     gh._request("PATCH", gh.url(f"issues/{mine[0]['number']}"), {"body": body})
     return mine[0]["number"]
 
@@ -1196,9 +1676,40 @@ def main(argv):
     repo = os.environ.get("GITHUB_REPOSITORY", REPO)
     if repo != REPO:
         raise SystemExit(f"REFUSED: repository {repo} is not {REPO}")
+    if mode == "due":
+        # prints true or false. Only a workflow_run event can be "not due". An unreadable issue list reads as an old
+        # brief; an unreadable RUN list means no fallback build (the hourly cron still builds).
+        due = True
+        if os.environ.get("GITHUB_EVENT_NAME") in FALLBACK_EVENTS:
+            # ONE call when the run list already says no; TWO when the brief is fresh (the usual case); at most
+            # DUE_API_CALLS when the brief is old and the jobs of up to three earlier runs must be read
+            gh = GitHub(token, budget=DUE_API_CALLS)
+            now = datetime.now(timezone.utc)
+            run_id = os.environ.get("GITHUB_RUN_ID", "")
+            run_id = int(run_id) if run_id.isdigit() else None
+            try:
+                runs = gh.get(f"actions/workflows/{Path(WORKFLOW_PATH).name}/runs", {"per_page": 100}).get("workflow_runs")
+            except Exception:                                    # noqa: BLE001
+                runs = None
+            due = False
+            if isinstance(runs, list) and not recent_build(runs, now, run_id):
+                try:
+                    issues = gh.get("issues", {"labels": BRIEF_LABEL, "state": "open", "per_page": 20})
+                except Exception:                                # noqa: BLE001
+                    issues = None
+                def jobs_of(rid):
+                    try:
+                        return gh.get(f"actions/runs/{rid}/jobs", {"per_page": 30}).get("jobs")
+                    except Exception:                            # noqa: BLE001  (unreadable: counted as a started build)
+                        return None
+                due = fallback_due(issues, now, runs, run_id, jobs_of=jobs_of)
+        print("true" if due else "false")
+        return 0
     if mode == "build":
+        global GIT_ENV
         root, head_root, out = argv[2], argv[3], Path(argv[4])
         run = {"id": int(os.environ["GITHUB_RUN_ID"]), "attempt": int(os.environ["GITHUB_RUN_ATTEMPT"]), "event": os.environ["GITHUB_EVENT_NAME"]}
+        GIT_ENV = token_git_env(token)
         gh = GitHub(token)
         snap = collect(gh, root, head_root, datetime.now(timezone.utc), run)
         brief = build_brief(snap)
@@ -1214,10 +1725,10 @@ def main(argv):
         brief = parse_body(body)
         if brief is None or str(brief.get("run_id")) != os.environ.get("GITHUB_RUN_ID") or brief.get("main") != os.environ.get("GITHUB_SHA"):
             raise SystemExit("PUBLISH_REFUSED: the brief does not belong to this run")
-        number = publish(GitHub(token, budget=20), body)
+        number = publish(GitHub(token, budget=PUBLISH_API_CALLS), body)
         print(f"S1_TICK_BRIEF_PUBLISHED issue={number} run={brief['run_id']}")
         return 0
-    raise SystemExit("usage: s1_tick_brief_v1.py build <main checkout> <head worktree dir> <out file> | publish <brief file>")
+    raise SystemExit("usage: s1_tick_brief_v1.py due | build <main checkout> <head worktree dir> <out file> | publish <brief file>")
 
 
 if __name__ == "__main__":

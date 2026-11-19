@@ -37,7 +37,8 @@ class TestMaeveOneShot(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "PINNED_SOURCE_MISMATCH"):
             m.pinned_blob(m.SOURCE_PIN, m.MISSION_PATH, "a"*40)
     def test_reserved_new_id_and_forged_reservation_denied(self):
-        m.check_reservation()
+        with self.assertRaises(ValueError):
+            m.check_reservation()  # Original one-shot consumed; never replay.
         with mock.patch.object(m, "WORK_ID", "PREVIOUS-WORK-ID"):
             with self.assertRaises(ValueError):
                 m.check_reservation()
