@@ -1,5 +1,5 @@
 {
   "contract": "FRAMEWORK_METRONOME_MODE_v1",
   "mode": "ACTIVE_DATA",
-  "note": "ACTIVE_DATA dispatches only the hourly data owners on time: hourly-sequence-capture (free public candles, from :05) and native-market-recovery (from :26; its repairs are bounded by their own cooldowns). Sunday close and paid Master Monday stay log-only (WOULD_DISPATCH). Full ACTIVE only by a later reviewed owner PR."
+  "note": "ACTIVE_DATA dispatches only the free hourly owners on time: hourly-sequence-capture (free public candles, from :05), native-market-recovery (from :26; its repairs are bounded by their own cooldowns) and s1-tick-brief (read-only S1 tick brief, from :15, unless its cron or a manual run already started this hour from :13). Sunday close and paid Master Monday stay log-only (WOULD_DISPATCH). Full ACTIVE only by a later reviewed owner PR."
 }
