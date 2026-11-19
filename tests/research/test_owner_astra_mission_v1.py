@@ -693,18 +693,19 @@ class TestCostGuard(unittest.TestCase):
                          [("ASTRA-S1-V32-REDTEAM-20261118-R2", "CONSUMED_PENDING_INVOICE", 0, 20, 1),
                           ("ASTRA-ALPHA-GLOBAL-SPECIALIST-20261118", "OWNER_RESERVED_PREHTTP", 0, 3, 1),
                           ("ASTRA-S1-V32-REDTEAM-20261118-R2-SOL", "CONSUMED_PENDING_INVOICE", 0, 3, 1),
-                          ("ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118", "OWNER_RESERVED_PREHTTP", 0, 20, 1)])
+                          ("ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118", "OWNER_RESERVED_PREHTTP", 0, 20, 1),
+                          ("ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118-SOL", "OWNER_RESERVED_PREHTTP", 0, 3, 1)])
         self.assertEqual((rows[0]["consumed_run_id"], rows[0]["consumed_response_id"],
                           rows[0]["consumed_estimated_upper_usd"]),
                          (44386340009, "resp_0477227a70790153006afe044ec9c487d08ebd44a0466687db", 3.13212))
-        self.assertEqual(res.mission_reservations(json.loads(CANONICAL_LEDGER.read_text()), set())[:2], (46.0, 4))
+        self.assertEqual(res.mission_reservations(json.loads(CANONICAL_LEDGER.read_text()), set())[:2], (49.0, 5))
         for mid in (ALPHA_MID, SOL_MID):
             proc = subprocess.run([sys.executable, str(GUARD), "--receipt-root", str(self.tmp / "receipts"),
                                    "--hard-stop-usd", str(self.stop), "--reserve-usd", "4", "--new-request-upper-usd", "0",
                                    "--liability-ledger", str(CANONICAL_LEDGER), "--owner-astra-mission-id", mid],
                                   capture_output=True, text=True, cwd=ROOT, timeout=120)
             self.assertEqual(proc.returncode, 0, proc.stdout)
-            self.assertEqual(json.loads(proc.stdout)["pending_liability_upper_usd"], 46.0)
+            self.assertEqual(json.loads(proc.stdout)["pending_liability_upper_usd"], 49.0)
         # The consumed R2 row stays counted but can never launch again.
         with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
             m.check_reservation(MID, 20)
