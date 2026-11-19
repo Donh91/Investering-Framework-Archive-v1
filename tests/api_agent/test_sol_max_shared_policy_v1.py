@@ -31,14 +31,16 @@ def future_policy():
 class SharedSolOwnerPolicyTests(unittest.TestCase):
     def test_official_six_two_requires_project_get(self):
         self.assertEqual(m.choose_model(POLICY, PRICE, available=lambda model: model == "gpt-6.2-sol")["id"], "gpt-6.2-sol")
-        self.assertEqual(m.choose_model(POLICY, PRICE, available=lambda _: False)["id"], "gpt-6.1-sol")
+        with self.assertRaisesRegex(ValueError, "REQUIRED_PROJECT_MODEL_UNAVAILABLE"):
+            m.choose_model(POLICY, PRICE, available=lambda _: False)
         row = m.choose_model(POLICY, PRICE, available=lambda _: True)
         self.assertEqual(m.quoted_upper_usd(180000, 128000, row), 2.28)
         with self.assertRaisesRegex(ValueError, "CACHE_WRITE_PRICE_NOT_PINNED"):
             m.quoted_upper_usd(100, 2048, dict(row, standard_cache_write_12h_usd_per_million=0))
 
-    def test_missing_project_probe_retains_six_one(self):
-        self.assertEqual(m.choose_model(POLICY, PRICE)["id"], "gpt-6.1-sol")
+    def test_missing_project_probe_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, "REQUIRED_PROJECT_MODEL_UNAVAILABLE"):
+            m.choose_model(POLICY, PRICE)
         self.assertFalse(POLICY["unverified_next_candidate_enabled"])
         self.assertIn("gpt-6-astra", POLICY["forbidden_auto_models"])
         self.assertTrue(POLICY["manual_astra_only"].startswith("Astra requires"))
@@ -53,9 +55,26 @@ class SharedSolOwnerPolicyTests(unittest.TestCase):
         self.assertEqual(m.choose_model(policy, prices, available=model_available)["id"],
                          "gpt-6.2-sol")
         self.assertEqual(observed, ["gpt-6.2-sol"])
-        self.assertEqual(m.choose_model(policy, prices)["id"], "gpt-6.1-sol")
-        self.assertEqual(m.choose_model(policy, prices, available=lambda _: False)["id"],
-                         "gpt-6.1-sol")
+        for probe in (None, lambda _: False, lambda name: name == "gpt-6.1-sol"):
+            with self.assertRaisesRegex(ValueError, "REQUIRED_PROJECT_MODEL_UNAVAILABLE"):
+                m.choose_model(policy, prices, available=probe)
+
+    def test_no_implicit_future_model_or_missing_required_model(self):
+        policy = copy.deepcopy(POLICY)
+        later = dict(policy["available_verified_sol_models"][-1], id="gpt-6.3-sol",
+                     version=[6, 3], official_model_spec="https://developers.openai.com/api/docs/models/gpt-6.3-sol")
+        policy["available_verified_sol_models"].append(later)
+        prices = dict(PRICE, **{"gpt-6.3-sol": PRICE["gpt-6.2-sol"]})
+        self.assertEqual(m.choose_model(policy, prices, available=lambda _: True)["id"], "gpt-6.2-sol")
+        with self.assertRaisesRegex(ValueError, "REQUIRED_PROJECT_MODEL_UNAVAILABLE"):
+            m.choose_model(policy, prices, available=lambda name: name == "gpt-6.3-sol")
+        policy["available_verified_sol_models"] = [x for x in policy["available_verified_sol_models"] if x["id"] != "gpt-6.2-sol"]
+        with self.assertRaisesRegex(ValueError, "REQUIRED_MODEL_NOT_VERIFIED"):
+            m.choose_model(policy, prices, available=lambda _: True)
+        policy = copy.deepcopy(POLICY)
+        policy["allow_model_fallback_for_new_max"] = True
+        with self.assertRaisesRegex(ValueError, "POLICY_INVALID"):
+            m.choose_model(policy, PRICE, available=lambda _: True)
 
     def test_unverified_version_price_or_astra_is_never_selected(self):
         policy = future_policy()
@@ -70,7 +89,7 @@ class SharedSolOwnerPolicyTests(unittest.TestCase):
                     "input": 3, "output": 12}}), available=lambda _: True)
 
     def test_max_output_and_money_bound_without_new_paid_post(self):
-        row = m.choose_model(POLICY, PRICE)
+        row = m.choose_model(POLICY, PRICE, available=lambda name: name == "gpt-6.2-sol")
         self.assertLess(m.quoted_upper_usd(120000, 128000, row), 3)
         for ctx, output in ((180001, 48000), (20000, 128001),
                             (20000, 200000), (0, 48000)):
