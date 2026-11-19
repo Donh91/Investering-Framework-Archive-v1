@@ -453,5 +453,27 @@ class AltseasonScopedDegradationReplayTests(unittest.TestCase):
         self.assertFalse(K._health_ok(core, self.at))
         self.assertEqual(K.action_context(core, as_of=self.at)["NOW"], "HOLD_WAIT_DATA_DEGRADED")
 
+
+class CnIssuerMethodTests(unittest.TestCase):
+    """K10/K11: the Official Compass states which issuer produced the CN and whether its protection was inherited."""
+
+    def test_real_w47_package_is_classified_as_offline_rule(self):
+        root = Path(__file__).resolve().parents[2]
+        cn, binding = K.load_cn_context(root)
+        if binding.get("status") != "PASS":
+            self.skipTest("CN package not in this checkout")
+        if binding.get("iso_week") in (46, 47):
+            self.assertEqual(K.cn_issuer_method(cn), K.CN_OFFLINE_ISSUER_METHOD)
+            self.assertEqual(K.cn_protection_state_basis(cn), "INHERITED_FROM_PRIOR_ISSUE")
+
+    def test_explicit_field_wins_and_missing_package_is_unavailable(self):
+        self.assertEqual(K.cn_issuer_method(None), "UNAVAILABLE")
+        self.assertEqual(K.cn_protection_state_basis(None), "UNAVAILABLE")
+        self.assertEqual(K.cn_issuer_method({"issuer_method": "MODEL_X"}), "MODEL_X")
+        self.assertEqual(K.cn_issuer_method({"readable_markdown": "no method line"}), "UNSTATED")
+        self.assertEqual(K.cn_issuer_method({"readable_markdown": "# CN\n\nMethod: " + K.CN_OFFLINE_ISSUER_METHOD + "\n"}),
+                         K.CN_OFFLINE_ISSUER_METHOD)
+        self.assertEqual(K.cn_protection_state_basis({"readable_markdown": "x"}), "UNSTATED")
+
 if __name__=="__main__":
     unittest.main()

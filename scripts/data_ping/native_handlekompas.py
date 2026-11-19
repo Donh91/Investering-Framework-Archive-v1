@@ -188,6 +188,34 @@ def load_prior_compass(repo_root: Path, pointer_path: Path) -> Mapping[str, Any]
     return compass
 
 
+CN_OFFLINE_ISSUER_METHOD = "CN_OWNER_AUTHORIZED_API_FREE_SEVEN_DAY_v1"
+
+
+def cn_issuer_method(cn_package: Mapping[str, Any] | None) -> str:
+    """K10 (2026-11-19): which issuer produced the weekly CN. W46/W47 predate the explicit field and state the
+    method only in their readable text; those immutable packages are classified from that text, never rewritten."""
+    if not isinstance(cn_package, Mapping):
+        return "UNAVAILABLE"
+    explicit = cn_package.get("issuer_method")
+    if isinstance(explicit, str) and explicit:
+        return explicit
+    text = cn_package.get("readable_markdown")
+    if isinstance(text, str) and ("Method: " + CN_OFFLINE_ISSUER_METHOD) in text:
+        return CN_OFFLINE_ISSUER_METHOD
+    return "UNSTATED"
+
+
+def cn_protection_state_basis(cn_package: Mapping[str, Any] | None) -> str:
+    """K11: an offline-issued protection state is carried forward, not re-evaluated."""
+    if not isinstance(cn_package, Mapping):
+        return "UNAVAILABLE"
+    protection = _cn_decision_projection(cn_package).get("protection") if isinstance(_cn_decision_projection(cn_package), Mapping) else None
+    basis = protection.get("state_basis") if isinstance(protection, Mapping) else None
+    if isinstance(basis, str) and basis:
+        return basis
+    return "INHERITED_FROM_PRIOR_ISSUE" if cn_issuer_method(cn_package) == CN_OFFLINE_ISSUER_METHOD else "UNSTATED"
+
+
 def load_cn_context(repo_root: Path, pointer_path: Path = DEFAULT_CN_POINTER) -> tuple[Mapping[str, Any] | None, dict[str, Any]]:
     path = repo_root / pointer_path
     if not path.exists():
@@ -1683,6 +1711,8 @@ def build_official_compass(
             "observation_open_utc": nested(auto_state, "normalized_state", "live_market", "observation_open_utc"),
         },
         "market_now": market_now,
+        "cn_issuer_method": cn_issuer_method(eligible_cn),
+        "cn_protection_state_basis": cn_protection_state_basis(eligible_cn),
         "horizons": horizons,
         "bull_bear_scale": bull_bear,
         "capitalization_ladder": ladder,

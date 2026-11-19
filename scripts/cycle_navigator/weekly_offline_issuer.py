@@ -176,6 +176,14 @@ def build_offline_value(context, baseline, previous, year, week, issue, public_i
     decision["protection"].update({"drivers":["Completed-week source price moves and bounded original weekly ranges."],
                                     "eta_window":"UNAVAILABLE","confidence_quality":"LOW",
                                     "invalidation":"Source-bound recovery and durable improved breadth weaken downside concern."})
+    # K11 (2026-11-19): this issuer refreshes drivers only; pullback_risk_state, class and public text are carried
+    # forward from the prior issue, not re-evaluated. Say so instead of presenting an inherited state as current.
+    prior_basis = (previous.get("decision_projection") or {}).get("protection", {}).get("state_basis")
+    decision["protection"]["state_basis"] = "INHERITED_FROM_PRIOR_ISSUE"
+    decision["protection"]["inherited_from_issue_number"] = (
+        (previous.get("decision_projection") or {}).get("protection", {}).get("inherited_from_issue_number")
+        if prior_basis == "INHERITED_FROM_PRIOR_ISSUE" else int(previous["issue_number"]))
+    decision["issuer_method"] = METHOD
     lines=["# Cycle Navigator "+week_id,"","Method: "+METHOD,
            "ISSUED after completed source week. Original UTC issue/freeze clock is recorded by the publisher.",
            "Not backdated, not an AI answer, not a known outcome or calibrated investment edge.",
@@ -195,6 +203,8 @@ def build_offline_value(context, baseline, previous, year, week, issue, public_i
     return {
         "status":"DEGRADED","status_reason_codes":["CONTINUITY_FALLBACK","COVERAGE_LIMITATION"],
         "issue_number":issue,"previous_issue_number":int(previous["issue_number"]),
+        # K10: a deterministic rule, not a model (1-3d DOWN if BTC or ETH fell; 5-7d MIXED; 2-3w NO_EDGE; scaled path).
+        "issuer_method":METHOD,
         "market_state":"MIXED_WITH_DOWNSIDE_PRESSURE" if bearish else "MIXED_WITH_UPSIDE_BIAS",
         "evaluation":eval_,
         "base_case_this_week":week_text,"base_case_2_3_weeks":medium,"base_case_4_8_weeks":long,
