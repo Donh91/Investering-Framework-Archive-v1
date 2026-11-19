@@ -935,3 +935,29 @@ def main(argv):
 2625: def test_a14_a_delayed_publish_never_replaces_a_newer_brief(self):
 2654: def test_f1_a_forged_or_future_dated_body_never_stops_the_publish(self):
 2841: def test_the_publish_budget_covers_its_writes(self):
+
+## Post-freeze delta 2026-11-19 (public-safe; observed native facts after the bundle was frozen)
+
+1. **Merged S1 fixes.**
+   - #2246 (32b4f362): connector-only reads; T1/T2 bound to raw REST fetch; the metronome dispatches the brief hourly from :15.
+   - #2249 (451e0dee): a compact, decidable T3. The connector's compare_commits gives the file scope. When code changed, a commit list plus non-recursive root trees attribute the change between squash merges. A proven difference always halts.
+2. **Measured connector shapes** (the operator's interactive probe; character counts as received):
+
+   | read | size | notes |
+   |---|---|---|
+   | compare_commits (connector) | ~15k | status / total_commits / too_large / files, no commits |
+   | raw /compare | ~550k | commits plus the union of files |
+   | /commits?per_page=10 | ~19k | |
+   | /git/trees (root) | ~9.5k | |
+   | Bridge comments per_page=100 | ~630k | |
+   | #1156 comments per page | ~579k | |
+
+   No transport truncation was observed. The Link header is not visible.
+3. **Scheduled-run behaviour.**
+   - Runs took 23–26 s and started up to about 4 min late.
+   - The 15:45Z tick printed the old-T3 reason for a 5-commit data-only range. Cause UNVERIFIED: history reuse, a tool failure, or rejection of the compact answer.
+   - The 16:45Z tick completed the full chain: NOTHING_ACTIONABLE, with skipped=2248:R3:claude_approved.
+   - The 18:45Z tick took the first real action: REQUEST_REVIEW #2250, posted exactly once.
+   - The task's tool transcript is not exposed. All ticks share one conversation.
+4. **Interactive dry run of a full tick.** T0–T5 passed in 36 connector calls and about 193 s. T6/T7 could not be completed: #1156 holds 1,440 comments, and heartbeat discovery needs page-by-page reads. The last heartbeat was on 2026-11-17.
+5. **Producer liveness.** The '18 * * * *' cron started 2 times in about 20 h. Push and workflow_run fallbacks went silent after 10:33Z. The metronome dispatch now builds hourly. The independent review estimates about 1.2 builds an hour (P2 double build).

@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/METRONOME_MODE_v1.json",
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "scripts/orchestration/framework_metronome_v1.py",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py",
+    "tests/governance/test_s1_runtime_contract_v1.py",
+    "tests/orchestration/test_framework_metronome_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-32b4f362c14a5c95",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "S1 liveness: apply Claude combined R2 package byte-exact (#2246)",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/METRONOME_MODE_v1.json": "569942aa086a65b087ab2b5d9422ca2b26269f68",
+    "00_FMOS/S1/BOOTSTRAP.txt": "ea8fe8105329cd541b6e3f4a43f3f9d77eb23c66",
+    "scripts/orchestration/framework_metronome_v1.py": "005e9813309c2915b5ff5f866088242f52f04ba4",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py": "b296fc9e73ef544a9fadb59816d0296c06f466db",
+    "tests/governance/test_s1_runtime_contract_v1.py": "435678781893998e322b4700d26af9c1df480fb7",
+    "tests/orchestration/test_framework_metronome_v1.py": "df66718032f5919b2a007525fa1613706cc1e75c"
+  },
+  "source_commit_sha": "32b4f362c14a5c9520b53f7a3d6782922ce6130b",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-19T14:32:13+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "S1 liveness: apply Claude combined R2 package byte-exact (#2246)"
+}

@@ -4,6 +4,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from tests.api_agent.test_astra_provider_settlement_v1 import expected_pending
 from unittest.mock import patch
 
 from scripts.api_agent import manual_astra_task2_high_v1 as m
@@ -175,7 +176,7 @@ class AstraOneShotTests(unittest.TestCase):
             "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
         low, high, n = pending_risk(ledger)
         # Native POSTs settled; all original holds and the distinct MAEVE hold remain counted.
-        self.assertEqual((low, high, n), (0.0, 61.0, 9))   # the canonical USD20 R2 (consumed) + USD3 Alpha-on-Sol + USD3 Sol A/B (consumed) + USD20 Navigator One + USD3 Navigator-on-Sol + 3x USD3 Navigator app research on Sol + USD3 Supervisor Evolution mission rows (#1156)
+        self.assertEqual((low, high, n), expected_pending())
         value = json.loads(ledger.read_text(encoding="utf-8"))
         self.assertEqual(len(value["settled"]), 3)
         self.assertEqual(value["provider_settlement_evidence"]["sha256"],
@@ -198,7 +199,7 @@ class AstraOneShotTests(unittest.TestCase):
         probe = self.root / "future-liability.json"
         probe.write_text(json.dumps(value), encoding="utf-8")
         future_low, future_high, future_count = pending_risk(probe)
-        self.assertEqual((future_low, future_high, future_count), (0.0, 68.0, 9))   # plus the canonical USD20 R2 (consumed) + USD3 Alpha-on-Sol + USD3 Sol A/B (consumed) + USD20 Navigator One + USD3 Navigator-on-Sol + 3x USD3 Navigator app research on Sol mission rows
+        self.assertEqual((future_low, future_high, future_count), expected_pending(value))
 
     def test_original_director_live_secret_not_corrupted(self):
         yml = (Path(__file__).resolve().parents[2] /
