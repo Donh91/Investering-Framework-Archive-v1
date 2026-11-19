@@ -17,23 +17,14 @@
   "decision": "FALSIFY",
   "decision_reason": "Resolve deterministic integrity/cohort blockers before scoring or external interpretation.",
   "deltas": [
-    "m6_event_count:340->359",
-    "feature_row_count:340->359",
-    "pit_verified_feature_rows:319->338",
-    "matured_event_counts.14d:218->224",
-    "matured_event_counts.24h:326->340",
-    "matured_event_counts.30d:61->69",
-    "matured_event_counts.72h:297->311",
-    "matured_event_counts.7d:264->270",
-    "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED",
-    "M6_MATURED_PAYLOAD_INTEGRITY_CHANGED"
+    "pullback_risk_state:ELEVATED->UNAVAILABLE"
   ],
   "external_routing": {
     "automatic_dispatch": false,
     "claude_recommended": false,
     "sol_recommended": false
   },
-  "generated_at_utc": "2026-11-19T10:17:25.865189Z",
+  "generated_at_utc": "2026-11-19T10:34:53.329286Z",
   "material_delta": true,
   "prior_false_bootstrap_supersession": null,
   "rules": {
@@ -42,7 +33,7 @@
     "raw_external_output_canonical": false,
     "warning_is_sell": false
   },
-  "semantic_fingerprint": "f63026eeb3eef4f0400b3729b35d86d71513a750741d14291cda2af0563fc5de",
+  "semantic_fingerprint": "5403a759946939f4f322d74f18791a7ba40fa63e1ce08ba65065904f02bfeb3a",
   "semantic_state": {
     "blockers": [
       "PIT_UNVERIFIED_FEATURE_ROWS"
@@ -89,7 +80,7 @@
     },
     "pit_unverified_feature_rows": 21,
     "pit_verified_feature_rows": 338,
-    "pullback_risk_state": "ELEVATED",
+    "pullback_risk_state": "UNAVAILABLE",
     "task15_research_admission": {
       "automatic_promotion": false,
       "collection_policy_change": false,
@@ -111,22 +102,22 @@
   "source_bindings": {
     "calibration": {
       "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-      "sha256": "1191cc7b4379c2036351530bd26abe2f96fc55fb50a9eb22404f7a7ee1bcbd3b",
+      "sha256": "80b41af20ea2919b161dfa42ef712996cf7127a11a3e05dfc47a8605ab742f11",
       "status": "PASS"
     },
     "compass_freeze": {
-      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/19/CMP-20261119-3eddae1a92cd.json",
-      "sha256": "94ef550689bc826ad7cb71f67fa47f26752926221e3ce6d10bf48e4200df6d70",
+      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/19/CMP-20261119-655fd5bdbeeb.json",
+      "sha256": "a5fea4596a8308489d69dc59ef8a3671f27774f6d676e2d29a15b6c74ff7b450",
       "status": "PASS"
     },
     "compass_pointer": {
       "path": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
-      "sha256": "b814d180746af0ee8ab67f3bf9fe600d5b05837421167a8a1a4198b5aa0cb170",
+      "sha256": "7b3b9327a65716b5f4c8a8daac861469436ae2eabc73aae645a9091008a1e99d",
       "status": "PASS"
     },
     "edge_features": {
       "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
-      "sha256": "c74fbdbad466b71fb4b6b1b71f5524ff622f18c1983cc7eb0fa46b70052b3f5c",
+      "sha256": "a44bddd70cf5c3a7016ba19d93dcb7cc2a229d481db2d399acc2e5658b6212eb",
       "status": "PASS"
     },
     "latest_sol": {
@@ -138,7 +129,7 @@
     },
     "m6_events": {
       "path": "research/framework_memory/m6_warning_events/LATEST.json",
-      "sha256": "9d9ad3ee46a33c1c247d0c8bfba6bd9221ac6db5cdf8f6eafc43e200029363c7",
+      "sha256": "8888be24790ac81df9419105dfeb46253166a322e6a39995f20fc99b7b1b67d1",
       "status": "PASS"
     },
     "task15_gate": {
