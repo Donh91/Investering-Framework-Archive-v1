@@ -345,15 +345,14 @@ def action_context(auto_state: Mapping[str, Any], *, as_of: datetime | None = No
     entry = ns.get("entry_signal_reference") or {}
     ratio = finite(live.get("ethbtc"))
     advance = finite(breadth.get("advance_ratio"))
-    blockers = list(auto_state.get("blockers") or [])
+    blockers = _core_blockers(auto_state)
+    alt_blockers = [lane for lane in list(auto_state.get("blockers") or []) if lane in ALT_SCOPED_LANES]
     validation = str(auto_state.get("validation_status") or "UNKNOWN")
-    decision_health = str(auto_state.get("decision_context_status") or "UNKNOWN")
     entry_state = entry.get("state") if isinstance(entry, Mapping) else None
 
     healthy = (
         validation != "FAIL"
-        and decision_health == "PASS"
-        and not blockers
+        and _core_decision_ready(auto_state)
         and _health_ok(auto_state, as_of)
     )
 
@@ -373,6 +372,8 @@ def action_context(auto_state: Mapping[str, Any], *, as_of: datetime | None = No
     why.append("BREADTH_ACTION_AUTHORITY=RETIRED_ZERO_WEIGHT")
     if blockers:
         why.append("BLOCKERS=" + ",".join(blockers))
+    if alt_blockers:
+        why.append("ALT_CONTEXT_DEGRADED=" + ",".join(alt_blockers))
 
     return {
         "NOW": now,
@@ -394,11 +395,9 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
     freshness = owner_freshness(auto_state, generated)
     source_validation = str(auto_state.get("validation_status") or "UNKNOWN")
     decision_context_status = str(auto_state.get("decision_context_status") or "UNKNOWN")
-    decision_blockers = list(auto_state.get("blockers") or [])
     decision_ready = (
         source_validation != "FAIL"
-        and decision_context_status == "PASS"
-        and not decision_blockers
+        and _core_decision_ready(auto_state)
     )
     # Optional/non-decision lanes remain visible in provider/source health, but
     # must not alone suppress a healthy governed Compass decision context.
@@ -424,6 +423,7 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
             "decision_context_status": auto_state.get("decision_context_status"),
             "blockers": list(auto_state.get("blockers") or []),
             "optional_degraded_lanes": list(auto_state.get("optional_degraded_lanes") or []),
+            "alt_context_status": "USABLE" if _alt_context_usable(auto_state) else "DEGRADED_ALT_OUTPUTS_UNAVAILABLE",
             "owner_freshness": freshness,
             "provider_health": provider,
         },
@@ -727,12 +727,43 @@ def owner_freshness(auto_state: Mapping[str, Any], as_of: datetime) -> dict[str,
     }
 
 
+# Lane-scoped degradation (2026-11-19, Research Closure RC09/K06). altseason_context is CONTEXT_ONLY for the
+# BTC/ETH core: one failed BlockchainCenter scrape blanked direction, every horizon, the ladder and protection
+# (7 episodes since 2026-09-26, about 46 h). It still blocks every altcoin output (the 3-8w altcoin cycle lane
+# and every alt ladder rung) unless its health is PASS or the <=72 h DEGRADED_CARRY of #2244. The upstream
+# registry, blockers list and native recovery stay unchanged: this only stops a context lane from failing the core.
+ALT_SCOPED_LANES = frozenset({"altseason_context"})
+ALT_CONTEXT_USABLE = frozenset({"PASS", "DEGRADED_CARRY"})
+ALT_LADDER_SEGMENTS = frozenset({"LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS"})
+
+
+def _core_blockers(auto_state: Mapping[str, Any]) -> list[str]:
+    return [lane for lane in list(auto_state.get("blockers") or []) if lane not in ALT_SCOPED_LANES]
+
+
+def _alt_context_usable(auto_state: Mapping[str, Any]) -> bool:
+    """Alt outputs fail closed only when the producer listed altseason_context as a blocker and its health is
+    neither PASS nor the bounded DEGRADED_CARRY (the producer lists any non-PASS required lane as a blocker)."""
+    if "altseason_context" not in list(auto_state.get("blockers") or []):
+        return True
+    status = nested(auto_state, "source_health", "altseason_context", "status")
+    return str(status or "") in ALT_CONTEXT_USABLE
+
+
+def _core_decision_ready(auto_state: Mapping[str, Any]) -> bool:
+    """decision_context PASS, or DEGRADED only because of alt-scoped context lanes."""
+    blockers = list(auto_state.get("blockers") or [])
+    status = str(auto_state.get("decision_context_status") or "UNKNOWN")
+    if _core_blockers(auto_state):
+        return False
+    return status == "PASS" or (status == "DEGRADED" and bool(blockers))
+
+
 def _health_ok(auto_state: Mapping[str, Any], as_of: datetime | None = None) -> bool:
     validation = str(auto_state.get("validation_status") or "UNKNOWN")
     structural = (
         validation != "FAIL"
-        and str(auto_state.get("decision_context_status") or "UNKNOWN") == "PASS"
-        and not list(auto_state.get("blockers") or [])
+        and _core_decision_ready(auto_state)
     )
     if not structural:
         return False
@@ -884,6 +915,25 @@ def _unavailable_horizon(reason: str) -> dict[str, Any]:
         "eta": None,
         "confidence": None,
     }
+
+
+ALT_CONTEXT_DEGRADED_REASON = (
+    "Altseason context is degraded (not PASS and no <=72 h carry); the altcoin lanes fail closed while the BTC/ETH lanes stay live."
+)
+
+
+def _scoped_altcoin_cycle_lane(
+    auto_state: Mapping[str, Any], cn_package: Mapping[str, Any] | None, posture: str, issued: datetime,
+) -> dict[str, Any]:
+    if not _alt_context_usable(auto_state):
+        return {
+            **_unavailable_horizon(ALT_CONTEXT_DEGRADED_REASON),
+            "state": "UNCLEAR",
+            "warning": "NONE",
+            "through_date": None,
+            "horizon_days": None,
+        }
+    return _altcoin_cycle_lane(cn_package, posture, issued)
 
 
 def _altcoin_cycle_lane(cn_package: Mapping[str, Any] | None, posture: str, issued: datetime) -> dict[str, Any]:
@@ -1283,7 +1333,7 @@ def horizon_map(
             "NEXT_1_3D": dict(forward_unavailable),
             "NEXT_5_7D": dict(forward_unavailable),
             "NEXT_2_3W": dict(forward_unavailable),
-            "CYCLE_ALTCOINS_3_8W": _altcoin_cycle_lane(None, posture, as_of or datetime.now(timezone.utc)),
+            "CYCLE_ALTCOINS_3_8W": _scoped_altcoin_cycle_lane(auto_state, None, posture, as_of or datetime.now(timezone.utc)),
         }
 
     if d13_source == "UNAVAILABLE":
@@ -1366,7 +1416,7 @@ def horizon_map(
             } if d23_source == "NO_EDGE"
             else _unavailable_horizon("Structured Cycle Navigator 2-3 week decision projection is unavailable."))
         ),
-        "CYCLE_ALTCOINS_3_8W": _altcoin_cycle_lane(cn_package, posture, as_of or datetime.now(timezone.utc)),
+        "CYCLE_ALTCOINS_3_8W": _scoped_altcoin_cycle_lane(auto_state, cn_package, posture, as_of or datetime.now(timezone.utc)),
     }
 
 
@@ -1418,7 +1468,16 @@ def capitalization_ladder(
     deteriorate = {"type": "ACTION_STATE", "states": ["HOLD_DEFENSIVE_WAIT", "HOLD_WAIT_DATA_DEGRADED"]}
     eta_by_state = {"HOLD": "now", "DEPLOY": "now", "PREPARE": "0-3d", "WAIT": "1-7d conditional", "HARD_WAIT": "no fixed ETA"}
     rows = []
+    alt_usable = _alt_context_usable(auto_state)
     for seg, state in zip(CAPITALIZATION_ORDER[:-1], states):
+        if seg in ALT_LADDER_SEGMENTS and not alt_usable:
+            rows.append({
+                "segment": seg, "status": "UNAVAILABLE", "action": "UNAVAILABLE", "direction": "UNAVAILABLE", "eta": None,
+                "reason": ALT_CONTEXT_DEGRADED_REASON,
+                "upgrade_trigger": {"type": "SOURCE_HEALTH", "lane": "altseason_context", "states": sorted(ALT_CONTEXT_USABLE)},
+                "deterioration_trigger": deteriorate,
+            })
+            continue
         rows.append({
             "segment": seg,
             "status": state,
