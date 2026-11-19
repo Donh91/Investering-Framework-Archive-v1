@@ -2859,5 +2859,107 @@ class ApiBudgetAndRateLimits(unittest.TestCase):
         self.assertEqual(len(writes), 20)
 
 
+class T3CompactDrift(unittest.TestCase):
+    """2026-11-19 S1_TOOL_SHAPE_AUDIT_v1: the connector's compare_commits answer has status, total_commits, too_large and
+    files but no commit list; raw REST compare has commits but only the UNION of files. Neither attributes a file to a
+    commit, so the C1b halt test could never be decided (live tick 13:45Z: BRIEF_INCOMPLETE(T3:comparison_not_verified)).
+    T3 now decides from the compact answer alone when no code path changed, and attributes code changes by root-tree
+    entries between squash merges. REFERENCE below is the decision procedure the TICK text states, run on synthetic ranges."""
+
+    T3 = TICK[TICK.index("T3 MAIN DRIFT"):TICK.index("IF THE BRIEF FAILED")]
+    HALT_DIRS = ("scripts", "tests", ".github", ".agents", "00_FMOS")
+
+    def test_tick_text_states_the_procedure(self):
+        for needle in ("Otherwise read the connector's compare_commits B.main...M (status, total_commits, too_large, files; no commit list).",
+                       "Status not ahead: BRIEF_UNVERIFIED(main_not_ahead); over 100 commits, too_large, or 300 or more files: BRIEF_STALE(drift_unreadable).",
+                       "C1b HALT TEST, only when a filename or previous_filename lies under scripts/, tests/, .github/, .agents/ or 00_FMOS/:",
+                       "fetch API/commits?sha=M&per_page=100 and go back by parents[0] to B.main (not reached, or two parents: BRIEF_INCOMPLETE(T3:range))",
+                       "a squash merge of a PR is a commit whose subject ends (#<n>)",
+                       "compare the scripts, tests, .github, .agents and 00_FMOS entries of fetch API/git/trees/<sha> (not recursive)",
+                       "from B.main to the parent of the first squash merge, from each squash merge to the parent of the next, and from the last squash merge to M",
+                       "post the S1_LANE_HALTED of C1b for the first commit whose entries differ from its parent's (unless one names it) and end the run",
+                       "over 20 tree reads: BRIEF_INCOMPLETE(T3:attribution_budget).",
+                       "Then a changed path that is AGENTS.md"):
+            self.assertIn(needle, self.T3)
+        self.assertLess(self.T3.index("C1b HALT TEST"), self.T3.index("Then a changed path"))   # the halt is decided before the stale
+        self.assertNotIn("compare_commits B.main...M and apply ACTION_LOOP.md C1b", self.T3)   # the undecidable 13:45Z wording
+        self.assertIn("A changed code path adds the reads of the T3 halt test (at most 21).", TICK)
+
+    # ---- reference model: commits = [(sha, parent, subject)] from oldest to newest; trees[sha] = {dir: tree sha}
+    def reference(self, files, commits, trees, base, status="ahead", too_large=False):
+        if status != "ahead":
+            return "BRIEF_UNVERIFIED(main_not_ahead)", 0
+        if len(commits) > 100 or too_large or len(files) >= 300:
+            return "BRIEF_STALE(drift_unreadable)", 0
+        if any(f.split("/")[0] in self.HALT_DIRS for f in files):
+            if not commits or commits[0][1] != base:
+                return "BRIEF_INCOMPLETE(T3:range)", 1
+            reads = 0
+            def five(sha):
+                nonlocal reads
+                reads += 1
+                return tuple(trees[sha].get(d) for d in self.HALT_DIRS)
+            squash = [i for i, c in enumerate(commits) if re.search(r"\(#\d+\)$", c[2])]
+            anchors, start = [], base
+            for i in squash:
+                anchors.append((start, commits[i][1], i))
+                start = commits[i][0]
+            anchors.append((start, commits[-1][0], len(commits)))
+            for a, b, _ in anchors:
+                if a != b and five(a) != five(b):
+                    for sha, parent, subject in commits:
+                        if five(sha) != five(parent) and not re.search(r"\(#\d+\)$", subject):
+                            return f"HALT({sha})", reads + 1
+            if reads > 20:
+                return "BRIEF_INCOMPLETE(T3:attribution_budget)", reads + 1
+        if any(f.split("/")[0] in ("00_FMOS", ".github", ".agents", "scripts") or f == "AGENTS.md"
+               or re.search(r"\.(py|sh|ya?ml|toml|cfg|ini|pth|mjs|js)$", f) for f in files):
+            return "BRIEF_STALE(source_changed)", 0
+        return "OK", 0
+
+    def chain(self, specs):
+        """specs: list of (subject, changes_dir or None); returns commits, trees, base."""
+        trees = {"base": {d: d + "0" for d in self.HALT_DIRS}}
+        commits, prev = [], "base"
+        for i, (subject, changed) in enumerate(specs, 1):
+            sha = f"c{i}"
+            t = dict(trees[prev])
+            if changed:
+                t[changed] = t[changed] + "x"
+            trees[sha] = t
+            commits.append((sha, prev, subject))
+            prev = sha
+        return commits, trees, "base"
+
+    def test_data_only_drift_is_one_call_and_ok(self):
+        commits, trees, base = self.chain([("data: capture", None), ("ops: recovery", None)])
+        self.assertEqual(self.reference(["03_DAILY_CAPTURE_LOGS/x.json"], commits, trees, base), ("OK", 0))
+
+    def test_the_live_1345z_range_is_source_changed_without_a_halt(self):
+        # b73a9832 -> d4866112 (data) -> 32b4f362 (#2246, 00_FMOS and scripts) -> five data commits -> 563a82fd
+        commits, trees, base = self.chain([("learning: entry signal ledger", None),
+                                           ("S1 liveness: apply Claude combined R2 package byte-exact (#2246)", "00_FMOS"),
+                                           ("ops: native market recovery", None), ("learning: native Handlekompas", None),
+                                           ("ops: native market recovery", None), ("health: audit", None), ("ops: dashboard", None)])
+        trees["c2"]["scripts"] = "scriptsx"; [trees[c].update(scripts="scriptsx") for c in ("c3", "c4", "c5", "c6", "c7")]
+        got, reads = self.reference(["00_FMOS/S1/BOOTSTRAP.txt", "scripts/orchestration/framework_metronome_v1.py",
+                                     "04_MARKET_LEARNING/a.json"], commits, trees, base)
+        self.assertEqual(got, "BRIEF_STALE(source_changed)")
+        self.assertLessEqual(reads, 4)
+
+    def test_an_unreviewed_code_commit_is_named_and_halts(self):
+        commits, trees, base = self.chain([("data: capture", None), ("chore: tweak", "scripts"), ("data: capture", None)])
+        self.assertEqual(self.reference(["scripts/x.py"], commits, trees, base)[0], "HALT(c2)")
+        commits, trees, base = self.chain([("feat (#9)", "tests"), ("data: x", None), ("bot: sneaky", ".github")])
+        self.assertEqual(self.reference([".github/workflows/a.yml", "tests/t.py"], commits, trees, base)[0], "HALT(c3)")
+
+    def test_broken_range_and_bounds_fail_closed(self):
+        commits, trees, base = self.chain([("data", None)])
+        self.assertEqual(self.reference(["scripts/a.py"], commits, trees, "elsewhere")[0], "BRIEF_INCOMPLETE(T3:range)")
+        self.assertEqual(self.reference(["a.json"], commits, trees, base, status="behind")[0], "BRIEF_UNVERIFIED(main_not_ahead)")
+        self.assertEqual(self.reference(["a.json"] * 300, commits, trees, base)[0], "BRIEF_STALE(drift_unreadable)")
+        self.assertEqual(self.reference(["a.json"], commits, trees, base, too_large=True)[0], "BRIEF_STALE(drift_unreadable)")
+
+
 if __name__ == "__main__":
     unittest.main()
