@@ -697,18 +697,19 @@ class TestCostGuard(unittest.TestCase):
                           ("ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118-SOL", "OWNER_RESERVED_PREHTTP", 0, 3, 1),
                           ("ASTRA-NAVIGATOR-APP-ARCH-20261119-SOL", "OWNER_RESERVED_PREHTTP", 0, 3, 1),
                           ("ASTRA-NAVIGATOR-APP-WALLET-20261119-SOL", "OWNER_RESERVED_PREHTTP", 0, 3, 1),
-                          ("ASTRA-NAVIGATOR-APP-REG-20261119-SOL", "OWNER_RESERVED_PREHTTP", 0, 3, 1)])
+                          ("ASTRA-NAVIGATOR-APP-REG-20261119-SOL", "OWNER_RESERVED_PREHTTP", 0, 3, 1),
+                          ("ASTRA-S1-SUPERVISOR-EVOLUTION-20261119-SOL", "OWNER_RESERVED_PREHTTP", 0, 3, 1)])
         self.assertEqual((rows[0]["consumed_run_id"], rows[0]["consumed_response_id"],
                           rows[0]["consumed_estimated_upper_usd"]),
                          (44386340009, "resp_0477227a70790153006afe044ec9c487d08ebd44a0466687db", 3.13212))
-        self.assertEqual(res.mission_reservations(json.loads(CANONICAL_LEDGER.read_text()), set())[:2], (58.0, 8))
+        self.assertEqual(res.mission_reservations(json.loads(CANONICAL_LEDGER.read_text()), set())[:2], (61.0, 9))
         for mid in (ALPHA_MID, SOL_MID):
             proc = subprocess.run([sys.executable, str(GUARD), "--receipt-root", str(self.tmp / "receipts"),
                                    "--hard-stop-usd", str(self.stop), "--reserve-usd", "4", "--new-request-upper-usd", "0",
                                    "--liability-ledger", str(CANONICAL_LEDGER), "--owner-astra-mission-id", mid],
                                   capture_output=True, text=True, cwd=ROOT, timeout=120)
             self.assertEqual(proc.returncode, 0, proc.stdout)
-            self.assertEqual(json.loads(proc.stdout)["pending_liability_upper_usd"], 58.0)
+            self.assertEqual(json.loads(proc.stdout)["pending_liability_upper_usd"], 61.0)
         # The consumed R2 row stays counted but can never launch again.
         with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
             m.check_reservation(MID, 20)
@@ -717,6 +718,7 @@ class TestCostGuard(unittest.TestCase):
             m.check_reservation(SOL_MID, 3)
         with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER):
             m.check_reservation(ALPHA_MID, 3)   # Alpha (rerouted to Sol, USD3) remains launchable once
+            m.check_reservation("ASTRA-S1-SUPERVISOR-EVOLUTION-20261119-SOL", 3)  # newly admitted one-shot Sol research
 
     def test_consumed_row_still_counted_in_full(self):
         code, result = self.guard([consumed_row()], hard_stop=50)

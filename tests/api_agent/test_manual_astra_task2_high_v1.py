@@ -175,7 +175,7 @@ class AstraOneShotTests(unittest.TestCase):
             "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json")
         low, high, n = pending_risk(ledger)
         # Native POSTs settled; all original holds and the distinct MAEVE hold remain counted.
-        self.assertEqual((low, high, n), (0.0, 58.0, 8))   # the canonical USD20 R2 (consumed) + USD3 Alpha-on-Sol + USD3 Sol A/B (consumed) + USD20 Navigator One + USD3 Navigator-on-Sol + 3x USD3 Navigator app research on Sol mission rows (#1156)
+        self.assertEqual((low, high, n), (0.0, 61.0, 9))   # the canonical USD20 R2 (consumed) + USD3 Alpha-on-Sol + USD3 Sol A/B (consumed) + USD20 Navigator One + USD3 Navigator-on-Sol + 3x USD3 Navigator app research on Sol + USD3 Supervisor Evolution mission rows (#1156)
         value = json.loads(ledger.read_text(encoding="utf-8"))
         self.assertEqual(len(value["settled"]), 3)
         self.assertEqual(value["provider_settlement_evidence"]["sha256"],
