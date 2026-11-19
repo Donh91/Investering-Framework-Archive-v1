@@ -111,6 +111,35 @@ def git_bytes(repo_root: Path, sha: str, path: str) -> tuple[bytes, dict[str, An
     return raw, {"repository": REPO, "exact_commit_sha": sha, "exact_path": path, "git_blob_sha": blob, "raw_response_sha256": h(raw)}
 
 
+def hourly_price_fields_valid(row: Any) -> bool:
+    """CSV prices must be finite, strictly positive numbers, not missing or bool."""
+    if not isinstance(row, Mapping):
+        return False
+    for key in ("btc_close", "eth_close", "ethbtc_close"):
+        value = row.get(key)
+        if isinstance(value, bool):
+            return False
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError, OverflowError):
+            return False
+        if not math.isfinite(parsed) or parsed <= 0:
+            return False
+    return True
+
+
+def hourly_market_source_health(pointer_health: Mapping[str, Any], row_health: Mapping[str, Any]) -> dict[str, Any]:
+    """A valid pointer is necessary but not sufficient for exact-row health."""
+    result = {**pointer_health, "row": dict(row_health)}
+    if pointer_health.get("status") != "PASS":
+        result["status"] = pointer_health.get("status") or "UNAVAILABLE"
+    elif row_health.get("status") != "PASS":
+        result["status"] = "UNAVAILABLE"
+        result["classification"] = row_health.get("classification") or "HOURLY_EXACT_ROW_UNAVAILABLE"
+        result["pointer_classification"] = pointer_health.get("classification")
+    return result
+
+
 def hourly_row(repo_root: Path, sha: str, result: Mapping[str, Any]) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     end = ptime(nested(result, "target", "window_end_utc"))
     if not end:
@@ -124,6 +153,8 @@ def hourly_row(repo_root: Path, sha: str, result: Mapping[str, Any]) -> tuple[di
         row = next((item for item in reversed(rows) if item.get("timestamp_utc") == expected), None)
         if not row:
             return None, {"status": "UNAVAILABLE", "classification": "HOURLY_EXACT_ROW_MISSING", "expected": expected, "provenance": provenance}
+        if not hourly_price_fields_valid(row):
+            return None, {"status": "UNAVAILABLE", "classification": "HOURLY_EXACT_ROW_INVALID_REQUIRED_PRICES", "expected": expected, "provenance": provenance}
         return row, {"status": "PASS", "classification": "HOURLY_EXACT_ROW_BOUND", "timestamp_utc": expected, "provenance": provenance}
     except Exception as exc:
         return None, {"status": "UNAVAILABLE", "classification": type(exc).__name__, "detail": str(exc), "path": path}
@@ -742,7 +773,7 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     health["live_anchor"] = live_health
     hourly, hourly_health = resolve(snapshot, "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json", ti.HOURLY_POINTER, now, timedelta(hours=3))
     row, row_health = hourly_row(repo_root, snapshot.commit_sha, hourly or {})
-    health["hourly_market"] = {**hourly_health, "row": row_health, "status": "PASS" if hourly_health.get("status") == "PASS" and row_health.get("status") == "PASS" else hourly_health.get("status")}
+    health["hourly_market"] = hourly_market_source_health(hourly_health, row_health)
     market_metrics = nested(live, "target", "market_metrics") or {}
     derivatives = market_metrics.get("derivatives") or {}
     microstructure = market_metrics.get("microstructure") or {}
