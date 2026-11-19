@@ -121,6 +121,8 @@ class Base(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.tmp)
         self.out = self.tmp / "out"
         ledger = json.loads(CANONICAL_LEDGER.read_text())
+        # Synthetic launcher rows cannot carry the real ledger's settlement proofs.
+        ledger.pop(res.provider_settlement.KEY, None)
         ledger["astra_mission_reservations"] = [reservation()]
         self.ledger = self.tmp / "ledger.json"
         self.ledger.write_text(json.dumps(ledger))
