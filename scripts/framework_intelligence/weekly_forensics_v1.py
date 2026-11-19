@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, hashlib, json
+import argparse, hashlib, json, math, re
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
@@ -39,6 +39,58 @@ def finding(module,severity,route,reason,evidence,owner,next_action,stop,gate,co
             "cheapest_sufficient_executor":"DETERMINISTIC" if route in {"SELF_HEAL_SAFE","DETERMINISTIC_REPAIR","NO_ACTION","WAIT_FOR_EVIDENCE"} else "OWNER_OR_SPECIALIST",
             "next_action":next_action,"stop_condition":stop,"acceptance_gate":gate}
 
+def surgical_source_findings(root):
+    """Bounded, read-only FSA source-contract scan; never an alternative market owner."""
+    pointer_path = "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json"
+    pointer = read(root / pointer_path, {})
+    path = pointer.get("packet_path") if isinstance(pointer, dict) else None
+    def unavailable():
+        return [finding("DATA_EVIDENCE_INTEGRITY", "HIGH", "SOURCE_OWNER",
+            "FSA auto-market packet binding unavailable or invalid",
+            [pointer_path], "#1827", "verify original pointer and self-digest",
+            "stop if a newer verified packet supersedes the observation", "EXACT_PACKET_DIGEST_AND_LINEAGE", "HIGH")]
+    if not isinstance(path, str) or not re.fullmatch(
+        r"04_MARKET_LEARNING/entry_signals/auto_market_state/runs/\d{4}/\d{2}/\d{2}/\d{6}_[0-9a-f]{12}\.json", path):
+        return unavailable()
+    packet = read(root / path, {})
+    if not isinstance(packet, dict):
+        return unavailable()
+    try:
+        payload = (json.dumps({k:v for k,v in packet.items() if k != "packet_sha256"},
+            sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False) + "\n").encode()
+    except (ValueError, TypeError):
+        return unavailable()
+    digest = hashlib.sha256(payload).hexdigest()
+    if digest != packet.get("packet_sha256") or digest != pointer.get("packet_sha256"):
+        return unavailable()
+    def get(value, *keys):
+        for key in keys:
+            if not isinstance(value, dict):
+                return None
+            value = value.get(key)
+        return value
+    def numeric(value):
+        return type(value) in (int, float) and math.isfinite(value)
+    checks = [
+        ("hourly_market", get(packet,"source_health","hourly_market","row","status") == "PASS"
+         and all(numeric(get(packet,"normalized_state","live_market",k))
+                 and get(packet,"normalized_state","live_market",k) > 0
+                 for k in ("btc_usdt","eth_usdt","ethbtc")),
+         "FSA hourly PASS without valid exact row or required prices"),
+        ("altseason_context", get(packet,"normalized_state","altseason_context","blockchaincenter_altcoin_season","status") == "PASS"
+         and numeric(get(packet,"normalized_state","altseason_context","blockchaincenter_altcoin_season","horizons","90","published_score"))
+         and 0 <= get(packet,"normalized_state","altseason_context","blockchaincenter_altcoin_season","horizons","90","published_score") <= 100,
+         "FSA altseason PASS without valid BlockchainCenter 90d"),
+    ]
+    findings = []
+    for lane, complete, reason in checks:
+        if get(packet, "source_health", lane, "status") == "PASS" and not complete:
+            findings.append(finding("DATA_EVIDENCE_INTEGRITY","HIGH","SOURCE_OWNER",reason,
+                [pointer_path,path],"#1827","dedup existing PR then reproduce and repair producer contract",
+                "stop if existing PR covers defect or newer verified producer/consumer has corrected it",
+                "EXACT_SOURCE_NEGATIVE_TEST_AND_NATURAL_CONSUMER_READBACK","HIGH"))
+    return findings
+
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--repo-root",default="."); ap.add_argument("--output-root",default="research/framework_learning/weekly_forensics"); ap.add_argument("--mode",choices=["PRELIMINARY","FINAL"],default="FINAL"); ap.add_argument("--as-of-utc"); a=ap.parse_args()
     root=Path(a.repo_root); out=root/a.output_root
@@ -55,7 +107,7 @@ def main():
       "compounding":root/"00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/STATE.json",
       "phase1":root/"research/framework_intelligence/phase1/LATEST.json",
     }
-    src={k:read(p,{}) or {} for k,p in paths.items()}; findings=[]
+    src={k:read(p,{}) or {} for k,p in paths.items()}; findings=surgical_source_findings(root)
 
     pb=src["pullback"]; elig=src["eligibility"]
     suspended=(str(pb.get("eligibility_status",{}).get("status","")).startswith("SUSPENDED") or str(elig.get("status","")).startswith("SUSPENDED"))
