@@ -1,0 +1,50 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json",
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "scripts/research/task2_all_cn_astra_high_v1.py",
+    "scripts/research/task2_astra_public_w46w47_v1.py",
+    "tests/api_agent/test_manual_astra_task2_high_v1.py",
+    "tests/api_agent/test_owner_global_api_budget_cap.py",
+    "tests/research/test_manual_astra_maeve_task2_20261117.py",
+    "tests/research/test_manual_astra_research_program_20261116.py",
+    "tests/research/test_task2_astra_public_w46w47_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-1f3787f0e33b4576",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "api-budget-nine-consumed-astra-reservations-owner-150",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "fix(api-budget): reconcile nine consumed Astra reservations; owner $150 absolute cap (#2222)",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json": "41ebab9360edb2bf8acde4d7ee75200575c19b97",
+    "scripts/api_agent/check_monthly_cost_guard.py": "b242bd896fb0b630ff68921e5ceb084a31f5222d",
+    "scripts/research/task2_all_cn_astra_high_v1.py": "5ce2aea3a44da2afdbc7cb2f8ced5e701c576304",
+    "scripts/research/task2_astra_public_w46w47_v1.py": "870c42a639e59629708bbc341616d6ce3def3c37",
+    "tests/api_agent/test_manual_astra_task2_high_v1.py": "fc3f6cdc027c3bdf8c1d575cdb547d990651f016",
+    "tests/api_agent/test_owner_global_api_budget_cap.py": "aba5f673d5921559128ed78ce3c173cba5b7455c",
+    "tests/research/test_manual_astra_maeve_task2_20261117.py": "f393b2954ec2fa2be6b8d5c76886bd607d89b9e7",
+    "tests/research/test_manual_astra_research_program_20261116.py": "74c6caa7408eb08796fed31304220aee41c5074a",
+    "tests/research/test_task2_astra_public_w46w47_v1.py": "5f5c9df929ee942734ab27ec362e7c213486daf8"
+  },
+  "source_commit_sha": "1f3787f0e33b4576aafa4690cbf4ab3322eebd0d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-18T16:42:40+01:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix(api-budget): reconcile nine consumed Astra reservations; owner $150 absolute cap (#2222)"
+}
