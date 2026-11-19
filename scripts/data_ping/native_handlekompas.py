@@ -546,6 +546,23 @@ def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[
     market_sentiment = cfgi_symbols.get("MARKET") if isinstance(cfgi_symbols.get("MARKET"), Mapping) else {}
     altseason = ns.get("altseason_context") or {}
     source_health = auto_state.get("source_health") or {}
+    altseason_bc = nested(altseason, "blockchaincenter_altcoin_season")
+    altseason_value = finite(nested(altseason_bc, "horizons", "90", "published_score"))
+    altseason_observed = nested(altseason_bc, "observation_date_utc")
+    altseason_retrieved = nested(altseason_bc, "retrieved_at_utc")
+    altseason_health = nested(source_health, "altseason_context", "status")
+    # Explicit opt-in: only when the upstream owner itself marked the lane
+    # DEGRADED_CARRY (<= 72h) and the current value is missing, show the last
+    # valid BC 90d value as degraded context with its age. Never PASS.
+    altseason_carry = ns.get("altseason_carry") if altseason_health == "DEGRADED_CARRY" else None
+    altseason_carry_used = (
+        altseason_value is None and isinstance(altseason_carry, Mapping)
+        and finite(altseason_carry.get("value")) is not None
+    )
+    if altseason_carry_used:
+        altseason_value = finite(altseason_carry.get("value"))
+        altseason_observed = altseason_carry.get("source_observation_date_utc")
+        altseason_retrieved = altseason_carry.get("source_retrieved_at_utc")
     packet_observed = auto_state.get("packet_generated_at_utc")
     packet_source = packet_path.as_posix()
 
@@ -591,7 +608,7 @@ def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[
         _feature("sentiment_market_score", finite(market_sentiment.get("score")), "index", packet_source, market_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
         _feature("sentiment_btc_score", finite(btc_sentiment.get("score")), "index", packet_source, btc_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
         _feature("sentiment_eth_score", finite(eth_sentiment.get("score")), "index", packet_source, eth_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
-        _feature("altseason_score_90d", finite(nested(altseason, "blockchaincenter_altcoin_season", "horizons", "90", "published_score")), "index", packet_source, nested(altseason, "blockchaincenter_altcoin_season", "observation_date_utc"), nested(source_health, "altseason_context", "status"), source_owner="BLOCKCHAINCENTER", retrieved_at=nested(altseason, "blockchaincenter_altcoin_season", "retrieved_at_utc")),
+        _feature("altseason_score_90d", altseason_value, "index", packet_source, altseason_observed, altseason_health, source_owner="BLOCKCHAINCENTER", retrieved_at=altseason_retrieved),
         _feature("entry_signal_state", nested(ns, "entry_signal_reference", "state"), None, packet_source, nested(ns, "entry_signal_reference", "generated_at_utc"), nested(source_health, "entry_signal_reference", "status"), source_owner="ENTRY_SIGNAL_LEDGER"),
         _feature("btc_delta_since_prior_packet_pct", _delta_pct(auto_state, "btc_usdt"), "pct", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="AUTO_MARKET_STATE_DELTA"),
         _feature("eth_delta_since_prior_packet_pct", _delta_pct(auto_state, "eth_usdt"), "pct", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="AUTO_MARKET_STATE_DELTA"),
@@ -601,6 +618,13 @@ def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[
         if row["feature_id"] in ("btc_funding", "eth_funding"):
             symbol = "BTC-USDT-SWAP" if row["feature_id"] == "btc_funding" else "ETH-USDT-SWAP"
             row.update(_funding_clock_metadata(auto_state, nested(derivative_live, symbol, "funding")))
+        if row["feature_id"] == "altseason_score_90d" and altseason_carry_used:
+            row.update({
+                "value_semantics": "DEGRADED_CARRY_LAST_VALID_BC_90D_NOT_FRESH",
+                "carry_age_hours": altseason_carry.get("age_hours"),
+                "carry_max_age_hours": altseason_carry.get("max_age_hours"),
+                "carry_source_packet_generated_at_utc": altseason_carry.get("source_packet_generated_at_utc"),
+            })
     available = sum(row["value"] is not None for row in rows)
     missing = [row["feature_id"] for row in rows if row["value"] is None]
     pass_lane_missing = [

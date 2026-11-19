@@ -546,6 +546,31 @@ def build_rotation_context(payload: bytes, retrieval: str) -> dict[str, Any]:
     }
 
 
+BLOCKCHAINCENTER_DRIFT_RECEIPT = "blockchaincenter_drift_receipt.json"
+BLOCKCHAINCENTER_DRIFT_STATES = frozenset({"BLOCKCHAINCENTER_SCHEMA_DRIFT", "BLOCKCHAINCENTER_RECONCILIATION_FAIL"})
+BLOCKCHAINCENTER_PARSER_CONTRACTS = ("NEXTJS_FLIGHT_ALTCOIN_PROPS_v1", "NEXTJS_FLIGHT_ALTCOIN_DENSE_SERIES_v2")
+
+
+def blockchaincenter_drift_receipt(context: dict[str, Any]) -> dict[str, Any] | None:
+    """Small machine-readable canary for parser drift; detection only, no repair."""
+    if context.get("failure_state") not in BLOCKCHAINCENTER_DRIFT_STATES:
+        return None
+    source = context.get("source") if isinstance(context.get("source"), dict) else {}
+    return {
+        "contract": "BLOCKCHAINCENTER_SCHEMA_DRIFT_RECEIPT_v1",
+        "source": "BlockchainCenter",
+        "source_url": BLOCKCHAINCENTER_URL,
+        "error_code": context["failure_state"],
+        "error_message": context.get("failure_message"),
+        "raw_sha256": source.get("raw_sha256"),
+        "raw_bytes": source.get("raw_bytes"),
+        "retrieved_at_utc": context.get("retrieved_at_utc"),
+        "parser_contracts_tried": list(BLOCKCHAINCENTER_PARSER_CONTRACTS),
+        "action": "DETECTION_ONLY_NO_AUTOMATIC_PARSER_CHANGE",
+        "authority": AUTHORITY,
+    }
+
+
 def degraded_rotation_context(retrieval: str, failure_state: str, message: str) -> dict[str, Any]:
     return {
         "contract": "BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1",
@@ -759,6 +784,7 @@ def run(
         "artifact_manifest.json", "owner_snapshot.json", "raw_blockchaincenter_altcoin_season.html.gz",
         "raw_coinmarketcap_altcoin_season.html.gz", "raw_source_payload.json", "receipt.json",
         "rotation_method_crosscheck_snapshot.json", "rotation_context_snapshot.json",
+        BLOCKCHAINCENTER_DRIFT_RECEIPT,
     ):
         (output / name).unlink(missing_ok=True)
     (output / "raw_source_payload.json").write_bytes(payload)
@@ -799,6 +825,10 @@ def run(
     }
     if include_extra_windows:
         receipt["extra_return_capture"] = owner["extra_return_capture"]
+    drift_receipt = blockchaincenter_drift_receipt(rotation_context)
+    if drift_receipt is not None:
+        (output / BLOCKCHAINCENTER_DRIFT_RECEIPT).write_text(json.dumps(drift_receipt, indent=2, sort_keys=True) + "\n")
+        receipt["rotation_context_drift_receipt"] = BLOCKCHAINCENTER_DRIFT_RECEIPT
     (output / "owner_snapshot.json").write_text(json.dumps(owner, indent=2, sort_keys=True) + "\n")
     (output / "rotation_context_snapshot.json").write_text(json.dumps(rotation_context, indent=2, sort_keys=True) + "\n")
     (output / "rotation_method_crosscheck_snapshot.json").write_text(json.dumps(coinmarketcap_context, indent=2, sort_keys=True) + "\n")

@@ -41,6 +41,11 @@ LANES = (
     "stablecoin_liquidity", "macro_risk", "sentiment", "altseason_context", "catalyst_context",
     "entry_signal_reference",
 )
+# BC 90d carry: last valid published value from an earlier capture, max age.
+ALTSEASON_CARRY_MAX_HOURS = 72
+# BC (Top-50) vs CMC (Top-100) 90d methods legitimately differ; only a gap
+# above this many index points is flagged, and only as a warning.
+ALTSEASON_CROSSCHECK_DIVERGENCE_POINTS = 35
 
 
 def canon(value: Any) -> bytes:
@@ -611,12 +616,103 @@ def sentiment_source_health(sentiment: Any) -> dict[str, str]:
     }
 
 
-def live_altseason_has_observation(altseason: Any) -> bool:
-    """PASS only for the BlockchainCenter 90-day score consumed by Kompas."""
+def _bc90_score(altseason: Any) -> float | None:
+    """The BlockchainCenter 90-day published score when PASS and in 0..100."""
     bc = nested(altseason, "blockchaincenter_altcoin_season")
     score = num(nested(bc, "horizons", "90", "published_score"))
-    return bool(isinstance(bc, Mapping) and bc.get("status") == "PASS"
-                and score is not None and 0 <= score <= 100)
+    if isinstance(bc, Mapping) and bc.get("status") == "PASS" and score is not None and 0 <= score <= 100:
+        return score
+    return None
+
+
+def live_altseason_has_observation(altseason: Any) -> bool:
+    """PASS only for the BlockchainCenter 90-day score consumed by Kompas."""
+    return _bc90_score(altseason) is not None
+
+
+def altseason_carry_candidate(prior: Any) -> dict[str, Any] | None:
+    """Most recent valid BC 90d observation held by the verified predecessor packet.
+
+    Either the predecessor's own fresh BC 90d observation, or the carry it
+    already exposed. The carried value is the source's published value, never
+    interpolated, and the age is always measured from the ORIGINAL source
+    retrieval, so chained carries can never extend the window.
+    """
+    bc = nested(prior, "normalized_state", "altseason_context", "blockchaincenter_altcoin_season")
+    score = _bc90_score(nested(prior, "normalized_state", "altseason_context"))
+    if score is not None and ptime(nested(bc, "retrieved_at_utc")) is not None:
+        return {
+            "value": score,
+            "source_retrieved_at_utc": bc["retrieved_at_utc"],
+            "source_observation_date_utc": bc.get("observation_date_utc"),
+            "source_raw_sha256": bc.get("source_raw_sha256"),
+            "source_packet_generated_at_utc": nested(prior, "packet_generated_at_utc"),
+            "carry_origin": "PREDECESSOR_PACKET_FRESH_OBSERVATION",
+        }
+    previous = nested(prior, "normalized_state", "altseason_carry")
+    value = num(nested(previous, "value"))
+    if (isinstance(previous, Mapping) and value is not None and 0 <= value <= 100
+            and ptime(previous.get("source_retrieved_at_utc")) is not None):
+        return {
+            "value": value,
+            "source_retrieved_at_utc": previous["source_retrieved_at_utc"],
+            "source_observation_date_utc": previous.get("source_observation_date_utc"),
+            "source_raw_sha256": previous.get("source_raw_sha256"),
+            "source_packet_generated_at_utc": previous.get("source_packet_generated_at_utc"),
+            "carry_origin": "PREDECESSOR_PACKET_CARRY",
+        }
+    return None
+
+
+def altseason_source_health(fresh: bool, prior: Any, now: datetime) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """Three-state BC 90d health: PASS, DEGRADED_CARRY (<= 72h), UNAVAILABLE.
+
+    ``fresh`` is live_altseason_has_observation() of the current capture.
+    DEGRADED_CARRY is never PASS: every consumer gating on PASS is unchanged.
+    CoinMarketCap is never used as the value (different methodology).
+    """
+    if fresh:
+        return {"status": "PASS", "classification": "LIVE_ANCHOR_ALTSEASON_CONTEXT"}, None
+    unavailable = {"status": "UNAVAILABLE", "classification": "BLOCKCHAINCENTER_90D_REQUIRED_VALUE_UNAVAILABLE"}
+    candidate = altseason_carry_candidate(prior)
+    source_time = ptime(nested(candidate, "source_retrieved_at_utc"))
+    if candidate is None or source_time is None or source_time > now:
+        return unavailable, None
+    age = now - source_time
+    if age > timedelta(hours=ALTSEASON_CARRY_MAX_HOURS):
+        return unavailable, None
+    carry = {
+        **candidate,
+        "age_hours": round(age.total_seconds() / 3600, 6),
+        "max_age_hours": ALTSEASON_CARRY_MAX_HOURS,
+        "semantics": "LAST_VALID_PUBLISHED_VALUE_CARRIED_NOT_INTERPOLATED_NOT_PASS",
+    }
+    return {
+        "status": "DEGRADED_CARRY",
+        "classification": "BLOCKCHAINCENTER_90D_CARRIED_FROM_PRIOR_CAPTURE",
+        "carry_age_hours": carry["age_hours"],
+        "carry_source_retrieved_at_utc": carry["source_retrieved_at_utc"],
+        "carry_max_age_hours": ALTSEASON_CARRY_MAX_HOURS,
+    }, carry
+
+
+def altseason_crosscheck(altseason: Any) -> dict[str, Any]:
+    """Informational BC-vs-CMC 90d warning only; it changes no signal or value."""
+    bc = _bc90_score(altseason)
+    cmc_row = nested(altseason, "coinmarketcap_altcoin_season")
+    cmc = num(nested(cmc_row, "published_score"))
+    if not (isinstance(cmc_row, Mapping) and cmc_row.get("status") == "PASS" and cmc is not None and 0 <= cmc <= 100):
+        cmc = None
+    out: dict[str, Any] = {
+        "status": "UNAVAILABLE", "bc": bc, "cmc": cmc, "abs_diff": None,
+        "divergence_threshold_points": ALTSEASON_CROSSCHECK_DIVERGENCE_POINTS,
+        "authority": "INFORMATIONAL_WARNING_ONLY_NO_SIGNAL_CHANGE",
+    }
+    if bc is not None and cmc is not None:
+        diff = abs(bc - cmc)
+        out["abs_diff"] = diff
+        out["status"] = "DIVERGENT" if diff > ALTSEASON_CROSSCHECK_DIVERGENCE_POINTS else "CONSISTENT"
+    return out
 
 
 def derivatives_source_health(derivatives: Any) -> dict[str, str]:
@@ -655,11 +751,9 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     altseason = market_metrics.get("altseason_context") or market_metrics.get("rotation_context") or {}
     health["derivatives"] = derivatives_source_health(derivatives)
     health["sentiment"] = sentiment_source_health(sentiment)
-    altseason_complete = live_altseason_has_observation(altseason)
-    health["altseason_context"] = {
-        "status": "PASS" if altseason_complete else "UNAVAILABLE",
-        "classification": "LIVE_ANCHOR_ALTSEASON_CONTEXT" if altseason_complete else "BLOCKCHAINCENTER_90D_REQUIRED_VALUE_UNAVAILABLE",
-    }
+    prior, predecessor_status = prior_packet(snapshot)
+    altseason_fresh = live_altseason_has_observation(altseason)
+    health["altseason_context"], altseason_carry = altseason_source_health(altseason_fresh, prior, now)
     breadth_raw, breadth_read_health = read_json(snapshot, BREADTH_OWNER)
     breadth, breadth_normalization_health = normalize_breadth(breadth_raw, now_utc=now)
     current_breadth = select_current_breadth(breadth, live_breadth_reference)
@@ -708,7 +802,6 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
         live_market = {"observation_open_utc": row.get("timestamp_utc"), "observation_semantics": "COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL", "btc_usdt": float(row["btc_close"]) if row.get("btc_close") else None, "eth_usdt": float(row["eth_close"]) if row.get("eth_close") else None, "ethbtc": float(row["ethbtc_close"]) if row.get("ethbtc_close") else None}
     health["derivatives"]["hourly_status"] = "PASS" if row and row.get("btc_open_interest") and row.get("eth_open_interest") else "UNAVAILABLE"
     scalar_values = {"btc_usdt": nested(live_market, "btc_usdt"), "eth_usdt": nested(live_market, "eth_usdt"), "ethbtc": nested(live_market, "ethbtc"), "btc_dominance_pct": nested(dominance, "value_pct"), "breadth_advance_ratio": nested(breadth, "aggregate", "advance_ratio"), "stablecoin_total_usd": nested(stable_state, "total_usd"), "btc_etf_musd": nested(etf_value, "btc_reported_total_musd"), "eth_etf_musd": nested(etf_value, "eth_reported_total_musd")}
-    prior, predecessor_status = prior_packet(snapshot)
     if isinstance(predecessor_status, dict) and predecessor_status.get("status") == "AVAILABLE":
         predecessor_status = {
             **predecessor_status,
@@ -718,7 +811,7 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     prior_values = nested(prior, "normalized_state", "scalar_values") or {}
     deltas = {key: delta(value, prior_values.get(key)) for key, value in scalar_values.items()}
     derived_ethbtc = None if not live_market or not live_market.get("btc_usdt") or not live_market.get("eth_usdt") else live_market["eth_usdt"] / live_market["btc_usdt"]
-    crosschecks = {"ethbtc_direct_vs_derived_same_binance_family": normalize_crosscheck(nested(live_market, "ethbtc"), derived_ethbtc, primary_family="BINANCE_SPOT", crosscheck_family="BINANCE_SPOT")}
+    crosschecks = {"ethbtc_direct_vs_derived_same_binance_family": normalize_crosscheck(nested(live_market, "ethbtc"), derived_ethbtc, primary_family="BINANCE_SPOT", crosscheck_family="BINANCE_SPOT"), "altseason_crosscheck": altseason_crosscheck(altseason)}
     required_lanes = decision_lanes(registry)
     blockers = [lane for lane in required_lanes if health.get(lane, {}).get("status") != "PASS"]
     optional_degraded = [lane for lane in LANES if lane not in required_lanes and health.get(lane, {}).get("status") != "PASS"]
@@ -797,6 +890,7 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
             "macro_risk": macro,
             "sentiment": sentiment or None,
             "altseason_context": altseason or None,
+            "altseason_carry": altseason_carry,
             "catalyst_context": catalyst,
             "entry_signal_reference": None if not entry else {
                 "contract": entry.get("contract"),
