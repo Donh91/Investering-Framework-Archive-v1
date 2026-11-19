@@ -1,0 +1,52 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json",
+    "scripts/api_agent/astra_mission_reservations_v1.py",
+    "scripts/api_agent/astra_provider_settlement_v1.py",
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "scripts/research/owner_astra_mission_v1.py",
+    "tests/api_agent/test_astra_provider_settlement_v1.py",
+    "tests/api_agent/test_manual_astra_task2_high_v1.py",
+    "tests/api_agent/test_owner_global_api_budget_cap.py",
+    "tests/research/test_manual_astra_research_program_20261116.py",
+    "tests/research/test_owner_astra_mission_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-3222501edce69d4e",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "ARCHIVE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* budget: reusable provider settlement and permanent Astra no-replay history * test: isolate synthetic Astra launcher reservations from settled evidence",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json": "3a140ff43830b86042e1353a60870a5c33c180ee",
+    "scripts/api_agent/astra_mission_reservations_v1.py": "f93ce68ae9dc9ea784b8936f9ff2e88e7efbd64b",
+    "scripts/api_agent/astra_provider_settlement_v1.py": "401e11a82aaf3f8e9c96ac9f1db9f2aeb4dd49d2",
+    "scripts/api_agent/check_monthly_cost_guard.py": "0443169f2fc40f2916595a722fbefd568fa7a753",
+    "scripts/research/owner_astra_mission_v1.py": "90f32d6247057eb27cfac623d9e9b377b0db73af",
+    "tests/api_agent/test_astra_provider_settlement_v1.py": "08dd260208c81f4eadcbe4d717a451243bee7d8a",
+    "tests/api_agent/test_manual_astra_task2_high_v1.py": "7a3062ee29404865eacbc58a7b7cc8a76b201fa9",
+    "tests/api_agent/test_owner_global_api_budget_cap.py": "858da9e128b61db1fa7cae02023be473da3ff7eb",
+    "tests/research/test_manual_astra_research_program_20261116.py": "c3e0d830310a7ae456894b70f8078a4933048280",
+    "tests/research/test_owner_astra_mission_v1.py": "464c66200ecae38bfb81f60ae93de20829c583fa"
+  },
+  "source_commit_sha": "3222501edce69d4ec01283525e575179c0201987",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-19T22:01:45+01:00",
+  "task_class": "API_AGENT",
+  "task_summary": "budget: reusable provider-period settlement; preserve Astra history and deny replay (#2254)"
+}
