@@ -27,7 +27,7 @@ def payload(count: int = 100) -> bytes:
     } for index in range(count)]).encode()
 
 
-def blockchaincenter_payload(score_override: dict[str, int] | None = None) -> bytes:
+def blockchaincenter_payload(score_override: dict[str, int] | None = None, *, dense: bool = False, dense_override: dict | None = None) -> bytes:
     targets = {"30": 18, "90": 20, "365": 17}
     latest_scores = {horizon: round(100 * outperformers / 49) for horizon, outperformers in targets.items()}
     if score_override:
@@ -45,6 +45,14 @@ def blockchaincenter_payload(score_override: dict[str, int] | None = None) -> by
             "current_alt_run_length": 0, "current_btc_run_length": 0,
         }
     props = {"score": histories, "stats": stats, "latestScores": latest_scores, "change": changes}
+    if dense:
+        del props["score"]
+        props["series"] = {
+            horizon: {"start": "2026-08-23", "scores": [score - 1, None, score]}
+            for horizon, score in latest_scores.items()
+        }
+        if dense_override is not None:
+            props["series"]["90"] = dense_override
     flight = "5:" + json.dumps(["$", "$Ltest", None, props], separators=(",", ":"))
     script = f"self.__next_f.push([1,{json.dumps(flight)}])"
     return f"<html><body><script>{script}</script></body></html>".encode()
@@ -150,6 +158,30 @@ class Top100BreadthOwnerTests(unittest.TestCase):
         self.assertEqual(context["horizons"]["90"]["score_reconciliation"], "PASS_EXACT")
         self.assertFalse(context["authority"]["binding"])
         self.assertFalse(context["authority"]["shared_row_tournament_eligible"])
+
+    def test_blockchaincenter_dense_series_preserves_calendar_gaps(self):
+        context = MODULE.build_rotation_context(blockchaincenter_payload(dense=True), "2026-08-25T07:15:00Z")
+        self.assertEqual(context["status"], "PASS")
+        self.assertEqual(context["source"]["parser_contract"], "NEXTJS_FLIGHT_ALTCOIN_DENSE_SERIES_v2")
+        self.assertEqual(context["headline"]["published_score"], 41)
+        series = context["historical_series_metadata"]["90"]
+        self.assertEqual(series["observation_count"], 2)
+        self.assertEqual(series["first_date"], "2026-08-23")
+        self.assertEqual(series["last_date"], "2026-08-25")
+        self.assertEqual(series["series_sha256"], MODULE.sha(MODULE.canonical({"2026-08-23": 40, "2026-08-25": 41})))
+
+    def test_blockchaincenter_dense_series_rejects_bad_points_and_dates(self):
+        for series in (
+            {"start": "bad", "scores": [41]},
+            {"start": "2026-08-26", "scores": [41]},
+            {"start": "2026-08-25", "scores": []},
+            {"start": "2026-08-23", "scores": [True, None, 41]},
+            {"start": "2026-08-23", "scores": [101, None, 41]},
+            {"start": "2026-08-23", "scores": [40, None, None]},
+            {"start": "2026-08-23", "scores": [40, None, 42]},
+        ):
+            with self.subTest(series=series), self.assertRaises(MODULE.E):
+                MODULE.build_rotation_context(blockchaincenter_payload(dense=True, dense_override=series), "2026-08-25T07:15:00Z")
 
     def test_blockchaincenter_score_mismatch_fails_closed(self):
         with self.assertRaises(MODULE.E) as raised:
