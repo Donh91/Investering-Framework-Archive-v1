@@ -1,0 +1,150 @@
+{
+  "contract": "ELITE_TRADER_SYNTHETIC_PROBE_RESEARCH_V1",
+  "date": "2026-11-19",
+  "evidence_class": "SYNTHETIC_FIXTURE_ONLY",
+  "method": "JavaScript isolate, deterministic toy formulas, no market source or empirical model",
+  "passed": 22,
+  "total": 22,
+  "results": [
+    {
+      "name": "compression_positive",
+      "actual": "CANDIDATE",
+      "expected": "CANDIDATE",
+      "pass": true
+    },
+    {
+      "name": "compression_early",
+      "actual": "UNKNOWN",
+      "expected": "UNKNOWN",
+      "pass": true
+    },
+    {
+      "name": "compression_future_invariance",
+      "actual": "CANDIDATE",
+      "expected": "CANDIDATE",
+      "pass": true
+    },
+    {
+      "name": "compression_available_late",
+      "actual": "UNKNOWN",
+      "expected": "UNKNOWN",
+      "pass": true
+    },
+    {
+      "name": "compression_breakout_missing",
+      "actual": "NO_SETUP",
+      "expected": "NO_SETUP",
+      "pass": true
+    },
+    {
+      "name": "compression_gap",
+      "actual": "UNKNOWN",
+      "expected": "UNKNOWN",
+      "pass": true
+    },
+    {
+      "name": "compression_stale",
+      "actual": "UNKNOWN",
+      "expected": "UNKNOWN",
+      "pass": true
+    },
+    {
+      "name": "avwap_weighted",
+      "actual": 107.5,
+      "expected": 107.5,
+      "pass": true
+    },
+    {
+      "name": "avwap_anchor_hindsight",
+      "actual": "UNKNOWN",
+      "expected": "UNKNOWN",
+      "pass": true
+    },
+    {
+      "name": "avwap_late_trade",
+      "actual": "UNKNOWN",
+      "expected": "UNKNOWN",
+      "pass": true
+    },
+    {
+      "name": "avwap_duplicate",
+      "actual": "UNKNOWN",
+      "expected": "UNKNOWN",
+      "pass": true
+    },
+    {
+      "name": "risk_cluster_cap",
+      "actual": 700,
+      "expected": 700,
+      "pass": true
+    },
+    {
+      "name": "risk_exit_unavailable",
+      "actual": "ABSTAIN",
+      "expected": "ABSTAIN",
+      "pass": true
+    },
+    {
+      "name": "risk_stale",
+      "actual": "ABSTAIN",
+      "expected": "ABSTAIN",
+      "pass": true
+    },
+    {
+      "name": "risk_zero_vol",
+      "actual": "ABSTAIN",
+      "expected": "ABSTAIN",
+      "pass": true
+    },
+    {
+      "name": "risk_signal_capped",
+      "actual": 2000,
+      "expected": 2000,
+      "pass": true
+    },
+    {
+      "name": "risk_vol_double",
+      "actual": 1000,
+      "expected": 1000,
+      "pass": true
+    },
+    {
+      "name": "deposit_not_profit",
+      "actual": 0,
+      "expected": 0,
+      "pass": true
+    },
+    {
+      "name": "incomplete_equity",
+      "actual": null,
+      "expected": null,
+      "pass": true
+    },
+    {
+      "name": "unobserved_exit_not_zero",
+      "actual": null,
+      "expected": null,
+      "pass": true
+    },
+    {
+      "name": "known_no_trade_kept",
+      "actual": 0,
+      "expected": 0,
+      "pass": true
+    },
+    {
+      "name": "costs_can_flip_win",
+      "actual": -1,
+      "expected": -1,
+      "pass": true
+    }
+  ],
+  "authority": {
+    "economic_edge": false,
+    "portfolio_action": false,
+    "live_trading": false,
+    "promotion": false,
+    "paid_dispatch": false
+  },
+  "limitations": "Not a production test suite or source validation. See SYNTHETIC_PROBE.md."
+}
