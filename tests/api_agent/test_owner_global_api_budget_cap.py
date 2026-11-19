@@ -402,5 +402,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                 self.assertEqual(state["status"], "BLOCKED")
 
 
+from tests.api_agent.test_opaque_api_reservations_v1 import OpaqueApiLiabilityTests
+
 if __name__ == "__main__":
     unittest.main()

@@ -14,6 +14,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
 from api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
 from api_agent import astra_mission_reservations_v1 as astra_missions
+from api_agent import opaque_api_reservations_v1 as opaque_reservations
 from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegative, json_evidence_paths, load_evidence
 
 # Owner explicit interactive approval 2026-11-13: account-wide USD50 per month
@@ -403,6 +404,10 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     mission_high, mission_count, _ = astra_missions.mission_reservations(value, reserved_work_ids)
     high += mission_high
     reservation_count += mission_count
+    # No exception offset: opaque liabilities count in full for all callers.
+    opaque_high, opaque_count = opaque_reservations.pending_upper(value)
+    high += opaque_high
+    reservation_count += opaque_count
     if settlement_bound and not RETAINED_ASTRA_RESERVATION_WORK_IDS <= reserved_work_ids:
         raise ValueError("RETAINED_ASTRA_RESERVATION_MISSING")
     missing = set(UNRESOLVED_NATIVE_POST_FLOOR_USD) - seen
