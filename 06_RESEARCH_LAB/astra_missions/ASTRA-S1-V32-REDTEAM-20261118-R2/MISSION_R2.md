@@ -80,6 +80,23 @@ Give at most 8 things to **remove or merge** in S1 v3.2 (rules, fields, steps,
 code paths) that reduce attack surface or tool calls without weakening a stated
 invariant. For each, give the invariant it preserves.
 
+### P-F. ChatGPT's self-audit and the agent organisation (appendix G)
+
+ChatGPT, the operator that runs S1 and the producer tasks, wrote its own audit.
+- For each of its 10 ranked improvements, give AGREE, DISAGREE or REORDER with a reason, and name any it missed.
+- Then design the best **division of labour and cadence** for:
+  - S1 (merge steward, hourly at :45);
+  - S2 (weekly Monday report);
+  - S4 (daily Alpha outcomes);
+  - CRE (daily research);
+  - S5 (hourly source watch);
+  - Claude (reviewer and fix packages);
+  - Codex;
+  - Astra/Sol on demand.
+- Cover the channels and contracts between them, deduplication, failure domains, and whether S1 is over-centralised.
+- Answer the questions in its section 6 that this bundle can support. Mark the others OPEN.
+- Give a cadence table (agent, frequency, reason, expected tool/API cost), and keep Monday 09:30-10:30 CPH read-only.
+
 ## 3. Output (strict; keep the visible answer under about 30k tokens, and spend the rest on reasoning)
 
 ```
@@ -103,6 +120,7 @@ findings:
 race_fix: <P-C design: the diff, the tests, the API-call delta>
 trust_binding: <P-D options, ranked, with cost and residual risk>
 deletions: <P-E list, each with the invariant kept>
+chatgpt_audit: <P-F: per-item AGREE/DISAGREE/REORDER, missed items, the organisation design and the cadence table>
 rejected_suspicions: <one line each: what you checked and why it is safe>
 open_questions: <only what blocks a verdict, naming the missing file>
 machine_readable: <one JSON array of {id,severity,confidence,area,file_line,title}>

@@ -16,7 +16,10 @@ Not included, and summarized here instead:
 - `AGENTS.md` (blob 256f814e);
 - the privacy scanner;
 - the isolation derivation script;
-- the tests.
+- the tests;
+- `S1_WORKFLOW_ISOLATION_V1.json` (F5 is a stub; omitted for the byte budget).
+
+Appendix **G** holds the ChatGPT operator's own audit of S1 and of the multi-agent organisation, verbatim. Mission priority P-F asks you to critique it.
 
 Where TICK cites one of these, treat the cited text as a black box, and mark any
 conclusion that depends on it as OPEN.
@@ -283,244 +286,7 @@ S1_TICK <ANSWER|REPAIR|REQUEST_REVIEW|MERGE|PACKAGE|REENABLE|STEWARD|NOOP> <PR n
 NOOP RESULTS, the complete list: MONDAY_READ_ONLY | SOURCE_UNVERIFIED(<step>) | BRIEF_UNVERIFIED(<reason>) | BRIEF_STALE(<reason>) | BRIEF_INCOMPLETE(<reason>) | LANE_HALTED(<reason>) | MERGE_REFUSED(<status>) | NOTHING_ACTIONABLE(<reasons>). No other NOOP result exists and you never invent one. A run that cannot finish T1 to T3 for a reason not named above (a tool limit, a budget, an unreadable answer) ends BRIEF_INCOMPLETE(<step>:<what failed>) with no write.
 ````
 
-## F5. FULL FILE `00_FMOS/S1_WORKFLOW_ISOLATION_V1.json` (blob 0397fb06d26aefb560b2f7f90840c7df89944cbd, 234 lines). secret-job census used by the lane exclusions.
-
-````
-{
-  "contract": "S1_WORKFLOW_ISOLATION_V1",
-  "rule": "The job-level view, kept equal to the derivation of scripts/governance/s1_workflow_isolation_derive_v1.py by tests/governance/test_s1_workflow_isolation_v1.py. The path lists (secret_job_executed_paths, secret_job_named_files, unresolved_edge_paths, writer_job_executed_paths, writer_job_named_files, writer_unresolved_edge_paths) are not in this file: they are derived at the PR head and at main by that module (the union), and published per PR in the S1_TICK_BRIEF_V1 field isolation. AGENTS.md section 0.2e: exclusion 3 includes every path of the three secret lists, plus the judgment rule; required_job_executed_paths outside the governance prefixes are lane-eligible only while gate_isolation is LIVE. pr_write_jobs and secret_on_pr_jobs are shrink-only debt. AGENTS.md section 0.2g (v3 privileged execution closure): a changed path in the three writer lists is risk HIGH at least; the unresolved lists, unknown_step_jobs and privileged_artifact_edges are shrink-only debt and action_refs is frozen. An UNKNOWN edge or a failed derivation is never read as an empty closure: it is OWNER_GATED, and the judgment rule of section 0.2e still applies.",
-  "secret_jobs": [
-    "adaptive-decision-miss-validation.yml:learn-and-validate",
-    "adaptive-evidence-gap.yml:evidence-gap",
-    "alpha-proof-supervisor.yml:adjudicate",
-    "alpha-shadow04-prospective.yml:shadow04",
-    "api-agent-gateway-gate.yml:gateway-gate",
-    "auto-trading-e2-candidate-selection-v4.yml:live-e2-v4",
-    "auto-trading-e2-candidate-selection.yml:live-e2-v3",
-    "auto-trading-e2-compiler-reliability.yml:live-e2-v2",
-    "auto-trading-e2-reproducibility.yml:live-e2",
-    "cfgi-v3-launch-receipt-publish.yml:publish",
-    "cycle-navigator-internal-precision.yml:internal-precision",
-    "cycle-navigator-precision-learning-supervisor.yml:precision-learning",
-    "daily-director-shadow.yml:director",
-    "daily-raw-owner-capture.yml:capture",
-    "daily-slow-cycle-shadow.yml:collect",
-    "framework-learning-operations.yml:receipt_sync",
-    "framework-learning-supervisor.yml:fmos-mission-loop-audit",
-    "framework-learning-supervisor.yml:operate",
-    "framework-learning-supervisor.yml:s1-v43-terra-max-review",
-    "framework-learning-supervisor.yml:senior-repair-audit",
-    "framework-learning-supervisor.yml:sol-max-collect",
-    "framework-learning-supervisor.yml:sol-max-elite-collect",
-    "framework-learning-supervisor.yml:sol-max-elite-submit",
-    "framework-learning-supervisor.yml:sol-max-implementation-patch",
-    "framework-learning-supervisor.yml:sol-max-response-probe",
-    "framework-learning-supervisor.yml:temp-sol-pr-review",
-    "historical-altseason-cfgi-enrichment.yml:enrich",
-    "historical-altseason-cfgi-publish.yml:publish",
-    "historical-altseason-free-publish.yml:publish",
-    "monthly-ai-learning-council.yml:council",
-    "owner-astra-maeve-task2-20261117.yml:paid",
-    "owner-astra-mission.yml:paid",
-    "owner-astra-mission.yml:recover",
-    "owner-astra-research-program-20261116.yml:paid-alpha-lab",
-    "owner-astra-research-program-20261116.yml:paid-compass-edge",
-    "owner-astra-research-program-20261116.yml:paid-compass-total",
-    "owner-astra-research-program-20261116.yml:paid-compass-warning",
-    "owner-astra-research-program-20261116.yml:paid-s1-vnext",
-    "owner-bound-daily-director-manual.yml:astra-all-cn-research",
-    "owner-bound-daily-director-manual.yml:astra-high-task2",
-    "owner-bound-daily-director-manual.yml:astra-public-w46w47",
-    "owner-bound-daily-director-manual.yml:astra-realdata-task2-v2",
-    "owner-bound-daily-director-manual.yml:director",
-    "research-execution-coordinator.yml:operate-one-heavy-lane",
-    "research-lab-sol-dispatch.yml:research-lab-sol",
-    "research-lab-sol-dispatch.yml:research-lab-sol-collect",
-    "shadow-admission-ai-decider.yml:autonomous-decision",
-    "shadow-compass-v2.yml:shadow",
-    "typesafe_jev_alpha_blind_replay.yml:jev-alpha-blind-replay",
-    "typesafe_jev_sanitized_smoke.yml:jev-smoke",
-    "typesafe_jev_stress_token_benchmark.yml:live-jev",
-    "typesafe_jev_stress_token_benchmark.yml:real-shadow-pilot",
-    "typesafe_jev_stress_token_benchmark.yml:sol-token-benchmark",
-    "weekly-api-calibration-shadow.yml:calibration",
-    "weekly-sol-adversarial-review.yml:adversarial-review"
-  ],
-  "pr_write_jobs": [
-    "adaptive-gap-validation-gate.yml:validate",
-    "compass-event-refresh.yml:validate",
-    "compass-outcomes.yml:validate",
-    "daily-compass.yml:validate",
-    "framework-learning-supervisor.yml:fmos-mission-loop-audit",
-    "framework-learning-supervisor.yml:s1-v43-terra-max-review",
-    "framework-learning-supervisor.yml:senior-repair-audit",
-    "framework-learning-supervisor.yml:sol-max-elite-submit",
-    "framework-learning-supervisor.yml:sol-max-implementation-patch",
-    "framework-learning-supervisor.yml:temp-sol-pr-review",
-    "framework-learning-supervisor.yml:validate",
-    "native-market-recovery.yml:validate",
-    "owner-bound-daily-director-manual.yml:astra-realdata-task2-v2",
-    "provider-budget-readback.yml:validate-pr",
-    "shadow-compass-v2.yml:validate",
-    "situation-room-daily-static.yml:validate"
-  ],
-  "secret_on_pr_jobs": [
-    "api-agent-gateway-gate.yml:gateway-gate",
-    "framework-learning-supervisor.yml:fmos-mission-loop-audit",
-    "framework-learning-supervisor.yml:s1-v43-terra-max-review",
-    "framework-learning-supervisor.yml:senior-repair-audit",
-    "framework-learning-supervisor.yml:sol-max-elite-collect",
-    "framework-learning-supervisor.yml:sol-max-elite-submit",
-    "framework-learning-supervisor.yml:sol-max-implementation-patch",
-    "framework-learning-supervisor.yml:sol-max-response-probe",
-    "framework-learning-supervisor.yml:temp-sol-pr-review",
-    "owner-bound-daily-director-manual.yml:astra-realdata-task2-v2"
-  ],
-  "gate_isolation": "LIVE",
-  "writer_jobs": [
-    "adaptive-decision-miss-validation.yml:notify",
-    "adaptive-evidence-gap.yml:notify",
-    "adaptive-gap-validation-gate.yml:validate",
-    "adaptive-rotation-cadence.yml:cadence",
-    "askr-forensic-replay.yml:replay",
-    "askr-launch-sentinel.yml:watch",
-    "automation-health-bootstrap.yml:dispatch",
-    "automation-production-health.yml:audit",
-    "autonomous-research-governance-loop.yml:governance-loop",
-    "cn-precision-learning-bootstrap.yml:dispatch",
-    "codex-intake-dispatch.yml:dispatch",
-    "compass-event-refresh.yml:detect",
-    "compass-event-refresh.yml:validate",
-    "compass-outcomes.yml:incident",
-    "compass-outcomes.yml:mature",
-    "compass-outcomes.yml:validate",
-    "compass-production-bootstrap.yml:dispatch",
-    "compass-schedule-watchdog.yml:recover",
-    "continuity-learning-maintenance.yml:maintain",
-    "continuity-learning-maintenance.yml:notify",
-    "cowork-historical-altseason-bundle-receipt.yml:publish",
-    "cycle-navigator-autonomous-calibration-loop.yml:calibration-loop",
-    "cycle-navigator-pages.yml:deploy",
-    "cycle-navigator-weekly-publication.yml:publish-cycle-navigator",
-    "daily-compass.yml:freeze",
-    "daily-compass.yml:incident",
-    "daily-compass.yml:validate",
-    "daily-machine-throughput.yml:throughput",
-    "daily-raw-owner-capture.yml:notify",
-    "daily-settled-etf-calibration.yml:notify",
-    "daily-settled-etf-calibration.yml:settled-etf",
-    "daily-stablecoin-liquidity.yml:capture",
-    "edge001-t2-registry.yml:build",
-    "entry-signal-ledger.yml:ledger",
-    "ethbtc-persistence-lifecycle.yml:materialize",
-    "experiment-receipt-sync-bootstrap.yml:dispatch",
-    "framework-intelligence-phase1-live-shadow.yml:observe",
-    "framework-learning-operations.yml:operate",
-    "framework-learning-supervisor.yml:validate",
-    "framework-metronome.yml:tick",
-    "framework-metronome.yml:wait",
-    "hcel-o1-independent-verify.yml:verify",
-    "historical-altseason-cfgi-run-audit.yml:audit",
-    "historical-altseason-cfgi-terminal-publish.yml:publish",
-    "hourly-sequence-capture.yml:intraday",
-    "hourly-sequence-capture.yml:notify",
-    "hourly-sequence-capture.yml:sequence",
-    "intraday-execution-research.yml:research",
-    "market-owner-chain-bootstrap.yml:dispatch",
-    "master-monday-remaining-gaps.yml:gap-check",
-    "monthly-ai-learning-council-bootstrap-once.yml:dispatch-if-first-monthly-review-is-due",
-    "native-handlekompas.yml:incident",
-    "native-handlekompas.yml:readback",
-    "native-market-recovery.yml:incident",
-    "native-market-recovery.yml:recover",
-    "native-market-recovery.yml:validate",
-    "native-ota-research-readback.yml:readback",
-    "operations-dashboard.yml:build",
-    "operations-recovery-launch-once.yml:dispatch-current-definitions",
-    "provider-budget-readback.yml:incident",
-    "provider-budget-readback.yml:provider-budget",
-    "provider-budget-readback.yml:validate-pr",
-    "pullback-learning-ledger.yml:learning",
-    "remediation-maturation.yml:mature",
-    "research-lab-cn-reconstructed-baseline.yml:reconstruct",
-    "research-lab-etf-decision-value-crosswalk.yml:crosswalk",
-    "research-lab-etf-pit-edge-replay.yml:replay",
-    "research-lab-m6-episode-power.yml:census",
-    "research-lab-m6-spar-comparator.yml:replay",
-    "research-lab-m6-t4-7d.yml:reconstruct",
-    "research-owner-breadth-daily.yml:capture",
-    "research-owner-btcd-daily.yml:capture",
-    "rich-breadth-checkpoint.yml:capture",
-    "s1-tick-brief.yml:publish",
-    "sequential-research-queue.yml:run-next-free-research-stage",
-    "shadow-compass-v2-bootstrap.yml:dispatch",
-    "shadow-compass-v2.yml:validate",
-    "shadow-registry-autonomous-portfolio-loop.yml:shadow-portfolio-loop",
-    "shadow-registry-weekly.yml:weekly-shadow-calibration",
-    "shared-row-prospective-evidence-loop.yml:research-loop",
-    "shared-row-tournament-weekly.yml:weekly-review",
-    "situation-room-daily-static.yml:discovery",
-    "situation-room-daily-static.yml:validate",
-    "situation-room-shadow-bridge.yml:verify-and-handoff",
-    "situation-room-static-bootstrap.yml:dispatch",
-    "source-provenance-recovery-loop.yml:source-recovery-loop",
-    "sunday-market-close-and-cfgi.yml:build",
-    "unified-experimental-lifecycle-adjudication.yml:adjudicate",
-    "weekly-api-calibration-shadow.yml:freeze",
-    "weekly-api-calibration-shadow.yml:publish",
-    "weekly-raw-calibration-bridge.yml:build-weekly-pack"
-  ],
-  "token_ref_jobs": [
-    "native-handlekompas.yml:validate",
-    "s1-tick-brief.yml:build",
-    "s1-tick-brief.yml:due"
-  ],
-  "privileged_artifact_edges": [
-    "alpha-proof-supervisor.yml:adjudicate <- download-artifact,gh-run-download",
-    "cfgi-v3-launch-receipt-publish.yml:publish <- download-artifact",
-    "cowork-historical-altseason-bundle-receipt.yml:publish <- gh-run-download",
-    "framework-learning-operations.yml:operate <- download-artifact",
-    "framework-learning-supervisor.yml:sol-max-collect <- download-artifact",
-    "framework-learning-supervisor.yml:sol-max-elite-collect <- gh-run-download",
-    "historical-altseason-cfgi-publish.yml:publish <- download-artifact",
-    "historical-altseason-cfgi-terminal-publish.yml:publish <- gh-run-download",
-    "historical-altseason-free-publish.yml:publish <- download-artifact",
-    "research-lab-sol-dispatch.yml:research-lab-sol-collect <- gh-run-download",
-    "weekly-api-calibration-shadow.yml:publish <- download-artifact"
-  ],
-  "action_refs": [
-    "./.github/actions/intraday-execution",
-    "actions/cache@v4",
-    "actions/checkout@v4",
-    "actions/checkout@v6",
-    "actions/configure-pages@v5",
-    "actions/deploy-pages@v4",
-    "actions/download-artifact@v4",
-    "actions/setup-node@v4",
-    "actions/setup-python@v5",
-    "actions/upload-artifact@v4",
-    "actions/upload-pages-artifact@v4",
-    "dtolnay/rust-toolchain@stable"
-  ],
-  "pr_persisted_write_credential_jobs": [
-    "adaptive-gap-validation-gate.yml:validate",
-    "compass-event-refresh.yml:validate",
-    "compass-outcomes.yml:validate",
-    "daily-compass.yml:validate",
-    "framework-learning-supervisor.yml:fmos-mission-loop-audit",
-    "framework-learning-supervisor.yml:s1-v43-terra-max-review",
-    "framework-learning-supervisor.yml:senior-repair-audit",
-    "framework-learning-supervisor.yml:temp-sol-pr-review",
-    "framework-learning-supervisor.yml:validate",
-    "native-market-recovery.yml:validate",
-    "owner-bound-daily-director-manual.yml:astra-realdata-task2-v2",
-    "provider-budget-readback.yml:validate-pr",
-    "shadow-compass-v2.yml:validate",
-    "situation-room-daily-static.yml:validate"
-  ],
-  "unknown_step_jobs": []
-}
-````
+## F5. OMITTED `00_FMOS/S1_WORKFLOW_ISOLATION_V1.json` (blob 0397fb06d26aefb560b2f7f90840c7df89944cbd, 234 lines). secret-job census used by the lane exclusions. Omitted for the byte budget; treat as a black box (OPEN).
 
 ## F6. FULL FILE `.github/workflows/s1-tick-brief.yml` (blob d5236e80e19d74637db2d081f163da0d922517cb, 137 lines). brief workflow (cron :18, push/workflow_run fallback via due).
 
@@ -3744,4 +3510,72 @@ def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
             output_rate *= 1.5
         return round((input_tokens * input_rate + output_tokens * output_rate) / 1_000_000, 8)
     return round((input_tokens * price["input"] + output_tokens * price["output"]) / 1_000_000, 8)
+````
+
+## G. APPENDIX: the ChatGPT operator's own S1 audit (verbatim; posted 2026-11-18T18:39Z, 11,989 bytes, sha256 f2a6bb3aabee39062912c614de0e1e79fe6a5a433a26a37dca3dddcd86341be7). It is a claim to critique, not evidence: its runtime observations are self-reported.
+
+````
+CHATGPT_S1_AUDIT_v1
+# S1 v3.2: runtime and organisation audit
+2026-11-18. Public Archive main a39145ec; contract eac1bdc6; TICK 19683db4; ACTION_LOOP 77922ae6; bootstrap v8. Research only. I am the ChatGPT operator, not an independent approver of work I authored.
+
+## 1. Runtime reality
+S1 is a short-lived reasoning process, not a daemon or transaction engine. Each tick reconstructs authority: main SHA, directory blob census, contract and TICK (four logical reads). Pinned 3b prevents repository-only authority changes. T1-T3 bind singleton bot issue, run provenance, freshness, pins and drift (up to four more calls). Native brief amortises PR census and isolation derivation.
+
+Nov 18: manual bootstrap returned SOURCE_UNVERIFIED(3) with older contract and missing TICK/directory evidence; later authenticated reads proved v8 existed. Reported observation, not proof of caching. Normalized connector responses may omit actor fields, IDs, timestamps and pagination. Search may lag. Closed issue != merged PR; PR-only run listings omit push/manual events; check names != execution truth. Raw REST often necessary. Large responses truncate; full comment history costly. A multi-file interactive operation hit a tool ceiling after its first write; readback enabled safe resumption. Exact scheduled tick quota unknown; interactive capability does not prove scheduled capability.
+
+Public runs: 44351374676 built main 62afc8b8. Concurrent push 44351688476 (f2716ad8) succeeded at due but skipped build/publish. Old pins could not satisfy v8; manual 44352859736 refreshed brief. Liveness race, not grounds to relax checks. Possible outcomes BRIEF_UNVERIFIED(pins), BRIEF_STALE(source_changed). Complete brief 44369844952 used 65 API reads for three active PRs; earlier snapshot 95. Main was two data-only commits ahead, admissible under T3. Samples, not distribution. BRIEF_INCOMPLETE covers missing evidence/exhausted initial reads; PREFLIGHT_INCOMPLETE is a diagnostic concept, not a permitted v3.2 terminal string. Historical counts unverified.
+
+Costliest: F4 veto pagination/artifact binding; repeated veto/thread/ledger reads F6; F5 directory pins/rulesets; F7 per-file readback. Merge plausibly requires dozens of reads; cheap NOOP bootstrap/brief only. Native brief cap 300 calls within shared 1,000-request hourly workflow-token limit. Checkout, serialization, CI and missing evidence dominate time. Public #2231: stale test expectation caused red CI despite local tests; full-suite passed before execution-truth. Never infer green from one job. Path-only privacy result is not autonomous merge clearance.
+
+## 2. Top 10 improvements (value/cost order)
+1. **Freshness race (very high/low-medium).** Problem/evidence: skipped concurrent run invalidated admission. Change: post-publish check policy fingerprint; dirty flag plus ONE coalesced catch-up for invalidating drift, bound to chosen SHA. Test concurrent pushes, missed cron and queued publish. Risk: event storms; single-flight, bounded catch-up, retain T3.
+2. **Typed native evidence (very high/medium).** Problem: connector projections/listing scopes omit facts, as above. Change: compact native reads with refs, missing fields, complete-pagination proof and alternate route. Risk: wrapper becomes authority; version schema, retain raw evidence, fail closed.
+3. **Pre-intent resource admission (high/low).** Problem: F1-F7 may exceed tick capacity; observed partial multi-write. Change: reserve calls for veto pages/final checks/readback before intent; else cheaper action or NOOP. Risk: starvation; expose blocked age, route to owner, never lower proof.
+4. **Reviewer principal binding (very high/medium-high).** Problem: F4 same-account text/unedited timestamps do not prove independence. Change: distinct app identities or signed receipts binding repo, PR, head, report hash, verdict, nonce, role; rotation/revocation. Risk: compromise/lockout; shadow tests before authority. Separate owner gate.
+5. **Bounded veto index (high/medium).** Problem: F4/F6 historical pages twice; T4 latest 100 insufficient. Change: authenticated append-only per-head projection with sequence, IDs, complete-through watermark and live tail; full-census fallback. BLOCK dominates until newer admissible APPROVE. Risk: missed edits/deletions, TOCTOU; gap => HOLD.
+6. **Native merge transaction (high/high).** Problem: F6 cannot atomically bind main, head, reviews, halt and rulesets. Change: explore narrow native executor with compare-and-set, idempotent operation key, required checks and postcondition. ChatGPT supplies judgment. Risk: privileged writer; no rollout without adversarial proof; no privilege expansion for speed.
+7. **Fair work queue (high/low-medium).** Problem: three attempts, one action; T4 may starve overdue work; ACTION_LOOP puts ANSWER first but TICK defers it. Change: unify order: halt/reconcile, bounded urgent answer, ready merge, overdue disposition, repair/review, intake; age within class. Risk: changed precedence; saturation tests, preserve safety.
+8. **Compact pin/drift proof (medium-high/medium).** Problem: F5 tree listings and conservative T3 invalidation. Change: native exact-SHA root/leaf proof and dependency graph, broad fallback for unknown imports/truncated diff. Risk: missed dependencies; test renames, generated code and indirect privileged inputs.
+9. **One closure lifecycle (medium-high/medium).** Problem: B3/B5/F7 separate intent/outcome, item, closure, consumer events. Change: immutable operation/consumer key, derived MERGED_NOT_CONSUMED vs VERIFIED, reconcile lost responses. Risk: projection mistaken for completion; original consumer receipt required.
+10. **Measure progress (medium/low).** Problem: optional heartbeat/repeated NOOP hides inactivity. Change: per-step calls, reason, latency, candidate age, disposition/closure; daily digest/weekly replay. Risk: gaming/noise; report denominators/outcomes, not comment counts.
+
+## 3. Delete/simplify
+Remove duplicate screening instructions once TICK is normative; keep policy/rubric invariants. Resolve max_merges_per_tick=3 vs TICK ONE and stale bootstrap references; retain stricter rule until review. Replace redundant status prose with derived digest, never delete original evidence or unresolved intents. Park duplicate supervisors/diagnostics; never awaken them to rescue a stale brief. Collapse research sweeps into delta proposals; no new scheduler.
+Keep exact-head reviews/vetoes, Monday read-only, owner gates, no-trade/no-payment, identity/privacy/CI proofs, writer lease, intent/readback, critical finding stops and consumer closure. Compact proof replaces a check only after adversarial equivalence tests.
+
+## 4. Multi-agent organisation
+Verified enabled ChatGPT inventory Nov 18 (role summaries):
+- Chat S1 / Elite Closure Supervisor v5 / Hourly: :45 CPH, bootstrap v8. Reads public authority, brief, PR/CI and admissible review evidence; writes steward requests/intents/outcomes to existing issues/PRs. Sole scheduled merge steward.
+- Ugentlig Master Monday + CN (S2): Mon 10:00 CPH. Reads official frozen weekly evidence, canonical artifacts, provenance/consumer health. Read-only report, no GitHub writes or forecast authorship.
+- Alpha Lab / Outcome Learning (S4): daily 22:15 CPH. Reads original frozen decisions, due horizons/outcome receipts; material deduplicated owner handoff, not canonical writer/scanner. Journal read-only derivative.
+- Compass Research Engine / Shadow Lab (CRE): daily 12:15 CPH. Reads public protocol/issuance/evidence; at most one reproducible material research receipt to science owner #1596. No promotion.
+- Project-to-CA / Alpha Source Watch / Chat (S5): hourly :02, silent continuity observer. Reads original runs/receipts and deltas; only deduplicated material owner handoffs. Not source writer/scanner.
+S1 Evolution & Diagnostic Lab and earlier Chat/Work S1 variants paused; keep parked. No separately enabled ChatGPT Strategist/Research Lab task; routed roles #1157/#1512.
+
+Proposed graph: native producer -> canonical domain issue/receipt -> public-safe S1_ITEM_PROPOSAL_v1 -> S1 admission #1156 -> one PR/lease -> CI -> exact-head review -> authorised merge -> consumer verification. S2 stays read-only: S1/producer picks up signal. S4/S5/CRE use existing authorised domain routes. Review proposal contract first.
+Envelope: stable semantic key (domain, owner, defect/hypothesis, immutable public evidence digest), refs, scope, risk, acceptance/negative tests, due, counterevidence, next owner. S1 checks existing item/PR and overlapping paths; attaches duplicates, never parallel PRs. One writer/parent/lease; release by holder/outcome, not silence. Changed head invalidates review. CI plus consumer receipt determines closure.
+
+Claude: reviewer/fix-package designer, Bridge #173, S1_REVIEW_REQUEST_v1 -> CLAUDE_REVIEW_v1; disclose authorship, detached review where required. Codex: leased repair via PR address request, independent exact-head review when eligible; unavailable => no repeated requests, admissible alternative or park. S1 resolves routing conflicts, not adverse evidence by vote. Direction -> #1157; science -> #1512/domain owner. Astra: adversarial analysis of approved public bundles. Sol: bounded analysis/implementation design. Findings return to mission owners; no direct release/self-approval. Owner-gated decisions and paid execution separately authorised.
+
+## 5. Cadence/resource discipline (proposed)
+Logical reads are estimates, not measured costs. No scheduled producer paid calls. All agents preserve Mon 09:30-10:30 CPH read-only, including handoffs. Proposed quiet notifications 22:30-07:00 CPH except material safety/owner events; native collection continues; retain S5 silence.
+- S1 hourly during backlog/reliability work; 2-hourly only after latency evidence. Cheap ~6-8 reads, action tens; no paid calls. Align native brief.
+- S2 weekly Mon 10:00 unchanged, ~10-30+ reads including provenance. Weekly freeze matters; no writes/paid calls.
+- S4 daily unchanged, ~3-8 reads when nothing due, extra per horizon. No premature outcome polling or paid calls.
+- CRE daily one experiment, ~5-15 reads cheap path, extra on novel evidence. Weekly review in existing run; park stalled hypotheses; no paid calls.
+- S5 hourly during recovery, 2-hourly candidate after proved native coverage/timeliness. ~3-6 stable reads, extra per delta; no paid calls. Chat polling cannot replace original observation.
+- Claude event-driven, sweep at most 4x daily as needed; Codex on leased work/review demand. One bounded review per changed head except deliberate adversarial trial; tools vary, no idle polling. Astra/Sol on demand, one approved mission, no blind retry. Native brief hourly plus coalesced invalidating catch-up; respect shared capacity.
+Measure p95 admission-to-action, stale ticks, missed admissions, tool reads, producer continuity, false-ready, duplicates and dispositions. Roll back degraded liveness; never weaken gates.
+
+## 6. Questions for Astra
+- Smallest safe push/build/publish race correction? Prove concurrency, cancellation, stale snapshot/missed schedule cases.
+- Is F6 safe if main, review or ruleset changes after final reads? Counterexamples and mitigation without added privilege.
+- Minimum principal binding separating same-account agents/owner? What is impossible without separate identities?
+- Can compact evidence prove full pagination, edited vetoes, CI and path truth with fewer calls?
+- Which TICK/ACTION_LOOP rules are redundant, contradictory or suitable for deterministic code? Equivalence/adversarial tests.
+- Design >=24 scheduled-tick replay: outage, stale brief, lost response, duplicates, reviewer unavailable, head changes, critical findings. Zero false-ready necessary, not sufficient; quantify closure/liveness.
+- Does workload/cadence optimise progress or over-centralise S1? Identify failure domains.
+- For P0/P1 give public anchor, minimal patch/test, confidence, residual risk. Challenge rankings; BUILD_NOTHING valid.
+
 ````
