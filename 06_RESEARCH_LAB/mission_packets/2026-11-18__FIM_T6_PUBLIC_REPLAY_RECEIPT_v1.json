@@ -1,0 +1,318 @@
+{
+  "contract": "PUBLIC_RESEARCH_DEVELOPMENT_ONLY",
+  "source": "Binance spot ETHBTC /api/v3/klines UTC",
+  "windows": [
+    [
+      "2018-01-01",
+      "2020-07-01"
+    ],
+    [
+      "2020-07-01",
+      "2023-01-01"
+    ],
+    [
+      "2023-01-01",
+      "2025-07-01"
+    ],
+    [
+      "2025-07-01",
+      "2026-11-18"
+    ]
+  ],
+  "last_completed_day": "2026-11-17",
+  "test_count": 8,
+  "source_rows": 3243,
+  "short_days": [
+    "2018-02-08"
+  ],
+  "models": [
+    {
+      "window_days": 20,
+      "censored": 0,
+      "groups": [
+        {
+          "era": "all",
+          "n": 65,
+          "confirmed": 44,
+          "metrics": [
+            {
+              "h": 7,
+              "firstMean": 0.008500332641022108,
+              "waitMean": -0.0032553620142566292,
+              "firstMedian": -0.004080351537978588,
+              "waitMedian": 0,
+              "firstPositive": 31,
+              "waitPositive": 18,
+              "avoidedLoss": 14,
+              "missedGain": 7
+            },
+            {
+              "h": 30,
+              "firstMean": -0.003012514276212666,
+              "waitMean": -0.011615423451882718,
+              "firstMedian": -0.021865113804977798,
+              "waitMedian": 0,
+              "firstPositive": 24,
+              "waitPositive": 16,
+              "avoidedLoss": 15,
+              "missedGain": 6
+            }
+          ]
+        },
+        {
+          "era": "2018-23",
+          "n": 42,
+          "confirmed": 30,
+          "metrics": [
+            {
+              "h": 7,
+              "firstMean": 0.013021659544343641,
+              "waitMean": -0.003380530163194181,
+              "firstMedian": 0.0007138919517669651,
+              "waitMedian": 0,
+              "firstPositive": 21,
+              "waitPositive": 11,
+              "avoidedLoss": 6,
+              "missedGain": 6
+            },
+            {
+              "h": 30,
+              "firstMean": -0.0008410834494118719,
+              "waitMean": -0.010514536264696527,
+              "firstMedian": -0.017837767197529775,
+              "waitMedian": 0,
+              "firstPositive": 16,
+              "waitPositive": 11,
+              "avoidedLoss": 8,
+              "missedGain": 4
+            }
+          ]
+        },
+        {
+          "era": "2024+",
+          "n": 23,
+          "confirmed": 14,
+          "metrics": [
+            {
+              "h": 7,
+              "firstMean": 0.00024399655669582948,
+              "waitMean": -0.0030267940901097957,
+              "firstMedian": -0.012997562956945652,
+              "waitMedian": 0,
+              "firstPositive": 10,
+              "waitPositive": 7,
+              "avoidedLoss": 8,
+              "missedGain": 1
+            },
+            {
+              "h": 30,
+              "firstMean": -0.006977735786022812,
+              "waitMean": -0.013625739185005328,
+              "firstMedian": -0.04048484848484857,
+              "waitMedian": 0,
+              "firstPositive": 8,
+              "waitPositive": 5,
+              "avoidedLoss": 7,
+              "missedGain": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "window_days": 50,
+      "censored": 0,
+      "groups": [
+        {
+          "era": "all",
+          "n": 43,
+          "confirmed": 28,
+          "metrics": [
+            {
+              "h": 7,
+              "firstMean": 0.008818504464627995,
+              "waitMean": -0.0012487451392474529,
+              "firstMedian": 0.0045098263399265814,
+              "waitMedian": 0,
+              "firstPositive": 22,
+              "waitPositive": 17,
+              "avoidedLoss": 11,
+              "missedGain": 4
+            },
+            {
+              "h": 30,
+              "firstMean": 0.02210160556037334,
+              "waitMean": 0.014032209969887181,
+              "firstMedian": -0.006412261495151617,
+              "waitMedian": 0,
+              "firstPositive": 19,
+              "waitPositive": 10,
+              "avoidedLoss": 9,
+              "missedGain": 6
+            }
+          ]
+        },
+        {
+          "era": "2018-23",
+          "n": 33,
+          "confirmed": 20,
+          "metrics": [
+            {
+              "h": 7,
+              "firstMean": 0.006603256340084555,
+              "waitMean": 0.003180059843869272,
+              "firstMedian": 0.0045098263399265814,
+              "waitMedian": 0,
+              "firstPositive": 17,
+              "waitPositive": 14,
+              "avoidedLoss": 10,
+              "missedGain": 3
+            },
+            {
+              "h": 30,
+              "firstMean": 0.017540237742360805,
+              "waitMean": 0.020913492931241326,
+              "firstMedian": -0.030147400185700945,
+              "waitMedian": 0,
+              "firstPositive": 12,
+              "waitPositive": 7,
+              "avoidedLoss": 9,
+              "missedGain": 4
+            }
+          ]
+        },
+        {
+          "era": "2024+",
+          "n": 10,
+          "confirmed": 8,
+          "metrics": [
+            {
+              "h": 7,
+              "firstMean": 0.016128823275621353,
+              "waitMean": -0.015863801583532643,
+              "firstMedian": 0.006541717329849317,
+              "waitMedian": -0.0016233766233766378,
+              "firstPositive": 5,
+              "waitPositive": 3,
+              "avoidedLoss": 1,
+              "missedGain": 1
+            },
+            {
+              "h": 30,
+              "firstMean": 0.03715411935981472,
+              "waitMean": -0.008676023802581501,
+              "firstMedian": 0.016063988890075986,
+              "waitMedian": -0.00012623074981060745,
+              "firstPositive": 7,
+              "waitPositive": 3,
+              "avoidedLoss": 0,
+              "missedGain": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "window_days": 100,
+      "censored": 0,
+      "groups": [
+        {
+          "era": "all",
+          "n": 37,
+          "confirmed": 20,
+          "metrics": [
+            {
+              "h": 7,
+              "firstMean": -0.005267292618372224,
+              "waitMean": 0.0008502868765567435,
+              "firstMedian": 0.0012348118146794373,
+              "waitMedian": 0,
+              "firstPositive": 19,
+              "waitPositive": 11,
+              "avoidedLoss": 11,
+              "missedGain": 6
+            },
+            {
+              "h": 30,
+              "firstMean": -0.0056851053474004576,
+              "waitMean": 0.01573097147598645,
+              "firstMedian": -0.01379870129870131,
+              "waitMedian": 0,
+              "firstPositive": 15,
+              "waitPositive": 10,
+              "avoidedLoss": 14,
+              "missedGain": 3
+            }
+          ]
+        },
+        {
+          "era": "2018-23",
+          "n": 24,
+          "confirmed": 13,
+          "metrics": [
+            {
+              "h": 7,
+              "firstMean": 0.001644611874883915,
+              "waitMean": 0.0021753375202268146,
+              "firstMedian": 0.0021600680233807568,
+              "waitMedian": 0,
+              "firstPositive": 13,
+              "waitPositive": 7,
+              "avoidedLoss": 6,
+              "missedGain": 5
+            },
+            {
+              "h": 30,
+              "firstMean": 0.007623100788970674,
+              "waitMean": 0.0250917690718023,
+              "firstMedian": 0.0006306251617105851,
+              "waitMedian": 0,
+              "firstPositive": 12,
+              "waitPositive": 7,
+              "avoidedLoss": 8,
+              "missedGain": 3
+            }
+          ]
+        },
+        {
+          "era": "2024+",
+          "n": 13,
+          "confirmed": 7,
+          "metrics": [
+            {
+              "h": 7,
+              "firstMean": -0.018027731682845098,
+              "waitMean": -0.001595960465603388,
+              "firstMedian": -0.01941438574156573,
+              "waitMedian": 0,
+              "firstPositive": 6,
+              "waitPositive": 4,
+              "avoidedLoss": 5,
+              "missedGain": 1
+            },
+            {
+              "h": 30,
+              "firstMean": -0.03025410129147024,
+              "waitMean": -0.0015505010085966524,
+              "firstMedian": -0.0476620328579167,
+              "waitMedian": 0,
+              "firstPositive": 3,
+              "waitPositive": 3,
+              "avoidedLoss": 6,
+              "missedGain": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "current retrieved historical data not original first-known vintages",
+    "no raw source digest persisted",
+    "no costs or position size realism",
+    "ETHBTC pair relative return, not realized cash profit or full rotation",
+    "nonoverlapping within each model; models share dates and cycles",
+    "post-discovery, not a preregistered prospective test",
+    "not canonical T6"
+  ]
+}
