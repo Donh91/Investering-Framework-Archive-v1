@@ -94,5 +94,25 @@ class OfflineIssuerTest(unittest.TestCase):
         late=daily_product_acceptance(v["forecast_freeze"],2026,46,datetime(2026,11,10,0,1,tzinfo=timezone.utc))
         self.assertEqual(late["status"],"INCOMPLETE")
 
+
+class IssuerMethodAndInheritedProtectionTest(unittest.TestCase):
+    """K10/K11 (2026-11-19): the offline issuer is a deterministic rule and its protection state is carried forward."""
+
+    def test_package_states_method_and_inherited_protection_basis(self):
+        c, b, p = fixtures()
+        v = build_offline_value(c, b, p, 2026, 46, 34, 33)
+        self.assertEqual(v["issuer_method"], METHOD)
+        self.assertEqual(v["decision_projection"]["issuer_method"], METHOD)
+        prot = v["decision_projection"]["protection"]
+        self.assertEqual(prot["state_basis"], "INHERITED_FROM_PRIOR_ISSUE")
+        self.assertEqual(prot["inherited_from_issue_number"], 33)
+
+    def test_inheritance_chain_keeps_the_original_evaluated_issue(self):
+        c, b, p = fixtures()
+        p = copy.deepcopy(p)
+        p["decision_projection"]["protection"].update({"state_basis": "INHERITED_FROM_PRIOR_ISSUE", "inherited_from_issue_number": 31})
+        v = build_offline_value(c, b, p, 2026, 46, 34, 33)
+        self.assertEqual(v["decision_projection"]["protection"]["inherited_from_issue_number"], 31)
+
 if __name__=="__main__":
     unittest.main()

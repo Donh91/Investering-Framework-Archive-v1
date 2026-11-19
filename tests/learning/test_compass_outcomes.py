@@ -221,6 +221,7 @@ class CompassOutcomeTest(unittest.TestCase):
             # K03 (2026-11-19): the outcome records the frozen forecast's own data status and mapping integrity.
             self.assertEqual(outcome["source_data_status"], self.freeze().get("data_status"))
             self.assertIn("source_mapping_integrity_status", outcome)
+            self.assertIn("source_cn_issuer_method", outcome)
             self.assertEqual(original, freeze_path.read_bytes())
 
     def test_batch_end_is_not_candle_close(self):
