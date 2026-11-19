@@ -703,6 +703,11 @@ class TestCostGuard(unittest.TestCase):
             self.assertTrue(row["no_retry"])
         self.assertEqual((by_id[MID]["consumed_run_id"], by_id[MID]["consumed_response_id"], by_id[MID]["consumed_estimated_upper_usd"]),
                          (44386340009, "resp_0477227a70790153006afe044ec9c487d08ebd44a0466687db", 3.13212))
+        supervisor = by_id["ASTRA-S1-SUPERVISOR-EVOLUTION-20261119-SOL"]
+        self.assertEqual((supervisor["status"], supervisor["lower_usd"], supervisor["upper_usd"], supervisor["one_paid_post_max"]),
+                         (res.RESERVED, 0, 3, 1))
+        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER):
+            m.check_reservation("ASTRA-S1-SUPERVISOR-EVOLUTION-20261119-SOL", 3)
         expected = [r for r in rows if r["status"] != res.SETTLED]
         self.assertEqual(res.mission_reservations(ledger, set())[:2],
                          (sum(r["upper_usd"] for r in expected), len(expected)))
