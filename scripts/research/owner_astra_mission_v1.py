@@ -47,7 +47,8 @@ MISSIONS_REL = "06_RESEARCH_LAB/astra_missions"
 MISSIONS = ROOT / MISSIONS_REL
 POLICY = ROOT / "research/api_agent/coordination/SOL_MAX_SHARED_MODEL_POLICY_V1.json"
 LEDGER = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
-MODEL = "gpt-6.2-astra"
+MODEL = "gpt-6.2-astra"           # the default model: a mission without "model" runs Astra, as before
+SOL_MODEL = "gpt-6.2-sol"         # the only other admitted model: the highest verified Sol of the shared policy
 EFFORT = "max"
 MISSION_ID = re.compile(r"ASTRA-[A-Z0-9]{1,24}(?:-[A-Z0-9]{1,24}){1,10}\Z")
 FILE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,80}\.md\Z")
@@ -55,7 +56,14 @@ TRIGGER = re.compile(TRIGGER_PREFIX + r" (ASTRA-[A-Z0-9-]{3,120}) ([0-9a-f]{64})
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 RESPONSE_ID = re.compile(r"resp_[A-Za-z0-9_-]{4,180}\Z")
-PROVIDER_MODEL = re.compile(re.escape(MODEL) + r"(?:-20[0-9]{2}-[0-9]{2}-[0-9]{2})?\Z")
+
+
+def provider_model(model: str):
+    """The provider may report the model id or a dated snapshot of exactly that id."""
+    return re.compile(re.escape(model) + r"(?:-20[0-9]{2}-[0-9]{2}-[0-9]{2})?\Z")
+
+
+PROVIDER_MODEL = provider_model(MODEL)
 MAX_MISSION_USD = 25.0          # per-mission ceiling, independent of the shared guard
 MAX_REQUEST_BYTES = 700_000
 MAX_OUTPUT_TOKENS = 128_000
@@ -102,8 +110,13 @@ def tracked_bytes(rel: str) -> bytes:
     return raw
 
 
-def model_policy() -> dict:
-    """The model comes from the reviewed shared policy, never from a mission, a comment or a fallback."""
+def model_policy(model: str = MODEL) -> dict:
+    """The model comes from the reviewed shared policy, never from a comment or a fallback. A mission may name only
+    the policy's Astra preference (the default) or its highest verified Sol, each with gateway-matching prices."""
+    if model == SOL_MODEL:
+        return sol_policy()
+    if model != MODEL:
+        fail("MISSION_MODEL_NOT_ALLOWED")
     policy = core.read(POLICY)
     pref = policy.get("manual_research_preference")
     price = PRICES_PER_MILLION.get(MODEL)
@@ -118,6 +131,45 @@ def model_policy() -> dict:
         fail("ASTRA_MODEL_POLICY_NOT_VERIFIED")
     return {"id": MODEL, "input_usd_per_million": price["input"], "output_usd_per_million": price["output"],
             "official_model_spec": pref["official_model_spec"]}
+
+
+def sol_policy() -> dict:
+    """SOL_MODEL only while it is the highest verified_available Sol of the policy and every price the gateway's
+    estimate_cost applies (standard, 12h cache-write, long context) matches the policy row. A newer Sol in the
+    policy fails closed here until a reviewed launcher change admits it."""
+    policy = core.read(POLICY)
+    rows = policy.get("available_verified_sol_models")
+    price = PRICES_PER_MILLION.get(SOL_MODEL)
+    if (policy.get("contract") != "SOL_MAX_SHARED_MODEL_POLICY_V1" or policy.get("owner_issue") != ISSUE
+            or not isinstance(rows, list) or not rows or not all(isinstance(r, dict) for r in rows)):
+        fail("SOL_MODEL_POLICY_NOT_VERIFIED")
+    verified = [r for r in rows if r.get("verified_available") is True]
+    versions = [r.get("version") for r in verified]
+    if not verified or any(not isinstance(v, list) or not v or not all(type(x) is int for x in v) for v in versions):
+        fail("SOL_MODEL_POLICY_NOT_VERIFIED")
+    top = max(verified, key=lambda r: tuple(r["version"]))
+    if (top.get("id") != SOL_MODEL or [r.get("id") for r in verified].count(SOL_MODEL) != 1
+            or sum(1 for r in verified if tuple(r["version"]) == tuple(top["version"])) != 1
+            or SOL_MODEL in policy.get("forbidden_auto_models", [])
+            or top.get("official_model_spec") != "https://developers.openai.com/api/docs/models/" + SOL_MODEL
+            or type(top.get("max_output_tokens")) is not int or top["max_output_tokens"] < MAX_OUTPUT_TOKENS
+            or not isinstance(price, dict)
+            or top.get("standard_input_usd_per_million") != price.get("input")
+            or top.get("standard_output_usd_per_million") != price.get("output")
+            or top.get("standard_cache_write_12h_usd_per_million") != price.get("input", 0) * 2.5
+            or top.get("long_context_input_threshold_tokens") != 272_000
+            or top.get("long_context_input_multiplier") != 2 or top.get("long_context_output_multiplier") != 1.5):
+        fail("SOL_MODEL_POLICY_NOT_VERIFIED")
+    return {"id": SOL_MODEL, "input_usd_per_million": price["input"], "output_usd_per_million": price["output"],
+            "official_model_spec": top["official_model_spec"]}
+
+
+def mission_model(mission: dict) -> str:
+    """A mission without "model" keeps the Astra default; otherwise exactly one of the two admitted ids."""
+    model = mission.get("model", MODEL)
+    if model not in (MODEL, SOL_MODEL):
+        fail("MISSION_CONTRACT_MODEL_NOT_ALLOWED")
+    return model
 
 
 def mission_rel(mission_id: str) -> str:
@@ -137,10 +189,11 @@ def load_mission(mission_id: str):
     mission = json.loads(raw)
     if (not isinstance(mission, dict) or not set(mission) <= MISSION_KEYS
             or mission.get("contract") != "ASTRA_MISSION_V1" or mission.get("mission_id") != mission_id
-            or mission.get("trigger_issue") != ISSUE or mission.get("model") != MODEL
+            or mission.get("trigger_issue") != ISSUE
             or mission.get("reasoning_effort") != EFFORT or mission.get("public_only") is not True
             or mission.get("authority") != AUTHORITY):
         fail("MISSION_CONTRACT_INVALID")
+    mission_model(mission)
     tokens, usd = mission.get("max_output_tokens"), mission.get("max_usd")
     if (type(tokens) is not int or not MIN_OUTPUT_TOKENS <= tokens <= MAX_OUTPUT_TOKENS
             or type(usd) not in (int, float) or not 0 < usd <= MAX_MISSION_USD):
@@ -155,7 +208,8 @@ def load_mission(mission_id: str):
 
 def build_request(mission_id: str):
     rel, mission_raw, mission = load_mission(mission_id)
-    policy = model_policy()
+    model = mission_model(mission)
+    policy = model_policy(model)
     instructions = tracked_bytes(rel + "/" + mission["instructions_file"])
     bundle = tracked_bytes(rel + "/" + mission["bundle_file"])
     if digest(bundle) != mission["bundle_sha256"]:
@@ -170,19 +224,19 @@ def build_request(mission_id: str):
             + instructions.decode("utf-8")
             + "\n===== BUNDLE " + mission["bundle_file"] + " sha256=" + mission["bundle_sha256"] + " =====\n"
             + bundle.decode("utf-8") + "\n===== END BUNDLE =====\n")
-    request = {"model": MODEL, "reasoning": {"effort": EFFORT}, "max_output_tokens": mission["max_output_tokens"],
+    request = {"model": model, "reasoning": {"effort": EFFORT}, "max_output_tokens": mission["max_output_tokens"],
                "background": True, "store": True,
                "input": [{"role": "user", "content": [{"type": "input_text", "text": text}]}]}
     data = core.canonical(request)
     input_upper = len(data) + INPUT_OVERHEAD_TOKENS
-    upper = estimate_cost(MODEL, input_upper, mission["max_output_tokens"])
+    upper = estimate_cost(model, input_upper, mission["max_output_tokens"])
     if len(data) > MAX_REQUEST_BYTES or upper > float(mission["max_usd"]) or CREDENTIAL.search(data):
         fail("REQUEST_BOUND_OR_COST_CAP_EXCEEDED")
     meta = {"contract": "ASTRA_MISSION_REQUEST_V1", "mission_id": mission_id, "work_id": mission_id,
             "mission_dir": rel, "mission_json_sha256": digest(mission_raw),
             "instructions_file": mission["instructions_file"], "instructions_sha256": digest(instructions),
             "bundle_file": mission["bundle_file"], "bundle_sha256": mission["bundle_sha256"],
-            "bundle_bytes": len(bundle), "model": MODEL, "model_policy": policy, "reasoning_effort": EFFORT,
+            "bundle_bytes": len(bundle), "model": model, "model_policy": policy, "reasoning_effort": EFFORT,
             "max_output_tokens": mission["max_output_tokens"], "request_sha256": digest(data),
             "request_bytes": len(data), "input_token_upper": input_upper,
             "worst_case_usd": round(upper, 6), "max_usd": mission["max_usd"], "external_tools": False,
@@ -355,9 +409,10 @@ def reserve(out: Path, guard_path: Path):
         fail("RUN_ID_INVALID")
     if consumed(token, mission_id):
         fail("ASTRA_MISSION_ALREADY_CLAIMED")
-    model = core.http_json("GET", core.API + "/models/" + MODEL,
-                           api_key=core.required_env("OPENAI_API_KEY"), timeout=45)
-    if model.get("id") != MODEL:
+    model = mission_model(meta)
+    provider = core.http_json("GET", core.API + "/models/" + model,
+                              api_key=core.required_env("OPENAI_API_KEY"), timeout=45)
+    if provider.get("id") != model:
         fail("PROVIDER_MODEL_NOT_VERIFIED")
     core.write_once(out / "budget_guard.json", guard)
     body = claim_body(mission_id, run_id, meta["request_sha256"])
@@ -461,11 +516,13 @@ def collect(out: Path, *, sleep=time.sleep, clock=time.monotonic):
     meta = core.read(out / "source_manifest.json")
     if meta.get("mission_id") != mission_id or meta.get("request_sha256") != handle.get("request_sha256"):
         fail("HANDLE_MANIFEST_MISMATCH")
+    model = mission_model(meta)
+    identity = provider_model(model)
     key = core.required_env("OPENAI_API_KEY")
     deadline = clock() + COLLECT_SECONDS
     while True:
         response = core.http_json("GET", core.API + "/responses/" + rid, api_key=key, timeout=75)
-        if response.get("id") != rid or not PROVIDER_MODEL.fullmatch(str(response.get("model"))):
+        if response.get("id") != rid or not identity.fullmatch(str(response.get("model"))):
             fail("PROVIDER_RESPONSE_IDENTITY_MISMATCH")
         for field, want in (("max_output_tokens", meta.get("max_output_tokens")),):
             if field in response and response[field] != want:
@@ -486,13 +543,13 @@ def collect(out: Path, *, sleep=time.sleep, clock=time.monotonic):
     ni, no = (usage.get("input_tokens"), usage.get("output_tokens")) if isinstance(usage, dict) else (None, None)
     usage_ok = type(ni) is int and type(no) is int and min(ni, no) >= 0
     # Without valid usage the whole reservation counts as spent (never a lower guess).
-    estimated = estimate_cost(MODEL, ni, no) if usage_ok else float(handle["owner_reserved_usd"])
+    estimated = estimate_cost(model, ni, no) if usage_ok else float(handle["owner_reserved_usd"])
     results = out / "archive" / meta["mission_dir"] / "results"
     results.mkdir(parents=True, exist_ok=True)
     report_name = "ASTRA_RAW_REPORT.md"
     receipt = {"contract": "ASTRA_MISSION_RECEIPT_V1", "mission_id": mission_id, "work_id": mission_id,
                "run_id": handle["run_id"], "response_id": rid, "status": status,
-               "incomplete_details": response.get("incomplete_details"), "model": MODEL,
+               "incomplete_details": response.get("incomplete_details"), "model": model,
                "provider_model": response.get("model"), "reasoning_effort": EFFORT,
                "release_main_sha": handle["release_main_sha"], "request_sha256": handle["request_sha256"],
                "bundle_sha256": handle["bundle_sha256"], "claim_comment_id": handle["claim_comment_id"],
