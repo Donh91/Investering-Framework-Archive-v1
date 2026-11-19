@@ -114,11 +114,23 @@ class S1RuntimeContractTest(unittest.TestCase):
         # v5 (first live v2.2 tick, 2026-11-17: the step-1 fetch was routed into a code sandbox with no network and
         # the run ended SOURCE_UNVERIFIED): step 1 names the tools. The text grew by one sentence, so the cap is 1750.
         # v6: step 2 names the directory listing (one more URL of the same repository). Cap 2100.
-        self.assertLessEqual(len(boot), 2100)
+        # v8 rev 2026-11-19 (S1_STEP1_PROBE_v1: web.run DisabledError, connector fetch returns current main in <1 s;
+        # one run used a 3 h stale SHA): steps 1-2 name the connector, forbid web fetch, and bind M to this run's fetch.
+        # No commit-age stop (S1_SELF_DIAGNOSIS_V1 7008602091: a quiet main would deadlock; an older M is caught by T3
+        # main_not_ahead against a fresh brief and by F6's re-read of main before any merge).
+        # Same rev, S1_T1T2_PROBE_v1: the connector's issue list returns user {"login": "github-actions"} without type and
+        # id, so T1's author check can never pass on it (BRIEF_INCOMPLETE(T1:brief_not_verified)); the connector's fetch of
+        # the raw REST URLs returns every field T1 and T2 check. Step 4 binds every fetch of TICK.md to it. Cap 2800.
+        self.assertLessEqual(len(boot), 2800)
+        self.assertNotIn("committer.date", boot)
+        self.assertNotIn("3stale", boot)
         for needle in ("Read no other file yet.", "that of TICK.md must equal tick_blob", "list the directory 00_FMOS/S1",
-                       "Use your web fetch tool or the GitHub connector's branch read of main",
+                       "with the GitHub connector's fetch (mcp__GitHub__fetch) of https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/branches/main",
+                       "Web fetch (web.run) is disabled for this host: do not use it.",
                        "NEVER the Python or code sandbox (it has no network)",
-                       "If neither tool returns the SHA: SOURCE_UNVERIFIED(3).", "(never a search result)"):
+                       "If the connector returns no SHA: SOURCE_UNVERIFIED(3).", "(never a search result)", "M is the SHA that this fetch returned in this run, never a remembered or cached SHA",
+                       'Tool binding: every "fetch <URL>" and "fetch API/..." in TICK.md and ACTION_LOOP.md is the connector\'s fetch (mcp__GitHub__fetch) of that exact URL',
+                       "T1 and T2 use only that fetch, never an issue list, issue search or workflow-run tool"):
             self.assertIn(needle, boot)
         self.assertEqual(boot.count("api.github.com"), 2, "main, and the 00_FMOS/S1 listing at that SHA; no other URL")
         self.assertEqual(boot.count("https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/"), 2)

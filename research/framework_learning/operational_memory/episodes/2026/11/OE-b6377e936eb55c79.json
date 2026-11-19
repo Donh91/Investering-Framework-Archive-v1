@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/data_ping/auto_market_state.py",
+    "scripts/data_terminal/top100_breadth_owner_collector.py",
+    "tests/daily_capture/test_live_anchor_empty_response_recovery.py",
+    "tests/data_terminal/test_top100_breadth_owner_collector.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-b6377e936eb55c79",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "kompas-blockchaincenter-dense-series-source-specific-altseason-health",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(data): decode BlockchainCenter dense historical series without filling gaps * fix(kompas): bind altseason lane health to required BlockchainCenter 90d feature * test(kompas): prevent secondary provider from masking a missing primary feature * test(data): cover dense source schema, missing dates and invalid series",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/data_ping/auto_market_state.py": "5088dda17f622ea1dedb47d21f6d6ebab270cfc1",
+    "scripts/data_terminal/top100_breadth_owner_collector.py": "028e75ace7ac1973eec9f96d85728400e1c4bb56",
+    "tests/daily_capture/test_live_anchor_empty_response_recovery.py": "9d3136afcf6fa0248f1fef4a0f8500001212681a",
+    "tests/data_terminal/test_top100_breadth_owner_collector.py": "c6787f1559613ad3a40b1e1a42c8a52c12b31e74"
+  },
+  "source_commit_sha": "b6377e936eb55c79c32ab6c4e06206fd3d1347f1",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-19T10:29:32+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(kompas): restore BlockchainCenter dense series and source-specific altseason health (#2239)"
+}

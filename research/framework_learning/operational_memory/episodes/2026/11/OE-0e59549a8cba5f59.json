@@ -1,0 +1,50 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "07_PROMPTS_AND_AGENTS/api/SHARED_SOL_MAX_CROSS_THREAD_RUNBOOK_V1.md",
+    "AGENTS.md",
+    "research/api_agent/coordination/SOL_MAX_SHARED_MODEL_POLICY_V1.json",
+    "scripts/api_agent/sol_max_shared_policy_v1.py",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py",
+    "tests/api_agent/test_sol_max_shared_policy_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-0e59549a8cba5f59",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "require-exact-gpt-sol-max-new-no-model",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "fix: require exact GPT-6.2 Sol MAX for new research; no model fallback (#2236)",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/S1/BOOTSTRAP.txt": "1cd0be5fa8d28f0598517634eecf348bb590a245",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "4fc98f34c13e38923c6efd2ad47fff256bde5b95",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "942e30d6d54178522a17b25773292143182ab9e6",
+    "07_PROMPTS_AND_AGENTS/api/SHARED_SOL_MAX_CROSS_THREAD_RUNBOOK_V1.md": "cb6316d9657c8d5c113d7b426ae5cb61f8a777b1",
+    "AGENTS.md": "18b6dbbe4adbeb2660590dc14cdb9e2ef3714994",
+    "research/api_agent/coordination/SOL_MAX_SHARED_MODEL_POLICY_V1.json": "68dc294b59a7fbaa0925874ae9ca80343d915e91",
+    "scripts/api_agent/sol_max_shared_policy_v1.py": "442691748e640b1212dbb3d0f91f0e2a609d018e",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py": "e1c070eaaa91f9b0e4760b10a3faa838ce14338a",
+    "tests/api_agent/test_sol_max_shared_policy_v1.py": "e91f24f75f781455449c3a9133ea655b21876b9d"
+  },
+  "source_commit_sha": "0e59549a8cba5f594cda250e8e0d606f89b1425c",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-19T08:46:14+01:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix: require exact GPT-6.2 Sol MAX for new research; no model fallback (#2236)"
+}
