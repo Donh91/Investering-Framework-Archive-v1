@@ -421,13 +421,14 @@ def settled_owner_cost_upper(path: Path, now: datetime) -> float:
     """One historical group provision; callers must first validate pending_risk."""
     value = json.loads(path.read_text(encoding="utf-8"))
     evidence = value.get("owner_astra_provider_period_settlement")
-    if evidence is None:
-        return 0.0
-    if evidence != OWNER_ASTRA_PROVIDER_PERIOD_SETTLEMENT:
-        raise ValueError("ASTRA_PROVIDER_GROUP_EVIDENCE_INVALID")
-    if (now.year, now.month) != (2026, 11):
-        return 0.0
-    return max(evidence["provider_period_spend_usd"], evidence["native_estimated_total_usd"])
+    _, provision = astra_missions.settlement_summary(value)
+    upper = float(provision.get(now.strftime("%Y-%m"), 0))
+    if evidence is not None:
+        if evidence != OWNER_ASTRA_PROVIDER_PERIOD_SETTLEMENT:
+            raise ValueError("ASTRA_PROVIDER_GROUP_EVIDENCE_INVALID")
+        if (now.year, now.month) == (2026, 11):
+            upper += max(evidence["provider_period_spend_usd"], evidence["native_estimated_total_usd"])
+    return upper
 
 
 def model_quote(args: argparse.Namespace) -> tuple[float, dict | None]:
@@ -583,9 +584,11 @@ def main() -> None:
         total = None
     pending_low, pending_high, pending_count = 0.0, 0.0, 0
     settled_owner_upper = 0.0
+    settled_astra_count = 0
     try:
         pending_low, pending_high, pending_count = pending_risk(args.liability_ledger)
         settled_owner_upper = settled_owner_cost_upper(args.liability_ledger, now)
+        settled_astra_count = len(astra_missions.settlement_summary(json.loads(args.liability_ledger.read_text(encoding="utf-8")))[0])
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         errors.append({"path": str(args.liability_ledger),
                        "reason": "LIABILITY_EVIDENCE_UNAVAILABLE:" + str(exc)[:100]})
@@ -653,7 +656,8 @@ def main() -> None:
                 raise ValueError("MISSION_EXCEPTION_SHAPE_INVALID")
             lr = json.loads(args.liability_ledger.read_text(encoding="utf-8"))
             exact = [r for r in lr.get(astra_missions.KEY, []) if isinstance(r, dict) and r.get("work_id") == mission_id]
-            if len(exact) != 1 or astra_missions.mission_max_usd(mission_id) != exact[0].get("upper_usd"):
+            if (len(exact) != 1 or exact[0].get("status") != astra_missions.RESERVED
+                    or astra_missions.mission_max_usd(mission_id) != exact[0].get("upper_usd")):
                 raise ValueError("DISTINCT_OWNER_ASTRA_MISSION_RESERVATION_REQUIRED")
             mission_ok = True
         except (OSError, ValueError, TypeError, KeyError, AttributeError):
@@ -672,7 +676,8 @@ def main() -> None:
                 for row in valid.get("owner_reservations", [])
                 if row.get("work_id") in OWNER_ASTRA_PROGRAM_WORK
                 and row.get("status") == ACTIVE_RESERVATION_STATUS
-            ) + sum(float(row.get("upper_usd", 0)) for row in valid.get(astra_missions.KEY, []))
+            ) + sum(float(row.get("upper_usd", 0)) for row in valid.get(astra_missions.KEY, [])
+                    if row.get("status") != astra_missions.SETTLED)
         except (OSError, ValueError, TypeError):
             errors.append({"path": "OWNER_ASTRA_PROGRAM",
                            "reason": "NORMAL_EXCEPTION_HOLD_UNREADABLE"})
@@ -718,6 +723,7 @@ def main() -> None:
         "owner_global_reserve_usd": OWNER_GLOBAL_RESERVE_USD,
         "owner_normal_target_usd": OWNER_GLOBAL_TARGET_USD,
         "settled_owner_cost_upper_usd": round(settled_owner_upper, 8),
+        "settled_astra_mission_count": settled_astra_count,
         "pending_liability_count": pending_count,
         "pending_liability_lower_usd": round(pending_low, 8),
         "pending_liability_upper_usd": round(pending_high, 8),

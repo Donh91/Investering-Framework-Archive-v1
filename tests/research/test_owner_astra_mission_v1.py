@@ -16,6 +16,7 @@ import yaml
 
 from scripts.research import owner_astra_mission_v1 as m
 from scripts.api_agent import astra_mission_reservations_v1 as res
+from tests.api_agent.test_astra_provider_settlement_v1 import expected_pending
 
 ROOT = Path(__file__).resolve().parents[2]
 MID = "ASTRA-S1-V32-REDTEAM-20261118-R2"
@@ -120,6 +121,8 @@ class Base(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.tmp)
         self.out = self.tmp / "out"
         ledger = json.loads(CANONICAL_LEDGER.read_text())
+        # Synthetic launcher rows cannot carry the real ledger's settlement proofs.
+        ledger.pop(res.provider_settlement.KEY, None)
         ledger["astra_mission_reservations"] = [reservation()]
         self.ledger = self.tmp / "ledger.json"
         self.ledger.write_text(json.dumps(ledger))
@@ -672,6 +675,7 @@ class TestCostGuard(unittest.TestCase):
         self.base = json.loads(CANONICAL_LEDGER.read_text())
         # Fixture rows are explicit per test; the canonical mission row is pinned in test_canonical_mission_row.
         self.base.pop("astra_mission_reservations", None)
+        self.base.pop(res.provider_settlement.KEY, None)  # isolate synthetic reservation tests
         # The canonical rows as they are: settled/consumed rows hold nothing, active rows count in full.
         self.stop = self.base["absolute_budget_usd"]
 
@@ -688,41 +692,34 @@ class TestCostGuard(unittest.TestCase):
         return proc.returncode, json.loads(proc.stdout)
 
     def test_canonical_mission_row(self):
-        rows = json.loads(CANONICAL_LEDGER.read_text()).get("astra_mission_reservations", [])
-        self.assertEqual([(r["work_id"], r["status"], r["lower_usd"], r["upper_usd"], r["one_paid_post_max"]) for r in rows],
-                         [("ASTRA-S1-V32-REDTEAM-20261118-R2", "CONSUMED_PENDING_INVOICE", 0, 20, 1),
-                          ("ASTRA-ALPHA-GLOBAL-SPECIALIST-20261118", "CONSUMED_PENDING_INVOICE", 0, 3, 1),
-                          ("ASTRA-S1-V32-REDTEAM-20261118-R2-SOL", "CONSUMED_PENDING_INVOICE", 0, 3, 1),
-                          ("ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118", "CONSUMED_PENDING_INVOICE", 0, 20, 1),
-                          ("ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118-SOL", "CONSUMED_PENDING_INVOICE", 0, 3, 1),
-                          ("ASTRA-NAVIGATOR-APP-ARCH-20261119-SOL", "CONSUMED_PENDING_INVOICE", 0, 3, 1),
-                          ("ASTRA-NAVIGATOR-APP-WALLET-20261119-SOL", "CONSUMED_PENDING_INVOICE", 0, 3, 1),
-                          ("ASTRA-NAVIGATOR-APP-REG-20261119-SOL", "CONSUMED_PENDING_INVOICE", 0, 3, 1),
-                          ("ASTRA-RESEARCH-CLOSURE-20261119-SOL", "OWNER_RESERVED_PREHTTP", 0, 3, 1)])
-        self.assertEqual((rows[0]["consumed_run_id"], rows[0]["consumed_response_id"],
-                          rows[0]["consumed_estimated_upper_usd"]),
+        ledger = json.loads(CANONICAL_LEDGER.read_text())
+        rows = ledger["astra_mission_reservations"]
+        by_id = {r["work_id"]: r for r in rows}
+        initial = {'ASTRA-S1-V32-REDTEAM-20261118-R2': 20, 'ASTRA-ALPHA-GLOBAL-SPECIALIST-20261118': 3, 'ASTRA-S1-V32-REDTEAM-20261118-R2-SOL': 3, 'ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118': 20, 'ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118-SOL': 3, 'ASTRA-NAVIGATOR-APP-ARCH-20261119-SOL': 3, 'ASTRA-NAVIGATOR-APP-WALLET-20261119-SOL': 3, 'ASTRA-NAVIGATOR-APP-REG-20261119-SOL': 3, 'ASTRA-RESEARCH-CLOSURE-20261119-SOL': 3}
+        for work, ceiling in initial.items():
+            row = by_id[work]
+            self.assertEqual((row["status"], row["lower_usd"], row["upper_usd"], row["one_paid_post_max"]),
+                             (res.SETTLED, 0, ceiling, 1))
+            self.assertTrue(row["no_retry"])
+        self.assertEqual((by_id[MID]["consumed_run_id"], by_id[MID]["consumed_response_id"], by_id[MID]["consumed_estimated_upper_usd"]),
                          (44386340009, "resp_0477227a70790153006afe044ec9c487d08ebd44a0466687db", 3.13212))
-        self.assertEqual(res.mission_reservations(json.loads(CANONICAL_LEDGER.read_text()), set())[:2], (61.0, 9))
-        for mid in ("ASTRA-RESEARCH-CLOSURE-20261119-SOL",):
-            proc = subprocess.run([sys.executable, str(GUARD), "--receipt-root", str(self.tmp / "receipts"),
-                                   "--hard-stop-usd", str(self.stop), "--reserve-usd", "4", "--new-request-upper-usd", "0",
-                                   "--liability-ledger", str(CANONICAL_LEDGER), "--owner-astra-mission-id", mid],
-                                  capture_output=True, text=True, cwd=ROOT, timeout=120)
-            self.assertEqual(proc.returncode, 0, proc.stdout)
-            self.assertEqual(json.loads(proc.stdout)["pending_liability_upper_usd"], 61.0)
-        # The consumed R2 row stays counted but can never launch again.
-        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
-            m.check_reservation(MID, 20)
-        # The consumed R2 and the consumed Sol A/B rows stay counted but can never launch again.
-        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
-            m.check_reservation(SOL_MID, 3)
-        # Every observed consumed native mission remains fully counted and may never be relaunched.
-        for row in rows[:-1]:
-            self.assertEqual(row["status"], "CONSUMED_PENDING_INVOICE")
-            with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
-                m.check_reservation(row["work_id"], row["upper_usd"])
-        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER):
-            m.check_reservation("ASTRA-RESEARCH-CLOSURE-20261119-SOL", 3)
+        expected = [r for r in rows if r["status"] != res.SETTLED]
+        self.assertEqual(res.mission_reservations(ledger, set())[:2],
+                         (sum(r["upper_usd"] for r in expected), len(expected)))
+        for row in rows:
+            if row["status"] == res.SETTLED:
+                with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
+                    m.check_reservation(row["work_id"], row["upper_usd"])
+        proc = subprocess.run([sys.executable, str(GUARD), "--receipt-root", str(self.tmp / "receipts"),
+                               "--hard-stop-usd", str(self.stop), "--reserve-usd", "4", "--new-request-upper-usd", "0",
+                               "--liability-ledger", str(CANONICAL_LEDGER), "--owner-astra-mission-id", MID],
+                              capture_output=True, text=True, cwd=ROOT, timeout=120)
+        self.assertNotEqual(proc.returncode, 0, proc.stdout)
+        guard = json.loads(proc.stdout)
+        self.assertEqual(guard["pending_liability_upper_usd"], expected_pending(ledger)[1])
+        self.assertEqual(guard["pending_liability_count"], expected_pending(ledger)[2])
+        self.assertEqual(guard["settled_astra_mission_count"], len([r for r in rows if r["status"] == res.SETTLED]))
+        self.assertIsNone(guard["owner_astra_mission_id"])
 
     def test_consumed_row_still_counted_in_full(self):
         code, result = self.guard([consumed_row()], hard_stop=50)

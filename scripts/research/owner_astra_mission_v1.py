@@ -34,6 +34,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from scripts.api_agent import manual_astra_task2_high_v1 as core
 from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
+from scripts.api_agent import astra_provider_settlement_v1 as provider_settlement
 
 REPO = "Donh91/Investering-Framework-Archive-v1"
 OWNER = "Donh91"
@@ -279,6 +280,12 @@ def check_reservation(mission_id: str, max_usd):
     rows = ledger.get("astra_mission_reservations")
     if not isinstance(rows, list):
         fail("MISSION_RESERVATION_REQUIRED")
+    try:
+        settled_ids, _ = provider_settlement.groups(ledger, rows)
+    except (ValueError, TypeError, KeyError, AttributeError):
+        fail("MISSION_RESERVATION_MISMATCH")
+    if mission_id in settled_ids:
+        fail("MISSION_RESERVATION_MISMATCH")
     match = [r for r in rows if isinstance(r, dict) and r.get("work_id") == mission_id]
     if (len(match) != 1 or match[0].get("upper_usd") != max_usd or match[0].get("lower_usd") != 0
             or match[0].get("status") != "OWNER_RESERVED_PREHTTP" or match[0].get("one_paid_post_max") != 1
