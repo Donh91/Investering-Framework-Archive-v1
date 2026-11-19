@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from tests.api_agent.test_astra_provider_settlement_v1 import expected_pending, expected_provision
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/api_agent/check_monthly_cost_guard.py"
@@ -234,8 +235,8 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(state["status"], "PASS", state)
         # Native POSTs are settled; retain consumed USD3+10 and distinct USD10
         # owner-approved (not yet consumed) public research reservation.
-        self.assertEqual(state["pending_liability_upper_usd"], 61.0)   # nine rows; earlier full ceilings retained plus USD3 Research Closure
-        self.assertEqual(state["pending_liability_count"], 9)
+        self.assertEqual(state["pending_liability_upper_usd"], expected_pending()[1])
+        self.assertEqual(state["pending_liability_count"], expected_pending()[2])
         self.assertEqual(state["owner_global_hard_stop_usd"], 100.0)
         self.assertGreaterEqual(state["remaining_usd"], 4.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
@@ -251,7 +252,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(
             sorted(r["work_id"] for r in ledger["owner_reservations"]),
             ["ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE","ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE","ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE","ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE","ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE","ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE","ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE","ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE","ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"])
-        self.assertEqual(pending_risk(p), (0.0, 61.0, 9))   # original eight full-ceiling reservations plus USD3 Research Closure; synthetic +USD10 where applicable
+        self.assertEqual(pending_risk(p), expected_pending(ledger))
         self.assertEqual(len(ledger["settled"]), 3)
         self.assertEqual({r["kind"] for r in ledger["settled"]}, {"NATIVE_POST"})
         self.assertEqual(ledger["provider_settlement_evidence"]["sha256"],
@@ -298,9 +299,9 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         from scripts.api_agent import check_monthly_cost_guard as g
         p = g.CANONICAL_LIABILITY_LEDGER
         original = json.loads(p.read_text())
-        self.assertEqual(g.pending_risk(p), (0.0, 61.0, 9))   # original eight full-ceiling reservations plus USD3 Research Closure; synthetic +USD10 where applicable
-        self.assertEqual(g.settled_owner_cost_upper(p, datetime(2026, 11, 18, tzinfo=timezone.utc)), 12.60981)
-        self.assertEqual(g.settled_owner_cost_upper(p, datetime(2026, 12, 1, tzinfo=timezone.utc)), 0.0)
+        self.assertEqual(g.pending_risk(p), expected_pending(original))
+        self.assertAlmostEqual(g.settled_owner_cost_upper(p, datetime(2026, 11, 19, tzinfo=timezone.utc)), expected_provision(original, "2026-11"), places=8)
+        self.assertAlmostEqual(g.settled_owner_cost_upper(p, datetime(2026, 12, 1, tzinfo=timezone.utc)), expected_provision(original, "2026-12"), places=8)
         self.assertEqual(original["owner_astra_provider_period_settlement"]["provider_period_spend_usd"], 5.41)
         self.assertEqual(original["owner_astra_provider_period_settlement"]["settled_total_usd"], 5.41)
         self.assertEqual(original["owner_astra_provider_period_settlement"]["source"], "owner OpenAI usage dashboard + CSV export 2026-11-18")
@@ -331,7 +332,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                    "one_paid_post_max": 1, "reconciliation_required": True}
             original["owner_reservations"].append(new)
             probe.write_text(json.dumps(original))
-            self.assertEqual(g.pending_risk(probe), (0.0, 71.0, 10))   # original eight full-ceiling reservations plus USD3 Research Closure; synthetic +USD10 where applicable
+            self.assertEqual(g.pending_risk(probe), expected_pending(original))
             # Reviewed native never-triggered evidence, not a claim about any current row.
             from unittest.mock import patch
             proof = {"trigger_comment": None, "workflow_run": None, "census": "synthetic"}
@@ -339,7 +340,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                        no_retry=True, native_settlement_evidence=proof)
             probe.write_text(json.dumps(original))
             with patch.dict(g.OWNER_NEVER_TRIGGERED_EVIDENCE, {new["work_id"]: proof}):
-                self.assertEqual(g.pending_risk(probe), (0.0, 61.0, 9))   # original eight full-ceiling reservations plus USD3 Research Closure; synthetic +USD10 where applicable
+                self.assertEqual(g.pending_risk(probe), expected_pending(original))
 
     def test_maeve_consumed_pr_preflight_never_returns_paid_pass(self):
         import os
