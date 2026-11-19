@@ -1,0 +1,54 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/s1-tick-brief.yml",
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "00_FMOS/S1/TICK.md",
+    "00_FMOS/S1_WORKFLOW_ISOLATION_V1.json",
+    "AGENTS.md",
+    "scripts/governance/s1_tick_brief_v1.py",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py",
+    "tests/governance/test_s1_runtime_contract_v1.py",
+    "tests/governance/test_s1_tick_brief_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-a3d0511c7760ec82",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* governance: import S1 v3.2 byte-exact non-workflow package * governance: complete owner-authorized S1 v3.2 workflow package",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/s1-tick-brief.yml": "d5236e80e19d74637db2d081f163da0d922517cb",
+    "00_FMOS/S1/BOOTSTRAP.txt": "405dcae182206a57de5ee766d147796dcfc62732",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "4a0f329b110dd4c3dfc98ce39dca6e3b33cb5659",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "f80d5b1e00df97cc2891224b7571c85c4fd2ce9b",
+    "00_FMOS/S1/TICK.md": "19683db4d756c67617b221a5dadc6b616093e9f2",
+    "00_FMOS/S1_WORKFLOW_ISOLATION_V1.json": "98b584ed0b108ade47e37545cbb0e97a1872761b",
+    "AGENTS.md": "256f814e5da4882b8ecf887feff669742bb77d8a",
+    "scripts/governance/s1_tick_brief_v1.py": "389117e84ae2ef8d186371ecd7282faa8062fd51",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py": "b1e74a5fcf4ce3e3914a09b8d5fa0e5c4f3d2435",
+    "tests/governance/test_s1_runtime_contract_v1.py": "8b8b9a4b87b18cc95608defc05590f971cef4a6e",
+    "tests/governance/test_s1_tick_brief_v1.py": "9b872a18f5d03fd1fc449d441576c082c2f35223"
+  },
+  "source_commit_sha": "a3d0511c7760ec821162413cfb5a9c17eeacc7bc",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-18T16:13:04+01:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "governance: S1 v3.2 brief completeness under a moving main, exact endings, git-object compare, Claude receipt ranking, owner branch-update route and freshness fallback (#2228)"
+}
