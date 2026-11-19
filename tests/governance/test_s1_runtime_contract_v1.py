@@ -121,7 +121,11 @@ class S1RuntimeContractTest(unittest.TestCase):
         # Same rev, S1_T1T2_PROBE_v1: the connector's issue list returns user {"login": "github-actions"} without type and
         # id, so T1's author check can never pass on it (BRIEF_INCOMPLETE(T1:brief_not_verified)); the connector's fetch of
         # the raw REST URLs returns every field T1 and T2 check. Step 4 binds every fetch of TICK.md to it. Cap 2800.
+        # Same rev, ticks 2026-11-19 19:45Z-21:45Z (BRIEF_UNVERIFIED(body) three times): S1 read "that block is one JSON
+        # object B" in TICK.md T1 literally and rejected the ```json fence that render() always writes and parse_body()
+        # always strips. Step 4 states the fence is the published format. Bootstrap-only: no contract, TICK or pin change.
         self.assertLessEqual(len(boot), 2800)
+        self.assertIn("In T1 the block between the two markers is one ```json fenced code block: B is the JSON object between its opening ```json line and its closing ``` line; that fence is the published format, never a body failure.", boot)
         self.assertNotIn("committer.date", boot)
         self.assertNotIn("3stale", boot)
         for needle in ("Read no other file yet.", "that of TICK.md must equal tick_blob", "list the directory 00_FMOS/S1",
