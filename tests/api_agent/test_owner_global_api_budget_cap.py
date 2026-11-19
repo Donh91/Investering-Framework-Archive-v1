@@ -234,7 +234,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(state["status"], "PASS", state)
         # Native POSTs are settled; retain consumed USD3+10 and distinct USD10
         # owner-approved (not yet consumed) public research reservation.
-        self.assertEqual(state["pending_liability_upper_usd"], 50.0)   # the four Astra mission rows (#1156): USD20 R2 (consumed, invoice pending) + USD7 Alpha + USD3 Sol + USD20 Navigator One
+        self.assertEqual(state["pending_liability_upper_usd"], 46.0)   # the four Astra mission rows (#1156): USD20 R2 (consumed) + USD3 Alpha-on-Sol + USD3 Sol A/B (consumed) + USD20 Navigator One
         self.assertEqual(state["pending_liability_count"], 4)
         self.assertEqual(state["owner_global_hard_stop_usd"], 100.0)
         self.assertGreaterEqual(state["remaining_usd"], 4.0)
@@ -251,7 +251,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(
             sorted(r["work_id"] for r in ledger["owner_reservations"]),
             ["ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE","ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE","ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE","ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE","ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE","ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE","ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE","ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE","ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"])
-        self.assertEqual(pending_risk(p), (0.0, 50.0, 4))   # canonical USD20 R2 (consumed, invoice pending) + USD7 Alpha + USD3 Sol + USD20 Navigator One mission rows
+        self.assertEqual(pending_risk(p), (0.0, 46.0, 4))   # canonical USD20 R2 (consumed) + USD3 Alpha-on-Sol + USD3 Sol A/B (consumed) + USD20 Navigator One mission rows
         self.assertEqual(len(ledger["settled"]), 3)
         self.assertEqual({r["kind"] for r in ledger["settled"]}, {"NATIVE_POST"})
         self.assertEqual(ledger["provider_settlement_evidence"]["sha256"],
@@ -298,7 +298,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         from scripts.api_agent import check_monthly_cost_guard as g
         p = g.CANONICAL_LIABILITY_LEDGER
         original = json.loads(p.read_text())
-        self.assertEqual(g.pending_risk(p), (0.0, 50.0, 4))   # canonical USD20 R2 (consumed, invoice pending) + USD7 Alpha + USD3 Sol + USD20 Navigator One mission rows
+        self.assertEqual(g.pending_risk(p), (0.0, 46.0, 4))   # canonical USD20 R2 (consumed) + USD3 Alpha-on-Sol + USD3 Sol A/B (consumed) + USD20 Navigator One mission rows
         self.assertEqual(g.settled_owner_cost_upper(p, datetime(2026, 11, 18, tzinfo=timezone.utc)), 12.60981)
         self.assertEqual(g.settled_owner_cost_upper(p, datetime(2026, 12, 1, tzinfo=timezone.utc)), 0.0)
         self.assertEqual(original["owner_astra_provider_period_settlement"]["provider_period_spend_usd"], 5.41)
@@ -331,7 +331,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                    "one_paid_post_max": 1, "reconciliation_required": True}
             original["owner_reservations"].append(new)
             probe.write_text(json.dumps(original))
-            self.assertEqual(g.pending_risk(probe), (0.0, 60.0, 5))   # plus the canonical USD20 R2 (consumed, invoice pending) + USD7 Alpha + USD3 Sol + USD20 Navigator One mission rows
+            self.assertEqual(g.pending_risk(probe), (0.0, 56.0, 5))   # plus the canonical USD20 R2 (consumed) + USD3 Alpha-on-Sol + USD3 Sol A/B (consumed) + USD20 Navigator One mission rows
             # Reviewed native never-triggered evidence, not a claim about any current row.
             from unittest.mock import patch
             proof = {"trigger_comment": None, "workflow_run": None, "census": "synthetic"}
@@ -339,7 +339,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                        no_retry=True, native_settlement_evidence=proof)
             probe.write_text(json.dumps(original))
             with patch.dict(g.OWNER_NEVER_TRIGGERED_EVIDENCE, {new["work_id"]: proof}):
-                self.assertEqual(g.pending_risk(probe), (0.0, 50.0, 4))   # the canonical USD20 R2 (consumed, invoice pending) + USD7 Alpha + USD3 Sol + USD20 Navigator One mission rows stay counted
+                self.assertEqual(g.pending_risk(probe), (0.0, 46.0, 4))   # the canonical USD20 R2 (consumed) + USD3 Alpha-on-Sol + USD3 Sol A/B (consumed) + USD20 Navigator One mission rows stay counted
 
     def test_maeve_consumed_pr_preflight_never_returns_paid_pass(self):
         import os
