@@ -22,8 +22,9 @@ MID = "ASTRA-S1-V32-REDTEAM-20261118-R2"
 SOL_MID = "ASTRA-S1-V32-REDTEAM-20261118-R2-SOL"
 ALPHA_MID = "ASTRA-ALPHA-GLOBAL-SPECIALIST-20261118"
 # Wire bytes of the existing Astra missions, pinned before multi-model support: they must never change.
-ASTRA_REQUEST_SHA = {MID: "73ac962b93e6119652ed0b8c39894c0404811c0c1beafb7991f8333d342fee68",
-                     ALPHA_MID: "0eaf6d2a5e79fde610abeb9a5b85d77beb2c4f5ee98ca6a47a4425816e2ddb07"}
+ASTRA_REQUEST_SHA = {MID: "73ac962b93e6119652ed0b8c39894c0404811c0c1beafb7991f8333d342fee68"}
+# Alpha was rerouted to Sol 6.2 MAX by the owner on 2026-11-19 (never launched as Astra); its Sol wire bytes are pinned.
+SOL_REQUEST_SHA = {ALPHA_MID: "a2d47d8df628aa2fd76297fab5467a40c5b6e473f8e1874267f0f5e992ad3184"}
 BUNDLE_SHA = "b1b9e7698207dbdbfcad80b9c20a14602e93d4755f22c5879c372e7b2edc802c"
 GUARD = ROOT / "scripts/api_agent/check_monthly_cost_guard.py"
 CANONICAL_LEDGER = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json"
@@ -227,6 +228,12 @@ class TestRequest(Base):
             req, data, meta = m.build_request(mid)
             self.assertEqual((m.digest(data), req["model"], meta["model"]), (want, m.MODEL, m.MODEL), mid)
             self.assertEqual(meta["model_policy"]["id"], m.MODEL)
+
+    def test_rerouted_sol_missions_pinned(self):
+        for mid, want in SOL_REQUEST_SHA.items():
+            req, data, meta = m.build_request(mid)
+            self.assertEqual((m.digest(data), req["model"], meta["model"]), (want, m.SOL_MODEL, m.SOL_MODEL), mid)
+            self.assertLessEqual(meta["worst_case_usd"], 3)
 
     def test_sol_mission_request(self):
         with mock.patch.object(m.core, "http_json", side_effect=AssertionError("NETWORK_FORBIDDEN")):
@@ -684,26 +691,28 @@ class TestCostGuard(unittest.TestCase):
         rows = json.loads(CANONICAL_LEDGER.read_text()).get("astra_mission_reservations", [])
         self.assertEqual([(r["work_id"], r["status"], r["lower_usd"], r["upper_usd"], r["one_paid_post_max"]) for r in rows],
                          [("ASTRA-S1-V32-REDTEAM-20261118-R2", "CONSUMED_PENDING_INVOICE", 0, 20, 1),
-                          ("ASTRA-ALPHA-GLOBAL-SPECIALIST-20261118", "OWNER_RESERVED_PREHTTP", 0, 7, 1),
-                          ("ASTRA-S1-V32-REDTEAM-20261118-R2-SOL", "OWNER_RESERVED_PREHTTP", 0, 3, 1),
+                          ("ASTRA-ALPHA-GLOBAL-SPECIALIST-20261118", "OWNER_RESERVED_PREHTTP", 0, 3, 1),
+                          ("ASTRA-S1-V32-REDTEAM-20261118-R2-SOL", "CONSUMED_PENDING_INVOICE", 0, 3, 1),
                           ("ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118", "OWNER_RESERVED_PREHTTP", 0, 20, 1)])
         self.assertEqual((rows[0]["consumed_run_id"], rows[0]["consumed_response_id"],
                           rows[0]["consumed_estimated_upper_usd"]),
                          (44386340009, "resp_0477227a70790153006afe044ec9c487d08ebd44a0466687db", 3.13212))
-        self.assertEqual(res.mission_reservations(json.loads(CANONICAL_LEDGER.read_text()), set())[:2], (50.0, 4))
+        self.assertEqual(res.mission_reservations(json.loads(CANONICAL_LEDGER.read_text()), set())[:2], (46.0, 4))
         for mid in (ALPHA_MID, SOL_MID):
             proc = subprocess.run([sys.executable, str(GUARD), "--receipt-root", str(self.tmp / "receipts"),
                                    "--hard-stop-usd", str(self.stop), "--reserve-usd", "4", "--new-request-upper-usd", "0",
                                    "--liability-ledger", str(CANONICAL_LEDGER), "--owner-astra-mission-id", mid],
                                   capture_output=True, text=True, cwd=ROOT, timeout=120)
             self.assertEqual(proc.returncode, 0, proc.stdout)
-            self.assertEqual(json.loads(proc.stdout)["pending_liability_upper_usd"], 50.0)
+            self.assertEqual(json.loads(proc.stdout)["pending_liability_upper_usd"], 46.0)
         # The consumed R2 row stays counted but can never launch again.
         with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
             m.check_reservation(MID, 20)
-        for mid, usd in ((ALPHA_MID, 7), (SOL_MID, 3)):
-            with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER):
-                m.check_reservation(mid, usd)
+        # The consumed R2 and the consumed Sol A/B rows stay counted but can never launch again.
+        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
+            m.check_reservation(SOL_MID, 3)
+        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER):
+            m.check_reservation(ALPHA_MID, 3)   # Alpha (rerouted to Sol, USD3) remains launchable once
 
     def test_consumed_row_still_counted_in_full(self):
         code, result = self.guard([consumed_row()], hard_stop=50)

@@ -381,24 +381,27 @@
       "created_month_utc": "2026-11",
       "status": "OWNER_RESERVED_PREHTTP",
       "lower_usd": 0,
-      "upper_usd": 7,
+      "upper_usd": 3,
       "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156",
       "one_paid_post_max": 1,
       "reconciliation_required": true,
       "authorization": "OWNER_INTERACTIVE_2026-11-18_ASTRA_ALPHA_GLOBAL_SPECIALIST_ONE",
-      "basis": "Owner-approved 2026-11-18: exactly ONE Astra gpt-6.2-astra POST for the global alpha specialist mission (mission folder 06_RESEARCH_LAB/astra_missions/ASTRA-ALPHA-GLOBAL-SPECIALIST-20261118). Worst case 5.36 USD per launcher preview-all (bundle 3db5b538931a8c2c3290f091a687ffc3f07234f7af204e76112d6874d5e9e883); reserved at USD7 (= mission max_usd) before any HTTP until provider settlement. One POST, no retry or reuse; reconciliation required."
+      "basis": "Owner-approved 2026-11-18: exactly ONE Astra gpt-6.2-astra POST for the global alpha specialist mission (mission folder 06_RESEARCH_LAB/astra_missions/ASTRA-ALPHA-GLOBAL-SPECIALIST-20261118). Worst case 5.36 USD per launcher preview-all (bundle 3db5b538931a8c2c3290f091a687ffc3f07234f7af204e76112d6874d5e9e883); reserved at USD7 (= mission max_usd) before any HTTP until provider settlement. One POST, no retry or reuse; reconciliation required. Rerouted 2026-11-19 to gpt-6.2-sol MAX (owner decision after the R2 A/B); reservation reduced to USD3 before any HTTP; the Astra variant was never claimed or launched."
     },
     {
       "work_id": "ASTRA-S1-V32-REDTEAM-20261118-R2-SOL",
       "created_month_utc": "2026-11",
-      "status": "OWNER_RESERVED_PREHTTP",
+      "status": "CONSUMED_PENDING_INVOICE",
       "lower_usd": 0,
       "upper_usd": 3,
       "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156",
       "one_paid_post_max": 1,
       "reconciliation_required": true,
       "authorization": "OWNER_INTERACTIVE_2026-11-18_SOL_AB_R2_ONE",
-      "basis": "Owner-approved 2026-11-18: exactly ONE Sol gpt-6.2-sol MAX POST on the byte-identical R2 bundle (b1b9e7698207dbdbfcad80b9c20a14602e93d4755f22c5879c372e7b2edc802c) for a 1:1 quality/price comparison with Astra R2 run 44386340009 (mission folder 06_RESEARCH_LAB/astra_missions/ASTRA-S1-V32-REDTEAM-20261118-R2-SOL). Worst case 2.63 USD per launcher preview-all (request 250959 bytes, 12h cache-write input rate); reserved at USD3 (= mission max_usd) before any HTTP until provider settlement. One POST, no retry or reuse; reconciliation required."
+      "basis": "Owner-approved 2026-11-18: exactly ONE Sol gpt-6.2-sol MAX POST on the byte-identical R2 bundle (b1b9e7698207dbdbfcad80b9c20a14602e93d4755f22c5879c372e7b2edc802c) for a 1:1 quality/price comparison with Astra R2 run 44386340009 (mission folder 06_RESEARCH_LAB/astra_missions/ASTRA-S1-V32-REDTEAM-20261118-R2-SOL). Worst case 2.63 USD per launcher preview-all (request 250959 bytes, 12h cache-write input rate); reserved at USD3 (= mission max_usd) before any HTTP until provider settlement. One POST, no retry or reuse; reconciliation required. Consumed by run 44474025178 (Sol A/B, receipt estimated upper 0.87973); invoice settlement pending.",
+      "consumed_run_id": 44474025178,
+      "consumed_response_id": "resp_0842655b767c2f1c006afe9a99bdf087d0b7c0339d3df85824",
+      "consumed_estimated_upper_usd": 0.87973
     },
     {
       "work_id": "ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118",
