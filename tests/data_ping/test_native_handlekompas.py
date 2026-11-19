@@ -1,9 +1,11 @@
+import copy
 import json
 import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
+from scripts.data_ping import native_handlekompas as K
 from scripts.data_ping.native_handlekompas import AUTHORITY, build, load_auto_state, owner_freshness, protection_tracker, write
 
 
@@ -395,6 +397,61 @@ class NativeHandlekompasTest(unittest.TestCase):
             prior = self._protection_transition(risk, prior, posture="PREPARE", direction="BULLISH")
             self.assertEqual(prior["reentry_state"], expected)
 
+
+
+class AltseasonScopedDegradationReplayTests(unittest.TestCase):
+    """Replay of the real 2026-11-19 10:24Z packet: BlockchainCenter UNAVAILABLE, every other lane PASS. Before
+    K06 every horizon, the ladder and protection went UNAVAILABLE; now only the altcoin outputs fail closed."""
+
+    PACKET = Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/11/19/102409_dd04579f96e2.json")
+
+    def setUp(self):
+        root = Path(__file__).resolve().parents[2]
+        path = root / self.PACKET
+        if not path.is_file():
+            self.skipTest("replay packet not in this checkout")
+        self.packet = json.loads(path.read_text(encoding="utf-8"))
+        self.at = datetime.fromisoformat(self.packet["packet_generated_at_utc"].replace("Z", "+00:00"))
+
+    def test_packet_is_the_altseason_only_outage(self):
+        self.assertEqual(self.packet["blockers"], ["altseason_context"])
+        self.assertEqual(self.packet["source_health"]["altseason_context"]["status"], "UNAVAILABLE")
+
+    def test_core_stays_live_and_alt_outputs_fail_closed(self):
+        self.assertTrue(K._health_ok(self.packet, self.at))
+        action = K.action_context(self.packet, as_of=self.at)
+        self.assertEqual(action["NOW"], "HOLD_WAIT")
+        self.assertIn("ALT_CONTEXT_DEGRADED=altseason_context", action["WHY"])
+        market = K.derive_market_now(self.packet, action, as_of=self.at)
+        self.assertNotEqual(market["directional_state"], "UNAVAILABLE")
+        horizons = K.horizon_map(self.packet, action, None, as_of=self.at)
+        self.assertNotEqual(horizons["NEXT_12H"]["label"], "UNAVAILABLE")
+        self.assertEqual(horizons["CYCLE_ALTCOINS_3_8W"]["label"], "UNAVAILABLE")
+        self.assertEqual(horizons["CYCLE_ALTCOINS_3_8W"]["expected_path"], K.ALT_CONTEXT_DEGRADED_REASON)
+        ladder = {row["segment"]: row for row in K.capitalization_ladder(self.packet, action, market, as_of=self.at)}
+        self.assertNotEqual(ladder["BTC"]["status"], "UNAVAILABLE")
+        self.assertNotEqual(ladder["ETH"]["status"], "UNAVAILABLE")
+        for seg in ("LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS", "MEMES"):
+            self.assertEqual(ladder[seg]["status"], "UNAVAILABLE", seg)
+        self.assertEqual(ladder["SMALL_CAPS"]["reason"], K.ALT_CONTEXT_DEGRADED_REASON)
+        health = K.build(self.packet, now=self.at)["DATA_HEALTH"]
+        self.assertEqual(health["status"], "PASS")
+        self.assertEqual(health["alt_context_status"], "DEGRADED_ALT_OUTPUTS_UNAVAILABLE")
+        self.assertEqual(health["blockers"], ["altseason_context"])          # the producer's record is unchanged
+
+    def test_carry_keeps_alt_outputs_and_a_core_blocker_still_blanks(self):
+        carried = copy.deepcopy(self.packet)
+        carried["source_health"]["altseason_context"]["status"] = "DEGRADED_CARRY"
+        action = K.action_context(carried, as_of=self.at)
+        market = K.derive_market_now(carried, action, as_of=self.at)
+        ladder = {row["segment"]: row for row in K.capitalization_ladder(carried, action, market, as_of=self.at)}
+        self.assertNotEqual(ladder["SMALL_CAPS"]["status"], "UNAVAILABLE")
+        self.assertNotEqual(K.horizon_map(carried, action, None, as_of=self.at)["CYCLE_ALTCOINS_3_8W"]["expected_path"],
+                            K.ALT_CONTEXT_DEGRADED_REASON)
+        core = copy.deepcopy(self.packet)
+        core["blockers"] = ["altseason_context", "breadth"]
+        self.assertFalse(K._health_ok(core, self.at))
+        self.assertEqual(K.action_context(core, as_of=self.at)["NOW"], "HOLD_WAIT_DATA_DEGRADED")
 
 if __name__=="__main__":
     unittest.main()

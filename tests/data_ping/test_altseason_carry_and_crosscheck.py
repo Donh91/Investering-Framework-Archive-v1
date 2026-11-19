@@ -151,9 +151,20 @@ class PassOnlyConsumerGatingTests(unittest.TestCase):
         health["altseason_context"] = {"status": "UNAVAILABLE"}
         self.assertEqual(carry_score, A.replacement_score(None, health, None))
 
-    def test_compass_health_gate_treats_carry_like_unavailable(self):
-        auto = {"validation_status": "DEGRADED", "decision_context_status": "DEGRADED", "blockers": ["altseason_context"]}
+    def test_altseason_blocker_degrades_only_the_alt_outputs(self):
+        # Superseded #2244 deferred decision 4 (2026-11-19, K06): altseason_context is CONTEXT_ONLY for the core.
+        # A failed or carried altseason lane no longer blanks BTC/ETH; it fails closed only for the alt outputs.
+        for status, alt_usable in (("UNAVAILABLE", False), ("DEGRADED_CARRY", True), ("PASS", True)):
+            auto = {"validation_status": "DEGRADED", "decision_context_status": "DEGRADED", "blockers": ["altseason_context"],
+                    "source_health": {"altseason_context": {"status": status}}}
+            self.assertTrue(K._health_ok(auto), status)
+            self.assertEqual(K._alt_context_usable(auto), alt_usable, status)
+        # any other required lane still blanks the core
+        auto = {"validation_status": "DEGRADED", "decision_context_status": "DEGRADED", "blockers": ["altseason_context", "breadth"],
+                "source_health": {"altseason_context": {"status": "UNAVAILABLE"}}}
         self.assertFalse(K._health_ok(auto))
+        self.assertFalse(K._health_ok({"validation_status": "FAIL", "decision_context_status": "DEGRADED", "blockers": ["altseason_context"]}))
+        self.assertFalse(K._health_ok({"validation_status": "DEGRADED", "decision_context_status": "UNKNOWN", "blockers": []}))
 
     def test_recovery_keeps_retrying_on_carry(self):
         health = {lane: {"status": "PASS", "classification": "PASS"} for lane in POLICY}

@@ -8,7 +8,7 @@ M=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(M)
 class M6WarningEventTests(unittest.TestCase):
     def freeze(self,root,state,btc=85000.0,eth=2700.0,issued="2026-10-06T16:14:15Z"):
         p=root/"04_MARKET_LEARNING/handlekompas/official/daily/2026/10/06"/f"CMP-{state}.json";p.parent.mkdir(parents=True,exist_ok=True)
-        p.write_text(json.dumps({"contract":"OFFICIAL_DAILY_COMPASS_v1","compass_id":f"CMP-{state}","issued_at_utc":issued,
+        p.write_text(json.dumps({"contract":"OFFICIAL_DAILY_COMPASS_v1","data_status":"OK","compass_id":f"CMP-{state}","issued_at_utc":issued,
           "market_reference":{"btc_usdt":btc,"eth_usdt":eth,"observation_open_utc":"2026-10-06T15:00:00Z"},
           "protection_tracker":{"contract":"COMPASS_PROTECTION_TRACKER_v1","data_quality":"OK","pullback_risk_state":state}}))
 
@@ -78,7 +78,7 @@ class M6WarningEventTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t);self.freeze(root,"ELEVATED")
             p=root/"04_MARKET_LEARNING/handlekompas/official/daily/2026/10/07/CMP-HIGH.json";p.parent.mkdir(parents=True,exist_ok=True)
-            p.write_text(json.dumps({"contract":"OFFICIAL_DAILY_COMPASS_v1","compass_id":"CMP-HIGH","issued_at_utc":"2026-10-07T16:14:15Z",
+            p.write_text(json.dumps({"contract":"OFFICIAL_DAILY_COMPASS_v1","data_status":"OK","compass_id":"CMP-HIGH","issued_at_utc":"2026-10-07T16:14:15Z",
               "market_reference":{"btc_usdt":84000.0,"eth_usdt":2600.0,"observation_open_utc":"2026-10-07T15:00:00Z"},
               "protection_tracker":{"contract":"COMPASS_PROTECTION_TRACKER_v1","data_quality":"OK","pullback_risk_state":"HIGH"}}))
             r=M.build(root,M.parse("2026-10-08T00:00:00Z"))
@@ -192,5 +192,29 @@ class M6WarningEventTests(unittest.TestCase):
         self.assertEqual(v["adverse_barriers"]["-10.0"]["first_touch_timestamp"],"2026-10-06T18:00:00Z")
         self.assertEqual(v["adverse_barriers"]["-15.0"]["first_touch_timestamp"],"2026-10-06T18:00:00Z")
         self.assertFalse(v["adverse_barriers"]["-20.0"]["touched"])
+
+class M6SourceDataStatusTests(unittest.TestCase):
+    """2026-11-19 (K02): a DEGRADED Official daily is not an OK warning even when its protection tracker says OK.
+    Live example: 04_MARKET_LEARNING/handlekompas/official/daily/2026/11/19/* had data_status DEGRADED and
+    mapping_integrity FAIL_PASS_LANE_MISSING_VALUE with protection data_quality OK."""
+
+    def test_degraded_daily_is_excluded_and_ok_daily_records_its_status(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            helper = M6WarningEventTests()
+            helper.freeze(root, "HIGH")
+            rows = M.eligible_freezes(root, M.parse("2026-10-30T00:00:00Z"))
+            self.assertEqual(len(rows), 1)
+            p = rows[0]["path"]
+            doc = json.loads(p.read_text())
+            doc["data_status"] = "DEGRADED"
+            p.write_text(json.dumps(doc))
+            self.assertEqual(M.eligible_freezes(root, M.parse("2026-10-30T00:00:00Z")), [])
+            doc.pop("data_status")
+            p.write_text(json.dumps(doc))
+            self.assertEqual(M.eligible_freezes(root, M.parse("2026-10-30T00:00:00Z")), [])   # missing status is not OK
+        self.assertEqual(M.INTEGRITY_REVISION, "v1.3_SOURCE_DATA_STATUS_OK_ONLY")
 
 if __name__=="__main__":unittest.main()
