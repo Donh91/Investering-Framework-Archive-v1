@@ -612,20 +612,11 @@ def sentiment_source_health(sentiment: Any) -> dict[str, str]:
 
 
 def live_altseason_has_observation(altseason: Any) -> bool:
-    """At least one PASS public altseason family with a numeric source score."""
-    if not isinstance(altseason, Mapping):
-        return False
-    bc = altseason.get("blockchaincenter_altcoin_season")
-    if isinstance(bc, Mapping) and bc.get("status") == "PASS":
-        horizons = bc.get("horizons")
-        if isinstance(horizons, Mapping) and any(
-            isinstance(row, Mapping) and num(row.get("published_score")) is not None
-            for row in horizons.values()
-        ):
-            return True
-    cmc = altseason.get("coinmarketcap_altcoin_season")
-    return bool(isinstance(cmc, Mapping) and cmc.get("status") == "PASS"
-                and num(cmc.get("published_score")) is not None)
+    """PASS only for the BlockchainCenter 90-day score consumed by Kompas."""
+    bc = nested(altseason, "blockchaincenter_altcoin_season")
+    score = num(nested(bc, "horizons", "90", "published_score"))
+    return bool(isinstance(bc, Mapping) and bc.get("status") == "PASS"
+                and score is not None and 0 <= score <= 100)
 
 
 def derivatives_source_health(derivatives: Any) -> dict[str, str]:
@@ -664,7 +655,11 @@ def assemble(repo_root: Path = Path.cwd(), now_utc: datetime | None = None) -> d
     altseason = market_metrics.get("altseason_context") or market_metrics.get("rotation_context") or {}
     health["derivatives"] = derivatives_source_health(derivatives)
     health["sentiment"] = sentiment_source_health(sentiment)
-    health["altseason_context"] = {"status": "PASS" if live_altseason_has_observation(altseason) else "UNAVAILABLE", "classification": "LIVE_ANCHOR_ALTSEASON_CONTEXT"}
+    altseason_complete = live_altseason_has_observation(altseason)
+    health["altseason_context"] = {
+        "status": "PASS" if altseason_complete else "UNAVAILABLE",
+        "classification": "LIVE_ANCHOR_ALTSEASON_CONTEXT" if altseason_complete else "BLOCKCHAINCENTER_90D_REQUIRED_VALUE_UNAVAILABLE",
+    }
     breadth_raw, breadth_read_health = read_json(snapshot, BREADTH_OWNER)
     breadth, breadth_normalization_health = normalize_breadth(breadth_raw, now_utc=now)
     current_breadth = select_current_breadth(breadth, live_breadth_reference)
