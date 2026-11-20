@@ -13,9 +13,17 @@
   "private_design": {
     "repository": "Donh91/Investering-AI-Audit-Bridge",
     "issue": 173,
-    "comment_id": 7035109303,
-    "exact_js_sha256": "32ea8f9971c7fb8f9862c062e2c307276a569e6b0f8b77c03107b09b828a53ab",
-    "source_health_comment": 7035082091
+    "comment_id": 7037206342,
+    "exact_js_sha256": "e15327124b3ea66adfbe7b9855438a727e28d578a2104608ff14a53bec0b16ff",
+    "source_health_comment": 7035082091,
+    "original_design_comment": 7035109303,
+    "original_exact_js_sha256": "32ea8f9971c7fb8f9862c062e2c307276a569e6b0f8b77c03107b09b828a53ab",
+    "function_sha256": {
+      "sha256": "b9936bdf76c5f892caae023d335b8d2fb031634961cf573c94dad9b1d2ae9c74",
+      "verifyAndLoad": "edefbf117cd3176b3532a3dad563e765dfd32576d8945b708d0b94f35c3707de",
+      "study": "edf6f5e1ae7903bd4eb387bbe60b52c53209b79a4839070d2f15bfa16261e819",
+      "decide": "827e479f923be654d94b35ead6843d7ffe541758bfbd6cf6fd5282a90dc30f8e"
+    }
   },
   "scope": {
     "source_contract_id": "BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1",
@@ -25,7 +33,7 @@
     "primary_question": "Marginal information from cohort-relative realized spending stress beyond price and aggregate on-chain model",
     "primary_endpoint": "Paired 30-day entry-to-trough absolute error",
     "cutoff": "2026-09-07",
-    "max_classification": "FORWARD_TEST_CANDIDATE_ONLY",
+    "max_classification": "KEEP_FOR_RESEARCH",
     "raw_values_public": false,
     "round3_access": false,
     "live_authority": false,
@@ -40,11 +48,86 @@
     "Native owner-gated merge; exact contract readback on main. Branch/comment alone is not permission.",
     "Freeze private source run header (exact source hashes, price close convention/date alignment, cohort definition, cutoff and unresolved limitations) before outcome-linked access. Abort on source identity/units/definition failure.",
     "Keep primary endpoint, baseline, stop/falsifier fixed before outcome. Private design digest is binding; reviewed corrections only before run. No retuning.",
-    "All restricted raw/normalized values and detailed results stay private. No standing change to existing prep or Round 3 authority."
+    "All restricted raw/normalized values and detailed results stay private. No standing change to existing prep or Round 3 authority.",
+    "Private immutable copy of public price bytes with the bound SHA256 reachable from private main before run; no substitute. Require strict year/day-axis schema, zero nulls, exact metadata and hashes before parsing, and fixed +1 clock check.",
+    "Before opening outcome-linked values append one unique private intent receipt identifying the exact merged release and readiness blobs, input/runner/decision hashes, clock and cutoff. Existing Research Lab owner checks for earlier intent/result; if any exists stop (no automatic retry)."
   ],
   "completion": [
     "Run exact approved design once; privately retain inputs, output hash, paired losses, regime diagnostics, failures and negative results.",
     "Independent adjudication; no new production signal. No repeat without separate admission.",
-    "If blocked, record exact gate and original owner, no bypass."
-  ]
+    "If blocked, record exact gate and original owner, no bypass.",
+    "Append exact result receipt privately with intent ID, SHA256 of canonical LF-free JSON.stringify(rec), rejected anchors, per-model losses, decision, failures, explicit retrospective hindsight/SEMANTICS_OR_REVISION_STATE_UNVERIFIED label. Public completion pointer only receipt ID/hash, no market-derived values."
+  ],
+  "bound_run_inputs": {
+    "hash_canonicalization": "raw ASCII bytes unchanged, exact byte length and SHA256; JS exact LF ASCII code inside fences excluding trailing newline; no trim on raw",
+    "sopr": {
+      "repo": "Donh91/secrets",
+      "ref": "1700dd8ee4bf7ac03f0e18cd5b3647a07fda645f",
+      "path": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/08/sopr_spent_output_profit_ratio__2026-09-08T06-05-26.csv",
+      "blob": "f090e99bd885aa5c09b726ccaabbfab9905c7834",
+      "bytes": 160483,
+      "sha256": "5cc5a9d1baa6b4c461862cb0cff0741dcbd97e359c1d4562f0fb2500b97b102e"
+    },
+    "sth": {
+      "repo": "Donh91/secrets",
+      "ref": "1700dd8ee4bf7ac03f0e18cd5b3647a07fda645f",
+      "path": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/08/sopr_short_term_supply_sts__2026-09-08T06-06-06.csv",
+      "blob": "cc7726bb2998ae014bc1b96d2251cd9ff8dbb99b",
+      "bytes": 154523,
+      "sha256": "d207007412115f4cdd091883c35595e2d7d7ddaa1c80d7cc0ab5a4c451d0ff5e"
+    },
+    "rc": {
+      "repo": "Donh91/secrets",
+      "ref": "1700dd8ee4bf7ac03f0e18cd5b3647a07fda645f",
+      "path": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/08/realized_cap_2026-09-08T06-11-16.csv",
+      "blob": "4f1015566a4a4e5f194ffc1b04e1e7874238fbc9",
+      "bytes": 205133,
+      "sha256": "1bb437ac6a55107e6cba183324cf874d6b1d77ce2a88694aa0b24516964ad5c8"
+    },
+    "price": {
+      "repo": "akpasz/btc-data",
+      "ref": "72d245637a6c947928ca5d52b6bc1194e813aa79",
+      "path": "data/series/price_cm.json",
+      "blob": "a9feae0a1a896c45a70951dbe58a37b90521d838",
+      "bytes": 154394,
+      "sha256": "93f7d6cecd17dfda71a373d9b4439f35fd8e18be3cdcc630e44676eda8396e99"
+    },
+    "clock_rule": "CM_NATIVE_LABEL = MIRROR_LABEL - 1D; CLOSE_UTC = NATIVE_LABEL + 1D; BH_LABELS_UNCHANGED; SIGNAL_LAG_DAYS = 7",
+    "clock_check": "unique minimum median absolute log price reference difference at mirror offset +1, strictly below 0.005; no outcome access before pass",
+    "semantics": "SEMANTICS_OR_REVISION_STATE_UNVERIFIED"
+  },
+  "decision_rule": {
+    "primary": "mean(|y-aggregate|-|y-sth|) paired over common anchors",
+    "secondary": "median paired improvement",
+    "segments": [
+      "2022-01-01 <= anchor < 2024-01-01",
+      "2024-01-01 <= anchor <= cutoff"
+    ],
+    "minimum_n": 48,
+    "minimum_segment_n": 12,
+    "uncertainty": "descriptive 90% circular moving-block bootstrap interval; block=3 anchors; B=2000; seed=20261120; lower must exceed zero for KEEP_FOR_RESEARCH",
+    "harm": "segment mean paired improvement < 0",
+    "negative_controls": {
+      "NC1": "relative feature at 37-day lag, same models and anchors",
+      "NC2": "39 deterministic training-only block permutations of candidate feature, block length 3, seeds 20261120+j*1009+training_n; unchanged held-out features; candidate must exceed empirical 95th percentile of mean improvements",
+      "NC3": "duplicate feature ID dedup; exact prediction equality required",
+      "NC4": "last mature outcome and training calendar-month mean (fallback historical mean if fewer than 3); candidate must beat persistence, calendar, historical and price"
+    },
+    "mapping": [
+      "INSUFFICIENT_SAMPLE if count below either fixed minimum",
+      "INSUFFICIENT_EVIDENCE if anchor gaps",
+      "REJECT if pooled mean <= 0 or any negative control failure",
+      "REGIME_SPECIFIC if harm in either segment",
+      "INSUFFICIENT_EVIDENCE if bootstrap lower <= 0",
+      "KEEP_FOR_RESEARCH otherwise"
+    ],
+    "deferred_gates": "Calendar split is diagnostic, not a verified ETF-owner boundary; leave-one-cycle-out and ETF-era gate not complete; no forward-test eligibility in this one-shot scope. No waiver of the canonical blueprint; any later promotion must meet it separately."
+  },
+  "receipt_contract": {
+    "private_channel": "Donh91/Investering-AI-Audit-Bridge #173",
+    "intent_marker": "BH_SOPR_COHORT_RETROSPECTIVE_INTENT_v1",
+    "result_marker": "BH_SOPR_COHORT_RETROSPECTIVE_RESULT_v1",
+    "completion_pointer": "original #1157 value-free receipt ID and hash only",
+    "on_prior_intent": "STOP_NO_AUTOMATIC_RETRY"
+  }
 }
