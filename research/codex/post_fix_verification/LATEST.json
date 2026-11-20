@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=44636348588:success,44635674999:success",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=2/2 sampled_runs=44706837776:success,44636348588:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -24,7 +24,7 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=44637354729:success,44635626325:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=2/2 sampled_runs=44743795864:success,44637354729:success",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": true
         },
@@ -54,7 +54,7 @@
       "candidate_id": "codex-automation-health-workflow-pagination-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=44634904325,44535408679 checks=PASS",
+          "evidence": "health_history: evidence_floor=e2e990aa6a403274ef92b3c6d3dc8c3a68230ea0 matched=2/2 runs=44743182545,44634904325 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -69,7 +69,7 @@
       "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
       "checks": [
         {
-          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=44634904325,44535408679 checks=PASS",
+          "evidence": "health_history: evidence_floor=666740a3a94a27cb7e4cce421b123d0d0b32ec38 matched=2/2 runs=44743182545,44634904325 checks=PASS",
           "kind": "N_HEALTH_HISTORY_MATCH",
           "pass": true
         },
@@ -119,8 +119,8 @@
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
   "coverage": {
     "machine_spec_configured": 6,
-    "machine_spec_unconfigured": 34,
-    "post_fix_total": 40
+    "machine_spec_unconfigured": 35,
+    "post_fix_total": 41
   },
   "skipped": [
     {
@@ -132,6 +132,11 @@
     {
       "candidate_id": "codex-daily-director-directional-threshold-root-cause-v1",
       "post_fix_gate": "ONE_PRODUCTION_SHAPE_PASS_PLUS_ONE_NATURAL_DAILY_DIRECTOR_PASS_WITH_NO_DIRECTIONAL_THRESHOLD_PARSE_ERROR",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-1557-proposal-batch-census-v1",
+      "post_fix_gate": "Independent review + all exact-head CI on scoped implementation, then main readback and natural existing Daily Director producer/consumer receipt proving complete per-batch source metadata and stable replay. #1557 stays PARTIAL until full cross-family proposal-time coverage and #1157 consumer validation are independently proven. No global=N=6, no strategy promotion. If policy/owner authority required for additional sources, escalate and preserve HOLD_SOURCE; no parallel counter.",
       "reason": "NO_MACHINE_VERIFICATION_SPEC"
     },
     {
