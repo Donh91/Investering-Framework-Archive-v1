@@ -1,3 +1,4 @@
+import ast
 import hashlib
 import json
 import subprocess
@@ -5,8 +6,10 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
-SCRIPT = Path(__file__).parents[2] / "scripts" / "experiments" / "experiment_lifecycle_scientific_admission.py"
+REPO = Path(__file__).parents[2]
+SCRIPT = REPO / "scripts" / "experiments" / "experiment_lifecycle_scientific_admission.py"
 if str(SCRIPT.parent) not in sys.path:
     sys.path.insert(0, str(SCRIPT.parent))
 import experiment_lifecycle_scientific_admission as module  # noqa: E402
@@ -166,6 +169,41 @@ def census_files(repo: Path):
 
 def pure(files, existing=None, known=None, legacy_items=()):
     return module.proposal_slot_census(*files, legacy_items=list(legacy_items), legacy_catalog_sha256=None, existing_candidates=existing or {}, known_response_identities=known)
+
+
+def skip_batch(reason="SKIPPED_NO_DELTA", ctx=None, output_overrides=None, **receipt_overrides):
+    """Bytes as daily-director-shadow.yml "Write zero-cost skipped output" writes them (no model call)."""
+    ctx = ctx if ctx is not None else context()
+    output = {"status": "BLOCKED", "summary": "Daily Director skipped because no new eligible owner evidence required analysis.", "evidence_for": [], "evidence_against": [], "uncertainties": [reason], "hypotheses": [], "forecast_candidates": []}
+    output.update(output_overrides or {})
+    receipt = {
+        "contract": "API_AGENT_RECEIPT_v3", "task": "DAILY_DIRECTOR_SHADOW", "model": "gpt-5.6-luna", "reasoning_effort": "medium",
+        "context_hash": hashlib.sha256(canonical(ctx)).hexdigest(), "prompt_hash": None, "output_hash": hashlib.sha256(canonical(output)).hexdigest(),
+        "response_id": None, "input_tokens": 0, "output_tokens": 0, "estimated_cost_usd": 0.0, "created_unix": 1787515200, "status": reason,
+        "authority": {"portfolio_action": False, "framework_state_change": False, "model_weight_change": False, "canonical_promotion": False},
+    }
+    receipt.update(receipt_overrides)
+    for key in [key for key, value in receipt.items() if value is DROP]:
+        del receipt[key]
+    return canonical(output), canonical(ctx), canonical(receipt)
+
+
+def census_id_for(files):
+    return "PSC-" + hashlib.sha256(":".join(hashlib.sha256(data).hexdigest() for data in files).encode()).hexdigest()[:20]
+
+
+def tree(repo: Path):
+    return sorted(p.relative_to(repo).as_posix() for p in repo.rglob("*") if p.is_file())
+
+
+def one_legacy_item():
+    with tempfile.TemporaryDirectory() as td:
+        catalog = Path(td) / "catalog.json"
+        catalog.write_text(json.dumps({"test_id": "T", "pairs": [{"pair_id": "P1", "sensor_a": "a", "sensor_b": "b"}]}))
+        return module.base.legacy(catalog)
+
+
+ARCHIVED_SKIP_BATCH = REPO / "research/api_agent/outputs/daily/2026/09/24/092718"
 
 
 class ProposalSlotCensusTest(unittest.TestCase):
@@ -364,6 +402,145 @@ class ProposalSlotCensusTest(unittest.TestCase):
             rows = module.retrospective_census(repo, repo / "research/api_agent/outputs/daily", repo / "research/experiment_lifecycle/candidates", None)
             self.assertEqual(rows, module.retrospective_census(repo, repo / "research/api_agent/outputs/daily", repo / "research/experiment_lifecycle/candidates", None))
             self.assertEqual([r["classification"] for r in rows], ["RETROSPECTIVE_DERIVED_VIEW"] * 3)
+
+    # --- census robustness: failure isolation, workflow skip receipts, fixed error codes -------------
+    def assertInternalError(self, census, files):
+        self.assertEqual((census["batch_status"], census["complete_for_observed_batch"], census["invalid_reasons"]), ("INVALID", False, ["CENSUS_INTERNAL_ERROR"]))
+        self.assertEqual(census["census_id"], census_id_for(files))
+        self.assertEqual([census["binding"][k] for k in ("output_sha256", "context_sha256", "receipt_sha256")], [hashlib.sha256(data).hexdigest() for data in files])
+        self.assertIsNone(census["binding"]["receipt_status"])
+        self.assertEqual((census["slots"], census["response_identity_sha256"]), ([], []))
+        self.assertEqual({key: census["counts"][key] for key in ("observed_raw_slot_count", "model_emission_slot_count", "by_family_outcome")}, dict.fromkeys(("observed_raw_slot_count", "model_emission_slot_count", "by_family_outcome"), "UNKNOWN"))
+        self.assertEqual(set(census["attempts"].values()), {"UNKNOWN"})
+        raw = canonical(census)
+        for leaked in (b"Error", b"surrogate", b"\\ud800", b"corrupt", b"attribute", b"resp_", b"SECRET"):
+            self.assertNotIn(leaked, raw)
+
+    def test_lone_surrogate_response_id_census_failure_does_not_stop_the_producer(self):
+        files = bound_batch(reproduction_output(), response_id="\ud800", response_ids=["resp_a", "\ud800"])
+        with tempfile.TemporaryDirectory() as td, tempfile.TemporaryDirectory() as control_td:
+            repo, control = Path(td), Path(control_td)
+            summary = run(repo, {}, files=files)
+            self.assertEqual(summary, run(control, {}, files=bound_batch(reproduction_output())))
+            candidates = "research/experiment_lifecycle/candidates"
+            self.assertEqual(sorted(p.name for p in (repo / candidates).rglob("*.json")), sorted(p.name for p in (control / candidates).rglob("*.json")))
+            [path] = census_files(repo)
+            census = json.loads(path.read_bytes())
+            self.assertInternalError(census, files)
+            self.assertEqual((census["classification"], census["source_batch_path"]), ("PROSPECTIVE_PRODUCER_CAPTURE", "daily"))
+
+    def test_non_dict_candidate_source_census_failure_does_not_stop_the_producer(self):
+        first = bound_batch(reproduction_output())
+        second = bound_batch(reproduction_output(), created_unix=1787515999, response_id="resp_z", response_ids=["resp_z"], attempt_count=1)
+        with tempfile.TemporaryDirectory() as td, tempfile.TemporaryDirectory() as control_td:
+            repo, control = Path(td), Path(control_td)
+            for root in (repo, control):
+                run(root, {}, files=first)
+            for path in (repo / "research/experiment_lifecycle/candidates").rglob("*.json"):
+                value = json.loads(path.read_text())
+                value["source"] = "corrupt-not-a-dict"
+                path.write_text(json.dumps(value))
+            summary = run(repo, {}, files=second, batch="daily2")
+            self.assertEqual(summary, run(control, {}, files=second, batch="daily2"))
+            self.assertEqual(tree(repo), tree(control))
+            by_batch = {row["source_batch_path"]: row for row in (json.loads(p.read_text()) for p in census_files(repo))}
+            self.assertInternalError(by_batch["daily2"], second)
+            control_rows = {row["source_batch_path"]: row for row in (json.loads(p.read_text()) for p in census_files(control))}
+            self.assertEqual(control_rows["daily2"]["batch_status"], "VALID_OBSERVED_BATCH")
+
+    def test_isolation_covers_construction_and_serialisation_and_keeps_only_a_fixed_code(self):
+        files = bound_batch(reproduction_output())
+
+        def explode():
+            raise RuntimeError("SECRET-RATIONALE-TEXT")
+
+        for build in (explode, lambda: {"not_serialisable": object()}, lambda: {"not_serialisable": {1, 2}}):
+            census = module.isolated_census(files, build, source_batch_path="daily", mode="RETROSPECTIVE_DERIVED_VIEW")
+            self.assertInternalError(census, files)
+            self.assertEqual((census["source_batch_path"], census["classification"]), ("daily", "RETROSPECTIVE_DERIVED_VIEW"))
+        self.assertEqual(module.isolated_census(files, lambda: pure(files), source_batch_path=None, mode="X"), pure(files))
+        missing = (None, files[1], files[2])
+        self.assertIsNone(module.isolated_census(missing, explode, source_batch_path=None, mode="X")["binding"]["output_sha256"])
+
+    def test_workflow_skip_receipts_are_skipped_not_invalid_and_not_complete(self):
+        for reason in ("SKIPPED_NO_DELTA", "SKIPPED_OWNER_RUN_ALREADY_ANALYZED"):
+            census = pure(skip_batch(reason))
+            self.assertEqual((census["batch_status"], census["complete_for_observed_batch"], census["invalid_reasons"]), ("SKIPPED", False, []))
+            self.assertEqual((census["counts"]["observed_raw_slot_count"], census["counts"]["model_emission_slot_count"]), (0, 0))
+            self.assertEqual(census["attempts"], {"attempt_count": "UNKNOWN", "surviving_output_attempts": 0, "abandoned_attempts_without_surviving_output": "UNKNOWN", "parse_error_count": "UNKNOWN", "pre_receipt_attempts": "UNKNOWN"})
+            self.assertEqual((census["declared_forecast_candidate_count"], census["response_identity_sha256"], census["binding"]["receipt_status"]), ("UNKNOWN", [], reason))
+        # attempts follow the receipt fields when they exist
+        explicit = pure(skip_batch(attempt_count=0, parse_errors=[], forecast_candidate_count=0))
+        self.assertEqual((explicit["batch_status"], explicit["declared_forecast_candidate_count"]), ("SKIPPED", 0))
+        self.assertEqual(explicit["attempts"], {"attempt_count": 0, "surviving_output_attempts": 0, "abandoned_attempts_without_surviving_output": 0, "parse_error_count": 0, "pre_receipt_attempts": "UNKNOWN"})
+        # the producer still feeds legacy slots on a skipped batch; only model slots are absent
+        with_legacy = pure(skip_batch(), legacy_items=one_legacy_item())
+        self.assertEqual((with_legacy["batch_status"], with_legacy["counts"]["observed_raw_slot_count"], with_legacy["counts"]["model_emission_slot_count"]), ("SKIPPED", 1, 0))
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            summary = run(repo, {}, files=skip_batch())
+            self.assertEqual(summary["new_candidate_count"], 0)
+            [path] = census_files(repo)
+            self.assertEqual(json.loads(path.read_text())["batch_status"], "SKIPPED")
+        aggregate = module.aggregate_census([pure(skip_batch()), pure(bound_batch(reproduction_output())), pure(bound_batch(reproduction_output(), output_hash="0" * 64))])
+        self.assertEqual((aggregate["batch_count"], aggregate["valid_batch_count"], aggregate["skipped_batch_count"], aggregate["invalid_batch_count"]), (3, 1, 1, 1))
+
+    def test_archived_workflow_skip_batch_is_skipped(self):
+        files = tuple((ARCHIVED_SKIP_BATCH / name).read_bytes() for name in ("DAILY_DIRECTOR_OUTPUT.json", "context.json", "DAILY_DIRECTOR_RECEIPT.json"))
+        census = pure(files)
+        self.assertEqual((census["batch_status"], census["invalid_reasons"], census["binding"]["receipt_status"]), ("SKIPPED", [], "SKIPPED_OWNER_RUN_ALREADY_ANALYZED"))
+        self.assertEqual(census["counts"]["model_emission_slot_count"], 0)
+
+    def test_contradictory_skip_receipts_stay_invalid(self):
+        self.assertInvalid(pure(skip_batch(response_id="resp_x")), "skip_receipt_has_response_identity")
+        self.assertInvalid(pure(skip_batch(response_ids=["resp_x"])), "skip_receipt_has_response_identity")
+        self.assertInvalid(pure(skip_batch(output_overrides={"forecast_candidates": [forecast()]})), "skip_receipt_with_model_slots")
+        self.assertInvalid(pure(skip_batch(output_overrides={"experiment_candidates": [pair("Skip pair")]})), "skip_receipt_with_model_slots")
+        self.assertInvalid(pure(skip_batch(forecast_candidate_count=1)), "declared_forecast_count_mismatch")
+        self.assertInvalid(pure(skip_batch(output_hash="0" * 64)), "output_hash_mismatch")
+        self.assertInvalid(pure(skip_batch(context_hash=DROP)), "context_hash_missing")
+        self.assertInvalid(pure(skip_batch(task="WEEKLY_CALIBRATION")), "receipt_task_not_daily_director")
+        # an unknown status is not a workflow skip: it gets no skip relaxation
+        self.assertEqual(pure(skip_batch(status="SKIPPED_SOMETHING_ELSE"))["invalid_reasons"], ["declared_forecast_count_missing", "receipt_status_unknown", "response_identity_missing"])
+        # the relaxation belongs to the workflow skip statuses only
+        self.assertEqual(pure(bound_batch(reproduction_output(), response_id=None, response_ids=DROP, attempt_count=DROP))["invalid_reasons"], ["response_identity_missing"])
+        self.assertEqual(pure(bound_batch(reproduction_output(), forecast_candidate_count=DROP))["invalid_reasons"], ["declared_forecast_count_missing"])
+        self.assertEqual(pure(bound_batch({"forecast_candidates": []}, status="API_OUTPUT_INVALID", response_id=None, response_ids=DROP, attempt_count=DROP))["invalid_reasons"], ["response_identity_missing"])
+
+    def test_retrospective_survives_census_failures_and_counts_skipped_batches(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            daily = repo / "research/api_agent/outputs/daily/2026/08/23"
+            batches = {"200000": bound_batch(reproduction_output()), "210000": skip_batch(), "220000": bound_batch(reproduction_output(), created_unix=1787515999, response_id="\ud800", response_ids=["\ud800"], attempt_count=1)}
+            for stamp, files in batches.items():
+                (daily / stamp).mkdir(parents=True)
+                for name, data in zip(("DAILY_DIRECTOR_OUTPUT.json", "context.json", "DAILY_DIRECTOR_RECEIPT.json"), files):
+                    (daily / stamp / name).write_bytes(data)
+            cmd = [sys.executable, str(SCRIPT), "retrospective-census", "--repo-root", str(repo), "--daily-root", str(repo / "research/api_agent/outputs/daily"), "--candidate-root", str(repo / "research/experiment_lifecycle/candidates")]
+            aggregate = json.loads(subprocess.run(cmd, check=True, capture_output=True, text=True).stdout)
+            self.assertEqual((aggregate["batch_count"], aggregate["valid_batch_count"], aggregate["skipped_batch_count"], aggregate["invalid_batch_count"]), (3, 1, 1, 1))
+            self.assertEqual((aggregate["invalid_reason_counts"], aggregate["slot_counts_unknown_batch_count"]), ({"CENSUS_INTERNAL_ERROR": 1}, 1))
+            self.assertEqual((aggregate["observed_raw_slot_count"], aggregate["model_emission_slot_count"]), (5, 5))
+            self.assertEqual((aggregate["attempts_unknown_batch_count"], aggregate["known_abandoned_attempts_without_surviving_output"]), (2, 1))
+
+    def test_error_reasons_are_allowlisted_fixed_codes_never_exception_text(self):
+        output = {"forecast_candidates": [], "experiment_candidates": [pair("Leak probe")]}
+        with mock.patch.object(module.base, "normalize", side_effect=ValueError("SECRETTITLE123")):
+            census = pure(bound_batch(output))
+        self.assertEqual([(s["outcome"], s["reason"]) for s in census["slots"]], [("error", "ValueError")])
+        with mock.patch.object(module.base, "emergent_pairs", side_effect=ValueError("SECRETDELTA456")):
+            derived = pure(bound_batch(output))
+        self.assertInvalid(derived, "emergent_pair_derivation_error:ValueError")
+        for value in (census, derived):
+            self.assertNotIn(b"SECRET", canonical(value))
+        # drift guard: the allowlist is exactly the fixed codes base.component/base.normalize raise
+        source = ast.parse(Path(module.base.__file__).read_text())
+        codes = {node.exc.args[0].value for fn in source.body if isinstance(fn, ast.FunctionDef) and fn.name in {"component", "normalize"} for node in ast.walk(fn)
+                 if isinstance(node, ast.Raise) and isinstance(node.exc, ast.Call) and node.exc.args and isinstance(node.exc.args[0], ast.Constant)}
+        self.assertEqual(codes, module.SLOT_ERROR_CODES)
+        for code in sorted(codes):
+            with mock.patch.object(module.base, "normalize", side_effect=ValueError(code)):
+                self.assertEqual(pure(bound_batch(output))["slots"][0]["reason"], code)
 
 
 if __name__ == "__main__":
