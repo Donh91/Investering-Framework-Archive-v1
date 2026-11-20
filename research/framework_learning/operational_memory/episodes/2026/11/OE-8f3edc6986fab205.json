@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/research-lab-sol-dispatch.yml",
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "tests/api_agent/test_owner_global_api_budget_cap.py",
+    "tests/governance/test_s1_trajectory_replay_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-8f3edc6986fab205",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "claude-sol-budget-50-s1-re-chain-high",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Copy Claude budget rechain package: .github/workflows/research-lab-sol-dispatch.yml * Copy Claude budget rechain package: 00_FMOS/S1/BOOTSTRAP.txt * Copy Claude budget rechain package: 00_FMOS/S1/REVIEWED_MERGE_LANE.json * Copy Claude budget rechain package: 00_FMOS/S1/RUNTIME_CONTRACT.json * Copy Claude budget rechain package: tests/api_agent/test_owner_global_api_budget_cap.py * Copy Claude budget rechain package: tests/governance/test_s1_trajectory_replay_v1.py",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/research-lab-sol-dispatch.yml": "861ebd4c6fd6d1574bb0802128c585d19107f445",
+    "00_FMOS/S1/BOOTSTRAP.txt": "b4147bcf789ed1232b3dbdeda2be3cc2e20065e6",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "7dfccdecf9a8e3027b09b71d53a2976b062bb2bd",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "80035bd5644d25738fe01360fb66cd9c2b985718",
+    "tests/api_agent/test_owner_global_api_budget_cap.py": "a3338708f765b87c6d2658b555bc11f23ab03891",
+    "tests/governance/test_s1_trajectory_replay_v1.py": "da48450ea554ce9a9240c290ebef7a0581f08451"
+  },
+  "source_commit_sha": "8f3edc6986fab2052a96dde213cd34c5e1cc0e96",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-20T15:22:17+01:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix: Claude Sol budget 50 and S1 re-chain (HIGH_IMPACT_BUDGET) (#2270)"
+}
