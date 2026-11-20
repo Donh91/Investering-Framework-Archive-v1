@@ -98,11 +98,11 @@ jobs:
           # missions, including missions created by other ChatGPT threads.
           # The global ledger reserves previous unresolved POSTs; reserve USD3
           # for EACH distinct new MAX before any native bot claim or POST.
-          # Older HIGH paths retain the same 40/4 guard. No Astra fallback.
+          # Owner-approved USD50 monthly envelope (owner 2026-11-20, #1156/7038154761) for MAX one-shots; non-MAX path keeps 40/4. No Astra fallback.
           if [ "${{ steps.dedupe.outputs.max_requested }}" = "true" ]; then
             python scripts/api_agent/check_monthly_cost_guard.py \
               --receipt-root research/api_agent/outputs \
-              --hard-stop-usd 40 --reserve-usd 4.0 \
+              --hard-stop-usd 50 --reserve-usd 4.0 \
               --new-request-upper-usd 3.0
           else
             python scripts/api_agent/check_monthly_cost_guard.py \
