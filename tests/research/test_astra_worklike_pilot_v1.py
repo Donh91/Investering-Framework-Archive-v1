@@ -71,5 +71,25 @@ class TestWorklikePilot(unittest.TestCase):
         with self.assertRaises(p.PilotBlocked):
             p.request_for_stage(1, "task", "fixture", {"stage": 0})
 
+
+    def test_existing_launcher_narrow_high_preview(self):
+        from scripts.research import owner_astra_mission_v1 as m
+        from unittest import mock
+        with mock.patch.object(m.core, "http_json", side_effect=AssertionError("NETWORK_FORBIDDEN")):
+            req, data, meta = m.build_request(m.WORKLIKE_STAGE1)
+        self.assertEqual(req["reasoning"], {"effort": "high"})
+        self.assertEqual(req["model"], p.MODEL)
+        self.assertEqual(meta["max_usd"], 1.5)
+        self.assertEqual(req["max_output_tokens"], p.MAX_OUTPUT_TOKENS)
+        self.assertEqual(meta["request_sha256"], p.sha(data))
+        self.assertLessEqual(meta["worst_case_usd"], 1.5)
+        self.assertNotIn("tools", req)
+        self.assertEqual(m.mission_effort({"mission_id": "ASTRA-ORDINARY-TEST"}), "max")
+        _, _, mission = m.load_mission(m.WORKLIKE_STAGE1)
+        for mutation in ({"reasoning_effort": "max"}, {"model": "gpt-6.2-sol"},
+                         {"max_usd": 2}, {"max_output_tokens": 128000}):
+            with self.assertRaises(ValueError):
+                m.mission_effort(dict(mission, **mutation))
+
 if __name__ == "__main__":
     unittest.main()
