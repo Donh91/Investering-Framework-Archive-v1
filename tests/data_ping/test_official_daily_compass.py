@@ -1219,6 +1219,62 @@ class OfficialDailyCompassTest(unittest.TestCase):
         self.assertFalse(route["official_compass_policy"]["render_request_creates_new_freeze"])
 
 
+    def test_cn_band_status_bound_completed_close_only(self):
+        as_of = datetime(2026, 9, 16, 19, 20, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            auto = self.auto(btc=75000, eth=2400)
+            auto["packet_generated_at_utc"] = "2026-09-16T19:10:00Z"
+            auto["source_snapshot"]["exact_commit_sha"] = "a" * 40
+            auto["normalized_state"]["live_market"]["observation_semantics"] = "COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL"
+            lane = auto["source_health"]["hourly_market"]
+            for key in ("pointer_freshness", "retrieval_freshness", "session_coverage_freshness", "source_observation_freshness"):
+                lane["freshness"][key]["timestamp"] = "2026-09-16T19:05:00Z" if key in ("pointer_freshness", "retrieval_freshness") else "2026-09-16T19:00:00Z"
+            rel = "03_DAILY_CAPTURE_LOGS/hourly/runs/test.json"
+            capture = {"contract": "HOURLY_SEQUENCE_CAPTURE_v2_2", "spot_venue": "BINANCE",
+                       "spot_status": "PASS", "forward_fill": False, "interpolation": False,
+                       "retrieved_at_utc": "2026-09-16T19:05:00Z", "window_end_utc": "2026-09-16T19:00:00Z",
+                       "directional_summary": {"latest_observations": [
+                           {"timestamp_utc": "2026-09-16T17:00:00Z", "btc_close": 74900, "eth_close": 2401},
+                           {"timestamp_utc": "2026-09-16T18:00:00Z", "btc_close": 75000, "eth_close": 2400}]}}
+            raw = nh.canon(capture)
+            file = root / rel
+            file.parent.mkdir(parents=True)
+            file.write_bytes(raw)
+            blob = hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\\0" + raw).hexdigest()
+            lane.update({"classification": "GITHUB_POINTER_TARGET_CHAIN_VALID",
+                         "provenance": {"target": {"exact_path": rel, "git_blob_sha": blob, "exact_commit_sha": "a" * 40}},
+                         "row": {"status": "PASS", "classification": "HOURLY_EXACT_ROW_BOUND",
+                                 "timestamp_utc": "2026-09-16T18:00:00Z", "provenance": {"exact_commit_sha": "a" * 40}}})
+            cn = self.cn()
+            cn["generated_unix"] = datetime(2026, 9, 14, 9, tzinfo=timezone.utc).timestamp()
+            cn["forecast_freeze"] = {"price_quote": {"BTC": "USDT", "ETH": "USDT"},
+                                     "btc_range_low": 75000, "eth_range_low": 2450,
+                                     "daily_price_path": {"contract": "CN_FROZEN_DAILY_PRICE_PATH_v1", "forecast_week": "2026-W38",
+                                     **{asset: {"points": [{"day": d, "low": low} for d in range(1, 8)]}
+                                        for asset, low in (("BTC", 75000), ("ETH", 2450))}}}
+            binding = {"status": "PASS", "issue_number": cn["issue_number"], "iso_year": 2026, "iso_week": 38}
+            before = nh.canon(cn)
+            result = nh.cn_band_status(auto, cn, binding, root, as_of)
+            self.assertEqual(result["status"], "OBSERVED")
+            self.assertFalse(result["assets"]["BTC"]["weekly_close_below_floor"])  # tie
+            self.assertEqual(result["assets"]["BTC"]["first_weekly_breach_in_captured_window_utc"], "2026-09-16T17:00:00Z")
+            self.assertTrue(result["assets"]["ETH"]["weekly_close_below_floor"])
+            self.assertEqual(result["availability_ts"], "2026-09-16T19:10:00Z")
+            self.assertEqual(nh.canon(cn), before)
+            self.assertEqual(nh.build_public_projection({"cn_band_status": result})["cn_band_status"], result)
+            auto["normalized_state"]["live_market"]["btc_usdt"] = 75100
+            self.assertEqual(nh.cn_band_status(auto, cn, binding, root, as_of)["reason"], "OWNER_CLOSE_MISMATCH")
+            auto["normalized_state"]["live_market"]["btc_usdt"] = 75000
+            cn["forecast_freeze"]["price_quote"]["BTC"] = "USD"
+            self.assertEqual(nh.cn_band_status(auto, cn, binding, root, as_of)["reason"], "QUOTE_MISMATCH")
+            cn["forecast_freeze"]["price_quote"]["BTC"] = "USDT"
+            self.assertEqual(nh.cn_band_status(auto, cn, binding, root, as_of.replace(hour=23))["status"], "UNAVAILABLE")
+            file.write_bytes(raw + b" ")
+            self.assertEqual(nh.cn_band_status(auto, cn, binding, root, as_of)["reason"], "HOURLY_TARGET_HASH_MISMATCH")
+
+
+
 class PriorCompassBindingTest(unittest.TestCase):
     """Synthetic source integrity, never investment performance or delivery proof."""
 
@@ -1369,60 +1425,6 @@ class PriorCompassBindingTest(unittest.TestCase):
                         evaluate.assert_not_called()
                         self.assertFalse((root / "refresh-output").exists())
 
-
-    def test_cn_band_status_bound_completed_close_only(self):
-        as_of = datetime(2026, 9, 16, 19, 20, tzinfo=timezone.utc)
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            auto = self.auto(btc=75000, eth=2400)
-            auto["packet_generated_at_utc"] = "2026-09-16T19:10:00Z"
-            auto["source_snapshot"]["exact_commit_sha"] = "a" * 40
-            auto["normalized_state"]["live_market"]["observation_semantics"] = "COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL"
-            lane = auto["source_health"]["hourly_market"]
-            for key in ("pointer_freshness", "retrieval_freshness", "session_coverage_freshness", "source_observation_freshness"):
-                lane["freshness"][key]["timestamp"] = "2026-09-16T19:05:00Z" if key in ("pointer_freshness", "retrieval_freshness") else "2026-09-16T19:00:00Z"
-            rel = "03_DAILY_CAPTURE_LOGS/hourly/runs/test.json"
-            capture = {"contract": "HOURLY_SEQUENCE_CAPTURE_v2_2", "spot_venue": "BINANCE",
-                       "spot_status": "PASS", "forward_fill": False, "interpolation": False,
-                       "retrieved_at_utc": "2026-09-16T19:05:00Z", "window_end_utc": "2026-09-16T19:00:00Z",
-                       "directional_summary": {"latest_observations": [
-                           {"timestamp_utc": "2026-09-16T17:00:00Z", "btc_close": 74900, "eth_close": 2401},
-                           {"timestamp_utc": "2026-09-16T18:00:00Z", "btc_close": 75000, "eth_close": 2400}]}}
-            raw = nh.canon(capture)
-            file = root / rel
-            file.parent.mkdir(parents=True)
-            file.write_bytes(raw)
-            blob = hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\\0" + raw).hexdigest()
-            lane.update({"classification": "GITHUB_POINTER_TARGET_CHAIN_VALID",
-                         "provenance": {"target": {"exact_path": rel, "git_blob_sha": blob, "exact_commit_sha": "a" * 40}},
-                         "row": {"status": "PASS", "classification": "HOURLY_EXACT_ROW_BOUND",
-                                 "timestamp_utc": "2026-09-16T18:00:00Z", "provenance": {"exact_commit_sha": "a" * 40}}})
-            cn = self.cn()
-            cn["generated_unix"] = datetime(2026, 9, 14, 9, tzinfo=timezone.utc).timestamp()
-            cn["forecast_freeze"] = {"price_quote": {"BTC": "USDT", "ETH": "USDT"},
-                                     "btc_range_low": 75000, "eth_range_low": 2450,
-                                     "daily_price_path": {"contract": "CN_FROZEN_DAILY_PRICE_PATH_v1", "forecast_week": "2026-W38",
-                                     **{asset: {"points": [{"day": d, "low": low} for d in range(1, 8)]}
-                                        for asset, low in (("BTC", 75000), ("ETH", 2450))}}}
-            binding = {"status": "PASS", "issue_number": cn["issue_number"], "iso_year": 2026, "iso_week": 38}
-            before = nh.canon(cn)
-            result = nh.cn_band_status(auto, cn, binding, root, as_of)
-            self.assertEqual(result["status"], "OBSERVED")
-            self.assertFalse(result["assets"]["BTC"]["weekly_close_below_floor"])  # tie
-            self.assertEqual(result["assets"]["BTC"]["first_weekly_breach_in_captured_window_utc"], "2026-09-16T17:00:00Z")
-            self.assertTrue(result["assets"]["ETH"]["weekly_close_below_floor"])
-            self.assertEqual(result["availability_ts"], "2026-09-16T19:10:00Z")
-            self.assertEqual(nh.canon(cn), before)
-            self.assertEqual(nh.build_public_projection({"cn_band_status": result})["cn_band_status"], result)
-            auto["normalized_state"]["live_market"]["btc_usdt"] = 75100
-            self.assertEqual(nh.cn_band_status(auto, cn, binding, root, as_of)["reason"], "OWNER_CLOSE_MISMATCH")
-            auto["normalized_state"]["live_market"]["btc_usdt"] = 75000
-            cn["forecast_freeze"]["price_quote"]["BTC"] = "USD"
-            self.assertEqual(nh.cn_band_status(auto, cn, binding, root, as_of)["reason"], "QUOTE_MISMATCH")
-            cn["forecast_freeze"]["price_quote"]["BTC"] = "USDT"
-            self.assertEqual(nh.cn_band_status(auto, cn, binding, root, as_of.replace(hour=23))["status"], "UNAVAILABLE")
-            file.write_bytes(raw + b" ")
-            self.assertEqual(nh.cn_band_status(auto, cn, binding, root, as_of)["reason"], "HOURLY_TARGET_HASH_MISMATCH")
 
 
 
