@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py",
+    "tests/experiments/test_scientific_admission_lifecycle.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-58ff15e485472889",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "experiments-scientific-admission-census-1557-2264",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Claude-authored package CLAUDE-1557-CENSUS-ROBUSTNESS-PATCH-20261120T0920Z",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py": "abc04f3b7c2aa4a00a35820a76f0aa6de3c58c70",
+    "tests/experiments/test_scientific_admission_lifecycle.py": "40d6fd5f43fc8a29557bc35fd3c91f7cad1cc5b2"
+  },
+  "source_commit_sha": "58ff15e485472889439dc8f61128fa270e730a82",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-20T12:20:26+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(experiments): harden scientific admission census (#1557) (#2264)"
+}

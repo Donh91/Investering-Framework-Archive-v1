@@ -9,16 +9,16 @@
   "automatic_escalation_required": false,
   "candidate_revalidation_count": 3,
   "compatibility_counts": {
-    "DRIFTED": 651,
-    "EXACT": 655,
-    "PARTIAL": 2520,
+    "DRIFTED": 656,
+    "EXACT": 657,
+    "PARTIAL": 2581,
     "REMOVED": 12,
     "UNKNOWN": 140
   },
   "contract": "OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT_v1",
-  "episode_count": 3978,
+  "episode_count": 4046,
   "failures": [],
-  "generated_at_utc": "2026-11-19T23:17:36.920388Z",
+  "generated_at_utc": "2026-11-20T12:09:51.695647Z",
   "materialized_candidate_count": 33,
   "measurement": {
     "failed_task_rate": "BASELINE_ACCUMULATING",
@@ -26,17 +26,17 @@
     "repeated_investigation_rate": "BASELINE_ACCUMULATING",
     "stale_memory_safety": "PASS",
     "task_bootstrap_context_load": "BASELINE_ACCUMULATING",
-    "useful_retrieval_precision": 0.9167
+    "useful_retrieval_precision": 1.0
   },
   "memory_reuse_allowed": true,
-  "new_episode_count": 104,
+  "new_episode_count": 129,
   "procedural_candidate_count": 33,
   "recommended_action": "CONTINUE_SHADOW_AND_ACCUMULATE_BASELINE",
   "retrieval_probe": {
     "probe_count": 12,
     "results": [
       {
-        "episode_id": "OE-78dd9b28441c2675",
+        "episode_id": "OE-f7afbeeb7c56721e",
         "expected_task_class": "GENERAL_FRAMEWORK",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -45,16 +45,16 @@
         "top_task_class": "GENERAL_FRAMEWORK"
       },
       {
-        "episode_id": "OE-f2ff3182ac351e78",
-        "expected_task_class": "API_AGENT",
+        "episode_id": "OE-7955c58cfbcf14a0",
+        "expected_task_class": "GENERAL_FRAMEWORK",
         "reusable_count": 5,
         "revalidation_count": 0,
         "selected_count": 5,
-        "top_class_match": false,
+        "top_class_match": true,
         "top_task_class": "GENERAL_FRAMEWORK"
       },
       {
-        "episode_id": "OE-40220ba61a437dc4",
+        "episode_id": "OE-20b2a326a0eccaa9",
         "expected_task_class": "MARKET_STATE",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -63,25 +63,7 @@
         "top_task_class": "MARKET_STATE"
       },
       {
-        "episode_id": "OE-a0939a02ea1bf93b",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-1e1866b251f6ab2c",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-dfc5b30eb518ec67",
+        "episode_id": "OE-06bab17dd67d8c14",
         "expected_task_class": "MARKET_STATE",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -90,7 +72,25 @@
         "top_task_class": "MARKET_STATE"
       },
       {
-        "episode_id": "OE-94659e237f0266ea",
+        "episode_id": "OE-ef90445ad2e5237a",
+        "expected_task_class": "MARKET_STATE",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "MARKET_STATE"
+      },
+      {
+        "episode_id": "OE-2e13022bd4aa7dc9",
+        "expected_task_class": "GENERAL_FRAMEWORK",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "GENERAL_FRAMEWORK"
+      },
+      {
+        "episode_id": "OE-618096136e2f8de8",
         "expected_task_class": "API_AGENT",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -99,7 +99,7 @@
         "top_task_class": "API_AGENT"
       },
       {
-        "episode_id": "OE-671d6890da6f1c09",
+        "episode_id": "OE-3cd7f638cf4d2a9f",
         "expected_task_class": "GENERAL_FRAMEWORK",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -108,7 +108,7 @@
         "top_task_class": "GENERAL_FRAMEWORK"
       },
       {
-        "episode_id": "OE-3f25b9293d4a9bae",
+        "episode_id": "OE-3dc2e71192560348",
         "expected_task_class": "GENERAL_FRAMEWORK",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -117,7 +117,16 @@
         "top_task_class": "GENERAL_FRAMEWORK"
       },
       {
-        "episode_id": "OE-84141bb77c07ca42",
+        "episode_id": "OE-3726f706f2f5710a",
+        "expected_task_class": "MARKET_STATE",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "MARKET_STATE"
+      },
+      {
+        "episode_id": "OE-91ac2fb98ceb3a84",
         "expected_task_class": "GENERAL_FRAMEWORK",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -126,30 +135,21 @@
         "top_task_class": "GENERAL_FRAMEWORK"
       },
       {
-        "episode_id": "OE-317b7bca130a89cd",
+        "episode_id": "OE-58ff15e485472889",
         "expected_task_class": "GENERAL_FRAMEWORK",
         "reusable_count": 5,
         "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-7aa02cbc4e5fa4fd",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 1,
-        "revalidation_count": 4,
         "selected_count": 5,
         "top_class_match": true,
         "top_task_class": "GENERAL_FRAMEWORK"
       }
     ],
     "stale_reuse_violations": 0,
-    "top_task_class_hits": 11,
-    "top_task_class_precision": 0.9167
+    "top_task_class_hits": 12,
+    "top_task_class_precision": 1.0
   },
-  "source_head_sha": "7aa02cbc4e5fa4fdb9a02ba1988e5d5fce252a9e",
-  "stale_share": 0.1667,
+  "source_head_sha": "3726f706f2f5710a87d8c50bed21932ac78f069d",
+  "stale_share": 0.1651,
   "status": "WARN",
   "warnings": [
     "candidate_requires_revalidation:3"
