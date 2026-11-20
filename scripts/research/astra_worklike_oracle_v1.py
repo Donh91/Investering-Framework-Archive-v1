@@ -47,6 +47,11 @@ def cases():
         row({"published_at_utc": "not-a-date"}, "INVALID"),
         row({"baseline_sha256": "not-a-digest"}, "INVALID"),
         row({"witness": {**early, "observed_at_utc": "2026-11-22T23:59:59"}}, "INVALID"),
+        row({"cutoff_utc": "2026-02-30T00:00:00Z"}, "INVALID"),
+        row({"witness": {**early, "independent": 1}}, "INVALID"),
+        row({"witness": {**early, "observed_at_utc": CUTOFF, "baseline_sha256": "bad"}}, "INVALID"),
+        row({"witness": {"independent": True}}, "INVALID"),
+        row({"unexpected": True}, "INVALID"),
     ]
 
 def docker_command(image, name, scratch):
@@ -206,7 +211,9 @@ def verdict(r):
     if w is not None:
         if set(w)!= {'observed_at_utc','baseline_sha256','independent'} or type(w['independent']) is not bool:
             raise ValueError()
-        good=ts(w['observed_at_utc'])<cutoff and digest(w['baseline_sha256'])==baseline and w['independent']
+        wt=ts(w['observed_at_utc'])
+        wd=digest(w['baseline_sha256'])
+        good=wt<cutoff and wd==baseline and w['independent']
     else:
         good=False
     return 'ELIGIBLE' if published<cutoff or good else 'UNKNOWN'
@@ -223,3 +230,116 @@ print(json.dumps({'status':status}))
     return {"contract": "ASTRA_WORKLIKE_SANDBOX_SMOKE_v1", "status": "PASS",
             "good": good, "negative": bad, "image": PINNED_IMAGE,
             "model_execution_proven": False, "paid_api": False}
+
+def read_artifact(root, rel, maximum):
+    path = root / rel
+    if path.is_symlink() or not path.resolve().is_relative_to(root.resolve()) or not path.is_file():
+        raise gate.PilotBlocked("ARTIFACT_PATH")
+    if not 0 < path.stat().st_size <= maximum:
+        raise gate.PilotBlocked("ARTIFACT_SIZE")
+    return path.read_bytes()
+
+def strict_json(data):
+    def pairs(items):
+        if len({k for k, _ in items}) != len(items):
+            raise gate.PilotBlocked("DUPLICATE_JSON_KEY")
+        return dict(items)
+    def nonfinite(_):
+        raise gate.PilotBlocked("NONFINITE_JSON")
+    try:
+        return json.loads(data.decode("utf-8"), object_pairs_hook=pairs, parse_constant=nonfinite)
+    except (UnicodeError, json.JSONDecodeError, RecursionError) as exc:
+        raise gate.PilotBlocked("ARTIFACT_JSON") from exc
+
+def admit_collected(root):
+    """Bind the paid artifact to the exact current native run and trusted request.
+
+    Must be called only on a same-workflow artifact in the isolated job.
+    Does not execute or write any model code.
+    """
+    from scripts.research import owner_astra_mission_v1 as owner
+    root = Path(root)
+    mid = owner.WORKLIKE_STAGE1
+    _, _, expected = owner.build_request(mid)
+    rb = read_artifact(root, "receipt.json", 32000)
+    mb = read_artifact(root, "source_manifest.json", 32000)
+    receipt, meta = strict_json(rb), strict_json(mb)
+    if not isinstance(receipt, dict) or not isinstance(meta, dict):
+        raise gate.PilotBlocked("ARTIFACT_SHAPE")
+    if any(meta.get(k) != v for k, v in expected.items()):
+        raise gate.PilotBlocked("ARTIFACT_REQUEST_MISMATCH")
+    current_run = os.environ.get("GITHUB_RUN_ID", "")
+    main = owner.git_head()
+    native_run = receipt.get("run_id")
+    if (not current_run.isdigit() or not isinstance(native_run, str) or not native_run.isdigit()
+            or (native_run != current_run and meta.get("recovered_by_run") != current_run)
+            or receipt.get("release_main_sha") != main):
+        raise gate.PilotBlocked("ARTIFACT_NATIVE_RUN_MISMATCH")
+    if (receipt.get("contract") != "ASTRA_MISSION_RECEIPT_V1"
+            or receipt.get("mission_id") != mid or receipt.get("work_id") != mid
+            or receipt.get("request_sha256") != expected["request_sha256"]
+            or receipt.get("bundle_sha256") != expected["bundle_sha256"]
+            or receipt.get("status") != "completed" or receipt.get("incomplete_details") is not None
+            or receipt.get("model") != gate.MODEL
+            or not owner.provider_model(gate.MODEL).fullmatch(str(receipt.get("provider_model")))
+            or not owner.RESPONSE_ID.fullmatch(str(receipt.get("response_id")))
+            or receipt.get("reasoning_effort") != gate.EFFORT
+            or receipt.get("provider_reasoning_effort") != gate.EFFORT
+            or receipt.get("no_retry") is not True or receipt.get("research_only") is not True
+            or receipt.get("owner_reserved_usd") != gate.STAGE_CAP_MICROUSD / 1_000_000
+            or receipt.get("usage_valid") is not True or receipt.get("output_file") != "ASTRA_RAW_REPORT.md"):
+        raise gate.PilotBlocked("ARTIFACT_RECEIPT_INVALID")
+    usage = receipt.get("usage")
+    if not isinstance(usage, dict):
+        raise gate.PilotBlocked("ARTIFACT_USAGE_INVALID")
+    ni, no = usage.get("input_tokens"), usage.get("output_tokens")
+    if (type(ni) is not int or type(no) is not int or ni < 0 or no < 0
+            or ni > expected["input_token_upper"] or no > gate.MAX_OUTPUT_TOKENS):
+        raise gate.PilotBlocked("ARTIFACT_USAGE_INVALID")
+    cost = owner.estimate_cost(gate.MODEL, ni, no)
+    if cost != receipt.get("estimated_upper_usd") or cost > receipt["owner_reserved_usd"]:
+        raise gate.PilotBlocked("ARTIFACT_COST_MISMATCH")
+    prefix = "archive/" + expected["mission_dir"] + "/results/"
+    if (read_artifact(root, prefix+"receipt.json", 32000) != rb
+            or read_artifact(root, prefix+"source_manifest.json", 32000) != mb):
+        raise gate.PilotBlocked("ARTIFACT_ARCHIVE_COPY_MISMATCH")
+    raw = read_artifact(root, prefix+"ASTRA_RAW_REPORT.md", 128000)
+    if gate.sha(raw) != receipt.get("output_sha256") or len(raw) != receipt.get("bytes"):
+        raise gate.PilotBlocked("ARTIFACT_OUTPUT_MISMATCH")
+    if owner.CREDENTIAL.search(raw) or owner.WALLET.search(raw):
+        raise gate.PilotBlocked("ARTIFACT_RESTRICTED_PATTERN")
+    proposal = strict_json(raw)
+    preflight = gate.validate_proposal(proposal, dict.fromkeys(gate.PATHS))
+    candidate = next(row["content"].encode("utf-8") for row in proposal["files"]
+                     if row["path"] == gate.PATHS[0])
+    return candidate, {"mission_id": mid, "native_run_id": current_run,
+                       "paid_run_id": native_run, "release_main_sha": main,
+                       "receipt_sha256": gate.sha(rb), "request_sha256": expected["request_sha256"],
+                       "raw_output_sha256": gate.sha(raw), "proposal": preflight}
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("action", choices=("smoke", "verify"))
+    parser.add_argument("--input", type=Path)
+    parser.add_argument("--out", required=True, type=Path)
+    args = parser.parse_args()
+    if args.action == "smoke":
+        result = smoke()
+    else:
+        if args.input is None:
+            raise gate.PilotBlocked("ARTIFACT_INPUT_MISSING")
+        candidate, binding = admit_collected(args.input)
+        result = verify_in_disposable_runner(candidate, PINNED_IMAGE)
+        result.update(binding)
+        result["image"] = PINNED_IMAGE
+        result["model_output_executed_in_sandbox"] = True
+        result["automatic_repair_authorized"] = False
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    with args.out.open("xb") as f:
+        f.write(gate.canonical(result)+b"\n")
+    print(result["contract"], result["status"], gate.sha(args.out.read_bytes()))
+    return 0 if result["status"] == "PASS" else 3
+
+if __name__ == "__main__":
+    raise SystemExit(main())
