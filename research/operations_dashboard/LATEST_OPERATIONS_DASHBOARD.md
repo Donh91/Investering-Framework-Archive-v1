@@ -1,34 +1,34 @@
 # Operations Dashboard
 
 Overall: **AMBER**
-Generated: `2026-11-20T22:47:56.785022Z`
+Generated: `2026-11-20T22:58:20.636580Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 1.735 |
-| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 0.827 |
-| `weekly_output` | **GREEN** | FRESH | 110.22 |
-| `automation_health` | **AMBER** | AMBER | 0.067 |
-| `architecture_health` | **GREEN** | GREEN | 0.018 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 0.826 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 12.661 |
-| `remediation_maturation` | **GREEN** | FRESH | 5.237 |
+| `daily_capture` | **GREEN** | FRESH | 1.908 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 1.0 |
+| `weekly_output` | **GREEN** | FRESH | 110.393 |
+| `automation_health` | **AMBER** | AMBER | 0.24 |
+| `architecture_health` | **GREEN** | GREEN | 0.191 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 1.0 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 12.834 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.067 |
 
 ## Source coverage (advisory, not producer/consumer acceptance)
 
 | Lane | Cadence | Source state | Schedule observation | Source age (h) | Consumer |
 |---|---|---|---|---:|---|
-| hourly | HOURLY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_NOT_SUCCESS | 0.799 | UNKNOWN |
-| daily_live_anchor | SIX_PER_LOCAL_DAY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 1.735 | UNKNOWN |
-| settled_etf | SETTLED_SESSION_DAILY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 6.711 | UNKNOWN |
-| stablecoin_liquidity | DAILY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 7.165 | UNKNOWN |
-| market_breadth | CHECKPOINT | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 4.904 | UNKNOWN |
-| btc_dominance | DAILY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 7.065 | UNKNOWN |
-| news_intelligence | DAILY_DISCOVERY | MISSING_OR_DEGRADED (NEWS_DISCOVERY_NOT_VERIFIED) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 6.632 | UNKNOWN |
-| entry_signals | EVENT_AND_HOURLY_FALLBACK | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 0.397 | UNKNOWN |
-| edge_research | PROSPECTIVE_EVENT_DRIVEN | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | NATIVE_SCHEDULE_UNVERIFIED | 0.826 | UNKNOWN |
+| hourly | HOURLY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_NOT_SUCCESS | 0.972 | UNKNOWN |
+| daily_live_anchor | SIX_PER_LOCAL_DAY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 1.908 | UNKNOWN |
+| settled_etf | SETTLED_SESSION_DAILY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 6.884 | UNKNOWN |
+| stablecoin_liquidity | DAILY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 7.338 | UNKNOWN |
+| market_breadth | CHECKPOINT | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 5.077 | UNKNOWN |
+| btc_dominance | DAILY | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 7.238 | UNKNOWN |
+| news_intelligence | DAILY_DISCOVERY | MISSING_OR_DEGRADED (NEWS_DISCOVERY_NOT_VERIFIED) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 6.806 | UNKNOWN |
+| entry_signals | EVENT_AND_HOURLY_FALLBACK | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | LAST_SCHEDULE_SUCCESS_NOT_COVERAGE | 0.57 | UNKNOWN |
+| edge_research | PROSPECTIVE_EVENT_DRIVEN | OBSERVED_SOURCE (SOURCE_ROW_PRESENT) | NATIVE_SCHEDULE_UNVERIFIED | 1.0 | UNKNOWN |
 
 A successful schedule does not prove a complete source, verified news, point-in-time first-known, consumer readback or financial edge.
 
@@ -39,8 +39,8 @@ A successful schedule does not prove a complete source, verified news, point-in-
 - Pending forecast candidates: **313**
 - Experiment candidates: **811**
 - Experiment dispatch requests: **5**
-- Codex-ready remediation tasks: **21**
-- Needs-more-evidence items: **11**
+- Codex-ready remediation tasks: **7**
+- Needs-more-evidence items: **8**
 
 ## Incidents
 
@@ -70,4 +70,4 @@ A gateway PASS alone is not measured downstream value or investment edge.
 - **P1** `automation_health` - SEMANTIC_STATUS_AMBER
 - **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `42e4b66ee5b88f3ecb9cd9219ef4bd9601746dd4663bf67060cbfc972bfb3b4f`
+Dashboard SHA-256: `44a41a37d14a62774c3b23781b0f2d9270f931d717147f9856ed58946cc2ad50`
