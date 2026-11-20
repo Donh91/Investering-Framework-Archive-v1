@@ -90,7 +90,17 @@
       "path": "data/series/price_cm.json",
       "blob": "a9feae0a1a896c45a70951dbe58a37b90521d838",
       "bytes": 154394,
-      "sha256": "93f7d6cecd17dfda71a373d9b4439f35fd8e18be3cdcc630e44676eda8396e99"
+      "sha256": "93f7d6cecd17dfda71a373d9b4439f35fd8e18be3cdcc630e44676eda8396e99",
+      "private_custody": {
+        "repository": "Donh91/secrets",
+        "pr": 210,
+        "review_head": "f66c9f94edc9954e158813ae44b002757dc52bc5",
+        "raw_path": "raw/BH_SOPR_COHORT_PRICE_SNAPSHOT_V1/2026/11/20/93f7d6cecd17dfda71a373d9b4439f35fd8e18be3cdcc630e44676eda8396e99.json",
+        "manifest_path": "raw/BH_SOPR_COHORT_PRICE_SNAPSHOT_V1/2026/11/20/MANIFEST.json",
+        "manifest_blob": "0273675beb0d6524b3186fd423cf1bb38362d1e9",
+        "manifest_sha256": "5ebdd3232d50ec42cbdd85a1c01fa1e7d6bcaa77964652bf813a9a33844e6c53",
+        "activation": "Require merge and exact blob/hash readback from private main; branch snapshot alone is not release."
+      }
     },
     "clock_rule": "CM_NATIVE_LABEL = MIRROR_LABEL - 1D; CLOSE_UTC = NATIVE_LABEL + 1D; BH_LABELS_UNCHANGED; SIGNAL_LAG_DAYS = 7",
     "clock_check": "unique minimum median absolute log price reference difference at mirror offset +1, strictly below 0.005; no outcome access before pass",
