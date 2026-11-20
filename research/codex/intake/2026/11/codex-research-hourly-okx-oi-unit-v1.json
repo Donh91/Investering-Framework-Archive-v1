@@ -1,0 +1,86 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-hourly-okx-oi-unit-v1",
+  "submitted_at_utc": "2026-11-20T11:53:33Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "Research Lab RL-MERINT C08B 2026-11-20",
+    "source_paths": [
+      "scripts/daily_capture/build_hourly_sequence.py",
+      "tests/daily_capture/test_daily_capture_pipeline.py",
+      "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-19.csv",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1918#issuecomment-7038867976"
+    ]
+  },
+  "title": "Repair OKX Hourly open-interest USD unit mapping without rewriting history",
+  "objective": "Correct the verified positional four-field OKX open-interest-history parser defect: a current [ts, contracts, base currency quantity, USD notional] response stores base quantity in the supposed USD value field. Primary target ONLY actual USD value normalization and fail-closed parsing for malformed/ambiguous source shapes. Keep already-defined same-unit amount and price/OI state logic unchanged unless a separately reviewed source contract permits explicit unit conversion. Establish actual quantity unit lineage across shapes; no cross-unit return/delta and no combining pre-fix mislabeled notional and corrected notional as one continuous economic measure. Before code release enumerate existing consumers of *_open_interest_value and check their current source authority and compatibility; a change to a live signal, canonical source selection, output schema/authority, or historic data semantics requires separate source-owner review, not this task. Preserve original archived rows, prior forecasts and evidence. Use existing Hourly owner and tests, no new pipeline, scheduled task or additional model/API spend.",
+  "finding_key": "HOURLY_OKX_OI_ARRAY_USD_VALUE_IS_BASE_QUANTITY",
+  "primary_target": "scripts/daily_capture/build_hourly_sequence.py",
+  "allowed_change_scope": [
+    "scripts/daily_capture/build_hourly_sequence.py",
+    "tests/daily_capture/test_daily_capture_pipeline.py"
+  ],
+  "evidence": [
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1918#issuecomment-7038867976",
+      "summary": "Actual direct public OKX BTC and ETH per-instrument Nov19 four-field rows and current public archive matched 46/46: stored amount=contracts and stored USD value=base quantity; 0/46 stored values match actual USD. Public instrument specs validate contract-to-base identities. Entry dates, endpoints, matching tolerances and source limitations documented."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/commit/3cd7f638cf4d2a9f9b955f568447fdbf5da106ce",
+      "summary": "Exact current parser still reads numbers[0] as amount and numbers[1] as value, discards actual USD field. Dictionary branch and array branch also have different legacy quantity unit precedence. Re-read fresh main before repair."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "03_DAILY_CAPTURE_LOGS/hourly/2026/11/2026-11-19.csv",
+      "summary": "Pinned original public source ref 2e13022bd4aa7dc9878d552b53f4b9126954ae5a; 24 hourly records each asset, 23 source-label matches each. Preserve original bytes; no backfill."
+    },
+    {
+      "kind": "TEST",
+      "ref": "tests/daily_capture/test_daily_capture_pipeline.py",
+      "summary": "Existing fixture defines dict oiCcy and oiUsd, does not reproduce real four-element array. Extend existing producer-to-persistence test."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "https://www.okx.com/api/v5/rubik/stat/contracts/open-interest-history?instId=BTC-USDT-SWAP&period=1H&begin=1795046400000&end=1795132800000&limit=100",
+      "summary": "Public exchange endpoint used for reproduction; data retention may expire, so use synthetic exact-shape regression plus C08 receipt and immutable public archive evidence."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "https://github.com/okxapi/python-okx/blob/master/okx/TradingData.py",
+      "summary": "Vendor SDK confirms endpoint/argument contract; raw source and contract specifications establish current positional unit identity."
+    }
+  ],
+  "reproduction": "Read current exact main build_hourly_sequence.py parse_okx_oi and build_rows. Synthetic four-slot response [1795129200000, '10000', '100', '6200000'] for BTC-USDT-SWAP (ctVal=.01) currently returns value=100 rather than 6200000; existing dict fixture {ts,oiCcy,oiUsd} does not catch this. Reproduce through parser and build_rows to *_open_interest_value, then through existing temp-root merge_rows persistence/reread. C08 independently reproduced 46 actual public archive rows. Different prior tasks #947/#694 and #1749 (funding clock) are not this failure. Do not claim source observation clocks or all historical extent; no live forecasts changed. Validate fresh source shapes before implementing. Root cause is positional decode, not data endpoint absence.",
+  "acceptance_tests": {
+    "positive": [
+      "Before implementation write failing synthetic 4-slot BTC and ETH arrays with distinct contract, base and USD numbers; after patch exact USD field is retained, no change to price or same-unit amount change semantics in existing supported shape; dictionary with explicit oiUsd retains correct USD.",
+      "Full existing Daily Capture Pipeline tests with native unittest collection count and new producer-to-persistence-to-reread fixture; observed USD value refers to true field, not base quantity. Existing equal-quality and degradation protections unchanged; no old archive file written by repair PR.",
+      "Verify independently against at least one natural new Hourly capture and public provider matching labels/units (source observation clock distinct from retrieval), compare actual source schema, instrument identity and correct USD; preserve receipts and history. Consumer census and immutable old/new unit boundary signed off before release."
+    ],
+    "negative": [
+      "Reject or explicitly mark unavailable ambiguous/truncated or shifted arrays, booleans, nonfinite or invalid numeric fields, missing USD, unknown shape; never treat base quantity as USD or silently substitute quantity for missing USD. Include adversarial mutation restoring old index and prove new regression fails.",
+      "Reject duplicate/conflicting source timestamp identities and mixed ambiguous quantity units for derived return only under existing fail-closed source contract; if a schema or output semantic change is required, stop/escalate rather than invent policy. No silent multiplication or inference of historical USD, no false freshness or PIT.",
+      "Synthetic original archive rows retain original immutable values on regression replay; no comparison of pre-fix mislabeled versus corrected USD as same-unit series, no edit to existing archived/frozen outcomes. No new API spend or workflow, no signal gate or weight changes. If no consumer-safe unit boundary possible within scope, stop and request owner decision."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical archive or frozen forecasts",
+    "workflow scheduling",
+    "automatic live action",
+    "unreviewed unit/schema migrations"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "Current source owner and exact-head independent review; existing CI with nonzero test collection and adversarial old-index mutation proof; no existing archive data edits; original-unit provenance and affected consumer disposition; real next natural Hourly persisted row verified against exact public source, corrected USD field and same-unit quantity continuity. If unresolved previous rows or consumer semantics, retain quarantine/owner HOLD, not RESOLVED."
+}
