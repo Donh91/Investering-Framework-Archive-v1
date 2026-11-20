@@ -88,11 +88,25 @@ jobs:
 
       - name: Enforce Research Lab Sol and monthly API budgets
         if: steps.dedupe.outputs.run_analysis == 'true'
+        env:
+          MISSION_ID: ${{ steps.trigger.outputs.mission }}
         run: |
+          # Owner exception #1156/7039702480, UTC 2026-11-20 only.
+          # Keep normal callers and their limits unchanged.
+          lane_cap=10.0
+          monthly_cap=40
+          if [ "$(date -u +%F)" = "2026-11-20" ] && [ "${{ steps.dedupe.outputs.max_requested }}" = "true" ]; then
+            case "$MISSION_ID" in
+              NAVIGATOR-ONE-COMPETITIVE-REVERSE-ENGINEERING-SOL62-MAX-20261118|PROXIMA-ECONOMIC-DEMAND-TRUTH-SOL62-MAX-20261118|ALPHA-CAPITAL-NETWORK-INTELLIGENCE-SOL62-MAX-20261120)
+                lane_cap=15.0
+                monthly_cap=50
+                ;;
+            esac
+          fi
           python scripts/api_agent/check_api_lane_budget.py \
             --receipt-root research/api_agent/outputs \
             --task RESEARCH_LAB_SOL_ANALYSIS \
-            --cap-usd 10.0 \
+            --cap-usd "$lane_cap" \
             --reserve-usd 1.0
           # Common owner-governed Sol MAX for ALL qualifying original
           # missions, including missions created by other ChatGPT threads.
@@ -102,7 +116,7 @@ jobs:
           if [ "${{ steps.dedupe.outputs.max_requested }}" = "true" ]; then
             python scripts/api_agent/check_monthly_cost_guard.py \
               --receipt-root research/api_agent/outputs \
-              --hard-stop-usd 40 --reserve-usd 4.0 \
+              --hard-stop-usd "$monthly_cap" --reserve-usd 4.0 \
               --new-request-upper-usd 3.0
           else
             python scripts/api_agent/check_monthly_cost_guard.py \
