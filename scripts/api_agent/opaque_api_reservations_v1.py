@@ -12,12 +12,25 @@ MAX_OUTSTANDING = 12
 MAX_SINGLE_USD = Decimal("3")
 # Append exact reviewed ID, original UTC month and full ceiling in the same
 # future release as the canonical ledger row. Never delete or lower a pin.
-RETAINED = {}
+RETAINED_ROWS = ()
 FIELDS = {"reservation_id", "created_month_utc", "status", "upper_usd",
           "one_paid_post_max", "no_retry", "reconciliation_required"}
 ID = re.compile(r"[0-9a-f]{32}\Z")
 MONTH = re.compile(r"20[0-9]{2}-(0[1-9]|1[0-2])\Z")
 USD = re.compile(r"(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?\Z")
+
+
+def retained_pins(rows):
+    """Reject duplicate reviewed IDs before converting source rows to a map."""
+    pins = {}
+    for ident, month, upper in rows:
+        if ident in pins:
+            raise ValueError("OPAQUE_API_RESERVATION_DUPLICATE_PIN")
+        pins[ident] = (month, upper)
+    return pins
+
+
+RETAINED = retained_pins(RETAINED_ROWS)
 
 
 def pending_upper(ledger: dict) -> tuple[float, int]:

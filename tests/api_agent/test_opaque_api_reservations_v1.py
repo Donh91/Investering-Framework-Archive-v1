@@ -60,6 +60,23 @@ class OpaqueApiLiabilityTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         OPAQUE.pending_upper(ledger([entry]))
 
+    def test_exact_pinned_over_cap_is_rejected(self):
+        # Matching a reviewed pin must not hide an invalid ceiling.
+        for value in ("3.000001", "5", "0"):
+            with self.subTest(value=value):
+                with patch.object(OPAQUE, "RETAINED", {ID: ("2025-12", value)}):
+                    with self.assertRaisesRegex(ValueError, "OPAQUE_API_RESERVATION_CAP_INVALID"):
+                        OPAQUE.pending_upper(ledger([dict(row(), upper_usd=value)]))
+
+    def test_duplicate_source_pin_is_not_silently_overwritten(self):
+        for second in ("3", "2"):
+            with self.subTest(second=second):
+                with self.assertRaisesRegex(ValueError, "OPAQUE_API_RESERVATION_DUPLICATE_PIN"):
+                    OPAQUE.retained_pins(((ID, "2025-12", "3"), (ID, "2025-12", second)))
+        self.assertEqual(OPAQUE.retained_pins(((ID, "2025-12", "3"),)),
+                         {ID: ("2025-12", "3")})
+        self.assertEqual(OPAQUE.retained_pins(()), {})
+
     def test_duplicate_unknown_or_extra_metadata_denied(self):
         with patch.object(OPAQUE, "RETAINED", {ID: ("2025-12", "3")}):
             for value in ([row(), row()], [dict(row(), source="synthetic")],
