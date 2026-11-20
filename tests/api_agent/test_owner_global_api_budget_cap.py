@@ -389,7 +389,12 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         maeve = [x for x in high_values if x[0] == ".github/workflows/owner-astra-maeve-task2-20261117.yml"]
         self.assertEqual(len(maeve), 1, high_values)
         self.assertEqual(maeve[0][1], 100.0)
-        self.assertEqual(len(high_values), 7, high_values)
+        # Owner 2026-11-20 (#1156/7038154761, budget explicitly approved): the Research Lab Sol MAX one-shot path
+        # uses the guard's own USD50 owner envelope; its non-MAX path keeps 40/4. Exactly one such caller.
+        research = [x for x in high_values if x[0] == ".github/workflows/research-lab-sol-dispatch.yml"]
+        self.assertEqual(len(research), 1, high_values)
+        self.assertEqual(research[0][1], 50.0)
+        self.assertEqual(len(high_values), 8, high_values)
         # Removing the false && on the only elevated-cap job must fail tests.
         self.assertFalse(json.loads((ROOT / "research/api_agent/coordination/ASTRA_TASK2_REALDATA_V2_ADMISSION_V1.json").read_text())["authorized_paid_dispatch"])
 

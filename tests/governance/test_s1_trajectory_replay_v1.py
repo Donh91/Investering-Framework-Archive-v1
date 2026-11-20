@@ -67,7 +67,7 @@ SHA40 = re.compile(r"[0-9a-f]{40}")
 BOOTSTRAP_TEXT = (ROOT / S1_DIR / "BOOTSTRAP.txt").read_text(encoding="utf-8")
 TICK_TEXT = (ROOT / TICK_PATH).read_text(encoding="utf-8")
 REFERENCE_TEXT_SHA256 = {
-    "BOOTSTRAP steps 1-4": "101cae5d8e3d41f795f0f42adfa2c1fab120d57af8c6213b3fc43e95899029eb",
+    "BOOTSTRAP steps 1-4": "ff2c915ed1086a0b7f663811513858a66f906f73650b979a12a8629430122713",
     "TICK T0-T3 and IF THE BRIEF FAILED": "2f1f7e40a9cc3abef451d7ae6efd06871c10aa296cdd7efcc26f828fb78b59a8",
     "TICK LAST TWO LINES": "2b7e00842d5e7b8ab2a96ad4ff3d87acbc730f3ff7b160c7128fd705641715b1",
 }
@@ -75,6 +75,9 @@ REFERENCE_TEXT_SHA256 = {
 
 def text_regions():
     boot = BOOTSTRAP_TEXT[BOOTSTRAP_TEXT.index("1. Read current main"):]
+    # The 3b hex is the only free part of BOOTSTRAP (as in test_s1_reviewed_merge_lane_v1): a contract re-chain changes
+    # it without changing any rule, so it is normalised here and the executor is not re-derived for a pure re-pin.
+    boot = re.sub(r"(as GitHub reports it\) must equal )[0-9a-f]{40}\.", r"\1<RUNTIME_CONTRACT_BLOB>.", boot)
     tick = TICK_TEXT[TICK_TEXT.index("T0 CLOCK (H1)."):TICK_TEXT.index("T4 CHOOSE.")]
     last = TICK_TEXT[TICK_TEXT.index("LAST TWO LINES of every run"):]
     return {"BOOTSTRAP steps 1-4": boot, "TICK T0-T3 and IF THE BRIEF FAILED": tick, "TICK LAST TWO LINES": last}
