@@ -8,7 +8,7 @@ import re
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import experiment_lifecycle as base
 
@@ -257,10 +257,16 @@ PROPOSAL_SLOT_CENSUS_CONTRACT = "EXPERIMENT_PROPOSAL_SLOT_CENSUS_v1"
 SLOT_ORIGIN_FAMILIES = ("model_experiment", "legacy_sensor", "emergent_pair", "model_forecast")
 SLOT_OUTCOMES = ("malformed", "mapping_rejected", "normalized_new", "normalized_existing_duplicate", "error")
 # Receipt status -> attempts whose output survived into DAILY_DIRECTOR_OUTPUT.json.
-SURVIVING_OUTPUT_BY_STATUS = {"PASS": 1, "API_OUTPUT_INVALID": 0, "COST_EXCEEDED": 0, "SKIPPED_OWNER_RUN_ALREADY_ANALYZED": 0}
+SURVIVING_OUTPUT_BY_STATUS = {"PASS": 1, "API_OUTPUT_INVALID": 0, "COST_EXCEEDED": 0, "SKIPPED_OWNER_RUN_ALREADY_ANALYZED": 0, "SKIPPED_NO_DELTA": 0}
+# daily-director-shadow.yml "Write zero-cost skipped output": no model call, response_id null and no
+# declared forecast count. Such a batch is SKIPPED: neither INVALID nor complete.
+WORKFLOW_SKIP_STATUSES = frozenset({"SKIPPED_NO_DELTA", "SKIPPED_OWNER_RUN_ALREADY_ANALYZED"})
 UNKNOWN = "UNKNOWN"
 SHA256_HEX = re.compile(r"[0-9a-f]{64}")
-ERROR_CODE = re.compile(r"[A-Za-z0-9_]{1,80}")
+# The fixed ValueError codes raised by base.component/base.normalize. Anything else is stored as the
+# exception type name only: exception text may echo proposal values.
+SLOT_ERROR_CODES = frozenset({"invalid_component", "threshold_required", "invalid_kind_or_direction", "invalid_identity_or_horizon", "invalid_directional_target", "invalid_range_target"})
+CENSUS_INTERNAL_ERROR = "CENSUS_INTERNAL_ERROR"
 
 
 def _sha256_bytes(data: bytes) -> str:
@@ -268,9 +274,13 @@ def _sha256_bytes(data: bytes) -> str:
 
 
 def _error_code(exc: Exception) -> str:
-    """Fixed error codes only; free-text exception messages may echo proposal values."""
+    """Allowlisted fixed codes only; never exception text."""
     text = str(exc)
-    return text if ERROR_CODE.fullmatch(text) else type(exc).__name__
+    return text if text in SLOT_ERROR_CODES else type(exc).__name__
+
+
+def _census_id(hashes: dict[str, str | None]) -> str:
+    return "PSC-" + _sha256_bytes(":".join(str(hashes[k]) for k in ("output_sha256", "context_sha256", "receipt_sha256")).encode())[:20]
 
 
 def _parse(data: bytes | None, name: str, reasons: list[str]) -> Any:
@@ -362,9 +372,14 @@ def proposal_slot_census(
     status = receipt.get("status")
     if status not in SURVIVING_OUTPUT_BY_STATUS:
         reasons.append("receipt_status_unknown")
+    skipped = status in WORKFLOW_SKIP_STATUSES
 
     response_id = receipt.get("response_id")
-    if not isinstance(response_id, str) or not response_id.strip():
+    if skipped:
+        if response_id is not None:
+            reasons.append("skip_receipt_has_response_identity")
+        response_id = None
+    elif not isinstance(response_id, str) or not response_id.strip():
         reasons.append("response_identity_missing")
         response_id = None
     response_ids = receipt.get("response_ids")
@@ -374,6 +389,8 @@ def proposal_slot_census(
         reasons.append("response_ids_malformed")
         response_ids = None
     else:
+        if skipped:
+            reasons.append("skip_receipt_has_response_identity")
         if len(set(response_ids)) != len(response_ids):
             reasons.append("response_identity_duplicated_within_batch")
         if response_id is not None and response_ids[-1] != response_id:
@@ -410,8 +427,11 @@ def proposal_slot_census(
         reasons.append("forecast_candidates_absent")  # required gateway field
     declared = receipt.get("forecast_candidate_count")
     observed_forecast_count = len(forecast_slots) if forecast_state == "LIST" else None
-    if type(declared) is not int:
-        reasons.append("declared_forecast_count_missing" if "forecast_candidate_count" not in receipt else "declared_forecast_count_malformed")
+    if "forecast_candidate_count" not in receipt:
+        if not skipped:  # the workflow skip branch declares no count; the observed count stays authoritative
+            reasons.append("declared_forecast_count_missing")
+    elif type(declared) is not int:
+        reasons.append("declared_forecast_count_malformed")
     elif declared != observed_forecast_count:
         reasons.append("declared_forecast_count_mismatch")
     try:
@@ -434,7 +454,7 @@ def proposal_slot_census(
             row.update({"outcome": "malformed", "reason": "container_not_a_list"} if index is None else _classify_slot(item, family, latest, existing_candidates, source, seen))
             slots.append(row)
 
-    census_id = "PSC-" + _sha256_bytes(":".join(str(hashes[k]) for k in ("output_sha256", "context_sha256", "receipt_sha256")).encode())[:20]
+    census_id = _census_id(hashes)
     for identity in identities:
         owner = (known_response_identities or {}).get(identity)
         if owner is not None and owner != census_id:
@@ -444,15 +464,18 @@ def proposal_slot_census(
     for row in slots:
         by_family[row["origin_family"]][row["outcome"]] += 1
     model = [row for row in slots if row["origin_family"] in {"model_forecast", "model_experiment"}]
+    if skipped and model:
+        reasons.append("skip_receipt_with_model_slots")
     reasons = sorted(set(reasons))
+    batch_status = "INVALID" if reasons else "SKIPPED" if skipped else "VALID_OBSERVED_BATCH"
     return {
         "contract": PROPOSAL_SLOT_CENSUS_CONTRACT,
         "census_id": census_id,
         "classification": mode,
         "source_family": "DAILY_DIRECTOR_SHADOW",
         "source_batch_path": source_batch_path,
-        "batch_status": "INVALID" if reasons else "VALID_OBSERVED_BATCH",
-        "complete_for_observed_batch": not reasons,
+        "batch_status": batch_status,
+        "complete_for_observed_batch": batch_status == "VALID_OBSERVED_BATCH",
         "invalid_reasons": reasons,
         "binding": {**hashes, "receipt_output_hash": receipt.get("output_hash"), "receipt_context_hash": receipt.get("context_hash"), "receipt_contract": receipt.get("contract"), "receipt_status": status, "legacy_sensor_catalog_sha256": legacy_catalog_sha256, "producer_source": source},
         "response_identity_sha256": identities,
@@ -481,6 +504,53 @@ def proposal_slot_census(
     }
 
 
+def census_internal_error(output_bytes: bytes | None, context_bytes: bytes | None, receipt_bytes: bytes | None, *, source_batch_path: str | None, mode: str) -> dict[str, Any]:
+    """Fixed-code INVALID census when the census itself failed: raw-byte hashes only, no parsed value, no exception text."""
+    hashes = {
+        "output_sha256": _sha256_bytes(output_bytes) if output_bytes is not None else None,
+        "context_sha256": _sha256_bytes(context_bytes) if context_bytes is not None else None,
+        "receipt_sha256": _sha256_bytes(receipt_bytes) if receipt_bytes is not None else None,
+    }
+    return {
+        "contract": PROPOSAL_SLOT_CENSUS_CONTRACT,
+        "census_id": _census_id(hashes),
+        "classification": mode,
+        "source_family": "DAILY_DIRECTOR_SHADOW",
+        "source_batch_path": source_batch_path,
+        "batch_status": "INVALID",
+        "complete_for_observed_batch": False,
+        "invalid_reasons": [CENSUS_INTERNAL_ERROR],
+        "binding": {**hashes, "context_canonical_sha256": None, "receipt_output_hash": None, "receipt_context_hash": None, "receipt_contract": None, "receipt_status": None, "legacy_sensor_catalog_sha256": None, "producer_source": None},
+        "response_identity_sha256": [],
+        "attempts": {key: UNKNOWN for key in ("attempt_count", "surviving_output_attempts", "abandoned_attempts_without_surviving_output", "parse_error_count", "pre_receipt_attempts")},
+        "declared_forecast_candidate_count": UNKNOWN,
+        "containers": {"output.experiment_candidates": UNKNOWN, "output.forecast_candidates": UNKNOWN},
+        "slots": [],
+        "counts": {
+            "observed_raw_slot_count": UNKNOWN,
+            "model_emission_slot_count": UNKNOWN,
+            "distinct_normalized_hypothesis_count": UNKNOWN,
+            "distinct_model_normalized_hypothesis_count": UNKNOWN,
+            "independent_effective_n": None,
+            "independent_effective_n_status": UNKNOWN,
+            "by_family_outcome": UNKNOWN,
+        },
+        "clock": {"source_capture_clock_utc": None, "semantics": "CAPTURE_CLOCK_NOT_PROPOSAL_GENERATION_OR_FIRST_PUBLICATION", "receipt_created_unix": None},
+        "coverage": {"label": "PARTIAL", "scope": "SINGLE_SOURCE_FAMILY_OBSERVED_BATCH_ONLY", "global_proposal_time_trial_denominator": None, "broad_search": "BROAD_SEARCH_BLOCKED"},
+        "authority": {"canonical_effect": False, "admission_effect": False, "automatic_promotion": False, "portfolio_execution": False, "framework_state_change": False},
+    }
+
+
+def isolated_census(inputs: tuple[bytes | None, bytes | None, bytes | None], build: Callable[[], dict[str, Any]], *, source_batch_path: str | None, mode: str) -> dict[str, Any]:
+    """The census is observability: no failure while building or serialising it may stop or change the producer."""
+    try:
+        census = build()
+        canonical(census)  # the same serialisation base.write_new uses
+        return census
+    except Exception:  # noqa: BLE001 - deliberately broad; only the fixed code is kept, never exception text
+        return census_internal_error(*inputs, source_batch_path=source_batch_path, mode=mode)
+
+
 def load_census_identities(census_root: Path) -> dict[str, str]:
     known: dict[str, str] = {}
     for _, value in sorted(base.jsons(census_root, PROPOSAL_SLOT_CENSUS_CONTRACT), key=lambda item: item[0].as_posix()):
@@ -502,10 +572,12 @@ def retrospective_census(repo_root: Path, daily_root: Path, candidate_root: Path
     rows = []
     for receipt_path in sorted(daily_root.rglob("DAILY_DIRECTOR_RECEIPT.json"), key=lambda p: p.as_posix()):
         folder = receipt_path.parent
-        census = proposal_slot_census(
-            _read_optional(folder / "DAILY_DIRECTOR_OUTPUT.json"), _read_optional(folder / "context.json"), receipt_path.read_bytes(),
-            legacy_items=legacy_items, legacy_catalog_sha256=_sha256_bytes(legacy_sha) if legacy_sha is not None else None,
-            existing_candidates=existing, known_response_identities=known, source_batch_path=base.rel(repo_root, folder), mode="RETROSPECTIVE_DERIVED_VIEW")
+        inputs = (_read_optional(folder / "DAILY_DIRECTOR_OUTPUT.json"), _read_optional(folder / "context.json"), receipt_path.read_bytes())
+        batch_path = base.rel(repo_root, folder)
+        census = isolated_census(inputs, lambda: proposal_slot_census(
+            *inputs, legacy_items=legacy_items, legacy_catalog_sha256=_sha256_bytes(legacy_sha) if legacy_sha is not None else None,
+            existing_candidates=existing, known_response_identities=known, source_batch_path=batch_path, mode="RETROSPECTIVE_DERIVED_VIEW"),
+            source_batch_path=batch_path, mode="RETROSPECTIVE_DERIVED_VIEW")
         for identity in census["response_identity_sha256"]:
             known.setdefault(identity, census["census_id"])
         for slot in census["slots"]:
@@ -520,13 +592,16 @@ def aggregate_census(rows: list[dict[str, Any]]) -> dict[str, Any]:
     reasons: dict[str, int] = {}
     hypotheses: set[str] = set()
     model_hypotheses: set[str] = set()
-    abandoned = unknown_attempts = with_abandoned = not_in_store = 0
+    abandoned = unknown_attempts = with_abandoned = not_in_store = unknown_slot_counts = 0
     for row in rows:
         for reason in row["invalid_reasons"]:
             reasons[reason] = reasons.get(reason, 0) + 1
-        for family, outcomes in row["counts"]["by_family_outcome"].items():
-            for outcome, count in outcomes.items():
-                by_family[family][outcome] += count
+        if not isinstance(row["counts"]["by_family_outcome"], dict):
+            unknown_slot_counts += 1  # CENSUS_INTERNAL_ERROR: slots were not enumerated, so they are not zero
+        else:
+            for family, outcomes in row["counts"]["by_family_outcome"].items():
+                for outcome, count in outcomes.items():
+                    by_family[family][outcome] += count
         for slot in row["slots"]:
             if "candidate_id" in slot:
                 hypotheses.add(slot["candidate_id"])
@@ -540,15 +615,18 @@ def aggregate_census(rows: list[dict[str, Any]]) -> dict[str, Any]:
             abandoned += value
             with_abandoned += int(value > 0)
     valid = sum(1 for row in rows if row["batch_status"] == "VALID_OBSERVED_BATCH")
+    skipped = sum(1 for row in rows if row["batch_status"] == "SKIPPED")
     return {
         "contract": "EXPERIMENT_PROPOSAL_SLOT_CENSUS_AGGREGATE_v1",
         "batch_count": len(rows),
         "valid_batch_count": valid,
-        "invalid_batch_count": len(rows) - valid,
+        "skipped_batch_count": skipped,
+        "invalid_batch_count": len(rows) - valid - skipped,
         "invalid_reason_counts": dict(sorted(reasons.items())),
+        "slot_counts_unknown_batch_count": unknown_slot_counts,
         "slots_by_family_outcome": by_family,
-        "observed_raw_slot_count": sum(row["counts"]["observed_raw_slot_count"] for row in rows),
-        "model_emission_slot_count": sum(row["counts"]["model_emission_slot_count"] for row in rows),
+        "observed_raw_slot_count": sum(row["counts"]["observed_raw_slot_count"] for row in rows if type(row["counts"]["observed_raw_slot_count"]) is int),
+        "model_emission_slot_count": sum(row["counts"]["model_emission_slot_count"] for row in rows if type(row["counts"]["model_emission_slot_count"]) is int),
         "distinct_normalized_hypothesis_count": len(hypotheses),
         "distinct_model_normalized_hypothesis_count": len(model_hypotheses),
         "independent_effective_n": None,
@@ -614,15 +692,20 @@ def main() -> None:
     existing_candidates = {value["candidate_id"]: value for _, value in existing_candidate_rows}
     # #1557: account for every raw slot before the filtering/mapping/dedup below (metadata only).
     census_root = args.proposal_census_root or args.admission_root.parent / "proposal_slot_census"
-    legacy_bytes = _read_optional(args.legacy_sensor_catalog) if args.legacy_sensor_catalog else None
     try:
         batch_path = base.rel(root, args.daily_output.parent)
     except ValueError:  # batch outside the repo root: keep the census, omit the path
         batch_path = None
-    census = proposal_slot_census(
-        args.daily_output.read_bytes(), args.daily_context.read_bytes(), args.daily_receipt.read_bytes(),
-        legacy_items=base.legacy(args.legacy_sensor_catalog), legacy_catalog_sha256=_sha256_bytes(legacy_bytes) if legacy_bytes is not None else None,
-        existing_candidates=existing_candidates, known_response_identities=load_census_identities(census_root), source_batch_path=batch_path)
+    census_inputs = (args.daily_output.read_bytes(), args.daily_context.read_bytes(), args.daily_receipt.read_bytes())
+
+    def build_census() -> dict[str, Any]:
+        legacy_bytes = _read_optional(args.legacy_sensor_catalog) if args.legacy_sensor_catalog else None
+        return proposal_slot_census(
+            *census_inputs,
+            legacy_items=base.legacy(args.legacy_sensor_catalog), legacy_catalog_sha256=_sha256_bytes(legacy_bytes) if legacy_bytes is not None else None,
+            existing_candidates=existing_candidates, known_response_identities=load_census_identities(census_root), source_batch_path=batch_path)
+
+    census = isolated_census(census_inputs, build_census, source_batch_path=batch_path, mode="PROSPECTIVE_PRODUCER_CAPTURE")
     base.write_new(census_root / when.strftime("%Y/%m") / f"{census['census_id']}.json", census)
     new_ids: set[str] = set()
     for item in raw:
