@@ -109,6 +109,7 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
             self.assertIn(queue.get("program_phase"), {
                 "FIVE_GOAL_MISSIONS_1_TO_5_COMPLETE_ADVISORY_NO_ACTIVE",
                 "ARP_V1_ARP01_TO_ARP04_COMPLETE_ADVISORY_NO_ACTIVE",
+                "KOMPAS_PRO_2_COMPLETE_ADVISORY_NO_ACTIVE",
             })
             self.assertFalse(any(row.get("new_paid_attempts_authorized", False)
                                  for row in queue["missions"]))
@@ -121,12 +122,28 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
                 self.assertEqual(arps[0]["original_paid_run_id"], 42470902520)
                 self.assertEqual(arps[0]["result_run_id"], 42471573553)
                 self.assertEqual(queue["arp_v1_terminal_report"]["paid_one_shots"], 3)
-            terminal = [row for row in queue["missions"] if row["mission_id"] ==
-                        "GOAL5-ALTSEASON-CAPITAL-REALITY-LAB-SOL61-MAX-20261106B"]
-            self.assertEqual(len(terminal), 1)
+            if queue.get("program_phase") == "KOMPAS_PRO_2_COMPLETE_ADVISORY_NO_ACTIVE":
+                terminal = [row for row in queue["missions"] if row["mission_id"] ==
+                            "KOMPAS2-FINGERPRINT-ALPHA-CROSS-EXAM-SOL61-MAX-20261111"]
+                self.assertEqual(len(terminal), 1)
+                self.assertEqual(terminal[0]["result_run_id"], 44513737625)
+                self.assertEqual(terminal[0]["result_owner_comment_id"], 7007592323)
+                receipt = json.loads((root / terminal[0]["result_receipt_path"]).read_text())
+                self.assertEqual(receipt["status"], "PASS")
+                self.assertEqual(receipt["attempt_count"], 1)
+                self.assertEqual(receipt["estimated_cost_usd"], terminal[0]["result_estimated_cost_usd"])
+                for seq in (28, 29, 30):
+                    held = [row for row in queue["missions"] if row["sequence"] == seq]
+                    self.assertEqual(len(held), 1)
+                    self.assertEqual(held[0]["state"], "OWNER_HELD_NEXT")
+                    self.assertFalse(held[0]["new_paid_attempts_authorized"])
+            else:
+                terminal = [row for row in queue["missions"] if row["mission_id"] ==
+                            "GOAL5-ALTSEASON-CAPITAL-REALITY-LAB-SOL61-MAX-20261106B"]
+                self.assertEqual(len(terminal), 1)
+                self.assertEqual(terminal[0]["result_run_id"], 42270191125)
             self.assertEqual(terminal[0]["state"],
                              "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_NO_REPOST")
-            self.assertEqual(terminal[0]["result_run_id"], 42270191125)
         for archived in ("SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105",
                          "S1-ELITE-RESILIENCE-SOL61-MAX-20261106"):
             rows=[r for r in queue["missions"] if r["mission_id"]==archived]
