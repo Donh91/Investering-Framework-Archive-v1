@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-11-19T23:22:37Z",
+  "generated_at_utc": "2026-11-20T09:00:34Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -40,7 +40,7 @@
         "private market-data disclosure, trading action, model paid call, and history rewriting"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 185ed5354a79d54ff626 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-19T23:22:37Z",
+      "last_observed_at_utc": "2026-11-20T09:00:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -103,7 +103,7 @@
         "private source publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 19427e2aa5b87c1b2426 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-19T23:22:37Z",
+      "last_observed_at_utc": "2026-11-20T09:00:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -137,71 +137,6 @@
       "transition_receipt_path": "research/codex/transitions/19427e2aa5b87c1b2426.json",
       "transition_receipt_required": true,
       "workflow": "research-intake/codex-research-s1-native-receiver-ack-proof-v1"
-    },
-    {
-      "allowed_change_scope": [
-        "scripts/experiments/experiment_lifecycle_scientific_admission.py",
-        "tests/experiments/test_scientific_admission_lifecycle.py"
-      ],
-      "candidate_id": "codex-research-1557-proposal-batch-census-v1",
-      "candidate_path": "research/codex/intake/2026/11/codex-research-1557-proposal-batch-census-v1.json",
-      "candidate_sha256": "89f6c0c49c12639b56a8e264fbc197bd5011342cf9c1d2637cf80500e24d851d",
-      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
-      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "AUTO_TRADING_1557_DAILY_PROPOSAL_SLOT_CENSUS_GAP",
-      "first_observed_at_utc": "2026-11-19T19:40:31.219Z",
-      "forbidden_changes": [
-        "API budget",
-        "canonical authority",
-        "global scientific gate relaxation",
-        "historical evidence rewrite",
-        "live orders",
-        "market gates",
-        "model weights",
-        "new policy semantics",
-        "portfolio logic",
-        "private data export",
-        "strategy execution",
-        "workflow/schedule changes"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 1d5785cec4d79c1b314f --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-19T23:22:37Z",
-      "latest_run_id": null,
-      "latest_run_url": null,
-      "lifecycle_state": "ACTIVE",
-      "objective": "Close the first reproducible implementation gap under the existing scientific admission owner: before filtering/mapping/semantic deduplication, account for every observed proposal slot in an authenticated original Daily Director source batch, including malformed, rejected and duplicate slots. Derive a value-free batch census/receipt within existing Experiment Lifecycle source/admission accounting using immutable original output/context/receipt and stable source response identity + array/slot identity; keep emission count, distinct material hypothesis and independent effective N separate. Prefer a derived view of already archived source batches; no second authoritative ledger, workflow or writer. Prospectively preserve deterministic capture at the existing producer before selection, only if the existing source publication and receipt semantics prove this is possible without a parallel authority. Do not claim global coverage; existing weekly consumer global_proposal_time_trial_denominator MUST remain null and BROAD_SEARCH_BLOCKED until all original-family proposal sources, rejected/abandoned pre-output attempts, first-known chronology, monotonic custody and independent review are proven. This first source-family partial receipt is an engineering observability step, NOT admission to broad search, a strategy experiment, or a change to scientific policy. If current authoritative path already supplies this exact evidence, CLEAN_NOOP; if missing provenance or policy needed, stop instead of inventing a count. Preserve existing candidate/forecast/admission/dispatch semantics.",
-      "observations": 1,
-      "post_fix_gate": "Independent review + all exact-head CI on scoped implementation, then main readback and natural existing Daily Director producer/consumer receipt proving complete per-batch source metadata and stable replay. #1557 stays PARTIAL until full cross-family proposal-time coverage and #1157 consumer validation are independently proven. No global=N=6, no strategy promotion. If policy/owner authority required for additional sources, escalate and preserve HOLD_SOURCE; no parallel counter.",
-      "precondition": "Candidate codex-research-1557-proposal-batch-census-v1 still exists on main at research/codex/intake/2026/11/codex-research-1557-proposal-batch-census-v1.json with SHA-256 89f6c0c49c12639b56a8e264fbc197bd5011342cf9c1d2637cf80500e24d851d, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
-      "requested_priority": "EXPEDITED",
-      "required_evidence": [
-        "scripts/experiments/experiment_lifecycle_scientific_admission.py@8ecf62048baa8ff67b2f73e8c9b57ab3c8c97aaa",
-        ".github/workflows/daily-director-shadow.yml@1eff521c630e82e78e3763c0ac30e137a257a665",
-        "scripts/api_agent/api_gateway.py@36ef72a7b2cf29bb5ed330f1c15ef49fe2060e35",
-        "scripts/research/shadow_cross_domain_weekly_v1.py@a6bbd29ad702ab23082108fc16357495c5d01da7",
-        "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1557#issuecomment-6362572867",
-        "a8821b9daf4cb624dc5b0368134bf6fc6413f044",
-        "reproduction",
-        "positive and negative acceptance tests"
-      ],
-      "risk_class": "B_CODEX_PR_RESEARCH",
-      "route": "CODEX_PR",
-      "signature": "1d5785cec4d79c1b314f",
-      "source_type": "RESEARCH_INTAKE",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
-      "submitted_at_utc": "2026-11-19T19:40:31.219Z",
-      "success_evidence": [
-        "candidate-linked reproduction",
-        "positive and negative acceptance tests",
-        "Independent review + all exact-head CI on scoped implementation, then main readback and natural existing Daily Director producer/consumer receipt proving complete per-batch source metadata and stable replay. #1557 stays PARTIAL until full cross-family proposal-time coverage and #1157 consumer validation are independently proven. No global=N=6, no strategy promotion. If policy/owner authority required for additional sources, escalate and preserve HOLD_SOURCE; no parallel counter."
-      ],
-      "success_streak": 0,
-      "task_contract_sha256": "377b1bfea1fb0e9fff67ae309b14d09893c710923737594a697b799ce345192a",
-      "transition_receipt_path": "research/codex/transitions/1d5785cec4d79c1b314f.json",
-      "transition_receipt_required": true,
-      "workflow": "research-intake/codex-research-1557-proposal-batch-census-v1"
     },
     {
       "allowed_change_scope": [
@@ -243,7 +178,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-19T23:22:37Z",
+      "last_observed_at_utc": "2026-11-20T09:00:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -315,7 +250,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-19T23:22:37Z",
+      "last_observed_at_utc": "2026-11-20T09:00:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -376,7 +311,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a369f29837aa0a0c3c82 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-19T23:22:37Z",
+      "last_observed_at_utc": "2026-11-20T09:00:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -436,7 +371,7 @@
         "workflow schedule or trigger changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c92177f7748b9b84cd33 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-19T23:22:37Z",
+      "last_observed_at_utc": "2026-11-20T09:00:34Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -490,12 +425,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 90386cf337a0366978ad --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-19T23:22:24Z",
+      "last_observed_at_utc": "2026-11-20T09:00:20Z",
       "latest_run_id": 44538572804,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/44538572804",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve SCHEDULE_STALE for remediation-maturation.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 5,
+      "observations": 6,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 90386cf337a0366978ad for remediation-maturation.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -539,12 +474,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 9daae3ae1731ce014301 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-19T23:22:24Z",
+      "last_observed_at_utc": "2026-11-20T09:00:20Z",
       "latest_run_id": 44417303696,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/44417303696",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve SCHEDULE_STALE for backtest-wave1-4-prospective.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 5,
+      "observations": 6,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 9daae3ae1731ce014301 for backtest-wave1-4-prospective.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -588,12 +523,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature f9538daacc5d375062e7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-11-19T23:22:24Z",
+      "last_observed_at_utc": "2026-11-20T09:00:20Z",
       "latest_run_id": 44541207711,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/44541207711",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve SCHEDULE_STALE for operations-dashboard.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 10,
+      "observations": 11,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature f9538daacc5d375062e7 for operations-dashboard.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
