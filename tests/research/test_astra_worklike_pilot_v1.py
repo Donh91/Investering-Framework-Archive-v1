@@ -91,5 +91,35 @@ class TestWorklikePilot(unittest.TestCase):
             with self.assertRaises(ValueError):
                 m.mission_effort(dict(mission, **mutation))
 
+
+    def test_native_workflow_isolation_contract(self):
+        import json
+        import yaml
+        from pathlib import Path
+        from scripts.research import astra_worklike_oracle_v1 as oracle
+        root = Path(__file__).resolve().parents[2]
+        wf = yaml.safe_load((root/".github/workflows/owner-astra-mission.yml").read_text())
+        jobs = wf["jobs"]
+        smoke, sandbox = jobs["worklike-smoke"], jobs["worklike-sandbox"]
+        for job in (smoke, sandbox):
+            self.assertEqual(job["permissions"], {"contents": "read"})
+            dumped = json.dumps(job)
+            for forbidden in ("secrets.", "OPENAI_API_KEY", "GITHUB_TOKEN", "workflow_dispatch"):
+                self.assertNotIn(forbidden, dumped)
+            self.assertIn(oracle.PINNED_IMAGE, dumped)
+        self.assertEqual(smoke["if"], "github.event_name == 'pull_request'")
+        self.assertEqual(sandbox["needs"], ["paid", "recover"])
+        cond = sandbox["if"]
+        for predicate in ("github.event_name == 'issue_comment'",
+                          "github.event.issue.number == 1156",
+                          "github.event.comment.user.login == 'Donh91'",
+                          "github.ref == 'refs/heads/main'", "github.run_attempt == 1",
+                          "needs.paid.result == 'success'", "needs.recover.result == 'success'",
+                          "OWNER_LAUNCH_ASTRA_MISSION ASTRA-KOMPAS-L04-WORKLIKE-PILOT-S1-20261120 ",
+                          "OWNER_COLLECT_ASTRA_MISSION ASTRA-KOMPAS-L04-WORKLIKE-PILOT-S1-20261120 "):
+            self.assertIn(predicate, cond)
+        self.assertIn("astra-mission-evidence-", json.dumps(sandbox))
+        self.assertIn("astra-worklike-result-", json.dumps(sandbox))
+
 if __name__ == "__main__":
     unittest.main()
