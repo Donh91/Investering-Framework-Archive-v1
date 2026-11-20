@@ -110,6 +110,7 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
                 "FIVE_GOAL_MISSIONS_1_TO_5_COMPLETE_ADVISORY_NO_ACTIVE",
                 "ARP_V1_ARP01_TO_ARP04_COMPLETE_ADVISORY_NO_ACTIVE",
                 "KOMPAS_PRO_2_COMPLETE_ADVISORY_NO_ACTIVE",
+                "NAVIGATOR_ONE_COMPETITIVE_COMPLETE_ADVISORY_NO_ACTIVE",
             })
             self.assertFalse(any(row.get("new_paid_attempts_authorized", False)
                                  for row in queue["missions"]))
@@ -133,6 +134,26 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
                 self.assertEqual(receipt["attempt_count"], 1)
                 self.assertEqual(receipt["estimated_cost_usd"], terminal[0]["result_estimated_cost_usd"])
                 for seq in (28, 29, 30):
+                    held = [row for row in queue["missions"] if row["sequence"] == seq]
+                    self.assertEqual(len(held), 1)
+                    self.assertEqual(held[0]["state"], "OWNER_HELD_NEXT")
+                    self.assertFalse(held[0]["new_paid_attempts_authorized"])
+            elif queue.get("program_phase") == "NAVIGATOR_ONE_COMPETITIVE_COMPLETE_ADVISORY_NO_ACTIVE":
+                terminal = [row for row in queue["missions"] if row["sequence"] == 28]
+                self.assertEqual(len(terminal), 1)
+                self.assertEqual(terminal[0]["mission_id"], "NAVIGATOR-ONE-COMPETITIVE-REVERSE-ENGINEERING-SOL62-MAX-20261118")
+                self.assertEqual(terminal[0]["result_run_id"], 44756331215)
+                self.assertEqual(terminal[0]["result_owner_comment_id"], 7042413320)
+                self.assertEqual(terminal[0]["result_collect_run_id"], 44759335008)
+                self.assertEqual(terminal[0]["result_collect_commit"], "d93e913902fb63b876f8f044b0701818178ee619")
+                receipt = json.loads((root / terminal[0]["result_receipt_path"]).read_text())
+                self.assertEqual(receipt["status"], "PASS")
+                self.assertEqual(receipt["attempt_count"], 1)
+                self.assertEqual(receipt["estimated_cost_usd"], terminal[0]["result_estimated_cost_usd"])
+                self.assertEqual(receipt["estimated_cost_usd"], 0.26679)
+                self.assertEqual(receipt["model"], "gpt-6.2-sol")
+                self.assertEqual(receipt["reasoning_effort"], "max")
+                for seq in (29, 30):
                     held = [row for row in queue["missions"] if row["sequence"] == seq]
                     self.assertEqual(len(held), 1)
                     self.assertEqual(held[0]["state"], "OWNER_HELD_NEXT")
