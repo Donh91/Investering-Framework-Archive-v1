@@ -1,7 +1,7 @@
 {
   "state": "BLOCKHORIZON_CURRENT_RESEARCH_READINESS_v1",
-  "status": "FIRST_PASS_RESEARCH_PREP_FROZEN__SCOPED_RETROSPECTIVE_RELEASE_CONDITIONAL",
-  "updated_at_utc": "2026-11-20T10:44:58Z",
+  "status": "FIRST_PASS_RESEARCH_PREP_FROZEN__SCOPED_RETROSPECTIVE_RELEASE_CONSUMED",
+  "updated_at_utc": "2026-11-20",
   "source_contract": "SOURCE_CONTRACT_v1.json",
   "current_private_binding": "CURRENT_PRIVATE_BINDING.json",
   "current_metric_registry": "METRIC_REGISTRY_v2.json",
@@ -78,7 +78,18 @@
     "contract_blob_sha": "31b37b8de9204532f922c69827508d0bb8f11889",
     "scope": "ONE_SHOT_RETROSPECTIVE_DESCRIPTIVE_ONLY",
     "activation": "REVIEWED_MAIN_AND_ALL_ORIGINAL_OWNER_PRECONDITIONS_REQUIRED",
-    "status": "CONDITIONAL_NOT_STANDING_AUTHORITY",
-    "max_classification": "KEEP_FOR_RESEARCH"
+    "status": "CONSUMED_NO_STANDING_AUTHORITY",
+    "max_classification": "KEEP_FOR_RESEARCH",
+    "run_state": "CONSUMED_NO_RERUN",
+    "remaining_allowed_runs": 0,
+    "classification": "REJECT",
+    "completion_pointer": {
+      "issue": 1157,
+      "issue_comment": 7038764973,
+      "private_receipt_comment": 7038689197,
+      "result_sha256": "98fc2f5ac91a113436f1cbf9355a7dc5f9f069c3456757b02b82bc6377854d7e",
+      "intent_comment": 7038673415
+    },
+    "next_action": "Do not reopen, rerun, retune or promote the consumed experiment. Any distinct future research requires new existing-owner admission and frozen design. Original source and Round3 guardrails unchanged."
   }
 }
