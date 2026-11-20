@@ -19,6 +19,7 @@ from pathlib import Path
 from scripts.research import astra_worklike_pilot_v1 as gate
 
 IMAGE = re.compile(r"python@sha256:[0-9a-f]{64}\Z")
+PINNED_IMAGE = "python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b"
 NAME = re.compile(r"astra-pilot-[0-9a-f]{32}\Z")
 MAX_OUTPUT_BYTES = 8192
 WALL_SECONDS = 15
@@ -59,7 +60,7 @@ def docker_command(image, name, scratch):
     if "," in str(path) or "\n" in str(path):
         raise gate.PilotBlocked("SCRATCH_PATH")
     return ["docker", "run", "--rm", "--interactive", "--pull", "never",
-            "--name", name, "--network", "none", "--read-only",
+            "--name", name, "--platform", "linux/amd64", "--network", "none", "--read-only",
             "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
             "--user", "65534:65534", "--memory", "256m", "--memory-swap", "256m",
             "--cpus", "0.5", "--pids-limit", "32", "--log-driver", "none",
@@ -131,9 +132,14 @@ def run_case(image, scratch, fixture):
                 proc.wait(timeout=5)
             # Remove only our own generated container, including on CLI timeout.
             try:
+                env = {"PATH": "/usr/bin:/bin", "HOME": "/tmp"}
                 subprocess.run(["docker", "rm", "-f", name], shell=False, timeout=5,
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                               env={"PATH": "/usr/bin:/bin", "HOME": "/tmp"})
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
+                remaining = subprocess.run(["docker", "ps", "-a", "--filter", "name=^/"+name+"$",
+                                            "--format", "{{.Names}}"], shell=False, timeout=5,
+                                           capture_output=True, env=env)
+                if remaining.returncode or remaining.stdout.strip():
+                    raise gate.PilotBlocked("SANDBOX_CLEANUP_UNVERIFIED")
             except (OSError, subprocess.TimeoutExpired):
                 raise gate.PilotBlocked("SANDBOX_CLEANUP_UNVERIFIED")
             for stream in (proc.stdout, proc.stderr):
@@ -174,3 +180,46 @@ def verify_in_disposable_runner(candidate, image):
         file.write_bytes(candidate)
         file.chmod(0o444)
         return compare(candidate, run=lambda _, fixture: run_case(image, scratch, fixture))
+
+
+def smoke():
+    """Real sandbox smoke with a deterministic reference, then a false-success control.
+
+    This is synthetic harness evidence, not model performance or production edge.
+    """
+    reference = b"""import datetime, json, re, sys
+def ts(s):
+    if not isinstance(s, str) or not re.fullmatch(r'\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z', s):
+        raise ValueError()
+    return datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%SZ')
+def digest(s):
+    if not isinstance(s, str) or not re.fullmatch(r'[0-9a-f]{64}', s):
+        raise ValueError()
+    return s
+def verdict(r):
+    if set(r)!= {'cutoff_utc','baseline_sha256','published_at_utc','witness'}:
+        raise ValueError()
+    cutoff=ts(r['cutoff_utc'])
+    published=ts(r['published_at_utc'])
+    baseline=digest(r['baseline_sha256'])
+    w=r['witness']
+    if w is not None:
+        if set(w)!= {'observed_at_utc','baseline_sha256','independent'} or type(w['independent']) is not bool:
+            raise ValueError()
+        good=ts(w['observed_at_utc'])<cutoff and digest(w['baseline_sha256'])==baseline and w['independent']
+    else:
+        good=False
+    return 'ELIGIBLE' if published<cutoff or good else 'UNKNOWN'
+try:
+    status=verdict(json.load(sys.stdin))
+except (ValueError, TypeError, KeyError):
+    status='INVALID'
+print(json.dumps({'status':status}))
+"""
+    good = verify_in_disposable_runner(reference, PINNED_IMAGE)
+    bad = verify_in_disposable_runner(b"""print('{"status":"ELIGIBLE"}')\n""", PINNED_IMAGE)
+    if good["status"] != "PASS" or bad["status"] != "TEST_FAILURE":
+        raise gate.PilotBlocked("SANDBOX_SMOKE_OR_MUTANT_FAILED")
+    return {"contract": "ASTRA_WORKLIKE_SANDBOX_SMOKE_v1", "status": "PASS",
+            "good": good, "negative": bad, "image": PINNED_IMAGE,
+            "model_execution_proven": False, "paid_api": False}
