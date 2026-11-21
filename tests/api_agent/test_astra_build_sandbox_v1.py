@@ -139,5 +139,37 @@ class BuildSandboxTest(unittest.TestCase):
             s.verify_snapshot(self.src, "NOT_A_HASH")
 
 
+    def test_real_docker_smoke_contract_under_mock(self):
+        good = {"status": "PASS", "returncode": 0, "output_sha256": "a"*64,
+                "output_bytes": 0, "last_200_lines": []}
+        mutant = {"status": "TEST_FAILURE", "returncode": 1,
+                  "output_sha256": "b"*64,
+                  "output_bytes": 1, "last_200_lines": ["failure"]}
+        with mock.patch.object(s, "_run_once", side_effect=[good, mutant]) as run:
+            receipt = s.smoke()
+        self.assertEqual(receipt["status"], "PASS")
+        self.assertTrue(receipt["network_attempt_executed"])
+        self.assertTrue(receipt["network_denied"])
+        self.assertTrue(receipt["synthetic_only"])
+        self.assertEqual(run.call_count, 2)
+        for call in run.call_args_list:
+            argv = call.args[0]
+            self.assertEqual(argv[argv.index("--network")+1], "none")
+            self.assertEqual(argv[-6:],
+                             ["python", "-m", "unittest", "discover", "-s",
+                              "tests/smoke", "-v"][-6:])
+
+    def test_real_docker_smoke_rejects_false_pass(self):
+        good = {"status": "PASS", "returncode": 0}
+        with mock.patch.object(s, "_run_once", side_effect=[good, good]):
+            with self.assertRaisesRegex(s.SandboxBlocked, "MUTATION_NOT_DETECTED"):
+                s.smoke()
+        bad = {"status": "TEST_FAILURE", "returncode": 1}
+        with mock.patch.object(s, "_run_once", return_value=bad):
+            with self.assertRaisesRegex(s.SandboxBlocked,
+                                        "NETWORK_DENIAL_FAILED"):
+                s.smoke()
+
+
 if __name__ == "__main__":
     unittest.main()
