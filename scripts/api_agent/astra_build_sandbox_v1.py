@@ -30,7 +30,8 @@ MAX_SNAPSHOT_FILES = 85_000
 # Public code and fixed-test dependencies only. Never copy the giant mutable
 # market-data/receipt tree into a model-code sandbox. Missing dependencies
 # fail the native fixed test, not a permission to read from private sources.
-SOURCE_ROOTS = ("scripts", "tests", "05_CYCLE_NAVIGATOR/site",
+SOURCE_ROOTS = ("scripts", "tests", "backtest_engine", ".agents",
+                 "05_CYCLE_NAVIGATOR/site",
                 "04_MARKET_LEARNING/handlekompas/contracts", ".github",
                 "00_FMOS", "01_CORE_FRAMEWORK/governance", "07_PROMPTS_AND_AGENTS",
                 "schemas")
