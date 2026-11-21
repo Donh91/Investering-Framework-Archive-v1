@@ -66,7 +66,7 @@ def probe(pristine: Path, sha: str, image_id: str) -> dict:
                     "last_200_lines_untrusted": run["last_200_lines"][-35:],
                 })
     all_look_green = bool(outcomes) and all(
-        x["result"] == "PASS" and x["observed_count_untrusted"] > 0
+        x["result"] == "EXIT0_WITH_UNTRUSTED_SUMMARY" and x["observed_count_untrusted"] > 0
         for x in outcomes)
     return {
         "contract": "ASTRA_BUILD_PRISTINE_BASELINE_PROBE_v1",
