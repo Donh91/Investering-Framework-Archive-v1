@@ -17,24 +17,24 @@
   "decision": "FALSIFY",
   "decision_reason": "Resolve deterministic integrity/cohort blockers before scoring or external interpretation.",
   "deltas": [
-    "pullback_risk_state:UNAVAILABLE->ELEVATED",
-    "m6_event_count:359->348",
-    "feature_row_count:359->374",
-    "pit_verified_feature_rows:338->353",
-    "matured_event_counts.24h:340->333",
-    "matured_event_counts.30d:69->77",
-    "matured_event_counts.72h:311->313",
-    "matured_event_counts.7d:270->267",
-    "BLOCKER_SET_CHANGED",
+    "m6_event_count:348->364",
+    "feature_row_count:374->390",
+    "pit_verified_feature_rows:353->368",
+    "pit_unverified_feature_rows:21->22",
+    "matured_event_counts.14d:224->228",
+    "matured_event_counts.24h:333->348",
+    "matured_event_counts.30d:77->82",
+    "matured_event_counts.72h:313->327",
+    "matured_event_counts.7d:267->275",
     "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED",
-    "M6_INTEGRITY_REVISION_CHANGED"
+    "M6_MATURED_PAYLOAD_INTEGRITY_CHANGED"
   ],
   "external_routing": {
     "automatic_dispatch": false,
     "claude_recommended": false,
     "sol_recommended": false
   },
-  "generated_at_utc": "2026-11-20T10:02:49.206166Z",
+  "generated_at_utc": "2026-11-21T10:01:24.125828Z",
   "material_delta": true,
   "prior_false_bootstrap_supersession": null,
   "rules": {
@@ -43,7 +43,7 @@
     "raw_external_output_canonical": false,
     "warning_is_sell": false
   },
-  "semantic_fingerprint": "e05b6a6ddb54c37b0cb33bc142d93e712781245b0afbfe1adb90da87cc3f5265",
+  "semantic_fingerprint": "afa9c6a5497079d0a70418b10e76aaa5ded356de4b0d10653724a00bf3170b1a",
   "semantic_state": {
     "blockers": [
       "M6_EVENT_CHRONOLOGY_FAMILY_OR_COHORT_INVALID",
@@ -55,33 +55,33 @@
     "distribution_risk": "UNKNOWN",
     "economic_action_edge_claim": "NOT_ESTABLISHED",
     "feature_integrity_revision": "v1.1_PIT_STRICT",
-    "feature_row_count": 374,
+    "feature_row_count": 390,
     "information_edge_claim": "NOT_ESTABLISHED",
     "latest_sol_verdict": "WEAKENED",
-    "m6_event_count": 348,
+    "m6_event_count": 364,
     "m6_family_semantics": "PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES",
     "m6_integrity": {
       "chronological": true,
       "family_anchor_valid": true,
-      "family_lineage_fingerprint": "4de81872a845e2c523a014725a8fe8d1cd89fc47b26c13ca9d3f4274f939030c",
+      "family_lineage_fingerprint": "b0d85dca49524d2dea45010d4d74a6d9dfe64b354bb891fc7bb98ef54fabb066",
       "feature_cohort_parity": false,
       "first_warning_weight_valid": true,
       "status": "BLOCKED"
     },
     "m6_integrity_revision": "v1.3_SOURCE_DATA_STATUS_OK_ONLY",
     "m6_matured_payload_integrity": {
-      "checked": 1214,
+      "checked": 1260,
       "invalid": 0,
       "reasons": [],
       "status": "PASS"
     },
     "m6_provisional_family_count": 2,
     "matured_event_counts": {
-      "14d": 224,
-      "24h": 333,
-      "30d": 77,
-      "72h": 313,
-      "7d": 267
+      "14d": 228,
+      "24h": 348,
+      "30d": 82,
+      "72h": 327,
+      "7d": 275
     },
     "matured_family_counts": {
       "14d": 2,
@@ -90,8 +90,8 @@
       "72h": 2,
       "7d": 2
     },
-    "pit_unverified_feature_rows": 21,
-    "pit_verified_feature_rows": 353,
+    "pit_unverified_feature_rows": 22,
+    "pit_verified_feature_rows": 368,
     "pullback_risk_state": "ELEVATED",
     "task15_research_admission": {
       "automatic_promotion": false,
@@ -114,22 +114,22 @@
   "source_bindings": {
     "calibration": {
       "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-      "sha256": "2e0cfe0427f641cad852e83175b517c3bf1ea5bea9b891a3aea5b0ab08e46743",
+      "sha256": "ae5791aab70217723e5675a59a83df96240415d50986b31ca7f71426e23a067e",
       "status": "PASS"
     },
     "compass_freeze": {
-      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/20/CMP-20261120-09b1bc15d7e9.json",
-      "sha256": "d2d9cd105b5aaa0137b59b4b63f167ce5ae97a016803be608f55f3cfe1f4c0a1",
+      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/21/CMP-20261121-ee12b616d334.json",
+      "sha256": "3a1ffbee2edc669be1ad0f8de7cb7e42d02b641f63a0e5ad34bddeb049add6f8",
       "status": "PASS"
     },
     "compass_pointer": {
       "path": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
-      "sha256": "edd9cbf201ea0554d9794bfde8a14fa4127baa232f5b1305bc9743dccaa5deef",
+      "sha256": "ba0ec2f3c88f8d8f3ecff24fd90689ec31b9625f374da0f4a6f2bc7238366833",
       "status": "PASS"
     },
     "edge_features": {
       "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
-      "sha256": "2b53d8fb23ba72fa75a44c003f9efdda6af26e5e51e249d329d2fb76111ed283",
+      "sha256": "504b531f0caa2af56cb3d393916b9cdccf942d3a09059f0ee065409d14baf2c6",
       "status": "PASS"
     },
     "latest_sol": {
@@ -141,7 +141,7 @@
     },
     "m6_events": {
       "path": "research/framework_memory/m6_warning_events/LATEST.json",
-      "sha256": "c688b0dfd8511a43641a1d43db24e858f78216017e1c19d7e5bddc7407e83273",
+      "sha256": "fdfbec4144cbb124ec132ae99db33a8f36c470225fa362f07c6a16091a618763",
       "status": "PASS"
     },
     "task15_gate": {
