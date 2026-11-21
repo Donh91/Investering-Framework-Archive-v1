@@ -129,13 +129,44 @@ All hypotheses use independently eligible, pre-specified cohorts, family groupin
 
 **Scientific disposition:** `RETAIN_SHADOW / BLOCKED_SOURCE_GRAIN_AND_PIT`. Do not publish an empirical effect size, percent hit rate, `p`-value or simulated PnL. First repair on existing #387: metadata-only complete inventory + provenance, then #1596 chooses source-eligible non-Round3 data or explicit `BLOCKED_SOURCE_HISTORY`. No paid source acquisition or private Round3 read authorized by this dossier.
 
-## 9. Explicit current execution receipt (as of authoring)
+## 9. Exploratory public spot-price calendar negative-control, 2026-11-21 (NOT ELIGIBLE OPTIONS EDGE)
+
+**Purpose and status:** An additional zero-fee public Binance spot BTCUSDT/ETHUSDT 4-hour OHLC sanity check was run after preregistration. This tests whether the *calendar label alone* at 08:00 UTC shows a robust difference between last-Friday monthly/quarterly dates and other Friday weekly Deribit expiry dates. It does NOT test options concentration/gamma, daily-vs-weekly, intraday minute-level reversal, the US equity OPEX treatment, or economic decision utility. It is exploratory and **not promoted scientific evidence**. All observed values came from public Binance's `get_spot_kline_candlestick_data` tool with `interval=4h`, `symbol=BTCUSDT` or `ETHUSDT`, `startTime=Date.UTC(2025,2,1)`, `endTime=Date.UTC(2026,10,21)`, four sequential non-overlap windows of 950 candles for each asset. The tool returned 3,780 fully completed 4h bars for each asset through 2026-11-20 20:00 UTC without time gaps after deduplication; the inclusive terminal 2026-11-21 00:00 bar is excluded from completed-range calculation. Exact original OHLC payloads were NOT persisted or hash-bound, so an independent reproducibility readback is still REQUIRED before any formal inferential claims.
+
+**Cohort:** 90 Fridays (2025-03 to 2026-11), 20 last-Fridays of the month (including quarterly expiries) versus 70 other Fridays, both at UTC 08:00; classify from calendar known in advance. `return = log(close_12UTC / open_08UTC)`, `abs = abs(return)`, `reversal = sign(return_04to08) != sign(return_08to12)`; the previous 04–08 bar is available before the 08:00 event. No position/PnL data, no derivative feature. BTC/ETH on same dates are correlated; do not sum their event counts as independent dates. Incomplete/pseudo daily non-expiry controls are prohibited.
+
+### Observed descriptive summary (percentage units)
+
+| Outcome | BTC last-Friday (n20) | BTC other-Friday (n70) | ETH last-Friday (n20) | ETH other-Friday (n70) |
+| --- | ---: | ---: | ---: | ---: |
+| mean absolute 08–12 UTC price return | 0.741% | 0.607% | 1.070% | 0.714% |
+| previous-bar-to-current-bar sign reversal | 60.0% | 48.6% | 45.0% | 55.7% |
+| mean signed 08–12 UTC price return | -0.107% | +0.093% | -0.127% | +0.044% |
+
+A *year-stratified* 10,000-permutation, exploratory two-sided comparison (equal weights for 2025 and 2026, retaining each year's 10/33 and 10/37 monthly/weekly splits) gives:
+- BTC mean absolute return difference **+0.136 percentage points**, p ~ **0.365**; naive stratified bootstrap 95% interval **[-0.185, +0.478]** pp.
+- ETH mean absolute return difference **+0.354 percentage points**, p ~ **0.079**; bootstrap 95% interval **[-0.104, +0.853]** pp.
+- BTC reversal difference **+11.4 pp**, p ~ **0.374**; bootstrap **[-13.1, +35.0]** pp.
+- ETH reversal difference **-10.7 pp**, p ~ **0.396**; bootstrap **[-35.2, +14.0]** pp.
+- Signed return comparisons also do not reject the null in this exploratory test (BTC p ~0.404, ETH p ~0.595).
+
+**Regime fragility:** BTC monthly-minus-weekly mean absolute move was **-0.087 pp in 2025**, then **+0.359 pp in 2026**. ETH corresponding differences were **+0.069 pp** then **+0.639 pp**. The 2025 cohort spans March-December and 2026 January-November, so the windows have different exposure. Month/quarterly dates, risk-on/off regimes, ETF/macroeconomic shocks, 08:00 settlement, exchange basis and volatile outliers are NOT fully balanced. Reassignment permutations assume conditional exchangeability within years, an unproven premise; bootstrap intervals do not robustly account for extended market-regime dependence. No corrections for multiple outcomes were applied. The p-values are descriptive *sanity checks*, not admissible source-locked inferential p-values or a success/failure gate.
+
+### Interpretation and gate
+
+- The dataset does **not** establish a repeatable calendar-only 08:00 expiry **direction**, **reversal** or **volatility** edge. All exploratory intervals span zero; no economic action benefit was examined. 20 larger expiry dates is a small effective treatment sample.
+- The data do **not** reject a more specific **PIT position-conditioned** expiry mechanism in the published literature. This cannot be tested with the current 1-60d, 4-hour L2b skew output and closed Round 3 research gate.
+- Next step under #1596 is independent public-price source reproduction and strongest weekday/seasonal controls only if the scientific owner judges this a useful low-cost negative control; do not spin out a new queue.
+- **Verdict: `NO_PROVEN_CALENDAR_EDGE; OPEX_CONDITIONAL_EDGE_UNKNOWN; RETAIN_SHADOW_WITH_SOURCE_GATE`.** No forecast, signal, portfolio action, raw restricted data read, paid API, or new automation.
+
+## 10. Explicit current execution receipt (as of authoring)
 
 - `external_literature_review=COMPLETE_AT_ABSTRACT_AND_OFFICIAL_DOC_LEVEL`
 - `current_archive_source_and_dedup=READ_ONLY_CHECKED_AT_PINNED_SHA`
 - `non_Round3_options_data_verified_for_test=NO`
 - `Round3_raw_data_read=NO`
-- `backtest_or_study_effect_estimate_run=NO`
+- `derived_price_only_exploratory_sanity_check=YES_NON_ADMISSIBLE_UNREPRODUCED`
+- `preregistered_options_backtest_run=NO`
 - `code_changed=NO`
 - `paid_API_or_vendor_data_used=NO`
 - `live_Compass_CN_Alpha_portfolio_changed=NO`
