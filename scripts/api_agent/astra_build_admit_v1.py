@@ -64,6 +64,9 @@ SCOPE_ALLOW = {
 # No string supplied by the model is ever evaluated as a command.
 # Each exact command is reviewed source, passed as an argv tuple (no shell).
 TEST_COMMANDS = {
+    # Dedicated offline/native security smoke. Not in SCOPE_ALLOW and cannot
+    # appear in any paid mission or model-admitted BUILD proposal.
+    "SMOKE": (("python", "-m", "unittest", "discover", "-s", "tests/smoke", "-v"),),
     "M1": (("python", "-m", "pytest", "-q", "tests/learning", "tests/cycle_navigator"),
            ("node", "--test", "05_CYCLE_NAVIGATOR/site/tests")),
     "M2": (("python", "-m", "pytest", "-q", "tests/learning", "tests/data_ping",
