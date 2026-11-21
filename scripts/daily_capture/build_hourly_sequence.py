@@ -203,8 +203,17 @@ def parse_okx_oi(body: bytes, symbol: str) -> dict[int, dict[str, float | str | 
     for i, row in enumerate(parse_okx_doc(body)):
         if isinstance(row, dict):
             stamp = _timestamp(row.get("ts") or row.get("timestamp"))
-            amount_raw = row.get("oiCcy") or row.get("oi") or row.get("openInterest")
-            usd_raw = row.get("oiUsd") or row.get("oiValue") or row.get("openInterestValue")
+            # Numeric zero is a present and valid observation, not a missing key.
+            # Truthiness fallback previously dropped it, risking a whole-window HOLD.
+            def present(keys):
+                for key in keys:
+                    raw = row.get(key)
+                    if raw is not None and raw != "":
+                        return raw
+                return None
+
+            amount_raw = present(("oiCcy", "oi", "openInterest"))
+            usd_raw = present(("oiUsd", "oiValue", "openInterestValue"))
             if stamp is None:
                 raise SourceError("SCHEMA_DRIFT", f"{symbol}:OKX OI dict timestamp:{i}")
             amount = _okx_oi_number(amount_raw, symbol=symbol, field="amount")
