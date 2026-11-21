@@ -83,6 +83,29 @@ class TestBuildDriver(unittest.TestCase):
             return d.verify_original_artifact(self.repo, self.artifact,
                                               self.mid, self.main, "25")
 
+    def test_native_event_reverified_independent_of_workflow_if(self):
+        request = {"model": "gpt-6.2-astra"}
+        body = {"comment": {"id": 1245}}
+        with mock.patch.object(d.owner, "owner_event",
+                               return_value=(body, self.mid, "b"*64)), \
+             mock.patch.object(d.owner, "build_request",
+                               return_value=(request, self.native_request,
+                                             self.meta)):
+            proof = d.verified_native_owner_event(self.mid)
+            self.assertEqual(proof["comment_id"], 1245)
+            self.assertEqual(proof["mission_id"], self.mid)
+        with mock.patch.object(d.owner, "owner_event",
+                               return_value=(body, "ASTRA-BUILD-M2-20261121-S1", "b"*64)):
+            with self.assertRaisesRegex(d.DriverHold, "OWNER_EVENT_MISSION_DRIFT"):
+                d.verified_native_owner_event(self.mid)
+        with mock.patch.object(d.owner, "owner_event",
+                               return_value=(body, self.mid, "c"*64)), \
+             mock.patch.object(d.owner, "build_request",
+                               return_value=(request, self.native_request,
+                                             self.meta)):
+            with self.assertRaisesRegex(d.DriverHold, "OWNER_EVENT_BUNDLE_DRIFT"):
+                d.verified_native_owner_event(self.mid)
+
     def test_verified_source_scope_has_real_sha(self):
         result = d.trusted_scope(self.repo, self.mid, self.main)
         self.assertEqual(result["main_sha"], self.main)
