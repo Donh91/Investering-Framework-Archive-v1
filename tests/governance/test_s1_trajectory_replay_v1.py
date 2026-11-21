@@ -1,7 +1,9 @@
 """S1 trajectory replay v1 (S1 v3.3 W1): a reference executor of the tick, replayed over recorded connector shapes.
 
 WHAT THIS IS. A deterministic REFERENCE EXECUTOR of 00_FMOS/S1/BOOTSTRAP.txt steps 1 to 3b and of 00_FMOS/S1/TICK.md
-T0 to T3, plus the T4/T5 path of ONE REQUEST_REVIEW (how BRIDGE_REQUEST) and the NOTHING_ACTIONABLE ending. It runs
+T0 to T3 and T3H (the heartbeat, also after a failed brief), plus the T4 CLAUDE RECEIPTS read (per_page=40) for slots that
+are not PROMOTED, the T5 paths of ONE REQUEST_REVIEW (how BRIDGE_REQUEST) and of HALT rule C1b (S1 v3.3 W2b), and the
+NOTHING_ACTIONABLE ending. It runs
 over recorded or mocked connector responses (the raw REST shapes that BOOTSTRAP step 4 binds T1 and T2 to) and a fake
 clock. Every fixture is the shape of a real tick of 2026-11-18 to 2026-11-20; every id, SHA and body is synthetic.
 
@@ -17,9 +19,9 @@ effects are counted apart from either.
 
 MUTANTS. Each critical check of the executor can be switched off. Every mutant must fail at least one fixture.
 
-OUT OF SCOPE (the executor stops with NotModelled rather than guess): T4 with a non-empty B.claude_slots (the Bridge
-receipt read), every B.next action other than REQUEST_REVIEW BRIDGE_REQUEST, the T6 ladder rules and T7. Those are
-covered by TickModel, ClaudeReceipts and the rule-text tests of test_s1_tick_brief_v1.py.
+OUT OF SCOPE (the executor stops with NotModelled rather than guess): a PROMOTED Claude slot (its merge), every B.next
+action other than REQUEST_REVIEW BRIDGE_REQUEST and HALT rule C1b, the T6 ladder rules and T7. Those are covered by
+TickModel, ClaudeReceipts and the rule-text tests of test_s1_tick_brief_v1.py.
 
 No network, no secrets, no write anywhere: the connector is a dict of recorded answers."""
 import copy
@@ -44,7 +46,28 @@ HOST = "https://" + "api" + ".github" + ".com"
 PULLS = "/pul" + "ls"
 API = HOST + "/repos/Donh91/Investering-Framework-Archive-v1"
 BRIDGE_API = HOST + "/repos/Donh91/Investering-AI-Audit-Bridge"
-BRIDGE_PAGE = BRIDGE_API + "/issues/comments?sort=created&direction=desc&per_page=100"
+BRIDGE_PAGE = BRIDGE_API + "/issues/comments?sort=created&direction=desc&per_page=100"      # the v3.2 T4 page (mutant t4_page40)
+PR_CREATED = "2026-11-19T14:02:00Z"
+
+
+def since_pages(base, n):
+    return f"{base}&per_page=100&page={n}"
+
+
+def veto_key(n, since=PR_CREATED):
+    """REQUEST_REVIEW BRIDGE_REQUEST reads #173 as VETO does: since the PR's created_at, every page."""
+    return since_pages(f"{BRIDGE_API}/issues/173/comments?since={since}", n)
+
+
+def cph_midnight_utc(now):
+    local = at(now).astimezone(CPH)
+    return iso(datetime(local.year, local.month, local.day, tzinfo=CPH))
+
+
+def beat_key(now, n):
+    """T3H: API/issues/1156/comments?since=<today 00:00 Copenhagen, in UTC>&per_page=100, page n."""
+    return since_pages(f"{API}/issues/1156/comments?since={cph_midnight_utc(now)}", n)
+BRIDGE_PAGE_40 = BRIDGE_API + "/issues/comments?sort=created&direction=desc&per_page=40"   # T4 CLAUDE RECEIPTS (W2b D2)
 ISSUES_URL = API + "/issues?labels=s1-tick-brief&state=open&per_page=20"
 S1_DIR = "00_FMOS/S1"
 CONTRACT_PATH = "00_FMOS/S1/RUNTIME_CONTRACT.json"
@@ -55,12 +78,12 @@ BOT_LOGIN, BOT_ID, BOT_TYPE = "github-actions[bot]", 41898282, "Bot"
 OWNER_LOGIN = "Donh91"
 CPH = ZoneInfo("Europe/Copenhagen")
 HALT_DIRS = ("scripts", "tests", ".github", ".agents", "00_FMOS")
-SOURCE_DIRS = ("00_FMOS/", ".github/", ".agents/", "scripts/")
+SOURCE_DIRS = ("00_FMOS/", ".github/", ".agents/", "scripts/", "tests/")    # W2b F1: tests/ is a source directory of T3
 SOURCE_SUFFIXES = (".py", ".sh", ".yml", ".yaml", ".toml", ".cfg", ".ini", ".pth", ".mjs", ".js")
 SQUASH = re.compile(r"\(#\d+\)$")
 NOOP_RESULTS = ("MONDAY_READ_ONLY", "SOURCE_UNVERIFIED", "BRIEF_UNVERIFIED", "BRIEF_STALE", "BRIEF_INCOMPLETE", "LANE_HALTED",
                 "MERGE_REFUSED", "NOTHING_ACTIONABLE")
-T1_T3_CALLS, HALT_TEST_CALLS, TREE_READS = 4, 21, 20     # TICK.md: "T1 to T3 are at most 4 tool calls" (+ the halt test)
+T1_T3_CALLS, TREE_READS = 4, 20     # TICK.md: "T1 to T3 are at most 4 tool calls; T3 never reads a tree" (W2b)
 SHA40 = re.compile(r"[0-9a-f]{40}")
 
 # The rule text this executor was derived from. A reworded step must re-derive the executor, so the text is pinned.
@@ -68,8 +91,11 @@ BOOTSTRAP_TEXT = (ROOT / S1_DIR / "BOOTSTRAP.txt").read_text(encoding="utf-8")
 TICK_TEXT = (ROOT / TICK_PATH).read_text(encoding="utf-8")
 REFERENCE_TEXT_SHA256 = {
     "BOOTSTRAP steps 1-4": "ff2c915ed1086a0b7f663811513858a66f906f73650b979a12a8629430122713",
-    "TICK T0-T3 and IF THE BRIEF FAILED": "2f1f7e40a9cc3abef451d7ae6efd06871c10aa296cdd7efcc26f828fb78b59a8",
+    "TICK T0-T3H and IF THE BRIEF FAILED": "55ccb530d03cfb47316087be331a1ed715b368695f3825fc695ca025d3a5c32b",
     "TICK LAST TWO LINES": "2b7e00842d5e7b8ab2a96ad4ff3d87acbc730f3ff7b160c7128fd705641715b1",
+    "TICK T4 CLAUDE RECEIPTS and ORDER": "5320ca81be8086f1a32929becb9f76ea19b139ce8437a4e28d64cc6d3ff7c675",
+    "TICK HALT rule C1b": "55a4a83458baf6bc210795f13fe82efdfc0133dbf3f831ecfd9f47917859e4f4",
+    "TICK REQUEST_REVIEW": "72fc9e8c8ba35bd9019b48e7eb2c3cffc58e9f7c72f9813c03c9b2a4eea83541",
 }
 
 
@@ -80,7 +106,11 @@ def text_regions():
     boot = re.sub(r"(as GitHub reports it\) must equal )[0-9a-f]{40}\.", r"\1<RUNTIME_CONTRACT_BLOB>.", boot)
     tick = TICK_TEXT[TICK_TEXT.index("T0 CLOCK (H1)."):TICK_TEXT.index("T4 CHOOSE.")]
     last = TICK_TEXT[TICK_TEXT.index("LAST TWO LINES of every run"):]
-    return {"BOOTSTRAP steps 1-4": boot, "TICK T0-T3 and IF THE BRIEF FAILED": tick, "TICK LAST TWO LINES": last}
+    receipts = TICK_TEXT[TICK_TEXT.index("CLAUDE RECEIPTS (ONE Bridge read"):TICK_TEXT.index("NO SECOND REVIEW REQUEST:")]
+    c1b = TICK_TEXT[TICK_TEXT.index("HALT, rule C1b"):TICK_TEXT.index("HALT (C7 halt trigger")]
+    request = TICK_TEXT[TICK_TEXT.index("REQUEST_REVIEW (rule 3)."):TICK_TEXT.index("REPAIR (rule 2).")]
+    return {"TICK REQUEST_REVIEW": request, "BOOTSTRAP steps 1-4": boot, "TICK T0-T3H and IF THE BRIEF FAILED": tick, "TICK LAST TWO LINES": last,
+            "TICK T4 CLAUDE RECEIPTS and ORDER": receipts, "TICK HALT rule C1b": c1b}
 
 
 def sha(tag):
@@ -247,10 +277,10 @@ def h1(now):
     return local.weekday() == 0 and (9, 30, 0) <= (local.hour, local.minute, local.second) <= (10, 30, 0)
 
 
-def source_path(p):
-    """T3: AGENTS.md, under 00_FMOS/ .github/ .agents/ scripts/, a code suffix or requirements*.txt, anywhere."""
+def source_path(p, dirs=SOURCE_DIRS):
+    """T3: AGENTS.md, under 00_FMOS/ .github/ .agents/ scripts/ tests/, a code suffix or requirements*.txt, anywhere."""
     name = p.rsplit("/", 1)[-1]
-    return p == "AGENTS.md" or p.startswith(SOURCE_DIRS) or p.endswith(SOURCE_SUFFIXES) or re.fullmatch(r"requirements.*\.txt", name) is not None
+    return p == "AGENTS.md" or p.startswith(dirs) or p.endswith(SOURCE_SUFFIXES) or re.fullmatch(r"requirements.*\.txt", name) is not None
 
 
 def route_name(kind, key):
@@ -263,8 +293,15 @@ def route_name(kind, key):
 
 # ================================================================================================ the executor
 CHECKS = ("bootstrap_3", "bootstrap_3b", "t0_monday", "issues", "author", "body_strict", "run_binding", "run_not_success",
-          "edited_outside_run", "pins", "staleness", "complete", "t3_not_ahead", "t3_unreadable", "t3_range", "t3_halt",
-          "t3_source", "h1_recheck", "head_reread", "request_dedupe")
+          "edited_outside_run", "pins", "staleness", "complete", "t3_not_ahead", "t3_unreadable", "t3_tree_free",
+          "t3_source", "h1_recheck", "head_reread", "request_dedupe",
+          # W2b: T3H, T4 per_page=40 and HALT rule C1b
+          "t3h_clock", "t3h_dedup", "t3h_unreadable", "t3h_failed_brief", "t4_page40", "t4_receipt_rules",
+          "c1b_squash", "c1b_entries", "c1b_on_main", "c1b_named",
+          # W2b phase 3: T3H scheduled-only and every page; the REQUEST_REVIEW dedupe reads every page since the PR
+          "t3h_scheduled", "t3h_all_pages", "request_all_pages",
+          # W2b phase 4 (detached review of 3385c74e): F1 tests/ is a T3 source directory; F6 entry type and sha
+          "t3_tests_dir", "c1b_entry_type")
 
 
 class End(Exception):
@@ -286,7 +323,8 @@ class Tick:
     """One run. `saved_3b` is the contract blob of the owner's saved BOOTSTRAP paste (step 3b). `off` switches checks
     off (mutants); `reading` is the T1 block reading ("strict", or the mutants "lenient" and "literal")."""
 
-    def __init__(self, routes, now, saved_3b, clock_step_s=0, off=(), reading="strict"):
+    def __init__(self, routes, now, saved_3b, clock_step_s=0, off=(), reading="strict", origin="schedule"):
+        self.origin = origin                                     # T3H: only a scheduled run of this task
         self.clock = Clock(now, clock_step_s)
         self.conn = Connector(routes, self.clock)
         self.saved_3b, self.off, self.reading = saved_3b, frozenset(off), reading
@@ -405,16 +443,6 @@ class Tick:
         self.stages["T2"] = "OK"
 
     # ---------------------------------------------------------------- T3
-    def five(self, sha_, cache):
-        if sha_ not in cache:
-            try:
-                tree = self.conn.fetch(f"{API}/git/trees/{sha_}")
-            except Refused:
-                raise End("brief", "BRIEF_INCOMPLETE(T3:trees_unreadable)")
-            entries = {e.get("path"): e.get("sha") for e in (tree.get("tree") or []) if isinstance(e, dict) and e.get("type") == "tree"}
-            cache[sha_] = tuple(entries.get(d) for d in HALT_DIRS)
-        return cache[sha_]
-
     def t3(self, b):
         self.conn.stage = "T3"
         if b.get("main") == self.M:
@@ -432,10 +460,11 @@ class Tick:
         if self.on("t3_unreadable") and ((cmp_.get("total_commits") or 0) > 100 or cmp_.get("too_large") or len(files) >= 300):
             raise End("brief", "BRIEF_STALE(drift_unreadable)")
         names = sorted({n for f in files for n in (f.get("filename"), f.get("previous_filename")) if n})
-        if any(n.split("/")[0] in HALT_DIRS for n in names):
-            self.halt_test(b["main"])
+        if not self.on("t3_tree_free") and any(n.split("/")[0] in HALT_DIRS for n in names):
+            self.old_tree_walk()                                 # mutant: the v3.2 C1b tree reads inside T3
         if self.on("t3_source"):
-            if any(source_path(n) for n in names):
+            dirs = SOURCE_DIRS if self.on("t3_tests_dir") else tuple(d for d in SOURCE_DIRS if d != "tests/")
+            if any(source_path(n, dirs) for n in names):
                 raise End("brief", "BRIEF_STALE(source_changed)")
             try:
                 switch = strict_json(self.conn.fetch_file(LANE_PATH, self.M))
@@ -447,82 +476,185 @@ class Tick:
         self.stages["T3"], self.stages["DRIFT"] = "OK", names
         return names
 
-    def halt_test(self, base):
-        """C1b HALT TEST of TICK T3 on the first-parent chain M -> B.main, attributed by root-tree entries."""
+    def old_tree_walk(self):
+        """The v3.2 T3 reads (commit list and root trees), kept only as the mutant t3_tree_free: v3.3 T3 reads no tree."""
         try:
             page = self.conn.fetch(f"{API}/commits?sha={self.M}&per_page=100")
         except Refused:
-            raise End("brief", "BRIEF_INCOMPLETE(T3:commits_unreadable)")
-        by_sha = {c.get("sha"): c for c in page if isinstance(c, dict)} if isinstance(page, list) else {}
-        chain, cur = [], self.M
-        while cur != base:
-            c = by_sha.get(cur)
-            parents = [p.get("sha") for p in (c or {}).get("parents") or [] if isinstance(p, dict)]
-            if c is None or not parents or len(chain) >= 100:
-                if self.on("t3_range"):
-                    raise End("brief", "BRIEF_INCOMPLETE(T3:range)")
-                return                                           # mutant: an unattributed range is waved through
-            chain.append((cur, parents, str((c.get("commit") or {}).get("message") or "").split("\n", 1)[0]))
-            cur = parents[0]
-        chain.reverse()                                          # oldest first
-        if not self.on("t3_halt"):
             return
-        cache, squash = {}, [k for k, (_s, parents, subject) in enumerate(chain) if len(parents) == 1 and SQUASH.search(subject)]
-        segments, anchor, start = [], base, 0
-        for k in squash:
-            segments.append((anchor, list(range(start, k))))
-            anchor, start = chain[k][0], k + 1
-        segments.append((anchor, list(range(start, len(chain)))))
-        for anchor, idx in segments:
-            if not idx or self.five(anchor, cache) == self.five(chain[idx[-1]][0], cache):
-                continue
-            for k in idx:
-                if len(cache) >= TREE_READS:
-                    self.post_halt(chain[idx[-1]][0])
-                s, parents, _subject = chain[k]
-                if self.five(s, cache) != self.five(parents[0], cache):
-                    self.post_halt(s)
+        for c in (page if isinstance(page, list) else [])[:TREE_READS]:
+            try:
+                self.conn.fetch(f"{API}/git/trees/{c.get('sha')}")
+            except Refused:
+                pass
 
-    def post_halt(self, commit):
+    # ---------------------------------------------------------------- T3H
+    def pages(self, key_of, every=True, limit=10):
+        """Every page of a per_page=100 list (a page under 100 rows is the last); Refused propagates."""
+        rows = []
+        for n in range(1, limit + 1):
+            page = self.conn.fetch(key_of(n))
+            if not isinstance(page, list):
+                raise Refused("shape")
+            rows += page
+            if len(page) < 100 or not every:
+                return rows
+        raise Refused("page_cap")
+
+    def t3h(self, b, failed):
+        """T3H HEARTBEAT: only in a scheduled run of this task, at 08:45 Copenhagen or later; read #1156 since today 00:00
+        Copenhagen, every page; no S1_HEARTBEAT_v1 of this task by Donh91 created today: post one. Any page that cannot be
+        read: no heartbeat. H1 before the write. "Of this task": the body names the task id or has a contract= line (the
+        authenticity idiom of the ACTION_LOOP WORK RULE)."""
+        self.conn.stage = "T3H"
+        if self.on("t3h_scheduled") and self.origin != "schedule":
+            return
+        local = self.clock.now.astimezone(CPH)
+        if self.on("t3h_clock") and (local.hour, local.minute) < (8, 45):
+            return
         try:
-            ledger = self.conn.ledger_newest()
+            page = self.pages(lambda n: beat_key(iso(self.clock.now), n), every=self.on("t3h_all_pages"))
         except Refused:
-            raise End("brief", "BRIEF_INCOMPLETE(T3:ledger_unreadable)")
-        named = any(isinstance(c, dict) and (c.get("user") or {}).get("login") == OWNER_LOGIN and first_token(c.get("body")) == "S1_LANE_HALTED"
-                    and commit in str(c.get("body")) for c in ledger or [])
-        if not named:
-            self.check_h1("halt")
-            self.conn.post("#1156", f"S1_LANE_HALTED\nPR=- head=-\nreason: unreviewed_code_on_main\ncommit: {commit}\nmain={self.M}\n"
-                                    f"contract={self.contract8}", "effect")
-        raise End("halted", "LANE_HALTED(unreviewed_code_on_main)")
+            if self.on("t3h_unreadable"):
+                return
+            page = []
+        def today(c):
+            try:
+                return at(c["created_at"]).astimezone(CPH).date() == local.date()
+            except (KeyError, TypeError, ValueError, AttributeError):
+                return False
+        mine = lambda c: B.TASK_ID in str(c.get("body")) or re.search(r"(?m)\bcontract=[0-9a-f-]{1,40}\b", str(c.get("body"))) is not None
+        if self.on("t3h_dedup") and any(isinstance(c, dict) and first_token(c.get("body")) == "S1_HEARTBEAT_v1"
+                                        and (c.get("user") or {}).get("login") == OWNER_LOGIN and mine(c) and today(c) for c in page):
+            return
+        self.check_h1("heartbeat")
+        run_id = b.get("run_id") if isinstance(b, dict) else None
+        state = "OK" if failed is None else failed.result
+        self.conn.post("#1156", f"S1_HEARTBEAT_v1\nmain={self.M[:8]} contract={self.contract8} brief={run_id or 'NONE'} brief_state={state}\n"
+                                "ticks_24h=UNKNOWN last_noop=UNKNOWN last_action=UNKNOWN open_ops=UNKNOWN closures=UNKNOWN\n"
+                                "S1_OPEN_WORK_INDEX_v1 UNKNOWN(t3h)", "heartbeat")
+        self.stages["T3H"] = "POSTED"
 
     # ---------------------------------------------------------------- T4 / T5
     def t4_t5(self, b):
         self.conn.stage = "T4"
         self.lines.extend(b["status_lines"])
-        if b["claude_slots"]:
-            raise NotModelled("T4 CLAUDE RECEIPTS")
+        slots = self.claude_receipts(b) if b["claude_slots"] else {}
+        if any(v == "PROMOTED" for v in slots.values()):
+            raise NotModelled("T4 PROMOTED slot (MERGE_IF_CLAUDE_APPROVE)")
         entries = [x for x in b["next"] if x.get("action") in ("HALT", "RECONCILE")] + \
             sorted((x for x in b["next"] if x.get("action") not in ("HALT", "RECONCILE")), key=lambda x: x.get("rank") or 0)
-        skipped = []
-        for x in entries[:3]:
-            if x.get("action") != "REQUEST_REVIEW" or x.get("how") != "BRIDGE_REQUEST":
+        skipped, tried = [], 0
+        for x in entries:
+            if tried >= 3:
+                break
+            if slots.get(x.get("pr")) == "ADMISSIBLE" and x.get("action") in ("REQUEST_REVIEW", "MERGE_IF_CLAUDE_APPROVE"):
+                skipped.append(f"{x['pr']}:R3:claude_approved")     # no re-read; not a tried entry
+                continue
+            tried += 1
+            if x.get("action") == "HALT" and x.get("source") == "C1B":
+                why = self.halt_c1b(x)
+            elif x.get("action") == "REQUEST_REVIEW" and x.get("how") == "BRIDGE_REQUEST":
+                why = self.request_review(b, x)
+            else:
                 raise NotModelled(f"T5 {x.get('action')} {x.get('how')}")
-            why = self.request_review(b, x)
             if why is None:
                 return
             skipped.append(why)
         reasons = ",".join(skipped[:3]) if skipped else "brief_empty"
         raise End("nothing", f"NOTHING_ACTIONABLE(skipped={reasons})")
 
+    def claude_receipts(self, b):
+        """T4 CLAUDE RECEIPTS: ONE Bridge read, the newest 40 comments; {pr: APPROVED | ADMISSIBLE | PROMOTED}. A receipt
+        that is not on that page approves nothing in this run; an unreadable Bridge approves no slot."""
+        try:
+            page = self.conn.fetch(BRIDGE_PAGE_40 if self.on("t4_page40") else BRIDGE_PAGE)
+        except Refused:
+            return {}
+        rows = [c for c in (page if isinstance(page, list) else []) if isinstance(c, dict) and str(c.get("issue_url") or "").endswith("/issues/173")]
+        by_id = {c.get("id"): c for c in rows}
+        unedited = lambda c: (c.get("user") or {}).get("login") == OWNER_LOGIN and c.get("created_at") == c.get("updated_at")
+        out = {}
+        for slot in b["claude_slots"]:
+            head = slot.get("head")
+            mine = sorted((c for c in rows if first_token(c.get("body")) == "CLAUDE_REVIEW_v1" and fields(c.get("body")).get("head_sha") == head),
+                          key=lambda c: c.get("created_at") or "", reverse=True)
+            for c in mine:
+                f, body = fields(c.get("body")), str(c.get("body"))
+                rid = re.fullmatch(r"\d+", f.get("request", "") or "")
+                if f.get("verdict") != "APPROVE" or (self.on("t4_receipt_rules") and (not unedited(c) or "PROACTIVE" in body or not rid)):
+                    continue
+                req = by_id.get(int(rid.group(0))) if rid else None
+                if self.on("t4_receipt_rules") and req is not None and not (first_token(req.get("body")) == "S1_REVIEW_REQUEST_v1"
+                                                                           and fields(req.get("body")).get("head") == head):
+                    continue                                       # a row with that id that is not such a request voids it
+                if any(r.get("created_at", "") > c.get("created_at", "") and fields(r.get("body")).get("verdict") in ("REQUEST_CHANGES", "BLOCK") for r in mine):
+                    break
+                e = next((p for p in b["prs"] if p.get("n") == slot.get("pr")), {})
+                plain_low = (e.get("lane") or {}).get("risk_floor") == "LOW" and (e.get("author") or {}).get("claude_package") is False
+                route = "INDEPENDENT_DETACHED" in body or plain_low
+                admissible = req is not None and unedited(req) and req.get("created_at", "") < c.get("created_at", "") \
+                    and all(f.get(k) for k in ("report", "report_blob", "bridge_commit")) and route
+                promoted = slot.get("ready") is True and f.get("lane_eligible") == "YES" and route
+                out[slot.get("pr")] = "PROMOTED" if promoted else "ADMISSIBLE" if admissible else "APPROVED"
+                break
+        return out
+
+    def halt_c1b(self, x):
+        """T5 HALT, rule C1b: the brief's halt, re-verified natively before the one S1_LANE_HALTED."""
+        self.conn.stage = "T5"
+        commit, parent = x.get("commit"), x.get("parent")
+        try:
+            c = self.conn.fetch(f"{API}/commits/{commit}")
+        except Refused:
+            return "-:C1b:commit_unreadable"
+        parents = [p.get("sha") for p in (c.get("parents") or []) if isinstance(p, dict)] if isinstance(c, dict) else []
+        subject = str(((c.get("commit") or {}) if isinstance(c, dict) else {}).get("message") or "").split("\n", 1)[0]
+        if self.on("c1b_squash") and len(parents) == 1 and SQUASH.search(subject):
+            return "-:C1b:squash_merge"
+        try:
+            five = [self.five_of(self.conn.fetch(f"{API}/git/trees/{s}")) for s in (parent, commit)]
+        except Refused:
+            return "-:C1b:trees_unreadable"
+        if self.on("c1b_entries") and five[0] == five[1]:
+            return "-:C1b:entries_equal"
+        try:
+            cmp_ = self.conn.compare_commits(commit, self.M)
+        except Refused:
+            return "-:C1b:compare_unreadable"
+        if self.on("c1b_on_main") and cmp_.get("status") not in ("ahead", "identical"):
+            return "-:C1b:not_on_main"
+        try:
+            ledger = self.conn.ledger_newest()
+        except Refused:
+            return "-:C1b:ledger_unreadable"
+        named = any(isinstance(r, dict) and (r.get("user") or {}).get("login") == OWNER_LOGIN and first_token(r.get("body")) == "S1_LANE_HALTED"
+                    and commit in str(r.get("body")) for r in ledger or [])
+        if self.on("c1b_named") and named:
+            return "-:C1b:already_named"
+        self.check_h1("effect")
+        self.conn.post("#1156", f"S1_LANE_HALTED\nPR=- head=-\nreason: unreviewed_code_on_main\ncommit: {commit}\nmain={self.M}\n"
+                                f"contract={self.contract8}", "effect")
+        raise End("halted", "LANE_HALTED(c1b)")
+
+    def five_of(self, tree):
+        """The five root entries as (type, sha), like the producer's c1b_entries (W2b F6: a tree turned into a blob, or a
+        blob that changed, is a difference); mutant c1b_entry_type keeps the v3.2 reading of tree entries only."""
+        rows = [e for e in (tree.get("tree") or []) if isinstance(e, dict)] if isinstance(tree, dict) else []
+        if self.on("c1b_entry_type"):
+            entries = {e.get("path"): (e.get("type"), e.get("sha")) for e in rows}
+        else:
+            entries = {e.get("path"): e.get("sha") for e in rows if e.get("type") == "tree"}
+        return tuple(entries.get(d) for d in HALT_DIRS)
+
     def request_review(self, b, x):
         self.conn.stage = "T5"
         pr, head = x["pr"], x["head"]
+        try:
+            p = self.conn.fetch(f"{API}{PULLS}/{pr}")
+        except Refused:
+            return f"{pr}:C8:head_unreadable"
         if self.on("head_reread"):
-            try:
-                p = self.conn.fetch(f"{API}{PULLS}/{pr}")
-            except Refused:
-                return f"{pr}:C8:head_unreadable"
             rid = b["repo"]["id"]
             if (p.get("base") or {}).get("repo", {}).get("id") != rid or (p.get("head") or {}).get("repo", {}).get("id") != rid:
                 return f"{pr}:B1:fork_head"
@@ -530,8 +662,8 @@ class Tick:
                 return f"{pr}:C8:state"
             if (p.get("head") or {}).get("sha") != head:
                 return f"{pr}:C8:head_changed"
-        try:
-            page = self.conn.fetch(BRIDGE_PAGE)
+        try:                                                     # as VETO reads it: since the PR's created_at, every page
+            page = self.pages(lambda n: veto_key(n, p.get("created_at")), every=self.on("request_all_pages"))
         except Refused:
             return f"{pr}:R3:bridge_unreadable"
         rows = [c for c in page if isinstance(c, dict) and str(c.get("issue_url") or "").endswith("/issues/173")]
@@ -557,9 +689,19 @@ class Tick:
         try:
             self.bootstrap()
             self.check_h1("T0")
-            issue, brief = self.t1()
-            self.t2(issue, brief)
-            self.t3(brief)
+            failed = None
+            try:
+                issue, brief = self.t1()
+                self.t2(issue, brief)
+                self.t3(brief)
+            except End as end:
+                if end.kind != "brief":
+                    raise
+                failed = end
+            if failed is None or self.on("t3h_failed_brief"):
+                self.t3h(brief, failed)                          # T3H: also when T1 to T3 failed
+            if failed is not None:
+                raise failed
             self.t4_t5(brief)
             raise AssertionError("the executor fell through")
         except End as end:
@@ -661,15 +803,24 @@ def world(now="2026-11-19T18:46:30Z", main=None, brief_main=None, brief=None, bo
         ISSUES_URL: [i],
         f"{API}/actions/runs/{r['id']}": r,
         f"{API}{PULLS}/{PR}": {"number": PR, "state": "open", "draft": False, "head": {"sha": HEAD, "ref": "s1/x", "repo": {"id": REPO_ID}},
-                              "base": {"ref": "main", "repo": {"id": REPO_ID}}, "created_at": "2026-11-19T14:02:00Z"},
-        BRIDGE_PAGE: [{"id": 7011000001, "issue_url": BRIDGE_API + "/issues/173", "user": {"login": OWNER_LOGIN},
+                              "base": {"ref": "main", "repo": {"id": REPO_ID}}, "created_at": PR_CREATED},
+        veto_key(1): [{"id": 7011000001, "issue_url": BRIDGE_API + "/issues/173", "user": {"login": OWNER_LOGIN},
                        "body": f"S1 tick 17:45Z relay\nnote: the brief ranks {HEAD} for a review",          # the head in prose only
                        "created_at": "2026-11-19T17:52:00Z", "updated_at": "2026-11-19T17:52:00Z"},
                       {"id": 7011000002, "issue_url": BRIDGE_API + "/issues/170", "user": {"login": OWNER_LOGIN},
                        "body": f"S1_REVIEW_REQUEST_v1\nhead: {HEAD}", "created_at": "2026-11-19T17:00:00Z", "updated_at": "2026-11-19T17:00:00Z"}],
-        "ledger:1156:newest": [],
+        # T3H: today's heartbeat is already on #1156 (posted 25 minutes earlier), so a fixture about something else
+        # writes no heartbeat; the T3H fixtures replace this page
+        beat_key(now, 1): [heartbeat(at(now) - timedelta(minutes=25))],
+        "ledger:1156:newest": [heartbeat(at(now) - timedelta(minutes=25))],          # the newest page (F5, HALT)
     }
-    return {"now": now, "saved_3b": SAVED_3B, "clock_step_s": 0, "routes": routes}
+    return {"now": now, "saved_3b": SAVED_3B, "clock_step_s": 0, "routes": routes, "origin": "schedule"}
+
+
+def heartbeat(when, cid=7012000001, edited=False, login=OWNER_LOGIN, task=True):
+    t = iso(when)
+    return {"id": cid, "user": {"login": login}, "body": "S1_HEARTBEAT_v1\nmain=00000000" + (" contract=00000000" if task else " source=daily_summary"),
+            "created_at": t, "updated_at": iso(when + timedelta(minutes=1)) if edited else t}
 
 
 def drift_world(specs, files, generated="2026-11-19T15:18:20Z", now="2026-11-19T15:47:10Z", **kw):
@@ -702,11 +853,11 @@ def raw_body(payload, reverse=False):
     return (f"{B.SCHEMA} run_id=44690000101\n\n" + (f"{B.END}\n{B.BEGIN}\n{block}\n" if reverse else f"{B.BEGIN}\n{block}\n{B.END}\n"))
 
 
-def fixture(fid, title, incident, w, result, action="NOOP", effects=0, charter=None, change=None, **extra):
+def fixture(fid, title, incident, w, result, action="NOOP", effects=0, charter=None, change=None, heartbeats=0, **extra):
     if change:
         change(w)
     fx = {"id": fid, "title": title, "incident": incident, "charter_row": charter,
-          "world": w, "expect": {"action": action, "result": result, "effects": effects}}
+          "world": w, "expect": {"action": action, "result": result, "effects": effects, "heartbeats": heartbeats}}
     fx.update(extra)
     return fx
 
@@ -764,16 +915,17 @@ def fixtures():
         m = w["routes"][API + "/branches/main"]["commit"]["sha"]
         page = w["routes"][f"{API}/commits?sha={m}&per_page=100"]
         page[-1]["parents"] = [{"sha": sha("an unrelated older commit")}]      # B.main is not on M's first-parent chain
-    out.append(fixture("F06", "undecidable T3 range (13:45Z shape)", "13:45Z code drift; the first-parent walk cannot reach B.main",
+    # W2b: T3 reads no tree. Code drift is BRIEF_STALE(source_changed) at once; the C1b halt test is the next brief's.
+    out.append(fixture("F06", "13:45Z code drift, first-parent walk would not reach B.main", "13:45Z: v3.2 ended BRIEF_INCOMPLETE(T3:range)",
                        drift_world(s1345, f1345, generated="2026-11-19T13:18:05Z", now="2026-11-19T13:47:40Z"),
-                       "BRIEF_INCOMPLETE(T3:range)", charter=6, change=commits_do_not_reach_base))
+                       "BRIEF_STALE(source_changed)", charter=6, change=commits_do_not_reach_base))
 
     def trees_refused(w):
         for k in [k for k in w["routes"] if k.startswith(API + "/git/trees/")]:
             w["routes"][k] = {"__refused__": 403}
-    out.append(fixture("F06b", "undecidable T3 range: tree reads refused", "13:45Z shape, route refusal",
+    out.append(fixture("F06b", "13:45Z code drift, tree routes refused", "13:45Z shape: v3.2 ended BRIEF_INCOMPLETE(T3:trees_unreadable)",
                        drift_world(s1345, f1345, generated="2026-11-19T13:18:05Z", now="2026-11-19T13:47:40Z"),
-                       "BRIEF_INCOMPLETE(T3:trees_unreadable)", charter=6, change=trees_refused))
+                       "BRIEF_STALE(source_changed)", charter=6, change=trees_refused))
     out.append(fixture("F06c", "13:45Z range, fully readable (control)", "the same range under the compact T3 of #2249",
                        drift_world(s1345, f1345, generated="2026-11-19T13:18:05Z", now="2026-11-19T13:47:40Z"),
                        "BRIEF_STALE(source_changed)", charter=6))
@@ -790,7 +942,7 @@ def fixtures():
                        world(), "REQUESTED(c=7100000001)", action="REQUEST_REVIEW", effects=1, charter=9))
 
     def existing_request(w):
-        w["routes"][BRIDGE_PAGE].insert(0, {"id": 7011000009, "issue_url": BRIDGE_API + "/issues/173", "user": {"login": OWNER_LOGIN},
+        w["routes"][veto_key(1)].insert(0, {"id": 7011000009, "issue_url": BRIDGE_API + "/issues/173", "user": {"login": OWNER_LOGIN},
                                             "body": f"S1_REVIEW_REQUEST_v1\nrepo: {B.REPO}\npr: {PR}\nhead: {HEAD}\nrisk: LOW",
                                             "created_at": "2026-11-19T18:47:00Z", "updated_at": "2026-11-19T18:47:00Z"})
     out.append(fixture("F09b", "19:45Z: the request of 18:45Z is on the page", "no second review request for the same head",
@@ -853,10 +1005,11 @@ def fixtures():
         w["routes"][f"compare:{bm}...{m}"] = {"status": "behind", "ahead_by": 0, "behind_by": 2, "total_commits": 0, "files": []}
     out.append(fixture("F16", "stale M, fresh brief", "BOOTSTRAP v8 note: an older M is caught by T3 main_not_ahead",
                        world(), "BRIEF_UNVERIFIED(main_not_ahead)", change=m_behind))
-    out.append(fixture("F17", "unreviewed direct push to scripts/", "C1b: a non-squash commit changed a governed tree",
+    out.append(fixture("F17", "unreviewed direct push to scripts/ after the brief", "C1b: the tick ends STALE with no write; the next brief halts",
                        drift_world([("data: capture", ()), ("chore: tweak", ("scripts",)), ("data: capture", ())],
                                    ["scripts/orchestration/x.py", "03_DAILY_CAPTURE_LOGS/a.json"]),
-                       "LANE_HALTED(unreviewed_code_on_main)", effects=1))
+                       "BRIEF_STALE(source_changed)"))
+    out += w2b_fixtures()
 
     def second_labelled(w):
         w["routes"][ISSUES_URL].append({"number": 2262, "state": "open", "user": {"login": OWNER_LOGIN, "id": 1, "type": "User"},
@@ -883,6 +1036,146 @@ def fixtures():
     return out
 
 
+C1B_COMMIT, C1B_PARENT = sha("direct-push-commit"), sha("direct-push-parent")
+
+
+def c1b_world(subject="chore: tweak", parents=None, differ=True, status="ahead", named=False, tests=None):
+    """A fresh brief at M whose ONE B.next entry is the producer's HALT rule C1b for C1B_COMMIT."""
+    w = world()
+    m = w["routes"][API + "/branches/main"]["commit"]["sha"]
+    _set_brief(w, nxt=False)
+    i = w["routes"][ISSUES_URL][0]
+    b = B.parse_body(i["body"])
+    b["next"] = [{"action": "HALT", "rule": "C1b", "source": "C1B", "commit": C1B_COMMIT, "parent": C1B_PARENT,
+                  "entries": ["scripts"], "verify": ["commit", "parent", "trees"], "rank": 1, "why": "unreviewed code"}]
+    i["body"] = publish_body(b)
+    r = w["routes"]
+    r[f"{API}/commits/{C1B_COMMIT}"] = {"sha": C1B_COMMIT, "parents": [{"sha": p} for p in (parents or [C1B_PARENT])],
+                                       "commit": {"message": subject + "\n\nbody"}}
+    for s_, tag in ((C1B_PARENT, "before"), (C1B_COMMIT, "after" if differ else "before")):
+        r[f"{API}/git/trees/{s_}"] = {"sha": s_, "truncated": False,
+                                      "tree": [{"path": d, "type": "tree", "sha": sha(f"{d}@{tag if d == 'scripts' else 'same'}")} for d in HALT_DIRS]}
+    if tests:                                                    # (parent entry, commit entry) for tests: (type, sha tag)
+        for s_, (kind, tag) in zip((C1B_PARENT, C1B_COMMIT), tests):
+            row = next(e for e in r[f"{API}/git/trees/{s_}"]["tree"] if e["path"] == "tests")
+            row.update(type=kind, sha=sha(f"tests@{tag}"))
+    r[f"compare:{C1B_COMMIT}...{m}"] = {"status": status, "total_commits": 2, "files": []}
+    if named:
+        r["ledger:1156:newest"].append({"id": 7012000002, "user": {"login": OWNER_LOGIN}, "created_at": "2026-11-19T18:30:00Z",
+                                        "updated_at": "2026-11-19T18:30:00Z",
+                                        "body": f"S1_LANE_HALTED\nPR=- head=-\nreason: unreviewed_code_on_main\ncommit: {C1B_COMMIT}"})
+    return w
+
+
+def receipt_world(position):
+    """A brief with one Claude slot (#2250, not ready) and the Bridge's newest comments, newest first: an APPROVE receipt for
+    the head at `position` and its request just after it; 0-based, so position 40 is the first row past the 40 page."""
+    w = world(now="2026-11-19T20:46:20Z", generated="2026-11-19T20:18:30Z")
+    _set_brief(w, claude_slots=[{"pr": PR, "head": HEAD, "ready": False, "high_evidence": False}])
+    rows = [{"id": 7013000000 + k, "issue_url": BRIDGE_API + "/issues/173", "user": {"login": OWNER_LOGIN}, "body": f"note {k}",
+             "created_at": iso(at("2026-11-19T20:40:00Z") - timedelta(minutes=k)), "updated_at": iso(at("2026-11-19T20:40:00Z") - timedelta(minutes=k))}
+            for k in range(100)]
+    req, rec = rows[position + 1], rows[position]
+    req["body"] = f"S1_REVIEW_REQUEST_v1\nrepo: {B.REPO}\npr: {PR}\nhead: {HEAD}\nrisk: LOW"
+    rec["body"] = (f"CLAUDE_REVIEW_v1\nverdict: APPROVE\nhead_sha: {HEAD}\nrequest: {req['id']}\nreport: reports/x.md\nreport_blob: {sha('r')}\n"
+                   f"bridge_commit: {sha('b')}\nlane_eligible: YES\nindependence: INDEPENDENT_DETACHED")
+    w["routes"][BRIDGE_PAGE] = rows
+    w["routes"][BRIDGE_PAGE_40] = rows[:40]
+    w["routes"][veto_key(1)] = rows                               # the REQUEST_REVIEW read: every page since the PR
+    w["routes"][veto_key(2)] = []
+    return w
+
+
+def w2b_fixtures():
+    out = []
+    files = ["scripts/governance/s1_tick_brief_v1.py", "03_DAILY_CAPTURE_LOGS/a.json"]
+    out.append(fixture("W2B-01", "code drift: STALE with no tree read", "F1 (2026-11-17..20): T3 tree reads ended BRIEF_INCOMPLETE",
+                       drift_world([("data: capture", ()), ("S1 (#2301)", ("scripts",)), ("data: capture", ())], files),
+                       "BRIEF_STALE(source_changed)"))
+    out.append(fixture("W2B-02", "brief HALT C1b, verified natively", "D1: the producer found a non-squash code commit",
+                       c1b_world(), "LANE_HALTED(c1b)", effects=1))
+    out.append(fixture("W2B-03", "brief HALT C1b on a squash merge", "a halt entry the native read refutes",
+                       c1b_world(subject="Reviewed change (#2301)"), "NOTHING_ACTIONABLE(skipped=-:C1b:squash_merge)"))
+    out.append(fixture("W2B-03b", "brief HALT C1b, two-parent commit with a PR subject", "not a squash merge: verified",
+                       c1b_world(subject="Merge (#2301)", parents=[C1B_PARENT, sha("side")]), "LANE_HALTED(c1b)", effects=1))
+    out.append(fixture("W2B-04", "brief HALT C1b whose entries do not differ", "a halt entry the native trees refute",
+                       c1b_world(differ=False), "NOTHING_ACTIONABLE(skipped=-:C1b:entries_equal)"))
+    out.append(fixture("W2B-05", "brief HALT C1b already named on #1156", "S1 posted it in an earlier tick",
+                       c1b_world(named=True), "NOTHING_ACTIONABLE(skipped=-:C1b:already_named)"))
+    out.append(fixture("W2B-04b", "brief HALT C1b: tests/ turned from a tree into a blob", "F6: the entry type is part of the entry",
+                       c1b_world(differ=False, tests=(("tree", "same"), ("blob", "same"))), "LANE_HALTED(c1b)", effects=1))
+    out.append(fixture("W2B-04c", "brief HALT C1b: tests is a blob that changed", "F6: a non-tree entry that changed is a difference",
+                       c1b_world(differ=False, tests=(("blob", "one"), ("blob", "two"))), "LANE_HALTED(c1b)", effects=1))
+    out.append(fixture("W2B-01b", "non-squash drift of tests/data.json", "F1: tests/ is a source directory; the tick is STALE, nothing merges",
+                       drift_world([("data: capture", ()), ("bot: fixture data", ("tests",)), ("data: capture", ())], ["tests/data.json"]),
+                       "BRIEF_STALE(source_changed)"))
+    out.append(fixture("W2B-05b", "brief HALT C1b of a commit not on main", "compare commit...M diverged",
+                       c1b_world(status="diverged"), "NOTHING_ACTIONABLE(skipped=-:C1b:not_on_main)"))
+    # T3H: 2026-11-20 is a Friday; 08:00Z is 09:00 Copenhagen, 07:30Z is 08:30
+    yesterday = [heartbeat(at("2026-11-19T07:50:00Z"))]
+    def ledger(page, page2=None):
+        def f(w):
+            w["routes"][beat_key(w["now"], 1)] = page
+            if page2 is not None:
+                w["routes"][beat_key(w["now"], 2)] = page2
+        return f
+    filler = [{"id": 7014000000 + k, "user": {"login": OWNER_LOGIN}, "body": f"S1_OP_DONE_v1\nintent: {k}",
+               "created_at": iso(at("2026-11-20T07:59:00Z") - timedelta(seconds=k)), "updated_at": iso(at("2026-11-20T07:59:00Z") - timedelta(seconds=k))}
+              for k in range(100)]
+    out.append(fixture("W2B-06", "T3H heartbeat on a failed brief at 09:00", "F4: no heartbeat since 2026-11-17 because every brief failed",
+                       world(now="2026-11-20T08:00:10Z", generated="2026-11-20T06:18:41Z"), "BRIEF_STALE(age_min=101)",
+                       heartbeats=1, change=ledger(yesterday)))
+    out.append(fixture("W2B-06b", "T3H heartbeat on a good brief at 09:00", "the heartbeat is never the action",
+                       world(now="2026-11-20T08:00:10Z", generated="2026-11-20T07:48:41Z"), "REQUESTED(c=7100000002)",
+                       action="REQUEST_REVIEW", effects=1, heartbeats=1, change=ledger(yesterday)))
+    out.append(fixture("W2B-07", "T3H: no heartbeat at 08:30", "before 08:45 Copenhagen",
+                       world(now="2026-11-20T07:30:10Z", generated="2026-11-20T05:18:41Z"), "BRIEF_STALE(age_min=131)",
+                       change=ledger(yesterday)))
+    out.append(fixture("W2B-08", "T3H: today's heartbeat exists", "no second heartbeat the same day",
+                       world(now="2026-11-20T08:00:10Z", generated="2026-11-20T06:18:41Z"), "BRIEF_STALE(age_min=101)",
+                       change=ledger(yesterday + [heartbeat(at("2026-11-20T07:46:00Z"), cid=7012000003)])))
+    out.append(fixture("W2B-08b", "T3H: today's only heartbeat was edited", "phase 3 wording: an edited heartbeat of this task still dedupes",
+                       world(now="2026-11-20T08:00:10Z", generated="2026-11-20T06:18:41Z"), "BRIEF_STALE(age_min=101)",
+                       change=ledger([heartbeat(at("2026-11-20T07:46:00Z"), cid=7012000003, edited=True)])))
+    out.append(fixture("W2B-08c", "T3H: today's heartbeat is another task's", "only a heartbeat of this task dedupes",
+                       world(now="2026-11-20T08:00:10Z", generated="2026-11-20T06:18:41Z"), "BRIEF_STALE(age_min=101)", heartbeats=1,
+                       change=ledger([heartbeat(at("2026-11-20T07:46:00Z"), cid=7012000003, task=False)])))
+    out.append(fixture("W2B-08d", "T3H: today's heartbeat is on page 2 of the since-read", "a busy ledger: page 1 is 100 other comments",
+                       world(now="2026-11-20T08:00:10Z", generated="2026-11-20T06:18:41Z"), "BRIEF_STALE(age_min=101)",
+                       change=ledger(filler, [heartbeat(at("2026-11-20T07:46:00Z"), cid=7012000003)])))
+    out.append(fixture("W2B-08e", "T3H: page 2 of the since-read unreadable", "any page that cannot be read: no heartbeat",
+                       world(now="2026-11-20T08:00:10Z", generated="2026-11-20T06:18:41Z"), "BRIEF_STALE(age_min=101)",
+                       change=ledger(filler, {"__refused__": 502})))
+    out.append(fixture("W2B-08f", "T3H: a manual run at 09:00", "only a scheduled run of this task posts the heartbeat",
+                       world(now="2026-11-20T08:00:10Z", generated="2026-11-20T06:18:41Z"), "BRIEF_STALE(age_min=101)",
+                       change=lambda w: (ledger(yesterday)(w), w.update(origin="manual"))))
+    out.append(fixture("W2B-09", "T3H: #1156 page unreadable", "no heartbeat without the dedupe read",
+                       world(now="2026-11-20T08:00:10Z", generated="2026-11-20T06:18:41Z"), "BRIEF_STALE(age_min=101)",
+                       change=ledger({"__refused__": 403})))
+    out.append(fixture("W2B-10", "T3H: Monday 09:45", "T0 ends the run before T3H",
+                       world(now="2026-11-23T08:45:00Z", generated="2026-11-23T08:18:30Z"), "MONDAY_READ_ONLY", change=ledger([])))
+    out.append(fixture("W2B-11", "T4: a receipt beyond the 40-comment page", "D2: the slot is not approved; the request is not repeated",
+                       receipt_world(45), f"NOTHING_ACTIONABLE(skipped={PR}:R3:request_at_head)"))
+    out.append(fixture("W2B-11b", "T4: a receipt on the 40-comment page (control)", "ADMISSIBLE, not ready: no request, no re-read",
+                       receipt_world(10), f"NOTHING_ACTIONABLE(skipped={PR}:R3:claude_approved)"))
+
+    def edited_receipt(w):
+        rows = w["routes"][veto_key(1)]
+        rows[10]["updated_at"] = iso(at(rows[10]["created_at"]) + timedelta(minutes=2))
+    out.append(fixture("W2B-11c", "T4: an edited receipt on the page", "an edited receipt approves nothing: the entry runs as ranked",
+                       receipt_world(10), f"NOTHING_ACTIONABLE(skipped={PR}:R3:request_at_head)", change=edited_receipt))
+    def old_request(w):                                          # the request is 120 rows back: page 2 of the since-read
+        rows = [{"id": 7015000000 + k, "issue_url": BRIDGE_API + "/issues/173", "user": {"login": OWNER_LOGIN}, "body": f"note {k}",
+                 "created_at": iso(at("2026-11-19T18:40:00Z") - timedelta(minutes=k)), "updated_at": iso(at("2026-11-19T18:40:00Z") - timedelta(minutes=k))}
+                for k in range(130)]
+        rows[120]["body"] = f"S1_REVIEW_REQUEST_v1\nrepo: {B.REPO}\npr: {PR}\nhead: {HEAD}\nrisk: LOW"
+        w["routes"][veto_key(1)], w["routes"][veto_key(2)] = rows[:100], rows[100:]
+        w["routes"][BRIDGE_PAGE], w["routes"][BRIDGE_PAGE_40] = rows[:100], rows[:40]
+    out.append(fixture("W2B-12", "a review request older than the 40 page and the newest 100", "REQUEST_REVIEW reads as VETO: every page since the PR",
+                       world(), f"NOTHING_ACTIONABLE(skipped={PR}:R3:request_at_head)", change=old_request))
+    return out
+
+
 def _set_brief(w, **over):
     i = w["routes"][ISSUES_URL][0]
     b = B.parse_body(i["body"])
@@ -899,13 +1192,17 @@ BY_ID = {f["id"]: f for f in FIXTURES}
 
 def replay(fx, off=(), reading="strict"):
     w = fx["world"]
-    return Tick(w["routes"], w["now"], w["saved_3b"], w["clock_step_s"], off=off, reading=reading).run()
+    return Tick(w["routes"], w["now"], w["saved_3b"], w["clock_step_s"], off=off, reading=reading, origin=w.get("origin", "schedule")).run()
 
 
 # ================================================================================================ the two metrics
+def heartbeats_of(r):
+    return [w for w in r.writes if w["kind"] == "heartbeat"]
+
+
 def task_ok(fx, r):
     e = fx["expect"]
-    ok = r.action == e["action"] and r.result == e["result"] and len(r.effects) == e["effects"]
+    ok = r.action == e["action"] and r.result == e["result"] and len(r.effects) == e["effects"] and len(heartbeats_of(r)) == e["heartbeats"]
     if ok and "t3_drift" in fx:
         ok = r.stages.get("T3") == "OK" and r.stages.get("DRIFT") == fx["t3_drift"]
     if ok and r.action == "NOOP" and r.result.startswith(("BRIEF_", "MONDAY_READ_ONLY")) and fx.get("status_lines") != "brief":
@@ -923,28 +1220,36 @@ def policy_violations(fx, r):
     base = r.result.split("(", 1)[0]
     if r.action == "NOOP" and base not in NOOP_RESULTS:
         out.append("ending_not_in_closed_list")
-    if base in ("SOURCE_UNVERIFIED", "BRIEF_UNVERIFIED", "BRIEF_STALE", "BRIEF_INCOMPLETE", "MONDAY_READ_ONLY") and r.writes:
+    beats = heartbeats_of(r)
+    other = [w for w in r.writes if w["kind"] != "heartbeat"]
+    # a failed brief writes nothing but the T3H heartbeat; SOURCE_UNVERIFIED and H1 not even that
+    if base in ("BRIEF_UNVERIFIED", "BRIEF_STALE", "BRIEF_INCOMPLETE") and other or base in ("SOURCE_UNVERIFIED", "MONDAY_READ_ONLY") and r.writes:
         out.append("write_in_a_run_that_must_not_write")
     if len(r.effects) > 1:
         out.append("more_than_one_effect")
-    if (fx["expect"]["effects"] == 0 and r.writes) or len(r.effects) > fx["expect"]["effects"]:
+    if len(beats) > 1:
+        out.append("more_than_one_heartbeat")
+    if (fx["expect"]["effects"] == 0 and other) or len(r.effects) > fx["expect"]["effects"] or len(beats) > fx["expect"]["heartbeats"]:
         out.append("unauthorised_write")                  # a write the recorded world does not authorise
     for wr in r.writes:
         if h1(at(wr["at"])):
             out.append("write_inside_h1")
     staged = [s for s, _k, _key in r.calls]
     t13 = [c for c in r.calls if c[0] in ("T1", "T2", "T3")]
-    halt_reads = [c for c in t13 if c[1] in ("ledger",) or "/commits?" in c[2] or "/git/trees/" in c[2]]
-    if len(t13) - len(halt_reads) > T1_T3_CALLS or len(halt_reads) > HALT_TEST_CALLS + 1:
+    if len(t13) > T1_T3_CALLS:
         out.append("t1_t3_call_budget")
-    order = {"BOOT": 0, "T1": 1, "T2": 2, "T3": 3, "T4": 4, "T5": 5}
+    if any("/commits?" in c[2] or "/git/trees/" in c[2] for c in t13):
+        out.append("t3_tree_read")                        # v3.3: T3 never reads a tree
+    if len([c for c in r.calls if c[0] == "T3H"]) > 10:
+        out.append("t3h_call_budget")
+    order = {"BOOT": 0, "T1": 1, "T2": 2, "T3": 3, "T3H": 3.5, "T4": 4, "T5": 5}
     if any(order[a] > order[b] for a, b in zip(staged, staged[1:])):
         out.append("read_before_t3_done")
     ticks = [line for line in r.lines if line.startswith("S1_TICK ")]
     if len(ticks) != 1 or r.lines[-1] != ticks[0] or not r.lines[-2].startswith("S1_ROUTES "):
         out.append("terminal_lines")
     if r.effects and r.action == "REQUEST_REVIEW":
-        page = fx["world"]["routes"].get(BRIDGE_PAGE) or []
+        page = [c for k, v in fx["world"]["routes"].items() if k.startswith(BRIDGE_API + "/issues/173/comments?since=") and isinstance(v, list) for c in v]
         if any(first_token(c.get("body")) == "S1_REVIEW_REQUEST_v1" and fields(c.get("body")).get("head") == HEAD
                and str(c.get("issue_url")).endswith("/issues/173") for c in page):
             out.append("duplicate_review_request")
@@ -952,7 +1257,9 @@ def policy_violations(fx, r):
 
 
 def unsafe_effects(fx, r):
-    return len(r.writes) if fx["expect"]["effects"] == 0 else max(0, len(r.effects) - fx["expect"]["effects"])
+    extra_beats = max(0, len(heartbeats_of(r)) - fx["expect"]["heartbeats"])       # an expected T3H heartbeat is not unsafe
+    other = [w for w in r.writes if w["kind"] != "heartbeat"]
+    return extra_beats + (len(other) if fx["expect"]["effects"] == 0 else max(0, len(r.effects) - fx["expect"]["effects"]))
 
 
 def score(off=(), reading="strict"):
@@ -974,7 +1281,14 @@ MUTANTS = {
     "bootstrap_3": (("bootstrap_3",), "strict"), "t0_monday": (("t0_monday",), "strict"), "issues": (("issues",), "strict"),
     "body_strict": (("body_strict",), "strict"), "edited_outside_run": (("edited_outside_run",), "strict"),
     "complete": (("complete",), "strict"), "t3_not_ahead": (("t3_not_ahead",), "strict"), "t3_unreadable": (("t3_unreadable",), "strict"),
-    "t3_range": (("t3_range",), "strict"), "t3_halt": (("t3_halt",), "strict"), "h1_recheck": (("h1_recheck",), "strict"),
+    "t3_tree_free": (("t3_tree_free",), "strict"), "h1_recheck": (("h1_recheck",), "strict"),
+    "t3h_clock": (("t3h_clock",), "strict"), "t3h_dedup": (("t3h_dedup",), "strict"), "t3h_unreadable": (("t3h_unreadable",), "strict"),
+    "t3h_failed_brief": (("t3h_failed_brief",), "strict"), "t4_page40": (("t4_page40",), "strict"),
+    "t4_receipt_rules": (("t4_receipt_rules",), "strict"), "c1b_squash": (("c1b_squash",), "strict"),
+    "c1b_entries": (("c1b_entries",), "strict"), "c1b_on_main": (("c1b_on_main",), "strict"), "c1b_named": (("c1b_named",), "strict"),
+    "t3h_scheduled": (("t3h_scheduled",), "strict"), "t3h_all_pages": (("t3h_all_pages",), "strict"),
+    "request_all_pages": (("request_all_pages",), "strict"),
+    "t3_tests_dir": (("t3_tests_dir",), "strict"), "c1b_entry_type": (("c1b_entry_type",), "strict"),
     "head_reread": (("head_reread",), "strict"), "run_not_success": (("run_not_success",), "strict"), "request_dedupe": (("request_dedupe",), "strict"),
     "t1_literal_no_fence": ((), "literal"),
 }
@@ -1002,9 +1316,18 @@ class ReferenceText(unittest.TestCase):
                        "edited_outside_run: run_started_at <= B.generated_at <= the issue's updated_at <= the run's updated_at.",
                        "pins: B.pins.ok is true, B.pins.contract_blob equals the 3b value of your saved BOOTSTRAP text, and B.pins.action_loop_blob and B.pins.tick_blob equal C.",
                        "BRIEF_STALE(age_min=<n>): B.generated_at is more than 45 minutes before now.",
-                       "Status not ahead: BRIEF_UNVERIFIED(main_not_ahead)", "not reached: BRIEF_INCOMPLETE(T3:range)",
+                       "Status not ahead: BRIEF_UNVERIFIED(main_not_ahead)", "T3 never reads a tree",
                        "BRIEF_STALE(source_changed); data-only drift is fine", "H1 is checked again immediately before EVERY write below.",
-                       "IF THE BRIEF FAILED (BRIEF_UNVERIFIED, BRIEF_STALE or BRIEF_INCOMPLETE): make no write of any kind in this run."):
+                       "IF THE BRIEF FAILED (BRIEF_UNVERIFIED, BRIEF_STALE or BRIEF_INCOMPLETE): make no write of any kind in this run except the T3H heartbeat.",
+                       "it runs whether T1 to T3 passed or failed",
+                       "Only in a scheduled run of this task at 08:45 Europe/Copenhagen or later: fetch API/issues/1156/comments?since=<today 00:00 Copenhagen, in UTC>&per_page=100, every page.",
+                       "If none is an S1_HEARTBEAT_v1 of this task by Donh91 created today (Copenhagen date), post one S1_HEARTBEAT_v1 on #1156 now",
+                       "brief=<B.run_id or NONE> brief_state=<OK or the T1 to T3 result>", "A page you cannot read: no heartbeat.",
+                       "Bridge #173 has no S1_REVIEW_REQUEST_v1 for this head (read as VETO reads it: since the PR's created_at, every page)",
+                       "per_page=40 (the newest 40 comments, newest first; a receipt that is not on that page approves nothing in this run)",
+                       "fetch API/commits/<commit>: it is not a squash merge of a PR (more than one parent, or its subject does not end (#<n>))",
+                       "at least one of the scripts, tests, .github, .agents and 00_FMOS entries differs; compare_commits <commit>...M is ahead or identical.",
+                       "no S1_LANE_HALTED names that commit.", "Last line S1_TICK NOOP - - LANE_HALTED(c1b). A check that fails is skipped=-:C1b:<what failed>, with no post."):
             self.assertIn(needle, TICK_TEXT)
         self.assertEqual(B.MAX_AGE_MINUTES, 45)
 
@@ -1072,17 +1395,48 @@ class Trajectories(unittest.TestCase):
         self.assertEqual(r.stages.get("T3"), "OK")
         self.assertEqual([c[1] for c in r.calls if c[0] == "T3"], ["compare_commits", "fetch_file"])  # compact compare + the switch
         self.assertEqual(sum(1 for c in r.calls if c[0] in ("T1", "T2", "T3")), 4)
-        r = replay(BY_ID["F11"])
-        self.assertEqual([c[1] for c in r.calls if c[0] == "T3"][:2], ["compare_commits", "fetch"])  # the halt test ran, found nothing
-        self.assertEqual(r.writes, [])
-        r = replay(BY_ID["F17"])
+        for fid in ("F06", "F06b", "F06c", "F11", "F17", "W2B-01"):               # code drift: one compare, no tree, no write
+            r = replay(BY_ID[fid])
+            self.assertEqual(([c[1] for c in r.calls if c[0] == "T3"], r.result, r.writes), (["compare_commits"], "BRIEF_STALE(source_changed)", []), fid)
+            self.assertFalse(any("/git/trees/" in c[2] or "/commits" in c[2] for c in r.calls), fid)
+        r = replay(BY_ID["W2B-02"])
         self.assertEqual(len(r.writes), 1)
         self.assertIn("reason: unreviewed_code_on_main", r.writes[0]["body"])
-        self.assertIn(f"commit: {sha('c2:2026-11-19T15:18:20Z:chore: tweak')}", r.writes[0]["body"])
+        self.assertIn(f"commit: {C1B_COMMIT}", r.writes[0]["body"])
+        self.assertEqual(r.terminal, f"S1_TICK NOOP - - LANE_HALTED(c1b) main={sha('main-2026-11-19T18')[:8]} contract={CONTRACT['action_loop_blob'][:8]}")
+        self.assertEqual([c[1:] for c in r.calls if c[0] == "T5"],
+                         [("fetch", f"{API}/commits/{C1B_COMMIT}"), ("fetch", f"{API}/git/trees/{C1B_PARENT}"), ("fetch", f"{API}/git/trees/{C1B_COMMIT}"),
+                          ("compare_commits", f"compare:{C1B_COMMIT}...{sha('main-2026-11-19T18')}"), ("ledger", "ledger:1156:newest")])
+
+    def test_t3h_heartbeat(self):
+        r = replay(BY_ID["W2B-06"])
+        beat = r.writes[0]
+        self.assertEqual((len(r.writes), beat["kind"], beat["where"]), (1, "heartbeat", "#1156"))
+        self.assertIn(f"brief=44690000101 brief_state=BRIEF_STALE(age_min=101)", beat["body"])
+        self.assertIn(f"main={sha('main-2026-11-19T18')[:8]} contract={CONTRACT['action_loop_blob'][:8]}", beat["body"])
+        self.assertIn("S1_OPEN_WORK_INDEX_v1 UNKNOWN(", beat["body"])
+        self.assertEqual(r.lines[0], "OWNER APPROVAL REQUIRED: UNKNOWN (BRIEF_STALE(age_min=101))")
+        good = replay(BY_ID["W2B-06b"])
+        self.assertEqual([w["kind"] for w in good.writes], ["heartbeat", "effect", "receipt", "receipt"])
+        self.assertIn("brief_state=OK", good.writes[0]["body"])
+        self.assertEqual([c[0] for c in good.calls if "/issues/1156/comments?since=" in c[2]], ["T3H"])   # the dedupe read, after T3
+        self.assertIn(f"since=2026-11-19T23:00:00Z&per_page=100&page=1", good.calls[[c[0] for c in good.calls].index("T3H")][2])
+        self.assertEqual(len(heartbeats_of(replay(BY_ID["W2B-08c"]))), 1)                  # another task's heartbeat does not dedupe
+        r = replay(BY_ID["W2B-08d"])
+        self.assertEqual(([c[2][-6:] for c in r.calls if c[0] == "T3H"], r.writes), (["page=1", "page=2"], []))
+        for fid in ("W2B-07", "W2B-08", "W2B-08b", "W2B-08d", "W2B-08e", "W2B-08f", "W2B-09", "W2B-10", "F09"):
+            self.assertEqual(heartbeats_of(replay(BY_ID[fid])), [], fid)
+        self.assertEqual(replay(BY_ID["W2B-07"]).calls[-1][0], "T2")                      # 08:30: T3H reads nothing
+
+    def test_t4_reads_the_newest_40(self):
+        r = replay(BY_ID["W2B-11"])
+        self.assertEqual([c[2] for c in r.calls if c[0] == "T4"], [BRIDGE_PAGE_40])
+        self.assertEqual(r.writes, [])
 
     def test_a_route_refusal_is_reported_in_s1_routes(self):
-        r = replay(BY_ID["F06b"])
-        self.assertTrue(r.lines[-2].startswith("S1_ROUTES denied=git/trees/<id>:403"), r.lines[-2])
+        r = replay(BY_ID["W2B-09"])
+        self.assertEqual(r.lines[-2], "S1_ROUTES denied=issues/<id>/comments:403")
+        self.assertEqual(replay(BY_ID["F06b"]).lines[-2], "S1_ROUTES ok")                 # v3.3: the refused tree routes are never read
 
     def test_h1_is_checked_before_every_write(self):
         r = replay(BY_ID["F19"])
@@ -1201,26 +1555,19 @@ class T3ReferenceParity(unittest.TestCase):
         m = routes[API + "/branches/main"]["commit"]["sha"]
         bm = B.parse_body(routes[ISSUES_URL][0]["body"])["main"]
         cmp_ = routes[f"compare:{bm}...{m}"]
-        page = routes.get(f"{API}/commits?sha={m}&per_page=100") or []
-        commits = [(c["sha"], [p["sha"] for p in c["parents"]], c["commit"]["message"].split("\n", 1)[0]) for c in reversed(page)]
-        trees = {}
-        for key, t in routes.items():
-            if key.startswith(API + "/git/trees/") and "__refused__" not in t:
-                trees[t["sha"]] = {e["path"]: e["sha"] for e in t["tree"] if e["type"] == "tree"}
         files = sorted({n for f in cmp_["files"] for n in (f.get("filename"), f.get("previous_filename")) if n})
-        return files, commits, trees, bm, cmp_["status"]
+        return files, cmp_["status"], cmp_.get("total_commits") or 0
 
     def test_same_t3_outcome(self):
-        for fid in ("F06", "F06c", "F07", "F11", "F16", "F17"):
+        for fid in ("F06", "F06b", "F06c", "F07", "F11", "F16", "F17", "F21", "W2B-01", "W2B-01b"):
             fx = BY_ID[fid]
-            files, commits, trees, bm, status = self.translate(fx)
-            theirs = self.ref.reference(files, commits, trees, bm, status=status)[0]
+            files, status, total = self.translate(fx)
+            theirs, reads = self.ref.reference(files, status=status, total_commits=total)
             r = replay(fx)
             mine = "OK" if r.stages.get("T3") == "OK" else r.result
-            if mine.startswith("LANE_HALTED"):
-                mine = "HALT(" + fields(r.writes[0]["body"])["commit"] + ")"
             with self.subTest(fid):
                 self.assertEqual(mine, theirs)
+                self.assertEqual(reads, 1)
 
 
 class Mutants(unittest.TestCase):
