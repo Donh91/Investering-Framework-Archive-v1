@@ -1,7 +1,7 @@
 # H06 Astra Ultimate Source Bundle (public, no tools)
 
 ## Observation contract
-Source snapshot: Archive main c6f046c69c7a6991b5f17ce5d34fe5fa5301d238, branch research/optimal-five-task-runtime-astra-20261117 with H06 source preparation (review only). Sources are public-safe copies from inspected GitHub files. Some are excerpts; original files must be reread for decisions not covered. None are current authorizations or independent test receipts.
+Source snapshot: Archive main c6f046c69c7a6991b5f17ce5d34fe5fa5301d238, branch research/optimal-five-task-runtime-astra-20261117 with H06 source preparation (review only). Sources are selected public-safe snapshots or EXCERPTS from inspected GitHub files, with redaction of 40-hex address and secret-shaped strings as required by the existing native Astra privacy admission. The source Git blob IDs identify ORIGINAL files; the copied snippets are NOT byte-identical to the original files if redactions apply. Original files must be reread before source-specific decisions. None are current authorizations or independent test receipts.
 Native ChatGPT task metadata observed 2026-11-21; raw saved prompts NOT copied:
 S1 id 6ae5fd466b48819187abc224ec0f1c5f, hourly :45, 2747 characters, BOOTSTRAP v8, sole supervisor. 
 S2 id 6a5515c4a5448191b3f6607fc568927f, Monday 10:00 Europe/Copenhagen, 11081 characters, read-only Master Monday+CN.
@@ -1661,7 +1661,7 @@ Neither 77 buyers nor 10 labelled profiles establishes 77 or 10 independent econ
 
 The supplied preregistration identifies:
 
-`0x53a42d2d0fdd60bf8f833fb94841349095a74024`
+`[REDACTED_PUBLIC_HEX_ADDRESS]`
 
 as an **executor/strategy contract**, not a smart-money EOA. The alleged 53 episodes and 33 target wallets remain external claims. [S3]
 
