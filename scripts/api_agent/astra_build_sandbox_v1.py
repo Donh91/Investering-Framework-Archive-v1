@@ -115,7 +115,7 @@ def _copy_public_tree(source: Path, target: Path):
         tracked_raw = subprocess.check_output(
             ["git", "-C", str(source), "ls-files", "--cached", "-z"],
             timeout=30, env={"PATH": "/usr/bin:/bin"})
-        tracked = set(x.decode("utf-8") for x in tracked_raw.split(b"\\x00") if x)
+        tracked = set(x.decode("utf-8") for x in tracked_raw.split(b"\x00") if x)
     except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
         raise SandboxBlocked("SOURCE_INDEX_UNVERIFIED") from exc
     require(bool(tracked), "SOURCE_INDEX_EMPTY")
