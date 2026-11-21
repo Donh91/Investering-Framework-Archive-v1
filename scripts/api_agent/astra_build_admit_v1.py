@@ -38,11 +38,13 @@ DENY_PREFIXES = (".github/", ".agents/", "00_FMOS/", "00_ARCHIVE_CONTROL/",
                  "vault/", "private/", "config/private/", "data/private/",
                  "08_SOURCE_MATERIAL/private/", "06_RESEARCH_LAB/astra_missions/",
                  "06_RESEARCH_LAB/astra_program_20261116/results/")
-DENY_EXACT = frozenset(("AGENTS.md", ".env", ".npmrc", ".pypirc",
+DENY_EXACT = frozenset(("AGENTS.md", "CLAUDE.md", ".env", ".npmrc", ".pypirc",
                        "scripts/governance/s1_runtime_contract_v1.py",
                        "scripts/research/owner_astra_mission_v1.py"))
 DENY_SEGMENTS = frozenset((".github", ".agents", "secrets", "private", "vault", "round3",
-                          "round_3", "credentials", "__pycache__", ".git"))
+                          "round_3", "credentials", "__pycache__", ".git", "data"))
+DENY_FILENAMES = frozenset(("agents.md", "claude.md", ".env", ".npmrc", ".pypirc"))
+DENY_PATH_SUBSTRINGS = ("round3", "round_3", "vault", "secret", "credential")
 SCOPE_ALLOW = {
     "M1": (
         "scripts/learning/**", "scripts/cycle_navigator/**",
@@ -113,8 +115,11 @@ def safe_path(path: str) -> str:
             "PATH_TRAVERSAL")
     require(not path.startswith("/") and "\\" not in path and "//" not in path,
             "PATH_TRAVERSAL")
+    lowered = path.lower()
     require(path not in DENY_EXACT and not path.startswith(DENY_PREFIXES)
-            and not (set(x.lower() for x in parts) & DENY_SEGMENTS),
+            and parts[-1].lower() not in DENY_FILENAMES
+            and not (set(x.lower() for x in parts) & DENY_SEGMENTS)
+            and not any(term in lowered for term in DENY_PATH_SUBSTRINGS),
             "PATH_PROTECTED")
     require(path.endswith(TEXT_SUFFIXES), "PATH_NOT_TEXT")
     return path
@@ -207,9 +212,13 @@ def admit(raw: bytes, scope: dict) -> dict:
         require((action == "create" and before is None)
                 or (action == "modify" and before is not None),
                 "ACTION_PREIMAGE_MISMATCH")
+        if path.startswith("scripts/governance/s1_closure_"):
+            require(path.count("/") == 2 and action == "create",
+                    "M3_CLOSURE_CREATE_ONLY")
         content = row["content"]
         require(isinstance(content, str) and bool(content.strip())
-                and all(ch not in content for ch in ("\x00", "\r", "\x1b")),
+                and not any(((ord(ch) < 32 and ch not in ("\n", "\t"))
+                             or ord(ch) == 127) for ch in content),
                 "CONTENT_NOT_TEXT")
         try:
             data = content.encode("utf-8", errors="strict")
