@@ -68,13 +68,13 @@ For historical comparisons the *actual snapshot captured before the modeled pred
 
 All hypotheses use independently eligible, pre-specified cohorts, family grouping for overlapping events, walk-forward train/test splitting with event embargo, no post-hoc threshold tuning, uncertainty and missing-data disclosure. Zero results until original owner authorizes a legal dataset and stage.
 
-**H0: Clock-only/calendar null.** At 08:00 UTC, after matching weekday, hour, baseline volatility, trend, asset, era, US-session overlap and major scheduled catalysts, expiry dates offer no incremental BTC/ETH direction, reversal or realized-volatility information. Simple placebo: 08:00 UTC on non-expiry days and equivalent Fridays. Do not mix US Friday expiration with Deribit 08:00 UTC.
+**H0: Clock/calendar/expiry-tier null (Codex P2 correction).** Deribit BTC/ETH options expire **EVERY DAY at 08:00 UTC**; an '08:00 non-expiry day' control is nonexistent and forbidden. Higher-timeframe listings replace overlapping daily contracts on their expiration date, so do not double-count daily+weekly+monthly+quarterly instruments. The primary *valid* contrast is larger **weekly, monthly and quarterly expiry cohorts** against **ordinary daily-expiry** cohorts at the same 08:00 UTC clock, controlling for weekday, realized volatility, trend, US hours and macro catalysts. Friday-weekly vs other daily comparisons confound weekday and tenor and are descriptive unless individually controlled. For monthly vs weekly, prefer **last-Friday monthly/quarterly** against **other-Friday weekly-only** cohorts; use within-Friday predeclared price-only clock baselines. On all days at 08:00 UTC the daily settlement mechanism itself is active; never claim an untreated settlement clock. Record actual tier from pre-existing instrument schedule (not from post-event price), and use **actual pre-event expiring OI/notional** only when legally observed at first-known times. If matched eligible controls are absent, the estimand is `NOT_IDENTIFIABLE`, not zero effect. Do not mix US Friday equity expiration with Deribit 08:00 UTC.
 
 **H1: Expiry intraday reversal.** On legally observed Deribit BTC/ETH expiry events with pre-event feature freeze, compare signs of pre-window [-120,-35] min and post [+5,+65] min log returns, with supporting windows 15/30/120 min and alternative nonoverlapping definitions predeclared. A reversal is opposing *nonzero* signs; exclude zero/flat, censored or unavailable separately. Control for diurnal patterns and prior trend. Event microstructure window [-30,0] min is separately described, not leaked as a predictive feature before its freeze.
 
 **H2: Conditional ATM concentration and gamma proxy.** Test whether pre-registered ATM OI concentration / strike distribution adds lift conditional on liquidity, realized volatility, skew and momentum. Report gamma sign as `UNKNOWN` without actual signed dealer-position data; unsigned GEX proxy is allowed only in a distinctly named non-causal exploratory sensitivity, never called net dealer gamma. Cboe-like dealer feedback is a hypothesis, not a demonstrated identification.
 
-**H3: Post-expiry volatility.** Compare 0-1h, 1-6h and 6-12h realized variance with identical UTC/hour matched non-expiry controls; report signed price outcomes separately from absolute returns, to avoid falsely converting 'reversal' into 'more volatility'. Use realized volatility benchmarks, including HAR/lagged RV and time-of-day seasonal baseline, not a naive zero predictor.
+**H3: Incremental post-expiry volatility.** Compare 0-1h, 1-6h and 6-12h realized variance of **higher-tier vs ordinary daily Deribit expiry cohorts**, all at 08:00 UTC. Use monthly-last-Friday versus matched Friday-weekly-only cohorts as the first feasible within-weekday comparison; assess quantitative expiring-size exposure only when PIT-available. Do NOT use a nonexistent non-expiry control. Contrast each tier with clock/weekday/volatility-matched baseline predictions (HAR, past RV, seasonal and trend) on same exact issued timestamps. Distinguish signed reversal, absolute returns and realized variance rather than equating these outcomes.
 
 **H4: US equity OPEX-to-crypto transmission.** Distinct US OPEX dates, index expiry types (AM vs PM where documented), VIX/SPX/Nasdaq risk-off, earnings/macro catalysts, equity-market hours and BTC spot/perp outcomes. Must show incremental signal beyond equity drawdown, VIX, ETF flows and plain BTC momentum; one November 20, 2026 case is not a cohort.
 
@@ -84,7 +84,7 @@ All hypotheses use independently eligible, pre-specified cohorts, family groupin
 
 ## 6. Pre-specified baselines, exclusions, and kill gates
 
-- Baselines: (B0) simple clock-matched no-information; (B1) price momentum/persistence, (B2) past realized-volatility/HAR and clock seasonality; (B3) existing source-eligible Compass/Pullback as actually frozen; (B4) each plus *admitted* pre-event option features. Same sample, same timestamps, same abstention denominator and same cost assumptions.
+- Baselines: (B0) **same 08:00 UTC daily-expiry** matched baseline, not no-expiry; (B0b) **Friday weekly-only** comparator for monthly/quarterly last-Friday tier where available; (B1) price momentum/persistence; (B2) past realized-volatility/HAR and clock+weekday seasonality; (B3) existing source-eligible Compass/Pullback as actually frozen; (B4) each plus *admitted* pre-event option features. Same sample, same first-available times, same abstention denominator, and same cost assumptions. Daily expiry on a monthly/quarterly date must not be counted as a separate treatment. Report eligible independent monthly families, not the number of overlapping minute bars.
 - Leakage negatives: shuffled event labels, future-shifted OI, post-expiry Greek reuse, altered provider availability time, historical 'today' chain substituted as prior chain, signed gamma inferred from OI, mislabelled 25-delta from moneyness, missing zero-filled, US/Deribit conflation. Each must fail admissibility or lose the effect.
 - Measurement negatives: Deribit 07:30-08:00 TWAP/Greeks decay, special API pause around 08:00, option-to-future settlement transition (April/August 2026), instrument-unit changes, daylight savings on US clocks, calendar holiday shifts, incomplete/delisted expiry membership, stale/overlapping chain snapshots.
 - Uncertainty: event family N, independent weekly/monthly/quarterly cohorts, multiple testing, block-bootstrap by event/date when appropriate, explicit source attrition; do not count BTC and ETH in the same systemic episode as independent market events.
@@ -103,7 +103,33 @@ All hypotheses use independently eligible, pre-specified cohorts, family groupin
 
 **Acceptance of this PR is only acceptance of a source-backed, falsifiable research brief.** PR merge must not be described as hypothesis tested, source acquired, a working 0DTE indicator, a delivered risk alert, scientific proof or trading readiness.
 
-## 8. Explicit current execution receipt (as of authoring)
+## 8. Metadata-only Archive capture audit, 2026-11-21
+
+**Inspection method and boundary:** only public control-plane paths, filenames/sha/date and high-level capture metadata; NO private provider raw values, market-derived parameter values, provider-data outcomes, Round 3 tests or trade backtest. Date-folder census is a *directory inventory*, not proof of six valid daily runs across all 102 days. Three exact preserved example captures and the current `LATEST` metadata were read as receipt/schema checks; no dataset was exported for empirical inference.
+
+- Archive main rechecked at `e3de2e087abdcb41a19dcafa395f5a865d9636fe` during this follow-up; relevant current source path: `03_DAILY_CAPTURE_LOGS/pullback_forensics/runs/2026/`.
+- Public directory inventory: August 12-31 = **20** dated folders; September = **30**; October = **31**; November 1-21 = **21**, total **102** daily folders. This is NOT a completed exhaustive per-run or per-hour census, and it is NOT an eligible event-family sample size.
+- The directly listed days August 12 (5 run directories), August 31 (6), September 15 (6), September 30 (7), October 30 (6), November 20 (7), November 21 (5) show roughly scheduled multi-captures; nonuniform counts include extra runs, not evidence of even minute-level coverage. Actual timestamps are from each capture, not inferred from workflow cron.
+- Sample August 12, `pfr-31567477393-1` at `2026-08-12T05:43:36.842349Z`: `status=PASS`, no recorded top-level errors, BTC+ETH `MONEYNESS_BUCKET_SKEW_NOT_25_DELTA`, each 6 summarized expiries; blob `e666e27714d2f3568555eb9ba1d72e707e430903`.
+- Sample October 30, `pfr-40983115775-1` at `2026-10-30T01:00:31.949149Z`: `PASS`, no recorded top-level errors, BTC+ETH same method, each 8 summarized expiries; blob `34371f1d76e00bfb787a44a8a0b5e5be7e0df95a`. This sample is ~7 hours before the monthly expiry and contains **no 0DTE row** in the derived 1-60d skew output.
+- Sample November 20, `pfr-44786783664-1` at `2026-11-20T17:49:21.324562Z`: `PASS`, no recorded top-level errors, BTC+ETH same method, each 7 summarized expiries; blob `581127f73c067f82cb37f0c83a8705a86b41e193`.
+- `LATEST.json` at `2026-11-21T20:05:40.696218Z`, run `pfr-44944287956-1`, blob `0df34e72f2d1bbde80b4360d9f1644e3fade8a0f`: `PASS`, BTC+ETH each 7 summarized expiries and summary+instrument source receipt keys. Its explicit source disclaimer is `CURRENT_CHAIN_ONLY_NO_EQUIVALENT_HISTORICAL_SNAPSHOT`, meaning current-chain capture is not a complete reconstructed historical chain.
+- The live collector's `dte < 1` filter means **zero derived 0DTE rows by design for all conforming captures**, even if the upstream current API returns expiring instruments. Thus a minute-scale 0DTE concentration/hedging study is `BLOCKED_SOURCE_GRAIN`. These existing captures may still support *descriptive* daily/multiweek skew history, but that is NOT the preregistered 0DTE expiry effect and cannot be relabeled as such.
+- External official source calibration: Deribit contract policy (updated 2026-07-28) explicitly says daily options expire **every day at 08:00 UTC** and longer expiries replace overlapping daily listings. At `08:00 UTC` Deribit also carries **daily settlement**, with a pause, and expiring contracts use a 07:30–08:00 UTC index TWAP. The controls in H0/H3 above are corrected in response to Codex independent review (P2, comment `4654747799` on PR #2299).
+
+### Source-eligibility verdict at this audit
+
+| Question | Verdict | Why |
+| --- | --- | --- |
+| Is L2b collector presently operating with valid BTC/ETH metadata receipts? | **YES for sampled captures and LATEST** | Three historical snapshots and current LATEST all `PASS`; full historical completeness NOT checked |
+| Does this derived L2b output have 0DTE options or minute-scale expiry Greek/OI history? | **NO** | DTE cutoff under 1 and 4h scheduled cadence |
+| Is a legal, clock-complete, independent PIT history with options-chain concentrations verified for H1/H2? | **NO** | Not demonstrated in public control plane; private Round3 firewall closed |
+| Is a genuine higher-tier-vs-daily measured incremental or economically executable edge proven? | **NO / NOT TESTABLE WITH ADMITTED INPUTS** | No authorized preregistered outcome cohort with feature availability and same-clock baselines |
+| Can a deterministic 08:00 daily/weekly/monthly expiry calendar be researched for contextual scheduling without option values? | **YES, descriptive only** | Official schedule, no directional skill or trading authority |
+
+**Scientific disposition:** `RETAIN_SHADOW / BLOCKED_SOURCE_GRAIN_AND_PIT`. Do not publish an empirical effect size, percent hit rate, `p`-value or simulated PnL. First repair on existing #387: metadata-only complete inventory + provenance, then #1596 chooses source-eligible non-Round3 data or explicit `BLOCKED_SOURCE_HISTORY`. No paid source acquisition or private Round3 read authorized by this dossier.
+
+## 9. Explicit current execution receipt (as of authoring)
 
 - `external_literature_review=COMPLETE_AT_ABSTRACT_AND_OFFICIAL_DOC_LEVEL`
 - `current_archive_source_and_dedup=READ_ONLY_CHECKED_AT_PINNED_SHA`
@@ -113,6 +139,6 @@ All hypotheses use independently eligible, pre-specified cohorts, family groupin
 - `code_changed=NO`
 - `paid_API_or_vendor_data_used=NO`
 - `live_Compass_CN_Alpha_portfolio_changed=NO`
-- `independent_review=REQUIRED_BEFORE_MERGE`
+- `independent_review=CODEX_P2_IDENTIFIED_AND_METHOD_AMENDED_AWAIT_REVIEW_ON_UPDATED_HEAD`
 
 Owner-present research authorization in the conversation permitted preparing this PR; it did NOT override the above separate data, science, governance and release gates.
