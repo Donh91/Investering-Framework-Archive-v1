@@ -55,7 +55,7 @@ def verify_job_contract(source: str, job: str):
     if not download:
         raise AssertionError("JOB_DOWNLOAD_MISSING")
     details = download.group("with")
-    if ("          name: astra-mission-evidence-${{ github.run_id }\n" not in details
+    if ("          name: astra-mission-evidence-${{ github.run_id }}\n" not in details
         or "run-id:" in details or "github-token:" in details
         or details.count("          name: ") != 1):
         raise AssertionError("JOB_CROSS_RUN_ARTIFACT")
@@ -95,8 +95,8 @@ class AstraBuildWorkflowSecurityTest(unittest.TestCase):
         for job in JOB_NAMES:
             segment = job_section(source, job)
             edited = source.replace(segment, segment.replace(
-                "          name: astra-mission-evidence-${{ github.run_id }\n",
-                "          name: astra-mission-evidence-${{ github.run_id }\n"
+                "          name: astra-mission-evidence-${{ github.run_id }}\n",
+                "          name: astra-mission-evidence-${{ github.run_id }}\n"
                 "          run-id: 12345\n"))
             with self.subTest(job=job), self.assertRaisesRegex(
                     AssertionError, "JOB_CROSS_RUN_ARTIFACT"):
