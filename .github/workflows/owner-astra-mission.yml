@@ -138,7 +138,7 @@ jobs:
         run: |
           set -euo pipefail
           docker build --pull --platform linux/amd64 \
-            --file scripts/api_agent/docker/astra-build-toolchain-v1.Dockerfile \
+            --file scripts/api_agent/docker/astra-build-toolchain-v1.Dockerfile.txt \
             --tag astra-build-toolchain-audit:v1 .
           image_id=$(docker image inspect --format '{{.Id}}' astra-build-toolchain-audit:v1)
           [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
