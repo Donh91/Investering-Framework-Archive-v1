@@ -27,6 +27,13 @@ MAX_LOG_BYTES = 256_000
 WALL_SECONDS = 180
 MAX_SNAPSHOT_BYTES = 400_000_000
 MAX_SNAPSHOT_FILES = 85_000
+# Public code and fixed-test dependencies only. Never copy the giant mutable
+# market-data/receipt tree into a model-code sandbox. Missing dependencies
+# fail the native fixed test, not a permission to read from private sources.
+SOURCE_ROOTS = ("scripts", "tests", "05_CYCLE_NAVIGATOR/site",
+                "04_MARKET_LEARNING/handlekompas/contracts", ".github",
+                "00_FMOS", "01_CORE_FRAMEWORK/governance", "07_PROMPTS_AND_AGENTS")
+SOURCE_FILES = ("pytest.ini", "pyproject.toml", "setup.cfg", "requirements.txt")
 
 class SandboxBlocked(admit.AdmissionBlocked):
     pass
@@ -94,24 +101,41 @@ def _copy_public_tree(source: Path, target: Path):
     """
     size, count = 0, 0
     excluded = {".git", "secrets", "vault", "private", "__pycache__", ".pytest_cache"}
-    for root, dirs, files in os.walk(source, followlinks=False):
-        here = Path(root)
-        require(not here.is_symlink(), "SOURCE_SYMLINK")
-        dirs[:] = [x for x in dirs if x not in excluded]
-        for name in dirs:
-            require(not (here / name).is_symlink(), "SOURCE_SYMLINK")
-        dest = target / here.relative_to(source)
-        dest.mkdir(parents=True, exist_ok=True)
-        for name in files:
-            src = here / name
-            mode = src.lstat().st_mode
-            require(stat.S_ISREG(mode), "SOURCE_SPECIAL_OR_SYMLINK")
-            count += 1
-            size += src.stat().st_size
-            require(count <= MAX_SNAPSHOT_FILES and size <= MAX_SNAPSHOT_BYTES,
-                    "SOURCE_SNAPSHOT_TOO_LARGE")
-            shutil.copyfile(src, dest / name)
-            (dest / name).chmod(0o444)
+    for relative in SOURCE_ROOTS:
+        subtree = source / relative
+        if not subtree.exists():
+            continue
+        require(subtree.is_dir() and not subtree.is_symlink(), "SOURCE_TREE_ROOT")
+        for root, dirs, files in os.walk(subtree, followlinks=False):
+            here = Path(root)
+            require(not here.is_symlink(), "SOURCE_SYMLINK")
+            dirs[:] = [x for x in dirs if x not in excluded]
+            for name in dirs:
+                require(not (here / name).is_symlink(), "SOURCE_SYMLINK")
+            dest = target / here.relative_to(source)
+            dest.mkdir(parents=True, exist_ok=True)
+            for name in files:
+                src = here / name
+                mode = src.lstat().st_mode
+                require(stat.S_ISREG(mode), "SOURCE_SPECIAL_OR_SYMLINK")
+                count += 1
+                size += src.stat().st_size
+                require(count <= MAX_SNAPSHOT_FILES and size <= MAX_SNAPSHOT_BYTES,
+                        "SOURCE_SNAPSHOT_TOO_LARGE")
+                shutil.copyfile(src, dest / name)
+                (dest / name).chmod(0o444)
+    for relative in SOURCE_FILES:
+        src = source / relative
+        if not src.exists():
+            continue
+        require(src.is_file() and not src.is_symlink()
+                and stat.S_ISREG(src.lstat().st_mode), "SOURCE_FILE_SPECIAL")
+        size += src.stat().st_size
+        count += 1
+        require(count <= MAX_SNAPSHOT_FILES and size <= MAX_SNAPSHOT_BYTES,
+                "SOURCE_SNAPSHOT_TOO_LARGE")
+        shutil.copyfile(src, target / relative)
+        (target / relative).chmod(0o444)
     return {"files": count, "bytes": size}
 
 def _write_admitted(root: Path, proposal: dict, scope: dict, receipt: dict):
@@ -154,7 +178,8 @@ def _run_once(command: list[str], name: str) -> dict:
     proc = None
     selector = selectors.DefaultSelector()
     try:
-        proc = subprocess.Popen(command, stdin=subprocess.DEVNULL,
+        require(command[0] == "docker", "DOCKER_BINARY_MISMATCH")
+        proc = subprocess.Popen(["docker", *command[1:]], stdin=subprocess.DEVNULL,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 shell=False, env=env)
         selector.register(proc.stdout, selectors.EVENT_READ)
