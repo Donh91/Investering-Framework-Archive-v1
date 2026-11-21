@@ -186,6 +186,30 @@ def _write_admitted(root: Path, proposal: dict, scope: dict, receipt: dict):
     return {"manifest_sha256": admit.digest(admit.canonical(receipt["files"])),
             "written_files": len(original)}
 
+def observed_test_count(command: list[str], output: bytes) -> int:
+    """Native CLI completion summary observed OUTSIDE the candidate process.
+
+    This catches exit(0) before the runner reports completion, but stdout can
+    be forged by untrusted code. Therefore this is NOT independent proof and
+    can NEVER, on its own, authorize a BUILD PASS or paid release.
+    """
+    text = output.decode("utf-8", errors="replace")
+    if "pytest" in command:
+        # Only accept the ordinary end-of-session summary, not collection.
+        match = re.search(r"(?m)^(?:=+\s*)?(\d+) passed(?:,[^\n]*)? in [0-9.]+s(?:\s*=+)?\s*$", text)
+        return int(match.group(1)) if match else 0
+    if "node" in command and "--test" in command:
+        def field(name):
+            m = re.search(r"(?m)^# " + re.escape(name) + r" (\d+)\s*$", text)
+            return int(m.group(1)) if m else None
+        n, passed, failed = field("tests"), field("pass"), field("fail")
+        return n if n is not None and n > 0 and passed == n and failed == 0 else 0
+    if "unittest" in command:
+        m = re.search(r"(?m)^Ran (\d+) tests? in [0-9.]+s\s*$", text)
+        return int(m.group(1)) if m and re.search(r"(?m)^OK\s*$", text) else 0
+    return 0
+
+
 def _run_once(command: list[str], name: str) -> dict:
     """Bound output, wall time, orphan cleanup; host environment has NO secrets."""
     require(command[:2] == ["docker", "run"] and "--network" in command
@@ -213,10 +237,13 @@ def _run_once(command: list[str], name: str) -> dict:
                 out.extend(chunk)
                 require(len(out) <= MAX_LOG_BYTES, "TEST_LOG_LIMIT")
         rc = proc.wait(timeout=max(.01, end-time.monotonic()))
+        completed = observed_test_count(command, bytes(out)) if rc == 0 else 0
         tail = out.decode("utf-8", errors="replace").splitlines()[-200:]
         return {"returncode": rc, "output_sha256": admit.digest(bytes(out)),
                 "output_bytes": len(out), "last_200_lines": tail,
-                "status": "PASS" if rc == 0 else "TEST_FAILURE"}
+                "completed_tests_observed": completed,
+                "completion_evidence": "UNTRUSTED_STDOUT_ONLY",
+                "status": "PASS" if rc == 0 and completed > 0 else "TEST_FAILURE"}
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise SandboxBlocked("DOCKER_INFRA_OR_TIMEOUT") from exc
     finally:
