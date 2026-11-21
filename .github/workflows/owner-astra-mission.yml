@@ -23,6 +23,8 @@ on:
       - 'scripts/api_agent/astra_build_sandbox_v1.py'
       - 'scripts/api_agent/astra_build_cost_v1.py'
       - 'scripts/api_agent/astra_build_receipt_v1.py'
+      - 'scripts/api_agent/astra_build_driver_v1.py'
+      - 'tests/api_agent/test_astra_build_driver_v1.py'
       - 'tests/api_agent/test_astra_build_receipt_v1.py'
       - 'tests/api_agent/test_astra_build_cost_v1.py'
       - 'tests/api_agent/test_astra_build_admit_v1.py'
@@ -59,7 +61,8 @@ jobs:
           tests.api_agent.test_astra_build_admit_v1
           tests.api_agent.test_astra_build_sandbox_v1
           tests.api_agent.test_astra_build_cost_v1
-          tests.api_agent.test_astra_build_receipt_v1 -v
+          tests.api_agent.test_astra_build_receipt_v1
+          tests.api_agent.test_astra_build_driver_v1 -v
       - name: Exact request preview of every mission, NO network
         run: python scripts/research/owner_astra_mission_v1.py preview-all --out runtime/astra-mission-preview
 
@@ -324,5 +327,51 @@ jobs:
         with:
           name: astra-worklike-result-${{ github.run_id }}
           path: runtime/astra-worklike-result/receipt.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  build-sandbox:
+    # BUILD_v1 downstream of one owner-approved and claimed paid request.
+    # No key, write token, model-chosen shell, PR writer, repair POST or auto-merge.
+    needs: [paid]
+    if: >-
+      always() && github.event_name == 'issue_comment' && github.event.action == 'created' &&
+      github.event.issue.number == 1156 && github.event.issue.pull_request == null &&
+      github.event.comment.user.login == 'Donh91' && github.actor == 'Donh91' &&
+      github.event.comment.author_association == 'OWNER' && github.ref == 'refs/heads/main' &&
+      github.run_attempt == 1 && needs.paid.result == 'success' &&
+      (startsWith(github.event.comment.body, 'OWNER_LAUNCH_ASTRA_MISSION ASTRA-BUILD-M1-20261121-S1 ') ||
+       startsWith(github.event.comment.body, 'OWNER_LAUNCH_ASTRA_MISSION ASTRA-BUILD-M2-20261121-S1 ') ||
+       startsWith(github.event.comment.body, 'OWNER_LAUNCH_ASTRA_MISSION ASTRA-BUILD-M3-20261121-S1 '))
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: astra-mission-evidence-${{ github.run_id }}
+          path: runtime/astra-build-input
+      - name: Pull exact source-reviewed Python image outside candidate container
+        run: |
+          docker pull --platform linux/amd64 python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b)" = linux/amd64
+      - name: Bind exact original provider receipt and execute only fixed BUILD tests
+        run: >-
+          python -m scripts.api_agent.astra_build_driver_v1
+          --repo . --artifact runtime/astra-build-input
+          --out runtime/astra-build-result/receipt.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: astra-build-result-${{ github.run_id }}
+          path: runtime/astra-build-result/receipt.json
           if-no-files-found: warn
           retention-days: 90
