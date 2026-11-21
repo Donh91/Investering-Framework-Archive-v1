@@ -117,6 +117,50 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+  build-toolchain-audit:
+    # Strictly PR-only, owner-source worktree, no key or write authority.
+    # Source-bound IMAGE CANDIDATE. A successful build does not lift BUILD HOLD.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.head_ref == 'build/astra-build-hold-lift-h1-h6-20261121'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }
+          persist-credentials: false
+      - name: Build reviewed dependency candidate outside any paid job
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --pull --platform linux/amd64 \
+            --file scripts/api_agent/docker/astra-build-toolchain-v1.Dockerfile \
+            --tag astra-build-toolchain-audit:v1 .
+          image_id=$(docker image inspect --format '{{.Id}}' astra-build-toolchain-audit:v1)
+          [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --pids-limit 32 \
+            astra-build-toolchain-audit:v1 python -m pytest --version
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --pids-limit 32 \
+            astra-build-toolchain-audit:v1 node --version
+          mkdir -p runtime/astra-build-toolchain-evidence
+          printf '{"contract":"ASTRA_BUILD_TOOLCHAIN_CANDIDATE_v1","image_id":"%s","activation":"HOLD_NO_PAID_BUILD","test_command_completed":false}\n' "$image_id" \
+            > runtime/astra-build-toolchain-evidence/image_candidate.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: astra-build-toolchain-candidate-${{ github.run_id }
+          path: runtime/astra-build-toolchain-evidence/image_candidate.json
+          if-no-files-found: warn
+          retention-days: 30
+
   verify:
     if: >-
       github.event_name == 'issue_comment' && github.event.action == 'created' &&
