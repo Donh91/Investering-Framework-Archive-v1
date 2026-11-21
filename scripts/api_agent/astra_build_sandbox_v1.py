@@ -256,7 +256,7 @@ def _run_once(command: list[str], name: str) -> dict:
                 "output_bytes": len(out), "last_200_lines": tail,
                 "completed_tests_observed": completed,
                 "completion_evidence": "UNTRUSTED_STDOUT_ONLY",
-                "status": "PASS" if rc == 0 and completed > 0 else "TEST_FAILURE"}
+                "status": "EXIT0_WITH_UNTRUSTED_SUMMARY" if rc == 0 and completed > 0 else "TEST_FAILURE"}
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise SandboxBlocked("DOCKER_INFRA_OR_TIMEOUT") from exc
     finally:
@@ -300,7 +300,7 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
         for ordinal, _ in enumerate(admit.TEST_COMMANDS[scope["test_command_id"]]):
             name, argv = docker_command(root, scope["test_command_id"], ordinal)
             baseline.append(_run_once(argv, name))
-        require(bool(baseline) and all(x.get("status") == "PASS" and
+        require(bool(baseline) and all(x.get("status") == "EXIT0_WITH_UNTRUSTED_SUMMARY" and
                 x.get("completed_tests_observed", 0) > 0 for x in baseline),
                 "FIXED_SUITE_BASELINE_NOT_PROVEN")
         staged = _write_admitted(root, proposal, scope, receipt)
@@ -308,7 +308,7 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
         for ordinal, _ in enumerate(admit.TEST_COMMANDS[scope["test_command_id"]]):
             name, argv = docker_command(root, scope["test_command_id"], ordinal)
             tests.append(_run_once(argv, name))
-        observed = all(x.get("status") == "PASS" and
+        observed = all(x.get("status") == "EXIT0_WITH_UNTRUSTED_SUMMARY" and
                        x.get("completed_tests_observed", 0) >= base["completed_tests_observed"]
                        for x, base in zip(tests, baseline))
         # Candidate stdout can be forged. A count and exit 0 are NOT
@@ -383,7 +383,7 @@ class ForcedEarlyExit(unittest.TestCase):
         file.chmod(0o444)
         name, command = docker_command(workspace, "SMOKE", 0)
         good = _run_once(command, name)
-        require(good["status"] == "PASS" and good["returncode"] == 0,
+        require(good["status"] == "EXIT0_WITH_UNTRUSTED_SUMMARY" and good["returncode"] == 0,
                 "ISOLATED_POSITIVE_OR_NETWORK_DENIAL_FAILED")
         file.chmod(0o644)
         file.write_text(mutant, encoding="utf-8")
