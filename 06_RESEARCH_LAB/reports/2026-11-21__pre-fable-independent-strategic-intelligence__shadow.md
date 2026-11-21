@@ -3,9 +3,9 @@
 **Dato:** 2026-11-21  
 **Status:** SHADOW_ONLY / INDEPENDENT_RESEARCH / NOT A RELEASE AUTHORIZATION  
 **Område:** Research Lab, Task 2, Kompas, S1, Alpha Lab, Fable Tuesday  
-**Primary folder:** \`06_RESEARCH_LAB/reports/\`  
+**Primary folder:** `06_RESEARCH_LAB/reports/`  
 **Primary owner:** Existing Research Lab #1512, Strategist #1157; implementation authority stays with domain owners #1596, #1553, #1827, #1516 and S1 #1156.  
-**Current comparison:** Bridge \`claude/log/reports/claude/plan/MASTER_PLAN_v2.md\`, \`FABLE_TUESDAY_MANDATE_v2.md\` and \`FABLE_TUESDAY_MANDATE_v2_ADDENDUM_1.md\`, inspected 2026-11-21.  
+**Current comparison:** Bridge `claude/log/reports/claude/plan/MASTER_PLAN_v2.md`, `FABLE_TUESDAY_MANDATE_v2.md` and `FABLE_TUESDAY_MANDATE_v2_ADDENDUM_1.md`, inspected 2026-11-21.  
 **Scope:** independent source review, external method scouting, adversarial objections and an optional bounded Fable clarification. **No production changes, code, backtest outcome scoring, paid model call, trading permission or new task.**  
 **Archive choice:** one reviewable research note with existing owners, not a new engine, source authority, registry, test or mandate.
 
@@ -18,7 +18,7 @@
 3. **Risk-decision provenance**: Was the risk/protection classification recomputed from admitted new evidence, or carried forward from an older issue?
 4. **Consumer delivery**: Was the current signal actually served by Pages and readable by its intended user? A merge or built artifact is not an alert receipt.
 
-The Fable v2 specification's instruction that a completed-close floor breach makes \`risk_freshness\` 'at least STALE' is practical for exposing an inherited decision, but risks conflating **forecast invalidation** with **source staleness**. This is a *design concern*, not a demonstrated code bug in the still-unbuilt patch. Preserve \`risk_freshness\` as proposed, but demand separately inspectable, typed \`source_freshness\`, \`forecast_floor_status\` / \`cn_band_status\` and \`risk_state_basis\` with reason/clock/binding. When a floor breaches, the consumer must say that the *frozen expectation was broken*; it must not claim a newly calibrated bearish forecast, an automatically authorized SELL, or a fresh risk classifier.
+The Fable v2 specification's instruction that a completed-close floor breach makes `risk_freshness` 'at least STALE' is practical for exposing an inherited decision, but risks conflating **forecast invalidation** with **source staleness**. This is a *design concern*, not a demonstrated code bug in the still-unbuilt patch. Preserve `risk_freshness` as proposed, but demand separately inspectable, typed `source_freshness`, `forecast_floor_status` / `cn_band_status` and `risk_state_basis` with reason/clock/binding. When a floor breaches, the consumer must say that the *frozen expectation was broken*; it must not claim a newly calibrated bearish forecast, an automatically authorized SELL, or a fresh risk classifier.
 
 **No evidence obtained here establishes incremental price prediction, avoided drawdown, executable microcap PnL or economic alpha.** The recommendation concerns epistemic honesty and measurable delivery, not performance promotion.
 
@@ -26,20 +26,20 @@ The Fable v2 specification's instruction that a completed-close floor breach mak
 
 | Evidence | Direct source | Finding and immediate disposition |
 |---|---|---|
-| Current plan pointer | Bridge \`reports/claude/plan/CURRENT.md\`, blob \`65d987ef52736464743778e82471879f578e4888\` | References Masterplan v2, Tuesday mandate v2 plus Addendum 1; Fable exact-version owner GO is separate. |
-| Tuesday frozen proposal | Bridge \`reports/claude/plan/FABLE_TUESDAY_MANDATE_v2.md\`, blob \`46c182be4aacb3e2beb6a8b5af045bfd8e67695d\` | Bridge-only Fable output, no new runtime permissions; ~25/55/20 split. Part 2 explicitly allows REJECTED/UNTESTABLE if defect cannot be reproduced. |
-| Completed-close extension | Bridge \`reports/claude/plan/FABLE_TUESDAY_MANDATE_v2_ADDENDUM_1.md\`, blob \`3a3fd6b254bac831abdd2e0702524e50434d7841\` | Exact schema consumer census, official packet ID versioning, original hourly Git 23:00 UTC close, Sunday next-week boundary, candle timestamps, real hash oracle and mutants are already specified. Do not create duplicate ticket. |
-| Inherited protection source | Archive \`scripts/cycle_navigator/weekly_offline_issuer.py\`, blob \`37bb9fda86078ec9b1e5a838066c5cef06a75685\`, lines ~180-198 | K11 comments and assignments explicitly carry prior protection state and mark \`INHERITED_FROM_PRIOR_ISSUE\`. It does not recompute protection. |
-| Official packet wiring | Archive \`scripts/data_ping/native_handlekompas.py\`, fetched 2026-11-21, official \`build_official_compass\` area ~1569-1712 | Packet constructs action, horizons, protection and data_status from multiple owners. \`compass_id\` includes schema version, so an incompatible schema edit can affect immutable slot identity. A packet source read is not proof of alert delivery. |
-| W47 original freeze | Archive \`05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json\`, blob \`1e72eb62e2da2f164a0da4108a4cf5f51b910f41\` | BTC/ETH USDT daily ranges and exact week are frozen. This allows factual comparisons, NOT ex-ante edge claims. |
-| #2289 public truth banner | [Archive PR #2289](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2289) | **Merged** when checked. Real served-CDN root + \`data/compass.json\` readback was not established in this research session; classify \`MERGED; SERVED_UNVERIFIED_HERE\` rather than closed. |
-| #2276 official band status | [Archive PR #2276](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2276), checked head \`c89b111f5a5462df8a426e137e8b5265f600c0be\` | OPEN DRAFT, not merged. Issues are appropriately absorbed by Fable Part 2. Never assume the completed-close producer is already live. |
-| W47 scorecard | [Archive PR #2292](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2292), head \`594307e891531e6da85bc71a5b42762e57266c67\` | OPEN DRAFT; frozen first-mature score needs the actual 23 Nov maturity before honest public display. B1 stays unavailable absent immutable matched row. |
-| Risk02 | [Archive PR #2284](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2284) | \`W48 NOT_ADMITTED\`, W49 SCIENTIFIC_HOLD. First-known B1 and other clocks unproven. Do not retro-admit. |
-| Alpha | Bridge \`MASTER_PLAN_v2.md\` blob \`0c34d7f93cdce21c43586f687b8aa468f34f8450\`, P2 | Strategy Arena currently lacks an admitted input producer; denominator missing and actual trades zero in the checked snapshot. This is a *product evidence gap*, not proof a strategy fails or wins. Verify fresh MAL before implementation. |
+| Current plan pointer | Bridge `reports/claude/plan/CURRENT.md`, blob `65d987ef52736464743778e82471879f578e4888` | References Masterplan v2, Tuesday mandate v2 plus Addendum 1; Fable exact-version owner GO is separate. |
+| Tuesday frozen proposal | Bridge `reports/claude/plan/FABLE_TUESDAY_MANDATE_v2.md`, blob `46c182be4aacb3e2beb6a8b5af045bfd8e67695d` | Bridge-only Fable output, no new runtime permissions; ~25/55/20 split. Part 2 explicitly allows REJECTED/UNTESTABLE if defect cannot be reproduced. |
+| Completed-close extension | Bridge `reports/claude/plan/FABLE_TUESDAY_MANDATE_v2_ADDENDUM_1.md`, blob `3a3fd6b254bac831abdd2e0702524e50434d7841` | Exact schema consumer census, official packet ID versioning, original hourly Git 23:00 UTC close, Sunday next-week boundary, candle timestamps, real hash oracle and mutants are already specified. Do not create duplicate ticket. |
+| Inherited protection source | Archive `scripts/cycle_navigator/weekly_offline_issuer.py`, blob `37bb9fda86078ec9b1e5a838066c5cef06a75685`, lines ~180-198 | K11 comments and assignments explicitly carry prior protection state and mark `INHERITED_FROM_PRIOR_ISSUE`. It does not recompute protection. |
+| Official packet wiring | Archive `scripts/data_ping/native_handlekompas.py`, fetched 2026-11-21, official `build_official_compass` area ~1569-1712 | Packet constructs action, horizons, protection and data_status from multiple owners. `compass_id` includes schema version, so an incompatible schema edit can affect immutable slot identity. A packet source read is not proof of alert delivery. |
+| W47 original freeze | Archive `05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json`, blob `1e72eb62e2da2f164a0da4108a4cf5f51b910f41` | BTC/ETH USDT daily ranges and exact week are frozen. This allows factual comparisons, NOT ex-ante edge claims. |
+| #2289 public truth banner | [Archive PR #2289](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2289) | **Merged** when checked. Real served-CDN root + `data/compass.json` readback was not established in this research session; classify `MERGED; SERVED_UNVERIFIED_HERE` rather than closed. |
+| #2276 official band status | [Archive PR #2276](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2276), checked head `c89b111f5a5462df8a426e137e8b5265f600c0be` | OPEN DRAFT, not merged. Issues are appropriately absorbed by Fable Part 2. Never assume the completed-close producer is already live. |
+| W47 scorecard | [Archive PR #2292](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2292), head `594307e891531e6da85bc71a5b42762e57266c67` | OPEN DRAFT; frozen first-mature score needs the actual 23 Nov maturity before honest public display. B1 stays unavailable absent immutable matched row. |
+| Risk02 | [Archive PR #2284](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2284) | `W48 NOT_ADMITTED`, W49 SCIENTIFIC_HOLD. First-known B1 and other clocks unproven. Do not retro-admit. |
+| Alpha | Bridge `MASTER_PLAN_v2.md` blob `0c34d7f93cdce21c43586f687b8aa468f34f8450`, P2 | Strategy Arena currently lacks an admitted input producer; denominator missing and actual trades zero in the checked snapshot. This is a *product evidence gap*, not proof a strategy fails or wins. Verify fresh MAL before implementation. |
 | Additional source defect | [Archive PR #2293](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2293), OPEN DRAFT | Synthetic OKX OI parser fixture reproduces unit ambiguity: positional base amount treated as USD in two positives. This is a research-local example of why signal provenance/units can dominate smarter models. Existing #387/#2267 owns the repair. |
 
-For Fable and implementation, **always refresh HEAD, main, rule and issue state at execution time**. The rows above are dated observations, not permanent readiness assertions. Source-of-truth precedences are in Archive \`AGENTS.md\` (blob \`18b6dbbe4adbeb2660590dc14cdb9e2ef3714994\`), \`00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md\` (blob \`c8ead1b0e92c32eef4a911ad1b6bf33a09170966\`) and current research-method file \`06_RESEARCH_LAB/methods/RESEARCH_PACKAGE_TO_REVIEW_PR_v1.md\` (blob \`52993aa6f791ef445e0286b13d809b87fe48333e\`).
+For Fable and implementation, **always refresh HEAD, main, rule and issue state at execution time**. The rows above are dated observations, not permanent readiness assertions. Source-of-truth precedences are in Archive `AGENTS.md` (blob `18b6dbbe4adbeb2660590dc14cdb9e2ef3714994`), `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` (blob `c8ead1b0e92c32eef4a911ad1b6bf33a09170966`) and current research-method file `06_RESEARCH_LAB/methods/RESEARCH_PACKAGE_TO_REVIEW_PR_v1.md` (blob `52993aa6f791ef445e0286b13d809b87fe48333e`).
 
 ## The most useful adversarial finding: truth status is not a prediction
 
@@ -47,28 +47,28 @@ The 2026-10 risk-to-action and integrity owner issues [#1553](https://github.com
 
 ### Synthetic countercases that should be forced through Fable tests
 
-- A fresh, correct daily source and inherited prior risk: \`source_freshness=FRESH\`; \`risk_freshness=INHERITED\`. Neither automatically means forecast breached.
-- An admitted completed-close BTC floor breach while daily source is fresh, protection still inherited: factual \`forecast_floor_status=BREACHED\`; explicit source clock; \`risk_freshness\` must truthfully flag inherited/obsolete basis per current contract. Do **not** silently replace risk/protection severity or investment action.
-- A stale or missing daily input but valid unchanged freeze: \`source_freshness=STALE/UNKNOWN\`, \`forecast_floor_status=UNTESTABLE\`. It is dishonest to claim "no breach".
-- A future close, incomplete candle, quote mismatch, pre-issuance observation or byte mismatch: \`UNTESTABLE\`, no success and no inferred breach.
+- A fresh, correct daily source and inherited prior risk: `source_freshness=FRESH`; `risk_freshness=INHERITED`. Neither automatically means forecast breached.
+- An admitted completed-close BTC floor breach while daily source is fresh, protection still inherited: factual `forecast_floor_status=BREACHED`; explicit source clock; `risk_freshness` must truthfully flag inherited/obsolete basis per current contract. Do **not** silently replace risk/protection severity or investment action.
+- A stale or missing daily input but valid unchanged freeze: `source_freshness=STALE/UNKNOWN`, `forecast_floor_status=UNTESTABLE`. It is dishonest to claim "no breach".
+- A future close, incomplete candle, quote mismatch, pre-issuance observation or byte mismatch: `UNTESTABLE`, no success and no inferred breach.
 - Sunday 23:00 UTC close observed next ISO week: allowed only at the exact bounded finalized-close clock, with frozen original forecast-week binding.
 - A previous packet slot regenerated after schema bump: immutable historical bytes retained, new schema produces a new packet ID, and consumers tolerate both schema generations.
-- A valid new packet and successful build but missing/old Pages deployment: \`MERGED_BUT_NOT_SERVED\`; user alert NOT confirmed. No claim of an operational warning.
+- A valid new packet and successful build but missing/old Pages deployment: `MERGED_BUT_NOT_SERVED`; user alert NOT confirmed. No claim of an operational warning.
 - Two simultaneous signs, stale daily source + factual breach from another valid admitted record: display both evidence provenance channels, do not overwrite one with the other.
 
-The proposed typed fields can be derived from existing data. This is a *contract review request*, not permission to broaden Fable's patch beyond the mandated files. If adding separate fields would exceed the bounded scope, preserve a clear \`basis/reasons\` structure and file the downstream UI adaptation under existing P1 owner. Do not weaken Fable's stop rule.
+The proposed typed fields can be derived from existing data. This is a *contract review request*, not permission to broaden Fable's patch beyond the mandated files. If adding separate fields would exceed the bounded scope, preserve a clear `basis/reasons` structure and file the downstream UI adaptation under existing P1 owner. Do not weaken Fable's stop rule.
 
 ## Archive archaeology: ideas previously found versus actually measured
 
-**June Research Lab source:** The attached project source \`Research Claude 10-6-2026.txt\` explicitly warns against \`ACCEPTANCE_THEATER\` (critique acknowledged, paperwork created, no new evidence) and \`CLOSED_EPISTEMIC_LOOP\` (one system writes rules, scores itself and claims success). This is an *archival recommendation*, not a verified current alert-engine implementation. Remedy: require at least one native producer result, real consumer receipt and an independent falsifier for any promoted research claim.
+**June Research Lab source:** The attached project source `Research Claude 10-6-2026.txt` explicitly warns against `ACCEPTANCE_THEATER` (critique acknowledged, paperwork created, no new evidence) and `CLOSED_EPISTEMIC_LOOP` (one system writes rules, scores itself and claims success). This is an *archival recommendation*, not a verified current alert-engine implementation. Remedy: require at least one native producer result, real consumer receipt and an independent falsifier for any promoted research claim.
 
-**May adaptive-learning archive:** \`12 maj - adaptive læringslag.txt\` describes SRE, FAE, CCE, ODM and RWE as activated shadow meta-components. That text alone cannot establish which components presently write actual output, are wired into official decision consumers, or improve prospective outcomes. Search the canonical owner/production output before rebuilding or trusting this layer. Avoid turning five named engines into five new workstreams.
+**May adaptive-learning archive:** `12 maj - adaptive læringslag.txt` describes SRE, FAE, CCE, ODM and RWE as activated shadow meta-components. That text alone cannot establish which components presently write actual output, are wired into official decision consumers, or improve prospective outcomes. Search the canonical owner/production output before rebuilding or trusting this layer. Avoid turning five named engines into five new workstreams.
 
-**March/April TechDev and Shadow PDFs:** \`TechDev_Master_Alignment_Full_Document.pdf\` asserts strong macro/TechDev alignment and a Tier-1 65% / Tier-2 25% / Tier-3 10% historical conceptual mix. \`Shadow Layer syntese v1-v8, audit-klar og Shadow-only.pdf\` includes illustrative Copper/Gold, BTC dominance, CFGI, SSR and ETH/BTC heuristic thresholds. Neither is evidence that those weights or triggers are currently effective, independent, well-timed or currently authoritative. The relevant source questions are point-in-time availability, false signals, confluence dependence and decision divergence. The old PDF refers to Fed SR 11-7; the Fed's **17 April 2026 SR 26-2 supersedes it** (https://www.federalreserve.gov/supervisionreg/srletters/SR2602.htm). This is a reference currency correction, not a claimed regulatory obligation for a private crypto research system.
+**March/April TechDev and Shadow PDFs:** `TechDev_Master_Alignment_Full_Document.pdf` asserts strong macro/TechDev alignment and a Tier-1 65% / Tier-2 25% / Tier-3 10% historical conceptual mix. `Shadow Layer syntese v1-v8, audit-klar og Shadow-only.pdf` includes illustrative Copper/Gold, BTC dominance, CFGI, SSR and ETH/BTC heuristic thresholds. Neither is evidence that those weights or triggers are currently effective, independent, well-timed or currently authoritative. The relevant source questions are point-in-time availability, false signals, confluence dependence and decision divergence. The old PDF refers to Fed SR 11-7; the Fed's **17 April 2026 SR 26-2 supersedes it** (https://www.federalreserve.gov/supervisionreg/srletters/SR2602.htm). This is a reference currency correction, not a claimed regulatory obligation for a private crypto research system.
 
-**June transition-survival archive:** \`Agent-idé Transition Survival.txt\` separates BTC absorption from ecosystem transmission and requires persistence of ETH leadership/breadth/rotation. \`Markedspsykologi og transition.txt\` stresses macro-positive and rotation-negative can coexist. Both are useful *hypothesis partitions* for Task 2/long-horizon Kompas but no prospective incremental performance was proven by these narrative documents.
+**June transition-survival archive:** `Agent-idé Transition Survival.txt` separates BTC absorption from ecosystem transmission and requires persistence of ETH leadership/breadth/rotation. `Markedspsykologi og transition.txt` stresses macro-positive and rotation-negative can coexist. Both are useful *hypothesis partitions* for Task 2/long-horizon Kompas but no prospective incremental performance was proven by these narrative documents.
 
-**June weekly fallback archive:** \`CANONICAL WEEKLY BACKBONE ENGINE v2.0 FIX.txt\` documents historical \`MANUAL_BACKFILL_PASS\` / \`NO_EXTERNAL_WRITE\` when chat lacked actual external data. The present Sep-2026 current authority has moved to autonomous/hash-bound data. Important failure class: a chat-level manual backfill MUST NOT be interpreted as the same thing as exact original GitHub/market availability. The authoritative routing file \`00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md\` (blob \`c57b0578f273dd93511f5d546abaeec30bd8acef\`) supersedes manual upstream assumptions. Preserve history, do not resurrect its fallback as scientific authority.
+**June weekly fallback archive:** `CANONICAL WEEKLY BACKBONE ENGINE v2.0 FIX.txt` documents historical `MANUAL_BACKFILL_PASS` / `NO_EXTERNAL_WRITE` when chat lacked actual external data. The present Sep-2026 current authority has moved to autonomous/hash-bound data. Important failure class: a chat-level manual backfill MUST NOT be interpreted as the same thing as exact original GitHub/market availability. The authoritative routing file `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md` (blob `c57b0578f273dd93511f5d546abaeec30bd8acef`) supersedes manual upstream assumptions. Preserve history, do not resurrect its fallback as scientific authority.
 
 **Research overlaps already underway:** [#2162 Shadow archaeology](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2162), [#2161 macro regime](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2161), [#2281 four-year calendar](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2281), [#2290 cross-asset 13F](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2290), [#2055 five-era warning cost](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2055), [#2054 CN/B1 comparison](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2054) and [#2208 CN/protection dispatch](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2208) establish substantial **prior research and already assigned ownership**. Do not launch parallel models until those original owner decisions are deduplicated and source-qualified.
 
@@ -103,13 +103,13 @@ Every proposed action routes through an existing issue and the existing [researc
 
 ## Exactly three optional Fable mandate clarifications, not three new work items
 
-**D1 (recommended, Part 2):** Preserve typed distinction between \`risk_freshness\` and an admitted completed-close \`forecast_floor_status\`. In tests validate all four combinations of source freshness and forecast breach, including inherited decision basis. \`risk_freshness=STALE\` may be used for obsolete decision basis only with explicit \`basis\`, never as a fabricated new risk severity. If the source does not justify a separate field, carry reason-coded metadata in the existing output and log the UI dependency without expanding mandate.
+**D1 (recommended, Part 2):** Preserve typed distinction between `risk_freshness` and an admitted completed-close `forecast_floor_status`. In tests validate all four combinations of source freshness and forecast breach, including inherited decision basis. `risk_freshness=STALE` may be used for obsolete decision basis only with explicit `basis`, never as a fabricated new risk severity. If the source does not justify a separate field, carry reason-coded metadata in the existing output and log the UI dependency without expanding mandate.
 
-**D2 (already planned, make it a hard acceptance, Part 2):** #2276 schema version consumer census, immutable old slot, Git-sourced 23:00 close, exact Sunday boundary, candle-close timestamps, same-quote/source/asset and independent \`git hash-object\` oracle. These are not optional cleanup. Maintain byte parity for unrelated packet fields.
+**D2 (already planned, make it a hard acceptance, Part 2):** #2276 schema version consumer census, immutable old slot, Git-sourced 23:00 close, exact Sunday boundary, candle-close timestamps, same-quote/source/asset and independent `git hash-object` oracle. These are not optional cleanup. Maintain byte parity for unrelated packet fields.
 
 **D3 (release handoff, no additional Fable code):** Make **merged / native producer emitted / Pages served / user-visible** four separate receipts in Claude's package README. Fable can draft the intended checks, but only the subsequent reviewed PR and actual naturally emitted new official packet + CDN readback can prove live impact.
 
-**Leave Fable Part 1 and Part 3 unchanged.** No attempt to add MAPIE, River, Qlib, Alpha, RISK-02, OKX OI, new warnings, S1 autonomy promotion or a second re-chain. Enforce exact mandate GO and keep all Fable writes in Bridge \`claude/log\`, as currently required.
+**Leave Fable Part 1 and Part 3 unchanged.** No attempt to add MAPIE, River, Qlib, Alpha, RISK-02, OKX OI, new warnings, S1 autonomy promotion or a second re-chain. Enforce exact mandate GO and keep all Fable writes in Bridge `claude/log`, as currently required.
 
 ## Adversarial counterargument and falsification
 
@@ -121,7 +121,7 @@ Every proposed action routes through an existing issue and the existing [researc
 
 ## English Claude handoff, as a review request
 
-\`\`\`text
+```text
 PRE-FABLE INDEPENDENT RESEARCH REVIEW, 2026-11-21
 Read the reviewable Archive research note with this title and its exact HEAD before the owner issues GO for FABLE_TUESDAY_MANDATE_v2 plus ADDENDUM_1.
 
@@ -140,7 +140,7 @@ Please review and disposition:
 (B) DEFER TO EXISTING OWNER if it expands scope,
 (C) REJECT with an explicit evidence-based reason.
 Do not treat this research-only PR as owner GO, a production fix or a Fable session trigger.
-\`\`\`
+```
 
 ## Evidence and science limits
 
