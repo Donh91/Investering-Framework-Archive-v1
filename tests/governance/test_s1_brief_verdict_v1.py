@@ -218,7 +218,9 @@ class Verdict(unittest.TestCase):
                 self.assertIn(reason, v["reasons"])
         v = verdict_of(lambda w: w.update(bootstrap_text=w["bootstrap_text"].replace("bootstrap_version must be", "version")))
         self.assertIn("3:bootstrap_version", v["reasons"])
-        self.assertEqual(verdict_of(lambda w: w["contract"].pop("rubric_blobs"))["source"], "OK")        # none listed: none to check
+        missing = verdict_of(lambda w: w["contract"].pop("rubric_blobs"))                          # W2b D5: missing is unverifiable
+        self.assertEqual(missing["source"], "SOURCE_UNVERIFIED(3)")
+        self.assertIn("3:rubric_blobs", missing["reasons"])
         w = verdict_world()
         bad = B.brief_verdict(TB.MAIN, dict(w["contract"], rubric_blobs=["x"]), w["pins_actual"], w["bootstrap_text"], {}, w["trees_actual"])
         self.assertIn("3:rubric_blobs", bad["reasons"])                                           # not a map: unverifiable
@@ -317,6 +319,8 @@ class RenderStability(unittest.TestCase):
                 brief = TB.brief_of(mutate)
                 self.assertIn("verdict", brief)
                 brief.pop("verdict")
+                for key in ("c1b", "ledger"):                                                       # W2b: added beside it
+                    brief.pop(key)
                 body = B.render(brief)
                 self.assertEqual((len(body), hashlib.sha256(body.encode("utf-8")).hexdigest()), RENDER_SHA256_BEFORE_W2[name])
 
