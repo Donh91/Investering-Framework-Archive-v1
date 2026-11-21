@@ -104,7 +104,8 @@ def main() -> int:
         }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_bytes(admission.canonical(result) + b"\n")
-    print(result["contract"], result["probe_result"])
+    print(result["contract"], result["probe_result"],
+          result.get("error_code", "NO_ERROR_CODE"))
     return 0 if result["probe_result"] == "CANDIDATE_BASELINES_LOOK_COMPLETE" else 3
 
 
