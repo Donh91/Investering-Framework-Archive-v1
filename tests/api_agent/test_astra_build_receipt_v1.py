@@ -1,10 +1,15 @@
 """BUILD_v1 native original receipt / sandbox binding tests, no model API."""
 import copy
+import json
+import tempfile
 import unittest
+from pathlib import Path
+from unittest import mock
 
 from scripts.api_agent import astra_build_admit_v1 as a
 from scripts.api_agent import astra_build_receipt_v1 as r
 from scripts.api_agent import astra_build_sandbox_v1 as sb
+from scripts.research import owner_astra_mission_v1 as owner
 
 
 class BuildReceiptTest(unittest.TestCase):
@@ -67,6 +72,69 @@ class BuildReceiptTest(unittest.TestCase):
         self.assertFalse(result["merge_authority"])
         self.assertFalse(result["paid_authority"])
         self.assertEqual(result["raw_model_response_sha256"],a.digest(self.raw))
+
+    def test_actual_collector_to_build_receipt_binding(self):
+        # A synthetic GET-only provider completion is passed through the real
+        # owner collector, then the real BUILD binder, with NO paid POST.
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            mission_dir = "06_RESEARCH_LAB/astra_missions/" + self.mid
+            manifest = dict(self.manifest, mission_dir=mission_dir)
+            claim = {
+                "mission_id": self.mid, "response_id": "resp_test1234",
+                "run_id": "123", "release_main_sha": self.scope["main_sha"],
+                "request_sha256": manifest["request_sha256"],
+                "bundle_sha256": manifest["bundle_sha256"],
+                "owner_reserved_usd": 5.0,
+                "claim_comment_id": 11, "trigger_comment_id": 12,
+            }
+            owner.core.write_once(out / "handle.json", claim)
+            owner.core.write_once(out / "source_manifest.json", manifest)
+            provider = {
+                "id": "resp_test1234", "model": owner.MODEL,
+                "reasoning": {"effort": "max"},
+                "status": "completed", "incomplete_details": None,
+                "max_output_tokens": manifest["max_output_tokens"],
+                "output_text": self.raw.decode("utf-8"),
+                "usage": {"input_tokens": 1200, "output_tokens": 800},
+            }
+            with mock.patch.object(owner.core, "required_env", return_value="fake_no_network"), \
+                 mock.patch.object(owner.core, "http_json", return_value=provider) as api:
+                self.assertEqual(owner.collect(out, sleep=lambda _: None), 0)
+                api.assert_called_once()
+                self.assertEqual(api.call_args.args[0], "GET")
+            actual = json.loads((out / "receipt.json").read_text())
+            self.assertEqual(actual["provider_reasoning_effort"], "max")
+            self.assertEqual(actual["output_sha256"], a.digest(self.raw))
+            self.manifest = manifest
+            self.paid = actual
+            self.assertEqual(self.bind()["status"], "TESTED_PASS_REVIEW_REQUIRED")
+
+    def test_collector_absent_provider_effort_is_not_qualified(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            manifest = dict(self.manifest, mission_dir="06_RESEARCH_LAB/astra_missions/" + self.mid)
+            owner.core.write_once(out / "source_manifest.json", manifest)
+            owner.core.write_once(out / "handle.json", {
+                "mission_id": self.mid, "response_id": "resp_test1234",
+                "run_id": "123", "release_main_sha": self.scope["main_sha"],
+                "request_sha256": manifest["request_sha256"], "bundle_sha256": manifest["bundle_sha256"],
+                "owner_reserved_usd": 5.0, "claim_comment_id": 11, "trigger_comment_id": 12,
+            })
+            provider = {
+                "id": "resp_test1234", "model": owner.MODEL,
+                "status": "completed", "output_text": self.raw.decode("utf-8"),
+                "usage": {"input_tokens": 1200, "output_tokens": 800},
+            }
+            with mock.patch.object(owner.core, "required_env", return_value="fake_no_network"), \
+                 mock.patch.object(owner.core, "http_json", return_value=provider):
+                self.assertEqual(owner.collect(out, sleep=lambda _: None), 3)
+            actual = json.loads((out / "receipt.json").read_text())
+            self.assertIsNone(actual["provider_reasoning_effort"])
+            self.manifest = manifest
+            self.paid = actual
+            with self.assertRaisesRegex(r.ReceiptBlocked, "MODEL_EFFORT_BOND"):
+                self.bind()
 
     def test_modified_source_manifest_rejected(self):
         self.manifest["bundle_sha256"]="c"*64
