@@ -190,7 +190,7 @@ class BuildReceiptTest(unittest.TestCase):
 
     def test_false_pass_claim_rejected(self):
         self.sandbox["status"]="PASS"
-        self.sandbox["tests"][1]={"returncode":1,"status":"TEST_FAILURE"}
+        self.sandbox["tests"][1]={"returncode":1,"status":"TEST_FAILURE","completed_tests_observed":0}
         with self.assertRaisesRegex(r.ReceiptBlocked,"FALSE_SANDBOX_SUCCESS"):
             self.bind()
 
