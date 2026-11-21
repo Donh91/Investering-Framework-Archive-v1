@@ -95,7 +95,7 @@ def verify_snapshot(repo_root: Path, expected_sha: str):
                                          env={"PATH": "/usr/bin:/bin"},
                                          text=True, timeout=8).strip()
         dirty = subprocess.check_output(["git", "-C", str(repo_root), "status",
-                                         "--porcelain", "--untracked-files=no"],
+                                         "--porcelain", "--untracked-files=all"],
                                         env={"PATH": "/usr/bin:/bin"},
                                         text=True, timeout=10)
     except (OSError, subprocess.SubprocessError) as exc:
@@ -109,6 +109,16 @@ def _copy_public_tree(source: Path, target: Path):
     Reject symlinks/special files everywhere, including a parent of a model
     output. This is conservative and may HOLD on oversized repos.
     """
+    # Only Git-indexed public files may enter the model-code workspace.
+    # A clean working-tree check alone misses .gitignored injected files.
+    try:
+        tracked_raw = subprocess.check_output(
+            ["git", "-C", str(source), "ls-files", "--cached", "-z"],
+            timeout=30, env={"PATH": "/usr/bin:/bin"})
+        tracked = set(x.decode("utf-8") for x in tracked_raw.split(b"\\x00") if x)
+    except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+        raise SandboxBlocked("SOURCE_INDEX_UNVERIFIED") from exc
+    require(bool(tracked), "SOURCE_INDEX_EMPTY")
     size, count = 0, 0
     excluded = {".git", "secrets", "vault", "private", "__pycache__", ".pytest_cache"}
     for relative in SOURCE_ROOTS:
@@ -126,6 +136,8 @@ def _copy_public_tree(source: Path, target: Path):
             dest.mkdir(parents=True, exist_ok=True)
             for name in files:
                 src = here / name
+                require(src.relative_to(source).as_posix() in tracked,
+                        "SOURCE_UNTRACKED_OR_IGNORED")
                 mode = src.lstat().st_mode
                 require(stat.S_ISREG(mode), "SOURCE_SPECIAL_OR_SYMLINK")
                 count += 1
@@ -138,6 +150,7 @@ def _copy_public_tree(source: Path, target: Path):
         src = source / relative
         if not src.exists():
             continue
+        require(relative in tracked, "SOURCE_UNTRACKED_OR_IGNORED")
         require(src.is_file() and not src.is_symlink()
                 and stat.S_ISREG(src.lstat().st_mode)
                 and all(not parent.is_symlink() for parent in list(src.parents)[:-1]
