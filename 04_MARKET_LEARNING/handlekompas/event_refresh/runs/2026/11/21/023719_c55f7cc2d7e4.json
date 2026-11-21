@@ -1,0 +1,123 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "OFFICIAL_SOURCE_REFRESH_DUE"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "HOLD_WAIT",
+  "current_data_status": "OK",
+  "current_ladder": [
+    [
+      "BTC",
+      "HOLD"
+    ],
+    [
+      "ETH",
+      "HOLD"
+    ],
+    [
+      "LARGE_CAPS",
+      "WAIT"
+    ],
+    [
+      "MID_CAPS",
+      "WAIT"
+    ],
+    [
+      "SMALL_CAPS",
+      "WAIT"
+    ],
+    [
+      "MICROCAPS",
+      "HARD_WAIT"
+    ],
+    [
+      "MEMES",
+      "UNAVAILABLE"
+    ]
+  ],
+  "current_market_state": {
+    "action_permission": "HOLD_WAIT",
+    "btc_delta_pct": -0.010010711969976605,
+    "directional_state": "MIXED",
+    "eth_delta_pct": 0.16323161642417539,
+    "eth_relative_state": "STRENGTHENING",
+    "ethbtc_delta_pct": 0.21826118588577081,
+    "market_observation_open_utc": "2026-11-21T01:00:00Z",
+    "new_price_observation": true,
+    "predecessor_market_observation_open_utc": "2026-11-21T00:00:00Z",
+    "regime": "MIXED",
+    "summary": "BTC/ETH direction is conflicting or incomplete; action authority remains separate."
+  },
+  "current_protection_tracker": {
+    "authority": {
+      "new_market_classifier": false,
+      "portfolio_execution": false,
+      "wallet_specific": false
+    },
+    "confidence_quality": "LOW",
+    "contract": "COMPASS_PROTECTION_TRACKER_v1",
+    "data_quality": "OK",
+    "decisive_public_drivers": [
+      "Completed-week source price moves and bounded original weekly ranges."
+    ],
+    "distribution_risk": "UNKNOWN",
+    "eta_window": "UNAVAILABLE",
+    "invalidation": "Source-bound recovery and durable improved breadth weaken downside concern.",
+    "last_material_change_at": "2026-11-19T12:22:31Z",
+    "public_explanation": {
+      "action_authority": false,
+      "contract": "CN_PUBLIC_PROTECTION_COPY_v1",
+      "forecast_week": "2026-W47",
+      "method": "EXISTING_WEEKLY_LLM_PUBLIC_LANGUAGE_FILTER",
+      "onset_end_utc": null,
+      "onset_start_utc": null,
+      "risk_class": "RENEWED-RETEST RISK AFTER A SHARP SELLOFF AND PARTIAL REPAIR; SEVERITY AND ONSET ARE UNQUANTIFIED.",
+      "risk_state": "ELEVATED",
+      "summary": "Pullback risk remains elevated after a sharp decline and incomplete recovery; distribution is not confirmed.",
+      "watch_for": "Watch whether the recovery holds as Ethereum strengthens relative to Bitcoin and participation broadens.",
+      "weakens_if": "Concern eases if prices remain resilient while relative strength, participation and flows improve together."
+    },
+    "pullback_class": "RENEWED-RETEST RISK AFTER A SHARP SELLOFF AND PARTIAL REPAIR; SEVERITY AND ONSET ARE UNQUANTIFIED.",
+    "pullback_risk_state": "ELEVATED",
+    "reentry_message": "No re-entry review is active.",
+    "reentry_state": "INACTIVE"
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-11-21T02:37:19Z",
+  "heat_detail": {
+    "btc_return_24h_pct": -4.16994,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": -6.23917,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": -3.337705
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 11335.0,
+  "last_requested_source_sha": "6d6665e6ea976e28cd5a3a5bb8d6693ecf192009b923a1829ddc2152774415dd",
+  "latest_compass_source_packet_sha256": "cb6c513f06c2c759999b2bf5e92a25a475ddce27c3e0fcde9a6476c87dae1c24",
+  "missing_freeze_observation_only": true,
+  "missing_scheduled_freeze": null,
+  "protective_bypass": false,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 16781.0,
+  "source_packet_sha256": "c55f7cc2d7e4319cd3a45426dd9fa93f6e8aa020981f3aa225a12e3dc38233a5",
+  "suppressed_cause_codes": [],
+  "temporary_source_continuity": {
+    "active": true,
+    "expires_local_date": null,
+    "expiry_at_utc": "2026-11-21T03:00:00Z",
+    "policy": "STANDING_UNTIL_REBOUNDED",
+    "refresh_admitted": true,
+    "semantics": "SOURCE_FRESHNESS_MAINTENANCE_ONLY_NO_MARKET_OR_PORTFOLIO_ACTION"
+  },
+  "upstream_refresh_required": false
+}
