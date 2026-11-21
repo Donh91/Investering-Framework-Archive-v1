@@ -153,6 +153,22 @@ jobs:
           mkdir -p runtime/astra-build-toolchain-evidence
           printf '{"contract":"ASTRA_BUILD_TOOLCHAIN_CANDIDATE_v1","image_id":"%s","activation":"HOLD_NO_PAID_BUILD","test_command_completed":false}\n' "$image_id" \
             > runtime/astra-build-toolchain-evidence/image_candidate.json
+      - name: Generate candidate wheel-hash lock from reviewed no-secret toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/astra-build-toolchain-evidence/wheels
+          docker run --rm --network bridge --pull never \
+            --mount "type=bind,src=$PWD/runtime/astra-build-toolchain-evidence,dst=/out" \
+            astra-build-toolchain-audit:v1 sh -ec \
+            'python -m pip freeze > /out/requirements-resolved.txt && \
+             python -m pip download --no-cache-dir --only-binary=:all: --no-deps \
+               -r /out/requirements-resolved.txt -d /out/wheels'
+          python scripts/api_agent/docker/inspect_astra_toolchain_lock_v1.py \
+            --freeze runtime/astra-build-toolchain-evidence/requirements-resolved.txt \
+            --wheels runtime/astra-build-toolchain-evidence/wheels \
+            --lock-out runtime/astra-build-toolchain-evidence/requirements.lock.candidate.txt
+          echo "CANDIDATE_LOCK_NOT_REVIEWED_NOT_DEPLOYED"
       - name: Read separate pristine public main checkout
         uses: actions/checkout@v4
         with:
