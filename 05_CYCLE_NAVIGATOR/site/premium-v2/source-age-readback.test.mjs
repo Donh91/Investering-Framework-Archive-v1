@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {originalSourceAgeAtIssue,originalSourceAgeLabel} from '../source-age-readback.mjs';
+import {inheritedProtectionOrigin,kompasTruthBanner,kompasTruthReadback} from '../kompas-truth-banner.mjs';
 
 const issue='2026-10-13T14:14:43Z';
 const compass='CMP-EXACT-ORIGINAL';
@@ -139,4 +140,46 @@ test('copied public metadata cannot hide a non-PASS clock under valid source fla
  }
  assert.match(originalSourceAgeLabel(
    {...projection,original_source_age_at_issue:valid},{valid:true}),/markedsdata 135 min/);
+});
+
+test('truth banner binds source age to the original issue and ages after expiry',()=>{
+ const official={...internal(),data_status:"OK"};
+ const source=originalSourceAgeAtIssue(official,projection);
+ const issued=Date.parse(official.issued_at_utc);
+ const expiry=issued+45*60000;
+ const origin={public_issue_number:32,issued_date_utc:'2026-11-02'};
+ const freshness={contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',
+   status:'VERIFIED_OWNER_POLICY',valid_until_utc:new Date(expiry).toISOString()};
+ const compass={...projection,original_source_age_at_issue:source};
+ const read=(input=official,feed=compass)=>({...feed,full_stack:{truth_banner:
+   kompasTruthReadback(input,feed,{origin,officialFreshness:freshness})}});
+ assert.equal(kompasTruthBanner(read(),{nowMs:issued}).state,'FRESH');
+ const inherited={...official,cn_protection_state_basis:'INHERITED_FROM_PRIOR_ISSUE'};
+ const cases={nowMs:issued+60*60000,weeklyAligned:true};
+ const stale=kompasTruthBanner(read(inherited),cases);
+ assert.equal(stale.state,'STALE');
+ assert.match(stale.text,/udgave #32 \(2026-11-02 UTC\).*Dataalder/);
+ assert.match(kompasTruthBanner(read(inherited),{...cases,weeklyAligned:false}).text,/ophav ukendt/);
+ assert.equal(kompasTruthBanner({...read(),compass_id:'MISMATCH'},cases).state,'MISSING');
+ assert.equal(kompasTruthBanner({...compass,full_stack:{}},cases).state,'MISSING');
+ assert.equal(kompasTruthBanner(read({...official,data_status:'DEGRADED'}),cases).state,'DEGRADED');
+ const drifted=originalSourceAgeAtIssue({...official,issued_at_utc:'2026-10-01T00:00:00Z'},projection);
+ assert.equal(kompasTruthBanner(read(official,{...compass,original_source_age_at_issue:drifted}),cases).state,'MISSING');
+});
+
+test('legacy carry reaches original public issue and fails closed on missing or mismatched chain links',async()=>{
+ const p={pullback_risk_state:'ELEVATED',pullback_class:'Retest',distribution_risk:'UNKNOWN'};
+ const machine=(n,protection=p)=>({issue_number:n,previous_issue_number:n-1,
+   generated_unix:1793607548+(n-33)*604800,decision_projection:{protection}});
+ const carry=n=>({...machine(n),readable_markdown:'Week\nMethod: CN_OWNER_AUTHORIZED_API_FREE_SEVEN_DAY_v1\n'});
+ const start=carry(35),prior=carry(34),original=machine(33);
+ const chain=new Map([[34,{pkg:prior,publicIssue:33}],[33,{pkg:original,publicIssue:32}]]);
+ const read=n=>chain.get(n);
+ assert.deepEqual(await inheritedProtectionOrigin(start,read),
+   {public_issue_number:32,issued_date_utc:'2026-11-02'});
+ assert.equal(await inheritedProtectionOrigin(start,n=>n===34?read(n):null),null);
+ assert.equal(await inheritedProtectionOrigin(start,n=>({...read(n),pkg:machine(n,{...p,pullback_risk_state:'HIGH'})})),null);
+ const explicit=machine(36,{...p,state_basis:'INHERITED_FROM_PRIOR_ISSUE',inherited_from_issue_number:33});
+ assert.deepEqual(await inheritedProtectionOrigin(explicit,read),
+   {public_issue_number:32,issued_date_utc:'2026-11-02'});
 });
