@@ -443,6 +443,16 @@ class DailyCapturePipelineTests(unittest.TestCase):
         self.assertEqual(legacy[module.floor_hour_ms(stamp)]["value"], 6200000.0)
         missing_dict_usd = parse({"ts": str(stamp), "oiCcy": "100"})
         self.assertIsNone(missing_dict_usd[module.floor_hour_ms(stamp)]["value"])
+        # Codex exact-head P2 regression: numeric 0 is NOT a missing
+        # dictionary value, and must not discard its following valid hour.
+        zero_window = parse(
+            {"ts": str(stamp), "oiCcy": 0, "oiUsd": 0},
+            {"ts": str(stamp + 3600000), "oiCcy": "100", "oiUsd": "6200000"},
+        )
+        self.assertEqual(len(zero_window), 2)
+        self.assertEqual(zero_window[module.floor_hour_ms(stamp)]["oi"], 0.0)
+        self.assertEqual(zero_window[module.floor_hour_ms(stamp)]["value"], 0.0)
+        self.assertEqual(zero_window[module.floor_hour_ms(stamp + 3600000)]["value"], 6200000.0)
 
         invalid_rows = [
             [stamp, "10000", "100"],                     # no USD notional
