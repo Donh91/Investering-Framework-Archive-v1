@@ -459,7 +459,7 @@ def classify_pr_disposition(record):
                   "repo_full_name", "pr_number", "independent_reviewer_available",
                   "high_impact_owner_approval",
                   "physical_site_review_required", "physical_site_review_passed",
-                  "owner_physical_review_waiver", "recovery", "release_assessment", "recovery_max_age_seconds",
+                  "owner_physical_review_waiver", "recovery", "native_vault_evidence", "release_assessment", "recovery_max_age_seconds",
                   "safepoint_source", "owner_authorized",
                   "s1_general_preflight_required", "s1_general_preflight",
                   "governance_paths_from_main_manifest")
@@ -669,6 +669,22 @@ def classify_pr_disposition(record):
         return blocked("INTERNAL_REPAIRABLE", "RISK_CLASSIFICATION_MISSING", "Changed-file/domain risk classification")
     if r["risk"] == "HIGH":
         recovery = r.get("recovery") or {}
+        if "native_vault_evidence" in r:
+            from scripts.governance.s1_vault_receipt_v1 import bind_technical_receipt
+
+            evidence = r["native_vault_evidence"]
+            if not isinstance(evidence, dict):
+                evidence = {}
+            result = bind_technical_receipt(evidence.get("comment"), evidence.get("native"))
+            if "recovery" not in result:
+                return blocked("INDEPENDENT_RECOVERY_UNVERIFIED", result["reason"],
+                               "Matching native technical receipt, run and snapshot",
+                               "EXISTING_RECOVERY_CUSTODIAN")
+            # Only the independent assessment path may provide custody flags.
+            claims = recovery if isinstance(recovery, dict) else {}
+            recovery = {**result["recovery"], **{
+                key: claims.get(key) for key in ("independent_custody", "separation")
+            }}
         if not isinstance(recovery, dict) or recovery.get("technical_recovery") is not True:
             return blocked("INDEPENDENT_RECOVERY_UNVERIFIED", "TECHNICAL_RECOVERY_MISSING", "High-impact independently verified recovery", "EXISTING_RECOVERY_CUSTODIAN")
         if recovery.get("source") != current["source"]:
