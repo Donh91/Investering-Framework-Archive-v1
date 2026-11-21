@@ -67,6 +67,20 @@ def trusted_scope(repo: Path, mission_id: str, head: str) -> dict:
             "SCOPE_STAGE_ID")
     scope = dict(data, main_sha=head)
     admit.verify_scope(scope)
+    # H5/N15: the reviewed bundle shown to the provider MUST contain the
+    # exact source path/preimage list from this separately trusted scope.
+    # A sha-only reference is insufficient: a stale bundle could overwrite
+    # interim main changes without the model having seen those preimages.
+    bundle = read_bound(repo, "06_RESEARCH_LAB/astra_missions/" + mission_id +
+                        "/BUNDLE.md", budget.MAX_REQUEST_BYTES)
+    start = b"<!-- ASTRA_BUILD_SOURCE_MANIFEST_V1\\n"
+    end = b"\\nEND_ASTRA_BUILD_SOURCE_MANIFEST_V1 -->"
+    require(bundle.count(start) == 1 and bundle.count(end) == 1,
+            "BUNDLE_SOURCE_MANIFEST_MISSING")
+    embedded = bundle.split(start, 1)[1].split(end, 1)[0]
+    listed = load_json(embedded)
+    require(admit.canonical(listed) == admit.canonical(data["source_files"]),
+            "BUNDLE_SOURCE_PREIMAGES_DRIFT")
     for path, meta in data["source_files"].items():
         entry = repo / path
         require(entry.resolve(strict=False).is_relative_to(repo.resolve()),
