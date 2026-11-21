@@ -104,16 +104,32 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
             and tested.get("merge_authority") is False,
             "SANDBOX_BOND")
     tests=tested.get("tests")
-    require(type(tests) is list and bool(tests) and
-            len(tests) == len(admission.TEST_COMMANDS[approved_scope["test_command_id"]]),
+    baseline=tested.get("native_suite_baseline")
+    expected_count=len(admission.TEST_COMMANDS[approved_scope["test_command_id"]])
+    require(type(tests) is list and type(baseline) is list
+            and len(tests) == len(baseline) == expected_count and expected_count > 0,
             "TEST_CENSUS")
-    require(all(type(x) is dict and x.get("status") in ("PASS","TEST_FAILURE")
-                and type(x.get("returncode")) is int for x in tests),
+    require(all(type(x) is dict and x.get("status") in ("PASS", "TEST_FAILURE")
+                and type(x.get("returncode")) is int
+                and type(x.get("completed_tests_observed")) is int
+                and x["completed_tests_observed"] >= 0 for x in tests),
             "TEST_STATUSES")
-    all_passed = all(x["status"] == "PASS" and x["returncode"] == 0 for x in tests)
-    require(tested.get("status") == ("PASS" if all_passed else "TEST_FAILURE"),
+    require(all(type(x) is dict and x.get("status") == "PASS"
+                and x.get("returncode") == 0
+                and type(x.get("completed_tests_observed")) is int
+                and x["completed_tests_observed"] > 0 for x in baseline),
+            "UNVERIFIED_BASELINE")
+    # No trusted test-completion attestor exists in the pinned Python-only
+    # image. Return an explicit HOLD even when the candidate shows normal CLI
+    # output. This prevents exit(0) and forged stdout from becoming a PASS.
+    require(tested.get("independent_completion_attested") is False,
+            "UNREVIEWED_TEST_ATTESTOR")
+    observed = all(x["status"] == "PASS" and x["returncode"] == 0
+                   and x["completed_tests_observed"] >= baseline[i]["completed_tests_observed"]
+                   for i, x in enumerate(tests))
+    require(tested.get("status") == ("TEST_COMPLETION_UNATTESTED" if observed else "TEST_FAILURE"),
             "FALSE_SANDBOX_SUCCESS")
-    status = "TESTED_PASS_REVIEW_REQUIRED" if all_passed else "TEST_FAILURE_OR_INCOMPLETE"
+    status = "TEST_COMPLETION_HOLD" if observed else "TEST_FAILURE_OR_INCOMPLETE"
     return {"contract": CONTRACT, "status": status,
             "mission_id": mission, "stage": approved_scope["stage"],
             "release_main_sha": approved_scope["main_sha"],
