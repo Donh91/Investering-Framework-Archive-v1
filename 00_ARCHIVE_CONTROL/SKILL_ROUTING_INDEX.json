@@ -363,7 +363,7 @@
       "maturity": "PILOT_ACTIVE_OPERATIONAL_HELPER_V1",
       "skill_path": ".agents/skills/research-parallel-lanes/SKILL.md",
       "agents_metadata_path": ".agents/skills/research-parallel-lanes/agents/openai.yaml",
-      "purpose": "Coordinate existing-owner source-first, adversarial and bounded research packages from explicit new-thread requests to reviewed PR or accurate reject/closure, plus parallel research lanes when relevant. No automatic invocation or new agent.",
+      "purpose": "The pre-existing skill coordinates explicit bounded, independent research lanes. For an owner-requested Research Lab end-to-end package, discover and read the separate 06_RESEARCH_LAB/methods/RESEARCH_PACKAGE_TO_REVIEW_PR_v1.md reference after current owner preflight; no skill or S1 code change.",
       "triggers": [
         "Research Parallel Lanes",
         "/research-parallel-lanes",
@@ -404,12 +404,13 @@
         "exact head and run/job/artifact receipts when claiming execution",
         "negative and null findings preserved",
         "read-only science kept separate from portfolio authority",
-        "research-package discovery with explicit permission only",
         "independent reviewer finality by current AGENTS.md",
-        "consumer evidence required before runtime-verified claim"
+        "consumer evidence required before runtime-verified claim",
+        "explicit deep-package discovery must point to 06_RESEARCH_LAB/methods reference",
+        "no changes to .agents or S1 bootstrap/pins"
       ],
       "allow_implicit_invocation": false,
-      "portability_notes": "Existing repository-local skill; explicit new-thread deep research package requests can discover reference method, not install or execute agents. Research review PR is not production result."
+      "portability_notes": "Explicit advisory discovery only, not skill invocation. The existing .agents skill is pinned and unchanged. The separate Research Lab method covers source -> challenge -> owner -> PR review -> verified consumer; no jobs/permissions implied."
     },
     {
       "name": "skill-quality-gate",
