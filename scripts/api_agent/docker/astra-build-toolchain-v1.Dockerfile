@@ -8,7 +8,10 @@ ARG NODE_TARBALL_SHA256=60e3b0a8500819514aca603487c254298cd776de0698d3cd08f11dba
 ENV PATH="/opt/node/current/bin:${PATH}" PYTHONDONTWRITEBYTECODE=1
 # pytest >=9.0.3 avoids GHSA-6w46-j5rx-g56g. Only trusted image
 # provisioning may use network. Runtime docker run MUST use --network none.
-RUN python -m pip install --no-cache-dir 'pytest==9.2.0' \
+RUN python -m pip install --no-cache-dir \
+ 'pytest==9.2.0' 'PyYAML==6.0.4' 'pandas==2.3.3' \
+ 'jsonschema==4.26.0' 'rfc3339-validator==0.1.4' \
+ 'scikit-learn==1.9.1' \
  && python -m pip check \
  && python -m pytest --version
 
