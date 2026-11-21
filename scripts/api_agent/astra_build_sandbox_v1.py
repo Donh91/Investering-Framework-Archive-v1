@@ -303,7 +303,7 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
 
 
 def smoke() -> dict:
-    """Two real isolated Docker executions: clean probe and false-pass mutant.
+    """Three real Docker executions: network denial, assertion failure, early exit.
 
     This is the ONLY purpose of TEST_COMMANDS['SMOKE']. No production source,
     no model response, no provider API, no secret, no GitHub write.
@@ -335,6 +335,13 @@ class SandboxMutant(unittest.TestCase):
     def test_must_fail(self):
         self.fail("Intentional mutant, cannot claim PASS")
 """
+    early_exit = """import os
+import unittest
+
+class ForcedEarlyExit(unittest.TestCase):
+    def test_abort_without_completion(self):
+        os._exit(0)
+"""
     with tempfile.TemporaryDirectory(prefix="astra-build-smoke-") as temporary:
         parent = Path(temporary)
         parent.chmod(0o755)
@@ -355,9 +362,18 @@ class SandboxMutant(unittest.TestCase):
         bad = _run_once(command, name)
         require(bad["status"] == "TEST_FAILURE" and bad["returncode"] != 0,
                 "ISOLATED_MUTATION_NOT_DETECTED")
+        file.chmod(0o644)
+        file.write_text(early_exit, encoding="utf-8")
+        file.chmod(0o444)
+        name, command = docker_command(workspace, "SMOKE", 0)
+        escaped = _run_once(command, name)
+        require(escaped["returncode"] == 0 and escaped["status"] == "TEST_FAILURE"
+                and escaped["completed_tests_observed"] == 0,
+                "EXIT_ZERO_WITHOUT_SUITE_END_FALSE_PASS")
         return {"contract": "ASTRA_BUILD_SANDBOX_SMOKE_v1",
                 "status": "PASS", "positive": good,
-                "negative": bad, "network_attempt_executed": True,
+                "negative": bad, "early_exit_zero": escaped,
+                "network_attempt_executed": True,
                 "network_denied": True,
                 "synthetic_only": True, "image": IMAGE,
                 "paid_api": False, "live_task_changed": False}
