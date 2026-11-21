@@ -79,9 +79,10 @@ def verify_snapshot(repo_root: Path, expected_sha: str):
             and not repo_root.is_symlink(), "SOURCE_REPO_INVALID")
     require(isinstance(expected_sha, str) and HEX40.fullmatch(expected_sha),
             "SOURCE_SHA")
-    cmd = ["git", "-C", str(repo_root), "rev-parse", "HEAD"]
     try:
-        actual = subprocess.check_output(cmd, stderr=subprocess.DEVNULL,
+        # Literal argv roots are required by the existing privileged-closure
+        # static derivation. Never accept executable names from model output.
+        actual = subprocess.check_output(["git", "-C", str(repo_root), "rev-parse", "HEAD"], stderr=subprocess.DEVNULL,
                                          env={"PATH": "/usr/bin:/bin"},
                                          text=True, timeout=8).strip()
         dirty = subprocess.check_output(["git", "-C", str(repo_root), "status",
