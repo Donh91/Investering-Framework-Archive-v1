@@ -6,6 +6,8 @@ the unique owner claim and receipt in an unprivileged separate job.
 """
 from __future__ import annotations
 
+import re
+
 from scripts.api_agent import astra_build_admit_v1 as admission
 from scripts.api_agent import astra_build_cost_v1 as cost
 from scripts.api_agent import astra_build_sandbox_v1 as sandbox
@@ -63,11 +65,16 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
             and paid_receipt.get("research_only") is True
             and paid_receipt.get("usage_valid") is True,
             "PAID_RECEIPT_NOT_FINAL")
+    # The GET collector performs this check too, but downstream binding must
+    # reject a forged provider model even when earlier receipt checks drift.
+    provider_model = paid_receipt.get("provider_model")
     require(source_manifest.get("model") == MODEL
             and source_manifest.get("reasoning_effort") == "max"
             and paid_receipt.get("model") == MODEL
             and paid_receipt.get("reasoning_effort") == "max"
-            and paid_receipt.get("provider_reasoning_effort") == "max",
+            and paid_receipt.get("provider_reasoning_effort") == "max"
+            and isinstance(provider_model, str)
+            and re.fullmatch(re.escape(MODEL) + r"(?:-20[0-9]{2}-[0-9]{2}-[0-9]{2})?", provider_model),
             "MODEL_EFFORT_BOND")
     require(type(source_manifest.get("request_bytes")) is int
             and 0 < source_manifest["request_bytes"] <= cost.MAX_REQUEST_BYTES,
