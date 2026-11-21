@@ -60,6 +60,11 @@
       "code": "CP08",
       "path": "06_RESEARCH_LAB/high_value_edge_research/2026-11-21__EDGE_DETECTIVE_CP08_MIGRATION_AND_CLASSIFIER_NEGATIVES_v1.md",
       "purpose": "Provider-reported migrated-pool collapse base rate and limited classifier coverage negative checks"
+    },
+    {
+      "code": "CP09",
+      "path": "06_RESEARCH_LAB/high_value_edge_research/2026-11-21__EDGE_DETECTIVE_CP09_PUBLIC_MAINNET_EVENT_REPLAY_v1.md",
+      "purpose": "Two source-independent public Explorer program-data event replays against pinned official PumpSwap IDL, exact signed i128 and u64 arithmetic, remaining first-known/exit blockers"
     }
   ],
   "claim_status_values": [
@@ -270,6 +275,63 @@
       "action": "NONE",
       "owner": "Archive#1512",
       "checkpoint": "CP00"
+    },
+    {
+      "id": "ED_SOL_EXPLORER_REPLAY_12",
+      "category": "CHAIN_EVENT_SOURCE",
+      "stage": "SOURCE_VERIFIED_MECHANIC_NOT_ACTION",
+      "title": "Two selected PumpSwap transactions independently re-decoded from public Explorer raw program logs using pinned official IDL; exact signed negative quote reserves and large u64 values confirmed, no profitable edge",
+      "source_grade": "PUBLIC_EXPLORER_FINALIZED_TRANSACTION_EVENT_REPLAY_NOT_INDEPENDENT_RAW_RPC_ENVELOPE",
+      "publicExplorerTransactions": [
+        {
+          "slot": 455293193,
+          "url": "https://explorer.solana.com/tx/2VStUexLU9anazTAnRweUN5Qznaktrub5asALf43htoVVThqBgDabaAqZj9qGimXQELDeKJ8itWHrfEYuZwsyJqX",
+          "events": [
+            {
+              "type": "SellEvent",
+              "byte_length": 441,
+              "bytes_consumed": 441,
+              "pool_quote_raw": "173987909809",
+              "signed_virtual_quote_raw": "-1156939",
+              "effective_quote_raw": "173986752870",
+              "user_quote_received_raw": "20097426"
+            }
+          ]
+        },
+        {
+          "slot": 455287607,
+          "url": "https://explorer.solana.com/tx/3EGHPVsAWWGPEjjqYq6zT4aYUWV438RBUE2zSGAU9DkvwPZXVZichYPsJMsSiKSXdJ27gTvF267tsxsYZpKWQwcN",
+          "events": [
+            {
+              "type": "SellEvent",
+              "byte_length": 441,
+              "bytes_consumed": 441,
+              "pool_quote_raw": "76183860355337791",
+              "signed_virtual_quote_raw": "-153587008",
+              "effective_quote_raw": "76183860201750783"
+            },
+            {
+              "type": "BuyEvent",
+              "byte_length": 489,
+              "bytes_consumed": 489,
+              "pool_quote_raw": "75563363457856427",
+              "signed_virtual_quote_raw": "-153587008",
+              "effective_quote_raw": "75563363304269419"
+            }
+          ]
+        }
+      ],
+      "primaryIdl": {
+        "repository": "pump-fun/pump-public-docs",
+        "commit": "bc35796152027d2744ca02066d305438e34b67e7",
+        "path": "idl/pump_amm.json",
+        "blob": "d907b16a91f035aeb3c3182bfa0972a91bf23a86"
+      },
+      "checkpoint": "CP09",
+      "falsifier": "Obtain first-party hashed read-only getTransaction JSON-RPC envelope and slot/transaction-era discriminator match, then source-first-known complete launch census with 100/500/1000 USD same-size full buy/sell and matured all-candidate economic outcomes",
+      "decision": "READ_ONLY_RPC_PROVENANCE_NEXT_SOURCE_GATE",
+      "action": "NONE",
+      "owner": "Meme-Alpha-Lab#194/#126; sellability #98; outcomes #77/#85"
     }
   ],
   "research_ladder": {
@@ -287,7 +349,7 @@
   },
   "next_valid_disposition": {
     "priority": "P0_SOURCE_FIRST",
-    "statement": "Within existing #1512 and Alpha original #194/#126, an owner-approved bounded read-only Solana native first-known source/IDL proof; #98 full-sized two-way quotes only after admissible source. Never start a new automated feed or paid run from this index.",
+    "statement": "PUBLIC_EXPLORER_EVENT_REPLAY_PASSED_TWO_SELECTED_TRANSACTIONS. Within existing #1512 and Alpha originals #194/#126, obtain a first-party read-only exact-slot/era RPC JSON envelope hash and true first-known population/clock; only then original #98 full-sized two-way quotes, followed by #77/#85 outcomes. Never start a new scheduled feed, scorer or paid run from this index.",
     "no_new_queue": true
   },
   "immutable_until_reviewer_releases": true,
