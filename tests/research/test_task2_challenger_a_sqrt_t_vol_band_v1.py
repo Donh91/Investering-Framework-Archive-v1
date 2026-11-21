@@ -1125,8 +1125,10 @@ class ChallengerATest(unittest.TestCase):
             with self.subTest(stamp=stamp):
                 self.assertEqual(A.mature_publication_week(A.utc(stamp)), expected)
         with mock.patch.object(A, "_publication_clock", return_value=A.utc("2026-11-22T12:00:00Z")):
-            self.assertEqual(A.publish_mature_score(Path("/nonexistent"))["status"],
-                             "CHALLENGER_A_SCORE_NOT_DUE")
+            not_due = A.publish_mature_score(Path("/nonexistent"))
+            self.assertEqual(not_due["status"], "CHALLENGER_A_SCORE_NOT_DUE")
+            # A not-yet-mature week must never emit a decision on the forecast.
+            self.assertNotIn("shadow_confirmatory_readback", not_due)
 
     def test_writer_cli_refuses_user_week_and_fixture_clock(self):
         for args in (["--week", "2026-W47"], ["--t0", "2026-11-23T01:00:00Z"],
@@ -1145,6 +1147,14 @@ class ChallengerATest(unittest.TestCase):
                     A, "preflight_hourly_score_publication", wraps=A.preflight_hourly_score_publication) as preflight:
                 result = A.publish_mature_score(root)
                 self.assertEqual(result["status"], "CHALLENGER_A_FIRST_MATURE_SCORE_READBACK_PASS")
+                # A confirmed decision readback follows the immutable remote
+                # score; first week is PENDING, never an edge or trade claim.
+                first_decision = result["shadow_confirmatory_readback"]
+                self.assertEqual(first_decision["status"], "PENDING")
+                self.assertFalse(first_decision["promotion_allowed"])
+                self.assertEqual(first_decision["source_class"],
+                                 "IMMUTABLE_FIRST_MAIN_WEEKLY_SCORES_ONLY")
+                self.assertEqual(len(first_decision["first_main_score_census"]), 1)
                 self.assertEqual(preflight.call_count, 1)
                 candidate = result["first_main_commit"]
                 self.assertEqual(preflight.call_args.args[-1], candidate)
@@ -1152,8 +1162,11 @@ class ChallengerATest(unittest.TestCase):
                 row, proof = A.read_first_main_weekly_score(root, 2026, 47)
                 self.assertEqual(row["paired_rows"], 14)
                 self.assertTrue(proof["eligible_first_maturity"])
-                self.assertEqual(A.publish_mature_score(root)["status"],
-                                 "CHALLENGER_A_SCORE_ALREADY_ON_MAIN")
+                already = A.publish_mature_score(root)
+                self.assertEqual(already["status"], "CHALLENGER_A_SCORE_ALREADY_ON_MAIN")
+                # Repeated scheduled ticks read the same already-verified
+                # decision; no score reissue, manual backfill or new writer.
+                self.assertEqual(already["shadow_confirmatory_readback"], first_decision)
                 self.assertEqual(self._git(bare, "rev-parse", "main"), candidate)
                 self.assertEqual(preflight.call_count, 1)
 
