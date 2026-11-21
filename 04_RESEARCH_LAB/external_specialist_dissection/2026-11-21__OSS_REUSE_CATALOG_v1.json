@@ -25,8 +25,8 @@
       "area": "Alpha sellability",
       "owner": "MAL#98 / Archive#1512 S1",
       "method": "Read-only EVM contract and EOA wallet buy/approve/sell comparison, adversarial simulation traps",
-      "test": "Same-block matched sell simulations, contract-vs-EOA disagreement, partial/full-size exit, revert/no-route and 100/500/1000 USD; no source promotion",
-      "risk": "Simulator read methods and eth_simulateV1 node support vary; contract state can later change",
+      "test": "First verify native Robinhood chain4663 compatibility (not present in upstream built-in chain registry) and eth_simulateV1 node capability; upstream EOA path is Uniswap V2-only. Only when feasible compare same-block same-token EOA vs contract, sized full exits 100/500/1000 USD; never treat unsupported as SAFE.",
+      "risk": "Upstream chains.js does not list Robinhood 4663; EOA path uses Uniswap V2 routers only, no V4 callback; eth_simulateV1 support unverified on Robinhood RPC. Native 4663 may require original-owner adapter; no automatic code deployment.",
       "action": "SOURCE_AUDIT_WITH_ORIGINAL_OWNER",
       "stars": 68,
       "lastPush": "2026-09-28"
@@ -305,5 +305,18 @@
     }
   ],
   "terminal_status": "SOURCE_REVIEWED_NOT_READY_FOR_IMPLEMENTATION",
-  "required_next_gate": "Original-owner source/overlap admissibility and independent review before any executable patch."
+  "required_next_gate": "Original-owner source/overlap admissibility and independent review before any executable patch.",
+  "additional_verification": [
+    {
+      "candidate": "OSS01",
+      "source_commit": "ab2891491124f7ff0235d76bb4cd4a66f5bb6c7f",
+      "paths": [
+        "packages/core/src/chains.js",
+        "packages/core/src/simulate-wallet.js",
+        "packages/core/src/simulate-contract.js"
+      ],
+      "finding": "No native 4663 chain config observed; EOA multiblock eth_simulateV1 explicitly V2 only; Corbel is separate chain4663 contract eth_call state override. This is a conditional test design, not an immediately runnable cross-implementation 4663 comparison.",
+      "state": "SOURCE_CODE_READ_CONFIRMED_NO_RUNTIME_TEST"
+    }
+  ]
 }
