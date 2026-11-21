@@ -864,6 +864,32 @@ class TestOwnerBuildStage1(unittest.TestCase):
                                return_value={"id": m.MODEL}):
             return m.build_request(mission_id)
 
+    def test_build_payment_hard_held_until_pinned_pytest_node_image(self):
+        # Preview is advisory only; no provider GET, claim or paid POST.
+        for stage in ("M1", "M2", "M3"):
+            mid = "ASTRA-BUILD-" + stage + "-20261121-S1"
+            with mock.patch.object(m, "validated",
+                                   return_value=({}, {}, {"mission_id": mid})), \
+                 mock.patch.object(m, "check_guard") as guard, \
+                 mock.patch.object(m.core, "required_env") as env, \
+                 mock.patch.object(m.core, "http_json") as http:
+                with self.assertRaisesRegex(ValueError,
+                        "BUILD_RELEASE_HOLD_PYTEST_NODE_IMAGE_NOT_PINNED"):
+                    m.reserve(Path("/unused"), Path("/unused-guard"))
+                guard.assert_not_called()
+                env.assert_not_called()
+                http.assert_not_called()
+
+    def test_build_paid_post_defense_in_depth_held(self):
+        mid = "ASTRA-BUILD-M1-20261121-S1"
+        with mock.patch.object(m, "verify_claim",
+                               return_value=({}, {"mission_id": mid})), \
+             mock.patch.object(m.core, "http_json") as http:
+            with self.assertRaisesRegex(ValueError,
+                    "BUILD_RELEASE_HOLD_PYTEST_NODE_IMAGE_NOT_PINNED"):
+                m.submit(Path("/unused"))
+            http.assert_not_called()
+
     def test_build_stage1_has_genuine_small_fixed_upper_bound(self):
         req, raw, meta = self.fake("ASTRA-BUILD-M1-20261121-S1")
         self.assertLessEqual(len(raw), 600_000)
