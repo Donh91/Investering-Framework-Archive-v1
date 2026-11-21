@@ -47,6 +47,18 @@ class TestOracle(unittest.TestCase):
                     o.docker_command(image, "astra-pilot-"+"b"*32, Path(d))
 
 
+    def test_network_attempt_is_an_independent_negative_control(self):
+        with mock.patch.object(o, "run_case",
+                               return_value=b'{"status":"INVALID"}') as run:
+            result = o.network_negative_control(o.PINNED_IMAGE)
+            self.assertTrue(result["attempted"])
+            self.assertEqual(result["outbound_connection"], "DENIED")
+            self.assertEqual(run.call_count, 1)
+            self.assertEqual(run.call_args.args[0], o.PINNED_IMAGE)
+        with mock.patch.object(o, "run_case", return_value=b'{"status":"ELIGIBLE"}'):
+            with self.assertRaisesRegex(p.PilotBlocked, "NETWORK_ATTEMPT_NOT_DENIED"):
+                o.network_negative_control(o.PINNED_IMAGE)
+
     def test_strict_json_and_artifact_bounds(self):
         for data in (b'{"a":1,"a":2}', b'{"a":NaN}', b'{"a":Infinity}', b'garbage'):
             with self.assertRaises(p.PilotBlocked):
