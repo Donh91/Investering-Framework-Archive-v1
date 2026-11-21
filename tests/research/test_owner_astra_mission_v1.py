@@ -846,5 +846,72 @@ class TestWorkflow(unittest.TestCase):
                     self.assertIs(step["with"]["persist-credentials"], False)
 
 
+class TestOwnerBuildStage1(unittest.TestCase):
+    """BUILD exceptions affect only three pinned owner-bound stage IDs."""
+
+    def fake(self, mission_id, max_usd=5.0, bundle=b"public-only test evidence"):
+        instructions = b"Strict BUILD_v1; do not execute commands."
+        mission = {"mission_id": mission_id, "model": m.MODEL,
+                   "reasoning_effort": "max", "max_output_tokens": 4096,
+                   "max_usd": max_usd, "instructions_file": "MISSION.md",
+                   "bundle_file": "BUNDLE.md", "bundle_sha256": m.digest(bundle)}
+        with mock.patch.object(m, "load_mission",
+                               return_value=("06_RESEARCH_LAB/astra_missions/test",
+                                             b"{}", mission)), \
+             mock.patch.object(m, "tracked_bytes",
+                               side_effect=[instructions, bundle]), \
+             mock.patch.object(m, "model_policy",
+                               return_value={"id": m.MODEL}):
+            return m.build_request(mission_id)
+
+    def test_build_payment_hard_held_until_pinned_pytest_node_image(self):
+        # Preview is advisory only; no provider GET, claim or paid POST.
+        for stage in ("M1", "M2", "M3"):
+            mid = "ASTRA-BUILD-" + stage + "-20261121-S1"
+            with mock.patch.object(m, "validated",
+                                   return_value=({}, {}, {"mission_id": mid})), \
+                 mock.patch.object(m, "check_guard") as guard, \
+                 mock.patch.object(m.core, "required_env") as env, \
+                 mock.patch.object(m.core, "http_json") as http:
+                with self.assertRaisesRegex(ValueError,
+                        "BUILD_RELEASE_HOLD_PYTEST_NODE_IMAGE_NOT_PINNED"):
+                    m.reserve(Path("/unused"), Path("/unused-guard"))
+                guard.assert_not_called()
+                env.assert_not_called()
+                http.assert_not_called()
+
+    def test_build_paid_post_defense_in_depth_held(self):
+        mid = "ASTRA-BUILD-M1-20261121-S1"
+        with mock.patch.object(m, "verify_claim",
+                               return_value=({}, {"mission_id": mid})), \
+             mock.patch.object(m.core, "http_json") as http:
+            with self.assertRaisesRegex(ValueError,
+                    "BUILD_RELEASE_HOLD_PYTEST_NODE_IMAGE_NOT_PINNED"):
+                m.submit(Path("/unused"))
+            http.assert_not_called()
+
+    def test_build_stage1_has_genuine_small_fixed_upper_bound(self):
+        req, raw, meta = self.fake("ASTRA-BUILD-M1-20261121-S1")
+        self.assertLessEqual(len(raw), 600_000)
+        self.assertLessEqual(meta["worst_case_usd"], 5.0)
+        self.assertEqual(meta["reasoning_effort"], "max")
+        self.assertEqual(req["model"], m.MODEL)
+        self.assertNotIn("tools", req)
+
+    def test_build_stage2_is_closed_without_native_failed_receipt(self):
+        with self.assertRaisesRegex(ValueError,
+                                    "BUILD_STAGE2_PRIOR_NATIVE_RECEIPT_NOT_ADMITTED"):
+            self.fake("ASTRA-BUILD-M1-20261121-S2")
+
+    def test_build_over_5_dollars_is_denied(self):
+        with self.assertRaisesRegex(ValueError, "BUILD_STAGE_MISSION_CAP"):
+            self.fake("ASTRA-BUILD-M2-20261121-S1", max_usd=5.01)
+
+    def test_existing_non_build_mission_wire_is_unchanged(self):
+        _, _, meta = self.fake("ASTRA-UNRELATED-NONBUILD-20261121", max_usd=5.01)
+        self.assertEqual(meta["max_usd"], 5.01)
+
+
+
 if __name__ == "__main__":
     unittest.main()
