@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {resolve,relative} from 'node:path';
-import {inheritedProtectionOrigin,kompasTruthReadback} from '../kompas-truth-banner.mjs';
+import {hourlyFloorReadback,inheritedProtectionOrigin,kompasTruthReadback} from '../kompas-truth-banner.mjs';
 const source=await readFile(new URL('../build-public.mjs',import.meta.url),'utf8');
 const premium=await readFile(new URL('../market-compass-premium.js',import.meta.url),'utf8');
 const hash=s=>createHash('sha256').update(s).digest('hex');
@@ -39,7 +39,7 @@ function fixture(){
  const forecastPath='04_MARKET_LEARNING/handlekompas/shadow_v2/forecasts/f.json';
  const forecast={contract:'SHADOW_COMPASS_V2_FORECAST_v1',forecast_id:'f',issued_at_utc:now,source_fingerprint:'fp',authority:{automatic_promotion:false},source_bindings:{auto_market_state:{packet_path:autoPath,packet_sha256:auto.hash,packet_generated_at_utc:now},cycle_navigator:{iso_year:2026,iso_week:41,issue_number:29,machine_package_sha256:wp.machine_package_sha256}},model_output:{horizons:{'12h':{direction:'UP'}}}};
  const installForecast=()=>{const f=signed(forecast,'forecast_sha256');files.set(resolve(root,forecastPath),f.raw);pointers.set('shadow',{contract:'SHADOW_COMPASS_V2_LATEST_POINTER_v1',forecast_path:forecastPath,forecast_sha256:f.hash,forecast_id:'f',source_fingerprint:'fp'});};installForecast();
- const context={resolve,relative,createHash,Date,inheritedProtectionOrigin,kompasTruthReadback,repoRoot:root,COMPASS_POINTER_PATH:'public',INTERNAL_COMPASS_POINTER_PATH:'official',AUTO_MARKET_STATE_POINTER_PATH:'auto',NATIVE_COMPASS_POINTER_PATH:'native',SHADOW_COMPASS_V2_POINTER_PATH:'shadow',STRATEGIC_COMPASS_POINTER_PATH:'strategic',MASTER_MONDAY_HANDOFF_PATH:'handoff',readJson:async p=>pointers.get(p),readFile:async(p,encoding)=>{if(!files.has(p))throw Error('missing');return encoding?files.get(p):Buffer.from(files.get(p));}};
+ const context={resolve,relative,createHash,Date,hourlyFloorReadback,inheritedProtectionOrigin,kompasTruthReadback,repoRoot:root,COMPASS_POINTER_PATH:'public',INTERNAL_COMPASS_POINTER_PATH:'official',AUTO_MARKET_STATE_POINTER_PATH:'auto',NATIVE_COMPASS_POINTER_PATH:'native',SHADOW_COMPASS_V2_POINTER_PATH:'shadow',STRATEGIC_COMPASS_POINTER_PATH:'strategic',MASTER_MONDAY_HANDOFF_PATH:'handoff',readJson:async p=>pointers.get(p),readFile:async(p,encoding)=>{if(!files.has(p))throw Error('missing');return encoding?files.get(p):Buffer.from(files.get(p));}};
  vm.createContext(context);vm.runInContext(source.slice(source.indexOf('function verifiedRelative'),source.indexOf('\nasync function buildCompassEventSnapshot'))+';globalThis.run=buildFullStackReadback;globalThis.digest=verifiedRawDigest;',context);
  return {root,files,pointers,forecast,installForecast,autoPath,officialPath,projectionPath,weeklyPath,weeklyPointer:wp,context,run:()=>context.run({compass_id:'c',issued_at_utc:now,data_status:'OK',action_now:'HOLD'},wp,{issue_number:29})};
 }
@@ -136,6 +136,28 @@ for(const mode of ['missing-pointer','missing-file','wrong-public-digest','wrong
  assert.equal(result.source_status.official,'DEGRADED','Public projection binding: '+mode);
  assert.equal(result.truth_banner,null,'Truth banner with unbound public projection: '+mode);
  assert.notEqual(result.shadow.status,'ALIGNED_RESEARCH','No validated shadow source when public pointer mismatched: '+mode);
+}
+// The site-only floor line must fail closed when either input's bytes drift.
+for(const mode of ['valid','tampered-forecast-freeze','tampered-auto-packet']){
+ const f=fixture();
+ const closed='2026-10-10T11:00:00Z',available='2026-10-10T11:15:00Z';
+ const auto=signed({contract:'AUTO_MARKET_STATE_PACKET_v1',packet_generated_at_utc:available,
+  normalized_state:{live_market:{observation_open_utc:'2026-10-10T10:00:00Z',
+   observation_semantics:'COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL',btc_usdt:59000}},
+  source_health:{hourly_market:{status:'PASS',classification:'GITHUB_POINTER_TARGET_CHAIN_VALID',
+   freshness:{status:'PASS',source_observation_freshness:{status:'PASS',timestamp:closed,max_age_seconds:10800}}}}},
+  'packet_sha256');
+ f.pointers.set('auto',{packet_path:f.autoPath,packet_generated_at_utc:available,packet_sha256:auto.hash});
+ f.files.set(resolve(f.root,f.autoPath),mode==='tampered-auto-packet'?auto.raw.replace('59000','58000'):auto.raw);
+ const freeze=JSON.stringify({btc_range_low:60000,price_quote:{BTC:'USDT'},daily_price_path:{
+  contract:'CN_FROZEN_DAILY_PRICE_PATH_v1',forecast_week:'2026-W41',BTC:{points:
+    Array.from({length:7},(_,i)=>({day:i+1,low:59000}))}}});
+ const freezePath=resolve(f.root,f.weeklyPointer.week_dir,'CYCLE_NAVIGATOR_FORECAST_FREEZE.json');
+ f.weeklyPointer.forecast_freeze_sha256=hash(freeze);
+ f.files.set(freezePath,mode==='tampered-forecast-freeze'?freeze.replace('60000','70000'):freeze);
+ const seen=await f.context.run(null,f.weeklyPointer,{issue_number:29,
+   generated_unix:Date.parse('2026-10-05T10:00:00Z')/1000});
+ assert.equal(seen.hourly_floor_observation?.assets[0].price,mode==='valid'?59000:undefined,mode);
 }
 // Native metadata must come from the hash-verified target, not a mutable pointer.
 for(const mode of ['valid','valid-degraded','health','time','scalar-health','missing-health-status','unknown-health-status']){

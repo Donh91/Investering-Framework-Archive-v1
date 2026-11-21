@@ -73,13 +73,81 @@ export function kompasTruthBanner(compass,{nowMs=Date.now(),lang='da',weeklyAlig
   const labels=en?
     {FRESH:'Current data',STALE:'Stale data',DEGRADED:'Incomplete source data',MISSING:'Source freshness unavailable'}:
     {FRESH:'Aktuelle data',STALE:'Forældede data',DEGRADED:'Ufuldstændige kildedata',MISSING:'Kildens friskhed er ukendt'};
-  const mins=known?Math.floor((nowMs-obs)/60000):null;
-  const timing=mins===null?'':(en?' · Data age ':' · Dataalder ')+mins+' min';
-  if(!valid||source.inherited!==true)return {state,text:labels[state]+timing};
+  if(!valid||source.inherited!==true)return {state,text:labels[state]};
   const p=source.origin;
-  const origin=weeklyAligned&&positiveInt(p?.public_issue_number)&&/^\d{4}-\d{2}-\d{2}$/.test(p?.issued_date_utc)?
-    (en?'issue #':'udgave #')+p.public_issue_number+' ('+p.issued_date_utc+' UTC)':
-    (en?'a prior issue (origin unverified)':'en tidligere udgave (ophav ukendt)');
-  const risk=en?'Risk assessment carried forward from '+origin:'Risikovurdering nedarvet fra '+origin;
-  return {state,text:risk+' · '+labels[state]+timing};
+  if(!weeklyAligned||!positiveInt(p?.public_issue_number)||!/^\d{4}-\d{2}-\d{2}$/.test(p?.issued_date_utc))
+    return {state,text:labels[state]};
+  const date=p.issued_date_utc+' UTC';
+  const risk=en?'Risk assessment carried forward from '+date+' (issue #'+p.public_issue_number+'), not refreshed.':
+    'Risikovurdering nedarvet fra '+date+' (udgave #'+p.public_issue_number+'), ikke fornyet.';
+  return {state,text:risk+' · '+labels[state]};
+}
+
+const HOUR_MS=3600000;
+const DAY_MS=24*HOUR_MS;
+const HOURLY_CONTRACT='CN_PUBLIC_FROZEN_FLOOR_HOURLY_OBSERVATION_v1';
+const positivePrice=n=>typeof n==='number'&&Number.isFinite(n)&&n>0;
+
+/** Both inputs come from hash-verified public files. Bind the quote and pre-existing owner clock. */
+export function hourlyFloorReadback(auto,freeze,pointer,pkg){
+ const year=pointer?.iso_year,week=pointer?.iso_week;
+ if(!Number.isInteger(year)||year<2000||year>9999||!Number.isInteger(week)||week<1||week>53)return null;
+ const jan4=new Date(Date.UTC(year,0,4));
+ const firstMonday=jan4.getTime()-((jan4.getUTCDay()+6)%7)*DAY_MS;
+ const weekStart=firstMonday+(week-1)*7*DAY_MS;
+ const weekEnd=weekStart+7*DAY_MS;
+ if(new Date(weekStart+3*DAY_MS).getUTCFullYear()!==year)return null;
+ const weekId=year+'-W'+String(week).padStart(2,'0');
+ const path=freeze?.daily_price_path;
+ if(path?.contract!=='CN_FROZEN_DAILY_PRICE_PATH_v1'||path.forecast_week!==weekId)return null;
+ const live=auto?.normalized_state?.live_market;
+ const health=auto?.source_health?.hourly_market;
+ const clock=health?.freshness?.source_observation_freshness;
+ const open=Date.parse(live?.observation_open_utc);
+ const close=open+HOUR_MS;
+ const delivered=Date.parse(auto?.packet_generated_at_utc);
+ const issued=pkg?.generated_unix*1000;
+ if(health?.status!=='PASS'||health.classification!=='GITHUB_POINTER_TARGET_CHAIN_VALID'||
+    health.freshness?.status!=='PASS'||clock?.status!=='PASS'||
+    !positivePrice(clock.max_age_seconds)||Date.parse(clock.timestamp)!==close||
+    live?.observation_semantics!=='COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL'||
+    !Number.isFinite(open)||open%HOUR_MS!==0||!Number.isFinite(issued)||open<issued||
+    open<weekStart||close>=weekEnd||!Number.isFinite(delivered)||close>delivered||
+    delivered-close>clock.max_age_seconds*1000)return null;
+ const assets=[];
+ for(const asset of ['BTC','ETH']){
+  const key=asset.toLowerCase();
+  const daily=path[asset]?.points;
+  const price=live[key+'_usdt'],floor=freeze[key+'_range_low'];
+  if(freeze.price_quote?.[asset]!=='USDT'||!positivePrice(price)||!positivePrice(floor)||
+     !Array.isArray(daily)||daily.length!==7||!daily.every(p=>
+       Number.isInteger(p?.day)&&p.day>=1&&p.day<=7&&positivePrice(p.low))||
+     new Set(daily.map(p=>p.day)).size!==7)continue;
+  assets.push({asset,price,weekly_floor:floor});
+ }
+ if(!assets.length)return null;
+ return {contract:HOURLY_CONTRACT,forecast_week:weekId,quote:'USDT',
+  closed_at_utc:new Date(close).toISOString(), available_at_utc:new Date(delivered).toISOString(),
+  valid_until_utc:new Date(Math.min(weekEnd,close+clock.max_age_seconds*1000)).toISOString(),assets};
+}
+
+export function hourlyFloorBanner(compass,{forecastWeek,nowMs=Date.now(),lang='da'}={}){
+ const row=compass?.full_stack?.hourly_floor_observation;
+ const close=Date.parse(row?.closed_at_utc),delivered=Date.parse(row?.available_at_utc);
+ const expiry=Date.parse(row?.valid_until_utc);
+ const latestHourly=compass?.public_data_health;
+ const knownNewer=latestHourly?.hourly_status==='COMPLETE'&&
+   Date.parse(latestHourly.latest_complete_market_hour_utc)>close;
+ if(row?.contract!==HOURLY_CONTRACT||row.forecast_week!==forecastWeek||row.quote!=='USDT'||
+    knownNewer||!Number.isFinite(close)||!(close<=delivered&&delivered<=nowMs&&nowMs<expiry)||
+    !Array.isArray(row.assets))return {age:'',lines:[]};
+ const en=lang==='en';
+ const age=Math.floor((nowMs-close)/60000);
+ const number=new Intl.NumberFormat(en?'en-GB':'da-DK',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const utc=new Date(close).toISOString().slice(11,16)+' UTC';
+ const lines=row.assets.filter(x=>['BTC','ETH'].includes(x?.asset)&&positivePrice(x?.price)&&
+  positivePrice(x?.weekly_floor)&&x.price<x.weekly_floor).map(({asset,price,weekly_floor})=>
+  en?asset+': Last hourly close '+number.format(price)+' USDT ('+utc+') is below the frozen weekly floor '+number.format(weekly_floor)+' USDT · observation only':
+    asset+': Seneste timelukkekurs '+number.format(price)+' USDT ('+utc+') ligger under prognosens ugebund '+number.format(weekly_floor)+' USDT · beskrivende observation');
+ return {age:en?'Data '+age+' min old.':'Data '+age+' min gammel.',lines};
 }
