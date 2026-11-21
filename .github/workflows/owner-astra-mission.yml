@@ -131,7 +131,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }
+          ref: ${{ github.sha }}
           persist-credentials: false
       - name: Build reviewed dependency candidate outside any paid job
         shell: bash
@@ -156,7 +156,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: astra-build-toolchain-candidate-${{ github.run_id }
+          name: astra-build-toolchain-candidate-${{ github.run_id }}
           path: runtime/astra-build-toolchain-evidence/image_candidate.json
           if-no-files-found: warn
           retention-days: 30
