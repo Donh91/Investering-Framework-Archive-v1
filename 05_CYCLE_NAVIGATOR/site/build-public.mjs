@@ -1,5 +1,6 @@
 import { mkdir, readFile, rm, writeFile, copyFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preserveLegacyShell, releasePremiumShell } from "./premium-release.mjs";
@@ -624,17 +625,13 @@ await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"\n");
 
-// Research-only first-party source slot for Challenger A. This is deliberately
-// an explicit NO-DATA receipt until a separately governed, immutable W47+
-// issuance is produced and proven before outcomes. Never compute a new shadow
-// forecast here or reuse today's data for a frozen past week.
+// Reuse the Task 2 first-main verifier. Never score or backfill from the site.
 const challengerDirectory=resolve(dataDir,"challenger-a");
 await mkdir(challengerDirectory,{recursive:true});
-await writeFile(resolve(challengerDirectory,"latest.json"),
-  JSON.stringify({contract:"CN_CHALLENGER_A_PUBLIC_SHADOW_v1",
-    publication_status:"UNAVAILABLE",visibility:"SHADOW_ONLY",
-    reason:"NO_GOVERNED_IMMUTABLE_ISSUANCE_ON_MAIN",
-    authority:{official_forecast:false,portfolio_execution:false,trading:false,promotion:false}},null,2)+"\n");
+const challengerSnapshot=execFileSync("python3",
+  [resolve(siteDir,"public-challenger-score.py"),repoRoot],
+  {encoding:"utf8",timeout:60000});
+await writeFile(resolve(challengerDirectory,"latest.json"),challengerSnapshot);
 
 for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolve(outputDir,file));}
  // CN SITE v2: one source-owned, renderer-neutral graph adapter for future

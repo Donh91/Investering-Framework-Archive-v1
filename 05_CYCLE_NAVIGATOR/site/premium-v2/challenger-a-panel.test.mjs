@@ -51,7 +51,25 @@ test('source-only integration into Prognose tab and no official graph mutation',
 
 test('build publishes an explicit unavailable research data receipt instead of a 404',async()=>{
  const build=await readFile(new URL('../build-public.mjs',import.meta.url),'utf8');
- assert.match(build,/CN_CHALLENGER_A_PUBLIC_SHADOW_v1/);
- assert.match(build,/NO_GOVERNED_IMMUTABLE_ISSUANCE_ON_MAIN/);
+ assert.match(build,/public-challenger-score\.py/);
  assert.match(build,/resolve\(dataDir,"challenger-a"\)/);
+});
+
+test('show paired close scores only with mature, immutable, same-week lineage',()=>{
+ const p=mk();
+ p.comparison={week:'2026-W47',n:10,first_in_main_commit:'e'.repeat(40),
+   first_in_main_utc:'2026-11-23T01:00:00Z',blob_sha:'f'.repeat(40),
+   issuance_sha256:p.issuance.issuance_sha256,b1_status:'NO_SAME_ROW_IMMUTABLE_SCORE',
+   scores:{CN:0.08,A:0.07,EQW_PRIOR:0.081}};
+ assert.equal(validateChallengerPublic(p,now).comparison,null);
+ const after=Date.parse('2026-11-23T02:00:00Z');
+ assert.equal(validateChallengerPublic(p,after).comparison.n,10);
+ for(const change of [
+   c=>{c.week='2026-W46'}, c=>{c.first_in_main_utc='2026-11-22T23:00:00Z'},
+   c=>{c.issuance_sha256='0'.repeat(64)}, c=>{delete c.scores.EQW_PRIOR},
+   c=>{c.n=15}, c=>{delete c.blob_sha},
+ ]){
+   const broken=structuredClone(p);change(broken.comparison);
+   assert.equal(validateChallengerPublic(broken,after).comparison,null);
+ }
 });
