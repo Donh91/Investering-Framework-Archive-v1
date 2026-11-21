@@ -1,6 +1,6 @@
 ---
 name: research-parallel-lanes
-description: 'Coordinate source-first, adversarial and bounded Investering Research Lab packages from a new chat to reviewed GitHub research or code PR and verified consumer, or reject/close with exact evidence. Also coordinate explicit Research Parallel Lanes, parallel deep research, Task 2 multi-track studies and authorized independent GitHub jobs. Does not create agents, workflows, schedules, API authorization, reviewers, scientific promotion or trading authority by itself.'
+description: 'Coordinate multiple bounded, independent research tracks in one Investering conversation and, when available, in parallel read-only GitHub Actions jobs or existing authorized AI-agent lanes. Use for explicit Research Parallel Lanes, parallel deep research, Task 2 multi-track studies, 5-10 research tracks, or a request to repeat the Ironflow parallel-job method. Does not create agents, workflows, schedules, API authorization, new reviewers or trading authority by itself.'
 ---
 
 # Research Parallel Lanes v1.0 (repository-local, explicit invocation)
@@ -15,17 +15,9 @@ Owner shortcut in another repository-aware thread:
 
 Canonical method: `.agents/skills/research-parallel-lanes/SKILL.md`; discovery: `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`. This is **not** an automatically installed ChatGPT-wide skill. The chat must actually fetch the repository file, and GitHub Actions/AI runtimes must be connected and separately authorized to do work.
 
-## Research Lab end-to-end package mode (explicit; no new actor)
-
-**New-thread trigger:** The owner explicitly asks for a substantial Research Lab deep dive / extremely thorough research package that should be sourced, challenged, archived and where justified carried to a reviewed GitHub PR or verified product integration. This can be expressed in ordinary Danish (for example "lav en grundig forskningspakke og få den til review") without knowing this skill's formal name. Do not trigger for routine explanations, status checks or generic market calls.
-
-**Required reference:** [Research Package to Reviewed PR to Verified Product v1](references/RESEARCH_PACKAGE_TO_REVIEW_PR_v1.md). Read this reference *in addition to* the existing source/owner/authority steps below. Its explicit sequence is source -> independent challenge -> original owner and baseline -> bounded research -> #1512/#1157 disposition -> smallest PR only if justified -> exact-head independent review -> main and real consumer readback -> measured effect or kill. It does NOT change the skill's existing explicit-invocation, privacy, Round 3, API budget, no-new-scheduler or original-owner limits. A PR-ready report and a verified working consumer are different completion states.
-
-**Future-thread shorthand:** "Research Lab end-to-end: [topic]. Brug Research Parallel Lanes og Research Package -> Reviewed PR. Source-first, falsificér, genbrug eksisterende ejere, aflever til review og verificér den faktiske forbruger, eller stop med en præcis trigger." This helper remains repository-local and must be fetched by an available GitHub tool; naming it in chat does not install it in other products or create ongoing work.
-
 ## Activation and nontriggers
 
-- **Explicit trigger:** `Research Parallel Lanes`, `/research-parallel-lanes`, `parallel research`, `flere forskningsspor i samme tråd`, `10 dybe spor`, or explicit reference to Ironflow's two/three independent Actions jobs. Also an explicit substantive Research Lab end-to-end research-package-to-reviewed-PR request, including ordinary Danish wording, per the referenced package mode. Require an existing scientific owner; use multiple tracks only if materially distinct hypotheses exist.
+- **Explicit trigger:** `Research Parallel Lanes`, `/research-parallel-lanes`, `parallel research`, `flere forskningsspor i samme tråd`, `10 dybe spor`, or explicit reference to Ironflow's two/three independent Actions jobs. Require a substantial research objective, multiple materially different hypotheses and one existing scientific owner.
 - **Do not invoke** for a quick factual answer, plain status, routine DATA PING, one small code fix, ordinary PR merge, current market signal, request for new automation, or a generic list of ideas without intent to research. Do not split a task merely to produce more tracks.
 - **No implicit invocation**: this candidate can initiate research/PR writes only under **existing explicit owner approval, verified non-default branch, budget and repository governance**. User's invocation is not GitHub/paid API permission when existing owners require extra gates.
 
