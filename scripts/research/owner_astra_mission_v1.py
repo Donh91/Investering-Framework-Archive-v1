@@ -36,6 +36,7 @@ from scripts.api_agent import manual_astra_task2_high_v1 as core
 from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
 from scripts.api_agent import astra_provider_settlement_v1 as provider_settlement
 from scripts.research import astra_worklike_pilot_v1 as worklike
+from scripts.api_agent import astra_build_cost_v1 as build_cost
 
 REPO = "Donh91/Investering-Framework-Archive-v1"
 OWNER = "Donh91"
@@ -249,6 +250,26 @@ def build_request(mission_id: str):
     data = core.canonical(request)
     if mission_id == WORKLIKE_STAGE1 and len(data) > worklike.MAX_REQUEST_BYTES:
         fail("WORKLIKE_REQUEST_BYTES")
+    build_stage = build_cost.OWNER_STAGE.fullmatch(mission_id)
+    if build_stage:
+        # One-stage safe admission now, never allow repair stage without an
+        # independently authenticated preceding native sandbox failure.
+        # The stage-2 route remains CLOSED until separately reviewed.
+        if build_stage.group(2) != "1":
+            fail("BUILD_STAGE2_PRIOR_NATIVE_RECEIPT_NOT_ADMITTED")
+        try:
+            build_cost.quote(
+                work_id=mission_id, mission=build_stage.group(1), stage=1,
+                model=model, reasoning_effort=effort,
+                request_bytes=len(data),
+                max_output_tokens=mission["max_output_tokens"],
+            )
+        except build_cost.BudgetHold as exc:
+            fail("BUILD_REQUEST_BUDGET_HOLD:" + str(exc))
+        if (mission.get("max_usd") is None
+                or mission["max_usd"] > build_cost.MAX_STAGE_USD
+                or len(data) > build_cost.MAX_REQUEST_BYTES):
+            fail("BUILD_STAGE_MISSION_CAP_OR_INPUT_LIMIT")
     input_upper = len(data) + INPUT_OVERHEAD_TOKENS
     upper = estimate_cost(model, input_upper, mission["max_output_tokens"])
     if len(data) > MAX_REQUEST_BYTES or upper > float(mission["max_usd"]) or CREDENTIAL.search(data):
