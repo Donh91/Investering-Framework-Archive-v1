@@ -103,8 +103,10 @@ def verify_original_artifact(repo: Path, input_dir: Path, mission_id: str,
             and meta["max_usd"] <= budget.MAX_STAGE_USD
             and meta["request_bytes"] <= budget.MAX_REQUEST_BYTES,
             "BUILD_MODEL_OR_REQUEST_CAP")
-    sr = load_json(read_bound(input_dir, "source_manifest.json", 48_000))
-    paid = load_json(read_bound(input_dir, "receipt.json", 48_000))
+    original_manifest_bytes = read_bound(input_dir, "source_manifest.json", 48_000)
+    original_receipt_bytes = read_bound(input_dir, "receipt.json", 48_000)
+    sr = load_json(original_manifest_bytes)
+    paid = load_json(original_receipt_bytes)
     require({k: v for k, v in sr.items()
              if k not in ("trigger_comment_id", "release_main_sha")} == meta,
             "SOURCE_MANIFEST_NOT_EXACT_NATIVE_REQUEST")
@@ -118,9 +120,9 @@ def verify_original_artifact(repo: Path, input_dir: Path, mission_id: str,
             and paid.get("no_retry") is True, "PAID_NOT_FINAL")
     prefix = "archive/" + meta["mission_dir"] + "/results/"
     require(read_bound(input_dir, prefix + "receipt.json", 48_000)
-            == admit.canonical(paid) + b"\n", "PAID_ARCHIVE_RECEIPT_NOT_MATCHED")
+            == original_receipt_bytes, "PAID_ARCHIVE_RECEIPT_NOT_MATCHED")
     require(read_bound(input_dir, prefix + "source_manifest.json", 48_000)
-            == admit.canonical(sr) + b"\n", "SOURCE_ARCHIVE_MANIFEST_NOT_MATCHED")
+            == original_manifest_bytes, "SOURCE_ARCHIVE_MANIFEST_NOT_MATCHED")
     raw = read_bound(input_dir, prefix + "ASTRA_RAW_REPORT.md")
     require(admit.digest(raw) == paid.get("output_sha256")
             and len(raw) == paid.get("bytes"), "RAW_REPORT_DIGEST_MISMATCH")
