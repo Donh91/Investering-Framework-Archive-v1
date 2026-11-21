@@ -32,8 +32,17 @@ MAX_SNAPSHOT_FILES = 85_000
 # fail the native fixed test, not a permission to read from private sources.
 SOURCE_ROOTS = ("scripts", "tests", "05_CYCLE_NAVIGATOR/site",
                 "04_MARKET_LEARNING/handlekompas/contracts", ".github",
-                "00_FMOS", "01_CORE_FRAMEWORK/governance", "07_PROMPTS_AND_AGENTS")
-SOURCE_FILES = ("pytest.ini", "pyproject.toml", "setup.cfg", "requirements.txt")
+                "00_FMOS", "01_CORE_FRAMEWORK/governance", "07_PROMPTS_AND_AGENTS",
+                "schemas")
+# Narrow, reviewed public fixtures actually read by the fixed M3 governance
+# tests. Never bulk-copy 00_ARCHIVE_CONTROL (which includes Vault registries).
+SOURCE_FILES = ("pytest.ini", "pyproject.toml", "setup.cfg", "requirements.txt",
+                "AGENTS.md", "CLAUDE.md",
+                "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
+                "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md",
+                "00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md")
+REQUIRED_PUBLIC_FIXTURES = ("AGENTS.md", "schemas/S1_CLOSURE_ASSURANCE_V1.schema.json",
+                            "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md")
 
 class SandboxBlocked(admit.AdmissionBlocked):
     pass
@@ -130,14 +139,21 @@ def _copy_public_tree(source: Path, target: Path):
         if not src.exists():
             continue
         require(src.is_file() and not src.is_symlink()
-                and stat.S_ISREG(src.lstat().st_mode), "SOURCE_FILE_SPECIAL")
+                and stat.S_ISREG(src.lstat().st_mode)
+                and all(not parent.is_symlink() for parent in list(src.parents)[:-1]
+                        if parent.is_relative_to(source)), "SOURCE_FILE_SPECIAL")
         size += src.stat().st_size
         count += 1
         require(count <= MAX_SNAPSHOT_FILES and size <= MAX_SNAPSHOT_BYTES,
                 "SOURCE_SNAPSHOT_TOO_LARGE")
-        shutil.copyfile(src, target / relative)
-        (target / relative).chmod(0o444)
-    return {"files": count, "bytes": size}
+        destination = target / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, destination)
+        destination.chmod(0o444)
+    for relative in REQUIRED_PUBLIC_FIXTURES:
+        require((target / relative).is_file() and not (target / relative).is_symlink(),
+                "REQUIRED_FIXED_TEST_FIXTURE_MISSING")
+    return {"files": count, "bytes": size, "public_fixture_count": len(REQUIRED_PUBLIC_FIXTURES)}
 
 def _write_admitted(root: Path, proposal: dict, scope: dict, receipt: dict):
     original = {r["path"]: r for r in receipt["files"]}
