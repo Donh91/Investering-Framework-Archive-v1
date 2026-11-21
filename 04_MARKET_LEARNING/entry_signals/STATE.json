@@ -1,9 +1,9 @@
 {
   "contract": "ENTRY_SIGNAL_STATE_v1",
   "criteria": {
-    "eth_outperforms_btc_24h": false,
+    "eth_outperforms_btc_24h": true,
     "ethbtc_above_registered_0_0300": false,
-    "top100_proxy_breadth_ge_50pct": false
+    "top100_proxy_breadth_ge_50pct": true
   },
   "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_2_CANONICAL_PROMOTION_GUARD",
   "execution_temperature": "NORMAL",
@@ -28,12 +28,12 @@
     "independent_rotation_confirmation_reason": "PROXY_OR_CANONICAL_COMPATIBILITY_UNCONFIRMED",
     "relative_breadth": {
       "constituent_count": 100,
-      "equal_weight_mean_return_24h_pct": -1.112438,
-      "median_return_24h_pct": -1.322885,
-      "outperforming_btc_count": 64,
-      "outperforming_btc_share": 0.64,
-      "outperforming_eth_count": 73,
-      "outperforming_eth_share": 0.73
+      "equal_weight_mean_return_24h_pct": 4.130998,
+      "median_return_24h_pct": 1.633205,
+      "outperforming_btc_count": 31,
+      "outperforming_btc_share": 0.31,
+      "outperforming_eth_count": 17,
+      "outperforming_eth_share": 0.17
     },
     "rolling_window_confirmation_policy": "Repeated observations from an overlapping rolling window are descriptive persistence only and are not, by themselves, independent confirmation.",
     "sensor_relationship_owner": "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
@@ -48,5 +48,5 @@
     "status": "FORWARD_ONLY_NOT_PROMOTION_READY"
   },
   "state": "WAIT",
-  "updated_at_utc": "2026-11-21T19:21:49.985455+00:00"
+  "updated_at_utc": "2026-11-21T20:24:39.191464+00:00"
 }
