@@ -24,7 +24,7 @@ def risk_row(run, lower=0, upper=3, month="2026-11"):
 
 
 def run_guard(spent=0, cap=40, reserve=4, rows=None, extra=None,
-              missing_ledger=False):
+              missing_ledger=False, ledger_addendum=None):
     with tempfile.TemporaryDirectory() as td:
         folder = Path(td)
         receipts = folder / "receipts"
@@ -46,6 +46,7 @@ def run_guard(spent=0, cap=40, reserve=4, rows=None, extra=None,
                     risk_row(41870364609), risk_row(41949497953),
                     risk_row(42204120988)],
             }
+            content.update(ledger_addendum or {})
             ledger.write_text(json.dumps(content))
         cmd = [
             sys.executable, str(SCRIPT), "--receipt-root", str(receipts),
@@ -62,6 +63,38 @@ def run_guard(spent=0, cap=40, reserve=4, rows=None, extra=None,
 
 
 class OwnerGlobalBudgetTests(unittest.TestCase):
+    def test_malformed_build_row_cannot_block_other_paid_lanes_or_hide_risk(self):
+        rogue = {"work_id": "ASTRA-BUILD-UNKNOWN-20261121-S1",
+                 "upper_usd": 5.0, "status": "OWNER_RESERVED_PREHTTP"}
+        rc, state = run_guard(spent=0, rows=[],
+                              ledger_addendum={"astra_mission_reservations": [rogue]})
+        self.assertEqual(rc, 0, state)
+        self.assertEqual(state["status"], "PASS")
+        self.assertEqual(state["pending_liability_upper_usd"], 30.0)
+        self.assertGreaterEqual(state["pending_liability_count"], 6)
+        from scripts.api_agent import check_monthly_cost_guard as guard
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "liabilities.json"
+            path.write_text(json.dumps({
+                "contract": "API_PENDING_BILLING_RISK_V1",
+                "no_retry_original_ids": True,
+                "requires_reconciliation_before_releasing_reserve": True,
+                "unresolved": [],
+                "astra_mission_reservations": [rogue]}))
+            with self.assertRaisesRegex(ValueError, "BUILD_PROGRAM_BUDGET_HOLD"):
+                guard.pending_risk(path, strict_build=True)
+            self.assertEqual(guard.pending_risk(path, strict_build=False)[1], 30.0)
+            path.write_text(json.dumps({
+                "contract": "API_PENDING_BILLING_RISK_V1",
+                "no_retry_original_ids": True,
+                "requires_reconciliation_before_releasing_reserve": True,
+                "unresolved": [],
+                "astra_mission_reservations": [
+                    {"work_id": "ASTRA-UNKNOWN-LEGACY-V1", "upper_usd": 5.0,
+                     "status": "OWNER_RESERVED_PREHTTP"}]}))
+            with self.assertRaises(ValueError):
+                guard.pending_risk(path, strict_build=False)
+
     def test_known_cost_plus_three_upper_unknown_is_never_zero(self):
         rc, state = run_guard(17)
         self.assertEqual(rc, 0, state)
