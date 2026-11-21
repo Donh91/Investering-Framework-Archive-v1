@@ -76,7 +76,7 @@ class BuildSandboxTest(unittest.TestCase):
         self.assertGreaterEqual(out["files"], 1)
         self.assertFalse((dst / ".git").exists())
         self.assertTrue((dst / self.pathname).is_file())
-        (self.src / "bad.py").symlink_to(self.path)
+        (self.src / "scripts/learning/bad.py").symlink_to(self.path)
         with self.assertRaisesRegex(s.SandboxBlocked, "SOURCE_SPECIAL_OR_SYMLINK"):
             s._copy_public_tree(self.src, self.root / "other")
 
