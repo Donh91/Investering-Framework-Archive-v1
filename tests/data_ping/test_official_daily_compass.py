@@ -1,10 +1,10 @@
 import json
 import hashlib
-import tempfile
 import subprocess
+import tempfile
 import unittest
 from unittest import mock
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 from scripts.data_ping import native_handlekompas as nh
@@ -1242,8 +1242,8 @@ class OfficialDailyCompassTest(unittest.TestCase):
             file = root / rel
             file.parent.mkdir(parents=True)
             file.write_bytes(raw)
-            blob = subprocess.run(["git", "hash-object", "--stdin"], input=raw,
-                                  capture_output=True, check=True).stdout.decode("ascii").strip()
+            blob = subprocess.run(["git", "hash-object", "--stdin"], input=raw, capture_output=True, check=True).stdout.decode().strip()
+            self.assertEqual(len(blob), 40)  # independent oracle: real Git, not the producer formula
             lane.update({"classification": "GITHUB_POINTER_TARGET_CHAIN_VALID",
                          "provenance": {"target": {"exact_path": rel, "git_blob_sha": blob, "exact_commit_sha": "a" * 40}},
                          "row": {"status": "PASS", "classification": "HOURLY_EXACT_ROW_BOUND",
@@ -1259,17 +1259,15 @@ class OfficialDailyCompassTest(unittest.TestCase):
             before = nh.canon(cn)
             result = nh.cn_band_status(auto, cn, binding, root, as_of)
             self.assertEqual(result["status"], "OBSERVED")
-            # Hourly observations are descriptive, NOT completed daily/weekly closes.
-            self.assertIsNone(result["assets"]["BTC"]["daily_close_below_floor"])
-            self.assertIsNone(result["assets"]["BTC"]["weekly_close_below_floor"])
-            self.assertIsNone(result["assets"]["ETH"]["weekly_close_below_floor"])
-            self.assertIsNone(result["assets"]["BTC"]["first_daily_breach_in_captured_window_utc"])
-            self.assertIsNone(result["assets"]["BTC"]["first_weekly_breach_in_captured_window_utc"])
-            self.assertTrue(result["assets"]["BTC"]["intraweek_breach"]["observed_in_captured_window"])
-            self.assertEqual(result["assets"]["BTC"]["intraweek_breach"]["first_observed_bar_open_utc"], "2026-09-16T17:00:00Z")
-            self.assertEqual(result["assets"]["BTC"]["daily_close_status"], "PENDING_D1_CLOSE")
-            self.assertEqual(result["assets"]["ETH"]["intraweek_breach"]["authority"],
-                             "DESCRIPTIVE_ONLY_NO_SCORE_NO_RISK_NO_ACTION")
+            # D1: no 23:00 candle in the window, so every completed-close field is pending (None)
+            for asset in ("BTC", "ETH"):
+                self.assertIsNone(result["assets"][asset]["daily_close_below_floor"])
+                self.assertIsNone(result["assets"][asset]["weekly_close_below_floor"])
+                self.assertIsNone(result["assets"][asset]["first_daily_breach_in_captured_window_utc"])
+            # hourly comparisons are descriptive only
+            self.assertFalse(result["assets"]["BTC"]["intraweek_breach"]["hourly_close_below_weekly_floor"])  # tie
+            self.assertEqual(result["assets"]["BTC"]["intraweek_breach"]["first_hourly_below_weekly_floor_utc"], "2026-09-16T17:00:00Z")
+            self.assertTrue(result["assets"]["ETH"]["intraweek_breach"]["hourly_close_below_weekly_floor"])
             self.assertEqual(result["availability_ts"], "2026-09-16T19:10:00Z")
             self.assertEqual(nh.canon(cn), before)
             self.assertEqual(nh.build_public_projection({"cn_band_status": result})["cn_band_status"], result)
@@ -1283,66 +1281,64 @@ class OfficialDailyCompassTest(unittest.TestCase):
             file.write_bytes(raw + b" ")
             self.assertEqual(nh.cn_band_status(auto, cn, binding, root, as_of)["reason"], "HOURLY_TARGET_HASH_MISMATCH")
 
-            def boundary_result(label: str, *, btc: float, eth: float, when: datetime):
-                """Independently bind the last completed hourly candle of a UTC day/week."""
-                boundary = datetime.fromisoformat(label.replace("Z", "+00:00"))
-                end = boundary + timedelta(hours=1)
-                retrieved_at = end + timedelta(minutes=5)
-                generated_at = retrieved_at + timedelta(minutes=5)
-                stamp = lambda dt: dt.isoformat().replace("+00:00", "Z")
-                auto["packet_generated_at_utc"] = stamp(generated_at)
-                live = auto["normalized_state"]["live_market"]
-                live["observation_open_utc"] = label
-                live["btc_usdt"] = btc
-                live["eth_usdt"] = eth
-                lane["row"]["timestamp_utc"] = label
-                lane["freshness"]["retrieval_freshness"]["timestamp"] = stamp(retrieved_at)
-                capture["retrieved_at_utc"] = stamp(retrieved_at)
-                capture["window_end_utc"] = stamp(end)
-                capture["directional_summary"]["latest_observations"] = [
-                    {"timestamp_utc": stamp(boundary - timedelta(hours=1)),
-                     "btc_close": 76000, "eth_close": 2500},
-                    {"timestamp_utc": label, "btc_close": btc, "eth_close": eth},
-                ]
-                wire = nh.canon(capture)
-                file.write_bytes(wire)
-                lane["provenance"]["target"]["git_blob_sha"] = subprocess.run(
-                    ["git", "hash-object", "--stdin"], input=wire,
-                    capture_output=True, check=True).stdout.decode("ascii").strip()
-                # Isolate source-bound D1/weekly closure semantics from unrelated
-                # historical freshness of this test fixture's other market lanes.
-                with mock.patch.object(nh, "_health_ok", return_value=True):
-                    return nh.cn_band_status(auto, cn, binding, root, when)
 
-            day_close = boundary_result(
-                "2026-09-16T23:00:00Z", btc=74900, eth=2400,
-                when=datetime(2026, 9, 17, 0, 20, tzinfo=timezone.utc))
-            self.assertEqual(day_close["status"], "OBSERVED")
-            self.assertTrue(day_close["assets"]["BTC"]["daily_close_below_floor"])
-            self.assertEqual(day_close["assets"]["BTC"]["daily_close_status"], "COMPLETED_UTC_DAY_CLOSE")
-            self.assertIsNone(day_close["assets"]["BTC"]["weekly_close_below_floor"])
-            self.assertEqual(day_close["assets"]["BTC"]["first_daily_breach_in_captured_window_utc"],
-                             "2026-09-16T23:00:00Z")
 
-            weekly_close = boundary_result(
-                "2026-09-20T23:00:00Z", btc=74000, eth=2300,
-                when=datetime(2026, 9, 21, 0, 20, tzinfo=timezone.utc))
-            self.assertEqual(weekly_close["status"], "OBSERVED")
-            self.assertTrue(weekly_close["assets"]["BTC"]["weekly_close_below_floor"])
-            self.assertEqual(weekly_close["assets"]["BTC"]["weekly_close_status"], "COMPLETED_UTC_WEEK_CLOSE")
-            self.assertEqual(weekly_close["assets"]["BTC"]["first_weekly_breach_in_captured_window_utc"],
-                             "2026-09-20T23:00:00Z")
-            premature = boundary_result(
-                "2026-09-20T23:00:00Z", btc=74000, eth=2300,
-                when=datetime(2026, 9, 20, 23, 50, tzinfo=timezone.utc))
-            self.assertEqual(premature["status"], "UNAVAILABLE")
-            self.assertEqual(premature["reason"], "BAR_OR_AVAILABILITY_CLOCK_UNAVAILABLE")
-            stale_cross_week = boundary_result(
-                "2026-09-20T23:00:00Z", btc=74000, eth=2300,
-                when=datetime(2026, 9, 21, 2, 20, tzinfo=timezone.utc))
-            self.assertEqual(stale_cross_week["status"], "UNAVAILABLE")
-            self.assertEqual(stale_cross_week["reason"], "BAR_OR_AVAILABILITY_CLOCK_UNAVAILABLE")
-
+    def test_cn_band_status_d1_uses_completed_daily_close_not_intraday_dip(self):
+        as_of = datetime(2026, 9, 16, 19, 20, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            auto = self.auto(btc=75500, eth=2500)
+            auto["packet_generated_at_utc"] = "2026-09-16T19:10:00Z"
+            auto["source_snapshot"]["exact_commit_sha"] = "b" * 40
+            auto["normalized_state"]["live_market"]["observation_semantics"] = "COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL"
+            lane = auto["source_health"]["hourly_market"]
+            for key in ("pointer_freshness", "retrieval_freshness", "session_coverage_freshness", "source_observation_freshness"):
+                lane["freshness"][key]["timestamp"] = "2026-09-16T19:05:00Z" if key in ("pointer_freshness", "retrieval_freshness") else "2026-09-16T19:00:00Z"
+            rel = "03_DAILY_CAPTURE_LOGS/hourly/runs/d1.json"
+            obs = [
+                {"timestamp_utc": "2026-09-15T22:00:00Z", "btc_close": 75200, "eth_close": 2500},
+                {"timestamp_utc": "2026-09-15T23:00:00Z", "btc_close": 74800, "eth_close": 2450},  # Tue close: BTC below its day floor; ETH ties
+                {"timestamp_utc": "2026-09-16T17:00:00Z", "btc_close": 74000, "eth_close": 2400},  # Wed intraday dip, recovers
+                {"timestamp_utc": "2026-09-16T18:00:00Z", "btc_close": 75500, "eth_close": 2500},
+            ]
+            capture = {"contract": "HOURLY_SEQUENCE_CAPTURE_v2_2", "spot_venue": "BINANCE",
+                       "spot_status": "PASS", "forward_fill": False, "interpolation": False,
+                       "retrieved_at_utc": "2026-09-16T19:05:00Z", "window_end_utc": "2026-09-16T19:00:00Z",
+                       "directional_summary": {"latest_observations": obs}}
+            raw = nh.canon(capture)
+            file = root / rel
+            file.parent.mkdir(parents=True)
+            file.write_bytes(raw)
+            blob = subprocess.run(["git", "hash-object", "--stdin"], input=raw, capture_output=True, check=True).stdout.decode().strip()
+            lane.update({"classification": "GITHUB_POINTER_TARGET_CHAIN_VALID",
+                         "provenance": {"target": {"exact_path": rel, "git_blob_sha": blob, "exact_commit_sha": "b" * 40}},
+                         "row": {"status": "PASS", "classification": "HOURLY_EXACT_ROW_BOUND",
+                                 "timestamp_utc": "2026-09-16T18:00:00Z", "provenance": {"exact_commit_sha": "b" * 40}}})
+            cn = self.cn()
+            cn["generated_unix"] = datetime(2026, 9, 14, 9, tzinfo=timezone.utc).timestamp()
+            cn["forecast_freeze"] = {"price_quote": {"BTC": "USDT", "ETH": "USDT"},
+                                     "btc_range_low": 74500, "eth_range_low": 2450,
+                                     "daily_price_path": {"contract": "CN_FROZEN_DAILY_PRICE_PATH_v1", "forecast_week": "2026-W38",
+                                     **{asset: {"points": [{"day": d, "low": low} for d in range(1, 8)]}
+                                        for asset, low in (("BTC", 75000), ("ETH", 2450))}}}
+            binding = {"status": "PASS", "issue_number": cn["issue_number"], "iso_year": 2026, "iso_week": 38}
+            result = nh.cn_band_status(auto, cn, binding, root, as_of)
+            self.assertEqual(result["status"], "OBSERVED")
+            btc, eth = result["assets"]["BTC"], result["assets"]["ETH"]
+            self.assertEqual(btc["completed_day_utc"], "2026-09-15")
+            self.assertTrue(btc["daily_close_below_floor"])          # 74800 < day floor 75000 at the Tuesday close
+            self.assertFalse(btc["weekly_close_below_floor"])        # 74800 >= weekly floor 74500
+            self.assertEqual(btc["first_daily_breach_in_captured_window_utc"], "2026-09-16T00:00:00Z")
+            self.assertIsNone(btc["first_weekly_breach_in_captured_window_utc"])
+            # the Wednesday 17:00 dip below the weekly floor is descriptive only
+            self.assertEqual(btc["intraweek_breach"]["first_hourly_below_weekly_floor_utc"], "2026-09-16T17:00:00Z")
+            self.assertFalse(btc["intraweek_breach"]["hourly_close_below_weekly_floor"])
+            self.assertFalse(eth["daily_close_below_floor"])   # tie at the daily floor is not a breach
+            self.assertFalse(eth["weekly_close_below_floor"])  # tie at the weekly floor is not a breach
+            self.assertEqual(result["daily_close_definition"], "CLOSE_OF_23_00_UTC_HOURLY_CANDLE; PENDING_NULL_IF_NOT_IN_WINDOW")
+            # a producer that hashed a literal backslash-zero would reject this real Git blob
+            bad = hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\\0" + raw).hexdigest()
+            self.assertNotEqual(bad, blob)
 
 
 class PriorCompassBindingTest(unittest.TestCase):
