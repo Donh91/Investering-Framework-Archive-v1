@@ -73,6 +73,15 @@ class BuildSandboxTest(unittest.TestCase):
         with self.assertRaises(s.SandboxBlocked):
             s.docker_command(self.src, "M1", 0, image="python:latest")
 
+    def test_real_suite_stdout_gate_blocks_os_exit_zero(self):
+        command = ["docker", "run", s.IMAGE, "python", "-m", "pytest", "-q"]
+        self.assertEqual(s.observed_test_count(command, b""), 0)
+        self.assertEqual(s.observed_test_count(command, b"1 passed in 0.2s"), 1)
+        self.assertEqual(s.observed_test_count(command, b"no tests ran in 0.1s"), 0)
+        node = ["docker", "run", s.IMAGE, "node", "--test", "tests"]
+        self.assertEqual(s.observed_test_count(node, b"# tests 3\n# pass 3\n# fail 0\n"), 3)
+        self.assertEqual(s.observed_test_count(node, b"# tests 3\n# pass 0\n# fail 0\n"), 0)
+
     def test_source_copy_omits_git_and_rejects_symlinks(self):
         (self.src / ".git").mkdir()
         (self.src / ".git/config").write_text("secret")
@@ -116,28 +125,33 @@ class BuildSandboxTest(unittest.TestCase):
     def test_admitted_files_are_only_staged_in_temp_with_hash(self):
         raw = admit.canonical(self.proposal)
         pass_result = {"returncode": 0, "output_sha256": "0" * 64,
-                       "output_bytes": 0, "last_200_lines": [], "status": "PASS"}
+                       "output_bytes": 0, "last_200_lines": [], "status": "PASS",
+                       "completed_tests_observed": 1}
         with mock.patch.object(s, "verify_snapshot", return_value=self.main), \
              mock.patch.object(s, "_run_once", return_value=pass_result) as run:
             result = s.run_admitted(raw, self.scope, self.src)
-        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["status"], "TEST_COMPLETION_UNATTESTED")
+        self.assertFalse(result["independent_completion_attested"])
         self.assertEqual(result["main_sha"], self.main)
         self.assertEqual(result["test_command_id"], "M1")
         self.assertEqual(result["network"], "none")
         self.assertFalse(result["secrets"])
         self.assertFalse(result["paid_authority"])
         self.assertFalse(result["merge_authority"])
-        self.assertEqual(run.call_count, 2)
+        self.assertEqual(run.call_count, 4)
         self.assertFalse((self.src / self.created).exists())
         self.assertEqual(self.path.read_text(), "def source():\n    return 1\n")
 
     def test_test_failure_is_not_success(self):
         raw = admit.canonical(self.proposal)
+        success = {"returncode": 0, "output_sha256": "0" * 64,
+                   "output_bytes": 24, "last_200_lines": ["1 passed in 0.1s"],
+                   "status": "PASS", "completed_tests_observed": 1}
         fail_result = {"returncode": 1, "output_sha256": "1" * 64,
                        "output_bytes": 7, "last_200_lines": ["fail"],
-                       "status": "TEST_FAILURE"}
+                       "status": "TEST_FAILURE", "completed_tests_observed": 0}
         with mock.patch.object(s, "verify_snapshot", return_value=self.main), \
-             mock.patch.object(s, "_run_once", return_value=fail_result):
+             mock.patch.object(s, "_run_once", side_effect=[success, success, fail_result, fail_result]):
             result = s.run_admitted(raw, self.scope, self.src)
         self.assertEqual(result["status"], "TEST_FAILURE")
 
@@ -147,7 +161,9 @@ class BuildSandboxTest(unittest.TestCase):
                                 "content": "def source():\n    return 2\n"}
         scope = copy.deepcopy(self.scope)
         scope["source_files"][self.pathname]["sha256"] = "e" * 64
-        with mock.patch.object(s, "verify_snapshot", return_value=self.main):
+        success = {"returncode": 0, "status": "PASS", "completed_tests_observed": 1}
+        with mock.patch.object(s, "verify_snapshot", return_value=self.main), \
+             mock.patch.object(s, "_run_once", return_value=success):
             with self.assertRaisesRegex(s.SandboxBlocked, "MODIFY_PREIMAGE_DRIFT"):
                 s.run_admitted(admit.canonical(altered), scope, self.src)
 
@@ -178,13 +194,16 @@ class BuildSandboxTest(unittest.TestCase):
         mutant = {"status": "TEST_FAILURE", "returncode": 1,
                   "output_sha256": "b"*64,
                   "output_bytes": 1, "last_200_lines": ["failure"]}
-        with mock.patch.object(s, "_run_once", side_effect=[good, mutant]) as run:
+        early = {"status": "TEST_FAILURE", "returncode": 0,
+                 "completed_tests_observed": 0}
+        with mock.patch.object(s, "_run_once", side_effect=[good, mutant, early]) as run:
             receipt = s.smoke()
         self.assertEqual(receipt["status"], "PASS")
         self.assertTrue(receipt["network_attempt_executed"])
         self.assertTrue(receipt["network_denied"])
         self.assertTrue(receipt["synthetic_only"])
-        self.assertEqual(run.call_count, 2)
+        self.assertEqual(run.call_count, 3)
+        self.assertEqual(receipt["early_exit_zero"]["status"], "TEST_FAILURE")
         for call in run.call_args_list:
             argv = call.args[0]
             self.assertEqual(argv[argv.index("--network")+1], "none")
@@ -198,6 +217,10 @@ class BuildSandboxTest(unittest.TestCase):
             with self.assertRaisesRegex(s.SandboxBlocked, "MUTATION_NOT_DETECTED"):
                 s.smoke()
         bad = {"status": "TEST_FAILURE", "returncode": 1}
+        with mock.patch.object(s, "_run_once", side_effect=[good, bad, good]):
+            with self.assertRaisesRegex(s.SandboxBlocked,
+                                        "EXIT_ZERO_WITHOUT_SUITE_END_FALSE_PASS"):
+                s.smoke()
         with mock.patch.object(s, "_run_once", return_value=bad):
             with self.assertRaisesRegex(s.SandboxBlocked,
                                         "NETWORK_DENIAL_FAILED"):
