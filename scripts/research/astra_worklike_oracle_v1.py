@@ -103,7 +103,11 @@ def run_case(image, scratch, fixture):
     stdout = bytearray()
     stderr = bytearray()
     try:
-        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        # Explicit literal binary lets the native isolation derivation prove
+        # this subprocess edge; docker_command has already fixed and checked argv.
+        if cmd[0] != "docker":
+            raise gate.PilotBlocked("DOCKER_BINARY_MISMATCH")
+        proc = subprocess.Popen(["docker", *cmd[1:]], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, shell=False, env={
                                     "PATH": "/usr/bin:/bin",
                                     "HOME": "/tmp",
