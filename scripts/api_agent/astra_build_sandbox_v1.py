@@ -23,7 +23,7 @@ from scripts.api_agent import astra_build_admit_v1 as admit
 
 IMAGE = "python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b"
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
-MAX_LOG_BYTES = 256_000
+MAX_LOG_BYTES = 4_000_000  # bounded full M3 suite logs, digest and last 200 lines only
 WALL_SECONDS = 180
 MAX_SNAPSHOT_BYTES = 400_000_000
 MAX_SNAPSHOT_FILES = 85_000
