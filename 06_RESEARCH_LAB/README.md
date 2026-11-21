@@ -27,6 +27,18 @@ Resolve the current Active Test Registry, current research protocols, current ro
 
 When Round 3 or restricted evidence is involved, obey `CROSS_REPO_AGENT_CONTEXT_MAP.json` and the private-data firewall. Collection availability is not analysis authorization.
 
+## Repeatable research package to reviewed PR (explicit owner request)
+
+When a new ChatGPT/GitHub research thread is asked to do an **extremely thorough Research Lab package, evaluate external claims, challenge the framework, or carry findings into a PR**, use the already-registered repository-local skill:
+
+- Entry skill: [research-parallel-lanes](../.agents/skills/research-parallel-lanes/SKILL.md).
+- End-to-end procedure: [Research Package to Reviewed PR to Verified Product v1](../.agents/skills/research-parallel-lanes/references/RESEARCH_PACKAGE_TO_REVIEW_PR_v1.md).
+- Scientific owner and deduplication: existing [Research Lab issue #1512](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1512), [Strategist #1157](https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1157) and the relevant original domain issue.
+
+**Owner shorthand:** "Research Lab end-to-end: [emne]. Kildekontrol, falsifikation, billig baseline, eksisterende ejer, implementeringsklar mission, PR til uafhængigt review og verificeret forbruger - eller luk med eksakt blocker."
+
+This is a **procedural routing reference**, not an additional active test, agent, scheduler, scoring engine, market authority, automatic paid model mission or license to bypass original research/CI/governance gates. Research may legitimately end at REJECT / DEDUP / SOURCE_BLOCKED. A research PR is not a production implementation and cannot self-approve or self-merge. Agents must fetch current source from main; these Markdown links do not automatically install the skill in ChatGPT.
+
 ## High-value mission seeds
 
 ### 1. Astra qualification suite
