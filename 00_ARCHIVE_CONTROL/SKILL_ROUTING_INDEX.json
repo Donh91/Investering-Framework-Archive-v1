@@ -363,14 +363,19 @@
       "maturity": "PILOT_ACTIVE_OPERATIONAL_HELPER_V1",
       "skill_path": ".agents/skills/research-parallel-lanes/SKILL.md",
       "agents_metadata_path": ".agents/skills/research-parallel-lanes/agents/openai.yaml",
-      "purpose": "Plan and verify multiple independent research lanes in one thread using actual supported tools, GitHub Actions jobs or existing separately authorized agent runtime, with original owner synthesis.",
+      "purpose": "The pre-existing skill coordinates explicit bounded, independent research lanes. For an owner-requested Research Lab end-to-end package, discover and read the separate 06_RESEARCH_LAB/methods/RESEARCH_PACKAGE_TO_REVIEW_PR_v1.md reference after current owner preflight; no skill or S1 code change.",
       "triggers": [
         "Research Parallel Lanes",
         "/research-parallel-lanes",
         "parallel deep research",
         "Task 2 multi-track",
         "flere forskningsspor i samme tråd",
-        "Ironflow independent GitHub jobs"
+        "Ironflow independent GitHub jobs",
+        "research lab end-to-end",
+        "kildebundet forskningspakke",
+        "grundig forskningspakke",
+        "forskningspakke til PR",
+        "research-to-PR"
       ],
       "do_not_use_for": [
         "one-question quick answers",
@@ -387,7 +392,9 @@
         "ORIGINAL_OWNER_LANE_MANIFEST",
         "NATIVE_PARALLEL_JOB_RECEIPTS",
         "CONSOLIDATED_SCIENTIFIC_SYNTHESIS",
-        "EVIDENCED_FAILURE_AND_BLOCKER_LEDGER"
+        "EVIDENCED_FAILURE_AND_BLOCKER_LEDGER",
+        "RESEARCH_TO_REVIEW_PR_HANDOFF_OR_EVIDENCED_REJECTION",
+        "VERIFIED_PRODUCT_CONSUMER_OR_EXACT_BLOCKER"
       ],
       "validation_expectations": [
         "existing domain owner and source snapshot read",
@@ -396,10 +403,14 @@
         "no new scheduler or extra agent identity",
         "exact head and run/job/artifact receipts when claiming execution",
         "negative and null findings preserved",
-        "read-only science kept separate from portfolio authority"
+        "read-only science kept separate from portfolio authority",
+        "independent reviewer finality by current AGENTS.md",
+        "consumer evidence required before runtime-verified claim",
+        "explicit deep-package discovery must point to 06_RESEARCH_LAB/methods reference",
+        "no changes to .agents or S1 bootstrap/pins"
       ],
       "allow_implicit_invocation": false,
-      "portability_notes": "Repository-local skill, not a ChatGPT-wide installed plugin; explicit text invocation in another GitHub-connected thread must read exact SKILL.md. GitHub Actions jobs are parallel compute, not independent AI agents."
+      "portability_notes": "Explicit advisory discovery only, not skill invocation. The existing .agents skill is pinned and unchanged. The separate Research Lab method covers source -> challenge -> owner -> PR review -> verified consumer; no jobs/permissions implied."
     },
     {
       "name": "skill-quality-gate",
@@ -526,5 +537,5 @@
     "mission_path": "07_PROMPTS_AND_AGENTS/astra/2026-09-06__agent-legibility-and-skill-compression-audit-v1.md",
     "goal": "Audit discoverability, authority visibility, context locality, impact predictability, hidden knowledge and progressive-disclosure opportunities before any broad rewrite of the six active skills."
   },
-  "routing_index_updated_date": "2026-11-07"
+  "routing_index_updated_date": "2026-11-21"
 }

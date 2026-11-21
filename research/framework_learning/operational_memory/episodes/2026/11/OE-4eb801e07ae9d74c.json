@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-4eb801e07ae9d74c",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Close seq28 original one-shot after verified GET-only recovery * Assert seq28 terminal receipt and held successor missions",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/research_lab_sol/RESEARCH_LAB_SOL_QUEUE_v1.json": "c5a4f599a415ae5e78f0f4666a0d15e0c4118373",
+    "tests/api_agent/test_research_lab_sol_max_owner_gate.py": "9e9446aac89da5843a66bac23c615859aabdef07"
+  },
+  "source_commit_sha": "4eb801e07ae9d74c7342ffa99a34f48fa2da0589",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-20T17:49:21+01:00",
+  "task_class": "API_AGENT",
+  "task_summary": "research: close Seq28 Navigator One verified one-shot (no repost) (#2271)"
+}

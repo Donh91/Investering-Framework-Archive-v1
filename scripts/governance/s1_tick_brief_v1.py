@@ -57,6 +57,7 @@ COALESCE_MINUTES = 5                  # an older fallback run this young and sti
 JOBS_READS_PER_DUE = 3                # jobs lists read per due check to find a started build
 DUE_API_CALLS = 5                     # run list, brief issue, and at most JOBS_READS_PER_DUE jobs lists
 PUBLISH_API_CALLS = 25                # label read, label create, issue create or update, lock, closing extra issues
+READBACK_API_CALLS = 2                # the one issue read after publish (S1_BRIEF_DIGEST_V1), a retry included
 RUN_EVENTS = ("schedule", "workflow_dispatch", "workflow_run", "push")
 FALLBACK_EVENTS = ("workflow_run", "push")   # these two only build after a missed cron; schedule and manual runs always build
 CODEX_LIMIT_HOURS = 24                # a Codex usage-limit answer this recent, with no newer Codex answer: unavailable
@@ -71,6 +72,13 @@ HALT_RE = re.compile(r"(?m)^\W{0,8}S1_LANE_HALTED\b")
 FAST_RISKS = ("LOW", "MEDIUM")        # a HIGH merge entry carries high_evidence=true: S1 proves HIGH EVIDENCE itself
 FAILED_CONCLUSIONS = ("failure", "timed_out", "startup_failure", "cancelled")
 SHA40 = re.compile(r"[0-9a-f]{40}")
+VERDICT_SCHEMA = "S1_BRIEF_VERDICT_V1"   # B.verdict, SHADOW (S1 v3.3 W2): published, and S1 still runs T1 to T3 itself
+DIGEST_TOKEN = "S1_BRIEF_DIGEST_V1"      # printed by publish after reading the issue back (R2-7)
+T3_TREE_DIRS = ("scripts", "tests", ".github", ".agents", "00_FMOS")   # the entries TICK T3 C1b compares, in its order
+C1B_WINDOW = 100                      # first-parent commits read back from B.main (one commits page, as TICK T3 C1b)
+C1B_SEARCH_READS = 20                 # tree reads inside one differing segment; past it the segment's last commit is named
+C1B_MAX_CALLS = 60                    # the C1b part's own share of MAX_API_CALLS (it runs before the PR depth reads)
+SQUASH_SUBJECT = re.compile(r"\(#\d+\)$")   # TICK T3: a squash merge is a one-parent commit whose subject ends (#<n>)
 S1_FILES = "00_FMOS/S1"
 SWITCH = "00_FMOS/S1/REVIEWED_MERGE_LANE.json"
 CONTRACT_FILE = "00_FMOS/S1/RUNTIME_CONTRACT.json"
@@ -839,11 +847,17 @@ def claude_slots(entries, lane):
     return out
 
 
-def next_actions(entries, lane, health, intents, codex_ok=True, max_n=6):
+def next_actions(entries, lane, health, intents, codex_ok=True, max_n=6, c1b_halt=None):
     """The ranked list. Entry 0 is THE one next ladder action; the rest are fallbacks if S1's native re-read fails.
-    Order: halt trigger, RECONCILE signal, rule 4 (review proven by the brief), rule 4 (review on the Bridge, S1 reads
-    it), rule 2, rule 3. Inside a class: fewest open gates, then the lowest PR number (ACTION_LOOP CANDIDATE ORDER)."""
+    Order: the C1b halt (B.c1b.halt), the C7 halt trigger, RECONCILE signal, rule 4 (review proven by the brief), rule 4
+    (review on the Bridge, S1 reads it), rule 2, rule 3. Inside a class: fewest open gates, then the lowest PR number
+    (ACTION_LOOP CANDIDATE ORDER). A C1b halt is never the brief's own halt: S1 re-reads the commit, its parent and
+    both trees natively and only then posts the S1_LANE_HALTED of C1b."""
     out = []
+    if c1b_halt_ok(c1b_halt):
+        out.append({"action": "HALT", "rule": "C1b", "source": "C1B", "commit": c1b_halt["commit"], "parent": c1b_halt["parent"],
+                    "entries": list(c1b_halt["entries"]), "verify": ["commit", "parent", "trees"],
+                    "why": "a commit on main that is not a squash merge changed scripts, tests, .github, .agents or 00_FMOS"})
     for run in (health.get("unhalted_failed_runs") or [])[:1]:
         out.append({"action": "HALT", "rule": "C7", "run": run, "verify": ["run"], "why": "failed main-health run after a lane merge, no halt names it"})
     due = [i for i in intents if i["due"]]
@@ -950,13 +964,344 @@ def status_lines(entries, lane, merges, now):
             f"DISPOSITIONS TODAY: merged={merged} parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"]
 
 
+def heartbeats(comments):
+    """The authentic S1_HEARTBEAT_v1 posts of #1156: owner account, never edited, first token S1_HEARTBEAT_v1."""
+    return [c for c in comments if is_owner_unedited(c) and first_line_token(c.get("body")) == "S1_HEARTBEAT_v1"]
+
+
 def heartbeat_due(comments, now):
     """ACTION_LOOP HEARTBEAT: one S1_HEARTBEAT_v1 per Copenhagen day, from the first tick at or after 08:45."""
     local = now.astimezone(CPH)
     if (local.hour, local.minute) < (8, 45):
         return False
-    return not any(is_owner_unedited(c) and first_line_token(c.get("body")) == "S1_HEARTBEAT_v1"
-                   and stamp(c["created_at"]).astimezone(CPH).date() == local.date() for c in comments)
+    return not any(stamp(c["created_at"]).astimezone(CPH).date() == local.date() for c in heartbeats(comments))
+
+
+def ledger_hint(comments, intents, ledger_ok):
+    """B.ledger (S1 v3.3 W2b, D4), HINT ONLY: the newest heartbeat and the open intents, from the #1156 comments this
+    build already read. S1 never acts on it: T7a still reads #1156 itself for its dedup, and F5 still reads the newest
+    comments; this only fills the heartbeat's open_ops field without guesswork. An unread ledger is read=false and
+    states nothing (count null)."""
+    if not ledger_ok:
+        return {"read": False, "last_heartbeat_at": None, "open_intents": {"count": None, "ids": []}}
+    newest = None
+    for c in heartbeats(comments):
+        try:
+            at = stamp(c["created_at"])
+        except (ValueError, KeyError):
+            continue
+        if newest is None or at > newest:
+            newest = at
+    return {"read": True, "last_heartbeat_at": iso(newest) if newest else None,
+            "open_intents": {"count": len(intents), "ids": [i["id"] for i in intents][:10]}}
+
+
+# ----------------------------------------------------------------------------------------------- C1b (producer)
+class C1bFail(Exception):
+    """The C1b part cannot finish: B.c1b is published with the carried anchor and the brief is complete=false with
+    the reason C1b:<why>. Never a partial range that reads as checked."""
+
+    def __init__(self, why):
+        super().__init__(why)
+        self.why = why
+
+
+def c1b_subject(row):
+    return str(((row or {}).get("commit") or {}).get("message") or "").split("\n", 1)[0]
+
+
+def c1b_parents(row):
+    return [p.get("sha") for p in (row or {}).get("parents") or [] if isinstance(p, dict) and isinstance(p.get("sha"), str)]
+
+
+def c1b_tree_key(row, sha):
+    """What GET /git/trees/<key> is read with: the commit's root tree SHA when the commit list states it (two commits
+    with one root tree then cost one read), else the commit SHA itself (GitHub resolves a commit to its tree)."""
+    tree = (((row or {}).get("commit") or {}).get("tree") or {}).get("sha")
+    return tree if isinstance(tree, str) and SHA40.fullmatch(tree) else sha
+
+
+def c1b_entries(doc):
+    """The scripts, tests, .github, .agents and 00_FMOS entries of ONE non-recursive root tree, as "<type>:<sha>" (a
+    missing name is None). Anything that is not a complete tree listing raises C1bFail("tree_read")."""
+    if not isinstance(doc, dict) or doc.get("truncated") or not isinstance(doc.get("tree"), list):
+        raise C1bFail("tree_read")
+    rows = {e.get("path"): f"{e.get('type')}:{e.get('sha')}" for e in doc["tree"] if isinstance(e, dict)}
+    return tuple(rows.get(d) for d in T3_TREE_DIRS)
+
+
+def c1b_walk(main_sha, commits, known, window=C1B_WINDOW):
+    """main's first-parent chain back from main_sha, by parents[0], until a known point (checked by an earlier brief).
+    Returns (chain oldest first as (sha, parents, subject, tree_key), base sha, reached). Not reached: the chain stops
+    at `window` commits, at a commit the page does not hold, or at a root commit; `base` is then where it stopped."""
+    by_sha = {c.get("sha"): c for c in commits if isinstance(c, dict)}
+    chain, cur, reached = [], main_sha, False
+    while True:
+        if cur in known:
+            reached = True
+            break
+        row = by_sha.get(cur)
+        parents = c1b_parents(row)
+        if len(chain) >= window or row is None or not parents:
+            break
+        chain.append((cur, parents, c1b_subject(row), c1b_tree_key(row, cur)))
+        cur = parents[0]
+    chain.reverse()
+    return chain, cur, reached
+
+
+def c1b_scan(chain, base, base_key, entries_of, search_reads=C1B_SEARCH_READS):
+    """TICK T3 C1b on a first-parent chain (oldest first): segments from the base to the parent of the first squash
+    merge, from each squash merge to the parent of the next, and from the last squash merge to the end (no squash
+    merge: base to end). A segment whose start and end entries differ was changed by a commit that is not a squash
+    merge: the first commit of that segment whose entries differ from its parent's is the halt, with parent its
+    parents[0]. Past `search_reads` tree reads in the segment the halt names the segment's last commit and, as its
+    parent, the segment's START (capped: S1's HALT step compares the trees of parent and commit, and those two are
+    the pair proven to differ). Returns None or {commit, parent, entries, capped}."""
+    keys = [base_key] + [c[3] for c in chain]                   # keys[k] is the tree of chain[k]'s first parent
+    squash = [k for k, (_s, parents, subject, _t) in enumerate(chain) if len(parents) == 1 and SQUASH_SUBJECT.search(subject)]
+    segments, anchor, start = [], (base, base_key), 0            # anchor: (commit sha, tree key) of the segment start
+    for k in squash:
+        segments.append((anchor, list(range(start, k))))
+        anchor, start = (chain[k][0], chain[k][3]), k + 1
+    segments.append((anchor, list(range(start, len(chain)))))
+    differ = lambda a, b: [d for d, x, y in zip(T3_TREE_DIRS, a, b) if x != y]
+    for (anchor_sha, anchor_key), idx in segments:
+        if not idx or entries_of(anchor_key) == entries_of(chain[idx[-1]][3]):
+            continue
+        for n, k in enumerate(idx):
+            if n >= search_reads:
+                last = chain[idx[-1]]
+                return {"commit": last[0], "parent": anchor_sha, "entries": differ(entries_of(anchor_key), entries_of(last[3])), "capped": True}
+            sha, parents, _subject, key = chain[k]
+            names = differ(entries_of(keys[k]), entries_of(key))
+            if names:
+                return {"commit": sha, "parent": parents[0], "entries": names, "capped": False}
+    return None
+
+
+def c1b_halt_ok(halt):
+    return isinstance(halt, dict) and isinstance(halt.get("commit"), str) and SHA40.fullmatch(halt["commit"]) is not None \
+        and isinstance(halt.get("parent"), str) and SHA40.fullmatch(halt["parent"]) is not None \
+        and isinstance(halt.get("entries"), list) and all(e in T3_TREE_DIRS for e in halt["entries"])
+
+
+def previous_brief(issues):
+    """The published brief of the one label read: (issue, brief) or (None, why). Same issue rules as TICK T1."""
+    if not isinstance(issues, list):
+        return None, "issues_unreadable"
+    rows = [i for i in issues if isinstance(i, dict) and "pull_request" not in i]
+    if len(rows) != 1:
+        return None, f"issues={len(rows)}"
+    if not is_actions_bot(rows[0].get("user")):
+        return None, "author"
+    brief = parse_body(rows[0].get("body"))
+    return (rows[0], brief) if brief is not None else (None, "body")
+
+
+def carried_halt(issues):
+    """The c1b.halt of a published brief body even when its run binding fails (F2): run_not_success, edited_outside_run
+    or an unreadable run. Bot authorship is the floor (the T1 author rule): a body not written by github-actions[bot]
+    is never read, because HALT rule C1b compares the entry's parent with its commit and a forged parent (an old
+    ancestor) could make S1 post a false S1_LANE_HALTED. Never used for the anchor. The first labelled bot issue whose
+    body parses and carries a valid halt."""
+    if not isinstance(issues, list):
+        return None
+    for i in sorted((i for i in issues if isinstance(i, dict) and "pull_request" not in i and is_actions_bot(i.get("user"))),
+                    key=lambda i: str(i.get("number"))):
+        c = (parse_body(i.get("body")) or {}).get("c1b")
+        if isinstance(c, dict) and c1b_halt_ok(c.get("halt")):
+            return c["halt"]
+    return None
+
+
+def previous_anchor(issue, brief, run, now):
+    """The checked point the previous brief proves: (known, halt, why). The brief counts only when its run is a run of
+    this workflow on main at brief.main, successful when completed, whose window holds generated_at, and the issue was
+    not edited after that run (TICK T2 edited_outside_run). known is [c1b.checked_through] when the brief has a c1b
+    block (null there: nothing known), else [brief.main] (a brief from before W2b, which has no c1b block). The halt
+    returned here is the bound one; read_c1b carries the previous halt even when the binding fails (carried_halt)."""
+    try:
+        made, edited = stamp(brief.get("generated_at")), stamp(issue.get("updated_at"))
+        if not isinstance(run, dict) or run.get("id") != brief.get("run_id") or run.get("path") != WORKFLOW_PATH \
+                or (run.get("repository") or {}).get("full_name") != REPO or run.get("head_branch") != "main" \
+                or run.get("head_sha") != brief.get("main"):
+            return [], None, "run_binding"
+        done = run.get("status") == "completed"
+        if done and run.get("conclusion") != "success":
+            return [], None, "run_not_success"
+        end = stamp(run.get("updated_at")) if done else now
+        if not stamp(run.get("run_started_at")) <= made <= edited <= end:
+            return [], None, "edited_outside_run"
+    except (ValueError, TypeError, AttributeError):
+        return [], None, "timestamps"
+    if "c1b" not in brief:
+        return [brief["main"]], None, None
+    c = brief.get("c1b") if isinstance(brief.get("c1b"), dict) else {}
+    point = _sha_or_none(c.get("checked_through"))
+    return ([point] if point else []), (c.get("halt") if c1b_halt_ok(c.get("halt")) else None), (None if point else "no_checked_through")
+
+
+def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
+    """B.c1b (S1 v3.3 W2b, D1): the TICK T3 C1b halt test, run by the producer on main's first-parent history from the
+    previous brief's checked_through up to B.main, on its own share of the call budget.
+
+    Fail closed: no usable previous brief, or a checked_through the first-parent walk of the newest C1B_WINDOW commits
+    does not reach, scans that window and is complete=false (C1b:range); an unreadable read or the budget is
+    complete=false (C1b:<why>) and carries the previous anchor (never this build's B.main). A halt of the previous brief
+    that no S1_LANE_HALTED on #1156 names yet is carried until one does (`ledger` None: unread, always carried).
+    Returns {checked_through, from, halt, complete, reason, stop}; `stop` is set when the API cap or a rate limit hit."""
+    out = {"checked_through": None, "from": None, "halt": None, "gap": None, "complete": False, "reason": None, "stop": None}
+    first = gh.calls
+
+    def get(path, params=None):
+        if gh.calls - first >= max_calls:
+            raise C1bFail("budget")
+        return gh.get(path, params)
+
+    try:
+        try:
+            issues = get("issues", {"labels": BRIEF_LABEL, "state": "open", "per_page": 20})
+        except (C1bFail, StopReading):
+            raise
+        except Exception:                                        # noqa: BLE001
+            raise C1bFail("issues_unreadable")
+        issue, prev = previous_brief(issues)
+        known, why = [], prev if issue is None else None
+        if why == "issues_unreadable":
+            raise C1bFail(why)
+        prev_halt = carried_halt(issues)                         # F2: carried whatever the binding; never the anchor
+        if prev_halt is not None:
+            named = ledger is not None and any(prev_halt["commit"] in h["body"] for h in lane_halts(ledger))
+            out["halt"] = None if named else prev_halt
+        if issue is not None:
+            try:
+                run = get(f"actions/runs/{int(prev.get('run_id'))}")
+            except (C1bFail, StopReading):
+                raise
+            except Exception:                                    # noqa: BLE001  (unproven: no anchor is carried)
+                raise C1bFail("run_unreadable")
+            known, _bound_halt, why = previous_anchor(issue, prev, run, now)
+        out["checked_through"] = known[0] if known else None    # carried when this build cannot finish
+        if main_sha in known:
+            out.update(checked_through=main_sha, complete=True)
+            out["from"] = main_sha
+            return out
+        try:
+            commits = get("commits", {"sha": main_sha, "per_page": C1B_WINDOW})
+        except (C1bFail, StopReading):
+            raise
+        except Exception:                                        # noqa: BLE001
+            raise C1bFail("commits_unreadable")
+        if not isinstance(commits, list):
+            raise C1bFail("commits_unreadable")
+        chain, base, reached = c1b_walk(main_sha, commits, known)
+        if not chain:
+            raise C1bFail("commits_unreadable")                  # B.main itself is not on the page: nothing was scanned
+        cache = {}
+
+        def entries_of(key):
+            if key not in cache:
+                try:
+                    doc = get(f"git/trees/{key}")
+                except (C1bFail, StopReading):
+                    raise
+                except Exception:                                # noqa: BLE001
+                    raise C1bFail("tree_read")
+                cache[key] = c1b_entries(doc)
+            return cache[key]
+
+        base_row = next((c for c in commits if isinstance(c, dict) and c.get("sha") == base), None)
+        halt = c1b_scan(chain, base, c1b_tree_key(base_row, base), entries_of)
+        if out["halt"] is None and halt is not None:
+            out["halt"] = halt                                   # an older unnamed halt of the previous brief stays first
+        # the range was scanned to B.main: the next build starts here, also after the window fallback (its own brief
+        # is complete=false, so that tick does nothing; without this step a lost anchor could never recover)
+        out.update(checked_through=main_sha, complete=reached,
+                   reason=None if reached else "C1b:range" + ("" if known else f":no_anchor:{why or 'none'}"))
+        if not reached:                                          # F3: checked_through moved past history nobody scanned
+            out["gap"] = {"from_unknown": True, "window": C1B_WINDOW, "reason": out["reason"]}
+        out["from"] = base
+        return out
+    except C1bFail as exc:
+        out.update(complete=False, reason=f"C1b:{exc.why}")
+    except StopReading as exc:
+        out.update(complete=False, reason=f"C1b:{exc.reason}", stop=exc.reason)
+    except Exception as exc:                                     # noqa: BLE001
+        out.update(complete=False, reason=f"C1b:unreadable:{type(exc).__name__}")
+    return out
+
+
+def c1b_block(snap_c1b):
+    """B.c1b and the brief's C1b incomplete reason (None when complete) from collect()'s record."""
+    c = snap_c1b if isinstance(snap_c1b, dict) else {}
+    gap = c.get("gap")
+    gap = {"from_unknown": True, "window": gap.get("window"), "reason": str(gap.get("reason"))} \
+        if isinstance(gap, dict) and gap.get("from_unknown") is True else None
+    block = {"checked_through": _sha_or_none(c.get("checked_through")), "from": _sha_or_none(c.get("from")),
+             "halt": c["halt"] if c1b_halt_ok(c.get("halt")) else None,
+             "gap": gap}                                          # F3: owner-visible only; S1 needs no action
+    reason = c.get("reason")
+    if c.get("complete") is True and not reason:
+        return block, None
+    reason = str(reason or "C1b:not_read")
+    return block, reason if reason.startswith("C1b:") else "C1b:" + reason
+
+
+# ----------------------------------------------------------------------------------------------- the verdict (shadow)
+def _sha_or_none(value):
+    return value if isinstance(value, str) and SHA40.fullmatch(value) else None
+
+
+def brief_verdict(main_sha, contract, actual, bootstrap_text, pins, trees):
+    """B.verdict, SHADOW (S1 v3.3 W2, charter A01/A02): the checks of BOOTSTRAP steps 3 and 3b and of the TICK T2 pins
+    clause that the producer can decide at B.main, computed here on their own (not copied from pin_check), plus the
+    tree SHAs at B.main that T3 C1b compares. S1 ignores this field until a reviewed TICK change promotes it.
+
+    The producer cannot decide T1 (which issue carries the label, and its author) or T2's run binding (its own run is
+    still running), and it cannot decide T3 (M is read by S1 later): those are "S1_DECIDES". The 3b value of the
+    owner's saved paste is S1's own independent cross-check; the producer compares with BOOTSTRAP.txt AT B.main only.
+    `actual` maps paths to blob SHAs at B.main; `trees` maps "" (the root) and each T3_TREE_DIRS entry to a tree SHA."""
+    contract = contract if isinstance(contract, dict) else {}
+    actual = actual if isinstance(actual, dict) else {}
+    pins = pins if isinstance(pins, dict) else {}
+    trees = trees if isinstance(trees, dict) else {}
+    blob = lambda path: _sha_or_none(actual.get(path)) if isinstance(path, str) and path else None
+    step3, step3b, t2, basis = [], [], [], []
+    for key, path_key in (("action_loop_blob", "action_loop_path"), ("tick_blob", "tick_path"), ("lane_switch_blob", "lane_switch_path")):
+        want = _sha_or_none(contract.get(key))
+        if want is None or blob(contract.get(path_key)) != want:
+            step3.append(f"3:{key}")
+    rubric = contract.get("rubric_blobs")
+    if not isinstance(rubric, dict):                            # D5: missing or not a map is unverifiable, never "none to check"
+        step3.append("3:rubric_blobs")
+    else:
+        for path, want in sorted(rubric.items()):
+            if _sha_or_none(want) is None or blob(path) != want:
+                step3.append(f"3:rubric:{path}")
+    stated = re.search(r"bootstrap_version must be (S1_BOOTSTRAP_v\d+)\.", bootstrap_text or "")
+    if not stated or contract.get("bootstrap_version") != stated.group(1):
+        step3.append("3:bootstrap_version")
+    contract_blob = blob(CONTRACT_FILE)
+    pasted = re.search(r"must equal ([0-9a-f]{40})\.", bootstrap_text or "")
+    bootstrap_3b = pasted.group(1) if pasted else None
+    if contract_blob is None or contract_blob != bootstrap_3b:
+        step3b.append("3b:bootstrap_text")
+    if pins.get("ok") is not True:
+        t2.append("pins:ok")
+    if contract_blob is None or pins.get("contract_blob") != contract_blob or pins.get("contract_blob") != bootstrap_3b:
+        t2.append("pins:contract_blob")
+    for key in ("action_loop_blob", "tick_blob"):
+        if _sha_or_none(pins.get(key)) is None or pins.get(key) != contract.get(key):
+            t2.append(f"pins:{key}")
+    basis_trees = {name: _sha_or_none(trees.get(name)) for name in T3_TREE_DIRS}
+    root_tree = _sha_or_none(trees.get(""))
+    basis = (["t3_basis:root"] if root_tree is None else []) + [f"t3_basis:{n}" for n, v in basis_trees.items() if v is None]
+    source = "SOURCE_UNVERIFIED(3)" if step3 else "SOURCE_UNVERIFIED(3b)" if step3b else "OK"
+    return {"schema": VERDICT_SCHEMA, "shadow": True, "main": main_sha, "source": source, "t1": "S1_DECIDES",
+            "t2": "BRIEF_UNVERIFIED(pins)" if t2 else "OK", "t2_scope": "pins", "t3": "S1_DECIDES",
+            "reasons": (step3 + step3b + t2 + basis)[:16], "contract_blob": contract_blob, "bootstrap_3b": bootstrap_3b,
+            "t3_basis": {"root_tree": root_tree, "trees": basis_trees}}
 
 
 # ----------------------------------------------------------------------------------------------- the brief
@@ -975,6 +1320,7 @@ def build_brief(snap):
         lane["state"] = "OFF"
         lane["off_reasons"].append("ledger_unreadable")
     intents = open_intents(comments, now, params["op_settle_minutes"]) if ledger_ok else []
+    c1b, c1b_reason = c1b_block(snap.get("c1b"))
     repo_id = (snap.get("repo") or {}).get("id")
     ctx = {"repo_id": repo_id, "main_sha": snap["main_sha"], "policy": snap["policy"], "tuples": params["required_job_tuples"],
            "gate_isolation_live": snap.get("gate_isolation") == "LIVE", "now": now, "budgets": snap["budgets"],
@@ -997,7 +1343,7 @@ def build_brief(snap):
     codex = codex_availability([d.get("comments") for d in (snap.get("pr") or {}).values() if isinstance(d, dict)], now)
     # complete=false is for data that was truly NOT READ. Main moving while the brief is built is not such a case:
     # the brief describes exactly snap["main_sha"], and S1's drift rule (TICK T3) covers main after it.
-    unread = ([] if pulls_ok else ["pulls_unreadable"]) + ([] if ledger_ok else ["ledger_unreadable"]) \
+    unread = ([c1b_reason] if c1b_reason else []) + ([] if pulls_ok else ["pulls_unreadable"]) + ([] if ledger_ok else ["ledger_unreadable"]) \
         + ([] if identity_ok else ["repository_identity"]) + [str(x) for x in (snap.get("errors") or [])] \
         + (["depth_cap"] if any(e.get("skip") == "NOT_READ:depth_cap" for e in entries) else [])
     brief = {
@@ -1012,7 +1358,7 @@ def build_brief(snap):
         ["OWNER APPROVAL REQUIRED: UNKNOWN (brief_incomplete)", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"],
         "heartbeat_due": heartbeat_due(comments, now) if ledger_ok else False,
         "prs": entries, "drafts": drafts,
-        "next": next_actions(entries, lane, health, intents, codex["available"]) if pulls_ok and identity_ok else [],
+        "next": next_actions(entries, lane, health, intents, codex["available"], c1b_halt=c1b["halt"]) if pulls_ok and identity_ok else [],
         "claude_slots": claude_slots(entries, lane) if pulls_ok and identity_ok else [],
         "codex": codex,
         "complete": not unread, "incomplete": unread[0] if unread else None,
@@ -1024,6 +1370,9 @@ def build_brief(snap):
         "main_moved_during_build": bool(snap.get("main_moved")), "timing": snap.get("timing") or {},
         "not_in_brief": ["rule 1 ANSWER", "rule 5 PACKAGE", "rule 5b REENABLE", "rule 6 STEWARD", "HIGH EVIDENCE",
                          "CLAUDE_REVIEW_v1 (private Bridge)", "exclusions 4,5,6,8,9, the judgment half of 3 and 7 (see shrinks)"],
+        "c1b": c1b,                                              # D1: the T3 C1b halt test, done here (TICK T3 reads it)
+        "ledger": ledger_hint(comments, intents, ledger_ok),     # D4: hint only
+        "verdict": brief_verdict(snap["main_sha"], contract, snap["pins_actual"], snap.get("bootstrap_text"), pins, snap.get("trees_actual")),
     }
     return brief
 
@@ -1059,25 +1408,87 @@ def render(brief):
     if len(body) <= MAX_BODY:
         return body
     b = {k: brief[k] for k in ("schema", "run_id", "run_attempt", "event", "generated_at", "max_age_minutes", "repo", "main", "pins")}
+    for key in ("verdict", "c1b", "ledger"):                   # small and bounded in size: kept at every shrink level
+        if key in brief:
+            b[key] = brief[key]
     b.update(next=[], claude_slots=[], complete=False, incomplete="brief_too_large", errors=["brief_too_large"], shrunk=3, prs=[], drafts=[], lane={"state": "OFF", "off_reasons": ["brief_too_large"]},
              status_lines=["OWNER APPROVAL REQUIRED: UNKNOWN (brief_too_large)", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"], heartbeat_due=False)
     return dump(b)
 
 
-def parse_body(body):
-    """The inverse of render(): exactly one marker pair and one JSON object with the schema; anything else is None."""
+def _unique_pairs(pairs):
+    """object_pairs_hook: a key repeated in ANY object, top-level or nested, makes the body invalid (the duplicate
+    would otherwise silently win, and a reader that keeps the first one would see a different brief)."""
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise ValueError(f"duplicate key {key!r}")
+        out[key] = value
+    return out
+
+
+def _no_constant(name):
+    raise ValueError(f"not JSON: {name}")                    # NaN, Infinity and -Infinity are not RFC 8259 JSON
+
+
+def strict_loads(text):
+    """RFC 8259 JSON with unique keys at every level and no NaN or Infinity; ValueError otherwise."""
+    return json.loads(text, object_pairs_hook=_unique_pairs, parse_constant=_no_constant)
+
+
+def _is_id(value):
+    return type(value) is int and value > 0                    # a bool is not an id (True == 1 in Python)
+
+
+def brief_schema_ok(b):
+    """The fields T1 to T5 read, with their types (CHARTER_ADDENDUM_1: a wrong type is BRIEF_UNVERIFIED(body)). The
+    reference is schema_ok of tests/governance/test_s1_trajectory_replay_v1.py; the SHA fields are also 40-hex here."""
+    pins, repo, lines = b.get("pins"), b.get("repo"), b.get("status_lines")
+    sha_or_null = lambda v: v is None or (isinstance(v, str) and SHA40.fullmatch(v) is not None)
+    return (b.get("schema") == SCHEMA and _is_id(b.get("run_id")) and _is_id(b.get("run_attempt"))
+            and isinstance(b.get("event"), str) and isinstance(b.get("generated_at"), str)
+            and isinstance(b.get("main"), str) and SHA40.fullmatch(b["main"]) is not None
+            and isinstance(pins, dict) and type(pins.get("ok")) is bool
+            and all(sha_or_null(pins.get(k)) for k in ("contract_blob", "action_loop_blob", "tick_blob"))
+            and type(b.get("complete")) is bool and isinstance(b.get("incomplete"), (str, type(None)))
+            and isinstance(repo, dict) and type(repo.get("id")) is int
+            and isinstance(lines, list) and len(lines) == 3 and all(isinstance(x, str) for x in lines)
+            and isinstance(b.get("next"), list) and all(isinstance(x, dict) for x in b["next"])
+            and isinstance(b.get("claude_slots"), list) and isinstance(b.get("prs"), list))
+
+
+def brief_block(body):
+    """The exact JSON text of the one block (the bytes between the opening ```json line and the closing ``` line), or
+    None: exactly one BEGIN and one END marker, BEGIN before END, and between them exactly one ```json fence."""
     text = str(body or "")
     if text.count(BEGIN) != 1 or text.count(END) != 1:
         return None
-    inner = text.split(BEGIN, 1)[1].split(END, 1)[0].strip()
-    m = re.fullmatch(r"```json\n(.*)\n```", inner, re.S)
-    if not m:
+    i, j = text.index(BEGIN), text.index(END)
+    if j < i:
+        return None
+    m = re.fullmatch(r"```json\n(.*)\n```", text[i + len(BEGIN):j].strip(), re.S)
+    if not m or "\n```" in m.group(1):
+        return None
+    return m.group(1)
+
+
+def parse_body(body):
+    """The inverse of render(): exactly one ordered marker pair around one ```json block holding one strict JSON object
+    (unique keys at every level, no NaN or Infinity) that passes brief_schema_ok; anything else is None."""
+    block = brief_block(body)
+    if block is None:
         return None
     try:
-        doc = json.loads(m.group(1))
-    except json.JSONDecodeError:
+        doc = strict_loads(block)
+    except (ValueError, RecursionError):
         return None
-    return doc if isinstance(doc, dict) and doc.get("schema") == SCHEMA else None
+    return doc if isinstance(doc, dict) and brief_schema_ok(doc) else None
+
+
+def brief_digest(body):
+    """S1_BRIEF_DIGEST_V1: sha256 of the UTF-8 bytes of the block text, or None when the body has no block."""
+    block = brief_block(body)
+    return None if block is None else hashlib.sha256(block.encode("utf-8")).hexdigest()
 
 
 def verify_brief(issues, run, now, repo_id=None, max_age=MAX_AGE_MINUTES):
@@ -1423,6 +1834,22 @@ def changed_between(root, base, main_sha):
         return None
 
 
+def root_trees(root):
+    """{"": the root tree SHA of HEAD, and each T3_TREE_DIRS name: its tree SHA in that root tree (the non-recursive
+    entries GET /git/trees/<sha> lists, which TICK T3 C1b compares)}. A name that is not a tree there is None."""
+    out = dict.fromkeys(("", *T3_TREE_DIRS))
+    try:
+        out[""] = git(root, "rev-parse", "HEAD^{tree}")
+        for row in git(root, "ls-tree", "-z", "HEAD").split("\0"):
+            meta, _tab, name = row.partition("\t")
+            parts = meta.split()
+            if name in T3_TREE_DIRS and len(parts) == 3 and parts[1] == "tree":
+                out[name] = parts[2]
+    except (subprocess.CalledProcessError, OSError):
+        pass
+    return out
+
+
 def parse_json_block(text, contract):
     for m in re.finditer(r"```json\n(.*?)\n```", text, re.S):
         try:
@@ -1525,6 +1952,7 @@ def collect(gh, root, head_root, now, run):
             snap["pins_actual"][path] = git(root, "rev-parse", f"HEAD:{path}")
         except subprocess.CalledProcessError:
             snap["pins_actual"][path] = None
+    snap["trees_actual"] = root_trees(root)                      # B.verdict.t3_basis: the trees TICK T3 C1b compares, at B.main
     clock, timing = time.monotonic(), {}
     snap["timing"] = timing
     snap["repo"] = gh.get("")
@@ -1543,6 +1971,8 @@ def collect(gh, root, head_root, now, run):
     r2, c2 = gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
     snap.update(rulesets_1=r1, rulesets_2=r2, rulesets_complete=c1 and c2)
     snap["pulls"], snap["pulls_complete"] = gh.pages("pulls", {"state": "open", "sort": "created", "direction": "asc"}, max_pages=5)
+    # D1: the C1b halt test, before the PR depth reads and on its own share of the cap (the PRs cannot starve it)
+    snap["c1b"] = read_c1b(gh, main_sha, snap["issue_comments"] if snap["issue_comments_complete"] else None, now)
     timing["base_s"] = round(time.monotonic() - clock)
     import s1_workflow_isolation_derive_v1 as iso_mod            # main's code only; it parses, it never executes a head
     main_derivation = iso_mod.derive(Path(root))
@@ -1598,7 +2028,9 @@ def collect(gh, root, head_root, now, run):
            "policy": snap["policy"], "gate_isolation_live": snap.get("gate_isolation") == "LIVE"}
     snap["pr"] = {}
     clock = time.monotonic()
-    stopped = None
+    stopped = snap["c1b"].get("stop")                           # the cap or a rate limit hit inside C1b: no further call
+    if stopped:
+        errors.insert(0, stopped)
     for pr in chosen:
         if stopped is None:
             try:
@@ -1670,6 +2102,37 @@ def publish(gh, body, now=None):
     return mine[0]["number"]
 
 
+def readback_line(gh, number, body):
+    """R2-7, SHADOW: read the brief issue back after the write and print S1_BRIEF_DIGEST_V1 over the exact block bytes
+    GitHub now serves. readback is MATCH (the served block is byte-identical to the one this run wrote), SUPERSEDED
+    (the served brief is another run's: publish kept a newer brief, or a later build wrote after this one), MISMATCH
+    (this run's brief, other bytes) or UNREADABLE. ONE read, on its own budget READBACK_API_CALLS, with the publish
+    token (issues: write includes read). A failure is reported, never raised: in shadow the line is evidence only and
+    the publish result is unchanged."""
+    mine, want = parse_body(body), brief_digest(body)
+    try:
+        served = gh.get(f"issues/{int(number)}")
+        served = served.get("body") if isinstance(served, dict) else None
+    except Exception:                                            # noqa: BLE001  (unreadable is a state, not an error)
+        served = None
+    block = brief_block(served) if isinstance(served, str) else None
+    got = None if block is None else hashlib.sha256(block.encode("utf-8")).hexdigest()
+    if got is None:
+        state = "UNREADABLE"
+    elif got == want:
+        state = "MATCH"
+    else:
+        try:
+            other = strict_loads(block)
+        except (ValueError, RecursionError):
+            other = None
+        same_run = isinstance(other, dict) and other.get("run_id") == (mine or {}).get("run_id") \
+            and other.get("run_attempt") == (mine or {}).get("run_attempt")
+        state = "MISMATCH" if same_run or not isinstance(other, dict) else "SUPERSEDED"
+    return (f"{DIGEST_TOKEN} issue={number} run={(mine or {}).get('run_id')} main={(mine or {}).get('main')} "
+            f"sha256={got or '-'} bytes={len(block.encode('utf-8')) if block is not None else '-'} expected_sha256={want} readback={state}")
+
+
 def main(argv):
     mode = argv[1] if len(argv) > 1 else ""
     token = os.environ.get("GITHUB" + "_TOKEN", "")
@@ -1727,6 +2190,7 @@ def main(argv):
             raise SystemExit("PUBLISH_REFUSED: the brief does not belong to this run")
         number = publish(GitHub(token, budget=PUBLISH_API_CALLS), body)
         print(f"S1_TICK_BRIEF_PUBLISHED issue={number} run={brief['run_id']}")
+        print(readback_line(GitHub(token, budget=READBACK_API_CALLS), number, body))
         return 0
     raise SystemExit("usage: s1_tick_brief_v1.py due | build <main checkout> <head worktree dir> <out file> | publish <brief file>")
 

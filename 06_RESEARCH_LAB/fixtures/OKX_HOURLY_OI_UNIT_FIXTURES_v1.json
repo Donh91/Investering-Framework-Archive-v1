@@ -1,0 +1,16 @@
+{
+  "contract": "OKX_HOURLY_OI_UNIT_OFFLINE_FIXTURES_v1",
+  "source_owner": "Donh91/Investering-Framework-Archive-v1#387",
+  "source_receipt": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1918#issuecomment-7038867976",
+  "scope": "SYNTHETIC_FIXTURES_ONLY_NO_HISTORICAL_REWRITE",
+  "array_fields": ["timestamp_ms", "contracts", "base_quantity", "usd_notional"],
+  "cases": [
+    {"id":"BTC_FOUR_SLOTS","symbol":"BTC-USDT-SWAP","row":[1795129200000,"10000","100","6200000"],"expected_usd":6200000,"known_legacy_value":100},
+    {"id":"ETH_FOUR_SLOTS","symbol":"ETH-USDT-SWAP","row":[1795129200000,"2500","250","475000"],"expected_usd":475000,"known_legacy_value":250},
+    {"id":"EXPLICIT_DICT_USD","symbol":"BTC-USDT-SWAP","row":{"ts":"1795129200000","oi":"10000","oiCcy":"100","oiUsd":"6200000"},"expected_usd":6200000,"known_legacy_value":6200000},
+    {"id":"NO_USD_SLOT","symbol":"BTC-USDT-SWAP","row":[1795129200000,"10000","100"],"expected_usd":null,"known_legacy_value":100},
+    {"id":"MALFORMED_BASE_SLOT","symbol":"BTC-USDT-SWAP","row":[1795129200000,"10000","not-a-number","6200000"],"expected_usd":null,"known_legacy_value":6200000},
+    {"id":"NONFINITE_USD","symbol":"ETH-USDT-SWAP","row":[1795129200000,"2500","250","NaN"],"expected_usd":null,"known_legacy_value":250},
+    {"id":"SHIFTED_TIMESTAMP","symbol":"BTC-USDT-SWAP","row":["10000",1795129200000,"100","6200000"],"expected_usd":null,"known_legacy_value":100}
+  ]
+}

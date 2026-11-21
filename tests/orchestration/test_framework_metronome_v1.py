@@ -60,21 +60,27 @@ class MetronomeTest(unittest.TestCase):
         self.assertEqual(plan(now.replace(minute=36), recovery=[run(now.replace(minute=24))])["targets"]["RECOVERY"],
                          "ALREADY_RAN_THIS_HOUR")
 
-    def test_s1_brief_once_per_hour_from_minute_15_before_the_s1_task(self):
+    def test_s1_brief_once_per_hour_from_minute_20_before_the_s1_task(self):
         # 2026-11-19: the brief's '18 * * * *' cron started twice in 20 h; S1 at :45 needs a brief < 45 min old.
-        now = dt.datetime(2026, 11, 19, 11, 22, tzinfo=UTC)
+        # 2026-11-20: dispatch moved from :15 to :20 (fresher brief at :45) while one deferred tick still makes :45.
+        now = dt.datetime(2026, 11, 19, 11, 32, tzinfo=UTC)
         ev = lambda t, e, **k: dict(run(t, **k), event=e, head_branch="main")  # noqa: E731
         p = plan(now, mode="ACTIVE_DATA", hourly=[run(now - dt.timedelta(hours=2))],
                  recovery=[run(now - dt.timedelta(hours=2))])
         self.assertEqual(p["targets"]["S1BRIEF"], "DUE")
         self.assertIn({"workflow": "s1-tick-brief.yml", "inputs": {}}, p["dispatch"])
         self.assertIn("s1-tick-brief.yml", M.DISPATCH_ALLOWLIST)
-        self.assertEqual(plan(now.replace(minute=14))["targets"]["S1BRIEF"], "BEFORE_MINUTE_15")
-        self.assertEqual(plan(now.replace(minute=15))["targets"]["S1BRIEF"], "DUE")
-        # a cron or manual run created this hour from :13 serves the hour (it always builds)
+        self.assertEqual(plan(now.replace(minute=19))["targets"]["S1BRIEF"], "BEFORE_MINUTE_20")
+        self.assertEqual(plan(now.replace(minute=20))["targets"]["S1BRIEF"], "DUE")
+        # 10.5 min tick period: first due tick < from+10.5; one TARGET_ACTIVE deferral adds 10.5; a 4 min build must
+        # still publish before :45. An on-time '18 * * * *' cron serves the hour (no double build).
+        self.assertLessEqual(M.S1BRIEF["from_minute"] + 2 * 10.5 + 4, 45)
+        self.assertLessEqual(M.S1BRIEF["serves_from_minute"], 18)
+        self.assertGreaterEqual(M.S1BRIEF["from_minute"], 20)
+        # a cron or manual run created this hour from :18 serves the hour (an on-time cron included; it always builds)
         for e in ("schedule", "workflow_dispatch"):
-            self.assertEqual(plan(now, s1brief=[ev(now.replace(minute=13), e)])["targets"]["S1BRIEF"], "ALREADY_RAN_THIS_HOUR")
-            self.assertEqual(plan(now, s1brief=[ev(now.replace(minute=12), e)])["targets"]["S1BRIEF"], "DUE")
+            self.assertEqual(plan(now, s1brief=[ev(now.replace(minute=18), e)])["targets"]["S1BRIEF"], "ALREADY_RAN_THIS_HOUR")
+            self.assertEqual(plan(now, s1brief=[ev(now.replace(minute=17), e)])["targets"]["S1BRIEF"], "DUE")
             self.assertEqual(plan(now, s1brief=[ev(now - dt.timedelta(minutes=50), e)])["targets"]["S1BRIEF"], "DUE")
         # a completed push or workflow_run fallback never serves the hour: its row cannot show whether it built
         for e in ("push", "workflow_run"):
@@ -83,7 +89,7 @@ class MetronomeTest(unittest.TestCase):
         self.assertEqual(plan(now, s1brief=[ev(now.replace(minute=21), "push", status="in_progress")])["targets"]["S1BRIEF"],
                          "TARGET_ACTIVE")
         # a row without an event counts as building (suppresses, never doubles); an unreadable row suppresses too
-        self.assertEqual(plan(now, s1brief=[run(now.replace(minute=14))])["targets"]["S1BRIEF"], "ALREADY_RAN_THIS_HOUR")
+        self.assertEqual(plan(now, s1brief=[run(now.replace(minute=19))])["targets"]["S1BRIEF"], "ALREADY_RAN_THIS_HOUR")
         self.assertEqual(plan(now, s1brief=[{"id": 1, "status": "completed", "created_at": "x", "event": "schedule"}])
                          ["targets"]["S1BRIEF"], "RUN_ROW_UNREADABLE")
         # SHADOW only logs it; ACTIVE dispatches it too
