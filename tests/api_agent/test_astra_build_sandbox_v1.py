@@ -61,6 +61,13 @@ class BuildSandboxTest(unittest.TestCase):
         self.assertIn("--security-opt", cmd)
         self.assertEqual(cmd[cmd.index("--security-opt")+1], "no-new-privileges")
         self.assertEqual(cmd[cmd.index("--user")+1], "65534:65534")
+        # Four prior mutation survivors: removing resource limits or
+        # the local-only image policy MUST break the native test.
+        self.assertEqual(cmd[cmd.index("--pull")+1], "never")
+        for flag, value in (("--memory", "256m"), ("--memory-swap", "256m"),
+                            ("--cpus", "0.5"), ("--pids-limit", "32")):
+            self.assertIn(flag, cmd)
+            self.assertEqual(cmd[cmd.index(flag)+1], value)
         self.assertIn("readonly", cmd[cmd.index("--mount")+1])
         self.assertEqual(tuple(cmd[-len(admit.TEST_COMMANDS["M1"][0]):]),
                          admit.TEST_COMMANDS["M1"][0])
@@ -141,6 +148,18 @@ class BuildSandboxTest(unittest.TestCase):
         self.assertEqual(run.call_count, 4)
         self.assertFalse((self.src / self.created).exists())
         self.assertEqual(self.path.read_text(), "def source():\n    return 1\n")
+
+    def test_baseline_must_finish_before_any_model_file_is_staged(self):
+        raw = admit.canonical(self.proposal)
+        failed = {"returncode": 1, "output_sha256": "0"*64,
+                  "completed_tests_observed": 0, "status": "TEST_FAILURE"}
+        with mock.patch.object(s, "verify_snapshot", return_value=self.main), \
+             mock.patch.object(s, "_run_once", return_value=failed), \
+             mock.patch.object(s, "_write_admitted") as stage:
+            with self.assertRaisesRegex(s.SandboxBlocked,
+                                         "FIXED_SUITE_BASELINE_NOT_PROVEN"):
+                s.run_admitted(raw, self.scope, self.src)
+            stage.assert_not_called()
 
     def test_test_failure_is_not_success(self):
         raw = admit.canonical(self.proposal)
