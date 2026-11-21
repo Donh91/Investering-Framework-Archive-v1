@@ -168,7 +168,10 @@ jobs:
             --freeze runtime/astra-build-toolchain-evidence/requirements-resolved.txt \
             --wheels runtime/astra-build-toolchain-evidence/wheels \
             --lock-out runtime/astra-build-toolchain-evidence/requirements.lock.candidate.txt
-          echo "CANDIDATE_LOCK_NOT_REVIEWED_NOT_DEPLOYED"
+          cmp -s scripts/api_agent/docker/astra-build-requirements.lock.txt \
+            runtime/astra-build-toolchain-evidence/requirements.lock.candidate.txt
+          sha256sum scripts/api_agent/docker/astra-build-requirements.lock.txt
+          echo "SOURCE_LOCK_EQUALS_NATIVE_WHEEL_HASH_CENSUS_NO_RELEASE"
       - name: Read separate pristine public main checkout
         uses: actions/checkout@v4
         with:
