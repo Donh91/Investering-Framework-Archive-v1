@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest import mock
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from scripts.data_ping import native_handlekompas as nh
