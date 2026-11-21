@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import re
 
-from scripts.api_agent.api_gateway import estimate_cost
+# Works both as scripts.api_agent.* from tests and as api_agent.* from the
+# legacy CLI invoking check_monthly_cost_guard.py directly.
+from .api_gateway import estimate_cost
 
 MAX_REQUEST_BYTES = 600_000
 INPUT_OVERHEAD_TOKENS = 20_000
