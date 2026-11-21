@@ -40,6 +40,12 @@ class TestBuildDriver(unittest.TestCase):
         self.spec_path = self.repo / "06_RESEARCH_LAB/astra_missions" / self.mid / d.SCOPE_NAME
         self.spec_path.parent.mkdir(parents=True)
         self.spec_path.write_bytes(a.canonical(self.spec) + b"\n")
+        self.bundle_path = self.spec_path.parent / "BUNDLE.md"
+        self.bundle_path.write_bytes(
+            b"Reviewed source manifest (model-visible)\n" +
+            b"<!-- ASTRA_BUILD_SOURCE_MANIFEST_V1\n" +
+            a.canonical(self.spec["source_files"]) +
+            b"\nEND_ASTRA_BUILD_SOURCE_MANIFEST_V1 -->\n")
         self.native_request = b"fixed_request_bytes"
         self.raw_report = a.canonical({"status": "ABSTAIN", "files": [],
                                        "test_command_id": "M1",
@@ -105,6 +111,19 @@ class TestBuildDriver(unittest.TestCase):
                                              self.meta)):
             with self.assertRaisesRegex(d.DriverHold, "OWNER_EVENT_BUNDLE_DRIFT"):
                 d.verified_native_owner_event(self.mid)
+
+    def test_model_bundle_must_show_the_exact_reviewed_source_manifest(self):
+        first = d.trusted_scope(self.repo, self.mid, self.main)
+        self.assertEqual(first["source_files"], self.spec["source_files"])
+        self.bundle_path.write_bytes(
+            b"<!-- ASTRA_BUILD_SOURCE_MANIFEST_V1\n" +
+            a.canonical({"scripts/learning/other.py": None}) +
+            b"\nEND_ASTRA_BUILD_SOURCE_MANIFEST_V1 -->\n")
+        with self.assertRaisesRegex(d.DriverHold, "BUNDLE_SOURCE_PREIMAGES_DRIFT"):
+            d.trusted_scope(self.repo, self.mid, self.main)
+        self.bundle_path.write_text("unversioned text\n", encoding="utf-8")
+        with self.assertRaisesRegex(d.DriverHold, "BUNDLE_SOURCE_MANIFEST_MISSING"):
+            d.trusted_scope(self.repo, self.mid, self.main)
 
     def test_verified_source_scope_has_real_sha(self):
         result = d.trusted_scope(self.repo, self.mid, self.main)
