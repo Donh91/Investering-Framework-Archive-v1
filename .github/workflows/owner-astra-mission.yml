@@ -21,6 +21,8 @@ on:
       - 'tests/research/test_astra_worklike_oracle_v1.py'
       - 'scripts/api_agent/astra_build_admit_v1.py'
       - 'scripts/api_agent/astra_build_sandbox_v1.py'
+      - 'scripts/api_agent/astra_build_cost_v1.py'
+      - 'tests/api_agent/test_astra_build_cost_v1.py'
       - 'tests/api_agent/test_astra_build_admit_v1.py'
       - 'tests/api_agent/test_astra_build_sandbox_v1.py'
       - 'scripts/api_agent/astra_mission_reservations_v1.py'
@@ -53,7 +55,8 @@ jobs:
           tests.research.test_astra_worklike_pilot_v1
           tests.research.test_astra_worklike_oracle_v1
           tests.api_agent.test_astra_build_admit_v1
-          tests.api_agent.test_astra_build_sandbox_v1 -v
+          tests.api_agent.test_astra_build_sandbox_v1
+          tests.api_agent.test_astra_build_cost_v1 -v
       - name: Exact request preview of every mission, NO network
         run: python scripts/research/owner_astra_mission_v1.py preview-all --out runtime/astra-mission-preview
 
