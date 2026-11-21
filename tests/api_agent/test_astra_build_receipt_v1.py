@@ -47,8 +47,8 @@ class BuildReceiptTest(unittest.TestCase):
             "output_sha256":a.digest(self.raw),"bytes":len(self.raw),
             "usage":{"input_tokens":40_000,"output_tokens":2_000},
             "estimated_upper_usd":2.5}
-        tests=[{"returncode":0,"status":"PASS","completed_tests_observed":1},
-               {"returncode":0,"status":"PASS","completed_tests_observed":1}]
+        tests=[{"returncode":0,"status":"EXIT0_WITH_UNTRUSTED_SUMMARY","completed_tests_observed":1},
+               {"returncode":0,"status":"EXIT0_WITH_UNTRUSTED_SUMMARY","completed_tests_observed":1}]
         baseline=[dict(x) for x in tests]
         self.sandbox = {
             "contract":"ASTRA_BUILD_SANDBOX_RECEIPT_v1",
