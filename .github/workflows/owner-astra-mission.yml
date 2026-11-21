@@ -19,6 +19,10 @@ on:
       - 'scripts/research/astra_worklike_oracle_v1.py'
       - 'tests/research/test_astra_worklike_pilot_v1.py'
       - 'tests/research/test_astra_worklike_oracle_v1.py'
+      - 'scripts/api_agent/astra_build_admit_v1.py'
+      - 'scripts/api_agent/astra_build_sandbox_v1.py'
+      - 'tests/api_agent/test_astra_build_admit_v1.py'
+      - 'tests/api_agent/test_astra_build_sandbox_v1.py'
       - 'scripts/api_agent/astra_mission_reservations_v1.py'
       - 'scripts/api_agent/check_monthly_cost_guard.py'
       - 'scripts/api_agent/api_gateway.py'
@@ -47,7 +51,9 @@ jobs:
         run: >-
           python -m unittest tests.research.test_owner_astra_mission_v1
           tests.research.test_astra_worklike_pilot_v1
-          tests.research.test_astra_worklike_oracle_v1 -v
+          tests.research.test_astra_worklike_oracle_v1
+          tests.api_agent.test_astra_build_admit_v1
+          tests.api_agent.test_astra_build_sandbox_v1 -v
       - name: Exact request preview of every mission, NO network
         run: python scripts/research/owner_astra_mission_v1.py preview-all --out runtime/astra-mission-preview
 
@@ -67,7 +73,7 @@ jobs:
         id: relevant
         run: |
           git diff --name-only HEAD^1 HEAD > "$RUNNER_TEMP/astra-worklike-changed.txt"
-          if grep -Eq '^([.]github/workflows/owner-astra-mission[.]yml$|scripts/research/(owner_astra_mission_v1|astra_worklike_.*)[.]py$|tests/research/test_astra_worklike_.*[.]py$|06_RESEARCH_LAB/astra_missions/ASTRA-KOMPAS-L04-WORKLIKE-PILOT-S1-20261120/)' "$RUNNER_TEMP/astra-worklike-changed.txt"; then
+          if grep -Eq '^([.]github/workflows/owner-astra-mission[.]yml$|scripts/research/(owner_astra_mission_v1|astra_worklike_.*)[.]py$|tests/research/test_astra_worklike_.*[.]py$|scripts/api_agent/astra_build_.*[.]py$|tests/api_agent/test_astra_build_.*[.]py$|06_RESEARCH_LAB/astra_missions/ASTRA-KOMPAS-L04-WORKLIKE-PILOT-S1-20261120/)' "$RUNNER_TEMP/astra-worklike-changed.txt"; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
