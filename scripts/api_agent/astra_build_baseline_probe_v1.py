@@ -97,6 +97,8 @@ def main() -> int:
             "contract": "ASTRA_BUILD_PRISTINE_BASELINE_PROBE_v1",
             "probe_result": "PROBE_INFRA_OR_SECURITY_HOLD",
             "error_type": type(error).__name__,
+            "error_code": str(error) if re.fullmatch(r"[A-Z][A-Z0-9_]{2,79}", str(error))
+                          else "UNCLASSIFIED_DIAGNOSTIC",
             "build_hold_lifted": False,
             "paid_or_merge_authority": False,
         }
