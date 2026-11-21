@@ -450,6 +450,13 @@ def claim_artifact(mission_id: str) -> str:
 def reserve(out: Path, guard_path: Path):
     event, request, meta = validated(out)
     mission_id = meta["mission_id"]
+    # Owner-mandated BUILD Stage 0 release hold, verified 2026-11-21.
+    # The pinned Python-only sandbox image cannot execute the fixed pytest/Node
+    # commands. Fail BEFORE model GET, GitHub claim or paid POST. A future
+    # independent exact-head review must replace this gate only after a
+    # verified, digest-pinned complete test toolchain and real negative smoke.
+    if build_cost.OWNER_STAGE.fullmatch(mission_id):
+        fail("BUILD_RELEASE_HOLD_PYTEST_NODE_IMAGE_NOT_PINNED")
     guard = check_guard(guard_path, mission_id, meta["max_usd"])
     token = core.required_env("GITHUB_TOKEN")
     run_id = core.required_env("GITHUB_RUN_ID")
@@ -513,6 +520,10 @@ def mark_attempt(out: Path):
 
 def submit(out: Path):
     request, claim = verify_claim(out)
+    # Defense in depth: even a restored/stale claim must not pay for a BUILD
+    # mission while fixed-command test image admission is explicitly HOLD.
+    if build_cost.OWNER_STAGE.fullmatch(claim["mission_id"]):
+        fail("BUILD_RELEASE_HOLD_PYTEST_NODE_IMAGE_NOT_PINNED")
     if core.read(out / "attempt.json") != attempt_record(claim):
         fail("ATTEMPT_BINDING_MISMATCH")
     # Exclusive irreversible marker BEFORE the only POST; a second call of this stage fails here.
