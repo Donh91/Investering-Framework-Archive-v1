@@ -43,7 +43,7 @@ class BuildReceiptTest(unittest.TestCase):
             "status":"completed","incomplete_details":None,
             "no_retry":True,"research_only":True,"usage_valid":True,
             "model":"gpt-6.2-astra","reasoning_effort":"max",
-            "provider_reasoning_effort":"max","response_id":"resp_test1234",
+            "provider_reasoning_effort":"max","provider_model":"gpt-6.2-astra","response_id":"resp_test1234",
             "output_sha256":a.digest(self.raw),"bytes":len(self.raw),
             "usage":{"input_tokens":40_000,"output_tokens":2_000},
             "estimated_upper_usd":2.5}
@@ -167,6 +167,13 @@ class BuildReceiptTest(unittest.TestCase):
         self.paid["provider_reasoning_effort"]="high"
         with self.assertRaisesRegex(r.ReceiptBlocked,"MODEL_EFFORT_BOND"):
             self.bind()
+
+    def test_provider_model_is_independently_checked(self):
+        self.paid["provider_model"] = "gpt-6.2-sol"
+        with self.assertRaisesRegex(r.ReceiptBlocked, "MODEL_EFFORT_BOND"):
+            self.bind()
+        self.paid["provider_model"] = "gpt-6.2-astra-2026-11-21"
+        self.assertEqual(self.bind()["status"], "TEST_COMPLETION_HOLD")
 
     def test_raw_report_tampering_detected(self):
         self.raw+=b"x"
