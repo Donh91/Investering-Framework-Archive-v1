@@ -1625,6 +1625,7 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         "bull_bear_scale": compass.get("bull_bear_scale"),
         "capitalization_ladder": public_ladder,
         "protection_tracker": compass.get("protection_tracker"),
+        "cn_band_status": compass.get("cn_band_status"),
         "sell_assessment": compass.get("sell_assessment"),
         "action_now": compass.get("action_now"),
         "next_meaningful_change_eta": None,
@@ -1635,6 +1636,166 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         ),
         "authority": {"official_navigation_output": True, "portfolio_execution": False, "source_override": False},
     }
+
+
+def cn_band_status(
+    auto_state: Mapping[str, Any],
+    cn_package: Mapping[str, Any] | None,
+    cn_binding: Mapping[str, Any] | None,
+    repo_root: Path,
+    as_of: datetime,
+) -> dict[str, Any]:
+    """Factual completed-close comparison only; never alter protection or forecast.
+
+    Earliest observed breach is limited to the hash-bound captured observation
+    window. It is not the first market breach or the first user notification.
+    """
+    def unavailable(reason: str) -> dict[str, Any]:
+        return {"contract": "CN_BAND_STATUS_v1", "status": "UNAVAILABLE",
+                "reason": reason, "authority": "DESCRIPTIVE_ONLY"}
+
+    if not _health_ok(auto_state, as_of) or not isinstance(cn_package, Mapping):
+        return unavailable("SOURCE_UNAVAILABLE")
+    if not isinstance(cn_binding, Mapping) or cn_binding.get("status") != "PASS":
+        return unavailable("CN_BINDING_UNAVAILABLE")
+    iso_year, iso_week = cn_binding.get("iso_year"), cn_binding.get("iso_week")
+    freeze = cn_package.get("forecast_freeze")
+    if not isinstance(freeze, Mapping) or cn_package.get("issue_number") != cn_binding.get("issue_number"):
+        return unavailable("CN_BINDING_UNAVAILABLE")
+    if nested(freeze, "price_quote", "BTC") != "USDT" or nested(freeze, "price_quote", "ETH") != "USDT":
+        return unavailable("QUOTE_MISMATCH")
+    if type(iso_year) is not int or type(iso_week) is not int:
+        return unavailable("CN_WEEK_UNAVAILABLE")
+    week = f"{iso_year}-W{iso_week:02d}"
+    path = nested(freeze, "daily_price_path")
+    if not isinstance(path, Mapping) or path.get("contract") != "CN_FROZEN_DAILY_PRICE_PATH_v1" or path.get("forecast_week") != week:
+        return unavailable("CN_WEEK_UNAVAILABLE")
+    live = nested(auto_state, "normalized_state", "live_market")
+    lane = nested(auto_state, "source_health", "hourly_market")
+    if not isinstance(live, Mapping) or not isinstance(lane, Mapping):
+        return unavailable("SOURCE_UNAVAILABLE")
+    bar = _parse_utc(live.get("observation_open_utc"))
+    available = _parse_utc(auto_state.get("packet_generated_at_utc"))
+    if (bar is None or available is None or bar + timedelta(hours=1) > available
+            or available > as_of or bar.minute or bar.second or bar.microsecond
+            or tuple(bar.isocalendar()[:2]) != (iso_year, iso_week)
+            or tuple(as_of.isocalendar()[:2]) != (iso_year, iso_week)
+            or live.get("observation_semantics") != "COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL"):
+        return unavailable("BAR_OR_AVAILABILITY_CLOCK_UNAVAILABLE")
+    generated = finite(cn_package.get("generated_unix"))
+    try:
+        issue = datetime.fromtimestamp(generated, timezone.utc) if generated is not None else None
+    except (OverflowError, ValueError, OSError):
+        issue = None
+    if issue is None or issue > bar:
+        return unavailable("PRE_ISSUE_OR_UNKNOWN_ISSUE")
+    target = nested(lane, "provenance", "target")
+    row = lane.get("row")
+    snapshot = nested(auto_state, "source_snapshot", "exact_commit_sha")
+    if (lane.get("status") != "PASS" or lane.get("classification") != "GITHUB_POINTER_TARGET_CHAIN_VALID"
+            or not isinstance(target, Mapping) or not isinstance(row, Mapping)
+            or row.get("status") != "PASS" or row.get("classification") != "HOURLY_EXACT_ROW_BOUND"
+            or _parse_utc(row.get("timestamp_utc")) != bar
+            or not isinstance(snapshot, str) or len(snapshot) != 40
+            or target.get("exact_commit_sha") != snapshot
+            or nested(row, "provenance", "exact_commit_sha") != snapshot):
+        return unavailable("HOURLY_BINDING_UNAVAILABLE")
+    rel = target.get("exact_path")
+    blob = target.get("git_blob_sha")
+    if (not isinstance(rel, str) or not rel.startswith("03_DAILY_CAPTURE_LOGS/hourly/runs/")
+            or not isinstance(blob, str) or len(blob) != 40):
+        return unavailable("HOURLY_BINDING_UNAVAILABLE")
+    try:
+        target_path = (repo_root / rel).resolve()
+        target_path.relative_to(repo_root.resolve())
+        raw = target_path.read_bytes()
+        actual_blob = hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest()
+        if actual_blob != blob:
+            return unavailable("HOURLY_TARGET_HASH_MISMATCH")
+        capture = json.loads(raw)
+    except (OSError, ValueError, TypeError):
+        return unavailable("HOURLY_TARGET_UNAVAILABLE")
+    if not isinstance(capture, Mapping):
+        return unavailable("HOURLY_TARGET_UNAVAILABLE")
+    retrieved = _parse_utc(capture.get("retrieved_at_utc"))
+    if (capture.get("contract") != "HOURLY_SEQUENCE_CAPTURE_v2_2"
+            or capture.get("spot_venue") != "BINANCE" or capture.get("spot_status") != "PASS"
+            or capture.get("forward_fill") is not False or capture.get("interpolation") is not False
+            or retrieved is None or not bar + timedelta(hours=1) <= retrieved <= available
+            or _parse_utc(capture.get("window_end_utc")) != bar + timedelta(hours=1)
+            or _parse_utc(nested(lane, "freshness", "retrieval_freshness", "timestamp")) != retrieved):
+        return unavailable("VENUE_OR_CAPTURE_CLOCK_UNAVAILABLE")
+    observations = nested(capture, "directional_summary", "latest_observations")
+    if not isinstance(observations, list) or not observations:
+        return unavailable("OBSERVATION_WINDOW_UNAVAILABLE")
+    rows = []
+    for obs in observations:
+        if not isinstance(obs, Mapping):
+            return unavailable("OBSERVATION_WINDOW_INVALID")
+        ts = _parse_utc(obs.get("timestamp_utc"))
+        btc, eth = finite(obs.get("btc_close")), finite(obs.get("eth_close"))
+        if (ts is None or ts > bar or ts.minute or ts.second or ts.microsecond
+                or btc is None or eth is None or min(btc, eth) <= 0
+                or (rows and ts <= rows[-1][0])):
+            return unavailable("OBSERVATION_WINDOW_INVALID")
+        rows.append((ts, btc, eth))
+    if rows[-1] != (bar, finite(live.get("btc_usdt")), finite(live.get("eth_usdt"))):
+        return unavailable("OWNER_CLOSE_MISMATCH")
+    rows = [r for r in rows if r[0] >= issue and tuple(r[0].isocalendar()[:2]) == (iso_year, iso_week)]
+    if not rows:
+        return unavailable("OBSERVATION_WINDOW_UNAVAILABLE")
+    def stamp(ts: datetime) -> str:
+        return ts.isoformat().replace("+00:00", "Z")
+    assets = {}
+    for i, asset in enumerate(("BTC", "ETH"), start=1):
+        floor = finite(freeze.get(f"{asset.lower()}_range_low"))
+        points = nested(path, asset, "points")
+        if floor is None or floor <= 0 or not isinstance(points, list) or len(points) != 7:
+            return unavailable("CN_FLOOR_UNAVAILABLE")
+        floors = {}
+        for point in points:
+            if not isinstance(point, Mapping):
+                return unavailable("CN_FLOOR_UNAVAILABLE")
+            day, low = point.get("day"), finite(point.get("low"))
+            if type(day) is not int or day not in range(1, 8) or day in floors or low is None or low <= 0:
+                return unavailable("CN_FLOOR_UNAVAILABLE")
+            floors[day] = low
+        value = rows[-1][i]
+        # D1 (owner decision 2026-11-21): status uses COMPLETED UTC DAILY closes only. The close of the
+        # 23:00-24:00 hourly candle is the UTC daily close; a day without that candle in the window is pending.
+        completed = [r for r in rows if r[0].hour == 23]
+        last_day = completed[-1] if completed else None
+        first_day = next((r for r in completed if r[i] < floors[r[0].isoweekday()]), None)
+        first_week = next((r for r in completed if r[i] < floor), None)
+        first_hour_week = next((r for r in rows if r[i] < floor), None)
+        assets[asset] = {
+            "symbol": asset + "USDT",
+            "weekly_floor": floor,
+            "completed_day_utc": last_day[0].date().isoformat() if last_day else None,
+            "completed_day_close": last_day[i] if last_day else None,
+            "completed_day_floor": floors[last_day[0].isoweekday()] if last_day else None,
+            "daily_close_below_floor": (last_day[i] < floors[last_day[0].isoweekday()]) if last_day else None,
+            "weekly_close_below_floor": (last_day[i] < floor) if last_day else None,
+            "first_daily_breach_in_captured_window_utc": stamp(first_day[0] + timedelta(hours=1)) if first_day else None,
+            "first_weekly_breach_in_captured_window_utc": stamp(first_week[0] + timedelta(hours=1)) if first_week else None,
+            "intraweek_breach": {
+                "authority": "DESCRIPTIVE_ONLY_NO_SCORE_RISK_OR_ACTION",
+                "latest_hourly_close": value,
+                "hourly_close_below_daily_floor": value < floors[bar.isoweekday()],
+                "hourly_close_below_weekly_floor": value < floor,
+                "first_hourly_below_weekly_floor_utc": stamp(first_hour_week[0]) if first_hour_week else None,
+            },
+        }
+    return {"contract": "CN_BAND_STATUS_v1", "status": "OBSERVED",
+            "authority": "DESCRIPTIVE_ONLY", "forecast_week": week,
+            "venue": "BINANCE_SPOT", "quote": "USDT",
+            "semantics": "COMPLETED_UTC_DAILY_CLOSE_ONLY_NOT_INTRADAY_OR_RISK_CLASSIFICATION",
+            "daily_close_definition": "CLOSE_OF_23_00_UTC_HOURLY_CANDLE; PENDING_NULL_IF_NOT_IN_WINDOW",
+            "bar_open_utc": stamp(bar), "bar_close_utc": stamp(bar + timedelta(hours=1)),
+            "availability_ts": stamp(available), "availability_semantics": "BOUND_AUTO_PACKET_GENERATION_NOT_PROVIDER_FIRST_KNOWN_OR_USER_DELIVERY",
+            "capture_retrieved_at_utc": stamp(retrieved), "capture_blob_sha": blob,
+            "window_start_utc": stamp(rows[0][0]), "window_observations": len(rows),
+            "coverage": "CAPTURED_WINDOW_ONLY_NOT_FIRST_MARKET_BREACH", "assets": assets}
 
 
 def build_official_compass(
@@ -1713,6 +1874,7 @@ def build_official_compass(
         "market_now": market_now,
         "cn_issuer_method": cn_issuer_method(eligible_cn),
         "cn_protection_state_basis": cn_protection_state_basis(eligible_cn),
+        "cn_band_status": cn_band_status(auto_state, eligible_cn, cn_binding, repo_root, issued),
         "horizons": horizons,
         "bull_bear_scale": bull_bear,
         "capitalization_ladder": ladder,
