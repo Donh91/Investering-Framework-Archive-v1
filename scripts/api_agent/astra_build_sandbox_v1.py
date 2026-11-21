@@ -205,8 +205,11 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
     proposal = admit.parse_untrusted(raw)
     verified_main = verify_snapshot(exact_main_repo, scope["main_sha"])
     with tempfile.TemporaryDirectory(prefix="astra-build-") as tmp:
+        # Docker executes as uid 65534. The disposable parent must be
+        # traversable, even though the bind mount itself stays read-only.
+        Path(tmp).chmod(0o755)
         root = Path(tmp) / "repo"
-        root.mkdir()
+        root.mkdir(mode=0o755)
         source = _copy_public_tree(exact_main_repo, root)
         staged = _write_admitted(root, proposal, scope, receipt)
         tests = []
