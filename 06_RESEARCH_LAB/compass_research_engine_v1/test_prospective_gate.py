@@ -173,6 +173,38 @@ class TemporalGateTests(unittest.TestCase):
         row = preflight(freeze(issued_at_utc="2026-11-02T07:17:00"), public(), source())
         self.assertIn("ISSUE_CLOCK_MISSING_OR_INVALID", row["quarantine_reasons"])
 
+    def test_published_outside_locked_daily_window_is_quarantined(self):
+        # The reference candle closes at 08:00, target is 20:00;
+        # therefore 09:05 publication still has >10h lead. The
+        # independent 07:00-09:00 publication window must ALSO be checked.
+        f = freeze(
+            issued_at_utc="2026-11-02T08:15:00Z",
+            market_reference={"observation_open_utc": "2026-11-02T07:00:00Z",
+                              "btc_usdt": 77777.0},
+            market_now={"btc_delta_pct": -0.5,
+                        "market_observation_open_utc": "2026-11-02T07:00:00Z",
+                        "predecessor_market_observation_open_utc": "2026-11-02T06:00:00Z"},
+        )
+        for time in ("09:00:00", "09:05:00"):
+            with self.subTest(publication_utc=time):
+                witness = public(server_created_at_utc=f"2026-11-02T{time}Z")
+                result = preflight(f, witness, source())
+                self.assertIn("PUBLICATION_OUTSIDE_DAILY_UTC_SELECTION_WINDOW",
+                              result["quarantine_reasons"])
+                self.assertFalse(result["temporal_preflight_pass"])
+                self.assertFalse(result["scientifically_admitted"])
+                selection = first_daily_candidate_preflight(
+                    "2026-11-02",
+                    [{"forecast": f, "public_witness": witness, "source_witness": source()}],
+                )
+                self.assertIn("PUBLICATION_OUTSIDE_DAILY_UTC_SELECTION_WINDOW",
+                              selection["quarantine_reasons"])
+                self.assertFalse(selection["scientifically_admitted"])
+        in_window = preflight(
+            f, public(server_created_at_utc="2026-11-02T08:59:59Z"), source())
+        self.assertTrue(in_window["temporal_preflight_pass"])
+        self.assertFalse(in_window["scientifically_admitted"])
+
     def test_first_original_abstention_cannot_be_replaced_by_later_winner(self):
         rows = [
             {"forecast": freeze(issued_at_utc="2026-11-02T07:10:00Z",
