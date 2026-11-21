@@ -155,10 +155,18 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--artifact", type=Path, required=True)
-    parser.add_argument("--mission", required=True)
+    parser.add_argument("--mission", default=None)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
-    result = run(args.repo.resolve(), args.artifact.resolve(), args.mission,
+    artifact = args.artifact.resolve()
+    mission_id = args.mission
+    if mission_id is None:
+        # Read only artifact data. No issue-comment string is ever interpolated
+        # into a shell command or a file path before the strict allowlist.
+        manifest = load_json(read_bound(artifact, "source_manifest.json", 48_000))
+        mission_id = manifest.get("mission_id")
+    require(mission_id in ALLOWED_STAGE1_IDS, "MISSION_NOT_STAGE1_BUILD")
+    result = run(args.repo.resolve(), artifact, mission_id,
                  os.environ.get("GITHUB_SHA", ""),
                  os.environ.get("GITHUB_RUN_ID", ""))
     data = admit.canonical(result) + b"\n"
