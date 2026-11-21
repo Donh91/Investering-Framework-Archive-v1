@@ -47,8 +47,9 @@ class BuildReceiptTest(unittest.TestCase):
             "output_sha256":a.digest(self.raw),"bytes":len(self.raw),
             "usage":{"input_tokens":40_000,"output_tokens":2_000},
             "estimated_upper_usd":2.5}
-        tests=[{"returncode":0,"status":"PASS"},
-               {"returncode":0,"status":"PASS"}]
+        tests=[{"returncode":0,"status":"PASS","completed_tests_observed":1},
+               {"returncode":0,"status":"PASS","completed_tests_observed":1}]
+        baseline=[dict(x) for x in tests]
         self.sandbox = {
             "contract":"ASTRA_BUILD_SANDBOX_RECEIPT_v1",
             "mission_id":self.mid,"main_sha":self.scope["main_sha"],
@@ -56,7 +57,8 @@ class BuildReceiptTest(unittest.TestCase):
             "admission_sha256":a.digest(a.canonical(self.original_admission)),
             "test_command_id":"M1", "network":"none","image":sb.IMAGE,
             "secrets":False,"paid_authority":False,"merge_authority":False,
-            "status":"PASS","tests":tests}
+            "status":"TEST_COMPLETION_UNATTESTED","tests":tests,
+            "native_suite_baseline":baseline,"independent_completion_attested":False}
 
     def bind(self):
         return r.bind(raw_report=self.raw,source_manifest=self.manifest,
@@ -66,9 +68,9 @@ class BuildReceiptTest(unittest.TestCase):
 
     def test_exact_binding_no_release_authority(self):
         result=self.bind()
-        self.assertEqual(result["status"],"TESTED_PASS_REVIEW_REQUIRED")
+        self.assertEqual(result["status"],"TEST_COMPLETION_HOLD")
         self.assertEqual(result["test_count"],2)
-        self.assertTrue(result["all_fixed_tests_passed"])
+        self.assertFalse(result["all_fixed_tests_passed"])
         self.assertFalse(result["merge_authority"])
         self.assertFalse(result["paid_authority"])
         self.assertEqual(result["raw_model_response_sha256"],a.digest(self.raw))
@@ -108,7 +110,7 @@ class BuildReceiptTest(unittest.TestCase):
             self.assertEqual(actual["output_sha256"], a.digest(self.raw))
             self.manifest = manifest
             self.paid = actual
-            self.assertEqual(self.bind()["status"], "TESTED_PASS_REVIEW_REQUIRED")
+            self.assertEqual(self.bind()["status"], "TEST_COMPLETION_HOLD")
 
     def test_collector_absent_provider_effort_is_not_qualified(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -183,7 +185,7 @@ class BuildReceiptTest(unittest.TestCase):
 
     def test_sandbox_test_fail_is_not_release(self):
         self.sandbox["status"]="TEST_FAILURE"
-        self.sandbox["tests"][1]={"returncode":1,"status":"TEST_FAILURE"}
+        self.sandbox["tests"][1]={"returncode":1,"status":"TEST_FAILURE","completed_tests_observed":0}
         self.assertEqual(self.bind()["status"],"TEST_FAILURE_OR_INCOMPLETE")
 
     def test_false_pass_claim_rejected(self):
@@ -191,6 +193,21 @@ class BuildReceiptTest(unittest.TestCase):
         self.sandbox["tests"][1]={"returncode":1,"status":"TEST_FAILURE"}
         with self.assertRaisesRegex(r.ReceiptBlocked,"FALSE_SANDBOX_SUCCESS"):
             self.bind()
+
+    def test_false_green_without_independent_completion_denied(self):
+        self.sandbox["status"]="PASS"
+        with self.assertRaisesRegex(r.ReceiptBlocked,"FALSE_SANDBOX_SUCCESS"):
+            self.bind()
+
+    def test_forged_native_attestor_claim_denied(self):
+        self.sandbox["independent_completion_attested"]=True
+        with self.assertRaisesRegex(r.ReceiptBlocked,"UNREVIEWED_TEST_ATTESTOR"):
+            self.bind()
+
+    def test_suite_count_cannot_decrease_or_promote(self):
+        self.sandbox["tests"][0]["completed_tests_observed"]=0
+        self.sandbox["status"]="TEST_FAILURE"
+        self.assertEqual(self.bind()["status"],"TEST_FAILURE_OR_INCOMPLETE")
 
     def test_incomplete_test_census_denied(self):
         self.sandbox["tests"].pop()
