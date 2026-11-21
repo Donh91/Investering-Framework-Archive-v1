@@ -184,6 +184,18 @@ class BuildAdmissionTest(unittest.TestCase):
         with self.assertRaises(a.AdmissionBlocked):
             a.admit(b" " * (a.MAX_RAW_JSON_BYTES + 1), self.scope)
 
+    def test_scope_contract_is_immutable(self):
+        scope = copy.deepcopy(self.scope)
+        scope["contract"] = "ALTERNATE_AUTHORITY"
+        self.rejects("SCOPE_CONTRACT", scope=scope)
+
+    def test_nested_governance_path_denied(self):
+        for candidate in ("projects/.github/workflows/x.py",
+                          "third_party/.agents/config.py"):
+            with self.subTest(candidate=candidate):
+                with self.assertRaisesRegex(a.AdmissionBlocked, "PATH_PROTECTED"):
+                    a.safe_path(candidate)
+
     def test_source_preimage_required(self):
         s = copy.deepcopy(self.scope)
         del s["source_files"][self.created]
