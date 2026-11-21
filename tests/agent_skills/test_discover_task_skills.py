@@ -131,6 +131,36 @@ class DiscoveryTests(unittest.TestCase):
         r = MODULE.discover(fixture(), "Please calculate two plus two")
         self.assertEqual(r["status"], "NO_MATCH")
 
+    def test_real_index_discovers_explicit_research_package_without_invocation(self):
+        path = ROOT / "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json"
+        if not path.exists():
+            self.skipTest("repo index not present in isolated test checkout")
+        index = json.loads(path.read_text(encoding="utf-8"))
+        task = ("Research Lab: lav en ekstrem grundig, kildebundet forskningspakke "
+                "og før den til en reviewed GitHub PR")
+        result = MODULE.discover(index, task)
+        self.assertEqual(result["status"], "SHORTLIST")
+        match = [r for r in result["recommendations"]
+                 if r["name"] == "research-parallel-lanes"]
+        self.assertEqual(len(match), 1)
+        self.assertIn("kildebundet forskningspakke", match[0]["matched_triggers"])
+        self.assertEqual(match[0]["invocation_status"], "EXPLICIT_ADMISSION_REQUIRED")
+        self.assertFalse(result["auto_invocation_authorized"])
+        self.assertFalse(result["skill_instruction_loaded"])
+
+    def test_real_index_does_not_trigger_research_package_on_routine_requests(self):
+        path = ROOT / "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json"
+        if not path.exists():
+            self.skipTest("repo index not present in isolated test checkout")
+        index = json.loads(path.read_text(encoding="utf-8"))
+        for task in ("Status på PR #2286", "Research Lab status",
+                     "Hvad tænker du om Bitcoin i dag?"):
+            with self.subTest(task=task):
+                result = MODULE.discover(index, task)
+                self.assertNotIn("research-parallel-lanes",
+                                 [s["name"] for s in result["recommendations"]])
+                self.assertFalse(result["auto_invocation_authorized"])
+
     def test_live_index_is_readable_and_nonauthoritative(self):
         path = ROOT / "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json"
         if not path.exists():
