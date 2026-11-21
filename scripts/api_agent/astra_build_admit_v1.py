@@ -41,7 +41,7 @@ DENY_PREFIXES = (".github/", ".agents/", "00_FMOS/", "00_ARCHIVE_CONTROL/",
 DENY_EXACT = frozenset(("AGENTS.md", ".env", ".npmrc", ".pypirc",
                        "scripts/governance/s1_runtime_contract_v1.py",
                        "scripts/research/owner_astra_mission_v1.py"))
-DENY_SEGMENTS = frozenset(("secrets", "private", "vault", "round3",
+DENY_SEGMENTS = frozenset((".github", ".agents", "secrets", "private", "vault", "round3",
                           "round_3", "credentials", "__pycache__", ".git"))
 SCOPE_ALLOW = {
     "M1": (
@@ -126,6 +126,7 @@ def verify_scope(scope: dict) -> dict:
     require(isinstance(scope, dict) and set(scope) ==
             {"contract", "mission_id", "main_sha", "test_command_id",
              "allowlist", "source_files", "stage", "previous_repair"}, "SCOPE_SCHEMA")
+    require(scope["contract"] == SCOPE_CONTRACT, "SCOPE_CONTRACT")
     mid, main, test_id = (scope[k] for k in
                           ("mission_id", "main_sha", "test_command_id"))
     require(isinstance(mid, str) and MISSION_ID.fullmatch(mid), "SCOPE_MISSION")
