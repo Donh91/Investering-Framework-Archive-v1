@@ -188,6 +188,50 @@ def verify_in_disposable_runner(candidate, image):
         return compare(candidate, run=lambda _, fixture: run_case(image, scratch, fixture))
 
 
+def network_negative_control(image):
+    """Run a trusted real network-attempt probe in the SAME isolated Docker profile.
+
+    A failed connection alone is not proof of isolation, so also inspect the
+    container's Linux route table for a non-loopback default route.
+    """
+    probe = b"""import json
+import socket
+blocked = False
+try:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(2)
+    try:
+        s.connect(("1.1.1.1", 443))
+    except OSError:
+        blocked = True
+    finally:
+        s.close()
+except OSError:
+    blocked = True
+routes = []
+try:
+    with open("/proc/net/route", encoding="ascii") as f:
+        routes = [r.split() for r in f.read().splitlines()[1:]]
+except OSError:
+    pass
+default_non_loopback = any(len(r) > 1 and r[1] == "00000000"
+                           and r[0] != "lo" for r in routes)
+print(json.dumps({"status": "INVALID" if blocked and not default_non_loopback
+                  else "ELIGIBLE"}))
+"""
+    with tempfile.TemporaryDirectory(prefix="astra-network-deny-") as tmp:
+        scratch = Path(tmp)
+        scratch.chmod(0o755)
+        file = scratch / "candidate.py"
+        file.write_bytes(probe)
+        file.chmod(0o444)
+        actual = parse_answer(run_case(image, scratch, {}))
+    if actual != "INVALID":
+        raise gate.PilotBlocked("SANDBOX_NETWORK_ATTEMPT_NOT_DENIED")
+    return {"attempted": True, "outbound_connection": "DENIED",
+            "non_loopback_default_route": False, "native_docker_run": True}
+
+
 def smoke():
     """Real sandbox smoke with a deterministic reference, then a false-success control.
 
@@ -228,8 +272,9 @@ print(json.dumps({'status':status}))
     bad = verify_in_disposable_runner(b"""print('{"status":"ELIGIBLE"}')\n""", PINNED_IMAGE)
     if good["status"] != "PASS" or bad["status"] != "TEST_FAILURE":
         raise gate.PilotBlocked("SANDBOX_SMOKE_OR_MUTANT_FAILED")
+    network = network_negative_control(PINNED_IMAGE)
     return {"contract": "ASTRA_WORKLIKE_SANDBOX_SMOKE_v1", "status": "PASS",
-            "good": good, "negative": bad, "image": PINNED_IMAGE,
+            "good": good, "negative": bad, "network": network, "image": PINNED_IMAGE,
             "model_execution_proven": False, "paid_api": False}
 
 def read_artifact(root, rel, maximum):
