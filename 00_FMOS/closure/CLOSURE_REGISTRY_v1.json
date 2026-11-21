@@ -1,0 +1,46 @@
+{
+  "contract": "S1_CLOSURE_REGISTRY_v1",
+  "authority": "ADVISORY_METADATA_ONLY",
+  "design": "06_RESEARCH_LAB/governance/S1_CLOSURE_INTELLIGENCE_DESIGN_v1.md",
+  "items": [
+    {
+      "item_id": "Donh91/Investering-Framework-Archive-v1#2289",
+      "owner": "Donh91/Investering-Framework-Archive-v1#1516",
+      "product": "kompas_pages",
+      "risk_class": "HIGH",
+      "priority": "P0",
+      "due_at": null,
+      "blocking_dependency": "Exact-head independent review and release evidence before squash. Pages render readback after squash.",
+      "consumer": "github_pages",
+      "next_action": "After release approval, verify the served banner with the risk details closed and record the deployment evidence.",
+      "rollback": "Revert the squash and verify the replacement Pages deployment.",
+      "evidence": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-7062430339"
+    },
+    {
+      "item_id": "Donh91/Investering-Framework-Archive-v1#2276",
+      "owner": "Donh91/Investering-Framework-Archive-v1#1553",
+      "product": "kompas_producer",
+      "risk_class": "HIGH",
+      "priority": "P1",
+      "due_at": null,
+      "blocking_dependency": "Owner GO for Fable Tuesday Part 2 and a reviewed replacement head.",
+      "consumer": "official_compass_packet",
+      "next_action": "Keep draft parked. At Fable Part 2, prove immutable retry safety, complete source persistence and the Sunday close boundary.",
+      "rollback": "Revert the eventual approved squash without rewriting any issued packet.",
+      "evidence": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-7062430339"
+    },
+    {
+      "item_id": "Donh91/Investering-Framework-Archive-v1#2284",
+      "owner": "Donh91/Investering-Framework-Archive-v1#1596",
+      "product": "risk02_research",
+      "risk_class": "LOW",
+      "priority": "P1",
+      "due_at": "2026-11-30T00:00:00Z",
+      "blocking_dependency": "Exact pre-boundary B1 and VIX first-known and original delivery evidence, independent review, native CI and eligible preregistration freeze.",
+      "consumer": null,
+      "next_action": "Hold W49 admission until evidence passes. If the boundary is missed, keep W49 excluded and route to Task 2 for a future cohort decision.",
+      "rollback": "Withdraw the prospective candidate through the existing Task 2 owner. Keep the historical decision intact.",
+      "evidence": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596#issuecomment-7062177026"
+    }
+  ]
+}
