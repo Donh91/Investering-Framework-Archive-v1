@@ -41,8 +41,11 @@ def probe(pristine: Path, sha: str, image_id: str) -> dict:
         raise ValueError("IMAGE_ID_LOCAL_MISMATCH")
     verified_sha = native_pristine_source(pristine, sha)
     with tempfile.TemporaryDirectory(prefix="astra-build-pristine-") as folder:
+        # The Docker candidate runs as uid 65534; the temporary parent
+        # must be searchable without granting write authority.
+        Path(folder).chmod(0o755)
         root = Path(folder) / "repo"
-        root.mkdir()
+        root.mkdir(mode=0o755)
         copied = sandbox._copy_public_tree(pristine.resolve(), root)
         outcomes = []
         for scope in TEST_IDS:
