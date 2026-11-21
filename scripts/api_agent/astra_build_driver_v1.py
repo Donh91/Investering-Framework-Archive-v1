@@ -73,8 +73,8 @@ def trusted_scope(repo: Path, mission_id: str, head: str) -> dict:
     # interim main changes without the model having seen those preimages.
     bundle = read_bound(repo, "06_RESEARCH_LAB/astra_missions/" + mission_id +
                         "/BUNDLE.md", budget.MAX_REQUEST_BYTES)
-    start = b"<!-- ASTRA_BUILD_SOURCE_MANIFEST_V1\\n"
-    end = b"\\nEND_ASTRA_BUILD_SOURCE_MANIFEST_V1 -->"
+    start = b"<!-- ASTRA_BUILD_SOURCE_MANIFEST_V1\n"
+    end = b"\nEND_ASTRA_BUILD_SOURCE_MANIFEST_V1 -->"
     require(bundle.count(start) == 1 and bundle.count(end) == 1,
             "BUNDLE_SOURCE_MANIFEST_MISSING")
     embedded = bundle.split(start, 1)[1].split(end, 1)[0]
