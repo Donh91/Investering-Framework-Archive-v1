@@ -112,6 +112,7 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
                 "KOMPAS_PRO_2_COMPLETE_ADVISORY_NO_ACTIVE",
                 "NAVIGATOR_ONE_COMPETITIVE_COMPLETE_ADVISORY_NO_ACTIVE",
                 "PROXIMA_ECONOMIC_DEMAND_COMPLETE_ADVISORY_NO_ACTIVE",
+                "ALPHA_CAPITAL_NETWORK_COMPLETE_ADVISORY_NO_ACTIVE",
             })
             self.assertFalse(any(row.get("new_paid_attempts_authorized", False)
                                  for row in queue["missions"]))
@@ -139,6 +140,21 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
                     self.assertEqual(len(held), 1)
                     self.assertEqual(held[0]["state"], "OWNER_HELD_NEXT")
                     self.assertFalse(held[0]["new_paid_attempts_authorized"])
+            elif queue.get("program_phase") == "ALPHA_CAPITAL_NETWORK_COMPLETE_ADVISORY_NO_ACTIVE":
+                terminal = [row for row in queue["missions"] if row["sequence"] == 30]
+                self.assertEqual(len(terminal), 1)
+                self.assertEqual(terminal[0]["state"], "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_NO_REPOST")
+                self.assertEqual(terminal[0]["result_run_id"], 44799542712)
+                self.assertEqual(terminal[0]["result_owner_comment_id"], 7048291724)
+                self.assertEqual(terminal[0]["result_research_verdict"], "INSUFFICIENT_EVIDENCE")
+                receipt = json.loads((root / terminal[0]["result_receipt_path"]).read_text())
+                self.assertEqual(receipt["status"], "PASS")
+                self.assertEqual(receipt["attempt_count"], 1)
+                self.assertEqual(receipt["estimated_cost_usd"], terminal[0]["result_estimated_cost_usd"])
+                self.assertEqual(receipt["estimated_cost_usd"], 0.17243)
+                self.assertEqual(receipt["model"], "gpt-6.2-sol")
+                self.assertEqual(receipt["reasoning_effort"], "max")
+                self.assertFalse(any(row["state"] == "ACTIVE_RELEASED" for row in queue["missions"]))
             elif queue.get("program_phase") == "PROXIMA_ECONOMIC_DEMAND_COMPLETE_ADVISORY_NO_ACTIVE":
                 terminal = [row for row in queue["missions"] if row["sequence"] == 29]
                 self.assertEqual(len(terminal), 1)

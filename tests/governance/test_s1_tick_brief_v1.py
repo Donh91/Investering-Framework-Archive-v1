@@ -109,6 +109,8 @@ def world():
         "health_runs": [health], "health_runs_complete": True,
         "rulesets_1": [], "rulesets_2": [], "rulesets_complete": True,
         "pulls": [pull()], "pulls_complete": True, "pr": {7: pr_data()},
+        # read_c1b's record (W2b D1): main equals the previous brief's checked_through, nothing to scan
+        "c1b": {"checked_through": MAIN, "from": MAIN, "halt": None, "complete": True, "reason": None, "stop": None},
     }
 
 
@@ -990,7 +992,19 @@ class CollectReplay(unittest.TestCase):
                 return {"protected": False, "commit": {"sha": self.main_now}}
             if path == "pulls/7":
                 return self.d["detail"]
+            if path == "issues":                                     # W2b C1b: the previous brief, at this same main
+                return [self.previous_issue()]
+            if path == "actions/runs/554":
+                return {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main",
+                        "head_sha": self.main, "status": "completed", "conclusion": "success",
+                        "run_started_at": ts(70), "updated_at": ts(60)}
             raise AssertionError(path)                               # v3.2: the REST compare is never read
+
+        def previous_issue(self):
+            prev = B.build_brief(dict(world(), main_sha=self.main, run={"id": 554, "attempt": 1, "event": "schedule"},
+                                      c1b={"checked_through": self.main, "from": self.main, "complete": True}))
+            prev["generated_at"] = ts(65)
+            return {"number": 3, "user": dict(BOT), "body": B.render(prev), "updated_at": ts(64)}
 
         def pages(self, path, params=None, key=None, max_pages=30):
             self.calls += 1
@@ -1215,11 +1229,13 @@ class TickText(unittest.TestCase):
         self.assertIn("BRIEF_UNVERIFIED", TICK)
 
     def test_every_action_and_route_of_the_builder_has_a_step(self):
-        for token in ("MERGE and MERGE_IF_CLAUDE_APPROVE", "REQUEST_REVIEW (rule 3)", "REPAIR (rule 2)", "HALT (C7 halt trigger)", "RECONCILE (",
+        for token in ("MERGE and MERGE_IF_CLAUDE_APPROVE", "REQUEST_REVIEW (rule 3)", "REPAIR (rule 2)", "HALT (C7 halt trigger, an entry with a run)",
+                      "HALT, rule C1b (an entry with source C1B", "RECONCILE (",
                       "CODEX_REVIEW", "BRIDGE_REQUEST", "CODEX_ADDRESS", "CODEX_ADDRESS_MERGE_MAIN", "BRANCH_UPDATE", "otherwise"):
             self.assertIn(token, TICK, token)
         brief = brief_of()
-        for key in ("status_lines", "heartbeat_due", "next", "prs", "lane", "pins", "rulesets", "repo", "main", "run_id", "run_attempt", "event", "generated_at"):
+        # heartbeat_due is no longer read by TICK (v3.3 T3H reads #1156 itself); the brief still publishes it as a hint
+        for key in ("status_lines", "c1b", "ledger", "next", "prs", "lane", "pins", "rulesets", "repo", "main", "run_id", "run_attempt", "event", "generated_at"):
             self.assertIn(key, brief)
             self.assertIn("B." + key, TICK, key)
 
@@ -1243,7 +1259,9 @@ class TickText(unittest.TestCase):
             self.assertIn(sentence, TICK, sentence)
 
     def test_the_tick_is_short(self):
-        self.assertLess(len(TICK.encode("utf-8")), 25000)            # v3 made S1 read about 120 KB before its first decision
+        # v3 made S1 read about 120 KB before its first decision. S1 v3.3 W2b raised the cap from 25,000 to 26,000: it added
+        # T3H and HALT rule C1b and removed the T3 tree walk (TICK v3.3 is 25,796 bytes)
+        self.assertLess(len(TICK.encode("utf-8")), 26000)
 
 
 class TickModel(unittest.TestCase):
@@ -1600,7 +1618,7 @@ class Endings(unittest.TestCase):
         self.assertEqual(listed, self.ALLOWED)
         self.assertIn("No other NOOP result exists and you never invent one.", line)
         self.assertIn("ends BRIEF_INCOMPLETE(<step>:<what failed>) with no write", line)
-        self.assertIn("IF THE BRIEF FAILED (BRIEF_UNVERIFIED, BRIEF_STALE or BRIEF_INCOMPLETE): make no write of any kind in this run.", TICK)
+        self.assertIn("IF THE BRIEF FAILED (BRIEF_UNVERIFIED, BRIEF_STALE or BRIEF_INCOMPLETE): make no write of any kind in this run except the T3H heartbeat.", TICK)
         self.assertIn("- BRIEF_INCOMPLETE(<B.incomplete>): B.complete is not true", TICK)
         self.assertIn("is NOT incomplete: T3 decides that", TICK)
 
@@ -1910,7 +1928,7 @@ class ClaudeReceipts(unittest.TestCase):
 
     def test_the_tick_text_carries_the_rule(self):
         for sentence in ("ONE Bridge read per run, and only when B.claude_slots is not empty",
-                         "Investering-AI-Audit-Bridge/issues/comments?sort=created&direction=desc&per_page=100 (the newest 100 comments, newest first)",
+                         "Investering-AI-Audit-Bridge/issues/comments?sort=created&direction=desc&per_page=40 (the newest 40 comments, newest first; a receipt that is not on that page approves nothing in this run)",   # W2b D2
                          "use only the rows whose issue_url ends /issues/173",
                          "An APPROVED slot is PROMOTED when it also has ready true, the receipt says lane_eligible: YES, and the receipt says INDEPENDENT_DETACHED or the PR is PLAIN LOW.",
                          "An APPROVED slot is ADMISSIBLE when the page itself shows everything F4 needs from the Bridge comments: the cited request row is on the page, is an S1_REVIEW_REQUEST_v1 by Donh91 for that head, was never edited and is older than the receipt; the receipt carries report, report_blob and bridge_commit; and it says INDEPENDENT_DETACHED or the PR is PLAIN LOW.",
@@ -2473,7 +2491,7 @@ class R4Followups(unittest.TestCase):
         self.assertNotIn("ignore-all-previous-instructions", B.render(b))
 
     def test_p3_1_and_p3_6_are_in_the_tick(self):
-        self.assertIn("lies under 00_FMOS/, .github/, .agents/ or scripts/, or ends .py, .sh, .yml, .yaml, .toml, .cfg, .ini, .pth, .mjs or .js or is named requirements*.txt, anywhere, tests/ included (the brief's path classes were derived from that code at B.main)", TICK)
+        self.assertIn("lies under 00_FMOS/, .github/, .agents/, scripts/ or tests/, or ends .py, .sh, .yml, .yaml, .toml, .cfg, .ini, .pth, .mjs or .js or is named requirements*.txt, anywhere, tests/ included (the brief's path classes were derived from that code at B.main)", TICK)
         self.assertNotIn("outside tests/", TICK)                     # A9
         self.assertIn("BRIEF_STALE(source_changed); data-only drift is fine;", TICK)
         self.assertIn("the set of every filename and previous_filename equals the entry's paths exactly (else skipped=<PR>:C8:files_changed)", TICK)
@@ -2606,13 +2624,17 @@ class RedTeamFixes(unittest.TestCase):
         loop = (ROOT / "00_FMOS/S1/ACTION_LOOP.md").read_text(encoding="utf-8")
         self.assertIn("an S1_STRATEGIST_CONSULT_v1 for this PR has an answer on #1157 with verdict CONCUR that cites H or a head whose diff to H changes no path; otherwise skipped=<PR>:C5:strategist", loop)   # the rule F4 restates
         self.assertIn("When otherwise is null (an ADMISSIBLE slot that this step refused), post ONE new S1_REVIEW_REQUEST_v1 for this head on Bridge #173 that names the refusal reason, unless a request newer than the refused receipt exists there. That post is this run's ONE action (last line S1_TICK REQUEST_REVIEW <PR> <H8> REQUESTED(c=<id>)); without it record skipped=<PR>:C5:no_admissible_review.", f4)   # A7, final round F6
-        self.assertIn("- T1 to T3 are at most 4 tool calls (the C1b halt of T3, when it applies, is extra).", TICK)
+        self.assertIn("- T1 to T3 are at most 4 tool calls; T3 never reads a tree", TICK)                                          # W2b D1
         self.assertIn("for an ADMISSIBLE slot you never post a review request of any kind, except the one F4 fallback", TICK)
         self.assertIn("List at M the parent directory of every pin path of the switch (API/contents/<dir>?ref=M; the list of pins comes from the switch you read, never from B): EVERY pin equals its blob or tree SHA there", f5)   # A23
         self.assertNotIn("07_PROMPTS_AND_AGENTS, scripts/governance and scripts/health (tree SHAs) equal", TICK)
         self.assertIn("a pin path of the switch (read 00_FMOS/S1/REVIEWED_MERGE_LANE.json at M now; the bootstrap verified its blob; never use B.pins.paths for this)", t3)
         self.assertIn(".toml, .cfg, .ini, .pth, .mjs or .js or is named requirements*.txt, anywhere, tests/ included", t3)                       # A9, final round F6
-        self.assertIn("when that rule says one is due by YOUR clock and this run's origin (read #1156 for today's heartbeat; B.heartbeat_due was computed at build time and is only a hint)", TICK)   # A20
+        # A20, W2b D3: the heartbeat is T3H; it reads #1156 itself and B.ledger is only a hint
+        self.assertIn("If none is an S1_HEARTBEAT_v1 of this task by Donh91 created today (Copenhagen date), post one S1_HEARTBEAT_v1 on #1156 now", TICK)
+        self.assertIn("Only in a scheduled run of this task at 08:45 Europe/Copenhagen or later: fetch API/issues/1156/comments?since=<today 00:00 Copenhagen, in UTC>&per_page=100, every page.", TICK)
+        self.assertIn("(B.ledger is a hint)", TICK)
+        self.assertIn("(The heartbeat is T3H.)", TICK)
         # the fields those steps name exist on the entry
         e = entry(brief_of())
         self.assertEqual(sorted(e["ci"]["tuples"]), ["execution-truth", "gate", "privacy-scan", "storage-health", "test"])
@@ -2861,138 +2883,59 @@ class ApiBudgetAndRateLimits(unittest.TestCase):
 
 
 class T3CompactDrift(unittest.TestCase):
-    """2026-11-19 S1_TOOL_SHAPE_AUDIT_v1: the connector's compare_commits answer has status, total_commits, too_large and
-    files but no commit list; raw REST compare has commits but only the UNION of files. Neither attributes a file to a
-    commit, so the C1b halt test could never be decided (live tick 13:45Z: BRIEF_INCOMPLETE(T3:comparison_not_verified)).
-    T3 now decides from the compact answer alone when no code path changed, and attributes code changes by root-tree
-    entries between squash merges. REFERENCE below is the decision procedure the TICK text states, run on synthetic ranges;
-    T3_SHA256 pins the exact paragraph, so a reworded rule cannot keep every needle and still change meaning."""
+    """2026-11-19 S1_TOOL_SHAPE_AUDIT_v1 and S1 v3.3 W2b (D1): T3 decides from the connector's compact compare_commits
+    answer alone (status, total_commits, too_large, files; no commit list) and NEVER reads a tree. The v3.2 C1b halt test
+    inside T3 (up to 21 tree reads, failure F1: BRIEF_INCOMPLETE(T3:tree_read) and T3:range) moved to the producer
+    (B.c1b, tests/governance/test_s1_brief_c1b_v1.py); S1 verifies its halt in the HALT rule C1b step. REFERENCE below is
+    the decision procedure the TICK text states; T3_SHA256 pins the exact paragraph."""
 
-    T3 = TICK[TICK.index("T3 MAIN DRIFT"):TICK.index("IF THE BRIEF FAILED")]
-    T3_SHA256 = "879d6b029e6a8ab64515ab2024e431e4f6826fffc95266f451746b0e5412bafa"
-    HALT_DIRS = ("scripts", "tests", ".github", ".agents", "00_FMOS")
-    SQUASH = re.compile(r"\(#\d+\)$")
+    T3 = TICK[TICK.index("T3 MAIN DRIFT"):TICK.index("T3H HEARTBEAT")]
+    T3_SHA256 = "32777ee68cd20e73c2ffb8859c6719ebc140c79c2cf0d30a5ea1b87b726a169e"
 
     def test_tick_text_states_the_procedure(self):
         self.assertEqual(hashlib.sha256(self.T3.encode("utf-8")).hexdigest(), self.T3_SHA256)
         for needle in ("Otherwise read the connector's compare_commits B.main...M (status, total_commits, too_large, files; no commit list).",
                        "Status not ahead: BRIEF_UNVERIFIED(main_not_ahead); over 100 commits, too_large, or 300 or more files: BRIEF_STALE(drift_unreadable).",
-                       "C1b HALT TEST, only when a filename or previous_filename lies under scripts/, tests/, .github/, .agents/ or 00_FMOS/:",
-                       "fetch API/commits?sha=M&per_page=100 and go back by parents[0] to B.main (not reached: BRIEF_INCOMPLETE(T3:range))",
-                       "a squash merge of a PR is a one-parent commit whose subject ends (#<n>)",
-                       "compare the scripts, tests, .github, .agents and 00_FMOS entries of fetch API/git/trees/<sha> (not recursive)",
-                       "from B.main to the parent of the first squash merge, from each squash merge to the parent of the next, and from the last squash merge to M (no squash merge: from B.main to M)",
-                       "post the S1_LANE_HALTED of C1b for the first commit whose entries differ from its parent's (past 20 tree reads: for the segment's last commit), unless one names it, and end the run.",
-                       "Then a changed path that is AGENTS.md"):
+                       "A changed path that is AGENTS.md", "BRIEF_STALE(source_changed); data-only drift is fine",
+                       "lies under 00_FMOS/, .github/, .agents/, scripts/ or tests/,",                  # W2b F1
+                       "No tree read here: the next brief's C1b test (B.c1b) finds a non-squash code commit, and this tick writes nothing on such drift."):
             self.assertIn(needle, self.T3)
-        self.assertLess(self.T3.index("C1b HALT TEST"), self.T3.index("Then a changed path"))   # the halt is decided before the stale
-        self.assertNotIn("compare_commits B.main...M and apply ACTION_LOOP.md C1b", self.T3)   # the undecidable 13:45Z wording
-        self.assertNotIn("attribution_budget", self.T3)          # a proven difference always halts, never ends incomplete
-        self.assertIn("A changed code path adds the reads of the T3 halt test (at most 21).", TICK)
+        for gone in ("git/trees", "commits?sha=M", "T3:range", "past 20 tree reads", "C1b HALT TEST"):
+            self.assertNotIn(gone, self.T3)
+        self.assertIn("- T1 to T3 are at most 4 tool calls; T3 never reads a tree (the C1b halt test of the drift is the brief's, B.c1b, verified in HALT).", TICK)
+        self.assertNotIn("A changed code path adds the reads of the T3 halt test", TICK)
 
-    # ---- reference model: commits = [(sha, parents, subject)] oldest first; trees[sha] = {dir: tree sha}
-    def reference(self, files, commits, trees, base, status="ahead", too_large=False):
-        reads = 1                                                 # the compare_commits answer
+    @staticmethod
+    def reference(files, status="ahead", too_large=False, total_commits=0):
+        """(result, reads). The one read is the compare_commits answer; no commit list, no tree."""
+        reads = 1
         if status != "ahead":
             return "BRIEF_UNVERIFIED(main_not_ahead)", reads
-        if len(commits) > 100 or too_large or len(files) >= 300:
+        if total_commits > 100 or too_large or len(files) >= 300:
             return "BRIEF_STALE(drift_unreadable)", reads
-        if any(f.split("/")[0] in self.HALT_DIRS for f in files):
-            reads += 1                                            # the commit list
-            if not commits or commits[0][1][0] != base:
-                return "BRIEF_INCOMPLETE(T3:range)", reads
-            seen = set()
-            def five(sha):
-                nonlocal reads
-                if sha not in seen:
-                    seen.add(sha)
-                    reads += 1
-                return tuple(trees[sha].get(d) for d in self.HALT_DIRS)
-            squash = [k for k, (_, parents, subject) in enumerate(commits) if len(parents) == 1 and self.SQUASH.search(subject)]
-            segments, start = [], 0                               # (anchor sha, [indexes of the segment's commits])
-            anchor = base
-            for k in squash:
-                segments.append((anchor, list(range(start, k))))
-                anchor, start = commits[k][0], k + 1
-            segments.append((anchor, list(range(start, len(commits)))))
-            for anchor, idx in segments:
-                if not idx:
-                    continue
-                if five(anchor) != five(commits[idx[-1]][0]):
-                    for k in idx:
-                        if len(seen) >= 20:
-                            return f"HALT({commits[idx[-1]][0]})", reads
-                        sha, parents, _ = commits[k]
-                        if five(sha) != five(parents[0]):
-                            return f"HALT({sha})", reads
-        if any(f.split("/")[0] in ("00_FMOS", ".github", ".agents", "scripts") or f == "AGENTS.md"
-               or re.search(r"\.(py|sh|ya?ml|toml|cfg|ini|pth|mjs|js)$", f) for f in files):
+        if any(f.split("/")[0] in ("00_FMOS", ".github", ".agents", "scripts", "tests") or f == "AGENTS.md"
+               or re.search(r"\.(py|sh|ya?ml|toml|cfg|ini|pth|mjs|js)$", f) or re.fullmatch(r"requirements.*\.txt", f.rsplit("/", 1)[-1])
+               for f in files):
             return "BRIEF_STALE(source_changed)", reads
         return "OK", reads
 
-    def chain(self, specs):
-        """specs: list of (subject, dir changed or None), oldest first; returns commits, trees, base."""
-        trees = {"base": {d: d + "0" for d in self.HALT_DIRS}}
-        commits, prev = [], "base"
-        for k, (subject, changed) in enumerate(specs, 1):
-            sha = f"c{k}"
-            t = dict(trees[prev])
-            if changed:
-                t[changed] = t[changed] + "x"
-            trees[sha] = t
-            commits.append((sha, [prev], subject))
-            prev = sha
-        return commits, trees, "base"
-
     def test_data_only_drift_is_one_call_and_ok(self):
-        commits, trees, base = self.chain([("data: capture", None), ("ops: recovery", None)])
-        self.assertEqual(self.reference(["03_DAILY_CAPTURE_LOGS/x.json"], commits, trees, base), ("OK", 1))
+        self.assertEqual(self.reference(["03_DAILY_CAPTURE_LOGS/x.json", "04_MARKET_LEARNING/a.jsonl"]), ("OK", 1))
 
-    def test_the_live_1345z_range_is_source_changed_without_a_halt(self):
-        # b73a9832 -> d4866112 (data) -> 32b4f362 (#2246, 00_FMOS and scripts) -> five data commits -> 563a82fd
-        commits, trees, base = self.chain([("learning: entry signal ledger", None),
-                                           ("S1 liveness: apply Claude combined R2 package byte-exact (#2246)", "00_FMOS"),
-                                           ("ops: native market recovery", None), ("learning: native Handlekompas", None),
-                                           ("ops: native market recovery", None), ("health: audit", None), ("ops: dashboard", None)])
-        for c in ("c2", "c3", "c4", "c5", "c6", "c7"):
-            trees[c]["scripts"] = "scriptsx"
-        got, reads = self.reference(["00_FMOS/S1/BOOTSTRAP.txt", "scripts/orchestration/framework_metronome_v1.py",
-                                     "04_MARKET_LEARNING/a.json"], commits, trees, base)
-        self.assertEqual(got, "BRIEF_STALE(source_changed)")
-        self.assertEqual(reads, 6)                                # compare + commits + 4 anchor trees
+    def test_the_live_1345z_range_is_source_changed_with_one_read(self):
+        self.assertEqual(self.reference(["00_FMOS/S1/BOOTSTRAP.txt", "scripts/orchestration/framework_metronome_v1.py", "04_MARKET_LEARNING/a.json"]),
+                         ("BRIEF_STALE(source_changed)", 1))
 
-    def test_an_unreviewed_code_commit_is_named_and_halts(self):
-        # no squash merge in the range: one segment from B.main to M
-        commits, trees, base = self.chain([("data: capture", None), ("chore: tweak", "scripts"), ("data: capture", None)])
-        self.assertEqual(self.reference(["scripts/x.py"], commits, trees, base)[0], "HALT(c2)")
-        # a non-code file under tests/ by a direct push is still a halt, never data-only drift
-        commits, trees, base = self.chain([("data", None), ("bot: fixture", "tests")])
-        self.assertEqual(self.reference(["tests/fixtures/x.json"], commits, trees, base)[0], "HALT(c2)")
-        # after a squash merge, in the last segment
-        commits, trees, base = self.chain([("feat (#9)", "tests"), ("data: x", None), ("bot: sneaky", ".github")])
-        self.assertEqual(self.reference([".github/workflows/a.yml", "tests/t.py"], commits, trees, base)[0], "HALT(c3)")
-        # in a middle segment, between two squash merges
-        commits, trees, base = self.chain([("a (#1)", "scripts"), ("data", None), ("bot: x", ".agents"), ("b (#2)", "tests"), ("data", None)])
-        self.assertEqual(self.reference(["scripts/a.py", ".agents/x.md", "tests/b.py"], commits, trees, base)[0], "HALT(c3)")
+    def test_code_drift_never_halts_in_the_tick(self):
+        for files in (["scripts/x.py"], ["tests/fixtures/x.json"], ["tests/data.json"], ["tests/fixtures/x.json", "tests/t.py"], [".github/workflows/a.yml"], ["AGENTS.md"], ["x/requirements-dev.txt"]):
+            self.assertEqual(self.reference(files), ("BRIEF_STALE(source_changed)", 1), files)
 
-    def test_a_proven_difference_past_the_budget_still_halts(self):
-        specs = [("data", None)] * 24 + [("bot: late change", "scripts")] + [("data", None)] * 5
-        commits, trees, base = self.chain(specs)
-        got, reads = self.reference(["scripts/x.py"], commits, trees, base)
-        self.assertEqual(got, "HALT(c30)")       # past 20 tree reads: the segment's last commit, never BRIEF_INCOMPLETE
-        self.assertLessEqual(reads, 22)          # compare + commit list + at most 20 trees
+    def test_bounds_fail_closed(self):
+        self.assertEqual(self.reference(["a.json"], status="behind")[0], "BRIEF_UNVERIFIED(main_not_ahead)")
+        self.assertEqual(self.reference(["a.json"] * 300)[0], "BRIEF_STALE(drift_unreadable)")
+        self.assertEqual(self.reference(["a.json"], too_large=True)[0], "BRIEF_STALE(drift_unreadable)")
+        self.assertEqual(self.reference(["a.json"], total_commits=101)[0], "BRIEF_STALE(drift_unreadable)")
 
-    def test_a_two_parent_commit_is_never_a_squash_merge(self):
-        commits, trees, base = self.chain([("data", None), ("Merge branch x (#5)", "scripts")])
-        commits[1] = (commits[1][0], ["c1", "other"], commits[1][2])
-        self.assertEqual(self.reference(["scripts/x.py"], commits, trees, base)[0], "HALT(c2)")
-
-    def test_broken_range_and_bounds_fail_closed(self):
-        commits, trees, base = self.chain([("data", None)])
-        self.assertEqual(self.reference(["scripts/a.py"], commits, trees, "elsewhere")[0], "BRIEF_INCOMPLETE(T3:range)")
-        self.assertEqual(self.reference(["a.json"], commits, trees, base, status="behind")[0], "BRIEF_UNVERIFIED(main_not_ahead)")
-        self.assertEqual(self.reference(["a.json"] * 300, commits, trees, base)[0], "BRIEF_STALE(drift_unreadable)")
-        self.assertEqual(self.reference(["a.json"], commits, trees, base, too_large=True)[0], "BRIEF_STALE(drift_unreadable)")
 
 if __name__ == "__main__":
     unittest.main()
