@@ -106,6 +106,45 @@ class BuildAdmissionTest(unittest.TestCase):
             with self.subTest(path=path), self.assertRaises(a.AdmissionBlocked):
                 a.safe_path(path)
 
+    def test_nested_prompt_and_sensitive_filename_protection(self):
+        for path in ("scripts/learning/AGENTS.md",
+                     "scripts/learning/CLAUDE.md",
+                     "scripts/learning/round3_labels.py",
+                     "scripts/learning/round_3_split.py",
+                     "scripts/learning/vault_sync.py",
+                     "scripts/learning/data/value.json",
+                     "scripts/learning/credentials_v2.py"):
+            with self.subTest(path=path), self.assertRaisesRegex(
+                    a.AdmissionBlocked, "PATH_PROTECTED"):
+                a.safe_path(path)
+
+    def test_c0_controls_and_del_are_rejected(self):
+        for character in ("\x01", "\x08", "\x0b", "\x0e", "\x1f", "\x7f"):
+            p = copy.deepcopy(self.proposal)
+            p["files"][0]["content"] = "x" + character + "y"
+            self.rejects("CONTENT_NOT_TEXT", p)
+        p = copy.deepcopy(self.proposal)
+        p["files"][0]["content"] = "x\\n\\ty"
+        self.assertEqual(self.submit(p)["status"],
+                         "ADMITTED_UNTRUSTED_CODE_TEST_REQUIRED")
+
+    def test_m3_closure_files_are_create_only_and_direct_child(self):
+        scoped = copy.deepcopy(self.scope)
+        scoped["mission_id"] = "ASTRA-BUILD-M3-20261121-S1"
+        scoped["test_command_id"] = "M3"
+        scoped["allowlist"] = ["scripts/governance/s1_closure_*.py"]
+        path = "scripts/governance/s1_closure_new.py"
+        scoped["source_files"] = {path: None}
+        p = copy.deepcopy(self.proposal)
+        p["test_command_id"] = "M3"
+        p["files"] = [{"path": path, "action": "create",
+                        "content": "def validate():\\n    return True\\n"}]
+        self.assertEqual(self.submit(p, scoped)["status"],
+                         "ADMITTED_UNTRUSTED_CODE_TEST_REQUIRED")
+        scoped["source_files"][path] = {"sha256": "a"*64, "mode": "100644"}
+        p["files"][0]["action"] = "modify"
+        self.rejects("M3_CLOSURE_CREATE_ONLY", p, scoped)
+
     def test_duplicate_file(self):
         p = copy.deepcopy(self.proposal)
         p["files"].append(copy.deepcopy(p["files"][0]))
