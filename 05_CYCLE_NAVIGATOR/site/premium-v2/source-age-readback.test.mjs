@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {originalSourceAgeAtIssue,originalSourceAgeLabel} from '../source-age-readback.mjs';
+import {hourlyFloorBanner,hourlyFloorReadback,inheritedProtectionOrigin,kompasTruthBanner,kompasTruthReadback} from '../kompas-truth-banner.mjs';
 
 const issue='2026-10-13T14:14:43Z';
 const compass='CMP-EXACT-ORIGINAL';
@@ -139,4 +140,82 @@ test('copied public metadata cannot hide a non-PASS clock under valid source fla
  }
  assert.match(originalSourceAgeLabel(
    {...projection,original_source_age_at_issue:valid},{valid:true}),/markedsdata 135 min/);
+});
+
+test('truth banner binds source age to the original issue and ages after expiry',()=>{
+ const official={...internal(),data_status:"OK"};
+ const source=originalSourceAgeAtIssue(official,projection);
+ const issued=Date.parse(official.issued_at_utc);
+ const expiry=issued+45*60000;
+ const origin={public_issue_number:32,issued_date_utc:'2026-11-02'};
+ const freshness={contract:'OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1',
+   status:'VERIFIED_OWNER_POLICY',valid_until_utc:new Date(expiry).toISOString()};
+ const compass={...projection,original_source_age_at_issue:source};
+ const read=(input=official,feed=compass)=>({...feed,full_stack:{truth_banner:
+   kompasTruthReadback(input,feed,{origin,officialFreshness:freshness})}});
+ assert.equal(kompasTruthBanner(read(),{nowMs:issued}).state,'FRESH');
+ const inherited={...official,cn_protection_state_basis:'INHERITED_FROM_PRIOR_ISSUE'};
+ const cases={nowMs:issued+60*60000,weeklyAligned:true};
+ const stale=kompasTruthBanner(read(inherited),cases);
+ assert.equal(stale.state,'STALE');
+ assert.match(stale.text,/2026-11-02 UTC \(udgave #32\), ikke fornyet.*Forældede data/);
+ assert.doesNotMatch(kompasTruthBanner(read(inherited),{...cases,weeklyAligned:false}).text,/nedarvet/);
+ assert.equal(kompasTruthBanner({...read(),compass_id:'MISMATCH'},cases).state,'MISSING');
+ assert.equal(kompasTruthBanner({...compass,full_stack:{}},cases).state,'MISSING');
+ assert.equal(kompasTruthBanner(read({...official,data_status:'DEGRADED'}),cases).state,'DEGRADED');
+ const drifted=originalSourceAgeAtIssue({...official,issued_at_utc:'2026-10-01T00:00:00Z'},projection);
+ assert.equal(kompasTruthBanner(read(official,{...compass,original_source_age_at_issue:drifted}),cases).state,'MISSING');
+});
+
+test('legacy carry reaches original public issue and fails closed on missing or mismatched chain links',async()=>{
+ const p={pullback_risk_state:'ELEVATED',pullback_class:'Retest',distribution_risk:'UNKNOWN'};
+ const machine=(n,protection=p)=>({issue_number:n,previous_issue_number:n-1,
+   generated_unix:1793607548+(n-33)*604800,decision_projection:{protection}});
+ const carry=n=>({...machine(n),readable_markdown:'Week\nMethod: CN_OWNER_AUTHORIZED_API_FREE_SEVEN_DAY_v1\n'});
+ const start=carry(35),prior=carry(34),original=machine(33);
+ const chain=new Map([[34,{pkg:prior,publicIssue:33}],[33,{pkg:original,publicIssue:32}]]);
+ const read=n=>chain.get(n);
+ assert.deepEqual(await inheritedProtectionOrigin(start,read),
+   {public_issue_number:32,issued_date_utc:'2026-11-02'});
+ assert.equal(await inheritedProtectionOrigin(start,n=>n===34?read(n):null),null);
+ assert.equal(await inheritedProtectionOrigin(start,n=>({...read(n),pkg:machine(n,{...p,pullback_risk_state:'HIGH'})})),null);
+ const explicit=machine(36,{...p,state_basis:'INHERITED_FROM_PRIOR_ISSUE',inherited_from_issue_number:33});
+ assert.deepEqual(await inheritedProtectionOrigin(explicit,read),
+   {public_issue_number:32,issued_date_utc:'2026-11-02'});
+});
+
+test('descriptive hourly close is shown only for fresh USDT prices strictly below the frozen weekly floor',()=>{
+ const forecastWeek='2026-W47';
+ const closed='2026-11-21T11:00:00Z', available='2026-11-21T11:14:00Z';
+ const auto={packet_generated_at_utc:available,normalized_state:{live_market:{
+   observation_open_utc:'2026-11-21T10:00:00Z',btc_usdt:57500,eth_usdt:1600,
+   observation_semantics:'COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL'}},
+   source_health:{hourly_market:{status:'PASS',classification:'GITHUB_POINTER_TARGET_CHAIN_VALID',
+    freshness:{status:'PASS',source_observation_freshness:{status:'PASS',timestamp:closed,max_age_seconds:10800}}}}};
+ const day=Array.from({length:7},(_,i)=>({day:i+1,low:1}));
+ const freeze={btc_range_low:60000,eth_range_low:1600,price_quote:{BTC:'USDT',ETH:'USDT'},
+   daily_price_path:{contract:'CN_FROZEN_DAILY_PRICE_PATH_v1',forecast_week:forecastWeek,
+    BTC:{points:day},ETH:{points:day}}};
+ const pointer={iso_year:2026,iso_week:47}, pkg={generated_unix:Date.parse('2026-11-16T08:35:53Z')/1000};
+ const fit=(prices=auto,floors=freeze)=>hourlyFloorReadback(prices,floors,pointer,pkg);
+ const nowMs=Date.parse('2026-11-21T12:00:00Z');
+ const render=(hourly,options={},health)=>hourlyFloorBanner({
+   full_stack:{hourly_floor_observation:hourly},public_data_health:health},
+   {forecastWeek,nowMs,...options});
+ const data=fit();
+ const result=render(data);
+ assert.equal(result.age,'Data 60 min gammel.');
+ assert.equal(result.lines.length,1);
+ assert.match(result.lines[0],/^BTC: Seneste timelukkekurs .*11:00 UTC.*ugebund.*beskrivende observation$/);
+ assert.deepEqual(render(fit(auto,{...freeze,btc_range_low:57500})).lines,[]);
+ assert.deepEqual(render(fit(auto,{...freeze,btc_range_low:57499})).lines,[]);
+ assert.deepEqual(render(fit(auto,{...freeze,price_quote:{BTC:'USD',ETH:'USDT'}})).lines,[]);
+ assert.deepEqual(render(null),{age:'',lines:[]});
+ assert.deepEqual(render(data,{nowMs:Date.parse('2026-11-21T14:00:00Z')}),{age:'',lines:[]});
+ assert.deepEqual(render(data,{nowMs:Date.parse('2026-11-21T11:03:00Z')}),{age:'',lines:[]});
+ assert.deepEqual(render(data,{}, {hourly_status:'COMPLETE',latest_complete_market_hour_utc:'2026-11-21T12:00:00Z'}),{age:'',lines:[]});
+ assert.deepEqual(render(data,{forecastWeek:'2026-W48'}),{age:'',lines:[]});
+ const invalid=structuredClone(auto);
+ invalid.source_health.hourly_market.freshness.source_observation_freshness.timestamp=available;
+ assert.equal(fit(invalid),null);
 });

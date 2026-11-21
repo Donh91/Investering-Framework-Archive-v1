@@ -492,16 +492,23 @@ try{
      overflow:style.overflow,hidden:note.hidden};
    };
    const actual=snapshot();
+   const banner=document.getElementById('cn-risk-truth-banner');
+   const bannerRect=banner?.getBoundingClientRect();
+   const truth=banner?{width:bannerRect.width,height:bannerRect.height,
+    clipPath:getComputedStyle(banner).clipPath,role:banner.getAttribute('role')}:null;
    // Negative control: restore the pre-fix behavior by removing the research
    // qualifier. Only the research card is allowed to override compact hiding.
    card.dataset.evidence='negative_control';
    const oldCascade=snapshot();
    card.dataset.evidence='research';
    return {viewport:innerWidth,tabbed:document.body.classList.contains('cn-tabbed-ui'),
-    actual,oldCascade,restored:snapshot()};
+    actual,oldCascade,restored:snapshot(),truth};
   });
   assert.equal(evidence.viewport,width,'RESEARCH_WARNING_VIEWPORT_MISMATCH');
   assert.ok(evidence.tabbed,'RESEARCH_WARNING_MOBILE_TABS_MISSING');
+  assert.ok(evidence.truth?.width>20&&evidence.truth.height>8&&
+   evidence.truth.clipPath==='none'&&evidence.truth.role==='status',
+   'TRUTH_BANNER_NOT_VISIBLE:'+JSON.stringify(evidence.truth));
   assert.match(evidence.actual.text,/Forskning|Research/i,
    'RESEARCH_WARNING_QUALIFIER_CONTENT_MISSING:'+width);
   assert.ok(evidence.actual.width>20&&evidence.actual.height>8&&

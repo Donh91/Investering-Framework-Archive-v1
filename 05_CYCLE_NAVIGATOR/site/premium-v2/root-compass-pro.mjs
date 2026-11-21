@@ -11,6 +11,7 @@ import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,sourceHorizonClock} from './compass-overview.mjs';
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
+import {hourlyFloorBanner,kompasTruthBanner} from '../kompas-truth-banner.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
 import {verifiedOriginalWeekPrices} from './original-week-price-readback.mjs';
@@ -285,6 +286,12 @@ function renderRiskQuick(){
    (en?'— / 5 · awaiting fresh data':'— / 5 · afventer nye data'));
  // Evidence gate: no proven pullback edge yet (pullback_learning suspended, 0 closed
  // episodes). Say so on the card itself instead of implying a calibrated warning.
+ const lang=en?'en':'da';
+ const truth=kompasTruthBanner(feeds?.compass,{lang,
+   weeklyAligned:feeds?.compass?.weekly_context?.status==='ALIGNED'&&
+     feeds.compass.weekly_context.forecast_week===view?.weekly?.forecast_week});
+ const hourly=hourlyFloorBanner(feeds?.compass,{lang,forecastWeek:view?.weekly?.forecast_week});
+ set('cn-risk-truth-banner',[truth.text,hourly.age,...hourly.lines].filter(Boolean).join(' · '));
  set('cn-risk-quick-note',en?'Research · no proven edge':
    'Forskning · ikke bevist edge');
  const copy=p?.public_explanation;
