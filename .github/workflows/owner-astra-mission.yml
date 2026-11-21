@@ -96,11 +96,21 @@ jobs:
       - name: Execute native synthetic sandbox and negative control
         if: steps.relevant.outputs.run == 'true'
         run: python -m scripts.research.astra_worklike_oracle_v1 smoke --out runtime/astra-worklike-smoke/receipt.json
+      - name: Execute BUILD_v1 real offline sandbox, network denial and mutant
+        if: steps.relevant.outputs.run == 'true'
+        run: python -m scripts.api_agent.astra_build_sandbox_v1 smoke --out runtime/astra-build-smoke/receipt.json
       - uses: actions/upload-artifact@v4
         if: steps.relevant.outputs.run == 'true'
         with:
           name: astra-worklike-smoke-${{ github.run_id }}
           path: runtime/astra-worklike-smoke/receipt.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        if: steps.relevant.outputs.run == 'true'
+        with:
+          name: astra-build-smoke-${{ github.run_id }}
+          path: runtime/astra-build-smoke/receipt.json
           if-no-files-found: error
           retention-days: 90
 
