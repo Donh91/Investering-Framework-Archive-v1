@@ -280,15 +280,32 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
         root = Path(tmp) / "repo"
         root.mkdir(mode=0o755)
         source = _copy_public_tree(exact_main_repo, root)
+        # The original, unmodified fixed suites MUST be capable of completing
+        # inside the copied environment before model-created code is staged.
+        # This is also a source-fixture/toolchain readiness check.
+        baseline = []
+        for ordinal, _ in enumerate(admit.TEST_COMMANDS[scope["test_command_id"]]):
+            name, argv = docker_command(root, scope["test_command_id"], ordinal)
+            baseline.append(_run_once(argv, name))
+        require(bool(baseline) and all(x.get("status") == "PASS" and
+                x.get("completed_tests_observed", 0) > 0 for x in baseline),
+                "FIXED_SUITE_BASELINE_NOT_PROVEN")
         staged = _write_admitted(root, proposal, scope, receipt)
         tests = []
         for ordinal, _ in enumerate(admit.TEST_COMMANDS[scope["test_command_id"]]):
             name, argv = docker_command(root, scope["test_command_id"], ordinal)
             tests.append(_run_once(argv, name))
-        # No arbitrary model-created scripts are executed on the host.
+        observed = all(x.get("status") == "PASS" and
+                       x.get("completed_tests_observed", 0) >= base["completed_tests_observed"]
+                       for x, base in zip(tests, baseline))
+        # Candidate stdout can be forged. A count and exit 0 are NOT
+        # independently attestable proof of completion. Explicitly HOLD
+        # rather than assert a completed, merge-eligible BUILD test.
+        # A separately reviewed, digest-pinned trusted attestor is needed.
         result = {"contract": "ASTRA_BUILD_SANDBOX_RECEIPT_v1",
-                  "status": "PASS" if tests and all(x["status"] == "PASS" for x in tests)
-                  else "TEST_FAILURE",
+                  "status": "TEST_COMPLETION_UNATTESTED" if observed else "TEST_FAILURE",
+                  "independent_completion_attested": False,
+                  "native_suite_baseline": baseline,
                   "mission_id": receipt["mission_id"], "stage": receipt["stage"],
                   "main_sha": verified_main,
                   "proposal_sha256": receipt["proposal_sha256"],
