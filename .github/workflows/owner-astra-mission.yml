@@ -153,11 +153,27 @@ jobs:
           mkdir -p runtime/astra-build-toolchain-evidence
           printf '{"contract":"ASTRA_BUILD_TOOLCHAIN_CANDIDATE_v1","image_id":"%s","activation":"HOLD_NO_PAID_BUILD","test_command_completed":false}\n' "$image_id" \
             > runtime/astra-build-toolchain-evidence/image_candidate.json
+      - name: Read separate pristine public main checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: runtime/pristine-main
+          persist-credentials: false
+      - name: Independent no-secret M1 and M3 baseline probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          image_id=$(docker image inspect --format '{{.Id}}' astra-build-toolchain-audit:v1)
+          pristine_sha=$(git -C runtime/pristine-main rev-parse HEAD)
+          python -m scripts.api_agent.astra_build_baseline_probe_v1 \
+            --pristine runtime/pristine-main \
+            --sha "$pristine_sha" --image-id "$image_id" \
+            --out runtime/astra-build-toolchain-evidence/pristine-baseline.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: astra-build-toolchain-candidate-${{ github.run_id }}
-          path: runtime/astra-build-toolchain-evidence/image_candidate.json
+          path: runtime/astra-build-toolchain-evidence/
           if-no-files-found: warn
           retention-days: 30
 
