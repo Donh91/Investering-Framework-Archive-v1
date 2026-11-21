@@ -16,6 +16,12 @@ class BuildSandboxTest(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.src = self.root / "trusted"
         self.src.mkdir()
+        # The fixed governance suite needs public fixtures, not the entire
+        # control-plane archive or any Vault metadata.
+        for fixture in s.REQUIRED_PUBLIC_FIXTURES:
+            loc = self.src / fixture
+            loc.parent.mkdir(parents=True, exist_ok=True)
+            loc.write_text("public fixed-test fixture\n", encoding="utf-8")
         (self.src / "scripts/learning").mkdir(parents=True)
         self.path = self.src / "scripts/learning/existing.py"
         self.path.write_text("def source():\n    return 1\n", encoding="utf-8")
@@ -79,6 +85,33 @@ class BuildSandboxTest(unittest.TestCase):
         (self.src / "scripts/learning/bad.py").symlink_to(self.path)
         with self.assertRaisesRegex(s.SandboxBlocked, "SOURCE_SPECIAL_OR_SYMLINK"):
             s._copy_public_tree(self.src, self.root / "other")
+
+    def test_required_governance_fixture_copy_is_narrow(self):
+        archive = self.src / "00_ARCHIVE_CONTROL"
+        (archive / "vault_backup_registry.json").write_text("PRIVATE_NOT_FOR_SANDBOX")
+        dest = self.root / "publiccopy"
+        dest.mkdir()
+        receipt = s._copy_public_tree(self.src, dest)
+        self.assertEqual(receipt["public_fixture_count"], 3)
+        for path in s.REQUIRED_PUBLIC_FIXTURES:
+            self.assertEqual((dest / path).read_bytes(), (self.src / path).read_bytes())
+        self.assertFalse((dest / "00_ARCHIVE_CONTROL/vault_backup_registry.json").exists())
+
+    def test_missing_required_governance_fixture_halts(self):
+        (self.src / "AGENTS.md").unlink()
+        dest = self.root / "miss"
+        dest.mkdir()
+        with self.assertRaisesRegex(s.SandboxBlocked, "REQUIRED_FIXED_TEST_FIXTURE_MISSING"):
+            s._copy_public_tree(self.src, dest)
+
+    def test_symlinked_control_plane_fixture_halts(self):
+        path = self.src / "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md"
+        path.unlink()
+        path.symlink_to(self.src / "AGENTS.md")
+        dest = self.root / "links"
+        dest.mkdir()
+        with self.assertRaisesRegex(s.SandboxBlocked, "SOURCE_FILE_SPECIAL"):
+            s._copy_public_tree(self.src, dest)
 
     def test_admitted_files_are_only_staged_in_temp_with_hash(self):
         raw = admit.canonical(self.proposal)
