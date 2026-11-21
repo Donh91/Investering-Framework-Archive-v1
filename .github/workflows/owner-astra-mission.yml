@@ -151,7 +151,13 @@ jobs:
             --user 65534:65534 --memory 256m --pids-limit 32 \
             astra-build-toolchain-audit:v1 node --version
           mkdir -p runtime/astra-build-toolchain-evidence
-          printf '{"contract":"ASTRA_BUILD_TOOLCHAIN_CANDIDATE_v1","image_id":"%s","activation":"HOLD_NO_PAID_BUILD","test_command_completed":false}\n' "$image_id" \
+          build_inputs_sha256=$(
+            sha256sum scripts/api_agent/docker/astra-build-toolchain-v1.Dockerfile.txt \
+              scripts/api_agent/docker/astra-build-requirements.lock.txt \
+              scripts/api_agent/docker/inspect_astra_toolchain_lock_v1.py \
+              | LC_ALL=C sort | sha256sum | cut -d' ' -f1
+          )
+          printf '{"contract":"ASTRA_BUILD_TOOLCHAIN_CANDIDATE_v1","image_id":"%s","build_inputs_sha256":"%s","lock_sha256":"70852b54dc8bd5af2c70403a5316bda21eaa6a949f710a0451981360c96b5e38","activation":"HOLD_NO_PAID_BUILD","test_command_completed":false}\n' "$image_id" "$build_inputs_sha256" \
             > runtime/astra-build-toolchain-evidence/image_candidate.json
       - name: Generate candidate wheel-hash lock from reviewed no-secret toolchain
         shell: bash
