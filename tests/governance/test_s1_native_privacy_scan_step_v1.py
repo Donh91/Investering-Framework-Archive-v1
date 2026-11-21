@@ -192,8 +192,12 @@ class NativePrivacyScanStep(unittest.TestCase):
     def test_scanner_pattern_is_not_weakened(self):
         # The release renamed its own term instead of weakening the scanner (PR #2200 review).
         rule = dict(step.scanner.KNOWN_SECRET_OR_RESTRICTED_DESIGN)["EXPLICIT_PRIVATE_DESIGN"]
-        for variant in (MARKER, MARKER.lower(), "OWNER" + "-" + "ONLY", "owner" + " " + "only"):
+        # v3: the marker TOKEN still matches in every form a token takes; narrative prose no longer does
+        # (tests/governance/test_s1_diff_scan_marker_precision_v3.py holds the full positive and negative matrix).
+        for variant in (MARKER, MARKER.lower(), "OWNER" + "-" + "ONLY", "OWNER" + " " + "ONLY"):
             self.assertTrue(rule.search(f"x {variant} y"), variant)
+        self.assertTrue(rule.search("## " + "Owner" + " " + "only"))
+        self.assertIsNone(rule.search("the owner" + " " + "only approves this"))
 
     def test_lane_still_requires_no_restricted_content(self):
         loop = (ROOT / "00_FMOS" / "S1" / "ACTION_LOOP.md").read_text(encoding="utf-8")
@@ -368,17 +372,22 @@ class GateWorkflowWiring(unittest.TestCase):
         # PR-controlled step of the gate job can run before it, overwrite the scanner or print a forged line.
         jobs_at = self.lines.index("jobs:")
         job_ids = [l.strip()[:-1] for l in self.lines[jobs_at + 1:] if re.fullmatch(r"  [A-Za-z0-9_-]+:", l)]
-        self.assertEqual(job_ids, ["privacy-scan", "gate"])
+        # Fix 4 (S1_SITE_PUBLIC_READBACK_V1): a third job, site-public-build, runs the PR-controlled Pages build and
+        # hands its output over as an artifact. The privacy job still runs no PR-controlled step: it only downloads
+        # that artifact (bytes) before the one scan step, and it runs whatever the build job's outcome was.
+        self.assertEqual(job_ids, ["privacy-scan", "gate", "site-public-build"])
         at, block = self._step_block()
         start, end = self.lines.index("  privacy-scan:"), self.lines.index("  gate:")
         self.assertTrue(start < at < end)
         job = self.lines[start:end]
         self.assertEqual([l.strip() for l in job if l.startswith("      - ")],
                          ["- uses: actions/checkout@v4", "- uses: actions/setup-python@v5",
+                          "- uses: actions/download-artifact@v4",
                           f"- name: {STEP_NAME}"], "nothing else may run in the privacy-scan job")
         self.assertEqual([l for l in job if l.strip().startswith("run:")],
                          ["        run: python -I scripts/governance/s1_native_privacy_scan_step_v1.py"])
-        self.assertIn("    if: github.event_name == 'pull_request'", job)
+        self.assertIn("    needs: site-public-build", job)
+        self.assertIn("    if: always() && github.event_name == 'pull_request'", job)
         self.assertNotIn("s1_native_privacy_scan_step_v1", "\n".join(self.lines[end:]), "the gate job must not run the scan")
         self.assertIn("        run: python -I scripts/governance/s1_native_privacy_scan_step_v1.py", block)
         self.assertIn("        if: github.event_name == 'pull_request'", block)

@@ -28,6 +28,10 @@ Dette er IKKE den tidligere forecast-/præcisionsserie. Den gamle serie, dens ta
 4. `EDITION_INDEX.json` - numre og faktisk publiceringsstatus.
 5. `editions/2026-W47/CN-MN-001_BRIEF.md` - forberedelse til første uge.
 
+## Fast X-format fra 2026-11-16
+
+**Tidslinje + kapitalrotation + dag-for-dag BTC/ETH-prisintervaller** er standard for ugens Market Notes. Byg altid på original aktuel, fastfrossen CN-kilde, ikke historiske X-tekster eller frie prisgæt. Syv daglige low/high-intervaller, en kort 1-7 dages tidslinje og de længere 2-3 og 4-8 ugers vinduer når understøttet. Hold fortsat præcisionsscore og tidligere X-serie adskilt. Se det daterede ejer-tillæg i `2026-11-12__editorial-charter-v1__canonical.md`.
+
 ## Rytme
 Vælg én god observation, brug konkrete efterprøvede data, vis mindst ét forhold der kan tale imod konklusionen, og slut med hvad der er værd at holde øje med. Giv plads til et andet emne i næste uge. Spring over, hvis ingen historie holder.
 

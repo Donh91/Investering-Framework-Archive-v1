@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from tests.api_agent.test_astra_provider_settlement_v1 import expected_pending, expected_provision
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/api_agent/check_monthly_cost_guard.py"
@@ -234,8 +235,9 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(state["status"], "PASS", state)
         # Native POSTs are settled; retain consumed USD3+10 and distinct USD10
         # owner-approved (not yet consumed) public research reservation.
-        self.assertEqual(state["pending_liability_upper_usd"], 83.0)
-        self.assertEqual(state["pending_liability_count"], 9)
+        self.assertEqual(state["pending_liability_upper_usd"], expected_pending()[1])
+        self.assertEqual(state["pending_liability_count"], expected_pending()[2])
+        self.assertEqual(state["owner_global_hard_stop_usd"], 100.0)
         self.assertGreaterEqual(state["remaining_usd"], 4.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
 
@@ -250,7 +252,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertEqual(
             sorted(r["work_id"] for r in ledger["owner_reservations"]),
             ["ASTRA-HIGH-ALPHA-LAB-PAPER-EDGE-20261116-ONE","ASTRA-HIGH-COMPASS-EARLY-WARNING-CYCLE-20261116-ONE","ASTRA-HIGH-COMPASS-EDGE-SCIENCE-20261116-ONE","ASTRA-HIGH-COMPASS-TOTAL-AUDIT-20261116-ONE","ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE","ASTRA-HIGH-S1-VNEXT-ARCHITECTURE-20261116-ONE","ASTRA-HIGH-TASK2-ALL-CN-HISTORICAL-20261113-ONE","ASTRA-HIGH-TASK2-PUBLIC-W46W47-20261116-ONE","ASTRA-HIGH-TASK2-SCIENTIFIC-20261113-ONE"])
-        self.assertEqual(pending_risk(p), (0.0, 83.0, 9))
+        self.assertEqual(pending_risk(p), expected_pending(ledger))
         self.assertEqual(len(ledger["settled"]), 3)
         self.assertEqual({r["kind"] for r in ledger["settled"]}, {"NATIVE_POST"})
         self.assertEqual(ledger["provider_settlement_evidence"]["sha256"],
@@ -280,7 +282,7 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
             # The consumed Astra reservations can neither be settled by this
             # aggregate evidence nor silently dropped from the ledger.
             for mutation, code in (("astra_settled", "PROVIDER_SETTLED_SET_INVALID"),
-                                   ("astra_dropped", "RETAINED_ASTRA_RESERVATION_MISSING")):
+                                   ("astra_dropped", "ASTRA_PROVIDER_GROUP_EVIDENCE_INVALID")):
                 bad = json.loads(json.dumps(ledger))
                 astra = bad["owner_reservations"].pop(0)
                 if mutation == "astra_settled":
@@ -292,6 +294,71 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                 f.write_text(json.dumps(bad), encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, code):
                     pending_risk(f)
+
+    def test_consumed_group_counted_once_and_tampering_denied(self):
+        from scripts.api_agent import check_monthly_cost_guard as g
+        p = g.CANONICAL_LIABILITY_LEDGER
+        original = json.loads(p.read_text())
+        self.assertEqual(g.pending_risk(p), expected_pending(original))
+        self.assertAlmostEqual(g.settled_owner_cost_upper(p, datetime(2026, 11, 19, tzinfo=timezone.utc)), expected_provision(original, "2026-11"), places=8)
+        self.assertAlmostEqual(g.settled_owner_cost_upper(p, datetime(2026, 12, 1, tzinfo=timezone.utc)), expected_provision(original, "2026-12"), places=8)
+        self.assertEqual(original["owner_astra_provider_period_settlement"]["provider_period_spend_usd"], 5.41)
+        self.assertEqual(original["owner_astra_provider_period_settlement"]["settled_total_usd"], 5.41)
+        self.assertEqual(original["owner_astra_provider_period_settlement"]["source"], "owner OpenAI usage dashboard + CSV export 2026-11-18")
+        with tempfile.TemporaryDirectory() as td:
+            probe = Path(td) / "ledger.json"
+            for change in ("wrong_run", "wrong_amount", "replay", "invented_release", "drop"):
+                bad = json.loads(json.dumps(original))
+                row = bad["owner_reservations"][0]
+                if change == "wrong_run":
+                    row["native_settlement_evidence"]["run_id"] = "0"
+                elif change == "wrong_amount":
+                    bad["owner_astra_provider_period_settlement"]["provider_period_spend_usd"] = 0
+                elif change == "replay":
+                    row["status"] = g.ACTIVE_RESERVATION_STATUS
+                    row["reconciliation_required"] = True
+                elif change == "invented_release":
+                    row["status"] = g.RELEASED_STATUS
+                else:
+                    bad["owner_reservations"].pop()
+                probe.write_text(json.dumps(bad))
+                with self.assertRaises(ValueError):
+                    g.pending_risk(probe)
+            # A separate future reservation still contributes exactly its full ceiling.
+            new = {"work_id": "ASTRA-HIGH-TASK2-REALDATA-V2-20261113-ONE",
+                   "created_month_utc": "2026-11", "status": g.ACTIVE_RESERVATION_STATUS,
+                   "lower_usd": 0, "upper_usd": 10,
+                   "source": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+                   "one_paid_post_max": 1, "reconciliation_required": True}
+            original["owner_reservations"].append(new)
+            probe.write_text(json.dumps(original))
+            self.assertEqual(g.pending_risk(probe), expected_pending(original))
+            # Reviewed native never-triggered evidence, not a claim about any current row.
+            from unittest.mock import patch
+            proof = {"trigger_comment": None, "workflow_run": None, "census": "synthetic"}
+            new.update(status=g.RELEASED_STATUS, reconciliation_required=False,
+                       no_retry=True, native_settlement_evidence=proof)
+            probe.write_text(json.dumps(original))
+            with patch.dict(g.OWNER_NEVER_TRIGGERED_EVIDENCE, {new["work_id"]: proof}):
+                self.assertEqual(g.pending_risk(probe), expected_pending(original))
+
+    def test_maeve_consumed_pr_preflight_never_returns_paid_pass(self):
+        import os
+        work = "ASTRA-HIGH-MAEVE-TASK2-PREP-20261117-ONE"
+        cmd = [sys.executable, str(SCRIPT), "--receipt-root", str(ROOT / "research/api_agent/outputs"),
+               "--hard-stop-usd", "100", "--reserve-usd", "4",
+               "--new-request-upper-usd", "0", "--owner-astra-program-work-id", work]
+        for event, ref, expected in [
+            ("pull_request", "refs/pull/2222/merge", "CONSUMED_NO_POST"),
+            ("issue_comment", "refs/heads/main", "BLOCKED"),
+            ("pull_request", "refs/heads/main", "BLOCKED"),
+        ]:
+            env = dict(os.environ, GITHUB_ACTIONS="true", GITHUB_EVENT_NAME=event, GITHUB_REF=ref)
+            proc = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True, timeout=25)
+            state = json.loads(proc.stdout)
+            self.assertEqual(state["status"], expected, state)
+            self.assertFalse(state["paid_authority"])
+            self.assertEqual(proc.returncode == 0, expected == "CONSUMED_NO_POST")
 
     def test_native_caller_caps_above_40_only_in_hard_disabled_astra_v2_job(self):
         import re
@@ -322,7 +389,12 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         maeve = [x for x in high_values if x[0] == ".github/workflows/owner-astra-maeve-task2-20261117.yml"]
         self.assertEqual(len(maeve), 1, high_values)
         self.assertEqual(maeve[0][1], 100.0)
-        self.assertEqual(len(high_values), 7, high_values)
+        # Owner 2026-11-20 (#1156/7038154761, budget explicitly approved): the Research Lab Sol MAX one-shot path
+        # uses the guard's own USD50 owner envelope; its non-MAX path keeps 40/4. Exactly one such caller.
+        research = [x for x in high_values if x[0] == ".github/workflows/research-lab-sol-dispatch.yml"]
+        self.assertEqual(len(research), 1, high_values)
+        self.assertEqual(research[0][1], 50.0)
+        self.assertEqual(len(high_values), 8, high_values)
         # Removing the false && on the only elevated-cap job must fail tests.
         self.assertFalse(json.loads((ROOT / "research/api_agent/coordination/ASTRA_TASK2_REALDATA_V2_ADMISSION_V1.json").read_text())["authorized_paid_dispatch"])
 
@@ -334,6 +406,8 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                 self.assertNotEqual(rc, 0)
                 self.assertEqual(state["status"], "BLOCKED")
 
+
+from tests.api_agent.test_opaque_api_reservations_v1 import OpaqueApiLiabilityTests
 
 if __name__ == "__main__":
     unittest.main()

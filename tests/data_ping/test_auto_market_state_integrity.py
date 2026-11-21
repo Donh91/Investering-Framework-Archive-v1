@@ -6,6 +6,49 @@ from scripts.data_ping.auto_market_state import capitalization_transmission_prox
 
 
 class AutoMarketStateIntegrityTests(unittest.TestCase):
+    def test_hourly_pointer_pass_cannot_mask_missing_or_invalid_row(self):
+        from scripts.data_ping.auto_market_state import hourly_market_source_health
+        pointer = {"status": "PASS", "classification": "GITHUB_POINTER_TARGET_CHAIN_VALID"}
+        for status in ("UNAVAILABLE", "FAIL", "DEGRADED", None):
+            with self.subTest(status=status):
+                row = {"status": status, "classification": "HOURLY_EXACT_ROW_MISSING"}
+                out = hourly_market_source_health(pointer, row)
+                self.assertEqual(out["status"], "UNAVAILABLE")
+                self.assertEqual(out["row"], row)
+                self.assertEqual(out["classification"], "HOURLY_EXACT_ROW_MISSING")
+                self.assertEqual(out["pointer_classification"], pointer["classification"])
+        self.assertEqual(hourly_market_source_health(pointer, {"status": "PASS"})["status"], "PASS")
+        for status in ("FAIL", "DEGRADED", "UNAVAILABLE"):
+            self.assertEqual(hourly_market_source_health({"status": status}, {"status": "PASS"})["status"], status)
+        self.assertEqual(hourly_market_source_health({}, {"status": "PASS"})["status"], "UNAVAILABLE")
+
+    def test_hourly_exact_row_required_price_quality(self):
+        from pathlib import Path
+        from unittest.mock import patch
+        from scripts.data_ping.auto_market_state import hourly_row, hourly_price_fields_valid
+        source = {"target": {"window_end_utc": "2026-11-19T12:00:00Z"}}
+        header = "timestamp_utc,btc_close,eth_close,ethbtc_close\n"
+        valid = "2026-11-19T11:00:00Z,63000,1800,0.028\n"
+        with patch("scripts.data_ping.auto_market_state.git_bytes", return_value=((header + valid).encode(), {"fixture": True})):
+            row, health = hourly_row(Path("."), "fixture", source)
+            self.assertEqual(health["status"], "PASS")
+            self.assertTrue(hourly_price_fields_valid(row))
+        for invalid in ("", "0", "-1", "NaN", "Infinity", "bad"):
+            for index in (1, 2, 3):
+                with self.subTest(invalid=invalid, index=index):
+                    values = valid.strip().split(",")
+                    values[index] = invalid
+                    raw = (header + ",".join(values) + "\n").encode()
+                    with patch("scripts.data_ping.auto_market_state.git_bytes", return_value=(raw, {"fixture": True})):
+                        row, health = hourly_row(Path("."), "fixture", source)
+                    self.assertIsNone(row)
+                    self.assertEqual(health["classification"], "HOURLY_EXACT_ROW_INVALID_REQUIRED_PRICES")
+        with patch("scripts.data_ping.auto_market_state.git_bytes", return_value=(header.encode(), {"fixture": True})):
+            row, health = hourly_row(Path("."), "fixture", source)
+            self.assertIsNone(row)
+            self.assertEqual(health["classification"], "HOURLY_EXACT_ROW_MISSING")
+        self.assertFalse(hourly_price_fields_valid({"btc_close": True, "eth_close": 1800, "ethbtc_close": .028}))
+
     def test_sentiment_original_false_pass_packet_now_unavailable(self):
         import json
         from pathlib import Path

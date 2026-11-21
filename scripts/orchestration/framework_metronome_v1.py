@@ -22,6 +22,15 @@ Targets (deliberately minimal; everything else already chains from these):
   MONDAY     weekly-api-calibration-shadow.yml (Master Monday) once per Monday from 02:40 Copenhagen,
              and ONLY after FINAL succeeded (Master Monday hard-requires the final close);
              CN Weekly Publication follows by its existing workflow_run trigger.
+  S1BRIEF    s1-tick-brief.yml once per UTC hour from :20, unless a cron or manual run of it was created
+             this hour from :18 (so an on-time '18 * * * *' cron serves the hour; no double build). The S1 task
+             runs at :45 (it may start up to ~15 min late) and needs a brief younger than 45 minutes
+             (00_FMOS/S1/TICK.md T2). The tick period is ~10.5 min: the dispatch lands :20-:31, or :31-:41 after one
+             TARGET_ACTIVE deferral (an in-flight push/workflow_run due check), and a 2-4 min build still publishes
+             before :45. 2026-11-20: from :15 the brief was ~20-30 min old at :45 (BRIEF_STALE(drift_unreadable) on
+             8 commits / 300+ files); from :27 one deferral could miss :45 (review of this change).
+             A dispatched run always builds (read-only token, no secrets); the push/workflow_run fallback
+             builds only when no cron or manual run happened in the last hour, so it stays quiet.
 
 Fail-closed rules:
   - mode is read from 00_FMOS/METRONOME_MODE_v1.json on main; ACTIVE, ACTIVE_DATA (hourly data owners only) or else SHADOW
@@ -68,7 +77,11 @@ FINAL = {"key": "FINAL", "workflow": CLOSE_WORKFLOW, "inputs": {"mode": "final"}
          "local_weekday": 0, "local_time": (2, 5)}
 MONDAY = {"key": "MONDAY", "workflow": "weekly-api-calibration-shadow.yml", "inputs": {},
           "local_weekday": 0, "local_time": (2, 40)}
-DISPATCH_ALLOWLIST = {HOURLY["workflow"], RECOVERY["workflow"], CLOSE_WORKFLOW, MONDAY["workflow"], SELF_WORKFLOW}
+# The S1 tick brief (evidence only; read-only build, issues:write publish of its own issue only). Its cron is '18 * * * *'.
+S1BRIEF = {"key": "S1BRIEF", "workflow": "s1-tick-brief.yml", "inputs": {}, "from_minute": 20, "serves_from_minute": 18}
+S1BRIEF_BUILDING_EVENTS = ("schedule", "workflow_dispatch")   # these always build; push/workflow_run mostly do not
+DISPATCH_ALLOWLIST = {HOURLY["workflow"], RECOVERY["workflow"], CLOSE_WORKFLOW, MONDAY["workflow"], S1BRIEF["workflow"],
+                      SELF_WORKFLOW}
 
 
 def utc(value: str) -> dt.datetime:
@@ -120,6 +133,25 @@ def hourly_due(now: dt.datetime, runs: list[dict], target: dict = HOURLY) -> tup
 
 def recovery_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
     return hourly_due(now, runs, RECOVERY)
+
+
+def s1brief_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
+    """One brief build per UTC hour, before the S1 task's :45 run. Only a cron or manual run serves the hour: a push or
+    workflow_run run is a fallback that builds only after a missed cron, and its run row cannot show whether it built.
+    Any run of the workflow still in flight (also a fallback's short due check) waits for the next tick."""
+    hour = now.replace(minute=0, second=0, microsecond=0)
+    if now.minute < S1BRIEF["from_minute"]:
+        return False, "BEFORE_MINUTE_%02d" % S1BRIEF["from_minute"]
+    if any_active(runs):
+        return False, "TARGET_ACTIVE"
+    since = hour + dt.timedelta(minutes=S1BRIEF["serves_from_minute"])
+    for r in runs or []:
+        try:
+            if r.get("event", "schedule") in S1BRIEF_BUILDING_EVENTS and utc(r["created_at"]) >= since:
+                return False, "ALREADY_RAN_THIS_HOUR"
+        except (KeyError, TypeError, ValueError, AttributeError):
+            return False, "RUN_ROW_UNREADABLE"   # conservative: an unreadable row suppresses, never doubles
+    return True, "DUE"
 
 
 def succeeded_since(runs: Iterable[dict], since: dt.datetime) -> bool:
@@ -194,11 +226,12 @@ def monday_due(now: dt.datetime, runs: list[dict], close_runs: list[dict] | None
     return True, "DUE"
 
 
-# ACTIVE_DATA dispatches only the hourly data owners (hourly capture: free public candles; market recovery:
-# bounded, cooldown-limited repairs). The Sunday close and the paid Master Monday stay log-only.
+# ACTIVE_DATA dispatches only the free hourly owners (hourly capture: free public candles; market recovery:
+# bounded, cooldown-limited repairs; the S1 tick brief: read-only GitHub reads). The Sunday close and the paid
+# Master Monday stay log-only.
 # Anything but an exact known mode is SHADOW.
 MODES = ("ACTIVE", "ACTIVE_DATA")
-DATA_TARGET_KEYS = frozenset({"HOURLY", "RECOVERY"})
+DATA_TARGET_KEYS = frozenset({"HOURLY", "RECOVERY", "S1BRIEF"})
 
 
 def read_mode(doc: Any) -> str:
@@ -222,7 +255,8 @@ def wait_minutes(environment: Any) -> int | None:
 
 def decide(now: dt.datetime, *, mode: str, hourly_runs: list[dict], monday_runs: list[dict],
            self_runs: list[dict], self_run_id: int | None, environment: Any,
-           recovery_runs: list[dict] | None = None, close_runs: list[dict] | None = None) -> dict:
+           recovery_runs: list[dict] | None = None, close_runs: list[dict] | None = None,
+           s1brief_runs: list[dict] | None = None) -> dict:
     """Pure decision. Returns dispatches (may be empty), would_dispatch and loop decision."""
     plan: dict[str, Any] = {"contract": CONTRACT, "now_utc": iso(now), "mode": mode,
                             "targets": {}, "dispatch": [], "would_dispatch": [], "next_tick": False,
@@ -234,6 +268,7 @@ def decide(now: dt.datetime, *, mode: str, hourly_runs: list[dict], monday_runs:
         (PRECLOSE, lambda: preclose_due(now, close_runs)),
         (FINAL, lambda: final_due(now, close_runs)),
         (MONDAY, lambda: monday_due(now, monday_runs, close_runs)),
+        (S1BRIEF, lambda: s1brief_due(now, s1brief_runs or [])),
     )
     for target, fn in checks:
         due, reason = fn()
@@ -377,6 +412,7 @@ def run(gh, now: dt.datetime, self_run_id: int | None, clock=None) -> dict:
         ("RECOVERY", RECOVERY["workflow"]),
         ("MONDAY", MONDAY["workflow"]),
         ("CLOSE", CLOSE_WORKFLOW),
+        ("S1BRIEF", S1BRIEF["workflow"]),
     ):
         raw_runs[name] = read(name, lambda wf=workflow: gh.runs(wf), [])
         if not isinstance(raw_runs[name], list):
@@ -404,7 +440,8 @@ def run(gh, now: dt.datetime, self_run_id: int | None, clock=None) -> dict:
                   self_runs=raw_runs["SELF"], self_run_id=self_run_id,
                   environment=environment,
                   recovery_runs=production_runs(raw_runs["RECOVERY"]),
-                  close_runs=production_runs(raw_runs["CLOSE"]))
+                  close_runs=production_runs(raw_runs["CLOSE"]),
+                  s1brief_runs=production_runs(raw_runs["S1BRIEF"]))
     plan["read_status"] = "DEGRADED" if failed_reads else "PASS"
     plan["failed_reads"] = sorted(failed_reads)
     if failed_reads:

@@ -11,12 +11,15 @@ import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
 import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,sourceHorizonClock} from './compass-overview.mjs';
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
+import {hourlyFloorBanner,kompasTruthBanner} from '../kompas-truth-banner.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
 import {verifiedOriginalWeekPrices} from './original-week-price-readback.mjs';
 import {kompasSourceClockReadback} from './kompas-clock-readback.mjs';
 import {importantStatusLine,btcNextDays,extraHorizonRows} from './kompas-owner-brief.mjs';
 import {cycleSourceReadback} from './cycle-source-readback.mjs';
+import {renderCycleMap} from './cycle-map.mjs';
+import './cycle-map.css';
 import {readSwingRotation,renderSwingRotation} from '../vnext-live/swing-rotation-readback.mjs';
 import {liveViewModel,liveChart} from './kompas-live.mjs';
 import './kompas-live.css';
@@ -281,8 +284,16 @@ function renderRiskQuick(){
  const stage=sourceStage&&/^[1-5]\/5 · /.test(sourceStage)?sourceStage:null;
  set('cn-risk-quick-state',stage||
    (en?'— / 5 · awaiting fresh data':'— / 5 · afventer nye data'));
- set('cn-risk-quick-note',en?'Ordinal risk level, not probability':
-   'Risikoniveau, ikke sandsynlighed');
+ // Evidence gate: no proven pullback edge yet (pullback_learning suspended, 0 closed
+ // episodes). Say so on the card itself instead of implying a calibrated warning.
+ const lang=en?'en':'da';
+ const truth=kompasTruthBanner(feeds?.compass,{lang,
+   weeklyAligned:feeds?.compass?.weekly_context?.status==='ALIGNED'&&
+     feeds.compass.weekly_context.forecast_week===view?.weekly?.forecast_week});
+ const hourly=hourlyFloorBanner(feeds?.compass,{lang,forecastWeek:view?.weekly?.forecast_week});
+ set('cn-risk-truth-banner',[truth.text,hourly.age,...hourly.lines].filter(Boolean).join(' · '));
+ set('cn-risk-quick-note',en?'Research · no proven edge':
+   'Forskning · ikke bevist edge');
  const copy=p?.public_explanation;
  const bounded=copy?.contract==='CN_PUBLIC_PROTECTION_COPY_v1'&&
    copy?.action_authority===false&&copy?.risk_state===p?.pullback_risk_state&&
@@ -316,6 +327,8 @@ function renderRiskQuick(){
    (quality||(en?'unknown':'ukendt')));
  set('cn-risk-quick-onset',(en?'Possible onset: ':'Mulig start: ')+
    (onset||(en?'not established':'ikke dokumenteret')));
+ // No calibrated onset model exists yet: keep the element, never show a start time.
+ {const o=$('cn-risk-quick-onset');if(o)o.hidden=true;}
  // Same official five source stages, never inferred from hourly prices.
  const source=$('premium-risk-steps'),target=$('cn-risk-quick-steps');
  if(source&&target){
@@ -768,6 +781,7 @@ function renderCycleSource(){
  const lang=document.documentElement.lang==='en'?'en':'da';
  const en=lang==='en';
  const model=cycleSourceReadback({view,lang});
+ renderCycleMap(document,{view,latest:feeds?.latest,lang});
  set('cn-cycle-health',model.weekLabel);
  set('cn-cycle-meaning',model.meaning);
  set('cn-cycle-reason',model.reason||model.nextMeaning||

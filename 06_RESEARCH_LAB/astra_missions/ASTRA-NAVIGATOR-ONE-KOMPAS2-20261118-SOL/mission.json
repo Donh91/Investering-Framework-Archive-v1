@@ -1,0 +1,25 @@
+{
+  "contract": "ASTRA_MISSION_V1",
+  "mission_id": "ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118-SOL",
+  "trigger_issue": 1156,
+  "model": "gpt-6.2-sol",
+  "reasoning_effort": "max",
+  "max_output_tokens": 128000,
+  "max_usd": 3,
+  "instructions_file": "MISSION.md",
+  "bundle_file": "BUNDLE.md",
+  "bundle_sha256": "6c3d163dd8314bdf1e08dcd6e8d595fbbc5cb6eb79e915743d9a314fefaf5ce5",
+  "public_only": true,
+  "authority": {
+    "research_only": true,
+    "paid_dispatch": false,
+    "private_export": false,
+    "round3_analysis": false,
+    "score_rewrite": false,
+    "trading": false,
+    "promotion": false
+  },
+  "prepared_by": "Claude (Bridge, copy of the Navigator One Astra mission with model gpt-6.2-sol)",
+  "owner_request": "Owner (Donh91) 2026-11-19: ONE Sol 6.2 MAX second-opinion run on the IDENTICAL Navigator One bundle (same as the Astra mission ASTRA-NAVIGATOR-ONE-KOMPAS2-20261118), for a cheap independent second perspective after the R2 A/B; full owner mandate.",
+  "notes": "PREP_ONLY; not a launch. Requires independent exact-head review, a matching astra_mission_reservations row (OWNER_RESERVED_PREHTTP, upper_usd 20, one_paid_post_max 1) and an owner release. Exactly one paid POST, no retry. Launch: OWNER_LAUNCH_ASTRA_MISSION <mission_id> <bundle_sha256> on #1156."
+}

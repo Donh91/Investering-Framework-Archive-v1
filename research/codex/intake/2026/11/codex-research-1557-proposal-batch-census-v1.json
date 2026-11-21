@@ -1,0 +1,88 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-1557-proposal-batch-census-v1",
+  "submitted_at_utc": "2026-11-19T19:40:31.219Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "Elite Trader Intelligence / Strategy Arena owner mandate 2026-11-19",
+    "source_paths": [
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1557",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/937#issuecomment-7017272738",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2251",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2250"
+    ]
+  },
+  "title": "P1 #1557: source-bound retrospective partial census and prospective proposal receipt seam",
+  "objective": "Close the first reproducible implementation gap under the existing scientific admission owner: before filtering/mapping/semantic deduplication, account for every observed proposal slot in an authenticated original Daily Director source batch, including malformed, rejected and duplicate slots. Derive a value-free batch census/receipt within existing Experiment Lifecycle source/admission accounting using immutable original output/context/receipt and stable source response identity + array/slot identity; keep emission count, distinct material hypothesis and independent effective N separate. Prefer a derived view of already archived source batches; no second authoritative ledger, workflow or writer. Prospectively preserve deterministic capture at the existing producer before selection, only if the existing source publication and receipt semantics prove this is possible without a parallel authority. Do not claim global coverage; existing weekly consumer global_proposal_time_trial_denominator MUST remain null and BROAD_SEARCH_BLOCKED until all original-family proposal sources, rejected/abandoned pre-output attempts, first-known chronology, monotonic custody and independent review are proven. This first source-family partial receipt is an engineering observability step, NOT admission to broad search, a strategy experiment, or a change to scientific policy. If current authoritative path already supplies this exact evidence, CLEAN_NOOP; if missing provenance or policy needed, stop instead of inventing a count. Preserve existing candidate/forecast/admission/dispatch semantics.",
+  "finding_key": "AUTO_TRADING_1557_DAILY_PROPOSAL_SLOT_CENSUS_GAP",
+  "primary_target": "scripts/experiments/experiment_lifecycle_scientific_admission.py",
+  "allowed_change_scope": [
+    "scripts/experiments/experiment_lifecycle_scientific_admission.py",
+    "tests/experiments/test_scientific_admission_lifecycle.py"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/experiments/experiment_lifecycle_scientific_admission.py@8ecf62048baa8ff67b2f73e8c9b57ab3c8c97aaa",
+      "summary": "Current actual producer lines 272–309: filters non-object slots before mapping; unmappable forecast append to local rejected; existing candidate ID continues without per-slot immutable lineage. Admissions later operate on unique candidate IDs."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": ".github/workflows/daily-director-shadow.yml@1eff521c630e82e78e3763c0ac30e137a257a665",
+      "summary": "Current existing owner archives dated output/context/receipt, calls scientific_admission at line149 and commits existing lifecycle output. No new workflow needed; no workflow change authorized."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/api_agent/api_gateway.py@36ef72a7b2cf29bb5ed330f1c15ef49fe2060e35",
+      "summary": "forecast_candidates is required array, experiment_candidates not a required gateway field; receipt commits exact output SHA256 and canonical context SHA256, declared count, response identity and status. Missing optional field must be distinguished from malformed or unknown, not inferred historic zero."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/research/shadow_cross_domain_weekly_v1.py@a6bbd29ad702ab23082108fc16357495c5d01da7",
+      "summary": "Hard-coded null global denominator is correct containment; preserve it. Only verified first-family proof, not a replacement with raw slots."
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1557#issuecomment-6362572867",
+      "summary": "Earlier independent source-gap audit. Existing outcome-maturity remediation is separate, post-fix observation; no race or changes to its scope."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "a8821b9daf4cb624dc5b0368134bf6fc6413f044",
+      "summary": "Actual read-only probe of 3 public dated Daily Director source batches on 2026-11-19: 034710 (output blob 6e1660bb1850a9a4361ee06d170dbfaa155cd371, receipt 25775db32691280a0f08e75a66e2ffd62ba9051b, context f433e8639abe7d409546a2826f2b9d9fff5a8b97), 144008 (output 4db5e1e9e4230e53d23a52a18f875000fc75e47b, receipt 0186a7086a489028f432b39c467ba1853793d4d1, context ceadb80a5ac9f3a303c33459d47330f0da7d93dc), 185546 (output 5477674ce826351130982372ce82805b04be8abc, receipt df0107010958b9bbeae5ca4d03e57fb3b0129fdc, context f2359ff8ac3cde10c34a8afec4cb95cb719ee9b1). All exact fetched output and context bytes independently SHA256 matched receipt fields (3/3 each); 3 distinct nonempty response identities; PASS status and 2/2 forecast slots per batch matched declared count; total 6 observable emission slots only. experiment_candidates absent in all 3. NOT independent hypothesis N or complete history; no provider values exported."
+    }
+  ],
+  "reproduction": "On fresh main, read #1557, execution state, workflow call and current actual producer. Use existing tests/experiments/test_scientific_admission_lifecycle.py run() fixture on temporary repo (no network). Freeze an authenticated synthetic output/context/receipt batch with one valid candidate, one identical repeat, one malformed raw slot, one invalid mapped forecast and one distinct valid revision; old code persists unique valid candidates, filters invalid types and collects rejects only in stdout, so complete per-slot immutable accounting is absent. Confirm actual source bytes and receipt binding against the three dated source triplets under research/api_agent/outputs/daily/2026/11/19; verify byte hash, declared count and distinct stable response identity without exporting source values. Existing source capture clock != model proposal generation/first publication clock; never infer causality from capture timestamp. Reuse existing workflow publication/immutable custody and validated receipt; historical/prospective classification must be explicit. Use actual file identity and compare prior canonical snapshots; if aborted/pre-output trial sources not recoverable, mark unknown. Before editing, freeze failing fixture and failure matrix, prove negative-test sensitivity by mutation, keep unchanged behavior for old fixtures with missing optional proofs (partial/unknown, not fake zero or success).",
+  "acceptance_tests": {
+    "positive": [
+      "An authenticated complete batch produces reproducible per-source counts and stable slot identities independent of retry/restart; one repeated same-response batch never increments distinct observed slots, distinct response output and materially revised hypothesis remain distinguishable.",
+      "Every observed raw slot is retained as metadata including malformed, mapping-rejected, normalized valid and duplicate, with exact original hash/array/index and source provenance; no raw proposal, provider or personal values in the new receipt. Counts partition observed inputs and do not equal candidate IDs or effective independent N.",
+      "Fixture verifies one valid source batch, one rejected/duplicate batch, existing producer can still write the same candidate/admission/forecast/dispatch outputs; #1557 first-family coverage labelled PARTIAL, existing global denominator stays null, no broad search release."
+    ],
+    "negative": [
+      "Missing/mismatching output or context hash, inconsistent declared count, missing stable response identity, contradictory duplicate identity, untrusted/unknown publication or malformed clock invalidates claimed complete batch; no invented zero or global total.",
+      "Same response copied to another path, same candidate duplicate/retry, alias, historical selected-only output, aborted request with no recovered response, rejected before normalization, and changed material hypothesis cannot be conflated with independent trials. Distinct slot vs distinct hypothesis vs independent N explicit; unknown prior coverage remains unknown.",
+      "Attempted source deletion or counter regression, fake first-known from capture, forged digest, nonsensical counts, raw restricted value leakage, mutation of hypotheses/forecast logic and global denominator promotion fail closed; prove mutation sensitivity of critical guards. Legacy admitted scientific status unchanged. No new source, paid call or runtime authority."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "global scientific gate relaxation",
+    "workflow/schedule changes",
+    "private data export",
+    "historical evidence rewrite",
+    "strategy execution",
+    "live orders"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "Independent review + all exact-head CI on scoped implementation, then main readback and natural existing Daily Director producer/consumer receipt proving complete per-batch source metadata and stable replay. #1557 stays PARTIAL until full cross-family proposal-time coverage and #1157 consumer validation are independently proven. No global=N=6, no strategy promotion. If policy/owner authority required for additional sources, escalate and preserve HOLD_SOURCE; no parallel counter."
+}

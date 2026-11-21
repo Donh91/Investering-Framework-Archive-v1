@@ -15,14 +15,34 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
         self.base={"tasks":{TASK_NAME:{"model":"gpt-6.1-sol","reasoning_effort":"high","max_attempts":1}}}
         self.packet={"mission_id":MAX_ONESHOT_MISSION,"original_owner_issue":1156,"reasoning_effort":"max","max_runs_for_this_release":1,"max_model_output_tokens_per_new_attempt":48000,"public_storage_consent_30_days":True,"public_storage_consent_comment_id":6683279250,"public_source_only":True,"one_shot_owner_mandate":"https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1156#issuecomment-6683279250","review_only_no_code_write":True,"authority":{"portfolio_action":False,"repository_write":False}}
     def test_max_and_no_global_mutation(self):
-        out=effective_registry_for_mission(self.base,self.packet,MAX_ONESHOT_MISSION)
+        out=effective_registry_for_mission(self.base,self.packet,MAX_ONESHOT_MISSION,
+            model_available=lambda name: name == "gpt-6.2-sol")
         self.assertEqual(out["tasks"][TASK_NAME]["reasoning_effort"],"max")
         self.assertEqual(out["tasks"][TASK_NAME]["max_attempts"],1)
         self.assertEqual(out["tasks"][TASK_NAME]["max_output_tokens"],48000)
         self.assertTrue(out["tasks"][TASK_NAME]["recoverable_background"])
         self.assertTrue(out["tasks"][TASK_NAME]["public_background_storage_authorized"])
-        self.assertEqual(out["tasks"][TASK_NAME]["model"], "gpt-6.1-sol")
+        self.assertEqual(out["tasks"][TASK_NAME]["model"], "gpt-6.2-sol")
         self.assertEqual(self.base["tasks"][TASK_NAME]["reasoning_effort"],"high")
+    def test_six_two_project_available_frozen_request_and_price(self):
+        from scripts.api_agent import api_gateway as gateway
+        cfg = effective_registry_for_mission(self.base, self.packet, MAX_ONESHOT_MISSION,
+            model_available=lambda name: name == "gpt-6.2-sol")["tasks"][TASK_NAME]
+        self.assertEqual(cfg["model"], "gpt-6.2-sol")
+        self.assertEqual(cfg["max_attempts"], 1)
+        request = gateway.build_request(TASK_NAME, cfg, "public test", {})
+        self.assertEqual(request["model"], "gpt-6.2-sol")
+        self.assertEqual(request["input"][0]["role"], "developer")
+        self.assertNotIn("instructions", request)
+        self.assertEqual(gateway.estimate_cost("gpt-6.2-sol", 200000, 128000), 2.28)
+        with self.assertRaisesRegex(ValueError, "REASONING_EFFORT_NOT_ADMITTED"):
+            gateway.build_request(TASK_NAME, dict(cfg, reasoning_effort="none"), "public test", {})
+
+    def test_native_registry_fails_closed_when_exact_model_unavailable(self):
+        for probe in (None, lambda _: False, lambda name: name == "gpt-6.1-sol"):
+            with self.assertRaisesRegex(ValueError, "REQUIRED_PROJECT_MODEL_UNAVAILABLE"):
+                effective_registry_for_mission(self.base, self.packet, MAX_ONESHOT_MISSION, model_available=probe)
+
     def test_max_without_public_storage_consent_fails_before_paid_post(self):
         packet=dict(self.packet)
         del packet["public_storage_consent_30_days"]
@@ -39,7 +59,8 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
                 effective_registry_for_mission(self.base, broken, MAX_ONESHOT_MISSION)
     def test_future_token_limit_128k_and_beyond_bound_rejected(self):
         newer = dict(self.packet, max_model_output_tokens_per_new_attempt=128000)
-        cfg = effective_registry_for_mission(self.base, newer, MAX_ONESHOT_MISSION)
+        cfg = effective_registry_for_mission(self.base, newer, MAX_ONESHOT_MISSION,
+            model_available=lambda name: name == "gpt-6.2-sol")
         self.assertEqual(cfg["tasks"][TASK_NAME]["max_output_tokens"], 128000)
         for out in (0, 128001, 200000, "128000"):
             with self.assertRaisesRegex(ValueError, "MAX_OUTPUT_LIMIT_INVALID"):
@@ -88,6 +109,10 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
             self.assertIn(queue.get("program_phase"), {
                 "FIVE_GOAL_MISSIONS_1_TO_5_COMPLETE_ADVISORY_NO_ACTIVE",
                 "ARP_V1_ARP01_TO_ARP04_COMPLETE_ADVISORY_NO_ACTIVE",
+                "KOMPAS_PRO_2_COMPLETE_ADVISORY_NO_ACTIVE",
+                "NAVIGATOR_ONE_COMPETITIVE_COMPLETE_ADVISORY_NO_ACTIVE",
+                "PROXIMA_ECONOMIC_DEMAND_COMPLETE_ADVISORY_NO_ACTIVE",
+                "ALPHA_CAPITAL_NETWORK_COMPLETE_ADVISORY_NO_ACTIVE",
             })
             self.assertFalse(any(row.get("new_paid_attempts_authorized", False)
                                  for row in queue["missions"]))
@@ -100,12 +125,81 @@ class ResearchLabMaxOwnerGateTests(unittest.TestCase):
                 self.assertEqual(arps[0]["original_paid_run_id"], 42470902520)
                 self.assertEqual(arps[0]["result_run_id"], 42471573553)
                 self.assertEqual(queue["arp_v1_terminal_report"]["paid_one_shots"], 3)
-            terminal = [row for row in queue["missions"] if row["mission_id"] ==
-                        "GOAL5-ALTSEASON-CAPITAL-REALITY-LAB-SOL61-MAX-20261106B"]
-            self.assertEqual(len(terminal), 1)
+            if queue.get("program_phase") == "KOMPAS_PRO_2_COMPLETE_ADVISORY_NO_ACTIVE":
+                terminal = [row for row in queue["missions"] if row["mission_id"] ==
+                            "KOMPAS2-FINGERPRINT-ALPHA-CROSS-EXAM-SOL61-MAX-20261111"]
+                self.assertEqual(len(terminal), 1)
+                self.assertEqual(terminal[0]["result_run_id"], 44513737625)
+                self.assertEqual(terminal[0]["result_owner_comment_id"], 7007592323)
+                receipt = json.loads((root / terminal[0]["result_receipt_path"]).read_text())
+                self.assertEqual(receipt["status"], "PASS")
+                self.assertEqual(receipt["attempt_count"], 1)
+                self.assertEqual(receipt["estimated_cost_usd"], terminal[0]["result_estimated_cost_usd"])
+                for seq in (28, 29, 30):
+                    held = [row for row in queue["missions"] if row["sequence"] == seq]
+                    self.assertEqual(len(held), 1)
+                    self.assertEqual(held[0]["state"], "OWNER_HELD_NEXT")
+                    self.assertFalse(held[0]["new_paid_attempts_authorized"])
+            elif queue.get("program_phase") == "ALPHA_CAPITAL_NETWORK_COMPLETE_ADVISORY_NO_ACTIVE":
+                terminal = [row for row in queue["missions"] if row["sequence"] == 30]
+                self.assertEqual(len(terminal), 1)
+                self.assertEqual(terminal[0]["state"], "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_NO_REPOST")
+                self.assertEqual(terminal[0]["result_run_id"], 44799542712)
+                self.assertEqual(terminal[0]["result_owner_comment_id"], 7048291724)
+                self.assertEqual(terminal[0]["result_research_verdict"], "INSUFFICIENT_EVIDENCE")
+                receipt = json.loads((root / terminal[0]["result_receipt_path"]).read_text())
+                self.assertEqual(receipt["status"], "PASS")
+                self.assertEqual(receipt["attempt_count"], 1)
+                self.assertEqual(receipt["estimated_cost_usd"], terminal[0]["result_estimated_cost_usd"])
+                self.assertEqual(receipt["estimated_cost_usd"], 0.17243)
+                self.assertEqual(receipt["model"], "gpt-6.2-sol")
+                self.assertEqual(receipt["reasoning_effort"], "max")
+                self.assertFalse(any(row["state"] == "ACTIVE_RELEASED" for row in queue["missions"]))
+            elif queue.get("program_phase") == "PROXIMA_ECONOMIC_DEMAND_COMPLETE_ADVISORY_NO_ACTIVE":
+                terminal = [row for row in queue["missions"] if row["sequence"] == 29]
+                self.assertEqual(len(terminal), 1)
+                self.assertEqual(terminal[0]["state"], "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_NO_REPOST")
+                self.assertEqual(terminal[0]["result_run_id"], 44785484922)
+                self.assertEqual(terminal[0]["result_owner_comment_id"], 7046404721)
+                self.assertEqual(terminal[0]["result_research_verdict"], "INSUFFICIENT_EVIDENCE")
+                receipt = json.loads((root / terminal[0]["result_receipt_path"]).read_text())
+                self.assertEqual(receipt["status"], "PASS")
+                self.assertEqual(receipt["attempt_count"], 1)
+                self.assertEqual(receipt["estimated_cost_usd"], terminal[0]["result_estimated_cost_usd"])
+                self.assertEqual(receipt["estimated_cost_usd"], 0.18736)
+                self.assertEqual(receipt["model"], "gpt-6.2-sol")
+                self.assertEqual(receipt["reasoning_effort"], "max")
+                held = [row for row in queue["missions"] if row["sequence"] == 30]
+                self.assertEqual(len(held), 1)
+                self.assertEqual(held[0]["state"], "OWNER_HELD_NEXT")
+                self.assertFalse(held[0]["new_paid_attempts_authorized"])
+            elif queue.get("program_phase") == "NAVIGATOR_ONE_COMPETITIVE_COMPLETE_ADVISORY_NO_ACTIVE":
+                terminal = [row for row in queue["missions"] if row["sequence"] == 28]
+                self.assertEqual(len(terminal), 1)
+                self.assertEqual(terminal[0]["mission_id"], "NAVIGATOR-ONE-COMPETITIVE-REVERSE-ENGINEERING-SOL62-MAX-20261118")
+                self.assertEqual(terminal[0]["result_run_id"], 44756331215)
+                self.assertEqual(terminal[0]["result_owner_comment_id"], 7042413320)
+                self.assertEqual(terminal[0]["result_collect_run_id"], 44759335008)
+                self.assertEqual(terminal[0]["result_collect_commit"], "d93e913902fb63b876f8f044b0701818178ee619")
+                receipt = json.loads((root / terminal[0]["result_receipt_path"]).read_text())
+                self.assertEqual(receipt["status"], "PASS")
+                self.assertEqual(receipt["attempt_count"], 1)
+                self.assertEqual(receipt["estimated_cost_usd"], terminal[0]["result_estimated_cost_usd"])
+                self.assertEqual(receipt["estimated_cost_usd"], 0.26679)
+                self.assertEqual(receipt["model"], "gpt-6.2-sol")
+                self.assertEqual(receipt["reasoning_effort"], "max")
+                for seq in (29, 30):
+                    held = [row for row in queue["missions"] if row["sequence"] == seq]
+                    self.assertEqual(len(held), 1)
+                    self.assertEqual(held[0]["state"], "OWNER_HELD_NEXT")
+                    self.assertFalse(held[0]["new_paid_attempts_authorized"])
+            else:
+                terminal = [row for row in queue["missions"] if row["mission_id"] ==
+                            "GOAL5-ALTSEASON-CAPITAL-REALITY-LAB-SOL61-MAX-20261106B"]
+                self.assertEqual(len(terminal), 1)
+                self.assertEqual(terminal[0]["result_run_id"], 42270191125)
             self.assertEqual(terminal[0]["state"],
                              "OWNER_HELD_AFTER_VERIFIED_SOL_MAX_PASS_NO_REPOST")
-            self.assertEqual(terminal[0]["result_run_id"], 42270191125)
         for archived in ("SOL61-MAX-CYCLE-RECOVERY-ALTSEASON-20261105",
                          "S1-ELITE-RESILIENCE-SOL61-MAX-20261106"):
             rows=[r for r in queue["missions"] if r["mission_id"]==archived]
@@ -162,14 +256,15 @@ class NativeNewPaidClaimTests(unittest.TestCase):
         self.registry={"tasks":{TASK_NAME:{"model":"gpt-6.1-sol",
                           "reasoning_effort":"high","max_attempts":1}}}
         self.effective = native.effective_registry_for_mission(
-            self.registry, self.packet, MAX_ONESHOT_MISSION)
+            self.registry, self.packet, MAX_ONESHOT_MISSION,
+            model_available=lambda name: name == "gpt-6.2-sol")
         source_policy=json.loads((Path(__file__).resolve().parents[2]/
                                    sol_policy.POLICY_PATH).read_text())
         for path,data in (
             (sol_policy.POLICY_PATH, source_policy),
             (Path("runtime/research-lab-sol/effective_registry.json"), self.effective),
             (Path("runtime/research-lab-sol/context.json"),
-             {"mission_id":MAX_ONESHOT_MISSION, "model":"gpt-6.1-sol"}),
+             {"mission_id":MAX_ONESHOT_MISSION, "model":"gpt-6.2-sol"}),
             (native.QUEUE_PATH, {"missions":[{
                 "mission_id":MAX_ONESHOT_MISSION,"state":"ACTIVE_RELEASED",
                 "mission_packet":self.packetpath}]}),
@@ -248,7 +343,7 @@ class NativeNewPaidClaimTests(unittest.TestCase):
             "mission_id":mid,"state":"ACTIVE_RELEASED",
             "mission_packet":self.packetpath}]}))
         (self.root/"runtime/research-lab-sol/context.json").write_text(
-            json.dumps({"mission_id":mid,"model":"gpt-6.1-sol"}))
+            json.dumps({"mission_id":mid,"model":"gpt-6.2-sol"}))
         digest=native.sha256_bytes((self.root/self.packetpath).read_bytes())
         release=("<!"+"-- SOL_MAX_OWNER_RELEASE_V1 mission="+mid
                  +" packet_sha256="+digest+" -->")
@@ -263,7 +358,7 @@ class NativeNewPaidClaimTests(unittest.TestCase):
         mid=self.configure_future_thread_mission()
         result=self.execute()
         self.assertEqual(result["mission"],mid)
-        self.assertEqual(result["model"],"gpt-6.1-sol")
+        self.assertEqual(result["model"],"gpt-6.2-sol")
         self.assertEqual(self.writes,1)
         with self.assertRaisesRegex(ValueError,"MAX_CLAIM_ALREADY_EXISTS_NO_REPOST"):
             self.execute()

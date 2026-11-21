@@ -12,7 +12,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
@@ -348,7 +348,7 @@ def parse(payload: bytes, *, include_extra_windows: bool = False) -> tuple[list[
 
 def _walk_for_altcoin_props(value: Any) -> dict[str, Any] | None:
     if isinstance(value, dict):
-        if {"score", "stats", "latestScores", "change"}.issubset(value):
+        if {"stats", "latestScores", "change"}.issubset(value) and ("score" in value or "series" in value):
             return value
         for child in value.values():
             found = _walk_for_altcoin_props(child)
@@ -390,6 +390,34 @@ def parse_blockchaincenter(payload: bytes) -> dict[str, Any]:
     raise E("BLOCKCHAINCENTER_SCHEMA_DRIFT", "Next.js Altcoin Season props not found")
 
 
+def _expand_blockchaincenter_series(series: Any, horizon: str, latest: int, retrieval: str) -> dict[str, int]:
+    """Decode the public provider's dated dense series without filling nulls."""
+    if not isinstance(series, dict) or not isinstance(series.get("start"), str):
+        raise E("BLOCKCHAINCENTER_SCHEMA_DRIFT", f"invalid {horizon}d dense series")
+    points = series.get("scores")
+    if not isinstance(points, list) or not points:
+        raise E("BLOCKCHAINCENTER_SCHEMA_DRIFT", f"empty {horizon}d dense series")
+    try:
+        start = datetime.strptime(series["start"], "%Y-%m-%d").date()
+        if start.isoformat() != series["start"]:
+            raise ValueError("noncanonical date")
+        end = start + timedelta(days=len(points) - 1)
+        if end > datetime.strptime(retrieval[:10], "%Y-%m-%d").date():
+            raise ValueError("future series")
+    except (ValueError, OverflowError) as exc:
+        raise E("BLOCKCHAINCENTER_SCHEMA_DRIFT", f"invalid {horizon}d dense series dates") from exc
+    normalized = {}
+    for offset, value in enumerate(points):
+        if value is None:
+            continue  # retain the gap at its original calendar position
+        if type(value) is not int or not 0 <= value <= 100:
+            raise E("BLOCKCHAINCENTER_SCHEMA_DRIFT", f"invalid {horizon}d dense score")
+        normalized[(start + timedelta(days=offset)).isoformat()] = value
+    if not normalized or points[-1] != latest:
+        raise E("BLOCKCHAINCENTER_RECONCILIATION_FAIL", f"{horizon}d series endpoint differs from headline")
+    return normalized
+
+
 def _finite_float(value: Any, field: str) -> float:
     try:
         number = float(value)
@@ -406,7 +434,9 @@ def _source_state(score: int) -> str:
 
 def build_rotation_context(payload: bytes, retrieval: str) -> dict[str, Any]:
     props = parse_blockchaincenter(payload)
-    scores, changes, histories, stats = (props.get(key) for key in ("latestScores", "change", "score", "stats"))
+    dense_series = "score" not in props and "series" in props
+    scores, changes, stats = (props.get(key) for key in ("latestScores", "change", "stats"))
+    histories = props.get("series" if dense_series else "score")
     if not all(isinstance(value, dict) for value in (scores, changes, histories, stats)):
         raise E("BLOCKCHAINCENTER_SCHEMA_DRIFT", "required props are not objects")
     required_stats = {
@@ -463,6 +493,8 @@ def build_rotation_context(payload: bytes, retrieval: str) -> dict[str, Any]:
             "returns_decimal": dict(sorted(returns.items())),
         }
         series = histories[horizon]
+        if dense_series:
+            series = _expand_blockchaincenter_series(series, horizon, published_score, retrieval)
         if not isinstance(series, dict) or not series:
             raise E("BLOCKCHAINCENTER_SCHEMA_DRIFT", f"empty {horizon}d historical series")
         normalized_series: dict[str, int] = {}
@@ -499,7 +531,7 @@ def build_rotation_context(payload: bytes, retrieval: str) -> dict[str, Any]:
             "transport": "PUBLIC_HTML_NEXTJS_FLIGHT_PAYLOAD",
             "raw_bytes": len(payload),
             "raw_sha256": sha(payload),
-            "parser_contract": "NEXTJS_FLIGHT_ALTCOIN_PROPS_v1",
+            "parser_contract": "NEXTJS_FLIGHT_ALTCOIN_DENSE_SERIES_v2" if dense_series else "NEXTJS_FLIGHT_ALTCOIN_PROPS_v1",
         },
         "methodology": {**BLOCKCHAINCENTER_METHOD, "methodology_fingerprint_sha256": sha(canonical(BLOCKCHAINCENTER_METHOD))},
         "headline": horizons["90"],
@@ -511,6 +543,31 @@ def build_rotation_context(payload: bytes, retrieval: str) -> dict[str, Any]:
         "backfill_materialized_as_daily_rows": False,
         "market_interpretation": False,
         "authority": ROTATION_AUTHORITY,
+    }
+
+
+BLOCKCHAINCENTER_DRIFT_RECEIPT = "blockchaincenter_drift_receipt.json"
+BLOCKCHAINCENTER_DRIFT_STATES = frozenset({"BLOCKCHAINCENTER_SCHEMA_DRIFT", "BLOCKCHAINCENTER_RECONCILIATION_FAIL"})
+BLOCKCHAINCENTER_PARSER_CONTRACTS = ("NEXTJS_FLIGHT_ALTCOIN_PROPS_v1", "NEXTJS_FLIGHT_ALTCOIN_DENSE_SERIES_v2")
+
+
+def blockchaincenter_drift_receipt(context: dict[str, Any]) -> dict[str, Any] | None:
+    """Small machine-readable canary for parser drift; detection only, no repair."""
+    if context.get("failure_state") not in BLOCKCHAINCENTER_DRIFT_STATES:
+        return None
+    source = context.get("source") if isinstance(context.get("source"), dict) else {}
+    return {
+        "contract": "BLOCKCHAINCENTER_SCHEMA_DRIFT_RECEIPT_v1",
+        "source": "BlockchainCenter",
+        "source_url": BLOCKCHAINCENTER_URL,
+        "error_code": context["failure_state"],
+        "error_message": context.get("failure_message"),
+        "raw_sha256": source.get("raw_sha256"),
+        "raw_bytes": source.get("raw_bytes"),
+        "retrieved_at_utc": context.get("retrieved_at_utc"),
+        "parser_contracts_tried": list(BLOCKCHAINCENTER_PARSER_CONTRACTS),
+        "action": "DETECTION_ONLY_NO_AUTOMATIC_PARSER_CHANGE",
+        "authority": AUTHORITY,
     }
 
 
@@ -727,6 +784,7 @@ def run(
         "artifact_manifest.json", "owner_snapshot.json", "raw_blockchaincenter_altcoin_season.html.gz",
         "raw_coinmarketcap_altcoin_season.html.gz", "raw_source_payload.json", "receipt.json",
         "rotation_method_crosscheck_snapshot.json", "rotation_context_snapshot.json",
+        BLOCKCHAINCENTER_DRIFT_RECEIPT,
     ):
         (output / name).unlink(missing_ok=True)
     (output / "raw_source_payload.json").write_bytes(payload)
@@ -767,6 +825,10 @@ def run(
     }
     if include_extra_windows:
         receipt["extra_return_capture"] = owner["extra_return_capture"]
+    drift_receipt = blockchaincenter_drift_receipt(rotation_context)
+    if drift_receipt is not None:
+        (output / BLOCKCHAINCENTER_DRIFT_RECEIPT).write_text(json.dumps(drift_receipt, indent=2, sort_keys=True) + "\n")
+        receipt["rotation_context_drift_receipt"] = BLOCKCHAINCENTER_DRIFT_RECEIPT
     (output / "owner_snapshot.json").write_text(json.dumps(owner, indent=2, sort_keys=True) + "\n")
     (output / "rotation_context_snapshot.json").write_text(json.dumps(rotation_context, indent=2, sort_keys=True) + "\n")
     (output / "rotation_method_crosscheck_snapshot.json").write_text(json.dumps(coinmarketcap_context, indent=2, sort_keys=True) + "\n")

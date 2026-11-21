@@ -91,7 +91,24 @@ class EmptyRecoveryTests(unittest.TestCase):
         self.assertFalse(live_altseason_has_observation({"blockchaincenter_altcoin_season":{"status":"PASS","horizons":{}}}))
         self.assertFalse(live_altseason_has_observation({"coinmarketcap_altcoin_season":{"status":"PASS","published_score":None}}))
         self.assertTrue(live_altseason_has_observation({"blockchaincenter_altcoin_season":{"status":"PASS","horizons":{"90":{"published_score":0}}}}))
-        self.assertTrue(live_altseason_has_observation({"coinmarketcap_altcoin_season":{"status":"PASS","published_score":0}}))
+        self.assertFalse(live_altseason_has_observation({"coinmarketcap_altcoin_season":{"status":"PASS","published_score":0}}))
+
+    def test_altseason_health_tracks_specific_required_source_and_horizon(self):
+        cmc = {"status": "PASS", "published_score": 58}
+        for bc in (
+            {"status": "DEGRADED", "horizons": {}},
+            {"status": "PASS", "horizons": {"30": {"published_score": 39}}},
+            {"status": "DEGRADED", "horizons": {"90": {"published_score": 49}}},
+        ):
+            self.assertFalse(live_altseason_has_observation({
+                "blockchaincenter_altcoin_season": bc, "coinmarketcap_altcoin_season": cmc}))
+        for score in (None, True, "49", float("nan"), float("inf"), -1, 101):
+            self.assertFalse(live_altseason_has_observation({
+                "blockchaincenter_altcoin_season": {"status": "PASS", "horizons": {"90": {"published_score": score}}},
+                "coinmarketcap_altcoin_season": cmc}))
+        for score in (0, 49, 100):
+            self.assertTrue(live_altseason_has_observation({
+                "blockchaincenter_altcoin_season": {"status": "PASS", "horizons": {"90": {"published_score": score}}}}))
 
     def test_derivatives_truthy_wrapper_is_not_a_pass(self):  # WO-3, auto_market_state :598
         self.assertEqual(derivatives_source_health(swaps(-3.08e-05, -8.17e-05))["status"], "PASS")

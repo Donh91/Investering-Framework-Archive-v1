@@ -8,7 +8,7 @@ from typing import Any
 
 CONTRACT="M6_WARNING_EVENT_OUTCOME_v1"
 INDEX_CONTRACT="M6_WARNING_EVENT_INDEX_v1"
-INTEGRITY_REVISION="v1.2_POST_KNOWLEDGE_BAR_INTEGRITY"
+INTEGRITY_REVISION="v1.3_SOURCE_DATA_STATUS_OK_ONLY"
 FREEZE_CONTRACT="OFFICIAL_DAILY_COMPASS_v1"
 PROTECTION_CONTRACT="COMPASS_PROTECTION_TRACKER_v1"
 PRIMARY={"ELEVATED","HIGH","CONFIRMED"}
@@ -85,7 +85,7 @@ def eligible_freezes(root, asof=None):
             continue
         btc=finite_number(ref.get("btc_usdt"));eth=finite_number(ref.get("eth_usdt"))
         if (f.get("contract")==FREEZE_CONTRACT and t.get("contract")==PROTECTION_CONTRACT and
-            t.get("data_quality")=="OK" and state in PRIMARY and
+            t.get("data_quality")=="OK" and f.get("data_status")=="OK" and state in PRIMARY and
             btc is not None and btc>0 and eth is not None and eth>0):
             rows.append({"path":p,"freeze":f,"tracker":t,"issued":issued,"knowledge":issued})
     # Only at-issue chronology, never filename order or future price knowledge.
@@ -198,7 +198,7 @@ def build(root,now):
           "warning_timestamp":f.get("issued_at_utc"),"knowledge_timestamp":z(start),
           "knowledge_clock_semantics":"ISSUED_WITH_COMPLETED_REFERENCE_HOUR_NOT_PROVIDER_FIRST_KNOWN",
           "provider_first_known_verified":False,"source_path":r["path"].relative_to(root).as_posix(),"source_hash":sha(r["path"]),
-          "compass_id":f.get("compass_id"),"data_health_state":t.get("data_quality"),"episode_family_id":r["episode_family_id"],
+          "compass_id":f.get("compass_id"),"data_health_state":t.get("data_quality"),"source_data_status":f.get("data_status"),"episode_family_id":r["episode_family_id"],
           "episode_family_status":r["episode_family_status"],"within_family_warning_index":r["within_family_warning_index"],"independent_family_weight":r["independent_family_weight"],
           "start_prices":{"BTC":finite_number(ref["btc_usdt"]),"ETH":finite_number(ref["eth_usdt"])},
           "reference_price_semantics":"FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE","outcome_tape_bindings":bindings,"horizons":{},

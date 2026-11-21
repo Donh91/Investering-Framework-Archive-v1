@@ -18,12 +18,13 @@ def run(created, status="completed", rid=1, conclusion="success"):
 FINAL_OK_W47 = run(dt.datetime(2026, 11, 16, 1, 7, tzinfo=UTC))  # 02:07 CET Monday, succeeded
 
 
-def plan(now, mode="ACTIVE", hourly=(), monday=(), self_runs=(), env=ENV_OK, self_id=99, recovery=(), close=None):
+def plan(now, mode="ACTIVE", hourly=(), monday=(), self_runs=(), env=ENV_OK, self_id=99, recovery=(), close=None,
+         s1brief=()):
     if close is None:
         close = [FINAL_OK_W47]
     return M.decide(now, mode=mode, hourly_runs=list(hourly), monday_runs=list(monday),
                     self_runs=list(self_runs), self_run_id=self_id, environment=env,
-                    recovery_runs=list(recovery), close_runs=list(close))
+                    recovery_runs=list(recovery), close_runs=list(close), s1brief_runs=list(s1brief))
 
 
 class MetronomeTest(unittest.TestCase):
@@ -58,6 +59,83 @@ class MetronomeTest(unittest.TestCase):
         # an on-time :24 recovery cron run already serves the hour: no second, metronome-dispatched recovery
         self.assertEqual(plan(now.replace(minute=36), recovery=[run(now.replace(minute=24))])["targets"]["RECOVERY"],
                          "ALREADY_RAN_THIS_HOUR")
+
+    def test_s1_brief_once_per_hour_from_minute_20_before_the_s1_task(self):
+        # 2026-11-19: the brief's '18 * * * *' cron started twice in 20 h; S1 at :45 needs a brief < 45 min old.
+        # 2026-11-20: dispatch moved from :15 to :20 (fresher brief at :45) while one deferred tick still makes :45.
+        now = dt.datetime(2026, 11, 19, 11, 32, tzinfo=UTC)
+        ev = lambda t, e, **k: dict(run(t, **k), event=e, head_branch="main")  # noqa: E731
+        p = plan(now, mode="ACTIVE_DATA", hourly=[run(now - dt.timedelta(hours=2))],
+                 recovery=[run(now - dt.timedelta(hours=2))])
+        self.assertEqual(p["targets"]["S1BRIEF"], "DUE")
+        self.assertIn({"workflow": "s1-tick-brief.yml", "inputs": {}}, p["dispatch"])
+        self.assertIn("s1-tick-brief.yml", M.DISPATCH_ALLOWLIST)
+        self.assertEqual(plan(now.replace(minute=19))["targets"]["S1BRIEF"], "BEFORE_MINUTE_20")
+        self.assertEqual(plan(now.replace(minute=20))["targets"]["S1BRIEF"], "DUE")
+        # 10.5 min tick period: first due tick < from+10.5; one TARGET_ACTIVE deferral adds 10.5; a 4 min build must
+        # still publish before :45. An on-time '18 * * * *' cron serves the hour (no double build).
+        self.assertLessEqual(M.S1BRIEF["from_minute"] + 2 * 10.5 + 4, 45)
+        self.assertLessEqual(M.S1BRIEF["serves_from_minute"], 18)
+        self.assertGreaterEqual(M.S1BRIEF["from_minute"], 20)
+        # a cron or manual run created this hour from :18 serves the hour (an on-time cron included; it always builds)
+        for e in ("schedule", "workflow_dispatch"):
+            self.assertEqual(plan(now, s1brief=[ev(now.replace(minute=18), e)])["targets"]["S1BRIEF"], "ALREADY_RAN_THIS_HOUR")
+            self.assertEqual(plan(now, s1brief=[ev(now.replace(minute=17), e)])["targets"]["S1BRIEF"], "DUE")
+            self.assertEqual(plan(now, s1brief=[ev(now - dt.timedelta(minutes=50), e)])["targets"]["S1BRIEF"], "DUE")
+        # a completed push or workflow_run fallback never serves the hour: its row cannot show whether it built
+        for e in ("push", "workflow_run"):
+            self.assertEqual(plan(now, s1brief=[ev(now.replace(minute=21), e)])["targets"]["S1BRIEF"], "DUE")
+        # anything still in flight (also a fallback's short due check) waits for the next tick
+        self.assertEqual(plan(now, s1brief=[ev(now.replace(minute=21), "push", status="in_progress")])["targets"]["S1BRIEF"],
+                         "TARGET_ACTIVE")
+        # a row without an event counts as building (suppresses, never doubles); an unreadable row suppresses too
+        self.assertEqual(plan(now, s1brief=[run(now.replace(minute=19))])["targets"]["S1BRIEF"], "ALREADY_RAN_THIS_HOUR")
+        self.assertEqual(plan(now, s1brief=[{"id": 1, "status": "completed", "created_at": "x", "event": "schedule"}])
+                         ["targets"]["S1BRIEF"], "RUN_ROW_UNREADABLE")
+        # SHADOW only logs it; ACTIVE dispatches it too
+        self.assertIn({"workflow": "s1-tick-brief.yml", "inputs": {}}, plan(now, mode="SHADOW")["would_dispatch"])
+        self.assertIn({"workflow": "s1-tick-brief.yml", "inputs": {}}, plan(now, mode="ACTIVE")["dispatch"])
+
+    def test_s1_brief_runs_are_read_and_filtered_and_fail_closed(self):
+        now = dt.datetime(2026, 11, 19, 11, 27, tzinfo=UTC)
+
+        class Fake:
+            def __init__(self, brief_runs=(), fail=False):
+                self.calls, self.read, self.brief_runs, self.fail = [], [], list(brief_runs), fail
+
+            def mode(self):
+                return {"mode": "ACTIVE_DATA"}
+
+            def runs(self, wf):
+                self.read.append(wf)
+                if wf == M.S1BRIEF["workflow"]:
+                    if self.fail:
+                        raise RuntimeError("boom")
+                    return self.brief_runs
+                return [dict(run(now - dt.timedelta(hours=2)), head_branch="main", event="schedule")] \
+                    if wf != M.SELF_WORKFLOW else []
+
+            def environment(self):
+                return ENV_OK
+
+            def dispatch(self, wf, inputs):
+                self.calls.append(wf)
+
+        gh = Fake()
+        M.run(gh, now, 99)
+        self.assertIn(M.S1BRIEF["workflow"], gh.read)
+        self.assertEqual(gh.calls, ["hourly-sequence-capture.yml", "native-market-recovery.yml", "s1-tick-brief.yml",
+                                    "framework-metronome.yml"])
+        # a branch run is not a production run and never serves the hour
+        branch = dict(run(now.replace(minute=16)), head_branch="fix-x", event="workflow_dispatch")
+        gh = Fake([branch])
+        M.run(gh, now, 99)
+        self.assertIn("s1-tick-brief.yml", gh.calls)
+        # an unreadable brief run census dispatches no target at all (fail closed), and the loop goes on
+        gh = Fake(fail=True)
+        p = M.run(gh, now, 99)
+        self.assertIn("S1BRIEF", p["failed_reads"])
+        self.assertEqual(gh.calls, ["framework-metronome.yml"])
 
     def test_sunday_preclose_window_before_midnight_only(self):
         sun = dt.datetime(2026, 11, 15, 22, 36, tzinfo=UTC)  # 23:36 CET Sunday
@@ -102,7 +180,8 @@ class MetronomeTest(unittest.TestCase):
         p = plan(now, mode="SHADOW")
         self.assertEqual(p["dispatch"], [])
         self.assertEqual([d["workflow"] for d in p["would_dispatch"]],
-                         ["hourly-sequence-capture.yml", "native-market-recovery.yml", "weekly-api-calibration-shadow.yml"])
+                         ["hourly-sequence-capture.yml", "native-market-recovery.yml", "weekly-api-calibration-shadow.yml",
+                          "s1-tick-brief.yml"])
         self.assertTrue(p["next_tick"])
         self.assertEqual(M.read_mode({"mode": "ACTIVE"}), "ACTIVE")
         self.assertEqual(M.read_mode({"mode": "ACTIVE_DATA"}), "ACTIVE_DATA")
@@ -118,7 +197,7 @@ class MetronomeTest(unittest.TestCase):
                  recovery=[run(now - dt.timedelta(hours=2))])
         sent = {x["workflow"] for x in p["dispatch"]}
         logged = {x["workflow"] for x in p["would_dispatch"]}
-        self.assertEqual(sent, {M.HOURLY["workflow"], M.RECOVERY["workflow"]})
+        self.assertEqual(sent, {M.HOURLY["workflow"], M.RECOVERY["workflow"], M.S1BRIEF["workflow"]})
         self.assertNotIn(M.MONDAY["workflow"], sent)
         self.assertTrue(sent.isdisjoint(logged))
         full = plan(now, mode="ACTIVE", hourly=[run(now - dt.timedelta(hours=2))],
@@ -188,7 +267,7 @@ class MetronomeTest(unittest.TestCase):
         gh = Fake()
         p = M.run(gh, now, 99)
         self.assertEqual(gh.calls, ["hourly-sequence-capture.yml", "native-market-recovery.yml",
-                                    "weekly-api-calibration-shadow.yml", "framework-metronome.yml"])
+                                    "weekly-api-calibration-shadow.yml", "s1-tick-brief.yml", "framework-metronome.yml"])
         self.assertEqual(p["errors"], [])
         gh = Fake(fail={"hourly-sequence-capture.yml"})
         p = M.run(gh, now, 99)
@@ -228,7 +307,7 @@ class MetronomeTest(unittest.TestCase):
         gh = Fake()
         M.run(gh, now, 99)
         self.assertEqual(gh.calls, ["hourly-sequence-capture.yml", "native-market-recovery.yml",
-                                    "weekly-api-calibration-shadow.yml", "framework-metronome.yml"])
+                                    "weekly-api-calibration-shadow.yml", "s1-tick-brief.yml", "framework-metronome.yml"])
         routes = []
         client = M.Github("t")
         client._req = lambda method, route, payload=None: routes.append(route) or {"workflow_runs": [], "total_count": 0}
@@ -530,7 +609,7 @@ class MetronomeTest(unittest.TestCase):
         plan = M.json.loads(output.getvalue().split(" ", 1)[1])
         self.assertEqual(plan["dispatch"], [])
         self.assertEqual([item["workflow"] for item in plan["would_dispatch"]],
-                         [M.HOURLY["workflow"], M.RECOVERY["workflow"], M.CLOSE_WORKFLOW])
+                         [M.HOURLY["workflow"], M.RECOVERY["workflow"], M.CLOSE_WORKFLOW, M.S1BRIEF["workflow"]])
         self.assertNotIn("synthetic-token", output.getvalue())
 
         wf = (ROOT / ".github/workflows/master-monday-preflight-gate.yml").read_text(encoding="utf-8")

@@ -343,11 +343,18 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
             "effective_window_hours": effective_window_hours,
         }
 
+    evidence = freeze.get("evidence_snapshot") if isinstance(freeze.get("evidence_snapshot"), Mapping) else {}
     outcome = {
         "contract": CONTRACT,
         "scoring_contract": SCORING_CONTRACT,
         "compass_id": freeze.get("compass_id"),
         "compass_sha256": freeze.get("compass_sha256"),
+        # Provenance of the frozen forecast (2026-11-19, K03): consumers must be able to stratify or exclude
+        # outcomes of DEGRADED dailies; existing outcome files are immutable and keep their original bytes.
+        "source_data_status": freeze.get("data_status"),
+        "source_mapping_integrity_status": evidence.get("mapping_integrity_status"),
+        # K10: stratify skill by issuer; W46+ offline-rule forecasts are the cheap baseline, not a model.
+        "source_cn_issuer_method": freeze.get("cn_issuer_method"),
         "forecast_path": freeze_path.relative_to(repo_root).as_posix(),
         "issued_at_utc": freeze.get("issued_at_utc"),
         "horizon": horizon,

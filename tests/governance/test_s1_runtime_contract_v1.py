@@ -12,11 +12,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 S1 = ROOT / "00_FMOS" / "S1"
 KEYS = ["contract", "task_id", "owner_issue", "schedule", "bootstrap_path",
-        "bootstrap_version", "action_loop_path", "action_loop_blob", "lane_switch_path", "lane_switch_blob", "rubric_blobs"]
+        "bootstrap_version", "action_loop_path", "action_loop_blob", "tick_path", "tick_blob", "lane_switch_path", "lane_switch_blob", "rubric_blobs"]
 RUBRICS = ["00_FMOS/S1/STEWARD_STATES.md", "00_FMOS/S1/REVIEW_ADMISSION.md", "00_FMOS/S1/OWNER_VISIBILITY.md",
-           "00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt"]
+           "00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt", "00_FMOS/S1/EVIDENCE_BINDINGS.md", "00_FMOS/S1/EDGE_LEDGER.md"]
 # Every file under 00_FMOS/S1/ is pinned (contract, bootstrap 3b or rubric_blobs) or is a legacy locator file.
-PINNED_BY_CHAIN = {"ACTION_LOOP.md", "BOOTSTRAP.txt", "RUNTIME_CONTRACT.json", "REVIEWED_MERGE_LANE.json"}
+PINNED_BY_CHAIN = {"ACTION_LOOP.md", "TICK.md", "BOOTSTRAP.txt", "RUNTIME_CONTRACT.json", "REVIEWED_MERGE_LANE.json"}
 LEGACY = {"MISSION.md", "README.md", "OPERATING_MANIFEST.json"}
 
 
@@ -41,7 +41,8 @@ class S1RuntimeContractTest(unittest.TestCase):
         self.assertEqual(self.c["contract"], "S1_RUNTIME_CONTRACT_v1")
         self.assertEqual(self.c["task_id"], "6ae5fd466b48819187abc224ec0f1c5f")
         self.assertEqual(self.c["owner_issue"], 1156)
-        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v4")
+        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v8")
+        self.assertEqual(self.c["tick_path"], "00_FMOS/S1/TICK.md")
         self.assertEqual(self.c["bootstrap_path"], "00_FMOS/S1/BOOTSTRAP.txt")
         self.assertEqual(self.c["action_loop_path"], "00_FMOS/S1/ACTION_LOOP.md")
 
@@ -70,7 +71,12 @@ class S1RuntimeContractTest(unittest.TestCase):
                 self.assertEqual(_git_blob((ROOT / path).read_bytes()), blob, f"{path} changed without updating rubric_blobs")
         boot = (ROOT / self.c["bootstrap_path"]).read_text(encoding="utf-8")
         self.assertIn("every rubric_blobs path must have its listed blob", boot)
-        self.assertIn("every path in its rubric_blobs", boot)
+        # v6 (v3.1): the rubric files are verified by blob from ONE directory listing; their text is read only where
+        # TICK.md names it. v5 read every rubric file in full before the first decision (about 120 KB).
+        self.assertIn("list the directory 00_FMOS/S1", boot)
+        self.assertIn("each entry's sha is that file's Git blob SHA", boot)
+        self.assertIn("Read no other file yet.", boot)
+        self.assertNotIn("every path in its rubric_blobs", boot)
 
     def test_every_s1_file_is_pinned(self):
         names = {p.name for p in S1.iterdir()}
@@ -95,11 +101,45 @@ class S1RuntimeContractTest(unittest.TestCase):
         self.assertEqual(_git_blob(data), self.c["action_loop_blob"],
                          "ACTION_LOOP.md changed without updating RUNTIME_CONTRACT.json")
 
+    def test_tick_blob_pins_the_exact_bytes(self):
+        data = (ROOT / self.c["tick_path"]).read_bytes()
+        self.assertEqual(_git_blob(data), self.c["tick_blob"], "TICK.md changed without updating RUNTIME_CONTRACT.json")
+        boot = (ROOT / self.c["bootstrap_path"]).read_text(encoding="utf-8")
+        self.assertIn("that of TICK.md must equal tick_blob", boot)
+        self.assertIn("4. Otherwise execute 00_FMOS/S1/TICK.md exactly.", boot)
+        self.assertIn("read ACTION_LOOP.md or a rubric file only where TICK.md names it", boot)
+
     def test_bootstrap_is_thin_and_points_only_to_github(self):
         boot = (ROOT / self.c["bootstrap_path"]).read_text(encoding="utf-8")
-        self.assertLessEqual(len(boot), 1500)
-        for needle in ("S1 BOOTSTRAP v4", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v4",
-                       "00_FMOS/S1/ACTION_LOOP.md", "SOURCE_UNVERIFIED", "only instruction set"):
+        # v5 (first live v2.2 tick, 2026-11-17: the step-1 fetch was routed into a code sandbox with no network and
+        # the run ended SOURCE_UNVERIFIED): step 1 names the tools. The text grew by one sentence, so the cap is 1750.
+        # v6: step 2 names the directory listing (one more URL of the same repository). Cap 2100.
+        # v8 rev 2026-11-19 (S1_STEP1_PROBE_v1: web.run DisabledError, connector fetch returns current main in <1 s;
+        # one run used a 3 h stale SHA): steps 1-2 name the connector, forbid web fetch, and bind M to this run's fetch.
+        # No commit-age stop (S1_SELF_DIAGNOSIS_V1 7008602091: a quiet main would deadlock; an older M is caught by T3
+        # main_not_ahead against a fresh brief and by F6's re-read of main before any merge).
+        # Same rev, S1_T1T2_PROBE_v1: the connector's issue list returns user {"login": "github-actions"} without type and
+        # id, so T1's author check can never pass on it (BRIEF_INCOMPLETE(T1:brief_not_verified)); the connector's fetch of
+        # the raw REST URLs returns every field T1 and T2 check. Step 4 binds every fetch of TICK.md to it. Cap 2800.
+        # Same rev, ticks 2026-11-19 19:45Z-21:45Z (BRIEF_UNVERIFIED(body) three times): S1 read "that block is one JSON
+        # object B" in TICK.md T1 literally and rejected the ```json fence that render() always writes and parse_body()
+        # always strips. Step 4 states the fence is the published format. Bootstrap-only: no contract, TICK or pin change.
+        self.assertLessEqual(len(boot), 2800)
+        self.assertIn("In T1 the block between the two markers is one ```json fenced code block: B is the JSON object between its opening ```json line and its closing ``` line; that fence is the published format, never a body failure.", boot)
+        self.assertNotIn("committer.date", boot)
+        self.assertNotIn("3stale", boot)
+        for needle in ("Read no other file yet.", "that of TICK.md must equal tick_blob", "list the directory 00_FMOS/S1",
+                       "with the GitHub connector's fetch (mcp__GitHub__fetch) of https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/branches/main",
+                       "Web fetch (web.run) is disabled for this host: do not use it.",
+                       "NEVER the Python or code sandbox (it has no network)",
+                       "If the connector returns no SHA: SOURCE_UNVERIFIED(3).", "(never a search result)", "M is the SHA that this fetch returned in this run, never a remembered or cached SHA",
+                       'Tool binding: every "fetch <URL>" and "fetch API/..." in TICK.md and ACTION_LOOP.md is the connector\'s fetch (mcp__GitHub__fetch) of that exact URL',
+                       "T1 and T2 use only that fetch, never an issue list, issue search or workflow-run tool"):
+            self.assertIn(needle, boot)
+        self.assertEqual(boot.count("api.github.com"), 2, "main, and the 00_FMOS/S1 listing at that SHA; no other URL")
+        self.assertEqual(boot.count("https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/"), 2)
+        for needle in ("S1 BOOTSTRAP v8", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v8",
+                       "00_FMOS/S1/TICK.md", "ACTION_LOOP.md", "SOURCE_UNVERIFIED", "only instruction set"):
             self.assertIn(needle, boot)
         for forbidden in ("LADDER", "MERGE", "HARD STOPS", "owner-present"):
             self.assertNotIn(forbidden, boot)
@@ -111,7 +151,8 @@ class S1RuntimeContractTest(unittest.TestCase):
                        "CHANGE CONTROL", "S1_PROMPT_DRIFT", "HEARTBEAT", "S1_HEARTBEAT_v1",
                        "contract=<first 8 of action_loop_blob>", "Never dispatch, rerun or pass inputs to any Vault workflow",
                        "CLAUDE_PROACTIVE_PREVIEW_v1", "ticks_24h=", "last_noop=",
-                       "WAITING_ONLY_FOR_OWNER", "STEWARD_STATES.md", "REVIEW_ADMISSION.md", "OWNER_VISIBILITY.md"):
+                       "WAITING_ONLY_FOR_OWNER", "STEWARD_STATES.md", "REVIEW_ADMISSION.md", "OWNER_VISIBILITY.md",
+                       "EVIDENCE_BINDINGS.md", "EDGE_LEDGER.md", "V3 EVIDENCE BINDINGS", "never a pass"):
 
             self.assertIn(needle, loop)
 

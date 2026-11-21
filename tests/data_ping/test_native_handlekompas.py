@@ -1,10 +1,12 @@
+import copy
 import json
 import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.data_ping.native_handlekompas import AUTHORITY, build, load_auto_state, owner_freshness, write
+from scripts.data_ping import native_handlekompas as K
+from scripts.data_ping.native_handlekompas import AUTHORITY, build, load_auto_state, owner_freshness, protection_tracker, write
 
 
 class NativeHandlekompasTest(unittest.TestCase):
@@ -249,6 +251,229 @@ class NativeHandlekompasTest(unittest.TestCase):
             finally:
                 _=cwd
 
+
+    def _protection_transition(self, risk, prior=None, *, posture="HOLD_WAIT", direction="MIXED", packet=None):
+        cn = {
+            "decision_projection": {
+                "contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1",
+                "protection": {
+                    "pullback_risk_state": risk,
+                    "distribution_risk": "NONE",
+                    "confidence_quality": "MEDIUM",
+                },
+            },
+        }
+        result = protection_tracker(
+            self.packet() if packet is None else packet,
+            {"NOW": posture},
+            {"directional_state": direction},
+            cn, as_of=datetime(2026, 9, 8, 20, 0, tzinfo=timezone.utc),
+            prior_compass={"protection_tracker": prior} if prior is not None else None,
+        )
+        self.assertEqual(result["authority"], {
+            "portfolio_execution": False, "wallet_specific": False,
+            "new_market_classifier": False,
+        })
+        return result
+
+    def test_reclaim_survives_repeated_elevated_observations(self):
+        high = self._protection_transition("HIGH")
+        self.assertEqual(high["reentry_state"], "WAIT_FOR_FLUSH")
+        prior = self._protection_transition("ELEVATED", high)
+        self.assertEqual(prior["reentry_state"], "WAIT_FOR_RECLAIM")
+        for posture, direction in (("HOLD_WAIT", "BEARISH"), ("PREPARE", "BULLISH")):
+            with self.subTest(posture=posture, direction=direction):
+                prior = self._protection_transition("ELEVATED", prior, posture=posture, direction=direction)
+                self.assertEqual(prior["pullback_risk_state"], "ELEVATED")
+                self.assertEqual(prior["reentry_state"], "WAIT_FOR_RECLAIM")
+
+    def test_review_requires_current_constructive_confirmation(self):
+        for risk in ("NORMAL", "BUILDING"):
+            for prior_state in ("WAIT_FOR_RECLAIM", "REVIEW"):
+                for posture, direction, expected in (
+                    ("PREPARE", "BULLISH", "REVIEW"),
+                    ("GRADUATED_TOPUP_ACTIVE", "BULLISH", "REVIEW"),
+                    ("HOLD_WAIT", "BULLISH", "WAIT_FOR_RECLAIM"),
+                    ("HOLD_WAIT_DATA_DEGRADED", "BULLISH", "WAIT_FOR_RECLAIM"),
+                    ("PREPARE", "BEARISH", "WAIT_FOR_RECLAIM"),
+                    ("PREPARE", "MIXED", "WAIT_FOR_RECLAIM"),
+                    ("PREPARE", "SIDEWAYS", "WAIT_FOR_RECLAIM"),
+                    ("PREPARE", "UNAVAILABLE", "WAIT_FOR_RECLAIM"),
+                    ("PREPARE", "UNCHANGED_NO_NEW_OBSERVATION", "WAIT_FOR_RECLAIM"),
+                ):
+                    with self.subTest(risk=risk, prior=prior_state, posture=posture, direction=direction):
+                        out = self._protection_transition(risk, {
+                            "pullback_risk_state": "NORMAL", "reentry_state": prior_state,
+                        }, posture=posture, direction=direction)
+                        self.assertEqual(out["pullback_risk_state"], risk)
+                        self.assertEqual(out["reentry_state"], expected)
+
+    def test_review_cannot_survive_renewed_risk_or_unavailable_evidence(self):
+        prior = {"pullback_risk_state": "NORMAL", "reentry_state": "REVIEW"}
+        for risk, expected in (
+            ("ELEVATED", "WAIT_FOR_RECLAIM"), ("HIGH", "WAIT_FOR_FLUSH"),
+            ("CONFIRMED", "WAIT_FOR_FLUSH"), ("UNAVAILABLE", "UNAVAILABLE"),
+        ):
+            with self.subTest(risk=risk):
+                out = self._protection_transition(risk, prior, posture="PREPARE", direction="BULLISH")
+                self.assertEqual(out["reentry_state"], expected)
+                self.assertEqual(out["pullback_risk_state"], risk)
+        out = self._protection_transition("NORMAL", prior, posture="PREPARE",
+                                          direction="BULLISH", packet=self.packet(validation="FAIL"))
+        self.assertEqual(out["reentry_state"], "UNAVAILABLE")
+
+    def test_no_review_without_prior_protection_sequence(self):
+        for risk in ("NORMAL", "BUILDING", "ELEVATED"):
+            with self.subTest(risk=risk):
+                out = self._protection_transition(risk, posture="PREPARE", direction="BULLISH")
+                self.assertEqual(out["reentry_state"], "INACTIVE")
+        high = self._protection_transition("HIGH")
+        first_reclaim = self._protection_transition("NORMAL", high, posture="PREPARE", direction="BULLISH")
+        self.assertEqual(first_reclaim["reentry_state"], "WAIT_FOR_RECLAIM")
+        self.assertEqual(self._protection_transition("NORMAL", first_reclaim, posture="PREPARE",
+                                                     direction="BULLISH")["reentry_state"], "REVIEW")
+
+
+    def test_outage_preserves_flush_and_reclaim_obligations(self):
+        high = self._protection_transition("HIGH")
+        reclaim = self._protection_transition("ELEVATED", high)
+        review = self._protection_transition("NORMAL", reclaim, posture="PREPARE", direction="BULLISH")
+        self.assertEqual(review["reentry_state"], "REVIEW")
+        for start, expected_carry in (
+            (high, "WAIT_FOR_FLUSH"), (reclaim, "WAIT_FOR_RECLAIM"),
+            (review, "WAIT_FOR_RECLAIM"),
+        ):
+            with self.subTest(start=start["reentry_state"]):
+                gap = self._protection_transition("UNAVAILABLE", start)
+                self.assertEqual(gap["reentry_state"], "UNAVAILABLE")
+                self.assertEqual(gap["reentry_pending_before_gap"], expected_carry)
+                gap = self._protection_transition("NORMAL", gap, packet=self.packet(validation="FAIL"))
+                self.assertEqual(gap["reentry_state"], "UNAVAILABLE")
+                self.assertEqual(gap["reentry_pending_before_gap"], expected_carry)
+                recovered = self._protection_transition("NORMAL", gap, posture="PREPARE", direction="BULLISH")
+                self.assertEqual(recovered["reentry_state"], "WAIT_FOR_RECLAIM")
+                self.assertNotIn("reentry_pending_before_gap", recovered)
+                self.assertEqual(self._protection_transition("NORMAL", recovered, posture="PREPARE",
+                                                             direction="BULLISH")["reentry_state"], "REVIEW")
+                self.assertEqual(self._protection_transition("HIGH", gap)["reentry_state"], "WAIT_FOR_FLUSH")
+
+    def test_outage_memory_does_not_invent_or_restore_permission(self):
+        priors = [
+            None,
+            {"pullback_risk_state": "UNAVAILABLE", "reentry_state": "UNAVAILABLE"},
+            {"pullback_risk_state": "UNAVAILABLE", "reentry_state": "UNAVAILABLE",
+             "reentry_pending_before_gap": "REVIEW"},
+            {"pullback_risk_state": "UNAVAILABLE", "reentry_state": "UNAVAILABLE",
+             "reentry_pending_before_gap": ["WAIT_FOR_RECLAIM"]},
+            {"pullback_risk_state": "NORMAL", "reentry_state": "INACTIVE",
+             "reentry_pending_before_gap": "WAIT_FOR_FLUSH"},
+        ]
+        for prior in priors:
+            with self.subTest(prior=prior):
+                gap = self._protection_transition("UNAVAILABLE", prior)
+                self.assertIsNone(gap["reentry_pending_before_gap"])
+                self.assertEqual(self._protection_transition("NORMAL", gap, posture="PREPARE",
+                                                             direction="BULLISH")["reentry_state"], "INACTIVE")
+
+    def test_missing_cn_or_projection_preserves_pending_reclaim(self):
+        start = self._protection_transition("ELEVATED", self._protection_transition("HIGH"))
+        for cn in (None, {"decision_projection": {"contract": "CYCLE_NAVIGATOR_DECISION_PROJECTION_v1"}}):
+            with self.subTest(cn=cn):
+                gap = protection_tracker(self.packet(), {"NOW": "PREPARE"},
+                    {"directional_state": "BULLISH"}, cn,
+                    as_of=datetime(2026, 9, 8, 20, 0, tzinfo=timezone.utc),
+                    prior_compass={"protection_tracker": start})
+                self.assertEqual(gap["reentry_state"], "UNAVAILABLE")
+                self.assertEqual(gap["reentry_pending_before_gap"], "WAIT_FOR_RECLAIM")
+                self.assertEqual(self._protection_transition("ELEVATED", gap)["reentry_state"],
+                                 "WAIT_FOR_RECLAIM")
+
+    def test_review_oscillation_after_recovery_never_latches(self):
+        high = self._protection_transition("HIGH")
+        gap = self._protection_transition("UNAVAILABLE", high)
+        prior = self._protection_transition("NORMAL", gap, posture="PREPARE", direction="BULLISH")
+        for risk, expected in (("NORMAL", "REVIEW"), ("ELEVATED", "WAIT_FOR_RECLAIM"),
+                               ("NORMAL", "REVIEW"), ("ELEVATED", "WAIT_FOR_RECLAIM")):
+            prior = self._protection_transition(risk, prior, posture="PREPARE", direction="BULLISH")
+            self.assertEqual(prior["reentry_state"], expected)
+
+
+
+class AltseasonScopedDegradationReplayTests(unittest.TestCase):
+    """Replay of the real 2026-11-19 10:24Z packet: BlockchainCenter UNAVAILABLE, every other lane PASS. Before
+    K06 every horizon, the ladder and protection went UNAVAILABLE; now only the altcoin outputs fail closed."""
+
+    PACKET = Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/2026/11/19/102409_dd04579f96e2.json")
+
+    def setUp(self):
+        root = Path(__file__).resolve().parents[2]
+        path = root / self.PACKET
+        if not path.is_file():
+            self.skipTest("replay packet not in this checkout")
+        self.packet = json.loads(path.read_text(encoding="utf-8"))
+        self.at = datetime.fromisoformat(self.packet["packet_generated_at_utc"].replace("Z", "+00:00"))
+
+    def test_packet_is_the_altseason_only_outage(self):
+        self.assertEqual(self.packet["blockers"], ["altseason_context"])
+        self.assertEqual(self.packet["source_health"]["altseason_context"]["status"], "UNAVAILABLE")
+
+    def test_core_stays_live_and_alt_outputs_fail_closed(self):
+        self.assertTrue(K._health_ok(self.packet, self.at))
+        action = K.action_context(self.packet, as_of=self.at)
+        self.assertEqual(action["NOW"], "HOLD_WAIT")
+        self.assertIn("ALT_CONTEXT_DEGRADED=altseason_context", action["WHY"])
+        market = K.derive_market_now(self.packet, action, as_of=self.at)
+        self.assertNotEqual(market["directional_state"], "UNAVAILABLE")
+        horizons = K.horizon_map(self.packet, action, None, as_of=self.at)
+        self.assertNotEqual(horizons["NEXT_12H"]["label"], "UNAVAILABLE")
+        self.assertEqual(horizons["CYCLE_ALTCOINS_3_8W"]["label"], "UNAVAILABLE")
+        self.assertEqual(horizons["CYCLE_ALTCOINS_3_8W"]["expected_path"], K.ALT_CONTEXT_DEGRADED_REASON)
+        ladder = {row["segment"]: row for row in K.capitalization_ladder(self.packet, action, market, as_of=self.at)}
+        self.assertNotEqual(ladder["BTC"]["status"], "UNAVAILABLE")
+        self.assertNotEqual(ladder["ETH"]["status"], "UNAVAILABLE")
+        for seg in ("LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS", "MEMES"):
+            self.assertEqual(ladder[seg]["status"], "UNAVAILABLE", seg)
+        self.assertEqual(ladder["SMALL_CAPS"]["reason"], K.ALT_CONTEXT_DEGRADED_REASON)
+        health = K.build(self.packet, now=self.at)["DATA_HEALTH"]
+        self.assertEqual(health["status"], "PASS")
+        self.assertEqual(health["alt_context_status"], "DEGRADED_ALT_OUTPUTS_UNAVAILABLE")
+        self.assertEqual(health["blockers"], ["altseason_context"])          # the producer's record is unchanged
+
+    def test_carry_keeps_alt_outputs_and_a_core_blocker_still_blanks(self):
+        carried = copy.deepcopy(self.packet)
+        carried["source_health"]["altseason_context"]["status"] = "DEGRADED_CARRY"
+        action = K.action_context(carried, as_of=self.at)
+        market = K.derive_market_now(carried, action, as_of=self.at)
+        ladder = {row["segment"]: row for row in K.capitalization_ladder(carried, action, market, as_of=self.at)}
+        self.assertNotEqual(ladder["SMALL_CAPS"]["status"], "UNAVAILABLE")
+        self.assertNotEqual(K.horizon_map(carried, action, None, as_of=self.at)["CYCLE_ALTCOINS_3_8W"]["expected_path"],
+                            K.ALT_CONTEXT_DEGRADED_REASON)
+        core = copy.deepcopy(self.packet)
+        core["blockers"] = ["altseason_context", "breadth"]
+        self.assertFalse(K._health_ok(core, self.at))
+        self.assertEqual(K.action_context(core, as_of=self.at)["NOW"], "HOLD_WAIT_DATA_DEGRADED")
+
+
+class CnIssuerMethodTests(unittest.TestCase):
+    """K10/K11: the Official Compass states which issuer produced the CN and whether its protection was inherited."""
+
+    def test_real_w47_package_is_classified_as_offline_rule(self):
+        root = Path(__file__).resolve().parents[2]
+        cn, binding = K.load_cn_context(root)
+        if binding.get("status") != "PASS":
+            self.skipTest("CN package not in this checkout")
+        if binding.get("iso_week") in (46, 47):
+            self.assertEqual(K.cn_issuer_method(cn), K.CN_OFFLINE_ISSUER_METHOD)
+            self.assertEqual(K.cn_protection_state_basis(cn), "INHERITED_FROM_PRIOR_ISSUE")
+
+    def test_explicit_field_wins_and_missing_package_is_unavailable(self):
+        self.assertEqual(K.cn_issuer_method(None), "UNAVAILABLE")
+        self.assertEqual(K.cn_protection_state_basis(None), "UNAVAILABLE")
+        self.assertEqual(K.cn_issuer_method({"issuer_method": "MODEL_X"}), "MODEL_X")
+        self.assertEqual(K.cn_issuer_method({"readable_markdown": "no method line"}), "UNSTATED")
+        self.assertEqual(K.cn_issuer_method({"readable_markdown": "# CN\n\nMethod: " + K.CN_OFFLINE_ISSUER_METHOD + "\n"}),
+                         K.CN_OFFLINE_ISSUER_METHOD)
+        self.assertEqual(K.cn_protection_state_basis({"readable_markdown": "x"}), "UNSTATED")
 
 if __name__=="__main__":
     unittest.main()

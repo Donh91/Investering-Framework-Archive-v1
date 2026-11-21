@@ -5,6 +5,7 @@ Every unfinished piece of work has exactly one state, visible on GitHub, with a 
 
 WORK ITEMS
 - One work item per subject. Keys: pr:<n> (an open PR, drafts included), issue:<n> (an open issue with no disposition and no activity for 14 days or more), pkg:<queue comment id> (a Bridge CLAUDE_FIX_QUEUE_v1, CLAUDE_FINDING_v1 or Grok report on #173), handoff:<comment id> (a Strategist or Research Lab item addressed to S1), todo:<path>#<first 8 of sha256 of the line> (an OPEN or TODO entry in 00_FMOS/*OPEN_WORK* or a roadmap file).
+- v3 keys: closure:<PR> (a lane merge whose consumer closure became UNVERIFIED, EVIDENCE_BINDINGS.md B5; kind FIX, risk as the merged PR) and edge:<stream_id> (a research stream of EDGE_LEDGER.md; kind RESEARCH).
 - NOT WORK ITEMS: the control issues #1156, #1157, #1512, #1593 and any issue that ACTION_LOOP.md or AGENTS.md names as a ledger or receipt channel. S1 never parks or closes them.
 - DEDUP: a new candidate whose subject is already an item (same PR; an issue that a PR closes or links; a package already opened as a PR; a todo that an item cites) joins that item and is never a second item.
 - Kind, set at TRIAGED and only ever raised: FIX (repairs a defect or test), TEST, DOCS, RESEARCH (a research or method question), DIRECTION (a new research program, removal of a feature, a change of priorities or roadmap, a new producer or consumer). Unclear reads as DIRECTION.
@@ -79,10 +80,12 @@ STRATEGIST CONSULT
 - S1 posts one S1_STRATEGIST_CONSULT_v1 on #1157: item, the question (Is this direction defensible? CLOSE or KEEP? Priority?), the evidence links, and the answer format: verdict: CONCUR | OBJECT | CLOSE | KEEP, plus one reason line, citing the consult comment id.
 - An answer counts when it is a later comment on #1157 (for a handoff: on #1512 or the named owner issue) by Donh91 or a framework bot, unedited (created_at equals updated_at), that cites the consult or handoff id and has a verdict line. Answers are behavioural evidence, not authority; they never replace a review or an owner decision.
 
+V3 PROGRESS ORDER (rule 6(b)): before the order that ACTION_LOOP.md rule 6(b) gives, S1 first does the due weekly EDGE LEDGER step (EDGE_LEDGER.md E5) and then the due CONSUMER CLOSURE checks (EVIDENCE_BINDINGS.md B5). Each is cheap and bounded by its own per-run limit, and each counts as S1_ITEM_v1-style transitions inside the same limit of max_transitions_per_run.
+
 DISCOVERY (rule 6(b); cheap, a few sources per run, rolling)
 - Sources in rolling order, at most 2 per run, resuming after the source named in the newest S1_OPEN_WORK_INDEX_v1 cursor: open PRs including drafts, oldest first; open issues with no activity for 14 days or more; Bridge #173 CLAUDE_FIX_QUEUE_v1 (s1_package: v1), CLAUDE_FINDING_v1 and Grok reports; 00_FMOS/*OPEN_WORK* and roadmap OPEN or TODO entries; the newest Strategist (#1157) and Research Lab (#1512) items addressed to S1.
 - A discovered item gets one S1_ITEM_v1 (state DISCOVERED) and is triaged within its budget.
-- S1_OPEN_WORK_INDEX_v1, once per Copenhagen day inside the heartbeat: counts per state, the 10 most overdue items with key, state and due, the ACTIVE handoffs, receipts=<key>:<comment id> for every S1_ITEM_v1 this task posted since the previous heartbeat, and cursor=<next source>. It is a comment, never a new file on main.
+- S1_OPEN_WORK_INDEX_v1, once per Copenhagen day inside the heartbeat: counts per state, the 10 most overdue items with key, state and due, the ACTIVE handoffs, ops=<OPEN intents, oldest id> (EVIDENCE_BINDINGS.md B3), closures=<observing>/<verified>/<unverified> with the UNVERIFIED PRs (B5), edge=<stream>:<newest decision> for every stream or edge=ABSENT (EDGE_LEDGER.md), receipts=<key>:<comment id> for every S1_ITEM_v1 this task posted since the previous heartbeat, and cursor=<next source>. It is a comment, never a new file on main.
 
 BRANCH UPDATE (rule 2(c); never main, never force, never a conflict resolution)
 - Route 1, preferred: when your tools can send PUT API/pulls/<n>/update-branch, send it with expected_head_sha = H. GitHub performs a real merge and refuses on a conflict.

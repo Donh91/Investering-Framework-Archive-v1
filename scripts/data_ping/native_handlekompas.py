@@ -188,6 +188,34 @@ def load_prior_compass(repo_root: Path, pointer_path: Path) -> Mapping[str, Any]
     return compass
 
 
+CN_OFFLINE_ISSUER_METHOD = "CN_OWNER_AUTHORIZED_API_FREE_SEVEN_DAY_v1"
+
+
+def cn_issuer_method(cn_package: Mapping[str, Any] | None) -> str:
+    """K10 (2026-11-19): which issuer produced the weekly CN. W46/W47 predate the explicit field and state the
+    method only in their readable text; those immutable packages are classified from that text, never rewritten."""
+    if not isinstance(cn_package, Mapping):
+        return "UNAVAILABLE"
+    explicit = cn_package.get("issuer_method")
+    if isinstance(explicit, str) and explicit:
+        return explicit
+    text = cn_package.get("readable_markdown")
+    if isinstance(text, str) and ("Method: " + CN_OFFLINE_ISSUER_METHOD) in text:
+        return CN_OFFLINE_ISSUER_METHOD
+    return "UNSTATED"
+
+
+def cn_protection_state_basis(cn_package: Mapping[str, Any] | None) -> str:
+    """K11: an offline-issued protection state is carried forward, not re-evaluated."""
+    if not isinstance(cn_package, Mapping):
+        return "UNAVAILABLE"
+    protection = _cn_decision_projection(cn_package).get("protection") if isinstance(_cn_decision_projection(cn_package), Mapping) else None
+    basis = protection.get("state_basis") if isinstance(protection, Mapping) else None
+    if isinstance(basis, str) and basis:
+        return basis
+    return "INHERITED_FROM_PRIOR_ISSUE" if cn_issuer_method(cn_package) == CN_OFFLINE_ISSUER_METHOD else "UNSTATED"
+
+
 def load_cn_context(repo_root: Path, pointer_path: Path = DEFAULT_CN_POINTER) -> tuple[Mapping[str, Any] | None, dict[str, Any]]:
     path = repo_root / pointer_path
     if not path.exists():
@@ -345,15 +373,14 @@ def action_context(auto_state: Mapping[str, Any], *, as_of: datetime | None = No
     entry = ns.get("entry_signal_reference") or {}
     ratio = finite(live.get("ethbtc"))
     advance = finite(breadth.get("advance_ratio"))
-    blockers = list(auto_state.get("blockers") or [])
+    blockers = _core_blockers(auto_state)
+    alt_blockers = [lane for lane in list(auto_state.get("blockers") or []) if lane in ALT_SCOPED_LANES]
     validation = str(auto_state.get("validation_status") or "UNKNOWN")
-    decision_health = str(auto_state.get("decision_context_status") or "UNKNOWN")
     entry_state = entry.get("state") if isinstance(entry, Mapping) else None
 
     healthy = (
         validation != "FAIL"
-        and decision_health == "PASS"
-        and not blockers
+        and _core_decision_ready(auto_state)
         and _health_ok(auto_state, as_of)
     )
 
@@ -373,6 +400,8 @@ def action_context(auto_state: Mapping[str, Any], *, as_of: datetime | None = No
     why.append("BREADTH_ACTION_AUTHORITY=RETIRED_ZERO_WEIGHT")
     if blockers:
         why.append("BLOCKERS=" + ",".join(blockers))
+    if alt_blockers:
+        why.append("ALT_CONTEXT_DEGRADED=" + ",".join(alt_blockers))
 
     return {
         "NOW": now,
@@ -394,11 +423,9 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
     freshness = owner_freshness(auto_state, generated)
     source_validation = str(auto_state.get("validation_status") or "UNKNOWN")
     decision_context_status = str(auto_state.get("decision_context_status") or "UNKNOWN")
-    decision_blockers = list(auto_state.get("blockers") or [])
     decision_ready = (
         source_validation != "FAIL"
-        and decision_context_status == "PASS"
-        and not decision_blockers
+        and _core_decision_ready(auto_state)
     )
     # Optional/non-decision lanes remain visible in provider/source health, but
     # must not alone suppress a healthy governed Compass decision context.
@@ -424,6 +451,7 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
             "decision_context_status": auto_state.get("decision_context_status"),
             "blockers": list(auto_state.get("blockers") or []),
             "optional_degraded_lanes": list(auto_state.get("optional_degraded_lanes") or []),
+            "alt_context_status": "USABLE" if _alt_context_usable(auto_state) else "DEGRADED_ALT_OUTPUTS_UNAVAILABLE",
             "owner_freshness": freshness,
             "provider_health": provider,
         },
@@ -546,6 +574,23 @@ def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[
     market_sentiment = cfgi_symbols.get("MARKET") if isinstance(cfgi_symbols.get("MARKET"), Mapping) else {}
     altseason = ns.get("altseason_context") or {}
     source_health = auto_state.get("source_health") or {}
+    altseason_bc = nested(altseason, "blockchaincenter_altcoin_season")
+    altseason_value = finite(nested(altseason_bc, "horizons", "90", "published_score"))
+    altseason_observed = nested(altseason_bc, "observation_date_utc")
+    altseason_retrieved = nested(altseason_bc, "retrieved_at_utc")
+    altseason_health = nested(source_health, "altseason_context", "status")
+    # Explicit opt-in: only when the upstream owner itself marked the lane
+    # DEGRADED_CARRY (<= 72h) and the current value is missing, show the last
+    # valid BC 90d value as degraded context with its age. Never PASS.
+    altseason_carry = ns.get("altseason_carry") if altseason_health == "DEGRADED_CARRY" else None
+    altseason_carry_used = (
+        altseason_value is None and isinstance(altseason_carry, Mapping)
+        and finite(altseason_carry.get("value")) is not None
+    )
+    if altseason_carry_used:
+        altseason_value = finite(altseason_carry.get("value"))
+        altseason_observed = altseason_carry.get("source_observation_date_utc")
+        altseason_retrieved = altseason_carry.get("source_retrieved_at_utc")
     packet_observed = auto_state.get("packet_generated_at_utc")
     packet_source = packet_path.as_posix()
 
@@ -591,7 +636,7 @@ def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[
         _feature("sentiment_market_score", finite(market_sentiment.get("score")), "index", packet_source, market_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
         _feature("sentiment_btc_score", finite(btc_sentiment.get("score")), "index", packet_source, btc_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
         _feature("sentiment_eth_score", finite(eth_sentiment.get("score")), "index", packet_source, eth_sentiment.get("timestamp"), sentiment_health, source_owner="CFGI", retrieved_at=cfgi.get("retrieved_at_utc")),
-        _feature("altseason_score_90d", finite(nested(altseason, "blockchaincenter_altcoin_season", "horizons", "90", "published_score")), "index", packet_source, nested(altseason, "blockchaincenter_altcoin_season", "observation_date_utc"), nested(source_health, "altseason_context", "status"), source_owner="BLOCKCHAINCENTER", retrieved_at=nested(altseason, "blockchaincenter_altcoin_season", "retrieved_at_utc")),
+        _feature("altseason_score_90d", altseason_value, "index", packet_source, altseason_observed, altseason_health, source_owner="BLOCKCHAINCENTER", retrieved_at=altseason_retrieved),
         _feature("entry_signal_state", nested(ns, "entry_signal_reference", "state"), None, packet_source, nested(ns, "entry_signal_reference", "generated_at_utc"), nested(source_health, "entry_signal_reference", "status"), source_owner="ENTRY_SIGNAL_LEDGER"),
         _feature("btc_delta_since_prior_packet_pct", _delta_pct(auto_state, "btc_usdt"), "pct", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="AUTO_MARKET_STATE_DELTA"),
         _feature("eth_delta_since_prior_packet_pct", _delta_pct(auto_state, "eth_usdt"), "pct", packet_source, live.get("observation_open_utc"), hourly_health, source_owner="AUTO_MARKET_STATE_DELTA"),
@@ -601,6 +646,13 @@ def evidence_snapshot(auto_state: Mapping[str, Any], packet_path: Path) -> dict[
         if row["feature_id"] in ("btc_funding", "eth_funding"):
             symbol = "BTC-USDT-SWAP" if row["feature_id"] == "btc_funding" else "ETH-USDT-SWAP"
             row.update(_funding_clock_metadata(auto_state, nested(derivative_live, symbol, "funding")))
+        if row["feature_id"] == "altseason_score_90d" and altseason_carry_used:
+            row.update({
+                "value_semantics": "DEGRADED_CARRY_LAST_VALID_BC_90D_NOT_FRESH",
+                "carry_age_hours": altseason_carry.get("age_hours"),
+                "carry_max_age_hours": altseason_carry.get("max_age_hours"),
+                "carry_source_packet_generated_at_utc": altseason_carry.get("source_packet_generated_at_utc"),
+            })
     available = sum(row["value"] is not None for row in rows)
     missing = [row["feature_id"] for row in rows if row["value"] is None]
     pass_lane_missing = [
@@ -703,12 +755,43 @@ def owner_freshness(auto_state: Mapping[str, Any], as_of: datetime) -> dict[str,
     }
 
 
+# Lane-scoped degradation (2026-11-19, Research Closure RC09/K06). altseason_context is CONTEXT_ONLY for the
+# BTC/ETH core: one failed BlockchainCenter scrape blanked direction, every horizon, the ladder and protection
+# (7 episodes since 2026-09-26, about 46 h). It still blocks every altcoin output (the 3-8w altcoin cycle lane
+# and every alt ladder rung) unless its health is PASS or the <=72 h DEGRADED_CARRY of #2244. The upstream
+# registry, blockers list and native recovery stay unchanged: this only stops a context lane from failing the core.
+ALT_SCOPED_LANES = frozenset({"altseason_context"})
+ALT_CONTEXT_USABLE = frozenset({"PASS", "DEGRADED_CARRY"})
+ALT_LADDER_SEGMENTS = frozenset({"LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS"})
+
+
+def _core_blockers(auto_state: Mapping[str, Any]) -> list[str]:
+    return [lane for lane in list(auto_state.get("blockers") or []) if lane not in ALT_SCOPED_LANES]
+
+
+def _alt_context_usable(auto_state: Mapping[str, Any]) -> bool:
+    """Alt outputs fail closed only when the producer listed altseason_context as a blocker and its health is
+    neither PASS nor the bounded DEGRADED_CARRY (the producer lists any non-PASS required lane as a blocker)."""
+    if "altseason_context" not in list(auto_state.get("blockers") or []):
+        return True
+    status = nested(auto_state, "source_health", "altseason_context", "status")
+    return str(status or "") in ALT_CONTEXT_USABLE
+
+
+def _core_decision_ready(auto_state: Mapping[str, Any]) -> bool:
+    """decision_context PASS, or DEGRADED only because of alt-scoped context lanes."""
+    blockers = list(auto_state.get("blockers") or [])
+    status = str(auto_state.get("decision_context_status") or "UNKNOWN")
+    if _core_blockers(auto_state):
+        return False
+    return status == "PASS" or (status == "DEGRADED" and bool(blockers))
+
+
 def _health_ok(auto_state: Mapping[str, Any], as_of: datetime | None = None) -> bool:
     validation = str(auto_state.get("validation_status") or "UNKNOWN")
     structural = (
         validation != "FAIL"
-        and str(auto_state.get("decision_context_status") or "UNKNOWN") == "PASS"
-        and not list(auto_state.get("blockers") or [])
+        and _core_decision_ready(auto_state)
     )
     if not structural:
         return False
@@ -862,6 +945,25 @@ def _unavailable_horizon(reason: str) -> dict[str, Any]:
     }
 
 
+ALT_CONTEXT_DEGRADED_REASON = (
+    "Altseason context is degraded (not PASS and no <=72 h carry); the altcoin lanes fail closed while the BTC/ETH lanes stay live."
+)
+
+
+def _scoped_altcoin_cycle_lane(
+    auto_state: Mapping[str, Any], cn_package: Mapping[str, Any] | None, posture: str, issued: datetime,
+) -> dict[str, Any]:
+    if not _alt_context_usable(auto_state):
+        return {
+            **_unavailable_horizon(ALT_CONTEXT_DEGRADED_REASON),
+            "state": "UNCLEAR",
+            "warning": "NONE",
+            "through_date": None,
+            "horizon_days": None,
+        }
+    return _altcoin_cycle_lane(cn_package, posture, issued)
+
+
 def _altcoin_cycle_lane(cn_package: Mapping[str, Any] | None, posture: str, issued: datetime) -> dict[str, Any]:
     projection = _cn_decision_projection(cn_package)
     structured = projection.get("weeks_4_8") if isinstance(projection, Mapping) else None
@@ -955,6 +1057,23 @@ def protection_tracker(
     """
     issued = (as_of or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(microsecond=0)
     issued_text = issued.isoformat().replace("+00:00", "Z")
+    prior_tracker = (prior_compass or {}).get("protection_tracker") if isinstance(prior_compass, Mapping) else None
+    prior_tracker = prior_tracker if isinstance(prior_tracker, Mapping) else {}
+    prior_risk = str(prior_tracker.get("pullback_risk_state") or "NORMAL")
+    prior_reentry = str(prior_tracker.get("reentry_state") or "INACTIVE")
+    # Preserve only an outstanding protective obligation, never stale REVIEW
+    # permission, while evidence is unavailable. Legacy missing memory is not
+    # reconstructed by guessing from prices, prose, or a corrupt carry value.
+    gap_pending = None
+    if prior_risk in {"HIGH", "CONFIRMED"}:
+        gap_pending = "WAIT_FOR_FLUSH"
+    elif prior_risk in {"NORMAL", "BUILDING", "ELEVATED"} and prior_reentry in {"WAIT_FOR_RECLAIM", "REVIEW"}:
+        gap_pending = "WAIT_FOR_RECLAIM"
+    elif prior_risk == "UNAVAILABLE" and prior_reentry == "UNAVAILABLE":
+        carried = prior_tracker.get("reentry_pending_before_gap")
+        if isinstance(carried, str) and carried in {"WAIT_FOR_FLUSH", "WAIT_FOR_RECLAIM"}:
+            gap_pending = carried
+
     if not _health_ok(auto_state, issued) or not isinstance(cn_package, Mapping):
         return {
             "contract": "COMPASS_PROTECTION_TRACKER_v1",
@@ -968,6 +1087,7 @@ def protection_tracker(
             "last_material_change_at": issued_text,
             "data_quality": "DEGRADED",
             "reentry_state": "UNAVAILABLE",
+            "reentry_pending_before_gap": gap_pending,
             "reentry_message": "Re-entry review is unavailable until canonical evidence is healthy.",
             "authority": {"portfolio_execution": False, "wallet_specific": False, "new_market_classifier": False},
         }
@@ -987,6 +1107,7 @@ def protection_tracker(
             "last_material_change_at": issued_text,
             "data_quality": "STRUCTURED_PROTECTION_PROJECTION_UNAVAILABLE",
             "reentry_state": "UNAVAILABLE",
+            "reentry_pending_before_gap": gap_pending,
             "reentry_message": "Re-entry review is unavailable until structured canonical protection evidence exists.",
             "authority": {"portfolio_execution": False, "wallet_specific": False, "new_market_classifier": False},
         }
@@ -1006,10 +1127,6 @@ def protection_tracker(
     drivers_raw = structured.get("drivers")
     drivers = [str(x) for x in drivers_raw[:4]] if isinstance(drivers_raw, list) else []
 
-    prior_tracker = (prior_compass or {}).get("protection_tracker") if isinstance(prior_compass, Mapping) else None
-    prior_tracker = prior_tracker if isinstance(prior_tracker, Mapping) else {}
-    prior_risk = str(prior_tracker.get("pullback_risk_state") or "NORMAL")
-    prior_reentry = str(prior_tracker.get("reentry_state") or "INACTIVE")
     posture = str(action.get("NOW") or "HOLD_WAIT")
     direction = str(market_now.get("directional_state") or "MIXED")
     if direction == "UNCHANGED_NO_NEW_OBSERVATION":
@@ -1018,19 +1135,29 @@ def protection_tracker(
     if risk in {"HIGH", "CONFIRMED"}:
         reentry = "WAIT_FOR_FLUSH"
         reentry_message = "Protection phase. Do not treat stabilization alone as a re-entry signal."
+    elif prior_risk == "UNAVAILABLE" and gap_pending is not None and risk != "UNAVAILABLE":
+        reentry = "WAIT_FOR_RECLAIM"
+        reentry_message = "Evidence is restored; re-entry remains blocked pending a new governed constructive confirmation."
     elif prior_risk in {"HIGH", "CONFIRMED"} and risk not in {"UNAVAILABLE"}:
         reentry = "WAIT_FOR_RECLAIM"
         reentry_message = "Risk has eased, but re-entry stays blocked until a governed constructive confirmation is restored."
-    elif prior_reentry == "WAIT_FOR_RECLAIM" and risk in {"NORMAL", "BUILDING"}:
-        if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and direction == "BULLISH":
+    elif prior_reentry in {"WAIT_FOR_RECLAIM", "REVIEW"} and risk in {"NORMAL", "BUILDING", "ELEVATED"}:
+        # The outstanding reclaim requirement survives repeated ELEVATED
+        # observations. REVIEW is conditional, not a latched permission.
+        constructive = (
+            risk in {"NORMAL", "BUILDING"}
+            and posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"}
+            and direction == "BULLISH"
+        )
+        if constructive:
             reentry = "REVIEW"
-            reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
+            if prior_reentry == "REVIEW":
+                reentry_message = "Re-entry review remains open while governed constructive confirmation persists."
+            else:
+                reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
         else:
             reentry = "WAIT_FOR_RECLAIM"
             reentry_message = "Risk has eased, but re-entry watch remains active until governed constructive confirmation arrives."
-    elif prior_reentry == "REVIEW" and risk in {"NORMAL", "BUILDING"}:
-        reentry = "REVIEW"
-        reentry_message = "Re-entry review remains open while governed constructive confirmation persists."
     else:
         reentry = "INACTIVE" if risk != "UNAVAILABLE" else "UNAVAILABLE"
         reentry_message = "No re-entry review is active." if reentry == "INACTIVE" else "Re-entry review is unavailable."
@@ -1073,6 +1200,7 @@ def protection_tracker(
         "last_material_change_at": last_change,
         "data_quality": "OK" if risk != "UNAVAILABLE" else "DEGRADED",
         "reentry_state": reentry,
+        **({"reentry_pending_before_gap": gap_pending} if risk == "UNAVAILABLE" else {}),
         "reentry_message": reentry_message,
         "authority": {"portfolio_execution": False, "wallet_specific": False, "new_market_classifier": False},
     }
@@ -1233,7 +1361,7 @@ def horizon_map(
             "NEXT_1_3D": dict(forward_unavailable),
             "NEXT_5_7D": dict(forward_unavailable),
             "NEXT_2_3W": dict(forward_unavailable),
-            "CYCLE_ALTCOINS_3_8W": _altcoin_cycle_lane(None, posture, as_of or datetime.now(timezone.utc)),
+            "CYCLE_ALTCOINS_3_8W": _scoped_altcoin_cycle_lane(auto_state, None, posture, as_of or datetime.now(timezone.utc)),
         }
 
     if d13_source == "UNAVAILABLE":
@@ -1316,7 +1444,7 @@ def horizon_map(
             } if d23_source == "NO_EDGE"
             else _unavailable_horizon("Structured Cycle Navigator 2-3 week decision projection is unavailable."))
         ),
-        "CYCLE_ALTCOINS_3_8W": _altcoin_cycle_lane(cn_package, posture, as_of or datetime.now(timezone.utc)),
+        "CYCLE_ALTCOINS_3_8W": _scoped_altcoin_cycle_lane(auto_state, cn_package, posture, as_of or datetime.now(timezone.utc)),
     }
 
 
@@ -1368,7 +1496,16 @@ def capitalization_ladder(
     deteriorate = {"type": "ACTION_STATE", "states": ["HOLD_DEFENSIVE_WAIT", "HOLD_WAIT_DATA_DEGRADED"]}
     eta_by_state = {"HOLD": "now", "DEPLOY": "now", "PREPARE": "0-3d", "WAIT": "1-7d conditional", "HARD_WAIT": "no fixed ETA"}
     rows = []
+    alt_usable = _alt_context_usable(auto_state)
     for seg, state in zip(CAPITALIZATION_ORDER[:-1], states):
+        if seg in ALT_LADDER_SEGMENTS and not alt_usable:
+            rows.append({
+                "segment": seg, "status": "UNAVAILABLE", "action": "UNAVAILABLE", "direction": "UNAVAILABLE", "eta": None,
+                "reason": ALT_CONTEXT_DEGRADED_REASON,
+                "upgrade_trigger": {"type": "SOURCE_HEALTH", "lane": "altseason_context", "states": sorted(ALT_CONTEXT_USABLE)},
+                "deterioration_trigger": deteriorate,
+            })
+            continue
         rows.append({
             "segment": seg,
             "status": state,
@@ -1574,6 +1711,8 @@ def build_official_compass(
             "observation_open_utc": nested(auto_state, "normalized_state", "live_market", "observation_open_utc"),
         },
         "market_now": market_now,
+        "cn_issuer_method": cn_issuer_method(eligible_cn),
+        "cn_protection_state_basis": cn_protection_state_basis(eligible_cn),
         "horizons": horizons,
         "bull_bear_scale": bull_bear,
         "capitalization_ladder": ladder,
