@@ -618,7 +618,9 @@ def collect(out: Path, *, sleep=time.sleep, clock=time.monotonic):
                "estimated_upper_usd": estimated, "owner_reserved_usd": handle["owner_reserved_usd"],
                "invoice_usd": None, "provider_invoice_not_verified": True, "research_only": True,
                "no_retry": True, "no_edge_claim": True, "created_at": datetime.now(timezone.utc).isoformat()}
-    if mission_id == WORKLIKE_STAGE1:
+    if mission_id == WORKLIKE_STAGE1 or build_cost.OWNER_STAGE.fullmatch(mission_id):
+        # Bind the ACTUAL provider-returned effort, never the requested effort.
+        # Missing effort remains None and cannot qualify a BUILD receipt.
         receipt["provider_reasoning_effort"] = effort
     core.write_once(out / "receipt.json", receipt)
     core.write_once(results / "receipt.json", receipt)
@@ -629,7 +631,8 @@ def collect(out: Path, *, sleep=time.sleep, clock=time.monotonic):
     sums = "".join(digest(p.read_bytes()) + "  " + p.name + "\n" for p in sorted(results.iterdir()))
     (results / "SHA256SUMS").write_text(sums, encoding="utf-8")
     if (status != "completed" or not raw or not usage_ok or estimated > float(handle["owner_reserved_usd"])
-            or (mission_id == WORKLIKE_STAGE1 and effort != worklike.EFFORT)):
+            or (mission_id == WORKLIKE_STAGE1 and effort != worklike.EFFORT)
+            or (build_cost.OWNER_STAGE.fullmatch(mission_id) and effort != mission_effort(meta))):
         return 3
     print("RESEARCH_COMPLETE", rid, receipt["output_sha256"], estimated)
     return 0
