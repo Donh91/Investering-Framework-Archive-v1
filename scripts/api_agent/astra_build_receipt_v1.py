@@ -110,14 +110,10 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
     require(all(type(x) is dict and x.get("status") in ("PASS","TEST_FAILURE")
                 and type(x.get("returncode")) is int for x in tests),
             "TEST_STATUSES")
-    status = ("TESTED_PASS_REVIEW_REQUIRED" if
-              tested.get("status") == "PASS" and
-              all(x["status"] == "PASS" and x["returncode"] == 0 for x in tests)
-              else "TEST_FAILURE_OR_INCOMPLETE")
-    if status != "TESTED_PASS_REVIEW_REQUIRED":
-        require(tested.get("status") != "PASS" or
-                any(x["status"] != "PASS" or x["returncode"] != 0 for x in tests),
-                "FALSE_SANDBOX_SUCCESS")
+    all_passed = all(x["status"] == "PASS" and x["returncode"] == 0 for x in tests)
+    require(tested.get("status") == ("PASS" if all_passed else "TEST_FAILURE"),
+            "FALSE_SANDBOX_SUCCESS")
+    status = "TESTED_PASS_REVIEW_REQUIRED" if all_passed else "TEST_FAILURE_OR_INCOMPLETE"
     return {"contract": CONTRACT, "status": status,
             "mission_id": mission, "stage": approved_scope["stage"],
             "release_main_sha": approved_scope["main_sha"],
