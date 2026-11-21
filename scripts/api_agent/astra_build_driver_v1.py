@@ -151,6 +151,20 @@ def run(repo: Path, artifact: Path, mission_id: str, native_head: str,
             "RELEASE_AUTHORITY_IN_SANDBOX")
     return verdict
 
+def verified_native_owner_event(mission_id: str) -> dict:
+    """Re-verify the native owner event in the no-secret driver, not just YAML."""
+    require(mission_id in ALLOWED_STAGE1_IDS, "MISSION_NOT_STAGE1_BUILD")
+    event, actual_mid, bundle = owner.owner_event()
+    require(actual_mid == mission_id, "OWNER_EVENT_MISSION_DRIFT")
+    expected, raw, meta = owner.build_request(mission_id)
+    require(bundle == meta["bundle_sha256"]
+            and admit.digest(raw) == meta["request_sha256"],
+            "OWNER_EVENT_BUNDLE_DRIFT")
+    return {"mission_id": actual_mid,
+            "bundle_sha256": bundle,
+            "comment_id": event["comment"]["id"]}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", type=Path, required=True)
@@ -166,6 +180,9 @@ def main():
         manifest = load_json(read_bound(artifact, "source_manifest.json", 48_000))
         mission_id = manifest.get("mission_id")
     require(mission_id in ALLOWED_STAGE1_IDS, "MISSION_NOT_STAGE1_BUILD")
+    # Re-read and authenticate the originating issue_comment after the
+    # artifact was downloaded, even though the workflow if gate also checked.
+    verified_native_owner_event(mission_id)
     result = run(args.repo.resolve(), artifact, mission_id,
                  os.environ.get("GITHUB_SHA", ""),
                  os.environ.get("GITHUB_RUN_ID", ""))
