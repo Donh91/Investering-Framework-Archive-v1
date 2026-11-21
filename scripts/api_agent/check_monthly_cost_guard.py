@@ -14,6 +14,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
 from api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
 from api_agent import astra_mission_reservations_v1 as astra_missions
+from api_agent import astra_build_cost_v1 as build_cost
 from api_agent import opaque_api_reservations_v1 as opaque_reservations
 from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegative, json_evidence_paths, load_evidence
 
@@ -400,6 +401,20 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
         if (consumed_ids != set(OWNER_CONSUMED_ASTRA_EVIDENCE)
                 or value.get("owner_astra_provider_period_settlement") != OWNER_ASTRA_PROVIDER_PERIOD_SETTLEMENT):
             raise ValueError("ASTRA_PROVIDER_GROUP_EVIDENCE_INVALID")
+    # Owner-specific BUILD_v1 sub-budget: at most three M1/M2/M3 missions,
+    # two separately reviewed stages per mission, USD5 per request and USD30
+    # aggregate. No implicit right to use the distinct USD10 contingency.
+    # Validate the FULL append-only BUILD history, including settled rows.
+    build_rows = []
+    for row in value.get(astra_missions.KEY, []):
+        if isinstance(row, dict) and str(row.get("work_id", "")).startswith("ASTRA-BUILD-"):
+            build_rows.append({"work_id": row.get("work_id"),
+                               "upper_usd": row.get("upper_usd"),
+                               "status": row.get("status")})
+    try:
+        build_cost.validate_program_reservations(build_rows)
+    except build_cost.BudgetHold as exc:
+        raise ValueError("BUILD_PROGRAM_BUDGET_HOLD:" + str(exc)) from exc
     # Generic owner Astra missions (#1156): a separate append-only ledger key, each row bound to a reviewed mission.
     mission_high, mission_count, _ = astra_missions.mission_reservations(value, reserved_work_ids)
     high += mission_high
