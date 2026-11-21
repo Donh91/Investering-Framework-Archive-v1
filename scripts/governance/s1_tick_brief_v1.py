@@ -57,6 +57,7 @@ COALESCE_MINUTES = 5                  # an older fallback run this young and sti
 JOBS_READS_PER_DUE = 3                # jobs lists read per due check to find a started build
 DUE_API_CALLS = 5                     # run list, brief issue, and at most JOBS_READS_PER_DUE jobs lists
 PUBLISH_API_CALLS = 25                # label read, label create, issue create or update, lock, closing extra issues
+READBACK_API_CALLS = 2                # the one issue read after publish (S1_BRIEF_DIGEST_V1), a retry included
 RUN_EVENTS = ("schedule", "workflow_dispatch", "workflow_run", "push")
 FALLBACK_EVENTS = ("workflow_run", "push")   # these two only build after a missed cron; schedule and manual runs always build
 CODEX_LIMIT_HOURS = 24                # a Codex usage-limit answer this recent, with no newer Codex answer: unavailable
@@ -71,6 +72,9 @@ HALT_RE = re.compile(r"(?m)^\W{0,8}S1_LANE_HALTED\b")
 FAST_RISKS = ("LOW", "MEDIUM")        # a HIGH merge entry carries high_evidence=true: S1 proves HIGH EVIDENCE itself
 FAILED_CONCLUSIONS = ("failure", "timed_out", "startup_failure", "cancelled")
 SHA40 = re.compile(r"[0-9a-f]{40}")
+VERDICT_SCHEMA = "S1_BRIEF_VERDICT_V1"   # B.verdict, SHADOW (S1 v3.3 W2): published, and S1 still runs T1 to T3 itself
+DIGEST_TOKEN = "S1_BRIEF_DIGEST_V1"      # printed by publish after reading the issue back (R2-7)
+T3_TREE_DIRS = ("scripts", "tests", ".github", ".agents", "00_FMOS")   # the entries TICK T3 C1b compares, in its order
 S1_FILES = "00_FMOS/S1"
 SWITCH = "00_FMOS/S1/REVIEWED_MERGE_LANE.json"
 CONTRACT_FILE = "00_FMOS/S1/RUNTIME_CONTRACT.json"
@@ -959,6 +963,62 @@ def heartbeat_due(comments, now):
                    and stamp(c["created_at"]).astimezone(CPH).date() == local.date() for c in comments)
 
 
+# ----------------------------------------------------------------------------------------------- the verdict (shadow)
+def _sha_or_none(value):
+    return value if isinstance(value, str) and SHA40.fullmatch(value) else None
+
+
+def brief_verdict(main_sha, contract, actual, bootstrap_text, pins, trees):
+    """B.verdict, SHADOW (S1 v3.3 W2, charter A01/A02): the checks of BOOTSTRAP steps 3 and 3b and of the TICK T2 pins
+    clause that the producer can decide at B.main, computed here on their own (not copied from pin_check), plus the
+    tree SHAs at B.main that T3 C1b compares. S1 ignores this field until a reviewed TICK change promotes it.
+
+    The producer cannot decide T1 (which issue carries the label, and its author) or T2's run binding (its own run is
+    still running), and it cannot decide T3 (M is read by S1 later): those are "S1_DECIDES". The 3b value of the
+    owner's saved paste is S1's own independent cross-check; the producer compares with BOOTSTRAP.txt AT B.main only.
+    `actual` maps paths to blob SHAs at B.main; `trees` maps "" (the root) and each T3_TREE_DIRS entry to a tree SHA."""
+    contract = contract if isinstance(contract, dict) else {}
+    actual = actual if isinstance(actual, dict) else {}
+    pins = pins if isinstance(pins, dict) else {}
+    trees = trees if isinstance(trees, dict) else {}
+    blob = lambda path: _sha_or_none(actual.get(path)) if isinstance(path, str) and path else None
+    step3, step3b, t2, basis = [], [], [], []
+    for key, path_key in (("action_loop_blob", "action_loop_path"), ("tick_blob", "tick_path"), ("lane_switch_blob", "lane_switch_path")):
+        want = _sha_or_none(contract.get(key))
+        if want is None or blob(contract.get(path_key)) != want:
+            step3.append(f"3:{key}")
+    rubric = contract.get("rubric_blobs", {})
+    if not isinstance(rubric, dict):
+        step3.append("3:rubric_blobs")
+    else:
+        for path, want in sorted(rubric.items()):
+            if _sha_or_none(want) is None or blob(path) != want:
+                step3.append(f"3:rubric:{path}")
+    stated = re.search(r"bootstrap_version must be (S1_BOOTSTRAP_v\d+)\.", bootstrap_text or "")
+    if not stated or contract.get("bootstrap_version") != stated.group(1):
+        step3.append("3:bootstrap_version")
+    contract_blob = blob(CONTRACT_FILE)
+    pasted = re.search(r"must equal ([0-9a-f]{40})\.", bootstrap_text or "")
+    bootstrap_3b = pasted.group(1) if pasted else None
+    if contract_blob is None or contract_blob != bootstrap_3b:
+        step3b.append("3b:bootstrap_text")
+    if pins.get("ok") is not True:
+        t2.append("pins:ok")
+    if contract_blob is None or pins.get("contract_blob") != contract_blob or pins.get("contract_blob") != bootstrap_3b:
+        t2.append("pins:contract_blob")
+    for key in ("action_loop_blob", "tick_blob"):
+        if _sha_or_none(pins.get(key)) is None or pins.get(key) != contract.get(key):
+            t2.append(f"pins:{key}")
+    basis_trees = {name: _sha_or_none(trees.get(name)) for name in T3_TREE_DIRS}
+    root_tree = _sha_or_none(trees.get(""))
+    basis = (["t3_basis:root"] if root_tree is None else []) + [f"t3_basis:{n}" for n, v in basis_trees.items() if v is None]
+    source = "SOURCE_UNVERIFIED(3)" if step3 else "SOURCE_UNVERIFIED(3b)" if step3b else "OK"
+    return {"schema": VERDICT_SCHEMA, "shadow": True, "main": main_sha, "source": source, "t1": "S1_DECIDES",
+            "t2": "BRIEF_UNVERIFIED(pins)" if t2 else "OK", "t2_scope": "pins", "t3": "S1_DECIDES",
+            "reasons": (step3 + step3b + t2 + basis)[:16], "contract_blob": contract_blob, "bootstrap_3b": bootstrap_3b,
+            "t3_basis": {"root_tree": root_tree, "trees": basis_trees}}
+
+
 # ----------------------------------------------------------------------------------------------- the brief
 def build_brief(snap):
     now = stamp(snap["now"])
@@ -1024,6 +1084,7 @@ def build_brief(snap):
         "main_moved_during_build": bool(snap.get("main_moved")), "timing": snap.get("timing") or {},
         "not_in_brief": ["rule 1 ANSWER", "rule 5 PACKAGE", "rule 5b REENABLE", "rule 6 STEWARD", "HIGH EVIDENCE",
                          "CLAUDE_REVIEW_v1 (private Bridge)", "exclusions 4,5,6,8,9, the judgment half of 3 and 7 (see shrinks)"],
+        "verdict": brief_verdict(snap["main_sha"], contract, snap["pins_actual"], snap.get("bootstrap_text"), pins, snap.get("trees_actual")),
     }
     return brief
 
@@ -1059,25 +1120,86 @@ def render(brief):
     if len(body) <= MAX_BODY:
         return body
     b = {k: brief[k] for k in ("schema", "run_id", "run_attempt", "event", "generated_at", "max_age_minutes", "repo", "main", "pins")}
+    if "verdict" in brief:                                     # small and fixed in size: kept at every shrink level
+        b["verdict"] = brief["verdict"]
     b.update(next=[], claude_slots=[], complete=False, incomplete="brief_too_large", errors=["brief_too_large"], shrunk=3, prs=[], drafts=[], lane={"state": "OFF", "off_reasons": ["brief_too_large"]},
              status_lines=["OWNER APPROVAL REQUIRED: UNKNOWN (brief_too_large)", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"], heartbeat_due=False)
     return dump(b)
 
 
-def parse_body(body):
-    """The inverse of render(): exactly one marker pair and one JSON object with the schema; anything else is None."""
+def _unique_pairs(pairs):
+    """object_pairs_hook: a key repeated in ANY object, top-level or nested, makes the body invalid (the duplicate
+    would otherwise silently win, and a reader that keeps the first one would see a different brief)."""
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise ValueError(f"duplicate key {key!r}")
+        out[key] = value
+    return out
+
+
+def _no_constant(name):
+    raise ValueError(f"not JSON: {name}")                    # NaN, Infinity and -Infinity are not RFC 8259 JSON
+
+
+def strict_loads(text):
+    """RFC 8259 JSON with unique keys at every level and no NaN or Infinity; ValueError otherwise."""
+    return json.loads(text, object_pairs_hook=_unique_pairs, parse_constant=_no_constant)
+
+
+def _is_id(value):
+    return type(value) is int and value > 0                    # a bool is not an id (True == 1 in Python)
+
+
+def brief_schema_ok(b):
+    """The fields T1 to T5 read, with their types (CHARTER_ADDENDUM_1: a wrong type is BRIEF_UNVERIFIED(body)). The
+    reference is schema_ok of tests/governance/test_s1_trajectory_replay_v1.py; the SHA fields are also 40-hex here."""
+    pins, repo, lines = b.get("pins"), b.get("repo"), b.get("status_lines")
+    sha_or_null = lambda v: v is None or (isinstance(v, str) and SHA40.fullmatch(v) is not None)
+    return (b.get("schema") == SCHEMA and _is_id(b.get("run_id")) and _is_id(b.get("run_attempt"))
+            and isinstance(b.get("event"), str) and isinstance(b.get("generated_at"), str)
+            and isinstance(b.get("main"), str) and SHA40.fullmatch(b["main"]) is not None
+            and isinstance(pins, dict) and type(pins.get("ok")) is bool
+            and all(sha_or_null(pins.get(k)) for k in ("contract_blob", "action_loop_blob", "tick_blob"))
+            and type(b.get("complete")) is bool and isinstance(b.get("incomplete"), (str, type(None)))
+            and isinstance(repo, dict) and type(repo.get("id")) is int
+            and isinstance(lines, list) and len(lines) == 3 and all(isinstance(x, str) for x in lines)
+            and isinstance(b.get("next"), list) and all(isinstance(x, dict) for x in b["next"])
+            and isinstance(b.get("claude_slots"), list) and isinstance(b.get("prs"), list))
+
+
+def brief_block(body):
+    """The exact JSON text of the one block (the bytes between the opening ```json line and the closing ``` line), or
+    None: exactly one BEGIN and one END marker, BEGIN before END, and between them exactly one ```json fence."""
     text = str(body or "")
     if text.count(BEGIN) != 1 or text.count(END) != 1:
         return None
-    inner = text.split(BEGIN, 1)[1].split(END, 1)[0].strip()
-    m = re.fullmatch(r"```json\n(.*)\n```", inner, re.S)
-    if not m:
+    i, j = text.index(BEGIN), text.index(END)
+    if j < i:
+        return None
+    m = re.fullmatch(r"```json\n(.*)\n```", text[i + len(BEGIN):j].strip(), re.S)
+    if not m or "\n```" in m.group(1):
+        return None
+    return m.group(1)
+
+
+def parse_body(body):
+    """The inverse of render(): exactly one ordered marker pair around one ```json block holding one strict JSON object
+    (unique keys at every level, no NaN or Infinity) that passes brief_schema_ok; anything else is None."""
+    block = brief_block(body)
+    if block is None:
         return None
     try:
-        doc = json.loads(m.group(1))
-    except json.JSONDecodeError:
+        doc = strict_loads(block)
+    except (ValueError, RecursionError):
         return None
-    return doc if isinstance(doc, dict) and doc.get("schema") == SCHEMA else None
+    return doc if isinstance(doc, dict) and brief_schema_ok(doc) else None
+
+
+def brief_digest(body):
+    """S1_BRIEF_DIGEST_V1: sha256 of the UTF-8 bytes of the block text, or None when the body has no block."""
+    block = brief_block(body)
+    return None if block is None else hashlib.sha256(block.encode("utf-8")).hexdigest()
 
 
 def verify_brief(issues, run, now, repo_id=None, max_age=MAX_AGE_MINUTES):
@@ -1423,6 +1545,22 @@ def changed_between(root, base, main_sha):
         return None
 
 
+def root_trees(root):
+    """{"": the root tree SHA of HEAD, and each T3_TREE_DIRS name: its tree SHA in that root tree (the non-recursive
+    entries GET /git/trees/<sha> lists, which TICK T3 C1b compares)}. A name that is not a tree there is None."""
+    out = dict.fromkeys(("", *T3_TREE_DIRS))
+    try:
+        out[""] = git(root, "rev-parse", "HEAD^{tree}")
+        for row in git(root, "ls-tree", "-z", "HEAD").split("\0"):
+            meta, _tab, name = row.partition("\t")
+            parts = meta.split()
+            if name in T3_TREE_DIRS and len(parts) == 3 and parts[1] == "tree":
+                out[name] = parts[2]
+    except (subprocess.CalledProcessError, OSError):
+        pass
+    return out
+
+
 def parse_json_block(text, contract):
     for m in re.finditer(r"```json\n(.*?)\n```", text, re.S):
         try:
@@ -1525,6 +1663,7 @@ def collect(gh, root, head_root, now, run):
             snap["pins_actual"][path] = git(root, "rev-parse", f"HEAD:{path}")
         except subprocess.CalledProcessError:
             snap["pins_actual"][path] = None
+    snap["trees_actual"] = root_trees(root)                      # B.verdict.t3_basis: the trees TICK T3 C1b compares, at B.main
     clock, timing = time.monotonic(), {}
     snap["timing"] = timing
     snap["repo"] = gh.get("")
@@ -1670,6 +1809,37 @@ def publish(gh, body, now=None):
     return mine[0]["number"]
 
 
+def readback_line(gh, number, body):
+    """R2-7, SHADOW: read the brief issue back after the write and print S1_BRIEF_DIGEST_V1 over the exact block bytes
+    GitHub now serves. readback is MATCH (the served block is byte-identical to the one this run wrote), SUPERSEDED
+    (the served brief is another run's: publish kept a newer brief, or a later build wrote after this one), MISMATCH
+    (this run's brief, other bytes) or UNREADABLE. ONE read, on its own budget READBACK_API_CALLS, with the publish
+    token (issues: write includes read). A failure is reported, never raised: in shadow the line is evidence only and
+    the publish result is unchanged."""
+    mine, want = parse_body(body), brief_digest(body)
+    try:
+        served = gh.get(f"issues/{int(number)}")
+        served = served.get("body") if isinstance(served, dict) else None
+    except Exception:                                            # noqa: BLE001  (unreadable is a state, not an error)
+        served = None
+    block = brief_block(served) if isinstance(served, str) else None
+    got = None if block is None else hashlib.sha256(block.encode("utf-8")).hexdigest()
+    if got is None:
+        state = "UNREADABLE"
+    elif got == want:
+        state = "MATCH"
+    else:
+        try:
+            other = strict_loads(block)
+        except (ValueError, RecursionError):
+            other = None
+        same_run = isinstance(other, dict) and other.get("run_id") == (mine or {}).get("run_id") \
+            and other.get("run_attempt") == (mine or {}).get("run_attempt")
+        state = "MISMATCH" if same_run or not isinstance(other, dict) else "SUPERSEDED"
+    return (f"{DIGEST_TOKEN} issue={number} run={(mine or {}).get('run_id')} main={(mine or {}).get('main')} "
+            f"sha256={got or '-'} bytes={len(block.encode('utf-8')) if block is not None else '-'} expected_sha256={want} readback={state}")
+
+
 def main(argv):
     mode = argv[1] if len(argv) > 1 else ""
     token = os.environ.get("GITHUB" + "_TOKEN", "")
@@ -1727,6 +1897,7 @@ def main(argv):
             raise SystemExit("PUBLISH_REFUSED: the brief does not belong to this run")
         number = publish(GitHub(token, budget=PUBLISH_API_CALLS), body)
         print(f"S1_TICK_BRIEF_PUBLISHED issue={number} run={brief['run_id']}")
+        print(readback_line(GitHub(token, budget=READBACK_API_CALLS), number, body))
         return 0
     raise SystemExit("usage: s1_tick_brief_v1.py due | build <main checkout> <head worktree dir> <out file> | publish <brief file>")
 

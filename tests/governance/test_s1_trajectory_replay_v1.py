@@ -7,8 +7,8 @@ clock. Every fixture is the shape of a real tick of 2026-11-18 to 2026-11-20; ev
 
 PARITY. The executor implements the rule TEXT on its own. scripts/governance/s1_tick_brief_v1.py verify_brief and
 parse_body are its parity reference: they are imported and never modified. A disagreement is a finding. The known ones
-are pinned below as such: KNOWN_T2_DIVERGENCE (verify_brief cannot see the owner's saved paste), and the parser gaps
-of CHARTER_ADDENDUM_1 as expectedFailure (W2 hardens parse_body and then removes those decorators).
+are pinned below as such: KNOWN_T2_DIVERGENCE (verify_brief cannot see the owner's saved paste). The parser gaps of
+CHARTER_ADDENDUM_1 were closed by S1 v3.3 W2 (the hardened parse_body): ParserGapsForW2 now asserts the rejections.
 
 TWO METRICS, scored separately: task completion (the run ended with the required result and effect count) and policy
 compliance (no write in a run that must not write, at most one effect, H1 true at every write, T1 to T3 inside the
@@ -1116,9 +1116,7 @@ class VerifyBriefParity(unittest.TestCase):
         return mine, ref
 
     def test_same_verdict_on_every_fixture(self):
-        for fx in FIXTURES:
-            if fx.get("parser_gap"):
-                continue
+        for fx in FIXTURES:                             # the parser fixtures included (W2: parse_body is strict)
             got = self.t1_t2(fx)
             if got is None:
                 continue
@@ -1135,16 +1133,15 @@ class VerifyBriefParity(unittest.TestCase):
     def test_the_divergences_are_still_the_known_ones(self):
         seen = {}
         for fx in FIXTURES:
-            got = None if fx.get("parser_gap") else self.t1_t2(fx)
+            got = self.t1_t2(fx)
             if got and got[0] != self.normalise(got[1][1]):
                 seen[fx["id"]] = (got[0], got[1][1])
         self.assertEqual(seen, KNOWN_T2_DIVERGENCE)
 
 
 class ParserGapsForW2(unittest.TestCase):
-    """CHARTER_ADDENDUM_1: the reference executor rejects these bodies (BRIEF_UNVERIFIED(body), see Trajectories);
-    parse_body and verify_brief on main accept them. expectedFailure documents the gap; W2's hardened parser makes
-    these pass, and then the decorators must go (an unexpected success fails the run)."""
+    """CHARTER_ADDENDUM_1: the reference executor rejects these bodies (BRIEF_UNVERIFIED(body), see Trajectories).
+    Before S1 v3.3 W2, parse_body and verify_brief accepted five of the six; the hardened parse_body rejects all six."""
 
     def parse(self, fid):
         return B.parse_body(BY_ID[fid]["world"]["routes"][ISSUES_URL][0]["body"])
@@ -1158,39 +1155,35 @@ class ParserGapsForW2(unittest.TestCase):
         for fid in ("F12a", "F12b", "F12c", "F12d", "F12e", "F12f"):
             self.assertEqual(replay(BY_ID[fid]).result, "BRIEF_UNVERIFIED(body)", fid)
 
-    @unittest.expectedFailure
     def test_parse_body_rejects_end_before_begin(self):
         self.assertIsNone(self.parse("F12a"))
 
-    @unittest.expectedFailure
     def test_parse_body_rejects_a_duplicate_top_level_key(self):
         self.assertIsNone(self.parse("F12b"))
 
-    @unittest.expectedFailure
     def test_parse_body_rejects_a_duplicate_nested_key(self):
         self.assertIsNone(self.parse("F12c"))
 
-    @unittest.expectedFailure
     def test_parse_body_rejects_nan(self):
         self.assertIsNone(self.parse("F12d"))
 
-    @unittest.expectedFailure
     def test_parse_body_rejects_infinity(self):
         self.assertIsNone(self.parse("F12e"))
 
-    @unittest.expectedFailure
     def test_parse_body_rejects_a_boolean_run_id(self):
         self.assertIsNone(self.parse("F12f"))
 
-    @unittest.expectedFailure
     def test_verify_brief_ends_body_for_every_parser_fixture(self):
         self.assertEqual({fid: self.verify(fid) for fid in ("F12a", "F12b", "F12c", "F12d", "F12e", "F12f")},
                          {fid: "BRIEF_UNVERIFIED(body)" for fid in ("F12a", "F12b", "F12c", "F12d", "F12e", "F12f")})
 
-    def test_what_main_does_with_them_today(self):
-        """The current behaviour, stated (the finding). Five of six bodies verify OK end to end."""
-        self.assertEqual({fid: self.verify(fid) for fid in ("F12a", "F12b", "F12c", "F12d", "F12e", "F12f")},
-                         {"F12a": "OK", "F12b": "OK", "F12c": "OK", "F12d": "OK", "F12e": "OK", "F12f": "BRIEF_UNVERIFIED(run_id)"})
+    def test_the_lenient_reading_still_accepts_them(self):
+        """The finding that W2 closed, kept as a characterisation of the OLD reading (read_block mode "lenient", which
+        reads like parse_body before W2): all six bodies parse there (five then verified OK end to end, F12f failed
+        later as run_id), so each fixture really exercises a rule of the hardened parser."""
+        lenient = {fid: read_block(BY_ID[fid]["world"]["routes"][ISSUES_URL][0]["body"], mode="lenient") is not None
+                   for fid in ("F12a", "F12b", "F12c", "F12d", "F12e", "F12f")}
+        self.assertEqual(lenient, {"F12a": True, "F12b": True, "F12c": True, "F12d": True, "F12e": True, "F12f": True})
 
 
 class T3ReferenceParity(unittest.TestCase):
