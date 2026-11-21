@@ -157,7 +157,7 @@ class BuildSandboxTest(unittest.TestCase):
     def test_admitted_files_are_only_staged_in_temp_with_hash(self):
         raw = admit.canonical(self.proposal)
         pass_result = {"returncode": 0, "output_sha256": "0" * 64,
-                       "output_bytes": 0, "last_200_lines": [], "status": "PASS",
+                       "output_bytes": 0, "last_200_lines": [], "status": "EXIT0_WITH_UNTRUSTED_SUMMARY",
                        "completed_tests_observed": 1}
         with mock.patch.object(s, "verify_snapshot", return_value=self.main), \
              mock.patch.object(s, "_run_once", return_value=pass_result) as run:
@@ -190,7 +190,7 @@ class BuildSandboxTest(unittest.TestCase):
         raw = admit.canonical(self.proposal)
         success = {"returncode": 0, "output_sha256": "0" * 64,
                    "output_bytes": 24, "last_200_lines": ["1 passed in 0.1s"],
-                   "status": "PASS", "completed_tests_observed": 1}
+                   "status": "EXIT0_WITH_UNTRUSTED_SUMMARY", "completed_tests_observed": 1}
         fail_result = {"returncode": 1, "output_sha256": "1" * 64,
                        "output_bytes": 7, "last_200_lines": ["fail"],
                        "status": "TEST_FAILURE", "completed_tests_observed": 0}
@@ -205,7 +205,7 @@ class BuildSandboxTest(unittest.TestCase):
                                 "content": "def source():\n    return 2\n"}
         scope = copy.deepcopy(self.scope)
         scope["source_files"][self.pathname]["sha256"] = "e" * 64
-        success = {"returncode": 0, "status": "PASS", "completed_tests_observed": 1}
+        success = {"returncode": 0, "status": "EXIT0_WITH_UNTRUSTED_SUMMARY", "completed_tests_observed": 1}
         with mock.patch.object(s, "verify_snapshot", return_value=self.main), \
              mock.patch.object(s, "_run_once", return_value=success):
             with self.assertRaisesRegex(s.SandboxBlocked, "MODIFY_PREIMAGE_DRIFT"):
@@ -233,7 +233,7 @@ class BuildSandboxTest(unittest.TestCase):
 
 
     def test_real_docker_smoke_contract_under_mock(self):
-        good = {"status": "PASS", "returncode": 0, "output_sha256": "a"*64,
+        good = {"status": "EXIT0_WITH_UNTRUSTED_SUMMARY", "returncode": 0, "output_sha256": "a"*64,
                 "output_bytes": 0, "last_200_lines": []}
         mutant = {"status": "TEST_FAILURE", "returncode": 1,
                   "output_sha256": "b"*64,
@@ -256,7 +256,7 @@ class BuildSandboxTest(unittest.TestCase):
                               "tests/smoke", "-v"][-6:])
 
     def test_real_docker_smoke_rejects_false_pass(self):
-        good = {"status": "PASS", "returncode": 0}
+        good = {"status": "EXIT0_WITH_UNTRUSTED_SUMMARY", "returncode": 0}
         with mock.patch.object(s, "_run_once", side_effect=[good, good]):
             with self.assertRaisesRegex(s.SandboxBlocked, "MUTATION_NOT_DETECTED"):
                 s.smoke()
