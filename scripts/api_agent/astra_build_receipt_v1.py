@@ -116,12 +116,12 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
     require(type(tests) is list and type(baseline) is list
             and len(tests) == len(baseline) == expected_count and expected_count > 0,
             "TEST_CENSUS")
-    require(all(type(x) is dict and x.get("status") in ("PASS", "TEST_FAILURE")
+    require(all(type(x) is dict and x.get("status") in ("EXIT0_WITH_UNTRUSTED_SUMMARY", "TEST_FAILURE")
                 and type(x.get("returncode")) is int
                 and type(x.get("completed_tests_observed")) is int
                 and x["completed_tests_observed"] >= 0 for x in tests),
             "TEST_STATUSES")
-    require(all(type(x) is dict and x.get("status") == "PASS"
+    require(all(type(x) is dict and x.get("status") == "EXIT0_WITH_UNTRUSTED_SUMMARY"
                 and x.get("returncode") == 0
                 and type(x.get("completed_tests_observed")) is int
                 and x["completed_tests_observed"] > 0 for x in baseline),
@@ -131,7 +131,7 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
     # output. This prevents exit(0) and forged stdout from becoming a PASS.
     require(tested.get("independent_completion_attested") is False,
             "UNREVIEWED_TEST_ATTESTOR")
-    observed = all(x["status"] == "PASS" and x["returncode"] == 0
+    observed = all(x["status"] == "EXIT0_WITH_UNTRUSTED_SUMMARY" and x["returncode"] == 0
                    and x["completed_tests_observed"] >= baseline[i]["completed_tests_observed"]
                    for i, x in enumerate(tests))
     require(tested.get("status") == ("TEST_COMPLETION_UNATTESTED" if observed else "TEST_FAILURE"),
