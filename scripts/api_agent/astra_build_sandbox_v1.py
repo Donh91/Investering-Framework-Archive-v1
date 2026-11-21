@@ -231,3 +231,83 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
                   "merge_authority": False}
         result["result_sha256"] = admit.digest(admit.canonical(result))
         return result
+
+
+def smoke() -> dict:
+    """Two real isolated Docker executions: clean probe and false-pass mutant.
+
+    This is the ONLY purpose of TEST_COMMANDS['SMOKE']. No production source,
+    no model response, no provider API, no secret, no GitHub write.
+    """
+    benign = """import socket
+import unittest
+
+class SandboxSmoke(unittest.TestCase):
+    def test_language_runtime(self):
+        self.assertEqual(1 + 1, 2)
+
+    def test_real_network_attempt_fails(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(2)
+            rc = sock.connect_ex(("1.1.1.1", 443))
+        self.assertNotEqual(rc, 0, "Outbound socket surprisingly reachable")
+        try:
+            with open("/proc/net/route", encoding="ascii") as fd:
+                routes = [line.split() for line in fd.read().splitlines()[1:]]
+        except OSError:
+            routes = []
+        self.assertFalse(any(len(r) > 1 and r[0] != "lo" and
+                             r[1] == "00000000" for r in routes),
+                         "Non-loopback default route exposes network")
+"""
+    mutant = """import unittest
+
+class SandboxMutant(unittest.TestCase):
+    def test_must_fail(self):
+        self.fail("Intentional mutant, cannot claim PASS")
+"""
+    with tempfile.TemporaryDirectory(prefix="astra-build-smoke-") as temporary:
+        parent = Path(temporary)
+        parent.chmod(0o755)
+        workspace = parent / "repo"
+        tests = workspace / "tests" / "smoke"
+        tests.mkdir(parents=True, mode=0o755)
+        file = tests / "test_smoke.py"
+        file.write_text(benign, encoding="utf-8")
+        file.chmod(0o444)
+        name, command = docker_command(workspace, "SMOKE", 0)
+        good = _run_once(command, name)
+        require(good["status"] == "PASS" and good["returncode"] == 0,
+                "ISOLATED_POSITIVE_OR_NETWORK_DENIAL_FAILED")
+        file.chmod(0o644)
+        file.write_text(mutant, encoding="utf-8")
+        file.chmod(0o444)
+        name, command = docker_command(workspace, "SMOKE", 0)
+        bad = _run_once(command, name)
+        require(bad["status"] == "TEST_FAILURE" and bad["returncode"] != 0,
+                "ISOLATED_MUTATION_NOT_DETECTED")
+        return {"contract": "ASTRA_BUILD_SANDBOX_SMOKE_v1",
+                "status": "PASS", "positive": good,
+                "negative": bad, "network_attempt_executed": True,
+                "network_denied": True,
+                "synthetic_only": True, "image": IMAGE,
+                "paid_api": False, "live_task_changed": False}
+
+
+def main() -> int:
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("action", choices=("smoke",))
+    parser.add_argument("--out", required=True, type=Path)
+    args = parser.parse_args()
+    receipt = smoke()
+    raw = admit.canonical(receipt) + b"\n"
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    with args.out.open("xb") as f:
+        f.write(raw)
+    print(receipt["contract"], receipt["status"], admit.digest(raw))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
