@@ -2,6 +2,7 @@
 import copy
 import hashlib
 import tempfile
+import subprocess
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -40,6 +41,16 @@ class BuildSandboxTest(unittest.TestCase):
             "stage": 1,
             "previous_repair": None,
         }
+        # Exact source copier now requires an actual Git index. No network,
+        # identity from global config, credential, or remote is used.
+        subprocess.run(["git", "-C", str(self.src), "init", "-q"],
+                       check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(self.src), "add", "."],
+                       check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(self.src),
+                        "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                        "commit", "-qm", "frozen public test fixture"],
+                       check=True, capture_output=True)
         self.proposal = {
             "status": "BUILD", "test_command_id": "M1",
             "rationale": "a", "risks": [],
@@ -90,8 +101,7 @@ class BuildSandboxTest(unittest.TestCase):
         self.assertEqual(s.observed_test_count(node, b"# tests 3\n# pass 0\n# fail 0\n"), 0)
 
     def test_source_copy_omits_git_and_rejects_symlinks(self):
-        (self.src / ".git").mkdir()
-        (self.src / ".git/config").write_text("secret")
+        self.assertTrue((self.src / ".git/config").exists())
         dst = self.root / "copied"
         dst.mkdir()
         out = s._copy_public_tree(self.src, dst)
@@ -99,8 +109,23 @@ class BuildSandboxTest(unittest.TestCase):
         self.assertFalse((dst / ".git").exists())
         self.assertTrue((dst / self.pathname).is_file())
         (self.src / "scripts/learning/bad.py").symlink_to(self.path)
-        with self.assertRaisesRegex(s.SandboxBlocked, "SOURCE_SPECIAL_OR_SYMLINK"):
+        with self.assertRaisesRegex(s.SandboxBlocked,
+                                        "SOURCE_UNTRACKED_OR_IGNORED|SOURCE_SPECIAL_OR_SYMLINK"):
             s._copy_public_tree(self.src, self.root / "other")
+
+    def test_untracked_and_gitignored_source_never_copied(self):
+        planted = self.src / "scripts/learning/untracked_planted.py"
+        planted.write_text("print('untrusted')", encoding="utf-8")
+        with self.assertRaisesRegex(s.SandboxBlocked,
+                                    "SOURCE_UNTRACKED_OR_IGNORED"):
+            s._copy_public_tree(self.src, self.root / "untracked_out")
+        planted.unlink()
+        (self.src / ".gitignore").write_text("scripts/learning/ignored_planted.py\n")
+        ignored = self.src / "scripts/learning/ignored_planted.py"
+        ignored.write_text("print('ignored')", encoding="utf-8")
+        with self.assertRaisesRegex(s.SandboxBlocked,
+                                    "SOURCE_UNTRACKED_OR_IGNORED"):
+            s._copy_public_tree(self.src, self.root / "ignored_out")
 
     def test_required_governance_fixture_copy_is_narrow(self):
         archive = self.src / "00_ARCHIVE_CONTROL"
