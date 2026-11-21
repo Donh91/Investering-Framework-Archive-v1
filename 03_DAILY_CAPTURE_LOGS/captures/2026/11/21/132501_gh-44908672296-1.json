@@ -1,0 +1,912 @@
+{
+  "anchor_core_passed": 3,
+  "anchor_core_planned": 3,
+  "authority": "SHADOW_OBSERVATION_ONLY",
+  "canonical_data_ping": false,
+  "capture_lane": "LIVE_POINT_IN_TIME_ANCHOR",
+  "captured_at_utc": "2026-11-21T13:25:01Z",
+  "context_owners_passed": 2,
+  "contract": "DAILY_LIVE_ANCHOR_INDEX_v3",
+  "core_owners_passed": 3,
+  "core_owners_planned": 3,
+  "execution_plan": {
+    "contract": "DAILY_LIVE_ANCHOR_EXECUTION_PLAN_v2",
+    "expected_owner_statuses": {
+      "binance_microstructure": "PASS",
+      "binance_spot": "DISABLED",
+      "cfgi_sentiment": "PASS",
+      "fred_macro": "PASS",
+      "okx_swap": "PASS",
+      "top100_breadth": "PASS"
+    },
+    "frozen_before_owner_execution": true,
+    "intent_basis": "WORKFLOW_TRIGGER_AND_SLOW_MACRO_DECISION_ONLY",
+    "outcome_independent": true,
+    "plan_sha256": "64ef4fd86aac21c5bdd53a09fd3e733f8d065d8f7fa6a0f7b8c14ecae8bf2eac",
+    "planned_at_utc": "2026-11-21T13:24:52Z",
+    "run_id": "gh-44908672296-1",
+    "schedule_id": "13 6 * * *",
+    "slow_macro_planned": true,
+    "slow_macro_reason": "NORMAL_DAILY_SLOW_LANE",
+    "trigger": "schedule"
+  },
+  "forward_fill": false,
+  "framework_state_change": false,
+  "hourly_sequence_lane": "03_DAILY_CAPTURE_LOGS/hourly",
+  "hourly_sequence_owned_fields": [
+    "BTCUSDT_1H_OHLCV",
+    "ETHUSDT_1H_OHLCV",
+    "ETHBTC_1H_OHLC",
+    "BTC_ETH_QUOTE_VOLUME_1H",
+    "BTC_ETH_TRADE_COUNT_1H",
+    "BTC_ETH_TAKER_BUY_SHARE_1H",
+    "BTC_OPEN_INTEREST_1H",
+    "ETH_OPEN_INTEREST_1H",
+    "BTC_LONG_SHORT_1H",
+    "ETH_LONG_SHORT_1H",
+    "FUNDING_EVENTS"
+  ],
+  "interpolation": false,
+  "market_metrics": {
+    "breadth": {
+      "advancers": 22,
+      "authority": {
+        "binding": false,
+        "canonical_acceptance": false,
+        "portfolio_action": false,
+        "state_change": false
+      },
+      "constituent_count": 100,
+      "decliners": 77,
+      "evidence_semantics": {
+        "availability": "AVAILABLE",
+        "canonical_broad_alt_breadth": "UNCONFIRMED",
+        "canonical_compatible": false,
+        "canonical_large_cap_breadth": "UNCONFIRMED",
+        "evidence_role": "PROXY_ONLY",
+        "owner_evidence": "OWNER_EVIDENCE",
+        "registered_threshold_compatibility": "UNCONFIRMED",
+        "substitution_policy": "NO_HIDDEN_SUBSTITUTION"
+      },
+      "flat": 1,
+      "membership_hash": "9344ff0a37a5c5dfc50aede855db80778b3122c22b1469c85ab97d4599f7dafb",
+      "observation": {
+        "cutoff_utc": "2026-11-21T13:24:58.439915Z",
+        "retrieval_timestamp_utc": "2026-11-21T13:24:58.439915Z",
+        "window_semantics": "SOURCE_REPORTED_ROLLING_24H_AT_RETRIEVAL"
+      },
+      "retrieval_timestamp": "2026-11-21T13:24:58.439915Z",
+      "universe": {
+        "constituent_count": 100,
+        "explicit_exclusions": [
+          "STABLECOINS",
+          "MISSING_REQUIRED_VALUE"
+        ],
+        "identifier": "COINGECKO_MARKET_CAP_TOP100_FILTERED_EX_STABLECOINS_v1",
+        "membership_hash": "9344ff0a37a5c5dfc50aede855db80778b3122c22b1469c85ab97d4599f7dafb",
+        "membership_semantics": "POINT_IN_TIME_FILTERED_MEMBERSHIP_AT_RETRIEVAL",
+        "ranking_metric": "market_cap_usd",
+        "ranking_source": "COINGECKO_MARKET_CAP",
+        "raw_rank_depth": 150,
+        "stablecoin_exclusion_taxonomy": {
+          "basis": "CASE_NORMALIZED_EXACT_SYMBOL_MATCH",
+          "exact_symbol_count": 56,
+          "exact_symbols": [
+            "ALUSD",
+            "BIDR",
+            "BUSD",
+            "CEUR",
+            "CRVUSD",
+            "CUSD",
+            "DAI",
+            "DJED",
+            "DOLA",
+            "EURC",
+            "EURS",
+            "EURT",
+            "FDUSD",
+            "FEI",
+            "FRAX",
+            "GHO",
+            "GUSD",
+            "HUSD",
+            "IDRT",
+            "LUSD",
+            "MAI",
+            "MIM",
+            "MUSD",
+            "OUSD",
+            "PAX",
+            "PYUSD",
+            "RLUSD",
+            "SUSD",
+            "TOR",
+            "TUSD",
+            "USC",
+            "USD0",
+            "USD1",
+            "USDA",
+            "USDB",
+            "USDC",
+            "USDD",
+            "USDE",
+            "USDG",
+            "USDJ",
+            "USDK",
+            "USDL",
+            "USDN",
+            "USDP",
+            "USDR",
+            "USDS",
+            "USDT",
+            "USDX",
+            "USK",
+            "USN",
+            "UST",
+            "USTC",
+            "USX",
+            "VAI",
+            "XIDR",
+            "XSGD"
+          ],
+          "exact_symbols_sha256": "f896b84f343e893d24f2b8beb437347b86a5336457399cfb28205d774e31de63",
+          "identifier": "CMC_FROZEN_BREADTH_V2_EXACT_STABLE_SYMBOLS",
+          "limitations": [
+            "CoinGecko markets payload has no validated stablecoin tags; no category call is added.",
+            "Ambiguous tokenized treasuries, commodity proxies and wrapped/LST assets are not inferred as stablecoins.",
+            "Exact-symbol taxonomy can require a reviewed version update when stablecoin symbols change."
+          ],
+          "live_source_tags_available": false,
+          "validated_source": {
+            "blob_sha": "4010dc34628b98aad80bf3b6771dc94dae37cd37",
+            "commit": "7f338cfbac1da29682fea9bb5772e47fb4af421a",
+            "path": "scripts/fetch_cmc_frozen_breadth_v2.py",
+            "repository": "Donh91/Eksperimenter-framework-"
+          },
+          "version": "2026-07-12"
+        },
+        "version": "TOP100_FILTERED_STABLE_EXCLUSION_RICH_BREADTH_v1_2"
+      }
+    },
+    "derivatives": {
+      "BTC-USDT-SWAP": {
+        "funding": {
+          "funding_rate": -2.14325684103e-05,
+          "funding_time": 1795276800000,
+          "next_funding_rate": -2.14325684103e-05
+        },
+        "mark_price": {
+          "mark_price": 59397.2,
+          "timestamp": 1795267497725
+        },
+        "open_interest": {
+          "open_interest_ccy": 33483.92100000016,
+          "open_interest_contracts": 3348392.1000000164,
+          "timestamp": 1795267497542
+        }
+      },
+      "ETH-USDT-SWAP": {
+        "funding": {
+          "funding_rate": 1.9232211146e-05,
+          "funding_time": 1795276800000,
+          "next_funding_rate": 1.9232211146e-05
+        },
+        "mark_price": {
+          "mark_price": 1671.88,
+          "timestamp": 1795267498262
+        },
+        "open_interest": {
+          "open_interest_ccy": 658979.1220000013,
+          "open_interest_contracts": 6589791.220000013,
+          "timestamp": 1795267498084
+        }
+      }
+    },
+    "macro": {
+      "DGS10": {
+        "date": "2026-11-19",
+        "freshness_seconds": 221092,
+        "retrieval_timestamp": "2026-11-21T13:24:52.228560Z",
+        "source_timestamp": "2026-11-19T00:00:00Z",
+        "stale_after_seconds": 604800,
+        "status": "PASS",
+        "value": 5.04
+      },
+      "DGS2": {
+        "date": "2026-11-19",
+        "freshness_seconds": 221092,
+        "retrieval_timestamp": "2026-11-21T13:24:52.228560Z",
+        "source_timestamp": "2026-11-19T00:00:00Z",
+        "stale_after_seconds": 604800,
+        "status": "PASS",
+        "value": 4.76
+      },
+      "DTWEXBGS": {
+        "date": "2026-11-13",
+        "freshness_seconds": 739492,
+        "retrieval_timestamp": "2026-11-21T13:24:52.228560Z",
+        "source_timestamp": "2026-11-13T00:00:00Z",
+        "stale_after_seconds": 864000,
+        "status": "PASS",
+        "value": 122.6503
+      },
+      "VIXCLS": {
+        "date": "2026-11-19",
+        "freshness_seconds": 221092,
+        "retrieval_timestamp": "2026-11-21T13:24:52.228560Z",
+        "source_timestamp": "2026-11-19T00:00:00Z",
+        "stale_after_seconds": 604800,
+        "status": "PASS",
+        "value": 28.44
+      }
+    },
+    "microstructure": {
+      "retrieval_timestamp": "2026-11-21T13:24:53.928180Z",
+      "source": "BINANCE_SPOT_MARKET_DATA_ONLY",
+      "symbols": {
+        "BTCUSDT": {
+          "depth20_quote_notional_imbalance": 0.5920460752775035,
+          "first_trade_time": "2026-11-21T13:24:44.302000Z",
+          "last_trade_time": "2026-11-21T13:24:55.004000Z",
+          "midpoint": 59419.985,
+          "spread_bps": 0.0016829354626665273,
+          "taker_quote_imbalance": -0.32156010191346773,
+          "trade_count": 1000,
+          "vwap": 59461.54161100337
+        },
+        "ETHUSDT": {
+          "depth20_quote_notional_imbalance": 0.4190063307269931,
+          "first_trade_time": "2026-11-21T13:23:56.428000Z",
+          "last_trade_time": "2026-11-21T13:24:55.922000Z",
+          "midpoint": 1672.815,
+          "spread_bps": 0.05977947352212232,
+          "taker_quote_imbalance": -0.37054889458970475,
+          "trade_count": 1000,
+          "vwap": 1674.9766867331773
+        }
+      }
+    },
+    "rotation_context": {
+      "blockchaincenter_altcoin_season": {
+        "authority": {
+          "binding": false,
+          "can_create_outcome_rows": false,
+          "canonical_acceptance": false,
+          "portfolio_action": false,
+          "shadow_context_only": true,
+          "shared_row_tournament_eligible": false,
+          "state_change": false
+        },
+        "contract": "BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1",
+        "failure_state": null,
+        "horizons": {
+          "30": {
+            "alt_constituent_count": 49,
+            "benchmark_return_decimal": -0.26107933007099,
+            "median_alt_minus_btc_return_decimal": -0.012841870679,
+            "median_alt_return_decimal": -0.27392120075,
+            "membership_hash": "a4d2a91eeb0a939bed1bfc137a7284cb5cf1ef73bb5e6af3ec809a0dc16918f8",
+            "outperforming_btc_count": 17,
+            "outperforming_btc_share": 0.34693877551,
+            "published_score": 35,
+            "recomputed_score": 35,
+            "score_reconciliation": "PASS_EXACT",
+            "source_state": "BETWEEN_PUBLISHED_THRESHOLDS"
+          },
+          "365": {
+            "alt_constituent_count": 49,
+            "benchmark_return_decimal": -0.26850070277425,
+            "median_alt_minus_btc_return_decimal": -0.059308452993,
+            "median_alt_return_decimal": -0.327809155767,
+            "membership_hash": "7a8a43629931db5cf685a7b427d34e1fe2676823eb88fb763d4f7e7837a0d2ee",
+            "outperforming_btc_count": 22,
+            "outperforming_btc_share": 0.448979591837,
+            "published_score": 45,
+            "recomputed_score": 45,
+            "score_reconciliation": "PASS_EXACT",
+            "source_state": "BETWEEN_PUBLISHED_THRESHOLDS"
+          },
+          "90": {
+            "alt_constituent_count": 49,
+            "benchmark_return_decimal": -0.19545836585219,
+            "median_alt_minus_btc_return_decimal": -0.025949876473,
+            "median_alt_return_decimal": -0.221408242325,
+            "membership_hash": "a4d2a91eeb0a939bed1bfc137a7284cb5cf1ef73bb5e6af3ec809a0dc16918f8",
+            "outperforming_btc_count": 21,
+            "outperforming_btc_share": 0.428571428571,
+            "published_score": 43,
+            "recomputed_score": 43,
+            "score_reconciliation": "PASS_EXACT",
+            "source_state": "BETWEEN_PUBLISHED_THRESHOLDS"
+          }
+        },
+        "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+        "observation_date_utc": "2026-11-21",
+        "retrieved_at_utc": "2026-11-21T13:24:58.439915Z",
+        "source_raw_sha256": "cb8bc14112310f9243a0e034d903d95d21f90c9eb3a76831cc6a918801fece9a",
+        "status": "PASS"
+      },
+      "coinmarketcap_altcoin_season": {
+        "authority": {
+          "binding": false,
+          "can_create_outcome_rows": false,
+          "canonical_acceptance": false,
+          "portfolio_action": false,
+          "shadow_context_only": true,
+          "shared_row_tournament_eligible": false,
+          "state_change": false
+        },
+        "component_reconciliation": "NOT_AVAILABLE_FROM_CAPTURED_PAGE",
+        "contract": "COINMARKETCAP_ALTCOIN_SEASON_SHADOW_CROSSCHECK_v1",
+        "evidence_grade": "PUBLISHED_LABEL_ONLY",
+        "failure_state": null,
+        "horizon_days": 90,
+        "methodology_fingerprint_sha256": "63651be2bc0cbdd65d11d203e646bdd3d9130955a8a7a2559d13cbe1daed4e58",
+        "observation_date_utc": "2026-11-21",
+        "published_score": 48,
+        "retrieved_at_utc": "2026-11-21T13:24:58.439915Z",
+        "source_build_id": "TU-OpjI6YKuZ1w4QzVck4",
+        "source_raw_sha256": "679538129d0dda41fe81434a0b4ff52af2369fbf5a0ba5b231d8c21198370e13",
+        "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+        "status": "PASS"
+      },
+      "method_dispersion": {
+        "authority": "LOWER_GRADE_SHADOW_CONTEXT_ONLY",
+        "measure": "CMC_TOP100_MINUS_BLOCKCHAINCENTER_TOP50_90D_SCORE",
+        "value": 5
+      }
+    },
+    "sentiment": {
+      "cfgi": {
+        "retrieved_at_utc": "2026-11-21T13:25:00Z",
+        "symbols": {
+          "BTC": {
+            "classification": "Greed",
+            "owner_status": "PASS",
+            "price": 59270,
+            "score": 61.5,
+            "stale": false,
+            "timestamp": "2026-11-21T13:23:29Z"
+          },
+          "ETH": {
+            "classification": "Greed",
+            "owner_status": "PASS",
+            "price": 1671.4100341796875,
+            "score": 61,
+            "stale": false,
+            "timestamp": "2026-11-21T13:23:29Z"
+          },
+          "MARKET": {
+            "classification": "Neutral",
+            "owner_status": "PASS",
+            "price": 0,
+            "score": 58.5,
+            "stale": false,
+            "timestamp": "2026-11-21T13:23:29Z"
+          }
+        },
+        "timeframe": "4h"
+      }
+    },
+    "spot_legacy": {}
+  },
+  "owners": [
+    {
+      "collector_exit_code": 0,
+      "file_count": 12,
+      "files": [
+        {
+          "bytes": 2379,
+          "path": "fred-owner-output/artifact_manifest.json",
+          "sha256": "321febe41d5b455678159942d33cc4a3bbd19fe6148aaa31bf9c314bf98eab55",
+          "summary": {
+            "run_id": "DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b"
+          }
+        },
+        {
+          "bytes": 2427855,
+          "path": "fred-owner-output/latest_data_ping_handoff.json",
+          "sha256": "2b83d273f97f2754afe180ce78958a43bbbaa4c1270e14aa4881ef68886337b7"
+        },
+        {
+          "bytes": 3451,
+          "path": "fred-owner-output/latest_terminal_state.json",
+          "sha256": "b961bcfbda1a8e21fbe48a398d8841f96112a51ee95f9dc64d5c31d9e0f3262d",
+          "summary": {
+            "run_id": "DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b",
+            "status": "SHADOW_CANDIDATE_ONLY"
+          }
+        },
+        {
+          "bytes": 477256,
+          "path": "fred-owner-output/raw/DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b__fred.csv",
+          "sha256": "d2e54f7ea59b1861d9db638f84da6437fe5d40e296ae075003c30ae9ff3cc52d"
+        },
+        {
+          "bytes": 269471,
+          "path": "fred-owner-output/raw/source_payloads/DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b__DGS10.csv",
+          "sha256": "078cf9534a352af6007ae9e93cd7beb94b2616d57bc469e8e895ba19a322ccce"
+        },
+        {
+          "bytes": 209644,
+          "path": "fred-owner-output/raw/source_payloads/DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b__DGS2.csv",
+          "sha256": "a9ca99df4f60e4d129396323f9c84e7a356478dcb3dc9568e0789cfaf6ba0819"
+        },
+        {
+          "bytes": 105121,
+          "path": "fred-owner-output/raw/source_payloads/DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b__DTWEXBGS.csv",
+          "sha256": "542aab261636608b3fb59fc913b8ad9d9767f15c551637b76ee16391d522f5d3"
+        },
+        {
+          "bytes": 162037,
+          "path": "fred-owner-output/raw/source_payloads/DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b__VIXCLS.csv",
+          "sha256": "5fdb14015c8fee857f1aae7ea54d799fe8e2eebc1b4dcab047cc7ac70e3a78a0"
+        },
+        {
+          "bytes": 2424996,
+          "path": "fred-owner-output/receipts/DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b__receipt.json",
+          "sha256": "156605d875257ccaae25b1731a0bbe4171c997ef46f7230ae3a0f206688b54e7",
+          "summary": {
+            "retrieval_timestamp": "2026-11-21T13:24:52.228560Z",
+            "run_id": "DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b",
+            "status": "PASS"
+          }
+        },
+        {
+          "bytes": 2430219,
+          "path": "fred-owner-output/snapshots/DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b__snapshot.json",
+          "sha256": "94fd390cb31a0921cfbba7f08cf5ba64990a33afae6203bb6f4d728f1af139e0",
+          "summary": {
+            "run_id": "DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b",
+            "snapshot_id": "DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b_SNAPSHOT",
+            "status": "PASS"
+          }
+        },
+        {
+          "bytes": 3083,
+          "path": "fred-owner-output/source_health.json",
+          "sha256": "957b606d7ee09ae434a52c75f33889c256672bead354aacc896d67e2b7431df1",
+          "summary": {
+            "run_id": "DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b",
+            "status": "PASS"
+          }
+        },
+        {
+          "bytes": 1387,
+          "path": "fred-owner-output/source_payload_lineage.json",
+          "sha256": "5cbe636c9a3f8b7a986be621ef2c140ae27c154ae8e2688fad697457c7fa8729",
+          "summary": {
+            "run_id": "DT_FRED_MULTI_20261121T132452Z_d2e54f7ea59b"
+          }
+        }
+      ],
+      "owner_class": "DAILY_CONTEXT",
+      "owner_id": "fred_macro",
+      "status": "PASS",
+      "total_bytes": 8516899
+    },
+    {
+      "collector_exit_code": 78,
+      "file_count": 0,
+      "files": [],
+      "owner_class": "SEQUENCE_OWNED",
+      "owner_id": "binance_spot",
+      "status": "DISABLED",
+      "total_bytes": 0
+    },
+    {
+      "collector_exit_code": 0,
+      "file_count": 7,
+      "files": [
+        {
+          "bytes": 1232,
+          "path": "binance-spot-microstructure-output/artifact_manifest.json",
+          "sha256": "80f8a12a29c90bc483bf474de2742abbe6c3178cd3f0810b1292df73c8c598d8",
+          "summary": {
+            "run_id": "T4_MICRO_20261121T132453_5ce73fee87ad"
+          }
+        },
+        {
+          "bytes": 4160,
+          "path": "binance-spot-microstructure-output/owner_snapshot.json",
+          "sha256": "915e74b17179538420ab8e352313318e485e2ba87bf64668716ab12a65f4e9c4",
+          "summary": {
+            "retrieval_timestamp": "2026-11-21T13:24:53.928180Z",
+            "run_id": "T4_MICRO_20261121T132453_5ce73fee87ad",
+            "source": "BINANCE_SPOT_MARKET_DATA_ONLY",
+            "symbols": [
+              "BTCUSDT",
+              "ETHUSDT"
+            ]
+          }
+        },
+        {
+          "bytes": 121337,
+          "path": "binance-spot-microstructure-output/raw/BTCUSDT_aggTrades.json",
+          "sha256": "6234797797b8acad56e9c8d3c0da0865d0e57c44b5457ab41aa600a968a518f3"
+        },
+        {
+          "bytes": 6447,
+          "path": "binance-spot-microstructure-output/raw/BTCUSDT_depth.json",
+          "sha256": "138d82bf8d1c75c739b6e3b81243aa67baa388734b4b59668fa516c4bdfd2d16"
+        },
+        {
+          "bytes": 120347,
+          "path": "binance-spot-microstructure-output/raw/ETHUSDT_aggTrades.json",
+          "sha256": "4d94ea352e2cc0ce50fbffd1263250da52a636b197acb6d94786e4bc844921c7"
+        },
+        {
+          "bytes": 6311,
+          "path": "binance-spot-microstructure-output/raw/ETHUSDT_depth.json",
+          "sha256": "9195083f8a550051b36c863f84d357ee3b9770508839b14937c5abc9f417a856"
+        },
+        {
+          "bytes": 1590,
+          "path": "binance-spot-microstructure-output/receipt.json",
+          "sha256": "a10f7073815a30126612c70e80e254ce71acff4d99a4d5423503b4162d053b71",
+          "summary": {
+            "run_id": "T4_MICRO_20261121T132453_5ce73fee87ad",
+            "status": "PASS"
+          }
+        }
+      ],
+      "owner_class": "ANCHOR_CORE",
+      "owner_id": "binance_microstructure",
+      "status": "PASS",
+      "total_bytes": 261424
+    },
+    {
+      "collector_exit_code": 0,
+      "file_count": 9,
+      "files": [
+        {
+          "bytes": 1424,
+          "path": "okx-swap-owner-output/artifact_manifest.json",
+          "sha256": "2299a2fcc2b5717f39f5174cd4bfb690dd3285058284d5d049a9a3b3f41154aa",
+          "summary": {
+            "run_id": "DT_OKX_SWAP_20261121T132457_9c2642122c20"
+          }
+        },
+        {
+          "bytes": 1686,
+          "path": "okx-swap-owner-output/owner_snapshot.json",
+          "sha256": "53c65836a0a65b5c4dc8715656e413e0745f726e32282c8ef252d6ccecfe7d96",
+          "summary": {
+            "retrieval_timestamp": "2026-11-21T13:24:57.157775Z",
+            "rows": [
+              {
+                "funding_rate": -2.14325684103e-05,
+                "funding_time": 1795276800000,
+                "instrument": "BTC-USDT-SWAP",
+                "metric": "funding",
+                "next_funding_rate": -2.14325684103e-05,
+                "venue": "OKX"
+              },
+              {
+                "instrument": "BTC-USDT-SWAP",
+                "metric": "open_interest",
+                "open_interest_ccy": 33483.92100000016,
+                "open_interest_contracts": 3348392.1000000164,
+                "timestamp": 1795267497542,
+                "venue": "OKX"
+              },
+              {
+                "instrument": "BTC-USDT-SWAP",
+                "mark_price": 59397.2,
+                "metric": "mark_price",
+                "timestamp": 1795267497725,
+                "venue": "OKX"
+              },
+              {
+                "funding_rate": 1.9232211146e-05,
+                "funding_time": 1795276800000,
+                "instrument": "ETH-USDT-SWAP",
+                "metric": "funding",
+                "next_funding_rate": 1.9232211146e-05,
+                "venue": "OKX"
+              },
+              {
+                "instrument": "ETH-USDT-SWAP",
+                "metric": "open_interest",
+                "open_interest_ccy": 658979.1220000013,
+                "open_interest_contracts": 6589791.220000013,
+                "timestamp": 1795267498084,
+                "venue": "OKX"
+              },
+              {
+                "instrument": "ETH-USDT-SWAP",
+                "mark_price": 1671.88,
+                "metric": "mark_price",
+                "timestamp": 1795267498262,
+                "venue": "OKX"
+              }
+            ],
+            "run_id": "DT_OKX_SWAP_20261121T132457_9c2642122c20",
+            "venue": "OKX"
+          }
+        },
+        {
+          "bytes": 526,
+          "path": "okx-swap-owner-output/raw/BTC-USDT-SWAP_funding.json",
+          "sha256": "17b96d1d1a5e1799de755c05f8c9e43cc9a01ac0eae7e8d3662f39c8a11d0a9b"
+        },
+        {
+          "bytes": 115,
+          "path": "okx-swap-owner-output/raw/BTC-USDT-SWAP_mark_price.json",
+          "sha256": "8aadd472d50ff0a5ec65107cbca996e628705286ab8436e8c51f6e95e06b4de5"
+        },
+        {
+          "bytes": 188,
+          "path": "okx-swap-owner-output/raw/BTC-USDT-SWAP_open_interest.json",
+          "sha256": "6e15a2b6f3bd9fdb5a18d9bb2770e7f9406bb92aa372276fa472540e00b3c047"
+        },
+        {
+          "bytes": 523,
+          "path": "okx-swap-owner-output/raw/ETH-USDT-SWAP_funding.json",
+          "sha256": "f61f095b053bcb06c1d98eeae2a048b4de952670cd3e2cbd225f404ae727e9a6"
+        },
+        {
+          "bytes": 115,
+          "path": "okx-swap-owner-output/raw/ETH-USDT-SWAP_mark_price.json",
+          "sha256": "22c3f15ab57051767961ecf0550e6667452861de1acdea264e2808fb22bd2b1c"
+        },
+        {
+          "bytes": 186,
+          "path": "okx-swap-owner-output/raw/ETH-USDT-SWAP_open_interest.json",
+          "sha256": "9841af5920d7baf65ebc3d227acab0f62a0417bf44b63e95abab8e015d511061"
+        },
+        {
+          "bytes": 1686,
+          "path": "okx-swap-owner-output/receipt.json",
+          "sha256": "9669a8aff83fef0286a9c11dfbc4c57ba049b0a3d8fb4c80aa540310964a32a0",
+          "summary": {
+            "run_id": "DT_OKX_SWAP_20261121T132457_9c2642122c20",
+            "status": "PASS"
+          }
+        }
+      ],
+      "owner_class": "ANCHOR_CORE",
+      "owner_id": "okx_swap",
+      "status": "PASS",
+      "total_bytes": 6449
+    },
+    {
+      "collector_exit_code": 0,
+      "file_count": 8,
+      "files": [
+        {
+          "bytes": 1276,
+          "path": "top100-breadth-owner-output/artifact_manifest.json",
+          "sha256": "e0d11b123fd5492a6284ff8953365565455961fa22f4c4b607d7af777dea126b",
+          "summary": {
+            "run_id": "DT_TOP100_20261121T132458_9344ff0a37a5"
+          }
+        },
+        {
+          "bytes": 72603,
+          "path": "top100-breadth-owner-output/owner_snapshot.json",
+          "sha256": "9a1f89c792c7c5ce91b9097956e73a3c8118af93ca2580aa3c509b5a15385a20",
+          "summary": {
+            "retrieval_timestamp": "2026-11-21T13:24:58.439915Z",
+            "run_id": "DT_TOP100_20261121T132458_9344ff0a37a5",
+            "source": "COINGECKO_MARKET_CAP"
+          }
+        },
+        {
+          "bytes": 30589,
+          "path": "top100-breadth-owner-output/raw_blockchaincenter_altcoin_season.html.gz",
+          "sha256": "e50e2e853562e3aca6f1a1880326088d85c999d3911dc39fd682584666842d0c"
+        },
+        {
+          "bytes": 79590,
+          "path": "top100-breadth-owner-output/raw_coinmarketcap_altcoin_season.html.gz",
+          "sha256": "1363c22372eb2498a84668a4f9d5c3e7797e8cdf2d217819ef28bcf3b1020192"
+        },
+        {
+          "bytes": 150274,
+          "path": "top100-breadth-owner-output/raw_source_payload.json",
+          "sha256": "411f0e3e303e949cf2db28f7cc20fca9a346c2829c47594043db4cb79903c304"
+        },
+        {
+          "bytes": 2171,
+          "path": "top100-breadth-owner-output/receipt.json",
+          "sha256": "18573929d45083c5971a55918bf196ac0fab3075ad12a071b4e80b3b846a66e5",
+          "summary": {
+            "constituent_count": 100,
+            "membership_hash": "9344ff0a37a5c5dfc50aede855db80778b3122c22b1469c85ab97d4599f7dafb",
+            "run_id": "DT_TOP100_20261121T132458_9344ff0a37a5",
+            "status": "PASS"
+          }
+        },
+        {
+          "bytes": 22341,
+          "path": "top100-breadth-owner-output/rotation_context_snapshot.json",
+          "sha256": "a2cad48cad40e9d6aad8e552f38e57999e44eead949f2e8a75f5073b720f07d6",
+          "summary": {
+            "retrieved_at_utc": "2026-11-21T13:24:58.439915Z",
+            "source": {
+              "parser_contract": "NEXTJS_FLIGHT_ALTCOIN_DENSE_SERIES_v2",
+              "provider": "BlockchainCenter",
+              "raw_bytes": 114827,
+              "raw_sha256": "cb8bc14112310f9243a0e034d903d95d21f90c9eb3a76831cc6a918801fece9a",
+              "transport": "PUBLIC_HTML_NEXTJS_FLIGHT_PAYLOAD",
+              "url": "https://www.blockchaincenter.net/altcoin-season-index/"
+            },
+            "status": "PASS"
+          }
+        },
+        {
+          "bytes": 1967,
+          "path": "top100-breadth-owner-output/rotation_method_crosscheck_snapshot.json",
+          "sha256": "0b3a9f074cd209626db96007e2fe2a0585840f127c385baa37c44f0aa3ac9ae6",
+          "summary": {
+            "retrieved_at_utc": "2026-11-21T13:24:58.439915Z",
+            "source": {
+              "parser_contract": "NEXT_DATA_CMC_ALTCOIN_INDEX_v1",
+              "provider": "CoinMarketCap",
+              "raw_bytes": 360442,
+              "raw_sha256": "679538129d0dda41fe81434a0b4ff52af2369fbf5a0ba5b231d8c21198370e13",
+              "source_build_id": "TU-OpjI6YKuZ1w4QzVck4",
+              "transport": "PUBLIC_HTML_NEXT_DATA_PAYLOAD",
+              "url": "https://coinmarketcap.com/charts/altcoin-season-index/"
+            },
+            "status": "PASS"
+          }
+        }
+      ],
+      "owner_class": "ANCHOR_CORE",
+      "owner_id": "top100_breadth",
+      "status": "PASS",
+      "total_bytes": 360811
+    },
+    {
+      "collector_exit_code": 0,
+      "file_count": 2,
+      "files": [
+        {
+          "bytes": 1889,
+          "path": "cfgi-owner-output/owner_snapshot.json",
+          "sha256": "2839f2707fd55fc7baebb95c367f9e0663725fadf42e56377f62050410de254d",
+          "summary": {
+            "fields": [
+              "score",
+              "volatility",
+              "volume",
+              "impulse",
+              "technical",
+              "social",
+              "dominance",
+              "trends",
+              "whales",
+              "orders"
+            ],
+            "retrieved_at_utc": "2026-11-21T13:25:00Z",
+            "rows": [
+              {
+                "age_seconds": 91,
+                "asset_class": "index",
+                "classification": "Neutral",
+                "components": {
+                  "dominance": 63,
+                  "impulse": 86,
+                  "orders": 73.5,
+                  "social": 18,
+                  "technical": 29.5,
+                  "trends": 69.5,
+                  "volatility": 81.5,
+                  "volume": 96,
+                  "whales": 50
+                },
+                "image": null,
+                "latest": true,
+                "market_cap": 2055862722222,
+                "name": "Crypto Market Index",
+                "owner_status": "PASS",
+                "price": 0,
+                "score": 58.5,
+                "stale": false,
+                "symbol": "MARKET",
+                "timestamp": "2026-11-21T13:23:29Z"
+              },
+              {
+                "age_seconds": 91,
+                "asset_class": "crypto",
+                "classification": "Greed",
+                "components": {
+                  "dominance": 72,
+                  "impulse": 89,
+                  "orders": 83,
+                  "social": 14.5,
+                  "technical": 27.5,
+                  "trends": 73,
+                  "volatility": 84,
+                  "volume": 99,
+                  "whales": 54
+                },
+                "image": "https://cfgi.io/iconos/BTC.png",
+                "latest": true,
+                "market_cap": 1182825122457,
+                "name": "Bitcoin",
+                "owner_status": "PASS",
+                "price": 59270,
+                "score": 61.5,
+                "stale": false,
+                "symbol": "BTC",
+                "timestamp": "2026-11-21T13:23:29Z"
+              },
+              {
+                "age_seconds": 91,
+                "asset_class": "crypto",
+                "classification": "Greed",
+                "components": {
+                  "dominance": 45.5,
+                  "impulse": 93,
+                  "orders": 58,
+                  "social": 2,
+                  "technical": 40,
+                  "trends": 65,
+                  "volatility": 80.5,
+                  "volume": 99,
+                  "whales": 52
+                },
+                "image": "https://cfgi.io/iconos/ETH.png",
+                "latest": true,
+                "market_cap": 203085319979,
+                "name": "Ethereum",
+                "owner_status": "PASS",
+                "price": 1671.4100341796875,
+                "score": 61,
+                "stale": false,
+                "symbol": "ETH",
+                "timestamp": "2026-11-21T13:23:29Z"
+              }
+            ],
+            "source": "CFGI_V3",
+            "symbols": [
+              "MARKET",
+              "BTC",
+              "ETH"
+            ],
+            "timeframe": "4h"
+          }
+        },
+        {
+          "bytes": 552,
+          "path": "cfgi-owner-output/receipt.json",
+          "sha256": "116df6d08d0eb5a199b23551b2db544c865655ac1969a1fb5bc9bc7e9be44dc6",
+          "summary": {
+            "fields": [
+              "score",
+              "volatility",
+              "volume",
+              "impulse",
+              "technical",
+              "social",
+              "dominance",
+              "trends",
+              "whales",
+              "orders"
+            ],
+            "retrieved_at_utc": "2026-11-21T13:25:00Z",
+            "row_count": 3,
+            "status": "PASS",
+            "timeframe": "4h"
+          }
+        }
+      ],
+      "owner_class": "DAILY_CONTEXT",
+      "owner_id": "cfgi_sentiment",
+      "status": "PASS",
+      "total_bytes": 2441
+    }
+  ],
+  "owners_active_planned": 5,
+  "owners_disabled": 1,
+  "owners_passed": 5,
+  "owners_planned": 6,
+  "portfolio_action": false,
+  "run_id": "gh-44908672296-1",
+  "status": "COMPLETE",
+  "trigger": "schedule",
+  "weekly_calibration_eligible": true
+}

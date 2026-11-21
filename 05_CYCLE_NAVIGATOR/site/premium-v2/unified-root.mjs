@@ -253,6 +253,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
       '<div class="cn-risk-quick-head"><div><small id="cn-risk-quick-label">RISIKO FOR YDERLIGERE FALD</small>'+
       '<strong id="cn-risk-quick-state">— / 5 · afventer nye data</strong></div>'+
       '<span id="cn-risk-quick-note">Forskning · ikke bevist edge</span></div>'+
+      '<p id="cn-risk-truth-banner" class="cn-risk-truth-banner" role="status">Kildestatus afventer data.</p>'+
       '<details class="cn-risk-more"><summary id="cn-risk-more-title">Læs risikovurderingen</summary>'+
       '<div id="cn-risk-quick-steps" class="risk-class-rail" aria-hidden="true"></div>'+
       '<p id="cn-risk-quick-brief" class="cn-risk-quick-brief">Afventer risikovurdering.</p>'+
