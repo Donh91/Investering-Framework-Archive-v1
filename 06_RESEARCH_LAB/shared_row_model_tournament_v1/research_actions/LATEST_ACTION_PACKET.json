@@ -6,103 +6,103 @@
   "evidence_summary": {
     "candidate_divergence_stats_7d": {
       "C01_ETHBTC": {
-        "correct": 10,
+        "correct": 11,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
         "errors": 29,
         "false_positive_adverse_mae_mean": 8.279386599999999,
         "false_positive_adverse_mae_n": 8,
-        "resolved_divergences": 39,
+        "resolved_divergences": 40,
         "unique_failures": 29,
-        "unique_wins": 10
+        "unique_wins": 11
       },
       "C02_BREADTH": {
         "correct": 72,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
-        "errors": 28,
-        "false_positive_adverse_mae_mean": 4.1231266078571425,
-        "false_positive_adverse_mae_n": 28,
-        "resolved_divergences": 100,
-        "unique_failures": 28,
+        "errors": 34,
+        "false_positive_adverse_mae_mean": 3.9264894817647056,
+        "false_positive_adverse_mae_n": 34,
+        "resolved_divergences": 106,
+        "unique_failures": 34,
         "unique_wins": 72
       },
       "C03_BTCD": {
-        "correct": 24,
+        "correct": 25,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
         "errors": 29,
         "false_positive_adverse_mae_mean": 3.9057084570000002,
         "false_positive_adverse_mae_n": 20,
-        "resolved_divergences": 53,
+        "resolved_divergences": 54,
         "unique_failures": 29,
-        "unique_wins": 24
+        "unique_wins": 25
       },
       "C04_ETHBTC_BREADTH": {
-        "correct": 10,
+        "correct": 11,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
         "errors": 29,
         "false_positive_adverse_mae_mean": 8.279386599999999,
         "false_positive_adverse_mae_n": 8,
-        "resolved_divergences": 39,
+        "resolved_divergences": 40,
         "unique_failures": 29,
-        "unique_wins": 10
+        "unique_wins": 11
       },
       "C05_ETHBTC_BTCD": {
-        "correct": 16,
+        "correct": 17,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
         "errors": 21,
         "false_positive_adverse_mae_mean": null,
         "false_positive_adverse_mae_n": 0,
-        "resolved_divergences": 37,
+        "resolved_divergences": 38,
         "unique_failures": 21,
-        "unique_wins": 16
+        "unique_wins": 17
       },
       "C06_BREADTH_BTCD": {
-        "correct": 26,
+        "correct": 27,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
         "errors": 17,
         "false_positive_adverse_mae_mean": 1.97747598,
         "false_positive_adverse_mae_n": 8,
-        "resolved_divergences": 43,
+        "resolved_divergences": 44,
         "unique_failures": 17,
-        "unique_wins": 26
+        "unique_wins": 27
       },
       "C07_SIMPLE_3": {
-        "correct": 16,
+        "correct": 17,
         "distinct_error_contexts": 1,
         "distinct_error_prospective_blocks": 1,
         "distinct_error_regimes": 1,
         "errors": 21,
         "false_positive_adverse_mae_mean": null,
         "false_positive_adverse_mae_n": 0,
-        "resolved_divergences": 37,
+        "resolved_divergences": 38,
         "unique_failures": 21,
-        "unique_wins": 16
+        "unique_wins": 17
       }
     },
-    "divergences_total": 252,
-    "eligible_rows_total": 71,
+    "divergences_total": 258,
+    "eligible_rows_total": 72,
     "excluded_pre_repair_rows": 0,
     "excluded_unbound_divergences": 0,
     "matured_divergences": {
       "24h": 240,
       "72h": 228,
-      "7d": 174
+      "7d": 180
     },
     "matured_rows": {
       "24h": 68,
       "72h": 63,
-      "7d": 52
+      "7d": 53
     },
     "pairwise_vs_baseline_7d": {
       "C01_ETHBTC": {
@@ -125,19 +125,19 @@
       "C02_BREADTH": {
         "baseline_false_positive_mae_mean": null,
         "baseline_false_positive_mae_n": 0,
-        "baseline_unique_wins": 6,
+        "baseline_unique_wins": 7,
         "distinct_prospective_blocks": 1,
         "distinct_regimes": 1,
-        "net_unique_wins": 7,
-        "resolved": 19,
+        "net_unique_wins": 6,
+        "resolved": 20,
         "tail_non_deterioration": false,
-        "target_false_positive_mae_mean": 4.346527648333333,
-        "target_false_positive_mae_n": 6,
+        "target_false_positive_mae_mean": 4.155430778571429,
+        "target_false_positive_mae_n": 7,
         "target_unique_wins": 13,
-        "unique_resolution_n": 19,
-        "unique_win_share": 0.6842105263157895,
-        "wilson_lower": 0.4601001017506463,
-        "wilson_upper": 0.846358289955714
+        "unique_resolution_n": 20,
+        "unique_win_share": 0.65,
+        "wilson_lower": 0.43285051021946463,
+        "wilson_upper": 0.8188104521320554
       },
       "C03_BTCD": {
         "baseline_false_positive_mae_mean": null,
@@ -192,7 +192,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-11-21T04:19:24Z",
+  "generated_at_utc": "2026-11-21T13:44:24Z",
   "paid_data_authorized": false,
   "primary_action": "INVESTIGATE_DIVERGENCE",
   "reason": "The first information-review floor is met; inspect matured disagreements before changing research scope.",
