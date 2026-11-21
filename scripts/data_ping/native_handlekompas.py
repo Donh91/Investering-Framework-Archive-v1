@@ -1625,7 +1625,7 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         "bull_bear_scale": compass.get("bull_bear_scale"),
         "capitalization_ladder": public_ladder,
         "protection_tracker": compass.get("protection_tracker"),
-        "cn_band_status": compass.get("cn_band_status"),
+        **({"cn_band_status": compass["cn_band_status"]} if "cn_band_status" in compass else {}),
         "sell_assessment": compass.get("sell_assessment"),
         "action_now": compass.get("action_now"),
         "next_meaningful_change_eta": None,
@@ -1676,10 +1676,21 @@ def cn_band_status(
         return unavailable("SOURCE_UNAVAILABLE")
     bar = _parse_utc(live.get("observation_open_utc"))
     available = _parse_utc(auto_state.get("packet_generated_at_utc"))
+    # A completed Sunday 23:00-24:00 UTC bar becomes available in Monday's
+    # first hour. Compare it against its ORIGINAL frozen week; never admit a
+    # Monday candle against the prior week's forecast.
+    current_week = tuple(as_of.isocalendar()[:2]) == (iso_year, iso_week)
+    sunday_rollover = (
+        bar is not None
+        and as_of.weekday() == 0 and as_of.hour == 0
+        and bar.weekday() == 6 and bar.hour == 23
+        and bar + timedelta(hours=1) <= as_of
+        and (bar + timedelta(days=1)).date() == as_of.date()
+    )
     if (bar is None or available is None or bar + timedelta(hours=1) > available
             or available > as_of or bar.minute or bar.second or bar.microsecond
             or tuple(bar.isocalendar()[:2]) != (iso_year, iso_week)
-            or tuple(as_of.isocalendar()[:2]) != (iso_year, iso_week)
+            or not (current_week or sunday_rollover)
             or live.get("observation_semantics") != "COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL"):
         return unavailable("BAR_OR_AVAILABILITY_CLOCK_UNAVAILABLE")
     generated = finite(cn_package.get("generated_unix"))
@@ -1764,7 +1775,12 @@ def cn_band_status(
         # D1 (owner decision 2026-11-21): status uses COMPLETED UTC DAILY closes only. The close of the
         # 23:00-24:00 hourly candle is the UTC daily close; a day without that candle in the window is pending.
         completed = [r for r in rows if r[0].hour == 23]
-        last_day = completed[-1] if completed else None
+        # Daily status is for the MOST RECENT expected completed UTC day, not
+        # any older completed day found in a truncated source window.
+        # Historical first-breach metadata remains a distinct captured-window fact.
+        expected_completed_day = (as_of - timedelta(days=1)).date()
+        last_day = next((r for r in reversed(completed)
+                         if r[0].date() == expected_completed_day), None)
         first_day = next((r for r in completed if r[i] < floors[r[0].isoweekday()]), None)
         first_week = next((r for r in completed if r[i] < floor), None)
         first_hour_week = next((r for r in rows if r[i] < floor), None)
