@@ -1341,6 +1341,107 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertNotEqual(bad, blob)
 
 
+    def test_cn_band_status_stale_current_d1_and_sunday_rollover(self):
+        """Historical closes stay historical; Sunday final-hour close survives Monday 00:xx UTC."""
+        def scenario(as_of, bar, observations):
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                latest = observations[-1]
+                auto = self.auto(btc=latest["btc_close"], eth=latest["eth_close"])
+                ready = bar + timedelta(hours=1, minutes=5)
+                close = bar + timedelta(hours=1)
+                stamp = lambda t: t.strftime("%Y-%m-%dT%H:%M:%SZ")
+                auto["packet_generated_at_utc"] = stamp(ready)
+                auto["source_snapshot"]["exact_commit_sha"] = "c" * 40
+                auto["normalized_state"]["live_market"]["observation_open_utc"] = stamp(bar)
+                auto["normalized_state"]["live_market"]["observation_semantics"] = "COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL"
+                lane = auto["source_health"]["hourly_market"]
+                for key in ("pointer_freshness", "retrieval_freshness", "session_coverage_freshness", "source_observation_freshness"):
+                    lane["freshness"][key]["timestamp"] = stamp(ready if key in ("pointer_freshness", "retrieval_freshness") else close)
+                rel = "03_DAILY_CAPTURE_LOGS/hourly/runs/rollover.json"
+                capture = {"contract": "HOURLY_SEQUENCE_CAPTURE_v2_2",
+                           "spot_venue": "BINANCE", "spot_status": "PASS",
+                           "forward_fill": False, "interpolation": False,
+                           "retrieved_at_utc": stamp(ready), "window_end_utc": stamp(close),
+                           "directional_summary": {"latest_observations": observations}}
+                raw = nh.canon(capture)
+                target = root / rel
+                target.parent.mkdir(parents=True)
+                target.write_bytes(raw)
+                blob = subprocess.run(["git", "hash-object", "--stdin"], input=raw,
+                                      capture_output=True, check=True).stdout.decode().strip()
+                lane.update({"classification": "GITHUB_POINTER_TARGET_CHAIN_VALID",
+                             "provenance": {"target": {"exact_path": rel, "git_blob_sha": blob,
+                                                        "exact_commit_sha": "c" * 40}},
+                             "row": {"status": "PASS", "classification": "HOURLY_EXACT_ROW_BOUND",
+                                     "timestamp_utc": stamp(bar),
+                                     "provenance": {"exact_commit_sha": "c" * 40}}})
+                cn = self.cn()
+                cn["generated_unix"] = datetime(2026, 9, 14, 9, tzinfo=timezone.utc).timestamp()
+                cn["forecast_freeze"] = {
+                    "price_quote": {"BTC": "USDT", "ETH": "USDT"},
+                    "btc_range_low": 74500, "eth_range_low": 2450,
+                    "daily_price_path": {
+                        "contract": "CN_FROZEN_DAILY_PRICE_PATH_v1",
+                        "forecast_week": "2026-W38",
+                        **{name: {"points": [{"day": day, "low": low} for day in range(1, 8)]}
+                           for name, low in (("BTC", 75000), ("ETH", 2450))}
+                    }
+                }
+                binding = {"status": "PASS", "issue_number": cn["issue_number"],
+                           "iso_year": 2026, "iso_week": 38}
+                return nh.cn_band_status(auto, cn, binding, root, as_of)
+
+        old_monday = {"timestamp_utc": "2026-09-14T23:00:00Z",
+                      "btc_close": 74000, "eth_close": 2400}
+        wednesday = {"timestamp_utc": "2026-09-16T18:00:00Z",
+                     "btc_close": 75500, "eth_close": 2500}
+        stale = scenario(datetime(2026, 9, 16, 19, 20, tzinfo=timezone.utc),
+                         datetime(2026, 9, 16, 18, tzinfo=timezone.utc),
+                         [old_monday, wednesday])
+        self.assertEqual(stale["status"], "OBSERVED")
+        self.assertIsNone(stale["assets"]["BTC"]["daily_close_below_floor"])
+        self.assertIsNone(stale["assets"]["BTC"]["weekly_close_below_floor"])
+        self.assertIsNone(stale["assets"]["BTC"]["completed_day_utc"])
+        self.assertEqual(stale["assets"]["BTC"]["first_daily_breach_in_captured_window_utc"],
+                         "2026-09-15T00:00:00Z")  # historical, never silently current
+
+        sunday = {"timestamp_utc": "2026-09-20T23:00:00Z",
+                  "btc_close": 74000, "eth_close": 2400}
+        rollover = scenario(datetime(2026, 9, 21, 0, 20, tzinfo=timezone.utc),
+                            datetime(2026, 9, 20, 23, tzinfo=timezone.utc),
+                            [sunday])
+        self.assertEqual(rollover["status"], "OBSERVED")
+        self.assertEqual(rollover["forecast_week"], "2026-W38")
+        self.assertEqual(rollover["assets"]["BTC"]["completed_day_utc"], "2026-09-20")
+        self.assertTrue(rollover["assets"]["BTC"]["daily_close_below_floor"])
+        self.assertTrue(rollover["assets"]["BTC"]["weekly_close_below_floor"])
+        self.assertEqual(rollover["assets"]["BTC"]["first_weekly_breach_in_captured_window_utc"],
+                         "2026-09-21T00:00:00Z")
+        monday = {"timestamp_utc": "2026-09-21T00:00:00Z",
+                  "btc_close": 74000, "eth_close": 2400}
+        wrong_week = scenario(datetime(2026, 9, 21, 1, 20, tzinfo=timezone.utc),
+                              datetime(2026, 9, 21, 0, tzinfo=timezone.utc),
+                              [sunday, monday])
+        self.assertEqual(wrong_week["status"], "UNAVAILABLE")
+        self.assertEqual(wrong_week["reason"], "BAR_OR_AVAILABILITY_CLOCK_UNAVAILABLE")
+
+    def test_old_frozen_compass_projection_does_not_gain_cn_band_null(self):
+        """An old issued freeze must replay to identical public-projection bytes."""
+        old = {"contract": nh.OFFICIAL_COMPASS_CONTRACT,
+               "compass_id": "CMP-20261118-abcdef012345",
+               "issued_at_utc": "2026-11-18T08:00:00Z"}
+        legacy = nh.build_public_projection(old)
+        self.assertNotIn("cn_band_status", legacy)
+        with_field = dict(old, cn_band_status={"contract": "CN_BAND_STATUS_v1",
+                                               "status": "UNAVAILABLE",
+                                               "authority": "DESCRIPTIVE_ONLY"})
+        newer = nh.build_public_projection(with_field)
+        self.assertEqual(newer["cn_band_status"], with_field["cn_band_status"])
+        self.assertEqual({k: v for k, v in newer.items() if k != "cn_band_status"}, legacy)
+
+
+
 class PriorCompassBindingTest(unittest.TestCase):
     """Synthetic source integrity, never investment performance or delivery proof."""
 
