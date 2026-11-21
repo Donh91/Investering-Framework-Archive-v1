@@ -17,6 +17,7 @@ import uuid
 from pathlib import Path
 
 from scripts.research import astra_worklike_pilot_v1 as gate
+from scripts.research import owner_astra_mission_v1 as owner
 
 IMAGE = re.compile(r"python@sha256:[0-9a-f]{64}\Z")
 PINNED_IMAGE = "python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b"
@@ -257,7 +258,6 @@ def admit_collected(root):
     Must be called only on a same-workflow artifact in the isolated job.
     Does not execute or write any model code.
     """
-    from scripts.research import owner_astra_mission_v1 as owner
     root = Path(root)
     mid = owner.WORKLIKE_STAGE1
     _, _, expected = owner.build_request(mid)
