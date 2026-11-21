@@ -15,6 +15,18 @@ on:
       - '.github/workflows/owner-astra-mission.yml'
       - 'scripts/research/owner_astra_mission_v1.py'
       - 'tests/research/test_owner_astra_mission_v1.py'
+      - 'scripts/research/astra_worklike_pilot_v1.py'
+      - 'scripts/research/astra_worklike_oracle_v1.py'
+      - 'tests/research/test_astra_worklike_pilot_v1.py'
+      - 'tests/research/test_astra_worklike_oracle_v1.py'
+      - 'scripts/api_agent/astra_build_admit_v1.py'
+      - 'scripts/api_agent/astra_build_sandbox_v1.py'
+      - 'scripts/api_agent/astra_build_cost_v1.py'
+      - 'scripts/api_agent/astra_build_receipt_v1.py'
+      - 'tests/api_agent/test_astra_build_receipt_v1.py'
+      - 'tests/api_agent/test_astra_build_cost_v1.py'
+      - 'tests/api_agent/test_astra_build_admit_v1.py'
+      - 'tests/api_agent/test_astra_build_sandbox_v1.py'
       - 'scripts/api_agent/astra_mission_reservations_v1.py'
       - 'scripts/api_agent/check_monthly_cost_guard.py'
       - 'scripts/api_agent/api_gateway.py'
@@ -40,9 +52,67 @@ jobs:
       - name: Install offline YAML test dependency
         run: python -m pip install --disable-pip-version-check 'PyYAML>=6,<7'
       - name: No-network trigger, claim, guard and no-retry tests
-        run: python -m unittest tests.research.test_owner_astra_mission_v1 -v
+        run: >-
+          python -m unittest tests.research.test_owner_astra_mission_v1
+          tests.research.test_astra_worklike_pilot_v1
+          tests.research.test_astra_worklike_oracle_v1
+          tests.api_agent.test_astra_build_admit_v1
+          tests.api_agent.test_astra_build_sandbox_v1
+          tests.api_agent.test_astra_build_cost_v1
+          tests.api_agent.test_astra_build_receipt_v1 -v
       - name: Exact request preview of every mission, NO network
         run: python scripts/research/owner_astra_mission_v1.py preview-all --out runtime/astra-mission-preview
+
+  worklike-smoke:
+    # Disposable PR runner, deterministic reference and false-success control only.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Detect Work-like pilot changes
+        id: relevant
+        run: |
+          git diff --name-only HEAD^1 HEAD > "$RUNNER_TEMP/astra-worklike-changed.txt"
+          if grep -Eq '^([.]github/workflows/owner-astra-mission[.]yml$|scripts/research/(owner_astra_mission_v1|astra_worklike_.*)[.]py$|tests/research/test_astra_worklike_.*[.]py$|scripts/api_agent/astra_build_.*[.]py$|tests/api_agent/test_astra_build_.*[.]py$|06_RESEARCH_LAB/astra_missions/ASTRA-KOMPAS-L04-WORKLIKE-PILOT-S1-20261120/)' "$RUNNER_TEMP/astra-worklike-changed.txt"; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.relevant.outputs.run == 'true'
+        with:
+          python-version: '3.12'
+      - name: Pull exact public Python image before sandbox
+        if: steps.relevant.outputs.run == 'true'
+        run: |
+          docker pull --platform linux/amd64 python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b)" = linux/amd64
+      - name: Execute native synthetic sandbox and negative control
+        if: steps.relevant.outputs.run == 'true'
+        run: python -m scripts.research.astra_worklike_oracle_v1 smoke --out runtime/astra-worklike-smoke/receipt.json
+      - name: Execute BUILD_v1 real offline sandbox, network denial and mutant
+        if: steps.relevant.outputs.run == 'true'
+        run: python -m scripts.api_agent.astra_build_sandbox_v1 smoke --out runtime/astra-build-smoke/receipt.json
+      - uses: actions/upload-artifact@v4
+        if: steps.relevant.outputs.run == 'true'
+        with:
+          name: astra-worklike-smoke-${{ github.run_id }}
+          path: runtime/astra-worklike-smoke/receipt.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        if: steps.relevant.outputs.run == 'true'
+        with:
+          name: astra-build-smoke-${{ github.run_id }}
+          path: runtime/astra-build-smoke/receipt.json
+          if-no-files-found: error
+          retention-days: 90
 
   verify:
     if: >-
@@ -210,3 +280,49 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python scripts/research/owner_astra_mission_v1.py report --out runtime/astra-mission
+
+  worklike-sandbox:
+    # Separate ephemeral runner. Only the fixed pilot's successful collected artifact is admitted.
+    # No provider key, write token, repository checkout inside the container, or further paid call.
+    needs: [paid, recover]
+    if: >-
+      always() && github.event_name == 'issue_comment' && github.event.action == 'created' &&
+      github.event.issue.number == 1156 && github.event.issue.pull_request == null &&
+      github.event.comment.user.login == 'Donh91' && github.actor == 'Donh91' &&
+      github.event.comment.author_association == 'OWNER' && github.ref == 'refs/heads/main' &&
+      github.run_attempt == 1 &&
+      ((needs.paid.result == 'success' &&
+      startsWith(github.event.comment.body, 'OWNER_LAUNCH_ASTRA_MISSION ASTRA-KOMPAS-L04-WORKLIKE-PILOT-S1-20261120 ')) ||
+      (needs.recover.result == 'success' &&
+      startsWith(github.event.comment.body, 'OWNER_COLLECT_ASTRA_MISSION ASTRA-KOMPAS-L04-WORKLIKE-PILOT-S1-20261120 ')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: astra-mission-evidence-${{ github.run_id }}
+          path: runtime/astra-worklike-input
+      - name: Pull exact public Python image before sandbox
+        run: |
+          docker pull --platform linux/amd64 python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b)" = linux/amd64
+      - name: Admit native receipt and independently execute candidate in bounded sandbox
+        run: >-
+          python -m scripts.research.astra_worklike_oracle_v1 verify
+          --input runtime/astra-worklike-input --out runtime/astra-worklike-result/receipt.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: astra-worklike-result-${{ github.run_id }}
+          path: runtime/astra-worklike-result/receipt.json
+          if-no-files-found: warn
+          retention-days: 90
