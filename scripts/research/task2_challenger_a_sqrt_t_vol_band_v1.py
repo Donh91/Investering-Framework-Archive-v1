@@ -995,7 +995,8 @@ def publish_mature_score(root: Path) -> dict:
         if not proof["eligible_first_maturity"]:
             raise ValueError("existing first score was not timely; never overwrite")
         return {"status": "CHALLENGER_A_SCORE_ALREADY_ON_MAIN", "week": label,
-                "first_main_commit": proof["first_main_commit"]}
+                "first_main_commit": proof["first_main_commit"],
+                "shadow_confirmatory_readback": confirmatory_decision_from_main(root, label)}
     if _git(root, "-c", "log.follow=false", "-c", "log.diffMerges=first-parent",
             "-c", "diff.renames=false", "log", "--first-parent",
             "--diff-merges=first-parent", "--no-renames", "--root",
@@ -1037,9 +1038,14 @@ def publish_mature_score(root: Path) -> dict:
             or remote_proof["first_main_commit"] != candidate
             or remote_proof["first_main_blob_sha"] != proof["first_main_blob_sha"]):
         raise ValueError("remote first-main score readback failed")
+    # Read-only first-main decision after verified remote publication. It is
+    # never a source of market authority and cannot rewrite the weekly score.
+    # Before eight eligible independent weeks it returns PENDING, not a win.
+    decision = confirmatory_decision_from_main(root, label)
     return {"status": "CHALLENGER_A_FIRST_MATURE_SCORE_READBACK_PASS", "week": label,
             "first_main_commit": candidate, "first_main_blob_sha": proof["first_main_blob_sha"],
-            "remote_main": remote, "authority": "SHADOW_ONLY_NO_PROMOTION"}
+            "remote_main": remote, "authority": "SHADOW_ONLY_NO_PROMOTION",
+            "shadow_confirmatory_readback": decision}
 
 
 def main(argv: Iterable[str] | None = None) -> int:
