@@ -267,7 +267,7 @@ CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
 )
 
 
-def pending_risk(path: Path) -> tuple[float, float, int]:
+def pending_risk(path: Path, *, strict_build: bool = True) -> tuple[float, float, int]:
     """Conservative persistent upper risk, never a provider invoice or retry permit.
 
     Unknown POSTs remain reserved across UTC month rollover until independent
@@ -405,16 +405,19 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     # two separately reviewed stages per mission, USD5 per request and USD30
     # aggregate. No implicit right to use the distinct USD10 contingency.
     # Validate the FULL append-only BUILD history, including settled rows.
-    build_rows = []
-    for row in value.get(astra_missions.KEY, []):
-        if isinstance(row, dict) and str(row.get("work_id", "")).startswith("ASTRA-BUILD-"):
-            build_rows.append({"work_id": row.get("work_id"),
-                               "upper_usd": row.get("upper_usd"),
-                               "status": row.get("status")})
-    try:
-        build_cost.validate_program_reservations(build_rows)
-    except build_cost.BudgetHold as exc:
-        raise ValueError("BUILD_PROGRAM_BUDGET_HOLD:" + str(exc)) from exc
+    # A corrupt BUILD row blocks the BUILD lane, not 30 unrelated existing
+    # paid lanes. Generic liability accounting below STILL includes the row.
+    if strict_build:
+        build_rows = []
+        for row in value.get(astra_missions.KEY, []):
+            if isinstance(row, dict) and str(row.get("work_id", "")).startswith("ASTRA-BUILD-"):
+                build_rows.append({"work_id": row.get("work_id"),
+                                   "upper_usd": row.get("upper_usd"),
+                                   "status": row.get("status")})
+        try:
+            build_cost.validate_program_reservations(build_rows)
+        except build_cost.BudgetHold as exc:
+            raise ValueError("BUILD_PROGRAM_BUDGET_HOLD:" + str(exc)) from exc
     # Generic owner Astra missions (#1156): a separate append-only ledger key, each row bound to a reviewed mission.
     mission_high, mission_count, _ = astra_missions.mission_reservations(value, reserved_work_ids)
     high += mission_high
@@ -606,7 +609,9 @@ def main() -> None:
     settled_owner_upper = 0.0
     settled_astra_count = 0
     try:
-        pending_low, pending_high, pending_count = pending_risk(args.liability_ledger)
+        pending_low, pending_high, pending_count = pending_risk(
+            args.liability_ledger,
+            strict_build=str(args.owner_astra_program_work_id or "").startswith("ASTRA-BUILD-"))
         settled_owner_upper = settled_owner_cost_upper(args.liability_ledger, now)
         settled_astra_count = len(astra_missions.settlement_summary(json.loads(args.liability_ledger.read_text(encoding="utf-8")))[0])
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
