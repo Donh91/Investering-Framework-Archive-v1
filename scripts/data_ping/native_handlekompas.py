@@ -1679,7 +1679,9 @@ def cn_band_status(
     if (bar is None or available is None or bar + timedelta(hours=1) > available
             or available > as_of or bar.minute or bar.second or bar.microsecond
             or tuple(bar.isocalendar()[:2]) != (iso_year, iso_week)
-            or tuple(as_of.isocalendar()[:2]) != (iso_year, iso_week)
+            or (tuple(as_of.isocalendar()[:2]) != (iso_year, iso_week)
+                and not (bar.isoweekday() == 7 and bar.hour == 23
+                         and bar + timedelta(hours=1) <= as_of < bar + timedelta(hours=2)))
             or live.get("observation_semantics") != "COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL"):
         return unavailable("BAR_OR_AVAILABILITY_CLOCK_UNAVAILABLE")
     generated = finite(cn_package.get("generated_unix"))
@@ -1709,7 +1711,7 @@ def cn_band_status(
         target_path = (repo_root / rel).resolve()
         target_path.relative_to(repo_root.resolve())
         raw = target_path.read_bytes()
-        actual_blob = hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\\0" + raw).hexdigest()
+        actual_blob = hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\x00" + raw).hexdigest()
         if actual_blob != blob:
             return unavailable("HOURLY_TARGET_HASH_MISMATCH")
         capture = json.loads(raw)
@@ -1762,20 +1764,37 @@ def cn_band_status(
             floors[day] = low
         value = rows[-1][i]
         daily_floor = floors[bar.isoweekday()]
-        first_week = next((r for r in rows if r[i] < floor), None)
-        first_day = next((r for r in rows if r[0].date() == bar.date() and r[i] < daily_floor), None)
+        # A completed hourly close during the day is NOT a completed D1 close.
+        # The 23:00-00:00 UTC candle closes the UTC day; Sunday 23:00
+        # also closes the ISO week. Earlier dips stay descriptive only.
+        day_closed = bar.hour == 23
+        week_closed = day_closed and bar.isoweekday() == 7
+        completed_days = [r for r in rows if r[0].hour == 23 and r[0].date() == bar.date()] if day_closed else []
+        completed_weeks = [r for r in completed_days if r[0].isoweekday() == 7] if week_closed else []
+        first_day = next((r for r in completed_days if r[i] < daily_floor), None)
+        first_week = next((r for r in completed_weeks if r[i] < floor), None)
+        # Only a captured completed-hourly close, not an OHLC low/wick.
+        first_intraweek = next((r for r in rows if r[i] < floor), None)
         assets[asset] = {
             "symbol": asset + "USDT", "close": value,
             "daily_floor": daily_floor, "weekly_floor": floor,
-            "daily_close_below_floor": value < daily_floor,
-            "weekly_close_below_floor": value < floor,
+            "daily_close_below_floor": value < daily_floor if day_closed else None,
+            "weekly_close_below_floor": value < floor if week_closed else None,
+            "daily_close_status": "COMPLETED_UTC_DAY_CLOSE" if day_closed else "PENDING_D1_CLOSE",
+            "weekly_close_status": "COMPLETED_UTC_WEEK_CLOSE" if week_closed else "PENDING_WEEK_CLOSE",
             "first_daily_breach_in_captured_window_utc": stamp(first_day[0]) if first_day else None,
             "first_weekly_breach_in_captured_window_utc": stamp(first_week[0]) if first_week else None,
+            "intraweek_breach": {
+                "authority": "DESCRIPTIVE_ONLY_NO_SCORE_NO_RISK_NO_ACTION",
+                "basis": "CAPTURED_COMPLETED_1H_CLOSE_BELOW_WEEKLY_FLOOR_NOT_WICK",
+                "observed_in_captured_window": first_intraweek is not None,
+                "first_observed_bar_open_utc": stamp(first_intraweek[0]) if first_intraweek else None,
+            },
         }
     return {"contract": "CN_BAND_STATUS_v1", "status": "OBSERVED",
             "authority": "DESCRIPTIVE_ONLY", "forecast_week": week,
             "venue": "BINANCE_SPOT", "quote": "USDT",
-            "semantics": "COMPLETED_CLOSE_ONLY_NOT_INTRADAY_OR_RISK_CLASSIFICATION",
+            "semantics": "D1_WEEKLY_FINAL_UTC_CLOSE_ONLY__HOURLY_BREACH_DESCRIPTIVE_ONLY",
             "bar_open_utc": stamp(bar), "bar_close_utc": stamp(bar + timedelta(hours=1)),
             "availability_ts": stamp(available), "availability_semantics": "BOUND_AUTO_PACKET_GENERATION_NOT_PROVIDER_FIRST_KNOWN_OR_USER_DELIVERY",
             "capture_retrieved_at_utc": stamp(retrieved), "capture_blob_sha": blob,
