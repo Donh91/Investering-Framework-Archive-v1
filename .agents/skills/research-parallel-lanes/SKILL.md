@@ -1,6 +1,6 @@
 ---
 name: research-parallel-lanes
-description: 'Coordinate multiple bounded, independent research tracks in one Investering conversation and, when available, in parallel read-only GitHub Actions jobs or existing authorized AI-agent lanes. Use for explicit Research Parallel Lanes, parallel deep research, Task 2 multi-track studies, 5-10 research tracks, or a request to repeat the Ironflow parallel-job method. Does not create agents, workflows, schedules, API authorization, new reviewers or trading authority by itself.'
+description: 'Coordinate source-first, adversarial and bounded Investering Research Lab packages from a new chat to reviewed GitHub research or code PR and verified consumer, or reject/close with exact evidence. Also coordinate explicit Research Parallel Lanes, parallel deep research, Task 2 multi-track studies and authorized independent GitHub jobs. Does not create agents, workflows, schedules, API authorization, reviewers, scientific promotion or trading authority by itself.'
 ---
 
 # Research Parallel Lanes v1.0 (repository-local, explicit invocation)
