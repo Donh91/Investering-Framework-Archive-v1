@@ -25,7 +25,8 @@ def require(cond, reason):
 
 def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
          admitted: dict, tested: dict, approved_scope: dict,
-         verified_current_run_id: str):
+         verified_current_run_id: str,
+         trusted_toolchain_image_id: str = sandbox.IMAGE):
     """Bind full-source report, original owner receipt, admission and tests.
 
     All caller-supplied objects must originate from separately authenticated
@@ -106,7 +107,9 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
             and tested.get("test_command_id") == approved_scope["test_command_id"]
             and tested.get("test_profile") == "FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF"
             and tested.get("network") == "none"
-            and tested.get("image") == sandbox.IMAGE
+            and tested.get("image") == trusted_toolchain_image_id
+            and (trusted_toolchain_image_id == sandbox.IMAGE or
+                 bool(re.fullmatch(r"sha256:[a-f0-9]{64}", trusted_toolchain_image_id)))
             and tested.get("secrets") is False
             and tested.get("paid_authority") is False
             and tested.get("merge_authority") is False,
@@ -137,7 +140,9 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
                    for i, x in enumerate(tests))
     require(tested.get("status") == ("TEST_COMPLETION_UNATTESTED" if observed else "TEST_FAILURE"),
             "FALSE_SANDBOX_SUCCESS")
-    status = "TEST_COMPLETION_HOLD" if observed else "TEST_FAILURE_OR_INCOMPLETE"
+    # The sandbox is a prefilter; only a later output PR native CI can prove
+    # real test completion. No paid authority or merge rights exist here.
+    status = "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY" if observed else "TEST_FAILURE_OR_INCOMPLETE"
     return {"contract": CONTRACT, "status": status,
             "mission_id": mission, "stage": approved_scope["stage"],
             "release_main_sha": approved_scope["main_sha"],
@@ -156,5 +161,7 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
             "test_count": len(tests), "all_fixed_tests_passed":
             status == "TESTED_PASS_REVIEW_REQUIRED",
             "body_and_coverage_attested_by_native_writer": False,
+            "independent_native_pr_ci_pending": True,
+            "output_eligibility": "ONE_DRAFT_PR_NO_AUTOMERGE" if observed else "NO_PR",
             "paid_authority": False, "merge_authority": False,
             "review_required": True}

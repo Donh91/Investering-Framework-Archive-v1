@@ -58,7 +58,8 @@ def require(cond: bool, reason: str):
 def docker_command(workspace: Path, test_command_id: str, ordinal: int, image: str = IMAGE,
                    *, profile: str = "trusted_full_main"):
     """No shell interpolation; a reviewed static command is chosen by ID."""
-    require(image == IMAGE, "IMAGE_NOT_VERIFIED")
+    require(image == IMAGE or (isinstance(image, str) and
+            re.fullmatch(r"sha256:[0-9a-f]{64}", image)), "IMAGE_NOT_VERIFIED")
     require(profile in ("trusted_full_main", "restricted_candidate"), "COMMAND_PROFILE")
     commands_by_scope = (admit.TEST_COMMANDS if profile == "trusted_full_main"
                          else admit.PREFILTER_COMMANDS)
@@ -84,6 +85,7 @@ def docker_command(workspace: Path, test_command_id: str, ordinal: int, image: s
                   "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=32m",
                   "--mount", "type=bind,src="+str(workspace)+",dst=/work,readonly",
                   "--workdir", "/work", "--env", "PYTHONDONTWRITEBYTECODE=1",
+                  "--env", "PYTEST_ADDOPTS=-c /opt/astra/pytest.ini",
                   "--env", "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
                   image, *argv]
 
@@ -348,8 +350,13 @@ def _run_once(command: list[str], name: str, *, trusted_full_baseline: bool = Fa
                 raise SandboxBlocked("DOCKER_CLEANUP_NOT_PROVEN") from exc
             proc.stdout.close()
 
-def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
+def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path,
+                 trusted_toolchain_image_id: str = IMAGE):
     """One isolated job. Never run in a paid/provider credential-bearing job."""
+    require(trusted_toolchain_image_id == IMAGE or
+            (isinstance(trusted_toolchain_image_id, str) and
+             re.fullmatch(r"sha256:[0-9a-f]{64}", trusted_toolchain_image_id)),
+            "IMAGE_NOT_VERIFIED")
     receipt = admit.admit(raw, scope)
     require(receipt["status"] == "ADMITTED_UNTRUSTED_CODE_TEST_REQUIRED",
             "NO_FILES_TO_TEST")
@@ -368,7 +375,8 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
         baseline = []
         for ordinal, _ in enumerate(admit.PREFILTER_COMMANDS[scope["test_command_id"]]):
             name, argv = docker_command(root, scope["test_command_id"], ordinal,
-                                        profile="restricted_candidate")
+                                        profile="restricted_candidate",
+                                        image=trusted_toolchain_image_id)
             baseline.append(_run_once(argv, name))
         require(bool(baseline) and all(x.get("status") == "EXIT0_WITH_UNTRUSTED_SUMMARY" and
                 x.get("completed_tests_observed", 0) > 0 for x in baseline),
@@ -377,7 +385,8 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
         tests = []
         for ordinal, _ in enumerate(admit.PREFILTER_COMMANDS[scope["test_command_id"]]):
             name, argv = docker_command(root, scope["test_command_id"], ordinal,
-                                        profile="restricted_candidate")
+                                        profile="restricted_candidate",
+                                        image=trusted_toolchain_image_id)
             tests.append(_run_once(argv, name))
         observed = all(x.get("status") == "EXIT0_WITH_UNTRUSTED_SUMMARY" and
                        x.get("completed_tests_observed", 0) >= base["completed_tests_observed"]
@@ -397,7 +406,8 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
                   "source_tree_copy": source, "staging": staged,
                   "test_command_id": scope["test_command_id"],
                   "test_profile": "FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF",
-                  "tests": tests, "image": IMAGE, "network": "none",
+                  "tests": tests, "image": trusted_toolchain_image_id,
+                  "network": "none",
                   "secrets": False, "paid_authority": False,
                   "merge_authority": False}
         result["result_sha256"] = admit.digest(admit.canonical(result))
