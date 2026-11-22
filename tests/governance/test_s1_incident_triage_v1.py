@@ -1,5 +1,9 @@
 """Adversarial, offline proof for S1 incident classification advisory."""
 import unittest
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from scripts.health.automation_health_resolution import record_status, resolve_recovered
 from scripts.governance.s1_incident_triage_v1 import (
     IncidentEvidenceError, incident_triage,
 )
@@ -156,6 +160,57 @@ class FleetHealthRecoveryTests(unittest.TestCase):
                       {"workflow_count": 0}, {"scheduled_workflow_count": 0}):
             with self.subTest(extra=extra):
                 self.assertFalse(qualified_natural_fleet_recovery({**self.good(), **extra}))
+
+
+class NativeHealthConsumerTests(unittest.TestCase):
+    def write_health(self, root, when):
+        path = root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({
+            "generated_at_utc": when, "status": "GREEN",
+            "red_count": 0, "amber_count": 0, "workflow_count": 6,
+            "scheduled_workflow_count": 2, "api_error": None, "warnings": [],
+            "orphaned_registered_workflows": [], "workflows": [],
+        }) + "\n")
+
+    def test_native_record_resolve_rejects_green_before_incident(self):
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            incident = root / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-20-attempt-1.md"
+            incident.parent.mkdir(parents=True)
+            incident.write_text("# later RED incident\n")
+            for run_id, when in ((10, "2026-11-21T05:30:00Z"),
+                                 (11, "2026-11-21T17:30:00Z"),
+                                 (21, "2026-11-22T05:30:00Z")):
+                self.write_health(root, when)
+                record_status(root, run_id, 1, "a" * 40, "schedule")
+                self.assertEqual(resolve_recovered(root, run_id), [])
+            self.write_health(root, "2026-11-22T17:30:00Z")
+            record_status(root, 22, 1, "a" * 40, "schedule")
+            created = resolve_recovered(root, 22)
+            self.assertEqual(len(created), 1)
+            self.assertEqual(json.loads((root / created[0]).read_text())["fleet_green_run_ids"], [21, 22])
+            self.assertTrue(incident.exists())
+
+    def test_native_record_resolve_refuses_manual_and_amber(self):
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            incident = root / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-1.md"
+            incident.parent.mkdir(parents=True)
+            incident.write_text("# original RED incident\n")
+            self.write_health(root, "2026-11-21T05:30:00Z")
+            record_status(root, 10, 1, "a" * 40, "workflow_dispatch")
+            self.write_health(root, "2026-11-21T17:30:00Z")
+            record_status(root, 11, 1, "a" * 40, "schedule")
+            self.assertEqual(resolve_recovered(root, 11), [])
+            health = root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
+            data = json.loads(health.read_text())
+            data.update(generated_at_utc="2026-11-22T05:30:00Z",
+                        status="AMBER", amber_count=1, warnings=["API_DEGRADED"])
+            health.write_text(json.dumps(data))
+            record_status(root, 12, 1, "a" * 40, "schedule")
+            self.assertEqual(resolve_recovered(root, 12), [])
+            self.assertTrue(incident.exists())
 
 
 if __name__ == "__main__":
