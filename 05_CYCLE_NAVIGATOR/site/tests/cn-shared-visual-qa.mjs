@@ -61,11 +61,23 @@ try {
      await page.locator('#variant-panel').waitFor({state:'attached',timeout:25000});
      await page.locator('#compass-pro').waitFor({state:'attached',timeout:10000});
      await page.waitForTimeout(650);
-     // Capture first-visit Compass before switching views; the graph tab is
-     // intentionally hidden on the genuine default homepage.
+     // The first screen is the default Compass view. Audit that view before
+     // the real tab system hides it. One axe run per view, not one per page.
+     await page.addScriptTag({content:axe.source});
+     const auditView=async(view)=>{
+       const audit=await page.evaluate(async()=>{
+         const result=await window.axe.run(document,{runOnly:{type:'tag',
+           values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}});
+         return {passes:result.passes.length,incomplete:result.incomplete.length,
+           violations:result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.length,
+             examples:v.nodes.slice(0,3).map(n=>n.target.join(' '))}))};
+       });
+       accessibility.push({width,view,...audit});
+     };
      const initial='compass-default-'+width+'.png';
      await page.screenshot({path:join(out,initial),fullPage:true,animations:'disabled'});
      screenshots.push(initial);
+     await auditView('compass');
      await page.locator('[data-premium-nav="graph"]').click();
      await page.locator('#variant-panel').waitFor({state:'visible',timeout:12000});
      await page.locator('#chart').waitFor({state:'visible',timeout:12000});
@@ -90,10 +102,42 @@ try {
      const eth=page.locator('#variant-panel button[data-asset="ETH"]:visible');
      assert.equal(await btc.count(),1,'BTC_ACTIVE_GRAPH_CONTROL_MISSING_OR_DUPLICATE');
      assert.equal(await eth.count(),1,'ETH_ACTIVE_GRAPH_CONTROL_MISSING_OR_DUPLICATE');
-     await eth.click({timeout:8000});
-     assert.equal(await eth.getAttribute('aria-pressed'),'true','ETH_CONTROL_NOT_ACTIVE');
-     await btc.click({timeout:8000});
-     assert.equal(await btc.getAttribute('aria-pressed'),'true','BTC_CONTROL_NOT_RESTORED');
+     // Each click launches asynchronous source-bound refresh. Wait for its
+     // actual public feed response, then a stable painted state. A missing
+     // authenticated source is recorded as UNAVAILABLE, never called fresh.
+     const refreshAsset=async(button,name)=>{
+       const [response]=await Promise.all([
+         page.waitForResponse(r=>r.url().includes('/data/latest.json') && r.status()===200,
+           {timeout:16000}),
+         button.click({timeout:8000})
+       ]);
+       assert.equal(response.status(),200,'PUBLIC_FEED_TRANSPORT_'+name);
+       await page.waitForFunction(async name=>{
+         const buttons=[...document.querySelectorAll('#variant-panel button[data-asset]')];
+         const selected=buttons.find(b=>b.dataset.asset===name);
+         const pair=document.getElementById('pair')?.textContent||'';
+         const feed=document.getElementById('feed-status')?.textContent||'';
+         return selected?.getAttribute('aria-pressed')==='true' && pair.startsWith(name+' / ')
+           && feed.trim().length>12;
+       },name,{timeout:10000});
+       // Optional public lineage can settle independently. Wait for a short
+       // DOM quiet interval, never a fixed synthetic market value.
+       await page.waitForTimeout(220);
+       const result=await page.evaluate(()=>({
+         asset:document.querySelector('#variant-panel button[aria-pressed="true"][data-asset]')?.dataset.asset||null,
+         freshness:document.getElementById('variant-panel')?.dataset.freshness||'NOT_DECLARED',
+         source:document.getElementById('source-state')?.textContent?.trim().slice(0,160)||'',
+         observed:document.getElementById('observed-value')?.textContent?.trim()||''
+       }));
+       assert.equal(result.asset,name,'ASSET_REFRESH_MISMATCH');
+       assert.ok(['fresh','stale','unavailable'].includes(result.freshness),'UNKNOWN_SOURCE_FRESHNESS');
+       assert.ok(result.source.length>0,'UNLABELED_SOURCE_STATE');
+       if(result.freshness==='unavailable') assert.ok(result.observed==='—','UNAVAILABLE_HAS_FALSE_QUOTE');
+       return result;
+     };
+     const ethState=await refreshAsset(eth,'ETH');
+     const btcState=await refreshAsset(btc,'BTC');
+     dom.assetRefresh={ETH:ethState,BTC:btcState};
      if(width===390||width===1280){
        const file='graph-'+width+'.png';
        await page.locator('#variant-panel').screenshot({path:join(out,file),animations:'disabled'});
@@ -102,15 +146,13 @@ try {
      const file='page-'+width+'.png';
      await page.screenshot({path:join(out,file),fullPage:true,animations:'disabled'});
      screenshots.push(file);
-     await page.addScriptTag({content:axe.source});
-     const audit=await page.evaluate(async()=>{
-       const result=await window.axe.run(document,{runOnly:{type:'tag',
-         values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}});
-       return {passes:result.passes.length,incomplete:result.incomplete.length,
-         violations:result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.length,
-           examples:v.nodes.slice(0,3).map(n=>n.target.join(' '))}))};
-     });
-     accessibility.push({width,...audit});
+     await auditView('graph');
+     for(const view of ['path','proof']){
+       await page.locator('[data-premium-nav="'+view+'"]').click();
+       const panel=view==='path'?'#official-path-view':'#proof-explorer';
+       await page.locator(panel).waitFor({state:'visible',timeout:12000});
+       await auditView(view);
+     }
      checks.push({width,status:'PASS'});
    }catch(e){
      problem('VISUAL_'+width,e.message||e);
@@ -131,7 +173,7 @@ finally{
  try{await new Promise(ok=>{if(server)server.close(ok);else ok()})}catch{}
  const functional=checks.length===4&&!findings.length&&checks.every(c=>c.status==='PASS')?'PASS':'FAIL';
  const violationCount=accessibility.reduce((n,x)=>n+x.violations.length,0);
- const a11y=accessibility.length===4?(violationCount===0?'NO_AUTOMATED_VIOLATIONS':'NEEDS_REMEDIATION'):'NOT_VERIFIED';
+ const a11y=accessibility.length===16?(violationCount===0?'NO_AUTOMATED_VIOLATIONS':'NEEDS_REMEDIATION'):'NOT_VERIFIED';
  const report={contract:'CN_SHARED_VISUAL_QA_V1',public_only:true,
    native_iphone_safari:false,visual_functional:functional,accessibility:a11y,
    axe_rule_findings:violationCount,viewports,checks,accessibility_results:accessibility,
