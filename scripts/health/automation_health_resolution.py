@@ -4,6 +4,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +37,7 @@ def write_new_json(path: Path, value: dict[str, Any]) -> bool:
     return True
 
 
-def record_status(repo_root: Path, run_id: int, run_attempt: int, head_sha: str = "") -> Path:
+def record_status(repo_root: Path, run_id: int, run_attempt: int, head_sha: str = "", run_event: str | None = None) -> Path:
     health_path = repo_root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
     health = read_json(health_path)
     if not health or not health.get("generated_at_utc"):
@@ -51,6 +53,7 @@ def record_status(repo_root: Path, run_id: int, run_attempt: int, head_sha: str 
         "contract": HISTORY_CONTRACT,
         "run_id": run_id,
         "run_attempt": run_attempt,
+        "run_event": run_event if run_event is not None else os.environ.get("GITHUB_EVENT_NAME", "UNKNOWN"),
         "head_sha": str(head_sha or "").strip(),
         "generated_at_utc": health.get("generated_at_utc"),
         "status": health.get("status"),
@@ -95,6 +98,31 @@ def resolved_incidents(repo_root: Path) -> set[str]:
     return resolved
 
 
+def qualified_natural_fleet_recovery(row: dict[str, Any]) -> bool:
+    """Full-fleet scheduled health, not just a green job or zero red-count.
+
+    Recovery of an individual source/consumer is NOT proven by this report.
+    Manual dispatch, incomplete API census, AMBER warning and missing SHA
+    cannot silently mark a source incident healed.
+    """
+    return (
+        row.get("run_event") == "schedule"
+        and row.get("status") == "GREEN"
+        and type(row.get("red_count")) is int and row["red_count"] == 0
+        and type(row.get("amber_count")) is int and row["amber_count"] == 0
+        and type(row.get("workflow_count")) is int and row["workflow_count"] > 0
+        and type(row.get("scheduled_workflow_count")) is int and row["scheduled_workflow_count"] > 0
+        and row.get("api_error") is None
+        and row.get("warnings") == []
+        and row.get("findings") == []
+        and row.get("orphaned_registered_workflows") == []
+        and isinstance(row.get("source_sha256"), str)
+        and re.fullmatch(r"[0-9a-f]{64}", row["source_sha256"]) is not None
+        and isinstance(row.get("head_sha"), str)
+        and re.fullmatch(r"[0-9a-f]{40}", row["head_sha"]) is not None
+    )
+
+
 def resolve_recovered(repo_root: Path, run_id: int) -> list[str]:
     history_root = repo_root / "research/architecture_health/history"
     rows: list[dict[str, Any]] = []
@@ -117,7 +145,7 @@ def resolve_recovered(repo_root: Path, run_id: int) -> list[str]:
     recent = distinct_rows[-2:]
     if int(recent[-1].get("run_id") or 0) != run_id:
         return []
-    if any(int(row.get("red_count") or 0) != 0 for row in recent):
+    if not all(qualified_natural_fleet_recovery(row) for row in recent):
         return []
     incident_root = repo_root / "09_SOURCE_QA/incidents"
     already = resolved_incidents(repo_root)
@@ -133,6 +161,12 @@ def resolve_recovered(repo_root: Path, run_id: int) -> list[str]:
             "owner": "automation-production-health",
             "successful_run_id": run_id,
             "successful_run_conclusion": "success",
+            "run_event": "schedule",
+            "fleet_green_run_ids": [int(row["run_id"]) for row in recent],
+            "evidence_scope": "FLEET_HEALTH_ONLY",
+            "original_consumer_verified": False,
+            "data_source_first_known_verified": False,
+            "incident_repaired_or_merged_by_this_receipt": False,
             "resolved_at_utc": resolved_at,
         }
         out = incident_root / "resolutions" / f"{incident.stem}.json"
