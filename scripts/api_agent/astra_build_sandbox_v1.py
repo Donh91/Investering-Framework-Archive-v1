@@ -248,6 +248,39 @@ def observed_test_count(command: list[str], output: bytes) -> int:
     return 0
 
 
+def _baseline_failure_diagnostics(output: bytes) -> list[dict]:
+    """Bounded public-source error census, never an unredacted log or test proof."""
+    text = output.decode("utf-8", errors="replace")
+    categories = (
+        ("FILE_NOT_FOUND", r"FileNotFoundError|No such file or directory"),
+        ("MODULE_NOT_FOUND", r"ModuleNotFoundError|ERR_MODULE_NOT_FOUND|Cannot find module"),
+        ("GIT_REPO_MISSING", r"not a git repository|git.+not found"),
+        ("PERMISSION_DENIED", r"PermissionError|EACCES|Permission denied"),
+        ("ASSERTION_FAILURE", r"AssertionError|Assertion failed"),
+        ("NODE_TEST_FAILED", r"ERR_TEST_FAILURE|test failed"),
+        ("TIMEOUT", r"TimeoutExpired|ETIMEDOUT"),
+        ("IMPORT_ERROR", r"ImportError|SyntaxError"),
+    )
+    counts = {name: len(re.findall(regex, text, flags=re.IGNORECASE))
+              for name, regex in categories}
+    prefixes = ("05_CYCLE_NAVIGATOR", "03_DAILY_CAPTURE_LOGS",
+                "research", "backtest_engine", "00_FMOS", "04_MARKET_LEARNING",
+                "scripts", "tests", ".agents")
+    path_hints: set[str] = set()
+    for line in text.splitlines():
+        if not re.search(r"FileNotFoundError|No such file or directory|Cannot find module", line):
+            continue
+        for prefix in prefixes:
+            expression = r"(?:/work/)?" + re.escape(prefix) + r"/[A-Za-z0-9_./-]{1,140}"
+            for match in re.finditer(expression, line):
+                path = match.group(0).removeprefix("/work/")
+                if ".." not in path.split("/") and len(path) < 180:
+                    path_hints.add(path)
+    return ([{"reason": name, "count": count} for name, count in counts.items() if count]
+            + [{"reason": "PUBLIC_PATH_HINT", "path": p}
+               for p in sorted(path_hints)[:12]])
+
+
 def _run_once(command: list[str], name: str) -> dict:
     """Bound output, wall time, orphan cleanup; host environment has NO secrets."""
     require(command[:2] == ["docker", "run"] and "--network" in command
@@ -279,6 +312,7 @@ def _run_once(command: list[str], name: str) -> dict:
         tail = out.decode("utf-8", errors="replace").splitlines()[-200:]
         return {"returncode": rc, "output_sha256": admit.digest(bytes(out)),
                 "output_bytes": len(out), "last_200_lines": tail,
+                "failure_diagnostics_untrusted": _baseline_failure_diagnostics(bytes(out)) if rc else [],
                 "completed_tests_observed": completed,
                 "completion_evidence": "UNTRUSTED_STDOUT_ONLY",
                 "status": "EXIT0_WITH_UNTRUSTED_SUMMARY" if rc == 0 and completed > 0 else "TEST_FAILURE"}
