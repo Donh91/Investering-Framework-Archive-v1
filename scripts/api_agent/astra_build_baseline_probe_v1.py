@@ -50,7 +50,12 @@ def probe(pristine: Path, sha: str, image_id: str) -> dict:
         outcomes = []
         for scope in TEST_IDS:
             for ordinal, command in enumerate(admission.TEST_COMMANDS[scope]):
-                name, argv = sandbox.docker_command(root, scope, ordinal)
+                # A pristine trusted MAIN checkout can run the FULL fixed suite
+                # with public Git metadata and historical files mounted read-only.
+                # This code executes before and separately from model-supplied
+                # file admission; the candidate sandbox still gets only root's
+                # narrow, tracked public fixture closure.
+                name, argv = sandbox.docker_command(pristine.resolve(), scope, ordinal)
                 image_pos = len(argv) - len(command) - 1
                 if argv[image_pos] != sandbox.IMAGE:
                     raise ValueError("NATIVE_IMAGE_ARGV_DRIFT")
@@ -72,6 +77,8 @@ def probe(pristine: Path, sha: str, image_id: str) -> dict:
     return {
         "contract": "ASTRA_BUILD_PRISTINE_BASELINE_PROBE_v1",
         "pristine_main_sha": verified_sha,
+        "baseline_workspace": "TRUSTED_PRISTINE_MAIN_READONLY_NO_MODEL",
+        "candidate_workspace": "RESTRICTED_PUBLIC_COPY",
         "toolchain_local_image_id": image_id,
         "source_copy": copied,
         "results": outcomes,
