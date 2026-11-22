@@ -63,6 +63,7 @@ def probe(pristine: Path, sha: str, image_id: str) -> dict:
                     "exit_code": run["returncode"],
                     "observed_count_untrusted": run["completed_tests_observed"],
                     "log_sha256": run["output_sha256"],
+                    "failure_diagnostics_untrusted": run.get("failure_diagnostics_untrusted", []),
                     "last_200_lines_untrusted": run["last_200_lines"][-35:],
                 })
     all_look_green = bool(outcomes) and all(
