@@ -55,11 +55,15 @@ def require(cond: bool, reason: str):
     if not cond:
         stop(reason)
 
-def docker_command(workspace: Path, test_command_id: str, ordinal: int, image: str = IMAGE):
+def docker_command(workspace: Path, test_command_id: str, ordinal: int, image: str = IMAGE,
+                   *, profile: str = "trusted_full_main"):
     """No shell interpolation; a reviewed static command is chosen by ID."""
     require(image == IMAGE, "IMAGE_NOT_VERIFIED")
-    require(test_command_id in admit.TEST_COMMANDS, "TEST_COMMAND_ID")
-    commands = admit.TEST_COMMANDS[test_command_id]
+    require(profile in ("trusted_full_main", "restricted_candidate"), "COMMAND_PROFILE")
+    commands_by_scope = (admit.TEST_COMMANDS if profile == "trusted_full_main"
+                         else admit.PREFILTER_COMMANDS)
+    require(test_command_id in commands_by_scope, "TEST_COMMAND_ID")
+    commands = commands_by_scope[test_command_id]
     require(type(ordinal) is int and 0 <= ordinal < len(commands), "TEST_INDEX")
     require(isinstance(workspace, Path) and workspace.is_absolute()
             and workspace.is_dir() and not workspace.is_symlink(), "WORKSPACE_INVALID")
@@ -358,16 +362,18 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
         # inside the copied environment before model-created code is staged.
         # This is also a source-fixture/toolchain readiness check.
         baseline = []
-        for ordinal, _ in enumerate(admit.TEST_COMMANDS[scope["test_command_id"]]):
-            name, argv = docker_command(root, scope["test_command_id"], ordinal)
+        for ordinal, _ in enumerate(admit.PREFILTER_COMMANDS[scope["test_command_id"]]):
+            name, argv = docker_command(root, scope["test_command_id"], ordinal,
+                                        profile="restricted_candidate")
             baseline.append(_run_once(argv, name))
         require(bool(baseline) and all(x.get("status") == "EXIT0_WITH_UNTRUSTED_SUMMARY" and
                 x.get("completed_tests_observed", 0) > 0 for x in baseline),
                 "FIXED_SUITE_BASELINE_NOT_PROVEN")
         staged = _write_admitted(root, proposal, scope, receipt)
         tests = []
-        for ordinal, _ in enumerate(admit.TEST_COMMANDS[scope["test_command_id"]]):
-            name, argv = docker_command(root, scope["test_command_id"], ordinal)
+        for ordinal, _ in enumerate(admit.PREFILTER_COMMANDS[scope["test_command_id"]]):
+            name, argv = docker_command(root, scope["test_command_id"], ordinal,
+                                        profile="restricted_candidate")
             tests.append(_run_once(argv, name))
         observed = all(x.get("status") == "EXIT0_WITH_UNTRUSTED_SUMMARY" and
                        x.get("completed_tests_observed", 0) >= base["completed_tests_observed"]
@@ -386,6 +392,7 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
                   "admission_sha256": admit.digest(admit.canonical(receipt)),
                   "source_tree_copy": source, "staging": staged,
                   "test_command_id": scope["test_command_id"],
+                  "test_profile": "FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF",
                   "tests": tests, "image": IMAGE, "network": "none",
                   "secrets": False, "paid_authority": False,
                   "merge_authority": False}
