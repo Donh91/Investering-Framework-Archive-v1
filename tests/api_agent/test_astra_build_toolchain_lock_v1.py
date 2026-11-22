@@ -50,6 +50,8 @@ class TestBuildToolchainLock(unittest.TestCase):
         self.assertIn("python -m pip install --no-cache-dir --require-hashes", dockerfile)
         self.assertIn("COPY scripts/api_agent/docker/astra-build-requirements.lock.txt", dockerfile)
         self.assertIn("FROM python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b", dockerfile)
+        self.assertIn("git=1:2.47.3-0+deb13u1", dockerfile)
+        self.assertIn("git version 2.47.3", dockerfile)
         self.assertIn("ARG NODE_VERSION=24.11.1", dockerfile)
         self.assertIn("ARG NODE_TARBALL_SHA256=" + NODE_TARBALL, dockerfile)
         self.assertIn("if hashlib.sha256(data).hexdigest() != expected:", dockerfile)

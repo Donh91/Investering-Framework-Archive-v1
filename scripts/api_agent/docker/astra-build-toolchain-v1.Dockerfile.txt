@@ -10,8 +10,8 @@ ENV PATH="/opt/node/current/bin:${PATH}" PYTHONDONTWRITEBYTECODE=1
 # no-secret toolchain, never mount host executables or credential-bearing .git.
 # This is a PR-only candidate until a native version receipt is checked.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git \
- && git --version \
+ && apt-get install -y --no-install-recommends 'git=1:2.47.3-0+deb13u1' \
+ && test "$(git --version)" = 'git version 2.47.3' \
  && rm -rf /var/lib/apt/lists/*
 # pytest >=9.0.3 avoids GHSA-6w46-j5rx-g56g. Only trusted image
 # provisioning may use network. Runtime docker run MUST use --network none.
