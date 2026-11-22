@@ -167,7 +167,31 @@ def _copy_public_tree(source: Path, target: Path):
     for relative in REQUIRED_PUBLIC_FIXTURES:
         require((target / relative).is_file() and not (target / relative).is_symlink(),
                 "REQUIRED_FIXED_TEST_FIXTURE_MISSING")
-    return {"files": count, "bytes": size, "public_fixture_count": len(REQUIRED_PUBLIC_FIXTURES)}
+    # Make the exact-main PUBLIC file subset testable as a local Git checkout.
+    # Never copy source/.git: it can carry credentials, private history, remotes
+    # or hooks. This synthetic, no-remote Git history contains ONLY the already
+    # admitted public source files; its SHA is NOT falsely claimed as main SHA.
+    env = {"PATH": "/usr/bin:/bin", "HOME": "/tmp",
+           "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"}
+    try:
+        subprocess.run(["git", "-C", str(target), "init", "-q", "-b", "main"],
+                       shell=False, env=env, check=True, capture_output=True, timeout=30)
+        subprocess.run(["git", "-C", str(target), "add", "-A"],
+                       shell=False, env=env, check=True, capture_output=True, timeout=90)
+        subprocess.run(["git", "-C", str(target), "-c", "user.name=Astra Fixture",
+                        "-c", "user.email=fixture@example.invalid",
+                        "commit", "-qm", "Public exact-main baseline input"],
+                       shell=False, env=env, check=True, capture_output=True, timeout=90)
+        synthetic_sha = subprocess.check_output(
+            ["git", "-C", str(target), "rev-parse", "HEAD"],
+            text=True, env=env, timeout=15).strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise SandboxBlocked("PUBLIC_GIT_FIXTURE_CREATION_FAILED") from exc
+    require(bool(HEX40.fullmatch(synthetic_sha)), "PUBLIC_GIT_FIXTURE_SHA")
+    return {"files": count, "bytes": size,
+            "public_fixture_count": len(REQUIRED_PUBLIC_FIXTURES),
+            "local_synthetic_git_sha": synthetic_sha,
+            "local_synthetic_git_is_original_main": False}
 
 def _write_admitted(root: Path, proposal: dict, scope: dict, receipt: dict):
     original = {r["path"]: r for r in receipt["files"]}
