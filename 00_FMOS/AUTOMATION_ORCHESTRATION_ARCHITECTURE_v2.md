@@ -18,6 +18,21 @@ This document defines the current execution, observability, remediation and agen
 
 No repository may silently create a competing canonical pointer, model-weight authority or portfolio action.
 
+## Canonical operations register and tool routing (owner decision, 2026-11-22)
+
+`Donh91/Investering-Framework-Archive-v1` is the durable shared **framework operations register** for agent instructions, authorized work, decision provenance, source-bound implementation and outcome receipts. Chat memory, browser sessions and external model messages are optional context, not competing operating registers. This does not displace `Donh91/secrets` as the restricted data plane, the credential plane or independent Vault custody.
+
+For each framework action, verify the **exact required capability**, current permission, risk, review/release gates and cost before selecting the lowest-incremental-cost qualified route. Prefer, when capable and authorized:
+
+1. Native GitHub connector / direct API calls and deterministic existing tooling, with exact-state readback.
+2. Existing original-owner GitHub Actions, S1 and other already-authorized runners, only through their actual trigger, evidence and scope contracts.
+3. Other existing direct APIs or connected plugins with verified capability, privacy compliance and available quota.
+4. TinyFish or another browser automation **only as a last resort** when actual UI interaction is required and no authorized direct route can perform the operation. Check available credits and avoid needless browser sessions for reads, PR work or public research.
+
+**Capability is not authority:** a connector that supports GitHub GET does not thereby support or authorize a POST `workflow_dispatch`; do not claim a workflow ran because it exists. Never rerun a different job, create a parallel agent/schedule/queue, broaden permissions, silently spend credits, top up a third-party account, relax a test, bypass review or substitute a fabricated receipt to work around a missing tool. If no route exists, record `NOT_EXECUTED`, the verified limitation and the smallest safe next action.
+
+Tool preference is subordinate to `AGENTS.md`, native repository protection, S1's pinned runtime and existing original owner, privacy, budget, CI, Vault and release controls. It grants **no new merge, dispatch, code-write, API-billing, forecast or trading authority**. Record a material tool-routing outcome in the original work item's existing GitHub receipt or owner issue, not a new reporting system. Measure efficiency as verified correct closures, time and cost, not agent calls or reports.
+
 ## Mandatory agent read order
 
 For automation, incident, GitHub Actions, API-agent, Codex or delivery work:
