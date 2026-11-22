@@ -22,7 +22,7 @@ def write_health(root: Path, generated: str, red: int, amber: int = 0):
         "orphaned_registered_workflows": [],
         "workflows": [
             {"workflow": "cycle-navigator-autonomous-calibration-loop.yml", "findings": []},
-            {"workflow": "situation-room-daily-static.yml", "findings": ["RECOVERING_AFTER_RECENT_FAILURES"]},
+            {"workflow": "situation-room-daily-static.yml", "findings": ["RECOVERING_AFTER_RECENT_FAILURES"] if amber else []},
         ],
     }) + "\n")
 
@@ -48,12 +48,12 @@ def test_two_zero_red_runs_resolve_health_incidents_without_mutation(tmp_path):
     incident.write_text("# old red\n")
     original = incident.read_bytes()
 
-    write_health(tmp_path, "2026-09-24T10:00:00Z", 0, 1)
-    record_status(tmp_path, 10, 1)
+    write_health(tmp_path, "2026-09-24T10:00:00Z", 0)
+    record_status(tmp_path, 10, 1, "a" * 40, "schedule")
     assert resolve_recovered(tmp_path, 10) == []
 
-    write_health(tmp_path, "2026-09-24T18:00:00Z", 0, 2)
-    record_status(tmp_path, 11, 1)
+    write_health(tmp_path, "2026-09-24T18:00:00Z", 0)
+    record_status(tmp_path, 11, 1, "a" * 40, "schedule")
     created = resolve_recovered(tmp_path, 11)
     assert len(created) == 1
     assert incident.read_bytes() == original
@@ -67,9 +67,9 @@ def test_recent_red_run_blocks_resolution(tmp_path):
     incident.parent.mkdir(parents=True)
     incident.write_text("# old red\n")
     write_health(tmp_path, "2026-09-24T10:00:00Z", 0)
-    record_status(tmp_path, 10, 1)
+    record_status(tmp_path, 10, 1, "a" * 40, "schedule")
     write_health(tmp_path, "2026-09-24T18:00:00Z", 1)
-    record_status(tmp_path, 11, 1)
+    record_status(tmp_path, 11, 1, "a" * 40, "schedule")
     assert resolve_recovered(tmp_path, 11) == []
 
 
@@ -77,10 +77,10 @@ def test_two_attempts_of_same_run_do_not_count_as_two_recovery_runs(tmp_path):
     incident = tmp_path / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-1.md"
     incident.parent.mkdir(parents=True)
     incident.write_text("# old red\n")
-    write_health(tmp_path, "2026-09-24T10:00:00Z", 0, 1)
-    record_status(tmp_path, 10, 1)
-    write_health(tmp_path, "2026-09-24T10:05:00Z", 0, 1)
-    record_status(tmp_path, 10, 2)
+    write_health(tmp_path, "2026-09-24T10:00:00Z", 0)
+    record_status(tmp_path, 10, 1, "a" * 40, "schedule")
+    write_health(tmp_path, "2026-09-24T10:05:00Z", 0)
+    record_status(tmp_path, 10, 2, "a" * 40, "schedule")
     assert resolve_recovered(tmp_path, 10) == []
 
 
@@ -89,9 +89,73 @@ def test_resolution_requires_current_run_to_be_latest_recovery_evidence(tmp_path
     incident.parent.mkdir(parents=True)
     incident.write_text("# old red\n")
     write_health(tmp_path, "2026-09-24T10:00:00Z", 0)
-    record_status(tmp_path, 10, 1)
+    record_status(tmp_path, 10, 1, "a" * 40, "schedule")
     write_health(tmp_path, "2026-09-24T18:00:00Z", 0)
-    record_status(tmp_path, 11, 1)
+    record_status(tmp_path, 11, 1, "a" * 40, "schedule")
     assert resolve_recovered(tmp_path, 10) == []
     created = resolve_recovered(tmp_path, 11)
     assert len(created) == 1
+
+
+def test_manual_success_is_not_automatic_recovery(tmp_path):
+    incident = tmp_path / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-1.md"
+    incident.parent.mkdir(parents=True)
+    incident.write_text("# real health error\n")
+    write_health(tmp_path, "2026-09-24T10:00:00Z", 0)
+    record_status(tmp_path, 10, 1, "a" * 40, "workflow_dispatch")
+    write_health(tmp_path, "2026-09-24T18:00:00Z", 0)
+    record_status(tmp_path, 11, 1, "a" * 40, "workflow_dispatch")
+    assert resolve_recovered(tmp_path, 11) == []
+
+
+def test_amber_zero_red_does_not_close_incident(tmp_path):
+    incident = tmp_path / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-1.md"
+    incident.parent.mkdir(parents=True)
+    incident.write_text("# real health error\n")
+    write_health(tmp_path, "2026-09-24T10:00:00Z", 0, 1)
+    record_status(tmp_path, 10, 1, "a" * 40, "schedule")
+    write_health(tmp_path, "2026-09-24T18:00:00Z", 0)
+    record_status(tmp_path, 11, 1, "a" * 40, "schedule")
+    assert resolve_recovered(tmp_path, 11) == []
+
+
+def test_incomplete_health_api_does_not_close_incident(tmp_path):
+    incident = tmp_path / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-1.md"
+    incident.parent.mkdir(parents=True)
+    incident.write_text("# real health error\n")
+    write_health(tmp_path, "2026-09-24T10:00:00Z", 0)
+    report = tmp_path / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
+    raw = json.loads(report.read_text())
+    raw["api_error"] = "UPSTREAM_SOURCE_UNAVAILABLE"
+    report.write_text(json.dumps(raw) + "\n")
+    record_status(tmp_path, 10, 1, "a" * 40, "schedule")
+    write_health(tmp_path, "2026-09-24T18:00:00Z", 0)
+    record_status(tmp_path, 11, 1, "a" * 40, "schedule")
+    assert resolve_recovered(tmp_path, 11) == []
+
+
+def test_unknown_legacy_event_and_sha_do_not_close_incident(tmp_path):
+    incident = tmp_path / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-1.md"
+    incident.parent.mkdir(parents=True)
+    incident.write_text("# real health error\n")
+    write_health(tmp_path, "2026-09-24T10:00:00Z", 0)
+    record_status(tmp_path, 10, 1)
+    write_health(tmp_path, "2026-09-24T18:00:00Z", 0)
+    record_status(tmp_path, 11, 1, "a" * 40, "schedule")
+    assert resolve_recovered(tmp_path, 11) == []
+
+
+def test_fleet_receipt_never_claims_consumer_success(tmp_path):
+    incident = tmp_path / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-1.md"
+    incident.parent.mkdir(parents=True)
+    incident.write_text("# old red\n")
+    write_health(tmp_path, "2026-09-24T10:00:00Z", 0)
+    record_status(tmp_path, 10, 1, "a" * 40, "schedule")
+    write_health(tmp_path, "2026-09-24T18:00:00Z", 0)
+    record_status(tmp_path, 11, 1, "a" * 40, "schedule")
+    receipt = json.loads((tmp_path / resolve_recovered(tmp_path, 11)[0]).read_text())
+    assert receipt["evidence_scope"] == "FLEET_HEALTH_ONLY"
+    assert receipt["fleet_green_run_ids"] == [10, 11]
+    assert receipt["original_consumer_verified"] is False
+    assert receipt["data_source_first_known_verified"] is False
+    assert receipt["incident_repaired_or_merged_by_this_receipt"] is False
