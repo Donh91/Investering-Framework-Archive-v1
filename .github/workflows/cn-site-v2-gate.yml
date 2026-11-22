@@ -191,3 +191,15 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/premium-v2/promote-root.mjs
       - name: Verify one original Graph B and one Kompas PRO on 390/430 canonical Chrome
         run: node 05_CYCLE_NAVIGATOR/site/premium-v2/next-browser.test.mjs --root
+      - name: Install isolated browser screenshot and WCAG audit dependencies
+        run: npm install --prefix 05_CYCLE_NAVIGATOR/site --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.56.1 axe-core@4.10.3
+      - name: Inspect final CN root on real browser at mobile tablet and desktop widths
+        run: node 05_CYCLE_NAVIGATOR/site/tests/cn-shared-visual-qa.mjs
+      - name: Retain public-only CN visual QA screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cn-visual-qa
+          path: 05_CYCLE_NAVIGATOR/site/qa-visual-artifacts/
+          if-no-files-found: warn
+          retention-days: 3
