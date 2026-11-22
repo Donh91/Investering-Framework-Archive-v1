@@ -84,10 +84,16 @@ try {
      assert.ok(dom.graphWidth>50&&dom.graphHeight>40,'GRAPH_CONTAINER_COLLAPSED');
      assert.ok(dom.scrollWidth<=dom.clientWidth+2,
        'HORIZONTAL_OVERFLOW_'+width+':'+dom.scrollWidth+'>'+dom.clientWidth);
-     const btc=page.locator('[data-asset="BTC"]'),eth=page.locator('[data-asset="ETH"]');
-     assert.ok(await btc.count()>0&&await eth.count()>0,'ASSET_CONTROLS_MISSING');
-     await eth.first().click();
-     await btc.first().click();
+     // More than one DOM node carries data-asset, including non-button,
+     // hidden Compass sections. Click only the active visible Graph B controls.
+     const btc=page.locator('#variant-panel button[data-asset="BTC"]:visible');
+     const eth=page.locator('#variant-panel button[data-asset="ETH"]:visible');
+     assert.equal(await btc.count(),1,'BTC_ACTIVE_GRAPH_CONTROL_MISSING_OR_DUPLICATE');
+     assert.equal(await eth.count(),1,'ETH_ACTIVE_GRAPH_CONTROL_MISSING_OR_DUPLICATE');
+     await eth.click({timeout:8000});
+     assert.equal(await eth.getAttribute('aria-pressed'),'true','ETH_CONTROL_NOT_ACTIVE');
+     await btc.click({timeout:8000});
+     assert.equal(await btc.getAttribute('aria-pressed'),'true','BTC_CONTROL_NOT_RESTORED');
      if(width===390||width===1280){
        const file='graph-'+width+'.png';
        await page.locator('#variant-panel').screenshot({path:join(out,file),animations:'disabled'});
