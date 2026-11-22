@@ -89,11 +89,11 @@ class BaselineTrustBoundaryTests(unittest.TestCase):
                        else admit.TEST_COMMANDS)[scope][ordinal]
                 return "fixed",["docker","run",sandbox.IMAGE,*fixed]
             with mock.patch.object(probe.subprocess,"check_output",
-                                   return_value=image_id+"\\n"), \\
-                 mock.patch.object(probe,"native_pristine_source",return_value=sha), \\
+                                   return_value=image_id+"\n"), \
+                 mock.patch.object(probe,"native_pristine_source",return_value=sha), \
                  mock.patch.object(sandbox,"_copy_public_tree",
-                                   return_value={"files":1}), \\
-                 mock.patch.object(sandbox,"docker_command",side_effect=command), \\
+                                   return_value={"files":1}), \
+                 mock.patch.object(sandbox,"docker_command",side_effect=command), \
                  mock.patch.object(sandbox,"_run_once",return_value=failed) as run:
                 receipt=probe.probe(pristine,sha,image_id)
             self.assertEqual(receipt["probe_result"],"BASELINES_FAIL_OR_INCOMPLETE")
