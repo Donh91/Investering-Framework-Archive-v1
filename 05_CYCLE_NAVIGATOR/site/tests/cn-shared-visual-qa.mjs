@@ -59,7 +59,7 @@ try {
      const resp=await page.goto(origin+prefix,{waitUntil:'domcontentloaded',timeout:30000});
      assert.equal(resp?.status(),200,'NO_PUBLIC_HOME');
      await page.locator('#variant-panel').waitFor({state:'attached',timeout:25000});
-     await page.locator('#official-product-pilot').waitFor({state:'attached',timeout:25000});
+     await page.locator('#compass-pro').waitFor({state:'attached',timeout:10000});
      await page.waitForTimeout(1000);
      dom=await page.evaluate(()=>{
        const doc=document.documentElement,body=document.body,graph=document.querySelector('#chart');
@@ -67,7 +67,7 @@ try {
        return {title:document.title,visibleTextChars:body?.innerText.trim().length||0,
          scrollWidth:Math.max(doc.scrollWidth,body?.scrollWidth||0),clientWidth:doc.clientWidth,
          graphWidth:rect?.width||0,graphHeight:rect?.height||0,
-         sourceState:document.querySelector('#official-product-pilot')?.dataset.sourceState||'NOT_DECLARED',
+         sourceState:document.querySelector('#compass-pro')?.dataset.sourceState||document.querySelector('#cn-forward-source-status')?.textContent?.trim().slice(0,120)||'NOT_DECLARED',
          feedText:document.querySelector('#feed-status')?.textContent?.trim().slice(0,160)||'NOT_DECLARED'};
      });
      assert.match(dom.title,/Cycle Navigator/i,'WRONG_PRODUCT_TITLE');
