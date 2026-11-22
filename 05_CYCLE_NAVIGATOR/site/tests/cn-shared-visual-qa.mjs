@@ -60,7 +60,16 @@ try {
      assert.equal(resp?.status(),200,'NO_PUBLIC_HOME');
      await page.locator('#variant-panel').waitFor({state:'attached',timeout:25000});
      await page.locator('#compass-pro').waitFor({state:'attached',timeout:10000});
-     await page.waitForTimeout(1000);
+     await page.waitForTimeout(650);
+     // Capture first-visit Compass before switching views; the graph tab is
+     // intentionally hidden on the genuine default homepage.
+     const initial='compass-default-'+width+'.png';
+     await page.screenshot({path:join(out,initial),fullPage:true,animations:'disabled'});
+     screenshots.push(initial);
+     await page.locator('[data-premium-nav="graph"]').click();
+     await page.locator('#variant-panel').waitFor({state:'visible',timeout:12000});
+     await page.locator('#chart').waitFor({state:'visible',timeout:12000});
+     await page.waitForTimeout(850);
      dom=await page.evaluate(()=>{
        const doc=document.documentElement,body=document.body,graph=document.querySelector('#chart');
        const rect=graph?.getBoundingClientRect();
