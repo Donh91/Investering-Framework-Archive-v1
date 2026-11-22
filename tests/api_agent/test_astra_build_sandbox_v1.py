@@ -100,6 +100,24 @@ class BuildSandboxTest(unittest.TestCase):
         self.assertEqual(s.observed_test_count(node, b"# tests 3\n# pass 3\n# fail 0\n"), 3)
         self.assertEqual(s.observed_test_count(node, b"# tests 3\n# pass 0\n# fail 0\n"), 0)
 
+    def test_reviewed_candidate_prefilter_is_not_full_main_suite(self):
+        self.assertNotEqual(admit.PREFILTER_COMMANDS["M1"],
+                            admit.TEST_COMMANDS["M1"])
+        self.assertNotEqual(admit.PREFILTER_COMMANDS["M3"],
+                            admit.TEST_COMMANDS["M3"])
+        name, argv = s.docker_command(self.src, "M1", 0,
+                                      profile="restricted_candidate")
+        fixed = admit.PREFILTER_COMMANDS["M1"][0]
+        self.assertEqual(tuple(argv[-len(fixed):]), fixed)
+        self.assertIn("--network", argv)
+        self.assertEqual(argv[argv.index("--network")+1], "none")
+        with self.assertRaisesRegex(s.SandboxBlocked, "COMMAND_PROFILE"):
+            s.docker_command(self.src, "M1", 0,
+                             profile="model_selected_shell")
+        with self.assertRaisesRegex(s.SandboxBlocked, "TEST_COMMAND_ID"):
+            s.docker_command(self.src, "SMOKE", 0,
+                             profile="restricted_candidate")
+
     def test_source_copy_omits_git_and_rejects_symlinks(self):
         self.assertTrue((self.src / ".git/config").exists())
         dst = self.root / "copied"
