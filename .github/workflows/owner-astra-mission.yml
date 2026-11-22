@@ -444,14 +444,33 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Build source-reviewed hash-locked toolchain BEFORE any model artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --pull --platform linux/amd64 \
+            --file scripts/api_agent/docker/astra-build-toolchain-v1.Dockerfile.txt \
+            --tag astra-build-runtime:reviewed .
+          image_id=$(docker image inspect --format '{{.Id}}' astra-build-runtime:reviewed)
+          [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image_id")" = linux/amd64
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --memory-swap 256m \
+            --cpus 0.5 --pids-limit 32 "$image_id" python -m pytest --version
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --memory-swap 256m \
+            --cpus 0.5 --pids-limit 32 "$image_id" node --version
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --memory-swap 256m \
+            --cpus 0.5 --pids-limit 32 "$image_id" git --version
+          echo "ASTRA_BUILD_IMAGE_ID=$image_id" >> "$GITHUB_ENV"
       - uses: actions/download-artifact@v4
         with:
           name: astra-mission-evidence-${{ github.run_id }}
           path: runtime/astra-build-input
-      - name: Pull exact source-reviewed Python image outside candidate container
-        run: |
-          docker pull --platform linux/amd64 python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b
-          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b)" = linux/amd64
       - name: Bind exact original provider receipt and execute only fixed BUILD tests
         run: >-
           python -m scripts.api_agent.astra_build_driver_v1

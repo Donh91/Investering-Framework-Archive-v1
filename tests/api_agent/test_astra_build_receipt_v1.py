@@ -69,7 +69,7 @@ class BuildReceiptTest(unittest.TestCase):
 
     def test_exact_binding_no_release_authority(self):
         result=self.bind()
-        self.assertEqual(result["status"],"TEST_COMPLETION_HOLD")
+        self.assertEqual(result["status"],"PREFILTER_ELIGIBLE_DRAFT_PR_ONLY")
         self.assertEqual(result["test_count"],2)
         self.assertFalse(result["all_fixed_tests_passed"])
         self.assertFalse(result["merge_authority"])
@@ -81,7 +81,7 @@ class BuildReceiptTest(unittest.TestCase):
         with self.assertRaisesRegex(r.ReceiptBlocked, "SANDBOX_BOND"):
             self.bind()
         self.sandbox["test_profile"] = "FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF"
-        self.assertEqual(self.bind()["status"], "TEST_COMPLETION_HOLD")
+        self.assertEqual(self.bind()["status"], "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY")
 
     def test_actual_collector_to_build_receipt_binding(self):
         # A synthetic GET-only provider completion is passed through the real
@@ -118,7 +118,7 @@ class BuildReceiptTest(unittest.TestCase):
             self.assertEqual(actual["output_sha256"], a.digest(self.raw))
             self.manifest = manifest
             self.paid = actual
-            self.assertEqual(self.bind()["status"], "TEST_COMPLETION_HOLD")
+            self.assertEqual(self.bind()["status"], "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY")
 
     def test_collector_absent_provider_effort_is_not_qualified(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -181,7 +181,7 @@ class BuildReceiptTest(unittest.TestCase):
         with self.assertRaisesRegex(r.ReceiptBlocked, "MODEL_EFFORT_BOND"):
             self.bind()
         self.paid["provider_model"] = "gpt-6.2-astra-2026-11-21"
-        self.assertEqual(self.bind()["status"], "TEST_COMPLETION_HOLD")
+        self.assertEqual(self.bind()["status"], "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY")
 
     def test_raw_report_tampering_detected(self):
         self.raw+=b"x"

@@ -61,6 +61,14 @@ def verify_job_contract(source: str, job: str):
         raise AssertionError("JOB_CROSS_RUN_ARTIFACT")
     if "persist-credentials: false" not in section:
         raise AssertionError("JOB_PERSIST_CREDENTIALS")
+    if job == "build-sandbox":
+        image_step = section.find("Build source-reviewed hash-locked toolchain BEFORE any model artifacts")
+        download_step = section.find("- uses: actions/download-artifact@v4")
+        if image_step < 0 or download_step < 0 or image_step >= download_step:
+            raise AssertionError("MODEL_BYTES_BEFORE_TOOLCHAIN")
+        if "ASTRA_BUILD_IMAGE_ID=$image_id" not in section or "--pull never" not in section:
+            raise AssertionError("TOOLCHAIN_ID_OR_LOCAL_ONLY_IMAGE")
+
     return True
 
 
@@ -89,6 +97,15 @@ class AstraBuildWorkflowSecurityTest(unittest.TestCase):
             with self.subTest(job=job), self.assertRaisesRegex(
                     AssertionError, "JOB_PERMISSION_NOT_READ_ONLY"):
                 verify_job_contract(edited, job)
+
+    def test_loading_model_before_toolchain_is_denied(self):
+        source = WF.read_text(encoding="utf-8")
+        segment = job_section(source, "build-sandbox")
+        edited = source.replace(segment, segment.replace(
+            "Build source-reviewed hash-locked toolchain BEFORE any model artifacts",
+            "Build unreviewed image after model download"))
+        with self.assertRaisesRegex(AssertionError, "MODEL_BYTES_BEFORE_TOOLCHAIN"):
+            verify_job_contract(edited, "build-sandbox")
 
     def test_other_run_download_denied(self):
         source = WF.read_text(encoding="utf-8")

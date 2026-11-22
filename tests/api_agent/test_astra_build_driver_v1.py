@@ -182,6 +182,20 @@ class TestBuildDriver(unittest.TestCase):
         with self.assertRaises(a.AdmissionBlocked):
             d.trusted_scope(self.repo, self.mid, self.main)
 
+    def test_same_job_toolchain_is_revalidated_not_taken_from_model(self):
+        image = "sha256:" + "a"*64
+        with mock.patch.dict(d.os.environ, {"ASTRA_BUILD_IMAGE_ID": image}), \
+             mock.patch.object(d.subprocess, "check_output", return_value=image+"\\n"):
+            self.assertEqual(d.verified_same_job_toolchain_image(), image)
+        with mock.patch.dict(d.os.environ, {"ASTRA_BUILD_IMAGE_ID": "python:latest"}):
+            with self.assertRaisesRegex(d.DriverHold, "TRUSTED_TOOLCHAIN_IMAGE_ID_MISSING"):
+                d.verified_same_job_toolchain_image()
+        with mock.patch.dict(d.os.environ, {"ASTRA_BUILD_IMAGE_ID": image}), \
+             mock.patch.object(d.subprocess, "check_output",
+                               return_value="sha256:"+"b"*64+"\\n"):
+            with self.assertRaisesRegex(d.DriverHold, "TRUSTED_TOOLCHAIN_IMAGE_DRIFT"):
+                d.verified_same_job_toolchain_image()
+
     def test_runner_never_claims_merge_from_sandbox(self):
         result = {"paid_authority": False,
                   "merge_authority": False,
