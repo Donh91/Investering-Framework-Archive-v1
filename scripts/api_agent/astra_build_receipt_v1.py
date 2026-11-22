@@ -104,6 +104,7 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
             and tested.get("proposal_sha256") == admission.digest(raw_report)
             and tested.get("admission_sha256") == admission.digest(admission.canonical(original))
             and tested.get("test_command_id") == approved_scope["test_command_id"]
+            and tested.get("test_profile") == "FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF"
             and tested.get("network") == "none"
             and tested.get("image") == sandbox.IMAGE
             and tested.get("secrets") is False
@@ -112,7 +113,7 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
             "SANDBOX_BOND")
     tests=tested.get("tests")
     baseline=tested.get("native_suite_baseline")
-    expected_count=len(admission.TEST_COMMANDS[approved_scope["test_command_id"]])
+    expected_count=len(admission.PREFILTER_COMMANDS[approved_scope["test_command_id"]])
     require(type(tests) is list and type(baseline) is list
             and len(tests) == len(baseline) == expected_count and expected_count > 0,
             "TEST_CENSUS")
