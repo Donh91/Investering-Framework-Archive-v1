@@ -106,8 +106,15 @@ class BuildSandboxTest(unittest.TestCase):
         dst.mkdir()
         out = s._copy_public_tree(self.src, dst)
         self.assertGreaterEqual(out["files"], 1)
-        self.assertFalse((dst / ".git").exists())
+        self.assertTrue((dst / ".git").is_dir())
         self.assertTrue((dst / self.pathname).is_file())
+        self.assertEqual(subprocess.check_output(
+            ["git", "-C", str(dst), "rev-parse", "HEAD"],
+            text=True).strip(), out["local_synthetic_git_sha"])
+        self.assertFalse(out["local_synthetic_git_is_original_main"])
+        self.assertEqual(subprocess.check_output(
+            ["git", "-C", str(dst), "remote"], text=True).strip(), "")
+        self.assertFalse((dst / ".git/FETCH_HEAD").exists())
         (self.src / "scripts/learning/bad.py").symlink_to(self.path)
         with self.assertRaisesRegex(s.SandboxBlocked,
                                         "SOURCE_UNTRACKED_OR_IGNORED|SOURCE_SPECIAL_OR_SYMLINK"):
