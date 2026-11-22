@@ -71,6 +71,21 @@ Before automation, incident, API-agent, Codex, scheduled delivery or remediation
 
 A health report may be RED while its observer workflow correctly succeeds after durable publication. `CODEX_READY` is a bounded task package, not proof that Codex has run, changed code or merged. `LATEST_CODEX_EXECUTION_STATE.json` is observability only and never overrides `LATEST_CODEX_READY_TASKS.json`. Do not work from conversation memory or an issue summary when newer hash-bound operational files exist.
 
+### Tool-use priority and durable operations register - owner instruction 2026-11-22
+
+`Donh91/Investering-Framework-Archive-v1` is the durable **framework operations register** for shared agent rules, work coordination, source-bound decisions and outcome receipts. Chat memory, browser sessions and external agent messages are convenience context, not competing canonical registers. Preserve the separate `Donh91/secrets` restricted-data plane and the credential plane.
+
+For each authorized framework task use the **lowest incremental-cost qualified tool capable of the exact required action**, normally in this order:
+
+1. Existing native GitHub connector/API operations and deterministic, authorized code.
+2. Existing original-owner GitHub Actions, S1 or other approved runners, only within their actual mandate, triggers and evidence contracts.
+3. Other already-connected, authorized direct APIs/plugins when their capability, permissions, privacy requirements and quota fit.
+4. TinyFish or similar browser automation **last**, only if genuine UI interaction is necessary and no authorized direct route can complete the task, after checking available usage/credits.
+
+Avoid browser automation for ordinary public research, repository reads, PR work, reviews or other tasks that direct tools can perform. Verify each connector's actual write/dispatch capabilities: GitHub GET access is not permission or capability to POST a `workflow_dispatch`. Never rerun an unrelated workflow, make a new scheduler, broaden credentials, purchase credits, bypass a release gate, or claim a run started simply to work around unavailable browser access. When blocked, report `NOT_EXECUTED`, the exact capability/quota limitation and the smallest safe next step.
+
+This rule optimizes tool selection, **not authority**. All current domain owners, readback, CI, independent review, privacy, Vault/recovery, spending, portfolio and release restrictions remain binding. Do not create a parallel task queue, memory store or authority plane. Log meaningful choices in the existing task's receipt rather than making new reports.
+
 ### Shared Sol MAX lane for ANY owner-authorized ChatGPT thread
 
 If the user in any conversation requests `Sol API MAX`, `GPT-6.1 Sol MAX`
