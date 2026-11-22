@@ -73,6 +73,18 @@ def verify_job_contract(source: str, job: str):
 
 
 class AstraBuildWorkflowSecurityTest(unittest.TestCase):
+    def test_only_pr_toolchain_job_coalesces_superseded_source(self):
+        source = WF.read_text(encoding="utf-8")
+        section = job_section(source, "build-toolchain-audit")
+        self.assertIn("github.event_name == 'pull_request'", section)
+        self.assertIn("github.head_ref == 'build/astra-build-hold-lift-h1-h6-20261121'", section)
+        self.assertIn("      group: astra-build-toolchain-pr-${{ github.event.pull_request.number }}", section)
+        self.assertIn("      cancel-in-progress: true", section)
+        for forbidden in ("paid", "recover", "verify", "build-sandbox", "worklike-sandbox"):
+            other = job_section(source, forbidden)
+            self.assertNotIn("astra-build-toolchain-pr-", other)
+            self.assertNotIn("cancel-in-progress: true", other)
+
     def test_all_sandboxes_pinned(self):
         source = WF.read_text(encoding="utf-8")
         for job in JOB_NAMES:
