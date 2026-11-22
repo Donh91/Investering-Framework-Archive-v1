@@ -145,6 +145,37 @@ def test_unknown_legacy_event_and_sha_do_not_close_incident(tmp_path):
     assert resolve_recovered(tmp_path, 11) == []
 
 
+def test_prior_green_health_does_not_auto_close_new_incident(tmp_path):
+    incident = tmp_path / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-20-attempt-1.md"
+    incident.parent.mkdir(parents=True)
+    incident.write_text("# later RED incident\n")
+    for run_id, moment in ((10, "10:00"), (11, "18:00")):
+        write_health(tmp_path, f"2026-09-24T{moment}:00Z", 0)
+        record_status(tmp_path, run_id, 1, "a" * 40, "schedule")
+    assert resolve_recovered(tmp_path, 11) == []
+    write_health(tmp_path, "2026-09-25T10:00:00Z", 0)
+    record_status(tmp_path, 21, 1, "a" * 40, "schedule")
+    assert resolve_recovered(tmp_path, 21) == []
+    write_health(tmp_path, "2026-09-25T18:00:00Z", 0)
+    record_status(tmp_path, 22, 1, "a" * 40, "schedule")
+    produced = resolve_recovered(tmp_path, 22)
+    assert len(produced) == 1
+    receipt = json.loads((tmp_path / produced[0]).read_text())
+    assert receipt["incident_origin_run_id"] == 20
+    assert receipt["fleet_green_run_ids"] == [21, 22]
+    assert receipt["original_consumer_verified"] is False
+
+
+def test_unverifiable_incident_filename_does_not_get_auto_closed(tmp_path):
+    incident = tmp_path / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-unverified.md"
+    incident.parent.mkdir(parents=True)
+    incident.write_text("# unknown origin\n")
+    for run_id, moment in ((10, "10:00"), (11, "18:00")):
+        write_health(tmp_path, f"2026-09-24T{moment}:00Z", 0)
+        record_status(tmp_path, run_id, 1, "a" * 40, "schedule")
+    assert resolve_recovered(tmp_path, 11) == []
+
+
 def test_fleet_receipt_never_claims_consumer_success(tmp_path):
     incident = tmp_path / "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-1.md"
     incident.parent.mkdir(parents=True)
