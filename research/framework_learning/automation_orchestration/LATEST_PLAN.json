@@ -4,21 +4,21 @@
     "luna_required": false,
     "max_luna_calls_this_run": 1,
     "max_sol_calls_this_run": 1,
-    "sol_6_1_required": false
+    "sol_6_1_required": true
   },
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "0d5fbc720363c09a2454cf41c539f4dceaa5d1ea0dbbc57d2f2a0aa56e7b6eea",
+  "fingerprint": "15439b37a93144c7a5eb646c2ccf96d9b62ee6b75caa4ad9df30a97a67fdb89a",
   "fleet": {
-    "amber_count": 9,
-    "green_count": 197,
-    "red_count": 0,
+    "amber_count": 23,
+    "green_count": 182,
+    "red_count": 1,
     "scheduled_workflow_count": 58,
     "workflow_count": 206,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-11-22T11:56:04Z",
+  "generated_at_utc": "2026-11-22T12:48:37Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -30,20 +30,40 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "items": [],
-  "material_delta": false,
+  "items": [
+    {
+      "cluster_id": null,
+      "existing_remediation": null,
+      "failure_streak": 2,
+      "findings": [
+        "REPEATED_CONSECUTIVE_FAILURES"
+      ],
+      "latest_head_sha": "8242ef06dee4173473863284fa246fc69eaf8fa4",
+      "latest_run_id": 45021940452,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45021940452",
+      "model_lane": "GPT_6_1_SOL",
+      "openai_enabled": false,
+      "recent_failure_count": 3,
+      "route": "SOL_DIAGNOSIS",
+      "scheduled": false,
+      "workflow": "cycle-navigator-pages.yml",
+      "write_target_class": "NO_REPO_WRITE",
+      "writer_group": "cycle-navigator-pages"
+    }
+  ],
+  "material_delta": true,
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
     "existing_remediation_count": 0,
     "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
-    "sol_6_1_diagnosis_count": 0
+    "sol_6_1_diagnosis_count": 1
   },
   "source_authority": {
     "codex_ready": "VALID",
     "new_diagnosis_eligible": true,
     "remediation": "VALID"
   },
-  "source_health_generated_at_utc": "2026-11-21T21:45:58.990755Z",
-  "source_health_status": "AMBER"
+  "source_health_generated_at_utc": "2026-11-22T12:44:28.309709Z",
+  "source_health_status": "RED"
 }

@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-11-22T12:00:29Z",
+  "generated_at_utc": "2026-11-22T12:53:48Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -15,19 +15,45 @@
   },
   "luna_triage": null,
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "0d5fbc720363c09a2454cf41c539f4dceaa5d1ea0dbbc57d2f2a0aa56e7b6eea",
+  "plan_fingerprint": "15439b37a93144c7a5eb646c2ccf96d9b62ee6b75caa4ad9df30a97a67fdb89a",
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
     "existing_remediation_count": 0,
     "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
-    "sol_6_1_diagnosis_count": 0
+    "sol_6_1_diagnosis_count": 1
   },
-  "sol_6_1_diagnosis": null,
+  "sol_6_1_diagnosis": {
+    "evidence_against": [
+      "Cross-workflow deduplication is not established: only one workflow is supplied, clusters is empty, and cluster_id is null. These facts do not demonstrate that the failures are independent.",
+      "Only the latest head SHA is supplied. There is no evidence that earlier failures occurred on that same head.",
+      "No failed-step logs, error signatures, dependency records, or successful comparison runs are supplied; a common root cause cannot be confirmed or ruled out."
+    ],
+    "evidence_for": [
+      "cycle-navigator-pages.yml has a failure_streak of 2 and recent_failure_count of 3, supporting investigation of recurrence before treating each failure as a separate incident.",
+      "The latest execution is run 45021940452 at head 8242ef06dee4173473863284fa246fc69eaf8fa4, providing a concrete anchor for bounded comparison.",
+      "The supplied finding is REPEATED_CONSECUTIVE_FAILURES; no more specific failure classification is provided."
+    ],
+    "forecast_candidates": [],
+    "hypotheses": [
+      "H1 \u2014 Repeated executions share one failure mechanism. Bounded diagnostic: compare the latest failed run with the immediately preceding failed run and, if available, one preceding successful run. Compare the first failing step, error signature, head SHA, trigger, and relevant inputs. Different first-failure signatures would weaken a single-mechanism explanation.",
+      "H2 \u2014 A shared upstream dependency causes the recurrence. Bounded diagnostic: identify dependencies consumed at the first failing step and inspect their corresponding producer-run status and artifact availability for the compared executions. Healthy, matching dependencies would weaken this hypothesis; timestamp proximity alone would not establish causation.",
+      "H3 \u2014 The failure belongs to a wider shared-head cluster omitted from this input. Bounded diagnostic: check existing automation-health records for workflows on the exact latest SHA, then compare first-failure signatures and dependency relationships. A shared SHA alone is insufficient for deduplication.",
+      "Remediation-state check \u2014 Before proposing any separate repair, consult the existing remediation record associated with this workflow or any confirmed shared cause. The supplied existing_remediation value is null, so remediation existence, status, and coverage remain unknown; do not infer a new remediation is needed."
+    ],
+    "status": "DEGRADED",
+    "summary": "Metadata-only review identifies one recurrent workflow-failure candidate, not three established independent incidents. Neither a shared root cause nor a workflow-local cause is demonstrated. Prioritize bounded signature and dependency comparisons before independent repair. No code changes, state changes, or remediation authority are proposed.",
+    "uncertainties": [
+      "The recent-failure lookback, intervening outcomes, earlier run IDs, and earlier head SHAs are unspecified.",
+      "Failure stage, error content, upstream/downstream topology, and artifact lineage are missing.",
+      "Existing remediation is null in the supplied record; authoritative remediation state cannot be determined from this input.",
+      "openai_enabled=false and scheduled=false are metadata flags, not established causes; the GPT_6_1_SOL lane label does not establish model involvement in the failure."
+    ]
+  },
   "source_authority": {
     "codex_ready": "VALID",
     "new_diagnosis_eligible": true,
     "remediation": "VALID"
   },
-  "source_health_generated_at_utc": "2026-11-21T21:45:58.990755Z"
+  "source_health_generated_at_utc": "2026-11-22T12:44:28.309709Z"
 }

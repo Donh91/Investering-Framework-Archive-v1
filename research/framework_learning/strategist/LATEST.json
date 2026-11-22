@@ -11,7 +11,7 @@
   },
   "contract": "FRAMEWORK_STRATEGIST_BRIEF_v1",
   "covered_source_count": 8,
-  "generated_at_utc": "2026-11-22T11:56:04.255372Z",
+  "generated_at_utc": "2026-11-22T12:48:37.867282Z",
   "goal_alignment": [
     {
       "evidence_requirement": "Independent production readback and accepted safety/integrity receipts",
@@ -59,6 +59,46 @@
       "automatic_code_write": false,
       "automatic_grok_call": false,
       "automatic_market_change": false,
+      "code": "OPERATIONAL_INTEGRITY_ATTENTION",
+      "dispatch_allowed": false,
+      "evidence_bindings": [
+        {
+          "contract": "AUTOMATION_PRODUCTION_HEALTH_v2_1",
+          "name": "health",
+          "path": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+          "sha256": "912f3b8a6155509779a8a7e8b419225ab8247de2a99342f324bd35ddd7a4e23e",
+          "source_generated_at_utc": "2026-11-22T12:44:28.309709Z",
+          "status": "CURRENT"
+        },
+        {
+          "contract": "SELF_IMPROVEMENT_ADVISORY_v1",
+          "name": "self_improvement",
+          "path": "research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json",
+          "sha256": "365d8f1ee83f70929e661e20d288abab6c84d823f5330718c3d0ae8bef45a747",
+          "source_generated_at_utc": "2026-11-22T12:48:37.774707Z",
+          "status": "CURRENT"
+        }
+      ],
+      "evidence_fingerprint": "6fa20dc19f5f553a361ce8b8",
+      "evidence_sources": [
+        "health",
+        "self_improvement"
+      ],
+      "goal_id": "RELIABILITY",
+      "grok_bridge_state": "NOT_REQUESTED",
+      "id": "3b1feeed0d1f54dd1c4cc29e",
+      "interpretation": "Operational degradation is observed; not proof of any fixed root cause.",
+      "owner": "#1156",
+      "question": "Ask existing #1156 to check root-cause and production evidence before declaring recovery.",
+      "routing": "SUPERVISOR_ATTENTION",
+      "scientific_status": "NOT_ASSESSED",
+      "severity": "HIGH"
+    },
+    {
+      "authority": "PROPOSAL_ONLY",
+      "automatic_code_write": false,
+      "automatic_grok_call": false,
+      "automatic_market_change": false,
       "code": "UNRESOLVED_WEEKLY_RESEARCH_BLOCKERS",
       "dispatch_allowed": false,
       "evidence_bindings": [
@@ -90,46 +130,6 @@
       "automatic_code_write": false,
       "automatic_grok_call": false,
       "automatic_market_change": false,
-      "code": "OPERATIONAL_WARNING_REVIEW",
-      "dispatch_allowed": false,
-      "evidence_bindings": [
-        {
-          "contract": "AUTOMATION_PRODUCTION_HEALTH_v2_1",
-          "name": "health",
-          "path": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
-          "sha256": "bc70687a9a7187d00012423500e62261e231064d831b1c544e13c24333a61625",
-          "source_generated_at_utc": "2026-11-21T21:45:58.990755Z",
-          "status": "CURRENT"
-        },
-        {
-          "contract": "SELF_IMPROVEMENT_ADVISORY_v1",
-          "name": "self_improvement",
-          "path": "research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json",
-          "sha256": "89e034963c1c590144ffebe8476ddfc93157236a36a2b749272c9a63502fa667",
-          "source_generated_at_utc": "2026-11-22T11:56:04.162803Z",
-          "status": "CURRENT"
-        }
-      ],
-      "evidence_fingerprint": "6ef11ccb76e1c577317383e3",
-      "evidence_sources": [
-        "health",
-        "self_improvement"
-      ],
-      "goal_id": "RELIABILITY",
-      "grok_bridge_state": "NOT_REQUESTED",
-      "id": "8ec45d13e62a3cc4ef4afeb2",
-      "interpretation": "A cautionary operations state is not automatically a critical incident.",
-      "owner": "#1156",
-      "question": "Which current AMBER findings are substantive, and which are expected controls?",
-      "routing": "SUPERVISOR_ATTENTION",
-      "scientific_status": "NOT_ASSESSED",
-      "severity": "MEDIUM"
-    },
-    {
-      "authority": "PROPOSAL_ONLY",
-      "automatic_code_write": false,
-      "automatic_grok_call": false,
-      "automatic_market_change": false,
       "code": "NO_DOCUMENTED_IMPROVEMENT_ADMISSION",
       "dispatch_allowed": false,
       "evidence_bindings": [
@@ -137,12 +137,12 @@
           "contract": "SELF_IMPROVEMENT_ADVISORY_v1",
           "name": "self_improvement",
           "path": "research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json",
-          "sha256": "89e034963c1c590144ffebe8476ddfc93157236a36a2b749272c9a63502fa667",
-          "source_generated_at_utc": "2026-11-22T11:56:04.162803Z",
+          "sha256": "365d8f1ee83f70929e661e20d288abab6c84d823f5330718c3d0ae8bef45a747",
+          "source_generated_at_utc": "2026-11-22T12:48:37.774707Z",
           "status": "CURRENT"
         }
       ],
-      "evidence_fingerprint": "8a9e8a37ff15b277367770e5",
+      "evidence_fingerprint": "2b39559667dafcc96b1c62af",
       "evidence_sources": [
         "self_improvement"
       ],
@@ -161,36 +161,36 @@
     "health": {
       "contract": "AUTOMATION_PRODUCTION_HEALTH_v2_1",
       "path": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
-      "sha256": "bc70687a9a7187d00012423500e62261e231064d831b1c544e13c24333a61625",
-      "source_generated_at_utc": "2026-11-21T21:45:58.990755Z",
+      "sha256": "912f3b8a6155509779a8a7e8b419225ab8247de2a99342f324bd35ddd7a4e23e",
+      "source_generated_at_utc": "2026-11-22T12:44:28.309709Z",
       "status": "CURRENT"
     },
     "learning_memory": {
       "contract": "FRAMEWORK_LEARNING_MEMORY_v1",
       "path": "research/framework_learning/LATEST_LEARNING_MEMORY.json",
-      "sha256": "d075025d64cacf444695fb08978a4b01eb9e27e182f19630beef03643c5b9cbd",
-      "source_generated_at_utc": "2026-11-22T11:56:04.079904Z",
+      "sha256": "6e6f3a888f967624f8c9eccb7e5dd03081490b612374c72638df9a8010be4579",
+      "source_generated_at_utc": "2026-11-22T12:48:37.687490Z",
       "status": "CURRENT"
     },
     "resource_budget": {
       "contract": "FRAMEWORK_RESOURCE_BUDGET_ADVISORY_v1",
       "path": "research/framework_learning/resource_budget/LATEST.json",
-      "sha256": "931f91378b756aa58cd5bf6f35963c753b41fab520d8503e76ce50d4f30a9d0e",
-      "source_generated_at_utc": "2026-11-22T11:56:04.212274Z",
+      "sha256": "5c8be537c668ef5dd444a7ecc97c9613401a4a08f5be9c50a2583c9f59d53031",
+      "source_generated_at_utc": "2026-11-22T12:48:37.824001Z",
       "status": "CURRENT"
     },
     "self_improvement": {
       "contract": "SELF_IMPROVEMENT_ADVISORY_v1",
       "path": "research/framework_learning/LATEST_SELF_IMPROVEMENT_V1.json",
-      "sha256": "89e034963c1c590144ffebe8476ddfc93157236a36a2b749272c9a63502fa667",
-      "source_generated_at_utc": "2026-11-22T11:56:04.162803Z",
+      "sha256": "365d8f1ee83f70929e661e20d288abab6c84d823f5330718c3d0ae8bef45a747",
+      "source_generated_at_utc": "2026-11-22T12:48:37.774707Z",
       "status": "CURRENT"
     },
     "staleness": {
       "contract": "METHOD_STALENESS_REGISTER_v1",
       "path": "research/framework_learning/LATEST_METHOD_STALENESS_REGISTER.json",
-      "sha256": "58633523dcc7e3e9503f7fdcabce97c39d8b73f9dd5346249149b14d73ccd5c5",
-      "source_generated_at_utc": "2026-11-22T11:56:04.079904Z",
+      "sha256": "3557a811861fcc4c7113dee5b8fe5a6341e053fa9ebe7f518c9dad4fde1ebdfa",
+      "source_generated_at_utc": "2026-11-22T12:48:37.687490Z",
       "status": "CURRENT"
     },
     "strategic_intent": {
@@ -203,15 +203,15 @@
     "unconsumed": {
       "contract": "UNCONSUMED_INFORMATION_REGISTER_v1",
       "path": "research/framework_learning/LATEST_UNCONSUMED_INFORMATION.json",
-      "sha256": "d121b2fa8232d1a1bca7d1a837a30054765feafaad26cc52551d4375c7689875",
-      "source_generated_at_utc": "2026-11-22T11:56:04.079904Z",
+      "sha256": "1fa7f48a2fadd021b267e13f356d599ac52514e8e19394487f8dae84a3e04fe9",
+      "source_generated_at_utc": "2026-11-22T12:48:37.687490Z",
       "status": "CURRENT"
     },
     "weekly_delta": {
       "contract": "WEEKLY_LEARNING_DELTA_v1",
       "path": "research/framework_learning/LATEST_WEEKLY_LEARNING_DELTA.json",
-      "sha256": "3ccf2eff758794c5e23d32a1b604a27ed2849a33a2593a2cf6e7543f9f6530fc",
-      "source_generated_at_utc": "2026-11-22T11:56:04.079904Z",
+      "sha256": "0eb11bed8568c769d57c8028da545c33ef1deef38284bd0536ae52d022d4b6c4",
+      "source_generated_at_utc": "2026-11-22T12:48:37.687490Z",
       "status": "CURRENT"
     },
     "weekly_forensics": {
