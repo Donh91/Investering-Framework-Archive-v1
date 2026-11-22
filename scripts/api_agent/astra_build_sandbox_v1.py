@@ -287,7 +287,7 @@ def _baseline_failure_diagnostics(output: bytes) -> list[dict]:
                for p in sorted(path_hints)[:12]])
 
 
-def _run_once(command: list[str], name: str) -> dict:
+def _run_once(command: list[str], name: str, *, trusted_full_baseline: bool = False) -> dict:
     """Bound output, wall time, orphan cleanup; host environment has NO secrets."""
     require(command[:2] == ["docker", "run"] and "--network" in command
             and command[command.index("--network")+1] == "none", "DOCKER_NETWORK")
@@ -301,7 +301,11 @@ def _run_once(command: list[str], name: str) -> dict:
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 shell=False, env=env)
         selector.register(proc.stdout, selectors.EVENT_READ)
-        end = time.monotonic() + WALL_SECONDS
+        # The public, unmodified MAIN test census has substantially more tests
+        # than the narrow candidate prefilter. It may take longer, but NO
+        # candidate-supplied code can select or extend the timeout.
+        wall = 900 if trusted_full_baseline is True else WALL_SECONDS
+        end = time.monotonic() + wall
         while selector.get_map():
             remaining = end - time.monotonic()
             if remaining <= 0:
