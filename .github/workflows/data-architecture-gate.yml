@@ -15,6 +15,12 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Original PR branches can be >64 commits apart. Shallow history
+          # causes an unverifiable three-dot merge base, not a privacy PASS.
+          # Fetch full graph only in the no-secret, read-only scanner job.
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

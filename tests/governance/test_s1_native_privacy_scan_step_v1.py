@@ -393,6 +393,18 @@ class GateWorkflowWiring(unittest.TestCase):
         self.assertIn("        if: github.event_name == 'pull_request'", block)
         self.assertIn("          S1_PRIVACY_SCAN_MODE: enforce", block)
 
+    def test_scanner_checkout_has_complete_original_merge_history(self):
+        # The no-secret privacy scan must never pass by guessing a
+        # three-dot merge-base. A long-lived BUILD PR exceeds its former
+        # 64-commit deepen limit, so pin a complete native Git graph.
+        start, end = self.lines.index("  privacy-scan:"), self.lines.index("  gate:")
+        section = "\n".join(self.lines[start:end])
+        self.assertIn("- uses: actions/checkout@v4\n        with:\n", section)
+        self.assertIn("          fetch-depth: 0\n", section + "\n")
+        self.assertIn("          persist-credentials: false\n", section + "\n")
+        self.assertNotIn("          fetch-depth: 1\n", section)
+        self.assertNotIn("          fetch-depth: 2\n", section)
+
     def test_step_uses_no_secret_and_no_inline_expression_in_run(self):
         _, block = self._step_block()
         joined = "\n".join(block)
