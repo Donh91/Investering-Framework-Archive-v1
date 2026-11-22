@@ -15,6 +15,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 # pytest >=9.0.3 avoids GHSA-6w46-j5rx-g56g. Only trusted image
 # provisioning may use network. Runtime docker run MUST use --network none.
+COPY scripts/api_agent/docker/astra-build-trusted-pytest.ini.txt /opt/astra/pytest.ini
 COPY scripts/api_agent/docker/astra-build-requirements.lock.txt /tmp/astra-build-requirements.lock.txt
 RUN python -m pip install --no-cache-dir --require-hashes \
  -r /tmp/astra-build-requirements.lock.txt \
