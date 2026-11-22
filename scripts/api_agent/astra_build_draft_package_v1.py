@@ -81,7 +81,8 @@ def build(*, raw: bytes, scope: dict, verdict: dict) -> bytes:
             "git_write_performed": False,
             "merge_performed": False,
             "live_trading": False,
-            "paid_provider_action_performed": False
+            "additional_paid_post_performed_by_stager": False,
+            "upstream_paid_receipt_must_be_authenticated": True
         }
     }
     data = admission.canonical(package) + b"\n"

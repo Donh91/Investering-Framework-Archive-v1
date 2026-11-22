@@ -63,6 +63,8 @@ class DraftPackageTest(unittest.TestCase):
         self.assertIsNone(obj["files"][0]["preimage_sha256"])
         self.assertFalse(obj["permissions"]["git_write_performed"])
         self.assertFalse(obj["permissions"]["merge_performed"])
+        self.assertFalse(obj["permissions"]["additional_paid_post_performed_by_stager"])
+        self.assertTrue(obj["permissions"]["upstream_paid_receipt_must_be_authenticated"])
         self.assertEqual(obj["review"]["pr_mode"], "DRAFT_ONLY")
         self.assertEqual(obj["review"]["native_ci"], "MUST_RUN_ON_EXACT_OUTPUT_PR_HEAD")
 
