@@ -60,7 +60,7 @@ def probe(pristine: Path, sha: str, image_id: str) -> dict:
                 if argv[image_pos] != sandbox.IMAGE:
                     raise ValueError("NATIVE_IMAGE_ARGV_DRIFT")
                 argv[image_pos] = image_id
-                run = sandbox._run_once(argv, name)
+                run = sandbox._run_once(argv, name, trusted_full_baseline=True)
                 outcomes.append({
                     "scope": scope,
                     "fixed_command": list(command),
