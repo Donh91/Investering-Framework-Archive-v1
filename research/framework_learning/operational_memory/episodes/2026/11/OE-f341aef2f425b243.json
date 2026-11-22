@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/daily_capture/build_hourly_sequence.py",
+    "tests/daily_capture/test_daily_capture_pipeline.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-f341aef2f425b243",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "hourly-387-okx-oi-usd-slot-fail-closed",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(hourly): bind OKX four-slot OI USD notional, reject ambiguous units * test(hourly): prove OKX USD slot, invalid-shape holds and persisted history * fix(hourly): preserve dictionary numeric zero from Codex exact-head review * test(hourly): numeric-zero dictionary preserves full OKX OI window",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/daily_capture/build_hourly_sequence.py": "4a3bd2d824af6eb6586b86a4b998a1d322b02e55",
+    "tests/daily_capture/test_daily_capture_pipeline.py": "d973b3abebde3d9df965a78fe8d070f87e072870"
+  },
+  "source_commit_sha": "f341aef2f425b243dd53cd9be382c534e6b8587d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-21T22:58:27+01:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "fix(hourly #387): correct OKX OI USD slot with fail-closed unit tests (#2298)"
+}

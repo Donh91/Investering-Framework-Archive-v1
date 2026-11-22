@@ -1,0 +1,72 @@
+{
+  "action": {
+    "auto_execute": false,
+    "bounded_next_action": "Bind one genuine existing S1/Research native run to an authenticated skill read/use receipt; compare against no-skill baseline",
+    "code": "INSTRUMENT_NATIVE_SKILL_USAGE",
+    "follow_up_trigger": "New actual native read/usage and independently adjudicated outcome source; no repeated unchanged report",
+    "owner": "Existing Framework Learning Supervisor + Skill Quality Gate / #1157",
+    "priority": "P1"
+  },
+  "action_fingerprint": "a972cbab8f7aab458a8f",
+  "actual_api_cost_usd": null,
+  "authority": "ADVISORY_ONLY",
+  "auto_skill_activation": false,
+  "automatic_model_calls": false,
+  "calibrated_at_utc": "2026-11-16T11:58:54.345270Z",
+  "calibration_policy": {
+    "measured_outcome_claim": "UNKNOWN_UNTIL_INDEPENDENT_NATIVE_PROOF",
+    "negative_control": "Routine work, suggestions and pilot matching never count as applied skills",
+    "no_hindsight": true,
+    "no_rewrite_past_scorings": true,
+    "one_owner_action_max": 1,
+    "week_over_week_comparison": "CANDIDATE_ONLY_UNTIL_TWO_QUALIFIED_WEEKLY_SAMPLES",
+    "weekly_source": "LAST_COMPLETED_ISO_WEEK_FINAL_ONLY"
+  },
+  "contract": "WEEKLY_SKILL_CALIBRATION_v1",
+  "evaluated_week": "2026-W46",
+  "independent_skill_effect_rate": null,
+  "metrics": {
+    "actual_error_reduction": null,
+    "catalog": {
+      "catalog_total": 12,
+      "implicit_allowed_count": 2,
+      "nonpilot_count": 9,
+      "pilot_count": 3,
+      "sha256": "96135d81833edddd2971f3d5068d8b7634e3f43c7dbc8d6c27ae9b6abf64fb5c",
+      "source": "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json"
+    },
+    "catalog_change_vs_prior_week": null,
+    "catalog_trend_unit": "registered_skills_not_skill_usage",
+    "cost_and_latency_delta": null,
+    "documented_activation_rate": null,
+    "eligible_invocation_denominator": null,
+    "false_negative_rate": null,
+    "false_positive_rate": null,
+    "independent_skill_effect_rate": null,
+    "observations": {
+      "by_phase": null,
+      "duplicate": null,
+      "invalid": null,
+      "pilots_reported_applied": null,
+      "reported": null,
+      "source_paths": [],
+      "state": "ABSENT"
+    },
+    "verified_duplicate_work_avoided": null
+  },
+  "new_agent_or_scheduler": false,
+  "prior_action_followup": {
+    "actual_incremental_benefit_verified": null,
+    "evidence_status": "UNKNOWN_UNLESS_ORIGINAL_OWNER_OUTCOME_IS_READ_BACK",
+    "native_resolution_verified": null,
+    "previous_code": null,
+    "previous_week": null,
+    "same_open_action_as_previous_week": null
+  },
+  "prior_comparison_status": "UNKNOWN",
+  "scientific_or_performance_promotion": false,
+  "source_final_path": "research/framework_learning/weekly_forensics/LATEST.json",
+  "source_final_sha256": "c397951ee35575db2c896d30366701cb03fd7b34c6c7317c4d7d89360fb254a5",
+  "status": "BASELINE_ONLY_NATIVE_USAGE_UNKNOWN",
+  "verified_native_skill_usage_count": null
+}
