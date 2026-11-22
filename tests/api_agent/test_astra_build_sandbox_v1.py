@@ -120,6 +120,21 @@ class BuildSandboxTest(unittest.TestCase):
                                         "SOURCE_UNTRACKED_OR_IGNORED|SOURCE_SPECIAL_OR_SYMLINK"):
             s._copy_public_tree(self.src, self.root / "other")
 
+    def test_public_source_executable_mode_survives_readonly_copy(self):
+        binary = self.src / "scripts/learning/native_cli.py"
+        binary.write_text("#!/usr/bin/env python3\\nprint(1)\\n", encoding="utf-8")
+        binary.chmod(0o755)
+        subprocess.run(["git", "-C", str(self.src), "add", "scripts/learning/native_cli.py"],
+                       check=True, capture_output=True)
+        subtree = self.root / "modecopy"
+        subtree.mkdir()
+        s._copy_public_tree(self.src, subtree)
+        self.assertEqual((subtree / "scripts/learning/native_cli.py").stat().st_mode & 0o777,
+                         0o555)
+        listing = subprocess.check_output(["git", "-C", str(subtree), "ls-tree", "HEAD",
+                                           "scripts/learning/native_cli.py"], text=True)
+        self.assertTrue(listing.startswith("100755 blob "))
+
     def test_untracked_and_gitignored_source_never_copied(self):
         planted = self.src / "scripts/learning/untracked_planted.py"
         planted.write_text("print('untrusted')", encoding="utf-8")
