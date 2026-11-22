@@ -1,7 +1,7 @@
 # LATEST HANDOFF
 
-Generated: 2026-11-22T21:59:03.847377Z
-Hash: `119ee255801caef449826b2514db671a57924018c8fea7e11f93797e9202c246`
+Generated: 2026-11-22T22:18:29.016144Z
+Hash: `4ca48f62ebb4523b16d9f8242ee1353d248574ba6f42e4e280623d18334ae648`
 
 - **latest_capture**: `03_DAILY_CAPTURE_LOGS/captures/LATEST.json`
 - **latest_director_output**: `research/api_agent/outputs/daily/2026/11/22/205102/DAILY_DIRECTOR_OUTPUT.json`
@@ -22,4 +22,4 @@ Pending candidate files scanned: 451
 Legacy candidates quarantined: 21
 Duplicate candidate files excluded: 113
 Experiment candidates: 827
-Codex-ready tasks: 18
+Codex-ready tasks: 7
