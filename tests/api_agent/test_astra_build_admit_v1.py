@@ -145,6 +145,22 @@ class BuildAdmissionTest(unittest.TestCase):
         p["files"][0]["action"] = "modify"
         self.rejects("M3_CLOSURE_CREATE_ONLY", p, scoped)
 
+    def test_candidate_cannot_install_collection_hooks_or_change_existing_tests(self):
+        for path in ("tests/learning/conftest.py",
+                     "tests/learning/sitecustomize.py",
+                     "tests/learning/pytest.ini",
+                     "tests/learning/setup.cfg",
+                     "tests/learning/package.json"):
+            with self.subTest(path=path), self.assertRaises(a.AdmissionBlocked):
+                a.safe_path(path)
+        existing = "tests/learning/test_original_baseline.py"
+        scoped = copy.deepcopy(self.scope)
+        scoped["source_files"][existing] = {"sha256": "d" * 64, "mode": "100644"}
+        original = copy.deepcopy(self.proposal)
+        original["files"] = [{"path": existing, "action": "modify",
+                              "content": "def test_nothing():\\n    pass\\n"}]
+        self.rejects("TRUSTED_BASELINE_TESTS_READ_ONLY", original, scoped)
+
     def test_duplicate_file(self):
         p = copy.deepcopy(self.proposal)
         p["files"].append(copy.deepcopy(p["files"][0]))
