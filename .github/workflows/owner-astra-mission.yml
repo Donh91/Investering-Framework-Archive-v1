@@ -480,6 +480,6 @@ jobs:
         if: always()
         with:
           name: astra-build-result-${{ github.run_id }}
-          path: runtime/astra-build-result/receipt.json
+          path: runtime/astra-build-result/
           if-no-files-found: warn
           retention-days: 90

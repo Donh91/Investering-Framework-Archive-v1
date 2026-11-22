@@ -18,6 +18,7 @@ from scripts.api_agent import astra_build_admit_v1 as admit
 from scripts.api_agent import astra_build_cost_v1 as budget
 from scripts.api_agent import astra_build_receipt_v1 as binding
 from scripts.api_agent import astra_build_sandbox_v1 as sandbox
+from scripts.api_agent import astra_build_draft_package_v1 as draft_package
 from scripts.research import owner_astra_mission_v1 as owner
 
 CONTRACT = "ASTRA_BUILD_DRIVER_RECEIPT_v1"
@@ -223,6 +224,18 @@ def main():
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("xb") as dest:
         dest.write(data)
+    if result["status"] == "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY":
+        # Only staging, never GitHub write. The owner connector may create
+        # ONE draft PR, whose exact-head native CI is independent test proof.
+        repo = args.repo.resolve()
+        scope = trusted_scope(repo, mission_id, os.environ.get("GITHUB_SHA", ""))
+        origin = "archive/" + owner.mission_rel(mission_id) + "/results/ASTRA_RAW_REPORT.md"
+        source_bytes = read_bound(artifact, origin)
+        staged = draft_package.build(raw=source_bytes, scope=scope, verdict=result)
+        with (args.out.parent / "draft_pr_package.json").open("xb") as dest:
+            dest.write(staged)
+        print("ASTRA_DRAFT_PACKAGE_STAGED", admit.digest(staged),
+              "PENDING_EXTERNAL_OWNER_CONNECTOR_PR_CREATION")
     print(CONTRACT, result["status"], admit.digest(data))
     return 0 if result["status"] == "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY" else 3
 
