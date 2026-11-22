@@ -88,6 +88,31 @@ TEST_COMMANDS = {
     "M3": (("python", "-m", "pytest", "-q", "tests/governance"),),
 }
 
+# Curated, deterministic no-secret MODEL-CODE PREFILTER, not the authority for
+# full historical/source-custody correctness. The untouched MAIN runs
+# TEST_COMMANDS above in the independent PR-only image audit. An actual model
+# output must become a DRAFT PR whose native GitHub CI independently tests it.
+# Only reviewed code chooses these commands. No model output/mission bundle can
+# supply argv, choose new tests, or waive exact-head PR CI.
+PREFILTER_COMMANDS = {
+    "M1": (("python", "-m", "pytest", "-q",
+            "tests/learning/test_forecast_error_taxonomy.py",
+            "tests/learning/test_m6_warning_event_outcomes.py",
+            "tests/cycle_navigator/test_v2_edge_forecast_freeze.py"),
+           ("node", "--test",
+            "05_CYCLE_NAVIGATOR/site/tests/official-compass-freshness.test.mjs",
+            "05_CYCLE_NAVIGATOR/site/tests/pullback-pages-run-block.test.mjs")),
+    "M2": (("python", "-m", "pytest", "-q",
+            "tests/learning/test_m6_warning_event_outcomes.py",
+            "tests/data_ping/test_compass_event_refresh.py",
+            "tests/data_ping/test_compass_source_continuity_standing.py"),),
+    "M3": (("python", "-m", "pytest", "-q",
+            "tests/governance/test_s1_closure_assurance_v1.py",
+            "tests/governance/test_s1_closure_claim_guard_v1.py",
+            "tests/governance/test_s1_closure_impact_readout_v1.py",
+            "tests/governance/test_s1_edge_ledger_v1.py"),),
+}
+
 class AdmissionBlocked(ValueError):
     """A non-admitted untrusted proposal. Never recover by widening scope."""
 
