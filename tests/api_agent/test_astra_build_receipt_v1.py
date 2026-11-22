@@ -55,7 +55,8 @@ class BuildReceiptTest(unittest.TestCase):
             "mission_id":self.mid,"main_sha":self.scope["main_sha"],
             "proposal_sha256":a.digest(self.raw),
             "admission_sha256":a.digest(a.canonical(self.original_admission)),
-            "test_command_id":"M1", "network":"none","image":sb.IMAGE,
+            "test_command_id":"M1", "test_profile":"FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF",
+            "network":"none","image":sb.IMAGE,
             "secrets":False,"paid_authority":False,"merge_authority":False,
             "status":"TEST_COMPLETION_UNATTESTED","tests":tests,
             "native_suite_baseline":baseline,"independent_completion_attested":False}
@@ -74,6 +75,13 @@ class BuildReceiptTest(unittest.TestCase):
         self.assertFalse(result["merge_authority"])
         self.assertFalse(result["paid_authority"])
         self.assertEqual(result["raw_model_response_sha256"],a.digest(self.raw))
+
+    def test_wrong_prefilter_profile_is_a_bond_failure(self):
+        self.sandbox["test_profile"] = "TRUSTED_FULL_MAIN"
+        with self.assertRaisesRegex(r.ReceiptBlocked, "SANDBOX_BOND"):
+            self.bind()
+        self.sandbox["test_profile"] = "FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF"
+        self.assertEqual(self.bind()["status"], "TEST_COMPLETION_HOLD")
 
     def test_actual_collector_to_build_receipt_binding(self):
         # A synthetic GET-only provider completion is passed through the real
