@@ -64,6 +64,10 @@ jobs:
         run: |
           python -m py_compile scripts/research/task2_challenger_b_kompas_tilt_v1.py tests/research/test_task2_challenger_b_kompas_tilt_v1.py
           python -m unittest -v tests.research.test_task2_challenger_b_kompas_tilt_v1
+      - name: Verify S1 incident classification and natural fleet recovery controls
+        run: |
+          python -m py_compile scripts/governance/s1_incident_triage_v1.py scripts/health/automation_health_resolution.py tests/governance/test_s1_incident_triage_v1.py
+          python -m unittest -v tests.governance.test_s1_incident_triage_v1
       - name: Derive and check S1 required-job executed paths on full checkout
         run: |
           python scripts/governance/s1_standing_policy_v1.py --derive > /tmp/s1-derived-executed-paths.json
