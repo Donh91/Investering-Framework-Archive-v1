@@ -168,17 +168,44 @@ jobs:
           fi
           gh workflow run operations-dashboard.yml --ref main
           echo "OPERATIONS_DASHBOARD_REFRESH_DISPATCHED source_health_run=${GITHUB_RUN_ID}"
-      - name: Open one sanitized incident issue for RED health
+      - name: Open one source-bound incident issue for RED health
         if: steps.health.outputs.exit_code != '0'
         env:
           GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
+          set -euo pipefail
           title="AUTOMATION HEALTH RED"
-          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          source="research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
+          git fetch --quiet origin main
+          source_main="$(git rev-parse origin/main)"
+          source_blob="$(git rev-parse "origin/main:$source")"
+          local_blob="$(git hash-object "$source")"
+          # Fail closed when a concurrent writer displaced the source.
+          test "$source_blob" = "$local_blob"
+          generated="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path("research/architecture_health/LATEST_AUTOMATION_HEALTH.json").read_text())
+          assert report.get("status") == "RED" and type(report.get("red_count")) is int and report["red_count"] > 0
+          assert report.get("repository") == "Donh91/Investering-Framework-Archive-v1"
+          assert isinstance(report.get("generated_at_utc"), str) and report["generated_at_utc"].endswith("Z")
+          print(report["generated_at_utc"])
+          PY
+          )"
+          receipt="$RUNNER_TEMP/health-red-origin.txt"
+          printf 'AUTOMATION_HEALTH_RED_ORIGIN_v1\nrepo: %s\nrun_id: %s\nrun_event: %s\nsource_main: %s\nsource_path: %s\nsource_blob: %s\nsource_generated_at_utc: %s\nstatus: RED\n' \
+            "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_EVENT_NAME" "$source_main" \
+            "$source" "$source_blob" "$generated" > "$receipt"
+          existing="$(gh issue list --state open --search "$title in:title" --limit 100 \
+            --json number,title --jq '[.[] | select(.title == "AUTOMATION HEALTH RED")][0].number // empty')"
           if [ -z "$existing" ]; then
-            gh issue create --title "$title" --body-file research/architecture_health/LATEST_AUTOMATION_HEALTH.md
+            cat research/architecture_health/LATEST_AUTOMATION_HEALTH.md "$receipt" > "$RUNNER_TEMP/health-red-issue.txt"
+            gh issue create --title "$title" --body-file "$RUNNER_TEMP/health-red-issue.txt"
           else
-            gh issue comment "$existing" --body "Health remains RED at run ${GITHUB_RUN_ID}. See latest committed health report."
+            # A later RED uses the same original issue and a fresh immutable
+            # comment. Do not rewrite historic source evidence.
+            gh issue comment "$existing" --body-file "$receipt"
           fi
       - name: Record observed fleet status without failing the observer
         shell: bash
