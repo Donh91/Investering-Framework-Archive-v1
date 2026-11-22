@@ -6,6 +6,13 @@ FROM python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34d
 ARG NODE_VERSION=24.11.1
 ARG NODE_TARBALL_SHA256=60e3b0a8500819514aca603487c254298cd776de0698d3cd08f11dba5b8289a8
 ENV PATH="/opt/node/current/bin:${PATH}" PYTHONDONTWRITEBYTECODE=1
+# M1/M3 pristine tests create real local Git fixtures. Keep Git inside the
+# no-secret toolchain, never mount host executables or credential-bearing .git.
+# This is a PR-only candidate until a native version receipt is checked.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git \
+ && git --version \
+ && rm -rf /var/lib/apt/lists/*
 # pytest >=9.0.3 avoids GHSA-6w46-j5rx-g56g. Only trusted image
 # provisioning may use network. Runtime docker run MUST use --network none.
 COPY scripts/api_agent/docker/astra-build-requirements.lock.txt /tmp/astra-build-requirements.lock.txt
