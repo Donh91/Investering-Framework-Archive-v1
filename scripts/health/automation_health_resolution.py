@@ -155,9 +155,22 @@ def resolve_recovered(repo_root: Path, run_id: int) -> list[str]:
         rel = incident.relative_to(repo_root).as_posix()
         if rel in already:
             continue
+        # Both healthy natural runs must occur strictly AFTER the original
+        # incident's own run. A stale pair of earlier green runs cannot close
+        # a newly discovered RED incident. Unknown legacy names stay open.
+        match = re.fullmatch(
+            r"INCIDENT_automation-production-health-([1-9][0-9]*)(?:-attempt-[1-9][0-9]*)?\.md",
+            incident.name,
+        )
+        if match is None:
+            continue
+        incident_run_id = int(match.group(1))
+        if any(int(row["run_id"]) <= incident_run_id for row in recent):
+            continue
         receipt = {
             "contract": RESOLUTION_CONTRACT,
             "incident_path": rel,
+            "incident_origin_run_id": incident_run_id,
             "owner": "automation-production-health",
             "successful_run_id": run_id,
             "successful_run_conclusion": "success",
