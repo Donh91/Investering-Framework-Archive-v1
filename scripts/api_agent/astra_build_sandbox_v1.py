@@ -146,7 +146,9 @@ def _copy_public_tree(source: Path, target: Path):
                 require(count <= MAX_SNAPSHOT_FILES and size <= MAX_SNAPSHOT_BYTES,
                         "SOURCE_SNAPSHOT_TOO_LARGE")
                 shutil.copyfile(src, dest / name)
-                (dest / name).chmod(0o444)
+                # Match Git's 100644/100755 tree modes exactly while keeping
+                # the bind-mounted candidate source read-only.
+                (dest / name).chmod(0o555 if (mode & 0o111) else 0o444)
     for relative in SOURCE_FILES:
         src = source / relative
         if not src.exists():
@@ -163,7 +165,7 @@ def _copy_public_tree(source: Path, target: Path):
         destination = target / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, destination)
-        destination.chmod(0o444)
+        destination.chmod(0o555 if (src.lstat().st_mode & 0o111) else 0o444)
     for relative in REQUIRED_PUBLIC_FIXTURES:
         require((target / relative).is_file() and not (target / relative).is_symlink(),
                 "REQUIRED_FIXED_TEST_FIXTURE_MISSING")
