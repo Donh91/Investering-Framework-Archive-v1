@@ -73,15 +73,14 @@ TEST_COMMANDS = {
     # Dedicated offline/native security smoke. Not in SCOPE_ALLOW and cannot
     # appear in any paid mission or model-admitted BUILD proposal.
     "SMOKE": (("python", "-m", "unittest", "discover", "-s", "tests/smoke", "-v"),),
+    # M1 no-secret sandbox is a PREFILTER, never full site/browser proof.
+    # Generated dist/Chrome integration is mandatory in output PR native CI,
+    # on separate trusted infrastructure with no model-selected commands.
     "M1": (("python", "-m", "pytest", "-q", "tests/learning", "tests/cycle_navigator"),
            ("node", "--test",
              "05_CYCLE_NAVIGATOR/site/tests/browser-startup-negative.test.mjs",
              "05_CYCLE_NAVIGATOR/site/tests/cn-v2-design-data-boundary.test.mjs",
-             "05_CYCLE_NAVIGATOR/site/tests/cn-v2-real-public-adapter.test.mjs",
-             "05_CYCLE_NAVIGATOR/site/tests/full-stack-readback.test.mjs",
-             "05_CYCLE_NAVIGATOR/site/tests/nowcast-disclosure.test.mjs",
              "05_CYCLE_NAVIGATOR/site/tests/official-compass-freshness.test.mjs",
-             "05_CYCLE_NAVIGATOR/site/tests/premium-mobile-browser.test.mjs",
              "05_CYCLE_NAVIGATOR/site/tests/pullback-pages-run-block.test.mjs",
              "05_CYCLE_NAVIGATOR/site/tests/pullback-research-readback.test.mjs")),
     "M2": (("python", "-m", "pytest", "-q", "tests/learning", "tests/data_ping",
