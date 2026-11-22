@@ -43,7 +43,11 @@ DENY_EXACT = frozenset(("AGENTS.md", "CLAUDE.md", ".env", ".npmrc", ".pypirc",
                        "scripts/research/owner_astra_mission_v1.py"))
 DENY_SEGMENTS = frozenset((".github", ".agents", "secrets", "private", "vault", "round3",
                           "round_3", "credentials", "__pycache__", ".git", "data"))
-DENY_FILENAMES = frozenset(("agents.md", "claude.md", ".env", ".npmrc", ".pypirc"))
+DENY_FILENAMES = frozenset((
+    "agents.md", "claude.md", ".env", ".npmrc", ".pypirc",
+    "conftest.py", "pytest.ini", "pyproject.toml", "setup.cfg", "tox.ini",
+    "sitecustomize.py", "usercustomize.py", "package.json", "package-lock.json",
+    "requirements.txt", "requirements-dev.txt"))
 DENY_PATH_SUBSTRINGS = ("round3", "round_3", "vault", "secret", "credential")
 SCOPE_ALLOW = {
     "M1": (
@@ -224,6 +228,10 @@ def admit(raw: bytes, scope: dict) -> dict:
         if path.startswith("scripts/governance/s1_closure_"):
             require(path.count("/") == 2 and action == "create",
                     "M3_CLOSURE_CREATE_ONLY")
+        # The model may ADD unit tests, never silently change a baseline test
+        # or its collection/runner configuration in the PR used for CI proof.
+        if path.startswith("tests/"):
+            require(action == "create", "TRUSTED_BASELINE_TESTS_READ_ONLY")
         content = row["content"]
         require(isinstance(content, str) and bool(content.strip())
                 and not any(((ord(ch) < 32 and ch not in ("\n", "\t"))
