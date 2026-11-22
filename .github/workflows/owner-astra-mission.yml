@@ -150,6 +150,10 @@ jobs:
             --cap-drop ALL --security-opt no-new-privileges \
             --user 65534:65534 --memory 256m --pids-limit 32 \
             astra-build-toolchain-audit:v1 node --version
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --pids-limit 32 \
+            astra-build-toolchain-audit:v1 git --version
           mkdir -p runtime/astra-build-toolchain-evidence
           build_inputs_sha256=$(
             sha256sum scripts/api_agent/docker/astra-build-toolchain-v1.Dockerfile.txt \
