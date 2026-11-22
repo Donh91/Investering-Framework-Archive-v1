@@ -3,6 +3,7 @@ import unittest
 from scripts.governance.s1_incident_triage_v1 import (
     IncidentEvidenceError, incident_triage,
 )
+from scripts.health.automation_health_resolution import qualified_natural_fleet_recovery
 
 REPO = "Investering-Framework-Archive-v1"
 NOW = "2026-11-22T20:45:00Z"
@@ -125,6 +126,36 @@ class IncidentTriageTests(unittest.TestCase):
                 incident_triage([case(1)], as_of_utc=NOW, threshold=value)
         with self.assertRaises(IncidentEvidenceError):
             self.classify([case(i + 1, minute=i % 45) for i in range(101)])
+
+
+class FleetHealthRecoveryTests(unittest.TestCase):
+    def good(self):
+        return {
+            "run_event": "schedule", "status": "GREEN",
+            "red_count": 0, "amber_count": 0, "workflow_count": 178,
+            "scheduled_workflow_count": 41, "api_error": None,
+            "warnings": [], "findings": [], "orphaned_registered_workflows": [],
+            "source_sha256": "f" * 64, "head_sha": "a" * 40,
+        }
+
+    def test_only_complete_natural_fleet_health_qualifies(self):
+        self.assertTrue(qualified_natural_fleet_recovery(self.good()))
+
+    def test_manual_and_amber_success_are_not_recovery(self):
+        for extra in ({"run_event": "workflow_dispatch"},
+                      {"status": "AMBER"}, {"amber_count": 1},
+                      {"red_count": 1}, {"api_error": "UPSTREAM_UNAVAILABLE"}):
+            with self.subTest(extra=extra):
+                self.assertFalse(qualified_natural_fleet_recovery({**self.good(), **extra}))
+
+    def test_partial_or_unknown_source_fails_closed(self):
+        for extra in ({"warnings": ["RATE_LIMIT"]},
+                      {"findings": ["SOURCE_MISSING"]},
+                      {"orphaned_registered_workflows": ["missing"]},
+                      {"source_sha256": None}, {"head_sha": ""},
+                      {"workflow_count": 0}, {"scheduled_workflow_count": 0}):
+            with self.subTest(extra=extra):
+                self.assertFalse(qualified_natural_fleet_recovery({**self.good(), **extra}))
 
 
 if __name__ == "__main__":
