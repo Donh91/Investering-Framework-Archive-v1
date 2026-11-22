@@ -1,0 +1,5 @@
+# Trusted pytest config is baked into the no-secret image before model bytes.
+# Never accept ini/hooks/conftest from the model or the PR output.
+[pytest]
+pythonpath = /work
+addopts = --tb=short -p no:cacheprovider
