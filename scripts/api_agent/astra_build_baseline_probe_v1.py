@@ -47,6 +47,44 @@ def probe(pristine: Path, sha: str, image_id: str) -> dict:
         root = Path(folder) / "repo"
         root.mkdir(mode=0o755)
         copied = sandbox._copy_public_tree(pristine.resolve(), root)
+        # Test the restricted, public, model-visible fixture closure BEFORE
+        # any full-main suite. A failure here would waste paid BUILD admission.
+        # This is trusted pristine code only; no candidate output is loaded.
+        prefilter = []
+        for scope in TEST_IDS:
+            for ordinal, command in enumerate(admission.PREFILTER_COMMANDS[scope]):
+                name, argv = sandbox.docker_command(
+                    root, scope, ordinal, profile="restricted_candidate")
+                image_pos = len(argv) - len(command) - 1
+                if argv[image_pos] != sandbox.IMAGE:
+                    raise ValueError("NATIVE_PREFILTER_IMAGE_ARGV_DRIFT")
+                argv[image_pos] = image_id
+                run = sandbox._run_once(argv, name)
+                prefilter.append({
+                    "scope": scope,
+                    "fixed_command": list(command),
+                    "result": run["status"],
+                    "exit_code": run["returncode"],
+                    "observed_count_untrusted": run["completed_tests_observed"],
+                    "log_sha256": run["output_sha256"],
+                    "failure_diagnostics_untrusted": run.get("failure_diagnostics_untrusted", []),
+                    "last_200_lines_untrusted": run["last_200_lines"][-25:],
+                })
+        prefilter_look_green = bool(prefilter) and all(
+            x["result"] == "EXIT0_WITH_UNTRUSTED_SUMMARY" and
+            x["observed_count_untrusted"] > 0 for x in prefilter)
+        if not prefilter_look_green:
+            return {
+                "contract": "ASTRA_BUILD_PRISTINE_BASELINE_PROBE_v1",
+                "pristine_main_sha": verified_sha,
+                "baseline_workspace": "TRUSTED_PRISTINE_MAIN_READONLY_NO_MODEL",
+                "candidate_workspace": "RESTRICTED_PUBLIC_COPY",
+                "toolchain_local_image_id": image_id, "source_copy": copied,
+                "prefilter_results": prefilter, "results": [],
+                "probe_result": "BASELINES_FAIL_OR_INCOMPLETE",
+                "candidate_test_completion_attested": False,
+                "build_hold_lifted": False, "paid_or_merge_authority": False,
+            }
         outcomes = []
         for scope in TEST_IDS:
             for ordinal, command in enumerate(admission.TEST_COMMANDS[scope]):
@@ -81,6 +119,7 @@ def probe(pristine: Path, sha: str, image_id: str) -> dict:
         "candidate_workspace": "RESTRICTED_PUBLIC_COPY",
         "toolchain_local_image_id": image_id,
         "source_copy": copied,
+        "prefilter_results": prefilter,
         "results": outcomes,
         "probe_result": "CANDIDATE_BASELINES_LOOK_COMPLETE" if all_look_green
                         else "BASELINES_FAIL_OR_INCOMPLETE",
