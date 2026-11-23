@@ -8,11 +8,13 @@ share supply, fees, or actual executable investor returns.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_EVEN, localcontext
 
 CONTRACT = "RESEARCH_VAULT_FLOW_INTEGRITY_V1"
 ALLOWED_EVIDENCE = {"SYNTHETIC_FIXTURE", "UNATTESTED_RESEARCH"}
-EPSILON = Decimal("0.000001")
+# Intentionally fixed point, not caller-context dependent: one micro-USD unit.
+MICRO_USD = Decimal("0.000001")
+MAX_AMOUNT_USD = Decimal("1000000000000000")
 
 
 class EvidenceRefused(ValueError):
@@ -40,6 +42,10 @@ def _amount(value: object, field: str) -> Decimal:
         raise EvidenceRefused(f"{field}:INVALID_AMOUNT") from exc
     if not number.is_finite():
         raise EvidenceRefused(f"{field}:NONFINITE_AMOUNT")
+    if abs(number) > MAX_AMOUNT_USD:
+        raise EvidenceRefused(f"{field}:AMOUNT_OUT_OF_BOUNDS")
+    if number != number.quantize(MICRO_USD):
+        raise EvidenceRefused(f"{field}:UNSUPPORTED_PRECISION")
     return number
 
 
@@ -59,7 +65,7 @@ def _point(record: dict, *, after: datetime, as_of: datetime, idx: int) -> tuple
     after_flow = _amount(record.get("equity_after_flow_usd"), prefix + ".equity_after_flow_usd")
     if before_flow < 0 or after_flow < 0:
         raise EvidenceRefused(f"{prefix}:NEGATIVE_EQUITY")
-    if abs(before_flow + flow - after_flow) > EPSILON:
+    if before_flow + flow != after_flow:
         raise EvidenceRefused(f"{prefix}:FLOW_RECONCILIATION_FAILED")
     return event, before_flow, flow, after_flow
 
@@ -71,6 +77,14 @@ def evaluate(payload: dict) -> dict:
     Unknown fee treatment, deposits between valuation boundaries, or unavailable
     source clocks are grounds to ABSTAIN by raising EvidenceRefused.
     """
+    # Isolate arithmetic from arbitrary caller globalcontext(prec=2) settings.
+    with localcontext() as context:
+        context.prec = 50
+        context.rounding = ROUND_HALF_EVEN
+        return _evaluate_in_fixed_context(payload)
+
+
+def _evaluate_in_fixed_context(payload: dict) -> dict:
     if not isinstance(payload, dict) or payload.get("contract") != CONTRACT:
         raise EvidenceRefused("WRONG_CONTRACT")
     evidence = payload.get("evidence_class")
@@ -112,8 +126,11 @@ def evaluate(payload: dict) -> dict:
             raise EvidenceRefused(f"points[{i}]:BANKRUPTCY_EPOCH_REQUIRES_NEW_LEDGER")
         index_peak = max(index_peak, index)
         max_twr_dd = max(max_twr_dd, Decimal(1) - index / index_peak)
-        naive_peak = max(naive_peak, post)
-        max_naive_dd = max(max_naive_dd, Decimal(1) - post / naive_peak)
+        # Both valuations were witnessed: omitting pre-flow peaks/lows can
+        # hide a redemption-induced naive drawdown or a deposit-masked loss.
+        for witnessed_equity in (pre, post):
+            naive_peak = max(naive_peak, witnessed_equity)
+            max_naive_dd = max(max_naive_dd, Decimal(1) - witnessed_equity / naive_peak)
         flow_total += flow
         previous_equity = post
         previous_event = event
