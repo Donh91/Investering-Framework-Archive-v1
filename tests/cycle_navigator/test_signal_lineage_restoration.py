@@ -80,7 +80,9 @@ class CapabilityGuard(unittest.TestCase):
         new = copy.deepcopy(old)
         del new['capabilities']['etf_flow']
         new['capabilities']['ethbtc_leadership']['authority'] = 'PRODUCTION'
+        with self.assertRaisesRegex(ValueError, 'MISSING_REQUIRED_DOMAINS'):
+            compare(old, new)
+        new['capabilities']['etf_flow'] = old['capabilities']['etf_flow']
         failures = compare(old, new)
-        self.assertIn('etf_flow:REMOVED', failures)
         self.assertIn('ethbtc_leadership:CHANGED:authority', failures)
         self.assertEqual(compare(old, old), [])

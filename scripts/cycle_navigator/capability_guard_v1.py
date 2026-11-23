@@ -2,11 +2,14 @@
 import json
 import sys
 
+DOMAINS = {'regime_cycle','ethbtc_leadership','btc_dominance','breadth_survival','spot_derivatives_oi_funding','etf_flow','stress_liquidation_reclaim','rotation_large_to_micro','pullback_invalidation','horizons_1_3d_5_7d_2_3w','freeze_scoring_calibration','continuity_publication'}
 REQUIRED = {'owner', 'family', 'freshness', 'first_known', 'decision_effect', 'output', 'authority', 'fallback', 'acceptance_test'}
 
 def validate(doc):
     if doc.get('contract') != 'CN_MM_CAPABILITY_CONTRACT_v1' or not isinstance(doc.get('capabilities'), dict):
         raise ValueError('INVALID_CONTRACT')
+    if not DOMAINS.issubset(doc['capabilities']):
+        raise ValueError('MISSING_REQUIRED_DOMAINS')
     for name, capability in doc['capabilities'].items():
         if not name or not REQUIRED.issubset(capability) or any(not capability[k] for k in REQUIRED):
             raise ValueError('INCOMPLETE_CAPABILITY:' + name)
