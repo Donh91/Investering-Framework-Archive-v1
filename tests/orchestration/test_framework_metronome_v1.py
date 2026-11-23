@@ -167,13 +167,38 @@ class MetronomeTest(unittest.TestCase):
         t = dt.datetime(2026, 11, 16, 6, 0, tzinfo=UTC)  # 07:00 CET Monday
         late_preclose_failed = run(dt.datetime(2026, 11, 16, 5, 50, tzinfo=UTC), conclusion="failure")
         p = plan(t, close=[late_preclose_failed])
-        self.assertEqual(p["targets"]["FINAL"], "DUE")
+        self.assertEqual(p["targets"]["FINAL"], "FINAL_RETRY_COOLDOWN")
+        self.assertEqual(plan(t + dt.timedelta(minutes=25), close=[late_preclose_failed])["targets"]["FINAL"], "DUE")
         self.assertEqual(p["targets"]["MONDAY"], "WAITING_FOR_SUNDAY_FINAL")
         sunday_preclose_ok = run(dt.datetime(2026, 11, 15, 22, 40, tzinfo=UTC))  # Sunday's own preclose
         self.assertEqual(plan(t, close=[sunday_preclose_ok])["targets"]["MONDAY"], "WAITING_FOR_SUNDAY_FINAL")
         # A success between Monday 00:00 and 02:00 CET is not the final close either.
         early_ok = run(dt.datetime(2026, 11, 16, 0, 30, tzinfo=UTC))  # 01:30 CET Monday
         self.assertEqual(plan(t, close=[early_ok])["targets"]["FINAL"], "DUE")
+
+    def test_native_final_has_bounded_retries_and_no_paid_monday_replay(self):
+        # Source-final is a free data owner, but a persistent upstream break
+        # must not become an unbounded series of GitHub Actions dispatches.
+        now = dt.datetime(2026, 11, 16, 2, 0, tzinfo=UTC)  # 03:00 Copenhagen
+        failed = [
+            run(dt.datetime(2026, 11, 16, 1, minute, tzinfo=UTC), rid=i, conclusion="failure")
+            for i, minute in enumerate((6, 25, 39), 1)
+        ]
+        self.assertEqual(M.MAX_FINAL_ATTEMPTS_PER_MONDAY, 3)
+        self.assertEqual(plan(now, close=failed)["targets"]["FINAL"], "FINAL_RETRY_BUDGET_EXHAUSTED")
+        self.assertEqual(plan(now, close=failed[:2])["targets"]["FINAL"], "DUE")
+        self.assertEqual(plan(now.replace(minute=40), close=failed[:2])["targets"]["FINAL"], "DUE")
+        self.assertEqual(plan(dt.datetime(2026, 11, 16, 1, 43, tzinfo=UTC),
+                              close=failed[:2])["targets"]["FINAL"], "FINAL_RETRY_COOLDOWN")
+        # An in-flight close is not duplicated even when a retry is due.
+        active = run(dt.datetime(2026, 11, 16, 1, 55, tzinfo=UTC), status="in_progress")
+        self.assertEqual(plan(now, close=[*failed[:2],active])["targets"]["FINAL"], "TARGET_ACTIVE")
+        # The paid weekly shadow owner is never retried after one failed or
+        # ambiguous attempt: its own weekly model idempotency stays authoritative.
+        monday_failed = run(dt.datetime(2026, 11, 16, 1, 43, tzinfo=UTC), conclusion="failure")
+        p = plan(now, mode="ACTIVE", monday=[monday_failed])
+        self.assertEqual(p["targets"]["MONDAY"], "ALREADY_RAN_THIS_MONDAY")
+        self.assertNotIn(M.MONDAY["workflow"], [row["workflow"] for row in p["dispatch"]])
 
     def test_shadow_mode_dispatches_nothing_but_the_loop(self):
         now = dt.datetime(2026, 11, 16, 1, 45, tzinfo=UTC)
