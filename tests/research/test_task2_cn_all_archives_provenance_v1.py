@@ -120,7 +120,8 @@ class AllArchiveCensusTests(unittest.TestCase):
         self.assertEqual(len((changes or "").splitlines()), 1,
                          "N1_FREEZE_CHANGED_OR_MISSING_ON_MAIN:" + str(changes))
         self.assertEqual(engine._git_text(engine.ROOT, "rev-parse", "--show-toplevel"), str(engine.ROOT.resolve()), "N1_GIT_TOP_MISMATCH")
-        self.assertEqual(engine._git_text(engine.ROOT, "rev-parse", "--is-shallow-repository"), "false", "N1_SHALLOW_HISTORY")
+        # Global repository may be shallow BEFORE seal; the post-seal first-parent
+        # chain is what must be complete, already verified in the lines above.
         self.assertFalse(engine.has_symlink_component(path, engine.ROOT), "N1_UNSAFE_SOURCE_PATH")
         index = engine.pinned_source_map(str(engine.ROOT.resolve()))
         original_weeks = [tuple(map(int, engine.FORECAST_PATH.fullmatch(p).groups()))
@@ -228,6 +229,28 @@ class AllArchiveCensusTests(unittest.TestCase):
             self._n1_git(root, "commit", "-qm", "restore original W48 bytes")
             self.assertFalse(engine._verified_post_index_first_parent(
                 root, rel, original, seal_commit=seal,
+                main_ref="refs/heads/main", last_index_week=(2026, 46)))
+
+    def test_n1_shallow_boundary_at_seal_allowed_but_inside_span_refused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            seal = self._n1_repo(root)
+            rel = self._n1_publish(root, 49, b'{"week":"2026-W49"}\n')
+            issue = self._n1_git(root, "rev-parse", "HEAD")
+            raw = (root / rel).read_bytes()
+            # GitHub checkout may be shallow before the research index, while
+            # the COMPLETE first-parent seal-to-current segment is present.
+            shallow = root / ".git/shallow"
+            shallow.write_text(seal + "\n")
+            self.assertEqual(self._n1_git(root, "rev-parse", "--is-shallow-repository"), "true")
+            self.assertTrue(engine._verified_post_index_first_parent(
+                root, rel, raw, seal_commit=seal,
+                main_ref="refs/heads/main", last_index_week=(2026, 46)))
+            # A shallow boundary at the introduction itself truncates the
+            # protected segment; even identical local bytes must be refused.
+            shallow.write_text(issue + "\n")
+            self.assertFalse(engine._verified_post_index_first_parent(
+                root, rel, raw, seal_commit=seal,
                 main_ref="refs/heads/main", last_index_week=(2026, 46)))
 
     def test_n1_injected_old_week_after_seal_still_rejected(self):
