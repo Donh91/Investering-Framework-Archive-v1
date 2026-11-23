@@ -60,6 +60,9 @@ ENVIRONMENT = "framework-metronome"
 MODE_PATH = "00_FMOS/METRONOME_MODE_v1.json"
 MIN_WAIT_MINUTES = 5
 MAX_WAIT_MINUTES = 30
+# Bounded native FINAL failover: GitHub's own cron can be 5-8h late.
+MAX_FINAL_ATTEMPTS_PER_MONDAY = 3
+FINAL_RETRY_COOLDOWN_MINUTES = 20
 CPH = ZoneInfo("Europe/Copenhagen")
 ACTIVE_STATUSES = {"queued", "in_progress", "waiting", "requested", "pending"}
 PRODUCTION_BRANCH = "main"
@@ -205,6 +208,22 @@ def final_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
         return False, "FINAL_SUCCEEDED_THIS_MONDAY"
     if any_active(runs):
         return False, "TARGET_ACTIVE"  # e.g. a late preclose cron still running; it will fail and not count
+    # Do not burn unlimited Actions minutes on a broken market-close producer.
+    # The source writer remains authoritative; only native failed run census
+    # from this specific Monday may control a bounded retry. Never classify an
+    # early Sunday preclose as a successful Monday final.
+    eligible = []
+    for row in runs:
+        try:
+            when = utc(row["created_at"])
+        except (KeyError, ValueError, TypeError):
+            return False, "FINAL_RUN_CLOCK_UNREADABLE"
+        if when >= start.astimezone(dt.timezone.utc):
+            eligible.append(when)
+    if len(eligible) >= MAX_FINAL_ATTEMPTS_PER_MONDAY:
+        return False, "FINAL_RETRY_BUDGET_EXHAUSTED"
+    if eligible and now - max(eligible) < dt.timedelta(minutes=FINAL_RETRY_COOLDOWN_MINUTES):
+        return False, "FINAL_RETRY_COOLDOWN"
     return True, "DUE"
 
 

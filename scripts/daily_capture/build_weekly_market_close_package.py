@@ -9,6 +9,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "ETHBTC"]
 BINANCE_MARKET_DATA_BASE = "https://data-api.binance.vision"
@@ -108,7 +109,37 @@ def validate_actions_week_binding(now: datetime, mode: str, *, event_name: str, 
     if run_attempt != "1":
         raise ValueError("WEEKLY_CLOSE_RERUN_ORIGINAL_WEEK_UNBOUND")
     if event_name == "workflow_dispatch":
-        raise ValueError("WEEKLY_CLOSE_DISPATCH_ORIGINAL_WEEK_UNBOUND")
+        # The existing Metronome dispatches the original GitHub owner on time.
+        # A dispatch is safe ONLY within the current local source slot; the
+        # event must bind to main and its producer mode. We never infer a
+        # historical week from a delayed or rerun dispatch.
+        if not event_path:
+            raise ValueError("WEEKLY_CLOSE_DISPATCH_EVENT_UNAVAILABLE")
+        try:
+            payload = json.loads(Path(event_path).read_text())
+        except (OSError, ValueError) as exc:
+            raise ValueError("WEEKLY_CLOSE_DISPATCH_EVENT_UNAVAILABLE") from exc
+        if not isinstance(payload, dict) or payload.get("ref") not in {"main", "refs/heads/main"}:
+            raise ValueError("WEEKLY_CLOSE_DISPATCH_ORIGINAL_WEEK_UNBOUND")
+        inputs = payload.get("inputs") or {}
+        if not isinstance(inputs, dict):
+            raise ValueError("WEEKLY_CLOSE_DISPATCH_INPUTS_INVALID")
+        local = now.astimezone(ZoneInfo("Europe/Copenhagen"))
+        minutes = local.hour * 60 + local.minute
+        if consumer and mode == "final":
+            # The paid weekly owner has no 'mode' workflow input; its source
+            # verification below is read-only and byte/hash checked.
+            valid = "mode" not in inputs and local.weekday() == 0 and minutes >= 2 * 60 + 40
+        elif mode == "final":
+            valid = inputs.get("mode") == "final" and local.weekday() == 0 and minutes >= 2 * 60 + 5
+        elif mode == "preclose":
+            valid = (inputs.get("mode") == "preclose" and local.weekday() == 6
+                     and 23 * 60 + 35 <= minutes < 23 * 60 + 59)
+        else:
+            valid = False
+        if not valid:
+            raise ValueError("WEEKLY_CLOSE_DISPATCH_ORIGINAL_WEEK_UNBOUND")
+        return
     if not event_path:
         raise ValueError("WEEKLY_CLOSE_SCHEDULE_EVENT_UNAVAILABLE")
     try:
@@ -227,6 +258,35 @@ def main() -> None:
         "framework_state_change": False,
         "portfolio_action": False,
     }
+
+    # FINAL is an immutable source issuance, not a mutable re-capture. A late
+    # native cron or a queued metronome retry after an earlier successful FINAL
+    # must NOT regenerate its generated_at_utc, hash or pointer. Pre-close is
+    # deliberately a partial draft for the SAME completed ISO week and may be
+    # replaced by the first real FINAL.
+    if final:
+        week = start.isocalendar()
+        existing_path = (args.output_root / str(week.year) / f"W{week.week:02d}"
+                         / "WEEKLY_MARKET_CLOSE_PACKAGE.json")
+        if existing_path.exists():
+            try:
+                existing = json.loads(existing_path.read_bytes())
+            except (OSError, ValueError, TypeError) as exc:
+                raise SystemExit("FINAL_EXISTING_PACKAGE_UNREADABLE") from exc
+            if not isinstance(existing, dict):
+                raise SystemExit("FINAL_EXISTING_PACKAGE_NOT_OBJECT")
+            if existing.get("final") is True:
+                # This verifies exact package, receipt, pointer and 168 hourly
+                # candles per symbol. Corruption FAILS CLOSED, never repair by
+                # rewriting an already-issued source from later market data.
+                print(json.dumps(verify_existing_final(now, args.output_root), sort_keys=True))
+                return
+            if not (existing.get("contract") == "WEEKLY_MARKET_CLOSE_PACKAGE_v3"
+                    and existing.get("final") is False
+                    and existing.get("close_mode") == "PRE_CLOSE_CURRENT_ISO_WEEK"
+                    and existing.get("iso_year") == week.year
+                    and existing.get("iso_week") == week.week):
+                raise SystemExit("FINAL_EXISTING_PACKAGE_STATE_UNEXPECTED")
 
     expected_hours = int((end - start).total_seconds() // 3600)
     all_complete = True
