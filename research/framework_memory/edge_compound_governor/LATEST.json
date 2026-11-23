@@ -17,15 +17,15 @@
   "decision": "FALSIFY",
   "decision_reason": "Resolve deterministic integrity/cohort blockers before scoring or external interpretation.",
   "deltas": [
-    "m6_event_count:364->379",
-    "feature_row_count:390->405",
-    "pit_verified_feature_rows:368->382",
-    "pit_unverified_feature_rows:22->23",
-    "matured_event_counts.14d:228->235",
-    "matured_event_counts.24h:348->364",
-    "matured_event_counts.30d:82->92",
-    "matured_event_counts.72h:327->333",
-    "matured_event_counts.7d:275->284",
+    "m6_event_count:379->396",
+    "feature_row_count:405->422",
+    "pit_verified_feature_rows:382->398",
+    "pit_unverified_feature_rows:23->24",
+    "matured_event_counts.14d:235->240",
+    "matured_event_counts.24h:364->380",
+    "matured_event_counts.30d:92->103",
+    "matured_event_counts.72h:333->348",
+    "matured_event_counts.7d:284->298",
     "M6_FAMILY_OR_COHORT_LINEAGE_CHANGED",
     "M6_MATURED_PAYLOAD_INTEGRITY_CHANGED"
   ],
@@ -34,7 +34,7 @@
     "claude_recommended": false,
     "sol_recommended": false
   },
-  "generated_at_utc": "2026-11-22T10:00:01.883503Z",
+  "generated_at_utc": "2026-11-23T10:45:49.766327Z",
   "material_delta": true,
   "prior_false_bootstrap_supersession": null,
   "rules": {
@@ -43,7 +43,7 @@
     "raw_external_output_canonical": false,
     "warning_is_sell": false
   },
-  "semantic_fingerprint": "4974caf814b4f75bb7e6c2aecf35fc016d78bc0415d2d3574eeb24b7fd8d9643",
+  "semantic_fingerprint": "a063075eb59c6207b93c67f96d9dd04ee6a5b4092ffe7fd6b7b0e9e3b9fd29a4",
   "semantic_state": {
     "blockers": [
       "M6_EVENT_CHRONOLOGY_FAMILY_OR_COHORT_INVALID",
@@ -55,33 +55,33 @@
     "distribution_risk": "UNKNOWN",
     "economic_action_edge_claim": "NOT_ESTABLISHED",
     "feature_integrity_revision": "v1.1_PIT_STRICT",
-    "feature_row_count": 405,
+    "feature_row_count": 422,
     "information_edge_claim": "NOT_ESTABLISHED",
     "latest_sol_verdict": "WEAKENED",
-    "m6_event_count": 379,
+    "m6_event_count": 396,
     "m6_family_semantics": "PROVISIONAL_WARNING_OBSERVATION_CLUSTERS_NOT_PEAK_TROUGH_ADVERSE_FAMILIES",
     "m6_integrity": {
       "chronological": true,
       "family_anchor_valid": true,
-      "family_lineage_fingerprint": "f92a5ec4a49fdfee9bede185e35856bf31d8e8fddda293c71f3d23666bd4b6fc",
+      "family_lineage_fingerprint": "e1bc21ae133568604221488f42da16f03105cc845f91da7bcea0e5aa2f8767a7",
       "feature_cohort_parity": false,
       "first_warning_weight_valid": true,
       "status": "BLOCKED"
     },
     "m6_integrity_revision": "v1.3_SOURCE_DATA_STATUS_OK_ONLY",
     "m6_matured_payload_integrity": {
-      "checked": 1308,
+      "checked": 1369,
       "invalid": 0,
       "reasons": [],
       "status": "PASS"
     },
     "m6_provisional_family_count": 2,
     "matured_event_counts": {
-      "14d": 235,
-      "24h": 364,
-      "30d": 92,
-      "72h": 333,
-      "7d": 284
+      "14d": 240,
+      "24h": 380,
+      "30d": 103,
+      "72h": 348,
+      "7d": 298
     },
     "matured_family_counts": {
       "14d": 2,
@@ -90,8 +90,8 @@
       "72h": 2,
       "7d": 2
     },
-    "pit_unverified_feature_rows": 23,
-    "pit_verified_feature_rows": 382,
+    "pit_unverified_feature_rows": 24,
+    "pit_verified_feature_rows": 398,
     "pullback_risk_state": "ELEVATED",
     "task15_research_admission": {
       "automatic_promotion": false,
@@ -114,22 +114,22 @@
   "source_bindings": {
     "calibration": {
       "path": "research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json",
-      "sha256": "f0e0881b723a7bc44b0557f0f43886639d6ed2e349a80af1d1ad85142bfadea4",
+      "sha256": "5a5704909025ae7b2dfa90275c802375e88455c739161571d18815ad4b8186ed",
       "status": "PASS"
     },
     "compass_freeze": {
-      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/22/CMP-20261122-3828bd3a67fa.json",
-      "sha256": "cf7f6c127e5f758897506a0f25c1e8d0a914fe9e85f6fe98a8acf41524bf894f",
+      "path": "04_MARKET_LEARNING/handlekompas/official/daily/2026/11/23/CMP-20261123-1436a79ca3e2.json",
+      "sha256": "63acb356800baba97a1ce489c33733ff9375e550b676488e6393b742b38e83d5",
       "status": "PASS"
     },
     "compass_pointer": {
       "path": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
-      "sha256": "7076bbeb94805705fd7118eb9183376510ff43da2187373c0effb1c0095b8ce5",
+      "sha256": "04b6969c4f9b7516289475ae417e840e26047bb615af0b5bf2b751ecfb5aa22b",
       "status": "PASS"
     },
     "edge_features": {
       "path": "research/framework_memory/edge001_tsunami_features/LATEST.json",
-      "sha256": "b122f5d10c7fe9fde9456b87d58fc3b416e8a0b65aef35e7ba5faf5a114b9fa3",
+      "sha256": "325c00869224d90b7e90ba0ed8a7034d9238d01e6b9015cb41d28757eaebcf21",
       "status": "PASS"
     },
     "latest_sol": {
@@ -141,7 +141,7 @@
     },
     "m6_events": {
       "path": "research/framework_memory/m6_warning_events/LATEST.json",
-      "sha256": "a28601e1ed94c5785e1eb2fa8a93af9318202258b4db7f7aeacb70c651a5853d",
+      "sha256": "f7c774bac7039793ca43a363dd55cb09fcb4559e0a1c864c2525e55407a94255",
       "status": "PASS"
     },
     "task15_gate": {
