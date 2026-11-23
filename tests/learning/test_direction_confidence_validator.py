@@ -610,3 +610,48 @@ def test_outcome_cannot_be_asserted_from_a_future_clock(tmp_path):
     root, _, _, _ = complete_ledger_fixture(tmp_path)
     with pytest.raises(ValidationError, match="OUTCOME_MEASURED_IN_FUTURE"):
         validate_repository(root, now=datetime(2026, 8, 31, 10, 30, tzinfo=timezone.utc))
+
+
+def test_immutable_git_cache_preserves_frozen_source_and_new_revision(tmp_path):
+    """Identical SHA-anchored reads can reuse Git objects; fresh commits cannot."""
+    from scripts.intraday_execution import shadow_direction_confidence as owner
+    from datetime import datetime, timezone
+
+    root, _, _, row = complete_ledger_fixture(tmp_path)
+    due = datetime(2026, 8, 31, 11, tzinfo=timezone.utc)
+    source = root / owner._hourly_source_path(due)
+    old_commit = row["production_context"]["commit_sha"]
+    old_bytes = source.read_bytes()
+
+    owner._immutable_git_object_read.cache_clear()
+    first = owner.exact_hourly_close_at_commit(root, old_commit, due, "BTC")
+    before = owner._immutable_git_object_read.cache_info()
+    second = owner.exact_hourly_close_at_commit(root, old_commit, due, "ETH")
+    after = owner._immutable_git_object_read.cache_info()
+    assert first["close"] == second["close"] == 101.0
+    assert after.hits >= before.hits + 3  # frozen timestamp, tree and blob
+    assert source.read_bytes() == old_bytes  # no writer or working-tree change
+
+    source.write_text(source.read_text().replace("101,101,PASS", "102,102,PASS"))
+    new_commit = _commit_fixture_source(root, "2026-08-31T11:15:00Z")
+    assert new_commit != old_commit
+    assert owner.exact_hourly_close_at_commit(root, new_commit, due, "BTC")["close"] == 102.0
+    assert owner.exact_hourly_close_at_commit(root, old_commit, due, "BTC")["close"] == 101.0
+
+
+def test_immutable_git_cache_cannot_accept_mutable_refs():
+    from scripts.intraday_execution import shadow_direction_confidence as owner
+    sha = "a" * 40
+    assert owner._can_cache_immutable_git_object(("show", "-s", "--format=%ct", sha))
+    assert owner._can_cache_immutable_git_object(("ls-tree", sha, "--", "hour.csv"))
+    assert owner._can_cache_immutable_git_object(("show", sha + ":hour.csv"))
+    for args in (
+        ("show", "origin/main:hour.csv"),
+        ("show", "HEAD:hour.csv"),
+        ("show", "-s", "--format=%ct", "main"),
+        ("ls-tree", "origin/main", "--", "hour.csv"),
+        ("fetch", "origin", "main"),
+        ("rev-list", "--first-parent", sha),
+        ("ls-remote", "origin", "refs/heads/main"),
+    ):
+        assert not owner._can_cache_immutable_git_object(args), args

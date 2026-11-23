@@ -11,6 +11,7 @@ import os
 import re
 import statistics
 import subprocess
+from functools import lru_cache
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -602,6 +603,31 @@ def _exact_hourly_close(due: datetime, target: str, *, root: Path = Path(".")) -
         return None
 
 
+@lru_cache(maxsize=16_384)
+def _immutable_git_object_read(root: str, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
+    """Cache Git reads only when the caller supplied a fully resolved commit SHA.
+
+    A Git blob/tree at an exact SHA cannot change. Mutable refs, fetch,
+    ancestry and remote head verification are intentionally NEVER cached.
+    Every hour still performs the full historical audit and fails closed if
+    any source is missing or inconsistent. Cache lives only in this process.
+    """
+    return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=60)
+
+
+def _can_cache_immutable_git_object(args: tuple[str, ...]) -> bool:
+    sha = r"[0-9a-f]{40}"
+    if (len(args) == 4 and args[:3] == ("show", "-s", "--format=%ct")
+            and re.fullmatch(sha, args[3])):
+        return True
+    if (len(args) == 4 and args[0] == "ls-tree" and args[2] == "--"
+            and re.fullmatch(sha, args[1])):
+        return True
+    if len(args) == 2 and args[0] == "show" and re.fullmatch(sha + r":.+", args[1]):
+        return True
+    return False
+
+
 def exact_hourly_close_at_commit(
     root: Path, commit: str, due: datetime, target: str,
     *, available_by: datetime | None = None, observed_at: datetime | None = None,
@@ -614,6 +640,10 @@ def exact_hourly_close_at_commit(
     checkout, tracked-file write, market API request or ref update is performed.
     """
     def git(*args):
+        # Read through Git itself. Cache only immutable commit-addressed
+        # objects, never live refs, network observations, ancestry or fetches.
+        if _can_cache_immutable_git_object(args):
+            return _immutable_git_object_read(str(root.resolve()), args)
         return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=60)
     try:
         require_canonical_main_commit(root, commit)
