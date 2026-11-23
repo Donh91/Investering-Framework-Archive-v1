@@ -98,7 +98,7 @@ async function originalEvidenceOrUnavailable(root=dist){
   try{return await discoverOriginalWeek(root)}
   catch(error){
     return {status:'NOT_ATTESTABLE',
-      reason:String(error?.message||'ORIGINAL_SOURCE_UNAVAILABLE').split(/[\\r\\n:]/)[0].slice(0,80)};
+      reason:String(error?.message||'ORIGINAL_SOURCE_UNAVAILABLE').split(String.fromCharCode(10))[0].split(':')[0].slice(0,80)};
   }
 }
 async function discoverFiles(root,prefix){
