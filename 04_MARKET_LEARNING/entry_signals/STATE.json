@@ -1,12 +1,12 @@
 {
   "contract": "ENTRY_SIGNAL_STATE_v1",
   "criteria": {
-    "eth_outperforms_btc_24h": false,
+    "eth_outperforms_btc_24h": true,
     "ethbtc_above_registered_0_0300": false,
     "top100_proxy_breadth_ge_50pct": true
   },
   "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_2_CANONICAL_PROMOTION_GUARD",
-  "execution_temperature": "NORMAL",
+  "execution_temperature": "HOT",
   "historical_validity_policy": "Historical signal records remain immutable. Later outcomes may calibrate definition quality but must not retroactively invalidate a signal solely because the later outcome was poor. A contemporaneous evidence-role or measurement-validity defect may be annotated prospectively without rewriting the historical event.",
   "measurement_validity": {
     "absolute_breadth_semantics": "DESCRIPTIVE_PARTICIPATION_ZERO_EXECUTION_WEIGHT",
@@ -28,12 +28,12 @@
     "independent_rotation_confirmation_reason": "PROXY_OR_CANONICAL_COMPATIBILITY_UNCONFIRMED",
     "relative_breadth": {
       "constituent_count": 100,
-      "equal_weight_mean_return_24h_pct": 2.133455,
-      "median_return_24h_pct": 2.058285,
-      "outperforming_btc_count": 35,
-      "outperforming_btc_share": 0.35,
-      "outperforming_eth_count": 39,
-      "outperforming_eth_share": 0.39
+      "equal_weight_mean_return_24h_pct": 4.544461,
+      "median_return_24h_pct": 4.547225,
+      "outperforming_btc_count": 58,
+      "outperforming_btc_share": 0.58,
+      "outperforming_eth_count": 55,
+      "outperforming_eth_share": 0.55
     },
     "rolling_window_confirmation_policy": "Repeated observations from an overlapping rolling window are descriptive persistence only and are not, by themselves, independent confirmation.",
     "sensor_relationship_owner": "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
@@ -48,5 +48,5 @@
     "status": "FORWARD_ONLY_NOT_PROMOTION_READY"
   },
   "state": "WAIT",
-  "updated_at_utc": "2026-11-23T14:20:29.432274+00:00"
+  "updated_at_utc": "2026-11-23T15:23:40.833465+00:00"
 }
