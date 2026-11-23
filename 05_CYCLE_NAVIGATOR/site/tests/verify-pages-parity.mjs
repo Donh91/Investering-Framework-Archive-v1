@@ -86,7 +86,8 @@ async function discoverOriginalWeek(root=dist){
   }
   assert.deepEqual(p.daily_product_acceptance,accepted,'CN_ORIGINAL_PUBLIC_SOURCE_DIVERGENCE');
   return {path,forecast_week:week,public_issue_number:issue,
-    source_forecast_freeze_sha256:p.freeze_sha256,seven_day_product:'COMPLETE'};
+    source_forecast_freeze_sha256:p.freeze_sha256,issued_at_utc:accepted.issued_at_utc,
+    seven_day_product:'COMPLETE'};
 }
 async function discoverFiles(root,prefix){
   safePath(prefix);
