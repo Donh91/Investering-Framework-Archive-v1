@@ -22,13 +22,18 @@ OUTCOME_INDEX = PROGRAM + "/ASTRA_HIGH_OUTCOME_AND_EARLY_WEEK_SOURCE_INDEX_20261
 ISO_RE = re.compile(r"W(\d\d)$")
 RANGE_ASSETS = {"BTC": "btc", "ETH": "eth"}
 
-# Explicitly known post-index source: W47 was published after the sealed
-# 2026-11-13 W36-W46 research inventory. It is NOT part of that vintage.
-# Its exact real Git blob is pinned so an unknown/edited later source still
-# fails closed. Future weeks need a reviewed new vintage, not auto-whitelisting.
+# Explicit post-index freeze exceptions: W47 and W48 were published AFTER
+# the sealed 2026-11-13 W36-W46 research cohort. Neither can enter that
+# vintage's denominator. Independently verified exact Git blobs, not current
+# file names or a later result, are admitted solely to keep sealed replay
+# runnable. W48 was first published on main at ed2c194adda8b49f1efede30ab8c5c1aa0cd6443
+# (2026-11-23T09:46:19Z); that commit does NOT prove first HTTP delivery.
+# A new or edited future week must still FAIL CLOSED until separately reviewed.
 POST_INDEX_FORECAST_BLOBS = {
     "05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json":
         "1e72eb62e2da2f164a0da4108a4cf5f51b910f41",
+    "05_CYCLE_NAVIGATOR/weekly/2026/W48/CYCLE_NAVIGATOR_FORECAST_FREEZE.json":
+        "f553b20bfcdbf2db43fefc1b7b4539d83972c30b",
 }
 
 # The 2026-11-13 index pinned W46 before its capture matured. The current
@@ -173,7 +178,7 @@ def week_census(repo_root: Path, asof: dt.datetime) -> list[dict]:
     }
     # Replay only the ORIGINAL pinned cohort. A new real week must not make
     # immutable W36-W46 research unreplayable, nor enter its denominator.
-    # Missing originals, unrecognized new weeks, and altered W47 still fail.
+    # Missing originals, unreviewed post-index weeks and altered W47/W48 still fail.
     if not expected_forecasts or not expected_forecasts.issubset(actual_forecasts):
         raise ValueError("FROZEN_WEEKLY_SOURCE_SET_DRIFT")
     for later_path in actual_forecasts - expected_forecasts:
