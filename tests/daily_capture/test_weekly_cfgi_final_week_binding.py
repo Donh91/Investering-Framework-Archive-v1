@@ -3,6 +3,11 @@ from __future__ import annotations
 import unittest
 import json
 import tempfile
+import contextlib
+import io
+import os
+import sys
+from unittest.mock import patch
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -112,6 +117,51 @@ class WeeklyCfgiFinalWeekBindingTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 resolve_close_mode("auto", event_name="schedule", event_path=str(event),
                     run_attempt="1", now=valid)
+
+    def test_real_cfgi_cli_metronome_first_attempt_accepts_and_rejects(self):
+        """Run actual CFGI main under original workflow env, not just resolver."""
+        from scripts.daily_capture import build_weekly_cfgi_summary as owner
+        scenarios = (
+            ("2026-11-29T22:35:00Z", "preclose"),
+            ("2026-11-30T01:05:00Z", "final"),
+        )
+        for at, mode in scenarios:
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                capture = root / "captures"
+                capture.mkdir()
+                output = root / "cfgi"
+                event = root / "event.json"
+                event.write_text(json.dumps({"ref":"refs/heads/main","inputs":{"mode":mode}}))
+                env = {"GITHUB_EVENT_NAME":"workflow_dispatch",
+                       "GITHUB_EVENT_PATH":str(event),"GITHUB_RUN_ATTEMPT":"1"}
+                argv = ["cfgi","--capture-root",str(capture),
+                        "--output-root",str(output),"--mode",mode,"--now-utc",at]
+                with patch.object(sys,"argv",argv), patch.dict(os.environ,env,clear=True), \
+                     contextlib.redirect_stdout(io.StringIO()):
+                    owner.main()
+                summary = output / "2026/W48/WEEKLY_CFGI_DERIVED_SUMMARY.json"
+                self.assertTrue(summary.is_file())
+                self.assertEqual(json.loads(summary.read_text())["iso_week"],48)
+                self.assertEqual(json.loads(summary.read_text())["status"],"SOURCE_UNAVAILABLE")
+                for bad in ("wrong_ref","rerun","outside_slot"):
+                    with self.subTest(bad=bad):
+                        later = root / bad
+                        inputs={"ref":"refs/heads/feature" if bad=="wrong_ref" else "refs/heads/main",
+                                "inputs":{"mode":mode}}
+                        event.write_text(json.dumps(inputs))
+                        rejected = list(argv)
+                        if bad=="outside_slot":
+                            rejected[-1] = "2026-11-30T00:30:00Z"
+                        if bad=="rerun":
+                            env["GITHUB_RUN_ATTEMPT"]="2"
+                        rejected[rejected.index(str(output))]=str(later)
+                        with patch.object(sys,"argv",rejected), \
+                             patch.dict(os.environ,env,clear=True):
+                            with self.assertRaises(ValueError):
+                                owner.main()
+                        self.assertFalse(later.exists())
+                        env["GITHUB_RUN_ATTEMPT"]="1"
 
     def test_offline_explicit_mode_and_unknown_triggers(self):
         self.assertEqual(resolve_close_mode("final",event_name="",event_path=""),"final")

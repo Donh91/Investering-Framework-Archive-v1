@@ -345,6 +345,38 @@ class WeeklyCloseArchitectureTests(unittest.TestCase):
         self.assertIn("needs: [freeze, calibration]", weekly)
         self.assertIn("--mode \"${{ steps.mode.outputs.mode }}\"", sunday)
 
+    def test_weekly_workflow_every_event_sensitive_cli_is_accounted_for(self):
+        # Enumerate EVERY directly invoked Python script across both original
+        # workflows. A new script reading GitHub event identity must be
+        # explicitly classified here, preventing another silent CFGI bypass.
+        import re
+        from pathlib import Path
+        workflows = [
+            Path(".github/workflows/sunday-market-close-and-cfgi.yml"),
+            Path(".github/workflows/weekly-api-calibration-shadow.yml"),
+        ]
+        commands = set()
+        for workflow in workflows:
+            commands.update(re.findall(
+                r"(?:python|python3)[ ]+(scripts/[A-Za-z0-9_./-]+[.]py)",
+                workflow.read_text()))
+        self.assertIn("scripts/daily_capture/build_weekly_market_close_package.py",commands)
+        self.assertIn("scripts/daily_capture/build_weekly_cfgi_summary.py",commands)
+        checked = set()
+        for script in commands:
+            source = Path(script).read_text()
+            if "GITHUB_EVENT_NAME" in source or "GITHUB_EVENT_PATH" in source:
+                checked.add(script)
+        self.assertEqual(checked,{
+            "scripts/daily_capture/build_weekly_market_close_package.py",
+            "scripts/daily_capture/build_weekly_cfgi_summary.py",
+            "scripts/api_agent/check_monthly_cost_guard.py"})
+        # The monthly guard uses event type only to avoid trusting
+        # pull_request owner-reservation claims; it does not reject dispatch.
+        budget = Path("scripts/api_agent/check_monthly_cost_guard.py").read_text()
+        self.assertIn('os.environ.get("GITHUB_EVENT_NAME") == "pull_request"',budget)
+        self.assertNotIn('os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch"',budget)
+
     def test_preclose_is_partial_and_non_binding(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / 'weekly_close'
