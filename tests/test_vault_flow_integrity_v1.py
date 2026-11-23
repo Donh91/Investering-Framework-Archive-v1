@@ -1,4 +1,5 @@
 import unittest
+from decimal import localcontext
 from scripts.research.vault_flow_integrity_v1 import CONTRACT, EvidenceRefused, evaluate
 
 
@@ -116,6 +117,64 @@ class VaultFlowIntegrityTests(unittest.TestCase):
         r = evaluate(p)
         self.assertEqual(float(r["flow_neutral_twr_pct"]), -100)
         self.assertFalse(r["eligible_to_rank_vaults"])
+
+    def test_codex_p2_rejects_tiny_equity_reconciliation_materiality(self):
+        p = fixture()
+        p["points"] = p["points"][:1]
+        p["start_equity_after_flow_usd"] = "0.0000001"
+        p["points"][0].update(equity_before_flow_usd="0.0000001",
+                              external_net_flow_usd="0", equity_after_flow_usd="0.00000001")
+        with self.assertRaisesRegex(EvidenceRefused, "UNSUPPORTED_PRECISION"):
+            evaluate(p)
+
+    def test_codex_p2_rejects_1e30_rounding_and_large_amounts(self):
+        p = fixture()
+        p["points"] = p["points"][:1]
+        p["start_equity_after_flow_usd"] = "1e30"
+        p["points"][0].update(equity_before_flow_usd="1e30",
+                              external_net_flow_usd="1", equity_after_flow_usd="1e30")
+        with self.assertRaisesRegex(EvidenceRefused, "AMOUNT_OUT_OF_BOUNDS"):
+            evaluate(p)
+
+    def test_codex_p2_decimal_precision_invariant(self):
+        p = fixture()
+        p["points"] = p["points"][:1]
+        p["start_equity_after_flow_usd"] = "7"
+        p["points"][0].update(equity_before_flow_usd="8",
+                              external_net_flow_usd="0", equity_after_flow_usd="8")
+        default = evaluate(p)
+        with localcontext() as context:
+            context.prec = 2
+            changed = evaluate(p)
+        self.assertEqual(default["flow_neutral_twr_pct"], changed["flow_neutral_twr_pct"])
+        self.assertTrue(default["flow_neutral_twr_pct"].startswith("14.28571428"))
+
+    def test_codex_p2_withdraw_at_new_peak_naive_drawdown(self):
+        p = fixture()
+        p["points"] = p["points"][:1]
+        p["points"][0].update(equity_before_flow_usd="200",
+                              external_net_flow_usd="-100", equity_after_flow_usd="100")
+        r = evaluate(p)
+        self.assertEqual(float(r["naive_account_drawdown_pct"]), 50)
+        self.assertEqual(float(r["flow_neutral_drawdown_pct"]), 0)
+        self.assertEqual(float(r["flow_neutral_twr_pct"]), 100)
+
+    def test_codex_p2_deposit_after_loss_naive_sees_interim_drop(self):
+        p = fixture()
+        p["points"] = p["points"][:1]
+        p["points"][0].update(equity_before_flow_usd="50",
+                              external_net_flow_usd="100", equity_after_flow_usd="150")
+        r = evaluate(p)
+        self.assertEqual(float(r["naive_account_drawdown_pct"]), 50)
+        self.assertEqual(float(r["flow_neutral_drawdown_pct"]), 50)
+        self.assertEqual(float(r["flow_neutral_twr_pct"]), -50)
+
+    def test_codex_p2_sub_micro_unit_reconciliation_rejected(self):
+        p = fixture()
+        p["points"] = p["points"][:1]
+        p["points"][0]["equity_after_flow_usd"] = "1000.0000001"
+        with self.assertRaisesRegex(EvidenceRefused, "UNSUPPORTED_PRECISION"):
+            evaluate(p)
 
     def test_unknown_source_class_not_promoted(self):
         p = fixture()
