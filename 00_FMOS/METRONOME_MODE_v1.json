@@ -1,5 +1,5 @@
 {
   "contract": "FRAMEWORK_METRONOME_MODE_v1",
-  "mode": "ACTIVE_DATA",
-  "note": "ACTIVE_DATA dispatches only the free hourly owners on time: hourly-sequence-capture (free public candles, from :05), native-market-recovery (from :26; its repairs are bounded by their own cooldowns) and s1-tick-brief (read-only S1 tick brief, from :15, unless its cron or a manual run already started this hour from :13). Sunday close and paid Master Monday stay log-only (WOULD_DISPATCH). Full ACTIVE only by a later reviewed owner PR."
+  "mode": "ACTIVE",
+  "note": "OWNER P0 native Monday reliability. Activate EXISTING GitHub metronome for free Sunday PRE/CLOSE and FINAL plus ONE weekly Master Monday owner when FINAL has succeeded. Weekly API model call remains subject to existing $2.50 task and $40 monthly hard budget gates, idempotency and API-failure-safe partial publication. Existing public CN original 7-day publisher still follows weekly completion. No new workflows/schedules/API permissions. Monday owner never automatically retries a failed/ambiguous paid run; FINAL source retries are capped at three with a 20-minute cooldown. Review + proof required before merge. ACTIVE_DATA was clock-insufficient: GitHub's native weekly cron arrived over 8 hours late on 2026-11-23."
 }

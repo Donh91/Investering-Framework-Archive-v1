@@ -6,6 +6,7 @@ is missing, even when a historical Git file and later outcome both exist.
 import datetime as dt
 import json
 import tempfile
+import subprocess
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -97,6 +98,44 @@ class AllArchiveCensusTests(unittest.TestCase):
         path = engine.ROOT / rel
         self.assertTrue(path.is_file())
         raw = path.read_bytes()
+        # First-parent source audit on the actual checked-out public Archive,
+        # not a fixture-only proof or mutable PR HEAD.
+        seal_blob = engine._git_text(
+            engine.ROOT, "rev-parse", "--verify",
+            engine.INDEX_SEAL_COMMIT + ":" + engine.SOURCE_INDEX)
+        self.assertEqual(seal_blob, engine.SOURCE_INDEX_BLOB)
+        main_ref = next(
+            (ref for ref in ("refs/heads/main", "refs/remotes/origin/main")
+             if engine._git_text(engine.ROOT, "rev-parse", "--verify",
+                                 ref + "^{commit}")), None)
+        self.assertIsNotNone(main_ref, "N1_REQUIRES_LOCAL_OR_ORIGIN_MAIN")
+        tip = engine._git_text(engine.ROOT, "rev-parse", "--verify",
+                               main_ref + "^{commit}")
+        chain = engine._git_text(engine.ROOT, "rev-list", "--first-parent", tip)
+        self.assertIn(engine.INDEX_SEAL_COMMIT, (chain or "").splitlines(),
+                      "N1_INDEX_SEAL_NOT_ON_FIRST_PARENT_MAIN")
+        changes = engine._git_text(
+            engine.ROOT, "rev-list", "--first-parent", "--reverse",
+            engine.INDEX_SEAL_COMMIT + ".." + tip, "--", rel)
+        self.assertEqual(len((changes or "").splitlines()), 1,
+                         "N1_FREEZE_CHANGED_OR_MISSING_ON_MAIN:" + str(changes))
+        self.assertEqual(engine._git_text(engine.ROOT, "rev-parse", "--show-toplevel"), str(engine.ROOT.resolve()), "N1_GIT_TOP_MISMATCH")
+        # Global repository may be shallow BEFORE seal; the post-seal first-parent
+        # chain is what must be complete, already verified in the lines above.
+        self.assertFalse(engine.has_symlink_component(path, engine.ROOT), "N1_UNSAFE_SOURCE_PATH")
+        index = engine.pinned_source_map(str(engine.ROOT.resolve()))
+        original_weeks = [tuple(map(int, engine.FORECAST_PATH.fullmatch(p).groups()))
+                          for p in index if engine.FORECAST_PATH.fullmatch(p)]
+        self.assertEqual(max(original_weeks), (2026, 46), "N1_WRONG_INDEX_MAX_WEEK")
+        introduction = changes.splitlines()[0]
+        self.assertIsNone(engine._git_text(engine.ROOT, "cat-file", "-e",
+                          introduction + "^:" + rel), "N1_NOT_A_NEW_FILE")
+        first_blob = engine._git_text(engine.ROOT, "rev-parse", "--verify",
+                                     introduction + ":" + rel)
+        current_blob = engine._git_text(engine.ROOT, "rev-parse", "--verify",
+                                       tip + ":" + rel)
+        self.assertEqual(first_blob, engine.git_blob_sha(raw), "N1_FIRST_BLOB_MISMATCH")
+        self.assertEqual(current_blob, engine.git_blob_sha(raw), "N1_CURRENT_BLOB_MISMATCH")
         self.assertTrue(engine.verified_post_index_forecast(rel, raw))
         self.assertFalse(engine.verified_post_index_forecast(rel, raw + b"\\n"))
         self.assertFalse(engine.verified_post_index_forecast(
@@ -127,6 +166,108 @@ class AllArchiveCensusTests(unittest.TestCase):
         self.assertEqual(len(rows), 11)
         self.assertNotIn("2026-W48", {row["iso_week"] for row in rows})
         self.assertNotIn("2026-W47", {row["iso_week"] for row in rows})
+
+    @staticmethod
+    def _n1_git(root: Path, *args: str) -> str:
+        result = subprocess.run(["git", *args], cwd=root, capture_output=True,
+                                text=True, check=True, timeout=30)
+        return result.stdout.strip()
+
+    def _n1_repo(self, root: Path) -> str:
+        """Isolated REAL first-parent main, with a pre-publication seal."""
+        self._n1_git(root, "init", "-q", "-b", "main")
+        self._n1_git(root, "config", "user.email", "n1-fixture@example.invalid")
+        self._n1_git(root, "config", "user.name", "N1 Fixture")
+        (root / "sealed-index.txt").write_text("immutable original vintage\n")
+        self._n1_git(root, "add", ".")
+        self._n1_git(root, "commit", "-qm", "seal original index")
+        return self._n1_git(root, "rev-parse", "HEAD")
+
+    def _n1_publish(self, root: Path, week: int, raw: bytes) -> str:
+        rel = (f"05_CYCLE_NAVIGATOR/weekly/2026/W{week:02d}/"
+               "CYCLE_NAVIGATOR_FORECAST_FREEZE.json")
+        target = root / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(raw)
+        self._n1_git(root, "add", rel)
+        self._n1_git(root, "commit", "-qm", f"introduce W{week:02d}")
+        return rel
+
+    def test_n1_new_w49_admitted_after_real_first_parent_introduction(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            seal = self._n1_repo(root)
+            rel = self._n1_publish(root, 49, b'{"week":"2026-W49"}\n')
+            raw = (root / rel).read_bytes()
+            self.assertTrue(engine._verified_post_index_first_parent(
+                root, rel, raw, seal_commit=seal,
+                main_ref="refs/heads/main", last_index_week=(2026, 46)))
+            self.assertFalse(engine._verified_post_index_first_parent(
+                root, rel, raw + b"tampered", seal_commit=seal,
+                main_ref="refs/heads/main", last_index_week=(2026, 46)))
+            self.assertFalse(engine._verified_post_index_first_parent(
+                root, rel, raw, seal_commit="0" * 40,
+                main_ref="refs/heads/main", last_index_week=(2026, 46)))
+
+    def test_n1_edited_and_restored_w48_rejected_even_if_bytes_equal(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            seal = self._n1_repo(root)
+            rel = self._n1_publish(root, 48, b'{"week":"2026-W48"}\n')
+            original = (root / rel).read_bytes()
+            self.assertTrue(engine._verified_post_index_first_parent(
+                root, rel, original, seal_commit=seal,
+                main_ref="refs/heads/main", last_index_week=(2026, 46)))
+            (root / rel).write_bytes(original + b"edit")
+            self._n1_git(root, "add", rel)
+            self._n1_git(root, "commit", "-qm", "edit W48")
+            self.assertFalse(engine._verified_post_index_first_parent(
+                root, rel, (root / rel).read_bytes(), seal_commit=seal,
+                main_ref="refs/heads/main", last_index_week=(2026, 46)))
+            (root / rel).write_bytes(original)
+            self._n1_git(root, "add", rel)
+            self._n1_git(root, "commit", "-qm", "restore original W48 bytes")
+            self.assertFalse(engine._verified_post_index_first_parent(
+                root, rel, original, seal_commit=seal,
+                main_ref="refs/heads/main", last_index_week=(2026, 46)))
+
+    def test_n1_shallow_boundary_at_seal_allowed_but_inside_span_refused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            seal = self._n1_repo(root)
+            rel = self._n1_publish(root, 49, b'{"week":"2026-W49"}\n')
+            issue = self._n1_git(root, "rev-parse", "HEAD")
+            raw = (root / rel).read_bytes()
+            # GitHub checkout may be shallow before the research index, while
+            # the COMPLETE first-parent seal-to-current segment is present.
+            shallow = root / ".git/shallow"
+            shallow.write_text(seal + "\n")
+            self.assertEqual(self._n1_git(root, "rev-parse", "--is-shallow-repository"), "true")
+            self.assertTrue(engine._verified_post_index_first_parent(
+                root, rel, raw, seal_commit=seal,
+                main_ref="refs/heads/main", last_index_week=(2026, 46)))
+            # A shallow boundary at the introduction itself truncates the
+            # protected segment; even identical local bytes must be refused.
+            shallow.write_text(issue + "\n")
+            self.assertFalse(engine._verified_post_index_first_parent(
+                root, rel, raw, seal_commit=seal,
+                main_ref="refs/heads/main", last_index_week=(2026, 46)))
+
+    def test_n1_injected_old_week_after_seal_still_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            seal = self._n1_repo(root)
+            # Even a valid-looking Git commit cannot enlarge the sealed
+            # original W36-W46 vintage with newly introduced W45 bytes.
+            rel = self._n1_publish(root, 45, b'{"week":"2026-W45","retro":true}\n')
+            self.assertFalse(engine._verified_post_index_first_parent(
+                root, rel, (root / rel).read_bytes(),
+                seal_commit=seal, main_ref="refs/heads/main",
+                last_index_week=(2026, 46)))
+            self.assertFalse(engine._verified_post_index_first_parent(
+                root, rel.replace("/W45/", "/W99/"), (root / rel).read_bytes(),
+                seal_commit=seal, main_ref="refs/heads/main",
+                last_index_week=(2026, 46)))
 
     def test_w46_vintage_uses_original_git_bytes_not_mutable_live_capture(self):
         """A real original W46 blob is replayed, but altered archived bytes fail."""
