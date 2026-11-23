@@ -259,6 +259,35 @@ def main() -> None:
         "portfolio_action": False,
     }
 
+    # FINAL is an immutable source issuance, not a mutable re-capture. A late
+    # native cron or a queued metronome retry after an earlier successful FINAL
+    # must NOT regenerate its generated_at_utc, hash or pointer. Pre-close is
+    # deliberately a partial draft for the SAME completed ISO week and may be
+    # replaced by the first real FINAL.
+    if final:
+        week = start.isocalendar()
+        existing_path = (args.output_root / str(week.year) / f"W{week.week:02d}"
+                         / "WEEKLY_MARKET_CLOSE_PACKAGE.json")
+        if existing_path.exists():
+            try:
+                existing = json.loads(existing_path.read_bytes())
+            except (OSError, ValueError, TypeError) as exc:
+                raise SystemExit("FINAL_EXISTING_PACKAGE_UNREADABLE") from exc
+            if not isinstance(existing, dict):
+                raise SystemExit("FINAL_EXISTING_PACKAGE_NOT_OBJECT")
+            if existing.get("final") is True:
+                # This verifies exact package, receipt, pointer and 168 hourly
+                # candles per symbol. Corruption FAILS CLOSED, never repair by
+                # rewriting an already-issued source from later market data.
+                print(json.dumps(verify_existing_final(now, args.output_root), sort_keys=True))
+                return
+            if not (existing.get("contract") == "WEEKLY_MARKET_CLOSE_PACKAGE_v3"
+                    and existing.get("final") is False
+                    and existing.get("close_mode") == "PRE_CLOSE_CURRENT_ISO_WEEK"
+                    and existing.get("iso_year") == week.year
+                    and existing.get("iso_week") == week.week):
+                raise SystemExit("FINAL_EXISTING_PACKAGE_STATE_UNEXPECTED")
+
     expected_hours = int((end - start).total_seconds() // 3600)
     all_complete = True
     for symbol in SYMBOLS:

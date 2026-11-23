@@ -261,6 +261,60 @@ class WeeklyCloseArchitectureTests(unittest.TestCase):
             self.assertEqual(json.loads(output.getvalue())['status'], 'PASS')
             self.assertEqual(originals, {str(p): p.read_bytes() for p in root.rglob('*.json')})
 
+    def test_late_native_final_cron_reuses_source_bytes_without_network(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'weekly_close'
+            self.run_weekly(root, mode='final')
+            original = {str(p): p.read_bytes() for p in root.rglob('*.json')}
+            argv = ['weekly', '--output-root', str(root), '--mode', 'final',
+                    '--now-utc', '2026-08-31T10:00:00Z']
+            # A delayed scheduled producer is valid on local Monday, but
+            # cannot overwrite its earlier successful source issuance.
+            ev = Path(tmp) / 'event.json'
+            ev.write_text(json.dumps({'schedule': '5 2 * * 1'}))
+            env = {'GITHUB_EVENT_NAME': 'schedule', 'GITHUB_EVENT_PATH': str(ev),
+                   'GITHUB_RUN_ATTEMPT': '1'}
+            with patch('sys.argv', argv), patch.dict(weekly.os.environ, env, clear=True), \
+                 patch.object(weekly, 'fetch_klines') as fetch, \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                weekly.main()
+            fetch.assert_not_called()
+            self.assertEqual(json.loads(output.getvalue())['mode'],
+                             'REUSE_VERIFIED_FINAL_NO_SOURCE_MUTATION')
+            self.assertEqual(original, {str(p): p.read_bytes() for p in root.rglob('*.json')})
+            # A corrupted original may NOT be silently repaired by a later
+            # native run: frozen first-source provenance takes priority.
+            ptr = root / 'LATEST_WEEKLY_MARKET_CLOSE.json'
+            ptr.write_text(json.dumps({'status': 'PASS'}))
+            with patch('sys.argv', argv), patch.dict(weekly.os.environ, env, clear=True), \
+                 patch.object(weekly, 'fetch_klines') as fetch:
+                with self.assertRaisesRegex(SystemExit,
+                                             'EXISTING_FINAL_MARKET_CLOSE_INTEGRITY_FAIL_CLOSED'):
+                    weekly.main()
+            fetch.assert_not_called()
+
+    def test_first_final_replaces_same_week_preclose_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'weekly_close'
+            def fetch(symbol, start_ms, end_ms, base_url):
+                return [[stamp, '10', '12', '9', '11', '5', stamp + 3_599_999]
+                        for stamp in range(start_ms, end_ms, 3_600_000)]
+            with patch('sys.argv', ['weekly', '--output-root', str(root),
+                 '--mode', 'preclose', '--now-utc', '2026-08-30T20:40:00Z']), \
+                 patch.object(weekly, 'fetch_klines', side_effect=fetch), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                weekly.main()
+            pre = json.loads((root / '2026/W35/WEEKLY_MARKET_CLOSE_PACKAGE.json').read_text())
+            self.assertFalse(pre['final'])
+            with patch('sys.argv', ['weekly', '--output-root', str(root),
+                 '--mode', 'final', '--now-utc', '2026-08-31T02:00:00Z']), \
+                 patch.object(weekly, 'fetch_klines', side_effect=fetch), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                weekly.main()
+            final = json.loads((root / '2026/W35/WEEKLY_MARKET_CLOSE_PACKAGE.json').read_text())
+            self.assertTrue(final['final'])
+            self.assertEqual(final['completeness'], 'COMPLETE')
+
     def test_preclose_is_partial_and_non_binding(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / 'weekly_close'
