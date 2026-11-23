@@ -1,6 +1,11 @@
 name: Deploy Cycle Navigator to GitHub Pages
 
 on:
+  # GitHub Actions GITHUB_TOKEN commits do not trigger other push workflows.
+  # Depend on the native source owner's completed run instead.
+  workflow_run:
+    workflows: ["Cycle Navigator Weekly Publication"]
+    types: [completed]
   push:
     branches: [main]
     paths:
@@ -51,6 +56,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -255,8 +264,18 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-      - name: Verify uploaded bundle bytes on actual GitHub Pages CDN
+      - name: Verify public bundle and exact original Monday freeze on CDN
+        env:
+          CN_PAGES_RECEIPT_PATH: runtime_cn_pages_release_receipt.json
         run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs
+      - name: Retain native weekly Pages receipt for S1
+        if: ${{ always() && github.event_name == 'workflow_run' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cn-monday-release-${{ github.run_id }}
+          path: runtime_cn_pages_release_receipt.json
+          if-no-files-found: warn
+          retention-days: 14
       - name: Acknowledge source Hourly closed candle on actual public CDN
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_hour_utc != '' }}
         env:

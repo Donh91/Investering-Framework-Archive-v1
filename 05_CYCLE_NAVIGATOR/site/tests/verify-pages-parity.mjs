@@ -55,6 +55,39 @@ const safePath=path=>{
   assert.ok(!path.split('/').some(part=>part===''||part==='.'||part==='..'),'PUBLIC_ASSET_PATH_INVALID');
   return path;
 };
+/** Bind an ACTUAL public CDN asset to the frozen original seven-day product. */
+async function discoverOriginalWeek(root=dist){
+  const snapshot=JSON.parse(await readFile(resolve(root,'data/latest.json'),'utf8'));
+  const p=snapshot?.public_live_precision;
+  assert.equal(p?.contract,'CN_PUBLIC_LIVE_PRICE_PRECISION_v1','CN_ORIGINAL_PRECISION_MISSING');
+  const week=p.forecast_week,issue=p.public_issue_number;
+  assert.match(week||'',/^\d{4}-W\d{2}$/,'CN_ORIGINAL_WEEK_INVALID');
+  assert.ok(Number.isInteger(issue)&&issue>0,'CN_ORIGINAL_ISSUE_INVALID');
+  const path=safePath(p.freeze_receipt_public_path);
+  assert.equal(path,'data/public-freezes/'+week.slice(0,4)+'/W'+week.slice(6)+'/CN'+issue+'_PUBLIC_FREEZE.json','CN_ORIGINAL_FREEZE_PATH_MISMATCH');
+  const r=JSON.parse(await readFile(resolve(root,path),'utf8'));
+  assert.equal(r.contract,'CN_SITE_PUBLIC_FREEZE_RECEIPT_v1','CN_ORIGINAL_FREEZE_CONTRACT');
+  assert.equal(r.status,'SITE_FROZEN_SOURCE_OF_RECORD','CN_ORIGINAL_FREEZE_NOT_ORIGINAL');
+  assert.equal(r.forecast_week,week,'CN_ORIGINAL_FREEZE_WEEK_MISMATCH');
+  assert.equal(r.public_issue_number,issue,'CN_ORIGINAL_FREEZE_ISSUE_MISMATCH');
+  assert.match(p.freeze_sha256||'',/^[0-9a-f]{64}$/,'CN_ORIGINAL_FREEZE_SHA_INVALID');
+  assert.equal(r.source_forecast_freeze_sha256,p.freeze_sha256,'CN_ORIGINAL_FREEZE_SHA_MISMATCH');
+  const accepted=r.daily_product_acceptance;
+  assert.equal(accepted?.contract,'CN_MONDAY_SEVEN_DAY_PRODUCT_ACCEPTANCE_v1','CN_ORIGINAL_ACCEPTANCE_CONTRACT');
+  assert.equal(accepted.forecast_week,week,'CN_ORIGINAL_ACCEPTANCE_WEEK_MISMATCH');
+  assert.equal(accepted.status,'COMPLETE','CN_ORIGINAL_PRODUCT_INCOMPLETE');
+  assert.equal(accepted.no_backward_reconstruction,true,'CN_ORIGINAL_BACKFILL_NOT_ALLOWED');
+  for(const asset of ['BTC','ETH']){
+    const a=accepted.assets?.[asset];
+    assert.equal(a?.status,'COMPLETE','CN_ORIGINAL_ASSET_INCOMPLETE_'+asset);
+    assert.equal(a?.expected_close_points,7,'CN_ORIGINAL_CLOSE_COUNT_'+asset);
+    assert.equal(a?.low_high_range_points,7,'CN_ORIGINAL_RANGE_COUNT_'+asset);
+    assert.deepEqual(a?.missing_requirements,[],'CN_ORIGINAL_ASSET_REQUIREMENTS_'+asset);
+  }
+  assert.deepEqual(p.daily_product_acceptance,accepted,'CN_ORIGINAL_PUBLIC_SOURCE_DIVERGENCE');
+  return {path,forecast_week:week,public_issue_number:issue,
+    source_forecast_freeze_sha256:p.freeze_sha256,seven_day_product:'COMPLETE'};
+}
 async function discoverFiles(root,prefix){
   safePath(prefix);
   const base=resolve(root);
@@ -84,7 +117,7 @@ const publicUrl=(path,allowed)=>{
   assert.equal(decodeURIComponent(url.pathname),'/Investering-Framework-Archive-v1/'+path);
   return url.href;
 };
-function snapshotSummary(rows,status,round,head,discoveryError=null){
+function snapshotSummary(rows,status,round,head,discoveryError=null,original=null){
   return {
     contract:'CN_PAGES_ARTIFACT_TO_CDN_PARITY_v1',
     status,checked_at_utc:new Date().toISOString(),run_head_sha:process.env.GITHUB_SHA||null,
@@ -92,6 +125,7 @@ function snapshotSummary(rows,status,round,head,discoveryError=null){
     canonical_public_url:ORIGIN,
     discovery_status:discoveryError?'FAILED':'PASS',
     discovery_error:discoveryError,
+    original_weekly_product:original,
     files:rows.map(x=>({path:x.path,status:x.status,expected_sha256:x.expected,served_sha256:x.actual,
       http_status:x.http_status??null,etag:x.etag??null,last_modified:x.last_modified??null,
       note:x.note||null}))
@@ -203,6 +237,34 @@ if(process.argv.includes('--self-test')){
     assert.equal(receipt.files[0].expected_sha256,null);
     assert.equal((await Promise.all(files.map(path=>check(path,allowed,{readAsset,fetchAsset,root:temporary}))))
       .filter(row=>row.status==='PASS').length,files.length);
+    const originalPath='data/public-freezes/2026/W48/CN35_PUBLIC_FREEZE.json';
+    const product={contract:'CN_MONDAY_SEVEN_DAY_PRODUCT_ACCEPTANCE_v1',forecast_week:'2026-W48',
+      status:'COMPLETE',no_backward_reconstruction:true,
+      assets:Object.fromEntries(['BTC','ETH'].map(a=>[a,{status:'COMPLETE',
+        expected_close_points:7,low_high_range_points:7,missing_requirements:[]}]))};
+    const receipt={contract:'CN_SITE_PUBLIC_FREEZE_RECEIPT_v1',status:'SITE_FROZEN_SOURCE_OF_RECORD',
+      forecast_week:'2026-W48',public_issue_number:35,source_forecast_freeze_sha256:'a'.repeat(64),
+      daily_product_acceptance:product};
+    const snap={public_live_precision:{contract:'CN_PUBLIC_LIVE_PRICE_PRECISION_v1',
+      forecast_week:'2026-W48',public_issue_number:35,freeze_sha256:'a'.repeat(64),
+      freeze_receipt_public_path:originalPath,daily_product_acceptance:product}};
+    await mkdir(resolve(temporary,'data/public-freezes/2026/W48'),{recursive:true});
+    await writeFile(resolve(temporary,'data/latest.json'),JSON.stringify(snap));
+    await writeFile(resolve(temporary,originalPath),JSON.stringify(receipt));
+    assert.equal((await discoverOriginalWeek(temporary)).path,originalPath);
+    await writeFile(resolve(temporary,originalPath),JSON.stringify({...receipt,source_forecast_freeze_sha256:'b'.repeat(64)}));
+    await assert.rejects(discoverOriginalWeek(temporary),/CN_ORIGINAL_FREEZE_SHA_MISMATCH/);
+    await writeFile(resolve(temporary,originalPath),JSON.stringify({...receipt,daily_product_acceptance:{...product,
+      assets:{...product.assets,BTC:{...product.assets.BTC,expected_close_points:6}}}}));
+    await assert.rejects(discoverOriginalWeek(temporary),/CN_ORIGINAL_CLOSE_COUNT_BTC/);
+    await writeFile(resolve(temporary,originalPath),JSON.stringify(receipt));
+    await writeFile(resolve(temporary,'data/latest.json'),JSON.stringify({public_live_precision:{
+      ...snap.public_live_precision,forecast_week:'2026-W49'}}));
+    await assert.rejects(discoverOriginalWeek(temporary),/CN_ORIGINAL_FREEZE_PATH_MISMATCH/);
+    await writeFile(resolve(temporary,'data/latest.json'),JSON.stringify(snap));
+    await writeFile(resolve(temporary,originalPath),JSON.stringify({...receipt,public_issue_number:34}));
+    await assert.rejects(discoverOriginalWeek(temporary),/CN_ORIGINAL_FREEZE_ISSUE_MISMATCH/);
+    await writeFile(resolve(temporary,originalPath),JSON.stringify(receipt));
   }finally{
     await rm(temporary,{recursive:true,force:true});
   }
@@ -211,10 +273,12 @@ if(process.argv.includes('--self-test')){
   let head=null;try{head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()}catch{}
   let files=[];
   let discoveryError=null;
+  let original=null;
   try{
     const nextFiles=await discoverFiles(dist,'next');
     const historyFiles=await graphHistoryParityAssets(dist);
-    files=[...new Set([...canonicalFiles,...historyFiles,...nextFiles])];
+    original=await discoverOriginalWeek(dist);
+    files=[...new Set([...canonicalFiles,original.path,...historyFiles,...nextFiles])];
   }catch(error){
     // Do not expose local paths or exception text. NEXT should exist because the
     // current workflow stages it before upload; absence is a release failure.
@@ -223,13 +287,13 @@ if(process.argv.includes('--self-test')){
   const allowed=new Set(files);
   let last=null;
   if(discoveryError){
-    last=snapshotSummary([], 'DEGRADED',0,head,discoveryError);
+    last=snapshotSummary([], 'DEGRADED',0,head,discoveryError,original);
     console.log('CN_PAGES_PARITY_RECEIPT '+JSON.stringify(last));
   }else{
     for(let round=1;round<=6;round++){
       const rows=await Promise.all(files.map(path=>check(path,allowed)));
       const pass=rows.every(row=>row.status==='PASS');
-      last=snapshotSummary(rows,pass?'PASS':'DEGRADED',round,head);
+      last=snapshotSummary(rows,pass?'PASS':'DEGRADED',round,head,null,original);
       // No JSON payload, secrets, portfolio or private URLs printed. All checked
       // assets are intentionally already publicly accessible.
       console.log('CN_PAGES_PARITY_RECEIPT '+JSON.stringify(last));
@@ -244,6 +308,9 @@ if(process.argv.includes('--self-test')){
       'Status **'+last.status+'** | **'+p+'/'+files.length+
       '** byte-for-byte SHA-256 matches | built checkout **'+(head||'UNKNOWN')+
       '** | latest attempt '+last.rounds+'\n');
+  }
+  if(process.env.CN_PAGES_RECEIPT_PATH){
+    await writeFile(resolve(process.cwd(),process.env.CN_PAGES_RECEIPT_PATH),JSON.stringify(last,null,2)+'\n');
   }
   if(last.status!=='PASS'){
     console.error('CN_PAGES_DELIVERY_PARITY_DEGRADED: public CDN differs from uploaded bundle or unavailable after bounded retries');
