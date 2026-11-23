@@ -66,8 +66,12 @@ def _verified_post_index_first_parent(
     if (year, week) <= last_index_week:
         return False
     root = repo_root.resolve()
-    if (_git_text(root, "rev-parse", "--show-toplevel") != str(root)
-            or _git_text(root, "rev-parse", "--is-shallow-repository") != "false"):
+    # The runner can hold a shallow boundary BEFORE the sealed source index.
+    # The actual requirement is a CONTIGUOUS first-parent segment from tip
+    # through the seal, proved by the chain-membership check immediately below.
+    # A missing parent inside that segment makes the seal unreachable and
+    # therefore fails closed. Do not demand unrelated pre-seal Git history.
+    if _git_text(root, "rev-parse", "--show-toplevel") != str(root):
         return False
     tip = _git_text(root, "rev-parse", "--verify", main_ref + "^{commit}")
     if not tip or not re.fullmatch(r"[0-9a-f]{40}", tip):
