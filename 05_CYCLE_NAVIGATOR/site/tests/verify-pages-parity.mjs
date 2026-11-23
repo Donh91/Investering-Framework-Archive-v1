@@ -242,7 +242,7 @@ if(process.argv.includes('--self-test')){
       status:'COMPLETE',no_backward_reconstruction:true,
       assets:Object.fromEntries(['BTC','ETH'].map(a=>[a,{status:'COMPLETE',
         expected_close_points:7,low_high_range_points:7,missing_requirements:[]}]))};
-    const receipt={contract:'CN_SITE_PUBLIC_FREEZE_RECEIPT_v1',status:'SITE_FROZEN_SOURCE_OF_RECORD',
+    const originalReceipt={contract:'CN_SITE_PUBLIC_FREEZE_RECEIPT_v1',status:'SITE_FROZEN_SOURCE_OF_RECORD',
       forecast_week:'2026-W48',public_issue_number:35,source_forecast_freeze_sha256:'a'.repeat(64),
       daily_product_acceptance:product};
     const snap={public_live_precision:{contract:'CN_PUBLIC_LIVE_PRICE_PRECISION_v1',
@@ -250,21 +250,21 @@ if(process.argv.includes('--self-test')){
       freeze_receipt_public_path:originalPath,daily_product_acceptance:product}};
     await mkdir(resolve(temporary,'data/public-freezes/2026/W48'),{recursive:true});
     await writeFile(resolve(temporary,'data/latest.json'),JSON.stringify(snap));
-    await writeFile(resolve(temporary,originalPath),JSON.stringify(receipt));
+    await writeFile(resolve(temporary,originalPath),JSON.stringify(originalReceipt));
     assert.equal((await discoverOriginalWeek(temporary)).path,originalPath);
-    await writeFile(resolve(temporary,originalPath),JSON.stringify({...receipt,source_forecast_freeze_sha256:'b'.repeat(64)}));
+    await writeFile(resolve(temporary,originalPath),JSON.stringify({...originalReceipt,source_forecast_freeze_sha256:'b'.repeat(64)}));
     await assert.rejects(discoverOriginalWeek(temporary),/CN_ORIGINAL_FREEZE_SHA_MISMATCH/);
-    await writeFile(resolve(temporary,originalPath),JSON.stringify({...receipt,daily_product_acceptance:{...product,
+    await writeFile(resolve(temporary,originalPath),JSON.stringify({...originalReceipt,daily_product_acceptance:{...product,
       assets:{...product.assets,BTC:{...product.assets.BTC,expected_close_points:6}}}}));
     await assert.rejects(discoverOriginalWeek(temporary),/CN_ORIGINAL_CLOSE_COUNT_BTC/);
-    await writeFile(resolve(temporary,originalPath),JSON.stringify(receipt));
+    await writeFile(resolve(temporary,originalPath),JSON.stringify(originalReceipt));
     await writeFile(resolve(temporary,'data/latest.json'),JSON.stringify({public_live_precision:{
       ...snap.public_live_precision,forecast_week:'2026-W49'}}));
     await assert.rejects(discoverOriginalWeek(temporary),/CN_ORIGINAL_FREEZE_PATH_MISMATCH/);
     await writeFile(resolve(temporary,'data/latest.json'),JSON.stringify(snap));
-    await writeFile(resolve(temporary,originalPath),JSON.stringify({...receipt,public_issue_number:34}));
+    await writeFile(resolve(temporary,originalPath),JSON.stringify({...originalReceipt,public_issue_number:34}));
     await assert.rejects(discoverOriginalWeek(temporary),/CN_ORIGINAL_FREEZE_ISSUE_MISMATCH/);
-    await writeFile(resolve(temporary,originalPath),JSON.stringify(receipt));
+    await writeFile(resolve(temporary,originalPath),JSON.stringify(originalReceipt));
   }finally{
     await rm(temporary,{recursive:true,force:true});
   }
