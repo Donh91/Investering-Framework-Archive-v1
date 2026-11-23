@@ -192,6 +192,75 @@ class WeeklyCloseArchitectureTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, 'EXISTING_FINAL_MARKET_CLOSE_INTEGRITY_FAIL_CLOSED'):
                 weekly.verify_existing_final(datetime(2026, 9, 7, 6, 27, tzinfo=timezone.utc), root)
 
+
+    def test_metronome_dispatch_reuses_only_current_valid_slots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            event = Path(tmp) / 'event.json'
+            def bind(inputs, ref='refs/heads/main'):
+                event.write_text(json.dumps({'ref': ref, 'inputs': inputs}))
+            def validate(when, mode='final', consumer=False, attempt='1'):
+                weekly.validate_actions_week_binding(datetime.fromisoformat(when.replace('Z', '+00:00')),
+                    mode, event_name='workflow_dispatch', event_path=str(event),
+                    run_attempt=attempt, consumer=consumer)
+            # Monday 2026-11-30 is ISO W49; FINAL is for the completed W48.
+            bind({'mode': 'final'})
+            validate('2026-11-30T01:05:00Z')
+            for timestamp in ('2026-11-30T00:30:00Z', '2026-12-01T02:00:00Z'):
+                with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                    validate(timestamp)
+            bind({'mode': 'preclose'})
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:10:00Z')
+            validate('2026-11-29T22:35:00Z', mode='preclose')
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:10:00Z', mode='preclose')
+            bind({'mode': 'final'}, ref='refs/heads/feature')
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:10:00Z')
+            bind({'mode': 'final'})
+            with self.assertRaisesRegex(ValueError, 'RERUN_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:10:00Z', attempt='2')
+            # Weekly consumer has a DIFFERENT workflow input schema and
+            # remains impossible before 02:40 Copenhagen.
+            bind({'force_reissue': 'false'})
+            validate('2026-11-30T01:40:00Z', consumer=True)
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:30:00Z', consumer=True)
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-12-01T01:40:00Z', consumer=True)
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:40:00Z', consumer=False)
+
+    def test_metronome_dispatch_produces_and_consumes_final_without_reissue(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'weekly_close'
+            event = Path(tmp) / 'event.json'
+            event.write_text(json.dumps({'ref': 'refs/heads/main', 'inputs': {'mode': 'final'}}))
+            env = {'GITHUB_EVENT_NAME': 'workflow_dispatch',
+                   'GITHUB_EVENT_PATH': str(event), 'GITHUB_RUN_ATTEMPT': '1'}
+            def fetch(symbol, start_ms, end_ms, base_url):
+                return [[stamp, '10', '12', '9', '11', '5', stamp + 3_599_999]
+                        for stamp in range(start_ms, end_ms, 3_600_000)]
+            argv = ['weekly', '--output-root', str(root), '--mode', 'final',
+                    '--now-utc', '2026-11-30T02:00:00Z']
+            with patch('sys.argv', argv), patch.dict(weekly.os.environ, env, clear=True), \
+                 patch.object(weekly, 'fetch_klines', side_effect=fetch):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    weekly.main()
+            pointer = json.loads((root / 'LATEST_WEEKLY_MARKET_CLOSE.json').read_text())
+            self.assertTrue(pointer['final'])
+            self.assertEqual((pointer['iso_year'], pointer['iso_week']), (2026, 48))
+            originals = {str(p): p.read_bytes() for p in root.rglob('*.json')}
+            event.write_text(json.dumps({'ref': 'refs/heads/main', 'inputs': {'force_reissue': 'false'}}))
+            argv.append('--require-existing-final')
+            with patch('sys.argv', argv), patch.dict(weekly.os.environ, env, clear=True), \
+                 patch.object(weekly, 'fetch_klines') as request, \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                weekly.main()
+            request.assert_not_called()
+            self.assertEqual(json.loads(output.getvalue())['status'], 'PASS')
+            self.assertEqual(originals, {str(p): p.read_bytes() for p in root.rglob('*.json')})
+
     def test_preclose_is_partial_and_non_binding(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / 'weekly_close'
