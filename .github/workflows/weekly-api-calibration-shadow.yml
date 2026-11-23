@@ -83,6 +83,8 @@ jobs:
           freeze['freeze_sha256']=hashlib.sha256(canonical(freeze)).hexdigest()
           f.write_bytes(canonical(freeze))
           week=f"{freeze['iso_year']}/W{int(freeze['iso_week']):02d}";dest=Path('research/master_monday_preflight/frozen')/week;dest.mkdir(parents=True,exist_ok=True)
+          from scripts.master_monday.weekly_source_binding_v1 import write_binding_sidecar
+          write_binding_sidecar(dest, freeze)
           for src,name in [(f,'WEEKLY_EVIDENCE_FREEZE.json'),(p,'MASTER_MONDAY_GAP_FILL_PACKAGE.json')]:
               (dest/name).write_bytes(src.read_bytes())
           blocking=[m for m in pre.get('missing',[]) if m.get('blocking_level')=='BLOCKING']
@@ -143,6 +145,14 @@ jobs:
               Path('research/master_monday_preflight/LATEST_MASTER_MONDAY_FREEZE_POINTER.json'),
               Path('03_DAILY_CAPTURE_LOGS/weekly/LATEST_WEEKLY_CALIBRATION.json'),
           ]
+          freeze=json.loads((d/'WEEKLY_EVIDENCE_FREEZE.json').read_text())
+          binding=freeze.get('weekly_source_binding') or {}
+          paths.append(d/'SOURCE_BINDINGS'/(freeze['freeze_sha256']+'.json'))
+          if binding.get('status') == 'BYTE_BOUND_AT_PRODUCER':
+              source=Path(binding['path'])
+              if hashlib.sha256(source.read_bytes()).hexdigest() != binding.get('sha256'):
+                  raise SystemExit('FROZEN_WEEKLY_SOURCE_CHANGED_BEFORE_READBACK')
+              paths.append(source)
           rows=[]
           for p in paths:
               path=str(p)

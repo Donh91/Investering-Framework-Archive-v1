@@ -1,5 +1,6 @@
 import copy
 import hashlib
+import json
 import unittest
 from pathlib import Path
 from scripts.cycle_navigator.weekly_shadow_analysis_v1 import build_weekly_analysis, ordered_sequence
@@ -16,6 +17,16 @@ class RealWeek(unittest.TestCase):
         self.assertEqual(a['settled_week']['ethbtc']['direction'],'UP')
         self.assertFalse(a['operational_translation']['portfolio_action'])
         self.assertFalse(a['independent_first_known_verified'])
+    def test_ethbtc_mutation_changes_structured_shadow_fact(self):
+        first=build_weekly_analysis(self.raw,self.sha,'2026-11-23T09:46:18Z',2026,47)
+        source=json.loads(self.raw)
+        source['hourly_sequence']['ethbtc']['week_range']['close'] *= .8
+        mutated=json.dumps(source,sort_keys=True,separators=(',',':')).encode()
+        second=build_weekly_analysis(mutated,hashlib.sha256(mutated).hexdigest(),'2026-11-23T09:46:18Z',2026,47)
+        self.assertEqual(first['settled_week']['ethbtc']['direction'],'UP')
+        self.assertEqual(second['settled_week']['ethbtc']['direction'],'DOWN')
+        self.assertNotEqual(first['operational_translation']['facts'],second['operational_translation']['facts'])
+        self.assertFalse(second['independent_first_known_verified'])
     def test_hash_and_clock_and_week_rejected(self):
         with self.assertRaisesRegex(ValueError,'SOURCE_DIGEST_MISMATCH'):build_weekly_analysis(self.raw,'0'*64,'2026-11-23T09:46:18Z',2026,47)
         with self.assertRaisesRegex(ValueError,'SOURCE_NOT_AVAILABLE_AT_FREEZE'):build_weekly_analysis(self.raw,self.sha,'2026-11-23T09:00:00Z',2026,47)
