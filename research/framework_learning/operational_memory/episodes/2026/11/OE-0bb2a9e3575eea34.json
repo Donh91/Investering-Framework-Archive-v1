@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/intraday_execution/shadow_direction_confidence.py",
+    "scripts/research/task2_cn_all_archives_provenance_v1.py",
+    "tests/learning/test_direction_confidence_validator.py",
+    "tests/research/test_task2_cn_all_archives_provenance_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-0bb2a9e3575eea34",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "draft-hourly-immutable-intraday-speed-sealed-w48-provenance",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* perf(intraday): cache only immutable SHA-bound Git evidence reads Preserve full historic validation and strict canonical-main/time-bound source checks; add regression against mutable ref cache and later source revisions. * test(intraday): mutate the actual decimal-valued frozen Git CSV fixture * perf(intraday): cache successful immutable commit existence, never failed reads Cache SHA-addressed cat-file success with LRU 8192; fail-closed on transient missing object; verify negative lookup remains retryable in actual Git fixture. * fix(research): bind original W48 freeze blob without changing ",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/intraday_execution/shadow_direction_confidence.py": "83fa47942f3be8d2a70b340c7e9cb1a2d39ce58f",
+    "scripts/research/task2_cn_all_archives_provenance_v1.py": "fdc843643f427cb4779ded655afee1a896416ce8",
+    "tests/learning/test_direction_confidence_validator.py": "05d48452949dda09f0f5fe0ca2a9ac191275413e",
+    "tests/research/test_task2_cn_all_archives_provenance_v1.py": "21b6ee81db24a8b227c5ab130f19162257864466"
+  },
+  "source_commit_sha": "0bb2a9e3575eea340792cf39f0206373ef463542",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-23T13:54:33+01:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "DRAFT fix(hourly): immutable intraday audit speed + sealed W48 provenance gate (#2309)"
+}

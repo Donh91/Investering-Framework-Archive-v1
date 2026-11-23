@@ -1,0 +1,54 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health.yml",
+    ".github/workflows/data-architecture-gate.yml",
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "00_FMOS/S1/STEWARD_STATES.md",
+    "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json",
+    "scripts/governance/s1_incident_triage_v1.py",
+    "scripts/health/automation_health_resolution.py",
+    "tests/governance/test_s1_incident_triage_v1.py",
+    "tests/health/test_automation_health_resolution.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-0bb24785eebad465",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* feat(s1): classify transient, repeat and integrity incidents without authorizing execution * test(s1): adversarial incident recovery, critical hold and provenance validation * fix(health): require two fully green scheduled runs before fleet recovery receipt * test(health): reject manual, amber, source-outage and missing-head false recovery * test(s1): prove fleet recovery refuses manual, amber and incomplete source * ci(s1): run 18 offline transient, integrity and false-recovery regressions * policy(s1): declare all newly executed gate dependencies in required-job manifest * policy(s1): rebi",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health.yml": "2751e46e9fcb2730b465fae2f711b227483c5d8e",
+    ".github/workflows/data-architecture-gate.yml": "92caf22f60aba331f9534fb01e569a3613e61c92",
+    "00_FMOS/S1/BOOTSTRAP.txt": "f8174a61c6d06dbb9f3db8c5441596f9c3d1f651",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "60854acb671645de344e2ad7adc7a9e83e2497bb",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "bd569149d95b362291b493cc7480987c9af8ca3c",
+    "00_FMOS/S1/STEWARD_STATES.md": "f9bba0fa8cdba5cf92c24e25ac2911f37abe87e9",
+    "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json": "44aea7baa306a8058fed2d760f5154f5ee7f7fad",
+    "scripts/governance/s1_incident_triage_v1.py": "886f56121291190f69f8cd41e67c675b32251e53",
+    "scripts/health/automation_health_resolution.py": "e52483816885cbb2832fe64d840b0f671f40270b",
+    "tests/governance/test_s1_incident_triage_v1.py": "ace2180b18455e688067802033342cd824659013",
+    "tests/health/test_automation_health_resolution.py": "bb6d16c242be319abb60763e6d3f67eb2f727ac9"
+  },
+  "source_commit_sha": "0bb24785eebad4654c497ae3be9c72198bba190e",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-23T12:10:53+01:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "DRAFT s1: classify transient vs critical incidents with evidence-bound recovery (#2307)"
+}
