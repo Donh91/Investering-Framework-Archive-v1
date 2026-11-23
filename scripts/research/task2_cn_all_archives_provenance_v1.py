@@ -12,6 +12,7 @@ import datetime as dt
 import hashlib
 import json
 import re
+import subprocess
 from functools import lru_cache
 from pathlib import Path
 
@@ -22,19 +23,75 @@ OUTCOME_INDEX = PROGRAM + "/ASTRA_HIGH_OUTCOME_AND_EARLY_WEEK_SOURCE_INDEX_20261
 ISO_RE = re.compile(r"W(\d\d)$")
 RANGE_ASSETS = {"BTC": "btc", "ETH": "eth"}
 
-# Explicit post-index freeze exceptions: W47 and W48 were published AFTER
-# the sealed 2026-11-13 W36-W46 research cohort. Neither can enter that
-# vintage's denominator. Independently verified exact Git blobs, not current
-# file names or a later result, are admitted solely to keep sealed replay
-# runnable. W48 was first published on main at ed2c194adda8b49f1efede30ab8c5c1aa0cd6443
-# (2026-11-23T09:46:19Z); that commit does NOT prove first HTTP delivery.
-# A new or edited future week must still FAIL CLOSED until separately reviewed.
-POST_INDEX_FORECAST_BLOBS = {
-    "05_CYCLE_NAVIGATOR/weekly/2026/W47/CYCLE_NAVIGATOR_FORECAST_FREEZE.json":
-        "1e72eb62e2da2f164a0da4108a4cf5f51b910f41",
-    "05_CYCLE_NAVIGATOR/weekly/2026/W48/CYCLE_NAVIGATOR_FORECAST_FREEZE.json":
-        "f553b20bfcdbf2db43fefc1b7b4539d83972c30b",
-}
+# The immutable research index was first introduced to first-parent main in
+# this exact 2026-11-13 commit. The pinned index blob (verified below) defines
+# the ORIGINAL W36–W46 denominator. New weeks may be accepted as non-cohort
+# files ONLY with a one-time, unmodified first-parent main introduction.
+# Committer timestamps and Git ancestry do NOT prove first HTTP delivery.
+INDEX_SEAL_COMMIT = "71ac7a6b9efa2eca15cdfdd1d5c3a07b73f12ad0"
+SOURCE_INDEX_BLOB = "9027def6ed9db61b607841acaf046330a3a2c6e7"
+FORECAST_PATH = re.compile(
+    r"05_CYCLE_NAVIGATOR/weekly/([0-9]{4})/W([0-9]{2})/CYCLE_NAVIGATOR_FORECAST_FREEZE[.]json\Z"
+)
+
+def _git_text(repo_root: Path, *args: str) -> str | None:
+    """Fail closed for absent/shallow Git history, errors and timed-out reads."""
+    try:
+        result = subprocess.run(["git", *args], cwd=repo_root,
+                                capture_output=True, text=True,
+                                encoding="utf-8", timeout=45, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def _verified_post_index_first_parent(
+    repo_root: Path, path: str, raw: bytes, *,
+    seal_commit: str, main_ref: str, last_index_week: tuple[int, int],
+) -> bool:
+    """Admit only new post-seal freeze files unchanged across first-parent main.
+
+    The source week remains outside the sealed scientific denominator. The
+    helper has explicit repository/seal arguments for real local Git fixtures;
+    production callers bind them to the original immutable research index.
+    """
+    match = FORECAST_PATH.fullmatch(path)
+    if not match or not isinstance(raw, bytes):
+        return False
+    try:
+        year, week = map(int, match.groups())
+        dt.date.fromisocalendar(year, week, 1)
+    except ValueError:
+        return False
+    if (year, week) <= last_index_week:
+        return False
+    root = repo_root.resolve()
+    if (_git_text(root, "rev-parse", "--show-toplevel") != str(root)
+            or _git_text(root, "rev-parse", "--is-shallow-repository") != "false"):
+        return False
+    tip = _git_text(root, "rev-parse", "--verify", main_ref + "^{commit}")
+    if not tip or not re.fullmatch(r"[0-9a-f]{40}", tip):
+        return False
+    # A merge-base ancestry relationship alone is insufficient: the index
+    # seal must belong to the actual FIRST-PARENT chain used for provenance.
+    chain = _git_text(root, "rev-list", "--first-parent", tip)
+    if not chain or seal_commit not in chain.splitlines():
+        return False
+    changes = _git_text(root, "rev-list", "--first-parent", "--reverse",
+                        seal_commit + ".." + tip, "--", path)
+    if changes is None:
+        return False
+    commits = changes.splitlines()
+    if len(commits) != 1:
+        return False  # includes edit-then-restore, even if current bytes match
+    introduction = commits[0]
+    if _git_text(root, "cat-file", "-e", introduction + "^:" + path) is not None:
+        return False  # older pre-existing file, not a new post-seal issuance
+    first_blob = _git_text(root, "rev-parse", "--verify", introduction + ":" + path)
+    current_blob = _git_text(root, "rev-parse", "--verify", tip + ":" + path)
+    return bool(first_blob and current_blob
+                and first_blob == current_blob == git_blob_sha(raw))
+
 
 # The 2026-11-13 index pinned W46 before its capture matured. The current
 # live W46 pack has advanced. Historical replay uses the exact ORIGINAL
@@ -45,9 +102,49 @@ PINNED_VINTAGE_REPLAY = {
         "06_RESEARCH_LAB/hugging_face_task2_audit_20261022/kompas_scientific_edge_program_v2_1/source_vintages/W46_WEEKLY_CAPTURE_AS_OF_20261113.json",
 }
 
-def verified_post_index_forecast(path: str, raw: bytes) -> bool:
-    expected = POST_INDEX_FORECAST_BLOBS.get(path)
-    return bool(expected and git_blob_sha(raw) == expected)
+def verified_post_index_forecast(
+    path: str, raw: bytes, repo_root: Path = ROOT,
+) -> bool:
+    """Source-bound post-index admission; NEVER part of W36–W46 scoring."""
+    match = FORECAST_PATH.fullmatch(path)
+    if not match or not isinstance(raw, bytes):
+        return False
+    candidate = repo_root / path
+    if (not candidate.is_file()
+            or has_symlink_component(candidate, repo_root)
+            or candidate.read_bytes() != raw):
+        return False
+    # The independent fixed Git seal must contain the exact sealed-index
+    # blob. A different main/ref, rewritten index or incomplete history fails.
+    seal_blob = _git_text(repo_root, "rev-parse", "--verify",
+                          INDEX_SEAL_COMMIT + ":" + SOURCE_INDEX)
+    if seal_blob != SOURCE_INDEX_BLOB:
+        return False
+    try:
+        indexed = pinned_source_map(str(repo_root.resolve()))
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+    weeks = []
+    for indexed_path in indexed:
+        w = FORECAST_PATH.fullmatch(indexed_path)
+        if w:
+            weeks.append((int(w.group(1)), int(w.group(2))))
+    if not weeks:
+        return False
+    # Local main when checked out; otherwise the remote-tracking main,
+    # never the PR's HEAD. The source may not be self-certified by this PR.
+    main_ref = next(
+        (ref for ref in ("refs/heads/main", "refs/remotes/origin/main")
+         if _git_text(repo_root, "rev-parse", "--verify", ref + "^{commit}")),
+        None,
+    )
+    if not main_ref:
+        return False
+    return _verified_post_index_first_parent(
+        repo_root, path, raw, seal_commit=INDEX_SEAL_COMMIT,
+        main_ref=main_ref, last_index_week=max(weeks),
+    )
+
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -78,7 +175,7 @@ def pinned_source_map(root: str) -> dict[str, str]:
     result = load_json(base / OUTCOME_INDEX)
     if not isinstance(src, dict) or not isinstance(result, dict):
         raise ValueError("PINNED_SOURCE_INDEX_UNAVAILABLE")
-    if git_blob_sha((base / SOURCE_INDEX).read_bytes()) != "9027def6ed9db61b607841acaf046330a3a2c6e7":
+    if git_blob_sha((base / SOURCE_INDEX).read_bytes()) != SOURCE_INDEX_BLOB:
         raise ValueError("SOURCE_INDEX_BLOB_CHANGED")
     if git_blob_sha((base / OUTCOME_INDEX).read_bytes()) != "91e6057780bc0c682cf2ad0513978d2a45e145ad":
         raise ValueError("OUTCOME_INDEX_BLOB_CHANGED")
@@ -178,13 +275,13 @@ def week_census(repo_root: Path, asof: dt.datetime) -> list[dict]:
     }
     # Replay only the ORIGINAL pinned cohort. A new real week must not make
     # immutable W36-W46 research unreplayable, nor enter its denominator.
-    # Missing originals, unreviewed post-index weeks and altered W47/W48 still fail.
+    # Missing originals and any post-index edit/rewrite still fail closed.
     if not expected_forecasts or not expected_forecasts.issubset(actual_forecasts):
         raise ValueError("FROZEN_WEEKLY_SOURCE_SET_DRIFT")
     for later_path in actual_forecasts - expected_forecasts:
         later_file = repo_root / later_path
         if (has_symlink_component(later_file, repo_root)
-                or not verified_post_index_forecast(later_path, later_file.read_bytes())):
+                or not verified_post_index_forecast(later_path, later_file.read_bytes(), repo_root)):
             raise ValueError("FROZEN_WEEKLY_SOURCE_SET_DRIFT")
     result = []
     for year_dir in sorted(weeks_dir.glob("[0-9][0-9][0-9][0-9]")):
