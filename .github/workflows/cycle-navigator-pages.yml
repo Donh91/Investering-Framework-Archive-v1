@@ -64,6 +64,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - name: Validate public series identity and score lineage
@@ -262,12 +263,6 @@ jobs:
         env:
           CN_PAGES_RECEIPT_PATH: runtime_cn_pages_release_receipt.json
         run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs
-      - name: Verify original Monday source-to-CDN closure negative tests
-        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py --self-test
-      - name: Persist one source-bound CDN success to existing GitHub #1593
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py
       - name: Acknowledge source Hourly closed candle on actual public CDN
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_hour_utc != '' }}
         env:
@@ -278,3 +273,9 @@ jobs:
             --expected-hour-utc "$EXPECTED_HOUR_UTC" \
             --max-wait-seconds 240 --poll-seconds 12
 
+      - name: Verify original Monday source-to-CDN closure negative tests
+        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py --self-test
+      - name: Persist one source-bound CDN success to existing GitHub #1593
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py

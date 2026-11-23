@@ -89,6 +89,18 @@ async function discoverOriginalWeek(root=dist){
     source_forecast_freeze_sha256:p.freeze_sha256,issued_at_utc:accepted.issued_at_utc,
     seven_day_product:'COMPLETE'};
 }
+/**
+ * Attestation is optional evidence, never a prerequisite for public CDN bytes
+ * or independently scheduled hourly observation. Preserve the failure reason
+ * without promoting any INCOMPLETE or malformed original to COMPLETE.
+ */
+async function originalEvidenceOrUnavailable(root=dist){
+  try{return await discoverOriginalWeek(root)}
+  catch(error){
+    return {status:'NOT_ATTESTABLE',
+      reason:String(error?.message||'ORIGINAL_SOURCE_UNAVAILABLE').split(':')[0].slice(0,80)};
+  }
+}
 async function discoverFiles(root,prefix){
   safePath(prefix);
   const base=resolve(root);
@@ -266,6 +278,21 @@ if(process.argv.includes('--self-test')){
     await writeFile(resolve(temporary,originalPath),JSON.stringify({...originalReceipt,public_issue_number:34}));
     await assert.rejects(discoverOriginalWeek(temporary),/CN_ORIGINAL_FREEZE_ISSUE_MISMATCH/);
     await writeFile(resolve(temporary,originalPath),JSON.stringify(originalReceipt));
+    // The entire week can legitimately be INCOMPLETE: attest unavailable,
+    // while the ordinary public-byte parity surface still succeeds.
+    const incomplete={...originalReceipt,daily_product_acceptance:{...product,status:'INCOMPLETE'}};
+    await writeFile(resolve(temporary,originalPath),JSON.stringify(incomplete));
+    const evidence=await originalEvidenceOrUnavailable(temporary);
+    assert.equal(evidence.status,'NOT_ATTESTABLE');
+    assert.equal(evidence.reason,'CN_ORIGINAL_PRODUCT_INCOMPLETE');
+    const canonicalOnly=new Set([...canonicalFiles]);
+    const bytesForParity=Buffer.from('independent public bundle bytes');
+    assert.equal((await check('data/latest.json',canonicalOnly,{
+      readAsset:async()=>bytesForParity,
+      fetchAsset:async()=>new Response(bytesForParity),root:temporary
+    })).status,'PASS');
+    await writeFile(resolve(temporary,originalPath),JSON.stringify(originalReceipt));
+    assert.equal((await originalEvidenceOrUnavailable(temporary)).seven_day_product,'COMPLETE');
   }finally{
     await rm(temporary,{recursive:true,force:true});
   }
@@ -274,12 +301,13 @@ if(process.argv.includes('--self-test')){
   let head=null;try{head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim()}catch{}
   let files=[];
   let discoveryError=null;
-  let original=null;
+  // The original seven-day attestation must NOT decide CDN byte parity.
+  // INCOMPLETE is an intentional producer outcome throughout the week.
+  const original=await originalEvidenceOrUnavailable(dist);
   try{
     const nextFiles=await discoverFiles(dist,'next');
     const historyFiles=await graphHistoryParityAssets(dist);
-    original=await discoverOriginalWeek(dist);
-    files=[...new Set([...canonicalFiles,original.path,...historyFiles,...nextFiles])];
+    files=[...new Set([...canonicalFiles,...(original.path?[original.path]:[]),...historyFiles,...nextFiles])];
   }catch(error){
     // Do not expose local paths or exception text. NEXT should exist because the
     // current workflow stages it before upload; absence is a release failure.

@@ -28,6 +28,11 @@ class ReleaseError(ValueError):
     pass
 
 
+class TransientGithubUnavailable(RuntimeError):
+    """Only a clearly identified GitHub 5xx, not evidence mismatch."""
+    pass
+
+
 def require(condition: bool, code: str) -> None:
     if not condition:
         raise ReleaseError(code)
@@ -50,6 +55,8 @@ def make_proof(doc: dict, root: Path, checked_at: dt.datetime | None = None) -> 
     require(doc.get("contract") == "CN_PAGES_ARTIFACT_TO_CDN_PARITY_v1" and doc.get("status") == "PASS",
             "CN_RELEASE_CDN_PARITY_NOT_PASS")
     original = doc.get("original_weekly_product") or {}
+    if original.get("status") == "NOT_ATTESTABLE":
+        return None  # Source not complete. Never turn this into CDN failure.
     week = original.get("forecast_week")
     require(isinstance(week, str) and re.fullmatch(r"20\d{2}-W\d{2}", week),
             "CN_RELEASE_WEEK_INVALID")
@@ -136,8 +143,17 @@ def make_proof(doc: dict, root: Path, checked_at: dt.datetime | None = None) -> 
 
 
 def gh(*args: str) -> str:
-    return subprocess.run(["gh", "api", *args], check=True,
-                          capture_output=True, text=True).stdout
+    result = subprocess.run(["gh", "api", *args], check=False,
+                            capture_output=True, text=True)
+    if result.returncode:
+        # A transient GitHub API outage is NOT an attested release. Keep the
+        # separately proven CDN and hourly delivery successful, while
+        # publishing no source-to-CDN success marker for this attempt.
+        if re.search(r"\bHTTP\s+5\d{2}\b", result.stderr or "", re.I):
+            raise TransientGithubUnavailable("CN_GITHUB_API_5XX")
+        raise subprocess.CalledProcessError(result.returncode, ["gh", "api", *args],
+                                            output=result.stdout, stderr=result.stderr)
+    return result.stdout
 
 
 def publish(proof: dict) -> None:
@@ -211,6 +227,31 @@ def self_test() -> None:
                "checked_at_utc": "2026-11-23T09:50:34Z", "built_checkout_sha": "b"*40,
                "original_weekly_product": original, "files": rows}
         assert make_proof(doc, root)["status"] == "COMPLETE_VERIFIED"
+        no_original = copy.deepcopy(doc)
+        no_original["original_weekly_product"] = {
+            "status": "NOT_ATTESTABLE", "reason": "CN_ORIGINAL_PRODUCT_INCOMPLETE"}
+        assert make_proof(no_original, root) is None
+        # A GitHub 503 is recoverable as absence of an issue receipt, NOT a
+        # forged completion. A 4xx remains an error and is never accepted.
+        from unittest.mock import patch
+        fake = type("Process", (), {"returncode": 1, "stdout": "",
+                                   "stderr": "gh: Server Error (HTTP 503)"})()
+        with patch("subprocess.run", return_value=fake):
+            try:
+                gh("repos/example/issues/1")
+            except TransientGithubUnavailable as exc:
+                assert str(exc) == "CN_GITHUB_API_5XX"
+            else:
+                raise AssertionError("GH_503_NOT_FAIL_CLOSED")
+        fake4 = type("Process", (), {"returncode": 1, "stdout": "",
+                                    "stderr": "gh: Forbidden (HTTP 403)"})()
+        with patch("subprocess.run", return_value=fake4):
+            try:
+                gh("repos/example/issues/1")
+            except subprocess.CalledProcessError:
+                pass
+            else:
+                raise AssertionError("GH_403_MUST_NOT_BE_TREATED_AS_TRANSIENT")
         for field, changed, code in [
             ("status", "DEGRADED", "CN_RELEASE_CDN_PARITY_NOT_PASS"),
             ("original_weekly_product", {**original, "source_forecast_freeze_sha256": "b"*64},
@@ -264,9 +305,19 @@ def main() -> None:
     doc = read_json(args.receipt)
     proof = make_proof(doc, args.root)
     if proof is None:
-        print("CN_MONDAY_RELEASE_OLDER_THAN_WINDOW: no new producer receipt")
+        original = doc.get("original_weekly_product") or {}
+        if original.get("status") == "NOT_ATTESTABLE":
+            print("CN_MONDAY_PAGES_NOT_ATTESTABLE original=" +
+                  str(original.get("reason") or "ORIGINAL_UNAVAILABLE")[:80])
+        else:
+            print("CN_MONDAY_RELEASE_OLDER_THAN_WINDOW: no new producer receipt")
         return
-    publish(proof)
+    try:
+        publish(proof)
+    except TransientGithubUnavailable:
+        print("::warning::CN_MONDAY_PAGES_NOT_ATTESTABLE_GITHUB_5XX: "
+              "CDN bytes were verified, but no durable issue receipt exists")
+        return
 
 
 if __name__ == "__main__":
