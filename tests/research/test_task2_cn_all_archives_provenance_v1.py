@@ -98,6 +98,27 @@ class AllArchiveCensusTests(unittest.TestCase):
         path = engine.ROOT / rel
         self.assertTrue(path.is_file())
         raw = path.read_bytes()
+        # First-parent source audit on the actual checked-out public Archive,
+        # not a fixture-only proof or mutable PR HEAD.
+        seal_blob = engine._git_text(
+            engine.ROOT, "rev-parse", "--verify",
+            engine.INDEX_SEAL_COMMIT + ":" + engine.SOURCE_INDEX)
+        self.assertEqual(seal_blob, engine.SOURCE_INDEX_BLOB)
+        main_ref = next(
+            (ref for ref in ("refs/heads/main", "refs/remotes/origin/main")
+             if engine._git_text(engine.ROOT, "rev-parse", "--verify",
+                                 ref + "^{commit}")), None)
+        self.assertIsNotNone(main_ref, "N1_REQUIRES_LOCAL_OR_ORIGIN_MAIN")
+        tip = engine._git_text(engine.ROOT, "rev-parse", "--verify",
+                               main_ref + "^{commit}")
+        chain = engine._git_text(engine.ROOT, "rev-list", "--first-parent", tip)
+        self.assertIn(engine.INDEX_SEAL_COMMIT, (chain or "").splitlines(),
+                      "N1_INDEX_SEAL_NOT_ON_FIRST_PARENT_MAIN")
+        changes = engine._git_text(
+            engine.ROOT, "rev-list", "--first-parent", "--reverse",
+            engine.INDEX_SEAL_COMMIT + ".." + tip, "--", rel)
+        self.assertEqual(len((changes or "").splitlines()), 1,
+                         "N1_FREEZE_CHANGED_OR_MISSING_ON_MAIN:" + str(changes))
         self.assertTrue(engine.verified_post_index_forecast(rel, raw))
         self.assertFalse(engine.verified_post_index_forecast(rel, raw + b"\\n"))
         self.assertFalse(engine.verified_post_index_forecast(
