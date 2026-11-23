@@ -632,7 +632,9 @@ def test_immutable_git_cache_preserves_frozen_source_and_new_revision(tmp_path):
     assert after.hits >= before.hits + 3  # frozen timestamp, tree and blob
     assert source.read_bytes() == old_bytes  # no writer or working-tree change
 
-    source.write_text(source.read_text().replace("101,101,PASS", "102,102,PASS"))
+    source_text = source.read_text()
+    assert "101.0,101.0,PASS" in source_text  # exact fixture, not a silent no-op
+    source.write_text(source_text.replace("101.0,101.0,PASS", "102.0,102.0,PASS"))
     new_commit = _commit_fixture_source(root, "2026-08-31T11:15:00Z")
     assert new_commit != old_commit
     assert owner.exact_hourly_close_at_commit(root, new_commit, due, "BTC")["close"] == 102.0
