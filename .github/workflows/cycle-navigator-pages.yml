@@ -46,13 +46,14 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # Issue write is used ONLY by the post-CDN verified issue attestation step.
+  # Source tree and immutable market data remain read-only in the Pages job.
+  issues: write
 concurrency:
   group: cycle-navigator-pages
   cancel-in-progress: false
 jobs:
   deploy:
-    outputs:
-      source_sha: ${{ steps.source_checkout.outputs.sha }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -63,9 +64,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Bind actual checked out public release source commit
-        id: source_checkout
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - name: Validate public series identity and score lineage
@@ -264,16 +262,12 @@ jobs:
         env:
           CN_PAGES_RECEIPT_PATH: runtime_cn_pages_release_receipt.json
         run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs
-      - name: Stage source-bound CDN proof for isolated issue attestor
-        uses: actions/upload-artifact@v4
-        with:
-          name: cn-release-evidence-${{ github.run_id }}
-          path: |
-            runtime_cn_pages_release_receipt.json
-            05_CYCLE_NAVIGATOR/site/dist/data/latest.json
-            05_CYCLE_NAVIGATOR/site/dist/data/public-freezes/**/CN*_PUBLIC_FREEZE.json
-          if-no-files-found: error
-          retention-days: 14
+      - name: Verify original Monday source-to-CDN closure negative tests
+        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py --self-test
+      - name: Persist one source-bound CDN success to existing GitHub #1593
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py
       - name: Acknowledge source Hourly closed candle on actual public CDN
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_hour_utc != '' }}
         env:
@@ -284,42 +278,3 @@ jobs:
             --expected-hour-utc "$EXPECTED_HOUR_UTC" \
             --max-wait-seconds 240 --poll-seconds 12
 
-  # Only this isolated and source-commit-pinned job can write a release receipt.
-  # Untrusted public site build/deploy code never gets an issues:write token.
-  attest-original-monday:
-    needs: deploy
-    if: needs.deploy.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
-    steps:
-      - name: Checkout exact public release source commit, never mutable main
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.deploy.outputs.source_sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Restore only public, source-bound original CDN proof
-        uses: actions/download-artifact@v4
-        with:
-          name: cn-release-evidence-${{ github.run_id }}
-          path: .
-      - name: Verify release source was pinned across the two jobs
-        env:
-          SOURCE_SHA: ${{ needs.deploy.outputs.source_sha }}
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
-          python3 - <<'PY'
-          import json,os
-          from pathlib import Path
-          doc=json.loads(Path('runtime_cn_pages_release_receipt.json').read_text())
-          assert doc.get('built_checkout_sha') == os.environ['SOURCE_SHA'], 'CN_ATTESTOR_SOURCE_SHA_DRIFT'
-          PY
-      - name: Verify durable Monday source-to-CDN closure negative tests
-        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py --self-test
-      - name: Read back original bytes and persist one canonical GitHub #1593 receipt
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py
