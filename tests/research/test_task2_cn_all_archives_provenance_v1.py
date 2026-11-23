@@ -108,6 +108,26 @@ class AllArchiveCensusTests(unittest.TestCase):
         self.assertEqual(len(rows), 11)
         self.assertNotIn("2026-W47", {row["iso_week"] for row in rows})
 
+    def test_sealed_vintage_replay_excludes_real_post_index_w48(self):
+        """True W48 first-publication blob is admitted, but excluded from W36-W46."""
+        rel = "05_CYCLE_NAVIGATOR/weekly/2026/W48/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+        path = engine.ROOT / rel
+        self.assertTrue(path.is_file())
+        raw = path.read_bytes()
+        self.assertEqual(engine.git_blob_sha(raw),
+                         "f553b20bfcdbf2db43fefc1b7b4539d83972c30b")
+        self.assertTrue(engine.verified_post_index_forecast(rel, raw))
+        self.assertFalse(engine.verified_post_index_forecast(rel, raw + b"tampered"))
+        self.assertFalse(engine.verified_post_index_forecast(
+            rel.replace("/W48/", "/W49/"), raw))
+        indexed = engine.pinned_source_map(str(engine.ROOT.resolve()))
+        self.assertNotIn(rel, indexed)
+        rows = engine.week_census(
+            engine.ROOT, dt.datetime(2026, 11, 13, 12, 59, tzinfo=dt.timezone.utc))
+        self.assertEqual(len(rows), 11)
+        self.assertNotIn("2026-W48", {row["iso_week"] for row in rows})
+        self.assertNotIn("2026-W47", {row["iso_week"] for row in rows})
+
     def test_w46_vintage_uses_original_git_bytes_not_mutable_live_capture(self):
         """A real original W46 blob is replayed, but altered archived bytes fail."""
         rel = "03_DAILY_CAPTURE_LOGS/weekly/2026/W46.json"
