@@ -2,12 +2,14 @@
 import unittest
 import json
 import os
+import hashlib
+import shutil
 import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from scripts.health.automation_health_resolution import record_status, resolve_recovered
+from scripts.health.automation_health_resolution import record_status, resolve_recovered, canonical_hash
 from scripts.governance.s1_incident_triage_v1 import (
-    IncidentEvidenceError, incident_triage,
+    IncidentEvidenceError, incident_triage, verify_health_red_origin, _git_blob_sha,
 )
 from scripts.health.automation_health_resolution import qualified_natural_fleet_recovery
 
@@ -216,6 +218,8 @@ class NativeHealthConsumerTests(unittest.TestCase):
 
 
 class HealthOriginProducerConsumerTests(unittest.TestCase):
+    """Real workflow shell -> committed Git history -> bot comment -> S1 admission."""
+
     @staticmethod
     def _script():
         root = Path(__file__).resolve().parents[2]
@@ -228,79 +232,205 @@ class HealthOriginProducerConsumerTests(unittest.TestCase):
         return "\n".join(line[10:] if line.startswith("          ") else line
                          for line in lines[start:]) + "\n"
 
-    def test_real_health_issue_step_binds_native_source_and_rejects_drift(self):
-        # Executes the ACTUAL GitHub YAML shell step offline against local git
-        # and a fake gh, not an invented equivalent implementation.
-        script = self._script()
-        rubric = (Path(__file__).resolve().parents[2]
-                  / "00_FMOS/S1/STEWARD_STATES.md").read_text()
-        for token in ("FRESH AUTOMATION HEALTH INCIDENT",
-                      "AUTOMATION_HEALTH_RED_ORIGIN_v1",
-                      "source_main", "source_blob", "source_generated_at_utc",
-                      "run_event", "SOURCE_UNVERIFIED", "EVIDENCE_BINDINGS B5"):
-            self.assertIn(token, rubric)
-        with TemporaryDirectory() as folder:
-            root = Path(folder)
-            remote, working = root / "origin.git", root / "working"
-            subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True)
-            working.mkdir()
-            def git(*args):
-                return subprocess.run(["git", *args], cwd=working, check=True,
-                                      capture_output=True, text=True).stdout.strip()
-            git("init", "-q")
-            git("config", "user.name", "test")
-            git("config", "user.email", "test@example.invalid")
-            source = working / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
-            source.parent.mkdir(parents=True)
-            source.write_text(json.dumps({
-                "repository": "Donh91/Investering-Framework-Archive-v1",
-                "generated_at_utc": "2026-11-22T20:00:00Z",
-                "red_count": 1, "status": "RED",
-            }) + "\n")
-            source.with_suffix(".md").write_text("# Automation Production Health\nStatus: RED\n")
-            git("add", ".")
-            git("commit", "-qm", "source")
-            git("branch", "-M", "main")
-            git("remote", "add", "origin", str(remote))
-            git("push", "-u", "origin", "main")
-            mock = root / "bin"
-            mock.mkdir()
-            gh = mock / "gh"
-            gh.write_text(
-                "#!/usr/bin/env python3\n"
-                "import os, sys, shutil\n"
-                "args=sys.argv[1:]\n"
-                "if args[:2] == ['issue', 'list']:\n"
-                " print(os.environ.get('MOCK_EXISTING', ''), end=''); sys.exit(0)\n"
-                "if args[:2] in (['issue','create'], ['issue','comment']):\n"
-                " shutil.copyfile(args[-1], os.environ['CAPTURE_FILE']); sys.exit(0)\n"
-                "sys.exit(91)\n"
-            )
-            gh.chmod(0o755)
-            capture = root / "captured.txt"
-            env = {**os.environ, "PATH": str(mock) + os.pathsep + os.environ["PATH"],
-                   "RUNNER_TEMP": str(root), "GITHUB_REPOSITORY": "Donh91/Investering-Framework-Archive-v1",
-                   "GITHUB_RUN_ID": "12345", "GITHUB_EVENT_NAME": "schedule",
-                   "CAPTURE_FILE": str(capture)}
-            for existing in ("", "777"):
-                env["MOCK_EXISTING"] = existing
-                run = subprocess.run(["bash", "-e", "-c", script], cwd=working,
-                                     env=env, capture_output=True, text=True, timeout=30)
-                self.assertEqual(run.returncode, 0, run.stderr + run.stdout)
-                receipt = capture.read_text()
-                self.assertIn("AUTOMATION_HEALTH_RED_ORIGIN_v1", receipt)
-                self.assertIn("run_id: 12345", receipt)
-                self.assertIn("run_event: schedule", receipt)
-                self.assertIn("status: RED", receipt)
-                self.assertIn("source_main: " + git("rev-parse", "origin/main"), receipt)
-                self.assertIn("source_blob: " + git("hash-object", str(source)), receipt)
-                self.assertIn("source_generated_at_utc: 2026-11-22T20:00:00Z", receipt)
-            prior = capture.read_text()
-            source.write_text(source.read_text().replace('"red_count": 1', '"red_count": 2'))
-            failure = subprocess.run(["bash", "-e", "-c", script], cwd=working,
-                                     env=env, capture_output=True, text=True, timeout=30)
-            self.assertNotEqual(failure.returncode, 0)
-            self.assertEqual(capture.read_text(), prior)
+    def git(self, *args):
+        return subprocess.run(["git", *args], cwd=self.working, check=True,
+                              capture_output=True, text=True).stdout.strip()
+
+    def setUp(self):
+        self.temp = TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.working = self.root / "working"
+        remote = self.root / "origin.git"
+        subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True)
+        self.working.mkdir()
+        self.git("init", "-q")
+        self.git("config", "user.name", "test")
+        self.git("config", "user.email", "test@example.invalid")
+        self.source = self.working / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
+        self.source.parent.mkdir(parents=True)
+        self.source.write_text(json.dumps({
+            "repository": "Donh91/Investering-Framework-Archive-v1",
+            "generated_at_utc": "2026-11-22T20:00:00Z",
+            "red_count": 1, "status": "RED",
+            "workflows": [], "workflow_count": 1, "scheduled_workflow_count": 1,
+            "amber_count": 0, "api_error": None, "warnings": [],
+        }, sort_keys=True) + "\n")
+        self.source.with_suffix(".md").write_text("# Automation Production Health\nStatus: RED\n")
+        mod = self.working / "scripts/health/automation_health_resolution.py"
+        mod.parent.mkdir(parents=True)
+        shutil.copyfile(Path(__file__).resolve().parents[2] /
+                        "scripts/health/automation_health_resolution.py", mod)
+        self.history_path = self.working / "research/architecture_health/history/12345-attempt-1.json"
+        record_status(self.working, 12345, 1, "a" * 40, "schedule")
+        self.git("add", ".")
+        self.git("commit", "-qm", "source")
+        self.git("branch", "-M", "main")
+        self.git("remote", "add", "origin", str(remote))
+        self.git("push", "-u", "origin", "main")
+        mock = self.root / "bin"
+        mock.mkdir()
+        gh = mock / "gh"
+        gh.write_text(
+            "#!/usr/bin/env python3\n"
+            "import os, sys, shutil\n"
+            "args=sys.argv[1:]\n"
+            "if args[:2] == ['issue', 'list']:\n"
+            " print(os.environ.get('MOCK_EXISTING', ''), end=''); sys.exit(0)\n"
+            "if args[:2] == ['issue', 'create']:\n"
+            " shutil.copyfile(args[-1],os.environ['CAPTURE_ISSUE'])\n"
+            " print('https://github.com/Donh91/Investering-Framework-Archive-v1/issues/9001')\n"
+            " sys.exit(0)\n"
+            "if args[:2] == ['issue', 'comment']:\n"
+            " shutil.copyfile(args[-1],os.environ['CAPTURE_FILE']); sys.exit(0)\n"
+            "sys.exit(91)\n"
+        )
+        gh.chmod(0o755)
+        self.issue_capture = self.root / "issue.txt"
+        self.capture = self.root / "comment.txt"
+        self.env = {**os.environ,
+                    "PATH": str(mock) + os.pathsep + os.environ["PATH"],
+                    "RUNNER_TEMP": str(self.root),
+                    "GITHUB_REPOSITORY": "Donh91/Investering-Framework-Archive-v1",
+                    "GITHUB_RUN_ID": "12345", "GITHUB_RUN_ATTEMPT": "1",
+                    "GITHUB_EVENT_NAME": "schedule",
+                    "MOCK_EXISTING": "", "CAPTURE_ISSUE": str(self.issue_capture),
+                    "CAPTURE_FILE": str(self.capture)}
+
+    def run_producer(self, *, event="schedule", attempt=1, existing=""):
+        return subprocess.run(["bash", "-e", "-c", self._script()], cwd=self.working,
+                              env={**self.env, "GITHUB_EVENT_NAME": event,
+                                   "GITHUB_RUN_ATTEMPT": str(attempt),
+                                   "MOCK_EXISTING": existing},
+                              capture_output=True, text=True, timeout=30)
+
+    @staticmethod
+    def native_run(*, event="schedule", attempt=1, run_id=12345):
+        return {
+            "id": run_id, "run_attempt": attempt, "event": event,
+            "name": "Automation Production Health",
+            "path": ".github/workflows/automation-production-health.yml",
+            "head_branch": "main", "status": "completed",
+            "conclusion": "success",
+            "repository": {"full_name": "Donh91/" + REPO},
+        }
+
+    def admission(self, *, body=None, actor="github-actions[bot]",
+                  created="2026-11-22T20:05:00Z", edited=None,
+                  native=None, attempt=1, source_bytes=None, history_bytes=None,
+                  current_source_blob=None):
+        body = self.capture.read_text() if body is None else body
+        history_path = (self.working / "research/architecture_health/history" /
+                        f"12345-attempt-{attempt}.json")
+        return verify_health_red_origin(
+            body, author_login=actor, created_at=created,
+            updated_at=created if edited is None else edited,
+            native_run=native or self.native_run(attempt=attempt),
+            source_bytes=self.source.read_bytes() if source_bytes is None else source_bytes,
+            history_bytes=history_path.read_bytes() if history_bytes is None else history_bytes,
+            current_main_source_blob=(self.git("hash-object", str(self.source))
+                                      if current_source_blob is None else current_source_blob),
+            source_main=self.git("rev-parse", "origin/main"),
+        )
+
+    def test_real_producer_body_matches_rubric_token_and_bot_comment(self):
+        rubric = (Path(__file__).resolve().parents[2] /
+                  "00_FMOS/S1/STEWARD_STATES.md").read_text()
+        for term in ("run_event: schedule", "github-actions[bot]",
+                     "INCIDENT_ORIGIN_UNVERIFIED", "run_attempt: <positive integer>"):
+            self.assertIn(term, rubric)
+        for existing in ("", "777"):
+            run = self.run_producer(existing=existing)
+            self.assertEqual(run.returncode, 0, run.stderr + run.stdout)
+            body = self.capture.read_text()
+            for text in (
+                "run_event: schedule", "run_attempt: 1",
+                "history_path: research/architecture_health/history/12345-attempt-1.json",
+                "history_blob: " + self.git("hash-object", str(self.history_path)),
+                "source_blob: " + self.git("hash-object", str(self.source)),
+                "source_main: " + self.git("rev-parse", "origin/main"),
+                "source_generated_at_utc: 2026-11-22T20:00:00Z",
+            ):
+                self.assertIn(text, body)
+            verified = self.admission()
+            self.assertEqual((verified["run_id"], verified["run_attempt"]), (12345, 1))
+            self.assertFalse(verified["merge_authorized"])
+            self.assertFalse(verified["incident_closed"])
+        self.assertNotIn("AUTOMATION_HEALTH_RED_ORIGIN_v1", self.issue_capture.read_text())
+
+    def test_run_attempt_dedup_and_no_forged_rerun(self):
+        self.assertEqual(self.run_producer().returncode, 0)
+        key = self.admission()["incident_evidence_key"]
+        self.assertEqual(self.run_producer(existing="777").returncode, 0)
+        self.assertEqual(self.admission()["incident_evidence_key"], key)
+        self.assertNotEqual(self.run_producer(existing="777", attempt=2).returncode, 0)
+        record_status(self.working, 12345, 2, "a" * 40, "schedule")
+        self.git("add", ".")
+        self.git("commit", "-qm", "second attempt")
+        self.git("push", "origin", "main")
+        self.assertEqual(self.run_producer(existing="777", attempt=2).returncode, 0)
+        self.assertNotEqual(self.admission(attempt=2)["incident_evidence_key"], key)
+
+    def test_event_author_and_hardcoded_schedule_mutants_rejected(self):
+        self.assertEqual(self.run_producer().returncode, 0)
+        body = self.capture.read_text()
+        for fake in ("run_event=schedule", "run_event: workflow_dispatch"):
+            with self.subTest(fake=fake), self.assertRaises(IncidentEvidenceError):
+                self.admission(body=body.replace("run_event: schedule", fake))
+        for actor in ("Donh91", "github-actions-bot", ""):
+            with self.subTest(actor=actor), self.assertRaisesRegex(
+                IncidentEvidenceError, "NOT_UNEDITED_ACTIONS_BOT_COMMENT"
+            ):
+                self.admission(actor=actor)
+        with self.assertRaisesRegex(IncidentEvidenceError, "NOT_UNEDITED_ACTIONS_BOT_COMMENT"):
+            self.admission(edited="2026-11-22T20:06:00Z")
+        with self.assertRaisesRegex(IncidentEvidenceError, "NATIVE_RUN_IDENTITY_MISMATCH"):
+            self.admission(native=self.native_run(event="workflow_dispatch"))
+        with self.assertRaisesRegex(IncidentEvidenceError, "NATIVE_RUN_IDENTITY_MISMATCH"):
+            self.admission(native=self.native_run(run_id=10000))
+        before = self.capture.read_text()
+        self.assertNotEqual(self.run_producer(event="workflow_dispatch", existing="777").returncode, 0)
+        self.assertEqual(self.capture.read_text(), before)
+
+    def test_red_count_mutant_rejected_despite_rehashed_valid_history(self):
+        self.assertEqual(self.run_producer().returncode, 0)
+        body = self.capture.read_text()
+        source_json = json.loads(self.source.read_text())
+        source_json["red_count"] = 0
+        changed = (json.dumps(source_json, sort_keys=True) + "\n").encode()
+        hist = json.loads(self.history_path.read_text())
+        hist.update(red_count=0, source_sha256=hashlib.sha256(changed).hexdigest())
+        hist["receipt_sha256"] = canonical_hash({
+            k:v for k,v in hist.items() if k != "receipt_sha256"
+        })
+        hist_bytes = (json.dumps(hist, indent=2, sort_keys=True) + "\n").encode()
+        body = body.replace(self.git("hash-object", str(self.source)), _git_blob_sha(changed))
+        body = body.replace(self.git("hash-object", str(self.history_path)), _git_blob_sha(hist_bytes))
+        with self.assertRaisesRegex(IncidentEvidenceError, "REPORT_RED_OR_TIMESTAMP_INVALID"):
+            self.admission(body=body, source_bytes=changed, history_bytes=hist_bytes,
+                           current_source_blob=_git_blob_sha(changed))
+
+    def test_origin_blob_attempt_and_history_substitution_fails_closed(self):
+        self.assertEqual(self.run_producer().returncode, 0)
+        body = self.capture.read_text()
+        for before, after in (
+            ("run_id: 12345", "run_id: 55555"),
+            ("run_attempt: 1", "run_attempt: 2"),
+            ("source_main: " + self.git("rev-parse", "origin/main"), "source_main: " + "f" * 40),
+            ("history_blob: " + self.git("hash-object", str(self.history_path)), "history_blob: " + "e" * 40),
+            ("status: RED", "status: GREEN"),
+        ):
+            with self.subTest(before=before), self.assertRaises(IncidentEvidenceError):
+                self.admission(body=body.replace(before, after))
+        history = json.loads(self.history_path.read_text())
+        history["run_event"] = "workflow_dispatch"
+        history["receipt_sha256"] = canonical_hash({
+            k:v for k,v in history.items() if k != "receipt_sha256"
+        })
+        new_history = (json.dumps(history, indent=2, sort_keys=True) + "\n").encode()
+        changed_body = body.replace(self.git("hash-object", str(self.history_path)), _git_blob_sha(new_history))
+        with self.assertRaisesRegex(IncidentEvidenceError, "HISTORY_NOT_BOUND_TO_NATIVE_RUN"):
+            self.admission(body=changed_body, history_bytes=new_history)
 
 
 if __name__ == "__main__":
