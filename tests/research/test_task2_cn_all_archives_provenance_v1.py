@@ -119,6 +119,22 @@ class AllArchiveCensusTests(unittest.TestCase):
             engine.INDEX_SEAL_COMMIT + ".." + tip, "--", rel)
         self.assertEqual(len((changes or "").splitlines()), 1,
                          "N1_FREEZE_CHANGED_OR_MISSING_ON_MAIN:" + str(changes))
+        self.assertEqual(engine._git_text(engine.ROOT, "rev-parse", "--show-toplevel"), str(engine.ROOT.resolve()), "N1_GIT_TOP_MISMATCH")
+        self.assertEqual(engine._git_text(engine.ROOT, "rev-parse", "--is-shallow-repository"), "false", "N1_SHALLOW_HISTORY")
+        self.assertFalse(engine.has_symlink_component(path, engine.ROOT), "N1_UNSAFE_SOURCE_PATH")
+        index = engine.pinned_source_map(str(engine.ROOT.resolve()))
+        original_weeks = [tuple(map(int, engine.FORECAST_PATH.fullmatch(p).groups()))
+                          for p in index if engine.FORECAST_PATH.fullmatch(p)]
+        self.assertEqual(max(original_weeks), (2026, 46), "N1_WRONG_INDEX_MAX_WEEK")
+        introduction = changes.splitlines()[0]
+        self.assertIsNone(engine._git_text(engine.ROOT, "cat-file", "-e",
+                          introduction + "^:" + rel), "N1_NOT_A_NEW_FILE")
+        first_blob = engine._git_text(engine.ROOT, "rev-parse", "--verify",
+                                     introduction + ":" + rel)
+        current_blob = engine._git_text(engine.ROOT, "rev-parse", "--verify",
+                                       tip + ":" + rel)
+        self.assertEqual(first_blob, engine.git_blob_sha(raw), "N1_FIRST_BLOB_MISMATCH")
+        self.assertEqual(current_blob, engine.git_blob_sha(raw), "N1_CURRENT_BLOB_MISMATCH")
         self.assertTrue(engine.verified_post_index_forecast(rel, raw))
         self.assertFalse(engine.verified_post_index_forecast(rel, raw + b"\\n"))
         self.assertFalse(engine.verified_post_index_forecast(
