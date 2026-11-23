@@ -1,11 +1,6 @@
 name: Deploy Cycle Navigator to GitHub Pages
 
 on:
-  # GitHub Actions GITHUB_TOKEN commits do not trigger other push workflows.
-  # Depend on the native source owner's completed run instead.
-  workflow_run:
-    workflows: ["Cycle Navigator Weekly Publication"]
-    types: [completed]
   push:
     branches: [main]
     paths:
@@ -51,15 +46,13 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # Existing Pages job may attest one original weekly release to existing issue #1593.
+  issues: write
 concurrency:
   group: cycle-navigator-pages
   cancel-in-progress: false
 jobs:
   deploy:
-    if: >-
-      github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -268,14 +261,12 @@ jobs:
         env:
           CN_PAGES_RECEIPT_PATH: runtime_cn_pages_release_receipt.json
         run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs
-      - name: Retain native weekly Pages receipt for S1
-        if: ${{ always() && github.event_name == 'workflow_run' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: cn-monday-release-${{ github.run_id }}
-          path: runtime_cn_pages_release_receipt.json
-          if-no-files-found: warn
-          retention-days: 14
+      - name: Native original Monday release receipt self-test
+        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py --self-test
+      - name: Attest one immutable source-to-CDN success to existing GitHub #1593
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py
       - name: Acknowledge source Hourly closed candle on actual public CDN
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_hour_utc != '' }}
         env:
