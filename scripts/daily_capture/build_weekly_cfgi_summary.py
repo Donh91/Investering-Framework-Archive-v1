@@ -8,6 +8,12 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+# Executed as both an importable module and a same-directory Actions CLI script.
+if __package__:
+    from .build_weekly_market_close_package import validate_actions_week_binding
+else:
+    from build_weekly_market_close_package import validate_actions_week_binding
+
 
 def canonical(value: object) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
@@ -88,33 +94,43 @@ def target_week_window(now: datetime, mode: str) -> tuple[datetime, datetime]:
     return monday, monday + timedelta(days=7)
 
 
-def resolve_close_mode(mode: str, *, event_name: str, event_path: str, run_attempt: str = "") -> str:
-    """Resolve trigger mode; reject reruns without immutable original-week anchor.
+def resolve_close_mode(mode: str, *, event_name: str, event_path: str,
+                       run_attempt: str = "", now: datetime | None = None) -> str:
+    """Use the ORIGINAL weekly-close source's single fail-closed event binding.
 
-    A GitHub rerun retains the original event payload and RUN_ID, but its
-    datetime.now() is a new clock. Without the original ISO-week anchor a
-    rerun after rollover could corrupt another weekly summary. Refuse every
-    Actions retry until the independent original-run clock is available.
+    The source collector, derived CFGI and weekly consumer must agree on
+    first-run, exact main ref, event inputs and Copenhagen-local issuance slot.
+    No independent CFGI-only clock inference or historic backfill is allowed.
     """
+    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     if run_attempt and run_attempt != "1":
         raise ValueError("RERUN_ORIGINAL_WEEK_UNBOUND_FAIL_CLOSED")
     if event_name == "workflow_dispatch":
-        # The existing workflow_dispatch payload specifies a mode, but it
-        # does not bind the original ISO week. A queued first attempt may
-        # execute across Monday UTC rollover; do not write a different week.
-        raise ValueError("DISPATCH_ORIGINAL_WEEK_UNBOUND_FAIL_CLOSED")
-    if mode in ("preclose", "final"):
+        if mode not in ("preclose", "final"):
+            raise ValueError("DISPATCH_ORIGINAL_WEEK_UNBOUND_FAIL_CLOSED")
+        validate_actions_week_binding(
+            current, mode, event_name=event_name, event_path=event_path,
+            run_attempt=run_attempt, consumer=False)
         return mode
-    if mode != "auto" or event_name not in ("schedule", "workflow_dispatch") or not event_path:
-        raise ValueError("WEEKLY_MODE_UNAVAILABLE")
-    payload = json.loads(Path(event_path).read_text())
-    if not isinstance(payload, dict):
-        raise ValueError("INVALID_GITHUB_EVENT")
     if event_name == "schedule":
+        if not event_path:
+            raise ValueError("WEEKLY_MODE_UNAVAILABLE")
+        try:
+            payload = json.loads(Path(event_path).read_text())
+        except (OSError, ValueError) as exc:
+            raise ValueError("WEEKLY_MODE_UNAVAILABLE") from exc
         schedules = {"35 23 * * 0": "preclose", "5 2 * * 1": "final"}
-        if payload.get("schedule") not in schedules:
+        if not isinstance(payload, dict) or payload.get("schedule") not in schedules:
             raise ValueError("UNKNOWN_SCHEDULE")
-        return schedules[payload["schedule"]]
+        scheduled_mode = schedules[payload["schedule"]]
+        if mode not in ("auto", scheduled_mode):
+            raise ValueError("SCHEDULE_MODE_MISMATCH")
+        validate_actions_week_binding(
+            current, scheduled_mode, event_name=event_name, event_path=event_path,
+            run_attempt=run_attempt, consumer=False)
+        return scheduled_mode
+    if event_name == "" and mode in ("preclose", "final"):
+        return mode  # offline synthetic tests only, never production Actions
     raise ValueError("WEEKLY_MODE_UNAVAILABLE")
 
 
@@ -123,10 +139,15 @@ def main() -> None:
     parser.add_argument("--capture-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--mode", choices=("auto", "preclose", "final"), default="auto")
+    parser.add_argument("--now-utc", help="Test-only UTC clock override")
     args = parser.parse_args()
 
-    now = datetime.now(timezone.utc)
-    mode = resolve_close_mode(args.mode, event_name=os.getenv('GITHUB_EVENT_NAME', ''), event_path=os.getenv('GITHUB_EVENT_PATH', ''), run_attempt=os.getenv('GITHUB_RUN_ATTEMPT', ''))
+    now = (datetime.fromisoformat(args.now_utc.replace("Z", "+00:00"))
+           if args.now_utc else datetime.now(timezone.utc))
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    now = now.astimezone(timezone.utc)
+    mode = resolve_close_mode(args.mode, event_name=os.getenv('GITHUB_EVENT_NAME', ''), event_path=os.getenv('GITHUB_EVENT_PATH', ''), run_attempt=os.getenv('GITHUB_RUN_ATTEMPT', ''), now=now)
     if os.getenv('GITHUB_EVENT_NAME') == 'schedule':
         # A delayed first attempt after UTC week rollover cannot safely
         # reconstruct the event's original ISO week from wall clock alone.

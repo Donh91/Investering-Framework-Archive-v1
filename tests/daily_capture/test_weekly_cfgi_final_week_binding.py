@@ -42,55 +42,84 @@ class WeeklyCfgiFinalWeekBindingTests(unittest.TestCase):
         self.assertEqual({row["symbol"] for row in rows}, {"BTC", "ETH", "MARKET"})
         self.assertEqual(billing, {})
 
-    def test_existing_workflow_untouched_and_resolves_preclose_final(self):
+    def test_sunday_workflow_passes_one_source_bound_mode_to_both_collectors(self):
         workflow = Path(".github/workflows/sunday-market-close-and-cfgi.yml").read_text()
         self.assertIn("cron: '35 23 * * 0'", workflow)
         self.assertIn("cron: '5 2 * * 1'", workflow)
-        self.assertIn("python scripts/daily_capture/build_weekly_cfgi_summary.py", workflow)
-        self.assertNotIn('--mode "${{ steps.mode.outputs.mode }}"', workflow.partition("Build zero-cost weekly CFGI summary from daily owner captures")[2].partition("Build preliminary weekly forensics")[0])
+        for marker in ("Build verified weekly price ranges", "Build zero-cost weekly CFGI summary"):
+            step = workflow.split("- name: " + marker, 1)[1].split("- name:", 1)[0]
+            self.assertIn('--mode "${{ steps.mode.outputs.mode }}"', step)
+        self.assertNotIn("continue-on-error: true", workflow.split("- name: Build verified weekly price ranges")[1].split("- name:",1)[0])
 
-    def test_auto_mode_uses_schedule_payload_not_execution_date(self):
-        for trigger, expected in (("35 23 * * 0", "preclose"), ("5 2 * * 1", "final")):
-            with self.subTest(trigger=trigger), tempfile.TemporaryDirectory() as d:
-                path = Path(d) / "event.json"
-                path.write_text(json.dumps({"schedule": trigger}))
-                self.assertEqual(resolve_close_mode("auto", event_name="schedule", event_path=str(path)), expected)
-
-    def test_queued_dispatch_without_original_week_fails_closed(self):
-        # A workflow_dispatch request only pins "mode", not the event ISO week.
-        # Queued first-attempt jobs can start after Monday's UTC rollover.
-        for mode in ("preclose", "final"):
-            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as d:
-                path = Path(d) / "event.json"
-                path.write_text(json.dumps({"inputs": {"mode": mode}}))
-                for flag in ("auto", "preclose", "final"):
-                    with self.subTest(flag=flag), self.assertRaisesRegex(ValueError, "DISPATCH_ORIGINAL_WEEK"):
-                        resolve_close_mode(flag, event_name="workflow_dispatch", event_path=str(path), run_attempt="1")
-
-    def test_actions_retry_after_week_rollover_fails_closed(self):
-        # Neither immutable schedule nor an explicit CLI mode proves
-        # which ISO week an old GitHub run originally belonged to.
-        for mode in ("auto", "preclose", "final"):
-            with self.subTest(mode=mode), self.assertRaisesRegex(ValueError, "RERUN_ORIGINAL_WEEK"):
-                resolve_close_mode(mode, event_name="schedule", event_path="not-read-on-rerun.json", run_attempt="2")
-
-    def test_offline_explicit_mode_remains_supported(self):
-        # Offline maintenance/tests can explicitly request a mode; the
-        # existing GitHub workflow_dispatch is blocked without a week anchor.
-        self.assertEqual(resolve_close_mode("final", event_name="", event_path="", run_attempt=""), "final")
-
-    def test_unknown_triggers_fail_closed_without_wrong_week_write(self):
-        with self.assertRaises(ValueError):
-            resolve_close_mode("auto", event_name="", event_path="")
+    def test_source_and_cfgi_share_exact_event_dispatch_matrix(self):
+        from scripts.daily_capture.build_weekly_market_close_package import validate_actions_week_binding
+        valid = (
+            ("2026-11-29T22:35:00Z", "preclose", False),
+            ("2026-11-30T01:05:00Z", "final", False),
+            ("2026-06-28T21:35:00Z", "preclose", False),
+            ("2026-06-29T00:05:00Z", "final", False),
+        )
         with tempfile.TemporaryDirectory() as d:
-            path = Path(d) / "event.json"
-            path.write_text(json.dumps({"schedule": "10 10 * * 3"}))
+            event = Path(d) / "event.json"
+            for at, mode, _ in valid:
+                event.write_text(json.dumps({"ref": "refs/heads/main", "inputs": {"mode": mode}}))
+                now = datetime.fromisoformat(at.replace("Z", "+00:00"))
+                self.assertEqual(resolve_close_mode(mode, event_name="workflow_dispatch",
+                    event_path=str(event), run_attempt="1", now=now), mode)
+                validate_actions_week_binding(now, mode, event_name="workflow_dispatch",
+                    event_path=str(event), run_attempt="1")
+            for bad_time, mode, ref, attempt in (
+                ("2026-11-29T22:30:00Z", "preclose", "refs/heads/main", "1"),
+                ("2026-11-30T00:30:00Z", "final", "refs/heads/main", "1"),
+                ("2026-11-30T01:05:00Z", "final", "refs/heads/feature", "1"),
+                ("2026-11-30T01:05:00Z", "final", "refs/heads/main", "2"),
+                ("2026-12-01T01:05:00Z", "final", "refs/heads/main", "1"),
+                ("2026-06-28T22:35:00Z", "preclose", "refs/heads/main", "1"),
+            ):
+                event.write_text(json.dumps({"ref": ref, "inputs": {"mode": mode}}))
+                now = datetime.fromisoformat(bad_time.replace("Z", "+00:00"))
+                with self.assertRaises(ValueError):
+                    resolve_close_mode(mode, event_name="workflow_dispatch",
+                        event_path=str(event), run_attempt=attempt, now=now)
+                with self.assertRaises(ValueError):
+                    validate_actions_week_binding(now, mode, event_name="workflow_dispatch",
+                        event_path=str(event), run_attempt=attempt)
+            event.write_text(json.dumps({"ref": "refs/heads/main", "inputs": {"mode": "preclose"}}))
             with self.assertRaises(ValueError):
-                resolve_close_mode("auto", event_name="schedule", event_path=str(path))
-            path.write_text(json.dumps({"inputs": {"mode": "unknown"}}))
-            with self.assertRaisesRegex(ValueError, "DISPATCH_ORIGINAL_WEEK"):
-                resolve_close_mode("auto", event_name="workflow_dispatch", event_path=str(path))
-        self.assertEqual(resolve_close_mode("final", event_name="", event_path=""), "final")
+                resolve_close_mode("final", event_name="workflow_dispatch",
+                    event_path=str(event), run_attempt="1",
+                    now=datetime(2026, 11, 30, 1, 5, tzinfo=timezone.utc))
+
+    def test_valid_scheduled_and_wrong_week_runs_fail_closed(self):
+        with tempfile.TemporaryDirectory() as d:
+            event = Path(d) / "event.json"
+            event.write_text(json.dumps({"schedule": "5 2 * * 1"}))
+            valid = datetime(2026, 11, 30, 1, 5, tzinfo=timezone.utc)
+            self.assertEqual(resolve_close_mode("auto", event_name="schedule",
+                event_path=str(event), run_attempt="1", now=valid), "final")
+            for now in (datetime(2026, 12, 1, 1, 5, tzinfo=timezone.utc),
+                        datetime(2026, 11, 29, 1, 5, tzinfo=timezone.utc)):
+                with self.assertRaises(ValueError):
+                    resolve_close_mode("auto", event_name="schedule", event_path=str(event),
+                        run_attempt="1", now=now)
+            with self.assertRaisesRegex(ValueError, "RERUN_ORIGINAL_WEEK"):
+                resolve_close_mode("final", event_name="schedule", event_path=str(event),
+                    run_attempt="2", now=valid)
+            with self.assertRaises(ValueError):
+                resolve_close_mode("preclose", event_name="schedule", event_path=str(event),
+                    run_attempt="1", now=valid)
+            event.write_text(json.dumps({"schedule":"10 10 * * 3"}))
+            with self.assertRaises(ValueError):
+                resolve_close_mode("auto", event_name="schedule", event_path=str(event),
+                    run_attempt="1", now=valid)
+
+    def test_offline_explicit_mode_and_unknown_triggers(self):
+        self.assertEqual(resolve_close_mode("final",event_name="",event_path=""),"final")
+        self.assertEqual(resolve_close_mode("preclose",event_name="",event_path=""),"preclose")
+        with self.assertRaises(ValueError):
+            resolve_close_mode("auto",event_name="",event_path="")
+        with self.assertRaises(ValueError):
+            resolve_close_mode("final",event_name="push",event_path="")
 
 
 if __name__ == "__main__":

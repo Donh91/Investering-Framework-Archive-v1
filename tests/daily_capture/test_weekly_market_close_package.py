@@ -315,6 +315,36 @@ class WeeklyCloseArchitectureTests(unittest.TestCase):
             self.assertTrue(final['final'])
             self.assertEqual(final['completeness'], 'COMPLETE')
 
+    def test_all_weekly_workflow_python_steps_are_gated_before_execution(self):
+        # Contract-level safeguard: every Python command in BOTH existing
+        # workflows is downstream of the first strict event-binding source
+        # check. A new earlier Python step must fail this test, not silently
+        # create another CFGI-like unguarded dispatch.
+        sunday = Path(".github/workflows/sunday-market-close-and-cfgi.yml").read_text()
+        weekly = Path(".github/workflows/weekly-api-calibration-shadow.yml").read_text()
+        sunday_steps = sunday.split("      - name: ")
+        weekly_steps = weekly.split("      - name: ")
+        first_sunday = next(i for i,s in enumerate(sunday_steps)
+                             if s.startswith("Build verified weekly price ranges"))
+        first_weekly = next(i for i,s in enumerate(weekly_steps)
+                             if s.startswith("Verify and reuse existing final ISO-week close"))
+        self.assertIn("build_weekly_market_close_package.py", sunday_steps[first_sunday])
+        self.assertIn("--mode", sunday_steps[first_sunday])
+        self.assertIn("build_weekly_market_close_package.py", weekly_steps[first_weekly])
+        self.assertIn("--require-existing-final", weekly_steps[first_weekly])
+        for name, steps, first in (("Sunday", sunday_steps, first_sunday),
+                                   ("Monday", weekly_steps, first_weekly)):
+            for i, step in enumerate(steps):
+                if "python " in step or "python3 " in step:
+                    self.assertGreaterEqual(i, first, (name, i, step[:90]))
+            self.assertNotIn("continue-on-error: true", steps[first])
+        # Paid API work and separate jobs must be gated by the freeze job:
+        # a bad dispatch that rejects the first source step cannot continue.
+        self.assertIn("needs.freeze.result == 'success'", weekly)
+        self.assertIn("needs: freeze", weekly)
+        self.assertIn("needs: [freeze, calibration]", weekly)
+        self.assertIn("--mode \"${{ steps.mode.outputs.mode }}\"", sunday)
+
     def test_preclose_is_partial_and_non_binding(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / 'weekly_close'
