@@ -603,16 +603,26 @@ def _exact_hourly_close(due: datetime, target: str, *, root: Path = Path(".")) -
         return None
 
 
-@lru_cache(maxsize=16_384)
-def _immutable_git_object_read(root: str, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
-    """Cache Git reads only when the caller supplied a fully resolved commit SHA.
+class _GitImmutableReadUnavailable(Exception):
+    """Preserve Git's real return code but do not cache transient read failures."""
 
-    A Git blob/tree at an exact SHA cannot change. Mutable refs, fetch,
-    ancestry and remote head verification are intentionally NEVER cached.
-    Every hour still performs the full historical audit and fails closed if
-    any source is missing or inconsistent. Cache lives only in this process.
+    def __init__(self, result: subprocess.CompletedProcess[str]) -> None:
+        self.result = result
+        super().__init__(result.stderr)
+
+
+@lru_cache(maxsize=8_192)
+def _immutable_git_object_read(root: str, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
+    """Memoize ONLY successfully read immutable SHA-addressed Git objects.
+
+    Failed reads are not memoized: a later authenticated fetch can restore an
+    object without reusing a stale negative result. Mutable refs, fetch,
+    ancestry and remote head verification are NEVER cached.
     """
-    return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=60)
+    result = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=60)
+    if result.returncode != 0:
+        raise _GitImmutableReadUnavailable(result)
+    return result
 
 
 def _can_cache_immutable_git_object(args: tuple[str, ...]) -> bool:
@@ -624,6 +634,9 @@ def _can_cache_immutable_git_object(args: tuple[str, ...]) -> bool:
             and re.fullmatch(sha, args[1])):
         return True
     if len(args) == 2 and args[0] == "show" and re.fullmatch(sha + r":.+", args[1]):
+        return True
+    if (len(args) == 3 and args[:2] == ("cat-file", "-e")
+            and re.fullmatch(sha + r"\^\{commit\}", args[2])):
         return True
     return False
 
@@ -643,7 +656,12 @@ def exact_hourly_close_at_commit(
         # Read through Git itself. Cache only immutable commit-addressed
         # objects, never live refs, network observations, ancestry or fetches.
         if _can_cache_immutable_git_object(args):
-            return _immutable_git_object_read(str(root.resolve()), args)
+            try:
+                return _immutable_git_object_read(str(root.resolve()), args)
+            except _GitImmutableReadUnavailable as exc:
+                # Preserve historical fail-closed behavior; a later fetch may
+                # make the SHA addressable, so do NOT cache this failure.
+                return exc.result
         return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=60)
     try:
         require_canonical_main_commit(root, commit)

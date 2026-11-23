@@ -647,6 +647,7 @@ def test_immutable_git_cache_cannot_accept_mutable_refs():
     assert owner._can_cache_immutable_git_object(("show", "-s", "--format=%ct", sha))
     assert owner._can_cache_immutable_git_object(("ls-tree", sha, "--", "hour.csv"))
     assert owner._can_cache_immutable_git_object(("show", sha + ":hour.csv"))
+    assert owner._can_cache_immutable_git_object(("cat-file", "-e", sha + "^{commit}"))
     for args in (
         ("show", "origin/main:hour.csv"),
         ("show", "HEAD:hour.csv"),
@@ -657,3 +658,28 @@ def test_immutable_git_cache_cannot_accept_mutable_refs():
         ("ls-remote", "origin", "refs/heads/main"),
     ):
         assert not owner._can_cache_immutable_git_object(args), args
+
+
+def test_immutable_git_cache_only_successful_object_existence(tmp_path):
+    from scripts.intraday_execution import shadow_direction_confidence as owner
+
+    root, _, _, row = complete_ledger_fixture(tmp_path)
+    commit = row["production_context"]["commit_sha"]
+    owner._immutable_git_object_read.cache_clear()
+    valid = ("cat-file", "-e", commit + "^{commit}")
+    invalid = ("cat-file", "-e", "f" * 40 + "^{commit}")
+    assert owner._can_cache_immutable_git_object(valid)
+    assert owner._can_cache_immutable_git_object(invalid)
+    ok = owner._immutable_git_object_read(str(root.resolve()), valid)
+    assert ok.returncode == 0
+    assert owner._immutable_git_object_read(str(root.resolve()), valid).returncode == 0
+    assert owner._immutable_git_object_read.cache_info().hits >= 1
+
+    before = owner._immutable_git_object_read.cache_info()
+    for _ in range(2):
+        with pytest.raises(owner._GitImmutableReadUnavailable) as exc:
+            owner._immutable_git_object_read(str(root.resolve()), invalid)
+        assert exc.value.result.returncode != 0
+    after = owner._immutable_git_object_read.cache_info()
+    assert after.hits == before.hits  # never memorize a failed object lookup
+    assert after.misses == before.misses + 2
