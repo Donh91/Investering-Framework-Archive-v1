@@ -25,14 +25,15 @@
     "CP16 verified W46→W47 delta; corrected ambiguous OKX OI quantity units and added actual cohort coverage gate",
     "CP17 same-execution incremental pair proof using actual prior full replay, full-current equality native test; no durable trust",
     "CP18 actual calibration context now carries CCE/ODM/SRE/FAE; existing MM publisher binds full gateway input, learning and Task2; CN consumes metadata only; no inferred model use",
-    "CP19 real context CLI→gateway request→publication binding→independent feature test; synthetic receipt, no paid API. CP17 native equivalence and leverage coverage PASS"
+    "CP19 real context CLI→gateway request→publication binding→independent feature test; synthetic receipt, no paid API. CP17 native equivalence and leverage coverage PASS",
+    "CP20 historical W47 real context asserts SOURCE_BINDING_MISSING and UNKNOWN; new isolated Git producer/sidecar/CN fixture; existing publisher and CN consumer now independently recheck original owner sidecar on exact Git bytes before admitting positive replay. Adversarial genuine-row rehashed historical packet rejected; native CI not yet observed."
   ],
   "head_discovery": "Use live PR head, not this file as a head attestation; read newest exact-head receipt and CI logs.",
   "priorities": [
     {
       "id": "P0",
       "status": "OPEN",
-      "next": "CP15 historical W47 199/199 matured, Task2 14 paired and delta verified. Read new CI and source coverage; independent known-by remains required."
+      "next": "CP20 implemented, verify exact-head CI and independent review. Historical W47 remains UNKNOWN; prospective source receipt check required at producer, publisher and CN. Next actual MM operational translation."
     },
     {
       "id": "P1",
@@ -57,7 +58,7 @@
     {
       "id": "P5",
       "status": "OPEN",
-      "next": "Inspect CP19 native real context integration test, resolve failures; natural publication/readback after reviewed release still open. Coordinate parent #2315 and public lanes."
+      "next": "Read CP20 native CI; then actual machine producer->committed CN, original owner schema translation and natural production readback. No historical write."
     }
   ],
   "guardrails": [
@@ -66,5 +67,28 @@
     "No competing writer or historical rewrite",
     "No independent edge/PIT claim before genuine evidence"
   ],
-  "resume": "Read KOMPAS_PRO_2_MISSION.md and this checkpoint, current PR comments/CI, parent and active related lanes, continue code-first at first unresolved priority. Save next checkpoint and exact head receipt."
+  "resume": "Read KOMPAS_PRO_2_MISSION.md and this checkpoint, current PR comments/CI, parent and active related lanes, continue code-first at first unresolved priority. Save next checkpoint and exact head receipt.",
+  "cp20": {
+    "code_head": "6a23221afe5491dfd12ae85ca26ee0f6f8071378",
+    "observed_main": "936eed481fe41d9881ab2576fb4d04bdbff0b51e",
+    "native_previous_failures": [
+      {
+        "run": 45409075535,
+        "job": 138497667404
+      },
+      {
+        "run": 45409075602,
+        "job": 138497666857
+      }
+    ],
+    "cause": "Same invalid positive historical W47 expectation; direct sidecar receipt absent. Publisher/consumer previously lacked independent producer receipt replay.",
+    "changed_blobs": {
+      "scripts/research/cn_mm_core_shadow_bridge_v1.py": "9ad4c8cde5073d37696d3c59aac55c5316970126",
+      "tests/cycle_navigator/test_cn_mm_core_shadow_bridge_v1.py": "074a79a41ba354f1938213431c9fae16a993ad6d"
+    },
+    "native_ci_status": "PENDING_NOT_CLAIMED",
+    "review": "REQUEST_AT_FINAL_HEAD",
+    "gate_status": "ALL_G00_G12_AND_M01_M11_REMAIN_OPEN",
+    "next": "Read fresh exact-head native CI, especially synthetic producer worktree fixture and historical gateway envelope. Verify native test execution; repair exact failure without weakening evidence. Then trace original MM output schema versus translation and scorecard, coordinate #2315 single writer; use #2312 existing failed publication job and existing owners, no release bypass."
+  }
 }
