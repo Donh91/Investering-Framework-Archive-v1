@@ -107,12 +107,12 @@ SHA40 = re.compile(r"[0-9a-f]{40}")
 BOOTSTRAP_TEXT = (ROOT / S1_DIR / "BOOTSTRAP.txt").read_text(encoding="utf-8")
 TICK_TEXT = (ROOT / TICK_PATH).read_text(encoding="utf-8")
 REFERENCE_TEXT_SHA256 = {
-    "BOOTSTRAP steps 1-4": "bf745bddead61595d4b4bfc6e15a74ec85c839e553d477ea7d8c8a0a4dbeb178",
+    "BOOTSTRAP steps 1-4": "ae5d0cf293d4166c3d2ccba655dd4de3602fba1828be4ed36de6b25a2caf6a98",
     "TICK T0-T3H and IF THE BRIEF FAILED": "d4d0cb7fad65849372b72eb8e4de48108a6a3106e1ce880ac97213886ac634c2",
     "TICK LAST TWO LINES": "2b7e00842d5e7b8ab2a96ad4ff3d87acbc730f3ff7b160c7128fd705641715b1",
-    "TICK T4 CLAUDE RECEIPTS and ORDER": "5320ca81be8086f1a32929becb9f76ea19b139ce8437a4e28d64cc6d3ff7c675",
+    "TICK T4 CLAUDE RECEIPTS and ORDER": "9f2a2c039336e63bd122b519e6a449a7993257c70895cd126c153d1527518e2d",
     "TICK HALT rule C1b": "55a4a83458baf6bc210795f13fe82efdfc0133dbf3f831ecfd9f47917859e4f4",
-    "TICK REQUEST_REVIEW": "72fc9e8c8ba35bd9019b48e7eb2c3cffc58e9f7c72f9813c03c9b2a4eea83541",
+    "TICK REQUEST_REVIEW": "a8898d30a5c3fbc5ab27f0773198679881db2648d89c461d6c3e5be2cfe81e56",
     "TICK REPAIR": "32743fdb737af687488fdab2fe424bf7eb24210d7afc4e6349fe0006f90a4bd7",
     "TICK T6": "41b365fb9dba7662cb5bd9ca96cb38c1ac3ba720c8f32954a7a220130855b1ca",
 }
@@ -125,7 +125,7 @@ def text_regions():
     boot = re.sub(r"(as GitHub reports it\) must equal )[0-9a-f]{40}\.", r"\1<RUNTIME_CONTRACT_BLOB>.", boot)
     tick = TICK_TEXT[TICK_TEXT.index("T0 CLOCK (H1)."):TICK_TEXT.index("T4 CHOOSE.")]
     last = TICK_TEXT[TICK_TEXT.index("LAST TWO LINES of every run"):]
-    receipts = TICK_TEXT[TICK_TEXT.index("CLAUDE RECEIPTS (ONE Bridge read"):TICK_TEXT.index("NO SECOND REVIEW REQUEST:")]
+    receipts = TICK_TEXT[TICK_TEXT.index("CLAUDE RECEIPTS (only when B.claude_slots"):TICK_TEXT.index("NO SECOND REVIEW REQUEST:")]
     c1b = TICK_TEXT[TICK_TEXT.index("HALT, rule C1b"):TICK_TEXT.index("HALT (C7 halt trigger")]
     request = TICK_TEXT[TICK_TEXT.index("REQUEST_REVIEW (rule 3)."):TICK_TEXT.index("REPAIR (rule 2).")]
     repair = TICK_TEXT[TICK_TEXT.index("REPAIR (rule 2)."):TICK_TEXT.index("HALT, rule C1b")]
@@ -1639,8 +1639,8 @@ class ReferenceText(unittest.TestCase):
                        "Post one S1_ITEM_v1 on the PR (state BUILD, attempt unchanged, reason: <the entry's reason>, next: OWNER_BRANCH_UPDATE) and the short receipt on #1156; result OWNER_BRANCH_UPDATE_REQUESTED.",
                        "If none is an S1_HEARTBEAT_v1 of this task by Donh91 created today (Copenhagen date), post one S1_HEARTBEAT_v1 on #1156 now",
                        "brief=<B.run_id or NONE> brief_state=<OK or the T1 to T3 result>", "A page you cannot read: no heartbeat.",
-                       "Bridge #173 has no S1_REVIEW_REQUEST_v1 for this head (read as VETO reads it: since the PR's created_at, every page)",
-                       "per_page=40 (the newest 40 comments, newest first; a receipt that is not on that page approves nothing in this run)",
+                       "REQUEST DEDUP: the PR's own comments (every page) hold no S1_ITEM_v1 by Donh91 whose head: line is this head",
+                       "APPROVALS_CURRENT.json?ref=L and decode its base64 content",
                        "fetch API/commits/<commit>: it is not a squash merge of a PR (more than one parent, or its subject does not end (#<n>))",
                        "at least one of the scripts, tests, .github, .agents and 00_FMOS entries differs; compare_commits <commit>...M is ahead or identical.",
                        "no S1_LANE_HALTED names that commit.", "Last line S1_TICK NOOP - - LANE_HALTED(c1b). A check that fails is skipped=-:C1b:<what failed>, with no post."):

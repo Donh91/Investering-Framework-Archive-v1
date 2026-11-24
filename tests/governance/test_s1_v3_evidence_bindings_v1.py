@@ -1511,7 +1511,7 @@ class AstraNegativeMatrixTest(unittest.TestCase):
 
     def test_N10_edited_or_hidden_review(self):                        # TEXT
         self.assertIn("created_at equals updated_at", LOOP_MD)
-        self.assertIn("paginated from the newest page back to before the request, and take the NEWEST CLAUDE_REVIEW_v1 whose head_sha is H", LOOP_MD)
+        self.assertIn("read Claude's verdict ledger view and prove the receipt, the request and the report by id", LOOP_MD)
         self.assertIn("R is still the admissible review for H with an identical body", LOOP_MD)
 
     def test_N11_same_pr_number_or_head_ref_in_a_fork(self):           # MODEL

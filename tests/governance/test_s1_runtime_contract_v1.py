@@ -127,7 +127,8 @@ class S1RuntimeContractTest(unittest.TestCase):
         # Reliability candidate: bounded orchestration and precise failure attribution, no additional source or authority.
         # v9 (C6 ARM, owner-approved measurement): the preamble alternates grouped and direct connector calls by the
         # Copenhagen hour and prints S1_ARM / S1_STEP chat lines; no check, call limit or ending changes; the grouped arm keeps
-        # v8's wording verbatim. Cap 4400.
+        # v8's wording verbatim; after the 2026-11-24 JSON.parse failure inside the grouped orchestration it runs only every
+        # 4th hour (6 of 24 ticks), direct otherwise. Cap 4400.
         self.assertLessEqual(len(boot), 4400)
         self.assertIn("In T1 the block between the two markers is one ```json fenced code block: B is the JSON object between its opening ```json line and its closing ``` line; that fence is the published format, never a body failure.", boot)
         self.assertNotIn("committer.date", boot)
@@ -151,8 +152,8 @@ class S1RuntimeContractTest(unittest.TestCase):
     def test_bootstrap_batches_reads_without_waiving_source_checks(self):
         boot = (S1 / "BOOTSTRAP.txt").read_text(encoding="utf-8")
         for needle in ("fetch main first, then parallelize the three reads in step 2 at M",
-                       "C6 ARM (measurement, owner-approved): if the Copenhagen hour of this scheduled run is even, ARM=grouped (exactly the v8 behaviour):",
-                       "If the hour is odd, ARM=direct: never use connector-call orchestration, batching or parallel invocation; make every read of steps 1–3b and T1–T3 as its own direct connector call, in order.",
+                       "C6 ARM (measurement, owner-approved): if the Copenhagen hour of this scheduled run is divisible by 4 (00, 04, 08, 12, 16, 20), ARM=grouped (exactly the v8 behaviour):",
+                       "In every other hour, ARM=direct: never use connector-call orchestration, batching or parallel invocation; make every read of steps 1–3b and T1–T3 as its own direct connector call, in order.",
                        "In both arms print the line S1_ARM <grouped|direct> <hour> first;",
                        "S1_STEP <step> start", "S1_STEP <step> ok <bytes or ->", "S1_STEP <step> fail <reason>",
                        "These lines are chat output only, never a GitHub write, and they change no check, call limit or ending. Never skip a read.",

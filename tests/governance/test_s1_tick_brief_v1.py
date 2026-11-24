@@ -1262,8 +1262,10 @@ class TickText(unittest.TestCase):
         # v3 made S1 read about 120 KB before its first decision. S1 v3.3 W2b raised the cap from 25,000 to 26,000: it added
         # T3H and HALT rule C1b and removed the T3 tree walk (TICK v3.3 was 25,796 bytes). S1 v3.3 W5 raised it to 27,500:
         # the T3H ledger hint (it replaces a full-day read of #1156 by none or one small read), the owner route for a
-        # required job that never ran, and the T6 budget (TICK is 27,026 bytes)
-        self.assertLess(len(TICK.encode("utf-8")), 27500)
+        # required job that never ran, and the T6 budget (TICK is 27,026 bytes). LEDGER-RUNTIME raised it to 28,000: T4, F4,
+        # VETO and REQUEST_REVIEW read Claude's 7 KB ledger view and two comments by id instead of paging Bridge #173
+        # (246 KB for the newest 40, about 800 KB since a PR's creation), for about 3,000 more bytes of rule text (two detached review rounds: L pinning and rewrite check, ledger_blob, refused_heads, LEDGER LAG tripwire, head-bound request dedup)
+        self.assertLess(len(TICK.encode("utf-8")), 31000)
 
 
 class TickModel(unittest.TestCase):
@@ -1884,9 +1886,9 @@ class ClaudeReceipts(unittest.TestCase):
         self.assertEqual(t4_approved([request, good, later], slots), {})
         ready = brief_of(self.two_prs)
         self.assertEqual([x["pr"] for x in tick_order(ready, t4_approved(page + [bad["proactive_marker"]], ready["claude_slots"]))[0]], [7, 9])   # not promoted either
-        for sentence in ("that was never edited (created_at equals updated_at), is not marked PROACTIVE and names request: <id>",
-                         "the solicited S1_REVIEW_REQUEST_v1 for that head; a row with that id on the page that is not such a request for that head voids it",
-                         "An edited, unsolicited or PROACTIVE receipt approves nothing and suppresses nothing: the B.next entries of that PR run as ranked (ACTION_LOOP.md rule 3)."):
+        for sentence in ("that was never edited (created_at equals updated_at), is not marked PROACTIVE, issue_url ends /issues/173",
+                         "(b) fetch https://api.github.com/repos/Donh91/Investering-AI-Audit-Bridge/issues/comments/<E.request_id>",
+                         "An APPROVE whose receipt F4 refuses (edited, unsolicited or PROACTIVE) approves nothing; F4's fallback then requests a review."):
             self.assertIn(sentence, TICK, sentence)
         self.assertIn("Ignore ALL PROACTIVE receipts for rule-3 deduplication", (ROOT / "00_FMOS/S1/ACTION_LOOP.md").read_text(encoding="utf-8"))
 
@@ -1929,19 +1931,19 @@ class ClaudeReceipts(unittest.TestCase):
         self.assertEqual(next(x for x in waiting["next"] if x["pr"] == 7)["how"], "BRIDGE_REQUEST")   # no waiting for an empty quota
 
     def test_the_tick_text_carries_the_rule(self):
-        for sentence in ("ONE Bridge read per run, and only when B.claude_slots is not empty",
-                         "Investering-AI-Audit-Bridge/issues/comments?sort=created&direction=desc&per_page=40 (the newest 40 comments, newest first; a receipt that is not on that page approves nothing in this run)",   # W2b D2
-                         "use only the rows whose issue_url ends /issues/173",
-                         "An APPROVED slot is PROMOTED when it also has ready true, the receipt says lane_eligible: YES, and the receipt says INDEPENDENT_DETACHED or the PR is PLAIN LOW.",
-                         "An APPROVED slot is ADMISSIBLE when the page itself shows everything F4 needs from the Bridge comments: the cited request row is on the page, is an S1_REVIEW_REQUEST_v1 by Donh91 for that head, was never edited and is older than the receipt; the receipt carries report, report_blob and bridge_commit; and it says INDEPENDENT_DETACHED or the PR is PLAIN LOW.",
+        for sentence in ("only when B.claude_slots is not empty; the workflow cannot read the private Bridge",
+                         "Investering-AI-Audit-Bridge/contents/reports/claude/APPROVALS_CURRENT.json?ref=L and decode its base64 content",   # W2b D2
+                         "issue_url ends /issues/173",
+                         "An APPROVED slot is PROMOTED when it also has ready true, E.lane_eligible is YES, and E.independence_class is INDEPENDENT_DETACHED or the PR is PLAIN LOW.",
+                         "An APPROVED slot is ADMISSIBLE when BOTH hold: (1) E.independence_class is INDEPENDENT_DETACHED or the PR is PLAIN LOW; (2) the reads (a) and (b) of F4 pass",
                          "otherwise null when the slot is ADMISSIBLE, else the otherwise of the PR's B.next entry, or null when it has none",
                          "For an ADMISSIBLE slot that is not PROMOTED it is skipped=<PR>:R3:claude_approved with no re-read",
                          "For every other APPROVED slot it runs as ranked: a receipt whose admissibility the page does not show never suppresses a review request",
                          "HEAD as above; the PR is not an ADMISSIBLE slot (T4).",
                          "this does not count as a tried entry",
                          "high_evidence false first, then lowest PR",
-                         "whose head_sha is the slot's 40-character head and whose verdict is APPROVE",
-                         "and no newer receipt on the page for that head says REQUEST_CHANGES or BLOCK", "An unreadable Bridge approves no slot.",
+                         "E.head is exactly the slot's 40-character head",
+                         "A PR whose E has pr_veto true or lists the PR's head in refused_heads holds every MERGE entry of that PR in this run", "An unreadable Bridge approves no slot.",
                          "then every PROMOTED slot, as an entry MERGE_IF_CLAUDE_APPROVE (pr, head and high_evidence of the slot;",
                          "for an ADMISSIBLE slot you never post a review request of any kind", "skipped=<PR>:R3:claude_approved",
                          "APPROVED, PROMOTED and ADMISSIBLE at T4 are ranking signals only, every check here still applies",
@@ -2521,7 +2523,7 @@ class RedTeamFixes(unittest.TestCase):
         self.assertIn("covers every earlier halt that the switch's clears_halt does not clear", TICK)
         self.assertNotIn("newer than B.generated_at", TICK)
         f6 = TICK[TICK.index("F6 MERGE:"):TICK.index("F7 READBACK")]
-        self.assertIn("immediately before the intent, read once more: the head (HEAD above; unchanged), the PR's reviews and review threads and the Bridge comments of VETO (F4 both kinds and VETO; R unchanged, no newer refusal), and #1156 (F5: no halt)", f6)   # A4
+        self.assertIn("compare_commits <the earlier L>...<the new L> is ahead or identical (else skipped=<PR>:C5:ledger_rewritten), with its LEDGER LAG page (F4 both kinds and VETO; R unchanged, E has the same seq, no newer refusal), and #1156 (F5: no halt)", f6)   # A4
         self.assertLess(f6.index("read once more"), f6.index("Post one S1_LANE_MERGE_INTENT_v1"))
 
     def test_a5_a_claude_refusal_vetoes_every_merge_route(self):
@@ -2552,10 +2554,10 @@ class RedTeamFixes(unittest.TestCase):
         for rows in ([no, codex_state, codex_final], [req, ok, no, codex_state, codex_final]):
             self.assertEqual((B.receipt_state(HEAD, rows)["veto"], B.receipt_state(HEAD, rows)["approved"]), (True, False))
         self.assertFalse(B.receipt_state(HEAD, [req, no, codex_final, receipt(1000120, HEAD, minutes_ago=2)])["veto"])   # the Claude APPROVE lifts it, not Codex
-        for sentence in ("VETO, every merge, on BOTH routes alike: fetch https://api.github.com/repos/Donh91/Investering-AI-Audit-Bridge/issues/173/comments?since=<the PR's created_at>&per_page=100, EVERY page",
-                         "created_at of API/pulls/<pr> is a server time; never use a commit date, its author sets it",                                  # N2
-                         "the newest 100 of T4 are not enough", "Unreadable or not paged to the end: skipped=<PR>:C5:veto_unreadable, no merge.",       # final round F2
-                         "The newest CLAUDE_REVIEW_v1 by Donh91 for this head that says REQUEST_CHANGES or BLOCK, edited or not, vetoes the merge unless a NEWER receipt that F4 admits (a Claude APPROVE for this same head) follows it.",
+        for sentence in ("VETO, every merge, on BOTH routes alike: the ledger is the Bridge veto.",
+                         "the ledger is the Bridge veto",                                  # N2
+                         "to the ledger and the view BEFORE it posts the #173 receipt", "or an unreadable LEDGER LAG page: skipped=<PR>:C5:veto_unreadable, no merge.",       # final round F2
+                         "an E that is not the APPROVE admitted by F4 for this head (another verdict, another head or another seq), vetoes the merge",
                          "A Codex review never lifts a Claude refusal, however new it is, and neither does an APPROVE that F4 would not admit (else skipped=<PR>:C5:claude_veto)"):
             self.assertIn(sentence, veto, sentence)
         self.assertNotIn("is newer than R (Codex route)", TICK)      # N1: the route-dependent wording is gone
@@ -2604,7 +2606,7 @@ class RedTeamFixes(unittest.TestCase):
         self.assertNotIn("head in str(", source)
         self.assertEqual(source.count("def request_for("), 1)
         self.assertIn("a request or receipt is for a head only when its own head or head_sha field holds exactly that head, never because the head appears in its text", TICK)
-        self.assertIn("the cited request is an S1_REVIEW_REQUEST_v1 whose head field is this head, created before it", TICK)
+        self.assertIn("an S1_REVIEW_REQUEST_v1 whose own head field is this head, created before the receipt", TICK)
 
     def test_a6_a10_a1_a3_a23_a9_a20_a7_are_in_the_merge_steps(self):
         f1 = TICK[TICK.index("F1 HEAD as above"):TICK.index("F2 PATHS AND RISK")]
@@ -2625,7 +2627,7 @@ class RedTeamFixes(unittest.TestCase):
         self.assertIn("an S1_STRATEGIST_CONSULT_v1 for this PR has an answer on #1157 with verdict CONCUR that cites the head or a head whose diff to it changes no path; otherwise skipped=<PR>:C5:strategist.", f4)
         loop = (ROOT / "00_FMOS/S1/ACTION_LOOP.md").read_text(encoding="utf-8")
         self.assertIn("an S1_STRATEGIST_CONSULT_v1 for this PR has an answer on #1157 with verdict CONCUR that cites H or a head whose diff to H changes no path; otherwise skipped=<PR>:C5:strategist", loop)   # the rule F4 restates
-        self.assertIn("When otherwise is null (an ADMISSIBLE slot that this step refused), post ONE new S1_REVIEW_REQUEST_v1 for this head on Bridge #173 that names the refusal reason, unless a request newer than the refused receipt exists there. That post is this run's ONE action (last line S1_TICK REQUEST_REVIEW <PR> <H8> REQUESTED(c=<id>)); without it record skipped=<PR>:C5:no_admissible_review.", f4)   # A7, final round F6
+        self.assertIn("When otherwise is null (an ADMISSIBLE slot that this step refused), post ONE new S1_REVIEW_REQUEST_v1 for this head on Bridge #173 that names the refusal reason, unless REQUEST DEDUP (REQUEST_REVIEW) finds a request for this head newer than the refused receipt, and then the S1_ITEM_v1 of REQUEST_REVIEW with its head and request lines. That post is this run's ONE action (last line S1_TICK REQUEST_REVIEW <PR> <H8> REQUESTED(c=<id>)); without it record skipped=<PR>:C5:no_admissible_review.", f4)   # A7, final round F6
         self.assertIn("- T1 to T3 are at most 4 tool calls; T3 never reads a tree", TICK)                                          # W2b D1
         self.assertIn("for an ADMISSIBLE slot you never post a review request of any kind, except the one F4 fallback", TICK)
         self.assertIn("List at M the parent directory of every pin path of the switch (API/contents/<dir>?ref=M; the list of pins comes from the switch you read, never from B): EVERY pin equals its blob or tree SHA there", f5)   # A23
