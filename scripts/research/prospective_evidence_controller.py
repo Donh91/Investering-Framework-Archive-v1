@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import core_shared_row_materializer as core
+from ethbtc_persistence_replay_v1 import verify_window_inputs
 
 REPO_ROOT = Path(".")
 ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
@@ -376,6 +377,33 @@ def verify_source_bindings(row: dict[str, Any], cutoff: datetime) -> dict[str, A
     return {"manifest": manifest, "ethbtc_window": window, "baseline": expected_baseline}
 
 
+def verify_persistence_source_bindings(row: dict[str, Any], cutoff: datetime) -> dict[str, Any]:
+    """Strict opt-in extension of the original source verifier.
+
+    The existing C01-C07 admission semantics remain unchanged until the
+    historical cohort has been replayed and reviewed. New persistence-aware
+    consumers must call this function, not trust the row's duration field.
+    """
+    verified = verify_source_bindings(row, cutoff)
+
+    def unique_object(pairs):
+        obj = {}
+        for key, value in pairs:
+            if key in obj:
+                raise ValueError("ETHBTC_PERSISTENCE_DUPLICATE_KEY")
+            obj[key] = value
+        return obj
+
+    raw = row.get("ethbtc_window_inputs")
+    if not isinstance(raw, str):
+        raise ValueError("ETHBTC_PERSISTENCE_INPUT_INVALID")
+    inputs = json.loads(raw, object_pairs_hook=unique_object)
+    if not isinstance(inputs, dict):
+        raise ValueError("ETHBTC_PERSISTENCE_INPUT_INVALID")
+    return {**verified, "persistence_replay": verify_window_inputs(
+        verified["ethbtc_window"], cutoff, inputs)}
+
+
 def validate_core_decision_contract(
     row: dict[str, Any], decisions: dict[str, Any], eligible: set[str]
 ) -> None:
@@ -562,11 +590,89 @@ def status() -> dict[str, Any]:
     }
 
 
+def audit_persistence_cohort() -> dict[str, Any]:
+    """Read-only full post-floor replay, using the original source owner.
+
+    No historical writes, outcome consumption, threshold tuning, or authority.
+    Repeated observations of one observed crossing share an episode key.
+    Left-censored runs never receive a fabricated start or episode identity.
+    """
+    from collections import Counter
+    eligible = set(eligible_candidates())
+    result = {
+        "contract": "SHARED_ROW_PERSISTENCE_AUDIT_v1",
+        "authority": "RESEARCH_ONLY_NON_CANONICAL",
+        "scientific_pit_eligible": False,
+        "forecast_authority": False,
+        "status": "UNKNOWN",
+        "raw_row_n": 0, "post_floor_row_n": 0, "excluded_pre_floor_n": 0,
+        "verified_n": 0, "rejected_n": 0, "left_censored_n": 0,
+        "above_observation_n": 0, "observed_above_episode_n": 0,
+        "rows": [], "reason": None,
+    }
+    if not collection_active() or not set(CORE_IDS).issubset(eligible):
+        return {**result, "reason": "CORE_COLLECTION_INACTIVE"}
+    floors = [eligibility_floor_for_candidate(k) for k in CORE_IDS]
+    if any(floor is None for floor in floors):
+        return {**result, "reason": "CORE_FLOOR_UNAVAILABLE"}
+    floor = max(floors)
+    source_rows = rows(LEDGER)
+    result["raw_row_n"] = len(source_rows)
+    identities = Counter(r.get("event_id") for r in source_rows)
+    episodes = set()
+    for row in source_rows:
+        event = row.get("event_id")
+        item = {"event_id": event, "status": "REJECTED"}
+        try:
+            cutoff = parse_ts(row["information_cutoff_utc"])
+            at = parse_ts(row["observation_timestamp_utc"])
+            if cutoff != at:
+                raise ValueError("ROW_CUTOFF_MISMATCH")
+            if at < floor:
+                result["excluded_pre_floor_n"] += 1
+                continue
+            result["post_floor_row_n"] += 1
+            if (not event or identities[event] != 1 or
+                    event != "PSR_" + at.strftime("%Y%m%dT%H%M%SZ") or
+                    row.get("row_integrity_contract") != core.ROW_INTEGRITY_CONTRACT):
+                raise ValueError("ROW_IDENTITY_INVALID")
+            verify_frozen_provenance(row)
+            decisions = json.loads(row["candidate_decisions"])
+            validate_core_decision_contract(row, decisions, eligible)
+            replay = verify_persistence_source_bindings(row, cutoff)["persistence_replay"]
+            item.update(status="VERIFIED", persistence=replay)
+            result["verified_n"] += 1
+            result["left_censored_n"] += int(replay["left_censored"])
+            if replay["side"] == "ABOVE":
+                result["above_observation_n"] += 1
+                if replay["first_above_bar_utc"]:
+                    episodes.add(replay["first_above_bar_utc"])
+        except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError,
+                OverflowError, subprocess.SubprocessError) as exc:
+            item["reason"] = str(exc)
+            result["rejected_n"] += 1
+        result["rows"].append(item)
+    result["observed_above_episode_n"] = len(episodes)
+    result["status"] = ("REPLAY_COMPLETE" if result["verified_n"] and not result["rejected_n"]
+                        else "REPLAY_BLOCKED")
+    return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--ingest-row", type=Path)
     parser.add_argument("--status-only", action="store_true")
+    parser.add_argument("--audit-persistence", action="store_true",
+                        help="Read-only full original owner replay; no ledger write")
     args = parser.parse_args()
+    if args.audit_persistence:
+        if args.ingest_row or args.status_only:
+            parser.error("--audit-persistence cannot be combined with other modes")
+        report = audit_persistence_cohort()
+        print(json.dumps(report, indent=2, sort_keys=True))
+        if report["status"] != "REPLAY_COMPLETE":
+            raise SystemExit(1)
+        return
     print(json.dumps(ingest(args.ingest_row) if args.ingest_row else status(), indent=2, sort_keys=True))
 
 

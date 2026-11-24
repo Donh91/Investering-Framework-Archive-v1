@@ -58,3 +58,11 @@ Keep mission PR DRAFT and auto-merge disabled. Do not mark ready or merge until 
 ## Definition of done
 
 The original analytical intelligence is operational and traceable (or explicitly evidenced as irrecoverable and disposition approved by the owner), the next-generation challenger is prospectively and fairly evaluated, calibration and attribution are reliable, functionality loss is detected, and existing automated owners handle recurring work. Every completion claim has a code path, test and appropriate real evidence. No report-only completion.
+
+## Continuation: original owner extension (2026-11-24)
+
+Added opt-in strict `verify_persistence_source_bindings` to the original prospective evidence owner. It first performs all existing byte/path/ancestry/clock/freshness checks, then replays the actual window and rejects forged duration/metadata or duplicate keys. Old frozen C01-C07 admission remains unchanged until the full cohort is audited. Added read-only full-cohort command:
+
+    python scripts/research/prospective_evidence_controller.py --audit-persistence
+
+The audit reports per-row source replay, rejected rows, left censoring and observed crossing identities without consuming outcomes or rewriting historical rows. Added two real Git fixture tests in existing P0 integrity suite. Full exact-head repository execution and historical cohort readback remain pending. Next: run full audit in trusted checkout, resolve mismatches through existing quarantine rules, integrate verified persistence into MM/CN shadow projection and its independent readback; never credit a censored or repeated observation as an independent signal. M02 remains OPEN.

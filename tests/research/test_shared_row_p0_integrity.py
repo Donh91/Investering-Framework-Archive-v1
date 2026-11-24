@@ -306,6 +306,52 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "event_id already frozen"):
             controller.ingest(row_path)
 
+    def test_persistence_extension_replays_bound_owner_and_rejects_self_rehashed_mutation(self):
+        fixture = FixtureRepo(self)
+        row = fixture.build()["row"]
+        row["provenance_hash"] = controller.frozen_provenance_hash(row)
+        verified = controller.verify_persistence_source_bindings(row, fixture.observation)
+        self.assertEqual(verified["persistence_replay"]["consecutive_same_side"], 168)
+        self.assertTrue(verified["persistence_replay"]["left_censored"])
+        self.assertIsNone(verified["persistence_replay"]["first_above_bar_utc"])
+        for key, value in (("consecutive_same_side", 1), ("lookback_rows", 167),
+                           ("window_start_utc", "2026-08-03T00:00:00Z"),
+                           ("method", "SYNTHETIC_RATIO")):
+            forged = dict(row)
+            metadata = json.loads(forged["ethbtc_window_inputs"])
+            metadata[key] = value
+            forged["ethbtc_window_inputs"] = controller.canon(metadata)
+            forged["provenance_hash"] = controller.frozen_provenance_hash(forged)
+            controller.verify_frozen_provenance(forged)
+            # Old frozen candidate semantics are deliberately unchanged.
+            controller.verify_source_bindings(forged, fixture.observation)
+            with self.assertRaisesRegex(ValueError, key):
+                controller.verify_persistence_source_bindings(forged, fixture.observation)
+        forged = dict(row)
+        forged["ethbtc_window_inputs"] = forged["ethbtc_window_inputs"].replace(
+            '"consecutive_same_side":168', '"consecutive_same_side":1,"consecutive_same_side":168')
+        self.assertNotEqual(forged["ethbtc_window_inputs"], row["ethbtc_window_inputs"])
+        with self.assertRaisesRegex(ValueError, "DUPLICATE_KEY"):
+            controller.verify_persistence_source_bindings(forged, fixture.observation)
+
+    def test_read_only_persistence_audit_reuses_original_owner(self):
+        fixture = FixtureRepo(self)
+        row = fixture.build()["row"]
+        row["provenance_hash"] = controller.frozen_provenance_hash(row)
+        controller.append(controller.LEDGER, row)
+        before = controller.LEDGER.read_bytes()
+        report = controller.audit_persistence_cohort()
+        self.assertEqual(report["status"], "REPLAY_COMPLETE")
+        self.assertEqual(report["verified_n"], 1)
+        self.assertEqual(report["left_censored_n"], 1)
+        self.assertEqual(report["observed_above_episode_n"], 0)
+        self.assertFalse(report["forecast_authority"])
+        self.assertEqual(controller.LEDGER.read_bytes(), before)
+        controller.append(controller.LEDGER, row)
+        duplicate = controller.audit_persistence_cohort()
+        self.assertEqual(duplicate["status"], "REPLAY_BLOCKED")
+        self.assertEqual(duplicate["rejected_n"], 2)
+
     def test_prospective_source_freshness_exact_boundary_and_all_three_stale_guards(self):
         clock = datetime(2026, 10, 24, 12, 0, tzinfo=timezone.utc)
         materializer.require_fresh_sources(
