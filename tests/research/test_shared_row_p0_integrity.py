@@ -354,6 +354,41 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         self.assertEqual(duplicate["status"], "REPLAY_BLOCKED")
         self.assertEqual(duplicate["rejected_n"], 2)
 
+    def test_pinned_owner_ignores_worktree_and_rejects_future_source_commit(self):
+        fixture = FixtureRepo(self)
+        path = fixture.repo / "row.json"
+        path.write_text(json.dumps(fixture.build()["row"]) + "\n")
+        controller.ingest(path)
+        fixture.commit_path(controller.LEDGER, "freeze ledger")
+        pinned = fixture._git("rev-parse", "HEAD")
+        row = controller.rows(controller.LEDGER)[0]
+        decisions = json.loads(row["candidate_decisions"])
+        reader = controller.PinnedSourceReplay(fixture.repo, pinned)
+        original = reader.verify(row, fixture.observation, decisions)
+        self.assertEqual(original["consecutive_same_side"], 168)
+        controller.LEDGER.write_text("dirty ledger header\n")
+        controller.CONTRACT.write_text("{}")
+        self.assertEqual(controller.PinnedSourceReplay(fixture.repo, pinned).verify(
+            row, fixture.observation, decisions), original)
+        fixture.commit_path(controller.CONTRACT, "later source")
+        future = fixture._git("rev-parse", "HEAD")
+        forged = dict(row)
+        manifest = json.loads(forged["source_binding_manifest"])
+        manifest["source_commit"] = future
+        forged["source_version_commit"] = future
+        forged["source_binding_manifest"] = controller.canon(manifest)
+        forged["source_binding_manifest_sha256"] = materializer.sha_json(manifest)
+        forged["provenance_hash"] = controller.frozen_provenance_hash(forged, fields=reader.fields)
+        with self.assertRaises(subprocess.CalledProcessError):
+            reader.verify(forged, fixture.observation, decisions)
+        forged = dict(row)
+        meta = json.loads(row["ethbtc_window_inputs"])
+        meta["consecutive_same_side"] = 1
+        forged["ethbtc_window_inputs"] = controller.canon(meta)
+        forged["provenance_hash"] = controller.frozen_provenance_hash(forged, fields=reader.fields)
+        with self.assertRaisesRegex(ValueError, "consecutive_same_side"):
+            reader.verify(forged, fixture.observation, decisions)
+
     def test_prospective_source_freshness_exact_boundary_and_all_three_stale_guards(self):
         clock = datetime(2026, 10, 24, 12, 0, tzinfo=timezone.utc)
         materializer.require_fresh_sources(

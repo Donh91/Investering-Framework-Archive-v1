@@ -200,50 +200,47 @@ def build_checkout(freeze_file, head):
                      "03_CANDIDATE_REGISTRY.json", "RUNTIME_STATUS.json"):
             committed(BASE / name, head, compare_worktree=True)
         owner = load_owner()
-        eligible = set(owner.eligible_candidates())
-        if not set(CORE).issubset(eligible):
-            raise ValueError("FROZEN_CORE_INACTIVE")
-        floor = max(owner.eligibility_floor_for_candidate(k) for k in CORE)
+        replay = owner.PinnedSourceReplay(ROOT, head)
+        if replay.ledger_raw != ledger_raw:
+            raise ValueError("SHADOW_PINNED_LEDGER_MISMATCH")
+        floor = replay.floor
         start, end, frozen = map(clock, (freeze["window_start_utc"], freeze["window_end_utc"],
                                         freeze["created_at_utc"]))
         if not start < end <= frozen:
             raise ValueError("INVALID_FREEZE_WINDOW")
 
-        def verify(row, at, decisions):
-            owner.verify_frozen_provenance(row)
-            owner.validate_core_decision_contract(row, decisions, eligible)
-            owner.verify_source_bindings(row, at)
-
         packet["core"] = evaluate_rows(read_rows(ledger_raw), iso(start), iso(end), iso(floor),
-                                       verify, owner.PROVENANCE_MUTABLE_FIELDS)
+                                       replay.verify, owner.PROVENANCE_MUTABLE_FIELDS)
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError, csv.Error, ImportError, subprocess.SubprocessError):
         packet["core"] = unknown("FROZEN_SOURCE_OR_OWNER_UNAVAILABLE")
     packet["packet_sha256"] = sha(canon(packet))
     return packet
 
 
-def verify_packet_projection(packet, freeze, ledger_raw, registry_raw):
-    """Recompute the observation projection; source replay remains the owner's job.
+def verify_packet_projection(packet, freeze, ledger_raw, registry_raw, *, repo):
+    """Recompute from original source bytes, not merely the self-hashed ledger.
 
-    This prevents a self-rehashed packet from inventing a different candidate
-    decision or interval ordering at publication or CN consumption.
+    Keep the v1 packet shape unchanged; persistence is a versioned readback
+    diagnostic, not an independent PIT claim.
     """
-    if sha(ledger_raw) != packet.get("ledger_sha256"):
+    owner = load_owner()
+    replay = owner.PinnedSourceReplay(repo, packet["checkout_sha"])
+    if (sha(ledger_raw) != packet.get("ledger_sha256") or
+            replay.ledger_raw != ledger_raw or replay.registry_raw != registry_raw):
         raise ValueError("SHADOW_LEDGER_BINDING_MISMATCH")
-    registry = load_evidence_object(registry_raw)
-    rule = registry["core_activation_rule"]
-    families = {r["family_id"]: r for r in registry["families"]}
-    if set(rule["start_only_when"]) != set(SINGLES) or set(rule["candidates"]) != set(CORE):
-        raise ValueError("SHADOW_FROZEN_CORE_MISMATCH")
-    floor = max(clock(families[k]["prospective_eligibility_start"]) for k in SINGLES)
     start, end, frozen = map(clock, (freeze["window_start_utc"], freeze["window_end_utc"], freeze["created_at_utc"]))
     if not start < end <= frozen:
         raise ValueError("SHADOW_FREEZE_WINDOW_INVALID")
-    mutable = {f"{k}_{h}" for h in ("24h", "72h", "7d") for k in ("outcome", "mae", "mfe")}
-    expected = evaluate_rows(read_rows(ledger_raw), iso(start), iso(end), iso(floor),
-                             lambda *_: None, mutable)
+    diagnostics = {}
+
+    def verify(row, at, decisions):
+        diagnostics[row["event_id"]] = replay.verify(row, at, decisions)
+
+    expected = evaluate_rows(read_rows(ledger_raw), iso(start), iso(end), iso(replay.floor),
+                             verify, owner.PROVENANCE_MUTABLE_FIELDS)
     if expected["status"] != "CORE_REPLAY_AT_OBSERVATION_ONLY" or packet["core"] != expected:
         raise ValueError("SHADOW_PROJECTION_MISMATCH")
+    return diagnostics[expected["latest_observation"]["event_id"]]
 
 
 def publish_packet(packet_path, freeze_file, head, output_dir):
@@ -265,7 +262,7 @@ def publish_packet(packet_path, freeze_file, head, output_dir):
         raise ValueError("SHADOW_LEDGER_BINDING_MISMATCH")
     if packet["core"]["status"] == "CORE_REPLAY_AT_OBSERVATION_ONLY":
         verify_packet_projection(packet, freeze, committed(LEDGER, head),
-                                 committed(BASE / "TRANSFORM_FREEZE_REGISTRY.json", head))
+                                 committed(BASE / "TRANSFORM_FREEZE_REGISTRY.json", head), repo=ROOT)
     elif packet["core"]["status"] != "UNKNOWN" or packet["core"].get("latest_observation") is not None:
         raise ValueError("SHADOW_UNKNOWN_STATUS_INVALID")
     expected_output_dir = ROOT / "research/api_agent/outputs/weekly" / str(freeze["iso_year"]) / f"W{freeze['iso_week']:02d}"
@@ -331,9 +328,9 @@ def consume_cn_shadow(repo, mm_pointer):
         core = packet["core"]
         if core["status"] != "CORE_REPLAY_AT_OBSERVATION_ONLY":
             return {**result, "packet_sha256": digest, "reason": "MM_CORE_REPLAY_UNAVAILABLE"}
-        verify_packet_projection(packet, load_evidence_object(frozen),
+        persistence = verify_packet_projection(packet, load_evidence_object(frozen),
                                  run("show", f"{head}:{LEDGER.as_posix()}"),
-                                 run("show", f"{head}:{(BASE / 'TRANSFORM_FREEZE_REGISTRY.json').as_posix()}"))
+                                 run("show", f"{head}:{(BASE / 'TRANSFORM_FREEZE_REGISTRY.json').as_posix()}"), repo=repo)
         latest = core["latest_observation"]
         decisions = latest["decisions"]
         if set(decisions) != set(CORE) or any(type(v) is not bool for v in decisions.values()):
@@ -343,8 +340,10 @@ def consume_cn_shadow(repo, mm_pointer):
                 "observation_utc": latest["observation_utc"],
                 "shadow_candidate_decision": decisions[CORE[-1]],
                 "candidate_id": CORE[-1], "target_semantics": packet["target_semantics"],
-                "observation_only": True, "edge_established": False}
-    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, subprocess.SubprocessError):
+                "observation_only": True, "edge_established": False,
+                "persistence_diagnostic": persistence}
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
+            csv.Error, ImportError, subprocess.SubprocessError):
         return {**result, "reason": "MM_SHADOW_RECEIPT_INVALID"}
 
 

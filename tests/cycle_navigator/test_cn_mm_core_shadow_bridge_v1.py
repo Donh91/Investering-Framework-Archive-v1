@@ -118,6 +118,20 @@ def _real_w47_owner_replay(self):
     altered = copy.deepcopy(rows)
     altered[0]["outcome_24h"] = "1" if rows[0]["outcome_24h"] == "0" else "0"
     self.assertEqual(evaluate_rows(altered, *args), result)
+    head = bridge.git("rev-parse", "HEAD").decode().strip()
+    pinned = owner.PinnedSourceReplay(bridge.ROOT, head)
+    freeze = {"window_start_utc": bridge.iso(at),
+              "window_end_utc": bridge.iso(at + timedelta(seconds=1)),
+              "created_at_utc": bridge.iso(at + timedelta(seconds=2))}
+    packet = {"checkout_sha": head, "ledger_sha256": bridge.sha(raw), "core": result}
+    diag = bridge.verify_packet_projection(packet, freeze, raw, pinned.registry_raw, repo=bridge.ROOT)
+    self.assertEqual(diag["side"], rows[0]["ethbtc_derived_state"])
+    self.assertFalse(diag["scientific_pit_eligible"])
+    self.assertIsNone(diag["stable_confirmation_utc"])
+    forged = copy.deepcopy(packet)
+    forged["core"]["latest_observation"]["decisions"]["C07_SIMPLE_3"] = True
+    with self.assertRaisesRegex(ValueError, "SHADOW_PROJECTION_MISMATCH"):
+        bridge.verify_packet_projection(forged, freeze, raw, pinned.registry_raw, repo=bridge.ROOT)
 
 
 
@@ -234,8 +248,9 @@ class CNConsumer(unittest.TestCase):
             git("add", ".")
             git("commit", "-qm", "shadow")
             result = bridge.consume_cn_shadow(root, pointer)
-            self.assertEqual(result["status"], "CONSUMED_SHADOW_ONLY")
-            self.assertFalse(result["shadow_candidate_decision"])
+            # A self-hashed synthetic ledger without source owners is not evidence.
+            self.assertEqual(result["status"], "UNKNOWN")
+            self.assertIsNone(result["shadow_candidate_decision"])
             self.assertFalse(result["official_forecast_effect"])
             self.assertFalse(result["scientific_pit_eligible"])
             path.write_bytes(path.read_bytes() + b" ")
