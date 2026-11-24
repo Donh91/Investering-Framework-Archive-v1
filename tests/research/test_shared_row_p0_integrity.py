@@ -389,6 +389,29 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "consecutive_same_side"):
             reader.verify(forged, fixture.observation, decisions)
 
+    def test_real_archive_persistence_cohort_is_fully_replayed_without_writes(self):
+        # Fresh process avoids fixture module/global contamination and uses
+        # the existing full-checkout native research gate, not mocked owners.
+        ledger = PROJECT / "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv"
+        before = ledger.read_bytes()
+        run = subprocess.run([sys.executable,
+            "scripts/research/prospective_evidence_controller.py", "--audit-persistence"],
+            cwd=PROJECT, capture_output=True, text=True, timeout=180)
+        self.assertEqual(ledger.read_bytes(), before)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        report = json.loads(run.stdout)
+        self.assertEqual(report["status"], "REPLAY_COMPLETE", report)
+        self.assertGreater(report["verified_n"], 0)
+        self.assertEqual(report["verified_n"], report["post_floor_row_n"])
+        self.assertEqual(report["raw_row_n"], report["verified_n"] + report["excluded_pre_floor_n"])
+        self.assertEqual(report["rejected_n"], 0)
+        self.assertFalse(report["scientific_pit_eligible"])
+        self.assertFalse(report["forecast_authority"])
+        self.assertEqual(report["checkout_sha"], subprocess.check_output(
+            ["git", "-C", str(PROJECT), "rev-parse", "HEAD"], text=True).strip())
+        print("PINNED_PERSISTENCE_COHORT " + json.dumps(
+            {k: v for k, v in report.items() if k != "rows"}, sort_keys=True))
+
     def test_prospective_source_freshness_exact_boundary_and_all_three_stale_guards(self):
         clock = datetime(2026, 10, 24, 12, 0, tzinfo=timezone.utc)
         materializer.require_fresh_sources(

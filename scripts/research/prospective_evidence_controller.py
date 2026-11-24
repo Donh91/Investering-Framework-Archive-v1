@@ -692,7 +692,7 @@ def status() -> dict[str, Any]:
     }
 
 
-def audit_persistence_cohort() -> dict[str, Any]:
+def audit_persistence_cohort(*, context=None) -> dict[str, Any]:
     """Read-only full post-floor replay, using the original source owner.
 
     No historical writes, outcome consumption, threshold tuning, or authority.
@@ -700,9 +700,10 @@ def audit_persistence_cohort() -> dict[str, Any]:
     Left-censored runs never receive a fabricated start or episode identity.
     """
     from collections import Counter
-    eligible = set(eligible_candidates())
+    eligible = set(eligible_candidates()) if context is None else set(CORE_IDS)
     result = {
         "contract": "SHARED_ROW_PERSISTENCE_AUDIT_v1",
+        "checkout_sha": None if context is None else context.checkout,
         "authority": "RESEARCH_ONLY_NON_CANONICAL",
         "scientific_pit_eligible": False,
         "forecast_authority": False,
@@ -712,13 +713,20 @@ def audit_persistence_cohort() -> dict[str, Any]:
         "above_observation_n": 0, "observed_above_episode_n": 0,
         "rows": [], "reason": None,
     }
-    if not collection_active() or not set(CORE_IDS).issubset(eligible):
-        return {**result, "reason": "CORE_COLLECTION_INACTIVE"}
-    floors = [eligibility_floor_for_candidate(k) for k in CORE_IDS]
-    if any(floor is None for floor in floors):
-        return {**result, "reason": "CORE_FLOOR_UNAVAILABLE"}
-    floor = max(floors)
-    source_rows = rows(LEDGER)
+    if context is None:
+        if not collection_active() or not set(CORE_IDS).issubset(eligible):
+            return {**result, "reason": "CORE_COLLECTION_INACTIVE"}
+        floors = [eligibility_floor_for_candidate(k) for k in CORE_IDS]
+        if any(floor is None for floor in floors):
+            return {**result, "reason": "CORE_FLOOR_UNAVAILABLE"}
+        floor = max(floors)
+        source_rows = rows(LEDGER)
+    else:
+        floor = context.floor
+        reader = csv.DictReader(io.StringIO(context.ledger_raw.decode("utf-8-sig"), newline=""), strict=True)
+        source_rows = list(reader)
+        if any(None in row or any(value is None for value in row.values()) for row in source_rows):
+            return {**result, "status": "REPLAY_BLOCKED", "reason": "PINNED_LEDGER_ROW_SHAPE_INVALID"}
     result["raw_row_n"] = len(source_rows)
     identities = Counter(r.get("event_id") for r in source_rows)
     episodes = set()
@@ -738,10 +746,14 @@ def audit_persistence_cohort() -> dict[str, Any]:
                     event != "PSR_" + at.strftime("%Y%m%dT%H%M%SZ") or
                     row.get("row_integrity_contract") != core.ROW_INTEGRITY_CONTRACT):
                 raise ValueError("ROW_IDENTITY_INVALID")
-            verify_frozen_provenance(row)
-            decisions = json.loads(row["candidate_decisions"])
-            validate_core_decision_contract(row, decisions, eligible)
-            replay = verify_persistence_source_bindings(row, cutoff)["persistence_replay"]
+            if context is None:
+                verify_frozen_provenance(row)
+                decisions = json.loads(row["candidate_decisions"])
+                validate_core_decision_contract(row, decisions, eligible)
+                replay = verify_persistence_source_bindings(row, cutoff)["persistence_replay"]
+            else:
+                decisions = _strict_object(row["candidate_decisions"])
+                replay = context.verify(row, cutoff, decisions)
             item.update(status="VERIFIED", persistence=replay)
             result["verified_n"] += 1
             result["left_censored_n"] += int(replay["left_censored"])
@@ -770,7 +782,9 @@ def main() -> None:
     if args.audit_persistence:
         if args.ingest_row or args.status_only:
             parser.error("--audit-persistence cannot be combined with other modes")
-        report = audit_persistence_cohort()
+        head = subprocess.check_output(["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"],
+                                       text=True, timeout=30).strip()
+        report = audit_persistence_cohort(context=PinnedSourceReplay(REPO_ROOT, head))
         print(json.dumps(report, indent=2, sort_keys=True))
         if report["status"] != "REPLAY_COMPLETE":
             raise SystemExit(1)
