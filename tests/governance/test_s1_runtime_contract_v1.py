@@ -125,7 +125,7 @@ class S1RuntimeContractTest(unittest.TestCase):
         # object B" in TICK.md T1 literally and rejected the ```json fence that render() always writes and parse_body()
         # always strips. Step 4 states the fence is the published format. Bootstrap-only: no contract, TICK or pin change.
         # Reliability candidate: bounded orchestration and precise failure attribution, no additional source or authority.
-        self.assertLessEqual(len(boot), 3500)
+        self.assertLessEqual(len(boot), 3800)
         self.assertIn("In T1 the block between the two markers is one ```json fenced code block: B is the JSON object between its opening ```json line and its closing ``` line; that fence is the published format, never a body failure.", boot)
         self.assertNotIn("committer.date", boot)
         self.assertNotIn("3stale", boot)
@@ -152,7 +152,9 @@ class S1RuntimeContractTest(unittest.TestCase):
                        "The fetched contract and TICK blob SHAs must also equal their directory entries.",
                        "retaining every TICK check and call limit",
                        "Report the first failed stage and actual missing field or connector error",
-                       "never call a producer brief incomplete unless T2 read B.complete != true"):
+                       "Use BRIEF_INCOMPLETE(<B.incomplete>) only when T2 read B.complete != true",
+                       "a host or tool failure before T3 ends BRIEF_INCOMPLETE(<step>:<what failed>)",
+                       "The short-circuit ends only the T1–T3 group; T3H and the NOOP ending then follow TICK.md."):
             self.assertIn(needle, boot)
         self.assertLess(boot.index("Where connector-call orchestration"), boot.index("1. Read current main"))
         self.assertLess(boot.index("3b."), boot.index("4. Otherwise execute"))
