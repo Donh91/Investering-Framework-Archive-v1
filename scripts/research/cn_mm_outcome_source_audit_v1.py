@@ -231,11 +231,83 @@ def evaluate_verified_cohort(replay, audit, rows, details, sequence_inputs, base
             raise ValueError("MATCHED_RESEARCH_DENOMINATOR_MISMATCH")
     census = bridge.load_owner().sequence_census(sequence_inputs)
     opportunity = episode_opportunity(census["episodes"], rows, details, baselines, verified_paths)
+    magnitude = matched_veto_magnitude(rows, details, replay.floor, weekly.CORE_ABLATIONS, ablation["horizons"])
     return {"contract": "PINNED_MATCHED_CORE_AND_EPISODE_RESEARCH_v1",
             "status": "DESCRIPTIVE_ONLY_NOT_INDEPENDENT_EDGE",
             "authority": "RESEARCH_ONLY_NON_CANONICAL",
             "source_owner": "ORIGINAL_FEATURE_AND_OUTCOME_SOURCE_BYTES_REPLAYED",
             "core_ablation": ablation, "episode_opportunity": opportunity,
+            "veto_magnitude": magnitude,
             "dependence": weekly.dependence_census(rows,runtime),
             "scientific_pit_eligible": False, "forecast_authority": False,
             "automatic_weight_updates": False, "edge_established": False}
+
+
+def matched_veto_magnitude(rows, details, floor, families, panels):
+    """Measure endpoint magnitudes on the same already verified veto subset.
+
+    No compounding, overlapping-horizon portfolio, strategy fill assumptions,
+    weights, significance, or optimization. Calendar blocks describe coverage
+    and must not be treated as independent market shocks.
+    """
+    from datetime import timedelta
+    from statistics import mean
+    from collections import defaultdict
+
+    def summarize(values):
+        positives = [v for v in values if v > 0]
+        negatives = [v for v in values if v < 0]
+        return {
+            "pivotal_veto_n": len(values),
+            "positive_missed_n": len(positives),
+            "negative_prevented_n": len(negatives),
+            "zero_return_n": len(values)-len(positives)-len(negatives),
+            "mean_positive_missed_relative_return_pct": mean(positives) if positives else None,
+            "mean_negative_prevented_relative_return_pct": mean(negatives) if negatives else None,
+            "mean_signed_veto_relative_return_pct": mean(values) if values else None,
+            "worst_vetoed_relative_return_pct": min(values) if values else None,
+            "best_vetoed_relative_return_pct": max(values) if values else None,
+        }
+
+    if len({r["event_id"] for r in rows}) != len(rows):
+        raise ValueError("VETO_MAGNITUDE_DUPLICATE_PARENT")
+    parsed = [(r,json.loads(r["candidate_decisions"])) for r in rows]
+    result = {}
+    for horizon,panel in panels.items():
+        matched = [(r,d,details[(r["event_id"],horizon)]) for r,d in parsed
+                   if (r["event_id"],horizon) in details]
+        if len(matched) != panel["matched_matured_n"]:
+            raise ValueError("VETO_MAGNITUDE_DENOMINATOR_MISMATCH")
+        horizon_result = {}
+        for family,without in families.items():
+            blocks = defaultdict(list)
+            values = []
+            for row,d,detail in matched:
+                if type(d[without]) is not bool or type(d["C07_SIMPLE_3"]) is not bool:
+                    raise ValueError("VETO_MAGNITUDE_NONBOOLEAN")
+                if d["C07_SIMPLE_3"] and not d[without]:
+                    raise ValueError("VETO_MAGNITUDE_NOT_CONJUNCTIVE")
+                if not d[without] or d["C07_SIMPLE_3"]:
+                    continue
+                value = float(detail["ethbtc_forward_return_pct"])
+                at = bridge.clock(row["observation_timestamp_utc"])
+                if not math.isfinite(value) or at < floor:
+                    raise ValueError("VETO_MAGNITUDE_INVALID")
+                block = (at-floor)//timedelta(days=28)
+                blocks[block].append(value)
+                values.append(value)
+            stats = summarize(values)
+            original = panel["families"][family]
+            if (stats["pivotal_veto_n"] != original["pivotal_veto_n"] or
+                    stats["positive_missed_n"] != original["positive_relative_outcomes_missed_n"] or
+                    stats["negative_prevented_n"]+stats["zero_return_n"] != original["negative_relative_outcomes_vetoed_n"]):
+                raise ValueError("VETO_MAGNITUDE_PAIRED_ACCOUNTING_MISMATCH")
+            horizon_result[family] = {**stats,"calendar_blocks": [
+                {"block_index":k,**summarize(v)} for k,v in sorted(blocks.items())],
+                "matched_matured_n":len(matched)}
+        result[horizon]=horizon_result
+    return {"contract":"MATCHED_VETO_RETURN_MAGNITUDE_v1",
+            "status":"DESCRIPTIVE_ONLY_OVERLAPPING_OBSERVATIONS",
+            "horizons":result,"independent_sample_n":None,
+            "portfolio_return":None,"causal_effect_established":False,
+            "forecast_authority":False,"automatic_weight_updates":False}

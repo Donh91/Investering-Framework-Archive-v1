@@ -206,6 +206,7 @@ if report['status']=='REPLAY_COMPLETE':
         assert panel['matched_matured_n']==report['verified_horizon_counts'].get(h,0)
     compact={k:v for k,v in research.items() if k!='core_ablation'}
     compact['horizons']=research['core_ablation']['horizons']
+    assert not research['veto_magnitude']['forecast_authority']
     print('PINNED_MATCHED_RESEARCH '+json.dumps(compact,sort_keys=True))
 else:
     assert research['status']=='BLOCKED_OUTCOME_SOURCE_REPLAY'

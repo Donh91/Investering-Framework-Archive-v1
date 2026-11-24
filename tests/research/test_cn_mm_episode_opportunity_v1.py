@@ -53,3 +53,38 @@ class OpportunityTests(unittest.TestCase):
         x=episode_opportunity([episode(LATE)],ROWS,DETAIL,BASE,{})["episodes"][0]["horizons"]["24h"]
         self.assertIsNone(x["wait_relative_return_pct"])
         self.assertFalse(x["same_path_later_baseline_verified"])
+
+
+class VetoMagnitudeTests(unittest.TestCase):
+    def test_signed_returns_and_zero_are_not_misclassified(self):
+        import json
+        from scripts.research.cn_mm_outcome_source_audit_v1 import matched_veto_magnitude
+        from scripts.research.cn_mm_core_shadow_bridge_v1 import clock
+        rows=[{"event_id":str(i),"observation_timestamp_utc":FIRST,
+               "candidate_decisions":json.dumps({"pair":True,"C07_SIMPLE_3":False})} for i in range(3)]
+        details={(str(i),"24h"):{"ethbtc_forward_return_pct":v} for i,v in enumerate([2.,-3.,0.])}
+        panels={"24h":{"matched_matured_n":3,"families":{"F":{
+            "pivotal_veto_n":3,"positive_relative_outcomes_missed_n":1,"negative_relative_outcomes_vetoed_n":2}}}}
+        result=matched_veto_magnitude(rows,details,clock("2026-10-24T12:00:00Z"),{"F":"pair"},panels)
+        f=result["horizons"]["24h"]["F"]
+        self.assertEqual(f["mean_positive_missed_relative_return_pct"],2)
+        self.assertEqual(f["mean_negative_prevented_relative_return_pct"],-3)
+        self.assertEqual(f["zero_return_n"],1)
+        self.assertIsNone(result["portfolio_return"])
+        self.assertEqual(len(f["calendar_blocks"]),1)
+        panels["24h"]["families"]["F"]["pivotal_veto_n"]=2
+        with self.assertRaisesRegex(ValueError,"PAIRED_ACCOUNTING"):
+            matched_veto_magnitude(rows,details,clock("2026-10-24T12:00:00Z"),{"F":"pair"},panels)
+
+    def test_no_veto_has_null_magnitudes(self):
+        import json
+        from scripts.research.cn_mm_outcome_source_audit_v1 import matched_veto_magnitude
+        from scripts.research.cn_mm_core_shadow_bridge_v1 import clock
+        rows=[{"event_id":"a","observation_timestamp_utc":FIRST,
+               "candidate_decisions":json.dumps({"pair":False,"C07_SIMPLE_3":False})}]
+        details={("a","24h"):{"ethbtc_forward_return_pct":9.}}
+        panels={"24h":{"matched_matured_n":1,"families":{"F":{
+            "pivotal_veto_n":0,"positive_relative_outcomes_missed_n":0,"negative_relative_outcomes_vetoed_n":0}}}}
+        f=matched_veto_magnitude(rows,details,clock("2026-10-24T12:00:00Z"),{"F":"pair"},panels)["horizons"]["24h"]["F"]
+        self.assertIsNone(f["mean_signed_veto_relative_return_pct"])
+        self.assertEqual(f["calendar_blocks"],[])
