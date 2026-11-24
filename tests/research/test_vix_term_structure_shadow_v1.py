@@ -1,5 +1,6 @@
 import unittest
-from scripts.research.vix_term_structure_shadow_v1 import features
+from scripts.research.vix_term_structure_shadow_v1 import features, features_from_fred_captures
+from scripts.data_terminal import fred_csv_collector as collector
 
 
 CUTOFF = "2026-11-24T22:00:00Z"
@@ -57,6 +58,67 @@ class TestVix(unittest.TestCase):
             features(rows, sessions[::-1], CUTOFF)
         with self.assertRaises(ValueError):
             features(rows, sessions, "2026-11-24T21:15:00Z")
+
+
+class TestFredCaptureBinding(unittest.TestCase):
+    def captures(self):
+        rows, sessions = fixture()
+        captures = []
+        for session in sessions:
+            day = session["date"]
+            values = [r["value"] for r in rows if r["date"] == day]
+            payload = f"DATE,VIXCLS,VXVCLS\n{day},{values[0]},{values[1]}\n".encode()
+            artifacts = collector.build_artifacts(
+                payload=payload, retrieval_timestamp=collector.parse_timestamp(day + "T21:30:00Z"),
+                series=("VIXCLS", "VXVCLS"), source_url="FIXTURE", acquisition_mode="FIXTURE",
+                stale_after_seconds=604800)
+            captures.append({"payload": payload, "receipt": artifacts["receipt"]})
+        return captures, sessions
+
+    def rehash(self, receipt):
+        receipt["receipt_sha256"] = collector.sha256_bytes(collector.canonical_json_bytes(
+            {k: v for k, v in receipt.items() if k != "receipt_sha256"}))
+
+    def test_existing_owner_artifact_to_feature(self):
+        captures, sessions = self.captures()
+        result = features_from_fred_captures(captures, sessions, CUTOFF)
+        self.assertEqual(result["features"]["vix_3m_ratio"], "0.88")
+        self.assertEqual(result["raw_to_feature_binding"], "RECOMPUTED_FROM_SUPPLIED_BYTES")
+        self.assertFalse(result["first_known_verified"])
+        self.assertFalse(result["source_authenticated"])
+        self.assertEqual(len(result["owner_receipt_digests"]), 4)
+
+    def test_raw_or_receipt_tampering(self):
+        captures, sessions = self.captures()
+        captures[-1]["payload"] = captures[-1]["payload"].replace(b",22,", b",99,")
+        with self.assertRaisesRegex(ValueError, "fred_capture_digest_mismatch"):
+            features_from_fred_captures(captures, sessions, CUTOFF)
+        captures, sessions = self.captures()
+        captures[-1]["receipt"]["retrieval_timestamp"] = CUTOFF
+        with self.assertRaisesRegex(ValueError, "fred_capture_digest_mismatch"):
+            features_from_fred_captures(captures, sessions, CUTOFF)
+
+    def test_rehashed_wrong_scope_and_late_clock(self):
+        for field, value, reason in (
+                ("source_id", "OTHER", "invalid_fred_receipt_scope"),
+                ("source_timestamps", {}, "fred_session_mismatch"),
+                ("observation_ids", [], "fred_observation_identity_mismatch"),
+                ("retrieval_timestamp", CUTOFF, "late_or_inconsistent_observation")):
+            captures, sessions = self.captures()
+            receipt = captures[-1]["receipt"]
+            receipt[field] = value
+            self.rehash(receipt)
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, reason):
+                features_from_fred_captures(captures, sessions, CUTOFF)
+
+    def test_rehashed_wrong_payload_session(self):
+        captures, sessions = self.captures()
+        item = captures[-1]
+        item["payload"] = item["payload"].replace(b"2026-11-24", b"2026-11-23")
+        item["receipt"]["payload_sha256"] = collector.sha256_bytes(item["payload"])
+        self.rehash(item["receipt"])
+        with self.assertRaisesRegex(ValueError, "fred_payload_session_mismatch"):
+            features_from_fred_captures(captures, sessions, CUTOFF)
 
 
 if __name__ == "__main__":
