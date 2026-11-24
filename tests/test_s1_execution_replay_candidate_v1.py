@@ -2,7 +2,6 @@
 from dataclasses import replace
 from hashlib import sha256
 from itertools import product
-from pathlib import Path
 import os
 import random
 import subprocess
@@ -137,10 +136,12 @@ class GitDifferentialReplay(unittest.TestCase):
     """Use real local git merge-tree as an independent oracle, never a remote."""
     def test_seeded_tree_comparisons(self):
         with tempfile.TemporaryDirectory() as tmp:
-            env = {**os.environ, "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull,
+            env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+            env.update({"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull,
+                   "GIT_TERMINAL_PROMPT": "0",
                    "GIT_AUTHOR_NAME": "D4", "GIT_AUTHOR_EMAIL": "d4@example.invalid",
                    "GIT_COMMITTER_NAME": "D4", "GIT_COMMITTER_EMAIL": "d4@example.invalid",
-                   "GIT_AUTHOR_DATE": "2026-11-24T08:00:00Z", "GIT_COMMITTER_DATE": "2026-11-24T08:00:00Z"}
+                   "GIT_AUTHOR_DATE": "2026-11-24T08:00:00Z", "GIT_COMMITTER_DATE": "2026-11-24T08:00:00Z"})
             def run(*args, data=None, check=True):
                 return subprocess.run(["git", *args], cwd=tmp, env=env, input=data,
                                       capture_output=True, check=check, timeout=10)
@@ -186,7 +187,7 @@ class GitDifferentialReplay(unittest.TestCase):
             moved = {"e/a": entry(0), "e/b": entry(1)}
             added = b | {"d/new": entry(2)}
             cases.extend([(b, moved, added), (b, added, moved)])
-            accepted = held = 0
+            accepted = held = unsafe = 0
             for i, (b, h_, m) in enumerate(cases):
                 bs = commit(b, f"base {i}")
                 hs = commit(h_, f"head {i}", bs.commit)
@@ -200,12 +201,15 @@ class GitDifferentialReplay(unittest.TestCase):
                         held += 1
                         continue
                     accepted += 1
+                    if native.returncode != 0 or tree(dict(p.expected)) != native.stdout.decode().splitlines()[0]:
+                        unsafe += 1
                     self.assertEqual(native.returncode, 0, native.stdout)
                     self.assertEqual(tree(dict(p.expected)), native.stdout.decode().splitlines()[0])
             self.assertEqual(accepted + held, 50)
             self.assertGreater(accepted, 0)
             self.assertGreater(held, 0)
-            print(f"D4 git oracle: accepted={accepted} held={held} unsafe=0")
+            self.assertEqual(unsafe, 0)
+            print(f"D4 git oracle: accepted={accepted} held={held} unsafe={unsafe}")
 
 
 if __name__ == "__main__":
