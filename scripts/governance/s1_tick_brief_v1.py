@@ -92,6 +92,18 @@ SITE_PREFIX = "05_CYCLE_NAVIGATOR/site/"
 GATE_FILES = (".github/workflows/data-architecture-gate.yml", "scripts/governance/s1_native_privacy_scan_step_v1.py",
               "scripts/governance/s1_diff_scan_v1.py", "scripts/governance/s1_site_public_readback_v1.py")
 OWNER_UPDATE_NEXT = "OWNER_BRANCH_UPDATE"
+# S1 v3.3 W5, rule 2c: who updates a branch that must take main. S1's connector has no update-branch call (Route 1 of
+# STEWARD_STATES.md) and Route 2 is not part of TICK.md, so an entry "BRANCH_UPDATE" without `by` can only end as a
+# skip, every tick, in front of every other entry. "OWNER": the entry carries by=OWNER (one S1_ITEM_v1 per head, then
+# the owner or ChatGPT updates the branch). Any other value restores the entry without `by`; flip it only together
+# with a reviewed TICK.md change that gives S1 a route.
+S1_BRANCH_UPDATE_ROUTE = "OWNER"
+# The named receipts of an S1 action on #1156 (ACTION_LOOP RECEIPTS) and the action word each one proves. Closed set:
+# B.ledger.last_action carries the word, never text of the comment.
+S1_ACTION_RECEIPTS = {"S1_LANE_MERGE_v1": "MERGE", "S1_LANE_HALTED": "LANE_HALTED", "S1_PACKAGE_PR_v1": "PACKAGE",
+                      "S1_PACKAGE_FAILED": "PACKAGE", "S1_PACKAGE_SKIPPED": "PACKAGE", "S1_OP_DONE_v1": "RECONCILE"}
+S1_ACTION_WORDS = ("ANSWER", "REPAIR", "REQUEST_REVIEW", "MERGE", "PACKAGE", "REENABLE", "STEWARD")
+CONTRACT_ANY = re.compile(r"\bcontract=[0-9a-f]{8}\b")   # anywhere: a heartbeat and a short receipt carry it mid-line
 LIMIT_RE = re.compile(r"(?i)usage limit|reached your .*limit|can(?:'|no)t review|unable to review")
 
 # AGENTS.md section 0.2e exclusions 10 and 11, matched on ADDED lines of the diff. Tokens are assembled so that this
@@ -826,10 +838,20 @@ def pr_entry(pr, data, ctx):
 
 # ----------------------------------------------------------------------------------------------- ranking
 def owner_update_route(e):
-    """Rule 2c, owner route: main changed a privacy- or CI-gate file after this head's privacy-scan run (gate_stale).
-    Whatever that run said, it does not prove the current gate, and no code fix on the branch can change that: the
-    branch must take main so the current gate runs. S1 cannot update a branch; the owner or ChatGPT does."""
-    return not e.get("skip") and bool(e.get("gate_stale")) and (e.get("behind") or 0) > 0
+    """Rule 2c, owner route: the reason this branch must take main while S1 is not the one to do it, else None.
+    gate_stale: main changed a privacy- or CI-gate file after this head's privacy-scan run. Whatever that run said, it
+    does not prove the current gate, and no code fix on the branch can change that: the branch must take main so the
+    current gate runs. ci_missing (S1 v3.3 W5): a required job never ran on this head (for example a PR opened by a
+    workflow, whose runs wait for approval with no job), the PR is behind main, main changed none of its files, and
+    S1 has no branch-update route (S1_BRANCH_UPDATE_ROUTE). S1 cannot update a branch; the owner or ChatGPT does."""
+    if e.get("skip") or (e.get("behind") or 0) <= 0:
+        return None
+    if e.get("gate_stale"):
+        return "gate_stale"
+    if S1_BRANCH_UPDATE_ROUTE == "OWNER" and (e.get("ci") or {}).get("state") == "MISSING" and e.get("main_overlap") == [] \
+            and not any(g.startswith("C1:") for g in e.get("open") or []):
+        return "ci_missing"
+    return None
 
 
 def claude_slots(entries, lane):
@@ -884,10 +906,13 @@ def next_actions(entries, lane, health, intents, codex_ok=True, max_n=6, c1b_hal
                 continue
         if any(g.startswith("C1:") for g in gates):
             continue                                            # H7: never write to a branch another writer works on
-        if owner_update_route(e):                                # the gate itself is stale: Codex is not the route
+        route = owner_update_route(e)
+        if route:                                                # no code fix helps and Codex is not the route
             if not e.get("owner_update_noted"):
-                repair.append((key, dict(base, action="REPAIR", rule="2c", how="BRANCH_UPDATE", by="OWNER", gate_stale=e["gate_stale"][:3],
-                                         verify=["head", "no_owner_update_item"])))
+                detail = {"gate_stale": e["gate_stale"][:3]} if route == "gate_stale" else \
+                    {"missing": sorted(k for k, t in e["ci"]["tuples"].items() if t["s"] == "MISSING")}
+                repair.append((key, dict(base, action="REPAIR", rule="2c", how="BRANCH_UPDATE", by="OWNER", reason=route,
+                                         verify=["head", "no_owner_update_item"], **detail)))
             continue
         gated = not e["lane"]["eligible"]                        # rule 2: for an OWNER_GATED PR S1 does (c) only
         # one "@codex address" per head, however it was answered; and none at all while Codex is out of quota (the
@@ -921,6 +946,38 @@ def next_actions(entries, lane, health, intents, codex_ok=True, max_n=6, c1b_hal
     return out[:max_n]
 
 
+MAX_BUILDS = 999                      # B.next[].builds stops counting here
+
+
+def entry_key(x):
+    """What makes two B.next entries of two briefs the same piece of work: the action and how it is done, on the same
+    PR head (or commit, or run, or intents). A new head is new work."""
+    if not isinstance(x, dict):
+        return None
+    what = x.get("pr") if x.get("pr") is not None else x.get("commit") or x.get("run") or ",".join(str(i) for i in x.get("intents") or [])
+    return f"{x.get('action')}:{x.get('how') or x.get('rule') or '-'}:{what}:{str(x.get('head') or '-')[:12]}"
+
+
+def next_builds(brief):
+    """{entry_key: builds} of a published brief's B.next (S1 v3.3 W5). A counter only: never an anchor, never authority."""
+    out = {}
+    for x in (brief or {}).get("next") or [] if isinstance(brief, dict) else []:
+        key, n = entry_key(x), x.get("builds") if isinstance(x, dict) else None
+        if key:
+            out[key] = int(n) if isinstance(n, int) and 0 < n <= MAX_BUILDS else 1      # JSON true is 1, as a missing count is
+    return out
+
+
+def count_builds(entries, previous):
+    """B.next[].builds: in how many briefs in a row this entry has been ranked, this one included (1: new in this
+    brief). The owner, the daily summary and the acceptance record read it: an entry S1 can take alone that stays ranked
+    brief after brief is work S1 did not do. S1 itself never reads it. `previous` is next_builds() of the brief this
+    build read as its predecessor ({} when it read none: the count restarts at 1, never higher than the truth)."""
+    for x in entries:
+        x["builds"] = min((previous or {}).get(entry_key(x), 0) + 1, MAX_BUILDS)
+    return entries
+
+
 def review_request_kind(e, codex_ok=True):
     """Rule 3: (i) '@codex review' once per head when Codex may review it; (ii) the Bridge request when Codex is
     inadmissible, unavailable or silent past its budget. None while a Codex request is still inside its budget.
@@ -939,9 +996,10 @@ def review_request_kind(e, codex_ok=True):
 CPH = ZoneInfo("Europe/Copenhagen")
 
 
-def status_lines(entries, lane, merges, now):
+def status_lines(entries, lane, merges, now, c1b=None):
     """The three STATUS LINES of OWNER_VISIBILITY.md as far as the brief can state them. What it cannot prove
-    (the WAITING_ONLY_FOR_OWNER set needs the review and HIGH EVIDENCE) is written UNKNOWN, never guessed."""
+    (the WAITING_ONLY_FOR_OWNER set needs the review and HIGH EVIDENCE) is written UNKNOWN, never guessed. `c1b` is
+    B.c1b: its gap (history the C1b halt test never scanned) is an owner entry, C1B_GAP(window=<n>)."""
     first = []
     for r in lane["off_reasons"]:
         first.append("LANE_OFF(" + (r if r.startswith(("halt", "pins:")) else "switch" if r == "switch" else "main_health" if r.startswith("main_health") else r) + ")")
@@ -952,6 +1010,9 @@ def status_lines(entries, lane, merges, now):
     update = [e["n"] for e in entries if owner_update_route(e)]
     if update:
         first.append("BRANCH_UPDATE(" + " ".join(f"#{n}" for n in update) + ")")
+    gap = (c1b or {}).get("gap")
+    if isinstance(gap, dict) and gap.get("from_unknown") is True:    # W5: history the C1b test never scanned
+        first.append(f"C1B_GAP(window={gap.get('window')})")
     second = []
     for e in gated:
         missing = next((g for g in e["open"] if g != "C2:owner_gated"), "review_or_high_evidence_not_in_brief")
@@ -964,9 +1025,42 @@ def status_lines(entries, lane, merges, now):
             f"DISPOSITIONS TODAY: merged={merged} parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"]
 
 
+def of_this_task(body):
+    """The ACTION_LOOP WORK RULE idiom for a post of this task: the task id, or a contract=<8> line."""
+    return TASK_ID in str(body or "") or CONTRACT_ANY.search(str(body or "")) is not None
+
+
 def heartbeats(comments):
-    """The authentic S1_HEARTBEAT_v1 posts of #1156: owner account, never edited, first token S1_HEARTBEAT_v1."""
-    return [c for c in comments if is_owner_unedited(c) and first_line_token(c.get("body")) == "S1_HEARTBEAT_v1"]
+    """The S1_HEARTBEAT_v1 posts of #1156 exactly as TICK T3H counts them for its de-duplication (W5: T3H relies on
+    B.ledger.last_heartbeat_at, so both must agree): by the owner account, first token S1_HEARTBEAT_v1, of this task.
+    An EDITED heartbeat still counts, as in T3H (it was posted; ignoring it would post a second one the same day); a
+    heartbeat-shaped post of another thread never does."""
+    return [c for c in comments if login(c) == OWNER_LOGIN and c.get("created_at")
+            and first_line_token(c.get("body")) == "S1_HEARTBEAT_v1" and of_this_task(c.get("body"))]
+
+
+def s1_actions(comments):
+    """The authentic receipts of an S1 action on #1156, as (created_at, action word, comment id), oldest first. A
+    named receipt of S1_ACTION_RECEIPTS, or a short receipt whose `action` field is one of S1_ACTION_WORDS; owner
+    account, never edited, with a contract=<8> line. A heartbeat, an intent and an S1_ITEM_v1 are not actions."""
+    out = []
+    for c in comments:
+        if not is_owner_unedited(c) or not CONTRACT_ANY.search(str(c.get("body") or "")):
+            continue
+        token = first_line_token(c.get("body"))
+        word = S1_ACTION_RECEIPTS.get(token)
+        if word is None and token in S1_ACTION_WORDS:
+            word = token
+        if word is None:
+            action = str(fields(c.get("body")).get("action") or "").strip().upper()
+            word = action if action in S1_ACTION_WORDS else None
+        if word is None:
+            continue
+        try:
+            out.append((stamp(c["created_at"]), word, c["id"]))
+        except (ValueError, KeyError):
+            continue
+    return sorted(out, key=lambda r: (r[0], r[2]))
 
 
 def heartbeat_due(comments, now):
@@ -977,13 +1071,19 @@ def heartbeat_due(comments, now):
     return not any(stamp(c["created_at"]).astimezone(CPH).date() == local.date() for c in heartbeats(comments))
 
 
-def ledger_hint(comments, intents, ledger_ok):
+def ledger_hint(comments, intents, ledger_ok, now=None):
     """B.ledger (S1 v3.3 W2b, D4), HINT ONLY: the newest heartbeat and the open intents, from the #1156 comments this
-    build already read. S1 never acts on it: T7a still reads #1156 itself for its dedup, and F5 still reads the newest
-    comments; this only fills the heartbeat's open_ops field without guesswork. An unread ledger is read=false and
-    states nothing (count null)."""
+    build already read. S1 never acts on it: F5 still reads the newest comments; this fills the heartbeat's fields
+    without guesswork, and TICK T3H reads #1156 only for the minutes after ledger_read_at. W5: last_action is the
+    newest authentic S1 action receipt (word, time, comment id; null: the ledger holds none) and actions_24h counts
+    them over the 24 hours before `now`. A run that ended NOOP writes nothing, so the ledger never proves ticks_24h.
+    An unread ledger is read=false and states nothing (count null)."""
     if not ledger_ok:
-        return {"read": False, "last_heartbeat_at": None, "open_intents": {"count": None, "ids": []}}
+        return {"read": False, "last_heartbeat_at": None, "open_intents": {"count": None, "ids": []},
+                "last_action": None, "actions_24h": None}
+    actions = s1_actions(comments)
+    last = {"at": iso(actions[-1][0]), "action": actions[-1][1], "id": actions[-1][2]} if actions else None
+    recent = None if now is None else sum(1 for at, _w, _i in actions if timedelta(0) <= now - at <= timedelta(hours=24))
     newest = None
     for c in heartbeats(comments):
         try:
@@ -993,7 +1093,8 @@ def ledger_hint(comments, intents, ledger_ok):
         if newest is None or at > newest:
             newest = at
     return {"read": True, "last_heartbeat_at": iso(newest) if newest else None,
-            "open_intents": {"count": len(intents), "ids": [i["id"] for i in intents][:10]}}
+            "open_intents": {"count": len(intents), "ids": [i["id"] for i in intents][:10]},
+            "last_action": last, "actions_24h": recent}
 
 
 # ----------------------------------------------------------------------------------------------- C1b (producer)
@@ -1151,7 +1252,7 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
     complete=false (C1b:<why>) and carries the previous anchor (never this build's B.main). A halt of the previous brief
     that no S1_LANE_HALTED on #1156 names yet is carried until one does (`ledger` None: unread, always carried).
     Returns {checked_through, from, halt, complete, reason, stop}; `stop` is set when the API cap or a rate limit hit."""
-    out = {"checked_through": None, "from": None, "halt": None, "gap": None, "complete": False, "reason": None, "stop": None}
+    out = {"checked_through": None, "from": None, "halt": None, "gap": None, "carry": None, "complete": False, "reason": None, "stop": None}
     first = gh.calls
 
     def get(path, params=None):
@@ -1170,6 +1271,11 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
         known, why = [], prev if issue is None else None
         if why == "issues_unreadable":
             raise C1bFail(why)
+        # W5: the previous build could not read ITS predecessor (carry UNKNOWN): whatever it carried is unknown, and so
+        # is this build's own carry. Fail closed: no anchor of that brief is used, the window is scanned, the brief is
+        # complete=false (C1b:carry_unknown) and the gap is published.
+        carry_unknown = issue is not None and isinstance(prev.get("c1b"), dict) and prev["c1b"].get("carry") == "UNKNOWN"
+        out["prev_next"] = next_builds(prev) if issue is not None else {}   # W5: B.next[].builds counts on from here
         prev_halt = carried_halt(issues)                         # F2: carried whatever the binding; never the anchor
         if prev_halt is not None:
             named = ledger is not None and any(prev_halt["commit"] in h["body"] for h in lane_halts(ledger))
@@ -1182,6 +1288,9 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
             except Exception:                                    # noqa: BLE001  (unproven: no anchor is carried)
                 raise C1bFail("run_unreadable")
             known, _bound_halt, why = previous_anchor(issue, prev, run, now)
+            if carry_unknown:
+                known, why = [], "carry_unknown"
+                out["carry"] = "UNKNOWN"                         # until this build's own scan reaches B.main
         out["checked_through"] = known[0] if known else None    # carried when this build cannot finish
         if main_sha in known:
             out.update(checked_through=main_sha, complete=True)
@@ -1217,14 +1326,19 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
             out["halt"] = halt                                   # an older unnamed halt of the previous brief stays first
         # the range was scanned to B.main: the next build starts here, also after the window fallback (its own brief
         # is complete=false, so that tick does nothing; without this step a lost anchor could never recover)
-        out.update(checked_through=main_sha, complete=reached,
-                   reason=None if reached else "C1b:range" + ("" if known else f":no_anchor:{why or 'none'}"))
+        out.update(checked_through=main_sha, complete=reached, carry=None,
+                   reason=None if reached else "C1b:carry_unknown" if carry_unknown
+                   else "C1b:range" + ("" if known else f":no_anchor:{why or 'none'}"))
         if not reached:                                          # F3: checked_through moved past history nobody scanned
             out["gap"] = {"from_unknown": True, "window": C1B_WINDOW, "reason": out["reason"]}
         out["from"] = base
         return out
     except C1bFail as exc:
         out.update(complete=False, reason=f"C1b:{exc.why}")
+        if exc.why == "issues_unreadable":
+            # W5: this build never saw the previous brief, so it cannot carry that brief's halt or anchor. It says so:
+            # publish() never lets such a brief replace one that holds a halt, and the next build fails closed on it.
+            out["carry"] = "UNKNOWN"
     except StopReading as exc:
         out.update(complete=False, reason=f"C1b:{exc.reason}", stop=exc.reason)
     except Exception as exc:                                     # noqa: BLE001
@@ -1240,7 +1354,8 @@ def c1b_block(snap_c1b):
         if isinstance(gap, dict) and gap.get("from_unknown") is True else None
     block = {"checked_through": _sha_or_none(c.get("checked_through")), "from": _sha_or_none(c.get("from")),
              "halt": c["halt"] if c1b_halt_ok(c.get("halt")) else None,
-             "gap": gap}                                          # F3: owner-visible only; S1 needs no action
+             "gap": gap,                                          # F3: owner-visible only; S1 needs no action
+             "carry": "UNKNOWN" if c.get("carry") == "UNKNOWN" else None}   # W5: this build never read its predecessor
     reason = c.get("reason")
     if c.get("complete") is True and not reason:
         return block, None
@@ -1354,11 +1469,12 @@ def build_brief(snap):
         "lane": dict(lane, halt=halt_id, health=health, halts_seen=len(halts), lane_merges_seen=len(merges)),
         "rulesets": rules, "main_protected": snap.get("main_protected"),
         "open_intents": intents[:5],
-        "status_lines": status_lines(entries, lane, merges, now) if pulls_ok and ledger_ok else
+        "status_lines": status_lines(entries, lane, merges, now, c1b) if pulls_ok and ledger_ok else
         ["OWNER APPROVAL REQUIRED: UNKNOWN (brief_incomplete)", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"],
         "heartbeat_due": heartbeat_due(comments, now) if ledger_ok else False,
         "prs": entries, "drafts": drafts,
-        "next": next_actions(entries, lane, health, intents, codex["available"], c1b_halt=c1b["halt"]) if pulls_ok and identity_ok else [],
+        "next": count_builds(next_actions(entries, lane, health, intents, codex["available"], c1b_halt=c1b["halt"]),
+                             (snap.get("c1b") or {}).get("prev_next") if isinstance(snap.get("c1b"), dict) else None) if pulls_ok and identity_ok else [],
         "claude_slots": claude_slots(entries, lane) if pulls_ok and identity_ok else [],
         "codex": codex,
         "complete": not unread, "incomplete": unread[0] if unread else None,
@@ -1371,7 +1487,7 @@ def build_brief(snap):
         "not_in_brief": ["rule 1 ANSWER", "rule 5 PACKAGE", "rule 5b REENABLE", "rule 6 STEWARD", "HIGH EVIDENCE",
                          "CLAUDE_REVIEW_v1 (private Bridge)", "exclusions 4,5,6,8,9, the judgment half of 3 and 7 (see shrinks)"],
         "c1b": c1b,                                              # D1: the T3 C1b halt test, done here (TICK T3 reads it)
-        "ledger": ledger_hint(comments, intents, ledger_ok),     # D4: hint only
+        "ledger": ledger_hint(comments, intents, ledger_ok, now),   # D4: hint only
         "verdict": brief_verdict(snap["main_sha"], contract, snap["pins_actual"], snap.get("bootstrap_text"), pins, snap.get("trees_actual")),
     }
     return brief
@@ -1618,6 +1734,71 @@ def fallback_due(issues, now, runs=None, self_run_id=None, minutes=FALLBACK_DUE_
     if not brief_is_old(issues, now, minutes):
         return False                                             # the usual case: two calls, no jobs read
     return not recent_build(runs, now, self_run_id, jobs_of or (lambda rid: None))
+
+
+CODE_DRIFT_PREFIXES = ("00_FMOS/", ".github/", ".agents/", "scripts/", "tests/", "07_PROMPTS_AND_AGENTS/",
+                       "01_CORE_FRAMEWORK/governance/")
+CODE_DRIFT_SUFFIXES = (".py", ".sh", ".yml", ".yaml", ".toml", ".cfg", ".ini", ".pth", ".mjs", ".js")
+
+
+def code_drift_path(path):
+    """The path rule of TICK.md T3 (source_changed), as code: AGENTS.md, a path under a governance prefix or a pin
+    directory of the lane switch, an executable or config suffix anywhere, or a requirements*.txt anywhere."""
+    if not isinstance(path, str) or not path:
+        return True                                              # unreadable path: treat as code
+    name = path.rsplit("/", 1)[-1]
+    return (path == "AGENTS.md" or path.startswith(CODE_DRIFT_PREFIXES) or path.endswith(CODE_DRIFT_SUFFIXES)
+            or (name.startswith("requirements") and name.endswith(".txt")))
+
+
+def code_drift_due(issues, drift, head):
+    """True when the published brief describes a main whose code differs from `head`: a squash merge of code since the
+    brief makes every S1 tick end BRIEF_STALE(source_changed) until the next build, so the push that brought it builds
+    now. Only native evidence decides: the brief's own B.main and drift(B.main, head) -> (relation, paths), read from
+    git (never the push payload, never the REST compare). Unreadable drift is due (fail toward a fresh brief); a brief
+    that is already at or past `head` is not; no single bot brief is left to the existing rule (brief_is_old)."""
+    if not isinstance(head, str) or not SHA40.fullmatch(head) or not isinstance(issues, list):
+        return False
+    rows = [i for i in issues if isinstance(i, dict) and "pull_request" not in i]
+    if len(rows) != 1 or not is_actions_bot(rows[0].get("user")):
+        return False
+    brief = parse_body(rows[0].get("body"))
+    base = (brief or {}).get("main")
+    if not isinstance(base, str) or not SHA40.fullmatch(base) or base == head:
+        return False
+    try:
+        relation, paths = drift(base, head)
+    except Exception:                                            # noqa: BLE001
+        return True
+    if relation == "behind":
+        return False                                             # a newer brief already covers this push (re-asked after the wait)
+    if relation != "ahead" or not isinstance(paths, list):
+        return True
+    return any(code_drift_path(p) for p in paths)
+
+
+def git_drift(root, base, head):
+    """(relation, paths) of base -> head for code_drift_due: relation from a commits-only graph (ahead, behind or
+    unknown), paths from the two trees (depth 1, no file cap). Anything unreadable is (unknown, None)."""
+    graph_dir = Path(str(root) + ".due-graph")
+    try:
+        url = git(root, "remote", "get-url", "origin")
+        graph_dir.mkdir(parents=True, exist_ok=True)
+        git(graph_dir, "init", "--quiet", "--bare")
+        if "origin" not in git(graph_dir, "remote").split():
+            git(graph_dir, "remote", "add", "origin", url)
+        have = fetch_commits(graph_dir, [base, head], "--filter=tree:0")
+    except (subprocess.CalledProcessError, OSError):
+        return "unknown", None
+    if not {base, head} <= have:
+        return "unknown", None
+    if on_main(graph_dir, head, base):
+        return "behind", None
+    if not on_main(graph_dir, base, head):
+        return "unknown", None
+    if not {base, head} <= fetch_commits(root, [base, head], "--depth=1"):
+        return "unknown", None
+    return "ahead", changed_between(root, base, head)
 
 
 # ----------------------------------------------------------------------------------------------- GitHub reader
@@ -2091,6 +2272,13 @@ def publish(gh, body, now=None):
     # published body is kept ONLY when it is provably such a brief (keep_published): a forged or future-dated body
     # must never stop every later publish.
     current, new = parse_body(mine[0].get("body")), parse_body(body)
+    # W5: a build that could not read the previous brief (c1b.carry UNKNOWN) carried nothing. It never replaces a
+    # published brief that still holds a C1b halt: that halt exists nowhere else until S1 has posted it. The older
+    # brief stays (S1 reads it as BRIEF_STALE), and the next build reads it and carries the halt as usual.
+    if isinstance((new or {}).get("c1b"), dict) and new["c1b"].get("carry") == "UNKNOWN" \
+            and isinstance((current or {}).get("c1b"), dict) and c1b_halt_ok(current["c1b"].get("halt")):
+        print(f"S1_TICK_BRIEF_PUBLISH_SKIPPED carried_halt_kept run={current.get('run_id')} halt={current['c1b']['halt']['commit']}")
+        return mine[0]["number"]
     try:
         if current is not None and stamp(current.get("generated_at")) > stamp(new.get("generated_at")) \
                 and keep_published(gh, mine[0], current, now or datetime.now(timezone.utc)):
@@ -2134,6 +2322,7 @@ def readback_line(gh, number, body):
 
 
 def main(argv):
+    global GIT_ENV
     mode = argv[1] if len(argv) > 1 else ""
     token = os.environ.get("GITHUB" + "_TOKEN", "")
     repo = os.environ.get("GITHUB_REPOSITORY", REPO)
@@ -2166,10 +2355,16 @@ def main(argv):
                     except Exception:                            # noqa: BLE001  (unreadable: counted as a started build)
                         return None
                 due = fallback_due(issues, now, runs, run_id, jobs_of=jobs_of)
+                if not due and os.environ.get("GITHUB_EVENT_NAME") == "push":
+                    # a push is a squash merge or an owner push (data bots push with the job token, which starts no
+                    # workflow): when it changed code since the published brief, the brief is stale for S1 now.
+                    # Git reads only (no REST quota): the checkout of this job is the repository root.
+                    GIT_ENV = token_git_env(token)
+                    due = code_drift_due(issues, lambda base, head: git_drift(Path.cwd(), base, head),
+                                         os.environ.get("GITHUB_SHA", ""))
         print("true" if due else "false")
         return 0
     if mode == "build":
-        global GIT_ENV
         root, head_root, out = argv[2], argv[3], Path(argv[4])
         run = {"id": int(os.environ["GITHUB_RUN_ID"]), "attempt": int(os.environ["GITHUB_RUN_ATTEMPT"]), "event": os.environ["GITHUB_EVENT_NAME"]}
         GIT_ENV = token_git_env(token)

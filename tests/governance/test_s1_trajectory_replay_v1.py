@@ -19,9 +19,15 @@ effects are counted apart from either.
 
 MUTANTS. Each critical check of the executor can be switched off. Every mutant must fail at least one fixture.
 
+S1 v3.3 W5 adds: the T3H ledger hint (no #1156 read when the verified brief shows today's heartbeat, otherwise only the
+comments after the brief's ledger read, and the heartbeat fields the brief proves), the T5 path of REPAIR with how
+BRANCH_UPDATE and by OWNER (one S1_ITEM_v1 per head; S1 never updates the branch), and the T6 budget (8 tool calls; a
+rule that does not fit is reported as skipped=t6:<rule>:budget and never as BRIEF_INCOMPLETE).
+
 OUT OF SCOPE (the executor stops with NotModelled rather than guess): a PROMOTED Claude slot (its merge), every B.next
-action other than REQUEST_REVIEW BRIDGE_REQUEST and HALT rule C1b, the T6 ladder rules and T7. Those are covered by
-TickModel, ClaudeReceipts and the rule-text tests of test_s1_tick_brief_v1.py.
+action other than REQUEST_REVIEW BRIDGE_REQUEST, REPAIR BRANCH_UPDATE by OWNER and HALT rule C1b, what a T6 ladder rule
+does once it runs (only its reads and its budget are modelled) and T7. Those are covered by TickModel, ClaudeReceipts
+and the rule-text tests of test_s1_tick_brief_v1.py.
 
 No network, no secrets, no write anywhere: the connector is a dict of recorded answers."""
 import copy
@@ -67,13 +73,23 @@ def cph_midnight_utc(now):
 def beat_key(now, n):
     """T3H: API/issues/1156/comments?since=<today 00:00 Copenhagen, in UTC>&per_page=100, page n."""
     return since_pages(f"{API}/issues/1156/comments?since={cph_midnight_utc(now)}", n)
+
+
+def hint_key(since, n):
+    """T3H with the LEDGER HINT (W5): API/issues/1156/comments?since=<B.ledger_read_at>&per_page=100, page n."""
+    return since_pages(f"{API}/issues/1156/comments?since={since}", n)
+
+
+def pr_comments_key(pr, n):
+    """REPAIR by OWNER: the PR's own comments (its S1_ITEM_v1 posts), every page."""
+    return f"{API}/issues/{pr}/comments?per_page=100&page={n}"
 BRIDGE_PAGE_40 = BRIDGE_API + "/issues/comments?sort=created&direction=desc&per_page=40"   # T4 CLAUDE RECEIPTS (W2b D2)
 ISSUES_URL = API + "/issues?labels=s1-tick-brief&state=open&per_page=20"
 S1_DIR = "00_FMOS/S1"
 CONTRACT_PATH = "00_FMOS/S1/RUNTIME_CONTRACT.json"
 TICK_PATH = "00_FMOS/S1/TICK.md"
 LANE_PATH = "00_FMOS/S1/REVIEWED_MERGE_LANE.json"
-BOOTSTRAP_VERSION = "S1_BOOTSTRAP_v8"
+BOOTSTRAP_VERSION = "S1_BOOTSTRAP_v9"
 BOT_LOGIN, BOT_ID, BOT_TYPE = "github-actions[bot]", 41898282, "Bot"
 OWNER_LOGIN = "Donh91"
 CPH = ZoneInfo("Europe/Copenhagen")
@@ -84,18 +100,21 @@ SQUASH = re.compile(r"\(#\d+\)$")
 NOOP_RESULTS = ("MONDAY_READ_ONLY", "SOURCE_UNVERIFIED", "BRIEF_UNVERIFIED", "BRIEF_STALE", "BRIEF_INCOMPLETE", "LANE_HALTED",
                 "MERGE_REFUSED", "NOTHING_ACTIONABLE")
 T1_T3_CALLS, TREE_READS = 4, 20     # TICK.md: "T1 to T3 are at most 4 tool calls; T3 never reads a tree" (W2b)
+T6_BUDGET = 8                       # TICK.md T6: "The T6 budget is 8 tool calls in total." (W5)
 SHA40 = re.compile(r"[0-9a-f]{40}")
 
 # The rule text this executor was derived from. A reworded step must re-derive the executor, so the text is pinned.
 BOOTSTRAP_TEXT = (ROOT / S1_DIR / "BOOTSTRAP.txt").read_text(encoding="utf-8")
 TICK_TEXT = (ROOT / TICK_PATH).read_text(encoding="utf-8")
 REFERENCE_TEXT_SHA256 = {
-    "BOOTSTRAP steps 1-4": "d3546a43fa78fff1e13b67c5f18833f38b6d8683c78ce1ff17845720e9e01497",
-    "TICK T0-T3H and IF THE BRIEF FAILED": "55ccb530d03cfb47316087be331a1ed715b368695f3825fc695ca025d3a5c32b",
+    "BOOTSTRAP steps 1-4": "bf745bddead61595d4b4bfc6e15a74ec85c839e553d477ea7d8c8a0a4dbeb178",
+    "TICK T0-T3H and IF THE BRIEF FAILED": "d4d0cb7fad65849372b72eb8e4de48108a6a3106e1ce880ac97213886ac634c2",
     "TICK LAST TWO LINES": "2b7e00842d5e7b8ab2a96ad4ff3d87acbc730f3ff7b160c7128fd705641715b1",
     "TICK T4 CLAUDE RECEIPTS and ORDER": "5320ca81be8086f1a32929becb9f76ea19b139ce8437a4e28d64cc6d3ff7c675",
     "TICK HALT rule C1b": "55a4a83458baf6bc210795f13fe82efdfc0133dbf3f831ecfd9f47917859e4f4",
     "TICK REQUEST_REVIEW": "72fc9e8c8ba35bd9019b48e7eb2c3cffc58e9f7c72f9813c03c9b2a4eea83541",
+    "TICK REPAIR": "32743fdb737af687488fdab2fe424bf7eb24210d7afc4e6349fe0006f90a4bd7",
+    "TICK T6": "41b365fb9dba7662cb5bd9ca96cb38c1ac3ba720c8f32954a7a220130855b1ca",
 }
 
 
@@ -109,7 +128,9 @@ def text_regions():
     receipts = TICK_TEXT[TICK_TEXT.index("CLAUDE RECEIPTS (ONE Bridge read"):TICK_TEXT.index("NO SECOND REVIEW REQUEST:")]
     c1b = TICK_TEXT[TICK_TEXT.index("HALT, rule C1b"):TICK_TEXT.index("HALT (C7 halt trigger")]
     request = TICK_TEXT[TICK_TEXT.index("REQUEST_REVIEW (rule 3)."):TICK_TEXT.index("REPAIR (rule 2).")]
-    return {"TICK REQUEST_REVIEW": request, "BOOTSTRAP steps 1-4": boot, "TICK T0-T3H and IF THE BRIEF FAILED": tick, "TICK LAST TWO LINES": last,
+    repair = TICK_TEXT[TICK_TEXT.index("REPAIR (rule 2)."):TICK_TEXT.index("HALT, rule C1b")]
+    t6 = TICK_TEXT[TICK_TEXT.index("T6 WHEN THE BRIEF HAS NO ACTION FOR YOU."):TICK_TEXT.index("T7 OBSERVABILITY")]
+    return {"TICK REQUEST_REVIEW": request, "TICK REPAIR": repair, "TICK T6": t6, "BOOTSTRAP steps 1-4": boot, "TICK T0-T3H and IF THE BRIEF FAILED": tick, "TICK LAST TWO LINES": last,
             "TICK T4 CLAUDE RECEIPTS and ORDER": receipts, "TICK HALT rule C1b": c1b}
 
 
@@ -301,7 +322,10 @@ CHECKS = ("bootstrap_3", "bootstrap_fetched_blobs", "bootstrap_3b", "t0_monday",
           # W2b phase 3: T3H scheduled-only and every page; the REQUEST_REVIEW dedupe reads every page since the PR
           "t3h_scheduled", "t3h_all_pages", "request_all_pages",
           # W2b phase 4 (detached review of 3385c74e): F1 tests/ is a T3 source directory; F6 entry type and sha
-          "t3_tests_dir", "c1b_entry_type")
+          "t3_tests_dir", "c1b_entry_type",
+          # W5: the T3H ledger hint and its fields, REPAIR by OWNER, the T6 budget and its ending
+          "t3h_hint_verified", "t3h_hint_today", "t3h_hint_since", "t3h_fields", "repair_writer", "owner_route_noted",
+          "owner_route_reason", "t6_budget", "t6_never_incomplete")
 
 
 class End(Exception):
@@ -333,6 +357,7 @@ class Tick:
             raise ValueError(f"unknown checks {sorted(unknown)}")
         self.lines, self.stages, self.h1_checks = [], {}, []
         self.M, self.C, self.contract8 = None, None, "-"
+        self.t12_ok = False
 
     def on(self, check):
         return check not in self.off
@@ -525,8 +550,24 @@ class Tick:
         local = self.clock.now.astimezone(CPH)
         if self.on("t3h_clock") and (local.hour, local.minute) < (8, 45):
             return
+        # W5 LEDGER HINT: only when T1 and T2 passed in this run and B.ledger.read is true (the brief read all of #1156
+        # up to B.ledger_read_at). A last_heartbeat_at on today's Copenhagen date: today's heartbeat exists, no read and
+        # no post. Otherwise only the comments after that read are read. In every other run: since today 00:00 Copenhagen.
+        ledger = b.get("ledger") if isinstance(b, dict) and isinstance(b.get("ledger"), dict) else {}
+        hint = ledger.get("read") is True and (self.t12_ok or not self.on("t3h_hint_verified"))
+        since = None
+        if hint:
+            try:
+                last = at(ledger["last_heartbeat_at"]).astimezone(CPH).date() if ledger.get("last_heartbeat_at") else None
+            except (TypeError, ValueError, AttributeError):
+                last = None
+            if last is not None and (last == local.date() or not self.on("t3h_hint_today")):
+                return
+            if self.on("t3h_hint_since") and isinstance(b.get("ledger_read_at"), str):
+                since = b["ledger_read_at"]
+        key_of = (lambda n: hint_key(since, n)) if since else (lambda n: beat_key(iso(self.clock.now), n))
         try:
-            page = self.pages(lambda n: beat_key(iso(self.clock.now), n), every=self.on("t3h_all_pages"))
+            page = self.pages(key_of, every=self.on("t3h_all_pages"))
         except Refused:
             if self.on("t3h_unreadable"):
                 return
@@ -543,8 +584,16 @@ class Tick:
         self.check_h1("heartbeat")
         run_id = b.get("run_id") if isinstance(b, dict) else None
         state = "OK" if failed is None else failed.result
+        last_action = open_ops = gap = "UNKNOWN"
+        if hint and self.on("t3h_fields"):                          # the fields the verified brief proves; nothing else
+            la = ledger.get("last_action")
+            last_action = f"{la.get('action')}@{la.get('at')}" if isinstance(la, dict) else "NONE"
+            count = (ledger.get("open_intents") or {}).get("count") if isinstance(ledger.get("open_intents"), dict) else None
+            open_ops = count if is_int(count) else "UNKNOWN"
+            g = (b.get("c1b") or {}).get("gap") if isinstance(b.get("c1b"), dict) else None
+            gap = f"window={g.get('window')}" if isinstance(g, dict) else "NONE"
         self.conn.post("#1156", f"S1_HEARTBEAT_v1\nmain={self.M[:8]} contract={self.contract8} brief={run_id or 'NONE'} brief_state={state}\n"
-                                "ticks_24h=UNKNOWN last_noop=UNKNOWN last_action=UNKNOWN open_ops=UNKNOWN closures=UNKNOWN\n"
+                                f"ticks_24h=UNKNOWN last_noop=UNKNOWN last_action={last_action} open_ops={open_ops} closures=UNKNOWN c1b_gap={gap}\n"
                                 "S1_OPEN_WORK_INDEX_v1 UNKNOWN(t3h)", "heartbeat")
         self.stages["T3H"] = "POSTED"
 
@@ -569,13 +618,84 @@ class Tick:
                 why = self.halt_c1b(x)
             elif x.get("action") == "REQUEST_REVIEW" and x.get("how") == "BRIDGE_REQUEST":
                 why = self.request_review(b, x)
+            elif x.get("action") == "REPAIR" and x.get("how") == "BRANCH_UPDATE" and x.get("by") == "OWNER":
+                why = self.owner_update(b, x)
             else:
                 raise NotModelled(f"T5 {x.get('action')} {x.get('how')}")
             if why is None:
                 return
             skipped.append(why)
+        self.t6(skipped)
         reasons = ",".join(skipped[:3]) if skipped else "brief_empty"
         raise End("nothing", f"NOTHING_ACTIONABLE(skipped={reasons})")
+
+    def t6(self, skipped):
+        """T6 (W5): the rules the brief does not carry, in ladder order, inside a budget of T6_BUDGET tool calls in total.
+        A rule that does not fit is not started and is reported as skipped=t6:<rule>:budget; T6 never makes a run
+        BRIEF_INCOMPLETE, and the brief's status lines stay as printed. The recorded world names, under "t6:plan", the
+        narrow reads each rule needs (a rule with no candidate needs its reads and then does nothing: what a T6 rule does
+        when it has a candidate is not modelled). No plan: no T6 rule has anything to read."""
+        self.conn.stage = "T6"
+        used = 0
+        for rule, need in self.conn.routes.get("t6:plan") or []:
+            if self.on("t6_budget") and used + need > T6_BUDGET:
+                if not self.on("t6_never_incomplete"):           # the 2026-11-21 run: its own UNKNOWN lines, BRIEF_INCOMPLETE(T6:unfinished)
+                    self.lines = []
+                    raise End("brief", "BRIEF_INCOMPLETE(T6:unfinished)")
+                skipped.append(f"t6:{rule}:budget")
+                continue
+            try:
+                for n in range(1, need + 1):
+                    used += 1
+                    self.conn.fetch(f"t6:{rule}:{n}")
+            except Refused:
+                skipped.append(f"t6:{rule}:unreadable")
+
+    def owner_update(self, b, x):
+        """T5 REPAIR, how BRANCH_UPDATE with by OWNER (rule 2c, owner route; W5: also for a required job that never ran).
+        S1 never updates the branch and posts no "@codex" comment: ONE S1_ITEM_v1 per head (state BUILD, the entry's
+        reason, next: OWNER_BRANCH_UPDATE) and the short receipt on #1156. An item of that kind newer than the head's
+        commit: skipped=<PR>:R2:owner_update_noted."""
+        self.conn.stage = "T5"
+        pr, head = x["pr"], x["head"]
+        e = next((p for p in b["prs"] if p.get("n") == pr), {})
+        if self.on("repair_writer") and e.get("writer") is not None:
+            return f"{pr}:C1:concurrent_writer"
+        try:
+            p = self.conn.fetch(f"{API}{PULLS}/{pr}")
+        except Refused:
+            return f"{pr}:C8:head_unreadable"
+        if self.on("head_reread"):
+            rid = b["repo"]["id"]
+            if (p.get("base") or {}).get("repo", {}).get("id") != rid or (p.get("head") or {}).get("repo", {}).get("id") != rid:
+                return f"{pr}:B1:fork_head"
+            if p.get("state") != "open" or p.get("draft") is not False or (p.get("base") or {}).get("ref") != "main":
+                return f"{pr}:C8:state"
+            if (p.get("head") or {}).get("sha") != head:
+                return f"{pr}:C8:head_changed"
+        try:
+            c = self.conn.fetch(f"{API}/commits/{head}")
+            rows = self.pages(lambda n: pr_comments_key(pr, n))
+            head_at = at(((c.get("commit") or {}).get("committer") or {}).get("date"))
+        except (Refused, TypeError, ValueError, AttributeError):
+            return f"{pr}:R2:items_unreadable"
+        def noted(r):
+            try:
+                return first_token(r.get("body")) == "S1_ITEM_v1" and "OWNER_BRANCH_UPDATE" in fields(r.get("body")).get("next", "") \
+                    and at(r["created_at"]) > head_at
+            except (KeyError, TypeError, ValueError, AttributeError):
+                return False
+        if self.on("owner_route_noted") and any(isinstance(r, dict) and noted(r) for r in rows):
+            return f"{pr}:R2:owner_update_noted"
+        reason = x.get("reason") if self.on("owner_route_reason") else "gate_stale"
+        risk = (e.get("lane") or {}).get("risk_floor") or "UNKNOWN"
+        self.check_h1("effect")
+        cid = self.conn.post(f"pr#{pr}", f"S1_ITEM_v1\nitem: pr:{pr}\nstate: BUILD\nkind: FIX\nrisk: {risk}\nattempt: 1\npark_count: 0\n"
+                                         f"due: -\nreason: {reason}\nsignals: -\nlinks: -\nnext: OWNER_BRANCH_UPDATE\ncontract={self.contract8}", "effect")
+        self.check_h1("receipt")
+        self.conn.post("#1156", f"REPAIR pr={pr} head={head} main={self.M} comment={cid} brief={b['run_id']} next=OWNER_BRANCH_UPDATE "
+                                f"contract={self.contract8}", "receipt")
+        raise End("action", "OWNER_BRANCH_UPDATE_REQUESTED", detail=("REPAIR", pr, head))
 
     def claude_receipts(self, b):
         """T4 CLAUDE RECEIPTS: ONE Bridge read, the newest 40 comments; {pr: APPROVED | ADMISSIBLE | PROMOTED}. A receipt
@@ -694,7 +814,7 @@ class Tick:
                                    f"due: -\nreason: review requested\nsignals: -\nlinks: {cid}\nnext: MERGE_IF_CLAUDE_APPROVE\ncontract={self.contract8}", "receipt")
         self.check_h1("receipt")
         self.conn.post("#1156", f"REQUEST_REVIEW pr={pr} head={head} main={self.M} comment={cid} brief={b['run_id']} contract={self.contract8}", "receipt")
-        raise End("action", f"REQUESTED(c={cid})", detail=(pr, head))
+        raise End("action", f"REQUESTED(c={cid})", detail=("REQUEST_REVIEW", pr, head))
 
     # ---------------------------------------------------------------- the run
     def run(self):
@@ -706,6 +826,7 @@ class Tick:
             try:
                 issue, brief = self.t1()
                 self.t2(issue, brief)
+                self.t12_ok = True                               # W5: the T3H ledger hint needs a verified brief
                 self.t3(brief)
             except End as end:
                 if end.kind != "brief":
@@ -728,9 +849,8 @@ class Tick:
         denied = ";".join(f"{route_name(k, key)}:{status}" for k, key, status in self.conn.denied)
         self.lines.append("S1_ROUTES ok" if not denied else f"S1_ROUTES denied={denied}")
         if end.kind == "action":
-            pr, head = end.detail
-            terminal = f"S1_TICK REQUEST_REVIEW {pr} {head[:8]} {end.result} main={main8} contract={self.contract8}"
-            action = "REQUEST_REVIEW"
+            action, pr, head = end.detail
+            terminal = f"S1_TICK {action} {pr} {head[:8]} {end.result} main={main8} contract={self.contract8}"
         else:
             contract = "-" if end.kind == "source" else self.contract8
             terminal = f"S1_TICK NOOP - - {end.result} main={main8} contract={contract}"
@@ -1043,6 +1163,7 @@ def fixtures():
                                    ["scripts/orchestration/x.py", "03_DAILY_CAPTURE_LOGS/a.json"]),
                        "BRIEF_STALE(source_changed)"))
     out += w2b_fixtures()
+    out += w5_fixtures()
 
     def second_labelled(w):
         w["routes"][ISSUES_URL].append({"number": 2262, "state": "open", "user": {"login": OWNER_LOGIN, "id": 1, "type": "User"},
@@ -1209,6 +1330,138 @@ def w2b_fixtures():
     return out
 
 
+OWNER_ENTRY = {"pr": PR, "head": HEAD, "action": "REPAIR", "rule": "2c", "how": "BRANCH_UPDATE", "by": "OWNER", "reason": "ci_missing",
+               "missing": ["execution-truth", "gate", "privacy-scan", "storage-health", "test"], "verify": ["head", "no_owner_update_item"], "rank": 1}
+HEAD_COMMITTED = "2026-11-19T14:05:00Z"
+
+
+def owner_world(items=(), writer=None, entry=None, **kw):
+    """A PR a workflow opened: its required jobs never ran (the runs wait for approval with no job) and it is behind
+    main. The brief ranks REPAIR BRANCH_UPDATE by OWNER first (the #2314 shape of 2026-11-24)."""
+    w = world(**kw)
+    i = w["routes"][ISSUES_URL][0]
+    b = B.parse_body(i["body"])
+    b["next"] = [dict(entry or OWNER_ENTRY)]
+    b["prs"][0].update(writer=writer, open=["C4:ci_missing"], behind=148,
+                       ci={"state": "MISSING", "tuples": {k: {"s": "MISSING", "why": "job_not_in_latest_attempt"} for k in OWNER_ENTRY["missing"]}})
+    b["status_lines"][0] = f"OWNER APPROVAL REQUIRED: BRANCH_UPDATE(#{PR})"
+    i["body"] = publish_body(b)
+    w["routes"][f"{API}/commits/{HEAD}"] = {"sha": HEAD, "commit": {"message": "learning: weekly", "committer": {"date": HEAD_COMMITTED}},
+                                            "parents": [{"sha": sha("pr-base")}]}
+    w["routes"][pr_comments_key(PR, 1)] = list(items)
+    return w
+
+
+def owner_item(when, nxt="OWNER_BRANCH_UPDATE", cid=7016000001):
+    return {"id": cid, "user": {"login": OWNER_LOGIN}, "created_at": when, "updated_at": when,
+            "body": f"S1_ITEM_v1\nitem: pr:{PR}\nstate: BUILD\nkind: FIX\nrisk: LOW\nattempt: 1\nreason: ci_missing\nnext: {nxt}\ncontract=00000000"}
+
+
+def hint_world(last_heartbeat, after=None, now="2026-11-20T08:46:10Z", generated="2026-11-20T08:21:41Z", read_at="2026-11-20T08:19:02Z",
+               ledger=None, c1b=None, **over):
+    """08:46Z on 2026-11-20 is 09:46 Copenhagen (a Friday). The brief read all of #1156 at read_at and names the newest
+    heartbeat it saw. `after` is the since=<read_at> page (None: that route does not exist); the read since midnight
+    is refused, as a busy ledger's is: with the hint S1 never needs it."""
+    w = world(now=now, generated=generated)
+    i = w["routes"][ISSUES_URL][0]
+    b = B.parse_body(i["body"])
+    b.update(ledger_read_at=read_at, c1b=c1b or {"checked_through": b["main"], "from": b["main"], "halt": None, "gap": None, "carry": None},
+             ledger=ledger or {"read": True, "last_heartbeat_at": last_heartbeat, "open_intents": {"count": 2, "ids": [1, 2]},
+                               "last_action": {"at": "2026-11-19T18:47:12Z", "action": "REQUEST_REVIEW", "id": 7013000001}, "actions_24h": 1})
+    b.update(over)
+    i["body"] = publish_body(b)
+    w["routes"][beat_key(now, 1)] = {"__refused__": 502}
+    if after is not None:
+        w["routes"][hint_key(read_at, 1)] = after
+    return w
+
+
+def w5_fixtures():
+    out = []
+    # ---- T6 (addendum 3 of the Tuesday mandate: the manual run of 2026-11-21 at main 6f725c1c, brief 44914189640)
+    def t6(plan):
+        def f(w):
+            _set_brief(w, nxt=False)
+            w["routes"]["t6:plan"] = plan
+            for rule, need in plan:
+                for n in range(1, need + 1):
+                    w["routes"][f"t6:{rule}:{n}"] = []
+        return f
+    out.append(fixture("W5-01", "T6 budget exhausted", "2026-11-21: T1 to T3 passed, next=[], the run ended BRIEF_INCOMPLETE(T6:unfinished) with its own UNKNOWN lines",
+                       world(), "NOTHING_ACTIONABLE(skipped=t6:rule1:budget)", change=t6([["rule1", 12]])))
+    out.append(fixture("W5-01b", "T6: the first rule fits, the second does not", "the budget is one total, not one per rule",
+                       world(), "NOTHING_ACTIONABLE(skipped=t6:rule6a:budget)", change=t6([["rule1", 5], ["rule6a", 4], ["rule5", 2]])))
+    out.append(fixture("W5-01c", "T6 inside its budget, no candidate", "every rule read and none had a candidate",
+                       world(), "NOTHING_ACTIONABLE(skipped=brief_empty)", change=t6([["rule1", 3], ["rule6a", 2], ["rule5", 1], ["rule5b", 1], ["rule6b", 1]])))
+    # ---- REPAIR, how BRANCH_UPDATE with by OWNER (the #2314 shape: a workflow-opened PR whose jobs never ran)
+    out.append(fixture("W5-02", "owner route for a required job that never ran", "2026-11-24: #2314 ranked first every tick as a branch update S1 cannot do",
+                       owner_world(), "OWNER_BRANCH_UPDATE_REQUESTED", action="REPAIR", effects=1,
+                       writes_have={"effect": ["reason: ci_missing", "next: OWNER_BRANCH_UPDATE", "state: BUILD"]}))
+    out.append(fixture("W5-02b", "owner route already announced at this head", "one S1_ITEM_v1 per head: the second tick posts nothing",
+                       owner_world(items=[owner_item("2026-11-19T15:47:00Z")]), f"NOTHING_ACTIONABLE(skipped={PR}:R2:owner_update_noted)"))
+    out.append(fixture("W5-02c", "an owner-route item from before this head", "the head moved since: announced again",
+                       owner_world(items=[owner_item("2026-11-19T13:00:00Z")]), "OWNER_BRANCH_UPDATE_REQUESTED", action="REPAIR", effects=1))
+    out.append(fixture("W5-02d", "an S1_ITEM_v1 of another kind at this head", "only next: OWNER_BRANCH_UPDATE dedupes",
+                       owner_world(items=[owner_item("2026-11-19T15:47:00Z", nxt="MERGE_IF_CLAUDE_APPROVE")]), "OWNER_BRANCH_UPDATE_REQUESTED",
+                       action="REPAIR", effects=1))
+    out.append(fixture("W5-02e", "owner route: another writer on the branch", "H7: the entry's writer is not null",
+                       owner_world(writer="address_open"), f"NOTHING_ACTIONABLE(skipped={PR}:C1:concurrent_writer)"))
+    def moved(w):
+        w["routes"][f"{API}{PULLS}/{PR}"]["head"]["sha"] = sha("another-head")
+    out.append(fixture("W5-02f", "owner route: the head moved", "never re-bind to the new head",
+                       owner_world(), f"NOTHING_ACTIONABLE(skipped={PR}:C8:head_changed)", change=moved))
+    out.append(fixture("W5-02g", "owner route: the PR's comments unreadable", "no item without the dedupe read",
+                       owner_world(), f"NOTHING_ACTIONABLE(skipped={PR}:R2:items_unreadable)",
+                       change=lambda w: w["routes"].update({pr_comments_key(PR, 1): {"__refused__": 502}})))
+    out.append(fixture("W5-02h", "owner route for a stale gate keeps its reason", "the entry's reason is written, whatever it is",
+                       owner_world(entry=dict(OWNER_ENTRY, reason="gate_stale", gate_stale=[".github/workflows/data-architecture-gate.yml"])),
+                       "OWNER_BRANCH_UPDATE_REQUESTED", action="REPAIR", effects=1, writes_have={"effect": ["reason: gate_stale"]}))
+    # ---- T3H with the LEDGER HINT
+    today, yesterday = "2026-11-20T07:46:20Z", "2026-11-19T07:50:00Z"
+    fresh = heartbeat(at("2026-11-20T08:30:00Z"), cid=7012000009)
+    out.append(fixture("W5-03", "T3H hint: today's heartbeat is in the brief", "2026-11-23/24: the heartbeat read of a busy #1156 came late or not at all",
+                       hint_world(today), "REQUESTED(c=7100000001)", action="REQUEST_REVIEW", effects=1, t3h_reads=0))
+    out.append(fixture("W5-03b", "T3H hint: none today, none after the brief's read", "one small read, then the heartbeat with the brief's fields",
+                       hint_world(yesterday, after=[]), "REQUESTED(c=7100000002)", action="REQUEST_REVIEW", effects=1, heartbeats=1, t3h_reads=1,
+                       writes_have={"heartbeat": ["last_action=REQUEST_REVIEW@2026-11-19T18:47:12Z", "open_ops=2", "c1b_gap=NONE", "ticks_24h=UNKNOWN", "brief_state=OK"]}))
+    out.append(fixture("W5-03c", "T3H hint: a heartbeat posted after the brief's read", "the since-read finds it: no second heartbeat",
+                       hint_world(yesterday, after=[fresh]), "REQUESTED(c=7100000001)", action="REQUEST_REVIEW", effects=1, t3h_reads=1))
+    out.append(fixture("W5-03d", "T3H hint: the brief never saw a heartbeat", "last_heartbeat_at null is not today",
+                       hint_world(None, after=[]), "REQUESTED(c=7100000002)", action="REQUEST_REVIEW", effects=1, heartbeats=1, t3h_reads=1))
+    out.append(fixture("W5-03e", "T3H hint: the since-read is unreadable", "a page you cannot read: no heartbeat",
+                       hint_world(yesterday), "REQUESTED(c=7100000001)", action="REQUEST_REVIEW", effects=1, t3h_reads=1))
+    gap = {"checked_through": sha("main-2026-11-19T18"), "from": sha("x"), "halt": None, "carry": None,
+           "gap": {"from_unknown": True, "window": 100, "reason": "C1b:carry_unknown"}}
+    out.append(fixture("W5-03f", "T3H hint: the heartbeat carries the C1b gap and no action", "W5: c1b.gap reaches the daily summary through the heartbeat",
+                       hint_world(yesterday, after=[], c1b=gap,
+                                  ledger={"read": True, "last_heartbeat_at": yesterday, "open_intents": {"count": 0, "ids": []}, "last_action": None, "actions_24h": 0}),
+                       "REQUESTED(c=7100000002)", action="REQUEST_REVIEW", effects=1, heartbeats=1,
+                       writes_have={"heartbeat": ["c1b_gap=window=100", "last_action=NONE", "open_ops=0"]}))
+    # a brief that failed T2 is not a verified brief: its ledger is no hint, whatever it says
+    def stale_claims_today(w):
+        w["routes"][beat_key(w["now"], 1)] = [heartbeat(at("2026-11-19T07:50:00Z"))]
+    out.append(fixture("W5-03g", "T3H: a stale brief that says today's heartbeat exists", "the hint needs T1 and T2 to pass: read since midnight, post",
+                       hint_world(today, generated="2026-11-20T07:21:41Z", read_at="2026-11-20T07:19:02Z"), "BRIEF_STALE(age_min=84)", heartbeats=1,
+                       change=stale_claims_today, writes_have={"heartbeat": ["last_action=UNKNOWN", "open_ops=UNKNOWN", "c1b_gap=UNKNOWN"]}))
+    out.append(fixture("W5-03h", "T3H: a brief whose ledger was not read", "ledger.read false: no hint, the read since midnight",
+                       hint_world(None, ledger={"read": False, "last_heartbeat_at": None, "open_intents": {"count": None, "ids": []},
+                                                "last_action": None, "actions_24h": None}),
+                       "REQUESTED(c=7100000002)", action="REQUEST_REVIEW", effects=1, heartbeats=1, change=stale_claims_today))
+    # T3 failed, T1 and T2 passed: the hint still holds (code drift after the brief)
+    def code_drift(w):
+        b = B.parse_body(w["routes"][ISSUES_URL][0]["body"])
+        m = sha("main-after-code-drift")
+        for k in list(w["routes"]):
+            if k.endswith(f"@{b['main']}") or k.endswith(f"?ref={b['main']}"):
+                w["routes"][k.replace(b["main"], m)] = w["routes"].pop(k)
+        w["routes"][API + "/branches/main"]["commit"]["sha"] = m
+        w["routes"][f"compare:{b['main']}...{m}"] = {"status": "ahead", "total_commits": 1, "files": [{"filename": "scripts/x.py", "status": "modified"}]}
+    out.append(fixture("W5-03i", "T3H hint in a run whose T3 failed", "T1 and T2 passed: the brief is verified, the drift is not its fault",
+                       hint_world(yesterday, after=[]), "BRIEF_STALE(source_changed)", heartbeats=1, change=code_drift, t3h_reads=1,
+                       writes_have={"heartbeat": ["brief_state=BRIEF_STALE(source_changed)", "open_ops=2"]}))
+    return out
+
+
 def _set_brief(w, **over):
     i = w["routes"][ISSUES_URL][0]
     b = B.parse_body(i["body"])
@@ -1238,10 +1491,15 @@ def task_ok(fx, r):
     ok = r.action == e["action"] and r.result == e["result"] and len(r.effects) == e["effects"] and len(heartbeats_of(r)) == e["heartbeats"]
     if ok and "t3_drift" in fx:
         ok = r.stages.get("T3") == "OK" and r.stages.get("DRIFT") == fx["t3_drift"]
+    for kind, needles in (fx.get("writes_have") or {}).items():    # W5: what the one write of that kind must say
+        bodies = [w["body"] for w in r.writes if w["kind"] == kind]
+        ok = ok and len(bodies) == 1 and all(n in bodies[0] for n in needles)
+    if ok and "t3h_reads" in fx:                                    # W5: the ledger hint is about how much T3H reads
+        ok = len([c for c in r.calls if c[0] == "T3H"]) == fx["t3h_reads"]
     if ok and r.action == "NOOP" and r.result.startswith(("BRIEF_", "MONDAY_READ_ONLY")) and fx.get("status_lines") != "brief":
         why = "monday_read_only" if r.result == "MONDAY_READ_ONLY" else r.result
         ok = r.lines[:3] == [f"OWNER APPROVAL REQUIRED: UNKNOWN ({why})", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"]
-    elif ok and (r.result.startswith(("NOTHING_ACTIONABLE", "REQUESTED")) or fx.get("status_lines") == "brief"):
+    elif ok and (r.result.startswith(("NOTHING_ACTIONABLE", "REQUESTED", "OWNER_BRANCH_UPDATE_REQUESTED")) or fx.get("status_lines") == "brief"):
         issue = fx["world"]["routes"][ISSUES_URL][0]
         ok = r.lines[:3] == read_block(issue["body"])["status_lines"]
     return ok
@@ -1275,7 +1533,9 @@ def policy_violations(fx, r):
         out.append("t3_tree_read")                        # v3.3: T3 never reads a tree
     if len([c for c in r.calls if c[0] == "T3H"]) > 10:
         out.append("t3h_call_budget")
-    order = {"BOOT": 0, "T1": 1, "T2": 2, "T3": 3, "T3H": 3.5, "T4": 4, "T5": 5}
+    if len([c for c in r.calls if c[0] == "T6"]) > T6_BUDGET:
+        out.append("t6_call_budget")
+    order = {"BOOT": 0, "T1": 1, "T2": 2, "T3": 3, "T3H": 3.5, "T4": 4, "T5": 5, "T6": 6}
     if any(order[a] > order[b] for a, b in zip(staged, staged[1:])):
         out.append("read_before_t3_done")
     ticks = [line for line in r.lines if line.startswith("S1_TICK ")]
@@ -1286,6 +1546,11 @@ def policy_violations(fx, r):
         if any(first_token(c.get("body")) == "S1_REVIEW_REQUEST_v1" and fields(c.get("body")).get("head") == HEAD
                and str(c.get("issue_url")).endswith("/issues/173") for c in page):
             out.append("duplicate_review_request")
+    if r.effects and r.action == "REPAIR":
+        rows = fx["world"]["routes"].get(pr_comments_key(PR, 1))
+        if any(isinstance(c, dict) and first_token(c.get("body")) == "S1_ITEM_v1" and "OWNER_BRANCH_UPDATE" in fields(c.get("body")).get("next", "")
+               and c.get("created_at", "") > HEAD_COMMITTED for c in (rows if isinstance(rows, list) else [])):
+            out.append("duplicate_owner_update")
     return out
 
 
@@ -1323,6 +1588,11 @@ MUTANTS = {
     "request_all_pages": (("request_all_pages",), "strict"),
     "t3_tests_dir": (("t3_tests_dir",), "strict"), "c1b_entry_type": (("c1b_entry_type",), "strict"),
     "head_reread": (("head_reread",), "strict"), "run_not_success": (("run_not_success",), "strict"), "request_dedupe": (("request_dedupe",), "strict"),
+    "t3h_hint_verified": (("t3h_hint_verified",), "strict"), "t3h_hint_today": (("t3h_hint_today",), "strict"),
+    "t3h_hint_since": (("t3h_hint_since",), "strict"), "t3h_fields": (("t3h_fields",), "strict"),
+    "repair_writer": (("repair_writer",), "strict"), "owner_route_noted": (("owner_route_noted",), "strict"),
+    "owner_route_reason": (("owner_route_reason",), "strict"), "t6_budget": (("t6_budget",), "strict"),
+    "t6_never_incomplete": (("t6_never_incomplete",), "strict"),
     "t1_literal_no_fence": ((), "literal"),
 }
 CHARTER_MUTANTS = ("pins", "bootstrap_3b", "author", "run_binding", "staleness", "t3_source")
@@ -1339,7 +1609,7 @@ class ReferenceText(unittest.TestCase):
         self.assertEqual(got, REFERENCE_TEXT_SHA256, "BOOTSTRAP or TICK changed: re-derive the reference executor of this file")
 
     def test_the_rule_sentences_the_executor_implements_are_present(self):
-        for needle in ("If the connector returns no SHA: SOURCE_UNVERIFIED(3).", "bootstrap_version must be S1_BOOTSTRAP_v8",
+        for needle in ("If the connector returns no SHA: SOURCE_UNVERIFIED(3).", "bootstrap_version must be S1_BOOTSTRAP_v9",
                        "SOURCE_UNVERIFIED(3b)", "that fence is the published format, never a body failure",
                        "T1 and T2 use only that fetch, never an issue list, issue search or workflow-run tool"):
             self.assertIn(needle, BOOTSTRAP_TEXT)
@@ -1353,7 +1623,20 @@ class ReferenceText(unittest.TestCase):
                        "BRIEF_STALE(source_changed); data-only drift is fine", "H1 is checked again immediately before EVERY write below.",
                        "IF THE BRIEF FAILED (BRIEF_UNVERIFIED, BRIEF_STALE or BRIEF_INCOMPLETE): make no write of any kind in this run except the T3H heartbeat.",
                        "it runs whether T1 to T3 passed or failed",
-                       "Only in a scheduled run of this task at 08:45 Europe/Copenhagen or later: fetch API/issues/1156/comments?since=<today 00:00 Copenhagen, in UTC>&per_page=100, every page.",
+                       "Only in a scheduled run of this task at 08:45 Europe/Copenhagen or later.",
+                       "LEDGER HINT: when T1 and T2 passed in this run and B.ledger.read is true, the brief read all of #1156 up to B.ledger_read_at.",
+                       "Then a B.ledger.last_heartbeat_at on today's Copenhagen date means today's heartbeat exists: read nothing here and post nothing.",
+                       "Otherwise S is B.ledger_read_at. In every other run S is today 00:00 Copenhagen, in UTC.",
+                       "fetch API/issues/1156/comments?since=<S>&per_page=100, every page.",
+                       "when the LEDGER HINT holds also last_action=<B.ledger.last_action as action@at, or NONE when it is null> open_ops=<B.ledger.open_intents.count> c1b_gap=<window=<n> when B.c1b.gap is set, else NONE>",
+                       "(ticks_24h always: a run that ended NOOP leaves no trace)",
+                       "The T6 budget is 8 tool calls in total.", "T6 never makes a run BRIEF_INCOMPLETE.",
+                       "A T6 rule not started or not finished is reported as NOTHING_ACTIONABLE(skipped=t6:<rule>:budget), with the brief's status lines printed verbatim.",
+                       "how BRANCH_UPDATE with by OWNER (2c, owner route): the branch must take main and S1 is not the one to do it.",
+                       "or ci_missing (a required job never ran on this head, the entry's missing list, for example a PR that a workflow opened, whose runs wait for approval with no job)",
+                       "The PR's entry has writer null (H7; else skipped=<PR>:C1:concurrent_writer).",
+                       "The PR has no S1_ITEM_v1 newer than the head's commit whose next is OWNER_BRANCH_UPDATE (else skipped=<PR>:R2:owner_update_noted).",
+                       "Post one S1_ITEM_v1 on the PR (state BUILD, attempt unchanged, reason: <the entry's reason>, next: OWNER_BRANCH_UPDATE) and the short receipt on #1156; result OWNER_BRANCH_UPDATE_REQUESTED.",
                        "If none is an S1_HEARTBEAT_v1 of this task by Donh91 created today (Copenhagen date), post one S1_HEARTBEAT_v1 on #1156 now",
                        "brief=<B.run_id or NONE> brief_state=<OK or the T1 to T3 result>", "A page you cannot read: no heartbeat.",
                        "Bridge #173 has no S1_REVIEW_REQUEST_v1 for this head (read as VETO reads it: since the PR's created_at, every page)",

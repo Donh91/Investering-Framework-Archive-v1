@@ -913,7 +913,7 @@ class Signals(unittest.TestCase):
 
     def test_heartbeat_due(self):
         self.assertTrue(brief_of()["heartbeat_due"])                                                            # 11:40 Copenhagen, none today
-        beat = comment(90, "S1_HEARTBEAT_v1\nmain=x", minutes_ago=60)
+        beat = comment(90, "S1_HEARTBEAT_v1\nmain=x contract=77922ae6", minutes_ago=60)
         self.assertFalse(brief_of(lambda w: w.update(issue_comments=[beat]))["heartbeat_due"])
         self.assertTrue(brief_of(lambda w: w.update(issue_comments=[dict(beat, created_at=ts(1500), updated_at=ts(1500))]))["heartbeat_due"])
         self.assertFalse(brief_of(lambda w: w.update(now=B.iso(NOW.replace(hour=6))))["heartbeat_due"])        # 07:40 Copenhagen
@@ -1260,8 +1260,10 @@ class TickText(unittest.TestCase):
 
     def test_the_tick_is_short(self):
         # v3 made S1 read about 120 KB before its first decision. S1 v3.3 W2b raised the cap from 25,000 to 26,000: it added
-        # T3H and HALT rule C1b and removed the T3 tree walk (TICK v3.3 is 25,796 bytes)
-        self.assertLess(len(TICK.encode("utf-8")), 26000)
+        # T3H and HALT rule C1b and removed the T3 tree walk (TICK v3.3 was 25,796 bytes). S1 v3.3 W5 raised it to 27,500:
+        # the T3H ledger hint (it replaces a full-day read of #1156 by none or one small read), the owner route for a
+        # required job that never ran, and the T6 budget (TICK is 27,026 bytes)
+        self.assertLess(len(TICK.encode("utf-8")), 27500)
 
 
 class TickModel(unittest.TestCase):
@@ -2630,10 +2632,15 @@ class RedTeamFixes(unittest.TestCase):
         self.assertNotIn("07_PROMPTS_AND_AGENTS, scripts/governance and scripts/health (tree SHAs) equal", TICK)
         self.assertIn("a pin path of the switch (read 00_FMOS/S1/REVIEWED_MERGE_LANE.json at M now; the bootstrap verified its blob; never use B.pins.paths for this)", t3)
         self.assertIn(".toml, .cfg, .ini, .pth, .mjs or .js or is named requirements*.txt, anywhere, tests/ included", t3)                       # A9, final round F6
-        # A20, W2b D3: the heartbeat is T3H; it reads #1156 itself and B.ledger is only a hint
+        # A20, W2b D3: the heartbeat is T3H. Whether one is due is S1's own clock and run origin, never the brief's
+        # heartbeat_due (that is the BUILD's clock: a brief built at 08:25 says "not due" for the 08:45 tick). W5: a brief
+        # that passed T1 and T2 is evidence of what #1156 held up to its ledger read, so T3H reads only the minutes after
+        # it, or nothing when that brief shows today's heartbeat; without such a brief it reads #1156 since midnight itself.
         self.assertIn("If none is an S1_HEARTBEAT_v1 of this task by Donh91 created today (Copenhagen date), post one S1_HEARTBEAT_v1 on #1156 now", TICK)
-        self.assertIn("Only in a scheduled run of this task at 08:45 Europe/Copenhagen or later: fetch API/issues/1156/comments?since=<today 00:00 Copenhagen, in UTC>&per_page=100, every page.", TICK)
-        self.assertIn("(B.ledger is a hint)", TICK)
+        self.assertIn("Only in a scheduled run of this task at 08:45 Europe/Copenhagen or later.", TICK)
+        self.assertIn("LEDGER HINT: when T1 and T2 passed in this run and B.ledger.read is true", TICK)
+        self.assertIn("In every other run S is today 00:00 Copenhagen, in UTC. fetch API/issues/1156/comments?since=<S>&per_page=100, every page.", TICK)
+        self.assertNotIn("heartbeat_due", TICK)
         self.assertIn("(The heartbeat is T3H.)", TICK)
         # the fields those steps name exist on the entry
         e = entry(brief_of())
