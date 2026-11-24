@@ -170,12 +170,117 @@ def incr(rows,base,other,h='24h'):
         if y is not None:
             wins+=int(bv==y and a!=y); fails+=int(bv!=y and a==y)
     return {'addition':other,'vs':base,'horizon':h,'decisions_changed_n':changed,'unique_wins_n':wins,'unique_failures_n':fails,'delay_cost':'UNAVAILABLE_UNTIL_CONFIRMATION_TIMESTAMPS','tail_errors_avoided':'UNAVAILABLE_UNTIL_NUMERIC_TAIL_OUTCOMES'}
+# Same frozen candidates, same outcome-owner-admitted rows. No new threshold,
+# outcome definition, model, scheduler or decision authority.
+CORE_ABLATIONS = {
+    "ETHBTC_PERSISTENCE": "C06_BREADTH_BTCD",
+    "BREADTH_SURVIVAL": "C05_ETHBTC_BTCD",
+    "BTCD_PATH_RECLAIM": "C04_ETHBTC_BREADTH",
+}
+
+
+def core_ablation_diagnostic(valid_rows, runtime):
+    """Describe marginal value of the EXISTING C07 AND rule on matched outcomes.
+
+    Only call after filter_consumer_rows. A negative return prevented is not
+    investment P&L; a positive return missed is not an execution loss.
+    Outcomes remain on the calibration side, never in a forecast projection.
+    """
+    event_ids = [r.get("event_id") for r in valid_rows]
+    if any(not isinstance(x, str) or not x for x in event_ids) or len(set(event_ids)) != len(event_ids):
+        raise ValueError("core_ablation_invalid_or_duplicate_event")
+    # Check the original active floor and preserve its dependence semantics.
+    dependence_census(valid_rows, runtime)
+    parsed = []
+    for row in valid_rows:
+        decisions = json.loads(row["candidate_decisions"])
+        if any(type(decisions.get(k)) is not bool for k in evidence.CORE_IDS):
+            raise ValueError("core_ablation_incomplete_decisions")
+        # No alternate rule: verify the original core decision contract.
+        evidence.validate_core_decision_contract(row, decisions, set(evidence.CORE_IDS))
+        parsed.append((row, decisions))
+
+    horizons = {}
+    for horizon in ("24h", "72h", "7d"):
+        matched = []
+        for row, decisions in parsed:
+            label = row.get("outcome_" + horizon, "")
+            if label == "":
+                continue
+            if label not in ("0", "1"):
+                raise ValueError("core_ablation_invalid_outcome")
+            matched.append((row, decisions, label == "1"))
+        n = len(matched)
+        positives = sum(y for _, _, y in matched)
+        full = "C07_SIMPLE_3"
+        full_correct = sum(d[full] == y for _, d, y in matched)
+        projection = sorted((r["event_id"], r["provenance_hash"], "1" if y else "0")
+                            for r, _, y in matched)
+        cohort_sha = hashlib.sha256(json.dumps(projection, separators=(",", ":"),
+                                                ensure_ascii=False).encode()).hexdigest()
+        families = {}
+        for family, without in CORE_ABLATIONS.items():
+            # Adding a conjunct can only change permission True -> False.
+            if any(d[full] and not d[without] for _, d, _ in matched):
+                raise ValueError("core_ablation_frozen_and_rule_violation")
+            blocked = [(r, y) for r, d, y in matched if d[without] and not d[full]]
+            prevented = sum(not y for _, y in blocked)
+            missed = sum(y for _, y in blocked)
+            without_correct = sum(d[without] == y for _, d, y in matched)
+            if full_correct - without_correct != prevented - missed:
+                raise ValueError("core_ablation_paired_accounting_mismatch")
+            families[family] = {
+                "without_candidate": without,
+                "paired_matured_n": n,
+                "pivotal_veto_n": len(blocked),
+                "negative_relative_outcomes_vetoed_n": prevented,
+                "positive_relative_outcomes_missed_n": missed,
+                "net_correct_classification_delta": prevented - missed if n else None,
+                "accuracy_delta": ratio(prevented - missed, n),
+                "positive_relative_outcome_miss_rate": ratio(missed, positives),
+                "classification_weighting": "EQUAL_ERROR_WEIGHT_DESCRIPTIVE_ONLY",
+                "confirmation_delay_cost": None,
+                "economic_opportunity_cost": None,
+            }
+        horizons[horizon] = {
+            "matched_matured_n": n,
+            "unmatured_n": len(parsed) - n,
+            "positive_relative_outcome_n": positives,
+            "nonpositive_relative_outcome_n": n - positives,
+            "cohort_sha256": cohort_sha,
+            "fixed_28d_calendar_block_n": dependence_census([r for r, _, _ in matched], runtime)["fixed_28d_calendar_block_n"],
+            "full_core_correct_n": full_correct,
+            "always_wait_correct_n": n - positives,
+            "always_permission_correct_n": positives,
+            "full_core_accuracy": ratio(full_correct, n),
+            "always_wait_accuracy": ratio(n - positives, n),
+            "always_permission_accuracy": ratio(positives, n),
+            "full_core_permission_n": sum(d[full] for _, d, _ in matched),
+            "families": families,
+        }
+    return {
+        "contract": "SHARED_ROW_CORE_ABLATION_DIAGNOSTIC_v1",
+        "authority": "RESEARCH_ONLY_NON_CANONICAL",
+        "source_owner": "ORIGINAL_SHARED_ROW_FILTER_CONSUMER_ROWS",
+        "binary_target": TARGET_OUTCOME,
+        "status": "DESCRIPTIVE_ONLY" if any(v["matched_matured_n"] for v in horizons.values()) else "INSUFFICIENT_EVIDENCE",
+        "horizons": horizons,
+        "independent_market_shock_family_n": None,
+        "statistical_independence_verified": False,
+        "predictive_edge_established": False,
+        "portfolio_execution": False,
+        "canonical_effect": False,
+        "automatic_promotion": False,
+    }
+
+
 def main():
     raw_rows=read(LED); raw_div=read(FNP); runtime=json.loads((ROOT/'RUNTIME_STATUS.json').read_text()); rows,div,excluded=filter_consumer_rows(raw_rows,raw_div,runtime); now=datetime.now(timezone.utc); y,w,_=now.isocalendar(); ids=[c['id'] for c in json.loads(REG.read_text())['candidates']]
     perf={cid:{h:metrics(rows,cid,h) for h in ['24h','72h','7d']} for cid in ids}; mats={h:sum(bool(d.get(f'matured_{h}_utc')) for d in div) for h in ['24h','72h','7d']}
     challengers=['C08_SIMPLE_3_ETF','C09_SIMPLE_3_ETF_LEVERAGE','C10_STABLECOIN_CHALLENGER','C11_CFGI_CHALLENGER','C12_FULL_STACK']
     report={'contract':'SHARED_ROW_TOURNAMENT_WEEKLY_v1','authority':'RESEARCH_ONLY_NON_CANONICAL','generated_at_utc':now.replace(microsecond=0).isoformat().replace('+00:00','Z'),'iso_year':y,'iso_week':w,'status':'COLLECTING' if not rows else 'EVALUATING','eligible_rows_total':len(rows),'consensus_rows':sum(1 for r in rows if len(set(json.loads(r.get('candidate_decisions') or '{}').values()))<=1),'divergences_total':len(div),'matured':mats,'candidate_performance':perf,'incremental_value_matrix':[incr(rows,'C07_SIMPLE_3',x) for x in challengers],'tail_error_prevention':{'status':'UNAVAILABLE' if not div else 'EVALUATE_FROM_MATURED_DIVERGENCES','n':len(div)},'consumer_integrity_filter':{'raw_rows':len(raw_rows),'raw_divergences':len(raw_div),'excluded':excluded},'architecture_gate':'INSUFFICIENT_EVIDENCE',
             'dependence_census':dependence_census(rows,runtime),
+            'core_ablation_diagnostic':core_ablation_diagnostic(rows,runtime),
             'decision_quality_not_proven':True,
             'binary_outcome_semantics':TARGET_OUTCOME,
             'broad_altcoin_takeoff_scored':False,'cycle_exit_scored':False,
@@ -183,6 +288,6 @@ def main():
             'canonical_effect':False}
     block_count=report["dependence_census"]["fixed_28d_calendar_block_n"]
     OUT.mkdir(parents=True,exist_ok=True); name=f'SHARED_ROW_TOURNAMENT_WEEKLY_{y}-W{w:02d}.json'; (OUT/name).write_text(json.dumps(report,indent=2,sort_keys=True)+'\n'); (OUT/'LATEST.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
-    (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n- 28-day calendar blocks: **{block_count}** (NOT independent market shocks)\n- Independent market-shock N: `UNKNOWN`\n- Outcome: ETH/BTC forward relative return positive, NOT broad altseason takeoff or exit\n\nRow-based precision and recall are DESCRIPTIVE ONLY; no statistical or economic winner is permitted.\n')
+    (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n- 28-day calendar blocks: **{block_count}** (NOT independent market shocks)\n- Independent market-shock N: `UNKNOWN`\n- Outcome: ETH/BTC forward relative return positive, NOT broad altseason takeoff or exit\n- Core ablation: see core_ablation_diagnostic in LATEST.json for matched matured C07 vs existing two-family candidates and always-wait/always-permission comparisons. No new threshold or trade authority.\n\nRow-based precision and recall are DESCRIPTIVE ONLY; no statistical or economic winner is permitted.\n')
     print(json.dumps({'status':'PASS','report':str(OUT/name),'eligible_rows':len(rows),'divergences':len(div)},sort_keys=True))
 if __name__=='__main__':main()
