@@ -75,6 +75,8 @@ def classify_family(
     settlements: list[dict[str, Any]],
     previous_state: str | None,
     policy: dict[str, Any],
+    *,
+    previous_weakness_unresolved: bool = False,
 ) -> dict[str, Any]:
     recent_rows = settlements[-4:]
     previous_rows = settlements[-8:-4]
@@ -96,11 +98,13 @@ def classify_family(
     recent_median = round(float(median(recent)), 2) if recent else None
     prev_mean = round(sum(prev) / len(prev), 2) if prev else None
     decline = round(prev_mean - recent_mean, 2) if recent_mean is not None and prev_mean is not None else None
-    last_two = recent[-2:]
-    recovery_ready = len(last_two) == 2 and all(x >= recovery_min for x in last_two)
-
     coverage = evidence_coverage(recent_values, min_valid)
-    raw_state = "INSUFFICIENT_EVIDENCE" if coverage["coverage_status"] == "INSUFFICIENT_EVIDENCE" else "NORMAL"
+    adequate = coverage["coverage_status"] != "INSUFFICIENT_EVIDENCE"
+    last_two = recent[-2:]
+    recovery_ready = adequate and len(last_two) == 2 and all(x >= recovery_min for x in last_two)
+
+    # Keep the existing policy vocabulary; WATCH can flag missing evidence, not measured failure.
+    raw_state = "NORMAL" if adequate else "WATCH"
     if len(recent) >= min_valid:
         if zero_count >= 2:
             raw_state = "DEEP_REVIEW"
@@ -109,9 +113,16 @@ def classify_family(
         elif weak_count >= 2 or (decline is not None and decline >= watch_decline):
             raw_state = "WATCH"
 
+    severe = {"PERSISTENT_WEAKNESS", "DEEP_REVIEW"}
+    prior_unresolved = previous_state in severe or previous_weakness_unresolved is True
+    unresolved = raw_state in severe or (prior_unresolved and not (raw_state == "NORMAL" and recovery_ready))
     state = raw_state
-    if previous_state in {"PERSISTENT_WEAKNESS", "DEEP_REVIEW"} and raw_state in {"NORMAL", "INSUFFICIENT_EVIDENCE"} and not recovery_ready:
+    if unresolved and raw_state == "NORMAL":
         state = "WATCH"
+    watch_reason = None
+    if state == "WATCH":
+        watch_reason = ("PRIOR_WEAKNESS_NOT_RECOVERED" if unresolved else
+                        "MEASURED_WEAKNESS" if adequate else "INSUFFICIENT_EVIDENCE")
 
     streak = 0
     for value in reversed(recent):
@@ -124,9 +135,12 @@ def classify_family(
         "family": family,
         "state": state,
         "raw_state": raw_state,
+        "performance_assessment": raw_state if adequate else None,
+        "watch_reason": watch_reason,
+        "prior_weakness_unresolved": unresolved,
         "valid_observations_4w": len(recent),
         **coverage,
-        "recent_scores": recent_values,
+        "recent_scores": [value if valid_score(value) else None for value in recent_values],
         "mean_4w": recent_mean,
         "median_4w": recent_median,
         "weak_weeks_4w": weak_count,
@@ -152,15 +166,16 @@ def build(repo: Path) -> dict[str, Any]:
     prev_family_states = previous.get("family_states") or {}
     trends = {}
     for fam in families:
-        prior_state = (prev_family_states.get(fam) or {}).get("state")
-        trends[fam] = classify_family(fam, settlements, prior_state, policy)
+        prior = prev_family_states.get(fam) or {}
+        trends[fam] = classify_family(fam, settlements, prior.get("state"), policy,
+                                      previous_weakness_unresolved=prior.get("prior_weakness_unresolved") is True)
 
     settled_count = len(settlements)
     last_checkpoint_count = int(previous.get("last_checkpoint_settled_count", 0) or 0)
     checkpoint_every = int(policy["checkpoint"]["settled_weeks"])
     checkpoint_due = settled_count >= checkpoint_every and settled_count - last_checkpoint_count >= checkpoint_every
 
-    severity_order = {"NORMAL": 0, "INSUFFICIENT_EVIDENCE": 1, "WATCH": 2, "PERSISTENT_WEAKNESS": 3, "DEEP_REVIEW": 4}
+    severity_order = {"NORMAL": 0, "WATCH": 1, "PERSISTENT_WEAKNESS": 2, "DEEP_REVIEW": 3}
     ranked = sorted(
         trends.values(),
         key=lambda x: (
@@ -170,7 +185,7 @@ def build(repo: Path) -> dict[str, Any]:
         ),
     )
     persistent = [x for x in ranked if x["state"] in {"PERSISTENT_WEAKNESS", "DEEP_REVIEW"}]
-    watched = [x for x in ranked if x["state"] == "WATCH"]
+    watched = [x for x in ranked if x["state"] == "WATCH" and x["watch_reason"] != "INSUFFICIENT_EVIDENCE"]
     insufficient = sorted(x["family"] for x in ranked if x["coverage_status"] == "INSUFFICIENT_EVIDENCE")
 
     checkpoint_sequence = int(previous.get("checkpoint_sequence", 0) or 0)
@@ -199,7 +214,7 @@ def build(repo: Path) -> dict[str, Any]:
             "has not matured. Continue observing without research escalation."
         )
     elif watched:
-        reason = f"Watch-only weakness exists in {watched[0]['family']}; continue collecting settled evidence."
+        reason = f"Measured or unresolved prior weakness remains on watch in {watched[0]['family']}; continue collecting settled evidence."
 
     if insufficient:
         reason += " Insufficient scoreable evidence; recover evaluator/input lineage for: " + ", ".join(insufficient) + ". Missingness is not normal performance."

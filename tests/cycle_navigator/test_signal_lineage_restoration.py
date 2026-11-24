@@ -110,10 +110,18 @@ class HistoricalRecoveryRegression(unittest.TestCase):
         policy = read('05_CYCLE_NAVIGATOR/internal_learning/POLICY.json')
         rows = [{'family_scores': {'ethbtc': value}} for value in [100, None, None, None]]
         result = classify_family('ethbtc', rows, 'NORMAL', policy)
-        self.assertEqual(result['state'], 'INSUFFICIENT_EVIDENCE')
+        self.assertEqual(result['state'], 'WATCH')
         self.assertEqual(result['coverage_status'], 'INSUFFICIENT_EVIDENCE')
+        self.assertIsNone(result['performance_assessment'])
+        self.assertEqual(result['watch_reason'], 'INSUFFICIENT_EVIDENCE')
         self.assertEqual(result['valid_observations_4w'], 1)
-        self.assertEqual(classify_family('ethbtc', rows, 'DEEP_REVIEW', policy)['state'], 'WATCH')
+        carried = classify_family('ethbtc', rows, 'DEEP_REVIEW', policy)
+        self.assertEqual(carried['state'], 'WATCH')
+        self.assertTrue(carried['prior_weakness_unresolved'])
+        self.assertFalse(carried['recovery_ready'])
+        again = classify_family('ethbtc', rows, carried['state'], policy, previous_weakness_unresolved=carried['prior_weakness_unresolved'])
+        self.assertTrue(again['prior_weakness_unresolved'])
+        self.assertEqual(again['watch_reason'], 'PRIOR_WEAKNESS_NOT_RECOVERED')
 
     def test_real_zero_scores_are_preserved(self):
         from scripts.cycle_navigator.cn_precision_learning_supervisor import classify_family

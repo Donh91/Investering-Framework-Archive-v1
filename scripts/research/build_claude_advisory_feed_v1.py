@@ -126,9 +126,12 @@ def build(root: Path, *, head: str | None = None) -> dict:
     weak = sorted(({
         "family": k, "state": v.get("state"),
         "scoreable_observations": v.get("valid_observations_4w"),
-        "mean_4w": v.get("mean_4w")
+        "mean_4w": v.get("mean_4w"),
+        "coverage_status": v.get("coverage_status"),
+        "watch_reason": v.get("watch_reason"),
     } for k, v in states.items() if isinstance(v, dict)
-                and v.get("state") in WATCH_STATES), key=lambda x: x["family"])
+                and v.get("state") in WATCH_STATES
+                and v.get("watch_reason") != "INSUFFICIENT_EVIDENCE"), key=lambda x: x["family"])
     if weak:
         items.append({
             "id": "CN_4_SETTLEMENT_WEAKNESS_CONTEXT",
@@ -140,6 +143,19 @@ def build(root: Path, *, head: str | None = None) -> dict:
             "weak_families": weak,
             "question": "Review original CN errors versus same-clock width-adjusted baselines only at an eligible checkpoint",
             "next_gate": "NEXT_SUCCESSFUL_4_SETTLEMENT_CHECKPOINT_AND_MATCHED_SOURCE_CLOCKS",
+        })
+    gaps = sorted((k for k, v in states.items() if isinstance(v, dict) and
+                   v.get("coverage_status") == "INSUFFICIENT_EVIDENCE"))
+    if gaps:
+        items.append({
+            "id": "CN_PRECISION_EVIDENCE_GAP_CONTEXT",
+            "original_owner": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1516",
+            "scientific_owner": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+            "priority": "P0_REVIEW_ONLY", "dispatch": "NO_AUTO_DISPATCH",
+            "last_settled_score_key": precision.get("last_settled_score_key"),
+            "insufficient_evidence_families": gaps,
+            "question": "Recover source/evaluator lineage; missing outcomes do not establish weak or normal performance",
+            "next_gate": "VERIFIED_SOURCE_AND_EVALUATOR_COVERAGE",
         })
     out = {
         "contract": "CLAUDE_ORIGINAL_OWNER_ADVISORY_FEED_v1",
