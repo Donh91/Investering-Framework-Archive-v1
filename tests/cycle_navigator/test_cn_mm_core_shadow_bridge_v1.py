@@ -598,7 +598,9 @@ def execute(*args):
     subprocess.run([sys.executable,*args],check=True,capture_output=True,text=True,timeout=180)
 capture=Path('03_DAILY_CAPTURE_LOGS')
 freeze_file=Path('research/master_monday_preflight/frozen/2026/W47/WEEKLY_EVIDENCE_FREEZE.json')
-historical=json.loads(freeze_file.read_bytes())
+historical_raw=freeze_file.read_bytes()
+historical=json.loads(historical_raw)
+historical_head=git('rev-parse','HEAD')
 assert 'weekly_source_binding' not in historical
 # Use original pointer bytes, not an advancing LATEST pointer.
 pointer_path=capture/'weekly/LATEST_WEEKLY_CALIBRATION.json'
@@ -635,6 +637,36 @@ with tempfile.TemporaryDirectory() as temp:
     packet_path=Path(temp)/'packet.json'
     packet_path.write_bytes(b.canon(packet))
     out=Path('research/api_agent/outputs/weekly/2026/W47')
+    # A genuine replay of the old core rows cannot manufacture the missing
+    # historical producer binding, even with a correctly rehashed packet.
+    forged={**packet,'checkout_sha':historical_head,
+            'freeze_sha256':historical['freeze_sha256'],
+            'freeze_file_sha256':b.sha(historical_raw)}
+    forged.pop('packet_sha256')
+    forged['packet_sha256']=b.sha(b.canon(forged))
+    old_ledger=b.committed(b.LEDGER,historical_head)
+    old_registry=b.committed(b.BASE/'TRANSFORM_FREEZE_REGISTRY.json',historical_head)
+    b.verify_packet_projection(forged,historical,old_ledger,old_registry,repo=b.ROOT)
+    forged_path=Path(temp)/'forged.json'
+    forged_path.write_bytes(b.canon(forged))
+    new_raw=freeze_file.read_bytes()
+    try:
+        freeze_file.write_bytes(historical_raw)
+        try:
+            b.publish_packet(forged_path,freeze_file,historical_head,out)
+        except ValueError as exc:
+            assert str(exc)=='SHADOW_PINNED_WEEKLY_BINDING_UNVERIFIED',exc
+        else:
+            raise AssertionError('PUBLISH_ACCEPTED_UNBOUND_HISTORICAL_PACKET')
+    finally:
+        freeze_file.write_bytes(new_raw)
+    old_path=out/('CN_MM_CORE_SHADOW_'+historical['freeze_sha256']+'.json')
+    old_path.write_bytes(b.canon(forged))
+    commit([old_path],'synthetic adversarial historical packet only')
+    old_pointer={'iso_year':2026,'iso_week':47,'freeze_sha256':historical['freeze_sha256']}
+    rejected=b.consume_cn_shadow(b.ROOT,old_pointer)
+    assert rejected['status']=='UNKNOWN' and rejected['shadow_candidate_decision'] is None,rejected
+    # The positive packet is still bound to its original earlier checkout.
     published=b.publish_packet(packet_path,freeze_file,head,out)
     mm_pointer={'iso_year':2026,'iso_week':47,'freeze_sha256':freeze['freeze_sha256']}
     assert b.consume_cn_shadow(b.ROOT,mm_pointer)['status']=='UNKNOWN'
