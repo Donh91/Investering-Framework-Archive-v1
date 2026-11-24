@@ -30,4 +30,4 @@ jobs:
       - name: Run executable semantic and PIT controls
         run: |
           set -euo pipefail
-          python -m unittest tests.cycle_navigator.test_signal_lineage_restoration tests.cycle_navigator.test_weekly_offline_issuer tests.cycle_navigator.test_weekly_shadow_analysis_v1 tests.master_monday.test_weekly_source_binding_v1 tests.master_monday.test_strict_json_v1 -v
+          python -m unittest tests.cycle_navigator.test_signal_lineage_restoration tests.cycle_navigator.test_weekly_offline_issuer tests.cycle_navigator.test_weekly_shadow_analysis_v1 tests.master_monday.test_weekly_source_binding_v1 tests.master_monday.test_strict_json_v1 tests.cycle_navigator.test_cn_mm_core_shadow_bridge_v1 -v
