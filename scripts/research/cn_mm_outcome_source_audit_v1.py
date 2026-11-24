@@ -9,7 +9,7 @@ from collections import Counter
 
 from scripts.research import cn_mm_core_shadow_bridge_v1 as bridge
 
-def verify_matured_path(replay, row, detail, horizon, frozen_baseline):
+def verify_matured_path(replay, row, detail, horizon, frozen_baseline, *, retain_path=False):
     # Reuse existing owner and admission functions. load_owner installs the
     # original scripts/research import route used by the owner modules.
     bridge.load_owner()
@@ -55,8 +55,16 @@ def verify_matured_path(replay, row, detail, horizon, frozen_baseline):
                             ("forward", "forward_return_pct"), ("mae", "mae_pct"), ("mfe", "mfe_pct")):
             if not math.isclose(actual[key], float(detail[f"{asset}_{suffix}"]), rel_tol=1e-12, abs_tol=1e-12):
                 raise ValueError("OUTCOME_REPLAY_STATISTIC_MISMATCH:" + asset + ":" + key)
-    return {"event_id": row["event_id"], "horizon": horizon, "status": "SOURCE_BYTES_REPLAYED",
-            "outcome_source_commit": commit, "sample_count": len(path_rows)}
+    result = {"event_id": row["event_id"], "horizon": horizon, "status": "SOURCE_BYTES_REPLAYED",
+              "outcome_source_commit": commit, "sample_count": len(path_rows)}
+    if retain_path:
+        # Keep the independently replayed path in memory on the evaluation side
+        # only. It is not a feature, a persisted market record, or a new owner.
+        result["path"] = {owner.iso(r["ts"]): {
+            "source_window_end_utc": owner.iso(r["available"]),
+            **{asset+"_close": r[asset] for asset in ("ethbtc","btc","eth")}}
+            for r in path_rows}
+    return result
 
 
 def audit_outcome_cohort(replay, *, evaluate=False):
@@ -73,6 +81,7 @@ def audit_outcome_cohort(replay, *, evaluate=False):
     horizon_counts = Counter()
     verified_rows = []
     verified_details = {}
+    verified_paths = {}
     sequence_inputs = []
     source_baselines = {}
     for row in rows:
@@ -103,11 +112,12 @@ def audit_outcome_cohort(replay, *, evaluate=False):
             try:
                 if len(receipts) != 1:
                     raise ValueError("OUTCOME_REPLAY_UNIQUE_RECEIPT_REQUIRED")
-                verify_matured_path(replay, row, receipts[0], horizon, frozen_baseline)
+                proof = verify_matured_path(replay, row, receipts[0], horizon, frozen_baseline, retain_path=evaluate)
                 counts["verified"] += 1
                 horizon_counts[horizon] += 1
                 if evaluate:
                     verified_details[key] = receipts[0]
+                    verified_paths[key] = proof["path"]
             except (ValueError, RuntimeError, TypeError, KeyError, AttributeError, OSError, OverflowError,
                     __import__("subprocess").SubprocessError) as exc:
                 counts["rejected"] += 1
@@ -122,11 +132,11 @@ def audit_outcome_cohort(replay, *, evaluate=False):
             "edge_established": False, "outcomes_used_as_features": False,
             "status": "REPLAY_COMPLETE" if counts["verified"] and not counts["rejected"] and not orphans else "REPLAY_BLOCKED"}
     if evaluate:
-        result["matched_research"] = evaluate_verified_cohort(replay, result, verified_rows, verified_details, sequence_inputs, source_baselines)
+        result["matched_research"] = evaluate_verified_cohort(replay, result, verified_rows, verified_details, sequence_inputs, source_baselines, verified_paths)
     return result
 
 
-def episode_opportunity(episodes, rows, details, baselines):
+def episode_opportunity(episodes, rows, details, baselines, verified_paths):
     """Compare on a common ORIGINAL endpoint, not moving 24h/72h/7d targets.
 
     This is descriptive research on observed crossing episodes. Never call
@@ -134,7 +144,6 @@ def episode_opportunity(episodes, rows, details, baselines):
     A closed episode without observed completion is a separate wait case.
     An open/censored episode or unavailable outcome cannot be scored.
     """
-    from datetime import timedelta
     by_clock = {r["observation_timestamp_utc"]: r for r in rows}
     if len(by_clock) != len(rows):
         raise ValueError("EPISODE_DUPLICATE_OBSERVATION")
@@ -151,7 +160,9 @@ def episode_opportunity(episodes, rows, details, baselines):
             detail = details.get((early["event_id"], h))
             item = {"status": "OUTCOME_UNAVAILABLE", "early_relative_return_pct": None,
                     "wait_relative_return_pct": None, "early_minus_wait_pp": None,
-                    "observation_delay_hours": None, "trade_pnl": None}
+                    "observation_delay_hours": None, "trade_pnl": None,
+                    "same_path_later_baseline_verified": False,
+                    "wait_comparator": "NO_RELATIVE_EXPOSURE_NOT_CASH_OR_PORTFOLIO_RETURN"}
             entry["horizons"][h] = item
             if detail is None:
                 continue
@@ -178,11 +189,23 @@ def episode_opportunity(episodes, rows, details, baselines):
                     bridge.clock(completion) < target <= endpoint):
                 item["status"] = "LATER_BASELINE_NOT_COMPARABLE"
                 continue
+            # A later source revision must not silently splice a different
+            # price history into the earlier receipt's endpoint calculation.
+            same_path = verified_paths.get((early["event_id"], h), {})
+            bound = same_path.get(late_base["timestamp_utc"])
+            if (bound is None or
+                    bound["source_window_end_utc"] != late_base["source_window_end_utc"] or
+                    bridge.clock(bound["source_window_end_utc"]) > bridge.clock(completion) or
+                    any(bound[asset+"_close"] != float(late_base[asset+"_close"])
+                        for asset in ("ethbtc","btc","eth"))):
+                item["status"] = "LATER_BASELINE_NOT_RECONCILED_TO_ORIGINAL_OUTCOME_PATH"
+                continue
             later_price = float(late_base["ethbtc_close"])
             if not math.isfinite(later_price) or later_price <= 0:
                 raise ValueError("EPISODE_BASELINE_INVALID")
             wait_return = (float(detail["ethbtc_end"]) / later_price - 1) * 100
             item.update(status="COMMON_ENDPOINT_OBSERVATION_BASELINE_PROXY",
+                        same_path_later_baseline_verified=True,
                         wait_relative_return_pct=wait_return, early_minus_wait_pp=early_return-wait_return,
                         observation_delay_hours=(bridge.clock(completion)-bridge.clock(first)).total_seconds()/3600)
         results.append(entry)
@@ -193,7 +216,7 @@ def episode_opportunity(episodes, rows, details, baselines):
             "scientific_pit_eligible": False, "forecast_authority": False}
 
 
-def evaluate_verified_cohort(replay, audit, rows, details, sequence_inputs, baselines):
+def evaluate_verified_cohort(replay, audit, rows, details, sequence_inputs, baselines, verified_paths):
     """Only all-admitted original-byte-replayed cohort, no outcome selection."""
     if audit["status"] != "REPLAY_COMPLETE":
         return {"status": "BLOCKED_OUTCOME_SOURCE_REPLAY", "forecast_authority": False}
@@ -207,7 +230,7 @@ def evaluate_verified_cohort(replay, audit, rows, details, sequence_inputs, base
         if panel["matched_matured_n"] != audit["verified_horizon_counts"].get(h,0):
             raise ValueError("MATCHED_RESEARCH_DENOMINATOR_MISMATCH")
     census = bridge.load_owner().sequence_census(sequence_inputs)
-    opportunity = episode_opportunity(census["episodes"], rows, details, baselines)
+    opportunity = episode_opportunity(census["episodes"], rows, details, baselines, verified_paths)
     return {"contract": "PINNED_MATCHED_CORE_AND_EPISODE_RESEARCH_v1",
             "status": "DESCRIPTIVE_ONLY_NOT_INDEPENDENT_EDGE",
             "authority": "RESEARCH_ONLY_NON_CANONICAL",
