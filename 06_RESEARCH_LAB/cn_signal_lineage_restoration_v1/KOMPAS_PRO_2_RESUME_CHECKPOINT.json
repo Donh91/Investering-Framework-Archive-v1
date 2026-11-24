@@ -26,14 +26,15 @@
     "CP17 same-execution incremental pair proof using actual prior full replay, full-current equality native test; no durable trust",
     "CP18 actual calibration context now carries CCE/ODM/SRE/FAE; existing MM publisher binds full gateway input, learning and Task2; CN consumes metadata only; no inferred model use",
     "CP19 real context CLI→gateway request→publication binding→independent feature test; synthetic receipt, no paid API. CP17 native equivalence and leverage coverage PASS",
-    "CP20 historical W47 real context asserts SOURCE_BINDING_MISSING and UNKNOWN; new isolated Git producer/sidecar/CN fixture; existing publisher and CN consumer now independently recheck original owner sidecar on exact Git bytes before admitting positive replay. Adversarial genuine-row rehashed historical packet rejected; native CI not yet observed."
+    "CP20 historical W47 real context asserts SOURCE_BINDING_MISSING and UNKNOWN; new isolated Git producer/sidecar/CN fixture; existing publisher and CN consumer now independently recheck original owner sidecar on exact Git bytes before admitting positive replay. Adversarial genuine-row rehashed historical packet rejected; native CI not yet observed.",
+    "CP21 existing MM publisher effective readiness now requires successful READY analysis, READY translation, available scorecard (or genuine empty pending outcomes) and verified consumer. API transport success is not product readiness. Native tests pending; translation/scorecard generation not repaired."
   ],
   "head_discovery": "Use live PR head, not this file as a head attestation; read newest exact-head receipt and CI logs.",
   "priorities": [
     {
       "id": "P0",
       "status": "OPEN",
-      "next": "CP20 implemented, verify exact-head CI and independent review. Historical W47 remains UNKNOWN; prospective source receipt check required at producer, publisher and CN. Next actual MM operational translation."
+      "next": "CP20 and CP21 implemented; verify final-head CI/review. Implement actual governed MM translation and scorecard using original owners; no false READY or new forecast authority."
     },
     {
       "id": "P1",
@@ -90,5 +91,24 @@
     "review": "REQUEST_AT_FINAL_HEAD",
     "gate_status": "ALL_G00_G12_AND_M01_M11_REMAIN_OPEN",
     "next": "Read fresh exact-head native CI, especially synthetic producer worktree fixture and historical gateway envelope. Verify native test execution; repair exact failure without weakening evidence. Then trace original MM output schema versus translation and scorecard, coordinate #2315 single writer; use #2312 existing failed publication job and existing owners, no release bypass."
+  },
+  "cp21": {
+    "code_head": "b65754498f63da041ab95b8eef0e516fa47aea0f",
+    "changed_blobs": {
+      "scripts/master_monday/publish_master_monday_outputs.py": "540843cdc6ab9e2bca41408cd6dd5ac74fc6031a",
+      "tests/master_monday/test_weekly_precision_regressions.py": "f43b77cc2c0aebf48560d0f454096cb60607c68e"
+    },
+    "root_cause": "Gateway framework_shadow_output_v3 strict schema has no operational_translation or scorecard. Publisher extracts summary only and previously used transport success and verified receipt for READY. CN offline issuer consumes fixed price-only sequence; no claim of restored intelligence.",
+    "native_previous_head": {
+      "head": "3735e2d79500883ee5157762506444848ea2d3a6",
+      "passed": 11,
+      "pending": 3,
+      "semantic_run": 45422074518,
+      "full_run": 45422073922
+    },
+    "native_ci_status": "PENDING_NOT_CLAIMED",
+    "review": "REQUEST_AT_FINAL_HEAD",
+    "next": "Read final-head CI and independent review. Coordinate #2315 original CN writer and gateway owner for task-specific validated analytical translation, genuine evidence-bound scorecard and actual consumer. #2319 site owner must separate verified source alignment from analytical readiness; #2312 browser startup failure remains open. Do not fabricate historical W47 or forecast.",
+    "gate_status": "ALL_G00_G12_AND_M01_M11_REMAIN_OPEN"
   }
 }
