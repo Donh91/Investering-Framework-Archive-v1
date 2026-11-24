@@ -419,6 +419,9 @@ class Digest(unittest.TestCase):
 # compares B.pins.contract_blob with the saved paste and, with 3b switched off, accepts the old value; the producer
 # compares it with the contract blob AT B.main and refuses it. That is why S1 keeps its own 3b cross-check (charter W2).
 KNOWN_PINS_DIVERGENCE = {"F02": ("BRIEF_UNVERIFIED(pins)", "OK")}
+# The producer uses native local blob evidence; it cannot see an independent connector file-response SHA.
+# The scheduled consumer must refuse these four cases even when the producer source verdict is OK.
+KNOWN_SOURCE_DIVERGENCE = {f"BOOT-FETCH-{index}-{wrong}" for index in (0, 1) for wrong in (True, False)}
 
 
 class VerdictAgreesWithW1(unittest.TestCase):
@@ -434,7 +437,8 @@ class VerdictAgreesWithW1(unittest.TestCase):
         m = (main.get("commit") or {}).get("sha") if isinstance(main, dict) else None
         listing = routes.get(f"{TR.API}/contents/{TR.S1_DIR}?ref={m}")
         try:
-            contract = json.loads(routes.get(f"file:{TR.CONTRACT_PATH}@{m}"))
+            response = routes.get(f"file:{TR.CONTRACT_PATH}@{m}")
+            contract = json.loads(response.get("content") if isinstance(response, dict) else None)
         except (TypeError, ValueError):
             return None
         if not isinstance(listing, list) or not isinstance(contract, dict):
@@ -459,6 +463,7 @@ class VerdictAgreesWithW1(unittest.TestCase):
 
     def test_every_fixture(self):
         compared = {"source": [], "t2": []}
+        source_divergence = set()
         for fx in TR.FIXTURES:
             got = self.inputs(fx)
             if got is None:
@@ -467,7 +472,11 @@ class VerdictAgreesWithW1(unittest.TestCase):
             v = B.brief_verdict(m, contract, blobs, text, (brief or {}).get("pins"), {})
             r = TR.replay(fx, off=("t0_monday",))
             with self.subTest(fx["id"]):
-                if r.result.startswith("SOURCE_UNVERIFIED"):
+                if fx["id"] in KNOWN_SOURCE_DIVERGENCE:
+                    self.assertEqual((v["source"], r.result), ("OK", "SOURCE_UNVERIFIED(3)"))
+                    self.assertEqual(r.writes, [])
+                    source_divergence.add(fx["id"])
+                elif r.result.startswith("SOURCE_UNVERIFIED"):
                     self.assertEqual(v["source"], r.result)
                 else:
                     self.assertEqual((v["source"], v["contract_blob"]), ("OK", fx["world"]["saved_3b"]))
@@ -478,6 +487,7 @@ class VerdictAgreesWithW1(unittest.TestCase):
                 if want is not None:
                     self.assertEqual((v["t2"], want), KNOWN_PINS_DIVERGENCE.get(fx["id"], (want, want)))
                     compared["t2"].append((fx["id"], v["t2"]))
+        self.assertEqual(source_divergence, KNOWN_SOURCE_DIVERGENCE)
         self.assertEqual(len(compared["source"]), len(TR.FIXTURES) - 1)                  # every fixture with a readable source
         self.assertEqual(sorted(i for i, w in compared["t2"] if w != "OK"), ["F02", "F13", "F13b"])
         self.assertGreaterEqual(len(compared["t2"]), 15)
