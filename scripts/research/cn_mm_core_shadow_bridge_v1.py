@@ -505,6 +505,21 @@ def calibration_feature_binding(context, freeze):
         return missing
 
 
+def gateway_input_status(api_receipt,api_status,whole_hash):
+    if not isinstance(api_receipt,dict) or not api_receipt:
+        return "UNATTESTED"
+    if (api_receipt.get("contract")!="API_AGENT_RECEIPT_v3" or
+        api_receipt.get("task")!="WEEKLY_CALIBRATION_SHADOW" or
+        api_receipt.get("context_hash")!=whole_hash or
+        not isinstance(whole_hash,str) or not re.fullmatch("[0-9a-f]{64}",whole_hash)):
+        return "RECEIPT_CONTEXT_MISMATCH"
+    if (api_status=="success" and api_receipt.get("status")=="PASS" and
+          isinstance(api_receipt.get("response_id"),str) and api_receipt["response_id"] and
+          api_receipt.get("untrusted_input_envelope") is True):
+        return "MATCHED_GATEWAY_INPUT_RECEIPT"
+    return "MATCHED_CONTEXT_NO_SUCCESSFUL_API_DELIVERY"
+
+
 def calibration_learning_binding(context,freeze,api_receipt,api_status):
     """Durable linkage to actual supplied calibration inputs, not model use.
 
@@ -525,18 +540,7 @@ def calibration_learning_binding(context,freeze,api_receipt,api_status):
         task2=intelligence["task2"]
         inventory=intelligence.get("incremental_inventory",{})
         whole_hash=sha(canon(context))
-        api_input_status="UNATTESTED"
-        if isinstance(api_receipt,dict) and api_receipt:
-            if (api_receipt.get("contract")!="API_AGENT_RECEIPT_v3" or
-                api_receipt.get("task")!="WEEKLY_CALIBRATION_SHADOW" or
-                api_receipt.get("context_hash")!=whole_hash):
-                api_input_status="RECEIPT_CONTEXT_MISMATCH"
-            elif (api_status=="success" and api_receipt.get("status")=="PASS" and
-                  isinstance(api_receipt.get("response_id"),str) and api_receipt["response_id"] and
-                  api_receipt.get("untrusted_input_envelope") is True):
-                api_input_status="MATCHED_GATEWAY_INPUT_RECEIPT"
-            else:
-                api_input_status="MATCHED_CONTEXT_NO_SUCCESSFUL_API_DELIVERY"
+        api_input_status=gateway_input_status(api_receipt,api_status,whole_hash)
         result.update(status="BOUND_RESEARCH_CONTEXT",
             api_input_status=api_input_status,context_sha256=context["context_hash"],
             gateway_context_sha256=whole_hash,
@@ -605,6 +609,7 @@ def read_calibration_feature_binding(repo, pointer, feature, read_committed, *, 
                     binding.get("intelligence_context_sha256")==machine["cn_mm_calibration_feature_binding"]["intelligence_context_sha256"] and
                     binding.get("freeze_sha256")==feature["freeze_sha256"] and
                     binding.get("feature_sha256")==feature["feature_sha256"] and
+                    binding.get("api_input_status")==gateway_input_status(machine.get("api_receipt"),machine.get("api_status"),binding.get("gateway_context_sha256")) and
                     all(binding.get(k) is False for k in ("model_utilization_verified","scientific_pit_eligible","forecast_authority","automatic_weight_updates"))):
                     # No outcome values in CN feature or forecast. Only the
                     # delivery metadata from the separately bound MM lane.

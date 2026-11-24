@@ -498,6 +498,68 @@ print('W47_INCREMENTAL_EQUIVALENCE '+json.dumps(result,sort_keys=True))
         context["cn_mm_shared_intelligence"]["learning"]["verified_n"]=999
         self.assertEqual(bridge.calibration_learning_binding(context,packet,receipt,"success")["status"],"UNAVAILABLE")
 
+    def test_real_weekly_context_and_gateway_envelope_share_exact_feature(self):
+        # Real existing context CLI and gateway request construction.
+        # Synthetic receipt only; no paid request or historical output write.
+        import subprocess
+        import sys
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/"context.json"
+            result=subprocess.run([sys.executable,"scripts/api_agent/build_weekly_calibration_context.py",
+                 "--weekly-pointer","03_DAILY_CAPTURE_LOGS/weekly/LATEST_WEEKLY_CALIBRATION.json",
+                 "--daily-output-root","research/api_agent/outputs/daily",
+                 "--freeze-file","research/master_monday_preflight/frozen/2026/W47/WEEKLY_EVIDENCE_FREEZE.json",
+                 "--legacy-root","04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1",
+                 "--experiment-registry","research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+                 "--experiment-outcome-root","research/framework_memory/outcome_memory",
+                 "--output",str(output)],cwd=bridge.ROOT,capture_output=True,text=True,timeout=240)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            code = """
+import json,sys
+from pathlib import Path
+from scripts.research import cn_mm_core_shadow_bridge_v1 as b
+from scripts.api_agent.api_gateway import build_request,canonical_bytes,sha256_bytes
+context=json.loads(Path(sys.argv[1]).read_text())
+freeze_file=Path('research/master_monday_preflight/frozen/2026/W47/WEEKLY_EVIDENCE_FREEZE.json')
+freeze=json.loads(freeze_file.read_text())
+head=b.git('rev-parse','HEAD').decode().strip()
+intel=context['cn_mm_shared_intelligence']
+assert intel['status']=='SHADOW_CONTEXT_ONLY',intel
+assert intel['learning']['verified_n']==199
+assert intel['task2']['paired_n']==14
+assert intel['incremental_inventory']['identity_counts']['new_receipt_keys']==54
+assert 'new_receipt_keys' not in intel['incremental_inventory']
+assert set(('cce','odm','sre','fae'))<=set(intel['learning']['meta_learning'])
+packet=b.build_checkout(freeze_file,head)
+assert packet['core']['status']=='CORE_REPLAY_AT_OBSERVATION_ONLY',packet
+diag=b.verify_packet_projection(packet,freeze,b.committed(b.LEDGER,head),b.committed(b.BASE/'TRANSFORM_FREEZE_REGISTRY.json',head),repo=b.ROOT)
+feature=b.intelligence_projection(packet,diag)
+assert feature==intel['feature']
+registry=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
+task='WEEKLY_CALIBRATION_SHADOW'
+request=build_request(task,registry['tasks'][task],'fixture no paid call',context)
+user=next(x for x in request['input'] if x['role']=='user')
+envelope=json.loads(user['content'][0]['text'])
+assert envelope['context_data']==context
+receipt={'contract':'API_AGENT_RECEIPT_v3','task':task,'context_hash':sha256_bytes(canonical_bytes(context)),
+         'status':'PASS','response_id':'synthetic_no_api_call','untrusted_input_envelope':True}
+binding=b.calibration_feature_binding(context,freeze)
+learning=b.calibration_learning_binding(context,freeze,receipt,'success')
+assert binding['status']=='BOUND_CALIBRATION_FEATURE'
+assert learning['api_input_status']=='MATCHED_GATEWAY_INPUT_RECEIPT'
+assert not learning['model_utilization_verified']
+machine={'freeze_sha256':freeze['freeze_sha256'],'context_hash':context['context_hash'],'api_status':'success',
+         'api_receipt':receipt,'cn_mm_calibration_feature_binding':binding,'cn_mm_calibration_learning_binding':learning}
+machine['package_sha256']=b.sha(b.canon(machine))
+pointer={'freeze_sha256':freeze['freeze_sha256'],'machine_package_sha256':machine['package_sha256']}
+assert b.compare_calibration_feature(machine,pointer,feature)=='MATCHED_MM_CALIBRATION_FEATURE'
+print('W47_REAL_CONTEXT_GATEWAY_FEATURE_PROOF '+json.dumps({'feature_sha256':feature['feature_sha256'],'learning_n':learning['verified_outcome_n'],'task2_n':learning['task2_paired_n'],'gateway_context_sha256':learning['gateway_context_sha256'],'api_called':False,'receipt_fixture':True,'model_utilization_verified':False},sort_keys=True))
+"""
+            result=subprocess.run([sys.executable,"-c",code,str(output)],cwd=bridge.ROOT,
+                                  capture_output=True,text=True,timeout=180)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            print(result.stdout)
+
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
         self.assertEqual(workflow.count("python scripts/research/cn_mm_core_shadow_bridge_v1.py"), 2)
