@@ -336,12 +336,14 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
 
     def test_read_only_persistence_audit_reuses_original_owner(self):
         fixture = FixtureRepo(self)
-        row = fixture.build()["row"]
-        row["provenance_hash"] = controller.frozen_provenance_hash(row)
-        controller.append(controller.LEDGER, row)
+        # Use the production normalization and ingress, not Python dict repr in CSV.
+        source = fixture.repo / "persistence-row.json"
+        source.write_text(json.dumps(fixture.build()["row"]) + "\n")
+        controller.ingest(source)
+        row = controller.rows(controller.LEDGER)[0]
         before = controller.LEDGER.read_bytes()
         report = controller.audit_persistence_cohort()
-        self.assertEqual(report["status"], "REPLAY_COMPLETE")
+        self.assertEqual(report["status"], "REPLAY_COMPLETE", report)
         self.assertEqual(report["verified_n"], 1)
         self.assertEqual(report["left_censored_n"], 1)
         self.assertEqual(report["observed_above_episode_n"], 0)
