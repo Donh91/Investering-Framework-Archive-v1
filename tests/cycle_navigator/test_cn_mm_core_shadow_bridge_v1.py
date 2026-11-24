@@ -303,6 +303,46 @@ print('TASK2_ORIGINAL_COMPARATOR '+json.dumps(report,sort_keys=True))
         context["cn_mm_shared_intelligence"]["feature"]["forecast_authority"]=True
         self.assertEqual(bridge.calibration_feature_binding(context,packet)["status"],"UNAVAILABLE")
 
+    def test_learning_snapshot_is_original_cutoff_tree_not_current_ledger(self):
+        import os
+        import subprocess
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            def git(*args,stamp=None):
+                env=dict(os.environ)
+                if stamp:
+                    env.update(GIT_AUTHOR_DATE=stamp,GIT_COMMITTER_DATE=stamp)
+                return subprocess.check_output(["git","-C",directory,*args],env=env,
+                    stderr=subprocess.DEVNULL).decode().strip()
+            git("init","-q")
+            git("config","user.name","Fixture")
+            git("config","user.email","fixture@example.invalid")
+            ledger=root/"ledger.csv"
+            ledger.write_text("original")
+            git("add",".")
+            git("commit","-qm","original",stamp="2026-11-23T09:00:00Z")
+            first=git("rev-parse","HEAD")
+            ledger.write_text("late outcome")
+            git("add",".")
+            git("commit","-qm","late",stamp="2026-11-23T10:00:00Z")
+            head=git("rev-parse","HEAD")
+            cutoff=bridge.clock("2026-11-23T09:42:55Z")
+            pin=bridge.learning_checkout_at_cutoff(root,head,cutoff)
+            self.assertEqual(pin["checkout_sha"],first)
+            self.assertEqual(git("show",pin["checkout_sha"]+":ledger.csv"),"original")
+            self.assertIn("NOT_INDEPENDENT_KNOWN_BY",pin["clock_class"])
+            self.assertEqual(bridge.learning_checkout_at_cutoff(root,head,
+                bridge.clock("2026-11-23T10:00:00Z"))["checkout_sha"],head)
+            with self.assertRaisesRegex(ValueError,"NO_CHECKOUT"):
+                bridge.learning_checkout_at_cutoff(root,head,bridge.clock("2026-11-23T08:00:00Z"))
+            ledger.write_text("inverted")
+            git("add",".")
+            git("commit","-qm","inverted",stamp="2026-11-23T09:30:00Z")
+            with self.assertRaisesRegex(ValueError,"CLOCK_INVERSION"):
+                bridge.learning_checkout_at_cutoff(root,git("rev-parse","HEAD"),
+                    bridge.clock("2026-11-23T09:15:00Z"))
+
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
         self.assertEqual(workflow.count("python scripts/research/cn_mm_core_shadow_bridge_v1.py"), 2)

@@ -304,6 +304,38 @@ def intelligence_projection(packet, diagnostics=None):
     return base
 
 
+def learning_checkout_at_cutoff(repo, head, cutoff):
+    """Select the original first-parent repository snapshot, not today's data.
+
+    Committer clocks are history proxies only. No independent source known-by
+    or HTTP delivery is inferred. Do not select by author date or read files
+    from the working tree. Reject clock inversion across the selected boundary.
+    """
+    if not re.fullmatch("[0-9a-f]{40}",head) or cutoff.utcoffset()!=timedelta(0):
+        raise ValueError("LEARNING_CHECKOUT_OR_CUTOFF_INVALID")
+    def run(*args):
+        return subprocess.check_output(["git","-C",str(repo),*args],
+                                       stderr=subprocess.DEVNULL,timeout=30).decode().strip()
+    if run("rev-parse","--is-shallow-repository")!="false":
+        raise ValueError("LEARNING_FULL_HISTORY_REQUIRED")
+    run("merge-base","--is-ancestor",head,"HEAD")
+    # --before alone can stop traversal at an out-of-order commit. Inspect the
+    # actual contiguous first-parent chain, and reject a local clock inversion.
+    lines=run("log","--first-parent","--format=%H%x09%cI",head).splitlines()
+    previous=None
+    for line in lines:
+        commit,stamp=line.split("\t")
+        at=datetime.fromisoformat(stamp).astimezone(timezone.utc)
+        if previous is not None and at>previous:
+            raise ValueError("LEARNING_FIRST_PARENT_CLOCK_INVERSION")
+        if at<=cutoff:
+            return {"checkout_sha":commit,"checkout_committer_utc":iso(at),
+                    "source_cutoff_utc":iso(cutoff),
+                    "clock_class":"FIRST_PARENT_COMMITTER_CLOCK_NOT_INDEPENDENT_KNOWN_BY"}
+        previous=at
+    raise ValueError("LEARNING_NO_CHECKOUT_BEFORE_CUTOFF")
+
+
 def calibration_intelligence(repo, freeze_file, freeze):
     """Existing MM calibration consumer, strictly separated feature/learning lanes.
 
@@ -339,11 +371,14 @@ def calibration_intelligence(repo, freeze_file, freeze):
         result["reason"]="PINNED_FEATURE_CONTEXT_UNAVAILABLE"
         return result
     cutoff = clock(freeze["created_at_utc"])
+    learning_pin = None
     try:
+        learning_pin = learning_checkout_at_cutoff(repo,head,cutoff)
+        result["learning_source_snapshot"] = learning_pin
         owner = load_owner()
-        replay = owner.PinnedSourceReplay(repo,head)
+        replay = owner.PinnedSourceReplay(repo,learning_pin["checkout_sha"])
         rows = read_rows(replay.ledger_raw)
-        detail = read_rows(replay.read_blob(head,replay.BASE+"/data/OUTCOME_DETAIL_LEDGER.csv"))
+        detail = read_rows(replay.read_blob(replay.checkout,replay.BASE+"/data/OUTCOME_DETAIL_LEDGER.csv"))
         if len(rows)>512:
             raise ValueError("LEARNING_REPLAY_BUDGET_EXCEEDED_INCREMENTAL_OWNER_REQUIRED")
         if any(clock(r["observation_timestamp_utc"])>cutoff for r in rows) or any(
@@ -355,7 +390,8 @@ def calibration_intelligence(repo, freeze_file, freeze):
         learning = {"status":research["status"],"verified_n":audit["verified_n"],
                     "rejected_n":audit["rejected_n"],"unavailable_n":audit["unmatured_or_unavailable_n"],
                     "verified_horizon_counts":audit["verified_horizon_counts"],
-                    "source_cutoff_utc":iso(cutoff),"scientific_pit_eligible":False,
+                    "source_cutoff_utc":iso(cutoff),"source_checkout_sha":replay.checkout,
+                    "scientific_pit_eligible":False,
                     "forecast_authority":False,"automatic_weight_updates":False}
         if audit["status"]=="REPLAY_COMPLETE":
             learning["horizons"] = research["core_ablation"]["horizons"]
@@ -369,7 +405,10 @@ def calibration_intelligence(repo, freeze_file, freeze):
                               "forecast_authority":False}
     try:
         from scripts.research.cn_mm_task2_comparator_readback_v1 import audit_week
-        comparison = audit_week(load_owner().PinnedSourceReplay(repo,head),freeze["iso_year"],freeze["iso_week"])
+        if learning_pin is None:
+            raise ValueError("TASK2_NO_CUTOFF_CHECKOUT")
+        comparison = audit_week(load_owner().PinnedSourceReplay(repo,learning_pin["checkout_sha"]),
+                                freeze["iso_year"],freeze["iso_week"])
         if clock(comparison["original_score"]["clock"])>cutoff:
             raise ValueError("TASK2_SCORE_AFTER_FROZEN_CUTOFF")
         result["task2"] = {k:comparison[k] for k in ("status","week","paired_n","interval_metrics",
