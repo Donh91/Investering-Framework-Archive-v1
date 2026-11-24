@@ -1408,6 +1408,9 @@ def render(brief):
     if len(body) <= MAX_BODY:
         return body
     b = {k: brief[k] for k in ("schema", "run_id", "run_attempt", "event", "generated_at", "max_age_minutes", "repo", "main", "pins")}
+    if "root_verdict" in brief:
+        from s1_root_verdict_v1 import force_none
+        b["root_verdict"] = force_none(brief["root_verdict"])
     for key in ("verdict", "c1b", "ledger"):                   # small and bounded in size: kept at every shrink level
         if key in brief:
             b[key] = brief[key]
@@ -2178,6 +2181,8 @@ def main(argv):
         brief = build_brief(snap)
         brief["api_calls"] = gh.calls
         brief["generated_at"] = iso(datetime.now(timezone.utc))  # the end of the reads: the age S1 measures starts here
+        from s1_root_verdict_v1 import build_root_verdict
+        brief["root_verdict"] = build_root_verdict(brief)
         body = render(brief)
         out.write_text(body, encoding="utf-8")
         print(f"S1_TICK_BRIEF_BUILD run={run['id']} main={brief['main']} prs={len(brief['prs'])} next={len(brief['next'])} "
