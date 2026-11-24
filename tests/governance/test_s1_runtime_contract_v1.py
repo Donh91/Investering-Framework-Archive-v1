@@ -124,7 +124,8 @@ class S1RuntimeContractTest(unittest.TestCase):
         # Same rev, ticks 2026-11-19 19:45Z-21:45Z (BRIEF_UNVERIFIED(body) three times): S1 read "that block is one JSON
         # object B" in TICK.md T1 literally and rejected the ```json fence that render() always writes and parse_body()
         # always strips. Step 4 states the fence is the published format. Bootstrap-only: no contract, TICK or pin change.
-        self.assertLessEqual(len(boot), 2800)
+        # Reliability candidate: bounded orchestration and precise failure attribution, no additional source or authority.
+        self.assertLessEqual(len(boot), 3800)
         self.assertIn("In T1 the block between the two markers is one ```json fenced code block: B is the JSON object between its opening ```json line and its closing ``` line; that fence is the published format, never a body failure.", boot)
         self.assertNotIn("committer.date", boot)
         self.assertNotIn("3stale", boot)
@@ -143,6 +144,23 @@ class S1RuntimeContractTest(unittest.TestCase):
             self.assertIn(needle, boot)
         for forbidden in ("LADDER", "MERGE", "HARD STOPS", "owner-present"):
             self.assertNotIn(forbidden, boot)
+
+    def test_bootstrap_batches_reads_without_waiving_source_checks(self):
+        boot = (S1 / "BOOTSTRAP.txt").read_text(encoding="utf-8")
+        for needle in ("fetch main first, then parallelize the three reads in step 2 at M",
+                       "Otherwise use the same direct reads; never skip a read.",
+                       "The fetched contract and TICK blob SHAs must also equal their directory entries.",
+                       "retaining every TICK check and call limit",
+                       "Report the first failed stage and actual missing field or connector error",
+                       "Use BRIEF_INCOMPLETE(<B.incomplete>) only when T2 read B.complete != true",
+                       "a host or tool failure before T3 ends BRIEF_INCOMPLETE(<step>:<what failed>)",
+                       "The short-circuit ends only the T1–T3 group; T3H and the NOOP ending then follow TICK.md."):
+            self.assertIn(needle, boot)
+        self.assertLess(boot.index("Where connector-call orchestration"), boot.index("1. Read current main"))
+        self.assertLess(boot.index("3b."), boot.index("4. Otherwise execute"))
+        self.assertIn("short-circuit on failure", boot)
+        self.assertIn("state the first failed read or pin and why", boot)
+        self.assertIn("write no GitHub change", boot)
 
     def test_action_loop_keeps_hard_stops_and_observability(self):
         loop = (ROOT / self.c["action_loop_path"]).read_text(encoding="utf-8")
