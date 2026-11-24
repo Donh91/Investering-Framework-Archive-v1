@@ -232,15 +232,24 @@ def verify_packet_projection(packet, freeze, ledger_raw, registry_raw, *, repo):
     if not start < end <= frozen:
         raise ValueError("SHADOW_FREEZE_WINDOW_INVALID")
     diagnostics = {}
+    sequence_inputs = []
 
     def verify(row, at, decisions):
-        diagnostics[row["event_id"]] = replay.verify(row, at, decisions)
+        persistence = replay.verify(row, at, decisions)
+        diagnostics[row["event_id"]] = persistence
+        sequence_inputs.append(owner.sequence_observation(row, at, persistence))
 
     expected = evaluate_rows(read_rows(ledger_raw), iso(start), iso(end), iso(replay.floor),
                              verify, owner.PROVENANCE_MUTABLE_FIELDS)
     if expected["status"] != "CORE_REPLAY_AT_OBSERVATION_ONLY" or packet["core"] != expected:
         raise ValueError("SHADOW_PROJECTION_MISMATCH")
-    return diagnostics[expected["latest_observation"]["event_id"]]
+    try:
+        sequence = owner.sequence_census(sequence_inputs, history_truncated=expected["history_truncated"])
+    except ValueError as exc:
+        sequence = {"status": "BLOCKED_SOURCE_SEQUENCE_CONFLICT", "reason": str(exc),
+                    "forecast_authority": False}
+    return {"persistence": diagnostics[expected["latest_observation"]["event_id"]],
+            "sequence": sequence}
 
 
 def publish_packet(packet_path, freeze_file, head, output_dir):
@@ -328,7 +337,7 @@ def consume_cn_shadow(repo, mm_pointer):
         core = packet["core"]
         if core["status"] != "CORE_REPLAY_AT_OBSERVATION_ONLY":
             return {**result, "packet_sha256": digest, "reason": "MM_CORE_REPLAY_UNAVAILABLE"}
-        persistence = verify_packet_projection(packet, load_evidence_object(frozen),
+        diagnostics = verify_packet_projection(packet, load_evidence_object(frozen),
                                  run("show", f"{head}:{LEDGER.as_posix()}"),
                                  run("show", f"{head}:{(BASE / 'TRANSFORM_FREEZE_REGISTRY.json').as_posix()}"), repo=repo)
         latest = core["latest_observation"]
@@ -341,7 +350,8 @@ def consume_cn_shadow(repo, mm_pointer):
                 "shadow_candidate_decision": decisions[CORE[-1]],
                 "candidate_id": CORE[-1], "target_semantics": packet["target_semantics"],
                 "observation_only": True, "edge_established": False,
-                "persistence_diagnostic": persistence}
+                "persistence_diagnostic": diagnostics["persistence"],
+                "sequence_diagnostic": diagnostics["sequence"]}
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
             csv.Error, ImportError, subprocess.SubprocessError):
         return {**result, "reason": "MM_SHADOW_RECEIPT_INVALID"}

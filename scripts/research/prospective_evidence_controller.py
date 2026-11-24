@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import core_shared_row_materializer as core
-from ethbtc_persistence_replay_v1 import verify_window_inputs
+from ethbtc_persistence_replay_v1 import verify_window_inputs, sequence_census
 
 REPO_ROOT = Path(".")
 ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
@@ -506,6 +506,20 @@ class PinnedSourceReplay:
         return verify_persistence_source_bindings(row, cutoff, context=self)["persistence_replay"]
 
 
+def sequence_observation(row, cutoff, persistence):
+    """Project only fields already reconciled by the original source owner."""
+    manifest = _strict_object(row["source_binding_manifest"])
+    families = manifest["families"]
+    breadth = families["BREADTH_SURVIVAL"]
+    btcd = families["BTCD_PATH_RECLAIM"]
+    return {"observation_utc": core.iso(cutoff), "persistence": persistence,
+            "btcd_state": row["btcd_derived_state"],
+            "btcd_settled_dates": btcd["settled_dates"],
+            "breadth_state": row["breadth_derived_state"],
+            "breadth_run_id": breadth["run_id"],
+            "breadth_capture_utc": breadth["capture_max_utc"]}
+
+
 def validate_core_decision_contract(
     row: dict[str, Any], decisions: dict[str, Any], eligible: set[str]
 ) -> None:
@@ -730,6 +744,7 @@ def audit_persistence_cohort(*, context=None) -> dict[str, Any]:
     result["raw_row_n"] = len(source_rows)
     identities = Counter(r.get("event_id") for r in source_rows)
     episodes = set()
+    sequence_inputs = []
     for row in source_rows:
         event = row.get("event_id")
         item = {"event_id": event, "status": "REJECTED"}
@@ -754,6 +769,7 @@ def audit_persistence_cohort(*, context=None) -> dict[str, Any]:
             else:
                 decisions = _strict_object(row["candidate_decisions"])
                 replay = context.verify(row, cutoff, decisions)
+            sequence_inputs.append(sequence_observation(row, cutoff, replay))
             item.update(status="VERIFIED", persistence=replay)
             result["verified_n"] += 1
             result["left_censored_n"] += int(replay["left_censored"])
@@ -767,6 +783,12 @@ def audit_persistence_cohort(*, context=None) -> dict[str, Any]:
             result["rejected_n"] += 1
         result["rows"].append(item)
     result["observed_above_episode_n"] = len(episodes)
+    if not result["rejected_n"]:
+        try:
+            result["sequence_diagnostic"] = sequence_census(sequence_inputs)
+        except ValueError as exc:
+            result["sequence_diagnostic"] = {"status": "BLOCKED_SOURCE_SEQUENCE_CONFLICT",
+                                              "reason": str(exc), "forecast_authority": False}
     result["status"] = ("REPLAY_COMPLETE" if result["verified_n"] and not result["rejected_n"]
                         else "REPLAY_BLOCKED")
     return result

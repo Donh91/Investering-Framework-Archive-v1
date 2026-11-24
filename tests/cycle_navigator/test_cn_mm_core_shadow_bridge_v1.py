@@ -125,9 +125,11 @@ def _real_w47_owner_replay(self):
               "created_at_utc": bridge.iso(at + timedelta(seconds=2))}
     packet = {"checkout_sha": head, "ledger_sha256": bridge.sha(raw), "core": result}
     diag = bridge.verify_packet_projection(packet, freeze, raw, pinned.registry_raw, repo=bridge.ROOT)
-    self.assertEqual(diag["side"], rows[0]["ethbtc_derived_state"])
-    self.assertFalse(diag["scientific_pit_eligible"])
-    self.assertIsNone(diag["stable_confirmation_utc"])
+    self.assertEqual(diag["persistence"]["side"], rows[0]["ethbtc_derived_state"])
+    self.assertFalse(diag["persistence"]["scientific_pit_eligible"])
+    self.assertIsNone(diag["persistence"]["stable_confirmation_utc"])
+    self.assertEqual(diag["sequence"]["observation_n"], 1)
+    self.assertFalse(diag["sequence"]["forecast_authority"])
     forged = copy.deepcopy(packet)
     forged["core"]["latest_observation"]["decisions"]["C07_SIMPLE_3"] = True
     with self.assertRaisesRegex(ValueError, "SHADOW_PROJECTION_MISMATCH"):

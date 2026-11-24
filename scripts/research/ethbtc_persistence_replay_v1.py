@@ -84,3 +84,99 @@ def verify_window_inputs(window, cutoff, inputs):
         if type(supplied) is not type(value) or supplied != value:
             raise ValueError(f"ETHBTC_PERSISTENCE_FIELD_MISMATCH:{key}")
     return result
+
+
+def sequence_census(observations, *, history_truncated=False):
+    """Descriptive observation-order proxy for frozen sequence 1, never a signal.
+
+    Inputs must come from full original-owner replay. A repeated snapshot is not
+    a new transition. No confirmation duration, precise event order, causal
+    effect, delay benefit, or independent first-known claim is inferred.
+    """
+    result = {
+        "contract": "CORE_OBSERVED_SEQUENCE_CENSUS_v1",
+        "authority": "RESEARCH_ONLY_NON_CANONICAL",
+        "scientific_pit_eligible": False, "forecast_authority": False,
+        "original_sequence_equivalence": False, "event_time_certified": False,
+        "history_truncated": history_truncated,
+        "status": "NO_OBSERVED_ABOVE_EPISODE", "observation_n": len(observations),
+        "above_observation_n": 0, "unidentified_censored_above_n": 0,
+        "observed_episode_n": 0, "ordered_proxy_episode_n": 0, "episodes": [],
+        "stable_confirmation_status": "NO_FROZEN_DURATION_RULE",
+        "step_value_status": "UNTESTED_MATCHED_OUTCOMES_AND_DELAY_COST_REQUIRED",
+        "sequence_2": {"status": "BLOCKED_MISSING_SOURCE", "missing": ["BTC_ETF_ABSORPTION"]},
+        "sequence_3": {"status": "BLOCKED_MISSING_SOURCE",
+                       "missing": ["PRICE_STRESS", "LIQUIDATION_CLEARANCE", "OI_FUNDING_RESET", "RECLAIM"]},
+    }
+    episodes = {}
+    previous = None
+    active = None
+    closed = set()
+    seen_btcd, seen_breadth = {}, {}
+    for row in sorted(observations, key=lambda item: item["observation_utc"]):
+        at = row["observation_utc"]
+        if previous and at <= previous["observation_utc"]:
+            raise ValueError("SEQUENCE_DUPLICATE_OBSERVATION_CLOCK")
+        p = row["persistence"]
+        # Same settled BTC.D prints or same breadth run cannot mint another
+        # independent observation. Inconsistent revisions block this diagnostic.
+        for seen, key, state in ((seen_btcd, tuple(row["btcd_settled_dates"]), row["btcd_state"]),
+                                  (seen_breadth, row["breadth_run_id"], row["breadth_state"])):
+            if not key or (key in seen and seen[key] != state):
+                raise ValueError("SEQUENCE_SOURCE_IDENTITY_CONFLICT")
+            seen[key] = state
+        key = p["first_above_bar_utc"] if p["side"] == "ABOVE" else None
+        if p["side"] == "ABOVE":
+            result["above_observation_n"] += 1
+            if key is None:
+                result["unidentified_censored_above_n"] += 1
+        if active != key:
+            if active is not None:
+                closed.add(active)
+            if key is not None and key in closed:
+                raise ValueError("SEQUENCE_EPISODE_REAPPEARED_AFTER_BREAK")
+            active = key
+        if key is not None:
+            ep = episodes.setdefault(key, {
+                "observed_crossing_bar_utc": key,
+                "first_observation_utc": at, "last_observation_utc": at,
+                "observation_n": 0, "max_observed_consecutive_hours": 0,
+                "btcd_falling_path_interval": None, "breadth_majority_interval": None,
+                "stable_confirmation_utc": None, "status": "CROSSING_OBSERVED_ONLY",
+            })
+            ep["observation_n"] += 1
+            ep["last_observation_utc"] = at
+            ep["max_observed_consecutive_hours"] = max(
+                ep["max_observed_consecutive_hours"], p["consecutive_same_side"])
+            if previous and previous["persistence"]["first_above_bar_utc"] == key:
+                # Reset downstream confirmation when the observed path is lost.
+                if row["btcd_state"] != "FALLING_PATH":
+                    ep["btcd_falling_path_interval"] = None
+                    ep["breadth_majority_interval"] = None
+                if row["breadth_state"] != "BROAD_MAJORITY":
+                    ep["breadth_majority_interval"] = None
+                if (previous["btcd_state"] != "FALLING_PATH" and
+                        row["btcd_state"] == "FALLING_PATH" and
+                        row["btcd_settled_dates"][-1] > previous["btcd_settled_dates"][-1]):
+                    ep["btcd_falling_path_interval"] = [previous["observation_utc"], at]
+                interval = ep["btcd_falling_path_interval"]
+                if (interval and interval[1] <= previous["observation_utc"] and
+                        previous["breadth_state"] == "NON_BROAD_MAJORITY" and
+                        row["breadth_state"] == "BROAD_MAJORITY" and
+                        row["breadth_run_id"] != previous["breadth_run_id"] and
+                        row["breadth_capture_utc"] > previous["breadth_capture_utc"]):
+                    ep["breadth_majority_interval"] = [previous["observation_utc"], at]
+            ep["status"] = ("ORDERED_OBSERVATION_PROXY" if ep["breadth_majority_interval"]
+                            else "BTCD_PATH_OBSERVED_AFTER_CROSSING" if ep["btcd_falling_path_interval"]
+                            else "CROSSING_OBSERVED_ONLY")
+        previous = row
+    result["episodes"] = list(episodes.values())
+    result["observed_episode_n"] = len(episodes)
+    result["ordered_proxy_episode_n"] = sum(e["status"] == "ORDERED_OBSERVATION_PROXY"
+                                            for e in episodes.values())
+    if episodes:
+        result["status"] = ("ORDERED_OBSERVATION_PROXY_PRESENT" if result["ordered_proxy_episode_n"]
+                            else "NO_ORDERED_OBSERVATION_PROXY")
+    elif result["unidentified_censored_above_n"]:
+        result["status"] = "ABOVE_EPISODE_START_UNAVAILABLE"
+    return result

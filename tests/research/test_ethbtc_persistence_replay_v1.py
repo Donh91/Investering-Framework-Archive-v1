@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime, timedelta, timezone
-from scripts.research.ethbtc_persistence_replay_v1 import replay, verify_window_inputs, METHOD
+from scripts.research.ethbtc_persistence_replay_v1 import replay, verify_window_inputs, METHOD, sequence_census
 
 START = datetime(2026, 11, 1, tzinfo=timezone.utc)
 H = timedelta(hours=1)
@@ -72,5 +72,58 @@ class ReplayTests(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError): verify_window_inputs(w,CUTOFF,p)
     def test_valid(self):
         w=window(); self.assertEqual(verify_window_inputs(w,CUTOFF,inputs(w))['consecutive_same_side'],7)
+
+
+class SequenceCensusTests(unittest.TestCase):
+    def observation(self, i, btcd="MIXED_PATH", breadth="NON_BROAD_MAJORITY",
+                    day=4, run=None, episode="2026-11-04T15:00:00Z", side="ABOVE"):
+        return {"observation_utc": f"2026-11-05T{i:02d}:00:00Z",
+                "persistence": {"side": side, "first_above_bar_utc": episode,
+                                "consecutive_same_side": 8+i},
+                "btcd_state": btcd, "btcd_settled_dates": [f"2026-11-{day:02d}"],
+                "breadth_state": breadth, "breadth_run_id": run or str(i),
+                "breadth_capture_utc": f"2026-11-05T{i:02d}:00:00Z"}
+
+    def test_repeated_observations_not_independent_episodes(self):
+        r = sequence_census([self.observation(1), self.observation(2)])
+        self.assertEqual(r["above_observation_n"], 2)
+        self.assertEqual(r["observed_episode_n"], 1)
+        self.assertEqual(r["ordered_proxy_episode_n"], 0)
+        self.assertIsNone(r["episodes"][0]["stable_confirmation_utc"])
+
+    def test_ordered_proxy_requires_distinct_nonoverlapping_transitions(self):
+        rows = [self.observation(1), self.observation(2, "FALLING_PATH", day=5),
+                self.observation(3, "FALLING_PATH", "BROAD_MAJORITY", day=5)]
+        r = sequence_census(rows)
+        self.assertEqual(r["ordered_proxy_episode_n"], 1)
+        self.assertEqual(r, sequence_census(list(reversed(rows))))
+        self.assertFalse(r["original_sequence_equivalence"])
+        self.assertFalse(r["scientific_pit_eligible"])
+        self.assertFalse(r["forecast_authority"])
+        self.assertEqual(r["sequence_2"]["status"], "BLOCKED_MISSING_SOURCE")
+        self.assertEqual(r["sequence_3"]["status"], "BLOCKED_MISSING_SOURCE")
+
+    def test_simultaneous_change_not_ordered(self):
+        r = sequence_census([self.observation(1),
+            self.observation(2, "FALLING_PATH", "BROAD_MAJORITY", day=5)])
+        self.assertEqual(r["ordered_proxy_episode_n"], 0)
+
+    def test_censored_start_no_episode(self):
+        r = sequence_census([self.observation(1, episode=None)])
+        self.assertEqual(r["unidentified_censored_above_n"], 1)
+        self.assertEqual(r["observed_episode_n"], 0)
+
+    def test_conflicting_same_source_and_duplicate_clock_fail_closed(self):
+        a = self.observation(1)
+        for rows in ([a, a], [a, self.observation(2, "FALLING_PATH")],
+                     [a, self.observation(2, breadth="BROAD_MAJORITY", run="1")]):
+            with self.assertRaises(ValueError):
+                sequence_census(rows)
+
+    def test_path_loss_resets_downstream_proxy(self):
+        rows = [self.observation(1), self.observation(2, "FALLING_PATH", day=5),
+                self.observation(3, "FALLING_PATH", "BROAD_MAJORITY", day=5),
+                self.observation(4, "RISING_RECLAIM", "BROAD_MAJORITY", day=6)]
+        self.assertEqual(sequence_census(rows)["ordered_proxy_episode_n"], 0)
 
 if __name__=='__main__': unittest.main()
