@@ -196,8 +196,19 @@ from scripts.research.cn_mm_outcome_source_audit_v1 import audit_outcome_cohort
 owner=b.load_owner()
 head=b.git('rev-parse','HEAD').decode().strip()
 replay=owner.PinnedSourceReplay(b.ROOT,head)
-report=audit_outcome_cohort(replay)
+report=audit_outcome_cohort(replay,evaluate=True)
+research=report.pop('matched_research')
 print('PINNED_OUTCOME_COHORT '+json.dumps(report,sort_keys=True))
+if report['status']=='REPLAY_COMPLETE':
+    assert research['status']=='DESCRIPTIVE_ONLY_NOT_INDEPENDENT_EDGE',research
+    assert not research['forecast_authority'] and not research['edge_established']
+    for h,panel in research['core_ablation']['horizons'].items():
+        assert panel['matched_matured_n']==report['verified_horizon_counts'].get(h,0)
+    compact={k:v for k,v in research.items() if k!='core_ablation'}
+    compact['horizons']=research['core_ablation']['horizons']
+    print('PINNED_MATCHED_RESEARCH '+json.dumps(compact,sort_keys=True))
+else:
+    assert research['status']=='BLOCKED_OUTCOME_SOURCE_REPLAY'
 assert report['verified_n']>0,report
 assert report['verified_n']+report['rejected_n']+report['unmatured_or_unavailable_n']==3*report['parent_n'],report
 assert not report['scientific_pit_eligible'] and not report['outcomes_used_as_features']
