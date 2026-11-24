@@ -130,6 +130,8 @@ def _real_w47_owner_replay(self):
     self.assertIsNone(diag["persistence"]["stable_confirmation_utc"])
     self.assertEqual(diag["sequence"]["observation_n"], 1)
     self.assertFalse(diag["sequence"]["forecast_authority"])
+    self.assertFalse(diag["forensics_context"]["forecast_authority"])
+    self.assertIsNone(diag["forensics_context"]["liquidation_clearance"])
     forged = copy.deepcopy(packet)
     forged["core"]["latest_observation"]["decisions"]["C07_SIMPLE_3"] = True
     with self.assertRaisesRegex(ValueError, "SHADOW_PROJECTION_MISMATCH"):
@@ -152,6 +154,37 @@ class ExistingOwnerReplay(unittest.TestCase):
             cwd=bridge.ROOT, capture_output=True, text=True, timeout=120,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_optional_source_coverage_on_original_admitted_cohort(self):
+        import subprocess
+        import sys
+        # Existing native test job executes against full Git history. No new collector.
+        code = """
+import json
+from scripts.research import cn_mm_core_shadow_bridge_v1 as b
+from scripts.research.cn_mm_optional_source_context_v1 import coverage
+owner=b.load_owner()
+head=b.git('rev-parse','HEAD').decode().strip()
+replay=owner.PinnedSourceReplay(b.ROOT,head)
+rows=b.read_rows(replay.ledger_raw)
+observations=[]
+for row in rows:
+    at=b.clock(row['observation_timestamp_utc'])
+    if at < replay.floor:
+        continue
+    replay.verify(row,at,json.loads(row['candidate_decisions']))
+    observations.append({'observation_utc':b.iso(at),'source_commit':row['source_version_commit']})
+result=coverage(replay,observations)
+assert result['observation_n']==len(observations)>0
+assert sum(result['etf_status_counts'].values())==len(observations)
+assert sum(result['liquidation_status_counts'].values())==len(observations)
+assert result['scientific_pit_eligible'] is False and result['forecast_authority'] is False
+print('OPTIONAL_SOURCE_COHORT '+json.dumps(result,sort_keys=True))
+"""
+        result = subprocess.run([sys.executable, "-c", code], cwd=bridge.ROOT,
+                                capture_output=True, text=True, timeout=180)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        print(result.stdout)
 
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()

@@ -252,8 +252,10 @@ def verify_packet_projection(packet, freeze, ledger_raw, registry_raw, *, repo):
     latest = expected["latest_observation"]
     etf = pinned_settled_context(repo, latest["source_commit"], packet["checkout_sha"],
                                  clock(latest["observation_utc"]))
+    from scripts.research.cn_mm_optional_source_context_v1 import forensics_context
+    forensics = forensics_context(replay, latest["source_commit"], clock(latest["observation_utc"]))
     return {"persistence": diagnostics[latest["event_id"]],
-            "sequence": sequence, "etf_context": etf}
+            "sequence": sequence, "etf_context": etf, "forensics_context": forensics}
 
 
 def publish_packet(packet_path, freeze_file, head, output_dir):
@@ -356,7 +358,8 @@ def consume_cn_shadow(repo, mm_pointer):
                 "observation_only": True, "edge_established": False,
                 "persistence_diagnostic": diagnostics["persistence"],
                 "sequence_diagnostic": diagnostics["sequence"],
-                "etf_context": diagnostics["etf_context"]}
+                "etf_context": diagnostics["etf_context"],
+                "forensics_context": diagnostics["forensics_context"]}
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
             csv.Error, ImportError, subprocess.SubprocessError):
         return {**result, "reason": "MM_SHADOW_RECEIPT_INVALID"}
