@@ -498,7 +498,7 @@ print('W47_INCREMENTAL_EQUIVALENCE '+json.dumps(result,sort_keys=True))
         context["cn_mm_shared_intelligence"]["learning"]["verified_n"]=999
         self.assertEqual(bridge.calibration_learning_binding(context,packet,receipt,"success")["status"],"UNAVAILABLE")
 
-    def test_real_weekly_context_and_gateway_envelope_share_exact_feature(self):
+    def test_real_historical_w47_context_and_gateway_preserve_unknown_feature(self):
         # Real existing context CLI and gateway request construction.
         # Synthetic receipt only; no paid request or historical output write.
         import subprocess
@@ -531,9 +531,17 @@ assert intel['incremental_inventory']['identity_counts']['new_receipt_keys']==54
 assert 'new_receipt_keys' not in intel['incremental_inventory']
 assert set(('cce','odm','sre','fae'))<=set(intel['learning']['meta_learning'])
 packet=b.build_checkout(freeze_file,head)
-assert packet['core']['status']=='CORE_REPLAY_AT_OBSERVATION_ONLY',packet
-diag=b.verify_packet_projection(packet,freeze,b.committed(b.LEDGER,head),b.committed(b.BASE/'TRANSFORM_FREEZE_REGISTRY.json',head),repo=b.ROOT)
-feature=b.intelligence_projection(packet,diag)
+# W47 is an authentic historical freeze, NOT a newly bound producer fixture.
+from scripts.master_monday.weekly_source_binding_v1 import verify_sidecar
+original_pointer=json.loads(b.git('show','ec36550041fe48b2976c06733dc4bad093b9eed5:03_DAILY_CAPTURE_LOGS/weekly/LATEST_WEEKLY_CALIBRATION.json'))
+verified=verify_sidecar(freeze_file.parent,freeze,original_pointer,Path('03_DAILY_CAPTURE_LOGS'),freeze['freeze_sha256'])
+assert verified['status']=='UNKNOWN' and verified['reason']=='SOURCE_BINDING_MISSING',verified
+assert not (freeze_file.parent/'SOURCE_BINDINGS'/(freeze['freeze_sha256']+'.json')).exists()
+assert packet['core']['status']=='UNKNOWN',packet
+assert packet['core']['latest_observation'] is None
+feature=b.intelligence_projection(packet)
+assert feature['status']=='UNKNOWN' and feature['observation'] is None
+assert not feature['forecast_authority'] and not feature['scientific_pit_eligible']
 assert feature==intel['feature']
 registry=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())
 task='WEEKLY_CALIBRATION_SHADOW'
@@ -553,12 +561,97 @@ machine={'freeze_sha256':freeze['freeze_sha256'],'context_hash':context['context
 machine['package_sha256']=b.sha(b.canon(machine))
 pointer={'freeze_sha256':freeze['freeze_sha256'],'machine_package_sha256':machine['package_sha256']}
 assert b.compare_calibration_feature(machine,pointer,feature)=='MATCHED_MM_CALIBRATION_FEATURE'
-print('W47_REAL_CONTEXT_GATEWAY_FEATURE_PROOF '+json.dumps({'feature_sha256':feature['feature_sha256'],'learning_n':learning['verified_outcome_n'],'task2_n':learning['task2_paired_n'],'gateway_context_sha256':learning['gateway_context_sha256'],'api_called':False,'receipt_fixture':True,'model_utilization_verified':False},sort_keys=True))
+print('W47_HISTORICAL_CONTEXT_GATEWAY_UNKNOWN_PROOF '+json.dumps({'feature_sha256':feature['feature_sha256'],'learning_n':learning['verified_outcome_n'],'task2_n':learning['task2_paired_n'],'gateway_context_sha256':learning['gateway_context_sha256'],'api_called':False,'receipt_fixture':True,'model_utilization_verified':False},sort_keys=True))
 """
             result=subprocess.run([sys.executable,"-c",code,str(output)],cwd=bridge.ROOT,
                                   capture_output=True,text=True,timeout=180)
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)
             print(result.stdout)
+
+
+    def test_new_producer_binding_reaches_existing_cn_consumer_in_isolated_git_fixture(self):
+        # Replay the existing W47 source bytes as an explicitly synthetic NEW
+        # producer execution. Never add a receipt to the actual historical tree.
+        import subprocess
+        import sys
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "fixture-checkout"
+            def run(*args, cwd=bridge.ROOT, timeout=240):
+                result = subprocess.run(args, cwd=cwd, capture_output=True,
+                                        text=True, timeout=timeout)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                return result.stdout
+            head = bridge.git("rev-parse", "HEAD").decode().strip()
+            run("git", "worktree", "add", "--detach", "--quiet", str(root), head)
+            try:
+                code = """
+import json, subprocess, sys, tempfile
+from pathlib import Path
+from scripts.research import cn_mm_core_shadow_bridge_v1 as b
+from scripts.master_monday.weekly_source_binding_v1 import write_binding_sidecar, verify_sidecar
+def git(*args):
+    return subprocess.check_output(['git',*args]).decode().strip()
+def commit(paths, message):
+    git('add','--',*(str(p) for p in paths))
+    git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid','-c','commit.gpgsign=false','commit','-qm',message)
+def execute(*args):
+    subprocess.run([sys.executable,*args],check=True,capture_output=True,text=True,timeout=180)
+capture=Path('03_DAILY_CAPTURE_LOGS')
+freeze_file=Path('research/master_monday_preflight/frozen/2026/W47/WEEKLY_EVIDENCE_FREEZE.json')
+historical=json.loads(freeze_file.read_bytes())
+assert 'weekly_source_binding' not in historical
+# Use original pointer bytes, not an advancing LATEST pointer.
+pointer_path=capture/'weekly/LATEST_WEEKLY_CALIBRATION.json'
+close_path=capture/'weekly_close/LATEST_WEEKLY_MARKET_CLOSE.json'
+for p in (pointer_path,close_path):
+    p.write_bytes(subprocess.check_output(['git','show','ec36550041fe48b2976c06733dc4bad093b9eed5:'+str(p)]))
+pointer=json.loads(pointer_path.read_bytes())
+with tempfile.TemporaryDirectory() as empty:
+    execute('scripts/orchestration/weekly_orchestration_controller.py','--capture-root',str(capture),
+            '--accepted-data-ping-root',empty,'--output',str(freeze_file),
+            '--now-utc',historical['created_at_utc'])
+freeze=json.loads(freeze_file.read_bytes())
+assert freeze['freeze_sha256']!=historical['freeze_sha256']
+assert freeze['weekly_source_binding']['status']=='BYTE_BOUND_AT_PRODUCER'
+commit([freeze_file,pointer_path,close_path],'synthetic producer fixture only')
+head=git('rev-parse','HEAD')
+assert b.build_checkout(freeze_file,head)['core']['status']=='UNKNOWN'
+sidecar=write_binding_sidecar(freeze_file.parent,freeze)
+assert verify_sidecar(freeze_file.parent,freeze,pointer,capture,freeze['freeze_sha256'])['status']=='BYTE_BINDING_AND_RECEIPT_VERIFIED'
+# A receipt only present in the worktree is not sufficient.
+assert b.build_checkout(freeze_file,head)['core']['status']=='UNKNOWN'
+commit([sidecar],'synthetic committed source receipt only')
+head=git('rev-parse','HEAD')
+packet=b.build_checkout(freeze_file,head)
+assert packet['core']['status']=='CORE_REPLAY_AT_OBSERVATION_ONLY',packet
+assert not packet['scientific_pit_eligible'] and not packet['forecast_authority']
+# Dirty source bytes must never be admitted.
+source=Path(freeze['weekly_source_binding']['path'])
+raw=source.read_bytes()
+source.write_bytes(raw+b' ')
+assert b.build_checkout(freeze_file,head)['core']['status']=='UNKNOWN'
+source.write_bytes(raw)
+with tempfile.TemporaryDirectory() as temp:
+    packet_path=Path(temp)/'packet.json'
+    packet_path.write_bytes(b.canon(packet))
+    out=Path('research/api_agent/outputs/weekly/2026/W47')
+    published=b.publish_packet(packet_path,freeze_file,head,out)
+    mm_pointer={'iso_year':2026,'iso_week':47,'freeze_sha256':freeze['freeze_sha256']}
+    assert b.consume_cn_shadow(b.ROOT,mm_pointer)['status']=='UNKNOWN'
+    commit([published],'synthetic committed shadow receipt only')
+    consumed=b.consume_cn_shadow(b.ROOT,mm_pointer)
+    assert consumed['status']=='CONSUMED_SHADOW_ONLY',consumed
+    assert consumed['packet_sha256']==packet['packet_sha256']
+    assert consumed['shared_intelligence_feature']['status']=='SOURCE_REPLAYED_OBSERVATION_ONLY'
+    assert not consumed['official_forecast_effect'] and not consumed['scientific_pit_eligible']
+print('SYNTHETIC_NEW_PRODUCER_TO_CN_FIXTURE_PASS')
+"""
+                result = run(sys.executable, "-c", code, cwd=root, timeout=300)
+                self.assertIn("SYNTHETIC_NEW_PRODUCER_TO_CN_FIXTURE_PASS", result)
+                print(result)
+            finally:
+                run("git", "worktree", "remove", "--force", str(root))
+            self.assertEqual(bridge.git("rev-parse", "HEAD").decode().strip(), head)
 
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
