@@ -6,6 +6,8 @@ import shutil
 import subprocess
 import json
 import unittest
+import hashlib
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 SKILL = ROOT / ".agents/skills/s1-pr-repair-learning/SKILL.md"
@@ -53,6 +55,81 @@ class S1RepairLearningSkillTest(unittest.TestCase):
         self.assertIn("owner-invoked", alpha["verified_limit"])
 
 
+
+def _git(root, *args):
+    return subprocess.run(["git", "-C", str(root), *args], check=True,
+                          capture_output=True, timeout=60).stdout
+
+
+def materialize_exact_host_tree(root, head, destination):
+    """Test exact PR host bytes without changing shared checkout or shallow graph."""
+    if not re.fullmatch(r"[0-9a-f]{40}", head):
+        raise ValueError("S1_PR_EVENT_HEAD_INVALID")
+    if _git(root, "rev-parse", head + "^{commit}").decode().strip() != head:
+        raise ValueError("S1_PR_HEAD_MISMATCH")
+    # Pull-request merge checkout must contain the exact head. Never fetch
+    # with --depth in the shared checkout; missing ancestry is a real error.
+    _git(root, "merge-base", "--is-ancestor", head, "HEAD")
+    records = _git(root, "ls-tree", "-r", "-z", head, "--", "tools/s1-release-control")
+    entries = [item for item in records.split(b"\0") if item]
+    if not entries:
+        raise ValueError("S1_HOST_TREE_EMPTY")
+    seen = set()
+    for entry in entries:
+        metadata, raw_path = entry.split(b"\t", 1)
+        mode, kind, blob = metadata.decode("ascii").split()
+        rel = Path(raw_path.decode("utf-8"))
+        if (mode not in {"100644", "100755"} or kind != "blob" or
+                rel.is_absolute() or ".." in rel.parts or
+                rel.parts[:2] != ("tools", "s1-release-control") or rel in seen):
+            raise ValueError("S1_HOST_TREE_UNSAFE_ENTRY")
+        seen.add(rel)
+        raw = _git(root, "cat-file", "blob", blob)
+        actual = hashlib.sha1(("blob %d\0" % len(raw)).encode("ascii") + raw).hexdigest()
+        if actual != blob:
+            raise ValueError("S1_HOST_BLOB_MISMATCH")
+        output = destination / rel
+        output.parent.mkdir(parents=True, exist_ok=True)
+        with output.open("xb") as handle:
+            handle.write(raw)
+        if mode == "100755":
+            output.chmod(0o755)
+    return len(entries)
+
+
+class S1ExactHostIsolation(unittest.TestCase):
+    def test_exact_head_tree_does_not_mutate_shared_graph_or_worktree(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "repo"
+            root.mkdir()
+            _git(root, "init", "-q")
+            _git(root, "config", "user.name", "Fixture")
+            _git(root, "config", "user.email", "fixture@example.invalid")
+            file = root / "tools/s1-release-control/test.mjs"
+            file.parent.mkdir(parents=True)
+            file.write_bytes(b"old")
+            _git(root, "add", ".")
+            _git(root, "commit", "-qm", "old")
+            head = _git(root, "rev-parse", "HEAD").decode().strip()
+            file.write_bytes(b"new")
+            _git(root, "add", ".")
+            _git(root, "commit", "-qm", "new")
+            before = _git(root, "rev-parse", "HEAD")
+            shallow = _git(root, "rev-parse", "--is-shallow-repository")
+            destination = Path(directory) / "isolated"
+            self.assertEqual(materialize_exact_host_tree(root, head, destination), 1)
+            self.assertEqual((destination / "tools/s1-release-control/test.mjs").read_bytes(), b"old")
+            self.assertEqual(file.read_bytes(), b"new")
+            self.assertEqual(_git(root, "rev-parse", "HEAD"), before)
+            self.assertEqual(_git(root, "rev-parse", "--is-shallow-repository"), shallow)
+            _git(root, "merge-base", "--is-ancestor", head, "HEAD")
+            self.assertEqual(_git(root, "status", "--porcelain"), b"")
+            with self.assertRaises(ValueError):
+                materialize_exact_host_tree(root, "HEAD", Path(directory) / "invalid")
+            with self.assertRaises(subprocess.CalledProcessError):
+                materialize_exact_host_tree(root, "0" * 40, Path(directory) / "missing")
+
+
 class S1ReleaseControlHostAcceptance(unittest.TestCase):
     """Actual Node and Chrome acceptance of existing S1 read-only code, no workflow edit."""
 
@@ -74,6 +151,7 @@ class S1ReleaseControlHostAcceptance(unittest.TestCase):
         if major < 22:
             raise AssertionError("S1_NODE_22_REQUIRED_FOUND_" + found)
         print("S1_CI_NODE_VERSION=" + found, flush=True)
+        cls.host_root = ROOT
         if os.getenv("GITHUB_EVENT_NAME") == "pull_request":
             event_path = os.getenv("GITHUB_EVENT_PATH")
             if not event_path:
@@ -82,23 +160,16 @@ class S1ReleaseControlHostAcceptance(unittest.TestCase):
             head = event.get("pull_request", {}).get("head", {}).get("sha", "")
             if not re.fullmatch(r"[0-9a-f]{40}", head):
                 raise AssertionError("S1_PR_EVENT_HEAD_INVALID")
-            for command in (["git", "fetch", "--no-tags", "--depth=1", "origin", head],
-                            ["git", "checkout", "--detach", head]):
-                completed = subprocess.run(command, cwd=ROOT, text=True, capture_output=True,
-                                           timeout=60, check=False)
-                if completed.returncode:
-                    raise AssertionError("S1_HEAD_CHECKOUT_FAILED " + completed.stderr[-3000:])
-            actual = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
-                                    check=True, text=True, stdout=subprocess.PIPE,
-                                    timeout=10).stdout.strip()
-            if actual != head:
-                raise AssertionError("S1_PR_HEAD_MISMATCH")
+            temporary = tempfile.TemporaryDirectory(prefix="s1-exact-host-")
+            cls.addClassCleanup(temporary.cleanup)
+            cls.host_root = Path(temporary.name)
+            cls.host_blob_count = materialize_exact_host_tree(ROOT, head, cls.host_root)
             print("S1_CI_EXACT_PR_HEAD=" + head, flush=True)
         elif os.getenv("CI") and os.getenv("GITHUB_EVENT_NAME") not in ("push", "workflow_dispatch"):
             raise AssertionError("S1_HOST_EVENT_UNKNOWN")
 
     def _run(self, argv, *, env=None, timeout=80):
-        result = subprocess.run([self.node, *argv], cwd=ROOT, env=env, text=True,
+        result = subprocess.run([self.node, *argv], cwd=self.host_root, env=env, text=True,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 timeout=timeout, check=False)
         self.assertEqual(result.returncode, 0, result.stdout[-12000:])
