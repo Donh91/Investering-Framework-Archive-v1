@@ -51,5 +51,36 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
         })
         self.assertEqual(score['status'], 'UNAVAILABLE_EXPERIMENT_REGISTRY')
 
+    def test_api_success_and_verified_receipt_cannot_mask_missing_translation(self):
+        score = publisher.fallback_scorecard({'experiment_learning': {
+            'status': 'AVAILABLE', 'matured_outcome_evidence_available': True,
+            'new_matured_outcomes': [{'outcome': 'MATURED'}],
+        }})
+        self.assertEqual(publisher.effective_delivery_status(
+            'success', {'status': 'READY'}, {'status': 'UNAVAILABLE_API_CONTRACT'},
+            score, True), 'DEGRADED')
+
+    def test_readiness_requires_analysis_translation_scorecard_and_receipt(self):
+        ready = {'status': 'READY'}
+        for api_status, api, translation, scorecard, receipt in [
+            ('failure', ready, ready, ready, True),
+            ('success', {'status': 'BLOCKED'}, ready, ready, True),
+            ('success', ready, ready, {'status': 'UNAVAILABLE_API_CONTRACT'}, True),
+            ('success', ready, ready, ready, False),
+            ('success', ready, ready, {'status': 'PENDING_MATURED_OUTCOMES',
+                                      'experiment_registry_status': 'AVAILABLE',
+                                      'matured_outcome_count': None}, True),
+        ]:
+            self.assertEqual(publisher.effective_delivery_status(
+                api_status, api, translation, scorecard, receipt), 'DEGRADED')
+        self.assertEqual(publisher.effective_delivery_status(
+            'success', ready, ready, ready, True), 'READY')
+        pending = publisher.fallback_scorecard({'experiment_learning': {
+            'status': 'AVAILABLE', 'matured_outcome_evidence_available': True,
+            'new_matured_outcomes': [],
+        }})
+        self.assertEqual(publisher.effective_delivery_status(
+            'success', ready, ready, pending, True), 'READY')
+
 if __name__ == '__main__':
     unittest.main()
