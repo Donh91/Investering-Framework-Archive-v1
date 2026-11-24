@@ -98,7 +98,60 @@ def verify_matured_path(replay, row, detail, horizon, frozen_baseline, *, retain
     return result
 
 
-def audit_outcome_cohort(replay, *, evaluate=False):
+class _ExecutionReplayMemo:
+    """Verified in-memory entries, never loaded from a file or supplied receipt.
+
+    Only the paired replay harness constructs this memo. It is a computational
+    proof of incremental/full equivalence, not a durable trust mechanism.
+    """
+    def __init__(self,before,after):
+        if before.repo!=after.repo or before.fields!=after.fields or before.floor!=after.floor or before.boundary!=after.boundary:
+            raise ValueError("INCREMENTAL_REPLAY_POLICY_MISMATCH")
+        after.require_ancestor(before.checkout)
+        for name in ("TRANSFORM_FREEZE_REGISTRY.json","CORE_FAMILY_PROSPECTIVE_CONTRACT_v1.json","03_CANDIDATE_REGISTRY.json"):
+            path=before.BASE+"/"+name
+            if before.read_blob(before.checkout,path)!=after.read_blob(after.checkout,path):
+                raise ValueError("INCREMENTAL_REPLAY_POLICY_MISMATCH")
+        self.allowed=(before,after)
+        self.features={}
+        self.outcomes={}
+        self.feature_hits=0
+        self.outcome_hits=0
+
+    def feature(self,replay,projection,at,decisions):
+        if not any(replay is x for x in self.allowed):
+            raise ValueError("INCREMENTAL_REPLAY_SCOPE_MISMATCH")
+        key=bridge.canon(projection)
+        if key in self.features:
+            replay.require_ancestor(projection["source_version_commit"])
+            self.feature_hits+=1
+            return self.features[key]
+        value=replay.verify(projection,at,decisions)
+        self.features[key]=value
+        return value
+
+    def outcome(self,replay,row,detail,horizon,baseline,cache):
+        if not any(replay is x for x in self.allowed):
+            raise ValueError("INCREMENTAL_REPLAY_SCOPE_MISMATCH")
+        # Exact full receipt, exact parent horizon fields, and frozen baseline.
+        # Other horizons may legitimately mature in the later snapshot.
+        owner=bridge.load_owner()
+        projection={k:v for k,v in row.items() if k not in owner.PROVENANCE_MUTABLE_FIELDS}
+        key=bridge.canon({"parent":projection,"detail":detail,"horizon":horizon,"baseline":baseline,
+                          "parent_outcome":{k:row.get(k) for k in (f"outcome_{horizon}",f"mae_{horizon}",f"mfe_{horizon}")}})
+        if key in self.outcomes:
+            import shared_row_outcome_receipt_gate as gate
+            gate.verify_receipt(row,detail,horizon)
+            replay.require_ancestor(detail["outcome_source_commit"])
+            replay._git("merge-base","--is-ancestor",row["source_version_commit"],detail["outcome_source_commit"])
+            self.outcome_hits+=1
+            return self.outcomes[key]
+        value=verify_matured_path(replay,row,detail,horizon,baseline,retain_path=True,cache=cache)
+        self.outcomes[key]=value
+        return value
+
+
+def audit_outcome_cohort(replay, *, evaluate=False, _memo=None):
     bridge.load_owner()
     import shared_row_outcome_receipt_gate as gate
     rows = bridge.read_rows(replay.ledger_raw)
@@ -127,7 +180,9 @@ def audit_outcome_cohort(replay, *, evaluate=False):
         # Full original decision-source replay precedes, but never receives outcome fields.
         projection = {k: v for k, v in row.items() if k not in
                       bridge.load_owner().PROVENANCE_MUTABLE_FIELDS}
-        persistence = replay.verify(projection, at, json.loads(projection["candidate_decisions"]))
+        decisions=json.loads(projection["candidate_decisions"])
+        persistence = (_memo.feature(replay,projection,at,decisions) if _memo is not None
+                       else replay.verify(projection,at,decisions))
         frozen_baseline = json.loads(projection["source_binding_manifest"])["families"]["ETHBTC_PERSISTENCE"]["baseline"]
         if evaluate:
             sequence_inputs.append(bridge.load_owner().sequence_observation(projection, at, persistence))
@@ -144,7 +199,8 @@ def audit_outcome_cohort(replay, *, evaluate=False):
             try:
                 if len(receipts) != 1:
                     raise ValueError("OUTCOME_REPLAY_UNIQUE_RECEIPT_REQUIRED")
-                proof = verify_matured_path(replay, row, receipts[0], horizon, frozen_baseline, retain_path=evaluate,cache=cache)
+                proof = (_memo.outcome(replay,row,receipts[0],horizon,frozen_baseline,cache) if _memo is not None
+                         else verify_matured_path(replay,row,receipts[0],horizon,frozen_baseline,retain_path=evaluate,cache=cache))
                 counts["verified"] += 1
                 horizon_counts[horizon] += 1
                 if evaluate:
@@ -399,3 +455,37 @@ def immutable_delta_inventory(before_rows,before_details,after_rows,after_detail
           "automatic_weight_updates":False,"forecast_authority":False}
     body["inventory_sha256"]=bridge.sha(bridge.canon(body))
     return body
+
+
+def replay_incremental_pair(before,after):
+    """Native proof harness: seed with actual verified prior cohort, then delta.
+
+    Only append-only exact identity changes are eligible. Both snapshots use
+    the same currently executed verifier and original immutable bytes. No
+    persistent verdict reuse, promotion, or production scheduling.
+    """
+    owner=bridge.load_owner()
+    path=before.BASE+"/data/OUTCOME_DETAIL_LEDGER.csv"
+    inventory=immutable_delta_inventory(bridge.read_rows(before.ledger_raw),
+        bridge.read_rows(before.read_blob(before.checkout,path)),bridge.read_rows(after.ledger_raw),
+        bridge.read_rows(after.read_blob(after.checkout,path)),owner.PROVENANCE_MUTABLE_FIELDS)
+    if inventory["status"]!="APPEND_ONLY_DELTA_IDENTIFIED":
+        raise ValueError("INCREMENTAL_REPLAY_MUTATION_REQUIRES_FULL_AUDIT")
+    memo=_ExecutionReplayMemo(before,after)
+    prior=audit_outcome_cohort(before,evaluate=True,_memo=memo)
+    if prior["status"]!="REPLAY_COMPLETE":
+        raise ValueError("INCREMENTAL_PRIOR_NOT_VERIFIED")
+    current=audit_outcome_cohort(after,evaluate=True,_memo=memo)
+    if current["status"]!="REPLAY_COMPLETE":
+        raise ValueError("INCREMENTAL_CURRENT_NOT_VERIFIED")
+    if (memo.feature_hits!=inventory["unchanged_parent_n"] or
+            memo.outcome_hits!=inventory["unchanged_receipt_n"]):
+        raise ValueError("INCREMENTAL_REUSE_DENOMINATOR_MISMATCH")
+    return {"contract":"CN_MM_SAME_EXECUTION_INCREMENTAL_PROOF_v1",
+            "status":"SAME_EXECUTION_REPLAY_ONLY","before_checkout":before.checkout,
+            "after_checkout":after.checkout,"inventory_sha256":inventory["inventory_sha256"],
+            "reused_feature_n":memo.feature_hits,"reused_outcome_n":memo.outcome_hits,
+            "new_feature_replay_n":current["parent_n"]-memo.feature_hits,
+            "new_outcome_replay_n":current["verified_n"]-memo.outcome_hits,
+            "current":current,"durable_verdict_reuse_authorized":False,
+            "scientific_pit_eligible":False,"forecast_authority":False}

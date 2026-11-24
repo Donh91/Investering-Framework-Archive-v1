@@ -439,6 +439,37 @@ print('W47_ORIGINAL_CALIBRATION_READBACK '+json.dumps({'pin':pin,'verified_n':re
         with self.assertRaisesRegex(ValueError,"DUPLICATE_IDENTITY"):
             immutable_delta_inventory([old],[],[old,old],[],m)
 
+    def test_real_incremental_replay_matches_full_original_w47(self):
+        import subprocess
+        import sys
+        code = """
+import json
+from scripts.research import cn_mm_core_shadow_bridge_v1 as b
+from scripts.research.cn_mm_outcome_source_audit_v1 import replay_incremental_pair,audit_outcome_cohort
+owner=b.load_owner()
+head=b.git('rev-parse','HEAD').decode().strip()
+def original(week):
+    path='research/master_monday_preflight/frozen/2026/W'+str(week)+'/WEEKLY_EVIDENCE_FREEZE.json'
+    freeze=json.loads(b.git('show',head+':'+path))
+    pin=b.learning_checkout_at_cutoff(b.ROOT,head,b.clock(freeze['created_at_utc']))
+    return owner.PinnedSourceReplay(b.ROOT,pin['checkout_sha'])
+before,after=original(46),original(47)
+result=replay_incremental_pair(before,after)
+full=audit_outcome_cohort(after,evaluate=True)
+incremental=result.pop('current')
+for x in (full,incremental): x.pop('path_read_cache')
+assert incremental==full,'INCREMENTAL_FULL_REPLAY_NOT_EQUAL'
+assert result['reused_feature_n']==59 and result['reused_outcome_n']==145,result
+assert result['new_feature_replay_n']==18 and result['new_outcome_replay_n']==54,result
+assert result['durable_verdict_reuse_authorized'] is False
+result['full_replay_equivalent']=True
+print('W47_INCREMENTAL_EQUIVALENCE '+json.dumps(result,sort_keys=True))
+"""
+        result=subprocess.run([sys.executable,"-c",code],cwd=bridge.ROOT,
+                              capture_output=True,text=True,timeout=240)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        print(result.stdout)
+
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
         self.assertEqual(workflow.count("python scripts/research/cn_mm_core_shadow_bridge_v1.py"), 2)
