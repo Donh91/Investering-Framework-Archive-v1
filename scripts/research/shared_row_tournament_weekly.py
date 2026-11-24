@@ -179,6 +179,124 @@ CORE_ABLATIONS = {
 }
 
 
+CORE_HORIZONS = ("24h", "72h", "7d")
+LEGACY_HORIZONS = ("6h", "12h", "24h", "48h", "72h", "7d", "14d", "30d")
+CORE_SINGLE_IDS = ("C01_ETHBTC", "C02_BREADTH", "C03_BTCD")
+
+
+def core_meta_learning_diagnostic(parsed, horizons, runtime):
+    """Bounded methodological descendants, not recovered legacy formulas.
+
+    The original independent review explicitly left the formulas unresolved.
+    The already-admitted row/outcome set is the sole denominator. Never derive
+    a forecast weight, promotion, economic utility or independent sample count.
+    """
+    from collections import Counter
+    from itertools import combinations
+    pairs = {}
+    for a, b_id in combinations(CORE_SINGLE_IDS, 2):
+        counts = Counter(f"{int(d[a])}{int(d[b_id])}" for _, d in parsed)
+        n = len(parsed)
+        pairs[a + "__" + b_id] = {
+            "matched_observation_n": n,
+            "decision_pair_counts": {k: counts[k] for k in ("00", "01", "10", "11")},
+            "agreement_n": counts["00"] + counts["11"],
+            "disagreement_n": counts["01"] + counts["10"],
+            "agreement_rate": ratio(counts["00"] + counts["11"], n),
+            "independent_information_proven": False,
+        }
+    patterns = Counter("".join(str(int(d[k])) for k in CORE_SINGLE_IDS) for _, d in parsed)
+    cce = {
+        "legacy_sensor_id": "CCE_V1_CONFIDENCE_COMPRESSION_ENGINE",
+        "historical_verdict": "KEEP",
+        "implementation": "STRUCTURAL_DEPENDENCE_CONTROL_NOT_LEGACY_FORMULA",
+        "observation_n": len(parsed),
+        "primitive_family_n": len(CORE_SINGLE_IDS),
+        "derived_candidate_n": len(evidence.CORE_IDS) - len(CORE_SINGLE_IDS),
+        "decision_patterns": {k: patterns[k] for k in sorted(patterns)},
+        "single_family_pairs": pairs,
+        "independent_market_shock_family_n": None,
+        "numeric_confidence_compression": None,
+        "cross_candidate_votes_may_be_summed_as_independent": False,
+    }
+    # Horizon availability and endpoint reversals, NOT market event timing.
+    # Missing outcomes stay missing; only fully matured matched rows enter
+    # the cross-horizon comparison.
+    common = [(r, d) for r, d in parsed
+              if all(r.get("outcome_" + h, "") in ("0", "1") for h in CORE_HORIZONS)]
+    panel = Counter("".join(r["outcome_" + h] for h in CORE_HORIZONS) for r, _ in common)
+    common_projection = sorted((r["event_id"], r["provenance_hash"],
+                                tuple(r["outcome_" + h] for h in CORE_HORIZONS))
+                               for r, _ in common)
+    transitions = {}
+    for a, b_id in zip(CORE_HORIZONS, CORE_HORIZONS[1:]):
+        counts = Counter(r["outcome_" + a] + r["outcome_" + b_id] for r, _ in common)
+        transitions[a + "__" + b_id] = {k: counts[k] for k in ("00", "01", "10", "11")}
+    odm = {
+        "legacy_sensor_id": "ODM_V1_OUTCOME_DELAY_MAPPER",
+        "historical_verdict": "WATCH",
+        "implementation": "FIXED_HORIZON_MATURATION_NOT_LEGACY_DELAY_FORMULA",
+        "legacy_registry_horizons": list(LEGACY_HORIZONS),
+        "available_core_horizons": list(CORE_HORIZONS),
+        "unavailable_legacy_horizons": [h for h in LEGACY_HORIZONS if h not in CORE_HORIZONS],
+        "legacy_horizon_coverage_complete": False,
+        "matured_by_horizon": {h: horizons[h]["matched_matured_n"] for h in CORE_HORIZONS},
+        "common_matured_n": len(common),
+        "common_calendar_block_n": dependence_census([r for r, _ in common], runtime)["fixed_28d_calendar_block_n"],
+        "common_cohort_sha256": hashlib.sha256(json.dumps(common_projection, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest(),
+        "common_endpoint_patterns": {k: panel[k] for k in sorted(panel)},
+        "common_endpoint_transitions": transitions,
+        "actual_signal_to_market_event_delay": None,
+        "confirmation_delay_cost": None,
+        "post_hoc_best_horizon_selected": False,
+    }
+    # Reuse existing outcome evaluator: no new historical reliability formula.
+    sre = {"legacy_sensor_id": "SRE_V1_SIGNAL_RELIABILITY_ENGINE",
+           "historical_verdict": "UNTESTABLE",
+           "implementation": "MODERN_DESCRIPTIVE_MATCHED_OUTCOME_PANEL",
+           "legacy_formula_reconstructed": False,
+           "candidate_metrics": {},
+           "predictive_reliability_established": False,
+           "regime_weight_updates_authorized": False}
+    admitted = [r for r, _ in parsed]
+    for candidate in evidence.CORE_IDS:
+        sre["candidate_metrics"][candidate] = {}
+        for h in CORE_HORIZONS:
+            m = metrics(admitted, candidate, h)
+            if m["n"] != horizons[h]["matched_matured_n"]:
+                raise ValueError("core_meta_reliability_denominator_mismatch")
+            sre["candidate_metrics"][candidate][h] = {k: m[k] for k in (
+                "n", "tp", "fp", "tn", "fn", "precision", "recall",
+                "false_positive_rate", "false_negative_rate")}
+    fae = {"legacy_sensor_id": "FAE_V1_FORECAST_ATTRIBUTION_ENGINE",
+           "historical_verdict": "UNTESTABLE",
+           "implementation": "MODERN_MATCHED_CORE_ABLATION",
+           "legacy_formula_reconstructed": False,
+           "attribution_field": "horizons.<horizon>.families",
+           "attribution_target": TARGET_OUTCOME,
+           "daily_price_forecast_attribution_available": False,
+           "causal_effect_established": False}
+    return {
+        "contract": "CN_MM_CORE_META_LEARNING_DIAGNOSTIC_v1",
+        "authority": "RESEARCH_ONLY_NON_CANONICAL",
+        "historical_review": {
+            "path": "06_RESEARCH_LAB/historical_sensor_recovery_v1/independent_review_v1/12_FINAL_MACHINE_READABLE_VERDICTS.json",
+            "git_blob": "4d9da247e47cb47a86c394137d7b64d015301934",
+        },
+        "legacy_test_registry": {
+            "path": "04_MARKET_LEARNING/forward_tests/historical_shadow_v1/PROSPECTIVE_TEST_REGISTRY.json",
+            "git_blob": "7fed2af824658eb4567d6d4fe773a00581581372",
+        },
+        "cce": cce, "odm": odm, "sre": sre, "fae": fae,
+        "status": "DESCRIPTIVE_ONLY" if any(h["matched_matured_n"] for h in horizons.values()) else "INSUFFICIENT_EVIDENCE",
+        "statistical_independence_verified": False,
+        "automatic_weight_updates": False,
+        "automatic_promotion": False,
+        "portfolio_execution": False,
+        "canonical_effect": False,
+    }
+
+
 def core_ablation_diagnostic(valid_rows, runtime):
     """Describe marginal value of the EXISTING C07 AND rule on matched outcomes.
 
@@ -265,6 +383,7 @@ def core_ablation_diagnostic(valid_rows, runtime):
         "binary_target": TARGET_OUTCOME,
         "status": "DESCRIPTIVE_ONLY" if any(v["matched_matured_n"] for v in horizons.values()) else "INSUFFICIENT_EVIDENCE",
         "horizons": horizons,
+        "meta_learning": core_meta_learning_diagnostic(parsed, horizons, runtime),
         "independent_market_shock_family_n": None,
         "statistical_independence_verified": False,
         "predictive_edge_established": False,

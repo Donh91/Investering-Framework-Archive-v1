@@ -191,6 +191,49 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         self.assertIsNone(report["independent_market_shock_family_n"])
         self.assertEqual(report, weekly.core_ablation_diagnostic(list(reversed(samples)), runtime()))
 
+
+    def test_core_meta_learning_retains_original_purpose_without_inventing_legacy_formula(self):
+        a = row("META_A", "2026-10-01T00:00:00Z")
+        b = row("META_B", "2026-10-02T00:00:00Z")
+        c = row("META_C", "2026-10-03T00:00:00Z")
+        b["ethbtc_derived_state"] = "BELOW"
+        b["candidate_decisions"] = json.dumps(dict(zip(weekly.evidence.CORE_IDS,
+            (False, True, True, False, False, True, False))))
+        for item, labels in [(a, ("1", "0", "1")), (b, ("0", "1", "0")), (c, ("1", "", ""))]:
+            for h, label in zip(("24h", "72h", "7d"), labels):
+                item["outcome_" + h] = label
+            item["provenance_hash"] = weekly.evidence.frozen_provenance_hash(item)
+        report = weekly.core_ablation_diagnostic([a, b, c], runtime())
+        meta = report["meta_learning"]
+        self.assertEqual(meta["cce"]["primitive_family_n"], 3)
+        self.assertEqual(meta["cce"]["derived_candidate_n"], 4)
+        self.assertEqual(meta["cce"]["decision_patterns"], {"011": 1, "111": 2})
+        pair = meta["cce"]["single_family_pairs"]["C01_ETHBTC__C02_BREADTH"]
+        self.assertEqual(pair["decision_pair_counts"], {"00": 0, "01": 1, "10": 0, "11": 2})
+        self.assertIsNone(meta["cce"]["numeric_confidence_compression"])
+        odm = meta["odm"]
+        self.assertEqual(odm["matured_by_horizon"], {"24h": 3, "72h": 2, "7d": 2})
+        self.assertEqual(odm["common_matured_n"], 2)
+        self.assertEqual(odm["common_endpoint_patterns"], {"010": 1, "101": 1})
+        self.assertEqual(odm["common_endpoint_transitions"]["24h__72h"], {"00": 0, "01": 1, "10": 1, "11": 0})
+        self.assertEqual(odm["unavailable_legacy_horizons"], ["6h", "12h", "48h", "14d", "30d"])
+        self.assertIsNone(odm["actual_signal_to_market_event_delay"])
+        self.assertFalse(odm["post_hoc_best_horizon_selected"])
+        self.assertEqual(meta["sre"]["candidate_metrics"]["C07_SIMPLE_3"]["24h"]["n"], 3)
+        self.assertFalse(meta["sre"]["legacy_formula_reconstructed"])
+        self.assertFalse(meta["fae"]["daily_price_forecast_attribution_available"])
+        self.assertFalse(meta["automatic_weight_updates"])
+        self.assertFalse(meta["canonical_effect"])
+        self.assertEqual(report, weekly.core_ablation_diagnostic([c, b, a], runtime()))
+
+    def test_core_meta_learning_empty_is_unknown_not_reliable(self):
+        meta = weekly.core_ablation_diagnostic([], runtime())["meta_learning"]
+        self.assertEqual(meta["status"], "INSUFFICIENT_EVIDENCE")
+        self.assertIsNone(meta["cce"]["single_family_pairs"]["C01_ETHBTC__C02_BREADTH"]["agreement_rate"])
+        self.assertEqual(meta["odm"]["common_matured_n"], 0)
+        self.assertIsNone(meta["sre"]["candidate_metrics"]["C07_SIMPLE_3"]["7d"]["recall"])
+        self.assertFalse(meta["sre"]["predictive_reliability_established"])
+
     def test_core_ablation_missing_invalid_and_duplicate_inputs(self):
         empty = weekly.core_ablation_diagnostic([], runtime())
         self.assertEqual(empty["status"], "INSUFFICIENT_EVIDENCE")

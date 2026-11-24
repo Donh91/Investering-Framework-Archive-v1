@@ -89,33 +89,53 @@ class CoreBridge(unittest.TestCase):
         self.assertEqual(self.replay([])["reason"], "NO_ELIGIBLE_OBSERVATIONS")
 
 
+def _real_w47_owner_replay(self):
+    owner = bridge.load_owner()
+    raw = (bridge.ROOT / bridge.LEDGER).read_bytes()
+    rows = [r for r in read_rows(raw) if r["event_id"] == "PSR_20261122T224954Z"]
+    self.assertEqual(len(rows), 1)
+    at = bridge.clock(rows[0]["observation_timestamp_utc"])
+    eligible = set(owner.eligible_candidates())
+    self.assertTrue(set(CORE).issubset(eligible))
+
+    def verify(row, cutoff, decisions):
+        owner.verify_frozen_provenance(row)
+        owner.validate_core_decision_contract(row, decisions, eligible)
+        owner.verify_source_bindings(row, cutoff)
+
+    args = (bridge.iso(at), bridge.iso(at + timedelta(seconds=1)), FLOOR,
+            verify, owner.PROVENANCE_MUTABLE_FIELDS)
+    # Direct call exposes the underlying verifier error instead of only UNKNOWN.
+    projection = {k: v for k, v in rows[0].items() if k not in owner.PROVENANCE_MUTABLE_FIELDS}
+    verify(projection, at, json.loads(projection["candidate_decisions"]))
+    result = evaluate_rows(rows, *args)
+    self.assertEqual(result["status"], "CORE_REPLAY_AT_OBSERVATION_ONLY")
+    self.assertFalse(result["latest_observation"]["decisions"]["C07_SIMPLE_3"])
+    self.assertTrue(result["attribution"]["ETHBTC_PERSISTENCE"]["pivotal_in_frozen_and_rule"])
+    altered = copy.deepcopy(rows)
+    altered[0]["source_version_commit"] = "0" * 40
+    self.assertEqual(evaluate_rows(altered, *args)["status"], "UNKNOWN")
+    altered = copy.deepcopy(rows)
+    altered[0]["outcome_24h"] = "1" if rows[0]["outcome_24h"] == "0" else "0"
+    self.assertEqual(evaluate_rows(altered, *args), result)
+
+
+
 class ExistingOwnerReplay(unittest.TestCase):
     def test_real_w47_row_uses_existing_byte_replay_and_frozen_candidates(self):
-        owner = bridge.load_owner()
-        raw = (bridge.ROOT / bridge.LEDGER).read_bytes()
-        rows = [r for r in read_rows(raw) if r["event_id"] == "PSR_20261122T224954Z"]
-        self.assertEqual(len(rows), 1)
-        at = bridge.clock(rows[0]["observation_timestamp_utc"])
-        eligible = set(owner.eligible_candidates())
-        self.assertTrue(set(CORE).issubset(eligible))
-
-        def verify(row, cutoff, decisions):
-            owner.verify_frozen_provenance(row)
-            owner.validate_core_decision_contract(row, decisions, eligible)
-            owner.verify_source_bindings(row, cutoff)
-
-        args = (bridge.iso(at), bridge.iso(at + timedelta(seconds=1)), FLOOR,
-                verify, owner.PROVENANCE_MUTABLE_FIELDS)
-        result = evaluate_rows(rows, *args)
-        self.assertEqual(result["status"], "CORE_REPLAY_AT_OBSERVATION_ONLY")
-        self.assertFalse(result["latest_observation"]["decisions"]["C07_SIMPLE_3"])
-        self.assertTrue(result["attribution"]["ETHBTC_PERSISTENCE"]["pivotal_in_frozen_and_rule"])
-        altered = copy.deepcopy(rows)
-        altered[0]["source_version_commit"] = "0" * 40
-        self.assertEqual(evaluate_rows(altered, *args)["status"], "UNKNOWN")
-        altered = copy.deepcopy(rows)
-        altered[0]["outcome_24h"] = "1" if rows[0]["outcome_24h"] == "0" else "0"
-        self.assertEqual(evaluate_rows(altered, *args), result)
+        # The repository-wide suite imports and mutates owner modules in many
+        # fixtures. Exercise the real production CLI's fresh-process context,
+        # without skipping, mocking or weakening any of the source verifiers.
+        import subprocess
+        import sys
+        result = subprocess.run(
+            [sys.executable, "-c",
+             "import runpy, unittest; "
+             "ns=runpy.run_path('tests/cycle_navigator/test_cn_mm_core_shadow_bridge_v1.py'); "
+             "ns['_real_w47_owner_replay'](unittest.TestCase())"],
+            cwd=bridge.ROOT, capture_output=True, text=True, timeout=120,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
