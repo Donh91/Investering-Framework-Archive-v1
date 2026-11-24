@@ -14,8 +14,15 @@ def policy_diagnostics(routing, registry, shared):
         "CAPABILITY_ROUTING_POLICY_v1", "API_TASK_REGISTRY_v1", "SOL_MAX_SHARED_MODEL_POLICY_V1"
     ):
         raise ValueError("unexpected_policy_contract")
-    models, tasks = routing["models"], registry["tasks"]
-    required = shared["required_new_max_model"]
+    models, tasks = routing.get("models"), registry.get("tasks")
+    required = shared.get("required_new_max_model")
+    if (not isinstance(models, dict) or not models or not isinstance(tasks, dict)
+            or not isinstance(required, str) or not required.strip()
+            or "RESEARCH_LAB_SOL_ANALYSIS" not in tasks
+            or any(not isinstance(task, str) or not isinstance(cfg, dict)
+                   or not isinstance(cfg.get("model"), str) or not cfg["model"].strip()
+                   for task, cfg in tasks.items())):
+        raise ValueError("invalid_policy_shape")
     return {
         "authority": dict(AUTHORITY),
         "registry_task_count": len(tasks),
