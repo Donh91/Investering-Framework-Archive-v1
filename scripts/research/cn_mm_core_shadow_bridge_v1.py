@@ -233,10 +233,12 @@ def verify_packet_projection(packet, freeze, ledger_raw, registry_raw, *, repo):
         raise ValueError("SHADOW_FREEZE_WINDOW_INVALID")
     diagnostics = {}
     sequence_inputs = []
+    verified_rows = {}
 
     def verify(row, at, decisions):
         persistence = replay.verify(row, at, decisions)
         diagnostics[row["event_id"]] = persistence
+        verified_rows[row["event_id"]] = row
         sequence_inputs.append(owner.sequence_observation(row, at, persistence))
 
     expected = evaluate_rows(read_rows(ledger_raw), iso(start), iso(end), iso(replay.floor),
@@ -252,10 +254,12 @@ def verify_packet_projection(packet, freeze, ledger_raw, registry_raw, *, repo):
     latest = expected["latest_observation"]
     etf = pinned_settled_context(repo, latest["source_commit"], packet["checkout_sha"],
                                  clock(latest["observation_utc"]))
-    from scripts.research.cn_mm_optional_source_context_v1 import forensics_context
+    from scripts.research.cn_mm_optional_source_context_v1 import forensics_context, leverage_context
     forensics = forensics_context(replay, latest["source_commit"], clock(latest["observation_utc"]))
+    leverage = leverage_context(replay,verified_rows[latest["event_id"]],clock(latest["observation_utc"]))
     return {"persistence": diagnostics[latest["event_id"]],
-            "sequence": sequence, "etf_context": etf, "forensics_context": forensics}
+            "sequence": sequence, "etf_context": etf, "forensics_context": forensics,
+            "leverage_context": leverage}
 
 
 def intelligence_projection(packet, diagnostics=None):
@@ -282,6 +286,7 @@ def intelligence_projection(packet, diagnostics=None):
         decisions = latest["decisions"]
         p, s = diagnostics["persistence"], diagnostics["sequence"]
         etf, liq = diagnostics["etf_context"], diagnostics["forensics_context"]
+        leverage = diagnostics["leverage_context"]
         base.update(status="SOURCE_REPLAYED_OBSERVATION_ONLY",
                     observation={k: latest[k] for k in ("event_id","observation_utc","source_commit","provenance_sha256")})
         base["models"]["C2"]["observed_c06_permission"] = decisions["C06_BREADTH_BTCD"]
@@ -293,6 +298,8 @@ def intelligence_projection(packet, diagnostics=None):
             "BTCD_PATH_RECLAIM": {"status":"SOURCE_REPLAYED","permission":decisions["C03_BTCD"]},
             "ETF_FLOW_QUALITY": {"status":etf["status"],"source_sha256":etf.get("source_sha256"),
                 "session_date":etf.get("session_date"),"absorption_state":None},
+            "LEVERAGE_CONTEXT": {"status":leverage["status"],"source_sha256":leverage.get("source_sha256"),
+                "reset_state":None,"reclaim_state":None,"assets":leverage["assets"]},
             "LIQUIDATION_CLEARANCE": {"status":liq["status"],"source_sha256":liq.get("source_sha256"),
                 "source_completeness_verified":False,"clearance_state":None},
         }
@@ -605,6 +612,7 @@ def consume_cn_shadow(repo, mm_pointer):
                 "sequence_diagnostic": diagnostics["sequence"],
                 "etf_context": diagnostics["etf_context"],
                 "forensics_context": diagnostics["forensics_context"],
+                "leverage_context": diagnostics["leverage_context"],
                 "shared_intelligence_feature": shared if binding_status!="MM_CALIBRATION_FEATURE_MISMATCH" else None,
                 "shared_feature_binding_status": binding_status}
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,

@@ -117,3 +117,86 @@ def coverage(replay, observations):
             "scientific_pit_eligible": False, "forecast_authority": False,
             "absorption_transform": "UNFROZEN", "liquidation_clearance_transform": "UNFROZEN",
             "source_completeness_verified": False}
+
+
+def leverage_context(replay, row, cutoff):
+    """Read existing OKX derivatives columns in the exact verified hourly family.
+
+    This is source-declared context, not independently known-by, verified venue
+    raw response, cross-venue leverage, liquidation clearance or reset evidence.
+    Missing funding-event rows are never forward-filled or turned into zero.
+    """
+    import csv
+    import io
+    import json
+    from datetime import timedelta
+    base={"contract":"PINNED_HOURLY_LEVERAGE_CONTEXT_v1","status":"UNAVAILABLE",
+          "authority":"RESEARCH_ONLY_NON_CANONICAL","forecast_authority":False,
+          "scientific_pit_eligible":False,"independent_first_known_utc":None,
+          "reset_state":None,"reclaim_state":None,"assets":{}}
+    try:
+        from scripts.research import cn_mm_core_shadow_bridge_v1 as bridge
+        owner=bridge.load_owner()
+        source=row["source_version_commit"]
+        replay.require_ancestor(source)
+        family=json.loads(row["source_binding_manifest"])["families"]["ETHBTC_PERSISTENCE"]
+        baseline=family["baseline"]
+        anchor=parse_utc(baseline["timestamp_utc"])
+        if not anchor+timedelta(hours=1)<=parse_utc(baseline["source_window_end_utc"])<=cutoff:
+            raise ValueError("LEVERAGE_BASELINE_CLOCK_INVALID")
+        payloads=owner._bound_payloads("ETHBTC_PERSISTENCE",family,source,read_blob=replay.read_blob)
+        samples={}
+        wanted={anchor,anchor-timedelta(hours=24)}
+        for path,raw in payloads:
+            reader=csv.DictReader(io.StringIO(raw.decode("utf-8-sig"),newline=""),strict=True)
+            if not reader.fieldnames or len(set(reader.fieldnames))!=len(reader.fieldnames):
+                raise ValueError("LEVERAGE_CSV_HEADER_INVALID")
+            for item in reader:
+                at=parse_utc(item["timestamp_utc"])
+                if at not in wanted: continue
+                available=parse_utc(item["source_window_end_utc"])
+                if at+timedelta(hours=1)>available or available>cutoff:
+                    continue
+                if at in samples:
+                    raise ValueError("LEVERAGE_DUPLICATE_HOUR")
+                samples[at]=(item,path,hashlib.sha256(raw).hexdigest())
+        latest,path,digest=samples[anchor]
+        if (parse_utc(latest["source_window_end_utc"])!=parse_utc(baseline["source_window_end_utc"]) or
+                any(float(latest[a+"_close"])!=float(baseline[a+"_close"]) for a in ("btc","eth","ethbtc"))):
+            raise ValueError("LEVERAGE_PRICE_BASELINE_MISMATCH")
+        def number(item,key,*,positive=False):
+            value=item.get(key)
+            if value in (None,""): return None
+            n=float(value)
+            if not math.isfinite(n) or (positive and n<=0):
+                raise ValueError("LEVERAGE_INVALID_NUMERIC:"+key)
+            return n
+        prior=samples.get(anchor-timedelta(hours=24))
+        assets={}
+        for asset in ("btc","eth"):
+            oi=ratio=funding=delta=None
+            if latest.get("derivatives_status")=="PASS":
+                if latest.get(asset+"_open_interest_source")=="OKX_CONTRACT_OI_HISTORY":
+                    oi=number(latest,asset+"_open_interest",positive=True)
+                if latest.get(asset+"_long_short_source")=="OKX_GLOBAL_ACCOUNT_RATIO":
+                    ratio=number(latest,asset+"_long_short_ratio",positive=True)
+                if latest.get(asset+"_funding_source")=="OKX_FUNDING_HISTORY":
+                    funding=number(latest,asset+"_funding_event_rate")
+                if oi is not None and prior:
+                    old=prior[0]
+                    if old.get("derivatives_status")=="PASS" and old.get(asset+"_open_interest_source")=="OKX_CONTRACT_OI_HISTORY":
+                        prior_oi=number(old,asset+"_open_interest",positive=True)
+                        if prior_oi is not None: delta=(oi/prior_oi-1)*100
+            assets[asset.upper()]={"open_interest_contracts":oi,"oi_change_24h_pct":delta,
+                    "long_short_account_ratio":ratio,"funding_event_rate":funding,
+                    "funding_event_observation_utc":bridge.iso(anchor) if funding is not None else None,
+                    "scope":"OKX_SINGLE_VENUE_CONTEXT_ONLY"}
+        available=any(v["open_interest_contracts"] is not None or v["long_short_account_ratio"] is not None or
+                      v["funding_event_rate"] is not None for v in assets.values())
+        return {**base,"status":"ARCHIVED_DECLARED_CLOCK_CONTEXT_ONLY" if available else "UNAVAILABLE",
+                "source_commit":source,"source_path":path,"source_sha256":digest,
+                "observation_bar_utc":bridge.iso(anchor),"source_window_end_utc":latest["source_window_end_utc"],
+                "prior_24h_source_sha256":prior[2] if prior else None,"assets":assets}
+    except (ValueError,KeyError,TypeError,AttributeError,OSError,OverflowError,csv.Error,
+            __import__("subprocess").SubprocessError):
+        return {**base,"reason":"LEVERAGE_BOUND_SOURCE_UNAVAILABLE"}

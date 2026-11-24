@@ -132,6 +132,9 @@ def _real_w47_owner_replay(self):
     self.assertFalse(diag["sequence"]["forecast_authority"])
     self.assertFalse(diag["forensics_context"]["forecast_authority"])
     self.assertIsNone(diag["forensics_context"]["liquidation_clearance"])
+    self.assertFalse(diag["leverage_context"]["forecast_authority"])
+    self.assertIsNone(diag["leverage_context"]["reset_state"])
+    self.assertIn(diag["leverage_context"]["status"],{"ARCHIVED_DECLARED_CLOCK_CONTEXT_ONLY","UNAVAILABLE"})
     shared = bridge.intelligence_projection(packet,diag)
     self.assertEqual(shared["models"]["C2"]["observed_c06_permission"],result["latest_observation"]["decisions"]["C06_BREADTH_BTCD"])
     self.assertFalse(shared["models"]["C2"]["issued"])
@@ -386,6 +389,16 @@ print('W47_ORIGINAL_CALIBRATION_READBACK '+json.dumps({'pin':pin,'verified_n':re
         with self.assertRaisesRegex(ValueError,"SOURCE_BYTES_MISMATCH"):
             cache.records("b",[{**manifest[0],"sha256":"0"*64}],parse,unique)
         self.assertEqual(replay.calls,3)
+
+    def test_leverage_missing_source_never_becomes_reset(self):
+        from scripts.research.cn_mm_optional_source_context_v1 import leverage_context
+        class Replay:
+            def require_ancestor(self,commit): raise ValueError("unavailable")
+        result=leverage_context(Replay(),{"source_version_commit":"0"*40},bridge.clock(START))
+        self.assertEqual(result["status"],"UNAVAILABLE")
+        self.assertIsNone(result["reset_state"])
+        self.assertIsNone(result["reclaim_state"])
+        self.assertFalse(result["forecast_authority"])
 
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
