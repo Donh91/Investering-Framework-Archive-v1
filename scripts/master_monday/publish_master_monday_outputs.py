@@ -98,6 +98,31 @@ def fallback_scorecard(context:dict[str,Any])->dict[str,Any]:
         'matured_outcome_count':len(matured),
         'reason':'WEEKLY_CALIBRATION_SHADOW validated output contract does not currently include a scorecard field.' if matured else 'A valid experiment registry supplied zero newly matured outcomes; formal outcome scoring remains pending.',
     }
+def effective_delivery_status(api_status: str, api: dict[str, Any],
+                              translation: dict[str, Any], scorecard: dict[str, Any],
+                              consumer_verified: bool) -> str:
+    """Transport success and consumer receipt are not analytical completeness.
+
+    The current gateway schema cannot produce translation or scorecard.
+    Preserve delivery, but do not certify incomplete products as READY.
+    A genuinely empty, available outcome population may remain pending.
+    """
+    if not consumer_verified or api_status != 'success' or api.get('status') != 'READY':
+        return 'DEGRADED'
+    if not isinstance(translation, dict) or translation.get('status') != 'READY':
+        return 'DEGRADED'
+    if not isinstance(scorecard, dict):
+        return 'DEGRADED'
+    if scorecard.get('status') == 'READY':
+        return 'READY'
+    if (scorecard.get('status') == 'PENDING_MATURED_OUTCOMES'
+            and scorecard.get('experiment_registry_status') == 'AVAILABLE'
+            and type(scorecard.get('matured_outcome_count')) is int
+            and scorecard['matured_outcome_count'] == 0):
+        return 'READY'
+    return 'DEGRADED'
+
+
 def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
                                     machine_file_sha256:str,pointer_file_sha256:str,
                                     freeze:dict[str,Any]|None=None,preflight:dict[str,Any]|None=None)->str:
@@ -248,7 +273,7 @@ def main():
     consumer_receipt=machine.get('consumer_receipt') if isinstance(machine.get('consumer_receipt'),dict) else {}
     consumer_verified=consumer_receipt.get('consumption_state')=='VERIFIED'
     producer_status='READY' if a.api_status=='success' else 'READY_WITH_API_FAILURE'
-    effective_status=producer_status if consumer_verified else 'DEGRADED'
+    effective_status=effective_delivery_status(a.api_status,api,translation,scorecard,consumer_verified)
     experiment_status=(context.get('experiment_learning') or {}).get('status','UNAVAILABLE_CONTEXT') if isinstance(context.get('experiment_learning'),dict) else 'UNAVAILABLE_CONTEXT'
     report=f"# MASTER MONDAY — {freeze['iso_year']}-W{int(freeze['iso_week']):02d}\n\nPreflight: **{preflight['packet']['status']}**\n\nAPI calibration: **{a.api_status.upper()}**\n\nExperiment registry evidence: **{experiment_status}**\n\nConsumer receipt: **{consumer_receipt.get('status','UNAVAILABLE')}**\n\nLearning decision impact: **{learning_impact.get('assessment_status','UNKNOWN')}**\n\n## Analysis layer\n\n```json\n{json.dumps(analysis,ensure_ascii=False,indent=2)}\n```\n\n## Operational translation\n\n```json\n{json.dumps(translation,ensure_ascii=False,indent=2)}\n```\n\n## Calibration scorecard\n\n```json\n{json.dumps(scorecard,ensure_ascii=False,indent=2)}\n```\n\n## Learning decision impact — 8 week shadow measurement\n\n```json\n{json.dumps(learning_impact,ensure_ascii=False,indent=2)}\n```\n\n## Autonomous shadow admission\n\nThis section is reporting-only. The OpenAI API lifecycle decision does not require owner confirmation.\n\n```json\n{json.dumps(shadow,ensure_ascii=False,indent=2)}\n```\n"
     (a.output_dir/'MASTER_MONDAY_REPORT.md').write_text(report)
