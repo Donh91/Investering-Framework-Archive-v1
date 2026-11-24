@@ -186,6 +186,29 @@ print('OPTIONAL_SOURCE_COHORT '+json.dumps(result,sort_keys=True))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         print(result.stdout)
 
+    def test_original_matured_outcome_source_replay(self):
+        import subprocess
+        import sys
+        code = """
+import json
+from scripts.research import cn_mm_core_shadow_bridge_v1 as b
+from scripts.research.cn_mm_outcome_source_audit_v1 import audit_outcome_cohort
+owner=b.load_owner()
+head=b.git('rev-parse','HEAD').decode().strip()
+replay=owner.PinnedSourceReplay(b.ROOT,head)
+report=audit_outcome_cohort(replay)
+print('PINNED_OUTCOME_COHORT '+json.dumps(report,sort_keys=True))
+assert report['verified_n']>0,report
+assert report['verified_n']+report['rejected_n']+report['unmatured_or_unavailable_n']==3*report['parent_n'],report
+assert not report['scientific_pit_eligible'] and not report['outcomes_used_as_features']
+# Rejections are explicit research blockers, never silently scored or rewritten.
+assert report['status'] in {'REPLAY_COMPLETE','REPLAY_BLOCKED'}
+"""
+        result = subprocess.run([sys.executable, "-c", code], cwd=bridge.ROOT,
+                                capture_output=True, text=True, timeout=240)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        print(result.stdout)
+
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
         self.assertEqual(workflow.count("python scripts/research/cn_mm_core_shadow_bridge_v1.py"), 2)
