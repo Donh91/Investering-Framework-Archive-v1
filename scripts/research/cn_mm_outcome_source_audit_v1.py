@@ -5,11 +5,45 @@ import hashlib
 import json
 import math
 import re
-from collections import Counter
+from collections import Counter, OrderedDict
 
 from scripts.research import cn_mm_core_shadow_bridge_v1 as bridge
 
-def verify_matured_path(replay, row, detail, horizon, frozen_baseline, *, retain_path=False):
+class OutcomePathReadCache:
+    """Bounded per-audit memoization of immutable Git bytes and parsed paths.
+
+    Never persists or accepts prior verification verdicts. Cache is scoped to
+    one replay instance and one execution. Original receipt and per-horizon
+    reconciliation still run on every result.
+    """
+    def __init__(self,replay,max_entries=64):
+        self.replay=replay
+        self.max_entries=max_entries
+        self.entries=OrderedDict()
+        self.hits=0
+        self.misses=0
+
+    def records(self,commit,manifest,parse,unique):
+        key=(commit,tuple((x["path"],x["sha256"],x["bytes"]) for x in manifest))
+        if key in self.entries:
+            self.hits+=1
+            self.entries.move_to_end(key)
+            return self.entries[key]
+        self.misses+=1
+        payloads=[]
+        for path,digest,size in key[1]:
+            raw=self.replay.read_blob(commit,path)
+            if hashlib.sha256(raw).hexdigest()!=digest or len(raw)!=size:
+                raise ValueError("OUTCOME_REPLAY_SOURCE_BYTES_MISMATCH")
+            payloads.append((path,raw))
+        records=unique(parse(payloads))
+        self.entries[key]=records
+        if len(self.entries)>self.max_entries:
+            self.entries.popitem(last=False)
+        return records
+
+
+def verify_matured_path(replay, row, detail, horizon, frozen_baseline, *, retain_path=False, cache=None):
     # Reuse existing owner and admission functions. load_owner installs the
     # original scripts/research import route used by the owner modules.
     bridge.load_owner()
@@ -23,18 +57,15 @@ def verify_matured_path(replay, row, detail, horizon, frozen_baseline, *, retain
     replay._git("merge-base", "--is-ancestor", row["source_version_commit"], commit)
     manifest = __import__("json").loads(detail["outcome_source_bindings"])
     paths = set()
-    payloads = []
     for binding in manifest:
         path = binding["path"]
         if not re.fullmatch(r"03_DAILY_CAPTURE_LOGS/hourly/\d{4}/\d{2}/\d{4}-\d{2}-\d{2}\.csv", path) or path in paths:
             raise ValueError("OUTCOME_REPLAY_PATH_INVALID_OR_DUPLICATE")
         paths.add(path)
-        raw = replay.read_blob(commit, path)
-        if (hashlib.sha256(raw).hexdigest() != binding["sha256"] or
-                len(raw) != binding["bytes"]):
-            raise ValueError("OUTCOME_REPLAY_SOURCE_BYTES_MISMATCH")
-        payloads.append((path, raw))
-    records = owner._unique_records(core.parse_hourly_payloads(payloads))
+    cache = cache if cache is not None else OutcomePathReadCache(replay)
+    if cache.replay is not replay:
+        raise ValueError("OUTCOME_REPLAY_CACHE_SCOPE_MISMATCH")
+    records = cache.records(commit,manifest,core.parse_hourly_payloads,owner._unique_records)
     start = owner.parse(detail["baseline_timestamp_utc"])
     wall = owner.parse(detail["matured_at_utc"])
     target = owner.parse(detail["target_timestamp_utc"])
@@ -84,6 +115,7 @@ def audit_outcome_cohort(replay, *, evaluate=False):
     verified_paths = {}
     sequence_inputs = []
     source_baselines = {}
+    cache = OutcomePathReadCache(replay)
     for row in rows:
         at = bridge.clock(row["observation_timestamp_utc"])
         if at < replay.floor:
@@ -112,7 +144,7 @@ def audit_outcome_cohort(replay, *, evaluate=False):
             try:
                 if len(receipts) != 1:
                     raise ValueError("OUTCOME_REPLAY_UNIQUE_RECEIPT_REQUIRED")
-                proof = verify_matured_path(replay, row, receipts[0], horizon, frozen_baseline, retain_path=evaluate)
+                proof = verify_matured_path(replay, row, receipts[0], horizon, frozen_baseline, retain_path=evaluate,cache=cache)
                 counts["verified"] += 1
                 horizon_counts[horizon] += 1
                 if evaluate:
@@ -128,6 +160,7 @@ def audit_outcome_cohort(replay, *, evaluate=False):
             "verified_n": counts["verified"], "unmatured_or_unavailable_n": counts["unmatured_or_unavailable"],
             "rejected_n": counts["rejected"], "orphan_or_excluded_detail_n": orphans,
             "verified_horizon_counts": dict(horizon_counts), "failures": failures,
+            "path_read_cache":{"scope":"SAME_EXECUTION_ONLY","hits":cache.hits,"misses":cache.misses},
             "scientific_pit_eligible": False, "forecast_authority": False,
             "edge_established": False, "outcomes_used_as_features": False,
             "status": "REPLAY_COMPLETE" if counts["verified"] and not counts["rejected"] and not orphans else "REPLAY_BLOCKED"}

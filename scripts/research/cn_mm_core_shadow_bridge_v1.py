@@ -322,18 +322,21 @@ def learning_checkout_at_cutoff(repo, head, cutoff):
     # --before alone can stop traversal at an out-of-order commit. Inspect the
     # actual contiguous first-parent chain, and reject a local clock inversion.
     lines=run("log","--first-parent","--format=%H%x09%cI",head).splitlines()
-    previous=None
+    selected=None
     for line in lines:
         commit,stamp=line.split("\t")
         at=datetime.fromisoformat(stamp).astimezone(timezone.utc)
-        if previous is not None and at>previous:
+        if selected is not None and at>cutoff:
+            # An older parent stamped after the cutoff contaminates the
+            # selected tree even if its child has an earlier clock.
             raise ValueError("LEARNING_FIRST_PARENT_CLOCK_INVERSION")
-        if at<=cutoff:
-            return {"checkout_sha":commit,"checkout_committer_utc":iso(at),
-                    "source_cutoff_utc":iso(cutoff),
-                    "clock_class":"FIRST_PARENT_COMMITTER_CLOCK_NOT_INDEPENDENT_KNOWN_BY"}
-        previous=at
-    raise ValueError("LEARNING_NO_CHECKOUT_BEFORE_CUTOFF")
+        if selected is None and at<=cutoff:
+            selected={"checkout_sha":commit,"checkout_committer_utc":iso(at),
+                      "source_cutoff_utc":iso(cutoff),
+                      "clock_class":"FIRST_PARENT_COMMITTER_CLOCK_NOT_INDEPENDENT_KNOWN_BY"}
+    if selected is None:
+        raise ValueError("LEARNING_NO_CHECKOUT_BEFORE_CUTOFF")
+    return selected
 
 
 def calibration_intelligence(repo, freeze_file, freeze):
@@ -370,6 +373,14 @@ def calibration_intelligence(repo, freeze_file, freeze):
             csv.Error, ImportError, subprocess.SubprocessError):
         result["reason"]="PINNED_FEATURE_CONTEXT_UNAVAILABLE"
         return result
+    result.update(calibration_learning_at_cutoff(repo,head,freeze))
+    result["context_sha256"] = sha(canon(result))
+    return result
+
+
+def calibration_learning_at_cutoff(repo,head,freeze):
+    """Read both learning owners from one historical tree, independent of features."""
+    result={"learning":{"status":"UNAVAILABLE"},"task2":{"status":"UNAVAILABLE"}}
     cutoff = clock(freeze["created_at_utc"])
     learning_pin = None
     try:
@@ -419,7 +430,6 @@ def calibration_intelligence(repo, freeze_file, freeze):
             csv.Error, ImportError, subprocess.SubprocessError):
         result["task2"] = {"status":"UNAVAILABLE","reason":"ORIGINAL_SCORE_MISSING_LATE_OR_UNVERIFIED",
                            "forecast_authority":False}
-    result["context_sha256"] = sha(canon(result))
     return result
 
 

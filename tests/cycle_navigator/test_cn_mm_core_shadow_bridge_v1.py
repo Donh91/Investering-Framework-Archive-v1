@@ -341,7 +341,51 @@ print('TASK2_ORIGINAL_COMPARATOR '+json.dumps(report,sort_keys=True))
             git("commit","-qm","inverted",stamp="2026-11-23T09:30:00Z")
             with self.assertRaisesRegex(ValueError,"CLOCK_INVERSION"):
                 bridge.learning_checkout_at_cutoff(root,git("rev-parse","HEAD"),
-                    bridge.clock("2026-11-23T09:15:00Z"))
+                    bridge.clock("2026-11-23T09:42:55Z"))
+
+    def test_real_w47_calibration_learning_uses_historical_snapshot(self):
+        import subprocess
+        import sys
+        code = """
+import json
+from scripts.research import cn_mm_core_shadow_bridge_v1 as b
+head=b.git('rev-parse','HEAD').decode().strip()
+path='research/master_monday_preflight/frozen/2026/W47/WEEKLY_EVIDENCE_FREEZE.json'
+freeze=json.loads(b.git('show',head+':'+path))
+result=b.calibration_learning_at_cutoff(b.ROOT,head,freeze)
+pin=result['learning_source_snapshot']
+assert pin['checkout_sha']!=head
+assert b.clock(pin['checkout_committer_utc'])<=b.clock(freeze['created_at_utc'])
+assert result['learning']['status']=='DESCRIPTIVE_ONLY_NOT_INDEPENDENT_EDGE',result
+assert result['learning']['source_checkout_sha']==pin['checkout_sha']
+assert result['learning']['verified_n']>0 and result['learning']['rejected_n']==0
+assert result['task2']['paired_n']==14 and not result['task2']['scientific_pit_eligible']
+print('W47_ORIGINAL_CALIBRATION_READBACK '+json.dumps({'pin':pin,'verified_n':result['learning']['verified_n'],'horizons':result['learning']['verified_horizon_counts'],'task2_paired_n':result['task2']['paired_n']},sort_keys=True))
+"""
+        result=subprocess.run([sys.executable,"-c",code],cwd=bridge.ROOT,
+                              capture_output=True,text=True,timeout=180)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        print(result.stdout)
+
+    def test_outcome_cache_is_scoped_and_digest_sensitive(self):
+        import hashlib
+        from scripts.research.cn_mm_outcome_source_audit_v1 import OutcomePathReadCache
+        class Replay:
+            def __init__(self): self.calls=0
+            def read_blob(self,commit,path): self.calls+=1; return b"fixture"
+        replay=Replay()
+        cache=OutcomePathReadCache(replay,max_entries=1)
+        manifest=[{"path":"p","sha256":hashlib.sha256(b"fixture").hexdigest(),"bytes":7}]
+        parse=lambda rows: rows
+        unique=lambda rows: tuple(rows)
+        self.assertEqual(cache.records("a",manifest,parse,unique),cache.records("a",manifest,parse,unique))
+        self.assertEqual(replay.calls,1)
+        self.assertEqual(cache.hits,1)
+        cache.records("b",manifest,parse,unique)
+        self.assertEqual(replay.calls,2)
+        with self.assertRaisesRegex(ValueError,"SOURCE_BYTES_MISMATCH"):
+            cache.records("b",[{**manifest[0],"sha256":"0"*64}],parse,unique)
+        self.assertEqual(replay.calls,3)
 
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
