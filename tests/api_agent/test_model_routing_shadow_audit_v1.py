@@ -22,6 +22,25 @@ class ShadowAuditTests(unittest.TestCase):
         self.assertFalse(any(x["authority"].values()))
         self.assertRaises(ValueError, policy_diagnostics, {}, t, s)
 
+    def test_malformed_policy_shapes(self):
+        r = dict(contract="CAPABILITY_ROUTING_POLICY_v1", models={"old": {}})
+        t = dict(contract="API_TASK_REGISTRY_v1", tasks={"RESEARCH_LAB_SOL_ANALYSIS": {"model": "old"}})
+        s = dict(contract="SOL_MAX_SHARED_MODEL_POLICY_V1", required_new_max_model="new")
+        for args in ((dict(r, models=None), t, s), (r, dict(t, tasks={}), s),
+                     (r, dict(t, tasks={"RESEARCH_LAB_SOL_ANALYSIS": {}}), s),
+                     (r, t, dict(s, required_new_max_model=None))):
+            with self.subTest(args=args), self.assertRaisesRegex(ValueError, "invalid_policy_shape"):
+                policy_diagnostics(*args)
+
+    def test_duplicate_id_within_single_receipt(self):
+        with self.assertRaisesRegex(ValueError, "invalid_attempt_identity"):
+            receipt_census([row(response_ids=["r1", "r1"], attempt_count=2)])
+
+    def test_negative_usage_and_clock(self):
+        for field in ("input_tokens", "output_tokens", "created_unix"):
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, "invalid_usage_or_clock"):
+                receipt_census([row(**{field: -1})])
+
     def test_cost_retains_failed_attempts_without_claiming_resolution(self):
         failed = row(response_id="r2", response_ids=["r2"], status="API_OUTPUT_INVALID", estimated_cost_usd=0.1)
         x = receipt_census([row(), failed])["cohorts"][0]
