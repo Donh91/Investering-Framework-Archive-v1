@@ -73,6 +73,17 @@ def related(a, b):
     return a == b or a.startswith(b + "/") or b.startswith(a + "/")
 
 
+def directories(entries):
+    return {"/".join(p.split("/")[:i]) for p in entries for i in range(1, len(p.split("/")))}
+
+
+def vanished_directory(base, added_side, other_side):
+    vanished = directories(base) - directories(other_side)
+    return any("/".join(p.split("/")[:i]) in vanished
+               for p in added_side.keys() - base.keys()
+               for i in range(1, len(p.split("/"))))
+
+
 def propose(base, head, main, *, pr_paths, pr_complete, native_merge_base,
             current_head, owner_gated, writer_clear, historical_overlap_clear):
     """Only construct an advisory plan; caller must retain every live governance gate.
@@ -95,6 +106,7 @@ def propose(base, head, main, *, pr_paths, pr_complete, native_merge_base,
         require(pr_paths[p] == status, "PR_STATUS_MISMATCH")
         require(all(x is None or x.mode in MODES for x in (old, new)), "UNSUPPORTED_PR_MODE")
     require(not any(related(p, q) for p in changed for q in delta(b, m)), "MAIN_OVERLAP")
+    require(not (vanished_directory(b, h, m) or vanished_directory(b, m, h)), "DIRECTORY_VANISHED")
     expected = m.copy()
     for p in changed:
         if p in h:

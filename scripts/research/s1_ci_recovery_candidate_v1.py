@@ -17,11 +17,19 @@ class Diagnosis:
     attempt: int | None = None
     job_id: int | None = None
     failed_steps: tuple = ()
-    release_authorized: bool = False
+    head: str | None = None
+    workflow_path: str | None = None
+    job_name: str | None = None
+    repo_id: int | None = None
+
+    @property
+    def release_authorized(self):
+        return False
 
     @property
     def fingerprint(self):
-        return (self.state, self.run_id, self.attempt, self.job_id, self.failed_steps)
+        return (self.repo_id, self.head, self.workflow_path, self.job_name, self.state,
+                self.run_id, self.attempt, self.job_id, self.failed_steps)
 
 
 def positive_int(value):
@@ -33,7 +41,11 @@ def diagnose(*, head, repo_id, workflow_path, job_name, must_run_steps,
     """Never infer code failure, approval reason or permission from conclusion alone."""
     def result(state, route, run=None, job=None, failed=()):
         return Diagnosis(state, route, (run or {}).get("id"),
-                         (run or {}).get("run_attempt"), (job or {}).get("id"), tuple(failed))
+                         (run or {}).get("run_attempt"), (job or {}).get("id"), tuple(failed),
+                         head if isinstance(head, str) else None,
+                         workflow_path if isinstance(workflow_path, str) else None,
+                         job_name if isinstance(job_name, str) else None,
+                         repo_id if positive_int(repo_id) else None)
 
     unknown = lambda: result("EVIDENCE_UNPROVEN", "READ_NATIVE_EVIDENCE")
     if (not isinstance(head, str) or not SHA.fullmatch(head) or not positive_int(repo_id)
@@ -69,7 +81,8 @@ def diagnose(*, head, repo_id, workflow_path, job_name, must_run_steps,
     if not kept:
         return result("NO_BOUND_RUN", "DIAGNOSE_TRIGGER")
     # Same workflow run_number must not point to multiple run identities.
-    if len({(r["run_number"], r["id"]) for r in kept}) != len({r["run_number"] for r in kept}):
+    if (len({(r["run_number"], r["id"]) for r in kept}) != len({r["run_number"] for r in kept})
+            or len({(r["run_number"], r["id"]) for r in kept}) != len({r["id"] for r in kept})):
         return unknown()
     latest = max(kept, key=lambda r: (r["run_number"], r["run_attempt"]))
     if sum((r["run_number"], r["run_attempt"]) == (latest["run_number"], latest["run_attempt"]) for r in kept) != 1:
@@ -109,7 +122,7 @@ def diagnose(*, head, repo_id, workflow_path, job_name, must_run_steps,
         return result("JOB_INTERRUPTED", "DIAGNOSE_INFRA_OR_CANCELLATION", latest, job)
     steps = job.get("steps")
     if (not isinstance(steps, list) or any(not isinstance(s, dict) or not isinstance(s.get("name"), str) for s in steps)
-            or len({s["name"] for s in steps}) != len(steps)):
+            or any(sum(s["name"] == n for s in steps) > 1 for n in must_run_steps)):
         return result("STEPS_UNPROVEN", "READ_NATIVE_EVIDENCE", latest, job)
     failed = tuple(sorted(s["name"] for s in steps if s.get("conclusion") == "failure"))
     if jc == "failure":

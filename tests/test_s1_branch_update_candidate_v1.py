@@ -64,6 +64,51 @@ class D1Test(unittest.TestCase):
         with self.assertRaisesRegex(Hold, "UNSUPPORTED_PR_MODE"):
             self.plan(head=replace(self.h, entries=self.h.entries | {"new": e(14, "120000")}))
 
+    def test_directory_rename_conflict_both_directions(self):
+        self.b = snap(1, {"d/a": e(10), "d/b": e(11)})
+        moved = {"e/a": e(10), "e/b": e(11)}
+        added = self.b.entries | {"d/new": e(12)}
+        with self.assertRaisesRegex(Hold, "^DIRECTORY_VANISHED$"):
+            self.plan(head=snap(2, added), main=snap(3, moved), pr_paths={"d/new": "added"})
+        with self.assertRaisesRegex(Hold, "^DIRECTORY_VANISHED$"):
+            self.plan(head=snap(2, moved), main=snap(3, added),
+                      pr_paths={"d/a": "removed", "d/b": "removed", "e/a": "added", "e/b": "added"})
+
+    def test_cap_and_empty_pr_delta(self):
+        paths = {f"n{i}": e(1000+i) for i in range(101)}
+        with self.assertRaisesRegex(Hold, "^PR_DIFF_LIMIT$"):
+            self.plan(head=snap(2, self.b.entries | paths), pr_paths={p: "added" for p in paths})
+        with self.assertRaisesRegex(Hold, "^PR_DIFF_LIMIT$"):
+            self.plan(head=snap(2, self.b.entries), pr_paths={})
+
+    def test_exact_snapshot_guards(self):
+        for change, reason in [
+            (dict(commit="bad"), "TREE_BINDING_INVALID"),
+            (dict(tree="bad"), "TREE_BINDING_INVALID"),
+            (dict(entries=self.m.entries | {"other": Entry("100644", "bad")}), "ENTRY_INVALID"),
+            (dict(entries=self.m.entries | {"other": e(20, "100600")}), "MODE_INVALID"),
+            (dict(entries=self.m.entries | {"a/child": e(20)}), "PATH_COLLISION"),
+            (dict(entries=self.m.entries | {"bad\x00path": e(20)}), "ENTRY_INVALID"),
+        ]:
+            with self.subTest(change=change), self.assertRaisesRegex(Hold, "^"+reason+"$"):
+                self.plan(main=replace(self.m, **change))
+
+    def test_old_special_mode_and_no_update(self):
+        self.b = replace(self.b, entries=self.b.entries | {"a": e(10, "120000")})
+        m = replace(self.m, entries=self.m.entries | {"a": e(10, "120000")})
+        with self.assertRaisesRegex(Hold, "^UNSUPPORTED_PR_MODE$"):
+            self.plan(main=m)
+        with self.assertRaisesRegex(Hold, "^NO_BRANCH_UPDATE$"):
+            self.plan(main=replace(m, commit=s(2)))
+
+    def test_readback_rejects_old_commit_and_invalid_plan(self):
+        p = self.plan()
+        for n in (1, 2, 3):
+            with self.subTest(n=n), self.assertRaisesRegex(Hold, "^HEAD_READBACK_MISMATCH$"):
+                verify_readback(p, actual=snap(n, dict(p.expected)), parents=[s(2), s(3)], live_head=s(n), native_main=s(3))
+        with self.assertRaisesRegex(Hold, "^PLAN_INVALID$"):
+            verify_readback(None, actual=snap(4, dict(p.expected)), parents=[s(2), s(3)], live_head=s(4), native_main=s(3))
+
     def test_readback_rejects_losses_and_races(self):
         p = self.plan()
         expected = dict(p.expected)
