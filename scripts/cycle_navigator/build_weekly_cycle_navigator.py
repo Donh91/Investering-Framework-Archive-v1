@@ -1051,6 +1051,10 @@ def main() -> None:
         freeze, target_year, target_week,
         datetime.fromtimestamp(generated_unix, timezone.utc))
     source_manifest = {"daily_path_issuance": daily_path_issue, "daily_product_acceptance": daily_product, "daily_path_recovery": daily_recovery_receipt, "original_price_product_diagnostic": build_weekly_price_product_diagnostic(context, freeze, daily_product, daily_recovery_receipt), "issuer_method": OFFLINE_ISSUER_METHOD, "api_request_performed": False, "contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_year": completed_year, "completed_iso_week": completed_week, "target_iso_year": target_year, "target_iso_week": target_week, "deterministic_range_baseline_persistence": {"forecast": range_forecast_persistence, "prior_score": prior_range_score_persistence}, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
+    # Consume the separately committed research packet only after the official forecast value is fixed.
+    # Its absence is visible in the source manifest, not silently filled with a price-only proxy.
+    from scripts.research.cn_mm_core_shadow_bridge_v1 import consume_cn_shadow
+    source_manifest["mm_core_shadow_lineage"] = consume_cn_shadow(repo, mm_ptr)
     scoring_valid_from_unix = ((generated_unix + 3599) // 3600) * 3600
     scoring_valid_from_utc = datetime.fromtimestamp(scoring_valid_from_unix, tz=timezone.utc).isoformat().replace("+00:00", "Z")
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": generated_unix, "public_issue_number": public_issue, "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}

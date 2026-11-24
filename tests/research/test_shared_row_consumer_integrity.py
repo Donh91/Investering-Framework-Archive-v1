@@ -152,6 +152,104 @@ class SharedRowConsumerIntegrityTests(unittest.TestCase):
         self.assertIsNone(data["independent_population_precision"])
         self.assertIsNone(data["statistically_valid_comparative_edge"])
 
+
+    def test_core_ablation_measures_veto_benefit_and_missed_positive_on_same_rows(self):
+        samples = []
+        for i, (eth, breadth, btcd, outcome) in enumerate([
+            (False, True, True, "1"), (False, True, True, "0"),
+            (True, False, True, "1"), (True, True, False, "0"),
+            (True, True, True, "1"), (True, True, True, ""),
+        ]):
+            entry = row(f"ABLATION_{i}", f"2026-10-01T0{i}:00:00Z")
+            entry["ethbtc_derived_state"] = "ABOVE" if eth else "BELOW"
+            entry["breadth_derived_state"] = "BROAD_MAJORITY" if breadth else "NON_BROAD_MAJORITY"
+            entry["btcd_derived_state"] = "FALLING_PATH" if btcd else "RISING_RECLAIM"
+            entry["candidate_decisions"] = json.dumps(dict(zip(weekly.evidence.CORE_IDS,
+                (eth, breadth, btcd, eth and breadth, eth and btcd, breadth and btcd, eth and breadth and btcd))))
+            entry["outcome_24h"] = outcome
+            entry["provenance_hash"] = weekly.evidence.frozen_provenance_hash(entry)
+            samples.append(entry)
+        report = weekly.core_ablation_diagnostic(samples, runtime())
+        h = report["horizons"]["24h"]
+        self.assertEqual(h["matched_matured_n"], 5)
+        self.assertEqual(h["unmatured_n"], 1)
+        self.assertEqual(h["full_core_correct_n"], 3)
+        self.assertEqual(h["always_wait_correct_n"], 2)
+        self.assertEqual(h["always_permission_correct_n"], 3)
+        self.assertEqual(h["full_core_permission_n"], 1)
+        eth = h["families"]["ETHBTC_PERSISTENCE"]
+        self.assertEqual(eth["pivotal_veto_n"], 2)
+        self.assertEqual(eth["negative_relative_outcomes_vetoed_n"], 1)
+        self.assertEqual(eth["positive_relative_outcomes_missed_n"], 1)
+        self.assertEqual(eth["net_correct_classification_delta"], 0)
+        self.assertEqual(h["families"]["BREADTH_SURVIVAL"]["net_correct_classification_delta"], -1)
+        self.assertEqual(h["families"]["BTCD_PATH_RECLAIM"]["net_correct_classification_delta"], 1)
+        self.assertIsNone(report["horizons"]["7d"]["full_core_accuracy"])
+        self.assertIsNone(report["horizons"]["7d"]["families"]["ETHBTC_PERSISTENCE"]["net_correct_classification_delta"])
+        self.assertFalse(report["predictive_edge_established"])
+        self.assertFalse(report["automatic_promotion"])
+        self.assertIsNone(report["independent_market_shock_family_n"])
+        self.assertEqual(report, weekly.core_ablation_diagnostic(list(reversed(samples)), runtime()))
+
+
+    def test_core_meta_learning_retains_original_purpose_without_inventing_legacy_formula(self):
+        a = row("META_A", "2026-10-01T00:00:00Z")
+        b = row("META_B", "2026-10-02T00:00:00Z")
+        c = row("META_C", "2026-10-03T00:00:00Z")
+        b["ethbtc_derived_state"] = "BELOW"
+        b["candidate_decisions"] = json.dumps(dict(zip(weekly.evidence.CORE_IDS,
+            (False, True, True, False, False, True, False))))
+        for item, labels in [(a, ("1", "0", "1")), (b, ("0", "1", "0")), (c, ("1", "", ""))]:
+            for h, label in zip(("24h", "72h", "7d"), labels):
+                item["outcome_" + h] = label
+            item["provenance_hash"] = weekly.evidence.frozen_provenance_hash(item)
+        report = weekly.core_ablation_diagnostic([a, b, c], runtime())
+        meta = report["meta_learning"]
+        self.assertEqual(meta["cce"]["primitive_family_n"], 3)
+        self.assertEqual(meta["cce"]["derived_candidate_n"], 4)
+        self.assertEqual(meta["cce"]["decision_patterns"], {"011": 1, "111": 2})
+        pair = meta["cce"]["single_family_pairs"]["C01_ETHBTC__C02_BREADTH"]
+        self.assertEqual(pair["decision_pair_counts"], {"00": 0, "01": 1, "10": 0, "11": 2})
+        self.assertIsNone(meta["cce"]["numeric_confidence_compression"])
+        odm = meta["odm"]
+        self.assertEqual(odm["matured_by_horizon"], {"24h": 3, "72h": 2, "7d": 2})
+        self.assertEqual(odm["common_matured_n"], 2)
+        self.assertEqual(odm["common_endpoint_patterns"], {"010": 1, "101": 1})
+        self.assertEqual(odm["common_endpoint_transitions"]["24h__72h"], {"00": 0, "01": 1, "10": 1, "11": 0})
+        self.assertEqual(odm["unavailable_legacy_horizons"], ["6h", "12h", "48h", "14d", "30d"])
+        self.assertIsNone(odm["actual_signal_to_market_event_delay"])
+        self.assertFalse(odm["post_hoc_best_horizon_selected"])
+        self.assertEqual(meta["sre"]["candidate_metrics"]["C07_SIMPLE_3"]["24h"]["n"], 3)
+        self.assertFalse(meta["sre"]["legacy_formula_reconstructed"])
+        self.assertFalse(meta["fae"]["daily_price_forecast_attribution_available"])
+        self.assertFalse(meta["automatic_weight_updates"])
+        self.assertFalse(meta["canonical_effect"])
+        self.assertEqual(report, weekly.core_ablation_diagnostic([c, b, a], runtime()))
+
+    def test_core_meta_learning_empty_is_unknown_not_reliable(self):
+        meta = weekly.core_ablation_diagnostic([], runtime())["meta_learning"]
+        self.assertEqual(meta["status"], "INSUFFICIENT_EVIDENCE")
+        self.assertIsNone(meta["cce"]["single_family_pairs"]["C01_ETHBTC__C02_BREADTH"]["agreement_rate"])
+        self.assertEqual(meta["odm"]["common_matured_n"], 0)
+        self.assertIsNone(meta["sre"]["candidate_metrics"]["C07_SIMPLE_3"]["7d"]["recall"])
+        self.assertFalse(meta["sre"]["predictive_reliability_established"])
+
+    def test_core_ablation_missing_invalid_and_duplicate_inputs(self):
+        empty = weekly.core_ablation_diagnostic([], runtime())
+        self.assertEqual(empty["status"], "INSUFFICIENT_EVIDENCE")
+        sample = row("DUP")
+        with self.assertRaisesRegex(ValueError, "duplicate_event"):
+            weekly.core_ablation_diagnostic([sample, dict(sample)], runtime())
+        sample["outcome_24h"] = "false"
+        with self.assertRaisesRegex(ValueError, "invalid_outcome"):
+            weekly.core_ablation_diagnostic([sample], runtime())
+        sample["outcome_24h"] = "0"
+        decisions = json.loads(sample["candidate_decisions"])
+        decisions["C07_SIMPLE_3"] = False
+        sample["candidate_decisions"] = json.dumps(decisions)
+        with self.assertRaises(ValueError):
+            weekly.core_ablation_diagnostic([sample], runtime())
+
     def test_shared_filter_counts_only_bound_post_floor_rows(self) -> None:
         rows, divs = self.adversarial_data()
         valid_rows, valid_divs, excluded = weekly.filter_consumer_rows(rows, divs, runtime(), verifier)

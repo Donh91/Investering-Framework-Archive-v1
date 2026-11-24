@@ -1,0 +1,138 @@
+{
+  "capabilities": {
+    "breadth_survival": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "UNKNOWN_IF_UNBOUND",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "BREADTH",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "CN_SEQUENCE_SHADOW_v1",
+      "owner": "sequence_shadow"
+    },
+    "btc_dominance": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "UNKNOWN_IF_UNBOUND",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "BTC_DOMINANCE",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "CN_SEQUENCE_SHADOW_v1",
+      "owner": "sequence_shadow"
+    },
+    "continuity_publication": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "PRICE_ONLY_CONTINUITY",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "BTC_ETH_PRICE",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "readable_markdown",
+      "owner": "weekly_offline_issuer"
+    },
+    "etf_flow": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "UNKNOWN_IF_UNBOUND",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "ETF",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "MM_NON_TRADING_TRANSLATION_SHADOW_v1",
+      "owner": "weekly_source_capture"
+    },
+    "ethbtc_leadership": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "SHADOW_ADVISORY_ONLY",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "ETHBTC",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "settled_week.ethbtc",
+      "owner": "weekly_shadow_analysis_v1"
+    },
+    "freeze_scoring_calibration": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "PARTIAL_RANGE_ONLY",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "PRICE_OUTCOMES",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "evaluation",
+      "owner": "weekly_offline_issuer"
+    },
+    "horizons_1_3d_5_7d_2_3w": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "PRICE_ONLY_UNCALIBRATED",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "HORIZONS",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "decision_projection",
+      "owner": "weekly_offline_issuer"
+    },
+    "pullback_invalidation": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "INHERITED_NOT_REEVALUATED",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "PULLBACK",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "decision_projection.protection",
+      "owner": "weekly_offline_issuer"
+    },
+    "regime_cycle": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "NO_EDGE_WHEN_UNVERIFIED",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "BTC_ETH_PRICE",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "forecast_freeze.market_structure_analysis",
+      "owner": "cycle_issuer"
+    },
+    "rotation_large_to_micro": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "UNKNOWN_IF_UNBOUND",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "ROTATION",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "CN_SEQUENCE_SHADOW_v1",
+      "owner": "sequence_shadow"
+    },
+    "spot_derivatives_oi_funding": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "UNKNOWN_IF_UNBOUND",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "SPOT_OI_FUNDING",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "MM_NON_TRADING_TRANSLATION_SHADOW_v1",
+      "owner": "weekly_source_capture"
+    },
+    "stress_liquidation_reclaim": {
+      "acceptance_test": "tests.cycle_navigator.test_signal_lineage_restoration AND tests.cycle_navigator.test_weekly_shadow_analysis_v1",
+      "authority": "SHADOW_OR_EXISTING_PRICE_ONLY",
+      "decision_effect": "SHADOW_ADVISORY_ONLY",
+      "fallback": "EXPLICIT_UNKNOWN_OR_INHERITED",
+      "family": "STRESS_RESET_RECLAIM",
+      "first_known": "AVAILABLE_NOT_AFTER_FORECAST_FREEZE",
+      "freshness": "SOURCE_CLOCK_AND_POLICY_REQUIRED",
+      "output": "CN_SEQUENCE_SHADOW_v1",
+      "owner": "sequence_shadow"
+    }
+  },
+  "contract": "CN_MM_CAPABILITY_CONTRACT_v1",
+  "status": "DRAFT_GUARD_CANDIDATE_NO_RELEASE_AUTHORITY"
+}

@@ -83,6 +83,8 @@ jobs:
           freeze['freeze_sha256']=hashlib.sha256(canonical(freeze)).hexdigest()
           f.write_bytes(canonical(freeze))
           week=f"{freeze['iso_year']}/W{int(freeze['iso_week']):02d}";dest=Path('research/master_monday_preflight/frozen')/week;dest.mkdir(parents=True,exist_ok=True)
+          from scripts.master_monday.weekly_source_binding_v1 import write_binding_sidecar
+          write_binding_sidecar(dest, freeze)
           for src,name in [(f,'WEEKLY_EVIDENCE_FREEZE.json'),(p,'MASTER_MONDAY_GAP_FILL_PACKAGE.json')]:
               (dest/name).write_bytes(src.read_bytes())
           blocking=[m for m in pre.get('missing',[]) if m.get('blocking_level')=='BLOCKING']
@@ -143,6 +145,14 @@ jobs:
               Path('research/master_monday_preflight/LATEST_MASTER_MONDAY_FREEZE_POINTER.json'),
               Path('03_DAILY_CAPTURE_LOGS/weekly/LATEST_WEEKLY_CALIBRATION.json'),
           ]
+          freeze=json.loads((d/'WEEKLY_EVIDENCE_FREEZE.json').read_text())
+          binding=freeze.get('weekly_source_binding') or {}
+          paths.append(d/'SOURCE_BINDINGS'/(freeze['freeze_sha256']+'.json'))
+          if binding.get('status') == 'BYTE_BOUND_AT_PRODUCER':
+              source=Path(binding['path'])
+              if hashlib.sha256(source.read_bytes()).hexdigest() != binding.get('sha256'):
+                  raise SystemExit('FROZEN_WEEKLY_SOURCE_CHANGED_BEFORE_READBACK')
+              paths.append(source)
           rows=[]
           for p in paths:
               path=str(p)
@@ -183,6 +193,10 @@ jobs:
             --experiment-registry research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json \
             --experiment-outcome-root research/framework_memory/outcome_memory \
             --output runtime/weekly-calibration/context.json
+          python scripts/research/cn_mm_core_shadow_bridge_v1.py \
+            --freeze-file "$WEEK_DIR/WEEKLY_EVIDENCE_FREEZE.json" \
+            --expected-head '${{ needs.freeze.outputs.freeze_commit }}' \
+            --output runtime/weekly-calibration/CN_MM_CORE_SHADOW.json
           cp "$WEEK_DIR/WEEKLY_EVIDENCE_FREEZE.json" runtime/weekly-calibration/WEEKLY_EVIDENCE_FREEZE.json
           cp "$WEEK_DIR/MASTER_MONDAY_GAP_FILL_PACKAGE.json" runtime/weekly-calibration/MASTER_MONDAY_GAP_FILL_PACKAGE.json
           cat > runtime/weekly-calibration/prompt.txt <<'EOF'
@@ -265,6 +279,11 @@ jobs:
           WEEK_DIR='${{ needs.freeze.outputs.week_dir }}'; STATUS=$(cat runtime/weekly-calibration/api_status.txt 2>/dev/null || echo failure)
           OUT="research/api_agent/outputs/weekly/${WEEK_DIR#research/master_monday_preflight/frozen/}"
           python scripts/master_monday/publish_master_monday_outputs.py --freeze "$WEEK_DIR/WEEKLY_EVIDENCE_FREEZE.json" --preflight "$WEEK_DIR/MASTER_MONDAY_GAP_FILL_PACKAGE.json" --context runtime/weekly-calibration/context.json --api-output runtime/weekly-calibration/output/output.json --api-receipt runtime/weekly-calibration/output/receipt.json --api-status "$STATUS" --output-dir "$OUT"
+          python scripts/research/cn_mm_core_shadow_bridge_v1.py \
+            --freeze-file "$WEEK_DIR/WEEKLY_EVIDENCE_FREEZE.json" \
+            --expected-head '${{ needs.freeze.outputs.freeze_commit }}' \
+            --publish-from runtime/weekly-calibration/CN_MM_CORE_SHADOW.json \
+            --output "$OUT" > runtime/cn_mm_core_shadow_path.txt
           cp "$OUT/MASTER_MONDAY_DELIVERY_POINTER.json" research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json
           echo "$OUT" > runtime/publish_output_dir.txt
       - name: Commit publication
@@ -291,6 +310,7 @@ jobs:
           pointer_bytes=(out/'MASTER_MONDAY_DELIVERY_POINTER.json').read_bytes()
           audit=out/f"MASTER_MONDAY_WEEKLY_INTELLIGENCE_AUDIT_{hashlib.sha256(pointer_bytes).hexdigest()[:16]}.md"
           paths=[out/'MASTER_MONDAY_MACHINE_PACKAGE.json',out/'MASTER_MONDAY_REPORT.md',out/'MASTER_MONDAY_CALIBRATION_SCORECARD.json',out/'MASTER_MONDAY_OPERATIONAL_TRANSLATION.json',out/'MASTER_MONDAY_DELIVERY_POINTER.json',audit,Path('research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json')]
+          paths.append(Path(Path('runtime/cn_mm_core_shadow_path.txt').read_text().strip()))
           rows=[]
           for p in paths:
               path=str(p);blob=subprocess.run(['git','rev-parse',f'HEAD:{path}'],capture_output=True,text=True,check=True).stdout.strip();rows.append({'path':path,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'blob_sha':blob})

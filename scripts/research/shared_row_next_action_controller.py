@@ -15,7 +15,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from backtest_engine.statistics import wilson_interval
-from shared_row_tournament_weekly import filter_consumer_rows
+from shared_row_tournament_weekly import filter_consumer_rows, core_ablation_diagnostic
 
 
 DEFAULT_ROOT = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1")
@@ -449,6 +449,8 @@ def main():
         "automatic_next_action_selection": True,
         "research_action_gate": "JUSTIFIED" if action in {"PROMOTE_FOR_CANONICAL_REVIEW", "DEPRIORITIZE", "RESEARCH_NEW_HYPOTHESIS", "STRESS_TEST", "INVESTIGATE_DIVERGENCE", "INVESTIGATE_DATA_GAP"} else "COLLECT_MORE_EVIDENCE",
         "terminal_verdict": "INSUFFICIENT_EVIDENCE",
+        # Advisory calibration evidence only: do not change action selection or the existing policy fingerprint.
+        "core_ablation_diagnostic": core_ablation_diagnostic(rows, runtime),
         "consumer_integrity_filter": {
             "raw_rows": len(raw_rows),
             "raw_divergences": len(raw_divs),

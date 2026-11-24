@@ -97,11 +97,8 @@ class ARP02OriginalOwnerNativeCostControl(unittest.TestCase):
             event = json.loads(Path(event_path).read_text(encoding="utf-8"))
             exact_head = event.get("pull_request", {}).get("head", {}).get("sha")
             self.assertRegex(str(exact_head), r"^[a-f0-9]{40}$")
-            fetched = subprocess.run(
-                ["git", "fetch", "--no-tags", "--depth=1", "origin", exact_head],
-                cwd=ROOT, capture_output=True, text=True, timeout=60, check=False,
-            )
-            self.assertEqual(fetched.returncode, 0, fetched.stderr[-3000:])
+            from tests.exact_pr_head_support import ensure_exact_pr_head
+            self.assertEqual(ensure_exact_pr_head(ROOT, exact_head), exact_head)
             for source_path in target_paths:
                 source_blob = subprocess.run(
                     ["git", "rev-parse", f"{exact_head}:{source_path}"],

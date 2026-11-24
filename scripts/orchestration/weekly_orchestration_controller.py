@@ -5,6 +5,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.master_monday.weekly_source_binding_v1 import capture_binding
 
 COPENHAGEN = ZoneInfo('Europe/Copenhagen')
 SUPPORTED_WEEK_CLOSE_POINTER_CONTRACTS = {'WEEKLY_MARKET_CLOSE_POINTER_v2', 'WEEKLY_MARKET_CLOSE_POINTER_v3'}
@@ -72,6 +75,7 @@ def main():
     reliability={'status':'UNAVAILABLE'}
     if reliability_path.exists():reliability={'status':'AVAILABLE','path':str(reliability_path),'sha256':file_digest(reliability_path)}
     freeze={'contract':'WEEKLY_ORCHESTRATION_FREEZE_v5','created_at_utc':now.isoformat().replace('+00:00','Z'),'status':'READY','iso_year':year,'iso_week':week,'evidence_timezone':'Europe/Copenhagen','window_start_local':local_start.isoformat(),'window_end_local':local_end.isoformat(),'window_start_utc':start.isoformat().replace('+00:00','Z'),'window_end_utc':end.isoformat().replace('+00:00','Z'),'exchange_week_close_end_utc':expected_exchange_end,'final_week_close':{'pointer_path':str(close_pointer),'pointer_contract':pointer.get('contract'),'pointer_sha256':digest(pointer),'package_path':str(package_path),'package_sha256':package_hash},'weekly_capture_bridge':{'path':str(weekly_pointer),'sha256':digest(weekly)},'reliability_ledger':reliability,'data_ping_lanes':lanes,'data_ping_parse_errors':errors,'late_evidence_policy':'Evidence at or after window_end_utc is excluded and belongs in LATE_EVIDENCE_LEDGER.','handoff_targets':['RAW_WEEKLY_CALIBRATION','CYCLE_NAVIGATOR','MASTER_MONDAY_PREP','FORECAST_LEDGER'],'authority':{'canonical_promotion':False,'model_weight_change':False,'portfolio_action':False}}
+    freeze['weekly_source_binding']=capture_binding(a.capture_root,weekly,year,week,freeze['created_at_utc'])
     freeze['freeze_sha256']=digest(freeze);a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(freeze,sort_keys=True,separators=(',',':'))+'\n')
     print(json.dumps({'status':'READY','iso_year':year,'iso_week':week,'lane_counts':{k:len(v) for k,v in lanes.items()},'reliability':reliability['status'],'freeze_sha256':freeze['freeze_sha256']},sort_keys=True))
 if __name__=='__main__':main()

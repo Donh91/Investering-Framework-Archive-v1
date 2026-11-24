@@ -83,6 +83,20 @@ class FeedTests(unittest.TestCase):
         self.assertEqual(f["candidate_count"],0)
         self.assertFalse(f["claude_invoked"])
 
+    def test_insufficient_coverage_is_not_measured_weakness(self):
+        self.meta["primary_action"] = "WAIT_FOR_EVIDENCE"
+        self.precision["family_states"]["rotation"].update({
+            "state": "WATCH", "coverage_status": "INSUFFICIENT_EVIDENCE",
+            "watch_reason": "INSUFFICIENT_EVIDENCE", "valid_observations_4w": 1,
+        })
+        self.replace("meta", self.meta)
+        self.replace("precision", self.precision)
+        out = m.build(self.root, head=None)
+        self.assertEqual([item["id"] for item in out["candidates"]], ["CN_PRECISION_EVIDENCE_GAP_CONTEXT"])
+        self.assertEqual(out["candidates"][0]["insufficient_evidence_families"], ["rotation"])
+        self.assertFalse(out["automatic_execution"])
+        self.assertFalse(out["automatic_paid_dispatch"])
+
     def test_fail_closed_missing_tampered_and_authority(self):
         (self.root/m.SOURCES["precision"]).unlink()
         with self.assertRaises(m.SourceFailure):

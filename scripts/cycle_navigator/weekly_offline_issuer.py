@@ -184,7 +184,7 @@ def build_offline_value(context, baseline, previous, year, week, issue, public_i
         (previous.get("decision_projection") or {}).get("protection", {}).get("inherited_from_issue_number")
         if prior_basis == "INHERITED_FROM_PRIOR_ISSUE" else int(previous["issue_number"]))
     decision["issuer_method"] = METHOD
-    lines=["# Cycle Navigator "+week_id,"","Method: "+METHOD,
+    lines=["# Cycle Navigator "+week_id,"","PRICE_ONLY_CONTINUITY / DEGRADED_SEMANTIC_COVERAGE: BTC/ETH price continuity only; full-market signals are not consumed by this issuer.","","Method: "+METHOD,
            "ISSUED after completed source week. Original UTC issue/freeze clock is recorded by the publisher.",
            "Not backdated, not an AI answer, not a known outcome or calibrated investment edge.",
            "",week_text,"",

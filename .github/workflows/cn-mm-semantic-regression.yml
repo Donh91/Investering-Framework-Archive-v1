@@ -1,0 +1,33 @@
+name: CN MM Semantic Regression Candidate
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  semantic-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compare capability contract against PR base
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          path=scripts/cycle_navigator/CN_MM_CAPABILITY_CONTRACT_v1.json
+          if git cat-file -e "$BASE_SHA:$path" 2>/dev/null; then
+            git show "$BASE_SHA:$path" > /tmp/cn-base-capabilities.json
+            python scripts/cycle_navigator/capability_guard_v1.py /tmp/cn-base-capabilities.json "$path"
+          else
+            python scripts/cycle_navigator/capability_guard_v1.py "$path" "$path"
+          fi
+      - name: Run executable semantic and PIT controls
+        run: |
+          set -euo pipefail
+          python -m unittest tests.cycle_navigator.test_signal_lineage_restoration tests.cycle_navigator.test_weekly_offline_issuer tests.cycle_navigator.test_weekly_shadow_analysis_v1 tests.master_monday.test_weekly_source_binding_v1 tests.master_monday.test_strict_json_v1 tests.cycle_navigator.test_cn_mm_core_shadow_bridge_v1 -v

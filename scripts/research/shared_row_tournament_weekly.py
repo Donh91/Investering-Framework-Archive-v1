@@ -170,12 +170,236 @@ def incr(rows,base,other,h='24h'):
         if y is not None:
             wins+=int(bv==y and a!=y); fails+=int(bv!=y and a==y)
     return {'addition':other,'vs':base,'horizon':h,'decisions_changed_n':changed,'unique_wins_n':wins,'unique_failures_n':fails,'delay_cost':'UNAVAILABLE_UNTIL_CONFIRMATION_TIMESTAMPS','tail_errors_avoided':'UNAVAILABLE_UNTIL_NUMERIC_TAIL_OUTCOMES'}
+# Same frozen candidates, same outcome-owner-admitted rows. No new threshold,
+# outcome definition, model, scheduler or decision authority.
+CORE_ABLATIONS = {
+    "ETHBTC_PERSISTENCE": "C06_BREADTH_BTCD",
+    "BREADTH_SURVIVAL": "C05_ETHBTC_BTCD",
+    "BTCD_PATH_RECLAIM": "C04_ETHBTC_BREADTH",
+}
+
+
+CORE_HORIZONS = ("24h", "72h", "7d")
+LEGACY_HORIZONS = ("6h", "12h", "24h", "48h", "72h", "7d", "14d", "30d")
+CORE_SINGLE_IDS = ("C01_ETHBTC", "C02_BREADTH", "C03_BTCD")
+
+
+def core_meta_learning_diagnostic(parsed, horizons, runtime):
+    """Bounded methodological descendants, not recovered legacy formulas.
+
+    The original independent review explicitly left the formulas unresolved.
+    The already-admitted row/outcome set is the sole denominator. Never derive
+    a forecast weight, promotion, economic utility or independent sample count.
+    """
+    from collections import Counter
+    from itertools import combinations
+    pairs = {}
+    for a, b_id in combinations(CORE_SINGLE_IDS, 2):
+        counts = Counter(f"{int(d[a])}{int(d[b_id])}" for _, d in parsed)
+        n = len(parsed)
+        pairs[a + "__" + b_id] = {
+            "matched_observation_n": n,
+            "decision_pair_counts": {k: counts[k] for k in ("00", "01", "10", "11")},
+            "agreement_n": counts["00"] + counts["11"],
+            "disagreement_n": counts["01"] + counts["10"],
+            "agreement_rate": ratio(counts["00"] + counts["11"], n),
+            "independent_information_proven": False,
+        }
+    patterns = Counter("".join(str(int(d[k])) for k in CORE_SINGLE_IDS) for _, d in parsed)
+    cce = {
+        "legacy_sensor_id": "CCE_V1_CONFIDENCE_COMPRESSION_ENGINE",
+        "historical_verdict": "KEEP",
+        "implementation": "STRUCTURAL_DEPENDENCE_CONTROL_NOT_LEGACY_FORMULA",
+        "observation_n": len(parsed),
+        "primitive_family_n": len(CORE_SINGLE_IDS),
+        "derived_candidate_n": len(evidence.CORE_IDS) - len(CORE_SINGLE_IDS),
+        "decision_patterns": {k: patterns[k] for k in sorted(patterns)},
+        "single_family_pairs": pairs,
+        "independent_market_shock_family_n": None,
+        "numeric_confidence_compression": None,
+        "cross_candidate_votes_may_be_summed_as_independent": False,
+    }
+    # Horizon availability and endpoint reversals, NOT market event timing.
+    # Missing outcomes stay missing; only fully matured matched rows enter
+    # the cross-horizon comparison.
+    common = [(r, d) for r, d in parsed
+              if all(r.get("outcome_" + h, "") in ("0", "1") for h in CORE_HORIZONS)]
+    panel = Counter("".join(r["outcome_" + h] for h in CORE_HORIZONS) for r, _ in common)
+    common_projection = sorted((r["event_id"], r["provenance_hash"],
+                                tuple(r["outcome_" + h] for h in CORE_HORIZONS))
+                               for r, _ in common)
+    transitions = {}
+    for a, b_id in zip(CORE_HORIZONS, CORE_HORIZONS[1:]):
+        counts = Counter(r["outcome_" + a] + r["outcome_" + b_id] for r, _ in common)
+        transitions[a + "__" + b_id] = {k: counts[k] for k in ("00", "01", "10", "11")}
+    odm = {
+        "legacy_sensor_id": "ODM_V1_OUTCOME_DELAY_MAPPER",
+        "historical_verdict": "WATCH",
+        "implementation": "FIXED_HORIZON_MATURATION_NOT_LEGACY_DELAY_FORMULA",
+        "legacy_registry_horizons": list(LEGACY_HORIZONS),
+        "available_core_horizons": list(CORE_HORIZONS),
+        "unavailable_legacy_horizons": [h for h in LEGACY_HORIZONS if h not in CORE_HORIZONS],
+        "legacy_horizon_coverage_complete": False,
+        "matured_by_horizon": {h: horizons[h]["matched_matured_n"] for h in CORE_HORIZONS},
+        "common_matured_n": len(common),
+        "common_calendar_block_n": dependence_census([r for r, _ in common], runtime)["fixed_28d_calendar_block_n"],
+        "common_cohort_sha256": hashlib.sha256(json.dumps(common_projection, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest(),
+        "common_endpoint_patterns": {k: panel[k] for k in sorted(panel)},
+        "common_endpoint_transitions": transitions,
+        "actual_signal_to_market_event_delay": None,
+        "confirmation_delay_cost": None,
+        "post_hoc_best_horizon_selected": False,
+    }
+    # Reuse existing outcome evaluator: no new historical reliability formula.
+    sre = {"legacy_sensor_id": "SRE_V1_SIGNAL_RELIABILITY_ENGINE",
+           "historical_verdict": "UNTESTABLE",
+           "implementation": "MODERN_DESCRIPTIVE_MATCHED_OUTCOME_PANEL",
+           "legacy_formula_reconstructed": False,
+           "candidate_metrics": {},
+           "predictive_reliability_established": False,
+           "regime_weight_updates_authorized": False}
+    admitted = [r for r, _ in parsed]
+    for candidate in evidence.CORE_IDS:
+        sre["candidate_metrics"][candidate] = {}
+        for h in CORE_HORIZONS:
+            m = metrics(admitted, candidate, h)
+            if m["n"] != horizons[h]["matched_matured_n"]:
+                raise ValueError("core_meta_reliability_denominator_mismatch")
+            sre["candidate_metrics"][candidate][h] = {k: m[k] for k in (
+                "n", "tp", "fp", "tn", "fn", "precision", "recall",
+                "false_positive_rate", "false_negative_rate")}
+    fae = {"legacy_sensor_id": "FAE_V1_FORECAST_ATTRIBUTION_ENGINE",
+           "historical_verdict": "UNTESTABLE",
+           "implementation": "MODERN_MATCHED_CORE_ABLATION",
+           "legacy_formula_reconstructed": False,
+           "attribution_field": "horizons.<horizon>.families",
+           "attribution_target": TARGET_OUTCOME,
+           "daily_price_forecast_attribution_available": False,
+           "causal_effect_established": False}
+    return {
+        "contract": "CN_MM_CORE_META_LEARNING_DIAGNOSTIC_v1",
+        "authority": "RESEARCH_ONLY_NON_CANONICAL",
+        "historical_review": {
+            "path": "06_RESEARCH_LAB/historical_sensor_recovery_v1/independent_review_v1/12_FINAL_MACHINE_READABLE_VERDICTS.json",
+            "git_blob": "4d9da247e47cb47a86c394137d7b64d015301934",
+        },
+        "legacy_test_registry": {
+            "path": "04_MARKET_LEARNING/forward_tests/historical_shadow_v1/PROSPECTIVE_TEST_REGISTRY.json",
+            "git_blob": "7fed2af824658eb4567d6d4fe773a00581581372",
+        },
+        "cce": cce, "odm": odm, "sre": sre, "fae": fae,
+        "status": "DESCRIPTIVE_ONLY" if any(h["matched_matured_n"] for h in horizons.values()) else "INSUFFICIENT_EVIDENCE",
+        "statistical_independence_verified": False,
+        "automatic_weight_updates": False,
+        "automatic_promotion": False,
+        "portfolio_execution": False,
+        "canonical_effect": False,
+    }
+
+
+def core_ablation_diagnostic(valid_rows, runtime):
+    """Describe marginal value of the EXISTING C07 AND rule on matched outcomes.
+
+    Only call after filter_consumer_rows. A negative return prevented is not
+    investment P&L; a positive return missed is not an execution loss.
+    Outcomes remain on the calibration side, never in a forecast projection.
+    """
+    event_ids = [r.get("event_id") for r in valid_rows]
+    if any(not isinstance(x, str) or not x for x in event_ids) or len(set(event_ids)) != len(event_ids):
+        raise ValueError("core_ablation_invalid_or_duplicate_event")
+    # Check the original active floor and preserve its dependence semantics.
+    dependence_census(valid_rows, runtime)
+    parsed = []
+    for row in valid_rows:
+        decisions = json.loads(row["candidate_decisions"])
+        if any(type(decisions.get(k)) is not bool for k in evidence.CORE_IDS):
+            raise ValueError("core_ablation_incomplete_decisions")
+        # No alternate rule: verify the original core decision contract.
+        evidence.validate_core_decision_contract(row, decisions, set(evidence.CORE_IDS))
+        parsed.append((row, decisions))
+
+    horizons = {}
+    for horizon in ("24h", "72h", "7d"):
+        matched = []
+        for row, decisions in parsed:
+            label = row.get("outcome_" + horizon, "")
+            if label == "":
+                continue
+            if label not in ("0", "1"):
+                raise ValueError("core_ablation_invalid_outcome")
+            matched.append((row, decisions, label == "1"))
+        n = len(matched)
+        positives = sum(y for _, _, y in matched)
+        full = "C07_SIMPLE_3"
+        full_correct = sum(d[full] == y for _, d, y in matched)
+        projection = sorted((r["event_id"], r["provenance_hash"], "1" if y else "0")
+                            for r, _, y in matched)
+        cohort_sha = hashlib.sha256(json.dumps(projection, separators=(",", ":"),
+                                                ensure_ascii=False).encode()).hexdigest()
+        families = {}
+        for family, without in CORE_ABLATIONS.items():
+            # Adding a conjunct can only change permission True -> False.
+            if any(d[full] and not d[without] for _, d, _ in matched):
+                raise ValueError("core_ablation_frozen_and_rule_violation")
+            blocked = [(r, y) for r, d, y in matched if d[without] and not d[full]]
+            prevented = sum(not y for _, y in blocked)
+            missed = sum(y for _, y in blocked)
+            without_correct = sum(d[without] == y for _, d, y in matched)
+            if full_correct - without_correct != prevented - missed:
+                raise ValueError("core_ablation_paired_accounting_mismatch")
+            families[family] = {
+                "without_candidate": without,
+                "paired_matured_n": n,
+                "pivotal_veto_n": len(blocked),
+                "negative_relative_outcomes_vetoed_n": prevented,
+                "positive_relative_outcomes_missed_n": missed,
+                "net_correct_classification_delta": prevented - missed if n else None,
+                "accuracy_delta": ratio(prevented - missed, n),
+                "positive_relative_outcome_miss_rate": ratio(missed, positives),
+                "classification_weighting": "EQUAL_ERROR_WEIGHT_DESCRIPTIVE_ONLY",
+                "confirmation_delay_cost": None,
+                "economic_opportunity_cost": None,
+            }
+        horizons[horizon] = {
+            "matched_matured_n": n,
+            "unmatured_n": len(parsed) - n,
+            "positive_relative_outcome_n": positives,
+            "nonpositive_relative_outcome_n": n - positives,
+            "cohort_sha256": cohort_sha,
+            "fixed_28d_calendar_block_n": dependence_census([r for r, _, _ in matched], runtime)["fixed_28d_calendar_block_n"],
+            "full_core_correct_n": full_correct,
+            "always_wait_correct_n": n - positives,
+            "always_permission_correct_n": positives,
+            "full_core_accuracy": ratio(full_correct, n),
+            "always_wait_accuracy": ratio(n - positives, n),
+            "always_permission_accuracy": ratio(positives, n),
+            "full_core_permission_n": sum(d[full] for _, d, _ in matched),
+            "families": families,
+        }
+    return {
+        "contract": "SHARED_ROW_CORE_ABLATION_DIAGNOSTIC_v1",
+        "authority": "RESEARCH_ONLY_NON_CANONICAL",
+        "source_owner": "ORIGINAL_SHARED_ROW_FILTER_CONSUMER_ROWS",
+        "binary_target": TARGET_OUTCOME,
+        "status": "DESCRIPTIVE_ONLY" if any(v["matched_matured_n"] for v in horizons.values()) else "INSUFFICIENT_EVIDENCE",
+        "horizons": horizons,
+        "meta_learning": core_meta_learning_diagnostic(parsed, horizons, runtime),
+        "independent_market_shock_family_n": None,
+        "statistical_independence_verified": False,
+        "predictive_edge_established": False,
+        "portfolio_execution": False,
+        "canonical_effect": False,
+        "automatic_promotion": False,
+    }
+
+
 def main():
     raw_rows=read(LED); raw_div=read(FNP); runtime=json.loads((ROOT/'RUNTIME_STATUS.json').read_text()); rows,div,excluded=filter_consumer_rows(raw_rows,raw_div,runtime); now=datetime.now(timezone.utc); y,w,_=now.isocalendar(); ids=[c['id'] for c in json.loads(REG.read_text())['candidates']]
     perf={cid:{h:metrics(rows,cid,h) for h in ['24h','72h','7d']} for cid in ids}; mats={h:sum(bool(d.get(f'matured_{h}_utc')) for d in div) for h in ['24h','72h','7d']}
     challengers=['C08_SIMPLE_3_ETF','C09_SIMPLE_3_ETF_LEVERAGE','C10_STABLECOIN_CHALLENGER','C11_CFGI_CHALLENGER','C12_FULL_STACK']
     report={'contract':'SHARED_ROW_TOURNAMENT_WEEKLY_v1','authority':'RESEARCH_ONLY_NON_CANONICAL','generated_at_utc':now.replace(microsecond=0).isoformat().replace('+00:00','Z'),'iso_year':y,'iso_week':w,'status':'COLLECTING' if not rows else 'EVALUATING','eligible_rows_total':len(rows),'consensus_rows':sum(1 for r in rows if len(set(json.loads(r.get('candidate_decisions') or '{}').values()))<=1),'divergences_total':len(div),'matured':mats,'candidate_performance':perf,'incremental_value_matrix':[incr(rows,'C07_SIMPLE_3',x) for x in challengers],'tail_error_prevention':{'status':'UNAVAILABLE' if not div else 'EVALUATE_FROM_MATURED_DIVERGENCES','n':len(div)},'consumer_integrity_filter':{'raw_rows':len(raw_rows),'raw_divergences':len(raw_div),'excluded':excluded},'architecture_gate':'INSUFFICIENT_EVIDENCE',
             'dependence_census':dependence_census(rows,runtime),
+            'core_ablation_diagnostic':core_ablation_diagnostic(rows,runtime),
             'decision_quality_not_proven':True,
             'binary_outcome_semantics':TARGET_OUTCOME,
             'broad_altcoin_takeoff_scored':False,'cycle_exit_scored':False,
@@ -183,6 +407,6 @@ def main():
             'canonical_effect':False}
     block_count=report["dependence_census"]["fixed_28d_calendar_block_n"]
     OUT.mkdir(parents=True,exist_ok=True); name=f'SHARED_ROW_TOURNAMENT_WEEKLY_{y}-W{w:02d}.json'; (OUT/name).write_text(json.dumps(report,indent=2,sort_keys=True)+'\n'); (OUT/'LATEST.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
-    (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n- 28-day calendar blocks: **{block_count}** (NOT independent market shocks)\n- Independent market-shock N: `UNKNOWN`\n- Outcome: ETH/BTC forward relative return positive, NOT broad altseason takeoff or exit\n\nRow-based precision and recall are DESCRIPTIVE ONLY; no statistical or economic winner is permitted.\n')
+    (OUT/'LATEST.md').write_text(f'# Shared Row Tournament Weekly\n\n- Week: `{y}-W{w:02d}`\n- Eligible rows: **{len(rows)}**\n- Divergences: **{len(div)}**\n- Matured 24h / 72h / 7d: **{mats["24h"]} / {mats["72h"]} / {mats["7d"]}**\n- Architecture gate: `INSUFFICIENT_EVIDENCE`\n- 28-day calendar blocks: **{block_count}** (NOT independent market shocks)\n- Independent market-shock N: `UNKNOWN`\n- Outcome: ETH/BTC forward relative return positive, NOT broad altseason takeoff or exit\n- Core ablation: see core_ablation_diagnostic in LATEST.json for matched matured C07 vs existing two-family candidates and always-wait/always-permission comparisons. No new threshold or trade authority.\n\nRow-based precision and recall are DESCRIPTIVE ONLY; no statistical or economic winner is permitted.\n')
     print(json.dumps({'status':'PASS','report':str(OUT/name),'eligible_rows':len(rows),'divergences':len(div)},sort_keys=True))
 if __name__=='__main__':main()
