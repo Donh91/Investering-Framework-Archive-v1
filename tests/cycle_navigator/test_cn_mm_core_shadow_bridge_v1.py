@@ -380,6 +380,8 @@ assert b.clock(pin['checkout_committer_utc'])<=b.clock(freeze['created_at_utc'])
 assert result['learning']['status']=='DESCRIPTIVE_ONLY_NOT_INDEPENDENT_EDGE',result
 assert result['learning']['source_checkout_sha']==pin['checkout_sha']
 assert result['learning']['verified_n']>0 and result['learning']['rejected_n']==0
+assert set(('cce','odm','sre','fae'))<=set(result['learning']['meta_learning'])
+assert not result['learning']['meta_learning']['automatic_weight_updates']
 assert result['task2']['paired_n']==14 and not result['task2']['scientific_pit_eligible']
 print('W47_ORIGINAL_CALIBRATION_READBACK '+json.dumps({'pin':pin,'verified_n':result['learning']['verified_n'],'horizons':result['learning']['verified_horizon_counts'],'task2_paired_n':result['task2']['paired_n'],'incremental_inventory':result['incremental_inventory']},sort_keys=True))
 """
@@ -469,6 +471,32 @@ print('W47_INCREMENTAL_EQUIVALENCE '+json.dumps(result,sort_keys=True))
                               capture_output=True,text=True,timeout=240)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         print(result.stdout)
+
+    def test_learning_gateway_input_receipt_is_not_model_use(self):
+        packet={"core":bridge.unknown("missing"),"freeze_sha256":"a"*64,
+                "checkout_sha":"b"*40,"packet_sha256":"c"*64}
+        feature=bridge.intelligence_projection(packet)
+        intelligence={"status":"SHADOW_CONTEXT_ONLY","feature":feature,"freeze_sha256":packet["freeze_sha256"],
+                      "checkout_sha":packet["checkout_sha"],"feature_uses_outcomes":False,
+                      "learning":{"status":"DESCRIPTIVE_ONLY_NOT_INDEPENDENT_EDGE","verified_n":199},
+                      "task2":{"status":"SOURCE_REPLAYED_DESCRIPTIVE_ONLY","paired_n":14}}
+        intelligence["context_sha256"]=bridge.sha(bridge.canon(intelligence))
+        context={"cn_mm_shared_intelligence":intelligence}
+        context["context_hash"]=bridge.sha(bridge.canon(context))
+        receipt={"contract":"API_AGENT_RECEIPT_v3","task":"WEEKLY_CALIBRATION_SHADOW",
+                 "context_hash":bridge.sha(bridge.canon(context)),"status":"PASS","response_id":"fixture",
+                 "untrusted_input_envelope":True}
+        good=bridge.calibration_learning_binding(context,packet,receipt,"success")
+        self.assertEqual(good["api_input_status"],"MATCHED_GATEWAY_INPUT_RECEIPT")
+        self.assertEqual(good["verified_outcome_n"],199)
+        self.assertFalse(good["model_utilization_verified"])
+        self.assertFalse(good["forecast_authority"])
+        for bad in ({**receipt,"context_hash":context["context_hash"]},{**receipt,"task":"OTHER"}):
+            self.assertEqual(bridge.calibration_learning_binding(context,packet,bad,"success")["api_input_status"],"RECEIPT_CONTEXT_MISMATCH")
+        self.assertEqual(bridge.calibration_learning_binding(context,packet,receipt,"failure")["api_input_status"],"MATCHED_CONTEXT_NO_SUCCESSFUL_API_DELIVERY")
+        self.assertEqual(bridge.calibration_learning_binding(context,packet,{},"failure")["api_input_status"],"UNATTESTED")
+        context["cn_mm_shared_intelligence"]["learning"]["verified_n"]=999
+        self.assertEqual(bridge.calibration_learning_binding(context,packet,receipt,"success")["status"],"UNAVAILABLE")
 
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()

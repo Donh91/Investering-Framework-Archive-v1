@@ -381,6 +381,14 @@ def calibration_intelligence(repo, freeze_file, freeze):
         result["reason"]="PINNED_FEATURE_CONTEXT_UNAVAILABLE"
         return result
     result.update(calibration_learning_at_cutoff(repo,head,freeze))
+    # Keep full delta inventory in the deterministic audit, but do not send an
+    # ever-growing list of event identifiers through the existing paid lane.
+    inventory=result.get("incremental_inventory")
+    if isinstance(inventory,dict) and "inventory_sha256" in inventory:
+        result["incremental_inventory"] = {
+            **{k:v for k,v in inventory.items() if not isinstance(v,list)},
+            "identity_counts":{k:len(v) for k,v in inventory.items() if isinstance(v,list)},
+            "identity_lists_omitted_from_calibration_context":True}
     result["context_sha256"] = sha(canon(result))
     return result
 
@@ -413,6 +421,7 @@ def calibration_learning_at_cutoff(repo,head,freeze):
                     "forecast_authority":False,"automatic_weight_updates":False}
         if audit["status"]=="REPLAY_COMPLETE":
             learning["horizons"] = research["core_ablation"]["horizons"]
+            learning["meta_learning"] = research["core_ablation"]["meta_learning"]
             learning["dependence"] = research["dependence"]
             learning["veto_magnitude"] = research["veto_magnitude"]
             learning["episode_opportunity"] = research["episode_opportunity"]
@@ -496,6 +505,58 @@ def calibration_feature_binding(context, freeze):
         return missing
 
 
+def calibration_learning_binding(context,freeze,api_receipt,api_status):
+    """Durable linkage to actual supplied calibration inputs, not model use.
+
+    The gateway receipt hashes the ENTIRE context (including context_hash).
+    The context's own self-digest excludes context_hash. Do not compare the
+    two different digests or infer that the model used a particular feature.
+    """
+    result={"contract":"CN_MM_CALIBRATION_LEARNING_BINDING_v1","status":"UNAVAILABLE",
+            "api_input_status":"UNATTESTED","model_utilization_verified":False,
+            "scientific_pit_eligible":False,"forecast_authority":False,
+            "automatic_weight_updates":False}
+    feature=calibration_feature_binding(context,freeze)
+    if feature["status"]!="BOUND_CALIBRATION_FEATURE":
+        return result
+    try:
+        intelligence=context["cn_mm_shared_intelligence"]
+        learning=intelligence["learning"]
+        task2=intelligence["task2"]
+        inventory=intelligence.get("incremental_inventory",{})
+        whole_hash=sha(canon(context))
+        api_input_status="UNATTESTED"
+        if isinstance(api_receipt,dict) and api_receipt:
+            if (api_receipt.get("contract")!="API_AGENT_RECEIPT_v3" or
+                api_receipt.get("task")!="WEEKLY_CALIBRATION_SHADOW" or
+                api_receipt.get("context_hash")!=whole_hash):
+                api_input_status="RECEIPT_CONTEXT_MISMATCH"
+            elif (api_status=="success" and api_receipt.get("status")=="PASS" and
+                  isinstance(api_receipt.get("response_id"),str) and api_receipt["response_id"] and
+                  api_receipt.get("untrusted_input_envelope") is True):
+                api_input_status="MATCHED_GATEWAY_INPUT_RECEIPT"
+            else:
+                api_input_status="MATCHED_CONTEXT_NO_SUCCESSFUL_API_DELIVERY"
+        result.update(status="BOUND_RESEARCH_CONTEXT",
+            api_input_status=api_input_status,context_sha256=context["context_hash"],
+            gateway_context_sha256=whole_hash,
+            intelligence_context_sha256=intelligence["context_sha256"],
+            feature_sha256=feature["feature_sha256"],freeze_sha256=feature["freeze_sha256"],
+            learning_sha256=sha(canon(learning)),task2_sha256=sha(canon(task2)),
+            incremental_inventory_sha256=inventory.get("inventory_sha256"),
+            learning_status=learning["status"],task2_status=task2["status"],
+            verified_outcome_n=learning.get("verified_n"),task2_paired_n=task2.get("paired_n"),
+            source_checkout_sha=learning.get("source_checkout_sha"),
+            source_cutoff_utc=learning.get("source_cutoff_utc"))
+        result["binding_sha256"]=sha(canon(result))
+        return result
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
+        return {"contract":result["contract"],"status":"UNAVAILABLE",
+                "api_input_status":"UNATTESTED","model_utilization_verified":False,
+                "scientific_pit_eligible":False,"forecast_authority":False,
+                "automatic_weight_updates":False}
+
+
 def compare_calibration_feature(machine, pointer, feature):
     """A new binding must match independently replayed CN feature bytes.
 
@@ -520,19 +581,39 @@ def compare_calibration_feature(machine, pointer, feature):
         return "MM_CALIBRATION_FEATURE_MISMATCH"
 
 
-def read_calibration_feature_binding(repo, pointer, feature, read_committed):
+def read_calibration_feature_binding(repo, pointer, feature, read_committed, *, include_learning=False):
+    def result(status, learning=None):
+        return (status,learning) if include_learning else status
     if not pointer.get("machine_package_path"):
-        return "UNATTESTED_MM_CALIBRATION_BINDING"
+        return result("UNATTESTED_MM_CALIBRATION_BINDING")
     try:
         expected = Path(f"research/api_agent/outputs/weekly/{pointer['iso_year']}/W{pointer['iso_week']:02d}/MASTER_MONDAY_MACHINE_PACKAGE.json")
         if Path(pointer["machine_package_path"])!=expected:
-            return "MM_CALIBRATION_FEATURE_MISMATCH"
+            return result("MM_CALIBRATION_FEATURE_MISMATCH")
         raw=(repo/expected).read_bytes()
         if raw!=read_committed("show",f"HEAD:{expected.as_posix()}"):
-            return "MM_CALIBRATION_FEATURE_MISMATCH"
-        return compare_calibration_feature(load_evidence_object(raw),pointer,feature)
+            return result("MM_CALIBRATION_FEATURE_MISMATCH")
+        machine=load_evidence_object(raw)
+        status=compare_calibration_feature(machine,pointer,feature)
+        learning=None
+        if status=="MATCHED_MM_CALIBRATION_FEATURE" and include_learning:
+            binding=machine.get("cn_mm_calibration_learning_binding")
+            if isinstance(binding,dict) and binding.get("status")=="BOUND_RESEARCH_CONTEXT":
+                if (sha(canon({k:v for k,v in binding.items() if k!="binding_sha256"}))==binding.get("binding_sha256") and
+                    binding.get("contract")=="CN_MM_CALIBRATION_LEARNING_BINDING_v1" and
+                    binding.get("context_sha256")==machine["context_hash"] and
+                    binding.get("intelligence_context_sha256")==machine["cn_mm_calibration_feature_binding"]["intelligence_context_sha256"] and
+                    binding.get("freeze_sha256")==feature["freeze_sha256"] and
+                    binding.get("feature_sha256")==feature["feature_sha256"] and
+                    all(binding.get(k) is False for k in ("model_utilization_verified","scientific_pit_eligible","forecast_authority","automatic_weight_updates"))):
+                    # No outcome values in CN feature or forecast. Only the
+                    # delivery metadata from the separately bound MM lane.
+                    learning={k:binding.get(k) for k in ("status","binding_sha256","api_input_status",
+                                "learning_status","task2_status","verified_outcome_n","task2_paired_n",
+                                "model_utilization_verified","scientific_pit_eligible","forecast_authority")}
+        return result(status,learning)
     except (ValueError,TypeError,KeyError,AttributeError,OSError,subprocess.SubprocessError):
-        return "MM_CALIBRATION_FEATURE_MISMATCH"
+        return result("MM_CALIBRATION_FEATURE_MISMATCH")
 
 
 def publish_packet(packet_path, freeze_file, head, output_dir):
@@ -628,7 +709,7 @@ def consume_cn_shadow(repo, mm_pointer):
         if set(decisions) != set(CORE) or any(type(v) is not bool for v in decisions.values()):
             raise ValueError("SHADOW_DECISIONS_INVALID")
         shared = intelligence_projection(packet,diagnostics)
-        binding_status = read_calibration_feature_binding(repo,mm_pointer,shared,run)
+        binding_status,learning_delivery = read_calibration_feature_binding(repo,mm_pointer,shared,run,include_learning=True)
         return {**result, "status": "CONSUMED_SHADOW_ONLY", "reason": None,
                 "packet_sha256": digest, "packet_file_sha256": sha(raw), "checkout_sha": head,
                 "observation_utc": latest["observation_utc"],
@@ -641,7 +722,8 @@ def consume_cn_shadow(repo, mm_pointer):
                 "forensics_context": diagnostics["forensics_context"],
                 "leverage_context": diagnostics["leverage_context"],
                 "shared_intelligence_feature": shared if binding_status!="MM_CALIBRATION_FEATURE_MISMATCH" else None,
-                "shared_feature_binding_status": binding_status}
+                "shared_feature_binding_status": binding_status,
+                "mm_learning_delivery":learning_delivery}
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
             csv.Error, ImportError, subprocess.SubprocessError):
         return {**result, "reason": "MM_SHADOW_RECEIPT_INVALID"}

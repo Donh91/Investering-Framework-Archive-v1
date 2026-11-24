@@ -220,8 +220,9 @@ def main():
     # duplicated outcomes or a new decision authority.
     root=str(Path(__file__).resolve().parents[2])
     if root not in sys.path:sys.path.insert(0,root)
-    from scripts.research.cn_mm_core_shadow_bridge_v1 import calibration_feature_binding
+    from scripts.research.cn_mm_core_shadow_bridge_v1 import calibration_feature_binding, calibration_learning_binding
     machine['cn_mm_calibration_feature_binding']=calibration_feature_binding(context,freeze)
+    machine['cn_mm_calibration_learning_binding']=calibration_learning_binding(context,freeze,receipt,a.api_status)
     machine['package_sha256']=sha(machine);a.output_dir.mkdir(parents=True,exist_ok=True)
     files={'MASTER_MONDAY_MACHINE_PACKAGE.json':machine,'MASTER_MONDAY_CALIBRATION_SCORECARD.json':scorecard,'MASTER_MONDAY_OPERATIONAL_TRANSLATION.json':translation,'MASTER_MONDAY_SHADOW_ADMISSION.json':shadow_reporting,'MASTER_MONDAY_LEARNING_DECISION_IMPACT.json':learning_impact}
     for name,obj in files.items():(a.output_dir/name).write_bytes(canon(obj))
