@@ -90,7 +90,7 @@ SHA40 = re.compile(r"[0-9a-f]{40}")
 BOOTSTRAP_TEXT = (ROOT / S1_DIR / "BOOTSTRAP.txt").read_text(encoding="utf-8")
 TICK_TEXT = (ROOT / TICK_PATH).read_text(encoding="utf-8")
 REFERENCE_TEXT_SHA256 = {
-    "BOOTSTRAP steps 1-4": "ff2c915ed1086a0b7f663811513858a66f906f73650b979a12a8629430122713",
+    "BOOTSTRAP steps 1-4": "6d6c5bb9aaa4ff763cd8652b35cbdf07380d91fcd5508140247cf9ef93ae6bb2",
     "TICK T0-T3H and IF THE BRIEF FAILED": "55ccb530d03cfb47316087be331a1ed715b368695f3825fc695ca025d3a5c32b",
     "TICK LAST TWO LINES": "2b7e00842d5e7b8ab2a96ad4ff3d87acbc730f3ff7b160c7128fd705641715b1",
     "TICK T4 CLAUDE RECEIPTS and ORDER": "5320ca81be8086f1a32929becb9f76ea19b139ce8437a4e28d64cc6d3ff7c675",
@@ -100,7 +100,7 @@ REFERENCE_TEXT_SHA256 = {
 
 
 def text_regions():
-    boot = BOOTSTRAP_TEXT[BOOTSTRAP_TEXT.index("1. Read current main"):]
+    boot = BOOTSTRAP_TEXT  # pin the orchestration preamble as well as steps 1-4
     # The 3b hex is the only free part of BOOTSTRAP (as in test_s1_reviewed_merge_lane_v1): a contract re-chain changes
     # it without changing any rule, so it is normalised here and the executor is not re-derived for a pure re-pin.
     boot = re.sub(r"(as GitHub reports it\) must equal )[0-9a-f]{40}\.", r"\1<RUNTIME_CONTRACT_BLOB>.", boot)
@@ -292,7 +292,7 @@ def route_name(kind, key):
 
 
 # ================================================================================================ the executor
-CHECKS = ("bootstrap_3", "bootstrap_3b", "t0_monday", "issues", "author", "body_strict", "run_binding", "run_not_success",
+CHECKS = ("bootstrap_3", "bootstrap_fetched_blobs", "bootstrap_3b", "t0_monday", "issues", "author", "body_strict", "run_binding", "run_not_success",
           "edited_outside_run", "pins", "staleness", "complete", "t3_not_ahead", "t3_unreadable", "t3_tree_free",
           "t3_source", "h1_recheck", "head_reread", "request_dedupe",
           # W2b: T3H, T4 per_page=40 and HALT rule C1b
@@ -350,8 +350,13 @@ class Tick:
         self.M = m
         try:
             listing = self.conn.fetch(f"{API}/contents/{S1_DIR}?ref={m}")
-            contract = strict_json(self.conn.fetch_file(CONTRACT_PATH, m))
-            self.conn.fetch_file(TICK_PATH, m)
+            contract_response = self.conn.fetch_file(CONTRACT_PATH, m)
+            tick_response = self.conn.fetch_file(TICK_PATH, m)
+            if not isinstance(contract_response, dict) or not isinstance(tick_response, dict):
+                raise ValueError("missing connector file response")
+            contract = strict_json(contract_response.get("content"))
+            if not isinstance(tick_response.get("content"), str):
+                raise ValueError("missing TICK text")
         except (Refused, ValueError, TypeError):
             raise End("source", "SOURCE_UNVERIFIED(3)")
         if not isinstance(listing, list) or not isinstance(contract, dict):
@@ -363,6 +368,14 @@ class Tick:
                  blobs.get(contract.get("lane_switch_path")) == contract.get("lane_switch_blob"),
                  contract.get("bootstrap_version") == BOOTSTRAP_VERSION]
         if self.on("bootstrap_3") and not all(step3):
+            raise End("source", "SOURCE_UNVERIFIED(3)")
+        # The connector returns content and its Git blob SHA. A directory listing alone cannot
+        # establish that the fetched RC/TICK response is the listed object.
+        if self.on("bootstrap_fetched_blobs") and any(
+            not isinstance(response.get("sha"), str) or not SHA40.fullmatch(response["sha"])
+            or response["sha"] != blobs.get(path)
+            for path, response in ((CONTRACT_PATH, contract_response), (TICK_PATH, tick_response))
+        ):
             raise End("source", "SOURCE_UNVERIFIED(3)")
         if self.on("bootstrap_3b") and blobs.get(CONTRACT_PATH) != self.saved_3b:
             raise End("source", "SOURCE_UNVERIFIED(3b)")
@@ -797,8 +810,8 @@ def world(now="2026-11-19T18:46:30Z", main=None, brief_main=None, brief=None, bo
     routes = {
         API + "/branches/main": {"name": "main", "commit": {"sha": m, "commit": {"committer": {"date": "2026-11-19T11:40:00Z"}}}, "protected": False},
         f"{API}/contents/{S1_DIR}?ref={m}": listing(SAVED_3B),
-        f"file:{CONTRACT_PATH}@{m}": json.dumps(CONTRACT, indent=2),
-        f"file:{TICK_PATH}@{m}": "S1 TICK v3.2 (recorded text elided)",
+        f"file:{CONTRACT_PATH}@{m}": {"content": json.dumps(CONTRACT, indent=2), "sha": SAVED_3B},
+        f"file:{TICK_PATH}@{m}": {"content": "S1 TICK v3.2 (recorded text elided)", "sha": CONTRACT["tick_blob"]},
         f"file:{LANE_PATH}@{m}": json.dumps({"contract": "S1_REVIEWED_MERGE_LANE_v1", "state": "ON", "pins": {p: sha("pin:" + p) for p in LANE_PINS}}),
         ISSUES_URL: [i],
         f"{API}/actions/runs/{r['id']}": r,
@@ -875,8 +888,8 @@ def fixtures():
         old_contract = dict(CONTRACT, bootstrap_version="S1_BOOTSTRAP_v7", tick_blob=sha("tick-v3.1"))
         w["routes"][API + "/branches/main"]["commit"]["sha"] = old
         w["routes"][f"{API}/contents/{S1_DIR}?ref={old}"] = listing(sha("contract-blob-v7"), old_contract)
-        w["routes"][f"file:{CONTRACT_PATH}@{old}"] = json.dumps(old_contract)
-        w["routes"][f"file:{TICK_PATH}@{old}"] = "S1 TICK v3.1"
+        w["routes"][f"file:{CONTRACT_PATH}@{old}"] = {"content": json.dumps(old_contract), "sha": sha("contract-blob-v7")}
+        w["routes"][f"file:{TICK_PATH}@{old}"] = {"content": "S1 TICK v3.1", "sha": old_contract["tick_blob"]}
     out.append(fixture("F01", "stale main", "2026-11-18 manual bootstrap: an older main whose contract predates v8",
                        world(), "SOURCE_UNVERIFIED(3)", charter=1, change=stale_contract))
     out.append(fixture("F01b", "stale main: no SHA", "BOOTSTRAP step 1: the connector returns no SHA",
@@ -884,9 +897,29 @@ def fixtures():
                        change=lambda w: w["routes"].update({API + "/branches/main": {"message": "Moved Permanently"}})))
 
     def new_contract_not_pasted(w):
-        w["routes"][f"{API}/contents/{S1_DIR}?ref={sha('main-2026-11-19T18')}"] = listing(sha("contract-blob-v8-rev-2026-11-20"))
+        m = sha("main-2026-11-19T18")
+        new_blob = sha("contract-blob-v8-rev-2026-11-20")
+        w["routes"][f"{API}/contents/{S1_DIR}?ref={m}"] = listing(new_blob)
+        w["routes"][f"file:{CONTRACT_PATH}@{m}"]["sha"] = new_blob
     out.append(fixture("F02", "3b mismatch", "contract on main moved; the owner's saved paste still holds the old 3b blob",
                        world(), "SOURCE_UNVERIFIED(3b)", charter=2, change=new_contract_not_pasted))
+
+    # A valid listing with a wrong or absent file-response SHA must still stop before T1.
+    def file_response_sha(path, wrong):
+        def change(w):
+            m = w["routes"][API + "/branches/main"]["commit"]["sha"]
+            response = w["routes"][f"file:{path}@{m}"]
+            if wrong:
+                response["sha"] = sha("wrong-fetched-blob")
+            else:
+                response.pop("sha", None)
+        return change
+
+    for index, path in enumerate((CONTRACT_PATH, TICK_PATH)):
+        for wrong in (True, False):
+            out.append(fixture(f"BOOT-FETCH-{index}-{wrong}", "fetched file SHA disagrees with listing",
+                               "execution reliability: independent file-response binding", world(),
+                               "SOURCE_UNVERIFIED(3)", change=file_response_sha(path, wrong)))
 
     def normalised_user(login):
         def f(w):
@@ -1278,7 +1311,7 @@ def score(off=(), reading="strict"):
 MUTANTS = {
     "pins": (("pins",), "strict"), "bootstrap_3b": (("bootstrap_3b",), "strict"), "author": (("author",), "strict"),
     "run_binding": (("run_binding",), "strict"), "staleness": (("staleness",), "strict"), "t3_source": (("t3_source",), "strict"),
-    "bootstrap_3": (("bootstrap_3",), "strict"), "t0_monday": (("t0_monday",), "strict"), "issues": (("issues",), "strict"),
+    "bootstrap_3": (("bootstrap_3",), "strict"), "bootstrap_fetched_blobs": (("bootstrap_fetched_blobs",), "strict"), "t0_monday": (("t0_monday",), "strict"), "issues": (("issues",), "strict"),
     "body_strict": (("body_strict",), "strict"), "edited_outside_run": (("edited_outside_run",), "strict"),
     "complete": (("complete",), "strict"), "t3_not_ahead": (("t3_not_ahead",), "strict"), "t3_unreadable": (("t3_unreadable",), "strict"),
     "t3_tree_free": (("t3_tree_free",), "strict"), "h1_recheck": (("h1_recheck",), "strict"),
