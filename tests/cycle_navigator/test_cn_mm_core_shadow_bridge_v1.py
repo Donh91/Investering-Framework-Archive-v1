@@ -132,6 +132,14 @@ def _real_w47_owner_replay(self):
     self.assertFalse(diag["sequence"]["forecast_authority"])
     self.assertFalse(diag["forensics_context"]["forecast_authority"])
     self.assertIsNone(diag["forensics_context"]["liquidation_clearance"])
+    shared = bridge.intelligence_projection(packet,diag)
+    self.assertEqual(shared["models"]["C2"]["observed_c06_permission"],result["latest_observation"]["decisions"]["C06_BREADTH_BTCD"])
+    self.assertFalse(shared["models"]["C2"]["issued"])
+    self.assertFalse(shared["forecast_authority"])
+    self.assertNotIn("learning",shared)
+    self.assertNotIn("outcome",shared)
+    digest = shared.pop("feature_sha256")
+    self.assertEqual(digest,bridge.sha(bridge.canon(shared)))
     forged = copy.deepcopy(packet)
     forged["core"]["latest_observation"]["decisions"]["C07_SIMPLE_3"] = True
     with self.assertRaisesRegex(ValueError, "SHADOW_PROJECTION_MISMATCH"):
@@ -247,6 +255,27 @@ print('TASK2_ORIGINAL_COMPARATOR '+json.dumps(report,sort_keys=True))
             "tests.research.test_cn_mm_c2_relative_tilt_fixture_v1"], cwd=bridge.ROOT,
             capture_output=True,text=True,timeout=60)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+
+    def test_shared_intelligence_unknown_never_promotes(self):
+        result=bridge.intelligence_projection({"core":bridge.unknown("missing")})
+        self.assertEqual(result["status"],"UNKNOWN")
+        self.assertIsNone(result["models"]["C2"]["observed_c06_permission"])
+        self.assertFalse(result["models"]["C2"]["issued"])
+        self.assertEqual(result["families"],{})
+        self.assertFalse(result["forecast_authority"])
+
+    def test_calibration_and_cn_share_projection_and_separate_learning(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as root:
+            result=bridge.calibration_intelligence(Path(root),Path(root)/"missing.json",{})
+            self.assertEqual(result["status"],"UNAVAILABLE")
+            self.assertFalse(result["feature_uses_outcomes"])
+            self.assertEqual(result["learning"]["status"],"UNAVAILABLE")
+        context=(bridge.ROOT/"scripts/api_agent/build_weekly_calibration_context.py").read_text()
+        self.assertIn('context["cn_mm_shared_intelligence"] = calibration_intelligence',context)
+        self.assertLess(context.index('context["cn_mm_shared_intelligence"] ='),context.index('context["context_hash"] ='))
+        self.assertIn('"shared_intelligence_feature": intelligence_projection(packet,diagnostics)',(bridge.ROOT/"scripts/research/cn_mm_core_shadow_bridge_v1.py").read_text())
 
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()

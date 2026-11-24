@@ -258,6 +258,132 @@ def verify_packet_projection(packet, freeze, ledger_raw, registry_raw, *, repo):
             "sequence": sequence, "etf_context": etf, "forensics_context": forensics}
 
 
+def intelligence_projection(packet, diagnostics=None):
+    """One shared feature-side vocabulary for MM and CN; no outcome fields.
+
+    Only call with diagnostics returned by original-owner replay. Observation
+    permission is not a forecast and is never a C2 activation credential.
+    Preserve existing v1 immutable packet bytes and consumer compatibility.
+    """
+    base = {"contract": "CN_MM_SHARED_INTELLIGENCE_FEATURE_v1",
+            "authority": "RESEARCH_ONLY_NON_CANONICAL",
+            "status": "UNKNOWN", "packet_sha256": packet.get("packet_sha256"),
+            "checkout_sha": packet.get("checkout_sha"), "freeze_sha256": packet.get("freeze_sha256"),
+            "scientific_pit_eligible": False, "forecast_authority": False,
+            "canonical_effect": False, "portfolio_execution": False,
+            "independent_first_known_utc": None, "observation": None,
+            "models": {"C0": "EXISTING_CN_UNCHANGED", "C1": "ORIGINAL_TASK2_A_OWNER",
+                       "C2": {"status": "BLOCKED_PENDING_REVIEWED_ACTIVATION_AND_KNOWN_BY",
+                              "observed_c06_permission": None, "issued": False}},
+            "families": {}, "sequence": None}
+    core = packet.get("core", {})
+    if core.get("status") == "CORE_REPLAY_AT_OBSERVATION_ONLY" and diagnostics is not None:
+        latest = core["latest_observation"]
+        decisions = latest["decisions"]
+        p, s = diagnostics["persistence"], diagnostics["sequence"]
+        etf, liq = diagnostics["etf_context"], diagnostics["forensics_context"]
+        base.update(status="SOURCE_REPLAYED_OBSERVATION_ONLY",
+                    observation={k: latest[k] for k in ("event_id","observation_utc","source_commit","provenance_sha256")})
+        base["models"]["C2"]["observed_c06_permission"] = decisions["C06_BREADTH_BTCD"]
+        base["families"] = {
+            "ETHBTC_PERSISTENCE": {"status":"SOURCE_REPLAYED","permission":decisions["C01_ETHBTC"],
+                "side":p["side"],"consecutive_hours":p["consecutive_same_side"],
+                "left_censored":p["left_censored"],"stable_confirmation_utc":None},
+            "BREADTH_SURVIVAL": {"status":"SOURCE_REPLAYED","permission":decisions["C02_BREADTH"]},
+            "BTCD_PATH_RECLAIM": {"status":"SOURCE_REPLAYED","permission":decisions["C03_BTCD"]},
+            "ETF_FLOW_QUALITY": {"status":etf["status"],"source_sha256":etf.get("source_sha256"),
+                "session_date":etf.get("session_date"),"absorption_state":None},
+            "LIQUIDATION_CLEARANCE": {"status":liq["status"],"source_sha256":liq.get("source_sha256"),
+                "source_completeness_verified":False,"clearance_state":None},
+        }
+        base["sequence"] = {"status":s["status"],"observed_episode_n":s.get("observed_episode_n"),
+                            "active_ordered_proxy_episode_n":s.get("active_ordered_proxy_episode_n"),
+                            "original_sequence_equivalence":False}
+        base["frozen_candidates"] = dict(decisions)
+    base["feature_sha256"] = sha(canon(base))
+    return base
+
+
+def calibration_intelligence(repo, freeze_file, freeze):
+    """Existing MM calibration consumer, strictly separated feature/learning lanes.
+
+    No API call, new writer, model promotion or change in calibration eligibility.
+    Bound workload until a reviewed incremental owner exists. Late data block
+    this optional learning lane rather than entering an earlier frozen context.
+    """
+    result = {"contract":"CN_MM_SHARED_INTELLIGENCE_CALIBRATION_v1",
+              "authority":"RESEARCH_ONLY_NON_CANONICAL","status":"UNAVAILABLE",
+              "forecast_authority":False,"canonical_effect":False,"automatic_weight_updates":False,
+              "feature":None,"learning":{"status":"UNAVAILABLE"},"task2":{"status":"UNAVAILABLE"},
+              "feature_uses_outcomes":False,"independent_first_known_utc":None}
+    try:
+        if repo.resolve()!=ROOT or Path.cwd().resolve()!=ROOT:
+            raise ValueError("INTELLIGENCE_PINNED_REPO_REQUIRED")
+        head = git("rev-parse","HEAD").decode().strip()
+        _, raw, actual = freeze_identity(freeze_file, head, compare_worktree=True)
+        if actual != freeze:
+            raise ValueError("INTELLIGENCE_FREEZE_MISMATCH")
+        packet = build_checkout(freeze_file, head)
+        result["checkout_sha"] = head
+        result["freeze_sha256"] = freeze["freeze_sha256"]
+        result["freeze_file_sha256"] = sha(raw)
+        if packet["core"]["status"] == "CORE_REPLAY_AT_OBSERVATION_ONLY":
+            diagnostics = verify_packet_projection(packet, freeze, committed(LEDGER,head),
+                         committed(BASE/"TRANSFORM_FREEZE_REGISTRY.json",head),repo=repo)
+            result["feature"] = intelligence_projection(packet,diagnostics)
+        else:
+            result["feature"] = intelligence_projection(packet)
+        result["status"] = "SHADOW_CONTEXT_ONLY"
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
+            csv.Error, ImportError, subprocess.SubprocessError):
+        result["reason"]="PINNED_FEATURE_CONTEXT_UNAVAILABLE"
+        return result
+    cutoff = clock(freeze["created_at_utc"])
+    try:
+        owner = load_owner()
+        replay = owner.PinnedSourceReplay(repo,head)
+        rows = read_rows(replay.ledger_raw)
+        detail = read_rows(replay.read_blob(head,replay.BASE+"/data/OUTCOME_DETAIL_LEDGER.csv"))
+        if len(rows)>512:
+            raise ValueError("LEARNING_REPLAY_BUDGET_EXCEEDED_INCREMENTAL_OWNER_REQUIRED")
+        if any(clock(r["observation_timestamp_utc"])>cutoff for r in rows) or any(
+                clock(d["matured_at_utc"])>cutoff for d in detail):
+            raise ValueError("LEARNING_LATER_THAN_FROZEN_CALIBRATION_CUTOFF")
+        from scripts.research.cn_mm_outcome_source_audit_v1 import audit_outcome_cohort
+        audit = audit_outcome_cohort(replay,evaluate=True)
+        research = audit["matched_research"]
+        learning = {"status":research["status"],"verified_n":audit["verified_n"],
+                    "rejected_n":audit["rejected_n"],"unavailable_n":audit["unmatured_or_unavailable_n"],
+                    "verified_horizon_counts":audit["verified_horizon_counts"],
+                    "source_cutoff_utc":iso(cutoff),"scientific_pit_eligible":False,
+                    "forecast_authority":False,"automatic_weight_updates":False}
+        if audit["status"]=="REPLAY_COMPLETE":
+            learning["horizons"] = research["core_ablation"]["horizons"]
+            learning["dependence"] = research["dependence"]
+            learning["veto_magnitude"] = research["veto_magnitude"]
+            learning["episode_opportunity"] = research["episode_opportunity"]
+        result["learning"] = learning
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
+            csv.Error, ImportError, subprocess.SubprocessError) as exc:
+        result["learning"] = {"status":"UNAVAILABLE","reason":str(exc).split(":")[0][:120],
+                              "forecast_authority":False}
+    try:
+        from scripts.research.cn_mm_task2_comparator_readback_v1 import audit_week
+        comparison = audit_week(load_owner().PinnedSourceReplay(repo,head),freeze["iso_year"],freeze["iso_week"])
+        if clock(comparison["original_score"]["clock"])>cutoff:
+            raise ValueError("TASK2_SCORE_AFTER_FROZEN_CUTOFF")
+        result["task2"] = {k:comparison[k] for k in ("status","week","paired_n","interval_metrics",
+                            "original_score","original_issue","original_cn_freeze","hourly_pin",
+                            "scientific_pit_eligible","forecast_authority","c2_status")}
+        result["task2"]["point_comparison"] = {k:v for k,v in comparison["point_comparison"].items() if k!="rows"}
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
+            csv.Error, ImportError, subprocess.SubprocessError):
+        result["task2"] = {"status":"UNAVAILABLE","reason":"ORIGINAL_SCORE_MISSING_LATE_OR_UNVERIFIED",
+                           "forecast_authority":False}
+    result["context_sha256"] = sha(canon(result))
+    return result
+
+
 def publish_packet(packet_path, freeze_file, head, output_dir):
     _, frozen_bytes, freeze = freeze_identity(freeze_file, head, compare_worktree=True)
     raw = packet_path.read_bytes()
@@ -359,7 +485,8 @@ def consume_cn_shadow(repo, mm_pointer):
                 "persistence_diagnostic": diagnostics["persistence"],
                 "sequence_diagnostic": diagnostics["sequence"],
                 "etf_context": diagnostics["etf_context"],
-                "forensics_context": diagnostics["forensics_context"]}
+                "forensics_context": diagnostics["forensics_context"],
+                "shared_intelligence_feature": intelligence_projection(packet,diagnostics)}
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
             csv.Error, ImportError, subprocess.SubprocessError):
         return {**result, "reason": "MM_SHADOW_RECEIPT_INVALID"}
