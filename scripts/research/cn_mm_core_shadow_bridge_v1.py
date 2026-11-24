@@ -384,6 +384,74 @@ def calibration_intelligence(repo, freeze_file, freeze):
     return result
 
 
+def calibration_feature_binding(context, freeze):
+    """Small durable reference for existing MM machine package, no new writer."""
+    missing = {"contract":"CN_MM_CALIBRATION_FEATURE_BINDING_v1","status":"UNAVAILABLE",
+               "forecast_authority":False}
+    try:
+        intelligence = context["cn_mm_shared_intelligence"]
+        feature = intelligence["feature"]
+        if intelligence["status"]!="SHADOW_CONTEXT_ONLY" or not isinstance(feature,dict):
+            return missing
+        if (sha(canon({k:v for k,v in context.items() if k!="context_hash"}))!=context["context_hash"] or
+                sha(canon({k:v for k,v in intelligence.items() if k!="context_sha256"}))!=intelligence["context_sha256"] or
+                sha(canon({k:v for k,v in feature.items() if k!="feature_sha256"}))!=feature["feature_sha256"] or
+                intelligence["freeze_sha256"]!=freeze["freeze_sha256"] or
+                feature["freeze_sha256"]!=freeze["freeze_sha256"] or
+                feature["checkout_sha"]!=intelligence["checkout_sha"] or
+                intelligence["feature_uses_outcomes"] is not False or
+                feature["forecast_authority"] is not False or
+                feature["models"]["C2"]["issued"] is not False or
+                feature["canonical_effect"] is not False):
+            return {**missing,"reason":"CONTEXT_OR_FEATURE_BINDING_INVALID"}
+        return {"contract":missing["contract"],"status":"BOUND_CALIBRATION_FEATURE",
+                "forecast_authority":False,"freeze_sha256":freeze["freeze_sha256"],
+                "checkout_sha":feature["checkout_sha"],"packet_sha256":feature["packet_sha256"],
+                "feature_sha256":feature["feature_sha256"],"context_sha256":context["context_hash"],
+                "intelligence_context_sha256":intelligence["context_sha256"]}
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
+        return missing
+
+
+def compare_calibration_feature(machine, pointer, feature):
+    """A new binding must match independently replayed CN feature bytes.
+
+    Older MM packages remain explicit UNATTESTED, not falsely paired.
+    The machine and pointer use the existing package self-hash convention.
+    """
+    binding = machine.get("cn_mm_calibration_feature_binding")
+    if not isinstance(binding,dict) or binding.get("status")=="UNAVAILABLE":
+        return "UNATTESTED_MM_CALIBRATION_BINDING"
+    try:
+        if (machine["package_sha256"]!=pointer["machine_package_sha256"] or
+                sha(canon({k:v for k,v in machine.items() if k!="package_sha256"}))!=machine["package_sha256"] or
+                machine["freeze_sha256"]!=pointer["freeze_sha256"] or
+                binding["contract"]!="CN_MM_CALIBRATION_FEATURE_BINDING_v1" or
+                binding["status"]!="BOUND_CALIBRATION_FEATURE" or
+                binding["forecast_authority"] is not False or
+                binding["context_sha256"]!=machine["context_hash"] or
+                any(binding[k]!=feature[k] for k in ("freeze_sha256","checkout_sha","packet_sha256","feature_sha256"))):
+            return "MM_CALIBRATION_FEATURE_MISMATCH"
+        return "MATCHED_MM_CALIBRATION_FEATURE"
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
+        return "MM_CALIBRATION_FEATURE_MISMATCH"
+
+
+def read_calibration_feature_binding(repo, pointer, feature, read_committed):
+    if not pointer.get("machine_package_path"):
+        return "UNATTESTED_MM_CALIBRATION_BINDING"
+    try:
+        expected = Path(f"research/api_agent/outputs/weekly/{pointer['iso_year']}/W{pointer['iso_week']:02d}/MASTER_MONDAY_MACHINE_PACKAGE.json")
+        if Path(pointer["machine_package_path"])!=expected:
+            return "MM_CALIBRATION_FEATURE_MISMATCH"
+        raw=(repo/expected).read_bytes()
+        if raw!=read_committed("show",f"HEAD:{expected.as_posix()}"):
+            return "MM_CALIBRATION_FEATURE_MISMATCH"
+        return compare_calibration_feature(load_evidence_object(raw),pointer,feature)
+    except (ValueError,TypeError,KeyError,AttributeError,OSError,subprocess.SubprocessError):
+        return "MM_CALIBRATION_FEATURE_MISMATCH"
+
+
 def publish_packet(packet_path, freeze_file, head, output_dir):
     _, frozen_bytes, freeze = freeze_identity(freeze_file, head, compare_worktree=True)
     raw = packet_path.read_bytes()
@@ -476,6 +544,8 @@ def consume_cn_shadow(repo, mm_pointer):
         decisions = latest["decisions"]
         if set(decisions) != set(CORE) or any(type(v) is not bool for v in decisions.values()):
             raise ValueError("SHADOW_DECISIONS_INVALID")
+        shared = intelligence_projection(packet,diagnostics)
+        binding_status = read_calibration_feature_binding(repo,mm_pointer,shared,run)
         return {**result, "status": "CONSUMED_SHADOW_ONLY", "reason": None,
                 "packet_sha256": digest, "packet_file_sha256": sha(raw), "checkout_sha": head,
                 "observation_utc": latest["observation_utc"],
@@ -486,7 +556,8 @@ def consume_cn_shadow(repo, mm_pointer):
                 "sequence_diagnostic": diagnostics["sequence"],
                 "etf_context": diagnostics["etf_context"],
                 "forensics_context": diagnostics["forensics_context"],
-                "shared_intelligence_feature": intelligence_projection(packet,diagnostics)}
+                "shared_intelligence_feature": shared if binding_status!="MM_CALIBRATION_FEATURE_MISMATCH" else None,
+                "shared_feature_binding_status": binding_status}
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
             csv.Error, ImportError, subprocess.SubprocessError):
         return {**result, "reason": "MM_SHADOW_RECEIPT_INVALID"}

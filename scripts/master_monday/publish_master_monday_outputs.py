@@ -216,6 +216,12 @@ def main():
     shadow=load(shadow_path) if shadow_path.exists() else {'contract':'SHADOW_ADMISSION_AI_DECISION_v1','overall_status':'NOT_YET_AVAILABLE','candidate_decisions':[],'master_monday_summary':'No autonomous shadow-admission decision has been published yet.'}
     shadow_reporting={'mode':'REPORT_AFTER_DECISION_NO_APPROVAL_PROMPT','human_confirmation_required':False,'decision':shadow}
     machine={'contract':'MASTER_MONDAY_MACHINE_PACKAGE_v1','created_at_utc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),'iso_year':freeze['iso_year'],'iso_week':freeze['iso_week'],'freeze_sha256':freeze['freeze_sha256'],'preflight_sha256':preflight['package_sha256'],'context_hash':context['context_hash'],'api_status':a.api_status,'api_receipt':receipt,'analysis':analysis,'operational_translation':translation,'scorecard':scorecard,'shadow_admission':shadow_reporting,'learning_decision_impact':learning_impact,'authority':{'portfolio_action':False,'canonical_promotion':False,'model_weight_change':False}}
+    # Existing machine writer carries only the shared feature reference, not
+    # duplicated outcomes or a new decision authority.
+    root=str(Path(__file__).resolve().parents[2])
+    if root not in sys.path:sys.path.insert(0,root)
+    from scripts.research.cn_mm_core_shadow_bridge_v1 import calibration_feature_binding
+    machine['cn_mm_calibration_feature_binding']=calibration_feature_binding(context,freeze)
     machine['package_sha256']=sha(machine);a.output_dir.mkdir(parents=True,exist_ok=True)
     files={'MASTER_MONDAY_MACHINE_PACKAGE.json':machine,'MASTER_MONDAY_CALIBRATION_SCORECARD.json':scorecard,'MASTER_MONDAY_OPERATIONAL_TRANSLATION.json':translation,'MASTER_MONDAY_SHADOW_ADMISSION.json':shadow_reporting,'MASTER_MONDAY_LEARNING_DECISION_IMPACT.json':learning_impact}
     for name,obj in files.items():(a.output_dir/name).write_bytes(canon(obj))

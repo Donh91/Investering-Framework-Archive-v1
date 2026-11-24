@@ -275,7 +275,33 @@ print('TASK2_ORIGINAL_COMPARATOR '+json.dumps(report,sort_keys=True))
         context=(bridge.ROOT/"scripts/api_agent/build_weekly_calibration_context.py").read_text()
         self.assertIn('context["cn_mm_shared_intelligence"] = calibration_intelligence',context)
         self.assertLess(context.index('context["cn_mm_shared_intelligence"] ='),context.index('context["context_hash"] ='))
-        self.assertIn('"shared_intelligence_feature": intelligence_projection(packet,diagnostics)',(bridge.ROOT/"scripts/research/cn_mm_core_shadow_bridge_v1.py").read_text())
+        self.assertIn('shared = intelligence_projection(packet,diagnostics)',(bridge.ROOT/"scripts/research/cn_mm_core_shadow_bridge_v1.py").read_text())
+        self.assertIn("calibration_feature_binding(context,freeze)",(bridge.ROOT/"scripts/master_monday/publish_master_monday_outputs.py").read_text())
+
+    def test_common_feature_receipt_requires_exact_independent_projection(self):
+        packet={"core":bridge.unknown("missing"),"freeze_sha256":"a"*64,
+                "checkout_sha":"b"*40,"packet_sha256":"c"*64}
+        feature=bridge.intelligence_projection(packet)
+        intelligence={"status":"SHADOW_CONTEXT_ONLY","feature":feature,"freeze_sha256":packet["freeze_sha256"],
+                      "checkout_sha":packet["checkout_sha"],"feature_uses_outcomes":False}
+        intelligence["context_sha256"]=bridge.sha(bridge.canon(intelligence))
+        context={"cn_mm_shared_intelligence":intelligence}
+        context["context_hash"]=bridge.sha(bridge.canon(context))
+        binding=bridge.calibration_feature_binding(context,packet)
+        self.assertEqual(binding["status"],"BOUND_CALIBRATION_FEATURE")
+        machine={"freeze_sha256":packet["freeze_sha256"],"context_hash":context["context_hash"],
+                 "cn_mm_calibration_feature_binding":binding}
+        machine["package_sha256"]=bridge.sha(bridge.canon(machine))
+        pointer={"freeze_sha256":packet["freeze_sha256"],"machine_package_sha256":machine["package_sha256"]}
+        self.assertEqual(bridge.compare_calibration_feature(machine,pointer,feature),"MATCHED_MM_CALIBRATION_FEATURE")
+        forged=copy.deepcopy(feature)
+        forged["models"]["C2"]["observed_c06_permission"]=True
+        forged.pop("feature_sha256")
+        forged["feature_sha256"]=bridge.sha(bridge.canon(forged))
+        self.assertEqual(bridge.compare_calibration_feature(machine,pointer,forged),"MM_CALIBRATION_FEATURE_MISMATCH")
+        self.assertEqual(bridge.compare_calibration_feature({},pointer,feature),"UNATTESTED_MM_CALIBRATION_BINDING")
+        context["cn_mm_shared_intelligence"]["feature"]["forecast_authority"]=True
+        self.assertEqual(bridge.calibration_feature_binding(context,packet)["status"],"UNAVAILABLE")
 
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
