@@ -5,6 +5,7 @@ import json
 import math
 from datetime import datetime, timedelta, timezone
 from scripts.cycle_navigator.signal_snapshot_shadow_v1 import _clock
+from scripts.master_monday.strict_json_v1 import load_evidence_object
 
 
 def _number(x):
@@ -20,7 +21,7 @@ def build_weekly_analysis(raw_bytes: bytes, expected_sha256: str, freeze_utc: st
     digest = hashlib.sha256(raw_bytes).hexdigest()
     if digest != expected_sha256:
         raise ValueError('SOURCE_DIGEST_MISMATCH')
-    source = json.loads(raw_bytes)
+    source = load_evidence_object(raw_bytes)
     frozen = _clock(freeze_utc)
     generated = _clock(source['generated_at_utc'])
     end = datetime.fromisocalendar(expected_year, expected_week, 1).replace(tzinfo=timezone.utc) + timedelta(days=7)

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any
+from scripts.master_monday.strict_json_v1 import load_evidence_object
 
 
 def canonical(value: Any) -> bytes:
@@ -22,7 +23,7 @@ def capture_binding(capture_root: Path, pointer: dict, year: int, week: int, fre
         return {'contract':'MM_WEEKLY_SOURCE_BINDING_v1','status':'UNKNOWN','reason':'SOURCE_MISSING_OR_OUTSIDE_CAPTURE_ROOT','first_known_status':'UNKNOWN'}
     raw = path.read_bytes()
     try:
-        data = json.loads(raw)
+        data = load_evidence_object(raw)
     except (ValueError, UnicodeError):
         return {'contract':'MM_WEEKLY_SOURCE_BINDING_v1','status':'UNKNOWN','reason':'SOURCE_INVALID_JSON','first_known_status':'UNKNOWN'}
     if not isinstance(data, dict) or data.get('contract') != 'WEEKLY_RAW_CALIBRATION_PACK_v3' or data.get('iso_year') != year or data.get('iso_week') != week:
