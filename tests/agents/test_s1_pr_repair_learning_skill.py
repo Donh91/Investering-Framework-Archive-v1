@@ -8,6 +8,7 @@ import json
 import unittest
 import hashlib
 import tempfile
+from tests.exact_pr_head_support import ensure_exact_pr_head
 
 ROOT = Path(__file__).resolve().parents[2]
 SKILL = ROOT / ".agents/skills/s1-pr-repair-learning/SKILL.md"
@@ -63,13 +64,7 @@ def _git(root, *args):
 
 def materialize_exact_host_tree(root, head, destination):
     """Test exact PR host bytes without changing shared checkout or shallow graph."""
-    if not re.fullmatch(r"[0-9a-f]{40}", head):
-        raise ValueError("S1_PR_EVENT_HEAD_INVALID")
-    if _git(root, "rev-parse", head + "^{commit}").decode().strip() != head:
-        raise ValueError("S1_PR_HEAD_MISMATCH")
-    # Pull-request merge checkout must contain the exact head. Never fetch
-    # with --depth in the shared checkout; missing ancestry is a real error.
-    _git(root, "merge-base", "--is-ancestor", head, "HEAD")
+    ensure_exact_pr_head(root, head)
     records = _git(root, "ls-tree", "-r", "-z", head, "--", "tools/s1-release-control")
     entries = [item for item in records.split(b"\0") if item]
     if not entries:
@@ -128,6 +123,45 @@ class S1ExactHostIsolation(unittest.TestCase):
                 materialize_exact_host_tree(root, "HEAD", Path(directory) / "invalid")
             with self.assertRaises(subprocess.CalledProcessError):
                 materialize_exact_host_tree(root, "0" * 40, Path(directory) / "missing")
+
+
+    def test_already_shallow_merge_checkout_fetches_only_bound_second_parent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            origin = Path(directory) / "origin"
+            origin.mkdir()
+            _git(origin, "init", "-q")
+            _git(origin, "config", "user.name", "Fixture")
+            _git(origin, "config", "user.email", "fixture@example.invalid")
+            file = origin / "tools/s1-release-control/test.mjs"
+            file.parent.mkdir(parents=True)
+            file.write_bytes(b"base")
+            _git(origin, "add", ".")
+            _git(origin, "commit", "-qm", "base")
+            base = _git(origin, "rev-parse", "HEAD").decode().strip()
+            _git(origin, "checkout", "-qb", "candidate")
+            file.write_bytes(b"candidate")
+            _git(origin, "commit", "-qam", "candidate")
+            candidate = _git(origin, "rev-parse", "HEAD").decode().strip()
+            _git(origin, "checkout", "-qb", "merge-target", base)
+            (origin / "other.txt").write_text("main")
+            _git(origin, "add", ".")
+            _git(origin, "commit", "-qm", "main")
+            main = _git(origin, "rev-parse", "HEAD").decode().strip()
+            _git(origin, "merge", "--no-ff", "--no-edit", "candidate")
+            merge = _git(origin, "rev-parse", "HEAD")
+            checkout = Path(directory) / "shallow"
+            subprocess.run(["git", "clone", "-q", "--depth=1", "--branch", "merge-target",
+                            origin.as_uri(), str(checkout)], check=True, capture_output=True)
+            self.assertEqual(_git(checkout, "rev-parse", "--is-shallow-repository"), b"true\n")
+            for invalid in (main, base, "0" * 40):
+                with self.assertRaisesRegex(ValueError, "NOT_RAW_MERGE_PARENT"):
+                    ensure_exact_pr_head(checkout, invalid)
+            destination = Path(directory) / "host"
+            self.assertEqual(materialize_exact_host_tree(checkout, candidate, destination), 1)
+            self.assertEqual((destination / "tools/s1-release-control/test.mjs").read_bytes(), b"candidate")
+            self.assertEqual(_git(checkout, "rev-parse", "HEAD"), merge)
+            self.assertEqual(_git(checkout, "status", "--porcelain"), b"")
+            self.assertEqual(_git(checkout, "rev-parse", "--is-shallow-repository"), b"true\n")
 
 
 class S1ReleaseControlHostAcceptance(unittest.TestCase):

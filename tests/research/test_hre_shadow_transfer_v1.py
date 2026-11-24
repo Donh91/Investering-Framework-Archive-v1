@@ -97,19 +97,8 @@ class ARP02OriginalOwnerNativeCostControl(unittest.TestCase):
             event = json.loads(Path(event_path).read_text(encoding="utf-8"))
             exact_head = event.get("pull_request", {}).get("head", {}).get("sha")
             self.assertRegex(str(exact_head), r"^[a-f0-9]{40}$")
-            # The full-repository gate already checks out complete history.
-            # Do not corrupt it with a depth-one fetch during a test.
-            head_present = subprocess.run(
-                ["git", "cat-file", "-e", exact_head + "^{commit}"],
-                cwd=ROOT, capture_output=True, text=True, timeout=10, check=False,
-            )
-            self.assertEqual(head_present.returncode, 0,
-                             "HRE_PR_HEAD_OBJECT_UNAVAILABLE:" + head_present.stderr[-3000:])
-            ancestor = subprocess.run(
-                ["git", "merge-base", "--is-ancestor", exact_head, "HEAD"],
-                cwd=ROOT, capture_output=True, text=True, timeout=10, check=False,
-            )
-            self.assertEqual(ancestor.returncode, 0, "HRE_PR_HEAD_NOT_ANCESTOR")
+            from tests.exact_pr_head_support import ensure_exact_pr_head
+            self.assertEqual(ensure_exact_pr_head(ROOT, exact_head), exact_head)
             for source_path in target_paths:
                 source_blob = subprocess.run(
                     ["git", "rev-parse", f"{exact_head}:{source_path}"],
