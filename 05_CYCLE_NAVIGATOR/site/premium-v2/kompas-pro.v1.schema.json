@@ -20,7 +20,10 @@
     "bull_bear",
     "risk",
     "horizons",
-    "horizon_status"
+    "horizon_status",
+    "protection",
+    "rotation",
+    "frozen_week"
   ],
   "properties": {
     "contract": {
@@ -47,7 +50,8 @@
         "enum": [
           "OFFICIAL_SOURCE_NOT_CURRENT",
           "ACTION_UNRECOGNIZED",
-          "PARTIAL_CARD_EVIDENCE"
+          "PARTIAL_CARD_EVIDENCE",
+          "LINEAGE_UNVERIFIED"
         ]
       }
     },
@@ -82,7 +86,8 @@
       "additionalProperties": false,
       "required": [
         "latest_json",
-        "compass_json"
+        "compass_json",
+        "publication_lineage_json"
       ],
       "properties": {
         "latest_json": {
@@ -90,6 +95,10 @@
           "pattern": "^[a-f0-9]{64}$"
         },
         "compass_json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "publication_lineage_json": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
         }
@@ -234,7 +243,8 @@
           "additionalProperties": false,
           "required": [
             "class",
-            "ordinal"
+            "ordinal",
+            "quality"
           ],
           "properties": {
             "class": {
@@ -250,6 +260,20 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 5
+            },
+            "quality": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "LOW",
+                    "MEDIUM",
+                    "HIGH"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           }
         },
@@ -268,7 +292,8 @@
         "required": [
           "id",
           "direction",
-          "action"
+          "action",
+          "bull_bear"
         ],
         "properties": {
           "id": {
@@ -315,6 +340,43 @@
                   "PREPARE_BUY",
                   "PREPARE_SELL"
                 ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bull_bear": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bull",
+                  "bear",
+                  "bias"
+                ],
+                "properties": {
+                  "bull": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10
+                  },
+                  "bear": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10
+                  },
+                  "bias": {
+                    "enum": [
+                      "BULLISH",
+                      "LEAN_BULLISH",
+                      "NEUTRAL",
+                      "LEAN_BEARISH",
+                      "BEARISH"
+                    ]
+                  }
+                }
               },
               {
                 "type": "null"
@@ -390,6 +452,191 @@
           }
         }
       }
+    },
+    "protection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sell_state",
+        "distribution",
+        "reentry"
+      ],
+      "properties": {
+        "sell_state": {
+          "anyOf": [
+            {
+              "enum": [
+                "NONE",
+                "WATCH",
+                "PREPARE",
+                "REDUCE",
+                "SELL",
+                "EXIT",
+                "CONFIRMED",
+                "UNAVAILABLE"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "distribution": {
+          "anyOf": [
+            {
+              "enum": [
+                "NONE",
+                "WARNING",
+                "CONFIRMED",
+                "UNKNOWN"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reentry": {
+          "anyOf": [
+            {
+              "enum": [
+                "INACTIVE",
+                "WAIT_FOR_FLUSH",
+                "WAIT_FOR_RECLAIM",
+                "REVIEW",
+                "UNAVAILABLE"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "rotation": {
+      "type": "array",
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "BTC",
+              "ETH",
+              "LARGE_CAPS",
+              "MID_CAPS",
+              "SMALL_CAPS",
+              "MICROCAPS",
+              "MEMES"
+            ]
+          },
+          "action": {
+            "enum": [
+              "HOLD",
+              "WAIT",
+              "HARD_WAIT",
+              "UNAVAILABLE",
+              "WATCH",
+              "PREPARE",
+              "PREPARE_BUY",
+              "BUY",
+              "PREPARE_SELL",
+              "REDUCE",
+              "SELL"
+            ]
+          }
+        }
+      }
+    },
+    "frozen_week": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "week",
+            "public_issue_number",
+            "btc",
+            "eth"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "OK",
+                "DEGRADED"
+              ]
+            },
+            "week": {
+              "type": "string",
+              "pattern": "^20[0-9]{2}-W[0-9]{2}$"
+            },
+            "public_issue_number": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "btc": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "low",
+                    "high"
+                  ],
+                  "properties": {
+                    "low": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "high": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "eth": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "low",
+                    "high"
+                  ],
+                  "properties": {
+                    "low": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "high": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   }
 }

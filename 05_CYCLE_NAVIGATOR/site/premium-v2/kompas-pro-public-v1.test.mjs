@@ -2,21 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {buildKompasProPublic} from './kompas-pro-public-v1.mjs';
-const nowMs=Date.parse('2026-11-24T10:00:00Z');
-const bytes=x=>Buffer.from(JSON.stringify(x)+'\n');
-test('wrong contracts suppress all current values, exact byte bindings',()=>{
- const a=bytes({schema:'WRONG'}),b=bytes({contract:'WRONG',action_now:'BUY'});
- const p=buildKompasProPublic(a,b,{nowMs});
- assert.equal(p.state,'INVALID');assert.equal(p.action,null);assert.equal(p.bull_bear,null);
- assert.equal(p.risk,null);assert.equal(p.momentum.direction,null);
- assert.equal(p.horizons.length,4);assert.equal(p.horizon_status.length,14);
- assert.ok(p.horizons.every(h=>h.action===null&&h.direction===null));
- assert.equal(p.source_shas.latest_json,createHash('sha256').update(a).digest('hex'));
- assert.notEqual(p.source_shas.latest_json,buildKompasProPublic(Buffer.from(a.toString().trim()),b,{nowMs}).source_shas.latest_json);
+import {fixture,bytes,nowMs} from './kompas-pro-public-fixture.mjs';
+const run=(f,now=nowMs)=>buildKompasProPublic(bytes(f.latest),bytes(f.compass),bytes(f.lineage),{nowMs:now});
+test('qualified positive source and exact three final byte bindings',()=>{
+ const f=fixture(),p=run(f);assert.equal(p.state,'OK');assert.equal(p.action,'HOLD_WAIT');
+ assert.deepEqual(p.bull_bear,{bull:6,bear:4,bias:'LEAN_BULLISH'});
+ assert.deepEqual(p.risk,{class:'ELEVATED',ordinal:3,quality:'LOW'});
+ assert.equal(p.momentum.direction,'BULLISH');assert.equal(p.momentum.valid_until,'2026-11-24T10:30:00.000Z');
+ assert.equal(p.valid_until,'2026-11-24T12:00:00.000Z');assert.equal(p.horizons.length,4);assert.equal(p.horizon_status.length,14);
+ assert.equal(p.protection.sell_state,'NONE');assert.deepEqual(p.frozen_week.btc,{low:60000,high:70000});
+ for(const [key,name] of [['latest_json','latest'],['compass_json','compass'],['publication_lineage_json','lineage']])assert.equal(p.source_shas[key],createHash('sha256').update(bytes(f[name])).digest('hex'));
 });
-test('expired owner deadline never creates current action',()=>{
- const a=bytes({schema:'CN_PUBLIC_SNAPSHOT_V2',generated_at:'2026-11-24T09:00:00Z'});
- const b=bytes({contract:'PUBLIC_COMPASS_PROJECTION_v1',issued_at_utc:'2026-11-24T08:00:00Z',action_now:'BUY',full_stack:{official_freshness:{valid_until_utc:'2026-11-24T09:30:00Z'}}});
- const p=buildKompasProPublic(a,b,{nowMs});assert.equal(p.state,'STALE');assert.equal(p.action,null);assert.equal(p.valid_until,'2026-11-24T09:30:00.000Z');
-});
-test('invalid clock rejected',()=>assert.throws(()=>buildKompasProPublic(bytes({}),bytes({}),{nowMs:NaN})));
+test('one-byte append on final latest changes its digest',()=>{const f=fixture(),a=bytes(f.latest),b=bytes(f.compass),c=bytes(f.lineage);assert.notEqual(buildKompasProPublic(a,b,c,{nowMs}).source_shas.latest_json,buildKompasProPublic(Buffer.concat([a,Buffer.from(' ')]),b,c,{nowMs}).source_shas.latest_json)});
+test('owner deadline inclusive expiry removes all live values',()=>{const p=run(fixture(),Date.parse('2026-11-24T12:00:00Z'));assert.equal(p.state,'STALE');assert.equal(p.action,null);assert.equal(p.risk,null);assert.equal(p.momentum.direction,null);assert.ok(p.horizons.every(h=>h.action===null&&h.direction===null&&h.bull_bear===null));assert.ok(p.horizon_status.every(h=>!['CURRENT_OBSERVATION','OFFICIAL_DIRECTION_ONLY'].includes(h.status)))});
+test('momentum has independent expiry',()=>{const p=run(fixture(),Date.parse('2026-11-24T10:31:00Z'));assert.equal(p.state,'DEGRADED');assert.equal(p.momentum.direction,null);assert.equal(p.action,'HOLD_WAIT')});
+test('lineage mismatch blocks live values despite fresh Compass',()=>{const f=fixture();f.lineage.public_issue_number++;const p=run(f);assert.equal(p.state,'INVALID');assert.equal(p.action,null);assert.equal(p.frozen_week,null);assert.ok(p.horizon_status.every(h=>!['CURRENT_OBSERVATION','OFFICIAL_DIRECTION_ONLY'].includes(h.status)))});
+test('future issue and unknown direction never promote momentum',()=>{const f=fixture();f.compass.issued_at_utc='2026-11-24T10:01:00Z';f.latest.generated_at='2026-11-24T10:02:00Z';assert.equal(run(f).action,null);const g=fixture();g.compass.market_now.directional_state='UNKNOWN';assert.equal(run(g).momentum.direction,null)});
+test('bad balance and risk authority are suppressed',()=>{const f=fixture();f.compass.bull_bear_scale.horizons['1_3d'].bull=9;f.compass.protection_tracker.authority.portfolio_execution=true;const p=run(f);assert.equal(p.state,'DEGRADED');assert.equal(p.risk,null);assert.equal(p.bull_bear,null)});
+test('invalid evaluation clock rejected',()=>assert.throws(()=>run(fixture(),NaN)));

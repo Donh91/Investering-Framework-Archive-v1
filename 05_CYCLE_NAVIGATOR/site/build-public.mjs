@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 import { dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { preserveLegacyShell, releasePremiumShell } from "./premium-release.mjs";
-import { buildKompasProPublic } from "./premium-v2/kompas-pro-public-v1.mjs";
 import { prospectiveRangeReadback } from "./prospective-range-readback.mjs";
 import { originalSourceAgeAtIssue } from "./source-age-readback.mjs";
 import { hourlyFloorReadback, inheritedProtectionOrigin, kompasTruthReadback } from "./kompas-truth-banner.mjs";
@@ -623,9 +622,7 @@ compass.full_stack=await buildFullStackReadback(compass,pointer,pkg,publicSeries
 const compassEvent=await buildCompassEventSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
-const kompasProPublic=buildKompasProPublic(await readFile(resolve(dataDir,"latest.json")),await readFile(resolve(dataDir,"compass.json")));
-await writeFile(resolve(dataDir,"kompas-pro.v1.json"),JSON.stringify(kompasProPublic,null,2)+"\n");
-await copyFile(resolve(siteDir,"premium-v2/kompas-pro.v1.schema.json"),resolve(dataDir,"kompas-pro.v1.schema.json"));
+// Kompas PRO is finalized after live-observation, precision and lineage writers.
 await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"\n");
 
 // Research-only first-party source slot for Challenger A. This is deliberately
