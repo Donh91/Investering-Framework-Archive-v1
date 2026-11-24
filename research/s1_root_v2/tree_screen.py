@@ -19,13 +19,15 @@ def index(tree):
 def screen(old_root, new_root, old_scripts, new_scripts):
     try:
         a, b, c, d = map(index, (old_root, new_root, old_scripts, new_scripts))
+        for root, scripts in ((a, old_scripts), (b, new_scripts)):
+            if root.get("scripts") != ("040000", "tree", scripts.get("sha")):
+                return "UNKNOWN"
         for left, right, pins in ((a,b,ROOT_PINS),(c,d,SCRIPT_PINS)):
             for pin in pins:
                 if pin not in left or pin not in right:
                     return "UNKNOWN"
                 if left[pin] != right[pin]:
                     return "STALE"
-        # Caller must independently bind fetched scripts trees to root entries.
         # Matching pins do not establish ancestry, disjointness or data-only drift.
         return "PINS_MATCH_ONLY"
     except (KeyError, TypeError, ValueError, AttributeError):

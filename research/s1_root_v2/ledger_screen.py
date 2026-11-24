@@ -14,6 +14,8 @@ def unique(pairs):
 
 def screen(snapshot, ledger, repo, pr, head, minimum_seq):
     try:
+        if type(pr) is not int or pr <= 0:
+            return "UNKNOWN"
         if type(snapshot) is not bytes or type(ledger) is not bytes:
             return "UNKNOWN"
         s = json.loads(snapshot, object_pairs_hook=unique)
@@ -26,8 +28,8 @@ def screen(snapshot, ledger, repo, pr, head, minimum_seq):
             return "UNKNOWN"
         if len(rows) != s["ledger_last_seq"] or len(rows) < minimum_seq:
             return "UNKNOWN"
-        matches = [r for r in rows if r["repo"] == repo and r["pr"] == pr]
-        current = [r for r in s["entries"] if r["repo"] == repo and r["pr"] == pr]
+        matches = [r for r in rows if r["repo"] == repo and type(r["pr"]) is int and r["pr"] == pr]
+        current = [r for r in s["entries"] if r["repo"] == repo and type(r["pr"]) is int and r["pr"] == pr]
         if not matches or len(current) != 1:
             return "UNKNOWN"
         r = matches[-1]

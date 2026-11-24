@@ -33,3 +33,7 @@ class LedgerScreenTest(unittest.TestCase):
         self.assertEqual(run([row(report_blob=None)]),"UNKNOWN")
         self.assertEqual(run([row()],entries=[]),"UNKNOWN")
         self.assertEqual(run([row(seq=2)]),"UNKNOWN")
+
+    def test_boolean_pr(self):
+        self.assertEqual(run([row(pr=True)]),"UNKNOWN")
+        self.assertEqual(m.screen(b"{}",b"","example/repo",True,"a"*40,1),"UNKNOWN")
