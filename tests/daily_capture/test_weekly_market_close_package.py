@@ -192,6 +192,191 @@ class WeeklyCloseArchitectureTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, 'EXISTING_FINAL_MARKET_CLOSE_INTEGRITY_FAIL_CLOSED'):
                 weekly.verify_existing_final(datetime(2026, 9, 7, 6, 27, tzinfo=timezone.utc), root)
 
+
+    def test_metronome_dispatch_reuses_only_current_valid_slots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            event = Path(tmp) / 'event.json'
+            def bind(inputs, ref='refs/heads/main'):
+                event.write_text(json.dumps({'ref': ref, 'inputs': inputs}))
+            def validate(when, mode='final', consumer=False, attempt='1'):
+                weekly.validate_actions_week_binding(datetime.fromisoformat(when.replace('Z', '+00:00')),
+                    mode, event_name='workflow_dispatch', event_path=str(event),
+                    run_attempt=attempt, consumer=consumer)
+            # Monday 2026-11-30 is ISO W49; FINAL is for the completed W48.
+            bind({'mode': 'final'})
+            validate('2026-11-30T01:05:00Z')
+            for timestamp in ('2026-11-30T00:30:00Z', '2026-12-01T02:00:00Z'):
+                with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                    validate(timestamp)
+            bind({'mode': 'preclose'})
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:10:00Z')
+            validate('2026-11-29T22:35:00Z', mode='preclose')
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:10:00Z', mode='preclose')
+            bind({'mode': 'final'}, ref='refs/heads/feature')
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:10:00Z')
+            bind({'mode': 'final'})
+            with self.assertRaisesRegex(ValueError, 'RERUN_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:10:00Z', attempt='2')
+            # Weekly consumer has a DIFFERENT workflow input schema and
+            # remains impossible before 02:40 Copenhagen.
+            bind({'force_reissue': 'false'})
+            validate('2026-11-30T01:40:00Z', consumer=True)
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:30:00Z', consumer=True)
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-12-01T01:40:00Z', consumer=True)
+            with self.assertRaisesRegex(ValueError, 'DISPATCH_ORIGINAL_WEEK_UNBOUND'):
+                validate('2026-11-30T01:40:00Z', consumer=False)
+
+    def test_metronome_dispatch_produces_and_consumes_final_without_reissue(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'weekly_close'
+            event = Path(tmp) / 'event.json'
+            event.write_text(json.dumps({'ref': 'refs/heads/main', 'inputs': {'mode': 'final'}}))
+            env = {'GITHUB_EVENT_NAME': 'workflow_dispatch',
+                   'GITHUB_EVENT_PATH': str(event), 'GITHUB_RUN_ATTEMPT': '1'}
+            def fetch(symbol, start_ms, end_ms, base_url):
+                return [[stamp, '10', '12', '9', '11', '5', stamp + 3_599_999]
+                        for stamp in range(start_ms, end_ms, 3_600_000)]
+            argv = ['weekly', '--output-root', str(root), '--mode', 'final',
+                    '--now-utc', '2026-11-30T02:00:00Z']
+            with patch('sys.argv', argv), patch.dict(weekly.os.environ, env, clear=True), \
+                 patch.object(weekly, 'fetch_klines', side_effect=fetch):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    weekly.main()
+            pointer = json.loads((root / 'LATEST_WEEKLY_MARKET_CLOSE.json').read_text())
+            self.assertTrue(pointer['final'])
+            self.assertEqual((pointer['iso_year'], pointer['iso_week']), (2026, 48))
+            originals = {str(p): p.read_bytes() for p in root.rglob('*.json')}
+            event.write_text(json.dumps({'ref': 'refs/heads/main', 'inputs': {'force_reissue': 'false'}}))
+            argv.append('--require-existing-final')
+            with patch('sys.argv', argv), patch.dict(weekly.os.environ, env, clear=True), \
+                 patch.object(weekly, 'fetch_klines') as request, \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                weekly.main()
+            request.assert_not_called()
+            self.assertEqual(json.loads(output.getvalue())['status'], 'PASS')
+            self.assertEqual(originals, {str(p): p.read_bytes() for p in root.rglob('*.json')})
+
+    def test_late_native_final_cron_reuses_source_bytes_without_network(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'weekly_close'
+            self.run_weekly(root, mode='final')
+            original = {str(p): p.read_bytes() for p in root.rglob('*.json')}
+            argv = ['weekly', '--output-root', str(root), '--mode', 'final',
+                    '--now-utc', '2026-08-31T10:00:00Z']
+            # A delayed scheduled producer is valid on local Monday, but
+            # cannot overwrite its earlier successful source issuance.
+            ev = Path(tmp) / 'event.json'
+            ev.write_text(json.dumps({'schedule': '5 2 * * 1'}))
+            env = {'GITHUB_EVENT_NAME': 'schedule', 'GITHUB_EVENT_PATH': str(ev),
+                   'GITHUB_RUN_ATTEMPT': '1'}
+            with patch('sys.argv', argv), patch.dict(weekly.os.environ, env, clear=True), \
+                 patch.object(weekly, 'fetch_klines') as fetch, \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                weekly.main()
+            fetch.assert_not_called()
+            self.assertEqual(json.loads(output.getvalue())['mode'],
+                             'REUSE_VERIFIED_FINAL_NO_SOURCE_MUTATION')
+            self.assertEqual(original, {str(p): p.read_bytes() for p in root.rglob('*.json')})
+            # A corrupted original may NOT be silently repaired by a later
+            # native run: frozen first-source provenance takes priority.
+            ptr = root / 'LATEST_WEEKLY_MARKET_CLOSE.json'
+            ptr.write_text(json.dumps({'status': 'PASS'}))
+            with patch('sys.argv', argv), patch.dict(weekly.os.environ, env, clear=True), \
+                 patch.object(weekly, 'fetch_klines') as fetch:
+                with self.assertRaisesRegex(SystemExit,
+                                             'EXISTING_FINAL_MARKET_CLOSE_INTEGRITY_FAIL_CLOSED'):
+                    weekly.main()
+            fetch.assert_not_called()
+
+    def test_first_final_replaces_same_week_preclose_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'weekly_close'
+            def fetch(symbol, start_ms, end_ms, base_url):
+                return [[stamp, '10', '12', '9', '11', '5', stamp + 3_599_999]
+                        for stamp in range(start_ms, end_ms, 3_600_000)]
+            with patch('sys.argv', ['weekly', '--output-root', str(root),
+                 '--mode', 'preclose', '--now-utc', '2026-08-30T20:40:00Z']), \
+                 patch.object(weekly, 'fetch_klines', side_effect=fetch), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                weekly.main()
+            pre = json.loads((root / '2026/W35/WEEKLY_MARKET_CLOSE_PACKAGE.json').read_text())
+            self.assertFalse(pre['final'])
+            with patch('sys.argv', ['weekly', '--output-root', str(root),
+                 '--mode', 'final', '--now-utc', '2026-08-31T02:00:00Z']), \
+                 patch.object(weekly, 'fetch_klines', side_effect=fetch), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                weekly.main()
+            final = json.loads((root / '2026/W35/WEEKLY_MARKET_CLOSE_PACKAGE.json').read_text())
+            self.assertTrue(final['final'])
+            self.assertEqual(final['completeness'], 'COMPLETE')
+
+    def test_all_weekly_workflow_python_steps_are_gated_before_execution(self):
+        # Contract-level safeguard: every Python command in BOTH existing
+        # workflows is downstream of the first strict event-binding source
+        # check. A new earlier Python step must fail this test, not silently
+        # create another CFGI-like unguarded dispatch.
+        sunday = Path(".github/workflows/sunday-market-close-and-cfgi.yml").read_text()
+        weekly = Path(".github/workflows/weekly-api-calibration-shadow.yml").read_text()
+        sunday_steps = sunday.split("      - name: ")
+        weekly_steps = weekly.split("      - name: ")
+        first_sunday = next(i for i,s in enumerate(sunday_steps)
+                             if s.startswith("Build verified weekly price ranges"))
+        first_weekly = next(i for i,s in enumerate(weekly_steps)
+                             if s.startswith("Verify and reuse existing final ISO-week close"))
+        self.assertIn("build_weekly_market_close_package.py", sunday_steps[first_sunday])
+        self.assertIn("--mode", sunday_steps[first_sunday])
+        self.assertIn("build_weekly_market_close_package.py", weekly_steps[first_weekly])
+        self.assertIn("--require-existing-final", weekly_steps[first_weekly])
+        for name, steps, first in (("Sunday", sunday_steps, first_sunday),
+                                   ("Monday", weekly_steps, first_weekly)):
+            for i, step in enumerate(steps):
+                if "python " in step or "python3 " in step:
+                    self.assertGreaterEqual(i, first, (name, i, step[:90]))
+            self.assertNotIn("continue-on-error: true", steps[first])
+        # Paid API work and separate jobs must be gated by the freeze job:
+        # a bad dispatch that rejects the first source step cannot continue.
+        self.assertIn("needs.freeze.result == 'success'", weekly)
+        self.assertIn("needs: freeze", weekly)
+        self.assertIn("needs: [freeze, calibration]", weekly)
+        self.assertIn("--mode \"${{ steps.mode.outputs.mode }}\"", sunday)
+
+    def test_weekly_workflow_every_event_sensitive_cli_is_accounted_for(self):
+        # Enumerate EVERY directly invoked Python script across both original
+        # workflows. A new script reading GitHub event identity must be
+        # explicitly classified here, preventing another silent CFGI bypass.
+        import re
+        from pathlib import Path
+        workflows = [
+            Path(".github/workflows/sunday-market-close-and-cfgi.yml"),
+            Path(".github/workflows/weekly-api-calibration-shadow.yml"),
+        ]
+        commands = set()
+        for workflow in workflows:
+            commands.update(re.findall(
+                r"(?:python|python3)[ ]+(scripts/[A-Za-z0-9_./-]+[.]py)",
+                workflow.read_text()))
+        self.assertIn("scripts/daily_capture/build_weekly_market_close_package.py",commands)
+        self.assertIn("scripts/daily_capture/build_weekly_cfgi_summary.py",commands)
+        checked = set()
+        for script in commands:
+            source = Path(script).read_text()
+            if "GITHUB_EVENT_NAME" in source or "GITHUB_EVENT_PATH" in source:
+                checked.add(script)
+        self.assertEqual(checked,{
+            "scripts/daily_capture/build_weekly_market_close_package.py",
+            "scripts/daily_capture/build_weekly_cfgi_summary.py",
+            "scripts/api_agent/check_monthly_cost_guard.py"})
+        # The monthly guard uses event type only to avoid trusting
+        # pull_request owner-reservation claims; it does not reject dispatch.
+        budget = Path("scripts/api_agent/check_monthly_cost_guard.py").read_text()
+        self.assertIn('os.environ.get("GITHUB_EVENT_NAME") == "pull_request"',budget)
+        self.assertNotIn('os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch"',budget)
+
     def test_preclose_is_partial_and_non_binding(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / 'weekly_close'

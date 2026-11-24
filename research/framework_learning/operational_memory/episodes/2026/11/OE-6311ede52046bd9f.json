@@ -1,0 +1,54 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/sunday-market-close-and-cfgi.yml",
+    "00_FMOS/METRONOME_MODE_v1.json",
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "scripts/daily_capture/build_weekly_cfgi_summary.py",
+    "scripts/daily_capture/build_weekly_market_close_package.py",
+    "scripts/orchestration/framework_metronome_v1.py",
+    "tests/daily_capture/test_weekly_cfgi_final_week_binding.py",
+    "tests/daily_capture/test_weekly_market_close_package.py",
+    "tests/orchestration/test_framework_metronome_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-6311ede52046bd9f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "draft-master-monday-native-github-weekly-clock-bounded",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(master-monday): bound native FINAL retries before weekly calibration * test(master-monday): no unbounded final retries or duplicate paid Monday dispatch * fix(master-monday): enable governed native weekly producer clock with cost caps * fix(master monday): bind native metronome dispatch to correct ISO-week source slots * fix(weekly close): preserve first FINAL source on late cron or retry * fix(master monday): bind CFGI weekly owner and workflow steps to metronome dispatch * fix(s1): rechain immutable governance pins after weekly workflow change * test(master monday): run CFGI under exac",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/sunday-market-close-and-cfgi.yml": "962c6cfa620241bded9c10ee860ffbcb50bb7a59",
+    "00_FMOS/METRONOME_MODE_v1.json": "55580b52ffd5bca4af7fe38d8b9ae708be28dc30",
+    "00_FMOS/S1/BOOTSTRAP.txt": "fbf2597901a5c95abe0a70afa140033dc38dcb24",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "bd5a537243b9448524baa0764d582b27c735f8a4",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "b32c70e5445d8339205e1aaf449160f96a213363",
+    "scripts/daily_capture/build_weekly_cfgi_summary.py": "e7644ab0d6b6c27f4d0d15082b98d3d9343ee518",
+    "scripts/daily_capture/build_weekly_market_close_package.py": "bb5d6879319000b85d6410a3bccee6a9714a7c09",
+    "scripts/orchestration/framework_metronome_v1.py": "8992bdc0e1c834dd46faefca83ba6b6f0e5fc6b3",
+    "tests/daily_capture/test_weekly_cfgi_final_week_binding.py": "44474854f51d09c05c94a49c75e669f183fb43fe",
+    "tests/daily_capture/test_weekly_market_close_package.py": "c6aebd8d6fbc6dbf20cccc018985da295982a85a",
+    "tests/orchestration/test_framework_metronome_v1.py": "ad7fc7dca6d8479301face4fcc002e47d793cd94"
+  },
+  "source_commit_sha": "6311ede52046bd9f98f16f650e4473740ba3ae67",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-23T21:20:25+01:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "DRAFT fix(Master Monday): activate native GitHub weekly clock with bounded FINAL retries (#2313)"
+}

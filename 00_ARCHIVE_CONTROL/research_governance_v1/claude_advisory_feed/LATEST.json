@@ -5,7 +5,7 @@
   "automatic_paid_dispatch": false,
   "bridge_home": "https://github.com/Donh91/Investering-AI-Audit-Bridge",
   "bridge_intake_path": "tasks/claude/CLAUDE_MAX_AUDIT_INTAKE_v1.json",
-  "candidate_count": 1,
+  "candidate_count": 2,
   "candidates": [
     {
       "calibration_outcome": null,
@@ -23,6 +23,31 @@
       "source": "SHADOW_REGISTRY",
       "source_evaluator_status": "NEEDS_OWNER_VALIDATION",
       "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+    },
+    {
+      "checkpoint_sequence": 2,
+      "dispatch": "NO_AUTO_DISPATCH",
+      "id": "CN_4_SETTLEMENT_WEAKNESS_CONTEXT",
+      "last_settled_score_key": "Y2026-W47-CN35",
+      "next_gate": "NEXT_SUCCESSFUL_4_SETTLEMENT_CHECKPOINT_AND_MATCHED_SOURCE_CLOCKS",
+      "original_owner": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1516",
+      "priority": "WATCH_MATURITY",
+      "question": "Review original CN errors versus same-clock width-adjusted baselines only at an eligible checkpoint",
+      "scientific_owner": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1596",
+      "weak_families": [
+        {
+          "family": "btc_range",
+          "mean_4w": 50.0,
+          "scoreable_observations": 4,
+          "state": "DEEP_REVIEW"
+        },
+        {
+          "family": "eth_range",
+          "mean_4w": 50.0,
+          "scoreable_observations": 4,
+          "state": "DEEP_REVIEW"
+        }
+      ]
     }
   ],
   "canonical_effect": false,
@@ -38,8 +63,8 @@
   "notes": "Discovery only. No Claude dispatch, scientific approval or native execution receipt is made here. Recheck source main and original owner before every audit.",
   "portfolio_execution": false,
   "research_queue_is_canonical": false,
-  "semantic_fingerprint": "af0c21e20fe28781f9f9417e93b2c383f455eec26654307bedd34e040eb02573",
-  "source_checkout_sha": "f32823579bbee56f5c86b528315359bf374fd367",
+  "semantic_fingerprint": "ab82c6e6721e1a77c689e858c56ca38627f53b411657a09a3e88015f0dc6fc0a",
+  "source_checkout_sha": "96c8f47a5b5aa53d526d3d821828de61530ac153",
   "source_receipts": {
     "compounding": {
       "basis": "LOCAL_SOURCE_BYTES",
@@ -51,13 +76,13 @@
       "basis": "LOCAL_SOURCE_BYTES",
       "contract": "RESEARCH_META_ORCHESTRATOR_STATE_v1",
       "path": "00_ARCHIVE_CONTROL/research_governance_v1/meta_orchestrator_v1/STATE.json",
-      "sha256": "c712847f18900b7c4d77f4a8e04b25a5250d141aa9303ab551910fa237eea036"
+      "sha256": "d51c835d8bc9ed0ca2d5b7650529e1d07f4c167dae20604c5ad52e49dbb30402"
     },
     "precision": {
       "basis": "LOCAL_SOURCE_BYTES",
       "contract": "CN_PRECISION_LEARNING_STATE_v1",
       "path": "05_CYCLE_NAVIGATOR/internal_learning/STATE.json",
-      "sha256": "66517825beabd640e3b74795be7f81826e3efef4bdfa1d85d864428603cc1f14"
+      "sha256": "7c04f25ac1a9e56edf22fdf08a8e4c938772a949be122657fc4bf1d299f8b713"
     }
   }
 }

@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/research/task2_cn_all_archives_provenance_v1.py",
+    "tests/research/test_task2_cn_all_archives_provenance_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-9325f03a247e8517",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "draft-task2-first-parent-post-index-cn-freeze",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(task2): admit untouched post-index CN freezes by first-parent main proof * test(task2): W49 first-main admission, W48 rewrite and injected-old-week negatives * test(task2 N1): pin actual W47 first-parent stage proof for release diagnosis * test(task2 N1): isolate exact W47 first-main source admission failure * fix(task2 N1): require complete post-seal first-parent chain, not global unshallow * test(task2 N1): permit pre-seal shallow boundary, reject missing post-seal ancestry",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/research/task2_cn_all_archives_provenance_v1.py": "49db3a8ae776404a8c18f06862c6fd81d1d19387",
+    "tests/research/test_task2_cn_all_archives_provenance_v1.py": "d32f2a381a12ceebccdb562a04afddce8f649fd4"
+  },
+  "source_commit_sha": "9325f03a247e8517bbbd3b67c3056f898fa667ba",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-23T21:22:14+01:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "DRAFT fix(task2): first-parent post-index CN freeze admission without week pins (N1) (#2311)"
+}
