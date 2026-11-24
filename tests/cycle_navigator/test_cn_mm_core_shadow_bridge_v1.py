@@ -240,6 +240,14 @@ print('TASK2_ORIGINAL_COMPARATOR '+json.dumps(report,sort_keys=True))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         print(result.stdout)
 
+    def test_c2_fixture_model_is_nonactivating(self):
+        import subprocess
+        import sys
+        result = subprocess.run([sys.executable, "-m", "unittest",
+            "tests.research.test_cn_mm_c2_relative_tilt_fixture_v1"], cwd=bridge.ROOT,
+            capture_output=True,text=True,timeout=60)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
         self.assertEqual(workflow.count("python scripts/research/cn_mm_core_shadow_bridge_v1.py"), 2)

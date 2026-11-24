@@ -6,7 +6,16 @@
   "model_proposal": {
     "baseline": "Task2 A frozen BTC/ETH P0 and volatility; C0 original CN daily expected close",
     "relative_tilt": "Candidate for review: positive C06 permission only; symmetric opposite log-price shift preserving geometric midpoint; scale bounded by existing Task2 B 0.5 coefficient and smaller of A hourly sigmas; zero drift when verified permission false, abstain when source unavailable. Exact formula, clocks and implementation must be frozen in reviewed follow-up before activation.",
-    "sequence_role": "Separate preregistered diagnostic; do not treat observed crossing as confirmed sequence."
+    "sequence_role": "Separate preregistered diagnostic; do not treat observed crossing as confirmed sequence.",
+    "fixture_formula": {
+      "status": "IMPLEMENTED_SYNTHETIC_ONLY_PENDING_REVIEW",
+      "relative_log_drift": "0.5 * min(sigma_BTC_hourly,sigma_ETH_hourly) * sqrt(24) * h/24 if C06 true; zero if verified false; abstain if unavailable",
+      "asset_log_shift": "ETH +relative_log_drift/2; BTC -relative_log_drift/2",
+      "band_shift": "multiply existing A quantile endpoints by exp(asset_log_shift); preserves logarithmic width, not calibrated coverage",
+      "max_hours": 168,
+      "implementation": "scripts/research/cn_mm_c2_relative_tilt_fixture_v1.py",
+      "activation": "rejects any A source other than explicit synthetic fixture; no live issuance interface"
+    }
   },
   "activation": {
     "earliest_week": null,
