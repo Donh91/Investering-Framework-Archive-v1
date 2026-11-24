@@ -4,6 +4,9 @@ import json
 import re
 
 OID = re.compile(r"[0-9a-f]{40}")
+def reject_constant(name):
+    raise ValueError("non-finite")
+
 def unique(pairs):
     result = {}
     for k,v in pairs:
@@ -18,12 +21,12 @@ def screen(snapshot, ledger, repo, pr, head, minimum_seq):
             return "UNKNOWN"
         if type(snapshot) is not bytes or type(ledger) is not bytes:
             return "UNKNOWN"
-        s = json.loads(snapshot, object_pairs_hook=unique)
+        s = json.loads(snapshot, object_pairs_hook=unique, parse_constant=reject_constant)
         if s["schema"] != "CLAUDE_APPROVAL_CURRENT_v1" or s["ledger_sha256"] != hashlib.sha256(ledger).hexdigest():
             return "UNKNOWN"
         if type(minimum_seq) is not int or minimum_seq < 1 or type(s["ledger_last_seq"]) is not int:
             return "UNKNOWN"
-        rows = [json.loads(line, object_pairs_hook=unique) for line in ledger.splitlines()]
+        rows = [json.loads(line, object_pairs_hook=unique, parse_constant=reject_constant) for line in ledger.splitlines()]
         if not rows or any(type(r["seq"]) is not int or r["seq"] != i for i,r in enumerate(rows,1)):
             return "UNKNOWN"
         if len(rows) != s["ledger_last_seq"] or len(rows) < minimum_seq:
