@@ -233,6 +233,7 @@ function renderQuickDecision(){
   NO_NEW_OBSERVATION:['Ingen ny måling','No new observation'],
   OBSERVATION_DELAYED:['Måling forsinket','Observation delayed'],
   OBSERVATION_CLOCK_INVALID:['Ingen gyldig måling','No verified observation'],
+  UNKNOWN:['Ukendt retning','Unknown direction'],
   UNAVAILABLE:['Ingen måling','No reading']
  };
  const observed=eligible?observedMarketClock({compass:feeds.compass}):
@@ -259,6 +260,9 @@ function renderQuickDecision(){
    (lang==='en'?'No current verified action':'Ingen aktuel verificeret handling'));
  const adaptive=explainCurrentAction({latest:feeds?.latest,compass:feeds?.compass,view,lang});
  if(adaptive)set('premium-action-meaning',adaptive);
+ // Keep one honest unavailable explanation; restore the secondary line on recovery.
+ const actionCode=$('premium-action-code');
+ if(actionCode)actionCode.hidden=!eligible;
  const twelve=$('premium-now-direction')?.closest('.product-cell')?.querySelector('small');
  if(twelve)twelve.textContent=lang==='en'?
   'Now · latest observed price move':
@@ -834,6 +838,12 @@ function paint(){
  renderProductExperience(view,feeds,lang);
  renderSwingRotation($('swing-rotation-overview'),readSwingRotation(view,feeds?.compass,{lang}),{lang});
  renderCycleSource();
+ // Repeated unavailable checkpoint labels carry no additional evidence.
+ for(const [primary,secondary] of [['premium-path-now','premium-path-source'],
+   ['premium-path-next','premium-path-gate'],['premium-path-alt','premium-path-alt-status']]){
+  const a=$(primary),b=$(secondary);
+  if(a&&b)b.hidden=a.textContent.trim()===b.textContent.trim();
+ }
  renderSourceClocks();
  renderQuickDecision();
  renderRiskQuick();

@@ -1,0 +1,395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://donh91.github.io/Investering-Framework-Archive-v1/data/kompas-pro.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "version",
+    "authority",
+    "state",
+    "reasons",
+    "generated_at",
+    "issued_at",
+    "valid_until",
+    "source_shas",
+    "compass_id",
+    "forecast_week",
+    "action",
+    "momentum",
+    "bull_bear",
+    "risk",
+    "horizons",
+    "horizon_status"
+  ],
+  "properties": {
+    "contract": {
+      "const": "CN_KOMPAS_PRO_PUBLIC_v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "authority": {
+      "const": "READ_ONLY_PRESENTATION"
+    },
+    "state": {
+      "enum": [
+        "OK",
+        "STALE",
+        "DEGRADED",
+        "INVALID"
+      ]
+    },
+    "reasons": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "OFFICIAL_SOURCE_NOT_CURRENT",
+          "ACTION_UNRECOGNIZED",
+          "PARTIAL_CARD_EVIDENCE"
+        ]
+      }
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "issued_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source_shas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "latest_json",
+        "compass_json"
+      ],
+      "properties": {
+        "latest_json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "compass_json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "compass_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "forecast_week": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^20[0-9]{2}-W[0-9]{2}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "action": {
+      "anyOf": [
+        {
+          "enum": [
+            "HOLD_WAIT",
+            "HOLD",
+            "WAIT",
+            "HARD_WAIT",
+            "ABSTAIN",
+            "NO_EDGE",
+            "WATCH",
+            "PREPARE",
+            "BUY",
+            "SELL",
+            "REDUCE",
+            "PREPARE_BUY",
+            "PREPARE_SELL"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "momentum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "direction",
+        "valid_until"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "FRESH_OBSERVATION",
+            "UNKNOWN_DIRECTION",
+            "OBSERVATION_DELAYED",
+            "OBSERVATION_CLOCK_INVALID",
+            "NO_NEW_PRICE_OBSERVATION",
+            "SOURCE_UNAVAILABLE"
+          ]
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "enum": [
+                "BULLISH",
+                "BEARISH",
+                "NEUTRAL",
+                "MIXED",
+                "UP",
+                "DOWN",
+                "SIDEWAYS"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "valid_until": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "bull_bear": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bull",
+            "bear",
+            "bias"
+          ],
+          "properties": {
+            "bull": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "bear": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "bias": {
+              "enum": [
+                "BULLISH",
+                "LEAN_BULLISH",
+                "NEUTRAL",
+                "LEAN_BEARISH",
+                "BEARISH"
+              ]
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "risk": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "class",
+            "ordinal"
+          ],
+          "properties": {
+            "class": {
+              "enum": [
+                "NORMAL",
+                "BUILDING",
+                "ELEVATED",
+                "HIGH",
+                "CONFIRMED"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "horizons": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "direction",
+          "action"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "NEXT_1_3D",
+              "NEXT_5_7D",
+              "NEXT_2_3W",
+              "CYCLE_ALTCOINS_3_8W"
+            ]
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "enum": [
+                  "UP",
+                  "DOWN",
+                  "MIXED",
+                  "SIDEWAYS",
+                  "LEAN_BEARISH",
+                  "LEAN_BULLISH",
+                  "NO_EDGE"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "action": {
+            "anyOf": [
+              {
+                "enum": [
+                  "HOLD_WAIT",
+                  "HOLD",
+                  "WAIT",
+                  "HARD_WAIT",
+                  "ABSTAIN",
+                  "NO_EDGE",
+                  "WATCH",
+                  "PREPARE",
+                  "BUY",
+                  "SELL",
+                  "REDUCE",
+                  "PREPARE_BUY",
+                  "PREPARE_SELL"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "horizon_status": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "tone"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "NOW",
+              "H0_12H",
+              "H24H",
+              "H1_3D",
+              "H5_7D",
+              "H8_14D",
+              "H15_21D",
+              "H2_3W",
+              "H21_30D",
+              "H4_8W",
+              "H1_3M",
+              "H3_6M",
+              "H6_9M",
+              "H9_12M"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "OBSERVED",
+              "PENDING",
+              "OFFICIAL",
+              "RESEARCH",
+              "STRATEGIC",
+              "SCENARIO"
+            ]
+          },
+          "status": {
+            "enum": [
+              "SOURCE_UNAVAILABLE",
+              "PENDING",
+              "RESEARCH_ONLY",
+              "SCENARIO_ONLY",
+              "VERIFIED_STRATEGIC_CONTEXT_ONLY",
+              "OFFICIAL_DIRECTION_ONLY",
+              "CURRENT_OBSERVATION",
+              "OBSERVATION_UNAVAILABLE",
+              "NONBINDING_CONTEXT",
+              "SOURCE_ISSUED_WEEK_PRICE_ONLY"
+            ]
+          },
+          "tone": {
+            "enum": [
+              "missing",
+              "up",
+              "down",
+              "mixed"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,3 @@
+# Kompas PRO public v1
+
+Read-only source projection, built from exact emitted latest.json and compass.json bytes. The SHA-256 digests bind bytes, not an independent signature. Runtime readers MUST verify both digests and recheck valid_until and momentum.valid_until at every read; do not display stale current values. DEGRADED means incomplete card evidence, not permission to substitute guesses. 14 horizon statuses are presentation metadata, not price forecasts. Independent publication-lineage.json remains required for original frozen price readbacks. No trade or execution authority. A breaking shape, enum, or semantics change requires a new version/path. This is a draft initial contract pending live public fixture and producer/consumer parity review.
