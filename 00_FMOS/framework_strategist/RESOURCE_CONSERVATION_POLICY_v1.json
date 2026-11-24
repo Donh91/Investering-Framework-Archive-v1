@@ -4,7 +4,7 @@
   "owner": "Donh91",
   "classification": "PUBLIC_OPERATIONAL_POLICY_NO_PRIVATE_BILLING_VALUES",
   "operating_mode": "TEMPORARY_CRITICAL_CONSERVATION",
-  "actions_critical_until_utc": "2026-11-01T00:00:00Z",
+  "actions_critical_until_utc": "2026-12-01T00:00:00Z",
   "codex_cloud_critical_until_utc": "2026-10-25T00:00:00Z",
   "codex_cloud_default": "DISABLED_PASSIVE",
   "codex_cloud_invocation_requires": "EXPLICIT_BOUNDED_SUPERVISOR_OR_CHAT_AGENT_TASK_OWNER_AUTHORIZATION",
@@ -17,7 +17,7 @@
   "never_change_trading_or_scientific_rules": true,
   "private_billing_snapshot_optional": true,
   "unknown_usage_fails_closed_for_new_cloud": "REQUIRE_VERIFIED_BUDGET_BEFORE_ANY_NEW_PAID_DELEGATION",
-  "review_policy": "Reassess with actual GitHub billed-minute data before 2026-11-01; preserved source gaps must be explicitly classified.",
+  "review_policy": "Reassess with actual GitHub billed-minute data at the 2026-12-01 reset; preserved source gaps must be explicitly classified. Reset is not evidence of recovery.",
   "cost_classes": {
     "NORMAL": "eligible ordinary planned noncloud work if source admissible",
     "CONSERVE": "P0/P1 and materially valuable tasks only; no repeated cloud review",
@@ -34,5 +34,12 @@
     "release_mandate": "OWNER_DIRECTED_SELF_REVIEW_AND_GOVERNED_EXPECTED_HEAD_MERGE",
     "preserve": "PLATFORM_SAFETY_PRIVACY_SCIENCE_LANE_CAPS_RESERVES_AND_SOURCE_RECOVERY_SEPARATION",
     "no_new_agents_automations_or_duplicate_review_loops": true
+  },
+  "owner_conservation_update_2026_11_24": {
+    "provenance": "OWNER_REPORTED_CAPACITY_ALERT_NOT_PROVIDER_VERIFIED",
+    "source": "Archive issue #2328 (value-free operational direction)",
+    "actions_mode": "CRITICAL",
+    "overage_authorization": "UNKNOWN_NO_NEW_DISCRETIONARY_SPEND",
+    "preserve": "REQUIRED_CI_IMMUTABLE_CAPTURE_SECURITY_REVIEW_AND_RECOVERY"
   }
 }
