@@ -86,3 +86,47 @@ class CapabilityGuard(unittest.TestCase):
         failures = compare(old, new)
         self.assertIn('ethbtc_leadership:CHANGED:authority', failures)
         self.assertEqual(compare(old, old), [])
+
+
+class HistoricalRecoveryRegression(unittest.TestCase):
+    def test_historical_inventory_retains_all_source_ids(self):
+        inventory = read('06_RESEARCH_LAB/cn_signal_lineage_restoration_v1/CN_MM_LEGACY_RECOVERY_MAP_v1.json')
+        for source, key, dest, id_key in (
+            ('source_definitions', 'recovered_definitions', 'recovered_definitions', 'sensor_id'),
+            ('historical_review', 'information_families', 'historical_information_families', 'id'),
+            ('historical_review', 'sensor_findings', 'historical_sensor_findings', 'sensor_id'),
+        ):
+            ref = inventory[source]
+            raw = (ROOT / ref['path']).read_bytes()
+            blob = hashlib.sha1(('blob %d\0' % len(raw)).encode() + raw).hexdigest()
+            self.assertEqual(blob, ref['git_blob'])
+            ids = [r[id_key] for r in json.loads(raw)[key]]
+            rows = inventory[dest]
+            self.assertEqual(sorted(ids), sorted(r['id'] for r in rows))
+            self.assertTrue(all(r['promotion_authorized'] is False for r in rows))
+
+    def test_latest_score_missingness_cannot_report_normal(self):
+        from scripts.cycle_navigator.cn_precision_learning_supervisor import classify_family
+        policy = read('05_CYCLE_NAVIGATOR/internal_learning/POLICY.json')
+        rows = [{'family_scores': {'ethbtc': value}} for value in [100, None, None, None]]
+        result = classify_family('ethbtc', rows, 'NORMAL', policy)
+        self.assertEqual(result['state'], 'INSUFFICIENT_EVIDENCE')
+        self.assertEqual(result['coverage_status'], 'INSUFFICIENT_EVIDENCE')
+        self.assertEqual(result['valid_observations_4w'], 1)
+        self.assertEqual(classify_family('ethbtc', rows, 'DEEP_REVIEW', policy)['state'], 'WATCH')
+
+    def test_real_zero_scores_are_preserved(self):
+        from scripts.cycle_navigator.cn_precision_learning_supervisor import classify_family
+        policy = read('05_CYCLE_NAVIGATOR/internal_learning/POLICY.json')
+        rows = [{'family_scores': {'btc_range': value}} for value in [100, 100, 0, 0]]
+        result = classify_family('btc_range', rows, 'NORMAL', policy)
+        self.assertEqual(result['state'], 'DEEP_REVIEW')
+        self.assertEqual(result['coverage_status'], 'COMPLETE')
+
+    def test_real_legacy_and_current_routes_stay_distinct(self):
+        from scripts.research.calibration_route_health_v1 import inspect_routes
+        from scripts.research.cycle_navigator_calibration_controller import _load_rows, _verified
+        result = inspect_routes(ROOT, sum(_verified(r) for r in _load_rows()))
+        self.assertIn(result['status'], {'LEGACY_LEDGER_EMPTY_NEWER_SCORECARD_PRESENT', 'DISTINCT_SCORE_METHODS_PRESENT'})
+        self.assertFalse(result['scientific_admission'])
+        self.assertFalse(result['score_method_conversion_performed'])

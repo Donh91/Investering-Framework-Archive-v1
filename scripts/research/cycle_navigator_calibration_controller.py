@@ -6,6 +6,13 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+if __package__:
+    from .calibration_route_health_v1 import inspect_routes
+else:
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from calibration_route_health_v1 import inspect_routes
+
 ROOT = Path(__file__).resolve().parents[2]
 BASE = ROOT / "05_CYCLE_NAVIGATOR" / "autonomous_calibration_v1"
 POLICY_PATH = BASE / "POLICY.json"
@@ -192,6 +199,11 @@ def main() -> int:
         raise SystemExit("policy firewall invalid")
     promotion = _load_json(PROMOTION_PACKET, None)
     decision = evaluate_rows(policy, _load_rows(), promotion)
+    health = inspect_routes(ROOT, decision["eligible_verified_row_n"])
+    decision["calibration_source_health"] = health
+    decision["evidence_fingerprint"] = hashlib.sha256(json.dumps({"legacy": decision["evidence_fingerprint"], "route": health}, sort_keys=True).encode()).hexdigest()
+    if health["status"] == "LEGACY_LEDGER_EMPTY_NEWER_SCORECARD_PRESENT":
+        decision["reason"] += "; legacy ledger has no evaluable outcomes, but the newer public scorecard route exists; recover matched evaluators, never substitute scores across methods"
     if args.dry_run:
         print(json.dumps(decision, indent=2, sort_keys=True))
         return 0

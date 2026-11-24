@@ -8,6 +8,11 @@ from pathlib import Path
 from statistics import median
 from typing import Any
 
+if __package__:
+    from .precision_evidence_coverage_v1 import evidence_coverage, valid_score
+else:
+    from precision_evidence_coverage_v1 import evidence_coverage, valid_score
+
 AUTHORITY = "RESEARCH_ONLY_NON_CANONICAL"
 STATE_CONTRACT = "CN_PRECISION_LEARNING_STATE_v1"
 SNAPSHOT_CONTRACT = "CN_PRECISION_WEEKLY_TREND_v1"
@@ -75,8 +80,8 @@ def classify_family(
     previous_rows = settlements[-8:-4]
     recent_values = [r.get("family_scores", {}).get(family) for r in recent_rows]
     previous_values = [r.get("family_scores", {}).get(family) for r in previous_rows]
-    recent = [float(x) for x in recent_values if isinstance(x, (int, float))]
-    prev = [float(x) for x in previous_values if isinstance(x, (int, float))]
+    recent = [float(x) for x in recent_values if valid_score(x)]
+    prev = [float(x) for x in previous_values if valid_score(x)]
 
     thresholds = policy["thresholds"]
     low_max = float(thresholds["low_score_max"])
@@ -94,7 +99,8 @@ def classify_family(
     last_two = recent[-2:]
     recovery_ready = len(last_two) == 2 and all(x >= recovery_min for x in last_two)
 
-    raw_state = "NORMAL"
+    coverage = evidence_coverage(recent_values, min_valid)
+    raw_state = "INSUFFICIENT_EVIDENCE" if coverage["coverage_status"] == "INSUFFICIENT_EVIDENCE" else "NORMAL"
     if len(recent) >= min_valid:
         if zero_count >= 2:
             raw_state = "DEEP_REVIEW"
@@ -104,7 +110,7 @@ def classify_family(
             raw_state = "WATCH"
 
     state = raw_state
-    if previous_state in {"PERSISTENT_WEAKNESS", "DEEP_REVIEW"} and raw_state == "NORMAL" and not recovery_ready:
+    if previous_state in {"PERSISTENT_WEAKNESS", "DEEP_REVIEW"} and raw_state in {"NORMAL", "INSUFFICIENT_EVIDENCE"} and not recovery_ready:
         state = "WATCH"
 
     streak = 0
@@ -119,6 +125,7 @@ def classify_family(
         "state": state,
         "raw_state": raw_state,
         "valid_observations_4w": len(recent),
+        **coverage,
         "recent_scores": recent_values,
         "mean_4w": recent_mean,
         "median_4w": recent_median,
@@ -153,7 +160,7 @@ def build(repo: Path) -> dict[str, Any]:
     checkpoint_every = int(policy["checkpoint"]["settled_weeks"])
     checkpoint_due = settled_count >= checkpoint_every and settled_count - last_checkpoint_count >= checkpoint_every
 
-    severity_order = {"NORMAL": 0, "WATCH": 1, "PERSISTENT_WEAKNESS": 2, "DEEP_REVIEW": 3}
+    severity_order = {"NORMAL": 0, "INSUFFICIENT_EVIDENCE": 1, "WATCH": 2, "PERSISTENT_WEAKNESS": 3, "DEEP_REVIEW": 4}
     ranked = sorted(
         trends.values(),
         key=lambda x: (
@@ -164,6 +171,7 @@ def build(repo: Path) -> dict[str, Any]:
     )
     persistent = [x for x in ranked if x["state"] in {"PERSISTENT_WEAKNESS", "DEEP_REVIEW"}]
     watched = [x for x in ranked if x["state"] == "WATCH"]
+    insufficient = sorted(x["family"] for x in ranked if x["coverage_status"] == "INSUFFICIENT_EVIDENCE")
 
     checkpoint_sequence = int(previous.get("checkpoint_sequence", 0) or 0)
     if checkpoint_due:
@@ -193,8 +201,12 @@ def build(repo: Path) -> dict[str, Any]:
     elif watched:
         reason = f"Watch-only weakness exists in {watched[0]['family']}; continue collecting settled evidence."
 
+    if insufficient:
+        reason += " Insufficient scoreable evidence; recover evaluator/input lineage for: " + ", ".join(insufficient) + ". Missingness is not normal performance."
+
     snapshot = {
         "contract": SNAPSHOT_CONTRACT,
+        "insufficient_evidence_families": insufficient,
         "authority": AUTHORITY,
         "completed_iso_year": int(latest["completed_iso_year"]),
         "completed_iso_week": int(latest["completed_iso_week"]),
@@ -299,6 +311,7 @@ def build(repo: Path) -> dict[str, Any]:
         "last_checkpoint_settled_count": settled_count if checkpoint_due else last_checkpoint_count,
         "checkpoint_sequence": checkpoint_sequence,
         "family_states": trends,
+        "insufficient_evidence_families": insufficient,
         "latest_weekly_snapshot": weekly_path.relative_to(repo).as_posix(),
         "latest_checkpoint": latest_checkpoint,
         "api_review_status": "PENDING" if checkpoint_due and persistent else "NOT_REQUIRED",

@@ -1,0 +1,284 @@
+{
+  "contract": "CN_MM_LEGACY_RECOVERY_MAP_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "status": "INVENTORY_ONLY_EVALUATOR_RECOVERY_REQUIRED",
+  "base_head": "e18ceff0a847da0c12374791834ac5766b6a81ae",
+  "source_definitions": {
+    "path": "06_RESEARCH_LAB/historical_sensor_recovery_v1/RECOVERED_LEGACY_SENSOR_DEFINITIONS_2026-08-21.json",
+    "git_blob": "0619aecff69ba96e6df251fc50ca0a715289e934"
+  },
+  "historical_review": {
+    "path": "06_RESEARCH_LAB/shadow_layer_historical_effectiveness_v1/09_MACHINE_READABLE_VERDICTS.json",
+    "git_blob": "f007304d8fa9dd3fe894562c605e5c3d0bd93fc6"
+  },
+  "frozen_sequence_study": {
+    "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/13_SEQUENCE_STUDY.md",
+    "git_blob": "dd322a7e9782f8cc2e5e6a47117f1ea2a671a647"
+  },
+  "recovered_definitions": [
+    {
+      "id": "EARLY_ROTATION_PRE_TRIGGER_V1_1",
+      "historical_role": "SHADOW_ONLY_EARLY_WINDOW_SIGNAL",
+      "source_recovery_status": "DORMANT_RECOVERABLE",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "ROTATION_READINESS_SCORE_V2",
+      "historical_role": "ROTATION_TIMING_SCORE",
+      "source_recovery_status": "RESEARCH_ONLY",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "ROTATION_BREADTH_FILTER_V2",
+      "historical_role": "HARD_CONTEXT_FILTER",
+      "source_recovery_status": "DORMANT_RECOVERABLE",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "ROTATION_DOMINANCE_FILTER_V2",
+      "historical_role": "BTC_DOMINANCE_CONTEXT_FILTER",
+      "source_recovery_status": "DORMANT_RECOVERABLE",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "MACRO_DELAY_WINDOW_V2",
+      "historical_role": "SLOW_ROTATION_DELAY_CONTEXT",
+      "source_recovery_status": "RESEARCH_ONLY",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "FAKE_ROTATION_TYPE3_V2",
+      "historical_role": "FAKE_ROTATION_TRAP_FILTER",
+      "source_recovery_status": "RESEARCH_ONLY",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "SRE_V1_SIGNAL_RELIABILITY_ENGINE",
+      "historical_role": "SHADOW_META_LEARNING",
+      "source_recovery_status": "DORMANT_RECOVERABLE",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "FAE_V1_FORECAST_ATTRIBUTION_ENGINE",
+      "historical_role": "SHADOW_META_LEARNING",
+      "source_recovery_status": "DORMANT_RECOVERABLE",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "CCE_V1_CONFIDENCE_COMPRESSION_ENGINE",
+      "historical_role": "SHADOW_META_LEARNING",
+      "source_recovery_status": "DORMANT_RECOVERABLE",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "ODM_V1_OUTCOME_DELAY_MAPPER",
+      "historical_role": "SHADOW_META_LEARNING",
+      "source_recovery_status": "DORMANT_RECOVERABLE",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "RWE_V1_REGIME_WEIGHT_ENGINE",
+      "historical_role": "SHADOW_META_LEARNING",
+      "source_recovery_status": "RESEARCH_ONLY",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "ETF_FLOW_POST_TEST_BEHAVIOR",
+      "historical_role": "ETF_ERA_SHADOW_CALIBRATION",
+      "source_recovery_status": "DORMANT_RECOVERABLE",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "FLOW_SUPPORTED_PULLBACK_VS_FLOW_DRIVEN_DETERIORATION",
+      "historical_role": "ETF_ERA_SHADOW_CLASSIFIER",
+      "source_recovery_status": "DORMANT_RECOVERABLE",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    },
+    {
+      "id": "BTC_SURVIVAL_ALT_DETERIORATION_DIVERGENCE",
+      "historical_role": "ETF_ERA_SHADOW_DIVERGENCE",
+      "source_recovery_status": "DORMANT_RECOVERABLE",
+      "current_recovery_status": "TRACE_EVALUATOR_SOURCE_OUTCOME_AND_CONSUMER",
+      "promotion_authorized": false
+    }
+  ],
+  "historical_information_families": [
+    {
+      "id": "ETHBTC_PERSISTENCE",
+      "historical_verdict": "KEEP",
+      "historical_role": [
+        "EARLY_WARNING",
+        "CONFIRMATION"
+      ],
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "BREADTH_SURVIVAL",
+      "historical_verdict": "KEEP",
+      "historical_role": [
+        "VETO",
+        "REGIME_CLASSIFIER"
+      ],
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "BTCD_PATH_RECLAIM",
+      "historical_verdict": "KEEP",
+      "historical_role": [
+        "VETO",
+        "REGIME_CLASSIFIER"
+      ],
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "ETF_FLOW_QUALITY",
+      "historical_verdict": "KEEP",
+      "historical_role": [
+        "REGIME_CLASSIFIER",
+        "RISK_DETERIORATION"
+      ],
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "STABLECOIN_DEPLOYMENT_NOT_SUPPLY",
+      "historical_verdict": "KEEP",
+      "historical_role": [
+        "REGIME_CLASSIFIER"
+      ],
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "LEVERAGE_LIQUIDATION_RECLAIM",
+      "historical_verdict": "KEEP",
+      "historical_role": [
+        "TIMING",
+        "RISK_DETERIORATION"
+      ],
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "SEQUENCE_PERSISTENCE",
+      "historical_verdict": "KEEP",
+      "historical_role": [
+        "META_CONTROL",
+        "REGIME_CLASSIFIER"
+      ],
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "FALSE_NEGATIVE_OPPORTUNITY_COST",
+      "historical_verdict": "KEEP",
+      "historical_role": [
+        "META_CONTROL"
+      ],
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    }
+  ],
+  "historical_sensor_findings": [
+    {
+      "id": "EARLY_ROTATION_PRE_TRIGGER_V1_1",
+      "historical_verdict": "PROSPECTIVE_TEST_JUSTIFIED",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "FAKE_ROTATION_TYPE3_V2",
+      "historical_verdict": "WATCH",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "ROTATION_READINESS_SCORE_V2",
+      "historical_verdict": "REDUNDANT",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "CCE_V1_CONFIDENCE_COMPRESSION_ENGINE",
+      "historical_verdict": "KEEP",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "ODM_V1_OUTCOME_DELAY_MAPPER",
+      "historical_verdict": "KEEP",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "SRE_V1_SIGNAL_RELIABILITY_ENGINE",
+      "historical_verdict": "WATCH",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "FAE_V1_FORECAST_ATTRIBUTION_ENGINE",
+      "historical_verdict": "WATCH",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "RWE_V1_REGIME_WEIGHT_ENGINE",
+      "historical_verdict": "UNTESTABLE",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "ENTRY_SIGNAL_LEDGER",
+      "historical_verdict": "WATCH",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "STRESS_FLUSH_ADDON",
+      "historical_verdict": "KEEP",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "HDS_SPTD_FAMILY",
+      "historical_verdict": "WATCH",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "AQS_EAQ_FAMILY",
+      "historical_verdict": "WATCH",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    },
+    {
+      "id": "TPS_DRS_FAMILY",
+      "historical_verdict": "WATCH",
+      "current_effect": "UNVERIFIED",
+      "promotion_authorized": false
+    }
+  ],
+  "rules": [
+    "Preserve every source-defined identity and its exact historical version/status; do not reactivate retired thresholds or duplicate correlated sensors.",
+    "Recover actual evaluator and outcome receipt before claiming current functionality.",
+    "The inventory is not complete coverage of all historical framework artifacts; discover and add further canonical source definitions.",
+    "Neither v2 price freeze records nor overlapping rows establish independent scientific N."
+  ]
+}
