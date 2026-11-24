@@ -621,6 +621,59 @@ def read_calibration_feature_binding(repo, pointer, feature, read_committed, *, 
         return result("MM_CALIBRATION_FEATURE_MISMATCH")
 
 
+def require_pinned_weekly_binding(repo, head, freeze):
+    """Replay the original sidecar verifier over exact Git bytes, not LATEST.
+
+    A verified core row or self-hashed packet is not evidence of the weekly
+    producer binding. Stage only the four public, pinned evidence files in
+    an isolated temporary directory so the existing owner checks its original
+    relative paths unchanged. No new data writer or availability claim.
+    """
+    import tempfile
+    year, week = freeze["iso_year"], freeze["iso_week"]
+    if type(year) is not int or type(week) is not int:
+        raise ValueError("SHADOW_SOURCE_BINDING_WEEK_INVALID")
+    datetime.fromisocalendar(year, week, 1)
+    digest = freeze["freeze_sha256"]
+    if not re.fullmatch("[0-9a-f]{40}", head) or not re.fullmatch("[0-9a-f]{64}", digest):
+        raise ValueError("SHADOW_SOURCE_BINDING_IDENTITY_INVALID")
+    directory = Path(f"research/master_monday_preflight/frozen/{year}/W{week:02d}")
+    freeze_path = directory / "WEEKLY_EVIDENCE_FREEZE.json"
+    source = Path(f"03_DAILY_CAPTURE_LOGS/weekly/{year}/W{week:02d}.json")
+    receipt = directory / "SOURCE_BINDINGS" / (digest + ".json")
+    def read(path):
+        return subprocess.run(["git", "-C", str(repo), "show", f"{head}:{path.as_posix()}"],
+                              check=True, capture_output=True, timeout=30).stdout
+    try:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for path in (freeze_path, POINTER, source, receipt):
+                raw = read(path)
+                if path == freeze_path and load_evidence_object(raw) != freeze:
+                    raise ValueError("SHADOW_SOURCE_BINDING_FREEZE_MISMATCH")
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(raw)
+            code = (
+                "import sys,json; from pathlib import Path; "
+                "sys.path.insert(0,sys.argv[1]); "
+                "from scripts.master_monday.weekly_source_binding_v1 import verify_sidecar; "
+                "f=Path(sys.argv[2]); freeze=json.loads(f.read_bytes()); "
+                "pointer=json.loads(Path(sys.argv[3]).read_bytes()); "
+                "r=verify_sidecar(f.parent,freeze,pointer,Path('03_DAILY_CAPTURE_LOGS'),freeze['freeze_sha256']); "
+                "print(json.dumps(r))"
+            )
+            response = subprocess.run([sys.executable, "-c", code, str(ROOT),
+                                       str(freeze_path), str(POINTER)], cwd=root,
+                                      check=True, capture_output=True, timeout=30).stdout
+            verified = load_evidence_object(response)
+            if (verified.get("status") != "BYTE_BINDING_AND_RECEIPT_VERIFIED" or
+                    verified.get("scientific_pit_eligible") is not False):
+                raise ValueError("SHADOW_PINNED_WEEKLY_BINDING_UNVERIFIED")
+    except (OSError, subprocess.SubprocessError, ValueError, TypeError, KeyError) as exc:
+        raise ValueError("SHADOW_PINNED_WEEKLY_BINDING_UNVERIFIED") from exc
+
+
 def publish_packet(packet_path, freeze_file, head, output_dir):
     _, frozen_bytes, freeze = freeze_identity(freeze_file, head, compare_worktree=True)
     raw = packet_path.read_bytes()
@@ -639,6 +692,7 @@ def publish_packet(packet_path, freeze_file, head, output_dir):
     if packet.get("ledger_sha256") is not None and packet["ledger_sha256"] != sha(committed(LEDGER, head)):
         raise ValueError("SHADOW_LEDGER_BINDING_MISMATCH")
     if packet["core"]["status"] == "CORE_REPLAY_AT_OBSERVATION_ONLY":
+        require_pinned_weekly_binding(ROOT, head, freeze)
         verify_packet_projection(packet, freeze, committed(LEDGER, head),
                                  committed(BASE / "TRANSFORM_FREEZE_REGISTRY.json", head), repo=ROOT)
     elif packet["core"]["status"] != "UNKNOWN" or packet["core"].get("latest_observation") is not None:
@@ -706,6 +760,9 @@ def consume_cn_shadow(repo, mm_pointer):
         core = packet["core"]
         if core["status"] != "CORE_REPLAY_AT_OBSERVATION_ONLY":
             return {**result, "packet_sha256": digest, "reason": "MM_CORE_REPLAY_UNAVAILABLE"}
+        # Recheck the producer receipt at the original packet checkout; a
+        # valid core replay alone cannot attest the weekly source binding.
+        require_pinned_weekly_binding(repo, head, load_evidence_object(frozen))
         diagnostics = verify_packet_projection(packet, load_evidence_object(frozen),
                                  run("show", f"{head}:{LEDGER.as_posix()}"),
                                  run("show", f"{head}:{(BASE / 'TRANSFORM_FREEZE_REGISTRY.json').as_posix()}"), repo=repo)
