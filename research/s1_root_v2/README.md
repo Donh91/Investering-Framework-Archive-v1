@@ -1,0 +1,5 @@
+# S1 ROOT v2 simulator checkpoint 1
+Status: SHADOW RESEARCH ONLY. No runtime imports, writes, scheduler, authority or cutover.
+Source: Archive main 0adb3c099fdf0283336f6a3fdfe7bdc2ba4f02eb, TICK v3.3 T0–T6, ACTION_LOOP H1–H8, B1–B9. Existing rules remain authoritative. FABLE-RELEASE and #2320 must land in reviewed order before integration.
+Pre-registered failure matrix: missing or non-boolean gate, stale head, overlapping drift, unknown review, veto, owner gate, open intent, Monday read-only, insufficient readback, uncertain response, foreign merge, mismatched blobs. Expected: no simulated merge unless every gate passes; uncertain response reconciles only; mismatch halts. No actual GitHub writes.
+Checkpoint 1: synthetic fixtures only; normalized evidence is not authentication. Historical replay requires immutable as-of evidence and observed outcome, missing inputs remain UNKNOWN; no hindsight or private evidence in public fixtures. Checkpoint 2: source adapters and historical coverage. Checkpoint 3: independent mutation audit and transaction model. Checkpoint 4: reviewed scheduled probe and natural shadow acceptance. No merge before owner approval.
