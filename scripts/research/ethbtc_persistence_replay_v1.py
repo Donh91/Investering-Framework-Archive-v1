@@ -101,7 +101,8 @@ def sequence_census(observations, *, history_truncated=False):
         "history_truncated": history_truncated,
         "status": "NO_OBSERVED_ABOVE_EPISODE", "observation_n": len(observations),
         "above_observation_n": 0, "unidentified_censored_above_n": 0,
-        "observed_episode_n": 0, "ordered_proxy_episode_n": 0, "episodes": [],
+        "observed_episode_n": 0, "ordered_proxy_episode_n": 0,
+        "ever_ordered_proxy_episode_n": 0, "active_ordered_proxy_episode_n": 0, "episodes": [],
         "stable_confirmation_status": "NO_FROZEN_DURATION_RULE",
         "step_value_status": "UNTESTED_MATCHED_OUTCOMES_AND_DELAY_COST_REQUIRED",
         "sequence_2": {"status": "BLOCKED_MISSING_SOURCE", "missing": ["BTC_ETF_ABSORPTION"]},
@@ -133,6 +134,9 @@ def sequence_census(observations, *, history_truncated=False):
         if active != key:
             if active is not None:
                 closed.add(active)
+                episodes[active]["active"] = False
+                episodes[active]["end_observation_utc"] = at
+                episodes[active]["end_reason"] = ("START_CENSORED_OR_UNIDENTIFIED" if p["side"] == "ABOVE" and key is None else "OBSERVED_EPISODE_BREAK_OR_CHANGE")
             if key is not None and key in closed:
                 raise ValueError("SEQUENCE_EPISODE_REAPPEARED_AFTER_BREAK")
             active = key
@@ -143,6 +147,8 @@ def sequence_census(observations, *, history_truncated=False):
                 "observation_n": 0, "max_observed_consecutive_hours": 0,
                 "btcd_falling_path_interval": None, "breadth_majority_interval": None,
                 "stable_confirmation_utc": None, "status": "CROSSING_OBSERVED_ONLY",
+                "active": True, "end_observation_utc": None, "end_reason": None,
+                "first_ordered_proxy_observation_utc": None, "first_ordered_proxy_intervals": None,
             })
             ep["observation_n"] += 1
             ep["last_observation_utc"] = at
@@ -169,11 +175,20 @@ def sequence_census(observations, *, history_truncated=False):
             ep["status"] = ("ORDERED_OBSERVATION_PROXY" if ep["breadth_majority_interval"]
                             else "BTCD_PATH_OBSERVED_AFTER_CROSSING" if ep["btcd_falling_path_interval"]
                             else "CROSSING_OBSERVED_ONLY")
+            if ep["status"] == "ORDERED_OBSERVATION_PROXY" and ep["first_ordered_proxy_observation_utc"] is None:
+                ep["first_ordered_proxy_observation_utc"] = at
+                ep["first_ordered_proxy_intervals"] = {
+                    "btcd": list(ep["btcd_falling_path_interval"]),
+                    "breadth": list(ep["breadth_majority_interval"])}
         previous = row
     result["episodes"] = list(episodes.values())
     result["observed_episode_n"] = len(episodes)
     result["ordered_proxy_episode_n"] = sum(e["status"] == "ORDERED_OBSERVATION_PROXY"
                                             for e in episodes.values())
+    result["ever_ordered_proxy_episode_n"] = sum(
+        e["first_ordered_proxy_observation_utc"] is not None for e in episodes.values())
+    result["active_ordered_proxy_episode_n"] = sum(
+        e["active"] and e["status"] == "ORDERED_OBSERVATION_PROXY" for e in episodes.values())
     if episodes:
         result["status"] = ("ORDERED_OBSERVATION_PROXY_PRESENT" if result["ordered_proxy_episode_n"]
                             else "NO_ORDERED_OBSERVATION_PROXY")

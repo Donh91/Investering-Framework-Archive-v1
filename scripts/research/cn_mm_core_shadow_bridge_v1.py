@@ -248,8 +248,12 @@ def verify_packet_projection(packet, freeze, ledger_raw, registry_raw, *, repo):
     except ValueError as exc:
         sequence = {"status": "BLOCKED_SOURCE_SEQUENCE_CONFLICT", "reason": str(exc),
                     "forecast_authority": False}
-    return {"persistence": diagnostics[expected["latest_observation"]["event_id"]],
-            "sequence": sequence}
+    from scripts.experiments.etf_absorption_transmission_v1 import pinned_settled_context
+    latest = expected["latest_observation"]
+    etf = pinned_settled_context(repo, latest["source_commit"], packet["checkout_sha"],
+                                 clock(latest["observation_utc"]))
+    return {"persistence": diagnostics[latest["event_id"]],
+            "sequence": sequence, "etf_context": etf}
 
 
 def publish_packet(packet_path, freeze_file, head, output_dir):
@@ -351,7 +355,8 @@ def consume_cn_shadow(repo, mm_pointer):
                 "candidate_id": CORE[-1], "target_semantics": packet["target_semantics"],
                 "observation_only": True, "edge_established": False,
                 "persistence_diagnostic": diagnostics["persistence"],
-                "sequence_diagnostic": diagnostics["sequence"]}
+                "sequence_diagnostic": diagnostics["sequence"],
+                "etf_context": diagnostics["etf_context"]}
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
             csv.Error, ImportError, subprocess.SubprocessError):
         return {**result, "reason": "MM_SHADOW_RECEIPT_INVALID"}

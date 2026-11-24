@@ -124,6 +124,20 @@ class SequenceCensusTests(unittest.TestCase):
         rows = [self.observation(1), self.observation(2, "FALLING_PATH", day=5),
                 self.observation(3, "FALLING_PATH", "BROAD_MAJORITY", day=5),
                 self.observation(4, "RISING_RECLAIM", "BROAD_MAJORITY", day=6)]
-        self.assertEqual(sequence_census(rows)["ordered_proxy_episode_n"], 0)
+        result = sequence_census(rows)
+        self.assertEqual(result["ordered_proxy_episode_n"], 0)
+        self.assertEqual(result["ever_ordered_proxy_episode_n"], 1)
+        self.assertEqual(result["active_ordered_proxy_episode_n"], 0)
+        self.assertEqual(result["episodes"][0]["first_ordered_proxy_observation_utc"], rows[2]["observation_utc"])
+
+    def test_closed_episode_is_not_active_and_history_is_preserved(self):
+        rows = [self.observation(1), self.observation(2, "FALLING_PATH", day=5),
+                self.observation(3, "FALLING_PATH", "BROAD_MAJORITY", day=5),
+                self.observation(4, "FALLING_PATH", "BROAD_MAJORITY", day=5, episode=None, side="BELOW")]
+        result = sequence_census(rows)
+        self.assertEqual(result["ever_ordered_proxy_episode_n"], 1)
+        self.assertEqual(result["active_ordered_proxy_episode_n"], 0)
+        self.assertFalse(result["episodes"][0]["active"])
+        self.assertEqual(result["episodes"][0]["end_observation_utc"], rows[-1]["observation_utc"])
 
 if __name__=='__main__': unittest.main()
