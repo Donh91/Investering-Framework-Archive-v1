@@ -1,34 +1,34 @@
 # Daily Machine Throughput
 
-Date: **2026-11-22** (Europe/Copenhagen)
+Date: **2026-11-23** (Europe/Copenhagen)
 Status: **PASS**
 
 ## Throughput
 
-- Workflow runs started: **1000** (60 scheduled)
+- Workflow runs started: **1000** (53 scheduled)
 - Scheduled workflow failures: **0**
-- Live-anchor captures: **6**
+- Live-anchor captures: **4**
 - Unique hourly observation rows: **23**
-- Core observation units: **29**
-- Owner collection attempts: **36**
-- Instrumented physical source calls: **252**
-- Instrumented source response bytes: **1619514**
-- Durable evidence bytes at window close: **7986388**
-- Structural normalized values: **160219**
+- Core observation units: **27**
+- Owner collection attempts: **24**
+- Instrumented physical source calls: **234**
+- Instrumented source response bytes: **1502162**
+- Durable evidence bytes at window close: **9046546**
+- Structural normalized values: **173792**
 
 ## AI and learning
 
-- API-agent receipts: **7**
-- Actual model calls: **7**
-- Daily Director model calls: **4**
-- Input/output tokens: **231155 / 18678**
-- Recorded API cost: **$0.158120**
-- New experiment candidates: **8**
-- New experiment observations: **3224**
-- New forecast-memory artifacts: **20**
+- API-agent receipts: **8**
+- Actual model calls: **8**
+- Daily Director model calls: **3**
+- Input/output tokens: **230771 / 16673**
+- Recorded API cost: **$0.263565**
+- New experiment candidates: **5**
+- New experiment observations: **2437**
+- New forecast-memory artifacts: **15**
 
 ## Instrumentation boundary
 
-Physical HTTP-call total: **PARTIAL_INSTRUMENTATION**. The hourly lane contributes 252 exact recorded calls; 36 owner invocations remain outside physical-request counting. No total is inferred.
+Physical HTTP-call total: **PARTIAL_INSTRUMENTATION**. The hourly lane contributes 234 exact recorded calls; 24 owner invocations remain outside physical-request counting. No total is inferred.
 
-Receipt SHA-256: `cdb364bbc10782d07a9c3909670c45cb338844097fd4b57fcc92e18730dd4939`
+Receipt SHA-256: `7397e04b0d2883e6e2f18283fbbeb586224bed6b4073414ad5f41a7fda5c7a68`
