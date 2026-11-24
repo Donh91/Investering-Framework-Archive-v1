@@ -15,7 +15,8 @@ def parse_ts(value: Any) -> datetime | None:
     if not isinstance(value, str) or not value:
         return None
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
+        instant = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return instant.astimezone(UTC) if instant.tzinfo is not None else None
     except ValueError:
         return None
 
@@ -35,7 +36,7 @@ def unknown_state(now: datetime, reason: str, snapshot: dict[str, Any] | None = 
         "generated_at_utc": now.isoformat().replace("+00:00", "Z"),
         "state": "UNKNOWN",
         "snapshot_status": reason,
-        "usage_snapshot": snapshot or {},
+        "usage_snapshot": {},  # Do not echo stale or malformed billing payloads.
         "usage_pct": None,
         "projected_cycle_minutes": None,
         "projected_cycle_pct": None,
@@ -59,17 +60,21 @@ def unknown_state(now: datetime, reason: str, snapshot: dict[str, Any] | None = 
 
 def evaluate(snapshot: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
     now = (now or datetime.now(UTC)).astimezone(UTC)
-    if snapshot.get("contract") != "GITHUB_ACTIONS_USAGE_SNAPSHOT_v1":
+    if not isinstance(snapshot, dict) or snapshot.get("contract") != "GITHUB_ACTIONS_USAGE_SNAPSHOT_v1":
         return unknown_state(now, "INVALID_CONTRACT", snapshot)
 
     observed = parse_ts(snapshot.get("observed_at_utc"))
     cycle_start = parse_date(snapshot.get("cycle_start_date_utc"))
     reset_date = parse_date(snapshot.get("reset_date_utc"))
     try:
-        used = float(snapshot.get("used_minutes"))
-        allowance = float(snapshot.get("included_minutes"))
-        freshness_max_hours = float(snapshot.get("freshness_max_hours", 72))
-    except (TypeError, ValueError):
+        raw = (snapshot.get("used_minutes"), snapshot.get("included_minutes"),
+               snapshot.get("freshness_max_hours", 72))
+        if any(type(v) not in (int, float) for v in raw):
+            raise ValueError("non-numeric or boolean")
+        used, allowance, freshness_max_hours = map(float, raw)
+        if not all(map(math.isfinite, (used, allowance, freshness_max_hours))) or freshness_max_hours <= 0:
+            raise ValueError("non-finite or invalid freshness")
+    except (TypeError, ValueError, OverflowError):
         return unknown_state(now, "INVALID_NUMERIC_FIELDS", snapshot)
 
     if not observed or not cycle_start or not reset_date or used < 0 or allowance <= 0:
@@ -86,7 +91,9 @@ def evaluate(snapshot: dict[str, Any], now: datetime | None = None) -> dict[str,
     if now >= reset_dt and observed < reset_dt:
         return unknown_state(now, "SNAPSHOT_PRE_RESET", snapshot)
 
-    age_hours = max(0.0, (now - observed).total_seconds() / 3600.0)
+    if observed > now:
+        return unknown_state(now, "FUTURE_USAGE_SNAPSHOT", snapshot)
+    age_hours = (now - observed).total_seconds() / 3600.0
     if age_hours > freshness_max_hours:
         state = unknown_state(now, "STALE_USAGE_SNAPSHOT", snapshot)
         state["snapshot_age_hours"] = round(age_hours, 3)
@@ -108,8 +115,11 @@ def evaluate(snapshot: dict[str, Any], now: datetime | None = None) -> dict[str,
     elif usage_pct >= 65.0 or (projected_pct is not None and projected_pct >= 85.0):
         state = "ELEVATED"
 
-    stop_usage = bool(snapshot.get("stop_usage"))
-    protected_blocked = bool(stop_usage and used >= allowance)
+    if not all(math.isfinite(x) for x in (usage_pct, projected_minutes, projected_pct)):
+        return unknown_state(now, "INVALID_NUMERIC_FIELDS", snapshot)
+    stop_usage = snapshot.get("stop_usage")
+    stop_usage = stop_usage if type(stop_usage) is bool else None
+    protected_blocked = (None if stop_usage is None else stop_usage and used >= allowance)
     if protected_blocked:
         state = "CRITICAL"
 
@@ -154,6 +164,8 @@ def evaluate(snapshot: dict[str, Any], now: datetime | None = None) -> dict[str,
             "stop_usage": stop_usage,
         },
         "usage_pct": round(usage_pct, 3),
+        "included_capacity_exhausted": used >= allowance,
+        "overage_authorization": "UNKNOWN",
         "projected_cycle_minutes": round(projected_minutes, 3) if projected_minutes is not None else None,
         "projected_cycle_pct": round(projected_pct, 3) if projected_pct is not None else None,
         "reset_eta_days": reset_eta_days,
@@ -168,6 +180,28 @@ def evaluate(snapshot: dict[str, Any], now: datetime | None = None) -> dict[str,
             "portfolio_action": False,
         },
     }
+
+
+def apply_owner_conservation(state: dict[str, Any], policy: dict[str, Any], now: datetime) -> dict[str, Any]:
+    """Value-free existing owner policy is advisory, never live billing evidence."""
+    if (not isinstance(policy, dict)
+            or policy.get("contract") != "RESOURCE_CONSERVATION_OWNER_POLICY_v1"
+            or policy.get("automatic_spend_authority") is not False
+            or policy.get("new_workflows_or_agent_schedules") is not False
+            or policy.get("never_bypass_required_ci") is not True):
+        return state
+    until = parse_ts(policy.get("actions_critical_until_utc"))
+    if until is None or now >= until:
+        return state
+    return {**state, "state": "CRITICAL", "burn_risk": "CRITICAL",
+            "owner_declared_conservation": True,
+            "owner_conservation_until_utc": until.isoformat().replace("+00:00", "Z"),
+            "recommended_behavior": [
+                "Owner-directed conservation; actual overage authorization is unknown.",
+                "Preserve required CI, immutable captures, security and recovery duties.",
+                "Defer discretionary paid work; do not blindly rerun billing-blocked jobs.",
+                "Refresh billing evidence through an authorized owner source.",
+            ]}
 
 
 def render_markdown(state: dict[str, Any]) -> str:
@@ -198,6 +232,7 @@ def main() -> int:
     ap.add_argument("--json-output", type=Path, required=True)
     ap.add_argument("--md-output", type=Path, required=True)
     ap.add_argument("--now")
+    ap.add_argument("--policy", type=Path, default=Path(__file__).resolve().parents[2] / "00_FMOS/framework_strategist/RESOURCE_CONSERVATION_POLICY_v1.json")
     args = ap.parse_args()
     now = parse_ts(args.now) if args.now else datetime.now(UTC)
     if now is None:
@@ -207,9 +242,14 @@ def main() -> int:
     except (OSError, json.JSONDecodeError):
         snapshot = {}
     state = evaluate(snapshot, now)
+    try:
+        policy = json.loads(args.policy.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        policy = {}
+    state = apply_owner_conservation(state, policy, now)
     args.json_output.parent.mkdir(parents=True, exist_ok=True)
     args.md_output.parent.mkdir(parents=True, exist_ok=True)
-    args.json_output.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    args.json_output.write_text(json.dumps(state, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
     args.md_output.write_text(render_markdown(state), encoding="utf-8")
     print(f"ACTIONS_BUDGET={state['state']}")
     print(f"SNAPSHOT_STATUS={state['snapshot_status']}")
