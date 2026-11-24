@@ -221,6 +221,25 @@ assert report['status'] in {'REPLAY_COMPLETE','REPLAY_BLOCKED'}
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         print(result.stdout)
 
+    def test_task2_original_w47_comparator_readback(self):
+        import subprocess
+        import sys
+        code = """
+import json
+from scripts.research import cn_mm_core_shadow_bridge_v1 as b
+from scripts.research.cn_mm_task2_comparator_readback_v1 import audit_week
+replay=b.load_owner().PinnedSourceReplay(b.ROOT,b.git('rev-parse','HEAD').decode().strip())
+report=audit_week(replay,2026,47)
+assert report['paired_n']==report['point_comparison']['all']['n']>0
+assert not report['scientific_pit_eligible'] and not report['forecast_authority']
+report['point_comparison'].pop('rows')
+print('TASK2_ORIGINAL_COMPARATOR '+json.dumps(report,sort_keys=True))
+"""
+        result = subprocess.run([sys.executable, "-c", code], cwd=bridge.ROOT,
+                                capture_output=True, text=True, timeout=120)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        print(result.stdout)
+
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
         self.assertEqual(workflow.count("python scripts/research/cn_mm_core_shadow_bridge_v1.py"), 2)

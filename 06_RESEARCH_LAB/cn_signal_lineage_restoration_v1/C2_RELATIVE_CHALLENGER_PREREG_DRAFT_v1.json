@@ -1,0 +1,31 @@
+{
+  "contract": "CN_MM_C2_RELATIVE_CHALLENGER_PREREG_DRAFT_v1",
+  "status": "DRAFT_NOT_ACTIVATED_NO_ISSUANCE",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "hypothesis": "The existing two-family C06 breadth/BTC.D permission may add relative ETH vs BTC forecast information beyond the independent Task2 A no-drift anchor. C07 remains frozen. Do not infer negative drift from absence of permission.",
+  "model_proposal": {
+    "baseline": "Task2 A frozen BTC/ETH P0 and volatility; C0 original CN daily expected close",
+    "relative_tilt": "Candidate for review: positive C06 permission only; symmetric opposite log-price shift preserving geometric midpoint; scale bounded by existing Task2 B 0.5 coefficient and smaller of A hourly sigmas; zero drift when verified permission false, abstain when source unavailable. Exact formula, clocks and implementation must be frozen in reviewed follow-up before activation.",
+    "sequence_role": "Separate preregistered diagnostic; do not treat observed crossing as confirmed sequence."
+  },
+  "activation": {
+    "earliest_week": null,
+    "required": "Reviewed immutable main contract/code and original source known-by evidence before first forecast issue; first actual consumer delivery recorded; no historical backfill",
+    "historical_data_use": "2026-W47 and earlier/current exposed outcomes are exploratory only; never confirmatory C2"
+  },
+  "evaluation": {
+    "primary": "Paired daily close normalized MAE vs A no-drift; separate BTC and ETH and relative ratio",
+    "secondary": [
+      "CN C0 same cohort",
+      "directional skill",
+      "close coverage",
+      "full-day range containment",
+      "interval score and width"
+    ],
+    "cohort": "Same decision cutoff, original source clocks, outcome path and availability across candidates; report abstentions; eight resolved week clusters proposed subject to review",
+    "no_posthoc_tuning": true
+  },
+  "forecast_authority": false,
+  "portfolio_execution": false,
+  "automatic_weight_updates": false
+}
