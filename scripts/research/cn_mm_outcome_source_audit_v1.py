@@ -344,3 +344,58 @@ def matched_veto_magnitude(rows, details, floor, families, panels):
             "horizons":result,"independent_sample_n":None,
             "portfolio_return":None,"causal_effect_established":False,
             "forecast_authority":False,"automatic_weight_updates":False}
+
+
+def immutable_delta_inventory(before_rows,before_details,after_rows,after_details,mutable_fields):
+    """Plan the incremental work from two immutable ledger snapshots.
+
+    No cached verdicts, no trust transfer, no outcome selection. Changed or
+    removed previously sealed identities require review/full replay. New
+    mature receipts for old observations are explicitly distinguished from
+    new feature rows. Never authorize skipping source verification.
+    """
+    def unique(rows,key):
+        result={}
+        for row in rows:
+            ident=key(row)
+            if ident in result: raise ValueError("DELTA_DUPLICATE_IDENTITY")
+            result[ident]=row
+        return result
+    before=unique(before_rows,lambda r:r["event_id"])
+    after=unique(after_rows,lambda r:r["event_id"])
+    bd=unique(before_details,lambda r:(r["event_id"],r["horizon"]))
+    ad=unique(after_details,lambda r:(r["event_id"],r["horizon"]))
+    frozen=lambda row:{k:v for k,v in row.items() if k not in mutable_fields}
+    removed=sorted(before.keys()-after.keys())
+    changed=sorted(k for k in before.keys()&after.keys() if frozen(before[k])!=frozen(after[k]))
+    new=sorted(after.keys()-before.keys())
+    removed_detail=sorted(bd.keys()-ad.keys())
+    changed_detail=sorted(k for k in bd.keys()&ad.keys() if bd[k]!=ad[k])
+    new_detail=sorted(ad.keys()-bd.keys())
+    orphan=sorted(k for k in ad if k[0] not in after or k[1] not in ("24h","72h","7d"))
+    # A prior matured parent label or statistic is immutable too, even
+    # though it is excluded from the original feature provenance hash.
+    altered_matured=[]
+    for event,horizon in bd.keys()&ad.keys():
+        if event in before and event in after and any(
+                before[event].get(f"{field}_{horizon}")!=after[event].get(f"{field}_{horizon}")
+                for field in ("outcome","mae","mfe")):
+            altered_matured.append((event,horizon))
+    blocked=bool(removed or changed or removed_detail or changed_detail or orphan or altered_matured)
+    body={"contract":"CN_MM_IMMUTABLE_LEARNING_DELTA_v1",
+          "status":"REVIEW_FULL_REPLAY_REQUIRED" if blocked else "APPEND_ONLY_DELTA_IDENTIFIED",
+          "previous_parent_n":len(before),"current_parent_n":len(after),
+          "previous_receipt_n":len(bd),"current_receipt_n":len(ad),
+          "new_parent_ids":new,"new_receipt_keys":[list(x) for x in new_detail],
+          "new_matured_prior_parent_n":sum(k[0] in before for k in new_detail),
+          "unchanged_parent_n":len(before.keys()&after.keys())-len(changed),
+          "unchanged_receipt_n":len(bd.keys()&ad.keys())-len(changed_detail),
+          "removed_parent_ids":removed,"changed_frozen_parent_ids":changed,
+          "removed_receipt_keys":[list(x) for x in removed_detail],
+          "changed_receipt_keys":[list(x) for x in changed_detail],
+          "orphan_receipt_keys":[list(x) for x in orphan],
+          "altered_matured_parent_keys":[list(x) for x in sorted(altered_matured)],
+          "prior_verdict_reuse_authorized":False,"scientific_pit_eligible":False,
+          "automatic_weight_updates":False,"forecast_authority":False}
+    body["inventory_sha256"]=bridge.sha(bridge.canon(body))
+    return body

@@ -437,6 +437,33 @@ def calibration_learning_at_cutoff(repo,head,freeze):
             csv.Error, ImportError, subprocess.SubprocessError):
         result["task2"] = {"status":"UNAVAILABLE","reason":"ORIGINAL_SCORE_MISSING_LATE_OR_UNVERIFIED",
                            "forecast_authority":False}
+    # Compare original previous-week tree to current cutoff tree, not mutable
+    # LATEST or a self-asserted cached verdict. This is an actionable delta
+    # inventory, not authorization to skip any full verification.
+    try:
+        if learning_pin is None: raise ValueError("DELTA_CURRENT_PIN_MISSING")
+        previous=datetime.fromisocalendar(freeze["iso_year"],freeze["iso_week"],1)-timedelta(days=7)
+        year,week,_=previous.isocalendar()
+        path=Path(f"research/master_monday_preflight/frozen/{year}/W{week:02d}/WEEKLY_EVIDENCE_FREEZE.json")
+        old=load_evidence_object(committed(path,learning_pin["checkout_sha"]))
+        if (old["iso_year"],old["iso_week"])!=(year,week) or clock(old["created_at_utc"])>=cutoff:
+            raise ValueError("DELTA_PREVIOUS_FREEZE_INVALID")
+        before_pin=learning_checkout_at_cutoff(repo,learning_pin["checkout_sha"],clock(old["created_at_utc"]))
+        owner=load_owner()
+        before=owner.PinnedSourceReplay(repo,before_pin["checkout_sha"])
+        after=owner.PinnedSourceReplay(repo,learning_pin["checkout_sha"])
+        if before.floor!=after.floor or before.registry_raw!=after.registry_raw:
+            raise ValueError("DELTA_OWNER_POLICY_CHANGED")
+        detail_path=before.BASE+"/data/OUTCOME_DETAIL_LEDGER.csv"
+        from scripts.research.cn_mm_outcome_source_audit_v1 import immutable_delta_inventory
+        result["incremental_inventory"]=immutable_delta_inventory(read_rows(before.ledger_raw),
+            read_rows(before.read_blob(before.checkout,detail_path)),read_rows(after.ledger_raw),
+            read_rows(after.read_blob(after.checkout,detail_path)),owner.PROVENANCE_MUTABLE_FIELDS)
+        result["incremental_source_snapshots"]={"previous":before_pin,"current":learning_pin}
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
+            csv.Error, ImportError, subprocess.SubprocessError) as exc:
+        result["incremental_inventory"]={"status":"UNAVAILABLE","reason":str(exc).split(":")[0][:120],
+                                         "prior_verdict_reuse_authorized":False}
     return result
 
 

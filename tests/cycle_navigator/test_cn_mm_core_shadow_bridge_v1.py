@@ -363,7 +363,7 @@ assert result['learning']['status']=='DESCRIPTIVE_ONLY_NOT_INDEPENDENT_EDGE',res
 assert result['learning']['source_checkout_sha']==pin['checkout_sha']
 assert result['learning']['verified_n']>0 and result['learning']['rejected_n']==0
 assert result['task2']['paired_n']==14 and not result['task2']['scientific_pit_eligible']
-print('W47_ORIGINAL_CALIBRATION_READBACK '+json.dumps({'pin':pin,'verified_n':result['learning']['verified_n'],'horizons':result['learning']['verified_horizon_counts'],'task2_paired_n':result['task2']['paired_n']},sort_keys=True))
+print('W47_ORIGINAL_CALIBRATION_READBACK '+json.dumps({'pin':pin,'verified_n':result['learning']['verified_n'],'horizons':result['learning']['verified_horizon_counts'],'task2_paired_n':result['task2']['paired_n'],'incremental_inventory':result['incremental_inventory']},sort_keys=True))
 """
         result=subprocess.run([sys.executable,"-c",code],cwd=bridge.ROOT,
                               capture_output=True,text=True,timeout=180)
@@ -399,6 +399,27 @@ print('W47_ORIGINAL_CALIBRATION_READBACK '+json.dumps({'pin':pin,'verified_n':re
         self.assertIsNone(result["reset_state"])
         self.assertIsNone(result["reclaim_state"])
         self.assertFalse(result["forecast_authority"])
+
+    def test_incremental_inventory_detects_new_maturity_and_frozen_rewrites(self):
+        from scripts.research.cn_mm_outcome_source_audit_v1 import immutable_delta_inventory
+        old={"event_id":"A","source":"x","outcome_24h":""}
+        matured={**old,"outcome_24h":"1"}
+        detail={"event_id":"A","horizon":"24h","digest":"x"}
+        new={"event_id":"B","source":"y","outcome_24h":""}
+        m={"outcome_24h"}
+        report=immutable_delta_inventory([old],[],[matured,new],[detail],m)
+        self.assertEqual(report["status"],"APPEND_ONLY_DELTA_IDENTIFIED")
+        self.assertEqual(report["new_parent_ids"],["B"])
+        self.assertEqual(report["new_matured_prior_parent_n"],1)
+        self.assertFalse(report["prior_verdict_reuse_authorized"])
+        for rows,details in (([{**matured,"source":"changed"},new],[detail]),
+                             ([{**matured,"outcome_24h":"0"},new],[detail]),
+                             ([matured,new],[{**detail,"digest":"changed"}]),
+                             ([matured,new],[]),([new],[detail])):
+            report=immutable_delta_inventory([matured],[detail],rows,details,m)
+            self.assertEqual(report["status"],"REVIEW_FULL_REPLAY_REQUIRED")
+        with self.assertRaisesRegex(ValueError,"DUPLICATE_IDENTITY"):
+            immutable_delta_inventory([old],[],[old,old],[],m)
 
     def test_existing_workflow_wires_readback_without_paid_context_change(self):
         workflow = (bridge.ROOT / ".github/workflows/weekly-api-calibration-shadow.yml").read_text()
