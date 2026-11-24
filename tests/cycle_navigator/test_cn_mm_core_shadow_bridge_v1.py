@@ -173,19 +173,37 @@ class ExistingOwnerReplay(unittest.TestCase):
         code = """
 import json
 from scripts.research import cn_mm_core_shadow_bridge_v1 as b
-from scripts.research.cn_mm_optional_source_context_v1 import coverage
+from scripts.research.cn_mm_optional_source_context_v1 import coverage, leverage_context
+from collections import Counter
 owner=b.load_owner()
 head=b.git('rev-parse','HEAD').decode().strip()
 replay=owner.PinnedSourceReplay(b.ROOT,head)
 rows=b.read_rows(replay.ledger_raw)
 observations=[]
+leverage_status=Counter()
+leverage_fields=Counter()
 for row in rows:
     at=b.clock(row['observation_timestamp_utc'])
     if at < replay.floor:
         continue
     replay.verify(row,at,json.loads(row['candidate_decisions']))
     observations.append({'observation_utc':b.iso(at),'source_commit':row['source_version_commit']})
+    lev=leverage_context(replay,row,at)
+    leverage_status[lev['status']]+=1
+    assert lev['reset_state'] is None and lev['reclaim_state'] is None
+    for asset,v in lev['assets'].items():
+        assert v['open_interest_contracts'] is None and v['oi_change_24h_pct'] is None
+        assert v['notional_change_is_contract_deleveraging'] is False
+        if v['funding_event_rate'] is None:
+            assert v['funding_event_observation_utc'] is None
+        for field in ('open_interest_owner_amount','open_interest_owner_declared_usd_notional','oi_owner_declared_usd_notional_change_24h_pct','long_short_account_ratio','funding_event_rate'):
+            if v[field] is not None:
+                leverage_fields[asset+':'+field]+=1
 result=coverage(replay,observations)
+result['leverage_status_counts']=dict(leverage_status)
+result['leverage_field_counts']=dict(leverage_fields)
+assert leverage_status['ARCHIVED_DECLARED_CLOCK_CONTEXT_ONLY']>0,result
+assert sum(leverage_status.values())==len(observations)
 assert result['observation_n']==len(observations)>0
 assert sum(result['etf_status_counts'].values())==len(observations)
 assert sum(result['liquidation_status_counts'].values())==len(observations)

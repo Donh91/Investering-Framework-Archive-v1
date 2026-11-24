@@ -174,24 +174,37 @@ def leverage_context(replay, row, cutoff):
         prior=samples.get(anchor-timedelta(hours=24))
         assets={}
         for asset in ("btc","eth"):
-            oi=ratio=funding=delta=None
+            oi=ratio=funding=notional=notional_delta=None
             if latest.get("derivatives_status")=="PASS":
                 if latest.get(asset+"_open_interest_source")=="OKX_CONTRACT_OI_HISTORY":
                     oi=number(latest,asset+"_open_interest",positive=True)
+                    notional=number(latest,asset+"_open_interest_value",positive=True)
                 if latest.get(asset+"_long_short_source")=="OKX_GLOBAL_ACCOUNT_RATIO":
                     ratio=number(latest,asset+"_long_short_ratio",positive=True)
                 if latest.get(asset+"_funding_source")=="OKX_FUNDING_HISTORY":
                     funding=number(latest,asset+"_funding_event_rate")
-                if oi is not None and prior:
+                # The existing hourly owner permits array contract amounts
+                # and legacy dict base/other amounts under one source tag.
+                # The CSV does not preserve that quantity-shape identity.
+                # USD notional is separately declared by the owner; a change
+                # in it includes price effects and is not contract deleveraging.
+                if notional is not None and prior:
                     old=prior[0]
                     if old.get("derivatives_status")=="PASS" and old.get(asset+"_open_interest_source")=="OKX_CONTRACT_OI_HISTORY":
-                        prior_oi=number(old,asset+"_open_interest",positive=True)
-                        if prior_oi is not None: delta=(oi/prior_oi-1)*100
-            assets[asset.upper()]={"open_interest_contracts":oi,"oi_change_24h_pct":delta,
+                        old_notional=number(old,asset+"_open_interest_value",positive=True)
+                        if old_notional is not None:
+                            notional_delta=(notional/old_notional-1)*100
+                            if not math.isfinite(notional_delta):
+                                raise ValueError("LEVERAGE_NOTIONAL_DELTA_NONFINITE")
+            assets[asset.upper()]={"open_interest_owner_amount":oi,"open_interest_amount_unit":"UNVERIFIED_OWNER_QUANTITY_SHAPE",
+                    "open_interest_contracts":None,"oi_change_24h_pct":None,
+                    "open_interest_owner_declared_usd_notional":notional,
+                    "oi_owner_declared_usd_notional_change_24h_pct":notional_delta,
+                    "notional_change_is_contract_deleveraging":False,
                     "long_short_account_ratio":ratio,"funding_event_rate":funding,
                     "funding_event_observation_utc":bridge.iso(anchor) if funding is not None else None,
                     "scope":"OKX_SINGLE_VENUE_CONTEXT_ONLY"}
-        available=any(v["open_interest_contracts"] is not None or v["long_short_account_ratio"] is not None or
+        available=any(v["open_interest_owner_amount"] is not None or v["open_interest_owner_declared_usd_notional"] is not None or v["long_short_account_ratio"] is not None or
                       v["funding_event_rate"] is not None for v in assets.values())
         return {**base,"status":"ARCHIVED_DECLARED_CLOCK_CONTEXT_ONLY" if available else "UNAVAILABLE",
                 "source_commit":source,"source_path":path,"source_sha256":digest,
