@@ -103,7 +103,7 @@ test('unavailable producer, asset, contract and stale tab are calm states withou
  assert.match(eth.unavailable.text,/Der mangler timekurser/);
  assert.equal(liveViewModel(fixture(),{nowMs:NOW+181*60e3}).reason,'STALE_IN_BROWSER');
  assert.equal(liveViewModel(fixture(),{nowMs:NOW+179*60e3}).state,'OK');
- for(const [flag,value] of [['official_forecast',true],['compass_probability_claim',true],['trading',true],['research_only',false]]){
+ for(const [flag,value] of [['official_forecast',true],['compass_probability_claim',true],['trading',true],['promotion',true],['site_synthesis',true],['research_only',false]]){
   const forged=fixture();forged.authority[flag]=value;
   assert.equal(liveViewModel(forged,{nowMs:NOW}).reason,'SOURCE','authority '+flag);
  }
@@ -320,4 +320,23 @@ test('fallback is fail-closed: wrong marker, invalid block or stale hourly still
  const bad=JSON.parse(JSON.stringify(base));bad.no_kompas_view.assets.BTC.days[0].lo=-1;
  assert.equal(liveViewModel(bad,{nowMs:NOW}).reason,'SOURCE');
  assert.equal(liveViewModel(base,{nowMs:NOW+4*H}).reason,'STALE_IN_BROWSER');
+});
+
+
+test('live source clock refuses future, naive, stale-at-issue and extended policy clocks',()=>{
+ const cases=[d=>d.generated_at_utc=iso(NOW+1*H),
+  d=>d.assets.BTC.as_of_utc=iso(NOW+H),
+  d=>d.generated_at_utc='2026-11-13T18:00:00',
+  d=>d.assets.BTC.as_of_utc=iso(NOW-91*60e3),
+  d=>d.display_rules.client_stale_after_minutes=9999,
+  d=>d.display_rules.freshness_sla_minutes=9999,
+  d=>delete d.display_rules];
+ for(const mutate of cases){const d=fixture();mutate(d);const m=liveViewModel(d,{nowMs:NOW});
+  assert.equal(m.reason,'SOURCE_CLOCK_INVALID');assert.equal(m.chart,null);}
+ assert.equal(liveViewModel(fixture(),{nowMs:NaN}).reason,'SOURCE_CLOCK_INVALID');
+ const valid=fixture();valid.assets.BTC.as_of_utc=iso(NOW-90*60e3);
+ assert.equal(liveViewModel(valid,{nowMs:NOW}).state,'OK');
+ const da=liveViewModel(fixture(),{nowMs:NOW}),en=liveViewModel(fixture(),{nowMs:NOW,lang:'en'});
+ assert.match(da.footer,/nominelt 50 % modelinterval.*00\.00 UTC/);
+ assert.match(en.footer,/nominal 50% model interval.*00:00 UTC/);
 });

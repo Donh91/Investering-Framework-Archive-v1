@@ -17,6 +17,9 @@ export const LIVE_HORIZONS=Object.freeze([1,3,7]);
 export const LIVE_ASSETS=Object.freeze(['BTC','ETH']);
 
 const HOUR=36e5,DAY=864e5;
+const MAX_CAPTURE_AGE_MIN=90, MAX_BROWSER_AGE_MIN=180;
+// UTC-only wire clock; ambiguous local timestamps must not depend on viewer locale.
+const wireClock=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(v)?ms(v):NaN;
 const tr=(lang,da,en)=>lang==='en'?en:da;
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 const ms=v=>{const t=Date.parse(v);return Number.isFinite(t)?t:NaN};
@@ -50,6 +53,7 @@ const UNAVAILABLE_REASON={
  OFFICIAL_POINTER_SOURCE_EXPIRED:['Kompas-kildens gyldighed er udløbet.','The verified Compass source has expired.'],
  OFFICIAL_POINTER_SOURCE_FRESHNESS_INVALID:['Kompas-kildens gyldighed kan ikke verificeres.','The Compass source freshness cannot be verified.'],
  OFFICIAL_POINTER_NONE:['Der er ingen verificeret Kompas-udgave lige nu.','There is no verified Compass issue right now.'],
+ SOURCE_CLOCK_INVALID:['Tidsgrundlaget for live-prognosen kan ikke verificeres.','The live forecast clock could not be verified.'],
  STALE_IN_BROWSER:['Siden har ikke fået nye live-data i over 3 timer.','The page has had no new live data for more than 3 hours.'],
  PRODUCER_ERROR:['Live-beregningen fejlede ved seneste opdatering.','The live computation failed at the latest update.'],
  SOURCE:['Live-data kunne ikke indlæses eller er ugyldige.','Live data could not be loaded or are invalid.']
@@ -87,13 +91,13 @@ function labels(lang,flat,noView=false){
     'Den blå linje er det forventede luk uden hældning, fordi der ikke er en gyldig, verificeret Kompas-udgave lige nu. ':flat?
     'Den blå linje er det forventede luk uden hældning; Challenger B (forsøg) er endnu ikke registreret i denne udgave. ':
     'Den blå linje er Challenger B (forsøg): en registreret forskningsmodel, der lader kursbanen hælde efter Kompas’ egne horisonter (1–3 og 5–7 dage). ')+
-   'Kompas’ bull/bear er evidenspoint, ikke sandsynligheder. Rammerne beregnes live med Challenger A’s formel (50 %). '+
+   'Kompas’ bull/bear er evidenspoint, ikke sandsynligheder. Rammerne beregnes live med Challenger A’s formel (nominelt 50 % modelinterval, faktisk dækning ikke dokumenteret her). Dagsluk er kl. 00.00 UTC (næste kalenderdag). '+
    'Disse timeberegnede kurver er ikke originale, fastfrosne A/B-udstedelser og må ikke indgå som original score. Kommentarerne er skrevet automatisk af kode. Visningen er ikke en købs- eller salgsanbefaling.',
    'Statistical trial display, not an official forecast. '+(noView?
     'The blue line is the expected close without tilt, because there is no valid, verified Compass issue right now. ':flat?
     'The blue line is the expected close without tilt; Challenger B (trial) is not registered in this build yet. ':
     'The blue line is Challenger B (trial): a registered research model that tilts the path along Compass’s own horizons (1–3 and 5–7 days). ')+
-   'Compass bull/bear are evidence points, not probabilities. The frames are calculated live using Challenger A’s formula (50%). '+
+   'Compass bull/bear are evidence points, not probabilities. The frames are calculated live using Challenger A’s formula (nominal 50% model interval; actual coverage is not documented here). Daily closes are at 00:00 UTC (next calendar day). '+
    'These hourly-calculated paths are not original frozen A/B issuances and must not be scored as such. Comments are written automatically by code. This display is not a buy or sell recommendation.'),
   unavailableTitle:tr(lang,'Kompas live er midlertidigt utilgængelig','Compass live is temporarily unavailable'),
   unavailableNote:tr(lang,'Der vises ingen kursbane, når data ikke er friske og gyldige.','No price path is shown when data are not fresh and valid.'),
@@ -104,7 +108,7 @@ function labels(lang,flat,noView=false){
 function sourceIsValid(json){
  const a=json?.authority;
  return json?.contract===LIVE_CONTRACT&&a?.research_only===true&&a?.official_forecast===false&&
-  a?.compass_probability_claim===false&&a?.trading===false&&json?.assets&&typeof json.assets==='object';
+  a?.compass_probability_claim===false&&a?.trading===false&&a?.promotion===false&&a?.site_synthesis===false&&json?.assets&&typeof json.assets==='object';
 }
 function validAssetBlock(b){
  return b?.status==='OK'&&finite(b.p0)&&b.p0>0&&Array.isArray(b.points)&&b.points.length>1&&
@@ -164,7 +168,7 @@ export function liveViewModel(json,{lang='da',hz=3,asset='BTC',nowMs=Date.now(),
  // After the verified Official Compass deadline (or when the producer had none) the TILT is withdrawn:
  // the card switches to the producer's untilted blocks (Challenger B's registered no-view case). The
  // browser never computes a path and never keeps a tilt past the deadline.
- const sourceDeadline=ms(json?.official_source_valid_until_utc);
+ const sourceDeadline=wireClock(json?.official_source_valid_until_utc);
  const noView=!!json&&(!Number.isFinite(sourceDeadline)||nowMs>=sourceDeadline);
  const flat=noView||json?.models?.line?.line==='FLAT'||json?.models?.line?.applied===false;
  const L=labels(lang,flat,noView);
@@ -181,9 +185,14 @@ export function liveViewModel(json,{lang='da',hz=3,asset='BTC',nowMs=Date.now(),
  if(noView&&json.no_kompas_view?.line!=='UNTILTED_NO_KOMPAS_VIEW')return unavailableModel(base,kompasReason,lang);
  if(!a||a.status!=='OK')return unavailableModel(base,a?.reason||'SOURCE',lang);
  if(!validAssetBlock(a))return unavailableModel(base,'SOURCE',lang);
- const asOf=ms(a.as_of_utc),issued=ms(json.generated_at_utc);
- const staleAfter=(json.display_rules?.client_stale_after_minutes??180)*60e3;
- if(!Number.isFinite(asOf)||!Number.isFinite(issued)||nowMs-asOf>staleAfter)
+ const asOf=wireClock(a.as_of_utc),issued=wireClock(json.generated_at_utc);
+ const policyAge=json.display_rules?.client_stale_after_minutes;
+ const captureAge=json.display_rules?.freshness_sla_minutes;
+ if(!Number.isFinite(nowMs)||!Number.isFinite(asOf)||!Number.isFinite(issued)||
+    asOf>issued||issued>nowMs||issued-asOf>MAX_CAPTURE_AGE_MIN*60e3||
+    policyAge!==MAX_BROWSER_AGE_MIN||captureAge!==MAX_CAPTURE_AGE_MIN)
+  return unavailableModel(base,'SOURCE_CLOCK_INVALID',lang);
+ if(nowMs-asOf>MAX_BROWSER_AGE_MIN*60e3)
   return unavailableModel(base,'STALE_IN_BROWSER',lang);
  const head=a.headline[String(hz)];
  const hzEnd=ms(json.horizon_end_utc?.[String(hz)]);
