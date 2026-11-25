@@ -1,4 +1,4 @@
-import {cycleParticipationMarkup} from './cycle-participation.mjs';
+import {cycleParticipationMarkup} from '../cycle-participation.mjs';
 import {cycleMapMarkup} from './cycle-map.mjs';
 /**
  * SITE #1578 · Source-composed SINGLE homepage. The original approved B SVG

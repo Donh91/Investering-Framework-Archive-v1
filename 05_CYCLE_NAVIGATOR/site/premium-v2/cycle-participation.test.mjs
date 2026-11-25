@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bindParticipation,readCycleParticipation,renderCycleParticipation} from './cycle-participation.mjs';
+import {bindParticipation,readCycleParticipation,renderCycleParticipation} from '../cycle-participation.mjs';
 const observed='2026-11-25T10:00:00Z',issued='2026-11-25T10:15:00Z',nowUtc='2026-11-25T11:00:00Z';
 function fixture(){
  const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MINORITY',outperforming_eth:'HALF'};

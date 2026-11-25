@@ -1,4 +1,4 @@
-import {bindParticipation} from './premium-v2/cycle-participation.mjs';
+import {bindParticipation} from './cycle-participation.mjs';
 import { mkdir, readFile, rm, writeFile, copyFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { dirname, resolve, relative } from "node:path";
