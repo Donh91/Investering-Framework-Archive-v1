@@ -169,6 +169,24 @@ for(const mode of ['valid','valid-degraded','health','time','scalar-health','mis
  if(['valid','valid-degraded'].includes(mode)){assert.equal(result.native.data_health,mode==='valid-degraded'?'DEGRADED':'PASS');assert.equal(result.native.now,'HOLD_WAIT');}
  assert.doesNotMatch(JSON.stringify(result.native),/MUST_NOT_BE_PUBLISHED|PRIVATE_UNKNOWN_STATUS/);
 }
+// Both live fields use the real builder and do not borrow a weekly or Official source.
+for(const mode of ['valid','tampered-native','wrong-auto','missing-native','weekly-mismatch','official-mismatch']){
+ const f=fixture(),auto=f.pointers.get('auto'),now=auto.packet_generated_at_utc;
+ const path='04_MARKET_LEARNING/handlekompas/runs/live.json';
+ const expiry=hours=>new Date(Date.parse(now)+hours*3600000).toISOString();
+ const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MINORITY',outperforming_eth:'HALF'};
+ const run={contract:'NATIVE_HANDLEKOMPAS_v1',action:{NOW:'HOLD_WAIT'},source:{packet_sha256:mode==='wrong-auto'?'b'.repeat(64):auto.packet_sha256},DATA_HEALTH:{status:'DEGRADED'},generated_at_utc:now,
+  cycle_participation:{contract:'CN_CYCLE_PARTICIPATION_READBACK_v1',semantics:'OBSERVED_24H_RELATIVE_PERFORMANCE_NOT_CAPITAL_FLOW',authority:'DESCRIPTIVE_ONLY_NO_ACTION_OR_FORECAST',status:'OBSERVED_PARTICIPATION',observed_at_utc:now,valid_until_utc:expiry(8),relative_leader:'ETH',phase:'UNAVAILABLE',rotation_confirmed:false,buckets:{LARGE_ALT_PROXY:row,MID_ALT_PROXY:row,SMALL_ALT_PROXY:{...row,coverage:'TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE'},MICROCAP_PROXY:{state:'UNAVAILABLE'},MEMES:{state:'UNAVAILABLE'}}},
+  altseason_readback:{contract:'CN_ALTSEASON_OBSERVATION_v1',source:'BLOCKCHAINCENTER_90D',authority:'CONTEXT_ONLY_NO_TRANSITION_OR_ETA',status:'OBSERVED',state:'ALTCOIN_SEASON',observed_at_utc:now,valid_until_utc:expiry(24)}};
+ const n=signed(run,'handlekompas_sha256');
+ if(mode!=='missing-native')f.files.set(resolve(f.root,path),mode==='tampered-native'?n.raw.replace('ALTCOIN_SEASON','BITCOIN_SEASON'):n.raw);
+ f.pointers.set('native',{handlekompas_path:path,handlekompas_sha256:n.hash,source_packet_sha256:auto.packet_sha256,NOW:'HOLD_WAIT',data_health:'DEGRADED',generated_at_utc:now});
+ if(mode==='weekly-mismatch')f.weeklyPointer.machine_package_sha256='a'.repeat(64);
+ if(mode==='official-mismatch')f.pointers.get('official').source_packet_sha256='b'.repeat(64);
+ const result=await f.run(),valid=['valid','weekly-mismatch','official-mismatch'].includes(mode);
+ assert.equal(result.native_cycle_participation_binding?.readback.relative_leader,valid?'ETH':undefined,mode);
+ assert.equal(result.native_altseason_binding?.readback.state,valid?'ALTCOIN_SEASON':undefined,mode);
+}
 // Preserve Python integral-float bytes rather than parse/stringify reconstruction.
 f=fixture();const raw='{"contract":"FLOAT_TEST","number":1.0}';const digest=hash(raw),withDigest='{"contract":"FLOAT_TEST","number":1.0,"z_sha256":"'+digest+'"}';assert.equal(f.context.digest(withDigest,JSON.parse(withDigest),'z_sha256',digest),true);assert.equal(f.context.digest(withDigest.replace('1.0','2.0'),JSON.parse(withDigest.replace('1.0','2.0')),'z_sha256',digest),false);
 function render(status,contract='PUBLIC_COMPASS_PROJECTION_v1',event=null){
