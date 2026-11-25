@@ -134,6 +134,75 @@ class StrategicCompassTests(unittest.TestCase):
             self.assertEqual(recovered["issued_at_utc"],healthy["issued_at_utc"])
             self.assertEqual((repo/recovered["anchor_path"]).read_bytes(),original_anchor)
 
+    def test_same_sources_never_attest_missing_or_modified_anchor(self):
+        from scripts.learning.strategic_compass import canon
+        now=datetime(2026,9,30,12,tzinfo=timezone.utc)
+        for mutation in ("missing", "rehashed", "pointer", "traversal", "duplicate", "future_clock"):
+            with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as td:
+                repo=fixture_repo(Path(td))
+                first=materialize(repo,now)
+                anchor=repo/first["anchor_path"]
+                pointer=repo/"04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
+                if mutation=="missing":
+                    anchor.unlink()
+                elif mutation in ("rehashed","future_clock"):
+                    payload=json.loads(anchor.read_text())
+                    if mutation=="rehashed":
+                        payload["strategic_21_30d"]["direction"]="DOWN"
+                    else:
+                        payload["issued_at_utc"]="2026-09-30T15:00:00Z"
+                    payload["anchor_sha256"]=digest({k:v for k,v in payload.items() if k!="anchor_sha256"})
+                    anchor.write_bytes(canon(payload))
+                    ptr=json.loads(pointer.read_text())
+                    ptr["anchor_sha256"]=payload["anchor_sha256"]
+                    ptr["issued_at_utc"]=payload["issued_at_utc"]
+                    pointer.write_bytes(canon(ptr))
+                elif mutation=="duplicate":
+                    pointer.write_bytes(pointer.read_bytes().rstrip()[:-1]+b',"anchor_id":"forged"}')
+                else:
+                    ptr=json.loads(pointer.read_text())
+                    if mutation=="traversal":
+                        ptr["anchor_path"]="../outside.json"
+                    else:
+                        ptr["alignment_class"]="FULL_BULL_ALIGNMENT"
+                    pointer.write_bytes(canon(ptr))
+                before=pointer.read_bytes()
+                with self.assertRaisesRegex(ValueError,"STRATEGIC_"):
+                    materialize(repo,now)
+                self.assertEqual(pointer.read_bytes(),before)
+
+    def test_recovery_rejects_coherently_rehashed_original(self):
+        from scripts.learning.strategic_compass import canon
+        now=datetime(2026,9,30,12,tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as td:
+            repo=fixture_repo(Path(td))
+            first=materialize(repo,now)
+            source=repo/"05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+            original=source.read_bytes()
+            source.write_bytes(b'{}')
+            degraded=materialize(repo,now)
+            anchor=repo/first["anchor_path"]
+            forged=json.loads(anchor.read_text())
+            forged["cycle_4_8w"]["direction"]="DOWN"
+            forged["anchor_sha256"]=digest({k:v for k,v in forged.items() if k!="anchor_sha256"})
+            anchor.write_bytes(canon(forged))
+            source.write_bytes(original)
+            pointer=repo/"04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
+            before=pointer.read_bytes()
+            with self.assertRaisesRegex(ValueError,"STRATEGIC_EXISTING_ANCHOR_INTEGRITY_FAILURE"):
+                materialize(repo,now.replace(hour=13))
+            self.assertEqual(pointer.read_bytes(),before)
+            self.assertEqual(json.loads(before)["anchor_id"],degraded["anchor_id"])
+
+    def test_same_sources_next_day_preserve_original_anchor(self):
+        now=datetime(2026,9,30,12,tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as td:
+            repo=fixture_repo(Path(td))
+            first=materialize(repo,now)
+            next_day=materialize(repo,datetime(2026,10,1,12,tzinfo=timezone.utc))
+            self.assertEqual(next_day["status"],"NOOP_SAME_SOURCES")
+            self.assertEqual(next_day["anchor_id"],first["anchor_id"])
+
     def test_tactical_pullback_structural_bull_class(self):
         self.assertEqual(alignment_class(["DOWN", "DOWN", "SIDEWAYS", "UP", "UP"]), "TACTICAL_PULLBACK_STRUCTURAL_BULL")
 

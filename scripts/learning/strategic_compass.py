@@ -464,35 +464,7 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
     return result
 
 
-def materialize(repo: Path, now: datetime | None = None) -> dict[str, Any]:
-    repo = repo.resolve()
-    now = (now or datetime.now(timezone.utc).replace(microsecond=0)).astimezone(timezone.utc)
-    anchor = build_anchor(repo, now)
-    latest_path = repo / ROOT / "LATEST_STRATEGIC_COMPASS.json"
-    if latest_path.exists():
-        latest = read_json(latest_path)
-        if latest.get("source_fingerprint") == anchor["source_fingerprint"]:
-            return {"status": "DEGRADED" if anchor["source_binding_status"] == "DEGRADED" else "NOOP_SAME_SOURCES",
-                    "write_status": "NOOP_SAME_SOURCES", "anchor_id": latest.get("anchor_id"),
-                    "source_fingerprint": anchor["source_fingerprint"],
-                    "source_binding_status": anchor["source_binding_status"],
-                    "source_binding_reason_code": anchor["source_binding_reason_code"]}
-
-    out = repo / ROOT / "anchors" / now.strftime("%Y/%m/%d") / f"{anchor['anchor_id']}.json"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    # Recovery may return to a previously issued source fingerprint on the
-    # same UTC day. Preserve the original anchor bytes and issue timestamp.
-    try:
-        with out.open("xb") as handle:
-            handle.write(canon(anchor))
-    except FileExistsError:
-        existing = strict_object(out.read_bytes())
-        if (existing.get("anchor_id") != anchor["anchor_id"]
-                or existing.get("source_fingerprint") != anchor["source_fingerprint"]
-                or existing.get("anchor_sha256") != digest({k: v for k, v in existing.items() if k != "anchor_sha256"})):
-            raise ValueError("STRATEGIC_EXISTING_ANCHOR_INTEGRITY_FAILURE")
-        anchor = existing
-    latest_path.parent.mkdir(parents=True, exist_ok=True)
+def anchor_pointer(repo: Path, out: Path, anchor: Mapping[str, Any]) -> dict[str, Any]:
     pointer = {
         "contract": "STRATEGIC_COMPASS_LATEST_POINTER_v1",
         "anchor_id": anchor["anchor_id"],
@@ -507,6 +479,75 @@ def materialize(repo: Path, now: datetime | None = None) -> dict[str, Any]:
         "strategic_21_30d_direction": anchor["strategic_21_30d"]["direction"],
         "cycle_4_8w_direction": anchor["cycle_4_8w"]["direction"],
     }
+    return pointer
+
+
+def verified_existing_anchor(repo: Path, path: Path, candidate: Mapping[str, Any], now: datetime) -> dict[str, Any]:
+    """Reconcile immutable bytes with the freshly verified source projection.
+
+    A self-digest alone cannot detect a coherently rehashed modification.
+    Preserve the original issue clock, but rederive every other field.
+    """
+    if not path.is_file() or path.is_symlink() or not path.resolve().is_relative_to(repo):
+        raise ValueError("STRATEGIC_EXISTING_ANCHOR_PATH_INVALID")
+    raw = path.read_bytes()
+    existing = strict_object(raw)
+    stamp = existing.get("issued_at_utc")
+    if not isinstance(stamp, str) or not stamp.endswith("Z"):
+        raise ValueError("STRATEGIC_EXISTING_ANCHOR_CLOCK_INVALID")
+    try:
+        issued = datetime.fromisoformat(stamp[:-1] + "+00:00")
+    except ValueError:
+        raise ValueError("STRATEGIC_EXISTING_ANCHOR_CLOCK_INVALID") from None
+    if issued > now or stamp != issued.isoformat().replace("+00:00", "Z"):
+        raise ValueError("STRATEGIC_EXISTING_ANCHOR_CLOCK_INVALID")
+    expected = dict(candidate)
+    expected["issued_at_utc"] = stamp
+    expected["anchor_id"] = "SC-" + issued.strftime("%Y%m%d") + "-" + candidate["source_fingerprint"][:12]
+    expected["anchor_sha256"] = digest({k: v for k, v in expected.items() if k != "anchor_sha256"})
+    expected_path = repo / ROOT / "anchors" / issued.strftime("%Y/%m/%d") / f"{expected['anchor_id']}.json"
+    if path != expected_path or raw != canon(expected):
+        raise ValueError("STRATEGIC_EXISTING_ANCHOR_INTEGRITY_FAILURE")
+    return existing
+
+
+def materialize(repo: Path, now: datetime | None = None) -> dict[str, Any]:
+    repo = repo.resolve()
+    now = (now or datetime.now(timezone.utc).replace(microsecond=0)).astimezone(timezone.utc)
+    anchor = build_anchor(repo, now)
+    latest_path = repo / ROOT / "LATEST_STRATEGIC_COMPASS.json"
+    if latest_path.is_symlink() or not latest_path.resolve().is_relative_to(repo):
+        raise ValueError("STRATEGIC_LATEST_POINTER_PATH_INVALID")
+    if latest_path.exists():
+        latest = strict_object(latest_path.read_bytes())
+        if latest.get("source_fingerprint") == anchor["source_fingerprint"]:
+            rel = latest.get("anchor_path")
+            if not isinstance(rel, str) or not re.fullmatch(
+                    r"04_MARKET_LEARNING/handlekompas/strategic/anchors/\d{4}/\d{2}/\d{2}/SC-\d{8}-[0-9a-f]{12}\.json", rel):
+                raise ValueError("STRATEGIC_EXISTING_ANCHOR_PATH_INVALID")
+            out = repo / rel
+            existing = verified_existing_anchor(repo, out, anchor, now)
+            if latest != anchor_pointer(repo, out, existing):
+                raise ValueError("STRATEGIC_LATEST_POINTER_INTEGRITY_FAILURE")
+            return {"status": "DEGRADED" if anchor["source_binding_status"] == "DEGRADED" else "NOOP_SAME_SOURCES",
+                    "write_status": "NOOP_SAME_SOURCES", "anchor_id": existing["anchor_id"],
+                    "source_fingerprint": anchor["source_fingerprint"],
+                    "source_binding_status": anchor["source_binding_status"],
+                    "source_binding_reason_code": anchor["source_binding_reason_code"]}
+
+    out = repo / ROOT / "anchors" / now.strftime("%Y/%m/%d") / f"{anchor['anchor_id']}.json"
+    if out.is_symlink() or not out.resolve().is_relative_to(repo):
+        raise ValueError("STRATEGIC_EXISTING_ANCHOR_PATH_INVALID")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    # Recovery may return to a previously issued source fingerprint on the
+    # same UTC day. Preserve the original anchor bytes and issue timestamp.
+    try:
+        with out.open("xb") as handle:
+            handle.write(canon(anchor))
+    except FileExistsError:
+        anchor = verified_existing_anchor(repo, out, anchor, now)
+    latest_path.parent.mkdir(parents=True, exist_ok=True)
+    pointer = anchor_pointer(repo, out, anchor)
     latest_path.write_bytes(canon(pointer))
     return {"status": "DEGRADED" if anchor["source_binding_status"] == "DEGRADED" else "CREATED",
             "write_status": "CREATED", **pointer}
