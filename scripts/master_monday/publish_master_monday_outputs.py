@@ -180,6 +180,87 @@ def fallback_scorecard(context:dict[str,Any])->dict[str,Any]:
         'matured_outcome_count':None if matured else 0,
         'reason':'Owner outcome records failed scorecard context or row integrity checks; no counts admitted.' if matured else 'A valid experiment registry supplied zero newly matured outcomes; formal outcome scoring remains pending.',
     }
+def calibration_context_matches_freeze(context:dict[str,Any], freeze:dict[str,Any])->bool:
+    try:
+        return (context.get('contract')=='WEEKLY_API_CALIBRATION_CONTEXT_v6'
+                and context.get('authority')=='SHADOW_ONLY'
+                and all(type(context.get(k)) is int and context[k]==freeze.get(k) for k in ('iso_year','iso_week'))
+                and isinstance(freeze.get('freeze_sha256'),str)
+                and re.fullmatch(r'[a-f0-9]{64}',freeze['freeze_sha256']) is not None
+                and context.get('freeze_sha256')==freeze['freeze_sha256']
+                and sha({k:v for k,v in context.items() if k!='context_hash'})==context.get('context_hash'))
+    except (ValueError,TypeError,OverflowError,RecursionError):
+        return False
+
+def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
+                           api:dict[str,Any],receipt:dict[str,Any],api_status:str)->dict[str,Any]:
+    """Preserve the existing shadow model's typed hypotheses, not live forecasts.
+
+    The current v3 API output has no action/phase/operational-translation field.
+    Do not infer one from prose, price targets or a successful transport.
+    Projection is deliberately value-free: only candidate horizons, directions,
+    counts and receipt hashes; actual science admission remains the original owner.
+    """
+    base={'contract':'MM_SHADOW_ANALYTICAL_TRANSLATION_v1','status':'DEGRADED',
+          'authority':'SHADOW_ONLY_NO_ACTION_OR_FORECAST_AUTHORITY',
+          'candidate_status':'UNAVAILABLE','candidate_horizon_counts':{},
+          'candidate_direction_counts':{},'candidate_count':None,
+          'phase':'UNAVAILABLE','rotation':'UNAVAILABLE','forecast_authority':False,
+          'portfolio_action':False,'model_weight_change':False,
+          'model_utilization_verified':False}
+    if api_status!='success':
+        return {**base,'reason':'API_FAILED'}
+    try:
+        if not calibration_context_matches_freeze(context,freeze):
+            return {**base,'reason':'CONTEXT_FREEZE_MISMATCH'}
+        if (not isinstance(receipt,dict) or receipt.get('contract')!='API_AGENT_RECEIPT_v3'
+                or receipt.get('task')!='WEEKLY_CALIBRATION_SHADOW' or receipt.get('status')!='PASS'
+                or receipt.get('untrusted_input_envelope') is not True
+                or not isinstance(receipt.get('response_id'),str) or not receipt['response_id']
+                or receipt.get('context_hash')!=sha(context) or receipt.get('output_hash')!=sha(api)):
+            return {**base,'reason':'GATEWAY_RECEIPT_MISMATCH'}
+        required={'status','summary','evidence_for','evidence_against','uncertainties','hypotheses','forecast_candidates'}
+        if not isinstance(api,dict) or set(api)!=required or not isinstance(api['summary'],str) or not api['summary'].strip():
+            return {**base,'reason':'OUTPUT_CONTRACT_INVALID'}
+        if api['status']!='READY':
+            return {**base,'reason':'MODEL_ANALYSIS_NOT_READY'}
+        if any(not isinstance(api[k],list) or not all(isinstance(v,str) for v in api[k])
+               for k in ('evidence_for','evidence_against','uncertainties','hypotheses')):
+            return {**base,'reason':'OUTPUT_CONTRACT_INVALID'}
+        candidates=api['forecast_candidates']
+        if not isinstance(candidates,list) or type(receipt.get('forecast_candidate_count')) is not int or receipt['forecast_candidate_count']!=len(candidates):
+            return {**base,'reason':'CANDIDATE_COUNT_MISMATCH'}
+        # Reuse original gateway validator, then enforce exact schema and finite
+        # numeric types (Python bool is an int; JSON NaN is not a valid target).
+        root=str(Path(__file__).resolve().parents[2])
+        if root not in sys.path:sys.path.insert(0,root)
+        from scripts.api_agent.api_gateway import validate_output
+        validate_output(api)
+        fields={'metric_path','direction','target_mode','threshold_pct','target_value','range_low','range_high','horizon_days','rationale'}
+        seen=set();horizons={};directions={}
+        for c in candidates:
+            if (set(c)!=fields or type(c['horizon_days']) is not int
+                    or not isinstance(c['metric_path'],str) or not isinstance(c['rationale'],str)
+                    or any(c[k] is not None and (type(c[k]) not in (int,float) or not math.isfinite(c[k]))
+                           for k in ('threshold_pct','target_value','range_low','range_high'))):
+                return {**base,'reason':'CANDIDATE_CONTRACT_INVALID'}
+            # One metric/horizon identity cannot contribute multiple competing
+            # rows to a single directional count. Preserve unresolved conflict.
+            key=(c['metric_path'].strip(),c['horizon_days'])
+            if key in seen:
+                return {**base,'reason':'DUPLICATE_OR_CONFLICTING_CANDIDATE'}
+            seen.add(key)
+            h=str(c['horizon_days']);d=c['direction']
+            horizons[h]=horizons.get(h,0)+1;directions[d]=directions.get(d,0)+1
+        return {**base,'reason':'TYPED_SHADOW_CANDIDATES_ONLY_NO_OPERATIONAL_DECISION',
+                'candidate_status':'VALIDATED_UNADMITTED' if candidates else 'NO_CANDIDATES',
+                'candidate_count':len(candidates),'candidate_horizon_counts':horizons,
+                'candidate_direction_counts':directions,
+                'context_sha256':context['context_hash'],'freeze_sha256':freeze['freeze_sha256'],
+                'gateway_context_sha256':receipt['context_hash'],'gateway_output_sha256':receipt['output_hash']}
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError,RecursionError):
+        return {**base,'reason':'OUTPUT_CONTRACT_INVALID'}
+
 def effective_delivery_status(api_status: str, api: dict[str, Any],
                               translation: dict[str, Any], scorecard: dict[str, Any],
                               consumer_verified: bool) -> str:
@@ -311,15 +392,12 @@ def main():
     learning=load(a.learning_packet) if a.learning_packet.exists() else None
     learning_impact=build_learning_decision_impact(context,learning,receipt,int(freeze['iso_year']),int(freeze['iso_week']))
     analysis=api.get('analysis') or api.get('calibration') or api.get('summary') or {'status':'UNAVAILABLE_API_FAILURE' if a.api_status!='success' else 'UNAVAILABLE_NOT_PRODUCED'}
-    translation=api.get('operational_translation') or {'status':'UNAVAILABLE_API_CONTRACT','reason':'WEEKLY_CALIBRATION_SHADOW validated output contract does not currently include an operational_translation field.'}
+    translation=analytical_translation(context,freeze,api,receipt,a.api_status)
     registry_fallback=fallback_scorecard(context)
     # Current gateway schema has no scorecard. Never override failed
     # deterministic evidence admission with an arbitrary model object.
     scorecard=registry_fallback
-    if (sha({k:v for k,v in context.items() if k!='context_hash'})!=context.get('context_hash')
-            or context.get('freeze_sha256')!=freeze.get('freeze_sha256')
-            or context.get('iso_year')!=freeze.get('iso_year')
-            or context.get('iso_week')!=freeze.get('iso_week')):
+    if not calibration_context_matches_freeze(context,freeze):
         scorecard={'status':'DEGRADED','experiment_registry_status':'UNVERIFIED',
                    'matured_outcome_count':None,'analysis_layer':{},'operational_translation_layer':{},
                    'reason':'Calibration context and freeze identity mismatch.'}

@@ -157,5 +157,56 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
         self.assertIsNone(score['analysis_layer']['experiment_outcome_counts']['hit_fraction'])
         self.assertEqual(score['matured_outcome_count'],0)
 
+    def translation_fixture(self):
+        c=self.scorecard_fixture()
+        c.pop('context_hash');c.update(iso_year=2026,iso_week=47);c['context_hash']=publisher.sha(c)
+        f={k:c[k] for k in ('iso_year','iso_week','freeze_sha256')}
+        a={'status':'READY','summary':'PRIVATE_SUMMARY_NOT_PROJECTED','evidence_for':['e'],
+           'evidence_against':[],'uncertainties':[],'hypotheses':[],
+           'forecast_candidates':[{'metric_path':'PRIVATE_METRIC_NOT_PROJECTED','direction':'UP',
+             'target_mode':'PCT_MOVE','threshold_pct':2.0,'target_value':None,
+             'range_low':None,'range_high':None,'horizon_days':7,'rationale':'PRIVATE_RATIONALE'}]}
+        r={'contract':'API_AGENT_RECEIPT_v3','task':'WEEKLY_CALIBRATION_SHADOW','status':'PASS',
+           'response_id':'fixture','untrusted_input_envelope':True,'context_hash':publisher.sha(c),
+           'output_hash':publisher.sha(a),'forecast_candidate_count':1}
+        return c,f,a,r
+
+    def test_typed_translation_preserves_shadow_candidate_counts_without_authority(self):
+        c,f,a,r=self.translation_fixture()
+        t=publisher.analytical_translation(c,f,a,r,'success')
+        self.assertEqual(t['candidate_status'],'VALIDATED_UNADMITTED')
+        self.assertEqual(t['candidate_horizon_counts'],{'7':1})
+        self.assertEqual(t['candidate_direction_counts'],{'UP':1})
+        self.assertEqual(t['status'],'DEGRADED')
+        self.assertFalse(t['forecast_authority'])
+        self.assertNotIn('PRIVATE_',str(t))
+        a['forecast_candidates'][0]['direction']='DOWN';r['output_hash']=publisher.sha(a)
+        self.assertEqual(publisher.analytical_translation(c,f,a,r,'success')['candidate_direction_counts'],{'DOWN':1})
+
+    def test_translation_rejects_receipt_mismatch_and_rehashed_invalid_candidates(self):
+        for mutate in (
+            lambda c,f,a,r:r.update(task='DAILY_DIRECTOR_SHADOW'),
+            lambda c,f,a,r:r.update(context_hash='x'*64),
+            lambda c,f,a,r:f.update(iso_week=46),
+            lambda c,f,a,r:a.update(operational_translation={'status':'READY'}),
+            lambda c,f,a,r:a['forecast_candidates'][0].update(horizon_days=True),
+            lambda c,f,a,r:a['forecast_candidates'][0].update(threshold_pct=True),
+            lambda c,f,a,r:a['forecast_candidates'][0].update(threshold_pct=float('nan')),
+            lambda c,f,a,r:a['forecast_candidates'][0].update(portfolio_action=True),
+            lambda c,f,a,r:a['forecast_candidates'].append(dict(a['forecast_candidates'][0])),
+        ):
+            with self.subTest(mutation=mutate):
+                c,f,a,r=self.translation_fixture()
+                mutate(c,f,a,r)
+                r['output_hash']=publisher.sha(a)
+                r['forecast_candidate_count']=len(a['forecast_candidates'])
+                t=publisher.analytical_translation(c,f,a,r,'success')
+                self.assertEqual(t['candidate_status'],'UNAVAILABLE')
+                self.assertEqual(t['candidate_horizon_counts'],{})
+        c,f,a,r=self.translation_fixture()
+        a['summary']='mutated without receipt'
+        self.assertEqual(publisher.analytical_translation(c,f,a,r,'success')['reason'],'GATEWAY_RECEIPT_MISMATCH')
+        self.assertEqual(publisher.analytical_translation(c,f,a,r,'failure')['reason'],'API_FAILED')
+
 if __name__ == '__main__':
     unittest.main()
