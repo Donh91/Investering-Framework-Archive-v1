@@ -6,7 +6,11 @@ import unittest
 from kompas_live_publication_preflight import bind_publication, census, PATH, ORIGIN
 
 DOC = {"contract": "KOMPAS_LIVE_PATH_v1", "generated_at_utc": "2026-11-25T20:25:26Z",
-       "status": "OK"}
+       "status": "OK",
+       "authority": {"research_only": True, "official_forecast": False,
+                     "compass_probability_claim": False, "trading": False,
+                     "promotion": False, "site_synthesis": False},
+       "assets": {"BTC": {"status": "OK"}, "ETH": {"status": "OK"}}}
 SEAL = hashlib.sha256(json.dumps(DOC, sort_keys=True, separators=(",", ":"),
                                 ensure_ascii=False).encode()).hexdigest()
 RAW = json.dumps(dict(DOC, path_sha256=SEAL)).encode()
@@ -74,6 +78,30 @@ class PreflightTests(unittest.TestCase):
         p = parity(files=[dict(parity()["files"][0], expected_sha256=digest, served_sha256=digest)])
         with self.assertRaises(ValueError):
             bind_publication(raw, c, p)
+
+    def test_self_sealed_invalid_source_rejected(self):
+        for changes in (
+                {"authority": {}},
+                {"authority": dict(DOC["authority"], trading=True)},
+                {"authority": dict(DOC["authority"], research_only=1)},
+                {"assets": {"BTC": {"status": "OK"}}},
+                {"assets": {"BTC": {"status": "OK"}, "ETH": {"status": "UNAVAILABLE"}}}):
+            doc = dict(DOC, **changes)
+            seal = hashlib.sha256(json.dumps(doc, sort_keys=True, separators=(",", ":"),
+                                             ensure_ascii=False).encode()).hexdigest()
+            raw = json.dumps(dict(doc, path_sha256=seal)).encode()
+            digest = hashlib.sha256(raw).hexdigest()
+            c = capture(source_bytes=len(raw), source_bytes_sha256=digest,
+                        source_seal_sha256=seal,
+                        source_bytes_base64=base64.b64encode(raw).decode("ascii"))
+            p = parity(files=[dict(parity()["files"][0], expected_sha256=digest, served_sha256=digest)])
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                bind_publication(raw, c, p)
+
+    def test_same_digest_different_issue_rejected(self):
+        other = capture(generated_at_utc="2026-11-25T20:30:00Z")
+        with self.assertRaises(ValueError):
+            census(START, END, [capture(), other])
 
     def test_hour_census_keeps_missing_unavailable_and_retries(self):
         unavailable = capture(generated_at_utc="2026-11-25T22:30:00Z",

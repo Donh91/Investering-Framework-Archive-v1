@@ -14,6 +14,9 @@ PATH = "data/kompas-live.json"
 ORIGIN = "https://donh91.github.io/Investering-Framework-Archive-v1/"
 HOUR = dt.timedelta(hours=1)
 MAX_BYTES = 4 * 1024 * 1024
+FLAGS = {"research_only": True, "official_forecast": False,
+         "compass_probability_claim": False, "trading": False,
+         "promotion": False, "site_synthesis": False}
 
 
 def unique_object(pairs):
@@ -37,6 +40,17 @@ def verify_capture_metadata(raw, capture):
                      parse_constant=reject_constant)
     if not isinstance(doc, dict) or doc.get("contract") != "KOMPAS_LIVE_PATH_v1":
         raise ValueError("wrong source contract")
+    authority = doc.get("authority")
+    if not isinstance(authority, dict) or any(authority.get(k) is not v for k, v in FLAGS.items()):
+        raise ValueError("unexpected source authority")
+    assets = doc.get("assets")
+    if (not isinstance(assets, dict) or set(assets) != {"BTC", "ETH"}
+            or any(not isinstance(a, dict) or a.get("status") not in ("OK", "UNAVAILABLE")
+                   for a in assets.values())):
+        raise ValueError("invalid source assets")
+    count = sum(a["status"] == "OK" for a in assets.values())
+    if doc.get("status") != ("OK" if count == 2 else "PARTIAL" if count == 1 else "UNAVAILABLE"):
+        raise ValueError("inconsistent source status")
     seal = doc.pop("path_sha256", None)
     canonical = json.dumps(doc, sort_keys=True, separators=(",", ":"),
                            ensure_ascii=False, allow_nan=False).encode("utf-8")
@@ -135,6 +149,7 @@ def census(start, end, rows):
             end.second or end.microsecond or not start < end or end-start > 366*24*HOUR):
         raise ValueError("invalid census bounds")
     slots = defaultdict(dict)
+    digest_identity = {}
     duplicates = defaultdict(int)
     outside = 0
     for row in rows:
@@ -150,6 +165,11 @@ def census(start, end, rows):
         observed = utc(row["observer_reported_at_utc"])
         if observed < clock:
             raise ValueError("future issue")
+        digest = row["source_bytes_sha256"]
+        identity = (clock, row["source_status"])
+        if digest in digest_identity and digest_identity[digest] != identity:
+            raise ValueError("same bytes, inconsistent issue identity")
+        digest_identity[digest] = identity
         if not start <= clock < end:
             outside += 1
             continue
