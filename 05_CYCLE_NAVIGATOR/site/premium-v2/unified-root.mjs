@@ -1,3 +1,4 @@
+import {cycleParticipationMarkup} from './cycle-participation.mjs';
 import {cycleMapMarkup} from './cycle-map.mjs';
 /**
  * SITE #1578 · Source-composed SINGLE homepage. The original approved B SVG
@@ -65,7 +66,7 @@ export function buildUnifiedRootHtml(graphSource,proSource){
       '<strong id="cn-cycle-health">Kontrollerer ugegrundlag</strong>'+
       '<p id="cn-cycle-meaning">Ingen markedsfase vurderes uden verificerede kilder.</p>'+
       '<small id="cn-cycle-reason">Afventer kildekontrol.</small></section>'+
-      cycleMapMarkup+
+      cycleMapMarkup.replace('<p class="cn-map-caption" id="cn-map-caption">',cycleParticipationMarkup+'<p class="cn-map-caption" id="cn-map-caption">')+
       '<div class="path-hero">')
     // Reuse the ONE Altseason Watch card inside the existing ten-stage cycle,
     // while keeping prior source-owned milestone readback IDs for the root
