@@ -651,6 +651,20 @@ class WorkflowAndSwitch(unittest.TestCase):
         self.assertEqual(self.job["concurrency"], {"group": "s1-executor", "cancel-in-progress": False})
         self.assertEqual(E.EVENTS, ("schedule", "workflow_dispatch"))
 
+    def test_a_failed_executor_job_never_fails_the_run_that_carries_the_brief(self):
+        # TICK.md T2 (run_not_success) and the next build's C1b anchor (previous_anchor) accept a brief only from a run
+        # whose conclusion is success. The executor runs AFTER the publish, in the same run, so its failure must not
+        # change that conclusion: continue-on-error at JOB level (the job itself still shows as failed).
+        self.assertIs(self.job["continue-on-error"], True)
+        self.assertNotIn("continue-on-error", {k for name, job in WORKFLOW["jobs"].items() if name != "execute" for k in job})
+        self.assertEqual([name for name, job in WORKFLOW["jobs"].items() if "execute" in (job.get("needs") or [])], [])   # nothing waits for it
+        run = {"id": 555, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": MAIN, "status": "completed",
+               "run_started_at": TB.ts(5), "updated_at": TB.ts(-5)}
+        brief = {"run_id": 555, "main": MAIN, "generated_at": TB.ts(2), "c1b": {"checked_through": MAIN}}
+        issue = {"updated_at": TB.ts(1)}
+        self.assertEqual(B.previous_anchor(issue, brief, dict(run, conclusion="success"), NOW), ([MAIN], None, None))
+        self.assertEqual(B.previous_anchor(issue, brief, dict(run, conclusion="failure"), NOW), ([], None, "run_not_success"))   # what a failing run would cost
+
     def test_it_runs_only_mains_own_scripts(self):
         steps = self.job["steps"]
         self.assertEqual([s.get("uses") for s in steps], ["actions/checkout@v4", "actions/setup-python@v5", None])

@@ -151,6 +151,10 @@ jobs:
       needs.build.outputs.brief != ''
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # The brief is valid when due, build and publish succeed, and its readers (TICK.md T2, and the next build's C1b
+    # anchor) require a SUCCESSFUL run. A failure of this job must therefore never fail the run: it shows as a failed
+    # job, and an intent it left behind is settled by the next run.
+    continue-on-error: true
     # One executor at a time, never cancelled half way: an intent with no outcome is settled by the next run.
     concurrency:
       group: s1-executor
