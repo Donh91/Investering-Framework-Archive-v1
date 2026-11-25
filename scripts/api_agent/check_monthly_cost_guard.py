@@ -697,7 +697,7 @@ def main() -> None:
                 if row.get("work_id") in OWNER_ASTRA_PROGRAM_WORK
                 and row.get("status") == ACTIVE_RESERVATION_STATUS
             ) + sum(float(row.get("upper_usd", 0)) for row in valid.get(astra_missions.KEY, [])
-                    if row.get("status") != astra_missions.SETTLED)
+                    if row.get("status") not in astra_missions.NON_PENDING)
         except (OSError, ValueError, TypeError):
             errors.append({"path": "OWNER_ASTRA_PROGRAM",
                            "reason": "NORMAL_EXCEPTION_HOLD_UNREADABLE"})
