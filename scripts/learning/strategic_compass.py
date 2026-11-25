@@ -252,55 +252,60 @@ def strict_object(raw: bytes) -> dict[str, Any]:
     return value
 
 
-def bound_anchor_sources(repo: Path, optr: Mapping[str, Any], cptr: Mapping[str, Any]):
-    """Verify original owner identities before copying any long-horizon direction.
+def bound_source_bytes(repo: Path, path: Path):
+    if not path.is_file() or path.is_symlink() or not path.resolve().is_relative_to(repo.resolve()):
+        raise ValueError("STRATEGIC_SOURCE_PATH_INVALID")
+    raw = path.read_bytes()
+    return strict_object(raw), hashlib.sha256(raw).hexdigest()
 
-    Official Compass uses a self-digest; CN pointer uses the raw package digest.
-    Neither is independent first-known proof. No stale or wrong-week rewrite.
-    """
-    if (optr.get("contract") != "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
-            or cptr.get("contract") != "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1"):
-        raise ValueError("STRATEGIC_SOURCE_POINTER_CONTRACT_INVALID")
-    year,week=cptr.get("iso_year"),cptr.get("iso_week")
+
+def bound_official_source(repo: Path, optr: Mapping[str, Any]):
+    if optr.get("contract") != "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1":
+        raise ValueError("STRATEGIC_OFFICIAL_POINTER_CONTRACT_INVALID")
+    relative = optr.get("compass_path")
+    if not isinstance(relative, str) or not re.fullmatch(
+            r"04_MARKET_LEARNING/handlekompas/official/daily/\d{4}/\d{2}/\d{2}/CMP-[A-Za-z0-9-]+\.json", relative):
+        raise ValueError("STRATEGIC_OFFICIAL_PATH_INVALID")
+    path = repo / relative
+    compass, raw_sha = bound_source_bytes(repo, path)
+    official_digest = digest({k: v for k, v in compass.items() if k != "compass_sha256"})
+    if (compass.get("contract") != "OFFICIAL_DAILY_COMPASS_v1"
+            or not isinstance(compass.get("compass_id"), str)
+            or path.stem != compass["compass_id"]
+            or compass.get("compass_id") != optr.get("compass_id")
+            or compass.get("issued_at_utc") != optr.get("issued_at_utc")
+            or compass.get("compass_sha256") != official_digest
+            or optr.get("compass_sha256") != official_digest):
+        raise ValueError("STRATEGIC_OFFICIAL_SOURCE_BINDING_MISMATCH")
+    if not isinstance(compass.get("horizons"), dict):
+        raise ValueError("STRATEGIC_OFFICIAL_PROJECTION_INVALID")
+    return path, compass, raw_sha
+
+
+def bound_cn_source(repo: Path, cptr: Mapping[str, Any]):
+    if cptr.get("contract") != "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1":
+        raise ValueError("STRATEGIC_CN_POINTER_CONTRACT_INVALID")
+    year, week = cptr.get("iso_year"), cptr.get("iso_week")
     if type(year) is not int or type(week) is not int:
         raise ValueError("STRATEGIC_SOURCE_WEEK_INVALID")
     try:
-        datetime.fromisocalendar(year,week,1)
+        datetime.fromisocalendar(year, week, 1)
     except ValueError:
         raise ValueError("STRATEGIC_SOURCE_WEEK_INVALID") from None
-    relative=f"05_CYCLE_NAVIGATOR/weekly/{year}/W{week:02d}"
-    if cptr.get("week_dir")!=relative:
+    relative = f"05_CYCLE_NAVIGATOR/weekly/{year}/W{week:02d}"
+    if cptr.get("week_dir") != relative:
         raise ValueError("STRATEGIC_CN_WEEK_PATH_MISMATCH")
-    official_rel=optr.get("compass_path")
-    if not isinstance(official_rel,str) or not re.fullmatch(
-            r"04_MARKET_LEARNING/handlekompas/official/daily/\d{4}/\d{2}/\d{2}/CMP-[A-Za-z0-9-]+\.json",official_rel):
-        raise ValueError("STRATEGIC_OFFICIAL_PATH_INVALID")
-    compass_path=repo/official_rel
-    cn_path=repo/relative/"CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
-    for path in (compass_path,cn_path):
-        if not path.is_file() or path.is_symlink() or not path.resolve().is_relative_to(repo.resolve()):
-            raise ValueError("STRATEGIC_SOURCE_PATH_INVALID")
-    official_raw=compass_path.read_bytes()
-    cn_raw=cn_path.read_bytes()
-    compass=strict_object(official_raw)
-    cn=strict_object(cn_raw)
-    official_digest=digest({k:v for k,v in compass.items() if k!="compass_sha256"})
-    if (compass.get("contract")!="OFFICIAL_DAILY_COMPASS_v1"
-            or not isinstance(compass.get("compass_id"),str)
-            or compass_path.stem!=compass["compass_id"]
-            or compass.get("compass_id")!=optr.get("compass_id")
-            or compass.get("issued_at_utc")!=optr.get("issued_at_utc")
-            or compass.get("compass_sha256")!=official_digest
-            or optr.get("compass_sha256")!=official_digest):
-        raise ValueError("STRATEGIC_OFFICIAL_SOURCE_BINDING_MISMATCH")
-    if (cn.get("contract")!="CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1"
-            or any(type(cptr.get(k)) is not int or cn.get(k)!=cptr[k] for k in ("issue_number","public_issue_number"))
-            or cn.get("status")!=cptr.get("status")
-            or hashlib.sha256(cn_raw).hexdigest()!=cptr.get("machine_package_sha256")):
+    path = repo / relative / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+    cn, raw_sha = bound_source_bytes(repo, path)
+    if (cn.get("contract") != "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1"
+            or any(type(cptr.get(k)) is not int or cn.get(k) != cptr[k]
+                   for k in ("issue_number", "public_issue_number"))
+            or cn.get("status") != cptr.get("status")
+            or raw_sha != cptr.get("machine_package_sha256")):
         raise ValueError("STRATEGIC_CN_SOURCE_BINDING_MISMATCH")
-    if not isinstance(compass.get("horizons"), dict) or not isinstance(cn.get("decision_projection"), dict):
-        raise ValueError("STRATEGIC_SOURCE_PROJECTION_INVALID")
-    return compass_path,cn_path,compass,cn,hashlib.sha256(official_raw).hexdigest(),hashlib.sha256(cn_raw).hexdigest()
+    if not isinstance(cn.get("decision_projection"), dict):
+        raise ValueError("STRATEGIC_CN_PROJECTION_INVALID")
+    return path, cn, raw_sha
 
 
 def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
@@ -308,7 +313,7 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
     cn_ptr_path = repo / CN_PTR
     optr, cptr = {}, {}
     pointer_hashes = {}
-    reason = None
+    failures = {}
     # Read each pointer independently so an invalid Official pointer cannot
     # hide the intended CN package identity from the degraded receipt.
     for name, path in (("official", official_ptr_path), ("cn", cn_ptr_path)):
@@ -323,23 +328,30 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
             else:
                 cptr = obj
         except (OSError, ValueError, RecursionError):
-            reason = reason or "STRATEGIC_POINTER_UNREADABLE"
+            failures[name] = "STRATEGIC_POINTER_UNREADABLE"
     expected_cn_sha = cptr.get("machine_package_sha256")
     if not isinstance(expected_cn_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_cn_sha):
         expected_cn_sha = None
     compass_path = cn_machine_path = None
     compass, cn = {}, {}
     official_raw_sha = cn_raw_sha = None
-    if reason is None:
+    # Each source owns its own horizons. Official outages must not invalidate
+    # independently verified CN bytes or abort weekly CN publication.
+    for name, pointer, bind in (("official", optr, bound_official_source),
+                                ("cn", cptr, bound_cn_source)):
+        if name in failures:
+            continue
         try:
-            compass_path,cn_machine_path,compass,cn,official_raw_sha,cn_raw_sha = bound_anchor_sources(repo,optr,cptr)
+            path, payload, raw_sha = bind(repo, pointer)
+            if name == "official":
+                compass_path, compass, official_raw_sha = path, payload, raw_sha
+            else:
+                cn_machine_path, cn, cn_raw_sha = path, payload, raw_sha
         except (OSError, ValueError, RecursionError) as exc:
             code = str(exc)
-            reason = code if re.fullmatch(r"STRATEGIC_[A-Z_]+", code) else "STRATEGIC_SOURCE_UNREADABLE"
-    if reason is not None:
-        # Never expose directions, scenarios or market data from an unbound source.
-        compass, cn = {}, {}
-    binding_status = "DEGRADED" if reason else "VERIFIED"
+            failures[name] = code if re.fullmatch(r"STRATEGIC_[A-Z_]+", code) else "STRATEGIC_SOURCE_UNREADABLE"
+    reason = failures.get("official") or failures.get("cn")
+    binding_status = "DEGRADED" if failures else "VERIFIED"
 
     tactical = {
         "12h": official_horizon(compass, "NEXT_12H"),
