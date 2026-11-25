@@ -3,7 +3,9 @@
 No caller-provided receipt authenticates itself. No scoring, storage, network or
 production authority. Native workflow provenance must be verified separately.
 """
+import base64
 import datetime as dt
+import json
 import hashlib
 import re
 from collections import defaultdict
@@ -11,6 +13,43 @@ from collections import defaultdict
 PATH = "data/kompas-live.json"
 ORIGIN = "https://donh91.github.io/Investering-Framework-Archive-v1/"
 HOUR = dt.timedelta(hours=1)
+MAX_BYTES = 4 * 1024 * 1024
+
+
+def unique_object(pairs):
+    obj = {}
+    for k, v in pairs:
+        if k in obj:
+            raise ValueError("duplicate JSON key")
+        obj[k] = v
+    return obj
+
+
+def reject_constant(value):
+    raise ValueError("nonfinite JSON constant")
+
+
+def verify_capture_metadata(raw, capture):
+    """Cross-check metadata against exact bytes; not proof of publication."""
+    if not 0 < len(raw) <= MAX_BYTES:
+        raise ValueError("invalid source size")
+    doc = json.loads(raw.decode("utf-8"), object_pairs_hook=unique_object,
+                     parse_constant=reject_constant)
+    if not isinstance(doc, dict) or doc.get("contract") != "KOMPAS_LIVE_PATH_v1":
+        raise ValueError("wrong source contract")
+    seal = doc.pop("path_sha256", None)
+    canonical = json.dumps(doc, sort_keys=True, separators=(",", ":"),
+                           ensure_ascii=False, allow_nan=False).encode("utf-8")
+    if not sha(seal, 64) or hashlib.sha256(canonical).hexdigest() != seal:
+        raise ValueError("invalid source seal")
+    if (capture.get("source_contract") != doc["contract"]
+            or capture.get("source_seal_sha256") != seal
+            or utc(capture["generated_at_utc"]) != utc(doc["generated_at_utc"])
+            or capture.get("source_status") != doc.get("status")
+            or doc.get("status") not in ("OK", "PARTIAL", "UNAVAILABLE")
+            or capture.get("source_bytes_base64") != base64.b64encode(raw).decode("ascii")):
+        raise ValueError("capture metadata not derived from source")
+
 
 
 def utc(value):
@@ -42,6 +81,7 @@ def bind_publication(raw, capture, parity):
             or capture.get("research_only") is not True
             or capture.get("source_url_label") != ORIGIN + PATH):
         raise ValueError("capture binding mismatch")
+    verify_capture_metadata(raw, capture)
     issued = utc(capture["generated_at_utc"])
     observed = utc(capture["observer_reported_at_utc"])
     checked = utc(parity["checked_at_utc"])

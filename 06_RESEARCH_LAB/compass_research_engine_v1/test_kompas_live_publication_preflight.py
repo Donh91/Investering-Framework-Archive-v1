@@ -1,9 +1,15 @@
 """Synthetic receipt/census tests. No network, market data or outcome linkage."""
+import base64
 import hashlib
+import json
 import unittest
 from kompas_live_publication_preflight import bind_publication, census, PATH, ORIGIN
 
-RAW = b"synthetic fixture, not a real forecast"
+DOC = {"contract": "KOMPAS_LIVE_PATH_v1", "generated_at_utc": "2026-11-25T20:25:26Z",
+       "status": "OK"}
+SEAL = hashlib.sha256(json.dumps(DOC, sort_keys=True, separators=(",", ":"),
+                                ensure_ascii=False).encode()).hexdigest()
+RAW = json.dumps(dict(DOC, path_sha256=SEAL)).encode()
 DIGEST = hashlib.sha256(RAW).hexdigest()
 START = "2026-11-25T20:00:00Z"
 END = "2026-11-26T00:00:00Z"
@@ -12,6 +18,8 @@ END = "2026-11-26T00:00:00Z"
 def capture(**kw):
     return dict({"contract": "KOMPAS_LIVE_MEMORY_CAPTURE_v1",
                  "source_url_label": ORIGIN+PATH, "source_bytes": len(RAW),
+                 "source_contract": DOC["contract"], "source_seal_sha256": SEAL,
+                 "source_bytes_base64": base64.b64encode(RAW).decode("ascii"),
                  "source_bytes_sha256": DIGEST, "source_status": "OK",
                  "generated_at_utc": "2026-11-25T20:25:26Z",
                  "observer_reported_at_utc": "2026-11-25T20:49:00Z",
@@ -48,6 +56,24 @@ class PreflightTests(unittest.TestCase):
                      (capture(), parity(files=[dict(parity()["files"][0], served_sha256="f"*64)]))]:
             with self.subTest(c=c, p=p), self.assertRaises(ValueError):
                 bind_publication(RAW, c, p)
+
+    def test_capture_metadata_tampering_rejected(self):
+        for c in (capture(generated_at_utc="2026-11-25T20:10:00Z"),
+                  capture(source_status="UNAVAILABLE"),
+                  capture(source_seal_sha256="f"*64),
+                  capture(source_contract="OTHER"),
+                  capture(source_bytes_base64="eA==")):
+            with self.subTest(c=c), self.assertRaises(ValueError):
+                bind_publication(RAW, c, parity())
+
+    def test_wrong_raw_payload_even_with_matching_hash_rejected(self):
+        raw = b"not JSON"
+        digest = hashlib.sha256(raw).hexdigest()
+        c = capture(source_bytes=len(raw), source_bytes_sha256=digest,
+                    source_bytes_base64=base64.b64encode(raw).decode("ascii"))
+        p = parity(files=[dict(parity()["files"][0], expected_sha256=digest, served_sha256=digest)])
+        with self.assertRaises(ValueError):
+            bind_publication(raw, c, p)
 
     def test_hour_census_keeps_missing_unavailable_and_retries(self):
         unavailable = capture(generated_at_utc="2026-11-25T22:30:00Z",
