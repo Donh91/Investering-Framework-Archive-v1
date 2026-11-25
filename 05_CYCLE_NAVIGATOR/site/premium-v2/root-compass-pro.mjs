@@ -19,6 +19,7 @@ import {kompasSourceClockReadback} from './kompas-clock-readback.mjs';
 import {importantStatusLine,btcNextDays,extraHorizonRows} from './kompas-owner-brief.mjs';
 import {cycleSourceReadback} from './cycle-source-readback.mjs';
 import {renderCycleMap} from './cycle-map.mjs';
+import {renderCycleParticipation} from './cycle-participation.mjs';
 import './cycle-map.css';
 import {readSwingRotation,renderSwingRotation} from '../vnext-live/swing-rotation-readback.mjs';
 import {liveViewModel,liveChart} from './kompas-live.mjs';
@@ -782,6 +783,7 @@ function renderCycleSource(){
  const en=lang==='en';
  const model=cycleSourceReadback({view,lang});
  renderCycleMap(document,{view,latest:feeds?.latest,lang});
+ renderCycleParticipation(document,feeds?.latest,feeds?.compass,{lang});
  set('cn-cycle-health',model.weekLabel);
  set('cn-cycle-meaning',model.meaning);
  set('cn-cycle-reason',model.reason||model.nextMeaning||
