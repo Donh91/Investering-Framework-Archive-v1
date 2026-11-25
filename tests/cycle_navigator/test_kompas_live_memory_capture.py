@@ -1,0 +1,76 @@
+"""Synthetic custody tests only; no historical or Round 3 outcomes."""
+import hashlib
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+from scripts.cycle_navigator.kompas_live_memory_capture import capture, store, FLAGS
+
+ISSUED = "2026-11-25T20:25:26Z"
+OBSERVED = "2026-11-25T20:49:00Z"
+
+
+def packet(**changes):
+    doc = {"contract": "KOMPAS_LIVE_PATH_v1", "authority": FLAGS.copy(),
+           "generated_at_utc": ISSUED, "status": "OK",
+           "assets": {"BTC": {"status": "OK"}, "ETH": {"status": "OK"}}}
+    doc.update(changes)
+    doc["path_sha256"] = hashlib.sha256(json.dumps(
+        doc, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode()).hexdigest()
+    return json.dumps(doc, indent=1).encode()
+
+
+class CaptureTests(unittest.TestCase):
+    def test_receipt_never_grants_scoring(self):
+        raw = packet()
+        result = capture(raw, OBSERVED)
+        self.assertEqual(result["source_bytes_sha256"], hashlib.sha256(raw).hexdigest())
+        for key in ("publication_authenticated", "pit_admitted", "scoring_authorized"):
+            self.assertIs(result[key], False)
+
+    def test_no_rewrite_and_same_clock_conflict(self):
+        with tempfile.TemporaryDirectory() as root:
+            raw = packet()
+            path, status = store(root, raw, OBSERVED)
+            self.assertEqual(status, "CREATED")
+            original = path.read_bytes()
+            self.assertEqual(store(root, raw, "2026-11-26T00:00:00Z"), (path, "ALREADY_CAPTURED"))
+            with self.assertRaises(ValueError):
+                store(root, packet(extra="changed"), OBSERVED)
+            self.assertEqual(path.read_bytes(), original)
+
+    def test_corruption_rejected(self):
+        with tempfile.TemporaryDirectory() as root:
+            raw = packet()
+            path, _ = store(root, raw, OBSERVED)
+            obj = json.loads(path.read_bytes())
+            obj["pit_admitted"] = True
+            path.write_text(json.dumps(obj))
+            with self.assertRaises(ValueError):
+                store(root, raw, OBSERVED)
+
+    def test_invalid_packets(self):
+        for raw in (packet(contract="OTHER"),
+                    packet(authority={**FLAGS, "trading": True}),
+                    packet(status="UNAVAILABLE"),
+                    packet().replace(b'"OK"', b'"PARTIAL"', 1),
+                    b'{"contract":"a","contract":"b"}',
+                    b'{"x":NaN}'):
+            with self.subTest(raw=raw), self.assertRaises(ValueError):
+                capture(raw, OBSERVED)
+
+    def test_future_and_naive_clock(self):
+        for clock in ("2026-11-25T20:00:00Z", "2026-11-25T21:00:00"):
+            with self.assertRaises(ValueError):
+                capture(packet(), clock)
+
+    def test_unavailable_is_preserved(self):
+        raw = packet(status="UNAVAILABLE",
+                     assets={"BTC": {"status": "UNAVAILABLE"}, "ETH": {"status": "UNAVAILABLE"}})
+        self.assertEqual(capture(raw, OBSERVED)["source_status"], "UNAVAILABLE")
+
+
+if __name__ == "__main__":
+    unittest.main()
