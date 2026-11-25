@@ -389,6 +389,38 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "consecutive_same_side"):
             reader.verify(forged, fixture.observation, decisions)
 
+    def test_pinned_history_diagnostics_distinguish_future_and_missing_object(self):
+        fixture = FixtureRepo(self)
+        path = fixture.repo / "row.json"
+        path.write_text(json.dumps(fixture.build()["row"]) + "\n")
+        controller.ingest(path)
+        fixture.commit_path(controller.LEDGER, "freeze ledger")
+        pinned = fixture._git("rev-parse", "HEAD")
+        reader = controller.PinnedSourceReplay(fixture.repo, pinned)
+        self.assertFalse(reader.history_context["shallow"])
+        self.assertEqual(reader.history_context["replace_ref_n"], 0)
+        self.assertFalse(reader.history_context["grafts_present"])
+        reader.require_ancestor(pinned)
+        controller.CONTRACT.write_text("{}")
+        fixture.commit_path(controller.CONTRACT, "future source")
+        future = fixture._git("rev-parse", "HEAD")
+        for source, code, kind in (
+            (future, "PINNED_SOURCE_NOT_ANCESTOR", "commit"),
+            ("0" * 40, "PINNED_GIT_ANCESTRY_ERROR", "UNAVAILABLE"),
+        ):
+            with self.subTest(source=source):
+                with self.assertRaises(subprocess.CalledProcessError) as caught:
+                    reader.require_ancestor(source)
+                detail = reader.ancestry_failure(source, caught.exception)
+                self.assertEqual(detail["code"], code)
+                self.assertEqual(detail["source_object_type"], kind)
+                self.assertEqual(detail["checkout_object_type"], "commit")
+        graft = fixture.repo / ".git/info/grafts"
+        graft.parent.mkdir(parents=True, exist_ok=True)
+        graft.write_text("")
+        with self.assertRaisesRegex(ValueError, "PINNED_GIT_HISTORY_INCOMPLETE_OR_REWRITTEN"):
+            controller.PinnedSourceReplay(fixture.repo, pinned)
+
     def test_real_archive_persistence_cohort_is_fully_replayed_without_writes(self):
         # Fresh process avoids fixture module/global contamination and uses
         # the existing full-checkout native research gate, not mocked owners.
