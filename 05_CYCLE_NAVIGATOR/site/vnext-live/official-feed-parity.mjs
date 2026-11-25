@@ -88,6 +88,7 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
       pullback_window: null, pullback_stage: null, pullback_investor_facts: null, bull_bear_1_3d: null,
       permit_path_live_gates: false
     },
+    live_observation: null,
     completed_score: {
       state: 'UNAVAILABLE', public_issue_number: null, forecast_week: null,
       price_range_precision: null, btc_score: null, eth_score: null,
@@ -162,6 +163,24 @@ export function inspectOfficialPublicFeeds(latest, compass, options = {}) {
     ownerFreshness?.semantics === 'SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA' &&
     ownerAsOf !== null && ownerExpiry !== null && ownerAsOf <= ownerExpiry &&
     ownerAsOf <= nowEpochMs + 5 * 60000 && nowEpochMs < ownerExpiry;
+  // Independent observed market context: the weekly join protects weekly-derived
+  // actions/forecasts, NOT the separately authenticated live observation.
+  // Never reinterpret this as a cycle stage, forecast, flow or action.
+  const observed = compass.market_now;
+  const observedAt = validUtc(observed?.market_observation_open_utc);
+  if (cOK && ownerCurrent && observedAt !== null && observedAt <= compassTime &&
+      observedAt <= nowEpochMs && normalizeAge(observed.market_observation_open_utc, nowEpochMs, compassMaxAgeHours) === 'FRESH' &&
+      ['BULLISH','BEARISH','MIXED','NEUTRAL','SIDEWAYS'].includes(observed.directional_state)) {
+    result.live_observation = {
+      semantics: 'OBSERVED_MOMENTUM_NOT_CYCLE_OR_FORECAST',
+      compass_id: compass.compass_id,
+      observation_open_utc: observed.market_observation_open_utc,
+      issued_at_utc: compass.issued_at_utc,
+      direction: observed.directional_state,
+      eth_relative_state: ['STRENGTHENING','WEAKENING','MIXED','NEUTRAL','STABLE'].includes(observed.eth_relative_state) ? observed.eth_relative_state : null,
+      authority: 'PRESENTATION_ONLY'
+    };
+  }
   const actionable = cOK && cnJoined && ownerCurrent;
   result.compass = {
     state: actionable ? 'FRESH' : compassAge === 'STALE' ? 'STALE' : 'UNAVAILABLE',
