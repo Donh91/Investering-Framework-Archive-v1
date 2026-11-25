@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bindParticipation,bindNativeParticipation,readCycleParticipation,renderCycleParticipation} from '../cycle-participation.mjs';
+import {bindParticipation,bindNativeParticipation,readCycleParticipation,renderCycleParticipation,bindNativeAltseason,readAltseason,altseasonDisplay} from '../cycle-participation.mjs';
 const observed='2026-11-25T10:00:00Z',issued='2026-11-25T10:15:00Z',nowUtc='2026-11-25T11:00:00Z';
 function fixture(){
  const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MINORITY',outperforming_eth:'HALF'};
@@ -64,4 +64,23 @@ test('newer hourly native readback is independent of the official slot and weekl
 test('new native missing evidence cannot silently borrow the older official observation',()=>{
  const x=fixture();x.c.full_stack.native_cycle_participation_emitted=true;
  assert.equal(readCycleParticipation(x.l,x.c,{nowUtc}),null);
+});
+
+test('live altseason source category survives weekly mismatch; stale, carry and future never become ETA',()=>{
+ const x=fixture(),n={contract:'NATIVE_HANDLEKOMPAS_v1',generated_at_utc:issued,source:{packet_sha256:'a'.repeat(64)},
+ altseason_readback:{contract:'CN_ALTSEASON_OBSERVATION_v1',source:'BLOCKCHAINCENTER_90D',authority:'CONTEXT_ONLY_NO_TRANSITION_OR_ETA',
+ status:'OBSERVED',state:'ALTCOIN_SEASON',observed_at_utc:observed,valid_until_utc:'2026-11-26T10:00:00Z'}};
+ const a={contract:'AUTO_MARKET_STATE_PACKET_v1',packet_sha256:'a'.repeat(64),packet_generated_at_utc:'2026-11-25T10:10:00Z'};
+ x.c.full_stack.source_status={native:'VERIFIED_NEWER_OR_DIFFERENT_SOURCE'};
+ x.c.full_stack.native={checked_at_utc:issued};
+ function bind(){x.c.full_stack.native_altseason_binding=bindNativeAltseason(n,a,{verified:true});}
+ bind();assert.match(altseasonDisplay(x.l,x.c,{nowUtc,lang:'en'}).state,/Altcoin season/);
+ n.altseason_readback.state='BITCOIN_SEASON';bind();
+ assert.match(altseasonDisplay(x.l,x.c,{nowUtc,lang:'en'}).state,/Bitcoin season/);
+ assert.equal(altseasonDisplay(x.l,x.c,{nowUtc,lang:'en'}).eta,'No verified ETA');
+ assert.equal(readAltseason(x.l,x.c,{nowUtc:'2026-11-26T10:00:00Z'}),null);
+ n.altseason_readback.status='CARRIED_NOT_FRESH';n.altseason_readback.valid_until_utc='2026-11-28T10:00:00Z';bind();
+ assert.match(altseasonDisplay(x.l,x.c,{nowUtc,lang:'en'}).state,/carried, not fresh/);
+ assert.equal(bindNativeAltseason(n,{...a,packet_sha256:'b'.repeat(64)},{verified:true}),null);
+ assert.equal(readAltseason(x.l,x.c,{nowUtc:'2026-11-25T09:00:00Z'}),null);
 });

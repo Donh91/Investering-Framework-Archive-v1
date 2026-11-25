@@ -1,7 +1,7 @@
 import copy
 import unittest
 from datetime import datetime, timedelta, timezone
-from scripts.data_ping.native_handlekompas import build, cycle_participation_readback
+from scripts.data_ping.native_handlekompas import build, cycle_participation_readback, altseason_readback
 
 NOW = datetime(2026, 11, 25, 11, tzinfo=timezone.utc)
 STAMP = "2026-11-25T10:00:00Z"
@@ -72,6 +72,46 @@ class ParticipationTests(unittest.TestCase):
         self.assertNotIn(H,str(result))
         self.assertNotIn("return_24h_pct",str(result))
         self.assertNotIn("constituent_count",str(result))
+
+class AltseasonTests(unittest.TestCase):
+    def source(self, score, state):
+        x=fixture()
+        x["source_health"]["altseason_context"]={"status":"PASS"}
+        x["normalized_state"]["altseason_context"]={"blockchaincenter_altcoin_season":{
+            "contract":"BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1","status":"PASS",
+            "retrieved_at_utc":STAMP,"observation_date_utc":"2026-11-25",
+            "horizons":{"90":{"published_score":score,"recomputed_score":score,
+                               "score_reconciliation":"PASS_EXACT","source_state":state}}}}
+        return x
+
+    def test_source_threshold_boundaries_and_native_emission(self):
+        for score,state in [(25,"BITCOIN_SEASON"),(26,"BETWEEN_PUBLISHED_THRESHOLDS"),
+                            (74,"BETWEEN_PUBLISHED_THRESHOLDS"),(75,"ALTCOIN_SEASON")]:
+            x=self.source(score,state)
+            got=altseason_readback(x,as_of=NOW)
+            self.assertEqual(got["state"],state)
+            self.assertEqual(build(x,now=NOW)["altseason_readback"],got)
+            self.assertNotIn("published_score",got)
+            self.assertNotIn("eta",got)
+
+    def test_clock_and_false_pass(self):
+        x=self.source(75,"ALTCOIN_SEASON")
+        self.assertEqual(altseason_readback(x,as_of=NOW+timedelta(hours=23))["status"],"UNAVAILABLE")
+        self.assertEqual(altseason_readback(self.source(75,"BITCOIN_SEASON"),as_of=NOW)["status"],"UNAVAILABLE")
+        x["validation_status"]="FAIL"
+        self.assertEqual(altseason_readback(x,as_of=NOW)["status"],"UNAVAILABLE")
+
+    def test_carry_not_fresh_and_expiry(self):
+        x=self.source(75,"ALTCOIN_SEASON")
+        x["source_health"]["altseason_context"]={"status":"DEGRADED_CARRY"}
+        x["normalized_state"]["altseason_carry"]={
+            "value":75,"source_retrieved_at_utc":"2026-11-24T10:00:00Z",
+            "source_packet_generated_at_utc":"2026-11-24T11:00:00Z",
+            "source_observation_date_utc":"2026-11-24","max_age_hours":72,
+            "semantics":"LAST_VALID_PUBLISHED_VALUE_CARRIED_NOT_INTERPOLATED_NOT_PASS"}
+        self.assertEqual(altseason_readback(x,as_of=NOW)["status"],"CARRIED_NOT_FRESH")
+        self.assertEqual(altseason_readback(x,as_of=NOW+timedelta(hours=47))["status"],"UNAVAILABLE")
+
 
 if __name__ == "__main__":
     unittest.main()

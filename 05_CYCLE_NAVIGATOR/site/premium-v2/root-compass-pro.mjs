@@ -19,7 +19,7 @@ import {kompasSourceClockReadback} from './kompas-clock-readback.mjs';
 import {importantStatusLine,btcNextDays,extraHorizonRows} from './kompas-owner-brief.mjs';
 import {cycleSourceReadback} from './cycle-source-readback.mjs';
 import {renderCycleMap} from './cycle-map.mjs';
-import {renderCycleParticipation} from '../cycle-participation.mjs';
+import {renderCycleParticipation,altseasonDisplay} from '../cycle-participation.mjs';
 import './cycle-map.css';
 import {readSwingRotation,renderSwingRotation} from '../vnext-live/swing-rotation-readback.mjs';
 import {liveViewModel,liveChart} from './kompas-live.mjs';
@@ -404,28 +404,14 @@ function renderReader(){
 
 function renderAltMilestone(){
  const en=document.documentElement.lang==='en';
- const eligible=view?.path?.state==='SOURCE_BOUND'&&
-  view?.compass?.state==='FRESH'&&
-  view.compass.permit_path_live_gates===true&&
-  view.path.source_issue===view?.weekly?.public_issue_number&&
-  view.path.source_week===view?.weekly?.forecast_week&&
-  view.path.source_identity===view.compass.compass_id;
- const p=eligible?view.path:null;
- set('cn-alt-milestone-title',en?'Altseason ignition':'Altseason begynder');
- set('cn-alt-milestone-subtitle',en?
-  'Before small/micro acceleration · independently verified rotation required':
-  'Før small/micro-acceleration · kræver verificeret rotation');
+ const m=altseasonDisplay(feeds?.latest,feeds?.compass,{lang:en?'en':'da'});
+ set('cn-alt-milestone-title',m.title);
+ set('cn-alt-milestone-subtitle',m.subtitle);
  set('cn-alt-milestone-eta-label',en?'Time to phase':'Tid til fase');
- // No structured authoritative future absolute timestamp exists in PATH v3.
- // A prose watch window is not a countdown, date or probability.
- set('cn-alt-milestone-eta',en?'No verified ETA':'Ingen verificeret ETA');
- const state=eligible&&p?.altseason?.status==='WATCH_ONLY'?
-   (en?'Conditional watch · not confirmed':'Betinget watch · ikke bekræftet'):
-   (en?'Awaiting verified transition':'Afventer verificeret overgang');
- set('cn-alt-milestone-state',state);
+ set('cn-alt-milestone-eta',m.eta);
+ set('cn-alt-milestone-state',m.state);
  const panel=$('cn-alt-milestone-title')?.closest('.cn-alt-milestone');
- if(panel)panel.dataset.state=eligible&&p.altseason?.status==='WATCH_ONLY'?
-   'watch':'unverified';
+ if(panel)panel.dataset.state=m.panel;
 }
 function renderForward(){
  const lang=document.documentElement.lang==='en'?'en':'da';

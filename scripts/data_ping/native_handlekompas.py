@@ -452,6 +452,7 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
         "action": native_action,
         "market_direction": market_direction,
         "cycle_participation": cycle_participation_readback(auto_state, as_of=generated),
+        "altseason_readback": altseason_readback(auto_state, as_of=generated),
         "DATA_HEALTH": {
             "status": effective_data_status,
             "source_validation_status": auto_state.get("validation_status"),
@@ -2269,6 +2270,62 @@ def cycle_participation_readback(auto_state, *, as_of):
     out["status"] = "OBSERVED_PARTICIPATION" if observed == len(_PARTICIPATION_WINDOWS) else "PARTIAL_OBSERVATION"
     out["reason"] = "SOURCE_PROXY_ONLY" if observed == len(_PARTICIPATION_WINDOWS) else "INCOMPLETE_RANK_WINDOWS"
     return out
+
+
+def altseason_readback(auto_state, *, as_of):
+    """Source-published 90d state only; no phase, ETA, flow or action.
+    Daily source expectation from blockchaincenter_altcoin_season_shadow.json;
+    carry policy from auto_market_state.altseason_source_health (72h).
+    No numeric provider data in this projection.
+    """
+    out = {"contract": "CN_ALTSEASON_OBSERVATION_v1", "status": "UNAVAILABLE",
+           "source": "BLOCKCHAINCENTER_90D", "state": "UNAVAILABLE",
+           "observed_at_utc": None, "valid_until_utc": None,
+           "authority": "CONTEXT_ONLY_NO_TRANSITION_OR_ETA"}
+    packet = _participation_mapping(auto_state)
+    if packet.get("validation_status") == "FAIL":
+        return out
+    now = as_of if isinstance(as_of, datetime) and as_of.utcoffset() is not None else None
+    issued = _participation_clock(packet.get("packet_generated_at_utc"))
+    ns = _participation_mapping(packet.get("normalized_state"))
+    health = nested(packet, "source_health", "altseason_context", "status")
+    bc = _participation_mapping(nested(ns, "altseason_context", "blockchaincenter_altcoin_season"))
+    row = _participation_mapping(nested(bc, "horizons", "90"))
+    if health == "PASS" and bc.get("status") == "PASS" and bc.get("contract") == "BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1":
+        value = row.get("published_score")
+        retrieved = _participation_clock(bc.get("retrieved_at_utc"))
+        if (row.get("score_reconciliation") != "PASS_EXACT" or
+                not _participation_number(row.get("recomputed_score")) or
+                row.get("recomputed_score") != value or
+                retrieved is None or bc.get("observation_date_utc") != retrieved.date().isoformat()):
+            return out
+        status, ttl = "OBSERVED", timedelta(hours=24)
+    elif health == "DEGRADED_CARRY":
+        carry = _participation_mapping(ns.get("altseason_carry"))
+        if (carry.get("semantics") != "LAST_VALID_PUBLISHED_VALUE_CARRIED_NOT_INTERPOLATED_NOT_PASS" or
+                carry.get("max_age_hours") != 72):
+            return out
+        value = carry.get("value")
+        retrieved = _participation_clock(carry.get("source_retrieved_at_utc"))
+        origin = _participation_clock(carry.get("source_packet_generated_at_utc"))
+        if (retrieved is None or origin is None or issued is None or
+                not retrieved <= origin < issued or
+                carry.get("source_observation_date_utc") != retrieved.date().isoformat()):
+            return out
+        status, ttl = "CARRIED_NOT_FRESH", timedelta(hours=72)
+    else:
+        return out
+    if (not _participation_number(value) or not 0 <= value <= 100 or
+            now is None or issued is None or retrieved is None or
+            not retrieved <= issued <= now or now >= retrieved + ttl):
+        return out
+    # Source registry thresholds (not framework trading thresholds).
+    state = "ALTCOIN_SEASON" if value >= 75 else "BITCOIN_SEASON" if value <= 25 else "BETWEEN_PUBLISHED_THRESHOLDS"
+    if status == "OBSERVED" and row.get("source_state") != state:
+        return out
+    return {**out, "status": status, "state": state,
+            "observed_at_utc": _stamp(retrieved),
+            "valid_until_utc": _stamp(retrieved + ttl)}
 
 
 def _public_descriptive(compass: Mapping[str, Any]) -> dict[str, Any]:
