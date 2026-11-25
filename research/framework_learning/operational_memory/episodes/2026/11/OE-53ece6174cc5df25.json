@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py",
+    "tests/governance/test_s1_runtime_contract_v1.py",
+    "tests/governance/test_s1_trajectory_replay_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-53ece6174cc5df25",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "s1-bootstrap-v9-output-end-grouped-only-runs",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* local: C6 grouped-only (never pushed) * fix(S1): BOOTSTRAP v9 OUTPUT AT END + grouped only (runs that print between tool calls stop after one call) Evidence: v8 BOOTSTRAP printed nothing before its tool calls and natural runs reached T1-T3 and the T3H heartbeat (e.g. #1156 2026-11-24T16:46Z). v9 added S1_ARM/S1_STEP chat lines before and after each call; every natural v9 run (09:45, 11:45 direct; 12:45 grouped) printed a line after its first call and then stopped (read_not_executed). Hypothesis: text emitted mid-run ends a scheduled run. Change (BOOTSTRAP text only; RUNTIME_CONTRACT, 3b 590a",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_FMOS/S1/BOOTSTRAP.txt": "f456148be057b55e7053da5e9300106a2c9cde29",
+    "tests/governance/test_s1_reviewed_merge_lane_v1.py": "80857ea5cba52d20b050b02fd0827aa70c662cb8",
+    "tests/governance/test_s1_runtime_contract_v1.py": "7b56d5cfc6987a54464c6aa928fc1052f403c46e",
+    "tests/governance/test_s1_trajectory_replay_v1.py": "c1c610ee3b1db6c3af1b71aa254da4bc7f95b67c"
+  },
+  "source_commit_sha": "53ece6174cc5df251bea63990b4f27fb5d9de1ca",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-25T14:49:11+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(S1): BOOTSTRAP v9 OUTPUT AT END + grouped only (runs that print between tool calls stop after one call) (#2336)"
+}
