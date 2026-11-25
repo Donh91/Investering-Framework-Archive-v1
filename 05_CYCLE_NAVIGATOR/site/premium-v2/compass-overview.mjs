@@ -166,6 +166,20 @@ export function observedMarketClock({compass,now=Date.now()}){
 // Reuse the independent live-observation owner introduced in #2333.
 // The weekly join remains mandatory for official actions and forecasts.
 // Recheck identity, delivery and the closed-candle SLA at the consumer clock.
+// The versioned public product and the independent root momentum branch
+// share the same publication identity check. This is not proof of CDN bytes.
+export function verifiedKompasPublicationLineage(lineage,view){
+ return lineage?.contract==='CN_PUBLICATION_LINEAGE_RELEASE_RECEIPT_v1'&&
+  lineage.semantics==='PUBLIC_BUNDLE_BUILD_TIME_EVIDENCE_NOT_LIVE_CLIENT_FRESHNESS'&&
+  lineage.authority==='READ_ONLY_RECONCILIATION_NO_FORECAST_OR_TRADING_AUTHORITY'&&
+  lineage.source_to_public_equality==='PASS'&&lineage.prospective_forecast_points_created===0&&
+  typeof view?.weekly?.forecast_week==='string'&&Number.isInteger(view.weekly.public_issue_number)&&
+  lineage.forecast_week===view.weekly.forecast_week&&lineage.public_issue_number===view.weekly.public_issue_number;
+}
+export function verifiedPublishedLiveMomentum({compass,view,publicationLineage,now=Date.now()}={}){
+ return verifiedKompasPublicationLineage(publicationLineage,view)?
+  verifiedLiveMomentum({compass,view,now}):null;
+}
 export function verifiedLiveMomentum({compass,view,now=Date.now()}={}){
  const o=view?.live_observation,m=compass?.market_now;
  if(!Number.isFinite(now)||view?.delivery_health!=='FRESH'||
