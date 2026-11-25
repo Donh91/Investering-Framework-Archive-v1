@@ -443,6 +443,9 @@ class PinnedSourceReplay:
     def __init__(self, repo: Path, checkout: str):
         self.repo = Path(repo).resolve()
         self.checkout = self._sha(checkout)
+        self.history_context = self.inspect_history()
+        if self.history_context["shallow"] or self.history_context["replace_ref_n"] or self.history_context["grafts_present"]:
+            raise ValueError("PINNED_GIT_HISTORY_INCOMPLETE_OR_REWRITTEN")
         self._git("merge-base", "--is-ancestor", self.checkout, "HEAD")
         self.ledger_raw = self.read_blob(self.checkout, self.BASE + "/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv")
         reader = csv.DictReader(io.StringIO(self.ledger_raw.decode("utf-8-sig"), newline=""), strict=True)
@@ -486,8 +489,40 @@ class PinnedSourceReplay:
         return subprocess.check_output(["git", "-C", str(self.repo), *args],
                                        stderr=subprocess.DEVNULL, timeout=30)
 
+    def inspect_history(self):
+        """Read-only runner evidence; never substitute API ancestry for local Git."""
+        shallow = self._git("rev-parse", "--is-shallow-repository").decode().strip()
+        if shallow not in ("true", "false"):
+            raise ValueError("PINNED_GIT_SHALLOW_STATE_UNKNOWN")
+        graft_path = Path(self._git("rev-parse", "--git-path", "info/grafts").decode().strip())
+        if not graft_path.is_absolute():
+            graft_path = self.repo / graft_path
+        return {
+            "head": self._sha(self._git("rev-parse", "HEAD").decode().strip()),
+            "checkout": self.checkout,
+            "shallow": shallow == "true",
+            "replace_ref_n": len(self._git("replace", "-l").splitlines()),
+            "grafts_present": graft_path.exists(),
+        }
+
     def require_ancestor(self, commit):
         self._git("merge-base", "--is-ancestor", self._sha(commit), self.checkout)
+
+    def ancestry_failure(self, commit, exc):
+        """Classify a rejected row without admitting it or exposing runner paths."""
+        source = self._sha(commit)
+        def object_type(sha):
+            try:
+                return self._git("cat-file", "-t", sha).decode().strip()
+            except (OSError, subprocess.SubprocessError):
+                return "UNAVAILABLE"
+        return {
+            "code": "PINNED_SOURCE_NOT_ANCESTOR" if exc.returncode == 1 else "PINNED_GIT_ANCESTRY_ERROR",
+            "git_exit_code": exc.returncode,
+            "source_commit": source,
+            "source_object_type": object_type(source),
+            "checkout_object_type": object_type(self.checkout),
+        }
 
     def read_blob(self, commit, path):
         return self._git("show", f"{self._sha(commit)}:{path}")
@@ -738,6 +773,7 @@ def audit_persistence_cohort(*, context=None) -> dict[str, Any]:
         source_rows = rows(LEDGER)
     else:
         floor = context.floor
+        result["history_context"] = context.history_context
         reader = csv.DictReader(io.StringIO(context.ledger_raw.decode("utf-8-sig"), newline=""), strict=True)
         source_rows = list(reader)
         if any(None in row or any(value is None for value in row.values()) for row in source_rows):
@@ -781,6 +817,11 @@ def audit_persistence_cohort(*, context=None) -> dict[str, Any]:
         except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError,
                 OverflowError, subprocess.SubprocessError) as exc:
             item["reason"] = str(exc)
+            if (context is not None and isinstance(exc, subprocess.CalledProcessError)
+                    and isinstance(exc.cmd, list) and "merge-base" in exc.cmd
+                    and "--is-ancestor" in exc.cmd):
+                item["ancestry_failure"] = context.ancestry_failure(row["source_version_commit"], exc)
+                item["reason"] = item["ancestry_failure"]["code"]
             result["rejected_n"] += 1
         result["rows"].append(item)
     result["observed_above_episode_n"] = len(episodes)
