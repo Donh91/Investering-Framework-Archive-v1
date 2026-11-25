@@ -69,8 +69,8 @@ class C2FixtureTests(unittest.TestCase):
             bars[t]={"BTC":(98.,99.,97.),"ETH":(102.,103.,101.)}
         return seal(f),bars
 
-    def evaluate(self,f,bars,permission=True,delivery="2026-11-30T00:00:00Z",mature="2026-12-07T00:00:00Z"):
-        return fixture_evaluation(f,permission,bars,first_delivery_utc=delivery,evaluated_at_utc=mature)
+    def evaluate(self,f,bars,permission=True,delivery="2026-11-30T00:00:00Z",mature="2026-12-07T00:00:00Z",c0=None):
+        return fixture_evaluation(f,permission,bars,first_delivery_utc=delivery,evaluated_at_utc=mature,c0_fixture=c0)
 
     def test_matched_evaluation_has_exact_common_denominator_and_relative_direction(self):
         f,bars=self.evaluation_fixture()
@@ -128,3 +128,70 @@ class C2FixtureTests(unittest.TestCase):
         self.assertGreater(r["relative"]["metrics"]["C2_abs_error_fraction"],
                            r["relative"]["metrics"]["C1_abs_error_fraction"])
         self.assertFalse(r["edge_established"])
+
+    def c0_fixture(self,f):
+        point={"contract":"CN_FROZEN_DAILY_PRICE_PATH_v1","forecast_week":f["week"]}
+        ranges={"contract":"CN_FROZEN_DAILY_RANGE_PLAN_v1","forecast_week":f["week"]}
+        for asset,center in (("BTC",98.),("ETH",102.)):
+            point[asset]={"status":"PUBLISHED","points":[{"day":d,"expected_close":center,
+                          "low":center-1,"high":center+1} for d in range(1,8)]}
+            ranges[asset]={"status":"PUBLISHED","points":[{"day":d,"low":center-2,
+                          "high":center+2} for d in range(1,8)]}
+        packet={"contract":"CN_MM_C0_COMPARATOR_FIXTURE_v1","source":"SYNTHETIC_NOT_MAIN_ATTESTED",
+                "a_issuance_sha256":f["issuance_sha256"],"issue_clock_utc":f["issue_clock_utc"],
+                "first_delivery_utc":f["issue_clock_utc"],
+                "freeze":{"daily_price_path":point,"daily_range_plan":ranges}}
+        return self.seal_c0(packet)
+
+    def seal_c0(self,p):
+        p.pop("packet_sha256",None);p["packet_sha256"]=A._digest(p)
+        return p
+
+    def test_three_model_common_population_and_distinct_interval_semantics(self):
+        f,bars=self.evaluation_fixture()
+        c0=self.c0_fixture(f)
+        r=self.evaluate(f,bars,c0=c0)
+        self.assertEqual(r["comparison_models"],["C0","C1","C2"])
+        self.assertEqual(r["paired_asset_day_count"],14)
+        self.assertEqual(r["all"]["metrics"]["C0_abs_error_fraction"],0.)
+        self.assertEqual(r["all"]["metrics"]["C0_direction_correct"],1.)
+        self.assertEqual(r["all"]["metrics"]["C0_range_covered"],1.)
+        self.assertAlmostEqual(r["all"]["metrics"]["C0_width"],.04)
+        self.assertAlmostEqual(r["all"]["metrics"]["C0_interval_score"],.04)
+        self.assertEqual(r["relative"]["metrics"]["C0_abs_error_fraction"],0.)
+        self.assertEqual(r["relative"]["metrics"]["C0_direction_correct"],1.)
+        self.assertIn("not a calibrated close interval",r["interval_comparison_caveat"])
+        self.assertFalse(r["edge_established"])
+
+    def test_three_model_late_delivery_and_gap_remove_all_model_rows(self):
+        f,bars=self.evaluation_fixture()
+        c0=self.c0_fixture(f)
+        c0["first_delivery_utc"]="2026-12-01T00:01:00Z"
+        del bars[A.utc("2026-12-02T05:00:00Z")]["BTC"]
+        r=self.evaluate(f,bars,c0=self.seal_c0(c0))
+        self.assertEqual(r["paired_day_count"],4)
+        self.assertEqual(r["paired_asset_day_count"],8)
+        self.assertEqual([a["day"] for a in r["abstentions"]],[1,2,3])
+        self.assertTrue(all(all(m+"_abs_error_fraction" in row for m in ("C0","C1","C2")) for row in r["rows"]))
+        self.assertEqual(self.evaluate(f,bars,None,c0=c0)["paired_asset_day_count"],0)
+
+    def test_c0_resealed_attacks_and_unsealed_mutation_rejected(self):
+        f,bars=self.evaluation_fixture()
+        for mutate in (
+            lambda p:p.update(source="MAIN"),
+            lambda p:p.update(a_issuance_sha256="a"*64),
+            lambda p:p.update(issue_clock_utc="2026-11-30T01:00:00Z"),
+            lambda p:p["freeze"]["daily_price_path"].update(forecast_week="2026-W48"),
+            lambda p:p["freeze"]["daily_price_path"]["BTC"]["points"][0].update(expected_close=999),
+            lambda p:p["freeze"]["daily_range_plan"]["ETH"]["points"].pop(),
+            lambda p:p["freeze"]["daily_range_plan"]["ETH"]["points"][0].update(day=True),
+            lambda p:p["freeze"]["daily_range_plan"]["ETH"]["points"][0].update(low=float("nan")),
+        ):
+            with self.subTest(mutation=mutate):
+                c0=self.c0_fixture(f);mutate(c0)
+                with self.assertRaises(ValueError):
+                    self.evaluate(f,bars,c0=self.seal_c0(c0))
+        c0=self.c0_fixture(f)
+        c0["freeze"]["daily_price_path"]["BTC"]["points"][0]["expected_close"]=98.5
+        with self.assertRaisesRegex(ValueError,"BINDING"):
+            self.evaluate(f,bars,c0=c0)

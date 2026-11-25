@@ -40,7 +40,8 @@
       "matched_population": "both BTC and ETH must have all original A scored hours; whole-day exclusion for late delivery, unmatured day, missing either asset or unavailable permission",
       "relative_target": "implied ETH/BTC spot close ratio from identical paired close times; no separately timestamped ratio",
       "metrics": "normalized close MAE, direction including FLAT, close and full-range coverage, original A primary interval score and width, all with identical denominators",
-      "guard": "no real issuance, no historical C2 score, no independent sample or edge, synthetic delivery clock unverified"
+      "guard": "no real issuance, no historical C2 score, no independent sample or edge, synthetic delivery clock unverified",
+      "c0_comparison": "Synthetic wrapper of original CN_FROZEN_DAILY_PRICE_PATH_v1 and CN_FROZEN_DAILY_RANGE_PLAN_v1; exact A digest, same issue clock, complete week, common latest delivery clock and same paired days across C0/C1/C2. C0 range interval evaluated against close, not a calibrated close interval. Real CN source not accepted by fixture interface."
     }
   },
   "forecast_authority": false,
