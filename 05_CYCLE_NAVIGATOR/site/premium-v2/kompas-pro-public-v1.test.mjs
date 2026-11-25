@@ -62,3 +62,23 @@ test('strategic context is evaluated at the supplied build clock, never later wa
  assert.equal(runAt(Date.parse(issued)),true);
  assert.equal(runAt(NaN),false);
 });
+
+test('weekly mismatch preserves independently verified closed-candle momentum only',()=>{
+ const f=fixture();f.compass.weekly_context.status='MISMATCH';
+ const p=run(f);assert.equal(p.state,'DEGRADED');assert.equal(p.action,null);assert.equal(p.risk,null);
+ assert.equal(p.momentum.direction,'BULLISH');assert.equal(p.momentum.valid_until,'2026-11-24T10:30:00.000Z');
+ assert.ok(p.horizons.every(x=>x.action===null&&x.direction===null&&x.bull_bear===null));
+ assert.equal(p.horizon_status.filter(x=>x.status==='CURRENT_OBSERVATION').length,2);
+ assert.ok(p.horizon_status.every(x=>x.status!=='OFFICIAL_DIRECTION_ONLY'));
+ assert.equal(run(f,Date.parse('2026-11-24T10:30:00Z')).momentum.direction,null);
+ for(const mutate of [
+  f=>{f.compass.compass_id=''},f=>{f.compass.market_now.new_price_observation=false},
+  f=>{f.compass.full_stack.official_freshness.valid_until_utc='2026-11-24T10:00:00Z'},
+  f=>{f.latest.generated_at='2026-11-24T10:01:00Z'},
+  f=>{f.lineage.public_issue_number++}
+ ]){
+  const g=fixture();g.compass.weekly_context.status='MISMATCH';mutate(g);
+  const q=run(g);assert.equal(q.momentum.direction,null);assert.equal(q.action,null);
+  assert.ok(q.horizon_status.every(x=>x.status!=='CURRENT_OBSERVATION'));
+ }
+});

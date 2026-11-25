@@ -9,7 +9,7 @@ import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfid
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,sourceHorizonClock} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,verifiedLiveMomentum,sourceHorizonClock} from './compass-overview.mjs';
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {hourlyFloorBanner,kompasTruthBanner} from '../kompas-truth-banner.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
@@ -236,19 +236,20 @@ function renderQuickDecision(){
   UNKNOWN:['Ukendt retning','Unknown direction'],
   UNAVAILABLE:['Ingen måling','No reading']
  };
- const observed=eligible?observedMarketClock({compass:feeds.compass}):
-  {state:'OBSERVATION_CLOCK_INVALID'};
+ const liveMomentum=verifiedLiveMomentum({compass:feeds?.compass,view});
+ const observed=liveMomentum|| (eligible?observedMarketClock({compass:feeds.compass}):
+  {state:'OBSERVATION_CLOCK_INVALID'});
  // The official 1–3d forecast remains source-valid even when the latest
  // completed public market candle has exceeded the independent 90min SLA.
  const nowState=observed.state==='FRESH_OBSERVATION'?
-  feeds.compass.market_now?.directional_state:
+  (liveMomentum?.direction||feeds.compass.market_now?.directional_state):
   observed.state==='NO_NEW_PRICE_OBSERVATION'?'NO_NEW_OBSERVATION':
   observed.state;
- const nowArrow=eligible?directionVisual(nowState,lang).arrow:'?';
+ const nowArrow=(eligible||liveMomentum)?directionVisual(nowState,lang).arrow:'?';
  set('premium-now-direction',nowLabels[nowState]?
    (nowArrow==='?'?'':nowArrow+' ')+nowLabels[nowState][lang==='en'?1:0]:
    (lang==='en'?'Awaiting valid data':'Afventer gyldige data'));
- if(eligible)enhanceLegacyLabel(document,$('premium-now-direction'),nowState,nowArrow);
+ if(eligible||liveMomentum)enhanceLegacyLabel(document,$('premium-now-direction'),nowState,nowArrow);
  const actionLabels={
   HOLD_WAIT:['Officiel vurdering · afvent','Official outlook · wait'],
   WAIT:['Officiel vurdering · afvent','Official outlook · wait'],

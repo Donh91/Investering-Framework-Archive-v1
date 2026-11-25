@@ -5,7 +5,7 @@
 import {createHash} from 'node:crypto';
 import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
 import {officialBullBear} from '../vnext-live/official-bullbear.mjs';
-import {observedMarketClock,readRotation} from './compass-overview.mjs';
+import {observedMarketClock,verifiedLiveMomentum,readRotation} from './compass-overview.mjs';
 import {verifiedOriginalWeekPrices} from './original-week-price-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
 import {sourceTrace} from '../vnext-live/source-trace.mjs';
@@ -35,11 +35,14 @@ export function buildKompasProPublic(latestBytes,compassBytes,lineageBytes,{nowM
   lineage.forecast_week===view.weekly.forecast_week&&lineage.public_issue_number===view.weekly.public_issue_number;
  const current=lineageOK&&view.compass.state==='FRESH'&&view.compass.permit_path_live_gates===true&&
   Number.isFinite(validUntil)&&issued<=nowMs&&nowMs<validUntil;
- const safeView=current?view:{...view,compass:{...view.compass,state:'UNAVAILABLE',permit_path_live_gates:false}};
+ const safeView=current?view:{...view,live_observation:lineageOK?view.live_observation:null,compass:{...view.compass,state:'UNAVAILABLE',permit_path_live_gates:false}};
  const action=current?known(actions,view.compass.action_now):null;
- const clock=current?observedMarketClock({compass,now:nowMs}):{state:'SOURCE_UNAVAILABLE'};
- const momentumDirection=clock.state==='FRESH_OBSERVATION'?known(observations,compass.market_now?.directional_state):null;
- const momentumUntil=momentumDirection?Math.min(validUntil,timestamp(compass.market_now.market_observation_open_utc)+9000000):NaN;
+ const independent=lineageOK?verifiedLiveMomentum({compass,view,now:nowMs}):null;
+ const clock=independent||(current?observedMarketClock({compass,now:nowMs}):{state:'SOURCE_UNAVAILABLE'});
+ const candidate=clock.state==='FRESH_OBSERVATION'?known(observations,independent?.direction||compass.market_now?.directional_state):null;
+ const limit=candidate?Math.min(validUntil,timestamp(compass.market_now.market_observation_open_utc)+9000000):NaN;
+ const momentumDirection=candidate&&nowMs<limit?candidate:null;
+ const momentumUntil=momentumDirection?limit:NaN;
  const risk=current?view.compass.pullback_stage:null;
  const riskClass=known(riskClasses,risk?.source_risk_state);
  const balance=current?officialBullBear(compass,'1_3d'):null;
@@ -48,7 +51,7 @@ export function buildKompasProPublic(latestBytes,compassBytes,lineageBytes,{nowM
   bull_bear:current?officialBullBear(compass,({'NEXT_1_3D':'1_3d','NEXT_5_7D':'5_7d','NEXT_2_3W':'2_3w'})[id]):null}));
  let trace=null,strategic=null;try{trace=sourceTrace(latest,compass,safeView);strategic=forwardOutlook(latest,compass,trace,{nowMs})}catch{}
  const originalWeekPrice=lineageOK?verifiedOriginalWeekPrices({latest,publicationLineage:lineage,nowUtc:iso(nowMs)}):null;
- const matrix=kompasHorizonStatusRows({compass,view:safeView,lang:'da',observationCurrent:!!momentumDirection,trace,strategic,originalWeekPrice});
+ const matrix=kompasHorizonStatusRows({compass,view:safeView,lang:'da',observationCurrent:!!momentumDirection,trace,strategic,originalWeekPrice,now:nowMs});
  const rotation=current?readRotation({compass,view:safeView,now:nowMs}):null;
  const tracker=compass?.protection_tracker;
  const riskQuality=riskClass?known(['LOW','MEDIUM','HIGH'],tracker?.confidence_quality):null;
@@ -57,10 +60,10 @@ export function buildKompasProPublic(latestBytes,compassBytes,lineageBytes,{nowM
  const frozen=view.weekly;
  const ranges=lineageOK&&['OK','DEGRADED'].includes(frozen.state)?{status:frozen.state,week:frozen.forecast_week,public_issue_number:frozen.public_issue_number,btc:frozen.btc_range,eth:frozen.eth_range}:null;
  const reason=!lineageOK?'LINEAGE_UNVERIFIED':!current?'OFFICIAL_SOURCE_NOT_CURRENT':!action?'ACTION_UNRECOGNIZED':!balance||!riskClass||!momentumDirection||horizons.some(h=>!h.direction||!h.action)?'PARTIAL_CARD_EVIDENCE':null;
- const state=!current?(lineageOK&&Number.isFinite(validUntil)&&nowMs>=validUntil?'STALE':'INVALID'):reason?'DEGRADED':'OK';
+ const state=!current?(momentumDirection?'DEGRADED':lineageOK&&Number.isFinite(validUntil)&&nowMs>=validUntil?'STALE':'INVALID'):reason?'DEGRADED':'OK';
  return {contract:CONTRACT,version:1,authority:'READ_ONLY_PRESENTATION',state,reasons:reason?[reason]:[],
   generated_at:iso(nowMs),issued_at:iso(issued),valid_until:iso(validUntil),source_shas,
-  compass_id:current?compass.compass_id:null,forecast_week:view.weekly.forecast_week,
+  compass_id:current||momentumDirection?compass.compass_id:null,forecast_week:view.weekly.forecast_week,
   action,momentum:{state:momentumDirection?'FRESH_OBSERVATION':clock.state==='FRESH_OBSERVATION'?'UNKNOWN_DIRECTION':clock.state,
     direction:momentumDirection,valid_until:iso(momentumUntil)},
   bull_bear:balance,risk:riskClass?{class:riskClass,ordinal:riskClasses.indexOf(riskClass)+1,quality:riskQuality}:null,
