@@ -41,7 +41,7 @@ class S1RuntimeContractTest(unittest.TestCase):
         self.assertEqual(self.c["contract"], "S1_RUNTIME_CONTRACT_v1")
         self.assertEqual(self.c["task_id"], "6ae5fd466b48819187abc224ec0f1c5f")
         self.assertEqual(self.c["owner_issue"], 1156)
-        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v8")
+        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v9")
         self.assertEqual(self.c["tick_path"], "00_FMOS/S1/TICK.md")
         self.assertEqual(self.c["bootstrap_path"], "00_FMOS/S1/BOOTSTRAP.txt")
         self.assertEqual(self.c["action_loop_path"], "00_FMOS/S1/ACTION_LOOP.md")
@@ -125,7 +125,11 @@ class S1RuntimeContractTest(unittest.TestCase):
         # object B" in TICK.md T1 literally and rejected the ```json fence that render() always writes and parse_body()
         # always strips. Step 4 states the fence is the published format. Bootstrap-only: no contract, TICK or pin change.
         # Reliability candidate: bounded orchestration and precise failure attribution, no additional source or authority.
-        self.assertLessEqual(len(boot), 3800)
+        # v9 (C6 ARM, owner-approved measurement): the preamble alternates grouped and direct connector calls by the
+        # Copenhagen hour and prints S1_ARM / S1_STEP chat lines; no check, call limit or ending changes; the grouped arm keeps
+        # v8's wording verbatim; after the 2026-11-24 JSON.parse failure inside the grouped orchestration it runs only every
+        # 4th hour (6 of 24 ticks), direct otherwise; the hour is the run start, a manual run is direct. Cap 4600.
+        self.assertLessEqual(len(boot), 4600)
         self.assertIn("In T1 the block between the two markers is one ```json fenced code block: B is the JSON object between its opening ```json line and its closing ``` line; that fence is the published format, never a body failure.", boot)
         self.assertNotIn("committer.date", boot)
         self.assertNotIn("3stale", boot)
@@ -139,7 +143,7 @@ class S1RuntimeContractTest(unittest.TestCase):
             self.assertIn(needle, boot)
         self.assertEqual(boot.count("api.github.com"), 2, "main, and the 00_FMOS/S1 listing at that SHA; no other URL")
         self.assertEqual(boot.count("https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/"), 2)
-        for needle in ("S1 BOOTSTRAP v8", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v8",
+        for needle in ("S1 BOOTSTRAP v9", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v9",
                        "00_FMOS/S1/TICK.md", "ACTION_LOOP.md", "SOURCE_UNVERIFIED", "only instruction set"):
             self.assertIn(needle, boot)
         for forbidden in ("LADDER", "MERGE", "HARD STOPS", "owner-present"):
@@ -148,7 +152,12 @@ class S1RuntimeContractTest(unittest.TestCase):
     def test_bootstrap_batches_reads_without_waiving_source_checks(self):
         boot = (S1 / "BOOTSTRAP.txt").read_text(encoding="utf-8")
         for needle in ("fetch main first, then parallelize the three reads in step 2 at M",
-                       "Otherwise use the same direct reads; never skip a read.",
+                       "C6 ARM (measurement, owner-approved): if this is a scheduled run and the hour (00-23, Europe/Copenhagen) at which this run started is divisible by 4 (00, 04, 08, 12, 16, 20), ARM=grouped (exactly the v8 behaviour):",
+                       "In every other hour, and in every manual run, ARM=direct: never use connector-call orchestration, batching or parallel invocation; make every read of steps 1–3b and T1–T3 as its own direct connector call, in order.",
+                       "In both arms print the line S1_ARM <grouped|direct> <hour> first;",
+                       "S1_STEP <step> start", "S1_STEP <step> ok <bytes or ->", "S1_STEP <step> fail <reason>",
+                       "These lines are chat output only, never a GitHub write, and they change no check, call limit or ending. Never skip a read.",
+                       "Make the T1–T3 connector calls as the C6 ARM says, in order, short-circuit on failure, retaining every TICK check and call limit.",
                        "The fetched contract and TICK blob SHAs must also equal their directory entries.",
                        "retaining every TICK check and call limit",
                        "Report the first failed stage and actual missing field or connector error",
@@ -156,7 +165,7 @@ class S1RuntimeContractTest(unittest.TestCase):
                        "a host or tool failure before T3 ends BRIEF_INCOMPLETE(<step>:<what failed>)",
                        "The short-circuit ends only the T1–T3 group; T3H and the NOOP ending then follow TICK.md."):
             self.assertIn(needle, boot)
-        self.assertLess(boot.index("Where connector-call orchestration"), boot.index("1. Read current main"))
+        self.assertLess(boot.index("C6 ARM (measurement, owner-approved)"), boot.index("1. Read current main"))
         self.assertLess(boot.index("3b."), boot.index("4. Otherwise execute"))
         self.assertIn("short-circuit on failure", boot)
         self.assertIn("state the first failed read or pin and why", boot)
