@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from scripts.cycle_navigator.kompas_live_memory_capture import capture, store, FLAGS
+from kompas_live_memory_capture import capture, store, FLAGS
 
 ISSUED = "2026-11-25T20:25:26Z"
 OBSERVED = "2026-11-25T20:49:00Z"

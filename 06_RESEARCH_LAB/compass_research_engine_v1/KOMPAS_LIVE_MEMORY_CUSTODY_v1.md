@@ -7,3 +7,5 @@ Input: exact public data/kompas-live.json bytes from an independently acquired p
 Next gated increment: bind independent first-observed publication receipt and full expected-hour census (including missing, partial and unavailable), agree retention and owner; wire into an existing approved delivery lane only after review. Then preregister a future cohort, fixed target UTC, matching source and baseline; use existing Task2/CRE scoring and independent cluster denominators, interval coverage and paired errors, never retrospective enrollment. UI consumes admitted read-only scores only. No Round 3 analyses.
 
 Acceptance: synthetic tests for wrong seal/authority/clock, missing statuses, conflict, idempotency, corruption and unavailable preservation. Native CI and exact-head independent review required. No production release claimed.
+
+Scope correction: keep offline custody code, tests and contract together inside the existing CRE shadow boundary. The native CRE scope guard remains unchanged. This is not the production CN writer.
