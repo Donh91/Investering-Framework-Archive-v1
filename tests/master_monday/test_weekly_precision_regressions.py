@@ -94,7 +94,7 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
                 'result':None if result=='CENSORED' else result,
                 'return_pct':None if result=='CENSORED' else 1.0,
                 'reason':'no target' if result=='CENSORED' else None,
-                'path':'MUST_NOT_ESCAPE'})
+                'path':'MUST_NOT_ESCAPE','evidence_path':'MUST_NOT_ESCAPE'})
         context={'contract':'WEEKLY_API_CALIBRATION_CONTEXT_v6','authority':'SHADOW_ONLY',
                  'freeze_sha256':'a'*64,'window_start_utc':'2026-11-16T00:00:00Z',
                  'window_end_utc':'2026-11-23T00:00:00Z','experiment_learning':{
@@ -135,6 +135,8 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
             lambda r:r[1].update(forecast_id=r[0]['forecast_id']),
             lambda r:r[1].update(outcome_sha256=r[0]['outcome_sha256']),
             lambda r:r[2].update(return_pct=0),
+            lambda r:r[2].update(evidence_path=None),
+            lambda r:r[2].update(evidence_sha256=None),
         ):
             with self.subTest(mutation=mutate):
                 c=self.scorecard_fixture()
@@ -148,6 +150,7 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
     def test_censored_only_is_not_a_zero_outcome_success(self):
         c=self.scorecard_fixture()
         c['experiment_learning']['new_matured_outcomes']=c['experiment_learning']['new_matured_outcomes'][2:]
+        c['experiment_learning']['new_matured_outcomes'][0].update(evidence_path=None,evidence_sha256=None)
         c.pop('context_hash');c['context_hash']=publisher.sha(c)
         score=publisher.fallback_scorecard(c)
         self.assertEqual(score['status'],'DEGRADED')

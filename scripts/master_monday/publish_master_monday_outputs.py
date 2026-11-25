@@ -100,18 +100,25 @@ def experiment_outcome_scorecard(context:dict[str,Any], learning:dict[str,Any])-
             fid,digest=row.get('forecast_id'),row.get('outcome_sha256')
             at=clock(row.get('created_at_utc'))
             if (not isinstance(fid,str) or not fid or fid in seen_ids or not is_hash(digest) or digest in seen_hashes
-                    or not is_hash(row.get('forecast_sha256')) or not is_hash(row.get('evidence_sha256'))
+                    or not is_hash(row.get('forecast_sha256'))
                     or row.get('source_binding_verification')!='CURRENT_FILE_CANONICAL_JSON_SHA256'
                     or at is None or not start<=at<end):
                 return None
             seen_ids.add(fid);seen_hashes.add(digest)
             if row.get('status')=='MATURED':
                 result,value=row.get('result'),row.get('return_pct')
-                if result not in ('HIT','MISS') or type(value) not in (int,float) or not math.isfinite(value):
+                if (result not in ('HIT','MISS') or type(value) not in (int,float)
+                        or not math.isfinite(value) or not is_hash(row.get('evidence_sha256'))):
                     return None
                 counts[result]+=1
             elif row.get('status')=='CENSORED':
                 if row.get('result') is not None or row.get('return_pct') is not None or not isinstance(row.get('reason'),str) or not row['reason']:
+                    return None
+                # The original maturation owner may censor before any market
+                # evidence is available. If supplied, path and digest must pair.
+                evidence_path,evidence_hash=row.get('evidence_path'),row.get('evidence_sha256')
+                if (evidence_path is not None or evidence_hash is not None) and (
+                        not isinstance(evidence_path,str) or not evidence_path or not is_hash(evidence_hash)):
                     return None
                 counts['CENSORED']+=1
             else:
@@ -166,12 +173,12 @@ def fallback_scorecard(context:dict[str,Any])->dict[str,Any]:
                     'matured_outcome_count':observed['matured_outcome_count'],
                     'reason':'Original owner outcome counts restored. Full analysis/translation and paired calibration score remain unavailable.'}
     return {
-        'status':'UNAVAILABLE_API_CONTRACT' if matured else 'PENDING_MATURED_OUTCOMES',
+        'status':'INCOMPLETE_EXPERIMENT_OUTCOME_INGESTION' if matured else 'PENDING_MATURED_OUTCOMES',
         'experiment_registry_status':registry_status,
         'analysis_layer':{},
         'operational_translation_layer':{},
-        'matured_outcome_count':len(matured),
-        'reason':'WEEKLY_CALIBRATION_SHADOW validated output contract does not currently include a scorecard field.' if matured else 'A valid experiment registry supplied zero newly matured outcomes; formal outcome scoring remains pending.',
+        'matured_outcome_count':None if matured else 0,
+        'reason':'Owner outcome records failed scorecard context or row integrity checks; no counts admitted.' if matured else 'A valid experiment registry supplied zero newly matured outcomes; formal outcome scoring remains pending.',
     }
 def effective_delivery_status(api_status: str, api: dict[str, Any],
                               translation: dict[str, Any], scorecard: dict[str, Any],
@@ -309,7 +316,8 @@ def main():
     # Current gateway schema has no scorecard. Never override failed
     # deterministic evidence admission with an arbitrary model object.
     scorecard=registry_fallback
-    if (context.get('freeze_sha256')!=freeze.get('freeze_sha256')
+    if (sha({k:v for k,v in context.items() if k!='context_hash'})!=context.get('context_hash')
+            or context.get('freeze_sha256')!=freeze.get('freeze_sha256')
             or context.get('iso_year')!=freeze.get('iso_year')
             or context.get('iso_week')!=freeze.get('iso_week')):
         scorecard={'status':'DEGRADED','experiment_registry_status':'UNVERIFIED',
