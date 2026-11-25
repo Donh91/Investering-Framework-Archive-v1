@@ -451,6 +451,7 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
         },
         "action": native_action,
         "market_direction": market_direction,
+        "cycle_participation": cycle_participation_readback(auto_state, as_of=generated),
         "DATA_HEALTH": {
             "status": effective_data_status,
             "source_validation_status": auto_state.get("validation_status"),

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bindParticipation,readCycleParticipation,renderCycleParticipation} from '../cycle-participation.mjs';
+import {bindParticipation,bindNativeParticipation,readCycleParticipation,renderCycleParticipation} from '../cycle-participation.mjs';
 const observed='2026-11-25T10:00:00Z',issued='2026-11-25T10:15:00Z',nowUtc='2026-11-25T11:00:00Z';
 function fixture(){
  const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MINORITY',outperforming_eth:'HALF'};
@@ -43,4 +43,20 @@ test('malformed clocks, unbound source, fabricated micro and false phase fail cl
  x=>x.c.cycle_participation.buckets.MICROCAP_PROXY.state='OBSERVED_PROXY',
  x=>x.c.cycle_participation.valid_until_utc='2026-11-26T18:00:00Z'
  ]){const x=fixture();edit(x);assert.equal(readCycleParticipation(x.l,x.c,{nowUtc}),null);}
+});
+
+test('newer hourly native readback is independent of the official slot and weekly freeze',()=>{
+ const x=fixture(),n={contract:'NATIVE_HANDLEKOMPAS_v1',generated_at_utc:'2026-11-25T10:25:00Z',source:{packet_sha256:'a'.repeat(64)},cycle_participation:structuredClone(x.c.cycle_participation)};
+ const a={contract:'AUTO_MARKET_STATE_PACKET_v1',packet_sha256:'a'.repeat(64),packet_generated_at_utc:'2026-11-25T10:20:00Z'};
+ n.cycle_participation.relative_leader='BTC';
+ const b=bindNativeParticipation(n,a,{verified:true});
+ assert.ok(b);
+ x.c.full_stack.native_cycle_participation_binding=b;
+ x.c.full_stack.source_status={native:'VERIFIED_NEWER_OR_DIFFERENT_SOURCE'};
+ x.c.full_stack.native={checked_at_utc:n.generated_at_utc};
+ assert.equal(readCycleParticipation(x.l,x.c,{nowUtc}).relative_leader,'BTC');
+ assert.equal(bindNativeParticipation(n,a),null);
+ assert.equal(bindNativeParticipation(n,{...a,packet_sha256:'b'.repeat(64)},{verified:true}),null);
+ x.c.full_stack.native.checked_at_utc='2026-11-25T10:26:00Z';
+ assert.equal(readCycleParticipation(x.l,x.c,{nowUtc}),null);
 });

@@ -36,12 +36,29 @@ export function bindParticipation(internal,publicProjection,{verified=false}={})
  if(![observed,expiry,issued].every(Number.isFinite)||observed>issued||issued>=expiry||expiry-observed!==8*3600000)return null;
  return {contract:'CN_CYCLE_PARTICIPATION_BINDING_v1',status:'VERIFIED_INTERNAL_PUBLIC',compass_id:internal.compass_id,issued_at_utc:internal.issued_at_utc,readback:a};
 }
+// Native pointer, run and source packet are independently verified by the builder.
+export function bindNativeParticipation(native,auto,{verified=false}={}){
+ if(!verified||native?.contract!=='NATIVE_HANDLEKOMPAS_v1'||auto?.contract!=='AUTO_MARKET_STATE_PACKET_v1'||
+    typeof auto.packet_sha256!=='string'||!/^[0-9a-f]{64}$/.test(auto.packet_sha256)||
+    native.source?.packet_sha256!==auto.packet_sha256)return null;
+ const a=safeBlock(native.cycle_participation);
+ if(!a)return null;
+ const observed=stamp(a.observed_at_utc), expiry=stamp(a.valid_until_utc), issued=stamp(native.generated_at_utc), packet=stamp(auto.packet_generated_at_utc);
+ if(![observed,expiry,issued,packet].every(Number.isFinite)||observed>packet||packet>issued||issued>=expiry||expiry-observed!==8*3600000)return null;
+ return {contract:'CN_CYCLE_PARTICIPATION_BINDING_v1',status:'VERIFIED_NATIVE_AUTO',issued_at_utc:native.generated_at_utc,readback:a};
+}
 export function readCycleParticipation(latest,compass,{nowUtc=new Date().toISOString()}={}){
  if(latest?.schema!=='CN_PUBLIC_SNAPSHOT_V2'||compass?.contract!=='PUBLIC_COMPASS_PROJECTION_v1')return null;
- const proof=compass.full_stack?.cycle_participation_binding;
- if(proof?.contract!=='CN_CYCLE_PARTICIPATION_BINDING_v1'||proof.status!=='VERIFIED_INTERNAL_PUBLIC'||
-    proof.compass_id!==compass.compass_id||proof.issued_at_utc!==compass.issued_at_utc)return null;
- const a=safeBlock(compass.cycle_participation);
+ const native=compass.full_stack?.native_cycle_participation_binding;
+ const proof=native??compass.full_stack?.cycle_participation_binding;
+ if(proof?.contract!=='CN_CYCLE_PARTICIPATION_BINDING_v1')return null;
+ const isNative=proof.status==='VERIFIED_NATIVE_AUTO';
+ if(isNative){
+  if(native!==proof||!['SOURCE_ALIGNED','VERIFIED_NEWER_OR_DIFFERENT_SOURCE'].includes(compass.full_stack?.source_status?.native)||
+     proof.issued_at_utc!==compass.full_stack?.native?.checked_at_utc)return null;
+ }else if(proof.status!=='VERIFIED_INTERNAL_PUBLIC'||proof.compass_id!==compass.compass_id||
+    proof.issued_at_utc!==compass.issued_at_utc)return null;
+ const a=safeBlock(isNative?proof.readback:compass.cycle_participation);
  if(!a||JSON.stringify(a)!==JSON.stringify(proof.readback))return null;
  const now=stamp(nowUtc), observed=stamp(a.observed_at_utc), expiry=stamp(a.valid_until_utc),
   issued=stamp(proof.issued_at_utc), delivery=stamp(latest.generated_at);
