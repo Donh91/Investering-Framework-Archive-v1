@@ -227,6 +227,53 @@ def validate_forward_range_candidate(value: Any) -> dict[str, Any]:
     return value
 
 
+def bound_anchor_sources(repo: Path, optr: Mapping[str, Any], cptr: Mapping[str, Any]):
+    """Verify original owner identities before copying any long-horizon direction.
+
+    Official Compass uses a self-digest; CN pointer uses the raw package digest.
+    Neither is independent first-known proof. No stale or wrong-week rewrite.
+    """
+    if (optr.get("contract") != "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
+            or cptr.get("contract") != "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1"):
+        raise ValueError("STRATEGIC_SOURCE_POINTER_CONTRACT_INVALID")
+    year,week=cptr.get("iso_year"),cptr.get("iso_week")
+    if type(year) is not int or type(week) is not int:
+        raise ValueError("STRATEGIC_SOURCE_WEEK_INVALID")
+    datetime.fromisocalendar(year,week,1)
+    relative=f"05_CYCLE_NAVIGATOR/weekly/{year}/W{week:02d}"
+    if cptr.get("week_dir")!=relative:
+        raise ValueError("STRATEGIC_CN_WEEK_PATH_MISMATCH")
+    official_rel=optr.get("compass_path")
+    if not isinstance(official_rel,str) or not re.fullmatch(
+            r"04_MARKET_LEARNING/handlekompas/official/daily/\d{4}/\d{2}/\d{2}/CMP-[A-Za-z0-9-]+\.json",official_rel):
+        raise ValueError("STRATEGIC_OFFICIAL_PATH_INVALID")
+    compass_path=repo/official_rel
+    cn_path=repo/relative/"CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+    for path in (compass_path,cn_path):
+        if not path.is_file() or path.is_symlink() or not path.resolve().is_relative_to(repo.resolve()):
+            raise ValueError("STRATEGIC_SOURCE_PATH_INVALID")
+    from scripts.master_monday.strict_json_v1 import load_evidence_object
+    official_raw=compass_path.read_bytes()
+    cn_raw=cn_path.read_bytes()
+    compass=load_evidence_object(official_raw)
+    cn=load_evidence_object(cn_raw)
+    official_digest=digest({k:v for k,v in compass.items() if k!="compass_sha256"})
+    if (compass.get("contract")!="OFFICIAL_DAILY_COMPASS_v1"
+            or not isinstance(compass.get("compass_id"),str)
+            or compass_path.stem!=compass["compass_id"]
+            or compass.get("compass_id")!=optr.get("compass_id")
+            or compass.get("issued_at_utc")!=optr.get("issued_at_utc")
+            or compass.get("compass_sha256")!=official_digest
+            or optr.get("compass_sha256")!=official_digest):
+        raise ValueError("STRATEGIC_OFFICIAL_SOURCE_BINDING_MISMATCH")
+    if (cn.get("contract")!="CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1"
+            or any(type(cptr.get(k)) is not int or cn.get(k)!=cptr[k] for k in ("issue_number","public_issue_number"))
+            or cn.get("status")!=cptr.get("status")
+            or hashlib.sha256(cn_raw).hexdigest()!=cptr.get("machine_package_sha256")):
+        raise ValueError("STRATEGIC_CN_SOURCE_BINDING_MISMATCH")
+    return compass_path,cn_path,compass,cn,hashlib.sha256(official_raw).hexdigest(),hashlib.sha256(cn_raw).hexdigest()
+
+
 def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
     official_ptr_path = repo / OFFICIAL_PTR
     cn_ptr_path = repo / CN_PTR
@@ -235,14 +282,7 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
 
     optr = read_json(official_ptr_path)
     cptr = read_json(cn_ptr_path)
-    compass_path = repo / str(optr.get("compass_path") or "")
-    cn_dir = repo / str(cptr.get("week_dir") or "")
-    cn_machine_path = cn_dir / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
-    if not compass_path.exists() or not cn_machine_path.exists():
-        raise SystemExit("bound_source_missing")
-
-    compass = read_json(compass_path)
-    cn = read_json(cn_machine_path)
+    compass_path,cn_machine_path,compass,cn,official_raw_sha,cn_raw_sha = bound_anchor_sources(repo,optr,cptr)
 
     tactical = {
         "12h": official_horizon(compass, "NEXT_12H"),
@@ -335,12 +375,12 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
         "source_bindings": {
             "official_compass": {
                 "path": str(compass_path.relative_to(repo)),
-                "sha256": file_sha(compass_path),
+                "sha256": official_raw_sha,
                 "compass_id": compass.get("compass_id"),
             },
             "cycle_navigator": {
                 "path": str(cn_machine_path.relative_to(repo)),
-                "sha256": file_sha(cn_machine_path),
+                "sha256": cn_raw_sha,
                 "issue_number": cn.get("issue_number"),
                 "public_issue_number": cn.get("public_issue_number"),
                 "iso_year": cptr.get("iso_year"),
