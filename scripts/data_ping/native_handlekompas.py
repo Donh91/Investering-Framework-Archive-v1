@@ -22,6 +22,7 @@ from typing import Any, Mapping
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.cycle_navigator.daily_price_journey import validated_public_copy
+from scripts.data_ping.cycle_participation_readback import cycle_participation_readback
 
 CONTRACT = "NATIVE_HANDLEKOMPAS_v1"
 POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
@@ -29,7 +30,7 @@ OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
 # Schema 5 (AUDIT-04b, 2026-11-24): adds the descriptive blocks source_freshness, cn_band_status and
 # risk_freshness. The version feeds compass_id, so every post-upgrade compass gets a new immutable slot and a
 # pre-upgrade slot is never rewritten with different bytes.
-OFFICIAL_COMPASS_SCHEMA_VERSION = 5
+OFFICIAL_COMPASS_SCHEMA_VERSION = 6  # independent descriptive participation; legacy projections unchanged
 # V3_2 adds the explicit Main-Framework permission ceiling for proactive long-cycle actions.
 OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1"
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
@@ -2159,6 +2160,7 @@ _PUBLIC_DESCRIPTIVE_DROP = {
     "source_freshness": ("binding",),
     "cn_band_status": ("source",),
     "risk_freshness": (),
+    "cycle_participation": (),
 }
 
 
@@ -2322,6 +2324,7 @@ def build_official_compass(
             "cycle_navigator": cn_binding or {"status": "UNAVAILABLE"},
         },
         "evidence_snapshot": evidence,
+        "cycle_participation": cycle_participation_readback(auto_state, as_of=issued),
         "market_reference": {
             "btc_usdt": finite(nested(auto_state, "normalized_state", "live_market", "btc_usdt")),
             "eth_usdt": finite(nested(auto_state, "normalized_state", "live_market", "eth_usdt")),
