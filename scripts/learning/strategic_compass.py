@@ -313,10 +313,10 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
     # hide the intended CN package identity from the degraded receipt.
     for name, path in (("official", official_ptr_path), ("cn", cn_ptr_path)):
         try:
-            raw = path.read_bytes()
-            pointer_hashes[name] = hashlib.sha256(raw).hexdigest()
             if path.is_symlink() or not path.resolve().is_relative_to(repo.resolve()):
                 raise ValueError("STRATEGIC_SOURCE_PATH_INVALID")
+            raw = path.read_bytes()
+            pointer_hashes[name] = hashlib.sha256(raw).hexdigest()
             obj = strict_object(raw)
             if name == "official":
                 optr = obj
@@ -480,7 +480,18 @@ def materialize(repo: Path, now: datetime | None = None) -> dict[str, Any]:
 
     out = repo / ROOT / "anchors" / now.strftime("%Y/%m/%d") / f"{anchor['anchor_id']}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_bytes(canon(anchor))
+    # Recovery may return to a previously issued source fingerprint on the
+    # same UTC day. Preserve the original anchor bytes and issue timestamp.
+    try:
+        with out.open("xb") as handle:
+            handle.write(canon(anchor))
+    except FileExistsError:
+        existing = strict_object(out.read_bytes())
+        if (existing.get("anchor_id") != anchor["anchor_id"]
+                or existing.get("source_fingerprint") != anchor["source_fingerprint"]
+                or existing.get("anchor_sha256") != digest({k: v for k, v in existing.items() if k != "anchor_sha256"})):
+            raise ValueError("STRATEGIC_EXISTING_ANCHOR_INTEGRITY_FAILURE")
+        anchor = existing
     latest_path.parent.mkdir(parents=True, exist_ok=True)
     pointer = {
         "contract": "STRATEGIC_COMPASS_LATEST_POINTER_v1",
