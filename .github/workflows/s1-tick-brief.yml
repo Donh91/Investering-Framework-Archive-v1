@@ -8,8 +8,16 @@ name: S1 tick brief
 #          brief is older than 55 minutes AND this workflow had no cron run in the last 50 minutes and no build in
 #          the last 60. One or two API calls per event as a rule, five at most. No data of the triggering run or
 #          push is ever used.
-# build:   read-only token. Reads GitHub natively and parses PR heads as data; it never runs PR code.
-# publish: issues:write only. Writes the one brief issue (label s1-tick-brief). No secrets anywhere.
+# build:   read-only token. Reads GitHub natively and parses PR heads as data; it never runs PR code. It also decides:
+#          S1_DECISION_V1 (scripts/governance/s1_decision_v1.py, pure functions) is the ONE next action of the lane.
+# publish: issues:write only. Writes the one brief issue (label s1-tick-brief): the decision block, then the brief.
+# execute: AGENTS.md section 0.2i ("S1 is GitHub"). Runs only on schedule and workflow_dispatch, only main's own
+#          scripts, never PR code. It re-reads every fact of the decision's one action natively and acts ONLY when the
+#          switch 00_FMOS/S1/REVIEWED_MERGE_LANE.json on main reads "executor": "LIVE" (missing or unknown: OFF) and
+#          the repository variable S1_EXECUTOR_HOLD is empty. In this file it holds a READ-ONLY token: SHADOW can
+#          print what it would do, and nothing here can merge or comment. Going LIVE is a separate owner-present PR
+#          that gives this ONE job contents: write, pull-requests: write and issues: write and sets the switch.
+# No secrets anywhere.
 
 on:
   schedule:
@@ -135,3 +143,40 @@ jobs:
         run: |
           printf '%s' "$BRIEF_B64" | base64 -d > "$RUNNER_TEMP/brief.md"
           python scripts/governance/s1_tick_brief_v1.py publish "$RUNNER_TEMP/brief.md"
+  execute:
+    needs: [build, publish]
+    if: >-
+      github.ref == 'refs/heads/main' && github.repository == 'Donh91/Investering-Framework-Archive-v1' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+      needs.build.outputs.brief != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # One executor at a time, never cancelled half way: an intent with no outcome is settled by the next run.
+    concurrency:
+      group: s1-executor
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      issues: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/governance
+            00_FMOS
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Execute the one decided action (re-verified natively; writes only when the switch on main is LIVE)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BRIEF_B64: ${{ needs.build.outputs.brief }}
+          S1_EXECUTOR_HOLD: ${{ vars.S1_EXECUTOR_HOLD }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          printf '%s' "$BRIEF_B64" | base64 -d > "$RUNNER_TEMP/brief.md"
+          python scripts/governance/s1_executor_v1.py execute "$RUNNER_TEMP/brief.md"

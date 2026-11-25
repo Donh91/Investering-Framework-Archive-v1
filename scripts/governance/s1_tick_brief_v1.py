@@ -7,6 +7,10 @@ re-reads natively before it acts, and a missing, stale or unauthentic brief is a
 
 Layout: pure functions first (tested with fixtures in tests/governance/test_s1_tick_brief_v1.py), then the GitHub
 reader, then the two command-line entry points `build` and `publish`.
+
+AGENTS.md section 0.2i: the build also decides. S1_DECISION_V1 = s1_decision_v1.decide(brief) is published as its own
+block above the brief (render_issue), and the job `execute` (its own module: this file never merges and never
+imports it) acts on it only when the switch on main reads LIVE.
 """
 from __future__ import annotations
 
@@ -32,6 +36,7 @@ if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 import check_codex_review_finality as codex_finality  # noqa: E402  (same directory, pinned with this file)
 import s1_native_job_identity_v1 as job_identity  # noqa: E402  (its redirect handler: no bearer token across hosts)
+import s1_decision_v1 as decision_v1  # noqa: E402  (pure functions: S1_DECISION_V1, AGENTS.md section 0.2i)
 
 SCHEMA = "S1_TICK_BRIEF_V1"
 REPO = "Donh91/Investering-Framework-Archive-v1"
@@ -164,6 +169,17 @@ def is_actions_bot(user):
     return isinstance(user, dict) and all(user.get(k) == v for k, v in ACTIONS_BOT.items())
 
 
+def is_s1_author(row):
+    """Who may have written an S1 ledger post on #1156: the owner account (S1 as the ChatGPT task) or the Actions bot
+    (the executor job of this workflow, AGENTS.md section 0.2i). Every use of this is fail closed: a post that counts
+    can only stop a merge (a halt, an open intent) or suppress a duplicate (a receipt, a heartbeat), never start one."""
+    return login(row) == OWNER_LOGIN or is_actions_bot((row or {}).get("user"))
+
+
+def is_s1_unedited(row):
+    return is_s1_author(row) and bool(row.get("created_at")) and row.get("created_at") == row.get("updated_at")
+
+
 def fields(body):
     """`key: value` and `key=value` lines of a receipt, first occurrence wins (a later line never overrides)."""
     out = {}
@@ -219,7 +235,7 @@ def lane_halts(comments):
     lane state 3 has no unedited condition, and ignoring an edited halt would fail open."""
     out = []
     for c in comments:
-        if login(c) == OWNER_LOGIN and HALT_RE.search(str(c.get("body") or "")):
+        if is_s1_author(c) and HALT_RE.search(str(c.get("body") or "")):
             f = fields(c.get("body"))
             out.append({"id": c["id"], "created_at": c["created_at"], "run": (f.get("run") or "").strip() or None,
                         "body": str(c.get("body") or "")})
@@ -238,7 +254,7 @@ def lane_merges(comments):
     out = []
     for c in comments:
         # edited receipts count too: this list only ever makes the halt trigger MORE likely (fail closed)
-        if login(c) == OWNER_LOGIN and first_line_token(c.get("body")) == "S1_LANE_MERGE_v1":
+        if is_s1_author(c) and first_line_token(c.get("body")) == "S1_LANE_MERGE_v1":
             out.append({"id": c["id"], "created_at": c["created_at"]})
     return out
 
@@ -249,7 +265,7 @@ def open_intents(comments, now, settle_minutes=60):
     intents = []
     for c in comments:
         token = first_line_token(c.get("body"))
-        if not is_owner_unedited(c) or token not in ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1"):
+        if not is_s1_unedited(c) or token not in ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1"):
             continue
         f = fields(c.get("body"))
         if "loop" not in f:
@@ -260,7 +276,7 @@ def open_intents(comments, now, settle_minutes=60):
     for it in intents:
         settled = False
         for c in comments:
-            if c.get("id", 0) <= it["id"] or not is_owner_unedited(c):
+            if c.get("id", 0) <= it["id"] or not is_s1_unedited(c):
                 continue
             token, body = first_line_token(c.get("body")), str(c.get("body") or "")
             f = fields(body)
@@ -747,6 +763,8 @@ def pr_entry(pr, data, ctx):
     e["paths_sha256"] = hashlib.sha256("\n".join(paths).encode()).hexdigest()[:16]
     reasons, floor = path_exclusions(files, fc, ctx["policy"], ctx["gate_isolation_live"], data.get("isolation"))
     e["lane"] = {"eligible": not reasons, "x": reasons[:6], "risk_floor": floor}
+    e["thin"] = decision_v1.entry_facts(pr, files, fc, ctx.get("push_filters"))   # section 0.2i: judgment as data
+    e["thin"]["bot"] = (pr.get("user") or {}).get("type") != "User"                # a PR a bot opened: never self-merged
     if data.get("isolation"):
         e["isolation"] = {k: (data["isolation"].get(k) or [])[:6] for k in ("owner_gated", "high_floor") if data["isolation"].get(k)}
     cmp_ = data.get("compare") or {}
@@ -961,7 +979,7 @@ def entry_key(x):
 def next_builds(brief):
     """{entry_key: builds} of a published brief's B.next (S1 v3.3 W5). A counter only: never an anchor, never authority."""
     out = {}
-    for x in (brief or {}).get("next") or [] if isinstance(brief, dict) else []:
+    for x in ((brief.get("ranked") or brief.get("next") or []) if isinstance(brief, dict) else []):
         key, n = entry_key(x), x.get("builds") if isinstance(x, dict) else None
         if key:
             out[key] = int(n) if isinstance(n, int) and 0 < n <= MAX_BUILDS else 1      # JSON true is 1, as a missing count is
@@ -1035,7 +1053,7 @@ def heartbeats(comments):
     B.ledger.last_heartbeat_at, so both must agree): by the owner account, first token S1_HEARTBEAT_v1, of this task.
     An EDITED heartbeat still counts, as in T3H (it was posted; ignoring it would post a second one the same day); a
     heartbeat-shaped post of another thread never does."""
-    return [c for c in comments if login(c) == OWNER_LOGIN and c.get("created_at")
+    return [c for c in comments if is_s1_author(c) and c.get("created_at")
             and first_line_token(c.get("body")) == "S1_HEARTBEAT_v1" and of_this_task(c.get("body"))]
 
 
@@ -1045,7 +1063,7 @@ def s1_actions(comments):
     account, never edited, with a contract=<8> line. A heartbeat, an intent and an S1_ITEM_v1 are not actions."""
     out = []
     for c in comments:
-        if not is_owner_unedited(c) or not CONTRACT_ANY.search(str(c.get("body") or "")):
+        if not is_s1_unedited(c) or not CONTRACT_ANY.search(str(c.get("body") or "")):
             continue
         token = first_line_token(c.get("body"))
         word = S1_ACTION_RECEIPTS.get(token)
@@ -1276,6 +1294,7 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
         # complete=false (C1b:carry_unknown) and the gap is published.
         carry_unknown = issue is not None and isinstance(prev.get("c1b"), dict) and prev["c1b"].get("carry") == "UNKNOWN"
         out["prev_next"] = next_builds(prev) if issue is not None else {}   # W5: B.next[].builds counts on from here
+        out["prev_log"] = prev.get("decision_log") if issue is not None and isinstance(prev.get("decision_log"), list) else None
         prev_halt = carried_halt(issues)                         # F2: carried whatever the binding; never the anchor
         if prev_halt is not None:
             named = ledger is not None and any(prev_halt["commit"] in h["body"] for h in lane_halts(ledger))
@@ -1439,7 +1458,7 @@ def build_brief(snap):
     repo_id = (snap.get("repo") or {}).get("id")
     ctx = {"repo_id": repo_id, "main_sha": snap["main_sha"], "policy": snap["policy"], "tuples": params["required_job_tuples"],
            "gate_isolation_live": snap.get("gate_isolation") == "LIVE", "now": now, "budgets": snap["budgets"],
-           "quiet_minutes": params["foreign_commit_quiet_minutes"]}
+           "quiet_minutes": params["foreign_commit_quiet_minutes"], "push_filters": snap.get("push_filters")}
     entries, drafts = [], []
     identity_ok = (snap.get("repo") or {}).get("full_name") == REPO and (snap.get("repo") or {}).get("fork") is False and isinstance(repo_id, int)
     for pr in sorted(snap.get("pulls") or [], key=lambda p: p.get("number") or 0):
@@ -1489,8 +1508,68 @@ def build_brief(snap):
         "c1b": c1b,                                              # D1: the T3 C1b halt test, done here (TICK T3 reads it)
         "ledger": ledger_hint(comments, intents, ledger_ok, now),   # D4: hint only
         "verdict": brief_verdict(snap["main_sha"], contract, snap["pins_actual"], snap.get("bootstrap_text"), pins, snap.get("trees_actual")),
+        "thin": decision_v1.thin_config(switch),                 # section 0.2i: executor mode and review policy of the switch
     }
+    if brief["thin"]["executor"] == "LIVE":
+        # The executor job is the ONE actor. The legacy ChatGPT procedure (TICK.md v3.3) acts only on B.next and
+        # B.claude_slots, so both are empty for it; the same ranked list is published as B.ranked.
+        brief["ranked"], brief["next"], brief["claude_slots"] = brief["next"], [], []
+    return log_decision(brief, (snap.get("c1b") or {}).get("prev_log") if isinstance(snap.get("c1b"), dict) else None)
+
+
+DECISION_LOG_MAX = 24                 # B.decision_log: the newest decisions, one line each (the shadow record)
+MAX_DECISION_BLOCK = 4000             # the decision block is small by construction; MAX_BODY + this stays under GitHub's limit
+
+
+def decision_log_entry(d):
+    """One line of B.decision_log: what the decision was, without any text of a PR (short ids only)."""
+    return {"d": d.get("id"), "at": d.get("generated_at"), "m": str(d.get("main") or "")[:12], "x": d.get("executor"),
+            "a": d.get("action"), "n": d.get("pr"), "h": str(d.get("head") or "")[:12] or None, "r": str(d.get("result"))[:120]}
+
+
+def log_decision(brief, prev_log):
+    """B.decision_log: the carried log of the previous published brief plus this brief's own decision. The decision
+    itself is NOT a field of the brief: it is decision_v1.decide(brief), a pure function of the published brief, and
+    render_issue() writes it as its own block above the brief. `prev_log` None: unknown or none, the log restarts."""
+    d = decision_v1.decide({k: v for k, v in brief.items() if k != "decision_log"})
+    log = [x for x in (prev_log or []) if isinstance(x, dict) and x.get("d") != d.get("id")][-(DECISION_LOG_MAX - 1):]
+    brief["decision_log"] = log + [decision_log_entry(d)]
     return brief
+
+
+def decision_of(body):
+    """The S1_DECISION_V1 of an issue body, or None: the body holds one valid brief and one valid decision block, and
+    that decision IS decision_v1.decide(brief) for the brief in the same body (a decision block that the brief does
+    not produce is never used: not published, not executed, not reported)."""
+    brief, d = parse_body(body), decision_v1.parse_decision(body)
+    if brief is None or d is None or not decision_v1.same_decision(d, decision_v1.decide(brief)):
+        return None
+    return d
+
+
+def render_issue(brief):
+    """(issue body, decision): the decision block first, then the brief block of render(). The decision is computed
+    from the brief AS PUBLISHED (after any shrink), so publish(), the executor and any reader can recompute it from the
+    body alone and must get the same object."""
+    d = None
+    for _ in range(3):
+        text = render(brief)
+        published = parse_body(text)
+        if published is None:
+            raise SystemExit("RENDER_REFUSED: the brief does not parse")
+        d = decision_v1.decide(published)
+        want, log = decision_log_entry(d), published.get("decision_log") or []
+        if log and log[-1] == want:
+            break
+        brief = dict(brief, decision_log=list(brief.get("decision_log") or [])[:-1] + [want])   # the shrink changed it
+    else:
+        raise SystemExit("RENDER_REFUSED: the decision log does not settle")
+    top = decision_v1.render_decision(d)
+    if len(top) > MAX_DECISION_BLOCK:                            # only the three owner lines can be long: cut them, keep the action
+        d = dict(d, status_lines=[x[:300] for x in d["status_lines"]], skipped=d["skipped"][:3], advice=[])
+        d["print"] = d["status_lines"] + d["print"][3:]
+        top = decision_v1.render_decision(d)
+    return top + text, d
 
 
 def render(brief):
@@ -1529,6 +1608,9 @@ def render(brief):
             b[key] = brief[key]
     b.update(next=[], claude_slots=[], complete=False, incomplete="brief_too_large", errors=["brief_too_large"], shrunk=3, prs=[], drafts=[], lane={"state": "OFF", "off_reasons": ["brief_too_large"]},
              status_lines=["OWNER APPROVAL REQUIRED: UNKNOWN (brief_too_large)", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"], heartbeat_due=False)
+    for key in ("thin", "decision_log"):                       # section 0.2i: a brief that ranks nothing decides NOOP
+        if key in brief:
+            b[key] = brief[key]
     return dump(b)
 
 
@@ -2040,6 +2122,40 @@ def root_trees(root):
     return out
 
 
+def read_push_filters(root):
+    """[{workflow, paths, paths_ignore}] for every workflow file at `root` whose push trigger can fire on main (section
+    0.2i: a merge made with the workflow token starts none of them, so decision_v1.push_trigger_matches keeps such a PR
+    for the owner route). None when the parser or any workflow file cannot be read: every PR then reads as a match."""
+    try:
+        import yaml
+    except ImportError:
+        return None
+    out = []
+    try:
+        files = sorted(p for p in (Path(root) / ".github" / "workflows").iterdir() if p.suffix in (".yml", ".yaml"))
+        for path in files:
+            doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+            if not isinstance(doc, dict):
+                return None
+            on = doc.get(True, doc.get("on"))                    # YAML 1.1 reads the key `on` as the boolean true
+            on = {on: None} if isinstance(on, str) else {k: None for k in on} if isinstance(on, list) else on
+            if not isinstance(on, dict):
+                return None
+            if "push" not in on:
+                continue
+            push = on["push"] if isinstance(on["push"], dict) else {}
+            branches = push.get("branches")
+            if "tags" in push and "branches" not in push and "branches-ignore" not in push:
+                continue                                         # tags only: a branch push never starts it
+            if isinstance(branches, list) and branches and "branches-ignore" not in push \
+                    and not any(str(b) == "main" or any(ch in str(b) for ch in "*?+[!") for b in branches):
+                continue                                         # provably other branches only
+            out.append({"workflow": path.name, "paths": push.get("paths"), "paths_ignore": push.get("paths-ignore")})
+    except Exception:                                            # noqa: BLE001  (unreadable: fail closed)
+        return None
+    return out
+
+
 def parse_json_block(text, contract):
     for m in re.finditer(r"```json\n(.*?)\n```", text, re.S):
         try:
@@ -2143,6 +2259,7 @@ def collect(gh, root, head_root, now, run):
         except subprocess.CalledProcessError:
             snap["pins_actual"][path] = None
     snap["trees_actual"] = root_trees(root)                      # B.verdict.t3_basis: the trees TICK T3 C1b compares, at B.main
+    snap["push_filters"] = read_push_filters(root)               # section 0.2i: main's push-triggered workflows (files only)
     clock, timing = time.monotonic(), {}
     snap["timing"] = timing
     snap["repo"] = gh.get("")
@@ -2258,6 +2375,8 @@ def publish(gh, body, now=None):
     open labelled issue by the Actions bot is repaired by closing the newer ones (never deleted)."""
     if parse_body(body) is None or len(body) > 65000:
         raise SystemExit("PUBLISH_REFUSED: body is not one valid brief")
+    if decision_v1.BEGIN in body and decision_of(body) is None:
+        raise SystemExit("PUBLISH_REFUSED: the S1_DECISION_V1 block is not the decision of this brief")
     issues = [i for i in gh.get("issues", {"labels": BRIEF_LABEL, "state": "open", "per_page": 20}) if "pull_request" not in i]
     mine = sorted((i for i in issues if is_actions_bot(i.get("user"))), key=lambda i: i["number"])
     foreign = [i["number"] for i in issues if not is_actions_bot(i.get("user"))]
@@ -2390,16 +2509,22 @@ def main(argv):
         brief = build_brief(snap)
         brief["api_calls"] = gh.calls
         brief["generated_at"] = iso(datetime.now(timezone.utc))  # the end of the reads: the age S1 measures starts here
-        body = render(brief)
+        log_decision(brief, (snap.get("c1b") or {}).get("prev_log") if isinstance(snap.get("c1b"), dict) else None)
+        body, _decision = render_issue(brief)
         out.write_text(body, encoding="utf-8")
         print(f"S1_TICK_BRIEF_BUILD run={run['id']} main={brief['main']} prs={len(brief['prs'])} next={len(brief['next'])} "
               f"complete={brief['complete']} calls={gh.calls} bytes={len(body)}")
+        d = decision_v1.parse_decision(body) or {}
+        print(f"S1_DECISION_V1 id={d.get('id')} executor={d.get('executor')} action={d.get('action')} pr={d.get('pr')} "
+              f"head={d.get('head')} result={d.get('result')}")
         return 0
     if mode == "publish":
         body = Path(argv[2]).read_text(encoding="utf-8")
         brief = parse_body(body)
         if brief is None or str(brief.get("run_id")) != os.environ.get("GITHUB_RUN_ID") or brief.get("main") != os.environ.get("GITHUB_SHA"):
             raise SystemExit("PUBLISH_REFUSED: the brief does not belong to this run")
+        if decision_of(body) is None:                            # section 0.2i: every published body carries its decision
+            raise SystemExit("PUBLISH_REFUSED: the S1_DECISION_V1 block is missing or is not the decision of this brief")
         number = publish(GitHub(token, budget=PUBLISH_API_CALLS), body)
         print(f"S1_TICK_BRIEF_PUBLISHED issue={number} run={brief['run_id']}")
         print(readback_line(GitHub(token, budget=READBACK_API_CALLS), number, body))

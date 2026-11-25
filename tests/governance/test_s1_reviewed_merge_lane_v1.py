@@ -24,6 +24,7 @@ SECTION_F_SHA256 = "8aa223b8bd06d884caacc0ea4990599d65a5bd8c2eae515d0e0fcfa9a6a5
 SECTION_SHA256 = "f8b5193a781c767b63a2cfdaa93db689e64aa8e73fe95ce93f68e0e9d7390ba6"
 SECTION_H_SHA256 = "f38aed1448cc7d9ea08e6f2d1788bc6d5174d8abefd7196facb0ab70fa91c1ad"
 SECTION_G_SHA256 = "15c9cccf64080751106d86452d6ee4c88be3ab81ed3fa5768593f20cc73add0a"
+SECTION_I_SHA256 = "f7f274f353db87c5b052cb076ba981b29c2257fbfb42099e6002395a73ae2ac9"
 BOOTSTRAP_TEMPLATE_SHA256 = "8a0c55764d432bf596501f2cbbff566fb5f604149bf0098eda04efa66dcac7b0"
 LINE_PINS = {'C2': 'ff0b1fb2b84c71181c36fa96323d7bb9400e4d4e75e2700158a2f617942b4e63', 'C3': '496ded0833856ec8f55aa9b2504a53653137fa2d96737ccad9c2f5ba61db30d6', 'C5': 'ba69b63c2563d19735dc0c8ea3c1160c36a71935d0b49410b788d749de172c08', 'CC_ONLY': 'd07a6e1d1a4cef55abb790edca32e261d15958e5969e4a1fe782165e4329bef7', 'CC_PR': '85bf8e3655a52a657d20f2992ccb40acc0d69cc7f3ae182a8401550e0f22e423', 'H1': '792e808899def4bb84452f7045b25420f330dfc8c0390f5c52a80323f5c8f1cf', 'H2': 'c76bf5513a523db56a0ae05357889cca0365d8b7d11bf3bb8b8b65b70414f815', 'H3': 'a9fb6bc830284ee5e0e38d1fc80283037274248fd109b502c13edde79dd5af5f', 'H4': 'd47f6f701a0744ad1e8076b4c4bbdd7ed77578c4e3d014800d7ad11b6909da7e', 'H5': 'ed6697482618d2cf6a5de633fbae9b5821c7909d40d963305191ab5ce65be311', 'H6': '4d6a43e793d8f6bcfe39028057a586416756febe05c3601c83c0f9a358474d6a', 'H7': '73981c63af506f153556961808dcac7d35bacb20d510c241e5565c6bb022d4ea', 'H8': '0343db2e8f9173b68600baaa0f8cbaf75eb2fe7247d243fdff7bb1948fea9b0b', 'LADDER': '9fe72664e57b9414dc18344a81e031eca57290a4547e4077fd81ffc15705eb40', 'LANE_INTEGRITY': 'd3d4818152a356742bed34c9b3216cceaa7b83cd503ba357ea726b90e03db140', 'LOOP_GUARD': '8487a53dfabae7732002e3adaba9a693a62e46d94997bd23bd9d0670d0a87768', 'OBS': 'a40fcc3c0dc848c71afdddc8e26b73ca068179886535369b8a0898d2ceb70ee8', 'ONE_ACTION': 'c326ce2c2ec993192d095bcda00372812214f5f47c41f99f40fb2b44a65c47fa', 'OWNER_GATED': '5a7c1317ca30993a8e7320ddc06a0ec75d514657b1ff81edcd71a0ba18afc2f8', 'RULE1': '54fd60bdd827ab1a91e6eb08747629c99b0aab5476c4d1e991336bc73f5446d4', 'RULE2': '25583e3b4601cb26582c5d816b9602ffa5538d2f57a48afaf24a3a8acc08ad4c', 'RULE3': 'cc765b466b981ea2106924425de3e9361b8eb958e723bd9c290c2f02c9d72c6f', 'RULE4': '4e29a51f082dda2c14cbdd5bb9b5524bb0a78cd20ed2566df8d736b6becfbeef', 'RULE5': 'abc0f14dab6e7bdd3f940fcbe9a377cb0d2a532c07054755df6f305b1ed40969', 'RULE5B': '960544bd5c356dbde81dc12346a34086531c2b6b7f49cef3cf77ba150edac885', 'RULE6': '03d16c79132996d0ae4bf298b9626d06aee80802641068dbb02b5f66c72ad261', 'RULE7': 'c1fc79408a137c8ac96a6d22ee409cf43622db1d5aa910dc014eb6740cb44b25', 'WAITING': '7495b6701b652bca13501fc5ebb8e7eb78c7b6e0f4cd585765ffce87bea173fe'}
 PINNED = ("AGENTS.md", "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json", ".github", ".agents", "scripts/governance",
@@ -51,6 +52,12 @@ def section_0_2g():
 def section_0_2h():
     text = AGENTS.read_text(encoding="utf-8")
     start = text.index("### 0.2h S1 v3.1 tick brief")
+    return text[start:text.index("### 0.2i ", start)]
+
+
+def section_0_2i():
+    text = AGENTS.read_text(encoding="utf-8")
+    start = text.index("### 0.2i S1 is GitHub: decision and executor in GitHub Actions")
     return text[start:text.index("### 0.3 ", start)]
 
 
@@ -66,6 +73,32 @@ class PinTest(unittest.TestCase):
         # privileged-closure bullet of 0.2g: the path lists are derived at the PR head and at main, not enumerated.
         self.assertEqual(hashlib.sha256(section_0_2g().encode("utf-8")).hexdigest(), SECTION_G_SHA256)
         self.assertEqual(hashlib.sha256(section_0_2h().encode("utf-8")).hexdigest(), SECTION_H_SHA256)
+        # 0.2i (S1 is GitHub) is added after 0.2h; sections 0.2e to 0.2h keep their hashes.
+        self.assertEqual(hashlib.sha256(section_0_2i().encode("utf-8")).hexdigest(), SECTION_I_SHA256)
+
+    def test_key_sentences_0_2i(self):
+        sec = section_0_2i()
+        for sentence in ("that merge puts the executor in SHADOW: it grants no merge and no write.",
+                         "The executor goes LIVE only by a second owner-present PR",
+                         "The decision is a function of the published brief alone",
+                         "It runs on `schedule` and `workflow_dispatch` on main only and never on a pull-request event",
+                         "it checks out and runs main's own scripts only; it never executes PR code; it holds no secret",
+                         "reads `\"executor\": \"LIVE\"` (missing, unknown or unparsable: `OFF`; `SHADOW`: every read and no write)",
+                         "the repository variable `S1_EXECUTOR_HOLD` is empty (the variable can only stop it)", "One action per run.",
+                         "`merge_method: squash` and `sha: <the decision's exact head>`", "A 405, a 409 or any other failure is STOP: no retry.",
+                         "`CODEX_FINAL_REQUIRED` (missing or unknown reads as this)", "`NATIVE_GATES` needs no review",
+                         "a head S1 authored or a PR a bot opened always needs the completed Codex review",
+                         "A `CLAUDE_REVIEW_v1` is never required and never read.",
+                         "risk HIGH, HIGH_IMPACT, EXTREME or unclear (so gate (f) is never used by the executor)",
+                         "a merge made with the workflow token starts no workflow",
+                         "An active ruleset or a protected main is `ruleset_unproven`: no executor merge.",
+                         "a post that counts can only stop a merge or suppress a duplicate",
+                         "`00_FMOS/S1/OBSERVER_BOOTSTRAP.txt`, verbatim: one read and no write of any kind",
+                         "gives the `execute` job, and only that job, `contents: write`, `pull-requests: write` and `issues: write`",
+                         "`actions: write` is not needed and is not granted.",
+                         "Monday 09:30–10:30 read-only (checked before every write)",
+                         "Set the repository variable `S1_EXECUTOR_HOLD` (immediate) or disable the workflow"):
+            self.assertIn(sentence, sec)
 
     def test_key_sentences_0_2h(self):
         for sentence in ("grants S1 no new merge class, write target, schedule or identity and removes no gate",
@@ -218,7 +251,12 @@ class LegacyProvenanceTest(unittest.TestCase):
 class SwitchTest(unittest.TestCase):
     def test_schema(self):
         doc = json.loads(LANE.read_text(encoding="utf-8"))
-        self.assertEqual(sorted(doc), ["clears_halt", "contract", "decided", "max_merges_per_tick", "pins", "policy", "state", "steward_state"])
+        self.assertEqual(sorted(doc), ["clears_halt", "contract", "decided", "executor", "max_merges_per_tick", "pins", "policy",
+                                       "review_policy", "state", "steward_state"])
+        # section 0.2i: the executor of this file is never LIVE without write permissions on the execute job, and this
+        # test and tests/governance/test_s1_executor_v1.py pin both together (the enable PR changes both)
+        self.assertIn(doc["executor"], {"OFF", "SHADOW", "LIVE"})
+        self.assertIn(doc["review_policy"], {"CODEX_FINAL_REQUIRED", "NATIVE_GATES"})
         self.assertIn(doc["steward_state"], {"ON", "OFF"})
         self.assertEqual(doc["contract"], "S1_REVIEWED_MERGE_LANE_v1")
         self.assertIn(doc["state"], {"ON", "OFF"})

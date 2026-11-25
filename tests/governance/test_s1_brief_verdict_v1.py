@@ -321,6 +321,10 @@ class RenderStability(unittest.TestCase):
                 brief.pop("verdict")
                 for key in ("c1b", "ledger"):                                                       # W2b: added beside it
                     brief.pop(key)
+                for key in ("thin", "decision_log"):                                                # section 0.2i: added beside them
+                    brief.pop(key)
+                for e in brief["prs"]:                                                              # section 0.2i: judgment as data
+                    e.pop("thin", None)
                 for x in brief["next"]:                                                             # W5: the counter of each ranked entry
                     self.assertEqual(x.pop("builds"), 1)
                 body = B.render(brief)

@@ -126,7 +126,8 @@ def entry(brief, n=7):
 
 
 def top(brief):
-    return brief["next"][0] if brief["next"] else None
+    ranked = brief.get("ranked") or brief["next"]              # section 0.2i: while the executor is LIVE the ranked list is B.ranked
+    return ranked[0] if ranked else None
 
 
 class CleanWorld(unittest.TestCase):
@@ -1069,7 +1070,7 @@ class CollectReplay(unittest.TestCase):
         self.assertTrue(brief["complete"])
         self.assertEqual((top(brief)["action"], top(brief)["pr"]), ("MERGE", 7))
         self.assertEqual(entry(brief)["behind"], 3)
-        self.assertEqual(B.parse_body(B.render(brief))["next"][0]["head"], HEAD)
+        self.assertEqual(top(B.parse_body(B.render(brief)))["head"], HEAD)
         self.assertLess(fake.calls, 40)
 
     def test_depth_reads_take_same_repository_prs_most_recently_updated_first(self):
@@ -1166,7 +1167,7 @@ class WorkflowFile(unittest.TestCase):
         self.assertEqual(due["permissions"], {"contents": "read", "issues": "read", "actions": "read"})   # read the workflow's own run list
         self.assertEqual(build["needs"], "due")
         self.assertIn("needs.due.outputs.due == 'true'", build["if"])
-        self.assertEqual(sorted(self.doc["jobs"]), ["build", "due", "publish"])
+        self.assertEqual(sorted(self.doc["jobs"]), ["build", "due", "execute", "publish"])   # execute: section 0.2i (test_s1_executor_v1.py)
         for job in (due, build, pub):
             for step in job["steps"]:
                 if str(step.get("uses", "")).startswith("actions/checkout@"):
