@@ -2,7 +2,7 @@ import copy
 import math
 import unittest
 from scripts.research import task2_challenger_a_sqrt_t_vol_band_v1 as A
-from scripts.research.cn_mm_c2_relative_tilt_fixture_v1 import fixture_projection
+from scripts.research.cn_mm_c2_relative_tilt_fixture_v1 import fixture_projection, fixture_evaluation
 
 def fixture():
     bands={family:{"0.5":[90.,110.],"0.8":[80.,120.],"0.95":[70.,130.]} for family in ("close","range")}
@@ -53,3 +53,78 @@ class C2FixtureTests(unittest.TestCase):
         f["assets"]["ETH"]["days"][0]["band"]["close"]["0.8"]=[95.,105.]
         with self.assertRaisesRegex(ValueError,"BAND_INVALID"):
             fixture_projection(seal(f),True)
+
+    def evaluation_fixture(self):
+        f=fixture()
+        f["week"]="2026-W49"
+        f["issue_clock_utc"]="2026-11-30T00:00:00Z"
+        for a in f["assets"].values():
+            template=a["days"][0]
+            a["days"]=[dict(copy.deepcopy(template),day=k,h=h,
+                            scored_from_utc=A.iso(start),end_utc=A.iso(end))
+                       for k,start,end,h in A.day_windows(A.utc(f["issue_clock_utc"]),A.utc(f["issue_clock_utc"]))]
+        bars={}
+        for h in range(7*24):
+            t=A.utc(f["issue_clock_utc"])+h*A.HOUR
+            bars[t]={"BTC":(98.,99.,97.),"ETH":(102.,103.,101.)}
+        return seal(f),bars
+
+    def evaluate(self,f,bars,permission=True,delivery="2026-11-30T00:00:00Z",mature="2026-12-07T00:00:00Z"):
+        return fixture_evaluation(f,permission,bars,first_delivery_utc=delivery,evaluated_at_utc=mature)
+
+    def test_matched_evaluation_has_exact_common_denominator_and_relative_direction(self):
+        f,bars=self.evaluation_fixture()
+        result=self.evaluate(f,bars)
+        self.assertEqual(result["paired_day_count"],7)
+        self.assertEqual(result["paired_asset_day_count"],14)
+        self.assertEqual(result["relative"]["n"],7)
+        self.assertEqual(result["by_asset"]["BTC"]["n"],7)
+        self.assertEqual(result["relative"]["metrics"]["C2_direction_correct"],1.)
+        self.assertEqual(result["relative"]["metrics"]["C1_direction_correct"],0.)
+        self.assertFalse(result["edge_established"])
+        self.assertFalse(result["first_delivery_verified"])
+        self.assertIsNone(result["independent_sample_size"])
+        self.assertFalse(result["authority"]["forecast_authority"])
+
+    def test_neutral_is_exact_baseline_for_every_metric(self):
+        f,bars=self.evaluation_fixture()
+        r=self.evaluate(f,bars,False)
+        for panel in (r["all"],r["by_asset"]["BTC"],r["by_asset"]["ETH"],r["relative"]):
+            for k,v in panel["metrics"].items():
+                if k.startswith("C1_"):
+                    self.assertEqual(v,panel["metrics"]["C2_"+k[3:]])
+        self.assertEqual(self.evaluate(f,bars,None)["paired_asset_day_count"],0)
+
+    def test_late_delivery_unmatured_and_one_asset_gap_exclude_both(self):
+        f,bars=self.evaluation_fixture()
+        del bars[A.utc("2026-12-01T05:00:00Z")]["ETH"]
+        r=self.evaluate(f,bars,delivery="2026-11-30T00:01:00Z",mature="2026-12-03T00:00:00Z")
+        self.assertEqual(r["paired_asset_day_count"],2)
+        self.assertEqual([v["day"] for v in r["rows"]],[3,3])
+        self.assertEqual(r["abstentions"][0]["reason"],"ABSTAIN_PRE_DELIVERY")
+        self.assertEqual(r["abstentions"][1]["reason"],"ABSTAIN_INCOMPLETE_MATCHED_HOURLY")
+        self.assertEqual(r["abstentions"][2]["reason"],"ABSTAIN_NOT_MATURE")
+
+    def test_invalid_ohlc_and_resealed_clock_attack_rejected(self):
+        f,bars=self.evaluation_fixture()
+        bars[A.utc(f["issue_clock_utc"])]["BTC"]=(98.,97.,96.)
+        with self.assertRaisesRegex(ValueError,"OHLC_ORDER"):
+            self.evaluate(f,bars)
+        f,bars=self.evaluation_fixture()
+        for asset in f["assets"].values():
+            asset["days"][0]["h"]=25.
+        with self.assertRaisesRegex(ValueError,"WINDOWS_DO_NOT_MATCH"):
+            self.evaluate(seal(f),bars)
+        f,bars=self.evaluation_fixture()
+        with self.assertRaisesRegex(ValueError,"CLOCK_ORDER"):
+            self.evaluate(f,bars,delivery="2026-11-29T23:59:00Z")
+
+    def test_losing_signal_is_not_suppressed_or_retuned(self):
+        f,bars=self.evaluation_fixture()
+        for row in bars.values():
+            row.update(BTC=(102.,103.,101.),ETH=(98.,99.,97.))
+        r=self.evaluate(f,bars)
+        self.assertEqual(r["relative"]["metrics"]["C2_direction_correct"],0.)
+        self.assertGreater(r["relative"]["metrics"]["C2_abs_error_fraction"],
+                           r["relative"]["metrics"]["C1_abs_error_fraction"])
+        self.assertFalse(r["edge_established"])

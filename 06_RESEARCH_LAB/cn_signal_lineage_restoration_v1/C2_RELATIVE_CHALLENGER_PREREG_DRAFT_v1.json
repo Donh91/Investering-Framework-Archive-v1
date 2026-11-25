@@ -32,7 +32,16 @@
       "interval score and width"
     ],
     "cohort": "Same decision cutoff, original source clocks, outcome path and availability across candidates; report abstentions; eight resolved week clusters proposed subject to review",
-    "no_posthoc_tuning": true
+    "no_posthoc_tuning": true,
+    "fixture_harness": {
+      "status": "IMPLEMENTED_SYNTHETIC_ONLY_PENDING_REVIEW",
+      "implementation": "scripts/research/cn_mm_c2_relative_tilt_fixture_v1.py",
+      "unit_tests": "tests/research/test_cn_mm_c2_relative_tilt_fixture_v1.py",
+      "matched_population": "both BTC and ETH must have all original A scored hours; whole-day exclusion for late delivery, unmatured day, missing either asset or unavailable permission",
+      "relative_target": "implied ETH/BTC spot close ratio from identical paired close times; no separately timestamped ratio",
+      "metrics": "normalized close MAE, direction including FLAT, close and full-range coverage, original A primary interval score and width, all with identical denominators",
+      "guard": "no real issuance, no historical C2 score, no independent sample or edge, synthetic delivery clock unverified"
+    }
   },
   "forecast_authority": false,
   "portfolio_execution": false,
