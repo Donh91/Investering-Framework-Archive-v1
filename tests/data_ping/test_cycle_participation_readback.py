@@ -1,7 +1,7 @@
 import copy
 import unittest
 from datetime import datetime, timedelta, timezone
-from scripts.data_ping.native_handlekompas import cycle_participation_readback
+from scripts.data_ping.native_handlekompas import build, cycle_participation_readback
 
 NOW = datetime(2026, 11, 25, 11, tzinfo=timezone.utc)
 STAMP = "2026-11-25T10:00:00Z"
@@ -48,6 +48,7 @@ class ParticipationTests(unittest.TestCase):
     def test_bad_authority_membership_and_health(self):
         for edit in [
             lambda x:proxy(x)["authority"].update(binding=True),
+            lambda x:x.update(validation_status="FAIL"),
             lambda x:proxy(x).update(source_membership_hash="b"*64),
             lambda x:x["source_health"]["breadth"].update(status="DEGRADED"),
             lambda x:proxy(x).update(source_retrieved_at_utc="2026-11-25T09:00:00Z"),
@@ -61,6 +62,9 @@ class ParticipationTests(unittest.TestCase):
             self.assertEqual(result["buckets"]["LARGE_ALT_PROXY"]["state"],"UNAVAILABLE")
             self.assertEqual(result["buckets"]["MICROCAP_PROXY"]["state"],"UNAVAILABLE")
             self.assertEqual(result["buckets"]["MEMES"]["state"],"UNAVAILABLE")
+    def test_native_owner_emits_identical_readback(self):
+        x=fixture()
+        self.assertEqual(build(x, now=NOW)["cycle_participation"], read(x))
     def test_privacy_and_purity(self):
         x=fixture();before=copy.deepcopy(x)
         result=read(x)

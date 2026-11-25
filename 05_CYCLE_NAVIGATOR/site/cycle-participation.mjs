@@ -41,7 +41,7 @@ export function bindParticipation(internal,publicProjection,{verified=false}={})
 export function bindNativeParticipation(native,auto,{verified=false}={}){
  if(!verified||native?.contract!=='NATIVE_HANDLEKOMPAS_v1'||auto?.contract!=='AUTO_MARKET_STATE_PACKET_v1'||
     typeof auto.packet_sha256!=='string'||!/^[0-9a-f]{64}$/.test(auto.packet_sha256)||
-    native.source?.packet_sha256!==auto.packet_sha256)return null;
+    auto.validation_status==='FAIL'||native.source?.packet_sha256!==auto.packet_sha256)return null;
  const a=safeBlock(native.cycle_participation);
  if(!a)return null;
  const observed=stamp(a.observed_at_utc), expiry=stamp(a.valid_until_utc), issued=stamp(native.generated_at_utc), packet=stamp(auto.packet_generated_at_utc);
@@ -52,6 +52,7 @@ export function readCycleParticipation(latest,compass,{nowUtc=new Date().toISOSt
  if(latest?.schema!=='CN_PUBLIC_SNAPSHOT_V2'||compass?.contract!=='PUBLIC_COMPASS_PROJECTION_v1')return null;
  const native=compass.full_stack?.native_cycle_participation_binding;
  const proof=native??compass.full_stack?.cycle_participation_binding;
+ if(compass.full_stack?.native_cycle_participation_emitted===true&&!native)return null;
  if(proof?.contract!=='CN_CYCLE_PARTICIPATION_BINDING_v1')return null;
  const isNative=proof.status==='VERIFIED_NATIVE_AUTO';
  if(isNative){

@@ -2214,6 +2214,8 @@ def cycle_participation_readback(auto_state, *, as_of):
     A bucket is an observed rank-window proxy, never an inferred capital flow.
     """
     packet = _participation_mapping(auto_state)
+    if packet.get("validation_status") == "FAIL":
+        return _participation_unavailable("AUTO_SOURCE_VALIDATION_FAILED")
     state = _participation_mapping(packet.get("normalized_state"))
     health = _participation_mapping(_participation_mapping(packet.get("source_health")).get("breadth"))
     norm = _participation_mapping(health.get("normalization"))

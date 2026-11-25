@@ -503,6 +503,7 @@ async function buildFullStackReadback(compass,weeklyPointer,weeklyPackage,series
     official_freshness:officialValid?officialFreshness:{status:"UNAVAILABLE"},
     cycle_participation_binding:cycleParticipationBinding,
     native_cycle_participation_binding:bindNativeParticipation(nativeTarget,autoTarget,{verified:nativeValidated}),
+    native_cycle_participation_emitted:Boolean(nativeValidated&&nativeTarget&&Object.hasOwn(nativeTarget,'cycle_participation')),
     official_action:officialValid?compass.action_now:"UNAVAILABLE",
     official_data_status:String(compass?.data_status||"NOT_PUBLISHED"),
     master_monday:mondayPublic,

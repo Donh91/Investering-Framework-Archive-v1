@@ -60,3 +60,8 @@ test('newer hourly native readback is independent of the official slot and weekl
  x.c.full_stack.native.checked_at_utc='2026-11-25T10:26:00Z';
  assert.equal(readCycleParticipation(x.l,x.c,{nowUtc}),null);
 });
+
+test('new native missing evidence cannot silently borrow the older official observation',()=>{
+ const x=fixture();x.c.full_stack.native_cycle_participation_emitted=true;
+ assert.equal(readCycleParticipation(x.l,x.c,{nowUtc}),null);
+});
