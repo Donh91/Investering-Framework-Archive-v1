@@ -9,8 +9,9 @@ read-only observer (00_FMOS/S1/OBSERVER_BOOTSTRAP.txt) and the offline replay.
 What moved here from the text a language model used to execute (00_FMOS/S1/TICK.md v3.3):
   T0 CLOCK            monday_window(), clock_gate()
   T4 CHOOSE / ORDER   decide(): HALT, then MERGE (LOW before MEDIUM, lowest PR), else NOOP; one action
-  T5 F2 judgment      entry_facts(): exclusions 4, 5, 6, 8, 9 on paths and title, the risk class, direction, shrinks
-  T5 F4 review        review_gate(): the GitHub-native review policy of the switch
+  T5 F2 judgment      entry_facts(): exclusions 4, 5, 6, 8, 9 as word lists on paths, title and body (best effort,
+                      never a proof), the risk class, direction, hold labels, the documentation-only fact
+  T5 F4 review        review_gate(): the GitHub-native review policy of the switch; code never merges unreviewed
   T5 F5 lane / rules  lane_gates()
   T3H HEARTBEAT       heartbeat block of the decision; body by heartbeat_body()
   F6/F7 receipts      intent_body(), merge_receipt_body(), halt_body(), op_done_body()
@@ -31,39 +32,79 @@ MAX_AGE_MINUTES = 45                       # a decision older than this is never
 EXECUTE_MAX_AGE_MINUTES = 20               # the executor runs in the build's own workflow run: an older decision is a re-run
 EXECUTOR_MODES = ("OFF", "SHADOW", "LIVE")
 REVIEW_POLICIES = ("CODEX_FINAL_REQUIRED", "NATIVE_GATES")
+NO_REVIEW_STATES = ("NONE", "UNAVAILABLE", "SILENT", "INADMISSIBLE")   # codex_review(): read completely, and no completed review
 EXECUTOR_ACTIONS = ("MERGE", "HALT")       # what the executor may do; a heartbeat is observability, never the action
 MERGE_RISKS = ("LOW", "MEDIUM")            # HIGH, HIGH_IMPACT, EXTREME, unclear and OWNER_GATED are never executor merges
 RISK_ORDER = ("LOW", "MEDIUM", "HIGH", "HIGH_IMPACT", "EXTREME", "UNCLEAR", "OWNER_GATED")
-HOLD_LABELS = ("s1-hold", "do-not-merge", "owner-gated", "high-impact", "wip")
+# The owner's label veto. Names are compared without case, spaces, "_" and "-" (label_key): HIGH_IMPACT, "high impact"
+# and High-Impact are one label. Every "risk:" label other than low and medium holds as well (hold_label).
+HOLD_LABELS = ("s1-hold", "hold", "on-hold", "do-not-merge", "dnm", "owner-gated", "high-impact", "wip", "draft", "blocked", "P0",
+               "priority: high", "priority: critical", "priority: urgent", "risk: high", "auto-trading", "wontfix", "invalid", "duplicate")
+TITLE_HOLD = re.compile(r"(?i)^[\s\[\(]*(draft|wip|do[ _-]?not[ _-]?merge|dnm|hold)(?![A-Za-z])")   # a title that says "not yet"
 # gates that are the executor's own policy: a PR that only these hold is finished work that waits for the owner's merge
 OWNER_ROUTE_GATES = ("C2:judgment:", "C2:risk:", "C2:push_trigger:", "C2:shrinks:", "C5:strategist", "C5:bot_authored", "C5:s1_authored",
-                     "C5:codex_final_required")
+                     "C5:codex_authored", "C5:ai_authored", "C5:review_required_for_code", "C5:codex_final_required", "C9:attempted_head")
 ORIGIN_WINDOW_MINUTES = 15                 # EVIDENCE_BINDINGS s1_origin_window_minutes: merged_at within this of the intent
 CPH = ZoneInfo("Europe/Copenhagen")
 SHA40 = re.compile(r"[0-9a-f]{40}")
 TASK_ID = "6ae5fd466b48819187abc224ec0f1c5f"
 OWNER_ISSUE = 1156
 DOC_SUFFIXES = (".md", ".txt", ".rst")
+DOCS_ONLY_SUFFIXES = (".md", ".rst")       # the only files a PR may change to merge with no completed review (review_gate)
+MANIFEST_NAME = re.compile(r"(?i)^(?:requirements|constraints)[^/]*\.txt$")       # a dependency list is code, not a document
+AGENT_FILE = re.compile(r"(?i)^(?:agents|claude|gemini|skill|copilot-instructions)\.md$|prompt|instruction|bootstrap")
 DATA_SUFFIXES = (".json", ".jsonl", ".ndjson", ".csv", ".tsv", ".parquet", ".db", ".sqlite", ".log")
 BINARY_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf", ".woff", ".woff2", ".ttf", ".parquet", ".zip", ".gz")
 RECORD_NAME = re.compile(r"(?i)ledger|receipt|journal|histor|episode|registry|manifest|audit|\bLOG\b|_log\b|changelog")
 DATA_PREFIXES = ("data/", "02_DATA_PING/", "03_DAILY_CAPTURE_LOGS/", "03_WEEKLY_OPERATIONS/", "09_SOURCE_QA/", "08_SOURCE_MATERIAL/")
 SITE_PREFIX = "05_CYCLE_NAVIGATOR/site/"
 
-# AGENTS.md section 0.2e exclusions 4, 5, 6 and 8, which a reviewer or S1 used to judge. Here they are a closed list of
-# words matched on every changed path, every previous_filename and the PR title. A match is OWNER_GATED; the lists err
-# toward the owner (a market word such as "trade" in a research note title costs an owner click, never a merge).
+# AGENTS.md section 0.2e exclusions 4, 5, 6 and 8, which a reviewer or S1 used to judge. Here they are word lists
+# matched on every changed path, every previous_filename, the PR title and the PR body. A match is OWNER_GATED; the lists
+# err toward the owner (a market word such as "trade" in a research note costs an owner click, never a merge).
+# BEST EFFORT, NEVER A PROOF: a list sees names and prose, not what a diff does, and a synonym it does not hold passes.
+# The control for code is therefore the review (review_gate): no policy merges a code change that nobody reviewed.
+# Two kinds of entry. A STEM matches anywhere, also inside one lower-case word (autotrader, swapexecutor). A WORD
+# (_words) matches between separators: "_", "-", ".", "/", digits, a space, and a camelCase boundary, because every
+# text is matched in two forms (word_forms): as written, and with a space at each camelCase boundary (TradeExecutor,
+# githubToken and placeOrder hold the words trade, token and order).
 _W = r"(?<![A-Za-z])"                       # word start that treats _ - . / and digits as separators
 _E = r"(?![A-Za-z])"
+_CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
+
+
+def _words(*alternatives):
+    return _W + "(?:" + "|".join(alternatives) + ")" + _E
+
+
+def word_forms(text):
+    """`text` as written, and again with a space at every camelCase boundary."""
+    t = str(text or "")
+    return t + "\n" + _CAMEL.sub(" ", t)
+
+
 JUDGMENT = {
-    "x4": re.compile(r"(?i)secret|credential|passw(?:or)?d|api[_ -]?key|private[_ -]?key|" + _W + r"tokens?" + _E + r"|vault|recover|backup"
-                     r"|ruleset|branch[_ -]?protect|repo(?:sitory)?[_ -]?settings|custody|" + _W + r"seal(?:ed|s)?" + _E + r"|signing[_ -]?key"),
-    "x5": re.compile(r"(?i)" + _W + r"trad(?:e|es|ed|er|ing)" + _E + r"|" + _W + r"orders?" + _E + r"|wallet|" + _W + r"funds?" + _E
-                     + r"|" + _W + r"capital" + _E + r"|payment|" + _W + r"paid" + _E + r"|spend|budget|billing|cost[_ -]?(?:cap|guard)"
-                     r"|api[_ -]?agent|withdraw|deposit|" + _W + r"transfers?" + _E + r"|broker|leverage"),
-    "x6": re.compile(r"(?i)privat|privacy|public|publish|publication|redact|restricted|" + _W + r"bridge" + _E + r"|personal|" + _W + r"pii" + _E),
+    # exclusion 4: credentials, custody, recovery, repository settings (and the usual names of key and credential files)
+    "x4": re.compile(r"(?i)secret|credential|passw(?:or)?d|passphrase|api[_ -]?key|private[_ -]?key|signing[_ -]?key|key[_ -]?pair|key[_ -]?store"
+                     r"|mnemonic|seed[_ -]?phrase|oauth|bearer|vault|recover|backup|ruleset|branch[_ -]?protect|repo(?:sitory)?[_ -]?settings|custody"
+                     r"|\.env(?![A-Za-z0-9])|\.envrc|\.pem(?![A-Za-z0-9])|\.key(?![A-Za-z0-9])|\.p12|\.pfx|\.jks|\.kdbx"
+                     r"|id_(?:rsa|dsa|ecdsa|ed25519)|\.netrc|\.npmrc|\.pypirc|\.htpasswd|authorized_keys|known_hosts|"
+                     + _words("tokens?", "seal(?:ed|s)?", "sign(?:s|ed|er|ers|ing|ature|atures)?", "seeds?", "auth", "jwt", "cookies?")),
+    # exclusion 5: money, trading, order execution, paid APIs
+    "x5": re.compile(r"(?i)trading|trader|wallet|payment|spend|budget|billing|cost[_ -]?(?:cap|guard)|api[_ -]?agent|withdraw|deposit|broker|leverage"
+                     r"|swap|executor|sniper|money|slippage|"
+                     + _words("trad(?:e|es|ed)", "(?<!in )orders?", "funds?", "capital", "paid", "transfers?",
+                              "exec(?:s|ute|utes|uted|uting|ution|utions|utable)?", "snip(?:e|es|ed|ing)", "buy(?:s|ing|er|ers)?",
+                              "sell(?:s|ing|er|ers)?")),
+    # exclusion 6: the public/private boundary
+    "x6": re.compile(r"(?i)privat|privacy|public|publish|publication|redact|restricted|personal|" + _words("bridge", "pii")),
+    # exclusion 8: Round 3
     "x8": re.compile(r"(?i)round[_ -]?3|round[_ -]?three|" + r"(?<![A-Za-z0-9])r3(?![A-Za-z0-9])"),
 }
+# The lists that are also matched on the PR BODY (the title and every path always get all four). All four: a body
+# that announces money, credential, privacy-boundary or Round 3 scope is the owner's. This is the widest net of the
+# section: most PR bodies of this repository restate the hard lines ("no paid API", "no trading") and so match.
+BODY_LISTS = ("x4", "x5", "x6", "x8")
 NAMED_HIGH = re.compile(r"(?i)high[_ -]?impact|" + _W + r"extreme" + _E + r"|owner[_ -]?gated")
 DIRECTION_WORDS = re.compile(r"(?i)roadmap|priorit|master[_ -]?plan|" + _W + r"mission" + _E + r"|strateg|deprecat|" + _W + r"remov(?:e|es|ed|al|ing)" + _E
                              + r"|sunset|retire|" + _W + r"new[_ -]?(?:program|producer|consumer)" + _E)
@@ -111,9 +152,10 @@ def thin_config(switch):
 
 def effective_mode(config_mode, hold):
     """The switch on main is the authority; the owner's repository variable S1_EXECUTOR_HOLD can only restrict it.
-    Any non-empty hold value other than 0/false/off turns a LIVE or SHADOW executor OFF."""
+    ANY non-empty value holds: "1", "true", "off", "0", "no" and "false" all turn a LIVE or SHADOW executor OFF. The
+    variable is a kill switch, so no word in it can mean "run"; only deleting it, or leaving it empty, releases the hold."""
     mode = config_mode if config_mode in EXECUTOR_MODES else "OFF"
-    held = str(hold or "").strip().lower() not in ("", "0", "false", "off", "no")
+    held = hold is not None and str(hold).strip() != ""
     return "OFF" if held else mode
 
 
@@ -259,18 +301,40 @@ def path_risk(path):
         return "LOW"
     if p.startswith(SITE_PREFIX) or p.startswith(DATA_PREFIXES) or base.startswith("LATEST_") or RECORD_NAME.search(base):
         return "HIGH"                                            # a file NAMED as a record; a directory name decides nothing
-    if low.endswith(DOC_SUFFIXES):
+    if low.endswith(DOC_SUFFIXES) and not MANIFEST_NAME.match(base):
         return "LOW"
     if low.endswith(DATA_SUFFIXES) and not p.startswith("scripts/"):
         return "HIGH"
     return "MEDIUM"
 
 
+def label_key(name):
+    """A label name without case, spaces, "_" and "-"."""
+    return re.sub(r"[\s_\-]+", "", str(name or "").lower())
+
+
+HOLD_KEYS = frozenset(label_key(name) for name in HOLD_LABELS)
+
+
+def hold_label(name):
+    key = label_key(name)
+    return key in HOLD_KEYS or (key.startswith("risk:") and key not in ("risk:low", "risk:medium"))
+
+
+def doc_path(path):
+    """Is this path a plain document: Markdown or reStructuredText of class LOW, in no dot-directory, and not a file
+    that instructs an agent (AGENTS.md, a prompt, a bootstrap text)? Everything else is code for review_gate()."""
+    p = str(path or "")
+    return (p.lower().endswith(DOCS_ONLY_SUFFIXES) and path_risk(p) == "LOW" and not any(part.startswith(".") for part in p.split("/"))
+            and not AGENT_FILE.search(p.rsplit("/", 1)[-1]))
+
+
 def entry_facts(pr, files, files_complete, push_filters):
     """The facts about one PR that TICK F2 left to judgment, as data: the judgment exclusions (x4 custody, x5 money,
-    x6 privacy, x8 Round 3, x9 a class named HIGH_IMPACT or a binary file), the path risk class, a direction signal,
-    hold labels, and the push-triggered workflows a token merge would not start. The title itself is never published:
-    only its hash, so the executor notices a retitled PR."""
+    x6 privacy, x8 Round 3, x9 a class named HIGH_IMPACT or a binary file) on paths, title and body, the path risk
+    class, a direction signal, hold labels and a hold title, whether the PR changes documents only, and the
+    push-triggered workflows a token merge would not start. Title and body are never published: only the title's hash,
+    so the executor notices a retitled PR."""
     pr = pr if isinstance(pr, dict) else {}
     title, body = str(pr.get("title") or ""), str(pr.get("body") or "")
     labels = sorted({str(l.get("name")) for l in pr.get("labels") or [] if isinstance(l, dict) and l.get("name")})
@@ -284,42 +348,61 @@ def entry_facts(pr, files, files_complete, push_filters):
             removed_code = True
         if name.lower().endswith(BINARY_SUFFIXES) and f.get("status") != "removed":
             binary.append(name)
-    x = []
+    x, title_forms, body_forms = [], word_forms(title), word_forms(body)
     for code, rx in JUDGMENT.items():
-        if rx.search(title):
+        if rx.search(title_forms):
             x.append(f"{code}:title")
-        x += [f"{code}:{p}" for p in paths if rx.search(p)]
-    if NAMED_HIGH.search(title) or NAMED_HIGH.search(body):
+        if code in BODY_LISTS and rx.search(body_forms):
+            x.append(f"{code}:body")
+        x += [f"{code}:{p}" for p in paths if rx.search(word_forms(p))]
+    if NAMED_HIGH.search(title_forms) or NAMED_HIGH.search(body_forms):
         x.append("x9:named_high_impact")
     x += [f"x9:binary:{p}" for p in binary]
     if not files_complete:
         x.append("x9:file_list_incomplete")
     risk = risk_max(*[path_risk(p) for p in paths]) if paths and files_complete else "UNCLEAR"
+    held = [l[:40] for l in labels if hold_label(l)]
+    named = TITLE_HOLD.search(title)
+    if named:
+        held.append("title:" + re.sub(r"[ _-]+", "-", named.group(1).lower()))
     return {"x": sorted(set(x))[:8], "x_n": len(set(x)), "risk": risk,
-            "direction": bool(removed_code or DIRECTION_WORDS.search(title) or any(DIRECTION_WORDS.search(p) for p in paths)),
-            "hold_labels": [l for l in labels if l.lower() in HOLD_LABELS][:3],
+            "direction": bool(removed_code or DIRECTION_WORDS.search(title_forms) or any(DIRECTION_WORDS.search(word_forms(p)) for p in paths)),
+            "hold_labels": held[:3],
+            "docs_only": bool(files_complete and paths and all(doc_path(p) for p in paths)),
             "push": push_trigger_matches(paths, push_filters)[:4] if files_complete else ["unknown"],
             "title_sha256": sha16(title)}
 
 
 def review_gate(e, policy):
     """Gate (d) as the switch states it, GitHub-native only (no Bridge, no Claude receipt). Findings and an unanswered
-    request block under every policy; a head S1 authored always needs the completed Codex review (H2)."""
+    request block under every policy. The completed Codex review of a head Codex did not write (status FINAL) passes
+    under every policy. With no completed review, CODEX_FINAL_REQUIRED never passes, and NATIVE_GATES passes only a
+    PR that nothing marks as written by S1, Codex, another AI or a bot AND that changes documents only (doc_path):
+    code is never merged unreviewed, and automation never merges automation's own PR unreviewed. Every fact is read
+    fail closed: a missing or unknown value is the blocking one."""
     cx = ((e.get("review") or {}).get("codex") or {}).get("status")
-    author = e.get("author") or {}
+    author = e.get("author") if isinstance(e.get("author"), dict) else {}
+    thin = e.get("thin") if isinstance(e.get("thin"), dict) else {}
     if cx == "FINDINGS":
         return "C5:codex_findings"
-    if cx in (None, "NOT_PROVEN"):
-        return "C5:review_unreadable"
     if cx == "REQUESTED":
         return "C5:codex_review_pending"
-    if cx != "FINAL":
-        if policy != "NATIVE_GATES":
-            return "C5:codex_final_required"
-        if author.get("s1") is not False:
-            return "C5:s1_authored"
-        if (e.get("thin") or {}).get("bot") is not False:
-            return "C5:bot_authored"                              # automation never merges automation's own PR unreviewed
+    if cx == "FINAL":
+        return None if author.get("codex") is False else "C5:codex_authored"   # Codex never reviews its own head
+    if cx not in NO_REVIEW_STATES:
+        return "C5:review_unreadable"                             # NOT_PROVEN, missing, or a status this code does not know
+    if policy != "NATIVE_GATES":
+        return "C5:codex_final_required"
+    if author.get("s1") is not False:
+        return "C5:s1_authored"
+    if author.get("codex") is not False:
+        return "C5:codex_authored"
+    if author.get("claude_package") is not False or thin.get("ai") is not False:
+        return "C5:ai_authored"
+    if thin.get("bot") is not False:
+        return "C5:bot_authored"
+    if thin.get("docs_only") is not True:
+        return "C5:review_required_for_code"
     return None
 
 
@@ -334,7 +417,7 @@ def pr_gates(e, cfg, intent_prs=()):
     lane = e.get("lane") or {}
     if thin is None:
         gates.append("C2:facts_not_in_brief")
-        thin = {"x": [], "risk": "UNCLEAR", "direction": True, "hold_labels": [], "push": ["unknown"]}
+        thin = {"x": [], "risk": "UNCLEAR", "direction": True, "hold_labels": [], "push": ["unknown"], "docs_only": False, "ai": True}
     if "paths" not in e:
         gates.append("C2:paths_not_in_brief")
     for x in (thin.get("x") or [])[:2]:
@@ -358,6 +441,8 @@ def pr_gates(e, cfg, intent_prs=()):
         gates.append(f"C5:hold_label:{label}")
     if e.get("n") in intent_prs:
         gates.append("C9:open_intent")
+    if e.get("attempted"):
+        gates.append("C9:attempted_head")                         # one merge attempt per PR head, ever: a refused merge is the owner's
     return gates
 
 
@@ -623,6 +708,7 @@ def merge_receipt_body(decision, repo_id, intent_id, readback, run_id, privacy_r
         "rules: no_active_ruleset_and_main_unprotected", f"repo_id={repo_id}", f"intent: {intent_id}",
         f"main_health=brief run={m.get('health_run', 'unavailable')}", f"brief={decision.get('run_id')}", f"decision={decision.get('id')}",
         "merge_execution_origin: " + ("UNKNOWN" if reconciled else f"S1_GITHUB_EXECUTOR run={run_id}"),
+        f"executor: GITHUB run={run_id if run_id is not None else '-'}",
         f"item: pr:{readback['pr']} state: MERGED", "closure: OBSERVING", f"contract={decision.get('contract')}", f"task: {TASK_ID}"])
 
 

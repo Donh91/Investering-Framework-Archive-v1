@@ -153,7 +153,9 @@ jobs:
     timeout-minutes: 10
     # The brief is valid when due, build and publish succeed, and its readers (TICK.md T2, and the next build's C1b
     # anchor) require a SUCCESSFUL run. A failure of this job must therefore never fail the run: it shows as a failed
-    # job, and an intent it left behind is settled by the next run.
+    # job, and an intent it left behind is settled by the next run. The job is not silent for that: the script writes
+    # its result lines to the job summary and exits non-zero (a failed JOB in a green run) when an intent is left
+    # without its outcome, a readback does not match, a read stops after a write, or anything unexpected is raised.
     continue-on-error: true
     # One executor at a time, never cancelled half way: an intent with no outcome is settled by the next run.
     concurrency:

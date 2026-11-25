@@ -11,6 +11,11 @@ The only writes this file can make (write() is the one call site of each):
                                             or S1_HEARTBEAT_v1 on the owner ledger
   PUT  /repos/<repo>/pulls/<n>/merge        {"merge_method": "squash", "sha": <the decision's exact head>}
 A merge is ONE per run, always intent first, readback after, receipt or halt last (EVIDENCE_BINDINGS B3, C9, C10).
+ONE attempt per PR head, ever: a refused or failed merge is never retried at that head (a new commit is a new head).
+
+No silent failure: the result lines go to the job summary, and the process exits non-zero when an operation was left
+without its outcome, a readback did not match, a read stopped after a write, or anything unexpected was raised. The
+job is `continue-on-error`, so that exit shows as a failed JOB and never fails the run that carries the brief.
 """
 from __future__ import annotations
 
@@ -33,7 +38,7 @@ import s1_tick_brief_v1 as B  # noqa: E402
 EXECUTE_API_CALLS = 150                # this job's own cap (the build is capped at 300; one PR in depth costs about 40)
 MAX_WRITES = 6                         # heartbeat, intent, merge, receipt or halt, and at most two reconcile records
 RECONCILES_PER_RUN = 3                 # EVIDENCE_BINDINGS op_reconciles_per_run
-MAX_ATTEMPTS_PER_HEAD = 2              # merge intents per PR head, ever: a refused merge is tried once more, then it is the owner's
+MAX_ATTEMPTS_PER_HEAD = 1              # merge intents per PR head, ever: a refused merge is NOT retried, that head is the owner's
 EVENTS = ("schedule", "workflow_dispatch")
 POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1")
 MAX_POST_CHARS = 4000
@@ -97,6 +102,8 @@ class Run:
         self.now_fn = now_fn or (lambda: datetime.now(timezone.utc))
         self.writes, self.mode, self.lines, self.ledger_read_at = [], "OFF", [], None
         self.brief = self.decision = None
+        self.run_of = B.RunReader(gh)                             # proves which Actions-bot ledger posts are this job's
+        self.alarms, self.pending = [], None                      # what makes the process exit non-zero (finish)
 
     # ---- the ONE place that writes
     def write(self, kind, **kw):
@@ -122,6 +129,7 @@ class Run:
         return json.loads(raw)
 
     def say(self, line):
+        line = re.sub(r"[\x00-\x1f\x7f]", " ", str(line))        # one line stays one line, whatever a path or a reason holds
         self.lines.append(line)
         self.out(line)
 
@@ -250,7 +258,7 @@ class Run:
         need(cc and c1 and c2 and c3, f"{n}:C5:reviews_unreadable")
         now = self.now_fn()
         need(B.concurrent_writer(commits, cc, prc, head, now, self.files["bindings"]["foreign_commit_quiet_minutes"]) is None, f"{n}:C1:concurrent_writer")
-        need(B.changes_requested(reviews, head) is False, f"{n}:C5:changes_requested")
+        need(B.changes_requested(reviews) is False, f"{n}:C5:changes_requested")   # on ANY commit: a push never lifts the veto
         item = B.newest_item(prc) or {}                          # the PR's S1_ITEM_v1 history as it is NOW: a risk or kind is only ever raised
         need(item.get("kind") != "DIRECTION", f"{n}:C5:strategist")
         need(D.risk_max(floor, facts["risk"], item.get("risk")) == m.get("risk") and m.get("risk") in D.MERGE_RISKS, f"{n}:C2:risk")
@@ -258,7 +266,9 @@ class Run:
         cx = B.codex_review(head, pr, commits, cc, prc, reviews, inline, True, now, self.files["budgets"]["codex_silent_hours"])
         if author.get("codex") and cx.get("status") == "FINAL":
             cx = {"status": "INADMISSIBLE"}
-        live = {"review": {"codex": cx}, "author": author, "thin": {"bot": (pr.get("user") or {}).get("type") != "User"}}
+        live = {"review": {"codex": cx}, "author": author,
+                "thin": {"bot": (pr.get("user") or {}).get("type") != "User", "docs_only": facts["docs_only"],
+                         "ai": B.ai_authored(pr, commits, cc, author)}}
         gate = D.review_gate(live, brief["thin"]["review_policy"])
         need(gate is None, f"{n}:{gate}")
         need(("CODEX" if cx.get("status") == "FINAL" else f"NONE(policy={brief['thin']['review_policy']})") == m.get("review"), f"{n}:C8:review_changed")
@@ -269,15 +279,16 @@ class Run:
         main, protected = self.main_now()
         self.no_code_drift(main, paths)
         health = self.lane_now(main, protected, comments)
-        open_now = B.open_intents(comments, now, 0)
+        open_now = B.open_intents(comments, now, 0, self.run_of)
         need(not any(i.get("kind") == "S1_LANE_MERGE_INTENT_v1" for i in open_now), "lane:C9:open_merge_intent")
-        # idempotency key = PR + head: a receipt for it means done; one earlier attempt may be repeated once, never more
+        # idempotency key = PR + head: a receipt for it means done, and an earlier intent for it means it was tried.
+        # ONE attempt per head, ever: no retry of a refused merge (the owner merges that head, or a new commit arrives)
         key = re.compile(rf"(?m)^pr: {n}\s*$")
         mine = [B.first_line_token(c.get("body")) for c in comments if B.is_s1_author(c) and key.search(str(c.get("body") or ""))
                 and head in str(c.get("body") or "")]
         need("S1_LANE_MERGE_v1" not in mine, f"{n}:C9:already_done")
-        need(mine.count("S1_LANE_MERGE_INTENT_v1") < MAX_ATTEMPTS_PER_HEAD, f"{n}:C9:attempt_limit")
-        head_read()
+        need(mine.count("S1_LANE_MERGE_INTENT_v1") < MAX_ATTEMPTS_PER_HEAD and (n, head) not in B.attempted_heads(comments), f"{n}:C9:attempted_head")
+        head_read()                                              # the head a SECOND time, the last read before the intent
         return {"paths": paths, "main": main, "privacy_run": ci["privacy-scan"]["run"], "repo_id": repo_id, "health": health}
 
     def readback(self, n, head, intent_at, paths, actor=B.ACTIONS_BOT["login"]):
@@ -301,6 +312,7 @@ class Run:
             return f"WOULD_MERGE(pr={m['pr']},head={m['sha'][:8]},risk={m['risk']},review={m['review']})"
         run_id = self.env.get("GITHUB_RUN_ID")
         intent = self.write("comment", body=D.intent_body(d, proof["repo_id"], self.files["contract"]["action_loop_blob"], run_id))
+        self.pending = f"intent_without_outcome(c={intent.get('id')})"   # until a receipt or a halt is posted: an alarm
         try:
             answer = self.write("merge", pr=m["pr"], sha=m["sha"])
         except Stop:
@@ -314,9 +326,12 @@ class Run:
         state, why, rb = self.readback(m["pr"], m["sha"], intent.get("created_at") or B.iso(self.now_fn()), proof["paths"])
         if state == "MATCH":
             self.write("comment", body=D.merge_receipt_body(d, proof["repo_id"], intent.get("id"), rb, run_id, proof["privacy_run"]))
+            self.pending = None
             return f"MERGED(n=1,main={str(rb['main_after'])[:8]})"
         if state == "MISMATCH":
             self.write("comment", body=D.halt_body("readback", pr=m["pr"], head=m["sha"], detail=why, contract=d["contract"], run_id=run_id))
+            self.pending = None
+            self.alarms.append(f"readback_mismatch({why})")
             return f"LANE_HALTED(readback:{why})"
         return f"MERGE_UNSETTLED({state}:{why})"                 # the intent stays OPEN; the next run's RECONCILE settles it
 
@@ -324,7 +339,7 @@ class Run:
     def reconcile(self, comments):
         """Returns the result text when a receipt or a halt was posted (that is this run's action), else None."""
         now, done, records = self.now_fn(), None, []
-        mine = [i for i in B.open_intents(comments, now, 0) if i.get("kind") == "S1_LANE_MERGE_INTENT_v1"]
+        mine = [i for i in B.open_intents(comments, now, 0, self.run_of) if i.get("kind") == "S1_LANE_MERGE_INTENT_v1"]
         by_id = {c.get("id"): c for c in comments}
         for it in sorted(mine, key=lambda i: i["id"])[:RECONCILES_PER_RUN]:
             row = by_id.get(it["id"]) or {}
@@ -346,6 +361,7 @@ class Run:
                 return f"RECONCILED(c={it['id']})"
             if state == "MISMATCH":
                 self.write("comment", body=D.halt_body("reconcile_readback", pr=it["pr"], head=head, detail=why, contract=contract, run_id=run_id))
+                self.alarms.append(f"reconcile_readback_mismatch({why})")
                 return f"LANE_HALTED(reconcile:{why})"
             if state in ("ABSENT", "FOREIGN"):
                 self.write("comment", body=D.op_done_body(it["id"], state, f"pr={it['pr']} {why}", contract=contract, run_id=run_id))
@@ -437,17 +453,40 @@ class Run:
             pr, head = (d.get("pr"), d.get("head")) if d["action"] == "MERGE" else (None, None)
             return end("NOOP", pr, head, f"NOTHING_ACTIONABLE(skipped={stop.reason})")
         except B.StopReading as stop:
+            if self.writes:
+                self.alarms.append(f"read_stopped_after_write({stop.reason})")
             return end("NOOP", None, None, f"BRIEF_INCOMPLETE(executor:{stop.reason})")
         except Exception as exc:                                 # noqa: BLE001  (an unreadable read: nothing more is written)
+            self.alarms.append(f"unexpected({type(exc).__name__})")
             return end("NOOP", None, None, f"BRIEF_INCOMPLETE(executor:{type(exc).__name__})")
 
     def finish(self, action, pr, head, result):
         d = self.decision or {}
         main, contract = str(d.get("main") or "-")[:8], d.get("contract") or "-"
+        if self.pending:                                         # an intent was posted and this run posted no outcome for it
+            self.alarms.append(self.pending)
+        if self.alarms:
+            self.say("S1_EXECUTOR_ALARM " + " ".join(self.alarms))
         self.say(f"S1_EXECUTOR_V1 mode={self.mode} decision={d.get('id')} action={d.get('action')} result={result} "
                  f"writes={len(self.writes)}:{','.join(str(w[1]) for w in self.writes) or '-'}")
         self.say(f"S1_TICK {action} {pr if pr is not None else '-'} {head[:8] if head else '-'} {result} main={main} contract={contract}")
-        return {"mode": self.mode, "action": action, "pr": pr, "head": head, "result": result, "writes": list(self.writes), "lines": list(self.lines)}
+        return {"mode": self.mode, "action": action, "pr": pr, "head": head, "result": result, "writes": list(self.writes), "lines": list(self.lines),
+                "alarms": list(self.alarms)}
+
+
+def write_summary(env, lines):
+    """The run's own lines in the job summary (the file the runner names in its *_STEP_SUMMARY variable), so that the
+    executor's result is visible on the run page without opening a log. Text only, inside one fenced block."""
+    path = env.get("GITHUB" + "_STEP_SUMMARY")
+    if not path:
+        return False
+    text = "\n".join(re.sub(r"[^\x20-\x7e]", "?", str(line)).replace("`", "'") for line in lines)
+    try:
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write("### S1 executor\n\n```text\n" + text + "\n```\n")
+    except OSError:
+        return False
+    return True
 
 
 def read_files(root):
@@ -468,8 +507,9 @@ def main(argv):
     root = B.CHECKOUT_ROOT
     B.GIT_ENV = B.token_git_env(token)
     run = Run(B.GitHub(token, budget=EXECUTE_API_CALLS), Native(root), dict(os.environ), read_files(root))
-    run.execute(Path(argv[2]).read_text(encoding="utf-8"))
-    return 0
+    out = run.execute(Path(argv[2]).read_text(encoding="utf-8"))
+    write_summary(os.environ, out["lines"])
+    return 1 if out["alarms"] else 0                             # a failed JOB (continue-on-error), never a failed run
 
 
 if __name__ == "__main__":

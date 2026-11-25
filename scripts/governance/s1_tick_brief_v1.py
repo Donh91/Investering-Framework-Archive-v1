@@ -110,6 +110,19 @@ S1_ACTION_RECEIPTS = {"S1_LANE_MERGE_v1": "MERGE", "S1_LANE_HALTED": "LANE_HALTE
 S1_ACTION_WORDS = ("ANSWER", "REPAIR", "REQUEST_REVIEW", "MERGE", "PACKAGE", "REENABLE", "STEWARD")
 CONTRACT_ANY = re.compile(r"\bcontract=[0-9a-f]{8}\b")   # anywhere: a heartbeat and a short receipt carry it mid-line
 LIMIT_RE = re.compile(r"(?i)usage limit|reached your .*limit|can(?:'|no)t review|unable to review")
+# AGENTS.md section 0.2i. An Actions-bot ledger post proves nothing by its identity (every workflow of the repository
+# posts as that bot): an executor post names its run, and that run is read and checked (executor_post).
+OP_INTENTS = ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1")
+EXECUTOR_RUN = re.compile(r"(?m)^executor: GITHUB run=(\d{1,20})[ \t]*$")
+EXECUTOR_EVENTS = ("schedule", "workflow_dispatch")
+RUN_POST_SLACK_SECONDS = 120          # an executor post was created between its run's creation and end, give or take this
+SETTLE_RUN_READS = 4                  # run reads per build (and per executor run) to judge Actions-bot outcome posts
+# What marks a PR as written by an AI or by automation (review_gate: such a PR never merges unreviewed). Best effort:
+# an AI that writes as the owner account, on a branch with another name and with no trailer, is not detectable.
+AI_BRANCH = re.compile(r"(?i)^(?:claude|codex|chatgpt|gpt|openai|copilot|grok|gemini|cursor|devin|agents?|ai|bots?|automation|auto|dependabot|renovate)[/_-]")
+AI_TRAILER = re.compile(r"(?im)^\s*co-authored-by:[^\n]*\b(?:claude|codex|chatgpt|openai|anthropic|copilot|gemini|grok|cursor|devin)\b"
+                        r"|^\s*claude-session:|noreply@anthropic\.com")
+AI_BODY = re.compile(r"(?i)generated with \[?claude code|claude\.ai/code|chatgpt\.com/(?:codex|s/)")
 
 # AGENTS.md section 0.2e exclusions 10 and 11, matched on ADDED lines of the diff. Tokens are assembled so that this
 # file's own text does not carry them.
@@ -172,7 +185,9 @@ def is_actions_bot(user):
 def is_s1_author(row):
     """Who may have written an S1 ledger post on #1156: the owner account (S1 as the ChatGPT task) or the Actions bot
     (the executor job of this workflow, AGENTS.md section 0.2i). Every use of this is fail closed: a post that counts
-    can only stop a merge (a halt, an open intent) or suppress a duplicate (a receipt, a heartbeat), never start one."""
+    can only stop a merge (a halt, an open intent, an attempted head) or suppress a duplicate (a receipt, a heartbeat),
+    never start one. SETTLING an intent is the one ledger rule that unblocks something, and identity is not enough for
+    it: open_intents() accepts the owner account, or an Actions-bot post that is proven to be the executor's."""
     return login(row) == OWNER_LOGIN or is_actions_bot((row or {}).get("user"))
 
 
@@ -259,35 +274,125 @@ def lane_merges(comments):
     return out
 
 
-def open_intents(comments, now, settle_minutes=60):
+def executor_run(body):
+    """The run id an executor post names on its own `executor: GITHUB run=<id>` line (the first such line), or None."""
+    m = EXECUTOR_RUN.search(str(body or ""))
+    return int(m.group(1)) if m else None
+
+
+def executor_post(c, run_of, now):
+    """Is this ledger post proven to be the work of the executor job? All must hold: the Actions bot wrote it and
+    never edited it; it names its run; `run_of(id)` (GET actions/runs/<id>, read by the caller) is that run, a run of
+    THIS workflow file on main of this repository, started by schedule or workflow_dispatch; and the post was created
+    while that run existed. Anything unread or unreadable: not proven. What this does NOT prove: a workflow on main
+    that deliberately names a run of this workflow while that run is in progress passes (only the owner merges
+    workflow code, AGENTS.md section 0.2e exclusion 1)."""
+    if run_of is None or not isinstance(c, dict) or not is_actions_bot(c.get("user")) or not is_s1_unedited(c):
+        return False
+    rid = executor_run(c.get("body"))
+    if rid is None:
+        return False
+    run = run_of(rid)
+    try:
+        if not isinstance(run, dict) or run.get("id") != rid or run.get("path") != WORKFLOW_PATH or run.get("head_branch") != "main" \
+                or run.get("event") not in EXECUTOR_EVENTS or (run.get("repository") or {}).get("full_name") != REPO \
+                or (run.get("head_repository") or {}).get("full_name") != REPO:
+            return False
+        slack = timedelta(seconds=RUN_POST_SLACK_SECONDS)
+        end = stamp(run["updated_at"]) if run.get("status") == "completed" else now
+        return stamp(run["created_at"]) - slack <= stamp(c["created_at"]) <= end + slack
+    except (ValueError, KeyError, TypeError):
+        return False
+
+
+class RunReader:
+    """`run_of` for executor_post(): GET actions/runs/<id>, memoised and capped. A run that does not exist, or a read
+    that GitHub answers with any other HTTP error, reads as None (not proven, fail closed: a post that names an odd
+    run id must never be able to stop the build); past the cap nothing more is read (None again). A rate limit or the
+    API cap still stops the reads (StopReading). `docs` is the record a snapshot keeps."""
+
+    def __init__(self, gh, max_reads=SETTLE_RUN_READS):
+        self.gh, self.max_reads, self.docs = gh, max_reads, {}
+
+    def __call__(self, run_id):
+        key = str(int(run_id))
+        if key not in self.docs:
+            if len(self.docs) >= self.max_reads:
+                return None
+            try:
+                self.docs[key] = self.gh.get(f"actions/runs/{key}")
+            except urllib.error.HTTPError:
+                self.docs[key] = None
+        return self.docs[key]
+
+
+def settles(c, it):
+    """Does this post READ as the outcome of intent `it`: an S1_OP_DONE_v1 that cites its id, or, for a merge intent,
+    an S1_LANE_MERGE_v1 or S1_LANE_HALTED that names its PR? Who wrote it is open_intents()'s question."""
+    token, body = first_line_token(c.get("body")), str(c.get("body") or "")
+    if token == "S1_OP_DONE_v1":
+        return re.search(rf"(?<!\d){it['id']}(?!\d)", body) is not None
+    if token in ("S1_LANE_MERGE_v1", "S1_LANE_HALTED") and it["kind"] == "S1_LANE_MERGE_INTENT_v1" and it["pr"] is not None:
+        return re.search(rf"(?<!\d){it['pr']}(?!\d)", fields(body).get("pr", "") or body.splitlines()[0]) is not None
+    return False
+
+
+def open_intents(comments, now, settle_minutes=60, run_of=None):
     """A cheap SIGNAL for RECONCILE (EVIDENCE_BINDINGS B3), never the reconciliation itself: authentic v3 intents
-    (they carry loop=) with no later outcome that names their PR or cites their id."""
+    (they carry loop=) with no later outcome that names their PR or cites their id.
+
+    WHO may settle an intent. A settled intent unblocks the lane (C9) and ends its readback, so this is the one ledger
+    rule that can start something, and the identity of the Actions bot is not enough for it (about 30 workflows of this
+    repository hold issues: write and post as that bot). An intent is settled by a never-edited outcome post of the
+    owner account, or by a never-edited outcome post that executor_post() proves to be the executor job's. `run_of`
+    is the caller's run reader (RunReader, or a snapshot's record of it); None: no Actions-bot post settles anything.
+
+    Bounded reads. An executor merge intent whose run is proven was posted by a run that had itself found no open
+    merge intent (the executor's verify_merge), and an owner post that settles an executor merge intent closes it and
+    every older one. So executor merge intents OLDER than the newest such intent are not examined again; intents the
+    owner account posted are always examined (an owner post settles them at no read)."""
+    rows = [c for c in comments if isinstance(c, dict)]
     intents = []
-    for c in comments:
+    for c in rows:
         token = first_line_token(c.get("body"))
-        if not is_s1_unedited(c) or token not in ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1"):
+        if not is_s1_unedited(c) or token not in OP_INTENTS:
             continue
         f = fields(c.get("body"))
         if "loop" not in f:
             continue                                   # a legacy intent: S1 decides case (i) natively, not this signal
         pr = re.search(r"\d+", f.get("pr", ""))
-        intents.append({"id": c["id"], "kind": token, "pr": int(pr.group(0)) if pr else None, "created_at": c["created_at"]})
+        intents.append({"id": c["id"], "kind": token, "pr": int(pr.group(0)) if pr else None, "created_at": c["created_at"],
+                        "bot": is_actions_bot(c.get("user")), "row": c})
+    outcomes = {it["id"]: [c for c in rows if c.get("id", 0) > it["id"] and settles(c, it)] for it in intents}
+    by_owner = lambda it: any(is_owner_unedited(c) for c in outcomes[it["id"]])
+    executor_merge = [it for it in intents if it["bot"] and it["kind"] == "S1_LANE_MERGE_INTENT_v1"]
+    floor = 0
+    for it in sorted(executor_merge, key=lambda i: i["id"], reverse=True):
+        if by_owner(it) or executor_post(it["row"], run_of, now):
+            floor = it["id"]
+            break
     out = []
     for it in intents:
-        settled = False
-        for c in comments:
-            if c.get("id", 0) <= it["id"] or not is_s1_unedited(c):
-                continue
-            token, body = first_line_token(c.get("body")), str(c.get("body") or "")
-            f = fields(body)
-            if token == "S1_OP_DONE_v1" and re.search(rf"(?<!\d){it['id']}(?!\d)", body):
-                settled = True
-            elif token in ("S1_LANE_MERGE_v1", "S1_LANE_HALTED") and it["kind"] == "S1_LANE_MERGE_INTENT_v1" and it["pr"] is not None \
-                    and re.search(rf"(?<!\d){it['pr']}(?!\d)", f.get("pr", "") or body.splitlines()[0]):
-                settled = True
-        if not settled:
-            age = (now - stamp(it["created_at"])).total_seconds() / 60
-            out.append({"id": it["id"], "kind": it["kind"], "pr": it["pr"], "age_min": int(age), "due": age > settle_minutes})
+        if it["bot"] and it["kind"] == "S1_LANE_MERGE_INTENT_v1" and it["id"] < floor:
+            continue                                   # closed by induction (docstring): never read again
+        if by_owner(it) or any(executor_post(c, run_of, now) for c in outcomes[it["id"]]):
+            continue
+        age = (now - stamp(it["created_at"])).total_seconds() / 60
+        out.append({"id": it["id"], "kind": it["kind"], "pr": it["pr"], "age_min": int(age), "due": age > settle_minutes})
+    return out
+
+
+def attempted_heads(comments):
+    """(PR, head) of every merge intent an S1 author ever posted on #1156, settled or not, edited or not. One merge
+    attempt per PR head, ever (AGENTS.md section 0.2i: a refused merge is never retried): such a head is the owner's
+    to merge, and a new commit is a new head. This list only ever stops a merge."""
+    out = set()
+    for c in comments:
+        if isinstance(c, dict) and is_s1_author(c) and first_line_token(c.get("body")) == "S1_LANE_MERGE_INTENT_v1":
+            f = fields(c.get("body"))
+            pr, head = re.search(r"\d+", f.get("pr", "")), (f.get("head") or "").strip()
+            if pr and SHA40.fullmatch(head):
+                out.add((int(pr.group(0)), head))
     return out
 
 
@@ -542,6 +647,19 @@ def authorship(pr, commits, commits_complete, comments):
     return {"s1": s1, "codex": codex, "claude_package": package}
 
 
+def ai_authored(pr, commits, commits_complete, author):
+    """AGENTS.md section 0.2i: is this PR marked as written by an AI or by automation? By authorship() (S1, Codex, a
+    Bridge package), by its branch name, by a commit trailer or by its body; an unreadable commit list reads as yes.
+    The branch name itself is never published, only this fact (B.prs[].thin.ai)."""
+    if not commits_complete or len(commits) > 250 or not isinstance(author, dict):
+        return True
+    if author.get("s1") is not False or author.get("codex") is not False or author.get("claude_package") is not False:
+        return True
+    ref, body = str((pr.get("head") or {}).get("ref") or ""), str(pr.get("body") or "")
+    return bool(AI_BRANCH.match(ref) or AI_BODY.search(body)
+                or any(AI_TRAILER.search(str((c.get("commit") or {}).get("message") or "")) for c in commits))
+
+
 def codex_review(head, pr, commits, commits_complete, comments, reviews, inline, complete, now, silent_hours):
     """REVIEW_ADMISSION (i) through the repository's own finality rule, plus the request state rule 3 needs."""
     out = {"status": "NONE", "requested_after_head": False}
@@ -575,11 +693,13 @@ def codex_review(head, pr, commits, commits_complete, comments, reviews, inline,
     return out
 
 
-def changes_requested(reviews, head):
-    """A native CHANGES_REQUESTED on the head voids every review kind. The newest non-comment review per user counts."""
+def changes_requested(reviews):
+    """A native CHANGES_REQUESTED voids every review kind, on whatever commit it was made. As on GitHub itself it
+    stands until the same reviewer approves or the review is dismissed: a new push never lifts it. Each reviewer's
+    newest non-comment review counts, over every commit of the PR."""
     newest = {}
     for r in sorted(reviews, key=lambda r: r.get("id") or 0):
-        if r.get("commit_id") == head and r.get("state") in ("APPROVED", "CHANGES_REQUESTED", "DISMISSED"):
+        if r.get("state") in ("APPROVED", "CHANGES_REQUESTED", "DISMISSED"):
             newest[login(r)] = r.get("state")
     return any(v == "CHANGES_REQUESTED" for v in newest.values())
 
@@ -800,13 +920,14 @@ def pr_entry(pr, data, ctx):
     rc = bool(data.get("review_reads_complete"))
     commits, cc = data.get("commits") or [], bool(data.get("commits_complete"))
     e["author"] = authorship(pr, commits, cc, comments if rc else None)
+    e["thin"]["ai"] = ai_authored(pr, commits, cc, e["author"])                   # section 0.2i: never merged unreviewed
     e["writer"] = concurrent_writer(commits, cc, comments, head, ctx["now"], ctx["quiet_minutes"]) if rc else "comments_unreadable"
     cx = codex_review(head, pr, commits, cc, comments, reviews, data.get("inline") or [], rc, ctx["now"], ctx["budgets"]["codex_silent_hours"])
     if e["author"].get("codex") and cx.get("status") == "FINAL":
         cx = {"status": "INADMISSIBLE", "why": "codex_authored_head"}
     threads = data.get("threads")
     p01 = None if threads is None else sum(1 for t in threads if not t.get("resolved") and re.search(r"(?i)\bP[01]\b", t.get("first_body") or ""))
-    e["review"] = {"codex": cx, "changes_requested": changes_requested(reviews, head) if rc else None,
+    e["review"] = {"codex": cx, "changes_requested": changes_requested(reviews) if rc else None,
                    "unresolved_p0p1": p01 if p01 is not None else "NOT_PROVEN", "claude": "S1_READS_BRIDGE"}
     e["item"] = newest_item(comments) if rc else None
     try:                                                         # the owner route of rule 2c is announced once per head
@@ -1453,7 +1574,9 @@ def build_brief(snap):
     if not ledger_ok:
         lane["state"] = "OFF"
         lane["off_reasons"].append("ledger_unreadable")
-    intents = open_intents(comments, now, params["op_settle_minutes"]) if ledger_ok else []
+    runs = snap.get("executor_runs") if isinstance(snap.get("executor_runs"), dict) else {}
+    intents = open_intents(comments, now, params["op_settle_minutes"], lambda rid: runs.get(str(rid))) if ledger_ok else []
+    attempted = attempted_heads(comments) if ledger_ok else set()
     c1b, c1b_reason = c1b_block(snap.get("c1b"))
     repo_id = (snap.get("repo") or {}).get("id")
     ctx = {"repo_id": repo_id, "main_sha": snap["main_sha"], "policy": snap["policy"], "tuples": params["required_job_tuples"],
@@ -1472,6 +1595,8 @@ def build_brief(snap):
             entries.append({"n": pr.get("number"), "head": (pr.get("head") or {}).get("sha"), "skip": "NOT_READ:depth_cap", "open": []})
         else:
             entries.append(pr_entry(pr, snap["pr"][pr["number"]], ctx))
+            if (entries[-1].get("n"), entries[-1].get("head")) in attempted:
+                entries[-1]["attempted"] = True                  # section 0.2i: one executor merge attempt per PR head, ever
     rules = ruleset_census(snap.get("rulesets_1") or [], snap.get("rulesets_2") or [], bool(snap.get("rulesets_complete")))
     pulls_ok = bool(snap.get("pulls_complete"))
     codex = codex_availability([d.get("comments") for d in (snap.get("pr") or {}).values() if isinstance(d, dict)], now)
@@ -1584,7 +1709,7 @@ def render(brief):
     if len(body) <= MAX_BODY:
         return body
     b = json.loads(json.dumps(brief))
-    ranked = {x.get("pr") for x in b["next"]}
+    ranked = {x.get("pr") for x in (b.get("ranked") or b["next"])}   # section 0.2i: while the executor is LIVE the list is B.ranked
     for e in b["prs"]:                                         # 1: drop detail of PRs that are not ranked
         if e["n"] not in ranked:
             for k in ("paths", "isolation", "item", "author"):
@@ -2271,6 +2396,15 @@ def collect(gh, root, head_root, now, run):
     snap["main_moved"] = (branch.get("commit") or {}).get("sha") != main_sha
     snap["ledger_read_at"] = iso(datetime.now(timezone.utc))   # BEFORE the read: a halt posted from now on is S1's to see (TICK F5)
     snap["issue_comments"], snap["issue_comments_complete"] = gh.pages(f"issues/{OWNER_ISSUE}/comments", max_pages=120)
+    # section 0.2i: the runs that Actions-bot outcome posts name (none while the ledger holds no such post; at most
+    # SETTLE_RUN_READS). build_brief() repeats the same pure computation over this record.
+    reader = RunReader(gh)
+    if snap["issue_comments_complete"]:
+        try:
+            open_intents(snap["issue_comments"], stamp(snap["now"]), 0, reader)   # the same `now` build_brief() uses
+        except StopReading as exc:
+            errors.append(exc.reason)
+    snap["executor_runs"] = reader.docs
     snap["health_runs"], _ = gh.pages(f"actions/workflows/{Path(snap['bindings']['main_health']['workflow_path']).name}/runs",
                                       {"event": "schedule", "branch": "main"}, key="workflow_runs", max_pages=1)
     snap["health_runs_complete"] = bool(snap["health_runs"])   # ROUTE 1 reads the newest 100 runs of this workflow only

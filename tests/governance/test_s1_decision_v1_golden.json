@@ -166,6 +166,83 @@
   ],
   "tick": "S1_TICK NOOP 7 bbbbbbbb DECIDED_MERGE(executor=OFF) main=aaaaaaaa contract=44444444"
  },
+ "MERGE_DOCS_ONLY_NATIVE_NO_REVIEW": {
+  "action": "MERGE",
+  "advice": [],
+  "contract": "44444444",
+  "contract_blob": "8888888888888888888888888888888888888888",
+  "executor": "LIVE",
+  "expires_at": "2026-11-18T11:25:00Z",
+  "generated_at": "2026-11-18T10:40:00Z",
+  "halt": null,
+  "head": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "heartbeat": {
+   "due": true
+  },
+  "id": "555.1",
+  "main": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "merge": {
+   "ci": {
+    "execution-truth": [
+     103,
+     1,
+     1031
+    ],
+    "gate": [
+     101,
+     1,
+     1011
+    ],
+    "privacy-scan": [
+     101,
+     1,
+     1010
+    ],
+    "storage-health": [
+     102,
+     1,
+     1020
+    ],
+    "test": [
+     103,
+     1,
+     1030
+    ]
+   },
+   "files": 1,
+   "health_run": 900,
+   "merge_method": "squash",
+   "paths_sha256": "cce5c8e75cf45a85",
+   "pr": 7,
+   "review": "NONE(policy=NATIVE_GATES)",
+   "risk": "LOW",
+   "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "title_sha256": "87f669e3e28bd098"
+  },
+  "observer": "S1_OBSERVER_v10",
+  "pins_ok": true,
+  "pr": 7,
+  "print": [
+   "OWNER APPROVAL REQUIRED: NONE",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN",
+   "S1_EXECUTOR mode=LIVE last_action=NONE",
+   "S1_ROUTES ok",
+   "S1_TICK NOOP 7 bbbbbbbb DECIDED_MERGE(executor=LIVE) main=aaaaaaaa contract=44444444"
+  ],
+  "result": "DECIDED_MERGE(executor=LIVE)",
+  "review_policy": "NATIVE_GATES",
+  "run_attempt": 1,
+  "run_id": 555,
+  "schema": "S1_DECISION_V1",
+  "skipped": [],
+  "status_lines": [
+   "OWNER APPROVAL REQUIRED: NONE",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"
+  ],
+  "tick": "S1_TICK NOOP 7 bbbbbbbb DECIDED_MERGE(executor=LIVE) main=aaaaaaaa contract=44444444"
+ },
  "MERGE_LOW_CODEX_FINAL": {
   "action": "MERGE",
   "advice": [],
@@ -243,83 +320,6 @@
   ],
   "tick": "S1_TICK NOOP 7 bbbbbbbb DECIDED_MERGE(executor=SHADOW) main=aaaaaaaa contract=44444444"
  },
- "MERGE_LOW_NATIVE_NO_REVIEW": {
-  "action": "MERGE",
-  "advice": [],
-  "contract": "44444444",
-  "contract_blob": "8888888888888888888888888888888888888888",
-  "executor": "LIVE",
-  "expires_at": "2026-11-18T11:25:00Z",
-  "generated_at": "2026-11-18T10:40:00Z",
-  "halt": null,
-  "head": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-  "heartbeat": {
-   "due": true
-  },
-  "id": "555.1",
-  "main": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "merge": {
-   "ci": {
-    "execution-truth": [
-     103,
-     1,
-     1031
-    ],
-    "gate": [
-     101,
-     1,
-     1011
-    ],
-    "privacy-scan": [
-     101,
-     1,
-     1010
-    ],
-    "storage-health": [
-     102,
-     1,
-     1020
-    ],
-    "test": [
-     103,
-     1,
-     1030
-    ]
-   },
-   "files": 2,
-   "health_run": 900,
-   "merge_method": "squash",
-   "paths_sha256": "87d34a7079c7bc78",
-   "pr": 7,
-   "review": "NONE(policy=NATIVE_GATES)",
-   "risk": "LOW",
-   "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-   "title_sha256": "87f669e3e28bd098"
-  },
-  "observer": "S1_OBSERVER_v10",
-  "pins_ok": true,
-  "pr": 7,
-  "print": [
-   "OWNER APPROVAL REQUIRED: NONE",
-   "HIGH_IMPACT BLOCKED: NONE",
-   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN",
-   "S1_EXECUTOR mode=LIVE last_action=NONE",
-   "S1_ROUTES ok",
-   "S1_TICK NOOP 7 bbbbbbbb DECIDED_MERGE(executor=LIVE) main=aaaaaaaa contract=44444444"
-  ],
-  "result": "DECIDED_MERGE(executor=LIVE)",
-  "review_policy": "NATIVE_GATES",
-  "run_attempt": 1,
-  "run_id": 555,
-  "schema": "S1_DECISION_V1",
-  "skipped": [],
-  "status_lines": [
-   "OWNER APPROVAL REQUIRED: NONE",
-   "HIGH_IMPACT BLOCKED: NONE",
-   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"
-  ],
-  "tick": "S1_TICK NOOP 7 bbbbbbbb DECIDED_MERGE(executor=LIVE) main=aaaaaaaa contract=44444444"
- },
  "MERGE_MEDIUM_CODE": {
   "action": "MERGE",
   "advice": [],
@@ -396,6 +396,48 @@
    "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"
   ],
   "tick": "S1_TICK NOOP 7 bbbbbbbb DECIDED_MERGE(executor=SHADOW) main=aaaaaaaa contract=44444444"
+ },
+ "NOOP_AI_BRANCH_NEEDS_A_REVIEW_UNDER_NATIVE_GATES": {
+  "action": "NOOP",
+  "advice": [],
+  "contract": "44444444",
+  "contract_blob": "8888888888888888888888888888888888888888",
+  "executor": "LIVE",
+  "expires_at": "2026-11-18T11:25:00Z",
+  "generated_at": "2026-11-18T10:40:00Z",
+  "halt": null,
+  "head": null,
+  "heartbeat": {
+   "due": true
+  },
+  "id": "555.1",
+  "main": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "merge": null,
+  "observer": "S1_OBSERVER_v10",
+  "pins_ok": true,
+  "pr": null,
+  "print": [
+   "OWNER APPROVAL REQUIRED: #7 bbbbbbbb (owner_merge:C5:ai_authored)",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN",
+   "S1_EXECUTOR mode=LIVE last_action=NONE",
+   "S1_ROUTES ok",
+   "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C5:ai_authored) main=aaaaaaaa contract=44444444"
+  ],
+  "result": "NOTHING_ACTIONABLE(skipped=7:C5:ai_authored)",
+  "review_policy": "NATIVE_GATES",
+  "run_attempt": 1,
+  "run_id": 555,
+  "schema": "S1_DECISION_V1",
+  "skipped": [
+   "7:C5:ai_authored"
+  ],
+  "status_lines": [
+   "OWNER APPROVAL REQUIRED: #7 bbbbbbbb (owner_merge:C5:ai_authored)",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"
+  ],
+  "tick": "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C5:ai_authored) main=aaaaaaaa contract=44444444"
  },
  "NOOP_BRIEF_EMPTY": {
   "action": "NOOP",
@@ -477,6 +519,48 @@
   ],
   "tick": "S1_TICK NOOP - - BRIEF_INCOMPLETE(pulls_unreadable) main=aaaaaaaa contract=44444444"
  },
+ "NOOP_CHANGES_REQUESTED_ON_AN_OLDER_COMMIT": {
+  "action": "NOOP",
+  "advice": [],
+  "contract": "44444444",
+  "contract_blob": "8888888888888888888888888888888888888888",
+  "executor": "LIVE",
+  "expires_at": "2026-11-18T11:25:00Z",
+  "generated_at": "2026-11-18T10:40:00Z",
+  "halt": null,
+  "head": null,
+  "heartbeat": {
+   "due": true
+  },
+  "id": "555.1",
+  "main": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "merge": null,
+  "observer": "S1_OBSERVER_v10",
+  "pins_ok": true,
+  "pr": null,
+  "print": [
+   "OWNER APPROVAL REQUIRED: NONE",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN",
+   "S1_EXECUTOR mode=LIVE last_action=NONE",
+   "S1_ROUTES ok",
+   "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C5:changes_requested) main=aaaaaaaa contract=44444444"
+  ],
+  "result": "NOTHING_ACTIONABLE(skipped=7:C5:changes_requested)",
+  "review_policy": "CODEX_FINAL_REQUIRED",
+  "run_attempt": 1,
+  "run_id": 555,
+  "schema": "S1_DECISION_V1",
+  "skipped": [
+   "7:C5:changes_requested"
+  ],
+  "status_lines": [
+   "OWNER APPROVAL REQUIRED: NONE",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"
+  ],
+  "tick": "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C5:changes_requested) main=aaaaaaaa contract=44444444"
+ },
  "NOOP_CI_FAIL_WITH_ADVICE": {
   "action": "NOOP",
   "advice": [
@@ -525,6 +609,90 @@
    "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"
   ],
   "tick": "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C4:ci_fail) main=aaaaaaaa contract=44444444"
+ },
+ "NOOP_CODE_NEEDS_A_REVIEW_UNDER_NATIVE_GATES": {
+  "action": "NOOP",
+  "advice": [],
+  "contract": "44444444",
+  "contract_blob": "8888888888888888888888888888888888888888",
+  "executor": "LIVE",
+  "expires_at": "2026-11-18T11:25:00Z",
+  "generated_at": "2026-11-18T10:40:00Z",
+  "halt": null,
+  "head": null,
+  "heartbeat": {
+   "due": true
+  },
+  "id": "555.1",
+  "main": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "merge": null,
+  "observer": "S1_OBSERVER_v10",
+  "pins_ok": true,
+  "pr": null,
+  "print": [
+   "OWNER APPROVAL REQUIRED: #7 bbbbbbbb (owner_merge:C5:review_required_for_code)",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN",
+   "S1_EXECUTOR mode=LIVE last_action=NONE",
+   "S1_ROUTES ok",
+   "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C5:review_required_for_code) main=aaaaaaaa contract=44444444"
+  ],
+  "result": "NOTHING_ACTIONABLE(skipped=7:C5:review_required_for_code)",
+  "review_policy": "NATIVE_GATES",
+  "run_attempt": 1,
+  "run_id": 555,
+  "schema": "S1_DECISION_V1",
+  "skipped": [
+   "7:C5:review_required_for_code"
+  ],
+  "status_lines": [
+   "OWNER APPROVAL REQUIRED: #7 bbbbbbbb (owner_merge:C5:review_required_for_code)",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"
+  ],
+  "tick": "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C5:review_required_for_code) main=aaaaaaaa contract=44444444"
+ },
+ "NOOP_MONEY_WORD_INSIDE_AN_IDENTIFIER": {
+  "action": "NOOP",
+  "advice": [],
+  "contract": "44444444",
+  "contract_blob": "8888888888888888888888888888888888888888",
+  "executor": "LIVE",
+  "expires_at": "2026-11-18T11:25:00Z",
+  "generated_at": "2026-11-18T10:40:00Z",
+  "halt": null,
+  "head": null,
+  "heartbeat": {
+   "due": true
+  },
+  "id": "555.1",
+  "main": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "merge": null,
+  "observer": "S1_OBSERVER_v10",
+  "pins_ok": true,
+  "pr": null,
+  "print": [
+   "OWNER APPROVAL REQUIRED: #7 bbbbbbbb (owner_merge:C2:judgment:x5:scripts/exec/TradeExecutor.py)",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN",
+   "S1_EXECUTOR mode=LIVE last_action=NONE",
+   "S1_ROUTES ok",
+   "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C2:judgment:x5:scripts/exec/TradeExecutor.py) main=aaaaaaaa contract=44444444"
+  ],
+  "result": "NOTHING_ACTIONABLE(skipped=7:C2:judgment:x5:scripts/exec/TradeExecutor.py)",
+  "review_policy": "CODEX_FINAL_REQUIRED",
+  "run_attempt": 1,
+  "run_id": 555,
+  "schema": "S1_DECISION_V1",
+  "skipped": [
+   "7:C2:judgment:x5:scripts/exec/TradeExecutor.py"
+  ],
+  "status_lines": [
+   "OWNER APPROVAL REQUIRED: #7 bbbbbbbb (owner_merge:C2:judgment:x5:scripts/exec/TradeExecutor.py)",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"
+  ],
+  "tick": "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C2:judgment:x5:scripts/exec/TradeExecutor.py) main=aaaaaaaa contract=44444444"
  },
  "NOOP_NO_REVIEW_UNDER_CODEX_FINAL_REQUIRED": {
   "action": "NOOP",
@@ -693,5 +861,47 @@
    "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"
   ],
   "tick": "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=lane:C7:halt c=60) main=aaaaaaaa contract=44444444"
+ },
+ "NOOP_TEST_CODE_NEEDS_A_REVIEW_UNDER_NATIVE_GATES": {
+  "action": "NOOP",
+  "advice": [],
+  "contract": "44444444",
+  "contract_blob": "8888888888888888888888888888888888888888",
+  "executor": "LIVE",
+  "expires_at": "2026-11-18T11:25:00Z",
+  "generated_at": "2026-11-18T10:40:00Z",
+  "halt": null,
+  "head": null,
+  "heartbeat": {
+   "due": true
+  },
+  "id": "555.1",
+  "main": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "merge": null,
+  "observer": "S1_OBSERVER_v10",
+  "pins_ok": true,
+  "pr": null,
+  "print": [
+   "OWNER APPROVAL REQUIRED: #7 bbbbbbbb (owner_merge:C5:review_required_for_code)",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN",
+   "S1_EXECUTOR mode=LIVE last_action=NONE",
+   "S1_ROUTES ok",
+   "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C5:review_required_for_code) main=aaaaaaaa contract=44444444"
+  ],
+  "result": "NOTHING_ACTIONABLE(skipped=7:C5:review_required_for_code)",
+  "review_policy": "NATIVE_GATES",
+  "run_attempt": 1,
+  "run_id": 555,
+  "schema": "S1_DECISION_V1",
+  "skipped": [
+   "7:C5:review_required_for_code"
+  ],
+  "status_lines": [
+   "OWNER APPROVAL REQUIRED: #7 bbbbbbbb (owner_merge:C5:review_required_for_code)",
+   "HIGH_IMPACT BLOCKED: NONE",
+   "DISPOSITIONS TODAY: merged=0 parked=UNKNOWN closed=UNKNOWN handed_off=UNKNOWN owner=UNKNOWN"
+  ],
+  "tick": "S1_TICK NOOP - - NOTHING_ACTIONABLE(skipped=7:C5:review_required_for_code) main=aaaaaaaa contract=44444444"
  }
 }

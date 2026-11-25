@@ -59,6 +59,21 @@ def no_codex(w):
     w["pr"][7]["comments"] = []
 
 
+def docs_only(w):
+    """PR 7 changes one plain document and nothing else (the clean world also adds a test file, which is code)."""
+    set_files(w, [file_("docs/notes/a.md")])
+
+
+def docs_no_review(w):
+    docs_only(w)
+    no_codex(w)
+
+
+def code_no_review(w):
+    code_path(w)
+    no_codex(w)
+
+
 def halt_c1b(w):
     w["c1b"] = dict(w["c1b"], halt={"commit": "c" * 40, "parent": "d" * 40, "entries": ["scripts"], "capped": False})
 
@@ -88,7 +103,13 @@ def ci_fail(w):
 SCENARIOS = {
     # name: (mutation, executor mode, review policy)
     "MERGE_LOW_CODEX_FINAL": (None, "SHADOW", "CODEX_FINAL_REQUIRED"),
-    "MERGE_LOW_NATIVE_NO_REVIEW": (no_codex, "LIVE", "NATIVE_GATES"),
+    "MERGE_DOCS_ONLY_NATIVE_NO_REVIEW": (docs_no_review, "LIVE", "NATIVE_GATES"),
+    "NOOP_CODE_NEEDS_A_REVIEW_UNDER_NATIVE_GATES": (code_no_review, "LIVE", "NATIVE_GATES"),
+    "NOOP_TEST_CODE_NEEDS_A_REVIEW_UNDER_NATIVE_GATES": (no_codex, "LIVE", "NATIVE_GATES"),
+    "NOOP_AI_BRANCH_NEEDS_A_REVIEW_UNDER_NATIVE_GATES": (lambda w: (docs_no_review(w), w["pulls"][0]["head"].update(ref="claude/x")), "LIVE", "NATIVE_GATES"),
+    "NOOP_CHANGES_REQUESTED_ON_AN_OLDER_COMMIT": (lambda w: w["pr"][7]["reviews"].append(
+        {"id": 5, "state": "CHANGES_REQUESTED", "commit_id": "f" * 40, "user": {"login": "Donh91"}}), "LIVE", "CODEX_FINAL_REQUIRED"),
+    "NOOP_MONEY_WORD_INSIDE_AN_IDENTIFIER": (lambda w: set_files(w, [file_("scripts/exec/TradeExecutor.py")]), "LIVE", "CODEX_FINAL_REQUIRED"),
     "MERGE_MEDIUM_CODE": (code_path, "SHADOW", "NATIVE_GATES"),
     "HALT_C1B_UNREVIEWED_CODE_ON_MAIN": (halt_c1b, "LIVE", "NATIVE_GATES"),
     "HALT_C7_FAILED_MAIN_HEALTH_AFTER_MERGE": (halt_c7, "LIVE", "NATIVE_GATES"),
@@ -333,7 +354,8 @@ class Decide(unittest.TestCase):
         self.assertEqual(D.thin_config({"executor": "LIVE", "review_policy": "NATIVE_GATES"}), {"executor": "LIVE", "review_policy": "NATIVE_GATES"})
         for bad in (None, {}, [], {"executor": "live"}, {"executor": True, "review_policy": 1}, {"executor": "ON", "review_policy": "NONE"}):
             self.assertEqual(D.thin_config(bad), {"executor": "OFF", "review_policy": "CODEX_FINAL_REQUIRED"}, bad)
-        self.assertEqual(decide(no_codex, policy="NATIVE_GATES")[0]["merge"]["review"], "NONE(policy=NATIVE_GATES)")
+        self.assertEqual(decide(docs_no_review, policy="NATIVE_GATES")[0]["merge"]["review"], "NONE(policy=NATIVE_GATES)")
+        self.assertEqual(decide(docs_no_review, policy="CODEX_FINAL_REQUIRED")[0]["skipped"], ["7:C5:codex_final_required"])
         self.assertEqual(decide(no_codex, policy="CODEX_FINAL_REQUIRED")[0]["skipped"], ["7:C5:codex_final_required"])
         self.assertEqual(decide(policy="CODEX_FINAL_REQUIRED")[0]["merge"]["review"], "CODEX")
         # a brief without the switch fields decides under the strict defaults
@@ -345,20 +367,23 @@ class Decide(unittest.TestCase):
         cases = {
             "C5:codex_findings": lambda w: w["pr"][7]["comments"][1].update(body=f"<!-- codex-review-state:v1 {state} -->"),
             "C5:codex_review_pending": lambda w: w["pr"][7].update(comments=[TB.comment(11, "@codex review", minutes_ago=300)]),
-            "C5:s1_authored": lambda w: (no_codex(w), w["pulls"][0]["head"].update(ref="s1/pkg-1")),
-            "C5:bot_authored": lambda w: (no_codex(w), w["pulls"][0].update(user=dict(TB.BOT))),
+            "C5:s1_authored": lambda w: (docs_no_review(w), w["pulls"][0]["head"].update(ref="s1/pkg-1")),
+            "C5:bot_authored": lambda w: (docs_no_review(w), w["pulls"][0].update(user=dict(TB.BOT))),
         }
         for want, mutate in cases.items():
             with self.subTest(want):
                 d, _b = decide(mutate, "LIVE", "NATIVE_GATES")
                 self.assertEqual((d["action"], d["skipped"]), ("NOOP", [f"7:{want}"]))
         # a Codex request that Codex answered with a usage limit, or that is silent past its budget, no longer holds a NATIVE_GATES merge
+        # ... for a documentation-only PR. Code still waits for a completed review, whatever Codex answers.
         limit = lambda w: w["pr"][7].update(comments=[TB.comment(11, "@codex review", minutes_ago=300), TB.comment(12, "You have reached your usage limit", TB.CODEX, 290)])
-        self.assertEqual(decide(limit, "LIVE", "NATIVE_GATES")[0]["action"], "MERGE")
+        self.assertEqual(decide(lambda w: (docs_only(w), limit(w)), "LIVE", "NATIVE_GATES")[0]["action"], "MERGE")
+        self.assertEqual(decide(limit, "LIVE", "NATIVE_GATES")[0]["skipped"], ["7:C5:review_required_for_code"])
         silent = lambda w: w["pr"][7].update(comments=[TB.comment(11, "@codex review", minutes_ago=380)],
                                              commits=[dict(w["pr"][7]["commits"][0], commit={"message": "docs", "committer": {"date": TB.ts(60 * 30)}})]) \
             or w["pr"][7]["comments"][0].update(created_at=TB.ts(60 * 25), updated_at=TB.ts(60 * 25))
-        self.assertEqual(decide(silent, "LIVE", "NATIVE_GATES")[0]["action"], "MERGE")
+        self.assertEqual(decide(lambda w: (docs_only(w), silent(w)), "LIVE", "NATIVE_GATES")[0]["action"], "MERGE")
+        self.assertEqual(decide(silent, "LIVE", "NATIVE_GATES")[0]["skipped"], ["7:C5:review_required_for_code"])
 
     def test_a_brief_without_the_section_0_2i_facts_never_merges(self):
         w = thin_world()
@@ -538,6 +563,27 @@ class Block(unittest.TestCase):
         self.assertEqual(B.decision_of(body), json.loads(json.dumps(d)))
         self.assertEqual(B.parse_body(body)["decision_log"][-1]["r"], "BRIEF_INCOMPLETE(brief_too_large)")
 
+    def test_a_shrunk_brief_keeps_the_detail_of_the_ranked_prs_in_live_mode_too(self):
+        # shrink level 1 drops paths and author of every PR that is not ranked. While the executor is LIVE the ranked
+        # list is B.ranked (B.next is empty for the legacy task), and the decision still needs the ranked PRs' detail.
+        def many(w):
+            for i in range(100, 150):
+                w["pulls"].append(dict(TB.pull(i, HEAD), title="docs", labels=[]))
+                data = TB.pr_data()
+                data["detail"]["number"] = data["detail2"]["number"] = i
+                data["files"][0]["filename"] = "docs/" + "x" * 300 + f"/{i}.md"
+                w["pr"][i] = data
+        for mode in ("SHADOW", "LIVE"):
+            w = thin_world(mode)
+            many(w)
+            body, d = B.render_issue(B.build_brief(w))
+            published = B.parse_body(body)
+            self.assertEqual(published.get("shrunk"), 1, mode)
+            ranked = {x["pr"] for x in (published.get("ranked") or published["next"])}
+            self.assertEqual(len(ranked), 6)
+            self.assertTrue(all(("paths" in e) == (e["n"] in ranked) for e in published["prs"]), mode)
+            self.assertEqual((d["action"], d["pr"]), ("MERGE", 7), mode)             # PR 7 is ranked first and keeps its paths
+
     def test_the_decision_log_is_carried_and_bounded(self):
         w = thin_world()
         w["c1b"]["prev_log"] = [{"d": f"{i}.1", "a": "NOOP"} for i in range(40)]
@@ -614,6 +660,454 @@ class Observer(unittest.TestCase):
         top = self.body[:self.body.index(D.END) + len(D.END)]
         self.assertEqual(D.observer_lines([dict(self.issue, body=top)], NOW), self.d["print"])
         self.assertLessEqual(len(top), 2600)
+
+
+# ----------------------------------------------------------------------------------------------- fix round 1
+# The detached review of head 75e97833 (REQUEST_CHANGES) built concrete PRs that decide() merged. They are kept here
+# as regression input, with the reviewer's own names; every one must end in something other than MERGE under BOTH
+# policies. `want` is the gate that stops it under NATIVE_GATES (the weaker policy).
+def _code(name, patch="@@\n+x = 1\n-x = 0"):
+    return file_(name, "modified", 4, 1, patch)
+
+
+def _files(*fs):
+    return lambda w: set_files(w, list(fs))
+
+
+def _chain(*mutations):
+    def run(w):
+        for m in mutations:
+            m(w)
+    return run
+
+
+def _title(title, body=""):
+    return lambda w: w["pulls"][0].update(title=title, body=body)
+
+
+def _label(*names):
+    return lambda w: w["pulls"][0].update(labels=[{"name": n} for n in names])
+
+
+def _codex_authored(w):
+    w["pr"][7]["commits"][0]["author"] = {"login": B.CODEX_BOT_LOGIN}
+
+
+def _old_changes_requested(w):
+    w["pr"][7]["reviews"] = [{"id": 1, "user": {"login": "Donh91"}, "state": "CHANGES_REQUESTED", "commit_id": "f" * 40}]
+
+
+def _p1_in_conversation(w):
+    w["pr"][7]["comments"] = w["pr"][7]["comments"] + [TB.comment(77, "P1: this places live orders, do not merge", minutes_ago=5)]
+
+
+TOOL = _code("scripts/zz_area/tool.py")
+COUNTEREXAMPLES = {
+    # money and execution code whose names evaded the word list (camelCase, synonyms)
+    "trading_camelcase": (_files(_code("scripts/exec/TradeExecutor.py")), "7:C2:judgment:x5:"),
+    "swap_executor": (_files(_code("scripts/meme/swap_executor.py", "@@\n+client.send_transaction(signed_swap)\n")), "7:C2:judgment:x5:"),
+    "sniper_bot": (_files(_code("scripts/meme/sniperBot.py")), "7:C2:judgment:x5:"),
+    "place_order_camel": (_files(_code("scripts/exec/placeOrder.py")), "7:C2:judgment:x5:"),
+    "live_exec_body_only": (_chain(_files(_code("scripts/alpha/runner.py")), _title("alpha: runner tweak", "Enables LIVE trading with real funds on Jupiter")),
+                            "7:C2:judgment:x5:body"),
+    # credential-shaped paths that evaded the word list
+    "keypair_json": (_files(_code("scripts/solana/keypair.json", "@@\n+[12,34]\n")), "7:C2:judgment:x4:"),
+    "dotenv": (_files(_code("config/.env", "@@\n+HELIUS=abc\n")), "7:C2:judgment:x4:"),
+    "ssh_pem": (_files(_code("scripts/deploy/id_ed25519.pem", "@@\n+-----BEGIN\n")), "7:C2:judgment:x4:"),
+    "githubToken_camel": (_files(_code("scripts/util/githubToken.py")), "7:C2:judgment:x4:"),
+    # owner vetoes that were not counted
+    "label_HIGH_IMPACT_underscore": (_chain(_files(TOOL), _label("HIGH_IMPACT")), "7:C5:hold_label:HIGH_IMPACT"),
+    "label_risk_high": (_chain(_files(TOOL), _label("risk:high")), "7:C5:hold_label:risk:high"),
+    "changes_requested_on_older_commit": (_chain(no_codex, _old_changes_requested), "7:C5:changes_requested"),
+    "p1_in_pr_conversation_comment": (_chain(_files(TOOL), no_codex, _p1_in_conversation), "7:C5:review_required_for_code"),
+    # authorship
+    "codex_authored_no_review": (_chain(_files(TOOL), no_codex, _codex_authored), "7:C5:codex_authored"),
+    "claude_branch_no_review": (_chain(_files(TOOL), no_codex, lambda w: w["pulls"][0]["head"].update(ref="claude/anything")), "7:C5:ai_authored"),
+    # the reviewer's controls, which were blocked before and must stay blocked
+    "CTRL_workflow_file": (_files(_code(".github/workflows/x.yml", "@@\n+permissions: write-all\n")), "7:C2:owner_gated"),
+    "CTRL_s1_contract": (_files(_code("00_FMOS/S1/RUNTIME_CONTRACT.json")), "7:C2:owner_gated"),
+    "CTRL_tick_md": (_files(_code("00_FMOS/S1/TICK.md")), "7:C2:owner_gated"),
+    "CTRL_agents_md": (_files(_code("AGENTS.md")), "7:C2:owner_gated"),
+    "CTRL_wallet_path": (_files(_code("scripts/x/wallet_sync.py")), "7:C2:judgment:x5:"),
+    "CTRL_title_trading": (_chain(_files(TOOL), _title("feat: trading loop")), "7:C2:judgment:x5:title"),
+    "CTRL_title_HIGH_IMPACT_body": (_chain(_files(TOOL), _title("x", "risk: HIGH_IMPACT")), "7:C2:judgment:x9:named_high_impact"),
+    "CTRL_label_owner_gated": (_chain(_files(TOOL), _label("owner-gated")), "7:C5:hold_label:owner-gated"),
+    "CTRL_round3": (_files(_code("research/round3/notes.py")), "7:C2:judgment:x8:"),
+    "CTRL_bot_opened": (_chain(no_codex, lambda w: w["pulls"][0].update(user={"login": "x[bot]", "id": 2, "type": "Bot"})), "7:C5:bot_authored"),
+    "CTRL_s1_branch": (_chain(no_codex, lambda w: w["pulls"][0]["head"].update(ref="s1/x")), "7:C5:s1_authored"),
+    "CTRL_secrets_dir": (_files(_code("secrets/x.py")), "7:C2:owner_gated"),
+}
+
+
+class ReviewerCounterexamples(unittest.TestCase):
+    """Finding P1-1, P1-2, P1-3 and P2-6 of the review of 75e97833, as the reviewer measured them."""
+
+    def test_invariant_none_of_the_27_counterexamples_is_a_merge_under_any_policy(self):
+        self.assertEqual(len(COUNTEREXAMPLES), 27)
+        for name, (mutate, want) in COUNTEREXAMPLES.items():
+            for policy in D.REVIEW_POLICIES:
+                with self.subTest(name=name, policy=policy):
+                    d, _b = decide(mutate, "LIVE", policy)
+                    self.assertEqual((d["action"], d["merge"], d["head"]), ("NOOP", None, None), d["result"])
+                    if policy == "NATIVE_GATES":
+                        self.assertTrue(any(g.startswith(want) for g in d["skipped"]), (want, d["skipped"]))
+
+    def test_the_lane_is_not_simply_closed_the_legitimate_merges_remain(self):
+        # reviewed code merges under both policies; an unreviewed plain document merges under NATIVE_GATES only
+        for policy in D.REVIEW_POLICIES:
+            d, _b = decide(_files(TOOL), "LIVE", policy)
+            self.assertEqual((d["action"], d["merge"]["risk"], d["merge"]["review"]), ("MERGE", "MEDIUM", "CODEX"), policy)
+        d, _b = decide(docs_no_review, "LIVE", "NATIVE_GATES")
+        self.assertEqual((d["action"], d["merge"]["risk"], d["merge"]["review"]), ("MERGE", "LOW", "NONE(policy=NATIVE_GATES)"))
+        self.assertEqual(decide(docs_no_review, "LIVE", "CODEX_FINAL_REQUIRED")[0]["action"], "NOOP")
+
+    def test_p0_p1_counts_in_a_review_thread_only_which_is_what_section_0_2i_says(self):
+        # P3-11, documented and unchanged: "P1" in a PR conversation comment is not a veto (a thread, a label, a
+        # CHANGES_REQUESTED or a draft is). With a completed review the PR of that counterexample merges.
+        d, _b = decide(_chain(_files(TOOL), _p1_in_conversation), "LIVE", "CODEX_FINAL_REQUIRED")
+        self.assertEqual(d["action"], "MERGE")
+        d, _b = decide(_chain(_files(TOOL), lambda w: w["pr"][7].update(threads=[{"resolved": False, "first_body": "P1: this places live orders"}])), "LIVE")
+        self.assertEqual((d["action"], d["skipped"]), ("NOOP", ["7:C6:unresolved_p0p1"]))
+
+
+class CodeIsNeverMergedUnreviewed(unittest.TestCase):
+    """P1-1 and P1-3. The word lists are best effort; THIS is the control: review_gate()."""
+
+    def test_invariant_review_gate_over_every_combination_of_its_facts(self):
+        import itertools
+        statuses = (None, "NOT_PROVEN", "NONE", "REQUESTED", "FINDINGS", "FINAL", "INADMISSIBLE", "UNAVAILABLE", "SILENT", "banana", 7)
+        flags = (False, True, None)
+        passed = []
+        for cx, policy, s1, codex, package, ai, bot, docs in itertools.product(statuses, D.REVIEW_POLICIES + ("banana", None), flags, flags, flags, flags, flags, flags):
+            e = {"review": {"codex": {"status": cx}}, "author": {"s1": s1, "codex": codex, "claude_package": package},
+                 "thin": {"bot": bot, "docs_only": docs, "ai": ai}}
+            if D.review_gate(e, policy) is None:
+                passed.append((cx, policy, s1, codex, package, ai, bot, docs))
+        reviewed = [c for c in passed if c[0] == "FINAL"]
+        unreviewed = [c for c in passed if c[0] != "FINAL"]
+        self.assertTrue(reviewed and unreviewed)
+        for cx, policy, s1, codex, package, ai, bot, docs in reviewed:
+            self.assertIs(codex, False)                                               # a completed review never passes a head Codex wrote
+        for cx, policy, s1, codex, package, ai, bot, docs in unreviewed:
+            self.assertEqual(policy, "NATIVE_GATES")                                  # the strict policy (and an unknown one) never passes without a review
+            self.assertIn(cx, D.NO_REVIEW_STATES)                                     # findings, a pending request, an unread or unknown state never pass
+            self.assertEqual((s1, codex, package, ai, bot), (False, False, False, False, False))   # each PROVEN false: unknown blocks
+            self.assertIs(docs, True)                                                 # documents only, PROVEN: code never passes
+        self.assertEqual(len(unreviewed), len(D.NO_REVIEW_STATES))                    # exactly one combination of the facts per state
+
+    def test_every_missing_fact_blocks(self):
+        ok = {"review": {"codex": {"status": "NONE"}}, "author": {"s1": False, "codex": False, "claude_package": False},
+              "thin": {"bot": False, "docs_only": True, "ai": False}}
+        self.assertIsNone(D.review_gate(ok, "NATIVE_GATES"))
+        self.assertEqual(D.review_gate(ok, "CODEX_FINAL_REQUIRED"), "C5:codex_final_required")
+        for drop, want in (("s1", "C5:s1_authored"), ("codex", "C5:codex_authored"), ("claude_package", "C5:ai_authored")):
+            e = dict(ok, author={k: v for k, v in ok["author"].items() if k != drop})
+            self.assertEqual(D.review_gate(e, "NATIVE_GATES"), want, drop)
+        self.assertEqual(D.review_gate(dict(ok, thin={"bot": False, "docs_only": True}), "NATIVE_GATES"), "C5:ai_authored")
+        self.assertEqual(D.review_gate(dict(ok, thin={"docs_only": True, "ai": False}), "NATIVE_GATES"), "C5:bot_authored")
+        self.assertEqual(D.review_gate(dict(ok, thin={"bot": False, "ai": False}), "NATIVE_GATES"), "C5:review_required_for_code")
+        self.assertEqual(D.review_gate(dict(ok, thin=None), "NATIVE_GATES"), "C5:ai_authored")
+        self.assertEqual(D.review_gate(dict(ok, author=None), "NATIVE_GATES"), "C5:s1_authored")
+        self.assertEqual(D.review_gate({}, "NATIVE_GATES"), "C5:review_unreadable")
+        self.assertEqual(D.review_gate(dict(ok, review={"codex": {"status": "FINAL"}}, author={}), "NATIVE_GATES"), "C5:codex_authored")
+
+    def test_what_counts_as_a_plain_document(self):
+        for path in ("docs/notes/a.md", "README.md", "06_RESEARCH_LAB/audit_summaries/note.md", "docs/guide.rst", "tests/x/README.md", "docs/Design.MD"):
+            self.assertTrue(D.doc_path(path), path)
+        for path in ("scripts/x/a.py", "tests/x/test_a.py", "tests/x/fixture.json", "docs/a.txt", "requirements.txt", "docs/requirements-dev.txt",
+                     "docs/a.html", "docs/conf.yml", "a.toml", "docs/a.md.py", "data/x.md", "03_DAILY_CAPTURE_LOGS/a.md", "LATEST_HANDOFF.md",
+                     "docs/RECEIPT_x.md", "05_CYCLE_NAVIGATOR/site/a.md", ".github/x.md", "docs/.hidden/a.md", ".agents/x.md", "x/AGENTS.md",
+                     "x/CLAUDE.md", "x/SKILL.md", "docs/system_prompt.md", "docs/operator_instructions.md", "x/BOOTSTRAP_notes.md", "", None):
+            self.assertFalse(D.doc_path(path), path)
+        self.assertEqual(D.path_risk("requirements.txt"), "MEDIUM")                    # a dependency list is code, not a LOW document
+        self.assertEqual(D.path_risk("docs/notes.txt"), "LOW")
+        facts = lambda files, complete=True: D.entry_facts({"title": "docs"}, files, complete, [])["docs_only"]
+        self.assertIs(facts([file_("docs/a.md"), file_("docs/b.rst")]), True)
+        self.assertIs(facts([file_("docs/a.md"), file_("tests/x/test_a.py")]), False)   # one code file is enough
+        self.assertIs(facts([file_("docs/b.md", "renamed", prev="scripts/b.py")]), False)   # the previous name counts
+        self.assertIs(facts([file_("docs/a.md")], complete=False), False)
+        self.assertIs(facts([]), False)
+
+    def test_the_decision_under_native_gates(self):
+        for name, mutate, want in (
+                ("code", code_no_review, "7:C5:review_required_for_code"),
+                ("a test file is code", no_codex, "7:C5:review_required_for_code"),
+                ("a dependency list", lambda w: (set_files(w, [file_("requirements.txt")]), no_codex(w)), "7:C5:review_required_for_code"),
+                ("a plain text file", lambda w: (set_files(w, [file_("docs/notes/a.txt")]), no_codex(w)), "7:C5:review_required_for_code"),
+                ("an agent instruction file", lambda w: (set_files(w, [file_("docs/x/CLAUDE.md")]), no_codex(w)), "7:C5:review_required_for_code"),
+                ("a claude/ branch, documents only", lambda w: (docs_no_review(w), w["pulls"][0]["head"].update(ref="claude/x")), "7:C5:ai_authored"),
+                ("a codex/ branch, documents only", lambda w: (docs_no_review(w), w["pulls"][0]["head"].update(ref="codex/x")), "7:C5:codex_authored"),
+                ("a chatgpt/ branch, documents only", lambda w: (docs_no_review(w), w["pulls"][0]["head"].update(ref="chatgpt/x")), "7:C5:ai_authored"),
+                ("an agent/ branch, documents only", lambda w: (docs_no_review(w), w["pulls"][0]["head"].update(ref="agent/grok-intake")), "7:C5:ai_authored"),
+                ("a Claude trailer", lambda w: (docs_no_review(w), w["pr"][7]["commits"][0]["commit"].update(
+                    message="docs\n\nCo-Authored-By: Claude <noreply@anthropic.com>")), "7:C5:ai_authored"),
+                ("a Claude Code body", lambda w: (docs_no_review(w), w["pulls"][0].update(body="Generated with [Claude Code](https://claude.com/claude-code)")), "7:C5:ai_authored"),
+                ("a Bridge package", lambda w: (docs_no_review(w), w["pulls"][0].update(body="Implements Bridge package x at y")), "7:C5:ai_authored"),
+                ("a Codex-authored commit", lambda w: (docs_no_review(w), _codex_authored(w)), "7:C5:codex_authored"),
+                ("an unreadable commit list", lambda w: (docs_no_review(w), w["pr"][7].update(commits_complete=False)), "7:C1:commit_list_incomplete")):
+            with self.subTest(name):
+                d, brief = decide(mutate, "LIVE", "NATIVE_GATES")
+                self.assertEqual(d["action"], "NOOP")
+                self.assertIn(want, [f"7:{g}" for g in D.pr_gates(TB.entry(brief), brief["thin"])])   # every open gate, not only the first
+        # the same PRs WITH the completed review of a head Codex did not write are merges (two different AIs)
+        d, _b = decide(lambda w: w["pulls"][0]["head"].update(ref="claude/x"), "LIVE", "NATIVE_GATES")
+        self.assertEqual((d["action"], d["merge"]["review"]), ("MERGE", "CODEX"))
+        d, _b = decide(lambda w: w["pulls"][0]["head"].update(ref="codex/x"), "LIVE", "NATIVE_GATES")   # Codex reviewing Codex is no review
+        self.assertEqual((d["action"], d["skipped"]), ("NOOP", ["7:C5:codex_authored"]))
+
+    def test_authorship_marks_and_never_publishes_the_branch_name(self):
+        clean = {"s1": False, "codex": False, "claude_package": False}
+
+        def marks(**kw):
+            pr = dict(TB.pull(ref=kw.get("ref", "feature/x")), body=kw.get("body", ""))
+            commits = kw.get("commits", TB.pr_data()["commits"])
+            author = B.authorship(pr, commits, True, [])
+            return {"ai": B.ai_authored(pr, commits, True, author)}
+        base = marks
+        self.assertEqual(B.authorship(TB.pull(), TB.pr_data()["commits"], True, []), clean)     # the legacy object is unchanged
+        self.assertIs(base()["ai"], False)
+        for ref in ("claude/x", "Claude/x", "codex/fix", "chatgpt/a", "gpt/a", "openai/a", "copilot/fix-1", "grok/a", "gemini/a", "cursor/a", "devin/1",
+                    "agent/x", "agents/x", "ai/x", "bot/x", "automation/x", "auto/x", "dependabot/pip/x", "renovate/x", "claude-fix", "codex_fix", "s1/pkg"):
+            self.assertIs(base(ref=ref)["ai"], True, ref)
+        for ref in ("feature/x", "fix/claude-review", "research/ai-notes", "docs/agent", "owner/x", "main", "aim/x", "autotune", "claudette"):
+            self.assertIs(base(ref=ref)["ai"], False, ref)
+        trailer = lambda text: [dict(TB.pr_data()["commits"][0], commit={"message": text, "committer": {"date": TB.ts(400)}})]
+        for text in ("x\n\nCo-Authored-By: Claude Opus <noreply@anthropic.com>", "x\n\nco-authored-by: Codex <c@openai.com>", "x\n\nClaude-Session: https://x",
+                     "x\n\nCo-authored-by: GitHub Copilot <c@github.com>", "x\n\nSigned-off-by: a <noreply@anthropic.com>"):
+            self.assertIs(base(commits=trailer(text))["ai"], True, text)
+        self.assertIs(base(commits=trailer("x\n\nCo-Authored-By: Jane <jane@example.com>"))["ai"], False)
+        self.assertIs(base(body="see https://claude.ai/code/session_1")["ai"], True)
+        self.assertIs(B.ai_authored(TB.pull(), [], False, clean), True)                # an unreadable commit list reads as yes
+        self.assertIs(B.ai_authored(TB.pull(), TB.pr_data()["commits"], True, None), True)
+        for key in clean:
+            self.assertIs(B.ai_authored(TB.pull(), TB.pr_data()["commits"], True, dict(clean, **{key: True})), True, key)
+            self.assertIs(B.ai_authored(TB.pull(), TB.pr_data()["commits"], True, {k: v for k, v in clean.items() if k != key}), True, key)
+        _d, brief = decide(lambda w: w["pulls"][0]["head"].update(ref="claude/SECRET-BRANCH"))
+        self.assertNotIn("SECRET-BRANCH", json.dumps(brief))
+        self.assertIs(TB.entry(brief)["thin"]["ai"], True)
+        self.assertEqual(TB.entry(brief)["author"], clean)                             # the fact lives with the other section 0.2i facts
+
+
+class WordsInsideIdentifiers(unittest.TestCase):
+    """P1-1 (c): camelCase, snake_case and kebab-case identifiers hold words; the title AND the body are read."""
+
+    def hits(self, text):
+        return sorted(code for code, rx in D.JUDGMENT.items() if rx.search(D.word_forms(text)))
+
+    def test_word_forms_split_camel_case_and_keep_the_text(self):
+        self.assertEqual(D.word_forms("TradeExecutor"), "TradeExecutor\nTrade Executor")
+        self.assertEqual(D.word_forms("githubToken.py"), "githubToken.py\ngithub Token.py")
+        self.assertEqual(D.word_forms("HTTPServer2Go"), "HTTPServer2Go\nHTTP Server2 Go")
+        self.assertEqual(D.word_forms(None), "\n")
+
+    def test_money_and_execution_words(self):
+        for text in ("scripts/exec/TradeExecutor.py", "scripts/meme/swap_executor.py", "scripts/meme/sniperBot.py", "scripts/exec/placeOrder.py",
+                     "scripts/x/autotrader.py", "scripts/x/live-trading.py", "scripts/x/daytrading.py", "scripts/x/swapRouter.py", "scripts/x/order_router.py",
+                     "scripts/x/SendOrders.py", "scripts/x/buy.py", "scripts/x/autoSell.py", "scripts/x/exec.py", "scripts/x/run_exec.py",
+                     "scripts/x/executeTrade.py", "scripts/x/execution-engine.py", "scripts/x/swapexecutor.py", "scripts/x/fundsMover.py",
+                     "scripts/x/slippage.py", "scripts/x/snipe.py", "scripts/x/sniping_loop.py", "scripts/x/moneyFlow.py", "scripts/x/walletSync.py",
+                     "scripts/x/PaidApi.py", "scripts/x/transferOut.py", "scripts/x/BuyerBot.py"):
+            self.assertIn("x5", self.hits(text), text)
+
+    def test_credential_and_custody_words(self):
+        for text in ("scripts/solana/keypair.json", "scripts/x/KeyPair.py", "scripts/x/key_pair.py", "config/.env", "config/.env.local", "config/prod.env",
+                     ".envrc", "scripts/deploy/id_ed25519.pem", "scripts/deploy/id_rsa", "scripts/deploy/id_ecdsa.pub", "certs/server.key", "certs/a.p12",
+                     "x/.npmrc", "x/.netrc", "x/authorized_keys", "scripts/util/githubToken.py", "scripts/x/api-token.py", "scripts/x/tokens.py",
+                     "scripts/x/sign_tx.py", "scripts/x/TxSigner.py", "scripts/x/signer.py", "scripts/x/signing.py", "scripts/x/signature_cache.py",
+                     "scripts/x/secretStore.py", "scripts/x/credentialCache.py", "scripts/x/privateKey.py", "scripts/x/mnemonic.py", "scripts/x/seed.txt",
+                     "scripts/x/seedPhrase.py", "scripts/x/oauth_flow.py", "scripts/x/OAuthClient.py", "scripts/x/authCookie.py", "scripts/x/jwt.py",
+                     "scripts/x/keyStore.py", "scripts/x/passWord.py", "scripts/x/bearer.py"):
+            self.assertIn("x4", self.hits(text), text)
+        self.assertIn("x6", self.hits("scripts/x/privateData.py"))
+        self.assertIn("x8", self.hits("scripts/x/Round3Loader.py"))
+
+    def test_ordinary_words_are_not_hits(self):
+        for text in ("scripts/signals/x.py", "docs/design.md", "scripts/x/assign.py", "scripts/x/tokenizer.py", "scripts/x/authoring.py", "scripts/x/author.py",
+                     "scripts/x/reorder.py", "scripts/x/border.py", "scripts/x/executive_summary.md", "scripts/x/seeded.py", "scripts/x/keynote.md",
+                     "scripts/x/environment.py", "scripts/x/monkey.py", "scripts/x/os_environ.py", "docs/notes/a.md", "scripts/zz_area/tool.py",
+                     "scripts/x/paidia.py", "scripts/x/sellotape.py", "scripts/x/buyout_x.py"[:0] or "scripts/x/abuy.py", "we did this in order to simplify",
+                     "x.keys() and dict.keyset", "the signal is designed and assigned", "HTTPServer", "sort the snippets"):
+            self.assertEqual(self.hits(text), [], text)
+
+    def test_the_pr_body_is_read_like_the_title(self):
+        files = [file_("scripts/alpha/runner.py")]
+        facts = lambda title, body: D.entry_facts({"title": title, "body": body}, files, True, [])
+        self.assertEqual(facts("alpha: runner tweak", "Enables LIVE trading with real funds on Jupiter")["x"], ["x5:body"])
+        self.assertEqual(facts("alpha: runner tweak", "rotates the deploy key in .env")["x"], ["x4:body"])
+        self.assertEqual(facts("alpha: runner tweak", "adds the placeOrder call")["x"], ["x5:body"])
+        self.assertEqual(facts("alpha: runner tweak", "touches Round 3 data")["x"], ["x8:body"])
+        self.assertEqual(facts("alpha: runner tweak", "moves a file to the public site")["x"], ["x6:body"])
+        self.assertEqual(facts("alpha: swapRouter", "")["x"], ["x5:title"])
+        self.assertEqual(facts("alpha: runner tweak", "## Summary\nRefactors the loop in order to simplify it.\n\n## Test plan\n- unit")["x"], [])
+        self.assertEqual(facts("alpha: runner tweak", None)["x"], [])
+        self.assertEqual(facts("alpha: runner tweak", "class: HighImpact")["x"], ["x9:named_high_impact"])
+        self.assertEqual(D.BODY_LISTS, ("x4", "x5", "x6", "x8"))                       # every list of the title is a list of the body
+        self.assertEqual(sorted(D.JUDGMENT), sorted(D.BODY_LISTS))
+        d, brief = decide(lambda w: w["pulls"][0].update(body="Enables LIVE trading. TOP-SECRET-BODY-WORDS"), "LIVE", "CODEX_FINAL_REQUIRED")
+        self.assertEqual((d["action"], d["skipped"]), ("NOOP", ["7:C2:judgment:x4:body"]))
+        self.assertNotIn("TOP-SECRET-BODY-WORDS", json.dumps(brief))                   # the body is read, never published
+
+
+class OwnerVetoes(unittest.TestCase):
+    """P2-5 and P2-6: the kill switch and the label veto read the way an owner writes them."""
+
+    def test_invariant_any_non_empty_hold_value_holds(self):
+        for mode in ("LIVE", "SHADOW"):
+            for hold in ("1", "true", "HOLD", "x", "0", "false", "off", "OFF", "no", "No", "False", " off ", "release", "\tstop\n", 0, False, 1):
+                self.assertEqual(D.effective_mode(mode, hold), "OFF", (mode, hold))
+            for free in ("", " ", "\n\t ", None):
+                self.assertEqual(D.effective_mode(mode, free), mode, (mode, free))
+        self.assertEqual(D.effective_mode("banana", ""), "OFF")
+        self.assertEqual(D.effective_mode("OFF", ""), "OFF")                           # the variable can never switch the executor ON
+        self.assertEqual(D.effective_mode(None, None), "OFF")
+
+    def test_label_names_are_compared_without_case_and_separators(self):
+        self.assertEqual(D.label_key("Do Not_Merge"), D.label_key("do-not-merge"))
+        self.assertEqual(D.label_key("priority: high"), "priority:high")
+        for name in ("s1-hold", "S1_HOLD", "s1 hold", "hold", "On Hold", "do-not-merge", "Do Not Merge", "DNM", "owner-gated", "OWNER_GATED", "high-impact",
+                     "HIGH_IMPACT", "High Impact", "wip", "WIP", "draft", "blocked", "P0", "p0", "priority: high", "Priority:High", "priority: critical",
+                     "priority: urgent", "risk:high", "risk: high", "Risk: HIGH_IMPACT", "risk:extreme", "risk:unknown", "auto-trading", "Auto_Trading",
+                     "wontfix", "invalid", "duplicate"):
+            self.assertTrue(D.hold_label(name), name)
+        for name in ("bug", "documentation", "enhancement", "codex", "good first issue", "help wanted", "question", "risk:low", "risk: medium", "priority: low",
+                     "threshold", "P1", "P2", "docs", "", None):
+            self.assertFalse(D.hold_label(name), name)
+
+    def test_invariant_every_hold_label_and_a_hold_title_stop_the_merge(self):
+        for name in D.HOLD_LABELS + ("HIGH_IMPACT", "risk:high", "Risk: Extreme", "PRIORITY:HIGH", "Auto Trading", "do not merge"):
+            for policy in D.REVIEW_POLICIES:
+                d, _b = decide(lambda w: w["pulls"][0].update(labels=[{"name": "docs"}, {"name": name}]), "LIVE", policy)
+                self.assertEqual((d["action"], d["skipped"]), ("NOOP", [f"7:C5:hold_label:{name}"]), name)
+        for title, word in (("DRAFT: docs note", "draft"), ("[WIP] docs note", "wip"), ("wip docs", "wip"), ("Do not merge: docs", "do-not-merge"),
+                            ("DNM docs", "dnm"), ("(draft) docs", "draft"), ("hold: docs", "hold")):
+            d, _b = decide(lambda w: w["pulls"][0].update(title=title), "LIVE")
+            self.assertEqual((d["action"], d["skipped"]), ("NOOP", [f"7:C5:hold_label:title:{word}"]), title)
+        for title in ("docs: a draft of the plan", "docs: holdings table", "docs: drafting notes", "wipe the cache docs"):
+            self.assertEqual(D.entry_facts({"title": title}, [file_("docs/a.md")], True, [])["hold_labels"], [], title)
+        d, _b = decide(lambda w: w["pulls"][0].update(labels=[{"name": "x" * 300 + "wontfix"}, {"name": "wontfix"}]), "LIVE")
+        self.assertEqual(d["skipped"], ["7:C5:hold_label:wontfix"])
+        # an owner veto is not finished work: it is never offered to the owner as "merge this"
+        self.assertEqual(decide(lambda w: w["pulls"][0].update(labels=[{"name": "P0"}]), "LIVE")[0]["status_lines"][0].count("owner_merge"), 0)
+
+    def test_invariant_changes_requested_survives_a_push(self):
+        review = lambda rid, state, commit, user="Donh91": {"id": rid, "state": state, "commit_id": commit, "user": {"login": user}}
+        old, new = "f" * 40, HEAD
+        cases = {
+            "on the head": ([review(1, "CHANGES_REQUESTED", new)], True),
+            "on an older commit (the push does not lift it)": ([review(1, "CHANGES_REQUESTED", old)], True),
+            "then approved by the same reviewer": ([review(1, "CHANGES_REQUESTED", old), review(2, "APPROVED", new)], False),
+            "then dismissed": ([review(1, "DISMISSED", old)], False),
+            "then only a comment review by the same reviewer": ([review(1, "CHANGES_REQUESTED", old), review(2, "COMMENTED", new)], True),
+            "approved by ANOTHER reviewer": ([review(1, "CHANGES_REQUESTED", old), review(2, "APPROVED", new, "someone")], True),
+            "approved, then changes requested again": ([review(1, "APPROVED", old), review(2, "CHANGES_REQUESTED", old)], True),
+            "ids out of order": ([review(2, "APPROVED", new), review(1, "CHANGES_REQUESTED", old)], False),
+            "no review": ([], False),
+            "a pending review": ([review(1, "PENDING", new)], False),
+        }
+        for name, (reviews, want) in cases.items():
+            with self.subTest(name):
+                self.assertIs(B.changes_requested(reviews), want)
+                for policy in D.REVIEW_POLICIES:
+                    d, brief = decide(lambda w: w["pr"][7].update(reviews=reviews), "LIVE", policy)
+                    self.assertEqual(d["action"], "NOOP" if want else "MERGE", (name, policy))
+                    self.assertEqual("C5:changes_requested" in TB.entry(brief)["open"], want)
+
+
+class OneAttemptPerHead(unittest.TestCase):
+    """P3-9: section 0.2i says a failed merge is not retried. One merge intent per PR head, ever."""
+
+    def intent(self, head=HEAD, pr=7, cid=64, user=None, settle=True):
+        def mutate(w):
+            w["issue_comments"].append(TB.comment(cid, f"S1_LANE_MERGE_INTENT_v1\npr: {pr}\nhead: {head}\nloop={'4' * 40}\ncontract=44444444", user or TB.BOT, 200))
+            if settle:
+                w["issue_comments"].append(TB.comment(cid + 1, f"S1_OP_DONE_v1\nintent: {cid}\nresult: ABSENT\ncontract=44444444", TB.OWNER, 199))
+        return mutate
+
+    def test_a_head_that_was_tried_is_never_decided_again_and_is_named_for_the_owner(self):
+        d, brief = decide(self.intent(), "LIVE")
+        self.assertIs(TB.entry(brief)["attempted"], True)
+        self.assertEqual((d["action"], d["skipped"]), ("NOOP", ["7:C9:attempted_head"]))
+        self.assertEqual(d["status_lines"][0], f"OWNER APPROVAL REQUIRED: #7 {HEAD[:8]} (owner_merge:C9:attempted_head)")
+        d, brief = decide(self.intent(user=TB.OWNER), "LIVE")                         # an attempt of the ChatGPT task counts as well
+        self.assertEqual(d["skipped"], ["7:C9:attempted_head"])
+
+    def test_another_head_or_another_pr_is_not_this_attempt(self):
+        for mutate in (self.intent(head="c" * 40), self.intent(pr=8), None):
+            d, brief = decide(mutate, "LIVE")
+            self.assertNotIn("attempted", TB.entry(brief))
+            self.assertEqual(d["action"], "MERGE")
+
+    def test_attempted_heads_reads_only_merge_intents_of_s1_authors(self):
+        c = TB.comment
+        body = f"S1_LANE_MERGE_INTENT_v1\npr: 7\nhead: {HEAD}\nloop=x"
+        self.assertEqual(B.attempted_heads([c(1, body, TB.BOT), c(2, body.replace("pr: 7", "pr: #9"), TB.OWNER, edited=True)]), {(7, HEAD), (9, HEAD)})
+        self.assertEqual(B.attempted_heads([c(1, body, {"login": "someone", "id": 5, "type": "User"}), c(2, "S1_OP_INTENT_v1\npr: 7\nhead: " + HEAD, TB.BOT),
+                                            c(3, "S1_LANE_MERGE_INTENT_v1\npr: 7\nhead: abc", TB.BOT), c(4, "x " + body, TB.BOT), None]), set())
+
+    def test_an_unreadable_ledger_never_reads_as_not_attempted(self):
+        d, _b = decide(lambda w: (self.intent()(w), w.update(issue_comments_complete=False)), "LIVE")
+        self.assertEqual(d["action"], "NOOP")
+
+
+class SectionMatchesTheCode(unittest.TestCase):
+    """Review finding P1-1 (d): AGENTS.md section 0.2i states what the code does, name by name."""
+
+    def setUp(self):
+        text = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        start = text.index("### 0.2i S1 is GitHub: decision and executor in GitHub Actions")
+        self.sec = text[start:text.index("### 0.3 ", start)]
+        self.named = lambda pattern: re.findall(r"`([^`]+)`", re.search(pattern, self.sec, re.S).group(1))
+
+    def test_every_hold_label_is_named_and_every_named_label_holds(self):
+        named = self.named(r"Hold labels are compared without case, spaces, `_` and `-`: (.*?), and every other `risk:` label except")
+        self.assertEqual(tuple(named), D.HOLD_LABELS)
+        self.assertIn("and every other `risk:` label except `risk: low` and `risk: medium`.", self.sec)
+        self.assertTrue(D.hold_label("risk: anything") and not D.hold_label("risk: low") and not D.hold_label("risk: medium"))
+
+    def test_every_hold_title_word_is_named(self):
+        named = self.named(r"start the title with (.*?); request changes")
+        self.assertEqual(named, ["DRAFT", "WIP", "DNM", "HOLD", "DO NOT MERGE"])
+        for word in named:
+            self.assertTrue(D.TITLE_HOLD.search(f"{word}: docs note"), word)
+        alternatives = re.search(r"\((draft.*?)\)\(\?!", D.TITLE_HOLD.pattern).group(1).split("|")
+        self.assertEqual(len(alternatives), len(named))                                # the pattern holds no word the section does not name
+
+    def test_every_ai_branch_name_is_named(self):
+        named = self.named(r"a branch whose first name part is (.*?); an AI co-author")
+        alternatives = re.search(r"\^\(\?:(.*?)\)\[/_-\]", B.AI_BRANCH.pattern).group(1).split("|")
+        expanded = sorted(x for a in alternatives for x in ((a[:-2], a[:-1]) if a.endswith("s?") else (a,)))
+        self.assertEqual(sorted(named), expanded)
+        for name in named:
+            for sep in "/_-":
+                self.assertTrue(B.AI_BRANCH.match(f"{name}{sep}x"), name)
+            self.assertFalse(B.AI_BRANCH.match(f"{name}x/y"), name)
+
+    def test_the_plain_document_rule_is_named(self):
+        self.assertIn("A plain document is a `.md` or `.rst` file of class LOW that is in no dot-directory and is not an agent instruction file", self.sec)
+        self.assertEqual(D.DOCS_ONLY_SUFFIXES, (".md", ".rst"))
+        named = self.named(r"is not an agent instruction file \((.*?)\);")
+        self.assertEqual(named, ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "SKILL.md", "copilot-instructions.md", "prompt", "instruction", "bootstrap"])
+        for name in named[:5]:
+            self.assertFalse(D.doc_path(f"docs/x/{name}"), name)
+        for stem in named[5:]:
+            self.assertFalse(D.doc_path(f"docs/x/a_{stem}_b.md"), stem)
+        self.assertEqual(len(D.AGENT_FILE.pattern.split("|")), len(named))             # nothing in the pattern that the section does not name
+        self.assertIn("a test file, a `.txt` file and a dependency list are code", self.sec)
+
+    def test_the_constants_the_section_states(self):
+        self.assertIn("One merge attempt per PR head, ever", self.sec)
+        source = (ROOT / "scripts/governance/s1_executor_v1.py").read_text(encoding="utf-8")
+        self.assertIn("MAX_ATTEMPTS_PER_HEAD = 1 ", source)
+        self.assertIn("(two minutes of slack)", self.sec)
+        self.assertEqual(B.RUN_POST_SLACK_SECONDS, 120)
+        self.assertIn("started by `schedule` or `workflow_dispatch`", self.sec)
+        self.assertEqual(B.EXECUTOR_EVENTS, ("schedule", "workflow_dispatch"))
+        self.assertIn("`executor: GITHUB run=<id>`", self.sec)
+        self.assertEqual(B.executor_run("S1_OP_DONE_v1\nexecutor: GITHUB run=12"), 12)
+        self.assertIn("in a changed path, in the PR title or in the PR body", self.sec)
+        switch = json.loads((ROOT / B.SWITCH).read_text(encoding="utf-8"))
+        if switch["executor"] != "LIVE":                                               # "this section ships with it"
+            self.assertEqual(switch["review_policy"], "CODEX_FINAL_REQUIRED")
 
 
 if __name__ == "__main__":

@@ -673,8 +673,18 @@ class Reviews(unittest.TestCase):
         self.assertFalse(any(x["action"].startswith("MERGE") for x in b["next"]))
         later = [{"id": 1, "user": OWNER, "commit_id": HEAD, "state": "CHANGES_REQUESTED"}, {"id": 2, "user": OWNER, "commit_id": HEAD, "state": "APPROVED"}]
         self.assertEqual(entry(brief_of(lambda w: w["pr"][7].update(reviews=later)))["open"], [])
+        # a CHANGES_REQUESTED made on an OLDER commit still stands (review of #2337, finding P1-2): as on GitHub itself
+        # only the same reviewer's approval or a dismissal lifts it; a new push never does
         other = [{"id": 1, "user": OWNER, "commit_id": "c" * 40, "state": "CHANGES_REQUESTED"}]
-        self.assertEqual(entry(brief_of(lambda w: w["pr"][7].update(reviews=other)))["open"], [])
+        b = brief_of(lambda w: w["pr"][7].update(reviews=other))
+        self.assertEqual(entry(b)["open"], ["C5:changes_requested"])
+        self.assertFalse(any(x["action"].startswith("MERGE") for x in b["next"]))
+        lifted = other + [{"id": 2, "user": OWNER, "commit_id": HEAD, "state": "APPROVED"}]
+        self.assertEqual(entry(brief_of(lambda w: w["pr"][7].update(reviews=lifted)))["open"], [])
+        dismissed = [{"id": 1, "user": OWNER, "commit_id": "c" * 40, "state": "DISMISSED"}]
+        self.assertEqual(entry(brief_of(lambda w: w["pr"][7].update(reviews=dismissed)))["open"], [])
+        by_another = other + [{"id": 2, "user": {"login": "someone"}, "commit_id": HEAD, "state": "APPROVED"}]
+        self.assertEqual(entry(brief_of(lambda w: w["pr"][7].update(reviews=by_another)))["open"], ["C5:changes_requested"])
 
     def test_codex_never_reviews_a_head_it_addressed(self):
         # R1 P1-3: an "@codex address" on the PR makes the head CODEX_AUTHORED even when the commits carry another login
@@ -1072,6 +1082,46 @@ class CollectReplay(unittest.TestCase):
         self.assertEqual(entry(brief)["behind"], 3)
         self.assertEqual(top(B.parse_body(B.render(brief)))["head"], HEAD)
         self.assertLess(fake.calls, 40)
+
+    def test_collect_proves_an_actions_bot_outcome_post_by_reading_its_run(self):
+        # AGENTS.md section 0.2i (review of #2337, finding P2-4): every workflow with issues: write posts as the
+        # Actions bot, so a bot post settles an intent only when the run it names is a run of THIS workflow on main.
+        intent = comment(300, f"S1_LANE_MERGE_INTENT_v1\npr: 9\nhead: {'e' * 40}\nloop={'4' * 40}\nexecutor: GITHUB run=540\ncontract=44444444", BOT, 30)
+        done = comment(301, "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nexecutor: GITHUB run=540\ncontract=44444444", BOT, 29)
+        run540 = {"id": 540, "path": B.WORKFLOW_PATH, "head_branch": "main", "event": "schedule", "status": "completed", "created_at": ts(32),
+                  "updated_at": ts(28), "repository": {"full_name": B.REPO}, "head_repository": {"full_name": B.REPO}}
+
+        def with_runs(runs):
+            def m(fake):
+                fake.w["issue_comments"] = [intent, done]
+                real = fake.get
+
+                def get(path, params=None):
+                    if path == "actions/runs/540":
+                        fake.calls += 1
+                        fake.paths.append(path)
+                        if 540 not in runs:
+                            raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
+                        return runs[540]
+                    return real(path, params)
+                fake.get = get
+            return m
+        snap, fake, _seen = self.run_collect(with_runs({540: run540}))
+        self.assertEqual((snap["executor_runs"], snap["errors"]), ({"540": run540}, []))
+        self.assertEqual(fake.paths.count("actions/runs/540"), 1)       # ONE read serves the intent and its outcome
+        self.assertEqual(B.build_brief(snap)["open_intents"], [])        # proven: settled
+        # a run of another workflow file: the build goes on and the intent stays open (no merge while it is)
+        snap, fake, _seen = self.run_collect(with_runs({540: dict(run540, path=".github/workflows/hourly-sequence-capture.yml")}))
+        self.assertEqual([i["id"] for i in B.build_brief(snap)["open_intents"]], [300])
+        # the run does not exist at all: the same, and never an error of the build
+        snap, fake, _seen = self.run_collect(with_runs({}))
+        self.assertEqual((snap["executor_runs"], snap["errors"]), ({"540": None}, []))
+        brief = B.build_brief(snap)
+        self.assertEqual(([i["id"] for i in brief["open_intents"]], brief["complete"]), ([300], True))
+        # no Actions-bot outcome post on the ledger: not one extra read
+        snap, fake, _seen = self.run_collect()
+        self.assertEqual(snap["executor_runs"], {})
+        self.assertNotIn("actions/runs/540", fake.paths)
 
     def test_depth_reads_take_same_repository_prs_most_recently_updated_first(self):
         saved = B.MAX_DEPTH_PRS
