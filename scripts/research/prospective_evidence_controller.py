@@ -445,7 +445,12 @@ class PinnedSourceReplay:
         self.checkout = self._sha(checkout)
         self.history_context = self.inspect_history()
         if self.history_context["shallow"] or self.history_context["replace_ref_n"] or self.history_context["grafts_present"]:
-            raise ValueError("PINNED_GIT_HISTORY_INCOMPLETE_OR_REWRITTEN")
+            raise ValueError(
+                "PINNED_GIT_HISTORY_INCOMPLETE_OR_REWRITTEN"
+                f": shallow={self.history_context['shallow']}"
+                f"; replace_ref_n={self.history_context['replace_ref_n']}"
+                f"; grafts_present={self.history_context['grafts_present']}"
+            )
         self._git("merge-base", "--is-ancestor", self.checkout, "HEAD")
         self.ledger_raw = self.read_blob(self.checkout, self.BASE + "/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv")
         reader = csv.DictReader(io.StringIO(self.ledger_raw.decode("utf-8-sig"), newline=""), strict=True)
