@@ -54,24 +54,28 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
 
     def test_delivery_health_is_independent_of_expected_translation_and_scorecard_limits(self):
         c,f,a,r=self.translation_fixture()
-        translation=publisher.analytical_translation(c,f,a,r,'success')
-        self.assertEqual(translation['status'],'DEGRADED')
-        for score in ({'status':'READY'}, {'status':'DEGRADED'},
-                      {'status':'UNAVAILABLE_EXPERIMENT_REGISTRY'},
-                      {'status':'PENDING_MATURED_OUTCOMES'}):
-            with self.subTest(score=score):
-                self.assertEqual(publisher.effective_delivery_status(
-                    'success',a,translation,score,True),'READY')
-        for api_status, output, typed, verified in (
-            ('failure',a,translation,True),
-            ('success',{'status':'BLOCKED'},translation,True),
-            ('success',a,translation,False),
-            ('success',a,{'status':'DEGRADED','reason':'GATEWAY_RECEIPT_MISMATCH'},True),
-            ('success',a,{'status':'READY'},True),
+        self.assertEqual(publisher.analytical_translation(c,f,a,r,'success')['status'],'DEGRADED')
+        for status in ('READY','DEGRADED','BLOCKED'):
+            with self.subTest(status=status):
+                a['status']=status
+                r['output_hash']=publisher.sha(a)
+                self.assertEqual(publisher.effective_delivery_status('success',a,r,c,f,True),'READY')
+        a['status']='READY'
+        a['forecast_candidates'].append(dict(a['forecast_candidates'][0]))
+        r.update(output_hash=publisher.sha(a),forecast_candidate_count=2)
+        self.assertEqual(publisher.analytical_translation(c,f,a,r,'success')['reason'],'DUPLICATE_OR_CONFLICTING_CANDIDATE')
+        self.assertEqual(publisher.effective_delivery_status('success',a,r,c,f,True),'READY')
+        for status, output, receipt, freeze, verified in (
+            ('failure',a,r,f,True),
+            ('success',{'status':'BLOCKED'},r,f,True),
+            ('success',a,r,f,False),
+            ('success',a,{**r,'output_hash':'0'*64},f,True),
+            ('success',a,{**r,'forecast_candidate_count':1},f,True),
+            ('success',a,{**r,'status':'FAIL'},f,True),
+            ('success',a,r,{**f,'iso_week':46},True),
         ):
-            with self.subTest(api_status=api_status,typed=typed,verified=verified):
-                self.assertEqual(publisher.effective_delivery_status(
-                    api_status,output,typed,{'status':'READY'},verified),'DEGRADED')
+            with self.subTest(status=status,receipt=receipt,verified=verified):
+                self.assertEqual(publisher.effective_delivery_status(status,output,receipt,c,freeze,verified),'DEGRADED')
 
     def scorecard_fixture(self):
         rows=[]
@@ -103,7 +107,7 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
         self.assertEqual(score['status'],'DEGRADED')
         self.assertEqual((counts['outcome_record_count'],counts['matured_outcome_count'],
                           counts['hit_count'],counts['miss_count'],counts['censored_count']),(3,2,1,1,1))
-        self.assertEqual(counts['hit_fraction'],.5)
+        self.assertNotIn('hit_fraction',counts)
         self.assertIsNone(counts['independent_sample_size'])
         self.assertIsNone(counts['matched_baseline_skill'])
         self.assertFalse(counts['portfolio_action'])
@@ -112,7 +116,7 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
         self.assertEqual(context,before)
         c,f,a,r=self.translation_fixture()
         typed=publisher.analytical_translation(c,f,a,r,'success')
-        self.assertEqual(publisher.effective_delivery_status('success',a,typed,score,True),'READY')
+        self.assertEqual(publisher.effective_delivery_status('success',a,r,c,f,True),'READY')
 
     def test_scorecard_rejects_rehashed_bad_owner_rows_and_tampered_context(self):
         def reseal(c):
@@ -145,7 +149,7 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
         c.pop('context_hash');c['context_hash']=publisher.sha(c)
         score=publisher.fallback_scorecard(c)
         self.assertEqual(score['status'],'DEGRADED')
-        self.assertIsNone(score['analysis_layer']['experiment_outcome_counts']['hit_fraction'])
+        self.assertNotIn('hit_fraction',score['analysis_layer']['experiment_outcome_counts'])
         self.assertEqual(score['matured_outcome_count'],0)
 
     def translation_fixture(self):
@@ -167,12 +171,16 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
         t=publisher.analytical_translation(c,f,a,r,'success')
         self.assertEqual(t['candidate_status'],'VALIDATED_UNADMITTED')
         self.assertEqual(t['candidate_horizon_counts'],{'7':1})
-        self.assertEqual(t['candidate_direction_counts'],{'UP':1})
+        self.assertNotIn('candidate_direction_counts',t)
+        self.assertNotIn('spot_candidate_directions',t)
         self.assertEqual(t['status'],'DEGRADED')
         self.assertFalse(t['forecast_authority'])
         self.assertNotIn('PRIVATE_',str(t))
         a['forecast_candidates'][0]['direction']='DOWN';r['output_hash']=publisher.sha(a)
-        self.assertEqual(publisher.analytical_translation(c,f,a,r,'success')['candidate_direction_counts'],{'DOWN':1})
+        changed=publisher.analytical_translation(c,f,a,r,'success')
+        self.assertEqual(changed['candidate_horizon_counts'],t['candidate_horizon_counts'])
+        self.assertNotIn('candidate_direction_counts',changed)
+        self.assertNotIn('spot_candidate_directions',changed)
 
     def test_translation_uses_original_settlement_aliases_without_conflating_mark_and_spot(self):
         c,f,a,r=self.translation_fixture()
@@ -181,8 +189,8 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
         a['forecast_candidates'].append({**candidate,'metric_path':'market_metrics.derivatives.BTC-USDT-SWAP.mark_price.mark_price'})
         r.update(output_hash=publisher.sha(a),forecast_candidate_count=2)
         t=publisher.analytical_translation(c,f,a,r,'success')
-        self.assertEqual(t['spot_candidate_directions'],[
-            {'asset':'BTC','horizon_days':7,'direction':'UP','target_mode':'PCT_MOVE'}])
+        self.assertNotIn('spot_candidate_directions',t)
+        self.assertEqual(t['candidate_horizon_counts'],{'7':2})
         self.assertEqual(t['candidate_count'],2)
         a['forecast_candidates'].append({**candidate,'metric_path':'spot.BTCUSDT.close'})
         r.update(output_hash=publisher.sha(a),forecast_candidate_count=3)
