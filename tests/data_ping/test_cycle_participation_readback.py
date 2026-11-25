@@ -94,6 +94,24 @@ class ParticipationTests(unittest.TestCase):
             lambda x:proxy(x).update(source_retrieved_at_utc="2026-11-25T09:00:00Z"),
         ]:
             x=fixture();edit(x);self.assertEqual(read(x)["status"],"UNAVAILABLE")
+    def test_owner_and_normalization_clock_bind_independently(self):
+        # All three timestamps are individually fresh and before issuance.
+        # Only the binding check, not freshness, can reject these mutations.
+        earlier = "2026-11-25T09:00:00Z"
+        for field in ("owner", "normalization"):
+            with self.subTest(field=field):
+                x = fixture()
+                if field == "owner":
+                    x["normalized_state"]["breadth"]["retrieved_at_utc"] = earlier
+                else:
+                    x["source_health"]["breadth"]["normalization"]["retrieved_at_utc"] = earlier
+                result = read(x)
+                self.assertEqual(result["status"], "UNAVAILABLE")
+                self.assertEqual(result["reason"], "SOURCE_MEMBERSHIP_OR_CLOCK_MISMATCH")
+                self.assertIsNone(result["observed_at_utc"])
+                self.assertIsNone(result["valid_until_utc"])
+        self.assertEqual(read(fixture())["status"], "OBSERVED_PARTICIPATION")
+
     def test_partial_and_malformed_never_proxy_micro(self):
         for value in [float("nan"),True,-.1,1.1,None]:
             x=fixture();proxy(x)["buckets"]["LARGE_ALT_PROXY"]["advance_ratio_24h"]=value
