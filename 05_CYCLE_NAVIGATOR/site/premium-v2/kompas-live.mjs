@@ -19,7 +19,13 @@ export const LIVE_ASSETS=Object.freeze(['BTC','ETH']);
 const HOUR=36e5,DAY=864e5;
 const MAX_CAPTURE_AGE_MIN=90, MAX_BROWSER_AGE_MIN=180;
 // UTC-only wire clock; ambiguous local timestamps must not depend on viewer locale.
-const wireClock=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(v)?ms(v):NaN;
+const wireClock=v=>{
+ const m=typeof v==='string'&&/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,3}))?Z$/.exec(v);
+ if(!m)return NaN;
+ const t=ms(v);
+ // Date.parse normalizes impossible dates and 24:00. Round-trip to reject both.
+ return Number.isFinite(t)&&new Date(t).toISOString()===m[1]+'.'+(m[2]||'').padEnd(3,'0')+'Z'?t:NaN;
+};
 const tr=(lang,da,en)=>lang==='en'?en:da;
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 const ms=v=>{const t=Date.parse(v);return Number.isFinite(t)?t:NaN};
