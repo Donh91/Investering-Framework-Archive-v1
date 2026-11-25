@@ -86,7 +86,7 @@ def fixture_repo(tmp_path: Path, *, month=True, cycle_direction="UP") -> Path:
 class StrategicCompassTests(unittest.TestCase):
     def test_strategic_rejects_unbound_long_horizon_and_official_source(self):
         now=datetime(2026,9,30,12,tzinfo=timezone.utc)
-        for target in ("cn","official","week"):
+        for target in ("cn","official","week","official_clock","official_missing","cn_status","both"):
             with self.subTest(target=target),tempfile.TemporaryDirectory() as td:
                 repo=fixture_repo(Path(td))
                 pointer=repo/"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
@@ -95,22 +95,41 @@ class StrategicCompassTests(unittest.TestCase):
                     source=json.loads(path.read_text())
                     source["decision_projection"]["weeks_4_8"]["direction"]="DOWN"
                     write(path,source)
-                elif target=="official":
+                elif target in ("official","both"):
                     path=repo/"04_MARKET_LEARNING/handlekompas/official/daily/2026/09/30/CMP-test.json"
                     source=json.loads(path.read_text())
                     source["horizons"]["NEXT_1_3D"]["expected_direction"]="UP"
                     write(path,source)
+                    if target == "both":
+                        p=json.loads(pointer.read_text());p["iso_week"]=41;write(pointer,p)
+                elif target in ("official_clock","official_missing"):
+                    op=repo/"04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json"
+                    if target == "official_missing":
+                        op.unlink()
+                    else:
+                        p=json.loads(op.read_text());p["issued_at_utc"]="2026-09-30T11:00:01Z";write(op,p)
+                elif target=="cn_status":
+                    p=json.loads(pointer.read_text());p["status"]="DEGRADED";write(pointer,p)
                 else:
                     p=json.loads(pointer.read_text());p["iso_week"]=41;write(pointer,p)
                 result=materialize(repo,now)
                 self.assertEqual(result["status"],"DEGRADED")
                 self.assertTrue(result["source_binding_reason_code"].startswith("STRATEGIC_"))
                 anchor=json.loads((repo/result["anchor_path"]).read_text())
-                self.assertEqual(anchor["strategic_21_30d"]["direction"],"UNAVAILABLE")
-                self.assertEqual(anchor["cycle_4_8w"]["direction"],"UNAVAILABLE")
-                self.assertEqual(anchor["tactical_context"]["72h"]["direction"],"UNAVAILABLE")
+                cn_valid = target in ("official","official_clock","official_missing")
+                official_valid = target in ("cn","week","cn_status")
+                self.assertEqual(anchor["strategic_21_30d"]["direction"],"UP" if cn_valid else "UNAVAILABLE")
+                self.assertEqual(anchor["cycle_4_8w"]["direction"],"UP" if cn_valid else "UNAVAILABLE")
+                self.assertEqual(anchor["tactical_context"]["72h"]["direction"],"DOWN" if official_valid else "UNAVAILABLE")
                 self.assertEqual(anchor["cross_horizon_alignment"]["class"],"MIXED_OR_NO_EDGE")
-                self.assertIsNone(anchor["source_bindings"]["cycle_navigator"]["sha256"])
+                self.assertEqual(anchor["market_reference"] is not None, official_valid)
+                machine=repo/"05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+                machine_sha=hashlib.sha256(machine.read_bytes()).hexdigest()
+                if cn_valid:
+                    # Same lineage predicate used by weekly publication.
+                    self.assertEqual(((anchor.get("source_bindings") or {}).get("cycle_navigator") or {}).get("sha256"), machine_sha)
+                else:
+                    self.assertIsNone(anchor["source_bindings"]["cycle_navigator"]["sha256"])
                 self.assertEqual(anchor["source_bindings"]["cycle_navigator"]["expected_package_sha256"],
                                  json.loads(pointer.read_text())["machine_package_sha256"])
                 self.assertEqual(materialize(repo,now)["write_status"],"NOOP_SAME_SOURCES")
