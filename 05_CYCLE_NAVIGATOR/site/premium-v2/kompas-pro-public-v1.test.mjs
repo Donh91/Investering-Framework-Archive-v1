@@ -1,4 +1,8 @@
 import test from 'node:test';
+import {mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {finalizeKompasPublic,verifyKompasPublicBinding} from './finalize-kompas-public.mjs';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {buildKompasProPublic} from './kompas-pro-public-v1.mjs';
@@ -20,3 +24,26 @@ test('lineage mismatch blocks live values despite fresh Compass',()=>{const f=fi
 test('future issue and unknown direction never promote momentum',()=>{const f=fixture();f.compass.issued_at_utc='2026-11-24T10:01:00Z';f.latest.generated_at='2026-11-24T10:02:00Z';assert.equal(run(f).action,null);const g=fixture();g.compass.market_now.directional_state='UNKNOWN';assert.equal(run(g).momentum.direction,null)});
 test('bad balance and risk authority are suppressed',()=>{const f=fixture();f.compass.bull_bear_scale.horizons['1_3d'].bull=9;f.compass.protection_tracker.authority.portfolio_execution=true;const p=run(f);assert.equal(p.state,'DEGRADED');assert.equal(p.risk,null);assert.equal(p.bull_bear,null)});
 test('invalid evaluation clock rejected',()=>assert.throws(()=>run(fixture(),NaN)));
+
+test('final binding rejects altered values despite original source digests',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'cn-kompas-binding-'));
+ try{
+  const f=fixture();
+  for(const [name,key] of [['latest.json','latest'],['compass.json','compass'],['publication-lineage.json','lineage']])await writeFile(join(dir,name),bytes(f[key]));
+  const original=await finalizeKompasPublic(dir,{nowMs});
+  assert.deepEqual(await verifyKompasPublicBinding(dir),original);
+  const target=join(dir,'kompas-pro.v1.json');
+  for(const mutate of [
+   p=>{p.action='BUY'},p=>{p.momentum.direction='BEARISH'},p=>{p.risk.ordinal=5},
+   p=>{p.horizons[0].direction='DOWN'},p=>{p.generated_at='2026-02-30T10:00:00.000Z'},
+   p=>{p.unreviewed_field=true}
+  ]){
+   const forged=JSON.parse(JSON.stringify(original));mutate(forged);
+   await writeFile(target,JSON.stringify(forged,null,2)+'\n');
+   await assert.rejects(verifyKompasPublicBinding(dir),/KOMPAS_PRO_FINAL_(PROJECTION_MISMATCH|BUILD_CLOCK_INVALID)/);
+  }
+  await writeFile(target,JSON.stringify(original,null,2)+'\n');
+  await writeFile(join(dir,'latest.json'),Buffer.concat([bytes(f.latest),Buffer.from(' ')]));
+  await assert.rejects(verifyKompasPublicBinding(dir),/KOMPAS_PRO_FINAL_BYTE_BINDING_MISMATCH/);
+ }finally{await rm(dir,{recursive:true,force:true})}
+});
