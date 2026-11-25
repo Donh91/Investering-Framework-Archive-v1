@@ -6,6 +6,7 @@ import {finalizeKompasPublic,verifyKompasPublicBinding} from './finalize-kompas-
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {buildKompasProPublic} from './kompas-pro-public-v1.mjs';
+import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {fixture,bytes,nowMs} from './kompas-pro-public-fixture.mjs';
 const run=(f,now=nowMs)=>buildKompasProPublic(bytes(f.latest),bytes(f.compass),bytes(f.lineage),{nowMs:now});
 test('qualified positive source and exact three final byte bindings',()=>{
@@ -46,4 +47,18 @@ test('final binding rejects altered values despite original source digests',asyn
   await writeFile(join(dir,'latest.json'),Buffer.concat([bytes(f.latest),Buffer.from(' ')]));
   await assert.rejects(verifyKompasPublicBinding(dir),/KOMPAS_PRO_FINAL_BYTE_BINDING_MISMATCH/);
  }finally{await rm(dir,{recursive:true,force:true})}
+});
+
+test('strategic context is evaluated at the supplied build clock, never later wall time',()=>{
+ const f=fixture(),issued='2026-11-24T11:00:00Z';
+ f.compass.full_stack={...f.compass.full_stack,contract:'PUBLIC_COMPASS_FULL_STACK_READBACK_v1',
+  source_status:{strategic:'BOUND_WEEKLY_ANCHOR'},strategic:{status:'BOUND_WEEKLY_ANCHOR',
+   authority:'CYCLE_NAVIGATOR_OWNED_NOT_NEW_SITE_FORECAST',issued_at_utc:issued,
+   horizon_21_30d:{btc_direction:'UP',eth_direction:'UP',confidence:'LOW'}}};
+ const trace={contract:'CN_PREMIUM_SOURCE_TRACE_v1',status:'VERIFIED',long_horizons:[{id:'21_30d',owner:'CYCLE_NAVIGATOR_STRATEGIC_CONTEXT',direction:'UP'}]};
+ const runAt=nowMs=>forwardOutlook(f.latest,f.compass,trace,{nowMs}).strategic.available;
+ assert.equal(runAt(nowMs),false);
+ assert.equal(runAt(Date.parse(issued)-1),false);
+ assert.equal(runAt(Date.parse(issued)),true);
+ assert.equal(runAt(NaN),false);
 });

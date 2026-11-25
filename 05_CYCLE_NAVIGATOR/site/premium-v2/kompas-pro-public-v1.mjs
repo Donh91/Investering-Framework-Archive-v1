@@ -46,7 +46,7 @@ export function buildKompasProPublic(latestBytes,compassBytes,lineageBytes,{nowM
  const horizons=horizonIds.map(id=>({id,direction:current?known(directions,compass.horizons?.[id]?.expected_direction):null,
   action:current?known(actions,compass.horizons?.[id]?.action_posture):null,
   bull_bear:current?officialBullBear(compass,({'NEXT_1_3D':'1_3d','NEXT_5_7D':'5_7d','NEXT_2_3W':'2_3w'})[id]):null}));
- let trace=null,strategic=null;try{trace=sourceTrace(latest,compass,safeView);strategic=forwardOutlook(latest,compass,trace)}catch{}
+ let trace=null,strategic=null;try{trace=sourceTrace(latest,compass,safeView);strategic=forwardOutlook(latest,compass,trace,{nowMs})}catch{}
  const originalWeekPrice=lineageOK?verifiedOriginalWeekPrices({latest,publicationLineage:lineage,nowUtc:iso(nowMs)}):null;
  const matrix=kompasHorizonStatusRows({compass,view:safeView,lang:'da',observationCurrent:!!momentumDirection,trace,strategic,originalWeekPrice});
  const rotation=current?readRotation({compass,view:safeView,now:nowMs}):null;
