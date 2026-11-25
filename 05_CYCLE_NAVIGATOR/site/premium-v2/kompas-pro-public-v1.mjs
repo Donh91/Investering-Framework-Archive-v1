@@ -5,7 +5,7 @@
 import {createHash} from 'node:crypto';
 import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
 import {officialBullBear} from '../vnext-live/official-bullbear.mjs';
-import {observedMarketClock,verifiedLiveMomentum,readRotation} from './compass-overview.mjs';
+import {observedMarketClock,verifiedPublishedLiveMomentum,verifiedKompasPublicationLineage,readRotation} from './compass-overview.mjs';
 import {verifiedOriginalWeekPrices} from './original-week-price-readback.mjs';
 import {kompasHorizonStatusRows} from './kompas-horizon-status.mjs';
 import {sourceTrace} from '../vnext-live/source-trace.mjs';
@@ -28,16 +28,12 @@ export function buildKompasProPublic(latestBytes,compassBytes,lineageBytes,{nowM
  const expiry=timestamp(compass?.full_stack?.official_freshness?.valid_until_utc);
  const issued=timestamp(compass?.issued_at_utc),delivered=timestamp(latest?.generated_at);
  const validUntil=Math.min(expiry,issued+86400000,delivered+86400000);
- const lineageOK=lineage?.contract==='CN_PUBLICATION_LINEAGE_RELEASE_RECEIPT_v1'&&
-  lineage.semantics==='PUBLIC_BUNDLE_BUILD_TIME_EVIDENCE_NOT_LIVE_CLIENT_FRESHNESS'&&
-  lineage.authority==='READ_ONLY_RECONCILIATION_NO_FORECAST_OR_TRADING_AUTHORITY'&&
-  lineage.source_to_public_equality==='PASS'&&lineage.prospective_forecast_points_created===0&&
-  lineage.forecast_week===view.weekly.forecast_week&&lineage.public_issue_number===view.weekly.public_issue_number;
+ const lineageOK=verifiedKompasPublicationLineage(lineage,view);
  const current=lineageOK&&view.compass.state==='FRESH'&&view.compass.permit_path_live_gates===true&&
   Number.isFinite(validUntil)&&issued<=nowMs&&nowMs<validUntil;
  const safeView=current?view:{...view,live_observation:lineageOK?view.live_observation:null,compass:{...view.compass,state:'UNAVAILABLE',permit_path_live_gates:false}};
  const action=current?known(actions,view.compass.action_now):null;
- const independent=lineageOK?verifiedLiveMomentum({compass,view,now:nowMs}):null;
+ const independent=verifiedPublishedLiveMomentum({compass,view,publicationLineage:lineage,now:nowMs});
  const clock=independent||(current?observedMarketClock({compass,now:nowMs}):{state:'SOURCE_UNAVAILABLE'});
  const candidate=clock.state==='FRESH_OBSERVATION'?known(observations,independent?.direction||compass.market_now?.directional_state):null;
  const limit=candidate?Math.min(validUntil,timestamp(compass.market_now.market_observation_open_utc)+9000000):NaN;
