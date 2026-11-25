@@ -1,0 +1,46 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {bindParticipation,readCycleParticipation,renderCycleParticipation} from './cycle-participation.mjs';
+const observed='2026-11-25T10:00:00Z',issued='2026-11-25T10:15:00Z',nowUtc='2026-11-25T11:00:00Z';
+function fixture(){
+ const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MINORITY',outperforming_eth:'HALF'};
+ const cycle_participation={contract:'CN_CYCLE_PARTICIPATION_READBACK_v1',semantics:'OBSERVED_24H_RELATIVE_PERFORMANCE_NOT_CAPITAL_FLOW',
+ authority:'DESCRIPTIVE_ONLY_NO_ACTION_OR_FORECAST',status:'OBSERVED_PARTICIPATION',observed_at_utc:observed,valid_until_utc:'2026-11-25T18:00:00Z',
+ relative_leader:'ETH',phase:'UNAVAILABLE',rotation_confirmed:false,buckets:{LARGE_ALT_PROXY:{...row},MID_ALT_PROXY:{...row},SMALL_ALT_PROXY:{...row,coverage:'TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE'},MICROCAP_PROXY:{state:'UNAVAILABLE'},MEMES:{state:'UNAVAILABLE'}}};
+ const c={contract:'PUBLIC_COMPASS_PROJECTION_v1',data_status:'DEGRADED',weekly_context:{status:'MISMATCH'},compass_id:'CMP-TEST',issued_at_utc:issued,cycle_participation};
+ const l={schema:'CN_PUBLIC_SNAPSHOT_V2',generated_at:'2026-11-25T10:30:00Z',package:{status:'DEGRADED'}};
+ const i=structuredClone(c);
+ function bind(){c.full_stack={cycle_participation_binding:bindParticipation(i,c,{verified:true})};}
+ bind();return {c,l,i,bind};
+}
+test('actual cycle renderer independent of weekly and action health; mutation changes output',()=>{
+ const x=fixture(),elements=Object.fromEntries(['cn-map-participation','cn-map-participation-details'].map(k=>[k,{hidden:true,textContent:''}]));
+ const doc={getElementById:k=>elements[k]};
+ renderCycleParticipation(doc,x.l,x.c,{nowUtc,lang:'en'});
+ assert.equal(elements['cn-map-participation'].hidden,false);
+ assert.match(elements['cn-map-participation'].textContent,/ETH/);
+ assert.match(elements['cn-map-participation-details'].textContent,/not capital flow or cycle phase/);
+ x.i.cycle_participation.relative_leader=x.c.cycle_participation.relative_leader='BTC';
+ x.i.cycle_participation.buckets.LARGE_ALT_PROXY.outperforming_btc=x.c.cycle_participation.buckets.LARGE_ALT_PROXY.outperforming_btc='MAJORITY';x.bind();
+ renderCycleParticipation(doc,x.l,x.c,{nowUtc,lang:'en'});
+ assert.match(elements['cn-map-participation'].textContent,/BTC/);
+ assert.match(elements['cn-map-participation-details'].textContent,/Large: majority/);
+ renderCycleParticipation(doc,x.l,x.c,{nowUtc:'2026-11-25T18:00:00Z'});
+ assert.equal(elements['cn-map-participation'].hidden,true);
+ assert.equal(elements['cn-map-participation'].textContent,'');
+});
+test('unverified digest gate and changed public projection cannot supply proof',()=>{
+ const x=fixture();assert.equal(bindParticipation(x.i,x.c),null);
+ x.c.cycle_participation.relative_leader='BTC';x.bind();
+ assert.equal(readCycleParticipation(x.l,x.c,{nowUtc}),null);
+});
+test('malformed clocks, unbound source, fabricated micro and false phase fail closed',()=>{
+ for(const edit of [
+ x=>x.c.full_stack.cycle_participation_binding.compass_id='other',
+ x=>x.l.generated_at='2026-11-25T09:00:00Z',
+ x=>x.l.generated_at='2026-11-25T12:00:00Z',
+ x=>x.c.cycle_participation.phase='ROTATION',
+ x=>x.c.cycle_participation.buckets.MICROCAP_PROXY.state='OBSERVED_PROXY',
+ x=>x.c.cycle_participation.valid_until_utc='2026-11-26T18:00:00Z'
+ ]){const x=fixture();edit(x);assert.equal(readCycleParticipation(x.l,x.c,{nowUtc}),null);}
+});
