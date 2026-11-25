@@ -131,7 +131,6 @@ def experiment_outcome_scorecard(context:dict[str,Any], learning:dict[str,Any])-
                 'registry_sha256':learning['registry_sha256'],
                 'outcome_record_count':len(rows),'matured_outcome_count':n,
                 'hit_count':counts['HIT'],'miss_count':counts['MISS'],'censored_count':counts['CENSORED'],
-                'hit_fraction':counts['HIT']/n if n else None,
                 'independent_sample_size':None,'matched_baseline_skill':None,
                 'forecast_authority':False,'portfolio_action':False}
     except (ValueError,TypeError,KeyError,OverflowError,RecursionError):
@@ -198,13 +197,13 @@ def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
 
     The current v3 API output has no action/phase/operational-translation field.
     Do not infer one from prose, price targets or a successful transport.
-    Projection is deliberately value-free: only candidate horizons, directions,
-    counts and receipt hashes; actual science admission remains the original owner.
+    Projection is deliberately value-free: only candidate horizons, counts and
+    receipt hashes; actual science admission remains the original owner.
     """
     base={'contract':'MM_SHADOW_ANALYTICAL_TRANSLATION_v1','status':'DEGRADED',
           'authority':'SHADOW_ONLY_NO_ACTION_OR_FORECAST_AUTHORITY',
           'candidate_status':'UNAVAILABLE','candidate_horizon_counts':{},
-          'candidate_direction_counts':{},'candidate_count':None,'spot_candidate_directions':[],
+          'candidate_count':None,
           'phase':'UNAVAILABLE','rotation':'UNAVAILABLE','forecast_authority':False,
           'portfolio_action':False,'model_weight_change':False,
           'model_utilization_verified':False}
@@ -238,8 +237,7 @@ def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
         from scripts.lib.forecast_settlement_contract import normalize_metric_path
         validate_output(api)
         fields={'metric_path','direction','target_mode','threshold_pct','target_value','range_low','range_high','horizon_days','rationale'}
-        seen=set();horizons={};directions={};spot=[]
-        spot_assets={'spot.BTCUSDT.close':'BTC','spot.ETHUSDT.close':'ETH','spot.ETHBTC.close':'ETHBTC'}
+        seen=set();horizons={}
         for c in candidates:
             if (set(c)!=fields or type(c['horizon_days']) is not int
                     or not isinstance(c['metric_path'],str) or not isinstance(c['rationale'],str)
@@ -247,43 +245,57 @@ def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
                            for k in ('threshold_pct','target_value','range_low','range_high'))):
                 return {**base,'reason':'CANDIDATE_CONTRACT_INVALID'}
             # One metric/horizon identity cannot contribute multiple competing
-            # rows to a single directional count. Preserve unresolved conflict.
+            # rows to a single horizon count. Preserve unresolved conflict.
             metric=normalize_metric_path(c['metric_path'])
             key=(metric,c['horizon_days'])
             if key in seen:
                 return {**base,'reason':'DUPLICATE_OR_CONFLICTING_CANDIDATE'}
             seen.add(key)
-            h=str(c['horizon_days']);d=c['direction']
-            horizons[h]=horizons.get(h,0)+1;directions[d]=directions.get(d,0)+1
-            if metric in spot_assets:
-                spot.append({'asset':spot_assets[metric],'horizon_days':c['horizon_days'],'direction':d,'target_mode':c['target_mode']})
+            h=str(c['horizon_days'])
+            horizons[h]=horizons.get(h,0)+1
         return {**base,'reason':'TYPED_SHADOW_CANDIDATES_ONLY_NO_OPERATIONAL_DECISION',
                 'candidate_status':'VALIDATED_UNADMITTED' if candidates else 'NO_CANDIDATES',
                 'candidate_count':len(candidates),'candidate_horizon_counts':horizons,
-                'candidate_direction_counts':directions,
-                'spot_candidate_directions':sorted(spot,key=lambda row:(row['asset'],row['horizon_days'])),
                 'context_sha256':context['context_hash'],'freeze_sha256':freeze['freeze_sha256'],
                 'gateway_context_sha256':receipt['context_hash'],'gateway_output_sha256':receipt['output_hash']}
     except (ValueError,TypeError,KeyError,AttributeError,OverflowError,RecursionError):
         return {**base,'reason':'OUTPUT_CONTRACT_INVALID'}
 
 def effective_delivery_status(api_status: str, api: dict[str, Any],
-                              translation: dict[str, Any], scorecard: dict[str, Any],
-                              consumer_verified: bool) -> str:
-    """Delivery health is separate from analytical/operational readiness.
+                              receipt: dict[str, Any], context: dict[str, Any],
+                              freeze: dict[str, Any], consumer_verified: bool) -> str:
+    """Verify delivery independently of the model's analytical readiness.
 
-    Typed gateway output and its receipt must validate, but the known absence
-    of an operational action contract or full scorecard is not a delivery fault.
-    These readiness states remain visible in their own pointer fields.
+    A valid gateway response may describe BLOCKED/DEGRADED analysis or include
+    duplicate hypotheses. Those are translation limitations, not transport errors.
     """
-    if (consumer_verified is not True or api_status != 'success'
-            or not isinstance(api, dict) or api.get('status') != 'READY'):
+    if consumer_verified is not True or api_status != 'success':
         return 'DEGRADED'
-    if (not isinstance(translation, dict)
-            or translation.get('reason') != 'TYPED_SHADOW_CANDIDATES_ONLY_NO_OPERATIONAL_DECISION'
-            or translation.get('candidate_status') not in ('VALIDATED_UNADMITTED', 'NO_CANDIDATES')):
+    try:
+        if not calibration_context_matches_freeze(context, freeze):
+            return 'DEGRADED'
+        if (not isinstance(api, dict) or not isinstance(receipt, dict)
+                or receipt.get('contract') != 'API_AGENT_RECEIPT_v3'
+                or receipt.get('task') != 'WEEKLY_CALIBRATION_SHADOW'
+                or receipt.get('status') != 'PASS'
+                or receipt.get('untrusted_input_envelope') is not True
+                or not isinstance(receipt.get('response_id'), str) or not receipt['response_id']
+                or receipt.get('context_hash') != sha(context)
+                or receipt.get('output_hash') != sha(api)):
+            return 'DEGRADED'
+        candidates = api.get('forecast_candidates')
+        if (not isinstance(candidates, list)
+                or type(receipt.get('forecast_candidate_count')) is not int
+                or receipt['forecast_candidate_count'] != len(candidates)):
+            return 'DEGRADED'
+        root = str(Path(__file__).resolve().parents[2])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from scripts.api_agent.api_gateway import validate_output
+        validate_output(api)
+        return 'READY'
+    except (ValueError, TypeError, KeyError, AttributeError, OverflowError, RecursionError):
         return 'DEGRADED'
-    return 'READY'
 
 
 def build_weekly_intelligence_audit(machine:dict[str,Any],pointer:dict[str,Any],
@@ -430,7 +442,7 @@ def main():
     consumer_receipt=machine.get('consumer_receipt') if isinstance(machine.get('consumer_receipt'),dict) else {}
     consumer_verified=consumer_receipt.get('consumption_state')=='VERIFIED'
     producer_status='READY' if a.api_status=='success' else 'READY_WITH_API_FAILURE'
-    effective_status=effective_delivery_status(a.api_status,api,translation,scorecard,consumer_verified)
+    effective_status=effective_delivery_status(a.api_status,api,receipt,context,freeze,consumer_verified)
     experiment_status=(context.get('experiment_learning') or {}).get('status','UNAVAILABLE_CONTEXT') if isinstance(context.get('experiment_learning'),dict) else 'UNAVAILABLE_CONTEXT'
     report=f"# MASTER MONDAY — {freeze['iso_year']}-W{int(freeze['iso_week']):02d}\n\nPreflight: **{preflight['packet']['status']}**\n\nAPI calibration: **{a.api_status.upper()}**\n\nExperiment registry evidence: **{experiment_status}**\n\nConsumer receipt: **{consumer_receipt.get('status','UNAVAILABLE')}**\n\nLearning decision impact: **{learning_impact.get('assessment_status','UNKNOWN')}**\n\n## Analysis layer\n\n```json\n{json.dumps(analysis,ensure_ascii=False,indent=2)}\n```\n\n## Operational translation\n\n```json\n{json.dumps(translation,ensure_ascii=False,indent=2)}\n```\n\n## Calibration scorecard\n\n```json\n{json.dumps(scorecard,ensure_ascii=False,indent=2)}\n```\n\n## Learning decision impact — 8 week shadow measurement\n\n```json\n{json.dumps(learning_impact,ensure_ascii=False,indent=2)}\n```\n\n## Autonomous shadow admission\n\nThis section is reporting-only. The OpenAI API lifecycle decision does not require owner confirmation.\n\n```json\n{json.dumps(shadow,ensure_ascii=False,indent=2)}\n```\n"
     (a.output_dir/'MASTER_MONDAY_REPORT.md').write_text(report)
