@@ -34,7 +34,9 @@ class ParticipationTests(unittest.TestCase):
         x=fixture(); first=read(x)
         self.assertEqual(first["status"],"OBSERVED_PARTICIPATION")
         self.assertEqual(first["relative_leader"],"ETH")
-        proxy(x)["eth_return_24h_pct"]=0
+        proxy(x)["eth_return_24h_pct"]=-1
+        for row in proxy(x)["buckets"].values():
+            row["outperforming_eth_share_24h"]=.9
         proxy(x)["buckets"]["LARGE_ALT_PROXY"]["outperforming_btc_share_24h"]=.2
         second=read(x)
         self.assertEqual(second["relative_leader"],"BTC")
@@ -62,6 +64,23 @@ class ParticipationTests(unittest.TestCase):
             self.assertEqual(result["buckets"]["LARGE_ALT_PROXY"]["state"],"UNAVAILABLE")
             self.assertEqual(result["buckets"]["MICROCAP_PROXY"]["state"],"UNAVAILABLE")
             self.assertEqual(result["buckets"]["MEMES"]["state"],"UNAVAILABLE")
+    def test_impossible_benchmark_order_is_unavailable_per_bucket(self):
+        for btc, eth, advancing, btc_share, eth_share in [
+            (1, 2, .8, .4, .5),  # harder ETH benchmark has larger share
+            (2, 1, .8, .5, .4),  # harder BTC benchmark has larger share
+            (1, 1, .8, .7, .6),  # tied benchmarks must agree, even within one category
+            (0, 2, .8, .7, .5),  # advancing and BTC thresholds are identical
+            (-1, 2, .8, .7, .5), # negative BTC benchmark cannot have fewer winners than zero
+            (1, 2, .4, .7, .5),  # positive BTC benchmark cannot have more winners than zero
+        ]:
+            x=fixture()
+            proxy(x).update(btc_return_24h_pct=btc, eth_return_24h_pct=eth)
+            proxy(x)["buckets"]["LARGE_ALT_PROXY"].update(
+                advance_ratio_24h=advancing, outperforming_btc_share_24h=btc_share,
+                outperforming_eth_share_24h=eth_share)
+            self.assertEqual(read(x)["buckets"]["LARGE_ALT_PROXY"]["state"], "UNAVAILABLE")
+        x=fixture()
+        self.assertEqual(read(x)["buckets"]["LARGE_ALT_PROXY"]["state"], "OBSERVED_PROXY")
     def test_native_owner_emits_identical_readback(self):
         x=fixture()
         self.assertEqual(build(x, now=NOW)["cycle_participation"], read(x))

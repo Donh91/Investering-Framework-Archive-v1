@@ -4,6 +4,12 @@ const SEMANTICS='OBSERVED_24H_RELATIVE_PERFORMANCE_NOT_CAPITAL_FLOW';
 const AUTHORITY='DESCRIPTIVE_ONLY_NO_ACTION_OR_FORECAST';
 const BUCKETS=['LARGE_ALT_PROXY','MID_ALT_PROXY','SMALL_ALT_PROXY'];
 const STATES=['MAJORITY','MINORITY','HALF'];
+const ORDER={MINORITY:0,HALF:1,MAJORITY:2};
+// Same constituents: a harder benchmark cannot have a larger outperforming share.
+function relativeConsistent(leader,row){
+ const btc=ORDER[row.outperforming_btc],eth=ORDER[row.outperforming_eth];
+ return leader==='ETH'?btc>=eth:leader==='BTC'?eth>=btc:btc===eth;
+}
 const stamp=x=>{
  if(typeof x!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/.test(x))return NaN;
  const ms=Date.parse(x);
@@ -21,7 +27,8 @@ function safeBlock(x){
   if(row?.state==='UNAVAILABLE'){rows[k]={state:'UNAVAILABLE'};continue;}
   const coverage=k==='SMALL_ALT_PROXY'?'TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE':'TOP100_FULL_RANK_WINDOW';
   if(row?.state!=='OBSERVED_PROXY'||row.coverage!==coverage||
-     !['advancing','outperforming_btc','outperforming_eth'].every(f=>STATES.includes(row[f])))return null;
+     !['advancing','outperforming_btc','outperforming_eth'].every(f=>STATES.includes(row[f]))||
+     !relativeConsistent(x.relative_leader,row))return null;
   rows[k]={state:row.state,coverage,advancing:row.advancing,outperforming_btc:row.outperforming_btc,outperforming_eth:row.outperforming_eth};
  }
  if(x.buckets?.MICROCAP_PROXY?.state!=='UNAVAILABLE'||x.buckets?.MEMES?.state!=='UNAVAILABLE')return null;

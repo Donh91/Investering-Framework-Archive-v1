@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {bindNativeParticipation,readCycleParticipation,renderCycleParticipation,bindNativeAltseason,readAltseason,altseasonDisplay} from '../cycle-participation.mjs';
 const observed='2026-11-25T10:00:00Z',issued='2026-11-25T10:15:00Z',nowUtc='2026-11-25T11:00:00Z';
 function fixture(){
- const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MINORITY',outperforming_eth:'HALF'};
+ const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MAJORITY',outperforming_eth:'HALF'};
  const cycle_participation={contract:'CN_CYCLE_PARTICIPATION_READBACK_v1',semantics:'OBSERVED_24H_RELATIVE_PERFORMANCE_NOT_CAPITAL_FLOW',
  authority:'DESCRIPTIVE_ONLY_NO_ACTION_OR_FORECAST',status:'OBSERVED_PARTICIPATION',observed_at_utc:observed,valid_until_utc:'2026-11-25T18:00:00Z',
  relative_leader:'ETH',phase:'UNAVAILABLE',rotation_confirmed:false,buckets:{LARGE_ALT_PROXY:{...row},MID_ALT_PROXY:{...row},SMALL_ALT_PROXY:{...row,coverage:'TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE'},MICROCAP_PROXY:{state:'UNAVAILABLE'},MEMES:{state:'UNAVAILABLE'}}};
@@ -22,6 +22,10 @@ test('actual cycle renderer independent of weekly and action health; mutation ch
  assert.match(elements['cn-map-participation'].textContent,/ETH/);
  assert.match(elements['cn-map-participation-details'].textContent,/not capital flow or cycle phase/);
  x.n.cycle_participation.relative_leader='BTC';
+ for(const k of ['LARGE_ALT_PROXY','MID_ALT_PROXY','SMALL_ALT_PROXY']){
+  x.n.cycle_participation.buckets[k].outperforming_btc='HALF';
+  x.n.cycle_participation.buckets[k].outperforming_eth='MAJORITY';
+ }
  x.n.cycle_participation.buckets.LARGE_ALT_PROXY.outperforming_btc='MAJORITY';x.bind();
  renderCycleParticipation(doc,x.l,x.c,{nowUtc,lang:'en'});
  assert.match(elements['cn-map-participation'].textContent,/BTC/);
@@ -50,6 +54,7 @@ test('newer hourly native readback is independent of the official slot and weekl
  const x=fixture(),n={contract:'NATIVE_HANDLEKOMPAS_v1',generated_at_utc:'2026-11-25T10:25:00Z',source:{packet_sha256:'a'.repeat(64)},cycle_participation:structuredClone(x.c.cycle_participation)};
  const a={contract:'AUTO_MARKET_STATE_PACKET_v1',packet_sha256:'a'.repeat(64),packet_generated_at_utc:'2026-11-25T10:20:00Z'};
  n.cycle_participation.relative_leader='BTC';
+ for(const k of ['LARGE_ALT_PROXY','MID_ALT_PROXY','SMALL_ALT_PROXY'])n.cycle_participation.buckets[k].outperforming_btc='MINORITY';
  const b=bindNativeParticipation(n,a,{verified:true});
  assert.ok(b);
  x.c.full_stack.native_cycle_participation_binding=b;
@@ -90,13 +95,13 @@ test('segment detail reflects advancing and ETH-relative observations, not a rot
  const x=fixture(),elements=Object.fromEntries(['cn-map-participation','cn-map-participation-details'].map(k=>[k,{hidden:true,textContent:''}]));
  const doc={getElementById:k=>elements[k]},details=elements['cn-map-participation-details'];
  renderCycleParticipation(doc,x.l,x.c,{nowUtc,lang:'en'});
- assert.match(details.textContent,/Large: minority outperform BTC, half outperform ETH, majority advancing/);
+ assert.match(details.textContent,/Large: majority outperform BTC, half outperform ETH, majority advancing/);
  assert.match(details.textContent,/not the full small-cap universe/);
  assert.match(details.textContent,/Rotation sequence unverified/);
  x.n.cycle_participation.buckets.LARGE_ALT_PROXY.advancing='MINORITY';
  x.n.cycle_participation.buckets.LARGE_ALT_PROXY.outperforming_eth='MAJORITY';x.bind();
  renderCycleParticipation(doc,x.l,x.c,{nowUtc,lang:'da'});
- assert.match(details.textContent,/Store: mindretal slår BTC, flertal slår ETH, mindretal stiger/);
+ assert.match(details.textContent,/Store: flertal slår BTC, flertal slår ETH, mindretal stiger/);
  assert.match(details.textContent,/Rotationssekvens ikke verificeret/);
  x.n.cycle_participation.buckets.MID_ALT_PROXY={state:'UNAVAILABLE'};
  x.n.cycle_participation.status='PARTIAL_OBSERVATION';x.bind();
@@ -112,5 +117,21 @@ test('impossible UTC calendar dates and 24:00 do not normalize into valid source
   Object.assign(x.n.cycle_participation,{observed_at_utc:bad,valid_until_utc:exp});
   x.n.generated_at_utc=issued;x.a.packet_generated_at_utc=packet;
   assert.equal(bindNativeParticipation(x.n,x.a,{verified:true}),null);
+ }
+});
+
+test('relative benchmark order is enforced for every segment, on binding and readback',()=>{
+ const states=['MINORITY','HALF','MAJORITY'];
+ for(const leader of ['BTC','ETH','TIED'])for(const [bi,btc] of states.entries())for(const [ei,eth] of states.entries()){
+  const expected=leader==='BTC'?ei>=bi:leader==='ETH'?bi>=ei:bi===ei;
+  for(const key of ['LARGE_ALT_PROXY','MID_ALT_PROXY','SMALL_ALT_PROXY']){
+   const x=fixture();x.n.cycle_participation.relative_leader=leader;
+   for(const k of ['LARGE_ALT_PROXY','MID_ALT_PROXY','SMALL_ALT_PROXY'])Object.assign(x.n.cycle_participation.buckets[k],{outperforming_btc:'HALF',outperforming_eth:'HALF'});
+   x.bind();assert.ok(x.c.full_stack.native_cycle_participation_binding);
+   Object.assign(x.c.full_stack.native_cycle_participation_binding.readback.buckets[key],{outperforming_btc:btc,outperforming_eth:eth});
+   assert.equal(Boolean(readCycleParticipation(x.l,x.c,{nowUtc})),expected);
+   Object.assign(x.n.cycle_participation.buckets[key],{outperforming_btc:btc,outperforming_eth:eth});
+   assert.equal(Boolean(bindNativeParticipation(x.n,x.a,{verified:true})),expected);
+  }
  }
 });

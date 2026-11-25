@@ -174,7 +174,7 @@ for(const mode of ['valid','tampered-native','wrong-auto','missing-native','week
  const f=fixture(),auto=f.pointers.get('auto'),now=auto.packet_generated_at_utc;
  const path='04_MARKET_LEARNING/handlekompas/runs/live.json';
  const expiry=hours=>new Date(Date.parse(now)+hours*3600000).toISOString();
- const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MINORITY',outperforming_eth:'HALF'};
+ const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MAJORITY',outperforming_eth:'HALF'};
  const run={contract:'NATIVE_HANDLEKOMPAS_v1',action:{NOW:'HOLD_WAIT'},source:{packet_sha256:mode==='wrong-auto'?'b'.repeat(64):auto.packet_sha256},DATA_HEALTH:{status:'DEGRADED'},generated_at_utc:now,
   cycle_participation:{contract:'CN_CYCLE_PARTICIPATION_READBACK_v1',semantics:'OBSERVED_24H_RELATIVE_PERFORMANCE_NOT_CAPITAL_FLOW',authority:'DESCRIPTIVE_ONLY_NO_ACTION_OR_FORECAST',status:'OBSERVED_PARTICIPATION',observed_at_utc:now,valid_until_utc:expiry(8),relative_leader:'ETH',phase:'UNAVAILABLE',rotation_confirmed:false,buckets:{LARGE_ALT_PROXY:row,MID_ALT_PROXY:row,SMALL_ALT_PROXY:{...row,coverage:'TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE'},MICROCAP_PROXY:{state:'UNAVAILABLE'},MEMES:{state:'UNAVAILABLE'}}},
   altseason_readback:{contract:'CN_ALTSEASON_OBSERVATION_v1',source:'BLOCKCHAINCENTER_90D',authority:'CONTEXT_ONLY_NO_TRANSITION_OR_ETA',status:'OBSERVED',state:'ALTCOIN_SEASON',observed_at_utc:now,valid_until_utc:expiry(24)}};

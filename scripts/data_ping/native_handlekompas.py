@@ -2258,7 +2258,16 @@ def cycle_participation_readback(auto_state, *, as_of):
                 or not all(type(n) is int and n >= 0 for n in counts)
                 or counts[0] != hi - lo + 1 or counts[1] + counts[2] != counts[0] or not counts[2]):
             continue
-        values = [_participation_majority(row.get(k)) for k in ("advance_ratio_24h", "outperforming_btc_share_24h", "outperforming_eth_share_24h")]
+        shares = [row.get(k) for k in ("advance_ratio_24h", "outperforming_btc_share_24h", "outperforming_eth_share_24h")]
+        values = [_participation_majority(value) for value in shares]
+        # The owner computes all three shares over identical constituents.
+        # Higher strict return thresholds cannot have higher shares; equal
+        # thresholds must have identical shares (including the zero benchmark).
+        if "UNAVAILABLE" not in values:
+            thresholds = (0, btc, eth)
+            if any((thresholds[i] >= thresholds[j] and shares[i] > shares[j])
+                   for i in range(3) for j in range(3)):
+                continue
         coverage = "TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE" if key == "SMALL_ALT_PROXY" else "TOP100_FULL_RANK_WINDOW"
         if "UNAVAILABLE" in values or row.get("coverage") != coverage:
             continue
