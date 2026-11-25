@@ -7,6 +7,7 @@ on:
       - '.github/workflows/cycle-navigator-weekly-publication.yml'
       - '.github/workflows/compass-outcomes.yml'
       - 'scripts/data_ping/native_handlekompas.py'
+      - 'scripts/data_ping/cycle_participation_readback.py'
       - 'scripts/data_ping/auto_market_state.py'
       - 'scripts/cycle_navigator/build_weekly_cycle_navigator.py'
       - 'scripts/learning/compass_outcomes.py'
@@ -14,6 +15,7 @@ on:
       - 'research/decision_economics/**'
       - 'tests/data_ping/test_official_daily_compass.py'
       - 'tests/data_ping/test_compass_risk_freshness_v1.py'
+      - 'tests/data_ping/test_cycle_participation_readback.py'
       - 'scripts/data_ping/compass_release_receipt_v1.py'
       - 'tests/data_ping/test_auto_market_state_integrity.py'
       - 'tests/cycle_navigator/test_weekly_publication_resilience.py'
@@ -74,6 +76,7 @@ jobs:
           python -m unittest tests.data_ping.test_auto_market_state_integrity -v
           python -m unittest tests.data_ping.test_official_daily_compass -v
           python -m unittest tests.data_ping.test_compass_risk_freshness_v1 -v
+          python -m unittest tests.data_ping.test_cycle_participation_readback -v
           python -m unittest tests.learning.test_compass_outcomes -v
           python -m unittest tests.learning.test_decision_economics_ledger -v
       - name: Task 1.5 checkout frozen PR source and input tree
@@ -162,7 +165,7 @@ jobs:
           import json
           d=json.load(open('/tmp/compass.json'))
           assert d['contract']=='OFFICIAL_DAILY_COMPASS_v1'
-          assert d['schema_version']==5
+          assert d['schema_version']==6
           assert set(d['horizons'])=={'NEXT_12H','NEXT_1_3D','NEXT_5_7D','NEXT_2_3W','CYCLE_ALTCOINS_3_8W'}
           alt=d['horizons']['CYCLE_ALTCOINS_3_8W']
           if alt['expected_direction']=='UNAVAILABLE':
