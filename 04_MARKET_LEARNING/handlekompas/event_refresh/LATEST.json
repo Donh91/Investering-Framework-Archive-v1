@@ -6,6 +6,7 @@
     "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
   },
   "cause_codes": [
+    "OFFICIAL_SOURCE_REFRESH_DUE",
     "MARKET_STATE_CHANGED"
   ],
   "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
@@ -44,16 +45,16 @@
   ],
   "current_market_state": {
     "action_permission": "HOLD_WAIT",
-    "btc_delta_pct": -0.04918073588584537,
-    "directional_state": "BEARISH",
-    "eth_delta_pct": -0.22603684045466865,
-    "eth_relative_state": "WEAKENING",
-    "ethbtc_delta_pct": -0.1783166904422151,
-    "market_observation_open_utc": "2026-11-25T21:00:00Z",
+    "btc_delta_pct": -0.20105295905266107,
+    "directional_state": "MIXED",
+    "eth_delta_pct": 0.04210726083373473,
+    "eth_relative_state": "STRENGTHENING",
+    "ethbtc_delta_pct": 0.2858163629867905,
+    "market_observation_open_utc": "2026-11-25T22:00:00Z",
     "new_price_observation": true,
-    "predecessor_market_observation_open_utc": "2026-11-25T20:00:00Z",
-    "regime": "BEARISH",
-    "summary": "BTC and ETH are both declining over the latest governed comparison interval; this does not create sell authority."
+    "predecessor_market_observation_open_utc": "2026-11-25T21:00:00Z",
+    "regime": "MIXED",
+    "summary": "BTC/ETH direction is conflicting or incomplete; action authority remains separate."
   },
   "current_protection_tracker": {
     "authority": {
@@ -90,33 +91,33 @@
     "reentry_state": "INACTIVE"
   },
   "dispatch": true,
-  "evaluated_at_utc": "2026-11-25T22:18:04Z",
+  "evaluated_at_utc": "2026-11-25T23:49:19Z",
   "heat_detail": {
-    "btc_return_24h_pct": -1.15993,
+    "btc_return_24h_pct": 0.23222,
     "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
-    "eth_return_24h_pct": -1.13684,
+    "eth_return_24h_pct": 0.00517,
     "existing_entry_temperature": "NORMAL",
-    "median_return_24h_pct": -1.120565
+    "median_return_24h_pct": 0.615985
   },
   "heat_state": "NORMAL",
-  "last_request_age_seconds": 3262.0,
-  "last_requested_source_sha": "de93e8e33a8ab66c4b50386c50b352a83c1233df9636716b25cfb88b1df1214e",
-  "latest_compass_source_packet_sha256": "de93e8e33a8ab66c4b50386c50b352a83c1233df9636716b25cfb88b1df1214e",
+  "last_request_age_seconds": 5475.0,
+  "last_requested_source_sha": "029e5223a5ba8878dd6422647622a1f41c8b3f54293a9c8ed5013677add89fa1",
+  "latest_compass_source_packet_sha256": "029e5223a5ba8878dd6422647622a1f41c8b3f54293a9c8ed5013677add89fa1",
   "missing_freeze_observation_only": true,
   "missing_scheduled_freeze": null,
-  "protective_bypass": true,
+  "protective_bypass": false,
   "reason": "MATERIAL_REASSESSMENT_REQUIRED",
   "request_retry_seconds": 1200,
   "scheduled_slot_proximity_seconds": 1800,
-  "seconds_to_next_scheduled_compass": 32336.0,
-  "source_packet_sha256": "029e5223a5ba8878dd6422647622a1f41c8b3f54293a9c8ed5013677add89fa1",
+  "seconds_to_next_scheduled_compass": 26861.0,
+  "source_packet_sha256": "0905a1a9d2c726aed09a12e535b44a17d2ef884b5518c7deaf68a61d7772dcda",
   "suppressed_cause_codes": [],
   "temporary_source_continuity": {
     "active": true,
     "expires_local_date": null,
-    "expiry_at_utc": "2026-11-26T00:00:00Z",
+    "expiry_at_utc": "2026-11-26T01:00:00Z",
     "policy": "STANDING_UNTIL_REBOUNDED",
-    "refresh_admitted": false,
+    "refresh_admitted": true,
     "semantics": "SOURCE_FRESHNESS_MAINTENANCE_ONLY_NO_MARKET_OR_PORTFOLIO_ACTION"
   },
   "upstream_refresh_required": false
