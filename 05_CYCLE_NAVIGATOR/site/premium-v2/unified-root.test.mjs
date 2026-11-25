@@ -164,7 +164,10 @@ test('design keeps W44 without invented daily forecast, and source-issued 7d pat
  assert.match(runtime,/renderQuickDecision\(\)/);
  assert.match(runtime,/renderRiskQuick\(\)/);
  assert.match(runtime,/renderAltMilestone\(\)/);
- assert.match(runtime,/No verified ETA/);
+ assert.match(runtime,/altseasonDisplay\(feeds\?\.latest,feeds\?\.compass/);
+ const alt=await import('../cycle-participation.mjs');
+ assert.equal(alt.altseasonDisplay(null,null,{lang:'en'}).eta,'No verified ETA');
+ assert.equal(alt.altseasonDisplay(null,null,{lang:'da'}).eta,'Ingen verificeret ETA');
 });
 
 
