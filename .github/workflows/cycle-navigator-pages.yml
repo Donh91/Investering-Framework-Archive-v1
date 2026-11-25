@@ -31,6 +31,10 @@ on:
       - "04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
       - "04_MARKET_LEARNING/handlekompas/event_refresh/**"
       - "04_MARKET_LEARNING/entry_signals/LATEST.json"
+      # Inputs of scripts/cycle_navigator/build_kompas_live_path.py that this job runs: a new Task 2 forecast or score,
+      # or a new range baseline, must redeploy the site (before: the page stayed stale until an unrelated path changed).
+      - "06_RESEARCH_LAB/task2_challenger_a/**"
+      - "05_CYCLE_NAVIGATOR/range_baselines/**"
       - ".github/workflows/cycle-navigator-pages.yml"
   repository_dispatch:
     # Existing Shadow writer sends this only after verified publication.

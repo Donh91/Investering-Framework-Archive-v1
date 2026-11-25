@@ -55,6 +55,34 @@ const safePath=path=>{
   assert.ok(!path.split('/').some(part=>part===''||part==='.'||part==='..'),'PUBLIC_ASSET_PATH_INVALID');
   return path;
 };
+/** The versioned Kompas projection must reach the CDN with its schema.
+ * Before M3 ships both are absent; once its reviewed finalizer exists they
+ * are required, not optional. Source hashes bind the same public bytes.
+ */
+async function kompasParityAssets(root,required=false){
+ const names=['data/kompas-pro.v1.json','data/kompas-pro.v1.schema.json'];
+ const readOptional=async path=>{
+  try{return await readFile(resolve(root,path))}
+  catch(error){if(error.code==='ENOENT')return null;throw error}
+ };
+ const [raw,schemaRaw]=await Promise.all(names.map(readOptional));
+ if(!raw&&!schemaRaw&&!required)return [];
+ if(!raw||!schemaRaw)throw Error('KOMPAS_PUBLIC_PAIR_MISSING');
+ const p=JSON.parse(raw),schema=JSON.parse(schemaRaw);
+ if(p.contract!=='CN_KOMPAS_PRO_PUBLIC_v1'||p.version!==1||
+    schema?.properties?.contract?.const!=='CN_KOMPAS_PRO_PUBLIC_v1'||schema?.properties?.version?.const!==1)
+  throw Error('KOMPAS_PUBLIC_PAIR_CONTRACT');
+ for(const [key,path] of [['latest_json','data/latest.json'],['compass_json','data/compass.json'],['publication_lineage_json','data/publication-lineage.json']]){
+  const bytes=await readFile(resolve(root,path));
+  if(p.source_shas?.[key]!==sha(bytes))throw Error('KOMPAS_PUBLIC_PAIR_SOURCE_MISMATCH');
+ }
+ return names;
+}
+async function kompasFinalizerPresent(){
+ try{await readFile(resolve(dirname(fileURLToPath(import.meta.url)),'../premium-v2/finalize-kompas-public.mjs'));return true}
+ catch(error){if(error.code==='ENOENT')return false;throw error}
+}
+
 /** Bind an ACTUAL public CDN asset to the frozen original seven-day product. */
 async function discoverOriginalWeek(root=dist){
   const snapshot=JSON.parse(await readFile(resolve(root,'data/latest.json'),'utf8'));
@@ -293,6 +321,22 @@ if(process.argv.includes('--self-test')){
     })).status,'PASS');
     await writeFile(resolve(temporary,originalPath),JSON.stringify(originalReceipt));
     assert.equal((await originalEvidenceOrUnavailable(temporary)).seven_day_product,'COMPLETE');
+    // M3 must never silently disappear or deliver only half of its contract.
+    assert.deepEqual(await kompasParityAssets(temporary),[]);
+    await assert.rejects(kompasParityAssets(temporary,true),/KOMPAS_PUBLIC_PAIR_MISSING/);
+    const inputs=['data/latest.json','data/compass.json','data/publication-lineage.json'];
+    const sourceBytes=[Buffer.from('{"snapshot":true}'),Buffer.from('{"compass":true}'),Buffer.from('{"lineage":true}')];
+    for(let i=0;i<inputs.length;i++)await writeFile(resolve(temporary,inputs[i]),sourceBytes[i]);
+    const kompas={contract:'CN_KOMPAS_PRO_PUBLIC_v1',version:1,source_shas:{
+      latest_json:sha(sourceBytes[0]),compass_json:sha(sourceBytes[1]),publication_lineage_json:sha(sourceBytes[2])}};
+    const kpath='data/kompas-pro.v1.json',spath='data/kompas-pro.v1.schema.json';
+    await writeFile(resolve(temporary,kpath),JSON.stringify(kompas));
+    await assert.rejects(kompasParityAssets(temporary),/KOMPAS_PUBLIC_PAIR_MISSING/);
+    await writeFile(resolve(temporary,spath),JSON.stringify({properties:{contract:{const:'CN_KOMPAS_PRO_PUBLIC_v1'},version:{const:1}}}));
+    assert.deepEqual(await kompasParityAssets(temporary,true),[kpath,spath]);
+    await writeFile(resolve(temporary,inputs[1]),Buffer.from('changed'));
+    await assert.rejects(kompasParityAssets(temporary,true),/KOMPAS_PUBLIC_PAIR_SOURCE_MISMATCH/);
+
   }finally{
     await rm(temporary,{recursive:true,force:true});
   }
@@ -307,7 +351,8 @@ if(process.argv.includes('--self-test')){
   try{
     const nextFiles=await discoverFiles(dist,'next');
     const historyFiles=await graphHistoryParityAssets(dist);
-    files=[...new Set([...canonicalFiles,...(original.path?[original.path]:[]),...historyFiles,...nextFiles])];
+    const kompasFiles=await kompasParityAssets(dist,await kompasFinalizerPresent());
+    files=[...new Set([...canonicalFiles,...(original.path?[original.path]:[]),...historyFiles,...kompasFiles,...nextFiles])];
   }catch(error){
     // Do not expose local paths or exception text. NEXT should exist because the
     // current workflow stages it before upload; absence is a release failure.

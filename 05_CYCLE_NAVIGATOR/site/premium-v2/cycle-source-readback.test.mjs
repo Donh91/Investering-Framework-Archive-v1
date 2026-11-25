@@ -61,3 +61,35 @@ test('unknown action cannot become a buy, phase or meme proxy',()=>{
  assert.equal(x.rotation[6].sourceAction,'BUY');
  assert.equal(x.referenceKind,'NO_VERIFIED_PHASE');
 });
+
+const independentlyObserved=()=>({delivery_health:'FRESH',
+ compass:{compass_id:'CMP-LIVE',state:'UNAVAILABLE',permit_path_live_gates:false},
+ live_observation:{compass_id:'CMP-LIVE',semantics:'OBSERVED_MOMENTUM_NOT_CYCLE_OR_FORECAST',
+  authority:'PRESENTATION_ONLY',direction:'BEARISH',observation_open_utc:'2026-11-25T10:00:00Z'}});
+test('actual orientation model remains live with unavailable weekly data, never promotes phase or flow',()=>{
+ const v=independentlyObserved(),m=read(v);
+ assert.equal(m.state,'LIVE_OBSERVATION_ONLY');
+ assert.equal(m.referenceKind,'NONE');
+ assert.deepEqual(m.rotation,[]);
+ assert.match(m.weekLabel,/faldende/);
+ assert.match(m.meaning,/ikke en bekræftet cyklusfase/);
+ v.live_observation.direction='BULLISH';
+ assert.match(read(v,'en').weekLabel,/rising/);
+});
+test('orientation model rejects stale, mismatched, malformed or action-bearing observations',()=>{
+ for(const mutate of [v=>v.delivery_health='STALE',v=>v.live_observation.compass_id='other',
+  v=>v.live_observation.authority='TRADE',v=>v.live_observation.direction='ROTATION',
+  v=>v.live_observation.observation_open_utc='bad']){
+  const v=independentlyObserved();mutate(v);assert.equal(read(v).state,'UNAVAILABLE');
+ }
+});
+test('verified weekly reference and independent current observation remain distinct',()=>{
+ const v=structuredClone(view);v.delivery_health='FRESH';
+ v.live_observation={...independentlyObserved().live_observation,compass_id:v.compass.compass_id};
+ const m=read(v);
+ assert.equal(m.state,'PARTIAL_WEEKLY');
+ assert.equal(m.referenceKind,'NO_VERIFIED_PHASE');
+ assert.match(m.weekLabel,/faldende.*CN #32/);
+ assert.match(m.meaning,/ikke en bekræftet cyklusfase/);
+ assert.equal(m.rotation.length,7);
+});

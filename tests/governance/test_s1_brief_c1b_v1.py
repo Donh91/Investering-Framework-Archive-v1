@@ -138,7 +138,7 @@ class Range(unittest.TestCase):
         self.assertEqual(gh.tree_reads(), 2)                                     # one segment: its two ends
         b = brief_with(out)
         self.assertTrue(b["complete"])
-        self.assertEqual(b["c1b"], {"checked_through": h.main, "from": anchor, "halt": None, "gap": None})
+        self.assertEqual(b["c1b"], {"checked_through": h.main, "from": anchor, "halt": None, "gap": None, "carry": None})
 
     def test_a_squash_merge_that_touches_code_is_no_halt(self):
         h = History()
@@ -164,7 +164,7 @@ class Range(unittest.TestCase):
         b = brief_with(out)
         self.assertEqual(b["next"][0], {"action": "HALT", "rule": "C1b", "source": "C1B", "commit": bad, "parent": out["halt"]["parent"],
                                         "entries": ["scripts", ".agents"], "verify": ["commit", "parent", "trees"], "rank": 1,
-                                        "why": b["next"][0]["why"]})
+                                        "why": b["next"][0]["why"], "builds": 1})
         self.assertEqual((b["next"][1]["action"], b["next"][1]["pr"]), ("MERGE", 7))  # the rest keeps its order
         self.assertEqual(B.parse_body(B.render(b))["next"][0]["commit"], bad)
 
@@ -356,7 +356,7 @@ class FailClosed(unittest.TestCase):
                 self.assertFalse(b["complete"])
                 self.assertTrue(b["incomplete"].startswith("C1b:"), b["incomplete"])
         b = brief_with({"checked_through": "x", "from": None, "halt": {"commit": "y"}, "complete": True})
-        self.assertEqual(b["c1b"], {"checked_through": None, "from": None, "halt": None, "gap": None})
+        self.assertEqual(b["c1b"], {"checked_through": None, "from": None, "halt": None, "gap": None, "carry": None})
 
 
 class CarriedHalt(unittest.TestCase):
@@ -466,16 +466,21 @@ class Gap(unittest.TestCase):
 
 class Ledger(unittest.TestCase):
     def test_last_heartbeat_and_open_intents(self):
-        beats = [TB.comment(60, "S1_HEARTBEAT_v1\nmain=x", minutes_ago=1500), TB.comment(61, "S1_HEARTBEAT_v1\nmain=y", minutes_ago=200),
-                 TB.comment(62, "S1_HEARTBEAT_v1\nmain=z", minutes_ago=100, edited=True),          # edited: not authentic
-                 TB.comment(63, "S1_HEARTBEAT_v1\nmain=z", user=TB.CODEX, minutes_ago=50)]         # foreign
+        beats = [TB.comment(60, "S1_HEARTBEAT_v1\nmain=x contract=77922ae6", minutes_ago=1500),
+                 TB.comment(61, "S1_HEARTBEAT_v1\nmain=y contract=77922ae6", minutes_ago=200),
+                 TB.comment(62, "S1_HEARTBEAT_v1\nmain=z contract=77922ae6", minutes_ago=100, edited=True),          # W5: edited still counts (as TICK T3H)
+                 TB.comment(63, "S1_HEARTBEAT_v1\nmain=z contract=77922ae6", user=TB.CODEX, minutes_ago=50),         # foreign
+                 TB.comment(64, "S1_HEARTBEAT_v1\nmain=z", minutes_ago=40)]                                          # W5: not of this task
         intents = [TB.comment(80, "S1_LANE_MERGE_INTENT_v1\npr: 7\nloop: " + "4" * 40, minutes_ago=90),
                    TB.comment(81, "S1_OP_INTENT_v1\nop: PUSH\npr: 8\nloop: " + "4" * 40, minutes_ago=10)]
         b = TB.brief_of(lambda w: w.update(issue_comments=beats + intents))
-        self.assertEqual(b["ledger"], {"read": True, "last_heartbeat_at": TB.ts(200), "open_intents": {"count": 2, "ids": [80, 81]}})
-        self.assertEqual(TB.brief_of()["ledger"], {"read": True, "last_heartbeat_at": None, "open_intents": {"count": 0, "ids": []}})
+        self.assertEqual(b["ledger"], {"read": True, "last_heartbeat_at": TB.ts(100), "open_intents": {"count": 2, "ids": [80, 81]},
+                                       "last_action": None, "actions_24h": 0})
+        self.assertEqual(TB.brief_of()["ledger"], {"read": True, "last_heartbeat_at": None, "open_intents": {"count": 0, "ids": []},
+                                                   "last_action": None, "actions_24h": 0})
         unread = TB.brief_of(lambda w: w.update(issue_comments=beats, issue_comments_complete=False))
-        self.assertEqual(unread["ledger"], {"read": False, "last_heartbeat_at": None, "open_intents": {"count": None, "ids": []}})
+        self.assertEqual(unread["ledger"], {"read": False, "last_heartbeat_at": None, "open_intents": {"count": None, "ids": []},
+                                            "last_action": None, "actions_24h": None})
 
     def test_it_is_a_hint_only(self):
         self.assertIn("HINT ONLY", B.ledger_hint.__doc__)

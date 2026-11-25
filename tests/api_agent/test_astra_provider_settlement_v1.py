@@ -128,7 +128,7 @@ def expected_pending(ledger=None):
     ledger = canonical_ledger() if ledger is None else ledger
     outstanding = list(ledger.get("unresolved", []))
     outstanding += [r for r in ledger.get("owner_reservations", []) if r["status"] == "OWNER_RESERVED_PREHTTP"]
-    outstanding += [r for r in ledger.get("astra_mission_reservations", []) if r["status"] != SETTLED]
+    outstanding += [r for r in ledger.get("astra_mission_reservations", []) if r["status"] in ("OWNER_RESERVED_PREHTTP", "CONSUMED_PENDING_INVOICE")]
     return float(sum(r["lower_usd"] for r in outstanding)), float(sum(r["upper_usd"] for r in outstanding)), len(outstanding)
 
 

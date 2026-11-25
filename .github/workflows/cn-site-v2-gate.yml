@@ -43,6 +43,8 @@ jobs:
         run: python3 scripts/cycle_navigator/verify_hourly_pages_handoff.py --self-test
       - name: Verify public homepage alias and exact CDN parity negative controls
         run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs --self-test
+      - name: Verify exact Pages artifact visibility and identity negative tests
+        run: node --test 05_CYCLE_NAVIGATOR/site/tests/wait-pages-artifact.test.mjs
       - name: Verify native Monday source-to-CDN closure and negative tests
         run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py --self-test
       - name: Verify Premium v2.1 isolated source contracts (no dependencies)

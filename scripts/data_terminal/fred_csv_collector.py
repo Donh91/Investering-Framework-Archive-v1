@@ -6,6 +6,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import sys
 import time
 import urllib.error
@@ -129,6 +130,8 @@ def parse_fred_csv(payload: bytes, series: str | Iterable[str]) -> tuple[dict[st
                 numeric_value = float(raw_value)
             except ValueError as exc:
                 raise CollectorError("SCHEMA_DRIFT", f"Non-numeric {item} value at CSV row {row_number}: {raw_value}") from exc
+            if not math.isfinite(numeric_value):
+                raise CollectorError("SCHEMA_DRIFT", f"Non-finite {item} value at CSV row {row_number}: {raw_value}")
             observations[item].append(Observation(date=utc_iso(source_date), value=numeric_value))
     empty = [item for item, rows in observations.items() if not rows]
     if empty:

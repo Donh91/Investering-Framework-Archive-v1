@@ -1,7 +1,7 @@
 {
   "agent_calls": {
     "astra_required": false,
-    "luna_required": false,
+    "luna_required": true,
     "max_luna_calls_this_run": 1,
     "max_sol_calls_this_run": 1,
     "sol_6_1_required": false
@@ -9,16 +9,16 @@
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "0d5fbc720363c09a2454cf41c539f4dceaa5d1ea0dbbc57d2f2a0aa56e7b6eea",
+  "fingerprint": "5c103caf56dbb32e587acb3f55bd73561b61dea22a485ca7d150edb504986136",
   "fleet": {
-    "amber_count": 40,
-    "green_count": 166,
-    "red_count": 0,
+    "amber_count": 29,
+    "green_count": 174,
+    "red_count": 3,
     "scheduled_workflow_count": 58,
     "workflow_count": 206,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-11-23T15:10:36Z",
+  "generated_at_utc": "2026-11-25T14:49:16Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -30,12 +30,82 @@
     "no_market_or_portfolio_authority": true,
     "no_repository_write_authority_for_models": true
   },
-  "items": [],
-  "material_delta": false,
+  "items": [
+    {
+      "cluster_id": null,
+      "existing_remediation": null,
+      "failure_streak": 1,
+      "findings": [
+        "LATEST_RUN_FAILED"
+      ],
+      "latest_head_sha": "acfad1c480eb287ea4e8bad69a71c0533e48234c",
+      "latest_run_id": 45550922548,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45550922548",
+      "model_lane": "GPT_6_LUNA",
+      "openai_enabled": true,
+      "recent_failure_count": 1,
+      "route": "LUNA_TRIAGE",
+      "scheduled": true,
+      "workflow": "adaptive-evidence-gap.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    },
+    {
+      "cluster_id": null,
+      "existing_remediation": {
+        "finding": "DAILY_DIRECTOR_DIRECTIONAL_PCT_THRESHOLD_REQUIRED",
+        "route": "EVIDENCE",
+        "signature": "774d6478412574ae9461",
+        "state": "POST_FIX_OBSERVATION"
+      },
+      "failure_streak": 1,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "SCHEDULE_STALE"
+      ],
+      "latest_head_sha": "acfad1c480eb287ea4e8bad69a71c0533e48234c",
+      "latest_run_id": 45550400486,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45550400486",
+      "model_lane": "NONE",
+      "openai_enabled": true,
+      "recent_failure_count": 2,
+      "route": "FOLLOW_EXISTING_REMEDIATION",
+      "scheduled": true,
+      "workflow": "daily-director-shadow.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    },
+    {
+      "cluster_id": null,
+      "existing_remediation": {
+        "finding": "SCHEDULE_STALE",
+        "route": "NONE",
+        "signature": "f9c2c78a55b54f7ce0d3",
+        "state": "CLEARED_NO_CHANGE"
+      },
+      "failure_streak": 1,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "SCHEDULE_STALE"
+      ],
+      "latest_head_sha": "cb490f245b8e6848f33135a25254bd0db4995780",
+      "latest_run_id": 45540368355,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45540368355",
+      "model_lane": "GPT_6_LUNA",
+      "openai_enabled": true,
+      "recent_failure_count": 1,
+      "route": "LUNA_TRIAGE",
+      "scheduled": true,
+      "workflow": "research-execution-coordinator.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    }
+  ],
+  "material_delta": true,
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
-    "existing_remediation_count": 0,
-    "luna_triage_count": 0,
+    "existing_remediation_count": 1,
+    "luna_triage_count": 2,
     "shared_head_cluster_count": 0,
     "sol_6_1_diagnosis_count": 0
   },
@@ -44,6 +114,6 @@
     "new_diagnosis_eligible": true,
     "remediation": "VALID"
   },
-  "source_health_generated_at_utc": "2026-11-23T15:04:20.061378Z",
-  "source_health_status": "AMBER"
+  "source_health_generated_at_utc": "2026-11-25T14:43:15.587635Z",
+  "source_health_status": "RED"
 }
