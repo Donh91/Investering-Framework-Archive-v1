@@ -121,6 +121,19 @@ function validAssetBlock(b){
   Array.isArray(b.days)&&b.days.length>0&&b.headline&&Array.isArray(b.events)&&
   b.days.every(d=>finite(d.centre)&&finite(d.lo)&&finite(d.hi)&&d.lo>0&&d.lo<=d.centre&&d.centre<=d.hi&&Number.isFinite(ms(d.end_utc)));
 }
+// Verify the producer's no-view invariant, without constructing a forecast.
+// Centres/targets are serialized to two decimals; p0 is not rounded.
+function validUntiltedBlock(b){
+ const nearP0=v=>finite(v)&&Math.abs(v-b.p0)<=0.005000001;
+ return b.drift_per_day?.g13===0&&b.drift_per_day?.g57===0&&
+  b.days.every(d=>nearP0(d.centre)&&d.log_shift===0)&&
+  LIVE_HORIZONS.every(h=>{
+   const x=b.headline[String(h)];
+   return x?.direction==='NONE'&&x.pct===0&&nearP0(x.target)&&x.strength===null&&x.balance===null&&
+    Array.isArray(x.tilting_views)&&x.tilting_views.length===0&&
+    x.official_direction?.['1_3d']===null&&x.official_direction?.['5_7d']===null;
+  });
+}
 function reasonText(code,lang){
  const key=String(code||'SOURCE').split(':')[0];
  return (UNAVAILABLE_REASON[key]||UNAVAILABLE_REASON.SOURCE)[lang==='en'?1:0];
@@ -191,6 +204,7 @@ export function liveViewModel(json,{lang='da',hz=3,asset='BTC',nowMs=Date.now(),
  if(noView&&json.no_kompas_view?.line!=='UNTILTED_NO_KOMPAS_VIEW')return unavailableModel(base,kompasReason,lang);
  if(!a||a.status!=='OK')return unavailableModel(base,a?.reason||'SOURCE',lang);
  if(!validAssetBlock(a))return unavailableModel(base,'SOURCE',lang);
+ if(noView&&!validUntiltedBlock(a))return unavailableModel(base,'SOURCE',lang);
  const asOf=wireClock(a.as_of_utc),issued=wireClock(json.generated_at_utc);
  const policyAge=json.display_rules?.client_stale_after_minutes;
  const captureAge=json.display_rules?.freshness_sla_minutes;
