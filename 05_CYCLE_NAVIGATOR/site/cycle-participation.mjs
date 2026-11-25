@@ -64,8 +64,10 @@ export function readCycleParticipation(latest,compass,{nowUtc=new Date().toISOSt
     now>=expiry||expiry-observed!==8*3600000)return null;
  return a;
 }
-export const cycleParticipationMarkup='<p class="cn-map-state" id="cn-map-participation" hidden></p><p class="cn-map-caption" id="cn-map-participation-details" hidden></p>';
+export const cycleParticipationMarkup='<p class="cn-map-state" id="cn-map-participation" hidden></p><p class="cn-map-caption" id="cn-map-participation-details" hidden></p><p class="cn-map-caption" id="cn-map-t6-research" hidden></p>';
 export function renderCycleParticipation(doc,latest,compass,{lang='da',nowUtc}={}){
+ const research=doc.getElementById('cn-map-t6-research');
+ if(research){research.textContent=t6ResearchDisplay(latest,compass,{lang,nowUtc});research.hidden=!research.textContent;}
  const row=doc.getElementById('cn-map-participation'),details=doc.getElementById('cn-map-participation-details');
  if(!row||!details)return;
  const m=readCycleParticipation(latest,compass,{nowUtc}),en=lang==='en';
@@ -127,4 +129,55 @@ export function altseasonDisplay(latest,compass,{lang='da',nowUtc}={}){
  state:a?label[a.state]+' · '+(a.status==='CARRIED_NOT_FRESH'?(en?'carried, not fresh':'videreført, ikke frisk'):(en?'observed':'observeret'))+' · '+a.observed_at_utc:
   (en?'Source observation unavailable':'Kildeobservation utilgængelig'),
  panel:a&&a.status==='OBSERVED'?'observed':'unverified'};
+}
+
+// T6 is a research observation owner, never a live phase or rotation classifier.
+// The builder verifies the original canonical bytes including Python float spelling.
+const T6_ROOT='research/framework_memory/rotation_survival_forward_rows/';
+const T6_EVENTS=['NO_ELIGIBLE_FIRST_CROSS','FIRST_CROSS_FROZEN','ACTIVE_SEQUENCE_OBSERVATION','ETHBTC_REVERSAL_OBSERVED'];
+const T6_AUTH={binding:false,market_interpretation:'NONE',canonical_acceptance:false,state_change:false,portfolio_action:false,market_threshold_change:false,model_weight_change:false,research_only:true};
+const t6Authority=x=>x&&Object.keys(x).length===Object.keys(T6_AUTH).length&&Object.entries(T6_AUTH).every(([k,v])=>x[k]===v);
+const t6Sequence=x=>typeof x==='string'&&/^T6-[a-f0-9]{16}$/.test(x);
+export function t6ObservationPath(p){
+ const path=p?.observation_path;
+ if(p?.contract!=='ROTATION_SURVIVAL_LATEST_v1'||typeof path!=='string'||!path.startsWith(T6_ROOT+'observations/')||
+    !/^\d{4}-\d\d-\d\d_[a-f0-9]{20}\.json$/.test(path.slice((T6_ROOT+'observations/').length))||
+    !Number.isFinite(stamp(p.observed_at_utc))||path.slice((T6_ROOT+'observations/').length,(T6_ROOT+'observations/').length+10)!==p.observed_at_utc.slice(0,10))return null;
+ return path;
+}
+export function bindT6Observation(pointer,observation,digest,{nowUtc=new Date().toISOString()}={}){
+ const p=pointer,o=observation;
+ if(!t6ObservationPath(p)||typeof digest!=='string'||!/^[a-f0-9]{64}$/.test(digest)||p.observation_sha256!==digest||
+    o?.contract!=='ROTATION_SURVIVAL_OBSERVATION_v1'||!t6Authority(p.authority)||!t6Authority(o.authority)||
+    !T6_EVENTS.includes(p.event)||o.event!==p.event||o.observed_at_utc!==p.observed_at_utc||
+    o.retrospective_creation!==false||typeof o.first_cross_detected!=='boolean'||
+    !/^[a-f0-9]{64}$/.test(o.source_packet_sha256||''))return null;
+ const now=stamp(nowUtc),at=stamp(o.observed_at_utc);
+ if(!Number.isFinite(now)||!Number.isFinite(at)||at>now)return null;
+ if(p.event==='NO_ELIGIBLE_FIRST_CROSS'){
+  if(p.active_sequence_id!==null||o.active_sequence_id_before!==null||o.first_cross_detected!==false||o.right_censored!==true||'sequence_id' in o||'time_in_state_days' in o)return null;
+ }else if(p.event==='FIRST_CROSS_FROZEN'){
+  if(!t6Sequence(p.active_sequence_id)||o.active_sequence_id_before!==null||o.first_cross_detected!==true||
+     'sequence_id' in o||'time_in_state_days' in o||'right_censored' in o)return null;
+ }else{
+  const active=p.event==='ACTIVE_SEQUENCE_OBSERVATION';
+  if(!t6Sequence(o.sequence_id)||o.active_sequence_id_before!==o.sequence_id||
+     p.active_sequence_id!==(active?o.sequence_id:null)||o.right_censored!==active||
+     (o.first_cross_detected&&!active)||
+     typeof o.time_in_state_days!=='number'||!Number.isFinite(o.time_in_state_days)||o.time_in_state_days<0)return null;
+ }
+ return {contract:'CN_T6_RESEARCH_READBACK_v1',authority:'RESEARCH_HISTORY_ONLY_NO_PHASE_ROTATION_ETA_OR_ACTION',
+         event:p.event,observed_at_utc:o.observed_at_utc};
+}
+export function t6ResearchDisplay(latest,compass,{lang='da',nowUtc=new Date().toISOString()}={}){
+ const en=lang==='en',r=compass?.full_stack?.t6_research_observation;
+ if(latest?.schema!=='CN_PUBLIC_SNAPSHOT_V2'||compass?.contract!=='PUBLIC_COMPASS_PROJECTION_v1'||
+    r?.contract!=='CN_T6_RESEARCH_READBACK_v1'||r.authority!=='RESEARCH_HISTORY_ONLY_NO_PHASE_ROTATION_ETA_OR_ACTION'||
+    !T6_EVENTS.includes(r.event))return '';
+ const at=stamp(r.observed_at_utc),delivery=stamp(latest.generated_at),now=stamp(nowUtc);
+ if(![at,delivery,now].every(Number.isFinite)||at>delivery||delivery>now)return '';
+ const labels=en?{NO_ELIGIBLE_FIRST_CROSS:'No eligible first cross recorded',FIRST_CROSS_FROZEN:'First cross recorded',ACTIVE_SEQUENCE_OBSERVATION:'Sequence observation recorded',ETHBTC_REVERSAL_OBSERVED:'ETH/BTC reversal recorded'}:
+ {NO_ELIGIBLE_FIRST_CROSS:'Intet kvalificeret første kryds registreret',FIRST_CROSS_FROZEN:'Første kryds registreret',ACTIVE_SEQUENCE_OBSERVATION:'Sekvensobservation registreret',ETHBTC_REVERSAL_OBSERVED:'ETH/BTC-reversering registreret'};
+ return (en?'Last recorded T6 research observation: ':'Senest registrerede T6-forskningsobservation: ')+labels[r.event]+' · '+r.observed_at_utc+
+  (en?' · Historical observation, not current rotation confirmation or forecast.':' · Historisk observation, ikke aktuel rotationsbekræftelse eller prognose.');
 }

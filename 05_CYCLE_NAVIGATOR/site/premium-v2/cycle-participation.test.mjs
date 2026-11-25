@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bindNativeParticipation,readCycleParticipation,renderCycleParticipation,bindNativeAltseason,readAltseason,altseasonDisplay} from '../cycle-participation.mjs';
+import {bindNativeParticipation,readCycleParticipation,renderCycleParticipation,bindNativeAltseason,readAltseason,altseasonDisplay,t6ObservationPath,bindT6Observation,t6ResearchDisplay} from '../cycle-participation.mjs';
 const observed='2026-11-25T10:00:00Z',issued='2026-11-25T10:15:00Z',nowUtc='2026-11-25T11:00:00Z';
 function fixture(){
  const row={state:'OBSERVED_PROXY',coverage:'TOP100_FULL_RANK_WINDOW',advancing:'MAJORITY',outperforming_btc:'MAJORITY',outperforming_eth:'HALF'};
@@ -134,4 +134,65 @@ test('relative benchmark order is enforced for every segment, on binding and rea
    assert.equal(Boolean(bindNativeParticipation(x.n,x.a,{verified:true})),expected);
   }
  }
+});
+
+const t6Auth={binding:false,market_interpretation:'NONE',canonical_acceptance:false,state_change:false,portfolio_action:false,market_threshold_change:false,model_weight_change:false,research_only:true};
+function t6Fixture(event='NO_ELIGIBLE_FIRST_CROSS'){
+ const seq='T6-'+'a'.repeat(16),at='2026-11-25T10:00:00Z',digest='b'.repeat(64);
+ const p={contract:'ROTATION_SURVIVAL_LATEST_v1',authority:{...t6Auth},event,observed_at_utc:at,
+  observation_path:'research/framework_memory/rotation_survival_forward_rows/observations/2026-11-25_'+'c'.repeat(20)+'.json',
+  observation_sha256:digest,active_sequence_id:null};
+ const o={contract:'ROTATION_SURVIVAL_OBSERVATION_v1',authority:{...t6Auth},event,observed_at_utc:at,source_packet_sha256:'d'.repeat(64),
+  retrospective_creation:false,active_sequence_id_before:null,first_cross_detected:false,axes:{private:'DO_NOT_PUBLISH'},right_censored:true};
+ if(event==='FIRST_CROSS_FROZEN'){p.active_sequence_id=seq;o.first_cross_detected=true;delete o.right_censored;}
+ if(event==='ACTIVE_SEQUENCE_OBSERVATION'||event==='ETHBTC_REVERSAL_OBSERVED'){
+  const active=event==='ACTIVE_SEQUENCE_OBSERVATION';p.active_sequence_id=active?seq:null;
+  Object.assign(o,{sequence_id:seq,active_sequence_id_before:seq,time_in_state_days:2,right_censored:active});
+ }
+ return {p,o,digest};
+}
+test('T6 only projects dated research events and never leaks source values or grants authority',()=>{
+ const latest={schema:'CN_PUBLIC_SNAPSHOT_V2',generated_at:'2026-11-25T10:30:00Z'};
+ const compass={contract:'PUBLIC_COMPASS_PROJECTION_v1',weekly_context:{status:'MISMATCH'},full_stack:{}};
+ const row={hidden:true,textContent:''},doc={getElementById:id=>id==='cn-map-t6-research'?row:null};
+ for(const event of ['NO_ELIGIBLE_FIRST_CROSS','FIRST_CROSS_FROZEN','ACTIVE_SEQUENCE_OBSERVATION','ETHBTC_REVERSAL_OBSERVED']){
+  const {p,o,digest}=t6Fixture(event);
+  const b=bindT6Observation(p,o,digest,{nowUtc});
+  assert.ok(b);assert.equal(b.event,event);assert.equal(Object.keys(b).length,4);
+  assert.equal(JSON.stringify(b).includes('DO_NOT_PUBLISH'),false);
+  compass.full_stack.t6_research_observation=b;
+  renderCycleParticipation(doc,latest,compass,{nowUtc,lang:'en'});
+  assert.equal(row.hidden,false);assert.match(row.textContent,/Last recorded T6 research observation/);
+  assert.match(row.textContent,/not current rotation confirmation or forecast/);
+ }
+ compass.full_stack.t6_research_observation=null;
+ renderCycleParticipation(doc,latest,compass,{nowUtc});assert.equal(row.hidden,true);assert.equal(row.textContent,'');
+});
+test('T6 tampered pointer, authority, event, sequence, chronology and malformed path fail closed',()=>{
+ const attacks=[
+  x=>x.p.observation_path=x.p.observation_path.replace('/observations/','/observations/../'),
+  x=>x.p.observation_path=x.p.observation_path.replace('2026-11-25_','2026-11-24_'),
+  x=>x.p.observation_sha256='f'.repeat(64),
+  x=>x.o.authority.portfolio_action=true,
+  x=>x.p.authority.market_interpretation='LIVE',
+  x=>x.o.retrospective_creation=true,
+  x=>x.o.event='FIRST_CROSS_FROZEN',
+  x=>x.p.active_sequence_id='T6-'+'a'.repeat(16),
+  x=>x.o.first_cross_detected=true,
+  x=>x.o.right_censored=false,
+  x=>x.o.sequence_id='T6-'+'a'.repeat(16),
+  x=>x.o.observed_at_utc='2026-11-25T09:59:00Z',
+  x=>{x.p.observed_at_utc=x.o.observed_at_utc='2026-11-25T12:00:00Z';},
+  x=>{x.p.observed_at_utc=x.o.observed_at_utc='2026-11-25T24:00:00Z';},
+ ];
+ for(const mutate of attacks){const x=t6Fixture();mutate(x);assert.equal(bindT6Observation(x.p,x.o,x.digest,{nowUtc}),null);}
+ for(const event of ['ACTIVE_SEQUENCE_OBSERVATION','ETHBTC_REVERSAL_OBSERVED']){
+  const x=t6Fixture(event);x.o.time_in_state_days=-1;assert.equal(bindT6Observation(x.p,x.o,x.digest,{nowUtc}),null);
+ }
+ const {p,o,digest}=t6Fixture(),b=bindT6Observation(p,o,digest,{nowUtc});
+ const c={contract:'PUBLIC_COMPASS_PROJECTION_v1',full_stack:{t6_research_observation:b}};
+ const latest={schema:'CN_PUBLIC_SNAPSHOT_V2',generated_at:'2026-11-25T09:59:00Z'};
+ assert.equal(t6ResearchDisplay(latest,c,{nowUtc}),'');
+ latest.generated_at='2026-11-25T12:00:00Z';assert.equal(t6ResearchDisplay(latest,c,{nowUtc}),'');
+ latest.generated_at='2026-11-25T10:30:00Z';b.authority='TRADE';assert.equal(t6ResearchDisplay(latest,c,{nowUtc}),'');
 });
