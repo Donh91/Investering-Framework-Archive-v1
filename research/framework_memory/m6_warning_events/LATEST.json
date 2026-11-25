@@ -223772,7 +223772,134 @@
           "target_at_utc": "2026-11-21T11:22:06Z"
         },
         "7d": {
-          "maturity_state": "PENDING",
+          "BTC": {
+            "adverse_barriers": {
+              "-10.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": "2026-11-20T20:00:00Z",
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": true
+              },
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -14.169865511512103,
+              "mfe_pct": 0.5785321599115267,
+              "price": 64231.52,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -8.300473038782197,
+              "timestamp": "2026-11-18T12:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": null,
+              "observation_end_at_utc": "2026-11-25T11:00:00Z",
+              "observed_trough_at_utc": "2026-11-21T07:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": true,
+              "status": "RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": null,
+              "time_to_first_close_reclaim_hours": null
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -14.35874381225225,
+              "mfe_pct": 0.35719844817361235,
+              "price": 64373.18,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -8.502267559253717,
+              "time_to_mae_hours": 67.63166666666666,
+              "time_to_mfe_hours": 123.63166666666666
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 58900.0,
+              "timestamp": "2026-11-25T11:00:00Z"
+            }
+          },
+          "ETH": {
+            "adverse_barriers": {
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-30.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -14.613428676119522,
+              "mfe_pct": 2.4344610874851513,
+              "price": 1801.22,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -8.465373469093173,
+              "timestamp": "2026-11-18T12:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": "2026-11-23T14:00:00Z",
+              "observation_end_at_utc": "2026-11-25T11:00:00Z",
+              "observed_trough_at_utc": "2026-11-21T05:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": false,
+              "status": "OBSERVED_FIRST_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": 57.0,
+              "time_to_first_close_reclaim_hours": 122.631667
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -14.88325502371426,
+              "mfe_pct": 2.110762453443127,
+              "price": 1806.93,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -8.754628015473765,
+              "time_to_mae_hours": 65.63166666666666,
+              "time_to_mfe_hours": 123.63166666666666
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 1648.74,
+              "timestamp": "2026-11-25T11:00:00Z"
+            }
+          },
+          "coverage": {
+            "first_close": "2026-11-18T12:00:00Z",
+            "last_close": "2026-11-25T11:00:00Z",
+            "max_gap_hours": 1.0,
+            "reason": "COMPLETE_HOURLY_CLOSE_GRID",
+            "row_count": 168
+          },
+          "maturity_state": "MATURED",
           "target_at_utc": "2026-11-25T11:22:06Z"
         }
       },
@@ -241466,7 +241593,134 @@
           "target_at_utc": "2026-12-22T11:21:37Z"
         },
         "72h": {
-          "maturity_state": "PENDING",
+          "BTC": {
+            "adverse_barriers": {
+              "-10.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -3.978891219096936,
+              "mfe_pct": 5.7979383172127585,
+              "price": 61062.74,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -3.5418325479662394,
+              "timestamp": "2026-11-22T12:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": null,
+              "observation_end_at_utc": "2026-11-25T11:00:00Z",
+              "observed_trough_at_utc": "2026-11-25T08:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": true,
+              "status": "RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": null,
+              "time_to_first_close_reclaim_hours": null
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -3.684690015247327,
+              "mfe_pct": 6.122094965817526,
+              "price": 60876.22,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -3.2462922303651554,
+              "time_to_mae_hours": 68.63972222222222,
+              "time_to_mfe_hours": 27.639722222222222
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 58900.0,
+              "timestamp": "2026-11-25T11:00:00Z"
+            }
+          },
+          "ETH": {
+            "adverse_barriers": {
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-30.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -4.410404691944803,
+              "mfe_pct": 7.996090046006343,
+              "price": 1708.46,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -3.4955456961239917,
+              "timestamp": "2026-11-22T12:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": null,
+              "observation_end_at_utc": "2026-11-25T11:00:00Z",
+              "observed_trough_at_utc": "2026-11-25T08:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": true,
+              "status": "RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": null,
+              "time_to_first_close_reclaim_hours": null
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -4.468558057911675,
+              "mfe_pct": 7.930389002632343,
+              "price": 1709.5,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -3.554255630301262,
+              "time_to_mae_hours": 68.63972222222222,
+              "time_to_mfe_hours": 27.639722222222222
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 1648.74,
+              "timestamp": "2026-11-25T11:00:00Z"
+            }
+          },
+          "coverage": {
+            "first_close": "2026-11-22T12:00:00Z",
+            "last_close": "2026-11-25T11:00:00Z",
+            "max_gap_hours": 1.0,
+            "reason": "COMPLETE_HOURLY_CLOSE_GRID",
+            "row_count": 72
+          },
+          "maturity_state": "MATURED",
           "target_at_utc": "2026-11-25T11:21:37Z"
         },
         "7d": {
@@ -247473,7 +247727,134 @@
           "target_at_utc": "2026-12-08T11:17:12Z"
         },
         "24h": {
-          "maturity_state": "PENDING",
+          "BTC": {
+            "adverse_barriers": {
+              "-10.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -2.9644496086595473,
+              "mfe_pct": 0.4355196421576224,
+              "price": 60424.37,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -2.5227735100920468,
+              "timestamp": "2026-11-24T12:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": null,
+              "observation_end_at_utc": "2026-11-25T11:00:00Z",
+              "observed_trough_at_utc": "2026-11-25T08:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": true,
+              "status": "RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": null,
+              "time_to_first_close_reclaim_hours": null
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -1.9305916952025104,
+              "mfe_pct": 1.5056022701784633,
+              "price": 59787.37,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -1.4842097921350272,
+              "time_to_mae_hours": 20.713333333333335,
+              "time_to_mfe_hours": 3.7133333333333334
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 58900.0,
+              "timestamp": "2026-11-25T11:00:00Z"
+            }
+          },
+          "ETH": {
+            "adverse_barriers": {
+              "-15.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-20.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              },
+              "-30.0": {
+                "basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_LOWS",
+                "first_touch_timestamp": null,
+                "touch_time_semantics": "HOURLY_BAR_END_NOT_EXACT_LOW_TIME",
+                "touched": false
+              }
+            },
+            "excluded_straddling_bar_extrema": 1,
+            "extrema_basis": "FIRST_POST_WARNING_CLOSE_PLUS_FULL_POST_KNOWLEDGE_BAR_HIGH_LOW",
+            "post_knowledge_close_anchor": {
+              "mae_pct": -4.0830949765950475,
+              "mfe_pct": 0.3247916458655187,
+              "price": 1702.63,
+              "semantics": "FIRST_HOURLY_CLOSE_AFTER_WARNING_KNOWLEDGE_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -3.1651033988594146,
+              "timestamp": "2026-11-24T12:00:00Z"
+            },
+            "recovery_after_mae": {
+              "durable_recovery_proven": false,
+              "economic_action_authority": false,
+              "first_close_reclaim_at_utc": null,
+              "observation_end_at_utc": "2026-11-25T11:00:00Z",
+              "observed_trough_at_utc": "2026-11-25T08:00:00Z",
+              "reclaim_clock_semantics": "FIRST_STRICTLY_LATER_COMPLETED_HOURLY_CLOSE_AFTER_OBSERVED_MINIMUM",
+              "reference_price_semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "right_censored": true,
+              "status": "RIGHT_CENSORED_NO_LATER_CLOSE_RECLAIM",
+              "time_from_mae_to_reclaim_hours": null,
+              "time_to_first_close_reclaim_hours": null
+            },
+            "reference_anchor": {
+              "extremum_timestamp_semantics": "HOURLY_CLOSE_OR_BAR_END_NOT_EXACT_TRADE_TIME",
+              "mae_pct": -3.0317604517358765,
+              "mfe_pct": 1.4244405256001569,
+              "price": 1684.17,
+              "semantics": "FREEZE_REFERENCE_CONTEXT_NOT_EXECUTION_PRICE",
+              "terminal_return_pct": -2.1037068704465756,
+              "time_to_mae_hours": 20.713333333333335,
+              "time_to_mfe_hours": 1.7133333333333334
+            },
+            "state": "MATURED",
+            "terminal": {
+              "close": 1648.74,
+              "timestamp": "2026-11-25T11:00:00Z"
+            }
+          },
+          "coverage": {
+            "first_close": "2026-11-24T12:00:00Z",
+            "last_close": "2026-11-25T11:00:00Z",
+            "max_gap_hours": 1.0,
+            "reason": "COMPLETE_HOURLY_CLOSE_GRID",
+            "row_count": 24
+          },
+          "maturity_state": "MATURED",
           "target_at_utc": "2026-11-25T11:17:12Z"
         },
         "30d": {
@@ -248624,7 +249005,7 @@
       "within_family_warning_index": 416
     }
   ],
-  "generated_at_utc": "2026-11-25T11:12:21Z",
+  "generated_at_utc": "2026-11-25T11:28:14Z",
   "integrity_revision": "v1.3_SOURCE_DATA_STATUS_OK_ONLY",
   "live_exit_rule": "NONE",
   "primary_warning_states": [
