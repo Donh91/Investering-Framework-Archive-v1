@@ -705,10 +705,15 @@ class TestCostGuard(unittest.TestCase):
                          (44386340009, "resp_0477227a70790153006afe044ec9c487d08ebd44a0466687db", 3.13212))
         supervisor = by_id["ASTRA-S1-SUPERVISOR-EVOLUTION-20261119-SOL"]
         self.assertEqual((supervisor["status"], supervisor["lower_usd"], supervisor["upper_usd"], supervisor["one_paid_post_max"]),
-                         (res.RESERVED, 0, 3, 1))
-        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER):
-            m.check_reservation("ASTRA-S1-SUPERVISOR-EVOLUTION-20261119-SOL", 3)
-        expected = [r for r in rows if r["status"] != res.SETTLED]
+                         (res.RELEASED, 0, 3, 1))
+        self.assertEqual(supervisor["release_evidence"], res.RELEASE_EVIDENCE)
+        self.assertEqual(supervisor["authorization"], "OWNER_INTERACTIVE_2026-11-19_SUPERVISOR_EVOLUTION_SOL_ONE")
+        self.assertTrue(supervisor["no_retry"])
+        self.assertFalse(supervisor["reconciliation_required"])
+        self.assertFalse(set(supervisor) & res.CONSUMED_FIELDS)
+        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
+            m.check_reservation(res.RELEASE_WORK_ID, 3)
+        expected = [r for r in rows if r["status"] not in res.NON_PENDING]
         self.assertEqual(res.mission_reservations(ledger, set())[:2],
                          (sum(r["upper_usd"] for r in expected), len(expected)))
         for row in rows:
@@ -725,6 +730,27 @@ class TestCostGuard(unittest.TestCase):
         self.assertEqual(guard["pending_liability_count"], expected_pending(ledger)[2])
         self.assertEqual(guard["settled_astra_mission_count"], len([r for r in rows if r["status"] == res.SETTLED]))
         self.assertIsNone(guard["owner_astra_mission_id"])
+
+    def test_never_triggered_release_is_exact_terminal_and_zero_pending(self):
+        canonical = json.loads(CANONICAL_LEDGER.read_text())
+        row = next(r for r in canonical[res.KEY] if r["work_id"] == res.RELEASE_WORK_ID)
+        self.assertEqual(res.mission_reservations({res.KEY: [row]}, set()), (0.0, 0, {res.RELEASE_WORK_ID}))
+        for bad in (dict(row, release_evidence={}), dict(row, no_retry=False),
+                    dict(row, reconciliation_required=True), dict(row, consumed_run_id=1),
+                    dict(row, work_id=MID), dict(row, upper_usd=2),
+                    {k: v for k, v in dict(row, status=res.RESERVED, reconciliation_required=True).items()
+                     if k not in ("release_evidence", "no_retry")}):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                res.mission_reservations({res.KEY: [bad]}, set())
+        code, released = self.guard([row], hard_stop=40)
+        _, empty = self.guard([], hard_stop=40)
+        self.assertEqual(code, 0, released)
+        self.assertEqual(released["pending_liability_upper_usd"], empty["pending_liability_upper_usd"])
+        self.assertEqual(released["remaining_usd"], empty["remaining_usd"])
+        self.assertFalse(released["paid_authority"])
+        code, launch = self.guard([row], "--owner-astra-mission-id", res.RELEASE_WORK_ID)
+        self.assertNotEqual(code, 0, launch)
+        self.assertFalse(launch["paid_authority"])
 
     def test_consumed_row_still_counted_in_full(self):
         code, result = self.guard([consumed_row()], hard_stop=50)

@@ -8,7 +8,7 @@ equals the row's upper_usd. This module grants no POST; the runner enforces the 
 A row is OWNER_RESERVED_PREHTTP (launchable once) or CONSUMED_PENDING_INVOICE (its one POST happened; bound to the
 run, the response id and the receipt's estimated upper cost). A consumed row is still counted at its FULL upper_usd
 until reviewed provider settlement cross-binds its receipt and historical ceiling.
-A settled row retains its history and can never be used as a new reservation.
+A settled or explicitly released never-triggered row retains its history and cannot launch again.
 """
 from __future__ import annotations
 
@@ -31,11 +31,19 @@ MAX_HISTORY_ROWS = 10000
 RESERVED = "OWNER_RESERVED_PREHTTP"
 CONSUMED = "CONSUMED_PENDING_INVOICE"
 SETTLED = provider_settlement.SETTLED
+RELEASED = "RELEASED_NEVER_TRIGGERED"
+NON_PENDING = (SETTLED, RELEASED)
+# Narrow owner-reviewed cancellation; never infer release from absence of a receipt.
+RELEASE_WORK_ID = "ASTRA-S1-SUPERVISOR-EVOLUTION-20261119-SOL"
+RELEASE_EVIDENCE = {
+    "owner_decision": "OWNER_INTERACTIVE_2026-11-25_RELEASE_UNLAUNCHED_SUPERVISOR_SOL",
+    "review_reference": "CLAUDE_REVIEW_7155867580",
+}
 SETTLED_FIELDS = {"settlement_group", "no_retry", "consumed_receipt_sha256"}
 CONSUMED_FIELDS = {"consumed_run_id", "consumed_response_id", "consumed_estimated_upper_usd"}
 RESPONSE_ID = re.compile(r"resp_[A-Za-z0-9_-]{4,180}\Z")
 FIELDS = {"work_id", "created_month_utc", "status", "lower_usd", "upper_usd", "source", "one_paid_post_max",
-          "reconciliation_required", "authorization", "basis"} | CONSUMED_FIELDS | SETTLED_FIELDS
+          "reconciliation_required", "authorization", "basis"} | CONSUMED_FIELDS | SETTLED_FIELDS | {"release_evidence"}
 
 
 def mission_max_usd(work_id: str, missions: Path = MISSIONS):
@@ -64,16 +72,26 @@ def mission_reservations(ledger: dict, other_work_ids: set, missions: Path = MIS
         work, upper = row.get("work_id"), row.get("upper_usd")
         if (not isinstance(work, str) or not MISSION_ID.fullmatch(work) or work in seen or work in other_work_ids
                 or not isinstance(row.get("created_month_utc"), str) or not MONTH.fullmatch(row["created_month_utc"])
-                or row.get("status") not in (RESERVED, CONSUMED, SETTLED) or row.get("lower_usd") != 0
+                or row.get("status") not in (RESERVED, CONSUMED, SETTLED, RELEASED) or row.get("lower_usd") != 0
                 or type(upper) not in (int, float) or not math.isfinite(upper) or not 0 < upper <= MAX_MISSION_USD
                 or row.get("source") != SOURCE or row.get("one_paid_post_max") != 1
-                or row.get("reconciliation_required") is not (row.get("status") != SETTLED)
+                or row.get("reconciliation_required") is not (row.get("status") not in NON_PENDING)
                 or not isinstance(row.get("basis"), str) or len(row["basis"].strip()) < 30):
             raise ValueError("ASTRA_MISSION_RESERVATION_UNVERIFIED")
-        if row["status"] == RESERVED and set(row) & CONSUMED_FIELDS:
+        if row["status"] in (RESERVED, RELEASED) and set(row) & CONSUMED_FIELDS:
             raise ValueError("ASTRA_MISSION_RESERVATION_UNVERIFIED")
-        if row["status"] != SETTLED and set(row) & SETTLED_FIELDS:
+        if row["status"] not in NON_PENDING and set(row) & SETTLED_FIELDS:
             raise ValueError("ASTRA_MISSION_RESERVATION_UNVERIFIED")
+        if row["status"] == RELEASED:
+            if (work != RELEASE_WORK_ID or upper != 3
+                    or row["created_month_utc"] != "2026-11"
+                    or row.get("authorization") != "OWNER_INTERACTIVE_2026-11-19_SUPERVISOR_EVOLUTION_SOL_ONE"
+                    or row.get("release_evidence") != RELEASE_EVIDENCE
+                    or row.get("no_retry") is not True
+                    or set(row) & (SETTLED_FIELDS - {"no_retry"})):
+                raise ValueError("ASTRA_MISSION_RELEASE_UNVERIFIED")
+        elif work == RELEASE_WORK_ID or "release_evidence" in row:
+            raise ValueError("ASTRA_MISSION_RELEASE_UNVERIFIED")
         if row["status"] in (CONSUMED, SETTLED):
             run, rid, est = (row.get(k) for k in ("consumed_run_id", "consumed_response_id",
                                                   "consumed_estimated_upper_usd"))
@@ -83,7 +101,7 @@ def mission_reservations(ledger: dict, other_work_ids: set, missions: Path = MIS
         if mission_max_usd(work, missions) != upper:
             raise ValueError("ASTRA_MISSION_RESERVATION_COST_MISMATCH")
         seen.add(work)
-        if row["status"] != SETTLED:
+        if row["status"] not in NON_PENDING:
             total += float(upper)  # consumed pending rows retain full ceiling
             pending_count += 1
     if pending_count > MAX_ROWS:
