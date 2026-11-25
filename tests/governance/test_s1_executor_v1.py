@@ -65,6 +65,7 @@ class FakeGitHub:
         # ledger post of the Actions bot is the executor's own)
         self.runs = {555: executor_run(555, created=now - timedelta(minutes=3), status="in_progress", updated=now)}
         self.pull_reads, self.head_from_read = 0, None             # (k, sha): from the k-th read of the PR on, it shows that head
+        self.fail_label = None                                      # an exception the label write raises
 
     def run_of(self, run_id):
         return copy.deepcopy(self.runs.get(int(run_id)))
@@ -126,6 +127,11 @@ class FakeGitHub:
         m = re.fullmatch(r"actions/runs/(\d+)/jobs", path)
         if m:
             return copy.deepcopy(d["jobs"].get(int(m.group(1))) or []), True
+        m = re.fullmatch(r"(?:issues|pulls)/(\d+)/(comments|reviews|commits)", path)   # a merged PR with a pending Codex recall
+        read = (w.get("recall_reads") or {}).get(m.group(1)) if m else None
+        if read is not None:
+            key = {"issues/comments": "comments", "pulls/reviews": "reviews", "pulls/comments": "inline", "pulls/commits": "commits"}[path.split("/")[0] + "/" + m.group(2)]
+            return copy.deepcopy(read[key]), bool(read["commits_complete"] if key == "commits" else read["complete"])
         raise AssertionError(f"unexpected PAGES {path}")
 
     def text(self, path):
@@ -148,6 +154,10 @@ class FakeGitHub:
             row = {"id": self.next_id, "body": data["body"], "user": dict(B.ACTIONS_BOT), "created_at": B.iso(self.now), "updated_at": B.iso(self.now)}
             self.w["issue_comments"].append(row)
             return json.dumps(row).encode(), {}
+        if (method, url) in (("POST", "issues/7/labels"), ("DELETE", f"issues/9/labels/{D.RECALL_LABEL}")):
+            if self.fail_label:
+                raise self.fail_label
+            return b"[]", {}
         if method == "PUT" and url == "pulls/7/merge":
             if self.fail_merge:
                 raise self.fail_merge
@@ -202,7 +212,8 @@ def execute(**kw):
 
 
 def tokens(gh):
-    return [B.first_line_token(data["body"]) if method == "POST" else "MERGE" for method, _url, data in gh.writes]
+    return [("LABEL+" if method == "POST" else "LABEL-") if "/labels" in url else B.first_line_token(data["body"]) if method == "POST" else "MERGE"
+            for method, url, data in gh.writes]
 
 
 class LiveMerge(unittest.TestCase):
@@ -263,13 +274,16 @@ class LiveMerge(unittest.TestCase):
         with self.assertRaises((E.Stop, KeyError)):
             run.write("delete", pr=7)
         self.assertEqual(gh.writes, [])
-        # the source has exactly two write calls, both inside write(), and no other mutating verb
+        # the source has exactly four write calls, all inside write(), and no other mutating verb (fix round 2 added
+        # the ONE label codex-recall-pending: its name is a constant, never a parameter)
         self.assertEqual(re.findall(r'_request\("(\w+)", self\.gh\.url\(f?"([^"]+)"\)', SOURCE),
-                         [("POST", "issues/{B.OWNER_ISSUE}/comments"), ("PUT", "pulls/{pr}/merge")])
-        self.assertEqual(SOURCE.count("_request("), 2)
+                         [("POST", "issues/{B.OWNER_ISSUE}/comments"), ("POST", "issues/{pr}/labels"), ("DELETE", "issues/{pr}/labels/{D.RECALL_LABEL}"),
+                          ("PUT", "pulls/{pr}/merge")])
+        self.assertEqual(SOURCE.count("_request("), 4)
         body_of_write = SOURCE[SOURCE.index("    def write(self, kind, **kw):"):SOURCE.index("    def say(self, line):")]
-        self.assertEqual(body_of_write.count("_request("), 2)
-        for verb in ('"DELETE"', '"PATCH"', "update-branch", "/dispatches", "git/refs", "/labels", "/reviews\", {", "contents/"):
+        self.assertEqual(body_of_write.count("_request("), 4)
+        self.assertIn('{"labels": [D.RECALL_LABEL]}', body_of_write)
+        for verb in ('"PATCH"', "update-branch", "/dispatches", "git/refs", "/reviews\", {", "contents/"):
             self.assertNotIn(verb, SOURCE, verb)
         self.assertNotIn("subprocess", SOURCE)                                         # every git read goes through the brief module's helpers
 
@@ -753,14 +767,13 @@ class WorkflowAndSwitch(unittest.TestCase):
         if perms == live:
             for ref in uses:
                 self.assertRegex(ref, r"^actions/[a-z-]+@[0-9a-f]{40}$", "the LIVE execute job pins its actions by commit SHA")
-        # review finding P1-1: NATIVE_GATES can only be chosen by the PR that takes the executor LIVE, never before it
-        if SWITCH["executor"] != "LIVE":
-            self.assertEqual(SWITCH["review_policy"], "CODEX_FINAL_REQUIRED")
+        # review finding P1-1 and the owner decision of 2026-11-25: NATIVE_GATES is not the owner's review route and is never shipped
+        self.assertIn(SWITCH["review_policy"], ("CODEX_FINAL_REQUIRED", D.RECALL_POLICY))
 
     def test_as_shipped_the_executor_is_shadow_and_read_only(self):
         self.assertEqual(self.job["permissions"], {"contents": "read", "actions": "read", "pull-requests": "read", "issues": "read"})
-        # the strict review policy ships; NATIVE_GATES can only be chosen in the owner-present enable PR (review finding P1-1)
-        self.assertEqual((SWITCH["executor"], SWITCH["review_policy"]), ("SHADOW", "CODEX_FINAL_REQUIRED"))
+        # the owner's review route of 2026-11-25 ships (Codex, a Claude receipt, or the Codex-offline fallback with recall)
+        self.assertEqual((SWITCH["executor"], SWITCH["review_policy"]), ("SHADOW", "CODEX_CLAUDE_OR_OFFLINE_RECALL"))
 
     def test_the_brief_script_still_never_merges(self):
         brief_source = (ROOT / "scripts/governance/s1_tick_brief_v1.py").read_text(encoding="utf-8")
@@ -1145,6 +1158,349 @@ class NativeGatesMergesOnlyReviewedCodeOrPlainDocuments(unittest.TestCase):
         out, gh, _n, d = execute(mutate=lambda w: (BEAT(w), TD.docs_no_review(w)), live=lambda w, gh, n: gh.pull.update(user=dict(TB.BOT)))
         self.assertIn("7:C5:bot_authored", out["result"])
         self.assertEqual(gh.writes, [])
+
+
+# ----------------------------------------------------------------------------------------------- fix round 2
+RECALL = D.RECALL_POLICY
+FILES = lambda w: {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE", "bindings": TB.BINDINGS, "budgets": TB.BUDGETS}
+
+
+def offline_world():
+    """PR 7 qualifies, nobody reviewed it, and Codex answered the request for this head with a usage limit."""
+    w = TD.thin_world("LIVE", RECALL)
+    BEAT(w)
+    TD.codex_limit(w)
+    return w
+
+
+def hourly_run(w, run_id, minutes, mode="LIVE", live=None, runs=None):
+    """One run of the workflow on the SAME world: a fresh brief at NOW+minutes, then the executor two minutes later."""
+    at = NOW + timedelta(minutes=minutes)
+    w["now"], w["run"] = B.iso(at), {"id": run_id, "attempt": 1, "event": "schedule"}
+    w["switch"]["executor"] = mode
+    body, decision = B.render_issue(B.build_brief(copy.deepcopy(w)))
+    now = at + timedelta(minutes=2)
+    gh, native = FakeGitHub(w, now), FakeNative(w)
+    gh.runs = dict(runs or {})
+    gh.runs[run_id] = executor_run(run_id, created=at - timedelta(minutes=1), status="in_progress", updated=now)
+    gh.next_id = 7000 + 10 * (run_id - 555)
+    if live:
+        live(w, gh, native)
+    out = E.Run(gh, native, dict(ENV, GITHUB_RUN_ID=str(run_id)), FILES(w), now_fn=lambda: now, out=lambda line: None).execute(body)
+    return out, gh, decision
+
+
+RUN_555 = {555: executor_run(555, created=NOW - timedelta(minutes=1))}             # the first run, as later runs read it: completed at NOW+3
+
+
+class CodexOfflineFallback(unittest.TestCase):
+    """Route (c): never a merge in the run that first saw the PR qualify. A second, independent run must agree."""
+
+    def test_invariant_two_independent_runs_that_agree_then_a_merge_flagged_for_codex(self):
+        w = offline_world()
+        out, gh, d = hourly_run(w, 555, 0)
+        self.assertEqual((d["action"], d["merge"]["review"]), ("MERGE", "FALLBACK(UNAVAILABLE)"))
+        self.assertEqual((out["action"], out["result"], tokens(gh)), ("NOOP", f"FALLBACK_CANDIDATE(pr=7,head={HEAD[:8]},n=1,first_run)", ["S1_FALLBACK_CANDIDATE_v1"]))
+        candidate = gh.writes[0][2]["body"]
+        for line in ("pr: 7", f"head: {HEAD}", "offline: UNAVAILABLE", "candidate_n: 1", "executor: GITHUB run=555"):
+            self.assertIn(line, candidate.splitlines())
+        evidence = B.fields(candidate)["evidence"]
+        self.assertRegex(evidence, r"^[0-9a-f]{32}$")
+        # ten minutes later another run agrees, but the first is too young: it waits and writes nothing
+        out, gh, _d = hourly_run(w, 556, 10, runs=RUN_555)
+        self.assertEqual((out["result"], gh.writes), ("FALLBACK_WAITING(pr=7,age_min=10)", []))
+        # an hour after the first run: every gate again, the same hash, the merge, and the recall flag
+        out, gh, d = hourly_run(w, 557, 60, runs=RUN_555)
+        self.assertEqual((out["action"], out["result"]), ("MERGE", f"MERGED(n=1,main={MERGE_SHA[:8]})"))
+        self.assertEqual(tokens(gh), ["S1_LANE_MERGE_INTENT_v1", "MERGE", "S1_LANE_MERGE_v1", "S1_CODEX_RECALL_PENDING_v1", "LABEL+"])
+        self.assertEqual(gh.writes[1], ("PUT", "pulls/7/merge", {"merge_method": "squash", "sha": HEAD}))
+        self.assertEqual(gh.writes[4], ("POST", "issues/7/labels", {"labels": ["codex-recall-pending"]}))
+        self.assertIn("review: FALLBACK(UNAVAILABLE)", gh.writes[2][2]["body"].splitlines())
+        recall = gh.writes[3][2]["body"]
+        for line in ("pr: 7", f"head: {HEAD}", f"merge: {MERGE_SHA}", "runs: 555,557", "label: codex-recall-pending", "executor: GITHUB run=557"):
+            self.assertIn(line, recall.splitlines())
+        self.assertEqual(out["alarms"], [])
+        self.assertEqual(B.recalls(w["issue_comments"]), [{"c": B.recalls(w["issue_comments"])[0]["c"], "pr": 7, "head": HEAD, "merge": MERGE_SHA}])
+        self.assertEqual(B.fields(candidate)["evidence"], evidence)                    # the second run derived the same hash itself:
+        self.assertEqual(sum(1 for kind, path in gh.calls if (kind, path) == ("TEXT", "actions/jobs/1010/logs")), 1)   # it re-read the privacy log, the CI, ...
+        self.assertIn(("GRAPHQL", "threads"), gh.calls)
+
+    def test_invariant_a_second_run_that_derives_something_else_parks_the_head(self):
+        changes = {
+            "the body changed": lambda w: w["pulls"][0].update(body="one more sentence"),
+            "a required job ran again (other ids)": lambda w: (w["pr"][7]["runs"][0].update(run_attempt=2), [j.update(run_attempt=2) for j in w["pr"][7]["jobs"][101]]),
+        }
+        for name, change in changes.items():
+            with self.subTest(name):
+                w = offline_world()
+                hourly_run(w, 555, 0)
+                change(w)
+                out, gh, d = hourly_run(w, 557, 60, runs=RUN_555)
+                self.assertEqual(d["action"], "MERGE")                                 # the brief cannot know yet: the PR still qualifies on its own
+                # the run that disagrees merges nothing and puts ITS evidence on the ledger: two different hashes for one head
+                self.assertEqual((out["action"], out["result"], tokens(gh)), ("NOOP", f"FALLBACK_MISMATCH(pr=7,head={HEAD[:8]},n=2,mismatch)", ["S1_FALLBACK_CANDIDATE_v1"]))
+                hashes = [B.fields(c["body"])["evidence"] for c in B.fallback_candidates(w["issue_comments"])[(7, HEAD)]]
+                self.assertEqual((len(hashes), len(set(hashes))), (2, 2))
+                # from the next brief on the head is PARKED, with the reason on the owner's first line; no run merges it, however long they agree
+                runs = {**RUN_555, 557: executor_run(557, created=NOW + timedelta(minutes=59))}
+                for k, minutes in ((559, 120), (560, 180)):
+                    out, gh, d = hourly_run(w, k, minutes, runs=runs)
+                    self.assertEqual((d["action"], d["skipped"], out["action"], gh.writes), ("NOOP", ["7:C5:fallback_parked:mismatch"], "NOOP", []))
+                    self.assertIn(f"#7 {HEAD[:8]} (owner_merge:C5:fallback_parked:mismatch)", d["status_lines"][0])
+                # a review (route a) still merges the parked head: the park is for the fallback only
+                w["pr"][7]["comments"] = TB.codex_comments()
+                out, gh, d = hourly_run(w, 561, 240, runs=runs)
+                self.assertEqual((d["merge"]["review"], out["action"]), ("CODEX", "MERGE"))
+
+    def test_each_run_proves_the_offline_signal_for_itself(self):
+        # the first run saw Codex's usage-limit answer, the second sees an unanswered request 24 hours old: another signal,
+        # the same PR facts. The evidence is about the PR; both runs proved Codex offline on their own.
+        w = offline_world()
+        out, gh, d = hourly_run(w, 555, 0)
+        self.assertEqual(d["merge"]["review"], "FALLBACK(UNAVAILABLE)")
+        TD.codex_silent(w)
+        out, gh, d = hourly_run(w, 557, 60, runs=RUN_555)
+        self.assertEqual((d["merge"]["review"], out["action"]), ("FALLBACK(SILENT)", "MERGE"))
+        self.assertIn("review: FALLBACK(SILENT)", gh.writes[2][2]["body"].splitlines())
+        self.assertEqual(D.fallback_evidence(7, HEAD, "LOW", 1, "p", "t", "body", [1]), D.fallback_evidence(7, HEAD, "LOW", 1, "p", "t", "body", [1]))
+        base = D.fallback_evidence(7, HEAD, "LOW", 1, "p", "t", "body", [1])
+        for other in (D.fallback_evidence(8, HEAD, "LOW", 1, "p", "t", "body", [1]), D.fallback_evidence(7, "c" * 40, "LOW", 1, "p", "t", "body", [1]),
+                      D.fallback_evidence(7, HEAD, "MEDIUM", 1, "p", "t", "body", [1]), D.fallback_evidence(7, HEAD, "LOW", 2, "p", "t", "body", [1]),
+                      D.fallback_evidence(7, HEAD, "LOW", 1, "q", "t", "body", [1]), D.fallback_evidence(7, HEAD, "LOW", 1, "p", "u", "body", [1]),
+                      D.fallback_evidence(7, HEAD, "LOW", 1, "p", "t", "body.", [1]), D.fallback_evidence(7, HEAD, "LOW", 1, "p", "t", "body", [2])):
+            self.assertNotEqual(base, other)                                           # every PR fact is part of the hash
+        # a new commit is a new head: the old candidate is for another head and counts for nothing
+        w = offline_world()
+        hourly_run(w, 555, 0)
+        self.assertEqual(B.fallback_candidates(w["issue_comments"]).get((7, "c" * 40)), None)
+
+    def candidate(self, evidence="E1", minutes_ago=60, run=540, user=None, edited=False, cid=600):
+        body = f"S1_FALLBACK_CANDIDATE_v1\npr: 7\nhead: {HEAD}\nevidence: {evidence}\nexecutor: GITHUB run={run}"
+        return TB.comment(cid, body, user or TB.BOT, minutes_ago, edited)
+
+    def run_with(self, rows, mode="LIVE", runs=None):
+        run, gh, _n, body, d = setup(mutate=lambda w: (BEAT(w), TD.codex_limit(w)), policy=RECALL, mode=mode)
+        run.brief, run.decision, run.mode = B.parse_body(body), d, mode
+        gh.runs.update(runs if runs is not None else {540: executor_run(540, created=NOW - timedelta(minutes=61))})
+        return run, gh, {"candidates": rows, "evidence": "E1", "offline": "UNAVAILABLE"}
+
+    def test_invariant_which_earlier_candidate_counts_as_the_first_run(self):
+        ok = self.candidate()
+        run, gh, proof = self.run_with([ok])
+        self.assertEqual(run.fallback(proof), (ok, None))                              # proven, another run, 62 minutes old, the same hash
+        self.assertEqual(gh.writes, [])
+        young = self.candidate(minutes_ago=30)
+        run, gh, proof = self.run_with([young], runs={540: executor_run(540, created=NOW - timedelta(minutes=31))})
+        self.assertEqual((run.fallback(proof), gh.writes), ((None, "FALLBACK_WAITING(pr=7,age_min=32)"), []))
+        boundary = self.candidate(minutes_ago=48)                                      # 50 minutes exactly: enough
+        run, gh, proof = self.run_with([boundary], runs={540: executor_run(540, created=NOW - timedelta(minutes=49))})
+        self.assertEqual(run.fallback(proof)[0], boundary)
+        not_first = {
+            "a post of another workflow (run not proven)": ([ok], {540: dict(executor_run(540, created=NOW - timedelta(minutes=61)), path=".github/workflows/x.yml")}),
+            "a run that does not exist": ([ok], {}),
+            "this very run, proven and old enough (not independent)": ([self.candidate(run=555)], {555: executor_run(555, created=NOW - timedelta(minutes=61))}),
+            "an edited candidate": ([self.candidate(edited=True)], None),
+            "a candidate the owner account posted (not an executor run)": ([self.candidate(user=TB.OWNER)], None),
+            "an expired candidate (25 hours)": ([self.candidate(minutes_ago=25 * 60)], {540: executor_run(540, created=NOW - timedelta(minutes=25 * 60 + 1))}),
+            "no run line": ([TB.comment(600, f"S1_FALLBACK_CANDIDATE_v1\npr: 7\nhead: {HEAD}\nevidence: E1", TB.BOT, 60)], None),
+        }
+        for name, (rows, runs) in not_first.items():
+            with self.subTest(name):
+                run, gh, proof = self.run_with(rows, runs=runs)
+                self.assertEqual(run.fallback(proof), (None, f"FALLBACK_CANDIDATE(pr=7,head={HEAD[:8]},n=2,restart)"))
+                self.assertEqual(tokens(gh), ["S1_FALLBACK_CANDIDATE_v1"])             # this run becomes a first run; it never merges
+        # another hash: the runs DISAGREE. No merge; this run's evidence goes on the ledger as the record of the mismatch
+        for rows in ([self.candidate(evidence="E2")], [self.candidate(evidence="")],
+                     [self.candidate(cid=600), self.candidate(evidence="E2", minutes_ago=55, cid=601)]):   # the NEWEST candidate decides
+            run, gh, proof = self.run_with(rows)
+            self.assertEqual(run.fallback(proof), (None, f"FALLBACK_MISMATCH(pr=7,head={HEAD[:8]},n={len(rows) + 1},mismatch)"))
+            self.assertEqual(tokens(gh), ["S1_FALLBACK_CANDIDATE_v1"])
+            self.assertIn("evidence: E1", gh.writes[0][2]["body"].splitlines())
+        run, gh, proof = self.run_with([self.candidate(evidence="E2")], mode="SHADOW")
+        self.assertEqual((run.fallback(proof), gh.writes), ((None, f"WOULD_POST_FALLBACK_CANDIDATE(pr=7,head={HEAD[:8]},mismatch)"), []))
+        # three candidates and still no merge: PARK, no fourth
+        run, gh, proof = self.run_with([self.candidate(cid=600 + k, run=555) for k in range(3)])
+        with self.assertRaises(E.Stop) as stop:
+            run.fallback(proof)
+        self.assertEqual((stop.exception.reason, gh.writes), ("7:C5:fallback_parked:candidates", []))
+        # SHADOW says what it would do and writes nothing
+        run, gh, proof = self.run_with([], mode="SHADOW")
+        self.assertEqual((run.fallback(proof), gh.writes), ((None, f"WOULD_POST_FALLBACK_CANDIDATE(pr=7,head={HEAD[:8]},first_run)"), []))
+
+    def test_the_limit_signal_is_read_again_by_the_executor(self):
+        def world():
+            w = TD.thin_world("LIVE", RECALL)
+            BEAT(w)
+            TD.codex_out_of_usage(w)
+            return w
+        out, gh, d = hourly_run(world(), 555, 0)
+        self.assertEqual((d["merge"]["review"], tokens(gh)), ("FALLBACK(LIMIT)", ["S1_FALLBACK_CANDIDATE_v1"]))
+        self.assertIn("offline: LIMIT", gh.writes[0][2]["body"].splitlines())
+        self.assertGreaterEqual(sum(1 for kind, path in gh.calls if (kind, path) == ("PAGES", "issues/7/comments")), 2)   # the PR's comments, and the evidence again
+        live = {
+            "Codex spoke again since (the limit answer is no longer its newest comment)": lambda w, gh, n: w["pr"][7]["comments"].append(TB.comment(13, "Codex: on it", TB.CODEX, 1)),
+            "the limit answer is gone": lambda w, gh, n: w["pr"][7].update(comments=w["pr"][7]["comments"][:1]),
+            "someone asked Codex about this head meanwhile (a pending request is never offline)": lambda w, gh, n: w["pr"][7]["comments"].append(TB.comment(14, "@codex review", minutes_ago=1)),
+        }
+        for name, change in live.items():
+            out, gh, d = hourly_run(world(), 555, 0, live=change)
+            self.assertEqual((d["merge"]["review"], gh.writes), ("FALLBACK(LIMIT)", []), name)
+            self.assertRegex(out["result"], r"7:C5:codex_review_(required|pending)", name)
+        run, gh, _n, body, d = setup(mutate=lambda w: (BEAT(w), TD.codex_out_of_usage(w)), policy=RECALL)
+        run.brief, run.decision = B.parse_body(body), d
+        self.assertIs(run.codex_limit(NOW), True)
+        self.assertIs(run.codex_limit(NOW + timedelta(hours=20)), False)                # 290 minutes + 20 hours: older than 24 hours
+        run.brief = dict(run.brief, codex_evidence={"pr": 7, "c": 999, "at": TB.ts(290)})
+        self.assertIs(run.codex_limit(NOW), False)                                     # another comment id than the brief's
+        run.brief = dict(run.brief, codex_evidence=None)
+        self.assertIs(run.codex_limit(NOW), False)
+
+    def test_shadow_never_writes_on_the_fallback_route(self):
+        out, gh, d = hourly_run(offline_world(), 555, 0, mode="SHADOW")
+        self.assertEqual((d["merge"]["review"], out["result"], gh.writes), ("FALLBACK(UNAVAILABLE)", f"WOULD_POST_FALLBACK_CANDIDATE(pr=7,head={HEAD[:8]},first_run)", []))
+
+    def test_invariant_the_route_is_derived_again_live(self):
+        cases = {
+            "Codex answered meanwhile (a completed review)": (lambda w, gh, n: w["pr"][7].update(comments=TB.codex_comments()), "7:C8:review_changed"),
+            "Codex posted findings meanwhile": (lambda w, gh, n: w["pr"][7].update(comments=[c if i != 1 else dict(c, body="<!-- codex-review-state:v1 " + json.dumps(
+                {"code_review": {"commit_sha": HEAD, "status": "completed", "has_unresolved_findings": True}}) + " -->") for i, c in enumerate(TB.codex_comments())]), "7:C5:codex_findings"),
+            "a Claude refusal arrived on the PR": (lambda w, gh, n: w["pr"][7]["comments"].append(
+                TB.comment(21, TD.CLAUDE_OK.replace("APPROVE", "BLOCK"), TB.OWNER, 1)), "7:C5:claude_veto"),
+            "the request was withdrawn (Codex was never asked)": (lambda w, gh, n: w["pr"][7].update(comments=[]), "7:C5:codex_review_required"),
+            "the PR turns out to be opened by a bot": (lambda w, gh, n: gh.pull.update(user=dict(TB.BOT)), "7:C5:bot_authored"),
+            "the head turns out to be S1's": (lambda w, gh, n: gh.pull["head"].update(ref="s1/x"), "7:C5:s1_authored"),
+            "the candidates were used up meanwhile": (lambda w, gh, n: w["issue_comments"].extend(
+                TB.comment(600 + k, f"S1_FALLBACK_CANDIDATE_v1\npr: 7\nhead: {HEAD}\nevidence: X\nexecutor: GITHUB run=54{k}", TB.BOT, 5) for k in range(3)), "7:C5:fallback_parked:candidates"),
+            "someone wrote P1 in the PR conversation meanwhile": (lambda w, gh, n: w["pr"][7]["comments"].append(
+                TB.comment(15, "P1: this places live orders, do not merge", minutes_ago=1)), "7:C5:fallback_parked:p0p1_comment"),
+            "a review summary named P0 meanwhile": (lambda w, gh, n: w["pr"][7].update(
+                reviews=[{"id": 1, "user": {"login": "someone"}, "state": "COMMENTED", "body": "P0: no", "commit_id": HEAD}]), "7:C5:fallback_parked:p0p1_comment"),
+            "two runs disagreed about this head meanwhile": (lambda w, gh, n: w["issue_comments"].extend(
+                TB.comment(600 + k, f"S1_FALLBACK_CANDIDATE_v1\npr: 7\nhead: {HEAD}\nevidence: X{k}\nexecutor: GITHUB run=54{k}", TB.BOT, 5) for k in range(2)), "7:C5:fallback_parked:mismatch"),
+        }
+        for name, (live, reason) in cases.items():
+            for mode in ("LIVE", "SHADOW"):
+                with self.subTest(name=name, mode=mode):
+                    out, gh, d = hourly_run(offline_world(), 555, 0, mode=mode, live=live)
+                    self.assertEqual(d["merge"]["review"], "FALLBACK(UNAVAILABLE)")
+                    self.assertEqual((out["action"], gh.writes), ("NOOP", []), out["result"])
+                    self.assertIn(reason, out["result"])
+
+    def test_a_fallback_merge_that_cannot_be_flagged_is_an_alarm_and_stays_on_the_ledger(self):
+        w = offline_world()
+        hourly_run(w, 555, 0)
+        refuse = lambda w, gh, n: setattr(gh, "fail_label", urllib.error.HTTPError("u", 422, "Unprocessable", {}, None))
+        out, gh, _d = hourly_run(w, 557, 60, runs=RUN_555, live=refuse)
+        self.assertTrue(out["result"].startswith("MERGED("))
+        self.assertEqual(out["alarms"], ["recall_flag_incomplete(HTTPError)"])
+        self.assertEqual([r["pr"] for r in B.recalls(w["issue_comments"])], [7])       # the receipts carry the recall without the label
+
+    def test_a_reconciled_fallback_merge_keeps_its_recall(self):
+        def intent(w):
+            BEAT(w)
+            w["issue_comments"].append(TB.comment(300, f"S1_LANE_MERGE_INTENT_v1\npr: 7\nhead: {HEAD}\nmain: {MAIN}\nloop={'4' * 40}\nbrief=500\ndecision=500.1\n"
+                                                       "review: FALLBACK(SILENT)\ncontract=44444444", TB.BOT, 30))
+
+        def merged(w, gh, n):
+            gh.pull.update(merged=True, state="closed", merged_at=TB.ts(29), merge_commit_sha=MERGE_SHA, merged_by={"login": "github-actions[bot]"})
+            w.setdefault("commit_objects", {})[MERGE_SHA] = {"sha": MERGE_SHA, "parents": [{"sha": MAIN}], "commit": {"message": "docs (#7)"}}
+        out, gh, _n, _d = execute(mutate=intent, live=merged, policy=RECALL)
+        self.assertEqual(out["result"], "RECONCILED(c=300)")
+        self.assertIn("review: FALLBACK(SILENT)", gh.writes[0][2]["body"].splitlines())
+        self.assertEqual([(r["pr"], r["head"], r["merge"]) for r in B.recalls(gh.w["issue_comments"])], [(7, HEAD, MERGE_SHA)])
+
+    def test_invariant_the_label_writes_are_the_one_label_and_only_after_this_runs_own_merge_or_proof(self):
+        run, gh, _n, body, d = setup()
+        run.brief, run.decision, run.mode = B.parse_body(body), d, "LIVE"
+        for bad, reason in (({"pr": 7, "add": True}, "label_without_merge"), ({"pr": 9, "add": False}, "label_without_clear"),
+                            ({"pr": "7", "add": True}, "label_shape"), ({"pr": 7, "add": "yes"}, "label_shape")):
+            with self.assertRaises(E.Stop) as stop:
+                run.write("label", **bad)
+            self.assertEqual(stop.exception.reason, reason)
+        self.assertEqual(gh.writes, [])
+        run.write("merge", pr=7, sha=HEAD)
+        run.write("label", pr=7, add=True)
+        with self.assertRaises(E.Stop):                                                # another PR's label: never
+            run.write("label", pr=8, add=True)
+        run.recall_cleared.add(9)
+        run.write("label", pr=9, add=False)
+        self.assertEqual([(m, u, b) for m, u, b in gh.writes[1:]], [("POST", "issues/7/labels", {"labels": ["codex-recall-pending"]}),
+                                                                      ("DELETE", "issues/9/labels/codex-recall-pending", None)])
+        run.mode = "SHADOW"
+        with self.assertRaises(E.Stop):
+            run.write("label", pr=7, add=True)
+        self.assertEqual(E.MAX_WRITES, 8)
+
+
+class ClaudeReceiptRoute(unittest.TestCase):
+    """Route (b): a Claude exact-head APPROVE receipt among the PR's own comments."""
+
+    def test_a_claude_approve_is_a_merge_with_no_recall(self):
+        approved = lambda w: (BEAT(w), TD.no_codex(w), TD.claude_receipt()(w))
+        out, gh, _n, d = execute(mutate=approved, policy=RECALL)
+        self.assertEqual((d["merge"]["review"], out["action"]), ("CLAUDE", "MERGE"))
+        self.assertEqual(tokens(gh), ["S1_LANE_MERGE_INTENT_v1", "MERGE", "S1_LANE_MERGE_v1"])           # a review was given: no candidate, no recall, no label
+        self.assertIn("review: CLAUDE", gh.writes[2][2]["body"].splitlines())
+        self.assertEqual(B.recalls(gh.w["issue_comments"]), [])
+        live = {
+            "the receipt was edited meanwhile": (lambda w, gh, n: w["pr"][7]["comments"][-1].update(updated_at=TB.ts(0)), "7:C5:codex_review_required"),
+            "a newer refusal arrived": (lambda w, gh, n: w["pr"][7]["comments"].append(TB.comment(21, TD.CLAUDE_OK.replace("APPROVE", "REQUEST_CHANGES"), TB.OWNER, 1)), "7:C5:claude_veto"),
+            "the head turns out to be Claude's own": (lambda w, gh, n: gh.pull["head"].update(ref="claude/x"), "7:C5:claude_authored"),
+        }
+        for name, (change, reason) in live.items():
+            out, gh, _n, d = execute(mutate=approved, policy=RECALL, live=change)
+            self.assertEqual((d["merge"]["review"], gh.writes), ("CLAUDE", []), name)
+            self.assertIn(reason, out["result"], name)
+
+
+class RecallIsClearedOnlyByCodex(unittest.TestCase):
+    PENDING = TD.CodexRecall.PENDING
+
+    def world(self, comments):
+        def mutate(w):
+            BEAT(w)
+            w["issue_comments"].append(TB.comment(700, self.PENDING, TB.BOT, 500))
+            w["recall_reads"] = {"9": TD.CodexRecall().read(comments)}
+        return mutate
+
+    def final(self):
+        state = json.dumps({"code_review": {"commit_sha": "e" * 40, "status": "completed", "has_unresolved_findings": False}})
+        return [TB.comment(31, "@codex review", minutes_ago=200), TB.comment(32, f"<!-- codex-review-state:v1 {state} -->", TB.CODEX, 180),
+                TB.comment(33, f"Codex Review: Didn't find any major issues\n**Reviewed commit:** `{'e' * 10}`", TB.CODEX, 170)]
+
+    def test_invariant_the_flag_clears_on_codexs_completed_review_read_again_by_the_executor(self):
+        out, gh, _n, d = execute(mutate=self.world(self.final()), policy=RECALL)
+        self.assertEqual(tokens(gh)[:2], ["S1_CODEX_RECALL_CLEARED_v1", "LABEL-"])     # bookkeeping first, then the run's one action
+        self.assertEqual(gh.writes[1][:2], ("DELETE", "issues/9/labels/codex-recall-pending"))
+        for line in ("pr: 9", f"head: {'e' * 40}", "codex: FINAL", "executor: GITHUB run=555"):
+            self.assertIn(line, gh.writes[0][2]["body"].splitlines())
+        self.assertIn("S1_EXECUTOR_RECALL RECALL_CLEARED(pr=9)", out["lines"])
+        self.assertEqual(B.recalls(gh.w["issue_comments"]), [])
+        self.assertTrue(out["result"].startswith("MERGED("))                           # PR 7 (Codex reviewed) still merges in the same run
+        for path in ("issues/9/comments", "pulls/9/reviews", "pulls/9/comments", "pulls/9/commits"):
+            self.assertIn(("PAGES", path), gh.calls)                                   # read again, natively, by the executor itself
+        out, gh, _n, _d = execute(mode="SHADOW", mutate=self.world(self.final()), policy=RECALL)
+        self.assertEqual(gh.writes, [])
+        self.assertIn("S1_EXECUTOR_RECALL WOULD_CLEAR_RECALL(pr=9)", out["lines"])
+
+    def test_invariant_nothing_else_clears_it(self):
+        asked = self.final()[:1]
+        for name, comments in {"not asked": [], "asked, no answer yet": asked}.items():
+            out, gh, _n, d = execute(mutate=self.world(comments), policy=RECALL)
+            self.assertNotIn("S1_CODEX_RECALL_CLEARED_v1", tokens(gh), name)
+            self.assertNotIn("LABEL-", tokens(gh), name)
+            self.assertEqual(d["recall"], {"pending": 1})
+        # the brief saw Codex's review, but the executor's own read does not: no clear
+        gone = lambda w, gh, n: w["recall_reads"]["9"].update(comments=[])
+        out, gh, _n, _d = execute(mutate=self.world(self.final()), policy=RECALL, live=gone)
+        self.assertIn("S1_EXECUTOR_RECALL RECALL_NOT_PROVEN(pr=9,NONE)", out["lines"])
+        self.assertNotIn("S1_CODEX_RECALL_CLEARED_v1", tokens(gh))
+        self.assertEqual(len(B.recalls(gh.w["issue_comments"])), 1)
+        # a label that is not on the PR (404) is no alarm; any other refusal is
+        for code, alarms in ((404, []), (500, ["recall_label_remove_failed(500)"])):
+            fail = lambda w, gh, n: setattr(gh, "fail_label", urllib.error.HTTPError("u", code, "x", {}, None))
+            out, gh, _n, _d = execute(mutate=lambda w: (self.world(self.final())(w), w.update(pulls=[], pr={})), policy=RECALL, live=fail)
+            self.assertEqual((out["alarms"], B.recalls(gh.w["issue_comments"])), (alarms, []))
 
 
 if __name__ == "__main__":

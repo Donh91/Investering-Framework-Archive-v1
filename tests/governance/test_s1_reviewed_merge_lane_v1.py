@@ -24,7 +24,7 @@ SECTION_F_SHA256 = "8aa223b8bd06d884caacc0ea4990599d65a5bd8c2eae515d0e0fcfa9a6a5
 SECTION_SHA256 = "f8b5193a781c767b63a2cfdaa93db689e64aa8e73fe95ce93f68e0e9d7390ba6"
 SECTION_H_SHA256 = "f38aed1448cc7d9ea08e6f2d1788bc6d5174d8abefd7196facb0ab70fa91c1ad"
 SECTION_G_SHA256 = "15c9cccf64080751106d86452d6ee4c88be3ab81ed3fa5768593f20cc73add0a"
-SECTION_I_SHA256 = "feeb9969d4eaf5009de83c50f54c3209a2d4f7ec67b2f926522a0352ef1a609f"
+SECTION_I_SHA256 = "4e1a72f84468beeb863d69d6e831d8effea437ff5e14ebaca745a9f7f45ec17d"
 BOOTSTRAP_TEMPLATE_SHA256 = "21ba6c082a0706b70d2838b1a275f05ab67539bfec908b78b1cc3a277f8936b8"
 LINE_PINS = {'C2': 'ff0b1fb2b84c71181c36fa96323d7bb9400e4d4e75e2700158a2f617942b4e63', 'C3': '496ded0833856ec8f55aa9b2504a53653137fa2d96737ccad9c2f5ba61db30d6', 'C5': 'ba69b63c2563d19735dc0c8ea3c1160c36a71935d0b49410b788d749de172c08', 'CC_ONLY': 'd07a6e1d1a4cef55abb790edca32e261d15958e5969e4a1fe782165e4329bef7', 'CC_PR': '85bf8e3655a52a657d20f2992ccb40acc0d69cc7f3ae182a8401550e0f22e423', 'H1': '792e808899def4bb84452f7045b25420f330dfc8c0390f5c52a80323f5c8f1cf', 'H2': 'c76bf5513a523db56a0ae05357889cca0365d8b7d11bf3bb8b8b65b70414f815', 'H3': 'a9fb6bc830284ee5e0e38d1fc80283037274248fd109b502c13edde79dd5af5f', 'H4': 'd47f6f701a0744ad1e8076b4c4bbdd7ed77578c4e3d014800d7ad11b6909da7e', 'H5': 'ed6697482618d2cf6a5de633fbae9b5821c7909d40d963305191ab5ce65be311', 'H6': '4d6a43e793d8f6bcfe39028057a586416756febe05c3601c83c0f9a358474d6a', 'H7': '73981c63af506f153556961808dcac7d35bacb20d510c241e5565c6bb022d4ea', 'H8': '0343db2e8f9173b68600baaa0f8cbaf75eb2fe7247d243fdff7bb1948fea9b0b', 'LADDER': '9fe72664e57b9414dc18344a81e031eca57290a4547e4077fd81ffc15705eb40', 'LANE_INTEGRITY': 'd3d4818152a356742bed34c9b3216cceaa7b83cd503ba357ea726b90e03db140', 'LOOP_GUARD': '8487a53dfabae7732002e3adaba9a693a62e46d94997bd23bd9d0670d0a87768', 'OBS': 'a40fcc3c0dc848c71afdddc8e26b73ca068179886535369b8a0898d2ceb70ee8', 'ONE_ACTION': 'c326ce2c2ec993192d095bcda00372812214f5f47c41f99f40fb2b44a65c47fa', 'OWNER_GATED': '5a7c1317ca30993a8e7320ddc06a0ec75d514657b1ff81edcd71a0ba18afc2f8', 'RULE1': '54fd60bdd827ab1a91e6eb08747629c99b0aab5476c4d1e991336bc73f5446d4', 'RULE2': '25583e3b4601cb26582c5d816b9602ffa5538d2f57a48afaf24a3a8acc08ad4c', 'RULE3': 'cc765b466b981ea2106924425de3e9361b8eb958e723bd9c290c2f02c9d72c6f', 'RULE4': '4e29a51f082dda2c14cbdd5bb9b5524bb0a78cd20ed2566df8d736b6becfbeef', 'RULE5': 'abc0f14dab6e7bdd3f940fcbe9a377cb0d2a532c07054755df6f305b1ed40969', 'RULE5B': '960544bd5c356dbde81dc12346a34086531c2b6b7f49cef3cf77ba150edac885', 'RULE6': '03d16c79132996d0ae4bf298b9626d06aee80802641068dbb02b5f66c72ad261', 'RULE7': 'c1fc79408a137c8ac96a6d22ee409cf43622db1d5aa910dc014eb6740cb44b25', 'WAITING': '7495b6701b652bca13501fc5ebb8e7eb78c7b6e0f4cd585765ffce87bea173fe'}
 PINNED = ("AGENTS.md", "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json", ".github", ".agents", "scripts/governance",
@@ -86,25 +86,45 @@ class PinTest(unittest.TestCase):
                          "reads `\"executor\": \"LIVE\"` (missing, unknown or unparsable: `OFF`; `SHADOW`: every read and no write)",
                          "the repository variable `S1_EXECUTOR_HOLD` is empty (the variable can only stop it)", "One action per run.",
                          "`merge_method: squash` and `sha: <the decision's exact head>`", "A 405, a 409 or any other failure is STOP: no retry.",
-                         "`CODEX_FINAL_REQUIRED` (missing or unknown reads as this)", "this section ships with it.",
-                         "`NATIVE_GATES` may be set only by the owner-present PR that takes the executor LIVE.",
-                         "Code is never merged unreviewed, under either policy",
+                         "`CODEX_FINAL_REQUIRED` (missing or unknown reads as this)",
+                         "**`CODEX_CLAUDE_OR_OFFLINE_RECALL` is the owner's review route of 2026-11-25, and this section ships with it.**",
+                         "(a) the completed Codex review of the exact head; (b) a Claude exact-head APPROVE receipt",
+                         "and never for a head Claude wrote", "(c) the Codex-offline fallback of the next bullet",
+                         "it may not be shipped without a new owner decision",
+                         "Route (c) applies only when Codex is demonstrably unavailable, by one of three signals read natively",
+                         "A request that is pending inside its 24 hours is never such a signal.",
+                         "No repository variable can switch it on.", "It needs TWO executor runs.",
+                         "at least 50 minutes and at most 24 hours after a candidate that is proven to be an executor run's",
+                         "merges only when its hash is equal", "Each run proves the offline signal for itself.",
+                         "A mismatch is PARK: the run that disagrees posts its own candidate, and two candidates for one head with different hashes park that head for the owner",
+                         "after 3 candidates for one head it is parked for the owner", "Any unknown fact is PARK.",
+                         "SHADOW posts no candidate, so SHADOW only ever shows a first run.",
+                         "Route (c) is the one case with no review at all",
+                         "route (b) proves the owner account and the text of a receipt, not who reviewed",
+                         "they share every blind spot and agree on a wrong answer as readily as on a right one",
+                         "it can post a recall-cleared receipt, which takes a pending Codex recall off the count while the label stays on the PR",
+                         "or stand in for the first of the two fallback runs (only the owner merges workflow code)",
+                         "the receipt `S1_CODEX_RECALL_PENDING_v1` on #1156 (PR, head, merge commit, both run ids) and the label `codex-recall-pending` on the PR",
+                         "The flag clears only on Codex's completed review of that head",
+                         "Its only writes are comments on #1156, the merge call, and adding or removing the one label `codex-recall-pending`.",
                          "`NATIVE_GATES` merges only a PR that changes plain documents only and that nothing marks as written by S1, Codex, another AI or a bot.",
                          "a native `CHANGES_REQUESTED` blocks on whatever commit it was made", "a push never lifts it.",
                          "ANY non-empty value of that variable holds, `0`, `false`, `no` and `off` included",
                          "(twice; the second read is the last read before the intent)",
                          "One merge attempt per PR head, ever",
-                         "in a changed path, in the PR title or in the PR body, matched also inside camelCase, snake_case and kebab-case identifiers",
+                         "in a changed path or in the PR title, matched also inside camelCase, snake_case and kebab-case identifiers",
+                         "in the PR body, a positive-action phrase or a strong identifier for exclusions 4, 5 and 8 that its sentence does not negate or disclaim",
                          "**The word lists are best effort and prove nothing.**",
                          "What keeps money, credential and custody code from an unreviewed merge is gate (d), not the lists.",
                          "A REVIEWED PR that changes such code under names the lists do not hold is an executor merge.",
-                         "A P0 or P1 written in a PR conversation comment or in a review summary is NOT read; only a review thread is.",
+                         "A P0 or P1 written in a PR conversation comment or in a review summary is NOT read by routes (a) and (b); only a review thread is. Route (c) parks on it.",
+                         "or when a conversation comment or a review summary of the PR names P0 or P1.",
                          "For that the bot's identity is not enough",
                          "An intent is settled only by a never-edited post of `Donh91`, or by a never-edited bot post that names its run (`executor: GITHUB run=<id>`)",
                          "exits non-zero, which shows as a failed job in a green run",
                          "pins the actions of that job by commit SHA",
-                         "it is also the only place where `\"review_policy\": \"NATIVE_GATES\"` may be chosen",
-                         "A `CLAUDE_REVIEW_v1` is never required and never read.",
+                         "the hold labels and the label `codex-recall-pending` created",
+                         "A `CLAUDE_REVIEW_v1` is never required.",
                          "risk HIGH, HIGH_IMPACT, EXTREME or unclear (so gate (f) is never used by the executor)",
                          "a merge made with the workflow token starts no workflow",
                          "An active ruleset or a protected main is `ruleset_unproven`: no executor merge.",
@@ -272,7 +292,9 @@ class SwitchTest(unittest.TestCase):
         # section 0.2i: the executor of this file is never LIVE without write permissions on the execute job, and this
         # test and tests/governance/test_s1_executor_v1.py pin both together (the enable PR changes both)
         self.assertIn(doc["executor"], {"OFF", "SHADOW", "LIVE"})
-        self.assertIn(doc["review_policy"], {"CODEX_FINAL_REQUIRED", "NATIVE_GATES"})
+        # the strict policy or the owner's review route of 2026-11-25; NATIVE_GATES stays a recognised value of the decision
+        # module, and section 0.2i says it may not be shipped without a new owner decision
+        self.assertIn(doc["review_policy"], {"CODEX_FINAL_REQUIRED", "CODEX_CLAUDE_OR_OFFLINE_RECALL"})
         self.assertIn(doc["steward_state"], {"ON", "OFF"})
         self.assertEqual(doc["contract"], "S1_REVIEWED_MERGE_LANE_v1")
         self.assertIn(doc["state"], {"ON", "OFF"})

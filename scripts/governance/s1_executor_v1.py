@@ -7,9 +7,18 @@ OFF) and the owner's repository variable S1_EXECUTOR_HOLD is empty. In SHADOW it
 it WOULD do; it never writes. It runs main's own code only and never checks out, imports or executes a PR head.
 
 The only writes this file can make (write() is the one call site of each):
-  POST /repos/<repo>/issues/1156/comments   an S1_LANE_MERGE_INTENT_v1, S1_LANE_MERGE_v1, S1_LANE_HALTED, S1_OP_DONE_v1
-                                            or S1_HEARTBEAT_v1 on the owner ledger
-  PUT  /repos/<repo>/pulls/<n>/merge        {"merge_method": "squash", "sha": <the decision's exact head>}
+  POST   /repos/<repo>/issues/1156/comments  an S1_LANE_MERGE_INTENT_v1, S1_LANE_MERGE_v1, S1_LANE_HALTED, S1_OP_DONE_v1,
+                                             S1_HEARTBEAT_v1, S1_FALLBACK_CANDIDATE_v1, S1_CODEX_RECALL_PENDING_v1 or
+                                             S1_CODEX_RECALL_CLEARED_v1 on the owner ledger
+  PUT    /repos/<repo>/pulls/<n>/merge       {"merge_method": "squash", "sha": <the decision's exact head>}
+  POST   /repos/<repo>/issues/<n>/labels     the ONE label codex-recall-pending, on the PR this run merged by the fallback
+  DELETE /repos/<repo>/issues/<n>/labels/codex-recall-pending   after this run itself read Codex's completed review
+
+Review route (owner decision 2026-11-25): a merge needs the completed Codex review, a Claude exact-head APPROVE receipt
+on the PR, or the Codex-offline fallback. The fallback is TWO executor runs: the first posts S1_FALLBACK_CANDIDATE_v1
+with a hash of what it derived; a later run (another run id, at least 50 minutes on, the candidate proven to be an
+executor run's) derives everything again from its own reads and merges only when its hash is equal. Such a merge is
+flagged for Codex to revisit (ledger receipt and label) until Codex's completed review of that head.
 A merge is ONE per run, always intent first, readback after, receipt or halt last (EVIDENCE_BINDINGS B3, C9, C10).
 ONE attempt per PR head, ever: a refused or failed merge is never retried at that head (a new commit is a new head).
 
@@ -36,11 +45,12 @@ import s1_decision_v1 as D  # noqa: E402
 import s1_tick_brief_v1 as B  # noqa: E402
 
 EXECUTE_API_CALLS = 150                # this job's own cap (the build is capped at 300; one PR in depth costs about 40)
-MAX_WRITES = 6                         # heartbeat, intent, merge, receipt or halt, and at most two reconcile records
+MAX_WRITES = 8                         # heartbeat, one recall clear (receipt, label), intent, merge, receipt or halt, recall flag (receipt, label)
 RECONCILES_PER_RUN = 3                 # EVIDENCE_BINDINGS op_reconciles_per_run
 MAX_ATTEMPTS_PER_HEAD = 1              # merge intents per PR head, ever: a refused merge is NOT retried, that head is the owner's
 EVENTS = ("schedule", "workflow_dispatch")
-POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1")
+POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1",
+         "S1_FALLBACK_CANDIDATE_v1", "S1_CODEX_RECALL_PENDING_v1", "S1_CODEX_RECALL_CLEARED_v1")
 MAX_POST_CHARS = 4000
 
 
@@ -104,6 +114,7 @@ class Run:
         self.brief = self.decision = None
         self.run_of = B.RunReader(gh)                             # proves which Actions-bot ledger posts are this job's
         self.alarms, self.pending = [], None                      # what makes the process exit non-zero (finish)
+        self.recall_cleared = set()                               # PRs whose recall THIS run proved cleared (the label may then go)
 
     # ---- the ONE place that writes
     def write(self, kind, **kw):
@@ -120,6 +131,17 @@ class Run:
             doc = json.loads(raw)
             self.writes.append(("comment", B.first_line_token(body), doc.get("id")))
             return doc
+        if kind == "label":                                       # the ONE label, added to the PR this run merged or removed after this run's proof
+            pr, add = kw["pr"], kw["add"]
+            need(type(pr) is int and type(add) is bool, "label_shape")
+            if add:
+                need(any(w[0] == "merge" and w[1] == pr for w in self.writes), "label_without_merge")
+                self.gh._request("POST", self.gh.url(f"issues/{pr}/labels"), {"labels": [D.RECALL_LABEL]})
+            else:
+                need(pr in self.recall_cleared, "label_without_clear")
+                self.gh._request("DELETE", self.gh.url(f"issues/{pr}/labels/{D.RECALL_LABEL}"))
+            self.writes.append(("label", "add" if add else "remove", pr))
+            return None
         need(kind == "merge" and not any(w[0] == "merge" for w in self.writes), "one_merge_per_run")
         pr, sha = kw["pr"], kw["sha"]
         need(type(pr) is int and isinstance(sha, str) and D.SHA40.fullmatch(sha) is not None, "merge_shape")
@@ -241,9 +263,11 @@ class Run:
                 rows, jc = self.gh.pages(f"actions/runs/{run['id']}/jobs", {"filter": "latest"}, key="jobs", max_pages=3)
                 jobs[run["id"]] = rows if jc else None
         ci = B.ci_tuples(head, repo_id, runs, rc, jobs, tuples)
+        ci_ids = {}
         for t in tuples:
             got = ci.get(t["job"]) or {}
             need(got.get("s") == "PASS" and [got.get("run"), got.get("att"), got.get("job")] == (m.get("ci") or {}).get(t["job"]), f"{n}:C4:ci_identity:{t['job']}")
+            ci_ids[t["job"]] = [got.get("run"), got.get("att"), got.get("job")]
         checks, k1 = self.gh.pages(f"commits/{head}/check-runs", key="check_runs", max_pages=5)
         statuses, k2 = self.gh.pages(f"commits/{head}/statuses", max_pages=3)
         need(B.checks_summary(checks, statuses, k1 and k2).get("green") is True, f"{n}:C4:checks")
@@ -261,17 +285,24 @@ class Run:
         need(B.changes_requested(reviews) is False, f"{n}:C5:changes_requested")   # on ANY commit: a push never lifts the veto
         item = B.newest_item(prc) or {}                          # the PR's S1_ITEM_v1 history as it is NOW: a risk or kind is only ever raised
         need(item.get("kind") != "DIRECTION", f"{n}:C5:strategist")
-        need(D.risk_max(floor, facts["risk"], item.get("risk")) == m.get("risk") and m.get("risk") in D.MERGE_RISKS, f"{n}:C2:risk")
+        risk = D.risk_max(floor, facts["risk"], item.get("risk"))
+        need(risk == m.get("risk") and m.get("risk") in D.MERGE_RISKS, f"{n}:C2:risk")
         author = B.authorship(pr, commits, cc, prc)
         cx = B.codex_review(head, pr, commits, cc, prc, reviews, inline, True, now, self.files["budgets"]["codex_silent_hours"])
         if author.get("codex") and cx.get("status") == "FINAL":
             cx = {"status": "INADMISSIBLE"}
+        candidates = B.fallback_candidates(comments).get((n, head), [])
         live = {"review": {"codex": cx}, "author": author,
                 "thin": {"bot": (pr.get("user") or {}).get("type") != "User", "docs_only": facts["docs_only"],
-                         "ai": B.ai_authored(pr, commits, cc, author)}}
-        gate = D.review_gate(live, brief["thin"]["review_policy"])
+                         "ai": B.ai_authored(pr, commits, cc, author), "claude": B.claude_receipt(head, prc),
+                         "claude_written": B.claude_written(pr, commits, cc), "diff_x": facts["diff_x"], "fallback_candidates": len(candidates),
+                         "fallback_mismatch": B.fallback_mismatch(candidates), "p01_named": B.p01_named(prc, reviews),
+                         "codex_limit": self.codex_limit(now) if m.get("review") == "FALLBACK(LIMIT)" else False}}
+        route, gate = D.review_route(live, brief["thin"]["review_policy"])     # the route itself is derived again, from this run's reads
         need(gate is None, f"{n}:{gate}")
-        need(("CODEX" if cx.get("status") == "FINAL" else f"NONE(policy={brief['thin']['review_policy']})") == m.get("review"), f"{n}:C8:review_changed")
+        need(route == m.get("review"), f"{n}:C8:review_changed")
+        evidence = D.fallback_evidence(n, head, risk, len(files), hashlib.sha256("\n".join(paths).encode()).hexdigest()[:16], facts["title_sha256"],
+                                       pr.get("body"), ci_ids)
         threads = B.read_threads(self.gh, n)
         need(threads is not None, f"{n}:C6:threads")
         need(not any(not t.get("resolved") and re.search(r"(?i)\bP[01]\b", t.get("first_body") or "") for t in threads), f"{n}:C6:unresolved_p0p1")
@@ -289,7 +320,49 @@ class Run:
         need("S1_LANE_MERGE_v1" not in mine, f"{n}:C9:already_done")
         need(mine.count("S1_LANE_MERGE_INTENT_v1") < MAX_ATTEMPTS_PER_HEAD and (n, head) not in B.attempted_heads(comments), f"{n}:C9:attempted_head")
         head_read()                                              # the head a SECOND time, the last read before the intent
-        return {"paths": paths, "main": main, "privacy_run": ci["privacy-scan"]["run"], "repo_id": repo_id, "health": health}
+        return {"paths": paths, "main": main, "privacy_run": ci["privacy-scan"]["run"], "repo_id": repo_id, "health": health,
+                "evidence": evidence, "candidates": candidates, "offline": route[9:-1] if route.startswith("FALLBACK(") else None}
+
+    def codex_limit(self, now):
+        """Signal LIMIT, read again: the comment the brief points to is on that PR, is Codex's, is a usage-limit answer at
+        most 24 hours old, and is still Codex's newest comment there."""
+        ev = self.brief.get("codex_evidence")
+        if not isinstance(ev, dict) or type(ev.get("pr")) is not int:
+            return False
+        rows, complete = self.gh.pages(f"issues/{ev['pr']}/comments", max_pages=10)
+        return complete and B.codex_limit_evidence({ev["pr"]: rows}, now) is not None and B.codex_limit_evidence({ev["pr"]: rows}, now)["c"] == ev.get("c")
+
+    # ---- route (c): the Codex-offline fallback needs TWO independent runs that agree
+    def fallback(self, proof):
+        """(candidate, None) when an EARLIER executor run recorded the same evidence: its S1_FALLBACK_CANDIDATE_v1 is
+        proven to be an executor run's (B.executor_post), of another run id, at least FALLBACK_MIN_GAP_MINUTES and at
+        most FALLBACK_MAX_AGE_HOURS old, and its evidence hash equals the one THIS run derived from its own reads.
+        Otherwise (None, result), and this run merges nothing. It posts its own candidate (LIVE): as a first run, as a
+        restart (the same evidence, but the earlier candidate is expired, unproven or this run's own), or as the record
+        of a MISMATCH (the runs disagree: two different hashes on the ledger park the head from then on, in the brief
+        and in verify_merge). An agreeing candidate that is simply too young is waited for; a head that used up its
+        candidates is PARK."""
+        d, m, now, run_id = self.decision, self.decision["merge"], self.now_fn(), self.env.get("GITHUB_RUN_ID")
+        newest = proof["candidates"][-1] if proof["candidates"] else None
+        why = "first_run"
+        if newest is not None:
+            age = (now - B.stamp(newest["created_at"])).total_seconds() / 60
+            agrees = (B.fields(newest.get("body")).get("evidence") or "").strip() == proof["evidence"]
+            other_run = str(B.executor_run(newest.get("body"))) != str(run_id)
+            if not agrees:
+                why = "mismatch"
+            elif other_run and 0 <= age <= D.FALLBACK_MAX_AGE_HOURS * 60 and B.executor_post(newest, self.run_of, now):
+                if age >= D.FALLBACK_MIN_GAP_MINUTES:
+                    return newest, None
+                return None, f"FALLBACK_WAITING(pr={m['pr']},age_min={int(age)})"
+            else:
+                why = "restart"
+        need(len(proof["candidates"]) < D.FALLBACK_MAX_CANDIDATES, f"{m['pr']}:C5:fallback_parked:candidates")
+        if self.mode != "LIVE":
+            return None, f"WOULD_POST_FALLBACK_CANDIDATE(pr={m['pr']},head={m['sha'][:8]},{why})"
+        self.write("comment", body=D.candidate_body(d, proof["evidence"], proof["offline"], len(proof["candidates"]) + 1, run_id))
+        kind = "FALLBACK_MISMATCH" if why == "mismatch" else "FALLBACK_CANDIDATE"
+        return None, f"{kind}(pr={m['pr']},head={m['sha'][:8]},n={len(proof['candidates']) + 1},{why})"
 
     def readback(self, n, head, intent_at, paths, actor=B.ACTIONS_BOT["login"]):
         pr = self.gh.get(f"pulls/{n}")
@@ -308,6 +381,11 @@ class Run:
         d, m = self.decision, self.decision["merge"]
         proof = self.verify_merge(comments)
         self.last_look()
+        first = None
+        if m["review"].startswith("FALLBACK("):                   # never a merge in the run that first saw the PR qualify
+            first, waiting = self.fallback(proof)
+            if first is None:
+                return waiting
         if self.mode != "LIVE":
             return f"WOULD_MERGE(pr={m['pr']},head={m['sha'][:8]},risk={m['risk']},review={m['review']})"
         run_id = self.env.get("GITHUB_RUN_ID")
@@ -327,6 +405,12 @@ class Run:
         if state == "MATCH":
             self.write("comment", body=D.merge_receipt_body(d, proof["repo_id"], intent.get("id"), rb, run_id, proof["privacy_run"]))
             self.pending = None
+            if first is not None:                                 # a fallback merge: flagged for Codex's revisit (the receipt above already says FALLBACK)
+                try:
+                    self.write("comment", body=D.recall_pending_body(d, rb["merge_commit"], first.get("id"), B.executor_run(first.get("body")), run_id))
+                    self.write("label", pr=m["pr"], add=True)
+                except Exception as exc:                          # noqa: BLE001  (the recall stays on the ledger through the merge receipt)
+                    self.alarms.append(f"recall_flag_incomplete({type(exc).__name__})")
             return f"MERGED(n=1,main={str(rb['main_after'])[:8]})"
         if state == "MISMATCH":
             self.write("comment", body=D.halt_body("readback", pr=m["pr"], head=m["sha"], detail=why, contract=d["contract"], run_id=run_id))
@@ -356,7 +440,8 @@ class Run:
                 records.append(f"WOULD_RECONCILE({it['id']}:{state})")
                 continue
             if state == "MATCH":
-                old = {"id": f.get("decision"), "run_id": f.get("brief"), "main": (f.get("main") or "").strip() or None, "contract": contract, "merge": None}
+                old = {"id": f.get("decision"), "run_id": f.get("brief"), "main": (f.get("main") or "").strip() or None, "contract": contract,
+                       "merge": {"review": (f.get("review") or "unavailable").strip()}}      # a fallback merge keeps its recall (B.recalls)
                 self.write("comment", body=D.merge_receipt_body(old, self.brief["repo"]["id"], it["id"], rb, run_id, None, reconciled=True) + "\nevidence_gap: review, privacy, ci, main_health")
                 return f"RECONCILED(c={it['id']})"
             if state == "MISMATCH":
@@ -402,6 +487,31 @@ class Run:
         self.write("comment", body=D.halt_body("main_health", run=h["run"], contract=d["contract"], run_id=run_id))
         return "LANE_HALTED(main_health)"
 
+    # ---- CODEX RECALL: bookkeeping, never the action; at most one clear per run
+    def recall(self, comments):
+        """When the brief shows Codex's completed review of a recalled head: read that PR's review state again, natively,
+        and only then clear the flag (the ledger receipt, then the label)."""
+        pending = {(r["pr"], r["head"]) for r in B.recalls(comments)}
+        for item in (self.brief.get("recall") or {}).get("items") or []:
+            if not isinstance(item, dict) or item.get("codex") != "FINAL" or (item.get("pr"), item.get("head")) not in pending:
+                continue
+            now, n, head = self.now_fn(), item["pr"], item["head"]
+            cx = B.codex_review(head, {}, *(lambda r: (r["commits"], r["commits_complete"], r["comments"], r["reviews"], r["inline"], r["complete"]))(B.read_recall(self.gh, n)),
+                                now, self.files["budgets"]["codex_silent_hours"])
+            if cx.get("status") != "FINAL":
+                return f"RECALL_NOT_PROVEN(pr={n},{cx.get('status')})"
+            if self.mode != "LIVE":
+                return f"WOULD_CLEAR_RECALL(pr={n})"
+            self.write("comment", body=D.recall_cleared_body(n, head, cx.get("requested_at"), self.decision["contract"], self.env.get("GITHUB_RUN_ID")))
+            self.recall_cleared.add(n)
+            try:
+                self.write("label", pr=n, add=False)
+            except urllib.error.HTTPError as exc:
+                if exc.code != 404:                              # 404: the label was not on the PR
+                    self.alarms.append(f"recall_label_remove_failed({exc.code})")
+            return f"RECALL_CLEARED(pr={n})"
+        return None
+
     # ---- HEARTBEAT: observability, never the action
     def heartbeat(self, comments):
         now = self.now_fn()
@@ -443,6 +553,9 @@ class Run:
             beat = self.heartbeat(comments)
             if beat:
                 self.say(f"S1_EXECUTOR_HEARTBEAT {beat}")
+            cleared = self.recall(comments)
+            if cleared:
+                self.say(f"S1_EXECUTOR_RECALL {cleared}")
             if d["action"] == "HALT":
                 return end("NOOP", None, None, self.do_halt(comments))
             if d["action"] == "MERGE":

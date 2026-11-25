@@ -31,8 +31,24 @@ OBSERVER_VERSION = "S1_OBSERVER_v10"       # the read-only ChatGPT task text thi
 MAX_AGE_MINUTES = 45                       # a decision older than this is never acted on and never reported as current
 EXECUTE_MAX_AGE_MINUTES = 20               # the executor runs in the build's own workflow run: an older decision is a re-run
 EXECUTOR_MODES = ("OFF", "SHADOW", "LIVE")
-REVIEW_POLICIES = ("CODEX_FINAL_REQUIRED", "NATIVE_GATES")
+REVIEW_POLICIES = ("CODEX_FINAL_REQUIRED", "CODEX_CLAUDE_OR_OFFLINE_RECALL", "NATIVE_GATES")
 NO_REVIEW_STATES = ("NONE", "UNAVAILABLE", "SILENT", "INADMISSIBLE")   # codex_review(): read completely, and no completed review
+# Owner decision 2026-11-25 (review route, Codex recall). The gate passes on (a) the completed Codex review of the exact
+# head, (b) a Claude exact-head APPROVE receipt, or (c) the Codex-offline fallback: two independent executor runs that
+# agree, and a merge that is flagged for Codex to revisit. (c) applies only when Codex is DEMONSTRABLY unavailable, by
+# evidence read natively, by the build and again by the executor:
+#   UNAVAILABLE  someone asked "@codex review" after this head's last commit and Codex answered with a usage limit;
+#   SILENT       someone asked after this head's last commit and Codex did not answer within 24 hours;
+#   LIMIT        nobody asked Codex about this head, and Codex's NEWEST comment on any open PR the build read is a
+#                usage-limit answer that is at most 24 hours old (Codex itself says it has no usage).
+# No repository variable can switch the fallback on. A request that is pending inside its 24 hours is never "offline".
+RECALL_POLICY = "CODEX_CLAUDE_OR_OFFLINE_RECALL"
+CODEX_OFFLINE_STATES = ("UNAVAILABLE", "SILENT")
+FALLBACK_MIN_GAP_MINUTES = 50              # the second run starts at least this long after the first run's candidate receipt
+FALLBACK_MAX_AGE_HOURS = 24                # an older candidate has expired: the count starts again
+FALLBACK_MAX_CANDIDATES = 3                # candidate receipts per PR head, ever; then the head is parked for the owner
+RECALL_LABEL = "codex-recall-pending"      # on every PR merged by the fallback, until Codex's completed review of that head
+REVIEW_ROUTE = re.compile(r"CODEX|CLAUDE|FALLBACK\((?:UNAVAILABLE|SILENT|LIMIT)\)|NONE\(policy=NATIVE_GATES\)")
 EXECUTOR_ACTIONS = ("MERGE", "HALT")       # what the executor may do; a heartbeat is observability, never the action
 MERGE_RISKS = ("LOW", "MEDIUM")            # HIGH, HIGH_IMPACT, EXTREME, unclear and OWNER_GATED are never executor merges
 RISK_ORDER = ("LOW", "MEDIUM", "HIGH", "HIGH_IMPACT", "EXTREME", "UNCLEAR", "OWNER_GATED")
@@ -43,7 +59,8 @@ HOLD_LABELS = ("s1-hold", "hold", "on-hold", "do-not-merge", "dnm", "owner-gated
 TITLE_HOLD = re.compile(r"(?i)^[\s\[\(]*(draft|wip|do[ _-]?not[ _-]?merge|dnm|hold)(?![A-Za-z])")   # a title that says "not yet"
 # gates that are the executor's own policy: a PR that only these hold is finished work that waits for the owner's merge
 OWNER_ROUTE_GATES = ("C2:judgment:", "C2:risk:", "C2:push_trigger:", "C2:shrinks:", "C5:strategist", "C5:bot_authored", "C5:s1_authored",
-                     "C5:codex_authored", "C5:ai_authored", "C5:review_required", "C5:codex_final_required", "C9:attempted_head")
+                     "C5:codex_authored", "C5:ai_authored", "C5:review_required", "C5:codex_final_required", "C9:attempted_head",
+                     "C5:claude_authored", "C5:fallback_parked:")
 ORIGIN_WINDOW_MINUTES = 15                 # EVIDENCE_BINDINGS s1_origin_window_minutes: merged_at within this of the intent
 CPH = ZoneInfo("Europe/Copenhagen")
 SHA40 = re.compile(r"[0-9a-f]{40}")
@@ -104,10 +121,43 @@ JUDGMENT = {
     # exclusion 8: Round 3
     "x8": re.compile(r"(?i)round[_ -]?3|round[_ -]?three|" + r"(?<![A-Za-z0-9])r3(?![A-Za-z0-9])"),
 }
-# The lists that are also matched on the PR BODY (the title and every path always get all four). All four: a body
-# that announces money, credential, privacy-boundary or Round 3 scope is the owner's. This is the widest net of the
-# section: most PR bodies of this repository restate the hard lines ("no paid API", "no trading") and so match.
-BODY_LISTS = ("x4", "x5", "x6", "x8")
+# The PR BODY (fix round 2). The title and every path get the four word lists above. A body is prose, and most bodies of
+# this repository restate the hard lines ("no paid API", "no live trading", "public-safe"): the word lists matched 280 of
+# 283 merged PRs on their body alone. So the body is matched with its own, narrower patterns: a positive-action phrase
+# ("enables live trading", "places orders"), a strong identifier (send_transaction, private key, .env) or Round 3, and
+# never inside a sentence that negates or disclaims it ("no ...", "not ...", "never ...", "without ...", "... unchanged").
+# The public/private list (x6) is not matched on the body at all. Best effort, like every list here.
+_ACT = (r"(?:enabl\w+|activat\w+|turn\w*\W+on|switch\w*\W+on|go(?:es|ing)?\W+live|start\w*|begin\w*|plac\w+|execut\w+|submit\w+|send\w*|broadcast\w*"
+        r"|sign\w*|mov\w+|transfer\w*|withdraw\w*|deposit\w*|spend\w*|pay\w*|rais\w+|increas\w+|buy\w*|sell\w*)")
+_OBJ = r"(?:trading|trades?|orders?|swaps?|funds?|money|transactions?|payments?|wallets?|spend(?:ing)?\W+caps?|budgets?|paid\W+apis?)"
+BODY_PATTERNS = {
+    "x4": re.compile(r"(?i)private[_ -]?keys?|secret[_ -]?keys?|signing[_ -]?keys?|seed[_ -]?phrases?|mnemonic|key[_ -]?pairs?|api[_ -]?keys?|access[_ -]?tokens?"
+                     r"|bearer[_ -]?tokens?|passw(?:or)?ds?|credentials?|\.env(?![A-Za-z0-9])|\.pem(?![A-Za-z0-9])|id_(?:rsa|dsa|ecdsa|ed25519)"),
+    "x5": re.compile(r"(?i)" + _W + _ACT + r"\W+(?:\w+\W+){0,4}?" + _OBJ + _E
+                     + r"|live\W+(?:trading|orders?|execution|funds?|money)|real\W+(?:funds|money)|auto\W?trading|order\W+execution|fund\W+movement"
+                     r"|send[_ ]?(?:raw[_ ]?)?transaction|sign[_ ]?transaction|(?:place|create|submit|cancel)[_ ]?orders?|execute[_ ]?(?:trade|swap|order)s?"),
+    "x8": JUDGMENT["x8"],
+}
+BODY_LISTS = tuple(BODY_PATTERNS)
+_SENTENCE_END = re.compile(r"[.;!?](?=\s|$)|\n")           # a full stop ends a sentence only before a space: ".env" and "a.py" stay whole
+_NEGATION = re.compile(r"(?i)" + _W + r"(?:no|not|never|without|non|none|neither|nor|cannot|zero)" + _E + r"|n't")
+_DISCLAIMER = re.compile(r"(?i)" + _W + r"(?:unchanged|untouched|unaffected|excluded|forbidden|prohibited|firewall)" + _E + r"|out\W+of\W+scope")
+
+
+def body_hits(body):
+    """The lists a PR body matches (see BODY_PATTERNS): sentence by sentence, in both word forms, skipping a match that
+    a negation precedes in its sentence and every sentence that disclaims ("... unchanged", "out of scope")."""
+    hits = set()
+    for sentence in _SENTENCE_END.split(str(body or "")):
+        if _DISCLAIMER.search(sentence):
+            continue
+        for form in word_forms(sentence).split("\n"):
+            for code, rx in BODY_PATTERNS.items():
+                if code not in hits and any(not _NEGATION.search(form[:m.start()]) for m in rx.finditer(form)):
+                    hits.add(code)
+    return sorted(hits)
+
+
 NAMED_HIGH = re.compile(r"(?i)high[_ -]?impact|" + _W + r"extreme" + _E + r"|owner[_ -]?gated")
 DIRECTION_WORDS = re.compile(r"(?i)roadmap|priorit|master[_ -]?plan|" + _W + r"mission" + _E + r"|strateg|deprecat|" + _W + r"remov(?:e|es|ed|al|ing)" + _E
                              + r"|sunset|retire|" + _W + r"new[_ -]?(?:program|producer|consumer)" + _E)
@@ -352,12 +402,17 @@ def entry_facts(pr, files, files_complete, push_filters):
             removed_code = True
         if name.lower().endswith(BINARY_SUFFIXES) and f.get("status") != "removed":
             binary.append(name)
-    x, title_forms, body_forms = [], word_forms(title), word_forms(body)
+    x, title_forms, body_forms = [f"{code}:body" for code in body_hits(body)], word_forms(title), word_forms(body)
+    # the diff itself, for the fallback route only (review_route): which lists the ADDED lines of non-document files match
+    diff_x = set()
+    for f in files or []:
+        if not str(f.get("filename") or "").lower().endswith(DOC_SUFFIXES):
+            added = "\n".join(line[1:] for line in str(f.get("patch") or "").splitlines() if line.startswith("+") and not line.startswith("+++"))
+            forms = word_forms(added)                             # the word lists of a path AND the strong identifiers of a body (send_transaction)
+            diff_x |= {code for code in BODY_LISTS if JUDGMENT[code].search(forms) or BODY_PATTERNS[code].search(forms)}
     for code, rx in JUDGMENT.items():
         if rx.search(title_forms):
             x.append(f"{code}:title")
-        if code in BODY_LISTS and rx.search(body_forms):
-            x.append(f"{code}:body")
         x += [f"{code}:{p}" for p in paths if rx.search(word_forms(p))]
     if NAMED_HIGH.search(title_forms) or NAMED_HIGH.search(body_forms):
         x.append("x9:named_high_impact")
@@ -373,41 +428,70 @@ def entry_facts(pr, files, files_complete, push_filters):
             "direction": bool(removed_code or DIRECTION_WORDS.search(title_forms) or any(DIRECTION_WORDS.search(word_forms(p)) for p in paths)),
             "hold_labels": held[:3],
             "docs_only": bool(files_complete and paths and all(doc_path(p) for p in paths)),
+            "diff_x": sorted(diff_x) if files_complete else ["unknown"],
             "push": push_trigger_matches(paths, push_filters)[:4] if files_complete else ["unknown"],
             "title_sha256": sha16(title)}
 
 
-def review_gate(e, policy):
-    """Gate (d) as the switch states it, GitHub-native only (no Bridge, no Claude receipt). Findings and an unanswered
-    request block under every policy. The completed Codex review of a head Codex did not write (status FINAL) passes
-    under every policy. With no completed review, CODEX_FINAL_REQUIRED never passes, and NATIVE_GATES passes only a
-    PR that nothing marks as written by S1, Codex, another AI or a bot AND that changes documents only (doc_path):
-    code is never merged unreviewed, and automation never merges automation's own PR unreviewed. Every fact is read
-    fail closed: a missing or unknown value is the blocking one."""
+def review_route(e, policy):
+    """Gate (d) as the switch states it. Returns (route, None) when the review gate passes, else (None, gate).
+    Routes: CODEX (the completed Codex review of a head Codex did not write), CLAUDE (a Claude exact-head APPROVE
+    receipt, RECALL_POLICY only), FALLBACK(<state>) (the Codex-offline fallback, RECALL_POLICY only) and
+    NONE(policy=NATIVE_GATES) (a plain document nobody marked as AI- or bot-written). Findings and an unanswered request
+    block under every policy. Every fact is read fail closed: a missing or unknown value is the blocking one."""
     cx = ((e.get("review") or {}).get("codex") or {}).get("status")
     author = e.get("author") if isinstance(e.get("author"), dict) else {}
     thin = e.get("thin") if isinstance(e.get("thin"), dict) else {}
+    recall = policy == RECALL_POLICY
     if cx == "FINDINGS":
-        return "C5:codex_findings"
+        return None, "C5:codex_findings"
     if cx == "REQUESTED":
-        return "C5:codex_review_pending"
+        return None, "C5:codex_review_pending"
+    if recall and thin.get("claude") not in ("NONE", "APPROVE"):
+        return None, "C5:claude_veto" if thin.get("claude") == "VETO" else "C5:review_unreadable"   # a Claude refusal blocks every route
     if cx == "FINAL":
-        return None if author.get("codex") is False else "C5:codex_authored"   # Codex never reviews its own head
+        return ("CODEX", None) if author.get("codex") is False else (None, "C5:codex_authored")   # Codex never reviews its own head
     if cx not in NO_REVIEW_STATES:
-        return "C5:review_unreadable"                             # NOT_PROVEN, missing, or a status this code does not know
+        return None, "C5:review_unreadable"                       # NOT_PROVEN, missing, or a status this code does not know
+    if recall:
+        if thin.get("claude") == "APPROVE":                       # (b): never Claude's review of a head Claude wrote
+            return ("CLAUDE", None) if thin.get("claude_written") is False else (None, "C5:claude_authored")
+        offline = cx if cx in CODEX_OFFLINE_STATES else "LIMIT" if cx == "NONE" and thin.get("codex_limit") is True else None
+        if offline is None:
+            return None, "C5:codex_review_required"               # (c) needs proof that Codex is unavailable: ask Codex
+        if author.get("s1") is not False:
+            return None, "C5:s1_authored"                         # automation's own work is never merged by automation's own runs alone
+        if author.get("codex") is not False:
+            return None, "C5:codex_authored"                      # Codex could never clear the recall of a head it wrote
+        if thin.get("bot") is not False:
+            return None, "C5:bot_authored"
+        if thin.get("diff_x") != []:
+            return None, "C5:fallback_parked:diff_words"          # the diff itself holds a credential, money or Round 3 word: uncertain, PARK
+        if thin.get("p01_named") is not False:
+            return None, "C5:fallback_parked:p0p1_comment"        # someone wrote P0 or P1 on the PR and no reviewer has read the head: PARK
+        if thin.get("fallback_mismatch") is not False:
+            return None, "C5:fallback_parked:mismatch"            # two runs derived different evidence for this head, or unknown: PARK
+        n = thin.get("fallback_candidates")
+        if type(n) is not int or n >= FALLBACK_MAX_CANDIDATES:
+            return None, "C5:fallback_parked:candidates"          # candidates used up without a merge, or the count is unknown: PARK
+        return f"FALLBACK({offline})", None
     if policy != "NATIVE_GATES":
-        return "C5:codex_final_required"
+        return None, "C5:codex_final_required"
     if author.get("s1") is not False:
-        return "C5:s1_authored"
+        return None, "C5:s1_authored"
     if author.get("codex") is not False:
-        return "C5:codex_authored"
+        return None, "C5:codex_authored"
     if author.get("claude_package") is not False or thin.get("ai") is not False:
-        return "C5:ai_authored"
+        return None, "C5:ai_authored"
     if thin.get("bot") is not False:
-        return "C5:bot_authored"
+        return None, "C5:bot_authored"
     if thin.get("docs_only") is not True:
-        return "C5:review_required"
-    return None
+        return None, "C5:review_required"
+    return "NONE(policy=NATIVE_GATES)", None
+
+
+def review_gate(e, policy):
+    return review_route(e, policy)[1]
 
 
 def pr_gates(e, cfg, intent_prs=()):
@@ -421,7 +505,9 @@ def pr_gates(e, cfg, intent_prs=()):
     lane = e.get("lane") or {}
     if thin is None:
         gates.append("C2:facts_not_in_brief")
-        thin = {"x": [], "risk": "UNCLEAR", "direction": True, "hold_labels": [], "push": ["unknown"], "docs_only": False, "ai": True}
+        thin = {"x": [], "risk": "UNCLEAR", "direction": True, "hold_labels": [], "push": ["unknown"], "docs_only": False, "ai": True,
+                "claude": "NOT_PROVEN", "claude_written": True, "diff_x": ["unknown"], "fallback_candidates": None, "fallback_mismatch": True,
+                "codex_limit": False, "p01_named": True}
     if "paths" not in e:
         gates.append("C2:paths_not_in_brief")
     for x in (thin.get("x") or [])[:2]:
@@ -501,7 +587,7 @@ def decide(brief, now=None):
             "generated_at": iso(made) if made else None, "expires_at": iso(expires_at(made)) if made else None,
             "main": main, "contract_blob": pins.get("contract_blob"), "pins_ok": pins.get("ok") is True,
             "observer": OBSERVER_VERSION, "executor": cfg["executor"], "review_policy": cfg["review_policy"],
-            "heartbeat": {"due": False}, "advice": [], "status_lines": list(lines), "contract": contract8}
+            "heartbeat": {"due": False}, "advice": [], "status_lines": list(lines), "contract": contract8, "recall": {"pending": None}}
 
     def done(d):
         pr, h8 = (d["pr"] if d["pr"] is not None else "-"), (d["head"][:8] if d.get("head") else "-")
@@ -525,6 +611,23 @@ def decide(brief, now=None):
     base["heartbeat"] = {"due": b.get("heartbeat_due") is True and ledger.get("read") is True}
     base["advice"] = [{k: x.get(k) for k in ("action", "pr", "head", "how", "reason") if x.get(k) is not None}
                       for x in (b.get("ranked") or b.get("next") or []) if isinstance(x, dict) and x.get("action") in ("REQUEST_REVIEW", "REPAIR")][:3]
+    # Codex recall (owner decision 2026-11-25): every fallback merge waits for Codex's completed review of its head.
+    recall = b.get("recall") if isinstance(b.get("recall"), dict) else {}
+    items = [i for i in (recall.get("items") or []) if isinstance(i, dict) and type(i.get("pr")) is int and SHA40.fullmatch(str(i.get("head") or ""))]
+    base["recall"] = {"pending": recall.get("pending") if type(recall.get("pending")) is int else None}
+    if (b.get("codex") or {}).get("available") is True:           # Codex answers again: ask it to review each pending merged head
+        base["advice"] += [{"action": "REQUEST_REVIEW", "pr": i["pr"], "head": i["head"], "how": "CODEX_RECALL"}
+                           for i in items if i.get("codex") in ("NONE", "SILENT", "UNAVAILABLE")][:3]
+    notes = []
+    if base["recall"]["pending"] != 0:
+        notes.append(f"CODEX_RECALL_PENDING({base['recall']['pending'] if base['recall']['pending'] is not None else 'UNKNOWN'}): "
+                     + (" ".join(f"#{i['pr']}" for i in items[:6]) or "-"))
+    findings = [i for i in items if i.get("codex") == "FINDINGS"]
+    if findings:
+        notes.append("CODEX_RECALL_FINDINGS: " + " ".join(f"#{i['pr']} {i['head'][:8]}" for i in findings[:4]) + " (revert or fix required)")
+    if notes:
+        first = base["status_lines"][0]
+        base["status_lines"] = [first + " ; " + " ; ".join(notes)] + base["status_lines"][1:]
 
     # 1. HALT: a commit on main that is not a squash merge and changed code (C1b), then a failed main-health run after
     #    a lane merge (C7). A halt is the decision's action; nothing merges in a decision that halts.
@@ -576,9 +679,8 @@ def decide(brief, now=None):
     if chosen is not None:
         e = chosen
         ci = (e.get("ci") or {}).get("tuples") or {}
-        cx = ((e.get("review") or {}).get("codex") or {})
         merge = {"pr": e["n"], "sha": e["head"], "merge_method": "squash", "risk": pr_risk(e),
-                 "review": "CODEX" if cx.get("status") == "FINAL" else f"NONE(policy={cfg['review_policy']})",
+                 "review": review_route(e, cfg["review_policy"])[0],
                  "files": e.get("files"), "paths_sha256": e.get("paths_sha256"), "title_sha256": (e.get("thin") or {}).get("title_sha256"),
                  "ci": {name: [t.get("run"), t.get("att"), t.get("job")] for name, t in sorted(ci.items())},
                  "health_run": health.get("run_id")}
@@ -598,7 +700,9 @@ def observer_print(d, ledger=None):
     did according to the ledger the brief read, S1_ROUTES, and the S1_TICK line last)."""
     last = (ledger or {}).get("last_action") if isinstance(ledger, dict) else None
     did = f"{last.get('action')}@{last.get('at')}(c={last.get('id')})" if isinstance(last, dict) else "NONE"
-    return list(d["status_lines"]) + [f"S1_EXECUTOR mode={d['executor']} last_action={did}", "S1_ROUTES ok", d["tick"]]
+    pending = (d.get("recall") or {}).get("pending")
+    return list(d["status_lines"]) + [f"S1_EXECUTOR mode={d['executor']} last_action={did} recall_pending={pending if pending is not None else 'UNKNOWN'}",
+                                      "S1_ROUTES ok", d["tick"]]
 
 
 # ----------------------------------------------------------------------------------------------- the block
@@ -623,8 +727,13 @@ def decision_schema_ok(d):
     if not (isinstance(out, list) and len(out) == 6 and all(isinstance(x, str) for x in out) and out[:3] == lines
             and out[3].startswith("S1_EXECUTOR ") and out[4] == "S1_ROUTES ok" and out[5] == d["tick"]):
         return False
+    recall = d.get("recall")
+    if not isinstance(recall, dict) or not (recall.get("pending") is None or (type(recall.get("pending")) is int and recall["pending"] >= 0)):
+        return False
     if d["action"] == "MERGE":
         m = d.get("merge")
+        if not (isinstance(m, dict) and isinstance(m.get("review"), str) and REVIEW_ROUTE.fullmatch(m["review"])):
+            return False
         return (isinstance(m, dict) and type(m.get("pr")) is int and m.get("pr") == d.get("pr") and isinstance(m.get("sha"), str)
                 and SHA40.fullmatch(m["sha"]) is not None and m["sha"] == d.get("head") and m.get("merge_method") == "squash"
                 and m.get("risk") in MERGE_RISKS and d.get("halt") is None and d.get("pins_ok") is True and d.get("main") is not None)
@@ -716,6 +825,35 @@ def merge_receipt_body(decision, repo_id, intent_id, readback, run_id, privacy_r
         f"item: pr:{readback['pr']} state: MERGED", "closure: OBSERVING", f"contract={decision.get('contract')}", f"task: {TASK_ID}"])
 
 
+def fallback_evidence(pr, head, risk, files, paths_sha256, title_sha256, body, ci):
+    """What one fallback run derived about the PR, from ITS OWN native reads, as one hash. Two runs agree when the hashes
+    are equal: the same head, the same file set, title and body, the same risk class, the same CI runs and jobs. The
+    Codex-offline signal is not part of it: every run has to prove that for itself, and the signal may differ."""
+    doc = {"pr": pr, "head": head, "risk": risk, "files": files, "paths_sha256": paths_sha256, "title_sha256": title_sha256,
+           "body_sha256": sha16(body), "ci": ci}
+    return hashlib.sha256(json.dumps(doc, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:32]
+
+
+def candidate_body(decision, evidence, offline, n, run_id):
+    m = decision["merge"]
+    return "\n".join(["S1_FALLBACK_CANDIDATE_v1", f"pr: {m['pr']}", f"head: {m['sha']}", f"main: {decision['main']}", f"evidence: {evidence}",
+                      f"risk: {m['risk']}", f"offline: {offline}", f"candidate_n: {n}", f"decision={decision['id']}",
+                      f"executor: GITHUB run={run_id}", f"contract={decision['contract']}", f"task: {TASK_ID}"])
+
+
+def recall_pending_body(decision, merge_commit, candidate_id, first_run, run_id):
+    m = decision["merge"]
+    return "\n".join(["S1_CODEX_RECALL_PENDING_v1", f"pr: {m['pr']}", f"head: {m['sha']}", f"merge: {merge_commit}", f"runs: {first_run},{run_id}",
+                      f"candidate: {candidate_id}", f"label: {RECALL_LABEL}", f"review: {m['review']}",
+                      "clears_on: the completed Codex review of this head", f"executor: GITHUB run={run_id}",
+                      f"contract={decision['contract']}", f"task: {TASK_ID}"])
+
+
+def recall_cleared_body(pr, head, requested_at, contract, run_id):
+    return "\n".join(["S1_CODEX_RECALL_CLEARED_v1", f"pr: {pr}", f"head: {head}", f"codex_review_requested_at: {requested_at}",
+                      "codex: FINAL", f"executor: GITHUB run={run_id}", f"contract={contract}", f"task: {TASK_ID}"])
+
+
 def halt_body(reason, pr=None, head=None, commit=None, run=None, detail=None, contract="-", run_id=None):
     lines = [f"S1_LANE_HALTED PR={pr if pr is not None else '-'} head={head or '-'}", f"reason: {reason}"]
     if commit:
@@ -745,6 +883,7 @@ def heartbeat_body(decision, brief, ticks_24h, mode, run_id):
         f"brief={decision.get('run_id')} brief_state=OK executor=GITHUB mode={mode} run={run_id}",
         f"decision: {decision.get('tick')}",
         f"c1b_gap={'window=' + str(gap.get('window')) if gap.get('from_unknown') is True else 'NONE'}",
+        f"codex_recall_pending={(decision.get('recall') or {}).get('pending') if (decision.get('recall') or {}).get('pending') is not None else 'UNKNOWN'}",
         "S1_OPEN_WORK_INDEX_v1 UNKNOWN(not_built_by_the_executor)", f"task: {TASK_ID}"])
 
 
