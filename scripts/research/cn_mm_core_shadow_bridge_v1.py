@@ -761,12 +761,96 @@ def publish_packet(packet_path, freeze_file, head, output_dir):
     return target
 
 
+def synthesize_relative_hypothesis(feature, learning_delivery, binding_status):
+    """CN decision-side research synthesis; no C2 issuance or price mutation.
+
+    C06 is a frozen conjunction, not a forecast. The draft C2 prereg permits
+    positive relative tilt only if C06 true, zero tilt if false, abstention if
+    unavailable. Compare direction vocabulary only with an explicit 7d
+    ETHBTC model hypothesis. Model input shares these signals, so compatibility
+    is neither independent confirmation nor same-clock statistical agreement.
+    Longer horizons, BTC/ETH absolute directions and model target magnitudes
+    cannot be substituted for that registered weekly relative hypothesis.
+    """
+    base={"contract":"CN_MM_RELATIVE_HYPOTHESIS_SYNTHESIS_v1",
+          "authority":"RESEARCH_ONLY_NON_CANONICAL",
+          "status":"UNKNOWN","reason":"VERIFIED_SHARED_FEATURE_REQUIRED",
+          "c06_permission":None,"relative_tilt_hypothesis":"ABSTAIN",
+          "mm_7d_ethbtc_direction":None,"directional_compatibility":"NOT_COMPARABLE",
+          "required_followup":"RECOVER_MATCHED_SOURCE_FEATURE",
+          "feature_sha256":None,"gateway_output_sha256":None,
+          "horizon_days":7,"independent_confirmation":False,
+          "matched_target_clock_verified":False,"scientific_pit_eligible":False,
+          "c2_issued":False,"official_forecast_effect":False,"portfolio_execution":False}
+    try:
+        if binding_status!="MATCHED_MM_CALIBRATION_FEATURE" or not isinstance(feature,dict):
+            return base
+        fd=feature.get("feature_sha256")
+        if (feature.get("contract")!="CN_MM_SHARED_INTELLIGENCE_FEATURE_v1"
+                or feature.get("status")!="SOURCE_REPLAYED_OBSERVATION_ONLY"
+                or feature.get("authority")!="RESEARCH_ONLY_NON_CANONICAL"
+                or any(feature.get(k) is not False for k in ("scientific_pit_eligible","forecast_authority","canonical_effect","portfolio_execution"))
+                or feature.get("independent_first_known_utc") is not None
+                or fd!=sha(canon({k:v for k,v in feature.items() if k!="feature_sha256"}))):
+            return base
+        candidates=feature["frozen_candidates"]
+        if set(candidates)!=set(CORE) or any(type(v) is not bool for v in candidates.values()):
+            return base
+        breadth=feature["families"]["BREADTH_SURVIVAL"]
+        dominance=feature["families"]["BTCD_PATH_RECLAIM"]
+        c2=feature["models"]["C2"]
+        permission=candidates["C06_BREADTH_BTCD"]
+        if (breadth.get("status")!="SOURCE_REPLAYED" or dominance.get("status")!="SOURCE_REPLAYED"
+                or breadth.get("permission") is not candidates["C02_BREADTH"]
+                or dominance.get("permission") is not candidates["C03_BTCD"]
+                or permission is not (candidates["C02_BREADTH"] and candidates["C03_BTCD"])
+                or c2.get("observed_c06_permission") is not permission
+                or c2.get("status")!="BLOCKED_PENDING_REVIEWED_ACTIVATION_AND_KNOWN_BY"
+                or c2.get("issued") is not False):
+            return base
+        out={**base,"status":"OBSERVED_SIGNAL_HYPOTHESIS_ONLY","reason":None,
+             "feature_sha256":fd,"c06_permission":permission,
+             "relative_tilt_hypothesis":"POSITIVE_RELATIVE_TILT_CANDIDATE" if permission else "ZERO_TILT_CONTROL",
+             "required_followup":"RECOVER_MATCHED_7D_ETHBTC_HYPOTHESIS"}
+        if not isinstance(learning_delivery,dict) or learning_delivery.get("api_input_status")!="MATCHED_GATEWAY_INPUT_RECEIPT":
+            return out
+        t=learning_delivery.get("mm_analytical_translation")
+        if (not isinstance(t,dict) or t.get("contract")!="CN_MM_SHADOW_TRANSLATION_READBACK_v1"
+                or t.get("status")!="COMMITTED_MM_SHADOW_METADATA"
+                or t.get("candidate_status")!="VALIDATED_UNADMITTED"
+                or any(t.get(k) is not False for k in ("forecast_authority","portfolio_action","independent_model_output_replay"))
+                or not isinstance(t.get("gateway_output_sha256"),str)
+                or not re.fullmatch("[0-9a-f]{64}",t["gateway_output_sha256"])):
+            return out
+        rows=t["spot_candidate_directions"]
+        if not isinstance(rows,list) or any(not isinstance(r,dict) for r in rows):
+            return out
+        exact=[r for r in rows if r.get("asset")=="ETHBTC" and type(r.get("horizon_days")) is int and r["horizon_days"]==7]
+        if len(exact)!=1:
+            return out
+        row=exact[0];direction=row.get("direction")
+        if (set(row)!={"asset","horizon_days","direction","target_mode"} or direction not in ("UP","DOWN","RANGE")
+                or row["target_mode"] not in (("ABSOLUTE_RANGE",) if direction=="RANGE" else ("PCT_MOVE","ABSOLUTE_VALUE"))):
+            return out
+        compatibility=("COMPATIBLE_UP_LABEL_ONLY" if direction=="UP" else
+                       "CONTRADICTORY_DOWN_LABEL_ONLY" if direction=="DOWN" else
+                       "RANGE_NOT_DIRECTIONALLY_COMPARABLE") if permission else "NO_SIGNAL_TILT_TO_COMPARE"
+        followup=("INVESTIGATE_CONFLICT_BEFORE_ANY_ACTIVATION" if compatibility=="CONTRADICTORY_DOWN_LABEL_ONLY"
+                  else "VERIFY_INDEPENDENT_KNOWN_BY_AND_MATCHED_TARGET_CLOCK")
+        return {**out,"status":"SHADOW_HYPOTHESES_COMPARED","mm_7d_ethbtc_direction":direction,
+                "directional_compatibility":compatibility,"gateway_output_sha256":t["gateway_output_sha256"],
+                "required_followup":followup}
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError,RecursionError):
+        return base
+
+
 def consume_cn_shadow(repo, mm_pointer):
     """Read only an exact committed MM packet. No mutation of official CN value."""
     result = {"contract": "CN_MM_CORE_SHADOW_CONSUMPTION_v1", "authority": "RESEARCH_ONLY_NON_CANONICAL",
               "status": "UNKNOWN", "reason": "MM_SHADOW_RECEIPT_UNAVAILABLE",
               "official_forecast_effect": False, "scientific_pit_eligible": False,
-              "packet_sha256": None, "shadow_candidate_decision": None}
+              "packet_sha256": None, "shadow_candidate_decision": None,
+              "relative_hypothesis_synthesis": synthesize_relative_hypothesis(None,None,None)}
     try:
         year, week = mm_pointer["iso_year"], mm_pointer["iso_week"]
         freeze_sha = mm_pointer["freeze_sha256"]
@@ -835,7 +919,8 @@ def consume_cn_shadow(repo, mm_pointer):
                 "leverage_context": diagnostics["leverage_context"],
                 "shared_intelligence_feature": shared if binding_status!="MM_CALIBRATION_FEATURE_MISMATCH" else None,
                 "shared_feature_binding_status": binding_status,
-                "mm_learning_delivery":learning_delivery}
+                "mm_learning_delivery":learning_delivery,
+                "relative_hypothesis_synthesis":synthesize_relative_hypothesis(shared,learning_delivery,binding_status)}
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
             csv.Error, ImportError, subprocess.SubprocessError):
         return {**result, "reason": "MM_SHADOW_RECEIPT_INVALID"}

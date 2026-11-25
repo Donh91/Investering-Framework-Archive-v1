@@ -531,6 +531,60 @@ print('W47_INCREMENTAL_EQUIVALENCE '+json.dumps(result,sort_keys=True))
             self.assertIsNone(bridge.mm_translation_readback(altered,pointer))
         self.assertIsNone(bridge.mm_translation_readback(machine,{"freeze_sha256":"e"*64}))
 
+    def test_relative_synthesis_changes_decision_branch_without_forecast_authority(self):
+        from copy import deepcopy
+        def feature(breadth,dominance):
+            f={"contract":"CN_MM_SHARED_INTELLIGENCE_FEATURE_v1","status":"SOURCE_REPLAYED_OBSERVATION_ONLY",
+               "authority":"RESEARCH_ONLY_NON_CANONICAL","scientific_pit_eligible":False,
+               "forecast_authority":False,"canonical_effect":False,"portfolio_execution":False,
+               "independent_first_known_utc":None,
+               "frozen_candidates":{k:False for k in bridge.CORE},
+               "families":{"BREADTH_SURVIVAL":{"status":"SOURCE_REPLAYED","permission":breadth},
+                           "BTCD_PATH_RECLAIM":{"status":"SOURCE_REPLAYED","permission":dominance}},
+               "models":{"C2":{"status":"BLOCKED_PENDING_REVIEWED_ACTIVATION_AND_KNOWN_BY",
+                               "observed_c06_permission":breadth and dominance,"issued":False}}}
+            f["frozen_candidates"].update(C02_BREADTH=breadth,C03_BTCD=dominance,C06_BREADTH_BTCD=breadth and dominance)
+            return seal(f)
+        def seal(f):
+            f.pop("feature_sha256",None);f["feature_sha256"]=bridge.sha(bridge.canon(f));return f
+        def learning(direction,asset="ETHBTC",horizon=7):
+            return {"api_input_status":"MATCHED_GATEWAY_INPUT_RECEIPT",
+                    "mm_analytical_translation":{"contract":"CN_MM_SHADOW_TRANSLATION_READBACK_v1",
+                    "status":"COMMITTED_MM_SHADOW_METADATA","candidate_status":"VALIDATED_UNADMITTED",
+                    "forecast_authority":False,"portfolio_action":False,"independent_model_output_replay":False,
+                    "gateway_output_sha256":"a"*64,
+                    "spot_candidate_directions":[{"asset":asset,"horizon_days":horizon,"direction":direction,
+                      "target_mode":"ABSOLUTE_RANGE" if direction=="RANGE" else "PCT_MOVE"}]}}
+        def run(f,l,binding="MATCHED_MM_CALIBRATION_FEATURE"):
+            return bridge.synthesize_relative_hypothesis(f,l,binding)
+        for b in (False,True):
+            for d in (False,True):
+                for direction in ("UP","DOWN","RANGE"):
+                    with self.subTest(b=b,d=d,direction=direction):
+                        result=run(feature(b,d),learning(direction))
+                        self.assertEqual(result["c06_permission"],b and d)
+                        self.assertEqual(result["directional_compatibility"],
+                          ({"UP":"COMPATIBLE_UP_LABEL_ONLY","DOWN":"CONTRADICTORY_DOWN_LABEL_ONLY",
+                            "RANGE":"RANGE_NOT_DIRECTIONALLY_COMPARABLE"}[direction] if b and d else "NO_SIGNAL_TILT_TO_COMPARE"))
+                        for flag in ("independent_confirmation","matched_target_clock_verified","scientific_pit_eligible",
+                                     "c2_issued","official_forecast_effect","portfolio_execution"):
+                            self.assertFalse(result[flag])
+                        self.assertEqual(result["required_followup"],
+                            "INVESTIGATE_CONFLICT_BEFORE_ANY_ACTIVATION" if b and d and direction=="DOWN"
+                            else "VERIFY_INDEPENDENT_KNOWN_BY_AND_MATCHED_TARGET_CLOCK")
+        f=feature(True,True)
+        for asset,horizon in (("ETHBTC",14),("ETH",7),("BTC",7),("ETHBTC",True)):
+            self.assertIsNone(run(f,learning("UP",asset,horizon))["mm_7d_ethbtc_direction"])
+        for mutate in (lambda x:x["frozen_candidates"].update(C06_BREADTH_BTCD=False),
+                       lambda x:x["models"]["C2"].update(issued=True),
+                       lambda x:x.update(forecast_authority=True),
+                       lambda x:x["families"]["BREADTH_SURVIVAL"].update(permission=False)):
+            bad=deepcopy(f);mutate(bad)
+            self.assertEqual(run(seal(bad),learning("UP"))["status"],"UNKNOWN")
+        self.assertEqual(run(f,learning("UP"),"UNATTESTED_MM_CALIBRATION_BINDING")["status"],"UNKNOWN")
+        f["frozen_candidates"]["C06_BREADTH_BTCD"]=False
+        self.assertEqual(run(f,learning("UP"))["status"],"UNKNOWN")
+
     def test_real_historical_w47_context_and_gateway_preserve_unknown_feature(self):
         # Real existing context CLI and gateway request construction.
         # Synthetic receipt only; no paid request or historical output write.
@@ -746,6 +800,24 @@ with tempfile.TemporaryDirectory() as temp:
     assert projected['spot_candidate_directions']==[{'asset':'ETH','horizon_days':14,'direction':'DOWN','target_mode':'PCT_MOVE'}]
     assert projected['forecast_authority'] is False and projected['independent_model_output_replay'] is False
     assert consumed['official_forecast_effect'] is False
+    synthesis=consumed['relative_hypothesis_synthesis']
+    assert synthesis['status']=='OBSERVED_SIGNAL_HYPOTHESIS_ONLY',synthesis
+    assert synthesis['mm_7d_ethbtc_direction'] is None
+    # Re-use the same committed feature but change the model's explicitly
+    # typed hypothesis. Actual consumer decision must change, not only metadata.
+    api['forecast_candidates'][0].update(metric_path='spot.ETHBTC.close',horizon_days=7)
+    receipt['output_hash']=b.sha(b.canon(api))
+    machine['operational_translation']=analytical_translation(context,freeze,api,receipt,'success')
+    machine.pop('package_sha256')
+    machine['package_sha256']=b.sha(b.canon(machine))
+    machine_path.write_bytes(b.canon(machine))
+    mm_pointer['machine_package_sha256']=machine['package_sha256']
+    commit([machine_path],'synthetic changed MM relative hypothesis only')
+    changed=b.consume_cn_shadow(b.ROOT,mm_pointer)['relative_hypothesis_synthesis']
+    assert changed['status']=='SHADOW_HYPOTHESES_COMPARED',changed
+    assert changed['mm_7d_ethbtc_direction']=='DOWN'
+    assert changed['feature_sha256']==synthesis['feature_sha256']
+    assert changed['official_forecast_effect'] is False and changed['c2_issued'] is False
     # Tampered working tree must not replace committed delivery.
     machine_path.write_bytes(b.canon({**machine,'operational_translation':{'status':'READY'}}))
     assert b.consume_cn_shadow(b.ROOT,mm_pointer)['mm_learning_delivery'] is None
