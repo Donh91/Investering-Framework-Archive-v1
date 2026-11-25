@@ -340,3 +340,20 @@ test('live source clock refuses future, naive, stale-at-issue and extended polic
  assert.match(da.footer,/nominelt 50 % modelinterval.*00\.00 UTC/);
  assert.match(en.footer,/nominal 50% model interval.*00:00 UTC/);
 });
+
+test('invalid calendar deadlines never prolong a tilted view; valid fractional UTC is accepted',()=>{
+ for(const deadline of ['2026-11-31T00:00:00Z','2026-11-13T24:00:00Z','2027-02-29T00:00:00Z']){
+  const d=withFallback({...fixture(),official_source_valid_until_utc:deadline});
+  const m=liveViewModel(d,{nowMs:NOW});
+  assert.equal(m.state,'OK');
+  assert.equal(m.kompas.view,'NONE');
+  assert.ok(m.chart.days.every(day=>day.centre===d.no_kompas_view.assets.BTC.p0));
+  assert.doesNotMatch(m.headline.source,/Faldende|Falling|Challenger B/);
+  assert.equal(liveViewModel({...fixture(),official_source_valid_until_utc:deadline},{nowMs:NOW}).state,'UNAVAILABLE');
+ }
+ const good=fixture();
+ good.generated_at_utc='2026-11-13T18:00:00.0Z';
+ good.assets.BTC.as_of_utc='2026-11-13T18:00:00.00Z';
+ good.official_source_valid_until_utc='2026-11-13T22:00:00.000Z';
+ assert.equal(liveViewModel(good,{nowMs:NOW}).state,'OK');
+});
