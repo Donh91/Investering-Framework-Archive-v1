@@ -28,7 +28,12 @@ export function cycleMapModel({view,latest,lang='da'}={}){
  // reference. HOLD is not flow, protection is not reset, no other stage guessed.
  const rotation=joined&&path.current_checkpoint?.key==='BTC'&&path.current_checkpoint?.status==='FROZEN_WEEK_REFERENCE'?{x:20,label:'BTC',kind:'FROZEN_WEEK_REFERENCE'}:null;
  const gate=aligned&&typeof ctx?.next_gate==='string'&&ctx.next_gate.trim()?ctx.next_gate.trim():null;
- return {phase,rotation,gate,asOf:aligned?stamp:null,rotationAsOf:rotation?stamp:null,
+ const live=view?.live_observation;
+ const observation=live?.semantics==='OBSERVED_MOMENTUM_NOT_CYCLE_OR_FORECAST'&&
+  live.authority==='PRESENTATION_ONLY'&&live.compass_id===c?.compass_id&&
+  typeof live.observation_open_utc==='string'&&Number.isFinite(Date.parse(live.observation_open_utc))&&
+  ['BULLISH','BEARISH','MIXED','NEUTRAL','SIDEWAYS'].includes(live.direction)?live:null;
+ return {phase,rotation,gate,observation,asOf:aligned?stamp:null,rotationAsOf:rotation?stamp:null,
   weeklyHealth:aligned?view.weekly.state:'UNAVAILABLE',confidence:'UNQUANTIFIED',
   evidence:'HYPOTHESIS',authority:'PRESENTATION_ONLY'};
 }
@@ -43,6 +48,7 @@ export const cycleMapMarkup=`<section class="cn-cycle-map" id="cn-cycle-map" dat
   <circle id="cn-map-phase-dot" class="cn-map-dot" cx="0" cy="0" r="5" hidden/>
  </svg>
  <p class="cn-map-state" id="cn-map-phase-text">Aktuel fase ikke dokumenteret.</p>
+ <p class="cn-map-state" id="cn-map-live-observation" hidden></p>
  <svg viewBox="0 0 340 57" aria-hidden="true" focusable="false" class="cn-map-rotation">
   <path class="cn-map-engrave" d="M20 14H320 M20 7V21 M80 7V21 M150 7V21 M230 7V21 M320 7V21"/>
   <g class="cn-map-label" text-anchor="middle"><text x="20" y="36">BTC</text><text x="80" y="36">ETH</text><text id="cn-map-large-label" x="150" y="36">Store</text><text id="cn-map-alt-label" x="230" y="36">Mellem / små</text><text x="230" y="49">Altseason</text><text id="cn-map-reset-label" x="312" y="36">BTC / stables</text></g>
@@ -67,6 +73,14 @@ export function renderCycleMap(doc,{view,latest,lang='da'}={}){
  set('cn-map-large-label',t('Store','Large caps'));set('cn-map-alt-label',t('Mellem / små','Mid / small'));set('cn-map-reset-label','BTC / stables');
  const conf=t('sikkerhed ikke kvantificeret','confidence unquantified');
  set('cn-map-phase-text',m.phase?(m.phase.label==='Expansion'?t('Bull / ekspansion','Bull / expansion'):t('Distribution','Distribution'))+' · '+t('ugemodel','weekly model')+' · '+conf+' · '+m.asOf:t('Aktuel fase ikke dokumenteret.','Current phase not established.'));
+ const observed=el('cn-map-live-observation');
+ if(observed){
+  const labels={BULLISH:t('stigende','rising'),BEARISH:t('faldende','falling'),MIXED:t('blandet','mixed'),NEUTRAL:t('neutral','neutral'),SIDEWAYS:t('sideværts','sideways')};
+  const relative={STRENGTHENING:t('ETH/BTC styrkes','ETH/BTC strengthening'),WEAKENING:t('ETH/BTC svækkes','ETH/BTC weakening'),MIXED:t('ETH/BTC blandet','ETH/BTC mixed'),NEUTRAL:t('ETH/BTC neutral','ETH/BTC neutral'),STABLE:t('ETH/BTC stabil','ETH/BTC stable')};
+  const o=m.observation;
+  observed.textContent=o?[t('Observeret momentum','Observed momentum')+': '+labels[o.direction],relative[o.eth_relative_state],t('Observationstime','Observation hour')+': '+o.observation_open_utc,t('Ikke en cyklusfase eller prognose','Not a cycle phase or forecast')].filter(Boolean).join(' · '):'';
+  observed.hidden=!o;
+ }
  set('cn-map-rotation-text',m.rotation?t('BTC · seneste ugereference, ikke live kapitalflow','BTC · previous weekly reference, not live capital flow')+' · '+conf+' · '+m.rotationAsOf:t('Aktuel rotation ikke bekræftet.','Current rotation not confirmed.'));
  set('cn-map-caption',t('Skematisk forløb, ikke pris, tid eller sandsynlighed.','Schematic sequence, not price, time or probability.'));
  set('cn-map-next-label',t('Næste bekræftelse · model view','Next confirmation · model view'));
