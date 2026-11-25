@@ -709,6 +709,46 @@ with tempfile.TemporaryDirectory() as temp:
     assert consumed['packet_sha256']==packet['packet_sha256']
     assert consumed['shared_intelligence_feature']['status']=='SOURCE_REPLAYED_OBSERVATION_ONLY'
     assert not consumed['official_forecast_effect'] and not consumed['scientific_pit_eligible']
+    # Real publisher projection and actual committed CN consumer; only the
+    # gateway receipt/response are synthetic, no paid call or original write.
+    from scripts.master_monday.publish_master_monday_outputs import analytical_translation
+    feature=consumed['shared_intelligence_feature']
+    intel={'status':'SHADOW_CONTEXT_ONLY','feature':feature,'freeze_sha256':freeze['freeze_sha256'],
+           'checkout_sha':feature['checkout_sha'],'feature_uses_outcomes':False,
+           'learning':{'status':'UNAVAILABLE'},'task2':{'status':'UNAVAILABLE'}}
+    intel['context_sha256']=b.sha(b.canon(intel))
+    context={'contract':'WEEKLY_API_CALIBRATION_CONTEXT_v6','authority':'SHADOW_ONLY',
+             'iso_year':2026,'iso_week':47,'freeze_sha256':freeze['freeze_sha256'],
+             'cn_mm_shared_intelligence':intel}
+    context['context_hash']=b.sha(b.canon(context))
+    api={'status':'READY','summary':'synthetic only','evidence_for':[],'evidence_against':[],
+         'uncertainties':[],'hypotheses':[],'forecast_candidates':[
+         {'metric_path':'market_metrics.spot.ETHUSDT.close','direction':'DOWN','target_mode':'PCT_MOVE',
+          'threshold_pct':1.0,'target_value':None,'range_low':None,'range_high':None,'horizon_days':14,'rationale':'fixture only'}]}
+    receipt={'contract':'API_AGENT_RECEIPT_v3','task':'WEEKLY_CALIBRATION_SHADOW',
+             'status':'PASS','response_id':'synthetic_no_api_call','untrusted_input_envelope':True,
+             'context_hash':b.sha(b.canon(context)),'output_hash':b.sha(b.canon(api)),'forecast_candidate_count':1}
+    translation=analytical_translation(context,freeze,api,receipt,'success')
+    assert translation['candidate_status']=='VALIDATED_UNADMITTED',translation
+    machine={'freeze_sha256':freeze['freeze_sha256'],'context_hash':context['context_hash'],
+             'api_status':'success','api_receipt':receipt,'operational_translation':translation,
+             'cn_mm_calibration_feature_binding':b.calibration_feature_binding(context,freeze),
+             'cn_mm_calibration_learning_binding':b.calibration_learning_binding(context,freeze,receipt,'success')}
+    machine['package_sha256']=b.sha(b.canon(machine))
+    machine_path=out/'MASTER_MONDAY_MACHINE_PACKAGE.json'
+    machine_path.write_bytes(b.canon(machine))
+    mm_pointer.update(machine_package_path=str(machine_path),machine_package_sha256=machine['package_sha256'])
+    # A worktree-only result is not a committed delivery.
+    assert b.consume_cn_shadow(b.ROOT,mm_pointer)['mm_learning_delivery'] is None
+    commit([machine_path],'synthetic MM translation delivery only')
+    consumed=b.consume_cn_shadow(b.ROOT,mm_pointer)
+    projected=consumed['mm_learning_delivery']['mm_analytical_translation']
+    assert projected['spot_candidate_directions']==[{'asset':'ETH','horizon_days':14,'direction':'DOWN','target_mode':'PCT_MOVE'}]
+    assert projected['forecast_authority'] is False and projected['independent_model_output_replay'] is False
+    assert consumed['official_forecast_effect'] is False
+    # Tampered working tree must not replace committed delivery.
+    machine_path.write_bytes(b.canon({**machine,'operational_translation':{'status':'READY'}}))
+    assert b.consume_cn_shadow(b.ROOT,mm_pointer)['mm_learning_delivery'] is None
 print('SYNTHETIC_NEW_PRODUCER_TO_CN_FIXTURE_PASS')
 """
                 result = run(sys.executable, "-c", code, cwd=root, timeout=300)
