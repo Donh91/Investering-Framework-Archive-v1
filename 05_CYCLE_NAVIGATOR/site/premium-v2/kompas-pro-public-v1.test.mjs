@@ -1,5 +1,5 @@
 import test from 'node:test';
-import {mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,writeFile,rm,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {finalizeKompasPublic,verifyKompasPublicBinding} from './finalize-kompas-public.mjs';
@@ -8,6 +8,8 @@ import {createHash} from 'node:crypto';
 import {buildKompasProPublic} from './kompas-pro-public-v1.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {fixture,bytes,nowMs} from './kompas-pro-public-fixture.mjs';
+import {inspectOfficialPublicFeeds} from '../vnext-live/official-feed-parity.mjs';
+import {verifiedLiveMomentum,verifiedPublishedLiveMomentum,verifiedKompasPublicationLineage} from './compass-overview.mjs';
 const run=(f,now=nowMs)=>buildKompasProPublic(bytes(f.latest),bytes(f.compass),bytes(f.lineage),{nowMs:now});
 test('qualified positive source and exact three final byte bindings',()=>{
  const f=fixture(),p=run(f);assert.equal(p.state,'OK');assert.equal(p.action,'HOLD_WAIT');
@@ -81,4 +83,28 @@ test('weekly mismatch preserves independently verified closed-candle momentum on
   const q=run(g);assert.equal(q.momentum.direction,null);assert.equal(q.action,null);
   assert.ok(q.horizon_status.every(x=>x.status!=='CURRENT_OBSERVATION'));
  }
+});
+
+test('independent momentum requires exact publication identity and expires at owner boundary',()=>{
+ const f=fixture();f.compass.weekly_context.status='MISMATCH';
+ const view=inspectOfficialPublicFeeds(f.latest,f.compass,{nowUtc:new Date(nowMs).toISOString()});
+ const args={compass:f.compass,view,publicationLineage:f.lineage,now:nowMs};
+ assert.equal(verifiedLiveMomentum(args)?.direction,'BULLISH');
+ assert.equal(verifiedPublishedLiveMomentum(args)?.direction,'BULLISH');
+ assert.equal(verifiedPublishedLiveMomentum({...args,now:Date.parse('2026-11-24T10:30:00Z')}),null);
+ for(const patch of [{forecast_week:'2026-W49'},{public_issue_number:36},{source_to_public_equality:'FAIL'},{prospective_forecast_points_created:1},{authority:'OTHER'},{semantics:'OTHER'},{contract:'OTHER'}]){
+  const receipt={...f.lineage,...patch};
+  assert.equal(verifiedKompasPublicationLineage(receipt,view),false);
+  assert.equal(verifiedPublishedLiveMomentum({...args,publicationLineage:receipt}),null);
+ }
+ assert.equal(verifiedPublishedLiveMomentum({...args,publicationLineage:null}),null);
+ assert.equal(verifiedPublishedLiveMomentum({...args,view:{...view,live_observation:{...view.live_observation,direction:'BEARISH'}}}),null);
+ assert.equal(verifiedKompasPublicationLineage(f.lineage,{weekly:{}}),false);
+});
+test('root quick decision and expanded horizon matrix use shared publication gate',async()=>{
+ const source=await readFile(new URL('./root-compass-pro.mjs',import.meta.url),'utf8');
+ assert.ok(source.includes('const liveMomentum=verifiedPublishedLiveMomentum({compass:feeds?.compass,view,publicationLineage:feeds?.publicationLineage});'));
+ assert.ok(source.includes('const matrixView=verifiedKompasPublicationLineage(feeds?.publicationLineage,view)?view:'));
+ assert.ok(source.includes('view?{...view,live_observation:null}:null;'));
+ assert.ok(source.includes('compass:feeds?.compass,view:matrixView,lang,strategic,trace,originalWeekPrice,'));
 });
