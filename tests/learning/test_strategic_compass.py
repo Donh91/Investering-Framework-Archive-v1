@@ -122,14 +122,17 @@ class StrategicCompassTests(unittest.TestCase):
             path=repo/"05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
             original=path.read_bytes()
             healthy=materialize(repo,now)
+            original_anchor=(repo/healthy["anchor_path"]).read_bytes()
             path.write_bytes(b'{"duplicate":1,"duplicate":2}')
             degraded=materialize(repo,now)
             self.assertEqual(degraded["status"],"DEGRADED")
             self.assertNotEqual(healthy["source_fingerprint"],degraded["source_fingerprint"])
             path.write_bytes(original)
-            recovered=materialize(repo,now)
+            recovered=materialize(repo,now.replace(hour=13))
             self.assertEqual(recovered["status"],"CREATED")
             self.assertEqual(recovered["source_fingerprint"],healthy["source_fingerprint"])
+            self.assertEqual(recovered["issued_at_utc"],healthy["issued_at_utc"])
+            self.assertEqual((repo/recovered["anchor_path"]).read_bytes(),original_anchor)
 
     def test_tactical_pullback_structural_bull_class(self):
         self.assertEqual(alignment_class(["DOWN", "DOWN", "SIDEWAYS", "UP", "UP"]), "TACTICAL_PULLBACK_STRUCTURAL_BULL")
