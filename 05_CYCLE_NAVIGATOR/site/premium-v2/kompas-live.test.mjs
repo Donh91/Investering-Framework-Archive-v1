@@ -336,6 +336,7 @@ test('live source clock refuses future, naive, stale-at-issue and extended polic
   assert.equal(m.reason,'SOURCE_CLOCK_INVALID');assert.equal(m.chart,null);}
  assert.equal(liveViewModel(fixture(),{nowMs:NaN}).reason,'SOURCE_CLOCK_INVALID');
  const valid=fixture();valid.assets.BTC.as_of_utc=iso(NOW-90*60e3);
+ valid.assets.BTC.points=valid.assets.BTC.points.map(([ts,v])=>[iso(Date.parse(ts)-90*60e3),v]);
  assert.equal(liveViewModel(valid,{nowMs:NOW}).state,'OK');
  const da=liveViewModel(fixture(),{nowMs:NOW}),en=liveViewModel(fixture(),{nowMs:NOW,lang:'en'});
  assert.match(da.footer,/nominelt 50 % modelinterval.*00\.00 UTC/);
@@ -372,6 +373,25 @@ test('expired source rejects a forged untilted marker with residual tilt',()=>{
   a=>a.headline['1'].tilting_views=['1_3d']];
  for(const mutate of attacks){const d=make();mutate(d.no_kompas_view.assets.BTC);
   const m=liveViewModel(d,{nowMs:NOW});assert.equal(m.state,'UNAVAILABLE');assert.equal(m.chart,null);}
- const rounded=make();const a=rounded.no_kompas_view.assets.BTC;a.p0+=0.003;
+ const rounded=make();const a=rounded.no_kompas_view.assets.BTC;a.p0+=0.003;a.points.at(-1)[1]=a.p0;
  assert.equal(liveViewModel(rounded,{nowMs:NOW}).state,'OK');
+});
+
+
+test('actual price observations are strictly ordered and bound to source as-of and raw p0',()=>{
+ const attacks=[a=>a.points.push([iso(NOW+H),a.p0]),
+  a=>a.points[2][0]=a.points[1][0],
+  a=>[a.points[1],a.points[2]]=[a.points[2],a.points[1]],
+  a=>a.points[2][0]='2026-11-31T00:00:00Z',
+  a=>a.points[2][1]=0,
+  a=>a.points[2]=null,
+  a=>a.points.pop(),
+  a=>a.points.at(-1)[1]+=1];
+ for(const asset of ['BTC','ETH'])for(const expired of [false,true]){
+  const make=()=>expired?withFallback({...fixture(),official_source_valid_until_utc:iso(NOW-1)}):fixture();
+  for(const mutate of attacks){const d=make();mutate((expired?d.no_kompas_view.assets:d.assets)[asset]);
+   const m=liveViewModel(d,{asset,nowMs:NOW});assert.equal(m.state,'UNAVAILABLE');assert.equal(m.chart,null);}
+  const good=make();const a=(expired?good.no_kompas_view.assets:good.assets)[asset];a.points.splice(40,2);
+  assert.equal(liveViewModel(good,{asset,nowMs:NOW}).state,'OK');
+ }
 });
