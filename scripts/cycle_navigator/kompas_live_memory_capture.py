@@ -120,7 +120,8 @@ def store(root, raw, observed_at):
             prior = parse(dest.read_bytes(), 2 * MAX_BYTES)
             previous_raw = base64.b64decode(prior["source_bytes_base64"], validate=True)
             expected = capture(previous_raw, prior["observer_reported_at_utc"])
-            if prior != expected or previous_raw != raw:
+            if (json.dumps(prior, sort_keys=True, allow_nan=False) !=
+                    json.dumps(expected, sort_keys=True, allow_nan=False) or previous_raw != raw):
                 raise ValueError("existing capture conflict or corruption")
             return dest, "ALREADY_CAPTURED"
     finally:

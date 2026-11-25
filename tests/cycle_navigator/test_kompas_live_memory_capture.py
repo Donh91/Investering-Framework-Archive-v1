@@ -51,6 +51,16 @@ class CaptureTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 store(root, raw, OBSERVED)
 
+    def test_boolean_integer_substitution_rejected(self):
+        with tempfile.TemporaryDirectory() as root:
+            raw = packet()
+            path, _ = store(root, raw, OBSERVED)
+            obj = json.loads(path.read_bytes())
+            obj["pit_admitted"] = 0
+            path.write_text(json.dumps(obj))
+            with self.assertRaises(ValueError):
+                store(root, raw, OBSERVED)
+
     def test_invalid_packets(self):
         for raw in (packet(contract="OTHER"),
                     packet(authority={**FLAGS, "trading": True}),
