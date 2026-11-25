@@ -217,9 +217,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
     def test_required_horizons_and_ladder_order(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp)
-            self.assertEqual(out["schema_version"], 6)
-            self.assertIn("cycle_participation", out)
-            self.assertFalse(out["cycle_participation"]["rotation_confirmed"])
+            self.assertEqual(out["schema_version"], 5)
             self.assertEqual(tuple(out["horizons"].keys()), HORIZON_ORDER)
             self.assertEqual(tuple(row["segment"] for row in out["capitalization_ladder"]), CAPITALIZATION_ORDER)
             self.assertTrue(all("action" in row for row in out["capitalization_ladder"]))

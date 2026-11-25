@@ -275,7 +275,7 @@ class RealW47PacketTest(unittest.TestCase):
             for key in real:
                 if key not in IDENTITY:
                     self.assertEqual(built[key], real[key], key)
-            self.assertEqual(set(built) - set(real), NEW_KEYS | {"cycle_participation"})
+            self.assertEqual(set(built) - set(real), NEW_KEYS)
 
     def test_real_sunday_close_observed_on_monday_of_the_next_iso_week(self):
         rel = f"{OFFICIAL}/daily/2026/11/23/CMP-20261123-" + self._id_issued_at("2026/11/23", "2026-11-23T00:21:12Z")
@@ -451,7 +451,7 @@ class CountercaseTest(unittest.TestCase):
             self.assertEqual(again["status"], "EXISTING_DAILY_FREEZE")
             self.assertEqual(Path(first["path"]).read_bytes(), frozen)
             self.assertEqual(Path(first["public_path"]).read_bytes(), old_public)
-            # A schema-4 scheduled slot of the day is never reused or rewritten by a schema-6 issuance.
+            # A schema-4 scheduled slot of the day is never reused or rewritten by a schema-5 issuance.
             case = Case(repo, bar=at(6))
             case.as_of = _parse(old["issued_at_utc"]) + timedelta(minutes=1)
             case.auto = bound_auto(case.box, case.commit, at(6), available=case.as_of - timedelta(minutes=1))
@@ -463,9 +463,7 @@ class CountercaseTest(unittest.TestCase):
             self.assertEqual(result["status"], "WRITTEN")
             self.assertNotEqual(result["path"], written_slot["path"])
             self.assertEqual(json.loads(Path(written_slot["path"]).read_text())["schema_version"], 4)
-            self.assertEqual(json.loads(Path(result["path"]).read_text())["schema_version"], 6)
-            self.assertNotIn("cycle_participation", json.loads(Path(written_slot["public_path"]).read_text()))
-            self.assertIn("cycle_participation", json.loads(Path(result["public_path"]).read_text()))
+            self.assertEqual(json.loads(Path(result["path"]).read_text())["schema_version"], 5)
             self.assertNotIn("risk_freshness", json.loads(Path(written_slot["public_path"]).read_text()))
             self.assertIn("risk_freshness", json.loads(Path(result["public_path"]).read_text()))
 
@@ -816,17 +814,17 @@ class InheritanceOriginTest(unittest.TestCase):
 
 
 class SchemaAndConsumerTest(unittest.TestCase):
-    def test_schema_is_6_and_feeds_the_compass_id(self):
-        self.assertEqual(nh.OFFICIAL_COMPASS_SCHEMA_VERSION, 6)
+    def test_schema_is_5_and_feeds_the_compass_id(self):
+        self.assertEqual(nh.OFFICIAL_COMPASS_SCHEMA_VERSION, 5)
         with tempfile.TemporaryDirectory() as tmp:
             case = Case(tmp, bar=at(5), override=SAFE)
             new = case.build()
             with mock.patch.object(nh, "OFFICIAL_COMPASS_SCHEMA_VERSION", 4):
                 old = case.build()
-            self.assertEqual(new["schema_version"], 6)
+            self.assertEqual(new["schema_version"], 5)
             self.assertNotEqual(new["compass_id"], old["compass_id"])
 
-    def test_consumer_census_every_schema_reader_accepts_6(self):
+    def test_consumer_census_every_schema_reader_accepts_5(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = Case(tmp, bar=at(5), override=SAFE).build()
         # scripts/learning/action_compass_exit_calibration.py: minimum schema 3.
@@ -848,8 +846,6 @@ class SchemaAndConsumerTest(unittest.TestCase):
             public = nh.build_public_projection(out)
             text = json.dumps(public)
             self.assertEqual(public["risk_freshness"], out["risk_freshness"])
-            self.assertEqual(public["cycle_participation"], out["cycle_participation"])
-            self.assertFalse(public["cycle_participation"]["rotation_confirmed"])
             self.assertEqual(public["cn_band_status"]["forecast_floor_status"], "BREACHED")
             self.assertEqual(public["source_freshness"]["status"], "FRESH")
             for needle in (case.commit, "git_blob_sha", "03_DAILY_CAPTURE_LOGS", "auto_market_state_packet_sha256", "snapshot_commit_sha"):
