@@ -121,6 +121,18 @@ function validAssetBlock(b){
   Array.isArray(b.days)&&b.days.length>0&&b.headline&&Array.isArray(b.events)&&
   b.days.every(d=>finite(d.centre)&&finite(d.lo)&&finite(d.hi)&&d.lo>0&&d.lo<=d.centre&&d.centre<=d.hi&&Number.isFinite(ms(d.end_utc)));
 }
+// Actual closes are observations, never forecasts. The producer emits sorted raw
+// bars with the final timestamp and price exactly equal to as_of_utc and p0.
+function validActualPoints(b,asOf){
+ let previous=-Infinity;
+ for(const point of b.points){
+  if(!Array.isArray(point)||point.length!==2)return false;
+  const t=wireClock(point[0]),v=point[1];
+  if(!Number.isFinite(t)||t<=previous||t>asOf||!finite(v)||v<=0)return false;
+  previous=t;
+ }
+ return previous===asOf&&b.points[b.points.length-1][1]===b.p0;
+}
 // Verify the producer's no-view invariant, without constructing a forecast.
 // Centres/targets are serialized to two decimals; p0 is not rounded.
 function validUntiltedBlock(b){
@@ -214,6 +226,7 @@ export function liveViewModel(json,{lang='da',hz=3,asset='BTC',nowMs=Date.now(),
   return unavailableModel(base,'SOURCE_CLOCK_INVALID',lang);
  if(nowMs-asOf>MAX_BROWSER_AGE_MIN*60e3)
   return unavailableModel(base,'STALE_IN_BROWSER',lang);
+ if(!validActualPoints(a,asOf))return unavailableModel(base,'SOURCE',lang);
  const head=a.headline[String(hz)];
  const hzEnd=ms(json.horizon_end_utc?.[String(hz)]);
  if(!head||!Number.isFinite(hzEnd))return unavailableModel(base,'SOURCE',lang);
