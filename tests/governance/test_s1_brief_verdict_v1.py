@@ -321,6 +321,8 @@ class RenderStability(unittest.TestCase):
                 brief.pop("verdict")
                 for key in ("c1b", "ledger"):                                                       # W2b: added beside it
                     brief.pop(key)
+                for x in brief["next"]:                                                             # W5: the counter of each ranked entry
+                    self.assertEqual(x.pop("builds"), 1)
                 body = B.render(brief)
                 self.assertEqual((len(body), hashlib.sha256(body.encode("utf-8")).hexdigest()), RENDER_SHA256_BEFORE_W2[name])
 
