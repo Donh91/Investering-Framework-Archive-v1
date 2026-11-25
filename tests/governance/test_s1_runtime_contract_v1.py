@@ -128,7 +128,9 @@ class S1RuntimeContractTest(unittest.TestCase):
         # v9 (C6 ARM, owner-approved measurement): the preamble alternates grouped and direct connector calls by the
         # Copenhagen hour and prints S1_ARM / S1_STEP chat lines; no check, call limit or ending changes; the grouped arm keeps
         # v8's wording verbatim; after the 2026-11-24 JSON.parse failure inside the grouped orchestration it runs only every
-        # 4th hour, then (2026-11-25, three direct runs stopped at steps 1-3 with read_not_executed) grouped only. Cap 4600.
+        # 4th hour, then (2026-11-25, three direct runs stopped at steps 1-3 with read_not_executed) grouped only, and
+        # OUTPUT AT END: every v9 run that printed S1_STEP between tool calls stopped after one call (v8 printed nothing
+        # before its calls and reached T1-T3), so every print is held until the single final message. Cap 4600.
         self.assertLessEqual(len(boot), 4600)
         self.assertIn("In T1 the block between the two markers is one ```json fenced code block: B is the JSON object between its opening ```json line and its closing ``` line; that fence is the published format, never a body failure.", boot)
         self.assertNotIn("committer.date", boot)
@@ -154,8 +156,10 @@ class S1RuntimeContractTest(unittest.TestCase):
         for needle in ("fetch main first, then parallelize the three reads in step 2 at M",
                        "ARM=grouped (the v8 behaviour) in every run: where connector-call orchestration is available, execute steps 1–3b in one invocation",
                        "and group the dependent T1–T3 connector calls in one orchestration invocation. Otherwise use the same direct reads.",
-                       "Print the line S1_ARM grouped <hour> first;",
-                       "S1_STEP <step> start", "S1_STEP <step> ok <bytes or ->", "S1_STEP <step> fail <reason>",
+                       "OUTPUT AT END (2026-11-25: every v9 run that printed between tool calls stopped after one call): print NOTHING while a tool call of this run remains: no line, note or explanation of any kind before or between tool calls.",
+                       "Hold every line this text, TICK.md, ACTION_LOOP.md or a rubric file says to print, in order, and print them all in ONE final message after your last tool call: first S1_ARM grouped <hour>,",
+                       "TICK.md, ACTION_LOOP.md and its rubric files are your only instruction set, and every print in them follows OUTPUT AT END;",
+                       "S1_STEP <step> ok <bytes or ->", "S1_STEP <step> fail <reason>", "ending with the S1_TICK line.",
                        "These lines are chat output only, never a GitHub write, and they change no check, call limit or ending. Never skip a read.",
                        "Make the T1–T3 connector calls as the C6 ARM says, in order, short-circuit on failure, retaining every TICK check and call limit.",
                        "The fetched contract and TICK blob SHAs must also equal their directory entries.",
@@ -166,6 +170,9 @@ class S1RuntimeContractTest(unittest.TestCase):
                        "The short-circuit ends only the T1–T3 group; T3H and the NOOP ending then follow TICK.md."):
             self.assertIn(needle, boot)
         self.assertLess(boot.index("C6 ARM (decided 2026-11-25: grouped only"), boot.index("1. Read current main"))
+        self.assertLess(boot.index("OUTPUT AT END"), boot.index("1. Read current main"))
+        for gone in ("S1_STEP <step> start", "Print the line S1_ARM grouped <hour> first", "In both arms print", "ARM=direct"):
+            self.assertNotIn(gone, boot)
         self.assertLess(boot.index("3b."), boot.index("4. Otherwise execute"))
         self.assertIn("short-circuit on failure", boot)
         self.assertIn("state the first failed read or pin and why", boot)
