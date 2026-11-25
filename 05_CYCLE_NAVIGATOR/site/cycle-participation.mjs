@@ -4,7 +4,12 @@ const SEMANTICS='OBSERVED_24H_RELATIVE_PERFORMANCE_NOT_CAPITAL_FLOW';
 const AUTHORITY='DESCRIPTIVE_ONLY_NO_ACTION_OR_FORECAST';
 const BUCKETS=['LARGE_ALT_PROXY','MID_ALT_PROXY','SMALL_ALT_PROXY'];
 const STATES=['MAJORITY','MINORITY','HALF'];
-const stamp=x=>typeof x==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/.test(x)?Date.parse(x):NaN;
+const stamp=x=>{
+ if(typeof x!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/.test(x))return NaN;
+ const ms=Date.parse(x);
+ // Date.parse normalizes some impossible calendar dates and 24:00.
+ return Number.isFinite(ms)&&new Date(ms).toISOString().slice(0,19)===x.slice(0,19)?ms:NaN;
+};
 function safeBlock(x){
  if(x?.contract!==CONTRACT||x.semantics!==SEMANTICS||x.authority!==AUTHORITY||
     x.phase!=='UNAVAILABLE'||x.rotation_confirmed!==false||
@@ -65,8 +70,11 @@ export function renderCycleParticipation(doc,latest,compass,{lang='da',nowUtc}={
  const labels=en?['Large','Mid','Top-100 tail']:['Store','Mellem','Top-100-hale'];
  const state=en?{MAJORITY:'majority',MINORITY:'minority',HALF:'half'}:{MAJORITY:'flertal',MINORITY:'mindretal',HALF:'halvdelen'};
  details.textContent=BUCKETS.map((k,i)=>labels[i]+': '+(m.buckets[k].state==='OBSERVED_PROXY'?
-  state[m.buckets[k].outperforming_btc]+' '+(en?'outperform BTC':'slår BTC'):(en?'unavailable':'utilgængelig'))).join(' · ')+
-  (en?' · Micro/memes: unavailable. Observed returns, not capital flow or cycle phase.':' · Micro/memes: utilgængelige. Observeret afkast, ikke kapitalflow eller cyklusfase.');
+  state[m.buckets[k].outperforming_btc]+' '+(en?'outperform BTC':'slår BTC')+', '+
+  state[m.buckets[k].outperforming_eth]+' '+(en?'outperform ETH':'slår ETH')+', '+
+  state[m.buckets[k].advancing]+' '+(en?'advancing':'stiger'):(en?'unavailable':'utilgængelig'))).join(' · ')+
+  (en?' · Top-100 tail is not the full small-cap universe. Micro/memes: unavailable. Observed returns, not capital flow or cycle phase. Rotation sequence unverified.':
+      ' · Top-100-halen dækker ikke hele small-cap-universet. Micro/memes: utilgængelige. Observeret afkast, ikke kapitalflow eller cyklusfase. Rotationssekvens ikke verificeret.');
 }
 
 function safeAlt(x){

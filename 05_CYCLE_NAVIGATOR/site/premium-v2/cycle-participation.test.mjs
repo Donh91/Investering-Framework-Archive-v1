@@ -85,3 +85,32 @@ test('live altseason source category survives weekly mismatch; stale, carry and 
  assert.equal(bindNativeAltseason(n,{...a,packet_sha256:'b'.repeat(64)},{verified:true}),null);
  assert.equal(readAltseason(x.l,x.c,{nowUtc:'2026-11-25T09:00:00Z'}),null);
 });
+
+test('segment detail reflects advancing and ETH-relative observations, not a rotation sequence',()=>{
+ const x=fixture(),elements=Object.fromEntries(['cn-map-participation','cn-map-participation-details'].map(k=>[k,{hidden:true,textContent:''}]));
+ const doc={getElementById:k=>elements[k]},details=elements['cn-map-participation-details'];
+ renderCycleParticipation(doc,x.l,x.c,{nowUtc,lang:'en'});
+ assert.match(details.textContent,/Large: minority outperform BTC, half outperform ETH, majority advancing/);
+ assert.match(details.textContent,/not the full small-cap universe/);
+ assert.match(details.textContent,/Rotation sequence unverified/);
+ x.n.cycle_participation.buckets.LARGE_ALT_PROXY.advancing='MINORITY';
+ x.n.cycle_participation.buckets.LARGE_ALT_PROXY.outperforming_eth='MAJORITY';x.bind();
+ renderCycleParticipation(doc,x.l,x.c,{nowUtc,lang:'da'});
+ assert.match(details.textContent,/Store: mindretal slår BTC, flertal slår ETH, mindretal stiger/);
+ assert.match(details.textContent,/Rotationssekvens ikke verificeret/);
+ x.n.cycle_participation.buckets.MID_ALT_PROXY={state:'UNAVAILABLE'};
+ x.n.cycle_participation.status='PARTIAL_OBSERVATION';x.bind();
+ renderCycleParticipation(doc,x.l,x.c,{nowUtc,lang:'en'});
+ assert.match(details.textContent,/Mid: unavailable/);
+});
+test('impossible UTC calendar dates and 24:00 do not normalize into valid source observations',()=>{
+ for(const [bad,exp,packet,issued] of [
+  ['2026-02-30T10:00:00Z','2026-03-02T18:00:00Z','2026-03-02T10:10:00Z','2026-03-02T10:15:00Z'],
+  ['2026-11-24T24:00:00Z','2026-11-25T08:00:00Z','2026-11-25T00:10:00Z','2026-11-25T00:15:00Z']
+ ]){
+  const x=fixture();
+  Object.assign(x.n.cycle_participation,{observed_at_utc:bad,valid_until_utc:exp});
+  x.n.generated_at_utc=issued;x.a.packet_generated_at_utc=packet;
+  assert.equal(bindNativeParticipation(x.n,x.a,{verified:true}),null);
+ }
+});
