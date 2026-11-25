@@ -426,7 +426,7 @@ def live_cases():
         "codex posted findings": (lambda w, gh, n: w["pr"][7]["comments"][1].update(
             body="<!-- codex-review-state:v1 " + json.dumps({"code_review": {"commit_sha": HEAD, "status": "completed", "has_unresolved_findings": True}}) + " -->"),
             "7:C5:codex_findings"),
-        "the codex review vanished (the PR holds code: no merge without a review)": (lambda w, gh, n: w["pr"][7].update(comments=[]), "7:C5:review_required_for_code"),
+        "the codex review vanished (the PR holds code: no merge without a review)": (lambda w, gh, n: w["pr"][7].update(comments=[]), "7:C5:review_required"),
         "the PR turns out to be opened by a bot and the review is gone": (lambda w, gh, n: (w["pr"][7].update(comments=[]), gh.pull.update(user=dict(TB.BOT))), "7:C5:bot_authored"),
         "main moved with a code change": (lambda w, gh, n: (setattr(gh, "main", MAIN2), setattr(n, "drift_paths", ["scripts/x.py"])), "BRIEF_STALE(source_changed)"),
         "main moved and touched a file of the PR": (lambda w, gh, n: (setattr(gh, "main", MAIN2), setattr(n, "drift_paths", ["docs/notes/a.md"])), "C2:needs_branch_update"),

@@ -378,12 +378,12 @@ class Decide(unittest.TestCase):
         # ... for a documentation-only PR. Code still waits for a completed review, whatever Codex answers.
         limit = lambda w: w["pr"][7].update(comments=[TB.comment(11, "@codex review", minutes_ago=300), TB.comment(12, "You have reached your usage limit", TB.CODEX, 290)])
         self.assertEqual(decide(lambda w: (docs_only(w), limit(w)), "LIVE", "NATIVE_GATES")[0]["action"], "MERGE")
-        self.assertEqual(decide(limit, "LIVE", "NATIVE_GATES")[0]["skipped"], ["7:C5:review_required_for_code"])
+        self.assertEqual(decide(limit, "LIVE", "NATIVE_GATES")[0]["skipped"], ["7:C5:review_required"])
         silent = lambda w: w["pr"][7].update(comments=[TB.comment(11, "@codex review", minutes_ago=380)],
                                              commits=[dict(w["pr"][7]["commits"][0], commit={"message": "docs", "committer": {"date": TB.ts(60 * 30)}})]) \
             or w["pr"][7]["comments"][0].update(created_at=TB.ts(60 * 25), updated_at=TB.ts(60 * 25))
         self.assertEqual(decide(lambda w: (docs_only(w), silent(w)), "LIVE", "NATIVE_GATES")[0]["action"], "MERGE")
-        self.assertEqual(decide(silent, "LIVE", "NATIVE_GATES")[0]["skipped"], ["7:C5:review_required_for_code"])
+        self.assertEqual(decide(silent, "LIVE", "NATIVE_GATES")[0]["skipped"], ["7:C5:review_required"])
 
     def test_a_brief_without_the_section_0_2i_facts_never_merges(self):
         w = thin_world()
@@ -719,7 +719,7 @@ COUNTEREXAMPLES = {
     "label_HIGH_IMPACT_underscore": (_chain(_files(TOOL), _label("HIGH_IMPACT")), "7:C5:hold_label:HIGH_IMPACT"),
     "label_risk_high": (_chain(_files(TOOL), _label("risk:high")), "7:C5:hold_label:risk:high"),
     "changes_requested_on_older_commit": (_chain(no_codex, _old_changes_requested), "7:C5:changes_requested"),
-    "p1_in_pr_conversation_comment": (_chain(_files(TOOL), no_codex, _p1_in_conversation), "7:C5:review_required_for_code"),
+    "p1_in_pr_conversation_comment": (_chain(_files(TOOL), no_codex, _p1_in_conversation), "7:C5:review_required"),
     # authorship
     "codex_authored_no_review": (_chain(_files(TOOL), no_codex, _codex_authored), "7:C5:codex_authored"),
     "claude_branch_no_review": (_chain(_files(TOOL), no_codex, lambda w: w["pulls"][0]["head"].update(ref="claude/anything")), "7:C5:ai_authored"),
@@ -805,15 +805,24 @@ class CodeIsNeverMergedUnreviewed(unittest.TestCase):
             self.assertEqual(D.review_gate(e, "NATIVE_GATES"), want, drop)
         self.assertEqual(D.review_gate(dict(ok, thin={"bot": False, "docs_only": True}), "NATIVE_GATES"), "C5:ai_authored")
         self.assertEqual(D.review_gate(dict(ok, thin={"docs_only": True, "ai": False}), "NATIVE_GATES"), "C5:bot_authored")
-        self.assertEqual(D.review_gate(dict(ok, thin={"bot": False, "ai": False}), "NATIVE_GATES"), "C5:review_required_for_code")
+        self.assertEqual(D.review_gate(dict(ok, thin={"bot": False, "ai": False}), "NATIVE_GATES"), "C5:review_required")
         self.assertEqual(D.review_gate(dict(ok, thin=None), "NATIVE_GATES"), "C5:ai_authored")
         self.assertEqual(D.review_gate(dict(ok, author=None), "NATIVE_GATES"), "C5:s1_authored")
         self.assertEqual(D.review_gate({}, "NATIVE_GATES"), "C5:review_unreadable")
         self.assertEqual(D.review_gate(dict(ok, review={"codex": {"status": "FINAL"}}, author={}), "NATIVE_GATES"), "C5:codex_authored")
 
     def test_what_counts_as_a_plain_document(self):
-        for path in ("docs/notes/a.md", "README.md", "06_RESEARCH_LAB/audit_summaries/note.md", "docs/guide.rst", "tests/x/README.md", "docs/Design.MD"):
+        for path in ("docs/notes/a.md", "README.md", "changelog/2026-11-25__x.md", "docs/guide.rst", "tests/x/README.md", "docs/Design.MD"):
             self.assertTrue(D.doc_path(path), path)
+        # section 0.2c D5: a research, market or forecast publication keeps its science owner's gate "regardless of .md suffix"
+        policy = json.loads((ROOT / B.POLICY_FILE).read_text(encoding="utf-8"))
+        self.assertEqual(list(D.SCIENCE_GATED_PREFIXES), policy["science_gated_prefixes"])
+        for path in ("06_RESEARCH_LAB/audit_summaries/note.md", "04_RESEARCH_LAB/x/note.md", "04_MARKET_LEARNING/handlekompas/exit_ladder.md",
+                     "05_CYCLE_NAVIGATOR/protocols/x.md", "research/programs/x.md"):
+            self.assertFalse(D.doc_path(path), path)
+            d, _b = decide(lambda w: (set_files(w, [file_(path)]), no_codex(w)), "LIVE", "NATIVE_GATES")
+            self.assertEqual((d["action"], d["skipped"]), ("NOOP", ["7:C5:review_required"]), path)
+            self.assertEqual(decide(lambda w: set_files(w, [file_(path)]), "LIVE", "NATIVE_GATES")[0]["action"], "MERGE", path)   # reviewed: a merge
         for path in ("scripts/x/a.py", "tests/x/test_a.py", "tests/x/fixture.json", "docs/a.txt", "requirements.txt", "docs/requirements-dev.txt",
                      "docs/a.html", "docs/conf.yml", "a.toml", "docs/a.md.py", "data/x.md", "03_DAILY_CAPTURE_LOGS/a.md", "LATEST_HANDOFF.md",
                      "docs/RECEIPT_x.md", "05_CYCLE_NAVIGATOR/site/a.md", ".github/x.md", "docs/.hidden/a.md", ".agents/x.md", "x/AGENTS.md",
@@ -830,11 +839,11 @@ class CodeIsNeverMergedUnreviewed(unittest.TestCase):
 
     def test_the_decision_under_native_gates(self):
         for name, mutate, want in (
-                ("code", code_no_review, "7:C5:review_required_for_code"),
-                ("a test file is code", no_codex, "7:C5:review_required_for_code"),
-                ("a dependency list", lambda w: (set_files(w, [file_("requirements.txt")]), no_codex(w)), "7:C5:review_required_for_code"),
-                ("a plain text file", lambda w: (set_files(w, [file_("docs/notes/a.txt")]), no_codex(w)), "7:C5:review_required_for_code"),
-                ("an agent instruction file", lambda w: (set_files(w, [file_("docs/x/CLAUDE.md")]), no_codex(w)), "7:C5:review_required_for_code"),
+                ("code", code_no_review, "7:C5:review_required"),
+                ("a test file is code", no_codex, "7:C5:review_required"),
+                ("a dependency list", lambda w: (set_files(w, [file_("requirements.txt")]), no_codex(w)), "7:C5:review_required"),
+                ("a plain text file", lambda w: (set_files(w, [file_("docs/notes/a.txt")]), no_codex(w)), "7:C5:review_required"),
+                ("an agent instruction file", lambda w: (set_files(w, [file_("docs/x/CLAUDE.md")]), no_codex(w)), "7:C5:review_required"),
                 ("a claude/ branch, documents only", lambda w: (docs_no_review(w), w["pulls"][0]["head"].update(ref="claude/x")), "7:C5:ai_authored"),
                 ("a codex/ branch, documents only", lambda w: (docs_no_review(w), w["pulls"][0]["head"].update(ref="codex/x")), "7:C5:codex_authored"),
                 ("a chatgpt/ branch, documents only", lambda w: (docs_no_review(w), w["pulls"][0]["head"].update(ref="chatgpt/x")), "7:C5:ai_authored"),
@@ -925,7 +934,7 @@ class WordsInsideIdentifiers(unittest.TestCase):
         for text in ("scripts/signals/x.py", "docs/design.md", "scripts/x/assign.py", "scripts/x/tokenizer.py", "scripts/x/authoring.py", "scripts/x/author.py",
                      "scripts/x/reorder.py", "scripts/x/border.py", "scripts/x/executive_summary.md", "scripts/x/seeded.py", "scripts/x/keynote.md",
                      "scripts/x/environment.py", "scripts/x/monkey.py", "scripts/x/os_environ.py", "docs/notes/a.md", "scripts/zz_area/tool.py",
-                     "scripts/x/paidia.py", "scripts/x/sellotape.py", "scripts/x/buyout_x.py"[:0] or "scripts/x/abuy.py", "we did this in order to simplify",
+                     "scripts/x/paidia.py", "scripts/x/sellotape.py", "scripts/x/abuy.py", "scripts/x/rebuy.py", "we did this in order to simplify",
                      "x.keys() and dict.keyset", "the signal is designed and assigned", "HTTPServer", "sort the snippets"):
             self.assertEqual(self.hits(text), [], text)
 
@@ -1083,8 +1092,9 @@ class SectionMatchesTheCode(unittest.TestCase):
             self.assertFalse(B.AI_BRANCH.match(f"{name}x/y"), name)
 
     def test_the_plain_document_rule_is_named(self):
-        self.assertIn("A plain document is a `.md` or `.rst` file of class LOW that is in no dot-directory and is not an agent instruction file", self.sec)
+        self.assertIn("A plain document is a `.md` or `.rst` file of class LOW that is in no dot-directory, under no science-gated prefix of §0.2c D5 (", self.sec)
         self.assertEqual(D.DOCS_ONLY_SUFFIXES, (".md", ".rst"))
+        self.assertEqual(self.named(r"under no science-gated prefix of §0\.2c D5 \((.*?)\)"), list(D.SCIENCE_GATED_PREFIXES))
         named = self.named(r"is not an agent instruction file \((.*?)\);")
         self.assertEqual(named, ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "SKILL.md", "copilot-instructions.md", "prompt", "instruction", "bootstrap"])
         for name in named[:5]:
@@ -1092,7 +1102,7 @@ class SectionMatchesTheCode(unittest.TestCase):
         for stem in named[5:]:
             self.assertFalse(D.doc_path(f"docs/x/a_{stem}_b.md"), stem)
         self.assertEqual(len(D.AGENT_FILE.pattern.split("|")), len(named))             # nothing in the pattern that the section does not name
-        self.assertIn("a test file, a `.txt` file and a dependency list are code", self.sec)
+        self.assertIn("a test file, a `.txt` file and a dependency list are code, and a research, market or forecast publication keeps its science owner's gate.", self.sec)
 
     def test_the_constants_the_section_states(self):
         self.assertIn("One merge attempt per PR head, ever", self.sec)

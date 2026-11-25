@@ -43,7 +43,7 @@ HOLD_LABELS = ("s1-hold", "hold", "on-hold", "do-not-merge", "dnm", "owner-gated
 TITLE_HOLD = re.compile(r"(?i)^[\s\[\(]*(draft|wip|do[ _-]?not[ _-]?merge|dnm|hold)(?![A-Za-z])")   # a title that says "not yet"
 # gates that are the executor's own policy: a PR that only these hold is finished work that waits for the owner's merge
 OWNER_ROUTE_GATES = ("C2:judgment:", "C2:risk:", "C2:push_trigger:", "C2:shrinks:", "C5:strategist", "C5:bot_authored", "C5:s1_authored",
-                     "C5:codex_authored", "C5:ai_authored", "C5:review_required_for_code", "C5:codex_final_required", "C9:attempted_head")
+                     "C5:codex_authored", "C5:ai_authored", "C5:review_required", "C5:codex_final_required", "C9:attempted_head")
 ORIGIN_WINDOW_MINUTES = 15                 # EVIDENCE_BINDINGS s1_origin_window_minutes: merged_at within this of the intent
 CPH = ZoneInfo("Europe/Copenhagen")
 SHA40 = re.compile(r"[0-9a-f]{40}")
@@ -51,6 +51,9 @@ TASK_ID = "6ae5fd466b48819187abc224ec0f1c5f"
 OWNER_ISSUE = 1156
 DOC_SUFFIXES = (".md", ".txt", ".rst")
 DOCS_ONLY_SUFFIXES = (".md", ".rst")       # the only files a PR may change to merge with no completed review (review_gate)
+# AGENTS.md section 0.2c D5 and the manifest's science_gated_prefixes: a research, market or forecast publication
+# under these prefixes needs its science owner's gate "regardless of .md suffix". It is never a plain document.
+SCIENCE_GATED_PREFIXES = ("04_MARKET_LEARNING/", "04_RESEARCH_LAB/", "05_CYCLE_NAVIGATOR/", "06_RESEARCH_LAB/", "research/")
 MANIFEST_NAME = re.compile(r"(?i)^(?:requirements|constraints)[^/]*\.txt$")       # a dependency list is code, not a document
 AGENT_FILE = re.compile(r"(?i)^(?:agents|claude|gemini|skill|copilot-instructions)\.md$|prompt|instruction|bootstrap")
 DATA_SUFFIXES = (".json", ".jsonl", ".ndjson", ".csv", ".tsv", ".parquet", ".db", ".sqlite", ".log")
@@ -322,11 +325,12 @@ def hold_label(name):
 
 
 def doc_path(path):
-    """Is this path a plain document: Markdown or reStructuredText of class LOW, in no dot-directory, and not a file
-    that instructs an agent (AGENTS.md, a prompt, a bootstrap text)? Everything else is code for review_gate()."""
+    """Is this path a plain document: Markdown or reStructuredText of class LOW, in no dot-directory, under no
+    science-gated prefix (section 0.2c D5: genuinely documentation-only, NON-scientific), and not a file that
+    instructs an agent (AGENTS.md, a prompt, a bootstrap text)? Everything else needs a review (review_gate)."""
     p = str(path or "")
     return (p.lower().endswith(DOCS_ONLY_SUFFIXES) and path_risk(p) == "LOW" and not any(part.startswith(".") for part in p.split("/"))
-            and not AGENT_FILE.search(p.rsplit("/", 1)[-1]))
+            and not p.startswith(SCIENCE_GATED_PREFIXES) and not AGENT_FILE.search(p.rsplit("/", 1)[-1]))
 
 
 def entry_facts(pr, files, files_complete, push_filters):
@@ -402,7 +406,7 @@ def review_gate(e, policy):
     if thin.get("bot") is not False:
         return "C5:bot_authored"
     if thin.get("docs_only") is not True:
-        return "C5:review_required_for_code"
+        return "C5:review_required"
     return None
 
 
