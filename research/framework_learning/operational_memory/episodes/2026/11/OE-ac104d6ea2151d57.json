@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json",
+    "scripts/api_agent/astra_mission_reservations_v1.py",
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "tests/api_agent/test_astra_provider_settlement_v1.py",
+    "tests/api_agent/test_owner_global_api_budget_cap.py",
+    "tests/research/test_owner_astra_mission_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-ac104d6ea2151d57",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Release owner-cancelled unlaunched supervisor Astra reservation with retained history * Separate deterministic budget regression from live paid readiness (owner approved)",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.json": "112f505c709b61ccc01a0774c7a9d8f50a06452b",
+    "scripts/api_agent/astra_mission_reservations_v1.py": "d4ee2aa5ec9e01c02037983ecec365871f47c024",
+    "scripts/api_agent/check_monthly_cost_guard.py": "19a63d202cce492ca6f13b6f89dbe1950994f904",
+    "tests/api_agent/test_astra_provider_settlement_v1.py": "3ab4e20f748cdf7f654a95c376bebc8c441dcc51",
+    "tests/api_agent/test_owner_global_api_budget_cap.py": "26ada1066ed990b097637816ca4962d7d18cc289",
+    "tests/research/test_owner_astra_mission_v1.py": "a0d24ea9b468c46282dd7e1fd83b779179b6dca4"
+  },
+  "source_commit_sha": "ac104d6ea2151d57a6234058ab56042d72cea1ba",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-25T09:13:45+01:00",
+  "task_class": "API_AGENT",
+  "task_summary": "Release unlaunched supervisor Astra reservation; separate paid readiness from code CI (#2332)"
+}
