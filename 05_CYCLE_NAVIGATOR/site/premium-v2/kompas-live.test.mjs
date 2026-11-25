@@ -275,7 +275,8 @@ function withFallback(doc){
  const fb={};
  for(const [k,a] of Object.entries(doc.assets)){
   const u=asset(a.p0,{down:false});delete u.challenger_b;
-  for(const h of ['1','3','7'])u.headline[h]={...u.headline[h],direction:'NONE',reason:'NO_VIEW',strength:null,tilting_views:[]};
+  u.drift_per_day={g13:0,g57:0};
+  for(const h of ['1','3','7'])u.headline[h]={...u.headline[h],direction:'NONE',reason:'NO_VIEW',strength:null,balance:null,tilting_views:[],official_direction:{'1_3d':null,'5_7d':null}};
   fb[k]=u;
  }
  return {...doc,kompas_view_state:{status:'VERIFIED',reason:null,valid_until_utc:doc.official_source_valid_until_utc},
@@ -356,4 +357,21 @@ test('invalid calendar deadlines never prolong a tilted view; valid fractional U
  good.assets.BTC.as_of_utc='2026-11-13T18:00:00.00Z';
  good.official_source_valid_until_utc='2026-11-13T22:00:00.000Z';
  assert.equal(liveViewModel(good,{nowMs:NOW}).state,'OK');
+});
+
+
+test('expired source rejects a forged untilted marker with residual tilt',()=>{
+ const make=()=>withFallback({...fixture(),official_source_valid_until_utc:iso(NOW-1)});
+ const attacks=[a=>a.days[0].centre+=1,
+  a=>a.days[0].log_shift=0.01,
+  a=>a.drift_per_day.g13=0.01,
+  a=>a.headline['3'].direction='DOWN',
+  a=>a.headline['3'].target+=1,
+  a=>a.headline['3'].pct=1,
+  a=>a.headline['7'].official_direction['5_7d']='DOWN',
+  a=>a.headline['1'].tilting_views=['1_3d']];
+ for(const mutate of attacks){const d=make();mutate(d.no_kompas_view.assets.BTC);
+  const m=liveViewModel(d,{nowMs:NOW});assert.equal(m.state,'UNAVAILABLE');assert.equal(m.chart,null);}
+ const rounded=make();const a=rounded.no_kompas_view.assets.BTC;a.p0+=0.003;
+ assert.equal(liveViewModel(rounded,{nowMs:NOW}).state,'OK');
 });
