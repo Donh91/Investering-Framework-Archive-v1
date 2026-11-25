@@ -212,6 +212,44 @@ class TestEtfOwnerAdapter(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"ROW_SIGNATURE_MISMATCH"):
                 etf.validate_owner_record(path)
 
+    def test_pinned_etf_verification_clock_and_historical_commit(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            def git(*args):
+                return subprocess.check_output(["git", "-C", td, *args], stderr=subprocess.DEVNULL, text=True).strip()
+            git("init", "-q")
+            git("config", "user.email", "fixture@example.invalid")
+            git("config", "user.name", "Fixture")
+            name = "03_DAILY_CAPTURE_LOGS/etf/2026/08/08/060800_2026-08-07.json"
+            body = current_owner()
+            self.write(root, name, body)
+            pointer = {"contract": "DAILY_SETTLED_ETF_LATEST_POINTER_v2", "status": "PASS",
+                       "path": name, "session_date": body["session_date"],
+                       "row_signature_sha256": body["row_signature_sha256"],
+                       "retrieved_at_utc": body["retrieved_at_utc"],
+                       "verification_completed_at_utc": "2026-08-08T06:08:00Z"}
+            pp = self.write(root, "03_DAILY_CAPTURE_LOGS/etf/LATEST.json", pointer)
+            git("add", ".")
+            git("commit", "-qm", "first source")
+            head = git("rev-parse", "HEAD")
+            early = etf.pinned_settled_context(root, head, head, etf.parse_utc("2026-08-08T06:07:00Z"))
+            self.assertEqual(early["status"], "UNAVAILABLE")
+            cutoff = etf.parse_utc("2026-08-08T06:09:00Z")
+            valid = etf.pinned_settled_context(root, head, head, cutoff)
+            self.assertEqual(valid["status"], "VERIFIED_DECLARED_CLOCK_CONTEXT_ONLY")
+            self.assertEqual(valid["raw_reported_totals"], {"BTC": 100, "ETH": 50})
+            self.assertFalse(valid["scientific_pit_eligible"])
+            self.assertIsNone(valid["absorption_state"])
+            pointer["path"] = "../unsafe.json"
+            pp.write_text(json.dumps(pointer))
+            git("add", ".")
+            git("commit", "-qm", "later broken pointer")
+            future = git("rev-parse", "HEAD")
+            self.assertEqual(etf.pinned_settled_context(root, head, head, cutoff), valid)
+            self.assertEqual(etf.pinned_settled_context(root, future, head, cutoff)["status"], "UNAVAILABLE")
+            self.assertEqual(etf.pinned_settled_context(root, future, future, cutoff)["reason"], "ETF_POINTER_PATH_INVALID")
+
     def test_preflight_does_not_run_experiment_or_call_sources(self):
         with tempfile.TemporaryDirectory() as td:
             result=etf.readiness(Path(td))

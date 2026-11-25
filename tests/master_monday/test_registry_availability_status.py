@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import subprocess
 import sys
@@ -43,9 +44,14 @@ class RegistryAvailabilityStatusTests(unittest.TestCase):
         preflight = root / "preflight.json"
         context = root / "context.json"
         output = root / "published"
-        freeze.write_text(json.dumps({"iso_year": 2026, "iso_week": 35, "freeze_sha256": "freeze"}))
+        freeze_value={"iso_year": 2026, "iso_week": 32, "freeze_sha256": "a"*64}
+        freeze.write_text(json.dumps(freeze_value))
         preflight.write_text(json.dumps({"package_sha256": "preflight", "packet": {"status": "FULL_MASTER_MONDAY_INPUT"}}))
-        context.write_text(json.dumps({"context_hash": "context", "experiment_learning": learning}))
+        context_value={"contract":"WEEKLY_API_CALIBRATION_CONTEXT_v6","authority":"SHADOW_ONLY",
+                       **freeze_value,"window_start_utc":"2026-08-03T00:00:00Z",
+                       "window_end_utc":"2026-08-10T00:00:00Z","experiment_learning":learning}
+        context_value["context_hash"]=hashlib.sha256((json.dumps(context_value,sort_keys=True,separators=(",",":"))+"\n").encode()).hexdigest()
+        context.write_text(json.dumps(context_value))
         command = [
             sys.executable,
             str(publisher_path),

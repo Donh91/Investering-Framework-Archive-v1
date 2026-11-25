@@ -875,6 +875,12 @@ def main() -> None:
             "No framework-state, model-weight or portfolio authority.",
         ],
     }
+    # The existing calibration lane consumes the same source-bound feature
+    # projection as CN, with matured learning in a separate research section.
+    from scripts.research.cn_mm_core_shadow_bridge_v1 import calibration_intelligence
+    context["cn_mm_shared_intelligence"] = calibration_intelligence(args.repo_root, args.freeze_file, freeze)
+    context["rules"].append("cn_mm_shared_intelligence.feature is observation-only; learning and task2 are matured research only. Never feed outcomes into feature generation, grant forecast authority, update weights, or interpret unavailable context as market evidence.")
+    context["rules"].append("For cn_mm_shared_intelligence.learning, inspect the matched horizon denominators, CCE structural dependence, ODM matured common endpoints, SRE descriptive candidate metrics, FAE paired attribution and veto magnitude; never count overlapping rows as independent, infer original legacy formulas, or treat a blocked C2 or missing source as market evidence. Distinguish Task2 interval score from width and close coverage. No automatic RWE updates.")
     context["context_hash"] = hashlib.sha256(canonical(context)).hexdigest()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(canonical(context))

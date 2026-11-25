@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.learning.strategic_compass import alignment_class, materialize, validate_forward_range_candidate
+from scripts.learning.strategic_compass import alignment_class, materialize, validate_forward_range_candidate, digest
 
 # Existing Official Compass Outcomes PR gate invokes this test module.
 # Import the isolated long-range shadow validators to execute their adversarial suite.
 from tests.learning.test_strategic_compass_long_range_validation import LongRangeCandidateTests  # noqa: F401
 from tests.learning.test_forward_price_shadow import ShadowPriceTests  # noqa: F401
 from tests.learning.test_forward_price_source_custody import SourceCustodyTests  # noqa: F401
-from tests.learning.test_forward_price_research_oracle import ForwardPriceResearchOracleTests  # noqa: F401
+from tests.learning.test_forward_price_research_oracle import ForwardPriceResearchOracleTests, NativeUsdtMatchedWindowTests  # noqa: F401
 from tests.learning.test_forward_price_admission_horizon_guard import ForwardPriceAdmissionHorizonGuardTests  # noqa: F401
 from tests.learning.test_forward_price_public_api_candidate import ForwardPricePublicApiCandidateTests  # noqa: F401
 from tests.learning.test_forward_price_binance_native_usdt_candidate import BinanceNativeUsdtSourceTests  # noqa: F401
@@ -24,6 +25,18 @@ from tests.learning.test_kompas_pro_internal_horizon_v2 import KompasProContract
 def write(path: Path, value: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value))
+
+
+def seal_official(repo,relative):
+    path=repo/relative
+    source=json.loads(path.read_text())
+    source.update(contract="OFFICIAL_DAILY_COMPASS_v1",issued_at_utc="2026-09-30T11:00:00Z")
+    source.pop("compass_sha256",None);source["compass_sha256"]=digest(source)
+    write(path,source)
+    write(repo/"04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",{
+        "contract":"OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1","compass_path":relative,
+        "compass_id":source["compass_id"],"issued_at_utc":source["issued_at_utc"],
+        "compass_sha256":source["compass_sha256"]})
 
 
 def fixture_repo(tmp_path: Path, *, month=True, cycle_direction="UP") -> Path:
@@ -37,10 +50,7 @@ def fixture_repo(tmp_path: Path, *, month=True, cycle_direction="UP") -> Path:
             "NEXT_5_7D": {"expected_direction": "SIDEWAYS", "expected_path": "absorption", "action_posture": "HOLD"},
         },
     })
-    write(tmp_path / "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json", {
-        "compass_path": compass_rel,
-        "compass_sha256": "official-sha",
-    })
+    seal_official(tmp_path,compass_rel)
     projection = {
         "weeks_4_8": {
             "direction": cycle_direction, "summary": "structural bull", "state": "ROTATION",
@@ -61,16 +71,41 @@ def fixture_repo(tmp_path: Path, *, month=True, cycle_direction="UP") -> Path:
         }
     cn_rel = "05_CYCLE_NAVIGATOR/weekly/2026/W40"
     write(tmp_path / cn_rel / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json", {
+        "contract":"CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1",
         "status": "READY", "issue_number": 28, "public_issue_number": 27,
         "decision_projection": projection,
     })
     write(tmp_path / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json", {
-        "week_dir": cn_rel, "machine_package_sha256": "cn-sha", "iso_year": 2026, "iso_week": 40,
+        "contract":"CYCLE_NAVIGATOR_DELIVERY_POINTER_v1",
+        "week_dir": cn_rel, "machine_package_sha256": hashlib.sha256((tmp_path/cn_rel/"CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").read_bytes()).hexdigest(),
+        "iso_year": 2026, "iso_week": 40,"issue_number":28,"public_issue_number":27,"status":"READY",
     })
     return tmp_path
 
 
 class StrategicCompassTests(unittest.TestCase):
+    def test_strategic_rejects_unbound_long_horizon_and_official_source(self):
+        now=datetime(2026,9,30,12,tzinfo=timezone.utc)
+        for target in ("cn","official","week"):
+            with self.subTest(target=target),tempfile.TemporaryDirectory() as td:
+                repo=fixture_repo(Path(td))
+                pointer=repo/"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+                if target=="cn":
+                    path=repo/"05_CYCLE_NAVIGATOR/weekly/2026/W40/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+                    source=json.loads(path.read_text())
+                    source["decision_projection"]["weeks_4_8"]["direction"]="DOWN"
+                    write(path,source)
+                elif target=="official":
+                    path=repo/"04_MARKET_LEARNING/handlekompas/official/daily/2026/09/30/CMP-test.json"
+                    source=json.loads(path.read_text())
+                    source["horizons"]["NEXT_1_3D"]["expected_direction"]="UP"
+                    write(path,source)
+                else:
+                    p=json.loads(pointer.read_text());p["iso_week"]=41;write(pointer,p)
+                with self.assertRaisesRegex(ValueError,"STRATEGIC_"):
+                    materialize(repo,now)
+                self.assertFalse((repo/"04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json").exists())
+
     def test_tactical_pullback_structural_bull_class(self):
         self.assertEqual(alignment_class(["DOWN", "DOWN", "SIDEWAYS", "UP", "UP"]), "TACTICAL_PULLBACK_STRUCTURAL_BULL")
 
@@ -119,6 +154,7 @@ class StrategicCompassTests(unittest.TestCase):
             freeze["horizons"]["NEXT_1_3D"]["expected_direction"] = "UP"
             freeze["horizons"]["NEXT_5_7D"]["expected_direction"] = "UP"
             write(path, freeze)
+            seal_official(repo,str(path.relative_to(repo)))
             r = materialize(repo, datetime(2026, 9, 30, 12, tzinfo=timezone.utc))
             a = json.loads((repo / r["anchor_path"]).read_text())
             self.assertEqual(a["tactical_context"]["12h"]["direction"], "UNAVAILABLE")

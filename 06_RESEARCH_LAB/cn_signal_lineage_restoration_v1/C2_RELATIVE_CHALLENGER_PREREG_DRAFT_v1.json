@@ -1,0 +1,50 @@
+{
+  "contract": "CN_MM_C2_RELATIVE_CHALLENGER_PREREG_DRAFT_v1",
+  "status": "DRAFT_NOT_ACTIVATED_NO_ISSUANCE",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "hypothesis": "The existing two-family C06 breadth/BTC.D permission may add relative ETH vs BTC forecast information beyond the independent Task2 A no-drift anchor. C07 remains frozen. Do not infer negative drift from absence of permission.",
+  "model_proposal": {
+    "baseline": "Task2 A frozen BTC/ETH P0 and volatility; C0 original CN daily expected close",
+    "relative_tilt": "Candidate for review: positive C06 permission only; symmetric opposite log-price shift preserving geometric midpoint; scale bounded by existing Task2 B 0.5 coefficient and smaller of A hourly sigmas; zero drift when verified permission false, abstain when source unavailable. Exact formula, clocks and implementation must be frozen in reviewed follow-up before activation.",
+    "sequence_role": "Separate preregistered diagnostic; do not treat observed crossing as confirmed sequence.",
+    "fixture_formula": {
+      "status": "IMPLEMENTED_SYNTHETIC_ONLY_PENDING_REVIEW",
+      "relative_log_drift": "0.5 * min(sigma_BTC_hourly,sigma_ETH_hourly) * sqrt(24) * h/24 if C06 true; zero if verified false; abstain if unavailable",
+      "asset_log_shift": "ETH +relative_log_drift/2; BTC -relative_log_drift/2",
+      "band_shift": "multiply existing A quantile endpoints by exp(asset_log_shift); preserves logarithmic width, not calibrated coverage",
+      "max_hours": 168,
+      "implementation": "scripts/research/cn_mm_c2_relative_tilt_fixture_v1.py",
+      "activation": "rejects any A source other than explicit synthetic fixture; no live issuance interface"
+    }
+  },
+  "activation": {
+    "earliest_week": null,
+    "required": "Reviewed immutable main contract/code and original source known-by evidence before first forecast issue; first actual consumer delivery recorded; no historical backfill",
+    "historical_data_use": "2026-W47 and earlier/current exposed outcomes are exploratory only; never confirmatory C2"
+  },
+  "evaluation": {
+    "primary": "Paired daily close normalized MAE vs A no-drift; separate BTC and ETH and relative ratio",
+    "secondary": [
+      "CN C0 same cohort",
+      "directional skill",
+      "close coverage",
+      "full-day range containment",
+      "interval score and width"
+    ],
+    "cohort": "Same decision cutoff, original source clocks, outcome path and availability across candidates; report abstentions; eight resolved week clusters proposed subject to review",
+    "no_posthoc_tuning": true,
+    "fixture_harness": {
+      "status": "IMPLEMENTED_SYNTHETIC_ONLY_PENDING_REVIEW",
+      "implementation": "scripts/research/cn_mm_c2_relative_tilt_fixture_v1.py",
+      "unit_tests": "tests/research/test_cn_mm_c2_relative_tilt_fixture_v1.py",
+      "matched_population": "both BTC and ETH must have all original A scored hours; whole-day exclusion for late delivery, unmatured day, missing either asset or unavailable permission",
+      "relative_target": "implied ETH/BTC spot close ratio from identical paired close times; no separately timestamped ratio",
+      "metrics": "normalized close MAE, direction including FLAT, close and full-range coverage, original A primary interval score and width, all with identical denominators",
+      "guard": "no real issuance, no historical C2 score, no independent sample or edge, synthetic delivery clock unverified",
+      "c0_comparison": "Synthetic wrapper of original CN_FROZEN_DAILY_PRICE_PATH_v1 and CN_FROZEN_DAILY_RANGE_PLAN_v1; exact A digest, same issue clock, complete week, common latest delivery clock and same paired days across C0/C1/C2. C0 range interval evaluated against close, not a calibrated close interval. Real CN source not accepted by fixture interface."
+    }
+  },
+  "forecast_authority": false,
+  "portfolio_execution": false,
+  "automatic_weight_updates": false
+}

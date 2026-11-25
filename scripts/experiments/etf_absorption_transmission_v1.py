@@ -5,6 +5,8 @@ import hashlib
 import json
 import math
 import os
+import re
+import subprocess
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -35,7 +37,7 @@ def finite_number(value: Any) -> bool:
         return False
 
 
-def strict_json(path: Path):
+def strict_json_bytes(raw):
     def constant(raw):
         raise ValueError('NON_FINITE_JSON')
     def number(raw):
@@ -50,7 +52,11 @@ def strict_json(path: Path):
                 raise ValueError('DUPLICATE_JSON_KEY')
             result[key] = value
         return result
-    return json.loads(path.read_text(), parse_float=number, parse_constant=constant, object_pairs_hook=pairs)
+    return json.loads(raw, parse_float=number, parse_constant=constant, object_pairs_hook=pairs)
+
+
+def strict_json(path: Path):
+    return strict_json_bytes(path.read_bytes())
 
 
 def iso_utc(value: datetime) -> str:
@@ -78,6 +84,10 @@ def validate_owner_record(path: Path) -> OwnerRecord:
     except Exception as exc:
         raise ValueError(f"INVALID_JSON:{path}") from exc
 
+    return validate_owner_payload(record, path)
+
+
+def validate_owner_payload(record, path) -> OwnerRecord:
     if not isinstance(record, dict):
         raise ValueError(f"RECORD_OBJECT_REQUIRED:{path}")
     contract = record.get("contract")
@@ -237,6 +247,69 @@ def asof_join(records: list[OwnerRecord], cutoff_utc: datetime) -> dict[str, Any
         "raw_reported_totals": {"BTC": selected.btc_reported_total, "ETH": selected.eth_reported_total},
     })
     return base
+
+
+def pinned_settled_context(repo: Path, source_commit: str, producer_checkout: str,
+                           cutoff: datetime) -> dict:
+    """Use existing validated ETF owner at the original row source commit.
+
+    The captured pointer is a historical pointer, never today's LATEST. Require
+    its verification-completion clock, not merely retrieval time, before cutoff.
+    Git ancestry and declared clock do not establish independent PIT knowledge.
+    Missing or invalid context does not veto the preexisting core.
+    """
+    base = {"contract": "ETF_PINNED_SETTLED_CONTEXT_v1",
+            "authority": "RESEARCH_ONLY_NON_CANONICAL", "forecast_authority": False,
+            "scientific_pit_eligible": False, "absorption_state": None,
+            "absorption_status": "BLOCKED_UNFROZEN_TRANSFORM",
+            "status": "UNAVAILABLE", "source_commit": source_commit}
+    try:
+        if cutoff.utcoffset() is None:
+            raise ValueError("CUTOFF_TIMEZONE_REQUIRED")
+        if any(not isinstance(x, str) or not re.fullmatch("[0-9a-f]{40}", x)
+               for x in (source_commit, producer_checkout)):
+            raise ValueError("ETF_SOURCE_COMMIT_INVALID")
+
+        def git(*args):
+            return subprocess.check_output(["git", "-C", str(repo), *args],
+                                           stderr=subprocess.DEVNULL, timeout=30)
+        git("merge-base", "--is-ancestor", producer_checkout, "HEAD")
+        git("merge-base", "--is-ancestor", source_commit, producer_checkout)
+        pointer_raw = git("show", source_commit + ":03_DAILY_CAPTURE_LOGS/etf/LATEST.json")
+        pointer = strict_json_bytes(pointer_raw)
+        if (pointer.get("contract") != "DAILY_SETTLED_ETF_LATEST_POINTER_v2" or
+                pointer.get("status") != "PASS"):
+            raise ValueError("ETF_POINTER_INVALID")
+        path = pointer["path"]
+        if not isinstance(path, str) or not re.fullmatch(
+                r"03_DAILY_CAPTURE_LOGS/etf/\d{4}/\d{2}/\d{2}/\d{6}_\d{4}-\d{2}-\d{2}\.json", path):
+            raise ValueError("ETF_POINTER_PATH_INVALID")
+        completed = parse_utc(pointer["verification_completed_at_utc"])
+        retrieved = parse_utc(pointer["retrieved_at_utc"])
+        if not retrieved <= completed <= cutoff:
+            raise ValueError("ETF_VERIFICATION_AFTER_CUTOFF_OR_CLOCK_INVALID")
+        raw = git("show", source_commit + ":" + path)
+        record = validate_owner_payload(strict_json_bytes(raw), path)
+        if (record.source_contract != SOURCE_CONTRACT or
+                record.session_date != pointer["session_date"] or
+                record.row_signature_sha256 != pointer["row_signature_sha256"] or
+                record.known_at_utc != retrieved or
+                date.fromisoformat(record.session_date) >= completed.date() or
+                not path.endswith("_" + record.session_date + ".json")):
+            raise ValueError("ETF_POINTER_OWNER_MISMATCH")
+        return {**base, "status": "VERIFIED_DECLARED_CLOCK_CONTEXT_ONLY",
+                "source_path": path, "source_sha256": hashlib.sha256(raw).hexdigest(),
+                "pointer_sha256": hashlib.sha256(pointer_raw).hexdigest(),
+                "row_signature_sha256": record.row_signature_sha256,
+                "session_date": record.session_date,
+                "retrieved_at_utc": retrieved.isoformat(),
+                "verification_completed_at_utc": completed.isoformat(),
+                "independent_first_known_utc": None,
+                "raw_reported_totals": {"BTC": record.btc_reported_total, "ETH": record.eth_reported_total}}
+    except (ValueError, KeyError, TypeError, AttributeError, OSError, OverflowError,
+            subprocess.SubprocessError) as exc:
+        return {**base, "reason": str(exc).split(":", 1)[0],
+                "independent_first_known_utc": None}
 
 
 def readiness(root: Path) -> dict[str, Any]:

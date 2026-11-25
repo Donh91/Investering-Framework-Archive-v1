@@ -200,50 +200,528 @@ def build_checkout(freeze_file, head):
                      "03_CANDIDATE_REGISTRY.json", "RUNTIME_STATUS.json"):
             committed(BASE / name, head, compare_worktree=True)
         owner = load_owner()
-        eligible = set(owner.eligible_candidates())
-        if not set(CORE).issubset(eligible):
-            raise ValueError("FROZEN_CORE_INACTIVE")
-        floor = max(owner.eligibility_floor_for_candidate(k) for k in CORE)
+        replay = owner.PinnedSourceReplay(ROOT, head)
+        if replay.ledger_raw != ledger_raw:
+            raise ValueError("SHADOW_PINNED_LEDGER_MISMATCH")
+        floor = replay.floor
         start, end, frozen = map(clock, (freeze["window_start_utc"], freeze["window_end_utc"],
                                         freeze["created_at_utc"]))
         if not start < end <= frozen:
             raise ValueError("INVALID_FREEZE_WINDOW")
 
-        def verify(row, at, decisions):
-            owner.verify_frozen_provenance(row)
-            owner.validate_core_decision_contract(row, decisions, eligible)
-            owner.verify_source_bindings(row, at)
-
         packet["core"] = evaluate_rows(read_rows(ledger_raw), iso(start), iso(end), iso(floor),
-                                       verify, owner.PROVENANCE_MUTABLE_FIELDS)
+                                       replay.verify, owner.PROVENANCE_MUTABLE_FIELDS)
     except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError, csv.Error, ImportError, subprocess.SubprocessError):
         packet["core"] = unknown("FROZEN_SOURCE_OR_OWNER_UNAVAILABLE")
     packet["packet_sha256"] = sha(canon(packet))
     return packet
 
 
-def verify_packet_projection(packet, freeze, ledger_raw, registry_raw):
-    """Recompute the observation projection; source replay remains the owner's job.
+def verify_packet_projection(packet, freeze, ledger_raw, registry_raw, *, repo):
+    """Recompute from original source bytes, not merely the self-hashed ledger.
 
-    This prevents a self-rehashed packet from inventing a different candidate
-    decision or interval ordering at publication or CN consumption.
+    Keep the v1 packet shape unchanged; persistence is a versioned readback
+    diagnostic, not an independent PIT claim.
     """
-    if sha(ledger_raw) != packet.get("ledger_sha256"):
+    owner = load_owner()
+    replay = owner.PinnedSourceReplay(repo, packet["checkout_sha"])
+    if (sha(ledger_raw) != packet.get("ledger_sha256") or
+            replay.ledger_raw != ledger_raw or replay.registry_raw != registry_raw):
         raise ValueError("SHADOW_LEDGER_BINDING_MISMATCH")
-    registry = load_evidence_object(registry_raw)
-    rule = registry["core_activation_rule"]
-    families = {r["family_id"]: r for r in registry["families"]}
-    if set(rule["start_only_when"]) != set(SINGLES) or set(rule["candidates"]) != set(CORE):
-        raise ValueError("SHADOW_FROZEN_CORE_MISMATCH")
-    floor = max(clock(families[k]["prospective_eligibility_start"]) for k in SINGLES)
     start, end, frozen = map(clock, (freeze["window_start_utc"], freeze["window_end_utc"], freeze["created_at_utc"]))
     if not start < end <= frozen:
         raise ValueError("SHADOW_FREEZE_WINDOW_INVALID")
-    mutable = {f"{k}_{h}" for h in ("24h", "72h", "7d") for k in ("outcome", "mae", "mfe")}
-    expected = evaluate_rows(read_rows(ledger_raw), iso(start), iso(end), iso(floor),
-                             lambda *_: None, mutable)
+    diagnostics = {}
+    sequence_inputs = []
+    verified_rows = {}
+
+    def verify(row, at, decisions):
+        persistence = replay.verify(row, at, decisions)
+        diagnostics[row["event_id"]] = persistence
+        verified_rows[row["event_id"]] = row
+        sequence_inputs.append(owner.sequence_observation(row, at, persistence))
+
+    expected = evaluate_rows(read_rows(ledger_raw), iso(start), iso(end), iso(replay.floor),
+                             verify, owner.PROVENANCE_MUTABLE_FIELDS)
     if expected["status"] != "CORE_REPLAY_AT_OBSERVATION_ONLY" or packet["core"] != expected:
         raise ValueError("SHADOW_PROJECTION_MISMATCH")
+    try:
+        sequence = owner.sequence_census(sequence_inputs, history_truncated=expected["history_truncated"])
+    except ValueError as exc:
+        sequence = {"status": "BLOCKED_SOURCE_SEQUENCE_CONFLICT", "reason": str(exc),
+                    "forecast_authority": False}
+    from scripts.experiments.etf_absorption_transmission_v1 import pinned_settled_context
+    latest = expected["latest_observation"]
+    etf = pinned_settled_context(repo, latest["source_commit"], packet["checkout_sha"],
+                                 clock(latest["observation_utc"]))
+    from scripts.research.cn_mm_optional_source_context_v1 import forensics_context, leverage_context
+    forensics = forensics_context(replay, latest["source_commit"], clock(latest["observation_utc"]))
+    leverage = leverage_context(replay,verified_rows[latest["event_id"]],clock(latest["observation_utc"]))
+    return {"persistence": diagnostics[latest["event_id"]],
+            "sequence": sequence, "etf_context": etf, "forensics_context": forensics,
+            "leverage_context": leverage}
+
+
+def intelligence_projection(packet, diagnostics=None):
+    """One shared feature-side vocabulary for MM and CN; no outcome fields.
+
+    Only call with diagnostics returned by original-owner replay. Observation
+    permission is not a forecast and is never a C2 activation credential.
+    Preserve existing v1 immutable packet bytes and consumer compatibility.
+    """
+    base = {"contract": "CN_MM_SHARED_INTELLIGENCE_FEATURE_v1",
+            "authority": "RESEARCH_ONLY_NON_CANONICAL",
+            "status": "UNKNOWN", "packet_sha256": packet.get("packet_sha256"),
+            "checkout_sha": packet.get("checkout_sha"), "freeze_sha256": packet.get("freeze_sha256"),
+            "scientific_pit_eligible": False, "forecast_authority": False,
+            "canonical_effect": False, "portfolio_execution": False,
+            "independent_first_known_utc": None, "observation": None,
+            "models": {"C0": "EXISTING_CN_UNCHANGED", "C1": "ORIGINAL_TASK2_A_OWNER",
+                       "C2": {"status": "BLOCKED_PENDING_REVIEWED_ACTIVATION_AND_KNOWN_BY",
+                              "observed_c06_permission": None, "issued": False}},
+            "families": {}, "sequence": None}
+    core = packet.get("core", {})
+    if core.get("status") == "CORE_REPLAY_AT_OBSERVATION_ONLY" and diagnostics is not None:
+        latest = core["latest_observation"]
+        decisions = latest["decisions"]
+        p, s = diagnostics["persistence"], diagnostics["sequence"]
+        etf, liq = diagnostics["etf_context"], diagnostics["forensics_context"]
+        leverage = diagnostics["leverage_context"]
+        base.update(status="SOURCE_REPLAYED_OBSERVATION_ONLY",
+                    observation={k: latest[k] for k in ("event_id","observation_utc","source_commit","provenance_sha256")})
+        base["models"]["C2"]["observed_c06_permission"] = decisions["C06_BREADTH_BTCD"]
+        base["families"] = {
+            "ETHBTC_PERSISTENCE": {"status":"SOURCE_REPLAYED","permission":decisions["C01_ETHBTC"],
+                "side":p["side"],"consecutive_hours":p["consecutive_same_side"],
+                "left_censored":p["left_censored"],"stable_confirmation_utc":None},
+            "BREADTH_SURVIVAL": {"status":"SOURCE_REPLAYED","permission":decisions["C02_BREADTH"]},
+            "BTCD_PATH_RECLAIM": {"status":"SOURCE_REPLAYED","permission":decisions["C03_BTCD"]},
+            "ETF_FLOW_QUALITY": {"status":etf["status"],"source_sha256":etf.get("source_sha256"),
+                "session_date":etf.get("session_date"),"absorption_state":None},
+            "LEVERAGE_CONTEXT": {"status":leverage["status"],"source_sha256":leverage.get("source_sha256"),
+                "reset_state":None,"reclaim_state":None,"assets":leverage["assets"]},
+            "LIQUIDATION_CLEARANCE": {"status":liq["status"],"source_sha256":liq.get("source_sha256"),
+                "source_completeness_verified":False,"clearance_state":None},
+        }
+        base["sequence"] = {"status":s["status"],"observed_episode_n":s.get("observed_episode_n"),
+                            "active_ordered_proxy_episode_n":s.get("active_ordered_proxy_episode_n"),
+                            "original_sequence_equivalence":False}
+        base["frozen_candidates"] = dict(decisions)
+    base["feature_sha256"] = sha(canon(base))
+    return base
+
+
+def learning_checkout_at_cutoff(repo, head, cutoff):
+    """Select the original first-parent repository snapshot, not today's data.
+
+    Committer clocks are history proxies only. No independent source known-by
+    or HTTP delivery is inferred. Do not select by author date or read files
+    from the working tree. Reject clock inversion across the selected boundary.
+    """
+    if not re.fullmatch("[0-9a-f]{40}",head) or cutoff.utcoffset()!=timedelta(0):
+        raise ValueError("LEARNING_CHECKOUT_OR_CUTOFF_INVALID")
+    def run(*args):
+        return subprocess.check_output(["git","-C",str(repo),*args],
+                                       stderr=subprocess.DEVNULL,timeout=30).decode().strip()
+    if run("rev-parse","--is-shallow-repository")!="false":
+        raise ValueError("LEARNING_FULL_HISTORY_REQUIRED")
+    run("merge-base","--is-ancestor",head,"HEAD")
+    # --before alone can stop traversal at an out-of-order commit. Inspect the
+    # actual contiguous first-parent chain, and reject a local clock inversion.
+    lines=run("log","--first-parent","--format=%H%x09%cI",head).splitlines()
+    selected=None
+    for line in lines:
+        commit,stamp=line.split("\t")
+        at=datetime.fromisoformat(stamp).astimezone(timezone.utc)
+        if selected is not None and at>cutoff:
+            # An older parent stamped after the cutoff contaminates the
+            # selected tree even if its child has an earlier clock.
+            raise ValueError("LEARNING_FIRST_PARENT_CLOCK_INVERSION")
+        if selected is None and at<=cutoff:
+            selected={"checkout_sha":commit,"checkout_committer_utc":iso(at),
+                      "source_cutoff_utc":iso(cutoff),
+                      "clock_class":"FIRST_PARENT_COMMITTER_CLOCK_NOT_INDEPENDENT_KNOWN_BY"}
+    if selected is None:
+        raise ValueError("LEARNING_NO_CHECKOUT_BEFORE_CUTOFF")
+    return selected
+
+
+def calibration_intelligence(repo, freeze_file, freeze):
+    """Existing MM calibration consumer, strictly separated feature/learning lanes.
+
+    No API call, new writer, model promotion or change in calibration eligibility.
+    Bound workload until a reviewed incremental owner exists. Late data block
+    this optional learning lane rather than entering an earlier frozen context.
+    """
+    result = {"contract":"CN_MM_SHARED_INTELLIGENCE_CALIBRATION_v1",
+              "authority":"RESEARCH_ONLY_NON_CANONICAL","status":"UNAVAILABLE",
+              "forecast_authority":False,"canonical_effect":False,"automatic_weight_updates":False,
+              "feature":None,"learning":{"status":"UNAVAILABLE"},"task2":{"status":"UNAVAILABLE"},
+              "feature_uses_outcomes":False,"independent_first_known_utc":None}
+    try:
+        if repo.resolve()!=ROOT or Path.cwd().resolve()!=ROOT:
+            raise ValueError("INTELLIGENCE_PINNED_REPO_REQUIRED")
+        head = git("rev-parse","HEAD").decode().strip()
+        _, raw, actual = freeze_identity(freeze_file, head, compare_worktree=True)
+        if actual != freeze:
+            raise ValueError("INTELLIGENCE_FREEZE_MISMATCH")
+        packet = build_checkout(freeze_file, head)
+        result["checkout_sha"] = head
+        result["freeze_sha256"] = freeze["freeze_sha256"]
+        result["freeze_file_sha256"] = sha(raw)
+        if packet["core"]["status"] == "CORE_REPLAY_AT_OBSERVATION_ONLY":
+            diagnostics = verify_packet_projection(packet, freeze, committed(LEDGER,head),
+                         committed(BASE/"TRANSFORM_FREEZE_REGISTRY.json",head),repo=repo)
+            result["feature"] = intelligence_projection(packet,diagnostics)
+        else:
+            result["feature"] = intelligence_projection(packet)
+        result["status"] = "SHADOW_CONTEXT_ONLY"
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
+            csv.Error, ImportError, subprocess.SubprocessError):
+        result["reason"]="PINNED_FEATURE_CONTEXT_UNAVAILABLE"
+        return result
+    result.update(calibration_learning_at_cutoff(repo,head,freeze))
+    # Keep full delta inventory in the deterministic audit, but do not send an
+    # ever-growing list of event identifiers through the existing paid lane.
+    inventory=result.get("incremental_inventory")
+    if isinstance(inventory,dict) and "inventory_sha256" in inventory:
+        result["incremental_inventory"] = {
+            **{k:v for k,v in inventory.items() if not isinstance(v,list)},
+            "identity_counts":{k:len(v) for k,v in inventory.items() if isinstance(v,list)},
+            "identity_lists_omitted_from_calibration_context":True}
+    result["context_sha256"] = sha(canon(result))
+    return result
+
+
+def calibration_learning_at_cutoff(repo,head,freeze):
+    """Read both learning owners from one historical tree, independent of features."""
+    result={"learning":{"status":"UNAVAILABLE"},"task2":{"status":"UNAVAILABLE"}}
+    cutoff = clock(freeze["created_at_utc"])
+    learning_pin = None
+    try:
+        learning_pin = learning_checkout_at_cutoff(repo,head,cutoff)
+        result["learning_source_snapshot"] = learning_pin
+        owner = load_owner()
+        replay = owner.PinnedSourceReplay(repo,learning_pin["checkout_sha"])
+        rows = read_rows(replay.ledger_raw)
+        detail = read_rows(replay.read_blob(replay.checkout,replay.BASE+"/data/OUTCOME_DETAIL_LEDGER.csv"))
+        if len(rows)>512:
+            raise ValueError("LEARNING_REPLAY_BUDGET_EXCEEDED_INCREMENTAL_OWNER_REQUIRED")
+        if any(clock(r["observation_timestamp_utc"])>cutoff for r in rows) or any(
+                clock(d["matured_at_utc"])>cutoff for d in detail):
+            raise ValueError("LEARNING_LATER_THAN_FROZEN_CALIBRATION_CUTOFF")
+        from scripts.research.cn_mm_outcome_source_audit_v1 import audit_outcome_cohort
+        audit = audit_outcome_cohort(replay,evaluate=True)
+        research = audit["matched_research"]
+        learning = {"status":research["status"],"verified_n":audit["verified_n"],
+                    "rejected_n":audit["rejected_n"],"unavailable_n":audit["unmatured_or_unavailable_n"],
+                    "verified_horizon_counts":audit["verified_horizon_counts"],
+                    "source_cutoff_utc":iso(cutoff),"source_checkout_sha":replay.checkout,
+                    "scientific_pit_eligible":False,
+                    "forecast_authority":False,"automatic_weight_updates":False}
+        if audit["status"]=="REPLAY_COMPLETE":
+            learning["horizons"] = research["core_ablation"]["horizons"]
+            learning["meta_learning"] = research["core_ablation"]["meta_learning"]
+            learning["dependence"] = research["dependence"]
+            learning["veto_magnitude"] = research["veto_magnitude"]
+            learning["episode_opportunity"] = research["episode_opportunity"]
+        result["learning"] = learning
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
+            csv.Error, ImportError, subprocess.SubprocessError) as exc:
+        result["learning"] = {"status":"UNAVAILABLE","reason":str(exc).split(":")[0][:120],
+                              "forecast_authority":False}
+    try:
+        from scripts.research.cn_mm_task2_comparator_readback_v1 import audit_week
+        if learning_pin is None:
+            raise ValueError("TASK2_NO_CUTOFF_CHECKOUT")
+        comparison = audit_week(load_owner().PinnedSourceReplay(repo,learning_pin["checkout_sha"]),
+                                freeze["iso_year"],freeze["iso_week"])
+        if clock(comparison["original_score"]["clock"])>cutoff:
+            raise ValueError("TASK2_SCORE_AFTER_FROZEN_CUTOFF")
+        result["task2"] = {k:comparison[k] for k in ("status","week","paired_n","interval_metrics",
+                            "original_score","original_issue","original_cn_freeze","hourly_pin",
+                            "scientific_pit_eligible","forecast_authority","c2_status")}
+        result["task2"]["point_comparison"] = {k:v for k,v in comparison["point_comparison"].items() if k!="rows"}
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
+            csv.Error, ImportError, subprocess.SubprocessError):
+        result["task2"] = {"status":"UNAVAILABLE","reason":"ORIGINAL_SCORE_MISSING_LATE_OR_UNVERIFIED",
+                           "forecast_authority":False}
+    # Compare original previous-week tree to current cutoff tree, not mutable
+    # LATEST or a self-asserted cached verdict. This is an actionable delta
+    # inventory, not authorization to skip any full verification.
+    try:
+        if learning_pin is None: raise ValueError("DELTA_CURRENT_PIN_MISSING")
+        previous=datetime.fromisocalendar(freeze["iso_year"],freeze["iso_week"],1)-timedelta(days=7)
+        year,week,_=previous.isocalendar()
+        path=Path(f"research/master_monday_preflight/frozen/{year}/W{week:02d}/WEEKLY_EVIDENCE_FREEZE.json")
+        old=load_evidence_object(committed(path,learning_pin["checkout_sha"]))
+        if (old["iso_year"],old["iso_week"])!=(year,week) or clock(old["created_at_utc"])>=cutoff:
+            raise ValueError("DELTA_PREVIOUS_FREEZE_INVALID")
+        before_pin=learning_checkout_at_cutoff(repo,learning_pin["checkout_sha"],clock(old["created_at_utc"]))
+        owner=load_owner()
+        before=owner.PinnedSourceReplay(repo,before_pin["checkout_sha"])
+        after=owner.PinnedSourceReplay(repo,learning_pin["checkout_sha"])
+        if before.floor!=after.floor or before.registry_raw!=after.registry_raw:
+            raise ValueError("DELTA_OWNER_POLICY_CHANGED")
+        detail_path=before.BASE+"/data/OUTCOME_DETAIL_LEDGER.csv"
+        from scripts.research.cn_mm_outcome_source_audit_v1 import immutable_delta_inventory
+        result["incremental_inventory"]=immutable_delta_inventory(read_rows(before.ledger_raw),
+            read_rows(before.read_blob(before.checkout,detail_path)),read_rows(after.ledger_raw),
+            read_rows(after.read_blob(after.checkout,detail_path)),owner.PROVENANCE_MUTABLE_FIELDS)
+        result["incremental_source_snapshots"]={"previous":before_pin,"current":learning_pin}
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
+            csv.Error, ImportError, subprocess.SubprocessError) as exc:
+        result["incremental_inventory"]={"status":"UNAVAILABLE","reason":str(exc).split(":")[0][:120],
+                                         "prior_verdict_reuse_authorized":False}
+    return result
+
+
+def calibration_feature_binding(context, freeze):
+    """Small durable reference for existing MM machine package, no new writer."""
+    missing = {"contract":"CN_MM_CALIBRATION_FEATURE_BINDING_v1","status":"UNAVAILABLE",
+               "forecast_authority":False}
+    try:
+        intelligence = context["cn_mm_shared_intelligence"]
+        feature = intelligence["feature"]
+        if intelligence["status"]!="SHADOW_CONTEXT_ONLY" or not isinstance(feature,dict):
+            return missing
+        if (sha(canon({k:v for k,v in context.items() if k!="context_hash"}))!=context["context_hash"] or
+                sha(canon({k:v for k,v in intelligence.items() if k!="context_sha256"}))!=intelligence["context_sha256"] or
+                sha(canon({k:v for k,v in feature.items() if k!="feature_sha256"}))!=feature["feature_sha256"] or
+                intelligence["freeze_sha256"]!=freeze["freeze_sha256"] or
+                feature["freeze_sha256"]!=freeze["freeze_sha256"] or
+                feature["checkout_sha"]!=intelligence["checkout_sha"] or
+                intelligence["feature_uses_outcomes"] is not False or
+                feature["forecast_authority"] is not False or
+                feature["models"]["C2"]["issued"] is not False or
+                feature["canonical_effect"] is not False):
+            return {**missing,"reason":"CONTEXT_OR_FEATURE_BINDING_INVALID"}
+        return {"contract":missing["contract"],"status":"BOUND_CALIBRATION_FEATURE",
+                "forecast_authority":False,"freeze_sha256":freeze["freeze_sha256"],
+                "checkout_sha":feature["checkout_sha"],"packet_sha256":feature["packet_sha256"],
+                "feature_sha256":feature["feature_sha256"],"context_sha256":context["context_hash"],
+                "intelligence_context_sha256":intelligence["context_sha256"]}
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
+        return missing
+
+
+def gateway_input_status(api_receipt,api_status,whole_hash):
+    if not isinstance(api_receipt,dict) or not api_receipt:
+        return "UNATTESTED"
+    if (api_receipt.get("contract")!="API_AGENT_RECEIPT_v3" or
+        api_receipt.get("task")!="WEEKLY_CALIBRATION_SHADOW" or
+        api_receipt.get("context_hash")!=whole_hash or
+        not isinstance(whole_hash,str) or not re.fullmatch("[0-9a-f]{64}",whole_hash)):
+        return "RECEIPT_CONTEXT_MISMATCH"
+    if (api_status=="success" and api_receipt.get("status")=="PASS" and
+          isinstance(api_receipt.get("response_id"),str) and api_receipt["response_id"] and
+          api_receipt.get("untrusted_input_envelope") is True):
+        return "MATCHED_GATEWAY_INPUT_RECEIPT"
+    return "MATCHED_CONTEXT_NO_SUCCESSFUL_API_DELIVERY"
+
+
+def calibration_learning_binding(context,freeze,api_receipt,api_status):
+    """Durable linkage to actual supplied calibration inputs, not model use.
+
+    The gateway receipt hashes the ENTIRE context (including context_hash).
+    The context's own self-digest excludes context_hash. Do not compare the
+    two different digests or infer that the model used a particular feature.
+    """
+    result={"contract":"CN_MM_CALIBRATION_LEARNING_BINDING_v1","status":"UNAVAILABLE",
+            "api_input_status":"UNATTESTED","model_utilization_verified":False,
+            "scientific_pit_eligible":False,"forecast_authority":False,
+            "automatic_weight_updates":False}
+    feature=calibration_feature_binding(context,freeze)
+    if feature["status"]!="BOUND_CALIBRATION_FEATURE":
+        return result
+    try:
+        intelligence=context["cn_mm_shared_intelligence"]
+        learning=intelligence["learning"]
+        task2=intelligence["task2"]
+        inventory=intelligence.get("incremental_inventory",{})
+        whole_hash=sha(canon(context))
+        api_input_status=gateway_input_status(api_receipt,api_status,whole_hash)
+        result.update(status="BOUND_RESEARCH_CONTEXT",
+            api_input_status=api_input_status,context_sha256=context["context_hash"],
+            gateway_context_sha256=whole_hash,
+            intelligence_context_sha256=intelligence["context_sha256"],
+            feature_sha256=feature["feature_sha256"],freeze_sha256=feature["freeze_sha256"],
+            learning_sha256=sha(canon(learning)),task2_sha256=sha(canon(task2)),
+            incremental_inventory_sha256=inventory.get("inventory_sha256"),
+            learning_status=learning["status"],task2_status=task2["status"],
+            verified_outcome_n=learning.get("verified_n"),task2_paired_n=task2.get("paired_n"),
+            source_checkout_sha=learning.get("source_checkout_sha"),
+            source_cutoff_utc=learning.get("source_cutoff_utc"))
+        result["binding_sha256"]=sha(canon(result))
+        return result
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
+        return {"contract":result["contract"],"status":"UNAVAILABLE",
+                "api_input_status":"UNATTESTED","model_utilization_verified":False,
+                "scientific_pit_eligible":False,"forecast_authority":False,
+                "automatic_weight_updates":False}
+
+
+def compare_calibration_feature(machine, pointer, feature):
+    """A new binding must match independently replayed CN feature bytes.
+
+    Older MM packages remain explicit UNATTESTED, not falsely paired.
+    The machine and pointer use the existing package self-hash convention.
+    """
+    binding = machine.get("cn_mm_calibration_feature_binding")
+    if not isinstance(binding,dict) or binding.get("status")=="UNAVAILABLE":
+        return "UNATTESTED_MM_CALIBRATION_BINDING"
+    try:
+        if (machine["package_sha256"]!=pointer["machine_package_sha256"] or
+                sha(canon({k:v for k,v in machine.items() if k!="package_sha256"}))!=machine["package_sha256"] or
+                machine["freeze_sha256"]!=pointer["freeze_sha256"] or
+                binding["contract"]!="CN_MM_CALIBRATION_FEATURE_BINDING_v1" or
+                binding["status"]!="BOUND_CALIBRATION_FEATURE" or
+                binding["forecast_authority"] is not False or
+                binding["context_sha256"]!=machine["context_hash"] or
+                any(binding[k]!=feature[k] for k in ("freeze_sha256","checkout_sha","packet_sha256","feature_sha256"))):
+            return "MM_CALIBRATION_FEATURE_MISMATCH"
+        return "MATCHED_MM_CALIBRATION_FEATURE"
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
+        return "MM_CALIBRATION_FEATURE_MISMATCH"
+
+
+def mm_translation_readback(machine, pointer):
+    """Only committed MM shadow candidate metadata; not an independently replayed model output."""
+    try:
+        t=machine["operational_translation"];receipt=machine["api_receipt"]
+        if (t.get("contract")!="MM_SHADOW_ANALYTICAL_TRANSLATION_v1" or
+                t.get("status")!="DEGRADED" or t.get("authority")!="SHADOW_ONLY_NO_ACTION_OR_FORECAST_AUTHORITY" or
+                t.get("candidate_status") not in ("VALIDATED_UNADMITTED","NO_CANDIDATES") or
+                t.get("phase")!="UNAVAILABLE" or t.get("rotation")!="UNAVAILABLE" or
+                any(t.get(k) is not False for k in ("forecast_authority","portfolio_action","model_weight_change","model_utilization_verified")) or
+                t["context_sha256"]!=machine["context_hash"] or t["freeze_sha256"]!=machine["freeze_sha256"] or
+                machine["freeze_sha256"]!=pointer["freeze_sha256"] or
+                t["gateway_output_sha256"]!=receipt["output_hash"] or
+                not re.fullmatch("[0-9a-f]{64}",t["gateway_output_sha256"]) or
+                gateway_input_status(receipt,machine["api_status"],t["gateway_context_sha256"])!="MATCHED_GATEWAY_INPUT_RECEIPT"):
+            return None
+        count=t["candidate_count"];rows=t["spot_candidate_directions"]
+        if (type(count) is not int or count<0 or
+                type(receipt.get("forecast_candidate_count")) is not int or receipt["forecast_candidate_count"]!=count or
+                (count==0)!=(t["candidate_status"]=="NO_CANDIDATES") or not isinstance(rows,list) or len(rows)>count):
+            return None
+        horizons=t["candidate_horizon_counts"];directions=t["candidate_direction_counts"]
+        if (not isinstance(horizons,dict) or not isinstance(directions,dict) or
+                any(not isinstance(k,str) or not re.fullmatch("[1-9][0-9]?",k) or int(k)>90 or type(v) is not int or v<=0 for k,v in horizons.items()) or
+                any(k not in ("UP","DOWN","RANGE") or type(v) is not int or v<=0 for k,v in directions.items()) or
+                sum(horizons.values())!=count or sum(directions.values())!=count):
+            return None
+        safe=[];seen=set();rh=Counter();rd=Counter()
+        for row in rows:
+            if (not isinstance(row,dict) or set(row)!={"asset","horizon_days","direction","target_mode"} or
+                    row["asset"] not in ("BTC","ETH","ETHBTC") or type(row["horizon_days"]) is not int or
+                    not 1<=row["horizon_days"]<=90 or row["direction"] not in ("UP","DOWN","RANGE") or
+                    row["target_mode"] not in (("ABSOLUTE_RANGE",) if row["direction"]=="RANGE" else ("PCT_MOVE","ABSOLUTE_VALUE"))):
+                return None
+            key=(row["asset"],row["horizon_days"])
+            if key in seen:return None
+            seen.add(key);rh[str(row["horizon_days"])]+=1;rd[row["direction"]]+=1
+            safe.append(dict(row))
+        if any(n>horizons.get(k,0) for k,n in rh.items()) or any(n>directions.get(k,0) for k,n in rd.items()):
+            return None
+        return {"contract":"CN_MM_SHADOW_TRANSLATION_READBACK_v1","status":"COMMITTED_MM_SHADOW_METADATA",
+                "candidate_status":t["candidate_status"],"candidate_count":count,"spot_candidate_directions":safe,
+                "gateway_output_sha256":t["gateway_output_sha256"],
+                "forecast_authority":False,"portfolio_action":False,"independent_model_output_replay":False}
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
+        return None
+
+
+def read_calibration_feature_binding(repo, pointer, feature, read_committed, *, include_learning=False):
+    def result(status, learning=None):
+        return (status,learning) if include_learning else status
+    if not pointer.get("machine_package_path"):
+        return result("UNATTESTED_MM_CALIBRATION_BINDING")
+    try:
+        expected = Path(f"research/api_agent/outputs/weekly/{pointer['iso_year']}/W{pointer['iso_week']:02d}/MASTER_MONDAY_MACHINE_PACKAGE.json")
+        if Path(pointer["machine_package_path"])!=expected:
+            return result("MM_CALIBRATION_FEATURE_MISMATCH")
+        raw=(repo/expected).read_bytes()
+        if raw!=read_committed("show",f"HEAD:{expected.as_posix()}"):
+            return result("MM_CALIBRATION_FEATURE_MISMATCH")
+        machine=load_evidence_object(raw)
+        status=compare_calibration_feature(machine,pointer,feature)
+        learning=None
+        if status=="MATCHED_MM_CALIBRATION_FEATURE" and include_learning:
+            binding=machine.get("cn_mm_calibration_learning_binding")
+            if isinstance(binding,dict) and binding.get("status")=="BOUND_RESEARCH_CONTEXT":
+                if (sha(canon({k:v for k,v in binding.items() if k!="binding_sha256"}))==binding.get("binding_sha256") and
+                    binding.get("contract")=="CN_MM_CALIBRATION_LEARNING_BINDING_v1" and
+                    binding.get("context_sha256")==machine["context_hash"] and
+                    binding.get("intelligence_context_sha256")==machine["cn_mm_calibration_feature_binding"]["intelligence_context_sha256"] and
+                    binding.get("freeze_sha256")==feature["freeze_sha256"] and
+                    binding.get("feature_sha256")==feature["feature_sha256"] and
+                    binding.get("api_input_status")==gateway_input_status(machine.get("api_receipt"),machine.get("api_status"),binding.get("gateway_context_sha256")) and
+                    all(binding.get(k) is False for k in ("model_utilization_verified","scientific_pit_eligible","forecast_authority","automatic_weight_updates"))):
+                    # No outcome values in CN feature or forecast. Only the
+                    # delivery metadata from the separately bound MM lane.
+                    learning={k:binding.get(k) for k in ("status","binding_sha256","api_input_status",
+                                "learning_status","task2_status","verified_outcome_n","task2_paired_n",
+                                "model_utilization_verified","scientific_pit_eligible","forecast_authority")}
+                    translation=mm_translation_readback(machine,pointer)
+                    if translation is not None:
+                        learning["mm_analytical_translation"]=translation
+        return result(status,learning)
+    except (ValueError,TypeError,KeyError,AttributeError,OSError,subprocess.SubprocessError):
+        return result("MM_CALIBRATION_FEATURE_MISMATCH")
+
+
+def require_pinned_weekly_binding(repo, head, freeze):
+    """Replay the original sidecar verifier over exact Git bytes, not LATEST.
+
+    A verified core row or self-hashed packet is not evidence of the weekly
+    producer binding. Stage only the four public, pinned evidence files in
+    an isolated temporary directory so the existing owner checks its original
+    relative paths unchanged. No new data writer or availability claim.
+    """
+    import tempfile
+    year, week = freeze["iso_year"], freeze["iso_week"]
+    if type(year) is not int or type(week) is not int:
+        raise ValueError("SHADOW_SOURCE_BINDING_WEEK_INVALID")
+    datetime.fromisocalendar(year, week, 1)
+    digest = freeze["freeze_sha256"]
+    if not re.fullmatch("[0-9a-f]{40}", head) or not re.fullmatch("[0-9a-f]{64}", digest):
+        raise ValueError("SHADOW_SOURCE_BINDING_IDENTITY_INVALID")
+    directory = Path(f"research/master_monday_preflight/frozen/{year}/W{week:02d}")
+    freeze_path = directory / "WEEKLY_EVIDENCE_FREEZE.json"
+    source = Path(f"03_DAILY_CAPTURE_LOGS/weekly/{year}/W{week:02d}.json")
+    receipt = directory / "SOURCE_BINDINGS" / (digest + ".json")
+    def read(path):
+        return subprocess.run(["git", "-C", str(repo), "show", f"{head}:{path.as_posix()}"],
+                              check=True, capture_output=True, timeout=30).stdout
+    try:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for path in (freeze_path, POINTER, source, receipt):
+                raw = read(path)
+                if path == freeze_path and load_evidence_object(raw) != freeze:
+                    raise ValueError("SHADOW_SOURCE_BINDING_FREEZE_MISMATCH")
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(raw)
+            code = (
+                "import sys,json; from pathlib import Path; "
+                "sys.path.insert(0,sys.argv[1]); "
+                "from scripts.master_monday.weekly_source_binding_v1 import verify_sidecar; "
+                "f=Path(sys.argv[2]); freeze=json.loads(f.read_bytes()); "
+                "pointer=json.loads(Path(sys.argv[3]).read_bytes()); "
+                "r=verify_sidecar(f.parent,freeze,pointer,Path('03_DAILY_CAPTURE_LOGS'),freeze['freeze_sha256']); "
+                "print(json.dumps(r))"
+            )
+            response = subprocess.run([sys.executable, "-c", code, str(ROOT),
+                                       str(freeze_path), str(POINTER)], cwd=root,
+                                      check=True, capture_output=True, timeout=30).stdout
+            verified = load_evidence_object(response)
+            if (verified.get("status") != "BYTE_BINDING_AND_RECEIPT_VERIFIED" or
+                    verified.get("scientific_pit_eligible") is not False):
+                raise ValueError("SHADOW_PINNED_WEEKLY_BINDING_UNVERIFIED")
+    except (OSError, subprocess.SubprocessError, ValueError, TypeError, KeyError) as exc:
+        raise ValueError("SHADOW_PINNED_WEEKLY_BINDING_UNVERIFIED") from exc
 
 
 def publish_packet(packet_path, freeze_file, head, output_dir):
@@ -264,8 +742,9 @@ def publish_packet(packet_path, freeze_file, head, output_dir):
     if packet.get("ledger_sha256") is not None and packet["ledger_sha256"] != sha(committed(LEDGER, head)):
         raise ValueError("SHADOW_LEDGER_BINDING_MISMATCH")
     if packet["core"]["status"] == "CORE_REPLAY_AT_OBSERVATION_ONLY":
+        require_pinned_weekly_binding(ROOT, head, freeze)
         verify_packet_projection(packet, freeze, committed(LEDGER, head),
-                                 committed(BASE / "TRANSFORM_FREEZE_REGISTRY.json", head))
+                                 committed(BASE / "TRANSFORM_FREEZE_REGISTRY.json", head), repo=ROOT)
     elif packet["core"]["status"] != "UNKNOWN" or packet["core"].get("latest_observation") is not None:
         raise ValueError("SHADOW_UNKNOWN_STATUS_INVALID")
     expected_output_dir = ROOT / "research/api_agent/outputs/weekly" / str(freeze["iso_year"]) / f"W{freeze['iso_week']:02d}"
@@ -282,12 +761,96 @@ def publish_packet(packet_path, freeze_file, head, output_dir):
     return target
 
 
+def synthesize_relative_hypothesis(feature, learning_delivery, binding_status):
+    """CN decision-side research synthesis; no C2 issuance or price mutation.
+
+    C06 is a frozen conjunction, not a forecast. The draft C2 prereg permits
+    positive relative tilt only if C06 true, zero tilt if false, abstention if
+    unavailable. Compare direction vocabulary only with an explicit 7d
+    ETHBTC model hypothesis. Model input shares these signals, so compatibility
+    is neither independent confirmation nor same-clock statistical agreement.
+    Longer horizons, BTC/ETH absolute directions and model target magnitudes
+    cannot be substituted for that registered weekly relative hypothesis.
+    """
+    base={"contract":"CN_MM_RELATIVE_HYPOTHESIS_SYNTHESIS_v1",
+          "authority":"RESEARCH_ONLY_NON_CANONICAL",
+          "status":"UNKNOWN","reason":"VERIFIED_SHARED_FEATURE_REQUIRED",
+          "c06_permission":None,"relative_tilt_hypothesis":"ABSTAIN",
+          "mm_7d_ethbtc_direction":None,"directional_compatibility":"NOT_COMPARABLE",
+          "required_followup":"RECOVER_MATCHED_SOURCE_FEATURE",
+          "feature_sha256":None,"gateway_output_sha256":None,
+          "horizon_days":7,"independent_confirmation":False,
+          "matched_target_clock_verified":False,"scientific_pit_eligible":False,
+          "c2_issued":False,"official_forecast_effect":False,"portfolio_execution":False}
+    try:
+        if binding_status!="MATCHED_MM_CALIBRATION_FEATURE" or not isinstance(feature,dict):
+            return base
+        fd=feature.get("feature_sha256")
+        if (feature.get("contract")!="CN_MM_SHARED_INTELLIGENCE_FEATURE_v1"
+                or feature.get("status")!="SOURCE_REPLAYED_OBSERVATION_ONLY"
+                or feature.get("authority")!="RESEARCH_ONLY_NON_CANONICAL"
+                or any(feature.get(k) is not False for k in ("scientific_pit_eligible","forecast_authority","canonical_effect","portfolio_execution"))
+                or feature.get("independent_first_known_utc") is not None
+                or fd!=sha(canon({k:v for k,v in feature.items() if k!="feature_sha256"}))):
+            return base
+        candidates=feature["frozen_candidates"]
+        if set(candidates)!=set(CORE) or any(type(v) is not bool for v in candidates.values()):
+            return base
+        breadth=feature["families"]["BREADTH_SURVIVAL"]
+        dominance=feature["families"]["BTCD_PATH_RECLAIM"]
+        c2=feature["models"]["C2"]
+        permission=candidates["C06_BREADTH_BTCD"]
+        if (breadth.get("status")!="SOURCE_REPLAYED" or dominance.get("status")!="SOURCE_REPLAYED"
+                or breadth.get("permission") is not candidates["C02_BREADTH"]
+                or dominance.get("permission") is not candidates["C03_BTCD"]
+                or permission is not (candidates["C02_BREADTH"] and candidates["C03_BTCD"])
+                or c2.get("observed_c06_permission") is not permission
+                or c2.get("status")!="BLOCKED_PENDING_REVIEWED_ACTIVATION_AND_KNOWN_BY"
+                or c2.get("issued") is not False):
+            return base
+        out={**base,"status":"OBSERVED_SIGNAL_HYPOTHESIS_ONLY","reason":None,
+             "feature_sha256":fd,"c06_permission":permission,
+             "relative_tilt_hypothesis":"POSITIVE_RELATIVE_TILT_CANDIDATE" if permission else "ZERO_TILT_CONTROL",
+             "required_followup":"RECOVER_MATCHED_7D_ETHBTC_HYPOTHESIS"}
+        if not isinstance(learning_delivery,dict) or learning_delivery.get("api_input_status")!="MATCHED_GATEWAY_INPUT_RECEIPT":
+            return out
+        t=learning_delivery.get("mm_analytical_translation")
+        if (not isinstance(t,dict) or t.get("contract")!="CN_MM_SHADOW_TRANSLATION_READBACK_v1"
+                or t.get("status")!="COMMITTED_MM_SHADOW_METADATA"
+                or t.get("candidate_status")!="VALIDATED_UNADMITTED"
+                or any(t.get(k) is not False for k in ("forecast_authority","portfolio_action","independent_model_output_replay"))
+                or not isinstance(t.get("gateway_output_sha256"),str)
+                or not re.fullmatch("[0-9a-f]{64}",t["gateway_output_sha256"])):
+            return out
+        rows=t["spot_candidate_directions"]
+        if not isinstance(rows,list) or any(not isinstance(r,dict) for r in rows):
+            return out
+        exact=[r for r in rows if r.get("asset")=="ETHBTC" and type(r.get("horizon_days")) is int and r["horizon_days"]==7]
+        if len(exact)!=1:
+            return out
+        row=exact[0];direction=row.get("direction")
+        if (set(row)!={"asset","horizon_days","direction","target_mode"} or direction not in ("UP","DOWN","RANGE")
+                or row["target_mode"] not in (("ABSOLUTE_RANGE",) if direction=="RANGE" else ("PCT_MOVE","ABSOLUTE_VALUE"))):
+            return out
+        compatibility=("COMPATIBLE_UP_LABEL_ONLY" if direction=="UP" else
+                       "CONTRADICTORY_DOWN_LABEL_ONLY" if direction=="DOWN" else
+                       "RANGE_NOT_DIRECTIONALLY_COMPARABLE") if permission else "NO_SIGNAL_TILT_TO_COMPARE"
+        followup=("INVESTIGATE_CONFLICT_BEFORE_ANY_ACTIVATION" if compatibility=="CONTRADICTORY_DOWN_LABEL_ONLY"
+                  else "VERIFY_INDEPENDENT_KNOWN_BY_AND_MATCHED_TARGET_CLOCK")
+        return {**out,"status":"SHADOW_HYPOTHESES_COMPARED","mm_7d_ethbtc_direction":direction,
+                "directional_compatibility":compatibility,"gateway_output_sha256":t["gateway_output_sha256"],
+                "required_followup":followup}
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError,RecursionError):
+        return base
+
+
 def consume_cn_shadow(repo, mm_pointer):
     """Read only an exact committed MM packet. No mutation of official CN value."""
     result = {"contract": "CN_MM_CORE_SHADOW_CONSUMPTION_v1", "authority": "RESEARCH_ONLY_NON_CANONICAL",
               "status": "UNKNOWN", "reason": "MM_SHADOW_RECEIPT_UNAVAILABLE",
               "official_forecast_effect": False, "scientific_pit_eligible": False,
-              "packet_sha256": None, "shadow_candidate_decision": None}
+              "packet_sha256": None, "shadow_candidate_decision": None,
+              "relative_hypothesis_synthesis": synthesize_relative_hypothesis(None,None,None)}
     try:
         year, week = mm_pointer["iso_year"], mm_pointer["iso_week"]
         freeze_sha = mm_pointer["freeze_sha256"]
@@ -331,20 +894,35 @@ def consume_cn_shadow(repo, mm_pointer):
         core = packet["core"]
         if core["status"] != "CORE_REPLAY_AT_OBSERVATION_ONLY":
             return {**result, "packet_sha256": digest, "reason": "MM_CORE_REPLAY_UNAVAILABLE"}
-        verify_packet_projection(packet, load_evidence_object(frozen),
+        # Recheck the producer receipt at the original packet checkout; a
+        # valid core replay alone cannot attest the weekly source binding.
+        require_pinned_weekly_binding(repo, head, load_evidence_object(frozen))
+        diagnostics = verify_packet_projection(packet, load_evidence_object(frozen),
                                  run("show", f"{head}:{LEDGER.as_posix()}"),
-                                 run("show", f"{head}:{(BASE / 'TRANSFORM_FREEZE_REGISTRY.json').as_posix()}"))
+                                 run("show", f"{head}:{(BASE / 'TRANSFORM_FREEZE_REGISTRY.json').as_posix()}"), repo=repo)
         latest = core["latest_observation"]
         decisions = latest["decisions"]
         if set(decisions) != set(CORE) or any(type(v) is not bool for v in decisions.values()):
             raise ValueError("SHADOW_DECISIONS_INVALID")
+        shared = intelligence_projection(packet,diagnostics)
+        binding_status,learning_delivery = read_calibration_feature_binding(repo,mm_pointer,shared,run,include_learning=True)
         return {**result, "status": "CONSUMED_SHADOW_ONLY", "reason": None,
                 "packet_sha256": digest, "packet_file_sha256": sha(raw), "checkout_sha": head,
                 "observation_utc": latest["observation_utc"],
                 "shadow_candidate_decision": decisions[CORE[-1]],
                 "candidate_id": CORE[-1], "target_semantics": packet["target_semantics"],
-                "observation_only": True, "edge_established": False}
-    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, subprocess.SubprocessError):
+                "observation_only": True, "edge_established": False,
+                "persistence_diagnostic": diagnostics["persistence"],
+                "sequence_diagnostic": diagnostics["sequence"],
+                "etf_context": diagnostics["etf_context"],
+                "forensics_context": diagnostics["forensics_context"],
+                "leverage_context": diagnostics["leverage_context"],
+                "shared_intelligence_feature": shared if binding_status!="MM_CALIBRATION_FEATURE_MISMATCH" else None,
+                "shared_feature_binding_status": binding_status,
+                "mm_learning_delivery":learning_delivery,
+                "relative_hypothesis_synthesis":synthesize_relative_hypothesis(shared,learning_delivery,binding_status)}
+    except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, OSError, OverflowError,
+            csv.Error, ImportError, subprocess.SubprocessError):
         return {**result, "reason": "MM_SHADOW_RECEIPT_INVALID"}
 
 
