@@ -2436,13 +2436,17 @@ class FreshnessFallback(unittest.TestCase):
         older_running = [{"id": 5, "event": "push", "status": "in_progress", "created_at": B.iso(now - timedelta(minutes=1))}]
         try:
             os.environ.update(GITHUB_EVENT_NAME="push", GITHUB_REPOSITORY=B.REPO, GITHUB_RUN_ID="900")
-            for runs_answer, want in ((older_running, ["actions"]), ([], ["actions", "issues"])):
+            # D1 (code drift since the brief) runs on every push, also behind a coalesced fallback check: a later push
+            # may carry code the older run never sees. It costs the one brief read (git drift itself is not REST).
+            B_git_drift, B.git_drift = B.git_drift, (lambda root, base, head: ("ahead", ["data/x.json"]))
+            for runs_answer, want in ((older_running, ["actions", "issues"]), ([], ["actions", "issues"])):
                 seen.clear()
                 B.GitHub.get = api(runs_answer)
                 with contextlib.redirect_stdout(io.StringIO()) as out:
                     B.main(["x", "due"])
                 self.assertEqual((seen, out.getvalue().strip()), (want, "false"))
         finally:
+            B.git_drift = B_git_drift
             B.GitHub.get = saved_get
             os.environ.clear()
             os.environ.update(saved_env)

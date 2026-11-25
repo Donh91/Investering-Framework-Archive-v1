@@ -51,7 +51,9 @@ class CodeDriftDue(unittest.TestCase):
         self.assertTrue(self.due(None))
         self.assertTrue(self.due([{"filename": "d/x.json"}], status="unknown"))
         self.assertTrue(self.due([{"filename": None}]))
-        self.assertFalse(self.due([{"filename": "d/x.json"}] * 5000))   # no file cap: git lists every path
+        self.assertTrue(self.due([{"filename": "d/x.json"}] * B.DRIFT_MAX_FILES))   # T3's cap: unreadable drift
+        self.assertFalse(self.due([{"filename": "d/x.json"}] * (B.DRIFT_MAX_FILES - 1)))
+        self.assertTrue(self.due([{"filename": "d/x.json"}], status="too_large"))
 
     def test_newer_brief_already_covers_push(self):
         self.assertFalse(self.due([{"filename": "scripts/a.py"}], status="behind"))
@@ -104,6 +106,55 @@ class GitDrift(unittest.TestCase):
             self.assertEqual(B.git_drift(clone, c, a)[0], "behind")
             self.assertEqual(B.git_drift(clone, a, "f" * 40), ("unknown", None))
             self.assertEqual(B.git_drift(clone, d, c), ("unknown", None))   # diverged: neither is an ancestor
+            saved = B.DRIFT_MAX_COMMITS; B.DRIFT_MAX_COMMITS = 1
+            try:
+                self.assertEqual(B.git_drift(clone, a, c), ("too_large", None))   # 2 commits > cap 1
+            finally:
+                B.DRIFT_MAX_COMMITS = saved
+
+
+class DueReachability(unittest.TestCase):
+    """main('due') on a push reaches D1 even when a cron run of the last hour exists (detached review F1)."""
+    def run_due(self, runs, drift_result, event="push"):
+        import io, contextlib, os
+        brief = issue()
+        class FakeGH:
+            def __init__(self, *a, **k): self.calls = 0
+            def get(self, path, params=None):
+                self.calls += 1
+                if path.startswith("actions/workflows/"): return {"workflow_runs": runs}
+                if path == "issues": return [brief]
+                raise AssertionError(path)
+        saved = (B.GitHub, B.git_drift, B.parse_body, dict(os.environ))
+        B.GitHub = FakeGH
+        B.git_drift = lambda root, base, head: drift_result
+        B.parse_body = lambda body: json.loads(body.split("```json\n", 1)[1].split("\n```", 1)[0])
+        os.environ.update({"GITHUB_EVENT_NAME": event, "GITHUB_SHA": H, "GITHUB_RUN_ID": "999", "GITHUB_REPOSITORY": B.REPO})
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out):
+                B.main(["x", "due"])
+        finally:
+            B.GitHub, B.git_drift, B.parse_body = saved[:3]
+            os.environ.clear(); os.environ.update(saved[3])
+        return out.getvalue().strip()
+
+    def fresh_cron(self):
+        from datetime import datetime, timedelta, timezone
+        t = (datetime.now(timezone.utc) - timedelta(minutes=20)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        return [{"id": 1, "event": "schedule", "created_at": t, "updated_at": t, "status": "completed"}]
+
+    def test_code_push_after_a_fresh_cron_is_due(self):
+        self.assertEqual(self.run_due(self.fresh_cron(), ("ahead", ["scripts/governance/x.py"])), "true")
+
+    def test_data_push_after_a_fresh_cron_is_not_due(self):
+        self.assertEqual(self.run_due(self.fresh_cron(), ("ahead", ["data/a.json"])), "false")
+
+    def test_workflow_run_event_never_uses_d1(self):
+        self.assertEqual(self.run_due(self.fresh_cron(), ("ahead", ["scripts/x.py"]), event="workflow_run"), "false")
+
+    def test_checkout_root_is_the_script_checkout(self):
+        self.assertEqual(B.CHECKOUT_ROOT, ROOT)
 
 
 class DueWiring(unittest.TestCase):
@@ -112,6 +163,7 @@ class DueWiring(unittest.TestCase):
         block = src.split('if mode == "due":', 1)[1].split('if mode == "build":', 1)[0]
         self.assertIn('if not due and os.environ.get("GITHUB_EVENT_NAME") == "push":', block)
         self.assertLess(block.index("fallback_due("), block.index("code_drift_due("))
+        self.assertIn("git_drift(CHECKOUT_ROOT, base, head)", block)
         self.assertIn('GITHUB_SHA', block)
 
 

@@ -1772,9 +1772,13 @@ def code_drift_due(issues, drift, head):
         return True
     if relation == "behind":
         return False                                             # a newer brief already covers this push (re-asked after the wait)
-    if relation != "ahead" or not isinstance(paths, list):
-        return True
+    if relation != "ahead" or not isinstance(paths, list) or len(paths) >= DRIFT_MAX_FILES:
+        return True                                              # unknown, diverged, or beyond T3's caps: rebuild
     return any(code_drift_path(p) for p in paths)
+
+
+CHECKOUT_ROOT = Path(__file__).resolve().parents[2]  # the checkout this script runs from (workspace in due, main/ in build)
+DRIFT_MAX_COMMITS, DRIFT_MAX_FILES = 100, 300       # TICK.md T3: beyond these the drift is unreadable (BRIEF_STALE)
 
 
 def git_drift(root, base, head):
@@ -1795,6 +1799,11 @@ def git_drift(root, base, head):
     if on_main(graph_dir, head, base):
         return "behind", None
     if not on_main(graph_dir, base, head):
+        return "unknown", None
+    try:
+        if int(git(graph_dir, "rev-list", "--count", f"{base}..{head}")) > DRIFT_MAX_COMMITS:
+            return "too_large", None
+    except (subprocess.CalledProcessError, ValueError):
         return "unknown", None
     if not {base, head} <= fetch_commits(root, [base, head], "--depth=1"):
         return "unknown", None
@@ -2344,24 +2353,32 @@ def main(argv):
             except Exception:                                    # noqa: BLE001
                 runs = None
             due = False
+            issues, issues_read = None, False
             if isinstance(runs, list) and not recent_build(runs, now, run_id):
                 try:
                     issues = gh.get("issues", {"labels": BRIEF_LABEL, "state": "open", "per_page": 20})
                 except Exception:                                # noqa: BLE001
                     issues = None
+                issues_read = True
                 def jobs_of(rid):
                     try:
                         return gh.get(f"actions/runs/{rid}/jobs", {"per_page": 30}).get("jobs")
                     except Exception:                            # noqa: BLE001  (unreadable: counted as a started build)
                         return None
                 due = fallback_due(issues, now, runs, run_id, jobs_of=jobs_of)
-                if not due and os.environ.get("GITHUB_EVENT_NAME") == "push":
-                    # a push is a squash merge or an owner push (data bots push with the job token, which starts no
-                    # workflow): when it changed code since the published brief, the brief is stale for S1 now.
-                    # Git reads only (no REST quota): the checkout of this job is the repository root.
-                    GIT_ENV = token_git_env(token)
-                    due = code_drift_due(issues, lambda base, head: git_drift(Path.cwd(), base, head),
-                                         os.environ.get("GITHUB_SHA", ""))
+            if not due and os.environ.get("GITHUB_EVENT_NAME") == "push":
+                # D1, independent of recent_build (a cron run of the last hour must not hide a code push): a push is a
+                # squash merge or an owner push (data bots push with the job token, which starts no workflow); when
+                # it changed code since the published brief, the brief is stale for S1 now. Git reads only for the
+                # drift (no REST quota); at most one more REST read (the brief issue), within DUE_API_CALLS.
+                if not issues_read:
+                    try:
+                        issues = gh.get("issues", {"labels": BRIEF_LABEL, "state": "open", "per_page": 20})
+                    except Exception:                            # noqa: BLE001
+                        issues = None
+                GIT_ENV = token_git_env(token)
+                due = code_drift_due(issues, lambda base, head: git_drift(CHECKOUT_ROOT, base, head),
+                                     os.environ.get("GITHUB_SHA", ""))
         print("true" if due else "false")
         return 0
     if mode == "build":
