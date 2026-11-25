@@ -20,6 +20,7 @@ function safeBlock(x){
   rows[k]={state:row.state,coverage,advancing:row.advancing,outperforming_btc:row.outperforming_btc,outperforming_eth:row.outperforming_eth};
  }
  if(x.buckets?.MICROCAP_PROXY?.state!=='UNAVAILABLE'||x.buckets?.MEMES?.state!=='UNAVAILABLE')return null;
+ rows.MICROCAP_PROXY={state:'UNAVAILABLE'};rows.MEMES={state:'UNAVAILABLE'};
  const complete=BUCKETS.every(k=>rows[k].state==='OBSERVED_PROXY');
  if((x.status==='OBSERVED_PARTICIPATION')!==complete)return null;
  return {contract:CONTRACT,semantics:SEMANTICS,authority:AUTHORITY,status:x.status,
