@@ -35,3 +35,13 @@ test('independent observation rejects expired owner, stale delivery, future obse
   const x=liveFixture();mutate(x);const v=inspect(x);assert.equal(v.live_observation,null);assert.equal(cycleMapModel({view:v,latest:x.latest}).observation,null);
  }
 });
+
+test('both consumers suppress independently qualified momentum after delivery health changes',()=>{
+ const x=liveFixture(),v=inspect(x);assert.ok(v.live_observation);assert.ok(cycleMapModel({view:v,latest:x.latest}).observation);
+ for(const health of ['STALE','UNAVAILABLE',undefined]){
+  const view={...v,delivery_health:health};assert.equal(cycleMapModel({view,latest:x.latest}).observation,null);
+  const e={textContent:'old observation',hidden:false};const doc={getElementById:id=>id==='cn-cycle-map'?{dataset:{}}:id==='cn-map-live-observation'?e:null};
+  renderCycleMap(doc,{view,latest:x.latest,lang:'en'});assert.equal(e.hidden,true);assert.equal(e.textContent,'');
+ }
+ const view={...v,compass:{...v.compass,compass_id:undefined},live_observation:{...v.live_observation,compass_id:undefined}};assert.equal(cycleMapModel({view,latest:x.latest}).observation,null);
+});

@@ -29,7 +29,7 @@ export function cycleMapModel({view,latest,lang='da'}={}){
  const rotation=joined&&path.current_checkpoint?.key==='BTC'&&path.current_checkpoint?.status==='FROZEN_WEEK_REFERENCE'?{x:20,label:'BTC',kind:'FROZEN_WEEK_REFERENCE'}:null;
  const gate=aligned&&typeof ctx?.next_gate==='string'&&ctx.next_gate.trim()?ctx.next_gate.trim():null;
  const live=view?.live_observation;
- const observation=live?.semantics==='OBSERVED_MOMENTUM_NOT_CYCLE_OR_FORECAST'&&
+ const observation=view?.delivery_health==='FRESH'&&!!live?.compass_id&&live.semantics==='OBSERVED_MOMENTUM_NOT_CYCLE_OR_FORECAST'&&
   live.authority==='PRESENTATION_ONLY'&&live.compass_id===c?.compass_id&&
   typeof live.observation_open_utc==='string'&&Number.isFinite(Date.parse(live.observation_open_utc))&&
   ['BULLISH','BEARISH','MIXED','NEUTRAL','SIDEWAYS'].includes(live.direction)?live:null;
