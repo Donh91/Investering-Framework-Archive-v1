@@ -275,7 +275,7 @@ class RealW47PacketTest(unittest.TestCase):
             for key in real:
                 if key not in IDENTITY:
                     self.assertEqual(built[key], real[key], key)
-            self.assertEqual(set(built) - set(real), NEW_KEYS)
+            self.assertEqual(set(built) - set(real), NEW_KEYS | {"cycle_participation"})
 
     def test_real_sunday_close_observed_on_monday_of_the_next_iso_week(self):
         rel = f"{OFFICIAL}/daily/2026/11/23/CMP-20261123-" + self._id_issued_at("2026/11/23", "2026-11-23T00:21:12Z")

@@ -877,3 +877,12 @@ test('official horizon clock anchors to issuance, never silently rolls on page r
 });
 
 test('one model-view cycle map precedes detailed PATH rail',()=>{const html=buildUnifiedRootHtml(original,pro);assert.equal(id(html,'cn-cycle-map'),1);assert.ok(html.indexOf('id="official-path-view"')<html.indexOf('id="cn-cycle-map"'));assert.ok(html.indexOf('id="cn-cycle-map"')<html.indexOf('id="premium-path-rail"'));assert.match(html,/data-contract="CN_WHERE_ARE_WE_MAP_v1"/);});
+
+
+test('single source participation readback is wired into the actual public cycle card',async()=>{
+ const html=buildUnifiedRootHtml(original,pro);
+ for(const name of ['cn-map-participation','cn-map-participation-details'])assert.equal(id(html,name),1,name);
+ assert.match(html,/id="cn-map-participation" hidden/);
+ const runtime=await read('./root-compass-pro.mjs');
+ assert.ok(runtime.includes('renderCycleParticipation(document,feeds?.latest,feeds?.compass,{lang})'));
+});

@@ -1,7 +1,7 @@
 import copy
 import unittest
 from datetime import datetime, timedelta, timezone
-from scripts.data_ping.cycle_participation_readback import cycle_participation_readback
+from scripts.data_ping.native_handlekompas import cycle_participation_readback
 
 NOW = datetime(2026, 11, 25, 11, tzinfo=timezone.utc)
 STAMP = "2026-11-25T10:00:00Z"
