@@ -1,5 +1,6 @@
 from __future__ import annotations
 import importlib.util
+import copy
 import unittest
 from pathlib import Path
 
@@ -81,6 +82,77 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
         }})
         self.assertEqual(publisher.effective_delivery_status(
             'success', ready, ready, pending, True), 'READY')
+
+    def scorecard_fixture(self):
+        rows=[]
+        for i,result in enumerate(('HIT','MISS','CENSORED')):
+            rows.append({'source_contract':'MATURED_OUTCOME_v3','forecast_id':f'F{i}',
+                'forecast_sha256':str(i)*64,'outcome_sha256':str(i+3)*64,'evidence_sha256':str(i+6)*64,
+                'source_binding_verification':'CURRENT_FILE_CANONICAL_JSON_SHA256',
+                'created_at_utc':'2026-11-20T12:00:00Z',
+                'status':'CENSORED' if result=='CENSORED' else 'MATURED',
+                'result':None if result=='CENSORED' else result,
+                'return_pct':None if result=='CENSORED' else 1.0,
+                'reason':'no target' if result=='CENSORED' else None,
+                'path':'MUST_NOT_ESCAPE'})
+        context={'contract':'WEEKLY_API_CALIBRATION_CONTEXT_v6','authority':'SHADOW_ONLY',
+                 'freeze_sha256':'a'*64,'window_start_utc':'2026-11-16T00:00:00Z',
+                 'window_end_utc':'2026-11-23T00:00:00Z','experiment_learning':{
+                 'status':'AVAILABLE','authority':'SHADOW_ONLY_NO_AUTOMATIC_PROMOTION',
+                 'registry_sha256':'b'*64,'matured_outcome_evidence_available':True,
+                 'outcome_ingestion_status':'COMPLETE','outcome_ingestion_diagnostics':[],
+                 'new_matured_outcomes':rows}}
+        context['context_hash']=publisher.sha(context)
+        return context
+
+    def test_owner_outcome_counts_are_restored_but_not_full_readiness(self):
+        context=self.scorecard_fixture()
+        before=copy.deepcopy(context)
+        score=publisher.fallback_scorecard(context)
+        counts=score['analysis_layer']['experiment_outcome_counts']
+        self.assertEqual(score['status'],'DEGRADED')
+        self.assertEqual((counts['outcome_record_count'],counts['matured_outcome_count'],
+                          counts['hit_count'],counts['miss_count'],counts['censored_count']),(3,2,1,1,1))
+        self.assertEqual(counts['hit_fraction'],.5)
+        self.assertIsNone(counts['independent_sample_size'])
+        self.assertIsNone(counts['matched_baseline_skill'])
+        self.assertFalse(counts['portfolio_action'])
+        self.assertNotIn('MUST_NOT_ESCAPE',str(counts))
+        self.assertNotIn('return_pct',str(counts))
+        self.assertEqual(context,before)
+        self.assertEqual(publisher.effective_delivery_status('success',{'status':'READY'},
+                         {'status':'READY'},score,True),'DEGRADED')
+
+    def test_scorecard_rejects_rehashed_bad_owner_rows_and_tampered_context(self):
+        def reseal(c):
+            c.pop('context_hash',None);c['context_hash']=publisher.sha(c)
+        for mutate in (
+            lambda r:r[0].update(return_pct=True),
+            lambda r:r[0].update(result='UNKNOWN'),
+            lambda r:r[0].update(created_at_utc='2026-11-23T00:00:00Z'),
+            lambda r:r[0].update(source_binding_verification='UNVERIFIED'),
+            lambda r:r[0].update(evidence_sha256='bad'),
+            lambda r:r[1].update(forecast_id=r[0]['forecast_id']),
+            lambda r:r[1].update(outcome_sha256=r[0]['outcome_sha256']),
+            lambda r:r[2].update(return_pct=0),
+        ):
+            with self.subTest(mutation=mutate):
+                c=self.scorecard_fixture()
+                mutate(c['experiment_learning']['new_matured_outcomes'])
+                reseal(c)
+                self.assertEqual(publisher.fallback_scorecard(c)['analysis_layer'],{})
+        c=self.scorecard_fixture()
+        c['experiment_learning']['new_matured_outcomes'][0]['result']='MISS'
+        self.assertEqual(publisher.fallback_scorecard(c)['analysis_layer'],{})
+
+    def test_censored_only_is_not_a_zero_outcome_success(self):
+        c=self.scorecard_fixture()
+        c['experiment_learning']['new_matured_outcomes']=c['experiment_learning']['new_matured_outcomes'][2:]
+        c.pop('context_hash');c['context_hash']=publisher.sha(c)
+        score=publisher.fallback_scorecard(c)
+        self.assertEqual(score['status'],'DEGRADED')
+        self.assertIsNone(score['analysis_layer']['experiment_outcome_counts']['hit_fraction'])
+        self.assertEqual(score['matured_outcome_count'],0)
 
 if __name__ == '__main__':
     unittest.main()

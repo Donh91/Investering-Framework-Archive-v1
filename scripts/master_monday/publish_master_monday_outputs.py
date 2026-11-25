@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, hashlib, json, re, subprocess, sys
+import argparse, hashlib, json, math, re, subprocess, sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -64,6 +64,72 @@ def build_learning_decision_impact(context:dict[str,Any],learning:dict[str,Any]|
     if not potential:
         return {**base,'assessment_status':'EVALUABLE_NO_INCREMENTAL_INPUT','changed_calibration_decision':False,'reason':'The advisory packet added no novel semantic identities or decision-relevant structured deltas beyond the frozen baseline context.'}
     return {**base,'assessment_status':'NOT_EVALUABLE_NOVEL_INPUT_NOT_CONSUMED','reason':'Novel advisory input existed, but the packet is advisory-only and was not allowed to alter the frozen baseline calibration. Fix/authorize the consumer edge before attributing decision impact.'}
+def experiment_outcome_scorecard(context:dict[str,Any], learning:dict[str,Any])->dict[str,Any]|None:
+    """Aggregate the original outcome owner's admitted rows, not new forecasts.
+
+    These are context-bound descriptive record counts, not independently
+    sampled performance, paired baseline skill or the full historical MM score.
+    The original context builder verifies each forecast and evidence binding.
+    No return values, source paths, raw provider data or action fields escape.
+    """
+    try:
+        if (context.get('contract')!='WEEKLY_API_CALIBRATION_CONTEXT_v6'
+                or context.get('authority')!='SHADOW_ONLY'
+                or sha({k:v for k,v in context.items() if k!='context_hash'})!=context.get('context_hash')
+                or context.get('experiment_learning')!=learning
+                or learning.get('status')!='AVAILABLE'
+                or learning.get('authority')!='SHADOW_ONLY_NO_AUTOMATIC_PROMOTION'
+                or learning.get('matured_outcome_evidence_available') is not True
+                or learning.get('outcome_ingestion_status')!='COMPLETE'
+                or learning.get('outcome_ingestion_diagnostics')!=[]):
+            return None
+        is_hash=lambda v:isinstance(v,str) and re.fullmatch(r'[a-f0-9]{64}',v) is not None
+        if not is_hash(learning.get('registry_sha256')) or not is_hash(context.get('freeze_sha256')):
+            return None
+        def clock(v):
+            return parse_time(v) if isinstance(v,str) and v.endswith('Z') else None
+        start,end=clock(context.get('window_start_utc')),clock(context.get('window_end_utc'))
+        rows=learning.get('new_matured_outcomes')
+        if start is None or end is None or not start<end or not isinstance(rows,list) or not rows:
+            return None
+        counts={'HIT':0,'MISS':0,'CENSORED':0}
+        seen_ids=set();seen_hashes=set()
+        for row in rows:
+            if not isinstance(row,dict) or row.get('source_contract') not in ('MATURED_OUTCOME_v2','MATURED_OUTCOME_v3'):
+                return None
+            fid,digest=row.get('forecast_id'),row.get('outcome_sha256')
+            at=clock(row.get('created_at_utc'))
+            if (not isinstance(fid,str) or not fid or fid in seen_ids or not is_hash(digest) or digest in seen_hashes
+                    or not is_hash(row.get('forecast_sha256')) or not is_hash(row.get('evidence_sha256'))
+                    or row.get('source_binding_verification')!='CURRENT_FILE_CANONICAL_JSON_SHA256'
+                    or at is None or not start<=at<end):
+                return None
+            seen_ids.add(fid);seen_hashes.add(digest)
+            if row.get('status')=='MATURED':
+                result,value=row.get('result'),row.get('return_pct')
+                if result not in ('HIT','MISS') or type(value) not in (int,float) or not math.isfinite(value):
+                    return None
+                counts[result]+=1
+            elif row.get('status')=='CENSORED':
+                if row.get('result') is not None or row.get('return_pct') is not None or not isinstance(row.get('reason'),str) or not row['reason']:
+                    return None
+                counts['CENSORED']+=1
+            else:
+                return None
+        n=counts['HIT']+counts['MISS']
+        return {'contract':'MM_EXPERIMENT_OUTCOME_COUNTS_v1',
+                'authority':'DESCRIPTIVE_RESEARCH_ONLY',
+                'source_binding':'CONTEXT_HASH_AND_ORIGINAL_OWNER_ADMITTED_ROWS',
+                'context_sha256':context['context_hash'],'freeze_sha256':context['freeze_sha256'],
+                'registry_sha256':learning['registry_sha256'],
+                'outcome_record_count':len(rows),'matured_outcome_count':n,
+                'hit_count':counts['HIT'],'miss_count':counts['MISS'],'censored_count':counts['CENSORED'],
+                'hit_fraction':counts['HIT']/n if n else None,
+                'independent_sample_size':None,'matched_baseline_skill':None,
+                'forecast_authority':False,'portfolio_action':False}
+    except (ValueError,TypeError,KeyError,OverflowError,RecursionError):
+        return None
+
 def fallback_scorecard(context:dict[str,Any])->dict[str,Any]:
     learning=context.get('experiment_learning') if isinstance(context.get('experiment_learning'),dict) else {}
     registry_status=str(learning.get('status') or 'UNAVAILABLE_CONTEXT')
@@ -90,6 +156,15 @@ def fallback_scorecard(context:dict[str,Any])->dict[str,Any]:
             'matured_outcome_count':None,
             'reason':'Experiment registry is available, but matured-outcome evidence ingestion is incomplete. This lane is degraded without misreporting the registry itself as unavailable.',
         }
+    if matured:
+        observed=experiment_outcome_scorecard(context,learning)
+        if observed is not None:
+            return {'status':'DEGRADED','experiment_registry_status':registry_status,
+                    'outcome_ingestion_status':'COMPLETE',
+                    'analysis_layer':{'experiment_outcome_counts':observed},
+                    'operational_translation_layer':{},
+                    'matured_outcome_count':observed['matured_outcome_count'],
+                    'reason':'Original owner outcome counts restored. Full analysis/translation and paired calibration score remain unavailable.'}
     return {
         'status':'UNAVAILABLE_API_CONTRACT' if matured else 'PENDING_MATURED_OUTCOMES',
         'experiment_registry_status':registry_status,
@@ -231,12 +306,15 @@ def main():
     analysis=api.get('analysis') or api.get('calibration') or api.get('summary') or {'status':'UNAVAILABLE_API_FAILURE' if a.api_status!='success' else 'UNAVAILABLE_NOT_PRODUCED'}
     translation=api.get('operational_translation') or {'status':'UNAVAILABLE_API_CONTRACT','reason':'WEEKLY_CALIBRATION_SHADOW validated output contract does not currently include an operational_translation field.'}
     registry_fallback=fallback_scorecard(context)
-    if registry_fallback['status']=='UNAVAILABLE_EXPERIMENT_REGISTRY':
-        scorecard=registry_fallback
-    elif api.get('scorecard'):
-        scorecard=api['scorecard']
-    else:
-        scorecard=registry_fallback
+    # Current gateway schema has no scorecard. Never override failed
+    # deterministic evidence admission with an arbitrary model object.
+    scorecard=registry_fallback
+    if (context.get('freeze_sha256')!=freeze.get('freeze_sha256')
+            or context.get('iso_year')!=freeze.get('iso_year')
+            or context.get('iso_week')!=freeze.get('iso_week')):
+        scorecard={'status':'DEGRADED','experiment_registry_status':'UNVERIFIED',
+                   'matured_outcome_count':None,'analysis_layer':{},'operational_translation_layer':{},
+                   'reason':'Calibration context and freeze identity mismatch.'}
     shadow_path=Path('research/api_agent/outputs/shadow_admission/LATEST_SHADOW_ADMISSION_DECISION.json')
     shadow=load(shadow_path) if shadow_path.exists() else {'contract':'SHADOW_ADMISSION_AI_DECISION_v1','overall_status':'NOT_YET_AVAILABLE','candidate_decisions':[],'master_monday_summary':'No autonomous shadow-admission decision has been published yet.'}
     shadow_reporting={'mode':'REPORT_AFTER_DECISION_NO_APPROVAL_PROMPT','human_confirmation_required':False,'decision':shadow}
