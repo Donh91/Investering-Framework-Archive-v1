@@ -227,22 +227,119 @@ def validate_forward_range_candidate(value: Any) -> dict[str, Any]:
     return value
 
 
+def strict_object(raw: bytes) -> dict[str, Any]:
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("STRATEGIC_DUPLICATE_KEY")
+            result[key] = value
+        return result
+
+    def reject_constant(_):
+        raise ValueError("STRATEGIC_NONFINITE_JSON")
+
+    def finite_float(value):
+        parsed = float(value)
+        if not math.isfinite(parsed):
+            raise ValueError("STRATEGIC_NONFINITE_JSON")
+        return parsed
+
+    value = json.loads(raw.decode("utf-8"), object_pairs_hook=unique,
+                       parse_constant=reject_constant, parse_float=finite_float)
+    if not isinstance(value, dict):
+        raise ValueError("STRATEGIC_JSON_OBJECT_REQUIRED")
+    return value
+
+
+def bound_anchor_sources(repo: Path, optr: Mapping[str, Any], cptr: Mapping[str, Any]):
+    """Verify original owner identities before copying any long-horizon direction.
+
+    Official Compass uses a self-digest; CN pointer uses the raw package digest.
+    Neither is independent first-known proof. No stale or wrong-week rewrite.
+    """
+    if (optr.get("contract") != "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
+            or cptr.get("contract") != "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1"):
+        raise ValueError("STRATEGIC_SOURCE_POINTER_CONTRACT_INVALID")
+    year,week=cptr.get("iso_year"),cptr.get("iso_week")
+    if type(year) is not int or type(week) is not int:
+        raise ValueError("STRATEGIC_SOURCE_WEEK_INVALID")
+    try:
+        datetime.fromisocalendar(year,week,1)
+    except ValueError:
+        raise ValueError("STRATEGIC_SOURCE_WEEK_INVALID") from None
+    relative=f"05_CYCLE_NAVIGATOR/weekly/{year}/W{week:02d}"
+    if cptr.get("week_dir")!=relative:
+        raise ValueError("STRATEGIC_CN_WEEK_PATH_MISMATCH")
+    official_rel=optr.get("compass_path")
+    if not isinstance(official_rel,str) or not re.fullmatch(
+            r"04_MARKET_LEARNING/handlekompas/official/daily/\d{4}/\d{2}/\d{2}/CMP-[A-Za-z0-9-]+\.json",official_rel):
+        raise ValueError("STRATEGIC_OFFICIAL_PATH_INVALID")
+    compass_path=repo/official_rel
+    cn_path=repo/relative/"CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+    for path in (compass_path,cn_path):
+        if not path.is_file() or path.is_symlink() or not path.resolve().is_relative_to(repo.resolve()):
+            raise ValueError("STRATEGIC_SOURCE_PATH_INVALID")
+    official_raw=compass_path.read_bytes()
+    cn_raw=cn_path.read_bytes()
+    compass=strict_object(official_raw)
+    cn=strict_object(cn_raw)
+    official_digest=digest({k:v for k,v in compass.items() if k!="compass_sha256"})
+    if (compass.get("contract")!="OFFICIAL_DAILY_COMPASS_v1"
+            or not isinstance(compass.get("compass_id"),str)
+            or compass_path.stem!=compass["compass_id"]
+            or compass.get("compass_id")!=optr.get("compass_id")
+            or compass.get("issued_at_utc")!=optr.get("issued_at_utc")
+            or compass.get("compass_sha256")!=official_digest
+            or optr.get("compass_sha256")!=official_digest):
+        raise ValueError("STRATEGIC_OFFICIAL_SOURCE_BINDING_MISMATCH")
+    if (cn.get("contract")!="CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1"
+            or any(type(cptr.get(k)) is not int or cn.get(k)!=cptr[k] for k in ("issue_number","public_issue_number"))
+            or cn.get("status")!=cptr.get("status")
+            or hashlib.sha256(cn_raw).hexdigest()!=cptr.get("machine_package_sha256")):
+        raise ValueError("STRATEGIC_CN_SOURCE_BINDING_MISMATCH")
+    if not isinstance(compass.get("horizons"), dict) or not isinstance(cn.get("decision_projection"), dict):
+        raise ValueError("STRATEGIC_SOURCE_PROJECTION_INVALID")
+    return compass_path,cn_path,compass,cn,hashlib.sha256(official_raw).hexdigest(),hashlib.sha256(cn_raw).hexdigest()
+
+
 def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
     official_ptr_path = repo / OFFICIAL_PTR
     cn_ptr_path = repo / CN_PTR
-    if not official_ptr_path.exists() or not cn_ptr_path.exists():
-        raise SystemExit("required_pointer_missing")
-
-    optr = read_json(official_ptr_path)
-    cptr = read_json(cn_ptr_path)
-    compass_path = repo / str(optr.get("compass_path") or "")
-    cn_dir = repo / str(cptr.get("week_dir") or "")
-    cn_machine_path = cn_dir / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
-    if not compass_path.exists() or not cn_machine_path.exists():
-        raise SystemExit("bound_source_missing")
-
-    compass = read_json(compass_path)
-    cn = read_json(cn_machine_path)
+    optr, cptr = {}, {}
+    pointer_hashes = {}
+    reason = None
+    # Read each pointer independently so an invalid Official pointer cannot
+    # hide the intended CN package identity from the degraded receipt.
+    for name, path in (("official", official_ptr_path), ("cn", cn_ptr_path)):
+        try:
+            raw = path.read_bytes()
+            pointer_hashes[name] = hashlib.sha256(raw).hexdigest()
+            if path.is_symlink() or not path.resolve().is_relative_to(repo.resolve()):
+                raise ValueError("STRATEGIC_SOURCE_PATH_INVALID")
+            obj = strict_object(raw)
+            if name == "official":
+                optr = obj
+            else:
+                cptr = obj
+        except (OSError, ValueError, RecursionError):
+            reason = reason or "STRATEGIC_POINTER_UNREADABLE"
+    expected_cn_sha = cptr.get("machine_package_sha256")
+    if not isinstance(expected_cn_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_cn_sha):
+        expected_cn_sha = None
+    compass_path = cn_machine_path = None
+    compass, cn = {}, {}
+    official_raw_sha = cn_raw_sha = None
+    if reason is None:
+        try:
+            compass_path,cn_machine_path,compass,cn,official_raw_sha,cn_raw_sha = bound_anchor_sources(repo,optr,cptr)
+        except (OSError, ValueError, RecursionError) as exc:
+            code = str(exc)
+            reason = code if re.fullmatch(r"STRATEGIC_[A-Z_]+", code) else "STRATEGIC_SOURCE_UNREADABLE"
+    if reason is not None:
+        # Never expose directions, scenarios or market data from an unbound source.
+        compass, cn = {}, {}
+    binding_status = "DEGRADED" if reason else "VERIFIED"
 
     tactical = {
         "12h": official_horizon(compass, "NEXT_12H"),
@@ -286,8 +383,12 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
         cycle_direction,
     ]
     source_fingerprint = digest({
-        "official_compass_sha256": optr.get("compass_sha256"),
-        "cn_machine_package_sha256": cptr.get("machine_package_sha256"),
+        "official_compass_sha256": official_raw_sha,
+        "cn_machine_package_sha256": expected_cn_sha,
+        "cn_verified_raw_sha256": cn_raw_sha,
+        "pointer_hashes": pointer_hashes,
+        "binding_status": binding_status,
+        "reason_code": reason,
         "scoring_contract": SCORING_CONTRACT,
     })
     anchor_id = "SC-" + now.strftime("%Y%m%d") + "-" + source_fingerprint[:12]
@@ -298,6 +399,8 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
         "anchor_id": anchor_id,
         "issued_at_utc": now.isoformat().replace("+00:00", "Z"),
         "source_fingerprint": source_fingerprint,
+        "source_binding_status": binding_status,
+        "source_binding_reason_code": reason,
         "market_reference": compass.get("market_reference"),
         "tactical_context": tactical,
         "strategic_21_30d": {
@@ -334,17 +437,18 @@ def build_anchor(repo: Path, now: datetime) -> dict[str, Any]:
         },
         "source_bindings": {
             "official_compass": {
-                "path": str(compass_path.relative_to(repo)),
-                "sha256": file_sha(compass_path),
+                "path": str(compass_path.relative_to(repo)) if compass_path is not None else None,
+                "sha256": official_raw_sha,
                 "compass_id": compass.get("compass_id"),
             },
             "cycle_navigator": {
-                "path": str(cn_machine_path.relative_to(repo)),
-                "sha256": file_sha(cn_machine_path),
+                "path": str(cn_machine_path.relative_to(repo)) if cn_machine_path is not None else None,
+                "expected_package_sha256": expected_cn_sha,
+                "sha256": cn_raw_sha,
                 "issue_number": cn.get("issue_number"),
                 "public_issue_number": cn.get("public_issue_number"),
-                "iso_year": cptr.get("iso_year"),
-                "iso_week": cptr.get("iso_week"),
+                "iso_year": cptr.get("iso_year") if type(cptr.get("iso_year")) is int else None,
+                "iso_week": cptr.get("iso_week") if type(cptr.get("iso_week")) is int else None,
             },
         },
         "authority": {
@@ -368,7 +472,11 @@ def materialize(repo: Path, now: datetime | None = None) -> dict[str, Any]:
     if latest_path.exists():
         latest = read_json(latest_path)
         if latest.get("source_fingerprint") == anchor["source_fingerprint"]:
-            return {"status": "NOOP_SAME_SOURCES", "anchor_id": latest.get("anchor_id"), "source_fingerprint": anchor["source_fingerprint"]}
+            return {"status": "DEGRADED" if anchor["source_binding_status"] == "DEGRADED" else "NOOP_SAME_SOURCES",
+                    "write_status": "NOOP_SAME_SOURCES", "anchor_id": latest.get("anchor_id"),
+                    "source_fingerprint": anchor["source_fingerprint"],
+                    "source_binding_status": anchor["source_binding_status"],
+                    "source_binding_reason_code": anchor["source_binding_reason_code"]}
 
     out = repo / ROOT / "anchors" / now.strftime("%Y/%m/%d") / f"{anchor['anchor_id']}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -380,13 +488,17 @@ def materialize(repo: Path, now: datetime | None = None) -> dict[str, Any]:
         "anchor_path": str(out.relative_to(repo)),
         "anchor_sha256": anchor["anchor_sha256"],
         "source_fingerprint": anchor["source_fingerprint"],
+        "source_binding_status": anchor["source_binding_status"],
+        "source_binding_reason_code": anchor["source_binding_reason_code"],
+        "cn_expected_package_sha256": anchor["source_bindings"]["cycle_navigator"]["expected_package_sha256"],
         "issued_at_utc": anchor["issued_at_utc"],
         "alignment_class": anchor["cross_horizon_alignment"]["class"],
         "strategic_21_30d_direction": anchor["strategic_21_30d"]["direction"],
         "cycle_4_8w_direction": anchor["cycle_4_8w"]["direction"],
     }
     latest_path.write_bytes(canon(pointer))
-    return {"status": "CREATED", **pointer}
+    return {"status": "DEGRADED" if anchor["source_binding_status"] == "DEGRADED" else "CREATED",
+            "write_status": "CREATED", **pointer}
 
 
 def main() -> None:
