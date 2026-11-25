@@ -1,7 +1,7 @@
 {
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_READOUT_v1",
-  "generated_at_utc": "2026-11-24T15:12:49Z",
+  "generated_at_utc": "2026-11-25T01:08:06Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -15,48 +15,19 @@
   },
   "luna_triage": null,
   "note": "Agent outputs are evidence/diagnosis only. Remediation Maturation remains the sole CODEX_READY authority.",
-  "plan_fingerprint": "3afcd2f12939c5d1db364e02af045366ecf87076b8df781e88b574e228ffb422",
+  "plan_fingerprint": "9a48f30f733e2010ce2d0d56345caf88b8b493b0e8568d87e1b42aef38f331c8",
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
     "existing_remediation_count": 1,
     "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
-    "sol_6_1_diagnosis_count": 1
+    "sol_6_1_diagnosis_count": 0
   },
-  "sol_6_1_diagnosis": {
-    "evidence_against": [
-      "Only one workflow item is supplied and clusters is empty; no cross-workflow shared-head cluster or duplicate remediation is demonstrated.",
-      "Only the latest head SHA is available. The evidence does not establish that earlier failures occurred on the same revision.",
-      "No error messages, failed-step details or failure signatures are supplied. Repeated failure status could conceal different causes.",
-      "No upstream/downstream relationships or upstream run outcomes are supplied. Dependency-driven failure remains unverified."
-    ],
-    "evidence_for": [
-      "cycle-navigator-pages.yml has a failure_streak of 2 and recent_failure_count of 6. This supports investigating recurrence before treating every failure as independent, but does not establish a common cause.",
-      "The latest run, 45413819046, is associated with head a6198f0f868359fbec9467eb8f2a6b0829a89cff, providing a concrete anchor for read-only comparison with failure history.",
-      "The supplied finding is REPEATED_CONSECUTIVE_FAILURES; the reported issue is therefore recurrent rather than a single observed failure."
-    ],
-    "forecast_candidates": [],
-    "hypotheses": [
-      "A persistent workflow-local failure could explain the recurrence. Bounded diagnostic: inspect the failed job, step and error signature in run 45413819046 and the immediately preceding failed run. Matching signatures would support one provisional cause family; materially different signatures would weaken it.",
-      "A shared upstream input or dependency could explain multiple failures. Bounded diagnostic: identify dependencies actually consumed by the latest failed step, then inspect only their directly associated run outcomes or artifact metadata. Require a matching timing, revision or artifact link before attributing the failure upstream.",
-      "A revision-linked cause could affect other workflows. Bounded diagnostic: compare available failed runs on head a6198f0f868359fbec9467eb8f2a6b0829a89cff for matching failure signatures or shared dependency failures. A shared SHA alone is insufficient for deduplication.",
-      "The six reported recent failures could include independent causes. Bounded diagnostic: group no more than those six failures by observed signature, revision and dependency linkage. Keep unmatched failures separate and leave unavailable attributes unknown."
-    ],
-    "status": "DEGRADED",
-    "summary": "The supplied evidence supports a recurrence investigation, not a confirmed root cause or cross-workflow deduplication. Start with the latest two consecutive failures in cycle-navigator-pages.yml, then widen only to directly implicated dependencies or matching-head failures. No separate repair streams are justified yet. existing_remediation is null, so remediation authority or absence cannot be established; verify any existing authoritative record before proposing a separate remediation. All next steps are bounded, read-only diagnostics.",
-    "uncertainties": [
-      "The failed job, step, error signature and logs are missing.",
-      "Earlier run IDs, head SHAs, timestamps and intervening successful runs are not supplied.",
-      "The time window and total run count underlying recent_failure_count of 6 are unspecified; a failure rate cannot be calculated.",
-      "cluster_id is null and clusters is empty, but the completeness of cross-workflow coverage is unknown.",
-      "existing_remediation is null; this does not prove that no remediation exists elsewhere.",
-      "scheduled=false and openai_enabled=false are supplied metadata, not demonstrated failure causes."
-    ]
-  },
+  "sol_6_1_diagnosis": null,
   "source_authority": {
     "codex_ready": "VALID",
     "new_diagnosis_eligible": true,
     "remediation": "VALID"
   },
-  "source_health_generated_at_utc": "2026-11-24T15:02:34.131273Z"
+  "source_health_generated_at_utc": "2026-11-25T00:57:28.665620Z"
 }

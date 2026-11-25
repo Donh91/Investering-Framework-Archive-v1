@@ -4,21 +4,21 @@
     "luna_required": false,
     "max_luna_calls_this_run": 1,
     "max_sol_calls_this_run": 1,
-    "sol_6_1_required": true
+    "sol_6_1_required": false
   },
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "3afcd2f12939c5d1db364e02af045366ecf87076b8df781e88b574e228ffb422",
+  "fingerprint": "9a48f30f733e2010ce2d0d56345caf88b8b493b0e8568d87e1b42aef38f331c8",
   "fleet": {
-    "amber_count": 30,
-    "green_count": 174,
-    "red_count": 2,
+    "amber_count": 14,
+    "green_count": 191,
+    "red_count": 1,
     "scheduled_workflow_count": 58,
     "workflow_count": 206,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-11-24T15:08:51Z",
+  "generated_at_utc": "2026-11-25T01:03:16Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -33,44 +33,26 @@
   "items": [
     {
       "cluster_id": null,
-      "existing_remediation": null,
-      "failure_streak": 2,
-      "findings": [
-        "REPEATED_CONSECUTIVE_FAILURES"
-      ],
-      "latest_head_sha": "a6198f0f868359fbec9467eb8f2a6b0829a89cff",
-      "latest_run_id": 45413819046,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45413819046",
-      "model_lane": "GPT_6_1_SOL",
-      "openai_enabled": false,
-      "recent_failure_count": 6,
-      "route": "SOL_DIAGNOSIS",
-      "scheduled": false,
-      "workflow": "cycle-navigator-pages.yml",
-      "write_target_class": "NO_REPO_WRITE",
-      "writer_group": "cycle-navigator-pages"
-    },
-    {
-      "cluster_id": null,
       "existing_remediation": {
-        "finding": "DAILY_DIRECTOR_DIRECTIONAL_PCT_THRESHOLD_REQUIRED",
-        "route": "EVIDENCE",
-        "signature": "774d6478412574ae9461",
-        "state": "POST_FIX_OBSERVATION"
+        "finding": "SCHEDULE_STALE",
+        "route": "CODEX_PR",
+        "signature": "90386cf337a0366978ad",
+        "state": "CODEX_READY"
       },
       "failure_streak": 1,
       "findings": [
-        "LATEST_RUN_FAILED"
+        "LATEST_RUN_FAILED",
+        "SCHEDULE_STALE"
       ],
-      "latest_head_sha": "cd0d6f23e5eb33a6c28719c9db93fa0af724584b",
-      "latest_run_id": 45339276204,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45339276204",
+      "latest_head_sha": "6baf6b0778be202703592de4d632f7954ca5c120",
+      "latest_run_id": 45424154390,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45424154390",
       "model_lane": "NONE",
-      "openai_enabled": true,
+      "openai_enabled": false,
       "recent_failure_count": 1,
       "route": "FOLLOW_EXISTING_REMEDIATION",
       "scheduled": true,
-      "workflow": "daily-director-shadow.yml",
+      "workflow": "remediation-maturation.yml",
       "write_target_class": "DIRECT_MAIN",
       "writer_group": "framework-main-writer"
     }
@@ -81,13 +63,13 @@
     "existing_remediation_count": 1,
     "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
-    "sol_6_1_diagnosis_count": 1
+    "sol_6_1_diagnosis_count": 0
   },
   "source_authority": {
     "codex_ready": "VALID",
     "new_diagnosis_eligible": true,
     "remediation": "VALID"
   },
-  "source_health_generated_at_utc": "2026-11-24T15:02:34.131273Z",
+  "source_health_generated_at_utc": "2026-11-25T00:57:28.665620Z",
   "source_health_status": "RED"
 }
