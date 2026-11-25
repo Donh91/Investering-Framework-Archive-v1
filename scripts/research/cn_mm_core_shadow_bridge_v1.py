@@ -585,6 +585,53 @@ def compare_calibration_feature(machine, pointer, feature):
         return "MM_CALIBRATION_FEATURE_MISMATCH"
 
 
+def mm_translation_readback(machine, pointer):
+    """Only committed MM shadow candidate metadata; not an independently replayed model output."""
+    try:
+        t=machine["operational_translation"];receipt=machine["api_receipt"]
+        if (t.get("contract")!="MM_SHADOW_ANALYTICAL_TRANSLATION_v1" or
+                t.get("status")!="DEGRADED" or t.get("authority")!="SHADOW_ONLY_NO_ACTION_OR_FORECAST_AUTHORITY" or
+                t.get("candidate_status") not in ("VALIDATED_UNADMITTED","NO_CANDIDATES") or
+                t.get("phase")!="UNAVAILABLE" or t.get("rotation")!="UNAVAILABLE" or
+                any(t.get(k) is not False for k in ("forecast_authority","portfolio_action","model_weight_change","model_utilization_verified")) or
+                t["context_sha256"]!=machine["context_hash"] or t["freeze_sha256"]!=machine["freeze_sha256"] or
+                machine["freeze_sha256"]!=pointer["freeze_sha256"] or
+                t["gateway_output_sha256"]!=receipt["output_hash"] or
+                not re.fullmatch("[0-9a-f]{64}",t["gateway_output_sha256"]) or
+                gateway_input_status(receipt,machine["api_status"],t["gateway_context_sha256"])!="MATCHED_GATEWAY_INPUT_RECEIPT"):
+            return None
+        count=t["candidate_count"];rows=t["spot_candidate_directions"]
+        if (type(count) is not int or count<0 or
+                type(receipt.get("forecast_candidate_count")) is not int or receipt["forecast_candidate_count"]!=count or
+                (count==0)!=(t["candidate_status"]=="NO_CANDIDATES") or not isinstance(rows,list) or len(rows)>count):
+            return None
+        horizons=t["candidate_horizon_counts"];directions=t["candidate_direction_counts"]
+        if (not isinstance(horizons,dict) or not isinstance(directions,dict) or
+                any(not isinstance(k,str) or not re.fullmatch("[1-9][0-9]?",k) or int(k)>90 or type(v) is not int or v<=0 for k,v in horizons.items()) or
+                any(k not in ("UP","DOWN","RANGE") or type(v) is not int or v<=0 for k,v in directions.items()) or
+                sum(horizons.values())!=count or sum(directions.values())!=count):
+            return None
+        safe=[];seen=set();rh=Counter();rd=Counter()
+        for row in rows:
+            if (not isinstance(row,dict) or set(row)!={"asset","horizon_days","direction","target_mode"} or
+                    row["asset"] not in ("BTC","ETH","ETHBTC") or type(row["horizon_days"]) is not int or
+                    not 1<=row["horizon_days"]<=90 or row["direction"] not in ("UP","DOWN","RANGE") or
+                    row["target_mode"] not in (("ABSOLUTE_RANGE",) if row["direction"]=="RANGE" else ("PCT_MOVE","ABSOLUTE_VALUE"))):
+                return None
+            key=(row["asset"],row["horizon_days"])
+            if key in seen:return None
+            seen.add(key);rh[str(row["horizon_days"])]+=1;rd[row["direction"]]+=1
+            safe.append(dict(row))
+        if any(n>horizons.get(k,0) for k,n in rh.items()) or any(n>directions.get(k,0) for k,n in rd.items()):
+            return None
+        return {"contract":"CN_MM_SHADOW_TRANSLATION_READBACK_v1","status":"COMMITTED_MM_SHADOW_METADATA",
+                "candidate_status":t["candidate_status"],"candidate_count":count,"spot_candidate_directions":safe,
+                "gateway_output_sha256":t["gateway_output_sha256"],
+                "forecast_authority":False,"portfolio_action":False,"independent_model_output_replay":False}
+    except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
+        return None
+
+
 def read_calibration_feature_binding(repo, pointer, feature, read_committed, *, include_learning=False):
     def result(status, learning=None):
         return (status,learning) if include_learning else status
@@ -616,6 +663,9 @@ def read_calibration_feature_binding(repo, pointer, feature, read_committed, *, 
                     learning={k:binding.get(k) for k in ("status","binding_sha256","api_input_status",
                                 "learning_status","task2_status","verified_outcome_n","task2_paired_n",
                                 "model_utilization_verified","scientific_pit_eligible","forecast_authority")}
+                    translation=mm_translation_readback(machine,pointer)
+                    if translation is not None:
+                        learning["mm_analytical_translation"]=translation
         return result(status,learning)
     except (ValueError,TypeError,KeyError,AttributeError,OSError,subprocess.SubprocessError):
         return result("MM_CALIBRATION_FEATURE_MISMATCH")

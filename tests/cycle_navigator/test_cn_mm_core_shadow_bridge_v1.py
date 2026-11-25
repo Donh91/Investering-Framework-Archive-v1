@@ -498,6 +498,39 @@ print('W47_INCREMENTAL_EQUIVALENCE '+json.dumps(result,sort_keys=True))
         context["cn_mm_shared_intelligence"]["learning"]["verified_n"]=999
         self.assertEqual(bridge.calibration_learning_binding(context,packet,receipt,"success")["status"],"UNAVAILABLE")
 
+    def test_mm_translation_readback_rejects_malformed_or_authoritative_shadow_rows(self):
+        from copy import deepcopy
+        digest="a"*64;ctx="b"*64;out="c"*64
+        t={"contract":"MM_SHADOW_ANALYTICAL_TRANSLATION_v1","status":"DEGRADED",
+           "authority":"SHADOW_ONLY_NO_ACTION_OR_FORECAST_AUTHORITY","candidate_status":"VALIDATED_UNADMITTED",
+           "phase":"UNAVAILABLE","rotation":"UNAVAILABLE","forecast_authority":False,"portfolio_action":False,
+           "model_weight_change":False,"model_utilization_verified":False,
+           "context_sha256":ctx,"freeze_sha256":digest,"gateway_context_sha256":ctx,"gateway_output_sha256":out,
+           "candidate_count":1,"candidate_horizon_counts":{"7":1},"candidate_direction_counts":{"UP":1},
+           "spot_candidate_directions":[{"asset":"BTC","horizon_days":7,"direction":"UP","target_mode":"PCT_MOVE"}]}
+        machine={"operational_translation":t,"context_hash":ctx,"freeze_sha256":digest,"api_status":"success",
+                 "api_receipt":{"contract":"API_AGENT_RECEIPT_v3","task":"WEEKLY_CALIBRATION_SHADOW",
+                                "status":"PASS","response_id":"fixture","untrusted_input_envelope":True,
+                                "context_hash":ctx,"output_hash":out,"forecast_candidate_count":1}}
+        pointer={"freeze_sha256":digest}
+        result=bridge.mm_translation_readback(machine,pointer)
+        self.assertEqual(result["spot_candidate_directions"],t["spot_candidate_directions"])
+        self.assertFalse(result["independent_model_output_replay"])
+        self.assertFalse(result["forecast_authority"])
+        for mutate in (
+            lambda x:x.update(forecast_authority=True),
+            lambda x:x.update(gateway_output_sha256="d"*64),
+            lambda x:x.update(candidate_direction_counts={"DOWN":1}),
+            lambda x:x.update(candidate_horizon_counts={"14":1}),
+            lambda x:x["spot_candidate_directions"][0].update(asset="MEME"),
+            lambda x:x["spot_candidate_directions"][0].update(horizon_days=True),
+            lambda x:x["spot_candidate_directions"][0].update(target_mode="ABSOLUTE_RANGE"),
+            lambda x:x["spot_candidate_directions"][0].update(target_value=123),
+        ):
+            altered=deepcopy(machine);mutate(altered["operational_translation"])
+            self.assertIsNone(bridge.mm_translation_readback(altered,pointer))
+        self.assertIsNone(bridge.mm_translation_readback(machine,{"freeze_sha256":"e"*64}))
+
     def test_real_historical_w47_context_and_gateway_preserve_unknown_feature(self):
         # Real existing context CLI and gateway request construction.
         # Synthetic receipt only; no paid request or historical output write.

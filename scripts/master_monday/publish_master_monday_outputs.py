@@ -204,7 +204,7 @@ def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
     base={'contract':'MM_SHADOW_ANALYTICAL_TRANSLATION_v1','status':'DEGRADED',
           'authority':'SHADOW_ONLY_NO_ACTION_OR_FORECAST_AUTHORITY',
           'candidate_status':'UNAVAILABLE','candidate_horizon_counts':{},
-          'candidate_direction_counts':{},'candidate_count':None,
+          'candidate_direction_counts':{},'candidate_count':None,'spot_candidate_directions':[],
           'phase':'UNAVAILABLE','rotation':'UNAVAILABLE','forecast_authority':False,
           'portfolio_action':False,'model_weight_change':False,
           'model_utilization_verified':False}
@@ -235,9 +235,11 @@ def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
         root=str(Path(__file__).resolve().parents[2])
         if root not in sys.path:sys.path.insert(0,root)
         from scripts.api_agent.api_gateway import validate_output
+        from scripts.lib.forecast_settlement_contract import normalize_metric_path
         validate_output(api)
         fields={'metric_path','direction','target_mode','threshold_pct','target_value','range_low','range_high','horizon_days','rationale'}
-        seen=set();horizons={};directions={}
+        seen=set();horizons={};directions={};spot=[]
+        spot_assets={'spot.BTCUSDT.close':'BTC','spot.ETHUSDT.close':'ETH','spot.ETHBTC.close':'ETHBTC'}
         for c in candidates:
             if (set(c)!=fields or type(c['horizon_days']) is not int
                     or not isinstance(c['metric_path'],str) or not isinstance(c['rationale'],str)
@@ -246,16 +248,20 @@ def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
                 return {**base,'reason':'CANDIDATE_CONTRACT_INVALID'}
             # One metric/horizon identity cannot contribute multiple competing
             # rows to a single directional count. Preserve unresolved conflict.
-            key=(c['metric_path'].strip(),c['horizon_days'])
+            metric=normalize_metric_path(c['metric_path'])
+            key=(metric,c['horizon_days'])
             if key in seen:
                 return {**base,'reason':'DUPLICATE_OR_CONFLICTING_CANDIDATE'}
             seen.add(key)
             h=str(c['horizon_days']);d=c['direction']
             horizons[h]=horizons.get(h,0)+1;directions[d]=directions.get(d,0)+1
+            if metric in spot_assets:
+                spot.append({'asset':spot_assets[metric],'horizon_days':c['horizon_days'],'direction':d,'target_mode':c['target_mode']})
         return {**base,'reason':'TYPED_SHADOW_CANDIDATES_ONLY_NO_OPERATIONAL_DECISION',
                 'candidate_status':'VALIDATED_UNADMITTED' if candidates else 'NO_CANDIDATES',
                 'candidate_count':len(candidates),'candidate_horizon_counts':horizons,
                 'candidate_direction_counts':directions,
+                'spot_candidate_directions':sorted(spot,key=lambda row:(row['asset'],row['horizon_days'])),
                 'context_sha256':context['context_hash'],'freeze_sha256':freeze['freeze_sha256'],
                 'gateway_context_sha256':receipt['context_hash'],'gateway_output_sha256':receipt['output_hash']}
     except (ValueError,TypeError,KeyError,AttributeError,OverflowError,RecursionError):

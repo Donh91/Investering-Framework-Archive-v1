@@ -183,6 +183,21 @@ class WeeklyPrecisionRegressionTests(unittest.TestCase):
         a['forecast_candidates'][0]['direction']='DOWN';r['output_hash']=publisher.sha(a)
         self.assertEqual(publisher.analytical_translation(c,f,a,r,'success')['candidate_direction_counts'],{'DOWN':1})
 
+    def test_translation_uses_original_settlement_aliases_without_conflating_mark_and_spot(self):
+        c,f,a,r=self.translation_fixture()
+        candidate=a['forecast_candidates'][0]
+        candidate['metric_path']='market_metrics.spot.BTCUSDT.close'
+        a['forecast_candidates'].append({**candidate,'metric_path':'market_metrics.derivatives.BTC-USDT-SWAP.mark_price.mark_price'})
+        r.update(output_hash=publisher.sha(a),forecast_candidate_count=2)
+        t=publisher.analytical_translation(c,f,a,r,'success')
+        self.assertEqual(t['spot_candidate_directions'],[
+            {'asset':'BTC','horizon_days':7,'direction':'UP','target_mode':'PCT_MOVE'}])
+        self.assertEqual(t['candidate_count'],2)
+        a['forecast_candidates'].append({**candidate,'metric_path':'spot.BTCUSDT.close'})
+        r.update(output_hash=publisher.sha(a),forecast_candidate_count=3)
+        self.assertEqual(publisher.analytical_translation(c,f,a,r,'success')['reason'],
+                         'DUPLICATE_OR_CONFLICTING_CANDIDATE')
+
     def test_translation_rejects_receipt_mismatch_and_rehashed_invalid_candidates(self):
         for mutate in (
             lambda c,f,a,r:r.update(task='DAILY_DIRECTOR_SHADOW'),
