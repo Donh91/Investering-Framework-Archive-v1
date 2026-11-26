@@ -795,7 +795,33 @@ def _event(previous, families, delta, adjudication, as_of):
     }
 
 
+def _validate_shared_candidate_rosters(registry, admission, adjudication):
+    """Pre-product identity guard; do not use a last-wins map as evidence.
+
+    A partial adjudication roster can be legitimate due to publication cadence.
+    Existing freshness checks handle that separately. Duplicate/malformed IDs,
+    however, make the shared inputs ambiguous before any event or proposal.
+    """
+    for label, doc, field in (
+        ("registry", registry, "candidates"),
+        ("admission", admission, "candidates"),
+        ("adjudication", adjudication, "candidate_actions"),
+    ):
+        rows = doc.get(field) if isinstance(doc, dict) else None
+        if not isinstance(rows, list):
+            raise RuntimeError(f"SHARED_CANDIDATE_ROSTER_INVALID:{label}")
+        seen = set()
+        for row in rows:
+            cid = row.get("candidate_id") if isinstance(row, dict) else None
+            if not isinstance(cid, str) or not cid or cid.strip() != cid:
+                raise RuntimeError(f"SHARED_CANDIDATE_ID_INVALID:{label}")
+            if cid in seen:
+                raise RuntimeError(f"SHARED_CANDIDATE_ID_DUPLICATE:{label}")
+            seen.add(cid)
+
+
 def _build_products(registry, admission, adjudication, policy, previous, previous_backlog, as_of):
+    _validate_shared_candidate_rosters(registry, admission, adjudication)
     packets, new_keys = evaluate_candidates(registry, admission, adjudication, policy, previous, as_of)
     event_keys = sorted(set(previous.get("emitted_event_keys") or []) | set(new_keys))
     families = build_hypothesis_families(registry, admission, adjudication, policy)

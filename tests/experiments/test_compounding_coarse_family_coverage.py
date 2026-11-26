@@ -79,6 +79,40 @@ class CoarseFamilyTest(unittest.TestCase):
         self.assertEqual(out["denominator_semantics"],"REGISTERED_FORECAST_IDENTITIES_NOT_INDEPENDENT_EPISODES")
         self.assertFalse(out["allocation_authorized"])
 
+    def test_shared_roster_guard_accepts_asynchronous_partial_adjudication(self):
+        core._validate_shared_candidate_rosters(
+            {"candidates": [{"candidate_id": "a"}, {"candidate_id": "b"}]},
+            {"candidates": [{"candidate_id": "a"}, {"candidate_id": "b"}]},
+            {"candidate_actions": [{"candidate_id": "a"}]})
+
+    def test_shared_roster_ambiguity_stops_before_learning_products(self):
+        from unittest.mock import patch
+        from datetime import datetime, timezone
+        for index, field, label in ((0, "candidates", "registry"),
+                                    (1, "candidates", "admission"),
+                                    (2, "candidate_actions", "adjudication")):
+            for rows, reason in (
+                ([{"candidate_id": "a", "status": "QUALIFIED_FOR_FORWARD_TEST"},
+                  {"candidate_id": "a", "status": "TARGET_UNIT_QUARANTINED"}], "ID_DUPLICATE"),
+                ([{"candidate_id": "a"}, {"candidate_id": "a"}], "ID_DUPLICATE"),
+                ([{"candidate_id": True}], "ID_INVALID"),
+                ([{"candidate_id": " a"}], "ID_INVALID"),
+                ([None], "ID_INVALID"),
+                (None, "ROSTER_INVALID"),
+            ):
+                for ordered in (rows, list(reversed(rows)) if isinstance(rows, list) else rows):
+                    docs = [{"candidates": [{"candidate_id": "a"}]},
+                            {"candidates": [{"candidate_id": "a"}]},
+                            {"candidate_actions": [{"candidate_id": "a"}]}]
+                    docs[index] = {field: ordered}
+                    with self.subTest(label=label, reason=reason, rows=ordered), \
+                         patch.object(core, "evaluate_candidates") as produce, \
+                         patch.object(core, "persist_json") as write:
+                        with self.assertRaisesRegex(RuntimeError, f"SHARED_CANDIDATE_{reason}:{label}"):
+                            core._build_products(*docs, {}, {}, {}, datetime(2026, 11, 26, tzinfo=timezone.utc))
+                        produce.assert_not_called()
+                        write.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
