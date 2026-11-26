@@ -127,3 +127,24 @@ class PreflightTests(unittest.TestCase):
             census(START, END, [capture(source_status="MAYBE")])
         with self.assertRaises(ValueError):
             census(START, END, [capture(), capture(source_status="PARTIAL")])
+
+    def test_parity_row_for_other_bytes_rejected(self):
+        other = "f" * 64
+        p = parity(files=[dict(parity()["files"][0], expected_sha256=other,
+                               served_sha256=other)])
+        with self.assertRaisesRegex(ValueError, "Kompas bytes not bound"):
+            bind_publication(RAW, capture(), p)
+
+    def test_integer_false_flags_rejected(self):
+        for key in ("publication_authenticated", "pit_admitted", "scoring_authorized",
+                    "research_only"):
+            with self.subTest(key=key):
+                c = capture(**{key: int(capture()[key])})
+                with self.assertRaisesRegex(ValueError, "capture binding mismatch"):
+                    bind_publication(RAW, c, parity())
+                with self.assertRaisesRegex(ValueError, "invalid census row"):
+                    census(START, END, [c])
+
+    def test_census_observation_before_issue_rejected(self):
+        with self.assertRaisesRegex(ValueError, "future issue"):
+            census(START, END, [capture(observer_reported_at_utc=START)])
