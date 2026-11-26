@@ -37,20 +37,6 @@ python scripts/agent_skills/discover_task_skills.py \
 | **Alpha Lab / S4 / S5** | On actual new executable sellability, source-PIT, wallet provenance or outcome-validation issue | Source and native on-chain proof outrank skill prose; no new token scanners, tasks, wallet signing or real trading. Respect separate repo access. |
 | **Claude/Grok via Bridge** | When a source-bound original owner explicitly asks for a bounded external review and the provider actually has access to the pinned skill | A text mention in public Archive is not proof that external Claude/Grok ran that skill. |
 
-## Execution First - common method reference for existing agents (2026-11-25)
-
-For material work that the current actor is already permitted to execute, use the existing [Research Package method, Execution First section](../../06_RESEARCH_LAB/methods/RESEARCH_PACKAGE_TO_REVIEW_PR_v1.md#execution-first---owner-directed-procedure-refinement-2026-11-25) as the shared internal-work reference, not as a new task, skill or mandate. The objective is to maximize completed, tested, coherent work per session, not maximize reports, handoffs or PR size. Select the smallest necessary skill set, then execute.
-
-- Interactive ChatGPT/Work and authorized product-development agents: research, implement, test, self-red-team, repair, retest and package together within the existing owner, scope and tool permission. Request consolidated final review only at the applicable mandatory boundary.
-- Research Lab/Task2/CRE and Alpha research: apply the same loop to permitted analyses, prototypes and source qualification; scientific admission, Round 3 collection-only, original test owners and active-lane limits still bind. Read-only collectors/observers do not become writers.
-- Codex: when already assigned a bounded original-owner task, deliver actual scoped changes and executed tests, not an intermediate research summary. This is not a Codex dispatch or readiness authorization.
-- Claude or other designated independent reviewer: receive a complete source-bound candidate for adversarial review; an author cannot independently review its own head. Use the established Bridge routing for research versus formal release control. Where separately authorized as a developer, do not also act as the independent reviewer for that delivery.
-- S1: existing pinned bootstrap, action loop, one-tick action bounds, review admission, Monday read-only and release authority are unchanged. A qualified release or due obligation takes precedence; this reference is not executable S1 policy or a prompt update.
-
-Keep only material checkpoints in the existing issue/PR/run receipt, including actual artifacts, executed vs proposed tests, remaining blocker and next trigger. A temporary lack of independent reviewer is not a reason to stop unrelated authorized development. A mandatory prior review/admission gate is a reason to stop the affected action, not permission to bypass it. No extra external review of each internal substep unless the current governing contract requires it.
-
-Availability of this reference does not demonstrate adoption by a particular task. Existing nonimplicit/pilot invocation and skill-quality gates remain unchanged; no automatic default promotion from documentation.
-
 ## Minimal user-visible and machine receipt
 
 Use an **existing run/issue/PR receipt**, not a new ledger, only when a skill materially changes an existing high-value decision or repair:
