@@ -11,6 +11,7 @@ function feeds(over={}){
   weekly_context:{status:'ALIGNED',forecast_week:'2026-W46'},
   full_stack:{contract:'PUBLIC_COMPASS_FULL_STACK_READBACK_v1',
    official_freshness:{valid_until_utc:'2026-11-10T11:00:00.000Z'},
+   source_status:{native:'VERIFIED_NEWER_OR_DIFFERENT_SOURCE',auto_market_state:'HASH_VERIFIED'},
    native:{now:'HOLD_WAIT',data_health:'PASS',checked_at_utc:'2026-11-10T08:53:30Z',official_source_aligned:false}},
   ...over};
  const view={compass:{state:'FRESH',permit_path_live_gates:true,compass_id:'CMP-1'},
@@ -30,6 +31,7 @@ test('important status states official issue and the newer native check, never a
 test('degraded native check is labelled from its typed enum only',()=>{
  const base=feeds();
  const {compass,view}=feeds({full_stack:{...base.compass.full_stack,
+  source_status:{native:'SOURCE_ALIGNED',auto_market_state:'HASH_VERIFIED'},
   native:{now:'HOLD_WAIT_DATA_DEGRADED',data_health:'DEGRADED',checked_at_utc:'2026-11-10T08:48:00Z',official_source_aligned:true}}});
  const s=importantStatusLine({compass,view,lang:'da',now});
  assert.match(s.text,/Nyere kontrol 09\.48: Afvent · datakvalitet forringet\./);
@@ -95,4 +97,45 @@ test('the altcoin lane is labelled 4–8 weeks after the owner decision; no conf
  assert.match(root,/data-cn-reader-horizon="CYCLE_ALTCOINS_3_8W" aria-pressed="false">4–8 uger</);
  assert.match(reader,/CYCLE_ALTCOINS_3_8W',da:'4–8 uger',en:'4–8 weeks'/);
  assert.doesNotMatch(root+reader,/3–8 uger|cn-overview-c38-note/);
+});
+
+
+test('all existing native producer actions remain explicitly nonbinding',()=>{
+ const base=feeds();
+ for(const [code,da,en] of [['PREPARE','Forbered','Prepare'],['BUY','Køb','Buy'],['HOLD','Behold','Hold']]){
+  const compass={...base.compass,full_stack:{...base.compass.full_stack,
+   native:{...base.compass.full_stack.native,now:code}}};
+  for(const [lang,label] of [['da',da],['en',en]]){
+   const r=importantStatusLine({compass,view:base.view,now,lang});
+   assert.ok(r.text.includes(label));
+   assert.match(r.text,lang==='da'?/^Officiel udgave .*Afvent\./:/^Official issue .*Wait\./);
+   assert.match(r.text,lang==='da'?/Kun den officielle vurdering styrer handlingen\./:/Only the official outlook owns action\./);
+   assert.equal(r.tone,'warning');
+  }
+ }
+});
+
+test('native readback requires producer verification, health and exact alignment semantics',()=>{
+ const base=feeds();
+ for(const mutate of [
+  x=>{delete x.source_status},x=>{x.source_status.native='UNVERIFIED'},
+  x=>{x.source_status.auto_market_state='UNVERIFIED'},
+  x=>{x.source_status.native='SOURCE_ALIGNED'},
+  x=>{x.native.official_source_aligned=true},
+  x=>{delete x.native.official_source_aligned},
+  x=>{x.native.data_health='UNVERIFIED'},
+  x=>{x.native.now='UNKNOWN'},
+  x=>{x.native.checked_at_utc='2026-11-10T09:11:00Z'}
+ ]){
+  const compass=structuredClone(base.compass);mutate(compass.full_stack);
+  const r=importantStatusLine({compass,view:base.view,now});
+  assert.equal(r.text,'Officiel udgave 09.24: Afvent. Kun den officielle vurdering styrer handlingen.');
+  assert.equal(r.tone,'ok');
+ }
+ const aligned=structuredClone(base.compass);
+ aligned.full_stack.source_status.native='SOURCE_ALIGNED';
+ aligned.full_stack.native.official_source_aligned=true;
+ const r=importantStatusLine({compass:aligned,view:base.view,now});
+ assert.match(r.text,/Nyere kontrol/);
+ assert.equal(r.tone,'ok');
 });
