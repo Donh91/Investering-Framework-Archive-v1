@@ -158,6 +158,17 @@ def cn_recovery_binding(sensor, root=None):
             return {**result, 'reason': 'CN_RECOVERY_PIN_MISSING', 'missing_path': rel}
         actual = hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
         if actual != expected:
+            # A newer source version is not a historical substitute. Full-history
+            # production checkout can recover the exact immutable historical bytes.
+            try:
+                historical = subprocess.run(['git', '-C', str(root), 'show', f'{CN_SOURCE_MAIN}:{rel}'],
+                    capture_output=True, timeout=10, check=False)
+                if historical.returncode == 0:
+                    raw = historical.stdout
+                    actual = hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
+            except (OSError, subprocess.SubprocessError):
+                pass
+        if actual != expected:
             return {**result, 'reason': 'CN_RECOVERY_PIN_MISMATCH', 'mismatched_path': rel}
         verified[rel] = actual
     return {**result, 'reason': 'SOURCE_BLOCKED_WITH_TRIGGER', 'source_blobs': verified,
