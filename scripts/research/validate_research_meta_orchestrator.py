@@ -288,3 +288,44 @@ with tempfile.TemporaryDirectory() as td:
     print("PASS dirty_cross_domain_note_cannot_be_admitted")
 
 print("RESEARCH_SPECIALIST_HANDOFF_GATE_v1 PASS")
+
+
+# WIRE-0 receipt contract: owner identity and immutable action binding.
+import research_action_receipt_v1 as receipt
+from copy import deepcopy
+data={"contract":receipt.CONTRACT,"action_id":receipt.ACTION_ID,"pr":42,
+      "merge_sha":"a"*40,"native_run_id":43,"review_receipt_id":44,
+      "readback":{"merge_sha":"a"*40,"changed_blobs_match":True},
+      "outcome":{"status":"BLOCKED","reason":"historical evaluator unavailable"}}
+def comment(value=data, **changes):
+    return {"id":45,"user":{"login":receipt.OWNER_LOGIN,"id":receipt.OWNER_ID},
+            "author_association":"OWNER","performed_via_github_app":None,
+            "created_at":"2026-11-26T10:00:00Z","updated_at":"2026-11-26T10:00:00Z",
+            "body":receipt.CONTRACT+"\n```json\n"+json.dumps(value)+"\n```",**changes}
+pilot_voi={"queue":[{"source":"SHADOW_REGISTRY","action":"RECOVER_EVALUATOR",
+    "target":"CYCLE_NAVIGATOR_RESEARCH_FAMILY","impact_tier":"MEDIUM",
+    "decision_surface":"SENSOR_PORTFOLIO_QUALITY","evidence_fingerprint":receipt.SOURCE_FP}]}
+pilot=o.orchestrate(pol,{}, {},pilot_voi,{"verdict":"PASS"})
+for bad in ([], [comment(user={"login":receipt.OWNER_LOGIN,"id":999})],
+            [comment(updated_at="2026-11-26T10:01:00Z")],
+            [comment({**data,"action_id":"wrong"})],
+            [comment(created_at=None,updated_at=None)],
+            [comment({**data,"readback":{"merge_sha":"b"*40,"changed_blobs_match":True}})],
+            [comment(),comment({**data,"outcome":{"status":"VERIFIED","reason":"conflicts"}},id=46)],
+            [comment(performed_via_github_app={"id":1})]):
+    result=receipt.attach_owner_receipt(pilot,lambda:bad)
+    assert result["execution_proof"]["native_run_id"] is None, bad
+    assert result["execution_proof"]["scientific_outcome"] is None
+accepted=receipt.attach_owner_receipt(pilot,lambda:[comment()])
+proof=accepted["execution_proof"]
+assert proof["action_id"]==receipt.ACTION_ID and proof["receipt_comment_id"]==45
+assert (proof["native_run_id"],proof["original_owner_pr"],proof["independent_review"])==(43,42,44)
+assert proof["main_readback"]==data["readback"] and proof["scientific_outcome"]==data["outcome"]
+assert proof["status"]=="OWNER_RECEIPT_PENDING_INDEPENDENT_VERIFICATION"
+assert proof["learning_calibration_applied"] is False and accepted["canonical_effect"] is False
+assert pilot["execution_proof"]["native_run_id"] is None
+def unavailable(): raise OSError("simulated API failure")
+assert receipt.attach_owner_receipt(pilot,unavailable)["execution_proof"]["native_run_id"] is None
+wrong=deepcopy(pilot); wrong["active_heavy_workstreams"][0]["evidence_fingerprint"]="b"*64
+assert receipt.attach_owner_receipt(wrong,lambda:[comment()])==wrong
+print("PASS WIRE-0 owner receipt provenance, negative controls and no calibration authority")
