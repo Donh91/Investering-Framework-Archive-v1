@@ -1,0 +1,73 @@
+name: S1 executor
+
+# AGENTS.md section 0.2i ("S1 is GitHub"): performs the ONE action of the S1_DECISION_V1 that a run of
+# .github/workflows/s1-tick-brief.yml published. Fix round 6 (#2337 F2): its own workflow, so that an executor that fails,
+# is cancelled (concurrency) or times out ends THIS run only, never the brief's run that TICK.md T2 and the next build's
+# C1b anchor require to conclude success.
+# Starts only from a COMPLETED, SUCCESSFUL scheduled or manual run of "S1 tick brief" on main of this repository, checks
+# out that run's own main commit (main's own scripts, never PR code), and reads the published brief issue: it acts only
+# on the brief of exactly that run (S1_BRIEF_RUN_ID), re-reads every fact of the decision's one action natively, and
+# writes ONLY when the switch 00_FMOS/S1/REVIEWED_MERGE_LANE.json on main reads "executor": "LIVE" (missing or unknown:
+# OFF) and the repository variable S1_EXECUTOR_HOLD is empty. In this file it holds a READ-ONLY token: SHADOW can print
+# what it would do, and nothing here can merge or comment. Going LIVE is a separate owner-present PR that gives this ONE
+# job contents: write, pull-requests: write and issues: write and sets the switch.
+# Only event fields (a run id, an attempt number, a commit SHA, an event name) are used, and only through env: and
+# the checkout ref; no text of the triggering run, of an issue or of a PR reaches a run: line. No secrets anywhere.
+
+on:
+  workflow_run:
+    workflows: ['S1 tick brief']
+    types: [completed]
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  execute:
+    if: >-
+      github.ref == 'refs/heads/main' && github.repository == 'Donh91/Investering-Framework-Archive-v1' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      (github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # One executor at a time, never cancelled half way: an intent with no outcome is settled by the next run. A pending
+    # run that a newer one replaces is cancelled before it starts; that cancels THIS workflow's run, never the brief's.
+    concurrency:
+      group: s1-executor
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      issues: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/governance
+            00_FMOS
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the YAML parser (one wheel, pinned by hash; main's push filters are re-read here, fix round 5 D05)
+        run: |
+          printf '%s\n' 'PyYAML==6.0.3 --hash=sha256:ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc' > "$RUNNER_TEMP/requirements.txt"
+          python -m pip install --disable-pip-version-check --no-deps --only-binary :all: --require-hashes -r "$RUNNER_TEMP/requirements.txt"
+      - name: Execute the one decided action (re-verified natively; writes only when the switch on main is LIVE)
+        # below the job's limit: a hang is this step's failure, reported by the job, and the next run settles any intent
+        timeout-minutes: 8
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          S1_BRIEF_RUN_ID: ${{ github.event.workflow_run.id }}
+          S1_BRIEF_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          S1_BRIEF_MAIN: ${{ github.event.workflow_run.head_sha }}
+          S1_BRIEF_EVENT: ${{ github.event.workflow_run.event }}
+          S1_EXECUTOR_HOLD: ${{ vars.S1_EXECUTOR_HOLD }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python scripts/governance/s1_executor_v1.py execute-published

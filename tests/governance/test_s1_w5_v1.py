@@ -181,7 +181,9 @@ class CarryMarker(unittest.TestCase):
         self.assertEqual(out["checked_through"], self.h.main)       # the window WAS scanned: the build after this one recovers
         b = TC.brief_with(out)
         self.assertEqual((b["complete"], b["incomplete"]), (False, "C1b:carry_unknown"))
-        self.assertEqual(b["c1b"]["gap"], {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:carry_unknown"})
+        gap = b["c1b"]["gap"]                                        # fix round 5: + the commit an owner disposition names, and the carry flag
+        self.assertEqual({k: gap[k] for k in ("from_unknown", "window", "reason", "carried")},
+                         {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:carry_unknown", "carried": False})
         self.assertIn(f"C1B_GAP(window={B.C1B_WINDOW})", b["status_lines"][0])
 
     def test_the_marked_brief_is_never_an_anchor_even_when_it_names_one(self):
@@ -200,12 +202,15 @@ class CarryMarker(unittest.TestCase):
 
     def test_the_marker_stays_while_the_recovery_scan_cannot_finish(self):
         issue, run = self.marked_previous()
-        for fail in (["commits"], ["git/trees/"]):
-            with self.subTest(fail):
-                self.h.commit("direct push", code=("scripts",))     # the scan must read a tree
-                out = B.read_c1b(TC.Gh(self.h, issue, run, fail=fail), self.h.main, [], NOW)
-                self.assertEqual((out["complete"], out["carry"]), (False, "UNKNOWN"))
-                self.assertNotEqual(out["checked_through"], self.h.main)
+        self.h.commit("direct push", code=("scripts",))             # the scan must read a tree
+        out = B.read_c1b(TC.Gh(self.h, issue, run, fail=["commits"]), self.h.main, [], NOW)
+        self.assertEqual((out["complete"], out["carry"]), (False, "UNKNOWN"))   # nothing of the window was read: still unknown
+        self.assertNotEqual(out["checked_through"], self.h.main)
+        # fix round 6: once the window is read, the history before it IS this build's own account (one unbounded gap to the
+        # window's start), so the carry is no longer unknown; the scan that could not finish stops at its proven point
+        out = B.read_c1b(TC.Gh(self.h, issue, run, fail=["git/trees/"]), self.h.main, [], NOW)
+        self.assertEqual((out["complete"], out["carry"], [(g["from"], g["to"]) for g in out["gaps"]]), (False, None, [(None, out["from"])]))
+        self.assertEqual((out["checked_through"], out["open"]["reason"]), (out["from"], "C1b:tree_read"))
 
     def test_the_build_after_the_recovery_is_complete_again(self):
         issue, run = self.marked_previous()
@@ -237,15 +242,20 @@ class PublishKeepsAHalt(unittest.TestCase):
         self.assertEqual(gh.writes, [])
         self.assertEqual(B.parse_body(gh.issues[0]["body"])["c1b"]["halt"]["commit"], halt()["commit"])
 
-    def test_a_marked_brief_replaces_a_brief_without_a_halt(self):
+    def test_a_marked_brief_never_replaces_a_published_brief(self):
+        # fix round 6 (S1): a build that never read its predecessor carried nothing of it: not its halt, and not its
+        # anchor or its history gaps either. The published brief stays (S1 reads it as BRIEF_STALE until the next build)
         gh = self.Fake(self.published(self.no_halt))
         B.publish(gh, self.unknown, NOW)
-        self.assertEqual([(m, u) for m, u, _ in gh.writes], [("PATCH", "issues/3000")])
+        self.assertEqual(gh.writes, [])
 
     def test_an_ordinary_brief_replaces_a_brief_with_a_halt(self):
         gh = self.Fake(self.published(self.with_halt))
-        B.publish(gh, body_of(self.no_halt), NOW)                  # it read the previous brief: the halt is its own to carry
+        B.publish(gh, body_of(dict(self.no_halt, prev=B.brief_tuple(self.published(self.with_halt)[0]))), NOW)   # it read and carried the previous brief
         self.assertEqual([(m, u) for m, u, _ in gh.writes], [("PATCH", "issues/3000")])
+        gh = self.Fake(self.published(self.with_halt))
+        B.publish(gh, body_of(dict(self.no_halt, prev=dict(B.brief_tuple(self.published(self.with_halt)[0]), run_id=553))), NOW)   # it carried ANOTHER brief: kept
+        self.assertEqual(gh.writes, [])
 
     def test_only_a_valid_halt_of_a_bot_issue_is_kept(self):
         rows = self.published(self.with_halt)                       # a published body whose halt is not one c1b_halt_ok accepts
@@ -255,7 +265,7 @@ class PublishKeepsAHalt(unittest.TestCase):
         self.assertEqual(B.parse_body(rows[0]["body"])["c1b"]["halt"]["entries"], ["docs"])
         gh = self.Fake(rows)
         B.publish(gh, self.unknown, NOW)
-        self.assertEqual(len(gh.writes), 1)
+        self.assertEqual(len(gh.writes), 0)                        # fix round 6: still a brief the build did not carry: kept
         rows = self.published(self.with_halt)
         rows[0]["body"] = "not a brief"
         gh = self.Fake(rows)
@@ -355,13 +365,16 @@ class BuildsCounter(unittest.TestCase):
         brief = dict(brief, generated_at=TB.ts(65))
         issue = {"number": 3, "user": dict(TB.BOT), "body": B.render(brief), "updated_at": TB.ts(64)}
         run = {"id": brief["run_id"], "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": brief["main"],
+               "head_repository": {"full_name": B.REPO}, "event": brief["event"], "run_attempt": brief["run_attempt"],
                "status": "completed", "conclusion": "success", "run_started_at": TB.ts(70), "updated_at": TB.ts(60)}
         return issue, run
 
     def next_brief(self, previous_brief, mutate=no_storage_run, **gh):
         h = TC.History()
         h.commit("data: a")
-        issue, run = self.published(dict(previous_brief, main=h.main))
+        # fix round 6: the previous brief checked main up to its own main (an anchor this history reaches), so no C1b
+        # gap fences the merge entries whose counts this class measures
+        issue, run = self.published(dict(previous_brief, main=h.main, c1b=dict(previous_brief["c1b"], checked_through=h.main)))
         record = B.read_c1b(TC.Gh(h, issue, run, **gh), h.main, [], NOW)
         w = TB.world()
         mutate(w)
