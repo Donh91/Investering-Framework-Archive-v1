@@ -69,10 +69,16 @@ class FakeGitHub:
         self.fail_label = None                                      # an exception the label write raises
         self.hold = None                                            # the LIVE value of S1_EXECUTOR_HOLD (None: not set, 404)
         self.hold_error = None                                      # an HTTP code the variable read answers with
+        self.hold_reads, self.hold_from = 0, 1                      # fix round 5 (D08): the first read that sees hold / hold_error
         self.after_intent = None                                    # fix round 3: a fact that changes right after the intent post
         self.issue_body = None                                      # fix round 4 (A26): the body of the ONE published brief issue
         self.issue_user = dict(B.ACTIONS_BOT)
         self.labels = {9: [{"name": D.RECALL_LABEL}]}               # the labels of a merged PR with a recall (issues/<n>/labels)
+        self.budget_left = 1000                                     # fix round 5 (D04): GitHub.remaining() of the real client
+        self.comment_override = {}                                  # fix round 5 (P1-06): GET issues/comments/<id> answers this instead
+
+    def remaining(self):
+        return self.budget_left - len(self.calls)
 
     def run_of(self, run_id):
         return copy.deepcopy(self.runs.get(int(run_id)))
@@ -109,6 +115,9 @@ class FakeGitHub:
             run = copy.deepcopy(next((r for r in w["health_runs"] if r["id"] == rid), {}))
             return dict({"repository": {"full_name": B.REPO}}, **run) if run else run   # a real run object names both repositories
         if path == f"actions/variables/{E.HOLD_VARIABLE}":
+            self.hold_reads += 1
+            if self.hold_reads < self.hold_from:                      # fix round 5 (D08): the hold is set only after the k-th read
+                raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
             if self.hold_error:
                 raise urllib.error.HTTPError(path, self.hold_error, "error", {}, None)
             if self.hold is None:
@@ -116,6 +125,15 @@ class FakeGitHub:
             return {"name": E.HOLD_VARIABLE, "value": self.hold}
         if path == "actions/workflows/s1-tick-brief.yml/runs":
             return {"workflow_runs": [{"event": "workflow_dispatch", "created_at": B.iso(self.now - timedelta(hours=h))} for h in range(30)]}
+        m = re.fullmatch(r"issues/comments/(\d+)", path)            # one ledger comment by its id (the first fallback run's candidate)
+        if m:
+            cid = int(m.group(1))
+            if cid in self.comment_override:
+                return copy.deepcopy(self.comment_override[cid])
+            row = next((c for c in w["issue_comments"] if c.get("id") == cid), None)
+            if row is None:
+                raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
+            return copy.deepcopy(row)
         if path == "issues":                                       # the brief issue, as the publish job left it
             return [] if self.issue_body is None else [{"number": 3, "user": dict(self.issue_user), "body": self.issue_body, "labels": [{"name": B.BRIEF_LABEL}]}]
         raise AssertionError(f"unexpected GET {path}")
@@ -171,7 +189,9 @@ class FakeGitHub:
         if threads is None:
             raise RuntimeError("GRAPHQL_ERROR")
         return {"repository": {"pullRequest": {"reviewThreads": {"pageInfo": {"hasNextPage": False, "endCursor": None},
-                "nodes": [{"isResolved": t["resolved"], "comments": {"nodes": [{"body": t["first_body"]}]}} for t in threads]}}}}
+                "nodes": [{"isResolved": t["resolved"], "comments": {"totalCount": len(t.get("bodies") or [t["first_body"]]),
+                                                                       "nodes": [{"body": b} for b in (t.get("bodies") or [t["first_body"]])][:B.THREAD_COMMENTS_MAX]}}
+                          for t in threads]}}}}
 
     def _request(self, method, url, data=None, accept=""):
         self._record(method, url)
@@ -200,6 +220,7 @@ class FakeGitHub:
 class FakeNative:
     def __init__(self, w):
         self.w, self.relation, self.drift_paths, self.ancestor, self.merged_blobs = w, "ahead", ["04_MARKET_LEARNING/x.json"], True, {}
+        self.delta = None
         self.calls = []
 
     def drift(self, base, head):
@@ -227,6 +248,14 @@ class FakeNative:
         self.calls.append(("is_ancestor", sha, main))
         return self.ancestor
 
+    def changed(self, parent, commit):
+        """Fix round 5 (N05): the squash commit's whole delta; by default exactly the PR's path set."""
+        self.calls.append(("changed", parent, commit))
+        if self.delta is not None:
+            return self.delta
+        files = self.w["pr"].get(7, {}).get("files") or []
+        return sorted({f.get("filename") for f in files} | {f["previous_filename"] for f in files if f.get("previous_filename")})
+
 
 def setup(mutate=None, mode="LIVE", policy="NATIVE_GATES", live=None, env=None, minutes=2):
     """Build the brief from world `w` (after `mutate`), then apply `live` to the SAME world (a fact that changes after
@@ -240,7 +269,8 @@ def setup(mutate=None, mode="LIVE", policy="NATIVE_GATES", live=None, env=None, 
     gh.issue_body = body
     if live:
         live(w, gh, native)
-    files = {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE", "bindings": TB.BINDINGS, "budgets": TB.BUDGETS}
+    files = {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE", "bindings": TB.BINDINGS, "budgets": TB.BUDGETS,
+             "push_filters": copy.deepcopy(w.get("push_filters"))}
     run = E.Run(gh, native, dict(ENV, **(env or {})), files, now_fn=lambda: now, out=lambda line: None)
     return run, gh, native, body, decision
 
@@ -267,7 +297,10 @@ class LiveMerge(unittest.TestCase):
         for line in ("pr: 7", f"head: {HEAD}", f"main: {MAIN}", f"repo_id={TB.REPO_ID}", f"loop={'4' * 40}", "brief=555", "decision=555.1",
                      "executor: GITHUB run=555", "risk: LOW", "review: CODEX", "contract=44444444"):
             self.assertIn(line, intent.splitlines())
-        for line in ("pr: 7", f"head: {HEAD}", f"merge: {MERGE_SHA}", "review: CODEX", "privacy=NO_RESTRICTED_CONTENT run=101", f"main_before: {MAIN}",
+        for line in ("pr: 7", f"head: {HEAD}", f"merge: {MERGE_SHA}", "review: CODEX", "privacy=NO_RESTRICTED_CONTENT run=101",
+                     # fix round 5 (D03): four mains, each what it is; the rules and the health are the final look's
+                     f"decision_main: {MAIN}", f"verified_main: {MAIN}", f"merge_parent: {MAIN}", "delta_match: 2 paths",
+                     "rules: no_active_ruleset_and_main_unprotected(final_look)", "main_health=final_look run=900",
                      f"main_after: {MERGE_SHA}", "blob_match: 2 paths", f"repo_id={TB.REPO_ID}", "intent: 7002", "brief=555",
                      "merge_execution_origin: S1_GITHUB_EXECUTOR run=555", "executor: GITHUB run=555", "contract=44444444"):
             self.assertIn(line, receipt.splitlines())
@@ -381,10 +414,10 @@ class ModesAndBinding(unittest.TestCase):
     def test_off_and_the_owner_hold_do_nothing_at_all(self):
         out, gh, _n, _d = execute(mode="OFF", policy="CODEX_FINAL_REQUIRED")
         self.assertEqual((out["result"], gh.calls), ("EXECUTOR_OFF(switch)", []))
-        for hold in ("1", "true", "HOLD", "x", "0", "false", "off", "OFF", "no"):          # ANY non-empty value holds (P2-5)
+        for hold in ("1", "true", "HOLD", "x", "0", "false", "off", "OFF", "no", " ", "\n"):   # ANY non-empty value holds (P2-5; fix round 5 P1-09: whitespace too)
             out, gh, _n, _d = execute(env={"S1_EXECUTOR_HOLD": hold})
             self.assertEqual((out["result"], gh.calls, gh.writes), ("EXECUTOR_OFF(hold)", [], []), hold)
-        for free in ("", " ", "\n"):
+        for free in ("",):
             self.assertEqual(D.effective_mode("LIVE", free), "LIVE", free)
             self.assertTrue(execute(env={"S1_EXECUTOR_HOLD": free})[0]["result"].startswith("MERGED("), repr(free))
         self.assertEqual(D.effective_mode("SHADOW", "1"), "OFF")
@@ -430,7 +463,8 @@ class ModesAndBinding(unittest.TestCase):
             gh = FakeGitHub(copy.deepcopy(w), now)
             gh.issue_body = body
             run = E.Run(gh, FakeNative(w), dict(ENV), {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE",
-                                                       "bindings": TB.BINDINGS, "budgets": TB.BUDGETS}, now_fn=lambda: now, out=lambda line: None)
+                                                       "bindings": TB.BINDINGS, "budgets": TB.BUDGETS, "push_filters": copy.deepcopy(w.get("push_filters"))},
+                         now_fn=lambda: now, out=lambda line: None)
             out = run.execute(body)
             self.assertEqual((out["result"], gh.writes), (want, []))
 
@@ -454,7 +488,7 @@ def live_cases():
         "merge conflict": (pr_field(mergeable=False), "7:C2:mergeable"),
         "a file was added to the PR": (lambda w, gh, n: (w["pr"][7]["files"].append(TD.file_("docs/notes/c.md")), gh.pull.update(changed_files=3)), "7:C8:files_changed"),
         "a file was swapped at the same count": (lambda w, gh, n: w["pr"][7]["files"][0].update(filename="docs/notes/z.md"), "7:C8:files_changed"),
-        "the file list is incomplete": (data("files_complete", False), "7:C8:files_changed"),
+        "the file list is incomplete": (data("files_complete", False), "7:C8:files_unreadable"),   # fix round 5 (P1-08): unread, not changed
         "the diff gained a repository writer": (lambda w, gh, n: w["pr"][7]["files"][0].update(patch="@@\n+os.system('git push')"), "7:C2:owner_gated"),
         "retitled to a money word": (pr_field(title="docs: wallet"), "7:C2:judgment"),
         "an S1_ITEM_v1 raised the risk to HIGH": (lambda w, gh, n: w["pr"][7]["comments"].append(
@@ -493,7 +527,7 @@ def live_cases():
         "the head turns out to be Codex-authored and the review is still there": (
             lambda w, gh, n: w["pr"][7]["commits"][0].update(author={"login": B.CODEX_BOT_LOGIN}), "7:C5:codex_authored"),
         "a P0 thread arrived (an owner veto)": (data("threads", [{"resolved": False, "first_body": "p0 data loss"}]), "7:C6:unresolved_p0p1"),
-        "threads unreadable": (data("threads", None), "BRIEF_INCOMPLETE(executor:RuntimeError)"),
+        "threads unreadable": (data("threads", None), "7:C6:threads"),                # fix round 5 (P1-08): unread, a stop of kind UNVERIFIED
         "review reads incomplete": (data("review_reads_complete", False), "7:C5:reviews_unreadable"),
         "a new @codex address request": (lambda w, gh, n: w["pr"][7]["comments"].append(TB.comment(80, "@codex address x", minutes_ago=1)), "7:C1:concurrent_writer"),
         "codex posted findings": (lambda w, gh, n: w["pr"][7]["comments"][1].update(
@@ -602,17 +636,17 @@ class ReadbackVerdict(unittest.TestCase):
         self.assertEqual(self.verdict(pr=dict(p, merged_at=TB.ts(-16))), ("FOREIGN", "outside_intent_window"))     # later than the origin window
         self.assertEqual(self.verdict(pr=dict(p, merged_by={"login": "Donh91"})), ("FOREIGN", "other_actor"))       # the owner's own merge is never ours
         self.assertEqual(self.verdict(pr=dict(p, merged_by={"login": "Donh91"}), executor_login="Donh91"), ("MATCH", "paths=2"))
-        self.assertEqual(self.verdict(commit=None), ("MISMATCH", "merge_commit_unreadable"))
-        self.assertEqual(self.verdict(commit=dict(self.commit, sha="c" * 40)), ("MISMATCH", "merge_commit_unreadable"))
+        self.assertEqual(self.verdict(commit=None), ("UNREADABLE", "merge_commit_unreadable"))     # fix round 5 (D06): unread is never a mismatch
+        self.assertEqual(self.verdict(commit=dict(self.commit, sha="c" * 40)), ("MISMATCH", "merge_commit_other"))
         self.assertEqual(self.verdict(commit=dict(self.commit, parents=[{"sha": MAIN}, {"sha": HEAD}])), ("MISMATCH", "parents"))
         self.assertEqual(self.verdict(commit=dict(self.commit, commit={"message": "docs: x (#8)"})), ("MISMATCH", "subject"))
         self.assertEqual(self.verdict(commit=dict(self.commit, commit={"message": "docs: x\n\n(#7)"})), ("MISMATCH", "subject"))
         self.assertEqual(self.verdict(ancestor=False), ("MISMATCH", "not_on_main"))
-        self.assertEqual(self.verdict(ancestor=None), ("MISMATCH", "not_on_main"))
+        self.assertEqual(self.verdict(ancestor=None), ("UNREADABLE", "ancestry_unknown"))        # fix round 5 (D06): unknown is not proven-absent
         self.assertEqual(self.verdict(blobs=[("a", self.one, self.two)]), ("MISMATCH", "blob:a"))
         self.assertEqual(self.verdict(blobs=[("a", ("ABSENT",), self.two)]), ("MISMATCH", "blob:a"))
-        self.assertEqual(self.verdict(blobs=[]), ("MISMATCH", "blobs_unreadable"))
-        self.assertEqual(self.verdict(blobs=None), ("MISMATCH", "blobs_unreadable"))
+        self.assertEqual(self.verdict(blobs=[]), ("UNREADABLE", "blobs_unreadable"))              # fix round 5 (D06)
+        self.assertEqual(self.verdict(blobs=None), ("UNREADABLE", "blobs_unreadable"))            # fix round 5 (D06)
         self.assertEqual(self.verdict(pr={}), ("UNREADABLE", "pr"))
         self.assertEqual(self.verdict(pr=dict(p, merged_at=None)), ("UNREADABLE", "timestamps"))
 
@@ -697,7 +731,9 @@ class Reconcile(unittest.TestCase):
         body = gh.writes[0][2]["body"]
         self.assertTrue(body.startswith("S1_LANE_MERGE_v1 reconciled\npr: 7\n"))
         for line in ("merge_execution_origin: UNKNOWN", "executor: GITHUB run=555", "intent: 300", "evidence_gap: review, privacy, ci, main_health",
-                     "review: unavailable", "brief=500", "privacy=UNVERIFIED run=unavailable"):
+                     "review: unavailable", "brief=500", "privacy=UNVERIFIED run=unavailable",
+                     # fix round 5 (D03): what reconcile did not read is UNVERIFIED, never asserted
+                     "rules: UNVERIFIED(reconciled)", "main_health=UNVERIFIED(reconciled)", "verified_main: UNVERIFIED"):
             self.assertIn(line, body.splitlines())
         self.assertEqual(B.open_intents(gh.w["issue_comments"], NOW + timedelta(minutes=5), 0, gh.run_of, B.MergeReader(gh)), [])
         self.assertEqual(len(B.open_intents(gh.w["issue_comments"], NOW + timedelta(minutes=5), 0, gh.run_of)), 1)   # A10: not without the native merge proof
@@ -828,8 +864,8 @@ class Harness(unittest.TestCase):
             "OFF": self.measure(mode="OFF", policy="CODEX_FINAL_REQUIRED"),
         }
         self.assertEqual(table["OFF"][:2], (0, 0))
-        self.assertEqual(table["NOOP (nothing actionable)"][:2], (2, 0))               # the publication read (A26) and the ledger read
-        self.assertEqual(table["NOOP + heartbeat"][:2], (5, 1))                        # ... the live hold and main before the write (#7)
+        self.assertEqual(table["NOOP (nothing actionable)"][:2], (3, 0))               # the publication read (A26), the start hold read (fix 5, D08), the ledger
+        self.assertEqual(table["NOOP + heartbeat"][:2], (6, 1))                        # ... the live hold and main before the write (#7)
         self.assertEqual(table["MERGE live"][1], 3)                                    # intent, merge, receipt
         self.assertEqual(table["MERGE shadow"][1], 0)
         self.assertLessEqual(table["MERGE live"][0], 80)                               # fix round 4: the final look verifies everything again
@@ -871,15 +907,17 @@ class WorkflowAndSwitch(unittest.TestCase):
 
     def test_it_runs_only_mains_own_scripts(self):
         steps = self.job["steps"]
-        self.assertEqual([(s.get("uses") or "").split("@")[0] for s in steps], ["actions/checkout", "actions/setup-python", ""])
+        self.assertEqual([(s.get("uses") or "").split("@")[0] for s in steps], ["actions/checkout", "actions/setup-python", "", ""])   # fix round 5: + the hash-pinned YAML wheel
         if SWITCH["executor"] != "LIVE":
-            self.assertEqual([s.get("uses") for s in steps], ["actions/checkout@v4", "actions/setup-python@v5", None])   # as every other job of this file
-        self.assertEqual(steps[0]["with"], {"ref": "${{ github.sha }}", "persist-credentials": False, "sparse-checkout": "scripts/governance\n00_FMOS\n"})
-        run = steps[2]["run"]
+            self.assertEqual([s.get("uses") for s in steps], ["actions/checkout@v4", "actions/setup-python@v5", None, None])   # as every other job of this file
+        self.assertEqual(steps[0]["with"], {"ref": "${{ github.sha }}", "persist-credentials": False, "sparse-checkout": "scripts/governance\n00_FMOS\n.github/workflows\n"})
+        self.assertIn("--require-hashes", steps[2]["run"])                              # the YAML wheel, pinned by hash as in the build job
+        self.assertEqual(steps[2]["run"], WORKFLOW["jobs"]["build"]["steps"][2]["run"])
+        run = steps[3]["run"]
         self.assertEqual([line.strip() for line in run.strip().splitlines()],
                          ['printf \'%s\' "$BRIEF_B64" | base64 -d > "$RUNNER_TEMP/brief.md"', 'python scripts/governance/s1_executor_v1.py execute "$RUNNER_TEMP/brief.md"'])
-        self.assertEqual(sorted(steps[2]["env"]), ["BRIEF_B64", "GITHUB_TOKEN", "PYTHONDONTWRITEBYTECODE", "S1_EXECUTOR_HOLD"])
-        self.assertEqual(steps[2]["env"]["S1_EXECUTOR_HOLD"], "${{ vars.S1_EXECUTOR_HOLD }}")
+        self.assertEqual(sorted(steps[3]["env"]), ["BRIEF_B64", "GITHUB_TOKEN", "PYTHONDONTWRITEBYTECODE", "S1_EXECUTOR_HOLD"])
+        self.assertEqual(steps[3]["env"]["S1_EXECUTOR_HOLD"], "${{ vars.S1_EXECUTOR_HOLD }}")
         self.assertNotIn("secrets.", self.text)
         for step in steps:
             self.assertNotIn("continue-on-error", step)
@@ -923,7 +961,8 @@ class WorkflowAndSwitch(unittest.TestCase):
     def test_read_files_reads_the_real_policy_files(self):
         files = E.read_files(ROOT)
         self.assertEqual(files["switch"], SWITCH)
-        self.assertEqual(sorted(files), ["bindings", "budgets", "contract", "gate_isolation", "policy", "switch"])
+        self.assertEqual(sorted(files), ["bindings", "budgets", "contract", "gate_isolation", "policy", "push_filters", "switch"])
+        self.assertIsInstance(files["push_filters"], list)                              # fix round 5 (D05): main's own push filters, read here
         self.assertEqual(files["gate_isolation"], "LIVE")
         self.assertEqual(len(files["bindings"]["required_job_tuples"]), 5)
 
@@ -985,6 +1024,9 @@ class SettlementIdentity(unittest.TestCase):
         done, receipt, halt = ("S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nevidence: pr=7 not_merged", f"S1_LANE_MERGE_v1\npr: 7\nhead: {HEAD}\nmerge: {MERGE_SHA}\nintent: 300",
                                f"S1_LANE_HALTED PR=7 head={HEAD}\nreason: readback\nintent: 300")
         for outcome in (done, receipt, halt):
+            # fix round 5 (P1-05): an ABSENT outcome settles only while the PR is natively NOT merged (and its run ended)
+            self.merge_of = (lambda n: {"number": n, "merged": False, "merge_commit_sha": None, "head_sha": HEAD, "state": "open"}) if outcome is done \
+                else (lambda n: {"number": n, "merged": True, "merge_commit_sha": MERGE_SHA, "head_sha": HEAD})
             with self.subTest(outcome=outcome.split()[0]):
                 self.assertEqual(self.open(self.ledger(None)), [300])
                 self.assertEqual(self.open(self.ledger(outcome)), [])                                    # the executor's own post, run 540 proven
@@ -1002,8 +1044,24 @@ class SettlementIdentity(unittest.TestCase):
         good = {"S1_OP_DONE_v1": "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nevidence: pr=7 not_merged",
                 "S1_LANE_MERGE_v1": f"S1_LANE_MERGE_v1\npr: 7\nhead: {HEAD}\nmerge: {MERGE_SHA}\nintent: 300",
                 "S1_LANE_HALTED": f"S1_LANE_HALTED PR=7 head={HEAD}\nreason: readback\nintent: 300"}
+        not_merged = lambda n: {"number": n, "merged": False, "merge_commit_sha": None, "head_sha": HEAD, "state": "open"}
         for name, body in good.items():
+            self.merge_of = not_merged if name == "S1_OP_DONE_v1" else (lambda n: {"number": n, "merged": True, "merge_commit_sha": MERGE_SHA, "head_sha": HEAD})
             self.assertEqual(self.open(self.ledger(body)), [], name)                                     # the control
+        # fix round 5 (P1-05): ABSENT / FOREIGN must be TRUE natively, and only after the intent's own run ended
+        absent = good["S1_OP_DONE_v1"]
+        self.merge_of = lambda n: {"number": n, "merged": True, "merge_commit_sha": MERGE_SHA, "head_sha": HEAD, "merged_by": "github-actions[bot]", "merged_at": TB.ts(29)}
+        self.assertEqual(self.open(self.ledger(absent)), [300])                                          # the PR IS merged: a false ABSENT settles nothing
+        self.assertEqual(self.open(self.ledger(absent.replace("ABSENT", "FOREIGN"))), [300])             # merged by the bot at this head in the window: ours, not foreign
+        self.merge_of = lambda n: {"number": n, "merged": True, "merge_commit_sha": MERGE_SHA, "head_sha": HEAD, "merged_by": "Donh91", "merged_at": TB.ts(29)}
+        self.assertEqual(self.open(self.ledger(absent.replace("ABSENT", "FOREIGN"))), [])                # the owner merged it: FOREIGN is true
+        self.merge_of = not_merged
+        self.runs[540] = dict(self.runs[540], status="in_progress", updated_at=TB.ts(0))
+        self.assertEqual(self.open(self.ledger(absent)), [300])                                          # the intent's run is still running: its PUT may still land
+        self.runs[540] = executor_run(540, created=NOW - timedelta(minutes=32))
+        self.merge_of = lambda n: None
+        self.assertEqual(self.open(self.ledger(absent)), [300])                                          # native state unread: unproven
+        self.merge_of = lambda n: {"number": n, "merged": True, "merge_commit_sha": MERGE_SHA, "head_sha": HEAD}
         bad = {
             "a merge receipt of the same PR for another head (stale)": good["S1_LANE_MERGE_v1"].replace(f"head: {HEAD}", f"head: {'c' * 40}"),
             "a merge receipt for another intent id": good["S1_LANE_MERGE_v1"].replace("intent: 300", "intent: 299"),
@@ -1038,6 +1096,7 @@ class SettlementIdentity(unittest.TestCase):
 
     def test_invariant_a_post_of_another_workflow_never_settles(self):
         done = "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nevidence: pr=7 not_merged"
+        self.merge_of = lambda n: {"number": n, "merged": False, "merge_commit_sha": None, "head_sha": HEAD, "state": "open"}   # fix round 5: ABSENT is true natively
         other = {
             "another workflow file": {"path": ".github/workflows/hourly-sequence-capture.yml"},
             "a run on another branch": {"head_branch": "claude/x"},
@@ -1118,19 +1177,38 @@ class SettlementIdentity(unittest.TestCase):
             runs[run] = executor_run(run, created=NOW - timedelta(minutes=at + 2))
             rows.append(TB.comment(1000 + 2 * k, INTENT.replace("pr: 7", f"pr: {20 + k}") + "\n" + RUN_LINE.format(run), TB.BOT, at))
             rows.append(TB.comment(1001 + 2 * k, f"S1_LANE_MERGE_v1\npr: {20 + k}\nhead: {HEAD}\nmerge: {MERGE_SHA}\nintent: {1000 + 2 * k}\n" + RUN_LINE.format(run), TB.BOT, at - 1))
-        asked, proofs = [], []
+        asked, proofs, logs = [], [], []
         reader = lambda rid: (asked.append(int(rid)), copy.deepcopy(runs.get(int(rid))))[1]
         merge_of = lambda n: (proofs.append(n), {"merged": True, "merge_commit_sha": MERGE_SHA, "head_sha": HEAD})[1]
-        self.assertEqual(B.open_intents(rows, NOW, 0, reader, merge_of), [])
+        # fix round 5 (P1-05): the induction needs the intent's OWN run's execute log naming it as one of that run's writes
+        log = lambda rid: f"S1_EXECUTOR_V1 mode=LIVE decision=1.1 action=MERGE result=MERGED(n=1) writes=3:S1_LANE_MERGE_INTENT_v1#{1000 + 2 * (int(rid) - 500)},S1_LANE_MERGE_v1#9"
+        log_of = lambda rid: (logs.append(int(rid)), log(rid))[1]
+        self.assertEqual(B.open_intents(rows, NOW, 0, reader, merge_of, log_of), [])
         self.assertEqual(set(proofs), {24})                                            # ... and one native merge proof (A10)
-        self.assertEqual(set(asked), {504})                                            # one run, however long the history is
+        self.assertEqual((set(asked), logs), ({504}, [504]))                           # one run and one log, however long the history is
         # a forged settlement of an OLD executor intent changes nothing: that intent is not examined again
         rows[1]["body"] = "S1_OP_DONE_v1\nintent: 1000\nresult: ABSENT"
+        self.assertEqual(B.open_intents(rows, NOW, 0, reader, merge_of, log_of), [])
+        rows[1]["body"] = f"S1_LANE_MERGE_v1\npr: 20\nhead: {HEAD}\nmerge: {MERGE_SHA}\nintent: 1000\n" + RUN_LINE.format(500)
+        # fix round 5 (P1-05): a NEWER bot intent that names a real run but whose run's log does not name it (another
+        # workflow's forgery) closes nothing: the older intents are examined again, each needs its own proven outcome
+        forged = TB.comment(1020, INTENT.replace("pr: 7", "pr: 99") + "\n" + RUN_LINE.format(504), TB.BOT, 1)
+        real_504 = runs[504]
+        runs[504] = dict(real_504, status="in_progress", updated_at=B.iso(NOW))           # the forger names a run that is still running
+        proofs.clear()
+        got = [i["id"] for i in B.open_intents(rows + [forged], NOW, 0, reader, lambda n: (proofs.append(n), {"merged": True, "merge_commit_sha": MERGE_SHA, "head_sha": HEAD})[1],
+                                               lambda rid: "S1_EXECUTOR_V1 mode=LIVE decision=1.1 action=MERGE result=X writes=1:S1_HEARTBEAT_v1#5")]
+        self.assertIn(1020, got)
+        self.assertGreater(len(set(proofs)), 1)                                        # older intents were read again, not closed by the forgery
+        runs[504] = real_504
+        # with no log proof at all nothing is closed by induction: every intent needs its own proven outcome
+        proofs.clear()
         self.assertEqual(B.open_intents(rows, NOW, 0, reader, merge_of), [])
+        self.assertEqual(set(proofs), {20, 21, 22, 23, 24})
         # when the NEWEST executor intent is not proven it stays open, and the induction starts at the newest PROVEN one
         runs.pop(504)
         asked.clear()
-        self.assertEqual([i["id"] for i in B.open_intents(rows, NOW, 0, reader, merge_of)], [1008])
+        self.assertEqual([i["id"] for i in B.open_intents(rows, NOW, 0, reader, merge_of, log_of)], [1008])
         self.assertEqual(set(asked), {504, 503})
         # with no proven executor intent at all nothing is closed by induction: every intent needs its own proven outcome
         self.assertEqual([i["id"] for i in B.open_intents(rows, NOW, 0, lambda rid: None)], [1000, 1002, 1004, 1006, 1008])
@@ -1204,8 +1282,8 @@ class NoSilentFailure(unittest.TestCase):
             "a refused merge": (dict(mutate=BEAT, live=lambda w, gh, n: setattr(gh, "fail_merge", refused)), ["intent_without_outcome(c=7001)"]),
             "a merge call that times out": (dict(mutate=BEAT, live=lambda w, gh, n: setattr(gh, "fail_merge", TimeoutError("t"))), ["intent_without_outcome(c=7001)"]),
             "a readback mismatch": (dict(mutate=BEAT, live=lambda w, gh, n: setattr(n, "ancestor", False)), ["readback_mismatch(not_on_main)"]),
-            "anything unexpected, even with no write": (dict(mutate=BEAT, live=lambda w, gh, n: w["pr"][7].update(threads=None)), ["unexpected(RuntimeError)"]),
-            "anything unexpected in SHADOW": (dict(mode="SHADOW", mutate=BEAT, live=lambda w, gh, n: w["pr"][7].update(threads=None)), ["unexpected(RuntimeError)"]),
+            "anything unexpected, even with no write": (dict(mutate=BEAT, live=lambda w, gh, n: setattr(gh, "graphql", lambda q, v: (_ for _ in ()).throw(ZeroDivisionError("boom")))), ["unexpected(ZeroDivisionError)"]),
+            "anything unexpected in SHADOW": (dict(mode="SHADOW", mutate=BEAT, live=lambda w, gh, n: setattr(gh, "graphql", lambda q, v: (_ for _ in ()).throw(ZeroDivisionError("boom")))), ["unexpected(ZeroDivisionError)"]),
         }
         for name, (kw, want) in cases.items():
             with self.subTest(name):
@@ -1291,8 +1369,7 @@ class NoSilentFailure(unittest.TestCase):
             text = Path(summary).read_text(encoding="utf-8")
             self.assertIn("S1_TICK NOOP a", text)
             self.assertIn("S1_EXECUTOR_ALARM intent_without_outcome(c=1)", text)
-        with self.assertRaises(SystemExit):
-            E.main(["x", "nope"])
+        self.assertEqual(E.main(["x", "nope"]), 1)                                       # fix round 5: a usage error also prints its health line
         self.assertIs(WORKFLOW["jobs"]["execute"]["continue-on-error"], True)          # so that exit 1 is a red JOB, never a failed run
 
 
@@ -1307,20 +1384,28 @@ class OneAttemptPerHeadEndToEnd(unittest.TestCase):
         results = []
         for hour in range(4):
             now = NOW + timedelta(minutes=2)
-            brief = B.build_brief(dict(copy.deepcopy(w), executor_runs={"555": executor_run(555, created=NOW - timedelta(minutes=1), status="in_progress")}))
+            # fix round 5 (P1-05): from the second hour on, the run that posted the intent has ENDED (an ABSENT settles
+            # an executor intent only then); the fake reuses the run id 555 for every hour
+            run555 = executor_run(555, created=NOW - timedelta(minutes=1), status="in_progress" if hour == 0 else "completed")
+            brief = B.build_brief(dict(copy.deepcopy(w), executor_runs={"555": run555},
+                                       merge_proofs={"7": {"number": 7, "merged": False, "merge_commit_sha": None, "head_sha": HEAD, "state": "open"}}))
             body, decision = B.render_issue(brief)
             gh, native = FakeGitHub(w, now), FakeNative(w)
+            gh.runs[555] = copy.deepcopy(run555)
             gh.issue_body = body
             gh.fail_merge = urllib.error.HTTPError("u", 405, "Not Allowed", {}, None)
             gh.next_id = 7000 + 10 * hour
-            files = {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE", "bindings": TB.BINDINGS, "budgets": TB.BUDGETS}
+            files = {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE", "bindings": TB.BINDINGS, "budgets": TB.BUDGETS,
+             "push_filters": copy.deepcopy(w.get("push_filters"))}
             out = E.Run(gh, native, dict(ENV), files, now_fn=lambda: now, out=lambda line: None).execute(body)
             puts += sum(1 for x in gh.writes if x[0] == "PUT")
             results.append((decision["action"], decision["result"] if decision["action"] == "NOOP" else "-", out["result"], tokens(gh)))
         self.assertEqual(puts, 1)                                                      # ONE merge call, ever, for this head
         self.assertEqual(results[0], ("MERGE", "-", "MERGE_REFUSED(405)", ["S1_LANE_MERGE_INTENT_v1", "MERGE"]))
-        # the next run settles the open intent from native state (the PR is still open: ABSENT) and merges nothing
+        # the next run settles the open intent from native state (the PR is still open: ABSENT) and merges nothing: a
+        # reconciliation-only tick (fix round 5, D04)
         self.assertEqual(results[1][0], "NOOP")
+        self.assertEqual(results[1][2], "SETTLED(ABSENT(7001))")
         self.assertIn("lane:C9:open_merge_intent", results[1][1])
         self.assertEqual(results[1][3], ["S1_OP_DONE_v1"])
         # from then on the decision itself names the head as attempted: the owner's to merge, no further write
@@ -1355,7 +1440,8 @@ class NativeGatesMergesOnlyReviewedCodeOrPlainDocuments(unittest.TestCase):
 
 # ----------------------------------------------------------------------------------------------- fix round 2
 RECALL = D.RECALL_POLICY
-FILES = lambda w: {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE", "bindings": TB.BINDINGS, "budgets": TB.BUDGETS}
+FILES = lambda w: {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE", "bindings": TB.BINDINGS, "budgets": TB.BUDGETS,
+                   "push_filters": copy.deepcopy(w.get("push_filters"))}
 
 
 def offline_world():
@@ -1444,10 +1530,10 @@ class CodexOfflineFallback(unittest.TestCase):
                     out, gh, d = hourly_run(w, k, minutes, runs=runs)
                     self.assertEqual((d["action"], d["skipped"], out["action"], gh.writes), ("NOOP", ["7:C5:fallback_parked:mismatch"], "NOOP", []))
                     self.assertIn(f"#7 {HEAD[:8]} (owner_merge:C5:fallback_parked:mismatch)", d["status_lines"][0])
-                # a review (route a) still merges the parked head: the park is for the fallback only
+                # fix round 5 (P1-03): a review (route a) no longer admits the HIGH data snapshot: that is route (c)'s alone
                 w["pr"][7]["comments"] = TB.codex_comments()
                 out, gh, d = hourly_run(w, 561, 240, runs=runs)
-                self.assertEqual((d["merge"]["review"], out["action"]), ("CODEX", "MERGE"))
+                self.assertEqual((d["action"], d["skipped"][0], gh.writes), ("NOOP", "7:C2:risk:HIGH", []))
 
     def test_each_run_proves_the_offline_signal_for_itself(self):
         # the first run saw Codex's usage-limit answer, the second sees an unanswered request 24 hours old: another signal,
@@ -1597,7 +1683,7 @@ class CodexOfflineFallback(unittest.TestCase):
                 with self.subTest(name=name, mode=mode):
                     out, gh, d = hourly_run(offline_world(), 555, 0, mode=mode, live=change)
                     self.assertEqual((out["action"], gh.writes), ("NOOP", []), out["result"])
-                    self.assertRegex(out["result"], r"7:C2:(risk|data_mode)|7:C1:", name)
+                    self.assertRegex(out["result"], r"7:C2:(risk|data_mode)|7:C1:|7:C5:fallback_parked:not_data", name)   # fix round 5: the route first
 
     def test_shadow_never_writes_on_the_fallback_route(self):
         out, gh, d = hourly_run(offline_world(), 555, 0, mode="SHADOW")
@@ -1611,8 +1697,8 @@ class CodexOfflineFallback(unittest.TestCase):
             "a Claude refusal arrived on the PR": (lambda w, gh, n: w["pr"][7]["comments"].append(
                 TB.comment(21, TD.CLAUDE_OK.replace("APPROVE", "BLOCK"), TB.OWNER, 1)), "7:C5:claude_veto"),
             "the request was withdrawn (Codex was never asked)": (lambda w, gh, n: w["pr"][7].update(comments=[]), "7:C5:codex_review_required"),
-            "the PR turns out to be opened by a person": (lambda w, gh, n: gh.pull.update(user=dict(TB.OWNER)), "7:C2:risk"),
-            "the head turns out to be on another branch": (lambda w, gh, n: gh.pull["head"].update(ref="s1/x"), "7:C2:risk"),
+            "the PR turns out to be opened by a person": (lambda w, gh, n: gh.pull.update(user=dict(TB.OWNER)), "7:C5:fallback_parked:not_data"),
+            "the head turns out to be on another branch": (lambda w, gh, n: gh.pull["head"].update(ref="s1/x"), "7:C5:fallback_parked:not_data"),
             "the candidates were used up meanwhile": (lambda w, gh, n: w["issue_comments"].extend(
                 TB.comment(600 + k, f"S1_FALLBACK_CANDIDATE_v1\npr: 7\nhead: {HEAD}\nevidence: X\nexecutor: GITHUB run=54{k}", TB.BOT, 5) for k in range(3)), "7:C5:fallback_parked:candidates"),
             "someone wrote P1 in the PR conversation meanwhile": (lambda w, gh, n: w["pr"][7]["comments"].append(
@@ -1850,10 +1936,15 @@ class FixRound3WriteBoundaries(unittest.TestCase):
 
     def test_the_hold_is_read_live_before_the_intent_too(self):
         for mode in ("LIVE", "SHADOW"):
-            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: setattr(gh, "hold", "stop"))   # the env was empty at job start
+            # fix round 5 (D08): set after the job's start (its env snapshot and the start read): the intent's read stops it
+            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: (setattr(gh, "hold", "stop"), setattr(gh, "hold_from", 2)))
             self.assertEqual((gh.writes, out["result"], out["mode"], out["health"]), ([], "NOTHING_ACTIONABLE(skipped=hold:intent)", "OFF", "HELD"), mode)
-            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: setattr(gh, "hold_error", 403))
-            self.assertEqual((gh.writes, out["result"]), ([], "NOTHING_ACTIONABLE(skipped=hold_unreadable:intent(403))"), mode)
+            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: (setattr(gh, "hold_error", 403), setattr(gh, "hold_from", 2)))
+            self.assertEqual((gh.writes, out["result"], out["health"]), ([], "NOTHING_ACTIONABLE(skipped=hold_unreadable:intent(403))", "UNVERIFIED"), mode)
+            # and set before the run: the start read stops it before any other read of the run (every tick proves the read)
+            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: setattr(gh, "hold", "stop"))
+            self.assertEqual((gh.writes, out["result"], out["health"]), ([], "NOTHING_ACTIONABLE(skipped=hold:start)", "HELD"), mode)
+            self.assertEqual(gh.calls[-1], ("GET", f"actions/variables/{E.HOLD_VARIABLE}"))
 
     def test_aba_force_push_is_invisible_to_sha_reads_and_the_reviews_still_bite(self):
         """A -> B -> A between the reads: the SHA is A at every read, so the merge call is for A, whose content was
@@ -1877,11 +1968,18 @@ class FixRound3WriteBoundaries(unittest.TestCase):
         self.assertEqual(B.attempted_heads(gh.w["issue_comments"]) >= {(7, HEAD)}, True)
 
     def test_health_states(self):
+        """Fix round 5 (#173/7188234670 P1-08): structured, and OK is positive (see TI::FixRound5Health for the stops)."""
         H = E.health_state
         self.assertEqual(H("MERGED(n=1,main=1)", [], None), "OK")
-        self.assertEqual(H("NO_ELIGIBLE_PR", [], None), "OK")
+        self.assertEqual(H("NO_ELIGIBLE_PR", [], None), "UNVERIFIED")                   # a result nobody classified is never OK
         self.assertEqual(H("EXECUTOR_OFF(hold)", [], None), "HELD")
-        self.assertEqual(H("NOTHING_ACTIONABLE(skipped=hold:put)", [], None), "HELD")
+        self.assertEqual(H("NOTHING_ACTIONABLE(skipped=hold:put)", [], None, E.HELD), "HELD")
+        self.assertEqual(H("NOTHING_ACTIONABLE(skipped=7:C2:risk)", [], None, E.BLOCKED), "OK")
+        self.assertEqual(H("NOTHING_ACTIONABLE(skipped=7:C6:threads)", [], None, E.UNVERIFIED), "UNVERIFIED")
+        self.assertEqual(H("NOTHING_ACTIONABLE(skipped=lane:C7:halt c=1)", [], None), "OK")     # the decision's own NOOP, all of it read
+        self.assertEqual(H("NOTHING_ACTIONABLE(skipped=7:C6:threads_unreadable)", [], None, None, (), ["7:C6:threads_unreadable"]), "UNVERIFIED")
+        self.assertEqual(H("WOULD_RECONCILE", [], None, None, ["UNREADABLE(300:path_set)"]), "UNVERIFIED")
+        self.assertEqual(H("BRIEF_STALE(age_min=30)", [], None), "UNVERIFIED")
         self.assertEqual(H("BRIEF_INCOMPLETE(executor:x)", [], None), "DEGRADED")
         self.assertEqual(H("NOTHING_ACTIONABLE(skipped=x)", ["unexpected(KeyError)"], None), "DEGRADED")
         self.assertEqual(H("MERGE_UNSETTLED(UNREADABLE:x)", [], None), "AMBIGUOUS")
@@ -1925,7 +2023,7 @@ class FixRound4(unittest.TestCase):
             "a higher S1_ITEM risk": (item("HIGH_IMPACT"), "7:C2:risk"),
             "an S1_ITEM of kind DIRECTION": (lambda w, g, n: w["pr"][7]["comments"].append(TB.comment(80, "S1_ITEM_v1\nitem: pr:7\nstate: REVIEW\nkind: DIRECTION\nrisk: LOW\ncontract=44444444", TB.OWNER, 0)), "7:C5:strategist"),
             "an unresolved P1 review thread": (lambda w, g, n: w["pr"][7].update(threads=[{"resolved": False, "first_body": "P1: wrong"}]), "7:C6:unresolved_p0p1"),
-            "the review threads became unreadable": (lambda w, g, n: w["pr"][7].update(threads=None), "unreadable:RuntimeError"),
+            "the review threads became unreadable": (lambda w, g, n: w["pr"][7].update(threads=None), "7:C6:threads"),
             "Codex posted findings": (lambda w, g, n: w["pr"][7].update(comments=[c if i != 1 else dict(c, body="<!-- codex-review-state:v1 " + json.dumps(
                 {"code_review": {"commit_sha": HEAD, "status": "completed", "has_unresolved_findings": True}}) + " -->") for i, c in enumerate(w["pr"][7]["comments"])]), "7:C5:codex_findings"),
             "a required job was re-run (another attempt)": (lambda w, g, n: (w["pr"][7]["runs"][0].update(run_attempt=2), [j.update(run_attempt=2) for j in w["pr"][7]["jobs"][101]]), "7:C4:ci_identity"),
@@ -1961,8 +2059,8 @@ class FixRound4(unittest.TestCase):
     def test_the_hold_and_the_switch_stop_every_write_not_only_the_merge(self):
         """7185637589 #11 / 7186140947 #7: a bookkeeping write (here the heartbeat, which comes before the action) is
         refused when the hold is set, the switch or the contract changed after the job started."""
-        for name, change, reason in (("hold set", lambda w, gh, n: setattr(gh, "hold", "1"), "hold:write:comment"),
-                                     ("hold unreadable", lambda w, gh, n: setattr(gh, "hold_error", 403), "hold_unreadable:write:comment(403)"),
+        for name, change, reason in (("hold set", lambda w, gh, n: (setattr(gh, "hold", "1"), setattr(gh, "hold_from", 2)), "hold:write:comment"),
+                                     ("hold unreadable", lambda w, gh, n: (setattr(gh, "hold_error", 403), setattr(gh, "hold_from", 2)), "hold_unreadable:write:comment(403)"),
                                      ("switch changed", lambda w, gh, n: w["pins_actual"].update({B.SWITCH: "0" * 40}), "lane:C7:switch_changed:write:comment"),
                                      ("contract changed", lambda w, gh, n: w["pins_actual"].update({B.CONTRACT_FILE: "0" * 40}), "lane:C7:contract_changed:write:comment")):
             with self.subTest(name):
@@ -1970,7 +2068,7 @@ class FixRound4(unittest.TestCase):
                 self.assertEqual(gh.writes, [], out["result"])
                 self.assertIn(reason, out["result"])
         rc = Reconcile()                                                                  # a reconcile receipt too
-        out, gh, _n, _d = execute(mutate=lambda w: rc.intent(w), live=lambda w, gh, n: (rc.merged()(w, gh, n), setattr(gh, "hold", "stop")))
+        out, gh, _n, _d = execute(mutate=lambda w: rc.intent(w), live=lambda w, gh, n: (rc.merged()(w, gh, n), setattr(gh, "hold", "stop"), setattr(gh, "hold_from", 2)))
         self.assertEqual((gh.writes, out["health"]), ([], "HELD"), out["result"])
 
     def test_the_executor_acts_only_on_the_decision_that_was_published(self):
@@ -1997,15 +2095,18 @@ class FixRound4(unittest.TestCase):
     def test_health_is_never_ok_when_verification_was_incomplete(self):
         """7185637589 #8 / 7186140947 #9."""
         H = E.health_state
-        for result in ("SOURCE_UNVERIFIED(3)", "BRIEF_UNVERIFIED(publication:issues=0/0)", "NOTHING_ACTIONABLE(skipped=hold_unreadable:intent(403))",
-                       "NOTHING_ACTIONABLE(skipped=lane:C7:pins:AGENTS.md)", "NOTHING_ACTIONABLE(skipped=lane:C7:switch_changed:put)",
+        for result in ("SOURCE_UNVERIFIED(3)", "BRIEF_UNVERIFIED(publication:issues=0/0)"):
+            self.assertEqual(H(result, [], None), "DEGRADED", result)
+        # fix round 5 (P1-08): a stop on an unread input carries kind UNVERIFIED, whatever its text
+        for result in ("NOTHING_ACTIONABLE(skipped=hold_unreadable:intent(403))", "NOTHING_ACTIONABLE(skipped=lane:C7:pins:AGENTS.md)",
                        "NOTHING_ACTIONABLE(skipped=lane:C7:ledger_unreadable)", "NOTHING_ACTIONABLE(skipped=B1:repository_identity)",
                        "NOTHING_ACTIONABLE(skipped=lane:C8:ruleset_census)", "NOTHING_ACTIONABLE(skipped=main_unreadable)"):
-            self.assertEqual(H(result, [], None), "DEGRADED", result)
-        for result in ("EXECUTOR_OFF(hold)", "MONDAY_READ_ONLY", "NOTHING_ACTIONABLE(skipped=hold:intent)", "NOTHING_ACTIONABLE(skipped=lane:C7:halt c=61)"):
-            self.assertEqual(H(result, [], None), "HELD", result)
+            self.assertEqual(H(result, [], None, E.UNVERIFIED), "UNVERIFIED", result)
+        for result, kind in (("EXECUTOR_OFF(hold)", None), ("MONDAY_READ_ONLY", None), ("NOTHING_ACTIONABLE(skipped=hold:intent)", E.HELD),
+                             ("NOTHING_ACTIONABLE(skipped=lane:C7:halt c=61)", E.HELD), ("NOTHING_ACTIONABLE(skipped=lane:C7:switch_changed:put)", E.HELD)):
+            self.assertEqual(H(result, [], None, kind), "HELD", result)
         out, gh, _n, d = execute(mutate=lambda w: w["pins_actual"].update({"AGENTS.md": "0" * 40}))
-        self.assertEqual((out["health"], gh.writes), ("DEGRADED", []))
+        self.assertEqual((out["health"], gh.writes), ("DEGRADED", []))                  # the decision itself is SOURCE_UNVERIFIED
         # main() prints one health line and exits 1 whatever fails before finish (a missing policy file here)
         with tempfile.TemporaryDirectory() as tmp:
             brief, summary = os.path.join(tmp, "brief.md"), os.path.join(tmp, "summary.md")
@@ -2022,10 +2123,21 @@ class FixRound4(unittest.TestCase):
     def test_the_watchdog_shows_a_missing_or_failed_executor_on_the_owners_line(self):
         """7185637589 #8: GitHub's own record of the previous execute job, independent of ChatGPT and of the executor."""
         W = B.executor_watch
-        run = lambda **kw: dict({"run": 554, "at": TB.ts(65), "publish": "success", "execute": "success", "complete": True}, **kw)
+        run = lambda **kw: dict({"run": 554, "at": TB.ts(65), "publish": "success", "execute": "success", "complete": True, "health": "OK"}, **kw)
         self.assertEqual(W({"runs": [run()], "listed": 1}, "SHADOW", NOW)["state"], "OK")
+        # fix round 5 (P1-08): the job's OWN health line decides, not its conclusion (continue-on-error; UNVERIFIED exits 0)
+        for health, want in (("HELD", "OK"), ("UNVERIFIED", "UNVERIFIED"), ("DEGRADED", "DEGRADED"), ("AMBIGUOUS", "AMBIGUOUS"),
+                             ("NOHEALTH", "NOHEALTH"), ("MANY", "MANY"), ("UNREAD", "UNREAD"), (None, "UNREAD")):
+            self.assertEqual(W({"runs": [run(health=health)], "listed": 1}, "LIVE", NOW)["state"], want, health)
+        self.assertEqual(W({"runs": [run(execute="failure", health="OK")], "listed": 1}, "LIVE", NOW)["state"], "FAILED")
+        line = lambda state: "2026-11-26T10:00:00Z S1_EXECUTOR_HEALTH " + json.dumps({"v": 1, "state": state})
+        self.assertEqual(B.health_of_log(line("OK")), "OK")
+        self.assertEqual(B.health_of_log("no line here"), "NOHEALTH")
+        self.assertEqual(B.health_of_log(line("OK") + "\n" + line("OK")), "MANY")
+        self.assertEqual(B.health_of_log(line("BANANA")), "UNREAD")
+        self.assertEqual(B.health_of_log(None), "UNREAD")
         self.assertEqual(W({"runs": [run()], "listed": 1}, "OFF", NOW)["state"], "OFF")
-        for got, want in ((run(execute="failure"), "FAILED"), (run(execute="cancelled"), "FAILED"), (run(execute="skipped"), "MISSING"),
+        for got, want in ((run(execute="failure", health="OK"), "FAILED"), (run(execute="cancelled", health=None), "UNREAD"), (run(execute="skipped"), "MISSING"),
                           (run(execute=None), "MISSING"), (run(at=TB.ts(4 * 60)), "STALE"), (run(complete=False), "UNREAD")):
             self.assertEqual(W({"runs": [got], "listed": 1}, "LIVE", NOW)["state"], want, got)
         self.assertEqual(W({"runs": [run(publish="skipped")], "listed": 1}, "LIVE", NOW)["state"], "NONE")

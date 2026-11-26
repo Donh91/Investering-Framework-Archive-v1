@@ -47,6 +47,12 @@ import s1_tick_brief_v1 as B  # noqa: E402
 EXECUTE_API_CALLS = 220                # this job's own cap (the build is capped at 300). One PR is verified twice (fix round 4, #2:
                                        # the final look re-derives every gate after the intent), about 40 reads each
 MAX_WRITES = 8                         # heartbeat, one recall clear (receipt, label), intent, merge, receipt or halt, recall flag (receipt, label)
+# Fix round 5 (#173/7190895883 D04): what a merge needs AFTER its intent is reserved BEFORE the intent. Measured on the
+# fake (Harness): the final look, the merge call, the readback and the receipts take 38 calls after the intent on route
+# (a) and 47 on route (c); 80 leaves room for the paged reads of a busier PR. Writes: intent, merge, receipt or halt,
+# recall receipt, label.
+MERGE_CALL_RESERVE = 80
+MERGE_WRITE_RESERVE = 5
 RECONCILES_PER_RUN = 3                 # EVIDENCE_BINDINGS op_reconciles_per_run
 MAX_ATTEMPTS_PER_HEAD = 1              # merge intents per PR head, ever: a refused merge is NOT retried, that head is the owner's
 EVENTS = ("schedule", "workflow_dispatch")
@@ -56,17 +62,23 @@ MAX_POST_CHARS = 4000
 HOLD_VARIABLE = "S1_EXECUTOR_HOLD"     # read from the job's env at start AND live before the intent and before the merge (live_stop)
 
 
+BLOCKED, UNVERIFIED, HELD = "BLOCKED", "UNVERIFIED", "HELD"
+
+
 class Stop(Exception):
-    """A check failed: nothing (more) is written in this run. `reason` is the skipped=<...> text."""
+    """A check failed: nothing (more) is written in this run. `reason` is the skipped=<...> text. Fix round 5
+    (#173/7188234670 P1-08): `kind` says what the stop proves. BLOCKED: a fact was read completely and it blocks (a
+    verified "not now"). HELD: the owner's or the lane's stop. UNVERIFIED: something could not be read or proven. The
+    default is UNVERIFIED, so a stop nobody classified is never reported as a verified NOOP."""
 
-    def __init__(self, reason):
+    def __init__(self, reason, kind=UNVERIFIED):
         super().__init__(reason)
-        self.reason = reason
+        self.reason, self.kind = reason, kind
 
 
-def need(ok, reason):
+def need(ok, reason, kind=UNVERIFIED):
     if not ok:
-        raise Stop(reason)
+        raise Stop(reason, kind)
 
 
 # ----------------------------------------------------------------------------------------------- native git reads
@@ -115,6 +127,9 @@ class Native:
         return out
 
     def is_ancestor(self, sha, main):
+        """Fix round 5 (D06): True, False (git proved it is not an ancestor) or None (fetch or graph unreadable)."""
+        if sha == main:
+            return True
         try:
             B.git(self.root, "remote", "get-url", "origin")
             self.graph.mkdir(parents=True, exist_ok=True)
@@ -122,10 +137,17 @@ class Native:
             if "origin" not in B.git(self.graph, "remote").split():
                 B.git(self.graph, "remote", "add", "origin", B.git(self.root, "remote", "get-url", "origin"))
             if not {sha, main} <= B.fetch_commits(self.graph, [sha, main], "--filter=tree:0"):
-                return False
+                return None
         except Exception:                                        # noqa: BLE001
-            return False
-        return sha == main or B.on_main(self.graph, sha, main)
+            return None
+        return B.ancestry(self.graph, sha, main)
+
+    def changed(self, parent, commit):
+        """Fix round 5 (N05): every path `commit` changed against `parent` (both trees, no rename detection), or None."""
+        if parent not in B.fetch_commits(self.root, [parent], "--depth=1", "--filter=blob:none") \
+                or commit not in B.fetch_commits(self.root, [commit], "--depth=1", "--filter=blob:none"):
+            return None
+        return B.changed_between(self.root, parent, commit)
 
 
 # ----------------------------------------------------------------------------------------------- the run
@@ -142,6 +164,13 @@ class Run:
         self.merge_of = B.MergeReader(gh)                         # the native merge proof behind a merge receipt (A10, fix round 4 #5)
         self.comments = []                                        # the ledger as this run read it (the final look adds what came later)
         self.label_repair = set()                                 # recalled PRs whose missing label THIS run proved natively (fix round 4)
+        self.log_of = B.LogReader(gh)                             # fix round 5 (P1-05): the execute log that proves an intent closes older ones
+        self.uncertain = []                                       # fix round 5 (P1-08): what this run could not settle or prove (health)
+        self.stop_kind = None                                     # the kind of the Stop that ended the run, if one did
+        self.verified_main = None                                 # the main the final look verified (D03: the receipt names it)
+        self.body = None                                          # the issue body this run executes (D02: re-checked at the boundary)
+        self.guard_paths = ()                                     # the PR's path set once verified (live_stop's drift check)
+        self.published_issue = None                               # the brief issue number the first publication check read
 
     # ---- the ONE place that writes
     def write(self, kind, **kw):
@@ -151,7 +180,7 @@ class Run:
         need(len(self.writes) < MAX_WRITES, "write_cap")
         self.live_stop(f"write:{kind}")                           # fix round 4 (#11, 7186140947-07): hold, switch and contract, live, before EVERY write
         clock = D.clock_gate(self.now_fn(), self.decision["generated_at"], self.decision["expires_at"], D.EXECUTE_MAX_AGE_MINUTES)
-        need(clock is None, f"clock:{clock}")
+        need(clock is None, f"clock:{clock}", HELD if clock == "MONDAY_READ_ONLY" else UNVERIFIED)
         if kind == "comment":
             body = kw["body"]
             need(isinstance(body, str) and 0 < len(body) <= MAX_POST_CHARS and B.first_line_token(body) in POSTS, "post_shape")
@@ -197,9 +226,9 @@ class Run:
         """Immediately before the intent: no halt and no other intent reached #1156 since the ledger read (one page)."""
         late = self.gh.get(f"issues/{B.OWNER_ISSUE}/comments", {"since": self.ledger_read_at, "per_page": 100})
         need(isinstance(late, list) and len(late) < 100, "lane:C7:ledger_unreadable")
-        need(not B.lane_halts(late), "lane:C7:halt_after_read")
+        need(not B.lane_halts(late), "lane:C7:halt_after_read", HELD)
         need(not any(B.is_s1_author(c) and B.first_line_token(c.get("body")) in ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1") for c in late),
-             "lane:C9:intent_after_read")
+             "lane:C9:intent_after_read", BLOCKED)
 
     def main_now(self):
         branch = self.gh.get("branches/main")
@@ -214,19 +243,20 @@ class Run:
         if main == base:
             return []
         relation, paths = self.native.drift(base, main)
-        need(relation == "ahead" and isinstance(paths, list), f"BRIEF_STALE(drift:{relation})")
+        need(relation == "ahead" and isinstance(paths, list), f"BRIEF_STALE(drift:{relation})", BLOCKED if relation == "too_large" else UNVERIFIED)
         need(len(paths) < B.DRIFT_MAX_FILES, "BRIEF_STALE(drift_unreadable)")
         code = [p for p in paths if B.code_drift_path(p)]
-        need(not code, "BRIEF_STALE(source_changed)")
+        need(not code, "BRIEF_STALE(source_changed)", BLOCKED)
         overlap = sorted(set(paths) & set(pr_paths))
-        need(not overlap, "C2:needs_branch_update")
+        need(not overlap, "C2:needs_branch_update", BLOCKED)
         return paths
 
     # ---- lane, at current main, from fresh reads
-    def lane_now(self, main, protected, comments):
-        switch, contract, bindings = self.files["switch"], self.files["contract"], self.files["bindings"]
-        need(isinstance(switch, dict) and switch.get("contract") == "S1_REVIEWED_MERGE_LANE_v1" and switch.get("state") == "ON", "lane:C7:switch")
-        pins = switch.get("pins")
+    def pins_at(self, main, where="lane"):
+        """Every pin of the switch and every blob of the S1 chain at `main`, by a native git read (fix round 5, P1-09:
+        shared by the lane check and the last read before every write)."""
+        switch, contract = self.files["switch"], self.files["contract"]
+        pins = switch.get("pins") if isinstance(switch, dict) else None
         need(isinstance(pins, dict) and pins, "lane:C7:pins_missing")
         chain = {contract.get("lane_switch_path"): contract.get("lane_switch_blob"), contract.get("action_loop_path"): contract.get("action_loop_blob"),
                  contract.get("tick_path"): contract.get("tick_blob"), **(contract.get("rubric_blobs") or {})}
@@ -234,20 +264,26 @@ class Run:
         need(all(isinstance(k, str) and isinstance(v, str) for k, v in want.items()), "lane:C7:contract_unreadable")
         actual = self.native.tree_shas(main, sorted(want) + [B.CONTRACT_FILE])
         for path in sorted(want):
-            need(actual.get(path) == want[path], f"lane:C7:pins:{path}")
-        need(actual.get(B.CONTRACT_FILE) == self.decision["contract_blob"], "lane:C7:pins:contract_blob")
+            need(actual.get(path) == want[path], f"lane:C7:pins:{path}" + ("" if where == "lane" else f":{where}"))
+        need(actual.get(B.CONTRACT_FILE) == self.decision["contract_blob"], "lane:C7:pins:contract_blob" + ("" if where == "lane" else f":{where}"))
+
+    def lane_now(self, main, protected, comments):
+        switch, bindings = self.files["switch"], self.files["bindings"]
+        need(isinstance(switch, dict) and switch.get("contract") == "S1_REVIEWED_MERGE_LANE_v1", "lane:C7:switch")
+        need(switch.get("state") == "ON", "lane:C7:switch_off", HELD)
+        self.pins_at(main)
         halts = B.lane_halts(comments)
         halt = B.standing_halt(halts, switch.get("clears_halt"))
-        need(halt is None, f"lane:C7:halt c={halt}")
+        need(halt is None, f"lane:C7:halt c={halt}", HELD)
         runs, _c = self.gh.pages(f"actions/workflows/{Path(bindings['main_health']['workflow_path']).name}/runs",
                                  {"event": "schedule", "branch": "main"}, key="workflow_runs", max_pages=1)
         health = B.main_health(runs, bool(runs), self.now_fn(), B.lane_merges(comments), halts, bindings["main_health"])
-        need(health.get("status") == "PASS", f"lane:C7:main_health:{health.get('reason')}")
+        need(health.get("status") == "PASS", f"lane:C7:main_health:{health.get('reason')}", UNVERIFIED if health.get("reason") == "TOOL_CANNOT_READ" else BLOCKED)
         r1, c1 = self.gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
         r2, c2 = self.gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
         rules = B.ruleset_census(r1, r2, c1 and c2)
         need(rules.get("stable") is True and rules.get("census") == (self.brief.get("rulesets") or {}).get("census"), "lane:C8:ruleset_census")
-        need(rules.get("active") == 0 and protected is False, "lane:C8:ruleset_unproven")
+        need(rules.get("active") == 0 and protected is False, "lane:C8:ruleset_unproven", BLOCKED)
         return health
 
     # ---- MERGE: every fact, natively, right before the write
@@ -262,27 +298,32 @@ class Run:
 
         def head_read():
             pr = self.gh.get(f"pulls/{n}")
-            need(pr.get("state") == "open" and pr.get("merged") is not True and pr.get("draft") is False, f"{n}:C8:state")
-            need((pr.get("head") or {}).get("sha") == head, f"{n}:C8:head_changed")
+            need(pr.get("state") == "open" and pr.get("merged") is not True and pr.get("draft") is False, f"{n}:C8:state", BLOCKED)
+            need((pr.get("head") or {}).get("sha") == head, f"{n}:C8:head_changed", BLOCKED)
             need((pr.get("base") or {}).get("ref") == "main" and ((pr.get("base") or {}).get("repo") or {}).get("id") == repo_id
-                 and ((pr.get("head") or {}).get("repo") or {}).get("id") == repo_id, f"{n}:B1:fork_head")
-            need(pr.get("mergeable") is not False and pr.get("mergeable_state") not in ("dirty", "blocked"), f"{n}:C2:mergeable")
+                 and ((pr.get("head") or {}).get("repo") or {}).get("id") == repo_id, f"{n}:B1:fork_head", BLOCKED)
+            need(pr.get("mergeable") is not False and pr.get("mergeable_state") not in ("dirty", "blocked"), f"{n}:C2:mergeable", BLOCKED)
             return pr
 
         pr = head_read()
         files, fc = self.gh.pages(f"pulls/{n}/files", max_pages=31)
-        need(fc and len(files) == pr.get("changed_files") == m.get("files"), f"{n}:C8:files_changed")
+        need(fc, f"{n}:C8:files_unreadable")
+        need(len(files) == pr.get("changed_files") == m.get("files"), f"{n}:C8:files_changed", BLOCKED)
         paths = sorted({f.get("filename") or "" for f in files} | {f["previous_filename"] for f in files if f.get("previous_filename")})
-        need(hashlib.sha256("\n".join(paths).encode()).hexdigest()[:16] == m.get("paths_sha256"), f"{n}:C8:files_changed")
+        need(hashlib.sha256("\n".join(paths).encode()).hexdigest()[:16] == m.get("paths_sha256"), f"{n}:C8:files_changed", BLOCKED)
         # risk and exclusions, recomputed from the LIVE diff, title and labels (exclusion 3 is a function of the head and of
-        # main's code: the head is unchanged and no_code_drift proves main's code is)
+        # main's code: the head is unchanged and no_code_drift proves main's code is; the isolation facts themselves are
+        # the producer's, from this same run's build job: fix round 5, D05, section 0.2i)
         reasons, floor = B.path_exclusions(files, True, self.files["policy"], self.files["gate_isolation"] == "LIVE", {"owner_gated": [], "high_floor": []})
-        need(not reasons and floor in D.MERGE_RISKS, f"{n}:C2:owner_gated")
-        facts = D.entry_facts(pr, files, True, [])
-        need(not facts["x"] and not facts["direction"] and not facts["hold_labels"], f"{n}:C2:judgment")
-        need(facts["title_sha256"] == m.get("title_sha256"), f"{n}:C8:title_changed")
+        need(not reasons and floor in D.MERGE_RISKS, f"{n}:C2:owner_gated", BLOCKED)
+        # fix round 5 (#173/7190895883 D05): the push-trigger rule is recomputed HERE from main's own workflow files
+        # (a merge made with the workflow token starts no push workflow), not trusted from the brief
+        facts = D.entry_facts(pr, files, True, self.files.get("push_filters"))
+        need(not facts["x"] and not facts["direction"] and not facts["hold_labels"], f"{n}:C2:judgment", BLOCKED)
+        need(not facts["push"], f"{n}:C2:push_trigger:{(facts['push'] or ['-'])[0]}", UNVERIFIED if facts["push"] == ["unknown"] else BLOCKED)
+        need(facts["title_sha256"] == m.get("title_sha256"), f"{n}:C8:title_changed", BLOCKED)
         need(not any(f.get("status") not in ("added", "removed", "renamed") and not str(f.get("filename") or "").startswith(("scripts/", "tests/"))
-                     and (f.get("deletions") or 0) > (f.get("additions") or 0) for f in files), f"{n}:C2:shrinks")
+                     and (f.get("deletions") or 0) > (f.get("additions") or 0) for f in files), f"{n}:C2:shrinks", BLOCKED)
         # CI identity (B4), every check, and the one privacy line
         tuples = self.files["bindings"]["required_job_tuples"]
         runs, rc = self.gh.pages("actions/runs", {"head_sha": head, "event": "pull_request"}, key="workflow_runs", max_pages=5)
@@ -297,14 +338,15 @@ class Run:
         ci_ids = {}
         for t in tuples:
             got = ci.get(t["job"]) or {}
-            need(got.get("s") == "PASS" and [got.get("run"), got.get("att"), got.get("job")] == (m.get("ci") or {}).get(t["job"]), f"{n}:C4:ci_identity:{t['job']}")
+            need(got.get("s") == "PASS" and [got.get("run"), got.get("att"), got.get("job")] == (m.get("ci") or {}).get(t["job"]), f"{n}:C4:ci_identity:{t['job']}",
+                 UNVERIFIED if got.get("s") == "NOT_PROVEN" else BLOCKED)
             ci_ids[t["job"]] = [got.get("run"), got.get("att"), got.get("job")]
         checks, k1 = self.gh.pages(f"commits/{head}/check-runs", key="check_runs", max_pages=5)
         statuses, k2 = self.gh.pages(f"commits/{head}/statuses", max_pages=3)
-        need(B.checks_summary(checks, statuses, k1 and k2).get("green") is True, f"{n}:C4:checks")
+        need(B.checks_summary(checks, statuses, k1 and k2).get("green") is True, f"{n}:C4:checks", BLOCKED if k1 and k2 else UNVERIFIED)
         privacy_job = ci["privacy-scan"]["job"]
         line = B.privacy_line(self.gh.text(f"actions/jobs/{privacy_job}/logs"), head)
-        need(line.get("result") == "NO_RESTRICTED_CONTENT", f"{n}:C3:privacy_line")
+        need(line.get("result") == "NO_RESTRICTED_CONTENT", f"{n}:C3:privacy_line", BLOCKED if line.get("result") else UNVERIFIED)
         # reviews, threads, writer
         commits, cc = self.gh.pages(f"pulls/{n}/commits", max_pages=3)
         prc, c1 = self.gh.pages(f"issues/{n}/comments", max_pages=10)
@@ -312,56 +354,63 @@ class Run:
         inline, c3 = self.gh.pages(f"pulls/{n}/comments", max_pages=10)
         need(cc and c1 and c2 and c3, f"{n}:C5:reviews_unreadable")
         now = self.now_fn()
-        need(B.concurrent_writer(commits, cc, prc, head, now, self.files["bindings"]["foreign_commit_quiet_minutes"]) is None, f"{n}:C1:concurrent_writer")
-        need(B.changes_requested(reviews) is False, f"{n}:C5:changes_requested")   # on ANY commit: a push never lifts the veto
+        need(B.concurrent_writer(commits, cc, prc, head, now, self.files["bindings"]["foreign_commit_quiet_minutes"]) is None, f"{n}:C1:concurrent_writer", BLOCKED)
+        need(B.changes_requested(reviews) is False, f"{n}:C5:changes_requested", BLOCKED)   # on ANY commit: a push never lifts the veto
         item = B.newest_item(prc) or {}                          # the PR's S1_ITEM_v1 history as it is NOW: a risk or kind is only ever raised
-        need(item.get("kind") != "DIRECTION", f"{n}:C5:strategist")
+        need(item.get("kind") != "DIRECTION", f"{n}:C5:strategist", BLOCKED)
         risk = D.risk_max(floor, facts["risk"], item.get("risk"))
         data_ok = D.data_route(pr, files, True, commits, cc, D.fallback_allowlist(self.files["switch"]))[0]   # addendum c, from THIS run's reads
-        admitted = D.data_admitted({"thin": {"data_route": data_ok, "risk": facts["risk"]}, "lane": {"risk_floor": floor}, "item": item})
-        need(risk == m.get("risk") and D.merge_risk_ok(risk, admitted), f"{n}:C2:risk")
-        need(facts["diff_x"] == [] or data_ok, f"{n}:C2:judgment:diff")   # fix round 4: the hard lines on every route, from the live diff
-        if admitted:                                              # a stored-data merge: every path a plain file at the head (no link, no mode change)
-            entries = self.native.tree_entries(head, [f.get("filename") for f in files])
-            need(all(v[0] == "PRESENT" and v[1] == "100644" and v[2] == "blob" for v in entries.values()), f"{n}:C2:data_mode")
         author = B.authorship(pr, commits, cc, prc)
         cx = B.codex_review(head, pr, commits, cc, prc, reviews, inline, True, now, self.files["budgets"]["codex_silent_hours"])
         if author.get("codex") and cx.get("status") == "FINAL":
             cx = {"status": "INADMISSIBLE"}
         candidates = B.fallback_candidates(comments).get((n, head), [])
-        live = {"review": {"codex": cx}, "author": author,
+        live = {"review": {"codex": cx}, "author": author, "lane": {"risk_floor": floor}, "item": item,
                 "thin": {"bot": (pr.get("user") or {}).get("type") != "User", "docs_only": facts["docs_only"],
                          "ai": B.ai_authored(pr, commits, cc, author), "claude": B.claude_receipt(head, prc),
                          "claude_written": B.claude_written(pr, commits, cc), "data_route": data_ok, "fallback_candidates": len(candidates),
-                         "fallback_mismatch": B.fallback_mismatch(candidates), "p01_named": B.p01_named(prc, reviews),
-                         "risk": risk, "codex_offline": self.codex_offline(n, cx, prc, reviews, inline, now) if str(m.get("review")).startswith("FALLBACK(") else None}}
-        route, gate = D.review_route(live, brief["thin"]["review_policy"])     # the route itself is derived again, from this run's reads
-        need(gate is None, f"{n}:{gate}")
-        need(route == m.get("review"), f"{n}:C8:review_changed")
+                         "fallback_mismatch": B.fallback_mismatch(candidates), "p01_named": B.p01_named(prc, reviews, inline),
+                         "risk": facts["risk"], "codex_offline": self.codex_offline(n, cx, prc, reviews, inline, now) if str(m.get("review")).startswith("FALLBACK(") else None}}
+        cfg = D.thin_config(self.files["switch"])
+        route, gate = D.review_route(live, cfg["review_policy"], cfg["fallback_route"])   # the route itself is derived again, from this run's reads
+        need(gate is None, f"{n}:{gate}", UNVERIFIED if gate == "C5:review_unreadable" else BLOCKED)
+        need(route == m.get("review"), f"{n}:C8:review_changed", BLOCKED)
+        # fix round 5 (#173/7188234670 P1-03): the HIGH stored-data admission and the word-list exemption hold on route (c) only
+        admitted = D.data_fallback(live, route)
+        need(risk == m.get("risk") and D.merge_risk_ok(risk, admitted) and admitted is (m.get("data") is True), f"{n}:C2:risk", BLOCKED)
+        need(facts["diff_x"] == [] or admitted, f"{n}:C2:judgment:diff", UNVERIFIED if "patch_unread" in facts["diff_x"] else BLOCKED)
+        if admitted:                                              # a stored-data merge: every path a plain file at the head (no link, no mode change)
+            entries = self.native.tree_entries(head, [f.get("filename") for f in files])
+            need(all(v[0] == "PRESENT" and v[1] == "100644" and v[2] == "blob" for v in entries.values()), f"{n}:C2:data_mode",
+                 UNVERIFIED if any(v[0] == "UNREADABLE" for v in entries.values()) else BLOCKED)
         evidence = D.fallback_evidence(n, head, risk, len(files), hashlib.sha256("\n".join(paths).encode()).hexdigest()[:16], facts["title_sha256"],
                                        pr.get("body"), ci_ids,
                                        policy=f"{self.decision.get('contract_blob')}:{brief['thin']['review_policy']}")
-        threads = B.read_threads(self.gh, n)
+        try:
+            threads = B.read_threads(self.gh, n)
+        except (RuntimeError, urllib.error.HTTPError, KeyError, TypeError):   # a GraphQL error or an odd answer: unread (P1-08)
+            threads = None
         need(threads is not None, f"{n}:C6:threads")
-        need(not any(not t.get("resolved") and re.search(r"(?i)\bP[01]\b", t.get("first_body") or "") for t in threads), f"{n}:C6:unresolved_p0p1")
+        need(not any(not t.get("resolved") and re.search(r"(?i)\bP[01]\b", t.get("first_body") or "") for t in threads), f"{n}:C6:unresolved_p0p1", BLOCKED)
         # lane, drift, intents; then the head once more, immediately before the intent
         main, protected = self.main_now()
         self.no_code_drift(main, paths)
         health = self.lane_now(main, protected, comments)
-        open_now = B.open_intents(comments, now, 0, self.run_of, self.merge_of)
-        need(not any(i.get("kind") == "S1_LANE_MERGE_INTENT_v1" and i.get("id") != own_intent for i in open_now), "lane:C9:open_merge_intent")
+        open_now = B.open_intents(comments, now, 0, self.run_of, self.merge_of, self.log_of)
+        need(not any(i.get("kind") == "S1_LANE_MERGE_INTENT_v1" and i.get("id") != own_intent for i in open_now), "lane:C9:open_merge_intent", BLOCKED)
         # idempotency key = PR + head: a receipt for it means done, and an earlier intent for it means it was tried.
         # ONE attempt per head, ever: no retry of a refused merge (the owner merges that head, or a new commit arrives)
         key = re.compile(rf"(?m)^pr: {n}\s*$")
         others = [c for c in comments if own_intent is None or c.get("id") != own_intent]   # the final look excludes this run's own intent
         mine = [B.first_line_token(c.get("body")) for c in others if B.is_s1_author(c) and key.search(str(c.get("body") or ""))
                 and head in str(c.get("body") or "")]
-        need("S1_LANE_MERGE_v1" not in mine, f"{n}:C9:already_done")
-        need(mine.count("S1_LANE_MERGE_INTENT_v1") < MAX_ATTEMPTS_PER_HEAD and (n, head) not in B.attempted_heads(others), f"{n}:C9:attempted_head")
+        need("S1_LANE_MERGE_v1" not in mine, f"{n}:C9:already_done", BLOCKED)
+        need(mine.count("S1_LANE_MERGE_INTENT_v1") < MAX_ATTEMPTS_PER_HEAD and (n, head) not in B.attempted_heads(others), f"{n}:C9:attempted_head", BLOCKED)
         head_read()                                              # the head a SECOND time, the last read before the intent
         return {"paths": paths, "files": files, "head_read": head_read, "main": main, "privacy_run": ci["privacy-scan"]["run"], "repo_id": repo_id, "health": health,
                 "evidence": evidence, "candidates": candidates, "offline": route[9:-1] if route.startswith("FALLBACK(") else None,
-                "claude": B.claude_receipt_fields(head, prc) if route == "CLAUDE" else None, "route": route, "risk": risk, "ci_ids": ci_ids}
+                "claude": B.claude_receipt_fields(head, prc) if route == "CLAUDE" else None, "route": route, "risk": risk, "ci_ids": ci_ids,
+                "health_run": health.get("run_id")}
 
     # ---- fix round 3 (ChatGPT audit: HOLD semantics, TOCTOU): fresh reads at the two write boundaries
     def live_stop(self, where):
@@ -371,10 +420,21 @@ class Run:
         immediately before the intent post and immediately before the merge call; SHADOW makes the same reads, so the
         SHADOW ticks prove the token can read the variable. What it cannot do: stop a merge call already sent."""
         self.hold_now(where)
-        main, _p = self.main_now()                               # the switch and the contract as current main holds them, by a native git read
+        main, protected = self.main_now()                        # the switch and the contract as current main holds them, by a native git read
         blobs = self.native.tree_shas(main, [B.SWITCH, B.CONTRACT_FILE])
-        need(isinstance(blobs.get(B.SWITCH), str) and blobs[B.SWITCH] == self.files["contract"].get("lane_switch_blob"), f"lane:C7:switch_changed:{where}")
-        need(isinstance(blobs.get(B.CONTRACT_FILE), str) and blobs[B.CONTRACT_FILE] == self.decision.get("contract_blob"), f"lane:C7:contract_changed:{where}")
+        need(isinstance(blobs.get(B.SWITCH), str) and blobs[B.SWITCH] == self.files["contract"].get("lane_switch_blob"), f"lane:C7:switch_changed:{where}",
+             HELD if isinstance(blobs.get(B.SWITCH), str) else UNVERIFIED)
+        need(isinstance(blobs.get(B.CONTRACT_FILE), str) and blobs[B.CONTRACT_FILE] == self.decision.get("contract_blob"), f"lane:C7:contract_changed:{where}",
+             HELD if isinstance(blobs.get(B.CONTRACT_FILE), str) else UNVERIFIED)
+        if not any(w[0] == "merge" for w in self.writes):
+            # fix round 5 (#173/7188234670 P1-09): until this run's merge call, the LAST read also covers what the final
+            # look verified: main unprotected, main moved since the decision by data only (no code, no path of the PR),
+            # and every pin and chain blob of the switch at the main read here. After the merge call the outcome posts
+            # (receipt, halt, recall) need only the hold, the switch and the contract: they record what happened.
+            need(protected is False, f"lane:C8:ruleset_unproven:{where}", BLOCKED)
+            if main != self.decision.get("main"):
+                self.no_code_drift(main, self.guard_paths)
+            self.pins_at(main, where)
 
     def hold_now(self, where):
         """S1_EXECUTOR_HOLD read live: any non-empty value turns this run OFF; 404 is the only "not set"; anything else
@@ -388,11 +448,11 @@ class Run:
         except urllib.error.HTTPError as exc:
             need(exc.code == 404, f"hold_unreadable:{where}({exc.code})")
             value = ""
-        if value.strip():
+        if value != "":                                          # fix round 5 (P1-09): ANY non-empty value, whitespace included
             self.mode = "OFF"
-            raise Stop(f"hold:{where}")
+            raise Stop(f"hold:{where}", HELD)
 
-    def final_look(self, proof, intent_id):
+    def final_look(self, proof, intent_id, first=None):
         """After the intent and immediately before the merge call, every fact that can change without a new head is read
         again: the hold and the switch (live_stop), the PR (state, exact head, draft, base, mergeable), its labels and its
         title, every review (a CHANGES_REQUESTED on any commit), every check run and status of the head, main (a data-only
@@ -403,23 +463,33 @@ class Run:
         m = self.decision["merge"]
         n, head = m["pr"], m["sha"]
         pr = proof["head_read"]()
-        facts = D.entry_facts(pr, proof["files"], True, [])
+        facts = D.entry_facts(pr, proof["files"], True, self.files.get("push_filters"))
         need(not facts["hold_labels"] and not facts["x"] and not facts["direction"] and facts["title_sha256"] == m.get("title_sha256"),
-             f"{n}:C8:pr_changed_after_intent")
+             f"{n}:C8:pr_changed_after_intent", BLOCKED)
         reviews, rc = self.gh.pages(f"pulls/{n}/reviews", max_pages=10)
-        need(rc and B.changes_requested(reviews) is False, f"{n}:C5:changes_requested_after_intent")
+        need(rc and B.changes_requested(reviews) is False, f"{n}:C5:changes_requested_after_intent", BLOCKED if rc else UNVERIFIED)
         checks, k1 = self.gh.pages(f"commits/{head}/check-runs", key="check_runs", max_pages=5)
         statuses, k2 = self.gh.pages(f"commits/{head}/statuses", max_pages=3)
-        need(B.checks_summary(checks, statuses, k1 and k2).get("green") is True, f"{n}:C4:checks_after_intent")
+        need(B.checks_summary(checks, statuses, k1 and k2).get("green") is True, f"{n}:C4:checks_after_intent", BLOCKED if k1 and k2 else UNVERIFIED)
         main, protected = self.main_now()
-        need(protected is False, "lane:C8:ruleset_unproven")
+        need(protected is False, "lane:C8:ruleset_unproven", BLOCKED)
         if main != proof["main"]:
             self.no_code_drift(main, proof["paths"])
         late = self.gh.get(f"issues/{B.OWNER_ISSUE}/comments", {"since": self.ledger_read_at, "per_page": 100})
         need(isinstance(late, list) and len(late) < 100, "lane:C7:ledger_unreadable")
-        need(not B.lane_halts(late), "lane:C7:halt_after_intent")
+        need(not B.lane_halts(late), "lane:C7:halt_after_intent", HELD)
         need(not any(B.is_s1_author(c) and c.get("id") != intent_id and B.first_line_token(c.get("body")) in ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1")
-                     for c in late), "lane:C9:intent_after_read")
+                     for c in late), "lane:C9:intent_after_read", BLOCKED)
+        # fix round 5 (#173/7190895883 D02): the publication is re-read at the boundary, by the same exact check
+        published = self.published(self.body) if self.body is not None else "body_unknown"
+        need(published is None, f"BRIEF_UNVERIFIED(publication_after_intent:{published})")
+        if first is not None:
+            # fix round 5 (#173/7188234670 P1-06): the first fallback run's candidate, re-read by its id after the intent:
+            # the same body, never edited, still the executor's own post. Its log proof is immutable and was read before.
+            row = self.gh.get(f"issues/comments/{int(first['id'])}")
+            need(isinstance(row, dict) and row.get("id") == first.get("id") and row.get("body") == first.get("body")
+                 and row.get("updated_at") == first.get("updated_at") and B.executor_post(row, self.run_of, self.now_fn()),
+                 f"{n}:C5:fallback_first_changed", BLOCKED)
         # fix round 4 (ChatGPT #2): EVERY mutable gate again, by the same code that verified it before the intent: the
         # PR's conversation and inline comments, review threads, the newest S1_ITEM, the Claude receipt or veto, the
         # Codex state and (route (c)) the repository-wide offline feed, the writer, every CI tuple with its run,
@@ -428,7 +498,10 @@ class Run:
         known = {c.get("id") for c in self.comments}
         again = self.verify_merge(self.comments + [c for c in late if isinstance(c, dict) and c.get("id") not in known], own_intent=intent_id)
         for key in ("route", "risk", "evidence", "paths", "privacy_run", "ci_ids", "claude", "offline"):
-            need(again.get(key) == proof.get(key), f"{n}:C8:{key}_changed_after_intent")
+            need(again.get(key) == proof.get(key), f"{n}:C8:{key}_changed_after_intent", BLOCKED)
+        if first is not None:
+            need(any(c.get("id") == first.get("id") for c in again.get("candidates") or []), f"{n}:C5:fallback_first_changed", BLOCKED)
+        self.verified_main, proof["final_health_run"] = again.get("main"), again.get("health_run")
         self.live_stop("put" if intent_id is not None else "shadow_put")   # the owner's hold and the switch: the LAST reads before the call
         if intent_id is not None:
             self.cleared_for = (n, head)
@@ -494,35 +567,52 @@ class Run:
     def readback(self, n, head, intent_at, paths, actor=B.ACTIONS_BOT["login"]):
         pr = self.gh.get(f"pulls/{n}")
         sha = pr.get("merge_commit_sha") if pr.get("merged") is True else None
-        commit = self.gh.get(f"commits/{sha}") if isinstance(sha, str) and D.SHA40.fullmatch(sha) else None
+        commit = None
+        if isinstance(sha, str) and D.SHA40.fullmatch(sha):
+            try:
+                commit = self.gh.get(f"commits/{sha}")
+            except urllib.error.HTTPError:                       # fix round 5 (D06): unread is UNREADABLE, never a mismatch
+                commit = None
+            commit = commit if isinstance(commit, dict) and commit else None
         main, _p = self.main_now()
-        blobs = None
+        blobs, parents = None, B.c1b_parents(commit) if commit else []
+        parent = parents[0] if len(parents) == 1 else None
+        changed = None
         if commit is not None and paths:
             a, b = self.native.tree_entries(sha, paths), self.native.tree_entries(head, paths)
             blobs = [(p, a.get(p, ("UNREADABLE",)), b.get(p, ("UNREADABLE",))) for p in paths]
-        state, why = D.readback_verdict(pr, head, intent_at, commit, blobs, commit is not None and self.native.is_ancestor(sha, main),
-                                        self.now_fn(), executor_login=actor, paths=paths)
-        return state, why, {"pr": n, "head": head, "merge_commit": sha, "main_after": main, "paths": len(paths or [])}
+            changed = self.native.changed(parent, sha) if parent else None   # fix round 5 (N05): the squash's whole delta
+        state, why = D.readback_verdict(pr, head, intent_at, commit, blobs, self.native.is_ancestor(sha, main) if commit is not None else None,
+                                        self.now_fn(), executor_login=actor, paths=paths, changed=changed)
+        return state, why, {"pr": n, "head": head, "merge_commit": sha, "main_after": main, "paths": len(paths or []), "merge_parent": parent,
+                            "verified_main": self.verified_main, "delta": f"{len(changed)} paths" if isinstance(changed, list) and state == "MATCH" else None}
 
     def do_merge(self, comments):
         d, m = self.decision, self.decision["merge"]
         self.comments = list(comments)
         proof = self.verify_merge(comments)
+        self.guard_paths = tuple(proof["paths"])
         self.last_look()
         first = None
         if m["review"].startswith("FALLBACK("):                   # never a merge in the run that first saw the PR qualify
             first, waiting = self.fallback(proof)
             if first is None:
                 return waiting
+        # fix round 5 (#173/7190895883 D04): everything the merge needs after its intent is reserved BEFORE the intent:
+        # calls for the final look, the merge call, the readback and the receipts, and the writes intent, merge,
+        # receipt or halt, recall receipt and label. Not enough left: no intent (the next run starts fresh).
+        remaining = self.gh.remaining() if callable(getattr(self.gh, "remaining", None)) else None
+        need(isinstance(remaining, int) and remaining >= MERGE_CALL_RESERVE and MAX_WRITES - len(self.writes) >= MERGE_WRITE_RESERVE,
+             f"budget:merge_reserve(calls={remaining},writes={MAX_WRITES - len(self.writes)})")
         self.live_stop("intent")                                 # the hold and the switch, read fresh, right before the intent
         if self.mode != "LIVE":
-            self.final_look(proof, None)                         # SHADOW makes the reads of the merge boundary too (evidence)
+            self.final_look(proof, None, first)                  # SHADOW makes the reads of the merge boundary too (evidence)
             return f"WOULD_MERGE(pr={m['pr']},head={m['sha'][:8]},risk={m['risk']},review={m['review']})"
         run_id = self.env.get("GITHUB_RUN_ID")
         intent = self.write("comment", body=D.intent_body(d, proof["repo_id"], self.files["contract"]["action_loop_blob"], run_id))
         self.pending = f"intent_without_outcome(c={intent.get('id')})"   # until a receipt or a halt is posted: an alarm
         try:
-            self.final_look(proof, intent.get("id"))             # after the intent, right before the merge call
+            self.final_look(proof, intent.get("id"), first)      # after the intent, right before the merge call
         except Stop as stop:
             return f"MERGE_ABORTED_AFTER_INTENT({stop.reason})"  # no merge call; the open intent is the alarm and the next run settles it
         except Exception as exc:                                 # noqa: BLE001  (a read that failed in the final look: no merge call either)
@@ -539,7 +629,8 @@ class Run:
             return "MERGE_REFUSED(not_merged)"
         state, why, rb = self.readback(m["pr"], m["sha"], intent.get("created_at") or B.iso(self.now_fn()), proof["paths"])
         if state == "MATCH":
-            self.write("comment", body=D.merge_receipt_body(d, proof["repo_id"], intent.get("id"), rb, run_id, proof["privacy_run"], claude=proof["claude"]))
+            self.write("comment", body=D.merge_receipt_body(d, proof["repo_id"], intent.get("id"), rb, run_id, proof["privacy_run"], claude=proof["claude"],
+                                                            health_run=proof.get("final_health_run")))
             self.pending = None
             if first is not None:                                 # a fallback merge: flagged for Codex's revisit (the receipt above already says FALLBACK)
                 try:
@@ -553,13 +644,14 @@ class Run:
             self.pending = None
             self.alarms.append(f"readback_mismatch({why})")
             return f"LANE_HALTED(readback:{why})"
+        self.uncertain.append(f"readback:{state}:{why}")
         return f"MERGE_UNSETTLED({state}:{why})"                 # the intent stays OPEN; the next run's RECONCILE settles it
 
     # ---- RECONCILE: an executor intent with no outcome (EVIDENCE_BINDINGS B3)
     def reconcile(self, comments):
         """Returns the result text when a receipt or a halt was posted (that is this run's action), else None."""
-        now, done, records = self.now_fn(), None, []
-        mine = [i for i in B.open_intents(comments, now, 0, self.run_of, self.merge_of) if i.get("kind") == "S1_LANE_MERGE_INTENT_v1"]
+        now, done, records, settled = self.now_fn(), None, [], []
+        mine = [i for i in B.open_intents(comments, now, 0, self.run_of, self.merge_of, self.log_of) if i.get("kind") == "S1_LANE_MERGE_INTENT_v1"]
         by_id = {c.get("id"): c for c in comments}
         for it in sorted(mine, key=lambda i: i["id"])[:RECONCILES_PER_RUN]:
             row = by_id.get(it["id"]) or {}
@@ -573,7 +665,7 @@ class Run:
             # fix round 4 (#10): an intent that does not bind its path set (a legacy row) is never read back as a verified
             # merge: its file list would be today's, not the intent's. It stays open for the owner (lane C9 holds).
             if not fc or (bound and hashlib.sha256("\n".join(paths).encode()).hexdigest()[:16] != bound):
-                records.append(f"UNREADABLE({it['id']}:path_set)")    # never a receipt from a file list that is not the intent's
+                records.append(f"UNREADABLE({it['id']}:path_set)")    # never a receipt from a file list that is not the intent's (uncertain, P1-08)
                 continue
             state, why, rb = self.readback(it["pr"], head, row.get("created_at"), paths, actor=B.login(row))
             if not bound and state in ("MATCH", "MISMATCH"):
@@ -599,8 +691,15 @@ class Run:
             if state in ("ABSENT", "FOREIGN"):
                 self.write("comment", body=D.op_done_body(it["id"], state, f"pr={it['pr']} {why}", contract=contract, run_id=run_id))
                 records.append(f"{state}({it['id']})")
+                settled.append(f"{state}({it['id']})")
         if records:
             self.say("S1_EXECUTOR_RECONCILE " + " ".join(records))
+        # fix round 5 (P1-08): what reconcile could not settle is uncertainty of this run, never a verified NOOP
+        self.uncertain += [r for r in records if "UNREADABLE" in r]
+        if settled:
+            # fix round 5 (#173/7190895883 D04): a run that wrote recovery outcomes does nothing else (a reconciliation-only
+            # tick): its writes and calls are not shared with a merge, and the next run decides from the settled ledger
+            return "SETTLED(" + ",".join(settled) + ")"
         return done
 
     # ---- HALT: re-proven natively, then posted
@@ -613,10 +712,12 @@ class Run:
             commit = self.gh.get(f"commits/{h['commit']}")
             subject = B.c1b_subject(commit)
             need(commit.get("sha") == h["commit"], "-:C1b:commit")
-            need(len(B.c1b_parents(commit)) != 1 or not B.SQUASH_SUBJECT.search(subject), "-:C1b:is_a_squash_merge")
+            need(len(B.c1b_parents(commit)) != 1 or not B.SQUASH_SUBJECT.search(subject), "-:C1b:is_a_squash_merge", BLOCKED)
             a, b = B.c1b_entries(self.gh.get(f"git/trees/{h['parent']}")), B.c1b_entries(self.gh.get(f"git/trees/{h['commit']}"))
-            need(a != b, "-:C1b:trees_equal")
-            need(self.native.is_ancestor(h["commit"], main), "-:C1b:not_on_main")
+            need(a != b, "-:C1b:trees_equal", BLOCKED)
+            anc = self.native.is_ancestor(h["commit"], main)       # fix round 5 (D06): proven not on main, or unknown
+            need(anc is not None, "-:C1b:ancestry_unknown")
+            need(anc is True, "-:C1b:not_on_main", BLOCKED)
             if h["commit"] in named:
                 return "LANE_HALTED(c1b:already_posted)"
             if self.mode != "LIVE":
@@ -627,7 +728,7 @@ class Run:
         health = self.files["bindings"]["main_health"]
         need(run.get("id") == h["run"] and run.get("path") == health["workflow_path"] and run.get("event") == "schedule" and run.get("head_branch") == "main"
              and (run.get("repository") or {}).get("full_name") == B.REPO and (run.get("head_repository") or {}).get("full_name") == B.REPO
-             and run.get("status") == "completed" and run.get("conclusion") in B.FAILED_CONCLUSIONS, "-:C7:run")
+             and run.get("status") == "completed" and run.get("conclusion") in B.FAILED_CONCLUSIONS, "-:C7:run", BLOCKED)
         if re.search(rf"(?<!\d){h['run']}(?!\d)", named):
             return "LANE_HALTED(main_health:already_posted)"
         if self.mode != "LIVE":
@@ -706,6 +807,13 @@ class Run:
         brief = B.parse_body(text)
         if not isinstance(brief, dict) or brief.get("run_id") != self.brief.get("run_id") or brief.get("run_attempt") != self.brief.get("run_attempt"):
             return "brief_differs"
+        # fix round 5 (#173/7190895883 D02): the WHOLE published brief, by its canonical digest, and the same issue as at
+        # this run's first check (a second issue, or a brief whose evidence was edited under the same decision, differs)
+        if B.brief_digest(text) is None or B.brief_digest(text) != B.brief_digest(body):
+            return "brief_digest_differs"
+        if self.published_issue is not None and mine[0].get("number") != self.published_issue:
+            return "issue_differs"
+        self.published_issue = mine[0].get("number")
         return None
 
     # ---- HEARTBEAT: observability, never the action
@@ -726,7 +834,7 @@ class Run:
         brief, d = B.parse_body(body), B.decision_of(body)
         if brief is None or d is None:
             return end("NOOP", None, None, "BRIEF_UNVERIFIED(body)")
-        self.brief, self.decision = brief, d
+        self.brief, self.decision, self.body = brief, d, body
         env = self.env
         if not (env.get("GITHUB_REPOSITORY") == B.REPO and env.get("GITHUB_REF") == "refs/heads/main" and env.get("GITHUB_EVENT_NAME") in EVENTS
                 and str(d.get("run_id")) == env.get("GITHUB_RUN_ID") and str(d.get("run_attempt")) == env.get("GITHUB_RUN_ATTEMPT")
@@ -752,9 +860,12 @@ class Run:
         if published is not None:
             return end("NOOP", None, None, f"BRIEF_UNVERIFIED(publication:{published})")
         try:
+            # fix round 5 (#173/7190895883 D08): the owner's hold is read LIVE once at the start of every SHADOW and LIVE run,
+            # so every tick is evidence that the token can read it (and a hold set after the job's env snapshot stops it)
+            self.hold_now("start")
             comments = self.ledger()
             settled = self.reconcile(comments)
-            if settled is not None:                              # a reconciled receipt or a reconcile halt is this run's action
+            if settled is not None:                              # a reconciled receipt, a reconcile halt or settled outcomes: this run's action
                 return end("MERGE" if settled.startswith("RECONCILED") else "NOOP", None, None, settled)
             beat = self.heartbeat(comments)
             if beat:
@@ -769,6 +880,7 @@ class Run:
                 return end("MERGE" if result.startswith("MERGED") else "NOOP", d["pr"], d["head"], result)   # only a read-back merge is a MERGE line
             return end("NOOP", None, None, d["result"])
         except Stop as stop:
+            self.stop_kind = stop.kind
             pr, head = (d.get("pr"), d.get("head")) if d["action"] == "MERGE" else (None, None)
             return end("NOOP", pr, head, f"NOTHING_ACTIONABLE(skipped={stop.reason})")
         except B.StopReading as stop:
@@ -786,10 +898,12 @@ class Run:
             self.alarms.append(self.pending)
         if self.alarms:
             self.say("S1_EXECUTOR_ALARM " + " ".join(self.alarms))
-        state = health_state(result, self.alarms, self.pending)
+        state = health_state(result, self.alarms, self.pending, self.stop_kind, self.uncertain, (self.decision or {}).get("unverified"))
         self.say("S1_EXECUTOR_HEALTH " + json.dumps({"v": 1, "state": state, "run": self.env.get("GITHUB_RUN_ID"), "attempt": self.env.get("GITHUB_RUN_ATTEMPT"),
                                                      "at": B.iso(self.now_fn()), "mode": self.mode, "action": action, "result": str(result)[:160],
-                                                     "writes": len(self.writes)}, sort_keys=True, separators=(",", ":")))
+                                                     "writes": len(self.writes), "stop": self.stop_kind, "uncertain": self.uncertain[:3],
+                                                     "unverified": list((self.decision or {}).get("unverified") or [])[:3]},
+                                                    sort_keys=True, separators=(",", ":")))
         self.say(f"S1_EXECUTOR_V1 mode={self.mode} decision={d.get('id')} action={d.get('action')} result={result} "
                  f"writes={len(self.writes)}:{','.join(str(w[1]) + (f'#{w[2]}' if w[0] == 'comment' else '') for w in self.writes) or '-'}")
         self.say(f"S1_TICK {action} {pr if pr is not None else '-'} {head[:8] if head else '-'} {result} main={main} contract={contract}")
@@ -797,27 +911,38 @@ class Run:
                 "alarms": list(self.alarms), "health": state}
 
 
-def health_state(result, alarms, pending):
+def health_state(result, alarms, pending, stop_kind=None, uncertain=(), unverified=()):
     """Executor health, machine-readable and separate from the producer (ChatGPT audit, P2 executor health): a green
-    build says nothing about the executor. AMBIGUOUS: an intent was posted and this run posted no outcome for it (a
-    merge call may or may not have landed; the next run settles it from native state). DEGRADED: an alarm, or the run
-    could not read or verify what it needed. HELD: the owner's hold or the switch stopped it. OK: it did what the
-    decision said, NOOP included. The newest run whose summary reads OK or HELD is the last successful executor tick."""
+    build says nothing about the executor. Fix round 5 (#173/7188234670 P1-08): classified by structure, not by
+    fragments of the result text, and OK is an explicit, positive state:
+      AMBIGUOUS   an intent was posted and this run posted no outcome for it (a merge call may or may not have landed;
+                  the next run settles it from native state)
+      DEGRADED    an alarm, a crash, or a run that could not verify its own inputs (brief, publication, source chain)
+      UNVERIFIED  the run stopped on a fact it could not read or prove (Stop kind UNVERIFIED, the default), reconcile
+                  left an intent it could not read, or the decision's NOOP rests on unread facts (decision.unverified)
+      HELD        the owner's hold, the switch, a standing halt, the Monday window
+      OK          a verified outcome: a merge, a halt, a reconciliation, a WOULD_* in SHADOW, or a NOOP whose every
+                  reason was read and proven (a BLOCKED stop, or a decision with no unverified gate)
+    Anything else is UNVERIFIED. The newest run whose line reads OK or HELD is the last successful executor tick."""
     text = str(result)
     if pending or text.startswith(("MERGE_UNSETTLED", "MERGE_REFUSED", "MERGE_ABORTED_AFTER_INTENT")):
         return "AMBIGUOUS"
-    # fix round 4 (ChatGPT #8): a run that could not VERIFY its inputs is degraded, not "nothing to do": the source chain
-    # (pins), the publication, the switch or contract, the hold variable, the ledger, the repository identity
-    if alarms or text.startswith(("BRIEF_INCOMPLETE", "BRIEF_UNVERIFIED", "SOURCE_UNVERIFIED")) \
-            or any(f"skipped={x}" in text for x in DEGRADED_SKIPS):
+    if alarms or text.startswith(("BRIEF_INCOMPLETE", "BRIEF_UNVERIFIED", "SOURCE_UNVERIFIED", "EXECUTOR_CRASHED")):
         return "DEGRADED"
-    if text.startswith(("EXECUTOR_OFF", "MONDAY_READ_ONLY")) or "skipped=hold:" in text or "skipped=lane:C7:halt" in text:
+    if text.startswith(("EXECUTOR_OFF", "MONDAY_READ_ONLY")) or stop_kind == HELD:
         return "HELD"
-    return "OK"
+    if stop_kind == UNVERIFIED or uncertain or text.startswith("BRIEF_STALE"):
+        return "UNVERIFIED"
+    if stop_kind == BLOCKED:
+        return "OK"
+    if text.startswith("NOTHING_ACTIONABLE"):
+        return "UNVERIFIED" if unverified else "OK"
+    if text.startswith(OK_RESULTS):
+        return "OK"
+    return "UNVERIFIED"
 
 
-DEGRADED_SKIPS = ("hold_unreadable", "lane:C7:pins", "lane:C7:switch", "lane:C7:contract_unreadable", "lane:C7:ledger_unreadable",
-                  "B1:repository_identity", "main_unreadable", "lane:C8:ruleset_census")
+OK_RESULTS = ("MERGED", "LANE_HALTED", "RECONCILED", "SETTLED", "WOULD_", "FALLBACK_CANDIDATE", "FALLBACK_MISMATCH", "FALLBACK_WAITING")
 
 
 def write_summary(env, lines):
@@ -840,18 +965,22 @@ def read_files(root):
     read = lambda rel: (Path(root) / rel).read_text(encoding="utf-8")
     return {"switch": json.loads(read(B.SWITCH)), "contract": json.loads(read(B.CONTRACT_FILE)), "policy": json.loads(read(B.POLICY_FILE)),
             "gate_isolation": json.loads(read(B.ISOLATION_FILE)).get("gate_isolation"),
+            "push_filters": B.read_push_filters(root),            # fix round 5 (D05): main's own push-triggered workflows; None: every PR matches
             "bindings": B.parse_json_block(read(B.BINDINGS_FILE), "S1_EVIDENCE_BINDINGS_v1"),
             "budgets": B.parse_json_block(read("00_FMOS/S1/STEWARD_STATES.md"), "S1_STEWARD_BUDGETS_v1")}
 
 
 def main(argv):
-    if len(argv) != 3 or argv[1] != "execute":
-        raise SystemExit("usage: s1_executor_v1.py execute <issue body file>")
-    token = os.environ.get("GITHUB" + "_TOKEN", "")
-    if os.environ.get("GITHUB_REPOSITORY", B.REPO) != B.REPO:
-        raise SystemExit(f"REFUSED: repository is not {B.REPO}")
-    root = B.CHECKOUT_ROOT
     try:
+        # fix round 5 (P1-08): the usage and repository checks are inside the handler too, so they also print a health
+        # line. What no handler can cover (an import that fails, a cancelled or killed job) prints none: the next
+        # build's watchdog reads the job's own log and reports EXECUTOR_NOHEALTH.
+        if len(argv) != 3 or argv[1] != "execute":
+            raise SystemExit("usage: s1_executor_v1.py execute <issue body file>")
+        token = os.environ.get("GITHUB" + "_TOKEN", "")
+        if os.environ.get("GITHUB_REPOSITORY", B.REPO) != B.REPO:
+            raise SystemExit(f"REFUSED: repository is not {B.REPO}")
+        root = B.CHECKOUT_ROOT
         B.GIT_ENV = B.token_git_env(token)
         run = Run(B.GitHub(token, budget=EXECUTE_API_CALLS), Native(root), dict(os.environ), read_files(root))
         out = run.execute(Path(argv[2]).read_text(encoding="utf-8"))
@@ -864,7 +993,8 @@ def main(argv):
         write_summary(os.environ, [line])
         return 1
     write_summary(os.environ, out["lines"])
-    return 1 if out["alarms"] or out.get("health") in ("AMBIGUOUS", "DEGRADED") else 0   # a failed JOB (continue-on-error), never a failed run
+    # a failed JOB (continue-on-error), never a failed run; UNVERIFIED exits 0, and the next build reads the health line itself
+    return 1 if out["alarms"] or out.get("health") in ("AMBIGUOUS", "DEGRADED") else 0
 
 
 if __name__ == "__main__":

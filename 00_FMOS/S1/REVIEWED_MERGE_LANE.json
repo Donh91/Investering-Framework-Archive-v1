@@ -8,13 +8,14 @@
   "clears_halt": null,
   "executor": "SHADOW",
   "review_policy": "CODEX_CLAUDE_OR_OFFLINE_RECALL",
+  "fallback_route": "OFF",
   "fallback_data_allowlist": {
     "decided": "owner addendum c 2026-11-26: route (c) merges only repository automation's data PRs on this list; derived from every merged PR github-actions[bot] opened (#735 #799 #1365 #1491 #1588 #1682 #1817 #1880 #2060 #2192 #2314)",
     "author": "github-actions[bot]",
     "entries": [
       {
         "name": "weekly shadow registry snapshot",
-        "head_ref": "^automation/shadow-registry-[0-9]{4}-W[0-9]{2}$",
+        "head_ref": "^automation/shadow-registry-(?P<week>[0-9]{4}-W[0-9]{2})$",
         "paths": [
           {
             "path": "^04_MARKET_LEARNING/shadow_registry/LATEST\\.json$",
@@ -23,7 +24,7 @@
             ]
           },
           {
-            "path": "^04_MARKET_LEARNING/shadow_registry/weekly/[0-9]{4}-W[0-9]{2}\\.json$",
+            "path": "^04_MARKET_LEARNING/shadow_registry/weekly/(?P<week>[0-9]{4}-W[0-9]{2})\\.json$",
             "status": [
               "added"
             ]
@@ -33,11 +34,11 @@
     ]
   },
   "pins": {
-    "AGENTS.md": "f00a6ae4298c3c3ba402cf8b795f6480e8db5ca7",
+    "AGENTS.md": "eca107497455b49d198e3cfb2bc6ad0fefdf26e5",
     "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json": "44aea7baa306a8058fed2d760f5154f5ee7f7fad",
-    ".github": "98a47c34ad179e1c3912bc63fa8442a8dbe2bf93",
+    ".github": "081b0e8b0b49037a5dfacc543b38702275be243d",
     ".agents": "e93392c3c78294c25d9073193c2405792fb3025c",
-    "scripts/governance": "5131d6cec72119cb2a6fe1347b9713a12caf9905",
+    "scripts/governance": "0e9ef8a3155de240545b2f019c23c646191514bb",
     "scripts/health": "a0ea5e97be8129a796d35213a796f0f852941be0",
     "07_PROMPTS_AND_AGENTS": "eb96a502d5a11847c40b821c5c18e76d417fe25b",
     "01_CORE_FRAMEWORK/governance": "b87a75cb93034089c381b607312667d87078a86a",

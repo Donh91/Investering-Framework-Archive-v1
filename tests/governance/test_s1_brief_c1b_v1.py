@@ -448,7 +448,10 @@ class Gap(unittest.TestCase):
         h.commit("data: b")
         out, _gh = c1b(h, None)
         b = brief_with(out)
-        self.assertEqual(b["c1b"]["gap"], {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:range:no_anchor:issues=0"})
+        gap = b["c1b"]["gap"]
+        self.assertEqual({k: gap[k] for k in ("from_unknown", "window", "reason", "carried")},
+                         {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:range:no_anchor:issues=0", "carried": False})
+        self.assertRegex(gap["to"], "^[0-9a-f]{40}$")                    # fix round 5: the commit the owner's disposition names
         self.assertEqual((b["complete"], b["incomplete"]), (False, "C1b:range:no_anchor:issues=0"))
         self.assertEqual(b["c1b"]["checked_through"], h.main)
         doc = B.parse_body(B.render(b))
@@ -461,7 +464,8 @@ class Gap(unittest.TestCase):
         self.assertIsNone(brief_with(c1b(h, anchor)[0])["c1b"]["gap"])
         self.assertIsNone(brief_with(c1b(h, anchor, fail=["git/trees/"])[0])["c1b"]["gap"])
         off_chain = brief_with(c1b(h, anchor, c1b=sha("rewritten"))[0])["c1b"]["gap"]           # an anchor not reached: a gap too
-        self.assertEqual(off_chain, {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:range"})
+        self.assertEqual({k: off_chain[k] for k in ("from_unknown", "window", "reason", "carried")},
+                         {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:range", "carried": False})
 
 
 class Ledger(unittest.TestCase):
@@ -521,6 +525,58 @@ class RubricBlobs(unittest.TestCase):
                 self.assertNotEqual(v["source"], "OK")
         ok = B.brief_verdict(TB.MAIN, dict(w["contract"], rubric_blobs={}), w["pins_actual"], "", {}, {})
         self.assertNotIn("3:rubric_blobs", ok["reasons"])                           # an empty map: nothing listed, nothing missing
+
+
+class FixRound5DurableGap(unittest.TestCase):
+    """#173/7188234670 P1-07: a C1b history gap is never forgotten by a later scan."""
+
+    def previous_with_gap(self, main, gap):
+        w = dict(TB.world(), main_sha=main, run={"id": 554, "attempt": 1, "event": "schedule"})
+        w["c1b"] = {"checked_through": main, "from": main, "halt": None, "complete": True, "gap": gap}
+        brief = B.build_brief(w)
+        brief["generated_at"] = TB.ts(65)
+        issue = {"number": 3, "user": dict(TB.BOT), "body": B.render(brief), "updated_at": TB.ts(64)}
+        run = {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": main,
+               "status": "completed", "conclusion": "success", "run_started_at": TB.ts(70), "updated_at": TB.ts(60)}
+        return issue, run
+
+    def test_a_capped_segment_resumes_where_the_proof_stopped(self):
+        h = History()
+        anchor = h.commit("data: 0")
+        for k in range(B.C1B_SEARCH_READS + 5):
+            h.commit(f"data: {k + 1}")
+        out, _gh = c1b(h, anchor)
+        self.assertEqual(out["gap"]["reason"], "C1b:capped_equal_ends")
+        proven = out["checked_through"]
+        self.assertNotEqual(proven, h.main)                                             # NOT main: the rest is unproven
+        self.assertEqual(proven, h.rows[len(h.rows) - 1 - B.C1B_SEARCH_READS]["sha"])       # the 20th commit after the anchor
+        d = B.build_brief(dict(TB.world(), c1b=out))
+        self.assertIn("lane:C1b:history_gap", __import__("s1_decision_v1").decide(d)["skipped"])
+        again, _gh = c1b(h, proven)                                                      # the next build resumes there and catches up
+        self.assertEqual((again["checked_through"], again["gap"], again["complete"]), (h.main, None, True))
+
+    def test_a_range_gap_is_carried_until_the_owner_disposes_of_it(self):
+        h = History()
+        anchor = h.commit("data: a")
+        h.commit("data: b")
+        gap = {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:range", "to": sha("old-base")}
+        issue, run = self.previous_with_gap(anchor, gap)
+        out = B.read_c1b(Gh(h, issue, run), h.main, [], NOW)
+        self.assertEqual((out["complete"], out["gap"]["carried"], out["gap"]["to"]), (True, True, sha("old-base")))
+        self.assertIn("lane:C1b:history_gap", __import__("s1_decision_v1").decide(B.build_brief(dict(TB.world(), c1b=out)))["skipped"])
+        accept = TB.comment(90, f"S1_C1B_GAP_ACCEPTED_v1\nto: {sha('old-base')}", TB.OWNER, 5)
+        for name, ledger, carried in (("the owner's disposition", [accept], False), ("an edited one", [dict(accept, updated_at=TB.ts(1))], True),
+                                      ("the bot's", [dict(accept, user=dict(TB.BOT))], True), ("another commit", [TB.comment(90, "S1_C1B_GAP_ACCEPTED_v1\nto: " + "1" * 40, TB.OWNER, 5)], True),
+                                      ("an unread ledger", None, True)):
+            with self.subTest(name):
+                out = B.read_c1b(Gh(h, issue, run), h.main, ledger, NOW)
+                self.assertEqual(out["gap"] is not None, carried, name)
+        # a failed scan keeps it too (it is carried before the scan)
+        out = B.read_c1b(Gh(h, issue, run, fail=["git/trees/", "commits"]), h.main, [], NOW)
+        self.assertEqual((out["complete"], (out["gap"] or {}).get("carried")), (False, True))
+        # a capped gap of the previous brief is NOT carried: its scan resumes from checked_through
+        issue, run = self.previous_with_gap(anchor, dict(gap, reason="C1b:capped_equal_ends"))
+        self.assertIsNone(B.read_c1b(Gh(h, issue, run), h.main, [], NOW)["gap"])
 
 
 if __name__ == "__main__":

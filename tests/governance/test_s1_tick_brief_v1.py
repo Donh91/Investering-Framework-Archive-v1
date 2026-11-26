@@ -109,7 +109,7 @@ def world():
         "health_runs": [health], "health_runs_complete": True,
         "rulesets_1": [], "rulesets_2": [], "rulesets_complete": True,
         # the executor watchdog's record (fix round 4, #8): the previous run published a decision and its execute job succeeded
-        "executor_watch": {"runs": [{"run": 554, "at": ts(65), "publish": "success", "execute": "success", "complete": True}], "listed": 1},
+        "executor_watch": {"runs": [{"run": 554, "at": ts(65), "publish": "success", "execute": "success", "complete": True, "health": "OK"}], "listed": 1},
         "pulls": [pull()], "pulls_complete": True, "pr": {7: pr_data()},
         # read_c1b's record (W2b D1): main equals the previous brief's checked_through, nothing to scan
         "c1b": {"checked_through": MAIN, "from": MAIN, "halt": None, "complete": True, "reason": None, "stop": None},
@@ -1035,7 +1035,7 @@ class CollectReplay(unittest.TestCase):
             if path.startswith("actions/workflows/automation-production-health.yml/runs"):
                 return self.w["health_runs"], True
             if path.startswith("actions/runs/") and path.endswith("/jobs"):
-                return self.d["jobs"][int(path.split("/")[2])], True
+                return self.d["jobs"].get(int(path.split("/")[2]), []), True   # fix round 5: an executor run's jobs (LogReader): none here
             return table[path], True
 
         def text(self, path):
@@ -1110,6 +1110,10 @@ class CollectReplay(unittest.TestCase):
                         if 540 not in runs:
                             raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
                         return runs[540]
+                    if path == "pulls/9":                                # fix round 5 (P1-05): ABSENT must be true natively: PR 9 is open
+                        fake.calls += 1
+                        fake.paths.append(path)
+                        return {"number": 9, "merged": False, "state": "open", "merge_commit_sha": None, "head": {"sha": "e" * 40}}
                     return real(path, params)
                 fake.get = get
             return m

@@ -352,16 +352,82 @@ class MergeReader:
             try:
                 doc = self.gh.get(f"pulls/{key}")
                 self.docs[key] = {"number": doc.get("number"), "merged": doc.get("merged"), "merge_commit_sha": doc.get("merge_commit_sha"),
-                                  "head_sha": (doc.get("head") or {}).get("sha")} if isinstance(doc, dict) else None
+                                  "head_sha": (doc.get("head") or {}).get("sha"), "merged_at": doc.get("merged_at"),
+                                  "merged_by": (doc.get("merged_by") or {}).get("login") if isinstance(doc.get("merged_by"), dict) else None,
+                                  "state": doc.get("state")} if isinstance(doc, dict) else None
             except urllib.error.HTTPError:
                 self.docs[key] = None
         return self.docs[key]
 
 
+class LogReader:
+    """`log_of` for open_intents() (fix round 5, P1-05): the log text of the `execute` job of one run of this workflow
+    (GET actions/runs/<id>/jobs, then the job's log), memoised and capped like RunReader. A run with no completed
+    execute job, or any HTTP error, reads as None (not proven)."""
+
+    def __init__(self, gh, max_reads=2):
+        self.gh, self.max_reads, self.docs = gh, max_reads, {}
+
+    def __call__(self, run_id):
+        key = str(int(run_id))
+        if key not in self.docs:
+            if len(self.docs) >= self.max_reads:
+                return None
+            self.docs[key] = None
+            try:
+                jobs, ok = self.gh.pages(f"actions/runs/{key}/jobs", {"filter": "latest"}, key="jobs", max_pages=1)
+                job = [j for j in jobs or [] if isinstance(j, dict) and j.get("name") == "execute" and j.get("status") == "completed"
+                       and j.get("run_id") in (None, int(key))]
+                if ok and len(job) == 1 and isinstance(job[0].get("id"), int):
+                    text = self.gh.text(f"actions/jobs/{job[0]['id']}/logs")
+                    self.docs[key] = text if isinstance(text, str) else None
+            except (urllib.error.HTTPError, ValueError):          # an expired or oversized log: not proven
+                self.docs[key] = None
+        return self.docs[key]
+
+
+def logged_write(log_of, run_id, token, comment_id):
+    """Did the execute job of run `run_id` itself write ledger post `comment_id` of kind `token`? Its own finish line
+    (S1_EXECUTOR_V1 ... writes=<n>:<token>#<id>,...) in that job's log says so. Unread: False."""
+    if log_of is None or run_id is None or type(comment_id) is not int:
+        return False
+    text = log_of(run_id)
+    want = re.compile(rf"S1_EXECUTOR_V1 mode=LIVE decision=\S+ action=\S+ result=[^\n]*? writes=\d+:\S*{re.escape(token)}#{comment_id}(?![0-9])")
+    return isinstance(text, str) and want.search(text) is not None
+
+
+def native_outcome(it, merge_of, run_of):
+    """Fix round 5 (#173/7188234670 P1-05): what native state says about executor intent `it` NOW, as an outcome that
+    can settle it: ABSENT (the PR is not merged) or FOREIGN (merged, but at another head, by another actor or outside
+    the intent's window), and only after the intent's OWN run has ended (a merge call of a running job may still land).
+    None: unproven, or merged by the Actions bot at this head inside the window (that is this intent's merge)."""
+    if merge_of is None or run_of is None:
+        return None
+    rid = executor_run((it.get("row") or {}).get("body"))
+    run = run_of(rid) if rid is not None else None
+    if not isinstance(run, dict) or run.get("id") != rid or run.get("status") != "completed":
+        return None
+    native = merge_of(it["pr"])
+    if not isinstance(native, dict):
+        return None
+    if native.get("merged") is False:
+        return "ABSENT"
+    if native.get("merged") is not True:
+        return None
+    try:
+        merged_at, at = stamp(native.get("merged_at")), stamp(it["created_at"])
+    except (ValueError, KeyError, TypeError):
+        return None
+    mine = native.get("head_sha") == it["head"] and native.get("merged_by") == ACTIONS_BOT["login"] \
+        and at - timedelta(seconds=5) <= merged_at <= at + timedelta(minutes=15)
+    return None if mine else "FOREIGN"
+
+
 HALT_FIRST = re.compile(r"^S1_LANE_HALTED PR=(\d{1,10}) head=([0-9a-f]{40})\b")
+LOG_PROOFS_PER_READ = 2               # executor intents whose run log one open_intents() call reads for the induction floor
 
 
-def settles(c, it, merge_of=None):
+def settles(c, it, merge_of=None, run_of=None):
     """Does this post READ as the outcome of intent `it`? Who wrote it is open_intents()'s question.
 
     An EXECUTOR merge intent (the Actions bot wrote it and it names its run: `it["exact"]`) is settled only by an outcome
@@ -383,7 +449,10 @@ def settles(c, it, merge_of=None):
             result = (f.get("result") or "").strip()
             if result == "OWNER_SETTLED":                        # the owner's explicit manual settlement of exactly this intent id
                 return is_owner_unedited(c)
-            return result in ("ABSENT", "FOREIGN") and re.match(rf"pr={it['pr']}(?!\d)", (f.get("evidence") or "").strip()) is not None
+            # fix round 5 (P1-05): the outcome must also be TRUE natively, after the intent's own run ended: a forged or
+            # early ABSENT (another workflow naming a running executor run) can then only ever say what is true
+            return result in ("ABSENT", "FOREIGN") and re.match(rf"pr={it['pr']}(?!\d)", (f.get("evidence") or "").strip()) is not None \
+                and native_outcome(it, merge_of, run_of) == result
         if token == "S1_LANE_HALTED":
             m = HALT_FIRST.match(body.splitlines()[0] if body else "")
             return bool(m) and int(m.group(1)) == it["pr"] and m.group(2) == it["head"]
@@ -401,7 +470,7 @@ def settles(c, it, merge_of=None):
     return False
 
 
-def open_intents(comments, now, settle_minutes=60, run_of=None, merge_of=None):
+def open_intents(comments, now, settle_minutes=60, run_of=None, merge_of=None, log_of=None):
     """A cheap SIGNAL for RECONCILE (EVIDENCE_BINDINGS B3), never the reconciliation itself: authentic v3 intents
     (they carry loop=) with no later outcome that names their PR or cites their id.
 
@@ -414,7 +483,13 @@ def open_intents(comments, now, settle_minutes=60, run_of=None, merge_of=None):
     Bounded reads. An executor merge intent whose run is proven was posted by a run that had itself found no open
     merge intent (the executor's verify_merge), and an owner post that settles an executor merge intent closes it and
     every older one. So executor merge intents OLDER than the newest such intent are not examined again; intents the
-    owner account posted are always examined (an owner post settles them at no read)."""
+    owner account posted are always examined (an owner post settles them at no read).
+
+    Fix round 5 (#173/7188234670 P1-05): "posted by a run that had itself found no open merge intent" is proven only by
+    that run's OWN execute log naming the intent as one of its writes (logged_write, `log_of`; at most
+    LOG_PROOFS_PER_READ logs per call). A bot post that only names a run, which any workflow with issues: write can
+    make, never closes older intents. No proof: every executor intent is examined (fail closed: an unproven one stays
+    open and holds the lane, C9)."""
     rows = [c for c in comments if isinstance(c, dict)]
     intents = []
     for c in rows:
@@ -434,15 +509,20 @@ def open_intents(comments, now, settle_minutes=60, run_of=None, merge_of=None):
 
     def outcomes(it):                                  # lazy: the native merge proofs are read only for the intents examined
         if it["id"] not in memo:
-            memo[it["id"]] = [c for c in rows if c.get("id", 0) > it["id"] and settles(c, it, merge_of)]
+            memo[it["id"]] = [c for c in rows if c.get("id", 0) > it["id"] and settles(c, it, merge_of, run_of)]
         return memo[it["id"]]
     by_owner = lambda it: any(is_owner_unedited(c) for c in outcomes(it))
     executor_merge = [it for it in intents if it["bot"] and it["kind"] == "S1_LANE_MERGE_INTENT_v1"]
-    floor = 0
+    floor, proofs = 0, 0
     for it in sorted(executor_merge, key=lambda i: i["id"], reverse=True):
-        if by_owner(it) or executor_post(it["row"], run_of, now):
+        if by_owner(it):
             floor = it["id"]
             break
+        if proofs < LOG_PROOFS_PER_READ and executor_post(it["row"], run_of, now):
+            proofs += 1
+            if logged_write(log_of, executor_run(it["row"].get("body")), "S1_LANE_MERGE_INTENT_v1", it["id"]):
+                floor = it["id"]
+                break
     out = []
     for it in intents:
         if it["bot"] and it["kind"] == "S1_LANE_MERGE_INTENT_v1" and it["id"] < floor:
@@ -473,13 +553,14 @@ def fallback_candidates(comments):
     return out
 
 
-def p01_named(comments, reviews):
-    """Route (c) only: True when a conversation comment or a review summary of the PR names P0 or P1 (any author, any
-    time); None when either list was not read. Routes (a) and (b) do not use it: there a reviewer has read the head,
-    and for them only an unresolved review THREAD blocks (C6)."""
-    if comments is None or reviews is None:
+def p01_named(comments, reviews, inline=()):
+    """Route (c) only: True when a conversation comment, a review summary or (fix round 5, P1-11) an inline review
+    comment of the PR names P0 or P1 (any author, any time, resolved or not); None when any list was not read. Routes
+    (a) and (b) do not use it: there a reviewer has read the head, and for them only an unresolved review THREAD
+    blocks (C6)."""
+    if comments is None or reviews is None or inline is None:
         return None
-    return any(re.search(r"(?i)\bP[01]\b", str(r.get("body") or "")) for r in list(comments) + list(reviews) if isinstance(r, dict))
+    return any(re.search(r"(?i)\bP[01]\b", str(r.get("body") or "")) for r in list(comments) + list(reviews) + list(inline) if isinstance(r, dict))
 
 
 def fallback_mismatch(posts):
@@ -549,8 +630,33 @@ def read_executor_watch(gh, current_run):
         names = {j.get("name"): j.get("conclusion") for j in jobs or [] if isinstance(j, dict)}
         seen.append({"run": r["id"], "at": r.get("created_at"), "publish": names.get("publish"), "execute": names.get("execute"), "complete": bool(ok)})
         if names.get("publish") == "success":
+            # fix round 5 (#173/7188234670 P1-08): the job conclusion is not the executor's health (the job is
+            # continue-on-error, and an UNVERIFIED run exits 0). The ONE health line of that job's own log is read.
+            job = [j for j in jobs or [] if isinstance(j, dict) and j.get("name") == "execute" and j.get("status") == "completed" and isinstance(j.get("id"), int)]
+            seen[-1]["health"] = health_of_log(gh.text(f"actions/jobs/{job[0]['id']}/logs")) if len(job) == 1 else None
             break
     return {"runs": seen, "listed": len(runs)}
+
+
+HEALTH_LINE = re.compile(r"S1_EXECUTOR_HEALTH (\{[^\n]*\})")
+HEALTH_STATES = ("OK", "HELD", "UNVERIFIED", "DEGRADED", "AMBIGUOUS")
+
+
+def health_of_log(text):
+    """The state of the ONE S1_EXECUTOR_HEALTH line of an execute job's log: "NOHEALTH" when there is none (a crash
+    before the handler, a cancelled or killed job), "MANY" when there are several, "UNREAD" when it does not parse."""
+    if not isinstance(text, str):
+        return "UNREAD"
+    found = HEALTH_LINE.findall(text)
+    if not found:
+        return "NOHEALTH"
+    if len(found) > 1:
+        return "MANY"
+    try:
+        state = json.loads(found[0]).get("state")
+    except (ValueError, AttributeError):
+        return "UNREAD"
+    return state if state in HEALTH_STATES else "UNREAD"
 
 
 def executor_watch(doc, mode, now):
@@ -571,9 +677,15 @@ def executor_watch(doc, mode, now):
     except (ValueError, TypeError):
         return {"state": "UNREAD", "run": first.get("run")}
     state = {"success": "OK", "skipped": "MISSING", None: "MISSING"}.get(first.get("execute"), "FAILED")
+    health = first.get("health")
+    if state in ("OK", "FAILED"):
+        # fix round 5 (P1-08): OK only when the job succeeded AND its own health line reads OK or HELD; any other line
+        # (UNVERIFIED, DEGRADED, AMBIGUOUS), no line, several lines or an unread log is that state, never OK
+        state = health if health not in ("OK", "HELD") else ("OK" if state == "OK" else "FAILED")
+        state = state if isinstance(state, str) else "UNREAD"
     if age > EXECUTOR_STALE_HOURS:
         state = "STALE"
-    return {"state": state, "run": first.get("run"), "execute": first.get("execute"), "age_h": round(age, 1)}
+    return {"state": state, "run": first.get("run"), "execute": first.get("execute"), "health": health, "age_h": round(age, 1)}
 
 
 def recall_window(items, now, n=RECALL_READS_PER_BUILD):
@@ -979,7 +1091,13 @@ def claude_receipt_fields(head, comments):
     rid, row = cited_request(f, comments)
     if rid is None or row is None:
         return None
-    return {"request": rid, "report_blob": (f.get("report_blob") or "").strip(), "bridge_commit": (f.get("bridge_commit") or "").strip()}
+    # fix round 5 (#173/7188234670 P1-10): the receipt is bound by its own comment id, body hash, update time and
+    # independence, and the request by its body hash, so the final look notices a receipt replaced under the same blobs
+    c = state.get("comment") if isinstance(state.get("comment"), dict) else {}
+    return {"request": rid, "request_sha256": hashlib.sha256(str(row.get("body") or "").encode()).hexdigest()[:16],
+            "receipt": c.get("id"), "receipt_sha256": hashlib.sha256(str(c.get("body") or "").encode()).hexdigest()[:16],
+            "receipt_updated_at": c.get("updated_at"), "independence": (f.get("independence") or "").strip(),
+            "report_blob": (f.get("report_blob") or "").strip(), "bridge_commit": (f.get("bridge_commit") or "").strip()}
 
 
 def changes_requested(reviews):
@@ -1120,8 +1238,8 @@ def offline_signal(cx, activity, now, hours=CODEX_LIMIT_HOURS):
             at = stamp(ev["at"])
             if at < since:
                 return None                                      # older than the repository-wide read: what Codex did since is unknown
-            if status == "UNAVAILABLE":
-                return status if items and items[0]["limit"] else None
+            if status == "UNAVAILABLE":                          # fix round 5 (P1-11): the newest limit answer is at most `hours` old
+                return status if items and items[0]["limit"] and 0 <= (now - items[0]["at"]).total_seconds() <= hours * 3600 else None
             return status if not any(a["at"] > at for a in items) else None
         if status == "NONE" and items and items[0]["limit"] and 0 <= (now - items[0]["at"]).total_seconds() <= hours * 3600:
             return "LIMIT"
@@ -1176,14 +1294,14 @@ def receipt_state(head, page):
                                 and f.get("report") and SHA40.fullmatch(f.get("report_blob") or "") and SHA40.fullmatch(f.get("bridge_commit") or ""))
             except (ValueError, KeyError, TypeError):
                 complete = False
-            good = (f, complete)
+            good = (f, complete, c)
             # fix round 4 (ChatGPT #173/7186140947 finding 02): only a COMPLETE, eligible, independent APPROVE lifts an
             # older refusal. An approval that lacks its request row, a blob, lane_eligible: YES or a known independence
             # is a candidate at most, never the authority that ends a veto.
             if complete and (f.get("lane_eligible") or "").strip() == "YES" and (f.get("independence") or "").strip() in INDEPENDENCE:
                 out["veto"] = False
     if good:
-        out.update(approved=True, page_complete=good[1], fields=good[0])
+        out.update(approved=True, page_complete=good[1], fields=good[0], comment=good[2])
     return out
 
 
@@ -1291,7 +1409,7 @@ def pr_entry(pr, data, ctx):
     e["thin"]["claude"] = claude_receipt(head, comments if rc else None)          # review route (b)
     e["thin"]["claude_written"] = claude_written(pr, commits, cc)
     e["thin"]["data_route"] = decision_v1.data_route(pr, files, fc, commits, cc, ctx.get("allowlist"))[0]   # addendum c: route (c) scope
-    e["thin"]["p01_named"] = p01_named(comments if rc else None, reviews if rc else None)   # route (c): PARK on a P0/P1 anybody wrote
+    e["thin"]["p01_named"] = p01_named(comments if rc else None, reviews if rc else None, (data.get("inline") or []) if rc else None)   # route (c): PARK on a P0/P1 anybody wrote
     e["writer"] = concurrent_writer(commits, cc, comments, head, ctx["now"], ctx["quiet_minutes"]) if rc else "comments_unreadable"
     cx = codex_review(head, pr, commits, cc, comments, reviews, data.get("inline") or [], rc, ctx["now"], ctx["budgets"]["codex_silent_hours"])
     if e["author"].get("codex") and cx.get("status") == "FINAL":
@@ -1688,8 +1806,8 @@ def c1b_scan(chain, base, base_key, entries_of, search_reads=C1B_SEARCH_READS, u
             if n >= search_reads and same_ends:
                 # fix round 4 (#7 / 7186140947-08): past the cap a segment with equal ends is UNPROVEN, never clean. It is
                 # recorded (the caller makes it a C1B_GAP and the decision of this brief merges nothing), not ignored
-                if unproven is not None:
-                    unproven.append({"from": anchor_sha, "to": chain[idx[-1]][0], "unread": len(idx) - n})
+                if unproven is not None:                         # fix round 5 (P1-07): and where the proof stopped
+                    unproven.append({"from": anchor_sha, "to": chain[idx[-1]][0], "unread": len(idx) - n, "proven": chain[idx[n - 1]][0]})
                 break
             if n >= search_reads:
                 last = chain[idx[-1]]
@@ -1763,6 +1881,26 @@ def previous_anchor(issue, brief, run, now):
     return ([point] if point else []), (c.get("halt") if c1b_halt_ok(c.get("halt")) else None), (None if point else "no_checked_through")
 
 
+GAP_ACCEPTED = "S1_C1B_GAP_ACCEPTED_v1"   # the owner's explicit disposition of ONE carried history gap (fix round 5)
+
+
+def carried_gap(prev, ledger):
+    """Fix round 5 (#173/7188234670 P1-07): the history gap of the previous brief that THIS brief must carry. A gap of
+    unread history (C1b:range, C1b:carry_unknown) is never forgotten by a later scan: it stays on every brief, and every
+    decision merges nothing, until a never-edited post of the owner account on #1156, S1_C1B_GAP_ACCEPTED_v1, names its
+    `to` commit (an explicit owner disposition). A capped segment (C1b:capped_equal_ends) needs no carry: its scan
+    resumes where the proof stopped (checked_through). `ledger` None: unread, the gap is carried."""
+    c = prev.get("c1b") if isinstance(prev, dict) and isinstance(prev.get("c1b"), dict) else {}
+    gap = c.get("gap") if isinstance(c.get("gap"), dict) else None
+    if not gap or gap.get("from_unknown") is not True or str(gap.get("reason") or "").startswith("C1b:capped_equal_ends"):
+        return None
+    to = _sha_or_none(gap.get("to"))
+    if to and ledger is not None and any(is_owner_unedited(x) and first_line_token(x.get("body")) == GAP_ACCEPTED
+                                         and (fields(x.get("body")).get("to") or "").strip() == to for x in ledger if isinstance(x, dict)):
+        return None
+    return {"from_unknown": True, "window": gap.get("window"), "reason": str(gap.get("reason")), "to": to, "carried": True}
+
+
 def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
     """B.c1b (S1 v3.3 W2b, D1): the TICK T3 C1b halt test, run by the producer on main's first-parent history from the
     previous brief's checked_through up to B.main, on its own share of the call budget.
@@ -1797,6 +1935,8 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
         carry_unknown = issue is not None and isinstance(prev.get("c1b"), dict) and prev["c1b"].get("carry") == "UNKNOWN"
         out["prev_next"] = next_builds(prev) if issue is not None else {}   # W5: B.next[].builds counts on from here
         out["prev_log"] = prev.get("decision_log") if issue is not None and isinstance(prev.get("decision_log"), list) else None
+        if issue is not None:
+            out["gap"] = carried_gap(prev, ledger)               # fix round 5: carried first, so a failed scan cannot drop it
         prev_halt = carried_halt(issues)                         # F2: carried whatever the binding; never the anchor
         if prev_halt is not None:
             named = ledger is not None and any(prev_halt["commit"] in h["body"] for h in lane_halts(ledger))
@@ -1852,9 +1992,14 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
                    reason=None if reached else "C1b:carry_unknown" if carry_unknown
                    else "C1b:range" + ("" if known else f":no_anchor:{why or 'none'}"))
         if not reached:                                          # F3: checked_through moved past history nobody scanned
-            out["gap"] = {"from_unknown": True, "window": C1B_WINDOW, "reason": out["reason"]}
-        elif unproven:                                           # commits past the per-segment cap: scanned to the ends only
-            out["gap"] = {"from_unknown": True, "window": sum(u["unread"] for u in unproven), "reason": "C1b:capped_equal_ends"}
+            out["gap"] = out["gap"] or {"from_unknown": True, "window": C1B_WINDOW, "reason": out["reason"], "to": base}
+        elif unproven:
+            # fix round 5 (P1-07): commits past the per-segment cap are NOT checked. checked_through stops where the
+            # step-by-step proof stopped, so the next build resumes there (a bounded incremental scan, no new state), and
+            # this brief carries the gap: its decision merges nothing until the scan has caught up
+            out["checked_through"] = unproven[0]["proven"]
+            out["gap"] = out["gap"] or {"from_unknown": True, "window": sum(u["unread"] for u in unproven), "reason": "C1b:capped_equal_ends",
+                                        "to": unproven[0]["to"]}
         out["from"] = base
         return out
     except C1bFail as exc:
@@ -1874,8 +2019,8 @@ def c1b_block(snap_c1b):
     """B.c1b and the brief's C1b incomplete reason (None when complete) from collect()'s record."""
     c = snap_c1b if isinstance(snap_c1b, dict) else {}
     gap = c.get("gap")
-    gap = {"from_unknown": True, "window": gap.get("window"), "reason": str(gap.get("reason"))} \
-        if isinstance(gap, dict) and gap.get("from_unknown") is True else None
+    gap = {"from_unknown": True, "window": gap.get("window"), "reason": str(gap.get("reason")), "to": _sha_or_none(gap.get("to")),
+           "carried": gap.get("carried") is True} if isinstance(gap, dict) and gap.get("from_unknown") is True else None
     block = {"checked_through": _sha_or_none(c.get("checked_through")), "from": _sha_or_none(c.get("from")),
              "halt": c["halt"] if c1b_halt_ok(c.get("halt")) else None,
              "gap": gap,                                          # F3: owner-visible only; S1 needs no action
@@ -1960,7 +2105,9 @@ def build_brief(snap):
         lane["off_reasons"].append("ledger_unreadable")
     runs = snap.get("executor_runs") if isinstance(snap.get("executor_runs"), dict) else {}
     proofs = snap.get("merge_proofs") if isinstance(snap.get("merge_proofs"), dict) else {}
-    intents = open_intents(comments, now, params["op_settle_minutes"], lambda rid: runs.get(str(rid)), lambda n: proofs.get(str(n))) if ledger_ok else []
+    logs = snap.get("executor_logs") if isinstance(snap.get("executor_logs"), dict) else {}
+    intents = open_intents(comments, now, params["op_settle_minutes"], lambda rid: runs.get(str(rid)), lambda n: proofs.get(str(n)),
+                           lambda rid: logs.get(str(rid))) if ledger_ok else []
     attempted = attempted_heads(comments) if ledger_ok else set()
     candidates = fallback_candidates(comments) if ledger_ok else None
     recall_items = [dict(item, codex=recall_status(item["head"], (snap.get("recall_reads") or {}).get(str(item["pr"])), now, snap["budgets"]["codex_silent_hours"]))
@@ -2478,6 +2625,10 @@ class GitHub:
                     raise
             time.sleep(2)
 
+    def remaining(self):
+        """API calls this client may still make under its cap (fix round 5, D04: the merge reserve)."""
+        return self.budget - self.calls
+
     def url(self, path, params=None):
         root = path if path.startswith("https://") else f"{self.base}/repos/{self.repo}{'/' if path and not path.startswith('/') else ''}{path}"
         return root + ("?" + urllib.parse.urlencode(params) if params else "")
@@ -2537,16 +2688,27 @@ class GitHub:
 
 
 THREADS_QUERY = """query($o:String!,$r:String!,$n:Int!,$c:String){repository(owner:$o,name:$r){pullRequest(number:$n){
-reviewThreads(first:100,after:$c){pageInfo{hasNextPage endCursor} nodes{isResolved comments(first:30){nodes{body}}}}}}}"""
+reviewThreads(first:100,after:$c){pageInfo{hasNextPage endCursor} nodes{isResolved comments(first:100){totalCount nodes{body}}}}}}}"""
+THREAD_COMMENTS_MAX = 100              # replies of one review thread read in one query; a longer thread is unread (None)
 
 
 def read_threads(gh, number):
+    """Every review thread of the PR with EVERY reply's body joined (`first_body` keeps its old name), or None when
+    anything is unread. Fix round 5 (#173/7190895883 D01): a thread whose replies GitHub reports beyond those returned
+    (totalCount), a missing or non-boolean isResolved, or a node of another shape is unread: never "no P0/P1"."""
     owner, name = gh.repo.split("/")
     out, cursor = [], None
     for _ in range(5):
         data = gh.graphql(THREADS_QUERY, {"o": owner, "r": name, "n": number, "c": cursor})
         t = data["repository"]["pullRequest"]["reviewThreads"]
-        out += [{"resolved": n["isResolved"], "first_body": "\n".join((c.get("body") or "") for c in n["comments"]["nodes"] or [])} for n in t["nodes"]]
+        for node in t["nodes"]:
+            comments = (node or {}).get("comments") if isinstance(node, dict) else None
+            rows = comments.get("nodes") if isinstance(comments, dict) else None
+            if not isinstance(node, dict) or type(node.get("isResolved")) is not bool or not isinstance(rows, list) \
+                    or type(comments.get("totalCount")) is not int or comments["totalCount"] != len(rows) or len(rows) > THREAD_COMMENTS_MAX \
+                    or not all(isinstance(c, dict) for c in rows):
+                return None
+            out.append({"resolved": node["isResolved"], "first_body": "\n".join(str(c.get("body") or "") for c in rows), "replies": len(rows)})
         if not t["pageInfo"]["hasNextPage"]:
             return out
         cursor = t["pageInfo"]["endCursor"]
@@ -2624,11 +2786,18 @@ def read_graph(root, graph_dir, main_sha, heads):
 
 def on_main(graph_dir, sha, main_sha):
     """Is `sha` an ancestor of main_sha? From the commits-only graph repository; anything unreadable is no."""
+    return ancestry(graph_dir, sha, main_sha) is True
+
+
+def ancestry(graph_dir, sha, main_sha):
+    """Fix round 5 (D06): True (an ancestor), False (git PROVED it is not: exit 1) or None (anything else: unknown)."""
     try:
         git(graph_dir, "merge-base", "--is-ancestor", sha, main_sha)
         return True
-    except (subprocess.CalledProcessError, OSError):
-        return False
+    except subprocess.CalledProcessError as exc:
+        return False if exc.returncode == 1 else None
+    except OSError:
+        return None
 
 
 def changed_between(root, base, main_sha):
@@ -2806,13 +2975,13 @@ def collect(gh, root, head_root, now, run):
     snap["issue_comments"], snap["issue_comments_complete"] = gh.pages(f"issues/{OWNER_ISSUE}/comments", max_pages=120)
     # section 0.2i: the runs that Actions-bot outcome posts name (none while the ledger holds no such post; at most
     # SETTLE_RUN_READS). build_brief() repeats the same pure computation over this record.
-    reader, merges = RunReader(gh), MergeReader(gh)
+    reader, merges, logs = RunReader(gh), MergeReader(gh), LogReader(gh)
     if snap["issue_comments_complete"]:
         try:
-            open_intents(snap["issue_comments"], stamp(snap["now"]), 0, reader, merges)   # the same `now` build_brief() uses
+            open_intents(snap["issue_comments"], stamp(snap["now"]), 0, reader, merges, logs)   # the same `now` build_brief() uses
         except StopReading as exc:
             errors.append(exc.reason)
-    snap["executor_runs"], snap["merge_proofs"] = reader.docs, merges.docs
+    snap["executor_runs"], snap["merge_proofs"], snap["executor_logs"] = reader.docs, merges.docs, logs.docs
     try:                                                         # the executor watchdog (fix round 4, #8): fail soft, UNREAD
         snap["executor_watch"] = read_executor_watch(gh, (snap.get("run") or {}).get("id"))
     except StopReading as exc:

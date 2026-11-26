@@ -5,6 +5,7 @@ negative case changes ONE fact. Golden decisions for every action type live in t
 file; set S1_DECISION_GOLDEN_WRITE=1 to regenerate them after a deliberate change.
 """
 import copy
+import hashlib
 import json
 import os
 import re
@@ -124,7 +125,10 @@ def data_pr(w):
     w["pulls"][0]["head"]["ref"] = DATA_REF
     set_files(w, [file_(DATA_FILES[0], "modified", 31, 31, '@@\n-  "week": "2026-W47",\n+  "week": "2026-W48",'),
                   file_(DATA_FILES[1], "added", 463, 0, '@@\n+{\n+  "week": "2026-W48"\n+}')])
-    w["pr"][7]["commits"] = [dict(c, author=None, committer=None, parents=[{"sha": MAIN}]) for c in w["pr"][7]["commits"]]
+    # fix round 5 (P1-02): the commits are LINKED to the bot (an unlinked author, as on #2314, is unknown and parks), and
+    # route (c)'s own switch is ON here; the shipped switch has it OFF (test_route_c_ships_off_and_parks)
+    w["pr"][7]["commits"] = [dict(c, author=dict(B.ACTIONS_BOT), committer=dict(B.ACTIONS_BOT), parents=[{"sha": MAIN}]) for c in w["pr"][7]["commits"]]
+    w["switch"]["fallback_route"] = "ON"
 
 
 def ci_fail(w):
@@ -403,9 +407,12 @@ class Decide(unittest.TestCase):
                 self.assertNotEqual(d["action"], "MERGE", (name, d["skipped"]))
 
     def test_review_policy_is_the_switch_and_defaults_to_the_strict_one(self):
-        self.assertEqual(D.thin_config({"executor": "LIVE", "review_policy": "NATIVE_GATES"}), {"executor": "LIVE", "review_policy": "NATIVE_GATES"})
+        self.assertEqual(D.thin_config({"executor": "LIVE", "review_policy": "NATIVE_GATES"}), {"executor": "LIVE", "review_policy": "NATIVE_GATES", "fallback_route": "OFF"})
         for bad in (None, {}, [], {"executor": "live"}, {"executor": True, "review_policy": 1}, {"executor": "ON", "review_policy": "NONE"}):
-            self.assertEqual(D.thin_config(bad), {"executor": "OFF", "review_policy": "CODEX_FINAL_REQUIRED"}, bad)
+            self.assertEqual(D.thin_config(bad), {"executor": "OFF", "review_policy": "CODEX_FINAL_REQUIRED", "fallback_route": "OFF"}, bad)
+        # fix round 5: route (c) has its own switch, ON only for exactly "ON"
+        for value, want in (("ON", "ON"), ("on", "OFF"), (True, "OFF"), ("OFF", "OFF"), (None, "OFF"), (" ON", "OFF")):
+            self.assertEqual(D.thin_config({"fallback_route": value})["fallback_route"], want, value)
         self.assertEqual(decide(docs_no_review, policy="NATIVE_GATES")[0]["merge"]["review"], "NONE(policy=NATIVE_GATES)")
         self.assertEqual(decide(docs_no_review, policy="CODEX_FINAL_REQUIRED")[0]["skipped"], ["7:C5:codex_final_required"])
         self.assertEqual(decide(no_codex, policy="CODEX_FINAL_REQUIRED")[0]["skipped"], ["7:C5:codex_final_required"])
@@ -1025,9 +1032,10 @@ class OwnerVetoes(unittest.TestCase):
 
     def test_invariant_any_non_empty_hold_value_holds(self):
         for mode in ("LIVE", "SHADOW"):
-            for hold in ("1", "true", "HOLD", "x", "0", "false", "off", "OFF", "no", "No", "False", " off ", "release", "\tstop\n", 0, False, 1):
+            # fix round 5 (#173/7188234670 P1-09): whitespace is a non-empty value, so it holds too
+            for hold in ("1", "true", "HOLD", "x", "0", "false", "off", "OFF", "no", "No", "False", " off ", "release", "\tstop\n", 0, False, 1, " ", "\n\t "):
                 self.assertEqual(D.effective_mode(mode, hold), "OFF", (mode, hold))
-            for free in ("", " ", "\n\t ", None):
+            for free in ("", None):
                 self.assertEqual(D.effective_mode(mode, free), mode, (mode, free))
         self.assertEqual(D.effective_mode("banana", ""), "OFF")
         self.assertEqual(D.effective_mode("OFF", ""), "OFF")                           # the variable can never switch the executor ON
@@ -1308,8 +1316,13 @@ class ReviewRoute(unittest.TestCase):
         })
         for name, mutate in cases.items():
             self.assertEqual(route(mutate)[:2], (None, ["7:C5:codex_review_required"]), name)
-        self.assertEqual(B.claude_receipt_fields(HEAD, [TB.comment(7165386485, CLAUDE_REQUEST, TB.OWNER, 200), TB.comment(20, CLAUDE_OK, TB.OWNER, 100)]),
-                         {"request": 7165386485, "report_blob": "a" * 40, "bridge_commit": "b" * 40})
+        got = B.claude_receipt_fields(HEAD, [TB.comment(7165386485, CLAUDE_REQUEST, TB.OWNER, 200), TB.comment(20, CLAUDE_OK, TB.OWNER, 100)])
+        self.assertEqual({k: got[k] for k in ("request", "report_blob", "bridge_commit", "receipt", "independence")},
+                         {"request": 7165386485, "report_blob": "a" * 40, "bridge_commit": "b" * 40, "receipt": 20, "independence": "INDEPENDENT_DETACHED"})
+        # fix round 5 (P1-10): the receipt and its request are bound by their own hashes and the receipt's update time
+        self.assertEqual(got["receipt_sha256"], hashlib.sha256(CLAUDE_OK.encode()).hexdigest()[:16])
+        self.assertEqual(got["request_sha256"], hashlib.sha256(CLAUDE_REQUEST.encode()).hexdigest()[:16])
+        self.assertEqual(got["receipt_updated_at"], TB.comment(20, CLAUDE_OK, TB.OWNER, 100)["updated_at"])
         self.assertIsNone(B.claude_receipt_fields(HEAD, [TB.comment(20, CLAUDE_OK, TB.OWNER, 100)]))
         # never S1's own head: S1 writes as the owner account, the account the receipt is checked against
         self.assertEqual(route(ok(lambda w: w["pulls"][0]["head"].update(ref="s1/x")))[:2], (None, ["7:C5:s1_authored"]))
@@ -1398,21 +1411,21 @@ class ReviewRoute(unittest.TestCase):
                       "codex_offline": "SILENT", "risk": "HIGH"}}
         # the data route is a positive fact: anything but True parks, and the builder's signal must fit this head's Codex state
         for value in (False, None, "yes", 1):
-            self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=False, data_route=value)), RECALL), (None, "C5:fallback_parked:not_data"), value)
+            self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=False, data_route=value)), RECALL, "ON"), (None, "C5:fallback_parked:not_data"), value)
         for offline in (None, "UNAVAILABLE", "LIMIT", "banana", True):
-            self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=False, codex_offline=offline)), RECALL), (None, "C5:codex_review_required"), offline)
+            self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=False, codex_offline=offline)), RECALL, "ON"), (None, "C5:codex_review_required"), offline)
         none = dict(e, review={"codex": {"status": "NONE"}})
-        self.assertEqual(D.review_route(dict(none, thin=dict(e["thin"], p01_named=False, codex_offline="LIMIT")), RECALL), ("FALLBACK(LIMIT)", None))
-        self.assertEqual(D.review_route(dict(none, thin=dict(e["thin"], p01_named=False, codex_offline="SILENT")), RECALL), (None, "C5:codex_review_required"))
+        self.assertEqual(D.review_route(dict(none, thin=dict(e["thin"], p01_named=False, codex_offline="LIMIT")), RECALL, "ON"), ("FALLBACK(LIMIT)", None))
+        self.assertEqual(D.review_route(dict(none, thin=dict(e["thin"], p01_named=False, codex_offline="SILENT")), RECALL, "ON"), (None, "C5:codex_review_required"))
         for value in (None, True, "no"):
-            self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=value)), RECALL), (None, "C5:fallback_parked:p0p1_comment"), value)
-        self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=False)), RECALL), ("FALLBACK(SILENT)", None))
+            self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=value)), RECALL, "ON"), (None, "C5:fallback_parked:p0p1_comment"), value)
+        self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=False)), RECALL, "ON"), ("FALLBACK(SILENT)", None))
         # an unknown ledger is an unknown count and an unknown mismatch state: PARK
         unread = route(_chain(data_pr, codex_limit, lambda w: w.update(issue_comments_complete=False)))
         self.assertEqual((unread[0], TB.entry(unread[2])["thin"]["fallback_candidates"], TB.entry(unread[2])["thin"]["fallback_mismatch"]), (None, None, None))
         for fact, value in (("fallback_mismatch", None), ("fallback_mismatch", True), ("fallback_mismatch", "no"), ("fallback_candidates", None)):
             e2 = dict(e, thin=dict(e["thin"], p01_named=False, **{fact: value}))
-            self.assertEqual(D.review_route(e2, RECALL), (None, "C5:fallback_parked:" + ("mismatch" if fact == "fallback_mismatch" else "candidates")), (fact, value))
+            self.assertEqual(D.review_route(e2, RECALL, "ON"), (None, "C5:fallback_parked:" + ("mismatch" if fact == "fallback_mismatch" else "candidates")), (fact, value))
 
     def test_route_c_is_automation_data_on_the_allowlist_only(self):
         """Owner addendum c (fix round 4): route (c) merges only a PR that github-actions[bot] opened, whose every path
@@ -1480,9 +1493,16 @@ class ReviewRoute(unittest.TestCase):
                 continue
             self.assertEqual(got, None, name)
             self.assertIn(want, skipped, name)
-        # the same data PR with a completed Codex review or a Claude receipt merges by that review, at class HIGH
-        self.assertEqual(route(data_pr)[0], "CODEX")
-        self.assertEqual(route(_chain(data_pr, no_codex, claude_receipt()))[0], "CLAUDE")
+        # fix round 5 (#173/7188234670 P1-03, addendum d): the HIGH admission is route (c)'s ONLY. The same data PR with a
+        # completed Codex review or a Claude receipt is HIGH like any stored data: the owner's merge, never the executor's
+        for mutate in (data_pr, _chain(data_pr, no_codex, claude_receipt())):
+            got, skipped, _b = route(mutate)
+            self.assertIsNone(got)
+            self.assertEqual(skipped[0], "7:C2:risk:HIGH")
+        # and the shipped switch keeps route (c) itself OFF: the same data PR, Codex offline, parks for the owner
+        got, skipped, _b = route(_chain(data_pr, codex_limit, lambda w: w["switch"].update(fallback_route="OFF")))
+        self.assertEqual((got, skipped[0]), (None, "7:C5:fallback_parked:route_off"))
+        self.assertEqual(SHIPPED_SWITCH.get("fallback_route"), "OFF")
 
     def test_invariant_review_route_over_every_combination_under_the_recall_policy(self):
         import itertools
@@ -1496,7 +1516,7 @@ class ReviewRoute(unittest.TestCase):
             e = {"review": {"codex": {"status": cx}}, "author": {"s1": s1, "codex": codex, "claude_package": False},
                  "thin": {"bot": True, "claude": claude, "claude_written": written, "data_route": data, "fallback_candidates": cand, "ai": True, "docs_only": False,
                           "codex_offline": offline, "fallback_mismatch": mismatch, "p01_named": p01, "risk": risk}}
-            got, gate = D.review_route(e, RECALL)
+            got, gate = D.review_route(e, RECALL, "ON")
             self.assertEqual(got is None, gate is not None)
             if got is None:
                 continue

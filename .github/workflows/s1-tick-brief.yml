@@ -174,9 +174,14 @@ jobs:
           sparse-checkout: |
             scripts/governance
             00_FMOS
+            .github/workflows
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install the YAML parser (one wheel, pinned by hash; main's push filters are re-read here, fix round 5 D05)
+        run: |
+          printf '%s\n' 'PyYAML==6.0.3 --hash=sha256:ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc' > "$RUNNER_TEMP/requirements.txt"
+          python -m pip install --disable-pip-version-check --no-deps --only-binary :all: --require-hashes -r "$RUNNER_TEMP/requirements.txt"
       - name: Execute the one decided action (re-verified natively; writes only when the switch on main is LIVE)
         env:
           GITHUB_TOKEN: ${{ github.token }}
