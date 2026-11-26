@@ -5,6 +5,7 @@ a merge authorization, or proof that calibration was applied. No workflow actor
 is admitted until its run provenance has an independently configured verifier.
 """
 import json
+import hashlib
 import re
 from datetime import datetime
 from urllib.request import Request, urlopen
@@ -42,10 +43,14 @@ def _unique(pairs):
         result[key] = value
     return result
 
+class ReceiptConflict(ValueError):
+    pass
+
+
 def receipt_from_comments(comments, action_id):
     """Accept exactly one distinct, unchanged owner receipt; conflicting claims fail closed."""
     if not isinstance(comments, list):
-        return None
+        raise ValueError("invalid comments census")
     candidates = []
     for comment in comments:
         if not isinstance(comment, dict):
@@ -81,13 +86,13 @@ def receipt_from_comments(comments, action_id):
                 or readback.get("changed_blobs_match") is not True
                 or not isinstance(outcome, dict) or outcome.get("status") not in ("VERIFIED", "FALSIFIED", "BLOCKED")
                 or not isinstance(outcome.get("reason"), str) or not outcome["reason"].strip()):
-            return None
+            raise ReceiptConflict("malformed claim for action")
         candidates.append((comment["id"], data))
     if not candidates:
         return None
     candidates.sort(key=lambda item: item[0])
     if any(data != candidates[0][1] for _, data in candidates):
-        return None
+        raise ReceiptConflict("conflicting claims for action")
     return candidates[0]
 
 def fetch_owner_comments():
@@ -110,31 +115,125 @@ def fetch_owner_comments():
             return comments
     raise ValueError("incomplete comments census")
 
-def attach_owner_receipt(state, fetch=fetch_owner_comments):
-    """Wire only the exact ACK-bound registry action, not unrelated meta ledger keys."""
+def _get_native(path):
+    request = Request(f"https://api.github.com/repos/{REPO}/{path}",
+                      headers={"Accept": "application/vnd.github+json", "User-Agent": "research-receipt-reader-v1"})
+    with urlopen(request, timeout=8) as response:
+        raw = response.read(MAX_RESPONSE + 1)
+    if len(raw) > MAX_RESPONSE:
+        raise ValueError("oversize native metadata")
+    obj = json.loads(raw, object_pairs_hook=_unique)
+    if not isinstance(obj, dict):
+        raise ValueError("invalid native metadata")
+    return obj
+
+
+def verify_native_metadata(data, get=_get_native):
+    """Bounded WIRE-0 native metadata check, NOT readback or independent science."""
+    # The only original-owner implementation for this pilot is #2357.
+    if data.get("pr") != 2357:
+        return "NATIVE_METADATA_MISMATCH"
+    pr = get("pulls/2357")
+    run = get(f"actions/runs/{data['native_run_id']}")
+    base = pr.get("base") or {}
+    if (pr.get("number") != 2357 or pr.get("merged") is not True
+            or pr.get("merge_commit_sha") != data["merge_sha"]
+            or base.get("ref") != "main" or (base.get("repo") or {}).get("full_name") != REPO
+            or run.get("id") != data["native_run_id"] or run.get("head_sha") != data["merge_sha"]
+            or run.get("head_branch") != "main" or (run.get("repository") or {}).get("full_name") != REPO
+            or run.get("path") != ".github/workflows/shadow-registry-weekly.yml"
+            or run.get("status") != "completed" or run.get("conclusion") != "success"):
+        return "NATIVE_METADATA_MISMATCH"
+    return "NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED"
+
+
+def _attestation(comment_id, data):
+    encoded = json.dumps(data, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    return {"contract": "WIRE0_HISTORICAL_ATTESTATION_v1", "action_id": ACTION_ID,
+            "source_fingerprint": SOURCE_FP, "comment_id": comment_id,
+            "claim_sha256": hashlib.sha256(encoded).hexdigest(),
+            "claimed_pr": data["pr"], "claimed_merge_sha": data["merge_sha"],
+            "claimed_native_run_id": data["native_run_id"],
+            "claimed_review_receipt_id": data["review_receipt_id"],
+            "claimed_outcome_status": data["outcome"]["status"],
+            "scientific_authority": False}
+
+
+def _prior_attestation(previous):
+    old = (previous or {}).get("wire0_historical_attestation")
+    if (not isinstance(old, dict) or old.get("contract") != "WIRE0_HISTORICAL_ATTESTATION_v1"
+            or old.get("action_id") != ACTION_ID or old.get("source_fingerprint") != SOURCE_FP
+            or old.get("scientific_authority") is not False
+            or not _id(old.get("comment_id")) or not isinstance(old.get("claim_sha256"), str)
+            or not re.fullmatch(r"[0-9a-f]{64}", old["claim_sha256"])):
+        return None
+    # Only known, value-free fields survive a mutable prior snapshot.
+    allowed = {"contract", "action_id", "source_fingerprint", "comment_id", "claim_sha256",
+               "claimed_pr", "claimed_merge_sha", "claimed_native_run_id",
+               "claimed_review_receipt_id", "claimed_outcome_status", "scientific_authority"}
+    if (set(old) != allowed or not _id(old.get("claimed_pr"))
+            or not _id(old.get("claimed_native_run_id")) or not _id(old.get("claimed_review_receipt_id"))
+            or not _sha(old.get("claimed_merge_sha"))
+            or old.get("claimed_outcome_status") not in ("VERIFIED", "FALSIFIED", "BLOCKED")):
+        return None
+    return dict(old)
+
+
+def attach_owner_receipt(state, fetch=fetch_owner_comments, *, previous=None, verify=None):
+    """Separate persistent historical claims from current evidence and science.
+
+    Shared owner identity is not independent review. R1 and an authenticated
+    scientific verifier are required before any scientific outcome is populated.
+    """
+    prior = _prior_attestation(previous)
+    result_state = dict(state)
+    if prior:
+        result_state["wire0_historical_attestation"] = prior
     active = state.get("active_heavy_workstreams", [])
     if (state.get("sentinel_verdict") != "PASS" or state.get("binding_integrity") != "PRIMARY_COMPLETE"
             or state.get("primary_source") != "SHADOW_REGISTRY"
             or state.get("primary_target") != "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
             or len(active) != 1 or active[0].get("specialist_action") != "RECOVER_EVALUATOR"
             or active[0].get("evidence_fingerprint") != SOURCE_FP):
-        return state
+        return result_state
     proof = dict(state["execution_proof"])
-    proof.update({"action_id": ACTION_ID, "receipt_status": "MISSING_OR_UNVERIFIED"})
+    proof.update({"action_id": ACTION_ID, "receipt_status": "ABSENT",
+                  "receipt_verification": "NOT_VERIFIED", "native_run_id": None,
+                  "original_owner_pr": None, "independent_review": None,
+                  "main_readback": None, "scientific_outcome": None,
+                  "learning_calibration_applied": False})
+    result_state["execution_proof"] = proof
+    if fetch is None:
+        proof["receipt_status"] = "NOT_CHECKED"
+        return result_state
     try:
         result = receipt_from_comments(fetch(), ACTION_ID)
+        claim = _attestation(*result) if result else None
+    except ReceiptConflict:
+        proof["receipt_status"] = "CONFLICT"
+        return result_state
     except (OSError, ValueError, TypeError):
-        result = None
-    if result:
-        comment_id, data = result
-        proof.update({"receipt_status": "OWNER_ATTESTATION_RECEIVED",
-                      "receipt_comment_id": comment_id,
-                      "status": "OWNER_RECEIPT_PENDING_INDEPENDENT_VERIFICATION",
-                      "native_run_id": data["native_run_id"],
-                      "original_owner_pr": data["pr"],
-                      "independent_review": data["review_receipt_id"],
-                      "main_readback": data["readback"],
-                      "scientific_outcome": data["outcome"],
-                      "required_next_proof": "INDEPENDENT_NATIVE_AND_SCIENTIFIC_VERIFIER",
-                      "learning_calibration_applied": False})
-    return {**state, "execution_proof": proof}
+        proof["receipt_status"] = "SOURCE_UNAVAILABLE"
+        return result_state
+    if claim is None:
+        if prior:
+            proof["receipt_status"] = "HISTORICAL_CLAIM_NOT_CURRENTLY_PRESENT"
+        return result_state
+    if prior and prior["claim_sha256"] != claim["claim_sha256"]:
+        proof["receipt_status"] = "CONFLICT"
+        return result_state
+    result_state["wire0_historical_attestation"] = prior or claim
+    proof.update({"receipt_status": "OWNER_ATTESTATION_RECEIVED",
+                  "receipt_comment_id": claim["comment_id"],
+                  "status": "OWNER_RECEIPT_PENDING_INDEPENDENT_VERIFICATION",
+                  "required_next_proof": "INDEPENDENT_NATIVE_AND_SCIENTIFIC_VERIFIER"})
+    if verify is not None:
+        try:
+            native = verify(result[1])
+            proof["receipt_verification"] = native if native in (
+                "NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED", "NATIVE_METADATA_MISMATCH") else "NOT_VERIFIED"
+        except (OSError, ValueError, TypeError):
+            proof["receipt_verification"] = "NATIVE_SOURCE_UNAVAILABLE"
+    # Even a native metadata match does not prove readback, review independence,
+    # or a scientific disposition. No claimed fields enter execution authority.
+    return result_state

@@ -319,8 +319,9 @@ for bad in ([], [comment(user={"login":receipt.OWNER_LOGIN,"id":999})],
 accepted=receipt.attach_owner_receipt(pilot,lambda:[comment()])
 proof=accepted["execution_proof"]
 assert proof["action_id"]==receipt.ACTION_ID and proof["receipt_comment_id"]==45
-assert (proof["native_run_id"],proof["original_owner_pr"],proof["independent_review"])==(43,42,44)
-assert proof["main_readback"]==data["readback"] and proof["scientific_outcome"]==data["outcome"]
+assert all(proof[k] is None for k in ("native_run_id","original_owner_pr","independent_review","main_readback","scientific_outcome"))
+assert accepted["wire0_historical_attestation"]["claimed_native_run_id"]==43
+assert accepted["wire0_historical_attestation"]["scientific_authority"] is False
 assert proof["status"]=="OWNER_RECEIPT_PENDING_INDEPENDENT_VERIFICATION"
 assert proof["learning_calibration_applied"] is False and accepted["canonical_effect"] is False
 assert pilot["execution_proof"]["native_run_id"] is None
@@ -329,3 +330,34 @@ assert receipt.attach_owner_receipt(pilot,unavailable)["execution_proof"]["nativ
 wrong=deepcopy(pilot); wrong["active_heavy_workstreams"][0]["evidence_fingerprint"]="b"*64
 assert receipt.attach_owner_receipt(wrong,lambda:[comment()])==wrong
 print("PASS WIRE-0 owner receipt provenance, negative controls and no calibration authority")
+
+# R7 negative controls: historical claims are not scientific proof or fresh evidence.
+outage=receipt.attach_owner_receipt(pilot,unavailable,previous=accepted)
+assert outage["execution_proof"]["receipt_status"]=="SOURCE_UNAVAILABLE"
+assert outage["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+assert outage["execution_proof"]["scientific_outcome"] is None
+assert receipt.attach_owner_receipt(pilot,lambda:[],previous=accepted)["execution_proof"]["receipt_status"]=="HISTORICAL_CLAIM_NOT_CURRENTLY_PRESENT"
+conflict=receipt.attach_owner_receipt(pilot,lambda:[comment({**data,"native_run_id":999})],previous=accepted)
+assert conflict["execution_proof"]["receipt_status"]=="CONFLICT"
+assert conflict["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+inactive=receipt.attach_owner_receipt(wrong,lambda:[comment()],previous=accepted)
+assert inactive["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+assert inactive["execution_proof"]==wrong["execution_proof"]
+returned=receipt.attach_owner_receipt(pilot,lambda:[comment()],previous=inactive)
+assert returned["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+dry=receipt.attach_owner_receipt(pilot,None,previous=accepted)
+assert dry["execution_proof"]["receipt_status"]=="NOT_CHECKED"
+assert dry["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+native_data={**data,"pr":2357}
+native_pr={"number":2357,"merged":True,"merge_commit_sha":data["merge_sha"],"base":{"ref":"main","repo":{"full_name":receipt.REPO}}}
+native_run={"id":43,"head_sha":data["merge_sha"],"head_branch":"main","repository":{"full_name":receipt.REPO},"path":".github/workflows/shadow-registry-weekly.yml","status":"completed","conclusion":"success"}
+def native_get(path):
+    return native_pr if path=="pulls/2357" else native_run
+assert receipt.verify_native_metadata(native_data,native_get)=="NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED"
+assert receipt.verify_native_metadata(data,native_get)=="NATIVE_METADATA_MISMATCH"
+assert receipt.verify_native_metadata(native_data,lambda p: native_pr if p=="pulls/2357" else {**native_run,"head_sha":"b"*40})=="NATIVE_METADATA_MISMATCH"
+matched=receipt.attach_owner_receipt(pilot,lambda:[comment(native_data)],verify=lambda d:receipt.verify_native_metadata(d,native_get))
+assert matched["execution_proof"]["receipt_verification"]=="NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED"
+assert matched["execution_proof"]["scientific_outcome"] is None
+assert matched["execution_proof"]["learning_calibration_applied"] is False
+print("PASS R7 historical attestation retention, native metadata negatives, no scientific authority")
