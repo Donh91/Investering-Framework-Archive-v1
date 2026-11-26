@@ -82,5 +82,17 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(capture(raw, OBSERVED)["source_status"], "UNAVAILABLE")
 
 
+    def test_wrong_seal_rejected(self):
+        doc = json.loads(packet())
+        doc["path_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "source seal mismatch"):
+            capture(json.dumps(doc).encode(), OBSERVED)
+
+    def test_integer_authority_flag_rejected(self):
+        for key, flag in FLAGS.items():
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, "unexpected source authority"):
+                capture(packet(authority={**FLAGS, key: int(flag)}), OBSERVED)
+
+
 if __name__ == "__main__":
     unittest.main()
