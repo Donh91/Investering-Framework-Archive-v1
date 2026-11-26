@@ -9,3 +9,5 @@ Next gated increment: bind independent first-observed publication receipt and fu
 Acceptance: synthetic tests for wrong seal/authority/clock, missing statuses, conflict, idempotency, corruption and unavailable preservation. Native CI and exact-head independent review required. No production release claimed.
 
 Scope correction: keep offline custody code, tests and contract together inside the existing CRE shadow boundary. The native CRE scope guard remains unchanged. This is not the production CN writer.
+
+Local custody limits: observer_reported_at_utc is not tamper-evident in local storage. First write wins, not earliest claimed observation; a divergent same-clock packet is rejected but its bytes are not retained by v1. Do not infer a complete conflict census or first-known time from this archive. No tilted cohort scoring without ROUND3_GOVERNED_ACTIVATION and the existing scientific admission gates. Conflict retention and an authenticated publication receipt remain separate gated work.
