@@ -157,8 +157,136 @@
           "after_sha": "8aebb7d224b77bcacb587f66b58ac4f252c48d13"
         }
       ]
+    },
+    {
+      "candidate_id": "codex-research-compass-sentiment-false-pass-v1",
+      "predicates": [
+        {
+          "kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+          "workflow": "daily-compass.yml",
+          "count": 1
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json",
+          "field": "contract",
+          "value": "AUTO_MARKET_STATE_LATEST_POINTER_v1"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+          "field": "contract",
+          "value": "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
+        }
+      ]
+    },
+    {
+      "candidate_id": "codex-research-live-breadth-stablecoin-exclusion-integrity-v1",
+      "predicates": [
+        {
+          "kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+          "workflow": "research-owner-breadth-daily.yml",
+          "count": 1
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/2026-11-25/receipt.json",
+          "field": "status",
+          "value": "PASS"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/2026-11-25/receipt.json",
+          "field": "aggregate_replay",
+          "value": "PASS"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/2026-11-25/receipt.json",
+          "field": "run_id",
+          "value": "DT_TOP100_20261125T171523_629cf1619822"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/11/2026-11-25/owner_snapshot.json",
+          "field": "aggregate.membership_hash",
+          "value": "629cf16198221a61d34b2be33cf619b08f994f97609723612da89eaa8eb3343d"
+        }
+      ]
+    },
+    {
+      "candidate_id": "codex-research-experiment-outcome-maturity-censoring-v1",
+      "predicates": [
+        {
+          "kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+          "workflow": "unified-experimental-lifecycle-adjudication.yml",
+          "count": 1
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+          "field": "outcome_count_contract",
+          "value": "EXPERIMENT_OUTCOME_COUNTS_v2"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+          "field": "rules.matured_outcome_count_semantics",
+          "value": "STATUS_MATURED_ONLY"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+          "field": "rules.scientific_score_eligible_outcome_count_semantics",
+          "value": "STATUS_MATURED_AND_SCORE_ELIGIBLE_TRUE_AND_HIT_OR_MISS"
+        }
+      ]
+    },
+    {
+      "candidate_id": "codex-research-shadow-registry-runtime-integrity-v1",
+      "predicates": [
+        {
+          "kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+          "workflow": "shadow-registry-weekly.yml",
+          "count": 1
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "04_MARKET_LEARNING/shadow_registry/LATEST.json",
+          "field": "contract",
+          "value": "SHADOW_WEEKLY_RELEVANCE_SNAPSHOT_v1"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "04_MARKET_LEARNING/shadow_registry/LATEST.json",
+          "field": "authority",
+          "value": "RESEARCH_ONLY_NON_CANONICAL"
+        }
+      ]
+    },
+    {
+      "candidate_id": "codex-research-outcome-censor-reason-observability-v1",
+      "predicates": [
+        {
+          "kind": "N_NATURAL_SCHEDULED_SUCCESSFUL_RUNS",
+          "workflow": "automation-production-health.yml",
+          "count": 1
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+          "field": "contract",
+          "value": "ARCHITECTURE_HEALTH_DASHBOARD_v2_3"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+          "field": "outcome_count_contract",
+          "value": "EXPERIMENT_OUTCOME_COUNTS_v2"
+        }
+      ]
     }
   ],
-  "contract_revision": "1.5.0",
-  "verification_note": "Only explicitly machine-verifiable gates are listed. Adversarial runtime closure is bound to verified production-shaped replay receipts plus mission convergence. Adversarial qualification enrichment is intentionally configured but blocked until a real frozen 88-row enrichment/counting run becomes interpretable or explicitly source-terminal; merged code/tests alone cannot complete it. N_CONSECUTIVE_SUCCESSFUL_RUNS may declare after_sha to reset evidence after a follow-up repair; the anchor must descend from the task merge. N_HEALTH_HISTORY_MATCH consumes immutable distinct-run health receipts bound to observed main HEAD and never infers evidence from mutable LATEST alone. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow. Natural first-attempt schedule evidence and the independent Situation Room live-owner gate are both required after the verified PR #1397 precedence repair. They remain only necessary machine conditions; existing Mission Convergence and semantic truth must still pass."
+  "contract_revision": "1.6.0",
+  "verification_note": "Only explicitly machine-verifiable gates are listed. Adversarial runtime closure is bound to verified production-shaped replay receipts plus mission convergence. Adversarial qualification enrichment is intentionally configured but blocked until a real frozen 88-row enrichment/counting run becomes interpretable or explicitly source-terminal; merged code/tests alone cannot complete it. N_CONSECUTIVE_SUCCESSFUL_RUNS may declare after_sha to reset evidence after a follow-up repair; the anchor must descend from the task merge. N_HEALTH_HISTORY_MATCH consumes immutable distinct-run health receipts bound to observed main HEAD and never infers evidence from mutable LATEST alone. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow. Natural first-attempt schedule evidence and the independent Situation Room live-owner gate are both required after the verified PR #1397 precedence repair. They remain only necessary machine conditions; existing Mission Convergence and semantic truth must still pass. WIRE-0 five-item batch (2026-11-26): these machine predicates are NECESSARY observations, not a substitute for original post_fix_gate or mission convergence. Existing validate_receipt must establish all original requirements, including scoped exact-head tests, original source/readback, stablecoin exclusion census on the bound natural capture, sentiment unavailable/valid branch and Pages consumer, immutable outcome reconciliation, and Shadow Registry reviewed publication. The new predicates alone must not be described as completed original gates. No scientific promotion, historical rewrite, or fabricated convergence receipt. Keep missing or unsupported evidence blocked."
 }
