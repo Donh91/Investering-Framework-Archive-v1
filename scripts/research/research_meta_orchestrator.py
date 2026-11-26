@@ -372,6 +372,8 @@ def main():
     bindings=specialist_binding_report()
     state=orchestrate(policy,states,load_json(MEMORY,{}),load_json(VOI,{}),load_json(SENTINEL,{}),bindings)
     state=attach_specialist_intakes(state)
+    from research_action_receipt_v1 import attach_owner_receipt
+    state=attach_owner_receipt(state)
     if args.dry_run: print(json.dumps(state,indent=2,sort_keys=True)); return
     persist(state); print(json.dumps(state,indent=2,sort_keys=True))
 if __name__=="__main__": main()
