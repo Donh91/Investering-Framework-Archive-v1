@@ -117,7 +117,8 @@ def bind_publication(raw, capture, parity):
     for row in files:
         if (not isinstance(row, dict) or not isinstance(row.get("path"), str)
                 or not row["path"] or row["path"] in names
-                or row.get("status") != "PASS" or row.get("http_status") != 200
+                or row.get("status") != "PASS" or type(row.get("http_status")) is not int
+                or row["http_status"] != 200
                 or not sha(row.get("expected_sha256"), 64)
                 or row["expected_sha256"] != row.get("served_sha256")):
             raise ValueError("invalid, duplicate or nonpassing parity row")
@@ -151,6 +152,7 @@ def census(start, end, rows):
     slots = defaultdict(dict)
     digest_identity = {}
     duplicates = defaultdict(int)
+    first_reported = {}
     outside = 0
     for row in rows:
         if (row.get("contract") != "KOMPAS_LIVE_MEMORY_CAPTURE_v1"
@@ -181,17 +183,25 @@ def census(start, end, rows):
                 raise ValueError("same bytes, inconsistent status")
             duplicates[slot] += 1
         by_clock[digest] = row["source_status"]
+        key = (clock, digest)
+        first_reported[key] = min(first_reported.get(key, observed), observed)
     report = []
     clock = start
     while clock < end:
         by_clock = slots.get(clock, {})
         statuses = [v for by_digest in by_clock.values() for v in by_digest.values()]
         conflict = any(len(by_digest)>1 for by_digest in by_clock.values())
+        # Inventory deadline only: next UTC slot boundary, not authenticated PIT.
+        late_packets = sum(first_reported[(issued, digest)] >= clock + HOUR
+                           for issued, by_digest in by_clock.items() for digest in by_digest)
         state = ("MISSING" if not by_clock else "CONFLICT" if conflict else
-                 "MULTIPLE_ISSUES" if len(by_clock)>1 else statuses[0])
+                 "MULTIPLE_ISSUES" if len(by_clock)>1 else
+                 "LATE" if late_packets else statuses[0])
         report.append({"hour_utc": iso(clock), "state": state,
                        "unique_issue_clocks": len(by_clock), "unique_packets": len(statuses),
-                       "duplicate_observations": duplicates[clock]})
+                       "duplicate_observations": duplicates[clock],
+                       "late_packets": late_packets,
+                       "source_statuses": sorted(statuses)})
         clock += HOUR
     return {"contract": "KOMPAS_LIVE_MEMORY_CENSUS_v1",
             "scope": "CALLER_SUPPLIED_PRODUCER_CLOCK_INVENTORY_ONLY",
