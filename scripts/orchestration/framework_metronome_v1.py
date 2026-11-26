@@ -31,9 +31,9 @@ Targets (deliberately minimal; everything else already chains from these):
              8 commits / 300+ files); from :27 one deferral could miss :45 (review of this change).
              A dispatched run always builds (read-only token, no secrets); the push/workflow_run fallback
              builds only when no cron or manual run happened in the last hour, so it stays quiet.
-  S1EXEC     s1-executor.yml (no inputs) once after the newest cron or manual s1-tick-brief.yml run on main
-             COMPLETED with success, when no executor run was created since that completion and it completed at
-             most S1EXEC_MAX_AGE_MINUTES ago. GitHub creates no workflow_run event for a run started with this
+  S1EXEC     s1-executor.yml (no inputs) once after the newest s1-tick-brief.yml run on main that COMPLETED
+             with success (any event: a push or workflow_run fallback build publishes a brief too), when no
+             executor run was created since that completion and it completed at most S1EXEC_MAX_AGE_MINUTES ago. GitHub creates no workflow_run event for a run started with this
              workflow token, so the brief runs dispatched above never started the executor by themselves. The
              executor resolves that brief from the published issue, proves its run natively and evaluates a brief
              run at most once (its own rule); its job token stays read-only (SHADOW). Next tick after the brief:
@@ -168,20 +168,17 @@ def s1brief_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
 
 
 def s1exec_due(now: dt.datetime, brief_runs: list[dict], exec_runs: list[dict]) -> tuple[bool, str]:
-    """Once per completed, successful cron or manual brief run: the newest such run (by creation) must be completed
-    with success, at most S1EXEC_MAX_AGE_MINUTES ago, and no executor run (any event: a workflow_run of a cron brief
-    counts too) was created since it completed. An unreadable row suppresses, never doubles."""
+    """Once per completed, successful brief run of any event: the newest such run (by creation; a run in progress or
+    cancelled by the brief's concurrency group is not one) completed at most S1EXEC_MAX_AGE_MINUTES ago, and no executor
+    run (any event: a workflow_run of that brief counts too) was created since it completed. A fallback run that built
+    nothing costs one short executor run that ends NO_DECISION. An unreadable row suppresses, never doubles."""
     if any_active(exec_runs):
         return False, "TARGET_ACTIVE"
     try:
-        building = [r for r in brief_runs or [] if r.get("event", "schedule") in S1BRIEF_BUILDING_EVENTS]
-        newest = max(building, key=lambda r: utc(r["created_at"])) if building else None
+        done_ok = [r for r in brief_runs or [] if r.get("status") == "completed" and r.get("conclusion") == "success"]
+        newest = max(done_ok, key=lambda r: utc(r["created_at"])) if done_ok else None
         if newest is None:
             return False, "NO_BRIEF_RUN"
-        if newest.get("status") != "completed":
-            return False, "BRIEF_NOT_COMPLETED"
-        if newest.get("conclusion") != "success":
-            return False, "BRIEF_NOT_SUCCESS"
         done = utc(newest["updated_at"])
         if now - done > dt.timedelta(minutes=S1EXEC_MAX_AGE_MINUTES):
             return False, "BRIEF_TOO_OLD"

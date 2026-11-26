@@ -99,12 +99,28 @@ class DispatchedRunResolvesFromThePublishedBrief(unittest.TestCase):
         self.assertEqual(gh.runs[555]["triggering_actor"]["login"], "github-actions[bot]")
         self.assertEqual((out["result"], r.env["S1_BRIEF_EVENT"], gh.writes), ("WOULD_MERGE(pr=7,head=bbbbbbbb,risk=LOW,review=CODEX)", "workflow_dispatch", []))
 
-    def test_push_and_workflow_run_brief_runs_never_qualify(self):
+    def test_push_and_workflow_run_fallback_briefs_qualify_like_scheduled_ones(self):
+        """F2 closed: the brief's push and workflow_run fallback builds publish the same brief from the same native reads
+        (13 of the 62 briefs published 2026-11-25..26 were push builds). Both paths evaluate them."""
         for event in ("push", "workflow_run"):
             with self.subTest(event):
-                out, gh, _n, _r = published(mutate=lambda w, e=event: w["run"].update(event=e))
-                self.assertEqual((out["result"], gh.writes), (f"NO_DECISION(brief_run=555:event:{event})", []))
-                self.assertEqual(reads(gh, "issues/1156/comments"), [])                  # nothing read past the resolution
+                out, gh, _n, r = published(mutate=lambda w, e=event: w["run"].update(event=e))
+                self.assertEqual((out["result"], r.env["S1_BRIEF_EVENT"], gh.writes), ("WOULD_MERGE(pr=7,head=bbbbbbbb,risk=LOW,review=CODEX)", event, []))
+                out, gh, _n, _r = published(mutate=lambda w, e=event: w["run"].update(event=e),
+                                            env={"GITHUB_EVENT_NAME": "workflow_run", "S1_BRIEF_RUN_ID": "555", "S1_BRIEF_RUN_ATTEMPT": "1",
+                                                 "S1_BRIEF_MAIN": MAIN, "S1_BRIEF_EVENT": event})
+                self.assertEqual((out["result"], gh.writes), ("WOULD_MERGE(pr=7,head=bbbbbbbb,risk=LOW,review=CODEX)", []))
+        # the native run's event must be the brief's own, and an event the brief workflow does not have never qualifies
+        out, gh, _n, _r = published(run={"event": "push"})
+        self.assertEqual((out["result"], gh.writes), ("NO_DECISION(brief_run=555:run_binding)", []))
+        out, gh, _n, _r = published(mutate=lambda w: w["run"].update(event="pull_request"))
+        self.assertEqual((out["result"], gh.writes), ("NO_DECISION(brief_run=555:run_binding)", []))
+        self.assertEqual(reads(gh, "issues/1156/comments"), [])                          # nothing read past the resolution
+        # a fallback run that built nothing: its workflow_run executor run names it, the published brief is another run's
+        out, gh, _n, _r = published(env={"GITHUB_EVENT_NAME": "workflow_run", "S1_BRIEF_RUN_ID": "556", "S1_BRIEF_RUN_ATTEMPT": "1",
+                                        "S1_BRIEF_MAIN": MAIN, "S1_BRIEF_EVENT": "push"})
+        self.assertEqual((out["result"], gh.writes), ("NO_DECISION(published_run=555)", []))
+        self.assertEqual(reads(gh, "actions/workflows/s1-executor.yml/runs"), [])          # no evaluation reads for it
         # a dispatched run that names a brief run itself (S1_BRIEF_* not empty) is not proven, whatever it names
         for key in E.BRIEF_ENV:
             out, gh, _n, _r = published(env={key: {"S1_BRIEF_RUN_ID": "555", "S1_BRIEF_RUN_ATTEMPT": "1", "S1_BRIEF_MAIN": MAIN,
@@ -114,8 +130,8 @@ class DispatchedRunResolvesFromThePublishedBrief(unittest.TestCase):
         for event in ("schedule", "push", "pull_request"):
             out, gh, _n, _r = published(env={"GITHUB_EVENT_NAME": event})
             self.assertEqual((out["result"], gh.writes), ("BRIEF_UNVERIFIED(run_binding)", []), event)
-        # the workflow_run path is unchanged: a push or workflow_run brief run named by the event is refused
-        for event in ("push", "workflow_run"):
+        # the workflow_run path: an event that is not the brief's own (or none) is refused
+        for event in ("push", "workflow_run", "pull_request", ""):
             out, gh, _n, _r = published(env={"GITHUB_EVENT_NAME": "workflow_run", "S1_BRIEF_RUN_ID": "555", "S1_BRIEF_RUN_ATTEMPT": "1",
                                             "S1_BRIEF_MAIN": MAIN, "S1_BRIEF_EVENT": event})
             self.assertEqual((out["result"], gh.writes), ("BRIEF_UNVERIFIED(run_binding)", []), event)
@@ -166,8 +182,10 @@ class DispatchedRunResolvesFromThePublishedBrief(unittest.TestCase):
         self.assertEqual(r.resolve_main(), MAIN)
         r, gh, _n, _b, _d = setup(run={"conclusion": "failure"})
         self.assertIsNone(r.resolve_main())
-        r, gh, _n, _b, _d = setup(mutate=lambda w: w["run"].update(event="push"))
+        r, gh, _n, _b, _d = setup(mutate=lambda w: w["run"].update(event="pull_request"))
         self.assertIsNone(r.resolve_main())
+        r, gh, _n, _b, _d = setup(mutate=lambda w: w["run"].update(event="push"))
+        self.assertEqual(r.resolve_main(), MAIN)                                         # F2 closed
         r, gh, _n, _b, _d = setup()
         gh.issue_body = "garbage"
         self.assertIsNone(r.resolve_main())
@@ -250,7 +268,8 @@ class ShadowNeverWrites(unittest.TestCase):
         beat = lambda w: w["issue_comments"].append(TE.TB.comment(71, "S1_HEARTBEAT_v1 main=a contract=44444444", TE.TB.BOT, 5))
         for name, kw in {"merge decided": {}, "merge decided, heartbeat due": {"mutate": None},
                          "nothing actionable": {"mutate": lambda w: (beat(w), w.update(pulls=[], pr={}))},
-                         "a bot-dispatched brief": {"mutate": lambda w: w["run"].update(event="workflow_dispatch")}}.items():
+                         "a bot-dispatched brief": {"mutate": lambda w: w["run"].update(event="workflow_dispatch")},
+                         "a push fallback brief": {"mutate": lambda w: w["run"].update(event="push")}}.items():
             with self.subTest(name):
                 out, gh, _n, _r = published(mode="SHADOW", **kw)
                 self.assertEqual((out["mode"], gh.writes, out["writes"]), ("SHADOW", [], []))
@@ -293,21 +312,24 @@ def erun(created_min, event="workflow_dispatch", status="completed", rid=2):
 
 
 class MetronomeDispatchesTheExecutor(unittest.TestCase):
-    def test_due_once_after_a_completed_successful_building_brief(self):
+    def test_due_once_after_a_completed_successful_brief_run_of_any_event(self):
         now = T0 + dt.timedelta(minutes=31)
         self.assertEqual(M.s1exec_due(now, [brun(21)], []), (True, "DUE"))               # completed at :25, 6 minutes ago
-        self.assertEqual(M.s1exec_due(now, [brun(21, event="schedule")], []), (True, "DUE"))
+        for event in ("schedule", "push", "workflow_run"):                               # F2 closed: a fallback build publishes too
+            self.assertEqual(M.s1exec_due(now, [brun(21, event=event)], []), (True, "DUE"), event)
         self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(26)]), (False, "ALREADY_DISPATCHED"))
         self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(25, event="workflow_run")]), (False, "ALREADY_DISPATCHED"))   # a cron brief's workflow_run
         self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(10)]), (True, "DUE"))      # an executor run for the previous brief
         self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(30, status="in_progress")]), (False, "TARGET_ACTIVE"))
-        self.assertEqual(M.s1exec_due(now, [brun(29, status="in_progress")], []), (False, "BRIEF_NOT_COMPLETED"))
-        self.assertEqual(M.s1exec_due(now, [brun(21, conclusion="failure")], []), (False, "BRIEF_NOT_SUCCESS"))
+        self.assertEqual(M.s1exec_due(now, [brun(29, status="in_progress")], []), (False, "NO_BRIEF_RUN"))
+        self.assertEqual(M.s1exec_due(now, [brun(21, conclusion="failure")], []), (False, "NO_BRIEF_RUN"))
+        self.assertEqual(M.s1exec_due(now, [brun(21, conclusion="cancelled")], []), (False, "NO_BRIEF_RUN"))   # replaced by the concurrency group
         self.assertEqual(M.s1exec_due(now, [], []), (False, "NO_BRIEF_RUN"))
         self.assertEqual(M.s1exec_due(T0 + dt.timedelta(minutes=46), [brun(21)], []), (False, "BRIEF_TOO_OLD"))   # completed 21 min ago
-        # a newer push or workflow_run fallback run is not a building brief run: the newest building one decides
+        # the newest COMPLETED successful run decides: a run in progress or cancelled after it does not hide it
         self.assertEqual(M.s1exec_due(now, [brun(21), brun(28, event="push", status="in_progress", rid=3)], []), (True, "DUE"))
-        self.assertEqual(M.s1exec_due(now, [brun(21), brun(27, rid=3, status="in_progress")], []), (False, "BRIEF_NOT_COMPLETED"))
+        self.assertEqual(M.s1exec_due(now, [brun(21), brun(26, conclusion="cancelled", rid=3)], []), (True, "DUE"))
+        self.assertEqual(M.s1exec_due(now, [brun(15), brun(22, event="workflow_run", took=1, rid=3)], [erun(20)]), (True, "DUE"))   # a later fallback run
         self.assertEqual(M.s1exec_due(now, [dict(brun(21), updated_at=None)], []), (False, "RUN_ROW_UNREADABLE"))
 
     def test_the_tick_dispatches_the_executor_with_its_own_token_and_mechanism(self):

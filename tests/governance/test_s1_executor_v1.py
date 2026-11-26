@@ -444,7 +444,9 @@ class ModesAndBinding(unittest.TestCase):
     def test_invariant_a_decision_of_another_run_is_never_executed(self):
         # fix round 6 (F2): the brief run comes from the triggering event (S1_BRIEF_*); this run is a workflow_run
         for name, env in {"a re-run attempt": {"S1_BRIEF_RUN_ATTEMPT": "2"}, "another sha": {"S1_BRIEF_MAIN": "c" * 40},
-                          "a push brief run": {"S1_BRIEF_EVENT": "push"}, "a workflow_run brief run": {"S1_BRIEF_EVENT": "workflow_run"},
+                          # trigger round (F2 closed): a push or workflow_run brief run qualifies, but only as the run the brief names
+                          "a push run for a scheduled brief": {"S1_BRIEF_EVENT": "push"}, "a workflow_run run for a scheduled brief": {"S1_BRIEF_EVENT": "workflow_run"},
+                          "a pull_request brief run": {"S1_BRIEF_EVENT": "pull_request"},
                           "no brief event": {"S1_BRIEF_EVENT": ""}, "no brief run id": {"S1_BRIEF_RUN_ID": ""},
                           "this run on a schedule": {"GITHUB_EVENT_NAME": "schedule"}, "this run on a push": {"GITHUB_EVENT_NAME": "push"},
                           "a pull_request event": {"GITHUB_EVENT_NAME": "pull_request"}, "another branch": {"GITHUB_REF": "refs/heads/x"},
@@ -917,10 +919,12 @@ class WorkflowAndSwitch(unittest.TestCase):
                                "(github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && "
                                "github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && "
                                "github.event.workflow_run.head_repository.full_name == github.repository && "
-                               "(github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'workflow_dispatch')))")
+                               "(github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'workflow_dispatch' || "
+                               "github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_run')))")
         self.assertNotIn("needs", self.job)
         self.assertEqual(list(EXEC_WORKFLOW["jobs"]), ["execute"])
         self.assertEqual(self.job["concurrency"], {"group": "s1-executor", "cancel-in-progress": False})
+        self.assertEqual(E.BRIEF_EVENTS, ("schedule", "workflow_dispatch", "workflow_run", "push"))   # trigger round: F2 closed
         self.assertEqual((E.EVENTS, E.EXECUTOR_TRIGGER, E.SELF_TRIGGER, B.EXECUTOR_EVENTS),
                          (("schedule", "workflow_dispatch"), "workflow_run", "workflow_dispatch", ("workflow_run", "workflow_dispatch")))
 

@@ -59,7 +59,12 @@ MERGE_CALL_RESERVE = 80
 MERGE_WRITE_RESERVE = 5
 RECONCILES_PER_RUN = 3                 # EVIDENCE_BINDINGS op_reconciles_per_run
 MAX_ATTEMPTS_PER_HEAD = 1              # merge intents per PR head, ever: a refused merge is NOT retried, that head is the owner's
-EVENTS = ("schedule", "workflow_dispatch")      # the events of the BRIEF run this executor run may act for
+EVENTS = ("schedule", "workflow_dispatch")      # the brief runs that always build (the heartbeat's tick count)
+# Trigger round (F2 closed): the events of the BRIEF run this executor run may act for. Every event of the brief workflow
+# builds the same brief from the same native reads at github.sha on main (the event is only recorded, B.main "build"),
+# decide() never reads it, and TICK.md T2 and the C1b anchor (B.RUN_EVENTS) already accept all four: a published brief
+# of a push or workflow_run fallback build is the same decision input as a scheduled one.
+BRIEF_EVENTS = B.RUN_EVENTS
 EXECUTOR_TRIGGER = "workflow_run"              # fix round 6 (F2): the event of this executor run itself
 # Trigger round (2026-11-26): GitHub creates no workflow_run event for a brief run that the metronome dispatched with the
 # workflow token, so such a brief never started the executor. The metronome now also dispatches s1-executor.yml; such a
@@ -883,9 +888,9 @@ class Run:
         if str(d.get("run_id")) != env.get("S1_BRIEF_RUN_ID") and str(env.get("S1_BRIEF_RUN_ID") or "").isdigit():
             return end("NOOP", None, None, f"NO_DECISION(published_run={d.get('run_id')})")
         if not (env.get("GITHUB_REPOSITORY") == B.REPO and env.get("GITHUB_REF") == "refs/heads/main"
-                and env.get("GITHUB_EVENT_NAME") in (EXECUTOR_TRIGGER, SELF_TRIGGER) and env.get("S1_BRIEF_EVENT") in EVENTS
+                and env.get("GITHUB_EVENT_NAME") in (EXECUTOR_TRIGGER, SELF_TRIGGER) and env.get("S1_BRIEF_EVENT") in BRIEF_EVENTS
                 and str(d.get("run_id")) == env.get("S1_BRIEF_RUN_ID") and str(d.get("run_attempt")) == env.get("S1_BRIEF_RUN_ATTEMPT")
-                and d.get("main") == env.get("S1_BRIEF_MAIN")):
+                and d.get("main") == env.get("S1_BRIEF_MAIN") and brief.get("event") == env.get("S1_BRIEF_EVENT")):   # trigger round: the brief names its event
             return end("NOOP", None, None, "BRIEF_UNVERIFIED(run_binding)")
         cfg = D.thin_config(self.files.get("switch"))
         if cfg != brief.get("thin") or cfg["executor"] != d["executor"] or cfg["review_policy"] != d["review_policy"]:
@@ -979,7 +984,7 @@ class Run:
         None when it qualifies (and the S1_BRIEF_* of this run are set from the native run), else the reason. The run
         must be exactly what the previous build's C1b anchor accepts (B.previous_anchor: a run of the brief workflow on
         main of this repository at the brief's main and attempt, COMPLETED with success, the brief generated inside the
-        run and the issue not edited after it), started by schedule or workflow_dispatch; and this checkout must be the
+        run and the issue not edited after it), started by an event of the brief workflow (BRIEF_EVENTS); and this checkout must be the
         brief's main (the workflow checks it out), so the code that evaluates it is the code that built it."""
         issue, rid = self.published_doc, brief.get("run_id")
         if not isinstance(issue, dict):
@@ -993,7 +998,7 @@ class Run:
         _known, _halt, why = B.previous_anchor(issue, brief, run, self.now_fn())
         if why is not None and why != "no_checked_through":     # no_checked_through is about the C1b point, not the run
             return why
-        if run.get("event") not in EVENTS:
+        if run.get("event") not in BRIEF_EVENTS:
             return f"event:{run.get('event')}"
         if not checkout:                                         # the resolve step: before the checkout of that SHA
             return None
