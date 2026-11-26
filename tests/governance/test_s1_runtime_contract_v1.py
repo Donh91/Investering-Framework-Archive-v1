@@ -14,7 +14,8 @@ S1 = ROOT / "00_FMOS" / "S1"
 KEYS = ["contract", "task_id", "owner_issue", "schedule", "bootstrap_path",
         "bootstrap_version", "action_loop_path", "action_loop_blob", "tick_path", "tick_blob", "lane_switch_path", "lane_switch_blob", "rubric_blobs"]
 RUBRICS = ["00_FMOS/S1/STEWARD_STATES.md", "00_FMOS/S1/REVIEW_ADMISSION.md", "00_FMOS/S1/OWNER_VISIBILITY.md",
-           "00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt", "00_FMOS/S1/EVIDENCE_BINDINGS.md", "00_FMOS/S1/EDGE_LEDGER.md"]
+           "00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt", "00_FMOS/S1/EVIDENCE_BINDINGS.md", "00_FMOS/S1/EDGE_LEDGER.md",
+           "00_FMOS/S1/OBSERVER_BOOTSTRAP.txt"]   # section 0.2i: the read-only task text for when the executor is LIVE
 # Every file under 00_FMOS/S1/ is pinned (contract, bootstrap 3b or rubric_blobs) or is a legacy locator file.
 PINNED_BY_CHAIN = {"ACTION_LOOP.md", "TICK.md", "BOOTSTRAP.txt", "RUNTIME_CONTRACT.json", "REVIEWED_MERGE_LANE.json"}
 LEGACY = {"MISSION.md", "README.md", "OPERATING_MANIFEST.json"}
