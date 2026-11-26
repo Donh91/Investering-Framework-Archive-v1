@@ -194,3 +194,42 @@ class RecallClosure(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SurvivorKillers(unittest.TestCase):
+    """Mutants that survived the first fix-round-4 run (N03, N09, N13, N25, N28): each gets a direct test."""
+
+    def test_n03_an_unknown_independence_is_no_route_b_receipt(self):
+        d, b = decide(TD.no_codex, TD.claude_receipt(TD.CLAUDE_OK.replace("INDEPENDENT_DETACHED", "TRUST_ME")))
+        self.assertNotEqual(d["action"], "MERGE")
+        self.assertIsNone(B.claude_receipt_fields(HEAD, [TB.comment(7165386485, TD.CLAUDE_REQUEST, TB.OWNER, 200),
+                                                          TB.comment(20, TD.CLAUDE_OK.replace("INDEPENDENT_DETACHED", "TRUST_ME"), TB.OWNER, 100)]))
+
+    def test_n09_high_data_needs_a_low_or_medium_lane_floor(self):
+        e = {"thin": {"data_route": True, "risk": "HIGH"}, "lane": {"risk_floor": "LOW"}, "item": None}
+        self.assertIs(D.data_admitted(e), True)
+        for floor in ("HIGH", "OWNER_GATED", "UNCLEAR", None):
+            self.assertIs(D.data_admitted(dict(e, lane={"risk_floor": floor})), False, floor)
+        self.assertIs(D.data_admitted(dict(e, thin={"data_route": "yes", "risk": "HIGH"})), False)
+
+    def test_n13_evidence_that_changes_after_the_intent_stops_the_call(self):
+        """The body is no gate, but it is part of the evidence: a body edited after the intent is not the PR that was verified."""
+        body = lambda w, g, n: setattr(g, "after_intent", lambda g2: g2.pull.update(body="one more sentence after the intent"))
+        out, gh, _n, _d = TE.execute(mutate=TE.BEAT, live=body)
+        self.assertEqual(TE.tokens(gh), ["S1_LANE_MERGE_INTENT_v1"], out["result"])
+        self.assertEqual(out["result"], "MERGE_ABORTED_AFTER_INTENT(7:C8:evidence_changed_after_intent)")
+
+    def test_n25_a_label_is_repaired_only_for_a_natively_merged_head(self):
+        pending = TB.comment(700, f"S1_CODEX_RECALL_PENDING_v1\npr: 7\nhead: {HEAD}\nmerge: {'9' * 40}", TB.BOT, 500)
+        run, gh, _n, body, d = TE.setup(mutate=lambda w: w["issue_comments"].append(pending), policy=RECALL)
+        run.brief, run.decision, run.mode = dict(B.parse_body(body), recall={"pending": 1, "items": [{"pr": 7, "head": HEAD, "codex": "NONE"}]}), d, "LIVE"
+        gh.labels[7] = []
+        self.assertIsNone(run.recall(gh.w["issue_comments"]))                     # PR 7 is open in this world: no repair
+        self.assertEqual(gh.writes, [])
+
+    def test_n28_the_executor_reads_the_hard_lines_in_the_live_diff(self):
+        live = lambda w, g, n: next(f for f in w["pr"][7]["files"] if not f["filename"].endswith(".md")).update(patch="@@\n+client.send_transaction(signed)\n")
+        out, gh, _n, d = TE.execute(mutate=TE.BEAT, live=live)
+        self.assertEqual(d["action"], "MERGE")
+        self.assertEqual(gh.writes, [])
+        self.assertIn("7:C2:judgment:diff", out["result"])
