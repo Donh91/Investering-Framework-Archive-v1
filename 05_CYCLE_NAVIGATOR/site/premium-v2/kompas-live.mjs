@@ -221,7 +221,7 @@ export function liveViewModel(json,{lang='da',hz=3,asset='BTC',nowMs=Date.now(),
  const policyAge=json.display_rules?.client_stale_after_minutes;
  const captureAge=json.display_rules?.freshness_sla_minutes;
  if(!Number.isFinite(nowMs)||!Number.isFinite(asOf)||!Number.isFinite(issued)||
-    asOf>issued||issued>nowMs||issued-asOf>MAX_CAPTURE_AGE_MIN*60e3||
+    asOf>issued||issued>nowMs+5*60e3||issued-asOf>MAX_CAPTURE_AGE_MIN*60e3||
     policyAge!==MAX_BROWSER_AGE_MIN||captureAge!==MAX_CAPTURE_AGE_MIN)
   return unavailableModel(base,'SOURCE_CLOCK_INVALID',lang);
  if(nowMs-asOf>MAX_BROWSER_AGE_MIN*60e3)
