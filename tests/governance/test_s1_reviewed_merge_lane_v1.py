@@ -24,6 +24,7 @@ SECTION_F_SHA256 = "8aa223b8bd06d884caacc0ea4990599d65a5bd8c2eae515d0e0fcfa9a6a5
 SECTION_SHA256 = "f8b5193a781c767b63a2cfdaa93db689e64aa8e73fe95ce93f68e0e9d7390ba6"
 SECTION_H_SHA256 = "f38aed1448cc7d9ea08e6f2d1788bc6d5174d8abefd7196facb0ab70fa91c1ad"
 SECTION_G_SHA256 = "15c9cccf64080751106d86452d6ee4c88be3ab81ed3fa5768593f20cc73add0a"
+SECTION_I_SHA256 = "e385567976bb1879a7c0fc1b70280e99c574042d7ada299a8c499b2779598af7"
 BOOTSTRAP_TEMPLATE_SHA256 = "21ba6c082a0706b70d2838b1a275f05ab67539bfec908b78b1cc3a277f8936b8"
 LINE_PINS = {'C2': 'ff0b1fb2b84c71181c36fa96323d7bb9400e4d4e75e2700158a2f617942b4e63', 'C3': '496ded0833856ec8f55aa9b2504a53653137fa2d96737ccad9c2f5ba61db30d6', 'C5': 'ba69b63c2563d19735dc0c8ea3c1160c36a71935d0b49410b788d749de172c08', 'CC_ONLY': 'd07a6e1d1a4cef55abb790edca32e261d15958e5969e4a1fe782165e4329bef7', 'CC_PR': '85bf8e3655a52a657d20f2992ccb40acc0d69cc7f3ae182a8401550e0f22e423', 'H1': '792e808899def4bb84452f7045b25420f330dfc8c0390f5c52a80323f5c8f1cf', 'H2': 'c76bf5513a523db56a0ae05357889cca0365d8b7d11bf3bb8b8b65b70414f815', 'H3': 'a9fb6bc830284ee5e0e38d1fc80283037274248fd109b502c13edde79dd5af5f', 'H4': 'd47f6f701a0744ad1e8076b4c4bbdd7ed77578c4e3d014800d7ad11b6909da7e', 'H5': 'ed6697482618d2cf6a5de633fbae9b5821c7909d40d963305191ab5ce65be311', 'H6': '4d6a43e793d8f6bcfe39028057a586416756febe05c3601c83c0f9a358474d6a', 'H7': '73981c63af506f153556961808dcac7d35bacb20d510c241e5565c6bb022d4ea', 'H8': '0343db2e8f9173b68600baaa0f8cbaf75eb2fe7247d243fdff7bb1948fea9b0b', 'LADDER': '9fe72664e57b9414dc18344a81e031eca57290a4547e4077fd81ffc15705eb40', 'LANE_INTEGRITY': 'd3d4818152a356742bed34c9b3216cceaa7b83cd503ba357ea726b90e03db140', 'LOOP_GUARD': '8487a53dfabae7732002e3adaba9a693a62e46d94997bd23bd9d0670d0a87768', 'OBS': 'a40fcc3c0dc848c71afdddc8e26b73ca068179886535369b8a0898d2ceb70ee8', 'ONE_ACTION': 'c326ce2c2ec993192d095bcda00372812214f5f47c41f99f40fb2b44a65c47fa', 'OWNER_GATED': '5a7c1317ca30993a8e7320ddc06a0ec75d514657b1ff81edcd71a0ba18afc2f8', 'RULE1': '54fd60bdd827ab1a91e6eb08747629c99b0aab5476c4d1e991336bc73f5446d4', 'RULE2': '25583e3b4601cb26582c5d816b9602ffa5538d2f57a48afaf24a3a8acc08ad4c', 'RULE3': 'cc765b466b981ea2106924425de3e9361b8eb958e723bd9c290c2f02c9d72c6f', 'RULE4': '4e29a51f082dda2c14cbdd5bb9b5524bb0a78cd20ed2566df8d736b6becfbeef', 'RULE5': 'abc0f14dab6e7bdd3f940fcbe9a377cb0d2a532c07054755df6f305b1ed40969', 'RULE5B': '960544bd5c356dbde81dc12346a34086531c2b6b7f49cef3cf77ba150edac885', 'RULE6': '03d16c79132996d0ae4bf298b9626d06aee80802641068dbb02b5f66c72ad261', 'RULE7': 'c1fc79408a137c8ac96a6d22ee409cf43622db1d5aa910dc014eb6740cb44b25', 'WAITING': '7495b6701b652bca13501fc5ebb8e7eb78c7b6e0f4cd585765ffce87bea173fe'}
 PINNED = ("AGENTS.md", "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json", ".github", ".agents", "scripts/governance",
@@ -51,6 +52,12 @@ def section_0_2g():
 def section_0_2h():
     text = AGENTS.read_text(encoding="utf-8")
     start = text.index("### 0.2h S1 v3.1 tick brief")
+    return text[start:text.index("### 0.2i ", start)]
+
+
+def section_0_2i():
+    text = AGENTS.read_text(encoding="utf-8")
+    start = text.index("### 0.2i S1 is GitHub: decision and executor in GitHub Actions")
     return text[start:text.index("### 0.3 ", start)]
 
 
@@ -66,6 +73,101 @@ class PinTest(unittest.TestCase):
         # privileged-closure bullet of 0.2g: the path lists are derived at the PR head and at main, not enumerated.
         self.assertEqual(hashlib.sha256(section_0_2g().encode("utf-8")).hexdigest(), SECTION_G_SHA256)
         self.assertEqual(hashlib.sha256(section_0_2h().encode("utf-8")).hexdigest(), SECTION_H_SHA256)
+        # 0.2i (S1 is GitHub) is added after 0.2h; sections 0.2e to 0.2h keep their hashes.
+        self.assertEqual(hashlib.sha256(section_0_2i().encode("utf-8")).hexdigest(), SECTION_I_SHA256)
+
+    def test_key_sentences_0_2i(self):
+        sec = section_0_2i()
+        for sentence in ("that merge puts the executor in SHADOW: it grants no merge and no write.",
+                         "The executor goes LIVE only by a second owner-present PR",
+                         "The decision is a function of the published brief alone",
+                         "it is its own workflow, started by `workflow_run` only after a run of the brief workflow on main, itself started by `schedule` or `workflow_dispatch`, has COMPLETED with success",   # fix round 6 (F2)
+                         "It never runs on a pull-request event",
+                         "it checks out and runs main's own scripts only; it never executes PR code; it holds no secret",
+                         "reads `\"executor\": \"LIVE\"` (missing, unknown or unparsable: `OFF`; `SHADOW`: every read and no write)",
+                         "the repository variable `S1_EXECUTOR_HOLD` is empty (the variable can only stop it)", "One action per run.",
+                         "`merge_method: squash` and `sha: <the decision's exact head>`", "A 405, a 409 or any other failure is STOP: no retry.",
+                         "`CODEX_FINAL_REQUIRED` (missing or unknown reads as this)",
+                         "**`CODEX_CLAUDE_OR_OFFLINE_RECALL` is the owner's review route of 2026-11-25, and this section ships with it.**",
+                         "(a) the completed Codex review of the exact head; (b) a Claude exact-head APPROVE receipt",
+                         "never for a head Claude wrote (a `claude` branch, a Claude trailer, a Claude Code body) and never for a head S1 wrote", "(c) the Codex-offline fallback of the next bullet",
+                         "it may not be shipped without a new owner decision",
+                         "Route (c) applies only when Codex is demonstrably unavailable, by one of three signals read natively",
+                         "A request that is pending inside its 24 hours is never such a signal.",
+                         "No repository variable can switch it on.", "It needs TWO executor runs.",
+                         "at least 50 minutes and at most 24 hours after a candidate that is proven to be an executor run's",
+                         "merges only when its hash is equal", "Each run proves the offline signal for itself.",
+                         "A mismatch is PARK: the run that disagrees posts its own candidate, and two candidates for one head with different hashes park that head for the owner",
+                         "after 3 candidates for one head it is parked for the owner", "Any unknown fact is PARK.",
+                         "SHADOW posts no candidate, so SHADOW only ever shows a first run.",
+                         "Route (c) is the one case with no review at all",
+                         "route (b) proves the owner account and the text of a receipt, not who reviewed",
+                         "they share every blind spot and agree on a wrong answer as readily as on a right one",
+                         "since fix round 4 it can no longer stand in for the first of the two fallback runs, which is proven by that run's own execute log",
+                         "**Route (b) proves only the owner account:**", "and never for a head S1 wrote",
+                         "`lane_eligible: YES`, an `independence` field, `report`, a 40-hex `report_blob` and a 40-hex `bridge_commit`",
+                         "whose `request` names a real comment of that PR",
+                         "named on the owner's first line as `CLAUDE_RECEIPT_UNVERIFIED`",
+                         "A usage-limit answer is a Codex comment that begins with the connector's own sentence, `You have reached your Codex usage limits`.",
+                         "A request counts only when `Donh91` posted `@codex review` after this head's last commit and never edited it.",
+                         "Codex has posted nothing anywhere in the repository since the request",
+                         "and the executor reads it again; an incomplete read, or evidence older than that read, is no signal.",
+                         "**Route (c) merges repository automation's data PRs only (owner addendum c, 2026-11-26):**",
+                         "Anything else is parked for the owner (`fallback_parked:not_data`); all code needs route (a) or (b).",
+                         "and is admitted at HIGH only by this allowlist; any other HIGH and anything above HIGH stays a `C2:risk` gate.",
+                         "It then runs the whole verification again, by the same code, against the ledger as it is now",
+                         "Before EVERY write, a comment or a label included, the executor reads the hold variable, the switch and the RUNTIME_CONTRACT blob at current main live",
+                         "The executor acts only when the one open brief issue holds exactly this run's decision block",
+                         "An executor intent (the Actions bot, naming its run) is settled only by an outcome bound to it exactly",
+                         "The first candidate is proven by the `execute` job's own log of the run it names",
+                         "**Pre-LIVE gates (fix round 4), each in that PR with its evidence:**",
+                         "protected-main compatibility is designed and tested before branch protection or a ruleset is turned on",
+                         "a run that could not verify its inputs (pins, publication, switch, contract, hold, ledger, identity, ruleset census) is `DEGRADED`, never `OK`",
+                         "a receipt never decides it, so a posted `S1_CODEX_RECALL_CLEARED_v1` takes nothing off the count",
+                         "the owner's written acceptance, in that PR, of the two residual risks of the review route",
+                         "could settle an intent with an exact `ABSENT` outcome",
+                         "the receipt `S1_CODEX_RECALL_PENDING_v1` on #1156 (PR, head, merge commit, both run ids) and the label `codex-recall-pending` on the PR",
+                         "The flag clears only on Codex's completed review of that head",
+                         "Its only writes are comments on #1156, the merge call, and adding or removing the one label `codex-recall-pending`.",
+                         "`NATIVE_GATES` merges only a PR that changes plain documents only and that nothing marks as written by S1, Codex, another AI or a bot.",
+                         "a native `CHANGES_REQUESTED` blocks on whatever commit it was made", "a push never lifts it.",
+                         "ANY non-empty value of that variable holds, `0`, `false`, `no` and `off` included",
+                         "(twice; the second read is the last read before the intent)",
+                         "One merge attempt per PR head, ever",
+                         "in a changed path or in the PR title, matched also inside camelCase, snake_case and kebab-case identifiers",
+                         "in the PR body, a positive-action phrase or a strong identifier for exclusions 4, 5 and 8 that its sentence does not negate or disclaim",
+                         "**The word lists are best effort and prove nothing.**",
+                         "What keeps money, credential and custody code from an unreviewed merge is gate (d), not the lists.",
+                         "A REVIEWED PR that changes such code under names the lists do not hold is an executor merge.",
+                         "A P0 or P1 written in a PR conversation comment or in a review summary is NOT read by routes (a) and (b); only a review thread is. Route (c) parks on it.",
+                         "or when a conversation comment or a review summary of the PR names P0 or P1.",
+                         "For that the bot's identity is not enough",
+                         "An intent is settled only by a never-edited post of `Donh91`, or by a never-edited bot post that names its run (`executor: GITHUB run=<id>`)",
+                         "exits non-zero, which fails its own run only (never the brief's)",   # fix round 6 (F2)
+                         "pins the actions of that job by commit SHA",
+                         "the hold labels and the label `codex-recall-pending` created",
+                         "A `CLAUDE_REVIEW_v1` is never required.",
+                         "risk HIGH, HIGH_IMPACT, EXTREME or unclear (so gate (f) is never used by the executor)",
+                         "a merge made with the workflow token starts no workflow",
+                         "An active ruleset or a protected main is `ruleset_unproven`: no executor merge.",
+                         "Such a post can only stop a merge or suppress a duplicate, with one exception: settling an intent, which unblocks the lane.",
+                         "`00_FMOS/S1/OBSERVER_BOOTSTRAP.txt`, verbatim: one read and no write of any kind",
+                         "gives the `execute` job, and only that job, `contents: write`, `pull-requests: write` and `issues: write`",
+                         "`actions: write` is not needed and is not granted.",
+                         "Monday 09:30–10:30 read-only (checked before every write)",
+                         "Set the repository variable `S1_EXECUTOR_HOLD` or disable the workflow",
+                         # fix round 3 (ChatGPT audits): the final look, the tri-state readback, the live hold, health
+                         "**Final look (fix round 3).** Between the intent and the merge call the executor reads again",
+                         "These reads shrink the window, they do not close it: main is not protected and no ruleset is active, so GitHub enforces only the exact head.",
+                         "One unreadable path is never MATCH: no receipt, the intent stays open.",
+                         "The hold is not instant for a job that is already running",
+                         "a merge call already sent cannot be stopped", "`gh run cancel <run id>`",
+                         "a green build is never evidence of a green executor",
+                         "past that, a segment with equal ends is a `C1B_GAP` on the owner's first line and the decision of that brief merges nothing",
+                         "A decision whose pins do not verify allows no write of any class",
+                         "no longer stops the decision over the PRs read in full; every other unread item still does",
+                         "A brief publishes every recall its build read", "The fallback evidence hash also binds the RUNTIME_CONTRACT blob and the review policy."):
+            self.assertIn(sentence, sec)
 
     def test_key_sentences_0_2h(self):
         for sentence in ("grants S1 no new merge class, write target, schedule or identity and removes no gate",
@@ -218,7 +320,24 @@ class LegacyProvenanceTest(unittest.TestCase):
 class SwitchTest(unittest.TestCase):
     def test_schema(self):
         doc = json.loads(LANE.read_text(encoding="utf-8"))
-        self.assertEqual(sorted(doc), ["clears_halt", "contract", "decided", "max_merges_per_tick", "pins", "policy", "state", "steward_state"])
+        self.assertEqual(sorted(doc), ["clears_halt", "contract", "decided", "executor", "fallback_data_allowlist", "fallback_route", "max_merges_per_tick", "pins", "policy",
+                                       "review_policy", "state", "steward_state"])
+        # owner addendum c (fix round 4): route (c)'s positive allowlist lives here, so a reviewed PR is the only way to change it
+        import importlib.util, sys
+        sys.dont_write_bytecode = True
+        spec = importlib.util.spec_from_file_location("s1_decision_v1_lane", ROOT / "scripts" / "governance" / "s1_decision_v1.py")
+        D = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(D)
+        self.assertIsNotNone(D.fallback_allowlist(doc))
+        # fix round 5 (P1-02, P1-11, N02): route (c) has its own switch and ships OFF; LIVE does not turn it on
+        self.assertEqual(doc["fallback_route"], "OFF")
+        self.assertEqual(D.thin_config(doc)["fallback_route"], "OFF")
+        # section 0.2i: the executor of this file is never LIVE without write permissions on the execute job, and this
+        # test and tests/governance/test_s1_executor_v1.py pin both together (the enable PR changes both)
+        self.assertIn(doc["executor"], {"OFF", "SHADOW", "LIVE"})
+        # the strict policy or the owner's review route of 2026-11-25; NATIVE_GATES stays a recognised value of the decision
+        # module, and section 0.2i says it may not be shipped without a new owner decision
+        self.assertIn(doc["review_policy"], {"CODEX_FINAL_REQUIRED", "CODEX_CLAUDE_OR_OFFLINE_RECALL"})
         self.assertIn(doc["steward_state"], {"ON", "OFF"})
         self.assertEqual(doc["contract"], "S1_REVIEWED_MERGE_LANE_v1")
         self.assertIn(doc["state"], {"ON", "OFF"})
