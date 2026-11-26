@@ -320,6 +320,7 @@ class Run:
         data_ok = D.data_route(pr, files, True, commits, cc, D.fallback_allowlist(self.files["switch"]))[0]   # addendum c, from THIS run's reads
         admitted = D.data_admitted({"thin": {"data_route": data_ok, "risk": facts["risk"]}, "lane": {"risk_floor": floor}, "item": item})
         need(risk == m.get("risk") and D.merge_risk_ok(risk, admitted), f"{n}:C2:risk")
+        need(facts["diff_x"] == [] or data_ok, f"{n}:C2:judgment:diff")   # fix round 4: the hard lines on every route, from the live diff
         if admitted:                                              # a stored-data merge: every path a plain file at the head (no link, no mode change)
             entries = self.native.tree_entries(head, [f.get("filename") for f in files])
             need(all(v[0] == "PRESENT" and v[1] == "100644" and v[2] == "blob" for v in entries.values()), f"{n}:C2:data_mode")

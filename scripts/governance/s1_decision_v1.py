@@ -168,6 +168,12 @@ FALLBACK_AUTHOR = {"login": "github-actions[bot]", "id": 41898282, "type": "Bot"
 ALLOWLIST_FORBIDDEN = (".github/", ".agents/", "00_FMOS/", "01_CORE_FRAMEWORK/", "07_PROMPTS_AND_AGENTS/", "scripts/", "tests/", "schemas/", SITE_PREFIX)
 DATA_STATUSES = ("added", "modified")                     # never removed, renamed, copied or a status this code does not know
 MAX_DATA_COMMITS = 5
+# Secret SHAPES in a data PR's added lines (a data file holds no names to read, so a word list would park every real
+# snapshot, ChatGPT #3 / addendum c): a PEM private key block, and the fixed prefixes of common live tokens. The native
+# privacy-scan job (C3) stays the primary credential gate; this only parks.
+SECRET_SHAPE = re.compile(r"-----BEGIN [A-Z ]{0,20}PRIVATE KEY-----|(?<![A-Za-z0-9])(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}"
+                          r"|sk-[A-Za-z0-9_-]{30,}|AKIA[0-9A-Z]{16}|xox[abprs]-[A-Za-z0-9-]{20,})")
+HARD_LINE_LISTS = ("x4", "x5", "x8")                       # credentials and custody, money and trading, Round 3
 
 NAMED_HIGH = re.compile(r"(?i)high[_ -]?impact|" + _W + r"extreme" + _E + r"|owner[_ -]?gated")
 DIRECTION_WORDS = re.compile(r"(?i)roadmap|priorit|master[_ -]?plan|" + _W + r"mission" + _E + r"|strateg|deprecat|" + _W + r"remov(?:e|es|ed|al|ing)" + _E
@@ -414,6 +420,16 @@ def entry_facts(pr, files, files_complete, push_filters):
         if name.lower().endswith(BINARY_SUFFIXES) and f.get("status") != "removed":
             binary.append(name)
     x, title_forms, body_forms = [f"{code}:body" for code in body_hits(body)], word_forms(title), word_forms(body)
+    # fix round 4 (ChatGPT #3 / 7186140947 #4): the hard lines hold on EVERY route, not only on the fallback. The ADDED
+    # lines of every file that is not prose (.md, .rst) are read for the credential, money and Round 3 lists; a hit is a
+    # judgment gate (the owner's route), whatever the review. A PR that is repository automation's allowlisted data is
+    # read for secret shapes instead (data_route), because its data carries those words by nature.
+    diff_x = set()
+    for f in files or []:
+        if not str(f.get("filename") or "").lower().endswith((".md", ".rst")):
+            added = "\n".join(line[1:] for line in str(f.get("patch") or "").splitlines() if line.startswith("+") and not line.startswith("+++"))
+            forms = word_forms(added)
+            diff_x |= {code for code in HARD_LINE_LISTS if JUDGMENT[code].search(forms) or (code in BODY_PATTERNS and BODY_PATTERNS[code].search(forms))}
     for code, rx in JUDGMENT.items():
         if rx.search(title_forms):
             x.append(f"{code}:title")
@@ -428,7 +444,7 @@ def entry_facts(pr, files, files_complete, push_filters):
     named = TITLE_HOLD.search(title)
     if named:
         held.append("title:" + re.sub(r"[ _-]+", "-", named.group(1).lower()))
-    return {"x": sorted(set(x))[:8], "x_n": len(set(x)), "risk": risk,
+    return {"x": sorted(set(x))[:8], "x_n": len(set(x)), "risk": risk, "diff_x": sorted(diff_x) if files_complete else ["unknown"],
             "direction": bool(removed_code or DIRECTION_WORDS.search(title_forms) or any(DIRECTION_WORDS.search(word_forms(p)) for p in paths)),
             "hold_labels": held[:3],
             "docs_only": bool(files_complete and paths and all(doc_path(p) for p in paths)),
@@ -520,6 +536,8 @@ def data_route(pr, files, files_complete, commits, commits_complete, allowlist):
                     or not name.lower().endswith(".json") or path_risk(name) != "HIGH" \
                     or not any(rx.fullmatch(name) and f.get("status") in statuses for rx, statuses in rows):
                 return False, "path"
+            if not isinstance(f.get("patch"), str) or SECRET_SHAPE.search(f["patch"]):
+                return False, "secret_shape"                     # no readable patch, or a secret's shape in it: never unreviewed data
         return True, None
     return False, "head_ref"
 
@@ -614,12 +632,14 @@ def pr_gates(e, cfg, intent_prs=()):
     if thin is None:
         gates.append("C2:facts_not_in_brief")
         thin = {"x": [], "risk": "UNCLEAR", "direction": True, "hold_labels": [], "push": ["unknown"], "docs_only": False, "ai": True,
-                "claude": "NOT_PROVEN", "claude_written": True, "data_route": False, "fallback_candidates": None, "fallback_mismatch": True,
+                "claude": "NOT_PROVEN", "claude_written": True, "data_route": False, "diff_x": ["unknown"], "fallback_candidates": None, "fallback_mismatch": True,
                 "codex_offline": None, "p01_named": True}
     if "paths" not in e:
         gates.append("C2:paths_not_in_brief")
     for x in (thin.get("x") or [])[:2]:
         gates.append(f"C2:judgment:{x}")
+    if thin.get("diff_x") != [] and thin.get("data_route") is not True:
+        gates.append(f"C2:judgment:diff:{(thin.get('diff_x') or ['unknown'])[0]}")   # fix round 4: the hard lines hold on every route
     if e.get("shrinks"):
         gates.append("C2:shrinks:" + str(e["shrinks"][0][0]))
     if thin.get("push"):
