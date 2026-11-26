@@ -44,17 +44,24 @@ def director_forecast():
             "target_value": None, "range_low": None, "range_high": None, "horizon_days": 5, "rationale": "priority"}
 
 
-def ctx(captured):
+def ctx(captured, run_id="fair-allocation-run"):
     metrics = {"spot": {"BTCUSDT": {"close": 64000.0}, "ETHBTC": {"close": 0.0302}}, "breadth": {"advancers": 60}}
-    return {"latest_capture": {"captured_at_utc": captured, "run_id": "fair-allocation-run", "market_metrics": metrics},
+    return {"latest_capture": {"captured_at_utc": captured, "run_id": run_id, "market_metrics": metrics},
             "previous_capture": {"captured_at_utc": "2026-08-01T00:00:00Z", "market_metrics": metrics}, "metric_deltas": []}
 
 
-def run(repo: Path, output: dict, captured: str, cap: int = 5) -> dict:
+def run(repo: Path, output: dict, captured: str, cap: int = 5, run_id: str = "fair-allocation-run") -> dict:
+    proc = run_raw(repo, output, captured, cap, run_id)
+    if proc.returncode != 0:
+        raise AssertionError(f"producer failed: {proc.stderr[-2000:]}")
+    return json.loads(proc.stdout)
+
+
+def run_raw(repo: Path, output: dict, captured: str, cap: int = 5, run_id: str = "fair-allocation-run") -> subprocess.CompletedProcess:
     daily = repo / "daily"
     daily.mkdir(parents=True, exist_ok=True)
     (daily / "output.json").write_text(json.dumps(output))
-    (daily / "context.json").write_text(json.dumps(ctx(captured)))
+    (daily / "context.json").write_text(json.dumps(ctx(captured, run_id)))
     (daily / "receipt.json").write_text(json.dumps({"contract": "API_AGENT_RECEIPT_v3"}))
     el = repo / "research/experiment_lifecycle"
     cmd = [sys.executable, str(SCRIPT), "--repo-root", str(repo),
@@ -64,7 +71,11 @@ def run(repo: Path, output: dict, captured: str, cap: int = 5) -> dict:
            "--receipt-root", str(el / "receipts"), "--registry-output", str(el / "LATEST_EXPERIMENT_REGISTRY.json"),
            "--manifest-output", str(el / "LATEST_EXPERIMENT_DISPATCH_MANIFEST.json"), "--admission-root", str(el / "admission"),
            "--admission-registry-output", str(el / "LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json"), "--max-new-forecasts", str(cap)]
-    return json.loads(subprocess.run(cmd, check=True, capture_output=True, text=True).stdout)
+    return subprocess.run(cmd, capture_output=True, text=True)
+
+
+def snapshot(repo: Path) -> dict[str, bytes]:
+    return {p.relative_to(repo).as_posix(): p.read_bytes() for p in repo.rglob("*") if p.is_file() and p.relative_to(repo).parts[0] != "daily"}
 
 
 def forecasts(repo: Path) -> list[dict]:
@@ -149,6 +160,11 @@ class FairForecastAllocationEndToEnd(unittest.TestCase):
         self.assertEqual(allocations[0], allocations[1])
 
 
+def fdoc(cid, window, frozen, **extra):
+    return {"contract": "FROZEN_FORECAST_v1", "forecast_id": module.canonical_forecast_id(cid, window), "source_candidate_id": cid,
+            "causal_event_window_id": window, "frozen_at_utc": frozen, **extra}
+
+
 def row(cid, kind="SENSOR_COMBINATION"):
     return (Path(f"{cid}.json"), {"candidate_id": cid, "spec": {"kind": kind}})
 
@@ -171,15 +187,11 @@ class FairForecastAllocationOrderUnit(unittest.TestCase):
     def test_service_history_ignores_current_and_future_windows_and_other_contracts(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
-            docs = [
-                {"contract": "FROZEN_FORECAST_v1", "forecast_id": "f1", "source_candidate_id": "EC-a", "frozen_at_utc": "2026-08-02T20:00:00Z"},
-                {"contract": "FROZEN_FORECAST_v1", "forecast_id": "f2", "source_candidate_id": "EC-a", "frozen_at_utc": "2026-08-03T20:00:00Z"},
-                {"contract": "FROZEN_FORECAST_v1", "forecast_id": "f3", "source_candidate_id": "EC-b", "frozen_at_utc": "2026-08-01T20:00:00.000+00:00"},
-                {"contract": "FROZEN_FORECAST_v1", "forecast_id": "f4", "frozen_at_utc": "2026-08-01T20:00:00Z"},
-                {"contract": "FORECAST_OUTCOME_v1", "forecast_id": "f5", "source_candidate_id": "EC-c", "frozen_at_utc": "2026-08-01T20:00:00Z"},
-            ]
-            for doc in docs:
-                (root / f"{doc['forecast_id']}.json").write_text(json.dumps(doc))
+            docs = [fdoc("EC-a", "w1", "2026-08-02T20:00:00Z"), fdoc("EC-a", "w2", "2026-08-03T20:00:00Z"),
+                    fdoc("EC-b", "w3", "2026-08-01T20:00:00.000+00:00"),
+                    {"contract": "FORECAST_OUTCOME_v1", "forecast_id": "f5", "source_candidate_id": "EC-c", "frozen_at_utc": "2026-08-01T20:00:00Z"}]
+            for i, doc in enumerate(docs):
+                (root / f"d{i}.json").write_text(json.dumps(doc))
             history = module.forecast_service_history(root, "2026-08-03T20:00:00Z")
             self.assertEqual(set(history), {"EC-a", "EC-b"})
             self.assertEqual(history["EC-a"][0], 1)
@@ -293,16 +305,17 @@ class ReplayContainmentRound2(unittest.TestCase):
             self.assertEqual(run(repo, self.output8, tick(0), cap=3)["new_forecasts"], 0)
             self.assertEqual(len(in_window(repo, tick(0))), 7)
 
-    def test_naive_timestamp_in_history_fails_closed_for_allocation_only(self):
+    def test_naive_timestamp_in_history_fails_whole_run_before_any_write(self):
         with tempfile.TemporaryDirectory() as td:
             repo = Path(td)
             run(repo, self.output8, tick(0))
             bad = dict(forecasts(repo)[0], frozen_at_utc="2026-08-01T20:00:00", forecast_id="EXP-FC-naive0000000000000")
             (repo / FORECAST_ROOT / "2026/08/EXP-FC-naive0000000000000.json").write_text(json.dumps(bad))
-            summary = run(repo, self.output8, tick(1))
-            self.assertEqual(summary["new_forecasts"], 0)
-            self.assertTrue(summary["forecast_allocation"]["status"].startswith("FAIL_CLOSED"))
-            self.assertGreater(summary["dispatch_created"] + summary["episode_continuations_not_dispatched"], 0)  # rest of the run proceeds
+            before = snapshot(repo)
+            proc = run_raw(repo, self.output8, tick(1))
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("FORECAST_STORE_INTEGRITY_FAILURE", proc.stderr)
+            self.assertEqual(snapshot(repo), before)
 
     def test_summary_records_policy_and_per_kind_denominators(self):
         with tempfile.TemporaryDirectory() as td:
@@ -319,7 +332,9 @@ class HistoryIdentityRound2(unittest.TestCase):
     """D1-B: history counts unique forecast identities and fails closed on identity/time conflicts."""
 
     def _doc(self, fid, cid="EC-a", frozen="2026-08-02T20:00:00Z", **extra):
-        return {"contract": "FROZEN_FORECAST_v1", "forecast_id": fid, "source_candidate_id": cid, "frozen_at_utc": frozen, **extra}
+        doc = fdoc("EC-a", "w-" + fid, frozen, **extra)  # canonical ID fixed by (EC-a, window)
+        doc["source_candidate_id"] = cid
+        return doc
 
     def test_duplicate_paths_for_one_forecast_id_count_once(self):
         with tempfile.TemporaryDirectory() as td:
@@ -351,6 +366,92 @@ class HistoryIdentityRound2(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             with self.assertRaises(module.AllocationIntegrityError):
                 module.forecast_service_history(Path(td), "2026-08-03T20:00:00")
+
+
+class Round3StoreIntegrityAndCaptureClock(unittest.TestCase):
+    """D1 round 3: unique-ID occupancy, strict forecast-store identity, canonical capture clock."""
+
+    output8 = {"forecast_candidates": [], "experiment_candidates": [pair(i) for i in range(8)]}
+
+    def _assert_store_failure_without_writes(self, repo: Path, captured: str, code: str):
+        before = snapshot(repo)
+        proc = run_raw(repo, self.output8, captured)
+        self.assertNotEqual(proc.returncode, 0, proc.stdout[-500:])
+        self.assertIn("FORECAST_STORE_INTEGRITY_FAILURE", proc.stderr)
+        self.assertIn(code, proc.stderr)
+        self.assertEqual(snapshot(repo), before)  # nothing written, nothing rewritten
+
+    def test_two_ids_for_one_candidate_window_fail_closed_instead_of_collapsing(self):
+        # F1/A, F2/A, F3/B, F4/C, F5/D in one window: 5 unique IDs must never become "4 occupied, 1 free"
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            rows = sorted(in_window(repo, tick(0)), key=lambda r: r["source_candidate_id"])
+            for p in (repo / FORECAST_ROOT).rglob(f"{rows[4]['forecast_id']}.json"):
+                p.unlink()
+            twin = dict(rows[0], forecast_id="EXP-FC-twin0000000000000000")
+            (repo / FORECAST_ROOT / "2026/08/EXP-FC-twin0000000000000000.json").write_text(json.dumps(twin))
+            self._assert_store_failure_without_writes(repo, tick(0), "candidate_window")
+
+    def test_conflicting_content_for_one_forecast_id_fails_whole_run_before_any_write(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            row = forecasts(repo)[0]
+            (repo / FORECAST_ROOT / "2026/07").mkdir(parents=True)
+            (repo / FORECAST_ROOT / f"2026/07/{row['forecast_id']}.json").write_text(json.dumps(dict(row, start_value=1.0)))
+            self._assert_store_failure_without_writes(repo, tick(1), "forecast_id_ownership_or_content_conflict")
+
+    def test_missing_identity_or_window_fails_closed(self):
+        for field in ("source_candidate_id", "forecast_id", "causal_event_window_id"):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                run(repo, self.output8, tick(0))
+                row = dict(forecasts(repo)[0])
+                row.pop(field)
+                (repo / FORECAST_ROOT / "2026/08/EXP-FC-missing00000000000000.json").write_text(json.dumps(row))
+                self._assert_store_failure_without_writes(repo, tick(1), "forecast_identity_missing")
+
+    def test_unreadable_expected_forecast_file_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            (repo / FORECAST_ROOT / "2026/08/EXP-FC-broken000000000000000.json").write_text("{not json")
+            self._assert_store_failure_without_writes(repo, tick(1), "forecast_file_unreadable")
+
+    def test_known_non_forecast_contract_and_non_json_files_are_ignored(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            (repo / FORECAST_ROOT / "2026/08/INDEX.json").write_text(json.dumps({"contract": "SOME_OTHER_INDEX_v1"}))
+            (repo / FORECAST_ROOT / "README.md").write_text("notes")
+            self.assertEqual(run(repo, self.output8, tick(1))["new_forecasts"], 5)
+
+    def test_equal_instant_with_different_capture_format_issues_nothing(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, "2026-08-02T20:00:00Z")
+            summary = run(repo, self.output8, "2026-08-02T21:00:00+01:00")  # same instant, other spelling
+            self.assertEqual(summary["new_forecasts"], 0)
+            self.assertEqual(summary["forecast_allocation"]["status"], "FAIL_CLOSED:capture_clock_noncanonical")
+            self.assertEqual(len(forecasts(repo)), 5)
+
+    def test_missing_run_id_never_synthesises_a_window(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            summary = run(repo, self.output8, tick(0), run_id="")
+            self.assertEqual(summary["new_forecasts"], 0)
+            self.assertEqual(summary["forecast_allocation"]["status"], "FAIL_CLOSED:capture_run_id_missing")
+
+    def test_window_and_forecast_ids_are_byte_identical_for_a_real_historical_capture(self):
+        # Native run 44628588447: source_run_id gh-44619142868-1, captured 2026-11-19T21:29:33Z;
+        # main forecast EXP-FC-99f5fcbd5182de573074 (EC-0258e3807909a4d1987f) carries window a0f4c4c5aa23545675ff.
+        self.assertTrue(module.canonical_capture_clock("2026-11-19T21:29:33Z"))
+        window = module.causal_event_window("gh-44619142868-1", "2026-11-19T21:29:33Z")
+        self.assertEqual(window, "a0f4c4c5aa23545675ff")
+        self.assertEqual(module.canonical_forecast_id("EC-0258e3807909a4d1987f", window), "EXP-FC-99f5fcbd5182de573074")
+        for other in ("2026-11-19T22:29:33+01:00", "2026-11-19T21:29:33.000Z", "2026-11-19T21:29:33", "2026-11-19 21:29:33Z", ""):
+            self.assertFalse(module.canonical_capture_clock(other), other)
 
 
 if __name__ == "__main__":

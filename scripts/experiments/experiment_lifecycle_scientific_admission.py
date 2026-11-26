@@ -73,25 +73,70 @@ def _utc_key(value: Any) -> str:
     return parsed.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
+CANONICAL_CAPTURE_CLOCK = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+
+
+def canonical_capture_clock(value: Any) -> bool:
+    """True only for the exact capture spelling every historical window was hashed from
+    (``YYYY-MM-DDTHH:MM:SSZ``). Other spellings of the same instant would hash to a different window."""
+    if not isinstance(value, str) or not CANONICAL_CAPTURE_CLOCK.fullmatch(value):
+        return False
+    try:
+        datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return False
+    return True
+
+
+def causal_event_window(run_id: str, captured: str) -> str:
+    """Unchanged historical derivation; callers must pass a canonical capture clock and a run id."""
+    return base.sha({"run": run_id, "captured": captured})[:20]
+
+
+def canonical_forecast_id(candidate_id: str, window_id: str) -> str:
+    return "EXP-FC-" + base.sha({"candidate_id": candidate_id, "window": window_id})[:20]
+
+
 def unique_frozen_forecasts(forecast_root: Path) -> dict[str, dict[str, Any]]:
-    """FROZEN_FORECAST_v1 rows keyed by immutable forecast_id, with the same invariant as
-    ``base.registry``: byte-identical duplicates count once; a forecast_id whose owner or content
-    differs between paths is a conflict. Here a conflict, or a naive/unparseable freeze time, raises
-    AllocationIntegrityError so allocation fails closed instead of silently skipping the row (a
-    skipped row would make its candidate look under-served and could undercount a window's slots).
+    """Strict read of the frozen-forecast store, keyed by immutable forecast_id.
+
+    Same invariant as ``base.registry`` (byte-identical duplicate paths count once; differing owner or
+    content under one forecast_id is a conflict), plus: every ``*.json`` file must parse to an object
+    with a string ``contract`` (files with another contract are known non-forecast files and are
+    ignored; non-JSON files are ignored); every FROZEN_FORECAST_v1 row must carry source_candidate_id,
+    forecast_id, causal_event_window_id and a timezone-aware frozen_at_utc; its forecast_id must be
+    the canonical ID for (candidate, window); and one (candidate, window) may hold only one forecast_id.
+    Any violation raises AllocationIntegrityError. Skipping such a row instead would make its candidate
+    look under-served and could undercount a window's occupied slots.
     """
     rows: dict[str, dict[str, Any]] = {}
-    for _, value in sorted(base.jsons(forecast_root, "FROZEN_FORECAST_v1"), key=lambda item: item[0].as_posix()):
-        cid, fid = value.get("source_candidate_id"), value.get("forecast_id")
-        if not cid or not fid:
+    pair_owner: dict[tuple[str, str], str] = {}
+    paths = sorted(p for p in forecast_root.rglob("*.json") if p.is_file()) if forecast_root.exists() else []
+    for path in paths:
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, ValueError):
+            raise AllocationIntegrityError("forecast_file_unreadable") from None
+        if not isinstance(value, dict) or not isinstance(value.get("contract"), str):
+            raise AllocationIntegrityError("forecast_file_unclassifiable")
+        if value["contract"] != "FROZEN_FORECAST_v1":
             continue
-        prior = rows.get(str(fid))
+        cid, fid, window = (value.get(k) for k in ("source_candidate_id", "forecast_id", "causal_event_window_id"))
+        if not all(isinstance(item, str) and item for item in (cid, fid, window)):
+            raise AllocationIntegrityError("forecast_identity_missing")
+        prior = rows.get(fid)
         if prior is not None:
-            if str(prior.get("source_candidate_id")) != str(cid) or prior != value:
+            if prior != value:
                 raise AllocationIntegrityError("forecast_id_ownership_or_content_conflict")
             continue
         _utc_key(value.get("frozen_at_utc"))
-        rows[str(fid)] = value
+        if fid != canonical_forecast_id(cid, window):
+            if pair_owner.get((cid, window)) not in (None, fid):
+                raise AllocationIntegrityError("forecast_candidate_window_conflict")
+            raise AllocationIntegrityError("forecast_id_not_canonical_for_candidate_window")
+        if pair_owner.setdefault((cid, window), fid) != fid:
+            raise AllocationIntegrityError("forecast_candidate_window_conflict")
+        rows[fid] = value
     return rows
 
 
@@ -119,9 +164,22 @@ def forecast_service_history(source: Path | dict[str, dict[str, Any]], before_ut
     return history
 
 
-def window_occupancy(source: Path | dict[str, dict[str, Any]], window_id: str) -> dict[str, str]:
-    """candidate_id -> forecast_id for unique forecasts already frozen in this causal event window."""
-    return {str(v["source_candidate_id"]): fid for fid, v in sorted(_forecast_rows(source).items()) if v.get("causal_event_window_id") == window_id}
+def window_occupancy(source: Path | dict[str, dict[str, Any]], window_id: str) -> tuple[set[str], dict[str, str]]:
+    """(unique forecast_ids frozen in this causal event window, candidate_id -> forecast_id membership).
+
+    The cap is charged against the unique-ID set; membership only decides which candidates already
+    hold a row. A (candidate, window) with two IDs never gets this far: the strict store read rejects it.
+    """
+    ids: set[str] = set()
+    members: dict[str, str] = {}
+    for fid, value in sorted(_forecast_rows(source).items()):
+        if value.get("causal_event_window_id") != window_id:
+            continue
+        ids.add(fid)
+        cid = str(value["source_candidate_id"])
+        if members.setdefault(cid, fid) != fid:
+            raise AllocationIntegrityError("forecast_candidate_window_conflict")
+    return ids, members
 
 
 def forecast_allocation_key(candidate: dict[str, Any], history: dict[str, tuple[int, str]]) -> tuple[int, int, str, str]:
@@ -745,6 +803,15 @@ def main() -> None:
     parser.add_argument("--proposal-census-root", type=Path, help="default: <admission-root>/../proposal_slot_census")
     args = parser.parse_args()
 
+    # Forecast-store integrity is checked before any write. base.registry would raise on an identity
+    # conflict later anyway (after observations/dispatch were written), so a corrupt store is a
+    # truthful whole-run failure with a fixed diagnostic code, never a partial run or false summary.
+    try:
+        frozen_rows = unique_frozen_forecasts(args.forecast_root)
+    except AllocationIntegrityError as exc:
+        print(json.dumps({"status": "FORECAST_STORE_INTEGRITY_FAILURE", "code": str(exc), "writes_performed": False}, sort_keys=True), file=sys.stderr)
+        raise SystemExit(3) from None
+
     root = args.repo_root.resolve()
     output = base.read(args.daily_output)
     context = base.read(args.daily_context)
@@ -837,18 +904,26 @@ def main() -> None:
     candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
     # The cap is per causal event window: rows already frozen in this window (by any earlier run or
     # policy) occupy slots and are never rewritten; only the remainder may be issued.
-    event_window = base.sha({"run": source["source_run_id"], "captured": captured})[:20]
+    # A window is only derived from a canonical capture clock and a real run id (the historical
+    # derivation is unchanged); anything else holds allocation for this run (0 new forecasts).
+    raw_capture = (context.get("latest_capture") or {}).get("captured_at_utc")
+    run_id = source["source_run_id"]
+    event_window = causal_event_window(run_id, captured) if canonical_capture_clock(raw_capture) and isinstance(run_id, str) and run_id else None
     allocation = {"policy_version": ALLOCATION_POLICY_VERSION, "lookback_days": ALLOCATION_LOOKBACK_DAYS, "cap": args.max_new_forecasts,
                   "causal_event_window_id": event_window, "status": "OK", "by_kind": {}}
-    try:
-        frozen_rows = unique_frozen_forecasts(args.forecast_root)
+    service_history: dict[str, tuple[int, str]] = {}
+    occupied_ids: set[str] = set()
+    occupied: dict[str, str] = {}
+    available_slots = 0
+    if not canonical_capture_clock(raw_capture):
+        allocation["status"] = "FAIL_CLOSED:capture_clock_noncanonical"
+    elif event_window is None:
+        allocation["status"] = "FAIL_CLOSED:capture_run_id_missing"
+    else:
         service_history = forecast_service_history(frozen_rows, captured)
-        occupied = window_occupancy(frozen_rows, event_window)
-        available_slots = max(0, args.max_new_forecasts - len(occupied))
-    except AllocationIntegrityError as exc:
-        service_history, occupied, available_slots = {}, {}, 0
-        allocation["status"] = f"FAIL_CLOSED:{exc}"
-    allocation.update({"occupied_slots_before": len(occupied), "available_slots": available_slots})
+        occupied_ids, occupied = window_occupancy(frozen_rows, event_window)
+        available_slots = max(0, args.max_new_forecasts - len(occupied_ids))
+    allocation.update({"occupied_slots_before": len(occupied_ids), "available_slots": available_slots})
     issued_slots = 0
     candidate_rows.sort(key=lambda item: forecast_allocation_key(item[1], service_history))
     for spec_path, candidate in candidate_rows:
@@ -877,7 +952,7 @@ def main() -> None:
         elif eligible and issued_slots < available_slots:
             issued_slots += 1
             window = event_window
-            forecast_id = "EXP-FC-" + base.sha({"candidate_id": candidate["candidate_id"], "window": window})[:20]
+            forecast_id = canonical_forecast_id(candidate["candidate_id"], window)
             frozen = {
                 "contract": "FROZEN_FORECAST_v1", "unit_contract_version": base.UNIT_CONTRACT_VERSION, "forecast_id": forecast_id, "source_candidate_id": candidate["candidate_id"], "source_observation_id": observation_id,
                 "frozen_at_utc": captured, "outcome_due_utc": base.iso(when + timedelta(days=spec["horizon_days"])), "metric_path": base.canonical_path(spec["target_metric_path"]), "metric_path_root": base.CAPTURE_DOCUMENT_ROOT,
