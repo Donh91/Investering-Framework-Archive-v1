@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/api_agent/budget_hold_disposition.py",
+    "tests/api_agent/test_budget_hold_disposition.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-71c6a4a61146f7f5",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "BUILD",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* draft: classify routine API reserve hold without granting execution * draft: classify routine API reserve hold without granting execution * draft: retain sanitized arithmetic for independently reviewable budget HOLD",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/api_agent/budget_hold_disposition.py": "b79dd8b7168244dc350f69eb1709c3d56987601f",
+    "tests/api_agent/test_budget_hold_disposition.py": "5f0d632f51cadee0a215ece413a25e04bbc125ca"
+  },
+  "source_commit_sha": "71c6a4a61146f7f5027843e38c81f63d64c6ca5e",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-26T11:55:37+01:00",
+  "task_class": "API_AGENT",
+  "task_summary": "Add inactive routine API budget HOLD helper (#2353)"
+}

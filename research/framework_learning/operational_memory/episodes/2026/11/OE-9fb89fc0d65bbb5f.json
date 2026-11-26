@@ -1,0 +1,54 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cn-site-v2-gate.yml",
+    ".github/workflows/cycle-navigator-pages.yml",
+    "00_FMOS/S1/BOOTSTRAP.txt",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json",
+    "05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs",
+    "05_CYCLE_NAVIGATOR/site/tests/wait-pages-artifact.mjs",
+    "05_CYCLE_NAVIGATOR/site/tests/wait-pages-artifact.test.mjs",
+    "scripts/cycle_navigator/attest_weekly_pages_delivery.py",
+    "scripts/governance/s1_site_public_readback_v1.py",
+    "tests/governance/test_s1_site_public_readback_v1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "00_FMOS",
+  "episode_id": "OE-9fb89fc0d65bbb5f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "draft-cn-native-weekly-pages-release-original-day",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(cn): native weekly-to-Pages release proof with frozen original CDN readback * test(cn): prevent shadowed receipt binding in native parity self-test * fix(cn): implement native durable Monday CDN receipt with source-frozen negative tests * fix(cn): preserve existing native Pages chain and durably attest weekly CDN proof * fix(cn): bind original UTC issue clock to Pages CDN parity evidence * test(cn): gate native Monday Pages source/CDN durability and negative cases * governance(s1): rebind reviewed lane .github tree to exact native Pages workflow * governance(s1): pin exact reviewed lane ",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cn-site-v2-gate.yml": "6beaf1487650588570ad41dba95f944da409cf28",
+    ".github/workflows/cycle-navigator-pages.yml": "619fdf75f9ff4423ab9df66bca9b4f3b4a52a045",
+    "00_FMOS/S1/BOOTSTRAP.txt": "a30aed1bf7a06e5de8f9b63836ee2e160cd3d8fe",
+    "00_FMOS/S1/REVIEWED_MERGE_LANE.json": "c0b279d8d7c7a03f83c25e9ec02610206297b597",
+    "00_FMOS/S1/RUNTIME_CONTRACT.json": "9290b4e5d08c298504ff0d5fd7db98b9474d266d",
+    "05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs": "b2a06e8d70546b1d3200cf4dc8f2062ae76648d8",
+    "05_CYCLE_NAVIGATOR/site/tests/wait-pages-artifact.mjs": "d2ff4b01439be631adcd546466fff7b1dfc19481",
+    "05_CYCLE_NAVIGATOR/site/tests/wait-pages-artifact.test.mjs": "db95cc5e62f813f81c6e632347c8b74b564b1a9a",
+    "scripts/cycle_navigator/attest_weekly_pages_delivery.py": "c9a50475e0537cf1639823f600d8862c0218ad7d",
+    "scripts/governance/s1_site_public_readback_v1.py": "338503a73bb616b7ac0771aba89bbcfbea499bb6",
+    "tests/governance/test_s1_site_public_readback_v1.py": "f8f8b3ac164a9ec0ae49112ad23c386a01fe3b24"
+  },
+  "source_commit_sha": "9fb89fc0d65bbb5f330f09ed6f0e9f8b6a0ade70",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-26T05:45:24+01:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "DRAFT fix(CN): native weekly \u2192 Pages release and original 7-day CDN proof (#2312)"
+}
