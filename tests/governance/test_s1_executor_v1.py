@@ -79,6 +79,8 @@ class FakeGitHub:
         self.labels = {9: [{"name": D.RECALL_LABEL}]}               # the labels of a merged PR with a recall (issues/<n>/labels)
         self.budget_left = 1000                                     # fix round 5 (D04): GitHub.remaining() of the real client
         self.comment_override = {}                                  # fix round 5 (P1-06): GET issues/comments/<id> answers this instead
+        self.exec_runs = None                                       # trigger round: the runs of s1-executor.yml on main (None: only this run)
+        self.issue_updated = None                                   # trigger round: updated_at of the published brief issue
 
     def remaining(self):
         return self.budget_left - len(self.calls)
@@ -126,6 +128,9 @@ class FakeGitHub:
             if self.hold is None:
                 raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
             return {"name": E.HOLD_VARIABLE, "value": self.hold}
+        if path == "actions/workflows/s1-executor.yml/runs":         # trigger round: one evaluation per brief run (evaluated_before)
+            rows = self.exec_runs if self.exec_runs is not None else [self.runs[555]]
+            return {"workflow_runs": copy.deepcopy(rows), "total_count": len(rows)}
         if path == "actions/workflows/s1-tick-brief.yml/runs":
             return {"workflow_runs": [{"event": "workflow_dispatch", "created_at": B.iso(self.now - timedelta(hours=h))} for h in range(30)]}
         m = re.fullmatch(r"issues/comments/(\d+)", path)            # one ledger comment by its id (the first fallback run's candidate)
@@ -138,7 +143,8 @@ class FakeGitHub:
                 raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
             return copy.deepcopy(row)
         if path == "issues":                                       # the brief issue, as the publish job left it
-            return [] if self.issue_body is None else [{"number": 3, "user": dict(self.issue_user), "body": self.issue_body, "labels": [{"name": B.BRIEF_LABEL}]}]
+            return [] if self.issue_body is None else [dict({"number": 3, "user": dict(self.issue_user), "body": self.issue_body, "labels": [{"name": B.BRIEF_LABEL}]},
+                                                            **({"updated_at": self.issue_updated} if self.issue_updated else {}))]
         raise AssertionError(f"unexpected GET {path}")
 
     def pages(self, path, params=None, key=None, max_pages=30):
@@ -225,6 +231,11 @@ class FakeNative:
         self.w, self.relation, self.drift_paths, self.ancestor, self.merged_blobs = w, "ahead", ["04_MARKET_LEARNING/x.json"], True, {}
         self.delta = None
         self.calls = []
+
+    def head_commit(self):
+        """Trigger round: the commit of this checkout (a dispatched run checks out the brief's main)."""
+        self.calls.append(("head_commit",))
+        return self.w["main_sha"]
 
     def drift(self, base, head):
         self.calls.append(("drift", base, head))
@@ -876,8 +887,9 @@ class Harness(unittest.TestCase):
             "OFF": self.measure(mode="OFF", policy="CODEX_FINAL_REQUIRED"),
         }
         self.assertEqual(table["OFF"][:2], (0, 0))
-        self.assertEqual(table["NOOP (nothing actionable)"][:2], (3, 0))               # the publication read (A26), the start hold read (fix 5, D08), the ledger
-        self.assertEqual(table["NOOP + heartbeat"][:2], (6, 1))                        # ... the live hold and main before the write (#7)
+        # trigger round: + ONE list of the executor's own runs (one evaluation per brief run; no earlier run in the window)
+        self.assertEqual(table["NOOP (nothing actionable)"][:2], (4, 0))               # the evaluation list, the publication read (A26), the start hold read (fix 5, D08), the ledger
+        self.assertEqual(table["NOOP + heartbeat"][:2], (7, 1))                        # ... the live hold and main before the write (#7)
         self.assertEqual(table["MERGE live"][1], 3)                                    # intent, merge, receipt
         self.assertEqual(table["MERGE shadow"][1], 0)
         self.assertLessEqual(table["MERGE live"][0], 80)                               # fix round 4: the final look verifies everything again
@@ -895,18 +907,22 @@ class WorkflowAndSwitch(unittest.TestCase):
         self.text = (ROOT / B.EXECUTOR_WORKFLOW_PATH).read_text(encoding="utf-8")
 
     def test_triggers_and_gating(self):
-        self.assertEqual(EXEC_WORKFLOW[True], {"workflow_run": {"workflows": ["S1 tick brief"], "types": ["completed"], "branches": ["main"]}})
+        # trigger round: + workflow_dispatch (no inputs), which the metronome uses; no schedule, no pull_request
+        self.assertEqual(EXEC_WORKFLOW[True], {"workflow_run": {"workflows": ["S1 tick brief"], "types": ["completed"], "branches": ["main"]},
+                                               "workflow_dispatch": None})
         self.assertEqual(WORKFLOW["name"], "S1 tick brief")                             # the name the trigger names
         self.assertNotIn("pull_request", self.text.replace("pull-requests", ""))       # no pull_request or pull_request_target trigger at all
         cond = " ".join(self.job["if"].split())
         self.assertEqual(cond, "github.ref == 'refs/heads/main' && github.repository == 'Donh91/Investering-Framework-Archive-v1' && "
+                               "(github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && "
                                "github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && "
                                "github.event.workflow_run.head_repository.full_name == github.repository && "
-                               "(github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'workflow_dispatch')")
+                               "(github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'workflow_dispatch')))")
         self.assertNotIn("needs", self.job)
         self.assertEqual(list(EXEC_WORKFLOW["jobs"]), ["execute"])
         self.assertEqual(self.job["concurrency"], {"group": "s1-executor", "cancel-in-progress": False})
-        self.assertEqual((E.EVENTS, E.EXECUTOR_TRIGGER, B.EXECUTOR_EVENTS), (("schedule", "workflow_dispatch"), "workflow_run", ("workflow_run",)))
+        self.assertEqual((E.EVENTS, E.EXECUTOR_TRIGGER, E.SELF_TRIGGER, B.EXECUTOR_EVENTS),
+                         (("schedule", "workflow_dispatch"), "workflow_run", "workflow_dispatch", ("workflow_run", "workflow_dispatch")))
 
     def test_a_failed_executor_job_never_fails_the_run_that_carries_the_brief(self):
         # TICK.md T2 (run_not_success) and the next build's C1b anchor (previous_anchor) accept a brief only from a run
@@ -917,7 +933,8 @@ class WorkflowAndSwitch(unittest.TestCase):
         self.assertNotIn("continue-on-error", {k for job in WORKFLOW["jobs"].values() for k in job})
         self.assertNotIn("s1_executor_v1", (ROOT / B.WORKFLOW_PATH).read_text(encoding="utf-8"))
         self.assertEqual(self.job["timeout-minutes"], 10)
-        self.assertEqual(self.job["steps"][3]["timeout-minutes"], 8)                    # a hang is the step's failure, inside the job's limit
+        self.assertEqual(self.job["steps"][-1]["timeout-minutes"], 8)                   # a hang is the step's failure, inside the job's limit
+        self.assertEqual(self.job["steps"][3]["timeout-minutes"], 2)                    # trigger round: the resolve step too
         run = {"id": 555, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": MAIN, "status": "completed",
                "head_repository": {"full_name": B.REPO}, "event": "schedule", "run_attempt": 1,     # fix round 7 (R6-SH2): exact provenance
                "run_started_at": TB.ts(5), "updated_at": TB.ts(-5)}
@@ -928,14 +945,24 @@ class WorkflowAndSwitch(unittest.TestCase):
 
     def test_it_runs_only_mains_own_scripts(self):
         steps = self.job["steps"]
-        self.assertEqual([(s.get("uses") or "").split("@")[0] for s in steps], ["actions/checkout", "actions/setup-python", "", ""])   # fix round 5: + the hash-pinned YAML wheel
+        # fix round 5: + the hash-pinned YAML wheel; trigger round: + the resolve step and the second checkout (dispatched runs only)
+        self.assertEqual([(s.get("uses") or "").split("@")[0] for s in steps], ["actions/checkout", "actions/setup-python", "", "", "actions/checkout", ""])
         if SWITCH["executor"] != "LIVE":
-            self.assertEqual([s.get("uses") for s in steps], ["actions/checkout@v4", "actions/setup-python@v5", None, None])   # as every other job
+            self.assertEqual([s.get("uses") for s in steps], ["actions/checkout@v4", "actions/setup-python@v5", None, None, "actions/checkout@v4", None])   # as every other job
         # the triggering brief run's own main commit (a schedule or dispatch run on main: main's own files)
         self.assertEqual(steps[0]["with"], {"ref": "${{ github.event.workflow_run.head_sha }}", "persist-credentials": False,
                                             "sparse-checkout": "scripts/governance\n00_FMOS\n.github/workflows\n"})
         self.assertIn("--require-hashes", steps[2]["run"])                              # the YAML wheel, pinned by hash as in the build job
         self.assertEqual(steps[2]["run"], WORKFLOW["jobs"]["build"]["steps"][2]["run"])
+        # trigger round: a dispatched run resolves the brief's main (a SHA through a step output, only into a checkout ref)
+        # and checks out exactly that commit, with the same sparse set and no persisted credentials
+        self.assertEqual((steps[3]["id"], steps[3]["if"]), ("brief", "github.event_name == 'workflow_dispatch'"))
+        self.assertEqual([line.strip() for line in steps[3]["run"].strip().splitlines()], ["python scripts/governance/s1_executor_v1.py resolve-brief-main"])
+        self.assertEqual(steps[3]["env"], {"GITHUB_TOKEN": "${{ github.token }}", "PYTHONDONTWRITEBYTECODE": "1"})
+        self.assertEqual(steps[4]["if"], "github.event_name == 'workflow_dispatch' && steps.brief.outputs.brief_main != ''")
+        self.assertEqual(steps[4]["with"], {"ref": "${{ steps.brief.outputs.brief_main }}", "persist-credentials": False,
+                                            "sparse-checkout": "scripts/governance\n00_FMOS\n.github/workflows\n"})
+        steps = steps[:3] + steps[5:]                                                  # the execute step, unchanged
         self.assertEqual([line.strip() for line in steps[3]["run"].strip().splitlines()], ["python scripts/governance/s1_executor_v1.py execute-published"])
         self.assertEqual(steps[3]["env"], {"GITHUB_TOKEN": "${{ github.token }}", "S1_BRIEF_RUN_ID": "${{ github.event.workflow_run.id }}",
                                            "S1_BRIEF_RUN_ATTEMPT": "${{ github.event.workflow_run.run_attempt }}",
@@ -963,7 +990,7 @@ class WorkflowAndSwitch(unittest.TestCase):
         self.assertEqual((WORKFLOW["permissions"], EXEC_WORKFLOW["permissions"]), ({}, {}))
         # review finding P3-10: a job that holds write permissions runs actions pinned by commit SHA, never by a tag
         uses = [s["uses"] for s in self.job["steps"] if s.get("uses")]
-        self.assertEqual([u.split("@")[0] for u in uses], ["actions/checkout", "actions/setup-python"])
+        self.assertEqual([u.split("@")[0] for u in uses], ["actions/checkout", "actions/setup-python", "actions/checkout"])   # trigger round: + the brief-main checkout
         if perms == live:
             for ref in uses:
                 self.assertRegex(ref, r"^actions/[a-z-]+@[0-9a-f]{40}$", "the LIVE execute job pins its actions by commit SHA")

@@ -61,6 +61,20 @@ RECONCILES_PER_RUN = 3                 # EVIDENCE_BINDINGS op_reconciles_per_run
 MAX_ATTEMPTS_PER_HEAD = 1              # merge intents per PR head, ever: a refused merge is NOT retried, that head is the owner's
 EVENTS = ("schedule", "workflow_dispatch")      # the events of the BRIEF run this executor run may act for
 EXECUTOR_TRIGGER = "workflow_run"              # fix round 6 (F2): the event of this executor run itself
+# Trigger round (2026-11-26): GitHub creates no workflow_run event for a brief run that the metronome dispatched with the
+# workflow token, so such a brief never started the executor. The metronome now also dispatches s1-executor.yml; such a
+# run has no triggering run, resolves the brief to evaluate from the PUBLISHED brief issue (its run_id and run_attempt),
+# re-reads that run natively (completed, success, schedule or workflow_dispatch, main, this repository, head = the
+# brief's main, the issue not edited after the run) and then takes the same path as a workflow_run.
+SELF_TRIGGER = "workflow_dispatch"
+BRIEF_ENV = ("S1_BRIEF_RUN_ID", "S1_BRIEF_RUN_ATTEMPT", "S1_BRIEF_MAIN", "S1_BRIEF_EVENT")
+# One evaluation per brief run and attempt, whatever started the executor: the earlier executor runs of s1-executor.yml
+# on main that ended after the brief was generated are read (one list, then jobs and log of at most EVALUATION_READS of
+# them); one whose own health line names this brief run (and attempt) with a result other than NO_DECISION has
+# evaluated it. Anything unread is "not proven": no second evaluation.
+EXECUTOR_RUNS_PAGE = 30
+EVALUATION_READS = 4
+EXECUTOR_RUN_MAX_MINUTES = 15          # the job's timeout (10) plus queueing: how far before the window a run may have started
 POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1",
          "S1_FALLBACK_CANDIDATE_v1", "S1_CODEX_RECALL_PENDING_v1", "S1_CODEX_RECALL_CLEARED_v1")
 MAX_POST_CHARS = 4000
@@ -97,6 +111,10 @@ class Native:
     def drift(self, base, head):
         """(relation, paths) of base -> head exactly as the brief's due check reads it (ahead, behind, unknown, too_large)."""
         return B.git_drift(self.root, base, head)
+
+    def head_commit(self):
+        """The commit this checkout is at (trigger round: a dispatched run must have checked out the brief's main)."""
+        return B.git(self.root, "rev-parse", "--verify", "HEAD")
 
     def tree_shas(self, commit, paths):
         """{path: blob or tree SHA at `commit`} (None: absent or unreadable)."""
@@ -176,6 +194,8 @@ class Run:
         self.body = None                                          # the issue body this run executes (D02: re-checked at the boundary)
         self.guard_paths = ()                                     # the PR's path set once verified (live_stop's drift check)
         self.published_issue = None                               # the brief issue number the first publication check read
+        self.published_doc = None                                 # trigger round: the brief issue execute_published() read
+        self.env = dict(env)                                      # trigger round: a dispatched run adds the S1_BRIEF_* it resolved
 
     # ---- the ONE place that writes
     def write(self, kind, **kw):
@@ -846,6 +866,16 @@ class Run:
             return end("NOOP", None, None, "BRIEF_UNVERIFIED(body)")
         self.brief, self.decision, self.body = brief, d, body
         env = self.env
+        # trigger round: a dispatched run (the metronome) has no triggering run; it resolves the brief run from the
+        # published brief and proves it natively, then takes the same path. The S1_BRIEF_* of such a run must be empty
+        # (the workflow passes github.event.workflow_run.*, which a dispatch does not have): set, they are not proven.
+        if env.get("GITHUB_EVENT_NAME") == SELF_TRIGGER:
+            if any(env.get(k) for k in BRIEF_ENV) or env.get("GITHUB_REPOSITORY") != B.REPO or env.get("GITHUB_REF") != "refs/heads/main":
+                return end("NOOP", None, None, "BRIEF_UNVERIFIED(run_binding)")
+            why = self.resolve_brief_run(brief)
+            if why is not None:
+                return end("NOOP", None, None, f"NO_DECISION(brief_run={d.get('run_id')}:{why})")
+            env = self.env
         # fix round 6 (F2): this run is a workflow_run of s1-executor.yml; the brief it acts for is the triggering run's
         # (S1_BRIEF_RUN_ID / _RUN_ATTEMPT / _MAIN / _EVENT, from github.event.workflow_run), and the published brief must
         # be exactly that run's brief. A published brief of another run (that run published nothing: not due, or its
@@ -853,7 +883,7 @@ class Run:
         if str(d.get("run_id")) != env.get("S1_BRIEF_RUN_ID") and str(env.get("S1_BRIEF_RUN_ID") or "").isdigit():
             return end("NOOP", None, None, f"NO_DECISION(published_run={d.get('run_id')})")
         if not (env.get("GITHUB_REPOSITORY") == B.REPO and env.get("GITHUB_REF") == "refs/heads/main"
-                and env.get("GITHUB_EVENT_NAME") == EXECUTOR_TRIGGER and env.get("S1_BRIEF_EVENT") in EVENTS
+                and env.get("GITHUB_EVENT_NAME") in (EXECUTOR_TRIGGER, SELF_TRIGGER) and env.get("S1_BRIEF_EVENT") in EVENTS
                 and str(d.get("run_id")) == env.get("S1_BRIEF_RUN_ID") and str(d.get("run_attempt")) == env.get("S1_BRIEF_RUN_ATTEMPT")
                 and d.get("main") == env.get("S1_BRIEF_MAIN")):
             return end("NOOP", None, None, "BRIEF_UNVERIFIED(run_binding)")
@@ -884,6 +914,14 @@ class Run:
         # chain did not verify; a pins failure is not "nothing to do", it is "nothing may be done"
         if d.get("pins_ok") is not True:
             return end("NOOP", None, None, d.get("result") or "SOURCE_UNVERIFIED")
+        # trigger round: one evaluation per brief run and attempt (a workflow_run and a dispatched run of the same brief,
+        # or two dispatches): an earlier executor run that evaluated it, or one that cannot be read, ends this run here
+        try:
+            done = self.evaluated_before(d["run_id"], d["run_attempt"], d["generated_at"])
+        except Exception as exc:                                 # noqa: BLE001  (unread: not proven, no second evaluation)
+            done = f"evaluated_unproven:{type(exc).__name__}"
+        if done is not None:
+            return end("NOOP", None, None, f"NO_DECISION({done})")
         try:
             published = self.published(body)
         except Exception as exc:                                 # noqa: BLE001  (unreadable: not proven, nothing is written)
@@ -930,10 +968,109 @@ class Run:
             rows = [i for i in issues if isinstance(i, dict) and "pull_request" not in i and B.is_actions_bot(i.get("user"))] \
                 if isinstance(issues, list) else []
             body = str(rows[0].get("body") or "") if len(rows) == 1 else ""
+            self.published_doc = rows[0] if len(rows) == 1 else None
         except Exception as exc:                                 # noqa: BLE001  (unreadable: nothing is decided, nothing is written)
             self.alarms.append(f"brief_unreadable({type(exc).__name__})")
             return self.finish("NOOP", None, None, "BRIEF_UNVERIFIED(unreadable)")
         return self.execute(body)
+
+    def resolve_brief_run(self, brief, checkout=True):
+        """Trigger round: for a dispatched run, the brief run the published brief names, proven natively (one read).
+        None when it qualifies (and the S1_BRIEF_* of this run are set from the native run), else the reason. The run
+        must be exactly what the previous build's C1b anchor accepts (B.previous_anchor: a run of the brief workflow on
+        main of this repository at the brief's main and attempt, COMPLETED with success, the brief generated inside the
+        run and the issue not edited after it), started by schedule or workflow_dispatch; and this checkout must be the
+        brief's main (the workflow checks it out), so the code that evaluates it is the code that built it."""
+        issue, rid = self.published_doc, brief.get("run_id")
+        if not isinstance(issue, dict):
+            return "issue_unread"
+        if type(rid) is not int or rid <= 0:
+            return "run_id"
+        try:
+            run = self.gh.get(f"actions/runs/{rid}")
+        except Exception as exc:                                 # noqa: BLE001  (unreadable: not proven)
+            return f"unreadable:{type(exc).__name__}"
+        _known, _halt, why = B.previous_anchor(issue, brief, run, self.now_fn())
+        if why is not None and why != "no_checked_through":     # no_checked_through is about the C1b point, not the run
+            return why
+        if run.get("event") not in EVENTS:
+            return f"event:{run.get('event')}"
+        if not checkout:                                         # the resolve step: before the checkout of that SHA
+            return None
+        try:
+            head = self.native.head_commit()
+        except Exception:                                        # noqa: BLE001  (unread: not proven)
+            head = None
+        if head != brief.get("main") or head != run.get("head_sha"):
+            return "checkout"
+        self.env = dict(self.env, S1_BRIEF_RUN_ID=str(run["id"]), S1_BRIEF_RUN_ATTEMPT=str(run["run_attempt"]),
+                        S1_BRIEF_MAIN=run["head_sha"], S1_BRIEF_EVENT=run["event"])
+        return None
+
+    def evaluated_before(self, run_id, attempt, generated_at):
+        """Trigger round: None when no earlier executor run evaluated brief run `run_id` attempt `attempt`, proven from
+        native reads; else "already_evaluated=<executor run>" or "evaluated_unproven:<why>". Read: the newest page of
+        runs of s1-executor.yml on main; every run older than this one (by id) that ended after the brief was generated
+        and was not skipped; for each, its execute job and that job's ONE S1_EXECUTOR_HEALTH line. The concurrency group
+        runs one execute job at a time, so when this job runs every older run has ended and no newer one has started."""
+        own = str(self.env.get("GITHUB_RUN_ID") or "")
+        need(own.isdigit(), "own_run_id")
+        since = B.stamp(generated_at) - timedelta(seconds=B.RUN_POST_SLACK_SECONDS)
+        doc = self.gh.get(f"actions/workflows/{Path(B.EXECUTOR_WORKFLOW_PATH).name}/runs", {"branch": "main", "per_page": EXECUTOR_RUNS_PAGE})
+        rows = doc.get("workflow_runs") if isinstance(doc, dict) else None
+        if not isinstance(rows, list) or not all(isinstance(r, dict) and type(r.get("id")) is int for r in rows):
+            return "evaluated_unproven:runs_unreadable"
+        older = [r for r in rows if r["id"] < int(own)]
+        try:
+            if len(rows) >= EXECUTOR_RUNS_PAGE and min(B.stamp(r["created_at"]) for r in rows) >= since - timedelta(minutes=EXECUTOR_RUN_MAX_MINUTES):
+                return "evaluated_unproven:runs_page"           # the window may reach past this page
+            window = [r for r in older if B.stamp(r["updated_at"]) >= since]
+        except (KeyError, TypeError, ValueError):
+            return "evaluated_unproven:run_row"
+        window = [r for r in window if not (r.get("status") == "completed" and r.get("conclusion") == "skipped")]
+        if any(r.get("status") != "completed" for r in window):
+            return "evaluated_unproven:run_active"
+        if len(window) > EVALUATION_READS:
+            return "evaluated_unproven:too_many_runs"
+        for r in sorted(window, key=lambda r: r["id"], reverse=True):
+            jobs, ok = self.gh.pages(f"actions/runs/{r['id']}/jobs", {"filter": "latest"}, key="jobs", max_pages=1)
+            job = [j for j in jobs or [] if isinstance(j, dict) and j.get("name") == "execute"]
+            if not ok or len(job) > 1:
+                return f"evaluated_unproven:jobs={r['id']}"
+            if not job or job[0].get("conclusion") == "skipped" or (job[0].get("conclusion") == "cancelled" and not job[0].get("steps")):
+                continue                                         # the job never ran: nothing was evaluated
+            if job[0].get("status") != "completed" or type(job[0].get("id")) is not int:
+                return f"evaluated_unproven:job={r['id']}"
+            text = self.gh.text(f"actions/jobs/{job[0]['id']}/logs")
+            found = B.HEALTH_LINE.findall(text) if isinstance(text, str) else []
+            try:
+                line = json.loads(found[0]) if len(found) == 1 else None
+            except ValueError:
+                line = None
+            if not isinstance(line, dict):
+                return f"evaluated_unproven:health={r['id']}"
+            result, brief_run = str(line.get("result") or ""), line.get("brief_run")
+            if brief_run in (None, "") and not result.startswith("NO_DECISION("):
+                return f"evaluated_unproven:brief_run={r['id']}"   # a crash line names no brief: it may have been this one
+            if str(brief_run) == str(run_id) and line.get("brief_attempt") in (None, "", str(attempt)) and not result.startswith("NO_DECISION("):
+                return f"already_evaluated={r['id']}"
+        return None
+
+    def resolve_main(self):
+        """Trigger round, the workflow's resolve step: the brief main a dispatched run must check out, or None. Only the
+        published brief and its run are read (resolve_brief_run without the checkout check); execute() proves all of
+        it again after the checkout."""
+        try:
+            issues = self.gh.get("issues", {"labels": B.BRIEF_LABEL, "state": "open", "per_page": 20})
+            rows = [i for i in issues if isinstance(i, dict) and "pull_request" not in i and B.is_actions_bot(i.get("user"))] \
+                if isinstance(issues, list) else []
+            self.published_doc = rows[0] if len(rows) == 1 else None
+            brief = B.parse_body(str(rows[0].get("body") or "")) if len(rows) == 1 else None
+            if not isinstance(brief, dict) or not isinstance(brief.get("main"), str) or D.SHA40.fullmatch(brief["main"]) is None:
+                return None
+            return brief["main"] if self.resolve_brief_run(brief, checkout=False) is None else None
+        except Exception:                                        # noqa: BLE001  (nothing resolved: execute() reports NO_DECISION)
+            return None
 
     def finish(self, action, pr, head, result):
         d = self.decision or {}
@@ -944,7 +1081,7 @@ class Run:
             self.say("S1_EXECUTOR_ALARM " + " ".join(self.alarms))
         state = health_state(result, self.alarms, self.pending, self.stop_kind, self.uncertain, (self.decision or {}).get("unverified"))
         self.say("S1_EXECUTOR_HEALTH " + json.dumps({"v": 1, "state": state, "run": self.env.get("GITHUB_RUN_ID"), "attempt": self.env.get("GITHUB_RUN_ATTEMPT"),
-                                                     "brief_run": self.env.get("S1_BRIEF_RUN_ID"),
+                                                     "brief_run": self.env.get("S1_BRIEF_RUN_ID"), "brief_attempt": self.env.get("S1_BRIEF_RUN_ATTEMPT"),
                                                      "at": B.iso(self.now_fn()), "mode": self.mode, "action": action, "result": str(result)[:160],
                                                      "writes": len(self.writes), "stop": self.stop_kind, "uncertain": self.uncertain[:3],
                                                      "unverified": list((self.decision or {}).get("unverified") or [])[:3]},
@@ -1023,13 +1160,39 @@ def read_files(root):
             "budgets": B.parse_json_block(read("00_FMOS/S1/STEWARD_STATES.md"), "S1_STEWARD_BUDGETS_v1")}
 
 
+def resolve_brief_main(env):
+    """Trigger round: the step before the second checkout of a dispatched run. Prints and writes to the step output
+    file ONE line brief_main=<40 hex>, or nothing; exits 0 either way (execute-published decides and reports)."""
+    if env.get("GITHUB_REPOSITORY", B.REPO) != B.REPO or env.get("GITHUB_EVENT_NAME") != SELF_TRIGGER:
+        print("S1_EXECUTOR_RESOLVE none (not a dispatched run of this repository)")
+        return 0
+    token = env.get("GITHUB" + "_TOKEN", "")
+    run = Run(B.GitHub(token, budget=4), Native(B.CHECKOUT_ROOT), dict(env), {}, out=lambda line: None)
+    sha = run.resolve_main()
+    sha = sha if isinstance(sha, str) and D.SHA40.fullmatch(sha) else None
+    print(f"S1_EXECUTOR_RESOLVE {sha or 'none'}")
+    path = env.get("GITHUB" + "_OUTPUT")
+    if sha and path:
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(f"brief_main={sha}\n")
+    return 0
+
+
 def main(argv):
+    if len(argv) == 2 and argv[1] == "resolve-brief-main":
+        # trigger round: never a health line from this step (the execute job's log must hold exactly the ONE health line
+        # of execute-published, which the watchdog and the next run's one-evaluation check read)
+        try:
+            return resolve_brief_main(os.environ)
+        except Exception as exc:                                 # noqa: BLE001  (nothing resolved: execute-published reports NO_DECISION)
+            print(f"S1_EXECUTOR_RESOLVE none ({type(exc).__name__})")
+            return 0
     try:
         # fix round 5 (P1-08): the usage and repository checks are inside the handler too, so they also print a health
         # line. What no handler can cover (an import that fails, a cancelled or killed job) prints none: the next
         # build's watchdog reads the job's own log and reports EXECUTOR_NOHEALTH.
         if not ((len(argv) == 3 and argv[1] == "execute") or (len(argv) == 2 and argv[1] == "execute-published")):
-            raise SystemExit("usage: s1_executor_v1.py execute-published | execute <issue body file>")
+            raise SystemExit("usage: s1_executor_v1.py execute-published | resolve-brief-main | execute <issue body file>")
         token = os.environ.get("GITHUB" + "_TOKEN", "")
         if os.environ.get("GITHUB_REPOSITORY", B.REPO) != B.REPO:
             raise SystemExit(f"REFUSED: repository is not {B.REPO}")
