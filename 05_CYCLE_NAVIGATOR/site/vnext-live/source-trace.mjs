@@ -132,7 +132,13 @@ export function sourceTrace(latest,compass,parsed){
   if(weeklySourceAligned&&f.source_status?.strategic==='BOUND_WEEKLY_ANCHOR'&&
      f.strategic?.status==='BOUND_WEEKLY_ANCHOR'&&
      f.strategic?.authority==='CYCLE_NAVIGATOR_OWNED_NOT_NEW_SITE_FORECAST'){
-    result.long_horizons[1].direction=validDirection(f.strategic.horizon_21_30d?.direction);
+    const strategicDirection=f.strategic.horizon_21_30d?.direction;
+    // Only the source-qualified weekly strategic projection may acquire
+    // this presentation owner; an unbound research lane remains unavailable.
+    if(['UP','DOWN','SIDEWAYS','MIXED','NO_EDGE'].includes(strategicDirection)){
+      result.long_horizons[1].direction=strategicDirection;
+      result.long_horizons[1].owner='CYCLE_NAVIGATOR_STRATEGIC_CONTEXT';
+    }
     result.long_horizons[2].direction=validDirection(f.strategic.horizon_4_8w?.direction);
   }
   return result;
