@@ -9,7 +9,7 @@ import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfid
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,verifiedLiveMomentum,sourceHorizonClock} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,verifiedPublishedLiveMomentum,verifiedKompasPublicationLineage,sourceHorizonClock} from './compass-overview.mjs';
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {hourlyFloorBanner,kompasTruthBanner} from '../kompas-truth-banner.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
@@ -237,7 +237,7 @@ function renderQuickDecision(){
   UNKNOWN:['Ukendt retning','Unknown direction'],
   UNAVAILABLE:['Ingen måling','No reading']
  };
- const liveMomentum=verifiedLiveMomentum({compass:feeds?.compass,view});
+ const liveMomentum=verifiedPublishedLiveMomentum({compass:feeds?.compass,view,publicationLineage:feeds?.publicationLineage});
  const observed=liveMomentum|| (eligible?observedMarketClock({compass:feeds.compass}):
   {state:'OBSERVATION_CLOCK_INVALID'});
  // The official 1–3d forecast remains source-valid even when the latest
@@ -560,8 +560,13 @@ function renderHorizonStatus(){
   latest:feeds?.latest,publicationLineage:feeds?.publicationLineage,
   nowUtc:new Date().toISOString()
  });
+ // A missing or mismatched publication receipt cannot independently revive
+ // momentum on a degraded weekly join. Keep the separately valid Official
+ // daily readback and strategic source untouched.
+ const matrixView=verifiedKompasPublicationLineage(feeds?.publicationLineage,view)?view:
+  view?{...view,live_observation:null}:null;
  const matrix=kompasHorizonStatusRows({
-  compass:feeds?.compass,view,lang,strategic,trace,originalWeekPrice,
+  compass:feeds?.compass,view:matrixView,lang,strategic,trace,originalWeekPrice,
   observationCurrent:clock.state==='FRESH_OBSERVATION'
  });
  const fragment=document.createDocumentFragment();
