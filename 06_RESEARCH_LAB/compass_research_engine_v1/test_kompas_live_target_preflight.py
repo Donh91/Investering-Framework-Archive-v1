@@ -12,7 +12,9 @@ def fixture():
     ends = {str(i): days[i]["end_utc"] for i in (1,3,7)}
     def block():
         return {"status": "OK", "quote": "USDT", "as_of_utc": "2026-11-25T20:00:00Z",
-                "p0": 99.0, "days": [dict(x) for x in days],
+                "p0": 99.0, "points": [["2026-11-25T19:00:00Z", 98.0],
+                                       ["2026-11-25T20:00:00Z", 99.0]],
+                "days": [dict(x) for x in days],
                 "headline": {str(i): {"end_utc": ends[str(i)], "target": days[i]["centre"]}
                              for i in (1,3,7)}}
     return {"contract": "KOMPAS_LIVE_PATH_v1", "generated_at_utc": ISSUED,
@@ -32,6 +34,8 @@ class TargetTests(unittest.TestCase):
         self.assertEqual(r["rows"][1]["baseline_close"], 99)
         self.assertGreater(r["rows"][1]["duration_from_issue_hours"], 72)
         self.assertIs(r["scoring_authorized"], False)
+        self.assertEqual(r["candidate_variant"], "PRODUCER_PRIMARY_NOT_VIEWER_STATE")
+        self.assertTrue(all(row["quote"] == "USDT" for row in r["rows"]))
 
     def test_unavailable_rows_retained(self):
         d = fixture()
@@ -57,3 +61,31 @@ class TargetTests(unittest.TestCase):
             mutate(d)
             with self.subTest(d=d), self.assertRaises(ValueError):
                 targets(d)
+
+    def test_reference_tail_mutations(self):
+        for mutate in (
+                lambda b: b.update(p0=100),
+                lambda b: b["points"][-1].__setitem__(1, 100),
+                lambda b: b["points"].pop(),
+                lambda b: b["points"].reverse(),
+                lambda b: b["points"].insert(0, ["2026-11-25T19:00:00Z", 98]),
+                lambda b: b["points"][0].__setitem__(0, "2026-11-25T19:01:00Z"),
+                lambda b: b["points"].append(["2026-11-25T21:00:00Z", 99]),
+                lambda b: b.update(points=[]),
+                lambda b: b["points"][0].__setitem__(1, True),
+                lambda b: b["days"].reverse()):
+            d = fixture()
+            mutate(d["assets"]["BTC"])
+            with self.subTest(b=d["assets"]["BTC"]), self.assertRaises(ValueError):
+                targets(d)
+
+    def test_midnight_exact_targets(self):
+        d = fixture()
+        d["generated_at_utc"] = "2026-11-26T00:00:00Z"
+        for b in d["assets"].values():
+            b["days"].pop(0)
+            b["as_of_utc"] = "2026-11-26T00:00:00Z"
+            b["points"] = [["2026-11-26T00:00:00Z", 99]]
+        r = targets(d)
+        self.assertEqual([x["duration_from_issue_hours"] for x in r["rows"][:3]], [24, 72, 168])
+        self.assertFalse(r["scoring_authorized"])

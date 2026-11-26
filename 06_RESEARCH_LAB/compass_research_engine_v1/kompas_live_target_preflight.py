@@ -57,7 +57,7 @@ def targets(doc):
         if block.get("status") == "UNAVAILABLE":
             for h in HORIZONS:
                 rows.append({"asset": asset, "horizon_days_label": h,
-                             "target_utc": ends[str(h)], "status": "UNAVAILABLE",
+                             "target_utc": iso(utc(ends[str(h)])), "quote": "USDT", "status": "UNAVAILABLE",
                              "reference_price": None, "candidate_close": None,
                              "baseline_close": None, "range": None})
             continue
@@ -67,11 +67,31 @@ def targets(doc):
         if not dt.timedelta(0) <= issued-asof <= dt.timedelta(minutes=90):
             raise ValueError("invalid issue/reference clock")
         p0 = price(block["p0"])
+        # Internal consistency, not independent price-source authentication.
+        points = block.get("points")
+        if not isinstance(points, list) or not points:
+            raise ValueError("missing reference points")
+        previous = None
+        for point in points:
+            if not isinstance(point, list) or len(point) != 2:
+                raise ValueError("invalid reference point")
+            clock, close = utc(point[0]), price(point[1])
+            if clock.minute or clock.second or clock.microsecond or clock > asof:
+                raise ValueError("invalid hourly reference clock")
+            if previous is not None and clock <= previous:
+                raise ValueError("reference points out of order")
+            previous = clock
+        if previous != asof or close != p0:
+            raise ValueError("reference tail mismatch")
         indexed = {}
+        previous = None
         for day in block["days"]:
             t = utc(day["end_utc"])
             if t in indexed or t != ceil_day(t) or t <= issued:
                 raise ValueError("invalid or duplicate UTC day endpoint")
+            if previous is not None and t <= previous:
+                raise ValueError("day endpoints out of order")
+            previous = t
             lo, mid, hi = map(price, (day["lo"], day["centre"], day["hi"]))
             if not lo <= mid <= hi:
                 raise ValueError("invalid interval")
@@ -93,7 +113,7 @@ def targets(doc):
             if utc(head["end_utc"]) != t or price(head["target"]) != mid:
                 raise ValueError("headline target mismatch")
             rows.append({"asset": asset, "horizon_days_label": h, "target_utc": iso(t),
-                         "status": "TARGET_PREFLIGHT_ONLY", "reference_as_of_utc": iso(asof),
+                         "status": "TARGET_PREFLIGHT_ONLY", "quote": "USDT", "reference_as_of_utc": iso(asof),
                          "reference_price": p0, "candidate_close": mid, "baseline_close": p0,
                          "range": {"lo": lo, "hi": hi, "semantics": "NOMINAL_MODEL_RANGE"},
                          "duration_from_issue_hours": (t-issued).total_seconds()/3600})
@@ -102,5 +122,6 @@ def targets(doc):
         raise ValueError("inconsistent document status")
     return {"contract": "KOMPAS_LIVE_TARGET_PREFLIGHT_v1",
             "status": "NO_OUTCOMES_NO_ADMISSION", "generated_at_utc": iso(issued),
-            "rows": rows, "publication_authenticated": False,
+            "rows": rows, "candidate_variant": "PRODUCER_PRIMARY_NOT_VIEWER_STATE",
+            "publication_authenticated": False,
             "pit_admitted": False, "scoring_authorized": False}
