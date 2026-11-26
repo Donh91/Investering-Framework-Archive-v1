@@ -254,6 +254,46 @@ class NativePrivacyScanStep(unittest.TestCase):
         self.assertEqual((code, out["result"]), (0, "NO_RESTRICTED_CONTENT"), out)
         self.assertEqual(out["merge_base_parent_sha"], fx.base)
 
+    def test_old_pr_in_shallow_checkout_deepens_past_64(self):
+        def main_history(fx):
+            for i in range(80):
+                git(fx.repo, "commit", "-q", "--allow-empty", "-m", f"data update {i}")
+            fx.write("docs/main-only.md", "Independent main data.\n")
+        fx = Fixture(self.tmp, clean_change, main_changes=main_history)
+        clone = self._shallow(fx)
+        git(clone, "config", "protocol.file.allow", "always")
+        code, out, _ = fx.cli(repo=clone)
+        self.assertEqual((code, out["result"]), (0, "NO_RESTRICTED_CONTENT"), out)
+        self.assertEqual(out["original_pr_merge_base_sha"], git(fx.repo, "merge-base", fx.base, fx.head))
+        self.assertEqual(out["files_count"], 2)
+
+    def test_bounded_deepen_exhaustion_and_early_success(self):
+        class FakeGit:
+            def __init__(self, found_after=None, shallow=True):
+                self.found_after = found_after
+                self.shallow = shallow
+                self.fetches = []
+
+            def run(self, *args, check=True):
+                if args[0] == "merge-base":
+                    return b"a" * 40 if self.found_after is not None and len(self.fetches) >= self.found_after else None
+                if args[0] == "rev-parse":
+                    return b"true" if self.shallow else b"false"
+                if args[0] == "fetch":
+                    self.fetches.append(args)
+                    return None
+                raise AssertionError(args)
+
+        for found_after, shallow, expected in ((0, True, []), (2, True, [64, 256]),
+                                               (None, True, [64, 256, 1024]), (None, False, [])):
+            with self.subTest(found_after=found_after, shallow=shallow):
+                fake = FakeGit(found_after, shallow)
+                value = step.original_pr_base(fake, "b" * 40, "c" * 40, "d" * 40)
+                self.assertEqual(value, "a" * 40 if found_after is not None else None)
+                self.assertEqual(fake.fetches, [("fetch", "--no-tags", f"--deepen={n}", "origin", "d" * 40) for n in expected])
+                if value is None:
+                    self.assertEqual(step.exit_code("UNKNOWN", "enforce"), 1)
+
     def test_missing_base_fails_closed(self):
         fx = Fixture(self.tmp, clean_change)
         clone = self._shallow(fx)
