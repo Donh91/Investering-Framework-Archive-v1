@@ -181,7 +181,9 @@ class CarryMarker(unittest.TestCase):
         self.assertEqual(out["checked_through"], self.h.main)       # the window WAS scanned: the build after this one recovers
         b = TC.brief_with(out)
         self.assertEqual((b["complete"], b["incomplete"]), (False, "C1b:carry_unknown"))
-        self.assertEqual(b["c1b"]["gap"], {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:carry_unknown"})
+        gap = b["c1b"]["gap"]                                        # fix round 5: + the commit an owner disposition names, and the carry flag
+        self.assertEqual({k: gap[k] for k in ("from_unknown", "window", "reason", "carried")},
+                         {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:carry_unknown", "carried": False})
         self.assertIn(f"C1B_GAP(window={B.C1B_WINDOW})", b["status_lines"][0])
 
     def test_the_marked_brief_is_never_an_anchor_even_when_it_names_one(self):

@@ -1882,6 +1882,15 @@ class RecallIsClearedOnlyByCodex(unittest.TestCase):
             self.assertEqual((out["alarms"], [r["cleared"] for r in B.recalls(gh.w["issue_comments"])]), (alarms, [True]))
 
 
+class FixRound5LaneLayers(unittest.TestCase):
+    """Each layer is attacked on its own (mutant E32): a protected main stops the LANE check itself, not only the last
+    read before a write (fix round 5, P1-09, added the second layer)."""
+
+    def test_a_protected_main_stops_the_lane_check_itself(self):
+        out, gh, _n, _d = execute(mutate=BEAT, live=lambda w, gh, n: w.update(main_protected=True))
+        self.assertEqual((gh.writes, out["result"]), ([], "NOTHING_ACTIONABLE(skipped=lane:C8:ruleset_unproven)"))
+
+
 if __name__ == "__main__":
     unittest.main()
 
