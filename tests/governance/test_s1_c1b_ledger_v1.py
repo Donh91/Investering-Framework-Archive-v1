@@ -570,6 +570,50 @@ class ExecutorWorkflowWatch(unittest.TestCase):
         self.assertEqual(doc["listed"], 2)                             # skipped runs and other events are not executor runs
 
 
+class SingleRuleClosers(unittest.TestCase):
+    """Fix round 6 mutants Q17, Q19, Q23, Q24 survived the sequences: each rule on its own."""
+
+    def test_no_claude_slot_is_ready_while_fenced(self):
+        h = TC.History()
+        anchor = h.commit("data: a")
+        h.commit("data: b")
+        clean, _gh = TC.c1b(h, anchor)
+        def slots(record):
+            w = TD.thin_world("SHADOW")
+            TD.no_codex(w)
+            w.update(c1b=record, codex_feed=TD.codex_feed_of(w))
+            return B.build_brief(w)["claude_slots"]
+        self.assertTrue(slots(clean) and all(x["ready"] for x in slots(clean)))            # the control: ready without a fence
+        gapped = dict(clean, gaps=[B.c1b_gap(None, TC.sha("g"), "C1b:range", 100, TB.ts(65))])
+        self.assertTrue(slots(gapped) and not any(x["ready"] for x in slots(gapped)))       # listed (no review request), never ready
+
+    def test_a_listed_gap_alone_stops_the_decision(self):
+        d, brief = TD.decide()
+        self.assertEqual(d["action"], "MERGE")
+        brief = copy.deepcopy(brief)
+        brief["c1b"]["gaps"] = [B.c1b_gap(None, TC.sha("g"), "C1b:range", 100, TB.ts(65))]
+        brief["c1b"]["fence"], brief["c1b"]["gap"] = [], None                 # even a brief whose fence and summary were dropped
+        d = D.decide(brief)
+        self.assertEqual(d["action"], "NOOP")
+        self.assertIn("lane:C1b:history_gap", d["skipped"])
+
+    def test_a_stale_native_main_health_is_unverified_never_ok(self):
+        import test_s1_executor_v1 as TE
+        stale = lambda w, g, n: [r.update(updated_at=TB.ts(30 * 60)) for r in w["health_runs"]]
+        out, gh, _n, d = TE.execute(mode="SHADOW", mutate=TE.BEAT, live=stale)
+        self.assertEqual((d["action"], gh.writes), ("MERGE", []))
+        self.assertIn("lane:C7:main_health:main_health_stale", out["result"])
+        self.assertEqual(out["health"], "UNVERIFIED")
+
+    def test_the_main_health_window_is_proven_as_its_scope(self):
+        run = {"id": 1}
+        self.assertTrue(B.health_window_ok([run] * 100, False))                # a full newest page (max_pages=1 says "incomplete")
+        self.assertTrue(B.health_window_ok([run] * 5, True))                   # a short page pages() found consistent
+        self.assertFalse(B.health_window_ok([run] * 5, False))                 # a short page that is not: unread
+        self.assertFalse(B.health_window_ok([], True))
+        self.assertFalse(B.health_window_ok(None, True))
+
+
 LONG_RUN_TICKS, LONG_RUN_SEED = 300, 20261126
 
 
