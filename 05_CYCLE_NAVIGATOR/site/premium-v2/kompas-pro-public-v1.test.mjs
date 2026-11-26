@@ -108,3 +108,25 @@ test('root quick decision and expanded horizon matrix use shared publication gat
  assert.ok(source.includes('view?{...view,live_observation:null}:null;'));
  assert.ok(source.includes('compass:feeds?.compass,view:matrixView,lang,strategic,trace,originalWeekPrice,'));
 });
+
+
+test('independent observation rejects isolated owner, source identity and delivery mutations',()=>{
+ const f=fixture();f.compass.weekly_context.status='MISMATCH';
+ const view=inspectOfficialPublicFeeds(f.latest,f.compass,{nowUtc:new Date(nowMs).toISOString()});
+ const args={compass:f.compass,view,publicationLineage:f.lineage,now:nowMs};
+ assert.equal(verifiedPublishedLiveMomentum(args)?.direction,'BULLISH');
+ const checks=[
+  {...args,view:{...view,delivery_health:'STALE'}},
+  {...args,view:{...view,compass:{...view.compass,compass_id:'SWAPPED'}}},
+  {...args,compass:{...f.compass,compass_id:'SWAPPED'}},
+  {...args,view:{...view,live_observation:{...view.live_observation,issued_at_utc:'2026-11-24T09:29:00Z'}}}
+ ];
+ for(const changed of checks)assert.equal(verifiedPublishedLiveMomentum(changed),null);
+ const owner=f.compass.full_stack.official_freshness;
+ const withOwner=patch=>({...args,compass:{...f.compass,full_stack:{...f.compass.full_stack,official_freshness:{...owner,...patch}}}});
+ assert.equal(verifiedPublishedLiveMomentum(withOwner({source_asof_utc:'2026-11-24T10:01:00Z'})),null);
+ assert.equal(verifiedPublishedLiveMomentum(withOwner({source_asof_utc:'2026-11-24T10:02:00Z',valid_until_utc:'2026-11-24T10:01:00Z'})),null);
+ const short=withOwner({valid_until_utc:'2026-11-24T10:15:00Z'});
+ assert.equal(verifiedPublishedLiveMomentum(short)?.validUntil,Date.parse('2026-11-24T10:15:00Z'));
+ assert.equal(verifiedPublishedLiveMomentum({...short,now:Date.parse('2026-11-24T10:15:00Z')}),null);
+});
