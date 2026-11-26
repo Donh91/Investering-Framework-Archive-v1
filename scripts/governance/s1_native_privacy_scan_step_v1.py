@@ -135,8 +135,11 @@ def original_pr_base(git: Git, base_parent: str, head: str, merge: str) -> str |
         if shallow is not None and shallow.strip() == b"true":
             # Bounded deepen for checkout@v4 default shallow PR-merge checkout.
             # If ancestry is still unavailable, classify UNKNOWN rather than green.
-            git.run("fetch", "--no-tags", "--deepen=64", "origin", merge, check=False)
-            ancestor = candidate()
+            for depth in (64, 256, 1024):
+                git.run("fetch", "--no-tags", f"--deepen={depth}", "origin", merge, check=False)
+                ancestor = candidate()
+                if ancestor is not None:
+                    break
     return ancestor
 
 
