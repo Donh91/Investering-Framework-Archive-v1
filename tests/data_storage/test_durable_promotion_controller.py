@@ -1,4 +1,7 @@
 import importlib.util, json, pathlib, tempfile, unittest
+# Existing Data Architecture Gate explicitly runs this module. Keep the repository
+# flag guard visible here until a dedicated workflow step can be independently re-chained.
+from tests.data_storage.test_strict_flags import StrictFlagGuardTests
 P=pathlib.Path('scripts/data_storage/durable_promotion_controller.py')
 S=importlib.util.spec_from_file_location('dpc',P); M=importlib.util.module_from_spec(S); S.loader.exec_module(M)
 
