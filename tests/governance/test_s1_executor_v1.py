@@ -34,14 +34,17 @@ MERGE_SHA = "9" * 40
 MAIN2 = "e" * 40
 SOURCE = (ROOT / "scripts" / "governance" / "s1_executor_v1.py").read_text(encoding="utf-8")
 WORKFLOW = yaml.safe_load((ROOT / B.WORKFLOW_PATH).read_text(encoding="utf-8"))
+EXEC_WORKFLOW = yaml.safe_load((ROOT / B.EXECUTOR_WORKFLOW_PATH).read_text(encoding="utf-8"))   # fix round 6 (F2)
 SWITCH = json.loads((ROOT / B.SWITCH).read_text(encoding="utf-8"))
-ENV = {"GITHUB_REPOSITORY": B.REPO, "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "schedule", "GITHUB_RUN_ID": "555",
-       "GITHUB_RUN_ATTEMPT": "1", "GITHUB_SHA": MAIN}
+# fix round 6 (F2): the executor is a workflow_run of s1-executor.yml; the brief run it acts for comes from the event
+ENV = {"GITHUB_REPOSITORY": B.REPO, "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_run", "GITHUB_RUN_ID": "555",
+       "GITHUB_RUN_ATTEMPT": "1", "GITHUB_SHA": MAIN, "S1_BRIEF_RUN_ID": "555", "S1_BRIEF_RUN_ATTEMPT": "1", "S1_BRIEF_MAIN": MAIN,
+       "S1_BRIEF_EVENT": "schedule"}
 
 
 def executor_run(run_id, created, updated=None, status="completed", **kw):
-    """GET actions/runs/<id> of a run of the brief workflow on main (what proves an executor post)."""
-    return dict({"id": run_id, "path": B.WORKFLOW_PATH, "head_branch": "main", "event": "schedule", "status": status,
+    """GET actions/runs/<id> of a run of the executor workflow on main (what proves an executor post)."""
+    return dict({"id": run_id, "path": B.EXECUTOR_WORKFLOW_PATH, "head_branch": "main", "event": "workflow_run", "status": status,
                  "conclusion": "success" if status == "completed" else None, "created_at": B.iso(created), "run_started_at": B.iso(created),
                  "updated_at": B.iso(updated or created + timedelta(minutes=4)), "repository": {"full_name": B.REPO},
                  "head_repository": {"full_name": B.REPO}}, **kw)
@@ -416,7 +419,10 @@ class ModesAndBinding(unittest.TestCase):
         self.assertEqual((out["result"], gh.calls), ("EXECUTOR_OFF(switch)", []))
         for hold in ("1", "true", "HOLD", "x", "0", "false", "off", "OFF", "no", " ", "\n"):   # ANY non-empty value holds (P2-5; fix round 5 P1-09: whitespace too)
             out, gh, _n, _d = execute(env={"S1_EXECUTOR_HOLD": hold})
-            self.assertEqual((out["result"], gh.calls, gh.writes), ("EXECUTOR_OFF(hold)", [], []), hold)
+            # fix round 6 (#173/7194141485 item 5): no write at all, and the hold is still read natively (ONE read): the
+            # native variable is not set in this fake, so only the env held (an env-only hold is named as such)
+            self.assertEqual((out["result"], gh.calls, gh.writes, out["health"]),
+                             ("EXECUTOR_OFF(hold:env_only)", [("GET", f"actions/variables/{E.HOLD_VARIABLE}")], [], "HELD"), hold)
         for free in ("",):
             self.assertEqual(D.effective_mode("LIVE", free), "LIVE", free)
             self.assertTrue(execute(env={"S1_EXECUTOR_HOLD": free})[0]["result"].startswith("MERGED("), repr(free))
@@ -425,13 +431,19 @@ class ModesAndBinding(unittest.TestCase):
         self.assertEqual(D.effective_mode("OFF", ""), "OFF")                           # the variable can never switch the executor ON
 
     def test_invariant_a_decision_of_another_run_is_never_executed(self):
-        for name, env in {"another run id": {"GITHUB_RUN_ID": "556"}, "a re-run attempt": {"GITHUB_RUN_ATTEMPT": "2"}, "another sha": {"GITHUB_SHA": "c" * 40},
-                          "a push event": {"GITHUB_EVENT_NAME": "push"}, "a workflow_run event": {"GITHUB_EVENT_NAME": "workflow_run"},
+        # fix round 6 (F2): the brief run comes from the triggering event (S1_BRIEF_*); this run is a workflow_run
+        for name, env in {"a re-run attempt": {"S1_BRIEF_RUN_ATTEMPT": "2"}, "another sha": {"S1_BRIEF_MAIN": "c" * 40},
+                          "a push brief run": {"S1_BRIEF_EVENT": "push"}, "a workflow_run brief run": {"S1_BRIEF_EVENT": "workflow_run"},
+                          "no brief event": {"S1_BRIEF_EVENT": ""}, "no brief run id": {"S1_BRIEF_RUN_ID": ""},
+                          "this run on a schedule": {"GITHUB_EVENT_NAME": "schedule"}, "this run on a push": {"GITHUB_EVENT_NAME": "push"},
                           "a pull_request event": {"GITHUB_EVENT_NAME": "pull_request"}, "another branch": {"GITHUB_REF": "refs/heads/x"},
                           "another repository": {"GITHUB_REPOSITORY": "someone/fork"}}.items():
             with self.subTest(name):
                 out, gh, _n, _d = execute(env=env)
                 self.assertEqual((out["result"], gh.calls, gh.writes), ("BRIEF_UNVERIFIED(run_binding)", [], []))
+        # the published brief is another run's (the triggering run published nothing new): no decision for this run
+        out, gh, _n, _d = execute(env={"S1_BRIEF_RUN_ID": "556"})
+        self.assertEqual((out["result"], gh.calls, gh.writes, out["health"]), ("NO_DECISION(published_run=555)", [], [], "UNVERIFIED"))
 
     def test_invariant_stale_malformed_or_tampered_decisions_are_noops(self):
         run, gh, _n, body, d = setup()
@@ -550,7 +562,7 @@ def live_cases():
         "the ledger cannot be read completely": (lambda w, gh, n: w.update(issue_comments_complete=False), "lane:C7:ledger_unreadable"),
         "main health failed meanwhile": (lambda w, gh, n: w["health_runs"].append(dict(w["health_runs"][0], id=950, conclusion="failure", updated_at=TB.ts(1))), "lane:C7:main_health:main_health_failed"),
         "a ruleset became active": (lambda w, gh, n: w.update(rulesets_1=[{"id": 1, "target": "branch", "enforcement": "active", "updated_at": "x"}]), "lane:C8:ruleset_census"),
-        "main became protected": (lambda w, gh, n: w.update(main_protected=True), "lane:C8:ruleset_unproven"),
+        "main became protected": (lambda w, gh, n: w.update(main_protected=True), "lane:C8:main_protected"),
         "a receipt for this PR and head exists": (lambda w, gh, n: w["issue_comments"].append(TB.comment(63, f"S1_LANE_MERGE_v1\npr: 7\nhead: {HEAD}\ncontract=44444444", TB.BOT, 3)), "7:C9:already_done"),
         "ONE earlier attempt at this head, settled by the owner (no retry, ever)": (lambda w, gh, n: w["issue_comments"].extend(
             [TB.comment(64, f"S1_LANE_MERGE_INTENT_v1\npr: 7\nhead: {HEAD}\nloop={'4' * 40}\ncontract=44444444", TB.BOT, 200),
@@ -875,29 +887,37 @@ class Harness(unittest.TestCase):
 
 
 class WorkflowAndSwitch(unittest.TestCase):
-    """The executor job as shipped: read-only, never on a PR event, main's own scripts only; and LIVE needs both halves."""
+    """The executor job as shipped: read-only, never on a PR event, main's own scripts only; and LIVE needs both halves.
+    Fix round 6 (F2): its own workflow, s1-executor.yml, started by a completed SUCCESSFUL brief run."""
 
     def setUp(self):
-        self.job = WORKFLOW["jobs"]["execute"]
-        self.text = (ROOT / B.WORKFLOW_PATH).read_text(encoding="utf-8")
+        self.job = EXEC_WORKFLOW["jobs"]["execute"]
+        self.text = (ROOT / B.EXECUTOR_WORKFLOW_PATH).read_text(encoding="utf-8")
 
     def test_triggers_and_gating(self):
-        self.assertEqual(sorted(WORKFLOW[True]), ["push", "schedule", "workflow_dispatch", "workflow_run"])
+        self.assertEqual(EXEC_WORKFLOW[True], {"workflow_run": {"workflows": ["S1 tick brief"], "types": ["completed"], "branches": ["main"]}})
+        self.assertEqual(WORKFLOW["name"], "S1 tick brief")                             # the name the trigger names
         self.assertNotIn("pull_request", self.text.replace("pull-requests", ""))       # no pull_request or pull_request_target trigger at all
         cond = " ".join(self.job["if"].split())
         self.assertEqual(cond, "github.ref == 'refs/heads/main' && github.repository == 'Donh91/Investering-Framework-Archive-v1' && "
-                               "(github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && needs.build.outputs.brief != ''")
-        self.assertEqual(self.job["needs"], ["build", "publish"])
+                               "github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && "
+                               "github.event.workflow_run.head_repository.full_name == github.repository && "
+                               "(github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'workflow_dispatch')")
+        self.assertNotIn("needs", self.job)
+        self.assertEqual(list(EXEC_WORKFLOW["jobs"]), ["execute"])
         self.assertEqual(self.job["concurrency"], {"group": "s1-executor", "cancel-in-progress": False})
-        self.assertEqual(E.EVENTS, ("schedule", "workflow_dispatch"))
+        self.assertEqual((E.EVENTS, E.EXECUTOR_TRIGGER, B.EXECUTOR_EVENTS), (("schedule", "workflow_dispatch"), "workflow_run", ("workflow_run",)))
 
     def test_a_failed_executor_job_never_fails_the_run_that_carries_the_brief(self):
         # TICK.md T2 (run_not_success) and the next build's C1b anchor (previous_anchor) accept a brief only from a run
-        # whose conclusion is success. The executor runs AFTER the publish, in the same run, so its failure must not
-        # change that conclusion: continue-on-error at JOB level (the job itself still shows as failed).
-        self.assertIs(self.job["continue-on-error"], True)
-        self.assertNotIn("continue-on-error", {k for name, job in WORKFLOW["jobs"].items() if name != "execute" for k in job})
-        self.assertEqual([name for name, job in WORKFLOW["jobs"].items() if "execute" in (job.get("needs") or [])], [])   # nothing waits for it
+        # whose conclusion is success. Fix round 6 (F2): the executor is no job of that run at all, so neither its failure
+        # nor its cancellation (concurrency) nor its timeout can change that conclusion; and it starts only after it.
+        self.assertNotIn("execute", WORKFLOW["jobs"])
+        self.assertEqual(sorted(WORKFLOW["jobs"]), ["build", "due", "publish"])
+        self.assertNotIn("continue-on-error", {k for job in WORKFLOW["jobs"].values() for k in job})
+        self.assertNotIn("s1_executor_v1", (ROOT / B.WORKFLOW_PATH).read_text(encoding="utf-8"))
+        self.assertEqual(self.job["timeout-minutes"], 10)
+        self.assertEqual(self.job["steps"][3]["timeout-minutes"], 8)                    # a hang is the step's failure, inside the job's limit
         run = {"id": 555, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": MAIN, "status": "completed",
                "run_started_at": TB.ts(5), "updated_at": TB.ts(-5)}
         brief = {"run_id": 555, "main": MAIN, "generated_at": TB.ts(2), "c1b": {"checked_through": MAIN}}
@@ -909,15 +929,19 @@ class WorkflowAndSwitch(unittest.TestCase):
         steps = self.job["steps"]
         self.assertEqual([(s.get("uses") or "").split("@")[0] for s in steps], ["actions/checkout", "actions/setup-python", "", ""])   # fix round 5: + the hash-pinned YAML wheel
         if SWITCH["executor"] != "LIVE":
-            self.assertEqual([s.get("uses") for s in steps], ["actions/checkout@v4", "actions/setup-python@v5", None, None])   # as every other job of this file
-        self.assertEqual(steps[0]["with"], {"ref": "${{ github.sha }}", "persist-credentials": False, "sparse-checkout": "scripts/governance\n00_FMOS\n.github/workflows\n"})
+            self.assertEqual([s.get("uses") for s in steps], ["actions/checkout@v4", "actions/setup-python@v5", None, None])   # as every other job
+        # the triggering brief run's own main commit (a schedule or dispatch run on main: main's own files)
+        self.assertEqual(steps[0]["with"], {"ref": "${{ github.event.workflow_run.head_sha }}", "persist-credentials": False,
+                                            "sparse-checkout": "scripts/governance\n00_FMOS\n.github/workflows\n"})
         self.assertIn("--require-hashes", steps[2]["run"])                              # the YAML wheel, pinned by hash as in the build job
         self.assertEqual(steps[2]["run"], WORKFLOW["jobs"]["build"]["steps"][2]["run"])
-        run = steps[3]["run"]
-        self.assertEqual([line.strip() for line in run.strip().splitlines()],
-                         ['printf \'%s\' "$BRIEF_B64" | base64 -d > "$RUNNER_TEMP/brief.md"', 'python scripts/governance/s1_executor_v1.py execute "$RUNNER_TEMP/brief.md"'])
-        self.assertEqual(sorted(steps[3]["env"]), ["BRIEF_B64", "GITHUB_TOKEN", "PYTHONDONTWRITEBYTECODE", "S1_EXECUTOR_HOLD"])
-        self.assertEqual(steps[3]["env"]["S1_EXECUTOR_HOLD"], "${{ vars.S1_EXECUTOR_HOLD }}")
+        self.assertEqual([line.strip() for line in steps[3]["run"].strip().splitlines()], ["python scripts/governance/s1_executor_v1.py execute-published"])
+        self.assertEqual(steps[3]["env"], {"GITHUB_TOKEN": "${{ github.token }}", "S1_BRIEF_RUN_ID": "${{ github.event.workflow_run.id }}",
+                                           "S1_BRIEF_RUN_ATTEMPT": "${{ github.event.workflow_run.run_attempt }}",
+                                           "S1_BRIEF_MAIN": "${{ github.event.workflow_run.head_sha }}",
+                                           "S1_BRIEF_EVENT": "${{ github.event.workflow_run.event }}",
+                                           "S1_EXECUTOR_HOLD": "${{ vars.S1_EXECUTOR_HOLD }}", "PYTHONDONTWRITEBYTECODE": "1"})
+        self.assertNotIn("${{", steps[3]["run"])                                       # no event or issue text in a run: line
         self.assertNotIn("secrets.", self.text)
         for step in steps:
             self.assertNotIn("continue-on-error", step)
@@ -933,10 +957,9 @@ class WorkflowAndSwitch(unittest.TestCase):
         self.assertNotIn("actions", [k for k, v in perms.items() if v == "write"])     # actions: write is never granted (no dispatch)
         self.assertEqual(SWITCH["executor"] == "LIVE", perms == live,
                          "the switch reads LIVE if and only if the execute job holds the write permissions (the enable PR changes both)")
-        for name, job in WORKFLOW["jobs"].items():
-            if name != "execute":
-                self.assertNotIn("write", [v for k, v in job["permissions"].items() if k in ("contents", "pull-requests", "actions")], name)
-        self.assertEqual(WORKFLOW["permissions"], {})
+        for name, job in WORKFLOW["jobs"].items():                                     # the brief workflow: never a write beyond the issue
+            self.assertNotIn("write", [v for k, v in job["permissions"].items() if k in ("contents", "pull-requests", "actions")], name)
+        self.assertEqual((WORKFLOW["permissions"], EXEC_WORKFLOW["permissions"]), ({}, {}))
         # review finding P3-10: a job that holds write permissions runs actions pinned by commit SHA, never by a tag
         uses = [s["uses"] for s in self.job["steps"] if s.get("uses")]
         self.assertEqual([u.split("@")[0] for u in uses], ["actions/checkout", "actions/setup-python"])
@@ -1102,7 +1125,8 @@ class SettlementIdentity(unittest.TestCase):
             "a run on another branch": {"head_branch": "claude/x"},
             "a pull_request run": {"event": "pull_request"},
             "a push run": {"event": "push"},
-            "a workflow_run run": {"event": "workflow_run"},
+            "a schedule run": {"event": "schedule"},                               # fix round 6 (F2): an executor run is a workflow_run
+            "a run of the brief workflow": {"path": B.WORKFLOW_PATH},             # fix round 6 (F2): never the executor's own
             "another repository": {"repository": {"full_name": "someone/fork"}},
             "a fork head repository": {"head_repository": {"full_name": "someone/fork"}},
             "another run id in the answer": {"id": 541},
@@ -1354,6 +1378,9 @@ class NoSilentFailure(unittest.TestCase):
 
             def execute(self, body):
                 return FakeRun.out
+
+            def execute_published(self):
+                return FakeRun.out
         with tempfile.TemporaryDirectory() as tmp:
             brief, summary = os.path.join(tmp, "brief.md"), os.path.join(tmp, "summary.md")
             Path(brief).write_text("x", encoding="utf-8")
@@ -1370,7 +1397,9 @@ class NoSilentFailure(unittest.TestCase):
             self.assertIn("S1_TICK NOOP a", text)
             self.assertIn("S1_EXECUTOR_ALARM intent_without_outcome(c=1)", text)
         self.assertEqual(E.main(["x", "nope"]), 1)                                       # fix round 5: a usage error also prints its health line
-        self.assertIs(WORKFLOW["jobs"]["execute"]["continue-on-error"], True)          # so that exit 1 is a red JOB, never a failed run
+        # fix round 6 (F2): exit 1 fails the executor's OWN run (s1-executor.yml); the brief's run has already concluded
+        self.assertNotIn("execute", WORKFLOW["jobs"])
+        self.assertEqual(EXEC_WORKFLOW[True]["workflow_run"]["types"], ["completed"])
 
 
 class OneAttemptPerHeadEndToEnd(unittest.TestCase):
@@ -1467,7 +1496,7 @@ def hourly_run(w, run_id, minutes, mode="LIVE", live=None, runs=None):
     gh.next_id = 7000 + 10 * (run_id - 555)
     if live:
         live(w, gh, native)
-    out = E.Run(gh, native, dict(ENV, GITHUB_RUN_ID=str(run_id)), FILES(w), now_fn=lambda: now, out=lambda line: None).execute(body)
+    out = E.Run(gh, native, dict(ENV, GITHUB_RUN_ID=str(run_id), S1_BRIEF_RUN_ID=str(run_id)), FILES(w), now_fn=lambda: now, out=lambda line: None).execute(body)
     w.setdefault("exec_logs", {})[run_id] = "\n".join("2026-11-18T06:00:00.0000000Z " + line for line in out["lines"])   # this job's own log
     return out, gh, decision
 
@@ -1888,7 +1917,7 @@ class FixRound5LaneLayers(unittest.TestCase):
 
     def test_a_protected_main_stops_the_lane_check_itself(self):
         out, gh, _n, _d = execute(mutate=BEAT, live=lambda w, gh, n: w.update(main_protected=True))
-        self.assertEqual((gh.writes, out["result"]), ([], "NOTHING_ACTIONABLE(skipped=lane:C8:ruleset_unproven)"))
+        self.assertEqual((gh.writes, out["result"]), ([], "NOTHING_ACTIONABLE(skipped=lane:C8:main_protected)"))
 
 
 if __name__ == "__main__":
@@ -1917,7 +1946,7 @@ class FixRound3WriteBoundaries(unittest.TestCase):
             "a check run failed": (lambda w, g, n: w["pr"][7]["check_runs"].append({"id": 99, "name": "x", "status": "completed", "conclusion": "failure", "app": {"slug": "y"}}),
                                    "7:C4:checks_after_intent"),
             "a commit status failed": (lambda w, g, n: w["pr"][7]["statuses"].append({"id": 1, "context": "ci", "state": "failure"}), "7:C4:checks_after_intent"),
-            "main became protected": (lambda w, g, n: w.update(main_protected=True), "lane:C8:ruleset_unproven"),
+            "main became protected": (lambda w, g, n: w.update(main_protected=True), "lane:C8:main_protected"),
             "main moved by code": (lambda w, g, n: (setattr(g, "main", MAIN2), setattr(n, "drift_paths", ["scripts/governance/x.py"])), "BRIEF_STALE(source_changed)"),
             "main moved onto a path of the PR": (lambda w, g, n: (setattr(g, "main", MAIN2), setattr(n, "drift_paths", ["docs/notes/a.md"])), "C2:needs_branch_update"),
             "a halt on the ledger": (lambda w, g, n: g.late.append(TB.comment(9001, "S1_LANE_HALTED PR=- head=-\nreason: owner\ncontract=44444444", TB.OWNER, 0)),

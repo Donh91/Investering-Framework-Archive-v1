@@ -114,9 +114,12 @@ class FailClosed(unittest.TestCase):
         self.assertIsNone(B.c1b_scan(late, "0" * 40, "A", lambda key: trees[key], search_reads=3, unproven=unproven))
         self.assertEqual(len(unproven), 1)
         self.assertEqual(unproven[0]["unread"], 4)
-        d, _b = decide(lambda w: w["c1b"].update(gap={"from_unknown": True, "window": 4, "reason": "C1b:capped_equal_ends"}))
+        # fix round 6: the capped rest is the brief's OPEN segment (checked_through stops at the proven point; the next
+        # build resumes it), never a clean range: no merge, and it is on the owner's line
+        proven = "5" * 40
+        d, _b = decide(lambda w: w["c1b"].update(checked_through=proven, open={"from": proven, "to": w["main_sha"], "reason": "C1b:capped_equal_ends", "unread": 4}))
         self.assertEqual(d["action"], "NOOP")
-        self.assertIn("lane:C1b:history_gap", d["skipped"])
+        self.assertIn("lane:C1b:open_segment", d["skipped"])
         self.assertIn("C1B_GAP(window=4)", d["status_lines"][0])
 
 
@@ -360,7 +363,7 @@ class FixRound5BoundaryReads(unittest.TestCase):
 
     def test_live_stop_sees_code_drift_protection_and_pins_until_the_merge_call(self):
         for name, change, reason in (("main moved by code", lambda gh, n: (setattr(gh, "main", TE.MAIN2), setattr(n, "drift_paths", ["scripts/x.py"])), "BRIEF_STALE(source_changed)"),
-                                     ("main protected", lambda gh, n: gh.w.update(main_protected=True), "lane:C8:ruleset_unproven:put"),
+                                     ("main protected", lambda gh, n: gh.w.update(main_protected=True), "lane:C8:main_protected:put"),
                                      ("a pin changed", lambda gh, n: gh.w["pins_actual"].update({"AGENTS.md": "0" * 40}), "lane:C7:pins:AGENTS.md:put")):
             with self.subTest(name):
                 run, gh, native = self.run_live()

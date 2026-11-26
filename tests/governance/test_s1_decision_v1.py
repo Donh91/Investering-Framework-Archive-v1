@@ -199,8 +199,8 @@ class Golden(unittest.TestCase):
         self.assertEqual({d["action"] for d in want.values()}, {"MERGE", "HALT", "NOOP"})
         results = {re.match(r"[A-Z_]+", d["result"]).group(0) for d in want.values()}
         self.assertLessEqual({"DECIDED_MERGE", "DECIDED_HALT", "NOTHING_ACTIONABLE", "BRIEF_INCOMPLETE", "SOURCE_UNVERIFIED"}, results)
-        for d in want.values():
-            self.assertTrue(d["tick"].startswith("S1_TICK NOOP "), d["tick"])          # the observer never prints a merge it did not read back
+        for d in want.values():                                                        # the observer never prints a merge it did not read back
+            self.assertTrue(d["tick"].startswith("S1_TICK NOOP " if d["executor"] == "LIVE" else D.SHADOW_TICK + " NOOP "), d["tick"])   # fix round 6 (F3)
         self.assertEqual({d["merge"]["risk"] for d in want.values() if d["action"] == "MERGE"}, {"LOW", "MEDIUM", "HIGH"})
         for d in want.values():                                                        # HIGH only as automation's allowlisted data (addendum c)
             if d["action"] == "MERGE" and d["merge"]["risk"] == "HIGH":
@@ -216,7 +216,11 @@ class Decide(unittest.TestCase):
                                       "paths_sha256": TB.entry(brief)["paths_sha256"], "title_sha256": D.sha16("docs: a note"),
                                       "ci": {"execution-truth": [103, 1, 1031], "gate": [101, 1, 1011], "privacy-scan": [101, 1, 1010],
                                              "storage-health": [102, 1, 1020], "test": [103, 1, 1030]}, "health_run": 900})
-        self.assertEqual(d["tick"], f"S1_TICK NOOP 7 {HEAD[:8]} DECIDED_MERGE(executor=SHADOW) main={MAIN[:8]} contract=44444444")   # a decision is never a merge
+        # a decision is never a merge; fix round 6 (F3): outside LIVE it carries no S1_TICK line at all
+        self.assertEqual(d["tick"], f"{D.SHADOW_TICK} NOOP 7 {HEAD[:8]} DECIDED_MERGE(executor=SHADOW) main={MAIN[:8]} contract=44444444")
+        self.assertNotIn("S1_TICK NOOP", D.render_decision(d))
+        live, _b = decide(executor="LIVE")
+        self.assertEqual(live["tick"], f"S1_TICK NOOP 7 {HEAD[:8]} DECIDED_MERGE(executor=LIVE) main={MAIN[:8]} contract=44444444")
         self.assertEqual(d["print"][-1], d["tick"])
         self.assertEqual(d["print"][:3], brief["status_lines"])
 
@@ -1181,8 +1185,8 @@ class SectionMatchesTheCode(unittest.TestCase):
         self.assertIn("MAX_ATTEMPTS_PER_HEAD = 1 ", source)
         self.assertIn("(two minutes of slack)", self.sec)
         self.assertEqual(B.RUN_POST_SLACK_SECONDS, 120)
-        self.assertIn("started by `schedule` or `workflow_dispatch`", self.sec)
-        self.assertEqual(B.EXECUTOR_EVENTS, ("schedule", "workflow_dispatch"))
+        self.assertIn("is a run of `.github/workflows/s1-executor.yml` on main of this repository started by `workflow_run`", self.sec)   # fix round 6 (F2)
+        self.assertEqual((B.EXECUTOR_EVENTS, B.EXECUTOR_WORKFLOW_PATH), (("workflow_run",), ".github/workflows/s1-executor.yml"))
         self.assertIn("`executor: GITHUB run=<id>`", self.sec)
         self.assertEqual(B.executor_run("S1_OP_DONE_v1\nexecutor: GITHUB run=12"), 12)
         self.assertIn("in a changed path or in the PR title", self.sec)

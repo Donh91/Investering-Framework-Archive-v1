@@ -45,6 +45,7 @@ OWNER_ISSUE = 1156
 BRIEF_LABEL = "s1-tick-brief"
 BRIEF_TITLE = "S1 tick brief (machine-written by .github/workflows/s1-tick-brief.yml; do not edit)"
 WORKFLOW_PATH = ".github/workflows/s1-tick-brief.yml"
+EXECUTOR_WORKFLOW_PATH = ".github/workflows/s1-executor.yml"   # fix round 6 (F2): the executor is its own workflow
 ACTIONS_BOT = {"login": "github-actions[bot]", "id": 41898282, "type": "Bot"}
 CODEX_BOT_LOGIN = "chatgpt-codex-connector[bot]"
 TASK_ID = "6ae5fd466b48819187abc224ec0f1c5f"
@@ -81,8 +82,20 @@ VERDICT_SCHEMA = "S1_BRIEF_VERDICT_V1"   # B.verdict, SHADOW (S1 v3.3 W2): publi
 DIGEST_TOKEN = "S1_BRIEF_DIGEST_V1"      # printed by publish after reading the issue back (R2-7)
 T3_TREE_DIRS = ("scripts", "tests", ".github", ".agents", "00_FMOS")   # the entries TICK T3 C1b compares, in its order
 C1B_WINDOW = 100                      # first-parent commits read back from B.main (one commits page, as TICK T3 C1b)
+C1B_PAGES = 3                         # fix round 6 (liveness): commit pages one build may read to REACH a known anchor; a range
+                                      # gap only when the anchor is lost or more than C1B_PAGES * C1B_WINDOW commits back
 C1B_SEARCH_READS = 20                 # tree reads inside one differing segment; past it the segment's last commit is named
-C1B_MAX_CALLS = 60                    # the C1b part's own share of MAX_API_CALLS (it runs before the PR depth reads)
+C1B_MAX_CALLS = 110                   # the C1b part's own share of MAX_API_CALLS (it runs before the PR depth reads).
+                                      # Fix round 6 (F1): enough for EVERY shape of a C1B_WINDOW chain: 1 issues + 1 run +
+                                      # 1 commits read + at most C1B_WINDOW + 1 distinct root trees (every key c1b_scan
+                                      # reads is the base tree or a chain commit's tree, memoised) = 104 <= 110
+C1B_MAX_GAPS = 16                     # fix round 6: more open history gaps than this is surfaced (C1b:gaps_overflow), never cut
+# Fix round 6 (S4): the owner's decision whether an open C1b history gap or open segment also fences the legacy live
+# ChatGPT lane (TICK.md v3.3 reads B.next and B.claude_slots). True: while any is open, B.next carries no MERGE entry
+# and no Claude slot is ready (HALT, RECONCILE, REPAIR and review requests stay). Without it this head would widen
+# that lane: a scan that main ends incomplete (the C1b budget) is a complete brief with an open segment here.
+C1B_FENCES_LEGACY_LANE = True
+MERGE_ACTIONS = ("MERGE", "MERGE_IF_CLAUDE_APPROVE")
 SQUASH_SUBJECT = re.compile(r"\(#\d+\)$")   # TICK T3: a squash merge is a one-parent commit whose subject ends (#<n>)
 S1_FILES = "00_FMOS/S1"
 SWITCH = "00_FMOS/S1/REVIEWED_MERGE_LANE.json"
@@ -118,7 +131,7 @@ CODEX_FEED_HOURS = 72                 # how far back the repository-wide read of
 # posts as that bot): an executor post names its run, and that run is read and checked (executor_post).
 OP_INTENTS = ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1")
 EXECUTOR_RUN = re.compile(r"(?m)^executor: GITHUB run=(\d{1,20})[ \t]*$")
-EXECUTOR_EVENTS = ("schedule", "workflow_dispatch")
+EXECUTOR_EVENTS = ("workflow_run",)   # fix round 6 (F2): an executor run is a workflow_run of s1-executor.yml
 RUN_POST_SLACK_SECONDS = 120          # an executor post was created between its run's creation and end, give or take this
 SETTLE_RUN_READS = 4                  # run reads per build (and per executor run) to judge Actions-bot outcome posts
 SETTLE_MERGE_READS = 4                # PR reads per build (and per executor run): the native proof behind a merge receipt (A10)
@@ -294,7 +307,8 @@ def executor_run(body):
 def executor_post(c, run_of, now):
     """Is this ledger post proven to be the work of the executor job? All must hold: the Actions bot wrote it and
     never edited it; it names its run; `run_of(id)` (GET actions/runs/<id>, read by the caller) is that run, a run of
-    THIS workflow file on main of this repository, started by schedule or workflow_dispatch; and the post was created
+    the EXECUTOR workflow file (fix round 6, F2: s1-executor.yml) on main of this repository, started by workflow_run
+    (a completed brief run); and the post was created
     while that run existed. Anything unread or unreadable: not proven. What this does NOT prove: a workflow on main
     that deliberately names a run of this workflow while that run is in progress passes (only the owner merges
     workflow code, AGENTS.md section 0.2e exclusion 1)."""
@@ -305,7 +319,7 @@ def executor_post(c, run_of, now):
         return False
     run = run_of(rid)
     try:
-        if not isinstance(run, dict) or run.get("id") != rid or run.get("path") != WORKFLOW_PATH or run.get("head_branch") != "main" \
+        if not isinstance(run, dict) or run.get("id") != rid or run.get("path") != EXECUTOR_WORKFLOW_PATH or run.get("head_branch") != "main" \
                 or run.get("event") not in EXECUTOR_EVENTS or (run.get("repository") or {}).get("full_name") != REPO \
                 or (run.get("head_repository") or {}).get("full_name") != REPO:
             return False
@@ -617,25 +631,41 @@ EXECUTOR_STALE_HOURS = 3             # a newest published run older than this: t
 
 
 def read_executor_watch(gh, current_run):
-    """Fix round 4 (ChatGPT #8): the watchdog's native reads. The newest completed schedule/dispatch runs of this
-    workflow on main other than this one (one list read), and the jobs of at most EXECUTOR_WATCH_RUNS of them, newest
-    first, until one whose publish job succeeded (that run's execute job had a decision to act on)."""
-    doc = gh.get(f"actions/workflows/{Path(WORKFLOW_PATH).name}/runs", {"branch": "main", "per_page": 15})
-    runs = sorted((r for r in (doc.get("workflow_runs") or []) if isinstance(r, dict) and r.get("id") != current_run
-                   and r.get("event") in EXECUTOR_EVENTS and r.get("status") == "completed" and isinstance(r.get("id"), int)),
+    """Fix round 4 (ChatGPT #8): the watchdog's native reads. Fix round 6 (F2): the executor is its own workflow, so the
+    newest completed runs of s1-executor.yml on main (one list read), and for at most EXECUTOR_WATCH_RUNS of them,
+    newest first, the jobs and the execute job's log, until one whose execute job ran and had a decision (a run whose
+    job was skipped, or whose health line reads NO_DECISION, had nothing to execute)."""
+    doc = gh.get(f"actions/workflows/{Path(EXECUTOR_WORKFLOW_PATH).name}/runs", {"branch": "main", "status": "completed", "per_page": 30})
+    runs = sorted((r for r in (doc.get("workflow_runs") or []) if isinstance(r, dict) and r.get("event") in EXECUTOR_EVENTS
+                   and r.get("status") == "completed" and r.get("conclusion") != "skipped" and isinstance(r.get("id"), int)),
                   key=lambda r: r["id"], reverse=True)
     seen = []
     for r in runs[:EXECUTOR_WATCH_RUNS]:
         jobs, ok = gh.pages(f"actions/runs/{r['id']}/jobs", {"filter": "latest"}, key="jobs", max_pages=1)
         names = {j.get("name"): j.get("conclusion") for j in jobs or [] if isinstance(j, dict)}
-        seen.append({"run": r["id"], "at": r.get("created_at"), "publish": names.get("publish"), "execute": names.get("execute"), "complete": bool(ok)})
-        if names.get("publish") == "success":
-            # fix round 5 (#173/7188234670 P1-08): the job conclusion is not the executor's health (the job is
-            # continue-on-error, and an UNVERIFIED run exits 0). The ONE health line of that job's own log is read.
-            job = [j for j in jobs or [] if isinstance(j, dict) and j.get("name") == "execute" and j.get("status") == "completed" and isinstance(j.get("id"), int)]
-            seen[-1]["health"] = health_of_log(gh.text(f"actions/jobs/{job[0]['id']}/logs")) if len(job) == 1 else None
+        # "publish": whether the brief run of this executor run published the brief it acted on ("success": it had a
+        # decision; "none": its job was skipped, or its health line reads NO_DECISION)
+        seen.append({"run": r["id"], "at": r.get("created_at"), "publish": "none", "execute": names.get("execute"), "complete": bool(ok)})
+        if names.get("execute") in (None, "skipped"):
+            continue
+        # fix round 5 (#173/7188234670 P1-08): the job conclusion is not the executor's health (an UNVERIFIED run exits
+        # 0). The ONE health line of that job's own log is read.
+        job = [j for j in jobs or [] if isinstance(j, dict) and j.get("name") == "execute" and j.get("status") == "completed" and isinstance(j.get("id"), int)]
+        text = gh.text(f"actions/jobs/{job[0]['id']}/logs") if len(job) == 1 else None
+        seen[-1]["health"] = health_of_log(text)
+        if seen[-1]["health"] != "UNVERIFIED" or not no_decision_log(text):
+            seen[-1]["publish"] = "success"
             break
     return {"runs": seen, "listed": len(runs)}
+
+
+def no_decision_log(text):
+    """The one health line of an executor log reads result NO_DECISION(...): its brief run published nothing new."""
+    found = HEALTH_LINE.findall(text) if isinstance(text, str) else []
+    try:
+        return len(found) == 1 and str(json.loads(found[0]).get("result") or "").startswith("NO_DECISION(")
+    except (ValueError, AttributeError):
+        return False
 
 
 HEALTH_LINE = re.compile(r"S1_EXECUTOR_HEALTH (\{[^\n]*\})")
@@ -772,6 +802,13 @@ def main_health(runs, complete, now, merges, halts, params):
     if out["unhalted_failed_runs"]:
         out.update(status="FAIL", reason="unhalted_failed_run")
     return out
+
+
+def health_window_ok(runs, complete):
+    """Fix round 6 (S3): did one read return main health's required window, ROUTE 1's newest page of runs? A list that is
+    either a full page (100 runs: the newest 100, as pages(max_pages=1) reads it) or a short page that pages() found
+    consistent (its total_count and ids). Empty, malformed or a short inconsistent page: not read."""
+    return isinstance(runs, list) and bool(runs) and (len(runs) >= 100 or complete is True)
 
 
 def lane_state(switch, pins, halt_id, health):
@@ -1779,43 +1816,60 @@ def c1b_walk(main_sha, commits, known, window=C1B_WINDOW):
     return chain, cur, reached
 
 
-def c1b_scan(chain, base, base_key, entries_of, search_reads=C1B_SEARCH_READS, unproven=None):
+def c1b_scan(chain, base, base_key, entries_of, search_reads=C1B_SEARCH_READS, unproven=None, progress=None):
     """TICK T3 C1b on a first-parent chain (oldest first): segments from the base to the parent of the first squash
     merge, from each squash merge to the parent of the next, and from the last squash merge to the end (no squash
     merge: base to end). A segment whose start and end entries differ was changed by a commit that is not a squash
     merge: the first commit of that segment whose entries differ from its parent's is the halt, with parent its
     parents[0]. Past `search_reads` tree reads in the segment the halt names the segment's last commit and, as its
     parent, the segment's START (capped: S1's HALT step compares the trees of parent and commit, and those two are
-    the pair proven to differ). Returns None or {commit, parent, entries, capped}."""
+    the pair proven to differ). Returns None or {commit, parent, entries, capped}.
+
+    Fix round 6 (#173/7194396829 S5, F1): `progress` (a dict) records how far the step-by-step proof got WHILE the scan
+    runs: progress["proven"] is the largest chain index k such that every commit chain[0..k] is proven (a squash merge,
+    a commit whose entries equal its parent's, or the halt commit itself), -1 for none. A read that fails or a budget
+    that runs out mid-scan leaves it where the proof stopped. It never moves past a capped (unproven) segment or an
+    unread commit, even when a later segment is read and proven."""
+    progress = progress if progress is not None else {}
+    progress["proven"] = -1
     keys = [base_key] + [c[3] for c in chain]                   # keys[k] is the tree of chain[k]'s first parent
     squash = [k for k, (_s, parents, subject, _t) in enumerate(chain) if len(parents) == 1 and SQUASH_SUBJECT.search(subject)]
     segments, anchor, start = [], (base, base_key), 0            # anchor: (commit sha, tree key) of the segment start
     for k in squash:
-        segments.append((anchor, list(range(start, k))))
+        segments.append((anchor, list(range(start, k)), k))     # k: the squash merge that ends this segment
         anchor, start = (chain[k][0], chain[k][3]), k + 1
-    segments.append((anchor, list(range(start, len(chain)))))
+    segments.append((anchor, list(range(start, len(chain))), None))
     differ = lambda a, b: [d for d, x, y in zip(T3_TREE_DIRS, a, b) if x != y]
-    for (anchor_sha, anchor_key), idx in segments:
-        if not idx:
-            continue
-        # ChatGPT audit A24: equal START and END entries no longer skip a segment. A code change that a later commit of
-        # the same segment undid (A -> B -> A) was on main in between, so the first `search_reads` commits of every
-        # segment are read one by one. Past that cap a segment with equal ends is still not proven clean (stated limit).
-        same_ends = entries_of(anchor_key) == entries_of(chain[idx[-1]][3])
-        for n, k in enumerate(idx):
-            if n >= search_reads and same_ends:
-                # fix round 4 (#7 / 7186140947-08): past the cap a segment with equal ends is UNPROVEN, never clean. It is
-                # recorded (the caller makes it a C1B_GAP and the decision of this brief merges nothing), not ignored
-                if unproven is not None:                         # fix round 5 (P1-07): and where the proof stopped
-                    unproven.append({"from": anchor_sha, "to": chain[idx[-1]][0], "unread": len(idx) - n, "proven": chain[idx[n - 1]][0]})
-                break
-            if n >= search_reads:
-                last = chain[idx[-1]]
-                return {"commit": last[0], "parent": anchor_sha, "entries": differ(entries_of(anchor_key), entries_of(last[3])), "capped": True}
-            sha, parents, _subject, key = chain[k]
-            names = differ(entries_of(keys[k]), entries_of(key))
-            if names:
-                return {"commit": sha, "parent": parents[0], "entries": names, "capped": False}
+    contiguous = True                                           # every commit before the current one is proven
+    for (anchor_sha, anchor_key), idx, after in segments:
+        if idx:
+            # ChatGPT audit A24: equal START and END entries no longer skip a segment. A code change that a later commit of
+            # the same segment undid (A -> B -> A) was on main in between, so the first `search_reads` commits of every
+            # segment are read one by one. Past that cap a segment with equal ends is still not proven clean (stated limit).
+            same_ends = entries_of(anchor_key) == entries_of(chain[idx[-1]][3])
+            for n, k in enumerate(idx):
+                if n >= search_reads and same_ends:
+                    # fix round 4 (#7 / 7186140947-08): past the cap a segment with equal ends is UNPROVEN, never clean. It is
+                    # recorded (the caller keeps checked_through at the proven point, and the decision merges nothing)
+                    if unproven is not None:                     # fix round 5 (P1-07): and where the proof stopped
+                        unproven.append({"from": anchor_sha, "to": chain[idx[-1]][0], "unread": len(idx) - n, "proven": chain[idx[n - 1]][0]})
+                    contiguous = False                           # fix round 6 (S5): the proof stops here for good in this scan
+                    break
+                if n >= search_reads:
+                    last = chain[idx[-1]]
+                    if contiguous:
+                        progress["proven"] = idx[-1]             # the halt covers its segment: the next scan starts after it
+                    return {"commit": last[0], "parent": anchor_sha, "entries": differ(entries_of(anchor_key), entries_of(last[3])), "capped": True}
+                sha, parents, _subject, key = chain[k]
+                names = differ(entries_of(keys[k]), entries_of(key))
+                if names:
+                    if contiguous:
+                        progress["proven"] = k
+                    return {"commit": sha, "parent": parents[0], "entries": names, "capped": False}
+                if contiguous:
+                    progress["proven"] = k
+        if after is not None and contiguous:
+            progress["proven"] = after                          # a squash merge may change code (TICK T3)
     return None
 
 
@@ -1882,23 +1936,117 @@ def previous_anchor(issue, brief, run, now):
 
 
 GAP_ACCEPTED = "S1_C1B_GAP_ACCEPTED_v1"   # the owner's explicit disposition of ONE carried history gap (fix round 5)
+GAP_KEYS = ("id", "kind", "from", "to", "from_unknown", "reason", "window", "detected_at", "state")
+GAP_UNBOUNDED = ("", "-", "unbounded")    # the `from:` of an acceptance of a gap with no known start
 
 
-def carried_gap(prev, ledger):
-    """Fix round 5 (#173/7188234670 P1-07): the history gap of the previous brief that THIS brief must carry. A gap of
-    unread history (C1b:range, C1b:carry_unknown) is never forgotten by a later scan: it stays on every brief, and every
-    decision merges nothing, until a never-edited post of the owner account on #1156, S1_C1B_GAP_ACCEPTED_v1, names its
-    `to` commit (an explicit owner disposition). A capped segment (C1b:capped_equal_ends) needs no carry: its scan
-    resumes where the proof stopped (checked_through). `ledger` None: unread, the gap is carried."""
+# Fix round 6 (#173/7194141485 S1, S2; #173/7194396829 S5; ChatGPT kit b6c810a1): the C1b history ledger.
+#   checked_through  the scan frontier: every first-parent commit up to it was proven by a scan (a squash merge, a commit
+#                    whose entries equal its parent's, or a halt) OR lies in one of the listed gaps. It only ever stops at
+#                    the contiguous proven point: never past a capped segment, an unread commit, a budget stop or a halt.
+#   open             this build's own unproven rest, (checked_through, B.main]: resumed by the next build from
+#                    checked_through (automatic, no state beyond the anchor; the next scan covers it exactly once).
+#   gaps             EVERY range no scan can prove (history before the window when the anchor was lost or not reached),
+#                    one item per range, each with its exact from/to, reason and detection time. Carried by every brief.
+#                    A gap leaves the ledger only by an exact owner disposition (gap_acceptance); a read failure never
+#                    removes, shrinks or merges one. prev names the brief this build carried them from: publish()
+#                    replaces the published brief only with a brief that carried exactly that one.
+def c1b_gap(frm, to, reason, window, detected_at):
+    return {"id": f"{frm or '-'}..{to}", "kind": "RANGE", "from": frm, "to": to, "from_unknown": True,
+            "reason": str(reason)[:80], "window": window, "detected_at": detected_at, "state": "UNVERIFIED"}
+
+
+def gap_ok(g):
+    """Is this one well-formed gap item (as c1b_gap writes it)?"""
+    try:
+        return isinstance(g, dict) and set(g) == set(GAP_KEYS) and g["kind"] == "RANGE" and g["from_unknown"] is True \
+            and isinstance(g["to"], str) and SHA40.fullmatch(g["to"]) is not None \
+            and (g["from"] is None or (isinstance(g["from"], str) and SHA40.fullmatch(g["from"]) is not None)) \
+            and g["id"] == f"{g['from'] or '-'}..{g['to']}" and isinstance(g["reason"], str) and type(g["window"]) is int \
+            and g["state"] == "UNVERIFIED" and isinstance(stamp(g["detected_at"]), datetime)
+    except (ValueError, TypeError, AttributeError):
+        return False
+
+
+def add_gap(gaps, g):
+    """One item per range: a range already in the ledger keeps its first item (and its detection time)."""
+    if not any(x["id"] == g["id"] for x in gaps):
+        gaps.append(g)
+
+
+def carried_gaps(prev, now):
+    """EVERY history gap of the previous brief, one by one. A gap item that does not validate, a gaps field that is not a
+    list, and the single gap of a brief from before this ledger (B.c1b.gap, fix round 5) are carried conservatively: as
+    an UNBOUNDED gap (no known start) to the commit they name, else to that brief's main, detected when that brief was
+    made. A capped segment of a fix round 5 brief is not a gap: its scan resumes from checked_through."""
     c = prev.get("c1b") if isinstance(prev, dict) and isinstance(prev.get("c1b"), dict) else {}
-    gap = c.get("gap") if isinstance(c.get("gap"), dict) else None
-    if not gap or gap.get("from_unknown") is not True or str(gap.get("reason") or "").startswith("C1b:capped_equal_ends"):
+    try:
+        made = iso(stamp(prev.get("generated_at")))
+    except (ValueError, TypeError, AttributeError):
+        made = iso(now)
+    fallback = _sha_or_none(prev.get("main")) if isinstance(prev, dict) else None
+    out = []
+
+    def unbounded(item, reason):
+        to = (_sha_or_none(item.get("to")) if isinstance(item, dict) else None) or fallback
+        if to is None:
+            raise C1bFail("gaps_unreadable")                    # nothing to name: this build carries nothing (publish keeps the old brief)
+        add_gap(out, c1b_gap(None, to, reason, C1B_WINDOW, made))
+
+    if "gaps" in c:
+        for g in c["gaps"] if isinstance(c["gaps"], list) else [None]:
+            if gap_ok(g):
+                add_gap(out, {k: g[k] for k in GAP_KEYS})
+            else:
+                unbounded(g, "C1b:gap_unreadable")
+    else:
+        legacy = c.get("gap")
+        if isinstance(legacy, dict) and legacy.get("from_unknown") is True \
+                and not str(legacy.get("reason") or "").startswith("C1b:capped_equal_ends"):
+            unbounded(legacy, str(legacy.get("reason") or "C1b:range"))
+    return out
+
+
+def gap_acceptance(gap, ledger):
+    """The id of the owner's disposition of exactly this gap, or None: a never-edited S1_C1B_GAP_ACCEPTED_v1 by the owner
+    account on #1156 whose `to:` is the gap's to and whose `from:` is the gap's from (absent, "-" or "unbounded" only
+    for a gap with no known start), created at or after the gap was detected (an earlier acceptance never clears a
+    newly found range). `ledger` None: unread, nothing is accepted."""
+    if ledger is None:
         return None
-    to = _sha_or_none(gap.get("to"))
-    if to and ledger is not None and any(is_owner_unedited(x) and first_line_token(x.get("body")) == GAP_ACCEPTED
-                                         and (fields(x.get("body")).get("to") or "").strip() == to for x in ledger if isinstance(x, dict)):
-        return None
-    return {"from_unknown": True, "window": gap.get("window"), "reason": str(gap.get("reason")), "to": to, "carried": True}
+    for x in ledger:
+        if not isinstance(x, dict) or not is_owner_unedited(x) or first_line_token(x.get("body")) != GAP_ACCEPTED:
+            continue
+        f = fields(x.get("body"))
+        to, frm = (f.get("to") or "").strip(), (f.get("from") or "").strip()
+        if to != gap["to"] or (frm != gap["from"] if gap["from"] else frm.lower() not in GAP_UNBOUNDED):
+            continue
+        try:
+            if stamp(x.get("created_at")) < stamp(gap["detected_at"]):
+                continue
+        except (ValueError, TypeError):
+            continue
+        return x.get("id") if type(x.get("id")) is int else -1
+    return None
+
+
+def gap_summary(gaps, opn, carried=0):
+    """B.c1b.gap as TICK.md v3.3 T3H reads it (c1b_gap=window=<n>) and as main's brief had it: set while any gap or an
+    open segment exists. window: the commits it covers (C1B_WINDOW for a range of unknown length)."""
+    if gaps:
+        return {"from_unknown": True, "window": sum(g["window"] for g in gaps), "reason": gaps[0]["reason"], "to": gaps[0]["to"],
+                "carried": carried > 0, "count": len(gaps)}
+    if opn:
+        return {"from_unknown": True, "window": opn["unread"], "reason": opn["reason"], "to": opn["to"], "carried": False, "count": 0}
+    return None
+
+
+def c1b_frontier(out, chain, base, progress, reason):
+    """checked_through at the contiguous proven point of this scan, and the open rest (checked_through, B.main]."""
+    p = progress.get("proven", -1) if isinstance(progress, dict) else -1
+    ct = chain[p][0] if p >= 0 else base
+    out["checked_through"] = ct
+    out["open"] = None if ct == chain[-1][0] else {"from": ct, "to": chain[-1][0], "reason": reason, "unread": len(chain) - 1 - p}
 
 
 def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
@@ -1906,12 +2054,17 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
     previous brief's checked_through up to B.main, on its own share of the call budget.
 
     Fail closed: no usable previous brief, or a checked_through the first-parent walk of the newest C1B_WINDOW commits
-    does not reach, scans that window and is complete=false (C1b:range); an unreadable read or the budget is
-    complete=false (C1b:<why>) and carries the previous anchor (never this build's B.main). A halt of the previous brief
-    that no S1_LANE_HALTED on #1156 names yet is carried until one does (`ledger` None: unread, always carried).
-    Returns {checked_through, from, halt, complete, reason, stop}; `stop` is set when the API cap or a rate limit hit."""
-    out = {"checked_through": None, "from": None, "halt": None, "gap": None, "carry": None, "complete": False, "reason": None, "stop": None}
+    does not reach, scans that window, records the range before it as a gap and is complete=false (C1b:range). An
+    unreadable read is complete=false (C1b:<why>); the budget is not (the open segment blocks every merge and the next
+    build resumes it). A halt of the previous brief that no S1_LANE_HALTED on #1156 names yet is carried until one does
+    (`ledger` None: unread, always carried). Fix round 6: the previous brief's gaps are carried one by one before any
+    other read, and B.c1b.prev is set only once the previous brief was read AND its anchor judged: every failure before
+    that leaves prev None, and publish() then keeps the published brief.
+    Returns {checked_through, from, halt, gap, gaps, open, cleared, prev, carry, complete, reason, stop}."""
+    out = {"checked_through": None, "from": None, "halt": None, "gap": None, "gaps": [], "open": None, "cleared": [], "prev": None,
+           "carry": None, "complete": False, "reason": None, "stop": None, "carried": 0}
     first = gh.calls
+    progress, chain, base, reached, range_reason = {"proven": -1}, None, None, False, None
 
     def get(path, params=None):
         if gh.calls - first >= max_calls:
@@ -1931,12 +2084,20 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
             raise C1bFail(why)
         # W5: the previous build could not read ITS predecessor (carry UNKNOWN): whatever it carried is unknown, and so
         # is this build's own carry. Fail closed: no anchor of that brief is used, the window is scanned, the brief is
-        # complete=false (C1b:carry_unknown) and the gap is published.
+        # complete=false (C1b:carry_unknown) and the range before the window is a gap.
         carry_unknown = issue is not None and isinstance(prev.get("c1b"), dict) and prev["c1b"].get("carry") == "UNKNOWN"
         out["prev_next"] = next_builds(prev) if issue is not None else {}   # W5: B.next[].builds counts on from here
         out["prev_log"] = prev.get("decision_log") if issue is not None and isinstance(prev.get("decision_log"), list) else None
         if issue is not None:
-            out["gap"] = carried_gap(prev, ledger)               # fix round 5: carried first, so a failed scan cannot drop it
+            # fix round 6 (S1, S2): every gap of the previous brief, carried first and one by one; only an exact owner
+            # disposition removes one (the cleared list says which, and by which comment)
+            for g in carried_gaps(prev, now):
+                cid = gap_acceptance(g, ledger)
+                if cid is None:
+                    out["gaps"].append(g)
+                else:
+                    out["cleared"].append({"id": g["id"], "by": f"owner:{cid}"})
+            out["carried"] = len(out["gaps"])
         prev_halt = carried_halt(issues)                         # F2: carried whatever the binding; never the anchor
         if prev_halt is not None:
             named = ledger is not None and any(prev_halt["commit"] in h["body"] for h in lane_halts(ledger))
@@ -1952,11 +2113,13 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
             if carry_unknown:
                 known, why = [], "carry_unknown"
                 out["carry"] = "UNKNOWN"                         # until this build's own scan reaches B.main
+            if type(prev.get("run_id")) is int and not isinstance(prev.get("run_id"), bool):
+                out["prev"] = {"run_id": prev["run_id"], "issue": issue.get("number") if type(issue.get("number")) is int else None}
         out["checked_through"] = known[0] if known else None    # carried when this build cannot finish
         if main_sha in known:
             out.update(checked_through=main_sha, complete=True)
             out["from"] = main_sha
-            return out
+            return c1b_done(out)
         try:
             commits = get("commits", {"sha": main_sha, "per_page": C1B_WINDOW})
         except (C1bFail, StopReading):
@@ -1965,9 +2128,35 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
             raise C1bFail("commits_unreadable")
         if not isinstance(commits, list):
             raise C1bFail("commits_unreadable")
-        chain, base, reached = c1b_walk(main_sha, commits, known)
-        if not chain:
+        # fix round 6 (liveness): a known anchor that the first page does not reach is followed back page by page (at most
+        # C1B_PAGES, each read from the commit where the walk stopped), so a backlog or a resumed scan never turns into a
+        # gap; the scan of the longer chain is bounded by the budget (an open segment, resumed). No anchor: one page.
+        rows, pages, limit = list(commits), 1, C1B_WINDOW * (C1B_PAGES if known else 1)
+        while True:
+            walked, base, reached = c1b_walk(main_sha, rows, known, limit)
+            if reached or not known or pages >= C1B_PAGES or len(walked) >= limit or not walked \
+                    or any(isinstance(c, dict) and c.get("sha") == base for c in rows):
+                break
+            try:
+                more = get("commits", {"sha": base, "per_page": C1B_WINDOW})
+            except (C1bFail, StopReading):
+                raise
+            except Exception:                                    # noqa: BLE001  (a transient read: no gap, the next build retries)
+                raise C1bFail("commits_unreadable")
+            if not isinstance(more, list) or not more:
+                raise C1bFail("commits_unreadable")
+            rows, pages = rows + more, pages + 1
+        commits = rows
+        if not walked:
             raise C1bFail("commits_unreadable")                  # B.main itself is not on the page: nothing was scanned
+        chain = walked
+        out["from"] = base
+        if not reached:
+            # F3, fix round 6 (S5): the history before the window is a gap of its own (from the anchor when there is one),
+            # whatever the scan of the window finds; it is orthogonal to the window's own open segment
+            range_reason = "C1b:carry_unknown" if carry_unknown else "C1b:range" + ("" if known else f":no_anchor:{why or 'none'}")
+            add_gap(out["gaps"], c1b_gap(known[0] if known else None, base, range_reason, C1B_WINDOW, iso(now)))
+            out["carry"] = None                                  # the window is read: this build's own scan is what it carries
         cache = {}
 
         def entries_of(key):
@@ -1983,52 +2172,99 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
 
         base_row = next((c for c in commits if isinstance(c, dict) and c.get("sha") == base), None)
         unproven = []
-        halt = c1b_scan(chain, base, c1b_tree_key(base_row, base), entries_of, unproven=unproven)
+        halt = c1b_scan(chain, base, c1b_tree_key(base_row, base), entries_of, unproven=unproven, progress=progress)
         if out["halt"] is None and halt is not None:
             out["halt"] = halt                                   # an older unnamed halt of the previous brief stays first
-        # the range was scanned to B.main: the next build starts here, also after the window fallback (its own brief
-        # is complete=false, so that tick does nothing; without this step a lost anchor could never recover)
-        out.update(checked_through=main_sha, complete=reached, carry=None,
-                   reason=None if reached else "C1b:carry_unknown" if carry_unknown
-                   else "C1b:range" + ("" if known else f":no_anchor:{why or 'none'}"))
-        if not reached:                                          # F3: checked_through moved past history nobody scanned
-            out["gap"] = out["gap"] or {"from_unknown": True, "window": C1B_WINDOW, "reason": out["reason"], "to": base}
-        elif unproven:
-            # fix round 5 (P1-07): commits past the per-segment cap are NOT checked. checked_through stops where the
-            # step-by-step proof stopped, so the next build resumes there (a bounded incremental scan, no new state), and
-            # this brief carries the gap: its decision merges nothing until the scan has caught up
-            out["checked_through"] = unproven[0]["proven"]
-            out["gap"] = out["gap"] or {"from_unknown": True, "window": sum(u["unread"] for u in unproven), "reason": "C1b:capped_equal_ends",
-                                        "to": unproven[0]["to"]}
-        out["from"] = base
-        return out
+        elif halt is not None and out["halt"] != halt:
+            # fix round 6: a halt this brief cannot carry (an older one is first) is never checkpointed over: the proof
+            # stops before it, so the next scan finds it again once the older halt is named
+            at = {c[0]: k for k, c in enumerate(chain)}
+            progress["proven"] = min(progress["proven"], at.get(halt["parent"], -1))
+        # fix round 5 (P1-07), fix round 6 (S5): checked_through stops where the step-by-step proof stopped (a capped
+        # segment, a halt), also after the window fallback; the rest of the window is this brief's open segment
+        c1b_frontier(out, chain, base, progress, "C1b:halt" if halt is not None else "C1b:capped_equal_ends" if unproven else "C1b:unproven")
+        out.update(complete=reached, carry=None, reason=range_reason)
+        return c1b_done(out)
     except C1bFail as exc:
+        if chain is not None:                                    # fix round 6 (F1): the scan stopped: keep its contiguous proof
+            c1b_frontier(out, chain, base, progress, f"C1b:{exc.why}")
+        if exc.why == "budget" and chain is not None:
+            # the C1b budget is bounded progress, never a stall: the open segment blocks every merge, the next build resumes
+            out.update(complete=reached, carry=None, reason=range_reason)
+            return c1b_done(out)
         out.update(complete=False, reason=f"C1b:{exc.why}")
         if exc.why == "issues_unreadable":
             # W5: this build never saw the previous brief, so it cannot carry that brief's halt or anchor. It says so:
-            # publish() never lets such a brief replace one that holds a halt, and the next build fails closed on it.
+            # publish() never lets such a brief replace a published one, and the next build fails closed on it.
             out["carry"] = "UNKNOWN"
     except StopReading as exc:
+        if chain is not None:
+            c1b_frontier(out, chain, base, progress, f"C1b:{exc.reason}")
         out.update(complete=False, reason=f"C1b:{exc.reason}", stop=exc.reason)
     except Exception as exc:                                     # noqa: BLE001
-        out.update(complete=False, reason=f"C1b:unreadable:{type(exc).__name__}")
+        out.update(complete=False, reason=f"C1b:unreadable:{type(exc).__name__}", prev=None)
+    return c1b_done(out)
+
+
+def c1b_done(out):
+    """The summary (B.c1b.gap) and the bound on the ledger: more gaps than C1B_MAX_GAPS is surfaced, never cut."""
+    out["gap"] = gap_summary(out["gaps"], out["open"], out.get("carried", 0))
+    if len(out["gaps"]) > C1B_MAX_GAPS and out.get("complete"):
+        out.update(complete=False, reason="C1b:gaps_overflow")
     return out
 
 
-def c1b_block(snap_c1b):
-    """B.c1b and the brief's C1b incomplete reason (None when complete) from collect()'s record."""
+def c1b_fence(block):
+    """Why the C1b state forbids every merge now (empty: it does not): open gaps, an open segment, an unknown carry."""
+    out = []
+    if block.get("gaps"):
+        out.append(f"gaps={len(block['gaps'])}")
+    if isinstance(block.get("open"), dict):
+        out.append(f"open:{block['open']['reason']}")
+    if block.get("carry") == "UNKNOWN":
+        out.append("carry_unknown")
+    return out
+
+
+def c1b_block(snap_c1b, now=None):
+    """B.c1b and the brief's C1b incomplete reason (None when complete) from collect()'s record. A record in the shape
+    of fix round 5 (one `gap`, no `gaps`) is migrated as carried_gaps() migrates a brief: one unbounded gap."""
     c = snap_c1b if isinstance(snap_c1b, dict) else {}
-    gap = c.get("gap")
-    gap = {"from_unknown": True, "window": gap.get("window"), "reason": str(gap.get("reason")), "to": _sha_or_none(gap.get("to")),
-           "carried": gap.get("carried") is True} if isinstance(gap, dict) and gap.get("from_unknown") is True else None
+    raw = c.get("gaps") if isinstance(c.get("gaps"), list) else []
+    gaps = [{k: g[k] for k in GAP_KEYS} for g in raw if gap_ok(g)]
+    bad = len(gaps) != len(raw) or ("gaps" in c and not isinstance(c.get("gaps"), list))
+    legacy = c.get("gap")
+    if "gaps" not in c and isinstance(legacy, dict) and legacy.get("from_unknown") is True \
+            and not str(legacy.get("reason") or "").startswith("C1b:capped_equal_ends"):
+        to = _sha_or_none(legacy.get("to")) or _sha_or_none(c.get("checked_through"))
+        if to is None:
+            bad = True
+        else:
+            gaps.append(c1b_gap(None, to, str(legacy.get("reason") or "C1b:range"), C1B_WINDOW, iso(now or datetime.now(timezone.utc))))
+    o = c.get("open")
+    opn = {"from": o["from"], "to": o["to"], "reason": str(o["reason"])[:60], "unread": o["unread"]} \
+        if isinstance(o, dict) and _sha_or_none(o.get("from")) and _sha_or_none(o.get("to")) and type(o.get("unread")) is int and o.get("reason") else None
+    bad = bad or (o is not None and opn is None)
+    prev = c.get("prev")
+    prev = {"run_id": prev["run_id"], "issue": prev.get("issue") if type(prev.get("issue")) is int else None} \
+        if isinstance(prev, dict) and type(prev.get("run_id")) is int and not isinstance(prev.get("run_id"), bool) else None
+    cleared = [{"id": str(x.get("id"))[:90], "by": str(x.get("by"))[:40]} for x in (c.get("cleared") or []) if isinstance(x, dict)][:2 * C1B_MAX_GAPS]
     block = {"checked_through": _sha_or_none(c.get("checked_through")), "from": _sha_or_none(c.get("from")),
              "halt": c["halt"] if c1b_halt_ok(c.get("halt")) else None,
-             "gap": gap,                                          # F3: owner-visible only; S1 needs no action
+             "gap": gap_summary(gaps, opn, c.get("carried") if type(c.get("carried")) is int else 0),   # TICK T3H reads it (heartbeat)
+             "gaps": gaps,                                        # fix round 6: the ledger, one item per unproven range
+             "open": opn,                                         # fix round 6: this build's unproven rest, resumed next build
+             "cleared": cleared,                                  # fix round 6: gaps of the previous brief the owner disposed of
+             "prev": prev,                                        # fix round 6: the brief this build carried (publish() checks it)
              "carry": "UNKNOWN" if c.get("carry") == "UNKNOWN" else None}   # W5: this build never read its predecessor
+    block["fence"] = c1b_fence(block)                            # fix round 6 (S4): non-empty: no merge by any lane
     reason = c.get("reason")
+    if bad:
+        reason = "C1b:record_invalid"
     if c.get("complete") is True and not reason:
         return block, None
     reason = str(reason or "C1b:not_read")
+    block["fence"].append("incomplete")                          # and an incomplete C1b part fences too (S1 also stops at T2)
     return block, reason if reason.startswith("C1b:") else "C1b:" + reason
 
 
@@ -2117,7 +2353,7 @@ def build_brief(snap):
     recall_pending = [i for i in recall_items if i["codex"] != "FINAL"]
     recall_shown = recall_publish(recall_items)                  # fix round 4 (#11): a FINAL one stays listed, cleared or not (label repair)
     unverified = unverified_receipts(comments) if ledger_ok else []
-    c1b, c1b_reason = c1b_block(snap.get("c1b"))
+    c1b, c1b_reason = c1b_block(snap.get("c1b"), now)
     repo_id = (snap.get("repo") or {}).get("id")
     ctx = {"repo_id": repo_id, "main_sha": snap["main_sha"], "policy": snap["policy"], "tuples": params["required_job_tuples"],
            "gate_isolation_live": snap.get("gate_isolation") == "LIVE", "now": now, "budgets": snap["budgets"],
@@ -2168,9 +2404,10 @@ def build_brief(snap):
         ["OWNER APPROVAL REQUIRED: UNKNOWN (brief_incomplete)", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"],
         "heartbeat_due": heartbeat_due(comments, now) if ledger_ok else False,
         "prs": entries, "drafts": drafts,
-        "next": count_builds(next_actions(entries, lane, health, intents, codex["available"], c1b_halt=c1b["halt"]),
-                             (snap.get("c1b") or {}).get("prev_next") if isinstance(snap.get("c1b"), dict) else None) if pulls_ok and identity_ok else [],
-        "claude_slots": claude_slots(entries, lane) if pulls_ok and identity_ok else [],
+        "next": c1b_fenced_next(count_builds(next_actions(entries, lane, health, intents, codex["available"], c1b_halt=c1b["halt"]),
+                                             (snap.get("c1b") or {}).get("prev_next") if isinstance(snap.get("c1b"), dict) else None), c1b)
+        if pulls_ok and identity_ok else [],
+        "claude_slots": c1b_fenced_slots(claude_slots(entries, lane), c1b) if pulls_ok and identity_ok else [],
         "codex": codex,
         "complete": not unread, "incomplete": unread[0] if unread else None, "unread": unread[:8],
         "errors": (snap.get("errors") or [])[:8],
@@ -2195,6 +2432,22 @@ def build_brief(snap):
         # B.claude_slots, so both are empty for it; the same ranked list is published as B.ranked.
         brief["ranked"], brief["next"], brief["claude_slots"] = brief["next"], [], []
     return log_decision(brief, (snap.get("c1b") or {}).get("prev_log") if isinstance(snap.get("c1b"), dict) else None)
+
+
+def c1b_fenced_next(entries, c1b):
+    """Fix round 6 (S4): while B.c1b.fence is set (an open gap or segment), B.next holds no merge entry for the legacy
+    lane; HALT, RECONCILE, REPAIR and review requests keep their rank (C1B_FENCES_LEGACY_LANE)."""
+    if not (C1B_FENCES_LEGACY_LANE and c1b.get("fence")):
+        return entries
+    return [e for e in entries if e.get("action") not in MERGE_ACTIONS]
+
+
+def c1b_fenced_slots(slots, c1b):
+    """Fix round 6 (S4): while B.c1b.fence is set no Claude slot is ready (TICK.md v3.3 promotes only a ready slot to a
+    merge entry). A slot stays listed, so an approval still means that no review request is posted."""
+    if not (C1B_FENCES_LEGACY_LANE and c1b.get("fence")):
+        return slots
+    return [dict(x, ready=False) for x in slots]
 
 
 DECISION_LOG_MAX = 24                 # B.decision_log: the newest decisions, one line each (the shadow record)
@@ -3009,9 +3262,10 @@ def collect(gh, root, head_root, now, run):
                 break
             except urllib.error.HTTPError:
                 continue                                         # a receipt that names an unreadable PR: its state stays NOT_READ
-    snap["health_runs"], _ = gh.pages(f"actions/workflows/{Path(snap['bindings']['main_health']['workflow_path']).name}/runs",
-                                      {"event": "schedule", "branch": "main"}, key="workflow_runs", max_pages=1)
-    snap["health_runs_complete"] = bool(snap["health_runs"])   # ROUTE 1 reads the newest 100 runs of this workflow only
+    snap["health_runs"] = gh.pages(f"actions/workflows/{Path(snap['bindings']['main_health']['workflow_path']).name}/runs",
+                                   {"event": "schedule", "branch": "main"}, key="workflow_runs", max_pages=1)
+    snap["health_runs"], health_complete = snap["health_runs"]
+    snap["health_runs_complete"] = health_window_ok(snap["health_runs"], health_complete)   # ROUTE 1: the newest 100 runs only (fix round 6: proven as that scope)
     r1, c1 = gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
     r2, c2 = gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
     snap.update(rulesets_1=r1, rulesets_2=r2, rulesets_complete=c1 and c2)
@@ -3138,6 +3392,19 @@ def publish(gh, body, now=None):
     # published body is kept ONLY when it is provably such a brief (keep_published): a forged or future-dated body
     # must never stop every later publish.
     current, new = parse_body(mine[0].get("body")), parse_body(body)
+    # Fix round 6 (#173/7194141485 S1, S2; ChatGPT kit b6c810a1): the C1b ledger (history gaps, halt, anchor) is
+    # conserved at the ONE persistent boundary. A brief replaces the published one only when its build read exactly that
+    # brief and carried it: B.c1b.prev.run_id is the published brief's run_id. Every other case keeps the published brief
+    # (S1 reads it as BRIEF_STALE until the next build): the build could not read its predecessor (unreadable, a non-list,
+    # two issues, the budget, a rate limit), failed before it judged it, or read an older one (a delayed or out-of-order
+    # publish). Not a compare-and-swap: two publishes that read the same brief can both write; each carried that same
+    # brief, so the one that stays is a complete account of history from it, and the next build resumes from it.
+    if isinstance(current, dict) and type(current.get("run_id")) is int:
+        carried = ((new or {}).get("c1b") or {}).get("prev") if isinstance((new or {}).get("c1b"), dict) else None
+        if not (isinstance(carried, dict) and carried.get("run_id") == current["run_id"]):
+            print(f"S1_TICK_BRIEF_PUBLISH_SKIPPED c1b_predecessor_not_carried run={current.get('run_id')} "
+                  f"carried={(carried or {}).get('run_id') if isinstance(carried, dict) else None}")
+            return mine[0]["number"]
     # W5: a build that could not read the previous brief (c1b.carry UNKNOWN) carried nothing. It never replaces a
     # published brief that still holds a C1b halt: that halt exists nowhere else until S1 has posted it. The older
     # brief stays (S1 reads it as BRIEF_STALE), and the next build reads it and carries the halt as usual.

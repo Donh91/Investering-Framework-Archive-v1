@@ -1007,7 +1007,7 @@ class CollectReplay(unittest.TestCase):
                 return self.d["detail"]
             if path == "issues":                                     # W2b C1b: the previous brief, at this same main
                 return [self.previous_issue()]
-            if path == "actions/workflows/s1-tick-brief.yml/runs":   # the executor watchdog (fix round 4): no earlier run in this fake
+            if path == "actions/workflows/s1-executor.yml/runs":     # the executor watchdog (fix round 4; fix round 6: its own workflow)
                 return {"workflow_runs": []}
             if path == "actions/runs/554":
                 return {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main",
@@ -1095,7 +1095,7 @@ class CollectReplay(unittest.TestCase):
         # Actions bot, so a bot post settles an intent only when the run it names is a run of THIS workflow on main.
         intent = comment(300, f"S1_LANE_MERGE_INTENT_v1\npr: 9\nhead: {'e' * 40}\nloop={'4' * 40}\nexecutor: GITHUB run=540\ncontract=44444444", BOT, 30)
         done = comment(301, "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nevidence: pr=9 not_merged\nexecutor: GITHUB run=540\ncontract=44444444", BOT, 29)
-        run540 = {"id": 540, "path": B.WORKFLOW_PATH, "head_branch": "main", "event": "schedule", "status": "completed", "created_at": ts(32),
+        run540 = {"id": 540, "path": B.EXECUTOR_WORKFLOW_PATH, "head_branch": "main", "event": "workflow_run", "status": "completed", "created_at": ts(32),   # fix round 6 (F2)
                   "updated_at": ts(28), "repository": {"full_name": B.REPO}, "head_repository": {"full_name": B.REPO}}
 
         def with_runs(runs):
@@ -1228,7 +1228,7 @@ class WorkflowFile(unittest.TestCase):
         self.assertEqual(due["permissions"], {"contents": "read", "issues": "read", "actions": "read"})   # read the workflow's own run list
         self.assertEqual(build["needs"], "due")
         self.assertIn("needs.due.outputs.due == 'true'", build["if"])
-        self.assertEqual(sorted(self.doc["jobs"]), ["build", "due", "execute", "publish"])   # execute: section 0.2i (test_s1_executor_v1.py)
+        self.assertEqual(sorted(self.doc["jobs"]), ["build", "due", "publish"])   # fix round 6 (F2): the executor is s1-executor.yml (test_s1_executor_v1.py)
         for job in (due, build, pub):
             for step in job["steps"]:
                 if str(step.get("uses", "")).startswith("actions/checkout@"):
@@ -2721,8 +2721,10 @@ class RedTeamFixes(unittest.TestCase):
         self.assertGreaterEqual(len(switch["pins"]), 9)              # more pins than the six the old F5 named
 
     def test_a14_a_delayed_publish_never_replaces_a_newer_brief(self):
-        newer = B.render(dict(brief_of(), generated_at=ts(3), run_id=777))
-        older = B.render(dict(brief_of(), generated_at=ts(20)))
+        # fix round 6: a brief replaces the published one only when its build carried exactly that one (B.c1b.prev)
+        carried = lambda b, rid: dict(b, c1b=dict(b["c1b"], prev={"run_id": rid, "issue": 5}))
+        older = B.render(carried(dict(brief_of(), generated_at=ts(20)), 553))
+        newer = B.render(carried(dict(brief_of(), generated_at=ts(3), run_id=777), B.parse_body(older)["run_id"]))
         real_run = {"id": 777, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "status": "completed", "run_started_at": ts(12), "updated_at": ts(2)}
         class Gh:
             def __init__(self, body, run=real_run, updated=ts(2)): self.body, self.run, self.updated, self.writes, self.reads = body, run, updated, [], []
@@ -2737,22 +2739,28 @@ class RedTeamFixes(unittest.TestCase):
             def _request(self, method, url, data=None): self.writes.append((method, url)); return b"{}", {}
         gh = Gh(newer)
         self.assertEqual(B.publish(gh, older, NOW), 5)
-        self.assertEqual((gh.writes, gh.reads), ([], ["issues", "actions/runs/777"]))        # build A's late publish does not overwrite build B's brief; ONE run read
+        self.assertEqual((gh.writes, gh.reads), ([], ["issues"]))        # build A's late publish does not overwrite build B's brief (fix round 6: it never carried it)
+        gh = Gh(newer)
+        self.assertEqual(B.publish(gh, B.render(dict(B.parse_body(older), c1b=dict(B.parse_body(older)["c1b"], prev={"run_id": 777, "issue": 5}))), NOW), 5)
+        self.assertEqual((gh.writes, gh.reads), ([], ["issues", "actions/runs/777"]))        # A14 also holds on its own: an older brief never replaces a newer one; ONE run read
         gh = Gh(older)
         B.publish(gh, newer, NOW)
         self.assertEqual((gh.writes, gh.reads), ([("PATCH", "issues/5")], ["issues"]))       # the usual case: no run read at all
         for current in ("not a brief", B.render(dict(brief_of(), generated_at="garbage"))):
             gh = Gh(current)
-            B.publish(gh, older, NOW)
+            # fix round 6: by the build that read it (previous_brief() reads any bot body that parses; its B.c1b.prev names it)
+            parsed = B.parse_body(current)
+            B.publish(gh, older if parsed is None else B.render(carried(B.parse_body(older), parsed["run_id"])), NOW)
             self.assertEqual(gh.writes, [("PATCH", "issues/5")])     # an unreadable current body is replaced
         gh = Gh(newer)
-        B.publish(gh, newer, NOW)
-        self.assertEqual(len(gh.writes), 1)                          # the same age, a real brief: written (a re-run of the same build)
+        B.publish(gh, B.render(dict(B.parse_body(newer), c1b=dict(B.parse_body(newer)["c1b"], prev={"run_id": 777, "issue": 5}))), NOW)
+        self.assertEqual(len(gh.writes), 1)                          # the same age, a real brief that carried it: written (a re-run of the same build)
 
     def test_f1_a_forged_or_future_dated_body_never_stops_the_publish(self):
         # Final round F1: the monotonic rule must not become a trap. A body that is not provably a newer brief of this
-        # workflow is overwritten, whatever its generated_at says.
-        older = B.render(dict(brief_of(), generated_at=ts(20)))
+        # workflow is overwritten, whatever its generated_at says. Fix round 6: by a build that read it as its predecessor
+        # (every build does: previous_brief() reads any bot-written body that parses), so B.c1b.prev names it.
+        older = B.render(dict(brief_of(), generated_at=ts(20), c1b=dict(brief_of()["c1b"], prev={"run_id": 777, "issue": 5})))
         real_run = {"id": 777, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "status": "completed", "run_started_at": ts(12), "updated_at": ts(2)}
         future = B.iso(NOW + timedelta(days=365))
         class Gh:
@@ -2779,11 +2787,17 @@ class RedTeamFixes(unittest.TestCase):
                  "run_id_not_a_number": (body(run_id="abc"), real_run, ts(2))}
         for name, (current, run, updated) in cases.items():
             gh = Gh(current, run, updated)
-            B.publish(gh, older, NOW)
+            rid = (B.parse_body(current) or {}).get("run_id")             # fix round 6: the build that read it carried it
+            older_brief = B.parse_body(older)
+            B.publish(gh, B.render(dict(older_brief, c1b=dict(older_brief["c1b"], prev={"run_id": rid, "issue": 5}))) if type(rid) is int else older, NOW)
             self.assertEqual(gh.writes, [("PATCH", "issues/5")], name)       # overwritten: the next publish is never blocked
         gh = Gh(body(), dict(real_run, status="in_progress", updated_at=ts(9)), ts(2))
         B.publish(gh, older, NOW)
         self.assertEqual(gh.writes, [])                              # the newer build is still running its publish job: a real brief, kept
+        blind = B.render(dict(brief_of(), generated_at=ts(20)))      # fix round 6: a build that did not carry the published body keeps it
+        gh = Gh(body(generated_at=future), real_run, ts(2))
+        B.publish(gh, blind, NOW)
+        self.assertEqual(gh.writes, [])
         self.assertTrue(B.keep_published(Gh(body(), real_run, ts(2)), {"updated_at": ts(2)}, B.parse_body(body()), NOW))
         self.assertEqual(yaml.safe_load((ROOT / B.WORKFLOW_PATH).read_text(encoding="utf-8"))["jobs"]["publish"]["permissions"],
                          {"contents": "read", "issues": "write", "actions": "read"})

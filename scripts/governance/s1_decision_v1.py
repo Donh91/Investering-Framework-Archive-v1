@@ -735,8 +735,13 @@ def pr_risk(e):
 UNVERIFIED_GATES = ("C1:comments_unreadable", "C2:compare_unreadable", "C2:facts_not_in_brief", "C2:paths_not_in_brief",
                     "C2:judgment:x9:file_list_incomplete", "C2:judgment:diff:unknown", "C2:judgment:diff:patch_unread",
                     "C2:push_trigger:unknown", "C2:risk:UNCLEAR", "C4:ci_not_proven", "C5:reviews_unreadable", "C5:review_unreadable",
-                    "C6:threads_unreadable", "C7:ledger_unreadable", "C8:ruleset_census", "B1:repository_identity", "C1b:history_gap",
+                    "C6:threads_unreadable", "C7:ledger_unreadable", "C8:ruleset_census", "B1:repository_identity", "C1b:",
                     "pins:", "NOT_READ:")
+# Fix round 6 (#173/7194141485 S3): the LANE gates (C7, C8) are typed the other way round: a lane gate is a verified block
+# ONLY when it is one of these, read and proven; every other C7 or C8 reason (an unread main-health window, a protection
+# flag that is not a real bool, an unstable ruleset census, any reason a later change adds) is UNVERIFIED by default.
+VERIFIED_LANE_GATES = ("C7:switch", "C7:main_health:main_health_failed", "C7:main_health:unhalted_failed_run",
+                       "C8:ruleset_active", "C8:main_protected")
 
 
 def unverified_gate(gate):
@@ -749,6 +754,8 @@ def unverified_gate(gate):
         return False                                            # outside the depth window: coverage, stated per brief (N03)
     if code.startswith("C3:privacy_line:"):
         return code[len("C3:privacy_line:"):][:1].islower()    # a reason (log_unreadable, marker_lines=0), not a scan result
+    if code.startswith(("C7:", "C8:")):
+        return not (code in VERIFIED_LANE_GATES or code.startswith("C7:halt c="))   # a standing halt the ledger shows
     return code.startswith(UNVERIFIED_GATES)
 
 
@@ -759,11 +766,18 @@ def lane_gates(brief):
     if lane.get("state") != "ON":
         out += [f"C7:{r}" for r in (lane.get("off_reasons") or ["lane_off"])][:3]
     rules = brief.get("rulesets") if isinstance(brief.get("rulesets"), dict) else {}
-    if rules.get("stable") is not True:
+    active, protected = rules.get("active"), brief.get("main_protected")
+    # an active rule or a protected branch: compliance and bypass evidence cannot be proven with the job token. Fix round 6
+    # (S3): a proven active rule or a proven protected main is a verified block; a census that is not stable, a count
+    # that is not an integer, or a protection flag that is not a real bool is unread (UNVERIFIED), never "proven"
+    if rules.get("stable") is not True or type(active) is not int:
         out.append("C8:ruleset_census")
-    elif rules.get("active") != 0 or brief.get("main_protected") is not False:
-        # an active rule or a protected branch: compliance and bypass evidence cannot be proven with the job token
-        out.append("C8:ruleset_unproven")
+    elif active != 0:
+        out.append("C8:ruleset_active")
+    elif protected is True:
+        out.append("C8:main_protected")
+    elif protected is not False:
+        out.append("C8:protection_unreadable")
     if not isinstance(brief.get("repo"), dict) or brief["repo"].get("identity") is not True:
         out.append("B1:repository_identity")
     return out
@@ -788,6 +802,7 @@ def decide(brief, now=None):
         d = _decide(None, None)
         d["result"] = f"BRIEF_UNVERIFIED(decide:{type(exc).__name__})"
         d["tick"] = f"S1_TICK NOOP - - {d['result']} main=- contract=-"
+        d["tick"] = d["tick"] if d.get("executor") == "LIVE" else shadow_tick(d["tick"])
         d["print"] = observer_print(d)
         return d
 
@@ -822,6 +837,8 @@ def _decide(brief, now=None):
         # A decision is never a merge: the line the observer prints is always NOOP with what was DECIDED (ACTION_LOOP
         # RECEIPTS: never claim a merge you did not read back). The executor's own run prints the outcome.
         d["tick"] = f"S1_TICK NOOP {pr} {h8} {d['result']} main={(main or '-')[:8]} contract={contract8}"
+        if cfg["executor"] != "LIVE":
+            d["tick"] = shadow_tick(d["tick"])                   # fix round 6 (F3): never a ready-made S1_TICK line in SHADOW
         d["print"] = observer_print(d, b.get("ledger"))
         return d
 
@@ -847,7 +864,7 @@ def _decide(brief, now=None):
     # Codex recall (owner decision 2026-11-25): every fallback merge waits for Codex's completed review of its head.
     recall = b.get("recall") if isinstance(b.get("recall"), dict) else {}
     items = [i for i in (recall.get("items") or []) if isinstance(i, dict) and type(i.get("pr")) is int and SHA40.fullmatch(str(i.get("head") or ""))]
-    base["recall"] = {"pending": recall.get("pending") if type(recall.get("pending")) is int else None}
+    base["recall"] = {"pending": recall.get("pending") if type(recall.get("pending")) is int and recall["pending"] >= 0 else None}   # fix round 6: a negative count is unread
     if (b.get("codex") or {}).get("available") is True:           # Codex answers again: ask it to review each pending merged head
         base["advice"] += [{"action": "REQUEST_REVIEW", "pr": i["pr"], "head": i["head"], "how": "CODEX_RECALL"}
                            for i in items if i.get("codex") in ("NONE", "SILENT", "UNAVAILABLE")][:3]
@@ -895,8 +912,11 @@ def _decide(brief, now=None):
     intents = b.get("open_intents") if isinstance(b.get("open_intents"), list) else []
     if ledger.get("read") is not True:
         skipped.append("lane:C7:ledger_unreadable")
-    if isinstance(c1b.get("gap"), dict) and c1b["gap"].get("from_unknown") is True:
+    if ("gaps" in c1b and (not isinstance(c1b["gaps"], list) or c1b["gaps"])) \
+            or ("gaps" not in c1b and isinstance(c1b.get("gap"), dict) and c1b["gap"].get("from_unknown") is True):
         skipped.append("lane:C1b:history_gap")                  # fix round 4: history this brief did not prove clean: no merge now
+    if c1b.get("open") is not None or c1b.get("checked_through") != b.get("main") or c1b.get("fence"):
+        skipped.append("lane:C1b:open_segment")                 # fix round 6: the scan has not proven B.main yet (it resumes next build)
     intent_prs = {i.get("pr") for i in intents if isinstance(i, dict)}
     if any(isinstance(i, dict) and i.get("kind") == "S1_LANE_MERGE_INTENT_v1" for i in intents):
         skipped.append("lane:C9:open_merge_intent")              # one merge at a time: the readback settles it first
@@ -944,6 +964,16 @@ def skipped_lane(skipped):
     return any(s.startswith("lane:") for s in skipped)
 
 
+SHADOW_TICK = "SHADOW_RECORD_NOT_A_TICK"
+
+
+def shadow_tick(tick):
+    """Fix round 6 (#2337 F3): outside LIVE the decision block is a record of what the executor WOULD do, published in the
+    issue that the live ChatGPT lane (TICK.md v3.3) reads. It carries no S1_TICK line a reader could copy: the same
+    fields, under a token that is not one (TICK.md's NOOP results and its S1_TICK line are S1's own, from its own reads)."""
+    return SHADOW_TICK + " " + str(tick)[len("S1_TICK "):] if str(tick).startswith("S1_TICK ") else str(tick)
+
+
 def observer_print(d, ledger=None):
     """D.print: the exact lines the read-only observer prints, in order (the three owner lines, what the executor last
     did according to the ledger the brief read, S1_ROUTES, and the S1_TICK line last)."""
@@ -959,7 +989,8 @@ def decision_schema_ok(d):
     sha_or_null = lambda v: v is None or (isinstance(v, str) and SHA40.fullmatch(v) is not None)
     if not isinstance(d, dict) or d.get("schema") != SCHEMA or d.get("action") not in ("NOOP", "MERGE", "HALT"):
         return False
-    if not (isinstance(d.get("result"), str) and isinstance(d.get("tick"), str) and d["tick"].startswith("S1_TICK NOOP ")):
+    want = "S1_TICK NOOP " if d.get("executor") == "LIVE" else SHADOW_TICK + " NOOP "
+    if not (isinstance(d.get("result"), str) and isinstance(d.get("tick"), str) and d["tick"].startswith(want)):
         return False
     if d["result"].startswith("DECIDED_") != (d["action"] != "NOOP") or (d["action"] != "NOOP" and not d["result"].startswith(f"DECIDED_{d['action']}(")):
         return False
@@ -1023,8 +1054,11 @@ def _no_constant(name):
 def render_decision(decision):
     """The decision's own block, placed FIRST in the brief issue body so that a reader needs only the top of it."""
     text = json.dumps(decision, separators=(",", ":"), sort_keys=True).replace("<", "\\u003c").replace("`", "\\u0060")
+    note = "" if decision.get("executor") == "LIVE" else \
+        ("\n\nSHADOW RECORD ONLY (fix round 6, F3): what the GitHub executor WOULD do. Not the S1 tick and never an "
+         "instruction: S1 (00_FMOS/S1/TICK.md) reads only the S1_TICK_BRIEF_V1 block below and acts on its own reads.")
     return (f"{SCHEMA} id={decision.get('id')} generated_at={decision.get('generated_at')} main={decision.get('main')} "
-            f"action={decision.get('action')}\n\n{BEGIN}\n```json\n{text}\n```\n{END}\n\n")
+            f"action={decision.get('action')}{note}\n\n{BEGIN}\n```json\n{text}\n```\n{END}\n\n")
 
 
 def decision_block(body):

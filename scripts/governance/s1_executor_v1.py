@@ -1,7 +1,11 @@
-"""S1 executor: the job `execute` of .github/workflows/s1-tick-brief.yml performs the ONE action of S1_DECISION_V1.
+"""S1 executor: the job `execute` of .github/workflows/s1-executor.yml performs the ONE action of S1_DECISION_V1.
 
-AGENTS.md section 0.2i ("S1 is GitHub"). The build job of the same workflow run read GitHub natively and decided
-(s1_decision_v1.decide); this job re-reads every fact of that one action natively, immediately before it writes, and
+AGENTS.md section 0.2i ("S1 is GitHub"). The build job of a run of .github/workflows/s1-tick-brief.yml read GitHub
+natively and decided (s1_decision_v1.decide), and its publish job wrote the brief issue. Fix round 6 (F2): this job is
+its OWN workflow, started only by a completed, SUCCESSFUL scheduled or manual run of that brief workflow on main, so the
+brief's run conclusion (TICK.md T2 run_not_success, and the next build's C1b anchor) never depends on the executor: an
+executor that fails, is cancelled or times out ends its own run, never the brief's. It reads the published brief issue
+(the brief of exactly that run) and re-reads every fact of that one action natively, immediately before it writes, and
 writes only when the switch 00_FMOS/S1/REVIEWED_MERGE_LANE.json on main reads "executor": "LIVE" (missing or unknown:
 OFF) and the owner's repository variable S1_EXECUTOR_HOLD is empty. In SHADOW it makes the same reads and prints what
 it WOULD do; it never writes. It runs main's own code only and never checks out, imports or executes a PR head.
@@ -23,8 +27,8 @@ A merge is ONE per run, always intent first, readback after, receipt or halt las
 ONE attempt per PR head, ever: a refused or failed merge is never retried at that head (a new commit is a new head).
 
 No silent failure: the result lines go to the job summary, and the process exits non-zero when an operation was left
-without its outcome, a readback did not match, a read stopped after a write, or anything unexpected was raised. The
-job is `continue-on-error`, so that exit shows as a failed JOB and never fails the run that carries the brief.
+without its outcome, a readback did not match, a read stopped after a write, or anything unexpected was raised. That
+exit fails this workflow's own run only (fix round 6, F2); the run that carries the brief has already concluded.
 """
 from __future__ import annotations
 
@@ -55,7 +59,8 @@ MERGE_CALL_RESERVE = 80
 MERGE_WRITE_RESERVE = 5
 RECONCILES_PER_RUN = 3                 # EVIDENCE_BINDINGS op_reconciles_per_run
 MAX_ATTEMPTS_PER_HEAD = 1              # merge intents per PR head, ever: a refused merge is NOT retried, that head is the owner's
-EVENTS = ("schedule", "workflow_dispatch")
+EVENTS = ("schedule", "workflow_dispatch")      # the events of the BRIEF run this executor run may act for
+EXECUTOR_TRIGGER = "workflow_run"              # fix round 6 (F2): the event of this executor run itself
 POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1",
          "S1_FALLBACK_CANDIDATE_v1", "S1_CODEX_RECALL_PENDING_v1", "S1_CODEX_RECALL_CLEARED_v1")
 MAX_POST_CHARS = 4000
@@ -275,15 +280,20 @@ class Run:
         halts = B.lane_halts(comments)
         halt = B.standing_halt(halts, switch.get("clears_halt"))
         need(halt is None, f"lane:C7:halt c={halt}", HELD)
-        runs, _c = self.gh.pages(f"actions/workflows/{Path(bindings['main_health']['workflow_path']).name}/runs",
-                                 {"event": "schedule", "branch": "main"}, key="workflow_runs", max_pages=1)
-        health = B.main_health(runs, bool(runs), self.now_fn(), B.lane_merges(comments), halts, bindings["main_health"])
-        need(health.get("status") == "PASS", f"lane:C7:main_health:{health.get('reason')}", UNVERIFIED if health.get("reason") == "TOOL_CANNOT_READ" else BLOCKED)
+        runs, complete = self.gh.pages(f"actions/workflows/{Path(bindings['main_health']['workflow_path']).name}/runs",
+                                       {"event": "schedule", "branch": "main"}, key="workflow_runs", max_pages=1)
+        # fix round 6 (#173/7194141485 S3): the producer's exact read scope (ROUTE 1: the newest page of 100 runs), proven
+        # as that scope, not merely non-empty; and only a proven failure is a verified block (FAIL), every NOT_PROVEN
+        # reason (unread, malformed, stale) is UNVERIFIED
+        health = B.main_health(runs, B.health_window_ok(runs, complete), self.now_fn(), B.lane_merges(comments), halts, bindings["main_health"])
+        need(health.get("status") == "PASS", f"lane:C7:main_health:{health.get('reason')}", BLOCKED if health.get("status") == "FAIL" else UNVERIFIED)
         r1, c1 = self.gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
         r2, c2 = self.gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
         rules = B.ruleset_census(r1, r2, c1 and c2)
         need(rules.get("stable") is True and rules.get("census") == (self.brief.get("rulesets") or {}).get("census"), "lane:C8:ruleset_census")
-        need(rules.get("active") == 0 and protected is False, "lane:C8:ruleset_unproven", BLOCKED)
+        need(type(rules.get("active")) is int, "lane:C8:ruleset_census")
+        need(rules["active"] == 0, "lane:C8:ruleset_active", BLOCKED)
+        protection_known(protected, "")
         return health
 
     # ---- MERGE: every fact, natively, right before the write
@@ -431,7 +441,7 @@ class Run:
             # look verified: main unprotected, main moved since the decision by data only (no code, no path of the PR),
             # and every pin and chain blob of the switch at the main read here. After the merge call the outcome posts
             # (receipt, halt, recall) need only the hold, the switch and the contract: they record what happened.
-            need(protected is False, f"lane:C8:ruleset_unproven:{where}", BLOCKED)
+            protection_known(protected, f":{where}")
             if main != self.decision.get("main"):
                 self.no_code_drift(main, self.guard_paths)
             self.pins_at(main, where)
@@ -472,7 +482,7 @@ class Run:
         statuses, k2 = self.gh.pages(f"commits/{head}/statuses", max_pages=3)
         need(B.checks_summary(checks, statuses, k1 and k2).get("green") is True, f"{n}:C4:checks_after_intent", BLOCKED if k1 and k2 else UNVERIFIED)
         main, protected = self.main_now()
-        need(protected is False, "lane:C8:ruleset_unproven", BLOCKED)
+        protection_known(protected, "")
         if main != proof["main"]:
             self.no_code_drift(main, proof["paths"])
         late = self.gh.get(f"issues/{B.OWNER_ISSUE}/comments", {"since": self.ledger_read_at, "per_page": 100})
@@ -836,16 +846,37 @@ class Run:
             return end("NOOP", None, None, "BRIEF_UNVERIFIED(body)")
         self.brief, self.decision, self.body = brief, d, body
         env = self.env
-        if not (env.get("GITHUB_REPOSITORY") == B.REPO and env.get("GITHUB_REF") == "refs/heads/main" and env.get("GITHUB_EVENT_NAME") in EVENTS
-                and str(d.get("run_id")) == env.get("GITHUB_RUN_ID") and str(d.get("run_attempt")) == env.get("GITHUB_RUN_ATTEMPT")
-                and d.get("main") == env.get("GITHUB_SHA")):
+        # fix round 6 (F2): this run is a workflow_run of s1-executor.yml; the brief it acts for is the triggering run's
+        # (S1_BRIEF_RUN_ID / _RUN_ATTEMPT / _MAIN / _EVENT, from github.event.workflow_run), and the published brief must
+        # be exactly that run's brief. A published brief of another run (that run published nothing: not due, or its
+        # publish kept the older brief) is no decision for this run: nothing to execute, nothing is read further.
+        if str(d.get("run_id")) != env.get("S1_BRIEF_RUN_ID") and str(env.get("S1_BRIEF_RUN_ID") or "").isdigit():
+            return end("NOOP", None, None, f"NO_DECISION(published_run={d.get('run_id')})")
+        if not (env.get("GITHUB_REPOSITORY") == B.REPO and env.get("GITHUB_REF") == "refs/heads/main"
+                and env.get("GITHUB_EVENT_NAME") == EXECUTOR_TRIGGER and env.get("S1_BRIEF_EVENT") in EVENTS
+                and str(d.get("run_id")) == env.get("S1_BRIEF_RUN_ID") and str(d.get("run_attempt")) == env.get("S1_BRIEF_RUN_ATTEMPT")
+                and d.get("main") == env.get("S1_BRIEF_MAIN")):
             return end("NOOP", None, None, "BRIEF_UNVERIFIED(run_binding)")
         cfg = D.thin_config(self.files.get("switch"))
         if cfg != brief.get("thin") or cfg["executor"] != d["executor"] or cfg["review_policy"] != d["review_policy"]:
             return end("NOOP", None, None, "BRIEF_UNVERIFIED(switch)")
         self.mode = D.effective_mode(cfg["executor"], env.get("S1_EXECUTOR_HOLD"))
+        if cfg["executor"] == "OFF":
+            return end("NOOP", None, None, "EXECUTOR_OFF(switch)")
         if self.mode == "OFF":
-            return end("NOOP", None, None, "EXECUTOR_OFF(" + ("hold" if cfg["executor"] != "OFF" else "switch") + ")")
+            # fix round 6 (#173/7194141485 item 5, pre-LIVE evidence): a hold already in the job's env stops every write at
+            # once (mode OFF), and the hold is STILL read natively, so a held tick proves (or disproves) that the token can
+            # read the variable: hold:start when the native read shows it, EXECUTOR_OFF(hold:env_only) when only the env did
+            try:
+                self.hold_now("start")
+            except Stop as stop:
+                self.stop_kind = stop.kind
+                return end("NOOP", None, None, f"NOTHING_ACTIONABLE(skipped={stop.reason})")
+            except Exception as exc:                             # noqa: BLE001  (unread: the env hold still holds)
+                self.stop_kind = UNVERIFIED
+                return end("NOOP", None, None, f"NOTHING_ACTIONABLE(skipped=hold_unreadable:start:{type(exc).__name__})")
+            self.mode = "OFF"
+            return end("NOOP", None, None, "EXECUTOR_OFF(hold:env_only)")
         clock = D.clock_gate(self.now_fn(), d["generated_at"], d["expires_at"], D.EXECUTE_MAX_AGE_MINUTES)
         if clock is not None:
             return end("NOOP", None, None, clock)
@@ -891,6 +922,19 @@ class Run:
             self.alarms.append(f"unexpected({type(exc).__name__})")
             return end("NOOP", None, None, f"BRIEF_INCOMPLETE(executor:{type(exc).__name__})")
 
+    def execute_published(self):
+        """Fix round 6 (F2): the brief issue as published, read once, then execute() on exactly that body (published()
+        re-reads it and must find the same block, digest and issue)."""
+        try:
+            issues = self.gh.get("issues", {"labels": B.BRIEF_LABEL, "state": "open", "per_page": 20})
+            rows = [i for i in issues if isinstance(i, dict) and "pull_request" not in i and B.is_actions_bot(i.get("user"))] \
+                if isinstance(issues, list) else []
+            body = str(rows[0].get("body") or "") if len(rows) == 1 else ""
+        except Exception as exc:                                 # noqa: BLE001  (unreadable: nothing is decided, nothing is written)
+            self.alarms.append(f"brief_unreadable({type(exc).__name__})")
+            return self.finish("NOOP", None, None, "BRIEF_UNVERIFIED(unreadable)")
+        return self.execute(body)
+
     def finish(self, action, pr, head, result):
         d = self.decision or {}
         main, contract = str(d.get("main") or "-")[:8], d.get("contract") or "-"
@@ -900,6 +944,7 @@ class Run:
             self.say("S1_EXECUTOR_ALARM " + " ".join(self.alarms))
         state = health_state(result, self.alarms, self.pending, self.stop_kind, self.uncertain, (self.decision or {}).get("unverified"))
         self.say("S1_EXECUTOR_HEALTH " + json.dumps({"v": 1, "state": state, "run": self.env.get("GITHUB_RUN_ID"), "attempt": self.env.get("GITHUB_RUN_ATTEMPT"),
+                                                     "brief_run": self.env.get("S1_BRIEF_RUN_ID"),
                                                      "at": B.iso(self.now_fn()), "mode": self.mode, "action": action, "result": str(result)[:160],
                                                      "writes": len(self.writes), "stop": self.stop_kind, "uncertain": self.uncertain[:3],
                                                      "unverified": list((self.decision or {}).get("unverified") or [])[:3]},
@@ -909,6 +954,14 @@ class Run:
         self.say(f"S1_TICK {action} {pr if pr is not None else '-'} {head[:8] if head else '-'} {result} main={main} contract={contract}")
         return {"mode": self.mode, "action": action, "pr": pr, "head": head, "result": result, "writes": list(self.writes), "lines": list(self.lines),
                 "alarms": list(self.alarms), "health": state}
+
+
+def protection_known(protected, where):
+    """Fix round 6 (#173/7194141485 S3): main's `protected` flag as GitHub returned it. True: a proven protected main, a
+    verified block (the job token cannot prove compliance or bypass evidence). Anything that is not the real bool False
+    or True (missing, null, a string, a number): unread, UNVERIFIED, never a proven block and never a pass."""
+    need(isinstance(protected, bool), f"lane:C8:protection_unreadable{where}")
+    need(protected is False, f"lane:C8:main_protected{where}", BLOCKED)
 
 
 def health_state(result, alarms, pending, stop_kind=None, uncertain=(), unverified=()):
@@ -975,15 +1028,15 @@ def main(argv):
         # fix round 5 (P1-08): the usage and repository checks are inside the handler too, so they also print a health
         # line. What no handler can cover (an import that fails, a cancelled or killed job) prints none: the next
         # build's watchdog reads the job's own log and reports EXECUTOR_NOHEALTH.
-        if len(argv) != 3 or argv[1] != "execute":
-            raise SystemExit("usage: s1_executor_v1.py execute <issue body file>")
+        if not ((len(argv) == 3 and argv[1] == "execute") or (len(argv) == 2 and argv[1] == "execute-published")):
+            raise SystemExit("usage: s1_executor_v1.py execute-published | execute <issue body file>")
         token = os.environ.get("GITHUB" + "_TOKEN", "")
         if os.environ.get("GITHUB_REPOSITORY", B.REPO) != B.REPO:
             raise SystemExit(f"REFUSED: repository is not {B.REPO}")
         root = B.CHECKOUT_ROOT
         B.GIT_ENV = B.token_git_env(token)
         run = Run(B.GitHub(token, budget=EXECUTE_API_CALLS), Native(root), dict(os.environ), read_files(root))
-        out = run.execute(Path(argv[2]).read_text(encoding="utf-8"))
+        out = run.execute_published() if argv[1] == "execute-published" else run.execute(Path(argv[2]).read_text(encoding="utf-8"))
     except BaseException as exc:                                 # noqa: BLE001  (fix round 4, #8: one health line per run, whatever fails)
         line = "S1_EXECUTOR_HEALTH " + json.dumps({"v": 1, "state": "DEGRADED", "run": os.environ.get("GITHUB_RUN_ID"),
                                                    "attempt": os.environ.get("GITHUB_RUN_ATTEMPT"), "mode": "UNKNOWN", "action": "NOOP",
