@@ -5,6 +5,7 @@ forecasts; the five lowest candidate IDs took every slot because allocation was 
 (kind, candidate_id) only. A perpetually firing candidate with a higher ID could never be served.
 """
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -189,7 +190,7 @@ class FairForecastAllocationOrderUnit(unittest.TestCase):
             root = Path(td)
             docs = [fdoc("EC-a", "w1", "2026-08-02T20:00:00Z"), fdoc("EC-a", "w2", "2026-08-03T20:00:00Z"),
                     fdoc("EC-b", "w3", "2026-08-01T20:00:00.000+00:00"),
-                    {"contract": "FORECAST_OUTCOME_v1", "forecast_id": "f5", "source_candidate_id": "EC-c", "frozen_at_utc": "2026-08-01T20:00:00Z"}]
+                    {"contract": "SOME_OTHER_INDEX_v1", "entries": 3}]
             for i, doc in enumerate(docs):
                 (root / f"d{i}.json").write_text(json.dumps(doc))
             history = module.forecast_service_history(root, "2026-08-03T20:00:00Z")
@@ -452,6 +453,106 @@ class Round3StoreIntegrityAndCaptureClock(unittest.TestCase):
         self.assertEqual(module.canonical_forecast_id("EC-0258e3807909a4d1987f", window), "EXP-FC-99f5fcbd5182de573074")
         for other in ("2026-11-19T22:29:33+01:00", "2026-11-19T21:29:33.000Z", "2026-11-19T21:29:33", "2026-11-19 21:29:33Z", ""):
             self.assertFalse(module.canonical_capture_clock(other), other)
+
+
+class Round4StrictParseAndCaptureValidation(unittest.TestCase):
+    """D1 round 4: strict JSON (no duplicate keys, finite numbers, exact-byte duplicates) and
+    exception-safe capture clock validation before any write."""
+
+    output8 = {"forecast_candidates": [], "experiment_candidates": [pair(i) for i in range(8)]}
+
+    def _store_failure(self, repo: Path, code: str):
+        before = snapshot(repo)
+        proc = run_raw(repo, self.output8, tick(1))
+        self.assertEqual(proc.returncode, 3, proc.stderr[-800:])
+        self.assertIn("FORECAST_STORE_INTEGRITY_FAILURE", proc.stderr)
+        self.assertIn(code, proc.stderr)
+        self.assertEqual(snapshot(repo), before)
+
+    def _first_forecast_path(self, repo: Path) -> Path:
+        return sorted((repo / FORECAST_ROOT).rglob("*.json"))[0]
+
+    def _tamper(self, repo: Path, edit) -> None:
+        path = self._first_forecast_path(repo)
+        text = path.read_text()
+        new = edit(text)
+        self.assertNotEqual(new, text)
+        path.write_text(new)
+
+    def test_duplicate_contract_key_cannot_hide_a_forecast(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            self._tamper(repo, lambda t: t.rstrip().rstrip("}") + ',"contract":"SOME_OTHER_INDEX_v1"}\n')
+            self._store_failure(repo, "forecast_file_duplicate_key")
+
+    def test_duplicate_freeze_time_and_nested_keys_are_rejected(self):
+        edits = {
+            "frozen": lambda t: t.replace('"frozen_at_utc":', '"frozen_at_utc":"2026-07-01T00:00:00Z","frozen_at_utc":', 1),
+            "nested": lambda t: t.replace('"always_wait":', '"always_wait":"X","always_wait":', 1),
+        }
+        for name, edit in edits.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                run(repo, self.output8, tick(0))
+                self._tamper(repo, edit)
+                self._store_failure(repo, "forecast_file_duplicate_key")
+
+    def test_non_finite_numbers_are_rejected(self):
+        for token in ("NaN", "Infinity", "-Infinity", "1e999"):
+            with self.subTest(token=token), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                run(repo, self.output8, tick(0))
+                self._tamper(repo, lambda t: re.sub(r'"start_value":[^,}]+', f'"start_value":{token}', t, count=1))
+                self._store_failure(repo, "forecast_file_non_finite_number")
+
+    def test_forecast_shaped_row_with_other_contract_is_unclassifiable(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            self._tamper(repo, lambda t: t.replace('"FROZEN_FORECAST_v1"', '"FROZEN_FORECAST_v9"', 1))
+            self._store_failure(repo, "forecast_file_unclassifiable")
+
+    def test_semantically_equal_duplicate_with_different_bytes_is_a_conflict(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            row = json.loads(self._first_forecast_path(repo).read_text())
+            (repo / FORECAST_ROOT / "2026/07").mkdir(parents=True)
+            (repo / FORECAST_ROOT / f"2026/07/{row['forecast_id']}.json").write_text(json.dumps(row, indent=2))
+            self._store_failure(repo, "forecast_id_ownership_or_content_conflict")
+
+    def test_unrepresentable_store_clock_is_an_integrity_failure(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            self._tamper(repo, lambda t: re.sub(r'"frozen_at_utc":"[^"]+"', '"frozen_at_utc":"0001-01-01T00:00:00+01:00"', t, count=1))
+            self._store_failure(repo, "allocation_time_unrepresentable")
+
+    def test_invalid_capture_clock_fails_whole_run_before_any_write(self):
+        for captured in ("not-a-time", "2026-02-30T00:00:00Z", "0001-01-01T00:00:00+01:00"):
+            with self.subTest(captured=captured), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                run(repo, self.output8, tick(0))
+                before = snapshot(repo)
+                proc = run_raw(repo, self.output8, captured)
+                self.assertEqual(proc.returncode, 4, proc.stderr[-800:])
+                self.assertIn("CAPTURE_CLOCK_INVALID", proc.stderr)
+                self.assertEqual(snapshot(repo), before)
+
+    def test_canonical_but_out_of_range_capture_holds_allocation(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            summary = run(repo, self.output8, "0001-01-01T00:00:00Z")
+            self.assertEqual(summary["new_forecasts"], 0)
+            self.assertEqual(summary["forecast_allocation"]["status"], "FAIL_CLOSED:capture_clock_noncanonical")
+
+    def test_valid_historical_capture_still_allocates(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            summary = run(repo, self.output8, "2026-11-19T21:29:33Z", run_id="gh-44619142868-1")
+            self.assertEqual(summary["forecast_allocation"]["causal_event_window_id"], "a0f4c4c5aa23545675ff")
+            self.assertEqual(summary["new_forecasts"], 5)
 
 
 if __name__ == "__main__":

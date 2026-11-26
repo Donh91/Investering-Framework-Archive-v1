@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import sys
 from datetime import datetime, timedelta, timezone
@@ -70,10 +71,40 @@ def _utc_key(value: Any) -> str:
         raise AllocationIntegrityError("allocation_time_unparseable") from None
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise AllocationIntegrityError("allocation_time_timezone_naive")
-    return parsed.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    try:
+        return parsed.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    except (OverflowError, ValueError):
+        raise AllocationIntegrityError("allocation_time_unrepresentable") from None
 
 
 CANONICAL_CAPTURE_CLOCK = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+SUPPORTED_CAPTURE_YEARS = range(2000, 9000)  # keeps lookback/horizon arithmetic representable
+FORECAST_IDENTITY_KEYS = ("forecast_id", "source_candidate_id", "causal_event_window_id", "frozen_at_utc")
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    value: dict[str, Any] = {}
+    for key, item in pairs:
+        if key in value:
+            raise AllocationIntegrityError("forecast_file_duplicate_key")
+        value[key] = item
+    return value
+
+
+def _reject_constant(_: str) -> Any:
+    raise AllocationIntegrityError("forecast_file_non_finite_number")
+
+
+def _finite_float(text: str) -> float:
+    number = float(text)
+    if not math.isfinite(number):  # e.g. 1e999 overflows to infinity
+        raise AllocationIntegrityError("forecast_file_non_finite_number")
+    return number
+
+
+def strict_json_loads(text: str) -> Any:
+    """json.loads that rejects duplicate keys at any depth and NaN/Infinity/overflowing numbers."""
+    return json.loads(text, object_pairs_hook=_reject_duplicate_keys, parse_constant=_reject_constant, parse_float=_finite_float)
 
 
 def canonical_capture_clock(value: Any) -> bool:
@@ -82,8 +113,17 @@ def canonical_capture_clock(value: Any) -> bool:
     if not isinstance(value, str) or not CANONICAL_CAPTURE_CLOCK.fullmatch(value):
         return False
     try:
-        datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+        parsed = datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
     except ValueError:
+        return False
+    return parsed.year in SUPPORTED_CAPTURE_YEARS
+
+
+def capture_clock_parseable(value: Any) -> bool:
+    """Exception-safe check that ``base.dt`` can turn the capture into a UTC instant."""
+    try:
+        base.dt(value)
+    except (ValueError, OverflowError, TypeError):
         return False
     return True
 
@@ -100,33 +140,41 @@ def canonical_forecast_id(candidate_id: str, window_id: str) -> str:
 def unique_frozen_forecasts(forecast_root: Path) -> dict[str, dict[str, Any]]:
     """Strict read of the frozen-forecast store, keyed by immutable forecast_id.
 
-    Same invariant as ``base.registry`` (byte-identical duplicate paths count once; differing owner or
-    content under one forecast_id is a conflict), plus: every ``*.json`` file must parse to an object
-    with a string ``contract`` (files with another contract are known non-forecast files and are
-    ignored; non-JSON files are ignored); every FROZEN_FORECAST_v1 row must carry source_candidate_id,
+    Stricter than ``base.registry``: files are parsed with duplicate-key and non-finite-number
+    rejection; duplicate paths for one forecast_id must be byte-identical (counted once), anything else
+    is a conflict. Also: every ``*.json`` file must parse to an object
+    with a string ``contract`` (files with another contract and no forecast identity keys are known
+    non-forecast files and are ignored; forecast-shaped files with another contract are unclassifiable;
+    non-JSON files are ignored); every FROZEN_FORECAST_v1 row must carry source_candidate_id,
     forecast_id, causal_event_window_id and a timezone-aware frozen_at_utc; its forecast_id must be
     the canonical ID for (candidate, window); and one (candidate, window) may hold only one forecast_id.
     Any violation raises AllocationIntegrityError. Skipping such a row instead would make its candidate
     look under-served and could undercount a window's occupied slots.
     """
     rows: dict[str, dict[str, Any]] = {}
+    raw_bytes: dict[str, bytes] = {}
     pair_owner: dict[tuple[str, str], str] = {}
     paths = sorted(p for p in forecast_root.rglob("*.json") if p.is_file()) if forecast_root.exists() else []
     for path in paths:
         try:
-            value = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeDecodeError, ValueError):
+            data = path.read_bytes()
+            value = strict_json_loads(data.decode("utf-8"))
+        except AllocationIntegrityError:
+            raise
+        except (OSError, UnicodeDecodeError, ValueError, RecursionError):
             raise AllocationIntegrityError("forecast_file_unreadable") from None
         if not isinstance(value, dict) or not isinstance(value.get("contract"), str):
             raise AllocationIntegrityError("forecast_file_unclassifiable")
         if value["contract"] != "FROZEN_FORECAST_v1":
+            if any(key in value for key in FORECAST_IDENTITY_KEYS):  # forecast-shaped but not a supported forecast contract
+                raise AllocationIntegrityError("forecast_file_unclassifiable")
             continue
         cid, fid, window = (value.get(k) for k in ("source_candidate_id", "forecast_id", "causal_event_window_id"))
         if not all(isinstance(item, str) and item for item in (cid, fid, window)):
             raise AllocationIntegrityError("forecast_identity_missing")
-        prior = rows.get(fid)
-        if prior is not None:
-            if prior != value:
+        if fid in rows:
+            # exact bytes, not parsed-dict equality (which would equate 1, 1.0 and true or key reorders)
+            if raw_bytes[fid] != data:
                 raise AllocationIntegrityError("forecast_id_ownership_or_content_conflict")
             continue
         _utc_key(value.get("frozen_at_utc"))
@@ -137,6 +185,7 @@ def unique_frozen_forecasts(forecast_root: Path) -> dict[str, dict[str, Any]]:
         if pair_owner.setdefault((cid, window), fid) != fid:
             raise AllocationIntegrityError("forecast_candidate_window_conflict")
         rows[fid] = value
+        raw_bytes[fid] = data
     return rows
 
 
@@ -816,6 +865,14 @@ def main() -> None:
     output = base.read(args.daily_output)
     context = base.read(args.daily_context)
     receipt = base.read(args.daily_receipt)
+    # A present but unparseable/unrepresentable capture clock already aborted this producer before any
+    # write (base.dt raised); keep that whole-run outcome, but controlled and with a fixed code, because
+    # census/candidate/observation paths and IDs have no safe time without it. Parseable non-canonical
+    # or missing captures keep the existing run behaviour and only hold forecast allocation (below).
+    raw_capture_early = (context.get("latest_capture") or {}).get("captured_at_utc") if isinstance(context.get("latest_capture"), dict) else None
+    if raw_capture_early and not capture_clock_parseable(raw_capture_early):
+        print(json.dumps({"status": "CAPTURE_CLOCK_INVALID", "writes_performed": False}, sort_keys=True), file=sys.stderr)
+        raise SystemExit(4)
     latest = ((context.get("latest_capture") or {}).get("market_metrics") or {})
     previous = ((context.get("previous_capture") or {}).get("market_metrics") or {})
     captured = (context.get("latest_capture") or {}).get("captured_at_utc") or base.iso(datetime.now(UTC))
