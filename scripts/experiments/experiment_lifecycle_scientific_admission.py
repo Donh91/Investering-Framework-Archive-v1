@@ -52,6 +52,49 @@ def prior_observation_status(observation_root: Path, candidate_id: str, before_u
     return best[1] if best else None
 
 
+def _utc_key(value: Any) -> str | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    except ValueError:
+        return None
+
+
+ALLOCATION_LOOKBACK_DAYS = 30
+
+
+def forecast_service_history(forecast_root: Path, before_utc: str, lookback_days: int = ALLOCATION_LOOKBACK_DAYS) -> dict[str, tuple[int, str]]:
+    """(slot count, latest freeze time) per candidate over FROZEN_FORECAST_v1 files frozen in
+    ``[before_utc - lookback_days, before_utc)``.
+
+    Outcome-blind by construction: only identity and freeze-time fields of frozen forecasts are read,
+    never outcome, hit/miss or score records. Excluding the current and later windows keeps a replay
+    of the same capture identical to the original allocation. The bounded lookback stops a candidate
+    with a long service history from being locked out forever by newer, never-served candidates.
+    """
+    cutoff = _utc_key(before_utc)
+    history: dict[str, tuple[int, str]] = {}
+    if cutoff is None:
+        return history
+    floor = _utc_key((datetime.fromisoformat(before_utc.replace("Z", "+00:00")) - timedelta(days=lookback_days)).isoformat())
+    for _, value in base.jsons(forecast_root, "FROZEN_FORECAST_v1"):
+        cid = value.get("source_candidate_id")
+        frozen = _utc_key(value.get("frozen_at_utc"))
+        if not isinstance(cid, str) or frozen is None or not (floor <= frozen < cutoff):
+            continue
+        count, last = history.get(cid, (0, ""))
+        history[cid] = (count + 1, max(last, frozen))
+    return history
+
+
+def forecast_allocation_key(candidate: dict[str, Any], history: dict[str, tuple[int, str]]) -> tuple[int, int, str, str]:
+    """Deterministic least-served order: kind priority, fewest recent slots, least recently served, then ID."""
+    cid = str(candidate.get("candidate_id") or "")
+    count, last = history.get(cid, (0, ""))
+    return (0 if candidate.get("spec", {}).get("kind") == "FORECAST_TEST" else 1, count, last, cid)
+
+
 def canonical(value: Any) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
 
@@ -753,10 +796,12 @@ def main() -> None:
     args.admission_registry_output.write_bytes(canonical(admission_registry))
 
     new_forecasts = 0
+    forecast_slots_used = 0  # counts allocations, not writes, so a same-capture replay cannot spill to later candidates
     dispatch = 0
     episode_continuations = 0
     candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
-    candidate_rows.sort(key=lambda item: (0 if item[1].get("spec", {}).get("kind") == "FORECAST_TEST" else 1, str(item[1].get("candidate_id") or "")))
+    service_history = forecast_service_history(args.forecast_root, captured)
+    candidate_rows.sort(key=lambda item: forecast_allocation_key(item[1], service_history))
     for spec_path, candidate in candidate_rows:
         spec = candidate["spec"]
         admission = admissions[candidate["candidate_id"]]
@@ -774,7 +819,8 @@ def main() -> None:
 
         forecast_id = None
         start = base.at(latest, spec.get("target_metric_path") or "") if spec.get("target_metric_path") else None
-        if admitted and fired and spec["target_direction"] != "NONE" and isinstance(start, (int, float)) and new_forecasts < args.max_new_forecasts:
+        if admitted and fired and spec["target_direction"] != "NONE" and isinstance(start, (int, float)) and forecast_slots_used < args.max_new_forecasts:
+            forecast_slots_used += 1
             window = base.sha({"run": source["source_run_id"], "captured": captured})[:20]
             forecast_id = "EXP-FC-" + base.sha({"candidate_id": candidate["candidate_id"], "window": window})[:20]
             frozen = {
