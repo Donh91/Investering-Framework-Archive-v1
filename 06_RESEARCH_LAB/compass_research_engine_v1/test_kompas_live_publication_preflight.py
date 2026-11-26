@@ -148,3 +148,29 @@ class PreflightTests(unittest.TestCase):
     def test_census_observation_before_issue_rejected(self):
         with self.assertRaisesRegex(ValueError, "future issue"):
             census(START, END, [capture(observer_reported_at_utc=START)])
+
+    def test_late_census_is_not_ok_and_preserves_source_status(self):
+        late = capture(observer_reported_at_utc="2026-11-28T20:49:00Z")
+        boundary = capture(observer_reported_at_utc="2026-11-25T21:00:00Z")
+        for row in (late, boundary):
+            with self.subTest(row=row):
+                hour = census(START, END, [row])["hours"][0]
+                self.assertEqual(hour["state"], "LATE")
+                self.assertEqual(hour["source_statuses"], ["OK"])
+                self.assertEqual(hour["late_packets"], 1)
+        before = capture(observer_reported_at_utc="2026-11-25T20:59:59Z")
+        for rows in ([before, late], [late, before]):
+            hour = census(START, END, rows)["hours"][0]
+            self.assertEqual(hour["state"], "OK")
+            self.assertEqual(hour["late_packets"], 0)
+            self.assertEqual(hour["duplicate_observations"], 1)
+        unavailable = capture(source_status="UNAVAILABLE",
+                              observer_reported_at_utc="2026-11-25T21:00:00Z")
+        hour = census(START, END, [unavailable])["hours"][0]
+        self.assertEqual(hour["state"], "LATE")
+        self.assertEqual(hour["source_statuses"], ["UNAVAILABLE"])
+
+    def test_http_status_requires_integer(self):
+        p = parity(files=[dict(parity()["files"][0], http_status=200.0)])
+        with self.assertRaisesRegex(ValueError, "invalid, duplicate or nonpassing parity row"):
+            bind_publication(RAW, capture(), p)
