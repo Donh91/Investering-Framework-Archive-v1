@@ -52,20 +52,55 @@ def prior_observation_status(observation_root: Path, candidate_id: str, before_u
     return best[1] if best else None
 
 
-def _utc_key(value: Any) -> str | None:
-    if not isinstance(value, str) or not value:
-        return None
-    try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-    except ValueError:
-        return None
-
-
+ALLOCATION_POLICY_VERSION = "FORECAST_SLOT_ALLOCATION_v2_LEAST_SERVED_30D_LRS_ID_WINDOW_CAP"
 ALLOCATION_LOOKBACK_DAYS = 30
 
 
-def forecast_service_history(forecast_root: Path, before_utc: str, lookback_days: int = ALLOCATION_LOOKBACK_DAYS) -> dict[str, tuple[int, str]]:
-    """(slot count, latest freeze time) per candidate over FROZEN_FORECAST_v1 files frozen in
+class AllocationIntegrityError(ValueError):
+    """Frozen-forecast history cannot be trusted for allocation; issue no new forecasts this run."""
+
+
+def _utc_key(value: Any) -> str:
+    """Normalised UTC sort key. Naive or unparseable times are rejected, never read as host-local time."""
+    if not isinstance(value, str) or not value:
+        raise AllocationIntegrityError("allocation_time_missing")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        raise AllocationIntegrityError("allocation_time_unparseable") from None
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise AllocationIntegrityError("allocation_time_timezone_naive")
+    return parsed.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+def unique_frozen_forecasts(forecast_root: Path) -> dict[str, dict[str, Any]]:
+    """FROZEN_FORECAST_v1 rows keyed by immutable forecast_id, with the same invariant as
+    ``base.registry``: byte-identical duplicates count once; a forecast_id whose owner or content
+    differs between paths is a conflict. Here a conflict, or a naive/unparseable freeze time, raises
+    AllocationIntegrityError so allocation fails closed instead of silently skipping the row (a
+    skipped row would make its candidate look under-served and could undercount a window's slots).
+    """
+    rows: dict[str, dict[str, Any]] = {}
+    for _, value in sorted(base.jsons(forecast_root, "FROZEN_FORECAST_v1"), key=lambda item: item[0].as_posix()):
+        cid, fid = value.get("source_candidate_id"), value.get("forecast_id")
+        if not cid or not fid:
+            continue
+        prior = rows.get(str(fid))
+        if prior is not None:
+            if str(prior.get("source_candidate_id")) != str(cid) or prior != value:
+                raise AllocationIntegrityError("forecast_id_ownership_or_content_conflict")
+            continue
+        _utc_key(value.get("frozen_at_utc"))
+        rows[str(fid)] = value
+    return rows
+
+
+def _forecast_rows(source: Path | dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return source if isinstance(source, dict) else unique_frozen_forecasts(source)
+
+
+def forecast_service_history(source: Path | dict[str, dict[str, Any]], before_utc: str, lookback_days: int = ALLOCATION_LOOKBACK_DAYS) -> dict[str, tuple[int, str]]:
+    """(unique forecast count, latest freeze time) per candidate over forecasts frozen in
     ``[before_utc - lookback_days, before_utc)``.
 
     Outcome-blind by construction: only identity and freeze-time fields of frozen forecasts are read,
@@ -74,18 +109,19 @@ def forecast_service_history(forecast_root: Path, before_utc: str, lookback_days
     with a long service history from being locked out forever by newer, never-served candidates.
     """
     cutoff = _utc_key(before_utc)
+    floor = _utc_key((datetime.fromisoformat(cutoff.replace("Z", "+00:00")) - timedelta(days=lookback_days)).isoformat())
     history: dict[str, tuple[int, str]] = {}
-    if cutoff is None:
-        return history
-    floor = _utc_key((datetime.fromisoformat(before_utc.replace("Z", "+00:00")) - timedelta(days=lookback_days)).isoformat())
-    for _, value in base.jsons(forecast_root, "FROZEN_FORECAST_v1"):
-        cid = value.get("source_candidate_id")
-        frozen = _utc_key(value.get("frozen_at_utc"))
-        if not isinstance(cid, str) or frozen is None or not (floor <= frozen < cutoff):
-            continue
-        count, last = history.get(cid, (0, ""))
-        history[cid] = (count + 1, max(last, frozen))
+    for value in _forecast_rows(source).values():
+        cid, frozen = str(value["source_candidate_id"]), _utc_key(value.get("frozen_at_utc"))
+        if floor <= frozen < cutoff:
+            count, last = history.get(cid, (0, ""))
+            history[cid] = (count + 1, max(last, frozen))
     return history
+
+
+def window_occupancy(source: Path | dict[str, dict[str, Any]], window_id: str) -> dict[str, str]:
+    """candidate_id -> forecast_id for unique forecasts already frozen in this causal event window."""
+    return {str(v["source_candidate_id"]): fid for fid, v in sorted(_forecast_rows(source).items()) if v.get("causal_event_window_id") == window_id}
 
 
 def forecast_allocation_key(candidate: dict[str, Any], history: dict[str, tuple[int, str]]) -> tuple[int, int, str, str]:
@@ -796,11 +832,24 @@ def main() -> None:
     args.admission_registry_output.write_bytes(canonical(admission_registry))
 
     new_forecasts = 0
-    forecast_slots_used = 0  # counts allocations, not writes, so a same-capture replay cannot spill to later candidates
     dispatch = 0
     episode_continuations = 0
     candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
-    service_history = forecast_service_history(args.forecast_root, captured)
+    # The cap is per causal event window: rows already frozen in this window (by any earlier run or
+    # policy) occupy slots and are never rewritten; only the remainder may be issued.
+    event_window = base.sha({"run": source["source_run_id"], "captured": captured})[:20]
+    allocation = {"policy_version": ALLOCATION_POLICY_VERSION, "lookback_days": ALLOCATION_LOOKBACK_DAYS, "cap": args.max_new_forecasts,
+                  "causal_event_window_id": event_window, "status": "OK", "by_kind": {}}
+    try:
+        frozen_rows = unique_frozen_forecasts(args.forecast_root)
+        service_history = forecast_service_history(frozen_rows, captured)
+        occupied = window_occupancy(frozen_rows, event_window)
+        available_slots = max(0, args.max_new_forecasts - len(occupied))
+    except AllocationIntegrityError as exc:
+        service_history, occupied, available_slots = {}, {}, 0
+        allocation["status"] = f"FAIL_CLOSED:{exc}"
+    allocation.update({"occupied_slots_before": len(occupied), "available_slots": available_slots})
+    issued_slots = 0
     candidate_rows.sort(key=lambda item: forecast_allocation_key(item[1], service_history))
     for spec_path, candidate in candidate_rows:
         spec = candidate["spec"]
@@ -819,9 +868,15 @@ def main() -> None:
 
         forecast_id = None
         start = base.at(latest, spec.get("target_metric_path") or "") if spec.get("target_metric_path") else None
-        if admitted and fired and spec["target_direction"] != "NONE" and isinstance(start, (int, float)) and forecast_slots_used < args.max_new_forecasts:
-            forecast_slots_used += 1
-            window = base.sha({"run": source["source_run_id"], "captured": captured})[:20]
+        eligible = admitted and fired and spec["target_direction"] != "NONE" and isinstance(start, (int, float))
+        kind_stats = allocation["by_kind"].setdefault(str(spec.get("kind")), {"eligible": 0, "issued_new": 0, "held_in_window": 0})
+        kind_stats["eligible"] += int(eligible)
+        if candidate["candidate_id"] in occupied:
+            kind_stats["held_in_window"] += 1
+            forecast_id = occupied[candidate["candidate_id"]] if eligible else None
+        elif eligible and issued_slots < available_slots:
+            issued_slots += 1
+            window = event_window
             forecast_id = "EXP-FC-" + base.sha({"candidate_id": candidate["candidate_id"], "window": window})[:20]
             frozen = {
                 "contract": "FROZEN_FORECAST_v1", "unit_contract_version": base.UNIT_CONTRACT_VERSION, "forecast_id": forecast_id, "source_candidate_id": candidate["candidate_id"], "source_observation_id": observation_id,
@@ -835,6 +890,7 @@ def main() -> None:
             apply_exact_settlement_contract(frozen)
             if base.write_new(args.forecast_root / when.strftime("%Y/%m") / f"{forecast_id}.json", frozen):
                 new_forecasts += 1
+                kind_stats["issued_new"] += 1
 
         episode_start = candidate["candidate_id"] in new_ids or (
             fired and prior_observation_status(args.observation_root, candidate["candidate_id"], captured) not in FIRED_STATES)
@@ -876,7 +932,7 @@ def main() -> None:
                 "receipted_request_count": total_qualified - len(requests), "history_root": base.rel(root, args.dispatch_root)}
     args.manifest_output.parent.mkdir(parents=True, exist_ok=True)
     args.manifest_output.write_bytes(base.canon(manifest))
-    print(json.dumps({"candidate_count": reg["candidate_count"], "new_candidate_count": len(new_ids), "new_forecasts": new_forecasts, "dispatch_created": dispatch, "episode_continuations_not_dispatched": episode_continuations, "admission_status_counts": admission_registry["status_counts"], "rejected": rejected}, sort_keys=True))
+    print(json.dumps({"candidate_count": reg["candidate_count"], "new_candidate_count": len(new_ids), "new_forecasts": new_forecasts, "forecast_allocation": allocation, "dispatch_created": dispatch, "episode_continuations_not_dispatched": episode_continuations, "admission_status_counts": admission_registry["status_counts"], "rejected": rejected}, sort_keys=True))
 
 
 if __name__ == "__main__":

@@ -189,5 +189,169 @@ class FairForecastAllocationOrderUnit(unittest.TestCase):
             self.assertEqual(module.forecast_service_history(root / "missing", "2026-08-03T20:00:00Z"), {})
 
 
+def window_id(captured: str) -> str:
+    return module.base.sha({"run": "fair-allocation-run", "captured": captured})[:20]
+
+
+def in_window(repo: Path, captured: str) -> list[dict]:
+    return [r for r in forecasts(repo) if r.get("causal_event_window_id") == window_id(captured)]
+
+
+def plant_window_forecast(repo: Path, template: dict, captured: str) -> Path:
+    """Simulate a forecast written into ``captured``'s window by an earlier (old-policy) producer."""
+    window = window_id(captured)
+    value = dict(template, frozen_at_utc=captured, causal_event_window_id=window,
+                 forecast_id="EXP-FC-" + module.base.sha({"candidate_id": template["source_candidate_id"], "window": window})[:20])
+    path = repo / FORECAST_ROOT / "2026/08" / f"{value['forecast_id']}.json"
+    path.write_text(json.dumps(value, sort_keys=True))
+    return path
+
+
+class ReplayContainmentRound2(unittest.TestCase):
+    """D1-A: the cap is per causal event window and counts rows already occupying that window."""
+
+    output8 = {"forecast_candidates": [], "experiment_candidates": [pair(i) for i in range(8)]}
+
+    def test_replay_with_new_earlier_ordered_candidate_keeps_window_at_cap(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            run(repo, self.output8, tick(1))
+            before = sorted(p.read_bytes() for p in (repo / FORECAST_ROOT).rglob("*.json"))
+            grown = {"forecast_candidates": [], "experiment_candidates": [pair(i) for i in range(9)]}
+            summary = run(repo, grown, tick(1))  # never-served newcomer sorts first
+            self.assertEqual(summary["new_forecasts"], 0)
+            self.assertEqual(len(in_window(repo, tick(1))), 5)
+            self.assertEqual(sorted(p.read_bytes() for p in (repo / FORECAST_ROOT).rglob("*.json")), before)
+
+    def _old_policy_window(self, repo: Path, count: int) -> list[str]:
+        run(repo, self.output8, tick(0))
+        run(repo, self.output8, tick(1))
+        served_counts = served(repo)
+        latest = {}
+        for r in forecasts(repo):
+            latest[r["source_candidate_id"]] = r
+        # the old ID-ordered policy would pick by candidate_id; plant the most-served ones so the
+        # new least-served order would prefer entirely different candidates
+        chosen = sorted(latest, key=lambda c: (-served_counts[c], c))[:count]
+        for cid in chosen:
+            plant_window_forecast(repo, latest[cid], tick(2))
+        return chosen
+
+    def test_pre_cutover_window_with_five_old_policy_rows_issues_nothing(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            chosen = self._old_policy_window(repo, 5)
+            summary = run(repo, self.output8, tick(2))
+            self.assertEqual(summary["new_forecasts"], 0)
+            self.assertEqual(sorted(r["source_candidate_id"] for r in in_window(repo, tick(2))), sorted(chosen))
+
+    def test_historical_over_cap_window_fails_closed_for_additional_issuance(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            self._old_policy_window(repo, 6)
+            before = sorted(p.read_bytes() for p in (repo / FORECAST_ROOT).rglob("*.json"))
+            summary = run(repo, self.output8, tick(2))
+            self.assertEqual(summary["new_forecasts"], 0)
+            self.assertEqual(len(in_window(repo, tick(2))), 6)  # nothing rewritten or deleted
+            self.assertEqual(sorted(p.read_bytes() for p in (repo / FORECAST_ROOT).rglob("*.json")), before)
+            self.assertEqual(summary["forecast_allocation"]["available_slots"], 0)
+
+    def test_removed_candidate_keeps_its_window_row_and_its_slot(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            holder = in_window(repo, tick(0))[0]
+            removed = None
+            for p in (repo / "research/experiment_lifecycle/candidates").rglob(f"{holder['source_candidate_id']}.json"):
+                removed = json.loads(p.read_text())["spec"]["target_threshold_pct"]
+                p.unlink()
+            remaining = [c for c in self.output8["experiment_candidates"] if c["target_threshold_pct"] != removed]
+            self.assertEqual(len(remaining), 7)
+            summary = run(repo, {"forecast_candidates": [], "experiment_candidates": remaining}, tick(0))
+            self.assertEqual(summary["new_forecasts"], 0)
+            self.assertIn(holder["forecast_id"], {r["forecast_id"] for r in in_window(repo, tick(0))})
+            self.assertEqual(len(in_window(repo, tick(0))), 5)
+
+    def test_partial_write_fills_only_the_remaining_slots(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            original = {r["forecast_id"] for r in in_window(repo, tick(0))}
+            paths = sorted((repo / FORECAST_ROOT).rglob("*.json"))
+            for p in paths[:3]:
+                p.unlink()
+            summary = run(repo, self.output8, tick(0))
+            self.assertEqual(summary["new_forecasts"], 3)
+            self.assertEqual({r["forecast_id"] for r in in_window(repo, tick(0))}, original)
+
+    def test_cap_change_raises_to_the_new_cap_and_never_shrinks_existing_rows(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0), cap=5)
+            self.assertEqual(run(repo, self.output8, tick(0), cap=7)["new_forecasts"], 2)
+            self.assertEqual(run(repo, self.output8, tick(0), cap=3)["new_forecasts"], 0)
+            self.assertEqual(len(in_window(repo, tick(0))), 7)
+
+    def test_naive_timestamp_in_history_fails_closed_for_allocation_only(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            run(repo, self.output8, tick(0))
+            bad = dict(forecasts(repo)[0], frozen_at_utc="2026-08-01T20:00:00", forecast_id="EXP-FC-naive0000000000000")
+            (repo / FORECAST_ROOT / "2026/08/EXP-FC-naive0000000000000.json").write_text(json.dumps(bad))
+            summary = run(repo, self.output8, tick(1))
+            self.assertEqual(summary["new_forecasts"], 0)
+            self.assertTrue(summary["forecast_allocation"]["status"].startswith("FAIL_CLOSED"))
+            self.assertGreater(summary["dispatch_created"] + summary["episode_continuations_not_dispatched"], 0)  # rest of the run proceeds
+
+    def test_summary_records_policy_and_per_kind_denominators(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            output = {"forecast_candidates": [director_forecast()], "experiment_candidates": [pair(i) for i in range(8)]}
+            alloc = run(repo, output, tick(0))["forecast_allocation"]
+            self.assertEqual(alloc["policy_version"], module.ALLOCATION_POLICY_VERSION)
+            self.assertEqual(alloc["cap"], 5)
+            self.assertEqual(alloc["by_kind"]["FORECAST_TEST"], {"eligible": 1, "issued_new": 1, "held_in_window": 0})
+            self.assertEqual(alloc["by_kind"]["SENSOR_COMBINATION"], {"eligible": 8, "issued_new": 4, "held_in_window": 0})
+
+
+class HistoryIdentityRound2(unittest.TestCase):
+    """D1-B: history counts unique forecast identities and fails closed on identity/time conflicts."""
+
+    def _doc(self, fid, cid="EC-a", frozen="2026-08-02T20:00:00Z", **extra):
+        return {"contract": "FROZEN_FORECAST_v1", "forecast_id": fid, "source_candidate_id": cid, "frozen_at_utc": frozen, **extra}
+
+    def test_duplicate_paths_for_one_forecast_id_count_once(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            doc = self._doc("f1")
+            for sub in ("a", "b"):
+                (root / sub).mkdir()
+                (root / sub / "f1.json").write_text(json.dumps(doc))
+            self.assertEqual(module.forecast_service_history(root, "2026-08-03T20:00:00Z")["EC-a"][0], 1)
+
+    def test_conflicting_content_or_owner_for_one_forecast_id_fails_closed(self):
+        for other in (self._doc("f1", cid="EC-b"), self._doc("f1", frozen="2026-08-01T20:00:00Z")):
+            with tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                (root / "a.json").write_text(json.dumps(self._doc("f1")))
+                (root / "b.json").write_text(json.dumps(other))
+                with self.assertRaises(module.AllocationIntegrityError):
+                    module.forecast_service_history(root, "2026-08-03T20:00:00Z")
+
+    def test_naive_or_unparseable_freeze_time_fails_closed_never_host_local(self):
+        for frozen in ("2026-08-02T20:00:00", "not-a-time"):
+            with tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                (root / "a.json").write_text(json.dumps(self._doc("f1", frozen=frozen)))
+                with self.assertRaises(module.AllocationIntegrityError):
+                    module.forecast_service_history(root, "2026-08-03T20:00:00Z")
+
+    def test_naive_capture_time_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            with self.assertRaises(module.AllocationIntegrityError):
+                module.forecast_service_history(Path(td), "2026-08-03T20:00:00")
+
+
 if __name__ == "__main__":
     unittest.main()
