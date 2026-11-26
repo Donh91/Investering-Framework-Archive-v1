@@ -82,6 +82,12 @@ class S1ReleaseControlHostAcceptance(unittest.TestCase):
             head = event.get("pull_request", {}).get("head", {}).get("sha", "")
             if not re.fullmatch(r"[0-9a-f]{40}", head):
                 raise AssertionError("S1_PR_EVENT_HEAD_INVALID")
+            # The full suite shares this working tree: remember the checked-out commit (the PR
+            # merge ref) so tearDownClass can restore it. Otherwise every later test module runs
+            # against the PR head tree while already-imported modules expect the merge tree.
+            cls._restore_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, check=True,
+                                               text=True, stdout=subprocess.PIPE,
+                                               timeout=10).stdout.strip()
             for command in (["git", "fetch", "--no-tags", "--depth=1", "origin", head],
                             ["git", "checkout", "--detach", head]):
                 completed = subprocess.run(command, cwd=ROOT, text=True, capture_output=True,
@@ -96,6 +102,15 @@ class S1ReleaseControlHostAcceptance(unittest.TestCase):
             print("S1_CI_EXACT_PR_HEAD=" + head, flush=True)
         elif os.getenv("CI") and os.getenv("GITHUB_EVENT_NAME") not in ("push", "workflow_dispatch"):
             raise AssertionError("S1_HOST_EVENT_UNKNOWN")
+
+    @classmethod
+    def tearDownClass(cls):
+        restore = getattr(cls, "_restore_head", None)
+        if restore:
+            completed = subprocess.run(["git", "checkout", "--detach", restore], cwd=ROOT,
+                                       text=True, capture_output=True, timeout=60, check=False)
+            if completed.returncode:
+                raise AssertionError("S1_HEAD_RESTORE_FAILED " + completed.stderr[-3000:])
 
     def _run(self, argv, *, env=None, timeout=80):
         result = subprocess.run([self.node, *argv], cwd=ROOT, env=env, text=True,
