@@ -54,7 +54,8 @@ RECALL_LABEL = "codex-recall-pending"      # on every PR merged by the fallback,
 OFFLINE_SIGNALS = ("UNAVAILABLE", "SILENT", "LIMIT")      # s1_tick_brief_v1.offline_signal
 REVIEW_ROUTE = re.compile(r"CODEX|CLAUDE|FALLBACK\((?:UNAVAILABLE|SILENT|LIMIT)\)|NONE\(policy=NATIVE_GATES\)")
 EXECUTOR_ACTIONS = ("MERGE", "HALT")       # what the executor may do; a heartbeat is observability, never the action
-MERGE_RISKS = ("LOW", "MEDIUM")            # HIGH, HIGH_IMPACT, EXTREME, unclear and OWNER_GATED are never executor merges
+MERGE_RISKS = ("LOW", "MEDIUM")            # HIGH_IMPACT, EXTREME, unclear and OWNER_GATED are never executor merges; HIGH only as
+                                           # repository automation's allowlisted stored data (owner addendum c, data_admitted)
 RISK_ORDER = ("LOW", "MEDIUM", "HIGH", "HIGH_IMPACT", "EXTREME", "UNCLEAR", "OWNER_GATED")
 # The owner's label veto. Names are compared without case, spaces, "_" and "-" (label_key): HIGH_IMPACT, "high impact"
 # and High-Impact are one label. Every "risk:" label other than low and medium holds as well (hold_label).
@@ -162,12 +163,12 @@ def body_hits(body):
     return sorted(hits)
 
 
-# Route (c) only, ADDED lines only (P1-B): words of a change that turns money on by VALUE, where no listed name is
-# added: `"dry_run": false`, `PAPER = False`, `max_position_usd: 50000`, `rpc.submit(tx)`. Far too wide for a path or a
-# title; on the one route with no reviewer a hit only parks the head for the owner.
-PROSE_SUFFIXES = (".md", ".rst")
-DIFF_FLIP = re.compile(r"(?i)" + _W + r"(?:dry[ _-]?run|paper|live|simulat\w*|position\w*|size\w*|sizing|amount\w*|notional|submit\w*|rpc|tx|txn|txs"
-                       r"|leverage|max[ _-]?(?:\w+[ _-])?usd)" + _E)
+# Owner addendum c (2026-11-26): route (c) merges only repository automation's DATA PRs on a positive allowlist.
+FALLBACK_AUTHOR = {"login": "github-actions[bot]", "id": 41898282, "type": "Bot"}   # the platform identity of a GITHUB_TOKEN PR
+ALLOWLIST_FORBIDDEN = (".github/", ".agents/", "00_FMOS/", "01_CORE_FRAMEWORK/", "07_PROMPTS_AND_AGENTS/", "scripts/", "tests/", "schemas/", SITE_PREFIX)
+DATA_STATUSES = ("added", "modified")                     # never removed, renamed, copied or a status this code does not know
+MAX_DATA_COMMITS = 5
+
 NAMED_HIGH = re.compile(r"(?i)high[_ -]?impact|" + _W + r"extreme" + _E + r"|owner[_ -]?gated")
 DIRECTION_WORDS = re.compile(r"(?i)roadmap|priorit|master[_ -]?plan|" + _W + r"mission" + _E + r"|strateg|deprecat|" + _W + r"remov(?:e|es|ed|al|ing)" + _E
                              + r"|sunset|retire|" + _W + r"new[_ -]?(?:program|producer|consumer)" + _E)
@@ -413,16 +414,6 @@ def entry_facts(pr, files, files_complete, push_filters):
         if name.lower().endswith(BINARY_SUFFIXES) and f.get("status") != "removed":
             binary.append(name)
     x, title_forms, body_forms = [f"{code}:body" for code in body_hits(body)], word_forms(title), word_forms(body)
-    # the diff itself, for the fallback route only (review_route): which lists the ADDED lines match. Every file that is
-    # not prose (.md, .rst) is read, a .txt file included (P1-B: a key in notes.txt), and the value-flip words count.
-    diff_x = set()
-    for f in files or []:
-        if not str(f.get("filename") or "").lower().endswith(PROSE_SUFFIXES):
-            added = "\n".join(line[1:] for line in str(f.get("patch") or "").splitlines() if line.startswith("+") and not line.startswith("+++"))
-            forms = word_forms(added)                             # the word lists of a path AND the strong identifiers of a body (send_transaction)
-            diff_x |= {code for code in BODY_LISTS if JUDGMENT[code].search(forms) or BODY_PATTERNS[code].search(forms)}
-            if DIFF_FLIP.search(forms):
-                diff_x.add("flip")
     for code, rx in JUDGMENT.items():
         if rx.search(title_forms):
             x.append(f"{code}:title")
@@ -441,9 +432,109 @@ def entry_facts(pr, files, files_complete, push_filters):
             "direction": bool(removed_code or DIRECTION_WORDS.search(title_forms) or any(DIRECTION_WORDS.search(word_forms(p)) for p in paths)),
             "hold_labels": held[:3],
             "docs_only": bool(files_complete and paths and all(doc_path(p) for p in paths)),
-            "diff_x": sorted(diff_x) if files_complete else ["unknown"],
             "push": push_trigger_matches(paths, push_filters)[:4] if files_complete else ["unknown"],
             "title_sha256": sha16(title)}
+
+
+def _literal_prefix(rx):
+    """The literal start of an anchored allowlist pattern: up to its first regex metacharacter, with "\\." read as "."."""
+    out, i = [], 1
+    while i < len(rx):
+        ch = rx[i]
+        if ch == "\\" and i + 1 < len(rx) and rx[i + 1] in "./-_":
+            out.append(rx[i + 1])
+            i += 2
+            continue
+        if ch in "\\[](){}.*+?|^$":
+            break
+        out.append(ch)
+        i += 1
+    return "".join(out)
+
+
+def fallback_allowlist(switch):
+    """Owner addendum c: the fixed, reviewed POSITIVE allowlist of route (c), from the lane switch on main (so a reviewed
+    PR is the only way to change it, and the pins and the switch blob bind it). [(head_ref regex, [(path regex,
+    statuses)])], or None when it is missing or ANY part is malformed: route (c) then merges nothing (fail closed).
+    Every path pattern is anchored, ends in .json, starts with a literal directory outside code, tests, workflows,
+    governance, agent instructions, schemas and the site, and allows only "added" and/or "modified"."""
+    doc = switch.get("fallback_data_allowlist") if isinstance(switch, dict) else None
+    if not isinstance(doc, dict) or doc.get("author") != FALLBACK_AUTHOR["login"] or not isinstance(doc.get("entries"), list) or not doc["entries"]:
+        return None
+    out = []
+    try:
+        for entry in doc["entries"]:
+            if not isinstance(entry, dict) or not isinstance(entry.get("paths"), list) or not entry["paths"]:
+                return None
+            ref = entry.get("head_ref")
+            if not (isinstance(ref, str) and ref.startswith("^") and ref.endswith("$") and "/" in _literal_prefix(ref)):
+                return None
+            rows = []
+            for row in entry["paths"]:
+                rx, statuses = (row.get("path"), row.get("status")) if isinstance(row, dict) else (None, None)
+                prefix = _literal_prefix(rx) if isinstance(rx, str) else ""
+                if not (isinstance(rx, str) and rx.startswith("^") and rx.endswith(r"\.json$") and "/" in prefix and ".." not in prefix
+                        and not prefix.startswith(ALLOWLIST_FORBIDDEN) and not prefix.startswith(".") and isinstance(statuses, list) and statuses
+                        and all(x in DATA_STATUSES for x in statuses)):
+                    return None
+                rows.append((re.compile(rx), tuple(statuses)))
+            out.append((re.compile(ref), rows))
+    except re.error:
+        return None
+    return out
+
+
+def _automation(user):
+    return isinstance(user, dict) and all(user.get(k) == v for k, v in FALLBACK_AUTHOR.items())
+
+
+def data_route(pr, files, files_complete, commits, commits_complete, allowlist):
+    """Owner addendum c: is this PR repository automation's DATA PR on the positive allowlist? (True, None) or (False,
+    why). All must hold: the PR was opened by github-actions[bot] (login, id and type: the identity GitHub gives a
+    GITHUB_TOKEN PR); at most MAX_DATA_COMMITS commits, none a merge, none whose GitHub author or committer is an account
+    other than that bot (a person who pushes to the branch is linked to their account); the head branch matches an
+    entry; and EVERY changed file matches a path pattern of that entry with an allowed status, has no previous name,
+    and is a stored-data file outside every code, test, workflow, governance and config location (checked again here,
+    whatever the allowlist says). Anything unread or unknown: False."""
+    if not allowlist:
+        return False, "no_allowlist"
+    pr = pr if isinstance(pr, dict) else {}
+    if not _automation(pr.get("user")):
+        return False, "author"
+    if not files_complete or not files:
+        return False, "files"
+    if not commits_complete or not commits or len(commits) > MAX_DATA_COMMITS:
+        return False, "commits"
+    for c in commits:
+        if not isinstance(c, dict) or len(c.get("parents") or []) != 1:
+            return False, "commits"
+        if any(who is not None and not _automation(who) for who in (c.get("author"), c.get("committer"))):
+            return False, "commit_identity"
+    ref = str(((pr.get("head") or {}).get("ref")) or "")
+    for ref_rx, rows in allowlist:
+        if not ref_rx.fullmatch(ref):
+            continue
+        for f in files:
+            name = f.get("filename") if isinstance(f, dict) else None
+            if not isinstance(name, str) or f.get("previous_filename") or name.startswith(ALLOWLIST_FORBIDDEN) \
+                    or not name.lower().endswith(".json") or path_risk(name) != "HIGH" \
+                    or not any(rx.fullmatch(name) and f.get("status") in statuses for rx, statuses in rows):
+                return False, "path"
+        return True, None
+    return False, "head_ref"
+
+
+def data_admitted(e):
+    """Owner addendum c names stored-data snapshots (#2314) as route (c) merges; REVIEW_ADMISSION.md RISK CLASS calls a
+    change to stored data HIGH. Such a PR is admitted at class HIGH, and ONLY then: the brief's data_route fact is True,
+    the class is exactly HIGH (never HIGH_IMPACT, EXTREME, UNCLEAR or OWNER_GATED, from whatever source), and the
+    automatic lane floor is LOW or MEDIUM (no producer path, no site, no exclusion). Every other HIGH stays a C2:risk gate."""
+    thin = e.get("thin") if isinstance(e.get("thin"), dict) else {}
+    return thin.get("data_route") is True and pr_risk(e) == "HIGH" and (e.get("lane") or {}).get("risk_floor") in MERGE_RISKS
+
+
+def merge_risk_ok(risk, data_ok):
+    return risk in MERGE_RISKS or (risk == "HIGH" and data_ok is True)
 
 
 def review_route(e, policy):
@@ -458,32 +549,32 @@ def review_route(e, policy):
     recall = policy == RECALL_POLICY
     if cx == "FINDINGS":
         return None, "C5:codex_findings"
-    if cx == "REQUESTED":
-        return None, "C5:codex_review_pending"
     if recall and thin.get("claude") not in ("NONE", "APPROVE"):
         return None, "C5:claude_veto" if thin.get("claude") == "VETO" else "C5:review_unreadable"   # a Claude refusal blocks every route
     if cx == "FINAL":
         return ("CODEX", None) if author.get("codex") is False else (None, "C5:codex_authored")   # Codex never reviews its own head
+    if recall and thin.get("claude") == "APPROVE" and (cx in NO_REVIEW_STATES or cx == "REQUESTED"):
+        # (b), owner decision B (2026-11-26): a Claude exact-head APPROVE counts AT ONCE, also while a Codex request is
+        # pending. Never Claude's review of a head Claude wrote, and never S1's own head (S1 writes as the owner account,
+        # the account the receipt is checked against, P1-C). Findings, a Claude veto and a native CHANGES_REQUESTED
+        # (C5, the brief's gate list) still block.
+        if author.get("s1") is not False:
+            return None, "C5:s1_authored"
+        return ("CLAUDE", None) if thin.get("claude_written") is False else (None, "C5:claude_authored")
+    if cx == "REQUESTED":
+        return None, "C5:codex_review_pending"
     if cx not in NO_REVIEW_STATES:
         return None, "C5:review_unreadable"                       # NOT_PROVEN, missing, or a status this code does not know
     if recall:
-        if thin.get("claude") == "APPROVE":                       # (b): never Claude's review of a head Claude wrote,
-            if author.get("s1") is not False:                     # and never S1's own head: S1 writes as the owner account,
-                return None, "C5:s1_authored"                     # the account the receipt is checked against (P1-C)
-            return ("CLAUDE", None) if thin.get("claude_written") is False else (None, "C5:claude_authored")
         offline = thin.get("codex_offline")                       # (c): the builder's signal, which must fit this head's Codex state
         if offline not in OFFLINE_SIGNALS or cx != ("NONE" if offline == "LIMIT" else offline):
             return None, "C5:codex_review_required"               # (c) needs proof that Codex is unavailable: ask Codex
-        if pr_risk(e) != "LOW":
-            return None, "C5:fallback_parked:risk"                # (c) merges class LOW only: MEDIUM code needs a reviewer (P1-B)
+        if thin.get("data_route") is not True:
+            return None, "C5:fallback_parked:not_data"            # addendum c: (c) merges ONLY automation's allowlisted data PRs; code needs (a) or (b)
         if author.get("s1") is not False:
-            return None, "C5:s1_authored"                         # automation's own work is never merged by automation's own runs alone
+            return None, "C5:s1_authored"                         # S1's own work is never merged by automation's own runs alone
         if author.get("codex") is not False:
             return None, "C5:codex_authored"                      # Codex could never clear the recall of a head it wrote
-        if thin.get("bot") is not False:
-            return None, "C5:bot_authored"
-        if thin.get("diff_x") != []:
-            return None, "C5:fallback_parked:diff_words"          # the diff itself holds a credential, money or Round 3 word: uncertain, PARK
         if thin.get("p01_named") is not False:
             return None, "C5:fallback_parked:p0p1_comment"        # someone wrote P0 or P1 on the PR and no reviewer has read the head: PARK
         if thin.get("fallback_mismatch") is not False:
@@ -523,7 +614,7 @@ def pr_gates(e, cfg, intent_prs=()):
     if thin is None:
         gates.append("C2:facts_not_in_brief")
         thin = {"x": [], "risk": "UNCLEAR", "direction": True, "hold_labels": [], "push": ["unknown"], "docs_only": False, "ai": True,
-                "claude": "NOT_PROVEN", "claude_written": True, "diff_x": ["unknown"], "fallback_candidates": None, "fallback_mismatch": True,
+                "claude": "NOT_PROVEN", "claude_written": True, "data_route": False, "fallback_candidates": None, "fallback_mismatch": True,
                 "codex_offline": None, "p01_named": True}
     if "paths" not in e:
         gates.append("C2:paths_not_in_brief")
@@ -535,7 +626,7 @@ def pr_gates(e, cfg, intent_prs=()):
         gates.append("C2:push_trigger:" + str(thin["push"][0]))
     item = e.get("item") if isinstance(e.get("item"), dict) else {}
     risk = risk_max(lane.get("risk_floor"), thin.get("risk"), item.get("risk"))
-    if risk not in MERGE_RISKS:
+    if not merge_risk_ok(risk, data_admitted(e)):
         gates.append(f"C2:risk:{risk}")
     if thin.get("direction") or item.get("kind") == "DIRECTION":
         gates.append("C5:strategist")
@@ -654,6 +745,10 @@ def decide(brief, now=None):
         loose = [i for i in (receipts.get("items") or []) if isinstance(i, dict) and type(i.get("pr")) is int]
         notes.append(f"CLAUDE_RECEIPT_UNVERIFIED({receipts['unverified'] if type(receipts.get('unverified')) is int else 'UNKNOWN'}): "
                      + (" ".join(f"#{i['pr']}" for i in loose[:6]) or "-"))
+    watch = b.get("executor_watch") if isinstance(b.get("executor_watch"), dict) else {}
+    if cfg["executor"] != "OFF" and watch.get("state") != "OK":   # fix round 4 (#8): a missing or degraded executor is on the owner's line
+        notes.append(f"EXECUTOR_{watch.get('state') if isinstance(watch.get('state'), str) and watch.get('state').isalpha() else 'UNKNOWN'}"
+                     f"(run={watch.get('run') if type(watch.get('run')) is int else '-'})")
     if notes:
         first = base["status_lines"][0]
         base["status_lines"] = [first + " ; " + " ; ".join(notes)] + base["status_lines"][1:]
@@ -680,6 +775,8 @@ def decide(brief, now=None):
     intents = b.get("open_intents") if isinstance(b.get("open_intents"), list) else []
     if ledger.get("read") is not True:
         skipped.append("lane:C7:ledger_unreadable")
+    if isinstance(c1b.get("gap"), dict) and c1b["gap"].get("from_unknown") is True:
+        skipped.append("lane:C1b:history_gap")                  # fix round 4: history this brief did not prove clean: no merge now
     intent_prs = {i.get("pr") for i in intents if isinstance(i, dict)}
     if any(isinstance(i, dict) and i.get("kind") == "S1_LANE_MERGE_INTENT_v1" for i in intents):
         skipped.append("lane:C9:open_merge_intent")              # one merge at a time: the readback settles it first
@@ -708,7 +805,7 @@ def decide(brief, now=None):
     if chosen is not None:
         e = chosen
         ci = (e.get("ci") or {}).get("tuples") or {}
-        merge = {"pr": e["n"], "sha": e["head"], "merge_method": "squash", "risk": pr_risk(e),
+        merge = {"pr": e["n"], "sha": e["head"], "merge_method": "squash", "risk": pr_risk(e), "data": data_admitted(e),
                  "review": review_route(e, cfg["review_policy"])[0],
                  "files": e.get("files"), "paths_sha256": e.get("paths_sha256"), "title_sha256": (e.get("thin") or {}).get("title_sha256"),
                  "ci": {name: [t.get("run"), t.get("att"), t.get("job")] for name, t in sorted(ci.items())},
@@ -765,7 +862,7 @@ def decision_schema_ok(d):
             return False
         return (isinstance(m, dict) and type(m.get("pr")) is int and m.get("pr") == d.get("pr") and isinstance(m.get("sha"), str)
                 and SHA40.fullmatch(m["sha"]) is not None and m["sha"] == d.get("head") and m.get("merge_method") == "squash"
-                and m.get("risk") in MERGE_RISKS and d.get("halt") is None and d.get("pins_ok") is True and d.get("main") is not None)
+                and merge_risk_ok(m.get("risk"), m.get("data")) and d.get("halt") is None and d.get("pins_ok") is True and d.get("main") is not None)
     if d["action"] == "HALT":
         h = d.get("halt")
         if not isinstance(h, dict) or d.get("merge") is not None or d.get("pr") is not None:
@@ -848,7 +945,8 @@ def merge_receipt_body(decision, repo_id, intent_id, readback, run_id, privacy_r
     return "\n".join([
         "S1_LANE_MERGE_v1" + (" reconciled" if reconciled else ""), f"pr: {readback['pr']}", f"head: {readback['head']}",
         f"merge: {readback['merge_commit']}", f"review: {m.get('review', 'unavailable')}",
-        f"privacy=NO_RESTRICTED_CONTENT run={privacy_run if privacy_run is not None else 'unavailable'}", ci or "ci=unavailable",
+        # fix round 4 (#173/7186140947 finding 06): a receipt never claims more than was verified
+        f"privacy=NO_RESTRICTED_CONTENT run={privacy_run}" if privacy_run is not None else "privacy=UNVERIFIED run=unavailable", ci or "ci=unavailable",
         f"main_before: {decision.get('main')}", f"main_after: {readback['main_after']}", f"blob_match: {readback['paths']} paths",
         "rules: no_active_ruleset_and_main_unprotected", f"repo_id={repo_id}", f"intent: {intent_id}",
         f"main_health=brief run={m.get('health_run', 'unavailable')}", f"brief={decision.get('run_id')}", f"decision={decision.get('id')}",
@@ -889,8 +987,10 @@ def recall_cleared_body(pr, head, requested_at, contract, run_id):
                       "codex: FINAL", f"executor: GITHUB run={run_id}", f"contract={contract}", f"task: {TASK_ID}"])
 
 
-def halt_body(reason, pr=None, head=None, commit=None, run=None, detail=None, contract="-", run_id=None):
+def halt_body(reason, pr=None, head=None, commit=None, run=None, detail=None, contract="-", run_id=None, intent=None):
     lines = [f"S1_LANE_HALTED PR={pr if pr is not None else '-'} head={head or '-'}", f"reason: {reason}"]
+    if intent is not None:
+        lines.append(f"intent: {intent}")                      # the intent this halt is the outcome of (A10: exact settlement)
     if commit:
         lines.append(f"commit: {commit}")
     if run is not None:
@@ -950,8 +1050,10 @@ def readback_verdict(pr, head, intent_at, merge_commit, blobs, ancestor_of_main,
     the intent's, is UNREADABLE and never MATCH: the intent stays open and no receipt says "verified"."""
     if not isinstance(pr, dict) or not isinstance(pr.get("number"), int):
         return "UNREADABLE", "pr"
-    if pr.get("merged") is not True:
+    if pr.get("merged") is False:
         return "ABSENT", "not_merged"
+    if pr.get("merged") is not True:
+        return "UNREADABLE", "merged_unknown"                     # a missing or odd field is not "not merged" (fix round 4, #10)
     try:
         merged_at, at = stamp(pr.get("merged_at")), stamp(intent_at)
     except ValueError:

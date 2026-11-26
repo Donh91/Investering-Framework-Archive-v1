@@ -108,6 +108,8 @@ def world():
         "issue_comments": [], "issue_comments_complete": True,
         "health_runs": [health], "health_runs_complete": True,
         "rulesets_1": [], "rulesets_2": [], "rulesets_complete": True,
+        # the executor watchdog's record (fix round 4, #8): the previous run published a decision and its execute job succeeded
+        "executor_watch": {"runs": [{"run": 554, "at": ts(65), "publish": "success", "execute": "success", "complete": True}], "listed": 1},
         "pulls": [pull()], "pulls_complete": True, "pr": {7: pr_data()},
         # read_c1b's record (W2b D1): main equals the previous brief's checked_through, nothing to scan
         "c1b": {"checked_through": MAIN, "from": MAIN, "halt": None, "complete": True, "reason": None, "stop": None},
@@ -1005,6 +1007,8 @@ class CollectReplay(unittest.TestCase):
                 return self.d["detail"]
             if path == "issues":                                     # W2b C1b: the previous brief, at this same main
                 return [self.previous_issue()]
+            if path == "actions/workflows/s1-tick-brief.yml/runs":   # the executor watchdog (fix round 4): no earlier run in this fake
+                return {"workflow_runs": []}
             if path == "actions/runs/554":
                 return {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main",
                         "head_sha": self.main, "status": "completed", "conclusion": "success",
@@ -1090,7 +1094,7 @@ class CollectReplay(unittest.TestCase):
         # AGENTS.md section 0.2i (review of #2337, finding P2-4): every workflow with issues: write posts as the
         # Actions bot, so a bot post settles an intent only when the run it names is a run of THIS workflow on main.
         intent = comment(300, f"S1_LANE_MERGE_INTENT_v1\npr: 9\nhead: {'e' * 40}\nloop={'4' * 40}\nexecutor: GITHUB run=540\ncontract=44444444", BOT, 30)
-        done = comment(301, "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nexecutor: GITHUB run=540\ncontract=44444444", BOT, 29)
+        done = comment(301, "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nevidence: pr=9 not_merged\nexecutor: GITHUB run=540\ncontract=44444444", BOT, 29)
         run540 = {"id": 540, "path": B.WORKFLOW_PATH, "head_branch": "main", "event": "schedule", "status": "completed", "created_at": ts(32),
                   "updated_at": ts(28), "repository": {"full_name": B.REPO}, "head_repository": {"full_name": B.REPO}}
 

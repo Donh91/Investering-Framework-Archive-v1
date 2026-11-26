@@ -321,7 +321,7 @@ class RenderStability(unittest.TestCase):
                 brief.pop("verdict")
                 for key in ("c1b", "ledger"):                                                       # W2b: added beside it
                     brief.pop(key)
-                for key in ("thin", "decision_log", "recall", "codex_evidence", "claude_receipts", "unread"):          # section 0.2i: added beside them
+                for key in ("thin", "decision_log", "recall", "codex_evidence", "claude_receipts", "unread", "executor_watch"):   # section 0.2i: added beside them
                     brief.pop(key)
                 for e in brief["prs"]:                                                              # section 0.2i: judgment as data
                     e.pop("thin", None)

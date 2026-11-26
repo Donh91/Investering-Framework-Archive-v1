@@ -70,6 +70,9 @@ class FakeGitHub:
         self.hold = None                                            # the LIVE value of S1_EXECUTOR_HOLD (None: not set, 404)
         self.hold_error = None                                      # an HTTP code the variable read answers with
         self.after_intent = None                                    # fix round 3: a fact that changes right after the intent post
+        self.issue_body = None                                      # fix round 4 (A26): the body of the ONE published brief issue
+        self.issue_user = dict(B.ACTIONS_BOT)
+        self.labels = {9: [{"name": D.RECALL_LABEL}]}               # the labels of a merged PR with a recall (issues/<n>/labels)
 
     def run_of(self, run_id):
         return copy.deepcopy(self.runs.get(int(run_id)))
@@ -113,6 +116,8 @@ class FakeGitHub:
             return {"name": E.HOLD_VARIABLE, "value": self.hold}
         if path == "actions/workflows/s1-tick-brief.yml/runs":
             return {"workflow_runs": [{"event": "workflow_dispatch", "created_at": B.iso(self.now - timedelta(hours=h))} for h in range(30)]}
+        if path == "issues":                                       # the brief issue, as the publish job left it
+            return [] if self.issue_body is None else [{"number": 3, "user": dict(self.issue_user), "body": self.issue_body, "labels": [{"name": B.BRIEF_LABEL}]}]
         raise AssertionError(f"unexpected GET {path}")
 
     def pages(self, path, params=None, key=None, max_pages=30):
@@ -134,7 +139,13 @@ class FakeGitHub:
         if path in table:
             rows, complete = table[path]
             return copy.deepcopy(rows or []), bool(complete)
+        m = re.fullmatch(r"issues/(\d+)/labels", path)
+        if m:
+            return copy.deepcopy(self.labels.get(int(m.group(1)), [])), True
         m = re.fullmatch(r"actions/runs/(\d+)/jobs", path)
+        if m and int(m.group(1)) in (w.get("exec_logs") or {}):          # an earlier run of the brief workflow: its execute job
+            rid = int(m.group(1))
+            return [{"id": 80000 + rid, "name": "execute", "status": "completed", "conclusion": "success", "run_id": rid}], True
         if m:
             return copy.deepcopy(d["jobs"].get(int(m.group(1))) or []), True
         if path in ("issues/comments", "pulls/comments"):              # Codex's activity in the whole repository (B.read_codex_feed)
@@ -149,6 +160,9 @@ class FakeGitHub:
 
     def text(self, path):
         self._record("TEXT", path)
+        m = re.fullmatch(r"actions/jobs/8(\d{4})/logs", path)
+        if m and int(m.group(1)) in (self.w.get("exec_logs") or {}):
+            return self.w["exec_logs"][int(m.group(1))]
         return self.w["pr"][7]["privacy_log"]
 
     def graphql(self, query, variables):
@@ -194,8 +208,8 @@ class FakeNative:
 
     def tree_shas(self, commit, paths):
         self.calls.append(("tree_shas", commit))
-        if commit == MERGE_SHA:
-            return {p: self.merged_blobs.get(p, "blob-" + p) for p in paths}
+        if commit == MERGE_SHA:                                     # main after the merge: the pinned files are main's, the PR's paths the head's
+            return {p: self.merged_blobs.get(p, self.w["pins_actual"].get(p, "blob-" + p)) for p in paths}
         if commit == HEAD:
             return {p: "blob-" + p for p in paths}
         return {p: self.w["pins_actual"].get(p) for p in paths}
@@ -223,6 +237,7 @@ def setup(mutate=None, mode="LIVE", policy="NATIVE_GATES", live=None, env=None, 
     body, decision = B.render_issue(B.build_brief(dict(copy.deepcopy(w), codex_feed=TD.codex_feed_of(w))))
     now = NOW + timedelta(minutes=minutes)
     gh, native = FakeGitHub(w, now), FakeNative(w)
+    gh.issue_body = body
     if live:
         live(w, gh, native)
     files = {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE", "bindings": TB.BINDINGS, "budgets": TB.BUDGETS}
@@ -260,8 +275,9 @@ class LiveMerge(unittest.TestCase):
         self.assertEqual(out["lines"][-1], f"S1_TICK MERGE 7 {HEAD[:8]} MERGED(n=1,main={MERGE_SHA[:8]}) main={MAIN[:8]} contract=44444444")
         # the receipts are ledger posts the next brief counts: the intent is settled and the merge is counted
         comments = gh.w["issue_comments"]
-        self.assertEqual(B.open_intents(comments, NOW + timedelta(minutes=5), 0, gh.run_of), [])
-        self.assertEqual(len(B.open_intents(comments, NOW + timedelta(minutes=5), 0)), 1)     # ... only because run 555 is proven (P2-4)
+        self.assertEqual(B.open_intents(comments, NOW + timedelta(minutes=5), 0, gh.run_of, B.MergeReader(gh)), [])
+        self.assertEqual(len(B.open_intents(comments, NOW + timedelta(minutes=5), 0, None, B.MergeReader(gh))), 1)     # ... only because run 555 is proven (P2-4)
+        self.assertEqual(len(B.open_intents(comments, NOW + timedelta(minutes=5), 0, gh.run_of)), 1)                    # ... and the merge is native (A10)
         self.assertEqual((out["alarms"], [line for line in out["lines"] if "ALARM" in line]), ([], []))
         self.assertEqual(len(B.lane_merges(comments)), 1)
         self.assertEqual(B.heartbeat_due(comments, NOW + timedelta(minutes=5)), False)
@@ -412,6 +428,7 @@ class ModesAndBinding(unittest.TestCase):
         self.assertEqual((d["action"], d["expires_at"]), ("MERGE", "2026-11-23T08:30:00Z"))
         for now, want in ((before + timedelta(minutes=5), "MONDAY_READ_ONLY"), (before + timedelta(minutes=30), "MONDAY_READ_ONLY")):
             gh = FakeGitHub(copy.deepcopy(w), now)
+            gh.issue_body = body
             run = E.Run(gh, FakeNative(w), dict(ENV), {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE",
                                                        "bindings": TB.BINDINGS, "budgets": TB.BUDGETS}, now_fn=lambda: now, out=lambda line: None)
             out = run.execute(body)
@@ -507,7 +524,7 @@ def live_cases():
         "ONE earlier attempt at this head, settled by a proven executor run": (lambda w, gh, n: (
             gh.runs.update({540: executor_run(540, created=NOW - timedelta(minutes=202))}), w["issue_comments"].extend(
                 [TB.comment(64, f"S1_LANE_MERGE_INTENT_v1\npr: 7\nhead: {HEAD}\nloop={'4' * 40}\nexecutor: GITHUB run=540\ncontract=44444444", TB.BOT, 200),
-                 TB.comment(65, "S1_OP_DONE_v1\nintent: 64\nresult: ABSENT\nexecutor: GITHUB run=540\ncontract=44444444", TB.BOT, 199)])), "7:C9:attempted_head"),
+                 TB.comment(65, "S1_OP_DONE_v1\nintent: 64\nresult: ABSENT\nevidence: pr=7 not_merged\nexecutor: GITHUB run=540\ncontract=44444444", TB.BOT, 199)])), "7:C9:attempted_head"),
         "an earlier attempt of the ChatGPT task at this head": (lambda w, gh, n: w["issue_comments"].extend(
             [TB.comment(64, f"S1_LANE_MERGE_INTENT_v1\npr: 7\nhead: {HEAD}\nloop={'4' * 40}\ncontract=44444444", TB.OWNER, 200),
              TB.comment(65, "S1_LANE_HALTED PR=7 head=-\nreason: x\ncontract=44444444", TB.OWNER, 199)]), "lane:C7:halt c=65"),
@@ -652,8 +669,14 @@ class ReadbackVerdict(unittest.TestCase):
 class Reconcile(unittest.TestCase):
     """An intent with no outcome (a run that died between the intent and the receipt) is settled from native state."""
 
-    def intent(self, w, minutes_ago=30, user=None, head=HEAD):
-        w["issue_comments"].append(TB.comment(300, f"S1_LANE_MERGE_INTENT_v1\npr: 7\nhead: {head}\nmain: {MAIN}\nloop={'4' * 40}\nbrief=500\ndecision=500.1\ncontract=44444444",
+    def intent(self, w, minutes_ago=30, user=None, head=HEAD, paths=None):
+        """An executor intent as the executor writes it (it names its run and binds its path set). paths="" leaves the
+        path set out (a legacy row); any other string is that digest."""
+        if paths is None:
+            paths = hashlib.sha256("\n".join(sorted({f["filename"] for f in w["pr"][7]["files"]})).encode()).hexdigest()[:16]
+        bound = f"\npaths_sha256: {paths}" if paths else ""
+        run = "" if user is TB.OWNER else "\nexecutor: GITHUB run=540"
+        w["issue_comments"].append(TB.comment(300, f"S1_LANE_MERGE_INTENT_v1\npr: 7\nhead: {head}\nmain: {MAIN}\nloop={'4' * 40}\nbrief=500\ndecision=500.1{run}{bound}\ncontract=44444444",
                                               user or TB.BOT, minutes_ago))
         w["issue_comments"].append(TB.comment(301, "S1_HEARTBEAT_v1 main=aaaaaaaa contract=44444444", TB.BOT, 60))
 
@@ -673,16 +696,25 @@ class Reconcile(unittest.TestCase):
         self.assertEqual(tokens(gh), ["S1_LANE_MERGE_v1"])
         body = gh.writes[0][2]["body"]
         self.assertTrue(body.startswith("S1_LANE_MERGE_v1 reconciled\npr: 7\n"))
-        for line in ("merge_execution_origin: UNKNOWN", "executor: GITHUB run=555", "intent: 300", "evidence_gap: review, privacy, ci, main_health, paths",
-                     "review: unavailable", "brief=500"):
+        for line in ("merge_execution_origin: UNKNOWN", "executor: GITHUB run=555", "intent: 300", "evidence_gap: review, privacy, ci, main_health",
+                     "review: unavailable", "brief=500", "privacy=UNVERIFIED run=unavailable"):
             self.assertIn(line, body.splitlines())
-        self.assertEqual(B.open_intents(gh.w["issue_comments"], NOW + timedelta(minutes=5), 0, gh.run_of), [])
+        self.assertEqual(B.open_intents(gh.w["issue_comments"], NOW + timedelta(minutes=5), 0, gh.run_of, B.MergeReader(gh)), [])
+        self.assertEqual(len(B.open_intents(gh.w["issue_comments"], NOW + timedelta(minutes=5), 0, gh.run_of)), 1)   # A10: not without the native merge proof
+
+    def test_fix4_a_legacy_intent_without_its_path_set_is_never_a_verified_receipt(self):
+        out, gh, _n, _d = execute(mutate=lambda w: self.intent(w, paths=""), live=self.merged())
+        self.assertEqual(gh.writes, [])
+        self.assertIn("S1_EXECUTOR_RECONCILE UNREADABLE(300:unbound_path_set)", out["lines"])
+        out, gh, _n, _d = execute(mutate=lambda w: self.intent(w, paths=""))             # never merged: ABSENT needs no path set
+        self.assertEqual(tokens(gh), ["S1_OP_DONE_v1"])
 
     def test_a_reconcile_mismatch_is_a_halt(self):
         out, gh, _n, _d = execute(mutate=lambda w: self.intent(w), live=lambda w, gh, n: (self.merged()(w, gh, n), n.merged_blobs.update({"docs/notes/a.md": "x"})))
         self.assertEqual(out["result"], "LANE_HALTED(reconcile:blob:docs/notes/a.md)")
         self.assertEqual(tokens(gh), ["S1_LANE_HALTED"])
         self.assertIn("reason: reconcile_readback", gh.writes[0][2]["body"])
+        self.assertIn("intent: 300", gh.writes[0][2]["body"].splitlines())               # A10: the halt names the intent it settles
 
     def test_absent_and_foreign_are_one_record_and_never_a_merge(self):
         out, gh, _n, _d = execute(mutate=lambda w: self.intent(w))                      # the PR is still open: ABSENT
@@ -698,13 +730,14 @@ class Reconcile(unittest.TestCase):
     def test_an_intent_of_the_chatgpt_task_is_reconciled_under_its_own_actor(self):
         out, gh, _n, _d = execute(mutate=lambda w: self.intent(w, user=TB.OWNER), live=self.merged(by="Donh91"))
         self.assertEqual(out["result"], "RECONCILED(c=300)")
+        out, gh, _n, _d = execute(mutate=lambda w: self.intent(w, user=TB.OWNER, paths=""), live=self.merged(by="Donh91"))
+        self.assertEqual(gh.writes, [])                                                 # a legacy row of the ChatGPT lane: quarantined, the owner settles it
         out, gh, _n, _d = execute(mutate=lambda w: self.intent(w, user=TB.OWNER), live=self.merged(by="github-actions[bot]"))
         self.assertIn("result: FOREIGN", gh.writes[0][2]["body"])
 
     def test_fix3_a_reconcile_receipt_needs_the_intents_path_set(self):
         def bound(w, digest):
-            self.intent(w)
-            w["issue_comments"][-2]["body"] += f"\npaths_sha256: {digest}"
+            self.intent(w, paths=digest)
         files = lambda w: sorted({f["filename"] for f in w["pr"][7]["files"]})
         right = lambda w: hashlib.sha256("\n".join(files(w)).encode()).hexdigest()[:16]
         out, gh, _n, _d = execute(mutate=lambda w: bound(w, right(w)), live=self.merged())
@@ -795,13 +828,13 @@ class Harness(unittest.TestCase):
             "OFF": self.measure(mode="OFF", policy="CODEX_FINAL_REQUIRED"),
         }
         self.assertEqual(table["OFF"][:2], (0, 0))
-        self.assertEqual(table["NOOP (nothing actionable)"][:2], (1, 0))               # the ledger read only
-        self.assertEqual(table["NOOP + heartbeat"][:2], (2, 1))
+        self.assertEqual(table["NOOP (nothing actionable)"][:2], (2, 0))               # the publication read (A26) and the ledger read
+        self.assertEqual(table["NOOP + heartbeat"][:2], (5, 1))                        # ... the live hold and main before the write (#7)
         self.assertEqual(table["MERGE live"][1], 3)                                    # intent, merge, receipt
         self.assertEqual(table["MERGE shadow"][1], 0)
-        self.assertLessEqual(table["MERGE live"][0], 40)
+        self.assertLessEqual(table["MERGE live"][0], 80)                               # fix round 4: the final look verifies everything again
         self.assertLess(table["MERGE live"][0], E.EXECUTE_API_CALLS)
-        self.assertEqual(table["MERGE live"][0] - table["MERGE shadow"][0], 3)         # the readback: the PR, the merge commit, main
+        self.assertEqual(table["MERGE live"][0] - table["MERGE shadow"][0], 9)         # the readback (PR, merge commit, main) + hold and main before each of 3 writes
         self.__class__.table = table
 
 
@@ -911,20 +944,22 @@ class HeadIsReadTwice(unittest.TestCase):
             self.assertEqual((out["action"], gh.writes), ("NOOP", []), mode)
             self.assertIn("7:C8:head_changed", out["result"])
             self.assertEqual(gh.pull_reads, 2)                                         # the first read passed; the SECOND one saw the new head
-        # fix round 3: the THIRD read is the final look after the intent; a head that moves there stops the merge call
-        out, gh, _n, _d = execute(mutate=BEAT, live=lambda w, gh, n: setattr(gh, "head_from_read", (3, "c" * 40)))
-        self.assertEqual((tokens(gh), out["result"]), (["S1_LANE_MERGE_INTENT_v1"], "MERGE_ABORTED_AFTER_INTENT(7:C8:head_changed)"))
-        # the control: a head that only moves at a fourth read (the readback, after the merge call) does not stop the merge
-        out, gh, _n, _d = execute(mutate=BEAT, live=lambda w, gh, n: setattr(gh, "head_from_read", (4, "c" * 40)))
+        # fix round 3/4: reads 3 to 5 are the final look after the intent (its own read, then the whole verification again);
+        # a head that moves at any of them stops the merge call
+        for k in (3, 4, 5):
+            out, gh, _n, _d = execute(mutate=BEAT, live=lambda w, gh, n, k=k: setattr(gh, "head_from_read", (k, "c" * 40)))
+            self.assertEqual((tokens(gh), out["result"]), (["S1_LANE_MERGE_INTENT_v1"], "MERGE_ABORTED_AFTER_INTENT(7:C8:head_changed)"), k)
+        # the control: a head that only moves at the sixth read (the readback, after the merge call) does not stop the merge
+        out, gh, _n, _d = execute(mutate=BEAT, live=lambda w, gh, n: setattr(gh, "head_from_read", (6, "c" * 40)))
         self.assertEqual(tokens(gh)[:2], ["S1_LANE_MERGE_INTENT_v1", "MERGE"])
 
     def test_the_second_read_is_after_every_other_read_of_the_verification(self):
         out, gh, _n, _d = execute(mode="SHADOW", mutate=BEAT)
         reads = [i for i, (kind, path) in enumerate(gh.calls) if (kind, path) == ("GET", "pulls/7")]
-        self.assertEqual(len(reads), 3)                                                # fix round 3: SHADOW makes the final look's reads too
+        self.assertEqual(len(reads), 5)                                                # fix round 3/4: SHADOW makes the final look's reads too
         between = gh.calls[reads[1] + 1:reads[2]]
-        self.assertEqual(between, [("GET", f"issues/{B.OWNER_ISSUE}/comments"), ("GET", f"actions/variables/{E.HOLD_VARIABLE}"), ("GET", "branches/main"),
-                                   ("GET", f"actions/variables/{E.HOLD_VARIABLE}"), ("GET", "branches/main")])   # last look, live stop (intent), live stop (put)
+        self.assertEqual(between, [("GET", f"issues/{B.OWNER_ISSUE}/comments"), ("GET", f"actions/variables/{E.HOLD_VARIABLE}"), ("GET", "branches/main")])   # last look, live stop (intent)
+        self.assertEqual(gh.calls[-2:], [("GET", f"actions/variables/{E.HOLD_VARIABLE}"), ("GET", "branches/main")])   # the live stop is the LAST read of the final look
 
 
 class SettlementIdentity(unittest.TestCase):
@@ -935,6 +970,7 @@ class SettlementIdentity(unittest.TestCase):
         self.now = NOW
         self.runs = {540: executor_run(540, created=NOW - timedelta(minutes=32))}      # ran from -32 to -28 minutes
         self.run_of = lambda rid: copy.deepcopy(self.runs.get(int(rid)))
+        self.merge_of = lambda n: {"number": n, "merged": True, "merge_commit_sha": MERGE_SHA, "head_sha": HEAD}   # GET pulls/<n>, merged at HEAD
 
     def ledger(self, outcome, user=TB.BOT, run=540, minutes_ago=29, intent_user=TB.BOT, edited=False):
         rows = [TB.comment(300, INTENT + ("\n" + RUN_LINE.format(540) if intent_user is TB.BOT else ""), intent_user, 30)]
@@ -943,10 +979,11 @@ class SettlementIdentity(unittest.TestCase):
         return rows
 
     def open(self, rows, run_of="default"):
-        return [i["id"] for i in B.open_intents(rows, self.now, 0, self.run_of if run_of == "default" else run_of)]
+        return [i["id"] for i in B.open_intents(rows, self.now, 0, self.run_of if run_of == "default" else run_of, self.merge_of)]
 
     def test_invariant_only_the_owner_or_a_proven_executor_post_settles_an_intent(self):
-        done, receipt, halt = "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT", f"S1_LANE_MERGE_v1\npr: 7\nhead: {HEAD}", "S1_LANE_HALTED PR=7 head=-\nreason: readback"
+        done, receipt, halt = ("S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nevidence: pr=7 not_merged", f"S1_LANE_MERGE_v1\npr: 7\nhead: {HEAD}\nmerge: {MERGE_SHA}\nintent: 300",
+                               f"S1_LANE_HALTED PR=7 head={HEAD}\nreason: readback\nintent: 300")
         for outcome in (done, receipt, halt):
             with self.subTest(outcome=outcome.split()[0]):
                 self.assertEqual(self.open(self.ledger(None)), [300])
@@ -960,8 +997,47 @@ class SettlementIdentity(unittest.TestCase):
                 self.assertEqual(self.open(self.ledger(outcome, user={"login": "someone", "id": 9, "type": "User"})), [300])
                 self.assertEqual(self.open(self.ledger(outcome, user={"login": "github-actions[bot]", "id": 7, "type": "Bot"})), [300])   # a look-alike
 
+    def test_fix4_an_executor_intent_is_settled_only_by_an_outcome_bound_to_it_exactly(self):
+        """A10 (ChatGPT #5 / 7186140947): the intent id, the PR, the head and, for a merge receipt, the native merge proof."""
+        good = {"S1_OP_DONE_v1": "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nevidence: pr=7 not_merged",
+                "S1_LANE_MERGE_v1": f"S1_LANE_MERGE_v1\npr: 7\nhead: {HEAD}\nmerge: {MERGE_SHA}\nintent: 300",
+                "S1_LANE_HALTED": f"S1_LANE_HALTED PR=7 head={HEAD}\nreason: readback\nintent: 300"}
+        for name, body in good.items():
+            self.assertEqual(self.open(self.ledger(body)), [], name)                                     # the control
+        bad = {
+            "a merge receipt of the same PR for another head (stale)": good["S1_LANE_MERGE_v1"].replace(f"head: {HEAD}", f"head: {'c' * 40}"),
+            "a merge receipt for another intent id": good["S1_LANE_MERGE_v1"].replace("intent: 300", "intent: 299"),
+            "a merge receipt with no intent line": good["S1_LANE_MERGE_v1"].replace("\nintent: 300", ""),
+            "a merge receipt of another PR": good["S1_LANE_MERGE_v1"].replace("pr: 7", "pr: 8"),
+            "a merge receipt whose merge commit is not the native one": good["S1_LANE_MERGE_v1"].replace(MERGE_SHA, "1" * 40),
+            "a merge receipt with no merge commit": good["S1_LANE_MERGE_v1"].replace(f"\nmerge: {MERGE_SHA}", ""),
+            "a halt of another head": good["S1_LANE_HALTED"].replace(f"head={HEAD}", "head=-"),
+            "a halt for another intent": good["S1_LANE_HALTED"].replace("intent: 300", "intent: 3001"),
+            "an OP_DONE that cites the id only in its text": "S1_OP_DONE_v1\nresult: ABSENT\nevidence: pr=7 see 300",
+            "an OP_DONE for another PR": good["S1_OP_DONE_v1"].replace("pr=7", "pr=77"),
+            "an OP_DONE with another result": good["S1_OP_DONE_v1"].replace("ABSENT", "MERGED"),
+            "an OP_DONE OWNER_SETTLED by the Actions bot": good["S1_OP_DONE_v1"].replace("ABSENT", "OWNER_SETTLED"),
+        }
+        for name, body in bad.items():
+            with self.subTest(name):
+                self.assertEqual(self.open(self.ledger(body)), [300])
+                if "OWNER_SETTLED" not in body:
+                    self.assertEqual(self.open(self.ledger(body, user=TB.OWNER, run=None)), [300])       # the owner account is held to it too
+        # the native merge proof: unread, not merged, another merge commit or another head
+        for name, native in (("unread", None), ("not merged", {"merged": False, "merge_commit_sha": None, "head_sha": HEAD}),
+                             ("other merge commit", {"merged": True, "merge_commit_sha": "1" * 40, "head_sha": HEAD}),
+                             ("merged at another head", {"merged": True, "merge_commit_sha": MERGE_SHA, "head_sha": "c" * 40})):
+            self.merge_of = lambda n, native=native: native
+            self.assertEqual(self.open(self.ledger(good["S1_LANE_MERGE_v1"])), [300], name)
+        self.assertEqual(self.open(self.ledger("S1_OP_DONE_v1\nintent: 300\nresult: OWNER_SETTLED", user=TB.OWNER, run=None)), [])   # the owner's manual settlement
+        # a legacy intent (the ChatGPT lane, no run line) keeps the lane's reading and is marked as such
+        rows = [TB.comment(300, INTENT, TB.OWNER, 30)]
+        self.assertEqual(B.open_intents(rows, self.now, 0, self.run_of, self.merge_of)[0].get("legacy"), True)
+        rows.append(TB.comment(301, f"S1_LANE_MERGE_v1\npr: 7\nhead: {HEAD}", TB.OWNER, 29))
+        self.assertEqual(B.open_intents(rows, self.now, 0, self.run_of, self.merge_of), [])
+
     def test_invariant_a_post_of_another_workflow_never_settles(self):
-        done = "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT"
+        done = "S1_OP_DONE_v1\nintent: 300\nresult: ABSENT\nevidence: pr=7 not_merged"
         other = {
             "another workflow file": {"path": ".github/workflows/hourly-sequence-capture.yml"},
             "a run on another branch": {"head_branch": "claude/x"},
@@ -1041,18 +1117,20 @@ class SettlementIdentity(unittest.TestCase):
             run, at = 500 + k, 600 - 100 * k
             runs[run] = executor_run(run, created=NOW - timedelta(minutes=at + 2))
             rows.append(TB.comment(1000 + 2 * k, INTENT.replace("pr: 7", f"pr: {20 + k}") + "\n" + RUN_LINE.format(run), TB.BOT, at))
-            rows.append(TB.comment(1001 + 2 * k, f"S1_LANE_MERGE_v1\npr: {20 + k}\nhead: {HEAD}\n" + RUN_LINE.format(run), TB.BOT, at - 1))
-        asked = []
+            rows.append(TB.comment(1001 + 2 * k, f"S1_LANE_MERGE_v1\npr: {20 + k}\nhead: {HEAD}\nmerge: {MERGE_SHA}\nintent: {1000 + 2 * k}\n" + RUN_LINE.format(run), TB.BOT, at - 1))
+        asked, proofs = [], []
         reader = lambda rid: (asked.append(int(rid)), copy.deepcopy(runs.get(int(rid))))[1]
-        self.assertEqual(B.open_intents(rows, NOW, 0, reader), [])
+        merge_of = lambda n: (proofs.append(n), {"merged": True, "merge_commit_sha": MERGE_SHA, "head_sha": HEAD})[1]
+        self.assertEqual(B.open_intents(rows, NOW, 0, reader, merge_of), [])
+        self.assertEqual(set(proofs), {24})                                            # ... and one native merge proof (A10)
         self.assertEqual(set(asked), {504})                                            # one run, however long the history is
         # a forged settlement of an OLD executor intent changes nothing: that intent is not examined again
         rows[1]["body"] = "S1_OP_DONE_v1\nintent: 1000\nresult: ABSENT"
-        self.assertEqual(B.open_intents(rows, NOW, 0, reader), [])
+        self.assertEqual(B.open_intents(rows, NOW, 0, reader, merge_of), [])
         # when the NEWEST executor intent is not proven it stays open, and the induction starts at the newest PROVEN one
         runs.pop(504)
         asked.clear()
-        self.assertEqual([i["id"] for i in B.open_intents(rows, NOW, 0, reader)], [1008])
+        self.assertEqual([i["id"] for i in B.open_intents(rows, NOW, 0, reader, merge_of)], [1008])
         self.assertEqual(set(asked), {504, 503})
         # with no proven executor intent at all nothing is closed by induction: every intent needs its own proven outcome
         self.assertEqual([i["id"] for i in B.open_intents(rows, NOW, 0, lambda rid: None)], [1000, 1002, 1004, 1006, 1008])
@@ -1149,7 +1227,9 @@ class NoSilentFailure(unittest.TestCase):
         run.now_fn = clock
         out = run.execute(body)
         self.assertEqual(tokens(gh), ["S1_LANE_MERGE_INTENT_v1"])
-        self.assertIn("clock:MONDAY_READ_ONLY", out["result"])
+        # fix round 4: the final look re-verifies at the new clock and stops first (main health is stale by Monday);
+        # either way no merge call is made and the open intent is the alarm
+        self.assertTrue(out["result"].startswith("MERGE_ABORTED_AFTER_INTENT("), out["result"])
         self.assertEqual(out["alarms"], ["intent_without_outcome(c=7001)"])
 
     def test_a_read_that_stops_after_a_write_is_an_alarm(self):
@@ -1230,6 +1310,7 @@ class OneAttemptPerHeadEndToEnd(unittest.TestCase):
             brief = B.build_brief(dict(copy.deepcopy(w), executor_runs={"555": executor_run(555, created=NOW - timedelta(minutes=1), status="in_progress")}))
             body, decision = B.render_issue(brief)
             gh, native = FakeGitHub(w, now), FakeNative(w)
+            gh.issue_body = body
             gh.fail_merge = urllib.error.HTTPError("u", 405, "Not Allowed", {}, None)
             gh.next_id = 7000 + 10 * hour
             files = {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE", "bindings": TB.BINDINGS, "budgets": TB.BUDGETS}
@@ -1281,6 +1362,7 @@ def offline_world():
     """PR 7 qualifies, nobody reviewed it, and Codex answered the request for this head with a usage limit."""
     w = TD.thin_world("LIVE", RECALL)
     BEAT(w)
+    TD.data_pr(w)                                                       # owner addendum c: route (c) is for automation's allowlisted data
     TD.codex_limit(w)
     return w
 
@@ -1293,12 +1375,14 @@ def hourly_run(w, run_id, minutes, mode="LIVE", live=None, runs=None):
     body, decision = B.render_issue(B.build_brief(dict(copy.deepcopy(w), codex_feed=TD.codex_feed_of(w))))
     now = at + timedelta(minutes=2)
     gh, native = FakeGitHub(w, now), FakeNative(w)
+    gh.issue_body = body
     gh.runs = dict(runs or {})
     gh.runs[run_id] = executor_run(run_id, created=at - timedelta(minutes=1), status="in_progress", updated=now)
     gh.next_id = 7000 + 10 * (run_id - 555)
     if live:
         live(w, gh, native)
     out = E.Run(gh, native, dict(ENV, GITHUB_RUN_ID=str(run_id)), FILES(w), now_fn=lambda: now, out=lambda line: None).execute(body)
+    w.setdefault("exec_logs", {})[run_id] = "\n".join("2026-11-18T06:00:00.0000000Z " + line for line in out["lines"])   # this job's own log
     return out, gh, decision
 
 
@@ -1334,7 +1418,8 @@ class CodexOfflineFallback(unittest.TestCase):
         self.assertEqual(out["alarms"], [])
         self.assertEqual(B.recalls(w["issue_comments"]), [{"c": B.recalls(w["issue_comments"])[0]["c"], "pr": 7, "head": HEAD, "merge": MERGE_SHA, "cleared": False}])
         self.assertEqual(B.fields(candidate)["evidence"], evidence)                    # the second run derived the same hash itself:
-        self.assertEqual(sum(1 for kind, path in gh.calls if (kind, path) == ("TEXT", "actions/jobs/1010/logs")), 1)   # it re-read the privacy log, the CI, ...
+        self.assertEqual(sum(1 for kind, path in gh.calls if (kind, path) == ("TEXT", "actions/jobs/1010/logs")), 2)   # it re-read the privacy log, the CI, ... (and again in the final look)
+        self.assertIn(("TEXT", "actions/jobs/80555/logs"), gh.calls)                  # and proved the first candidate by run 555's own execute log
         self.assertIn(("GRAPHQL", "threads"), gh.calls)
 
     def test_invariant_a_second_run_that_derives_something_else_parks_the_head(self):
@@ -1390,10 +1475,13 @@ class CodexOfflineFallback(unittest.TestCase):
         body = f"S1_FALLBACK_CANDIDATE_v1\npr: 7\nhead: {HEAD}\nevidence: {evidence}\nexecutor: GITHUB run={run}"
         return TB.comment(cid, body, user or TB.BOT, minutes_ago, edited)
 
-    def run_with(self, rows, mode="LIVE", runs=None):
-        run, gh, _n, body, d = setup(mutate=lambda w: (BEAT(w), TD.codex_limit(w)), policy=RECALL, mode=mode)
+    def run_with(self, rows, mode="LIVE", runs=None, logged=True):
+        run, gh, _n, body, d = setup(mutate=lambda w: (BEAT(w), TD.data_pr(w), TD.codex_limit(w)), policy=RECALL, mode=mode)
         run.brief, run.decision, run.mode = B.parse_body(body), d, mode
         gh.runs.update(runs if runs is not None else {540: executor_run(540, created=NOW - timedelta(minutes=61))})
+        if logged:                                                     # what run 540's execute job printed when it posted candidate 600
+            gh.w.setdefault("exec_logs", {})[540] = (f"x S1_EXECUTOR_V1 mode=LIVE decision=540.1 action=MERGE result=FALLBACK_CANDIDATE(pr=7,head={HEAD[:8]},"
+                                                     "n=1,first_run) writes=1:S1_FALLBACK_CANDIDATE_v1#600")
         return run, gh, {"candidates": rows, "evidence": "E1", "offline": "UNAVAILABLE"}
 
     def test_invariant_which_earlier_candidate_counts_as_the_first_run(self):
@@ -1415,10 +1503,14 @@ class CodexOfflineFallback(unittest.TestCase):
             "a candidate the owner account posted (not an executor run)": ([self.candidate(user=TB.OWNER)], None),
             "an expired candidate (25 hours)": ([self.candidate(minutes_ago=25 * 60)], {540: executor_run(540, created=NOW - timedelta(minutes=25 * 60 + 1))}),
             "no run line": ([TB.comment(600, f"S1_FALLBACK_CANDIDATE_v1\npr: 7\nhead: {HEAD}\nevidence: E1", TB.BOT, 60)], None),
+            # fix round 4 (ChatGPT #4, P2-E): a candidate that names a real, proven run of this workflow but that the run's
+            # execute job never wrote (another workflow with issues: write posted it while the run was in progress)
+            "a candidate the named run's execute job did not write": ([self.candidate(cid=601)], None),
+            "the named run's execute job log is not readable": ([ok], "nolog"),
         }
         for name, (rows, runs) in not_first.items():
             with self.subTest(name):
-                run, gh, proof = self.run_with(rows, runs=runs)
+                run, gh, proof = self.run_with(rows, runs=None if runs == "nolog" else runs, logged=runs != "nolog")
                 self.assertEqual(run.fallback(proof), (None, f"FALLBACK_CANDIDATE(pr=7,head={HEAD[:8]},n=2,restart)"))
                 self.assertEqual(tokens(gh), ["S1_FALLBACK_CANDIDATE_v1"])             # this run becomes a first run; it never merges
         # another hash: the runs DISAGREE. No merge; this run's evidence goes on the ledger as the record of the mismatch
@@ -1444,6 +1536,7 @@ class CodexOfflineFallback(unittest.TestCase):
         def world(offline=TD.codex_out_of_usage):
             w = TD.thin_world("LIVE", RECALL)
             BEAT(w)
+            TD.data_pr(w)
             offline(w)
             return w
         out, gh, d = hourly_run(world(), 555, 0)
@@ -1486,19 +1579,25 @@ class CodexOfflineFallback(unittest.TestCase):
         out, gh, _n, d = execute(policy=RECALL)
         self.assertEqual((d["merge"]["review"], ("PAGES", "issues/comments") in gh.calls), ("CODEX", False))
 
-    def test_invariant_route_c_merges_class_low_only_also_live(self):
-        # fix round 3 (P1-B): the brief may be older than the PR's label or class; the executor's own risk decides too
+    def test_invariant_route_c_merges_automation_data_only_also_live(self):
+        # owner addendum c (fix round 4): the executor derives the data route again from ITS reads and its own copy of the
+        # switch; a PR that stops being automation's allowlisted data after the build is never merged at class HIGH
         w = offline_world()
         out, gh, d = hourly_run(w, 555, 0, live=lambda w, gh, n: None)
-        self.assertEqual((d["merge"]["risk"], d["merge"]["review"]), ("LOW", "FALLBACK(UNAVAILABLE)"))
-        run, gh, _n, body, d = setup(mutate=lambda w: (BEAT(w), TD.codex_limit(w)), policy=RECALL)
-        live = {"review": {"codex": {"status": "UNAVAILABLE"}}, "author": {"s1": False, "codex": False},
-                "thin": {"bot": False, "claude": "NONE", "claude_written": False, "diff_x": [], "fallback_candidates": 0, "fallback_mismatch": False,
-                         "p01_named": False, "codex_offline": "UNAVAILABLE", "risk": "LOW"}}
-        self.assertEqual(D.review_route(live, RECALL), ("FALLBACK(UNAVAILABLE)", None))
-        self.assertEqual(D.review_route(dict(live, thin=dict(live["thin"], risk="MEDIUM")), RECALL), (None, "C5:fallback_parked:risk"))
-        source = (ROOT / "scripts/governance/s1_executor_v1.py").read_text(encoding="utf-8")
-        self.assertIn('"risk": risk, "codex_offline": self.codex_offline(n, cx, prc, reviews, inline, now)', source)   # the live facts carry this run's own class
+        self.assertEqual((d["merge"]["risk"], d["merge"]["data"], d["merge"]["review"]), ("HIGH", True, "FALLBACK(UNAVAILABLE)"))
+        person = {"login": "Donh91", "id": 1, "type": "User"}
+        live = {
+            "the PR turns out to be opened by a person": lambda w, gh, n: gh.pull.update(user=dict(TB.OWNER)),
+            "a commit by a person arrived (same head id in the fake)": lambda w, gh, n: w["pr"][7]["commits"][0].update(author=person),
+            "the executor's switch has no allowlist": lambda w, gh, n: w["switch"].pop("fallback_data_allowlist"),
+            "a data path is a symlink at the head": lambda w, gh, n: setattr(n, "tree_entries", lambda c, ps: {p: ("PRESENT", "120000", "blob", "a" * 40) for p in ps}),
+        }
+        for name, change in live.items():
+            for mode in ("LIVE", "SHADOW"):
+                with self.subTest(name=name, mode=mode):
+                    out, gh, d = hourly_run(offline_world(), 555, 0, mode=mode, live=change)
+                    self.assertEqual((out["action"], gh.writes), ("NOOP", []), out["result"])
+                    self.assertRegex(out["result"], r"7:C2:(risk|data_mode)|7:C1:", name)
 
     def test_shadow_never_writes_on_the_fallback_route(self):
         out, gh, d = hourly_run(offline_world(), 555, 0, mode="SHADOW")
@@ -1512,8 +1611,8 @@ class CodexOfflineFallback(unittest.TestCase):
             "a Claude refusal arrived on the PR": (lambda w, gh, n: w["pr"][7]["comments"].append(
                 TB.comment(21, TD.CLAUDE_OK.replace("APPROVE", "BLOCK"), TB.OWNER, 1)), "7:C5:claude_veto"),
             "the request was withdrawn (Codex was never asked)": (lambda w, gh, n: w["pr"][7].update(comments=[]), "7:C5:codex_review_required"),
-            "the PR turns out to be opened by a bot": (lambda w, gh, n: gh.pull.update(user=dict(TB.BOT)), "7:C5:bot_authored"),
-            "the head turns out to be S1's": (lambda w, gh, n: gh.pull["head"].update(ref="s1/x"), "7:C5:s1_authored"),
+            "the PR turns out to be opened by a person": (lambda w, gh, n: gh.pull.update(user=dict(TB.OWNER)), "7:C2:risk"),
+            "the head turns out to be on another branch": (lambda w, gh, n: gh.pull["head"].update(ref="s1/x"), "7:C2:risk"),
             "the candidates were used up meanwhile": (lambda w, gh, n: w["issue_comments"].extend(
                 TB.comment(600 + k, f"S1_FALLBACK_CANDIDATE_v1\npr: 7\nhead: {HEAD}\nevidence: X\nexecutor: GITHUB run=54{k}", TB.BOT, 5) for k in range(3)), "7:C5:fallback_parked:candidates"),
             "someone wrote P1 in the PR conversation meanwhile": (lambda w, gh, n: w["pr"][7]["comments"].append(
@@ -1543,8 +1642,10 @@ class CodexOfflineFallback(unittest.TestCase):
     def test_a_reconciled_fallback_merge_keeps_its_recall(self):
         def intent(w):
             BEAT(w)
+            paths = sorted({f["filename"] for f in w["pr"][7]["files"]})
             w["issue_comments"].append(TB.comment(300, f"S1_LANE_MERGE_INTENT_v1\npr: 7\nhead: {HEAD}\nmain: {MAIN}\nloop={'4' * 40}\nbrief=500\ndecision=500.1\n"
-                                                       "review: FALLBACK(SILENT)\ncontract=44444444", TB.BOT, 30))
+                                                       f"executor: GITHUB run=540\nreview: FALLBACK(SILENT)\npaths_sha256: {hashlib.sha256(chr(10).join(paths).encode()).hexdigest()[:16]}\n"
+                                                       "contract=44444444", TB.BOT, 30))
 
         def merged(w, gh, n):
             gh.pull.update(merged=True, state="closed", merged_at=TB.ts(29), merge_commit_sha=MERGE_SHA, merged_by={"login": "github-actions[bot]"})
@@ -1553,6 +1654,18 @@ class CodexOfflineFallback(unittest.TestCase):
         self.assertEqual(out["result"], "RECONCILED(c=300)")
         self.assertIn("review: FALLBACK(SILENT)", gh.writes[0][2]["body"].splitlines())
         self.assertEqual([(r["pr"], r["head"], r["merge"]) for r in B.recalls(gh.w["issue_comments"])], [(7, HEAD, MERGE_SHA)])
+        self.assertIn("privacy=UNVERIFIED run=unavailable", gh.writes[0][2]["body"].splitlines())   # 7186140947-06: no stronger claim than verified
+        # the next run repairs the label the dead run never set: natively merged at that head, recorded, label missing
+        run, gh2, _n, body, d = setup(mutate=intent, live=merged, policy=RECALL)
+        gh2.w["issue_comments"] = copy.deepcopy(gh.w["issue_comments"])
+        run.brief, run.decision, run.mode = dict(B.parse_body(body), recall={"pending": 1, "items": [{"pr": 7, "head": HEAD, "codex": "NONE"}]}), d, "LIVE"
+        gh2.labels[7] = []
+        self.assertEqual(run.recall(gh2.w["issue_comments"]), "RECALL_LABEL_REPAIRED(pr=7)")
+        self.assertEqual(tokens(gh2), ["LABEL+"])
+        gh2.labels[7] = [{"name": D.RECALL_LABEL}]
+        gh2.writes.clear()
+        self.assertIsNone(run.recall(gh2.w["issue_comments"]))                          # idempotent: a label that is there is not added again
+        self.assertEqual(gh2.writes, [])
 
     def test_invariant_the_label_writes_are_the_one_label_and_only_after_this_runs_own_merge_or_proof(self):
         run, gh, _n, body, d = setup()
@@ -1637,10 +1750,17 @@ class RecallIsClearedOnlyByCodex(unittest.TestCase):
         again = lambda w: (self.world(self.final())(w), w["issue_comments"].append(TB.comment(702, f"S1_CODEX_RECALL_CLEARED_v1\npr: 9\nhead: {'e' * 40}\ncodex: FINAL", TB.BOT, 30)))
         # ... and when the clear receipt reached the ledger after the brief was built: the executor reads the ledger itself
         late = lambda w, gh, n: w["issue_comments"].append(TB.comment(702, f"S1_CODEX_RECALL_CLEARED_v1\npr: 9\nhead: {'e' * 40}\ncodex: FINAL", TB.BOT, 1))
-        out3, gh3, _n, d3 = execute(mutate=self.world(self.final()), policy=RECALL, live=late)
+        out3, gh3, _n, d3 = execute(mutate=self.world(self.final()), policy=RECALL, live=lambda w, gh, n: (late(w, gh, n), gh.labels.update({9: []})))
         self.assertEqual([t for t in tokens(gh3) if t in ("S1_CODEX_RECALL_CLEARED_v1", "LABEL-")], [])
-        out2, gh2, _n, d2 = execute(mutate=again, policy=RECALL)
+        out2, gh2, _n, d2 = execute(mutate=again, policy=RECALL, live=lambda w, gh, n: gh.labels.update({9: []}))
         self.assertEqual(([t for t in tokens(gh2) if t in ("S1_CODEX_RECALL_CLEARED_v1", "LABEL-")], d2["recall"], any("S1_EXECUTOR_RECALL" in l for l in out2["lines"])), ([], {"pending": 0}, False))
+        # fix round 4 (7186140947-11): a clear receipt someone else posted (forged or not) never blocks the native cleanup:
+        # Codex's completed review read again here, and the label that is still on the PR is removed, with no second receipt
+        for who in (TB.OWNER, TB.BOT):
+            forged = lambda w, who=who: (self.world(self.final())(w), w["issue_comments"].append(TB.comment(702, f"S1_CODEX_RECALL_CLEARED_v1\npr: 9\nhead: {'e' * 40}\ncodex: FINAL", who, 30)))
+            out4, gh4, _n, _d = execute(mutate=forged, policy=RECALL)
+            self.assertEqual([t for t in tokens(gh4) if t in ("S1_CODEX_RECALL_CLEARED_v1", "LABEL-")], ["LABEL-"], who)
+            self.assertIn("S1_EXECUTOR_RECALL RECALL_CLEARED(pr=9)", out4["lines"])
         self.assertTrue(out["result"].startswith("MERGED("))                           # PR 7 (Codex reviewed) still merges in the same run
         for path in ("issues/9/comments", "pulls/9/reviews", "pulls/9/comments", "pulls/9/commits"):
             self.assertIn(("PAGES", path), gh.calls)                                   # read again, natively, by the executor itself
@@ -1691,7 +1811,8 @@ class FixRound3WriteBoundaries(unittest.TestCase):
         cases = {
             "hold set after the intent": (lambda w, g, n: setattr(g, "hold", "1"), "hold:put"),
             "hold variable unreadable": (lambda w, g, n: setattr(g, "hold_error", 403), "hold_unreadable:put(403)"),
-            "switch changed on main": (lambda w, g, n: w["pins_actual"].update({B.SWITCH: "0" * 40}), "lane:C7:switch_changed:put"),
+            "switch changed on main": (lambda w, g, n: w["pins_actual"].update({B.SWITCH: "0" * 40}), f"lane:C7:pins:{B.SWITCH}"),
+            "the contract changed on main": (lambda w, g, n: w["pins_actual"].update({B.CONTRACT_FILE: "0" * 40}), "lane:C7:pins:contract_blob"),
             "CHANGES_REQUESTED on the head": (lambda w, g, n: w["pr"][7]["reviews"].append({"id": 5, "state": "CHANGES_REQUESTED", "commit_id": HEAD, "user": {"login": "Donh91"}}),
                                               "7:C5:changes_requested_after_intent"),
             "a hold label": (lambda w, g, n: g.pull.update(labels=[{"name": "s1-hold"}]), "7:C8:pr_changed_after_intent"),
@@ -1788,3 +1909,131 @@ class FixRound3AuthorityAndEpoch(unittest.TestCase):
         self.assertNotEqual(base, D.fallback_evidence(7, HEAD, "LOW", 1, "p", "t", "body", [1], policy="rc2:CODEX_CLAUDE_OR_OFFLINE_RECALL"))
         self.assertNotEqual(base, D.fallback_evidence(7, HEAD, "LOW", 1, "p", "t", "body", [1], policy="rc1:CODEX_FINAL_REQUIRED"))
         self.assertIn("policy=f\"{self.decision.get('contract_blob')}:{brief['thin']['review_policy']}\"", SOURCE)
+
+
+class FixRound4(unittest.TestCase):
+    """ChatGPT #173/7185637589 and #173/7186140947 (fix round 4): the final look, every write, the publication, health."""
+
+    def after_intent(self, change):
+        return lambda w, gh, n: setattr(gh, "after_intent", lambda g: change(w, g, n))
+
+    def test_the_final_look_re_derives_every_mutable_gate_after_the_intent(self):
+        """7185637589 #2 / 7186140947 #3: facts that the fix-round-3 final look did not read. Each changes ONLY after the
+        intent; each stops the merge call."""
+        item = lambda risk: (lambda w, g, n: w["pr"][7]["comments"].append(TB.comment(80, f"S1_ITEM_v1\nitem: pr:7\nstate: REVIEW\nkind: FIX\nrisk: {risk}\ncontract=44444444", TB.OWNER, 0)))
+        cases = {
+            "a higher S1_ITEM risk": (item("HIGH_IMPACT"), "7:C2:risk"),
+            "an S1_ITEM of kind DIRECTION": (lambda w, g, n: w["pr"][7]["comments"].append(TB.comment(80, "S1_ITEM_v1\nitem: pr:7\nstate: REVIEW\nkind: DIRECTION\nrisk: LOW\ncontract=44444444", TB.OWNER, 0)), "7:C5:strategist"),
+            "an unresolved P1 review thread": (lambda w, g, n: w["pr"][7].update(threads=[{"resolved": False, "first_body": "P1: wrong"}]), "7:C6:unresolved_p0p1"),
+            "the review threads became unreadable": (lambda w, g, n: w["pr"][7].update(threads=None), "unreadable:RuntimeError"),
+            "Codex posted findings": (lambda w, g, n: w["pr"][7].update(comments=[c if i != 1 else dict(c, body="<!-- codex-review-state:v1 " + json.dumps(
+                {"code_review": {"commit_sha": HEAD, "status": "completed", "has_unresolved_findings": True}}) + " -->") for i, c in enumerate(w["pr"][7]["comments"])]), "7:C5:codex_findings"),
+            "a required job was re-run (another attempt)": (lambda w, g, n: (w["pr"][7]["runs"][0].update(run_attempt=2), [j.update(run_attempt=2) for j in w["pr"][7]["jobs"][101]]), "7:C4:ci_identity"),
+            "the privacy line changed": (lambda w, g, n: w["pr"][7].update(privacy_log="nothing here"), "7:C3:privacy_line"),
+            "a ruleset became active": (lambda w, g, n: w.update(rulesets_1=[{"id": 1, "enforcement": "active", "target": "branch"}]), "lane:C8:"),
+            "a lane halt": (lambda w, g, n: g.late.append(TB.comment(9002, "S1_LANE_HALTED PR=- head=-\nreason: owner\ncontract=44444444", TB.OWNER, 0)), "lane:C7:halt"),
+        }
+        for name, (change, reason) in cases.items():
+            with self.subTest(name):
+                out, gh, _n, d = execute(mutate=BEAT, live=self.after_intent(change))
+                self.assertEqual(d["action"], "MERGE")
+                self.assertEqual(tokens(gh), ["S1_LANE_MERGE_INTENT_v1"], out["result"])                # the intent, and NO merge call
+                self.assertTrue(out["result"].startswith("MERGE_ABORTED_AFTER_INTENT(") and reason in out["result"], out["result"])
+        # the control: nothing changes, it merges
+        out, gh, _n, _d = execute(mutate=BEAT, live=self.after_intent(lambda w, g, n: None))
+        self.assertTrue(out["result"].startswith("MERGED("), out["result"])
+        # under the recall policy: a Claude BLOCK posted after the intent is a veto on every route
+        block = lambda w, g, n: w["pr"][7]["comments"].append(TB.comment(81, TD.CLAUDE_OK.replace("APPROVE", "BLOCK"), TB.OWNER, 0))
+        out, gh, _n, d = execute(mutate=BEAT, policy=RECALL, live=self.after_intent(block))
+        self.assertEqual((d["merge"]["review"], tokens(gh), out["result"]), ("CODEX", ["S1_LANE_MERGE_INTENT_v1"], "MERGE_ABORTED_AFTER_INTENT(7:C5:claude_veto)"))
+
+    def test_the_route_must_be_exactly_the_same_in_the_final_look(self):
+        """Codex recovering (a completed review) after the intent of a FALLBACK merge changes the route: stop, never
+        merge under a route nobody verified before the intent."""
+        w = offline_world()
+        hourly_run(w, 555, 0)
+        recover = lambda w, g, n: setattr(g, "after_intent", lambda g2: w["pr"][7].update(comments=TB.codex_comments()))
+        out, gh, d = hourly_run(w, 557, 60, runs=RUN_555, live=recover)
+        self.assertEqual(d["merge"]["review"], "FALLBACK(UNAVAILABLE)")
+        self.assertEqual(tokens(gh), ["S1_LANE_MERGE_INTENT_v1"], out["result"])
+        self.assertIn("MERGE_ABORTED_AFTER_INTENT(", out["result"])
+
+    def test_the_hold_and_the_switch_stop_every_write_not_only_the_merge(self):
+        """7185637589 #11 / 7186140947 #7: a bookkeeping write (here the heartbeat, which comes before the action) is
+        refused when the hold is set, the switch or the contract changed after the job started."""
+        for name, change, reason in (("hold set", lambda w, gh, n: setattr(gh, "hold", "1"), "hold:write:comment"),
+                                     ("hold unreadable", lambda w, gh, n: setattr(gh, "hold_error", 403), "hold_unreadable:write:comment(403)"),
+                                     ("switch changed", lambda w, gh, n: w["pins_actual"].update({B.SWITCH: "0" * 40}), "lane:C7:switch_changed:write:comment"),
+                                     ("contract changed", lambda w, gh, n: w["pins_actual"].update({B.CONTRACT_FILE: "0" * 40}), "lane:C7:contract_changed:write:comment")):
+            with self.subTest(name):
+                out, gh, _n, _d = execute(live=change)                                    # no heartbeat today: the heartbeat is the first write
+                self.assertEqual(gh.writes, [], out["result"])
+                self.assertIn(reason, out["result"])
+        rc = Reconcile()                                                                  # a reconcile receipt too
+        out, gh, _n, _d = execute(mutate=lambda w: rc.intent(w), live=lambda w, gh, n: (rc.merged()(w, gh, n), setattr(gh, "hold", "stop")))
+        self.assertEqual((gh.writes, out["health"]), ([], "HELD"), out["result"])
+
+    def test_the_executor_acts_only_on_the_decision_that_was_published(self):
+        """7185637589 #8 (A26): `needs: publish` proves only that the publish job succeeded. The ONE open brief issue must
+        hold exactly this run's decision block."""
+        def issue(gh, body):
+            gh.issue_body = body
+        cases = {
+            "no brief issue": lambda w, gh, n: setattr(gh, "issue_body", None),
+            "another run's brief (a newer one was kept)": lambda w, gh, n: setattr(gh, "issue_body", gh.issue_body.replace('"run_id":555', '"run_id":556')),
+            "the decision block was edited": lambda w, gh, n: setattr(gh, "issue_body", gh.issue_body.replace("DECIDED_MERGE", "DECIDED_MERGE ")),
+            "the issue is not the Actions bot's": lambda w, gh, n: setattr(gh, "issue_user", dict(TB.OWNER)),
+        }
+        for name, change in cases.items():
+            for mode in ("LIVE", "SHADOW"):
+                with self.subTest(name=name, mode=mode):
+                    out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=change)
+                    self.assertEqual(gh.writes, [])
+                    self.assertTrue(out["result"].startswith("BRIEF_UNVERIFIED(publication:"), out["result"])
+                    self.assertEqual(out["health"], "DEGRADED")
+        out, gh, _n, _d = execute(mutate=BEAT)
+        self.assertTrue(out["result"].startswith("MERGED("))
+
+    def test_health_is_never_ok_when_verification_was_incomplete(self):
+        """7185637589 #8 / 7186140947 #9."""
+        H = E.health_state
+        for result in ("SOURCE_UNVERIFIED(3)", "BRIEF_UNVERIFIED(publication:issues=0/0)", "NOTHING_ACTIONABLE(skipped=hold_unreadable:intent(403))",
+                       "NOTHING_ACTIONABLE(skipped=lane:C7:pins:AGENTS.md)", "NOTHING_ACTIONABLE(skipped=lane:C7:switch_changed:put)",
+                       "NOTHING_ACTIONABLE(skipped=lane:C7:ledger_unreadable)", "NOTHING_ACTIONABLE(skipped=B1:repository_identity)",
+                       "NOTHING_ACTIONABLE(skipped=lane:C8:ruleset_census)", "NOTHING_ACTIONABLE(skipped=main_unreadable)"):
+            self.assertEqual(H(result, [], None), "DEGRADED", result)
+        for result in ("EXECUTOR_OFF(hold)", "MONDAY_READ_ONLY", "NOTHING_ACTIONABLE(skipped=hold:intent)", "NOTHING_ACTIONABLE(skipped=lane:C7:halt c=61)"):
+            self.assertEqual(H(result, [], None), "HELD", result)
+        out, gh, _n, d = execute(mutate=lambda w: w["pins_actual"].update({"AGENTS.md": "0" * 40}))
+        self.assertEqual((out["health"], gh.writes), ("DEGRADED", []))
+        # main() prints one health line and exits 1 whatever fails before finish (a missing policy file here)
+        with tempfile.TemporaryDirectory() as tmp:
+            brief, summary = os.path.join(tmp, "brief.md"), os.path.join(tmp, "summary.md")
+            Path(brief).write_text("x", encoding="utf-8")
+            lines = []
+            with mock.patch.object(E, "read_files", lambda root: (_ for _ in ()).throw(FileNotFoundError("x"))), \
+                    mock.patch.dict(os.environ, {"GITHUB_REPOSITORY": B.REPO, "GITHUB" + "_STEP_SUMMARY": summary, "GITHUB_RUN_ID": "9"}, clear=False), \
+                    mock.patch("builtins.print", lambda *a, **k: lines.append(" ".join(map(str, a)))):
+                self.assertEqual(E.main(["x", "execute", brief]), 1)
+            doc = json.loads(lines[-1].split(" ", 1)[1])
+            self.assertEqual((doc["state"], doc["result"], doc["run"]), ("DEGRADED", "EXECUTOR_CRASHED(FileNotFoundError)", "9"))
+            self.assertIn("S1_EXECUTOR_HEALTH ", Path(summary).read_text(encoding="utf-8"))
+
+    def test_the_watchdog_shows_a_missing_or_failed_executor_on_the_owners_line(self):
+        """7185637589 #8: GitHub's own record of the previous execute job, independent of ChatGPT and of the executor."""
+        W = B.executor_watch
+        run = lambda **kw: dict({"run": 554, "at": TB.ts(65), "publish": "success", "execute": "success", "complete": True}, **kw)
+        self.assertEqual(W({"runs": [run()], "listed": 1}, "SHADOW", NOW)["state"], "OK")
+        self.assertEqual(W({"runs": [run()], "listed": 1}, "OFF", NOW)["state"], "OFF")
+        for got, want in ((run(execute="failure"), "FAILED"), (run(execute="cancelled"), "FAILED"), (run(execute="skipped"), "MISSING"),
+                          (run(execute=None), "MISSING"), (run(at=TB.ts(4 * 60)), "STALE"), (run(complete=False), "UNREAD")):
+            self.assertEqual(W({"runs": [got], "listed": 1}, "LIVE", NOW)["state"], want, got)
+        self.assertEqual(W({"runs": [run(publish="skipped")], "listed": 1}, "LIVE", NOW)["state"], "NONE")
+        self.assertEqual(W(None, "LIVE", NOW)["state"], "UNREAD")
+        for doc, note in (({"runs": [run(execute="failure")], "listed": 1}, "EXECUTOR_FAILED(run=554)"), (None, "EXECUTOR_UNREAD(run=-)")):
+            d, _b = TD.decide(lambda w, doc=doc: w.update(executor_watch=doc), "SHADOW")
+            self.assertIn(note, d["status_lines"][0])
+        d, _b = TD.decide(None, "SHADOW")
+        self.assertNotIn("EXECUTOR_", d["status_lines"][0])
+        d, _b = TD.decide(lambda w: w.update(executor_watch=None), "OFF")
+        self.assertNotIn("EXECUTOR_", d["status_lines"][0])

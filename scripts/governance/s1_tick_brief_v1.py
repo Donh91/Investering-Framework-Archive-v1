@@ -121,6 +121,7 @@ EXECUTOR_RUN = re.compile(r"(?m)^executor: GITHUB run=(\d{1,20})[ \t]*$")
 EXECUTOR_EVENTS = ("schedule", "workflow_dispatch")
 RUN_POST_SLACK_SECONDS = 120          # an executor post was created between its run's creation and end, give or take this
 SETTLE_RUN_READS = 4                  # run reads per build (and per executor run) to judge Actions-bot outcome posts
+SETTLE_MERGE_READS = 4                # PR reads per build (and per executor run): the native proof behind a merge receipt (A10)
 # What marks a PR as written by an AI or by automation (review_gate: such a PR never merges unreviewed). Best effort:
 # an AI that writes as the owner account, on a branch with another name and with no trailer, is not detectable.
 AI_BRANCH = re.compile(r"(?i)^(?:claude|codex|chatgpt|gpt|openai|copilot|grok|gemini|cursor|devin|agents?|ai|bots?|automation|auto|dependabot|renovate)[/_-]")
@@ -131,6 +132,7 @@ AI_BODY = re.compile(r"(?i)generated with \[?claude code|claude\.ai/code|chatgpt
 CLAUDE_BRANCH = re.compile(r"(?i)^claude[/_-]")
 CLAUDE_TRAILER = re.compile(r"(?im)^\s*co-authored-by:[^\n]*\b(?:claude|anthropic)\b|^\s*claude-session:|noreply@anthropic\.com")
 CLAUDE_BODY = re.compile(r"(?i)generated with \[?claude code|claude\.ai/code")
+INDEPENDENCE = ("INDEPENDENT_DETACHED", "SELF_AUTHORED_DESIGN")   # CLAUDE.md receipt values; anything else is no route (b) receipt
 RECALL_READS_PER_BUILD = 3            # merged PRs with a pending Codex recall whose review state one build reads (four reads each)
 
 # AGENTS.md section 0.2e exclusions 10 and 11, matched on ADDED lines of the diff. Tokens are assembled so that this
@@ -335,10 +337,63 @@ class RunReader:
         return self.docs[key]
 
 
-def settles(c, it):
-    """Does this post READ as the outcome of intent `it`: an S1_OP_DONE_v1 that cites its id, or, for a merge intent,
-    an S1_LANE_MERGE_v1 or S1_LANE_HALTED that names its PR? Who wrote it is open_intents()'s question."""
+class MergeReader:
+    """`merge_of` for settles(): GET pulls/<n>, memoised and capped like RunReader; keeps only the fields the native
+    merge proof needs. A missing PR or any other HTTP error reads as None (not proven: the intent stays open)."""
+
+    def __init__(self, gh, max_reads=SETTLE_MERGE_READS):
+        self.gh, self.max_reads, self.docs = gh, max_reads, {}
+
+    def __call__(self, pr):
+        key = str(int(pr))
+        if key not in self.docs:
+            if len(self.docs) >= self.max_reads:
+                return None
+            try:
+                doc = self.gh.get(f"pulls/{key}")
+                self.docs[key] = {"number": doc.get("number"), "merged": doc.get("merged"), "merge_commit_sha": doc.get("merge_commit_sha"),
+                                  "head_sha": (doc.get("head") or {}).get("sha")} if isinstance(doc, dict) else None
+            except urllib.error.HTTPError:
+                self.docs[key] = None
+        return self.docs[key]
+
+
+HALT_FIRST = re.compile(r"^S1_LANE_HALTED PR=(\d{1,10}) head=([0-9a-f]{40})\b")
+
+
+def settles(c, it, merge_of=None):
+    """Does this post READ as the outcome of intent `it`? Who wrote it is open_intents()'s question.
+
+    An EXECUTOR merge intent (the Actions bot wrote it and it names its run: `it["exact"]`) is settled only by an outcome
+    bound to it exactly (ChatGPT finding A10 / #5): an S1_LANE_MERGE_v1 whose `intent:`, `pr:` and `head:` are this
+    intent's id, PR and head AND whose `merge:` commit is the PR's native merge_commit_sha with the PR natively merged
+    at that head (`merge_of`, GET pulls/<n>; unread: not settled); an S1_LANE_HALTED whose first line names this PR and
+    head and whose `intent:` is this id; or an S1_OP_DONE_v1 whose `intent:` is this id, result ABSENT or FOREIGN, and
+    evidence names this PR. A stale or other-head outcome of the same PR never settles it.
+
+    LEGACY intents (the owner account's ChatGPT lane, which names no executor run) keep the reading the live lane has
+    always had: an S1_OP_DONE_v1 that cites the id anywhere, or an S1_LANE_MERGE_v1 or S1_LANE_HALTED that names the
+    PR. They are quarantined, not migrated: open_intents() marks them `legacy`, and the executor posts no new one."""
     token, body = first_line_token(c.get("body")), str(c.get("body") or "")
+    if it.get("exact"):
+        f = fields(body)
+        if (f.get("intent") or "").strip() != str(it["id"]):
+            return False
+        if token == "S1_OP_DONE_v1":
+            result = (f.get("result") or "").strip()
+            if result == "OWNER_SETTLED":                        # the owner's explicit manual settlement of exactly this intent id
+                return is_owner_unedited(c)
+            return result in ("ABSENT", "FOREIGN") and re.match(rf"pr={it['pr']}(?!\d)", (f.get("evidence") or "").strip()) is not None
+        if token == "S1_LANE_HALTED":
+            m = HALT_FIRST.match(body.splitlines()[0] if body else "")
+            return bool(m) and int(m.group(1)) == it["pr"] and m.group(2) == it["head"]
+        if token == "S1_LANE_MERGE_v1":
+            merge = (f.get("merge") or "").strip()
+            if (f.get("pr") or "").strip() != str(it["pr"]) or (f.get("head") or "").strip() != it["head"] or not SHA40.fullmatch(merge) or merge_of is None:
+                return False
+            native = merge_of(it["pr"])
+            return isinstance(native, dict) and native.get("merged") is True and native.get("merge_commit_sha") == merge and native.get("head_sha") == it["head"]
+        return False
     if token == "S1_OP_DONE_v1":
         return re.search(rf"(?<!\d){it['id']}(?!\d)", body) is not None
     if token in ("S1_LANE_MERGE_v1", "S1_LANE_HALTED") and it["kind"] == "S1_LANE_MERGE_INTENT_v1" and it["pr"] is not None:
@@ -346,7 +401,7 @@ def settles(c, it):
     return False
 
 
-def open_intents(comments, now, settle_minutes=60, run_of=None):
+def open_intents(comments, now, settle_minutes=60, run_of=None, merge_of=None):
     """A cheap SIGNAL for RECONCILE (EVIDENCE_BINDINGS B3), never the reconciliation itself: authentic v3 intents
     (they carry loop=) with no later outcome that names their PR or cites their id.
 
@@ -370,10 +425,18 @@ def open_intents(comments, now, settle_minutes=60, run_of=None):
         if "loop" not in f:
             continue                                   # a legacy intent: S1 decides case (i) natively, not this signal
         pr = re.search(r"\d+", f.get("pr", ""))
+        head = (f.get("head") or "").strip()
+        bot = is_actions_bot(c.get("user"))
+        exact = bot and token == "S1_LANE_MERGE_INTENT_v1" and executor_run(c.get("body")) is not None and bool(pr) and bool(SHA40.fullmatch(head))
         intents.append({"id": c["id"], "kind": token, "pr": int(pr.group(0)) if pr else None, "created_at": c["created_at"],
-                        "bot": is_actions_bot(c.get("user")), "row": c})
-    outcomes = {it["id"]: [c for c in rows if c.get("id", 0) > it["id"] and settles(c, it)] for it in intents}
-    by_owner = lambda it: any(is_owner_unedited(c) for c in outcomes[it["id"]])
+                        "bot": bot, "row": c, "head": head, "exact": exact})
+    memo = {}
+
+    def outcomes(it):                                  # lazy: the native merge proofs are read only for the intents examined
+        if it["id"] not in memo:
+            memo[it["id"]] = [c for c in rows if c.get("id", 0) > it["id"] and settles(c, it, merge_of)]
+        return memo[it["id"]]
+    by_owner = lambda it: any(is_owner_unedited(c) for c in outcomes(it))
     executor_merge = [it for it in intents if it["bot"] and it["kind"] == "S1_LANE_MERGE_INTENT_v1"]
     floor = 0
     for it in sorted(executor_merge, key=lambda i: i["id"], reverse=True):
@@ -384,10 +447,11 @@ def open_intents(comments, now, settle_minutes=60, run_of=None):
     for it in intents:
         if it["bot"] and it["kind"] == "S1_LANE_MERGE_INTENT_v1" and it["id"] < floor:
             continue                                   # closed by induction (docstring): never read again
-        if by_owner(it) or any(executor_post(c, run_of, now) for c in outcomes[it["id"]]):
+        if by_owner(it) or any(executor_post(c, run_of, now) for c in outcomes(it)):
             continue
         age = (now - stamp(it["created_at"])).total_seconds() / 60
-        out.append({"id": it["id"], "kind": it["kind"], "pr": it["pr"], "age_min": int(age), "due": age > settle_minutes})
+        out.append(dict({"id": it["id"], "kind": it["kind"], "pr": it["pr"], "age_min": int(age), "due": age > settle_minutes},
+                        **({} if it["exact"] else {"legacy": True})))
     return out
 
 
@@ -465,6 +529,51 @@ def unverified_receipts(comments):
             verified.add((pr, head, blob))
     return [v for (pr, head), v in merged.items()
             if not any(k[0] == pr and k[1] == head and v["report_blob"] in (None, k[2]) for k in verified)]
+
+
+EXECUTOR_WATCH_RUNS = 3              # earlier runs whose jobs one build reads to find the newest published one
+EXECUTOR_STALE_HOURS = 3             # a newest published run older than this: the executor is not running
+
+
+def read_executor_watch(gh, current_run):
+    """Fix round 4 (ChatGPT #8): the watchdog's native reads. The newest completed schedule/dispatch runs of this
+    workflow on main other than this one (one list read), and the jobs of at most EXECUTOR_WATCH_RUNS of them, newest
+    first, until one whose publish job succeeded (that run's execute job had a decision to act on)."""
+    doc = gh.get(f"actions/workflows/{Path(WORKFLOW_PATH).name}/runs", {"branch": "main", "per_page": 15})
+    runs = sorted((r for r in (doc.get("workflow_runs") or []) if isinstance(r, dict) and r.get("id") != current_run
+                   and r.get("event") in EXECUTOR_EVENTS and r.get("status") == "completed" and isinstance(r.get("id"), int)),
+                  key=lambda r: r["id"], reverse=True)
+    seen = []
+    for r in runs[:EXECUTOR_WATCH_RUNS]:
+        jobs, ok = gh.pages(f"actions/runs/{r['id']}/jobs", {"filter": "latest"}, key="jobs", max_pages=1)
+        names = {j.get("name"): j.get("conclusion") for j in jobs or [] if isinstance(j, dict)}
+        seen.append({"run": r["id"], "at": r.get("created_at"), "publish": names.get("publish"), "execute": names.get("execute"), "complete": bool(ok)})
+        if names.get("publish") == "success":
+            break
+    return {"runs": seen, "listed": len(runs)}
+
+
+def executor_watch(doc, mode, now):
+    """The executor's health as GitHub itself records it, independent of ChatGPT and of the executor's own report:
+    OFF (the switch says OFF), OK (the newest run that published a decision ran its execute job to success), FAILED
+    (that job failed, was cancelled or timed out: DEGRADED, AMBIGUOUS or a crash), MISSING (it did not run), STALE (the
+    newest published run is older than EXECUTOR_STALE_HOURS), NONE (no published run among those read) or UNREAD."""
+    if mode == "OFF":
+        return {"state": "OFF"}
+    runs = doc.get("runs") if isinstance(doc, dict) else None
+    if not isinstance(runs, list) or not all(isinstance(r, dict) and r.get("complete") for r in runs):
+        return {"state": "UNREAD"}
+    first = next((r for r in runs if r.get("publish") == "success"), None)
+    if first is None:
+        return {"state": "NONE" if doc.get("listed") else "UNREAD"}
+    try:
+        age = (now - stamp(first.get("at"))).total_seconds() / 3600
+    except (ValueError, TypeError):
+        return {"state": "UNREAD", "run": first.get("run")}
+    state = {"success": "OK", "skipped": "MISSING", None: "MISSING"}.get(first.get("execute"), "FAILED")
+    if age > EXECUTOR_STALE_HOURS:
+        state = "STALE"
+    return {"state": state, "run": first.get("run"), "execute": first.get("execute"), "age_h": round(age, 1)}
 
 
 def recall_window(items, now, n=RECALL_READS_PER_BUILD):
@@ -865,8 +974,8 @@ def claude_receipt_fields(head, comments):
     f = state.get("fields") if isinstance(state.get("fields"), dict) else {}
     if state["veto"] or not state["approved"] or not state["page_complete"]:
         return None
-    if (f.get("lane_eligible") or "").strip() != "YES" or not (f.get("independence") or "").strip():
-        return None
+    if (f.get("lane_eligible") or "").strip() != "YES" or (f.get("independence") or "").strip() not in INDEPENDENCE:
+        return None                                              # fix round 4 (#12): a known independence value, not any text
     rid, row = cited_request(f, comments)
     if rid is None or row is None:
         return None
@@ -1068,7 +1177,11 @@ def receipt_state(head, page):
             except (ValueError, KeyError, TypeError):
                 complete = False
             good = (f, complete)
-            out["veto"] = False                                  # only an admissible approval lifts an older refusal
+            # fix round 4 (ChatGPT #173/7186140947 finding 02): only a COMPLETE, eligible, independent APPROVE lifts an
+            # older refusal. An approval that lacks its request row, a blob, lane_eligible: YES or a known independence
+            # is a candidate at most, never the authority that ends a veto.
+            if complete and (f.get("lane_eligible") or "").strip() == "YES" and (f.get("independence") or "").strip() in INDEPENDENCE:
+                out["veto"] = False
     if good:
         out.update(approved=True, page_complete=good[1], fields=good[0])
     return out
@@ -1177,6 +1290,7 @@ def pr_entry(pr, data, ctx):
     e["thin"]["ai"] = ai_authored(pr, commits, cc, e["author"])                   # section 0.2i: never merged unreviewed
     e["thin"]["claude"] = claude_receipt(head, comments if rc else None)          # review route (b)
     e["thin"]["claude_written"] = claude_written(pr, commits, cc)
+    e["thin"]["data_route"] = decision_v1.data_route(pr, files, fc, commits, cc, ctx.get("allowlist"))[0]   # addendum c: route (c) scope
     e["thin"]["p01_named"] = p01_named(comments if rc else None, reviews if rc else None)   # route (c): PARK on a P0/P1 anybody wrote
     e["writer"] = concurrent_writer(commits, cc, comments, head, ctx["now"], ctx["quiet_minutes"]) if rc else "comments_unreadable"
     cx = codex_review(head, pr, commits, cc, comments, reviews, data.get("inline") or [], rc, ctx["now"], ctx["budgets"]["codex_silent_hours"])
@@ -1547,7 +1661,7 @@ def c1b_walk(main_sha, commits, known, window=C1B_WINDOW):
     return chain, cur, reached
 
 
-def c1b_scan(chain, base, base_key, entries_of, search_reads=C1B_SEARCH_READS):
+def c1b_scan(chain, base, base_key, entries_of, search_reads=C1B_SEARCH_READS, unproven=None):
     """TICK T3 C1b on a first-parent chain (oldest first): segments from the base to the parent of the first squash
     merge, from each squash merge to the parent of the next, and from the last squash merge to the end (no squash
     merge: base to end). A segment whose start and end entries differ was changed by a commit that is not a squash
@@ -1572,6 +1686,10 @@ def c1b_scan(chain, base, base_key, entries_of, search_reads=C1B_SEARCH_READS):
         same_ends = entries_of(anchor_key) == entries_of(chain[idx[-1]][3])
         for n, k in enumerate(idx):
             if n >= search_reads and same_ends:
+                # fix round 4 (#7 / 7186140947-08): past the cap a segment with equal ends is UNPROVEN, never clean. It is
+                # recorded (the caller makes it a C1B_GAP and the decision of this brief merges nothing), not ignored
+                if unproven is not None:
+                    unproven.append({"from": anchor_sha, "to": chain[idx[-1]][0], "unread": len(idx) - n})
                 break
             if n >= search_reads:
                 last = chain[idx[-1]]
@@ -1724,7 +1842,8 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
             return cache[key]
 
         base_row = next((c for c in commits if isinstance(c, dict) and c.get("sha") == base), None)
-        halt = c1b_scan(chain, base, c1b_tree_key(base_row, base), entries_of)
+        unproven = []
+        halt = c1b_scan(chain, base, c1b_tree_key(base_row, base), entries_of, unproven=unproven)
         if out["halt"] is None and halt is not None:
             out["halt"] = halt                                   # an older unnamed halt of the previous brief stays first
         # the range was scanned to B.main: the next build starts here, also after the window fallback (its own brief
@@ -1734,6 +1853,8 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
                    else "C1b:range" + ("" if known else f":no_anchor:{why or 'none'}"))
         if not reached:                                          # F3: checked_through moved past history nobody scanned
             out["gap"] = {"from_unknown": True, "window": C1B_WINDOW, "reason": out["reason"]}
+        elif unproven:                                           # commits past the per-segment cap: scanned to the ends only
+            out["gap"] = {"from_unknown": True, "window": sum(u["unread"] for u in unproven), "reason": "C1b:capped_equal_ends"}
         out["from"] = base
         return out
     except C1bFail as exc:
@@ -1838,7 +1959,8 @@ def build_brief(snap):
         lane["state"] = "OFF"
         lane["off_reasons"].append("ledger_unreadable")
     runs = snap.get("executor_runs") if isinstance(snap.get("executor_runs"), dict) else {}
-    intents = open_intents(comments, now, params["op_settle_minutes"], lambda rid: runs.get(str(rid))) if ledger_ok else []
+    proofs = snap.get("merge_proofs") if isinstance(snap.get("merge_proofs"), dict) else {}
+    intents = open_intents(comments, now, params["op_settle_minutes"], lambda rid: runs.get(str(rid)), lambda n: proofs.get(str(n))) if ledger_ok else []
     attempted = attempted_heads(comments) if ledger_ok else set()
     candidates = fallback_candidates(comments) if ledger_ok else None
     recall_items = [dict(item, codex=recall_status(item["head"], (snap.get("recall_reads") or {}).get(str(item["pr"])), now, snap["budgets"]["codex_silent_hours"]))
@@ -1846,13 +1968,14 @@ def build_brief(snap):
     # P2-D: PENDING is "this build did not read Codex's completed review of that head". A clear receipt decides nothing;
     # an item drops out of the brief only when it is FINAL natively AND its clear receipt is already posted.
     recall_pending = [i for i in recall_items if i["codex"] != "FINAL"]
-    recall_shown = recall_publish([i for i in recall_items if i["codex"] != "FINAL" or not i.get("cleared")])
+    recall_shown = recall_publish(recall_items)                  # fix round 4 (#11): a FINAL one stays listed, cleared or not (label repair)
     unverified = unverified_receipts(comments) if ledger_ok else []
     c1b, c1b_reason = c1b_block(snap.get("c1b"))
     repo_id = (snap.get("repo") or {}).get("id")
     ctx = {"repo_id": repo_id, "main_sha": snap["main_sha"], "policy": snap["policy"], "tuples": params["required_job_tuples"],
            "gate_isolation_live": snap.get("gate_isolation") == "LIVE", "now": now, "budgets": snap["budgets"],
-           "quiet_minutes": params["foreign_commit_quiet_minutes"], "push_filters": snap.get("push_filters")}
+           "quiet_minutes": params["foreign_commit_quiet_minutes"], "push_filters": snap.get("push_filters"),
+           "allowlist": decision_v1.fallback_allowlist(switch)}
     entries, drafts = [], []
     identity_ok = (snap.get("repo") or {}).get("full_name") == REPO and (snap.get("repo") or {}).get("fork") is False and isinstance(repo_id, int)
     for pr in sorted(snap.get("pulls") or [], key=lambda p: p.get("number") or 0):
@@ -1918,6 +2041,7 @@ def build_brief(snap):
         "recall": {"pending": len(recall_pending) if ledger_ok else None, "items": recall_shown},   # merges that wait for Codex's revisit
         "codex_evidence": limit,                                 # Codex's newest activity in the repository, when it is a usage-limit answer
         "claude_receipts": {"unverified": len(unverified) if ledger_ok else None, "items": unverified[:10]},   # route (b) merges, receipt not checked against the Bridge
+        "executor_watch": executor_watch(snap.get("executor_watch"), decision_v1.thin_config(switch)["executor"], now),   # GitHub's own record of the executor job
     }
     if brief["thin"]["executor"] == "LIVE":
         # The executor job is the ONE actor. The legacy ChatGPT procedure (TICK.md v3.3) acts only on B.next and
@@ -2682,13 +2806,20 @@ def collect(gh, root, head_root, now, run):
     snap["issue_comments"], snap["issue_comments_complete"] = gh.pages(f"issues/{OWNER_ISSUE}/comments", max_pages=120)
     # section 0.2i: the runs that Actions-bot outcome posts name (none while the ledger holds no such post; at most
     # SETTLE_RUN_READS). build_brief() repeats the same pure computation over this record.
-    reader = RunReader(gh)
+    reader, merges = RunReader(gh), MergeReader(gh)
     if snap["issue_comments_complete"]:
         try:
-            open_intents(snap["issue_comments"], stamp(snap["now"]), 0, reader)   # the same `now` build_brief() uses
+            open_intents(snap["issue_comments"], stamp(snap["now"]), 0, reader, merges)   # the same `now` build_brief() uses
         except StopReading as exc:
             errors.append(exc.reason)
-    snap["executor_runs"] = reader.docs
+    snap["executor_runs"], snap["merge_proofs"] = reader.docs, merges.docs
+    try:                                                         # the executor watchdog (fix round 4, #8): fail soft, UNREAD
+        snap["executor_watch"] = read_executor_watch(gh, (snap.get("run") or {}).get("id"))
+    except StopReading as exc:
+        errors.append(exc.reason)
+        snap["executor_watch"] = None
+    except (urllib.error.HTTPError, OSError, ValueError, KeyError, TypeError, AttributeError):
+        snap["executor_watch"] = None
     # Codex's own activity in the whole repository (route (c): is Codex demonstrably unavailable?). Fail soft: an
     # unreadable feed is an incomplete one, and an incomplete one is never an offline signal.
     try:
