@@ -29,8 +29,16 @@ on:
 
 permissions: {}
 
-# The build job is serialised in one group. The due job coalesces per event kind (see there), so a fallback run
-# that is not due can never replace a pending cron build; a run that reaches build is always a real build.
+# Fix round 7 (R6-SH1): ONE serialized writer. The WHOLE run (due, build, publish) is one critical section of the group
+# s1-tick-brief, cancel-in-progress false: a build reads the published brief and its own publish writes the next one
+# before any other run of this workflow (a rerun included) starts, so no publish can interleave with another build's
+# read. GitHub keeps at most one pending run: a newer event replaces a pending older one before it starts (never a
+# running one); a run that was waiting re-checks due, and recent_build() ignores a run cancelled that way. The write
+# token stays in the publish job only. publish() is the second fence: an exact compare-and-swap on the predecessor
+# tuple and the brief generation.
+concurrency:
+  group: s1-tick-brief
+  cancel-in-progress: false
 
 jobs:
   due:
@@ -42,11 +50,7 @@ jobs:
       (github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'workflow_dispatch')))
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Coalescing: a newer event of the same kind cancels an older due check that is still running (a push never
-    # cancels the cron run's check: the group is per event kind).
-    concurrency:
-      group: s1-tick-brief-due-${{ github.event_name }}
-      cancel-in-progress: true
+    # Coalescing (fix round 7): the workflow-level group above; a job-level group here would deadlock inside it.
     permissions:
       contents: read
       issues: read
@@ -77,9 +81,6 @@ jobs:
     if: github.ref == 'refs/heads/main' && needs.due.outputs.due == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    concurrency:
-      group: s1-tick-brief
-      cancel-in-progress: false
     permissions:
       contents: read
       actions: read

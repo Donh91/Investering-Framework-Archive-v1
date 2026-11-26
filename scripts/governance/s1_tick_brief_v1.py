@@ -1534,7 +1534,7 @@ def claude_slots(entries, lane):
     return out
 
 
-def next_actions(entries, lane, health, intents, codex_ok=True, max_n=6, c1b_halt=None):
+def next_actions(entries, lane, health, intents, codex_ok=True, max_n=6, c1b_halt=None, fence_merges=False):
     """The ranked list. Entry 0 is THE one next ladder action; the rest are fallbacks if S1's native re-read fails.
     Order: the C1b halt (B.c1b.halt), the C7 halt trigger, RECONCILE signal, rule 4 (review proven by the brief), rule 4
     (review on the Bridge, S1 reads it), rule 2, rule 3. Inside a class: fewest open gates, then the lowest PR number
@@ -1606,6 +1606,10 @@ def next_actions(entries, lane, health, intents, codex_ok=True, max_n=6, c1b_hal
                 review.append((key, dict(base, action="REQUEST_REVIEW", rule="3", how=kind, verify=["head", "no_request_for_head"])))
     for group in (merge_a, merge_b, repair, review):
         out += [x for _k, x in sorted(group, key=lambda kx: kx[0])]
+    if fence_merges:
+        # fix round 7 (R6-SH3): the C1b fence removes merge entries BEFORE the rank and the cut, so the legal non-merge
+        # actions (HALT, RECONCILE, REPAIR, REQUEST_REVIEW) surface instead of being cut behind fenced merges
+        out = [x for x in out if x.get("action") not in MERGE_ACTIONS]
     for rank, x in enumerate(out[:max_n], 1):
         x["rank"] = rank
     return out[:max_n]
@@ -1892,6 +1896,46 @@ def previous_brief(issues):
     return (rows[0], brief) if brief is not None else (None, "body")
 
 
+ANCHOR_WAITS = (10, 20, 30)            # fix round 7: seconds between re-reads of a predecessor run that has not completed yet
+def _sleep(seconds):
+    time.sleep(seconds)                 # through the module attribute: a test that replaces time.sleep replaces this too
+
+
+def brief_tuple(issue):
+    """Fix round 7 (R6-SH2): the EXACT identity of one published brief issue: issue number, run id, run attempt, the
+    sha256 of the exact brief block bytes, and the brief generation (0 for a brief from before fix round 7). publish()
+    replaces the published brief only when the new brief carried exactly this tuple. None when it does not parse."""
+    brief = parse_body((issue or {}).get("body")) if isinstance(issue, dict) else None
+    if brief is None or not _is_id(issue.get("number")):
+        return None
+    gen = brief.get("generation", 0)
+    return {"issue": issue["number"], "run_id": brief["run_id"], "run_attempt": brief["run_attempt"],
+            "sha256": brief_digest(issue.get("body")), "generation": gen if type(gen) is int and gen >= 0 else -1}
+
+
+TUPLE_KEYS = ("issue", "run_id", "run_attempt", "sha256", "generation")
+
+
+def tuple_ok(t):
+    return isinstance(t, dict) and _is_id(t.get("issue")) and _is_id(t.get("run_id")) and _is_id(t.get("run_attempt")) \
+        and isinstance(t.get("sha256"), str) and re.fullmatch(r"[0-9a-f]{64}", t["sha256"]) is not None \
+        and type(t.get("generation")) is int and t["generation"] >= 0
+
+
+def duplicate_briefs(issues):
+    """Fix round 7 (R6-SH2): more than one labelled Actions-bot issue whose body parses: [(issue, brief)] by number,
+    else []. Their gaps are ALL carried (conservatively) and publish() closes an extra one only once every gap and halt
+    of it is proven in the surviving brief."""
+    if not isinstance(issues, list):
+        return []
+    rows = sorted((i for i in issues if isinstance(i, dict) and "pull_request" not in i and is_actions_bot(i.get("user"))
+                   and _is_id(i.get("number"))), key=lambda i: i["number"])
+    if len(rows) < 2 or len(rows) != len([i for i in issues if isinstance(i, dict) and "pull_request" not in i]):
+        return []
+    pairs = [(i, parse_body(i.get("body"))) for i in rows]
+    return pairs if all(b is not None for _i, b in pairs) else []
+
+
 def carried_halt(issues):
     """The c1b.halt of a published brief body even when its run binding fails (F2): run_not_success, edited_outside_run
     or an unreadable run. Bot authorship is the floor (the T1 author rule): a body not written by github-actions[bot]
@@ -1918,12 +1962,16 @@ def previous_anchor(issue, brief, run, now):
         made, edited = stamp(brief.get("generated_at")), stamp(issue.get("updated_at"))
         if not isinstance(run, dict) or run.get("id") != brief.get("run_id") or run.get("path") != WORKFLOW_PATH \
                 or (run.get("repository") or {}).get("full_name") != REPO or run.get("head_branch") != "main" \
-                or run.get("head_sha") != brief.get("main"):
+                or (run.get("head_repository") or {}).get("full_name") != REPO \
+                or run.get("head_sha") != brief.get("main") or run.get("run_attempt") != brief.get("run_attempt") \
+                or run.get("event") not in RUN_EVENTS or run.get("event") != brief.get("event"):
             return [], None, "run_binding"
-        done = run.get("status") == "completed"
-        if done and run.get("conclusion") != "success":
+        # fix round 7 (R6-SH2): only a COMPLETED, successful run anchors (read_c1b re-reads an in-progress one first)
+        if run.get("status") != "completed":
+            return [], None, "run_in_progress"
+        if run.get("conclusion") != "success":
             return [], None, "run_not_success"
-        end = stamp(run.get("updated_at")) if done else now
+        end = stamp(run.get("updated_at"))
         if not stamp(run.get("run_started_at")) <= made <= edited <= end:
             return [], None, "edited_outside_run"
     except (ValueError, TypeError, AttributeError):
@@ -2007,27 +2055,80 @@ def carried_gaps(prev, now):
     return out
 
 
+def gap_action_id(gap):
+    """Fix round 7 (R6-SH4, owner addendum g): the stable action id of ONE detection of ONE gap: the range id AND its
+    detection time (a range found again later is a new detection with a new id). C1B- and 12 hex."""
+    return "C1B-" + hashlib.sha256(f"{gap['id']}|{gap['detected_at']}".encode("utf-8")).hexdigest()[:12]
+
+
+def gap_accept_body(gap):
+    """The exact never-edited comment the owner account posts on #1156 to dispose of this gap detection (what ChatGPT
+    posts when the owner sends GO <action id>)."""
+    return f"{GAP_ACCEPTED}\ngap: {gap_action_id(gap)}\nfrom: {gap['from'] or '-'}\nto: {gap['to']}"
+
+
+GAP_NATIVE_QUERY = ("query($ids:[ID!]!){nodes(ids:$ids){... on IssueComment{databaseId lastEditedAt includesCreatedEdit "
+                    "author{login} issue{number}}}}")
+GAP_NATIVE_READS = 20                 # acceptance candidates whose native edit record one build reads (ONE GraphQL call)
+
+
+def native_edit_ok(row):
+    """Fix round 7 (R6-SH4): GitHub's own edit record of this comment (GraphQL IssueComment, attached by collect() as
+    row["native_edit"]) proves it was never edited: lastEditedAt null and includesCreatedEdit false, for this positive
+    comment id, by the owner account, on #1156. Missing or unreadable: not proven (fail closed). Residual: every agent
+    writes as the same owner account, so this proves the comment unedited, not which agent of the owner account wrote it."""
+    n = row.get("native_edit") if isinstance(row, dict) else None
+    return isinstance(n, dict) and _is_id(row.get("id")) and n.get("databaseId") == row["id"] and n.get("lastEditedAt") is None \
+        and "lastEditedAt" in n and n.get("includesCreatedEdit") is False and n.get("author") == OWNER_LOGIN and n.get("issue") == OWNER_ISSUE
+
+
 def gap_acceptance(gap, ledger):
-    """The id of the owner's disposition of exactly this gap, or None: a never-edited S1_C1B_GAP_ACCEPTED_v1 by the owner
-    account on #1156 whose `to:` is the gap's to and whose `from:` is the gap's from (absent, "-" or "unbounded" only
-    for a gap with no known start), created at or after the gap was detected (an earlier acceptance never clears a
-    newly found range). `ledger` None: unread, nothing is accepted."""
+    """The id of the owner's disposition of exactly this gap detection, or None. Fix round 7 (R6-SH4): an
+    S1_C1B_GAP_ACCEPTED_v1 by the owner account on #1156 with a positive comment id, never edited by GitHub's own record
+    (native_edit_ok; the REST created_at == updated_at check still applies too), whose fields are each present exactly
+    once and name exactly this detection: gap: is gap_action_id(gap) (range AND detection time), to: is the gap's to and
+    from: is the gap's from ("-" or "unbounded" only for a gap with no known start), created at or after the gap was
+    detected. `ledger` None: unread, nothing is accepted."""
     if ledger is None:
         return None
     for x in ledger:
-        if not isinstance(x, dict) or not is_owner_unedited(x) or first_line_token(x.get("body")) != GAP_ACCEPTED:
+        if not isinstance(x, dict) or not is_owner_unedited(x) or first_line_token(x.get("body")) != GAP_ACCEPTED \
+                or not native_edit_ok(x):
             continue
+        keys = [m.group(1).strip().lower() for m in (re.match(r"^\s*(?:[-*]\s+)?([A-Za-z_][A-Za-z0-9_ ]{0,40}?)\s*[:=]\s*(.*?)\s*$", ln)
+                                                       for ln in str(x.get("body")).splitlines()) if m]
+        if any(keys.count(k) != 1 for k in ("gap", "from", "to")):
+            continue                                             # a missing or a repeated field: not exact
         f = fields(x.get("body"))
-        to, frm = (f.get("to") or "").strip(), (f.get("from") or "").strip()
-        if to != gap["to"] or (frm != gap["from"] if gap["from"] else frm.lower() not in GAP_UNBOUNDED):
+        to, frm, gid = (f.get("to") or "").strip(), (f.get("from") or "").strip(), (f.get("gap") or "").strip()
+        if gid != gap_action_id(gap) or to != gap["to"] or (frm != gap["from"] if gap["from"] else frm.lower() not in GAP_UNBOUNDED):
             continue
         try:
             if stamp(x.get("created_at")) < stamp(gap["detected_at"]):
                 continue
         except (ValueError, TypeError):
             continue
-        return x.get("id") if type(x.get("id")) is int else -1
+        return x["id"]
     return None
+
+
+def read_gap_native(gh, comments, limit=GAP_NATIVE_READS):
+    """Fix round 7 (R6-SH4): attach GitHub's native edit record to the newest `limit` owner S1_C1B_GAP_ACCEPTED_v1
+    comments (ONE read-only GraphQL call). A failed read attaches nothing (no acceptance counts)."""
+    rows = [c for c in comments or [] if isinstance(c, dict) and login(c) == OWNER_LOGIN and _is_id(c.get("id"))
+            and first_line_token(c.get("body")) == GAP_ACCEPTED and isinstance(c.get("node_id"), str)][-limit:]
+    if not rows:
+        return 0
+    doc = gh.graphql(GAP_NATIVE_QUERY, {"ids": [c["node_id"] for c in rows]})
+    nodes = ((doc or {}).get("data") or doc or {}).get("nodes") if isinstance(doc, dict) else None
+    by_id = {n.get("databaseId"): n for n in nodes or [] if isinstance(n, dict)}
+    for c in rows:
+        n = by_id.get(c["id"])
+        if isinstance(n, dict) and "lastEditedAt" in n:
+            c["native_edit"] = {"databaseId": n.get("databaseId"), "lastEditedAt": n.get("lastEditedAt"),
+                                "includesCreatedEdit": n.get("includesCreatedEdit"),
+                                "author": (n.get("author") or {}).get("login"), "issue": (n.get("issue") or {}).get("number")}
+    return len(rows)
 
 
 def gap_summary(gaps, opn, carried=0):
@@ -2088,10 +2189,16 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
         carry_unknown = issue is not None and isinstance(prev.get("c1b"), dict) and prev["c1b"].get("carry") == "UNKNOWN"
         out["prev_next"] = next_builds(prev) if issue is not None else {}   # W5: B.next[].builds counts on from here
         out["prev_log"] = prev.get("decision_log") if issue is not None and isinstance(prev.get("decision_log"), list) else None
-        if issue is not None:
+        dups = duplicate_briefs(issues) if issue is None else []
+        if issue is not None or dups:
             # fix round 6 (S1, S2): every gap of the previous brief, carried first and one by one; only an exact owner
-            # disposition removes one (the cleared list says which, and by which comment)
-            for g in carried_gaps(prev, now):
+            # disposition removes one (the cleared list says which, and by which comment). Fix round 7: with duplicate
+            # brief issues, the gaps of EVERY one of them (no anchor is taken from any)
+            carried = []
+            for _i, b in (dups or [(issue, prev)]):
+                for g in carried_gaps(b, now):
+                    add_gap(carried, g)
+            for g in carried:
                 cid = gap_acceptance(g, ledger)
                 if cid is None:
                     out["gaps"].append(g)
@@ -2110,11 +2217,25 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
             except Exception:                                    # noqa: BLE001  (unproven: no anchor is carried)
                 raise C1bFail("run_unreadable")
             known, _bound_halt, why = previous_anchor(issue, prev, run, now)
+            for wait in ANCHOR_WAITS:                            # fix round 7: completion lags the job end by seconds
+                if why != "run_in_progress":
+                    break
+                _sleep(wait)
+                try:
+                    run = get(f"actions/runs/{int(prev.get('run_id'))}")
+                except (C1bFail, StopReading):
+                    raise
+                except Exception:                                # noqa: BLE001
+                    raise C1bFail("run_unreadable")
+                known, _bound_halt, why = previous_anchor(issue, prev, run, now)
+            if why == "run_in_progress":
+                raise C1bFail("anchor_pending")                  # never an anchor, never a replacement (prev stays None)
             if carry_unknown:
                 known, why = [], "carry_unknown"
                 out["carry"] = "UNKNOWN"                         # until this build's own scan reaches B.main
-            if type(prev.get("run_id")) is int and not isinstance(prev.get("run_id"), bool):
-                out["prev"] = {"run_id": prev["run_id"], "issue": issue.get("number") if type(issue.get("number")) is int else None}
+            out["prev"] = brief_tuple(issue)                     # fix round 7 (R6-SH2): the exact tuple publish() compares
+        elif dups:
+            out["prev"] = dict(brief_tuple(dups[0][0]), absorbed=[brief_tuple(i) for i, _b in dups[1:]])
         out["checked_through"] = known[0] if known else None    # carried when this build cannot finish
         if main_sha in known:
             out.update(checked_through=main_sha, complete=True)
@@ -2173,6 +2294,21 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
         base_row = next((c for c in commits if isinstance(c, dict) and c.get("sha") == base), None)
         unproven = []
         halt = c1b_scan(chain, base, c1b_tree_key(base_row, base), entries_of, unproven=unproven, progress=progress)
+        # fix round 7 (R6-SH3, liveness): a segment capped at C1B_SEARCH_READS is resumed IN THIS BUILD from the proven
+        # point while the C1b budget lasts (each pass proves up to C1B_SEARCH_READS more commits, or stops at a halt or a
+        # budget stop exactly as before), so one build proves about C1B_MAX_CALLS commits, not C1B_SEARCH_READS. A load
+        # above that stays an open segment whose unread count the owner line shows (C1B_GAP(window=<unread>)).
+        while halt is None and unproven and gh.calls - first < max_calls and 0 <= progress["proven"] < len(chain) - 1:
+            p = progress["proven"]
+            sub, more, sub_progress = chain[p + 1:], [], {"proven": -1}
+            try:
+                halt = c1b_scan(sub, chain[p][0], chain[p][3], entries_of, unproven=more, progress=sub_progress)
+            finally:
+                if sub_progress["proven"] >= 0:
+                    progress["proven"] = p + 1 + sub_progress["proven"]
+            unproven[:] = more
+            if progress["proven"] == p:
+                break                                            # no step forward: never loop
         if out["halt"] is None and halt is not None:
             out["halt"] = halt                                   # an older unnamed halt of the previous brief stays first
         elif halt is not None and out["halt"] != halt:
@@ -2246,8 +2382,15 @@ def c1b_block(snap_c1b, now=None):
         if isinstance(o, dict) and _sha_or_none(o.get("from")) and _sha_or_none(o.get("to")) and type(o.get("unread")) is int and o.get("reason") else None
     bad = bad or (o is not None and opn is None)
     prev = c.get("prev")
-    prev = {"run_id": prev["run_id"], "issue": prev.get("issue") if type(prev.get("issue")) is int else None} \
-        if isinstance(prev, dict) and type(prev.get("run_id")) is int and not isinstance(prev.get("run_id"), bool) else None
+    if tuple_ok(prev):
+        absorbed = prev.get("absorbed")
+        prev = dict({k: prev[k] for k in TUPLE_KEYS},
+                    **({"absorbed": [{k: a[k] for k in TUPLE_KEYS} for a in absorbed]} if isinstance(absorbed, list)
+                       and all(tuple_ok(a) for a in absorbed) else {}))
+        bad = bad or (absorbed is not None and "absorbed" not in prev)
+    else:
+        bad = bad or prev is not None
+        prev = None
     cleared = [{"id": str(x.get("id"))[:90], "by": str(x.get("by"))[:40]} for x in (c.get("cleared") or []) if isinstance(x, dict)][:2 * C1B_MAX_GAPS]
     block = {"checked_through": _sha_or_none(c.get("checked_through")), "from": _sha_or_none(c.get("from")),
              "halt": c["halt"] if c1b_halt_ok(c.get("halt")) else None,
@@ -2257,6 +2400,9 @@ def c1b_block(snap_c1b, now=None):
              "cleared": cleared,                                  # fix round 6: gaps of the previous brief the owner disposed of
              "prev": prev,                                        # fix round 6: the brief this build carried (publish() checks it)
              "carry": "UNKNOWN" if c.get("carry") == "UNKNOWN" else None}   # W5: this build never read its predecessor
+    # fix round 7 (owner addendum g, SHADOW record only): one stable action id per gap detection and the exact reply the
+    # owner sends; GO <id> lets ChatGPT post gap_accept_body(gap) as the owner account. No expiry or receipt yet (pre-LIVE)
+    block["owner_actions"] = [{"id": gap_action_id(g), "gap": g["id"], "reply": f"GO {gap_action_id(g)}"} for g in gaps]
     block["fence"] = c1b_fence(block)                            # fix round 6 (S4): non-empty: no merge by any lane
     reason = c.get("reason")
     if bad:
@@ -2394,6 +2540,7 @@ def build_brief(snap):
         + (["depth_cap"] if any(e.get("skip") == "NOT_READ:depth_cap" for e in entries) else [])
     brief = {
         "schema": SCHEMA, "run_id": snap["run"]["id"], "run_attempt": snap["run"]["attempt"], "event": snap["run"]["event"],
+        "generation": brief_generation(c1b),                    # fix round 7 (R6-SH1): monotonic, publish() never goes back
         "generated_at": iso(now), "max_age_minutes": MAX_AGE_MINUTES,
         "repo": {"full_name": (snap.get("repo") or {}).get("full_name"), "id": repo_id, "identity": identity_ok},
         "main": snap["main_sha"], "pins": pins,
@@ -2404,7 +2551,8 @@ def build_brief(snap):
         ["OWNER APPROVAL REQUIRED: UNKNOWN (brief_incomplete)", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"],
         "heartbeat_due": heartbeat_due(comments, now) if ledger_ok else False,
         "prs": entries, "drafts": drafts,
-        "next": c1b_fenced_next(count_builds(next_actions(entries, lane, health, intents, codex["available"], c1b_halt=c1b["halt"]),
+        "next": c1b_fenced_next(count_builds(next_actions(entries, lane, health, intents, codex["available"], c1b_halt=c1b["halt"],
+                                                          fence_merges=bool(C1B_FENCES_LEGACY_LANE and c1b.get("fence"))),
                                              (snap.get("c1b") or {}).get("prev_next") if isinstance(snap.get("c1b"), dict) else None), c1b)
         if pulls_ok and identity_ok else [],
         "claude_slots": c1b_fenced_slots(claude_slots(entries, lane), c1b) if pulls_ok and identity_ok else [],
@@ -2432,6 +2580,13 @@ def build_brief(snap):
         # B.claude_slots, so both are empty for it; the same ranked list is published as B.ranked.
         brief["ranked"], brief["next"], brief["claude_slots"] = brief["next"], [], []
     return log_decision(brief, (snap.get("c1b") or {}).get("prev_log") if isinstance(snap.get("c1b"), dict) else None)
+
+
+def brief_generation(c1b):
+    """Fix round 7 (R6-SH1): the predecessor's generation + 1 (1 when this build carried no brief: the first one, or a
+    build whose predecessor read failed, which publish() then never lets replace a published brief)."""
+    prev = c1b.get("prev") if isinstance(c1b, dict) else None
+    return (prev["generation"] + 1) if tuple_ok(prev) else 1
 
 
 def c1b_fenced_next(entries, c1b):
@@ -2723,6 +2878,8 @@ def recent_build(runs, now, self_run_id, jobs_of=None):
         try:
             if run.get("id") == self_run_id:
                 continue
+            if run.get("status") == "completed" and run.get("conclusion") == "cancelled":
+                continue                                         # fix round 7: replaced while pending in the run group; it built nothing
             age = (now - stamp(run.get("created_at"))).total_seconds() / 60
             if age < CRON_RECENT_MINUTES and run.get("event") == "schedule":
                 return True
@@ -3270,6 +3427,13 @@ def collect(gh, root, head_root, now, run):
     r2, c2 = gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
     snap.update(rulesets_1=r1, rulesets_2=r2, rulesets_complete=c1 and c2)
     snap["pulls"], snap["pulls_complete"] = gh.pages("pulls", {"state": "open", "sort": "created", "direction": "asc"}, max_pages=5)
+    if snap["issue_comments_complete"]:
+        try:                                                     # fix round 7 (R6-SH4): native edit records, fail closed
+            read_gap_native(gh, snap["issue_comments"])
+        except StopReading as exc:
+            errors.append(exc.reason)
+        except (urllib.error.HTTPError, OSError, ValueError, KeyError, TypeError, AttributeError, RuntimeError):
+            pass
     # D1: the C1b halt test, before the PR depth reads and on its own share of the cap (the PRs cannot starve it)
     snap["c1b"] = read_c1b(gh, main_sha, snap["issue_comments"] if snap["issue_comments_complete"] else None, now)
     timing["base_s"] = round(time.monotonic() - clock)
@@ -3364,7 +3528,8 @@ def keep_published(gh, issue, brief, now):
 
 def publish(gh, body, now=None):
     """Write the one brief issue. Finds it by label; creates the label and the issue on the first run. More than one
-    open labelled issue by the Actions bot is repaired by closing the newer ones (never deleted)."""
+    open labelled issue by the Actions bot is repaired by closing the newer ones (never deleted), and only once their
+    ledger is proven carried (fix round 7)."""
     if parse_body(body) is None or len(body) > 65000:
         raise SystemExit("PUBLISH_REFUSED: body is not one valid brief")
     if decision_v1.BEGIN in body and decision_of(body) is None:
@@ -3386,25 +3551,31 @@ def publish(gh, body, now=None):
         except urllib.error.HTTPError:
             pass                                                 # an unlocked issue still works; a comment only makes one brief unverifiable
         return number
-    for extra in mine[1:]:
-        gh._request("PATCH", gh.url(f"issues/{extra['number']}"), {"state": "closed", "state_reason": "not_planned"})
-    # A14: monotonic. A publish that was delayed never replaces a brief that a later build already wrote. But the
-    # published body is kept ONLY when it is provably such a brief (keep_published): a forged or future-dated body
-    # must never stop every later publish.
+    # Fix round 7 (R6-SH1, R6-SH2): an exact compare-and-swap on the ONE serialized writer. The workflow runs build and
+    # publish in ONE job of ONE concurrency group (cancel-in-progress false), so no other publish of this code runs
+    # between this build's read of the published brief and the write below; this check is the second fence (a rerun,
+    # an old-code run during rollout, a manual edit). The new brief replaces the published one only when its build
+    # carried EXACTLY the published brief: the same issue number, run id, run attempt, sha256 of the exact block bytes
+    # and generation, and the new generation is that generation + 1. Anything else keeps the published brief (S1 reads
+    # it as BRIEF_STALE until the next build, which resumes from it): no build ever replaces a newer brief.
     current, new = parse_body(mine[0].get("body")), parse_body(body)
-    # Fix round 6 (#173/7194141485 S1, S2; ChatGPT kit b6c810a1): the C1b ledger (history gaps, halt, anchor) is
-    # conserved at the ONE persistent boundary. A brief replaces the published one only when its build read exactly that
-    # brief and carried it: B.c1b.prev.run_id is the published brief's run_id. Every other case keeps the published brief
-    # (S1 reads it as BRIEF_STALE until the next build): the build could not read its predecessor (unreadable, a non-list,
-    # two issues, the budget, a rate limit), failed before it judged it, or read an older one (a delayed or out-of-order
-    # publish). Not a compare-and-swap: two publishes that read the same brief can both write; each carried that same
-    # brief, so the one that stays is a complete account of history from it, and the next build resumes from it.
-    if isinstance(current, dict) and type(current.get("run_id")) is int:
-        carried = ((new or {}).get("c1b") or {}).get("prev") if isinstance((new or {}).get("c1b"), dict) else None
-        if not (isinstance(carried, dict) and carried.get("run_id") == current["run_id"]):
-            print(f"S1_TICK_BRIEF_PUBLISH_SKIPPED c1b_predecessor_not_carried run={current.get('run_id')} "
-                  f"carried={(carried or {}).get('run_id') if isinstance(carried, dict) else None}")
-            return mine[0]["number"]
+    carried = ((new or {}).get("c1b") or {}).get("prev") if isinstance((new or {}).get("c1b"), dict) else None
+    have = brief_tuple(mine[0])
+    want = {k: carried.get(k) for k in TUPLE_KEYS} if isinstance(carried, dict) else None
+    # a published body that is not a brief (have None) carries no ledger this build could have carried: replaced (F1)
+    if have is not None and (want != have or new.get("generation") != have["generation"] + 1):
+        print(f"S1_TICK_BRIEF_PUBLISH_SKIPPED c1b_predecessor_not_carried published={json.dumps(have, sort_keys=True)} "
+              f"carried={json.dumps(want, sort_keys=True)} generation={(new or {}).get('generation')}")
+        return mine[0]["number"]
+    extras = mine[1:]
+    absorbed = carried.get("absorbed") if isinstance(carried, dict) and isinstance(carried.get("absorbed"), list) else []
+    keep = []
+    for extra in extras:
+        # an extra brief issue is closed only once THIS build carried exactly it (its tuple) and every gap and the halt
+        # of it is in the brief written below; otherwise it stays open (two issues: S1 reads BRIEF_UNVERIFIED, fenced)
+        t = brief_tuple(extra)
+        if t is None or t not in absorbed or not preserved(parse_body(extra.get("body")), new):
+            keep.append(extra["number"])
     # W5: a build that could not read the previous brief (c1b.carry UNKNOWN) carried nothing. It never replaces a
     # published brief that still holds a C1b halt: that halt exists nowhere else until S1 has posted it. The older
     # brief stays (S1 reads it as BRIEF_STALE), and the next build reads it and carries the halt as usual.
@@ -3420,7 +3591,31 @@ def publish(gh, body, now=None):
     except (ValueError, TypeError):
         pass                                                     # an unreadable current brief is replaced
     gh._request("PATCH", gh.url(f"issues/{mine[0]['number']}"), {"body": body})
+    for extra in extras:
+        if extra["number"] in keep:
+            print(f"S1_TICK_BRIEF_DUPLICATE_KEPT issue={extra['number']} reason=ledger_not_proven_preserved")
+        else:
+            gh._request("PATCH", gh.url(f"issues/{extra['number']}"), {"state": "closed", "state_reason": "not_planned"})
     return mine[0]["number"]
+
+
+def preserved(old, new):
+    """Fix round 7 (R6-SH2): is every unique gap and the halt of brief `old` in brief `new`? A gap is kept by id (the
+    same range, carried unchanged) or named in new.c1b.cleared (an owner disposition); a halt by the same commit."""
+    if not isinstance(old, dict) or not isinstance(new, dict):
+        return False
+    nc = new.get("c1b") if isinstance(new.get("c1b"), dict) else {}
+    have = {g.get("id") for g in nc.get("gaps") or [] if isinstance(g, dict)} | \
+        {x.get("id") for x in nc.get("cleared") or [] if isinstance(x, dict)}
+    try:
+        gaps = carried_gaps(old, datetime.now(timezone.utc))
+    except C1bFail:
+        return False
+    if any(g["id"] not in have for g in gaps):
+        return False
+    oc = old.get("c1b") if isinstance(old.get("c1b"), dict) else {}
+    halt = oc.get("halt") if c1b_halt_ok(oc.get("halt")) else None
+    return halt is None or (c1b_halt_ok(nc.get("halt")) and nc["halt"].get("commit") == halt.get("commit"))
 
 
 def readback_line(gh, number, body):

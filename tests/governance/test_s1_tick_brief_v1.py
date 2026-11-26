@@ -936,6 +936,13 @@ class Signals(unittest.TestCase):
         self.assertIn("merged=1 ", brief_of(lambda w: w.update(issue_comments=merges))["status_lines"][2])
 
 
+def carry(b, current_body, number=5, **change):
+    """Fix round 7 (R6-SH2): brief b as a build that carried exactly the published body `current_body` writes it: the
+    exact predecessor tuple and that generation + 1."""
+    t = dict(B.brief_tuple({"number": number, "body": current_body}), **change)
+    return dict(b, c1b=dict(b["c1b"], prev=t), generation=t["generation"] + 1)
+
+
 class Publish(unittest.TestCase):
     class Fake:
         def __init__(self, issues):
@@ -969,9 +976,9 @@ class Publish(unittest.TestCase):
     def test_duplicates_are_closed_never_deleted(self):
         gh = self.Fake([{"number": 3001, "user": dict(BOT)}, {"number": 3000, "user": dict(BOT)}])
         B.publish(gh, self.body)
-        self.assertEqual([(m, u) for m, u, _ in gh.writes], [("PATCH", "issues/3001"), ("PATCH", "issues/3000")])
-        self.assertEqual(gh.writes[0][2]["state"], "closed")
-        self.assertFalse(any(m == "DELETE" for m, _u, _d in gh.writes))
+        # fix round 7 (R6-SH2): an extra issue whose ledger this build did not carry (here: no body) is never closed
+        self.assertEqual([(m, u) for m, u, _ in gh.writes], [("PATCH", "issues/3000")])
+        self.assertFalse(any(m == "DELETE" for m, _u, _d in gh.writes))   # closing a carried one: test_s1_fix7_publisher_v1
 
     def test_refusals(self):
         with self.assertRaises(SystemExit):
@@ -1011,6 +1018,7 @@ class CollectReplay(unittest.TestCase):
                 return {"workflow_runs": []}
             if path == "actions/runs/554":
                 return {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main",
+                        "head_repository": {"full_name": B.REPO}, "event": "schedule", "run_attempt": 1,
                         "head_sha": self.main, "status": "completed", "conclusion": "success",
                         "run_started_at": ts(70), "updated_at": ts(60)}
             raise AssertionError(path)                               # v3.2: the REST compare is never read
@@ -1240,10 +1248,11 @@ class WorkflowFile(unittest.TestCase):
                 if "uses" in step:
                     self.assertRegex(step["uses"], r"^actions/(checkout@v4|setup-python@v5)$")
         self.assertFalse(pub["steps"][0]["with"]["persist-credentials"])
-        self.assertNotIn("concurrency", self.doc)                    # v3.2 fix pass: only the build job is serialised
-        self.assertEqual(self.doc["jobs"]["build"]["concurrency"], {"group": "s1-tick-brief", "cancel-in-progress": False})
-        self.assertEqual(self.doc["jobs"]["due"]["concurrency"], {"group": "s1-tick-brief-due-${{ github.event_name }}", "cancel-in-progress": True})   # A12: coalescing per event kind; a push never cancels the cron run's check
-        self.assertNotIn("concurrency", self.doc["jobs"]["publish"])
+        # fix round 7 (R6-SH1): the WHOLE run is one serialized critical section (build -> publish), never cancelled once
+        # running; no job-level group (inside the run group it would deadlock)
+        self.assertEqual(self.doc["concurrency"], {"group": "s1-tick-brief", "cancel-in-progress": False})
+        for job in self.doc["jobs"].values():
+            self.assertNotIn("concurrency", job)
 
     def test_schedule_lands_before_the_tick(self):
         minutes = sorted(int(c["cron"].split()[0]) for c in self.doc[True]["schedule"])
@@ -2263,10 +2272,11 @@ class FreshnessFallback(unittest.TestCase):
         self.assertEqual(self.text.count("github.event.workflow_run"), 4)
         self.assertNotIn("pull_request_target", self.text)
         self.assertNotIn("actions: write", self.text)
-        self.assertNotIn("concurrency", self.doc)                    # v3.2 fix pass: only the build job is serialised
-        self.assertEqual(self.doc["jobs"]["build"]["concurrency"], {"group": "s1-tick-brief", "cancel-in-progress": False})
-        self.assertEqual(self.doc["jobs"]["due"]["concurrency"], {"group": "s1-tick-brief-due-${{ github.event_name }}", "cancel-in-progress": True})   # A12: coalescing per event kind; a push never cancels the cron run's check
-        self.assertNotIn("concurrency", self.doc["jobs"]["publish"])
+        # fix round 7 (R6-SH1): the WHOLE run is one serialized critical section (build -> publish), never cancelled once
+        # running; no job-level group (inside the run group it would deadlock)
+        self.assertEqual(self.doc["concurrency"], {"group": "s1-tick-brief", "cancel-in-progress": False})
+        for job in self.doc["jobs"].values():
+            self.assertNotIn("concurrency", job)
 
     def test_a_trigger_run_started_by_workflow_dispatch_is_accepted(self):
         # Live 2026-11-18: the hourly work is dispatched (workflow_dispatch) by the Framework Metronome while GitHub's
@@ -2722,9 +2732,9 @@ class RedTeamFixes(unittest.TestCase):
 
     def test_a14_a_delayed_publish_never_replaces_a_newer_brief(self):
         # fix round 6: a brief replaces the published one only when its build carried exactly that one (B.c1b.prev)
-        carried = lambda b, rid: dict(b, c1b=dict(b["c1b"], prev={"run_id": rid, "issue": 5}))
-        older = B.render(carried(dict(brief_of(), generated_at=ts(20)), 553))
-        newer = B.render(carried(dict(brief_of(), generated_at=ts(3), run_id=777), B.parse_body(older)["run_id"]))
+        base = B.render(dict(brief_of(), generated_at=ts(40), run_id=553))
+        older = B.render(carry(dict(brief_of(), generated_at=ts(20)), base))
+        newer = B.render(carry(dict(brief_of(), generated_at=ts(3), run_id=777), older))
         real_run = {"id": 777, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "status": "completed", "run_started_at": ts(12), "updated_at": ts(2)}
         class Gh:
             def __init__(self, body, run=real_run, updated=ts(2)): self.body, self.run, self.updated, self.writes, self.reads = body, run, updated, [], []
@@ -2741,7 +2751,7 @@ class RedTeamFixes(unittest.TestCase):
         self.assertEqual(B.publish(gh, older, NOW), 5)
         self.assertEqual((gh.writes, gh.reads), ([], ["issues"]))        # build A's late publish does not overwrite build B's brief (fix round 6: it never carried it)
         gh = Gh(newer)
-        self.assertEqual(B.publish(gh, B.render(dict(B.parse_body(older), c1b=dict(B.parse_body(older)["c1b"], prev={"run_id": 777, "issue": 5}))), NOW), 5)
+        self.assertEqual(B.publish(gh, B.render(carry(B.parse_body(older), newer)), NOW), 5)
         self.assertEqual((gh.writes, gh.reads), ([], ["issues", "actions/runs/777"]))        # A14 also holds on its own: an older brief never replaces a newer one; ONE run read
         gh = Gh(older)
         B.publish(gh, newer, NOW)
@@ -2750,10 +2760,10 @@ class RedTeamFixes(unittest.TestCase):
             gh = Gh(current)
             # fix round 6: by the build that read it (previous_brief() reads any bot body that parses; its B.c1b.prev names it)
             parsed = B.parse_body(current)
-            B.publish(gh, older if parsed is None else B.render(carried(B.parse_body(older), parsed["run_id"])), NOW)
+            B.publish(gh, older if parsed is None else B.render(carry(B.parse_body(older), current)), NOW)
             self.assertEqual(gh.writes, [("PATCH", "issues/5")])     # an unreadable current body is replaced
         gh = Gh(newer)
-        B.publish(gh, B.render(dict(B.parse_body(newer), c1b=dict(B.parse_body(newer)["c1b"], prev={"run_id": 777, "issue": 5}))), NOW)
+        B.publish(gh, B.render(carry(B.parse_body(newer), newer)), NOW)
         self.assertEqual(len(gh.writes), 1)                          # the same age, a real brief that carried it: written (a re-run of the same build)
 
     def test_f1_a_forged_or_future_dated_body_never_stops_the_publish(self):
@@ -2789,7 +2799,7 @@ class RedTeamFixes(unittest.TestCase):
             gh = Gh(current, run, updated)
             rid = (B.parse_body(current) or {}).get("run_id")             # fix round 6: the build that read it carried it
             older_brief = B.parse_body(older)
-            B.publish(gh, B.render(dict(older_brief, c1b=dict(older_brief["c1b"], prev={"run_id": rid, "issue": 5}))) if type(rid) is int else older, NOW)
+            B.publish(gh, B.render(carry(older_brief, current)) if type(rid) is int else older, NOW)
             self.assertEqual(gh.writes, [("PATCH", "issues/5")], name)       # overwritten: the next publish is never blocked
         gh = Gh(body(), dict(real_run, status="in_progress", updated_at=ts(9)), ts(2))
         B.publish(gh, older, NOW)
@@ -2967,8 +2977,8 @@ class ApiBudgetAndRateLimits(unittest.TestCase):
                 writes.append(method)
                 return b"{}", {}
         body = B.render(dict(brief_of(), generated_at=ts(3)))
-        self.assertEqual(B.publish(Gh("t", budget=B.PUBLISH_API_CALLS), body), 1)      # 1 read + 19 closes + 1 update = 21 calls
-        self.assertEqual(len(writes), 20)
+        self.assertEqual(B.publish(Gh("t", budget=B.PUBLISH_API_CALLS), body), 1)      # at most 1 read + 19 closes + 1 update = 21 calls
+        self.assertEqual(len(writes), 1)   # fix round 7 (R6-SH2): extras whose ledger this build did not carry stay open
 
 
 class T3CompactDrift(unittest.TestCase):

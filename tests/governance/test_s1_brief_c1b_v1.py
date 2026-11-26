@@ -107,7 +107,7 @@ def previous(main, c1b="checked", run_id=554, edited=False, halt=None):
         brief.pop("c1b")
     brief["generated_at"] = TB.ts(65)
     issue = {"number": 3, "user": dict(TB.BOT), "body": B.render(brief), "updated_at": TB.ts(30 if edited else 64)}
-    run = {"id": run_id, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": main,
+    run = {"id": run_id, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_repository": {"full_name": B.REPO}, "event": "schedule", "run_attempt": 1, "head_branch": "main", "head_sha": main,
            "status": "completed", "conclusion": "success", "run_started_at": TB.ts(70), "updated_at": TB.ts(60)}
     return issue, run
 
@@ -116,6 +116,15 @@ def c1b(history, anchor, ledger=(), max_calls=B.C1B_MAX_CALLS, **kw):
     issue, run = previous(anchor, **{k: kw.pop(k) for k in ("c1b", "edited", "halt") if k in kw}) if anchor else (None, None)
     gh = Gh(history, issue, run, **kw)
     return B.read_c1b(gh, history.main, list(ledger) if ledger is not None else None, NOW, max_calls=max_calls), gh
+
+
+def accept_comment(cid, gap, minutes_ago=5, **native):
+    """Fix round 7 (R6-SH4): the owner's exact S1_C1B_GAP_ACCEPTED_v1 for this gap detection, with GitHub's native edit
+    record as collect() attaches it (never edited unless `native` says otherwise)."""
+    row = TB.comment(cid, B.gap_accept_body(gap), TB.OWNER, minutes_ago)
+    row["native_edit"] = dict({"databaseId": cid, "lastEditedAt": None, "includesCreatedEdit": False, "author": TB.OWNER["login"],
+                               "issue": B.OWNER_ISSUE}, **native)
+    return row
 
 
 def brief_with(record, **change):
@@ -144,7 +153,9 @@ class Range(unittest.TestCase):
         b = brief_with(out)
         self.assertTrue(b["complete"])
         self.assertEqual(b["c1b"], {"checked_through": h.main, "from": anchor, "halt": None, "gap": None, "carry": None, "gaps": [], "open": None,
-                                    "cleared": [], "prev": {"run_id": 554, "issue": 3}, "fence": []})
+                                    "cleared": [], "prev": b["c1b"]["prev"], "fence": [], "owner_actions": []})
+        self.assertEqual((b["c1b"]["prev"]["run_id"], b["c1b"]["prev"]["issue"], b["c1b"]["prev"]["run_attempt"]), (554, 3, 1))   # fix round 7: the exact tuple
+        self.assertEqual(sorted(b["c1b"]["prev"]), sorted(B.TUPLE_KEYS))
 
     def test_a_squash_merge_that_touches_code_is_no_halt(self):
         h = History()
@@ -268,7 +279,7 @@ class FailClosed(unittest.TestCase):
         # equal-ends segment past the per-segment cap is the open rest, resumed by the next build
         out, gh = c1b(h, anchor)
         self.assertEqual((out["complete"], out["reason"], out["gaps"], gh.paths.count("commits")), (True, None, [], 2))
-        self.assertEqual(out["open"]["reason"], "C1b:capped_equal_ends")
+        self.assertIsNone(out["open"])                             # fix round 7 (R6-SH3): the capped segment is resumed in this build
         for i in range(B.C1B_WINDOW * B.C1B_PAGES):                # beyond C1B_PAGES pages: the range before them is a gap
             h.commit(f"data: more {i}")
         out, gh = c1b(h, anchor)
@@ -383,7 +394,7 @@ class FailClosed(unittest.TestCase):
                 self.assertTrue(b["incomplete"].startswith("C1b:"), b["incomplete"])
         b = brief_with({"checked_through": "x", "from": None, "halt": {"commit": "y"}, "complete": True})
         self.assertEqual(b["c1b"], {"checked_through": None, "from": None, "halt": None, "gap": None, "carry": None, "gaps": [], "open": None,
-                                    "cleared": [], "prev": None, "fence": []})
+                                    "cleared": [], "prev": None, "fence": [], "owner_actions": []})
         for record in ({"complete": True, "gaps": "x"}, {"complete": True, "gaps": [{"to": "x"}]}, {"complete": True, "open": {"from": "x"}}):
             self.assertEqual(brief_with(record)["incomplete"], "C1b:record_invalid", record)   # fix round 6: a ledger that does not validate
 
@@ -569,7 +580,7 @@ class FixRound5DurableGap(unittest.TestCase):
         brief = B.build_brief(w)
         brief["generated_at"] = TB.ts(65)
         issue = {"number": 3, "user": dict(TB.BOT), "body": B.render(brief), "updated_at": TB.ts(64)}
-        run = {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": main,
+        run = {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_repository": {"full_name": B.REPO}, "event": "schedule", "run_attempt": 1, "head_branch": "main", "head_sha": main,
                "status": "completed", "conclusion": "success", "run_started_at": TB.ts(70), "updated_at": TB.ts(60)}
         return issue, run
 
@@ -578,7 +589,10 @@ class FixRound5DurableGap(unittest.TestCase):
         anchor = h.commit("data: 0")
         for k in range(B.C1B_SEARCH_READS + 5):
             h.commit(f"data: {k + 1}")
-        out, _gh = c1b(h, anchor)
+        # fix round 7 (R6-SH3): with budget left the capped segment is resumed in the SAME build, to main
+        whole, _gh = c1b(h, anchor)
+        self.assertEqual((whole["checked_through"], whole["open"], whole["gap"]), (h.main, None, None))
+        out, _gh = c1b(h, anchor, max_calls=25)                                          # the budget ends right after the first pass
         self.assertEqual((out["gap"]["reason"], out["open"]["reason"], out["gaps"]), ("C1b:capped_equal_ends", "C1b:capped_equal_ends", []))
         proven = out["checked_through"]
         self.assertNotEqual(proven, h.main)                                             # NOT main: the rest is unproven
@@ -597,9 +611,10 @@ class FixRound5DurableGap(unittest.TestCase):
         out = B.read_c1b(Gh(h, issue, run), h.main, [], NOW)
         self.assertEqual((out["complete"], out["gap"]["carried"], out["gap"]["to"]), (True, True, sha("old-base")))
         self.assertIn("lane:C1b:history_gap", __import__("s1_decision_v1").decide(B.build_brief(dict(TB.world(), c1b=out)))["skipped"])
-        accept = TB.comment(90, f"S1_C1B_GAP_ACCEPTED_v1\nto: {sha('old-base')}", TB.OWNER, 5)
+        accept = accept_comment(90, out["gaps"][0])                  # fix round 7: the exact detection, natively unedited
+        other = dict(out["gaps"][0], to="1" * 40, id="-.." + "1" * 40)
         for name, ledger, carried in (("the owner's disposition", [accept], False), ("an edited one", [dict(accept, updated_at=TB.ts(1))], True),
-                                      ("the bot's", [dict(accept, user=dict(TB.BOT))], True), ("another commit", [TB.comment(90, "S1_C1B_GAP_ACCEPTED_v1\nto: " + "1" * 40, TB.OWNER, 5)], True),
+                                      ("the bot's", [dict(accept, user=dict(TB.BOT))], True), ("another commit", [accept_comment(90, other)], True),
                                       ("an unread ledger", None, True)):
             with self.subTest(name):
                 out = B.read_c1b(Gh(h, issue, run), h.main, ledger, NOW)

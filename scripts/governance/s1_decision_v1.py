@@ -924,6 +924,8 @@ def _decide(brief, now=None):
     ranked, unverified = [], [s for s in skipped if unverified_gate(s)]
     for e in entries:
         gates = pr_gates(e, cfg, intent_prs)
+        if not (isinstance(e.get("head"), str) and SHA40.fullmatch(e["head"])):
+            gates = ["C2:head_unreadable"] + gates               # fix round 7: a malformed head is never merged (fuzz, N07)
         ranked.append(((RISK_ORDER.index(pr_risk(e)), len(gates), e["n"]), e, gates))
         unverified += [f"{e['n']}:{g}" for g in gates if unverified_gate(g)][:1]
     base["unverified"] = sorted(set(unverified))[:6]

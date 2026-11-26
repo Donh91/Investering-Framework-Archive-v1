@@ -319,6 +319,7 @@ class RenderStability(unittest.TestCase):
                 brief = TB.brief_of(mutate)
                 self.assertIn("verdict", brief)
                 brief.pop("verdict")
+                brief.pop("generation")                                                             # fix round 7 (R6-SH1): added beside it
                 for key in ("c1b", "ledger"):                                                       # W2b: added beside it
                     brief.pop(key)
                 for key in ("thin", "decision_log", "recall", "codex_evidence", "claude_receipts", "unread", "executor_watch"):   # section 0.2i: added beside them

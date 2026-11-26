@@ -251,10 +251,10 @@ class PublishKeepsAHalt(unittest.TestCase):
 
     def test_an_ordinary_brief_replaces_a_brief_with_a_halt(self):
         gh = self.Fake(self.published(self.with_halt))
-        B.publish(gh, body_of(dict(self.no_halt, prev={"run_id": 554, "issue": 3000})), NOW)   # it read and carried the previous brief
+        B.publish(gh, body_of(dict(self.no_halt, prev=B.brief_tuple(self.published(self.with_halt)[0]))), NOW)   # it read and carried the previous brief
         self.assertEqual([(m, u) for m, u, _ in gh.writes], [("PATCH", "issues/3000")])
         gh = self.Fake(self.published(self.with_halt))
-        B.publish(gh, body_of(dict(self.no_halt, prev={"run_id": 553, "issue": 3000})), NOW)   # it carried ANOTHER brief: kept
+        B.publish(gh, body_of(dict(self.no_halt, prev=dict(B.brief_tuple(self.published(self.with_halt)[0]), run_id=553))), NOW)   # it carried ANOTHER brief: kept
         self.assertEqual(gh.writes, [])
 
     def test_only_a_valid_halt_of_a_bot_issue_is_kept(self):
@@ -365,6 +365,7 @@ class BuildsCounter(unittest.TestCase):
         brief = dict(brief, generated_at=TB.ts(65))
         issue = {"number": 3, "user": dict(TB.BOT), "body": B.render(brief), "updated_at": TB.ts(64)}
         run = {"id": brief["run_id"], "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": brief["main"],
+               "head_repository": {"full_name": B.REPO}, "event": brief["event"], "run_attempt": brief["run_attempt"],
                "status": "completed", "conclusion": "success", "run_started_at": TB.ts(70), "updated_at": TB.ts(60)}
         return issue, run
 

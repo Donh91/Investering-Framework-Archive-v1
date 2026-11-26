@@ -183,14 +183,17 @@ class Sim:
     def post(self, body, at, user=OWNER, edited=False):
         self.next_cid += 1
         self.ledger.append({"id": self.next_cid, "user": dict(user), "body": body, "created_at": B.iso(at),
-                            "updated_at": B.iso(at + timedelta(minutes=1) if edited else at)})
+                            "updated_at": B.iso(at + timedelta(minutes=1) if edited else at),
+                            # fix round 7 (R6-SH4): GitHub's native edit record, as collect() attaches it (read_gap_native)
+                            "native_edit": {"databaseId": self.next_cid, "lastEditedAt": B.iso(at + timedelta(minutes=1)) if edited else None,
+                                            "includesCreatedEdit": False, "author": user["login"], "issue": B.OWNER_ISSUE}})
 
     def accept(self, gap, at, kind="valid"):
         frm = gap["from"] or "-"
         if kind == "wrong_from":
             frm = TC.sha(f"other{self.next_cid}")
         when = B.stamp(gap["detected_at"]) - timedelta(minutes=1) if kind == "predated" else at
-        self.post(f"{B.GAP_ACCEPTED}\nfrom: {frm}\nto: {gap['to']}", when, EVE if kind == "forged" else OWNER, edited=kind == "edited")
+        self.post(f"{B.GAP_ACCEPTED}\ngap: {B.gap_action_id(gap)}\nfrom: {frm}\nto: {gap['to']}", when, EVE if kind == "forged" else OWNER, edited=kind == "edited")
         if kind == "valid":
             self.valid_accepts.setdefault(gap["id"], []).append(when)
 
@@ -287,7 +290,7 @@ class Sequences(unittest.TestCase, Invariants):
         self.tick()                                                   # the first brief: no predecessor, a gap to the window's start
         first = self.gaps()
         self.assertEqual(len(first), 1)
-        for fault in ({"issues": "transport"}, {"issues": "malformed"}, {"issues": "duplicate"}, {"run": "transport"},
+        for fault in ({"issues": "transport"}, {"issues": "malformed"}, {"run": "transport"},   # duplicate: test_s1_fix7_publisher_v1
                       {"max_calls": 0}, {"max_calls": 1}, {"stop_at": 1}, {"stop_at": 2}):
             with self.subTest(fault):
                 b, wrote = self.tick(fault)
@@ -368,7 +371,9 @@ class Sequences(unittest.TestCase, Invariants):
         sim.h.commit("data: y")
         b = sim.build(sim.t + timedelta(minutes=10))
         self.assertTrue(sim.publish(a, sim.t + timedelta(minutes=11), view=stale))
-        self.assertTrue(sim.publish(b, sim.t + timedelta(minutes=12), view=stale))   # not a CAS: both read the same brief
+        # both read the same brief before either wrote: a configuration the workflow-level group excludes (fix round 7,
+        # R6-SH1; test_s1_fix7_publisher_v1.SerializedWriterModel). The compare-and-swap of one process cannot see it
+        self.assertTrue(sim.publish(b, sim.t + timedelta(minutes=12), view=stale))
         self.check_publish(self, sim, before, sim.published(), [a, b])
         self.check_coverage(self, sim)
         for _ in range(3):
@@ -394,9 +399,10 @@ class Sequences(unittest.TestCase, Invariants):
         self.check_build(self, sim, b)
         rec = b["record"]
         self.assertEqual([(g["from"], g["to"]) for g in rec["gaps"]], [(None, h.base)])   # the history before the window
-        self.assertEqual(rec["open"]["reason"], "C1b:capped_equal_ends")                # AND, separately, the capped rest
+        # fix round 7 (R6-SH3): the capped rest is resumed in the same build, which finds the transient change at once
+        self.assertEqual(rec["open"]["reason"], "C1b:halt")
         self.assertNotEqual(rec["checked_through"], h.main)
-        self.assertIsNone(rec["halt"])
+        self.assertEqual(rec["halt"]["commit"], bad)
         self.assertTrue(sim.publish(b, sim.t + timedelta(minutes=1)))
         sim.accept(rec["gaps"][0], sim.t + timedelta(minutes=5))      # the owner accepts the missing range only
         b2, _w = self.tick(n=0)
@@ -458,7 +464,7 @@ class LedgerRules(unittest.TestCase):
         brief["c1b"] = dict(brief["c1b"], **c1b_block)
         brief["generated_at"] = TB.ts(minutes_ago)
         issue = {"number": ISSUE, "user": dict(BOT), "body": B.render(brief), "updated_at": TB.ts(minutes_ago - 1)}
-        run = {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": main,
+        run = {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_repository": {"full_name": B.REPO}, "event": "schedule", "run_attempt": 1, "head_branch": "main", "head_sha": main,
                "status": "completed", "conclusion": "success", "run_started_at": TB.ts(minutes_ago + 5), "updated_at": TB.ts(minutes_ago - 5)}
         return issue, run
 
@@ -530,9 +536,10 @@ class LedgerRules(unittest.TestCase):
         self.assertIsNone(first["record"]["prev"])                     # the very first brief creates the issue
         sim.t += timedelta(hours=1)
         nxt = sim.build(sim.t)
-        self.assertEqual(nxt["record"]["prev"], {"run_id": first["rid"], "issue": ISSUE})
+        self.assertEqual(nxt["record"]["prev"], B.brief_tuple(sim.issue))   # fix round 7: the exact tuple
+        self.assertEqual((nxt["record"]["prev"]["run_id"], nxt["record"]["prev"]["issue"]), (first["rid"], ISSUE))
         forged = B.parse_body(nxt["body"])
-        forged["c1b"]["prev"] = {"run_id": first["rid"] + 1, "issue": ISSUE}
+        forged["c1b"]["prev"] = dict(forged["c1b"]["prev"], run_id=first["rid"] + 1)
         self.assertFalse(sim.publish(dict(nxt, body=B.render_issue(forged)[0]), sim.t + timedelta(minutes=1)))
         self.assertTrue(sim.publish(nxt, sim.t + timedelta(minutes=2)))
 
@@ -657,9 +664,9 @@ class LongRun(unittest.TestCase, Invariants):
                 if kind == "order":                                    # the second build publishes first, the first one late
                     sim.publish(built[1], sim.t + timedelta(minutes=11))
                     sim.publish(built[0], sim.t + timedelta(minutes=12))
-                else:                                                  # both publishers read the brief before either wrote
-                    sim.publish(built[0], sim.t + timedelta(minutes=11), view=stale)
-                    sim.publish(built[1], sim.t + timedelta(minutes=12), view=stale)
+                else:                                                  # fix round 7 (R6-SH1): the serialized writer: each
+                    sim.publish(built[0], sim.t + timedelta(minutes=11))   # publish reads the brief as the other left it
+                    sim.publish(built[1], sim.t + timedelta(minutes=12))
             elif kind == "pubfail":
                 sim.end_run(built[0]["rid"], sim.t + timedelta(minutes=2), "failure")   # the publish job failed before its write
             else:

@@ -158,7 +158,7 @@ class AdversarialGapSequences(unittest.TestCase):
         # Simulate the actual serialization boundary and next successful tick.
         issue2, run2 = previous(h.main, record)
         h.commit("data: current")
-        accept1 = TB.comment(90, f"S1_C1B_GAP_ACCEPTED_v1\nto: {g1}", TB.OWNER, 5)
+        accept1 = TC.accept_comment(90, next(g for g in record["gaps"] if g["to"] == g1))   # fix round 7: exact detection
         record2 = B.read_c1b(TC.Gh(h, issue2, run2), h.main, [accept1], NOW)
         self.assertIn(g2, history_gaps(record2), record2)
         self.assertNotIn(g1, history_gaps(record2), record2)
@@ -170,10 +170,11 @@ class AdversarialGapSequences(unittest.TestCase):
         g1 = TC.sha("unaccepted-history-A")
         issue, run = previous(main, gap_record(main, g1))
         h.commit("data: current")
-        accept = TB.comment(90, f"S1_C1B_GAP_ACCEPTED_v1\nto: {g1}", TB.OWNER, 5)
+        gap = next(g for g in B.read_c1b(TC.Gh(h, issue, run), h.main, [], NOW)["gaps"] if g["to"] == g1)
+        accept = TC.accept_comment(90, gap)                          # fix round 7: exact detection, natively unedited
         for ledger in (None, [], [dict(accept, user=TB.BOT)],
                        [dict(accept, updated_at=TB.ts(1))],
-                       [TB.comment(91, "S1_C1B_GAP_ACCEPTED_v1\nto: " + "1"*40, TB.OWNER, 5)]):
+                       [TC.accept_comment(91, dict(gap, to="1" * 40, id="-.." + "1" * 40))]):
             self.assertIn(g1, history_gaps(B.read_c1b(TC.Gh(h, issue, run), h.main, ledger, NOW)))
         self.assertNotIn(g1, history_gaps(B.read_c1b(TC.Gh(h, issue, run), h.main, [accept], NOW)))
 

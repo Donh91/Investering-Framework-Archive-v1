@@ -919,8 +919,9 @@ class WorkflowAndSwitch(unittest.TestCase):
         self.assertEqual(self.job["timeout-minutes"], 10)
         self.assertEqual(self.job["steps"][3]["timeout-minutes"], 8)                    # a hang is the step's failure, inside the job's limit
         run = {"id": 555, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": MAIN, "status": "completed",
+               "head_repository": {"full_name": B.REPO}, "event": "schedule", "run_attempt": 1,     # fix round 7 (R6-SH2): exact provenance
                "run_started_at": TB.ts(5), "updated_at": TB.ts(-5)}
-        brief = {"run_id": 555, "main": MAIN, "generated_at": TB.ts(2), "c1b": {"checked_through": MAIN}}
+        brief = {"run_id": 555, "run_attempt": 1, "event": "schedule", "main": MAIN, "generated_at": TB.ts(2), "c1b": {"checked_through": MAIN}}
         issue = {"updated_at": TB.ts(1)}
         self.assertEqual(B.previous_anchor(issue, brief, dict(run, conclusion="success"), NOW), ([MAIN], None, None))
         self.assertEqual(B.previous_anchor(issue, brief, dict(run, conclusion="failure"), NOW), ([], None, "run_not_success"))   # what a failing run would cost
