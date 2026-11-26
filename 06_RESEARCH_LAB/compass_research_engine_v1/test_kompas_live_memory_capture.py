@@ -37,8 +37,22 @@ class CaptureTests(unittest.TestCase):
             self.assertEqual(status, "CREATED")
             original = path.read_bytes()
             self.assertEqual(store(root, raw, "2026-11-26T00:00:00Z"), (path, "ALREADY_CAPTURED"))
-            with self.assertRaises(ValueError):
-                store(root, packet(extra="changed"), OBSERVED)
+            changed = packet(extra="changed")
+            conflict, state = store(root, changed, OBSERVED)
+            self.assertEqual(state, "CONFLICT")
+            self.assertEqual(conflict.name, path.stem + ".conflict-" +
+                             hashlib.sha256(changed).hexdigest()[:16] + ".json")
+            retained = conflict.read_bytes()
+            self.assertEqual(json.loads(retained)["source_bytes_sha256"],
+                             hashlib.sha256(changed).hexdigest())
+            self.assertEqual(store(root, changed, "2026-11-26T00:00:00Z"),
+                             (conflict, "CONFLICT_ALREADY_CAPTURED"))
+            self.assertEqual(conflict.read_bytes(), retained)
+            self.assertEqual(path.read_bytes(), original)
+            conflict.write_text("{}")
+            with self.assertRaises((ValueError, KeyError)):
+                store(root, changed, OBSERVED)
+            self.assertEqual(conflict.read_text(), "{}")
             self.assertEqual(path.read_bytes(), original)
 
     def test_corruption_rejected(self):

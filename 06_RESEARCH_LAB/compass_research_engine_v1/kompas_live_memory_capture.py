@@ -97,10 +97,23 @@ def capture(raw, observed_at):
             "scoring_authorized": False, "research_only": True}
 
 
+def read_existing(path, expected_clock):
+    if path.stat().st_size > 2 * MAX_BYTES:
+        raise ValueError("existing capture too large")
+    prior = parse(path.read_bytes(), 2 * MAX_BYTES)
+    previous_raw = base64.b64decode(prior["source_bytes_base64"], validate=True)
+    expected = capture(previous_raw, prior["observer_reported_at_utc"])
+    if (json.dumps(prior, sort_keys=True, allow_nan=False) !=
+            json.dumps(expected, sort_keys=True, allow_nan=False)
+            or expected["generated_at_utc"] != expected_clock):
+        raise ValueError("existing capture corruption")
+    return previous_raw
+
+
 def store(root, raw, observed_at):
     receipt = capture(raw, observed_at)
     issued = utc(receipt["generated_at_utc"])
-    # One filename per producer clock, so a divergent same-clock packet conflicts.
+    # Primary file is first write; divergent same-clock bytes get no-replace siblings.
     directory = Path(root) / issued.strftime("%Y/%m/%d")
     directory.mkdir(parents=True, exist_ok=True)
     dest = directory / (issued.strftime("%H%M%S") + ("%06d" % issued.microsecond) + "Z.json")
@@ -115,15 +128,17 @@ def store(root, raw, observed_at):
             os.link(temporary, dest)  # atomic no-replace, same filesystem
             return dest, "CREATED"
         except FileExistsError:
-            if dest.stat().st_size > 2 * MAX_BYTES:
-                raise ValueError("existing capture too large")
-            prior = parse(dest.read_bytes(), 2 * MAX_BYTES)
-            previous_raw = base64.b64decode(prior["source_bytes_base64"], validate=True)
-            expected = capture(previous_raw, prior["observer_reported_at_utc"])
-            if (json.dumps(prior, sort_keys=True, allow_nan=False) !=
-                    json.dumps(expected, sort_keys=True, allow_nan=False) or previous_raw != raw):
-                raise ValueError("existing capture conflict or corruption")
-            return dest, "ALREADY_CAPTURED"
+            previous_raw = read_existing(dest, receipt["generated_at_utc"])
+            if previous_raw == raw:
+                return dest, "ALREADY_CAPTURED"
+            conflict = dest.with_name(dest.stem + ".conflict-" + sha(raw)[:16] + ".json")
+            try:
+                os.link(temporary, conflict)
+                return conflict, "CONFLICT"
+            except FileExistsError:
+                if read_existing(conflict, receipt["generated_at_utc"]) != raw:
+                    raise ValueError("conflict digest-prefix collision or corruption")
+                return conflict, "CONFLICT_ALREADY_CAPTURED"
     finally:
         os.unlink(temporary)
 
