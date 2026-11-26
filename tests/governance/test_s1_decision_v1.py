@@ -35,10 +35,23 @@ def thin_world(executor="SHADOW", policy="NATIVE_GATES"):
     return w
 
 
+LIMIT_TEXT = "You have reached your Codex usage limits for code reviews. You can see your limits in the [Codex usage dashboard](https://chatgpt.com/codex/cloud/settings/usage)."
+
+
+def codex_feed_of(w):
+    """What the repository-wide read of Codex's activity (B.read_codex_feed) shows for this world: Codex's comments and
+    inline comments on every PR of the world, plus w["codex_elsewhere"] (its posts on PRs the build does not read)."""
+    mine = lambda rows: [copy.deepcopy(c) for c in rows or [] if (c.get("user") or {}).get("login") == TB.CODEX["login"]]
+    return {"since": TB.ts(72 * 60), "complete": w.get("codex_feed_complete", True),
+            "comments": [c for d in w["pr"].values() for c in mine(d.get("comments"))] + mine(w.get("codex_elsewhere")),
+            "inline": [c for d in w["pr"].values() for c in mine(d.get("inline"))]}
+
+
 def decide(mutate=None, executor="SHADOW", policy="NATIVE_GATES"):
     w = thin_world(executor, policy)
     if mutate:
         mutate(w)
+    w.setdefault("codex_feed", codex_feed_of(w))
     brief = B.build_brief(w)
     return D.decide(brief), brief
 
@@ -115,10 +128,17 @@ SCENARIOS = {
     "MERGE_FALLBACK_CODEX_UNAVAILABLE": (lambda w: codex_limit(w), "LIVE", "CODEX_CLAUDE_OR_OFFLINE_RECALL"),
     "MERGE_FALLBACK_CODEX_OUT_OF_USAGE": (lambda w: codex_out_of_usage(w), "SHADOW", "CODEX_CLAUDE_OR_OFFLINE_RECALL"),
     "NOOP_CODEX_WAS_NOT_ASKED": (no_codex, "LIVE", "CODEX_CLAUDE_OR_OFFLINE_RECALL"),
-    "NOOP_FALLBACK_PARKED_A_MONEY_CALL_IN_THE_DIFF": (lambda w: (set_files(w, [file_("scripts/alpha/runner.py", "modified", 4, 1, "@@\n+client.send_transaction(tx)\n")]),
+    "NOOP_FALLBACK_PARKED_A_MONEY_CALL_IN_THE_DIFF": (lambda w: (set_files(w, [file_("tests/alpha/test_runner.py", "modified", 4, 1, "@@\n+client.send_transaction(tx)\n")]),
                                                                    codex_limit(w)), "LIVE", "CODEX_CLAUDE_OR_OFFLINE_RECALL"),
-    "NOOP_RECALL_PENDING_WITH_A_CODEX_FINDING": (lambda w: (w["issue_comments"].append(TB.comment(700, CodexRecall.PENDING, TB.BOT, 500)), ci_fail(w)),
-                                                 "LIVE", "CODEX_CLAUDE_OR_OFFLINE_RECALL"),
+    "NOOP_FALLBACK_PARKED_MEDIUM_CODE": (lambda w: (code_path(w), codex_limit(w)), "LIVE", "CODEX_CLAUDE_OR_OFFLINE_RECALL"),
+    "NOOP_FALLBACK_PARKED_A_VALUE_FLIP": (lambda w: (set_files(w, [file_("tests/alpha/fixture.json", "modified", 1, 1, '@@\n-  "dry_run": true,\n+  "dry_run": false,\n')]),
+                                                     codex_limit(w)), "LIVE", "CODEX_CLAUDE_OR_OFFLINE_RECALL"),
+    "NOOP_AN_OUTSIDERS_CODEX_REQUEST_IS_NO_OFFLINE_SIGNAL": (lambda w: (codex_silent(w), w["pr"][7]["comments"][0].update(user={"login": "eve-outsider", "id": 999, "type": "User"})),
+                                                             "LIVE", "CODEX_CLAUDE_OR_OFFLINE_RECALL"),
+    "NOOP_RECALL_PENDING_WITH_A_CODEX_FINDING": (lambda w: (w["issue_comments"].append(TB.comment(700, CodexRecall.PENDING, TB.BOT, 500)), ci_fail(w),
+                                                            w.update(recall_reads={"9": recall_read_with_a_finding()})), "LIVE", "CODEX_CLAUDE_OR_OFFLINE_RECALL"),
+    "NOOP_A_ROUTE_B_MERGE_WITH_AN_UNVERIFIED_RECEIPT": (lambda w: (w["issue_comments"].append(TB.comment(710, ROUTE_B_MERGE, TB.BOT, 500)), ci_fail(w)),
+                                                        "LIVE", "CODEX_CLAUDE_OR_OFFLINE_RECALL"),
     "MERGE_MEDIUM_CODE": (code_path, "SHADOW", "NATIVE_GATES"),
     "HALT_C1B_UNREVIEWED_CODE_ON_MAIN": (halt_c1b, "LIVE", "NATIVE_GATES"),
     "HALT_C7_FAILED_MAIN_HEALTH_AFTER_MERGE": (halt_c7, "LIVE", "NATIVE_GATES"),
@@ -385,7 +405,7 @@ class Decide(unittest.TestCase):
                 self.assertEqual((d["action"], d["skipped"]), ("NOOP", [f"7:{want}"]))
         # a Codex request that Codex answered with a usage limit, or that is silent past its budget, no longer holds a NATIVE_GATES merge
         # ... for a documentation-only PR. Code still waits for a completed review, whatever Codex answers.
-        limit = lambda w: w["pr"][7].update(comments=[TB.comment(11, "@codex review", minutes_ago=300), TB.comment(12, "You have reached your usage limit", TB.CODEX, 290)])
+        limit = lambda w: w["pr"][7].update(comments=[TB.comment(11, "@codex review", minutes_ago=300), TB.comment(12, LIMIT_TEXT, TB.CODEX, 290)])
         self.assertEqual(decide(lambda w: (docs_only(w), limit(w)), "LIVE", "NATIVE_GATES")[0]["action"], "MERGE")
         self.assertEqual(decide(limit, "LIVE", "NATIVE_GATES")[0]["skipped"], ["7:C5:review_required"])
         silent = lambda w: w["pr"][7].update(comments=[TB.comment(11, "@codex review", minutes_ago=380)],
@@ -1139,7 +1159,9 @@ class SectionMatchesTheCode(unittest.TestCase):
         self.assertEqual(switch["review_policy"], D.RECALL_POLICY)                     # "this section ships with it": the owner's review route
         for text, value in (("at least 50 minutes", D.FALLBACK_MIN_GAP_MINUTES == 50), ("at most 24 hours", D.FALLBACK_MAX_AGE_HOURS == 24),
                             ("after 3 candidates", D.FALLBACK_MAX_CANDIDATES == 3), ("the label `codex-recall-pending`", D.RECALL_LABEL == "codex-recall-pending"),
-                            ("did not answer within 24 hours", TB.BUDGETS["codex_silent_hours"] == 24)):
+                            ("within 24 hours", TB.BUDGETS["codex_silent_hours"] == 24), ("over the last 72 hours", B.CODEX_FEED_HOURS == 72),
+                            ("**Route (c) merges class LOW only:**", True),
+                            ("begins with the connector's own sentence, `You have reached your Codex usage limits`", bool(B.LIMIT_RE.search(LIMIT_TEXT)))):
             self.assertIn(text, self.sec)
             self.assertTrue(value, text)
 
@@ -1148,12 +1170,14 @@ class SectionMatchesTheCode(unittest.TestCase):
 # Owner decision 2026-11-25 (review route, Codex recall): the review gate passes on (a) Codex FINAL, (b) a Claude
 # exact-head APPROVE receipt, or (c) the Codex-offline fallback, and every fallback merge waits for Codex's revisit.
 RECALL = D.RECALL_POLICY
-CLAUDE_OK = f"CLAUDE_REVIEW_v1\nverdict: APPROVE\nhead_sha: {HEAD}\nrequest: 7165386485\nlane_eligible: YES"
+CLAUDE_REQUEST = f"S1_REVIEW_REQUEST_v1\nrepo: Donh91/Investering-Framework-Archive-v1\npr: 7\nhead: {HEAD}\nrisk_class: MEDIUM"
+CLAUDE_OK = (f"CLAUDE_REVIEW_v1\nverdict: APPROVE\nhead_sha: {HEAD}\nrequest: 7165386485\nlane_eligible: YES\nindependence: INDEPENDENT_DETACHED\n"
+             f"report: reports/claude/reviews/2026/11/x.md\nreport_blob: {'a' * 40}\nbridge_commit: {'b' * 40}")
 
 
 def codex_limit(w):
     """Someone asked Codex after the head's last commit; Codex answered with a usage limit."""
-    w["pr"][7]["comments"] = [TB.comment(11, "@codex review", minutes_ago=300), TB.comment(12, "You have reached your usage limit", TB.CODEX, 290)]
+    w["pr"][7]["comments"] = [TB.comment(11, "@codex review", minutes_ago=300), TB.comment(12, LIMIT_TEXT, TB.CODEX, 290)]
 
 
 def codex_silent(w):
@@ -1167,11 +1191,29 @@ def codex_out_of_usage(w, answered_minutes_ago=290):
     usage-limit answer: the LIMIT signal."""
     w["pr"][7]["commits"] = [dict(w["pr"][7]["commits"][0], commit={"message": "docs", "committer": {"date": TB.ts(100)}})]
     w["pr"][7]["comments"] = [TB.comment(11, "@codex review", minutes_ago=answered_minutes_ago + 10),
-                              TB.comment(12, "You have reached your usage limit", TB.CODEX, answered_minutes_ago)]
+                              TB.comment(12, LIMIT_TEXT, TB.CODEX, answered_minutes_ago)]
 
 
-def claude_receipt(body=CLAUDE_OK, user=None, edited=False, cid=20):
-    return lambda w: w["pr"][7]["comments"].append(TB.comment(cid, body, user or TB.OWNER, 100, edited))
+def claude_receipt(body=CLAUDE_OK, user=None, edited=False, cid=20, request=CLAUDE_REQUEST):
+    """A receipt on the PR and, unless request is None, the owner's request row it names (comment id 7165386485)."""
+    def m(w):
+        if request is not None and not any(c.get("id") == 7165386485 for c in w["pr"][7]["comments"]):
+            w["pr"][7]["comments"].append(TB.comment(7165386485, request, TB.OWNER, 200))
+        w["pr"][7]["comments"].append(TB.comment(cid, body, user or TB.OWNER, 100, edited))
+    return m
+
+
+ROUTE_B_MERGE = (f"S1_LANE_MERGE_v1\npr: 12\nhead: {'d' * 40}\nmerge: {'1' * 40}\nreview: CLAUDE\nexecutor: GITHUB run=541\n"
+                 f"claude_request: 7165386485\nreport_blob: {'a' * 40}\nbridge_commit: {'b' * 40}\nclaude_receipt: UNVERIFIED")
+
+
+def recall_read_with_a_finding():
+    """What the build reads on merged PR 9: the owner asked Codex, and Codex's completed review has an unresolved finding."""
+    state = json.dumps({"code_review": {"commit_sha": "e" * 40, "status": "completed", "has_unresolved_findings": True}})
+    return {"comments": [TB.comment(31, "@codex review", minutes_ago=200), TB.comment(32, f"<!-- codex-review-state:v1 {state} -->", TB.CODEX, 180),
+                         TB.comment(33, f"Codex Review: Didn't find any major issues\n**Reviewed commit:** `{'e' * 10}`", TB.CODEX, 170)],
+            "reviews": [], "inline": [], "complete": True, "commits_complete": True,
+            "commits": [{"sha": "e" * 40, "commit": {"message": "x", "committer": {"date": TB.ts(900)}}}]}
 
 
 def route(mutate, policy=RECALL):
@@ -1185,10 +1227,13 @@ class ReviewRoute(unittest.TestCase):
         self.assertEqual(route(_chain(no_codex, claude_receipt()))[0], "CLAUDE")       # (b)
         self.assertEqual(route(codex_limit)[0], "FALLBACK(UNAVAILABLE)")               # (c), Codex said it has no usage
         self.assertEqual(route(codex_silent)[0], "FALLBACK(SILENT)")                   # (c), Codex did not answer in 24 hours
-        self.assertEqual(route(_chain(code_path, codex_limit))[0], "FALLBACK(UNAVAILABLE)")   # MEDIUM code as well: that is the owner's decision
+        # (c) merges class LOW only (fix round 3, P1-B): MEDIUM code is parked for the owner, with the reason on his first line
+        self.assertEqual(route(_chain(code_path, codex_limit))[:2], (None, ["7:C5:fallback_parked:risk"]))
+        self.assertIn(f"#7 {HEAD[:8]} (owner_merge:C5:fallback_parked:risk)", decide(_chain(code_path, codex_limit), "LIVE", RECALL)[0]["status_lines"][0])
+        self.assertEqual(route(_chain(code_path, codex_silent))[:2], (None, ["7:C5:fallback_parked:risk"]))
         # (c), nobody asked about this head, and Codex's newest comment says it has no usage (at most 24 hours ago)
         got, _s, brief = route(codex_out_of_usage)
-        self.assertEqual((got, TB.entry(brief)["review"]["codex"]["status"], brief["codex_evidence"]), ("FALLBACK(LIMIT)", "NONE", {"pr": 7, "c": 12, "at": TB.ts(290)}))
+        self.assertEqual((got, TB.entry(brief)["review"]["codex"]["status"], brief["codex_evidence"]), ("FALLBACK(LIMIT)", "NONE", {"c": 12, "at": TB.ts(290), "kind": "comment"}))
         self.assertEqual(route(lambda w: codex_out_of_usage(w, 25 * 60))[:2], (None, ["7:C5:codex_review_required"]))    # the answer is too old: ask again
         newer = lambda w: (codex_out_of_usage(w), w["pr"][7]["comments"].append(TB.comment(13, "Codex here: looking at it", TB.CODEX, 5)))
         self.assertEqual(route(newer)[:2], (None, ["7:C5:codex_review_required"]))      # Codex spoke since: no longer its newest comment
@@ -1218,8 +1263,30 @@ class ReviewRoute(unittest.TestCase):
             "not the first line": _chain(no_codex, claude_receipt("note\n" + CLAUDE_OK)),
             "verdict COMMENT": _chain(no_codex, claude_receipt(CLAUDE_OK.replace("APPROVE", "COMMENT"))),
         }
+        # fix round 3 (P1-C): the receipt must be COMPLETE on the PR itself
+        req = lambda body=CLAUDE_REQUEST, user=TB.OWNER, ago=200, edited=False: (lambda w: w["pr"][7]["comments"].append(TB.comment(7165386485, body, user, ago, edited)))
+        bare = claude_receipt(request=None)
+        cases.update({
+            "the request row it names does not exist": _chain(no_codex, bare),
+            "the request row is another kind of comment": _chain(no_codex, req("please look at this"), bare),
+            "the request row is for another head": _chain(no_codex, req(CLAUDE_REQUEST.replace(HEAD, "c" * 40)), bare),
+            "the request row is by someone else": _chain(no_codex, req(user={"login": "someone", "id": 9, "type": "User"}), bare),
+            "the request row was edited": _chain(no_codex, req(edited=True), bare),
+            "the request row is newer than the receipt": _chain(no_codex, req(ago=50), bare),
+            "lane_eligible: NO": _chain(no_codex, claude_receipt(CLAUDE_OK.replace("lane_eligible: YES", "lane_eligible: NO"))),
+            "no lane_eligible": _chain(no_codex, claude_receipt(CLAUDE_OK.replace("lane_eligible: YES\n", ""))),
+            "no independence": _chain(no_codex, claude_receipt(CLAUDE_OK.replace("independence: INDEPENDENT_DETACHED\n", ""))),
+            "no report": _chain(no_codex, claude_receipt(CLAUDE_OK.replace("report: reports/claude/reviews/2026/11/x.md\n", ""))),
+            "report_blob is not a blob": _chain(no_codex, claude_receipt(CLAUDE_OK.replace("a" * 40, "a" * 39))),
+            "no bridge_commit": _chain(no_codex, claude_receipt(CLAUDE_OK.replace(f"\nbridge_commit: {'b' * 40}", ""))),
+        })
         for name, mutate in cases.items():
             self.assertEqual(route(mutate)[:2], (None, ["7:C5:codex_review_required"]), name)
+        self.assertEqual(B.claude_receipt_fields(HEAD, [TB.comment(7165386485, CLAUDE_REQUEST, TB.OWNER, 200), TB.comment(20, CLAUDE_OK, TB.OWNER, 100)]),
+                         {"request": 7165386485, "report_blob": "a" * 40, "bridge_commit": "b" * 40})
+        self.assertIsNone(B.claude_receipt_fields(HEAD, [TB.comment(20, CLAUDE_OK, TB.OWNER, 100)]))
+        # never S1's own head: S1 writes as the owner account, the account the receipt is checked against
+        self.assertEqual(route(ok(lambda w: w["pulls"][0]["head"].update(ref="s1/x")))[:2], (None, ["7:C5:s1_authored"]))
         # a refusal for this head blocks EVERY route, a completed Codex review included, until a newer admissible APPROVE
         veto = claude_receipt(CLAUDE_OK.replace("APPROVE", "REQUEST_CHANGES"), cid=21)
         self.assertEqual(route(veto)[:2], (None, ["7:C5:claude_veto"]))
@@ -1233,9 +1300,12 @@ class ReviewRoute(unittest.TestCase):
         # never Claude's review of a head Claude wrote; a head Codex wrote is fine for Claude
         for mark in (lambda w: w["pulls"][0]["head"].update(ref="claude/x"),
                      lambda w: w["pr"][7]["commits"][0]["commit"].update(message="x\n\nCo-Authored-By: Claude <noreply@anthropic.com>"),
-                     lambda w: w["pulls"][0].update(body="Generated with [Claude Code](https://claude.com/claude-code)"),
-                     lambda w: w["pr"][7].update(commits_complete=False)):
+                     lambda w: w["pulls"][0].update(body="Generated with [Claude Code](https://claude.com/claude-code)")):
             self.assertIn("7:C5:claude_authored", [f"7:{g}" for g in D.pr_gates(TB.entry(route(ok(mark))[2]), {"review_policy": RECALL})])
+        unread = TB.entry(route(ok(lambda w: w["pr"][7].update(commits_complete=False)))[2])     # an unreadable commit list: nobody's head is proven
+        self.assertEqual((unread["thin"]["claude_written"], "C5:s1_authored" in D.pr_gates(unread, {"review_policy": RECALL})), (True, True))
+        e = {"review": {"codex": {"status": "NONE"}}, "author": {"s1": False, "codex": False}, "thin": {"claude": "APPROVE", "claude_written": True}}
+        self.assertEqual(D.review_route(e, RECALL), (None, "C5:claude_authored"))
         self.assertEqual(route(ok(lambda w: w["pulls"][0]["head"].update(ref="codex/x")))[0], "CLAUDE")
         self.assertEqual(route(ok(lambda w: w["pulls"][0]["head"].update(ref="chatgpt/x")))[0], "CLAUDE")
 
@@ -1247,9 +1317,19 @@ class ReviewRoute(unittest.TestCase):
             "a head S1 wrote": (lambda w: w["pulls"][0]["head"].update(ref="s1/x"), "7:C5:s1_authored"),
             "a head Codex wrote": (lambda w: w["pulls"][0]["head"].update(ref="codex/x"), "7:C5:codex_authored"),
             "a PR a bot opened": (lambda w: w["pulls"][0].update(user=dict(TB.BOT)), "7:C5:bot_authored"),
-            "the diff adds a money call under a neutral name": (_files(_code("scripts/alpha/runner.py", "@@\n+client.send_transaction(signed_tx)\n")), "7:C5:fallback_parked:diff_words"),
-            "the diff adds a credential read": (_files(_code("scripts/alpha/runner.py", "@@\n+key = os.environ['API_KEY']\n")), "7:C5:fallback_parked:diff_words"),
-            "the diff touches Round 3": (_files(_code("scripts/alpha/runner.py", "@@\n+load('round3/data.csv')\n")), "7:C5:fallback_parked:diff_words"),
+            "the diff adds a money call under a neutral name": (_files(_code("tests/alpha/test_runner.py", "@@\n+client.send_transaction(signed_tx)\n")), "7:C5:fallback_parked:diff_words"),
+            "the diff adds a credential read": (_files(_code("tests/alpha/test_runner.py", "@@\n+key = os.environ['API_KEY']\n")), "7:C5:fallback_parked:diff_words"),
+            "the diff touches Round 3": (_files(_code("tests/alpha/test_runner.py", "@@\n+load('round3/data.csv')\n")), "7:C5:fallback_parked:diff_words"),
+            # fix round 3 (P1-B), the reviewer's repros: a change that turns money on by VALUE adds no listed name
+            "a key in a .txt file (class LOW)": (_files(_code("scripts/meme/notes.txt", "@@\n+PRIVATE_KEY=5Kb8kLf9zgWQnogidDA76MzPL6TsZZY36hWXMssSzNydYXYB9KF\n")), "7:C5:fallback_parked:diff_words"),
+            "PAPER = False in a test file": (_files(_code("tests/alpha/test_runner.py", "@@\n-PAPER = True\n+PAPER = False\n")), "7:C5:fallback_parked:diff_words"),
+            "dry_run flipped in a test fixture": (_files(_code("tests/alpha/fixture.json", '@@\n-  "dry_run": true,\n+  "dry_run": false,\n')), "7:C5:fallback_parked:diff_words"),
+            "a position size in a test": (_files(_code("tests/alpha/test_params.py", "@@\n-max_position_usd = 50\n+max_position_usd = 50000\n")), "7:C5:fallback_parked:diff_words"),
+            "rpc.submit(tx) in a test": (_files(_code("tests/alpha/test_runner.py", "@@\n+rpc.submit(tx); jup.post(url, json=q)\n")), "7:C5:fallback_parked:diff_words"),
+            "dry_run flipped in MEDIUM configuration": (_files(_code("scripts/meme/config.json", '@@\n-  "dry_run": true,\n+  "dry_run": false,\n')), "7:C5:fallback_parked:risk"),
+            "PAPER = False in MEDIUM code": (_files(_code("scripts/meme/runner.py", "@@\n-PAPER = True\n+PAPER = False\n")), "7:C5:fallback_parked:risk"),
+            "a position size in MEDIUM configuration": (_files(_code("scripts/meme/params.yaml", "@@\n-max_position_usd: 50\n+max_position_usd: 50000\n")), "7:C5:fallback_parked:risk"),
+            "rpc.submit(tx) in MEDIUM code": (_files(_code("scripts/meme/runner.py", "@@\n+rpc.submit(tx); jup.post(url, json=q)\n")), "7:C5:fallback_parked:risk"),
             "three candidates were used up": (candidates(3), "7:C5:fallback_parked:candidates"),
             "two runs disagreed about this head": (disagree, "7:C5:fallback_parked:mismatch"),
             "a candidate without its evidence next to one with it": (candidates(2, lambda k: "e0" if k else ""), "7:C5:fallback_parked:mismatch"),
@@ -1272,11 +1352,19 @@ class ReviewRoute(unittest.TestCase):
             TB.comment(521, f"S1_FALLBACK_CANDIDATE_v1\npr: 8\nhead: {HEAD}\nevidence: yy\nexecutor: GITHUB run=421", TB.BOT, 589)])
         self.assertEqual(route(_chain(candidates(1), other, codex_limit))[0], "FALLBACK(UNAVAILABLE)")
         self.assertIs(B.fallback_mismatch([]), False)
-        # a removed line, a document and a test file do not park: only ADDED lines of non-document files are read
-        self.assertEqual(route(_chain(_files(_code("scripts/alpha/runner.py", "@@\n-client.send_transaction(x)\n+pass\n")), codex_limit))[0], "FALLBACK(UNAVAILABLE)")
+        # a removed line and prose do not park: only ADDED lines are read, in every file that is not .md or .rst
+        self.assertEqual(route(_chain(_files(_code("tests/alpha/test_runner.py", "@@\n-client.send_transaction(x)\n+pass\n")), codex_limit))[0], "FALLBACK(UNAVAILABLE)")
+        self.assertEqual(route(_chain(_files(file_("docs/notes/a.md", patch="@@\n+the paper says live trading needs a position size\n")), codex_limit))[0], "FALLBACK(UNAVAILABLE)")
+        self.assertEqual(D.entry_facts({"title": "x"}, [file_("docs/a.txt", patch="@@\n+PRIVATE_KEY=abc\n")], True, [])["diff_x"], ["x4"])   # a .txt file IS read
+        self.assertEqual(D.entry_facts({"title": "x"}, [file_("docs/a.rst", patch="@@\n+PRIVATE_KEY=abc\n")], True, [])["diff_x"], [])
+        for line in ('"dry_run": false,', "PAPER = False", "LIVE = True", "simulate=False", "max_position_usd: 50000", "maxPositionUsd = 5", "position = 3", "open_positions += 1", "size = 10", "batch_size=3",
+                     "amount = 1e6", "notional: 5", "rpc.submit(tx)", "await submitBundle(txs)", "txn = build()"):
+            self.assertEqual(D.entry_facts({"title": "x"}, [_code("tests/a/test_x.py", f"@@\n+{line}\n")], True, [])["diff_x"], ["flip"], line)
+        for line in ("x = total + 1", "def load_candles(path):", "return sorted(rows)", "assert got == want", "import json", "paperwork = 1", "resize(img)", "context = {}"):
+            self.assertEqual(D.entry_facts({"title": "x"}, [_code("tests/a/test_x.py", f"@@\n+{line}\n")], True, [])["diff_x"], [], line)
         self.assertEqual(D.entry_facts({"title": "x"}, [file_("docs/a.md", patch="@@\n+we never trade or place orders\n")], True, [])["diff_x"], [])
         self.assertEqual(D.entry_facts({"title": "x"}, [_code("scripts/a.py", "@@\n+swap = 1\n")], True, [])["diff_x"], ["x5"])
-        for line, want in (("client.send_transaction(tx)", ["x5"]), ("api.placeOrder(q)", ["x5"]), ("kp = Keypair.from_secret_key(raw)", ["x4"]),
+        for line, want in (("client.send_transaction(tx)", ["flip", "x5"]), ("client.send_transaction(payload)", ["x5"]), ("api.placeOrder(q)", ["x5"]), ("kp = Keypair.from_secret_key(raw)", ["x4"]),
                            ("x = total + 1", []), ("def load_candles(path):", [])):
             self.assertEqual(D.entry_facts({"title": "x"}, [_code("scripts/a.py", f"@@\n+{line}\n")], True, [])["diff_x"], want, line)
         self.assertEqual(D.entry_facts({"title": "x"}, [_code("scripts/a.py")], False, [])["diff_x"], ["unknown"])
@@ -1296,7 +1384,16 @@ class ReviewRoute(unittest.TestCase):
         unread = route(_chain(codex_limit, lambda w: w["pr"][7].update(review_reads_complete=False)))
         self.assertEqual((unread[0], TB.entry(unread[2])["thin"]["p01_named"]), (None, None))
         e = {"review": {"codex": {"status": "SILENT"}}, "author": {"s1": False, "codex": False},
-             "thin": {"bot": False, "claude": "NONE", "claude_written": False, "diff_x": [], "fallback_candidates": 0, "fallback_mismatch": False}}
+             "thin": {"bot": False, "claude": "NONE", "claude_written": False, "diff_x": [], "fallback_candidates": 0, "fallback_mismatch": False,
+                      "codex_offline": "SILENT", "risk": "LOW"}}
+        # fix round 3: class LOW only, and the builder's signal must fit this head's Codex state
+        for risk in ("MEDIUM", "HIGH", "UNCLEAR", None, "banana"):
+            self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=False, risk=risk)), RECALL), (None, "C5:fallback_parked:risk"), risk)
+        for offline in (None, "UNAVAILABLE", "LIMIT", "banana", True):
+            self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=False, codex_offline=offline)), RECALL), (None, "C5:codex_review_required"), offline)
+        none = dict(e, review={"codex": {"status": "NONE"}})
+        self.assertEqual(D.review_route(dict(none, thin=dict(e["thin"], p01_named=False, codex_offline="LIMIT")), RECALL), ("FALLBACK(LIMIT)", None))
+        self.assertEqual(D.review_route(dict(none, thin=dict(e["thin"], p01_named=False, codex_offline="SILENT")), RECALL), (None, "C5:codex_review_required"))
         for value in (None, True, "no"):
             self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=value)), RECALL), (None, "C5:fallback_parked:p0p1_comment"), value)
         self.assertEqual(D.review_route(dict(e, thin=dict(e["thin"], p01_named=False)), RECALL), ("FALLBACK(SILENT)", None))
@@ -1306,19 +1403,21 @@ class ReviewRoute(unittest.TestCase):
         for fact, value in (("fallback_mismatch", None), ("fallback_mismatch", True), ("fallback_mismatch", "no"), ("fallback_candidates", None)):
             e = {"review": {"codex": {"status": "SILENT"}}, "author": {"s1": False, "codex": False},
                  "thin": dict({"bot": False, "claude": "NONE", "claude_written": False, "diff_x": [], "fallback_candidates": 0, "fallback_mismatch": False,
-                               "p01_named": False}, **{fact: value})}
+                               "p01_named": False, "codex_offline": "SILENT", "risk": "LOW"}, **{fact: value})}
             self.assertEqual(D.review_route(e, RECALL), (None, "C5:fallback_parked:" + ("mismatch" if fact == "fallback_mismatch" else "candidates")), (fact, value))
 
     def test_invariant_review_route_over_every_combination_under_the_recall_policy(self):
         import itertools
         flags = (False, True, None)
         seen = set()
-        for cx, claude, written, s1, codex, bot, diff, cand, limit, mismatch, p01 in itertools.product(
+        two = (False, True)
+        for cx, claude, written, s1, codex, bot, diff, cand, offline, mismatch, p01, risk in itertools.product(
                 (None, "NOT_PROVEN", "NONE", "REQUESTED", "FINDINGS", "FINAL", "INADMISSIBLE", "UNAVAILABLE", "SILENT", "banana"),
-                ("NONE", "APPROVE", "VETO", "NOT_PROVEN", None), flags, flags, flags, flags, ([], ["x5"], ["unknown"], None), (0, 2, 3, None, "1"), flags, flags, flags):
+                ("NONE", "APPROVE", "VETO", "NOT_PROVEN", None), flags, flags, flags, flags, ([], ["flip"], None), (0, 3, None),
+                (None, "UNAVAILABLE", "SILENT", "LIMIT", "NONE", "banana"), two, two, ("LOW", "MEDIUM", None)):
             e = {"review": {"codex": {"status": cx}}, "author": {"s1": s1, "codex": codex, "claude_package": False},
                  "thin": {"bot": bot, "claude": claude, "claude_written": written, "diff_x": diff, "fallback_candidates": cand, "ai": True, "docs_only": False,
-                          "codex_limit": limit, "fallback_mismatch": mismatch, "p01_named": p01}}
+                          "codex_offline": offline, "fallback_mismatch": mismatch, "p01_named": p01, "risk": risk}}
             got, gate = D.review_route(e, RECALL)
             self.assertEqual(got is None, gate is not None)
             if got is None:
@@ -1328,16 +1427,13 @@ class ReviewRoute(unittest.TestCase):
             if got == "CODEX":
                 self.assertEqual((cx, codex), ("FINAL", False))
             elif got == "CLAUDE":
-                self.assertEqual((claude, written), ("APPROVE", False))
+                self.assertEqual((claude, written, s1), ("APPROVE", False, False))    # never Claude's own head, never S1's own head
                 self.assertIn(cx, D.NO_REVIEW_STATES)
             else:
-                if got == "FALLBACK(LIMIT)":                                          # nobody asked about this head, and Codex says it has no usage
-                    self.assertEqual((cx, limit), ("NONE", True))
-                else:
-                    self.assertEqual(got, f"FALLBACK({cx})")
-                    self.assertIn(cx, D.CODEX_OFFLINE_STATES)                          # Codex was asked about this head and did not review
-                self.assertEqual((claude, s1, codex, bot, diff, mismatch, p01), ("NONE", False, False, False, [], False, False))
-                self.assertIn(cand, (0, 2))
+                self.assertEqual(got, f"FALLBACK({offline})")                         # the builder's signal, and it fits this head's Codex state
+                self.assertEqual(cx, "NONE" if offline == "LIMIT" else offline)
+                self.assertIn(offline, D.OFFLINE_SIGNALS)
+                self.assertEqual((claude, s1, codex, bot, diff, mismatch, p01, risk, cand), ("NONE", False, False, False, [], False, False, "LOW", 0))
         self.assertEqual(seen, {"CODEX", "CLAUDE", "FALLBACK(UNAVAILABLE)", "FALLBACK(SILENT)", "FALLBACK(LIMIT)"})
         for got in seen | {"NONE(policy=NATIVE_GATES)"}:
             self.assertTrue(D.REVIEW_ROUTE.fullmatch(got))
@@ -1349,7 +1445,7 @@ class ReviewRoute(unittest.TestCase):
         # The reviewer's 27 counterexamples again, now with every route open: a Claude APPROVE receipt on the PR, and
         # Codex proven offline for the head. Money, credentials, labels, a CHANGES_REQUESTED and the owner-gated paths
         # still never merge. What merges is LOW or MEDIUM, non-money, with a review or by the fallback.
-        legit = {"p1_in_pr_conversation_comment", "claude_branch_no_review", "codex_authored_no_review", "CTRL_bot_opened", "CTRL_s1_branch"}
+        legit = {"p1_in_pr_conversation_comment", "codex_authored_no_review", "CTRL_bot_opened"}   # reviewed (route b), LOW or MEDIUM, non-money
         for name, (mutate, _want) in COUNTEREXAMPLES.items():
             for label, extra in (("as the reviewer built it", lambda w: None), ("with a Claude APPROVE", claude_receipt()), ("with Codex offline", codex_limit)):
                 with self.subTest(name=name, route=label):
@@ -1358,15 +1454,205 @@ class ReviewRoute(unittest.TestCase):
                         self.assertEqual((d["action"], d["merge"]), ("NOOP", None), d["result"])
                     elif d["action"] == "MERGE":
                         self.assertIn(d["merge"]["risk"], D.MERGE_RISKS)
-        # exactly which of the five legitimate ones merge, and how
+        # exactly which ones merge, and how. Fix round 3: with Codex offline NONE of the 27 merges (route (c) is LOW only), and
+        # S1's own head is not approved through the owner account
         got = lambda name, extra: (lambda d: d["merge"]["review"] if d["action"] == "MERGE" else d["skipped"][0])(decide(_chain(COUNTEREXAMPLES[name][0], extra), "LIVE", RECALL)[0])
         self.assertEqual(got("p1_in_pr_conversation_comment", claude_receipt()), "CLAUDE")
         self.assertEqual(got("claude_branch_no_review", claude_receipt()), "7:C5:claude_authored")       # Claude never reviews Claude's head
-        self.assertEqual(got("claude_branch_no_review", codex_limit), "FALLBACK(UNAVAILABLE)")           # two runs and a recall, by owner decision
+        self.assertEqual(got("claude_branch_no_review", codex_limit), "7:C5:fallback_parked:risk")       # MEDIUM code never merges unreviewed
+        self.assertEqual(got("CTRL_s1_branch", claude_receipt()), "7:C5:s1_authored")
+        self.assertEqual(got("CTRL_bot_opened", claude_receipt()), "CLAUDE")
+        for name, (mutate, _want) in COUNTEREXAMPLES.items():
+            for offline in (codex_limit, codex_silent, codex_out_of_usage):
+                self.assertEqual(decide(_chain(mutate, offline), "LIVE", RECALL)[0]["action"], "NOOP", name)
         self.assertEqual(got("codex_authored_no_review", claude_receipt()), "CLAUDE")
-        self.assertEqual(got("codex_authored_no_review", codex_limit), "7:C5:codex_authored")
+        self.assertEqual(got("codex_authored_no_review", codex_limit), "7:C5:fallback_parked:risk")      # MEDIUM; a LOW head Codex wrote: test_route_c_parks...
         self.assertEqual(got("CTRL_bot_opened", codex_limit), "7:C5:bot_authored")
         self.assertEqual(got("CTRL_s1_branch", codex_limit), "7:C5:s1_authored")
+
+
+class OfflineSignalCannotBeForged(unittest.TestCase):
+    """Fix round 3, P1-A: route (c) opens only on evidence that Codex itself is out of usage. Anyone can comment on a
+    public repository, and Codex writes sentences too."""
+    EVE = {"login": "eve-outsider", "id": 999, "type": "User"}
+
+    def silent(self, user=TB.OWNER, hours=25, edited=False):
+        def m(w):
+            w["pr"][7]["commits"] = [dict(w["pr"][7]["commits"][0], commit={"message": "docs", "committer": {"date": TB.ts(60 * 100)}})]
+            w["pr"][7]["comments"] = [TB.comment(11, "@codex review", user, 60 * hours, edited)]
+        return m
+
+    def elsewhere(self, body, minutes_ago, cid=900):
+        return lambda w: w.setdefault("codex_elsewhere", []).append(TB.comment(cid, body, TB.CODEX, minutes_ago))
+
+    def test_invariant_only_the_owners_unedited_request_counts(self):
+        self.assertEqual(route(self.silent())[0], "FALLBACK(SILENT)")
+        for name, mutate in {"an outsider asked": self.silent(self.EVE), "the Actions bot asked": self.silent(TB.BOT),
+                             "the owner's request was edited": self.silent(edited=True)}.items():
+            got, skipped, brief = route(mutate)
+            self.assertEqual((got, skipped), (None, ["7:C5:codex_review_required"]), name)
+            cx = TB.entry(brief)["review"]["codex"]
+            self.assertEqual((cx["status"], "offline" in cx, TB.entry(brief)["thin"]["codex_offline"]), ("SILENT", False, None), name)
+        # the same for a usage-limit answer to a request that was not the owner's
+        limited = lambda user: (lambda w: w["pr"][7].update(comments=[TB.comment(11, "@codex review", user, 300), TB.comment(12, LIMIT_TEXT, TB.CODEX, 290)]))
+        self.assertEqual(route(limited(TB.OWNER))[0], "FALLBACK(UNAVAILABLE)")
+        self.assertEqual(route(limited(self.EVE))[:2], (None, ["7:C5:codex_review_required"]))
+        # an outsider's request that is still inside its 24 hours blocks, as every pending request does (it can only stop)
+        self.assertEqual(route(self.silent(self.EVE, hours=5))[:2], (None, ["7:C5:codex_review_pending"]))
+
+    def test_invariant_a_usage_limit_answer_is_the_connectors_own_sentence(self):
+        self.assertTrue(B.LIMIT_RE.search(LIMIT_TEXT))
+        self.assertTrue(B.LIMIT_RE.search("\n  you have reached your codex usage limit."))
+        for text in ("Codex Review: I can't review the generated lockfile, skipped it.", "I am unable to review binary files.", "usage limit reached",
+                     "Note: You have reached your Codex usage limits for code reviews.", "You have reached your usage limit", "You have reached your Codex usage limitations"):
+            self.assertIsNone(B.LIMIT_RE.search(text), text)
+        answered = lambda text, ask=300, answer=290: (lambda w: w["pr"][7].update(comments=[TB.comment(11, "@codex review", minutes_ago=ask), TB.comment(12, text, TB.CODEX, answer)]))
+        # the reviewer's repro: a normal Codex sentence. Inside 24 hours the request is pending; after them Codex HAS answered
+        self.assertEqual(route(answered("Codex Review: I can't review the generated lockfile, skipped it."))[:2], (None, ["7:C5:codex_review_pending"]))
+        late = _chain(self.silent(), lambda w: w["pr"][7]["comments"].append(TB.comment(12, "Codex Review: I can't review the generated lockfile, skipped it.", TB.CODEX, 60 * 20)))
+        got, skipped, brief = route(late)
+        self.assertEqual((got, skipped, TB.entry(brief)["review"]["codex"]["status"]), (None, ["7:C5:codex_review_required"], "SILENT"))
+
+    def test_invariant_silent_means_codex_answered_nothing_here_and_posted_nothing_anywhere(self):
+        review = lambda w: w["pr"][7].update(reviews=[{"id": 5, "user": dict(TB.CODEX), "state": "COMMENTED", "body": "x", "commit_id": HEAD, "submitted_at": TB.ts(60 * 20)}])
+        inline = lambda w: w["pr"][7].update(inline=[dict(TB.comment(6, "nit", TB.CODEX, 60 * 20), commit_id=HEAD, path="a.md")])
+        cases = {
+            "Codex answered with a PR review": review,
+            "Codex answered with an inline comment": inline,
+            "Codex reviewed another PR since the request": self.elsewhere("Codex Review: Didn't find any major issues", 60),
+            "Codex said on another PR that it is out of usage (still activity: ask again)": self.elsewhere(LIMIT_TEXT, 60),
+            "the repository-wide read is incomplete": lambda w: w.update(codex_feed_complete=False),
+        }
+        for name, extra in cases.items():
+            got, skipped, _b = route(_chain(self.silent(), extra))
+            self.assertEqual((got, skipped), (None, ["7:C5:codex_review_required"]), name)
+        # the state of the PR itself (B.codex_review) already says "answered": no SILENT evidence, whatever else is read
+        w = thin_world("LIVE", RECALL)
+        self.silent()(w)
+        d7 = w["pr"][7]
+        cx = lambda comments=None, reviews=(), inline_rows=(): B.codex_review(HEAD, w["pulls"][0], d7["commits"], True, comments or d7["comments"], list(reviews), list(inline_rows), True,
+                                                                              TB.NOW, TB.BUDGETS["codex_silent_hours"])
+        self.assertEqual(cx()["offline"], {"signal": "SILENT", "at": TB.ts(60 * 25), "request_at": TB.ts(60 * 25)})
+        answered = {"a PR review": cx(reviews=[{"id": 5, "user": dict(TB.CODEX), "state": "COMMENTED", "body": "x", "commit_id": HEAD, "submitted_at": TB.ts(60 * 20)}]),
+                    "an inline comment": cx(inline_rows=[dict(TB.comment(6, "nit", TB.CODEX, 60 * 20), commit_id=HEAD, path="a.md")]),
+                    "a comment": cx(comments=d7["comments"] + [TB.comment(12, "Codex: I looked at it", TB.CODEX, 60 * 20)])}
+        for name, got in answered.items():
+            self.assertEqual((got["status"], "offline" in got), ("SILENT", False), name)
+        older = cx(reviews=[{"id": 5, "user": dict(TB.CODEX), "state": "COMMENTED", "body": "x", "commit_id": HEAD, "submitted_at": TB.ts(60 * 40)}])
+        self.assertIn("offline", older)                                                # a review from BEFORE the request is no answer to it
+        # Codex's posts from BEFORE the request change nothing; a request older than the repository-wide read proves nothing
+        self.assertEqual(route(_chain(self.silent(), self.elsewhere("Codex Review: Didn't find any major issues", 60 * 30)))[0], "FALLBACK(SILENT)")
+        self.assertEqual(route(self.silent(hours=80))[:2], (None, ["7:C5:codex_review_required"]))
+
+    def test_invariant_unavailable_and_limit_need_codexs_newest_activity_to_be_a_usage_limit_answer(self):
+        self.assertEqual(route(codex_limit)[0], "FALLBACK(UNAVAILABLE)")
+        self.assertEqual(route(_chain(codex_limit, self.elsewhere(LIMIT_TEXT, 30)))[0], "FALLBACK(UNAVAILABLE)")          # still out of usage, elsewhere too
+        for name, extra in {"Codex completed a review elsewhere since": self.elsewhere("Codex Review: Didn't find any major issues", 30),
+                            "the repository-wide read is incomplete": lambda w: w.update(codex_feed_complete=False)}.items():
+            self.assertEqual(route(_chain(codex_limit, extra))[:2], (None, ["7:C5:codex_review_required"]), name)
+            self.assertEqual(route(_chain(codex_out_of_usage, extra))[:2], (None, ["7:C5:codex_review_required"]), name)
+        self.assertIsNone(route(_chain(codex_out_of_usage, lambda w: w.update(codex_feed_complete=False)))[2]["codex_evidence"])   # nothing is named from an incomplete read
+        # LIMIT: the usage-limit answer may stand on a PR the build did not read in depth (the repository-wide read finds it)
+        nobody_asked = lambda w: (w["pr"][7].update(comments=[]), w["pr"][7].update(commits=[dict(w["pr"][7]["commits"][0], commit={"message": "docs", "committer": {"date": TB.ts(100)}})]))
+        got, _s, brief = route(_chain(nobody_asked, self.elsewhere(LIMIT_TEXT, 30)))
+        self.assertEqual((got, brief["codex_evidence"]), ("FALLBACK(LIMIT)", {"c": 900, "at": TB.ts(30), "kind": "comment"}))
+        self.assertEqual(route(_chain(nobody_asked, self.elsewhere(LIMIT_TEXT, 25 * 60)))[:2], (None, ["7:C5:codex_review_required"]))   # older than 24 hours
+        self.assertEqual(route(nobody_asked)[:2], (None, ["7:C5:codex_review_required"]))
+
+    def test_the_build_reads_the_repository_wide_feed_and_survives_its_failure(self):
+        limit = TB.comment(900, LIMIT_TEXT, TB.CODEX, 30)
+        snap, fake, _seen = TB.CollectReplay().run_collect(lambda fake: fake.w.update(codex_elsewhere=[limit]))
+        self.assertEqual((snap["codex_feed"]["since"], snap["codex_feed"]["complete"], snap["errors"]), (TB.ts(72 * 60), True, []))
+        self.assertIn(900, [c["id"] for c in snap["codex_feed"]["comments"]])
+        self.assertEqual(B.build_brief(snap)["codex_evidence"], {"c": 900, "at": TB.ts(30), "kind": "comment"})
+        for path in ("issues/comments", "pulls/comments"):                             # an unreadable feed is an incomplete one: no signal, and the build goes on
+            snap, fake, _seen = TB.CollectReplay().run_collect(lambda fake, path=path: (fake.w.update(codex_elsewhere=[limit]), fake.fail.add(path)))
+            self.assertEqual((snap["codex_feed"], snap["errors"]), ({"complete": False}, []))
+            brief = B.build_brief(snap)
+            self.assertEqual((brief["codex_evidence"], brief["complete"], TB.entry(brief)["thin"]["codex_offline"]), (None, True, None))
+
+    def test_the_signal_function_and_the_repository_wide_read(self):
+        at = lambda minutes: datetime.fromisoformat(TB.ts(minutes).replace("Z", "+00:00"))
+        act = lambda *items, complete=True: {"complete": complete, "since": TB.ts(72 * 60), "items": [{"at": at(m), "limit": lim, "c": 1, "kind": "comment"} for m, lim in items]}
+        un = {"status": "UNAVAILABLE", "offline": {"signal": "UNAVAILABLE", "at": TB.ts(290), "request_at": TB.ts(300)}}
+        si = {"status": "SILENT", "offline": {"signal": "SILENT", "at": TB.ts(1500), "request_at": TB.ts(1500)}}
+        sig = lambda cx, activity: B.offline_signal(cx, activity, TB.NOW)
+        self.assertEqual((sig(un, act((290, True))), sig(si, act()), sig({"status": "NONE"}, act((30, True)))), ("UNAVAILABLE", "SILENT", "LIMIT"))
+        for cx, activity in ((un, act((290, True), complete=False)), (un, act((30, False), (290, True))), (un, act()), ({"status": "UNAVAILABLE"}, act((290, True))),
+                             (dict(un, offline=dict(un["offline"], signal="SILENT")), act((290, True))), (si, act((60, True))), (si, act((60, False))),
+                             ({"status": "SILENT"}, act()), ({"status": "NONE"}, act((30, False), (60, True))), ({"status": "NONE"}, act((25 * 60, True))),
+                             ({"status": "NONE"}, act()), ({"status": "REQUESTED"}, act((30, True))), ({"status": "FINAL"}, act((30, True))), (None, act()), (un, None),
+                             (un, {"complete": True, "since": "not a time", "items": []}), ({"status": "banana"}, act((30, True)))):
+            self.assertIsNone(sig(cx, activity), (cx, activity))
+        self.assertIsNone(sig(dict(un, offline=dict(un["offline"], at=TB.ts(80 * 60))), act((290, True))))          # evidence older than the read
+
+        class Gh:
+            def __init__(self):
+                self.seen = []
+
+            def pages(self, path, params=None, key=None, max_pages=30):
+                self.seen.append((path, dict(params or {}), max_pages))
+                rows = [TB.comment(1, LIMIT_TEXT + " " + "x" * 500, TB.CODEX, 30), TB.comment(2, "@codex review", TB.OWNER, 40), TB.comment(3, "note", TB.BOT, 50)]
+                return (rows, True) if path == "issues/comments" else ([TB.comment(4, "nit", TB.CODEX, 20)], False)
+        gh = Gh()
+        feed = B.read_codex_feed(gh, TB.NOW)
+        want = {"since": TB.ts(72 * 60), "sort": "created", "direction": "desc"}
+        self.assertEqual(gh.seen, [("issues/comments", want, 5), ("pulls/comments", want, 5)])
+        self.assertEqual(([c["id"] for c in feed["comments"]], [c["id"] for c in feed["inline"]], feed["complete"], feed["since"]), ([1], [4], False, TB.ts(72 * 60)))
+        self.assertLessEqual(len(feed["comments"][0]["body"]), 160)
+        activity = B.codex_activity(dict(feed, complete=True), {7: {"comments": [TB.comment(1, LIMIT_TEXT, TB.CODEX, 30), TB.comment(9, "@codex review", TB.OWNER, 5)],
+                                                                     "reviews": [{"id": 8, "user": dict(TB.CODEX), "submitted_at": TB.ts(10)}], "inline": []}})
+        self.assertEqual([(a["kind"], a["c"], a["limit"]) for a in activity["items"]], [("review", 8, False), ("inline", 4, False), ("comment", 1, True)])
+        self.assertEqual(B.codex_activity(None, None), {"complete": False, "since": None, "items": []})
+
+
+class ClaudeReceiptIsUnverifiedUntilTheOwnerSaysSo(unittest.TestCase):
+    """Fix round 3, P1-C: route (b) proves only the owner account. The workflow cannot read the private Bridge, so every
+    route (b) merge stays on the owner's first line until the owner posts that he checked the report."""
+
+    def test_which_merges_are_listed_and_what_clears_them(self):
+        c = TB.comment
+        merge = c(710, ROUTE_B_MERGE, TB.BOT, 500)
+        item = {"c": 710, "pr": 12, "head": "d" * 40, "report_blob": "a" * 40}
+        self.assertEqual(B.unverified_receipts([merge]), [item])
+        verified = lambda blob="a" * 40, user=TB.OWNER, edited=False, head="d" * 40, pr=12: c(
+            711, f"S1_CLAUDE_RECEIPT_VERIFIED_v1\npr: {pr}\nhead: {head}\nreport_blob: {blob}", user, 100, edited)
+        self.assertEqual(B.unverified_receipts([merge, verified()]), [])
+        for name, post in {"the Actions bot (the workflow cannot read the Bridge)": verified(user=TB.BOT), "someone else": verified(user={"login": "x", "id": 9, "type": "User"}),
+                           "an edited post": verified(edited=True), "another blob": verified("c" * 40), "no blob": verified(""), "another head": verified(head="c" * 40),
+                           "another PR": verified(pr=13)}.items():
+            self.assertEqual(B.unverified_receipts([merge, post]), [item], name)
+        # only the executor's own route (b) receipts are listed: not a Codex or fallback merge, not a receipt without its run line
+        others = [c(712, ROUTE_B_MERGE.replace("review: CLAUDE", "review: CODEX"), TB.BOT, 400), c(713, ROUTE_B_MERGE.replace("review: CLAUDE", "review: FALLBACK(LIMIT)"), TB.BOT, 400),
+                  c(714, ROUTE_B_MERGE.replace("executor: GITHUB run=541\n", ""), TB.OWNER, 400), c(715, ROUTE_B_MERGE, {"login": "x", "id": 9, "type": "User"}, 400)]
+        self.assertEqual(B.unverified_receipts(others), [])
+        # a receipt that recorded no blob (a reconciled merge) is cleared by an owner post that names any 40-hex blob
+        loose = c(716, ROUTE_B_MERGE.replace(f"report_blob: {'a' * 40}", "report_blob: unavailable"), TB.BOT, 500)
+        self.assertEqual((B.unverified_receipts([loose])[0]["report_blob"], B.unverified_receipts([loose, verified("c" * 40)])), (None, []))
+        for blob in ("", "unavailable", "c" * 39):
+            self.assertEqual(len(B.unverified_receipts([loose, verified(blob)])), 1, blob)
+
+    def test_the_flag_is_on_the_owners_first_line(self):
+        ledger = lambda *rows: (lambda w: w["issue_comments"].extend(rows))
+        d, brief = decide(ledger(TB.comment(710, ROUTE_B_MERGE, TB.BOT, 500)), "LIVE", RECALL)
+        self.assertEqual(brief["claude_receipts"], {"unverified": 1, "items": [{"c": 710, "pr": 12, "head": "d" * 40, "report_blob": "a" * 40}]})
+        self.assertTrue(d["status_lines"][0].endswith(" ; CLAUDE_RECEIPT_UNVERIFIED(1): #12"), d["status_lines"][0])
+        d, brief = decide(ledger(TB.comment(710, ROUTE_B_MERGE, TB.BOT, 500),
+                                 TB.comment(711, f"S1_CLAUDE_RECEIPT_VERIFIED_v1\npr: 12\nhead: {'d' * 40}\nreport_blob: {'a' * 40}", TB.OWNER, 100)), "LIVE", RECALL)
+        self.assertEqual((brief["claude_receipts"], "CLAUDE_RECEIPT" in d["status_lines"][0]), ({"unverified": 0, "items": []}, False))
+        d, brief = decide(None, "LIVE", RECALL)
+        self.assertEqual((brief["claude_receipts"]["unverified"], "CLAUDE_RECEIPT" in d["status_lines"][0]), (0, False))
+        d, brief = decide(lambda w: w.update(issue_comments_complete=False), "LIVE", RECALL)
+        self.assertIsNone(brief["claude_receipts"]["unverified"])                      # an unread ledger states nothing
+        # the merge receipt of a route (b) merge records what was accepted
+        d, _b = decide(_chain(no_codex, claude_receipt()), "LIVE", RECALL)
+        rb = {"pr": 7, "head": HEAD, "merge_commit": "1" * 40, "main_after": "2" * 40, "paths": 1}
+        body = D.merge_receipt_body(d, 1, 2, rb, 555, 9, claude={"request": 7165386485, "report_blob": "a" * 40, "bridge_commit": "b" * 40})
+        for line in ("review: CLAUDE", "claude_request: 7165386485", f"report_blob: {'a' * 40}", f"bridge_commit: {'b' * 40}", "claude_receipt: UNVERIFIED"):
+            self.assertIn(line, body.splitlines())
+        self.assertEqual(B.unverified_receipts([TB.comment(720, body, TB.BOT, 5)]), [{"c": 720, "pr": 7, "head": HEAD, "report_blob": "a" * 40}])
+        d, _b = decide(None, "LIVE", RECALL)                                           # a Codex merge: no such lines
+        self.assertNotIn("claude_receipt: UNVERIFIED", D.merge_receipt_body(d, 1, 2, rb, 555, 9))
 
 
 class CodexRecall(unittest.TestCase):
@@ -1382,24 +1668,44 @@ class CodexRecall(unittest.TestCase):
     def test_a_fallback_merge_is_pending_until_a_clear_names_its_pr_and_head(self):
         c = TB.comment
         pending = c(700, self.PENDING, TB.BOT, 500)
-        self.assertEqual(B.recalls([pending]), [{"c": 700, "pr": 9, "head": "e" * 40, "merge": "9" * 40}])
+        self.assertEqual(B.recalls([pending]), [{"c": 700, "pr": 9, "head": "e" * 40, "merge": "9" * 40, "cleared": False}])
         receipt = c(701, f"S1_LANE_MERGE_v1\npr: 8\nhead: {'d' * 40}\nmerge: {'1' * 40}\nreview: FALLBACK(SILENT)", TB.BOT, 400)
         self.assertEqual([r["pr"] for r in B.recalls([pending, receipt])], [9, 8])     # the merge receipt alone keeps the recall
         self.assertEqual(B.recalls([c(701, f"S1_LANE_MERGE_v1\npr: 8\nhead: {'d' * 40}\nreview: CODEX", TB.BOT, 400)]), [])
         clear = lambda user=TB.BOT, edited=False, head="e" * 40: c(702, f"S1_CODEX_RECALL_CLEARED_v1\npr: 9\nhead: {head}\ncodex: FINAL", user, 300, edited)
-        self.assertEqual(B.recalls([pending, clear()]), [])
-        self.assertEqual(B.recalls([pending, clear(TB.OWNER)]), [])
-        self.assertEqual(len(B.recalls([pending, clear(edited=True)])), 1)             # an edited clear clears nothing
-        self.assertEqual(len(B.recalls([pending, clear(head="c" * 40)])), 1)           # another head
-        self.assertEqual(len(B.recalls([pending, clear({"login": "someone", "id": 9, "type": "User"})])), 1)
+        # fix round 3 (P2-D): a clear receipt removes NOTHING. It is recorded (`cleared`), so that the executor posts no second one
+        for forged in (clear(), clear(TB.OWNER), clear(edited=True)):
+            self.assertEqual([(r["pr"], r["cleared"]) for r in B.recalls([pending, forged])], [(9, True)])
+        self.assertEqual([r["cleared"] for r in B.recalls([pending, clear(head="c" * 40)])], [False])           # another head
+        self.assertEqual([r["cleared"] for r in B.recalls([pending, clear({"login": "someone", "id": 9, "type": "User"})])], [False])
+        # PENDING is Codex's own state of that head, read by the build: a forged clear changes neither the count nor the list
+        state = json.dumps({"code_review": {"commit_sha": "e" * 40, "status": "completed", "has_unresolved_findings": False}})
+        final = [TB.comment(31, "@codex review", minutes_ago=200), TB.comment(32, f"<!-- codex-review-state:v1 {state} -->", TB.CODEX, 180),
+                 TB.comment(33, f"Codex Review: Didn't find any major issues\n**Reviewed commit:** `{'e' * 10}`", TB.CODEX, 170)]
+        world = lambda rows, read: _chain(self.ledger(*rows), lambda w: w.update(recall_reads={"9": self.read(read)} if read is not None else {}))
+        for name, rows, read, want in (
+                ("a forged clear, Codex has not reviewed", [pending, clear(TB.OWNER)], [], (1, ["NONE"], " ; CODEX_RECALL_PENDING(1): #9")),
+                ("a forged clear, the head was not read in this build", [pending, clear()], None, (1, ["NOT_READ"], " ; CODEX_RECALL_PENDING(1): #9?")),
+                ("no clear, Codex's review is complete: not pending, still listed for the executor's clear", [pending], final, (0, ["FINAL"], None)),
+                ("cleared and complete: gone", [pending, clear()], final, (0, [], None))):
+            d, brief = decide(world(rows, read), "LIVE", RECALL)
+            self.assertEqual((brief["recall"]["pending"], [i["codex"] for i in brief["recall"]["items"]]), want[:2], name)
+            self.assertEqual(d["recall"], {"pending": want[0]}, name)
+            self.assertEqual(d["status_lines"][0].endswith(want[2]) if want[2] else "CODEX_RECALL" not in d["status_lines"][0], True, name)
+        # two recalls, one of them reviewed by Codex and waiting only for the executor's clear: the owner's list names the other one
+        second = c(703, f"S1_CODEX_RECALL_PENDING_v1\npr: 10\nhead: {'f' * 40}\nmerge: {'8' * 40}\nruns: 542,543\nexecutor: GITHUB run=543", TB.BOT, 400)
+        d, brief = decide(_chain(self.ledger(pending, second), lambda w: w.update(recall_reads={"9": self.read(final), "10": dict(self.read([]), commits=[
+            {"sha": "f" * 40, "commit": {"message": "x", "committer": {"date": TB.ts(900)}}}])})), "LIVE", RECALL)
+        self.assertEqual(([(i["pr"], i["codex"]) for i in brief["recall"]["items"]], d["recall"]), ([(9, "FINAL"), (10, "NONE")], {"pending": 1}))
+        self.assertTrue(d["status_lines"][0].endswith(" ; CODEX_RECALL_PENDING(1): #10"), d["status_lines"][0])
         self.assertEqual(len(B.recalls([c(700, self.PENDING, TB.BOT, 500, edited=True)])), 1)   # an edited pending post still counts
         self.assertEqual(B.recalls([c(700, self.PENDING, {"login": "someone", "id": 9, "type": "User"}, 500)]), [])
 
     def test_the_count_is_on_the_owner_line_the_observer_line_and_the_heartbeat(self):
         d, brief = decide(self.ledger(TB.comment(700, self.PENDING, TB.BOT, 500)), "LIVE", RECALL)
-        self.assertEqual(brief["recall"], {"pending": 1, "items": [{"c": 700, "pr": 9, "head": "e" * 40, "merge": "9" * 40, "codex": "NOT_READ"}]})
+        self.assertEqual(brief["recall"], {"pending": 1, "items": [{"c": 700, "pr": 9, "head": "e" * 40, "merge": "9" * 40, "cleared": False, "codex": "NOT_READ"}]})
         self.assertEqual(d["recall"], {"pending": 1})
-        self.assertTrue(d["status_lines"][0].endswith(" ; CODEX_RECALL_PENDING(1): #9"), d["status_lines"][0])
+        self.assertTrue(d["status_lines"][0].endswith(" ; CODEX_RECALL_PENDING(1): #9?"), d["status_lines"][0])   # "?": not read in this build
         self.assertIn(" recall_pending=1", d["print"][3])
         self.assertIn("codex_recall_pending=1", D.heartbeat_body(d, brief, 3, "LIVE", 555).splitlines())
         d, brief = decide(None, "LIVE", RECALL)
@@ -1469,9 +1775,9 @@ class CodexRecall(unittest.TestCase):
         d, brief = decide(recall(found), "LIVE", RECALL)
         self.assertEqual(brief["recall"]["items"][0]["codex"], "FINDINGS")
         self.assertTrue(d["status_lines"][0].endswith(f"CODEX_RECALL_PENDING(1): #9 ; CODEX_RECALL_FINDINGS: #9 {'e' * 8} (revert or fix required)"))
-        # Codex's completed review: the brief says FINAL (the executor then proves it again and clears the flag); still pending until then
+        # Codex's completed review, read by the build: no longer pending (the executor then reads it again and posts its clear)
         d, brief = decide(recall(final), "LIVE", RECALL)
-        self.assertEqual((brief["recall"]["items"][0]["codex"], d["recall"]), ("FINAL", {"pending": 1}))
+        self.assertEqual((brief["recall"]["items"][0]["codex"], d["recall"]), ("FINAL", {"pending": 0}))
 
 
 if __name__ == "__main__":

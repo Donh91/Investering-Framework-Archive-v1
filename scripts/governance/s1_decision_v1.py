@@ -35,19 +35,23 @@ REVIEW_POLICIES = ("CODEX_FINAL_REQUIRED", "CODEX_CLAUDE_OR_OFFLINE_RECALL", "NA
 NO_REVIEW_STATES = ("NONE", "UNAVAILABLE", "SILENT", "INADMISSIBLE")   # codex_review(): read completely, and no completed review
 # Owner decision 2026-11-25 (review route, Codex recall). The gate passes on (a) the completed Codex review of the exact
 # head, (b) a Claude exact-head APPROVE receipt, or (c) the Codex-offline fallback: two independent executor runs that
-# agree, and a merge that is flagged for Codex to revisit. (c) applies only when Codex is DEMONSTRABLY unavailable, by
-# evidence read natively, by the build and again by the executor:
-#   UNAVAILABLE  someone asked "@codex review" after this head's last commit and Codex answered with a usage limit;
-#   SILENT       someone asked after this head's last commit and Codex did not answer within 24 hours;
-#   LIMIT        nobody asked Codex about this head, and Codex's NEWEST comment on any open PR the build read is a
+# agree, and a merge that is flagged for Codex to revisit. (c) merges class LOW only, and it applies only when Codex is
+# DEMONSTRABLY unavailable, by evidence read natively, by the build and again by the executor
+# (s1_tick_brief_v1.offline_signal; fix round 3). Only a never-edited "@codex review" of the OWNER account after this
+# head's last commit counts as a request, and Codex's own activity is read for the whole repository:
+#   UNAVAILABLE  the owner asked, Codex answered with its usage-limit sentence, and Codex's newest activity anywhere in
+#                the repository is still a usage-limit answer;
+#   SILENT       the owner asked, Codex answered nothing on the PR within 24 hours, and Codex has posted nothing anywhere
+#                in the repository since the request;
+#   LIMIT        nobody asked Codex about this head, and Codex's NEWEST activity anywhere in the repository is a
 #                usage-limit answer that is at most 24 hours old (Codex itself says it has no usage).
 # No repository variable can switch the fallback on. A request that is pending inside its 24 hours is never "offline".
 RECALL_POLICY = "CODEX_CLAUDE_OR_OFFLINE_RECALL"
-CODEX_OFFLINE_STATES = ("UNAVAILABLE", "SILENT")
 FALLBACK_MIN_GAP_MINUTES = 50              # the second run starts at least this long after the first run's candidate receipt
 FALLBACK_MAX_AGE_HOURS = 24                # an older candidate has expired: the count starts again
 FALLBACK_MAX_CANDIDATES = 3                # candidate receipts per PR head, ever; then the head is parked for the owner
 RECALL_LABEL = "codex-recall-pending"      # on every PR merged by the fallback, until Codex's completed review of that head
+OFFLINE_SIGNALS = ("UNAVAILABLE", "SILENT", "LIMIT")      # s1_tick_brief_v1.offline_signal
 REVIEW_ROUTE = re.compile(r"CODEX|CLAUDE|FALLBACK\((?:UNAVAILABLE|SILENT|LIMIT)\)|NONE\(policy=NATIVE_GATES\)")
 EXECUTOR_ACTIONS = ("MERGE", "HALT")       # what the executor may do; a heartbeat is observability, never the action
 MERGE_RISKS = ("LOW", "MEDIUM")            # HIGH, HIGH_IMPACT, EXTREME, unclear and OWNER_GATED are never executor merges
@@ -158,6 +162,12 @@ def body_hits(body):
     return sorted(hits)
 
 
+# Route (c) only, ADDED lines only (P1-B): words of a change that turns money on by VALUE, where no listed name is
+# added: `"dry_run": false`, `PAPER = False`, `max_position_usd: 50000`, `rpc.submit(tx)`. Far too wide for a path or a
+# title; on the one route with no reviewer a hit only parks the head for the owner.
+PROSE_SUFFIXES = (".md", ".rst")
+DIFF_FLIP = re.compile(r"(?i)" + _W + r"(?:dry[ _-]?run|paper|live|simulat\w*|position\w*|size\w*|sizing|amount\w*|notional|submit\w*|rpc|tx|txn|txs"
+                       r"|leverage|max[ _-]?(?:\w+[ _-])?usd)" + _E)
 NAMED_HIGH = re.compile(r"(?i)high[_ -]?impact|" + _W + r"extreme" + _E + r"|owner[_ -]?gated")
 DIRECTION_WORDS = re.compile(r"(?i)roadmap|priorit|master[_ -]?plan|" + _W + r"mission" + _E + r"|strateg|deprecat|" + _W + r"remov(?:e|es|ed|al|ing)" + _E
                              + r"|sunset|retire|" + _W + r"new[_ -]?(?:program|producer|consumer)" + _E)
@@ -403,13 +413,16 @@ def entry_facts(pr, files, files_complete, push_filters):
         if name.lower().endswith(BINARY_SUFFIXES) and f.get("status") != "removed":
             binary.append(name)
     x, title_forms, body_forms = [f"{code}:body" for code in body_hits(body)], word_forms(title), word_forms(body)
-    # the diff itself, for the fallback route only (review_route): which lists the ADDED lines of non-document files match
+    # the diff itself, for the fallback route only (review_route): which lists the ADDED lines match. Every file that is
+    # not prose (.md, .rst) is read, a .txt file included (P1-B: a key in notes.txt), and the value-flip words count.
     diff_x = set()
     for f in files or []:
-        if not str(f.get("filename") or "").lower().endswith(DOC_SUFFIXES):
+        if not str(f.get("filename") or "").lower().endswith(PROSE_SUFFIXES):
             added = "\n".join(line[1:] for line in str(f.get("patch") or "").splitlines() if line.startswith("+") and not line.startswith("+++"))
             forms = word_forms(added)                             # the word lists of a path AND the strong identifiers of a body (send_transaction)
             diff_x |= {code for code in BODY_LISTS if JUDGMENT[code].search(forms) or BODY_PATTERNS[code].search(forms)}
+            if DIFF_FLIP.search(forms):
+                diff_x.add("flip")
     for code, rx in JUDGMENT.items():
         if rx.search(title_forms):
             x.append(f"{code}:title")
@@ -454,11 +467,15 @@ def review_route(e, policy):
     if cx not in NO_REVIEW_STATES:
         return None, "C5:review_unreadable"                       # NOT_PROVEN, missing, or a status this code does not know
     if recall:
-        if thin.get("claude") == "APPROVE":                       # (b): never Claude's review of a head Claude wrote
+        if thin.get("claude") == "APPROVE":                       # (b): never Claude's review of a head Claude wrote,
+            if author.get("s1") is not False:                     # and never S1's own head: S1 writes as the owner account,
+                return None, "C5:s1_authored"                     # the account the receipt is checked against (P1-C)
             return ("CLAUDE", None) if thin.get("claude_written") is False else (None, "C5:claude_authored")
-        offline = cx if cx in CODEX_OFFLINE_STATES else "LIMIT" if cx == "NONE" and thin.get("codex_limit") is True else None
-        if offline is None:
+        offline = thin.get("codex_offline")                       # (c): the builder's signal, which must fit this head's Codex state
+        if offline not in OFFLINE_SIGNALS or cx != ("NONE" if offline == "LIMIT" else offline):
             return None, "C5:codex_review_required"               # (c) needs proof that Codex is unavailable: ask Codex
+        if pr_risk(e) != "LOW":
+            return None, "C5:fallback_parked:risk"                # (c) merges class LOW only: MEDIUM code needs a reviewer (P1-B)
         if author.get("s1") is not False:
             return None, "C5:s1_authored"                         # automation's own work is never merged by automation's own runs alone
         if author.get("codex") is not False:
@@ -507,7 +524,7 @@ def pr_gates(e, cfg, intent_prs=()):
         gates.append("C2:facts_not_in_brief")
         thin = {"x": [], "risk": "UNCLEAR", "direction": True, "hold_labels": [], "push": ["unknown"], "docs_only": False, "ai": True,
                 "claude": "NOT_PROVEN", "claude_written": True, "diff_x": ["unknown"], "fallback_candidates": None, "fallback_mismatch": True,
-                "codex_limit": False, "p01_named": True}
+                "codex_offline": None, "p01_named": True}
     if "paths" not in e:
         gates.append("C2:paths_not_in_brief")
     for x in (thin.get("x") or [])[:2]:
@@ -619,12 +636,19 @@ def decide(brief, now=None):
         base["advice"] += [{"action": "REQUEST_REVIEW", "pr": i["pr"], "head": i["head"], "how": "CODEX_RECALL"}
                            for i in items if i.get("codex") in ("NONE", "SILENT", "UNAVAILABLE")][:3]
     notes = []
+    waiting = [i for i in items if i.get("codex") != "FINAL"]    # P2-D: pending by Codex's native state; "?" = not read in this build
     if base["recall"]["pending"] != 0:
         notes.append(f"CODEX_RECALL_PENDING({base['recall']['pending'] if base['recall']['pending'] is not None else 'UNKNOWN'}): "
-                     + (" ".join(f"#{i['pr']}" for i in items[:6]) or "-"))
+                     + (" ".join(f"#{i['pr']}" + ("?" if i.get("codex") == "NOT_READ" else "") for i in waiting[:6]) or "-"))
     findings = [i for i in items if i.get("codex") == "FINDINGS"]
     if findings:
         notes.append("CODEX_RECALL_FINDINGS: " + " ".join(f"#{i['pr']} {i['head'][:8]}" for i in findings[:4]) + " (revert or fix required)")
+    # route (b) merges whose receipt nobody checked against the Bridge (P1-C): the owner's line only, until the owner clears it
+    receipts = b.get("claude_receipts") if isinstance(b.get("claude_receipts"), dict) else {}
+    if receipts.get("unverified") != 0:
+        loose = [i for i in (receipts.get("items") or []) if isinstance(i, dict) and type(i.get("pr")) is int]
+        notes.append(f"CLAUDE_RECEIPT_UNVERIFIED({receipts['unverified'] if type(receipts.get('unverified')) is int else 'UNKNOWN'}): "
+                     + (" ".join(f"#{i['pr']}" for i in loose[:6]) or "-"))
     if notes:
         first = base["status_lines"][0]
         base["status_lines"] = [first + " ; " + " ; ".join(notes)] + base["status_lines"][1:]
@@ -810,9 +834,12 @@ def intent_body(decision, repo_id, loop_blob, run_id):
         f"risk: {m['risk']}", f"review: {m['review']}", f"contract={decision['contract']}", f"task: {TASK_ID}"])
 
 
-def merge_receipt_body(decision, repo_id, intent_id, readback, run_id, privacy_run, reconciled=False):
+def merge_receipt_body(decision, repo_id, intent_id, readback, run_id, privacy_run, reconciled=False, claude=None):
     m = decision["merge"] if isinstance(decision.get("merge"), dict) else {}
     ci = " ".join(f"ci={name}@{v[0]}.{v[1]}" for name, v in sorted((m.get("ci") or {}).items()) if isinstance(v, list) and len(v) >= 2)
+    receipt = [] if m.get("review") != "CLAUDE" else [                 # route (b): what was accepted, and that nobody checked it against the Bridge
+        f"claude_request: {(claude or {}).get('request', 'unavailable')}", f"report_blob: {(claude or {}).get('report_blob', 'unavailable')}",
+        f"bridge_commit: {(claude or {}).get('bridge_commit', 'unavailable')}", "claude_receipt: UNVERIFIED"]
     return "\n".join([
         "S1_LANE_MERGE_v1" + (" reconciled" if reconciled else ""), f"pr: {readback['pr']}", f"head: {readback['head']}",
         f"merge: {readback['merge_commit']}", f"review: {m.get('review', 'unavailable')}",
@@ -822,7 +849,7 @@ def merge_receipt_body(decision, repo_id, intent_id, readback, run_id, privacy_r
         f"main_health=brief run={m.get('health_run', 'unavailable')}", f"brief={decision.get('run_id')}", f"decision={decision.get('id')}",
         "merge_execution_origin: " + ("UNKNOWN" if reconciled else f"S1_GITHUB_EXECUTOR run={run_id}"),
         f"executor: GITHUB run={run_id if run_id is not None else '-'}",
-        f"item: pr:{readback['pr']} state: MERGED", "closure: OBSERVING", f"contract={decision.get('contract')}", f"task: {TASK_ID}"])
+        f"item: pr:{readback['pr']} state: MERGED", "closure: OBSERVING", f"contract={decision.get('contract')}", f"task: {TASK_ID}"] + receipt)
 
 
 def fallback_evidence(pr, head, risk, files, paths_sha256, title_sha256, body, ci):

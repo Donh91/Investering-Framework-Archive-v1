@@ -702,7 +702,7 @@ class Reviews(unittest.TestCase):
         # R2 N2: a Codex "usage limit" reply must not let S1 ask again every hour at the same head
         def m(w):
             next(j for jobs in w["pr"][7]["jobs"].values() for j in jobs if j["name"] == "test").update(conclusion="failure")
-            w["pr"][7]["comments"] = [comment(20, "@codex address the failing test", minutes_ago=200), comment(21, "usage limit reached", CODEX, minutes_ago=190)]
+            w["pr"][7]["comments"] = [comment(20, "@codex address the failing test", minutes_ago=200), comment(21, "You have reached your Codex usage limits for code reviews.", CODEX, minutes_ago=190)]
         b = brief_of(m)
         self.assertEqual((entry(b)["writer"], entry(b)["address_at_head"], b["next"]), (None, True, []))
         def new_head(w):
@@ -1024,6 +1024,9 @@ class CollectReplay(unittest.TestCase):
             table = {f"issues/{B.OWNER_ISSUE}/comments": self.w["issue_comments"], "rulesets": [], "pulls": self.w["pulls"],
                      "pulls/7/files": self.d["files"], "pulls/7/commits": self.d["commits"], "issues/7/comments": self.d["comments"],
                      "pulls/7/reviews": [], "pulls/7/comments": [], "actions/runs": self.d["runs"],
+                     # Codex's activity in the whole repository (read_codex_feed): its comments on the one PR of this world
+                     "issues/comments": [c for c in self.d["comments"] if c.get("user") == CODEX] + list(self.w.get("codex_elsewhere") or []),
+                     "pulls/comments": [],
                      f"commits/{HEAD}/check-runs": self.d["check_runs"], f"commits/{HEAD}/statuses": []}
             if path.startswith("actions/workflows/automation-production-health.yml/runs"):
                 return self.w["health_runs"], True

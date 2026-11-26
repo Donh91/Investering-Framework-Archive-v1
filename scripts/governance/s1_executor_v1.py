@@ -297,7 +297,7 @@ class Run:
                          "ai": B.ai_authored(pr, commits, cc, author), "claude": B.claude_receipt(head, prc),
                          "claude_written": B.claude_written(pr, commits, cc), "diff_x": facts["diff_x"], "fallback_candidates": len(candidates),
                          "fallback_mismatch": B.fallback_mismatch(candidates), "p01_named": B.p01_named(prc, reviews),
-                         "codex_limit": self.codex_limit(now) if m.get("review") == "FALLBACK(LIMIT)" else False}}
+                         "risk": risk, "codex_offline": self.codex_offline(n, cx, prc, reviews, inline, now) if str(m.get("review")).startswith("FALLBACK(") else None}}
         route, gate = D.review_route(live, brief["thin"]["review_policy"])     # the route itself is derived again, from this run's reads
         need(gate is None, f"{n}:{gate}")
         need(route == m.get("review"), f"{n}:C8:review_changed")
@@ -321,16 +321,14 @@ class Run:
         need(mine.count("S1_LANE_MERGE_INTENT_v1") < MAX_ATTEMPTS_PER_HEAD and (n, head) not in B.attempted_heads(comments), f"{n}:C9:attempted_head")
         head_read()                                              # the head a SECOND time, the last read before the intent
         return {"paths": paths, "main": main, "privacy_run": ci["privacy-scan"]["run"], "repo_id": repo_id, "health": health,
-                "evidence": evidence, "candidates": candidates, "offline": route[9:-1] if route.startswith("FALLBACK(") else None}
+                "evidence": evidence, "candidates": candidates, "offline": route[9:-1] if route.startswith("FALLBACK(") else None,
+                "claude": B.claude_receipt_fields(head, prc) if route == "CLAUDE" else None}
 
-    def codex_limit(self, now):
-        """Signal LIMIT, read again: the comment the brief points to is on that PR, is Codex's, is a usage-limit answer at
-        most 24 hours old, and is still Codex's newest comment there."""
-        ev = self.brief.get("codex_evidence")
-        if not isinstance(ev, dict) or type(ev.get("pr")) is not int:
-            return False
-        rows, complete = self.gh.pages(f"issues/{ev['pr']}/comments", max_pages=10)
-        return complete and B.codex_limit_evidence({ev["pr"]: rows}, now) is not None and B.codex_limit_evidence({ev["pr"]: rows}, now)["c"] == ev.get("c")
+    def codex_offline(self, n, cx, prc, reviews, inline, now):
+        """The offline signal of route (c), derived again by THIS run: Codex's activity in the whole repository is read
+        again (two list reads), together with this PR's own comments, reviews and inline comments (P1-A, P3-F)."""
+        feed = B.read_codex_feed(self.gh, now)
+        return B.offline_signal(cx, B.codex_activity(feed, {n: {"comments": prc, "reviews": reviews, "inline": inline}}), now)
 
     # ---- route (c): the Codex-offline fallback needs TWO independent runs that agree
     def fallback(self, proof):
@@ -403,7 +401,7 @@ class Run:
             return "MERGE_REFUSED(not_merged)"
         state, why, rb = self.readback(m["pr"], m["sha"], intent.get("created_at") or B.iso(self.now_fn()), proof["paths"])
         if state == "MATCH":
-            self.write("comment", body=D.merge_receipt_body(d, proof["repo_id"], intent.get("id"), rb, run_id, proof["privacy_run"]))
+            self.write("comment", body=D.merge_receipt_body(d, proof["repo_id"], intent.get("id"), rb, run_id, proof["privacy_run"], claude=proof["claude"]))
             self.pending = None
             if first is not None:                                 # a fallback merge: flagged for Codex's revisit (the receipt above already says FALLBACK)
                 try:
@@ -491,7 +489,7 @@ class Run:
     def recall(self, comments):
         """When the brief shows Codex's completed review of a recalled head: read that PR's review state again, natively,
         and only then clear the flag (the ledger receipt, then the label)."""
-        pending = {(r["pr"], r["head"]) for r in B.recalls(comments)}
+        pending = {(r["pr"], r["head"]) for r in B.recalls(comments) if not r.get("cleared")}   # no clear receipt on the ledger yet
         for item in (self.brief.get("recall") or {}).get("items") or []:
             if not isinstance(item, dict) or item.get("codex") != "FINAL" or (item.get("pr"), item.get("head")) not in pending:
                 continue

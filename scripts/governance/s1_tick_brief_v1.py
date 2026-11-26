@@ -109,7 +109,11 @@ S1_ACTION_RECEIPTS = {"S1_LANE_MERGE_v1": "MERGE", "S1_LANE_HALTED": "LANE_HALTE
                       "S1_PACKAGE_FAILED": "PACKAGE", "S1_PACKAGE_SKIPPED": "PACKAGE", "S1_OP_DONE_v1": "RECONCILE"}
 S1_ACTION_WORDS = ("ANSWER", "REPAIR", "REQUEST_REVIEW", "MERGE", "PACKAGE", "REENABLE", "STEWARD")
 CONTRACT_ANY = re.compile(r"\bcontract=[0-9a-f]{8}\b")   # anywhere: a heartbeat and a short receipt carry it mid-line
-LIMIT_RE = re.compile(r"(?i)usage limit|reached your .*limit|can(?:'|no)t review|unable to review")
+# The Codex connector's own usage-limit answer, at the START of its comment ("You have reached your Codex usage limits
+# for code reviews. ..."; read from this repository on 2026-11-26). A sentence such as "I can't review the lockfile"
+# is not one (review finding P1-A).
+LIMIT_RE = re.compile(r"(?i)\A\s*You have reached your Codex usage limits?\b")
+CODEX_FEED_HOURS = 72                 # how far back the repository-wide read of Codex's own activity goes (read_codex_feed)
 # AGENTS.md section 0.2i. An Actions-bot ledger post proves nothing by its identity (every workflow of the repository
 # posts as that bot): an executor post names its run, and that run is read and checked (executor_post).
 OP_INTENTS = ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1")
@@ -421,11 +425,12 @@ def fallback_mismatch(posts):
 
 
 def recalls(comments):
-    """The pending Codex recalls, oldest first (owner decision 2026-11-25): every fallback merge an S1 author recorded
-    on #1156, as an S1_CODEX_RECALL_PENDING_v1 or as an S1_LANE_MERGE_v1 whose review reads FALLBACK(...), by PR and
-    head, minus those a never-edited S1_CODEX_RECALL_CLEARED_v1 of an S1 author names. A pending post counts edited or
-    not (it only adds caution). Stated limit: a clear counts by its author's identity; the executor posts one only
-    after it read Codex's completed review itself, and it removes the PR's label only then."""
+    """Every fallback merge an S1 author recorded on #1156, oldest first (owner decision 2026-11-25): an
+    S1_CODEX_RECALL_PENDING_v1, or an S1_LANE_MERGE_v1 whose review reads FALLBACK(...), by PR and head. A pending post
+    counts edited or not (it only adds caution). Whether a recall is still PENDING is decided by Codex's own review
+    state of that head, read natively (recall_status), never by a receipt: `cleared` only says that a clear receipt of
+    an S1 author exists, and it is used for one thing, to keep the executor from posting a second one (review finding
+    P2-D: any workflow with issues: write, and anything that writes as the owner account, can post such a receipt)."""
     pending, cleared = {}, set()
     for c in sorted((c for c in comments if isinstance(c, dict)), key=lambda c: c.get("id") or 0):
         if not is_s1_author(c):
@@ -436,9 +441,30 @@ def recalls(comments):
             continue
         if token == "S1_CODEX_RECALL_PENDING_v1" or (token == "S1_LANE_MERGE_v1" and str(f.get("review") or "").startswith("FALLBACK(")):
             pending.setdefault((pr, head), {"c": c["id"], "pr": pr, "head": head, "merge": (f.get("merge") or "").strip() or None})
-        elif token == "S1_CODEX_RECALL_CLEARED_v1" and is_s1_unedited(c):
+        elif token == "S1_CODEX_RECALL_CLEARED_v1":
             cleared.add((pr, head))
-    return [v for k, v in pending.items() if k not in cleared]
+    return [dict(v, cleared=k in cleared) for k, v in pending.items()]
+
+
+def unverified_receipts(comments):
+    """Route (b) merges whose Claude receipt nobody has checked against the private Bridge (P1-C): every
+    S1_LANE_MERGE_v1 of an S1 author, posted by an executor run, whose review reads exactly CLAUDE. The workflow
+    cannot read the Bridge, so nothing in GitHub Actions can clear this. It is cleared by a never-edited post of the
+    OWNER account on #1156, S1_CLAUDE_RECEIPT_VERIFIED_v1, that names the PR, the head and a 40-hex report_blob,
+    which must be the blob the merge receipt recorded when it recorded one."""
+    merged, verified = {}, set()
+    for c in sorted((c for c in comments if isinstance(c, dict)), key=lambda c: c.get("id") or 0):
+        token = first_line_token(c.get("body"))
+        pr, head, f = _pr_head(c.get("body"))
+        if pr is None:
+            continue
+        blob = (f.get("report_blob") or "").strip()
+        if token == "S1_LANE_MERGE_v1" and is_s1_author(c) and (f.get("review") or "").strip() == "CLAUDE" and executor_run(c.get("body")) is not None:
+            merged.setdefault((pr, head), {"c": c["id"], "pr": pr, "head": head, "report_blob": blob if SHA40.fullmatch(blob) else None})
+        elif token == "S1_CLAUDE_RECEIPT_VERIFIED_v1" and is_owner_unedited(c) and SHA40.fullmatch(blob):
+            verified.add((pr, head, blob))
+    return [v for (pr, head), v in merged.items()
+            if not any(k[0] == pr and k[1] == head and v["report_blob"] in (None, k[2]) for k in verified)]
 
 
 def recall_window(items, now, n=RECALL_READS_PER_BUILD):
@@ -766,6 +792,24 @@ def codex_review(head, pr, commits, commits_complete, comments, reviews, inline,
                 out["status"] = "SILENT"
             else:
                 out["status"] = "REQUESTED"
+            # Section 0.2i route (c): a status is evidence that Codex is unavailable only when it rests on a request of
+            # the OWNER account that was never edited. Anyone can comment on a public repository, and Codex is not known
+            # to answer accounts it does not serve, so silence after an outsider's request proves nothing (P1-A).
+            mine = [codex_finality.effective_request_time(c) for c in comments
+                    if is_owner_unedited(c) and re.search(r"(?mi)^\s*@codex\s+review\b", str(c.get("body") or ""))]
+            mine = [r for r in mine if r > head_time]
+            if mine and out["status"] in ("UNAVAILABLE", "SILENT"):
+                asked = max(mine)
+                said = [(stamp(c.get("updated_at") or c.get("created_at")), c) for c in comments if codex_finality.is_codex(c)]
+                said = [(at, c) for at, c in said if at > asked]
+                limits = [at for at, c in said if LIMIT_RE.search(str(c.get("body") or ""))]
+                # an answer is a Codex comment, a Codex PR review or a Codex inline comment after the request
+                other = [stamp(r["submitted_at"]) for r in reviews if codex_finality.is_codex(r) and r.get("submitted_at")] \
+                    + [stamp(r.get("updated_at") or r["created_at"]) for r in inline if codex_finality.is_codex(r)]
+                if out["status"] == "UNAVAILABLE" and limits:
+                    out["offline"] = {"signal": "UNAVAILABLE", "at": iso(max(limits)), "request_at": iso(asked)}
+                elif out["status"] == "SILENT" and (now - asked).total_seconds() > silent_hours * 3600 and not said and not any(t > asked for t in other):
+                    out["offline"] = {"signal": "SILENT", "at": iso(asked), "request_at": iso(asked)}
         decision = codex_finality.decision(head, comments, reviews, inline)
     except (ValueError, KeyError, TypeError):
         return {"status": "NOT_PROVEN", "why": "review_unreadable"}
@@ -796,9 +840,28 @@ def claude_receipt(head, comments):
         return "NOT_PROVEN"
     try:
         state = receipt_state(head, comments)
+        return "VETO" if state["veto"] else "APPROVE" if claude_receipt_fields(head, comments) is not None else "NONE"
     except (ValueError, KeyError, TypeError, AttributeError):
         return "NOT_PROVEN"
-    return "VETO" if state["veto"] else "APPROVE" if state["approved"] else "NONE"
+
+
+def claude_receipt_fields(head, comments):
+    """The ONE receipt route (b) accepts for this head, as the fields the merge receipt records, or None (P1-C). On top
+    of receipt_state()'s approval it must be complete on the PR itself: the request it names is a real comment there,
+    an S1_REVIEW_REQUEST_v1 for this head by the owner account, never edited and older than the receipt; the receipt
+    carries `report`, a 40-hex `report_blob` and a 40-hex `bridge_commit`; it says `lane_eligible: YES`; and it states
+    its `independence`. What this does NOT prove: who wrote it (the owner account did), or that the report exists in
+    the private Bridge (the workflow cannot read it). Hence the unverified-receipt flag (unverified_receipts)."""
+    state = receipt_state(head, comments)
+    f = state.get("fields") if isinstance(state.get("fields"), dict) else {}
+    if state["veto"] or not state["approved"] or not state["page_complete"]:
+        return None
+    if (f.get("lane_eligible") or "").strip() != "YES" or not (f.get("independence") or "").strip():
+        return None
+    rid, row = cited_request(f, comments)
+    if rid is None or row is None:
+        return None
+    return {"request": rid, "report_blob": (f.get("report_blob") or "").strip(), "bridge_commit": (f.get("bridge_commit") or "").strip()}
 
 
 def changes_requested(reviews):
@@ -875,23 +938,78 @@ def codex_availability(comment_lists, now, hours=CODEX_LIMIT_HOURS):
     return {"available": True}
 
 
-def codex_limit_evidence(comments_by_pr, now, hours=CODEX_LIMIT_HOURS):
-    """The evidence behind codex_availability()'s "unavailable", as a pointer the executor can read again: the PR and
-    the id of Codex's NEWEST comment over the given PRs, when that comment is a usage-limit answer at most `hours`
-    old. None: Codex is not known to be out of usage."""
-    newest = None
-    for n, comments in sorted((comments_by_pr or {}).items(), key=lambda kv: str(kv[0])):
-        for c in comments or []:
-            try:
-                if codex_finality.is_codex(c):
-                    at = stamp(c.get("updated_at") or c.get("created_at"))
-                    if newest is None or at > newest[0]:
-                        newest = (at, c, n)
-            except (ValueError, TypeError):
-                continue
-    if newest and LIMIT_RE.search(str(newest[1].get("body") or "")) and 0 <= (now - newest[0]).total_seconds() <= hours * 3600:
-        return {"pr": newest[2], "c": newest[1].get("id"), "at": iso(newest[0])}
-    return None
+def read_codex_feed(gh, now, hours=CODEX_FEED_HOURS):
+    """Codex's own activity in the WHOLE repository over the last `hours`, newest first: its issue and PR conversation
+    comments and its inline review comments (two list reads; neither is limited to open PRs or to the PRs a build reads
+    in depth). `complete` is False when either list did not end inside its pages."""
+    since = iso(now - timedelta(hours=hours))
+    rows, c1 = gh.pages("issues/comments", {"since": since, "sort": "created", "direction": "desc"}, max_pages=5)
+    inline, c2 = gh.pages("pulls/comments", {"since": since, "sort": "created", "direction": "desc"}, max_pages=5)
+    slim = lambda r: {"id": r.get("id"), "user": r.get("user"), "created_at": r.get("created_at"), "updated_at": r.get("updated_at"),
+                      "body": str(r.get("body") or "")[:160]}
+    return {"since": since, "comments": [slim(r) for r in rows if isinstance(r, dict) and codex_finality.is_codex(r)],
+            "inline": [slim(r) for r in inline if isinstance(r, dict) and codex_finality.is_codex(r)], "complete": bool(c1 and c2)}
+
+
+def codex_activity(feed, prs):
+    """Everything Codex is known to have posted: the repository-wide feed (read_codex_feed) plus the comments, reviews
+    and inline comments of the PRs that were read in depth. {"complete": the feed was read whole, "since", "items":
+    [{"at", "limit", "c", "kind"}] newest first}; `limit` marks a usage-limit answer."""
+    items = {}
+
+    def add(kind, r, when):
+        try:
+            if isinstance(r, dict) and codex_finality.is_codex(r) and when:
+                items[(kind, r.get("id"))] = {"at": stamp(when), "c": r.get("id"), "kind": kind,
+                                              "limit": kind == "comment" and bool(LIMIT_RE.search(str(r.get("body") or "")))}
+        except (ValueError, TypeError):
+            pass
+    feed = feed if isinstance(feed, dict) else {}
+    for r in feed.get("comments") or []:
+        add("comment", r, r.get("updated_at") or r.get("created_at"))
+    for r in feed.get("inline") or []:
+        add("inline", r, r.get("updated_at") or r.get("created_at"))
+    for d in (prs or {}).values() if isinstance(prs, dict) else []:
+        if isinstance(d, dict):
+            for r in d.get("comments") or []:
+                add("comment", r, r.get("updated_at") or r.get("created_at"))
+            for r in d.get("inline") or []:
+                add("inline", r, r.get("updated_at") or r.get("created_at"))
+            for r in d.get("reviews") or []:
+                add("review", r, r.get("submitted_at"))
+    return {"complete": feed.get("complete") is True, "since": feed.get("since"),
+            "items": sorted(items.values(), key=lambda a: (a["at"], str(a["c"])), reverse=True)}
+
+
+def offline_signal(cx, activity, now, hours=CODEX_LIMIT_HOURS):
+    """Section 0.2i route (c): is Codex DEMONSTRABLY unavailable for this head? The signal, or None (P1-A, P3-F).
+    UNAVAILABLE  the owner asked about this head, Codex answered with its usage-limit sentence (codex_review), and
+                 Codex's newest activity anywhere in the repository is still a usage-limit answer;
+    SILENT       the owner asked about this head, Codex answered nothing on this PR (no comment, review or inline
+                 comment) for more than the silent budget, and Codex has posted nothing anywhere in the repository
+                 since the request;
+    LIMIT        nobody asked about this head, and Codex's newest activity anywhere in the repository is a usage-limit
+                 answer at most `hours` old.
+    None         everything else: the repository-wide read is incomplete, the evidence is older than that read, the
+                 request was not the owner's or was edited, or Codex has done anything else since."""
+    try:
+        if not isinstance(cx, dict) or not isinstance(activity, dict) or activity.get("complete") is not True:
+            return None
+        since, items = stamp(activity["since"]), activity.get("items") or []
+        status = cx.get("status")
+        ev = cx.get("offline") if isinstance(cx.get("offline"), dict) else {}
+        if status in ("UNAVAILABLE", "SILENT") and ev.get("signal") == status:
+            at = stamp(ev["at"])
+            if at < since:
+                return None                                      # older than the repository-wide read: what Codex did since is unknown
+            if status == "UNAVAILABLE":
+                return status if items and items[0]["limit"] else None
+            return status if not any(a["at"] > at for a in items) else None
+        if status == "NONE" and items and items[0]["limit"] and 0 <= (now - items[0]["at"]).total_seconds() <= hours * 3600:
+            return "LIMIT"
+        return None
+    except (ValueError, KeyError, TypeError):
+        return None
 
 
 def request_for(head, row):
@@ -1710,6 +1828,11 @@ def build_brief(snap):
     candidates = fallback_candidates(comments) if ledger_ok else None
     recall_items = [dict(item, codex=recall_status(item["head"], (snap.get("recall_reads") or {}).get(str(item["pr"])), now, snap["budgets"]["codex_silent_hours"]))
                     for item in (recalls(comments) if ledger_ok else [])]
+    # P2-D: PENDING is "this build did not read Codex's completed review of that head". A clear receipt decides nothing;
+    # an item drops out of the brief only when it is FINAL natively AND its clear receipt is already posted.
+    recall_pending = [i for i in recall_items if i["codex"] != "FINAL"]
+    recall_shown = [i for i in recall_items if i["codex"] != "FINAL" or not i.get("cleared")]
+    unverified = unverified_receipts(comments) if ledger_ok else []
     c1b, c1b_reason = c1b_block(snap.get("c1b"))
     repo_id = (snap.get("repo") or {}).get("id")
     ctx = {"repo_id": repo_id, "main_sha": snap["main_sha"], "policy": snap["policy"], "tuples": params["required_job_tuples"],
@@ -1737,10 +1860,12 @@ def build_brief(snap):
     rules = ruleset_census(snap.get("rulesets_1") or [], snap.get("rulesets_2") or [], bool(snap.get("rulesets_complete")))
     pulls_ok = bool(snap.get("pulls_complete"))
     codex = codex_availability([d.get("comments") for d in (snap.get("pr") or {}).values() if isinstance(d, dict)], now)
-    limit = codex_limit_evidence({n: d.get("comments") for n, d in (snap.get("pr") or {}).items() if isinstance(d, dict)}, now)
-    for e in entries:                                            # route (c), signal LIMIT: Codex itself says it has no usage
+    activity = codex_activity(snap.get("codex_feed"), snap.get("pr"))
+    newest = activity["items"][0] if activity["items"] else None
+    limit = {"c": newest["c"], "at": iso(newest["at"]), "kind": newest["kind"]} if activity["complete"] and newest and newest["limit"] else None
+    for e in entries:                                            # route (c): is Codex demonstrably unavailable for this head?
         if isinstance(e.get("thin"), dict):
-            e["thin"]["codex_limit"] = limit is not None and codex["available"] is False
+            e["thin"]["codex_offline"] = offline_signal((e.get("review") or {}).get("codex"), activity, now)
     # complete=false is for data that was truly NOT READ. Main moving while the brief is built is not such a case:
     # the brief describes exactly snap["main_sha"], and S1's drift rule (TICK T3) covers main after it.
     unread = ([c1b_reason] if c1b_reason else []) + ([] if pulls_ok else ["pulls_unreadable"]) + ([] if ledger_ok else ["ledger_unreadable"]) \
@@ -1775,8 +1900,9 @@ def build_brief(snap):
         "ledger": ledger_hint(comments, intents, ledger_ok, now),   # D4: hint only
         "verdict": brief_verdict(snap["main_sha"], contract, snap["pins_actual"], snap.get("bootstrap_text"), pins, snap.get("trees_actual")),
         "thin": decision_v1.thin_config(switch),                 # section 0.2i: executor mode and review policy of the switch
-        "recall": {"pending": len(recall_items) if ledger_ok else None, "items": recall_items[:10]},   # merges that wait for Codex's revisit
-        "codex_evidence": limit,                                 # where the executor reads Codex's usage-limit answer again
+        "recall": {"pending": len(recall_pending) if ledger_ok else None, "items": recall_shown[:10]},   # merges that wait for Codex's revisit
+        "codex_evidence": limit,                                 # Codex's newest activity in the repository, when it is a usage-limit answer
+        "claude_receipts": {"unverified": len(unverified) if ledger_ok else None, "items": unverified[:10]},   # route (b) merges, receipt not checked against the Bridge
     }
     if brief["thin"]["executor"] == "LIVE":
         # The executor job is the ONE actor. The legacy ChatGPT procedure (TICK.md v3.3) acts only on B.next and
@@ -1876,7 +2002,7 @@ def render(brief):
             b[key] = brief[key]
     b.update(next=[], claude_slots=[], complete=False, incomplete="brief_too_large", errors=["brief_too_large"], shrunk=3, prs=[], drafts=[], lane={"state": "OFF", "off_reasons": ["brief_too_large"]},
              status_lines=["OWNER APPROVAL REQUIRED: UNKNOWN (brief_too_large)", "HIGH_IMPACT BLOCKED: UNKNOWN", "DISPOSITIONS TODAY: UNKNOWN"], heartbeat_due=False)
-    for key in ("thin", "decision_log", "recall", "codex_evidence"):   # section 0.2i: a brief that ranks nothing decides NOOP
+    for key in ("thin", "decision_log", "recall", "codex_evidence", "claude_receipts"):   # section 0.2i: a brief that ranks nothing decides NOOP
         if key in brief:
             b[key] = brief[key]
     return dump(b)
@@ -2548,6 +2674,15 @@ def collect(gh, root, head_root, now, run):
         except StopReading as exc:
             errors.append(exc.reason)
     snap["executor_runs"] = reader.docs
+    # Codex's own activity in the whole repository (route (c): is Codex demonstrably unavailable?). Fail soft: an
+    # unreadable feed is an incomplete one, and an incomplete one is never an offline signal.
+    try:
+        snap["codex_feed"] = read_codex_feed(gh, stamp(snap["now"]))
+    except StopReading as exc:
+        errors.append(exc.reason)
+        snap["codex_feed"] = {"complete": False}
+    except (urllib.error.HTTPError, OSError, ValueError):
+        snap["codex_feed"] = {"complete": False}
     # Codex recall: the review state of the merged PRs whose recall is pending (none while the ledger holds no fallback merge)
     snap["recall_reads"] = {}
     if snap["issue_comments_complete"]:

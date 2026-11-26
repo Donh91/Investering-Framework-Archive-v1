@@ -127,6 +127,9 @@ class FakeGitHub:
         m = re.fullmatch(r"actions/runs/(\d+)/jobs", path)
         if m:
             return copy.deepcopy(d["jobs"].get(int(m.group(1))) or []), True
+        if path in ("issues/comments", "pulls/comments"):              # Codex's activity in the whole repository (B.read_codex_feed)
+            feed = TD.codex_feed_of(w)
+            return feed["comments" if path == "issues/comments" else "inline"], bool(feed["complete"])
         m = re.fullmatch(r"(?:issues|pulls)/(\d+)/(comments|reviews|commits)", path)   # a merged PR with a pending Codex recall
         read = (w.get("recall_reads") or {}).get(m.group(1)) if m else None
         if read is not None:
@@ -196,7 +199,7 @@ def setup(mutate=None, mode="LIVE", policy="NATIVE_GATES", live=None, env=None, 
     w = TD.thin_world(mode, policy)
     if mutate:
         mutate(w)
-    body, decision = B.render_issue(B.build_brief(copy.deepcopy(w)))
+    body, decision = B.render_issue(B.build_brief(dict(copy.deepcopy(w), codex_feed=TD.codex_feed_of(w))))
     now = NOW + timedelta(minutes=minutes)
     gh, native = FakeGitHub(w, now), FakeNative(w)
     if live:
@@ -365,7 +368,7 @@ class ModesAndBinding(unittest.TestCase):
     def test_invariant_monday_window_no_write_even_for_a_decision_made_before_it(self):
         before = datetime(2026, 11, 23, 8, 27, tzinfo=timezone.utc)
         w = TD.thin_world("LIVE", "NATIVE_GATES")
-        brief = B.build_brief(copy.deepcopy(w))
+        brief = B.build_brief(dict(copy.deepcopy(w), codex_feed=TD.codex_feed_of(w)))
         body, d = B.render_issue(dict(brief, generated_at=B.iso(before), decision_log=[]))
         self.assertEqual((d["action"], d["expires_at"]), ("MERGE", "2026-11-23T08:30:00Z"))
         for now, want in ((before + timedelta(minutes=5), "MONDAY_READ_ONLY"), (before + timedelta(minutes=30), "MONDAY_READ_ONLY")):
@@ -1178,7 +1181,7 @@ def hourly_run(w, run_id, minutes, mode="LIVE", live=None, runs=None):
     at = NOW + timedelta(minutes=minutes)
     w["now"], w["run"] = B.iso(at), {"id": run_id, "attempt": 1, "event": "schedule"}
     w["switch"]["executor"] = mode
-    body, decision = B.render_issue(B.build_brief(copy.deepcopy(w)))
+    body, decision = B.render_issue(B.build_brief(dict(copy.deepcopy(w), codex_feed=TD.codex_feed_of(w))))
     now = at + timedelta(minutes=2)
     gh, native = FakeGitHub(w, now), FakeNative(w)
     gh.runs = dict(runs or {})
@@ -1220,7 +1223,7 @@ class CodexOfflineFallback(unittest.TestCase):
         for line in ("pr: 7", f"head: {HEAD}", f"merge: {MERGE_SHA}", "runs: 555,557", "label: codex-recall-pending", "executor: GITHUB run=557"):
             self.assertIn(line, recall.splitlines())
         self.assertEqual(out["alarms"], [])
-        self.assertEqual(B.recalls(w["issue_comments"]), [{"c": B.recalls(w["issue_comments"])[0]["c"], "pr": 7, "head": HEAD, "merge": MERGE_SHA}])
+        self.assertEqual(B.recalls(w["issue_comments"]), [{"c": B.recalls(w["issue_comments"])[0]["c"], "pr": 7, "head": HEAD, "merge": MERGE_SHA, "cleared": False}])
         self.assertEqual(B.fields(candidate)["evidence"], evidence)                    # the second run derived the same hash itself:
         self.assertEqual(sum(1 for kind, path in gh.calls if (kind, path) == ("TEXT", "actions/jobs/1010/logs")), 1)   # it re-read the privacy log, the CI, ...
         self.assertIn(("GRAPHQL", "threads"), gh.calls)
@@ -1327,33 +1330,66 @@ class CodexOfflineFallback(unittest.TestCase):
         run, gh, proof = self.run_with([], mode="SHADOW")
         self.assertEqual((run.fallback(proof), gh.writes), ((None, f"WOULD_POST_FALLBACK_CANDIDATE(pr=7,head={HEAD[:8]},first_run)"), []))
 
-    def test_the_limit_signal_is_read_again_by_the_executor(self):
-        def world():
+    def test_invariant_the_offline_signal_is_derived_again_by_the_executor_from_the_whole_repository(self):
+        # fix round 3 (P1-A, P3-F): the executor reads Codex's activity in the WHOLE repository itself, not one PR
+        def world(offline=TD.codex_out_of_usage):
             w = TD.thin_world("LIVE", RECALL)
             BEAT(w)
-            TD.codex_out_of_usage(w)
+            offline(w)
             return w
         out, gh, d = hourly_run(world(), 555, 0)
         self.assertEqual((d["merge"]["review"], tokens(gh)), ("FALLBACK(LIMIT)", ["S1_FALLBACK_CANDIDATE_v1"]))
         self.assertIn("offline: LIMIT", gh.writes[0][2]["body"].splitlines())
-        self.assertGreaterEqual(sum(1 for kind, path in gh.calls if (kind, path) == ("PAGES", "issues/7/comments")), 2)   # the PR's comments, and the evidence again
+        for path in ("issues/comments", "pulls/comments"):
+            self.assertEqual(sum(1 for kind, got in gh.calls if (kind, got) == ("PAGES", path)), 1, path)
+        elsewhere = lambda body, cid=900: (lambda w, gh, n: w.setdefault("codex_elsewhere", []).append(TB.comment(cid, body, TB.CODEX, 1)))
         live = {
-            "Codex spoke again since (the limit answer is no longer its newest comment)": lambda w, gh, n: w["pr"][7]["comments"].append(TB.comment(13, "Codex: on it", TB.CODEX, 1)),
+            "Codex spoke again on this PR (the limit answer is no longer its newest activity)": lambda w, gh, n: w["pr"][7]["comments"].append(TB.comment(13, "Codex: on it", TB.CODEX, 1)),
+            "Codex completed a review on ANOTHER PR since the build": elsewhere("Codex Review: Didn't find any major issues"),
+            "Codex posted an inline comment somewhere since the build": lambda w, gh, n: w["pr"][7].update(inline=[dict(TB.comment(6, "nit", TB.CODEX, 1), commit_id=HEAD, path="a.md")]),
             "the limit answer is gone": lambda w, gh, n: w["pr"][7].update(comments=w["pr"][7]["comments"][:1]),
             "someone asked Codex about this head meanwhile (a pending request is never offline)": lambda w, gh, n: w["pr"][7]["comments"].append(TB.comment(14, "@codex review", minutes_ago=1)),
+            "the executor's repository-wide read is incomplete": lambda w, gh, n: w.update(codex_feed_complete=False),
         }
         for name, change in live.items():
-            out, gh, d = hourly_run(world(), 555, 0, live=change)
-            self.assertEqual((d["merge"]["review"], gh.writes), ("FALLBACK(LIMIT)", []), name)
-            self.assertRegex(out["result"], r"7:C5:codex_review_(required|pending)", name)
-        run, gh, _n, body, d = setup(mutate=lambda w: (BEAT(w), TD.codex_out_of_usage(w)), policy=RECALL)
-        run.brief, run.decision = B.parse_body(body), d
-        self.assertIs(run.codex_limit(NOW), True)
-        self.assertIs(run.codex_limit(NOW + timedelta(hours=20)), False)                # 290 minutes + 20 hours: older than 24 hours
-        run.brief = dict(run.brief, codex_evidence={"pr": 7, "c": 999, "at": TB.ts(290)})
-        self.assertIs(run.codex_limit(NOW), False)                                     # another comment id than the brief's
-        run.brief = dict(run.brief, codex_evidence=None)
-        self.assertIs(run.codex_limit(NOW), False)
+            for mode in ("LIVE", "SHADOW"):
+                out, gh, d = hourly_run(world(), 555, 0, mode=mode, live=change)
+                self.assertEqual((d["merge"]["review"], gh.writes), ("FALLBACK(LIMIT)", []), name)
+                self.assertRegex(out["result"], r"7:C5:codex_review_(required|pending)", name)
+        # the same for the two signals that rest on the owner's request
+        for offline, route in ((TD.codex_limit, "FALLBACK(UNAVAILABLE)"), (TD.codex_silent, "FALLBACK(SILENT)")):
+            out, gh, d = hourly_run(world(offline), 555, 0)
+            self.assertEqual((d["merge"]["review"], tokens(gh)), (route, ["S1_FALLBACK_CANDIDATE_v1"]))
+            out, gh, d = hourly_run(world(offline), 555, 0, live=elsewhere("Codex Review: Didn't find any major issues"))
+            self.assertEqual((d["merge"]["review"], gh.writes), (route, []))
+            self.assertIn("7:C5:codex_review_required", out["result"])
+        # a newer usage-limit answer elsewhere keeps LIMIT and UNAVAILABLE (Codex is still out of usage); for SILENT it is activity
+        for offline, route, stops in ((TD.codex_out_of_usage, "FALLBACK(LIMIT)", False), (TD.codex_limit, "FALLBACK(UNAVAILABLE)", False), (TD.codex_silent, "FALLBACK(SILENT)", True)):
+            out, gh, d = hourly_run(world(offline), 555, 0, live=elsewhere(TD.LIMIT_TEXT))
+            self.assertEqual((d["merge"]["review"], tokens(gh) == []), (route, stops), route)
+        # the owner's request was edited after the build: no longer a request that counts
+        edited = lambda w, gh, n: w["pr"][7]["comments"][0].update(updated_at=TB.ts(0))
+        for offline in (TD.codex_limit, TD.codex_silent):
+            out, gh, d = hourly_run(world(offline), 555, 0, live=edited)
+            self.assertEqual(gh.writes, [])
+            self.assertRegex(out["result"], r"7:C5:codex_review_(required|pending)")   # an edited request is at best a new, pending one
+        # a route with a review does not cost the two repository-wide reads
+        out, gh, _n, d = execute(policy=RECALL)
+        self.assertEqual((d["merge"]["review"], ("PAGES", "issues/comments") in gh.calls), ("CODEX", False))
+
+    def test_invariant_route_c_merges_class_low_only_also_live(self):
+        # fix round 3 (P1-B): the brief may be older than the PR's label or class; the executor's own risk decides too
+        w = offline_world()
+        out, gh, d = hourly_run(w, 555, 0, live=lambda w, gh, n: None)
+        self.assertEqual((d["merge"]["risk"], d["merge"]["review"]), ("LOW", "FALLBACK(UNAVAILABLE)"))
+        run, gh, _n, body, d = setup(mutate=lambda w: (BEAT(w), TD.codex_limit(w)), policy=RECALL)
+        live = {"review": {"codex": {"status": "UNAVAILABLE"}}, "author": {"s1": False, "codex": False},
+                "thin": {"bot": False, "claude": "NONE", "claude_written": False, "diff_x": [], "fallback_candidates": 0, "fallback_mismatch": False,
+                         "p01_named": False, "codex_offline": "UNAVAILABLE", "risk": "LOW"}}
+        self.assertEqual(D.review_route(live, RECALL), ("FALLBACK(UNAVAILABLE)", None))
+        self.assertEqual(D.review_route(dict(live, thin=dict(live["thin"], risk="MEDIUM")), RECALL), (None, "C5:fallback_parked:risk"))
+        source = (ROOT / "scripts/governance/s1_executor_v1.py").read_text(encoding="utf-8")
+        self.assertIn('"risk": risk, "codex_offline": self.codex_offline(n, cx, prc, reviews, inline, now)', source)   # the live facts carry this run's own class
 
     def test_shadow_never_writes_on_the_fallback_route(self):
         out, gh, d = hourly_run(offline_world(), 555, 0, mode="SHADOW")
@@ -1440,12 +1476,21 @@ class ClaudeReceiptRoute(unittest.TestCase):
         out, gh, _n, d = execute(mutate=approved, policy=RECALL)
         self.assertEqual((d["merge"]["review"], out["action"]), ("CLAUDE", "MERGE"))
         self.assertEqual(tokens(gh), ["S1_LANE_MERGE_INTENT_v1", "MERGE", "S1_LANE_MERGE_v1"])           # a review was given: no candidate, no recall, no label
-        self.assertIn("review: CLAUDE", gh.writes[2][2]["body"].splitlines())
+        receipt = gh.writes[2][2]["body"]
+        # fix round 3 (P1-C): the receipt records what was accepted, and that nobody checked it against the Bridge
+        for line in ("review: CLAUDE", "claude_request: 7165386485", f"report_blob: {'a' * 40}", f"bridge_commit: {'b' * 40}", "claude_receipt: UNVERIFIED", "executor: GITHUB run=555"):
+            self.assertIn(line, receipt.splitlines())
         self.assertEqual(B.recalls(gh.w["issue_comments"]), [])
+        self.assertEqual(B.unverified_receipts(gh.w["issue_comments"]), [{"c": gh.writes[2][2]["id"] if "id" in gh.writes[2][2] else B.unverified_receipts(gh.w["issue_comments"])[0]["c"],
+                                                                         "pr": 7, "head": HEAD, "report_blob": "a" * 40}])
+        self.assertTrue(B.build_brief(dict(copy.deepcopy(gh.w), codex_feed=TD.codex_feed_of(gh.w)))["claude_receipts"]["unverified"] == 1)
         live = {
             "the receipt was edited meanwhile": (lambda w, gh, n: w["pr"][7]["comments"][-1].update(updated_at=TB.ts(0)), "7:C5:codex_review_required"),
             "a newer refusal arrived": (lambda w, gh, n: w["pr"][7]["comments"].append(TB.comment(21, TD.CLAUDE_OK.replace("APPROVE", "REQUEST_CHANGES"), TB.OWNER, 1)), "7:C5:claude_veto"),
             "the head turns out to be Claude's own": (lambda w, gh, n: gh.pull["head"].update(ref="claude/x"), "7:C5:claude_authored"),
+            "the head turns out to be S1's own": (lambda w, gh, n: gh.pull["head"].update(ref="s1/x"), "7:C5:s1_authored"),
+            "the request row is gone": (lambda w, gh, n: w["pr"][7].update(comments=[c for c in w["pr"][7]["comments"] if c["id"] != 7165386485]), "7:C5:codex_review_required"),
+            "the request row was edited meanwhile": (lambda w, gh, n: [c.update(updated_at=TB.ts(0)) for c in w["pr"][7]["comments"] if c["id"] == 7165386485], "7:C5:codex_review_required"),
         }
         for name, (change, reason) in live.items():
             out, gh, _n, d = execute(mutate=approved, policy=RECALL, live=change)
@@ -1475,7 +1520,16 @@ class RecallIsClearedOnlyByCodex(unittest.TestCase):
         for line in ("pr: 9", f"head: {'e' * 40}", "codex: FINAL", "executor: GITHUB run=555"):
             self.assertIn(line, gh.writes[0][2]["body"].splitlines())
         self.assertIn("S1_EXECUTOR_RECALL RECALL_CLEARED(pr=9)", out["lines"])
-        self.assertEqual(B.recalls(gh.w["issue_comments"]), [])
+        self.assertEqual([(r["pr"], r["cleared"]) for r in B.recalls(gh.w["issue_comments"])], [(9, True)])   # recorded; it decides nothing
+        self.assertEqual(d["recall"], {"pending": 0})                                  # not pending: THIS build read Codex's completed review
+        # the next run: the clear receipt is on the ledger, so no second one and no second label call
+        again = lambda w: (self.world(self.final())(w), w["issue_comments"].append(TB.comment(702, f"S1_CODEX_RECALL_CLEARED_v1\npr: 9\nhead: {'e' * 40}\ncodex: FINAL", TB.BOT, 30)))
+        # ... and when the clear receipt reached the ledger after the brief was built: the executor reads the ledger itself
+        late = lambda w, gh, n: w["issue_comments"].append(TB.comment(702, f"S1_CODEX_RECALL_CLEARED_v1\npr: 9\nhead: {'e' * 40}\ncodex: FINAL", TB.BOT, 1))
+        out3, gh3, _n, d3 = execute(mutate=self.world(self.final()), policy=RECALL, live=late)
+        self.assertEqual([t for t in tokens(gh3) if t in ("S1_CODEX_RECALL_CLEARED_v1", "LABEL-")], [])
+        out2, gh2, _n, d2 = execute(mutate=again, policy=RECALL)
+        self.assertEqual(([t for t in tokens(gh2) if t in ("S1_CODEX_RECALL_CLEARED_v1", "LABEL-")], d2["recall"], any("S1_EXECUTOR_RECALL" in l for l in out2["lines"])), ([], {"pending": 0}, False))
         self.assertTrue(out["result"].startswith("MERGED("))                           # PR 7 (Codex reviewed) still merges in the same run
         for path in ("issues/9/comments", "pulls/9/reviews", "pulls/9/comments", "pulls/9/commits"):
             self.assertIn(("PAGES", path), gh.calls)                                   # read again, natively, by the executor itself
@@ -1490,17 +1544,25 @@ class RecallIsClearedOnlyByCodex(unittest.TestCase):
             self.assertNotIn("S1_CODEX_RECALL_CLEARED_v1", tokens(gh), name)
             self.assertNotIn("LABEL-", tokens(gh), name)
             self.assertEqual(d["recall"], {"pending": 1})
+        # fix round 3 (P2-D): a forged clear receipt (the owner account, or any workflow that may comment) changes nothing.
+        # The recall stays pending, it stays in the brief, Codex is still asked, and the label stays on the PR
+        for who in (TB.OWNER, TB.BOT):
+            forged = lambda w: (self.world([])(w), w["issue_comments"].append(TB.comment(702, f"S1_CODEX_RECALL_CLEARED_v1\npr: 9\nhead: {'e' * 40}\ncodex: FINAL", who, 30)))
+            out, gh, _n, d = execute(mutate=forged, policy=RECALL)
+            self.assertEqual((d["recall"], "LABEL-" in tokens(gh)), ({"pending": 1}, False))
+            self.assertIn({"action": "REQUEST_REVIEW", "pr": 9, "head": "e" * 40, "how": "CODEX_RECALL"}, d["advice"])
+            self.assertTrue(d["status_lines"][0].endswith(" ; CODEX_RECALL_PENDING(1): #9"), d["status_lines"][0])
         # the brief saw Codex's review, but the executor's own read does not: no clear
         gone = lambda w, gh, n: w["recall_reads"]["9"].update(comments=[])
         out, gh, _n, _d = execute(mutate=self.world(self.final()), policy=RECALL, live=gone)
         self.assertIn("S1_EXECUTOR_RECALL RECALL_NOT_PROVEN(pr=9,NONE)", out["lines"])
         self.assertNotIn("S1_CODEX_RECALL_CLEARED_v1", tokens(gh))
-        self.assertEqual(len(B.recalls(gh.w["issue_comments"])), 1)
+        self.assertEqual([r["cleared"] for r in B.recalls(gh.w["issue_comments"])], [False])
         # a label that is not on the PR (404) is no alarm; any other refusal is
         for code, alarms in ((404, []), (500, ["recall_label_remove_failed(500)"])):
             fail = lambda w, gh, n: setattr(gh, "fail_label", urllib.error.HTTPError("u", code, "x", {}, None))
             out, gh, _n, _d = execute(mutate=lambda w: (self.world(self.final())(w), w.update(pulls=[], pr={})), policy=RECALL, live=fail)
-            self.assertEqual((out["alarms"], B.recalls(gh.w["issue_comments"])), (alarms, []))
+            self.assertEqual((out["alarms"], [r["cleared"] for r in B.recalls(gh.w["issue_comments"])]), (alarms, [True]))
 
 
 if __name__ == "__main__":
