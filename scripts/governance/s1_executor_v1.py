@@ -52,6 +52,7 @@ EVENTS = ("schedule", "workflow_dispatch")
 POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1",
          "S1_FALLBACK_CANDIDATE_v1", "S1_CODEX_RECALL_PENDING_v1", "S1_CODEX_RECALL_CLEARED_v1")
 MAX_POST_CHARS = 4000
+HOLD_VARIABLE = "S1_EXECUTOR_HOLD"     # read from the job's env at start AND live before the intent and before the merge (live_stop)
 
 
 class Stop(Exception):
@@ -91,6 +92,27 @@ class Native:
                 out[path] = None
         return out
 
+    def tree_entries(self, commit, paths):
+        """{path: entry} at `commit` in the tri-state of D.tree_entry: ("PRESENT", mode, type, sha) from `git ls-tree`,
+        ("ABSENT",) only when the commit was fetched and ls-tree read it and listed nothing for that exact path, and
+        ("UNREADABLE",) for everything else (fetch failed, git failed, output that does not parse)."""
+        out = {p: ("UNREADABLE",) for p in paths}
+        if commit not in B.fetch_commits(self.root, [commit], "--depth=1", "--filter=blob:none"):
+            return out
+        for path in paths:
+            try:
+                raw = B.git(self.root, "ls-tree", "--full-tree", commit, "--", path)
+            except Exception:                                    # noqa: BLE001  (git failed: unknown, never "absent")
+                continue
+            rows = [line for line in raw.splitlines() if line.strip()]
+            if not rows:
+                out[path] = ("ABSENT",)
+                continue
+            m = re.fullmatch(r"([0-7]{6}) (blob|tree|commit) ([0-9a-f]{40})\t(.+)", rows[0])
+            if len(rows) == 1 and m and m.group(4) == path:
+                out[path] = ("PRESENT", m.group(1), m.group(2), m.group(3))
+        return out
+
     def is_ancestor(self, sha, main):
         try:
             B.git(self.root, "remote", "get-url", "origin")
@@ -115,6 +137,7 @@ class Run:
         self.run_of = B.RunReader(gh)                             # proves which Actions-bot ledger posts are this job's
         self.alarms, self.pending = [], None                      # what makes the process exit non-zero (finish)
         self.recall_cleared = set()                               # PRs whose recall THIS run proved cleared (the label may then go)
+        self.cleared_for = None                                   # (pr, head) whose final look after the intent passed (A32)
 
     # ---- the ONE place that writes
     def write(self, kind, **kw):
@@ -146,6 +169,9 @@ class Run:
         pr, sha = kw["pr"], kw["sha"]
         need(type(pr) is int and isinstance(sha, str) and D.SHA40.fullmatch(sha) is not None, "merge_shape")
         need(self.decision.get("action") == "MERGE" and self.decision["merge"]["pr"] == pr and self.decision["merge"]["sha"] == sha, "merge_not_the_decision")
+        # ChatGPT audit A32: the gateway itself requires this run's intent for this PR and head on #1156 and a final look
+        # passed after it, not only the caller's order of calls
+        need(any(w[0] == "comment" and w[1] == "S1_LANE_MERGE_INTENT_v1" for w in self.writes) and self.cleared_for == (pr, sha), "merge_without_intent")
         self.writes.append(("merge", pr, sha))                   # recorded BEFORE the call: an ambiguous answer is never retried
         raw, _h = self.gh._request("PUT", self.gh.url(f"pulls/{pr}/merge"), {"merge_method": "squash", "sha": sha})
         return json.loads(raw)
@@ -302,7 +328,8 @@ class Run:
         need(gate is None, f"{n}:{gate}")
         need(route == m.get("review"), f"{n}:C8:review_changed")
         evidence = D.fallback_evidence(n, head, risk, len(files), hashlib.sha256("\n".join(paths).encode()).hexdigest()[:16], facts["title_sha256"],
-                                       pr.get("body"), ci_ids)
+                                       pr.get("body"), ci_ids,
+                                       policy=f"{self.decision.get('contract_blob')}:{brief['thin']['review_policy']}")
         threads = B.read_threads(self.gh, n)
         need(threads is not None, f"{n}:C6:threads")
         need(not any(not t.get("resolved") and re.search(r"(?i)\bP[01]\b", t.get("first_body") or "") for t in threads), f"{n}:C6:unresolved_p0p1")
@@ -320,9 +347,62 @@ class Run:
         need("S1_LANE_MERGE_v1" not in mine, f"{n}:C9:already_done")
         need(mine.count("S1_LANE_MERGE_INTENT_v1") < MAX_ATTEMPTS_PER_HEAD and (n, head) not in B.attempted_heads(comments), f"{n}:C9:attempted_head")
         head_read()                                              # the head a SECOND time, the last read before the intent
-        return {"paths": paths, "main": main, "privacy_run": ci["privacy-scan"]["run"], "repo_id": repo_id, "health": health,
+        return {"paths": paths, "files": files, "head_read": head_read, "main": main, "privacy_run": ci["privacy-scan"]["run"], "repo_id": repo_id, "health": health,
                 "evidence": evidence, "candidates": candidates, "offline": route[9:-1] if route.startswith("FALLBACK(") else None,
                 "claude": B.claude_receipt_fields(head, prc) if route == "CLAUDE" else None}
+
+    # ---- fix round 3 (ChatGPT audit: HOLD semantics, TOCTOU): fresh reads at the two write boundaries
+    def live_stop(self, where):
+        """The owner's stop, read LIVE (never the value the job started with): the repository variable S1_EXECUTOR_HOLD
+        and the lane switch at current main. A non-empty hold turns this run OFF; a switch blob that is no longer the one
+        this run verified stops it. A hold that cannot be read stops too (fail closed): 404 is the only "not set". Called
+        immediately before the intent post and immediately before the merge call; SHADOW makes the same reads, so the
+        SHADOW ticks prove the token can read the variable. What it cannot do: stop a merge call already sent."""
+        try:
+            doc = self.gh.get(f"actions/variables/{HOLD_VARIABLE}")
+            value = doc.get("value") if isinstance(doc, dict) else None
+            need(isinstance(value, str), f"hold_unreadable:{where}")
+        except urllib.error.HTTPError as exc:
+            need(exc.code == 404, f"hold_unreadable:{where}({exc.code})")
+            value = ""
+        if value.strip():
+            self.mode = "OFF"
+            raise Stop(f"hold:{where}")
+        main, _p = self.main_now()                               # the switch as current main holds it, by a native git read
+        blob = self.native.tree_shas(main, [B.SWITCH]).get(B.SWITCH)
+        need(isinstance(blob, str) and blob == self.files["contract"].get("lane_switch_blob"), f"lane:C7:switch_changed:{where}")
+
+    def final_look(self, proof, intent_id):
+        """After the intent and immediately before the merge call, every fact that can change without a new head is read
+        again: the hold and the switch (live_stop), the PR (state, exact head, draft, base, mergeable), its labels and its
+        title, every review (a CHANGES_REQUESTED on any commit), every check run and status of the head, main (a data-only
+        move is allowed, anything else stops), and the ledger since this run's read (a halt, or an intent that is not this
+        run's own). These reads shrink the window; they do not close it: main is not protected and no ruleset is active,
+        so GitHub enforces nothing but the exact head (`sha` in the merge call). A stop here leaves the intent open: it is
+        an alarm, and the next run settles it from native state (ABSENT)."""
+        m = self.decision["merge"]
+        n, head = m["pr"], m["sha"]
+        self.live_stop("put" if intent_id is not None else "shadow_put")
+        pr = proof["head_read"]()
+        facts = D.entry_facts(pr, proof["files"], True, [])
+        need(not facts["hold_labels"] and not facts["x"] and not facts["direction"] and facts["title_sha256"] == m.get("title_sha256"),
+             f"{n}:C8:pr_changed_after_intent")
+        reviews, rc = self.gh.pages(f"pulls/{n}/reviews", max_pages=10)
+        need(rc and B.changes_requested(reviews) is False, f"{n}:C5:changes_requested_after_intent")
+        checks, k1 = self.gh.pages(f"commits/{head}/check-runs", key="check_runs", max_pages=5)
+        statuses, k2 = self.gh.pages(f"commits/{head}/statuses", max_pages=3)
+        need(B.checks_summary(checks, statuses, k1 and k2).get("green") is True, f"{n}:C4:checks_after_intent")
+        main, protected = self.main_now()
+        need(protected is False, "lane:C8:ruleset_unproven")
+        if main != proof["main"]:
+            self.no_code_drift(main, proof["paths"])
+        late = self.gh.get(f"issues/{B.OWNER_ISSUE}/comments", {"since": self.ledger_read_at, "per_page": 100})
+        need(isinstance(late, list) and len(late) < 100, "lane:C7:ledger_unreadable")
+        need(not B.lane_halts(late), "lane:C7:halt_after_intent")
+        need(not any(B.is_s1_author(c) and c.get("id") != intent_id and B.first_line_token(c.get("body")) in ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1")
+                     for c in late), "lane:C9:intent_after_read")
+        if intent_id is not None:
+            self.cleared_for = (n, head)
 
     def codex_offline(self, n, cx, prc, reviews, inline, now):
         """The offline signal of route (c), derived again by THIS run: Codex's activity in the whole repository is read
@@ -369,10 +449,10 @@ class Run:
         main, _p = self.main_now()
         blobs = None
         if commit is not None and paths:
-            a, b = self.native.tree_shas(sha, paths), self.native.tree_shas(head, paths)
-            blobs = [(p, a.get(p), b.get(p)) for p in paths]
+            a, b = self.native.tree_entries(sha, paths), self.native.tree_entries(head, paths)
+            blobs = [(p, a.get(p, ("UNREADABLE",)), b.get(p, ("UNREADABLE",))) for p in paths]
         state, why = D.readback_verdict(pr, head, intent_at, commit, blobs, commit is not None and self.native.is_ancestor(sha, main),
-                                        self.now_fn(), executor_login=actor)
+                                        self.now_fn(), executor_login=actor, paths=paths)
         return state, why, {"pr": n, "head": head, "merge_commit": sha, "main_after": main, "paths": len(paths or [])}
 
     def do_merge(self, comments):
@@ -384,11 +464,17 @@ class Run:
             first, waiting = self.fallback(proof)
             if first is None:
                 return waiting
+        self.live_stop("intent")                                 # the hold and the switch, read fresh, right before the intent
         if self.mode != "LIVE":
+            self.final_look(proof, None)                         # SHADOW makes the reads of the merge boundary too (evidence)
             return f"WOULD_MERGE(pr={m['pr']},head={m['sha'][:8]},risk={m['risk']},review={m['review']})"
         run_id = self.env.get("GITHUB_RUN_ID")
         intent = self.write("comment", body=D.intent_body(d, proof["repo_id"], self.files["contract"]["action_loop_blob"], run_id))
         self.pending = f"intent_without_outcome(c={intent.get('id')})"   # until a receipt or a halt is posted: an alarm
+        try:
+            self.final_look(proof, intent.get("id"))             # after the intent, right before the merge call
+        except Stop as stop:
+            return f"MERGE_ABORTED_AFTER_INTENT({stop.reason})"  # no merge call; the open intent is the alarm and the next run settles it
         try:
             answer = self.write("merge", pr=m["pr"], sha=m["sha"])
         except Stop:
@@ -431,6 +517,10 @@ class Run:
                 continue
             files, fc = self.gh.pages(f"pulls/{it['pr']}/files", max_pages=31)
             paths = sorted({x.get("filename") or "" for x in files} | {x["previous_filename"] for x in files if x.get("previous_filename")}) if fc else []
+            bound = (f.get("paths_sha256") or "").strip()            # the path set the intent was made for (fix round 3)
+            if not fc or (bound and hashlib.sha256("\n".join(paths).encode()).hexdigest()[:16] != bound):
+                records.append(f"UNREADABLE({it['id']}:path_set)")    # never a receipt from a file list that is not the intent's
+                continue
             state, why, rb = self.readback(it["pr"], head, row.get("created_at"), paths, actor=B.login(row))
             contract = (f.get("contract") or self.decision["contract"]).strip()
             run_id = self.env.get("GITHUB_RUN_ID")
@@ -440,7 +530,8 @@ class Run:
             if state == "MATCH":
                 old = {"id": f.get("decision"), "run_id": f.get("brief"), "main": (f.get("main") or "").strip() or None, "contract": contract,
                        "merge": {"review": (f.get("review") or "unavailable").strip()}}      # a fallback merge keeps its recall (B.recalls)
-                self.write("comment", body=D.merge_receipt_body(old, self.brief["repo"]["id"], it["id"], rb, run_id, None, reconciled=True) + "\nevidence_gap: review, privacy, ci, main_health")
+                gap = "review, privacy, ci, main_health" + ("" if bound else ", paths")   # an intent without paths_sha256: the file list is today's
+                self.write("comment", body=D.merge_receipt_body(old, self.brief["repo"]["id"], it["id"], rb, run_id, None, reconciled=True) + f"\nevidence_gap: {gap}")
                 return f"RECONCILED(c={it['id']})"
             if state == "MISMATCH":
                 self.write("comment", body=D.halt_body("reconcile_readback", pr=it["pr"], head=head, detail=why, contract=contract, run_id=run_id))
@@ -543,6 +634,10 @@ class Run:
         clock = D.clock_gate(self.now_fn(), d["generated_at"], d["expires_at"], D.EXECUTE_MAX_AGE_MINUTES)
         if clock is not None:
             return end("NOOP", None, None, clock)
+        # ChatGPT audit A11: no write of ANY class (reconcile, heartbeat, recall bookkeeping) on a decision whose source
+        # chain did not verify; a pins failure is not "nothing to do", it is "nothing may be done"
+        if d.get("pins_ok") is not True:
+            return end("NOOP", None, None, d.get("result") or "SOURCE_UNVERIFIED")
         try:
             comments = self.ledger()
             settled = self.reconcile(comments)
@@ -578,11 +673,31 @@ class Run:
             self.alarms.append(self.pending)
         if self.alarms:
             self.say("S1_EXECUTOR_ALARM " + " ".join(self.alarms))
+        state = health_state(result, self.alarms, self.pending)
+        self.say("S1_EXECUTOR_HEALTH " + json.dumps({"v": 1, "state": state, "run": self.env.get("GITHUB_RUN_ID"), "attempt": self.env.get("GITHUB_RUN_ATTEMPT"),
+                                                     "at": B.iso(self.now_fn()), "mode": self.mode, "action": action, "result": str(result)[:160],
+                                                     "writes": len(self.writes)}, sort_keys=True, separators=(",", ":")))
         self.say(f"S1_EXECUTOR_V1 mode={self.mode} decision={d.get('id')} action={d.get('action')} result={result} "
                  f"writes={len(self.writes)}:{','.join(str(w[1]) for w in self.writes) or '-'}")
         self.say(f"S1_TICK {action} {pr if pr is not None else '-'} {head[:8] if head else '-'} {result} main={main} contract={contract}")
         return {"mode": self.mode, "action": action, "pr": pr, "head": head, "result": result, "writes": list(self.writes), "lines": list(self.lines),
-                "alarms": list(self.alarms)}
+                "alarms": list(self.alarms), "health": state}
+
+
+def health_state(result, alarms, pending):
+    """Executor health, machine-readable and separate from the producer (ChatGPT audit, P2 executor health): a green
+    build says nothing about the executor. AMBIGUOUS: an intent was posted and this run posted no outcome for it (a
+    merge call may or may not have landed; the next run settles it from native state). DEGRADED: an alarm, or the run
+    could not read or verify what it needed. HELD: the owner's hold or the switch stopped it. OK: it did what the
+    decision said, NOOP included. The newest run whose summary reads OK or HELD is the last successful executor tick."""
+    text = str(result)
+    if pending or text.startswith(("MERGE_UNSETTLED", "MERGE_REFUSED", "MERGE_ABORTED_AFTER_INTENT")):
+        return "AMBIGUOUS"
+    if alarms or text.startswith(("BRIEF_INCOMPLETE", "BRIEF_UNVERIFIED")):
+        return "DEGRADED"
+    if text.startswith("EXECUTOR_OFF") or "skipped=hold:" in text:
+        return "HELD"
+    return "OK"
 
 
 def write_summary(env, lines):
@@ -620,7 +735,7 @@ def main(argv):
     run = Run(B.GitHub(token, budget=EXECUTE_API_CALLS), Native(root), dict(os.environ), read_files(root))
     out = run.execute(Path(argv[2]).read_text(encoding="utf-8"))
     write_summary(os.environ, out["lines"])
-    return 1 if out["alarms"] else 0                             # a failed JOB (continue-on-error), never a failed run
+    return 1 if out["alarms"] or out.get("health") in ("AMBIGUOUS", "DEGRADED") else 0   # a failed JOB (continue-on-error), never a failed run
 
 
 if __name__ == "__main__":

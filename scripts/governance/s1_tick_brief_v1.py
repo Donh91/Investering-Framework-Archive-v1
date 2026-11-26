@@ -477,6 +477,15 @@ def recall_window(items, now, n=RECALL_READS_PER_BUILD):
     return (items[start:] + items[:start])[:n]
 
 
+def recall_publish(items, cap=10):
+    """The recalls a brief publishes, at most `cap` (ChatGPT audit A23): every item THIS build read first (recall_window
+    reads RECALL_READS_PER_BUILD < cap of them), then the unread ones, oldest first. Publication used to be the oldest
+    ten, so with more than ten pending the read ones beyond the tenth never reached the decision or the executor: they
+    could never be requested again or cleared. The count of pending recalls is published separately and is never cut."""
+    read = [i for i in items if i.get("codex") != "NOT_READ"]
+    return (read + [i for i in items if i.get("codex") == "NOT_READ"])[:cap]
+
+
 def read_recall(gh, n):
     """The review state of one merged PR with a pending recall: its comments, reviews, inline comments and commits."""
     c, c1 = gh.pages(f"issues/{n}/comments", max_pages=10)
@@ -1555,9 +1564,15 @@ def c1b_scan(chain, base, base_key, entries_of, search_reads=C1B_SEARCH_READS):
     segments.append((anchor, list(range(start, len(chain)))))
     differ = lambda a, b: [d for d, x, y in zip(T3_TREE_DIRS, a, b) if x != y]
     for (anchor_sha, anchor_key), idx in segments:
-        if not idx or entries_of(anchor_key) == entries_of(chain[idx[-1]][3]):
+        if not idx:
             continue
+        # ChatGPT audit A24: equal START and END entries no longer skip a segment. A code change that a later commit of
+        # the same segment undid (A -> B -> A) was on main in between, so the first `search_reads` commits of every
+        # segment are read one by one. Past that cap a segment with equal ends is still not proven clean (stated limit).
+        same_ends = entries_of(anchor_key) == entries_of(chain[idx[-1]][3])
         for n, k in enumerate(idx):
+            if n >= search_reads and same_ends:
+                break
             if n >= search_reads:
                 last = chain[idx[-1]]
                 return {"commit": last[0], "parent": anchor_sha, "entries": differ(entries_of(anchor_key), entries_of(last[3])), "capped": True}
@@ -1831,7 +1846,7 @@ def build_brief(snap):
     # P2-D: PENDING is "this build did not read Codex's completed review of that head". A clear receipt decides nothing;
     # an item drops out of the brief only when it is FINAL natively AND its clear receipt is already posted.
     recall_pending = [i for i in recall_items if i["codex"] != "FINAL"]
-    recall_shown = [i for i in recall_items if i["codex"] != "FINAL" or not i.get("cleared")]
+    recall_shown = recall_publish([i for i in recall_items if i["codex"] != "FINAL" or not i.get("cleared")])
     unverified = unverified_receipts(comments) if ledger_ok else []
     c1b, c1b_reason = c1b_block(snap.get("c1b"))
     repo_id = (snap.get("repo") or {}).get("id")
@@ -1887,7 +1902,7 @@ def build_brief(snap):
                              (snap.get("c1b") or {}).get("prev_next") if isinstance(snap.get("c1b"), dict) else None) if pulls_ok and identity_ok else [],
         "claude_slots": claude_slots(entries, lane) if pulls_ok and identity_ok else [],
         "codex": codex,
-        "complete": not unread, "incomplete": unread[0] if unread else None,
+        "complete": not unread, "incomplete": unread[0] if unread else None, "unread": unread[:8],
         "errors": (snap.get("errors") or [])[:8],
         # A15: a PR that could not be read is listed here and carries unreadable=true; it does not make the brief
         # incomplete. Only global evidence does (the pulls list, the ledger, identity, the API cap, the depth cap).
@@ -1900,7 +1915,7 @@ def build_brief(snap):
         "ledger": ledger_hint(comments, intents, ledger_ok, now),   # D4: hint only
         "verdict": brief_verdict(snap["main_sha"], contract, snap["pins_actual"], snap.get("bootstrap_text"), pins, snap.get("trees_actual")),
         "thin": decision_v1.thin_config(switch),                 # section 0.2i: executor mode and review policy of the switch
-        "recall": {"pending": len(recall_pending) if ledger_ok else None, "items": recall_shown[:10]},   # merges that wait for Codex's revisit
+        "recall": {"pending": len(recall_pending) if ledger_ok else None, "items": recall_shown},   # merges that wait for Codex's revisit
         "codex_evidence": limit,                                 # Codex's newest activity in the repository, when it is a usage-limit answer
         "claude_receipts": {"unverified": len(unverified) if ledger_ok else None, "items": unverified[:10]},   # route (b) merges, receipt not checked against the Bridge
     }

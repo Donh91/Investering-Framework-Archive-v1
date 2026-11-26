@@ -135,7 +135,7 @@ class Range(unittest.TestCase):
             h.commit(f"data: capture {i}")
         out, gh = c1b(h, anchor)
         self.assertEqual((out["complete"], out["halt"], out["checked_through"], out["from"]), (True, None, h.main, anchor))
-        self.assertEqual(gh.tree_reads(), 2)                                     # one segment: its two ends
+        self.assertEqual(gh.tree_reads(), 7)                                     # A24 (fix round 3): every commit of the segment, not only its two ends
         b = brief_with(out)
         self.assertTrue(b["complete"])
         self.assertEqual(b["c1b"], {"checked_through": h.main, "from": anchor, "halt": None, "gap": None, "carry": None})
@@ -525,3 +525,31 @@ class RubricBlobs(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FixRound3TransientCodeChange(unittest.TestCase):
+    """ChatGPT audit A24: a code change undone later in the same non-squash segment (A -> B -> A) was invisible."""
+
+    def scan(self, chain, cap=20):
+        trees = {"A": ("a1", "t", "g", "x", "f"), "B": ("b2", "t", "g", "x", "f")}
+        return B.c1b_scan(chain, "0" * 40, "A", lambda key: trees[key], search_reads=cap)
+
+    def test_a_b_a_in_one_segment_is_a_halt(self):
+        chain = [("1" * 40, ["0" * 40], "data: hourly", "A"), ("2" * 40, ["1" * 40], "fix: direct push", "B"),
+                 ("3" * 40, ["2" * 40], "revert direct push", "A"), ("4" * 40, ["3" * 40], "data: hourly", "A")]
+        halt = self.scan(chain)
+        self.assertEqual((halt["commit"], halt["parent"], halt["entries"], halt["capped"]), ("2" * 40, "1" * 40, ["scripts"], False))
+        self.assertTrue(B.c1b_halt_ok(halt))
+
+    def test_a_clean_segment_and_the_stated_cap(self):
+        clean = [(f"{k + 1:040x}", [f"{k:040x}"], "data: hourly", "A") for k in range(5)]
+        self.assertIsNone(self.scan(clean))
+        # past the cap, a segment whose ends are equal is not proven clean: stated limit, never a halt with no entries
+        late = clean + [("9" * 40, [clean[-1][0]], "fix: direct", "B"), ("8" * 40, ["9" * 40], "revert", "A")]
+        self.assertIsNone(self.scan(late, cap=3))
+
+    def test_the_squash_subject_exemption_is_unchanged_stated_limit(self):
+        """A one-parent commit whose subject ends (#n) still counts as a squash merge by its subject alone (A24 second
+        half: OWNER_DECISION; server-side protection of main is the primary control)."""
+        chain = [("1" * 40, ["0" * 40], "anything (#42)", "B")]
+        self.assertIsNone(self.scan(chain))

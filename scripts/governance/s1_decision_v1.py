@@ -620,7 +620,12 @@ def decide(brief, now=None):
         why = (pins.get("mismatch") or ["pins"])[0] if isinstance(pins.get("mismatch"), list) else "pins"
         step = "3b" if why == "bootstrap:3b" else "3"
         return done(_noop(base, f"SOURCE_UNVERIFIED({step})", [f"lane:pins:{why}"]))
-    if b.get("complete") is not True:
+    # ChatGPT audit A22: PRs beyond the build's depth (NOT_READ:depth_cap) are per-PR unknowns, not global ones. Such a
+    # PR is never a candidate (it carries `skip`), and nothing it holds can change the lane: halts and intents are on
+    # #1156, main is read, C1b reads main's history. So a brief whose ONLY unread item is depth_cap still decides over
+    # the PRs it read in full. Every other unread item (ledger, pulls, identity, C1b, errors, brief_too_large) is global.
+    depth_only = b.get("complete") is False and b.get("unread") == ["depth_cap"] and b.get("incomplete") == "depth_cap"
+    if b.get("complete") is not True and not depth_only:
         return done(_noop(base, f"BRIEF_INCOMPLETE({b.get('incomplete') or 'unknown'})"))
     if in_monday_window(now) or in_monday_window(made):
         return done(_noop(base, "MONDAY_READ_ONLY"))
@@ -831,7 +836,7 @@ def intent_body(decision, repo_id, loop_blob, run_id):
     return "\n".join([
         "S1_LANE_MERGE_INTENT_v1", f"pr: {m['pr']}", f"head: {m['sha']}", f"main: {decision['main']}", f"repo_id={repo_id}",
         f"loop={loop_blob}", f"brief={decision['run_id']}", f"decision={decision['id']}", f"executor: GITHUB run={run_id}",
-        f"risk: {m['risk']}", f"review: {m['review']}", f"contract={decision['contract']}", f"task: {TASK_ID}"])
+        f"risk: {m['risk']}", f"review: {m['review']}", f"paths_sha256: {m.get('paths_sha256')}", f"contract={decision['contract']}", f"task: {TASK_ID}"])
 
 
 def merge_receipt_body(decision, repo_id, intent_id, readback, run_id, privacy_run, reconciled=False, claude=None):
@@ -852,12 +857,15 @@ def merge_receipt_body(decision, repo_id, intent_id, readback, run_id, privacy_r
         f"item: pr:{readback['pr']} state: MERGED", "closure: OBSERVING", f"contract={decision.get('contract')}", f"task: {TASK_ID}"] + receipt)
 
 
-def fallback_evidence(pr, head, risk, files, paths_sha256, title_sha256, body, ci):
+def fallback_evidence(pr, head, risk, files, paths_sha256, title_sha256, body, ci, policy=None):
     """What one fallback run derived about the PR, from ITS OWN native reads, as one hash. Two runs agree when the hashes
-    are equal: the same head, the same file set, title and body, the same risk class, the same CI runs and jobs. The
-    Codex-offline signal is not part of it: every run has to prove that for itself, and the signal may differ."""
+    are equal: the same head, the same file set, title and body, the same risk class, the same CI runs and jobs, and
+    (ChatGPT audit A09) the same policy epoch: the RUNTIME_CONTRACT blob and the review policy the run verified, so a
+    candidate of an older contract or policy never counts for a newer one. Main is not part of it: a data-only move of
+    main is allowed, a code move stops each run (no_code_drift). The Codex-offline signal is not part of it either:
+    every run has to prove that for itself, and the signal may differ."""
     doc = {"pr": pr, "head": head, "risk": risk, "files": files, "paths_sha256": paths_sha256, "title_sha256": title_sha256,
-           "body_sha256": sha16(body), "ci": ci}
+           "body_sha256": sha16(body), "ci": ci, "policy": policy}
     return hashlib.sha256(json.dumps(doc, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:32]
 
 
@@ -915,15 +923,31 @@ def heartbeat_body(decision, brief, ticks_24h, mode, run_id):
 
 
 # ----------------------------------------------------------------------------------------------- C10 readback
+def tree_entry(entry):
+    """One path of a readback, in the tri-state of fix round 3 (ChatGPT audit READBACK_FALSE_MATCH): ("PRESENT", mode,
+    type, sha), ("ABSENT",) when the commit was read and the path is proven not to be in it, or ("UNREADABLE",). Anything
+    else (None, a bare SHA, a short tuple) is UNREADABLE: "absent" and "could not read" are never the same value."""
+    if isinstance(entry, tuple) and entry == ("ABSENT",):
+        return entry
+    if (isinstance(entry, tuple) and len(entry) == 4 and entry[0] == "PRESENT" and isinstance(entry[1], str) and re.fullmatch(r"[0-7]{6}", entry[1])
+            and entry[2] in ("blob", "tree", "commit") and isinstance(entry[3], str) and SHA40.fullmatch(entry[3])):
+        return entry
+    return ("UNREADABLE",)
+
+
 def readback_verdict(pr, head, intent_at, merge_commit, blobs, ancestor_of_main, now, executor_login="github-actions[bot]",
-                     window_minutes=ORIGIN_WINDOW_MINUTES):
+                     window_minutes=ORIGIN_WINDOW_MINUTES, paths=None):
     """ACTION_LOOP C10 / EVIDENCE_BINDINGS B3 for one merge intent, from native reads the caller made:
       pr             GET /pulls/<n>
       merge_commit   GET /commits/<merge_commit_sha> (parents, commit.message), or None
-      blobs          [(path, blob at the merge commit or None, blob at the head or None)] for EVERY changed path
+      blobs          [(path, entry at the merge commit, entry at the head)] for EVERY changed path; an entry is
+                     tree_entry()'s ("PRESENT", mode, type, sha), ("ABSENT",) or ("UNREADABLE",)
       ancestor_of_main  True when the merge commit is an ancestor of, or equal to, current main
-    Returns (state, why): ABSENT (not merged), FOREIGN (merged, but not this intent's operation), MATCH, or MISMATCH
-    (this intent's merge, and a C10 fact fails: the halt trigger)."""
+      paths          the exact path set the intent was made for; `blobs` must cover exactly that set
+    Returns (state, why): ABSENT (not merged), FOREIGN (merged, but not this intent's operation), MATCH, MISMATCH
+    (this intent's merge, and a C10 fact fails: the halt trigger), or UNREADABLE. MATCH needs every path read at both
+    commits and equal in mode, type and SHA (a deletion is ABSENT at both). One unknown path, or a path set that is not
+    the intent's, is UNREADABLE and never MATCH: the intent stays open and no receipt says "verified"."""
     if not isinstance(pr, dict) or not isinstance(pr.get("number"), int):
         return "UNREADABLE", "pr"
     if pr.get("merged") is not True:
@@ -951,10 +975,20 @@ def readback_verdict(pr, head, intent_at, merge_commit, blobs, ancestor_of_main,
         return "MISMATCH", "not_on_main"
     if not isinstance(blobs, list) or not blobs:
         return "MISMATCH", "blobs_unreadable"
-    for path, merged_blob, head_blob in blobs:
-        if merged_blob != head_blob:
+    try:
+        listed = [row[0] for row in blobs]
+        rows = [(row[0], tree_entry(row[1]), tree_entry(row[2])) for row in blobs]
+    except (TypeError, IndexError):
+        return "UNREADABLE", "blobs_shape"
+    if paths is not None and (len(set(listed)) != len(listed) or set(listed) != set(paths)):
+        return "UNREADABLE", "path_set"
+    unknown = [path for path, a, b in rows if a == ("UNREADABLE",) or b == ("UNREADABLE",)]
+    for path, merged_entry, head_entry in rows:
+        if "UNREADABLE" not in (merged_entry[0], head_entry[0]) and merged_entry != head_entry:
             return "MISMATCH", f"blob:{path}"
-    return "MATCH", f"paths={len(blobs)}"
+    if unknown:
+        return "UNREADABLE", f"path_unknown:{unknown[0]}"
+    return "MATCH", f"paths={len(rows)}"
 
 
 # ----------------------------------------------------------------------------------------------- the observer

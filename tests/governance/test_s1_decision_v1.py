@@ -1782,3 +1782,50 @@ class CodexRecall(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FixRound3Scale(unittest.TestCase):
+    """ChatGPT audit A22 (a 16th open PR stopped every merge) and A23 (recalls beyond the tenth never published)."""
+
+    def test_a22_prs_beyond_the_depth_never_stop_a_fully_read_candidate(self):
+        for extra in (1, 10, 85):                                                       # 16, 25 and 100 open PRs
+            d, b = decide(lambda w: w["pulls"].extend(TB.pull(100 + k, "c" * 40) for k in range(extra)), "LIVE")
+            with self.subTest(extra=extra):
+                self.assertEqual((b["complete"], b["incomplete"], b["unread"]), (False, "depth_cap", ["depth_cap"]))
+                self.assertEqual((d["action"], d.get("pr")), ("MERGE", 7))
+                self.assertTrue(all(e.get("skip") == "NOT_READ:depth_cap" for e in b["prs"] if e["n"] >= 100))   # never a candidate
+        # depth_cap together with ANY global unknown is still BRIEF_INCOMPLETE
+        d, b = decide(lambda w: (w["pulls"].append(TB.pull(100, "c" * 40)), w.update(issue_comments_complete=False)), "LIVE")
+        self.assertEqual((d["action"], b["unread"][:2]), ("NOOP", ["ledger_unreadable", "depth_cap"]))
+        self.assertTrue(d["result"].startswith("BRIEF_INCOMPLETE("))
+        for forged in ({"unread": ["depth_cap"], "incomplete": "ledger_unreadable"}, {"unread": ["depth_cap", "x"]}, {"unread": None}, {"complete": None}):
+            _d, b = decide(lambda w: w["pulls"].append(TB.pull(100, "c" * 40)), "LIVE")
+            self.assertEqual(D.decide(dict(b, **forged))["action"], "NOOP", forged)
+
+    def test_a23_every_read_recall_is_published_whatever_the_count(self):
+        for count in (11, 13, 30, 100):
+            items = [{"pr": 1000 + k, "head": f"{k:040x}", "c": k} for k in range(count)]
+            seen_read = set()
+            for hour in range(2 * count):
+                now = NOW + timedelta(hours=hour)
+                read = {i["pr"] for i in B.recall_window(items, now)}
+                shown = B.recall_publish([dict(i, codex="NONE" if i["pr"] in read else "NOT_READ") for i in items])
+                self.assertLessEqual(len(shown), 10)
+                self.assertTrue(read <= {i["pr"] for i in shown}, (count, hour))      # what was read reaches the decision
+                seen_read |= read
+            self.assertEqual(seen_read, {i["pr"] for i in items}, count)               # and every item is read within the rotation
+
+
+class FixRound3RecallPublication(unittest.TestCase):
+    """A23 end to end: with 13 pending recalls, the three the build read (the 11th to the 13th) are in the brief."""
+    ledger, read = CodexRecall.ledger, CodexRecall.read
+
+    def test_a23_the_read_items_beyond_the_tenth_reach_the_decision(self):
+        rows = [TB.comment(700 + k, f"S1_CODEX_RECALL_PENDING_v1\npr: {100 + k}\nhead: {'e' * 40}\nmerge: {'9' * 40}\nruns: 540,541\nexecutor: GITHUB run=541",
+                           TB.BOT, 600 - k) for k in range(13)]
+        reads = {str(100 + k): self.read([]) for k in (10, 11, 12)}
+        d, brief = decide(_chain(self.ledger(*rows), lambda w: w.update(recall_reads=reads)), "LIVE", RECALL)
+        items = brief["recall"]["items"]
+        self.assertEqual((brief["recall"]["pending"], len(items)), (13, 10))
+        self.assertEqual([(i["pr"], i["codex"]) for i in items[:3]], [(110, "NONE"), (111, "NONE"), (112, "NONE")])
+        self.assertEqual({a["pr"] for a in d["advice"] if a.get("how") == "CODEX_RECALL"}, {110, 111, 112})   # Codex is asked again for them

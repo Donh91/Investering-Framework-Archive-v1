@@ -6,6 +6,7 @@ asserts that the executor writes nothing. The call counter of the fake is the dr
 writes per run type.
 """
 import copy
+import hashlib
 import json
 import os
 import re
@@ -66,6 +67,9 @@ class FakeGitHub:
         self.runs = {555: executor_run(555, created=now - timedelta(minutes=3), status="in_progress", updated=now)}
         self.pull_reads, self.head_from_read = 0, None             # (k, sha): from the k-th read of the PR on, it shows that head
         self.fail_label = None                                      # an exception the label write raises
+        self.hold = None                                            # the LIVE value of S1_EXECUTOR_HOLD (None: not set, 404)
+        self.hold_error = None                                      # an HTTP code the variable read answers with
+        self.after_intent = None                                    # fix round 3: a fact that changes right after the intent post
 
     def run_of(self, run_id):
         return copy.deepcopy(self.runs.get(int(run_id)))
@@ -101,6 +105,12 @@ class FakeGitHub:
                 return copy.deepcopy(self.runs[rid])
             run = copy.deepcopy(next((r for r in w["health_runs"] if r["id"] == rid), {}))
             return dict({"repository": {"full_name": B.REPO}}, **run) if run else run   # a real run object names both repositories
+        if path == f"actions/variables/{E.HOLD_VARIABLE}":
+            if self.hold_error:
+                raise urllib.error.HTTPError(path, self.hold_error, "error", {}, None)
+            if self.hold is None:
+                raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
+            return {"name": E.HOLD_VARIABLE, "value": self.hold}
         if path == "actions/workflows/s1-tick-brief.yml/runs":
             return {"workflow_runs": [{"event": "workflow_dispatch", "created_at": B.iso(self.now - timedelta(hours=h))} for h in range(30)]}
         raise AssertionError(f"unexpected GET {path}")
@@ -156,6 +166,8 @@ class FakeGitHub:
             self.next_id += 1
             row = {"id": self.next_id, "body": data["body"], "user": dict(B.ACTIONS_BOT), "created_at": B.iso(self.now), "updated_at": B.iso(self.now)}
             self.w["issue_comments"].append(row)
+            if self.after_intent and B.first_line_token(data["body"]) == "S1_LANE_MERGE_INTENT_v1":
+                self.after_intent(self)
             return json.dumps(row).encode(), {}
         if (method, url) in (("POST", "issues/7/labels"), ("DELETE", f"issues/9/labels/{D.RECALL_LABEL}")):
             if self.fail_label:
@@ -187,6 +199,15 @@ class FakeNative:
         if commit == HEAD:
             return {p: "blob-" + p for p in paths}
         return {p: self.w["pins_actual"].get(p) for p in paths}
+
+    def tree_entries(self, commit, paths):
+        """tree_shas() in the tri-state of D.tree_entry: None is ABSENT, "UNREADABLE" is unknown, a tuple is itself."""
+        self.calls.append(("tree_entries", commit))
+        rows = self.tree_shas(commit, paths)
+        self.calls.pop()
+        conv = lambda v: v if isinstance(v, tuple) else ("ABSENT",) if v is None else ("UNREADABLE",) if v == "UNREADABLE" \
+            else ("PRESENT", "100644", "blob", hashlib.sha1(str(v).encode()).hexdigest())
+        return {p: conv(rows.get(p)) for p in paths}
 
     def is_ancestor(self, sha, main):
         self.calls.append(("is_ancestor", sha, main))
@@ -252,10 +273,22 @@ class LiveMerge(unittest.TestCase):
             with self.assertRaises(E.Stop):
                 run.write("merge", **bad)
         self.assertEqual(gh.writes, [])
+        with self.assertRaises(E.Stop) as stop:                                        # A32: no intent of this run, no final look
+            run.write("merge", pr=7, sha=HEAD)
+        self.assertEqual(stop.exception.reason, "merge_without_intent")
+        run.write("comment", body=D.intent_body(d, TB.REPO_ID, "4" * 40, "555"))
+        with self.assertRaises(E.Stop) as stop:                                        # an intent, but no final look passed
+            run.write("merge", pr=7, sha=HEAD)
+        self.assertEqual(stop.exception.reason, "merge_without_intent")
+        run.cleared_for = (7, "c" * 40)
+        with self.assertRaises(E.Stop):                                                # a final look of another head
+            run.write("merge", pr=7, sha=HEAD)
+        run.cleared_for = (7, HEAD)
+        self.assertEqual(len(gh.writes), 1)
         run.write("merge", pr=7, sha=HEAD)
         with self.assertRaises(E.Stop):                                                # ONE merge per run, whatever the caller asks
             run.write("merge", pr=7, sha=HEAD)
-        self.assertEqual(len(gh.writes), 1)
+        self.assertEqual(len(gh.writes), 2)
 
     def test_invariant_one_action_per_run_and_a_write_cap(self):
         out, gh, _n, _d = execute()
@@ -528,7 +561,8 @@ class ReadbackVerdict(unittest.TestCase):
     def setUp(self):
         self.pr = {"number": 7, "merged": True, "merged_at": TB.ts(-1), "head": {"sha": HEAD}, "merged_by": {"login": "github-actions[bot]"}, "merge_commit_sha": MERGE_SHA}
         self.commit = {"sha": MERGE_SHA, "parents": [{"sha": MAIN}], "commit": {"message": "docs: x (#7)\n\nbody"}}
-        self.blobs = [("a", "1", "1"), ("gone", None, None)]
+        self.one, self.two = ("PRESENT", "100644", "blob", "1" * 40), ("PRESENT", "100644", "blob", "2" * 40)
+        self.blobs = [("a", self.one, self.one), ("gone", ("ABSENT",), ("ABSENT",))]
 
     def verdict(self, pr=None, commit="same", blobs="same", ancestor=True, intent_at=None, **kw):
         return D.readback_verdict(self.pr if pr is None else pr, HEAD, intent_at or TB.ts(0), self.commit if commit == "same" else commit,
@@ -552,12 +586,61 @@ class ReadbackVerdict(unittest.TestCase):
         self.assertEqual(self.verdict(commit=dict(self.commit, commit={"message": "docs: x\n\n(#7)"})), ("MISMATCH", "subject"))
         self.assertEqual(self.verdict(ancestor=False), ("MISMATCH", "not_on_main"))
         self.assertEqual(self.verdict(ancestor=None), ("MISMATCH", "not_on_main"))
-        self.assertEqual(self.verdict(blobs=[("a", "1", "2")]), ("MISMATCH", "blob:a"))
-        self.assertEqual(self.verdict(blobs=[("a", None, "2")]), ("MISMATCH", "blob:a"))
+        self.assertEqual(self.verdict(blobs=[("a", self.one, self.two)]), ("MISMATCH", "blob:a"))
+        self.assertEqual(self.verdict(blobs=[("a", ("ABSENT",), self.two)]), ("MISMATCH", "blob:a"))
         self.assertEqual(self.verdict(blobs=[]), ("MISMATCH", "blobs_unreadable"))
         self.assertEqual(self.verdict(blobs=None), ("MISMATCH", "blobs_unreadable"))
         self.assertEqual(self.verdict(pr={}), ("UNREADABLE", "pr"))
         self.assertEqual(self.verdict(pr=dict(p, merged_at=None)), ("UNREADABLE", "timestamps"))
+
+    def test_fix3_unreadable_is_never_absent_and_never_a_match(self):
+        """ChatGPT audit READBACK_FALSE_MATCH: a failed read was None, and None == None was MATCH."""
+        U = ("UNREADABLE",)
+        self.assertEqual(self.verdict(blobs=[("a", U, U)]), ("UNREADABLE", "path_unknown:a"))                  # both unreadable: was MATCH
+        self.assertEqual(self.verdict(blobs=[("a", self.one, self.one), ("b", U, U)]), ("UNREADABLE", "path_unknown:b"))   # partly unreadable: was MATCH
+        self.assertEqual(self.verdict(blobs=[("a", None, None)]), ("UNREADABLE", "path_unknown:a"))           # a bare None is unknown, not absent
+        self.assertEqual(self.verdict(blobs=[("a", "1" * 40, "1" * 40)]), ("UNREADABLE", "path_unknown:a"))   # a bare SHA has no mode and type
+        self.assertEqual(self.verdict(blobs=[("a", self.one, U), ("b", self.one, self.two)]), ("MISMATCH", "blob:b"))   # a known difference still halts
+        self.assertEqual(self.verdict(blobs=[("a", ("PRESENT", "100755", "blob", "1" * 40), self.one)]), ("MISMATCH", "blob:a"))   # chmod only
+        self.assertEqual(self.verdict(blobs=[("a", ("PRESENT", "120000", "blob", "1" * 40), self.one)]), ("MISMATCH", "blob:a"))   # file -> symlink
+        self.assertEqual(self.verdict(blobs=[("a", ("PRESENT", "160000", "commit", "1" * 40), ("PRESENT", "040000", "tree", "1" * 40))]),
+                         ("MISMATCH", "blob:a"))                                                               # submodule vs tree
+        self.assertEqual(self.verdict(paths=["a", "gone"]), ("MATCH", "paths=2"))                              # the exact path set
+        self.assertEqual(self.verdict(paths=["a", "gone", "c"]), ("UNREADABLE", "path_set"))                   # a path of the intent not read
+        self.assertEqual(self.verdict(paths=["a"]), ("UNREADABLE", "path_set"))                                # a path read that is not the intent's
+        self.assertEqual(self.verdict(blobs=[("a", self.one, self.one), ("a", self.one, self.one)], paths=["a"]), ("UNREADABLE", "path_set"))
+        self.assertEqual(self.verdict(blobs=[("a",)]), ("UNREADABLE", "blobs_shape"))
+        for bad in (("PRESENT", "bad", "blob", "1" * 40), ("PRESENT", "10064", "blob", "1" * 40), ("PRESENT", "100644", "file", "1" * 40),
+                    ("PRESENT", "100644", "blob", "1" * 39), ("PRESENT", 100644, "blob", "1" * 40), ("ABSENT", "x"), ["ABSENT"], "ABSENT"):
+            self.assertEqual(D.tree_entry(bad), ("UNREADABLE",), bad)                           # only the exact shapes count
+
+    def test_fix3_a_readback_with_an_unknown_path_posts_no_receipt(self):
+        out, gh, native, _d = execute(mutate=BEAT, live=lambda w, gh, n: n.merged_blobs.update({"docs/notes/a.md": "UNREADABLE"}))
+        self.assertEqual(tokens(gh), ["S1_LANE_MERGE_INTENT_v1", "MERGE"])                  # no receipt, no halt: the intent stays open
+        self.assertEqual(out["result"], "MERGE_UNSETTLED(UNREADABLE:path_unknown:docs/notes/a.md)")
+        self.assertEqual(out["health"], "AMBIGUOUS")
+        self.assertTrue(any(a.startswith("intent_without_outcome") for a in out["alarms"]))
+
+    def test_fix3_native_tree_entries_tri_state(self):
+        """The real git reader: PRESENT with mode and type, ABSENT only for a commit it read, UNREADABLE otherwise."""
+        import subprocess
+        with tempfile.TemporaryDirectory() as tmp:
+            run = lambda *a: subprocess.run(["git", "-C", tmp, *a], check=True, capture_output=True, text=True).stdout.strip()
+            run("init", "-q"); run("config", "user.email", "t@t"); run("config", "user.name", "t")
+            Path(tmp, "d").mkdir(); Path(tmp, "d", "f.txt").write_text("x"); Path(tmp, "x.sh").write_text("y"); os.chmod(Path(tmp, "x.sh"), 0o755)
+            run("add", "-A"); run("commit", "-q", "-m", "c")
+            sha = run("rev-parse", "HEAD")
+            native = E.Native(tmp)
+            with mock.patch.object(B, "fetch_commits", lambda repo, shas, *o: set(shas)):
+                got = native.tree_entries(sha, ["d/f.txt", "x.sh", "d", "nope.md"])
+            self.assertEqual(got["d/f.txt"][:3], ("PRESENT", "100644", "blob"))
+            self.assertEqual(got["x.sh"][:3], ("PRESENT", "100755", "blob"))
+            self.assertEqual(got["d"][:3], ("PRESENT", "040000", "tree"))
+            self.assertEqual(got["nope.md"], ("ABSENT",))
+            with mock.patch.object(B, "fetch_commits", lambda repo, shas, *o: set()):
+                self.assertEqual(set(native.tree_entries(sha, ["d/f.txt"]).values()), {("UNREADABLE",)})   # fetch failed: unknown
+            with mock.patch.object(B, "fetch_commits", lambda repo, shas, *o: set(shas)):
+                self.assertEqual(native.tree_entries("f" * 40, ["d/f.txt"]), {"d/f.txt": ("UNREADABLE",)})  # git failed: unknown
 
 
 class Reconcile(unittest.TestCase):
@@ -584,7 +667,7 @@ class Reconcile(unittest.TestCase):
         self.assertEqual(tokens(gh), ["S1_LANE_MERGE_v1"])
         body = gh.writes[0][2]["body"]
         self.assertTrue(body.startswith("S1_LANE_MERGE_v1 reconciled\npr: 7\n"))
-        for line in ("merge_execution_origin: UNKNOWN", "executor: GITHUB run=555", "intent: 300", "evidence_gap: review, privacy, ci, main_health",
+        for line in ("merge_execution_origin: UNKNOWN", "executor: GITHUB run=555", "intent: 300", "evidence_gap: review, privacy, ci, main_health, paths",
                      "review: unavailable", "brief=500"):
             self.assertIn(line, body.splitlines())
         self.assertEqual(B.open_intents(gh.w["issue_comments"], NOW + timedelta(minutes=5), 0, gh.run_of), [])
@@ -611,6 +694,19 @@ class Reconcile(unittest.TestCase):
         self.assertEqual(out["result"], "RECONCILED(c=300)")
         out, gh, _n, _d = execute(mutate=lambda w: self.intent(w, user=TB.OWNER), live=self.merged(by="github-actions[bot]"))
         self.assertIn("result: FOREIGN", gh.writes[0][2]["body"])
+
+    def test_fix3_a_reconcile_receipt_needs_the_intents_path_set(self):
+        def bound(w, digest):
+            self.intent(w)
+            w["issue_comments"][-2]["body"] += f"\npaths_sha256: {digest}"
+        files = lambda w: sorted({f["filename"] for f in w["pr"][7]["files"]})
+        right = lambda w: hashlib.sha256("\n".join(files(w)).encode()).hexdigest()[:16]
+        out, gh, _n, _d = execute(mutate=lambda w: bound(w, right(w)), live=self.merged())
+        self.assertEqual(out["result"], "RECONCILED(c=300)")
+        self.assertIn("evidence_gap: review, privacy, ci, main_health", gh.writes[0][2]["body"].splitlines())   # bound: no ", paths"
+        out, gh, _n, _d = execute(mutate=lambda w: bound(w, "0" * 16), live=self.merged())                    # today's file list is not the intent's
+        self.assertEqual(gh.writes, [])
+        self.assertIn("S1_EXECUTOR_RECONCILE UNREADABLE(300:path_set)", out["lines"])
 
     def test_shadow_reconciles_nothing(self):
         out, gh, _n, _d = execute(mode="SHADOW", mutate=lambda w: self.intent(w), live=self.merged())
@@ -809,16 +905,20 @@ class HeadIsReadTwice(unittest.TestCase):
             self.assertEqual((out["action"], gh.writes), ("NOOP", []), mode)
             self.assertIn("7:C8:head_changed", out["result"])
             self.assertEqual(gh.pull_reads, 2)                                         # the first read passed; the SECOND one saw the new head
-        # the control: a head that only moves at a third read (the readback, after the merge call) does not stop the intent
+        # fix round 3: the THIRD read is the final look after the intent; a head that moves there stops the merge call
         out, gh, _n, _d = execute(mutate=BEAT, live=lambda w, gh, n: setattr(gh, "head_from_read", (3, "c" * 40)))
+        self.assertEqual((tokens(gh), out["result"]), (["S1_LANE_MERGE_INTENT_v1"], "MERGE_ABORTED_AFTER_INTENT(7:C8:head_changed)"))
+        # the control: a head that only moves at a fourth read (the readback, after the merge call) does not stop the merge
+        out, gh, _n, _d = execute(mutate=BEAT, live=lambda w, gh, n: setattr(gh, "head_from_read", (4, "c" * 40)))
         self.assertEqual(tokens(gh)[:2], ["S1_LANE_MERGE_INTENT_v1", "MERGE"])
 
     def test_the_second_read_is_after_every_other_read_of_the_verification(self):
         out, gh, _n, _d = execute(mode="SHADOW", mutate=BEAT)
         reads = [i for i, (kind, path) in enumerate(gh.calls) if (kind, path) == ("GET", "pulls/7")]
-        self.assertEqual(len(reads), 2)
-        late = gh.calls[reads[1] + 1:]
-        self.assertEqual(late, [("GET", f"issues/{B.OWNER_ISSUE}/comments")])          # only the last look at the ledger follows it
+        self.assertEqual(len(reads), 3)                                                # fix round 3: SHADOW makes the final look's reads too
+        between = gh.calls[reads[1] + 1:reads[2]]
+        self.assertEqual(between, [("GET", f"issues/{B.OWNER_ISSUE}/comments"), ("GET", f"actions/variables/{E.HOLD_VARIABLE}"), ("GET", "branches/main"),
+                                   ("GET", f"actions/variables/{E.HOLD_VARIABLE}"), ("GET", "branches/main")])   # last look, live stop (intent), live stop (put)
 
 
 class SettlementIdentity(unittest.TestCase):
@@ -1099,6 +1199,9 @@ class NoSilentFailure(unittest.TestCase):
                 self.assertEqual(E.main(["x", "execute", brief]), 0)
                 FakeRun.out = {"lines": ["S1_EXECUTOR_ALARM intent_without_outcome(c=1)", "S1_EXECUTOR_V1 b", "S1_TICK NOOP b"], "alarms": ["intent_without_outcome(c=1)"]}
                 self.assertEqual(E.main(["x", "execute", brief]), 1)
+                for state, code in (("DEGRADED", 1), ("AMBIGUOUS", 1), ("HELD", 0), ("OK", 0)):        # fix round 3: health, alarms or not
+                    FakeRun.out = {"lines": ["S1_TICK NOOP c"], "alarms": [], "health": state}
+                    self.assertEqual(E.main(["x", "execute", brief]), code, state)
             text = Path(summary).read_text(encoding="utf-8")
             self.assertIn("S1_TICK NOOP a", text)
             self.assertIn("S1_EXECUTOR_ALARM intent_without_outcome(c=1)", text)
@@ -1454,13 +1557,15 @@ class CodexOfflineFallback(unittest.TestCase):
                 run.write("label", **bad)
             self.assertEqual(stop.exception.reason, reason)
         self.assertEqual(gh.writes, [])
+        run.write("comment", body=D.intent_body(d, TB.REPO_ID, "4" * 40, "555"))      # A32: the merge gateway needs this run's intent
+        run.cleared_for = (7, HEAD)                                                    # ... and a passed final look
         run.write("merge", pr=7, sha=HEAD)
         run.write("label", pr=7, add=True)
         with self.assertRaises(E.Stop):                                                # another PR's label: never
             run.write("label", pr=8, add=True)
         run.recall_cleared.add(9)
         run.write("label", pr=9, add=False)
-        self.assertEqual([(m, u, b) for m, u, b in gh.writes[1:]], [("POST", "issues/7/labels", {"labels": ["codex-recall-pending"]}),
+        self.assertEqual([(m, u, b) for m, u, b in gh.writes[2:]], [("POST", "issues/7/labels", {"labels": ["codex-recall-pending"]}),
                                                                       ("DELETE", "issues/9/labels/codex-recall-pending", None)])
         run.mode = "SHADOW"
         with self.assertRaises(E.Stop):
@@ -1567,3 +1672,113 @@ class RecallIsClearedOnlyByCodex(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FixRound3WriteBoundaries(unittest.TestCase):
+    """ChatGPT audit (HOLD semantics, TOCTOU): every fact that can change without a new head is read again after the
+    intent and immediately before the merge call, and the owner's hold is read LIVE at both write boundaries."""
+
+    def after_intent(self, change):
+        return lambda w, gh, n: setattr(gh, "after_intent", lambda g: change(w, g, n))
+
+    def test_each_fact_that_changes_between_the_intent_and_the_merge_call_stops_the_call(self):
+        cases = {
+            "hold set after the intent": (lambda w, g, n: setattr(g, "hold", "1"), "hold:put"),
+            "hold variable unreadable": (lambda w, g, n: setattr(g, "hold_error", 403), "hold_unreadable:put(403)"),
+            "switch changed on main": (lambda w, g, n: w["pins_actual"].update({B.SWITCH: "0" * 40}), "lane:C7:switch_changed:put"),
+            "CHANGES_REQUESTED on the head": (lambda w, g, n: w["pr"][7]["reviews"].append({"id": 5, "state": "CHANGES_REQUESTED", "commit_id": HEAD, "user": {"login": "Donh91"}}),
+                                              "7:C5:changes_requested_after_intent"),
+            "a hold label": (lambda w, g, n: g.pull.update(labels=[{"name": "s1-hold"}]), "7:C8:pr_changed_after_intent"),
+            "a hold title": (lambda w, g, n: g.pull.update(title="DNM docs: a note"), "7:C8:pr_changed_after_intent"),
+            "converted to draft": (lambda w, g, n: g.pull.update(draft=True), "7:C8:state"),
+            "a new head": (lambda w, g, n: g.pull["head"].update(sha="c" * 40), "7:C8:head_changed"),
+            "a check run failed": (lambda w, g, n: w["pr"][7]["check_runs"].append({"id": 99, "name": "x", "status": "completed", "conclusion": "failure", "app": {"slug": "y"}}),
+                                   "7:C4:checks_after_intent"),
+            "a commit status failed": (lambda w, g, n: w["pr"][7]["statuses"].append({"id": 1, "context": "ci", "state": "failure"}), "7:C4:checks_after_intent"),
+            "main became protected": (lambda w, g, n: w.update(main_protected=True), "lane:C8:ruleset_unproven"),
+            "main moved by code": (lambda w, g, n: (setattr(g, "main", MAIN2), setattr(n, "drift_paths", ["scripts/governance/x.py"])), "BRIEF_STALE(source_changed)"),
+            "main moved onto a path of the PR": (lambda w, g, n: (setattr(g, "main", MAIN2), setattr(n, "drift_paths", ["docs/notes/a.md"])), "C2:needs_branch_update"),
+            "a halt on the ledger": (lambda w, g, n: g.late.append(TB.comment(9001, "S1_LANE_HALTED PR=- head=-\nreason: owner\ncontract=44444444", TB.OWNER, 0)),
+                                     "lane:C7:halt_after_intent"),
+            "another intent on the ledger": (lambda w, g, n: g.late.append(TB.comment(9001, f"S1_OP_INTENT_v1\npr: 8\nloop={'4' * 40}", TB.OWNER, 0)),
+                                             "lane:C9:intent_after_read"),
+        }
+        for name, (change, reason) in cases.items():
+            with self.subTest(name):
+                out, gh, native, d = execute(mutate=BEAT, live=self.after_intent(change))
+                self.assertEqual(d["action"], "MERGE")
+                self.assertEqual(tokens(gh), ["S1_LANE_MERGE_INTENT_v1"], out["result"])                # the intent, and NO merge call
+                self.assertEqual(out["result"], f"MERGE_ABORTED_AFTER_INTENT({reason})")
+                self.assertEqual(out["health"], "AMBIGUOUS")
+                self.assertTrue(any(a.startswith("intent_without_outcome") for a in out["alarms"]))
+                # the open intent holds the lane until a later run settles it from native state (ABSENT)
+                self.assertEqual(len(B.open_intents(gh.w["issue_comments"], NOW + timedelta(minutes=5), 0, gh.run_of)), 1)
+
+    def test_controls_that_do_not_stop_the_call(self):
+        for name, change in {"nothing": lambda w, g, n: None, "a data-only move of main": lambda w, g, n: setattr(g, "main", MAIN2),
+                             "this run's own intent in the late ledger": lambda w, g, n: g.late.extend(w["issue_comments"][-1:])}.items():
+            with self.subTest(name):
+                out, gh, _n, _d = execute(mutate=BEAT, live=self.after_intent(change))
+                self.assertTrue(out["result"].startswith("MERGED("), out["result"])
+
+    def test_the_hold_is_read_live_before_the_intent_too(self):
+        for mode in ("LIVE", "SHADOW"):
+            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: setattr(gh, "hold", "stop"))   # the env was empty at job start
+            self.assertEqual((gh.writes, out["result"], out["mode"], out["health"]), ([], "NOTHING_ACTIONABLE(skipped=hold:intent)", "OFF", "HELD"), mode)
+            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: setattr(gh, "hold_error", 403))
+            self.assertEqual((gh.writes, out["result"]), ([], "NOTHING_ACTIONABLE(skipped=hold_unreadable:intent(403))"), mode)
+
+    def test_aba_force_push_is_invisible_to_sha_reads_and_the_reviews_still_bite(self):
+        """A -> B -> A between the reads: the SHA is A at every read, so the merge call is for A, whose content was
+        verified (documented residual). A CHANGES_REQUESTED made on B is read across commits and stops the call."""
+        def aba(w, g, n):
+            g.pull["head"].update(sha="c" * 40)
+            g.pull["head"].update(sha=HEAD)
+        out, gh, _n, _d = execute(mutate=BEAT, live=self.after_intent(aba))
+        self.assertTrue(out["result"].startswith("MERGED("), out["result"])
+        def aba_veto(w, g, n):
+            aba(w, g, n)
+            w["pr"][7]["reviews"].append({"id": 5, "state": "CHANGES_REQUESTED", "commit_id": "c" * 40, "user": {"login": "Donh91"}})
+        out, gh, _n, _d = execute(mutate=BEAT, live=self.after_intent(aba_veto))
+        self.assertEqual(out["result"], "MERGE_ABORTED_AFTER_INTENT(7:C5:changes_requested_after_intent)")
+
+    def test_a_stopped_intent_is_settled_by_the_next_run_and_the_head_is_never_tried_again(self):
+        out, gh, native, _d = execute(mutate=BEAT, live=self.after_intent(lambda w, g, n: setattr(g, "hold", "1")))
+        self.assertEqual(tokens(gh), ["S1_LANE_MERGE_INTENT_v1"])
+        body = gh.w["issue_comments"][-1]["body"]
+        self.assertIn("paths_sha256: ", body)                                                  # the path set the intent was made for
+        self.assertEqual(B.attempted_heads(gh.w["issue_comments"]) >= {(7, HEAD)}, True)
+
+    def test_health_states(self):
+        H = E.health_state
+        self.assertEqual(H("MERGED(n=1,main=1)", [], None), "OK")
+        self.assertEqual(H("NO_ELIGIBLE_PR", [], None), "OK")
+        self.assertEqual(H("EXECUTOR_OFF(hold)", [], None), "HELD")
+        self.assertEqual(H("NOTHING_ACTIONABLE(skipped=hold:put)", [], None), "HELD")
+        self.assertEqual(H("BRIEF_INCOMPLETE(executor:x)", [], None), "DEGRADED")
+        self.assertEqual(H("NOTHING_ACTIONABLE(skipped=x)", ["unexpected(KeyError)"], None), "DEGRADED")
+        self.assertEqual(H("MERGE_UNSETTLED(UNREADABLE:x)", [], None), "AMBIGUOUS")
+        self.assertEqual(H("x", [], "intent_without_outcome(c=1)"), "AMBIGUOUS")
+        out, _gh, _n, _d = execute(mode="SHADOW", mutate=BEAT)
+        line = next(l for l in out["lines"] if l.startswith("S1_EXECUTOR_HEALTH "))
+        doc = json.loads(line.split(" ", 1)[1])
+        self.assertEqual((doc["v"], doc["state"], doc["run"], doc["mode"], doc["writes"]), (1, "OK", "555", "SHADOW", 0))
+        self.assertTrue(out["lines"][-1].startswith("S1_TICK "))
+
+
+class FixRound3AuthorityAndEpoch(unittest.TestCase):
+    def test_a11_no_bookkeeping_write_on_an_unverified_source_chain(self):
+        rc = Reconcile()
+        mutate = lambda w: (rc.intent(w), w["pins_actual"].update({"AGENTS.md": "0" * 40}))
+        out, gh, _n, d = execute(mutate=mutate, live=rc.merged())
+        self.assertFalse(d["pins_ok"])
+        self.assertEqual((gh.writes, out["action"]), ([], "NOOP"))                       # the reconcile receipt is NOT written
+        self.assertTrue(out["result"].startswith("SOURCE_UNVERIFIED"), out["result"])
+        out, gh, _n, _d = execute(mutate=lambda w: rc.intent(w), live=rc.merged())     # the control: verified pins reconcile
+        self.assertEqual(out["result"], "RECONCILED(c=300)")
+
+    def test_a09_the_candidate_hash_binds_the_policy_epoch(self):
+        base = D.fallback_evidence(7, HEAD, "LOW", 1, "p", "t", "body", [1], policy="rc1:CODEX_CLAUDE_OR_OFFLINE_RECALL")
+        self.assertNotEqual(base, D.fallback_evidence(7, HEAD, "LOW", 1, "p", "t", "body", [1], policy="rc2:CODEX_CLAUDE_OR_OFFLINE_RECALL"))
+        self.assertNotEqual(base, D.fallback_evidence(7, HEAD, "LOW", 1, "p", "t", "body", [1], policy="rc1:CODEX_FINAL_REQUIRED"))
+        self.assertIn("policy=f\"{self.decision.get('contract_blob')}:{brief['thin']['review_policy']}\"", SOURCE)
