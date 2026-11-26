@@ -19,6 +19,7 @@ on:
       - '05_CYCLE_NAVIGATOR/graph_history/**'
       - '05_CYCLE_NAVIGATOR/CANONICAL_SCORE_AND_LINEAGE.md'
       - 'scripts/cycle_navigator/validate_public_series.py'
+      - 'scripts/cycle_navigator/attest_weekly_pages_delivery.py'
       - '.github/workflows/cycle-navigator-pages.yml'
       - '.github/workflows/hourly-sequence-capture.yml'
       - 'scripts/cycle_navigator/verify_hourly_pages_handoff.py'
@@ -42,6 +43,10 @@ jobs:
         run: python3 scripts/cycle_navigator/verify_hourly_pages_handoff.py --self-test
       - name: Verify public homepage alias and exact CDN parity negative controls
         run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs --self-test
+      - name: Verify exact Pages artifact visibility and identity negative tests
+        run: node --test 05_CYCLE_NAVIGATOR/site/tests/wait-pages-artifact.test.mjs
+      - name: Verify native Monday source-to-CDN closure and negative tests
+        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py --self-test
       - name: Verify Premium v2.1 isolated source contracts (no dependencies)
         run: npm test --prefix 05_CYCLE_NAVIGATOR/site/premium-v2
       - name: Verify Kompas live path producer (Challenger B formula, fail-closed, no Compass probability)
