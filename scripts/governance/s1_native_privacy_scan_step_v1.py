@@ -133,10 +133,15 @@ def original_pr_base(git: Git, base_parent: str, head: str, merge: str) -> str |
     if ancestor is None:
         shallow = git.run("rev-parse", "--is-shallow-repository", check=False)
         if shallow is not None and shallow.strip() == b"true":
-            # Bounded deepen for checkout@v4 default shallow PR-merge checkout.
-            # If ancestry is still unavailable, classify UNKNOWN rather than green.
-            git.run("fetch", "--no-tags", "--deepen=64", "origin", merge, check=False)
-            ancestor = candidate()
+            # Bounded incremental deepening of the exact PR merge commit.
+            # Never fall back to the merge-output delta or a moving branch tip.
+            # Busy main may be hundreds of commits ahead of a PR's true base.
+            for deepen in (64, 256, 1024):
+                git.run("fetch", "--no-tags", f"--deepen={deepen}", "origin", merge, check=False)
+                ancestor = candidate()
+                if ancestor is not None:
+                    break
+            # Exhausted or unavailable ancestry stays UNKNOWN at the caller.
     return ancestor
 
 
