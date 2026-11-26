@@ -2,6 +2,7 @@ import copy
 import unittest
 from datetime import datetime, timedelta, timezone
 from scripts.data_ping.native_handlekompas import build, cycle_participation_readback, altseason_readback
+from scripts.data_ping.auto_market_state import normalize_breadth, capitalization_transmission_proxy
 
 NOW = datetime(2026, 11, 25, 11, tzinfo=timezone.utc)
 STAMP = "2026-11-25T10:00:00Z"
@@ -30,6 +31,43 @@ def read(x,now=NOW):
     return cycle_participation_readback(x,as_of=now)
 
 class ParticipationTests(unittest.TestCase):
+    def test_owner_clock_variants_end_to_end(self):
+        raw = dict(contract="C5E_TOP100_BREADTH_OWNER_v1_2",
+            universe=dict(identifier="TOP100", version="v1_2", membership_hash=H, constituent_count=100),
+            aggregate=dict(membership_hash=H, constituent_count=100, advancers=100, decliners=0, flat=0),
+            evidence_semantics=dict(evidence_role="PROXY_ONLY", canonical_compatible=False,
+                canonical_large_cap_breadth="UNCONFIRMED", canonical_broad_alt_breadth="UNCONFIRMED"),
+            constituents=[dict(asset_id="bitcoin" if i == 1 else "ethereum" if i == 2 else f"asset-{i}",
+                filtered_rank=i, change_24h_pct=1 if i == 1 else 2 if i == 2 else 3)
+                for i in range(1, 101)])
+        for clocks in [
+            dict(retrieved_at_utc=STAMP),
+            dict(retrieved_at_utc=None, retrieval_timestamp=STAMP),
+            dict(observation=dict(retrieval_timestamp_utc=STAMP)),
+            dict(retrieval_timestamp=STAMP, observation=dict(retrieval_timestamp_utc="2026-11-25T09:00:00Z")),
+        ]:
+            with self.subTest(clocks=clocks):
+                source = {**raw, **clocks}
+                original = copy.deepcopy(source)
+                normalized, health = normalize_breadth(source, now_utc=NOW)
+                self.assertEqual(health["status"], "PASS")
+                self.assertEqual(source, original)
+                self.assertEqual(normalized, original)
+                x = fixture()
+                x["normalized_state"]["breadth"] = normalized
+                x["normalized_state"]["capitalization_transmission_proxy"] = capitalization_transmission_proxy(normalized)
+                x["source_health"]["breadth"]["normalization"] = health
+                self.assertEqual(proxy(x)["source_retrieved_at_utc"], STAMP)
+                self.assertEqual(read(x)["status"], "OBSERVED_PARTICIPATION")
+                self.assertEqual(read(x, NOW + timedelta(hours=7))["status"], "UNAVAILABLE")
+                proxy(x)["source_retrieved_at_utc"] = None
+                self.assertEqual(read(x)["status"], "UNAVAILABLE")
+        for invalid in ["bad", "2026-11-25T12:00:00Z", "2026-11-24T10:00:00Z"]:
+            source = {**raw, "retrieved_at_utc": invalid, "retrieval_timestamp": STAMP}
+            normalized, health = normalize_breadth(source, now_utc=NOW)
+            self.assertIsNone(normalized)
+            self.assertNotEqual(health["status"], "PASS")
+
     def test_mutation(self):
         x=fixture(); first=read(x)
         self.assertEqual(first["status"],"OBSERVED_PARTICIPATION")

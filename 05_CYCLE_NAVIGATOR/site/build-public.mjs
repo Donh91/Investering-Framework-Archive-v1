@@ -638,6 +638,7 @@ compass.full_stack=await buildFullStackReadback(compass,pointer,pkg,publicSeries
 const compassEvent=await buildCompassEventSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
 await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
+// Kompas PRO is finalized after live-observation, precision and lineage writers.
 await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"\n");
 
 // Research-only first-party source slot for Challenger A. This is deliberately

@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/master_monday/publish_master_monday_outputs.py",
+    "tests/master_monday/test_registry_availability_status.py",
+    "tests/master_monday/test_weekly_precision_regressions.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-57b55ed91b43a3ed",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Split D: separate Master Monday delivery health from readiness * Verify delivery and translation states in registry publication * Test receipt-qualified delivery independently of analytical completeness * Separate delivery integrity from analytical status; remove unadmitted direction and hit fraction * Test delivery independence, receipt failures and direction-free projection",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/master_monday/publish_master_monday_outputs.py": "330ab706fccc4e08f36683a74c485d38022f00b8",
+    "tests/master_monday/test_registry_availability_status.py": "e288ed08c907476cb4ad2b78b11de3a8a1a05496",
+    "tests/master_monday/test_weekly_precision_regressions.py": "7498e544e1ad4d9c9c060628d6bb9afaf1f6c592"
+  },
+  "source_commit_sha": "57b55ed91b43a3ed2f14ef25f72dfbd1989eae47",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-25T21:12:15+01:00",
+  "task_class": "MASTER_MONDAY",
+  "task_summary": "Split D: Master Monday delivery health and analytical readiness (#2341)"
+}

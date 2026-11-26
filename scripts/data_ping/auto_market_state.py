@@ -477,7 +477,11 @@ def capitalization_transmission_proxy(breadth: Any) -> dict[str, Any]:
         "contract": "CAPITALIZATION_TRANSMISSION_PROXY_v2",
         "source_universe": nested(breadth, "universe", "identifier"),
         "source_membership_hash": nested(breadth, "universe", "membership_hash") or nested(breadth, "aggregate", "membership_hash"),
-        "source_retrieved_at_utc": breadth.get("retrieved_at_utc") if isinstance(breadth, Mapping) else None,
+        "source_retrieved_at_utc": (
+            breadth.get("retrieved_at_utc")
+            or breadth.get("retrieval_timestamp")
+            or nested(breadth, "observation", "retrieval_timestamp_utc")
+        ) if isinstance(breadth, Mapping) else None,
         "bucket_semantics": "FILTERED_TOP100_RANK_WINDOWS_EXPLICIT_NON_BETA_EXCLUSIONS_PROXY_ONLY",
         "non_beta_exclusion_policy": {
             "policy_id": "CAP_TRANSMISSION_NON_BETA_EXCLUSIONS_2026_10_01_A",

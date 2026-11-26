@@ -2240,7 +2240,11 @@ def cycle_participation_readback(auto_state, *, as_of):
     membership = _participation_mapping(breadth.get("universe")).get("membership_hash") or _participation_mapping(breadth.get("aggregate")).get("membership_hash")
     if (not isinstance(membership, str) or not re.fullmatch(r"[0-9a-f]{64}", membership)
             or membership != proxy.get("source_membership_hash")
-            or stamp != _participation_clock(breadth.get("retrieved_at_utc"))
+            or stamp != _participation_clock(
+                breadth.get("retrieved_at_utc")
+                or breadth.get("retrieval_timestamp")
+                or _participation_mapping(breadth.get("observation")).get("retrieval_timestamp_utc")
+            )
             or stamp != _participation_clock(norm.get("retrieved_at_utc"))):
         return _participation_unavailable("SOURCE_MEMBERSHIP_OR_CLOCK_MISMATCH")
     out = _participation_unavailable("NO_QUALIFIED_BUCKET")
