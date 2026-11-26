@@ -256,6 +256,15 @@ class ExactPredecessor(unittest.TestCase):
         newer = self.published_variant(generation=self.nxt["brief"]["generation"] + 3)
         self.assertEqual(self.attempt(newer), [])
 
+    def test_a_carried_tuple_with_a_generation_that_is_not_the_next_is_refused(self):
+        for gen in (0, self.nxt["brief"]["generation"] + 1, self.nxt["brief"]["generation"] - 1):
+            with self.subTest(gen=gen):
+                body = B.render_issue(dict(self.nxt["brief"], generation=gen))[0]
+                gh = TL.PublishGh(self.sim, self.sim.t)
+                with TL.contextlib.redirect_stdout(self.sim.lines):
+                    B.publish(gh, body, now=self.sim.t)
+                self.assertEqual([w for w in gh.writes if w[0] == "PATCH"], [])
+
     def test_an_in_progress_predecessor_is_re_read_then_never_an_anchor(self):
         sim = self.sim
         rid = B.parse_body(sim.issue["body"])["run_id"]
