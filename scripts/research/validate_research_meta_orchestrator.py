@@ -355,7 +355,18 @@ def native_get(path):
     return native_pr if path=="pulls/2357" else native_run
 assert receipt.verify_native_metadata(native_data,native_get)=="NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED"
 assert receipt.verify_native_metadata(data,native_get)=="NATIVE_METADATA_MISMATCH"
-assert receipt.verify_native_metadata(native_data,lambda p: native_pr if p=="pulls/2357" else {**native_run,"head_sha":"b"*40})=="NATIVE_METADATA_MISMATCH"
+assert receipt.verify_native_metadata(native_data,lambda p: native_pr if p=="pulls/2357" else {**native_run,"head_sha":"b"*40})=="NATIVE_RUN_HEAD_DIFFERS_CUSTODY_UNVERIFIED"
+assert receipt.verify_native_metadata(native_data,lambda p: native_pr if p=="pulls/2357" else {**native_run,"head_sha":"invalid"})=="NATIVE_METADATA_MISMATCH"
+assert receipt.verify_native_metadata(native_data,lambda p: {**native_pr,"base":"invalid"} if p=="pulls/2357" else native_run)=="NATIVE_METADATA_MISMATCH"
+replaced_comment=receipt.attach_owner_receipt(pilot,lambda:[comment(id=46)],previous=accepted)
+assert replaced_comment["execution_proof"]["receipt_status"]=="CONFLICT"
+assert replaced_comment["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+assert replaced_comment["execution_proof"]["scientific_outcome"] is None
+later_run=receipt.attach_owner_receipt(pilot,lambda:[comment(native_data)],verify=lambda d:receipt.verify_native_metadata(d,lambda p:native_pr if p=="pulls/2357" else {**native_run,"head_sha":"b"*40}))
+assert later_run["execution_proof"]["receipt_verification"]=="NATIVE_RUN_HEAD_DIFFERS_CUSTODY_UNVERIFIED"
+assert later_run["execution_proof"]["scientific_outcome"] is None
+assert later_run["execution_proof"]["main_readback"] is None
+assert later_run["execution_proof"]["learning_calibration_applied"] is False
 matched=receipt.attach_owner_receipt(pilot,lambda:[comment(native_data)],verify=lambda d:receipt.verify_native_metadata(d,native_get))
 assert matched["execution_proof"]["receipt_verification"]=="NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED"
 assert matched["execution_proof"]["scientific_outcome"] is None

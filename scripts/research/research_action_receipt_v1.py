@@ -129,21 +129,36 @@ def _get_native(path):
 
 
 def verify_native_metadata(data, get=_get_native):
-    """Bounded WIRE-0 native metadata check, NOT readback or independent science."""
-    # The only original-owner implementation for this pilot is #2357.
+    """Bounded WIRE-0 metadata check, NOT a producer/readback/independence proof.
+
+    The weekly workflow checks out current main, then publishes its output on
+    an automation branch and separate reviewed PR. The run event head alone
+    cannot establish the exact source checkout or accepted output bytes.
+    """
     if data.get("pr") != 2357:
         return "NATIVE_METADATA_MISMATCH"
     pr = get("pulls/2357")
     run = get(f"actions/runs/{data['native_run_id']}")
-    base = pr.get("base") or {}
-    if (pr.get("number") != 2357 or pr.get("merged") is not True
+    if not isinstance(pr, dict) or not isinstance(run, dict):
+        return "NATIVE_METADATA_MISMATCH"
+    base, repo, run_repo = pr.get("base"), None, run.get("repository")
+    if isinstance(base, dict):
+        repo = base.get("repo")
+    if (not isinstance(base, dict) or not isinstance(repo, dict)
+            or not isinstance(run_repo, dict)
+            or pr.get("number") != 2357 or pr.get("merged") is not True
             or pr.get("merge_commit_sha") != data["merge_sha"]
-            or base.get("ref") != "main" or (base.get("repo") or {}).get("full_name") != REPO
-            or run.get("id") != data["native_run_id"] or run.get("head_sha") != data["merge_sha"]
-            or run.get("head_branch") != "main" or (run.get("repository") or {}).get("full_name") != REPO
+            or base.get("ref") != "main" or repo.get("full_name") != REPO
+            or run.get("id") != data["native_run_id"] or not _sha(run.get("head_sha"))
+            or run.get("head_branch") != "main" or run_repo.get("full_name") != REPO
             or run.get("path") != ".github/workflows/shadow-registry-weekly.yml"
             or run.get("status") != "completed" or run.get("conclusion") != "success"):
         return "NATIVE_METADATA_MISMATCH"
+    if run["head_sha"] != data["merge_sha"]:
+        # A different main event head is not proof of a conflict or ancestry.
+        # Native checkout, producer output, publication PR and main readback
+        # remain unverified; do not silently equate a later run with a merge.
+        return "NATIVE_RUN_HEAD_DIFFERS_CUSTODY_UNVERIFIED"
     return "NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED"
 
 
@@ -219,7 +234,8 @@ def attach_owner_receipt(state, fetch=fetch_owner_comments, *, previous=None, ve
         if prior:
             proof["receipt_status"] = "HISTORICAL_CLAIM_NOT_CURRENTLY_PRESENT"
         return result_state
-    if prior and prior["claim_sha256"] != claim["claim_sha256"]:
+    if prior and (prior["claim_sha256"] != claim["claim_sha256"]
+                  or prior["comment_id"] != claim["comment_id"]):
         proof["receipt_status"] = "CONFLICT"
         return result_state
     result_state["wire0_historical_attestation"] = prior or claim
@@ -231,7 +247,8 @@ def attach_owner_receipt(state, fetch=fetch_owner_comments, *, previous=None, ve
         try:
             native = verify(result[1])
             proof["receipt_verification"] = native if native in (
-                "NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED", "NATIVE_METADATA_MISMATCH") else "NOT_VERIFIED"
+                "NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED", "NATIVE_METADATA_MISMATCH",
+                "NATIVE_RUN_HEAD_DIFFERS_CUSTODY_UNVERIFIED") else "NOT_VERIFIED"
         except (OSError, ValueError, TypeError):
             proof["receipt_verification"] = "NATIVE_SOURCE_UNAVAILABLE"
     # Even a native metadata match does not prove readback, review independence,
