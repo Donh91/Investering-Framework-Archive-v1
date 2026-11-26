@@ -310,7 +310,7 @@ class Sequences(unittest.TestCase, Invariants):
         self.sim.accept(gaps[0], self.sim.t + timedelta(minutes=5))
         b, _w = self.tick()
         self.assertEqual(self.gaps(), [(gaps[1]["from"], gaps[1]["to"])])
-        self.assertEqual(b["record"]["cleared"], [{"id": gaps[0]["id"], "by": f"owner:{self.sim.next_cid}"}])
+        self.assertEqual(b["record"]["cleared"], [B.cleared_record(gaps[0], self.sim.next_cid)])   # fix round 8: the exact detection
         self.assertNotEqual(b["decision"]["action"], "MERGE")
         self.sim.accept(gaps[1], self.sim.t + timedelta(minutes=5))
         unread = []

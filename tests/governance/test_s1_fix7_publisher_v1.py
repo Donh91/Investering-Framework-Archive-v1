@@ -389,7 +389,9 @@ class DuplicateIssues(unittest.TestCase):
         halt = {"commit": TC.sha("h"), "parent": TC.sha("hp"), "entries": ["tests"], "capped": False}
         old = {"c1b": {"gaps": [g], "halt": halt}, "generated_at": B.iso(NOW), "main": TC.sha("m")}
         self.assertFalse(B.preserved(old, {"c1b": {"gaps": [], "halt": halt, "cleared": []}}))
-        self.assertTrue(B.preserved(old, {"c1b": {"gaps": [], "halt": halt, "cleared": [{"id": g["id"], "by": "owner:9"}]}}))
+        self.assertTrue(B.preserved(old, {"c1b": {"gaps": [], "halt": halt, "cleared": [B.cleared_record(g, 9)]}}))
+        # fix round 8 (R7-SH1): a legacy record that names the range only is ambiguous and never counts
+        self.assertFalse(B.preserved(old, {"c1b": {"gaps": [], "halt": halt, "cleared": [{"id": g["id"], "by": "owner:9"}]}}))
         self.assertFalse(B.preserved(old, {"c1b": {"gaps": [g], "halt": None}}))
         self.assertTrue(B.preserved(old, {"c1b": {"gaps": [g], "halt": dict(halt)}}))
 

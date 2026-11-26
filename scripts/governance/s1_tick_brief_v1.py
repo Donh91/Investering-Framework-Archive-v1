@@ -1944,8 +1944,10 @@ def carried_halt(issues):
     body parses and carries a valid halt."""
     if not isinstance(issues, list):
         return None
+    # fix round 8: in the issue-number order publish() and duplicate_briefs() use (the canonical issue first). A string
+    # order put issue 10000 before 9999, so the canonical issue's halt was replaced by the extra's and then lost
     for i in sorted((i for i in issues if isinstance(i, dict) and "pull_request" not in i and is_actions_bot(i.get("user"))),
-                    key=lambda i: str(i.get("number"))):
+                    key=lambda i: (0, i["number"], "") if _is_id(i.get("number")) else (1, 0, str(i.get("number")))):
         c = (parse_body(i.get("body")) or {}).get("c1b")
         if isinstance(c, dict) and c1b_halt_ok(c.get("halt")):
             return c["halt"]
@@ -2016,9 +2018,19 @@ def gap_ok(g):
         return False
 
 
-def add_gap(gaps, g):
-    """One item per range: a range already in the ledger keeps its first item (and its detection time)."""
-    if not any(x["id"] == g["id"] for x in gaps):
+def gap_detection(g):
+    """Fix round 8 (R7-SH1): the exact identity of ONE detection of ONE gap: its range id AND its detection time (the
+    pair gap_action_id hashes). Two items with the same range and another detected_at are two detections."""
+    return (g["id"], g["detected_at"])
+
+
+def add_gap(gaps, g, exact=False):
+    """A NEW detection of this build (exact False): one item per range, a range already in the ledger keeps its first
+    unresolved item and its detection time (a range found again every tick is not a new gap each tick). Carrying items
+    of published briefs (exact True, fix round 8, R7-SH1): one item per exact detection, so two detections of one range
+    from two issue histories are never coalesced (each keeps its own action id and needs its own owner disposition)."""
+    key = gap_detection if exact else (lambda x: x["id"])
+    if not any(key(x) == key(g) for x in gaps):
         gaps.append(g)
 
 
@@ -2039,12 +2051,12 @@ def carried_gaps(prev, now):
         to = (_sha_or_none(item.get("to")) if isinstance(item, dict) else None) or fallback
         if to is None:
             raise C1bFail("gaps_unreadable")                    # nothing to name: this build carries nothing (publish keeps the old brief)
-        add_gap(out, c1b_gap(None, to, reason, C1B_WINDOW, made))
+        add_gap(out, c1b_gap(None, to, reason, C1B_WINDOW, made), exact=True)
 
     if "gaps" in c:
         for g in c["gaps"] if isinstance(c["gaps"], list) else [None]:
             if gap_ok(g):
-                add_gap(out, {k: g[k] for k in GAP_KEYS})
+                add_gap(out, {k: g[k] for k in GAP_KEYS}, exact=True)   # fix round 8: by exact detection, never by range
             else:
                 unbounded(g, "C1b:gap_unreadable")
     else:
@@ -2053,6 +2065,20 @@ def carried_gaps(prev, now):
                 and not str(legacy.get("reason") or "").startswith("C1b:capped_equal_ends"):
             unbounded(legacy, str(legacy.get("reason") or "C1b:range"))
     return out
+
+
+def cleared_record(gap, cid):
+    """Fix round 8 (R7-SH1): B.c1b.cleared item of ONE owner disposition: the range id, the exact detection (its
+    detected_at and gap_action_id) and the acceptance comment id. preserved() counts only such a complete record."""
+    return {"id": gap["id"], "detected_at": gap["detected_at"], "gap": gap_action_id(gap), "by": f"owner:{cid}", "comment": cid}
+
+
+def cleared_ok(x):
+    """Is this a complete fix-round-8 cleared record? A legacy record (range id and by only) is ambiguous: it names no
+    detection, so it never counts as the disposition of any detection (fail closed)."""
+    return isinstance(x, dict) and isinstance(x.get("id"), str) and isinstance(x.get("detected_at"), str) \
+        and isinstance(x.get("gap"), str) and _is_id(x.get("comment")) and x.get("by") == f"owner:{x['comment']}" \
+        and x["gap"] == gap_action_id(x)
 
 
 def gap_action_id(gap):
@@ -2193,17 +2219,20 @@ def read_c1b(gh, main_sha, ledger, now, max_calls=C1B_MAX_CALLS):
         if issue is not None or dups:
             # fix round 6 (S1, S2): every gap of the previous brief, carried first and one by one; only an exact owner
             # disposition removes one (the cleared list says which, and by which comment). Fix round 7: with duplicate
-            # brief issues, the gaps of EVERY one of them (no anchor is taken from any)
+            # brief issues, the gaps of EVERY one of them (no anchor is taken from any). Fix round 8 (R7-SH1): the union
+            # is by exact detection (range id AND detected_at): the same range detected in two issue histories stays two
+            # items, each disposed of only by its own acceptance; the cleared record names the exact detection and the
+            # acceptance comment, so no clearance is ever read as another detection's
             carried = []
             for _i, b in (dups or [(issue, prev)]):
                 for g in carried_gaps(b, now):
-                    add_gap(carried, g)
+                    add_gap(carried, g, exact=True)
             for g in carried:
                 cid = gap_acceptance(g, ledger)
                 if cid is None:
                     out["gaps"].append(g)
                 else:
-                    out["cleared"].append({"id": g["id"], "by": f"owner:{cid}"})
+                    out["cleared"].append(cleared_record(g, cid))
             out["carried"] = len(out["gaps"])
         prev_halt = carried_halt(issues)                         # F2: carried whatever the binding; never the anchor
         if prev_halt is not None:
@@ -2391,7 +2420,11 @@ def c1b_block(snap_c1b, now=None):
     else:
         bad = bad or prev is not None
         prev = None
-    cleared = [{"id": str(x.get("id"))[:90], "by": str(x.get("by"))[:40]} for x in (c.get("cleared") or []) if isinstance(x, dict)][:2 * C1B_MAX_GAPS]
+    # fix round 8 (R7-SH1): a complete record keeps its exact detection and comment id; anything else keeps only the
+    # legacy id/by (which preserved() never counts as a disposition)
+    cleared = [{k: x[k] for k in ("id", "detected_at", "gap", "by", "comment")} if cleared_ok(x) else
+               {"id": str(x.get("id"))[:90], "by": str(x.get("by"))[:40]}
+               for x in (c.get("cleared") or []) if isinstance(x, dict)][:2 * C1B_MAX_GAPS]
     block = {"checked_through": _sha_or_none(c.get("checked_through")), "from": _sha_or_none(c.get("from")),
              "halt": c["halt"] if c1b_halt_ok(c.get("halt")) else None,
              "gap": gap_summary(gaps, opn, c.get("carried") if type(c.get("carried")) is int else 0),   # TICK T3H reads it (heartbeat)
@@ -2607,6 +2640,7 @@ def c1b_fenced_slots(slots, c1b):
 
 DECISION_LOG_MAX = 24                 # B.decision_log: the newest decisions, one line each (the shadow record)
 MAX_DECISION_BLOCK = 4000             # the decision block is small by construction; MAX_BODY + this stays under GitHub's limit
+RENDER_HARD_LIMIT = 65000 - MAX_DECISION_BLOCK   # fix round 8 (R7-SH2): a brief block above this is never publishable (publish refuses > 65000)
 
 
 def decision_log_entry(d):
@@ -2662,7 +2696,10 @@ def render_issue(brief):
 
 def render(brief):
     """The issue body: one JSON block between two markers. Shrinks deterministically below MAX_BODY; a brief that
-    still does not fit is published with next=[] and complete=false (S1 then has no candidate from it)."""
+    still does not fit is published with next=[] and complete=false (S1 then has no candidate from it). Fix round 8
+    (R7-SH2): every level keeps the generation and the WHOLE c1b block (gaps, open, fence, cleared, owner_actions and
+    the exact prev tuple publish() compares), so the shrunk brief can replace its predecessor; when even the last level
+    does not fit, the build fails visibly (RENDER_REFUSED) and the published brief stays: a gap is never dropped."""
     def dump(b):
         return (f"{SCHEMA} run_id={b['run_id']} generated_at={b['generated_at']} main={b['main']}\n\n"
                 "Machine-written every tick by `.github/workflows/s1-tick-brief.yml`. Evidence only, never authority: "
@@ -2691,6 +2728,8 @@ def render(brief):
     if len(body) <= MAX_BODY:
         return body
     b = {k: brief[k] for k in ("schema", "run_id", "run_attempt", "event", "generated_at", "max_age_minutes", "repo", "main", "pins")}
+    if "generation" in brief:
+        b["generation"] = brief["generation"]                   # fix round 8 (R7-SH2): publish() needs it at every level
     for key in ("verdict", "c1b", "ledger"):                   # small and bounded in size: kept at every shrink level
         if key in brief:
             b[key] = brief[key]
@@ -2699,7 +2738,15 @@ def render(brief):
     for key in ("thin", "decision_log", "recall", "codex_evidence", "claude_receipts"):   # section 0.2i: a brief that ranks nothing decides NOOP
         if key in brief:
             b[key] = brief[key]
-    return dump(b)
+    body = dump(b)
+    if len(body) > RENDER_HARD_LIMIT:
+        # fix round 8 (R7-SH2): never cut the C1b ledger to fit. A level-3 brief above the shrink target but under the
+        # hard limit is still published (it fits GitHub with its decision block); above the hard limit the build fails
+        # visibly, the published brief stays (S1 reads it as BRIEF_STALE) and nothing is lost
+        gaps = (brief.get("c1b") or {}).get("gaps") if isinstance(brief.get("c1b"), dict) else None
+        raise SystemExit(f"RENDER_REFUSED: brief_too_large even at shrink level 3 (bytes={len(body)} max={RENDER_HARD_LIMIT} "
+                         f"c1b_gaps={len(gaps) if isinstance(gaps, list) else '-'}); the C1b ledger is never cut, the published brief is kept")
+    return body
 
 
 def _unique_pairs(pairs):
@@ -3526,10 +3573,13 @@ def keep_published(gh, issue, brief, now):
         return False
 
 
-def publish(gh, body, now=None):
+def publish(gh, body, now=None, result=None):
     """Write the one brief issue. Finds it by label; creates the label and the issue on the first run. More than one
     open labelled issue by the Actions bot is repaired by closing the newer ones (never deleted), and only once their
-    ledger is proven carried (fix round 7)."""
+    ledger is proven carried (fix round 7). Returns the issue number. Fix round 8: `result` (a dict, optional) is set
+    to {"state": "WRITTEN"|"SKIPPED", "reason": ...}: a skip keeps the published brief and is never reported as a write."""
+    result = {} if result is None else result
+    result.update(state="SKIPPED", reason="not_reached")
     if parse_body(body) is None or len(body) > 65000:
         raise SystemExit("PUBLISH_REFUSED: body is not one valid brief")
     if decision_v1.BEGIN in body and decision_of(body) is None:
@@ -3546,6 +3596,7 @@ def publish(gh, body, now=None):
             pass                                                 # exists already, or creating the issue creates it
         raw, _h = gh._request("POST", gh.url("issues"), {"title": BRIEF_TITLE, "body": body, "labels": [BRIEF_LABEL]})
         number = json.loads(raw)["number"]
+        result.update(state="WRITTEN", reason="created")
         try:
             gh._request("PUT", gh.url(f"issues/{number}/lock"), {"lock_reason": "resolved"})
         except urllib.error.HTTPError:
@@ -3566,6 +3617,7 @@ def publish(gh, body, now=None):
     if have is not None and (want != have or new.get("generation") != have["generation"] + 1):
         print(f"S1_TICK_BRIEF_PUBLISH_SKIPPED c1b_predecessor_not_carried published={json.dumps(have, sort_keys=True)} "
               f"carried={json.dumps(want, sort_keys=True)} generation={(new or {}).get('generation')}")
+        result.update(reason="c1b_predecessor_not_carried")
         return mine[0]["number"]
     extras = mine[1:]
     absorbed = carried.get("absorbed") if isinstance(carried, dict) and isinstance(carried.get("absorbed"), list) else []
@@ -3582,15 +3634,18 @@ def publish(gh, body, now=None):
     if isinstance((new or {}).get("c1b"), dict) and new["c1b"].get("carry") == "UNKNOWN" \
             and isinstance((current or {}).get("c1b"), dict) and c1b_halt_ok(current["c1b"].get("halt")):
         print(f"S1_TICK_BRIEF_PUBLISH_SKIPPED carried_halt_kept run={current.get('run_id')} halt={current['c1b']['halt']['commit']}")
+        result.update(reason="carried_halt_kept")
         return mine[0]["number"]
     try:
         if current is not None and stamp(current.get("generated_at")) > stamp(new.get("generated_at")) \
                 and keep_published(gh, mine[0], current, now or datetime.now(timezone.utc)):
             print(f"S1_TICK_BRIEF_PUBLISH_SKIPPED newer_brief_published run={current.get('run_id')}")
+            result.update(reason="newer_brief_published")
             return mine[0]["number"]
     except (ValueError, TypeError):
         pass                                                     # an unreadable current brief is replaced
     gh._request("PATCH", gh.url(f"issues/{mine[0]['number']}"), {"body": body})
+    result.update(state="WRITTEN", reason="replaced")
     for extra in extras:
         if extra["number"] in keep:
             print(f"S1_TICK_BRIEF_DUPLICATE_KEPT issue={extra['number']} reason=ledger_not_proven_preserved")
@@ -3600,18 +3655,21 @@ def publish(gh, body, now=None):
 
 
 def preserved(old, new):
-    """Fix round 7 (R6-SH2): is every unique gap and the halt of brief `old` in brief `new`? A gap is kept by id (the
-    same range, carried unchanged) or named in new.c1b.cleared (an owner disposition); a halt by the same commit."""
+    """Fix round 7 (R6-SH2), fix round 8 (R7-SH1): is every gap DETECTION and the halt of brief `old` in brief `new`?
+    A gap is kept only by its exact detection (the same range id AND detected_at in new.c1b.gaps) or by a complete
+    cleared record of exactly that detection (cleared_ok, the same range, detected_at and action id). Another detection
+    of the same range, or a legacy cleared record that names the range only, never counts. A halt by the same commit."""
     if not isinstance(old, dict) or not isinstance(new, dict):
         return False
     nc = new.get("c1b") if isinstance(new.get("c1b"), dict) else {}
-    have = {g.get("id") for g in nc.get("gaps") or [] if isinstance(g, dict)} | \
-        {x.get("id") for x in nc.get("cleared") or [] if isinstance(x, dict)}
+    have = {gap_detection(g) for g in nc.get("gaps") or [] if isinstance(g, dict) and isinstance(g.get("id"), str)
+                                                     and isinstance(g.get("detected_at"), str)} | \
+        {gap_detection(x) for x in nc.get("cleared") or [] if cleared_ok(x)}
     try:
         gaps = carried_gaps(old, datetime.now(timezone.utc))
     except C1bFail:
         return False
-    if any(g["id"] not in have for g in gaps):
+    if any(gap_detection(g) not in have for g in gaps):
         return False
     oc = old.get("c1b") if isinstance(old.get("c1b"), dict) else {}
     halt = oc.get("halt") if c1b_halt_ok(oc.get("halt")) else None
@@ -3725,8 +3783,13 @@ def main(argv):
             raise SystemExit("PUBLISH_REFUSED: the brief does not belong to this run")
         if decision_of(body) is None:                            # section 0.2i: every published body carries its decision
             raise SystemExit("PUBLISH_REFUSED: the S1_DECISION_V1 block is missing or is not the decision of this brief")
-        number = publish(GitHub(token, budget=PUBLISH_API_CALLS), body)
-        print(f"S1_TICK_BRIEF_PUBLISHED issue={number} run={brief['run_id']}")
+        outcome = {}
+        number = publish(GitHub(token, budget=PUBLISH_API_CALLS), body, result=outcome)
+        # fix round 8: a skipped publish is never reported as published (the readback line below then says SUPERSEDED)
+        if outcome.get("state") == "WRITTEN":
+            print(f"S1_TICK_BRIEF_PUBLISHED issue={number} run={brief['run_id']} result=WRITTEN reason={outcome.get('reason')}")
+        else:
+            print(f"S1_TICK_BRIEF_NOT_PUBLISHED issue={number} run={brief['run_id']} result=SKIPPED reason={outcome.get('reason')}")
         print(readback_line(GitHub(token, budget=READBACK_API_CALLS), number, body))
         return 0
     raise SystemExit("usage: s1_tick_brief_v1.py due | build <main checkout> <head worktree dir> <out file> | publish <brief file>")

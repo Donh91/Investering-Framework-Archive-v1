@@ -407,7 +407,7 @@ class Digest(unittest.TestCase):
     def test_it_is_printed_after_the_publish_on_its_own_budget_and_reads_only(self):
         publish_mode = SOURCE[SOURCE.index('    if mode == "publish":'):]
         self.assertLess(publish_mode.index('print(f"S1_TICK_BRIEF_PUBLISHED'), publish_mode.index("print(readback_line(GitHub(token, budget=READBACK_API_CALLS), number, body))"))
-        self.assertIn("publish(GitHub(token, budget=PUBLISH_API_CALLS), body)", publish_mode)
+        self.assertIn("publish(GitHub(token, budget=PUBLISH_API_CALLS), body, result=outcome)", publish_mode)   # fix round 8: WRITTEN/SKIPPED
         self.assertEqual((B.READBACK_API_CALLS, B.PUBLISH_API_CALLS), (2, 25))
         fn = SOURCE[SOURCE.index("def readback_line("):SOURCE.index("def main(argv):")]
         self.assertNotIn("_request(", fn)                                                         # a GET through gh.get only

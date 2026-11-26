@@ -1273,7 +1273,7 @@ class WorkflowFile(unittest.TestCase):
 
     def test_the_script_writes_only_in_publish(self):
         source = (ROOT / "scripts/governance/s1_tick_brief_v1.py").read_text(encoding="utf-8")
-        head, tail = source.split("def publish(gh, body, now=None):", 1)
+        head, tail = source.split("def publish(gh, body, now=None, result=None):", 1)   # fix round 8: WRITTEN/SKIPPED
         self.assertEqual(re.findall(r'_request\("(\w+)"', head), ["GET", "POST"])                   # get, graphql (a read query); text() is a GET with its own opener
         self.assertEqual(head.count('method="GET"'), 1)
         self.assertEqual(sorted(set(re.findall(r'_request\("(\w+)"', tail))), ["PATCH", "POST", "PUT"])
@@ -2963,7 +2963,7 @@ class ApiBudgetAndRateLimits(unittest.TestCase):
     def test_the_publish_budget_covers_its_writes(self):
         self.assertEqual(B.PUBLISH_API_CALLS, 25)
         source = (ROOT / "scripts/governance/s1_tick_brief_v1.py").read_text(encoding="utf-8")
-        self.assertIn("publish(GitHub(token, budget=PUBLISH_API_CALLS), body)", source)
+        self.assertIn("publish(GitHub(token, budget=PUBLISH_API_CALLS), body, result=outcome)", source)
         self.assertNotIn("budget=20", source)
         writes = []
         class Gh(B.GitHub):
