@@ -1,8 +1,15 @@
 import json
 import subprocess
 import unittest
+import contextlib
+import io
+import os
+import sys
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 
-from scripts.api_agent.budget_hold_disposition import classify, run_guards
+from scripts.api_agent.budget_hold_disposition import classify, run_guards, main
 
 
 def result(row, rc=0, stderr=""):
@@ -86,3 +93,41 @@ class BudgetHoldDispositionTest(unittest.TestCase):
         self.assertEqual(run_guards("director", runner)[0], "HOLD")
         self.assertIn("--pending-ledger-root", calls[1])
         self.assertIn("runtime/api-cost-ledger", calls[1])
+
+    def test_owner_global_reserve_hold(self):
+        row = monthly(remaining=5)
+        row["owner_global_remaining_usd_after_risk"] = 3.99
+        self.assertEqual(classify("monthly", result(row, 1, "monthly_api_cost_guard_blocked"), "research")[0], "HOLD")
+
+    def test_main_disposition_output_and_receipt(self):
+        for disposition in ("PASS", "HOLD", "ERROR"):
+            with self.subTest(disposition=disposition), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                output, receipt, summary = root / "output", root / "receipt.json", root / "summary"
+                output.write_text("unrelated=preserved\n", encoding="utf-8")
+                env = {"GITHUB_OUTPUT": str(output), "GITHUB_STEP_SUMMARY": str(summary),
+                       "GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "1", "GITHUB_SHA": "test-head"}
+                stdout = io.StringIO()
+                with patch.dict(os.environ, env, clear=True), patch.object(sys, "argv", [
+                    "budget_hold_disposition", "--lane", "research", "--receipt", str(receipt)
+                ]), patch("scripts.api_agent.budget_hold_disposition.run_guards",
+                          return_value=(disposition, "TEST_REASON", [])), contextlib.redirect_stdout(stdout):
+                    if disposition == "ERROR":
+                        with self.assertRaises(SystemExit) as raised:
+                            main()
+                        self.assertNotIn(raised.exception.code, (0, None))
+                    else:
+                        main()
+                row = json.loads(receipt.read_text())
+                self.assertEqual(row["disposition"], disposition)
+                self.assertEqual(row["run_id"], "123")
+                self.assertIs(row["paid_call_executed_here"], False)
+                self.assertIs(row["analysis_completed_here"], False)
+                if disposition == "ERROR":
+                    self.assertEqual(output.read_text(), "unrelated=preserved\n")
+                    self.assertEqual(stdout.getvalue(), "")
+                    self.assertFalse(summary.exists())
+                else:
+                    self.assertEqual(output.read_text(), f"unrelated=preserved\ndisposition={disposition}\n")
+                    self.assertEqual(stdout.getvalue(), f"disposition={disposition}\n")
+                    self.assertIn(disposition, summary.read_text())
