@@ -1,0 +1,56 @@
+import sys
+import unittest
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parents[2] / "scripts" / "research"))
+import compounding_learning_v1_core as core
+
+
+def spec(target="derivatives.BTC-USDT-SWAP.mark_price.mark_price", **kw):
+    return dict({"target_metric_path":target, "target_direction":"RANGE", "kind":"FORECAST_TEST",
+                 "target_unit_contract_version":"FORECAST_TARGET_UNITS_v2",
+                 "novelty_reason":"DAILY_DIRECTOR_FORECAST", "components":[]}, **kw)
+
+
+class CoarseFamilyTest(unittest.TestCase):
+    def test_aliases_and_distinct_assets(self):
+        keys = {core.coarse_family_key(spec(p)) for p in core.TARGET_ALIAS_MAP if "BTC" in p}
+        self.assertEqual(len(keys), 1)
+        self.assertNotIn(core.coarse_family_key(spec("derivatives.ETH-USDT-SWAP.mark_price.mark_price")), keys)
+        self.assertNotIn(core.coarse_family_key(spec("spot.BTCUSDT.close")), keys)
+        self.assertNotIn(core.coarse_family_key(spec("derivatives.BTC-USDT-SWAP.index_price")), keys)
+
+    def test_bounds_and_horizon_are_coverage_not_equivalence(self):
+        self.assertEqual(core.coarse_family_key(spec(horizon_days=3,target_range_lower_pct=-2)),
+                         core.coarse_family_key(spec(horizon_days=7,target_range_lower_pct=-8)))
+        for changes in ({"target_direction":"UP"},{"target_unit_contract_version":"legacy"},
+                        {"novelty_reason":"OTHER"},{"components":[{"metric_path":"breadth.advancers"}]}):
+            self.assertNotEqual(core.coarse_family_key(spec()), core.coarse_family_key(spec(**changes)))
+
+    def test_unknown_is_not_family(self):
+        self.assertIsNone(core.coarse_family_key({}))
+        self.assertIsNone(core.coarse_family_key(spec(components=[{}])))
+        self.assertIsNone(core.coarse_family_key(spec(novelty_reason="ROUND_3")))
+        self.assertIsNone(core.coarse_family_key(spec(target_mode="ABSOLUTE_VALUE")))
+
+    def test_coverage_no_pooling_or_admission(self):
+        reg={"candidates":[{"candidate_id":"a","kind":"FORECAST_TEST","forecast_ids":["f"]},
+                           {"candidate_id":"b","kind":"FORECAST_TEST","forecast_ids":[]},
+                           {"candidate_id":"c","kind":"FORECAST_TEST","forecast_ids":["g"]}]}
+        adm={"candidates":[{"candidate_id":"a","semantic_fingerprint":"x","status":"QUALIFIED_FOR_FORWARD_TEST"},
+                           {"candidate_id":"b","semantic_fingerprint":"y","status":"QUALIFIED_FOR_FORWARD_TEST"},
+                           {"candidate_id":"c","semantic_fingerprint":"z","status":"SEMANTIC_DUPLICATE_KEEP_SHADOW"}]}
+        out=core.coarse_family_coverage(reg,adm,{k:spec() for k in "abc"})
+        self.assertEqual(len(out["families"]),1)
+        self.assertEqual(out["families"][0]["semantic_fingerprints"],["x","y","z"])
+        self.assertEqual(out["families"][0]["served_candidate_ids"],["a"])
+        self.assertFalse(out["allocation_authorized"])
+        self.assertFalse(out["scientific_equivalence_asserted"])
+        missing=core.coarse_family_coverage(reg,adm,{"a":spec()})
+        self.assertFalse(missing["coverage_complete"])
+        self.assertEqual(missing["unmapped_candidate_ids"],["b","c"])
+        with self.assertRaises(ValueError):
+            core.coarse_family_coverage({"candidates":reg["candidates"]*2},adm,{})
+
+
+if __name__ == "__main__":
+    unittest.main()
