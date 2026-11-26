@@ -11,6 +11,29 @@ ROOT = Path(__file__).resolve().parents[2]
 SKILL = ROOT / ".agents/skills/s1-pr-repair-learning/SKILL.md"
 CASES = ROOT / ".agents/skills/s1-pr-repair-learning/references/verified-casebook.json"
 
+
+def register_head_restore(cls, root):
+    """Record the checked-out commit of the shared working tree and register ONE class cleanup
+    that restores it. Registered BEFORE any fetch/checkout: unittest runs class cleanups even when
+    setUpClass raises (tearDownClass would not run), so a failed setup cannot leave later test
+    modules on the PR-head tree. The cleanup verifies the restored HEAD and fails loudly."""
+    original = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True, text=True,
+                              stdout=subprocess.PIPE, timeout=10).stdout.strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", original):
+        raise AssertionError("S1_HEAD_RESTORE_ORIGINAL_INVALID")
+
+    def restore():
+        done = subprocess.run(["git", "checkout", "--detach", original], cwd=root, text=True,
+                              capture_output=True, timeout=60, check=False)
+        actual = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True,
+                                capture_output=True, timeout=10, check=False).stdout.strip()
+        if done.returncode or actual != original:
+            raise AssertionError("S1_HEAD_RESTORE_FAILED expected=%s actual=%s %s"
+                                 % (original, actual, done.stderr[-3000:]))
+
+    cls.addClassCleanup(restore)
+    return original
+
 class S1RepairLearningSkillTest(unittest.TestCase):
     def test_installed_skill_and_triggers(self):
         body = SKILL.read_text(encoding="utf-8")
@@ -82,12 +105,9 @@ class S1ReleaseControlHostAcceptance(unittest.TestCase):
             head = event.get("pull_request", {}).get("head", {}).get("sha", "")
             if not re.fullmatch(r"[0-9a-f]{40}", head):
                 raise AssertionError("S1_PR_EVENT_HEAD_INVALID")
-            # The full suite shares this working tree: remember the checked-out commit (the PR
-            # merge ref) so tearDownClass can restore it. Otherwise every later test module runs
-            # against the PR head tree while already-imported modules expect the merge tree.
-            cls._restore_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, check=True,
-                                               text=True, stdout=subprocess.PIPE,
-                                               timeout=10).stdout.strip()
+            # The full suite shares this working tree: restore the merge-ref checkout after this
+            # class, also when setUpClass fails after the checkout (see register_head_restore).
+            register_head_restore(cls, ROOT)
             for command in (["git", "fetch", "--no-tags", "--depth=1", "origin", head],
                             ["git", "checkout", "--detach", head]):
                 completed = subprocess.run(command, cwd=ROOT, text=True, capture_output=True,
@@ -102,15 +122,6 @@ class S1ReleaseControlHostAcceptance(unittest.TestCase):
             print("S1_CI_EXACT_PR_HEAD=" + head, flush=True)
         elif os.getenv("CI") and os.getenv("GITHUB_EVENT_NAME") not in ("push", "workflow_dispatch"):
             raise AssertionError("S1_HOST_EVENT_UNKNOWN")
-
-    @classmethod
-    def tearDownClass(cls):
-        restore = getattr(cls, "_restore_head", None)
-        if restore:
-            completed = subprocess.run(["git", "checkout", "--detach", restore], cwd=ROOT,
-                                       text=True, capture_output=True, timeout=60, check=False)
-            if completed.returncode:
-                raise AssertionError("S1_HEAD_RESTORE_FAILED " + completed.stderr[-3000:])
 
     def _run(self, argv, *, env=None, timeout=80):
         result = subprocess.run([self.node, *argv], cwd=ROOT, env=env, text=True,
@@ -153,3 +164,62 @@ class S1ReleaseControlHostAcceptance(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HeadRestoreLifecycleTest(unittest.TestCase):
+    """Real unittest lifecycle on a disposable repository; never touches the shared checkout."""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.repo = Path(self.tmp.name)
+        git = lambda *a: subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *a],
+                                        cwd=self.repo, check=True, capture_output=True, text=True)
+        git("init", "-q")
+        (self.repo / "f").write_text("a"); git("add", "f"); git("commit", "-qm", "a")
+        self.old = git("rev-parse", "HEAD").stdout.strip()
+        (self.repo / "f").write_text("b"); git("commit", "-qam", "b")
+        self.merge_ref = git("rev-parse", "HEAD").stdout.strip()
+        git("checkout", "-q", "--detach", self.merge_ref)
+
+    def head(self):
+        return subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.repo, check=True,
+                              capture_output=True, text=True).stdout.strip()
+
+    def run_class(self, fail_after_checkout, break_restore=False):
+        repo, old = self.repo, self.old
+
+        class Probe(unittest.TestCase):
+            @classmethod
+            def setUpClass(cls):
+                register_head_restore(cls, repo)
+                subprocess.run(["git", "checkout", "-q", "--detach", old], cwd=repo, check=True)
+                if break_restore:
+                    (repo / ".git" / "index.lock").write_text("")
+                if fail_after_checkout:
+                    raise AssertionError("S1_PR_HEAD_MISMATCH")
+
+            def test_on_pr_head(self):
+                self.assertEqual(subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
+                                                capture_output=True, text=True).stdout.strip(), old)
+
+        result = unittest.TestResult()
+        unittest.TestLoader().loadTestsFromTestCase(Probe).run(result)
+        return result
+
+    def test_restores_after_normal_class_completion(self):
+        result = self.run_class(fail_after_checkout=False)
+        self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
+        self.assertEqual(self.head(), self.merge_ref)
+
+    def test_restores_after_post_checkout_setup_exception(self):
+        result = self.run_class(fail_after_checkout=True)
+        self.assertEqual(len(result.errors), 1)
+        self.assertIn("S1_PR_HEAD_MISMATCH", str(result.errors[0][1]))
+        self.assertEqual(self.head(), self.merge_ref)
+
+    def test_failed_restore_is_visible(self):
+        result = self.run_class(fail_after_checkout=False, break_restore=True)
+        self.assertTrue(any("S1_HEAD_RESTORE_FAILED" in str(e[1]) for e in result.errors),
+                        result.errors)
