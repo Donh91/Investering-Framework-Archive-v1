@@ -254,6 +254,53 @@ class NativePrivacyScanStep(unittest.TestCase):
         self.assertEqual((code, out["result"]), (0, "NO_RESTRICTED_CONTENT"), out)
         self.assertEqual(out["merge_base_parent_sha"], fx.base)
 
+    def test_deeply_diverged_pr_recovers_original_base_not_merge_output(self):
+        def advance_main(f):
+            for i in range(80):
+                git(f.repo, "commit", "--allow-empty", "-q", "-m", f"main data tick {i}")
+            f.write("docs/main-only.md", "Independent main data.\n")
+        fx = Fixture(self.tmp, clean_change, main_changes=advance_main)
+        original_base = git(fx.repo, "merge-base", fx.base, fx.head)
+        clone = self._shallow(fx)
+        git(clone, "config", "protocol.file.allow", "always")
+        code, out, _ = fx.cli(repo=clone)
+        self.assertEqual((code, out["result"]), (0, "NO_RESTRICTED_CONTENT"), out)
+        self.assertEqual(out["original_pr_merge_base_sha"], original_base)
+        self.assertNotEqual(original_base, fx.base)
+        self.assertEqual(out["files_count"], 2)
+
+    def test_merge_base_deepening_exhaustion_is_bounded_and_closed(self):
+        class FakeGit:
+            def __init__(self, success_at=None, shallow=True):
+                self.fetches = []
+                self.success_at = success_at
+                self.shallow = shallow
+            def run(self, *args, check=True):
+                if args[0] == "merge-base":
+                    if self.success_at is not None and len(self.fetches) >= self.success_at:
+                        return b"a" * 40 + b"\n"
+                    return None
+                if args[0] == "rev-parse":
+                    return b"true\n" if self.shallow else b"false\n"
+                if args[0] == "fetch":
+                    self.fetches.append(args)
+                    return None  # fetch failure must not fabricate an ancestor
+                raise AssertionError(args)
+        merge = "b" * 40
+        for success_at, expected in ((1, [64]), (2, [64, 256]),
+                                     (3, [64, 256, 1024]), (None, [64, 256, 1024])):
+            with self.subTest(success_at=success_at):
+                fake = FakeGit(success_at)
+                result = step.original_pr_base(fake, "c" * 40, "d" * 40, merge)
+                self.assertEqual(result, "a" * 40 if success_at is not None else None)
+                self.assertEqual(fake.fetches, [
+                    ("fetch", "--no-tags", f"--deepen={n}", "origin", merge)
+                    for n in expected
+                ])
+        full = FakeGit(shallow=False)
+        self.assertIsNone(step.original_pr_base(full, "c" * 40, "d" * 40, merge))
+        self.assertEqual(full.fetches, [])
+
     def test_missing_base_fails_closed(self):
         fx = Fixture(self.tmp, clean_change)
         clone = self._shallow(fx)
