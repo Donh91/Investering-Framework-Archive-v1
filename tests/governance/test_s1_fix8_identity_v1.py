@@ -251,6 +251,8 @@ class GapIdentity(unittest.TestCase):
         for name, forged in {"another_detections_action_id": dict(rec_b, gap=B.gap_action_id(a)),
                              "by_names_another_comment": dict(rec_b, by="owner:79"),
                              "no_comment_id": {k: v for k, v in rec_b.items() if k != "comment"},
+                             "no_detection_id_but_detected_at": {k: v for k, v in rec_b.items() if k != "gap"},   # closer S06
+                             "detection_id_not_a_string": dict(rec_b, gap=None),
                              "comment_not_positive": dict(rec_b, comment=0, by="owner:0")}.items():
             with self.subTest(name):
                 self.assertFalse(B.preserved(old, {"c1b": {"gaps": [], "halt": None, "cleared": [forged]}}))
