@@ -98,12 +98,13 @@ class DirectorFreshnessAuditTests(unittest.TestCase):
 
     def write_skip(self, path: Path, **receipt_updates):
         write_context(path, market_delta=False)
-        out = {"status": "BLOCKED", "summary": "No new evidence", "evidence_for": [],
+        out = {"status": "BLOCKED", "summary": "Daily Director skipped because no new eligible owner evidence required analysis.", "evidence_for": [],
                "evidence_against": [], "uncertainties": ["SKIPPED_NO_DELTA"],
                "hypotheses": [], "forecast_candidates": []}
         def digest(value):
             return hashlib.sha256((json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()).hexdigest()
         rec = {"contract": "API_AGENT_RECEIPT_v3", "task": "DAILY_DIRECTOR_SHADOW",
+               "model": "gpt-5.6-luna", "reasoning_effort": "medium", "created_unix": 1788912000,
                "status": "SKIPPED_NO_DELTA", "context_hash": digest(json.loads(path.read_text())),
                "output_hash": digest(out), "response_id": None, "prompt_hash": None,
                "input_tokens": 0, "output_tokens": 0, "estimated_cost_usd": 0.0,
@@ -144,6 +145,11 @@ class DirectorFreshnessAuditTests(unittest.TestCase):
             {"estimated_cost_usd": 0.001}, {"input_tokens": 1}, {"input_tokens": False},
             {"prompt_hash": "a" * 64}, {"context_hash": "a" * 64}, {"output_hash": "b" * 64},
             {"authority": {}}, {"task": "DAILY_CONFLICT_REVIEW"},
+            {"request_hash": "a" * 64}, {"forecast_candidate_count": 2},
+            {"model": "unknown"}, {"reasoning_effort": "high"}, {"created_unix": True},
+            {"created_unix": 0}, {"authority": {"portfolio_action": False,
+                "framework_state_change": False, "model_weight_change": False,
+                "canonical_promotion": False, "automatic_trade": True}},
         ]
         for change in variants:
             with self.subTest(change=change), tempfile.TemporaryDirectory() as raw:

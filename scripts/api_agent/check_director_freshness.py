@@ -75,7 +75,16 @@ def documented_no_delta_skip(context_path: Path) -> bool:
         rec = _read_object(context_path.parent / "DAILY_DIRECTOR_RECEIPT.json")
         authority = rec.get("authority")
         return (
-            rec.get("contract") == "API_AGENT_RECEIPT_v3"
+            set(rec) == {"contract", "task", "model", "reasoning_effort", "context_hash",
+                         "prompt_hash", "output_hash", "response_id", "input_tokens",
+                         "output_tokens", "estimated_cost_usd", "created_unix", "status", "authority"}
+            and set(out) == {"status", "summary", "evidence_for", "evidence_against",
+                             "uncertainties", "hypotheses", "forecast_candidates"}
+            and rec.get("contract") == "API_AGENT_RECEIPT_v3"
+            and rec.get("model") == "gpt-5.6-luna"
+            and rec.get("reasoning_effort") == "medium"
+            and type(rec.get("created_unix")) is int and rec["created_unix"] > 0
+            and out.get("summary") == "Daily Director skipped because no new eligible owner evidence required analysis."
             and rec.get("task") == "DAILY_DIRECTOR_SHADOW"
             and rec.get("status") == "SKIPPED_NO_DELTA"
             and rec.get("context_hash") == _canonical_hash(context)
@@ -87,6 +96,7 @@ def documented_no_delta_skip(context_path: Path) -> bool:
             and all(type(rec.get(k)) is int and rec[k] == 0 for k in ("input_tokens", "output_tokens"))
             and type(rec.get("estimated_cost_usd")) in (int, float) and rec["estimated_cost_usd"] == 0
             and isinstance(authority, dict)
+            and set(authority) == {"portfolio_action", "framework_state_change", "model_weight_change", "canonical_promotion"}
             and all(authority.get(k) is False for k in (
                 "portfolio_action", "framework_state_change", "model_weight_change", "canonical_promotion"))
             and out.get("status") == "BLOCKED"
