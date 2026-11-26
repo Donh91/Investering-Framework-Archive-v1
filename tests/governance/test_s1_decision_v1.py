@@ -1410,6 +1410,43 @@ class CodexRecall(unittest.TestCase):
         self.assertFalse(D.decision_schema_ok(dict(d, recall={"pending": -1})))
         self.assertFalse(D.decision_schema_ok({k: v for k, v in d.items() if k != "recall"}))
 
+    def test_every_pending_recall_is_read_in_turn(self):
+        # one build reads three of the pending recalls (four reads each). A recall that never clears must not starve the
+        # ones behind it: the window moves on by one every hour
+        items = [{"pr": n} for n in (21, 22, 23, 24, 25)]
+        at = lambda hour: datetime(2026, 11, 18, hour, 40, tzinfo=timezone.utc)
+        windows = [[i["pr"] for i in B.recall_window(items, at(h))] for h in range(10, 15)]
+        self.assertEqual(windows, [[21, 22, 23], [22, 23, 24], [23, 24, 25], [24, 25, 21], [25, 21, 22]])
+        self.assertEqual({n for w in windows for n in w}, {21, 22, 23, 24, 25})
+        for few in (items[:1], items[:2], items[:3]):                                  # three or fewer: all of them, every hour
+            for h in (10, 11, 12):
+                self.assertEqual(sorted(i["pr"] for i in B.recall_window(few, at(h))), [i["pr"] for i in few])
+        self.assertEqual((B.recall_window([], at(10)), B.RECALL_READS_PER_BUILD), ([], 3))
+        # collect() itself: four pending recalls on the ledger at 10:40 (hour 495898, 495898 % 4 = 2): it reads PRs 23, 24 and 21
+        def four_pending(fake):
+            fake.w["issue_comments"] = [TB.comment(700 + n, f"S1_CODEX_RECALL_PENDING_v1\npr: {n}\nhead: {'e' * 40}\nmerge: {'9' * 40}\nruns: 540,541", TB.BOT, 500 - n)
+                                        for n in (21, 22, 23, 24)]
+            real, served = fake.pages, []
+            fake.served = served
+
+            def pages(path, params=None, key=None, max_pages=30):
+                m = re.fullmatch(r"(?:issues|pulls)/(2[1-4])/(comments|reviews|commits)", path)
+                if m:
+                    fake.calls += 1
+                    served.append(path)
+                    return [], True
+                return real(path, params, key, max_pages)
+            fake.pages = pages
+        snap, fake, _seen = TB.CollectReplay().run_collect(four_pending)
+        self.assertEqual((sorted(snap["recall_reads"]), snap["errors"]), (["21", "23", "24"], []))
+        self.assertEqual(sorted(fake.served), sorted(p for n in (21, 23, 24) for p in (f"issues/{n}/comments", f"pulls/{n}/reviews", f"pulls/{n}/comments", f"pulls/{n}/commits")))
+        brief = B.build_brief(snap)
+        self.assertEqual((brief["recall"]["pending"], {i["pr"]: i["codex"] for i in brief["recall"]["items"]}),
+                         (4, {21: "NOT_PROVEN", 22: "NOT_READ", 23: "NOT_PROVEN", 24: "NOT_PROVEN"}))
+        # no pending recall: not one extra read
+        snap, fake, _seen = TB.CollectReplay().run_collect(lambda fake: setattr(fake, "served", []))
+        self.assertEqual(snap["recall_reads"], {})
+
     def test_codex_is_asked_again_and_a_finding_is_the_owners(self):
         pending = self.ledger(TB.comment(700, self.PENDING, TB.BOT, 500))
         state = lambda finding: json.dumps({"code_review": {"commit_sha": "e" * 40, "status": "completed", "has_unresolved_findings": finding}})

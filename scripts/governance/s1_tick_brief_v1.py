@@ -441,6 +441,16 @@ def recalls(comments):
     return [v for k, v in pending.items() if k not in cleared]
 
 
+def recall_window(items, now, n=RECALL_READS_PER_BUILD):
+    """Which pending recalls ONE build reads: n of them, starting one further every hour. A recall that never clears
+    (a head Codex does not review, a finding nobody resolves) can therefore not starve the ones behind it: with more
+    than n pending, every one is still read in n of every len(items) hours."""
+    if not items:
+        return []
+    start = (int(now.timestamp()) // 3600) % len(items)
+    return (items[start:] + items[:start])[:n]
+
+
 def read_recall(gh, n):
     """The review state of one merged PR with a pending recall: its comments, reviews, inline comments and commits."""
     c, c1 = gh.pages(f"issues/{n}/comments", max_pages=10)
@@ -2541,7 +2551,7 @@ def collect(gh, root, head_root, now, run):
     # Codex recall: the review state of the merged PRs whose recall is pending (none while the ledger holds no fallback merge)
     snap["recall_reads"] = {}
     if snap["issue_comments_complete"]:
-        for item in recalls(snap["issue_comments"])[:RECALL_READS_PER_BUILD]:
+        for item in recall_window(recalls(snap["issue_comments"]), stamp(snap["now"])):
             try:
                 snap["recall_reads"][str(item["pr"])] = read_recall(gh, item["pr"])
             except StopReading as exc:
