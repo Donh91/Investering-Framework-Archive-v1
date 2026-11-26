@@ -1321,7 +1321,7 @@ class ReviewRoute(unittest.TestCase):
             "the diff adds a credential read": (_files(_code("tests/alpha/test_runner.py", "@@\n+key = os.environ['API_KEY']\n")), "7:C5:fallback_parked:diff_words"),
             "the diff touches Round 3": (_files(_code("tests/alpha/test_runner.py", "@@\n+load('round3/data.csv')\n")), "7:C5:fallback_parked:diff_words"),
             # fix round 3 (P1-B), the reviewer's repros: a change that turns money on by VALUE adds no listed name
-            "a key in a .txt file (class LOW)": (_files(_code("scripts/meme/notes.txt", "@@\n+PRIVATE_KEY=5Kb8kLf9zgWQnogidDA76MzPL6TsZZY36hWXMssSzNydYXYB9KF\n")), "7:C5:fallback_parked:diff_words"),
+            "a key in a .txt file (class LOW)": (_files(_code("scripts/meme/notes.txt", "@@\n+PRIVATE_" "KEY=FAKE-NOT-A-KEY\n")), "7:C5:fallback_parked:diff_words"),
             "PAPER = False in a test file": (_files(_code("tests/alpha/test_runner.py", "@@\n-PAPER = True\n+PAPER = False\n")), "7:C5:fallback_parked:diff_words"),
             "dry_run flipped in a test fixture": (_files(_code("tests/alpha/fixture.json", '@@\n-  "dry_run": true,\n+  "dry_run": false,\n')), "7:C5:fallback_parked:diff_words"),
             "a position size in a test": (_files(_code("tests/alpha/test_params.py", "@@\n-max_position_usd = 50\n+max_position_usd = 50000\n")), "7:C5:fallback_parked:diff_words"),
