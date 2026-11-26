@@ -6,9 +6,18 @@ from kompas_live_target_preflight import targets
 ISSUED = "2026-11-25T20:25:26Z"
 
 
+def bind_windows(days, issued):
+    issue = dt.datetime.fromisoformat(issued.replace("Z", "+00:00"))
+    for i, day in enumerate(days):
+        end = dt.datetime.fromisoformat(day["end_utc"].replace("Z", "+00:00"))
+        day.update(index=i, start_utc=max(end-dt.timedelta(days=1), issue).isoformat().replace("+00:00", "Z"),
+                   h=round((end-issue).total_seconds()/3600, 4))
+
+
 def fixture():
     days = [{"end_utc": (dt.date(2026, 11, 26)+dt.timedelta(days=i)).isoformat()+"T00:00:00Z",
              "lo": 98.0, "centre": 100.0+i, "hi": 110.0} for i in range(8)]
+    bind_windows(days, ISSUED)
     ends = {str(i): days[i]["end_utc"] for i in (1,3,7)}
     def block():
         return {"status": "OK", "quote": "USDT", "as_of_utc": "2026-11-25T20:00:00Z",
@@ -84,8 +93,24 @@ class TargetTests(unittest.TestCase):
         d["generated_at_utc"] = "2026-11-26T00:00:00Z"
         for b in d["assets"].values():
             b["days"].pop(0)
+            bind_windows(b["days"], d["generated_at_utc"])
             b["as_of_utc"] = "2026-11-26T00:00:00Z"
             b["points"] = [["2026-11-26T00:00:00Z", 99]]
         r = targets(d)
         self.assertEqual([x["duration_from_issue_hours"] for x in r["rows"][:3]], [24, 72, 168])
         self.assertFalse(r["scoring_authorized"])
+
+
+    def test_exact_day_window_identity(self):
+        for asset in ("BTC", "ETH"):
+            for index in (0, 3, 7):
+                for change in (
+                    {"index": True}, {"index": index+1},
+                    {"start_utc": "2026-11-25T00:00:00Z"},
+                    {"start_utc": None}, {"h": True},
+                    {"h": float("nan")}, {"h": 999},
+                ):
+                    d = fixture()
+                    d["assets"][asset]["days"][index].update(change)
+                    with self.subTest(asset=asset, index=index, change=change), self.assertRaises(ValueError):
+                        targets(d)

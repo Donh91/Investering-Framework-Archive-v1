@@ -85,13 +85,24 @@ def targets(doc):
             raise ValueError("reference tail mismatch")
         indexed = {}
         previous = None
-        for day in block["days"]:
+        for index, day in enumerate(block["days"]):
             t = utc(day["end_utc"])
             if t in indexed or t != ceil_day(t) or t <= issued:
                 raise ValueError("invalid or duplicate UTC day endpoint")
             if previous is not None and t <= previous:
                 raise ValueError("day endpoints out of order")
             previous = t
+            # Mirror producer day_grid: first day may be partial, subsequent
+            # days start at midnight; h is cumulative from the issue clock.
+            expected_start = max(t - DAY, issued)
+            if type(day.get("index")) is not int or day["index"] != index:
+                raise ValueError("wrong day index")
+            if utc(day.get("start_utc")) != expected_start:
+                raise ValueError("wrong day start")
+            h = day.get("h")
+            if (type(h) not in (int, float) or not math.isfinite(h)
+                    or h != round((t - issued).total_seconds() / 3600, 4)):
+                raise ValueError("wrong day duration")
             lo, mid, hi = map(price, (day["lo"], day["centre"], day["hi"]))
             if not lo <= mid <= hi:
                 raise ValueError("invalid interval")
