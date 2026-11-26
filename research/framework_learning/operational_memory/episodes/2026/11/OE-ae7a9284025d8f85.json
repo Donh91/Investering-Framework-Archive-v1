@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/data_ping/auto_market_state.py",
+    "scripts/data_ping/native_handlekompas.py",
+    "tests/data_ping/test_cycle_participation_readback.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-ae7a9284025d8f85",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cn-verified-breadth-owner-timestamp-variants-participation-2342",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(auto): retain validated breadth owner timestamp fallback * fix(compass): match native owner breadth timestamp precedence * test(compass): exercise v1_2 breadth clocks end to end",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/data_ping/auto_market_state.py": "f3d887b7b1d39cb42178c3f6913f5349108c1760",
+    "scripts/data_ping/native_handlekompas.py": "86a8f2cea5cb9ced954cc48c1f0d86a2b232a58b",
+    "tests/data_ping/test_cycle_participation_readback.py": "c53d4711001b60d4bc78a8b7fd8b292984dbb346"
+  },
+  "source_commit_sha": "ae7a9284025d8f851bd67d72b16588b6a63976aa",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-25T21:11:13+01:00",
+  "task_class": "MARKET_STATE",
+  "task_summary": "fix(CN): reconcile verified breadth owner timestamp variants for participation (#2342)"
+}
