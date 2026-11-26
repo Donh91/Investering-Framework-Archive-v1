@@ -16,7 +16,8 @@ export function validateChallengerPublic(payload, now = Date.now()) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return refuse('MISSING_PUBLICATION');
   if (payload.contract !== CHALLENGER_A_PUBLIC_CONTRACT ||
       payload.publication_status !== 'ISSUED_FROZEN' ||
-      payload.visibility !== 'SHADOW_ONLY') return refuse('CONTRACT_OR_AUTHORITY_MISMATCH');
+      payload.visibility !== 'SHADOW_ONLY' ||
+      !['official_forecast','portfolio_execution','trading','promotion'].every(k=>payload.authority?.[k]===false)) return refuse('CONTRACT_OR_AUTHORITY_MISMATCH');
   const src=payload.source, i=payload.issuance;
   if (!src || !SHA40.test(src.blob_sha || '') || !SHA40.test(src.first_in_main_commit || '') ||
       !date(src.first_in_main_utc) || !SHA64.test(src.sha256 || '')) return refuse('MISSING_SOURCE_ATTESTATION');
@@ -24,7 +25,7 @@ export function validateChallengerPublic(payload, now = Date.now()) {
       i.formula_version !== 'A1' || !SHA64.test(i.issuance_sha256 || '') ||
       i.authority?.research_only !== true || i.authority?.official_forecast !== false ||
       i.authority?.trading !== false || i.authority?.promotion !== false ||
-      !WEEK.test(i.week || '') || i.week < '2026-W47' || !date(i.issue_clock_utc))
+      !WEEK.test(i.week || '') || i.week < '2026-W47' || payload.score_week!==i.week || !date(i.issue_clock_utc))
     return refuse('FORECAST_CONTRACT_MISMATCH');
   const issue=Date.parse(i.issue_clock_utc),known=Date.parse(src.first_in_main_utc);
   const t=typeof now==='number'?now:Date.parse(now);
@@ -48,7 +49,7 @@ export function validateChallengerPublic(payload, now = Date.now()) {
       const start=Date.parse(d?.scored_from_utc),end=Date.parse(d?.end_utc);
       const expectedDayStart=monday+(k-1)*86400000,expectedEnd=expectedDayStart+86400000;
       if (d?.day!==k || !date(d.scored_from_utc) || !date(d.end_utc) ||
-          end!==expectedEnd || start<expectedDayStart || start>=end ||
+          end!==expectedEnd || start!==Math.max(expectedDayStart,Math.ceil(issue/3600000)*3600000) || start>=end ||
           start<known || start<issue ||
           !Array.isArray(range) || !Array.isArray(close) ||
           range.length!==2 || close.length!==2 ||

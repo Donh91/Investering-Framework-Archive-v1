@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {validateChallengerPublic,CHALLENGER_A_PUBLIC_CONTRACT} from './challenger-a-panel.mjs';
 const iso='2026-11-16T10:35:00Z';
-const day=k=>({day:k,scored_from_utc:'2026-11-'+String(15+k).padStart(2,'0')+'T11:00:00Z',
+const day=k=>({day:k,scored_from_utc:'2026-11-'+String(15+k).padStart(2,'0')+(k===1?'T11:00:00Z':'T00:00:00Z'),
  end_utc:'2026-11-'+String(16+k).padStart(2,'0')+'T00:00:00Z',
  band:{range:{'0.8':[65000,80000]},close:{'0.8':[68000,78000]}}});
 const mk=()=>({
- contract:CHALLENGER_A_PUBLIC_CONTRACT,publication_status:'ISSUED_FROZEN',visibility:'SHADOW_ONLY',
+ contract:CHALLENGER_A_PUBLIC_CONTRACT,publication_status:'ISSUED_FROZEN',visibility:'SHADOW_ONLY',score_week:'2026-W47',
+ authority:{official_forecast:false,portfolio_execution:false,trading:false,promotion:false},
  source:{blob_sha:'a'.repeat(40),first_in_main_commit:'b'.repeat(40),
   first_in_main_utc:'2026-11-16T10:40:00Z',sha256:'c'.repeat(64)},
  issuance:{contract:'TASK2_CHALLENGER_A_SQRT_T_VOL_BAND_v1',formula_version:'A1',
@@ -71,5 +72,27 @@ test('show paired close scores only with mature, immutable, same-week lineage',(
  ]){
    const broken=structuredClone(p);change(broken.comparison);
    assert.equal(validateChallengerPublic(broken,after).comparison,null);
+ }
+});
+
+
+test('reject contradictory authority and detached score week on otherwise mature comparison',()=>{
+ const p=mk();
+ p.comparison={week:'2026-W47',n:14,first_in_main_commit:'e'.repeat(40),
+   first_in_main_utc:'2026-11-23T01:00:00Z',blob_sha:'f'.repeat(40),
+   issuance_sha256:p.issuance.issuance_sha256,b1_status:'NO_SAME_ROW_IMMUTABLE_SCORE',
+   scores:{CN:0.311269,A:0.171928,EQW_PRIOR:0.371175}};
+ const after=Date.parse('2026-11-23T02:00:00Z');
+ assert.equal(validateChallengerPublic(p,after).comparison.n,14);
+ for(const change of [
+   x=>{x.authority.trading=true}, x=>{delete x.authority},
+   x=>{x.authority.promotion='false'}, x=>{x.score_week='2026-W46'},
+   x=>{delete x.score_week},
+   x=>{x.issuance.assets.ETH.days[3].scored_from_utc='2026-11-19T12:00:00Z'},
+   x=>{for(const a of ['BTC','ETH'])x.issuance.assets[a].days[3].scored_from_utc='2026-11-19T12:00:00Z'},
+   x=>{for(const a of ['BTC','ETH'])x.issuance.assets[a].days[0].scored_from_utc='2026-11-16T12:00:00Z'}
+ ]){
+   const broken=structuredClone(p);change(broken);
+   assert.equal(validateChallengerPublic(broken,after).ok,false);
  }
 });
