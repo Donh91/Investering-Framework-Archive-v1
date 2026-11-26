@@ -2,7 +2,54 @@
   "clusters": [],
   "contract": "AUTOMATION_ORCHESTRATOR_SOL_CONTEXT_v1",
   "instructions_context": "Root-cause and deduplication only. Test shared-cause before independent repair. Existing remediation state remains authoritative.",
-  "items": [],
-  "plan_fingerprint": "5c103caf56dbb32e587acb3f55bd73561b61dea22a485ca7d150edb504986136",
-  "source_health_generated_at_utc": "2026-11-25T14:43:15.587635Z"
+  "items": [
+    {
+      "cluster_id": null,
+      "existing_remediation": {
+        "finding": "SCHEDULE_STALE",
+        "route": "NONE",
+        "signature": "f9c2c78a55b54f7ce0d3",
+        "state": "CLEARED_NO_CHANGE"
+      },
+      "failure_streak": 2,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "REPEATED_CONSECUTIVE_FAILURES"
+      ],
+      "latest_head_sha": "bbc7ba39b4ba2d3abb1f4b155448f81929512cd8",
+      "latest_run_id": 45676886366,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45676886366",
+      "model_lane": "GPT_6_1_SOL",
+      "openai_enabled": true,
+      "recent_failure_count": 2,
+      "route": "SOL_DIAGNOSIS",
+      "scheduled": true,
+      "workflow": "research-execution-coordinator.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    },
+    {
+      "cluster_id": null,
+      "existing_remediation": null,
+      "failure_streak": 2,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "REPEATED_CONSECUTIVE_FAILURES",
+        "SCHEDULE_STALE"
+      ],
+      "latest_head_sha": "ae7a9284025d8f851bd67d72b16588b6a63976aa",
+      "latest_run_id": 45692528807,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45692528807",
+      "model_lane": "GPT_6_1_SOL",
+      "openai_enabled": true,
+      "recent_failure_count": 2,
+      "route": "SOL_DIAGNOSIS",
+      "scheduled": true,
+      "workflow": "shadow-compass-v2.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
+    }
+  ],
+  "plan_fingerprint": "fd3334e284f8f1d9f5c5a0d3e907e6e3030f79bc404af59cec6f5b2ea9cd66d6",
+  "source_health_generated_at_utc": "2026-11-26T00:33:35.733242Z"
 }
