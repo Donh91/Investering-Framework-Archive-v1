@@ -116,6 +116,16 @@ export function kompasHorizonStatusRows({compass,view,lang='da',observationCurre
     if(kind==='OFFICIAL'){
       const h=compass.horizons?.[officialId];
       const info=directions[h?.expected_direction];
+      // A verified abstention is evidence, not a missing source and not
+      // a directional prediction. Reuse the existing nonbinding status.
+      if(h?.expected_direction==='NO_EDGE')
+        return {...row,status:'NONBINDING_CONTEXT',tone:'missing',
+          sourceStatus:'OFFICIAL_SOURCE_NO_EDGE',
+          value:tr(lang,directions.NO_EDGE[0],directions.NO_EDGE[1]),
+          sourceLabel:tr(lang,'Officiel vurdering · ingen dokumenteret fordel',
+            'Official assessment · no proven edge'),
+          priceLabel:id==='H5_7D'&&weekPriceText?weekPriceText:
+            tr(lang,'Ingen retningsprognose eller kursmål','No directional forecast or price target')};
       if(!info||!['UP','DOWN','MIXED','SIDEWAYS','LEAN_BULLISH','LEAN_BEARISH'].includes(h.expected_direction))
         return id==='H5_7D'&&weekPriceText?weekOnly(row):row;
       return {...row,label:tr(lang,da,en),kind,status:'OFFICIAL_DIRECTION_ONLY',
