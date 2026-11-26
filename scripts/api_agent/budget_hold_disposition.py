@@ -87,11 +87,22 @@ def run_guards(lane, runner=subprocess.run):
     for kind, command in commands:
         result = runner(command, cwd=ROOT, capture_output=True, text=True, check=False)
         disposition, reason = classify(kind, result, lane)
-        observations.append({
+        observation = {
             "guard": kind, "returncode": result.returncode,
             "disposition": disposition, "reason": reason,
             "stdout_sha256": hashlib.sha256(result.stdout.encode()).hexdigest(),
-        })
+        }
+        if disposition in {"PASS", "HOLD"}:
+            # The classified clean result may expose only its existing public
+            # budget arithmetic, never arbitrary guard output or error payloads.
+            row = json.loads(result.stdout)
+            observation["budget"] = {
+                key: row[key] for key in ("status", "remaining_usd", "reserve_usd",
+                                           "owner_global_remaining_usd_after_risk",
+                                           "owner_global_reserve_usd")
+                if key in row
+            }
+        observations.append(observation)
         if disposition != "PASS":
             return disposition, reason, observations
     return "PASS", "BOTH_EXISTING_GUARDS_PASS", observations
