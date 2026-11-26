@@ -284,6 +284,12 @@ class LiveMerge(unittest.TestCase):
         with self.assertRaises(E.Stop):                                                # a final look of another head
             run.write("merge", pr=7, sha=HEAD)
         run.cleared_for = (7, HEAD)
+        for other in (dict(d, action="NOOP"), dict(d, merge=dict(d["merge"], pr=8)), dict(d, merge=dict(d["merge"], sha="c" * 40))):
+            run.decision = other                                                       # an intent and a final look never replace the decision
+            with self.assertRaises(E.Stop) as stop:
+                run.write("merge", pr=7, sha=HEAD)
+            self.assertEqual(stop.exception.reason, "merge_not_the_decision")
+        run.decision = d
         self.assertEqual(len(gh.writes), 1)
         run.write("merge", pr=7, sha=HEAD)
         with self.assertRaises(E.Stop):                                                # ONE merge per run, whatever the caller asks
