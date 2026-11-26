@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/strategic_compass.py",
+    "tests/learning/test_strategic_compass.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-00da36642cb5b673",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "BUILD",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Split C: bind Strategic Compass sources and degrade on mismatch * Test degraded source binding, idempotence and recovery * Preserve immutable anchors through same-day degraded recovery * Assert recovery never rewrites previously issued anchor bytes * fix(strategic): verify immutable anchor and pointer before no-op or recovery * Bind tactical and strategic sources independently to preserve verified weekly CN lineage * Cover independent source failures and exact weekly publication lineage predicate",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/strategic_compass.py": "3a464477af1c7507f4f4debc1887a67b1c19ff0b",
+    "tests/learning/test_strategic_compass.py": "e29171e15873f56b0f5c68619f181c58442bd78c"
+  },
+  "source_commit_sha": "00da36642cb5b67310a95b70b9ad6b58d04f1d92",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-25T21:11:52+01:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "Split C: Strategic Compass source binding with degraded publication (#2339)"
+}
