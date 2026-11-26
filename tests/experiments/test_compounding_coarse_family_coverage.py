@@ -51,6 +51,34 @@ class CoarseFamilyTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             core.coarse_family_coverage({"candidates":reg["candidates"]*2},adm,{})
 
+    def test_duplicate_admission_and_registry_mismatch_unmapped(self):
+        reg = {"candidates":[{"candidate_id":"a","kind":"FORECAST_TEST","forecast_ids":["f"],
+                              "semantic_fingerprint":"x"}]}
+        adm = {"candidate_id":"a","semantic_fingerprint":"x","status":"QUALIFIED_FOR_FORWARD_TEST"}
+        for rows, reason in (([adm,dict(adm)],"DUPLICATE_ADMISSION_ID"),
+                             ([{**adm,"semantic_fingerprint":"y"}],"REGISTRY_METADATA_CONFLICT")):
+            out = core.coarse_family_coverage(reg,{"candidates":rows},{"a":spec()})
+            self.assertEqual(out["unmapped_reasons"],{"a":reason})
+            self.assertFalse(out["coverage_complete"])
+
+    def test_conflicting_forecast_owner_and_malformed_ids_unmapped(self):
+        reg = {"candidates":[{"candidate_id":"a","kind":"FORECAST_TEST","forecast_ids":["f"]},
+                             {"candidate_id":"b","kind":"FORECAST_TEST","forecast_ids":["f"]},
+                             {"candidate_id":"c","kind":"FORECAST_TEST","forecast_ids":["g","g"]}]}
+        adm = {"candidates":[{"candidate_id":cid,"semantic_fingerprint":cid,
+                              "status":"QUALIFIED_FOR_FORWARD_TEST"} for cid in "abc"]}
+        out = core.coarse_family_coverage(reg,adm,{cid:spec() for cid in "abc"})
+        self.assertEqual(out["families"],[])
+        self.assertEqual(set(out["unmapped_reasons"].values()),{"FORECAST_IDENTITY_UNVERIFIED"})
+
+    def test_registered_forecasts_not_independent_episodes(self):
+        reg = {"candidates":[{"candidate_id":"a","kind":"FORECAST_TEST","forecast_ids":["f","g"]}]}
+        adm = {"candidates":[{"candidate_id":"a","semantic_fingerprint":"x","status":"QUALIFIED_FOR_FORWARD_TEST"}]}
+        out = core.coarse_family_coverage(reg,adm,{"a":spec()})
+        self.assertEqual(out["families"][0]["registered_qualified_forecast_id_count"],2)
+        self.assertEqual(out["denominator_semantics"],"REGISTERED_FORECAST_IDENTITIES_NOT_INDEPENDENT_EPISODES")
+        self.assertFalse(out["allocation_authorized"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -280,36 +280,87 @@ def coarse_family_key(spec):
 
 
 def coarse_family_coverage(registry, admission, specs):
-    amap, _ = _maps(admission, {})
-    groups, unmapped, seen = {}, [], set()
+    # Keep incomplete or contradictory metadata visible; never choose the
+    # last of two competing admission rows or count corrupted service.
+    amap, conflicting = {}, set()
+    for adm in admission.get("candidates", []):
+        if not isinstance(adm, dict):
+            raise ValueError("coarse family: malformed admission row")
+        cid = adm.get("candidate_id")
+        if not isinstance(cid, str) or not cid:
+            raise ValueError("coarse family: invalid admission ID")
+        if cid in amap:
+            conflicting.add(cid)
+        else:
+            amap[cid] = adm
+    groups, unmapped, seen = {}, {}, set()
+    owners, conflicted_forecasts = {}, set()
     for row in registry.get("candidates", []):
+        if not isinstance(row, dict):
+            raise ValueError("coarse family: malformed registry row")
         cid = row.get("candidate_id")
         if not isinstance(cid, str) or not cid or cid in seen:
             raise ValueError("coarse family: invalid or duplicate registry ID")
         seen.add(cid)
-        adm = amap.get(cid, {})
-        key = coarse_family_key(specs.get(cid))
-        # Confirmatory cohorts are not inputs to descriptive allocation diagnostics.
-        if (_profile(row, {"profiles": PROFILE_DEFAULTS}) == "CONFIRMATORY"
-                or key is None or not adm.get("semantic_fingerprint")):
-            unmapped.append(cid)
+        forecast_ids = row.get("forecast_ids")
+        if isinstance(forecast_ids, list):
+            for fid in forecast_ids:
+                if isinstance(fid, str) and fid:
+                    if fid in owners and owners[fid] != cid:
+                        conflicted_forecasts.update((owners[fid], cid))
+                    owners[fid] = cid
+    for row in registry.get("candidates", []):
+        cid = row["candidate_id"]
+        adm, spec = amap.get(cid, {}), specs.get(cid)
+        fingerprint = adm.get("semantic_fingerprint")
+        forecast_ids = row.get("forecast_ids")
+        key = coarse_family_key(spec)
+        if _profile(row, {"profiles": PROFILE_DEFAULTS}) == "CONFIRMATORY":
+            reason = "CONFIRMATORY_EXCLUDED"
+        elif cid in conflicting:
+            reason = "DUPLICATE_ADMISSION_ID"
+        elif key is None:
+            reason = "SPEC_UNAVAILABLE_OR_UNMAPPED"
+        elif not isinstance(fingerprint, str) or not fingerprint:
+            reason = "ADMISSION_FINGERPRINT_UNAVAILABLE"
+        elif (row.get("kind") != spec.get("kind")
+              or (row.get("semantic_fingerprint") is not None
+                  and row["semantic_fingerprint"] != fingerprint)
+              or (row.get("scientific_admission_status") is not None
+                  and row["scientific_admission_status"] != adm.get("status"))):
+            reason = "REGISTRY_METADATA_CONFLICT"
+        elif (not isinstance(forecast_ids, list)
+              or any(not isinstance(fid, str) or not fid for fid in forecast_ids)
+              or len(set(forecast_ids)) != len(forecast_ids)
+              or cid in conflicted_forecasts):
+            reason = "FORECAST_IDENTITY_UNVERIFIED"
+        else:
+            reason = None
+        if reason:
+            unmapped[cid] = reason
             continue
         group = groups.setdefault(key, {"candidate_ids": [], "qualified_candidate_ids": [],
-                                        "served_candidate_ids": [], "semantic_fingerprints": set()})
+                                        "served_candidate_ids": [], "semantic_fingerprints": set(),
+                                        "registered_forecast_ids": set()})
         group["candidate_ids"].append(cid)
-        group["semantic_fingerprints"].add(adm["semantic_fingerprint"])
+        group["semantic_fingerprints"].add(fingerprint)
         if adm.get("status") == "QUALIFIED_FOR_FORWARD_TEST":
             group["qualified_candidate_ids"].append(cid)
-            if row.get("forecast_ids"):
+            if forecast_ids:
                 group["served_candidate_ids"].append(cid)
+                group["registered_forecast_ids"].update(forecast_ids)
     rows = []
     for key, group in sorted(groups.items()):
-        rows.append({"coarse_family_key": key, **{k: sorted(v) for k, v in group.items()}})
+        counts = len(group.pop("registered_forecast_ids"))
+        rows.append({"coarse_family_key": key, **{k: sorted(v) for k, v in group.items()},
+                     "registered_qualified_forecast_id_count": counts})
     return {"contract": COARSE_FAMILY_CONTRACT, "authority": "DESCRIPTIVE_ONLY",
             "allocation_authorized": False, "scientific_equivalence_asserted": False,
             "registry_candidate_count": len(seen), "mapped_candidate_count": len(seen)-len(unmapped),
-            "unmapped_candidate_ids": sorted(unmapped), "families": rows,
-            "coverage_complete": not unmapped}
+            "unmapped_candidate_ids": sorted(unmapped), "unmapped_reasons": dict(sorted(unmapped.items())),
+            "families": rows, "coverage_complete": not unmapped,
+            "denominator_semantics": "REGISTERED_FORECAST_IDENTITIES_NOT_INDEPENDENT_EPISODES",
+            "source_temporal_binding": "NOT_ATTESTED_DESCRIPTIVE_ONLY"}
 
 
 def load_coarse_candidate_specs(registry, candidate_root):
