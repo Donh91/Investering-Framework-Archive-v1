@@ -10,6 +10,7 @@ import {spawnSync} from 'node:child_process';
 import {dirname,resolve,relative,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {verifyViteOutput} from './verify-vite-output.mjs';
+import {verifyKompasPublicBinding} from './finalize-kompas-public.mjs';
 
 const here=dirname(fileURLToPath(import.meta.url));
 const dist=resolve(here,'../dist');
@@ -74,6 +75,7 @@ export async function stageNext({run=execute,lockfile=resolve(here,'package-lock
  // No speculative npm installation or staging when the reviewed lockfile is missing.
  try{await readFile(lockfile)}
  catch{throw Error('NEXT_STAGE_REVIEWED_PACKAGE_LOCK_REQUIRED')}
+ await verifyKompasPublicBinding(resolve(dist,'data'));
  const before=await snapshotProtected();
  const fullBefore=await snapshotCanonicalTree();
  run('npm',['ci']);
@@ -84,6 +86,7 @@ export async function stageNext({run=execute,lockfile=resolve(here,'package-lock
  const fullAfter=await snapshotCanonicalTree();
  assertUnchanged(before,after);
  assertCanonicalTreeUnchanged(fullBefore,fullAfter);
+ await verifyKompasPublicBinding(resolve(dist,'data'));
  return {...manifest,preservation:'ALL_NON_NEXT_ARTIFACT_HASHES_IDENTICAL',
   canonical_public_asset_count:Object.keys(fullBefore).length,
   stage:'NONCANONICAL_NEXT_ONLY',pages_workflow:'EXISTING_WORKFLOW_ONLY'};

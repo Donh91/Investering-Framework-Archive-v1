@@ -1,24 +1,24 @@
 # Automation Production Health
 Status: **RED**
-Generated: `2026-11-25T00:57:28.665620Z`
+Generated: `2026-11-26T00:33:35.733242Z`
 Workflows: 206 local / 235 registered
 Scheduled: 58
 Writers: 68
-GREEN / AMBER / RED: 191 / 14 / 1
+GREEN / AMBER / RED: 187 / 14 / 5
 
 ## Workflow matrix
 | Workflow | Lifecycle | Schedule | Writer | Last conclusion | Last run | Status | Findings |
 |---|---|---:|---:|---|---|---|---|
-| `adaptive-decision-miss-validation.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T07:03:22Z | **GREEN** | None |
+| `adaptive-decision-miss-validation.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T05:38:13Z | **GREEN** | None |
 | `adaptive-evidence-gap-gate.yml` | `ACTIVE` | no | no | success | 2026-10-01T23:46:53Z | **GREEN** | None |
-| `adaptive-evidence-gap.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T06:30:01Z | **GREEN** | None |
+| `adaptive-evidence-gap.yml` | `ACTIVE` | yes | yes | failure | 2026-11-25T05:03:27Z | **RED** | LATEST_RUN_FAILED |
 | `adaptive-gap-validation-gate.yml` | `ACTIVE` | no | no | success | 2026-10-07T07:53:27Z | **GREEN** | None |
-| `adaptive-rotation-cadence.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T18:54:02Z | **GREEN** | None |
+| `adaptive-rotation-cadence.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T23:37:53Z | **GREEN** | None |
 | `alpha-arc-live-replay.yml` | `ACTIVE` | no | no | success | 2026-09-16T19:33:35Z | **GREEN** | None |
 | `alpha-e3-launch-window-shadow.yml` | `ACTIVE` | no | no | none | none | **GREEN** | None |
-| `alpha-proof-supervisor.yml` | `ACTIVE` | no | no | success | 2026-11-24T23:20:54Z | **GREEN** | None |
-| `alpha-shadow04-prospective.yml` | `ACTIVE` | yes | no | success | 2026-11-24T21:19:43Z | **GREEN** | None |
-| `api-agent-gateway-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T15:13:03Z | **GREEN** | None |
+| `alpha-proof-supervisor.yml` | `ACTIVE` | no | no | success | 2026-11-25T17:44:00Z | **GREEN** | None |
+| `alpha-shadow04-prospective.yml` | `ACTIVE` | yes | no | in_progress | 2026-11-26T00:29:03Z | **GREEN** | None |
+| `api-agent-gateway-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T14:04:26Z | **GREEN** | None |
 | `askr-forensic-replay.yml` | `ACTIVE` | no | no | skipped | 2026-11-24T19:54:54Z | **GREEN** | None |
 | `askr-launch-sentinel.yml` | `RETIRED` | no | no | cancelled | 2026-09-18T19:11:54Z | **GREEN** | None |
 | `astra-landing-zone-gate.yml` | `ACTIVE` | no | no | success | 2026-10-15T21:04:57Z | **GREEN** | None |
@@ -27,15 +27,15 @@ GREEN / AMBER / RED: 191 / 14 / 1
 | `auto-trading-e2-compiler-reliability.yml` | `ACTIVE` | no | no | success | 2026-09-14T10:39:09Z | **GREEN** | None |
 | `auto-trading-e2-reproducibility.yml` | `ACTIVE` | no | no | success | 2026-09-13T22:46:04Z | **GREEN** | None |
 | `automation-health-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-11-23T11:10:56Z | **GREEN** | None |
-| `automation-production-health-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T22:28:04Z | **GREEN** | None |
-| `automation-production-health.yml` | `ACTIVE` | yes | yes | in_progress | 2026-11-25T00:56:42Z | **GREEN** | None |
+| `automation-production-health-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T21:47:14Z | **GREEN** | None |
+| `automation-production-health.yml` | `ACTIVE` | yes | yes | in_progress | 2026-11-26T00:32:50Z | **GREEN** | None |
 | `autonomous-research-governance-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T09:39:52Z | **GREEN** | None |
-| `autonomous-research-governance-loop.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T17:59:19Z | **GREEN** | None |
+| `autonomous-research-governance-loop.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T17:27:39Z | **GREEN** | None |
 | `backtest-engine-foundation.yml` | `ACTIVE` | no | no | success | 2026-10-31T20:14:02Z | **GREEN** | None |
 | `backtest-readiness-contracts.yml` | `ACTIVE` | no | no | success | 2026-09-05T20:39:59Z | **GREEN** | None |
 | `backtest-wave1-2-foundation.yml` | `ACTIVE` | no | no | success | 2026-10-31T20:14:02Z | **GREEN** | None |
 | `backtest-wave1-3-authority-lineage.yml` | `ACTIVE` | no | no | success | 2026-07-28T16:15:15Z | **GREEN** | None |
-| `backtest-wave1-4-prospective.yml` | `ACTIVE` | yes | no | success | 2026-11-24T03:00:04Z | **AMBER** | SCHEDULE_STALE |
+| `backtest-wave1-4-prospective.yml` | `ACTIVE` | yes | no | success | 2026-11-25T01:01:07Z | **AMBER** | SCHEDULE_STALE |
 | `binance-spot-owner-manual.yml` | `ACTIVE` | no | no | success | 2026-08-01T19:31:36Z | **GREEN** | None |
 | `binance-usdm-owner-manual.yml` | `ACTIVE` | no | no | success | 2026-07-31T20:51:59Z | **GREEN** | None |
 | `buildwithclaude-shadow-evidence-ledger.yml` | `ACTIVE` | no | no | success | 2026-09-02T16:22:23Z | **GREEN** | None |
@@ -45,50 +45,50 @@ GREEN / AMBER / RED: 191 / 14 / 1
 | `cfgi-recovery-launch-trigger.yml` | `RETIRED` | no | no | skipped | 2026-10-02T06:26:39Z | **GREEN** | None |
 | `cfgi-v3-launch-receipt-publish.yml` | `ACTIVE` | no | yes | success | 2026-08-23T07:24:14Z | **GREEN** | None |
 | `cn-precision-learning-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-11-15T10:02:38Z | **GREEN** | None |
-| `cn-site-v2-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T18:15:02Z | **GREEN** | None |
+| `cn-site-v2-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T21:47:14Z | **GREEN** | None |
 | `cn-v2-edge-freeze-ci.yml` | `ACTIVE` | no | no | success | 2026-11-24T09:39:52Z | **GREEN** | None |
 | `codex-intake-dispatch.yml` | `ACTIVE` | no | no | success | 2026-11-20T17:32:11Z | **GREEN** | None |
-| `compass-event-refresh.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T00:16:56Z | **GREEN** | None |
-| `compass-outcomes.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T23:34:38Z | **GREEN** | None |
-| `compass-production-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-11-19T23:16:55Z | **GREEN** | None |
-| `compass-schedule-watchdog.yml` | `ACTIVE` | yes | no | success | 2026-11-24T19:02:43Z | **GREEN** | None |
-| `continuity-learning-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T18:15:02Z | **GREEN** | None |
-| `continuity-learning-maintenance.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T06:24:17Z | **GREEN** | None |
+| `compass-event-refresh.yml` | `ACTIVE` | yes | yes | success | 2026-11-26T00:29:36Z | **GREEN** | None |
+| `compass-outcomes.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T20:11:25Z | **GREEN** | None |
+| `compass-production-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-11-25T20:11:18Z | **GREEN** | None |
+| `compass-schedule-watchdog.yml` | `ACTIVE` | yes | no | success | 2026-11-25T18:08:25Z | **AMBER** | SCHEDULE_STALE |
+| `continuity-learning-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T19:09:57Z | **GREEN** | None |
+| `continuity-learning-maintenance.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T05:01:30Z | **GREEN** | None |
 | `cowork-historical-altseason-bundle-gate.yml` | `ACTIVE` | no | no | success | 2026-08-21T09:47:00Z | **GREEN** | None |
 | `cowork-historical-altseason-bundle-receipt.yml` | `ACTIVE` | no | yes | success | 2026-08-21T09:47:59Z | **GREEN** | None |
 | `cowork-historical-altseason-bundle.yml` | `ACTIVE` | no | no | success | 2026-08-21T09:47:47Z | **GREEN** | None |
-| `cre-shadow-tests.yml` | `ACTIVE` | no | no | success | 2026-11-21T18:00:10Z | **GREEN** | None |
-| `cross-repo-agent-context-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T09:39:53Z | **GREEN** | None |
+| `cre-shadow-tests.yml` | `ACTIVE` | no | no | success | 2026-11-25T21:29:53Z | **GREEN** | None |
+| `cross-repo-agent-context-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T20:11:01Z | **GREEN** | None |
 | `cycle-navigator-autonomous-calibration-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T09:39:53Z | **GREEN** | None |
 | `cycle-navigator-autonomous-calibration-loop.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T19:19:52Z | **GREEN** | None |
 | `cycle-navigator-internal-precision.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T21:27:05Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `cycle-navigator-pages.yml` | `ACTIVE` | no | no | success | 2026-11-25T00:19:30Z | **GREEN** | None |
+| `cycle-navigator-pages.yml` | `ACTIVE` | no | no | success | 2026-11-26T00:30:34Z | **GREEN** | None |
 | `cycle-navigator-precision-hardening-once.yml` | `ACTIVE` | no | no | failure | 2026-09-14T14:33:59Z | **GREEN** | None |
 | `cycle-navigator-precision-hardening-v2-once.yml` | `ACTIVE` | no | no | failure | 2026-09-14T14:36:54Z | **GREEN** | None |
 | `cycle-navigator-precision-hardening-v3-once.yml` | `ACTIVE` | no | no | success | 2026-09-14T14:38:47Z | **GREEN** | None |
 | `cycle-navigator-precision-learning-supervisor.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T21:39:29Z | **GREEN** | None |
-| `cycle-navigator-public-contract-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T18:15:02Z | **GREEN** | None |
+| `cycle-navigator-public-contract-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T21:47:14Z | **GREEN** | None |
 | `cycle-navigator-weekly-publication.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T20:03:47Z | **GREEN** | None |
-| `daily-capture-architecture-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T15:13:03Z | **GREEN** | None |
-| `daily-compass.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T00:18:35Z | **GREEN** | None |
-| `daily-director-shadow.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T23:37:48Z | **GREEN** | None |
+| `daily-capture-architecture-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T19:05:59Z | **GREEN** | None |
+| `daily-compass.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T23:49:23Z | **AMBER** | SCHEDULE_STALE |
+| `daily-director-shadow.yml` | `ACTIVE` | yes | yes | failure | 2026-11-25T23:17:57Z | **RED** | LATEST_RUN_FAILED, REPEATED_CONSECUTIVE_FAILURES |
 | `daily-machine-throughput-gate.yml` | `ACTIVE` | no | no | success | 2026-10-02T06:48:23Z | **GREEN** | None |
-| `daily-machine-throughput.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T07:07:22Z | **GREEN** | None |
-| `daily-raw-owner-capture.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T22:59:50Z | **GREEN** | None |
-| `daily-settled-etf-calibration.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T18:49:25Z | **GREEN** | None |
-| `daily-slow-cycle-shadow.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T16:19:58Z | **GREEN** | None |
-| `daily-stablecoin-liquidity.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T17:57:19Z | **GREEN** | None |
-| `data-architecture-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T22:28:04Z | **GREEN** | None |
+| `daily-machine-throughput.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T05:42:23Z | **GREEN** | None |
+| `daily-raw-owner-capture.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T22:28:19Z | **GREEN** | None |
+| `daily-settled-etf-calibration.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T17:55:01Z | **GREEN** | None |
+| `daily-slow-cycle-shadow.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T15:59:47Z | **GREEN** | None |
+| `daily-stablecoin-liquidity.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T17:25:48Z | **GREEN** | None |
+| `data-architecture-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T21:47:14Z | **GREEN** | None |
 | `data-terminal-shadow-manual.yml` | `ACTIVE` | no | no | success | 2026-11-24T12:54:26Z | **GREEN** | None |
 | `dataset-registry-gate.yml` | `ACTIVE` | no | no | success | 2026-09-04T23:12:36Z | **GREEN** | None |
 | `edge001-t2-registry.yml` | `ACTIVE` | no | yes | success | 2026-10-07T19:38:36Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
 | `entry-signal-ledger-gate.yml` | `ACTIVE` | no | no | success | 2026-11-19T22:08:29Z | **GREEN** | None |
-| `entry-signal-ledger.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T00:10:16Z | **AMBER** | SCHEDULE_STALE |
-| `ethbtc-persistence-lifecycle.yml` | `ACTIVE` | no | yes | success | 2026-11-24T23:39:41Z | **GREEN** | None |
+| `entry-signal-ledger.yml` | `ACTIVE` | yes | yes | success | 2026-11-26T00:21:32Z | **GREEN** | None |
+| `ethbtc-persistence-lifecycle.yml` | `ACTIVE` | no | yes | skipped | 2026-11-25T23:19:00Z | **GREEN** | None |
 | `evidence-closure-gate.yml` | `ACTIVE` | no | no | success | 2026-11-19T09:58:36Z | **GREEN** | None |
 | `evidence-lifecycle-observability-gate.yml` | `ACTIVE` | no | no | success | 2026-10-02T06:48:23Z | **GREEN** | None |
-| `evidence-lifecycle-store-health.yml` | `ACTIVE` | yes | no | success | 2026-11-24T14:53:42Z | **GREEN** | None |
-| `experiment-lifecycle-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T15:13:03Z | **GREEN** | None |
+| `evidence-lifecycle-store-health.yml` | `ACTIVE` | yes | no | success | 2026-11-25T14:25:27Z | **GREEN** | None |
+| `experiment-lifecycle-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T14:04:26Z | **GREEN** | None |
 | `experiment-receipt-sync-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-11-17T11:52:23Z | **GREEN** | None |
 | `external-alpha-registry-gate.yml` | `ACTIVE` | yes | no | success | 2026-11-23T18:01:25Z | **GREEN** | None |
 | `fetch_btc_d_cmc_free.yml` | `ACTIVE` | no | no | success | 2026-07-12T00:09:38Z | **GREEN** | None |
@@ -100,11 +100,11 @@ GREEN / AMBER / RED: 191 / 14 / 1
 | `forecast-skill-study-v132-gate.yml` | `ACTIVE` | no | no | success | 2026-11-15T10:21:17Z | **GREEN** | None |
 | `forecast-source-temporal-provenance-gate.yml` | `ACTIVE` | no | no | success | 2026-10-31T06:45:00Z | **GREEN** | None |
 | `framework-intelligence-phase1-live-shadow.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T20:19:50Z | **GREEN** | None |
-| `framework-learning-operations.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T12:36:04Z | **GREEN** | None |
-| `framework-learning-supervisor.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T15:07:13Z | **GREEN** | None |
-| `framework-metronome.yml` | `ACTIVE` | yes | no | waiting | 2026-11-25T00:50:51Z | **GREEN** | None |
-| `full-architecture-1to7-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T19:57:16Z | **GREEN** | None |
-| `hcel-o1-independent-verify.yml` | `ACTIVE` | no | yes | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
+| `framework-learning-operations.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T11:25:55Z | **GREEN** | None |
+| `framework-learning-supervisor.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T13:24:36Z | **GREEN** | None |
+| `framework-metronome.yml` | `ACTIVE` | yes | no | waiting | 2026-11-26T00:32:13Z | **GREEN** | None |
+| `full-architecture-1to7-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T20:11:01Z | **GREEN** | None |
+| `hcel-o1-independent-verify.yml` | `ACTIVE` | no | yes | skipped | 2026-11-25T21:38:11Z | **GREEN** | None |
 | `historical-altseason-cfgi-enrichment.yml` | `RETIRED` | no | no | failure | 2026-08-23T05:18:07Z | **GREEN** | None |
 | `historical-altseason-cfgi-publish.yml` | `ACTIVE` | no | yes | success | 2026-08-21T08:08:20Z | **GREEN** | None |
 | `historical-altseason-cfgi-reservation.yml` | `RETIRED` | no | no | success | 2026-10-02T07:07:51Z | **GREEN** | None |
@@ -117,7 +117,7 @@ GREEN / AMBER / RED: 191 / 14 / 1
 | `historical-altseason-lab-gate.yml` | `ACTIVE` | no | no | success | 2026-10-02T06:50:18Z | **GREEN** | None |
 | `historical-altseason-throughput-gate.yml` | `ACTIVE` | no | no | success | 2026-10-02T06:48:23Z | **GREEN** | None |
 | `historical-research-vault-gate.yml` | `ACTIVE` | no | no | failure | 2026-11-07T16:01:22Z | **GREEN** | None |
-| `hourly-sequence-capture.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T00:09:11Z | **AMBER** | HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H |
+| `hourly-sequence-capture.yml` | `ACTIVE` | yes | yes | success | 2026-11-26T00:18:42Z | **AMBER** | HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H |
 | `intraday-execution-gate.yml` | `ACTIVE` | no | no | success | 2026-11-23T12:27:49Z | **GREEN** | None |
 | `intraday-execution-research.yml` | `ACTIVE` | no | yes | success | 2026-08-31T00:03:54Z | **GREEN** | None |
 | `ironflow-task2-source-pilot.yml` | `ACTIVE` | no | no | success | 2026-11-11T12:44:41Z | **GREEN** | None |
@@ -125,7 +125,7 @@ GREEN / AMBER / RED: 191 / 14 / 1
 | `mar_wp04c4_gate.yml` | `ACTIVE` | no | no | success | 2026-07-31T01:41:02Z | **GREEN** | None |
 | `market-owner-chain-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-11-18T09:14:53Z | **GREEN** | None |
 | `master-monday-precision-repair-once.yml` | `ACTIVE` | no | no | success | 2026-09-14T14:30:57Z | **GREEN** | None |
-| `master-monday-preflight-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T15:13:03Z | **GREEN** | None |
+| `master-monday-preflight-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T19:05:59Z | **GREEN** | None |
 | `master-monday-remaining-gaps.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T16:50:40Z | **GREEN** | None |
 | `meme-alpha-clean-g3-core.yml` | `ACTIVE` | no | no | success | 2026-10-21T07:33:07Z | **GREEN** | None |
 | `meme-alpha-ian-g2g3-research.yml` | `ACTIVE` | no | no | success | 2026-09-15T19:12:27Z | **GREEN** | None |
@@ -144,18 +144,18 @@ GREEN / AMBER / RED: 191 / 14 / 1
 | `meme-alpha-trenches-point-in-time.yml` | `ACTIVE` | no | no | success | 2026-11-08T10:33:23Z | **GREEN** | None |
 | `monthly-ai-learning-council-bootstrap-once.yml` | `ACTIVE` | no | no | success | 2026-09-03T06:03:59Z | **GREEN** | None |
 | `monthly-ai-learning-council-gate.yml` | `ACTIVE` | no | no | success | 2026-11-17T07:37:17Z | **GREEN** | None |
-| `monthly-ai-learning-council.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T15:53:58Z | **GREEN** | None |
-| `native-handlekompas.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T00:16:54Z | **AMBER** | SCHEDULE_STALE |
-| `native-market-recovery.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T00:29:58Z | **GREEN** | None |
-| `native-ota-research-readback.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T11:38:41Z | **GREEN** | None |
+| `monthly-ai-learning-council.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T15:37:04Z | **GREEN** | None |
+| `native-handlekompas.yml` | `ACTIVE` | yes | yes | success | 2026-11-26T00:29:33Z | **GREEN** | None |
+| `native-market-recovery.yml` | `ACTIVE` | yes | yes | success | 2026-11-26T00:32:11Z | **GREEN** | None |
+| `native-ota-research-readback.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T10:30:30Z | **GREEN** | None |
 | `okx-swap-owner-manual.yml` | `ACTIVE` | no | no | success | 2026-07-31T20:51:59Z | **GREEN** | None |
 | `operations-dashboard-gate.yml` | `ACTIVE` | no | no | success | 2026-11-23T07:07:59Z | **GREEN** | None |
-| `operations-dashboard.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T15:37:57Z | **AMBER** | SCHEDULE_STALE |
+| `operations-dashboard.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T15:22:21Z | **AMBER** | SCHEDULE_STALE |
 | `operations-recovery-launch-once.yml` | `ACTIVE` | no | no | success | 2026-08-31T16:26:39Z | **GREEN** | None |
-| `owner-astra-maeve-task2-20261117.yml` | `ACTIVE` | no | no | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `owner-astra-mission.yml` | `ACTIVE` | no | no | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `owner-astra-research-program-20261116.yml` | `ACTIVE` | no | no | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `owner-bound-daily-director-manual.yml` | `ACTIVE` | no | no | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
+| `owner-astra-maeve-task2-20261117.yml` | `ACTIVE` | no | no | skipped | 2026-11-25T21:38:12Z | **GREEN** | None |
+| `owner-astra-mission.yml` | `ACTIVE` | no | no | skipped | 2026-11-25T21:38:11Z | **GREEN** | None |
+| `owner-astra-research-program-20261116.yml` | `ACTIVE` | no | no | skipped | 2026-11-25T21:38:12Z | **GREEN** | None |
+| `owner-bound-daily-director-manual.yml` | `ACTIVE` | no | no | skipped | 2026-11-25T21:38:11Z | **GREEN** | None |
 | `pdf-inspector-ingestion.yml` | `ACTIVE` | no | no | success | 2026-08-02T18:16:02Z | **GREEN** | None |
 | `pdlt-bootstrap-once.yml` | `EXPECTED_BLOCK` | no | no | skipped | 2026-08-10T15:36:07Z | **AMBER** | EXPECTED_BLOCK |
 | `pdlt-daily-census.yml` | `EXPECTED_BLOCK` | no | no | success | 2026-09-01T23:35:24Z | **AMBER** | EXPECTED_BLOCK |
@@ -164,47 +164,47 @@ GREEN / AMBER / RED: 191 / 14 / 1
 | `pdlt-runtime-gate.yml` | `ACTIVE` | no | no | success | 2026-10-02T06:48:23Z | **GREEN** | None |
 | `pdlt-v1-1.yml` | `ACTIVE` | no | no | success | 2026-10-02T06:48:23Z | **GREEN** | None |
 | `phase4-no-hindsight-replay.yml` | `ACTIVE` | no | no | success | 2026-08-23T17:53:27Z | **GREEN** | None |
-| `provider-budget-readback.yml` | `ACTIVE` | no | yes | success | 2026-11-24T23:01:34Z | **GREEN** | None |
+| `provider-budget-readback.yml` | `ACTIVE` | no | yes | success | 2026-11-25T22:29:34Z | **GREEN** | None |
 | `pullback-learning-gate.yml` | `ACTIVE` | no | no | success | 2026-10-02T06:48:23Z | **GREEN** | None |
-| `pullback-learning-ledger.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T21:34:47Z | **GREEN** | None |
+| `pullback-learning-ledger.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T23:48:32Z | **GREEN** | None |
 | `remediation-maturation-gate.yml` | `ACTIVE` | no | no | success | 2026-11-20T07:39:09Z | **GREEN** | None |
-| `remediation-maturation.yml` | `ACTIVE` | yes | yes | failure | 2026-11-24T15:19:25Z | **RED** | LATEST_RUN_FAILED, SCHEDULE_STALE |
-| `research-execution-coordinator.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T19:27:58Z | **GREEN** | None |
-| `research-governance-smoke.yml` | `ACTIVE` | no | no | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `research-lab-cn-reconstructed-baseline.yml` | `ACTIVE` | no | yes | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `research-lab-etf-decision-value-crosswalk.yml` | `ACTIVE` | no | yes | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `research-lab-etf-pit-edge-replay.yml` | `ACTIVE` | no | yes | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `research-lab-m6-episode-power.yml` | `ACTIVE` | no | yes | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `research-lab-m6-spar-comparator.yml` | `ACTIVE` | no | yes | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `research-lab-m6-t4-7d.yml` | `ACTIVE` | no | yes | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `research-lab-sol-dispatch.yml` | `ACTIVE` | no | yes | skipped | 2026-11-24T22:28:20Z | **GREEN** | None |
-| `research-owner-breadth-daily.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T17:46:44Z | **GREEN** | None |
-| `research-owner-btcd-daily.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T18:13:58Z | **GREEN** | None |
+| `remediation-maturation.yml` | `ACTIVE` | yes | yes | failure | 2026-11-25T15:00:18Z | **RED** | LATEST_RUN_FAILED, SCHEDULE_STALE |
+| `research-execution-coordinator.yml` | `ACTIVE` | yes | yes | failure | 2026-11-25T18:36:29Z | **RED** | LATEST_RUN_FAILED, REPEATED_CONSECUTIVE_FAILURES |
+| `research-governance-smoke.yml` | `ACTIVE` | no | no | skipped | 2026-11-25T21:38:12Z | **GREEN** | None |
+| `research-lab-cn-reconstructed-baseline.yml` | `ACTIVE` | no | yes | skipped | 2026-11-25T21:38:11Z | **GREEN** | None |
+| `research-lab-etf-decision-value-crosswalk.yml` | `ACTIVE` | no | yes | skipped | 2026-11-25T21:38:12Z | **GREEN** | None |
+| `research-lab-etf-pit-edge-replay.yml` | `ACTIVE` | no | yes | skipped | 2026-11-25T21:38:11Z | **GREEN** | None |
+| `research-lab-m6-episode-power.yml` | `ACTIVE` | no | yes | skipped | 2026-11-25T21:38:11Z | **GREEN** | None |
+| `research-lab-m6-spar-comparator.yml` | `ACTIVE` | no | yes | skipped | 2026-11-25T21:38:12Z | **GREEN** | None |
+| `research-lab-m6-t4-7d.yml` | `ACTIVE` | no | yes | skipped | 2026-11-25T21:38:12Z | **GREEN** | None |
+| `research-lab-sol-dispatch.yml` | `ACTIVE` | no | yes | skipped | 2026-11-25T21:38:11Z | **GREEN** | None |
+| `research-owner-breadth-daily.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T17:14:45Z | **GREEN** | None |
+| `research-owner-btcd-daily.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T17:34:32Z | **GREEN** | None |
 | `research-parallel-lanes-skill-ci.yml` | `ACTIVE` | no | no | success | 2026-11-24T09:39:53Z | **GREEN** | None |
 | `research-s5-derivatives-crowding-v1.yml` | `ACTIVE` | no | no | success | 2026-11-05T11:01:27Z | **GREEN** | None |
-| `rich-breadth-checkpoint.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T23:04:58Z | **GREEN** | None |
+| `rich-breadth-checkpoint.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T22:37:02Z | **GREEN** | None |
 | `round3-contract-freeze-gate.yml` | `ACTIVE` | no | no | success | 2026-09-13T09:52:24Z | **GREEN** | None |
 | `round3-v2-materialization.yml` | `ACTIVE` | no | no | success | 2026-08-23T13:17:33Z | **GREEN** | None |
-| `s1-tick-brief.yml` | `ACTIVE` | yes | no | success | 2026-11-25T00:29:59Z | **AMBER** | SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE |
-| `sequential-research-queue.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T18:57:32Z | **GREEN** | None |
+| `s1-tick-brief.yml` | `ACTIVE` | yes | no | success | 2026-11-26T00:27:00Z | **AMBER** | SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE |
+| `sequential-research-queue.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T18:01:31Z | **GREEN** | None |
 | `shadow-admission-ai-decider.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T08:17:55Z | **GREEN** | None |
-| `shadow-compass-v2-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-11-19T19:05:14Z | **GREEN** | None |
-| `shadow-compass-v2.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T18:58:17Z | **GREEN** | None |
+| `shadow-compass-v2-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-11-25T20:11:18Z | **GREEN** | None |
+| `shadow-compass-v2.yml` | `ACTIVE` | yes | yes | failure | 2026-11-25T20:11:24Z | **RED** | LATEST_RUN_FAILED, REPEATED_CONSECUTIVE_FAILURES, SCHEDULE_STALE |
 | `shadow-registry-autonomous-portfolio-gate.yml` | `ACTIVE` | no | no | success | 2026-10-02T06:48:23Z | **GREEN** | None |
 | `shadow-registry-autonomous-portfolio-loop.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T19:29:43Z | **GREEN** | None |
 | `shadow-registry-gate.yml` | `ACTIVE` | no | no | success | 2026-11-23T18:44:01Z | **GREEN** | None |
 | `shadow-registry-weekly.yml` | `ACTIVE` | yes | no | success | 2026-11-23T18:42:51Z | **GREEN** | None |
-| `shared-row-prospective-evidence-loop.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T16:28:54Z | **AMBER** | SCHEDULE_STALE |
-| `shared-row-tournament-research-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T15:13:03Z | **GREEN** | None |
+| `shared-row-prospective-evidence-loop.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T16:08:15Z | **AMBER** | SCHEDULE_STALE |
+| `shared-row-tournament-research-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T19:18:15Z | **GREEN** | None |
 | `shared-row-tournament-weekly.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T19:14:03Z | **GREEN** | None |
-| `situation-room-daily-static.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T18:53:24Z | **GREEN** | None |
+| `situation-room-daily-static.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T17:57:51Z | **GREEN** | None |
 | `situation-room-owner-live-gate.yml` | `ACTIVE` | no | no | success | 2026-11-14T18:43:11Z | **GREEN** | None |
-| `situation-room-shadow-bridge.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T19:02:54Z | **GREEN** | None |
+| `situation-room-shadow-bridge.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T18:08:44Z | **GREEN** | None |
 | `situation-room-static-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-11-14T10:28:02Z | **GREEN** | None |
 | `source-provenance-recovery-gate.yml` | `ACTIVE` | no | no | success | 2026-10-02T06:48:23Z | **GREEN** | None |
-| `source-provenance-recovery-loop.yml` | `ACTIVE` | yes | yes | success | 2026-11-24T17:17:41Z | **GREEN** | None |
+| `source-provenance-recovery-loop.yml` | `ACTIVE` | yes | yes | success | 2026-11-25T16:58:33Z | **GREEN** | None |
 | `specialist-architecture-gate.yml` | `ACTIVE` | no | no | success | 2026-08-23T11:29:50Z | **GREEN** | None |
-| `storage-health-gate.yml` | `ACTIVE` | no | no | success | 2026-11-24T22:28:04Z | **GREEN** | None |
+| `storage-health-gate.yml` | `ACTIVE` | no | no | success | 2026-11-25T21:47:14Z | **GREEN** | None |
 | `sunday-market-close-and-cfgi.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T08:51:08Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
 | `top100-breadth-owner-manual.yml` | `ACTIVE` | no | no | success | 2026-11-19T09:58:36Z | **GREEN** | None |
 | `typesafe_jev_alpha_blind_replay.yml` | `ACTIVE` | no | no | success | 2026-09-19T12:49:17Z | **GREEN** | None |
@@ -217,8 +217,16 @@ GREEN / AMBER / RED: 191 / 14 / 1
 | `weekly-sol-adversarial-review.yml` | `ACTIVE` | yes | yes | success | 2026-11-23T14:31:58Z | **GREEN** | None |
 
 ## Blockers
+- adaptive-evidence-gap.yml:LATEST_RUN_FAILED
+- daily-director-shadow.yml:LATEST_RUN_FAILED
+- daily-director-shadow.yml:REPEATED_CONSECUTIVE_FAILURES
 - remediation-maturation.yml:LATEST_RUN_FAILED
 - remediation-maturation.yml:SCHEDULE_STALE
+- research-execution-coordinator.yml:LATEST_RUN_FAILED
+- research-execution-coordinator.yml:REPEATED_CONSECUTIVE_FAILURES
+- shadow-compass-v2.yml:LATEST_RUN_FAILED
+- shadow-compass-v2.yml:REPEATED_CONSECUTIVE_FAILURES
+- shadow-compass-v2.yml:SCHEDULE_STALE
 
 ## Warnings
 - REGISTERED_WITHOUT_LOCAL_FILE:2026-10-08-compass-source-scoped-release.yml
@@ -251,11 +259,11 @@ GREEN / AMBER / RED: 191 / 14 / 1
 - REGISTERED_WITHOUT_LOCAL_FILE:t4-microstructure-live-readback.yml
 - REGISTERED_WITHOUT_LOCAL_FILE:zero-manual-feed-graduation.yml
 - backtest-wave1-4-prospective.yml:SCHEDULE_STALE
+- compass-schedule-watchdog.yml:SCHEDULE_STALE
 - cycle-navigator-internal-precision.yml:RECOVERING_AFTER_RECENT_FAILURES
+- daily-compass.yml:SCHEDULE_STALE
 - edge001-t2-registry.yml:RECOVERING_AFTER_RECENT_FAILURES
-- entry-signal-ledger.yml:SCHEDULE_STALE
 - hourly-sequence-capture.yml:HOURLY_SCHEDULE_EVENT_CREATION_GAP_24H
-- native-handlekompas.yml:SCHEDULE_STALE
 - operations-dashboard.yml:SCHEDULE_STALE
 - pdlt-bootstrap-once.yml:EXPECTED_BLOCK
 - pdlt-daily-census.yml:EXPECTED_BLOCK

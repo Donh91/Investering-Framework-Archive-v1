@@ -14,6 +14,7 @@ import hashlib
 import io
 import json
 import math
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -450,6 +451,8 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
         },
         "action": native_action,
         "market_direction": market_direction,
+        "cycle_participation": cycle_participation_readback(auto_state, as_of=generated),
+        "altseason_readback": altseason_readback(auto_state, as_of=generated),
         "DATA_HEALTH": {
             "status": effective_data_status,
             "source_validation_status": auto_state.get("validation_status"),
@@ -2160,6 +2163,181 @@ _PUBLIC_DESCRIPTIVE_DROP = {
     "cn_band_status": ("source",),
     "risk_freshness": (),
 }
+
+
+_PARTICIPATION_CONTRACT = "CN_CYCLE_PARTICIPATION_READBACK_v1"
+_PARTICIPATION_SEMANTICS = "OBSERVED_24H_RELATIVE_PERFORMANCE_NOT_CAPITAL_FLOW"
+# Same source expiry as auto_market_state.normalize_breadth.
+_PARTICIPATION_MAX_AGE = timedelta(hours=8)
+_PARTICIPATION_WINDOWS = {"LARGE_ALT_PROXY": (3, 20), "MID_ALT_PROXY": (21, 50),
+           "SMALL_ALT_PROXY": (51, 100)}
+
+
+def _participation_mapping(value):
+    return value if isinstance(value, Mapping) else {}
+
+
+def _participation_clock(value):
+    if not isinstance(value, str):
+        return None
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return dt.astimezone(timezone.utc) if dt.utcoffset() is not None else None
+    except (ValueError, OverflowError):
+        return None
+
+
+def _participation_number(value):
+    return type(value) in (int, float) and -1e100 <= value <= 1e100 and math.isfinite(value)
+
+
+def _participation_majority(value):
+    if not _participation_number(value) or not 0 <= value <= 1:
+        return "UNAVAILABLE"
+    return "MAJORITY" if value > .5 else "MINORITY" if value < .5 else "HALF"
+
+
+def _participation_unavailable(reason):
+    return {"contract": _PARTICIPATION_CONTRACT, "status": "UNAVAILABLE", "reason": reason,
+            "semantics": _PARTICIPATION_SEMANTICS, "observed_at_utc": None, "valid_until_utc": None,
+            "relative_leader": "UNAVAILABLE",
+            "buckets": {k: {"state": "UNAVAILABLE"} for k in
+                        (*_PARTICIPATION_WINDOWS, "MICROCAP_PROXY", "MEMES")},
+            "phase": "UNAVAILABLE", "rotation_confirmed": False,
+            "authority": "DESCRIPTIVE_ONLY_NO_ACTION_OR_FORECAST"}
+
+
+def cycle_participation_readback(auto_state, *, as_of):
+    """Read only the authenticated public Auto Market State owner's existing proxy.
+
+    Caller must verify packet ancestry/digest before invoking this helper.
+    A bucket is an observed rank-window proxy, never an inferred capital flow.
+    """
+    packet = _participation_mapping(auto_state)
+    if packet.get("validation_status") == "FAIL":
+        return _participation_unavailable("AUTO_SOURCE_VALIDATION_FAILED")
+    state = _participation_mapping(packet.get("normalized_state"))
+    health = _participation_mapping(_participation_mapping(packet.get("source_health")).get("breadth"))
+    norm = _participation_mapping(health.get("normalization"))
+    breadth = _participation_mapping(state.get("breadth"))
+    proxy = _participation_mapping(state.get("capitalization_transmission_proxy"))
+    now = as_of.astimezone(timezone.utc) if isinstance(as_of, datetime) and as_of.utcoffset() is not None else None
+    issued = _participation_clock(packet.get("packet_generated_at_utc"))
+    stamp = _participation_clock(proxy.get("source_retrieved_at_utc"))
+    if now is None or issued is None or stamp is None or not stamp <= issued <= now:
+        return _participation_unavailable("SOURCE_CLOCK_INVALID")
+    if now - stamp >= _PARTICIPATION_MAX_AGE:
+        return _participation_unavailable("BREADTH_OWNER_EXPIRED")
+    if health.get("status") != "PASS" or norm.get("status") != "PASS":
+        return _participation_unavailable("BREADTH_OWNER_NOT_PASS")
+    if (proxy.get("contract") != "CAPITALIZATION_TRANSMISSION_PROXY_v2"
+            or proxy.get("bucket_semantics") != "FILTERED_TOP100_RANK_WINDOWS_EXPLICIT_NON_BETA_EXCLUSIONS_PROXY_ONLY"):
+        return _participation_unavailable("SOURCE_CONTRACT_MISMATCH")
+    authority = _participation_mapping(proxy.get("authority"))
+    if (not all(authority.get(k) is False for k in ("binding", "canonical_rotation", "portfolio_action", "market_threshold_change"))
+            or type(authority.get("execution_weight")) is not int or authority["execution_weight"] != 0):
+        return _participation_unavailable("SOURCE_AUTHORITY_MISMATCH")
+    membership = _participation_mapping(breadth.get("universe")).get("membership_hash") or _participation_mapping(breadth.get("aggregate")).get("membership_hash")
+    if (not isinstance(membership, str) or not re.fullmatch(r"[0-9a-f]{64}", membership)
+            or membership != proxy.get("source_membership_hash")
+            or stamp != _participation_clock(
+                breadth.get("retrieved_at_utc")
+                or breadth.get("retrieval_timestamp")
+                or _participation_mapping(breadth.get("observation")).get("retrieval_timestamp_utc")
+            )
+            or stamp != _participation_clock(norm.get("retrieved_at_utc"))):
+        return _participation_unavailable("SOURCE_MEMBERSHIP_OR_CLOCK_MISMATCH")
+    out = _participation_unavailable("NO_QUALIFIED_BUCKET")
+    btc, eth = proxy.get("btc_return_24h_pct"), proxy.get("eth_return_24h_pct")
+    if not all(_participation_number(x) for x in (btc, eth)):
+        return out
+    out["observed_at_utc"] = stamp.isoformat().replace("+00:00", "Z")
+    out["valid_until_utc"] = (stamp + _PARTICIPATION_MAX_AGE).isoformat().replace("+00:00", "Z")
+    out["relative_leader"] = "BTC" if btc > eth else "ETH" if eth > btc else "TIED"
+    buckets = _participation_mapping(proxy.get("buckets"))
+    for key, (lo, hi) in _PARTICIPATION_WINDOWS.items():
+        row = _participation_mapping(buckets.get(key))
+        counts = [row.get(k) for k in ("raw_rank_window_constituent_count", "excluded_non_beta_count", "constituent_count")]
+        if (row.get("status") != "OBSERVED_PROXY" or row.get("rank_window") != [lo, hi]
+                or not all(type(n) is int and n >= 0 for n in counts)
+                or counts[0] != hi - lo + 1 or counts[1] + counts[2] != counts[0] or not counts[2]):
+            continue
+        shares = [row.get(k) for k in ("advance_ratio_24h", "outperforming_btc_share_24h", "outperforming_eth_share_24h")]
+        values = [_participation_majority(value) for value in shares]
+        # The owner computes all three shares over identical constituents.
+        # Higher strict return thresholds cannot have higher shares; equal
+        # thresholds must have identical shares (including the zero benchmark).
+        if "UNAVAILABLE" not in values:
+            thresholds = (0, btc, eth)
+            if any((thresholds[i] >= thresholds[j] and shares[i] > shares[j])
+                   for i in range(3) for j in range(3)):
+                continue
+        coverage = "TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE" if key == "SMALL_ALT_PROXY" else "TOP100_FULL_RANK_WINDOW"
+        if "UNAVAILABLE" in values or row.get("coverage") != coverage:
+            continue
+        out["buckets"][key] = dict(state="OBSERVED_PROXY", coverage=coverage,
+                                   advancing=values[0], outperforming_btc=values[1],
+                                   outperforming_eth=values[2])
+    observed = sum(out["buckets"][k]["state"] == "OBSERVED_PROXY" for k in _PARTICIPATION_WINDOWS)
+    out["status"] = "OBSERVED_PARTICIPATION" if observed == len(_PARTICIPATION_WINDOWS) else "PARTIAL_OBSERVATION"
+    out["reason"] = "SOURCE_PROXY_ONLY" if observed == len(_PARTICIPATION_WINDOWS) else "INCOMPLETE_RANK_WINDOWS"
+    return out
+
+
+def altseason_readback(auto_state, *, as_of):
+    """Source-published 90d state only; no phase, ETA, flow or action.
+    Daily source expectation from blockchaincenter_altcoin_season_shadow.json;
+    carry policy from auto_market_state.altseason_source_health (72h).
+    No numeric provider data in this projection.
+    """
+    out = {"contract": "CN_ALTSEASON_OBSERVATION_v1", "status": "UNAVAILABLE",
+           "source": "BLOCKCHAINCENTER_90D", "state": "UNAVAILABLE",
+           "observed_at_utc": None, "valid_until_utc": None,
+           "authority": "CONTEXT_ONLY_NO_TRANSITION_OR_ETA"}
+    packet = _participation_mapping(auto_state)
+    if packet.get("validation_status") == "FAIL":
+        return out
+    now = as_of if isinstance(as_of, datetime) and as_of.utcoffset() is not None else None
+    issued = _participation_clock(packet.get("packet_generated_at_utc"))
+    ns = _participation_mapping(packet.get("normalized_state"))
+    health = nested(packet, "source_health", "altseason_context", "status")
+    bc = _participation_mapping(nested(ns, "altseason_context", "blockchaincenter_altcoin_season"))
+    row = _participation_mapping(nested(bc, "horizons", "90"))
+    if health == "PASS" and bc.get("status") == "PASS" and bc.get("contract") == "BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1":
+        value = row.get("published_score")
+        retrieved = _participation_clock(bc.get("retrieved_at_utc"))
+        if (row.get("score_reconciliation") != "PASS_EXACT" or
+                not _participation_number(row.get("recomputed_score")) or
+                row.get("recomputed_score") != value or
+                retrieved is None or bc.get("observation_date_utc") != retrieved.date().isoformat()):
+            return out
+        status, ttl = "OBSERVED", timedelta(hours=24)
+    elif health == "DEGRADED_CARRY":
+        carry = _participation_mapping(ns.get("altseason_carry"))
+        if (carry.get("semantics") != "LAST_VALID_PUBLISHED_VALUE_CARRIED_NOT_INTERPOLATED_NOT_PASS" or
+                carry.get("max_age_hours") != 72):
+            return out
+        value = carry.get("value")
+        retrieved = _participation_clock(carry.get("source_retrieved_at_utc"))
+        origin = _participation_clock(carry.get("source_packet_generated_at_utc"))
+        if (retrieved is None or origin is None or issued is None or
+                not retrieved <= origin < issued or
+                carry.get("source_observation_date_utc") != retrieved.date().isoformat()):
+            return out
+        status, ttl = "CARRIED_NOT_FRESH", timedelta(hours=72)
+    else:
+        return out
+    if (not _participation_number(value) or not 0 <= value <= 100 or
+            now is None or issued is None or retrieved is None or
+            not retrieved <= issued <= now or now >= retrieved + ttl):
+        return out
+    # Source registry thresholds (not framework trading thresholds).
+    state = "ALTCOIN_SEASON" if value >= 75 else "BITCOIN_SEASON" if value <= 25 else "BETWEEN_PUBLISHED_THRESHOLDS"
+    if status == "OBSERVED" and row.get("source_state") != state:
+        return out
+    return {**out, "status": status, "state": state,
+            "observed_at_utc": _stamp(retrieved),
+            "valid_until_utc": _stamp(retrieved + ttl)}
 
 
 def _public_descriptive(compass: Mapping[str, Any]) -> dict[str, Any]:

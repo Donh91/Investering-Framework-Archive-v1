@@ -9,7 +9,7 @@ import {sourceTrace,displayPublicStatus,displayLongDirection,displaySourceConfid
 import {mondayContext,mondayLabels} from '../vnext-live/monday-public-bridge.mjs';
 import {forwardOutlook} from '../vnext-live/forward-outlook.mjs';
 import {VIEWS,readHorizon,lensContext,explainPosture,explainCurrentAction,sourceWatch,expiredOfficial} from './compass-reader.mjs';
-import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,sourceHorizonClock} from './compass-overview.mjs';
+import {publicOverview,directionVisual,readRotation,POSITION_GUIDE,shortVsForward,observedMarketClock,verifiedLiveMomentum,sourceHorizonClock} from './compass-overview.mjs';
 import {enhanceLegacyArrow,enhanceLegacyLabel} from './direction-mark.mjs';
 import {hourlyFloorBanner,kompasTruthBanner} from '../kompas-truth-banner.mjs';
 import {originalSourceAgeLabel} from '../source-age-readback.mjs';
@@ -19,6 +19,7 @@ import {kompasSourceClockReadback} from './kompas-clock-readback.mjs';
 import {importantStatusLine,btcNextDays,extraHorizonRows} from './kompas-owner-brief.mjs';
 import {cycleSourceReadback} from './cycle-source-readback.mjs';
 import {renderCycleMap} from './cycle-map.mjs';
+import {renderCycleParticipation,altseasonDisplay} from '../cycle-participation.mjs';
 import './cycle-map.css';
 import {readSwingRotation,renderSwingRotation} from '../vnext-live/swing-rotation-readback.mjs';
 import {liveViewModel,liveChart} from './kompas-live.mjs';
@@ -233,21 +234,23 @@ function renderQuickDecision(){
   NO_NEW_OBSERVATION:['Ingen ny måling','No new observation'],
   OBSERVATION_DELAYED:['Måling forsinket','Observation delayed'],
   OBSERVATION_CLOCK_INVALID:['Ingen gyldig måling','No verified observation'],
+  UNKNOWN:['Ukendt retning','Unknown direction'],
   UNAVAILABLE:['Ingen måling','No reading']
  };
- const observed=eligible?observedMarketClock({compass:feeds.compass}):
-  {state:'OBSERVATION_CLOCK_INVALID'};
+ const liveMomentum=verifiedLiveMomentum({compass:feeds?.compass,view});
+ const observed=liveMomentum|| (eligible?observedMarketClock({compass:feeds.compass}):
+  {state:'OBSERVATION_CLOCK_INVALID'});
  // The official 1–3d forecast remains source-valid even when the latest
  // completed public market candle has exceeded the independent 90min SLA.
  const nowState=observed.state==='FRESH_OBSERVATION'?
-  feeds.compass.market_now?.directional_state:
+  (liveMomentum?.direction||feeds.compass.market_now?.directional_state):
   observed.state==='NO_NEW_PRICE_OBSERVATION'?'NO_NEW_OBSERVATION':
   observed.state;
- const nowArrow=eligible?directionVisual(nowState,lang).arrow:'?';
+ const nowArrow=(eligible||liveMomentum)?directionVisual(nowState,lang).arrow:'?';
  set('premium-now-direction',nowLabels[nowState]?
    (nowArrow==='?'?'':nowArrow+' ')+nowLabels[nowState][lang==='en'?1:0]:
    (lang==='en'?'Awaiting valid data':'Afventer gyldige data'));
- if(eligible)enhanceLegacyLabel(document,$('premium-now-direction'),nowState,nowArrow);
+ if(eligible||liveMomentum)enhanceLegacyLabel(document,$('premium-now-direction'),nowState,nowArrow);
  const actionLabels={
   HOLD_WAIT:['Officiel vurdering · afvent','Official outlook · wait'],
   WAIT:['Officiel vurdering · afvent','Official outlook · wait'],
@@ -259,6 +262,9 @@ function renderQuickDecision(){
    (lang==='en'?'No current verified action':'Ingen aktuel verificeret handling'));
  const adaptive=explainCurrentAction({latest:feeds?.latest,compass:feeds?.compass,view,lang});
  if(adaptive)set('premium-action-meaning',adaptive);
+ // Keep one honest unavailable explanation; restore the secondary line on recovery.
+ const actionCode=$('premium-action-code');
+ if(actionCode)actionCode.hidden=!eligible;
  const twelve=$('premium-now-direction')?.closest('.product-cell')?.querySelector('small');
  if(twelve)twelve.textContent=lang==='en'?
   'Now · latest observed price move':
@@ -403,28 +409,14 @@ function renderReader(){
 
 function renderAltMilestone(){
  const en=document.documentElement.lang==='en';
- const eligible=view?.path?.state==='SOURCE_BOUND'&&
-  view?.compass?.state==='FRESH'&&
-  view.compass.permit_path_live_gates===true&&
-  view.path.source_issue===view?.weekly?.public_issue_number&&
-  view.path.source_week===view?.weekly?.forecast_week&&
-  view.path.source_identity===view.compass.compass_id;
- const p=eligible?view.path:null;
- set('cn-alt-milestone-title',en?'Altseason ignition':'Altseason begynder');
- set('cn-alt-milestone-subtitle',en?
-  'Before small/micro acceleration · independently verified rotation required':
-  'Før small/micro-acceleration · kræver verificeret rotation');
+ const m=altseasonDisplay(feeds?.latest,feeds?.compass,{lang:en?'en':'da'});
+ set('cn-alt-milestone-title',m.title);
+ set('cn-alt-milestone-subtitle',m.subtitle);
  set('cn-alt-milestone-eta-label',en?'Time to phase':'Tid til fase');
- // No structured authoritative future absolute timestamp exists in PATH v3.
- // A prose watch window is not a countdown, date or probability.
- set('cn-alt-milestone-eta',en?'No verified ETA':'Ingen verificeret ETA');
- const state=eligible&&p?.altseason?.status==='WATCH_ONLY'?
-   (en?'Conditional watch · not confirmed':'Betinget watch · ikke bekræftet'):
-   (en?'Awaiting verified transition':'Afventer verificeret overgang');
- set('cn-alt-milestone-state',state);
+ set('cn-alt-milestone-eta',m.eta);
+ set('cn-alt-milestone-state',m.state);
  const panel=$('cn-alt-milestone-title')?.closest('.cn-alt-milestone');
- if(panel)panel.dataset.state=eligible&&p.altseason?.status==='WATCH_ONLY'?
-   'watch':'unverified';
+ if(panel)panel.dataset.state=m.panel;
 }
 function renderForward(){
  const lang=document.documentElement.lang==='en'?'en':'da';
@@ -782,6 +774,7 @@ function renderCycleSource(){
  const en=lang==='en';
  const model=cycleSourceReadback({view,lang});
  renderCycleMap(document,{view,latest:feeds?.latest,lang});
+ renderCycleParticipation(document,feeds?.latest,feeds?.compass,{lang});
  set('cn-cycle-health',model.weekLabel);
  set('cn-cycle-meaning',model.meaning);
  set('cn-cycle-reason',model.reason||model.nextMeaning||
@@ -834,6 +827,12 @@ function paint(){
  renderProductExperience(view,feeds,lang);
  renderSwingRotation($('swing-rotation-overview'),readSwingRotation(view,feeds?.compass,{lang}),{lang});
  renderCycleSource();
+ // Repeated unavailable checkpoint labels carry no additional evidence.
+ for(const [primary,secondary] of [['premium-path-now','premium-path-source'],
+   ['premium-path-next','premium-path-gate'],['premium-path-alt','premium-path-alt-status']]){
+  const a=$(primary),b=$(secondary);
+  if(a&&b)b.hidden=a.textContent.trim()===b.textContent.trim();
+ }
  renderSourceClocks();
  renderQuickDecision();
  renderRiskQuick();

@@ -163,6 +163,31 @@ export function observedMarketClock({compass,now=Date.now()}){
  return {state:'FRESH_OBSERVATION',ageSeconds:Math.floor(age/1000)};
 }
 
+// Reuse the independent live-observation owner introduced in #2333.
+// The weekly join remains mandatory for official actions and forecasts.
+// Recheck identity, delivery and the closed-candle SLA at the consumer clock.
+export function verifiedLiveMomentum({compass,view,now=Date.now()}={}){
+ const o=view?.live_observation,m=compass?.market_now;
+ if(!Number.isFinite(now)||view?.delivery_health!=='FRESH'||
+    compass?.contract!=='PUBLIC_COMPASS_PROJECTION_v1'||compass?.data_status!=='OK'||
+    o?.semantics!=='OBSERVED_MOMENTUM_NOT_CYCLE_OR_FORECAST'||o.authority!=='PRESENTATION_ONLY'||
+    typeof o.compass_id!=='string'||!o.compass_id.trim()||
+    o.compass_id!==view?.compass?.compass_id||o.compass_id!==compass.compass_id||
+    o.issued_at_utc!==compass.issued_at_utc||o.observation_open_utc!==m?.market_observation_open_utc||
+    o.direction!==m?.directional_state||!['BULLISH','BEARISH','MIXED','NEUTRAL','SIDEWAYS'].includes(o.direction))return null;
+ const issued=Date.parse(o.issued_at_utc),delivered=Date.parse(view.generated_at),open=Date.parse(o.observation_open_utc);
+ const owner=compass.full_stack?.official_freshness;
+ const expiry=Date.parse(owner?.valid_until_utc),asof=Date.parse(owner?.source_asof_utc);
+ if(owner?.contract!=='OFFICIAL_COMPASS_SOURCE_FRESHNESS_READBACK_v1'||owner.status!=='VERIFIED_OWNER_POLICY'||
+    owner.semantics!=='SOURCE_FRESHNESS_EXPIRY_NOT_FORECAST_ETA'||
+    ![issued,delivered,open,expiry,asof].every(Number.isFinite)||
+    issued>now||delivered>now||issued>delivered+300000||asof>now||asof>expiry||open>issued||
+    observedMarketClock({compass,now}).state!=='FRESH_OBSERVATION')return null;
+ const validUntil=Math.min(expiry,issued+86400000,delivered+86400000,open+9000000);
+ if(now>=validUntil)return null;
+ return {state:'FRESH_OBSERVATION',direction:o.direction,validUntil};
+}
+
 /**
  * Public source-only comparison, NOT a new forecast.
  *
