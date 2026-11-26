@@ -11,7 +11,7 @@ const empty=()=>({contract:'CN_PUBLIC_FORWARD_OUTLOOK_v1',status:'UNAVAILABLE',
  strategic:{available:false,direction:'UNAVAILABLE',btc_direction:'UNAVAILABLE',
   eth_direction:'UNAVAILABLE',confidence:'UNKNOWN',summary:null,issued_at_utc:null,
   expected_path:null,scenarios:[],falsifiers:[]},price_path_status:'NOT_ISSUED'});
-export function forwardOutlook(latest,compass,trace){
+export function forwardOutlook(latest,compass,trace,{nowMs=Date.now()}={}){
  const out=empty();
  const cp=latest?.public_series?.current_public_projection;
  const wc=compass?.weekly_context;
@@ -34,7 +34,7 @@ export function forwardOutlook(latest,compass,trace){
     s.direction!=='UNAVAILABLE'&&f.source_status?.strategic==='BOUND_WEEKLY_ANCHOR'&&
     sc?.status==='BOUND_WEEKLY_ANCHOR'&&
     sc?.authority==='CYCLE_NAVIGATOR_OWNED_NOT_NEW_SITE_FORECAST'&&
-    Number.isFinite(when)&&when<=Date.now()){
+    Number.isFinite(when)&&Number.isFinite(nowMs)&&when<=nowMs){
     const h=sc.horizon_21_30d;
     out.strategic={available:true,direction:direction(s.direction),
      btc_direction:direction(h?.btc_direction),eth_direction:direction(h?.eth_direction),

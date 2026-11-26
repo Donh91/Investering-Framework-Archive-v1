@@ -31,6 +31,10 @@ on:
       - "04_MARKET_LEARNING/handlekompas/strategic/LATEST_STRATEGIC_COMPASS.json"
       - "04_MARKET_LEARNING/handlekompas/event_refresh/**"
       - "04_MARKET_LEARNING/entry_signals/LATEST.json"
+      # Inputs of scripts/cycle_navigator/build_kompas_live_path.py that this job runs: a new Task 2 forecast or score,
+      # or a new range baseline, must redeploy the site (before: the page stayed stale until an unrelated path changed).
+      - "06_RESEARCH_LAB/task2_challenger_a/**"
+      - "05_CYCLE_NAVIGATOR/range_baselines/**"
       - ".github/workflows/cycle-navigator-pages.yml"
   repository_dispatch:
     # Existing Shadow writer sends this only after verified publication.
@@ -44,8 +48,13 @@ on:
 
 permissions:
   contents: read
+  # Read-only pre-deploy metadata check for the exact uploaded artifact.
+  actions: read
   pages: write
   id-token: write
+  # Issue write is used ONLY by the post-CDN verified issue attestation step.
+  # Source tree and immutable market data remain read-only in the Pages job.
+  issues: write
 concurrency:
   group: cycle-navigator-pages
   cancel-in-progress: false
@@ -61,6 +70,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - name: Validate public series identity and score lineage
@@ -247,15 +257,25 @@ jobs:
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload Cycle Navigator public bundle only
+        id: pages_upload
         uses: actions/upload-pages-artifact@v4
         with:
           path: 05_CYCLE_NAVIGATOR/site/dist
       - name: Self-test exact-byte CDN delivery parity
         run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs --self-test
+      - name: Verify exact current Pages artifact visibility before deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAGES_ARTIFACT_ID: ${{ steps.pages_upload.outputs.artifact_id }}
+        run: |
+          node --test 05_CYCLE_NAVIGATOR/site/tests/wait-pages-artifact.test.mjs
+          node 05_CYCLE_NAVIGATOR/site/tests/wait-pages-artifact.mjs
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-      - name: Verify uploaded bundle bytes on actual GitHub Pages CDN
+      - name: Verify public bundle and exact original Monday freeze on CDN
+        env:
+          CN_PAGES_RECEIPT_PATH: runtime_cn_pages_release_receipt.json
         run: node 05_CYCLE_NAVIGATOR/site/tests/verify-pages-parity.mjs
       - name: Acknowledge source Hourly closed candle on actual public CDN
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_hour_utc != '' }}
@@ -266,3 +286,10 @@ jobs:
           python3 scripts/cycle_navigator/verify_hourly_pages_handoff.py \
             --expected-hour-utc "$EXPECTED_HOUR_UTC" \
             --max-wait-seconds 240 --poll-seconds 12
+
+      - name: Verify original Monday source-to-CDN closure negative tests
+        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py --self-test
+      - name: Persist one source-bound CDN success to existing GitHub #1593
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/cycle_navigator/attest_weekly_pages_delivery.py

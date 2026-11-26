@@ -177,26 +177,72 @@ def _timestamp(value):
         return None
 
 
+def _okx_oi_number(raw, *, symbol: str, field: str) -> float:
+    """Accept numeric source fields, never booleans, NaN, infinities or negatives."""
+    if isinstance(raw, bool) or raw is None or raw == "":
+        raise SourceError("SCHEMA_DRIFT", f"{symbol}:OKX OI {field} missing/boolean")
+    try:
+        value = float(raw)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise SourceError("SCHEMA_DRIFT", f"{symbol}:OKX OI {field} not numeric") from exc
+    if not math.isfinite(value) or value < 0:
+        raise SourceError("SCHEMA_DRIFT", f"{symbol}:OKX OI {field} not finite/nonnegative")
+    return value
+
+
 def parse_okx_oi(body: bytes, symbol: str) -> dict[int, dict[str, float | str | None]]:
+    """OKX array: [timestamp, contract_count, base_quantity, USD_notional].
+
+    Preserve existing OI amount semantics. Never equate array slot 3 (base
+    quantity) with slot 4 (USD), or infer a missing USD value from a quantity.
+    Reject mixed source shapes rather than compare unlike OI amounts within one
+    captured window. Previously persisted historical rows remain untouched.
+    """
     output = {}
-    for row in parse_okx_doc(body):
-        stamp = amount = value = None
+    seen_quantity_shape = None
+    for i, row in enumerate(parse_okx_doc(body)):
         if isinstance(row, dict):
             stamp = _timestamp(row.get("ts") or row.get("timestamp"))
-            amount = _num(row.get("oiCcy") or row.get("oi") or row.get("openInterest"))
-            value = _num(row.get("oiUsd") or row.get("oiValue") or row.get("openInterestValue"))
+            # Numeric zero is a present and valid observation, not a missing key.
+            # Truthiness fallback previously dropped it, risking a whole-window HOLD.
+            def present(keys):
+                for key in keys:
+                    raw = row.get(key)
+                    if raw is not None and raw != "":
+                        return raw
+                return None
+
+            amount_raw = present(("oiCcy", "oi", "openInterest"))
+            usd_raw = present(("oiUsd", "oiValue", "openInterestValue"))
+            if stamp is None:
+                raise SourceError("SCHEMA_DRIFT", f"{symbol}:OKX OI dict timestamp:{i}")
+            amount = _okx_oi_number(amount_raw, symbol=symbol, field="amount")
+            # The legacy dictionary contract permits an explicitly unavailable
+            # USD field, but never substitutes base/contract quantities for it.
+            value = None if usd_raw in (None, "") else _okx_oi_number(
+                usd_raw, symbol=symbol, field="usd_notional"
+            )
+            quantity_shape = "DICT_BASE" if row.get("oiCcy") not in (None, "") else "DICT_OTHER"
         elif isinstance(row, list):
-            idx = next((j for j, item in enumerate(row) if _timestamp(item) is not None), None)
-            if idx is not None:
-                stamp = _timestamp(row[idx])
-                numbers = [_num(item) for j, item in enumerate(row) if j != idx and _num(item) is not None]
-                if numbers:
-                    amount = numbers[0]
-                if len(numbers) > 1:
-                    value = numbers[1]
-        if stamp is None or amount is None:
-            continue
-        output[floor_hour_ms(stamp)] = {"oi": amount, "value": value, "source": "OKX_CONTRACT_OI_HISTORY"}
+            # Four positions are an explicit source contract, not an arbitrary
+            # list of numeric fields. A shifted/truncated row must fail closed.
+            if len(row) != 4 or _timestamp(row[0]) is None:
+                raise SourceError("SCHEMA_DRIFT", f"{symbol}:OKX OI array shape:{i}")
+            stamp = _timestamp(row[0])
+            amount = _okx_oi_number(row[1], symbol=symbol, field="contracts")
+            _okx_oi_number(row[2], symbol=symbol, field="base_quantity")
+            value = _okx_oi_number(row[3], symbol=symbol, field="usd_notional")
+            quantity_shape = "ARRAY_CONTRACTS"
+        else:
+            raise SourceError("SCHEMA_DRIFT", f"{symbol}:OKX OI row type:{i}")
+
+        if seen_quantity_shape is not None and seen_quantity_shape != quantity_shape:
+            raise SourceError("SCHEMA_DRIFT", f"{symbol}:OKX OI mixed amount units")
+        seen_quantity_shape = quantity_shape
+        hour = floor_hour_ms(stamp)
+        if hour in output:
+            raise SourceError("SCHEMA_DRIFT", f"{symbol}:OKX OI duplicate hour")
+        output[hour] = {"oi": amount, "value": value, "source": "OKX_CONTRACT_OI_HISTORY"}
     if not output:
         raise SourceError("SCHEMA_DRIFT", f"{symbol}:OKX OI no parseable rows")
     return output

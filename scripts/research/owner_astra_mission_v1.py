@@ -35,6 +35,8 @@ if str(ROOT) not in sys.path:
 from scripts.api_agent import manual_astra_task2_high_v1 as core
 from scripts.api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
 from scripts.api_agent import astra_provider_settlement_v1 as provider_settlement
+from scripts.research import astra_worklike_pilot_v1 as worklike
+from scripts.api_agent import astra_build_cost_v1 as build_cost
 
 REPO = "Donh91/Investering-Framework-Archive-v1"
 OWNER = "Donh91"
@@ -51,6 +53,7 @@ LEDGER = ROOT / "research/api_agent/coordination/API_PENDING_BILLING_RISK_V1.jso
 MODEL = "gpt-6.2-astra"           # the default model: a mission without "model" runs Astra, as before
 SOL_MODEL = "gpt-6.2-sol"         # the only other admitted model: the highest verified Sol of the shared policy
 EFFORT = "max"
+WORKLIKE_STAGE1 = "ASTRA-KOMPAS-L04-WORKLIKE-PILOT-S1-20261120"
 MISSION_ID = re.compile(r"ASTRA-[A-Z0-9]{1,24}(?:-[A-Z0-9]{1,24}){1,10}\Z")
 FILE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,80}\.md\Z")
 TRIGGER = re.compile(TRIGGER_PREFIX + r" (ASTRA-[A-Z0-9-]{3,120}) ([0-9a-f]{64})\Z")
@@ -173,6 +176,18 @@ def mission_model(mission: dict) -> str:
     return model
 
 
+def mission_effort(mission: dict) -> str:
+    """Narrow owner-gated pilot exception; all other historical wire bytes stay MAX."""
+    if mission.get("mission_id") == WORKLIKE_STAGE1:
+        if mission.get("model") != MODEL or mission.get("reasoning_effort") != worklike.EFFORT:
+            fail("WORKLIKE_MODEL_OR_EFFORT_MISMATCH")
+        if (mission.get("max_output_tokens") != worklike.MAX_OUTPUT_TOKENS
+                or mission.get("max_usd") != worklike.STAGE_CAP_MICROUSD / 1_000_000):
+            fail("WORKLIKE_STAGE_BOUNDS")
+        return worklike.EFFORT
+    return EFFORT
+
+
 def mission_rel(mission_id: str) -> str:
     if not isinstance(mission_id, str) or len(mission_id) > 100 or not MISSION_ID.fullmatch(mission_id):
         fail("MISSION_ID_INVALID")
@@ -191,7 +206,7 @@ def load_mission(mission_id: str):
     if (not isinstance(mission, dict) or not set(mission) <= MISSION_KEYS
             or mission.get("contract") != "ASTRA_MISSION_V1" or mission.get("mission_id") != mission_id
             or mission.get("trigger_issue") != ISSUE
-            or mission.get("reasoning_effort") != EFFORT or mission.get("public_only") is not True
+            or mission.get("reasoning_effort") != mission_effort(mission) or mission.get("public_only") is not True
             or mission.get("authority") != AUTHORITY):
         fail("MISSION_CONTRACT_INVALID")
     mission_model(mission)
@@ -225,10 +240,36 @@ def build_request(mission_id: str):
             + instructions.decode("utf-8")
             + "\n===== BUNDLE " + mission["bundle_file"] + " sha256=" + mission["bundle_sha256"] + " =====\n"
             + bundle.decode("utf-8") + "\n===== END BUNDLE =====\n")
-    request = {"model": model, "reasoning": {"effort": EFFORT}, "max_output_tokens": mission["max_output_tokens"],
-               "background": True, "store": True,
-               "input": [{"role": "user", "content": [{"type": "input_text", "text": text}]}]}
+    effort = mission_effort(mission)
+    if mission_id == WORKLIKE_STAGE1:
+        request, _ = worklike.request_for_stage(1, instructions.decode("utf-8"), bundle.decode("utf-8"))
+    else:
+        request = {"model": model, "reasoning": {"effort": effort}, "max_output_tokens": mission["max_output_tokens"],
+                   "background": True, "store": True,
+                   "input": [{"role": "user", "content": [{"type": "input_text", "text": text}]}]}
     data = core.canonical(request)
+    if mission_id == WORKLIKE_STAGE1 and len(data) > worklike.MAX_REQUEST_BYTES:
+        fail("WORKLIKE_REQUEST_BYTES")
+    build_stage = build_cost.OWNER_STAGE.fullmatch(mission_id)
+    if build_stage:
+        # One-stage safe admission now, never allow repair stage without an
+        # independently authenticated preceding native sandbox failure.
+        # The stage-2 route remains CLOSED until separately reviewed.
+        if build_stage.group(2) != "1":
+            fail("BUILD_STAGE2_PRIOR_NATIVE_RECEIPT_NOT_ADMITTED")
+        try:
+            build_cost.quote(
+                work_id=mission_id, mission=build_stage.group(1), stage=1,
+                model=model, reasoning_effort=effort,
+                request_bytes=len(data),
+                max_output_tokens=mission["max_output_tokens"],
+            )
+        except build_cost.BudgetHold as exc:
+            fail("BUILD_REQUEST_BUDGET_HOLD:" + str(exc))
+        if (mission.get("max_usd") is None
+                or mission["max_usd"] > build_cost.MAX_STAGE_USD
+                or len(data) > build_cost.MAX_REQUEST_BYTES):
+            fail("BUILD_STAGE_MISSION_CAP_OR_INPUT_LIMIT")
     input_upper = len(data) + INPUT_OVERHEAD_TOKENS
     upper = estimate_cost(model, input_upper, mission["max_output_tokens"])
     if len(data) > MAX_REQUEST_BYTES or upper > float(mission["max_usd"]) or CREDENTIAL.search(data):
@@ -237,7 +278,7 @@ def build_request(mission_id: str):
             "mission_dir": rel, "mission_json_sha256": digest(mission_raw),
             "instructions_file": mission["instructions_file"], "instructions_sha256": digest(instructions),
             "bundle_file": mission["bundle_file"], "bundle_sha256": mission["bundle_sha256"],
-            "bundle_bytes": len(bundle), "model": model, "model_policy": policy, "reasoning_effort": EFFORT,
+            "bundle_bytes": len(bundle), "model": model, "model_policy": policy, "reasoning_effort": effort,
             "max_output_tokens": mission["max_output_tokens"], "request_sha256": digest(data),
             "request_bytes": len(data), "input_token_upper": input_upper,
             "worst_case_usd": round(upper, 6), "max_usd": mission["max_usd"], "external_tools": False,
@@ -409,6 +450,13 @@ def claim_artifact(mission_id: str) -> str:
 def reserve(out: Path, guard_path: Path):
     event, request, meta = validated(out)
     mission_id = meta["mission_id"]
+    # Owner-mandated BUILD Stage 0 release hold, verified 2026-11-21.
+    # The pinned Python-only sandbox image cannot execute the fixed pytest/Node
+    # commands. Fail BEFORE model GET, GitHub claim or paid POST. A future
+    # independent exact-head review must replace this gate only after a
+    # verified, digest-pinned complete test toolchain and real negative smoke.
+    if build_cost.OWNER_STAGE.fullmatch(mission_id):
+        fail("BUILD_RELEASE_HOLD_PYTEST_NODE_IMAGE_NOT_PINNED")
     guard = check_guard(guard_path, mission_id, meta["max_usd"])
     token = core.required_env("GITHUB_TOKEN")
     run_id = core.required_env("GITHUB_RUN_ID")
@@ -472,6 +520,10 @@ def mark_attempt(out: Path):
 
 def submit(out: Path):
     request, claim = verify_claim(out)
+    # Defense in depth: even a restored/stale claim must not pay for a BUILD
+    # mission while fixed-command test image admission is explicitly HOLD.
+    if build_cost.OWNER_STAGE.fullmatch(claim["mission_id"]):
+        fail("BUILD_RELEASE_HOLD_PYTEST_NODE_IMAGE_NOT_PINNED")
     if core.read(out / "attempt.json") != attempt_record(claim):
         fail("ATTEMPT_BINDING_MISMATCH")
     # Exclusive irreversible marker BEFORE the only POST; a second call of this stage fails here.
@@ -535,7 +587,7 @@ def collect(out: Path, *, sleep=time.sleep, clock=time.monotonic):
             if field in response and response[field] != want:
                 fail("PROVIDER_RESPONSE_PARAMETERS_MISMATCH")
         effort = (response.get("reasoning") or {}).get("effort") if isinstance(response.get("reasoning"), dict) else None
-        if effort is not None and effort != EFFORT:
+        if effort is not None and effort != mission_effort(meta):
             fail("PROVIDER_RESPONSE_PARAMETERS_MISMATCH")
         status = response.get("status")
         if status not in ("queued", "in_progress"):
@@ -557,7 +609,7 @@ def collect(out: Path, *, sleep=time.sleep, clock=time.monotonic):
     receipt = {"contract": "ASTRA_MISSION_RECEIPT_V1", "mission_id": mission_id, "work_id": mission_id,
                "run_id": handle["run_id"], "response_id": rid, "status": status,
                "incomplete_details": response.get("incomplete_details"), "model": model,
-               "provider_model": response.get("model"), "reasoning_effort": EFFORT,
+               "provider_model": response.get("model"), "reasoning_effort": mission_effort(meta),
                "release_main_sha": handle["release_main_sha"], "request_sha256": handle["request_sha256"],
                "bundle_sha256": handle["bundle_sha256"], "claim_comment_id": handle["claim_comment_id"],
                "trigger_comment_id": handle["trigger_comment_id"], "output_file": report_name if raw else None,
@@ -566,6 +618,10 @@ def collect(out: Path, *, sleep=time.sleep, clock=time.monotonic):
                "estimated_upper_usd": estimated, "owner_reserved_usd": handle["owner_reserved_usd"],
                "invoice_usd": None, "provider_invoice_not_verified": True, "research_only": True,
                "no_retry": True, "no_edge_claim": True, "created_at": datetime.now(timezone.utc).isoformat()}
+    if mission_id == WORKLIKE_STAGE1 or build_cost.OWNER_STAGE.fullmatch(mission_id):
+        # Bind the ACTUAL provider-returned effort, never the requested effort.
+        # Missing effort remains None and cannot qualify a BUILD receipt.
+        receipt["provider_reasoning_effort"] = effort
     core.write_once(out / "receipt.json", receipt)
     core.write_once(results / "receipt.json", receipt)
     core.write_once(results / "source_manifest.json", meta)
@@ -574,7 +630,9 @@ def collect(out: Path, *, sleep=time.sleep, clock=time.monotonic):
             f.write(raw)
     sums = "".join(digest(p.read_bytes()) + "  " + p.name + "\n" for p in sorted(results.iterdir()))
     (results / "SHA256SUMS").write_text(sums, encoding="utf-8")
-    if status != "completed" or not raw or not usage_ok or estimated > float(handle["owner_reserved_usd"]):
+    if (status != "completed" or not raw or not usage_ok or estimated > float(handle["owner_reserved_usd"])
+            or (mission_id == WORKLIKE_STAGE1 and effort != worklike.EFFORT)
+            or (build_cost.OWNER_STAGE.fullmatch(mission_id) and effort != mission_effort(meta))):
         return 3
     print("RESEARCH_COMPLETE", rid, receipt["output_sha256"], estimated)
     return 0

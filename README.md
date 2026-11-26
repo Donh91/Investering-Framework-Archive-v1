@@ -25,6 +25,9 @@ Start every fresh repository session here:
 
 Folder `README.md` files are **navigation and mission cards, not independent authority**. They tell a capable model what the folder owns, where current truth lives, what questions are worth challenging, and what authority ceiling applies. Canonical owners, current machine pointers and verified receipts always win over README prose.
 
+**Shared Browser QA (agent capability):** [Cycle Navigator visual QA contract](05_CYCLE_NAVIGATOR/site/CN_SHARED_VISUAL_QA_V1.md) and [read-only Playwright/axe runner](05_CYCLE_NAVIGATOR/site/tests/cn-shared-visual-qa.mjs) provide screenshot/interaction/contrast evidence on the actual public CN build. See [PR #2308](https://github.com/Donh91/Investering-Framework-Archive-v1/pull/2308) for exact-head CI receipts. The read-only tool is reusable by Navigator One and Alpha Lab, but **not an authority for live market data, forecasts, wallet decisions, model quality or merge permissions**. Until the separately governed W5 S1 pin re-chain, the new browser runner is **manual only**, not an automatically installed CN gate. New agents must read the linked scope and fail-closed conditions before reusing it. Never bypass S1 pins to enable the workflow.
+
+
 **Altseason / microcap / distribution research shortcut, AFTER the mandatory authority read:** [Altseason Research Atlas](research/altseason_atlas/README.md), with a SHA-pinned, public-safe [source manifest](research/altseason_atlas/SOURCE_MANIFEST_v1.json) and a separately executable [Deep Research brief](research/altseason_atlas/DEEP_RESEARCH_MISSION_v1.md). This is discoverability only, not a model, trading signal, source authority, or scheduled Deep Research run.
 
 For Astra or any successor model with materially stronger long-horizon engineering/research capability, also read:

@@ -127,6 +127,14 @@ def preflight(freeze: Mapping, public_witness: Mapping | None = None,
         errors.append("SOURCE_FIRST_KNOWN_CLOCKS_MISSING")
     if pub is not None and issue is not None and pub < issue:
         errors.append("PUBLICATION_BEFORE_DECLARED_ISSUANCE")
+    # The locked selection contract requires BOTH an 07:00-09:00 UTC
+    # issuance AND an independently witnessed publication in that window.
+    # The >=10h forward lead gate alone is insufficient when the reference
+    # candle closes later (for example, at 08:00 UTC).
+    if pub is not None and issue is not None and (
+        pub.date() != issue.date() or not (7 <= pub.hour < 9)
+    ):
+        errors.append("PUBLICATION_OUTSIDE_DAILY_UTC_SELECTION_WINDOW")
     if pub is not None and target is not None:
         if pub >= target:
             errors.append("PUBLICATION_NOT_BEFORE_TARGET")

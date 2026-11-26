@@ -1,0 +1,9 @@
+# Public-only L04 source excerpt and synthetic pilot contract
+
+Original owner issue: Archive #1596; clock preflight comment 7048901559.
+Source: 04_MARKET_LEARNING/handlekompas/research/2026-11-19__KOMPAS_L04_ETF_FLOW_LOCATION_PREREGISTRATION_v1.md.
+The original protocol says the feature cutoff is Monday 00:00 UTC and the B1 comparator was issued before the week. The W46 and W47 B1 publications were after Monday 00:00 UTC. No proof of an independently observed earlier exact comparator is established. The pilot is only a synthetic admission reproducer: it must not change the original preregistration, production, forecasts, scores, or policy.
+
+Input: one UTF-8 JSON object read from stdin with keys cutoff_utc, baseline_sha256, published_at_utc, witness. The first and third values must be real UTC timestamps formatted YYYY-MM-DDTHH:MM:SSZ. baseline_sha256 must be 64 lowercase hex characters. witness is null or an object with keys observed_at_utc (same format), baseline_sha256 (same format), independent (boolean). Malformed or missing fields are INVALID. ELIGIBLE only when publication is strictly before cutoff, or a genuine independent witness of the exact baseline hash was observed strictly before cutoff. Otherwise UNKNOWN. The witness is synthetic; never infer authenticity in production from a boolean. Output exactly one JSON object with key status and value ELIGIBLE, UNKNOWN or INVALID. No network or dependencies beyond Python standard library. All times are synthetic and no outcome is used.
+
+Produce full text of two new files named in the developer message, with preimage_sha256 null. The candidate must run as a standalone script with python -I -B candidate.py. The second file supplies supplementary unittest cases; an independent sandbox separately checks the candidate against its own fixtures. Do not claim that tests ran. Do not return shell instructions or Markdown fences.

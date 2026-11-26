@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md",
+    "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json",
+    "06_RESEARCH_LAB/README.md",
+    "06_RESEARCH_LAB/methods/RESEARCH_PACKAGE_EVAL_CASES_v1.json",
+    "06_RESEARCH_LAB/methods/RESEARCH_PACKAGE_TO_REVIEW_PR_v1.md",
+    "tests/agent_skills/test_discover_task_skills.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-534b84e1ec256747",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* docs(skill): reusable research-to-review-PR and product verification method * docs(skill): expose end-to-end research packet mode in existing skill * docs(research): discover existing end-to-end research skill from Research Lab * docs(skill): make thorough Research Lab package discoverable in frontmatter * test(skill): frozen positive and negative research-package routing cases * docs(skill): derive independent reviewer eligibility from current S1 policy * docs(registry): advertise existing research-to-PR package mode with explicit admission * docs(discovery): map explicit Research Lab end-t",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md": "ece461a387489add361dd7697545a78ee08da31d",
+    "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json": "f7479e564ff96656c290b737dca042031fada48e",
+    "06_RESEARCH_LAB/README.md": "396cb99a1681a5aec961387b91f729cc86739b50",
+    "06_RESEARCH_LAB/methods/RESEARCH_PACKAGE_EVAL_CASES_v1.json": "21182cad91ead3196dd5e7c0d0b79cdf83f288ff",
+    "06_RESEARCH_LAB/methods/RESEARCH_PACKAGE_TO_REVIEW_PR_v1.md": "52993aa6f791ef445e0286b13d809b87fe48333e",
+    "tests/agent_skills/test_discover_task_skills.py": "84d6aef48b6a84725893fb8af0ac5906196b3d11"
+  },
+  "source_commit_sha": "534b84e1ec256747c3dbe6b4e2d5acbbb5226898",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-21T14:58:31+01:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "docs(research): reusable end-to-end research-to-reviewed-PR method, without S1 changes (#2286)"
+}

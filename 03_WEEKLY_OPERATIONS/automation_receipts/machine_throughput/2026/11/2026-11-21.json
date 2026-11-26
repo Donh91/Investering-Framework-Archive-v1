@@ -1,0 +1,116 @@
+{
+  "ai_analysis": {
+    "actual_model_calls": 6,
+    "api_agent_receipts": 6,
+    "daily_conflict_review_model_calls": 0,
+    "daily_director_model_calls": 4,
+    "daily_director_receipts": 4,
+    "estimated_cost_usd": 0.141684,
+    "input_tokens": 228322,
+    "output_tokens": 17086,
+    "zero_cost_skips": 0
+  },
+  "authority": "OPERATIONAL_OBSERVABILITY_ONLY",
+  "contract": "DAILY_MACHINE_THROUGHPUT_RECEIPT_v1",
+  "durable_repository_throughput": {
+    "created_evidence_paths": 4043,
+    "durable_end_state_bytes": 8867459,
+    "modified_evidence_paths": 8,
+    "normalized_json_scalar_values": 170076,
+    "normalized_values_total_structural": 171353,
+    "touched_evidence_paths": 4051,
+    "unique_end_state_content_hashes": 4045
+  },
+  "efficiency": {
+    "actual_model_calls_per_100_core_observation_units": 19.354839,
+    "api_cost_usd_per_100_core_observation_units": 0.457045,
+    "new_experiment_candidates_per_1000_normalized_values": 0.046687,
+    "new_experiment_candidates_per_100_core_observation_units": 25.806452
+  },
+  "failures": {
+    "owner_failures": 0,
+    "scheduled_workflow_failed_runs": 0,
+    "workflow_failed_runs": 57
+  },
+  "generated_at_utc": "2026-11-22T03:33:59.149761Z",
+  "instrumentation": {
+    "exact_metrics": [
+      "workflow run counts within the closed window",
+      "unique hourly rows persisted at the window-end commit for the local day",
+      "live-anchor capture count",
+      "owner invocation outcomes exposed by immutable capture indexes",
+      "durable repository bytes and scalar JSON leaves at window close",
+      "API-agent receipts, model calls, token usage and recorded cost",
+      "new experiment/forecast/outcome files created in the window"
+    ],
+    "physical_external_source_calls": {
+      "exact_total_physical_http_calls": null,
+      "instrumented_count": 243,
+      "instrumented_scope": "HOURLY_SEQUENCE source_records with one recorded URL/response per record",
+      "reason": "Existing point-in-time and specialist owners do not all expose one physical-request counter per network request. No inferred total is permitted.",
+      "status": "PARTIAL_INSTRUMENTATION",
+      "unmetered_owner_collection_attempts": 48
+    },
+    "semantic_warning": "Counts measure machine throughput and observability only. They do not measure forecast skill, information value or portfolio edge by themselves."
+  },
+  "learning_activity": {
+    "experiment_candidates_created": 8,
+    "experiment_dispatch_artifacts_created": 5,
+    "experiment_observations_created": 3192,
+    "forecast_memory_created": 20,
+    "outcome_memory_created": 20
+  },
+  "market_observation_throughput": {
+    "core_observation_units": 31,
+    "hourly_nonempty_normalized_cells": 1277,
+    "hourly_sequence_runs": 27,
+    "instrumented_physical_source_calls": 243,
+    "instrumented_source_response_bytes": 1563353,
+    "instrumented_source_rows_returned": 5094,
+    "live_anchor_captures": 8,
+    "live_anchor_normalized_scalar_values": 1812,
+    "owner_collection_attempts": 48,
+    "owner_declared_artifact_bytes": 22004641,
+    "owner_declared_raw_source_bytes": 4497840,
+    "owner_expected_skips": 14,
+    "owner_failures": 0,
+    "owner_successes": 34,
+    "unique_hourly_observation_rows": 23
+  },
+  "market_rule_change": false,
+  "model_weight_change": false,
+  "portfolio_action": false,
+  "receipt_sha256": "6c58e0f1897da11b27d8beab06f16e87b4c99440f923e5d3b1192e94de10fd11",
+  "status": "PASS",
+  "window": {
+    "closed_window": true,
+    "end_commit_sha": "04a5d10113b69db6c559614ec7f5a258f8d05096",
+    "end_utc": "2026-11-21T23:00:00Z",
+    "local_date": "2026-11-21",
+    "start_commit_sha": "e456e8448cd84882ffcb7ce652ac4429627ed3f5",
+    "start_utc": "2026-11-20T23:00:00Z",
+    "timezone": "Europe/Copenhagen"
+  },
+  "workflow_activity": {
+    "by_conclusion": {
+      "cancelled": 3,
+      "failure": 57,
+      "skipped": 667,
+      "success": 273
+    },
+    "by_event": {
+      "issue_comment": 667,
+      "pull_request": 272,
+      "push": 6,
+      "schedule": 11,
+      "workflow_dispatch": 40,
+      "workflow_run": 4
+    },
+    "cancelled_runs": 3,
+    "failed_runs": 57,
+    "runs_started": 1000,
+    "scheduled_failed_runs": 0,
+    "scheduled_runs": 11,
+    "scheduled_success_rate_pct": 100.0
+  }
+}

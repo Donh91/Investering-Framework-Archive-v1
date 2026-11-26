@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/compass_research_engine_v1/prospective_gate.py",
+    "06_RESEARCH_LAB/compass_research_engine_v1/test_prospective_gate.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-a52983a909de478c",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cre-quarantine-first-publication-outside-locked-daily-window",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* test(cre): prove 09:00 publication boundary quarantine * fix(cre): enforce frozen first-publication window before temporal preflight",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/compass_research_engine_v1/prospective_gate.py": "fc2315482086c22045ebdddda12118490ba364d6",
+    "06_RESEARCH_LAB/compass_research_engine_v1/test_prospective_gate.py": "e6b15bb0f590a995aa24dc36d40358cb3dc44490"
+  },
+  "source_commit_sha": "a52983a909de478cb5cf7c1472025c146e54630b",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-21T19:53:23+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "fix(cre): quarantine first publication outside locked daily research window (#2296)"
+}

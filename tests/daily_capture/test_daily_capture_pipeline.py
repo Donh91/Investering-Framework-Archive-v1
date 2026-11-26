@@ -416,5 +416,116 @@ class DailyCapturePipelineTests(unittest.TestCase):
             self.assertEqual(pointer["iso_week"], 32)
 
 
+    def test_okx_four_slot_usd_notional_and_adversarial_source_shapes(self):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "hourly_okx_unit_regression", REPO_ROOT / "scripts/daily_capture/build_hourly_sequence.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        stamp = 1795129200000
+
+        def parse(*rows):
+            return module.parse_okx_oi(
+                json.dumps({"code": "0", "msg": "", "data": list(rows)}).encode(), "BTC",
+            )
+
+        correct = parse([stamp, "10000", "100", "6200000"])
+        got = correct[module.floor_hour_ms(stamp)]
+        self.assertEqual(got["oi"], 10000.0)
+        # Removing the new explicit USD-slot guard, or restoring the old
+        # second-numeric-field decoder, MUST fail this assertion.
+        self.assertEqual(got["value"], 6200000.0)
+        self.assertNotEqual(got["value"], 100.0)
+        legacy = parse({"ts": str(stamp), "oiCcy": "100", "oiUsd": "6200000"})
+        self.assertEqual(legacy[module.floor_hour_ms(stamp)]["value"], 6200000.0)
+        missing_dict_usd = parse({"ts": str(stamp), "oiCcy": "100"})
+        self.assertIsNone(missing_dict_usd[module.floor_hour_ms(stamp)]["value"])
+        # Codex exact-head P2 regression: numeric 0 is NOT a missing
+        # dictionary value, and must not discard its following valid hour.
+        zero_window = parse(
+            {"ts": str(stamp), "oiCcy": 0, "oiUsd": 0},
+            {"ts": str(stamp + 3600000), "oiCcy": "100", "oiUsd": "6200000"},
+        )
+        self.assertEqual(len(zero_window), 2)
+        self.assertEqual(zero_window[module.floor_hour_ms(stamp)]["oi"], 0.0)
+        self.assertEqual(zero_window[module.floor_hour_ms(stamp)]["value"], 0.0)
+        self.assertEqual(zero_window[module.floor_hour_ms(stamp + 3600000)]["value"], 6200000.0)
+
+        invalid_rows = [
+            [stamp, "10000", "100"],                     # no USD notional
+            [stamp, "10000", "100", "6200000", "extra"],  # shifted schema
+            ["10000", stamp, "100", "6200000"],          # timestamp shifted
+            [stamp, "10000", True, "6200000"],           # boolean base quantity
+            [stamp, False, "100", "6200000"],            # boolean contracts
+            [stamp, "10000", "100", "NaN"],               # nonfinite USD
+            [stamp, "10000", "100", "Infinity"],
+            [stamp, "10000", "100", "-1"],                # negative USD
+            [stamp, "garbage", "100", "6200000"],
+        ]
+        for row in invalid_rows:
+            with self.subTest(row=row), self.assertRaises(module.SourceError) as ctx:
+                parse(row)
+            self.assertEqual(ctx.exception.status, "SCHEMA_DRIFT")
+        with self.assertRaisesRegex(module.SourceError, "duplicate hour"):
+            parse([stamp, "10000", "100", "6200000"],
+                  [stamp + 1000, "10001", "100.01", "6200062"])
+        with self.assertRaisesRegex(module.SourceError, "mixed amount units"):
+            parse([stamp, "10000", "100", "6200000"],
+                  {"ts": str(stamp + 3600000), "oiCcy": "100", "oiUsd": "6200000"})
+
+    def test_okx_four_slot_producer_persistence_and_history_retention(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            fixture = root / "fixture"
+            fixture.mkdir()
+            retrieval = datetime(2026, 8, 9, 10, 55, tzinfo=timezone.utc)
+            self._write_hourly_fixtures(fixture, retrieval, 26)
+            for symbol, nominal in (("BTCUSDT", 6200000), ("ETHUSDT", 3200000)):
+                path = fixture / f"{symbol}_oi_okx.json"
+                source = json.loads(path.read_text())
+                source["data"] = [
+                    [row["ts"], str(10000 + i * 10), str(100 + i * 0.1), str(nominal + i * 1000)]
+                    for i, row in enumerate(source["data"])
+                ]
+                path.write_text(json.dumps(source))
+            output = root / "hourly"
+            args = (
+                "--output-root", str(output), "--raw-output", str(root / "raw"),
+                "--lookback-hours", "26",
+                "--retrieval-timestamp", retrieval.isoformat().replace("+00:00", "Z"),
+                "--fixture-dir", str(fixture),
+            )
+            self.run_script("scripts/daily_capture/build_hourly_sequence.py", *args)
+            paths = sorted(output.glob("2026/08/*.csv"))
+            self.assertTrue(paths)
+            with_rows = []
+            for path in paths:
+                with path.open(newline="") as handle:
+                    with_rows.extend(csv.DictReader(handle))
+            with_rows.sort(key=lambda row: row["timestamp_utc"])
+            self.assertEqual(len(with_rows), 26)
+            for i, row in enumerate(with_rows):
+                self.assertEqual(float(row["btc_open_interest"]), 10000 + i * 10)
+                self.assertEqual(float(row["eth_open_interest"]), 10000 + i * 10)
+                self.assertEqual(float(row["btc_open_interest_value"]), 6200000 + i * 1000)
+                self.assertEqual(float(row["eth_open_interest_value"]), 3200000 + i * 1000)
+            self.assertEqual(with_rows[0]["btc_oi_change_1h_pct"], "")
+            self.assertAlmostEqual(float(with_rows[1]["btc_oi_change_1h_pct"]), 0.1)
+
+            # A later source revision cannot silently rewrite an already
+            # persisted, equal-quality old vintage or re-denominate history.
+            frozen = {path: path.read_bytes() for path in paths}
+            for symbol in ("BTCUSDT", "ETHUSDT"):
+                path = fixture / f"{symbol}_oi_okx.json"
+                source = json.loads(path.read_text())
+                for row in source["data"]:
+                    row[3] = str(float(row[3]) + 999000)
+                path.write_text(json.dumps(source))
+            self.run_script("scripts/daily_capture/build_hourly_sequence.py", *args)
+            self.assertEqual({path: path.read_bytes() for path in paths}, frozen)
+
 if __name__ == "__main__":
     unittest.main()

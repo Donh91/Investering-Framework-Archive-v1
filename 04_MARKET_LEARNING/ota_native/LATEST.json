@@ -14,7 +14,7 @@
   },
   "classified_deltas": [
     {
-      "claim": "New settled session 2026-11-20",
+      "claim": "New settled session 2026-11-24",
       "classification": "NEW_INFORMATION",
       "id": "D-SETTLE"
     },
@@ -38,11 +38,11 @@
   },
   "eth_leadership": {
     "classification": "DESCRIPTIVE_RELATIVE_LEADERSHIP_ONLY",
-    "consecutive_btc_led_settled": 1,
-    "in_progress_leader": "ETH",
-    "in_progress_relative_pp": 0.05086241322498353,
+    "consecutive_btc_led_settled": 0,
+    "in_progress_leader": "BTC",
+    "in_progress_relative_pp": -0.2465846347432743,
     "in_progress_semantics": "IN_PROGRESS_CONTEXT_ONLY",
-    "latest_settled_relative_pp": -2.741245910255307,
+    "latest_settled_relative_pp": 0.5654653319117631,
     "settled_eth_led_last_4": 3,
     "settled_eth_led_last_6": 4,
     "settled_sessions_last_4": 4,
@@ -51,41 +51,41 @@
   "ethbtc_gate": {
     "consecutive_settled_closes_at_or_above": 0,
     "in_progress": {
-      "close_margin_pct": -8.166666666666655,
-      "date_utc": "2026-11-21",
-      "hour_count": 2,
-      "latest_close": 0.02755,
-      "low": 0.02746,
-      "low_margin_pct": -8.466666666666667,
+      "close_margin_pct": -6.633333333333324,
+      "date_utc": "2026-11-25",
+      "hour_count": 4,
+      "latest_close": 0.02801,
+      "low": 0.02792,
+      "low_margin_pct": -6.933333333333325,
       "semantics": "IN_PROGRESS_NEVER_SETTLED_EVIDENCE"
     },
     "last7_close_margin_monotonic_compression": false,
-    "last7_close_margin_slope_pp_per_session": 0.05714285714285675,
+    "last7_close_margin_slope_pp_per_session": -0.06428571428571317,
     "last7_low_margin_monotonic_compression": false,
-    "last7_low_margin_slope_pp_per_session": 0.14285714285714324,
+    "last7_low_margin_slope_pp_per_session": 0.05357142857142981,
     "last7_settled_close_margin_pct": [
-      -8.066666666666666,
-      -6.366666666666665,
-      -6.466666666666654,
-      -6.366666666666665,
       -6.099999999999994,
       -5.499999999999994,
-      -8.233333333333338
+      -8.233333333333338,
+      -6.699999999999995,
+      -6.166666666666654,
+      -6.933333333333325,
+      -6.433333333333325
     ],
     "last7_settled_low_margin_pct": [
-      -9.066666666666666,
-      -8.799999999999997,
-      -6.999999999999995,
-      -8.133333333333326,
       -7.333333333333336,
       -6.333333333333336,
-      -9.266666666666657
+      -9.266666666666657,
+      -8.866666666666667,
+      -6.933333333333325,
+      -7.099999999999995,
+      -7.099999999999995
     ],
-    "latest_settled_close": 0.02753,
-    "latest_settled_close_margin_pct": -8.233333333333338,
-    "latest_settled_date_utc": "2026-11-20",
-    "latest_settled_low": 0.02722,
-    "latest_settled_low_margin_pct": -9.266666666666657,
+    "latest_settled_close": 0.02807,
+    "latest_settled_close_margin_pct": -6.433333333333325,
+    "latest_settled_date_utc": "2026-11-24",
+    "latest_settled_low": 0.02787,
+    "latest_settled_low_margin_pct": -7.099999999999995,
     "registered_level_read_only": 0.03,
     "settled_close_crossed_below_on_latest": false,
     "settled_close_reclaimed_on_latest": false,
@@ -96,7 +96,7 @@
     "ota_context_gaps": [],
     "rule": "If a native owner artifact exists, absence from an external/legacy OTA context is OTA_CONTEXT_GAP, not FRAMEWORK_DATA_GAP."
   },
-  "generated_at_utc": "2026-11-21T02:51:34Z",
+  "generated_at_utc": "2026-11-25T04:36:36Z",
   "governance": {
     "canonical_state_change": false,
     "do_not_force_finding": true,
@@ -107,30 +107,30 @@
   },
   "in_progress_session": {
     "btc": {
-      "close": 59030.85,
-      "high": 59248.06,
-      "low": 58880.0,
-      "open": 58951.51,
-      "return_pct": 0.134585187046099
+      "close": 59421.85,
+      "high": 59835.38,
+      "low": 58952.48,
+      "open": 59832.0,
+      "return_pct": -0.6855027410081593
     },
-    "date_utc": "2026-11-21",
+    "date_utc": "2026-11-25",
     "eth": {
-      "close": 1626.11,
-      "high": 1629.46,
-      "low": 1618.0,
-      "open": 1623.1,
-      "return_pct": 0.18544760027108254
+      "close": 1664.44,
+      "high": 1680.11,
+      "low": 1649.1,
+      "open": 1680.1,
+      "return_pct": -0.9320873757514336
     },
-    "eth_minus_btc_return_pp": 0.05086241322498353,
+    "eth_minus_btc_return_pp": -0.2465846347432743,
     "ethbtc": {
-      "close": 0.02755,
-      "high": 0.02757,
-      "low": 0.02746,
-      "open": 0.02753,
-      "return_pct": 0.07264802034145923
+      "close": 0.02801,
+      "high": 0.0281,
+      "low": 0.02792,
+      "open": 0.02807,
+      "return_pct": -0.21375133594585538
     },
-    "hour_count": 2,
-    "last_hour_open_utc": "2026-11-21T01:00:00Z",
+    "hour_count": 4,
+    "last_hour_open_utc": "2026-11-25T03:00:00Z",
     "session_status": "IN_PROGRESS_INCOMPLETE"
   },
   "legacy_claude_ota": {
@@ -147,21 +147,21 @@
       "boost_active": false,
       "boost_reasons": [],
       "ethbtc_live": null,
-      "generated_at_utc": "2026-11-21T00:49:20.487220+00:00",
-      "latest_top100_proxy_advance_ratio": 0.15,
+      "generated_at_utc": "2026-11-25T03:03:36.145436+00:00",
+      "latest_top100_proxy_advance_ratio": 0.18,
       "path": "03_DAILY_CAPTURE_LOGS/cadence/LATEST.json",
       "registered_ethbtc_level_read_only": 0.03,
       "status": "PASS"
     },
     "breadth": {
-      "advance_ratio": 0.19,
-      "advancers": 19,
-      "decliners": 80,
+      "advance_ratio": 0.14,
+      "advancers": 14,
+      "decliners": 85,
       "evidence_role": "PROXY_ONLY_DESCRIPTIVE_ZERO_EXECUTION_WEIGHT",
       "flat": 1,
-      "membership_hash": "5da8cf44435b05ea9d28ddbb3d6a791fc34796020171d6b95d318358ac652f47",
-      "outperforming_btc_count": 62,
-      "outperforming_eth_count": 84,
+      "membership_hash": "285e60f3233f767390cbccfeb3e5df1737964c7cca09e049b662acdd711b1fb6",
+      "outperforming_btc_count": 37,
+      "outperforming_eth_count": 41,
       "path": "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json",
       "status": "PASS"
     },
@@ -170,14 +170,14 @@
       "contract": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
       "latest_final": {
         "BTC": {
-          "date": "2026-11-19",
-          "reported_total": -582.3,
+          "date": "2026-11-23",
+          "reported_total": -569.7,
           "session_final": true,
           "total_parity": true
         },
         "ETH": {
-          "date": "2026-11-19",
-          "reported_total": -131.2,
+          "date": "2026-11-23",
+          "reported_total": -84.9,
           "session_final": true,
           "total_parity": true
         }
@@ -220,16 +220,16 @@
     },
     "situation_room": {
       "authority": "RESEARCH_ONLY_NON_CANONICAL",
-      "daily_result": "MATERIAL_CATALYSTS_FOUND",
+      "daily_result": "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
       "l4_bridge_status": "PARTIAL_NATIVE_DISCOVERY_CONTEXT_NOT_FULL_L4_ATTRIBUTION_OWNER",
       "l4_evidence_rule": "NO_L4_EVIDENCE_ROW_FROM_UNVERIFIED_DISCOVERY_OR_RETROSPECTIVE_TAGGING",
-      "observation_date_utc": "2026-11-20",
+      "observation_date_utc": "2026-11-24",
       "owner_contract": "SITUATION_ROOM_DAILY_OWNER_LATEST_POINTER_v1",
       "path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/LATEST.json",
-      "run_status": "PASS",
+      "run_status": "DEGRADED",
       "status": "PASS",
       "unverified_discovery_count": 1,
-      "verified_event_count": 2
+      "verified_event_count": 0
     }
   },
   "qa": {
@@ -240,36 +240,36 @@
     "orderbook_delta_over_60m_allowed": false,
     "settled_definition": "EXACTLY_24_UNIQUE_UTC_HOURLY_ROWS_00_THROUGH_23"
   },
-  "report_hash_sha256": "daca75975b2dcfef5bee458bcf313710ba9a72f63d54d5db3a0519687ccdd76a",
+  "report_hash_sha256": "1651e1b5396222c0770fdec25f2d7fa0df88f942116cdaa19d866547d85eb195",
   "schema_version": 1,
   "settled_session": {
     "btc": {
-      "close": 58951.51,
-      "high": 62639.52,
-      "low": 57778.35,
-      "open": 61986.73,
-      "return_pct": -4.896564151714411
+      "close": 59832.0,
+      "high": 61682.01,
+      "low": 59260.0,
+      "open": 61270.92,
+      "return_pct": -2.348455025646745
     },
-    "date_utc": "2026-11-20",
+    "date_utc": "2026-11-24",
     "eth": {
-      "close": 1623.09,
-      "high": 1770.55,
-      "low": 1581.47,
-      "open": 1757.31,
-      "return_pct": -7.637810061969718
+      "close": 1680.11,
+      "high": 1721.88,
+      "low": 1664.18,
+      "open": 1710.61,
+      "return_pct": -1.782989693734982
     },
-    "eth_minus_btc_return_pp": -2.741245910255307,
+    "eth_minus_btc_return_pp": 0.5654653319117631,
     "ethbtc": {
-      "close": 0.02753,
-      "high": 0.02838,
-      "low": 0.02722,
-      "open": 0.02835,
-      "return_pct": -2.892416225749561
+      "close": 0.02807,
+      "high": 0.02828,
+      "low": 0.02787,
+      "open": 0.02792,
+      "return_pct": 0.537249283667629
     },
     "hour_count": 24,
-    "last_hour_open_utc": "2026-11-20T23:00:00Z",
+    "last_hour_open_utc": "2026-11-24T23:00:00Z",
     "session_status": "SETTLED_COMPLETE_24H"
   },
   "source_policy": "READ_EXISTING_GITHUB_OWNERS_ONLY_NO_NEW_MARKET_SOURCE_CALLS",
-  "trigger": "FIXED_WEEKLY_FRIDAY"
+  "trigger": "ADAPTIVE_HIGH_VOI"
 }

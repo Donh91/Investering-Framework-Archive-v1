@@ -705,10 +705,15 @@ class TestCostGuard(unittest.TestCase):
                          (44386340009, "resp_0477227a70790153006afe044ec9c487d08ebd44a0466687db", 3.13212))
         supervisor = by_id["ASTRA-S1-SUPERVISOR-EVOLUTION-20261119-SOL"]
         self.assertEqual((supervisor["status"], supervisor["lower_usd"], supervisor["upper_usd"], supervisor["one_paid_post_max"]),
-                         (res.RESERVED, 0, 3, 1))
-        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER):
-            m.check_reservation("ASTRA-S1-SUPERVISOR-EVOLUTION-20261119-SOL", 3)
-        expected = [r for r in rows if r["status"] != res.SETTLED]
+                         (res.RELEASED, 0, 3, 1))
+        self.assertEqual(supervisor["release_evidence"], res.RELEASE_EVIDENCE)
+        self.assertEqual(supervisor["authorization"], "OWNER_INTERACTIVE_2026-11-19_SUPERVISOR_EVOLUTION_SOL_ONE")
+        self.assertTrue(supervisor["no_retry"])
+        self.assertFalse(supervisor["reconciliation_required"])
+        self.assertFalse(set(supervisor) & res.CONSUMED_FIELDS)
+        with mock.patch.object(m, "LEDGER", CANONICAL_LEDGER), self.assertRaisesRegex(ValueError, "RESERVATION_MISMATCH"):
+            m.check_reservation(res.RELEASE_WORK_ID, 3)
+        expected = [r for r in rows if r["status"] not in res.NON_PENDING]
         self.assertEqual(res.mission_reservations(ledger, set())[:2],
                          (sum(r["upper_usd"] for r in expected), len(expected)))
         for row in rows:
@@ -725,6 +730,27 @@ class TestCostGuard(unittest.TestCase):
         self.assertEqual(guard["pending_liability_count"], expected_pending(ledger)[2])
         self.assertEqual(guard["settled_astra_mission_count"], len([r for r in rows if r["status"] == res.SETTLED]))
         self.assertIsNone(guard["owner_astra_mission_id"])
+
+    def test_never_triggered_release_is_exact_terminal_and_zero_pending(self):
+        canonical = json.loads(CANONICAL_LEDGER.read_text())
+        row = next(r for r in canonical[res.KEY] if r["work_id"] == res.RELEASE_WORK_ID)
+        self.assertEqual(res.mission_reservations({res.KEY: [row]}, set()), (0.0, 0, {res.RELEASE_WORK_ID}))
+        for bad in (dict(row, release_evidence={}), dict(row, no_retry=False),
+                    dict(row, reconciliation_required=True), dict(row, consumed_run_id=1),
+                    dict(row, work_id=MID), dict(row, upper_usd=2),
+                    {k: v for k, v in dict(row, status=res.RESERVED, reconciliation_required=True).items()
+                     if k not in ("release_evidence", "no_retry")}):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                res.mission_reservations({res.KEY: [bad]}, set())
+        code, released = self.guard([row], hard_stop=40)
+        _, empty = self.guard([], hard_stop=40)
+        self.assertEqual(code, 0, released)
+        self.assertEqual(released["pending_liability_upper_usd"], empty["pending_liability_upper_usd"])
+        self.assertEqual(released["remaining_usd"], empty["remaining_usd"])
+        self.assertFalse(released["paid_authority"])
+        code, launch = self.guard([row], "--owner-astra-mission-id", res.RELEASE_WORK_ID)
+        self.assertNotEqual(code, 0, launch)
+        self.assertFalse(launch["paid_authority"])
 
     def test_consumed_row_still_counted_in_full(self):
         code, result = self.guard([consumed_row()], hard_stop=50)
@@ -844,6 +870,73 @@ class TestWorkflow(unittest.TestCase):
                     self.assertNotIn("github.event.issue.body", value)
                 if "uses" in step and step["uses"].startswith("actions/checkout"):
                     self.assertIs(step["with"]["persist-credentials"], False)
+
+
+class TestOwnerBuildStage1(unittest.TestCase):
+    """BUILD exceptions affect only three pinned owner-bound stage IDs."""
+
+    def fake(self, mission_id, max_usd=5.0, bundle=b"public-only test evidence"):
+        instructions = b"Strict BUILD_v1; do not execute commands."
+        mission = {"mission_id": mission_id, "model": m.MODEL,
+                   "reasoning_effort": "max", "max_output_tokens": 4096,
+                   "max_usd": max_usd, "instructions_file": "MISSION.md",
+                   "bundle_file": "BUNDLE.md", "bundle_sha256": m.digest(bundle)}
+        with mock.patch.object(m, "load_mission",
+                               return_value=("06_RESEARCH_LAB/astra_missions/test",
+                                             b"{}", mission)), \
+             mock.patch.object(m, "tracked_bytes",
+                               side_effect=[instructions, bundle]), \
+             mock.patch.object(m, "model_policy",
+                               return_value={"id": m.MODEL}):
+            return m.build_request(mission_id)
+
+    def test_build_payment_hard_held_until_pinned_pytest_node_image(self):
+        # Preview is advisory only; no provider GET, claim or paid POST.
+        for stage in ("M1", "M2", "M3"):
+            mid = "ASTRA-BUILD-" + stage + "-20261121-S1"
+            with mock.patch.object(m, "validated",
+                                   return_value=({}, {}, {"mission_id": mid})), \
+                 mock.patch.object(m, "check_guard") as guard, \
+                 mock.patch.object(m.core, "required_env") as env, \
+                 mock.patch.object(m.core, "http_json") as http:
+                with self.assertRaisesRegex(ValueError,
+                        "BUILD_RELEASE_HOLD_PYTEST_NODE_IMAGE_NOT_PINNED"):
+                    m.reserve(Path("/unused"), Path("/unused-guard"))
+                guard.assert_not_called()
+                env.assert_not_called()
+                http.assert_not_called()
+
+    def test_build_paid_post_defense_in_depth_held(self):
+        mid = "ASTRA-BUILD-M1-20261121-S1"
+        with mock.patch.object(m, "verify_claim",
+                               return_value=({}, {"mission_id": mid})), \
+             mock.patch.object(m.core, "http_json") as http:
+            with self.assertRaisesRegex(ValueError,
+                    "BUILD_RELEASE_HOLD_PYTEST_NODE_IMAGE_NOT_PINNED"):
+                m.submit(Path("/unused"))
+            http.assert_not_called()
+
+    def test_build_stage1_has_genuine_small_fixed_upper_bound(self):
+        req, raw, meta = self.fake("ASTRA-BUILD-M1-20261121-S1")
+        self.assertLessEqual(len(raw), 600_000)
+        self.assertLessEqual(meta["worst_case_usd"], 5.0)
+        self.assertEqual(meta["reasoning_effort"], "max")
+        self.assertEqual(req["model"], m.MODEL)
+        self.assertNotIn("tools", req)
+
+    def test_build_stage2_is_closed_without_native_failed_receipt(self):
+        with self.assertRaisesRegex(ValueError,
+                                    "BUILD_STAGE2_PRIOR_NATIVE_RECEIPT_NOT_ADMITTED"):
+            self.fake("ASTRA-BUILD-M1-20261121-S2")
+
+    def test_build_over_5_dollars_is_denied(self):
+        with self.assertRaisesRegex(ValueError, "BUILD_STAGE_MISSION_CAP"):
+            self.fake("ASTRA-BUILD-M2-20261121-S1", max_usd=5.01)
+
+    def test_existing_non_build_mission_wire_is_unchanged(self):
+        _, _, meta = self.fake("ASTRA-UNRELATED-NONBUILD-20261121", max_usd=5.01)
+        self.assertEqual(meta["max_usd"], 5.01)
+
 
 
 if __name__ == "__main__":

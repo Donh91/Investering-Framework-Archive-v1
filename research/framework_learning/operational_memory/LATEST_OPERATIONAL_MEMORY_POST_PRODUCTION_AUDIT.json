@@ -9,34 +9,52 @@
   "automatic_escalation_required": false,
   "candidate_revalidation_count": 3,
   "compatibility_counts": {
-    "DRIFTED": 658,
-    "EXACT": 665,
-    "PARTIAL": 2664,
+    "DRIFTED": 683,
+    "EXACT": 674,
+    "PARTIAL": 3081,
     "REMOVED": 12,
     "UNKNOWN": 140
   },
   "contract": "OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT_v1",
-  "episode_count": 4139,
+  "episode_count": 4590,
   "failures": [],
-  "generated_at_utc": "2026-11-21T13:00:18.682878Z",
-  "materialized_candidate_count": 33,
+  "generated_at_utc": "2026-11-26T14:19:17.895922Z",
+  "materialized_candidate_count": 34,
   "measurement": {
     "failed_task_rate": "BASELINE_ACCUMULATING",
     "no_savings_claim_without_measurement": true,
     "repeated_investigation_rate": "BASELINE_ACCUMULATING",
     "stale_memory_safety": "PASS",
     "task_bootstrap_context_load": "BASELINE_ACCUMULATING",
-    "useful_retrieval_precision": 1.0
+    "useful_retrieval_precision": 0.9167
   },
   "memory_reuse_allowed": true,
-  "new_episode_count": 10,
-  "procedural_candidate_count": 33,
+  "new_episode_count": 12,
+  "procedural_candidate_count": 34,
   "recommended_action": "CONTINUE_SHADOW_AND_ACCUMULATE_BASELINE",
   "retrieval_probe": {
     "probe_count": 12,
     "results": [
       {
-        "episode_id": "OE-11e0855b1a42e469",
+        "episode_id": "OE-76ce35fc75a5537a",
+        "expected_task_class": "GENERAL_FRAMEWORK",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "GENERAL_FRAMEWORK"
+      },
+      {
+        "episode_id": "OE-a5c38c902f8682a8",
+        "expected_task_class": "GENERAL_FRAMEWORK",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "GENERAL_FRAMEWORK"
+      },
+      {
+        "episode_id": "OE-d8584dd353b591b2",
         "expected_task_class": "MARKET_STATE",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -45,43 +63,7 @@
         "top_task_class": "MARKET_STATE"
       },
       {
-        "episode_id": "OE-ba5d925966238b4b",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-0f7eab2610c78cd3",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-efa5dc3af9d6e590",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-9dd8bc16380ec09c",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-4b98757b543ef5e1",
+        "episode_id": "OE-417ca37171e80fa0",
         "expected_task_class": "MARKET_STATE",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -90,7 +72,7 @@
         "top_task_class": "MARKET_STATE"
       },
       {
-        "episode_id": "OE-909533291dc8aba8",
+        "episode_id": "OE-52728fd1d5c26a7b",
         "expected_task_class": "MARKET_STATE",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -99,16 +81,7 @@
         "top_task_class": "MARKET_STATE"
       },
       {
-        "episode_id": "OE-c607dcf720c6a017",
-        "expected_task_class": "MARKET_STATE",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "MARKET_STATE"
-      },
-      {
-        "episode_id": "OE-4c194bb3cacc4c84",
+        "episode_id": "OE-4dc55a998f123302",
         "expected_task_class": "GENERAL_FRAMEWORK",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -117,7 +90,34 @@
         "top_task_class": "GENERAL_FRAMEWORK"
       },
       {
-        "episode_id": "OE-590c24de526bc514",
+        "episode_id": "OE-e5537b201a396cca",
+        "expected_task_class": "CYCLE_NAVIGATOR",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "CYCLE_NAVIGATOR"
+      },
+      {
+        "episode_id": "OE-5597a128673205c9",
+        "expected_task_class": "CYCLE_NAVIGATOR",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "CYCLE_NAVIGATOR"
+      },
+      {
+        "episode_id": "OE-8924353f9f01180e",
+        "expected_task_class": "RESEARCH_ARCHIVE",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": false,
+        "top_task_class": "GENERAL_FRAMEWORK"
+      },
+      {
+        "episode_id": "OE-b6f1467156f4bf26",
         "expected_task_class": "GENERAL_FRAMEWORK",
         "reusable_count": 5,
         "revalidation_count": 0,
@@ -126,30 +126,30 @@
         "top_task_class": "GENERAL_FRAMEWORK"
       },
       {
-        "episode_id": "OE-e1ac69098cc56f71",
+        "episode_id": "OE-a2b5c680f96becf7",
+        "expected_task_class": "GENERAL_FRAMEWORK",
+        "reusable_count": 5,
+        "revalidation_count": 0,
+        "selected_count": 5,
+        "top_class_match": true,
+        "top_task_class": "GENERAL_FRAMEWORK"
+      },
+      {
+        "episode_id": "OE-1fc599a4f6062427",
         "expected_task_class": "GENERAL_FRAMEWORK",
         "reusable_count": 1,
         "revalidation_count": 4,
         "selected_count": 5,
         "top_class_match": true,
         "top_task_class": "GENERAL_FRAMEWORK"
-      },
-      {
-        "episode_id": "OE-2dd9e5b7176cbb71",
-        "expected_task_class": "GENERAL_FRAMEWORK",
-        "reusable_count": 5,
-        "revalidation_count": 0,
-        "selected_count": 5,
-        "top_class_match": true,
-        "top_task_class": "GENERAL_FRAMEWORK"
       }
     ],
     "stale_reuse_violations": 0,
-    "top_task_class_hits": 12,
-    "top_task_class_precision": 1.0
+    "top_task_class_hits": 11,
+    "top_task_class_precision": 0.9167
   },
-  "source_head_sha": "e1ac69098cc56f715a780599b9e45bddf85b2c8c",
-  "stale_share": 0.1619,
+  "source_head_sha": "1fc599a4f6062427cb9205b7fc7b9babfbf5f0d5",
+  "stale_share": 0.1514,
   "status": "WARN",
   "warnings": [
     "candidate_requires_revalidation:3"

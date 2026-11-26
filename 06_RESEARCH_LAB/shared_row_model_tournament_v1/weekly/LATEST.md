@@ -1,11 +1,11 @@
 # Shared Row Tournament Weekly
 
-- Week: `2026-W47`
-- Eligible rows: **60**
-- Divergences: **204**
-- Matured 24h / 72h / 7d: **186 / 168 / 144**
+- Week: `2026-W48`
+- Eligible rows: **78**
+- Divergences: **312**
+- Matured 24h / 72h / 7d: **276 / 240 / 204**
 - Architecture gate: `INSUFFICIENT_EVIDENCE`
-- 28-day calendar blocks: **1** (NOT independent market shocks)
+- 28-day calendar blocks: **2** (NOT independent market shocks)
 - Independent market-shock N: `UNKNOWN`
 - Outcome: ETH/BTC forward relative return positive, NOT broad altseason takeoff or exit
 
