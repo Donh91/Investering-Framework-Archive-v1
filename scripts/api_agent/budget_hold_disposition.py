@@ -133,6 +133,13 @@ def main():
     if summary:
         with Path(summary).open("a") as out:
             out.write(f"Routine API guard: {disposition} ({reason})\n")
+    # Only PASS permits downstream work. HOLD is deliberately also exit 0.
+    # ERROR reaches neither this output nor stdout. If output is absent,
+    # consumers must require exact PASS rather than infer approval.
+    output = os.environ.get("GITHUB_OUTPUT")
+    if output:
+        with Path(output).open("a", encoding="utf-8") as out:
+            out.write(f"disposition={disposition}\n")
     print(f"disposition={disposition}")
 
 
