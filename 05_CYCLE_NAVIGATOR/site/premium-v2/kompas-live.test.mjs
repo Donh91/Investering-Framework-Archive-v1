@@ -395,3 +395,35 @@ test('actual price observations are strictly ordered and bound to source as-of a
   assert.equal(liveViewModel(good,{asset,nowMs:NOW}).state,'OK');
  }
 });
+
+
+test('bounded viewer clock skew does not relax producer clocks or expiry',()=>{
+ for(const asset of ['BTC','ETH']){
+  for(const minutes of [3,5]){
+   assert.equal(liveViewModel(fixture(),{asset,nowMs:NOW-minutes*60e3}).state,'OK');
+  }
+  const tooEarly=liveViewModel(fixture(),{asset,nowMs:NOW-5*60e3-1});
+  assert.equal(tooEarly.reason,'SOURCE_CLOCK_INVALID');
+  assert.equal(tooEarly.chart,null);
+  const invalid=fixture();invalid.assets[asset].as_of_utc=iso(NOW+60e3);
+  assert.equal(liveViewModel(invalid,{asset,nowMs:NOW}).reason,'SOURCE_CLOCK_INVALID');
+  const expired=withFallback({...fixture(),official_source_valid_until_utc:iso(NOW)});
+  assert.equal(liveViewModel(expired,{asset,nowMs:NOW}).kompas.view,'NONE');
+ }
+});
+
+test('isolated tail clock and untilted strength and balance guards',()=>{
+ for(const asset of ['BTC','ETH']){
+  const d=fixture();d.assets[asset].points.at(-1)[0]=iso(NOW-60e3);
+  const m=liveViewModel(d,{asset,nowMs:NOW});
+  assert.equal(m.state,'UNAVAILABLE');assert.equal(m.chart,null);
+  for(const [key,value] of [['strength','moderat'],['balance',{horizon:'1_3d',bull:5,bear:5}]]){
+   for(const hz of [1,3,7]){
+    const e=withFallback({...fixture(),official_source_valid_until_utc:iso(NOW)});
+    e.no_kompas_view.assets[asset].headline[String(hz)][key]=value;
+    const v=liveViewModel(e,{asset,hz,nowMs:NOW});
+    assert.equal(v.state,'UNAVAILABLE');assert.equal(v.chart,null);
+   }
+  }
+ }
+});
