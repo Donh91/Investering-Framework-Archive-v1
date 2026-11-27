@@ -81,6 +81,7 @@ class FakeGitHub:
         self.comment_override = {}                                  # fix round 5 (P1-06): GET issues/comments/<id> answers this instead
         self.exec_runs = None                                       # trigger round: the runs of s1-executor.yml on main (None: only this run)
         self.issue_updated = None                                   # trigger round: updated_at of the published brief issue
+        self.exec_jobs = {}                                         # FA-P1-01: (run, attempt) -> its execute job (None: unreadable list)
 
     def remaining(self):
         return self.budget_left - len(self.calls)
@@ -169,6 +170,17 @@ class FakeGitHub:
         m = re.fullmatch(r"issues/(\d+)/labels", path)
         if m:
             return copy.deepcopy(self.labels.get(int(m.group(1)), [])), True
+        m = re.fullmatch(r"actions/runs/(\d+)/attempts/(\d+)/jobs", path)   # FA-P1-01: one attempt of an executor run
+        if m:
+            rid, n = int(m.group(1)), int(m.group(2))
+            if (rid, n) in self.exec_jobs:
+                job = self.exec_jobs[(rid, n)]
+                return ([], False) if job is None else ([dict({"id": n * 1000000 + rid, "name": "execute", "run_id": rid}, **job)], True)
+            logs = w.get("exec_logs") or {}
+            if (rid, n) in logs or (n == 1 and rid in logs):
+                return [{"id": n * 1000000 + rid, "name": "execute", "status": "completed", "conclusion": "success", "run_id": rid,
+                         "steps": [{"status": "completed", "conclusion": "success"}]}], True
+            return [], True
         m = re.fullmatch(r"actions/runs/(\d+)/jobs", path)
         if m and int(m.group(1)) in (w.get("exec_logs") or {}):          # an earlier run of the brief workflow: its execute job
             rid = int(m.group(1))
@@ -187,6 +199,11 @@ class FakeGitHub:
 
     def text(self, path):
         self._record("TEXT", path)
+        m = re.fullmatch(r"actions/jobs/(\d{7,})/logs", path)          # FA-P1-01: an attempt's execute job (id = attempt * 10^6 + run)
+        if m:
+            jid, logs = int(m.group(1)), self.w.get("exec_logs") or {}
+            rid, n = jid % 1000000, jid // 1000000
+            return logs.get((rid, n), logs.get(rid) if n == 1 else None)
         m = re.fullmatch(r"actions/jobs/8(\d{4})/logs", path)
         if m and int(m.group(1)) in (self.w.get("exec_logs") or {}):
             return self.w["exec_logs"][int(m.group(1))]

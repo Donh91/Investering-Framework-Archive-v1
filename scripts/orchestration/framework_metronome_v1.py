@@ -182,7 +182,10 @@ def s1exec_due(now: dt.datetime, brief_runs: list[dict], exec_runs: list[dict]) 
         done = utc(newest["updated_at"])
         if now - done > dt.timedelta(minutes=S1EXEC_MAX_AGE_MINUTES):
             return False, "BRIEF_TOO_OLD"
-        if any(utc(r["created_at"]) >= done for r in exec_runs or []):
+        # FA-P2-02: a skipped executor run (its brief run did not succeed) or one cancelled before it started (a newer
+        # one replaced it) evaluated nothing and does not suppress the dispatch
+        if any(utc(r["created_at"]) >= done for r in exec_runs or []
+               if not (r.get("status") == "completed" and r.get("conclusion") in ("skipped", "cancelled"))):
             return False, "ALREADY_DISPATCHED"
     except (KeyError, TypeError, ValueError, AttributeError):
         return False, "RUN_ROW_UNREADABLE"

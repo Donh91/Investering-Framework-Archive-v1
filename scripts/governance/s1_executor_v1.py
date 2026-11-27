@@ -73,12 +73,13 @@ EXECUTOR_TRIGGER = "workflow_run"              # fix round 6 (F2): the event of 
 # brief's main, the issue not edited after the run) and then takes the same path as a workflow_run.
 SELF_TRIGGER = "workflow_dispatch"
 BRIEF_ENV = ("S1_BRIEF_RUN_ID", "S1_BRIEF_RUN_ATTEMPT", "S1_BRIEF_MAIN", "S1_BRIEF_EVENT")
-# One evaluation per brief run and attempt, whatever started the executor: the earlier executor runs of s1-executor.yml
-# on main that ended after the brief was generated are read (one list, then jobs and log of at most EVALUATION_READS of
-# them); one whose own health line names this brief run (and attempt) with a result other than NO_DECISION has
-# evaluated it. Anything unread is "not proven": no second evaluation.
+# One evaluation per brief run and attempt, whatever started the executor: every OTHER executor run attempt (earlier
+# attempts of this run id, other run ids in any order) that was active after the brief was generated is read (one
+# list, then the jobs and log of at most EVALUATION_READS attempts); one whose own health line names this brief run
+# (and attempt) with a result other than NO_DECISION has evaluated it. Anything unread is "not proven": no second
+# evaluation.
 EXECUTOR_RUNS_PAGE = 30
-EVALUATION_READS = 4
+EVALUATION_READS = 6                   # executor run attempts read (FA-P1-01: per attempt); bound 1 + 2 * 6 = 13 calls
 EXECUTOR_RUN_MAX_MINUTES = 15          # the job's timeout (10) plus queueing: how far before the window a run may have started
 POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1",
          "S1_FALLBACK_CANDIDATE_v1", "S1_CODEX_RECALL_PENDING_v1", "S1_CODEX_RECALL_CLEARED_v1")
@@ -1013,52 +1014,73 @@ class Run:
         return None
 
     def evaluated_before(self, run_id, attempt, generated_at):
-        """Trigger round: None when no earlier executor run evaluated brief run `run_id` attempt `attempt`, proven from
-        native reads; else "already_evaluated=<executor run>" or "evaluated_unproven:<why>". Read: the newest page of
-        runs of s1-executor.yml on main; every run older than this one (by id) that ended after the brief was generated
-        and was not skipped; for each, its execute job and that job's ONE S1_EXECUTOR_HEALTH line. The concurrency group
-        runs one execute job at a time, so when this job runs every older run has ended and no newer one has started."""
-        own = str(self.env.get("GITHUB_RUN_ID") or "")
-        need(own.isdigit(), "own_run_id")
+        """Trigger round: None when no OTHER executor run attempt evaluated brief run `run_id` attempt `attempt`, proven
+        from native reads; else "already_evaluated=<executor run>.<attempt>" or "evaluated_unproven:<why>".
+        Fix FA-P1-01 (#173 review of b09e0003): neither run-id order nor FIFO is assumed. Every executor run attempt
+        except this one (GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT) counts: the earlier attempts of THIS run id (a rerun), and
+        every other run of s1-executor.yml on main, lower or higher id, that ended or is still active after the brief
+        was generated and was not skipped, each of its attempts read by its own jobs list
+        (actions/runs/<id>/attempts/<n>/jobs) and that attempt's execute job log (its ONE S1_EXECUTOR_HEALTH line).
+        An attempt whose execute job is queued or waiting with no step started has not evaluated anything (it waits
+        for the concurrency group this job holds; when it runs it reads this run's log); any other active job, or
+        anything unread, is not proven. Read bound: 1 list + 2 reads for each of at most EVALUATION_READS attempts."""
+        own, own_attempt = str(self.env.get("GITHUB_RUN_ID") or ""), str(self.env.get("GITHUB_RUN_ATTEMPT") or "")
+        need(own.isdigit() and own_attempt.isdigit() and int(own_attempt) >= 1, "own_run_id")
+        own, own_attempt = int(own), int(own_attempt)
         since = B.stamp(generated_at) - timedelta(seconds=B.RUN_POST_SLACK_SECONDS)
         doc = self.gh.get(f"actions/workflows/{Path(B.EXECUTOR_WORKFLOW_PATH).name}/runs", {"branch": "main", "per_page": EXECUTOR_RUNS_PAGE})
         rows = doc.get("workflow_runs") if isinstance(doc, dict) else None
         if not isinstance(rows, list) or not all(isinstance(r, dict) and type(r.get("id")) is int for r in rows):
             return "evaluated_unproven:runs_unreadable"
-        older = [r for r in rows if r["id"] < int(own)]
+        attempts = [(own, n) for n in range(1, own_attempt)]    # a rerun of this run: its earlier attempts, always
         try:
             if len(rows) >= EXECUTOR_RUNS_PAGE and min(B.stamp(r["created_at"]) for r in rows) >= since - timedelta(minutes=EXECUTOR_RUN_MAX_MINUTES):
                 return "evaluated_unproven:runs_page"           # the window may reach past this page
-            window = [r for r in older if B.stamp(r["updated_at"]) >= since]
+            for r in rows:
+                if r["id"] == own or (r.get("status") == "completed" and r.get("conclusion") == "skipped"):
+                    continue
+                if r.get("status") == "completed" and B.stamp(r["updated_at"]) < since:
+                    continue                                     # ended before the brief was generated
+                last = r.get("run_attempt", 1)
+                if type(last) is not int or last < 1:
+                    return f"evaluated_unproven:run_attempt={r['id']}"
+                attempts += [(r["id"], n) for n in range(1, last + 1)]
         except (KeyError, TypeError, ValueError):
             return "evaluated_unproven:run_row"
-        window = [r for r in window if not (r.get("status") == "completed" and r.get("conclusion") == "skipped")]
-        if any(r.get("status") != "completed" for r in window):
-            return "evaluated_unproven:run_active"
-        if len(window) > EVALUATION_READS:
+        if len(attempts) > EVALUATION_READS:
             return "evaluated_unproven:too_many_runs"
-        for r in sorted(window, key=lambda r: r["id"], reverse=True):
-            jobs, ok = self.gh.pages(f"actions/runs/{r['id']}/jobs", {"filter": "latest"}, key="jobs", max_pages=1)
+        for rid, n in sorted(attempts, reverse=True):
+            name = f"{rid}.{n}"
+            jobs, ok = self.gh.pages(f"actions/runs/{rid}/attempts/{n}/jobs", key="jobs", max_pages=1)
             job = [j for j in jobs or [] if isinstance(j, dict) and j.get("name") == "execute"]
             if not ok or len(job) > 1:
-                return f"evaluated_unproven:jobs={r['id']}"
-            if not job or job[0].get("conclusion") == "skipped" or (job[0].get("conclusion") == "cancelled" and not job[0].get("steps")):
+                return f"evaluated_unproven:jobs={name}"
+            if not job or job[0].get("conclusion") == "skipped":
                 continue                                         # the job never ran: nothing was evaluated
-            if job[0].get("status") != "completed" or type(job[0].get("id")) is not int:
-                return f"evaluated_unproven:job={r['id']}"
-            text = self.gh.text(f"actions/jobs/{job[0]['id']}/logs")
+            j = job[0]
+            started = any(isinstance(st, dict) and st.get("status") in ("in_progress", "completed") and st.get("conclusion") != "skipped"
+                          for st in j.get("steps") or [])
+            if j.get("status") != "completed":
+                if j.get("status") in ("queued", "waiting", "pending", "requested") and not started:
+                    continue                                     # waiting for the group: it has not read the brief
+                return f"evaluated_unproven:job_active={name}"
+            if j.get("conclusion") == "cancelled" and not started:
+                continue
+            if type(j.get("id")) is not int:
+                return f"evaluated_unproven:job={name}"
+            text = self.gh.text(f"actions/jobs/{j['id']}/logs")
             found = B.HEALTH_LINE.findall(text) if isinstance(text, str) else []
             try:
                 line = json.loads(found[0]) if len(found) == 1 else None
             except ValueError:
                 line = None
             if not isinstance(line, dict):
-                return f"evaluated_unproven:health={r['id']}"
+                return f"evaluated_unproven:health={name}"
             result, brief_run = str(line.get("result") or ""), line.get("brief_run")
             if brief_run in (None, "") and not result.startswith("NO_DECISION("):
-                return f"evaluated_unproven:brief_run={r['id']}"   # a crash line names no brief: it may have been this one
+                return f"evaluated_unproven:brief_run={name}"   # a crash line names no brief: it may have been this one
             if str(brief_run) == str(run_id) and line.get("brief_attempt") in (None, "", str(attempt)) and not result.startswith("NO_DECISION("):
-                return f"already_evaluated={r['id']}"
+                return f"already_evaluated={name}"
         return None
 
     def resolve_main(self):
