@@ -488,3 +488,59 @@ def test_cross_domain_review_remains_backwards_compatible_and_time_bound(tmp_pat
     out["cross_domain_review"]["week"] = "2026-W41"
     with pytest.raises(ValueError):
         runtime.validate_snapshot(out)
+
+
+def cn_recovery_fixture(tmp_path, monkeypatch):
+    sensor = next(x for x in current_registry()['sensors']
+                  if x['sensor_id'] == 'CYCLE_NAVIGATOR_RESEARCH_FAMILY')
+    # The pins are known source blobs, not a user-provided manifest. Test the
+    # byte-binding mechanism with isolated synthetic content.
+    path = tmp_path / runtime.CN_DEFINITION
+    path.parent.mkdir(parents=True)
+    raw = b"synthetic pinned legacy audit; no machine evaluator"
+    path.write_bytes(raw)
+    sha = hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
+    monkeypatch.setattr(runtime, 'CN_RECOVERY_PINS', {runtime.CN_DEFINITION: sha})
+    return sensor, path
+
+
+def test_cn_pinned_evidence_is_explicit_block_not_scorable(tmp_path, monkeypatch):
+    sensor, path = cn_recovery_fixture(tmp_path, monkeypatch)
+    monkeypatch.setattr(runtime, 'ROOT', tmp_path)
+    row = runtime.evaluate_sensor(sensor)
+    assert row['calibration_readiness'] == 'RECOVERY_REQUIRED'
+    binding = row['evaluator_binding']
+    assert binding['reason'] == 'SOURCE_BLOCKED_WITH_TRIGGER'
+    assert binding['status'] == 'UNAVAILABLE'
+    assert binding['source_blobs'] == runtime.CN_RECOVERY_PINS
+    assert binding['action_id'] == runtime.CN_RECOVERY_ACTION
+    assert binding['source_fingerprint'] == runtime.CN_RECOVERY_SOURCE
+    assert binding['trigger'] and binding['blocker']
+    assert binding['legacy_w31_method'] != binding['modern_w46_method']
+
+
+@pytest.mark.parametrize('kind', ['missing', 'malformed', 'changed_bytes', 'wrong_source',
+                                 'duplicate_source', 'wrong_horizon', 'unsupported_evaluator',
+                                 'forward_enabled'])
+def test_cn_recovery_negative_controls(tmp_path, monkeypatch, kind):
+    sensor, path = cn_recovery_fixture(tmp_path, monkeypatch)
+    if kind == 'missing':
+        path.unlink()
+    elif kind == 'malformed':
+        path.write_bytes(b'{' )
+    elif kind == 'changed_bytes':
+        path.write_bytes(b'other document')
+    elif kind == 'wrong_source':
+        sensor['source_definition_paths'] = ['README.md']
+    elif kind == 'duplicate_source':
+        sensor['source_definition_paths'] *= 2
+    elif kind == 'wrong_horizon':
+        sensor['outcome_horizons'] = ['1d']
+    elif kind == 'unsupported_evaluator':
+        sensor['evaluator'] = 'CN_PUBLIC_WEEKLY_SCORECARD_v1'
+    elif kind == 'forward_enabled':
+        sensor['forward_observation_enabled'] = True
+    result = runtime.cn_recovery_binding(sensor, tmp_path)
+    assert result['status'] == 'UNAVAILABLE'
+    assert result['reason'] != 'SOURCE_BLOCKED_WITH_TRIGGER'
+    assert 'source_blobs' not in result
