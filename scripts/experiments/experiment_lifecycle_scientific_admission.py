@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import re
 import sys
 from datetime import datetime, timedelta, timezone
@@ -43,6 +44,9 @@ def prior_observation_status(observation_root: Path, candidate_id: str, before_u
         except (OSError, ValueError):
             continue
         if not isinstance(value, dict) or value.get("contract") != "EXPERIMENT_OBSERVATION_v1":
+            continue
+        # A no-dispatch HOLD observation must not consume the paid-path episode start.
+        if isinstance(value.get("source"), dict) and value["source"].get("mode") == EXISTING_ONLY_MODE:
             continue
         observed = str(value.get("observed_at_utc") or "")
         status = str(value.get("evaluation_status") or "")
@@ -839,18 +843,145 @@ def retrospective_main(argv: list[str]) -> None:
     print(json.dumps(aggregate_census(rows), sort_keys=True))
 
 
+
+EXISTING_ONLY_MODE = "BUDGET_HOLD_EXISTING_ADMITTED_ONLY_v1"
+
+
+def existing_only_source(root: Path, context_path: Path, hold_path: Path, now: datetime) -> tuple[dict, dict]:
+    """Bind the original writer's current context and explicit clean HOLD; no model receipt."""
+    evidence_root = root / "research/experiment_lifecycle/budget_hold_inputs"
+    run = os.environ.get("GITHUB_RUN_ID", "")
+    attempt = os.environ.get("GITHUB_RUN_ATTEMPT", "")
+    head = os.environ.get("GITHUB_SHA", "")
+    if not (re.fullmatch(r"[1-9][0-9]*", run) and re.fullmatch(r"[1-9][0-9]*", attempt)
+            and re.fullmatch(r"[0-9a-f]{40}", head)):
+        raise ValueError("hold_native_identity_missing")
+    folder = evidence_root / f"{run}-{attempt}"
+    if (context_path.absolute() != folder / "context.json"
+            or hold_path.absolute() != folder / "budget_disposition.json"
+            or context_path.resolve() != context_path.absolute()
+            or hold_path.resolve() != hold_path.absolute()):
+        raise ValueError("hold_evidence_path_invalid")
+    context_bytes, hold_bytes = context_path.read_bytes(), hold_path.read_bytes()
+    context = strict_json_loads(context_bytes.decode("utf-8"))
+    receipt = strict_json_loads(hold_bytes.decode("utf-8"))
+    if (not isinstance(context, dict) or not isinstance(receipt, dict)
+            or receipt.get("contract") != "ROUTINE_API_BUDGET_DISPOSITION_v1"
+            or receipt.get("lane") != "director" or receipt.get("disposition") != "HOLD"
+            or receipt.get("reason") != "API_RESERVE_GUARD_BLOCKED"
+            or (receipt.get("run_id"), receipt.get("run_attempt"), receipt.get("head_sha")) != (run, attempt, head)
+            or any(receipt.get(k) is not False for k in ("paid_call_executed_here", "analysis_completed_here", "paid_authority"))):
+        raise ValueError("hold_receipt_unverified")
+    guards = receipt.get("guard_observations")
+    if not isinstance(guards, list) or not all(isinstance(g, dict) for g in guards):
+        raise ValueError("hold_guard_sequence_invalid")
+    sequence = [(g.get("guard"), g.get("disposition"), g.get("returncode")) for g in guards]
+    if sequence not in [[("lane", "HOLD", 1)], [("lane", "PASS", 0), ("monthly", "HOLD", 1)]]:
+        raise ValueError("hold_guard_sequence_invalid")
+    if any(type(g.get("returncode")) is not int or not isinstance(g.get("stdout_sha256"), str)
+           or not SHA256_HEX.fullmatch(g["stdout_sha256"]) for g in guards):
+        raise ValueError("hold_guard_binding_invalid")
+    latest = context.get("latest_capture")
+    coverage = context.get("coverage")
+    if not isinstance(latest, dict) or not isinstance(coverage, dict):
+        raise ValueError("hold_capture_invalid")
+    captured, rid = latest.get("captured_at_utc"), latest.get("run_id")
+    if (not canonical_capture_clock(captured) or not isinstance(rid, str) or not rid.strip()
+            or not isinstance(latest.get("market_metrics"), dict)):
+        raise ValueError("hold_capture_invalid")
+    age = now - base.dt(captured)
+    if not timedelta(0) <= age <= timedelta(hours=4):
+        raise ValueError("hold_capture_stale_or_future")
+    comparable = coverage.get("comparable_numeric_metrics")
+    if (type(comparable) is not int or comparable <= 0
+            or context.get("delta_status") not in {"DELTA_READY", "DELTA_DEGRADED_STALE_PREDECESSOR"}):
+        raise ValueError("hold_market_delta_unavailable")
+    return context, {
+        "mode": EXISTING_ONLY_MODE, "source_run_id": rid,
+        "daily_output_sha256": None, "daily_receipt_sha256": None,
+        "daily_context_sha256": base.sha(context),
+        "daily_context_path": base.rel(root, context_path),
+        "context_bytes_sha256": hashlib.sha256(context_bytes).hexdigest(),
+        "budget_hold_receipt_path": base.rel(root, hold_path),
+        "budget_hold_receipt_sha256": hashlib.sha256(hold_bytes).hexdigest(),
+    }
+
+
+def existing_only_admissions(root: Path) -> dict[str, dict]:
+    """Do not silently accept conflicting admission records or malformed authority."""
+    rows: dict[str, dict] = {}
+    raw: dict[str, bytes] = {}
+    for path in sorted(root.rglob("*.json")):
+        if path.is_symlink():
+            raise ValueError("hold_admission_symlink")
+        data = path.read_bytes()
+        value = strict_json_loads(data.decode("utf-8"))
+        if not isinstance(value, dict) or value.get("contract") != ADMISSION_CONTRACT:
+            raise ValueError("hold_admission_invalid")
+        cid = value.get("candidate_id")
+        if not isinstance(cid, str) or not cid:
+            raise ValueError("hold_admission_identity_invalid")
+        if cid in raw and raw[cid] != data:
+            raise ValueError("hold_admission_conflict")
+        rows[cid], raw[cid] = value, data
+    return rows
+
+
+def hold_candidate_eligible(candidate: dict, admission: dict | None, captured: str) -> bool:
+    if not admission or admission.get("status") != QUALIFIED:
+        return False
+    spec = candidate["spec"]
+    authority = admission.get("authority")
+    if (not isinstance(authority, dict)
+            or set(authority) != {"canonical_effect", "portfolio_execution", "framework_state_change",
+                                  "threshold_change", "weight_change", "automatic_promotion"}
+            or any(v is not False for v in authority.values())
+            or admission.get("no_retroactive_rescore") is not True
+            or admission.get("candidate_id") != candidate.get("candidate_id")
+            or admission.get("candidate_created_at_utc") != candidate.get("created_at_utc")
+            or admission.get("semantic_spec") != semantic_spec(spec)
+            or admission.get("semantic_fingerprint") != digest(semantic_spec(spec))
+            or qualification_status(spec, None)[0] != QUALIFIED):
+        return False
+    try:
+        return all(_utc_key(t) < _utc_key(captured) for t in
+                   (candidate.get("created_at_utc"), candidate.get("registered_at_utc"),
+                    admission.get("admission_frozen_at_utc")))
+    except AllocationIntegrityError:
+        return False
+
+
+def capture_already_observed(root: Path, cid: str, captured: str, run_id: str) -> bool:
+    for _, row in base.jsons(root / cid, "EXPERIMENT_OBSERVATION_v1"):
+        source = row.get("source")
+        if (row.get("candidate_id") == cid and row.get("observed_at_utc") == captured
+                and isinstance(source, dict) and source.get("source_run_id") == run_id):
+            return True
+    return False
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     for name in (
-        "repo-root", "daily-output", "daily-context", "daily-receipt", "candidate-root", "observation-root", "dispatch-root", "forecast-root", "outcome-root", "receipt-root", "registry-output", "manifest-output", "admission-root", "admission-registry-output",
+        "repo-root", "daily-context", "candidate-root", "observation-root", "dispatch-root", "forecast-root", "outcome-root", "receipt-root", "registry-output", "manifest-output", "admission-root", "admission-registry-output",
     ):
         parser.add_argument(f"--{name}", type=Path, required=True)
+    parser.add_argument("--daily-output", type=Path)
+    parser.add_argument("--daily-receipt", type=Path)
+    parser.add_argument("--existing-admitted-only", action="store_true")
+    parser.add_argument("--budget-hold-receipt", type=Path)
     parser.add_argument("--legacy-sensor-catalog", type=Path)
     parser.add_argument("--repository", default="Donh91/Investering-Framework-Archive-v1")
     parser.add_argument("--branch", default="main")
     parser.add_argument("--max-new-forecasts", type=int, default=5)
     parser.add_argument("--proposal-census-root", type=Path, help="default: <admission-root>/../proposal_slot_census")
     args = parser.parse_args()
+    hold = args.existing_admitted_only
+    if hold:
+        if args.daily_output or args.daily_receipt or args.legacy_sensor_catalog or not args.budget_hold_receipt or not 0 <= args.max_new_forecasts <= 5:
+            parser.error("existing-only requires HOLD receipt, no proposal inputs, and cap at most 5")
+    elif not args.daily_output or not args.daily_receipt or args.budget_hold_receipt:
+        parser.error("normal mode requires daily output and receipt, no HOLD receipt")
 
     # Forecast-store integrity is checked before any write. base.registry would raise on an identity
     # conflict later anyway (after observations/dispatch were written), so a corrupt store is a
@@ -862,9 +993,17 @@ def main() -> None:
         raise SystemExit(3) from None
 
     root = args.repo_root.resolve()
-    output = base.read(args.daily_output)
-    context = base.read(args.daily_context)
-    receipt = base.read(args.daily_receipt)
+    if hold:
+        try:
+            context, hold_source = existing_only_source(root, args.daily_context, args.budget_hold_receipt, datetime.now(UTC))
+            admissions = existing_only_admissions(args.admission_root)
+        except (OSError, ValueError, TypeError, RecursionError):
+            raise SystemExit("existing_only_evidence_unverified") from None
+        output, receipt = {}, {}
+    else:
+        output = base.read(args.daily_output)
+        context = base.read(args.daily_context)
+        receipt = base.read(args.daily_receipt)
     # Preserve the legacy missing/null/empty-string clock fallback (forecast allocation still holds).
     # A present wrong JSON type is not missing, even when falsey. Reject it before any producer write.
     # A malformed latest_capture container must not be silently treated as an absent clock either.
@@ -880,9 +1019,9 @@ def main() -> None:
     captured = base.iso(datetime.now(UTC)) if clock_missing else raw_capture_early
     when = base.dt(captured)
     now = base.iso(datetime.now(UTC))
-    source = {"daily_output_sha256": base.sha(output), "daily_context_sha256": base.sha(context), "daily_receipt_sha256": base.sha(receipt), "source_run_id": (context.get("latest_capture") or {}).get("run_id")}
+    source = hold_source if hold else {"daily_output_sha256": base.sha(output), "daily_context_sha256": base.sha(context), "daily_receipt_sha256": base.sha(receipt), "source_run_id": (context.get("latest_capture") or {}).get("run_id")}
 
-    raw = [item for item in output.get("experiment_candidates", []) if isinstance(item, dict)] + base.legacy(args.legacy_sensor_catalog) + base.emergent_pairs(context, latest)
+    raw = [] if hold else [item for item in output.get("experiment_candidates", []) if isinstance(item, dict)] + base.legacy(args.legacy_sensor_catalog) + base.emergent_pairs(context, latest)
     rejected = []
     for item in output.get("forecast_candidates", []):
         if not isinstance(item, dict):
@@ -895,23 +1034,24 @@ def main() -> None:
 
     existing_candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
     existing_candidates = {value["candidate_id"]: value for _, value in existing_candidate_rows}
-    # #1557: account for every raw slot before the filtering/mapping/dedup below (metadata only).
-    census_root = args.proposal_census_root or args.admission_root.parent / "proposal_slot_census"
-    try:
-        batch_path = base.rel(root, args.daily_output.parent)
-    except ValueError:  # batch outside the repo root: keep the census, omit the path
-        batch_path = None
-    census_inputs = (args.daily_output.read_bytes(), args.daily_context.read_bytes(), args.daily_receipt.read_bytes())
+    if not hold:
+        # #1557: account for every raw slot before the filtering/mapping/dedup below (metadata only).
+        census_root = args.proposal_census_root or args.admission_root.parent / "proposal_slot_census"
+        try:
+            batch_path = base.rel(root, args.daily_output.parent)
+        except ValueError:  # batch outside the repo root: keep the census, omit the path
+            batch_path = None
+        census_inputs = (args.daily_output.read_bytes(), args.daily_context.read_bytes(), args.daily_receipt.read_bytes())
 
-    def build_census() -> dict[str, Any]:
-        legacy_bytes = _read_optional(args.legacy_sensor_catalog) if args.legacy_sensor_catalog else None
-        return proposal_slot_census(
-            *census_inputs,
-            legacy_items=base.legacy(args.legacy_sensor_catalog), legacy_catalog_sha256=_sha256_bytes(legacy_bytes) if legacy_bytes is not None else None,
-            existing_candidates=existing_candidates, known_response_identities=load_census_identities(census_root), source_batch_path=batch_path)
+        def build_census() -> dict[str, Any]:
+            legacy_bytes = _read_optional(args.legacy_sensor_catalog) if args.legacy_sensor_catalog else None
+            return proposal_slot_census(
+                *census_inputs,
+                legacy_items=base.legacy(args.legacy_sensor_catalog), legacy_catalog_sha256=_sha256_bytes(legacy_bytes) if legacy_bytes is not None else None,
+                existing_candidates=existing_candidates, known_response_identities=load_census_identities(census_root), source_batch_path=batch_path)
 
-    census = isolated_census(census_inputs, build_census, source_batch_path=batch_path, mode="PROSPECTIVE_PRODUCER_CAPTURE")
-    base.write_new(census_root / when.strftime("%Y/%m") / f"{census['census_id']}.json", census)
+        census = isolated_census(census_inputs, build_census, source_batch_path=batch_path, mode="PROSPECTIVE_PRODUCER_CAPTURE")
+        base.write_new(census_root / when.strftime("%Y/%m") / f"{census['census_id']}.json", census)
     new_ids: set[str] = set()
     for item in raw:
         try:
@@ -937,7 +1077,8 @@ def main() -> None:
         except Exception as exc:
             rejected.append({"title": str(item.get("title") or "UNKNOWN"), "error": str(exc)})
 
-    admissions = load_admissions(args.admission_root)
+    if not hold:
+        admissions = load_admissions(args.admission_root)
     semantic_owner: dict[str, str] = {}
     all_candidates = sorted(existing_candidates.values(), key=lambda row: (str(row.get("created_at_utc") or ""), str(row.get("candidate_id") or "")))
     for candidate in all_candidates:
@@ -945,6 +1086,8 @@ def main() -> None:
         existing = admissions.get(cid)
         semantic_id = digest(semantic_spec(candidate["spec"]))
         owner = semantic_owner.get(semantic_id)
+        if existing is None and hold:
+            continue
         if existing is None:
             record = admission_record(candidate, owner, now, historical=cid not in new_ids)
             path = args.admission_root / str(candidate.get("created_at_utc") or now)[:7].replace("-", "/") / f"{cid}.json"
@@ -954,8 +1097,9 @@ def main() -> None:
             semantic_owner[semantic_id] = cid
 
     admission_registry = build_admission_registry(admissions, now)
-    args.admission_registry_output.parent.mkdir(parents=True, exist_ok=True)
-    args.admission_registry_output.write_bytes(canonical(admission_registry))
+    if not hold:
+        args.admission_registry_output.parent.mkdir(parents=True, exist_ok=True)
+        args.admission_registry_output.write_bytes(canonical(admission_registry))
 
     new_forecasts = 0
     dispatch = 0
@@ -986,9 +1130,14 @@ def main() -> None:
     allocation.update({"occupied_slots_before": len(occupied_ids), "available_slots": available_slots})
     issued_slots = 0
     candidate_rows.sort(key=lambda item: forecast_allocation_key(item[1], service_history))
+    hold_observed = 0
     for spec_path, candidate in candidate_rows:
         spec = candidate["spec"]
-        admission = admissions[candidate["candidate_id"]]
+        cid = candidate["candidate_id"]
+        if hold and (not hold_candidate_eligible(candidate, admissions.get(cid), captured)
+                     or capture_already_observed(args.observation_root, cid, captured, run_id)):
+            continue
+        admission = admissions[cid]
         admitted = admission.get("status") == QUALIFIED
         legacy_forecast_unit_ambiguous = spec.get("kind") == "FORECAST_TEST" and spec.get("target_unit_contract_version") != base.UNIT_CONTRACT_VERSION
         results = [base.evaluate(item, latest, previous) for item in spec["components"]]
@@ -996,14 +1145,18 @@ def main() -> None:
         missing = any(item["matched"] is None for item in results)
         fired = admitted and not legacy_forecast_unit_ambiguous and not mapping and ((not spec["components"] and spec["kind"] == "FORECAST_TEST") or (results and not missing and all(item["matched"] for item in results)))
         status = "TARGET_UNIT_QUARANTINED" if legacy_forecast_unit_ambiguous else "SCIENTIFIC_ADMISSION_BLOCKED" if not admitted and not mapping else "WAITING_FOR_MAPPING" if mapping else "WAITING_FOR_DATA" if missing else "FIRED_NO_TARGET" if fired and spec["target_direction"] == "NONE" else "FIRED" if fired else "OBSERVED_NOT_FIRED"
-        observation_id = "EO-" + base.sha({"candidate_id": candidate["candidate_id"], "captured": captured, "source": source})[:20]
+        observation_id = "EO-" + base.sha({"candidate_id": candidate["candidate_id"], "captured": captured, "source": source} if not hold else {"candidate_id": cid, "window": event_window, "mode": EXISTING_ONLY_MODE})[:20]
         observation = {"contract": "EXPERIMENT_OBSERVATION_v1", "observation_id": observation_id, "candidate_id": candidate["candidate_id"], "observed_at_utc": captured, "evaluation_status": status, "component_results": results, "scientific_admission_status": admission.get("status"), "scientific_admission_sha256": digest(admission), "source": source, "authority": "SHADOW_ONLY"}
         observation_path = args.observation_root / candidate["candidate_id"] / f"{observation_id}.json"
         is_new = False if mapping and candidate["candidate_id"] not in new_ids else base.write_new(observation_path, observation)
+        if hold:
+            hold_observed += int(is_new)
 
         forecast_id = None
         start = base.at(latest, spec.get("target_metric_path") or "") if spec.get("target_metric_path") else None
         eligible = admitted and fired and spec["target_direction"] != "NONE" and isinstance(start, (int, float))
+        if hold:
+            eligible = eligible and is_new and type(start) in (int, float) and math.isfinite(start)
         kind_stats = allocation["by_kind"].setdefault(str(spec.get("kind")), {"eligible": 0, "issued_new": 0, "held_in_window": 0})
         kind_stats["eligible"] += int(eligible)
         if candidate["candidate_id"] in occupied:
@@ -1027,6 +1180,8 @@ def main() -> None:
                 new_forecasts += 1
                 kind_stats["issued_new"] += 1
 
+        if hold:
+            continue  # Never create replication/registration requests on budget HOLD.
         episode_start = candidate["candidate_id"] in new_ids or (
             fired and prior_observation_status(args.observation_root, candidate["candidate_id"], captured) not in FIRED_STATES)
         if admitted and is_new and fired and not episode_start:
@@ -1065,9 +1220,13 @@ def main() -> None:
     manifest = {"contract": "EXPERIMENT_DISPATCH_MANIFEST_v2_SCIENTIFIC_ADMISSION", "generated_at_utc": now, "source_repository": args.repository, "source_branch": args.branch, "request_count": len(requests), "requests": sorted(requests, key=lambda item: item["request_id"]), "admission_required": QUALIFIED, "authority": "SHADOW_ONLY_CROSS_REPO_DISPATCH",
                 "listing_rule": DISPATCH_LISTING_RULE, "total_qualified_request_count": total_qualified,
                 "receipted_request_count": total_qualified - len(requests), "history_root": base.rel(root, args.dispatch_root)}
-    args.manifest_output.parent.mkdir(parents=True, exist_ok=True)
-    args.manifest_output.write_bytes(base.canon(manifest))
-    print(json.dumps({"candidate_count": reg["candidate_count"], "new_candidate_count": len(new_ids), "new_forecasts": new_forecasts, "forecast_allocation": allocation, "dispatch_created": dispatch, "episode_continuations_not_dispatched": episode_continuations, "admission_status_counts": admission_registry["status_counts"], "rejected": rejected}, sort_keys=True))
+    if not hold:
+        args.manifest_output.parent.mkdir(parents=True, exist_ok=True)
+        args.manifest_output.write_bytes(base.canon(manifest))
+    summary = {"candidate_count": reg["candidate_count"], "new_candidate_count": len(new_ids), "new_forecasts": new_forecasts, "forecast_allocation": allocation, "dispatch_created": dispatch, "episode_continuations_not_dispatched": episode_continuations, "admission_status_counts": admission_registry["status_counts"], "rejected": rejected}
+    if hold:
+        summary.update({"mode": EXISTING_ONLY_MODE, "observations_created": hold_observed, "paid_call_executed_here": False, "analysis_completed_here": False})
+    print(json.dumps(summary, sort_keys=True))
 
 
 if __name__ == "__main__":
