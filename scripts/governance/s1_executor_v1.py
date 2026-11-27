@@ -14,6 +14,7 @@ The only writes this file can make (write() is the one call site of each):
   POST   /repos/<repo>/issues/1156/comments  an S1_LANE_MERGE_INTENT_v1, S1_LANE_MERGE_v1, S1_LANE_HALTED, S1_OP_DONE_v1,
                                              S1_HEARTBEAT_v1, S1_FALLBACK_CANDIDATE_v1, S1_CODEX_RECALL_PENDING_v1 or
                                              S1_CODEX_RECALL_CLEARED_v1 on the owner ledger
+  POST   /repos/<repo>/issues/<n>/comments   only the exact-head Codex request, after a ledger intent
   PUT    /repos/<repo>/pulls/<n>/merge       {"merge_method": "squash", "sha": <the decision's exact head>}
   POST   /repos/<repo>/issues/<n>/labels     the ONE label codex-recall-pending, on the PR this run merged by the fallback
   DELETE /repos/<repo>/issues/<n>/labels/codex-recall-pending   after this run itself read Codex's completed review
@@ -81,7 +82,7 @@ BRIEF_ENV = ("S1_BRIEF_RUN_ID", "S1_BRIEF_RUN_ATTEMPT", "S1_BRIEF_MAIN", "S1_BRI
 EXECUTOR_RUNS_PAGE = 30
 EVALUATION_READS = 6                   # executor run attempts read (FA-P1-01: per attempt); bound 1 + 2 * 6 = 13 calls
 POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1",
-         "S1_FALLBACK_CANDIDATE_v1", "S1_CODEX_RECALL_PENDING_v1", "S1_CODEX_RECALL_CLEARED_v1")
+         "S1_FALLBACK_CANDIDATE_v1", "S1_CODEX_RECALL_PENDING_v1", "S1_CODEX_RECALL_CLEARED_v1", B.REVIEW_INTENT, B.REVIEW_RECEIPT)
 MAX_POST_CHARS = 4000
 HOLD_VARIABLE = "S1_EXECUTOR_HOLD"     # liveness round: the job env (vars context, set by GitHub at job start) in every mode;
                                        # LIVE additionally reads it live before every write (live_stop), which fails closed today
@@ -195,6 +196,9 @@ class Run:
         self.brief = self.decision = None
         self.run_of = B.RunReader(gh)                             # proves which Actions-bot ledger posts are this job's
         self.alarms, self.pending = [], None                      # what makes the process exit non-zero (finish)
+        self.review_reservation = None                            # exact PR/head/run/intent, one per run
+        self.review_plan = None
+        self.review_request_record = None
         self.recall_cleared = set()                               # PRs whose recall THIS run proved cleared (the label may then go)
         self.cleared_for = None                                   # (pr, head) whose final look after the intent passed (A32)
         self.merge_of = B.MergeReader(gh)                         # the native merge proof behind a merge receipt (A10, fix round 4 #5)
@@ -222,9 +226,51 @@ class Run:
         if kind == "comment":
             body = kw["body"]
             need(isinstance(body, str) and 0 < len(body) <= MAX_POST_CHARS and B.first_line_token(body) in POSTS, "post_shape")
+            token = B.first_line_token(body)
+            if token in (B.REVIEW_INTENT, B.REVIEW_RECEIPT):
+                need(self.review_plan is not None, "review_no_plan")
+                pr, head, rid, attempt = self.review_plan
+                need(self.files["switch"].get("review_dispatch") in ("BOT_PROBE", "BOT_VERIFIED")
+                     and self.decision.get("action") == "NOOP", "review_route")
+                if token == B.REVIEW_INTENT:
+                    need(body == B.review_dispatch_body(token, pr, head, rid, attempt)
+                         and not any(w[0] == "comment" and w[1] == token for w in self.writes), "review_intent_shape")
+                else:
+                    need(self.review_request_record is not None, "review_receipt_without_request")
+                    iid, cid = self.review_request_record
+                    need(body == B.review_dispatch_body(token, pr, head, rid, attempt, iid, cid)
+                         and ("comment", B.REVIEW_REQUEST, cid) in self.writes
+                         and not any(w[0] == "comment" and w[1] == token for w in self.writes), "review_receipt_shape")
             raw, _h = self.gh._request("POST", self.gh.url(f"issues/{B.OWNER_ISSUE}/comments"), {"body": body})
             doc = json.loads(raw)
             self.writes.append(("comment", B.first_line_token(body), doc.get("id")))
+            return doc
+        if kind == "review":
+            pr, head, iid = kw["pr"], kw["head"], kw["intent"]
+            rid, attempt = int(self.env["GITHUB_RUN_ID"]), int(self.env["GITHUB_RUN_ATTEMPT"])
+            need(self.review_reservation == (pr, head, iid) and self.decision.get("action") == "NOOP"
+                 and any(w == ("comment", B.REVIEW_INTENT, iid) for w in self.writes)
+                 and not any(w[0] == "comment" and w[1] == B.REVIEW_REQUEST for w in self.writes), "review_without_intent")
+            need(type(pr) is int and pr > 0 and D.SHA40.fullmatch(head) is not None, "review_shape")
+            need(self.review_plan == (pr, head, rid, attempt), "review_no_plan")
+            rows, complete = self.gh.pages(f"issues/{pr}/comments", max_pages=10)
+            commits, cc = self.gh.pages(f"pulls/{pr}/commits", max_pages=3)
+            need(complete and cc, "review_last_read_unreadable")
+            made = B.head_commit_time(commits, head)
+            need(not any(re.search(r"(?mi)^\s*@codex\s+review\b", str(c.get("body") or ""))
+                         and B.stamp(c.get("updated_at") or c.get("created_at")) > made for c in rows),
+                 "review_already_requested", BLOCKED)
+            self.review_head(pr, head)
+            body = B.review_dispatch_body(B.REVIEW_REQUEST, pr, head, rid, attempt, iid)
+            # An ambiguous response must never be retried, even by a later run (ledger intent stays).
+            self.review_reservation = None
+            raw, _h = self.gh._request("POST", self.gh.url(f"issues/{pr}/comments"), {"body": body})
+            doc = json.loads(raw)
+            need(type(doc.get("id")) is int and doc.get("body") == body and B.is_s1_unedited(doc)
+                 and B.is_actions_bot(doc.get("user")), "review_readback")
+            self.writes.append(("comment", B.REVIEW_REQUEST, doc["id"]))
+            self.review_request_record = (iid, doc["id"])
+            self.review_head(pr, head)  # if it moved in the POST window: no receipt, never retry
             return doc
         if kind == "label":                                       # the ONE label, added to the PR this run merged or removed after this run's proof
             pr, add = kw["pr"], kw["add"]
@@ -880,6 +926,178 @@ class Run:
         self.write("comment", body=D.heartbeat_body(self.decision, self.brief, ticks if len(runs) < 100 else None, self.mode, self.env.get("GITHUB_RUN_ID")))
         return "HEARTBEAT"
 
+    # ---- REVIEW DISPATCH: one exact-head request; not an approval or a merge
+    def review_head(self, pr, head):
+        row = self.gh.get(f"pulls/{pr}")
+        repo_id = (self.brief.get("repo") or {}).get("id")
+        need(row.get("state") == "open" and row.get("draft") is False and row.get("merged") is not True
+             and (row.get("head") or {}).get("sha") == head and (row.get("base") or {}).get("ref") == "main"
+             and ((row.get("head") or {}).get("repo") or {}).get("id") == repo_id
+             and ((row.get("base") or {}).get("repo") or {}).get("id") == repo_id, "review_head_changed", BLOCKED)
+        return row
+
+    def review_candidate(self):
+        rows = self.brief.get("ranked") or self.brief.get("next") or []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            if not ((row.get("action"), row.get("how")) == ("REQUEST_REVIEW", "CODEX_REVIEW")
+                    or (row.get("action"), row.get("otherwise")) == ("MERGE_IF_CLAUDE_APPROVE", "CODEX_REVIEW")):
+                continue
+            pr, head = row.get("pr"), row.get("head")
+            e = next((e for e in self.brief.get("prs") or [] if e.get("n") == pr and e.get("head") == head), None)
+            if (type(pr) is int and pr > 0 and isinstance(head, str) and D.SHA40.fullmatch(head)
+                    and e and not e.get("skip") and not e.get("open") and (e.get("lane") or {}).get("eligible") is True
+                    and (e.get("ci") or {}).get("state") == "GREEN" and not (e.get("author") or {}).get("codex")
+                    and (e.get("thin") or {}).get("claude") == "NONE"
+                    and ((e.get("review") or {}).get("codex") or {}).get("status") == "NONE"):
+                return pr, head
+        return None
+
+    def verify_review_dispatch(self, pr, head, ledger, own_intent=None):
+        row = self.review_head(pr, head)
+        files, fc = self.gh.pages(f"pulls/{pr}/files", max_pages=31)
+        need(fc and len(files) == row.get("changed_files"), "review_files_unreadable")
+        exclusions, floor = B.path_exclusions(files, fc, self.files["policy"], self.files["gate_isolation"] == "LIVE",
+                                               {"owner_gated": [], "high_floor": []})
+        need(not exclusions and floor in ("LOW", "MEDIUM"), "review_owner_gated", BLOCKED)
+        facts = D.entry_facts(row, files, fc, self.files.get("push_filters"))
+        need(not facts["x"] and not facts["direction"] and not facts["hold_labels"], "review_judgment_gate", BLOCKED)
+        paths = sorted({f.get("filename") or "" for f in files} | {f["previous_filename"] for f in files if f.get("previous_filename")})
+        main, protected = self.main_now()
+        self.no_code_drift(main, paths)
+        self.lane_now(main, protected, ledger)
+        self.guard_paths = paths
+        need(not B.review_dispatch_attempted([c for c in ledger if c.get("id") != own_intent], pr, head),
+             "review_attempted", BLOCKED)
+        commits, cc = self.gh.pages(f"pulls/{pr}/commits", max_pages=3)
+        prc, c1 = self.gh.pages(f"issues/{pr}/comments", max_pages=10)
+        reviews, c2 = self.gh.pages(f"pulls/{pr}/reviews", max_pages=10)
+        inline, c3 = self.gh.pages(f"pulls/{pr}/comments", max_pages=10)
+        need(cc and c1 and c2 and c3, "review_reads_unreadable")
+        now = self.now_fn()
+        need(now - B.head_commit_time(commits, head) >= timedelta(hours=2), "review_wait_2h", BLOCKED)
+        need(not B.authorship(row, commits, cc, prc).get("codex"), "review_self", BLOCKED)
+        need(B.concurrent_writer(commits, cc, prc, head, now, self.files["bindings"]["foreign_commit_quiet_minutes"]) is None,
+             "review_concurrent_writer", BLOCKED)
+        need(B.changes_requested(reviews) is False and B.claude_receipt(head, prc) == "NONE", "review_already_adjudicated", BLOCKED)
+        item = B.newest_item(prc) or {}
+        need(item.get("kind") != "DIRECTION" and D.risk_max(floor, facts["risk"], item.get("risk")) in ("LOW", "MEDIUM")
+             and not facts["diff_x"], "review_direction_or_risk", BLOCKED)
+        # Any previous request on this head (including an unproven bot comment) can only suppress a duplicate.
+        need(not any(re.search(r"(?mi)^\s*@codex\s+review\b", str(c.get("body") or ""))
+                     and B.stamp(c.get("updated_at") or c.get("created_at")) > B.head_commit_time(commits, head)
+                     for c in prc), "review_already_requested", BLOCKED)
+        cx = B.codex_review(head, row, commits, cc, prc, reviews, inline, True, now, self.files["budgets"]["codex_silent_hours"])
+        need(cx.get("status") == "NONE", "review_state_changed", BLOCKED)
+        threads = B.read_threads(self.gh, pr)
+        need(threads is not None and not any(not t.get("resolved") and re.search(r"(?i)\bP[01]\b", t.get("first_body") or "")
+                                            for t in threads), "review_threads")
+        tuples = self.files["bindings"]["required_job_tuples"]
+        runs, rc = self.gh.pages("actions/runs", {"head_sha": head, "event": "pull_request"}, key="workflow_runs", max_pages=5)
+        jobs = {}
+        for path in sorted({t["workflow_path"] for t in tuples}):
+            kept = [r for r in runs if r.get("path") == path and r.get("head_sha") == head]
+            if kept:
+                run = max(kept, key=lambda r: r.get("run_number") or 0)
+                items, jc = self.gh.pages(f"actions/runs/{run['id']}/jobs", {"filter": "latest"}, key="jobs", max_pages=3)
+                jobs[run["id"]] = items if jc else None
+        ci = B.ci_tuples(head, (self.brief.get("repo") or {}).get("id"), runs, rc, jobs, tuples)
+        need(all(ci.get(t["job"], {}).get("s") == "PASS" for t in tuples), "review_ci", BLOCKED)
+        checks, k1 = self.gh.pages(f"commits/{head}/check-runs", key="check_runs", max_pages=5)
+        statuses, k2 = self.gh.pages(f"commits/{head}/statuses", max_pages=3)
+        need(B.checks_summary(checks, statuses, k1 and k2).get("green") is True, "review_checks", BLOCKED)
+        line = B.privacy_line(self.gh.text(f"actions/jobs/{ci['privacy-scan']['job']}/logs"), head)
+        need(line.get("result") == "NO_RESTRICTED_CONTENT", "review_privacy", BLOCKED)
+        activity = B.codex_activity(B.read_codex_feed(self.gh, now), {pr: {"comments": prc, "reviews": reviews, "inline": inline}})
+        need(activity.get("complete") is True, "review_quota_unreadable")
+        newest = (activity.get("items") or [None])[0]
+        need(not (newest and newest["limit"] and timedelta(0) <= now - newest["at"] <= timedelta(hours=B.CODEX_LIMIT_HOURS)),
+             "review_quota_limit", BLOCKED)
+        self.review_head(pr, head)
+
+    def probe_verified(self, ledger, probe):
+        if not isinstance(probe, dict) or type(probe.get("pr")) is not int or not D.SHA40.fullmatch(str(probe.get("head") or "")):
+            return False
+        pr, head, cid = probe["pr"], probe["head"], probe.get("request")
+        rows, complete = self.gh.pages(f"issues/{pr}/comments", max_pages=10)
+        if not complete or cid not in B.verified_bot_requests(head, pr, rows, ledger, self.run_of, self.log_of, self.now_fn()):
+            return False
+        request = next(c for c in rows if c.get("id") == cid)
+        requested_at = B.stamp(request["created_at"])
+        # A second trigger could have produced the response. Do not infer attribution from a later review.
+        if any(c.get("id") != cid and re.search(r"(?mi)^\s*@codex\s+review\b", str(c.get("body") or ""))
+               and B.stamp(c.get("updated_at") or c.get("created_at")) >= requested_at for c in rows):
+            return False
+        for c in rows:
+            if not B.codex_finality.is_codex(c) or B.stamp(c.get("updated_at") or c.get("created_at")) <= B.stamp(request["created_at"]):
+                continue
+            match = re.search(r"<!-- codex-review-state:v1\s+(.+?)\s*-->", str(c.get("body") or ""), re.S)
+            if match:
+                try:
+                    state = json.loads(match.group(1)).get("code_review", {})
+                    if state.get("commit_sha") == head and state.get("status") in ("completed", "in_progress"):
+                        return True
+                except (ValueError, TypeError, AttributeError):
+                    continue
+        return False
+
+    def review_or_skip(self, ledger):
+        """Claude fix on #2377: the review dispatch is secondary to the decision. Until this run wrote its review intent,
+        a stop or an unreadable read in the dispatch checks never replaces the decision's NOOP result, its health or its
+        stop kind; the reason is printed on its own line. After the intent (LIVE only) every stop keeps its old meaning:
+        the open intent is an alarm and the head is never requested again."""
+        try:
+            return self.dispatch_review(ledger)
+        except Exception as exc:                                 # noqa: BLE001  (Stop, StopReading or an unreadable fact)
+            if any(w[0] == "comment" and w[1] == B.REVIEW_INTENT for w in self.writes):
+                raise
+            self.say(f"S1_EXECUTOR_REVIEW SKIPPED({getattr(exc, 'reason', type(exc).__name__)})")
+            return None
+
+    def dispatch_review(self, ledger):
+        cfg = self.files["switch"]
+        route = cfg.get("review_dispatch")
+        if route not in ("SHADOW", "BOT_PROBE", "BOT_VERIFIED", "OWNER_ACTION"):
+            return None
+        if self.decision.get("action") != "NOOP" or not self.decision.get("result", "").startswith("NOTHING_ACTIONABLE"):
+            return None
+        target = self.review_candidate()
+        if target is None or (self.brief.get("codex") or {}).get("available") is not True:
+            return None
+        pr, head = target
+        probe = cfg.get("review_dispatch_probe")
+        if route == "BOT_PROBE" and (not isinstance(probe, dict) or (probe.get("pr"), probe.get("head")) != target):
+            return None
+        self.verify_review_dispatch(pr, head, ledger)
+        if route == "OWNER_ACTION":
+            return f"WOULD_OWNER_ACTION_REVIEW(pr={pr},head={head[:8]})"
+        if self.mode != "LIVE" or route == "SHADOW":
+            return f"WOULD_REQUEST_REVIEW(pr={pr},head={head[:8]})"
+        if route == "BOT_VERIFIED" and not self.probe_verified(ledger, probe):
+            return f"WOULD_OWNER_ACTION_REVIEW(pr={pr},head={head[:8]})"
+        # The probe is also a LIVE write, only after an owner-reviewed switch PR and every existing LIVE gate.
+        rid, attempt = int(self.env["GITHUB_RUN_ID"]), int(self.env["GITHUB_RUN_ATTEMPT"])
+        need(len(self.writes) + 3 <= MAX_WRITES and self.published(self.body) is None, "review_write_reserve")
+        self.last_look()
+        fresh = self.ledger()
+        need(not B.review_dispatch_attempted(fresh, pr, head), "review_attempted", BLOCKED)
+        self.review_head(pr, head)
+        self.review_plan = (pr, head, rid, attempt)
+        intent = self.write("comment", body=B.review_dispatch_body(B.REVIEW_INTENT, pr, head, rid, attempt))
+        iid = intent.get("id")
+        need(type(iid) is int, "review_intent_unreadable")
+        self.pending = f"review_intent_unsettled(pr={pr},head={head[:8]},id={iid})"
+        fresh = self.ledger()
+        self.verify_review_dispatch(pr, head, fresh, iid)
+        need(self.published(self.body) is None, "review_publication_changed")
+        self.review_reservation = (pr, head, iid)
+        request = self.write("review", pr=pr, head=head, intent=iid)
+        cid = request["id"]
+        self.write("comment", body=B.review_dispatch_body(B.REVIEW_RECEIPT, pr, head, rid, attempt, iid, cid))
+        self.pending = None
+        return f"REQUESTED_REVIEW(pr={pr},head={head[:8]},comment={cid})"
+
     # ---- the whole run
     def execute(self, body):
         end = lambda action, pr, head, result: self.finish(action, pr, head, result)
@@ -964,6 +1182,9 @@ class Run:
             if d["action"] == "MERGE":
                 result = self.do_merge(comments)
                 return end("MERGE" if result.startswith("MERGED") else "NOOP", d["pr"], d["head"], result)   # only a read-back merge is a MERGE line
+            requested = self.review_or_skip(comments)
+            if requested is not None:
+                return end("NOOP", None, None, requested)
             return end("NOOP", None, None, d["result"])
         except Stop as stop:
             self.stop_kind = stop.kind
@@ -1219,7 +1440,7 @@ def health_state(result, alarms, pending, stop_kind=None, uncertain=(), unverifi
     return "UNVERIFIED"
 
 
-OK_RESULTS = ("MERGED", "LANE_HALTED", "RECONCILED", "SETTLED", "WOULD_", "FALLBACK_CANDIDATE", "FALLBACK_MISMATCH", "FALLBACK_WAITING")
+OK_RESULTS = ("MERGED", "LANE_HALTED", "RECONCILED", "SETTLED", "REQUESTED_REVIEW", "WOULD_", "FALLBACK_CANDIDATE", "FALLBACK_MISMATCH", "FALLBACK_WAITING")
 
 
 def write_summary(env, lines):

@@ -1040,6 +1040,67 @@ def ai_authored(pr, commits, commits_complete, author):
                 or any(AI_TRAILER.search(str((c.get("commit") or {}).get("message") or "")) for c in commits))
 
 
+REVIEW_INTENT = "S1_CODEX_REVIEW_INTENT_v1"
+REVIEW_REQUEST = "S1_CODEX_REVIEW_COMMENT_v1"
+REVIEW_RECEIPT = "S1_CODEX_REVIEW_RECEIPT_v1"
+
+
+def review_dispatch_body(token, pr, head, run, attempt, intent=None, request=None):
+    body = f"{token}\npr: {pr}\nhead: {head}\nexecutor: GITHUB run={run}\nattempt: {attempt}"
+    if intent is not None:
+        body += f"\nintent: {intent}"
+    if request is not None:
+        body += f"\nrequest: {request}"
+    return ("@codex review\n\n" + body) if token == REVIEW_REQUEST else body
+
+
+def review_dispatch_attempted(ledger, pr, head):
+    """An intent is an at-most-once reservation, including an ambiguous POST. It can only stop a request."""
+    return any(is_s1_unedited(c) and first_line_token(c.get("body")) == REVIEW_INTENT
+               and fields(c.get("body")).get("pr") == str(pr)
+               and fields(c.get("body")).get("head") == head for c in ledger)
+
+
+def verified_bot_requests(head, pr, comments, ledger, run_of, log_of, now):
+    """Exact PR/head, immutable bot comment, matching intent and receipt, native run AND its own write log.
+    Missing, expired or capped proof is not a request. No bot request adds offline-fallback authority."""
+    if type(pr) is not int or not isinstance(head, str) or not SHA40.fullmatch(head):
+        return set()
+    by_id = {c.get("id"): c for c in ledger if isinstance(c, dict)}
+    requests = {c.get("id"): c for c in comments if isinstance(c, dict)}
+    valid = set()
+    for receipt in ledger:
+        try:
+            if first_line_token(receipt.get("body")) != REVIEW_RECEIPT:
+                continue
+            f = fields(receipt["body"])
+            if f.get("pr") != str(pr) or f.get("head") != head:
+                continue
+            rid, attempt = executor_run(receipt["body"]), int(f["attempt"])
+            iid, cid = int(f["intent"]), int(f["request"])
+            intent, comment = by_id[iid], requests[cid]
+            run = run_of(rid)
+            if not isinstance(run, dict) or run.get("status") != "completed" or run.get("run_attempt") != attempt:
+                continue
+            if not all(executor_post(c, run_of, now) for c in (intent, receipt)):
+                continue
+            if not is_actions_bot(comment.get("user")) or not is_s1_unedited(comment):
+                continue
+            if not (intent["body"] == review_dispatch_body(REVIEW_INTENT, pr, head, rid, attempt)
+                    and comment["body"] == review_dispatch_body(REVIEW_REQUEST, pr, head, rid, attempt, iid)
+                    and receipt["body"] == review_dispatch_body(REVIEW_RECEIPT, pr, head, rid, attempt, iid, cid)):
+                continue
+            if not stamp(intent["created_at"]) <= stamp(comment["created_at"]) <= stamp(receipt["created_at"]):
+                continue
+            if not all(logged_write(log_of, rid, token, ident) for token, ident in
+                       ((REVIEW_INTENT, iid), (REVIEW_REQUEST, cid), (REVIEW_RECEIPT, receipt["id"]))):
+                continue
+            valid.add(cid)
+        except (ValueError, KeyError, TypeError, AttributeError):
+            continue
+    return valid
+
+
 def codex_review(head, pr, commits, commits_complete, comments, reviews, inline, complete, now, silent_hours):
     """REVIEW_ADMISSION (i) through the repository's own finality rule, plus the request state rule 3 needs."""
     out = {"status": "NONE", "requested_after_head": False}
@@ -1049,6 +1110,10 @@ def codex_review(head, pr, commits, commits_complete, comments, reviews, inline,
         head_time = head_commit_time(commits, head) if commits_complete else None
         requests = [codex_finality.effective_request_time(c) for c in comments
                     if not codex_finality.is_codex(c) and re.search(r"(?mi)^\s*@codex\s+review\b", str(c.get("body") or ""))]
+        # option B review (Claude, #2377): EVERY non-Codex `@codex review` stays a request here, proven bot request or
+        # not. In this function a request can only stop (pending, the "nobody asked" offline signal, finality after the
+        # latest request); the offline signal itself rests on the owner's unedited request below. An executor-verified
+        # bot request therefore needs no special case, and ignoring an unverified one would fail open.
         after = [r for r in requests if head_time is not None and r > head_time]
         if after:
             last = max(after)
