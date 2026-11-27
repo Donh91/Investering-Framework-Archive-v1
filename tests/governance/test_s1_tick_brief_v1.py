@@ -1246,7 +1246,8 @@ class WorkflowFile(unittest.TestCase):
             for step in job["steps"]:
                 self.assertNotIn("continue-on-error", step)
                 if "uses" in step:
-                    self.assertRegex(step["uses"], r"^actions/(checkout@v4|setup-python@v5)$")
+                    # LIVE v1 (gate 11): pinned by commit SHA (checkout v4.4.0 = the v4 tag, setup-python v5.6.0 = the v5 tag)
+                    self.assertRegex(step["uses"], r"^actions/(checkout@11d5960a326750d5838078e36cf38b85af677262|setup-python@a26af69be951a213d495a4c3e4e4022e16d87065)$")
         self.assertFalse(pub["steps"][0]["with"]["persist-credentials"])
         # fix round 7 (R6-SH1): the WHOLE run is one serialized critical section (build -> publish), never cancelled once
         # running; no job-level group (inside the run group it would deadlock)
