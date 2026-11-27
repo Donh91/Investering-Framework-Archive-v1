@@ -213,13 +213,18 @@ class AdversarialHealth(unittest.TestCase):
         self.assertEqual((out["action"], gh.writes), ("NOOP", []))
 
     def test_env_hold_does_not_substitute_for_native_hold_evidence(self):
-        out, gh, _, _ = TE.execute(mode="SHADOW", mutate=TE.BEAT,
-            env={"S1_EXECUTOR_HOLD": " "},
-            live=lambda w, g, n: setattr(g, "hold", " "))
-        self.assertEqual(gh.writes, [])
-        self.assertGreaterEqual(gh.hold_reads, 1)
-        self.assertIn("hold:start", out["result"])
-        self.assertEqual(out["health"], "HELD")
+        # liveness round (native run 45986221512): the job token cannot read repository variables (403), so the native
+        # read is no evidence source at all; the job-start env value holds (no read, no write), and LIVE, which still
+        # reads the hold live before every write, stays refused until an owner-only live hold source is proven
+        for mode in ("SHADOW", "LIVE"):
+            out, gh, _, _ = TE.execute(mode=mode, mutate=TE.BEAT,
+                env={"S1_EXECUTOR_HOLD": " "},
+                live=lambda w, g, n: setattr(g, "hold", " "))
+            self.assertEqual(gh.writes, [])
+            self.assertEqual(gh.hold_reads, 0)
+            self.assertEqual((out["result"], out["health"]), ("EXECUTOR_OFF(hold:start)", "HELD"), mode)
+        out, gh, _, _ = TE.execute(mode="LIVE", mutate=TE.BEAT, live=lambda w, g, n: setattr(g, "hold_error", 403))
+        self.assertEqual((gh.writes, out["result"]), ([], "NOTHING_ACTIONABLE(skipped=hold_unreadable:start(403))"))
 
 
 if __name__ == "__main__":

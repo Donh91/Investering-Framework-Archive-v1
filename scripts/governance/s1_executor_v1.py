@@ -83,7 +83,15 @@ EVALUATION_READS = 6                   # executor run attempts read (FA-P1-01: p
 POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1",
          "S1_FALLBACK_CANDIDATE_v1", "S1_CODEX_RECALL_PENDING_v1", "S1_CODEX_RECALL_CLEARED_v1")
 MAX_POST_CHARS = 4000
-HOLD_VARIABLE = "S1_EXECUTOR_HOLD"     # read from the job's env at start AND live before the intent and before the merge (live_stop)
+HOLD_VARIABLE = "S1_EXECUTOR_HOLD"     # liveness round: the job env (vars context, set by GitHub at job start) in every mode;
+                                       # LIVE additionally reads it live before every write (live_stop), which fails closed today
+# Liveness round (2026-11-27, native run 45986221512 job 140462413113): GET actions/variables/<name> answers 403 to this job's
+# token. The token's permissions are Actions, Contents, Issues, Metadata, PullRequests: read (the job log's own GITHUB_TOKEN
+# Permissions block); a workflow cannot grant a GITHUB_TOKEN a Variables permission. So the live read can never succeed with
+# it: SHADOW (which never writes) decides on the job-start value only, and LIVE stays impossible until an owner-only live
+# hold source exists (a pre-LIVE gate; 403 is never read as "not set").
+HOLD_ENV_MISSING = "hold_unreadable:start(env)"
+EXECUTE_STEP = "Execute the one decided action (re-verified natively; writes only when the switch on main is LIVE)"
 
 
 BLOCKED, UNVERIFIED, HELD = "BLOCKED", "UNVERIFIED", "HELD"
@@ -452,8 +460,9 @@ class Run:
         """The owner's stop, read LIVE (never the value the job started with): the repository variable S1_EXECUTOR_HOLD
         and the lane switch at current main. A non-empty hold turns this run OFF; a switch blob that is no longer the one
         this run verified stops it. A hold that cannot be read stops too (fail closed): 404 is the only "not set". Called
-        immediately before the intent post and immediately before the merge call; SHADOW makes the same reads, so the
-        SHADOW ticks prove the token can read the variable. What it cannot do: stop a merge call already sent."""
+        immediately before the intent post and immediately before the merge call. Liveness round: SHADOW takes the
+        job-start hold only (hold_now) and still reads the switch and contract here; LIVE reads the variable live, which
+        this job's token cannot do today (403, fail closed). What it cannot do: stop a merge call already sent."""
         self.hold_now(where)
         main, protected = self.main_now()                        # the switch and the contract as current main holds them, by a native git read
         blobs = self.native.tree_shas(main, [B.SWITCH, B.CONTRACT_FILE])
@@ -472,10 +481,18 @@ class Run:
             self.pins_at(main, where)
 
     def hold_now(self, where):
-        """S1_EXECUTOR_HOLD read live: any non-empty value turns this run OFF; 404 is the only "not set"; anything else
-        that is not a readable string stops (fail closed). Whether 404 can also mean "this token may not read
-        variables" is a pre-LIVE gate (section 0.2i enable steps): the owner sets the hold once in SHADOW and the
-        health line must read HELD with hold:intent."""
+        """The owner's hold. SHADOW (it never writes): the job-start value from the env only, never a live read. LIVE:
+        S1_EXECUTOR_HOLD read live: any non-empty value turns this run OFF; 404 is the only "not set"; anything else
+        that is not a readable string stops (fail closed). Liveness round: this job's token gets 403 here (it holds no
+        Variables permission and a workflow cannot grant one), so every LIVE run stops at its first hold read until the
+        pre-LIVE gate "live hold source" is solved; 403 is never "not set"."""
+        if self.mode != "LIVE":
+            value = self.env.get(HOLD_VARIABLE)
+            need(isinstance(value, str), HOLD_ENV_MISSING)
+            if value != "":
+                self.mode = "OFF"
+                raise Stop(f"hold:{where}", HELD)
+            return
         try:
             doc = self.gh.get(f"actions/variables/{HOLD_VARIABLE}")
             value = doc.get("value") if isinstance(doc, dict) else None
@@ -895,23 +912,18 @@ class Run:
         cfg = D.thin_config(self.files.get("switch"))
         if cfg != brief.get("thin") or cfg["executor"] != d["executor"] or cfg["review_policy"] != d["review_policy"]:
             return end("NOOP", None, None, "BRIEF_UNVERIFIED(switch)")
-        self.mode = D.effective_mode(cfg["executor"], env.get("S1_EXECUTOR_HOLD"))
         if cfg["executor"] == "OFF":
             return end("NOOP", None, None, "EXECUTOR_OFF(switch)")
+        # liveness round: the owner's hold as GitHub set it in this job's env at start (the workflow always passes
+        # vars.S1_EXECUTOR_HOLD; an unset variable is ""). A missing or non-string value is not "no hold": fail closed.
+        hold = env.get(HOLD_VARIABLE)
+        if not isinstance(hold, str):
+            self.stop_kind = UNVERIFIED
+            return end("NOOP", None, None, f"NOTHING_ACTIONABLE(skipped={HOLD_ENV_MISSING})")
+        self.mode = D.effective_mode(cfg["executor"], hold)
         if self.mode == "OFF":
-            # fix round 6 (#173/7194141485 item 5, pre-LIVE evidence): a hold already in the job's env stops every write at
-            # once (mode OFF), and the hold is STILL read natively, so a held tick proves (or disproves) that the token can
-            # read the variable: hold:start when the native read shows it, EXECUTOR_OFF(hold:env_only) when only the env did
-            try:
-                self.hold_now("start")
-            except Stop as stop:
-                self.stop_kind = stop.kind
-                return end("NOOP", None, None, f"NOTHING_ACTIONABLE(skipped={stop.reason})")
-            except Exception as exc:                             # noqa: BLE001  (unread: the env hold still holds)
-                self.stop_kind = UNVERIFIED
-                return end("NOOP", None, None, f"NOTHING_ACTIONABLE(skipped=hold_unreadable:start:{type(exc).__name__})")
-            self.mode = "OFF"
-            return end("NOOP", None, None, "EXECUTOR_OFF(hold:env_only)")
+            # a hold in the job's env stops every write at once; no native read (this token cannot read variables)
+            return end("NOOP", None, None, "EXECUTOR_OFF(hold:start)")
         clock = D.clock_gate(self.now_fn(), d["generated_at"], d["expires_at"], D.EXECUTE_MAX_AGE_MINUTES)
         if clock is not None:
             return end("NOOP", None, None, clock)
@@ -934,8 +946,8 @@ class Run:
         if published is not None:
             return end("NOOP", None, None, f"BRIEF_UNVERIFIED(publication:{published})")
         try:
-            # fix round 5 (#173/7190895883 D08): the owner's hold is read LIVE once at the start of every SHADOW and LIVE run,
-            # so every tick is evidence that the token can read it (and a hold set after the job's env snapshot stops it)
+            # fix round 5 (D08), liveness round: LIVE reads the hold live once at start (today: 403, fail closed, so LIVE
+            # cannot run); SHADOW uses the job-start value, which the check above already applied
             self.hold_now("start")
             comments = self.ledger()
             settled = self.reconcile(comments)
@@ -1106,6 +1118,9 @@ class Run:
                 return f"evaluated_unproven:job_active={name}"
             if j.get("conclusion") == "cancelled" and not started and j.get("started_at") is None:
                 continue
+            ex = [st for st in steps if st.get("name") == EXECUTE_STEP]
+            if j.get("status") == "completed" and len(ex) == 1 and ex[0].get("status") == "completed" and ex[0].get("conclusion") == "skipped":
+                continue                                         # liveness round (L1): failed before the execute step ran
             text = self.gh.text(f"actions/jobs/{j['id']}/logs")
             found = B.HEALTH_LINE.findall(text) if isinstance(text, str) else []
             try:
