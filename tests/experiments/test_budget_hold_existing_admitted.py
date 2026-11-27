@@ -12,7 +12,10 @@ from pathlib import Path
 # Full-repository CI uses pytest importlib collection; the sibling fixture directory
 # is not implicitly on sys.path in that mode.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from test_forecast_fair_allocation import SCRIPT, ctx, pair, run, forecasts, snapshot, module
+from test_forecast_fair_allocation import SCRIPT, ctx, pair, run, forecasts, snapshot as full_snapshot, module
+
+sys.path.insert(0, str(SCRIPT.resolve().parents[1] / 'api_agent'))
+import build_owner_bound_director_context as context_builder
 
 UTC = timezone.utc
 MODE = "BUDGET_HOLD_EXISTING_ADMITTED_ONLY_v1"
@@ -22,17 +25,65 @@ def clock(minutes):
     return (datetime.now(UTC) + timedelta(minutes=minutes)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def hold_run(repo, captured, *, attempt="1", receipt_updates=None, context_updates=None, extra=(), cap=5, fail_forecast=False):
+def snapshot(repo):
+    # Synthetic input Git objects are setup, not scientific writes. The
+    # separate custody tests assert source bytes and HEAD remain unchanged.
+    return {p: b for p, b in full_snapshot(repo).items()
+            if not p.startswith((".git/", "03_DAILY_CAPTURE_LOGS/"))}
+
+
+def capture_fixture(repo, captured):
+    def git(*args):
+        return subprocess.run(("git", "-C", str(repo), *args), check=True,
+                              capture_output=True, text=True, timeout=10).stdout.strip()
+    if not (repo / ".git").exists():
+        git("init", "-q", "-b", "main")
+        git("config", "user.name", "SyntheticFixture")
+        git("config", "user.email", "fixture@example.invalid")
+    previous = (datetime.fromisoformat(captured.replace("Z", "+00:00")) -
+                timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+    metrics = ctx(captured)["latest_capture"]["market_metrics"]
+    rows = []
+    for stamp, rid in ((previous, "prior-capture"), (captured, "hold-capture")):
+        when = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+        rel = module.HOLD_CAPTURE_ROOT / when.strftime("%Y/%m/%d") / (when.strftime("%H%M%S") + "_" + rid + ".json")
+        value = {"contract": "DAILY_RAW_CAPTURE_INDEX_v2", "captured_at_utc": stamp,
+                 "run_id": rid, "status": "COMPLETE", "market_metrics": metrics, "owners": []}
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        data = context_builder.canonical_bytes(value)
+        if path.exists():
+            assert path.read_bytes() == data
+        else:
+            path.write_bytes(data)
+        rows.append((rel, value))
+    git("add", "--", module.HOLD_CAPTURE_ROOT.as_posix())
+    if git("status", "--porcelain", "--", module.HOLD_CAPTURE_ROOT.as_posix()):
+        git("commit", "-qm", "synthetic capture sources")
+    return context_builder.build_context(rows), git("rev-parse", "HEAD")
+
+
+def hold_run(repo, captured, *, attempt="1", receipt_updates=None, context_updates=None, extra=(), cap=5, fail_forecast=False, capture_defect=None):
     root = repo / "research/experiment_lifecycle"
     folder = root / "budget_hold_inputs" / ("123-" + attempt)
     folder.mkdir(parents=True, exist_ok=True)
-    context = ctx(captured, "hold-capture")
-    context.update({"coverage": {"comparable_numeric_metrics": 2}, "delta_status": "DELTA_READY"})
+    context, head = capture_fixture(repo, captured)
     context.update(context_updates or {})
+    if capture_defect == "changed_bytes":
+        path = repo / context["latest_capture"]["path"]
+        path.write_bytes(path.read_bytes() + b" ")
+    elif capture_defect == "untracked_capture":
+        path = repo / context["latest_capture"]["path"]
+        path.with_name("untracked.json").write_bytes(path.read_bytes())
+    elif capture_defect == "missing_predecessor":
+        (repo / context["previous_capture"]["path"]).unlink()
+    elif capture_defect == "forged_metrics":
+        context["latest_capture"]["market_metrics"]["spot"]["BTCUSDT"]["close"] += 1
+        context["context_hash"] = context_builder.sha256({k: v for k, v in context.items() if k != "context_hash"})
     receipt = {
         "contract": "ROUTINE_API_BUDGET_DISPOSITION_v1",
         "lane": "director", "disposition": "HOLD", "reason": "API_RESERVE_GUARD_BLOCKED",
-        "run_id": "123", "run_attempt": attempt, "head_sha": "a" * 40,
+        "run_id": "123", "run_attempt": attempt, "head_sha": head,
         "paid_call_executed_here": False, "analysis_completed_here": False, "paid_authority": False,
         "guard_observations": [
             {"guard": "lane", "disposition": "PASS", "returncode": 0, "stdout_sha256": "b" * 64,
@@ -56,7 +107,7 @@ def hold_run(repo, captured, *, attempt="1", receipt_updates=None, context_updat
            "--admission-root", str(root / "admission"),
            "--admission-registry-output", str(root / "LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json"),
            "--max-new-forecasts", str(cap), *extra]
-    env = dict(os.environ, GITHUB_RUN_ID="123", GITHUB_RUN_ATTEMPT=attempt, GITHUB_SHA="a" * 40)
+    env = dict(os.environ, GITHUB_RUN_ID="123", GITHUB_RUN_ATTEMPT=attempt, GITHUB_SHA=head)
     if fail_forecast:
         # Execute the real CLI and inject an actual error at the forecast writer,
         # after the first observation is persisted. No mocked allocation.
@@ -350,3 +401,32 @@ class ExistingOnlyHold(unittest.TestCase):
                 self.assertNotEqual(paid.returncode, 0, paid.stdout)
                 self.assertIn("hold_publication_recovery_required", paid.stderr)
                 self.assertEqual({p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}, before)
+
+    def test_hold_capture_custody_rejects_rehashed_forgery_and_tree_changes(self):
+        for defect in ("changed_bytes", "untracked_capture", "missing_predecessor", "forged_metrics"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                self.seed(repo)
+                before = {p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}
+                result = hold_run(repo, clock(-1), capture_defect=defect)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertIn("existing_only_evidence_unverified", result.stderr)
+                self.assertEqual({p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}, before)
+
+    def test_hold_capture_binding_records_original_bytes_and_does_not_claim_guard_authentication(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = self.seed(repo)
+            captured = clock(-1)
+            context, head = capture_fixture(repo, captured)
+            paths = [repo / context[key]["path"] for key in ("latest_capture", "previous_capture")]
+            original = [p.read_bytes() for p in paths]
+            result = hold_run(repo, captured)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual([p.read_bytes() for p in paths], original)
+            rows = [json.loads(p.read_text()) for p in (root / "observations").rglob("*.json")]
+            source = next(r["source"] for r in rows if r["source"].get("mode") == MODE)
+            self.assertEqual(source["capture_checkout_head"], head)
+            self.assertEqual(source["latest_capture_bytes_sha256"], hashlib.sha256(original[0]).hexdigest())
+            self.assertEqual(source["previous_capture_bytes_sha256"], hashlib.sha256(original[1]).hexdigest())
+            self.assertIs(source["native_guard_custody_verified"], False)

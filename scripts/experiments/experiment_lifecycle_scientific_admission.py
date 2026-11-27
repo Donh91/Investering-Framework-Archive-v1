@@ -847,6 +847,113 @@ def retrospective_main(argv: list[str]) -> None:
 EXISTING_ONLY_MODE = "BUDGET_HOLD_EXISTING_ADMITTED_ONLY_v1"
 
 
+HOLD_CAPTURE_ROOT = Path("03_DAILY_CAPTURE_LOGS/captures")
+HOLD_CAPTURE_ENTRY = re.compile(
+    rb"100644 blob ([0-9a-f]{40})\t(03_DAILY_CAPTURE_LOGS/captures/"
+    rb"(?:LATEST\.json|[0-9]{4}/[0-9]{2}/[0-9]{2}/[A-Za-z0-9_.-]+\.json))"
+)
+
+
+def verify_hold_capture_context(root: Path, head: str, supplied: dict) -> dict:
+    """Recompute the base context from a complete, pinned public capture tree.
+
+    Object/checkout custody only: the native workflow must separately establish
+    that this head and the guard invocation are authorized. Never infer a
+    server clock or scientific admission from Git objects or environment.
+    """
+    from source_git_anchor import _git, SourceGitAnchorUnavailable
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "api_agent"))
+    import build_owner_bound_director_context as builder
+
+    try:
+        if (_git(root, "rev-parse", "HEAD").decode("ascii").strip() != head
+                or not re.fullmatch(r"[0-9a-f]{40}", head)):
+            raise ValueError("hold_capture_checkout_mismatch")
+        tree = _git(root, "--literal-pathspecs", "ls-tree", "-r", "-z",
+                    "--full-tree", head, "--", HOLD_CAPTURE_ROOT.as_posix())
+    except SourceGitAnchorUnavailable:
+        raise ValueError("hold_capture_tree_unavailable") from None
+    entries = tree.split(b"\0")
+    if not entries or entries.pop() != b"" or not 1 <= len(entries) <= 4096:
+        raise ValueError("hold_capture_tree_invalid")
+    expected = {}
+    for entry in entries:
+        match = HOLD_CAPTURE_ENTRY.fullmatch(entry)
+        if match is None:
+            raise ValueError("hold_capture_tree_entry_invalid")
+        key = match.group(2).decode("ascii")
+        if key in expected:
+            raise ValueError("hold_capture_tree_duplicate")
+        expected[key] = match.group(1).decode("ascii")
+    folder = root / HOLD_CAPTURE_ROOT
+    if not folder.is_dir() or folder.resolve() != folder:
+        raise ValueError("hold_capture_root_invalid")
+    actual = set()
+    for path in folder.rglob("*"):
+        if path.is_symlink() or path.resolve() != path:
+            raise ValueError("hold_capture_symlink")
+        if not path.is_dir():
+            if not path.is_file():
+                raise ValueError("hold_capture_file_invalid")
+            actual.add(path.relative_to(root).as_posix())
+            if len(actual) > 4096:
+                raise ValueError("hold_capture_census_budget")
+    if actual != set(expected):
+        raise ValueError("hold_capture_census_mismatch")
+    rows = []
+    hashes = {}
+    clocks, run_ids = set(), set()
+    total = 0
+    for key, blob in sorted(expected.items()):
+        path = root / key
+        size = path.stat().st_size
+        total += size
+        if size > 1_000_000 or total > 128_000_000:
+            raise ValueError("hold_capture_byte_budget")
+        raw = path.read_bytes()
+        if (len(raw) != size
+                or hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest() != blob):
+            raise ValueError("hold_capture_blob_mismatch")
+        row = strict_json_loads(raw.decode("utf-8"))
+        if not isinstance(row, dict):
+            raise ValueError("hold_capture_row_invalid")
+        if key == (HOLD_CAPTURE_ROOT / "LATEST.json").as_posix():
+            # The pointer is not itself a metric-bearing capture.
+            if row.get("contract") not in {"DAILY_LIVE_ANCHOR_LATEST_POINTER_v1",
+                                           "DAILY_RAW_CAPTURE_LATEST_POINTER_v1"}:
+                raise ValueError("hold_capture_pointer_invalid")
+            continue
+        rid, captured = row.get("run_id"), row.get("captured_at_utc")
+        if (row.get("contract") not in builder.SUPPORTED_CAPTURE_CONTRACTS
+                or not canonical_capture_clock(captured)
+                or not isinstance(rid, str) or not rid.strip()
+                or rid in run_ids or captured in clocks):
+            raise ValueError("hold_capture_identity_invalid")
+        run_ids.add(rid)
+        clocks.add(captured)
+        rows.append((Path(key), row))
+        hashes[key] = hashlib.sha256(raw).hexdigest()
+    rows.sort(key=lambda item: item[1]["captured_at_utc"])
+    rebuilt = builder.build_context(rows)
+    # HOLD intentionally consumes the original base context, without legacy
+    # research or paid/enriched output; exact canonical equality binds every
+    # derived metric, predecessor, clock, authority and coverage field.
+    if builder.canonical_bytes(rebuilt) != builder.canonical_bytes(supplied):
+        raise ValueError("hold_capture_context_mismatch")
+    latest, previous = rebuilt["latest_capture"], rebuilt["previous_capture"]
+    if not isinstance(previous, dict):
+        raise ValueError("hold_capture_predecessor_missing")
+    return {
+        "capture_checkout_head": head,
+        "capture_tree_file_count": len(expected),
+        "latest_capture_path": latest["path"],
+        "latest_capture_bytes_sha256": hashes[latest["path"]],
+        "previous_capture_path": previous["path"],
+        "previous_capture_bytes_sha256": hashes[previous["path"]],
+        "native_guard_custody_verified": False,
+    }
+
+
 def existing_only_source(root: Path, context_path: Path, hold_path: Path, now: datetime) -> tuple[dict, dict]:
     """Bind the original writer's current context and explicit clean HOLD; no model receipt."""
     evidence_root = root / "research/experiment_lifecycle/budget_hold_inputs"
@@ -918,7 +1025,9 @@ def existing_only_source(root: Path, context_path: Path, hold_path: Path, now: d
     if (type(comparable) is not int or comparable <= 0
             or context.get("delta_status") not in {"DELTA_READY", "DELTA_DEGRADED_STALE_PREDECESSOR"}):
         raise ValueError("hold_market_delta_unavailable")
+    capture_binding = verify_hold_capture_context(root, head, context)
     return context, {
+        **capture_binding,
         "mode": EXISTING_ONLY_MODE, "source_run_id": rid,
         "daily_output_sha256": None, "daily_receipt_sha256": None,
         "daily_context_sha256": base.sha(context),
