@@ -80,7 +80,6 @@ BRIEF_ENV = ("S1_BRIEF_RUN_ID", "S1_BRIEF_RUN_ATTEMPT", "S1_BRIEF_MAIN", "S1_BRI
 # evaluation.
 EXECUTOR_RUNS_PAGE = 30
 EVALUATION_READS = 6                   # executor run attempts read (FA-P1-01: per attempt); bound 1 + 2 * 6 = 13 calls
-EXECUTOR_RUN_MAX_MINUTES = 15          # the job's timeout (10) plus queueing: how far before the window a run may have started
 POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1",
          "S1_FALLBACK_CANDIDATE_v1", "S1_CODEX_RECALL_PENDING_v1", "S1_CODEX_RECALL_CLEARED_v1")
 MAX_POST_CHARS = 4000
@@ -1014,60 +1013,98 @@ class Run:
         return None
 
     def evaluated_before(self, run_id, attempt, generated_at):
-        """Trigger round: None when no OTHER executor run attempt evaluated brief run `run_id` attempt `attempt`, proven
-        from native reads; else "already_evaluated=<executor run>.<attempt>" or "evaluated_unproven:<why>".
-        Fix FA-P1-01 (#173 review of b09e0003): neither run-id order nor FIFO is assumed. Every executor run attempt
-        except this one (GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT) counts: the earlier attempts of THIS run id (a rerun), and
-        every other run of s1-executor.yml on main, lower or higher id, that ended or is still active after the brief
-        was generated and was not skipped, each of its attempts read by its own jobs list
-        (actions/runs/<id>/attempts/<n>/jobs) and that attempt's execute job log (its ONE S1_EXECUTOR_HEALTH line).
-        An attempt whose execute job is queued or waiting with no step started has not evaluated anything (it waits
-        for the concurrency group this job holds; when it runs it reads this run's log); any other active job, or
-        anything unread, is not proven. Read bound: 1 list + 2 reads for each of at most EVALUATION_READS attempts."""
+        """At-most-once over the complete, bounded original-creation window, not run-id order.
+        Every executor must first prove its own native original creation is inside that window.
+        A historical rerun or delayed dispatch cannot evaluate a fresh brief outside the census.
+        GitHub's created filter and exact total_count are required; a partial census fails closed.
+        Own run + list + at most EVALUATION_READS attempt jobs/log pairs (14 calls)."""
         own, own_attempt = str(self.env.get("GITHUB_RUN_ID") or ""), str(self.env.get("GITHUB_RUN_ATTEMPT") or "")
-        need(own.isdigit() and own_attempt.isdigit() and int(own_attempt) >= 1, "own_run_id")
+        need(own.isdigit() and int(own) > 0 and own_attempt.isdigit() and int(own_attempt) >= 1, "own_run_id")
         own, own_attempt = int(own), int(own_attempt)
         since = B.stamp(generated_at) - timedelta(seconds=B.RUN_POST_SLACK_SECONDS)
-        doc = self.gh.get(f"actions/workflows/{Path(B.EXECUTOR_WORKFLOW_PATH).name}/runs", {"branch": "main", "per_page": EXECUTOR_RUNS_PAGE})
-        rows = doc.get("workflow_runs") if isinstance(doc, dict) else None
-        if not isinstance(rows, list) or not all(isinstance(r, dict) and type(r.get("id")) is int for r in rows):
-            return "evaluated_unproven:runs_unreadable"
-        attempts = [(own, n) for n in range(1, own_attempt)]    # a rerun of this run: its earlier attempts, always
+        now = self.now_fn()
+
+        def native_run(row):
+            return (isinstance(row, dict) and type(row.get("id")) is int and row["id"] > 0
+                    and row.get("path") == B.EXECUTOR_WORKFLOW_PATH and row.get("head_branch") == "main"
+                    and row.get("event") in B.EXECUTOR_EVENTS
+                    and isinstance(row.get("repository"), dict) and row["repository"].get("full_name") == B.REPO
+                    and isinstance(row.get("head_repository"), dict) and row["head_repository"].get("full_name") == B.REPO
+                    and type(row.get("run_attempt")) is int and row["run_attempt"] >= 1)
+
+        own_run = self.gh.get(f"actions/runs/{own}")
+        if (not native_run(own_run) or own_run["id"] != own or own_run["run_attempt"] != own_attempt
+                or own_run.get("event") != self.env.get("GITHUB_EVENT_NAME") or own_run.get("status") != "in_progress"):
+            return "evaluated_unproven:own_run_binding"
         try:
-            if len(rows) >= EXECUTOR_RUNS_PAGE and min(B.stamp(r["created_at"]) for r in rows) >= since - timedelta(minutes=EXECUTOR_RUN_MAX_MINUTES):
-                return "evaluated_unproven:runs_page"           # the window may reach past this page
+            own_created = B.stamp(own_run["created_at"])
+            if own_created < since:
+                return "executor_run_outside_brief_window"
+            if own_created > now:
+                return "evaluated_unproven:own_run_clock"
+        except (KeyError, TypeError, ValueError, AttributeError):
+            return "evaluated_unproven:own_run_clock"
+
+        doc = self.gh.get(f"actions/workflows/{Path(B.EXECUTOR_WORKFLOW_PATH).name}/runs",
+                          {"branch": "main", "created": ">=" + B.iso(since), "per_page": EXECUTOR_RUNS_PAGE})
+        rows = doc.get("workflow_runs") if isinstance(doc, dict) else None
+        if not isinstance(rows, list) or not all(native_run(r) for r in rows):
+            return "evaluated_unproven:runs_unreadable"
+        total = doc.get("total_count")
+        if type(total) is not int or total != len(rows) or len(rows) > EXECUTOR_RUNS_PAGE:
+            return "evaluated_unproven:runs_page"
+        if len({r["id"] for r in rows}) != len(rows):
+            return "evaluated_unproven:runs_duplicate"
+        own_rows = [r for r in rows if r["id"] == own]
+        if len(own_rows) != 1 or any(own_rows[0].get(k) != own_run.get(k) for k in
+                                     ("created_at", "run_attempt", "event", "status")):
+            return "evaluated_unproven:own_run_census"
+        attempts = []
+        try:
             for r in rows:
-                if r["id"] == own or (r.get("status") == "completed" and r.get("conclusion") == "skipped"):
-                    continue
-                if r.get("status") == "completed" and B.stamp(r["updated_at"]) < since:
-                    continue                                     # ended before the brief was generated
-                last = r.get("run_attempt", 1)
-                if type(last) is not int or last < 1:
-                    return f"evaluated_unproven:run_attempt={r['id']}"
-                attempts += [(r["id"], n) for n in range(1, last + 1)]
-        except (KeyError, TypeError, ValueError):
+                created = B.stamp(r["created_at"])
+                if created < since or created > now:
+                    return "evaluated_unproven:run_row_clock"
+                last = r["run_attempt"]
+                if r["id"] == own:
+                    last -= 1
+                # Do not drop a run because only its latest attempt was skipped/cancelled.
+                for n in range(1, last + 1):
+                    if len(attempts) >= EVALUATION_READS:
+                        return "evaluated_unproven:too_many_runs"
+                    attempts.append((r["id"], n, r))
+        except (KeyError, TypeError, ValueError, AttributeError):
             return "evaluated_unproven:run_row"
-        if len(attempts) > EVALUATION_READS:
-            return "evaluated_unproven:too_many_runs"
-        for rid, n in sorted(attempts, reverse=True):
+
+        for rid, n, row in sorted(attempts, key=lambda a: (a[0], a[1]), reverse=True):
             name = f"{rid}.{n}"
             jobs, ok = self.gh.pages(f"actions/runs/{rid}/attempts/{n}/jobs", key="jobs", max_pages=1)
-            job = [j for j in jobs or [] if isinstance(j, dict) and j.get("name") == "execute"]
-            if not ok or len(job) > 1:
+            if (not ok or not isinstance(jobs, list) or any(not isinstance(j, dict) or not isinstance(j.get("name"), str)
+                                                          for j in jobs)):
                 return f"evaluated_unproven:jobs={name}"
-            if not job or job[0].get("conclusion") == "skipped":
-                continue                                         # the job never ran: nothing was evaluated
+            job = [j for j in jobs if j["name"] == "execute"]
+            if len(job) != 1:
+                # A not-yet-started current attempt or an explicitly skipped current attempt can have no job.
+                if not jobs and n == row["run_attempt"] and (row.get("status") in ("queued", "waiting", "pending", "requested")
+                        or (row.get("status") == "completed" and row.get("conclusion") == "skipped")):
+                    continue
+                return f"evaluated_unproven:jobs={name}"
             j = job[0]
-            started = any(isinstance(st, dict) and st.get("status") in ("in_progress", "completed") and st.get("conclusion") != "skipped"
-                          for st in j.get("steps") or [])
+            if (type(j.get("id")) is not int or j["id"] <= 0 or j.get("run_id") != rid
+                    or j.get("run_attempt") != n):
+                return f"evaluated_unproven:job={name}"
+            if j.get("status") == "completed" and j.get("conclusion") == "skipped":
+                continue
+            steps = j.get("steps")
+            if not isinstance(steps, list) or any(not isinstance(st, dict) or not isinstance(st.get("status"), str) for st in steps):
+                return f"evaluated_unproven:job_steps={name}"
+            started = any(st.get("status") in ("in_progress", "completed") and st.get("conclusion") != "skipped" for st in steps)
             if j.get("status") != "completed":
                 if j.get("status") in ("queued", "waiting", "pending", "requested") and not started:
-                    continue                                     # waiting for the group: it has not read the brief
+                    continue
                 return f"evaluated_unproven:job_active={name}"
-            if j.get("conclusion") == "cancelled" and not started:
+            if j.get("conclusion") == "cancelled" and not started and j.get("started_at") is None:
                 continue
-            if type(j.get("id")) is not int:
-                return f"evaluated_unproven:job={name}"
             text = self.gh.text(f"actions/jobs/{j['id']}/logs")
             found = B.HEALTH_LINE.findall(text) if isinstance(text, str) else []
             try:
@@ -1076,10 +1113,17 @@ class Run:
                 line = None
             if not isinstance(line, dict):
                 return f"evaluated_unproven:health={name}"
-            result, brief_run = str(line.get("result") or ""), line.get("brief_run")
-            if brief_run in (None, "") and not result.startswith("NO_DECISION("):
-                return f"evaluated_unproven:brief_run={name}"   # a crash line names no brief: it may have been this one
-            if str(brief_run) == str(run_id) and line.get("brief_attempt") in (None, "", str(attempt)) and not result.startswith("NO_DECISION("):
+            result, brief_run = line.get("result"), line.get("brief_run")
+            if brief_run in (None, "") and not (isinstance(result, str) and result.startswith("NO_DECISION(")):
+                return f"evaluated_unproven:brief_run={name}"
+            if (line.get("v") != 1 or str(line.get("run")) != str(rid) or str(line.get("attempt")) != str(n)
+                    or not isinstance(result, str) or not result):
+                return f"evaluated_unproven:health_binding={name}"
+            brief_attempt = line.get("brief_attempt")
+            if (brief_attempt not in (None, "") and (not str(brief_attempt).isdigit() or int(brief_attempt) < 1)
+                    or brief_run not in (None, "") and (not str(brief_run).isdigit() or int(brief_run) < 1)):
+                return f"evaluated_unproven:health_binding={name}"
+            if str(brief_run) == str(run_id) and (brief_attempt in (None, "") or str(brief_attempt) == str(attempt)) and not result.startswith("NO_DECISION("):
                 return f"already_evaluated={name}"
         return None
 
