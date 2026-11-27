@@ -312,10 +312,17 @@ for bad in ([], [comment(user={"login":receipt.OWNER_LOGIN,"id":999})],
             [comment(created_at=None,updated_at=None)],
             [comment({**data,"readback":{"merge_sha":"b"*40,"changed_blobs_match":True}})],
             [comment(),comment({**data,"outcome":{"status":"VERIFIED","reason":"conflicts"}},id=46)],
-            [comment(performed_via_github_app={"id":1})]):
+            [comment(performed_via_github_app={"id":1})],
+            [comment(user={"login":"not-owner","id":receipt.OWNER_ID})],
+            [comment(author_association="MEMBER")]):
     result=receipt.attach_owner_receipt(pilot,lambda:bad)
     assert result["execution_proof"]["native_run_id"] is None, bad
     assert result["execution_proof"]["scientific_outcome"] is None
+    # Rejection must be observable: no accepted attestation, status ABSENT or CONFLICT.
+    assert result["execution_proof"]["receipt_status"] in ("ABSENT","CONFLICT"), (bad, result["execution_proof"]["receipt_status"])
+    assert "wire0_historical_attestation" not in result, bad
+assert receipt.attach_owner_receipt(pilot,lambda:[comment({**data,"readback":{"merge_sha":"b"*40,"changed_blobs_match":True}})])["execution_proof"]["receipt_status"]=="CONFLICT"
+assert receipt.attach_owner_receipt(pilot,lambda:[comment(),comment({**data,"outcome":{"status":"VERIFIED","reason":"conflicts"}},id=46)])["execution_proof"]["receipt_status"]=="CONFLICT"
 accepted=receipt.attach_owner_receipt(pilot,lambda:[comment()])
 proof=accepted["execution_proof"]
 assert proof["action_id"]==receipt.ACTION_ID and proof["receipt_comment_id"]==45
@@ -358,6 +365,8 @@ assert receipt.verify_native_metadata(data,native_get)=="NATIVE_METADATA_MISMATC
 assert receipt.verify_native_metadata(native_data,lambda p: native_pr if p=="pulls/2357" else {**native_run,"head_sha":"b"*40})=="NATIVE_RUN_HEAD_DIFFERS_CUSTODY_UNVERIFIED"
 assert receipt.verify_native_metadata(native_data,lambda p: native_pr if p=="pulls/2357" else {**native_run,"head_sha":"invalid"})=="NATIVE_METADATA_MISMATCH"
 assert receipt.verify_native_metadata(native_data,lambda p: {**native_pr,"base":"invalid"} if p=="pulls/2357" else native_run)=="NATIVE_METADATA_MISMATCH"
+assert receipt.verify_native_metadata(native_data,lambda p: {**native_pr,"merged":False} if p=="pulls/2357" else native_run)=="NATIVE_METADATA_MISMATCH"
+assert receipt.verify_native_metadata(native_data,lambda p: native_pr if p=="pulls/2357" else {**native_run,"path":".github/workflows/other.yml"})=="NATIVE_METADATA_MISMATCH"
 replaced_comment=receipt.attach_owner_receipt(pilot,lambda:[comment(id=46)],previous=accepted)
 assert replaced_comment["execution_proof"]["receipt_status"]=="CONFLICT"
 assert replaced_comment["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
