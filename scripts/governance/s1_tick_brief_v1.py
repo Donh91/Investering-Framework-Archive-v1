@@ -1101,8 +1101,7 @@ def verified_bot_requests(head, pr, comments, ledger, run_of, log_of, now):
     return valid
 
 
-def codex_review(head, pr, commits, commits_complete, comments, reviews, inline, complete, now, silent_hours,
-                 verified_bot_ids=()):
+def codex_review(head, pr, commits, commits_complete, comments, reviews, inline, complete, now, silent_hours):
     """REVIEW_ADMISSION (i) through the repository's own finality rule, plus the request state rule 3 needs."""
     out = {"status": "NONE", "requested_after_head": False}
     if not complete:
@@ -1110,7 +1109,11 @@ def codex_review(head, pr, commits, commits_complete, comments, reviews, inline,
     try:
         head_time = head_commit_time(commits, head) if commits_complete else None
         requests = [codex_finality.effective_request_time(c) for c in comments
-                    if codex_finality.request_row(c, verified_bot_ids) and re.search(r"(?mi)^\s*@codex\s+review\b", str(c.get("body") or ""))]
+                    if not codex_finality.is_codex(c) and re.search(r"(?mi)^\s*@codex\s+review\b", str(c.get("body") or ""))]
+        # option B review (Claude, #2377): EVERY non-Codex `@codex review` stays a request here, proven bot request or
+        # not. In this function a request can only stop (pending, the "nobody asked" offline signal, finality after the
+        # latest request); the offline signal itself rests on the owner's unedited request below. An executor-verified
+        # bot request therefore needs no special case, and ignoring an unverified one would fail open.
         after = [r for r in requests if head_time is not None and r > head_time]
         if after:
             last = max(after)
@@ -1140,7 +1143,7 @@ def codex_review(head, pr, commits, commits_complete, comments, reviews, inline,
                     out["offline"] = {"signal": "UNAVAILABLE", "at": iso(max(limits)), "request_at": iso(asked)}
                 elif out["status"] == "SILENT" and (now - asked).total_seconds() > silent_hours * 3600 and not said and not any(t > asked for t in other):
                     out["offline"] = {"signal": "SILENT", "at": iso(asked), "request_at": iso(asked)}
-        decision = codex_finality.decision(head, comments, reviews, inline, verified_bot_ids)
+        decision = codex_finality.decision(head, comments, reviews, inline)
     except (ValueError, KeyError, TypeError):
         return {"status": "NOT_PROVEN", "why": "review_unreadable"}
     if decision.get("technical_review_accepted") is True:
@@ -1511,10 +1514,7 @@ def pr_entry(pr, data, ctx):
     e["thin"]["data_route"] = decision_v1.data_route(pr, files, fc, commits, cc, ctx.get("allowlist"))[0]   # addendum c: route (c) scope
     e["thin"]["p01_named"] = p01_named(comments if rc else None, reviews if rc else None, (data.get("inline") or []) if rc else None)   # route (c): PARK on a P0/P1 anybody wrote
     e["writer"] = concurrent_writer(commits, cc, comments, head, ctx["now"], ctx["quiet_minutes"]) if rc else "comments_unreadable"
-    verified = verified_bot_requests(head, n, comments, ctx.get("review_ledger", []),
-                                     ctx.get("review_run_of", lambda _: None), ctx.get("review_log_of", lambda _: None), ctx["now"])
-    cx = codex_review(head, pr, commits, cc, comments, reviews, data.get("inline") or [], rc, ctx["now"],
-                      ctx["budgets"]["codex_silent_hours"], verified)
+    cx = codex_review(head, pr, commits, cc, comments, reviews, data.get("inline") or [], rc, ctx["now"], ctx["budgets"]["codex_silent_hours"])
     if e["author"].get("codex") and cx.get("status") == "FINAL":
         cx = {"status": "INADMISSIBLE", "why": "codex_authored_head"}
     threads = data.get("threads")
@@ -2603,10 +2603,7 @@ def build_brief(snap):
     ctx = {"repo_id": repo_id, "main_sha": snap["main_sha"], "policy": snap["policy"], "tuples": params["required_job_tuples"],
            "gate_isolation_live": snap.get("gate_isolation") == "LIVE", "now": now, "budgets": snap["budgets"],
            "quiet_minutes": params["foreign_commit_quiet_minutes"], "push_filters": snap.get("push_filters"),
-           "allowlist": decision_v1.fallback_allowlist(switch),
-           "review_ledger": comments if ledger_ok else [],
-           "review_run_of": lambda rid: (snap.get("review_dispatch_runs") or {}).get(str(rid)),
-           "review_log_of": lambda rid: (snap.get("review_dispatch_logs") or {}).get(str(rid))}
+           "allowlist": decision_v1.fallback_allowlist(switch)}
     entries, drafts = [], []
     identity_ok = (snap.get("repo") or {}).get("full_name") == REPO and (snap.get("repo") or {}).get("fork") is False and isinstance(repo_id, int)
     for pr in sorted(snap.get("pulls") or [], key=lambda p: p.get("number") or 0):
@@ -3543,21 +3540,6 @@ def collect(gh, root, head_root, now, run):
     r2, c2 = gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
     snap.update(rulesets_1=r1, rulesets_2=r2, rulesets_complete=c1 and c2)
     snap["pulls"], snap["pulls_complete"] = gh.pages("pulls", {"state": "open", "sort": "created", "direction": "asc"}, max_pages=5)
-    # Bounded native proof reads for current open exact heads, never a proof from the ledger alone.
-    review_runs, review_logs = RunReader(gh), LogReader(gh)
-    open_heads = {(str(pr.get("number")), (pr.get("head") or {}).get("sha")) for pr in snap["pulls"]}
-    if snap["issue_comments_complete"]:
-        try:
-            receipts = [c for c in snap["issue_comments"] if first_line_token(c.get("body")) == REVIEW_RECEIPT
-                        and is_s1_unedited(c) and (fields(c.get("body")).get("pr"), fields(c.get("body")).get("head")) in open_heads]
-            for c in sorted(receipts, key=lambda r: r.get("id") or 0, reverse=True)[:2]:
-                rid = executor_run(c.get("body"))
-                if rid is not None:
-                    review_runs(rid)
-                    review_logs(rid)
-        except StopReading as exc:
-            errors.append(exc.reason)
-    snap["review_dispatch_runs"], snap["review_dispatch_logs"] = review_runs.docs, review_logs.docs
     if snap["issue_comments_complete"]:
         try:                                                     # fix round 7 (R6-SH4): native edit records, fail closed
             read_gap_native(gh, snap["issue_comments"])

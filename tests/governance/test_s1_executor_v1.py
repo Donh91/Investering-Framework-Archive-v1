@@ -413,9 +413,13 @@ class LiveMerge(unittest.TestCase):
         self.assertEqual(re.findall(r'_request\("(\w+)", self\.gh\.url\(f?"([^"]+)"\)', SOURCE),
                          [("POST", "issues/{B.OWNER_ISSUE}/comments"), ("POST", "issues/{pr}/comments"), ("POST", "issues/{pr}/labels"), ("DELETE", "issues/{pr}/labels/{D.RECALL_LABEL}"),
                           ("PUT", "pulls/{pr}/merge")])
-        self.assertEqual(SOURCE.count("_request("), 5)
+        # option B (owner decision 2026-11-27): the fifth write is the exact-head review request on the PR itself
+        self.assertEqual(SOURCE.count("._request("), 5)
         body_of_write = SOURCE[SOURCE.index("    def write(self, kind, **kw):"):SOURCE.index("    def say(self, line):")]
-        self.assertEqual(body_of_write.count("_request("), 5)
+        self.assertEqual(body_of_write.count("._request("), 5)
+        self.assertIn('raw, _h = self.gh._request("POST", self.gh.url(f"issues/{pr}/comments"), {"body": body})', body_of_write)
+        review = body_of_write[body_of_write.index('if kind == "review":'):body_of_write.index('if kind == "label":')]
+        self.assertIn("body = B.review_dispatch_body(B.REVIEW_REQUEST, pr, head, rid, attempt, iid)", review)   # never a caller's text
         self.assertIn('{"labels": [D.RECALL_LABEL]}', body_of_write)
         for verb in ('"PATCH"', "update-branch", "/dispatches", "git/refs", "/reviews\", {", "contents/"):
             self.assertNotIn(verb, SOURCE, verb)

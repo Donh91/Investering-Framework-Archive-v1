@@ -450,9 +450,7 @@ class Run:
         risk = D.risk_max(floor, facts["risk"], item.get("risk"))
         data_ok = D.data_route(pr, files, True, commits, cc, D.fallback_allowlist(self.files["switch"]))[0]   # addendum c, from THIS run's reads
         author = B.authorship(pr, commits, cc, prc)
-        verified = B.verified_bot_requests(head, n, prc, comments, self.run_of, self.log_of, now)
-        cx = B.codex_review(head, pr, commits, cc, prc, reviews, inline, True, now,
-                            self.files["budgets"]["codex_silent_hours"], verified)
+        cx = B.codex_review(head, pr, commits, cc, prc, reviews, inline, True, now, self.files["budgets"]["codex_silent_hours"])
         if author.get("codex") and cx.get("status") == "FINAL":
             cx = {"status": "INADMISSIBLE"}
         candidates = B.fallback_candidates(comments).get((n, head), [])
@@ -956,7 +954,7 @@ class Run:
                 return pr, head
         return None
 
-    def verify_review_request(self, pr, head, ledger, own_intent=None):
+    def verify_review_dispatch(self, pr, head, ledger, own_intent=None):
         row = self.review_head(pr, head)
         files, fc = self.gh.pages(f"pulls/{pr}/files", max_pages=31)
         need(fc and len(files) == row.get("changed_files"), "review_files_unreadable")
@@ -1044,6 +1042,19 @@ class Run:
                     continue
         return False
 
+    def review_or_skip(self, ledger):
+        """Claude fix on #2377: the review dispatch is secondary to the decision. Until this run wrote its review intent,
+        a stop or an unreadable read in the dispatch checks never replaces the decision's NOOP result, its health or its
+        stop kind; the reason is printed on its own line. After the intent (LIVE only) every stop keeps its old meaning:
+        the open intent is an alarm and the head is never requested again."""
+        try:
+            return self.dispatch_review(ledger)
+        except Exception as exc:                                 # noqa: BLE001  (Stop, StopReading or an unreadable fact)
+            if any(w[0] == "comment" and w[1] == B.REVIEW_INTENT for w in self.writes):
+                raise
+            self.say(f"S1_EXECUTOR_REVIEW SKIPPED({getattr(exc, 'reason', type(exc).__name__)})")
+            return None
+
     def dispatch_review(self, ledger):
         cfg = self.files["switch"]
         route = cfg.get("review_dispatch")
@@ -1058,7 +1069,7 @@ class Run:
         probe = cfg.get("review_dispatch_probe")
         if route == "BOT_PROBE" and (not isinstance(probe, dict) or (probe.get("pr"), probe.get("head")) != target):
             return None
-        self.verify_review_request(pr, head, ledger)
+        self.verify_review_dispatch(pr, head, ledger)
         if route == "OWNER_ACTION":
             return f"WOULD_OWNER_ACTION_REVIEW(pr={pr},head={head[:8]})"
         if self.mode != "LIVE" or route == "SHADOW":
@@ -1078,7 +1089,7 @@ class Run:
         need(type(iid) is int, "review_intent_unreadable")
         self.pending = f"review_intent_unsettled(pr={pr},head={head[:8]},id={iid})"
         fresh = self.ledger()
-        self.verify_review_request(pr, head, fresh, iid)
+        self.verify_review_dispatch(pr, head, fresh, iid)
         need(self.published(self.body) is None, "review_publication_changed")
         self.review_reservation = (pr, head, iid)
         request = self.write("review", pr=pr, head=head, intent=iid)
@@ -1171,7 +1182,7 @@ class Run:
             if d["action"] == "MERGE":
                 result = self.do_merge(comments)
                 return end("MERGE" if result.startswith("MERGED") else "NOOP", d["pr"], d["head"], result)   # only a read-back merge is a MERGE line
-            requested = self.dispatch_review(comments)
+            requested = self.review_or_skip(comments)
             if requested is not None:
                 return end("NOOP", None, None, requested)
             return end("NOOP", None, None, d["result"])
