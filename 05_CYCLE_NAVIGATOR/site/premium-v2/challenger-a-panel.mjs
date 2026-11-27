@@ -16,7 +16,8 @@ export function validateChallengerPublic(payload, now = Date.now()) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return refuse('MISSING_PUBLICATION');
   if (payload.contract !== CHALLENGER_A_PUBLIC_CONTRACT ||
       payload.publication_status !== 'ISSUED_FROZEN' ||
-      payload.visibility !== 'SHADOW_ONLY') return refuse('CONTRACT_OR_AUTHORITY_MISMATCH');
+      payload.visibility !== 'SHADOW_ONLY' ||
+      !['official_forecast','portfolio_execution','trading','promotion'].every(k=>payload.authority?.[k]===false)) return refuse('CONTRACT_OR_AUTHORITY_MISMATCH');
   const src=payload.source, i=payload.issuance;
   if (!src || !SHA40.test(src.blob_sha || '') || !SHA40.test(src.first_in_main_commit || '') ||
       !date(src.first_in_main_utc) || !SHA64.test(src.sha256 || '')) return refuse('MISSING_SOURCE_ATTESTATION');
@@ -24,7 +25,7 @@ export function validateChallengerPublic(payload, now = Date.now()) {
       i.formula_version !== 'A1' || !SHA64.test(i.issuance_sha256 || '') ||
       i.authority?.research_only !== true || i.authority?.official_forecast !== false ||
       i.authority?.trading !== false || i.authority?.promotion !== false ||
-      !WEEK.test(i.week || '') || i.week < '2026-W47' || !date(i.issue_clock_utc))
+      !WEEK.test(i.week || '') || i.week < '2026-W47' || payload.score_week!==i.week || !date(i.issue_clock_utc))
     return refuse('FORECAST_CONTRACT_MISMATCH');
   const issue=Date.parse(i.issue_clock_utc),known=Date.parse(src.first_in_main_utc);
   const t=typeof now==='number'?now:Date.parse(now);
@@ -48,7 +49,7 @@ export function validateChallengerPublic(payload, now = Date.now()) {
       const start=Date.parse(d?.scored_from_utc),end=Date.parse(d?.end_utc);
       const expectedDayStart=monday+(k-1)*86400000,expectedEnd=expectedDayStart+86400000;
       if (d?.day!==k || !date(d.scored_from_utc) || !date(d.end_utc) ||
-          end!==expectedEnd || start<expectedDayStart || start>=end ||
+          end!==expectedEnd || start!==Math.max(expectedDayStart,Math.ceil(issue/3600000)*3600000) || start>=end ||
           start<known || start<issue ||
           !Array.isArray(range) || !Array.isArray(close) ||
           range.length!==2 || close.length!==2 ||
@@ -59,7 +60,16 @@ export function validateChallengerPublic(payload, now = Date.now()) {
     }
     days[asset]=good;
   }
-  return {ok:true,week:i.week,issue_utc:i.issue_clock_utc,known_utc:src.first_in_main_utc,
+  const c=payload.comparison;
+  const scoredAt=Date.parse(c?.first_in_main_utc);
+  const maturity=monday+7*86400000;
+  const comparison=c?.week===i.week && c.issuance_sha256===i.issuance_sha256 &&
+    SHA40.test(c.first_in_main_commit || '') && SHA40.test(c.blob_sha || '') &&
+    date(c.first_in_main_utc) && scoredAt>=maturity && scoredAt<=maturity+2*86400000 &&
+    scoredAt<=t && Number.isInteger(c.n) && c.n>=1 && c.n<=14 &&
+    c.b1_status==='NO_SAME_ROW_IMMUTABLE_SCORE' &&
+    ['CN','A','EQW_PRIOR'].every(k=>numeric(c.scores?.[k])) ? c : null;
+  return {ok:true,comparison,week:i.week,issue_utc:i.issue_clock_utc,known_utc:src.first_in_main_utc,
     source_commit:src.first_in_main_commit,source_sha:src.sha256,issuance_sha:i.issuance_sha256,
     days,prices:{BTC:i.assets.BTC.P0,ETH:i.assets.ETH.P0}};
 }
@@ -118,7 +128,8 @@ export function mountChallengerA(graphPanel,getLang=()=>document.documentElement
  const data=element('div','cn-challenger-a-data');data.hidden=true;
  const meta=element('p','cn-challenger-a-meta');
  const grids=element('div','cn-challenger-a-assets');
- data.append(meta,grids);
+ const scorecard=element('section');
+ data.append(meta,scorecard,grids);
  const foot=element('p','cn-challenger-a-footnote');
  const link=element('a','cn-challenger-a-link');
  link.href=SOURCE_URL;link.target='_blank';link.rel='noopener noreferrer';
@@ -135,6 +146,21 @@ export function mountChallengerA(graphPanel,getLang=()=>document.documentElement
   if (!validated) {heading.textContent=t.pending;detail.textContent=t.unavailable;return}
   meta.textContent=t.available+' · '+validated.week+' · '+t.month+': '+
     stamp(validated.issue_utc)+' · '+t.published+': '+stamp(validated.known_utc);
+  scorecard.replaceChildren();
+  const c=validated.comparison;
+  if(c){
+   const heading=element('h4',null,lang==='da'?'Moden prognosesammenligning':'Mature forecast comparison');
+   const basis=lang==='da'?'Daglige lukkekurser på samme rækker, intervalscore (lavere er bedre)':
+      'Daily closes on identical rows, interval score (lower is better)';
+   const format=new Intl.NumberFormat(lang==='da'?'da-DK':'en-US',{maximumSignificantDigits:4});
+   const summary=element('p',null,'CN '+format.format(c.scores.CN)+' · B1 '+
+     (lang==='da'?'mangler sammenlignelig score':'no comparable score')+
+     ' · A '+format.format(c.scores.A)+' · EQW_PRIOR '+format.format(c.scores.EQW_PRIOR));
+   const source=element('a',null,lang==='da'?'Fastlåst score':'Pinned score');
+   source.href='https://github.com/Donh91/Investering-Framework-Archive-v1/blob/'+c.first_in_main_commit+
+     '/06_RESEARCH_LAB/task2_challenger_a/scored/'+c.week.replace('-','/')+'/CHALLENGER_A_FIRST_MATURE_SCORE.json';
+   scorecard.append(heading,element('p',null,basis+' · N='+c.n),summary,source);
+  }
   grids.replaceChildren();
   for(const asset of ['BTC','ETH']){
    const article=element('article','cn-challenger-a-asset');
