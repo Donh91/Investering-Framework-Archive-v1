@@ -39,6 +39,10 @@ When a new ChatGPT/GitHub research thread is asked to do an **extremely thorough
 
 This is a **Research Lab procedural routing reference**, not a change to the pinned .agents skill or S1 bootstrap and not an additional active test, agent, scheduler, scoring engine, market authority, automatic paid model mission or license to bypass original research/CI/governance gates. Research may legitimately end at REJECT / DEDUP / SOURCE_BLOCKED. A research PR is not a production implementation and cannot self-approve or self-merge. Agents must fetch current source from main; these Markdown links do not automatically install the skill in ChatGPT.
 
+## Execution First - work internally before handoff
+
+For an already-authorized material research or development assignment, apply the [Execution First refinement in the existing end-to-end method](methods/RESEARCH_PACKAGE_TO_REVIEW_PR_v1.md#execution-first---owner-directed-procedure-refinement-2026-11-25). Research, develop, execute tests, self-red-team, repair and retest in a coherent slice before consolidated delivery and required final review. Prefer actual artifacts over repeated intermediate reports; if blocked, finish other permitted independent work and leave an exact resume checkpoint. A simple question needs no extra ceremony. Self-review is not independent review; original science/admission, permissions, scope, active-lane caps, release and safety gates still bind. Do not broaden read-only tasks or infer default pilot activation from this link.
+
 ## High-value mission seeds
 
 ### 1. Astra qualification suite

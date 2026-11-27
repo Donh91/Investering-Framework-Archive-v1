@@ -78,8 +78,13 @@ class Gh:
         if path.startswith("actions/runs/"):
             return self.prev_run
         if path == "commits":
-            assert params == {"sha": self.h.main, "per_page": B.C1B_WINDOW}, params
-            return self.h.page()
+            assert params["per_page"] == B.C1B_WINDOW and set(params) == {"sha", "per_page"}, params
+            if params["sha"] == self.h.main:
+                return self.h.page()[:B.C1B_WINDOW]            # fix round 6: one page of the newest C1B_WINDOW commits, as GitHub answers
+            rows = self.h.page()                               # fix round 6: a later page starts at the commit the walk stopped at
+            at = next((k for k, r in enumerate(rows) if r["sha"] == params["sha"]), None)
+            assert at is not None, params
+            return rows[at:at + B.C1B_WINDOW]
         if path.startswith("git/trees/"):
             key = path.split("/")[-1]
             entries = self.h.trees[key]
@@ -102,7 +107,7 @@ def previous(main, c1b="checked", run_id=554, edited=False, halt=None):
         brief.pop("c1b")
     brief["generated_at"] = TB.ts(65)
     issue = {"number": 3, "user": dict(TB.BOT), "body": B.render(brief), "updated_at": TB.ts(30 if edited else 64)}
-    run = {"id": run_id, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_branch": "main", "head_sha": main,
+    run = {"id": run_id, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_repository": {"full_name": B.REPO}, "event": "schedule", "run_attempt": 1, "head_branch": "main", "head_sha": main,
            "status": "completed", "conclusion": "success", "run_started_at": TB.ts(70), "updated_at": TB.ts(60)}
     return issue, run
 
@@ -111,6 +116,15 @@ def c1b(history, anchor, ledger=(), max_calls=B.C1B_MAX_CALLS, **kw):
     issue, run = previous(anchor, **{k: kw.pop(k) for k in ("c1b", "edited", "halt") if k in kw}) if anchor else (None, None)
     gh = Gh(history, issue, run, **kw)
     return B.read_c1b(gh, history.main, list(ledger) if ledger is not None else None, NOW, max_calls=max_calls), gh
+
+
+def accept_comment(cid, gap, minutes_ago=5, **native):
+    """Fix round 7 (R6-SH4): the owner's exact S1_C1B_GAP_ACCEPTED_v1 for this gap detection, with GitHub's native edit
+    record as collect() attaches it (never edited unless `native` says otherwise)."""
+    row = TB.comment(cid, B.gap_accept_body(gap), TB.OWNER, minutes_ago)
+    row["native_edit"] = dict({"databaseId": cid, "lastEditedAt": None, "includesCreatedEdit": False, "author": TB.OWNER["login"],
+                               "issue": B.OWNER_ISSUE}, **native)
+    return row
 
 
 def brief_with(record, **change):
@@ -135,10 +149,13 @@ class Range(unittest.TestCase):
             h.commit(f"data: capture {i}")
         out, gh = c1b(h, anchor)
         self.assertEqual((out["complete"], out["halt"], out["checked_through"], out["from"]), (True, None, h.main, anchor))
-        self.assertEqual(gh.tree_reads(), 2)                                     # one segment: its two ends
+        self.assertEqual(gh.tree_reads(), 7)                                     # A24 (fix round 3): every commit of the segment, not only its two ends
         b = brief_with(out)
         self.assertTrue(b["complete"])
-        self.assertEqual(b["c1b"], {"checked_through": h.main, "from": anchor, "halt": None, "gap": None, "carry": None})
+        self.assertEqual(b["c1b"], {"checked_through": h.main, "from": anchor, "halt": None, "gap": None, "carry": None, "gaps": [], "open": None,
+                                    "cleared": [], "prev": b["c1b"]["prev"], "fence": [], "owner_actions": []})
+        self.assertEqual((b["c1b"]["prev"]["run_id"], b["c1b"]["prev"]["issue"], b["c1b"]["prev"]["run_attempt"]), (554, 3, 1))   # fix round 7: the exact tuple
+        self.assertEqual(sorted(b["c1b"]["prev"]), sorted(B.TUPLE_KEYS))
 
     def test_a_squash_merge_that_touches_code_is_no_halt(self):
         h = History()
@@ -165,7 +182,10 @@ class Range(unittest.TestCase):
         self.assertEqual(b["next"][0], {"action": "HALT", "rule": "C1b", "source": "C1B", "commit": bad, "parent": out["halt"]["parent"],
                                         "entries": ["scripts", ".agents"], "verify": ["commit", "parent", "trees"], "rank": 1,
                                         "why": b["next"][0]["why"], "builds": 1})
-        self.assertEqual((b["next"][1]["action"], b["next"][1]["pr"]), ("MERGE", 7))  # the rest keeps its order
+        # fix round 6: the proof stops AT the halt (never checkpointed over: the next build scans from it), so the rest of the
+        # window is the open segment, and no lane merges meanwhile (the MERGE entry is fenced; HALT keeps its rank)
+        self.assertEqual((out["checked_through"], out["open"]["from"], out["open"]["to"], out["open"]["reason"]), (bad, bad, h.main, "C1b:halt"))
+        self.assertEqual([e["action"] for e in b["next"]], ["HALT"])
         self.assertEqual(B.parse_body(B.render(b))["next"][0]["commit"], bad)
 
     def test_a_code_commit_right_after_the_anchor_and_one_before_main(self):
@@ -236,7 +256,8 @@ class FailClosed(unittest.TestCase):
         out, _gh = c1b(h, None)
         self.assertFalse(out["complete"])
         self.assertTrue(out["reason"].startswith("C1b:range"), out["reason"])
-        self.assertEqual((out["halt"]["commit"], out["checked_through"]), (bad, h.main))   # scanned to B.main: the next build recovers
+        self.assertEqual((out["halt"]["commit"], out["checked_through"]), (bad, bad))   # fix round 6: the proof stops at the halt; the next build resumes there
+        self.assertEqual([g["to"] for g in out["gaps"]], [out["from"]])                 # the history before the window is ONE gap of its own
         b = brief_with(out)
         self.assertEqual((b["complete"], b["incomplete"]), (False, out["reason"]))
         self.assertEqual(b["next"][0]["commit"], bad)
@@ -254,8 +275,18 @@ class FailClosed(unittest.TestCase):
         anchor = h.commit("data: a")
         for i in range(B.C1B_WINDOW + 2):
             h.commit(f"data: {i}")
-        out, _gh = c1b(h, anchor)
-        self.assertEqual((out["complete"], out["reason"]), (False, "C1b:range"))
+        # fix round 6 (liveness): a known anchor one page back is followed to the next page: reached, no gap; the long
+        # equal-ends segment past the per-segment cap is the open rest, resumed by the next build
+        out, gh = c1b(h, anchor)
+        self.assertEqual((out["complete"], out["reason"], out["gaps"], gh.paths.count("commits")), (True, None, [], 2))
+        self.assertIsNone(out["open"])                             # fix round 7 (R6-SH3): the capped segment is resumed in this build
+        for i in range(B.C1B_WINDOW * B.C1B_PAGES):                # beyond C1B_PAGES pages: the range before them is a gap
+            h.commit(f"data: more {i}")
+        out, gh = c1b(h, anchor)
+        self.assertEqual((out["complete"], out["reason"], gh.paths.count("commits")), (False, "C1b:range", B.C1B_PAGES))
+        self.assertEqual([(g["from"], g["to"]) for g in out["gaps"]], [(anchor, out["from"])])
+        out, gh = c1b(h, anchor, fail=["commits"])                  # an unreadable page: incomplete, the anchor kept, NO gap
+        self.assertEqual((out["complete"], out["reason"], out["checked_through"], out["gaps"]), (False, "C1b:commits_unreadable", anchor, []))
 
     def test_an_edited_or_unbound_previous_brief_is_no_anchor(self):
         h = History()
@@ -317,8 +348,14 @@ class FailClosed(unittest.TestCase):
         for i in range(8):
             h.commit(f"direct {i}" if i == 6 else f"data: {i}", code=("scripts",) if i == 6 else ())
         out, gh = c1b(h, anchor, max_calls=5)
-        self.assertEqual((out["complete"], out["reason"], out["checked_through"], out["stop"]), (False, "C1b:budget", anchor, None))
+        # fix round 6 (F1): the budget is bounded PROGRESS, never a stall: complete, checked_through at the proven point (here
+        # the anchor: no commit was proven yet), the rest an open segment that fences every merge; the next build resumes
+        self.assertEqual((out["complete"], out["reason"], out["checked_through"], out["stop"]), (True, None, anchor, None))
+        self.assertEqual((out["open"]["from"], out["open"]["to"], out["open"]["reason"]), (anchor, h.main, "C1b:budget"))
         self.assertEqual(gh.calls, 5)
+        self.assertEqual(brief_with(out)["c1b"]["fence"], ["open:C1b:budget"])
+        again, _gh = c1b(h, anchor)
+        self.assertEqual(again["halt"]["commit"], h.rows[1]["sha"])                     # "direct 6": the resumed scan finds it
 
     def test_the_global_cap_stops_the_build(self):
         h = History()
@@ -356,7 +393,10 @@ class FailClosed(unittest.TestCase):
                 self.assertFalse(b["complete"])
                 self.assertTrue(b["incomplete"].startswith("C1b:"), b["incomplete"])
         b = brief_with({"checked_through": "x", "from": None, "halt": {"commit": "y"}, "complete": True})
-        self.assertEqual(b["c1b"], {"checked_through": None, "from": None, "halt": None, "gap": None, "carry": None})
+        self.assertEqual(b["c1b"], {"checked_through": None, "from": None, "halt": None, "gap": None, "carry": None, "gaps": [], "open": None,
+                                    "cleared": [], "prev": None, "fence": [], "owner_actions": []})
+        for record in ({"complete": True, "gaps": "x"}, {"complete": True, "gaps": [{"to": "x"}]}, {"complete": True, "open": {"from": "x"}}):
+            self.assertEqual(brief_with(record)["incomplete"], "C1b:record_invalid", record)   # fix round 6: a ledger that does not validate
 
 
 class CarriedHalt(unittest.TestCase):
@@ -448,7 +488,10 @@ class Gap(unittest.TestCase):
         h.commit("data: b")
         out, _gh = c1b(h, None)
         b = brief_with(out)
-        self.assertEqual(b["c1b"]["gap"], {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:range:no_anchor:issues=0"})
+        gap = b["c1b"]["gap"]
+        self.assertEqual({k: gap[k] for k in ("from_unknown", "window", "reason", "carried")},
+                         {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:range:no_anchor:issues=0", "carried": False})
+        self.assertRegex(gap["to"], "^[0-9a-f]{40}$")                    # fix round 5: the commit the owner's disposition names
         self.assertEqual((b["complete"], b["incomplete"]), (False, "C1b:range:no_anchor:issues=0"))
         self.assertEqual(b["c1b"]["checked_through"], h.main)
         doc = B.parse_body(B.render(b))
@@ -459,9 +502,11 @@ class Gap(unittest.TestCase):
         anchor = h.commit("data: a")
         h.commit("data: b")
         self.assertIsNone(brief_with(c1b(h, anchor)[0])["c1b"]["gap"])
-        self.assertIsNone(brief_with(c1b(h, anchor, fail=["git/trees/"])[0])["c1b"]["gap"])
+        failed = brief_with(c1b(h, anchor, fail=["git/trees/"])[0])["c1b"]                # fix round 6: a failed read is an OPEN segment, no history gap
+        self.assertEqual((failed["gaps"], failed["open"]["reason"], failed["checked_through"]), ([], "C1b:tree_read", anchor))
         off_chain = brief_with(c1b(h, anchor, c1b=sha("rewritten"))[0])["c1b"]["gap"]           # an anchor not reached: a gap too
-        self.assertEqual(off_chain, {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:range"})
+        self.assertEqual({k: off_chain[k] for k in ("from_unknown", "window", "reason", "carried")},
+                         {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:range", "carried": False})
 
 
 class Ledger(unittest.TestCase):
@@ -523,5 +568,92 @@ class RubricBlobs(unittest.TestCase):
         self.assertNotIn("3:rubric_blobs", ok["reasons"])                           # an empty map: nothing listed, nothing missing
 
 
+class FixRound5DurableGap(unittest.TestCase):
+    """#173/7188234670 P1-07: a C1b history gap is never forgotten by a later scan."""
+
+    def previous_with_gap(self, main, gap):
+        w = dict(TB.world(), main_sha=main, run={"id": 554, "attempt": 1, "event": "schedule"})
+        w["c1b"] = {"checked_through": main, "from": main, "halt": None, "complete": True, "gap": gap}
+        if not gap["reason"].startswith("C1b:capped_equal_ends"):                       # fix round 6: the ledger's schema, detected 65 minutes ago
+            w["c1b"] = {"checked_through": main, "from": main, "halt": None, "complete": True,
+                        "gaps": [B.c1b_gap(None, gap["to"], gap["reason"], gap["window"], TB.ts(65))]}
+        brief = B.build_brief(w)
+        brief["generated_at"] = TB.ts(65)
+        issue = {"number": 3, "user": dict(TB.BOT), "body": B.render(brief), "updated_at": TB.ts(64)}
+        run = {"id": 554, "path": B.WORKFLOW_PATH, "repository": {"full_name": B.REPO}, "head_repository": {"full_name": B.REPO}, "event": "schedule", "run_attempt": 1, "head_branch": "main", "head_sha": main,
+               "status": "completed", "conclusion": "success", "run_started_at": TB.ts(70), "updated_at": TB.ts(60)}
+        return issue, run
+
+    def test_a_capped_segment_resumes_where_the_proof_stopped(self):
+        h = History()
+        anchor = h.commit("data: 0")
+        for k in range(B.C1B_SEARCH_READS + 5):
+            h.commit(f"data: {k + 1}")
+        # fix round 7 (R6-SH3): with budget left the capped segment is resumed in the SAME build, to main
+        whole, _gh = c1b(h, anchor)
+        self.assertEqual((whole["checked_through"], whole["open"], whole["gap"]), (h.main, None, None))
+        out, _gh = c1b(h, anchor, max_calls=25)                                          # the budget ends right after the first pass
+        self.assertEqual((out["gap"]["reason"], out["open"]["reason"], out["gaps"]), ("C1b:capped_equal_ends", "C1b:capped_equal_ends", []))
+        proven = out["checked_through"]
+        self.assertNotEqual(proven, h.main)                                             # NOT main: the rest is unproven
+        self.assertEqual(proven, h.rows[len(h.rows) - 1 - B.C1B_SEARCH_READS]["sha"])       # the 20th commit after the anchor
+        d = B.build_brief(dict(TB.world(), c1b=out))
+        self.assertIn("lane:C1b:open_segment", __import__("s1_decision_v1").decide(d)["skipped"])
+        again, _gh = c1b(h, proven)                                                      # the next build resumes there and catches up
+        self.assertEqual((again["checked_through"], again["gap"], again["complete"]), (h.main, None, True))
+
+    def test_a_range_gap_is_carried_until_the_owner_disposes_of_it(self):
+        h = History()
+        anchor = h.commit("data: a")
+        h.commit("data: b")
+        gap = {"from_unknown": True, "window": B.C1B_WINDOW, "reason": "C1b:range", "to": sha("old-base")}
+        issue, run = self.previous_with_gap(anchor, gap)
+        out = B.read_c1b(Gh(h, issue, run), h.main, [], NOW)
+        self.assertEqual((out["complete"], out["gap"]["carried"], out["gap"]["to"]), (True, True, sha("old-base")))
+        self.assertIn("lane:C1b:history_gap", __import__("s1_decision_v1").decide(B.build_brief(dict(TB.world(), c1b=out)))["skipped"])
+        accept = accept_comment(90, out["gaps"][0])                  # fix round 7: the exact detection, natively unedited
+        other = dict(out["gaps"][0], to="1" * 40, id="-.." + "1" * 40)
+        for name, ledger, carried in (("the owner's disposition", [accept], False), ("an edited one", [dict(accept, updated_at=TB.ts(1))], True),
+                                      ("the bot's", [dict(accept, user=dict(TB.BOT))], True), ("another commit", [accept_comment(90, other)], True),
+                                      ("an unread ledger", None, True)):
+            with self.subTest(name):
+                out = B.read_c1b(Gh(h, issue, run), h.main, ledger, NOW)
+                self.assertEqual(out["gap"] is not None, carried, name)
+        # a failed scan keeps it too (it is carried before the scan)
+        out = B.read_c1b(Gh(h, issue, run, fail=["git/trees/", "commits"]), h.main, [], NOW)
+        self.assertEqual((out["complete"], (out["gap"] or {}).get("carried")), (False, True))
+        # a capped gap of the previous brief is NOT carried: its scan resumes from checked_through
+        issue, run = self.previous_with_gap(anchor, dict(gap, reason="C1b:capped_equal_ends"))
+        self.assertIsNone(B.read_c1b(Gh(h, issue, run), h.main, [], NOW)["gap"])
+
+
 if __name__ == "__main__":
     unittest.main()
+
+
+class FixRound3TransientCodeChange(unittest.TestCase):
+    """ChatGPT audit A24: a code change undone later in the same non-squash segment (A -> B -> A) was invisible."""
+
+    def scan(self, chain, cap=20):
+        trees = {"A": ("a1", "t", "g", "x", "f"), "B": ("b2", "t", "g", "x", "f")}
+        return B.c1b_scan(chain, "0" * 40, "A", lambda key: trees[key], search_reads=cap)
+
+    def test_a_b_a_in_one_segment_is_a_halt(self):
+        chain = [("1" * 40, ["0" * 40], "data: hourly", "A"), ("2" * 40, ["1" * 40], "fix: direct push", "B"),
+                 ("3" * 40, ["2" * 40], "revert direct push", "A"), ("4" * 40, ["3" * 40], "data: hourly", "A")]
+        halt = self.scan(chain)
+        self.assertEqual((halt["commit"], halt["parent"], halt["entries"], halt["capped"]), ("2" * 40, "1" * 40, ["scripts"], False))
+        self.assertTrue(B.c1b_halt_ok(halt))
+
+    def test_a_clean_segment_and_the_stated_cap(self):
+        clean = [(f"{k + 1:040x}", [f"{k:040x}"], "data: hourly", "A") for k in range(5)]
+        self.assertIsNone(self.scan(clean))
+        # past the cap, a segment whose ends are equal is not proven clean: stated limit, never a halt with no entries
+        late = clean + [("9" * 40, [clean[-1][0]], "fix: direct", "B"), ("8" * 40, ["9" * 40], "revert", "A")]
+        self.assertIsNone(self.scan(late, cap=3))
+
+    def test_the_squash_subject_exemption_is_unchanged_stated_limit(self):
+        """A one-parent commit whose subject ends (#n) still counts as a squash merge by its subject alone (A24 second
+        half: OWNER_DECISION; server-side protection of main is the primary control)."""
+        chain = [("1" * 40, ["0" * 40], "anything (#42)", "B")]
+        self.assertIsNone(self.scan(chain))
