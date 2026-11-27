@@ -349,6 +349,29 @@ class OneEvaluationPerBriefRun(unittest.TestCase):
                                     logs={(4321, 1): health("555")})
         self.assertEqual((out["result"], gh.writes), ("NO_DECISION(already_evaluated=4321.1)", []))
 
+    def test_started_then_cancelled_attempt_is_not_assumed_unevaluated(self):
+        # A cancelled attempt can have executed before cancellation. Its own log is required.
+        for log, expected in ((None, "NO_DECISION(evaluated_unproven:health=4321.1)"),
+                              (health("555"), "NO_DECISION(already_evaluated=4321.1)")):
+            r, gh, _n, _b, _d = setup(exec_runs=[earlier(4321, conclusion="cancelled")], logs={4321: log})
+            gh.exec_jobs[(4321, 1)] = {"status": "completed", "conclusion": "cancelled", "started_at": B.iso(NOW - timedelta(minutes=1)),
+                                       "steps": [{"status": "completed", "conclusion": "success"}]}
+            out = r.execute_published()
+            self.assertEqual((out["result"], gh.writes), (expected, []))
+            self.assertIn(("TEXT", "actions/jobs/1004321/logs"), gh.calls)
+
+    def test_native_pull_request_brief_cannot_reach_evaluation(self):
+        # previous_anchor and execute() both enforce the permitted event set, even when the brief
+        # and its native run agree on the prohibited event.
+        for event in ("workflow_dispatch", "workflow_run"):
+            env = {"GITHUB_EVENT_NAME": event}
+            if event == "workflow_run":
+                env.update(S1_BRIEF_RUN_ID="555", S1_BRIEF_RUN_ATTEMPT="1", S1_BRIEF_MAIN=MAIN, S1_BRIEF_EVENT="pull_request")
+            out, gh, _n, _r = published(env=env, mutate=lambda w: w["run"].update(event="pull_request"))
+            self.assertIn(out["result"], ("NO_DECISION(brief_run=555:run_binding)", "BRIEF_UNVERIFIED(run_binding)"))
+            self.assertEqual(gh.writes, [])
+            self.assertEqual(reads(gh, "actions/workflows/s1-executor.yml/runs"), [])
+
     def test_two_runs_for_one_brief_evaluate_it_once(self):
         """End to end: the first run evaluates and prints its health line; the second reads that line from the first run's
         job log and stops."""
