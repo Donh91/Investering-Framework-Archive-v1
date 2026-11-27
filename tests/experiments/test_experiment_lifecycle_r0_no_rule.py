@@ -6,6 +6,7 @@ never claims a real trusted clock exists. Everything else runs the production
 binding, settlement and state-selection code.
 """
 import hashlib
+import importlib.util
 import itertools
 import json
 import tempfile
@@ -14,7 +15,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.experiments.experiment_lifecycle import registry
-import test_experiment_lifecycle as _base  # module import: do not re-collect its TestCases
+
+# Load the sibling fixture module by path: works under both unittest discover
+# and repository-root pytest collection, and does not re-collect its TestCases.
+_spec = importlib.util.spec_from_file_location(
+    "_r0_lifecycle_fixture", Path(__file__).with_name("test_experiment_lifecycle.py"))
+_base = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_base)
 
 NO_RULE = "NO_PREREGISTERED_DECISION_RULE"
 ANCHOR = "scripts.experiments.source_git_anchor.AcceptedMainSource.matches"
