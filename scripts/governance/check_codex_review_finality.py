@@ -26,6 +26,14 @@ def effective_request_time(row):
     return updated
 
 
+def content_time(row):
+    """Codex edits its review-state comment in place: date its content by the native updated_at."""
+    created, updated = stamp(row.get("created_at")), stamp(row.get("updated_at"))
+    if updated < created:
+        raise ValueError("COMMENT_CLOCK_REGRESSION")
+    return updated
+
+
 def is_codex(row):
     user = row.get("user") or {}
     return (isinstance(user, dict) and user.get("login") == "chatgpt-codex-connector[bot]" and user.get("type") == "Bot" and user.get("id") == 199175422)
@@ -49,7 +57,9 @@ def decision(head, comments, reviews, inline):
             if not is_codex(row):
                 continue
             body = str(row.get("body") or "")
-            when = stamp(row.get("updated_at") or row.get("created_at"))
+            # No created_at fallback: a Codex row without its native
+            # updated_at cannot be dated, so the decision fails closed.
+            when = content_time(row)
             # GitHub comment timestamps are second-resolution. A receipt with
             # the same time as a request could PRECEDE it; fail closed.
             if when <= last:
@@ -81,13 +91,24 @@ def decision(head, comments, reviews, inline):
         if latest.get("has_unresolved_findings") is not False:
             return fail("UNRESOLVED_CODEX_FINDINGS")
         last_positive, positive_ref = max(positive)
-        # Codex currently emits a 10-hex receipt but a full SHA in its trusted
-        # state JSON. The same separately authenticated bot must attest both,
-        # and the complete state must finish no later than the positive receipt.
-        # Never accept a short-prefix receipt without this exact full-SHA bind.
-        if not any(state_time < last_positive and state.get("commit_sha") == head
-                   and state.get("has_unresolved_findings") is False
-                   for state_time, state in completed):
+        # Codex emits a 10-hex receipt but a full SHA in its trusted state JSON.
+        # The same platform-authenticated bot must attest both, and the receipt
+        # binds only to a completed exact-head state STRICTLY ordered against it:
+        # - native order (replay of every Codex-reviewed PR, 2026-11-27): Codex
+        #   keeps ONE review-state comment per PR and edits it in place, so the
+        #   state is dated by its native updated_at (taken above), never by its
+        #   created_at. A clean review posts the receipt first and edits the
+        #   state to completed 1-3 s later; an automatic re-review of the same
+        #   head ("Draft marked ready") edits the state again, no new receipt.
+        #   Then the LATEST exact-head state, proven completed with no
+        #   unresolved finding above, is newer than the newest receipt.
+        # - legacy order, unchanged: a completed exact-head state older than it.
+        # A same-second pair proves no order and stays refused. Never accept a
+        # short-prefix receipt without this exact full-SHA bind.
+        if not (last_positive < latest_time
+                or any(state_time < last_positive and state.get("commit_sha") == head
+                       and state.get("has_unresolved_findings") is False
+                       for state_time, state in completed)):
             return fail("POSITIVE_WITHOUT_EXACT_HEAD_COMPLETION")
         for row in reviews:
             if (not is_codex(row) or row.get("commit_id") != head
