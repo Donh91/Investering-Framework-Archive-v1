@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/api_agent/budget_hold_disposition.py",
+    "tests/api_agent/test_budget_hold_disposition.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-21d0f077aff9ba48",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "expose-inactive-budget-hold-step-output-test-cli",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: expose explicit budget disposition through GitHub step output * test: cover CLI PASS HOLD ERROR and owner-global reserve branch",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/api_agent/budget_hold_disposition.py": "8dd88163cea9fa187631e3b281355397a57df54e",
+    "tests/api_agent/test_budget_hold_disposition.py": "f2db84e5693c9ed08d5e31df247969a14d0e4777"
+  },
+  "source_commit_sha": "21d0f077aff9ba48fd902455c10588de0f5696a2",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-27T12:56:27+01:00",
+  "task_class": "API_AGENT",
+  "task_summary": "fix: expose inactive budget HOLD step output and test CLI fail-closed contract (#2354)"
+}
