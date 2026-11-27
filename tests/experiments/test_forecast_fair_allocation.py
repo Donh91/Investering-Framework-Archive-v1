@@ -58,11 +58,12 @@ def run(repo: Path, output: dict, captured: str, cap: int = 5, run_id: str = "fa
     return json.loads(proc.stdout)
 
 
-def run_raw(repo: Path, output: dict, captured: str, cap: int = 5, run_id: str = "fair-allocation-run") -> subprocess.CompletedProcess:
+def run_raw(repo: Path, output: dict, captured: str, cap: int = 5, run_id: str = "fair-allocation-run", *,
+            context_override: dict | None = None) -> subprocess.CompletedProcess:
     daily = repo / "daily"
     daily.mkdir(parents=True, exist_ok=True)
     (daily / "output.json").write_text(json.dumps(output))
-    (daily / "context.json").write_text(json.dumps(ctx(captured, run_id)))
+    (daily / "context.json").write_text(json.dumps(ctx(captured, run_id) if context_override is None else context_override))
     (daily / "receipt.json").write_text(json.dumps({"contract": "API_AGENT_RECEIPT_v3"}))
     el = repo / "research/experiment_lifecycle"
     cmd = [sys.executable, str(SCRIPT), "--repo-root", str(repo),
@@ -530,7 +531,8 @@ class Round4StrictParseAndCaptureValidation(unittest.TestCase):
             self._store_failure(repo, "allocation_time_unrepresentable")
 
     def test_invalid_capture_clock_fails_whole_run_before_any_write(self):
-        for captured in ("not-a-time", "2026-02-30T00:00:00Z", "0001-01-01T00:00:00+01:00"):
+        for captured in ("not-a-time", "2026-02-30T00:00:00Z", "0001-01-01T00:00:00+01:00",
+                         False, True, 0, 0.0, 1, [], {}, [1], {"clock": "invalid"}):
             with self.subTest(captured=captured), tempfile.TemporaryDirectory() as td:
                 repo = Path(td)
                 run(repo, self.output8, tick(0))
@@ -539,6 +541,36 @@ class Round4StrictParseAndCaptureValidation(unittest.TestCase):
                 self.assertEqual(proc.returncode, 4, proc.stderr[-800:])
                 self.assertIn("CAPTURE_CLOCK_INVALID", proc.stderr)
                 self.assertEqual(snapshot(repo), before)
+
+    def test_falsey_and_wrong_type_latest_capture_container_fails_before_any_write(self):
+        for malformed in (False, True, 0, 0.0, "", "wrong", [], [1]):
+            with self.subTest(malformed=malformed), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                run(repo, self.output8, tick(0))
+                before = snapshot(repo)
+                context = ctx(tick(1))
+                context["latest_capture"] = malformed
+                proc = run_raw(repo, self.output8, tick(1), context_override=context)
+                self.assertEqual(proc.returncode, 4, proc.stderr[-800:])
+                self.assertEqual(json.loads(proc.stderr), {"status": "CAPTURE_CLOCK_INVALID", "writes_performed": False})
+                self.assertEqual(snapshot(repo), before)
+
+    def test_legacy_missing_null_and_blank_clock_hold_forecasts_only(self):
+        for missing_kind in ("absent", "null", "blank"):
+            with self.subTest(missing_kind=missing_kind), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                context = ctx(tick(0))
+                if missing_kind == "absent":
+                    del context["latest_capture"]["captured_at_utc"]
+                else:
+                    context["latest_capture"]["captured_at_utc"] = None if missing_kind == "null" else ""
+                proc = run_raw(repo, self.output8, tick(0), context_override=context)
+                self.assertEqual(proc.returncode, 0, proc.stderr[-800:])
+                summary = json.loads(proc.stdout)
+                self.assertEqual(summary["new_forecasts"], 0)
+                self.assertEqual(summary["forecast_allocation"]["status"], "FAIL_CLOSED:capture_clock_noncanonical")
+                self.assertEqual(forecasts(repo), [])
+                self.assertTrue(snapshot(repo))  # legacy nonforecast producer path still executes
 
     def test_canonical_but_out_of_range_capture_holds_allocation(self):
         with tempfile.TemporaryDirectory() as td:
