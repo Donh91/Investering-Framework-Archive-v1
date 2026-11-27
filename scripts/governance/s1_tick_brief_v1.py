@@ -1040,7 +1040,69 @@ def ai_authored(pr, commits, commits_complete, author):
                 or any(AI_TRAILER.search(str((c.get("commit") or {}).get("message") or "")) for c in commits))
 
 
-def codex_review(head, pr, commits, commits_complete, comments, reviews, inline, complete, now, silent_hours):
+REVIEW_INTENT = "S1_CODEX_REVIEW_INTENT_v1"
+REVIEW_REQUEST = "S1_CODEX_REVIEW_COMMENT_v1"
+REVIEW_RECEIPT = "S1_CODEX_REVIEW_RECEIPT_v1"
+
+
+def review_dispatch_body(token, pr, head, run, attempt, intent=None, request=None):
+    body = f"{token}\npr: {pr}\nhead: {head}\nexecutor: GITHUB run={run}\nattempt: {attempt}"
+    if intent is not None:
+        body += f"\nintent: {intent}"
+    if request is not None:
+        body += f"\nrequest: {request}"
+    return ("@codex review\n\n" + body) if token == REVIEW_REQUEST else body
+
+
+def review_dispatch_attempted(ledger, pr, head):
+    """An intent is an at-most-once reservation, including an ambiguous POST. It can only stop a request."""
+    return any(is_s1_unedited(c) and first_line_token(c.get("body")) == REVIEW_INTENT
+               and fields(c.get("body")).get("pr") == str(pr)
+               and fields(c.get("body")).get("head") == head for c in ledger)
+
+
+def verified_bot_requests(head, pr, comments, ledger, run_of, log_of, now):
+    """Exact PR/head, immutable bot comment, matching intent and receipt, native run AND its own write log.
+    Missing, expired or capped proof is not a request. No bot request adds offline-fallback authority."""
+    if type(pr) is not int or not isinstance(head, str) or not SHA40.fullmatch(head):
+        return set()
+    by_id = {c.get("id"): c for c in ledger if isinstance(c, dict)}
+    requests = {c.get("id"): c for c in comments if isinstance(c, dict)}
+    valid = set()
+    for receipt in ledger:
+        try:
+            if first_line_token(receipt.get("body")) != REVIEW_RECEIPT:
+                continue
+            f = fields(receipt["body"])
+            if f.get("pr") != str(pr) or f.get("head") != head:
+                continue
+            rid, attempt = executor_run(receipt["body"]), int(f["attempt"])
+            iid, cid = int(f["intent"]), int(f["request"])
+            intent, comment = by_id[iid], requests[cid]
+            run = run_of(rid)
+            if not isinstance(run, dict) or run.get("status") != "completed" or run.get("run_attempt") != attempt:
+                continue
+            if not all(executor_post(c, run_of, now) for c in (intent, receipt)):
+                continue
+            if not is_actions_bot(comment.get("user")) or not is_s1_unedited(comment):
+                continue
+            if not (intent["body"] == review_dispatch_body(REVIEW_INTENT, pr, head, rid, attempt)
+                    and comment["body"] == review_dispatch_body(REVIEW_REQUEST, pr, head, rid, attempt, iid)
+                    and receipt["body"] == review_dispatch_body(REVIEW_RECEIPT, pr, head, rid, attempt, iid, cid)):
+                continue
+            if not stamp(intent["created_at"]) <= stamp(comment["created_at"]) <= stamp(receipt["created_at"]):
+                continue
+            if not all(logged_write(log_of, rid, token, ident) for token, ident in
+                       ((REVIEW_INTENT, iid), (REVIEW_REQUEST, cid), (REVIEW_RECEIPT, receipt["id"]))):
+                continue
+            valid.add(cid)
+        except (ValueError, KeyError, TypeError, AttributeError):
+            continue
+    return valid
+
+
+def codex_review(head, pr, commits, commits_complete, comments, reviews, inline, complete, now, silent_hours,
+                 verified_bot_ids=()):
     """REVIEW_ADMISSION (i) through the repository's own finality rule, plus the request state rule 3 needs."""
     out = {"status": "NONE", "requested_after_head": False}
     if not complete:
@@ -1048,7 +1110,7 @@ def codex_review(head, pr, commits, commits_complete, comments, reviews, inline,
     try:
         head_time = head_commit_time(commits, head) if commits_complete else None
         requests = [codex_finality.effective_request_time(c) for c in comments
-                    if not codex_finality.is_codex(c) and re.search(r"(?mi)^\s*@codex\s+review\b", str(c.get("body") or ""))]
+                    if codex_finality.request_row(c, verified_bot_ids) and re.search(r"(?mi)^\s*@codex\s+review\b", str(c.get("body") or ""))]
         after = [r for r in requests if head_time is not None and r > head_time]
         if after:
             last = max(after)
@@ -1078,7 +1140,7 @@ def codex_review(head, pr, commits, commits_complete, comments, reviews, inline,
                     out["offline"] = {"signal": "UNAVAILABLE", "at": iso(max(limits)), "request_at": iso(asked)}
                 elif out["status"] == "SILENT" and (now - asked).total_seconds() > silent_hours * 3600 and not said and not any(t > asked for t in other):
                     out["offline"] = {"signal": "SILENT", "at": iso(asked), "request_at": iso(asked)}
-        decision = codex_finality.decision(head, comments, reviews, inline)
+        decision = codex_finality.decision(head, comments, reviews, inline, verified_bot_ids)
     except (ValueError, KeyError, TypeError):
         return {"status": "NOT_PROVEN", "why": "review_unreadable"}
     if decision.get("technical_review_accepted") is True:
@@ -1449,7 +1511,10 @@ def pr_entry(pr, data, ctx):
     e["thin"]["data_route"] = decision_v1.data_route(pr, files, fc, commits, cc, ctx.get("allowlist"))[0]   # addendum c: route (c) scope
     e["thin"]["p01_named"] = p01_named(comments if rc else None, reviews if rc else None, (data.get("inline") or []) if rc else None)   # route (c): PARK on a P0/P1 anybody wrote
     e["writer"] = concurrent_writer(commits, cc, comments, head, ctx["now"], ctx["quiet_minutes"]) if rc else "comments_unreadable"
-    cx = codex_review(head, pr, commits, cc, comments, reviews, data.get("inline") or [], rc, ctx["now"], ctx["budgets"]["codex_silent_hours"])
+    verified = verified_bot_requests(head, n, comments, ctx.get("review_ledger", []),
+                                     ctx.get("review_run_of", lambda _: None), ctx.get("review_log_of", lambda _: None), ctx["now"])
+    cx = codex_review(head, pr, commits, cc, comments, reviews, data.get("inline") or [], rc, ctx["now"],
+                      ctx["budgets"]["codex_silent_hours"], verified)
     if e["author"].get("codex") and cx.get("status") == "FINAL":
         cx = {"status": "INADMISSIBLE", "why": "codex_authored_head"}
     threads = data.get("threads")
@@ -2538,7 +2603,10 @@ def build_brief(snap):
     ctx = {"repo_id": repo_id, "main_sha": snap["main_sha"], "policy": snap["policy"], "tuples": params["required_job_tuples"],
            "gate_isolation_live": snap.get("gate_isolation") == "LIVE", "now": now, "budgets": snap["budgets"],
            "quiet_minutes": params["foreign_commit_quiet_minutes"], "push_filters": snap.get("push_filters"),
-           "allowlist": decision_v1.fallback_allowlist(switch)}
+           "allowlist": decision_v1.fallback_allowlist(switch),
+           "review_ledger": comments if ledger_ok else [],
+           "review_run_of": lambda rid: (snap.get("review_dispatch_runs") or {}).get(str(rid)),
+           "review_log_of": lambda rid: (snap.get("review_dispatch_logs") or {}).get(str(rid))}
     entries, drafts = [], []
     identity_ok = (snap.get("repo") or {}).get("full_name") == REPO and (snap.get("repo") or {}).get("fork") is False and isinstance(repo_id, int)
     for pr in sorted(snap.get("pulls") or [], key=lambda p: p.get("number") or 0):
@@ -3475,6 +3543,21 @@ def collect(gh, root, head_root, now, run):
     r2, c2 = gh.pages("rulesets", {"includes_parents": "true"}, max_pages=2)
     snap.update(rulesets_1=r1, rulesets_2=r2, rulesets_complete=c1 and c2)
     snap["pulls"], snap["pulls_complete"] = gh.pages("pulls", {"state": "open", "sort": "created", "direction": "asc"}, max_pages=5)
+    # Bounded native proof reads for current open exact heads, never a proof from the ledger alone.
+    review_runs, review_logs = RunReader(gh), LogReader(gh)
+    open_heads = {(str(pr.get("number")), (pr.get("head") or {}).get("sha")) for pr in snap["pulls"]}
+    if snap["issue_comments_complete"]:
+        try:
+            receipts = [c for c in snap["issue_comments"] if first_line_token(c.get("body")) == REVIEW_RECEIPT
+                        and is_s1_unedited(c) and (fields(c.get("body")).get("pr"), fields(c.get("body")).get("head")) in open_heads]
+            for c in sorted(receipts, key=lambda r: r.get("id") or 0, reverse=True)[:2]:
+                rid = executor_run(c.get("body"))
+                if rid is not None:
+                    review_runs(rid)
+                    review_logs(rid)
+        except StopReading as exc:
+            errors.append(exc.reason)
+    snap["review_dispatch_runs"], snap["review_dispatch_logs"] = review_runs.docs, review_logs.docs
     if snap["issue_comments_complete"]:
         try:                                                     # fix round 7 (R6-SH4): native edit records, fail closed
             read_gap_native(gh, snap["issue_comments"])

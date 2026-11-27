@@ -31,14 +31,26 @@ def is_codex(row):
     return (isinstance(user, dict) and user.get("login") == "chatgpt-codex-connector[bot]" and user.get("type") == "Bot" and user.get("id") == 199175422)
 
 
-def decision(head, comments, reviews, inline):
+def request_row(row, verified_bot_ids=()):
+    """Bot comments are not review requests unless their executor receipt was independently verified."""
+    user = row.get("user") or {}
+    login = str(user.get("login") or "")
+    if is_codex(row):
+        return False
+    if user.get("type") == "Bot" or login.endswith("[bot]"):
+        return (login == "github-actions[bot]" and user.get("type") == "Bot"
+                and user.get("id") == 41898282 and row.get("id") in verified_bot_ids)
+    return True
+
+
+def decision(head, comments, reviews, inline, verified_bot_ids=()):
     """Require positive exact-head completion AFTER the latest human request."""
     fail = lambda reason: {"status": reason, "technical_review_accepted": False}
     if not re.fullmatch(r"[0-9a-f]{40}", head):
         return fail("INVALID_HEAD")
     try:
         requests = [effective_request_time(row) for row in comments
-                    if not is_codex(row) and re.search(r"(?mi)^\s*@codex\s+review\b", str(row.get("body") or ""))]
+                    if request_row(row, verified_bot_ids) and re.search(r"(?mi)^\s*@codex\s+review\b", str(row.get("body") or ""))]
         if not requests:
             return fail("REVIEW_NOT_REQUESTED")
         last = max(requests)

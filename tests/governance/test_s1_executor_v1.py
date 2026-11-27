@@ -236,6 +236,11 @@ class FakeGitHub:
             if self.after_intent and B.first_line_token(data["body"]) == "S1_LANE_MERGE_INTENT_v1":
                 self.after_intent(self)
             return json.dumps(row).encode(), {}
+        if method == "POST" and url == "issues/7/comments":
+            self.next_id += 1
+            row = {"id": self.next_id, "body": data["body"], "user": dict(B.ACTIONS_BOT), "created_at": B.iso(self.now), "updated_at": B.iso(self.now)}
+            self.w["pr"][7]["comments"].append(row)
+            return json.dumps(row).encode(), {}
         if (method, url) in (("POST", "issues/7/labels"), ("DELETE", f"issues/9/labels/{D.RECALL_LABEL}")):
             if self.fail_label:
                 raise self.fail_label
@@ -403,14 +408,14 @@ class LiveMerge(unittest.TestCase):
         with self.assertRaises((E.Stop, KeyError)):
             run.write("delete", pr=7)
         self.assertEqual(gh.writes, [])
-        # the source has exactly four write calls, all inside write(), and no other mutating verb (fix round 2 added
+        # the source has exactly five write calls, all inside write(), and no other mutating verb (fix round 2 added
         # the ONE label codex-recall-pending: its name is a constant, never a parameter)
         self.assertEqual(re.findall(r'_request\("(\w+)", self\.gh\.url\(f?"([^"]+)"\)', SOURCE),
-                         [("POST", "issues/{B.OWNER_ISSUE}/comments"), ("POST", "issues/{pr}/labels"), ("DELETE", "issues/{pr}/labels/{D.RECALL_LABEL}"),
+                         [("POST", "issues/{B.OWNER_ISSUE}/comments"), ("POST", "issues/{pr}/comments"), ("POST", "issues/{pr}/labels"), ("DELETE", "issues/{pr}/labels/{D.RECALL_LABEL}"),
                           ("PUT", "pulls/{pr}/merge")])
-        self.assertEqual(SOURCE.count("_request("), 4)
+        self.assertEqual(SOURCE.count("_request("), 5)
         body_of_write = SOURCE[SOURCE.index("    def write(self, kind, **kw):"):SOURCE.index("    def say(self, line):")]
-        self.assertEqual(body_of_write.count("_request("), 4)
+        self.assertEqual(body_of_write.count("_request("), 5)
         self.assertIn('{"labels": [D.RECALL_LABEL]}', body_of_write)
         for verb in ('"PATCH"', "update-branch", "/dispatches", "git/refs", "/reviews\", {", "contents/"):
             self.assertNotIn(verb, SOURCE, verb)
