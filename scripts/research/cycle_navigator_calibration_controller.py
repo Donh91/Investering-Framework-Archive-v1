@@ -3,6 +3,9 @@ import argparse
 import csv
 import hashlib
 import json
+import math
+import re
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -12,7 +15,7 @@ POLICY_PATH = BASE / "POLICY.json"
 STATE_PATH = BASE / "STATE.json"
 ACTION_LEDGER = BASE / "ACTION_LEDGER.csv"
 ACTION_DIR = BASE / "research_actions"
-FORWARD_LEDGER = ROOT / "05_CYCLE_NAVIGATOR" / "forward_range_ledger" / "FORWARD_RANGE_LEDGER_v0_1.csv"
+FORWARD_LEDGER = ROOT / "05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl"
 PROMOTION_PACKET = BASE / "PROMOTION_CANDIDATE.json"
 
 
@@ -128,11 +131,90 @@ def evaluate_rows(policy: Dict[str, Any], all_rows: List[Dict[str, str]], promot
     }
 
 
-def _load_rows() -> List[Dict[str, str]]:
-    if not FORWARD_LEDGER.exists():
-        return []
-    with FORWARD_LEDGER.open(newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+def _load_rows(policy: Dict[str, Any]) -> List[Dict[str, Any]]:
+    # The policy must identify the live, append-only freeze ledger. Never fall
+    # back to the example CSV, or interpret a missing source as empty evidence.
+    if policy.get("source_ledger") != FORWARD_LEDGER.relative_to(ROOT).as_posix():
+        raise ValueError("unexpected forward ledger policy")
+    with FORWARD_LEDGER.open(encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
+def _coverage_v2(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    intervals = {"weekly": (0, 7), "day_1_2": (0, 2),
+                 "day_3_4": (2, 4), "day_5_7": (4, 7)}
+    valid_status = {"FROZEN_PROSPECTIVE", "ISSUED_AFTER_WINDOW_START",
+                    "RECOVERED_FROM_IMMUTABLE_PROSPECTIVE_PUBLICATION"}
+    clocks, prospective_clocks, windows, prospective_windows = set(), set(), set(), set()
+    weeks, prospective_weeks = set(), set()
+    prospective_n, missing_clock_n = 0, 0
+    for row in rows:
+        if not isinstance(row, dict) or row.get("contract") != "CN_FORWARD_RANGE_FREEZE_v2":
+            raise ValueError("invalid v2 freeze contract")
+        week = row.get("forecast_week")
+        window, status = row.get("window"), row.get("status")
+        if (not isinstance(week, str) or not re.fullmatch(r"[0-9]{4}-W[0-9]{2}", week)
+                or window not in intervals or status not in valid_status
+                or row.get("asset") not in {"BTC", "ETH"}):
+            raise ValueError("invalid v2 freeze identity")
+        monday = date.fromisocalendar(int(week[:4]), int(week[-2:]), 1)
+        low, high = row.get("forecast_low"), row.get("forecast_high")
+        if any(type(v) not in (int, float) or not math.isfinite(v) for v in (low, high)) or not 0 < low <= high:
+            raise ValueError("invalid v2 forecast bounds")
+        start, stop = intervals[window]
+        interval = (monday + timedelta(days=start), monday + timedelta(days=stop))
+        weeks.add(week)
+        windows.add(interval)
+        clock = row.get("generated_unix")
+        if clock is None:
+            missing_clock_n += 1
+        elif type(clock) is int and clock > 0:
+            clocks.add(clock)
+        else:
+            raise ValueError("invalid v2 freeze clock")
+        if status == "FROZEN_PROSPECTIVE":
+            if clock is None:
+                raise ValueError("prospective freeze missing clock")
+            prospective_n += 1
+            prospective_clocks.add(clock)
+            prospective_weeks.add(week)
+            prospective_windows.add(interval)
+
+    def nonoverlap(windows: set) -> int:
+        # Earliest finish is maximum-cardinality interval scheduling. Assets
+        # and repeated forecasts sharing the same window do not add episodes.
+        last, count = date.min, 0
+        for start, stop in sorted(windows, key=lambda w: (w[1], w[0])):
+            if start >= last:
+                count += 1
+                last = stop
+        return count
+
+    return {
+        "raw_rows": len(rows),
+        "unique_recorded_freeze_clocks": len(clocks),
+        "missing_freeze_clock_rows": missing_clock_n,
+        "calendar_week_clusters": len(weeks),
+        "max_nonoverlapping_calendar_windows": nonoverlap(windows),
+        "labelled_prospective_rows": prospective_n,
+        "labelled_prospective_unique_clocks": len(prospective_clocks),
+        "labelled_prospective_calendar_week_clusters": len(prospective_weeks),
+        "labelled_prospective_max_nonoverlapping_windows": nonoverlap(prospective_windows),
+        "scientific_eligibility": "UNADMITTED_FREEZE_LEDGER_ONLY",
+        "independence_attested": False,
+    }
+
+
+def evaluate_v2_freezes(policy: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    # Freeze rows do not establish verified actuals or baseline score custody.
+    # Do not accept even plausible outcome fields injected into freeze rows.
+    result = evaluate_rows(policy, [], None)
+    result["source_coverage_v2"] = _coverage_v2(rows)
+    result["reason"] = "live freeze ledger read; no independently admitted baseline/outcome join"
+    result["evidence_fingerprint"] = hashlib.sha256(
+        json.dumps(rows, sort_keys=True, allow_nan=False, separators=(",", ":")).encode()
+    ).hexdigest()
+    return result
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -190,8 +272,7 @@ def main() -> int:
     policy = _load_json(POLICY_PATH, {})
     if policy.get("authority") != "RESEARCH_ONLY_NON_CANONICAL" or policy.get("canonical_effect") is not False:
         raise SystemExit("policy firewall invalid")
-    promotion = _load_json(PROMOTION_PACKET, None)
-    decision = evaluate_rows(policy, _load_rows(), promotion)
+    decision = evaluate_v2_freezes(policy, _load_rows(policy))
     if args.dry_run:
         print(json.dumps(decision, indent=2, sort_keys=True))
         return 0
