@@ -9,6 +9,9 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+# Full-repository CI uses pytest importlib collection; the sibling fixture directory
+# is not implicitly on sys.path in that mode.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_forecast_fair_allocation import SCRIPT, ctx, pair, run, forecasts, snapshot, module
 
 UTC = timezone.utc
