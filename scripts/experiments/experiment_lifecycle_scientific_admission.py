@@ -929,19 +929,64 @@ def existing_only_source(root: Path, context_path: Path, hold_path: Path, now: d
     }
 
 
+def strict_hold_candidate_rows(root: Path) -> tuple[list[tuple[Path, dict]], set[str]]:
+    """Read the complete candidate census before HOLD writes.
+
+    Historical duplicate IDs with identical specs but different records are
+    not independently qualified. Keep the existing canonical representative
+    for registry compatibility, but quarantine the entire ambiguous ID from
+    HOLD selection. Do not rewrite or delete historical rows.
+    """
+    rows: dict[str, tuple[Path, dict, bytes]] = {}
+    ambiguous: set[str] = set()
+    if not root.is_dir() or root.resolve() != root.absolute():
+        raise ValueError("hold_candidate_root_invalid")
+    for path in sorted(root.rglob("*")):
+        if path.is_symlink():
+            raise ValueError("hold_candidate_symlink")
+        if path.suffix != ".json":
+            continue
+        data = path.read_bytes()
+        value = strict_json_loads(data.decode("utf-8"))
+        if not isinstance(value, dict) or value.get("contract") != "EXPERIMENT_CANDIDATE_v1":
+            raise ValueError("hold_candidate_invalid")
+        cid = value.get("candidate_id")
+        if not isinstance(cid, str) or not re.fullmatch(r"EC-[0-9a-f]{20}", cid) or path.stem != cid:
+            raise ValueError("hold_candidate_identity_invalid")
+        if not isinstance(value.get("spec"), dict):
+            raise ValueError("hold_candidate_spec_invalid")
+        old = rows.get(cid)
+        if old is not None:
+            if old[1]["spec"] != value["spec"]:
+                raise ValueError("hold_candidate_spec_conflict")
+            if old[2] != data:
+                ambiguous.add(cid)
+            # Match the legacy representative only for descriptive compatibility.
+            key = lambda item: (str(item[1].get("created_at_utc") or ""),
+                                str(item[1].get("registered_at_utc") or ""), item[0].as_posix())
+            if key((path, value)) >= key(old):
+                continue
+        rows[cid] = (path, value, data)
+    return [(p, v) for p, v, _ in rows.values()], ambiguous
+
+
 def existing_only_admissions(root: Path) -> dict[str, dict]:
     """Do not silently accept conflicting admission records or malformed authority."""
     rows: dict[str, dict] = {}
     raw: dict[str, bytes] = {}
-    for path in sorted(root.rglob("*.json")):
+    if not root.is_dir() or root.resolve() != root.absolute():
+        raise ValueError("hold_admission_root_invalid")
+    for path in sorted(root.rglob("*")):
         if path.is_symlink():
             raise ValueError("hold_admission_symlink")
+        if path.suffix != ".json":
+            continue
         data = path.read_bytes()
         value = strict_json_loads(data.decode("utf-8"))
         if not isinstance(value, dict) or value.get("contract") != ADMISSION_CONTRACT:
             raise ValueError("hold_admission_invalid")
         cid = value.get("candidate_id")
-        if not isinstance(cid, str) or not cid:
+        if not isinstance(cid, str) or not re.fullmatch(r"EC-[0-9a-f]{20}", cid) or path.stem != cid:
             raise ValueError("hold_admission_identity_invalid")
         if cid in raw and raw[cid] != data:
             raise ValueError("hold_admission_conflict")
@@ -953,6 +998,11 @@ def hold_candidate_eligible(candidate: dict, admission: dict | None, captured: s
     if not admission or admission.get("status") != QUALIFIED:
         return False
     spec = candidate["spec"]
+    candidate_authority = candidate.get("authority")
+    if (not isinstance(candidate_authority, dict)
+            or set(candidate_authority) != {"canonical_promotion", "framework_state_change", "model_weight_change", "portfolio_action"}
+            or any(v is not False for v in candidate_authority.values())):
+        return False
     authority = admission.get("authority")
     if (not isinstance(authority, dict)
             or set(authority) != {"canonical_effect", "portfolio_execution", "framework_state_change",
@@ -966,9 +1016,10 @@ def hold_candidate_eligible(candidate: dict, admission: dict | None, captured: s
             or qualification_status(spec, None)[0] != QUALIFIED):
         return False
     try:
-        return all(_utc_key(t) < _utc_key(captured) for t in
-                   (candidate.get("created_at_utc"), candidate.get("registered_at_utc"),
-                    admission.get("admission_frozen_at_utc")))
+        created, registered, frozen, capture = (_utc_key(t) for t in
+            (candidate.get("created_at_utc"), candidate.get("registered_at_utc"),
+             admission.get("admission_frozen_at_utc"), captured))
+        return created <= registered <= frozen < capture
     except AllocationIntegrityError:
         return False
 
@@ -1020,6 +1071,9 @@ def main() -> None:
         try:
             context, hold_source = existing_only_source(root, args.daily_context, args.budget_hold_receipt, datetime.now(UTC))
             admissions = existing_only_admissions(args.admission_root)
+            hold_rows, ambiguous_ids = strict_hold_candidate_rows(args.candidate_root)
+            if set(admissions) - {row["candidate_id"] for _, row in hold_rows}:
+                raise ValueError("hold_orphan_admission")
         except (OSError, ValueError, TypeError, RecursionError):
             raise SystemExit("existing_only_evidence_unverified") from None
         output, receipt = {}, {}
@@ -1055,7 +1109,10 @@ def main() -> None:
         else:
             rejected.append({"title": f"Prospective {item.get('metric_path')}", "error": "explicit_target_unit_contract_required"})
 
-    existing_candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
+    if hold:
+        existing_candidate_rows = hold_rows
+    else:
+        existing_candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
     existing_candidates = {value["candidate_id"]: value for _, value in existing_candidate_rows}
     if not hold:
         # #1557: account for every raw slot before the filtering/mapping/dedup below (metadata only).
@@ -1127,7 +1184,10 @@ def main() -> None:
     new_forecasts = 0
     dispatch = 0
     episode_continuations = 0
-    candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
+    if hold:
+        candidate_rows = list(hold_rows)
+    else:
+        candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
     # The cap is per causal event window: rows already frozen in this window (by any earlier run or
     # policy) occupy slots and are never rewritten; only the remainder may be issued.
     # A window is only derived from a canonical capture clock and a real run id (the historical
@@ -1157,7 +1217,7 @@ def main() -> None:
     for spec_path, candidate in candidate_rows:
         spec = candidate["spec"]
         cid = candidate["candidate_id"]
-        if hold and (not hold_candidate_eligible(candidate, admissions.get(cid), captured)
+        if hold and (cid in ambiguous_ids or not hold_candidate_eligible(candidate, admissions.get(cid), captured)
                      or capture_already_observed(args.observation_root, cid, captured, run_id)):
             continue
         # A subsequent paid analysis of the same source may register genuinely new proposals,
@@ -1253,7 +1313,7 @@ def main() -> None:
         args.manifest_output.write_bytes(base.canon(manifest))
     summary = {"candidate_count": reg["candidate_count"], "new_candidate_count": len(new_ids), "new_forecasts": new_forecasts, "forecast_allocation": allocation, "dispatch_created": dispatch, "episode_continuations_not_dispatched": episode_continuations, "admission_status_counts": admission_registry["status_counts"], "rejected": rejected}
     if hold:
-        summary.update({"mode": EXISTING_ONLY_MODE, "observations_created": hold_observed, "paid_call_executed_here": False, "analysis_completed_here": False})
+        summary.update({"mode": EXISTING_ONLY_MODE, "observations_created": hold_observed, "ambiguous_candidate_count": len(ambiguous_ids), "paid_call_executed_here": False, "analysis_completed_here": False})
     print(json.dumps(summary, sort_keys=True))
 
 

@@ -205,3 +205,73 @@ class ExistingOnlyHold(unittest.TestCase):
             row["source"] = {}
             (folder / "normal.json").write_text(json.dumps(row))
             self.assertEqual(module.prior_observation_status(root, "EC-example", "2026-01-02T00:00:00Z"), "FIRED")
+
+    def test_hold_rejects_invalid_candidate_census_before_any_scientific_write(self):
+        for defect in ("invalid_json", "wrong_contract", "wrong_id", "orphan", "symlink"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                root = self.seed(repo)
+                path = sorted((root / "candidates").rglob("*.json"))[0]
+                row = json.loads(path.read_text())
+                if defect == "invalid_json":
+                    path.write_text("{broken")
+                elif defect == "wrong_contract":
+                    row["contract"] = "OTHER"; path.write_text(json.dumps(row))
+                elif defect == "wrong_id":
+                    row["candidate_id"] = " " + row["candidate_id"]; path.write_text(json.dumps(row))
+                elif defect == "orphan":
+                    path.unlink()
+                else:
+                    link = path.parent / "alias"
+                    link.symlink_to(path.parent, target_is_directory=True)
+                before = {p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}
+                result = hold_run(repo, clock(-1))
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertIn("existing_only_evidence_unverified", result.stderr)
+                self.assertEqual({p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}, before)
+
+    def test_hold_quarantines_same_spec_different_candidate_record(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = self.seed(repo)
+            path = sorted((root / "candidates").rglob("*.json"))[0]
+            row = json.loads(path.read_text())
+            cid = row["candidate_id"]
+            row["registered_at_utc"] = clock(-75)
+            duplicate = path.parent / "duplicate" / path.name
+            duplicate.parent.mkdir()
+            duplicate.write_text(json.dumps(row))
+            before = immutable(repo)
+            result = hold_run(repo, clock(-1))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["ambiguous_candidate_count"], 1)
+            self.assertNotIn(cid, {f["source_candidate_id"] for f in forecasts(repo)})
+            obs = [json.loads(p.read_text()) for p in (root / "observations").rglob("*.json")]
+            self.assertFalse(any(o["candidate_id"] == cid and o["source"].get("mode") == MODE for o in obs))
+            self.assertEqual(immutable(repo), before)
+
+    def test_hold_rejects_reversed_admission_chronology_and_candidate_authority(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = self.seed(repo)
+            candidates = sorted((root / "candidates").rglob("*.json"))
+            invalid = set()
+            for i, path in enumerate(candidates):
+                row = json.loads(path.read_text())
+                cid = row["candidate_id"]
+                invalid.add(cid)
+                if i % 2:
+                    row["authority"]["portfolio_action"] = True
+                    path.write_text(json.dumps(row))
+                else:
+                    adm = next((root / "admission").rglob(path.name))
+                    value = json.loads(adm.read_text())
+                    value["admission_frozen_at_utc"] = clock(-85)
+                    adm.write_text(json.dumps(value))
+            before = immutable(repo)
+            result = hold_run(repo, clock(-1))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["observations_created"], 0)
+            self.assertEqual(forecasts(repo), [])
+            self.assertEqual(immutable(repo), before)
+
