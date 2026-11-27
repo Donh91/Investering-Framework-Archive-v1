@@ -1094,6 +1094,8 @@ def main() -> None:
         "frozen_unix": generated_unix,
         "source_forecast_freeze_path": str((target_dir / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").relative_to(repo)),
         "source_forecast_freeze_sha256": pointer["forecast_freeze_sha256"],
+        "source_manifest_sha256": package["source_manifest_sha256"],
+        "range_benchmark_snapshot_sha256": benchmark_snapshot.get("snapshot_sha256"),
         "source_binding_path": str((target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").relative_to(repo)),
         "daily_path_issuance": daily_path_issue,
         "daily_product_acceptance": daily_product,

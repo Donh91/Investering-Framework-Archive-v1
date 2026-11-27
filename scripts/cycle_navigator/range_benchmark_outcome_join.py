@@ -80,6 +80,7 @@ def _join(repo, row, now):
             and receipt["public_issue_number"] == public and receipt["machine_issue_number"] == machine
             and receipt["source_forecast_freeze_path"] == (folder/"CYCLE_NAVIGATOR_FORECAST_FREEZE.json").as_posix()
             and receipt["source_forecast_freeze_sha256"] == sha(freeze_raw)
+            and receipt["source_manifest_sha256"] == sha(manifest_raw)
             and receipt["source_binding_path"] == (folder/"CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").as_posix()
             and receipt["score_formula"] == FORMULA and receipt["score_window_policy"] == "FIRST_COMPLETE_UTC_HOUR_AT_OR_AFTER_FREEZE_v1"
             and _clock(receipt["scoring_valid_from_utc"]) <= start, "FREEZE_RECEIPT_MISMATCH")
@@ -99,7 +100,7 @@ def _join(repo, row, now):
     require(snapshot["contract"] == "CN_RANGE_BENCHMARK_FREEZE_v1" and snapshot["status"] == "FROZEN_RETAINED_SNAPSHOT"
             and snapshot["scientific_admission"] is False and snapshot["generated_unix"] == clock
             and snapshot["quote_unit"] == "USDT" and snapshot["history_days"] == 63
-            and snapshot["snapshot_sha256"] == snapshot_hash == row["baseline_snapshot_sha256"]
+            and snapshot["snapshot_sha256"] == snapshot_hash == row["baseline_snapshot_sha256"] == receipt["range_benchmark_snapshot_sha256"]
             and row["baseline_quote_unit"] == freeze["price_quote"][asset] == "USDT", "BASELINE_SNAPSHOT_MISMATCH")
     baselines = snapshot["assets"][asset]
     require(all(row[k] == baselines[k] for k in METHODS), "BASELINE_VALUES_MISMATCH")

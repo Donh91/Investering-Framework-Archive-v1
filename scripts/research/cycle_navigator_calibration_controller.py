@@ -281,6 +281,11 @@ def main() -> int:
         sys.path.insert(0, str(ROOT))
     from scripts.cycle_navigator.range_benchmark_outcome_join import join_diagnostics
     decision["retained_outcome_join"] = join_diagnostics(ROOT, rows, datetime.now(timezone.utc))
+    # A matured join is new evidence, not the same immutable action packet.
+    # Hash content/counts, not the polling clock, so unchanged inputs are stable.
+    decision["evidence_fingerprint"] = hashlib.sha256(json.dumps(
+        [decision["evidence_fingerprint"], decision["retained_outcome_join"]],
+        sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
     if args.dry_run:
         print(json.dumps(decision, indent=2, sort_keys=True))
         return 0
