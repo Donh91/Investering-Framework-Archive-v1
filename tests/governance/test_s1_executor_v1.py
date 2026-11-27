@@ -923,15 +923,16 @@ class Harness(unittest.TestCase):
         }
         self.assertEqual(table["OFF"][:2], (0, 0))
         # FA-P1-03: own native run + complete creation-window list (no earlier run in the window)
-        self.assertEqual(table["NOOP (nothing actionable)"][:2], (5, 0))               # the evaluation list, the publication read (A26), the start hold read (fix 5, D08), the ledger
-        self.assertEqual(table["NOOP + heartbeat"][:2], (8, 1))                        # ... the live hold and main before the write (#7)
+        # LIVE v1 (gate 2 (i)): the live hold reads are gone (one at start, one before each write)
+        self.assertEqual(table["NOOP (nothing actionable)"][:2], (4, 0))               # own run, the evaluation list, the publication read (A26), the ledger
+        self.assertEqual(table["NOOP + heartbeat"][:2], (6, 1))                        # ... main before the write (#7)
         self.assertEqual(table["MERGE live"][1], 3)                                    # intent, merge, receipt
         self.assertEqual(table["MERGE shadow"][1], 0)
         self.assertLessEqual(table["MERGE live"][0], 80)                               # fix round 4: the final look verifies everything again
         self.assertLess(table["MERGE live"][0], E.EXECUTE_API_CALLS)
         # the readback (PR, merge commit, main) + hold and main before each of 3 writes; liveness round: + the 3 live hold
         # reads SHADOW no longer makes (start, intent, final look)
-        self.assertEqual(table["MERGE live"][0] - table["MERGE shadow"][0], 12)
+        self.assertEqual(table["MERGE live"][0] - table["MERGE shadow"][0], 6)          # LIVE v1: the readback (PR, merge commit, main) + main before each of 3 writes
         self.__class__.table = table
 
 
@@ -1036,10 +1037,14 @@ class WorkflowAndSwitch(unittest.TestCase):
         # review finding P1-1 and the owner decision of 2026-11-25: NATIVE_GATES is not the owner's review route and is never shipped
         self.assertIn(SWITCH["review_policy"], ("CODEX_FINAL_REQUIRED", D.RECALL_POLICY))
 
-    def test_as_shipped_the_executor_is_shadow_and_read_only(self):
-        self.assertEqual(self.job["permissions"], {"contents": "read", "actions": "read", "pull-requests": "read", "issues": "read"})
+    def test_as_shipped_the_executor_is_live_v1_with_the_merge_scope_only(self):
+        # LIVE v1 enable (owner-present PR): the execute job holds the write scopes, the switch reads LIVE with the narrow
+        # scope and the canary; the fallback route and the review dispatch stay OFF/SHADOW
+        self.assertEqual(self.job["permissions"], {"contents": "write", "actions": "read", "pull-requests": "write", "issues": "write"})
+        self.assertEqual((SWITCH["executor"], SWITCH["live_scope"], SWITCH["canary"]["max_merges_per_utc_day"]), ("LIVE", "MERGE_LOW_NORMAL_ONLY", 1))
+        self.assertEqual((SWITCH["fallback_route"], SWITCH["review_dispatch"], SWITCH["review_dispatch_probe"]), ("OFF", "SHADOW", None))
         # the owner's review route of 2026-11-25 ships (Codex, a Claude receipt, or the Codex-offline fallback with recall)
-        self.assertEqual((SWITCH["executor"], SWITCH["review_policy"]), ("SHADOW", "CODEX_CLAUDE_OR_OFFLINE_RECALL"))
+        self.assertEqual(SWITCH["review_policy"], "CODEX_CLAUDE_OR_OFFLINE_RECALL")
 
     def test_the_brief_script_still_never_merges(self):
         brief_source = (ROOT / "scripts/governance/s1_tick_brief_v1.py").read_text(encoding="utf-8")
@@ -1092,7 +1097,7 @@ class HeadIsReadTwice(unittest.TestCase):
         self.assertEqual(gh.calls[-1:], [("GET", "branches/main")])                    # the live stop is the LAST read of the final look
         self.assertNotIn(("GET", f"actions/variables/{E.HOLD_VARIABLE}"), gh.calls)
         out, gh, _n, _d = execute(mode="LIVE", mutate=BEAT, live=lambda w, gh, n: setattr(gh, "fail_merge", urllib.error.HTTPError("u", 405, "x", {}, None)))
-        self.assertIn(("GET", f"actions/variables/{E.HOLD_VARIABLE}"), gh.calls)       # LIVE still reads it live before each write
+        self.assertNotIn(("GET", f"actions/variables/{E.HOLD_VARIABLE}"), gh.calls)    # LIVE v1 (gate 2 (i)): no live variables read either
 
 
 class SettlementIdentity(unittest.TestCase):
@@ -2012,8 +2017,7 @@ class FixRound3WriteBoundaries(unittest.TestCase):
 
     def test_each_fact_that_changes_between_the_intent_and_the_merge_call_stops_the_call(self):
         cases = {
-            "hold set after the intent": (lambda w, g, n: setattr(g, "hold", "1"), "hold:put"),
-            "hold variable unreadable": (lambda w, g, n: setattr(g, "hold_error", 403), "hold_unreadable:put(403)"),
+            # LIVE v1 (gate 2 option (i), owner #173/7227941605): no live variables read; a hold set after the job started is seen by the next run
             "switch changed on main": (lambda w, g, n: w["pins_actual"].update({B.SWITCH: "0" * 40}), f"lane:C7:pins:{B.SWITCH}"),
             "the contract changed on main": (lambda w, g, n: w["pins_actual"].update({B.CONTRACT_FILE: "0" * 40}), "lane:C7:pins:contract_blob"),
             "CHANGES_REQUESTED on the head": (lambda w, g, n: w["pr"][7]["reviews"].append({"id": 5, "state": "CHANGES_REQUESTED", "commit_id": HEAD, "user": {"login": "Donh91"}}),
@@ -2052,17 +2056,16 @@ class FixRound3WriteBoundaries(unittest.TestCase):
                 self.assertTrue(out["result"].startswith("MERGED("), out["result"])
 
     def test_the_hold_is_read_live_before_the_intent_too(self):
-        # liveness round: only LIVE reads the hold live; SHADOW (no write) decides on the job-start value (ShadowHold below)
-        for mode in ("LIVE",):
-            # fix round 5 (D08): set after the job's start (its env snapshot and the start read): the intent's read stops it
-            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: (setattr(gh, "hold", "stop"), setattr(gh, "hold_from", 2)))
-            self.assertEqual((gh.writes, out["result"], out["mode"], out["health"]), ([], "NOTHING_ACTIONABLE(skipped=hold:intent)", "OFF", "HELD"), mode)
-            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: (setattr(gh, "hold_error", 403), setattr(gh, "hold_from", 2)))
-            self.assertEqual((gh.writes, out["result"], out["health"]), ([], "NOTHING_ACTIONABLE(skipped=hold_unreadable:intent(403))", "UNVERIFIED"), mode)
-            # and set before the run: the start read stops it before any other read of the run (every tick proves the read)
-            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: setattr(gh, "hold", "stop"))
-            self.assertEqual((gh.writes, out["result"], out["health"]), ([], "NOTHING_ACTIONABLE(skipped=hold:start)", "HELD"), mode)
-            self.assertEqual(gh.calls[-1], ("GET", f"actions/variables/{E.HOLD_VARIABLE}"))
+        # LIVE v1 (gate 2 option (i), owner #173/7227941605): the hold is the job-start env value in every mode; no live
+        # variables read exists any more (the token cannot read variables: 403). A hold in the env stops before any read.
+        for mode in ("LIVE", "SHADOW"):
+            out, gh, _n, _d = execute(mode=mode, mutate=BEAT, env={"S1_EXECUTOR_HOLD": "stop"})
+            self.assertEqual((gh.writes, out["result"], out["health"], gh.calls), ([], "EXECUTOR_OFF(hold:start)", "HELD", []), mode)
+            # a value the variables endpoint would show later (or a 403 there) is never read and changes nothing
+            for live in (lambda w, gh, n: setattr(gh, "hold", "stop"), lambda w, gh, n: setattr(gh, "hold_error", 403)):
+                out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=live)
+                self.assertNotIn(("GET", f"actions/variables/{E.HOLD_VARIABLE}"), gh.calls, mode)
+                self.assertFalse(out["result"].startswith("NOTHING_ACTIONABLE(skipped=hold"), (mode, out["result"]))
 
     def test_aba_force_push_is_invisible_to_sha_reads_and_the_reviews_still_bite(self):
         """A -> B -> A between the reads: the SHA is A at every read, so the merge call is for A, whose content was
@@ -2079,7 +2082,8 @@ class FixRound3WriteBoundaries(unittest.TestCase):
         self.assertEqual(out["result"], "MERGE_ABORTED_AFTER_INTENT(7:C5:changes_requested_after_intent)")
 
     def test_a_stopped_intent_is_settled_by_the_next_run_and_the_head_is_never_tried_again(self):
-        out, gh, native, _d = execute(mutate=BEAT, live=self.after_intent(lambda w, g, n: setattr(g, "hold", "1")))
+        # LIVE v1 (gate 2 option (i)): the switch changed on main after the intent stops the call (no live hold read)
+        out, gh, native, _d = execute(mutate=BEAT, live=self.after_intent(lambda w, g, n: w["pins_actual"].update({B.SWITCH: "0" * 40})))
         self.assertEqual(tokens(gh), ["S1_LANE_MERGE_INTENT_v1"])
         body = gh.w["issue_comments"][-1]["body"]
         self.assertIn("paths_sha256: ", body)                                                  # the path set the intent was made for
@@ -2177,17 +2181,18 @@ class FixRound4(unittest.TestCase):
     def test_the_hold_and_the_switch_stop_every_write_not_only_the_merge(self):
         """7185637589 #11 / 7186140947 #7: a bookkeeping write (here the heartbeat, which comes before the action) is
         refused when the hold is set, the switch or the contract changed after the job started."""
-        for name, change, reason in (("hold set", lambda w, gh, n: (setattr(gh, "hold", "1"), setattr(gh, "hold_from", 2)), "hold:write:comment"),
-                                     ("hold unreadable", lambda w, gh, n: (setattr(gh, "hold_error", 403), setattr(gh, "hold_from", 2)), "hold_unreadable:write:comment(403)"),
-                                     ("switch changed", lambda w, gh, n: w["pins_actual"].update({B.SWITCH: "0" * 40}), "lane:C7:switch_changed:write:comment"),
+        # LIVE v1 (gate 2 option (i), owner #173/7227941605): no live variables read; a hold set after the job started is seen by the next run
+        for name, change, reason in (("switch changed", lambda w, gh, n: w["pins_actual"].update({B.SWITCH: "0" * 40}), "lane:C7:switch_changed:write:comment"),
                                      ("contract changed", lambda w, gh, n: w["pins_actual"].update({B.CONTRACT_FILE: "0" * 40}), "lane:C7:contract_changed:write:comment")):
             with self.subTest(name):
                 out, gh, _n, _d = execute(live=change)                                    # no heartbeat today: the heartbeat is the first write
                 self.assertEqual(gh.writes, [], out["result"])
                 self.assertIn(reason, out["result"])
         rc = Reconcile()                                                                  # a reconcile receipt too
-        out, gh, _n, _d = execute(mutate=lambda w: rc.intent(w), live=lambda w, gh, n: (rc.merged()(w, gh, n), setattr(gh, "hold", "stop"), setattr(gh, "hold_from", 2)))
+        out, gh, _n, _d = execute(mutate=lambda w: rc.intent(w), live=lambda w, gh, n: (rc.merged()(w, gh, n), w["pins_actual"].update({B.SWITCH: "0" * 40})))
         self.assertEqual((gh.writes, out["health"]), ([], "HELD"), out["result"])
+        out, gh, _n, _d = execute(mutate=lambda w: rc.intent(w), live=rc.merged(), env={"S1_EXECUTOR_HOLD": "stop"})   # the job-start hold
+        self.assertEqual((gh.writes, out["health"], out["result"]), ([], "HELD", "EXECUTOR_OFF(hold:start)"))
 
     def test_the_executor_acts_only_on_the_decision_that_was_published(self):
         """7185637589 #8 (A26): `needs: publish` proves only that the publish job succeeded. The ONE open brief issue must

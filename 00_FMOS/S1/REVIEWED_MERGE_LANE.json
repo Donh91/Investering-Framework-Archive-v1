@@ -6,7 +6,9 @@
   "policy": "AGENTS.md section 0.2e",
   "decided": "2026-11-15 owner-present interactive",
   "clears_halt": null,
-  "executor": "SHADOW",
+  "executor": "LIVE",
+  "live_scope": "MERGE_LOW_NORMAL_ONLY",
+  "canary": {"max_merges_per_utc_day": 1, "decided": "LIVE v1 enable 2026-11-27: at most 1 executor merge per UTC day; lifting it after the first 48 hours is a reviewed switch change (no automatic expiry)"},
   "review_policy": "CODEX_CLAUDE_OR_OFFLINE_RECALL",
   "fallback_route": "OFF",
   "fallback_data_allowlist": {
@@ -34,15 +36,15 @@
     ]
   },
   "pins": {
-    "AGENTS.md": "a274067714788c07e24532f8a0dd60cecf63ef41",
+    "AGENTS.md": "46902ee5ec479523c3c71e6d36ced5f6cd3de5d8",
     "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json": "44aea7baa306a8058fed2d760f5154f5ee7f7fad",
-    ".github": "4ce7cc11300ebbf3c1bad9d54d23e0d597ba515b",
+    ".github": "c8164f72b76a8a7af5d86a70748069cf25377db4",
     ".agents": "e93392c3c78294c25d9073193c2405792fb3025c",
-    "scripts/governance": "44ac1c2c25060a9bed681e454ba9025c619e48cd",
+    "scripts/governance": "a691785064d926baa0c7304f5a544f11e591ea1c",
     "scripts/health": "a0ea5e97be8129a796d35213a796f0f852941be0",
     "07_PROMPTS_AND_AGENTS": "eb96a502d5a11847c40b821c5c18e76d417fe25b",
     "01_CORE_FRAMEWORK/governance": "b87a75cb93034089c381b607312667d87078a86a",
-    "00_FMOS/S1_WORKFLOW_ISOLATION_V1.json": "aca61dca3b6af81e368cfa05650c4088ac08009d"
+    "00_FMOS/S1_WORKFLOW_ISOLATION_V1.json": "03986ee7a3a8fd10fd62f9eb6202b7b4b5fcea8c"
   },
   "review_dispatch": "SHADOW",
   "review_dispatch_probe": null

@@ -32,6 +32,9 @@ def thin_world(executor="SHADOW", policy="NATIVE_GATES"):
     w = TB.world()
     w["push_filters"] = []
     w["switch"]["executor"], w["switch"]["review_policy"] = executor, policy
+    # LIVE v1: the fixtures keep the full section 0.2i write classes of #2337 (heartbeat, halts, fallback, recall), which a
+    # LIVE run writes only under live_scope FULL_SECTION_0_2I; the shipped scope MERGE_LOW_NORMAL_ONLY has its own tests
+    w["switch"].setdefault("live_scope", "FULL_SECTION_0_2I")
     w["pulls"][0].update(title="docs: a note", labels=[])
     return w
 

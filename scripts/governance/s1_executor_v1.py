@@ -84,14 +84,63 @@ EVALUATION_READS = 6                   # executor run attempts read (FA-P1-01: p
 POSTS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1", "S1_HEARTBEAT_v1",
          "S1_FALLBACK_CANDIDATE_v1", "S1_CODEX_RECALL_PENDING_v1", "S1_CODEX_RECALL_CLEARED_v1", B.REVIEW_INTENT, B.REVIEW_RECEIPT)
 MAX_POST_CHARS = 4000
-HOLD_VARIABLE = "S1_EXECUTOR_HOLD"     # liveness round: the job env (vars context, set by GitHub at job start) in every mode;
-                                       # LIVE additionally reads it live before every write (live_stop), which fails closed today
+HOLD_VARIABLE = "S1_EXECUTOR_HOLD"     # the job env (vars context, set by GitHub at job start), in every mode (LIVE v1: gate 2 (i))
 # Liveness round (2026-11-27, native run 45986221512 job 140462413113): GET actions/variables/<name> answers 403 to this job's
 # token. The token's permissions are Actions, Contents, Issues, Metadata, PullRequests: read (the job log's own GITHUB_TOKEN
 # Permissions block); a workflow cannot grant a GITHUB_TOKEN a Variables permission. So the live read can never succeed with
-# it: SHADOW (which never writes) decides on the job-start value only, and LIVE stays impossible until an owner-only live
-# hold source exists (a pre-LIVE gate; 403 is never read as "not set").
+# it; SHADOW and (LIVE v1, owner decision #173/7227941605 option (i)) LIVE decide on the job-start value (403 is never read as
+# "not set").
 HOLD_ENV_MISSING = "hold_unreadable:start(env)"
+# LIVE v1 (owner decision #173/7227941605 gate 2 option (i)): LIVE's stop is the job-start S1_EXECUTOR_HOLD (the env GitHub
+# injects) plus the live re-read of the switch and the RUNTIME_CONTRACT on main before every write (live_stop). The REST
+# variables read (always 403 for this token) is gone from every mode; an unreadable or missing env value is never "no hold".
+# The write scope of a LIVE run is the switch's "live_scope" (missing or unknown: no write at all):
+#   MERGE_LOW_NORMAL_ONLY       ONE action type: the sha-pinned MERGE of a LOW or MEDIUM ("normal") PR whose review route
+#                               is an exact-head independent APPROVE receipt (route (b), CLAUDE), with the records that
+#                               merge needs (intent, receipt, readback halt) and the settlement of its own intents
+#                               (receipt, halt, OP_DONE). No heartbeat, halt decision, recall, label, fallback candidate
+#                               or review-dispatch write.
+#   MERGE_LOW_NORMAL_REVIEWED   the same, and route (a) (the completed Codex review) too: a later reviewed switch change.
+#   FULL_SECTION_0_2I           every write class of section 0.2i (the #2337 design); never shipped without a new owner
+#                               decision.
+LIVE_SCOPES = {"MERGE_LOW_NORMAL_ONLY": {"routes": ("CLAUDE",), "risks": ("LOW", "MEDIUM")},
+               "MERGE_LOW_NORMAL_REVIEWED": {"routes": ("CODEX", "CLAUDE"), "risks": ("LOW", "MEDIUM")},
+               "FULL_SECTION_0_2I": None}
+SCOPE_TOKENS = ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1", "S1_LANE_HALTED", "S1_OP_DONE_v1")
+# Canary (gate 8 / D07 K): at most K executor merges per UTC day under a scoped LIVE; K from the switch's
+# canary.max_merges_per_utc_day (missing: 1). Counted from the ledger's S1 merge intents and receipts of the current UTC
+# day (one per PR and head; any S1 author, edited or not: it can only stop). No automatic expiry: lifting the cap after the
+# first 48 hours is a reviewed switch change.
+CANARY_DEFAULT = 1
+
+
+def live_scope(switch):
+    """(name, spec) of the switch's live_scope; (None, None) when missing or unknown (a LIVE run then writes nothing)."""
+    name = switch.get("live_scope") if isinstance(switch, dict) else None
+    return (name, LIVE_SCOPES[name]) if isinstance(name, str) and name in LIVE_SCOPES else (None, None)
+
+
+def canary_limit(switch):
+    """K, or None when the switch's canary block is present but not a valid non-negative integer (fail closed)."""
+    c = switch.get("canary", {}) if isinstance(switch, dict) else None
+    if not isinstance(c, dict):
+        return None
+    k = c.get("max_merges_per_utc_day", CANARY_DEFAULT)
+    return k if type(k) is int and k >= 0 else None
+
+
+def canary_count(comments, now):
+    """Distinct (PR, head) with an S1 merge intent or merge receipt on #1156 created in the UTC day of `now`. Raises on a
+    row whose time cannot be read (the caller fails closed)."""
+    day, keys = now.astimezone(timezone.utc).date(), set()
+    for c in comments:
+        if not B.is_s1_author(c) or B.first_line_token(c.get("body")) not in ("S1_LANE_MERGE_INTENT_v1", "S1_LANE_MERGE_v1"):
+            continue
+        if B.stamp(c["created_at"]).astimezone(timezone.utc).date() != day:
+            continue
+        f = B.fields(c.get("body"))
+        keys.add((str(f.get("pr")).strip(), str(f.get("head")).strip()) if f.get("pr") and f.get("head") else ("id", c.get("id")))
+    return len(keys)
 EXECUTE_STEP = "Execute the one decided action (re-verified natively; writes only when the switch on main is LIVE)"
 
 
@@ -197,6 +246,9 @@ class Run:
         self.run_of = B.RunReader(gh)                             # proves which Actions-bot ledger posts are this job's
         self.alarms, self.pending = [], None                      # what makes the process exit non-zero (finish)
         self.review_reservation = None                            # exact PR/head/run/intent, one per run
+        self.scope_cleared = None                                 # LIVE v1: (pr, sha) whose scope and canary this run verified
+        self.reconciling = False                                  # LIVE v1: settlement writes of this run's reconcile
+        self.late_comments = []                                   # LIVE v1: the ledger rows last_look() read
         self.review_plan = None
         self.review_request_record = None
         self.recall_cleared = set()                               # PRs whose recall THIS run proved cleared (the label may then go)
@@ -219,6 +271,7 @@ class Run:
         """kind 'comment' (body=...) or 'merge' (pr=..., sha=...). Refused unless the mode is LIVE, the clock allows a
         write now (H1 is checked before EVERY write), the cap holds and the payload is one of the two allowed shapes."""
         need(self.mode == "LIVE", "executor_not_live")
+        self.scope_gate(kind, kw)                                 # LIVE v1: the write scope of the switch, before any read
         need(len(self.writes) < MAX_WRITES, "write_cap")
         self.live_stop(f"write:{kind}")                           # fix round 4 (#11, 7186140947-07): hold, switch and contract, live, before EVERY write
         clock = D.clock_gate(self.now_fn(), self.decision["generated_at"], self.decision["expires_at"], D.EXECUTE_MAX_AGE_MINUTES)
@@ -294,6 +347,53 @@ class Run:
         raw, _h = self.gh._request("PUT", self.gh.url(f"pulls/{pr}/merge"), {"merge_method": "squash", "sha": sha})
         return json.loads(raw)
 
+    def scoped(self):
+        """True under a narrow LIVE scope (MERGE_LOW_NORMAL_*): only the merge and its records may be written."""
+        return live_scope(self.files.get("switch"))[1] is not None
+
+    def scope_gate(self, kind, kw):
+        """LIVE v1: what the switch's live_scope allows. Missing or unknown scope: nothing. A narrow scope: the merge this
+        run cleared (route, risk, canary), the intent and receipt of that merge, a readback halt after this run's merge
+        call, and the settlement records of this run's reconcile; nothing else (heartbeat, halt decision, recall, label,
+        fallback candidate, review dispatch)."""
+        name, spec = live_scope(self.files.get("switch"))
+        need(name is not None, "live_scope_unknown")
+        if spec is None:
+            return
+        merged = any(w[0] == "merge" for w in self.writes)
+        if kind == "merge":
+            need(self.scope_cleared == (kw.get("pr"), kw.get("sha")), "live_scope:merge_not_cleared")
+            return
+        need(kind == "comment", f"live_scope:{kind}")
+        token = B.first_line_token(kw.get("body"))
+        need(token in SCOPE_TOKENS, f"live_scope:{token}")
+        if token == "S1_LANE_MERGE_INTENT_v1":
+            need(self.scope_cleared is not None and not self.reconciling and (self.decision or {}).get("action") == "MERGE", "live_scope:intent")
+        elif token == "S1_OP_DONE_v1":
+            need(self.reconciling, "live_scope:op_done")
+        else:                                                    # S1_LANE_MERGE_v1, S1_LANE_HALTED: a merge outcome only
+            need(merged or self.reconciling, f"live_scope:{token}")
+
+    def check_scope(self, m, proof, comments):
+        """LIVE v1, before the intent (in every mode, so SHADOW shows it too): the decision's merge is in the switch's
+        scope (route, risk, and the proof of this run agrees) and the canary cap of the UTC day is not reached."""
+        name, spec = live_scope(self.files.get("switch"))
+        if spec is None:                                         # no scope named (legacy SHADOW) or FULL_SECTION_0_2I
+            if self.mode == "LIVE":
+                need(name is not None, "live_scope_unknown")
+            self.scope_cleared = (m["pr"], m["sha"])
+            return
+        need(m.get("review") in spec["routes"] and proof.get("route") == m.get("review"), f"live_scope:route={m.get('review')}", BLOCKED)
+        need(m.get("risk") in spec["risks"] and proof.get("risk") in spec["risks"], f"live_scope:risk={m.get('risk')}", BLOCKED)
+        k = canary_limit(self.files.get("switch"))
+        need(k is not None, "canary:config")
+        try:
+            count = canary_count(list(comments) + list(self.late_comments or []), self.now_fn())
+        except (KeyError, TypeError, ValueError, AttributeError):
+            raise Stop("canary:unreadable")
+        need(count < k, f"canary:cap(day={count},k={k})", HELD)
+        self.scope_cleared = (m["pr"], m["sha"])
+
     def say(self, line):
         line = re.sub(r"[\x00-\x1f\x7f]", " ", str(line))        # one line stays one line, whatever a path or a reason holds
         self.lines.append(line)
@@ -310,6 +410,7 @@ class Run:
         """Immediately before the intent: no halt and no other intent reached #1156 since the ledger read (one page)."""
         late = self.gh.get(f"issues/{B.OWNER_ISSUE}/comments", {"since": self.ledger_read_at, "per_page": 100})
         need(isinstance(late, list) and len(late) < 100, "lane:C7:ledger_unreadable")
+        self.late_comments = list(late)                           # LIVE v1: the canary counts these too
         need(not B.lane_halts(late), "lane:C7:halt_after_read", HELD)
         need(not any(B.is_s1_author(c) and B.first_line_token(c.get("body")) in ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1") for c in late),
              "lane:C9:intent_after_read", BLOCKED)
@@ -503,12 +604,11 @@ class Run:
 
     # ---- fix round 3 (ChatGPT audit: HOLD semantics, TOCTOU): fresh reads at the two write boundaries
     def live_stop(self, where):
-        """The owner's stop, read LIVE (never the value the job started with): the repository variable S1_EXECUTOR_HOLD
-        and the lane switch at current main. A non-empty hold turns this run OFF; a switch blob that is no longer the one
-        this run verified stops it. A hold that cannot be read stops too (fail closed): 404 is the only "not set". Called
-        immediately before the intent post and immediately before the merge call. Liveness round: SHADOW takes the
-        job-start hold only (hold_now) and still reads the switch and contract here; LIVE reads the variable live, which
-        this job's token cannot do today (403, fail closed). What it cannot do: stop a merge call already sent."""
+        """The owner's stop before every write. LIVE v1 (gate 2 option (i)): the job-start S1_EXECUTOR_HOLD (hold_now: a
+        non-empty or unreadable value stops) and, read live, the lane switch and the RUNTIME_CONTRACT at current main: a
+        switch blob that is no longer the one this run verified (the switch no longer reads LIVE, or anything in it
+        changed) stops it. Called immediately before the intent post, before the merge call and before every other write.
+        What it cannot do: see a hold set after the job started (the next run does), or stop a merge call already sent."""
         self.hold_now(where)
         main, protected = self.main_now()                        # the switch and the contract as current main holds them, by a native git read
         blobs = self.native.tree_shas(main, [B.SWITCH, B.CONTRACT_FILE])
@@ -527,25 +627,13 @@ class Run:
             self.pins_at(main, where)
 
     def hold_now(self, where):
-        """The owner's hold. SHADOW (it never writes): the job-start value from the env only, never a live read. LIVE:
-        S1_EXECUTOR_HOLD read live: any non-empty value turns this run OFF; 404 is the only "not set"; anything else
-        that is not a readable string stops (fail closed). Liveness round: this job's token gets 403 here (it holds no
-        Variables permission and a workflow cannot grant one), so every LIVE run stops at its first hold read until the
-        pre-LIVE gate "live hold source" is solved; 403 is never "not set"."""
-        if self.mode != "LIVE":
-            value = self.env.get(HOLD_VARIABLE)
-            need(isinstance(value, str), HOLD_ENV_MISSING)
-            if value != "":
-                self.mode = "OFF"
-                raise Stop(f"hold:{where}", HELD)
-            return
-        try:
-            doc = self.gh.get(f"actions/variables/{HOLD_VARIABLE}")
-            value = doc.get("value") if isinstance(doc, dict) else None
-            need(isinstance(value, str), f"hold_unreadable:{where}")
-        except urllib.error.HTTPError as exc:
-            need(exc.code == 404, f"hold_unreadable:{where}({exc.code})")
-            value = ""
+        """The owner's hold, in every mode: the S1_EXECUTOR_HOLD value GitHub put in this job's env at start (owner
+        decision #173/7227941605, gate 2 option (i)). Any non-empty value turns this run OFF; a missing or non-string value
+        stops (fail closed, never "no hold"). No live REST read: this job's token cannot read repository variables (403,
+        native run 45986221512). A hold set after the job started is seen by the next run; live_stop re-reads the switch
+        and the contract on main before every write."""
+        value = self.env.get(HOLD_VARIABLE)
+        need(isinstance(value, str), HOLD_ENV_MISSING)
         if value != "":                                          # fix round 5 (P1-09): ANY non-empty value, whitespace included
             self.mode = "OFF"
             raise Stop(f"hold:{where}", HELD)
@@ -691,6 +779,7 @@ class Run:
         proof = self.verify_merge(comments)
         self.guard_paths = tuple(proof["paths"])
         self.last_look()
+        self.check_scope(m, proof, comments)                     # LIVE v1: route, risk and the canary cap, before anything else
         first = None
         if m["review"].startswith("FALLBACK("):                   # never a merge in the run that first saw the PR qualify
             first, waiting = self.fallback(proof)
@@ -748,6 +837,13 @@ class Run:
     # ---- RECONCILE: an executor intent with no outcome (EVIDENCE_BINDINGS B3)
     def reconcile(self, comments):
         """Returns the result text when a receipt or a halt was posted (that is this run's action), else None."""
+        self.reconciling = True
+        try:
+            return self._reconcile(comments)
+        finally:
+            self.reconciling = False
+
+    def _reconcile(self, comments):
         now, done, records, settled = self.now_fn(), None, [], []
         mine = [i for i in B.open_intents(comments, now, 0, self.run_of, self.merge_of, self.log_of) if i.get("kind") == "S1_LANE_MERGE_INTENT_v1"]
         by_id = {c.get("id"): c for c in comments}
@@ -818,7 +914,7 @@ class Run:
             need(anc is True, "-:C1b:not_on_main", BLOCKED)
             if h["commit"] in named:
                 return "LANE_HALTED(c1b:already_posted)"
-            if self.mode != "LIVE":
+            if self.mode != "LIVE" or self.scoped():             # LIVE v1: a halt decision is not in the write scope
                 return f"WOULD_HALT(c1b:{h['commit'][:8]})"
             self.write("comment", body=D.halt_body("unreviewed_code_on_main", commit=h["commit"], contract=d["contract"], run_id=run_id))
             return "LANE_HALTED(c1b)"
@@ -829,7 +925,7 @@ class Run:
              and run.get("status") == "completed" and run.get("conclusion") in B.FAILED_CONCLUSIONS, "-:C7:run", BLOCKED)
         if re.search(rf"(?<!\d){h['run']}(?!\d)", named):
             return "LANE_HALTED(main_health:already_posted)"
-        if self.mode != "LIVE":
+        if self.mode != "LIVE" or self.scoped():
             return f"WOULD_HALT(main_health:{h['run']})"
         self.write("comment", body=D.halt_body("main_health", run=h["run"], contract=d["contract"], run_id=run_id))
         return "LANE_HALTED(main_health)"
@@ -845,6 +941,8 @@ class Run:
           else    the PR is natively merged at that head and the label is missing (a run that died after the merge, or a
                   reconciled fallback merge): add it.
         Nothing else is written, and a read that does not prove the state writes nothing."""
+        if self.mode == "LIVE" and self.scoped():                # LIVE v1: recall bookkeeping is not in the write scope
+            return None
         recorded = {(r["pr"], r["head"]): r for r in B.recalls(comments)}
         for item in (self.brief.get("recall") or {}).get("items") or []:
             if not isinstance(item, dict) or (item.get("pr"), item.get("head")) not in recorded or item.get("codex") == "NOT_READ":
@@ -919,7 +1017,7 @@ class Run:
         now = self.now_fn()
         if not self.decision["heartbeat"]["due"] or not B.heartbeat_due(comments, now):
             return None
-        if self.mode != "LIVE":
+        if self.mode != "LIVE" or self.scoped():                 # LIVE v1: the heartbeat is not in the write scope
             return "WOULD_HEARTBEAT"
         runs = self.gh.get(f"actions/workflows/{Path(B.WORKFLOW_PATH).name}/runs", {"per_page": 100}).get("workflow_runs") or []
         ticks = sum(1 for r in runs if r.get("event") in EVENTS and timedelta(0) <= now - B.stamp(r["created_at"]) <= timedelta(hours=24))
