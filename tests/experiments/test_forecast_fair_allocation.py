@@ -439,11 +439,14 @@ class Round3StoreIntegrityAndCaptureClock(unittest.TestCase):
             self.assertEqual(len(forecasts(repo)), 5)
 
     def test_missing_run_id_never_synthesises_a_window(self):
-        with tempfile.TemporaryDirectory() as td:
-            repo = Path(td)
-            summary = run(repo, self.output8, tick(0), run_id="")
-            self.assertEqual(summary["new_forecasts"], 0)
-            self.assertEqual(summary["forecast_allocation"]["status"], "FAIL_CLOSED:capture_run_id_missing")
+        for run_id in ("", " ", "\t\n", None, False, 0, [], {}):
+            with self.subTest(run_id=run_id), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                summary = run(repo, self.output8, tick(0), run_id=run_id)
+                self.assertEqual(summary["new_forecasts"], 0)
+                self.assertEqual(summary["forecast_allocation"]["status"], "FAIL_CLOSED:capture_run_id_missing")
+                self.assertIsNone(summary["forecast_allocation"]["causal_event_window_id"])
+                self.assertEqual(forecasts(repo), [])
 
     def test_window_and_forecast_ids_are_byte_identical_for_a_real_historical_capture(self):
         # Native run 44628588447: source_run_id gh-44619142868-1, captured 2026-11-19T21:29:33Z;
@@ -532,14 +535,26 @@ class Round4StrictParseAndCaptureValidation(unittest.TestCase):
 
     def test_invalid_capture_clock_fails_whole_run_before_any_write(self):
         for captured in ("not-a-time", "2026-02-30T00:00:00Z", "0001-01-01T00:00:00+01:00",
-                         False, True, 0, 0.0, 1, [], {}, [1], {"clock": "invalid"}):
+                         False, True, 0, 0.0, -0.0, 1, [], {}, [1], {"clock": "invalid"}, " ", "\t"):
             with self.subTest(captured=captured), tempfile.TemporaryDirectory() as td:
                 repo = Path(td)
                 run(repo, self.output8, tick(0))
                 before = snapshot(repo)
                 proc = run_raw(repo, self.output8, captured)
                 self.assertEqual(proc.returncode, 4, proc.stderr[-800:])
-                self.assertIn("CAPTURE_CLOCK_INVALID", proc.stderr)
+                self.assertEqual(json.loads(proc.stderr), {"status": "CAPTURE_CLOCK_INVALID", "writes_performed": False})
+                self.assertEqual(proc.stdout, "")
+                self.assertEqual(snapshot(repo), before)
+
+    def test_invalid_capture_clock_on_empty_store_creates_no_outputs(self):
+        for captured in (False, 0, [], {}, "not-a-time"):
+            with self.subTest(captured=captured), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                before = snapshot(repo)
+                proc = run_raw(repo, self.output8, captured)
+                self.assertEqual(proc.returncode, 4, proc.stderr[-800:])
+                self.assertEqual(json.loads(proc.stderr), {"status": "CAPTURE_CLOCK_INVALID", "writes_performed": False})
+                self.assertEqual(proc.stdout, "")
                 self.assertEqual(snapshot(repo), before)
 
     def test_falsey_and_wrong_type_latest_capture_container_fails_before_any_write(self):
