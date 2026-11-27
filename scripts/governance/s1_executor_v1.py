@@ -48,6 +48,7 @@ if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 import s1_decision_v1 as D  # noqa: E402
 import s1_tick_brief_v1 as B  # noqa: E402
+import s1_owner_review_batch_v1 as C  # noqa: E402
 
 EXECUTE_API_CALLS = 220                # this job's own cap (the build is capped at 300). One PR is verified twice (fix round 4, #2:
                                        # the final look re-derives every gate after the intent), about 40 reads each
@@ -936,7 +937,8 @@ class Run:
              and ((row.get("base") or {}).get("repo") or {}).get("id") == repo_id, "review_head_changed", BLOCKED)
         return row
 
-    def review_candidate(self):
+    def review_candidates(self):
+        seen = set()
         rows = self.brief.get("ranked") or self.brief.get("next") or []
         for row in rows:
             if not isinstance(row, dict):
@@ -951,8 +953,12 @@ class Run:
                     and (e.get("ci") or {}).get("state") == "GREEN" and not (e.get("author") or {}).get("codex")
                     and (e.get("thin") or {}).get("claude") == "NONE"
                     and ((e.get("review") or {}).get("codex") or {}).get("status") == "NONE"):
-                return pr, head
-        return None
+                if pr not in seen:
+                    seen.add(pr)
+                    yield pr, head
+
+    def review_candidate(self):
+        return next(self.review_candidates(), None)
 
     def verify_review_dispatch(self, pr, head, ledger, own_intent=None):
         row = self.review_head(pr, head)
@@ -1055,6 +1061,29 @@ class Run:
             self.say(f"S1_EXECUTOR_REVIEW SKIPPED({getattr(exc, 'reason', type(exc).__name__)})")
             return None
 
+    def emit_owner_review_batch(self, ledger, target):
+        d = self.decision
+        if self.mode != "SHADOW" or not C.daily_slot(d.get("generated_at")):
+            return
+        targets = [target]
+        old_paths = self.guard_paths
+        try:
+            for pr, head in self.review_candidates():
+                if (pr, head) == target:
+                    continue
+                if len(targets) >= C.MAX_TARGETS:
+                    break
+                self.verify_review_dispatch(pr, head, ledger)
+                targets.append((pr, head))
+            payload = C.proposal(targets=targets, main=d.get("main"), contract=d.get("contract_blob"),
+                                 run=int(self.env["GITHUB_RUN_ID"]), attempt=int(self.env["GITHUB_RUN_ATTEMPT"]),
+                                 generated_at=d["generated_at"], now=self.now_fn())
+            self.say(C.SCHEMA + " " + json.dumps(payload, sort_keys=True, separators=(",", ":")))
+        except Exception as exc:  # no partial proposal or write on failure
+            self.say("S1_OWNER_REVIEW_BATCH_SKIPPED " + str(getattr(exc, "reason", type(exc).__name__)))
+        finally:
+            self.guard_paths = old_paths
+
     def dispatch_review(self, ledger):
         cfg = self.files["switch"]
         route = cfg.get("review_dispatch")
@@ -1070,6 +1099,8 @@ class Run:
         if route == "BOT_PROBE" and (not isinstance(probe, dict) or (probe.get("pr"), probe.get("head")) != target):
             return None
         self.verify_review_dispatch(pr, head, ledger)
+        if route in ("SHADOW", "OWNER_ACTION"):
+            self.emit_owner_review_batch(ledger, target)
         if route == "OWNER_ACTION":
             return f"WOULD_OWNER_ACTION_REVIEW(pr={pr},head={head[:8]})"
         if self.mode != "LIVE" or route == "SHADOW":
