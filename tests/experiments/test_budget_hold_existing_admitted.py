@@ -12,7 +12,10 @@ from pathlib import Path
 # Full-repository CI uses pytest importlib collection; the sibling fixture directory
 # is not implicitly on sys.path in that mode.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from test_forecast_fair_allocation import SCRIPT, ctx, pair, run, forecasts, snapshot, module
+from test_forecast_fair_allocation import SCRIPT, ctx, pair, run, forecasts, snapshot as full_snapshot, module
+
+sys.path.insert(0, str(SCRIPT.resolve().parents[1] / 'api_agent'))
+import build_owner_bound_director_context as context_builder
 
 UTC = timezone.utc
 MODE = "BUDGET_HOLD_EXISTING_ADMITTED_ONLY_v1"
@@ -22,17 +25,65 @@ def clock(minutes):
     return (datetime.now(UTC) + timedelta(minutes=minutes)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def hold_run(repo, captured, *, attempt="1", receipt_updates=None, context_updates=None, extra=(), cap=5):
+def snapshot(repo):
+    # Synthetic input Git objects are setup, not scientific writes. The
+    # separate custody tests assert source bytes and HEAD remain unchanged.
+    return {p: b for p, b in full_snapshot(repo).items()
+            if not p.startswith((".git/", "03_DAILY_CAPTURE_LOGS/"))}
+
+
+def capture_fixture(repo, captured):
+    def git(*args):
+        return subprocess.run(("git", "-C", str(repo), *args), check=True,
+                              capture_output=True, text=True, timeout=10).stdout.strip()
+    if not (repo / ".git").exists():
+        git("init", "-q", "-b", "main")
+        git("config", "user.name", "SyntheticFixture")
+        git("config", "user.email", "fixture@example.invalid")
+    previous = (datetime.fromisoformat(captured.replace("Z", "+00:00")) -
+                timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+    metrics = ctx(captured)["latest_capture"]["market_metrics"]
+    rows = []
+    for stamp, rid in ((previous, "prior-capture"), (captured, "hold-capture")):
+        when = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+        rel = module.HOLD_CAPTURE_ROOT / when.strftime("%Y/%m/%d") / (when.strftime("%H%M%S") + "_" + rid + ".json")
+        value = {"contract": "DAILY_RAW_CAPTURE_INDEX_v2", "captured_at_utc": stamp,
+                 "run_id": rid, "status": "COMPLETE", "market_metrics": metrics, "owners": []}
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        data = context_builder.canonical_bytes(value)
+        if path.exists():
+            assert path.read_bytes() == data
+        else:
+            path.write_bytes(data)
+        rows.append((rel, value))
+    git("add", "--", module.HOLD_CAPTURE_ROOT.as_posix())
+    if git("status", "--porcelain", "--", module.HOLD_CAPTURE_ROOT.as_posix()):
+        git("commit", "-qm", "synthetic capture sources")
+    return context_builder.build_context(rows), git("rev-parse", "HEAD")
+
+
+def hold_run(repo, captured, *, attempt="1", receipt_updates=None, context_updates=None, extra=(), cap=5, fail_forecast=False, capture_defect=None):
     root = repo / "research/experiment_lifecycle"
     folder = root / "budget_hold_inputs" / ("123-" + attempt)
     folder.mkdir(parents=True, exist_ok=True)
-    context = ctx(captured, "hold-capture")
-    context.update({"coverage": {"comparable_numeric_metrics": 2}, "delta_status": "DELTA_READY"})
+    context, head = capture_fixture(repo, captured)
     context.update(context_updates or {})
+    if capture_defect == "changed_bytes":
+        path = repo / context["latest_capture"]["path"]
+        path.write_bytes(path.read_bytes() + b" ")
+    elif capture_defect == "untracked_capture":
+        path = repo / context["latest_capture"]["path"]
+        path.with_name("untracked.json").write_bytes(path.read_bytes())
+    elif capture_defect == "missing_predecessor":
+        (repo / context["previous_capture"]["path"]).unlink()
+    elif capture_defect == "forged_metrics":
+        context["latest_capture"]["market_metrics"]["spot"]["BTCUSDT"]["close"] += 1
+        context["context_hash"] = context_builder.sha256({k: v for k, v in context.items() if k != "context_hash"})
     receipt = {
         "contract": "ROUTINE_API_BUDGET_DISPOSITION_v1",
         "lane": "director", "disposition": "HOLD", "reason": "API_RESERVE_GUARD_BLOCKED",
-        "run_id": "123", "run_attempt": attempt, "head_sha": "a" * 40,
+        "run_id": "123", "run_attempt": attempt, "head_sha": head,
         "paid_call_executed_here": False, "analysis_completed_here": False, "paid_authority": False,
         "guard_observations": [
             {"guard": "lane", "disposition": "PASS", "returncode": 0, "stdout_sha256": "b" * 64,
@@ -56,7 +107,25 @@ def hold_run(repo, captured, *, attempt="1", receipt_updates=None, context_updat
            "--admission-root", str(root / "admission"),
            "--admission-registry-output", str(root / "LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json"),
            "--max-new-forecasts", str(cap), *extra]
-    env = dict(os.environ, GITHUB_RUN_ID="123", GITHUB_RUN_ATTEMPT=attempt, GITHUB_SHA="a" * 40)
+    env = dict(os.environ, GITHUB_RUN_ID="123", GITHUB_RUN_ATTEMPT=attempt, GITHUB_SHA=head)
+    if fail_forecast:
+        # Execute the real CLI and inject an actual error at the forecast writer,
+        # after the first observation is persisted. No mocked allocation.
+        injection = """
+import sys, runpy
+from pathlib import Path
+sys.path.insert(0, str(Path(sys.argv[1]).parent))
+import experiment_lifecycle as base
+original = base.write_new
+def fail(path, value):
+    if value.get("contract") == "FROZEN_FORECAST_v1":
+        raise OSError("injected forecast publication failure")
+    return original(path, value)
+base.write_new = fail
+sys.argv = sys.argv[1:]
+runpy.run_path(sys.argv[0], run_name="__main__")
+"""
+        cmd = [sys.executable, "-c", injection, *cmd[1:]]
     return subprocess.run(cmd, capture_output=True, text=True, env=env)
 
 
@@ -205,3 +274,159 @@ class ExistingOnlyHold(unittest.TestCase):
             row["source"] = {}
             (folder / "normal.json").write_text(json.dumps(row))
             self.assertEqual(module.prior_observation_status(root, "EC-example", "2026-01-02T00:00:00Z"), "FIRED")
+
+    def test_hold_rejects_invalid_candidate_census_before_any_scientific_write(self):
+        for defect in ("invalid_json", "wrong_contract", "wrong_id", "orphan", "symlink"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                root = self.seed(repo)
+                path = sorted((root / "candidates").rglob("*.json"))[0]
+                row = json.loads(path.read_text())
+                if defect == "invalid_json":
+                    path.write_text("{broken")
+                elif defect == "wrong_contract":
+                    row["contract"] = "OTHER"; path.write_text(json.dumps(row))
+                elif defect == "wrong_id":
+                    row["candidate_id"] = " " + row["candidate_id"]; path.write_text(json.dumps(row))
+                elif defect == "orphan":
+                    path.unlink()
+                else:
+                    link = path.parent / "alias"
+                    link.symlink_to(path.parent, target_is_directory=True)
+                before = {p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}
+                result = hold_run(repo, clock(-1))
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertIn("existing_only_evidence_unverified", result.stderr)
+                self.assertEqual({p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}, before)
+
+    def test_hold_quarantines_same_spec_different_candidate_record(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = self.seed(repo)
+            path = sorted((root / "candidates").rglob("*.json"))[0]
+            row = json.loads(path.read_text())
+            cid = row["candidate_id"]
+            row["registered_at_utc"] = clock(-75)
+            duplicate = path.parent / "duplicate" / path.name
+            duplicate.parent.mkdir()
+            duplicate.write_text(json.dumps(row))
+            before = immutable(repo)
+            result = hold_run(repo, clock(-1))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["ambiguous_candidate_count"], 1)
+            self.assertNotIn(cid, {f["source_candidate_id"] for f in forecasts(repo)})
+            obs = [json.loads(p.read_text()) for p in (root / "observations").rglob("*.json")]
+            self.assertFalse(any(o["candidate_id"] == cid and o["source"].get("mode") == MODE for o in obs))
+            self.assertEqual(immutable(repo), before)
+
+    def test_hold_rejects_reversed_admission_chronology_and_candidate_authority(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = self.seed(repo)
+            candidates = sorted((root / "candidates").rglob("*.json"))
+            invalid = set()
+            for i, path in enumerate(candidates):
+                row = json.loads(path.read_text())
+                cid = row["candidate_id"]
+                invalid.add(cid)
+                if i % 2:
+                    row["authority"]["portfolio_action"] = True
+                    path.write_text(json.dumps(row))
+                else:
+                    adm = next((root / "admission").rglob(path.name))
+                    value = json.loads(adm.read_text())
+                    value["admission_frozen_at_utc"] = clock(-85)
+                    adm.write_text(json.dumps(value))
+            before = immutable(repo)
+            result = hold_run(repo, clock(-1))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["observations_created"], 0)
+            self.assertEqual(forecasts(repo), [])
+            self.assertEqual(immutable(repo), before)
+
+    def test_interrupted_real_forecast_write_blocks_hold_and_paid_before_new_writes(self):
+        from test_forecast_fair_allocation import run_raw
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = self.seed(repo)
+            captured = clock(-1)
+            failed = hold_run(repo, captured, fail_forecast=True)
+            self.assertNotEqual(failed.returncode, 0, failed.stdout)
+            self.assertIn("injected forecast publication failure", failed.stderr)
+            self.assertEqual(forecasts(repo), [])
+            obs = [json.loads(p.read_text()) for p in (root / "observations").rglob("*.json")]
+            self.assertTrue(any(r["source"].get("mode") == MODE for r in obs))
+            markers = root / "budget_hold_inputs/publication"
+            self.assertEqual(len(list(markers.rglob("started.json"))), 1)
+            self.assertEqual(list(markers.rglob("completed.json")), [])
+            before = {p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}
+            retry = hold_run(repo, captured, attempt="2")
+            self.assertNotEqual(retry.returncode, 0, retry.stdout)
+            self.assertIn("hold_publication_recovery_required", retry.stderr)
+            self.assertEqual({p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}, before)
+            paid = run_raw(repo, {"experiment_candidates": [pair(99)]}, captured, run_id="hold-capture")
+            self.assertNotEqual(paid.returncode, 0, paid.stdout)
+            self.assertIn("hold_publication_recovery_required", paid.stderr)
+            self.assertEqual({p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}, before)
+
+    def test_completed_publication_replay_checks_existing_artifact_bytes(self):
+        from test_forecast_fair_allocation import run_raw
+        for defect in ("missing_forecast", "changed_observation", "missing_completion"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                root = self.seed(repo)
+                captured = clock(-1)
+                result = hold_run(repo, captured)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                completed = next((root / "budget_hold_inputs/publication").rglob("completed.json"))
+                manifest = json.loads(completed.read_text())
+                self.assertEqual(len(manifest["artifacts"]), 13)  # 8 observations + 5 forecasts
+                first = {key: (repo / key).read_bytes() for key in manifest["artifacts"]}
+                replay = hold_run(repo, captured, attempt="2")
+                self.assertEqual(replay.returncode, 0, replay.stderr)
+                self.assertEqual(json.loads(replay.stdout)["new_forecasts"], 0)
+                self.assertEqual({key: (repo / key).read_bytes() for key in first}, first)
+                if defect == "missing_forecast":
+                    (repo / next(k for k in first if "/forecast_memory/" in k)).unlink()
+                elif defect == "changed_observation":
+                    path = repo / next(k for k in first if "/observations/" in k)
+                    path.write_bytes(path.read_bytes() + b" ")
+                else:
+                    completed.unlink()
+                before = {p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}
+                retry = hold_run(repo, captured, attempt="3")
+                self.assertNotEqual(retry.returncode, 0, retry.stdout)
+                self.assertIn("hold_publication_recovery_required", retry.stderr)
+                paid = run_raw(repo, {"experiment_candidates": [pair(99)]}, clock(0), run_id="new-capture")
+                self.assertNotEqual(paid.returncode, 0, paid.stdout)
+                self.assertIn("hold_publication_recovery_required", paid.stderr)
+                self.assertEqual({p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}, before)
+
+    def test_hold_capture_custody_rejects_rehashed_forgery_and_tree_changes(self):
+        for defect in ("changed_bytes", "untracked_capture", "missing_predecessor", "forged_metrics"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                self.seed(repo)
+                before = {p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}
+                result = hold_run(repo, clock(-1), capture_defect=defect)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertIn("existing_only_evidence_unverified", result.stderr)
+                self.assertEqual({p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}, before)
+
+    def test_hold_capture_binding_records_original_bytes_and_does_not_claim_guard_authentication(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = self.seed(repo)
+            captured = clock(-1)
+            context, head = capture_fixture(repo, captured)
+            paths = [repo / context[key]["path"] for key in ("latest_capture", "previous_capture")]
+            original = [p.read_bytes() for p in paths]
+            result = hold_run(repo, captured)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual([p.read_bytes() for p in paths], original)
+            rows = [json.loads(p.read_text()) for p in (root / "observations").rglob("*.json")]
+            source = next(r["source"] for r in rows if r["source"].get("mode") == MODE)
+            self.assertEqual(source["capture_checkout_head"], head)
+            self.assertEqual(source["latest_capture_bytes_sha256"], hashlib.sha256(original[0]).hexdigest())
+            self.assertEqual(source["previous_capture_bytes_sha256"], hashlib.sha256(original[1]).hexdigest())
+            self.assertIs(source["native_guard_custody_verified"], False)

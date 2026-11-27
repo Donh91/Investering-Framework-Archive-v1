@@ -847,6 +847,113 @@ def retrospective_main(argv: list[str]) -> None:
 EXISTING_ONLY_MODE = "BUDGET_HOLD_EXISTING_ADMITTED_ONLY_v1"
 
 
+HOLD_CAPTURE_ROOT = Path("03_DAILY_CAPTURE_LOGS/captures")
+HOLD_CAPTURE_ENTRY = re.compile(
+    rb"100644 blob ([0-9a-f]{40})\t(03_DAILY_CAPTURE_LOGS/captures/"
+    rb"(?:LATEST\.json|[0-9]{4}/[0-9]{2}/[0-9]{2}/[A-Za-z0-9_.-]+\.json))"
+)
+
+
+def verify_hold_capture_context(root: Path, head: str, supplied: dict) -> dict:
+    """Recompute the base context from a complete, pinned public capture tree.
+
+    Object/checkout custody only: the native workflow must separately establish
+    that this head and the guard invocation are authorized. Never infer a
+    server clock or scientific admission from Git objects or environment.
+    """
+    from source_git_anchor import _git, SourceGitAnchorUnavailable
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "api_agent"))
+    import build_owner_bound_director_context as builder
+
+    try:
+        if (_git(root, "rev-parse", "HEAD").decode("ascii").strip() != head
+                or not re.fullmatch(r"[0-9a-f]{40}", head)):
+            raise ValueError("hold_capture_checkout_mismatch")
+        tree = _git(root, "--literal-pathspecs", "ls-tree", "-r", "-z",
+                    "--full-tree", head, "--", HOLD_CAPTURE_ROOT.as_posix())
+    except SourceGitAnchorUnavailable:
+        raise ValueError("hold_capture_tree_unavailable") from None
+    entries = tree.split(b"\0")
+    if not entries or entries.pop() != b"" or not 1 <= len(entries) <= 4096:
+        raise ValueError("hold_capture_tree_invalid")
+    expected = {}
+    for entry in entries:
+        match = HOLD_CAPTURE_ENTRY.fullmatch(entry)
+        if match is None:
+            raise ValueError("hold_capture_tree_entry_invalid")
+        key = match.group(2).decode("ascii")
+        if key in expected:
+            raise ValueError("hold_capture_tree_duplicate")
+        expected[key] = match.group(1).decode("ascii")
+    folder = root / HOLD_CAPTURE_ROOT
+    if not folder.is_dir() or folder.resolve() != folder:
+        raise ValueError("hold_capture_root_invalid")
+    actual = set()
+    for path in folder.rglob("*"):
+        if path.is_symlink() or path.resolve() != path:
+            raise ValueError("hold_capture_symlink")
+        if not path.is_dir():
+            if not path.is_file():
+                raise ValueError("hold_capture_file_invalid")
+            actual.add(path.relative_to(root).as_posix())
+            if len(actual) > 4096:
+                raise ValueError("hold_capture_census_budget")
+    if actual != set(expected):
+        raise ValueError("hold_capture_census_mismatch")
+    rows = []
+    hashes = {}
+    clocks, run_ids = set(), set()
+    total = 0
+    for key, blob in sorted(expected.items()):
+        path = root / key
+        size = path.stat().st_size
+        total += size
+        if size > 1_000_000 or total > 128_000_000:
+            raise ValueError("hold_capture_byte_budget")
+        raw = path.read_bytes()
+        if (len(raw) != size
+                or hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest() != blob):
+            raise ValueError("hold_capture_blob_mismatch")
+        row = strict_json_loads(raw.decode("utf-8"))
+        if not isinstance(row, dict):
+            raise ValueError("hold_capture_row_invalid")
+        if key == (HOLD_CAPTURE_ROOT / "LATEST.json").as_posix():
+            # The pointer is not itself a metric-bearing capture.
+            if row.get("contract") not in {"DAILY_LIVE_ANCHOR_LATEST_POINTER_v1",
+                                           "DAILY_RAW_CAPTURE_LATEST_POINTER_v1"}:
+                raise ValueError("hold_capture_pointer_invalid")
+            continue
+        rid, captured = row.get("run_id"), row.get("captured_at_utc")
+        if (row.get("contract") not in builder.SUPPORTED_CAPTURE_CONTRACTS
+                or not canonical_capture_clock(captured)
+                or not isinstance(rid, str) or not rid.strip()
+                or rid in run_ids or captured in clocks):
+            raise ValueError("hold_capture_identity_invalid")
+        run_ids.add(rid)
+        clocks.add(captured)
+        rows.append((Path(key), row))
+        hashes[key] = hashlib.sha256(raw).hexdigest()
+    rows.sort(key=lambda item: item[1]["captured_at_utc"])
+    rebuilt = builder.build_context(rows)
+    # HOLD intentionally consumes the original base context, without legacy
+    # research or paid/enriched output; exact canonical equality binds every
+    # derived metric, predecessor, clock, authority and coverage field.
+    if builder.canonical_bytes(rebuilt) != builder.canonical_bytes(supplied):
+        raise ValueError("hold_capture_context_mismatch")
+    latest, previous = rebuilt["latest_capture"], rebuilt["previous_capture"]
+    if not isinstance(previous, dict):
+        raise ValueError("hold_capture_predecessor_missing")
+    return {
+        "capture_checkout_head": head,
+        "capture_tree_file_count": len(expected),
+        "latest_capture_path": latest["path"],
+        "latest_capture_bytes_sha256": hashes[latest["path"]],
+        "previous_capture_path": previous["path"],
+        "previous_capture_bytes_sha256": hashes[previous["path"]],
+        "native_guard_custody_verified": False,
+    }
+
+
 def existing_only_source(root: Path, context_path: Path, hold_path: Path, now: datetime) -> tuple[dict, dict]:
     """Bind the original writer's current context and explicit clean HOLD; no model receipt."""
     evidence_root = root / "research/experiment_lifecycle/budget_hold_inputs"
@@ -918,7 +1025,9 @@ def existing_only_source(root: Path, context_path: Path, hold_path: Path, now: d
     if (type(comparable) is not int or comparable <= 0
             or context.get("delta_status") not in {"DELTA_READY", "DELTA_DEGRADED_STALE_PREDECESSOR"}):
         raise ValueError("hold_market_delta_unavailable")
+    capture_binding = verify_hold_capture_context(root, head, context)
     return context, {
+        **capture_binding,
         "mode": EXISTING_ONLY_MODE, "source_run_id": rid,
         "daily_output_sha256": None, "daily_receipt_sha256": None,
         "daily_context_sha256": base.sha(context),
@@ -929,19 +1038,64 @@ def existing_only_source(root: Path, context_path: Path, hold_path: Path, now: d
     }
 
 
+def strict_hold_candidate_rows(root: Path) -> tuple[list[tuple[Path, dict]], set[str]]:
+    """Read the complete candidate census before HOLD writes.
+
+    Historical duplicate IDs with identical specs but different records are
+    not independently qualified. Keep the existing canonical representative
+    for registry compatibility, but quarantine the entire ambiguous ID from
+    HOLD selection. Do not rewrite or delete historical rows.
+    """
+    rows: dict[str, tuple[Path, dict, bytes]] = {}
+    ambiguous: set[str] = set()
+    if not root.is_dir() or root.resolve() != root.absolute():
+        raise ValueError("hold_candidate_root_invalid")
+    for path in sorted(root.rglob("*")):
+        if path.is_symlink():
+            raise ValueError("hold_candidate_symlink")
+        if path.suffix != ".json":
+            continue
+        data = path.read_bytes()
+        value = strict_json_loads(data.decode("utf-8"))
+        if not isinstance(value, dict) or value.get("contract") != "EXPERIMENT_CANDIDATE_v1":
+            raise ValueError("hold_candidate_invalid")
+        cid = value.get("candidate_id")
+        if not isinstance(cid, str) or not re.fullmatch(r"EC-[0-9a-f]{20}", cid) or path.stem != cid:
+            raise ValueError("hold_candidate_identity_invalid")
+        if not isinstance(value.get("spec"), dict):
+            raise ValueError("hold_candidate_spec_invalid")
+        old = rows.get(cid)
+        if old is not None:
+            if old[1]["spec"] != value["spec"]:
+                raise ValueError("hold_candidate_spec_conflict")
+            if old[2] != data:
+                ambiguous.add(cid)
+            # Match the legacy representative only for descriptive compatibility.
+            key = lambda item: (str(item[1].get("created_at_utc") or ""),
+                                str(item[1].get("registered_at_utc") or ""), item[0].as_posix())
+            if key((path, value)) >= key(old):
+                continue
+        rows[cid] = (path, value, data)
+    return [(p, v) for p, v, _ in rows.values()], ambiguous
+
+
 def existing_only_admissions(root: Path) -> dict[str, dict]:
     """Do not silently accept conflicting admission records or malformed authority."""
     rows: dict[str, dict] = {}
     raw: dict[str, bytes] = {}
-    for path in sorted(root.rglob("*.json")):
+    if not root.is_dir() or root.resolve() != root.absolute():
+        raise ValueError("hold_admission_root_invalid")
+    for path in sorted(root.rglob("*")):
         if path.is_symlink():
             raise ValueError("hold_admission_symlink")
+        if path.suffix != ".json":
+            continue
         data = path.read_bytes()
         value = strict_json_loads(data.decode("utf-8"))
         if not isinstance(value, dict) or value.get("contract") != ADMISSION_CONTRACT:
             raise ValueError("hold_admission_invalid")
         cid = value.get("candidate_id")
-        if not isinstance(cid, str) or not cid:
+        if not isinstance(cid, str) or not re.fullmatch(r"EC-[0-9a-f]{20}", cid) or path.stem != cid:
             raise ValueError("hold_admission_identity_invalid")
         if cid in raw and raw[cid] != data:
             raise ValueError("hold_admission_conflict")
@@ -953,6 +1107,11 @@ def hold_candidate_eligible(candidate: dict, admission: dict | None, captured: s
     if not admission or admission.get("status") != QUALIFIED:
         return False
     spec = candidate["spec"]
+    candidate_authority = candidate.get("authority")
+    if (not isinstance(candidate_authority, dict)
+            or set(candidate_authority) != {"canonical_promotion", "framework_state_change", "model_weight_change", "portfolio_action"}
+            or any(v is not False for v in candidate_authority.values())):
+        return False
     authority = admission.get("authority")
     if (not isinstance(authority, dict)
             or set(authority) != {"canonical_effect", "portfolio_execution", "framework_state_change",
@@ -966,9 +1125,10 @@ def hold_candidate_eligible(candidate: dict, admission: dict | None, captured: s
             or qualification_status(spec, None)[0] != QUALIFIED):
         return False
     try:
-        return all(_utc_key(t) < _utc_key(captured) for t in
-                   (candidate.get("created_at_utc"), candidate.get("registered_at_utc"),
-                    admission.get("admission_frozen_at_utc")))
+        created, registered, frozen, capture = (_utc_key(t) for t in
+            (candidate.get("created_at_utc"), candidate.get("registered_at_utc"),
+             admission.get("admission_frozen_at_utc"), captured))
+        return created <= registered <= frozen < capture
     except AllocationIntegrityError:
         return False
 
@@ -981,6 +1141,86 @@ def capture_already_observed(root: Path, cid: str, captured: str, run_id: str, *
                 and (not hold_only or source.get("mode") == EXISTING_ONLY_MODE)):
             return True
     return False
+
+
+HOLD_PUBLICATION_START = "EXPERIMENT_HOLD_PUBLICATION_START_v1"
+HOLD_PUBLICATION_COMPLETE = "EXPERIMENT_HOLD_PUBLICATION_COMPLETE_v1"
+HOLD_PUBLICATION_ARTIFACT = re.compile(
+    r"(?:research/experiment_lifecycle/observations/EC-[0-9a-f]{20}/EO-[0-9a-f]{20}"
+    r"|research/framework_memory/forecast_memory/[0-9]{4}/[0-9]{2}/EXP-FC-[0-9a-f]{20})\.json"
+)
+
+
+def hold_publication_root(root: Path) -> Path:
+    return root / "research/experiment_lifecycle/budget_hold_inputs/publication"
+
+
+def hold_publication_artifact(root: Path, path: Path) -> tuple[str, str]:
+    key = path.absolute().relative_to(root).as_posix()
+    if (not HOLD_PUBLICATION_ARTIFACT.fullmatch(key) or path.resolve() != path.absolute()
+            or not path.is_file()):
+        raise ValueError("hold_publication_artifact_invalid")
+    return key, hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def hold_publication_preflight(root: Path, window: str | None) -> dict | None:
+    """Refuse an interrupted HOLD publication before either writer can write.
+
+    Only process-level restart detection, not automatic repair or a trusted
+    source clock. Completed manifests bind the immutable newly written bytes.
+    """
+    folder = hold_publication_root(root)
+    if folder.resolve() != folder.absolute():
+        raise ValueError("hold_publication_path_invalid")
+    if not folder.exists():
+        return None
+    if not folder.is_dir():
+        raise ValueError("hold_publication_path_invalid")
+    found = None
+    for entry in sorted(folder.iterdir()):
+        if (not re.fullmatch(r"[0-9a-f]{20}", entry.name) or entry.is_symlink()
+                or not entry.is_dir()):
+            raise ValueError("hold_publication_path_invalid")
+        start_path, done_path = entry / "started.json", entry / "completed.json"
+        if (set(x.name for x in entry.iterdir()) != {"started.json", "completed.json"}
+                or any(x.is_symlink() or not x.is_file() for x in (start_path, done_path))):
+            raise ValueError("hold_publication_incomplete")
+        start_bytes = start_path.read_bytes()
+        start = strict_json_loads(start_bytes.decode("utf-8"))
+        done = strict_json_loads(done_path.read_text(encoding="utf-8"))
+        if (not isinstance(start, dict) or not isinstance(done, dict)
+                or set(start) != {"contract", "window", "source_run_id", "captured_at_utc",
+                                  "context_sha256", "hold_receipt_sha256"}
+                or set(done) != {"contract", "window", "started_sha256", "artifacts"}
+                or start["contract"] != HOLD_PUBLICATION_START
+                or done["contract"] != HOLD_PUBLICATION_COMPLETE
+                or start["window"] != entry.name or done["window"] != entry.name
+                or not canonical_capture_clock(start["captured_at_utc"])
+                or not isinstance(start["source_run_id"], str) or not start["source_run_id"].strip()
+                or causal_event_window(start["source_run_id"], start["captured_at_utc"]) != entry.name
+                or not all(isinstance(start[k], str) and SHA256_HEX.fullmatch(start[k])
+                           for k in ("context_sha256", "hold_receipt_sha256"))
+                or done["started_sha256"] != hashlib.sha256(start_bytes).hexdigest()
+                or not isinstance(done["artifacts"], dict)):
+            raise ValueError("hold_publication_receipt_invalid")
+        for key, expected in done["artifacts"].items():
+            if (not isinstance(key, str) or not HOLD_PUBLICATION_ARTIFACT.fullmatch(key)
+                    or not isinstance(expected, str) or not SHA256_HEX.fullmatch(expected)
+                    or hold_publication_artifact(root, root / key) != (key, expected)):
+                raise ValueError("hold_publication_artifact_changed")
+        if entry.name == window:
+            found = start
+    return found
+
+
+def hold_publication_write(path: Path, value: dict) -> str:
+    # Exclusive creation: an interrupted marker is deliberately not replaced.
+    data = canonical(value)
+    with path.open("xb") as out:
+        out.write(data)
+        out.flush()
+        os.fsync(out.fileno())
+    return hashlib.sha256(data).hexdigest()
 
 
 def main() -> None:
@@ -1020,6 +1260,9 @@ def main() -> None:
         try:
             context, hold_source = existing_only_source(root, args.daily_context, args.budget_hold_receipt, datetime.now(UTC))
             admissions = existing_only_admissions(args.admission_root)
+            hold_rows, ambiguous_ids = strict_hold_candidate_rows(args.candidate_root)
+            if set(admissions) - {row["candidate_id"] for _, row in hold_rows}:
+                raise ValueError("hold_orphan_admission")
         except (OSError, ValueError, TypeError, RecursionError):
             raise SystemExit("existing_only_evidence_unverified") from None
         output, receipt = {}, {}
@@ -1044,6 +1287,19 @@ def main() -> None:
     now = base.iso(datetime.now(UTC))
     source = hold_source if hold else {"daily_output_sha256": base.sha(output), "daily_context_sha256": base.sha(context), "daily_receipt_sha256": base.sha(receipt), "source_run_id": (context.get("latest_capture") or {}).get("run_id")}
 
+    # Check pending HOLD publication before the paid path can create a proposal census.
+    early_run = source["source_run_id"]
+    early_window = (causal_event_window(early_run, captured)
+                    if canonical_capture_clock(raw_capture_early) and isinstance(early_run, str)
+                    and early_run.strip() else None)
+    try:
+        previous_publication = hold_publication_preflight(root, early_window)
+        if hold and previous_publication is not None:
+            if previous_publication["context_sha256"] != source["daily_context_sha256"]:
+                raise ValueError("hold_publication_context_changed")
+    except (OSError, ValueError, TypeError, RecursionError):
+        raise SystemExit("hold_publication_recovery_required") from None
+
     raw = [] if hold else [item for item in output.get("experiment_candidates", []) if isinstance(item, dict)] + base.legacy(args.legacy_sensor_catalog) + base.emergent_pairs(context, latest)
     rejected = []
     for item in output.get("forecast_candidates", []):
@@ -1055,7 +1311,10 @@ def main() -> None:
         else:
             rejected.append({"title": f"Prospective {item.get('metric_path')}", "error": "explicit_target_unit_contract_required"})
 
-    existing_candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
+    if hold:
+        existing_candidate_rows = hold_rows
+    else:
+        existing_candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
     existing_candidates = {value["candidate_id"]: value for _, value in existing_candidate_rows}
     if not hold:
         # #1557: account for every raw slot before the filtering/mapping/dedup below (metadata only).
@@ -1127,7 +1386,10 @@ def main() -> None:
     new_forecasts = 0
     dispatch = 0
     episode_continuations = 0
-    candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
+    if hold:
+        candidate_rows = list(hold_rows)
+    else:
+        candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
     # The cap is per causal event window: rows already frozen in this window (by any earlier run or
     # policy) occupy slots and are never rewritten; only the remainder may be issued.
     # A window is only derived from a canonical capture clock and a real run id (the historical
@@ -1154,10 +1416,28 @@ def main() -> None:
     issued_slots = 0
     candidate_rows.sort(key=lambda item: forecast_allocation_key(item[1], service_history))
     hold_observed = 0
+    publication_start_sha = None
+    publication_folder = None
+    publication_artifacts: dict[str, str] = {}
+    if hold:
+        if previous_publication is not None:
+            candidate_rows = []  # completed capture is immutable across attempts
+        else:
+            if early_window is None or early_window != event_window:
+                raise SystemExit("hold_publication_window_invalid")
+            publication_folder = hold_publication_root(root) / early_window
+            # The directory itself is a durable pending indicator if marker writing fails.
+            publication_folder.mkdir(parents=True, exist_ok=False)
+            publication_start_sha = hold_publication_write(publication_folder / "started.json", {
+                "contract": HOLD_PUBLICATION_START, "window": early_window,
+                "source_run_id": early_run, "captured_at_utc": captured,
+                "context_sha256": source["daily_context_sha256"],
+                "hold_receipt_sha256": source["budget_hold_receipt_sha256"],
+            })
     for spec_path, candidate in candidate_rows:
         spec = candidate["spec"]
         cid = candidate["candidate_id"]
-        if hold and (not hold_candidate_eligible(candidate, admissions.get(cid), captured)
+        if hold and (cid in ambiguous_ids or not hold_candidate_eligible(candidate, admissions.get(cid), captured)
                      or capture_already_observed(args.observation_root, cid, captured, run_id)):
             continue
         # A subsequent paid analysis of the same source may register genuinely new proposals,
@@ -1178,7 +1458,11 @@ def main() -> None:
         observation_path = args.observation_root / candidate["candidate_id"] / f"{observation_id}.json"
         is_new = False if mapping and candidate["candidate_id"] not in new_ids else base.write_new(observation_path, observation)
         if hold:
-            hold_observed += int(is_new)
+            if not is_new:
+                raise SystemExit("hold_publication_recovery_required")
+            key, sha = hold_publication_artifact(root, observation_path)
+            publication_artifacts[key] = sha
+            hold_observed += 1
 
         forecast_id = None
         start = base.at(latest, spec.get("target_metric_path") or "") if spec.get("target_metric_path") else None
@@ -1204,9 +1488,15 @@ def main() -> None:
                 "authority": {"portfolio_action": False, "framework_state_change": False, "model_weight_change": False, "canonical_promotion": False},
             }
             apply_exact_settlement_contract(frozen)
+            forecast_path = args.forecast_root / when.strftime("%Y/%m") / f"{forecast_id}.json"
             if base.write_new(args.forecast_root / when.strftime("%Y/%m") / f"{forecast_id}.json", frozen):
+                if hold:
+                    key, sha = hold_publication_artifact(root, forecast_path)
+                    publication_artifacts[key] = sha
                 new_forecasts += 1
                 kind_stats["issued_new"] += 1
+            elif hold:
+                raise SystemExit("hold_publication_recovery_required")
 
         if hold:
             continue  # Never create replication/registration requests on budget HOLD.
@@ -1253,7 +1543,12 @@ def main() -> None:
         args.manifest_output.write_bytes(base.canon(manifest))
     summary = {"candidate_count": reg["candidate_count"], "new_candidate_count": len(new_ids), "new_forecasts": new_forecasts, "forecast_allocation": allocation, "dispatch_created": dispatch, "episode_continuations_not_dispatched": episode_continuations, "admission_status_counts": admission_registry["status_counts"], "rejected": rejected}
     if hold:
-        summary.update({"mode": EXISTING_ONLY_MODE, "observations_created": hold_observed, "paid_call_executed_here": False, "analysis_completed_here": False})
+        if publication_folder is not None:
+            hold_publication_write(publication_folder / "completed.json", {
+                "contract": HOLD_PUBLICATION_COMPLETE, "window": early_window,
+                "started_sha256": publication_start_sha, "artifacts": publication_artifacts,
+            })
+        summary.update({"mode": EXISTING_ONLY_MODE, "observations_created": hold_observed, "ambiguous_candidate_count": len(ambiguous_ids), "paid_call_executed_here": False, "analysis_completed_here": False})
     print(json.dumps(summary, sort_keys=True))
 
 
