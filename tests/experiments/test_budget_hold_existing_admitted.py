@@ -32,8 +32,11 @@ def hold_run(repo, captured, *, attempt="1", receipt_updates=None, context_updat
         "run_id": "123", "run_attempt": attempt, "head_sha": "a" * 40,
         "paid_call_executed_here": False, "analysis_completed_here": False, "paid_authority": False,
         "guard_observations": [
-            {"guard": "lane", "disposition": "PASS", "returncode": 0, "stdout_sha256": "b" * 64},
-            {"guard": "monthly", "disposition": "HOLD", "returncode": 1, "stdout_sha256": "c" * 64},
+            {"guard": "lane", "disposition": "PASS", "returncode": 0, "stdout_sha256": "b" * 64,
+             "reason": "GUARD_PASS", "budget": {"status": "PASS", "remaining_usd": 3.0, "reserve_usd": 0.05}},
+            {"guard": "monthly", "disposition": "HOLD", "returncode": 1, "stdout_sha256": "c" * 64,
+             "reason": "API_RESERVE_GUARD_BLOCKED", "budget": {"status": "BLOCKED", "remaining_usd": 3.9, "reserve_usd": 4.0,
+                "owner_global_remaining_usd_after_risk": 3.9, "owner_global_reserve_usd": 4.0}},
         ],
     }
     receipt.update(receipt_updates or {})
@@ -116,6 +119,13 @@ class ExistingOnlyHold(unittest.TestCase):
             self.assertEqual(json.loads(replay.stdout)["observations_created"], 0)
             self.assertEqual(sorted(r["forecast_id"] for r in forecasts(repo)), first)
             self.assertEqual(immutable(repo), before)
+            # The paid path must still process genuinely new proposals, but not double-count
+            # the same capture for candidates already observed under HOLD.
+            paid = run(repo, {"experiment_candidates": []}, captured, run_id="hold-capture")
+            self.assertEqual(paid["new_forecasts"], 0)
+            for row in new:
+                matches = [json.loads(p.read_text()) for p in (root / "observations" / row["candidate_id"]).rglob("*.json")]
+                self.assertEqual(sum(r["observed_at_utc"] == captured for r in matches), 1)
 
     def test_missing_future_or_wrong_admission_never_admitted(self):
         with tempfile.TemporaryDirectory() as td:
@@ -151,6 +161,18 @@ class ExistingOnlyHold(unittest.TestCase):
                 result = hold_run(repo, clock(-1), receipt_updates=variant)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual({p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}, before)
+
+    def test_guard_arithmetic_contradiction_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            self.seed(repo)
+            before = {p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}
+            invalid = {"guard_observations": [{"guard": "lane", "disposition": "HOLD", "returncode": 1,
+                "reason": "API_RESERVE_GUARD_BLOCKED", "stdout_sha256": "b" * 64,
+                "budget": {"status": "BLOCKED", "remaining_usd": 3.0, "reserve_usd": 0.05}}]}
+            result = hold_run(repo, clock(-1), receipt_updates=invalid)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual({p: b for p, b in snapshot(repo).items() if "budget_hold_inputs" not in p}, before)
 
     def test_stale_future_news_only_and_extra_proposals_fail_closed(self):
         for captured, updates, extra, cap in [
