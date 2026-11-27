@@ -1,0 +1,34 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "tests/agents/test_s1_pr_repair_learning_skill.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-4638199cc8e8dee8",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "test-ci-merge-ref-checkout-after-exact-pr",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* test(ci): restore the merge-ref checkout after the exact-PR-head Node class S1ReleaseControlHostAcceptance.setUpClass checks out the PR head in the shared working tree during the full-suite job. Every later test module then runs on the PR-head tree while modules collected from the merge ref expect merge-ref files. Since #2337 added S1 tests with data files (OBSERVER_BOOTSTRAP.txt, the decision golden), every PR branch older than that merge fails 29 tests in tests/governance (e.g. run 45897203421). Record the original HEAD and restore it in tearDownClass; the class itself still runs on the ex",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "tests/agents/test_s1_pr_repair_learning_skill.py": "9482b77359a44c538afca1c3dabff968dd9e68e4"
+  },
+  "source_commit_sha": "4638199cc8e8dee86ca7d552b264773da63f341d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-26T22:58:47+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "test(ci): restore the merge-ref checkout after the exact-PR-head Node class (#2370)"
+}
