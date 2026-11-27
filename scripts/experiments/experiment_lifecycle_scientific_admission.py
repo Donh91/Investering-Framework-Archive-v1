@@ -967,7 +967,8 @@ def main() -> None:
     # derivation is unchanged); anything else holds allocation for this run (0 new forecasts).
     raw_capture = (context.get("latest_capture") or {}).get("captured_at_utc")
     run_id = source["source_run_id"]
-    event_window = causal_event_window(run_id, captured) if canonical_capture_clock(raw_capture) and isinstance(run_id, str) and run_id else None
+    # A whitespace-only source ID is missing, not a causal identity. Never trim a valid ID: historical hashes stay unchanged.
+    event_window = causal_event_window(run_id, captured) if canonical_capture_clock(raw_capture) and isinstance(run_id, str) and run_id.strip() else None
     allocation = {"policy_version": ALLOCATION_POLICY_VERSION, "lookback_days": ALLOCATION_LOOKBACK_DAYS, "cap": args.max_new_forecasts,
                   "causal_event_window_id": event_window, "status": "OK", "by_kind": {}}
     service_history: dict[str, tuple[int, str]] = {}
