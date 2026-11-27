@@ -404,10 +404,11 @@ class ShadowNeverWrites(unittest.TestCase):
                 out, gh, _n, _r = published(mode="SHADOW", **kw)
                 self.assertEqual((out["mode"], gh.writes, out["writes"]), ("SHADOW", [], []))
                 self.assertFalse([c for c in gh.calls if c[0] in ("POST", "PUT", "PATCH", "DELETE")])
-        # the switch on main as shipped by this PR is still SHADOW, fallback route OFF, and the job token read-only
+        # LIVE v1 enable: the switch on main reads LIVE with the narrow merge scope, the fallback route OFF; the write scopes
+        # are the execute job's only (a SHADOW world above still writes nothing)
         switch = json.loads((ROOT / B.SWITCH).read_text(encoding="utf-8"))
-        self.assertEqual((switch["executor"], switch["fallback_route"]), ("SHADOW", "OFF"))
-        self.assertEqual(EXEC_WORKFLOW["jobs"]["execute"]["permissions"], {"contents": "read", "actions": "read", "pull-requests": "read", "issues": "read"})
+        self.assertEqual((switch["executor"], switch["live_scope"], switch["fallback_route"]), ("LIVE", "MERGE_LOW_NORMAL_ONLY", "OFF"))
+        self.assertEqual(EXEC_WORKFLOW["jobs"]["execute"]["permissions"], {"contents": "write", "actions": "read", "pull-requests": "write", "issues": "write"})
         self.assertEqual(EXEC_WORKFLOW["permissions"], {})
 
     def test_the_dispatch_trigger_takes_no_input_and_no_event_text_reaches_a_run_line(self):

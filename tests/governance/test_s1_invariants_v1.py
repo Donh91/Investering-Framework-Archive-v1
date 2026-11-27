@@ -89,7 +89,7 @@ class Freshness(unittest.TestCase):
     def test_a_change_after_the_intent_stops_the_call(self):
         late = lambda change: (lambda w, g, n: setattr(g, "after_intent", lambda g2: change(w, g2)))
         for name, change in (("P1 thread", lambda w, g: w["pr"][7].update(threads=[{"resolved": False, "first_body": "P1"}])),
-                             ("hold", lambda w, g: setattr(g, "hold", "x")),
+                             ("switch", lambda w, g: w["pins_actual"].update({B.SWITCH: "0" * 40})),   # LIVE v1: gate 2 (i), no live hold read
                              ("item risk", lambda w, g: w["pr"][7]["comments"].append(TB.comment(80, "S1_ITEM_v1\nitem: pr:7\nstate: REVIEW\nkind: FIX\nrisk: EXTREME\ncontract=44444444", TB.OWNER, 0)))):
             out, gh, _n, _d = TE.execute(mutate=TE.BEAT, live=late(change))
             self.assertEqual(TE.tokens(gh), ["S1_LANE_MERGE_INTENT_v1"], name)
@@ -326,7 +326,7 @@ class FixRound5Health(unittest.TestCase):
         with self.subTest("the hold unreadable"):
             out, gh, _n, _d = TE.execute(mode="SHADOW", mutate=TE.BEAT, env={"S1_EXECUTOR_HOLD": None})
             self.assertEqual((out["health"], gh.writes), ("UNVERIFIED", []), out["result"])
-            out, gh, _n, _d = TE.execute(mode="LIVE", mutate=TE.BEAT, live=lambda w, gh, n: setattr(gh, "hold_error", 403))
+            out, gh, _n, _d = TE.execute(mode="LIVE", mutate=TE.BEAT, env={"S1_EXECUTOR_HOLD": None})   # LIVE v1: the env value too
             self.assertEqual((out["health"], gh.writes), ("UNVERIFIED", []), out["result"])
         blocked = {
             "a CHANGES_REQUESTED": lambda w, gh, n: w["pr"][7]["reviews"].append({"id": 9, "state": "CHANGES_REQUESTED", "commit_id": HEAD, "user": {"login": "x"}}),
@@ -535,9 +535,10 @@ class FixRound5ExecutorOwnReads(unittest.TestCase):
         self.assertEqual((gh.writes, out["health"]), ([], "UNVERIFIED"), out["result"])
 
     def test_a_whitespace_hold_read_live_holds(self):
+        # LIVE v1 (gate 2 (i)): the job-start env value; whitespace and "0" still hold
         for value in (" ", "\n", "0"):
-            out, gh, _n, _d = TE.execute(mutate=TE.BEAT, live=lambda w, gh, n, value=value: setattr(gh, "hold", value))
-            self.assertEqual((gh.writes, out["result"], out["health"]), ([], "NOTHING_ACTIONABLE(skipped=hold:start)", "HELD"), repr(value))
+            out, gh, _n, _d = TE.execute(mutate=TE.BEAT, env={"S1_EXECUTOR_HOLD": value})
+            self.assertEqual((gh.writes, out["result"], out["health"]), ([], "EXECUTOR_OFF(hold:start)", "HELD"), repr(value))
 
 
 if __name__ == "__main__":

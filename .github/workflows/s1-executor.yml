@@ -8,8 +8,10 @@ name: S1 executor
 # out that run's own main commit (main's own scripts, never PR code), and reads the published brief issue: it acts only
 # on the brief of exactly that run (S1_BRIEF_RUN_ID), re-reads every fact of the decision's one action natively, and
 # writes ONLY when the switch 00_FMOS/S1/REVIEWED_MERGE_LANE.json on main reads "executor": "LIVE" (missing or unknown:
-# OFF) and the repository variable S1_EXECUTOR_HOLD is empty. In this file it holds a READ-ONLY token: SHADOW can print
-# what it would do, and nothing here can merge or comment. Going LIVE is a separate owner-present PR that gives this ONE
+# OFF) and the repository variable S1_EXECUTOR_HOLD is empty. LIVE v1 (owner-present enable PR): this job holds
+# contents, pull-requests and issues write, every action is pinned by commit SHA, and the script writes only what the
+# switch's live_scope allows (MERGE_LOW_NORMAL_ONLY: one sha-pinned merge of a LOW/MEDIUM PR with an exact-head receipt,
+# at most canary K per UTC day, and its records). Before LIVE v1 it held a READ-ONLY token; going LIVE gave this ONE
 # job contents: write, pull-requests: write and issues: write and sets the switch.
 # Only event fields (a run id, an attempt number, a commit SHA, an event name) are used, and only through env: and
 # the checkout ref; no text of the triggering run, of an issue or of a PR reaches a run: line. No secrets anywhere.
@@ -51,13 +53,16 @@ jobs:
     concurrency:
       group: s1-executor
       cancel-in-progress: false
+    # LIVE v1 (gate 11): the write scopes live on THIS job only, and only while the switch reads LIVE (a test binds the two).
+    # contents and pull-requests: the sha-pinned squash merge; issues: the intent, receipt and settlement on #1156.
+    # actions stays read (no dispatch). The script's own live_scope gate narrows what may be written (MERGE_LOW_NORMAL_ONLY).
     permissions:
-      contents: read
+      contents: write
       actions: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0 (= the v4 tag, read 2026-11-27)
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
@@ -65,7 +70,7 @@ jobs:
             scripts/governance
             00_FMOS
             .github/workflows
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0 (= the v5 tag, read 2026-11-27)
         with:
           python-version: '3.12'
       - name: Install the YAML parser (one wheel, pinned by hash; main's push filters are re-read here, fix round 5 D05)
@@ -83,7 +88,7 @@ jobs:
           python scripts/governance/s1_executor_v1.py resolve-brief-main
       - name: Check out the brief's own main commit (a dispatched run only)
         if: github.event_name == 'workflow_dispatch' && steps.brief.outputs.brief_main != ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0 (= the v4 tag, read 2026-11-27)
         with:
           ref: ${{ steps.brief.outputs.brief_main }}
           persist-credentials: false
