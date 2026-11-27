@@ -865,17 +865,19 @@ def main() -> None:
     output = base.read(args.daily_output)
     context = base.read(args.daily_context)
     receipt = base.read(args.daily_receipt)
-    # A present but unparseable/unrepresentable capture clock already aborted this producer before any
-    # write (base.dt raised); keep that whole-run outcome, but controlled and with a fixed code, because
-    # census/candidate/observation paths and IDs have no safe time without it. Parseable non-canonical
-    # or missing captures keep the existing run behaviour and only hold forecast allocation (below).
-    raw_capture_early = (context.get("latest_capture") or {}).get("captured_at_utc") if isinstance(context.get("latest_capture"), dict) else None
-    if raw_capture_early and not capture_clock_parseable(raw_capture_early):
+    # Preserve the legacy missing/null/empty-string clock fallback (forecast allocation still holds).
+    # A present wrong JSON type is not missing, even when falsey. Reject it before any producer write.
+    # A malformed latest_capture container must not be silently treated as an absent clock either.
+    latest_capture = context.get("latest_capture")
+    raw_capture_early = latest_capture.get("captured_at_utc") if isinstance(latest_capture, dict) else None
+    clock_missing = raw_capture_early is None or (isinstance(raw_capture_early, str) and raw_capture_early == "")
+    if ((latest_capture is not None and not isinstance(latest_capture, dict))
+            or (not clock_missing and (not isinstance(raw_capture_early, str) or not capture_clock_parseable(raw_capture_early)))):
         print(json.dumps({"status": "CAPTURE_CLOCK_INVALID", "writes_performed": False}, sort_keys=True), file=sys.stderr)
         raise SystemExit(4)
-    latest = ((context.get("latest_capture") or {}).get("market_metrics") or {})
+    latest = ((latest_capture or {}).get("market_metrics") or {})
     previous = ((context.get("previous_capture") or {}).get("market_metrics") or {})
-    captured = (context.get("latest_capture") or {}).get("captured_at_utc") or base.iso(datetime.now(UTC))
+    captured = base.iso(datetime.now(UTC)) if clock_missing else raw_capture_early
     when = base.dt(captured)
     now = base.iso(datetime.now(UTC))
     source = {"daily_output_sha256": base.sha(output), "daily_context_sha256": base.sha(context), "daily_receipt_sha256": base.sha(receipt), "source_run_id": (context.get("latest_capture") or {}).get("run_id")}
