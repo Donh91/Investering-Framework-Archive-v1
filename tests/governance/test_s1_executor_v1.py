@@ -44,7 +44,7 @@ ENV = {"GITHUB_REPOSITORY": B.REPO, "GITHUB_REF": "refs/heads/main", "GITHUB_EVE
 
 def executor_run(run_id, created, updated=None, status="completed", **kw):
     """GET actions/runs/<id> of a run of the executor workflow on main (what proves an executor post)."""
-    return dict({"id": run_id, "path": B.EXECUTOR_WORKFLOW_PATH, "head_branch": "main", "event": "workflow_run", "status": status,
+    return dict({"id": run_id, "path": B.EXECUTOR_WORKFLOW_PATH, "head_branch": "main", "event": "workflow_run", "status": status, "run_attempt": 1,
                  "conclusion": "success" if status == "completed" else None, "created_at": B.iso(created), "run_started_at": B.iso(created),
                  "updated_at": B.iso(updated or created + timedelta(minutes=4)), "repository": {"full_name": B.REPO},
                  "head_repository": {"full_name": B.REPO}}, **kw)
@@ -79,7 +79,8 @@ class FakeGitHub:
         self.labels = {9: [{"name": D.RECALL_LABEL}]}               # the labels of a merged PR with a recall (issues/<n>/labels)
         self.budget_left = 1000                                     # fix round 5 (D04): GitHub.remaining() of the real client
         self.comment_override = {}                                  # fix round 5 (P1-06): GET issues/comments/<id> answers this instead
-        self.exec_runs = None                                       # trigger round: the runs of s1-executor.yml on main (None: only this run)
+        self.exec_runs = None                                       # native executor-run census (None: self.runs)
+        self.exec_total = None                                      # override only for incomplete-census regressions
         self.issue_updated = None                                   # trigger round: updated_at of the published brief issue
         self.exec_jobs = {}                                         # FA-P1-01: (run, attempt) -> its execute job (None: unreadable list)
 
@@ -130,8 +131,13 @@ class FakeGitHub:
                 raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
             return {"name": E.HOLD_VARIABLE, "value": self.hold}
         if path == "actions/workflows/s1-executor.yml/runs":         # trigger round: one evaluation per brief run (evaluated_before)
-            rows = self.exec_runs if self.exec_runs is not None else [self.runs[555]]
-            return {"workflow_runs": copy.deepcopy(rows), "total_count": len(rows)}
+            rows = self.exec_runs if self.exec_runs is not None else list(self.runs.values())
+            if isinstance(rows, list) and (params or {}).get("created"):
+                assert params["created"].startswith(">=")
+                since = B.stamp(params["created"][2:])
+                rows = [r for r in rows if not isinstance(r, dict) or not r.get("created_at") or B.stamp(r["created_at"]) >= since]
+            total = len(rows) if self.exec_total is None else self.exec_total
+            return {"workflow_runs": copy.deepcopy(rows), "total_count": total}
         if path == "actions/workflows/s1-tick-brief.yml/runs":
             return {"workflow_runs": [{"event": "workflow_dispatch", "created_at": B.iso(self.now - timedelta(hours=h))} for h in range(30)]}
         m = re.fullmatch(r"issues/comments/(\d+)", path)            # one ledger comment by its id (the first fallback run's candidate)
@@ -175,10 +181,10 @@ class FakeGitHub:
             rid, n = int(m.group(1)), int(m.group(2))
             if (rid, n) in self.exec_jobs:
                 job = self.exec_jobs[(rid, n)]
-                return ([], False) if job is None else ([dict({"id": n * 1000000 + rid, "name": "execute", "run_id": rid}, **job)], True)
+                return ([], False) if job is None else ([dict({"id": n * 1000000 + rid, "name": "execute", "run_id": rid, "run_attempt": n, "steps": []}, **job)], True)
             logs = w.get("exec_logs") or {}
             if (rid, n) in logs or (n == 1 and rid in logs):
-                return [{"id": n * 1000000 + rid, "name": "execute", "status": "completed", "conclusion": "success", "run_id": rid,
+                return [{"id": n * 1000000 + rid, "name": "execute", "status": "completed", "conclusion": "success", "run_id": rid, "run_attempt": n,
                          "steps": [{"status": "completed", "conclusion": "success"}]}], True
             return [], True
         m = re.fullmatch(r"actions/runs/(\d+)/jobs", path)
@@ -906,9 +912,9 @@ class Harness(unittest.TestCase):
             "OFF": self.measure(mode="OFF", policy="CODEX_FINAL_REQUIRED"),
         }
         self.assertEqual(table["OFF"][:2], (0, 0))
-        # trigger round: + ONE list of the executor's own runs (one evaluation per brief run; no earlier run in the window)
-        self.assertEqual(table["NOOP (nothing actionable)"][:2], (4, 0))               # the evaluation list, the publication read (A26), the start hold read (fix 5, D08), the ledger
-        self.assertEqual(table["NOOP + heartbeat"][:2], (7, 1))                        # ... the live hold and main before the write (#7)
+        # FA-P1-03: own native run + complete creation-window list (no earlier run in the window)
+        self.assertEqual(table["NOOP (nothing actionable)"][:2], (5, 0))               # the evaluation list, the publication read (A26), the start hold read (fix 5, D08), the ledger
+        self.assertEqual(table["NOOP + heartbeat"][:2], (8, 1))                        # ... the live hold and main before the write (#7)
         self.assertEqual(table["MERGE live"][1], 3)                                    # intent, merge, receipt
         self.assertEqual(table["MERGE shadow"][1], 0)
         self.assertLessEqual(table["MERGE live"][0], 80)                               # fix round 4: the final look verifies everything again
@@ -1470,12 +1476,17 @@ class OneAttemptPerHeadEndToEnd(unittest.TestCase):
             body, decision = B.render_issue(brief)
             gh, native = FakeGitHub(w, now), FakeNative(w)
             gh.runs[555] = copy.deepcopy(run555)
+            own_id = 555 + hour
+            if hour:
+                gh.runs[own_id] = executor_run(own_id, created=NOW, status="in_progress", updated=now)
+            # This fixture exercises settlement, not replay of the same brief. Its prior run is represented by the ledger.
+            gh.exec_runs = [gh.runs[own_id]]
             gh.issue_body = body
             gh.fail_merge = urllib.error.HTTPError("u", 405, "Not Allowed", {}, None)
             gh.next_id = 7000 + 10 * hour
             files = {"switch": w["switch"], "contract": w["contract"], "policy": TB.POLICY, "gate_isolation": "LIVE", "bindings": TB.BINDINGS, "budgets": TB.BUDGETS,
              "push_filters": copy.deepcopy(w.get("push_filters"))}
-            out = E.Run(gh, native, dict(ENV), files, now_fn=lambda: now, out=lambda line: None).execute(body)
+            out = E.Run(gh, native, dict(ENV, GITHUB_RUN_ID=str(own_id)), files, now_fn=lambda: now, out=lambda line: None).execute(body)
             puts += sum(1 for x in gh.writes if x[0] == "PUT")
             results.append((decision["action"], decision["result"] if decision["action"] == "NOOP" else "-", out["result"], tokens(gh)))
         self.assertEqual(puts, 1)                                                      # ONE merge call, ever, for this head
