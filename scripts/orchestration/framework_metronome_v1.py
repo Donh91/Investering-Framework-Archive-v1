@@ -31,6 +31,13 @@ Targets (deliberately minimal; everything else already chains from these):
              8 commits / 300+ files); from :27 one deferral could miss :45 (review of this change).
              A dispatched run always builds (read-only token, no secrets); the push/workflow_run fallback
              builds only when no cron or manual run happened in the last hour, so it stays quiet.
+  S1EXEC     s1-executor.yml (no inputs) once after the newest s1-tick-brief.yml run on main that COMPLETED
+             with success (any event: a push or workflow_run fallback build publishes a brief too), when no
+             executor run was created since that completion and it completed at most S1EXEC_MAX_AGE_MINUTES ago. GitHub creates no workflow_run event for a run started with this
+             workflow token, so the brief runs dispatched above never started the executor by themselves. The
+             executor resolves that brief from the published issue, proves its run natively and evaluates a brief
+             run at most once (its own rule); its job token stays read-only (SHADOW). Next tick after the brief:
+             ~10 min, inside the decision's 20-minute execution window.
 
 Fail-closed rules:
   - mode is read from 00_FMOS/METRONOME_MODE_v1.json on main; ACTIVE, ACTIVE_DATA (hourly data owners only) or else SHADOW
@@ -83,8 +90,11 @@ MONDAY = {"key": "MONDAY", "workflow": "weekly-api-calibration-shadow.yml", "inp
 # The S1 tick brief (evidence only; read-only build, issues:write publish of its own issue only). Its cron is '18 * * * *'.
 S1BRIEF = {"key": "S1BRIEF", "workflow": "s1-tick-brief.yml", "inputs": {}, "from_minute": 20, "serves_from_minute": 18}
 S1BRIEF_BUILDING_EVENTS = ("schedule", "workflow_dispatch")   # these always build; push/workflow_run mostly do not
+# The S1 executor (SHADOW, read-only job token). Dispatched once per completed, successful building brief run (above).
+S1EXEC = {"key": "S1EXEC", "workflow": "s1-executor.yml", "inputs": {}}
+S1EXEC_MAX_AGE_MINUTES = 20           # 00_FMOS/S1 EXECUTE_MAX_AGE_MINUTES: an older decision is refused (BRIEF_STALE) anyway
 DISPATCH_ALLOWLIST = {HOURLY["workflow"], RECOVERY["workflow"], CLOSE_WORKFLOW, MONDAY["workflow"], S1BRIEF["workflow"],
-                      SELF_WORKFLOW}
+                      S1EXEC["workflow"], SELF_WORKFLOW}
 
 
 def utc(value: str) -> dt.datetime:
@@ -154,6 +164,31 @@ def s1brief_due(now: dt.datetime, runs: list[dict]) -> tuple[bool, str]:
                 return False, "ALREADY_RAN_THIS_HOUR"
         except (KeyError, TypeError, ValueError, AttributeError):
             return False, "RUN_ROW_UNREADABLE"   # conservative: an unreadable row suppresses, never doubles
+    return True, "DUE"
+
+
+def s1exec_due(now: dt.datetime, brief_runs: list[dict], exec_runs: list[dict]) -> tuple[bool, str]:
+    """Once per completed, successful brief run of any event: the newest such run (by creation; a run in progress or
+    cancelled by the brief's concurrency group is not one) completed at most S1EXEC_MAX_AGE_MINUTES ago, and no executor
+    run (any event: a workflow_run of that brief counts too) was created since it completed. A fallback run that built
+    nothing costs one short executor run that ends NO_DECISION. An unreadable row suppresses, never doubles."""
+    if any_active(exec_runs):
+        return False, "TARGET_ACTIVE"
+    try:
+        done_ok = [r for r in brief_runs or [] if r.get("status") == "completed" and r.get("conclusion") == "success"]
+        newest = max(done_ok, key=lambda r: utc(r["created_at"])) if done_ok else None
+        if newest is None:
+            return False, "NO_BRIEF_RUN"
+        done = utc(newest["updated_at"])
+        if now - done > dt.timedelta(minutes=S1EXEC_MAX_AGE_MINUTES):
+            return False, "BRIEF_TOO_OLD"
+        # FA-P2-02: a skipped executor run (its brief run did not succeed) or one cancelled before it started (a newer
+        # one replaced it) evaluated nothing and does not suppress the dispatch
+        if any(utc(r["created_at"]) >= done for r in exec_runs or []
+               if not (r.get("status") == "completed" and r.get("conclusion") in ("skipped", "cancelled"))):
+            return False, "ALREADY_DISPATCHED"
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False, "RUN_ROW_UNREADABLE"
     return True, "DUE"
 
 
@@ -250,7 +285,7 @@ def monday_due(now: dt.datetime, runs: list[dict], close_runs: list[dict] | None
 # Master Monday stay log-only.
 # Anything but an exact known mode is SHADOW.
 MODES = ("ACTIVE", "ACTIVE_DATA")
-DATA_TARGET_KEYS = frozenset({"HOURLY", "RECOVERY", "S1BRIEF"})
+DATA_TARGET_KEYS = frozenset({"HOURLY", "RECOVERY", "S1BRIEF", "S1EXEC"})
 
 
 def read_mode(doc: Any) -> str:
@@ -275,7 +310,7 @@ def wait_minutes(environment: Any) -> int | None:
 def decide(now: dt.datetime, *, mode: str, hourly_runs: list[dict], monday_runs: list[dict],
            self_runs: list[dict], self_run_id: int | None, environment: Any,
            recovery_runs: list[dict] | None = None, close_runs: list[dict] | None = None,
-           s1brief_runs: list[dict] | None = None) -> dict:
+           s1brief_runs: list[dict] | None = None, s1exec_runs: list[dict] | None = None) -> dict:
     """Pure decision. Returns dispatches (may be empty), would_dispatch and loop decision."""
     plan: dict[str, Any] = {"contract": CONTRACT, "now_utc": iso(now), "mode": mode,
                             "targets": {}, "dispatch": [], "would_dispatch": [], "next_tick": False,
@@ -288,6 +323,7 @@ def decide(now: dt.datetime, *, mode: str, hourly_runs: list[dict], monday_runs:
         (FINAL, lambda: final_due(now, close_runs)),
         (MONDAY, lambda: monday_due(now, monday_runs, close_runs)),
         (S1BRIEF, lambda: s1brief_due(now, s1brief_runs or [])),
+        (S1EXEC, lambda: s1exec_due(now, s1brief_runs or [], s1exec_runs or [])),
     )
     for target, fn in checks:
         due, reason = fn()
@@ -432,6 +468,7 @@ def run(gh, now: dt.datetime, self_run_id: int | None, clock=None) -> dict:
         ("MONDAY", MONDAY["workflow"]),
         ("CLOSE", CLOSE_WORKFLOW),
         ("S1BRIEF", S1BRIEF["workflow"]),
+        ("S1EXEC", S1EXEC["workflow"]),
     ):
         raw_runs[name] = read(name, lambda wf=workflow: gh.runs(wf), [])
         if not isinstance(raw_runs[name], list):
@@ -460,7 +497,8 @@ def run(gh, now: dt.datetime, self_run_id: int | None, clock=None) -> dict:
                   environment=environment,
                   recovery_runs=production_runs(raw_runs["RECOVERY"]),
                   close_runs=production_runs(raw_runs["CLOSE"]),
-                  s1brief_runs=production_runs(raw_runs["S1BRIEF"]))
+                  s1brief_runs=production_runs(raw_runs["S1BRIEF"]),
+                  s1exec_runs=production_runs(raw_runs["S1EXEC"]))
     plan["read_status"] = "DEGRADED" if failed_reads else "PASS"
     plan["failed_reads"] = sorted(failed_reads)
     if failed_reads:

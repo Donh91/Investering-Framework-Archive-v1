@@ -131,7 +131,8 @@ CODEX_FEED_HOURS = 72                 # how far back the repository-wide read of
 # posts as that bot): an executor post names its run, and that run is read and checked (executor_post).
 OP_INTENTS = ("S1_LANE_MERGE_INTENT_v1", "S1_OP_INTENT_v1")
 EXECUTOR_RUN = re.compile(r"(?m)^executor: GITHUB run=(\d{1,20})[ \t]*$")
-EXECUTOR_EVENTS = ("workflow_run",)   # fix round 6 (F2): an executor run is a workflow_run of s1-executor.yml
+EXECUTOR_EVENTS = ("workflow_run", "workflow_dispatch")   # fix round 6 (F2): a workflow_run of s1-executor.yml; trigger round:
+                                                         # or a dispatched one (the metronome), which runs the same main code
 RUN_POST_SLACK_SECONDS = 120          # an executor post was created between its run's creation and end, give or take this
 SETTLE_RUN_READS = 4                  # run reads per build (and per executor run) to judge Actions-bot outcome posts
 SETTLE_MERGE_READS = 4                # PR reads per build (and per executor run): the native proof behind a merge receipt (A10)
@@ -308,7 +309,7 @@ def executor_post(c, run_of, now):
     """Is this ledger post proven to be the work of the executor job? All must hold: the Actions bot wrote it and
     never edited it; it names its run; `run_of(id)` (GET actions/runs/<id>, read by the caller) is that run, a run of
     the EXECUTOR workflow file (fix round 6, F2: s1-executor.yml) on main of this repository, started by workflow_run
-    (a completed brief run); and the post was created
+    (a completed brief run) or by workflow_dispatch (trigger round: the metronome); and the post was created
     while that run existed. Anything unread or unreadable: not proven. What this does NOT prove: a workflow on main
     that deliberately names a run of this workflow while that run is in progress passes (only the owner merges
     workflow code, AGENTS.md section 0.2e exclusion 1)."""
