@@ -1380,7 +1380,7 @@ def main() -> None:
             }
             apply_exact_settlement_contract(frozen)
             forecast_path = args.forecast_root / when.strftime("%Y/%m") / f"{forecast_id}.json"
-            if base.write_new(forecast_path, frozen):
+            if base.write_new(args.forecast_root / when.strftime("%Y/%m") / f"{forecast_id}.json", frozen):
                 if hold:
                     key, sha = hold_publication_artifact(root, forecast_path)
                     publication_artifacts[key] = sha
