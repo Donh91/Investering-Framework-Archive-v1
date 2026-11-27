@@ -48,6 +48,7 @@ if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 import s1_decision_v1 as D  # noqa: E402
 import s1_tick_brief_v1 as B  # noqa: E402
+import s1_owner_review_batch_v1 as O  # noqa: E402
 
 EXECUTE_API_CALLS = 220                # this job's own cap (the build is capped at 300). One PR is verified twice (fix round 4, #2:
                                        # the final look re-derives every gate after the intent), about 40 reads each
@@ -936,7 +937,8 @@ class Run:
              and ((row.get("base") or {}).get("repo") or {}).get("id") == repo_id, "review_head_changed", BLOCKED)
         return row
 
-    def review_candidate(self):
+    def review_candidates(self):
+        seen = set()
         rows = self.brief.get("ranked") or self.brief.get("next") or []
         for row in rows:
             if not isinstance(row, dict):
@@ -951,8 +953,44 @@ class Run:
                     and (e.get("ci") or {}).get("state") == "GREEN" and not (e.get("author") or {}).get("codex")
                     and (e.get("thin") or {}).get("claude") == "NONE"
                     and ((e.get("review") or {}).get("codex") or {}).get("status") == "NONE"):
-                return pr, head
-        return None
+                if pr not in seen:
+                    seen.add(pr)
+                    yield pr, head
+
+    def review_candidate(self):
+        return next(self.review_candidates(), None)
+
+    def owner_review_batch_plan(self, target, ledger):
+        # Only read/print in SHADOW. Never reserve, comment, or set release authority.
+        if self.mode != "SHADOW":
+            return
+        targets = [target]
+        remaining = getattr(self.gh, "remaining", None)
+        for candidate in self.review_candidates():
+            if candidate == target:
+                continue
+            if len(targets) >= O.MAX_TARGETS or not callable(remaining) or remaining() < 85:
+                break
+            try:
+                self.verify_review_dispatch(*candidate, ledger)
+            except Exception as exc:
+                self.say(f"S1_OWNER_REVIEW_BATCH_SKIP({getattr(exc, 'reason', type(exc).__name__)})")
+                break
+            targets.append(candidate)
+        try:
+            # The interactive operator must still re-read main, run provenance,
+            # every exact head and all review gates before any reservation.
+            main, _ = self.main_now()
+            plan = O.build_plan(targets, now=self.now_fn(), main=main,
+                                brief_run=int(self.env["S1_BRIEF_RUN_ID"]),
+                                brief_attempt=int(self.env["S1_BRIEF_RUN_ATTEMPT"]),
+                                executor_run=int(self.env["GITHUB_RUN_ID"]),
+                                executor_attempt=int(self.env["GITHUB_RUN_ATTEMPT"]))
+            O.check_reservation(plan, ledger, complete=True)
+        except Exception as exc:
+            self.say(f"S1_OWNER_REVIEW_BATCH_SKIP({getattr(exc, 'reason', type(exc).__name__)})")
+            return
+        self.say(O.PLAN + " " + json.dumps(plan, sort_keys=True, separators=(",", ":")))
 
     def verify_review_dispatch(self, pr, head, ledger, own_intent=None):
         row = self.review_head(pr, head)
@@ -1070,6 +1108,8 @@ class Run:
         if route == "BOT_PROBE" and (not isinstance(probe, dict) or (probe.get("pr"), probe.get("head")) != target):
             return None
         self.verify_review_dispatch(pr, head, ledger)
+        if route in ("SHADOW", "OWNER_ACTION") and self.mode == "SHADOW":
+            self.owner_review_batch_plan(target, ledger)
         if route == "OWNER_ACTION":
             return f"WOULD_OWNER_ACTION_REVIEW(pr={pr},head={head[:8]})"
         if self.mode != "LIVE" or route == "SHADOW":
