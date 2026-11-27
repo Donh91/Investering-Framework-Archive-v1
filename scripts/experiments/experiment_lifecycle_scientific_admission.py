@@ -881,6 +881,28 @@ def existing_only_source(root: Path, context_path: Path, hold_path: Path, now: d
     if any(type(g.get("returncode")) is not int or not isinstance(g.get("stdout_sha256"), str)
            or not SHA256_HEX.fullmatch(g["stdout_sha256"]) for g in guards):
         raise ValueError("hold_guard_binding_invalid")
+    for guard in guards:
+        budget = guard.get("budget")
+        if not isinstance(budget, dict):
+            raise ValueError("hold_guard_budget_missing")
+        remaining, reserve = budget.get("remaining_usd"), budget.get("reserve_usd")
+        def finite_number(value):
+            return type(value) in (int, float) and math.isfinite(value)
+        expected_reserve = 0.05 if guard["guard"] == "lane" else 4.0
+        if not finite_number(remaining) or not finite_number(reserve) or reserve != expected_reserve:
+            raise ValueError("hold_guard_budget_invalid")
+        exhausted = remaining <= reserve
+        if guard["guard"] == "monthly":
+            owner_remaining, owner_reserve = budget.get("owner_global_remaining_usd_after_risk"), budget.get("owner_global_reserve_usd")
+            if not finite_number(owner_remaining) or not finite_number(owner_reserve) or owner_reserve != 4.0:
+                raise ValueError("hold_guard_owner_budget_invalid")
+            exhausted = exhausted or owner_remaining < owner_reserve
+        expected_disposition = "HOLD" if exhausted else "PASS"
+        expected_status = "BLOCKED" if exhausted else "PASS"
+        expected_reason = "API_RESERVE_GUARD_BLOCKED" if exhausted else "GUARD_PASS"
+        if (guard["disposition"] != expected_disposition or budget.get("status") != expected_status
+                or guard.get("reason") != expected_reason):
+            raise ValueError("hold_guard_budget_contradiction")
     latest = context.get("latest_capture")
     coverage = context.get("coverage")
     if not isinstance(latest, dict) or not isinstance(coverage, dict):
@@ -951,11 +973,12 @@ def hold_candidate_eligible(candidate: dict, admission: dict | None, captured: s
         return False
 
 
-def capture_already_observed(root: Path, cid: str, captured: str, run_id: str) -> bool:
+def capture_already_observed(root: Path, cid: str, captured: str, run_id: str, *, hold_only: bool = False) -> bool:
     for _, row in base.jsons(root / cid, "EXPERIMENT_OBSERVATION_v1"):
         source = row.get("source")
         if (row.get("candidate_id") == cid and row.get("observed_at_utc") == captured
-                and isinstance(source, dict) and source.get("source_run_id") == run_id):
+                and isinstance(source, dict) and source.get("source_run_id") == run_id
+                and (not hold_only or source.get("mode") == EXISTING_ONLY_MODE)):
             return True
     return False
 
@@ -1136,6 +1159,11 @@ def main() -> None:
         cid = candidate["candidate_id"]
         if hold and (not hold_candidate_eligible(candidate, admissions.get(cid), captured)
                      or capture_already_observed(args.observation_root, cid, captured, run_id)):
+            continue
+        # A subsequent paid analysis of the same source may register genuinely new proposals,
+        # but must not observe/freeze the already observed existing candidate again.
+        if not hold and cid not in new_ids and event_window is not None and capture_already_observed(
+                args.observation_root, cid, captured, run_id, hold_only=True):
             continue
         admission = admissions[cid]
         admitted = admission.get("status") == QUALIFIED
