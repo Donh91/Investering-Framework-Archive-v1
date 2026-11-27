@@ -49,7 +49,7 @@ def brief_run(brief, **kw):
 
 
 def health(brief_run_id, result="WOULD_MERGE(pr=7,head=bbbbbbbb,risk=LOW,review=CODEX)", attempt="1", **extra):
-    doc = dict({"v": 1, "state": "OK", "run": "1", "mode": "SHADOW", "action": "NOOP", "result": result, "brief_run": brief_run_id}, **extra)
+    doc = dict({"v": 1, "state": "OK", "run": "__RID__", "attempt": "__ATTEMPT__", "mode": "SHADOW", "action": "NOOP", "result": result, "brief_run": brief_run_id}, **extra)
     if attempt is not None:
         doc["brief_attempt"] = attempt
     return "2026-11-18T10:43:00Z S1_EXECUTOR_HEALTH " + json.dumps(doc, sort_keys=True, separators=(",", ":")) + "\n"
@@ -57,7 +57,7 @@ def health(brief_run_id, result="WOULD_MERGE(pr=7,head=bbbbbbbb,risk=LOW,review=
 
 def earlier(run_id, minutes_ago=1, **kw):
     """An earlier completed executor run on main (s1-executor.yml)."""
-    return TE.executor_run(run_id, created=NOW - timedelta(minutes=minutes_ago + 3), updated=NOW - timedelta(minutes=minutes_ago), **kw)
+    return TE.executor_run(run_id, created=NOW - timedelta(minutes=minutes_ago), updated=NOW - timedelta(minutes=minutes_ago), **kw)
 
 
 def setup(env=None, run=None, mutate=None, logs=None, exec_runs=None, issue_updated=None, mode="SHADOW", **kw):
@@ -66,10 +66,16 @@ def setup(env=None, run=None, mutate=None, logs=None, exec_runs=None, issue_upda
     brief = B.parse_body(body)
     gh.runs[555] = brief_run(brief, **(run or {}))
     own = int(r.env["GITHUB_RUN_ID"])
-    gh.runs[own] = TE.executor_run(own, created=NOW, status="in_progress", event="workflow_dispatch")
+    gh.runs[own] = TE.executor_run(own, created=NOW, status="in_progress", event=r.env["GITHUB_EVENT_NAME"],
+                                    run_attempt=int(r.env["GITHUB_RUN_ATTEMPT"]))
     gh.issue_updated = issue_updated or B.iso(B.stamp(brief["generated_at"]) + timedelta(minutes=1))
     gh.exec_runs = [gh.runs[own]] + list(exec_runs or [])
-    gh.w["exec_logs"] = dict(logs or {})
+    gh.w["exec_logs"] = {
+        key: (value.replace("__RID__", str(key[0] if isinstance(key, tuple) else key))
+                    .replace("__ATTEMPT__", str(key[1] if isinstance(key, tuple) else 1))
+              if isinstance(value, str) else value)
+        for key, value in (logs or {}).items()
+    }
     return r, gh, native, body, decision
 
 
@@ -244,7 +250,7 @@ class OneEvaluationPerBriefRun(unittest.TestCase):
             "two health lines": ({4321: health("1") + health("2")}, [earlier(4321)], "evaluated_unproven:health=4321.1"),
             "a crash line (no brief named)": ({4321: "S1_EXECUTOR_HEALTH " + json.dumps({"result": "EXECUTOR_CRASHED(KeyError)", "state": "DEGRADED"})},
                                                [earlier(4321)], "evaluated_unproven:brief_run=4321.1"),
-            "a bad attempt number": ({}, [earlier(4321, run_attempt=0)], "evaluated_unproven:run_attempt=4321"),
+            "a bad attempt number": ({}, [earlier(4321, run_attempt=0)], "evaluated_unproven:runs_unreadable"),
             "too many runs in the window": ({}, [earlier(4300 + i) for i in range(E.EVALUATION_READS + 1)], "evaluated_unproven:too_many_runs"),
             "a full page inside the window": ({}, [earlier(1000 + i) for i in range(E.EXECUTOR_RUNS_PAGE)], "evaluated_unproven:runs_page"),
         }
@@ -259,15 +265,15 @@ class OneEvaluationPerBriefRun(unittest.TestCase):
     def test_fa_p1_01_reruns_and_order(self):
         """ChatGPT FA-P1-01 (#2371 at b09e0003): a rerun keeps its run id, and the concurrency group is not FIFO by id."""
         rerun = {"GITHUB_RUN_ATTEMPT": "2"}
-        own_row = lambda **kw: TE.executor_run(OWN, created=NOW - timedelta(minutes=3), status="in_progress", event="workflow_dispatch", run_attempt=2, **kw)
+        own_row = lambda **kw: TE.executor_run(OWN, created=NOW, status="in_progress", event="workflow_dispatch", run_attempt=2, **kw)
         # a rerun (attempt 2) sees attempt 1's evaluation of the same brief
         r, gh, _n, _b, _d = setup(env=rerun, logs={(OWN, 1): health("555")})
         gh.exec_runs = [own_row()]
         self.assertEqual((r.execute_published()["result"], gh.writes), (f"NO_DECISION(already_evaluated={OWN}.1)", []))
-        # ... also when the own row is missing from the page (the earlier attempts of this run are always read)
+        # A missing own row is now explicit evidence of an incomplete census, regardless of prior attempts.
         r, gh, _n, _b, _d = setup(env=rerun, logs={(OWN, 1): health("555")})
         gh.exec_runs = []
-        self.assertEqual(r.execute_published()["result"], f"NO_DECISION(already_evaluated={OWN}.1)")
+        self.assertEqual(r.execute_published()["result"], "NO_DECISION(evaluated_unproven:own_run_census)")
         # a rerun whose attempt 1 decided nothing for this brief evaluates it (once)
         r, gh, _n, _b, _d = setup(env=rerun, logs={(OWN, 1): health("555", result="NO_DECISION(published_run=554)")})
         gh.exec_runs = [own_row()]
@@ -300,6 +306,48 @@ class OneEvaluationPerBriefRun(unittest.TestCase):
         out, gh, _n, _r = published(exec_runs=[earlier(4300 + i) for i in range(E.EVALUATION_READS)], logs={4300 + i: health("554") for i in range(6)})
         evaluation = [c for c in gh.calls if "s1-executor.yml/runs" in c[1] or "/attempts/" in c[1] or c[1].startswith("actions/jobs/100")]
         self.assertEqual((out["result"].startswith("WOULD_MERGE("), len(evaluation)), (True, 1 + 2 * E.EVALUATION_READS))
+
+    def test_fa_p1_03_old_dispatch_and_missing_census_fail_closed(self):
+        for trigger in ("workflow_dispatch", "workflow_run"):
+            env = {"GITHUB_EVENT_NAME": trigger}
+            if trigger == "workflow_run":
+                env.update(S1_BRIEF_RUN_ID="555", S1_BRIEF_RUN_ATTEMPT="1", S1_BRIEF_MAIN=MAIN, S1_BRIEF_EVENT="schedule")
+            for attempt in (1, 2):
+                r, gh, _n, _b, _d = setup(env=dict(env, GITHUB_RUN_ATTEMPT=str(attempt)))
+                gh.runs[OWN]["created_at"] = B.iso(NOW - timedelta(days=3))
+                gh.exec_runs = [earlier(12000 + i, minutes_ago=60 + i) for i in range(E.EXECUTOR_RUNS_PAGE)]
+                out = r.execute_published()
+                self.assertEqual((out["result"], gh.writes), ("NO_DECISION(executor_run_outside_brief_window)", []))
+                self.assertEqual(reads(gh, "actions/workflows/s1-executor.yml/runs"), [])
+        for field, invalid in (("run_attempt", None), ("event", "push"), ("head_branch", "other"),
+                               ("path", B.WORKFLOW_PATH), ("created_at", None)):
+            r, gh, _n, _b, _d = setup()
+            gh.runs[OWN][field] = invalid
+            out = r.execute_published()
+            self.assertTrue(out["result"].startswith("NO_DECISION(evaluated_unproven:own_run"), out)
+            self.assertEqual(gh.writes, [])
+        r, gh, _n, _b, _d = setup()
+        gh.exec_total = 2  # a short page with a native count mismatch cannot prove absence
+        self.assertEqual(r.execute_published()["result"], "NO_DECISION(evaluated_unproven:runs_page)")
+        r, gh, _n, _b, _d = setup()
+        gh.exec_runs.append(copy.deepcopy(gh.runs[OWN]))
+        self.assertEqual(r.execute_published()["result"], "NO_DECISION(evaluated_unproven:runs_duplicate)")
+
+    def test_fa_p1_03_job_and_health_identity_is_bound(self):
+        for line in (health("555", run="99"), health("555").replace("__ATTEMPT__", "9"), health("555", v=2)):
+            out, gh, _n, _r = published(exec_runs=[earlier(4321)], logs={4321: line})
+            self.assertEqual((out["result"], gh.writes), ("NO_DECISION(evaluated_unproven:health_binding=4321.1)", []))
+        for job in ({"run_id": 99}, {"run_attempt": 9}):
+            r, gh, _n, _b, _d = setup(exec_runs=[earlier(4321)])
+            gh.exec_jobs[(4321, 1)] = dict(status="completed", conclusion="success", **job)
+            self.assertEqual(r.execute_published()["result"], "NO_DECISION(evaluated_unproven:job=4321.1)")
+        # A completed successful run with no execute job is not proof that it never evaluated.
+        r, gh, _n, _b, _d = setup(exec_runs=[earlier(4321)])
+        self.assertEqual(r.execute_published()["result"], "NO_DECISION(evaluated_unproven:jobs=4321.1)")
+        # A latest skipped attempt cannot erase an earlier evaluation.
+        out, gh, _n, _r = published(exec_runs=[earlier(4321, run_attempt=2, conclusion="skipped")],
+                                    logs={(4321, 1): health("555")})
+        self.assertEqual((out["result"], gh.writes), ("NO_DECISION(already_evaluated=4321.1)", []))
 
     def test_two_runs_for_one_brief_evaluate_it_once(self):
         """End to end: the first run evaluates and prints its health line; the second reads that line from the first run's
