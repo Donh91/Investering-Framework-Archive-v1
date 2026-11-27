@@ -72,15 +72,45 @@ def explain(forecast, outcome):
     return row
 
 
+def strict_json(raw):
+    """Do not silently choose between duplicate keys or accept non-finite numbers."""
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError('duplicate_json_key')
+            result[key] = value
+        return result
+
+    def invalid_constant(value):
+        raise ValueError('nonfinite_json_number')
+
+    def finite_float(value):
+        result = float(value)
+        if not math.isfinite(result):
+            raise ValueError('nonfinite_json_number')
+        return result
+
+    value = json.loads(raw, object_pairs_hook=pairs, parse_constant=invalid_constant,
+                       parse_float=finite_float)
+    if not isinstance(value, dict):
+        raise ValueError('source_json_object_required')
+    return value
+
+
 def build_report(forecast_root, outcome_root):
+    froot, oroot = forecast_root.resolve(), outcome_root.resolve()
+    if froot.is_relative_to(oroot) or oroot.is_relative_to(froot):
+        raise ValueError('source_roots_overlap')
     sources, forecasts, outcomes = [], defaultdict(dict), []
+    outcome_ids = set()
     for root, contracts in ((forecast_root, {'FROZEN_FORECAST_v1'}),
                             (outcome_root, {'MATURED_OUTCOME_v2', 'MATURED_OUTCOME_v3'})):
         if not root.is_dir():
             raise ValueError('source_root_missing')
         for path in sorted(root.rglob('*.json')):
             raw = path.read_bytes()
-            value = json.loads(raw)  # Malformed evidence must not silently disappear.
+            value = strict_json(raw)  # Ambiguous evidence must not silently disappear.
             binding = {'path': str(path), 'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
             sources.append(binding)
             if value.get('contract') not in contracts:
@@ -88,6 +118,14 @@ def build_report(forecast_root, outcome_root):
             if root == forecast_root:
                 forecasts[value.get('forecast_id')][owner.sha(value)] = value
             else:
+                # The maturation owner writes one immutable <forecast_id>.json.
+                # Multiple copies or conflicting versions must not multiply learning evidence.
+                forecast_id = value.get('forecast_id')
+                if not isinstance(forecast_id, str) or not forecast_id.strip():
+                    raise ValueError('invalid_outcome_forecast_id')
+                if forecast_id in outcome_ids:
+                    raise ValueError('duplicate_outcome_forecast_id')
+                outcome_ids.add(forecast_id)
                 outcomes.append((binding, value))
     rows = []
     for binding, outcome in outcomes:
