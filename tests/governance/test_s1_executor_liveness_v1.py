@@ -77,24 +77,24 @@ class HoldFromTheJobStart(unittest.TestCase):
             self.assertEqual((out["result"], gh.writes), (WOULD, []))
             self.assertNotIn(VAR, gh.calls)
 
-    def test_live_is_refused_while_the_live_hold_read_answers_403(self):
-        # LIVE gate: the token of this job cannot read repository variables, so LIVE stops at its first live read
-        out, gh, _n, _d = TE.execute(mode="LIVE", mutate=TE.BEAT, live=lambda w, gh, n: setattr(gh, "hold_error", 403))
-        self.assertEqual((out["result"], out["health"], gh.writes), ("NOTHING_ACTIONABLE(skipped=hold_unreadable:start(403))", "UNVERIFIED", []))
-        out, gh, _n, _d = TE.execute(mode="LIVE", mutate=TE.BEAT, live=lambda w, gh, n: (setattr(gh, "hold_error", 403), setattr(gh, "hold_from", 2)))
-        self.assertEqual((out["result"], gh.writes), ("NOTHING_ACTIONABLE(skipped=hold_unreadable:intent(403))", []))
-        # 403 is never "not set"; only 404 is
+    def test_live_decides_on_the_job_start_hold_and_never_reads_variables(self):
+        # LIVE v1 (gate 2 option (i), owner #173/7227941605): the 403 variables endpoint is no longer read in any mode; the
+        # env value at job start is the hold (missing or non-string: fail closed), the switch is re-read before every write
         for code in (401, 403, 500):
             out, gh, _n, _d = TE.execute(mode="LIVE", mutate=TE.BEAT, live=lambda w, gh, n, c=code: setattr(gh, "hold_error", c))
-            self.assertEqual((out["result"], gh.writes), (f"NOTHING_ACTIONABLE(skipped=hold_unreadable:start({code}))", []), code)
+            self.assertNotIn(VAR, gh.calls, code)
+            self.assertTrue(out["result"].startswith("MERGED("), (code, out["result"]))
+        out, gh, _n, _d = TE.execute(mode="LIVE", mutate=TE.BEAT, env={"S1_EXECUTOR_HOLD": None})
+        self.assertEqual((out["result"], out["health"], gh.writes), (f"NOTHING_ACTIONABLE(skipped={E.HOLD_ENV_MISSING})", "UNVERIFIED", []))
 
     def test_the_workflow_passes_the_hold_and_gains_no_permission(self):
         job = EXEC_WORKFLOW["jobs"]["execute"]
         self.assertEqual(job["steps"][-1]["env"]["S1_EXECUTOR_HOLD"], "${{ vars.S1_EXECUTOR_HOLD }}")
-        self.assertEqual(job["permissions"], {"contents": "read", "actions": "read", "pull-requests": "read", "issues": "read"})
+        # LIVE v1 enable: the write scopes are this job's only; the workflow level stays empty
+        self.assertEqual(job["permissions"], {"contents": "write", "actions": "read", "pull-requests": "write", "issues": "write"})
         self.assertEqual(EXEC_WORKFLOW["permissions"], {})
         switch = json.loads((ROOT / B.SWITCH).read_text(encoding="utf-8"))
-        self.assertEqual((switch["executor"], switch["fallback_route"]), ("SHADOW", "OFF"))
+        self.assertEqual((switch["executor"], switch["live_scope"], switch["fallback_route"]), ("LIVE", "MERGE_LOW_NORMAL_ONLY", "OFF"))
 
 
 class ReviewConditionsL2L4(unittest.TestCase):

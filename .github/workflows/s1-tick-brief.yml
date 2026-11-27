@@ -58,13 +58,13 @@ jobs:
     outputs:
       due: ${{ steps.due.outputs.due }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0 (= the v4 tag, read 2026-11-27)
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           sparse-checkout: |
             scripts/governance
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0 (= the v5 tag, read 2026-11-27)
         with:
           python-version: '3.12'
       - name: Is a new brief due
@@ -89,12 +89,12 @@ jobs:
     outputs:
       brief: ${{ steps.build.outputs.brief }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0 (= the v4 tag, read 2026-11-27)
         with:
           ref: ${{ github.sha }}
           path: main
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0 (= the v5 tag, read 2026-11-27)
         with:
           python-version: '3.12'
       - name: Install the YAML parser (one wheel, pinned by hash)
@@ -124,13 +124,13 @@ jobs:
       issues: write
       actions: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0 (= the v4 tag, read 2026-11-27)
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           sparse-checkout: |
             scripts/governance
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0 (= the v5 tag, read 2026-11-27)
         with:
           python-version: '3.12'
       - name: Publish the brief issue

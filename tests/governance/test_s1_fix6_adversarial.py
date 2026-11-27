@@ -223,8 +223,9 @@ class AdversarialHealth(unittest.TestCase):
             self.assertEqual(gh.writes, [])
             self.assertEqual(gh.hold_reads, 0)
             self.assertEqual((out["result"], out["health"]), ("EXECUTOR_OFF(hold:start)", "HELD"), mode)
-        out, gh, _, _ = TE.execute(mode="LIVE", mutate=TE.BEAT, live=lambda w, g, n: setattr(g, "hold_error", 403))
-        self.assertEqual((gh.writes, out["result"]), ([], "NOTHING_ACTIONABLE(skipped=hold_unreadable:start(403))"))
+        # LIVE v1 (gate 2 option (i)): no live variables read; a missing env value fails closed in LIVE too
+        out, gh, _, _ = TE.execute(mode="LIVE", mutate=TE.BEAT, env={"S1_EXECUTOR_HOLD": None})
+        self.assertEqual((gh.writes, out["result"]), ([], "NOTHING_ACTIONABLE(skipped=hold_unreadable:start(env))"))
 
 
 if __name__ == "__main__":
