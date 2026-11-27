@@ -22,7 +22,7 @@ def clock(minutes):
     return (datetime.now(UTC) + timedelta(minutes=minutes)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def hold_run(repo, captured, *, attempt="1", receipt_updates=None, context_updates=None, extra=(), cap=5):
+def hold_run(repo, captured, *, attempt="1", receipt_updates=None, context_updates=None, extra=(), cap=5, fail_forecast=False):
     root = repo / "research/experiment_lifecycle"
     folder = root / "budget_hold_inputs" / ("123-" + attempt)
     folder.mkdir(parents=True, exist_ok=True)
@@ -57,6 +57,24 @@ def hold_run(repo, captured, *, attempt="1", receipt_updates=None, context_updat
            "--admission-registry-output", str(root / "LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json"),
            "--max-new-forecasts", str(cap), *extra]
     env = dict(os.environ, GITHUB_RUN_ID="123", GITHUB_RUN_ATTEMPT=attempt, GITHUB_SHA="a" * 40)
+    if fail_forecast:
+        # Execute the real CLI and inject an actual error at the forecast writer,
+        # after the first observation is persisted. No mocked allocation.
+        injection = """
+import sys, runpy
+from pathlib import Path
+sys.path.insert(0, str(Path(sys.argv[1]).parent))
+import experiment_lifecycle as base
+original = base.write_new
+def fail(path, value):
+    if value.get("contract") == "FROZEN_FORECAST_v1":
+        raise OSError("injected forecast publication failure")
+    return original(path, value)
+base.write_new = fail
+sys.argv = sys.argv[1:]
+runpy.run_path(sys.argv[0], run_name="__main__")
+"""
+        cmd = [sys.executable, "-c", injection, *cmd[1:]]
     return subprocess.run(cmd, capture_output=True, text=True, env=env)
 
 
@@ -275,3 +293,60 @@ class ExistingOnlyHold(unittest.TestCase):
             self.assertEqual(forecasts(repo), [])
             self.assertEqual(immutable(repo), before)
 
+    def test_interrupted_real_forecast_write_blocks_hold_and_paid_before_new_writes(self):
+        from test_forecast_fair_allocation import run_raw
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = self.seed(repo)
+            captured = clock(-1)
+            failed = hold_run(repo, captured, fail_forecast=True)
+            self.assertNotEqual(failed.returncode, 0, failed.stdout)
+            self.assertIn("injected forecast publication failure", failed.stderr)
+            self.assertEqual(forecasts(repo), [])
+            obs = [json.loads(p.read_text()) for p in (root / "observations").rglob("*.json")]
+            self.assertTrue(any(r["source"].get("mode") == MODE for r in obs))
+            markers = root / "budget_hold_inputs/publication"
+            self.assertEqual(len(list(markers.rglob("started.json"))), 1)
+            self.assertEqual(list(markers.rglob("completed.json")), [])
+            before = {p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}
+            retry = hold_run(repo, captured, attempt="2")
+            self.assertNotEqual(retry.returncode, 0, retry.stdout)
+            self.assertIn("hold_publication_recovery_required", retry.stderr)
+            self.assertEqual({p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}, before)
+            paid = run_raw(repo, {"experiment_candidates": [pair(99)]}, captured, run_id="hold-capture")
+            self.assertNotEqual(paid.returncode, 0, paid.stdout)
+            self.assertIn("hold_publication_recovery_required", paid.stderr)
+            self.assertEqual({p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}, before)
+
+    def test_completed_publication_replay_checks_existing_artifact_bytes(self):
+        from test_forecast_fair_allocation import run_raw
+        for defect in ("missing_forecast", "changed_observation", "missing_completion"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as td:
+                repo = Path(td)
+                root = self.seed(repo)
+                captured = clock(-1)
+                result = hold_run(repo, captured)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                completed = next((root / "budget_hold_inputs/publication").rglob("completed.json"))
+                manifest = json.loads(completed.read_text())
+                self.assertEqual(len(manifest["artifacts"]), 13)  # 8 observations + 5 forecasts
+                first = {key: (repo / key).read_bytes() for key in manifest["artifacts"]}
+                replay = hold_run(repo, captured, attempt="2")
+                self.assertEqual(replay.returncode, 0, replay.stderr)
+                self.assertEqual(json.loads(replay.stdout)["new_forecasts"], 0)
+                self.assertEqual({key: (repo / key).read_bytes() for key in first}, first)
+                if defect == "missing_forecast":
+                    (repo / next(k for k in first if "/forecast_memory/" in k)).unlink()
+                elif defect == "changed_observation":
+                    path = repo / next(k for k in first if "/observations/" in k)
+                    path.write_bytes(path.read_bytes() + b" ")
+                else:
+                    completed.unlink()
+                before = {p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}
+                retry = hold_run(repo, captured, attempt="3")
+                self.assertNotEqual(retry.returncode, 0, retry.stdout)
+                self.assertIn("hold_publication_recovery_required", retry.stderr)
+                paid = run_raw(repo, {"experiment_candidates": [pair(99)]}, clock(0), run_id="new-capture")
+                self.assertNotEqual(paid.returncode, 0, paid.stdout)
+                self.assertIn("hold_publication_recovery_required", paid.stderr)
+                self.assertEqual({p: b for p, b in snapshot(repo).items() if "/budget_hold_inputs/" not in p}, before)
