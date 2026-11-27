@@ -535,6 +535,7 @@ class Round4StrictParseAndCaptureValidation(unittest.TestCase):
 
     def test_invalid_capture_clock_fails_whole_run_before_any_write(self):
         for captured in ("not-a-time", "2026-02-30T00:00:00Z", "0001-01-01T00:00:00+01:00",
+                         "9999-12-31T23:59:59-01:00",
                          False, True, 0, 0.0, -0.0, 1, [], {}, [1], {"clock": "invalid"}, " ", "\t"):
             with self.subTest(captured=captured), tempfile.TemporaryDirectory() as td:
                 repo = Path(td)
@@ -568,6 +569,7 @@ class Round4StrictParseAndCaptureValidation(unittest.TestCase):
                 proc = run_raw(repo, self.output8, tick(1), context_override=context)
                 self.assertEqual(proc.returncode, 4, proc.stderr[-800:])
                 self.assertEqual(json.loads(proc.stderr), {"status": "CAPTURE_CLOCK_INVALID", "writes_performed": False})
+                self.assertEqual(proc.stdout, "")
                 self.assertEqual(snapshot(repo), before)
 
     def test_legacy_missing_null_and_blank_clock_hold_forecasts_only(self):
