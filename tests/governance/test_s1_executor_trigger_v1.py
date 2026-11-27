@@ -349,6 +349,14 @@ class OneEvaluationPerBriefRun(unittest.TestCase):
                                     logs={(4321, 1): health("555")})
         self.assertEqual((out["result"], gh.writes), ("NO_DECISION(already_evaluated=4321.1)", []))
 
+    def test_a_run_created_just_after_the_clock_read_is_not_a_census_failure(self):
+        """A newer executor run created between this run's clock read and its list read (or a small clock skew) waits
+        for the group and is no reason to fail closed; a row far in the future still is."""
+        for seconds, want in ((30, "WOULD_MERGE(pr=7,head=bbbbbbbb,risk=LOW,review=CODEX)"), (B.RUN_POST_SLACK_SECONDS + 60, "NO_DECISION(evaluated_unproven:run_row_clock)")):
+            r, gh, _n, _b, _d = setup(exec_runs=[TE.executor_run(9100, created=NOW + timedelta(minutes=2, seconds=seconds), status="queued", event="workflow_dispatch")])
+            gh.exec_jobs[(9100, 1)] = {"status": "queued", "conclusion": None, "steps": []}
+            self.assertEqual((r.execute_published()["result"], gh.writes), (want, []), seconds)
+
     def test_started_then_cancelled_attempt_is_not_assumed_unevaluated(self):
         # A cancelled attempt can have executed before cancellation. Its own log is required.
         for log, expected in ((None, "NO_DECISION(evaluated_unproven:health=4321.1)"),

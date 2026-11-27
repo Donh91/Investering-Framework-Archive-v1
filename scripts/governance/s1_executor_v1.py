@@ -1022,7 +1022,8 @@ class Run:
         need(own.isdigit() and int(own) > 0 and own_attempt.isdigit() and int(own_attempt) >= 1, "own_run_id")
         own, own_attempt = int(own), int(own_attempt)
         since = B.stamp(generated_at) - timedelta(seconds=B.RUN_POST_SLACK_SECONDS)
-        now = self.now_fn()
+        # GitHub's clock vs the runner's, and a run created between this clock read and the list read: the same slack
+        latest = self.now_fn() + timedelta(seconds=B.RUN_POST_SLACK_SECONDS)
 
         def native_run(row):
             return (isinstance(row, dict) and type(row.get("id")) is int and row["id"] > 0
@@ -1040,7 +1041,7 @@ class Run:
             own_created = B.stamp(own_run["created_at"])
             if own_created < since:
                 return "executor_run_outside_brief_window"
-            if own_created > now:
+            if own_created > latest:
                 return "evaluated_unproven:own_run_clock"
         except (KeyError, TypeError, ValueError, AttributeError):
             return "evaluated_unproven:own_run_clock"
@@ -1063,7 +1064,7 @@ class Run:
         try:
             for r in rows:
                 created = B.stamp(r["created_at"])
-                if created < since or created > now:
+                if created < since or created > latest:
                     return "evaluated_unproven:run_row_clock"
                 last = r["run_attempt"]
                 if r["id"] == own:

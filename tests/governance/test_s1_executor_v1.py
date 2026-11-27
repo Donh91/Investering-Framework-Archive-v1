@@ -1469,14 +1469,17 @@ class OneAttemptPerHeadEndToEnd(unittest.TestCase):
         for hour in range(4):
             now = NOW + timedelta(minutes=2)
             # fix round 5 (P1-05): from the second hour on, the run that posted the intent has ENDED (an ABSENT settles
-            # an executor intent only then); the fake reuses the run id 555 for every hour
-            run555 = executor_run(555, created=NOW - timedelta(minutes=1), status="in_progress" if hour == 0 else "completed")
-            brief = B.build_brief(dict(copy.deepcopy(w), executor_runs={"555": run555},
+            # an executor intent only then). FA-P1-03: every hour is its own executor run (555 + hour), so every earlier
+            # run's posts (the intent of 555, the OP_DONE of 556) stay provable natively, by the build and the executor
+            own_id = 555 + hour
+            done = {str(r): executor_run(r, created=NOW - timedelta(minutes=1), status="completed") for r in range(555, own_id)}
+            run555 = executor_run(555, created=NOW - timedelta(minutes=1), status="in_progress") if hour == 0 else done["555"]
+            brief = B.build_brief(dict(copy.deepcopy(w), executor_runs=dict(done, **{"555": run555}),
                                        merge_proofs={"7": {"number": 7, "merged": False, "merge_commit_sha": None, "head_sha": HEAD, "state": "open"}}))
             body, decision = B.render_issue(brief)
             gh, native = FakeGitHub(w, now), FakeNative(w)
+            gh.runs.update({int(k): copy.deepcopy(v) for k, v in done.items()})
             gh.runs[555] = copy.deepcopy(run555)
-            own_id = 555 + hour
             if hour:
                 gh.runs[own_id] = executor_run(own_id, created=NOW, status="in_progress", updated=now)
             # This fixture exercises settlement, not replay of the same brief. Its prior run is represented by the ledger.
