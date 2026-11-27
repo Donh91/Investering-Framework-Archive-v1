@@ -315,13 +315,19 @@ class FixRound5Health(unittest.TestCase):
             "threads unreadable": lambda w, gh, n: w["pr"][7].update(threads=None),
             "file list incomplete": lambda w, gh, n: w["pr"][7].update(files_complete=False),
             "the CI run list unreadable": lambda w, gh, n: w["pr"][7].update(runs_complete=False),
-            "the hold unreadable": lambda w, gh, n: setattr(gh, "hold_error", 403),
             "a thread longer than GitHub returned": lambda w, gh, n: w["pr"][7].update(threads=[{"resolved": False, "first_body": "x", "bodies": ["x"] * 101}]),
         }
         for name, live in unread.items():
             with self.subTest(name):
                 out, gh, _n, _d = TE.execute(mode="SHADOW", mutate=TE.BEAT, live=live)
                 self.assertEqual((out["health"], gh.writes), ("UNVERIFIED", []), out["result"])
+        # liveness round: SHADOW never reads the hold live (the job token gets 403 there); its unread hold input is the
+        # job-start env value, and LIVE's live read answering 403 is unverified too
+        with self.subTest("the hold unreadable"):
+            out, gh, _n, _d = TE.execute(mode="SHADOW", mutate=TE.BEAT, env={"S1_EXECUTOR_HOLD": None})
+            self.assertEqual((out["health"], gh.writes), ("UNVERIFIED", []), out["result"])
+            out, gh, _n, _d = TE.execute(mode="LIVE", mutate=TE.BEAT, live=lambda w, gh, n: setattr(gh, "hold_error", 403))
+            self.assertEqual((out["health"], gh.writes), ("UNVERIFIED", []), out["result"])
         blocked = {
             "a CHANGES_REQUESTED": lambda w, gh, n: w["pr"][7]["reviews"].append({"id": 9, "state": "CHANGES_REQUESTED", "commit_id": HEAD, "user": {"login": "x"}}),
             "the head moved": lambda w, gh, n: gh.pull["head"].update(sha="c" * 40),
