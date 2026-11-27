@@ -4,21 +4,21 @@
     "luna_required": false,
     "max_luna_calls_this_run": 1,
     "max_sol_calls_this_run": 1,
-    "sol_6_1_required": true
+    "sol_6_1_required": false
   },
   "authority": "ADVISORY_ORCHESTRATION_ONLY",
   "clusters": [],
   "contract": "AUTOMATION_INTELLIGENT_ORCHESTRATION_PLAN_v1",
-  "fingerprint": "3afcd2f12939c5d1db364e02af045366ecf87076b8df781e88b574e228ffb422",
+  "fingerprint": "40395c44617eee60d4efe1b03101a0d2c6f64cff134ff1835b25226ccc518f5d",
   "fleet": {
-    "amber_count": 30,
+    "amber_count": 29,
     "green_count": 174,
-    "red_count": 2,
+    "red_count": 4,
     "scheduled_workflow_count": 58,
-    "workflow_count": 206,
+    "workflow_count": 207,
     "writer_count": 68
   },
-  "generated_at_utc": "2026-11-24T15:08:51Z",
+  "generated_at_utc": "2026-11-27T14:09:47Z",
   "guardrails": {
     "astra_periodic_use": false,
     "batch_before_model_call": true,
@@ -33,61 +33,119 @@
   "items": [
     {
       "cluster_id": null,
-      "existing_remediation": null,
-      "failure_streak": 2,
+      "existing_remediation": {
+        "finding": "REPEATED_CONSECUTIVE_FAILURES",
+        "route": "CODEX_PR",
+        "signature": "49bea51fd3a3137ce79f",
+        "state": "CODEX_READY"
+      },
+      "failure_streak": 3,
       "findings": [
+        "LATEST_RUN_FAILED",
         "REPEATED_CONSECUTIVE_FAILURES"
       ],
-      "latest_head_sha": "a6198f0f868359fbec9467eb8f2a6b0829a89cff",
-      "latest_run_id": 45413819046,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45413819046",
-      "model_lane": "GPT_6_1_SOL",
-      "openai_enabled": false,
-      "recent_failure_count": 6,
-      "route": "SOL_DIAGNOSIS",
-      "scheduled": false,
-      "workflow": "cycle-navigator-pages.yml",
-      "write_target_class": "NO_REPO_WRITE",
-      "writer_group": "cycle-navigator-pages"
+      "latest_head_sha": "4474cd8df74f39d8699f59b1c1519698eb96a362",
+      "latest_run_id": 45940883344,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45940883344",
+      "model_lane": "NONE",
+      "openai_enabled": true,
+      "recent_failure_count": 3,
+      "route": "FOLLOW_EXISTING_REMEDIATION",
+      "scheduled": true,
+      "workflow": "adaptive-evidence-gap.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
     },
     {
       "cluster_id": null,
       "existing_remediation": {
-        "finding": "DAILY_DIRECTOR_DIRECTIONAL_PCT_THRESHOLD_REQUIRED",
-        "route": "EVIDENCE",
-        "signature": "774d6478412574ae9461",
-        "state": "POST_FIX_OBSERVATION"
+        "finding": "REPEATED_CONSECUTIVE_FAILURES",
+        "route": "CODEX_PR",
+        "signature": "0d688464738b7ea9bbb5",
+        "state": "CODEX_READY"
       },
-      "failure_streak": 1,
+      "failure_streak": 9,
       "findings": [
-        "LATEST_RUN_FAILED"
+        "LATEST_RUN_FAILED",
+        "REPEATED_CONSECUTIVE_FAILURES",
+        "SCHEDULE_STALE"
       ],
-      "latest_head_sha": "cd0d6f23e5eb33a6c28719c9db93fa0af724584b",
-      "latest_run_id": 45339276204,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45339276204",
+      "latest_head_sha": "de16bbb87eadf45c5c9dd6ae313f61caf63783f3",
+      "latest_run_id": 45939993941,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45939993941",
       "model_lane": "NONE",
       "openai_enabled": true,
-      "recent_failure_count": 1,
+      "recent_failure_count": 10,
       "route": "FOLLOW_EXISTING_REMEDIATION",
       "scheduled": true,
       "workflow": "daily-director-shadow.yml",
       "write_target_class": "DIRECT_MAIN",
       "writer_group": "framework-main-writer"
+    },
+    {
+      "cluster_id": null,
+      "existing_remediation": {
+        "finding": "REPEATED_CONSECUTIVE_FAILURES",
+        "route": "CODEX_PR",
+        "signature": "0e7231042813ac834d36",
+        "state": "CODEX_READY"
+      },
+      "failure_streak": 5,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "REPEATED_CONSECUTIVE_FAILURES"
+      ],
+      "latest_head_sha": "978ab750b0bff743397e46f6a602318194985e16",
+      "latest_run_id": 45930287212,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45930287212",
+      "model_lane": "NONE",
+      "openai_enabled": true,
+      "recent_failure_count": 5,
+      "route": "FOLLOW_EXISTING_REMEDIATION",
+      "scheduled": true,
+      "workflow": "research-execution-coordinator.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "framework-main-writer"
+    },
+    {
+      "cluster_id": null,
+      "existing_remediation": {
+        "finding": "SCHEDULE_STALE",
+        "route": "CODEX_PR",
+        "signature": "f5d79a5472c3be598fd6",
+        "state": "CODEX_READY"
+      },
+      "failure_streak": 1,
+      "findings": [
+        "LATEST_RUN_FAILED",
+        "SCHEDULE_STALE"
+      ],
+      "latest_head_sha": "f980c7a0ff703808638d27a6e2c086615f253aea",
+      "latest_run_id": 45927481478,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/45927481478",
+      "model_lane": "NONE",
+      "openai_enabled": true,
+      "recent_failure_count": 5,
+      "route": "FOLLOW_EXISTING_REMEDIATION",
+      "scheduled": true,
+      "workflow": "shadow-compass-v2.yml",
+      "write_target_class": "DIRECT_MAIN",
+      "writer_group": "${{ github.event_name == 'pull_request' && format('{0}-pr-{1}', github.workflow, github.event.pull_request.number) || 'framework-main-writer' }}"
     }
   ],
   "material_delta": true,
   "routing_summary": {
     "authoritative_input_unknown_count": 0,
-    "existing_remediation_count": 1,
+    "existing_remediation_count": 4,
     "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
-    "sol_6_1_diagnosis_count": 1
+    "sol_6_1_diagnosis_count": 0
   },
   "source_authority": {
     "codex_ready": "VALID",
     "new_diagnosis_eligible": true,
     "remediation": "VALID"
   },
-  "source_health_generated_at_utc": "2026-11-24T15:02:34.131273Z",
+  "source_health_generated_at_utc": "2026-11-27T14:04:37.195315Z",
   "source_health_status": "RED"
 }

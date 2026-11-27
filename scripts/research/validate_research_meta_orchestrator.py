@@ -288,3 +288,96 @@ with tempfile.TemporaryDirectory() as td:
     print("PASS dirty_cross_domain_note_cannot_be_admitted")
 
 print("RESEARCH_SPECIALIST_HANDOFF_GATE_v1 PASS")
+
+
+# WIRE-0 receipt contract: owner identity and immutable action binding.
+import research_action_receipt_v1 as receipt
+from copy import deepcopy
+data={"contract":receipt.CONTRACT,"action_id":receipt.ACTION_ID,"pr":42,
+      "merge_sha":"a"*40,"native_run_id":43,"review_receipt_id":44,
+      "readback":{"merge_sha":"a"*40,"changed_blobs_match":True},
+      "outcome":{"status":"BLOCKED","reason":"historical evaluator unavailable"}}
+def comment(value=data, **changes):
+    return {"id":45,"user":{"login":receipt.OWNER_LOGIN,"id":receipt.OWNER_ID},
+            "author_association":"OWNER","performed_via_github_app":None,
+            "created_at":"2026-11-26T10:00:00Z","updated_at":"2026-11-26T10:00:00Z",
+            "body":receipt.CONTRACT+"\n```json\n"+json.dumps(value)+"\n```",**changes}
+pilot_voi={"queue":[{"source":"SHADOW_REGISTRY","action":"RECOVER_EVALUATOR",
+    "target":"CYCLE_NAVIGATOR_RESEARCH_FAMILY","impact_tier":"MEDIUM",
+    "decision_surface":"SENSOR_PORTFOLIO_QUALITY","evidence_fingerprint":receipt.SOURCE_FP}]}
+pilot=o.orchestrate(pol,{}, {},pilot_voi,{"verdict":"PASS"})
+for bad in ([], [comment(user={"login":receipt.OWNER_LOGIN,"id":999})],
+            [comment(updated_at="2026-11-26T10:01:00Z")],
+            [comment({**data,"action_id":"wrong"})],
+            [comment(created_at=None,updated_at=None)],
+            [comment({**data,"readback":{"merge_sha":"b"*40,"changed_blobs_match":True}})],
+            [comment(),comment({**data,"outcome":{"status":"VERIFIED","reason":"conflicts"}},id=46)],
+            [comment(performed_via_github_app={"id":1})],
+            [comment(user={"login":"not-owner","id":receipt.OWNER_ID})],
+            [comment(author_association="MEMBER")]):
+    result=receipt.attach_owner_receipt(pilot,lambda:bad)
+    assert result["execution_proof"]["native_run_id"] is None, bad
+    assert result["execution_proof"]["scientific_outcome"] is None
+    # Rejection must be observable: no accepted attestation, status ABSENT or CONFLICT.
+    assert result["execution_proof"]["receipt_status"] in ("ABSENT","CONFLICT"), (bad, result["execution_proof"]["receipt_status"])
+    assert "wire0_historical_attestation" not in result, bad
+assert receipt.attach_owner_receipt(pilot,lambda:[comment({**data,"readback":{"merge_sha":"b"*40,"changed_blobs_match":True}})])["execution_proof"]["receipt_status"]=="CONFLICT"
+assert receipt.attach_owner_receipt(pilot,lambda:[comment(),comment({**data,"outcome":{"status":"VERIFIED","reason":"conflicts"}},id=46)])["execution_proof"]["receipt_status"]=="CONFLICT"
+accepted=receipt.attach_owner_receipt(pilot,lambda:[comment()])
+proof=accepted["execution_proof"]
+assert proof["action_id"]==receipt.ACTION_ID and proof["receipt_comment_id"]==45
+assert all(proof[k] is None for k in ("native_run_id","original_owner_pr","independent_review","main_readback","scientific_outcome"))
+assert accepted["wire0_historical_attestation"]["claimed_native_run_id"]==43
+assert accepted["wire0_historical_attestation"]["scientific_authority"] is False
+assert proof["status"]=="OWNER_RECEIPT_PENDING_INDEPENDENT_VERIFICATION"
+assert proof["learning_calibration_applied"] is False and accepted["canonical_effect"] is False
+assert pilot["execution_proof"]["native_run_id"] is None
+def unavailable(): raise OSError("simulated API failure")
+assert receipt.attach_owner_receipt(pilot,unavailable)["execution_proof"]["native_run_id"] is None
+wrong=deepcopy(pilot); wrong["active_heavy_workstreams"][0]["evidence_fingerprint"]="b"*64
+assert receipt.attach_owner_receipt(wrong,lambda:[comment()])==wrong
+print("PASS WIRE-0 owner receipt provenance, negative controls and no calibration authority")
+
+# R7 negative controls: historical claims are not scientific proof or fresh evidence.
+outage=receipt.attach_owner_receipt(pilot,unavailable,previous=accepted)
+assert outage["execution_proof"]["receipt_status"]=="SOURCE_UNAVAILABLE"
+assert outage["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+assert outage["execution_proof"]["scientific_outcome"] is None
+assert receipt.attach_owner_receipt(pilot,lambda:[],previous=accepted)["execution_proof"]["receipt_status"]=="HISTORICAL_CLAIM_NOT_CURRENTLY_PRESENT"
+conflict=receipt.attach_owner_receipt(pilot,lambda:[comment({**data,"native_run_id":999})],previous=accepted)
+assert conflict["execution_proof"]["receipt_status"]=="CONFLICT"
+assert conflict["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+inactive=receipt.attach_owner_receipt(wrong,lambda:[comment()],previous=accepted)
+assert inactive["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+assert inactive["execution_proof"]==wrong["execution_proof"]
+returned=receipt.attach_owner_receipt(pilot,lambda:[comment()],previous=inactive)
+assert returned["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+dry=receipt.attach_owner_receipt(pilot,None,previous=accepted)
+assert dry["execution_proof"]["receipt_status"]=="NOT_CHECKED"
+assert dry["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+native_data={**data,"pr":2357}
+native_pr={"number":2357,"merged":True,"merge_commit_sha":data["merge_sha"],"base":{"ref":"main","repo":{"full_name":receipt.REPO}}}
+native_run={"id":43,"head_sha":data["merge_sha"],"head_branch":"main","repository":{"full_name":receipt.REPO},"path":".github/workflows/shadow-registry-weekly.yml","status":"completed","conclusion":"success"}
+def native_get(path):
+    return native_pr if path=="pulls/2357" else native_run
+assert receipt.verify_native_metadata(native_data,native_get)=="NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED"
+assert receipt.verify_native_metadata(data,native_get)=="NATIVE_METADATA_MISMATCH"
+assert receipt.verify_native_metadata(native_data,lambda p: native_pr if p=="pulls/2357" else {**native_run,"head_sha":"b"*40})=="NATIVE_RUN_HEAD_DIFFERS_CUSTODY_UNVERIFIED"
+assert receipt.verify_native_metadata(native_data,lambda p: native_pr if p=="pulls/2357" else {**native_run,"head_sha":"invalid"})=="NATIVE_METADATA_MISMATCH"
+assert receipt.verify_native_metadata(native_data,lambda p: {**native_pr,"base":"invalid"} if p=="pulls/2357" else native_run)=="NATIVE_METADATA_MISMATCH"
+assert receipt.verify_native_metadata(native_data,lambda p: {**native_pr,"merged":False} if p=="pulls/2357" else native_run)=="NATIVE_METADATA_MISMATCH"
+assert receipt.verify_native_metadata(native_data,lambda p: native_pr if p=="pulls/2357" else {**native_run,"path":".github/workflows/other.yml"})=="NATIVE_METADATA_MISMATCH"
+replaced_comment=receipt.attach_owner_receipt(pilot,lambda:[comment(id=46)],previous=accepted)
+assert replaced_comment["execution_proof"]["receipt_status"]=="CONFLICT"
+assert replaced_comment["wire0_historical_attestation"]==accepted["wire0_historical_attestation"]
+assert replaced_comment["execution_proof"]["scientific_outcome"] is None
+later_run=receipt.attach_owner_receipt(pilot,lambda:[comment(native_data)],verify=lambda d:receipt.verify_native_metadata(d,lambda p:native_pr if p=="pulls/2357" else {**native_run,"head_sha":"b"*40}))
+assert later_run["execution_proof"]["receipt_verification"]=="NATIVE_RUN_HEAD_DIFFERS_CUSTODY_UNVERIFIED"
+assert later_run["execution_proof"]["scientific_outcome"] is None
+assert later_run["execution_proof"]["main_readback"] is None
+assert later_run["execution_proof"]["learning_calibration_applied"] is False
+matched=receipt.attach_owner_receipt(pilot,lambda:[comment(native_data)],verify=lambda d:receipt.verify_native_metadata(d,native_get))
+assert matched["execution_proof"]["receipt_verification"]=="NATIVE_METADATA_MATCH_INDEPENDENCE_UNVERIFIED"
+assert matched["execution_proof"]["scientific_outcome"] is None
+assert matched["execution_proof"]["learning_calibration_applied"] is False
+print("PASS R7 historical attestation retention, native metadata negatives, no scientific authority")

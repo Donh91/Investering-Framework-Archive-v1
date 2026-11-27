@@ -192,8 +192,15 @@ def parse_pages_recipe(text: Any) -> dict[str, Any]:
         step = _parse_step(block)
         uses = step.get("uses")
         if uses == UPLOAD_ACTION:
-            if set(step) - {"name", "uses", "with"} or set(step.get("with") or {}) != {"path"}:
+            if set(step) - {"name", "id", "uses", "with"} or set(step.get("with") or {}) != {"path"}:
                 raise RecipeError("UPLOAD_STEP_HAS_OPTIONS_THAT_CHANGE_THE_PUBLISHED_SET")
+            # A literal step ID only names outputs for later steps; it does not alter the upload.
+            # Reject invalid IDs and collisions with any preceding step, including setup actions.
+            if "id" in step:
+                upload_id = step["id"]
+                if (not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", upload_id)
+                        or any(_parse_step(previous).get("id") == upload_id for previous in blocks[:index])):
+                    raise RecipeError("UPLOAD_STEP_ID_NOT_UNDERSTOOD")
             publish_root = step["with"]["path"].rstrip("/")
             if any("upload-pages-artifact" in line for b in blocks[index + 1:] for line in b):
                 raise RecipeError("SECOND_UPLOAD_STEP")

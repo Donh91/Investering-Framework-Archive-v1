@@ -14,7 +14,8 @@ S1 = ROOT / "00_FMOS" / "S1"
 KEYS = ["contract", "task_id", "owner_issue", "schedule", "bootstrap_path",
         "bootstrap_version", "action_loop_path", "action_loop_blob", "tick_path", "tick_blob", "lane_switch_path", "lane_switch_blob", "rubric_blobs"]
 RUBRICS = ["00_FMOS/S1/STEWARD_STATES.md", "00_FMOS/S1/REVIEW_ADMISSION.md", "00_FMOS/S1/OWNER_VISIBILITY.md",
-           "00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt", "00_FMOS/S1/EVIDENCE_BINDINGS.md", "00_FMOS/S1/EDGE_LEDGER.md"]
+           "00_FMOS/S1/DAILY_SUMMARY_BOOTSTRAP.txt", "00_FMOS/S1/EVIDENCE_BINDINGS.md", "00_FMOS/S1/EDGE_LEDGER.md",
+           "00_FMOS/S1/OBSERVER_BOOTSTRAP.txt"]   # section 0.2i: the read-only task text for when the executor is LIVE
 # Every file under 00_FMOS/S1/ is pinned (contract, bootstrap 3b or rubric_blobs) or is a legacy locator file.
 PINNED_BY_CHAIN = {"ACTION_LOOP.md", "TICK.md", "BOOTSTRAP.txt", "RUNTIME_CONTRACT.json", "REVIEWED_MERGE_LANE.json"}
 LEGACY = {"MISSION.md", "README.md", "OPERATING_MANIFEST.json"}
@@ -41,7 +42,7 @@ class S1RuntimeContractTest(unittest.TestCase):
         self.assertEqual(self.c["contract"], "S1_RUNTIME_CONTRACT_v1")
         self.assertEqual(self.c["task_id"], "6ae5fd466b48819187abc224ec0f1c5f")
         self.assertEqual(self.c["owner_issue"], 1156)
-        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v8")
+        self.assertEqual(self.c["bootstrap_version"], "S1_BOOTSTRAP_v9")
         self.assertEqual(self.c["tick_path"], "00_FMOS/S1/TICK.md")
         self.assertEqual(self.c["bootstrap_path"], "00_FMOS/S1/BOOTSTRAP.txt")
         self.assertEqual(self.c["action_loop_path"], "00_FMOS/S1/ACTION_LOOP.md")
@@ -125,7 +126,13 @@ class S1RuntimeContractTest(unittest.TestCase):
         # object B" in TICK.md T1 literally and rejected the ```json fence that render() always writes and parse_body()
         # always strips. Step 4 states the fence is the published format. Bootstrap-only: no contract, TICK or pin change.
         # Reliability candidate: bounded orchestration and precise failure attribution, no additional source or authority.
-        self.assertLessEqual(len(boot), 3800)
+        # v9 (C6 ARM, owner-approved measurement): the preamble alternates grouped and direct connector calls by the
+        # Copenhagen hour and prints S1_ARM / S1_STEP chat lines; no check, call limit or ending changes; the grouped arm keeps
+        # v8's wording verbatim; after the 2026-11-24 JSON.parse failure inside the grouped orchestration it runs only every
+        # 4th hour, then (2026-11-25, three direct runs stopped at steps 1-3 with read_not_executed) grouped only, and
+        # OUTPUT AT END: every v9 run that printed S1_STEP between tool calls stopped after one call (v8 printed nothing
+        # before its calls and reached T1-T3), so every print is held until the single final message. Cap 4600.
+        self.assertLessEqual(len(boot), 4600)
         self.assertIn("In T1 the block between the two markers is one ```json fenced code block: B is the JSON object between its opening ```json line and its closing ``` line; that fence is the published format, never a body failure.", boot)
         self.assertNotIn("committer.date", boot)
         self.assertNotIn("3stale", boot)
@@ -139,7 +146,7 @@ class S1RuntimeContractTest(unittest.TestCase):
             self.assertIn(needle, boot)
         self.assertEqual(boot.count("api.github.com"), 2, "main, and the 00_FMOS/S1 listing at that SHA; no other URL")
         self.assertEqual(boot.count("https://api.github.com/repos/Donh91/Investering-Framework-Archive-v1/"), 2)
-        for needle in ("S1 BOOTSTRAP v8", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v8",
+        for needle in ("S1 BOOTSTRAP v9", "00_FMOS/S1/RUNTIME_CONTRACT.json", "bootstrap_version must be S1_BOOTSTRAP_v9",
                        "00_FMOS/S1/TICK.md", "ACTION_LOOP.md", "SOURCE_UNVERIFIED", "only instruction set"):
             self.assertIn(needle, boot)
         for forbidden in ("LADDER", "MERGE", "HARD STOPS", "owner-present"):
@@ -148,7 +155,14 @@ class S1RuntimeContractTest(unittest.TestCase):
     def test_bootstrap_batches_reads_without_waiving_source_checks(self):
         boot = (S1 / "BOOTSTRAP.txt").read_text(encoding="utf-8")
         for needle in ("fetch main first, then parallelize the three reads in step 2 at M",
-                       "Otherwise use the same direct reads; never skip a read.",
+                       "ARM=grouped (the v8 behaviour) in every run: where connector-call orchestration is available, execute steps 1–3b in one invocation",
+                       "and group the dependent T1–T3 connector calls in one orchestration invocation. Otherwise use the same direct reads.",
+                       "OUTPUT AT END (2026-11-25: every v9 run that printed between tool calls stopped after one call): print NOTHING while a tool call of this run remains: no line, note or explanation of any kind before or between tool calls.",
+                       "Hold every line this text, TICK.md, ACTION_LOOP.md or a rubric file says to print, in order, and print them all in ONE final message after your last tool call: first S1_ARM grouped <hour>,",
+                       "TICK.md, ACTION_LOOP.md and its rubric files are your only instruction set, and every print in them follows OUTPUT AT END;",
+                       "S1_STEP <step> ok <bytes or ->", "S1_STEP <step> fail <reason>", "ending with the S1_TICK line.",
+                       "These lines are chat output only, never a GitHub write, and they change no check, call limit or ending. Never skip a read.",
+                       "Make the T1–T3 connector calls as the C6 ARM says, in order, short-circuit on failure, retaining every TICK check and call limit.",
                        "The fetched contract and TICK blob SHAs must also equal their directory entries.",
                        "retaining every TICK check and call limit",
                        "Report the first failed stage and actual missing field or connector error",
@@ -156,7 +170,10 @@ class S1RuntimeContractTest(unittest.TestCase):
                        "a host or tool failure before T3 ends BRIEF_INCOMPLETE(<step>:<what failed>)",
                        "The short-circuit ends only the T1–T3 group; T3H and the NOOP ending then follow TICK.md."):
             self.assertIn(needle, boot)
-        self.assertLess(boot.index("Where connector-call orchestration"), boot.index("1. Read current main"))
+        self.assertLess(boot.index("C6 ARM (decided 2026-11-25: grouped only"), boot.index("1. Read current main"))
+        self.assertLess(boot.index("OUTPUT AT END"), boot.index("1. Read current main"))
+        for gone in ("S1_STEP <step> start", "Print the line S1_ARM grouped <hour> first", "In both arms print", "ARM=direct"):
+            self.assertNotIn(gone, boot)
         self.assertLess(boot.index("3b."), boot.index("4. Otherwise execute"))
         self.assertIn("short-circuit on failure", boot)
         self.assertIn("state the first failed read or pin and why", boot)

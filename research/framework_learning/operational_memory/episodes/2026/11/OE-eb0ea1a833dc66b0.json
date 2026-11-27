@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/forecast_error_taxonomy.py",
+    "tests/learning/test_forecast_error_taxonomy.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-eb0ea1a833dc66b0",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "predictive-learning-existing-t11-forecast-error-evidence-integrity",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix(learning): reject duplicate or ambiguous T11 evidence * test(learning): cover duplicate outcome and malformed source evidence",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/forecast_error_taxonomy.py": "07de5ad2bd442b8485265357f9dfde4bb9b31324",
+    "tests/learning/test_forecast_error_taxonomy.py": "84f3f8cc9fb5925c1ef3474da3beb94a34453346"
+  },
+  "source_commit_sha": "eb0ea1a833dc66b032c01e7408dddef8932ebbec",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-27T10:06:45+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "Predictive Learning: harden existing T11 forecast error evidence integrity (#2355)"
+}

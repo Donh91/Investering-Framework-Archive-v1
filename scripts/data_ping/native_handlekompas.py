@@ -9,9 +9,12 @@ Neither surface has portfolio-execution or source-override authority.
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
+import io
 import json
 import math
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -24,7 +27,10 @@ from scripts.cycle_navigator.daily_price_journey import validated_public_copy
 CONTRACT = "NATIVE_HANDLEKOMPAS_v1"
 POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
 OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
-OFFICIAL_COMPASS_SCHEMA_VERSION = 4
+# Schema 5 (AUDIT-04b, 2026-11-24): adds the descriptive blocks source_freshness, cn_band_status and
+# risk_freshness. The version feeds compass_id, so every post-upgrade compass gets a new immutable slot and a
+# pre-upgrade slot is never rewritten with different bytes.
+OFFICIAL_COMPASS_SCHEMA_VERSION = 5
 # V3_2 adds the explicit Main-Framework permission ceiling for proactive long-cycle actions.
 OFFICIAL_COMPASS_DECISION_POLICY_VERSION = "2026-10-31_OBSERVED_MOMENTUM_SOURCE_SEPARATION_V4_1"
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
@@ -445,6 +451,8 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
         },
         "action": native_action,
         "market_direction": market_direction,
+        "cycle_participation": cycle_participation_readback(auto_state, as_of=generated),
+        "altseason_readback": altseason_readback(auto_state, as_of=generated),
         "DATA_HEALTH": {
             "status": effective_data_status,
             "source_validation_status": auto_state.get("validation_status"),
@@ -1566,6 +1574,786 @@ def sell_assessment(
     }
 
 
+# ---------------------------------------------------------------------------------------------------------
+# AUDIT-04b (2026-11-24). Three separately inspectable DESCRIPTIVE facts. None of them changes action,
+# protection, score, horizon or sell state; escalating an action on any of them is a separate owner decision.
+#   source_freshness   FRESH | STALE | UNKNOWN          is the daily owner evidence inside its own SLA?
+#   cn_band_status     NOT_BREACHED | BREACHED | UNTESTABLE   did a COMPLETED UTC daily close break the frozen floor?
+#   risk_freshness     FRESH | INHERITED | STALE | DEGRADED   where does the displayed risk state come from?
+# A fourth fact, consumer delivery, is a release receipt and is never produced here.
+# ---------------------------------------------------------------------------------------------------------
+SOURCE_FRESHNESS_CONTRACT = "COMPASS_SOURCE_FRESHNESS_v1"
+CN_BAND_STATUS_CONTRACT = "CN_BAND_STATUS_v2"
+RISK_FRESHNESS_CONTRACT = "COMPASS_RISK_FRESHNESS_v1"
+DESCRIPTIVE_AUTHORITY = "DESCRIPTIVE_ONLY_NO_SCORE_RISK_OR_ACTION"
+DESCRIPTIVE_RELEASE_STAGE = "SHADOW"
+HOURLY_DAILY_CSV_ROOT = "03_DAILY_CAPTURE_LOGS/hourly"
+COMPLETED_CANDLE_SEMANTICS = "COMPLETED_1H_CANDLE_CLOSE_VALUE_ON_CANDLE_OPEN_LABEL"
+# The Sunday 23:00-24:00 UTC candle completes the forecast week; it can only be observed in the next ISO week.
+# The frozen week stays comparable for this bounded window after the week ends, never longer.
+SUNDAY_CLOSE_WINDOW = timedelta(hours=24)
+INHERITANCE_WALK_MAX_WEEKS = 12
+INHERITED_BASIS = "INHERITED_FROM_PRIOR_ISSUE"
+FLOOR_ASSETS = ("BTC", "ETH")
+
+
+def _stamp(value: datetime) -> str:
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _is_commit_sha(value: Any) -> bool:
+    return isinstance(value, str) and len(value) == 40 and all(c in "0123456789abcdef" for c in value)
+
+
+def _git_bound_bytes(repo_root: Path, commit: str, rel_path: str) -> tuple[bytes, str] | None:
+    """Bytes and Git blob of one path at one exact commit. The blob is recomputed from the bytes that were read."""
+    try:
+        raw = subprocess.check_output(["git", "show", f"{commit}:{rel_path}"], cwd=repo_root, stderr=subprocess.DEVNULL)
+        blob = subprocess.check_output(
+            ["git", "rev-parse", "--verify", f"{commit}:{rel_path}"], cwd=repo_root, text=True, stderr=subprocess.DEVNULL,
+        ).strip()
+    except Exception:
+        return None
+    if hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest() != blob:
+        return None
+    return raw, blob
+
+
+def source_freshness(auto_state: Mapping[str, Any], as_of: datetime, *, packet_path: Path | None = None) -> dict[str, Any]:
+    """Fact 1. The owner's own freshness contract, re-evaluated at issuance, as a three-valued status.
+
+    STALE needs a clock that is provably older than its own limit. A missing policy, a missing timestamp or a
+    timestamp in the future is UNKNOWN: it is not evidence of freshness and not evidence of age.
+    """
+    as_of = as_of.astimezone(timezone.utc)
+    owner = owner_freshness(auto_state, as_of)
+    checks = [row for row in owner.get("checks") or [] if isinstance(row, Mapping)]
+    stale_lanes = sorted(
+        str(row.get("lane")) for row in checks
+        if finite(row.get("age_seconds")) is not None and finite(row.get("max_age_seconds")) is not None
+        and float(row["age_seconds"]) > float(row["max_age_seconds"])
+    )
+    if not owner["reasons"]:
+        status = "FRESH"
+    elif stale_lanes:
+        status = "STALE"
+    else:
+        status = "UNKNOWN"
+    aged = [row for row in checks if finite(row.get("age_seconds")) is not None]
+    oldest = max(aged, key=lambda row: float(row["age_seconds"])) if aged else None
+    return {
+        "contract": SOURCE_FRESHNESS_CONTRACT,
+        "status": status,
+        "reasons": list(owner["reasons"]),
+        "stale_lanes": stale_lanes,
+        "clock": {
+            "evaluated_at_utc": owner["evaluated_at_utc"],
+            "packet_generated_at_utc": auto_state.get("packet_generated_at_utc"),
+            "observation_open_utc": nested(auto_state, "normalized_state", "live_market", "observation_open_utc"),
+            "oldest_lane": oldest.get("lane") if oldest else None,
+            "oldest_age_seconds": oldest.get("age_seconds") if oldest else None,
+            "oldest_max_age_seconds": oldest.get("max_age_seconds") if oldest else None,
+        },
+        "binding": {
+            "auto_market_state_packet_path": packet_path.as_posix() if packet_path is not None else None,
+            "auto_market_state_packet_sha256": auto_state.get("packet_sha256"),
+            "source_snapshot_commit_sha": nested(auto_state, "source_snapshot", "exact_commit_sha"),
+        },
+        "authority": DESCRIPTIVE_AUTHORITY,
+        "release_stage": DESCRIPTIVE_RELEASE_STAGE,
+    }
+
+
+def _iso_week_start(iso_year: int, iso_week: int) -> datetime | None:
+    try:
+        monday = datetime.fromisocalendar(iso_year, iso_week, 1)
+    except (ValueError, TypeError):
+        return None
+    return monday.replace(tzinfo=timezone.utc)
+
+
+def _cn_issue_time(cn_package: Mapping[str, Any]) -> datetime | None:
+    generated = finite(cn_package.get("generated_unix"))
+    if generated is None or generated <= 0:
+        return None
+    try:
+        return datetime.fromtimestamp(generated, timezone.utc)
+    except (OverflowError, ValueError, OSError):
+        return None
+
+
+def cn_band_status(
+    auto_state: Mapping[str, Any],
+    cn_package: Mapping[str, Any] | None,
+    cn_binding: Mapping[str, Any] | None,
+    repo_root: Path,
+    as_of: datetime,
+    *,
+    source_status: str = "UNKNOWN",
+) -> dict[str, Any]:
+    """Fact 2. Completed UTC daily closes of the frozen forecast week against the frozen floors.
+
+    The daily close is the close of the 23:00-24:00 UTC hourly candle, read from the daily hourly CSV as Git
+    holds it at the snapshot commit the owner packet is bound to. It is not the eight-row capture window, so the
+    status is valid all day. Factual comparison only: it never alters protection, forecast, score or action.
+
+    forecast_floor_status compares against the frozen WEEKLY floor (the forecast's own invalidation envelope);
+    daily_floor_status compares each day against that day's own frozen low.
+      BREACHED      at least one eligible completed close is strictly below the floor (a fact that stays true);
+      NOT_BREACHED  every eligible completed close the bound source can know is readable and none is below,
+                    and the daily source is FRESH;
+      UNTESTABLE    anything else. Missing evidence is never reported as "no breach".
+    """
+    as_of = as_of.astimezone(timezone.utc)
+
+    def untestable(reason: str) -> dict[str, Any]:
+        return {
+            "contract": CN_BAND_STATUS_CONTRACT,
+            "forecast_floor_status": "UNTESTABLE",
+            "daily_floor_status": "UNTESTABLE",
+            "reason": reason,
+            "authority": DESCRIPTIVE_AUTHORITY,
+            "release_stage": DESCRIPTIVE_RELEASE_STAGE,
+        }
+
+    if not isinstance(cn_package, Mapping) or not isinstance(cn_binding, Mapping) or cn_binding.get("status") != "PASS":
+        return untestable("CN_BINDING_UNAVAILABLE")
+    freeze = cn_package.get("forecast_freeze")
+    if not isinstance(freeze, Mapping) or cn_package.get("issue_number") != cn_binding.get("issue_number"):
+        return untestable("CN_BINDING_UNAVAILABLE")
+    iso_year, iso_week = cn_binding.get("iso_year"), cn_binding.get("iso_week")
+    if type(iso_year) is not int or type(iso_week) is not int:
+        return untestable("CN_WEEK_UNAVAILABLE")
+    week_start = _iso_week_start(iso_year, iso_week)
+    if week_start is None:
+        return untestable("CN_WEEK_UNAVAILABLE")
+    week_end = week_start + timedelta(days=7)
+    week = f"{iso_year:04d}-W{iso_week:02d}"
+    if any(nested(freeze, "price_quote", asset) != "USDT" for asset in FLOOR_ASSETS):
+        return untestable("QUOTE_MISMATCH_OR_UNSTATED")
+    path = freeze.get("daily_price_path")
+    if not isinstance(path, Mapping) or path.get("contract") != "CN_FROZEN_DAILY_PRICE_PATH_v1" or path.get("forecast_week") != week:
+        return untestable("CN_DAILY_PATH_UNAVAILABLE")
+    weekly_floor: dict[str, float] = {}
+    daily_floor: dict[str, dict[int, float]] = {}
+    for asset in FLOOR_ASSETS:
+        floor = finite(freeze.get(f"{asset.lower()}_range_low"))
+        points = nested(path, asset, "points")
+        if floor is None or floor <= 0 or not isinstance(points, list) or len(points) != 7:
+            return untestable("CN_FLOOR_UNAVAILABLE")
+        per_day: dict[int, float] = {}
+        for point in points:
+            if not isinstance(point, Mapping):
+                return untestable("CN_FLOOR_UNAVAILABLE")
+            day, low = point.get("day"), finite(point.get("low"))
+            if type(day) is not int or day not in range(1, 8) or day in per_day or low is None or low <= 0:
+                return untestable("CN_FLOOR_UNAVAILABLE")
+            per_day[day] = low
+        weekly_floor[asset], daily_floor[asset] = floor, per_day
+    issue = _cn_issue_time(cn_package)
+    if issue is None:
+        return untestable("CN_ISSUE_CLOCK_UNAVAILABLE")
+    if as_of < issue:
+        return untestable("AS_OF_BEFORE_FORECAST_ISSUE")
+    if as_of >= week_end + SUNDAY_CLOSE_WINDOW:
+        return untestable("FORECAST_WEEK_EXPIRED_BEYOND_SUNDAY_CLOSE_WINDOW")
+
+    live = nested(auto_state, "normalized_state", "live_market")
+    lane = nested(auto_state, "source_health", "hourly_market")
+    snapshot = nested(auto_state, "source_snapshot", "exact_commit_sha")
+    if not isinstance(live, Mapping) or not isinstance(lane, Mapping):
+        return untestable("HOURLY_OWNER_UNAVAILABLE")
+    if not _is_commit_sha(snapshot):
+        return untestable("SNAPSHOT_COMMIT_UNBOUND")
+    bar = _parse_utc(live.get("observation_open_utc"))
+    available = _parse_utc(auto_state.get("packet_generated_at_utc"))
+    if (bar is None or available is None or bar.minute or bar.second or bar.microsecond
+            or live.get("observation_semantics") != COMPLETED_CANDLE_SEMANTICS
+            or bar + timedelta(hours=1) > available or available > as_of):
+        return untestable("BAR_FUTURE_INCOMPLETE_OR_CLOCK_UNAVAILABLE")
+    row_health = lane.get("row")
+    bar_csv = f"{HOURLY_DAILY_CSV_ROOT}/{bar:%Y/%m/%Y-%m-%d}.csv"
+    if (lane.get("status") != "PASS" or not isinstance(row_health, Mapping)
+            or row_health.get("status") != "PASS" or row_health.get("classification") != "HOURLY_EXACT_ROW_BOUND"
+            or _parse_utc(row_health.get("timestamp_utc")) != bar
+            or nested(row_health, "provenance", "exact_commit_sha") != snapshot
+            or nested(row_health, "provenance", "exact_path") != bar_csv):
+        return untestable("HOURLY_ROW_BINDING_UNAVAILABLE")
+    bound_blob = nested(row_health, "provenance", "git_blob_sha")
+
+    cache: dict[str, tuple[list[dict[str, str]], str] | None] = {}
+
+    def day_rows(rel: str) -> tuple[list[dict[str, str]], str] | None:
+        if rel not in cache:
+            got = _git_bound_bytes(repo_root, snapshot, rel)
+            if got is None:
+                cache[rel] = None
+            else:
+                try:
+                    cache[rel] = (list(csv.DictReader(io.StringIO(got[0].decode("utf-8-sig")))), got[1])
+                except (UnicodeDecodeError, csv.Error):
+                    cache[rel] = None
+        return cache[rel]
+
+    def exact_row(rel: str, candle_open: datetime) -> tuple[dict[str, float] | None, str | None, str | None]:
+        loaded = day_rows(rel)
+        if loaded is None:
+            return None, None, "ROW_SOURCE_UNREADABLE_AT_SNAPSHOT"
+        rows, blob = loaded
+        label = _stamp(candle_open)
+        matches = [row for row in rows if row.get("timestamp_utc") == label]
+        if len(matches) != 1:
+            return None, blob, "ROW_MISSING" if not matches else "ROW_DUPLICATE"
+        row = matches[0]
+        # source_window_end_utc is the end of the capture window that wrote the row. A backfilled row carries a later
+        # window; a window that ends before the candle closes cannot hold a completed candle, and a window that
+        # ends after the owner packet was generated cannot have been known to it.
+        window_end = _parse_utc(row.get("source_window_end_utc"))
+        if row.get("spot_status") != "PASS" or window_end is None or window_end < candle_open + timedelta(hours=1):
+            return None, blob, "ROW_NOT_A_COMPLETED_PASS_CANDLE"
+        if window_end > available:
+            return None, blob, "ROW_CAPTURED_AFTER_OWNER_PACKET"
+        closes: dict[str, float] = {}
+        for asset in FLOOR_ASSETS:
+            try:
+                value = float(row.get(f"{asset.lower()}_close"))
+            except (TypeError, ValueError, OverflowError):
+                return None, blob, "ROW_PRICE_INVALID"
+            if not math.isfinite(value) or value <= 0:
+                return None, blob, "ROW_PRICE_INVALID"
+            closes[asset] = value
+        return closes, blob, None
+
+    # The owner's bound row must be byte-identical in Git and carry the owner's own closes (same quote and asset).
+    owner_closes, owner_blob, owner_error = exact_row(bar_csv, bar)
+    if owner_error is not None or owner_closes is None:
+        return untestable("HOURLY_ROW_BINDING_UNAVAILABLE:" + str(owner_error))
+    if owner_blob != bound_blob:
+        return untestable("HOURLY_ROW_BLOB_MISMATCH")
+    if any(finite(live.get(f"{asset.lower()}_usdt")) != owner_closes[asset] for asset in FLOOR_ASSETS):
+        return untestable("OWNER_CLOSE_MISMATCH")
+
+    days: list[dict[str, Any]] = []
+    first_weekly: dict[str, dict[str, Any]] = {}
+    first_daily: dict[str, dict[str, Any]] = {}
+    observed = untested = 0
+    evaluated_through = None
+    pending: list[str] = []
+    for index in range(7):
+        day_start = week_start + timedelta(days=index)
+        candle_open = day_start + timedelta(hours=23)
+        candle_close = candle_open + timedelta(hours=1)
+        entry: dict[str, Any] = {
+            "day_utc": day_start.date().isoformat(),
+            "iso_day": index + 1,
+            "candle_open_utc": _stamp(candle_open),
+            "candle_close_utc": _stamp(candle_close),
+        }
+        if candle_open < issue:
+            # The forecast must be frozen before the candle opens; an earlier close is not a forecast outcome.
+            entry["state"] = "PRE_ISSUE"
+        elif candle_open > bar:
+            entry["state"] = "PENDING"
+            pending.append(entry["day_utc"])
+        else:
+            rel = f"{HOURLY_DAILY_CSV_ROOT}/{day_start:%Y/%m/%Y-%m-%d}.csv"
+            closes, blob, error = exact_row(rel, candle_open)
+            entry["source"] = {"path": rel, "git_blob_sha": blob}
+            if error is not None or closes is None:
+                entry["state"], entry["reason"] = "UNTESTABLE", error
+                untested += 1
+            else:
+                entry["state"] = "OBSERVED"
+                observed += 1
+                evaluated_through = entry["day_utc"]
+                entry["assets"] = {}
+                for asset in FLOOR_ASSETS:
+                    close = closes[asset]
+                    day_low = daily_floor[asset][index + 1]
+                    below_week = close < weekly_floor[asset]
+                    below_day = close < day_low
+                    entry["assets"][asset] = {
+                        "symbol": asset + "USDT",
+                        "close": close,
+                        "weekly_floor": weekly_floor[asset],
+                        "daily_floor": day_low,
+                        "close_below_weekly_floor": below_week,
+                        "close_below_daily_floor": below_day,
+                    }
+                    # Every breach is stamped with the candle's CLOSE time: that is when the close became a fact.
+                    mark = {"day_utc": entry["day_utc"], "breach_at_utc": _stamp(candle_close), "close": close}
+                    if below_week and asset not in first_weekly:
+                        first_weekly[asset] = {**mark, "floor": weekly_floor[asset]}
+                    if below_day and asset not in first_daily:
+                        first_daily[asset] = {**mark, "floor": day_low}
+        days.append(entry)
+
+    def verdict(breached: bool) -> tuple[str, str | None]:
+        if breached:
+            return "BREACHED", None
+        if untested:
+            return "UNTESTABLE", "COMPLETED_DAY_ROW_UNTESTABLE"
+        if not observed:
+            return "UNTESTABLE", "NO_ELIGIBLE_COMPLETED_CLOSE"
+        if source_status != "FRESH":
+            return "UNTESTABLE", "DAILY_SOURCE_NOT_FRESH"
+        return "NOT_BREACHED", None
+
+    weekly_status, weekly_reason = verdict(bool(first_weekly))
+    daily_status, daily_reason = verdict(bool(first_daily))
+    return {
+        "contract": CN_BAND_STATUS_CONTRACT,
+        "forecast_floor_status": weekly_status,
+        "daily_floor_status": daily_status,
+        "reason": weekly_reason,
+        "daily_reason": daily_reason,
+        "forecast_week": week,
+        "quote": "USDT",
+        "semantics": "COMPLETED_UTC_DAILY_CLOSE_ONLY_NOT_INTRADAY_OR_RISK_CLASSIFICATION",
+        "daily_close_definition": "CLOSE_OF_23_00_UTC_HOURLY_CANDLE_FROM_GIT_BOUND_DAILY_CSV_AT_SNAPSHOT",
+        "comparison": "STRICTLY_BELOW_FLOOR; EQUAL_IS_NOT_A_BREACH",
+        "original_freeze": {
+            "issue_number": cn_package.get("issue_number"),
+            "public_issue_number": cn_package.get("public_issue_number"),
+            "issued_at_utc": _stamp(issue),
+            "machine_package_sha256": nested(cn_binding, "machine_package", "content_sha256"),
+            "weekly_floor": dict(weekly_floor),
+        },
+        "source": {
+            "snapshot_commit_sha": snapshot,
+            "bound_bar_open_utc": _stamp(bar),
+            "bound_bar_csv": {"path": bar_csv, "git_blob_sha": owner_blob},
+            "quote_binding": "CSV_CLOSE_EQUALS_OWNER_LIVE_MARKET_USDT_AT_THE_BOUND_BAR",
+        },
+        "evaluated_through_day_utc": evaluated_through,
+        "pending_days_utc": pending,
+        "observed_days": observed,
+        "first_weekly_floor_breach": first_weekly,
+        "first_daily_floor_breach": first_daily,
+        "days": days,
+        "authority": DESCRIPTIVE_AUTHORITY,
+        "release_stage": DESCRIPTIVE_RELEASE_STAGE,
+    }
+
+
+def _cn_protection_inherited(cn_package: Mapping[str, Any]) -> bool:
+    return cn_protection_state_basis(cn_package) == INHERITED_BASIS
+
+
+def _same_protection_state(left: Mapping[str, Any], right: Mapping[str, Any]) -> bool:
+    a = nested(left, "decision_projection", "protection")
+    b = nested(right, "decision_projection", "protection")
+    return bool(isinstance(a, Mapping) and isinstance(b, Mapping) and all(
+        isinstance(a.get(key), str) and a.get(key) == b.get(key)
+        for key in ("pullback_risk_state", "pullback_class", "distribution_risk")
+    ))
+
+
+def _read_bound_weekly_issue(repo_root: Path, week_start: datetime) -> tuple[Mapping[str, Any], str, str] | None:
+    """One weekly machine package, accepted only through its own hash-binding delivery pointer."""
+    iso = week_start.isocalendar()
+    week_dir = Path(f"05_CYCLE_NAVIGATOR/weekly/{iso[0]:04d}/W{iso[1]:02d}")
+    try:
+        pointer = read_json(repo_root / week_dir / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json")
+        raw = (repo_root / week_dir / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").read_bytes()
+        package = json.loads(raw)
+    except (OSError, ValueError):
+        return None
+    sha = digest(raw)
+    if (not isinstance(pointer, Mapping) or not isinstance(package, Mapping)
+            or pointer.get("contract") != "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1"
+            or pointer.get("week_dir") != week_dir.as_posix()
+            or pointer.get("machine_package_sha256") != sha
+            or pointer.get("issue_number") != package.get("issue_number")):
+        return None
+    return package, sha, f"{iso[0]:04d}-W{iso[1]:02d}"
+
+
+def cn_protection_origin(
+    cn_package: Mapping[str, Any] | None,
+    cn_binding: Mapping[str, Any] | None,
+    repo_root: Path,
+) -> dict[str, Any]:
+    """The last weekly issue that EVALUATED the protection state the bound issue carries.
+
+    The offline issuer copies the state forward. Immutable packages from before its explicit state_basis field
+    truncate the declared chain (W48 declares issue 35 although 35 and 34 were carried too), so the chain is
+    walked issue by issue through hash-bound packages until one that was not carried. An unresolved chain is
+    reported as UNRESOLVED; it is never guessed.
+    """
+    def unresolved(reason: str, chain: list[int]) -> dict[str, Any]:
+        return {"status": "UNRESOLVED", "reason": reason, "chain_issue_numbers": chain}
+
+    if not isinstance(cn_package, Mapping) or not isinstance(cn_binding, Mapping):
+        return unresolved("CN_UNAVAILABLE", [])
+    iso_year, iso_week = cn_binding.get("iso_year"), cn_binding.get("iso_week")
+    cursor = _iso_week_start(iso_year, iso_week) if type(iso_year) is int and type(iso_week) is int else None
+    issue_number = cn_package.get("issue_number")
+    if cursor is None or type(issue_number) is not int or issue_number <= 0:
+        return unresolved("CN_WEEK_OR_ISSUE_UNAVAILABLE", [])
+    package: Mapping[str, Any] = cn_package
+    sha = nested(cn_binding, "machine_package", "content_sha256")
+    week = f"{iso_year:04d}-W{iso_week:02d}"
+    chain = [issue_number]
+    weeks_left = INHERITANCE_WALK_MAX_WEEKS
+    while _cn_protection_inherited(package):
+        declared = nested(package, "decision_projection", "protection", "inherited_from_issue_number")
+        prior = declared if declared is not None else package.get("previous_issue_number")
+        current = package.get("issue_number")
+        if type(prior) is not int or type(current) is not int or not 0 < prior < current:
+            return unresolved("PRIOR_ISSUE_NUMBER_INVALID", chain)
+        found = None
+        while weeks_left > 0 and found is None:
+            weeks_left -= 1
+            cursor = cursor - timedelta(days=7)
+            candidate = _read_bound_weekly_issue(repo_root, cursor)
+            if candidate is not None and candidate[0].get("issue_number") == prior:
+                found = candidate
+        if found is None:
+            return unresolved("PRIOR_ISSUE_NOT_FOUND_HASH_BOUND", chain)
+        earlier = _cn_issue_time(found[0])
+        later = _cn_issue_time(package)
+        if earlier is None or later is None or earlier >= later or not _same_protection_state(package, found[0]):
+            return unresolved("PRIOR_ISSUE_STATE_OR_CLOCK_MISMATCH", chain)
+        package, sha, week = found
+        chain.append(prior)
+    issued = _cn_issue_time(package)
+    if issued is None:
+        return unresolved("ORIGIN_ISSUE_CLOCK_UNAVAILABLE", chain)
+    return {
+        "status": "RESOLVED",
+        "issue_number": package.get("issue_number"),
+        "public_issue_number": package.get("public_issue_number"),
+        "forecast_week": week,
+        "evaluated_at_utc": _stamp(issued),
+        "machine_package_sha256": sha,
+        "issuer_method": cn_issuer_method(package),
+        "chain_issue_numbers": chain,
+        "issues_carried": len(chain) - 1,
+    }
+
+
+def risk_freshness(
+    auto_state: Mapping[str, Any],
+    protection: Mapping[str, Any],
+    *,
+    data_status: str,
+    mapping_integrity_status: Any,
+    source: Mapping[str, Any],
+    band: Mapping[str, Any],
+    cn_package: Mapping[str, Any] | None,
+    cn_binding: Mapping[str, Any] | None,
+    repo_root: Path,
+    as_of: datetime,
+) -> dict[str, Any]:
+    """Fact 3. Provenance of the displayed risk state. Descriptive only.
+
+      STALE      the daily source is provably past its SLA, or the bound weekly forecast week has expired;
+      DEGRADED   the state is unavailable or the packet is not OK for any other reason;
+      INHERITED  healthy evidence, but the weekly issuer carried the state forward instead of evaluating it;
+      FRESH      healthy evidence and a state evaluated in the bound weekly issue.
+    A completed-close floor breach never changes this status. It is named in basis, and cn_band_status stays the
+    one place that states it. Neither field produces a risk severity, an action or a SELL.
+    """
+    as_of = as_of.astimezone(timezone.utc)
+    cn_eligible = isinstance(cn_package, Mapping) and isinstance(cn_binding, Mapping) and cn_binding.get("status") == "PASS"
+    basis: list[str] = []
+    degraded: list[str] = []
+    stale: list[str] = []
+
+    source_status = str(source.get("status") or "UNKNOWN")
+    if source_status == "STALE":
+        stale.append("DAILY_SOURCE_STALE:" + ",".join(source.get("stale_lanes") or []))
+    elif source_status != "FRESH":
+        degraded.append("DAILY_SOURCE_FRESHNESS_UNKNOWN")
+    if str(auto_state.get("validation_status") or "UNKNOWN") == "FAIL":
+        degraded.append("OWNER_VALIDATION_FAIL")
+    blockers = _core_blockers(auto_state)
+    if blockers:
+        degraded.append("CORE_BLOCKERS=" + ",".join(sorted(str(x) for x in blockers)))
+    elif not _core_decision_ready(auto_state):
+        degraded.append("DECISION_CONTEXT_" + str(auto_state.get("decision_context_status") or "UNKNOWN"))
+    if not cn_eligible:
+        binding_status = str((cn_binding or {}).get("status") or "UNAVAILABLE") if isinstance(cn_binding, Mapping) else "UNAVAILABLE"
+        degraded.append("CN_BINDING_" + binding_status)
+    if str(mapping_integrity_status) != "PASS":
+        degraded.append("MAPPING_INTEGRITY_" + str(mapping_integrity_status or "UNKNOWN"))
+    risk_state = str(protection.get("pullback_risk_state") or "UNAVAILABLE")
+    if risk_state == "UNAVAILABLE" and cn_eligible and not degraded and not stale:
+        degraded.append("PROTECTION_" + str(protection.get("data_quality") or "UNAVAILABLE"))
+    if data_status != "OK" and not degraded and not stale:
+        degraded.append("PACKET_DATA_STATUS_" + str(data_status))
+
+    week_expired = False
+    if cn_eligible:
+        iso_year, iso_week = cn_binding.get("iso_year"), cn_binding.get("iso_week")
+        week_start = _iso_week_start(iso_year, iso_week) if type(iso_year) is int and type(iso_week) is int else None
+        if week_start is None:
+            degraded.append("CN_WEEK_UNAVAILABLE")
+        elif as_of >= week_start + timedelta(days=7) + SUNDAY_CLOSE_WINDOW:
+            week_expired = True
+
+    origin = cn_protection_origin(cn_package, cn_binding, repo_root) if cn_eligible else {"status": "UNRESOLVED", "reason": "CN_UNAVAILABLE", "chain_issue_numbers": []}
+    inherited = bool(cn_eligible and _cn_protection_inherited(cn_package))
+    state_basis = cn_protection_state_basis(cn_package if cn_eligible else None)
+
+    if stale:
+        status = "STALE"
+        basis += stale + degraded
+    elif degraded:
+        status = "DEGRADED"
+        basis += degraded
+    elif week_expired:
+        status = "STALE"
+        basis.append("CN_FORECAST_WEEK_EXPIRED")
+    elif inherited:
+        status = "INHERITED"
+    else:
+        status = "FRESH"
+        basis.append("EVALUATED_IN_BOUND_WEEKLY_ISSUE")
+    if stale and week_expired:
+        basis.append("CN_FORECAST_WEEK_EXPIRED")
+    if inherited:
+        basis.append(INHERITED_BASIS)
+        if origin.get("status") != "RESOLVED":
+            basis.append("INHERITANCE_ORIGIN_UNRESOLVED:" + str(origin.get("reason")))
+    for label, key in (("FORECAST_WEEKLY_FLOOR_BREACHED", "first_weekly_floor_breach"),
+                       ("FORECAST_DAILY_FLOOR_BREACHED", "first_daily_floor_breach")):
+        marks = band.get(key)
+        if isinstance(marks, Mapping):
+            for asset in FLOOR_ASSETS:
+                mark = marks.get(asset)
+                if isinstance(mark, Mapping):
+                    basis.append(f"{label}:{asset}@{mark.get('breach_at_utc')}")
+    if risk_state != "UNAVAILABLE" and status in {"STALE", "DEGRADED"}:
+        # G1: a packet that is not OK must not show a live state without saying so.
+        basis.append("LIVE_RISK_STATE_DISPLAYED_ON_NON_OK_EVIDENCE")
+
+    since = None
+    if origin.get("status") == "RESOLVED":
+        since = {
+            "kind": "RISK_STATE_LAST_EVALUATED_BY_WEEKLY_ISSUER",
+            "at_utc": origin["evaluated_at_utc"],
+            "issue_number": origin["issue_number"],
+            "public_issue_number": origin["public_issue_number"],
+            "forecast_week": origin["forecast_week"],
+        }
+    return {
+        "contract": RISK_FRESHNESS_CONTRACT,
+        "status": status,
+        "since": since,
+        "basis": basis,
+        "displayed_pullback_risk_state": risk_state,
+        "inheritance": {
+            "state_basis": state_basis,
+            "issuer_method": cn_issuer_method(cn_package if cn_eligible else None),
+            "declared_inherited_from_issue_number": nested(cn_package, "decision_projection", "protection", "inherited_from_issue_number") if cn_eligible else None,
+            "origin": origin,
+        },
+        "source_freshness_status": source_status,
+        "forecast_floor_status": band.get("forecast_floor_status"),
+        "authority": DESCRIPTIVE_AUTHORITY,
+        "release_stage": DESCRIPTIVE_RELEASE_STAGE,
+    }
+
+
+# Public projection: descriptive statuses only, never internal paths, commits or packet bindings.
+_PUBLIC_DESCRIPTIVE_DROP = {
+    "source_freshness": ("binding",),
+    "cn_band_status": ("source",),
+    "risk_freshness": (),
+}
+
+
+_PARTICIPATION_CONTRACT = "CN_CYCLE_PARTICIPATION_READBACK_v1"
+_PARTICIPATION_SEMANTICS = "OBSERVED_24H_RELATIVE_PERFORMANCE_NOT_CAPITAL_FLOW"
+# Same source expiry as auto_market_state.normalize_breadth.
+_PARTICIPATION_MAX_AGE = timedelta(hours=8)
+_PARTICIPATION_WINDOWS = {"LARGE_ALT_PROXY": (3, 20), "MID_ALT_PROXY": (21, 50),
+           "SMALL_ALT_PROXY": (51, 100)}
+
+
+def _participation_mapping(value):
+    return value if isinstance(value, Mapping) else {}
+
+
+def _participation_clock(value):
+    if not isinstance(value, str):
+        return None
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return dt.astimezone(timezone.utc) if dt.utcoffset() is not None else None
+    except (ValueError, OverflowError):
+        return None
+
+
+def _participation_number(value):
+    return type(value) in (int, float) and -1e100 <= value <= 1e100 and math.isfinite(value)
+
+
+def _participation_majority(value):
+    if not _participation_number(value) or not 0 <= value <= 1:
+        return "UNAVAILABLE"
+    return "MAJORITY" if value > .5 else "MINORITY" if value < .5 else "HALF"
+
+
+def _participation_unavailable(reason):
+    return {"contract": _PARTICIPATION_CONTRACT, "status": "UNAVAILABLE", "reason": reason,
+            "semantics": _PARTICIPATION_SEMANTICS, "observed_at_utc": None, "valid_until_utc": None,
+            "relative_leader": "UNAVAILABLE",
+            "buckets": {k: {"state": "UNAVAILABLE"} for k in
+                        (*_PARTICIPATION_WINDOWS, "MICROCAP_PROXY", "MEMES")},
+            "phase": "UNAVAILABLE", "rotation_confirmed": False,
+            "authority": "DESCRIPTIVE_ONLY_NO_ACTION_OR_FORECAST"}
+
+
+def cycle_participation_readback(auto_state, *, as_of):
+    """Read only the authenticated public Auto Market State owner's existing proxy.
+
+    Caller must verify packet ancestry/digest before invoking this helper.
+    A bucket is an observed rank-window proxy, never an inferred capital flow.
+    """
+    packet = _participation_mapping(auto_state)
+    if packet.get("validation_status") == "FAIL":
+        return _participation_unavailable("AUTO_SOURCE_VALIDATION_FAILED")
+    state = _participation_mapping(packet.get("normalized_state"))
+    health = _participation_mapping(_participation_mapping(packet.get("source_health")).get("breadth"))
+    norm = _participation_mapping(health.get("normalization"))
+    breadth = _participation_mapping(state.get("breadth"))
+    proxy = _participation_mapping(state.get("capitalization_transmission_proxy"))
+    now = as_of.astimezone(timezone.utc) if isinstance(as_of, datetime) and as_of.utcoffset() is not None else None
+    issued = _participation_clock(packet.get("packet_generated_at_utc"))
+    stamp = _participation_clock(proxy.get("source_retrieved_at_utc"))
+    if now is None or issued is None or stamp is None or not stamp <= issued <= now:
+        return _participation_unavailable("SOURCE_CLOCK_INVALID")
+    if now - stamp >= _PARTICIPATION_MAX_AGE:
+        return _participation_unavailable("BREADTH_OWNER_EXPIRED")
+    if health.get("status") != "PASS" or norm.get("status") != "PASS":
+        return _participation_unavailable("BREADTH_OWNER_NOT_PASS")
+    if (proxy.get("contract") != "CAPITALIZATION_TRANSMISSION_PROXY_v2"
+            or proxy.get("bucket_semantics") != "FILTERED_TOP100_RANK_WINDOWS_EXPLICIT_NON_BETA_EXCLUSIONS_PROXY_ONLY"):
+        return _participation_unavailable("SOURCE_CONTRACT_MISMATCH")
+    authority = _participation_mapping(proxy.get("authority"))
+    if (not all(authority.get(k) is False for k in ("binding", "canonical_rotation", "portfolio_action", "market_threshold_change"))
+            or type(authority.get("execution_weight")) is not int or authority["execution_weight"] != 0):
+        return _participation_unavailable("SOURCE_AUTHORITY_MISMATCH")
+    membership = _participation_mapping(breadth.get("universe")).get("membership_hash") or _participation_mapping(breadth.get("aggregate")).get("membership_hash")
+    if (not isinstance(membership, str) or not re.fullmatch(r"[0-9a-f]{64}", membership)
+            or membership != proxy.get("source_membership_hash")
+            or stamp != _participation_clock(
+                breadth.get("retrieved_at_utc")
+                or breadth.get("retrieval_timestamp")
+                or _participation_mapping(breadth.get("observation")).get("retrieval_timestamp_utc")
+            )
+            or stamp != _participation_clock(norm.get("retrieved_at_utc"))):
+        return _participation_unavailable("SOURCE_MEMBERSHIP_OR_CLOCK_MISMATCH")
+    out = _participation_unavailable("NO_QUALIFIED_BUCKET")
+    btc, eth = proxy.get("btc_return_24h_pct"), proxy.get("eth_return_24h_pct")
+    if not all(_participation_number(x) for x in (btc, eth)):
+        return out
+    out["observed_at_utc"] = stamp.isoformat().replace("+00:00", "Z")
+    out["valid_until_utc"] = (stamp + _PARTICIPATION_MAX_AGE).isoformat().replace("+00:00", "Z")
+    out["relative_leader"] = "BTC" if btc > eth else "ETH" if eth > btc else "TIED"
+    buckets = _participation_mapping(proxy.get("buckets"))
+    for key, (lo, hi) in _PARTICIPATION_WINDOWS.items():
+        row = _participation_mapping(buckets.get(key))
+        counts = [row.get(k) for k in ("raw_rank_window_constituent_count", "excluded_non_beta_count", "constituent_count")]
+        if (row.get("status") != "OBSERVED_PROXY" or row.get("rank_window") != [lo, hi]
+                or not all(type(n) is int and n >= 0 for n in counts)
+                or counts[0] != hi - lo + 1 or counts[1] + counts[2] != counts[0] or not counts[2]):
+            continue
+        shares = [row.get(k) for k in ("advance_ratio_24h", "outperforming_btc_share_24h", "outperforming_eth_share_24h")]
+        values = [_participation_majority(value) for value in shares]
+        # The owner computes all three shares over identical constituents.
+        # Higher strict return thresholds cannot have higher shares; equal
+        # thresholds must have identical shares (including the zero benchmark).
+        if "UNAVAILABLE" not in values:
+            thresholds = (0, btc, eth)
+            if any((thresholds[i] >= thresholds[j] and shares[i] > shares[j])
+                   for i in range(3) for j in range(3)):
+                continue
+        coverage = "TOP100_TAIL_ONLY_NOT_FULL_SMALL_CAP_UNIVERSE" if key == "SMALL_ALT_PROXY" else "TOP100_FULL_RANK_WINDOW"
+        if "UNAVAILABLE" in values or row.get("coverage") != coverage:
+            continue
+        out["buckets"][key] = dict(state="OBSERVED_PROXY", coverage=coverage,
+                                   advancing=values[0], outperforming_btc=values[1],
+                                   outperforming_eth=values[2])
+    observed = sum(out["buckets"][k]["state"] == "OBSERVED_PROXY" for k in _PARTICIPATION_WINDOWS)
+    out["status"] = "OBSERVED_PARTICIPATION" if observed == len(_PARTICIPATION_WINDOWS) else "PARTIAL_OBSERVATION"
+    out["reason"] = "SOURCE_PROXY_ONLY" if observed == len(_PARTICIPATION_WINDOWS) else "INCOMPLETE_RANK_WINDOWS"
+    return out
+
+
+def altseason_readback(auto_state, *, as_of):
+    """Source-published 90d state only; no phase, ETA, flow or action.
+    Daily source expectation from blockchaincenter_altcoin_season_shadow.json;
+    carry policy from auto_market_state.altseason_source_health (72h).
+    No numeric provider data in this projection.
+    """
+    out = {"contract": "CN_ALTSEASON_OBSERVATION_v1", "status": "UNAVAILABLE",
+           "source": "BLOCKCHAINCENTER_90D", "state": "UNAVAILABLE",
+           "observed_at_utc": None, "valid_until_utc": None,
+           "authority": "CONTEXT_ONLY_NO_TRANSITION_OR_ETA"}
+    packet = _participation_mapping(auto_state)
+    if packet.get("validation_status") == "FAIL":
+        return out
+    now = as_of if isinstance(as_of, datetime) and as_of.utcoffset() is not None else None
+    issued = _participation_clock(packet.get("packet_generated_at_utc"))
+    ns = _participation_mapping(packet.get("normalized_state"))
+    health = nested(packet, "source_health", "altseason_context", "status")
+    bc = _participation_mapping(nested(ns, "altseason_context", "blockchaincenter_altcoin_season"))
+    row = _participation_mapping(nested(bc, "horizons", "90"))
+    if health == "PASS" and bc.get("status") == "PASS" and bc.get("contract") == "BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1":
+        value = row.get("published_score")
+        retrieved = _participation_clock(bc.get("retrieved_at_utc"))
+        if (row.get("score_reconciliation") != "PASS_EXACT" or
+                not _participation_number(row.get("recomputed_score")) or
+                row.get("recomputed_score") != value or
+                retrieved is None or bc.get("observation_date_utc") != retrieved.date().isoformat()):
+            return out
+        status, ttl = "OBSERVED", timedelta(hours=24)
+    elif health == "DEGRADED_CARRY":
+        carry = _participation_mapping(ns.get("altseason_carry"))
+        if (carry.get("semantics") != "LAST_VALID_PUBLISHED_VALUE_CARRIED_NOT_INTERPOLATED_NOT_PASS" or
+                carry.get("max_age_hours") != 72):
+            return out
+        value = carry.get("value")
+        retrieved = _participation_clock(carry.get("source_retrieved_at_utc"))
+        origin = _participation_clock(carry.get("source_packet_generated_at_utc"))
+        if (retrieved is None or origin is None or issued is None or
+                not retrieved <= origin < issued or
+                carry.get("source_observation_date_utc") != retrieved.date().isoformat()):
+            return out
+        status, ttl = "CARRIED_NOT_FRESH", timedelta(hours=72)
+    else:
+        return out
+    if (not _participation_number(value) or not 0 <= value <= 100 or
+            now is None or issued is None or retrieved is None or
+            not retrieved <= issued <= now or now >= retrieved + ttl):
+        return out
+    # Source registry thresholds (not framework trading thresholds).
+    state = "ALTCOIN_SEASON" if value >= 75 else "BITCOIN_SEASON" if value <= 25 else "BETWEEN_PUBLISHED_THRESHOLDS"
+    if status == "OBSERVED" and row.get("source_state") != state:
+        return out
+    return {**out, "status": status, "state": state,
+            "observed_at_utc": _stamp(retrieved),
+            "valid_until_utc": _stamp(retrieved + ttl)}
+
+
+def _public_descriptive(compass: Mapping[str, Any]) -> dict[str, Any]:
+    """Emit a block only when the frozen compass carries it, so a pre-upgrade slot re-projects byte-identically."""
+    out: dict[str, Any] = {}
+    for key, drop in _PUBLIC_DESCRIPTIVE_DROP.items():
+        block = compass.get(key)
+        if not isinstance(block, Mapping):
+            continue
+        view = {k: v for k, v in block.items() if k not in drop}
+        if key == "cn_band_status" and isinstance(view.get("days"), list):
+            view["days"] = [{k: v for k, v in day.items() if k != "source"} if isinstance(day, Mapping) else day for day in view["days"]]
+        out[key] = view
+    return out
+
+
 def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
     public_ladder = []
     for row in compass.get("capitalization_ladder", []):
@@ -1625,6 +2413,7 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         "bull_bear_scale": compass.get("bull_bear_scale"),
         "capitalization_ladder": public_ladder,
         "protection_tracker": compass.get("protection_tracker"),
+        **_public_descriptive(compass),
         "sell_assessment": compass.get("sell_assessment"),
         "action_now": compass.get("action_now"),
         "next_meaningful_change_eta": None,
@@ -1664,6 +2453,13 @@ def build_official_compass(
     sell = sell_assessment(auto_state, protection, as_of=issued)
     evidence = evidence_snapshot(auto_state, packet_path)
     data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible and evidence.get("mapping_integrity_status") == "PASS" else "DEGRADED"
+    source = source_freshness(auto_state, issued, packet_path=packet_path)
+    band = cn_band_status(auto_state, eligible_cn, cn_binding, repo_root, issued, source_status=source["status"])
+    risk_provenance = risk_freshness(
+        auto_state, protection, data_status=data_status,
+        mapping_integrity_status=evidence.get("mapping_integrity_status"),
+        source=source, band=band, cn_package=eligible_cn, cn_binding=cn_binding, repo_root=repo_root, as_of=issued,
+    )
     decision_context = {
         "auto_market_state_packet_sha256": auto_state.get("packet_sha256"),
         "cycle_navigator_machine_sha256": nested(cn_binding, "machine_package", "content_sha256"),
@@ -1713,6 +2509,9 @@ def build_official_compass(
         "market_now": market_now,
         "cn_issuer_method": cn_issuer_method(eligible_cn),
         "cn_protection_state_basis": cn_protection_state_basis(eligible_cn),
+        "source_freshness": source,
+        "cn_band_status": band,
+        "risk_freshness": risk_provenance,
         "horizons": horizons,
         "bull_bear_scale": bull_bear,
         "capitalization_ladder": ladder,

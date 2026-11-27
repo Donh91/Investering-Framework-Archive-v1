@@ -2,10 +2,10 @@
   "authority": "ORCHESTRATION_ONLY",
   "automation_orchestration": {
     "authoritative_input_unknown_count": 0,
-    "existing_remediation_count": 1,
+    "existing_remediation_count": 4,
     "luna_triage_count": 0,
     "shared_head_cluster_count": 0,
-    "sol_6_1_diagnosis_count": 1
+    "sol_6_1_diagnosis_count": 0
   },
   "canonical_effect": false,
   "compounding_learning_backlog_reference": "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/LEARNING_BACKLOG.json",
@@ -14,15 +14,37 @@
   "cross_domain_shadow_weekly": {
     "authority": "ADVISORY_ONLY",
     "automatic_model_calls": false,
-    "lanes": [],
+    "lanes": [
+      {
+        "lane_id": "COMPASS",
+        "next_review_question": "WATCH_MATURATION_AND_DELIVERED_AFTER_COST_OUTCOMES",
+        "owner": "Official Compass / EDGE #1530 / risk-to-action #1553",
+        "scientific_edge": "UNPROVEN",
+        "source_status": "SOURCE_OBSERVED"
+      },
+      {
+        "lane_id": "AUTO_TRADING",
+        "next_review_question": "REPAIR_GLOBAL_TRIAL_DENOMINATOR_BEFORE_BROAD_SEARCH",
+        "owner": "AUTO_TRADING #1557 / Experiment Lifecycle",
+        "scientific_edge": "UNPROVEN",
+        "source_status": "SOURCE_INCOMPLETE"
+      },
+      {
+        "lane_id": "ALPHA_LAB",
+        "next_review_question": "AWAIT_AUTHENTICATED_PUBLIC_SAFE_CROSS_REPO_OWNER_RECEIPT",
+        "owner": "Meme-Alpha-Lab domain owners / Archive #1340",
+        "scientific_edge": "UNPROVEN",
+        "source_status": "PRIVATE_REPO_SOURCE_NOT_IMPORTED"
+      }
+    ],
     "portfolio_execution": false,
-    "reason": "WEEKLY_REVIEW_NOT_MERGED_OR_STALE",
-    "status": "PENDING_REVIEWED_WEEKLY_SNAPSHOT",
+    "reason": "OWNER_REVIEW_AND_INDEPENDENT_ACCEPTANCE_REQUIRED",
+    "status": "WEEKLY_RESEARCH_ADVISORY_ONLY",
     "week": "2026-W48"
   },
   "delegation_queue_count": 6,
   "family_count": 380,
-  "generated_at_utc": "2026-11-24T15:08:51.689750Z",
+  "generated_at_utc": "2026-11-27T14:09:47.684341Z",
   "iso_week": 48,
   "iso_year": 2026,
   "master_monday_live_influence": false,
@@ -71,10 +93,10 @@
       "bf6d487281c1060a03a4d4ba"
     ],
     "reference": "research/framework_learning/strategist/LATEST.json",
-    "source_generated_at_utc": "2026-11-24T15:08:51.904785Z",
-    "source_sha256": "f24e8650f0c3db754236813cf25be466d428cb089bea3a2401c022d5ee23a09b",
+    "source_generated_at_utc": "2026-11-27T14:09:47.970357Z",
+    "source_sha256": "1a8a7fa823a5e7fca9ed010364ea904ff8e46c17dc6fa6dee0399c0ece22e6df",
     "status": "ADVISORY_CURRENT_EVIDENCE",
-    "verified_at_utc": "2026-11-24T15:08:51.950748Z"
+    "verified_at_utc": "2026-11-27T14:09:48.026124Z"
   },
   "unconsumed_information_count": 1
 }

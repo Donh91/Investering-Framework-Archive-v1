@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/experiment_lifecycle.py",
+    "tests/experiments/test_experiment_lifecycle_r0_no_rule.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-dbb1a4162629260f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* experiments(R0): no preregistered rule -> MATURED_INCONCLUSIVE, never any(HIT) SUPPORTED Remove the any(HIT) => MATURED_SUPPORTED and any(MISS) => MATURED_NOT_SUPPORTED branches in the lifecycle state selection. With no preregistered decision rule, matured eligible evidence of any size or mix now stays MATURED_INCONCLUSIVE, and the row records matured_state_reason_v1 = NO_PREREGISTERED_DECISION_RULE (null otherwise). Target-unit quarantine precedence, every non-mature state, all outcome/eligible counts and the input bytes are unchanged. No decision rule is added; that is a separate later cha",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/experiment_lifecycle.py": "0b1c22e4c447af8df46f3456b5aa5d3e136264b1",
+    "tests/experiments/test_experiment_lifecycle_r0_no_rule.py": "2dc8abacc2b6a78b472330303eb0fbebf0cb12d6"
+  },
+  "source_commit_sha": "dbb1a4162629260fcabcbac79bdfc1d1e71e14d4",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-11-27T13:30:30+01:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "experiments(R0): no preregistered rule -> MATURED_INCONCLUSIVE (remove any(HIT) SUPPORTED) (#2373)"
+}

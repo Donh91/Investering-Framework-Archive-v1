@@ -17,7 +17,7 @@ def parse_ts(value: Any) -> datetime | None:
     try:
         instant = datetime.fromisoformat(value.replace("Z", "+00:00"))
         return instant.astimezone(UTC) if instant.tzinfo is not None else None
-    except ValueError:
+    except (ValueError, OverflowError):
         return None
 
 
@@ -193,7 +193,9 @@ def apply_owner_conservation(state: dict[str, Any], policy: dict[str, Any], now:
     until = parse_ts(policy.get("actions_critical_until_utc"))
     if until is None or now >= until:
         return state
-    return {**state, "state": "CRITICAL", "burn_risk": "CRITICAL",
+    return {**state, "measured_budget_state": state["state"],
+            "state": "UNKNOWN" if state["state"] == "UNKNOWN" else "CRITICAL",
+            "effective_operating_state": "CRITICAL", "burn_risk": "CRITICAL",
             "owner_declared_conservation": True,
             "owner_conservation_until_utc": until.isoformat().replace("+00:00", "Z"),
             "recommended_behavior": [
@@ -213,6 +215,7 @@ def render_markdown(state: dict[str, Any]) -> str:
         "# GitHub Actions Budget Guard",
         "",
         f"- ACTIONS_BUDGET: **{state.get('state', 'UNKNOWN')}**",
+        f"- EFFECTIVE_OPERATING_STATE: {state.get('effective_operating_state', state.get('state', 'UNKNOWN'))}",
         f"- USAGE_SNAPSHOT: {usage}",
         f"- SNAPSHOT_STATUS: {state.get('snapshot_status', 'UNKNOWN')}",
         f"- RESET_ETA_DAYS: {state.get('reset_eta_days') if state.get('reset_eta_days') is not None else 'UNKNOWN'}",

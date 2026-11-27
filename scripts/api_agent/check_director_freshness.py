@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -38,6 +39,75 @@ def parse_source_timestamp(raw: object) -> datetime | None:
     return value.astimezone(timezone.utc)
 
 
+def _unique_json_object(pairs):
+    obj = {}
+    for key, value in pairs:
+        if key in obj:
+            raise ValueError("duplicate JSON key")
+        obj[key] = value
+    return obj
+
+
+def _read_object(path: Path) -> dict:
+    if path.is_symlink():
+        raise ValueError("symlink is not an evidence object")
+    value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_unique_json_object)
+    if not isinstance(value, dict):
+        raise ValueError("expected evidence object")
+    return value
+
+
+def _canonical_hash(value: dict) -> str:
+    return hashlib.sha256((json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode()).hexdigest()
+
+
+def documented_no_delta_skip(context_path: Path) -> bool:
+    """Recognize only the existing zero-call SKIPPED_NO_DELTA workflow shape.
+
+    Unknown or contradictory receipts remain in the seen-ID set, as before.
+    SKIPPED_OWNER_RUN_ALREADY_ANALYZED is not an absence-of-analysis proof.
+    Future budget HOLD artifacts must stay outside the analyzed-output root.
+    This local receipt check is not server acceptance or scientific custody.
+    """
+    try:
+        context = _read_object(context_path)
+        out = _read_object(context_path.parent / "DAILY_DIRECTOR_OUTPUT.json")
+        rec = _read_object(context_path.parent / "DAILY_DIRECTOR_RECEIPT.json")
+        authority = rec.get("authority")
+        return (
+            set(rec) == {"contract", "task", "model", "reasoning_effort", "context_hash",
+                         "prompt_hash", "output_hash", "response_id", "input_tokens",
+                         "output_tokens", "estimated_cost_usd", "created_unix", "status", "authority"}
+            and set(out) == {"status", "summary", "evidence_for", "evidence_against",
+                             "uncertainties", "hypotheses", "forecast_candidates"}
+            and rec.get("contract") == "API_AGENT_RECEIPT_v3"
+            and rec.get("model") == "gpt-5.6-luna"
+            and rec.get("reasoning_effort") == "medium"
+            and type(rec.get("created_unix")) is int and rec["created_unix"] > 0
+            and out.get("summary") == "Daily Director skipped because no new eligible owner evidence required analysis."
+            and rec.get("task") == "DAILY_DIRECTOR_SHADOW"
+            and rec.get("status") == "SKIPPED_NO_DELTA"
+            and rec.get("context_hash") == _canonical_hash(context)
+            and rec.get("output_hash") == _canonical_hash(out)
+            and "response_id" in rec and rec["response_id"] is None
+            and "prompt_hash" in rec and rec["prompt_hash"] is None
+            and rec.get("response_ids", []) == []
+            and type(rec.get("attempt_count", 0)) is int and rec.get("attempt_count", 0) == 0
+            and all(type(rec.get(k)) is int and rec[k] == 0 for k in ("input_tokens", "output_tokens"))
+            and type(rec.get("estimated_cost_usd")) in (int, float) and rec["estimated_cost_usd"] == 0
+            and isinstance(authority, dict)
+            and set(authority) == {"portfolio_action", "framework_state_change", "model_weight_change", "canonical_promotion"}
+            and all(authority.get(k) is False for k in (
+                "portfolio_action", "framework_state_change", "model_weight_change", "canonical_promotion"))
+            and out.get("status") == "BLOCKED"
+            and out.get("uncertainties") == ["SKIPPED_NO_DELTA"]
+            and all(out.get(k) == [] for k in ("evidence_for", "evidence_against", "hypotheses", "forecast_candidates"))
+            and out.get("experiment_candidates", []) == []
+        )
+    except (OSError, ValueError, TypeError, RecursionError):
+        return False
+
+
 def evaluate(context: Path, output_root: Path, now: datetime | None = None) -> dict[str, object]:
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     current_run_id, source_raw = context_capture(context)
@@ -70,7 +140,7 @@ def evaluate(context: Path, output_root: Path, now: datetime | None = None) -> d
     if output_root.exists():
         for path in output_root.rglob("context.json"):
             run_id = run_id_from_context(path)
-            if run_id:
+            if run_id and not documented_no_delta_skip(path):
                 seen.add(run_id)
     unseen = current_run_id not in seen
     # A verified news event may deserve analysis even when the market owner

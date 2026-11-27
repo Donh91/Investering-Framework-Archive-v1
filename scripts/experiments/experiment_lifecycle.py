@@ -38,6 +38,7 @@ UTC = timezone.utc
 KINDS = {"SENSOR_COMBINATION", "FORECAST_TEST", "SEQUENCE_TEST", "DATA_QUALITY_TEST"}
 OPS = {"GT", "LT", "DELTA_PCT_GT", "DELTA_PCT_LT", "POSITIVE", "NEGATIVE", "AVAILABLE", "CHANGED"}
 UNIT_CONTRACT_VERSION = "FORECAST_TARGET_UNITS_v2"
+NO_PREREGISTERED_DECISION_RULE = "NO_PREREGISTERED_DECISION_RULE"
 
 
 def canon(value: Any) -> bytes:
@@ -544,14 +545,15 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
                     if item.get("contract") in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}
                     and item.get("status") == "CENSORED"]
         unresolved_count = len(original_outcomes) - len(matured) - len(censored)
+        matured_state_reason = None
         if candidate.get("spec", {}).get("kind") == "FORECAST_TEST" and candidate.get("spec", {}).get("target_unit_contract_version") != UNIT_CONTRACT_VERSION:
             state = "TARGET_UNIT_QUARANTINED"
-        elif any(item.get("result") == "HIT" for item in eligible):
-            state = "MATURED_SUPPORTED"
-        elif any(item.get("result") == "MISS" for item in eligible):
-            state = "MATURED_NOT_SUPPORTED"
         elif matured:
+            # R0: no preregistered decision rule exists, so eligible HIT/MISS
+            # evidence of any mix or size is never SUPPORTED/NOT_SUPPORTED.
             state = "MATURED_INCONCLUSIVE"
+            if eligible:
+                matured_state_reason = NO_PREREGISTERED_DECISION_RULE
         elif original_outcomes:
             # Historical source is retained, but not a mature observation.
             state = "WAITING_FOR_DATA"
@@ -580,6 +582,7 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
             "unknown_outcome_count": unresolved_count,
             "scientific_score_eligible_outcome_count": len(eligible),
             "scientific_score_nonadmission_counts_v1": nonadmission_counts,
+            "matured_state_reason_v1": matured_state_reason,
             "outcome_evidence_state": (
                 "CENSORED_ONLY" if censored and not matured and not unresolved_count
                 else "MATURED_SOME" if matured
@@ -593,7 +596,7 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
     # the corrected count semantics explicitly versioned. Historical snapshots
     # are not rewritten; their adjudications must pass each consumer's existing
     # state/count drift checks before reuse.
-    return {"contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "contract_revision": "1.1", "outcome_count_contract": "EXPERIMENT_OUTCOME_COUNTS_v2", "generated_at_utc": now, "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION", "candidate_count": len(rows), "duplicate_candidate_file_count": duplicate_candidate_file_count, "state_counts": counts, "candidates": rows, "rules": {"candidate_id_uniqueness": "ONE_CURRENT_ROW_PER_CANDIDATE_ID_EARLIEST_CANONICAL_SOURCE", "duplicate_candidate_spec_conflict": "FAIL_CLOSED", "idea_bank_capacity": "UNBOUNDED_WITH_SEMANTIC_DEDUPLICATION", "automatic_age_expiry": False, "max_new_forecasts_per_run_default": 5, "promotion_requires_governance_review": True, "matured_outcome_count_semantics": "STATUS_MATURED_ONLY", "scientific_score_eligible_outcome_count_semantics": "STATUS_MATURED_AND_SCORE_ELIGIBLE_TRUE_AND_HIT_OR_MISS", "censored_outcomes_never_matured": True, "legacy_snapshot_reinterpretation": "FORBIDDEN", "prior_adjudication_reuse": "REQUIRES_CURRENT_STATE_AND_COUNT_MATCH"}}
+    return {"contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "contract_revision": "1.1", "outcome_count_contract": "EXPERIMENT_OUTCOME_COUNTS_v2", "generated_at_utc": now, "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION", "candidate_count": len(rows), "duplicate_candidate_file_count": duplicate_candidate_file_count, "state_counts": counts, "candidates": rows, "rules": {"candidate_id_uniqueness": "ONE_CURRENT_ROW_PER_CANDIDATE_ID_EARLIEST_CANONICAL_SOURCE", "duplicate_candidate_spec_conflict": "FAIL_CLOSED", "idea_bank_capacity": "UNBOUNDED_WITH_SEMANTIC_DEDUPLICATION", "automatic_age_expiry": False, "max_new_forecasts_per_run_default": 5, "promotion_requires_governance_review": True, "matured_outcome_count_semantics": "STATUS_MATURED_ONLY", "scientific_score_eligible_outcome_count_semantics": "STATUS_MATURED_AND_SCORE_ELIGIBLE_TRUE_AND_HIT_OR_MISS", "censored_outcomes_never_matured": True, "legacy_snapshot_reinterpretation": "FORBIDDEN", "prior_adjudication_reuse": "REQUIRES_CURRENT_STATE_AND_COUNT_MATCH", "matured_decision_rule": "NONE_PREREGISTERED_ELIGIBLE_EVIDENCE_STAYS_INCONCLUSIVE"}}
 
 
 def main() -> None:

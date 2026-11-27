@@ -6,15 +6,44 @@
   "policy": "AGENTS.md section 0.2e",
   "decided": "2026-11-15 owner-present interactive",
   "clears_halt": null,
+  "executor": "SHADOW",
+  "review_policy": "CODEX_CLAUDE_OR_OFFLINE_RECALL",
+  "fallback_route": "OFF",
+  "fallback_data_allowlist": {
+    "decided": "owner addendum c 2026-11-26: route (c) merges only repository automation's data PRs on this list; derived from every merged PR github-actions[bot] opened (#735 #799 #1365 #1491 #1588 #1682 #1817 #1880 #2060 #2192 #2314)",
+    "author": "github-actions[bot]",
+    "entries": [
+      {
+        "name": "weekly shadow registry snapshot",
+        "head_ref": "^automation/shadow-registry-(?P<week>[0-9]{4}-W[0-9]{2})$",
+        "paths": [
+          {
+            "path": "^04_MARKET_LEARNING/shadow_registry/LATEST\\.json$",
+            "status": [
+              "modified"
+            ]
+          },
+          {
+            "path": "^04_MARKET_LEARNING/shadow_registry/weekly/(?P<week>[0-9]{4}-W[0-9]{2})\\.json$",
+            "status": [
+              "added"
+            ]
+          }
+        ]
+      }
+    ]
+  },
   "pins": {
-    "AGENTS.md": "18b6dbbe4adbeb2660590dc14cdb9e2ef3714994",
+    "AGENTS.md": "a274067714788c07e24532f8a0dd60cecf63ef41",
     "00_FMOS/S1_REQUIRED_PR_JOBS_POLICY_V1.json": "44aea7baa306a8058fed2d760f5154f5ee7f7fad",
-    ".github": "fdd271c2d899aa655a5f7fe95b90e370cf6d85a8",
+    ".github": "4ce7cc11300ebbf3c1bad9d54d23e0d597ba515b",
     ".agents": "e93392c3c78294c25d9073193c2405792fb3025c",
-    "scripts/governance": "3c3c03c53c3e899537bca458ff3bd777785b816c",
+    "scripts/governance": "44ac1c2c25060a9bed681e454ba9025c619e48cd",
     "scripts/health": "a0ea5e97be8129a796d35213a796f0f852941be0",
     "07_PROMPTS_AND_AGENTS": "eb96a502d5a11847c40b821c5c18e76d417fe25b",
     "01_CORE_FRAMEWORK/governance": "b87a75cb93034089c381b607312667d87078a86a",
-    "00_FMOS/S1_WORKFLOW_ISOLATION_V1.json": "0397fb06d26aefb560b2f7f90840c7df89944cbd"
-  }
+    "00_FMOS/S1_WORKFLOW_ISOLATION_V1.json": "aca61dca3b6af81e368cfa05650c4088ac08009d"
+  },
+  "review_dispatch": "SHADOW",
+  "review_dispatch_probe": null
 }

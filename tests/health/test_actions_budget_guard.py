@@ -111,7 +111,9 @@ def test_owner_conservation_is_value_free_and_expires_without_inventing_recovery
               "never_bypass_required_ci": True,
               "actions_critical_until_utc": "2026-12-01T00:00:00Z"}
     d = apply_owner_conservation(evaluate({}, now), policy, now)
-    assert d["state"] == "CRITICAL"
+    assert d["state"] == "UNKNOWN"
+    assert d["measured_budget_state"] == "UNKNOWN"
+    assert d["effective_operating_state"] == "CRITICAL"
     assert d["snapshot_status"] == "INVALID_CONTRACT"
     assert d["protected_a_blocked"] is None
     assert d["usage_pct"] is None
@@ -120,3 +122,20 @@ def test_owner_conservation_is_value_free_and_expires_without_inventing_recovery
     assert apply_owner_conservation(evaluate({}, reset), policy, reset)["state"] == "UNKNOWN"
     policy["automatic_spend_authority"] = True
     assert apply_owner_conservation(evaluate({}, now), policy, now)["state"] == "UNKNOWN"
+
+
+def test_owner_conservation_keeps_fresh_measurement_separate():
+    now = datetime(2026, 9, 29, 13, tzinfo=UTC)
+    measured = evaluate(snapshot(100, observed="2026-09-29T12:00:00Z"), now)
+    assert measured["state"] == "NORMAL"
+    policy = {"contract": "RESOURCE_CONSERVATION_OWNER_POLICY_v1",
+              "automatic_spend_authority": False,
+              "new_workflows_or_agent_schedules": False,
+              "never_bypass_required_ci": True,
+              "actions_critical_until_utc": "2026-12-01T00:00:00Z"}
+    result = apply_owner_conservation(measured, policy, now)
+    assert result["state"] == "CRITICAL"
+    assert result["measured_budget_state"] == "NORMAL"
+    assert result["effective_operating_state"] == "CRITICAL"
+    assert result["usage_pct"] == measured["usage_pct"]
+    assert measured["state"] == "NORMAL"

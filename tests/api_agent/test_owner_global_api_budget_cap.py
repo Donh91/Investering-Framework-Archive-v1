@@ -217,9 +217,10 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
         self.assertIn("MAX_APPROVAL_ID_OR_EFFORT_INVALID",
                       str(state["cost_evidence_errors"]))
 
-    def test_canonical_ledger_keeps_existing_40_4_lanes_live(self):
-        # Run against REAL canonical receipts and canonical persistent ledger.
-        # Synthetic fixtures hid the rejected-P1 USD10 reservation regression.
+    def test_canonical_ledger_reports_40_4_readiness_without_granting_authority(self):
+        # Real canonical evidence must remain valid even when live paid capacity
+        # is exhausted. Owner decision 2026-11-25: non-paid code releases do not
+        # require live API headroom; paid admission still uses the unchanged guard.
         cmd = [
             sys.executable, str(SCRIPT),
             "--receipt-root", str(ROOT / "research/api_agent/outputs"),
@@ -231,15 +232,41 @@ class OwnerGlobalBudgetTests(unittest.TestCase):
                                 check=False, timeout=25, cwd=ROOT)
         self.assertTrue(result.stdout.strip(), result.stderr)
         state = json.loads(result.stdout)
-        self.assertEqual(result.returncode, 0, state)
-        self.assertEqual(state["status"], "PASS", state)
-        # Native POSTs are settled; retain consumed USD3+10 and distinct USD10
-        # owner-approved (not yet consumed) public research reservation.
+        self.assertEqual(state["cost_evidence_errors"], [], state)
+        self.assertEqual(state["malformed_cost_receipts"], [], state)
+        self.assertIs(state["fail_closed"], True)
+        self.assertIs(state["paid_authority"], False)
+        self.assertEqual(state["pending_liability_lower_usd"], expected_pending()[0])
         self.assertEqual(state["pending_liability_upper_usd"], expected_pending()[1])
         self.assertEqual(state["pending_liability_count"], expected_pending()[2])
         self.assertEqual(state["owner_global_hard_stop_usd"], 100.0)
-        self.assertGreaterEqual(state["remaining_usd"], 4.0)
         self.assertEqual(state["effective_hard_stop_usd"], 40.0)
+        self.assertEqual(state["reserve_usd"], 4.0)
+        self.assertEqual(state["owner_global_reserve_usd"], 4.0)
+        import math
+        remaining = state["remaining_usd"]
+        global_remaining = state["owner_global_remaining_usd_after_risk"]
+        self.assertTrue(math.isfinite(remaining) and math.isfinite(global_remaining), state)
+        self.assertIn(state["status"], ("PASS", "BLOCKED"), state)
+        self.assertEqual(result.returncode == 0, state["status"] == "PASS", state)
+        # Reported values round to eight decimals; equality is tested using
+        # exact synthetic inputs below, not inferred from rounded live values.
+        if remaining < 4.0 or global_remaining < 4.0:
+            self.assertEqual(state["status"], "BLOCKED", state)
+        elif remaining > 4.0 and global_remaining > 4.0:
+            self.assertEqual(state["status"], "PASS", state)
+
+    def test_40_4_paid_guard_boundary_deterministic(self):
+        for spent, remaining, expected in (
+                (35.99, 4.01, "PASS"), (36.0, 4.0, "BLOCKED"),
+                (36.01, 3.99, "BLOCKED")):
+            with self.subTest(spent=spent):
+                rc, state = run_guard(spent, cap=40, reserve=4, rows=[])
+                self.assertEqual(state["cost_evidence_errors"], [], state)
+                self.assertAlmostEqual(state["remaining_usd"], remaining, places=8)
+                self.assertEqual(state["status"], expected, state)
+                self.assertEqual(rc == 0, expected == "PASS", state)
+                self.assertIs(state["paid_authority"], False)
 
     def test_canonical_provider_settlement_is_evidence_bound_and_private(self):
         from scripts.api_agent.check_monthly_cost_guard import (
