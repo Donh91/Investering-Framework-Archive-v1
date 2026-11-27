@@ -39,7 +39,8 @@ SWITCH = json.loads((ROOT / B.SWITCH).read_text(encoding="utf-8"))
 # fix round 6 (F2): the executor is a workflow_run of s1-executor.yml; the brief run it acts for comes from the event
 ENV = {"GITHUB_REPOSITORY": B.REPO, "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_run", "GITHUB_RUN_ID": "555",
        "GITHUB_RUN_ATTEMPT": "1", "GITHUB_SHA": MAIN, "S1_BRIEF_RUN_ID": "555", "S1_BRIEF_RUN_ATTEMPT": "1", "S1_BRIEF_MAIN": MAIN,
-       "S1_BRIEF_EVENT": "schedule"}
+       "S1_BRIEF_EVENT": "schedule",
+       "S1_EXECUTOR_HOLD": ""}   # liveness round: the workflow always passes vars.S1_EXECUTOR_HOLD ("" when unset)
 
 
 def executor_run(run_id, created, updated=None, status="completed", **kw):
@@ -453,10 +454,10 @@ class ModesAndBinding(unittest.TestCase):
         self.assertEqual((out["result"], gh.calls), ("EXECUTOR_OFF(switch)", []))
         for hold in ("1", "true", "HOLD", "x", "0", "false", "off", "OFF", "no", " ", "\n"):   # ANY non-empty value holds (P2-5; fix round 5 P1-09: whitespace too)
             out, gh, _n, _d = execute(env={"S1_EXECUTOR_HOLD": hold})
-            # fix round 6 (#173/7194141485 item 5): no write at all, and the hold is still read natively (ONE read): the
-            # native variable is not set in this fake, so only the env held (an env-only hold is named as such)
+            # liveness round: no write and no read at all; the job-start value is authoritative (this job's token cannot
+            # read repository variables: GET actions/variables answers 403, native run 45986221512)
             self.assertEqual((out["result"], gh.calls, gh.writes, out["health"]),
-                             ("EXECUTOR_OFF(hold:env_only)", [("GET", f"actions/variables/{E.HOLD_VARIABLE}")], [], "HELD"), hold)
+                             ("EXECUTOR_OFF(hold:start)", [], [], "HELD"), hold)
         for free in ("",):
             self.assertEqual(D.effective_mode("LIVE", free), "LIVE", free)
             self.assertTrue(execute(env={"S1_EXECUTOR_HOLD": free})[0]["result"].startswith("MERGED("), repr(free))
@@ -919,7 +920,9 @@ class Harness(unittest.TestCase):
         self.assertEqual(table["MERGE shadow"][1], 0)
         self.assertLessEqual(table["MERGE live"][0], 80)                               # fix round 4: the final look verifies everything again
         self.assertLess(table["MERGE live"][0], E.EXECUTE_API_CALLS)
-        self.assertEqual(table["MERGE live"][0] - table["MERGE shadow"][0], 9)         # the readback (PR, merge commit, main) + hold and main before each of 3 writes
+        # the readback (PR, merge commit, main) + hold and main before each of 3 writes; liveness round: + the 3 live hold
+        # reads SHADOW no longer makes (start, intent, final look)
+        self.assertEqual(table["MERGE live"][0] - table["MERGE shadow"][0], 12)
         self.__class__.table = table
 
 
@@ -1075,8 +1078,12 @@ class HeadIsReadTwice(unittest.TestCase):
         reads = [i for i, (kind, path) in enumerate(gh.calls) if (kind, path) == ("GET", "pulls/7")]
         self.assertEqual(len(reads), 5)                                                # fix round 3/4: SHADOW makes the final look's reads too
         between = gh.calls[reads[1] + 1:reads[2]]
-        self.assertEqual(between, [("GET", f"issues/{B.OWNER_ISSUE}/comments"), ("GET", f"actions/variables/{E.HOLD_VARIABLE}"), ("GET", "branches/main")])   # last look, live stop (intent)
-        self.assertEqual(gh.calls[-2:], [("GET", f"actions/variables/{E.HOLD_VARIABLE}"), ("GET", "branches/main")])   # the live stop is the LAST read of the final look
+        # liveness round: SHADOW never reads the hold live (the job-start value decides); the switch read stays
+        self.assertEqual(between, [("GET", f"issues/{B.OWNER_ISSUE}/comments"), ("GET", "branches/main")])   # last look, live stop (intent)
+        self.assertEqual(gh.calls[-1:], [("GET", "branches/main")])                    # the live stop is the LAST read of the final look
+        self.assertNotIn(("GET", f"actions/variables/{E.HOLD_VARIABLE}"), gh.calls)
+        out, gh, _n, _d = execute(mode="LIVE", mutate=BEAT, live=lambda w, gh, n: setattr(gh, "fail_merge", urllib.error.HTTPError("u", 405, "x", {}, None)))
+        self.assertIn(("GET", f"actions/variables/{E.HOLD_VARIABLE}"), gh.calls)       # LIVE still reads it live before each write
 
 
 class SettlementIdentity(unittest.TestCase):
@@ -2036,7 +2043,8 @@ class FixRound3WriteBoundaries(unittest.TestCase):
                 self.assertTrue(out["result"].startswith("MERGED("), out["result"])
 
     def test_the_hold_is_read_live_before_the_intent_too(self):
-        for mode in ("LIVE", "SHADOW"):
+        # liveness round: only LIVE reads the hold live; SHADOW (no write) decides on the job-start value (ShadowHold below)
+        for mode in ("LIVE",):
             # fix round 5 (D08): set after the job's start (its env snapshot and the start read): the intent's read stops it
             out, gh, _n, _d = execute(mode=mode, mutate=BEAT, live=lambda w, gh, n: (setattr(gh, "hold", "stop"), setattr(gh, "hold_from", 2)))
             self.assertEqual((gh.writes, out["result"], out["mode"], out["health"]), ([], "NOTHING_ACTIONABLE(skipped=hold:intent)", "OFF", "HELD"), mode)

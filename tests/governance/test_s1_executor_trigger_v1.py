@@ -441,35 +441,76 @@ def erun(created_min, event="workflow_dispatch", status="completed", rid=2):
             "created_at": M.iso(created), "updated_at": M.iso(created + dt.timedelta(minutes=1))}
 
 
+class Reader:
+    """The metronome's S1EXEC reads (jobs of a run or of one attempt, and job logs) over a fixed world. `pubs` maps a
+    brief run id to WRITTEN, NONE (a fallback run that built nothing) or None (unreadable); `attempts` maps
+    (executor run, attempt) to {"job": overrides, "log": text} or None (unreadable). An executor attempt that is not
+    listed has an execute job whose health line evaluated brief run 1."""
+
+    def __init__(self, pubs=None, attempts=None):
+        self.pubs, self.attempts, self.logs, self.calls = dict(pubs or {}), dict(attempts or {}), {}, []
+
+    def jobs(self, run_id, attempt):
+        self.calls.append(("jobs", run_id, attempt))
+        if attempt is None:                                                          # a brief run: its build and publish jobs
+            state = self.pubs.get(run_id, "WRITTEN")
+            if state is None:
+                return None
+            if state == "NONE":
+                return [{"name": "build", "status": "completed", "conclusion": "success"}, {"name": "publish", "status": "completed", "conclusion": "skipped"}]
+            jid = 500000 + run_id
+            self.logs[jid] = f"S1_TICK_BRIEF_PUBLISHED issue=3 run={run_id} result=WRITTEN reason=created\n"
+            return [{"name": "build", "status": "completed", "conclusion": "success"}, {"id": jid, "name": "publish", "status": "completed", "conclusion": "success"}]
+        spec = self.attempts.get((run_id, attempt), {"log": hline(run_id, attempt, "1")})
+        if spec is None:
+            return None
+        if spec == "nojob":
+            return []
+        jid = 700000 + 10 * run_id + attempt
+        self.logs[jid] = spec.get("log")
+        return [dict({"id": jid, "name": "execute", "status": "completed", "conclusion": "success", "run_id": run_id, "run_attempt": attempt,
+                      "steps": [{"name": M.EXECUTE_STEP, "status": "completed", "conclusion": "success"}]}, **(spec.get("job") or {}))]
+
+    def log(self, job_id):
+        self.calls.append(("log", job_id))
+        return self.logs.get(job_id)
+
+
+def hline(run_id, attempt, brief_run, result="WOULD_MERGE(pr=7,head=bbbbbbbb,risk=LOW,review=CODEX)", brief_attempt="1"):
+    doc = {"v": 1, "run": str(run_id), "attempt": str(attempt), "brief_run": brief_run, "brief_attempt": brief_attempt, "result": result, "mode": "SHADOW"}
+    return "2026-11-26T14:30:00Z S1_EXECUTOR_HEALTH " + json.dumps(doc, sort_keys=True) + "\n"
+
+
 class MetronomeDispatchesTheExecutor(unittest.TestCase):
     def test_due_once_after_a_completed_successful_brief_run_of_any_event(self):
-        now = T0 + dt.timedelta(minutes=31)
-        self.assertEqual(M.s1exec_due(now, [brun(21)], []), (True, "DUE"))               # completed at :25, 6 minutes ago
+        now, R = T0 + dt.timedelta(minutes=31), Reader
+        self.assertEqual(M.s1exec_due(now, [brun(21)], [], R()), (True, "DUE"))          # completed at :25, 6 minutes ago
         for event in ("schedule", "push", "workflow_run"):                               # F2 closed: a fallback build publishes too
-            self.assertEqual(M.s1exec_due(now, [brun(21, event=event)], []), (True, "DUE"), event)
-        self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(26)]), (False, "ALREADY_DISPATCHED"))
-        self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(25, event="workflow_run")]), (False, "ALREADY_DISPATCHED"))   # a cron brief's workflow_run
-        self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(10)]), (True, "DUE"))      # an executor run for the previous brief
-        self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(30, status="in_progress")]), (False, "TARGET_ACTIVE"))
+            self.assertEqual(M.s1exec_due(now, [brun(21, event=event)], [], R()), (True, "DUE"), event)
+        # liveness round (L1): an executor attempt that EVALUATED the publication stops it, whatever started it
+        self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(26)], R()), (False, "ALREADY_EVALUATED"))
+        self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(25, event="workflow_run")], R()), (False, "ALREADY_EVALUATED"))
+        self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(10)], R()), (True, "DUE"))  # an executor run for the previous brief
+        self.assertEqual(M.s1exec_due(now, [brun(21)], [erun(30, status="in_progress")], R()), (False, "TARGET_ACTIVE"))
         for concl in ("skipped", "cancelled"):                                           # FA-P2-02: evaluated nothing, does not suppress
-            self.assertEqual(M.s1exec_due(now, [brun(21)], [dict(erun(26), conclusion=concl)]), (True, "DUE"), concl)
-        self.assertEqual(M.s1exec_due(now, [brun(29, status="in_progress")], []), (False, "NO_BRIEF_RUN"))
-        self.assertEqual(M.s1exec_due(now, [brun(21, conclusion="failure")], []), (False, "NO_BRIEF_RUN"))
-        self.assertEqual(M.s1exec_due(now, [brun(21, conclusion="cancelled")], []), (False, "NO_BRIEF_RUN"))   # replaced by the concurrency group
-        self.assertEqual(M.s1exec_due(now, [], []), (False, "NO_BRIEF_RUN"))
-        self.assertEqual(M.s1exec_due(T0 + dt.timedelta(minutes=46), [brun(21)], []), (False, "BRIEF_TOO_OLD"))   # completed 21 min ago
+            self.assertEqual(M.s1exec_due(now, [brun(21)], [dict(erun(26), conclusion=concl)], R(attempts={(2, 1): "nojob"})), (True, "DUE"), concl)
+        self.assertEqual(M.s1exec_due(now, [brun(29, status="in_progress")], [], R()), (False, "NO_BRIEF_RUN"))
+        self.assertEqual(M.s1exec_due(now, [brun(21, conclusion="failure")], [], R()), (False, "NO_BRIEF_RUN"))
+        self.assertEqual(M.s1exec_due(now, [brun(21, conclusion="cancelled")], [], R()), (False, "NO_BRIEF_RUN"))   # replaced by the concurrency group
+        self.assertEqual(M.s1exec_due(now, [], [], R()), (False, "NO_BRIEF_RUN"))
+        self.assertEqual(M.s1exec_due(T0 + dt.timedelta(minutes=46), [brun(21)], [], R()), (False, "BRIEF_TOO_OLD"))   # completed 21 min ago
         # the newest COMPLETED successful run decides: a run in progress or cancelled after it does not hide it
-        self.assertEqual(M.s1exec_due(now, [brun(21), brun(28, event="push", status="in_progress", rid=3)], []), (True, "DUE"))
-        self.assertEqual(M.s1exec_due(now, [brun(21), brun(26, conclusion="cancelled", rid=3)], []), (True, "DUE"))
-        self.assertEqual(M.s1exec_due(now, [brun(15), brun(22, event="workflow_run", took=1, rid=3)], [erun(20)]), (True, "DUE"))   # a later fallback run
-        self.assertEqual(M.s1exec_due(now, [dict(brun(21), updated_at=None)], []), (False, "RUN_ROW_UNREADABLE"))
+        self.assertEqual(M.s1exec_due(now, [brun(21), brun(28, event="push", status="in_progress", rid=3)], [], R()), (True, "DUE"))
+        self.assertEqual(M.s1exec_due(now, [brun(21), brun(26, conclusion="cancelled", rid=3)], [], R()), (True, "DUE"))
+        self.assertEqual(M.s1exec_due(now, [dict(brun(21), updated_at=None)], [], R()), (False, "RUN_ROW_UNREADABLE"))
+        self.assertEqual(M.s1exec_due(now, [brun(21)], []), (False, "EVALUATION_UNREAD"))  # no reader: never a blind dispatch
 
     def test_the_tick_dispatches_the_executor_with_its_own_token_and_mechanism(self):
         now = T0 + dt.timedelta(minutes=31)
 
         class Fake:
             def __init__(self, exec_rows):
-                self.exec_rows, self.sent, self.read = exec_rows, [], []
+                self.exec_rows, self.sent, self.read, self.reader = exec_rows, [], [], Reader()
 
             def environment(self):
                 return {"protection_rules": [{"type": "wait_timer", "wait_timer": 10}]}
@@ -480,6 +521,12 @@ class MetronomeDispatchesTheExecutor(unittest.TestCase):
             def runs(self, wf):
                 self.read.append(wf)
                 return {M.S1BRIEF["workflow"]: [brun(21)], M.S1EXEC["workflow"]: self.exec_rows}.get(wf, [])
+
+            def jobs(self, run_id, attempt):
+                return self.reader.jobs(run_id, attempt)
+
+            def log(self, job_id):
+                return self.reader.log(job_id)
 
             def dispatch(self, wf, inputs):
                 self.sent.append((wf, inputs))
@@ -493,10 +540,11 @@ class MetronomeDispatchesTheExecutor(unittest.TestCase):
         gh = Fake([erun(26)])
         plan = M.run(gh, now, self_run_id=1)
         self.assertNotIn("s1-executor.yml", [w for w, _i in gh.sent])
-        self.assertEqual(plan["targets"]["S1EXEC"], "ALREADY_DISPATCHED")
+        self.assertEqual(plan["targets"]["S1EXEC"], "ALREADY_EVALUATED")
         # SHADOW mode: logged only
         p = M.decide(now, mode="SHADOW", hourly_runs=[], monday_runs=[], self_runs=[], self_run_id=None,
-                     environment={"protection_rules": [{"type": "wait_timer", "wait_timer": 10}]}, s1brief_runs=[brun(21)], s1exec_runs=[])
+                     environment={"protection_rules": [{"type": "wait_timer", "wait_timer": 10}]}, s1brief_runs=[brun(21)], s1exec_runs=[],
+                     s1exec_reader=Reader())
         self.assertIn({"workflow": "s1-executor.yml", "inputs": {}}, p["would_dispatch"])
         self.assertNotIn({"workflow": "s1-executor.yml", "inputs": {}}, p["dispatch"])
         # an unreadable executor census fails every target closed (as every other read)
@@ -509,6 +557,14 @@ class MetronomeDispatchesTheExecutor(unittest.TestCase):
         plan = M.run(gh, now, self_run_id=1)
         self.assertEqual((plan["dispatch"], plan["read_status"]), ([], "DEGRADED"))
         self.assertIn("S1EXEC", plan["failed_reads"])
+        # but an unreadable job or log is UNKNOWN for S1EXEC only: the other targets and the loop go on
+        class NoJobs(Fake):
+            def jobs(self, run_id, attempt):
+                raise TimeoutError("READ_BUDGET_EXCEEDED")
+        gh = NoJobs([])
+        plan = M.run(gh, now, self_run_id=1)
+        self.assertEqual((plan["targets"]["S1EXEC"], plan["read_status"], plan["next_tick"]), ("PUBLICATION_UNKNOWN", "PASS", True))
+        self.assertNotIn("s1-executor.yml", [w for w, _i in gh.sent])
 
     def test_no_new_route_token_or_permission(self):
         self.assertIn("s1-executor.yml", M.DISPATCH_ALLOWLIST)
