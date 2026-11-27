@@ -54,16 +54,27 @@ def _targets(targets):
     return result
 
 
-def build_plan(targets, *, now, main, brief_run, brief_attempt, executor_run, executor_attempt):
+def daily_slot(value):
+    try:
+        return _stamp(value).astimezone(DAY).hour == 20
+    except (ValueError, TypeError):
+        return False
+
+
+def build_plan(targets, *, now, main, runtime_contract, brief_generated_at, brief_run, brief_attempt, executor_run, executor_attempt):
     at = _utc(now)
-    if not isinstance(main, str) or not SHA.fullmatch(main):
-        raise ValueError("invalid main")
+    source = _stamp(brief_generated_at)
+    if not daily_slot(brief_generated_at) or not source <= at <= source + timedelta(minutes=45):
+        raise ValueError("daily source slot or freshness invalid")
+    if any(not isinstance(v, str) or not SHA.fullmatch(v) for v in (main, runtime_contract)):
+        raise ValueError("invalid main or contract")
     ids = (brief_run, brief_attempt, executor_run, executor_attempt)
     if any(type(x) is not int or x <= 0 for x in ids):
         raise ValueError("native run identity required")
     result = {"contract": PLAN, "repository_id": REPO_ID, "main": main,
+              "runtime_contract": runtime_contract, "brief_generated_at": brief_generated_at,
               "generated_at": _iso(at), "expires_at": _iso(at + timedelta(hours=24)),
-              "owner_day": at.astimezone(DAY).date().isoformat(), "brief_run": brief_run,
+              "owner_day": source.astimezone(DAY).date().isoformat(), "brief_run": brief_run,
               "brief_attempt": brief_attempt, "executor_run": executor_run,
               "executor_attempt": executor_attempt, "targets": _targets(targets),
               "authority": "SHADOW_PLAN_ONLY_NOT_OWNER_AUTHORIZATION"}
@@ -76,21 +87,19 @@ def validate_plan(plan, now):
     at = _stamp(plan["generated_at"])
     current = _utc(now)
     expected = build_plan([(r["pr"], r["head"]) for r in plan["targets"]], now=at,
-                          main=plan["main"], brief_run=plan["brief_run"], brief_attempt=plan["brief_attempt"],
+                          main=plan["main"], runtime_contract=plan["runtime_contract"],
+                          brief_generated_at=plan["brief_generated_at"],
+                          brief_run=plan["brief_run"], brief_attempt=plan["brief_attempt"],
                           executor_run=plan["executor_run"], executor_attempt=plan["executor_attempt"])
     if plan != expected or not at <= current < _stamp(plan["expires_at"]):
         raise ValueError("invalid or expired plan")
-    # A batch is daily; crossing local midnight closes the old offer even if
-    # its absolute 24h ceiling has not elapsed.
-    if current.astimezone(DAY).date().isoformat() != plan["owner_day"]:
-        raise ValueError("owner day changed")
     return expected
 
 
 def validate_selection(plan, message, current_heads, now):
     """Syntax + immutable binding only; never a human-presence authenticator."""
     validate_plan(plan, now)
-    expected = "GO review " + " ".join("#"+str(r["pr"]) for r in plan["targets"])
+    expected = "GO review " + " ".join("#"+str(r["pr"]) for r in plan["targets"]) + " batch=" + plan["plan_id"]
     if message != expected or current_heads != {r["pr"]: r["head"] for r in plan["targets"]}:
         raise ValueError("selection or head mismatch")
     return {"selection_valid": True, "owner_authenticated": False,
@@ -120,24 +129,28 @@ def _parse_intents(comments, complete):
                 or type(c.get("id")) is not int or c["id"] in ids):
             raise ValueError("ambiguous reservation")
         plan = json.loads(body.split("\n", 1)[1])
-        validate_plan(plan, _stamp(plan["generated_at"]))
+        posted = _stamp(c["created_at"])
+        validate_plan(plan, posted)
         ids.add(c["id"])
-        result.append((c["id"], plan))
+        result.append((c["id"], plan, posted))
     return result
 
 
-def check_reservation(plan, comments, *, complete, own_intent_id=None):
+def check_reservation(plan, comments, *, complete, now, own_intent_id=None):
     """Conservative one-use/day and one-use/head; any incomplete read stops."""
+    validate_plan(plan, now)
     target_keys = {(r["pr"], r["head"]) for r in plan["targets"]}
+    execution_day = _utc(now).astimezone(DAY).date()
     own = []
-    for cid, prior in _parse_intents(comments, complete):
+    for cid, prior, posted in _parse_intents(comments, complete):
         prior_keys = {(r["pr"], r["head"]) for r in prior["targets"]}
         if cid == own_intent_id:
             if prior != plan:
                 raise ValueError("reservation mismatch")
             own.append(cid)
             continue
-        if prior["owner_day"] == plan["owner_day"] or target_keys & prior_keys:
+        if (prior["owner_day"] == plan["owner_day"] or posted.astimezone(DAY).date() == execution_day
+                or target_keys & prior_keys):
             raise ValueError("already reserved")
     if own_intent_id is not None and own != [own_intent_id]:
         raise ValueError("reservation missing")

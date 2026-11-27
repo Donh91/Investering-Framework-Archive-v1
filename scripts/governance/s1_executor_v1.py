@@ -962,7 +962,7 @@ class Run:
 
     def owner_review_batch_plan(self, target, ledger):
         # Only read/print in SHADOW. Never reserve, comment, or set release authority.
-        if self.mode != "SHADOW":
+        if self.mode != "SHADOW" or not O.daily_slot(self.decision.get("generated_at")):
             return
         targets = [target]
         remaining = getattr(self.gh, "remaining", None)
@@ -980,13 +980,16 @@ class Run:
         try:
             # The interactive operator must still re-read main, run provenance,
             # every exact head and all review gates before any reservation.
-            main, _ = self.main_now()
+            main, protected = self.main_now()
+            self.lane_now(main, protected, ledger)
             plan = O.build_plan(targets, now=self.now_fn(), main=main,
+                                runtime_contract=self.decision["contract_blob"],
+                                brief_generated_at=self.decision["generated_at"],
                                 brief_run=int(self.env["S1_BRIEF_RUN_ID"]),
                                 brief_attempt=int(self.env["S1_BRIEF_RUN_ATTEMPT"]),
                                 executor_run=int(self.env["GITHUB_RUN_ID"]),
                                 executor_attempt=int(self.env["GITHUB_RUN_ATTEMPT"]))
-            O.check_reservation(plan, ledger, complete=True)
+            O.check_reservation(plan, ledger, complete=True, now=self.now_fn())
         except Exception as exc:
             self.say(f"S1_OWNER_REVIEW_BATCH_SKIP({getattr(exc, 'reason', type(exc).__name__)})")
             return
