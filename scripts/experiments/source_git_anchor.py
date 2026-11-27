@@ -6,18 +6,115 @@ Never fetches, deepens, rewrites refs or trusts PR/local-main as authority.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
 import subprocess
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.error import URLError
 
 ALLOWED_ORIGINS = frozenset((
     "https://github.com/Donh91/Investering-Framework-Archive-v1.git",
     "https://github.com/Donh91/Investering-Framework-Archive-v1",
     "git@github.com:Donh91/Investering-Framework-Archive-v1.git",
 ))
+
+
+
+ARCHIVE_REPOSITORY = "Donh91/Investering-Framework-Archive-v1"
+ARCHIVE_REPOSITORY_ID = 1289482022
+
+
+class _NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _native_push_runs(first_commit):
+    """Direct GitHub HTTPS GET only; no redirect, paid service or new credential."""
+    if not isinstance(first_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", first_commit):
+        return None
+    url = (f"https://api.github.com/repos/{ARCHIVE_REPOSITORY}/actions/runs"
+           f"?event=push&branch=main&head_sha={first_commit}&per_page=100")
+    headers = {"Accept": "application/vnd.github+json",
+               "X-GitHub-Api-Version": "2022-11-28",
+               "User-Agent": "Archive-source-anchor-v1"}
+    token = os.environ.get("GITHUB_TOKEN", "")
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    try:
+        with build_opener(_NoRedirect()).open(Request(url, headers=headers), timeout=5) as response:
+            if response.status != 200 or response.geturl() != url:
+                return None
+            data = response.read(2_000_001)
+        if len(data) > 2_000_000:
+            return None
+        return json.loads(data)
+    except (OSError, URLError, ValueError, TypeError):
+        return None
+
+
+def _push_upper_bound(intro, response):
+    """Derive a conservative inclusion upper bound, NEVER a lower bound.
+
+    Called only on a freshly retrieved native API response in production.
+    The pure function is separately testable; supplied JSON is not an
+    authenticated receipt and must not be accepted from stored artifacts.
+    """
+    if not isinstance(intro, dict) or not isinstance(response, dict):
+        return None
+    if (intro.get("contract") != "EXPERIMENT_FIRST_MAIN_INTRODUCTION_v1"
+            or intro.get("repository") != ARCHIVE_REPOSITORY
+            or intro.get("ref") != "refs/heads/main"):
+        return None
+    sha_keys = ("first_commit", "first_parent", "main_head", "git_blob_sha")
+    if any(not isinstance(intro.get(k), str) or not re.fullmatch(r"[0-9a-f]{40}", intro[k]) for k in sha_keys):
+        return None
+    if (not isinstance(intro.get("content_sha256"), str)
+            or not re.fullmatch(r"[0-9a-f]{64}", intro["content_sha256"])
+            or not isinstance(intro.get("path"), str)
+            or not re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*", intro["path"])):
+        return None
+    rows = response.get("workflow_runs")
+    total = response.get("total_count")
+    if (not isinstance(rows, list) or type(total) is not int
+            or total != len(rows) or not 1 <= total <= 100):
+        return None
+    clocks = []
+    ids = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            return None
+        repositories = (row.get("repository"), row.get("head_repository"))
+        if (row.get("event") != "push" or row.get("head_branch") != "main"
+                or row.get("head_sha") != intro["first_commit"]
+                or any(not isinstance(r, dict) or r.get("id") != ARCHIVE_REPOSITORY_ID
+                       or r.get("full_name") != ARCHIVE_REPOSITORY for r in repositories)
+                or type(row.get("id")) is not int or row["id"] <= 0 or row["id"] in ids):
+            return None
+        ids.add(row["id"])
+        clock = row.get("created_at")
+        if not isinstance(clock, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z", clock):
+            return None
+        try:
+            at = datetime.fromisoformat(clock[:-1]+"+00:00")
+            if at > datetime.now(timezone.utc):
+                return None
+            # GitHub returns second precision. Do not round a cutoff down.
+            clocks.append((at + timedelta(seconds=1), row["id"]))
+        except (ValueError, OverflowError):
+            return None
+    at, run_id = min(clocks)
+    return {**intro, "server_acceptance_clock_verified": False,
+            "server_upper_witness_verified": True,
+            "acceptance_state": "UPPER_BOUND_ONLY_UNADMITTED",
+            "present_by_utc": at.isoformat().replace("+00:00", "Z"),
+            "absent_through_utc": None, "witness_run_id": run_id,
+            "witness_kind": "GITHUB_NATIVE_PUSH_RUN_CREATION",
+            "scientifically_admitted": False}
 
 
 class SourceGitAnchorUnavailable(RuntimeError):
@@ -205,6 +302,18 @@ class AcceptedMainSource:
             raise
         except (OSError, UnicodeError, ValueError, SourceGitAnchorUnavailable):
             return None
+
+    def native_upper_witness(self, relative_path: Path, expected_sha256: str) -> dict | None:
+        """Opt-in diagnostic. No timed matches caller is enabled by this method."""
+        if self.fixture_origin is not None:
+            return None
+        intro = self.first_introduction(relative_path, expected_sha256)
+        if intro is None:
+            return None
+        self._check_budget()
+        response = _native_push_runs(intro["first_commit"])
+        self._check_budget()
+        return _push_upper_bound(intro, response)
 
 
 def first_accepted_main_raw(repo_root: Path, relative_raw_path: Path,
