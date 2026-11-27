@@ -272,7 +272,15 @@ def main() -> int:
     policy = _load_json(POLICY_PATH, {})
     if policy.get("authority") != "RESEARCH_ONLY_NON_CANONICAL" or policy.get("canonical_effect") is not False:
         raise SystemExit("policy firewall invalid")
-    decision = evaluate_v2_freezes(policy, _load_rows(policy))
+    rows = _load_rows(policy)
+    decision = evaluate_v2_freezes(policy, rows)
+    # Diagnostic joins are never passed into evaluate_rows or promotion logic.
+    import sys
+    from datetime import datetime, timezone
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from scripts.cycle_navigator.range_benchmark_outcome_join import join_diagnostics
+    decision["retained_outcome_join"] = join_diagnostics(ROOT, rows, datetime.now(timezone.utc))
     if args.dry_run:
         print(json.dumps(decision, indent=2, sort_keys=True))
         return 0
