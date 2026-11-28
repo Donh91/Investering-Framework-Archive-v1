@@ -99,8 +99,29 @@ def validate_forecast_candidate(candidate: dict[str, Any]) -> None:
             raise ValueError("range_fields_conflict")
 
 
-def validate_output(value: dict[str, Any]) -> None:
+WEEKLY_TASK = "WEEKLY_CALIBRATION_SHADOW"
+WEEKLY_FIELDS = ("scorecard", "operational_translation")
+WEEKLY_EVIDENCE = ("daily_director_rows", "daily_director_intraday_sequence", "experiment_learning", "compass_learning", "deterministic_range_baseline_learning", "legacy_research_context")
+
+def validate_weekly_section(section: dict[str, Any]) -> None:
+    if not isinstance(section, dict) or set(section) != {"status", "summary", "evidence_keys"}:
+        raise ValueError("weekly_section_contract_invalid")
+    if section["status"] not in ("READY", "UNAVAILABLE") or not isinstance(section["summary"], str) or not section["summary"].strip():
+        raise ValueError("weekly_section_status_or_summary_invalid")
+    refs = section["evidence_keys"]
+    if not isinstance(refs, list) or any(not isinstance(k, str) or k not in WEEKLY_EVIDENCE for k in refs) or len(set(refs)) != len(refs):
+        raise ValueError("weekly_evidence_keys_invalid")
+    if section["status"] == "READY" and not refs:
+        raise ValueError("weekly_ready_without_evidence")
+
+def validate_output(value: dict[str, Any], task: str | None = None) -> None:
     required = {"status", "summary", "evidence_for", "evidence_against", "uncertainties", "hypotheses", "forecast_candidates"}
+    if task == WEEKLY_TASK or any(k in value for k in WEEKLY_FIELDS):
+        required.update(WEEKLY_FIELDS)
+        if set(value) != required:
+            raise ValueError("weekly_output_contract_invalid")
+        for key in WEEKLY_FIELDS:
+            validate_weekly_section(value[key])
     missing = required - set(value)
     if missing:
         raise ValueError("missing_output_fields:" + ",".join(sorted(missing)))
@@ -181,8 +202,8 @@ def forecast_candidate_schema() -> dict[str, Any]:
     }
 
 
-def output_schema() -> dict[str, Any]:
-    return {
+def output_schema(task: str | None = None) -> dict[str, Any]:
+    schema = {
         "type": "object", "additionalProperties": False,
         "required": ["status", "summary", "evidence_for", "evidence_against", "uncertainties", "hypotheses", "forecast_candidates"],
         "properties": {
@@ -198,6 +219,16 @@ def output_schema() -> dict[str, Any]:
             },
         },
     }
+
+    if task == WEEKLY_TASK:
+        for key in WEEKLY_FIELDS:
+            schema["required"].append(key)
+            schema["properties"][key] = {"type":"object","additionalProperties":False,
+                "required":["status","summary","evidence_keys"],"properties":{
+                    "status":{"type":"string","enum":["READY","UNAVAILABLE"]},
+                    "summary":{"type":"string"},
+                    "evidence_keys":{"type":"array","items":{"type":"string","enum":list(WEEKLY_EVIDENCE)}}}}
+    return schema
 
 
 def build_request(task: str, task_cfg: dict[str, Any], prompt: str, context: dict[str, Any]) -> dict[str, Any]:
@@ -227,13 +258,13 @@ def build_request(task: str, task_cfg: dict[str, Any], prompt: str, context: dic
             "store": False, "max_output_tokens": task_cfg["max_output_tokens"],
             "input": [{"role": "developer", "content": instruction},
                       {"role": "user", "content": [{"type": "input_text", "text": json.dumps(envelope, sort_keys=True)}]}],
-            "text": {"format": {"type": "json_schema", "name": "framework_shadow_output_v3", "strict": True, "schema": output_schema()}},
+            "text": {"format": {"type": "json_schema", "name": "framework_shadow_output_v3", "strict": True, "schema": output_schema(task)}},
         }
     return {
         "model": task_cfg["model"], "reasoning": {"effort": task_cfg["reasoning_effort"], "context": "current_turn"}, "store": False,
         "max_output_tokens": task_cfg["max_output_tokens"], "instructions": instruction,
         "input": [{"role": "user", "content": [{"type": "input_text", "text": json.dumps(envelope, sort_keys=True)}]}],
-        "text": {"format": {"type": "json_schema", "name": "framework_shadow_output_v3", "strict": True, "schema": output_schema()}},
+        "text": {"format": {"type": "json_schema", "name": "framework_shadow_output_v3", "strict": True, "schema": output_schema(task)}},
     }
 
 
@@ -274,7 +305,7 @@ def call_api(api_key: str, payload: dict[str, Any], timeout_seconds: int = 180) 
         raise RuntimeError(f"openai_http_{exc.code}:{body[:500]}") from exc
 
 
-def extract_output(response: dict[str, Any]) -> dict[str, Any]:
+def extract_output(response: dict[str, Any], task: str | None = None) -> dict[str, Any]:
     if response.get("status") == "incomplete":
         raise ValueError("response_incomplete:" + json.dumps(response.get("incomplete_details", {}), sort_keys=True))
     text = response.get("output_text")
@@ -288,7 +319,7 @@ def extract_output(response: dict[str, Any]) -> dict[str, Any]:
     if not text:
         raise ValueError("missing_output_text")
     value = json.loads(text)
-    validate_output(value)
+    validate_output(value, task)
     return value
 
 
@@ -297,8 +328,8 @@ def usage_of(response: dict[str, Any]) -> tuple[int, int]:
     return int(usage.get("input_tokens", 0) or 0), int(usage.get("output_tokens", 0) or 0)
 
 
-def blocked_output(reason: str) -> dict[str, Any]:
-    return {
+def blocked_output(reason: str, task: str | None = None) -> dict[str, Any]:
+    value = {
         "status": "BLOCKED",
         "summary": "API analysis was not accepted because the structured response was incomplete or invalid.",
         "evidence_for": [],
@@ -307,6 +338,11 @@ def blocked_output(reason: str) -> dict[str, Any]:
         "hypotheses": [],
         "forecast_candidates": [],
     }
+
+    if task == WEEKLY_TASK:
+        for key in WEEKLY_FIELDS:
+            value[key] = {"status":"UNAVAILABLE","summary":reason,"evidence_keys":[]}
+    return value
 
 
 def main() -> None:
@@ -339,8 +375,8 @@ def main() -> None:
     errors: list[str] = []
     output: dict[str, Any] | None = None
     if args.dry_run:
-        responses = [{"id": "dry-run", "usage": {"input_tokens": 0, "output_tokens": 0}, "output_text": json.dumps(blocked_output("no_api_call"))}]
-        output = extract_output(responses[0])
+        responses = [{"id": "dry-run", "usage": {"input_tokens": 0, "output_tokens": 0}, "output_text": json.dumps(blocked_output("no_api_call", args.task))}]
+        output = extract_output(responses[0], args.task)
     else:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: raise SystemExit("OPENAI_API_KEY_missing")
@@ -357,7 +393,7 @@ def main() -> None:
                 request_payload, api_key, args.output_dir / "transport",
                 resume=args.resume_background)
             responses.append(response)
-            output = extract_output(response)
+            output = extract_output(response, args.task)
         else:
             for attempt in range(api_attempt_limit(task_cfg)):
                 payload = dict(request_payload)
@@ -366,7 +402,7 @@ def main() -> None:
                 response = call_api(api_key, payload, timeout_seconds=request_timeout_seconds(task_cfg))
                 responses.append(response)
                 try:
-                    output = extract_output(response)
+                    output = extract_output(response, args.task)
                     break
                 except (ValueError, json.JSONDecodeError) as exc:
                     errors.append(f"attempt_{attempt + 1}:{type(exc).__name__}:{str(exc)[:240]}")
@@ -378,9 +414,9 @@ def main() -> None:
     cost_exceeded = cost > hard_stop
     accepted = output is not None and not cost_exceeded
     if cost_exceeded:
-        output = blocked_output("SINGLE_RUN_COST_EXCEEDED")
+        output = blocked_output("SINGLE_RUN_COST_EXCEEDED", args.task)
     elif output is None:
-        output = blocked_output("API_OUTPUT_INVALID_AFTER_BOUNDED_RETRY")
+        output = blocked_output("API_OUTPUT_INVALID_AFTER_BOUNDED_RETRY", args.task)
     output_bytes = canonical_bytes(output)
     status = "COST_EXCEEDED" if cost_exceeded else ("PASS" if accepted else "API_OUTPUT_INVALID")
     receipt = {"contract": "API_AGENT_RECEIPT_v3", "task": args.task, "model": task_cfg["model"], "reasoning_effort": task_cfg["reasoning_effort"], "request_hash": request_hash, "context_hash": sha256_bytes(canonical_bytes(context)), "prompt_hash": sha256_bytes(prompt.encode()), "output_hash": sha256_bytes(output_bytes), "response_id": responses[-1].get("id") if responses else None, "response_ids": [r.get("id") for r in responses], "attempt_count": len(responses), "input_tokens": input_tokens, "output_tokens": output_tokens, "estimated_cost_usd": cost, "created_unix": int(time.time()), "status": status, "parse_errors": errors, "allowed_write_prefix": allowed_prefix, "intended_write_prefix": args.intended_write_prefix, "forecast_candidate_count": len(output.get("forecast_candidates", [])), "untrusted_input_envelope": True, "authority": registry["authority"]}

@@ -219,6 +219,8 @@ def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
                 or receipt.get('context_hash')!=sha(context) or receipt.get('output_hash')!=sha(api)):
             return {**base,'reason':'GATEWAY_RECEIPT_MISMATCH'}
         required={'status','summary','evidence_for','evidence_against','uncertainties','hypotheses','forecast_candidates'}
+        if isinstance(api,dict) and any(k in api for k in ('scorecard','operational_translation')):
+            required.update(('scorecard','operational_translation'))
         if not isinstance(api,dict) or set(api)!=required or not isinstance(api['summary'],str) or not api['summary'].strip():
             return {**base,'reason':'OUTPUT_CONTRACT_INVALID'}
         if api['status']!='READY':
@@ -253,6 +255,9 @@ def analytical_translation(context:dict[str,Any],freeze:dict[str,Any],
             seen.add(key)
             h=str(c['horizon_days'])
             horizons[h]=horizons.get(h,0)+1
+        section=api.get('operational_translation')
+        if isinstance(section,dict) and section.get('status')=='READY' and all(context.get(k) for k in section['evidence_keys']):
+            base={**base,'status':'READY','model_utilization_verified':True,'research_only_translation':section['summary'],'evidence_keys':section['evidence_keys']}
         return {**base,'reason':'TYPED_SHADOW_CANDIDATES_ONLY_NO_OPERATIONAL_DECISION',
                 'candidate_status':'VALIDATED_UNADMITTED' if candidates else 'NO_CANDIDATES',
                 'candidate_count':len(candidates),'candidate_horizon_counts':horizons,
@@ -406,9 +411,16 @@ def main():
     analysis=api.get('analysis') or api.get('calibration') or api.get('summary') or {'status':'UNAVAILABLE_API_FAILURE' if a.api_status!='success' else 'UNAVAILABLE_NOT_PRODUCED'}
     translation=analytical_translation(context,freeze,api,receipt,a.api_status)
     registry_fallback=fallback_scorecard(context)
-    # Current gateway schema has no scorecard. Never override failed
-    # deterministic evidence admission with an arbitrary model object.
+    # Qualitative model assessment cannot override deterministic outcome evidence.
     scorecard=registry_fallback
+    section=api.get('scorecard') if isinstance(api,dict) else None
+    if (effective_delivery_status(a.api_status,api,receipt,context,freeze,True)=='READY'
+            and api.get('status')=='READY' and isinstance(section,dict) and section.get('status')=='READY'
+            and all(context.get(k) for k in section.get('evidence_keys',[]))
+            and registry_fallback.get('outcome_ingestion_status')=='COMPLETE'):
+        scorecard={**registry_fallback,'status':'READY','analysis_layer':{**registry_fallback['analysis_layer'],
+            'research_only_scorecard':section['summary'],'evidence_keys':section['evidence_keys']},
+            'reason':'Qualitative shadow calibration assessment plus verified owner outcome evidence; no invented numerical score.'}
     if not calibration_context_matches_freeze(context,freeze):
         scorecard={'status':'DEGRADED','experiment_registry_status':'UNVERIFIED',
                    'matured_outcome_count':None,'analysis_layer':{},'operational_translation_layer':{},

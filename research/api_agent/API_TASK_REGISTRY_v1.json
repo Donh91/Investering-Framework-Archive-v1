@@ -28,7 +28,9 @@
       "max_output_tokens": 3000,
       "manual_only": false,
       "outcome_access": true,
-      "allowed_write_prefix": "research/api_agent/outputs/weekly/"
+      "allowed_write_prefix": "research/api_agent/outputs/weekly/",
+      "max_attempts": 1,
+      "governed_instruction": "In the same single response, return scorecard and operational_translation independently. Each is a qualitative shadow-only section with status READY or UNAVAILABLE, nonempty summary, and unique evidence_keys naming only supplied context lanes. For scorecard report observed calibration errors, baseline comparisons, uncertainty and missingness; do not invent counts or scores. For translation describe research hypotheses and falsifiers only, not actions, phase/rotation authority, targets, thresholds or state changes. If evidence is insufficient return UNAVAILABLE and explain why. No extra call."
     },
     "WEEKLY_ADVERSARIAL_REVIEW": {
       "model": "gpt-6-sol",
