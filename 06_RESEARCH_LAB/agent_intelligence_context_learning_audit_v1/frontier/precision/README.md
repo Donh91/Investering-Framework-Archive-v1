@@ -1,0 +1,2 @@
+# PROJECT PRECISION
+FRONTIER specialized mission, 2026-11-24. Owner-approved intent, pending governed review and execution. Read [MISSION](MISSION.md), [ACCEPTANCE](ACCEPTANCE.json), [RESEARCH DESIGN](RESEARCH_DESIGN.md), [PRODUCT & SOURCES](PRODUCT_AND_SOURCES.md), [WORK ORDER](WORK_ORDER.md). Parent method in FRONTIER #2330 (separate exact-head review). This directory is a durable requirements packet, not a new execution queue or canonical market authority. Original owner records remain authoritative; future FRONTIER audits reconcile outcomes by ID rather than copy state.
