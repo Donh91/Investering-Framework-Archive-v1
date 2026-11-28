@@ -2,6 +2,7 @@
 import copy
 import hashlib
 import tempfile
+import subprocess
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -40,6 +41,16 @@ class BuildSandboxTest(unittest.TestCase):
             "stage": 1,
             "previous_repair": None,
         }
+        # Exact source copier now requires an actual Git index. No network,
+        # identity from global config, credential, or remote is used.
+        subprocess.run(["git", "-C", str(self.src), "init", "-q"],
+                       check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(self.src), "add", "."],
+                       check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(self.src),
+                        "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                        "commit", "-qm", "frozen public test fixture"],
+                       check=True, capture_output=True)
         self.proposal = {
             "status": "BUILD", "test_command_id": "M1",
             "rationale": "a", "risks": [],
@@ -61,6 +72,13 @@ class BuildSandboxTest(unittest.TestCase):
         self.assertIn("--security-opt", cmd)
         self.assertEqual(cmd[cmd.index("--security-opt")+1], "no-new-privileges")
         self.assertEqual(cmd[cmd.index("--user")+1], "65534:65534")
+        # Four prior mutation survivors: removing resource limits or
+        # the local-only image policy MUST break the native test.
+        self.assertEqual(cmd[cmd.index("--pull")+1], "never")
+        for flag, value in (("--memory", "256m"), ("--memory-swap", "256m"),
+                            ("--cpus", "0.5"), ("--pids-limit", "32")):
+            self.assertIn(flag, cmd)
+            self.assertEqual(cmd[cmd.index(flag)+1], value)
         self.assertIn("readonly", cmd[cmd.index("--mount")+1])
         self.assertEqual(tuple(cmd[-len(admit.TEST_COMMANDS["M1"][0]):]),
                          admit.TEST_COMMANDS["M1"][0])
@@ -82,18 +100,72 @@ class BuildSandboxTest(unittest.TestCase):
         self.assertEqual(s.observed_test_count(node, b"# tests 3\n# pass 3\n# fail 0\n"), 3)
         self.assertEqual(s.observed_test_count(node, b"# tests 3\n# pass 0\n# fail 0\n"), 0)
 
+    def test_reviewed_candidate_prefilter_is_not_full_main_suite(self):
+        self.assertNotEqual(admit.PREFILTER_COMMANDS["M1"],
+                            admit.TEST_COMMANDS["M1"])
+        self.assertNotEqual(admit.PREFILTER_COMMANDS["M3"],
+                            admit.TEST_COMMANDS["M3"])
+        name, argv = s.docker_command(self.src, "M1", 0,
+                                      profile="restricted_candidate")
+        fixed = admit.PREFILTER_COMMANDS["M1"][0]
+        self.assertEqual(tuple(argv[-len(fixed):]), fixed)
+        self.assertIn("--network", argv)
+        self.assertEqual(argv[argv.index("--network")+1], "none")
+        with self.assertRaisesRegex(s.SandboxBlocked, "COMMAND_PROFILE"):
+            s.docker_command(self.src, "M1", 0,
+                             profile="model_selected_shell")
+        with self.assertRaisesRegex(s.SandboxBlocked, "TEST_COMMAND_ID"):
+            s.docker_command(self.src, "SMOKE", 0,
+                             profile="restricted_candidate")
+
     def test_source_copy_omits_git_and_rejects_symlinks(self):
-        (self.src / ".git").mkdir()
-        (self.src / ".git/config").write_text("secret")
+        self.assertTrue((self.src / ".git/config").exists())
         dst = self.root / "copied"
         dst.mkdir()
         out = s._copy_public_tree(self.src, dst)
         self.assertGreaterEqual(out["files"], 1)
-        self.assertFalse((dst / ".git").exists())
+        self.assertTrue((dst / ".git").is_dir())
         self.assertTrue((dst / self.pathname).is_file())
+        self.assertEqual(subprocess.check_output(
+            ["git", "-C", str(dst), "rev-parse", "HEAD"],
+            text=True).strip(), out["local_synthetic_git_sha"])
+        self.assertFalse(out["local_synthetic_git_is_original_main"])
+        self.assertEqual(subprocess.check_output(
+            ["git", "-C", str(dst), "remote"], text=True).strip(), "")
+        self.assertFalse((dst / ".git/FETCH_HEAD").exists())
         (self.src / "scripts/learning/bad.py").symlink_to(self.path)
-        with self.assertRaisesRegex(s.SandboxBlocked, "SOURCE_SPECIAL_OR_SYMLINK"):
+        with self.assertRaisesRegex(s.SandboxBlocked,
+                                        "SOURCE_UNTRACKED_OR_IGNORED|SOURCE_SPECIAL_OR_SYMLINK"):
             s._copy_public_tree(self.src, self.root / "other")
+
+    def test_public_source_executable_mode_survives_readonly_copy(self):
+        binary = self.src / "scripts/learning/native_cli.py"
+        binary.write_text("#!/usr/bin/env python3\\nprint(1)\\n", encoding="utf-8")
+        binary.chmod(0o755)
+        subprocess.run(["git", "-C", str(self.src), "add", "scripts/learning/native_cli.py"],
+                       check=True, capture_output=True)
+        subtree = self.root / "modecopy"
+        subtree.mkdir()
+        s._copy_public_tree(self.src, subtree)
+        self.assertEqual((subtree / "scripts/learning/native_cli.py").stat().st_mode & 0o777,
+                         0o555)
+        listing = subprocess.check_output(["git", "-C", str(subtree), "ls-tree", "HEAD",
+                                           "scripts/learning/native_cli.py"], text=True)
+        self.assertTrue(listing.startswith("100755 blob "))
+
+    def test_untracked_and_gitignored_source_never_copied(self):
+        planted = self.src / "scripts/learning/untracked_planted.py"
+        planted.write_text("print('untrusted')", encoding="utf-8")
+        with self.assertRaisesRegex(s.SandboxBlocked,
+                                    "SOURCE_UNTRACKED_OR_IGNORED"):
+            s._copy_public_tree(self.src, self.root / "untracked_out")
+        planted.unlink()
+        (self.src / ".gitignore").write_text("scripts/learning/ignored_planted.py\n")
+        ignored = self.src / "scripts/learning/ignored_planted.py"
+        ignored.write_text("print('ignored')", encoding="utf-8")
+        with self.assertRaisesRegex(s.SandboxBlocked,
+                                    "SOURCE_UNTRACKED_OR_IGNORED"):
+            s._copy_public_tree(self.src, self.root / "ignored_out")
 
     def test_required_governance_fixture_copy_is_narrow(self):
         archive = self.src / "00_ARCHIVE_CONTROL"
@@ -125,7 +197,7 @@ class BuildSandboxTest(unittest.TestCase):
     def test_admitted_files_are_only_staged_in_temp_with_hash(self):
         raw = admit.canonical(self.proposal)
         pass_result = {"returncode": 0, "output_sha256": "0" * 64,
-                       "output_bytes": 0, "last_200_lines": [], "status": "PASS",
+                       "output_bytes": 0, "last_200_lines": [], "status": "EXIT0_WITH_UNTRUSTED_SUMMARY",
                        "completed_tests_observed": 1}
         with mock.patch.object(s, "verify_snapshot", return_value=self.main), \
              mock.patch.object(s, "_run_once", return_value=pass_result) as run:
@@ -142,11 +214,23 @@ class BuildSandboxTest(unittest.TestCase):
         self.assertFalse((self.src / self.created).exists())
         self.assertEqual(self.path.read_text(), "def source():\n    return 1\n")
 
+    def test_baseline_must_finish_before_any_model_file_is_staged(self):
+        raw = admit.canonical(self.proposal)
+        failed = {"returncode": 1, "output_sha256": "0"*64,
+                  "completed_tests_observed": 0, "status": "TEST_FAILURE"}
+        with mock.patch.object(s, "verify_snapshot", return_value=self.main), \
+             mock.patch.object(s, "_run_once", return_value=failed), \
+             mock.patch.object(s, "_write_admitted") as stage:
+            with self.assertRaisesRegex(s.SandboxBlocked,
+                                         "FIXED_SUITE_BASELINE_NOT_PROVEN"):
+                s.run_admitted(raw, self.scope, self.src)
+            stage.assert_not_called()
+
     def test_test_failure_is_not_success(self):
         raw = admit.canonical(self.proposal)
         success = {"returncode": 0, "output_sha256": "0" * 64,
                    "output_bytes": 24, "last_200_lines": ["1 passed in 0.1s"],
-                   "status": "PASS", "completed_tests_observed": 1}
+                   "status": "EXIT0_WITH_UNTRUSTED_SUMMARY", "completed_tests_observed": 1}
         fail_result = {"returncode": 1, "output_sha256": "1" * 64,
                        "output_bytes": 7, "last_200_lines": ["fail"],
                        "status": "TEST_FAILURE", "completed_tests_observed": 0}
@@ -161,7 +245,7 @@ class BuildSandboxTest(unittest.TestCase):
                                 "content": "def source():\n    return 2\n"}
         scope = copy.deepcopy(self.scope)
         scope["source_files"][self.pathname]["sha256"] = "e" * 64
-        success = {"returncode": 0, "status": "PASS", "completed_tests_observed": 1}
+        success = {"returncode": 0, "status": "EXIT0_WITH_UNTRUSTED_SUMMARY", "completed_tests_observed": 1}
         with mock.patch.object(s, "verify_snapshot", return_value=self.main), \
              mock.patch.object(s, "_run_once", return_value=success):
             with self.assertRaisesRegex(s.SandboxBlocked, "MODIFY_PREIMAGE_DRIFT"):
@@ -189,7 +273,7 @@ class BuildSandboxTest(unittest.TestCase):
 
 
     def test_real_docker_smoke_contract_under_mock(self):
-        good = {"status": "PASS", "returncode": 0, "output_sha256": "a"*64,
+        good = {"status": "EXIT0_WITH_UNTRUSTED_SUMMARY", "returncode": 0, "output_sha256": "a"*64,
                 "output_bytes": 0, "last_200_lines": []}
         mutant = {"status": "TEST_FAILURE", "returncode": 1,
                   "output_sha256": "b"*64,
@@ -212,7 +296,7 @@ class BuildSandboxTest(unittest.TestCase):
                               "tests/smoke", "-v"][-6:])
 
     def test_real_docker_smoke_rejects_false_pass(self):
-        good = {"status": "PASS", "returncode": 0}
+        good = {"status": "EXIT0_WITH_UNTRUSTED_SUMMARY", "returncode": 0}
         with mock.patch.object(s, "_run_once", side_effect=[good, good]):
             with self.assertRaisesRegex(s.SandboxBlocked, "MUTATION_NOT_DETECTED"):
                 s.smoke()

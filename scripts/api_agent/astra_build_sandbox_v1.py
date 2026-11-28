@@ -23,14 +23,15 @@ from scripts.api_agent import astra_build_admit_v1 as admit
 
 IMAGE = "python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b"
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
-MAX_LOG_BYTES = 256_000
+MAX_LOG_BYTES = 4_000_000  # bounded full M3 suite logs, digest and last 200 lines only
 WALL_SECONDS = 180
 MAX_SNAPSHOT_BYTES = 400_000_000
 MAX_SNAPSHOT_FILES = 85_000
 # Public code and fixed-test dependencies only. Never copy the giant mutable
 # market-data/receipt tree into a model-code sandbox. Missing dependencies
 # fail the native fixed test, not a permission to read from private sources.
-SOURCE_ROOTS = ("scripts", "tests", "05_CYCLE_NAVIGATOR/site",
+SOURCE_ROOTS = ("scripts", "tests", "backtest_engine", ".agents",
+                 "05_CYCLE_NAVIGATOR/site",
                 "04_MARKET_LEARNING/handlekompas/contracts", ".github",
                 "00_FMOS", "01_CORE_FRAMEWORK/governance", "07_PROMPTS_AND_AGENTS",
                 "schemas")
@@ -54,11 +55,16 @@ def require(cond: bool, reason: str):
     if not cond:
         stop(reason)
 
-def docker_command(workspace: Path, test_command_id: str, ordinal: int, image: str = IMAGE):
+def docker_command(workspace: Path, test_command_id: str, ordinal: int, image: str = IMAGE,
+                   *, profile: str = "trusted_full_main"):
     """No shell interpolation; a reviewed static command is chosen by ID."""
-    require(image == IMAGE, "IMAGE_NOT_VERIFIED")
-    require(test_command_id in admit.TEST_COMMANDS, "TEST_COMMAND_ID")
-    commands = admit.TEST_COMMANDS[test_command_id]
+    require(image == IMAGE or (isinstance(image, str) and
+            re.fullmatch(r"sha256:[0-9a-f]{64}", image)), "IMAGE_NOT_VERIFIED")
+    require(profile in ("trusted_full_main", "restricted_candidate"), "COMMAND_PROFILE")
+    commands_by_scope = (admit.TEST_COMMANDS if profile == "trusted_full_main"
+                         else admit.PREFILTER_COMMANDS)
+    require(test_command_id in commands_by_scope, "TEST_COMMAND_ID")
+    commands = commands_by_scope[test_command_id]
     require(type(ordinal) is int and 0 <= ordinal < len(commands), "TEST_INDEX")
     require(isinstance(workspace, Path) and workspace.is_absolute()
             and workspace.is_dir() and not workspace.is_symlink(), "WORKSPACE_INVALID")
@@ -79,6 +85,7 @@ def docker_command(workspace: Path, test_command_id: str, ordinal: int, image: s
                   "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=32m",
                   "--mount", "type=bind,src="+str(workspace)+",dst=/work,readonly",
                   "--workdir", "/work", "--env", "PYTHONDONTWRITEBYTECODE=1",
+                  "--env", "PYTEST_ADDOPTS=-c /opt/astra/pytest.ini",
                   "--env", "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
                   image, *argv]
 
@@ -95,7 +102,7 @@ def verify_snapshot(repo_root: Path, expected_sha: str):
                                          env={"PATH": "/usr/bin:/bin"},
                                          text=True, timeout=8).strip()
         dirty = subprocess.check_output(["git", "-C", str(repo_root), "status",
-                                         "--porcelain", "--untracked-files=no"],
+                                         "--porcelain", "--untracked-files=all"],
                                         env={"PATH": "/usr/bin:/bin"},
                                         text=True, timeout=10)
     except (OSError, subprocess.SubprocessError) as exc:
@@ -109,6 +116,16 @@ def _copy_public_tree(source: Path, target: Path):
     Reject symlinks/special files everywhere, including a parent of a model
     output. This is conservative and may HOLD on oversized repos.
     """
+    # Only Git-indexed public files may enter the model-code workspace.
+    # A clean working-tree check alone misses .gitignored injected files.
+    try:
+        tracked_raw = subprocess.check_output(
+            ["git", "-C", str(source), "ls-files", "--cached", "-z"],
+            timeout=30, env={"PATH": "/usr/bin:/bin"})
+        tracked = set(x.decode("utf-8") for x in tracked_raw.split(b"\x00") if x)
+    except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+        raise SandboxBlocked("SOURCE_INDEX_UNVERIFIED") from exc
+    require(bool(tracked), "SOURCE_INDEX_EMPTY")
     size, count = 0, 0
     excluded = {".git", "secrets", "vault", "private", "__pycache__", ".pytest_cache"}
     for relative in SOURCE_ROOTS:
@@ -126,6 +143,8 @@ def _copy_public_tree(source: Path, target: Path):
             dest.mkdir(parents=True, exist_ok=True)
             for name in files:
                 src = here / name
+                require(src.relative_to(source).as_posix() in tracked,
+                        "SOURCE_UNTRACKED_OR_IGNORED")
                 mode = src.lstat().st_mode
                 require(stat.S_ISREG(mode), "SOURCE_SPECIAL_OR_SYMLINK")
                 count += 1
@@ -133,11 +152,14 @@ def _copy_public_tree(source: Path, target: Path):
                 require(count <= MAX_SNAPSHOT_FILES and size <= MAX_SNAPSHOT_BYTES,
                         "SOURCE_SNAPSHOT_TOO_LARGE")
                 shutil.copyfile(src, dest / name)
-                (dest / name).chmod(0o444)
+                # Match Git's 100644/100755 tree modes exactly while keeping
+                # the bind-mounted candidate source read-only.
+                (dest / name).chmod(0o555 if (mode & 0o111) else 0o444)
     for relative in SOURCE_FILES:
         src = source / relative
         if not src.exists():
             continue
+        require(relative in tracked, "SOURCE_UNTRACKED_OR_IGNORED")
         require(src.is_file() and not src.is_symlink()
                 and stat.S_ISREG(src.lstat().st_mode)
                 and all(not parent.is_symlink() for parent in list(src.parents)[:-1]
@@ -149,11 +171,35 @@ def _copy_public_tree(source: Path, target: Path):
         destination = target / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, destination)
-        destination.chmod(0o444)
+        destination.chmod(0o555 if (src.lstat().st_mode & 0o111) else 0o444)
     for relative in REQUIRED_PUBLIC_FIXTURES:
         require((target / relative).is_file() and not (target / relative).is_symlink(),
                 "REQUIRED_FIXED_TEST_FIXTURE_MISSING")
-    return {"files": count, "bytes": size, "public_fixture_count": len(REQUIRED_PUBLIC_FIXTURES)}
+    # Make the exact-main PUBLIC file subset testable as a local Git checkout.
+    # Never copy source/.git: it can carry credentials, private history, remotes
+    # or hooks. This synthetic, no-remote Git history contains ONLY the already
+    # admitted public source files; its SHA is NOT falsely claimed as main SHA.
+    env = {"PATH": "/usr/bin:/bin", "HOME": "/tmp",
+           "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"}
+    try:
+        subprocess.run(["git", "-C", str(target), "init", "-q", "-b", "main"],
+                       shell=False, env=env, check=True, capture_output=True, timeout=30)
+        subprocess.run(["git", "-C", str(target), "add", "-A"],
+                       shell=False, env=env, check=True, capture_output=True, timeout=90)
+        subprocess.run(["git", "-C", str(target), "-c", "user.name=Astra Fixture",
+                        "-c", "user.email=fixture@example.invalid",
+                        "commit", "-qm", "Public exact-main baseline input"],
+                       shell=False, env=env, check=True, capture_output=True, timeout=90)
+        synthetic_sha = subprocess.check_output(
+            ["git", "-C", str(target), "rev-parse", "HEAD"],
+            text=True, env=env, timeout=15).strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise SandboxBlocked("PUBLIC_GIT_FIXTURE_CREATION_FAILED") from exc
+    require(bool(HEX40.fullmatch(synthetic_sha)), "PUBLIC_GIT_FIXTURE_SHA")
+    return {"files": count, "bytes": size,
+            "public_fixture_count": len(REQUIRED_PUBLIC_FIXTURES),
+            "local_synthetic_git_sha": synthetic_sha,
+            "local_synthetic_git_is_original_main": False}
 
 def _write_admitted(root: Path, proposal: dict, scope: dict, receipt: dict):
     original = {r["path"]: r for r in receipt["files"]}
@@ -210,7 +256,40 @@ def observed_test_count(command: list[str], output: bytes) -> int:
     return 0
 
 
-def _run_once(command: list[str], name: str) -> dict:
+def _baseline_failure_diagnostics(output: bytes) -> list[dict]:
+    """Bounded public-source error census, never an unredacted log or test proof."""
+    text = output.decode("utf-8", errors="replace")
+    categories = (
+        ("FILE_NOT_FOUND", r"FileNotFoundError|No such file or directory"),
+        ("MODULE_NOT_FOUND", r"ModuleNotFoundError|ERR_MODULE_NOT_FOUND|Cannot find module"),
+        ("GIT_REPO_MISSING", r"not a git repository|git.+not found"),
+        ("PERMISSION_DENIED", r"PermissionError|EACCES|Permission denied"),
+        ("ASSERTION_FAILURE", r"AssertionError|Assertion failed"),
+        ("NODE_TEST_FAILED", r"ERR_TEST_FAILURE|test failed"),
+        ("TIMEOUT", r"TimeoutExpired|ETIMEDOUT"),
+        ("IMPORT_ERROR", r"ImportError|SyntaxError"),
+    )
+    counts = {name: len(re.findall(regex, text, flags=re.IGNORECASE))
+              for name, regex in categories}
+    prefixes = ("05_CYCLE_NAVIGATOR", "03_DAILY_CAPTURE_LOGS",
+                "research", "backtest_engine", "00_FMOS", "04_MARKET_LEARNING",
+                "scripts", "tests", ".agents")
+    path_hints: set[str] = set()
+    for line in text.splitlines():
+        if not re.search(r"FileNotFoundError|No such file or directory|Cannot find module", line):
+            continue
+        for prefix in prefixes:
+            expression = r"(?:/work/)?" + re.escape(prefix) + r"/[A-Za-z0-9_./-]{1,140}"
+            for match in re.finditer(expression, line):
+                path = match.group(0).removeprefix("/work/")
+                if ".." not in path.split("/") and len(path) < 180:
+                    path_hints.add(path)
+    return ([{"reason": name, "count": count} for name, count in counts.items() if count]
+            + [{"reason": "PUBLIC_PATH_HINT", "path": p}
+               for p in sorted(path_hints)[:12]])
+
+
+def _run_once(command: list[str], name: str, *, trusted_full_baseline: bool = False) -> dict:
     """Bound output, wall time, orphan cleanup; host environment has NO secrets."""
     require(command[:2] == ["docker", "run"] and "--network" in command
             and command[command.index("--network")+1] == "none", "DOCKER_NETWORK")
@@ -224,7 +303,11 @@ def _run_once(command: list[str], name: str) -> dict:
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 shell=False, env=env)
         selector.register(proc.stdout, selectors.EVENT_READ)
-        end = time.monotonic() + WALL_SECONDS
+        # The public, unmodified MAIN test census has substantially more tests
+        # than the narrow candidate prefilter. It may take longer, but NO
+        # candidate-supplied code can select or extend the timeout.
+        wall = 900 if trusted_full_baseline is True else WALL_SECONDS
+        end = time.monotonic() + wall
         while selector.get_map():
             remaining = end - time.monotonic()
             if remaining <= 0:
@@ -241,9 +324,10 @@ def _run_once(command: list[str], name: str) -> dict:
         tail = out.decode("utf-8", errors="replace").splitlines()[-200:]
         return {"returncode": rc, "output_sha256": admit.digest(bytes(out)),
                 "output_bytes": len(out), "last_200_lines": tail,
+                "failure_diagnostics_untrusted": _baseline_failure_diagnostics(bytes(out)) if rc else [],
                 "completed_tests_observed": completed,
                 "completion_evidence": "UNTRUSTED_STDOUT_ONLY",
-                "status": "PASS" if rc == 0 and completed > 0 else "TEST_FAILURE"}
+                "status": "EXIT0_WITH_UNTRUSTED_SUMMARY" if rc == 0 and completed > 0 else "TEST_FAILURE"}
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise SandboxBlocked("DOCKER_INFRA_OR_TIMEOUT") from exc
     finally:
@@ -266,8 +350,13 @@ def _run_once(command: list[str], name: str) -> dict:
                 raise SandboxBlocked("DOCKER_CLEANUP_NOT_PROVEN") from exc
             proc.stdout.close()
 
-def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
+def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path,
+                 trusted_toolchain_image_id: str = IMAGE):
     """One isolated job. Never run in a paid/provider credential-bearing job."""
+    require(trusted_toolchain_image_id == IMAGE or
+            (isinstance(trusted_toolchain_image_id, str) and
+             re.fullmatch(r"sha256:[0-9a-f]{64}", trusted_toolchain_image_id)),
+            "IMAGE_NOT_VERIFIED")
     receipt = admit.admit(raw, scope)
     require(receipt["status"] == "ADMITTED_UNTRUSTED_CODE_TEST_REQUIRED",
             "NO_FILES_TO_TEST")
@@ -284,18 +373,22 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
         # inside the copied environment before model-created code is staged.
         # This is also a source-fixture/toolchain readiness check.
         baseline = []
-        for ordinal, _ in enumerate(admit.TEST_COMMANDS[scope["test_command_id"]]):
-            name, argv = docker_command(root, scope["test_command_id"], ordinal)
+        for ordinal, _ in enumerate(admit.PREFILTER_COMMANDS[scope["test_command_id"]]):
+            name, argv = docker_command(root, scope["test_command_id"], ordinal,
+                                        profile="restricted_candidate",
+                                        image=trusted_toolchain_image_id)
             baseline.append(_run_once(argv, name))
-        require(bool(baseline) and all(x.get("status") == "PASS" and
+        require(bool(baseline) and all(x.get("status") == "EXIT0_WITH_UNTRUSTED_SUMMARY" and
                 x.get("completed_tests_observed", 0) > 0 for x in baseline),
                 "FIXED_SUITE_BASELINE_NOT_PROVEN")
         staged = _write_admitted(root, proposal, scope, receipt)
         tests = []
-        for ordinal, _ in enumerate(admit.TEST_COMMANDS[scope["test_command_id"]]):
-            name, argv = docker_command(root, scope["test_command_id"], ordinal)
+        for ordinal, _ in enumerate(admit.PREFILTER_COMMANDS[scope["test_command_id"]]):
+            name, argv = docker_command(root, scope["test_command_id"], ordinal,
+                                        profile="restricted_candidate",
+                                        image=trusted_toolchain_image_id)
             tests.append(_run_once(argv, name))
-        observed = all(x.get("status") == "PASS" and
+        observed = all(x.get("status") == "EXIT0_WITH_UNTRUSTED_SUMMARY" and
                        x.get("completed_tests_observed", 0) >= base["completed_tests_observed"]
                        for x, base in zip(tests, baseline))
         # Candidate stdout can be forged. A count and exit 0 are NOT
@@ -312,7 +405,9 @@ def run_admitted(raw: bytes, scope: dict, exact_main_repo: Path):
                   "admission_sha256": admit.digest(admit.canonical(receipt)),
                   "source_tree_copy": source, "staging": staged,
                   "test_command_id": scope["test_command_id"],
-                  "tests": tests, "image": IMAGE, "network": "none",
+                  "test_profile": "FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF",
+                  "tests": tests, "image": trusted_toolchain_image_id,
+                  "network": "none",
                   "secrets": False, "paid_authority": False,
                   "merge_authority": False}
         result["result_sha256"] = admit.digest(admit.canonical(result))
@@ -370,7 +465,7 @@ class ForcedEarlyExit(unittest.TestCase):
         file.chmod(0o444)
         name, command = docker_command(workspace, "SMOKE", 0)
         good = _run_once(command, name)
-        require(good["status"] == "PASS" and good["returncode"] == 0,
+        require(good["status"] == "EXIT0_WITH_UNTRUSTED_SUMMARY" and good["returncode"] == 0,
                 "ISOLATED_POSITIVE_OR_NETWORK_DENIAL_FAILED")
         file.chmod(0o644)
         file.write_text(mutant, encoding="utf-8")

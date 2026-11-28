@@ -40,6 +40,12 @@ class TestBuildDriver(unittest.TestCase):
         self.spec_path = self.repo / "06_RESEARCH_LAB/astra_missions" / self.mid / d.SCOPE_NAME
         self.spec_path.parent.mkdir(parents=True)
         self.spec_path.write_bytes(a.canonical(self.spec) + b"\n")
+        self.bundle_path = self.spec_path.parent / "BUNDLE.md"
+        self.bundle_path.write_bytes(
+            b"Reviewed source manifest (model-visible)\n" +
+            b"<!-- ASTRA_BUILD_SOURCE_MANIFEST_V1\n" +
+            a.canonical(self.spec["source_files"]) +
+            b"\nEND_ASTRA_BUILD_SOURCE_MANIFEST_V1 -->\n")
         self.native_request = b"fixed_request_bytes"
         self.raw_report = a.canonical({"status": "ABSTAIN", "files": [],
                                        "test_command_id": "M1",
@@ -82,6 +88,42 @@ class TestBuildDriver(unittest.TestCase):
                                              self.native_request, self.meta)):
             return d.verify_original_artifact(self.repo, self.artifact,
                                               self.mid, self.main, "25")
+
+    def test_native_event_reverified_independent_of_workflow_if(self):
+        request = {"model": "gpt-6.2-astra"}
+        body = {"comment": {"id": 1245}}
+        with mock.patch.object(d.owner, "owner_event",
+                               return_value=(body, self.mid, "b"*64)), \
+             mock.patch.object(d.owner, "build_request",
+                               return_value=(request, self.native_request,
+                                             self.meta)):
+            proof = d.verified_native_owner_event(self.mid)
+            self.assertEqual(proof["comment_id"], 1245)
+            self.assertEqual(proof["mission_id"], self.mid)
+        with mock.patch.object(d.owner, "owner_event",
+                               return_value=(body, "ASTRA-BUILD-M2-20261121-S1", "b"*64)):
+            with self.assertRaisesRegex(d.DriverHold, "OWNER_EVENT_MISSION_DRIFT"):
+                d.verified_native_owner_event(self.mid)
+        with mock.patch.object(d.owner, "owner_event",
+                               return_value=(body, self.mid, "c"*64)), \
+             mock.patch.object(d.owner, "build_request",
+                               return_value=(request, self.native_request,
+                                             self.meta)):
+            with self.assertRaisesRegex(d.DriverHold, "OWNER_EVENT_BUNDLE_DRIFT"):
+                d.verified_native_owner_event(self.mid)
+
+    def test_model_bundle_must_show_the_exact_reviewed_source_manifest(self):
+        first = d.trusted_scope(self.repo, self.mid, self.main)
+        self.assertEqual(first["source_files"], self.spec["source_files"])
+        self.bundle_path.write_bytes(
+            b"<!-- ASTRA_BUILD_SOURCE_MANIFEST_V1\n" +
+            a.canonical({"scripts/learning/other.py": None}) +
+            b"\nEND_ASTRA_BUILD_SOURCE_MANIFEST_V1 -->\n")
+        with self.assertRaisesRegex(d.DriverHold, "BUNDLE_SOURCE_PREIMAGES_DRIFT"):
+            d.trusted_scope(self.repo, self.mid, self.main)
+        self.bundle_path.write_text("unversioned text\n", encoding="utf-8")
+        with self.assertRaisesRegex(d.DriverHold, "BUNDLE_SOURCE_MANIFEST_MISSING"):
+            d.trusted_scope(self.repo, self.mid, self.main)
 
     def test_verified_source_scope_has_real_sha(self):
         result = d.trusted_scope(self.repo, self.mid, self.main)
@@ -139,6 +181,20 @@ class TestBuildDriver(unittest.TestCase):
         self.spec_path.write_bytes(a.canonical(fake))
         with self.assertRaises(a.AdmissionBlocked):
             d.trusted_scope(self.repo, self.mid, self.main)
+
+    def test_same_job_toolchain_is_revalidated_not_taken_from_model(self):
+        image = "sha256:" + "a"*64
+        with mock.patch.dict(d.os.environ, {"ASTRA_BUILD_IMAGE_ID": image}), \
+             mock.patch.object(d.subprocess, "check_output", return_value=image+"\n"):
+            self.assertEqual(d.verified_same_job_toolchain_image(), image)
+        with mock.patch.dict(d.os.environ, {"ASTRA_BUILD_IMAGE_ID": "python:latest"}):
+            with self.assertRaisesRegex(d.DriverHold, "TRUSTED_TOOLCHAIN_IMAGE_ID_MISSING"):
+                d.verified_same_job_toolchain_image()
+        with mock.patch.dict(d.os.environ, {"ASTRA_BUILD_IMAGE_ID": image}), \
+             mock.patch.object(d.subprocess, "check_output",
+                               return_value="sha256:"+"b"*64+"\n"):
+            with self.assertRaisesRegex(d.DriverHold, "TRUSTED_TOOLCHAIN_IMAGE_DRIFT"):
+                d.verified_same_job_toolchain_image()
 
     def test_runner_never_claims_merge_from_sandbox(self):
         result = {"paid_authority": False,

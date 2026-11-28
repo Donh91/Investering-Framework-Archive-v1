@@ -38,11 +38,17 @@ DENY_PREFIXES = (".github/", ".agents/", "00_FMOS/", "00_ARCHIVE_CONTROL/",
                  "vault/", "private/", "config/private/", "data/private/",
                  "08_SOURCE_MATERIAL/private/", "06_RESEARCH_LAB/astra_missions/",
                  "06_RESEARCH_LAB/astra_program_20261116/results/")
-DENY_EXACT = frozenset(("AGENTS.md", ".env", ".npmrc", ".pypirc",
+DENY_EXACT = frozenset(("AGENTS.md", "CLAUDE.md", ".env", ".npmrc", ".pypirc",
                        "scripts/governance/s1_runtime_contract_v1.py",
                        "scripts/research/owner_astra_mission_v1.py"))
 DENY_SEGMENTS = frozenset((".github", ".agents", "secrets", "private", "vault", "round3",
-                          "round_3", "credentials", "__pycache__", ".git"))
+                          "round_3", "credentials", "__pycache__", ".git", "data"))
+DENY_FILENAMES = frozenset((
+    "agents.md", "claude.md", ".env", ".npmrc", ".pypirc",
+    "conftest.py", "pytest.ini", "pyproject.toml", "setup.cfg", "tox.ini",
+    "sitecustomize.py", "usercustomize.py", "package.json", "package-lock.json",
+    "requirements.txt", "requirements-dev.txt"))
+DENY_PATH_SUBSTRINGS = ("round3", "round_3", "vault", "secret", "credential")
 SCOPE_ALLOW = {
     "M1": (
         "scripts/learning/**", "scripts/cycle_navigator/**",
@@ -67,11 +73,44 @@ TEST_COMMANDS = {
     # Dedicated offline/native security smoke. Not in SCOPE_ALLOW and cannot
     # appear in any paid mission or model-admitted BUILD proposal.
     "SMOKE": (("python", "-m", "unittest", "discover", "-s", "tests/smoke", "-v"),),
+    # M1 no-secret sandbox is a PREFILTER, never full site/browser proof.
+    # Generated dist/Chrome integration is mandatory in output PR native CI,
+    # on separate trusted infrastructure with no model-selected commands.
     "M1": (("python", "-m", "pytest", "-q", "tests/learning", "tests/cycle_navigator"),
-           ("node", "--test", "05_CYCLE_NAVIGATOR/site/tests")),
+           ("node", "--test",
+             "05_CYCLE_NAVIGATOR/site/tests/browser-startup-negative.test.mjs",
+             "05_CYCLE_NAVIGATOR/site/tests/cn-v2-design-data-boundary.test.mjs",
+             "05_CYCLE_NAVIGATOR/site/tests/official-compass-freshness.test.mjs",
+             "05_CYCLE_NAVIGATOR/site/tests/pullback-pages-run-block.test.mjs",
+             "05_CYCLE_NAVIGATOR/site/tests/pullback-research-readback.test.mjs")),
     "M2": (("python", "-m", "pytest", "-q", "tests/learning", "tests/data_ping",
             "-k", "regime_feed or rotation or recovery"),),
     "M3": (("python", "-m", "pytest", "-q", "tests/governance"),),
+}
+
+# Curated, deterministic no-secret MODEL-CODE PREFILTER, not the authority for
+# full historical/source-custody correctness. The untouched MAIN runs
+# TEST_COMMANDS above in the independent PR-only image audit. An actual model
+# output must become a DRAFT PR whose native GitHub CI independently tests it.
+# Only reviewed code chooses these commands. No model output/mission bundle can
+# supply argv, choose new tests, or waive exact-head PR CI.
+PREFILTER_COMMANDS = {
+    "M1": (("python", "-I", "-m", "pytest", "-c", "/opt/astra/pytest.ini", "-q",
+            "tests/learning/test_forecast_error_taxonomy.py",
+            "tests/learning/test_m6_warning_event_outcomes.py",
+            "tests/cycle_navigator/test_v2_edge_forecast_freeze.py"),
+           ("node", "--test",
+            "05_CYCLE_NAVIGATOR/site/tests/official-compass-freshness.test.mjs",
+            "05_CYCLE_NAVIGATOR/site/tests/pullback-pages-run-block.test.mjs")),
+    "M2": (("python", "-I", "-m", "pytest", "-c", "/opt/astra/pytest.ini", "-q",
+            "tests/learning/test_m6_warning_event_outcomes.py",
+            "tests/data_ping/test_compass_event_refresh.py",
+            "tests/data_ping/test_compass_source_continuity_standing.py"),),
+    "M3": (("python", "-I", "-m", "pytest", "-c", "/opt/astra/pytest.ini", "-q",
+            "tests/governance/test_s1_closure_assurance_v1.py",
+            "tests/governance/test_s1_closure_claim_guard_v1.py",
+            "tests/governance/test_s1_closure_impact_readout_v1.py",
+            "tests/governance/test_s1_edge_ledger_v1.py"),),
 }
 
 class AdmissionBlocked(ValueError):
@@ -113,8 +152,11 @@ def safe_path(path: str) -> str:
             "PATH_TRAVERSAL")
     require(not path.startswith("/") and "\\" not in path and "//" not in path,
             "PATH_TRAVERSAL")
+    lowered = path.lower()
     require(path not in DENY_EXACT and not path.startswith(DENY_PREFIXES)
-            and not (set(x.lower() for x in parts) & DENY_SEGMENTS),
+            and parts[-1].lower() not in DENY_FILENAMES
+            and not (set(x.lower() for x in parts) & DENY_SEGMENTS)
+            and not any(term in lowered for term in DENY_PATH_SUBSTRINGS),
             "PATH_PROTECTED")
     require(path.endswith(TEXT_SUFFIXES), "PATH_NOT_TEXT")
     return path
@@ -207,9 +249,17 @@ def admit(raw: bytes, scope: dict) -> dict:
         require((action == "create" and before is None)
                 or (action == "modify" and before is not None),
                 "ACTION_PREIMAGE_MISMATCH")
+        if path.startswith("scripts/governance/s1_closure_"):
+            require(path.count("/") == 2 and action == "create",
+                    "M3_CLOSURE_CREATE_ONLY")
+        # The model may ADD unit tests, never silently change a baseline test
+        # or its collection/runner configuration in the PR used for CI proof.
+        if path.startswith("tests/"):
+            require(action == "create", "TRUSTED_BASELINE_TESTS_READ_ONLY")
         content = row["content"]
         require(isinstance(content, str) and bool(content.strip())
-                and all(ch not in content for ch in ("\x00", "\r", "\x1b")),
+                and not any(((ord(ch) < 32 and ch not in ("\n", "\t"))
+                             or ord(ch) == 127) for ch in content),
                 "CONTENT_NOT_TEXT")
         try:
             data = content.encode("utf-8", errors="strict")

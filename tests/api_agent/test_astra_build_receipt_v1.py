@@ -43,19 +43,20 @@ class BuildReceiptTest(unittest.TestCase):
             "status":"completed","incomplete_details":None,
             "no_retry":True,"research_only":True,"usage_valid":True,
             "model":"gpt-6.2-astra","reasoning_effort":"max",
-            "provider_reasoning_effort":"max","response_id":"resp_test1234",
+            "provider_reasoning_effort":"max","provider_model":"gpt-6.2-astra","response_id":"resp_test1234",
             "output_sha256":a.digest(self.raw),"bytes":len(self.raw),
             "usage":{"input_tokens":40_000,"output_tokens":2_000},
             "estimated_upper_usd":2.5}
-        tests=[{"returncode":0,"status":"PASS","completed_tests_observed":1},
-               {"returncode":0,"status":"PASS","completed_tests_observed":1}]
+        tests=[{"returncode":0,"status":"EXIT0_WITH_UNTRUSTED_SUMMARY","completed_tests_observed":1},
+               {"returncode":0,"status":"EXIT0_WITH_UNTRUSTED_SUMMARY","completed_tests_observed":1}]
         baseline=[dict(x) for x in tests]
         self.sandbox = {
             "contract":"ASTRA_BUILD_SANDBOX_RECEIPT_v1",
             "mission_id":self.mid,"main_sha":self.scope["main_sha"],
             "proposal_sha256":a.digest(self.raw),
             "admission_sha256":a.digest(a.canonical(self.original_admission)),
-            "test_command_id":"M1", "network":"none","image":sb.IMAGE,
+            "test_command_id":"M1", "test_profile":"FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF",
+            "network":"none","image":sb.IMAGE,
             "secrets":False,"paid_authority":False,"merge_authority":False,
             "status":"TEST_COMPLETION_UNATTESTED","tests":tests,
             "native_suite_baseline":baseline,"independent_completion_attested":False}
@@ -68,12 +69,19 @@ class BuildReceiptTest(unittest.TestCase):
 
     def test_exact_binding_no_release_authority(self):
         result=self.bind()
-        self.assertEqual(result["status"],"TEST_COMPLETION_HOLD")
+        self.assertEqual(result["status"],"PREFILTER_ELIGIBLE_DRAFT_PR_ONLY")
         self.assertEqual(result["test_count"],2)
         self.assertFalse(result["all_fixed_tests_passed"])
         self.assertFalse(result["merge_authority"])
         self.assertFalse(result["paid_authority"])
         self.assertEqual(result["raw_model_response_sha256"],a.digest(self.raw))
+
+    def test_wrong_prefilter_profile_is_a_bond_failure(self):
+        self.sandbox["test_profile"] = "TRUSTED_FULL_MAIN"
+        with self.assertRaisesRegex(r.ReceiptBlocked, "SANDBOX_BOND"):
+            self.bind()
+        self.sandbox["test_profile"] = "FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF"
+        self.assertEqual(self.bind()["status"], "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY")
 
     def test_actual_collector_to_build_receipt_binding(self):
         # A synthetic GET-only provider completion is passed through the real
@@ -110,7 +118,7 @@ class BuildReceiptTest(unittest.TestCase):
             self.assertEqual(actual["output_sha256"], a.digest(self.raw))
             self.manifest = manifest
             self.paid = actual
-            self.assertEqual(self.bind()["status"], "TEST_COMPLETION_HOLD")
+            self.assertEqual(self.bind()["status"], "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY")
 
     def test_collector_absent_provider_effort_is_not_qualified(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -167,6 +175,13 @@ class BuildReceiptTest(unittest.TestCase):
         self.paid["provider_reasoning_effort"]="high"
         with self.assertRaisesRegex(r.ReceiptBlocked,"MODEL_EFFORT_BOND"):
             self.bind()
+
+    def test_provider_model_is_independently_checked(self):
+        self.paid["provider_model"] = "gpt-6.2-sol"
+        with self.assertRaisesRegex(r.ReceiptBlocked, "MODEL_EFFORT_BOND"):
+            self.bind()
+        self.paid["provider_model"] = "gpt-6.2-astra-2026-11-21"
+        self.assertEqual(self.bind()["status"], "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY")
 
     def test_raw_report_tampering_detected(self):
         self.raw+=b"x"

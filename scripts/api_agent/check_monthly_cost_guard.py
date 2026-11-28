@@ -267,7 +267,41 @@ CANONICAL_LIABILITY_LEDGER = SCRIPTS_ROOT.parent / (
 )
 
 
-def pending_risk(path: Path) -> tuple[float, float, int]:
+def build_ledger_view(value: dict, *, strict_build: bool) -> tuple[dict, float, int]:
+    """Non-BUILD lanes quarantine bad BUILD metadata at the FULL USD30 cap.
+
+    Never treat a malformed BUILD row as zero liability. All six governed BUILD
+    stages have a hard USD5 request cap enforced independently in the owner
+    runner. A damaged BUILD subledger therefore consumes the full USD30
+    program envelope in the global risk guard, while the BUILD lane HALTS.
+    Every non-BUILD row still undergoes normal, strict original validation.
+    """
+    rows = value.get(astra_missions.KEY, [])
+    if not isinstance(rows, list):
+        raise ValueError("ASTRA_MISSION_RESERVATION_LEDGER_INVALID")
+    projected = [{"work_id": row.get("work_id"), "upper_usd": row.get("upper_usd"),
+                  "status": row.get("status")}
+                 for row in rows if isinstance(row, dict)
+                 and str(row.get("work_id", "")).startswith("ASTRA-BUILD-")]
+    try:
+        build_cost.validate_program_reservations(projected)
+    except build_cost.BudgetHold as exc:
+        if strict_build:
+            raise ValueError("BUILD_PROGRAM_BUDGET_HOLD:" + str(exc)) from exc
+        # A malformed NON-dict row is not attributable to BUILD and must
+        # remain a full stop, as do non-BUILD unknown liabilities.
+        if any(not isinstance(row, dict) for row in rows):
+            raise ValueError("ASTRA_MISSION_RESERVATION_ROW_INVALID")
+        filtered = [row for row in rows
+                    if not str(row.get("work_id", "")).startswith("ASTRA-BUILD-")]
+        if len(filtered) == len(rows):
+            raise ValueError("BUILD_QUARANTINE_NO_BUILD_ROWS")
+        view = dict(value, **{astra_missions.KEY: filtered})
+        return view, build_cost.MAX_PROGRAM_USD, 6
+    return value, 0.0, 0
+
+
+def pending_risk(path: Path, *, strict_build: bool = True) -> tuple[float, float, int]:
     """Conservative persistent upper risk, never a provider invoice or retry permit.
 
     Unknown POSTs remain reserved across UTC month rollover until independent
@@ -284,6 +318,8 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             or value.get("requires_reconciliation_before_releasing_reserve") is not True
             or not isinstance(value.get("unresolved"), list)):
         raise ValueError("LIABILITY_LEDGER_CONTRACT_INVALID")
+    value, quarantined_build_upper, quarantined_build_count = build_ledger_view(
+        value, strict_build=strict_build)
     # Canonical released liabilities need immutable, private-source evidence;
     # test fixtures with future unknown POSTs may omit the settlement block.
     settlement_bound = path.resolve() == CANONICAL_LIABILITY_LEDGER.resolve() or "settled" in value
@@ -307,7 +343,7 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
             raise ValueError("PROVIDER_SETTLED_ID_SET_MISMATCH")
         if any(row.get("run_id") in post_ids for row in value["unresolved"]) or any(row.get("work_id") in work_ids for row in value.get("owner_reservations", [])):
             raise ValueError("PROVIDER_SETTLED_REINTRODUCED_PENDING")
-    low, high, seen = 0.0, 0.0, set()
+    low, high, seen = 0.0, quarantined_build_upper, set()
     for row in value["unresolved"]:
         if not isinstance(row, dict):
             raise ValueError("LIABILITY_ROW_NOT_OBJECT")
@@ -396,7 +432,7 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
                 raise ValueError("ASTRA_ACTIVE_RESERVATION_INVALID")
             active_count += 1
             high += float(allowed[work])
-    reservation_count = active_count
+    reservation_count = active_count + quarantined_build_count
     if settlement_bound or consumed_ids or "owner_astra_provider_period_settlement" in value:
         if (consumed_ids != set(OWNER_CONSUMED_ASTRA_EVIDENCE)
                 or value.get("owner_astra_provider_period_settlement") != OWNER_ASTRA_PROVIDER_PERIOD_SETTLEMENT):
@@ -405,16 +441,19 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     # two separately reviewed stages per mission, USD5 per request and USD30
     # aggregate. No implicit right to use the distinct USD10 contingency.
     # Validate the FULL append-only BUILD history, including settled rows.
-    build_rows = []
-    for row in value.get(astra_missions.KEY, []):
-        if isinstance(row, dict) and str(row.get("work_id", "")).startswith("ASTRA-BUILD-"):
-            build_rows.append({"work_id": row.get("work_id"),
-                               "upper_usd": row.get("upper_usd"),
-                               "status": row.get("status")})
-    try:
-        build_cost.validate_program_reservations(build_rows)
-    except build_cost.BudgetHold as exc:
-        raise ValueError("BUILD_PROGRAM_BUDGET_HOLD:" + str(exc)) from exc
+    # A corrupt BUILD row blocks the BUILD lane, not 30 unrelated existing
+    # paid lanes. Generic liability accounting below STILL includes the row.
+    if strict_build:
+        build_rows = []
+        for row in value.get(astra_missions.KEY, []):
+            if isinstance(row, dict) and str(row.get("work_id", "")).startswith("ASTRA-BUILD-"):
+                build_rows.append({"work_id": row.get("work_id"),
+                                   "upper_usd": row.get("upper_usd"),
+                                   "status": row.get("status")})
+        try:
+            build_cost.validate_program_reservations(build_rows)
+        except build_cost.BudgetHold as exc:
+            raise ValueError("BUILD_PROGRAM_BUDGET_HOLD:" + str(exc)) from exc
     # Generic owner Astra missions (#1156): a separate append-only ledger key, each row bound to a reviewed mission.
     mission_high, mission_count, _ = astra_missions.mission_reservations(value, reserved_work_ids)
     high += mission_high
@@ -437,9 +476,10 @@ def pending_risk(path: Path) -> tuple[float, float, int]:
     return low, high, len(seen) + reservation_count
 
 
-def settled_owner_cost_upper(path: Path, now: datetime) -> float:
+def settled_owner_cost_upper(path: Path, now: datetime, *, strict_build: bool = True) -> float:
     """One historical group provision; callers must first validate pending_risk."""
     value = json.loads(path.read_text(encoding="utf-8"))
+    value, _, _ = build_ledger_view(value, strict_build=strict_build)
     evidence = value.get("owner_astra_provider_period_settlement")
     _, provision = astra_missions.settlement_summary(value)
     upper = float(provision.get(now.strftime("%Y-%m"), 0))
@@ -606,9 +646,15 @@ def main() -> None:
     settled_owner_upper = 0.0
     settled_astra_count = 0
     try:
-        pending_low, pending_high, pending_count = pending_risk(args.liability_ledger)
-        settled_owner_upper = settled_owner_cost_upper(args.liability_ledger, now)
-        settled_astra_count = len(astra_missions.settlement_summary(json.loads(args.liability_ledger.read_text(encoding="utf-8")))[0])
+        strict_build = str(args.owner_astra_program_work_id or "").startswith("ASTRA-BUILD-")
+        pending_low, pending_high, pending_count = pending_risk(
+            args.liability_ledger, strict_build=strict_build)
+        settled_owner_upper = settled_owner_cost_upper(
+            args.liability_ledger, now, strict_build=strict_build)
+        settled_view, _, _ = build_ledger_view(
+            json.loads(args.liability_ledger.read_text(encoding="utf-8")),
+            strict_build=strict_build)
+        settled_astra_count = len(astra_missions.settlement_summary(settled_view)[0])
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         errors.append({"path": str(args.liability_ledger),
                        "reason": "LIABILITY_EVIDENCE_UNAVAILABLE:" + str(exc)[:100]})

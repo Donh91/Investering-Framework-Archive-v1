@@ -53,13 +53,24 @@ class BuildCostTest(unittest.TestCase):
         with mock.patch.object(c,"estimate_cost",return_value=5.0):
             self.assertEqual(self.quote()["worst_case_usd"],5.0)
 
-    def test_600kb_is_size_ceiling_not_spend_permission(self):
-        with mock.patch.object(c,"estimate_cost",return_value=20.0):
-            self.assert_hold("STAGE_OVER_USD5",request_bytes=600_000)
-        with mock.patch.object(c,"estimate_cost",return_value=1.0) as cost:
-            self.quote(request_bytes=600_000)
-            self.assertEqual(cost.call_args.args[1],620_000)
-        self.assert_hold("INPUT_600KB",request_bytes=600_001)
+    def test_realistic_input_ceiling_still_requires_usd5_price(self):
+        with mock.patch.object(c, "estimate_cost", return_value=20.0):
+            self.assert_hold("STAGE_OVER_USD5", request_bytes=220_000)
+        with mock.patch.object(c, "estimate_cost", return_value=1.0) as cost:
+            self.quote(request_bytes=220_000)
+            self.assertEqual(cost.call_args.args[1], 240_000)
+        self.assert_hold("INPUT_BUILD_REALISTIC_CAP", request_bytes=220_001)
+
+    def test_program_cap_is_mutation_sensitive(self):
+        rows = [
+            {"work_id": f"ASTRA-BUILD-{m}-20261121-S{s}",
+             "upper_usd": 5.0, "status": "OWNER_RESERVED_PREHTTP"}
+            for m in ("M1", "M2", "M3") for s in (1, 2)
+        ]
+        with mock.patch.object(c, "MAX_PROGRAM_USD", 29.99):
+            with self.assertRaisesRegex(c.BudgetHold, "BUILD_PROGRAM_USD30"):
+                c.validate_program_reservations(rows)
+        self.assertEqual(c.validate_program_reservations(rows)["current_reserved_upper_usd"], 30.0)
 
     def test_bad_model_effort_and_stage(self):
         self.assert_hold("MODEL_OR_EFFORT",model="gpt-6.1-sol")

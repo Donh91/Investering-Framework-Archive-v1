@@ -14,7 +14,7 @@ import re
 # legacy CLI invoking check_monthly_cost_guard.py directly.
 from .api_gateway import estimate_cost
 
-MAX_REQUEST_BYTES = 600_000
+MAX_REQUEST_BYTES = 220_000  # conservative 4k-output tier ceiling; USD5 quote remains binding
 INPUT_OVERHEAD_TOKENS = 20_000
 MAX_STAGE_USD = 5.0
 MAX_MISSION_USD = 10.0
@@ -46,7 +46,7 @@ def quote(*, work_id, mission, stage, model, reasoning_effort,
     exact_stage_id(work_id, mission, stage)
     require(model == MODEL and reasoning_effort == EFFORT, "MODEL_OR_EFFORT")
     require(type(request_bytes) is int and 0 < request_bytes <= MAX_REQUEST_BYTES,
-            "INPUT_600KB")
+            "INPUT_BUILD_REALISTIC_CAP")
     require(type(max_output_tokens) is int and 4_096 <= max_output_tokens <= 128_000,
             "OUTPUT_TOKENS")
     if stage == 1:

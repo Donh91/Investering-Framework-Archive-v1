@@ -6,6 +6,8 @@ the unique owner claim and receipt in an unprivileged separate job.
 """
 from __future__ import annotations
 
+import re
+
 from scripts.api_agent import astra_build_admit_v1 as admission
 from scripts.api_agent import astra_build_cost_v1 as cost
 from scripts.api_agent import astra_build_sandbox_v1 as sandbox
@@ -23,7 +25,8 @@ def require(cond, reason):
 
 def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
          admitted: dict, tested: dict, approved_scope: dict,
-         verified_current_run_id: str):
+         verified_current_run_id: str,
+         trusted_toolchain_image_id: str = sandbox.IMAGE):
     """Bind full-source report, original owner receipt, admission and tests.
 
     All caller-supplied objects must originate from separately authenticated
@@ -63,11 +66,16 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
             and paid_receipt.get("research_only") is True
             and paid_receipt.get("usage_valid") is True,
             "PAID_RECEIPT_NOT_FINAL")
+    # The GET collector performs this check too, but downstream binding must
+    # reject a forged provider model even when earlier receipt checks drift.
+    provider_model = paid_receipt.get("provider_model")
     require(source_manifest.get("model") == MODEL
             and source_manifest.get("reasoning_effort") == "max"
             and paid_receipt.get("model") == MODEL
             and paid_receipt.get("reasoning_effort") == "max"
-            and paid_receipt.get("provider_reasoning_effort") == "max",
+            and paid_receipt.get("provider_reasoning_effort") == "max"
+            and isinstance(provider_model, str)
+            and re.fullmatch(re.escape(MODEL) + r"(?:-20[0-9]{2}-[0-9]{2}-[0-9]{2})?", provider_model),
             "MODEL_EFFORT_BOND")
     require(type(source_manifest.get("request_bytes")) is int
             and 0 < source_manifest["request_bytes"] <= cost.MAX_REQUEST_BYTES,
@@ -97,24 +105,27 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
             and tested.get("proposal_sha256") == admission.digest(raw_report)
             and tested.get("admission_sha256") == admission.digest(admission.canonical(original))
             and tested.get("test_command_id") == approved_scope["test_command_id"]
+            and tested.get("test_profile") == "FIXED_RESTRICTED_PREFILTER_NOT_CI_PROOF"
             and tested.get("network") == "none"
-            and tested.get("image") == sandbox.IMAGE
+            and tested.get("image") == trusted_toolchain_image_id
+            and (trusted_toolchain_image_id == sandbox.IMAGE or
+                 bool(re.fullmatch(r"sha256:[a-f0-9]{64}", trusted_toolchain_image_id)))
             and tested.get("secrets") is False
             and tested.get("paid_authority") is False
             and tested.get("merge_authority") is False,
             "SANDBOX_BOND")
     tests=tested.get("tests")
     baseline=tested.get("native_suite_baseline")
-    expected_count=len(admission.TEST_COMMANDS[approved_scope["test_command_id"]])
+    expected_count=len(admission.PREFILTER_COMMANDS[approved_scope["test_command_id"]])
     require(type(tests) is list and type(baseline) is list
             and len(tests) == len(baseline) == expected_count and expected_count > 0,
             "TEST_CENSUS")
-    require(all(type(x) is dict and x.get("status") in ("PASS", "TEST_FAILURE")
+    require(all(type(x) is dict and x.get("status") in ("EXIT0_WITH_UNTRUSTED_SUMMARY", "TEST_FAILURE")
                 and type(x.get("returncode")) is int
                 and type(x.get("completed_tests_observed")) is int
                 and x["completed_tests_observed"] >= 0 for x in tests),
             "TEST_STATUSES")
-    require(all(type(x) is dict and x.get("status") == "PASS"
+    require(all(type(x) is dict and x.get("status") == "EXIT0_WITH_UNTRUSTED_SUMMARY"
                 and x.get("returncode") == 0
                 and type(x.get("completed_tests_observed")) is int
                 and x["completed_tests_observed"] > 0 for x in baseline),
@@ -124,12 +135,14 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
     # output. This prevents exit(0) and forged stdout from becoming a PASS.
     require(tested.get("independent_completion_attested") is False,
             "UNREVIEWED_TEST_ATTESTOR")
-    observed = all(x["status"] == "PASS" and x["returncode"] == 0
+    observed = all(x["status"] == "EXIT0_WITH_UNTRUSTED_SUMMARY" and x["returncode"] == 0
                    and x["completed_tests_observed"] >= baseline[i]["completed_tests_observed"]
                    for i, x in enumerate(tests))
     require(tested.get("status") == ("TEST_COMPLETION_UNATTESTED" if observed else "TEST_FAILURE"),
             "FALSE_SANDBOX_SUCCESS")
-    status = "TEST_COMPLETION_HOLD" if observed else "TEST_FAILURE_OR_INCOMPLETE"
+    # The sandbox is a prefilter; only a later output PR native CI can prove
+    # real test completion. No paid authority or merge rights exist here.
+    status = "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY" if observed else "TEST_FAILURE_OR_INCOMPLETE"
     return {"contract": CONTRACT, "status": status,
             "mission_id": mission, "stage": approved_scope["stage"],
             "release_main_sha": approved_scope["main_sha"],
@@ -148,5 +161,7 @@ def bind(*, raw_report: bytes, source_manifest: dict, paid_receipt: dict,
             "test_count": len(tests), "all_fixed_tests_passed":
             status == "TESTED_PASS_REVIEW_REQUIRED",
             "body_and_coverage_attested_by_native_writer": False,
+            "independent_native_pr_ci_pending": True,
+            "output_eligibility": "ONE_DRAFT_PR_NO_AUTOMERGE" if observed else "NO_PR",
             "paid_authority": False, "merge_authority": False,
             "review_required": True}

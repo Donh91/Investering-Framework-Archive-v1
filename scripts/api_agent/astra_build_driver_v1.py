@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import stat
 import subprocess
 from pathlib import Path
@@ -17,6 +18,7 @@ from scripts.api_agent import astra_build_admit_v1 as admit
 from scripts.api_agent import astra_build_cost_v1 as budget
 from scripts.api_agent import astra_build_receipt_v1 as binding
 from scripts.api_agent import astra_build_sandbox_v1 as sandbox
+from scripts.api_agent import astra_build_draft_package_v1 as draft_package
 from scripts.research import owner_astra_mission_v1 as owner
 
 CONTRACT = "ASTRA_BUILD_DRIVER_RECEIPT_v1"
@@ -67,6 +69,20 @@ def trusted_scope(repo: Path, mission_id: str, head: str) -> dict:
             "SCOPE_STAGE_ID")
     scope = dict(data, main_sha=head)
     admit.verify_scope(scope)
+    # H5/N15: the reviewed bundle shown to the provider MUST contain the
+    # exact source path/preimage list from this separately trusted scope.
+    # A sha-only reference is insufficient: a stale bundle could overwrite
+    # interim main changes without the model having seen those preimages.
+    bundle = read_bound(repo, "06_RESEARCH_LAB/astra_missions/" + mission_id +
+                        "/BUNDLE.md", budget.MAX_REQUEST_BYTES)
+    start = b"<!-- ASTRA_BUILD_SOURCE_MANIFEST_V1\n"
+    end = b"\nEND_ASTRA_BUILD_SOURCE_MANIFEST_V1 -->"
+    require(bundle.count(start) == 1 and bundle.count(end) == 1,
+            "BUNDLE_SOURCE_MANIFEST_MISSING")
+    embedded = bundle.split(start, 1)[1].split(end, 1)[0]
+    listed = load_json(embedded)
+    require(admit.canonical(listed) == admit.canonical(data["source_files"]),
+            "BUNDLE_SOURCE_PREIMAGES_DRIFT")
     for path, meta in data["source_files"].items():
         entry = repo / path
         require(entry.resolve(strict=False).is_relative_to(repo.resolve()),
@@ -135,21 +151,52 @@ def verify_original_artifact(repo: Path, input_dir: Path, mission_id: str,
     return raw, sr, paid
 
 def run(repo: Path, artifact: Path, mission_id: str, native_head: str,
-        native_run_id: str) -> dict:
+        native_run_id: str, trusted_toolchain_image_id: str = sandbox.IMAGE) -> dict:
     head = verified_head(repo, native_head)
     scope = trusted_scope(repo, mission_id, head)
     raw, source, paid = verify_original_artifact(
         repo, artifact, mission_id, head, native_run_id)
     admitted = admit.admit(raw, scope)
-    tested = sandbox.run_admitted(raw, scope, repo)
+    tested = sandbox.run_admitted(raw, scope, repo,
+                                  trusted_toolchain_image_id=trusted_toolchain_image_id)
     verdict = binding.bind(raw_report=raw, source_manifest=source,
                            paid_receipt=paid, admitted=admitted, tested=tested,
                            approved_scope=scope,
-                           verified_current_run_id=native_run_id)
+                           verified_current_run_id=native_run_id,
+                           trusted_toolchain_image_id=trusted_toolchain_image_id)
     require(verdict["paid_authority"] is False
             and verdict["merge_authority"] is False,
             "RELEASE_AUTHORITY_IN_SANDBOX")
     return verdict
+
+def verified_same_job_toolchain_image() -> str:
+    """Source-reviewed no-secret workflow builds this before untrusted bytes."""
+    image = os.environ.get("ASTRA_BUILD_IMAGE_ID", "")
+    require(bool(re.fullmatch(r"sha256:[a-f0-9]{64}", image)),
+            "TRUSTED_TOOLCHAIN_IMAGE_ID_MISSING")
+    try:
+        actual = subprocess.check_output(
+            ["docker", "image", "inspect", "--format", "{{.Id}}", image],
+            timeout=15, text=True, env={"PATH": "/usr/bin:/bin"}).strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise DriverHold("TRUSTED_TOOLCHAIN_IMAGE_UNAVAILABLE") from exc
+    require(actual == image, "TRUSTED_TOOLCHAIN_IMAGE_DRIFT")
+    return image
+
+
+def verified_native_owner_event(mission_id: str) -> dict:
+    """Re-verify the native owner event in the no-secret driver, not just YAML."""
+    require(mission_id in ALLOWED_STAGE1_IDS, "MISSION_NOT_STAGE1_BUILD")
+    event, actual_mid, bundle = owner.owner_event()
+    require(actual_mid == mission_id, "OWNER_EVENT_MISSION_DRIFT")
+    expected, raw, meta = owner.build_request(mission_id)
+    require(bundle == meta["bundle_sha256"]
+            and admit.digest(raw) == meta["request_sha256"],
+            "OWNER_EVENT_BUNDLE_DRIFT")
+    return {"mission_id": actual_mid,
+            "bundle_sha256": bundle,
+            "comment_id": event["comment"]["id"]}
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -166,15 +213,31 @@ def main():
         manifest = load_json(read_bound(artifact, "source_manifest.json", 48_000))
         mission_id = manifest.get("mission_id")
     require(mission_id in ALLOWED_STAGE1_IDS, "MISSION_NOT_STAGE1_BUILD")
+    # Re-read and authenticate the originating issue_comment after the
+    # artifact was downloaded, even though the workflow if gate also checked.
+    verified_native_owner_event(mission_id)
+    trusted_image = verified_same_job_toolchain_image()
     result = run(args.repo.resolve(), artifact, mission_id,
                  os.environ.get("GITHUB_SHA", ""),
-                 os.environ.get("GITHUB_RUN_ID", ""))
+                 os.environ.get("GITHUB_RUN_ID", ""), trusted_image)
     data = admit.canonical(result) + b"\n"
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("xb") as dest:
         dest.write(data)
+    if result["status"] == "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY":
+        # Only staging, never GitHub write. The owner connector may create
+        # ONE draft PR, whose exact-head native CI is independent test proof.
+        repo = args.repo.resolve()
+        scope = trusted_scope(repo, mission_id, os.environ.get("GITHUB_SHA", ""))
+        origin = "archive/" + owner.mission_rel(mission_id) + "/results/ASTRA_RAW_REPORT.md"
+        source_bytes = read_bound(artifact, origin)
+        staged = draft_package.build(raw=source_bytes, scope=scope, verdict=result)
+        with (args.out.parent / "draft_pr_package.json").open("xb") as dest:
+            dest.write(staged)
+        print("ASTRA_DRAFT_PACKAGE_STAGED", admit.digest(staged),
+              "PENDING_EXTERNAL_OWNER_CONNECTOR_PR_CREATION")
     print(CONTRACT, result["status"], admit.digest(data))
-    return 0 if result["status"] == "TESTED_PASS_REVIEW_REQUIRED" else 3
+    return 0 if result["status"] == "PREFILTER_ELIGIBLE_DRAFT_PR_ONLY" else 3
 
 if __name__ == "__main__":
     raise SystemExit(main())

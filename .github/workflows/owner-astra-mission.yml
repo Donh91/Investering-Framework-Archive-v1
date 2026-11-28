@@ -117,6 +117,100 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+  build-toolchain-audit:
+    # Strictly PR-only, owner-source worktree, no key or write authority.
+    # Source-bound IMAGE CANDIDATE. A successful build does not lift BUILD HOLD.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.head_ref == 'build/astra-build-hold-lift-h1-h6-20261121'
+    # Only this PR-only no-secret diagnostic coalesces superseded builds.
+    # Paid/recover/verify and native release jobs have no such cancellation.
+    concurrency:
+      group: astra-build-toolchain-pr-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Build reviewed dependency candidate outside any paid job
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --pull --platform linux/amd64 \
+            --file scripts/api_agent/docker/astra-build-toolchain-v1.Dockerfile.txt \
+            --tag astra-build-toolchain-audit:v1 .
+          image_id=$(docker image inspect --format '{{.Id}}' astra-build-toolchain-audit:v1)
+          [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --pids-limit 32 \
+            astra-build-toolchain-audit:v1 python -m pytest --version
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --pids-limit 32 \
+            astra-build-toolchain-audit:v1 node --version
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --pids-limit 32 \
+            astra-build-toolchain-audit:v1 git --version
+          mkdir -p runtime/astra-build-toolchain-evidence
+          build_inputs_sha256=$(
+            sha256sum scripts/api_agent/docker/astra-build-toolchain-v1.Dockerfile.txt \
+              scripts/api_agent/docker/astra-build-requirements.lock.txt \
+              scripts/api_agent/docker/inspect_astra_toolchain_lock_v1.py \
+              | LC_ALL=C sort | sha256sum | cut -d' ' -f1
+          )
+          printf '{"contract":"ASTRA_BUILD_TOOLCHAIN_CANDIDATE_v1","image_id":"%s","build_inputs_sha256":"%s","lock_sha256":"70852b54dc8bd5af2c70403a5316bda21eaa6a949f710a0451981360c96b5e38","activation":"HOLD_NO_PAID_BUILD","test_command_completed":false}\n' "$image_id" "$build_inputs_sha256" \
+            > runtime/astra-build-toolchain-evidence/image_candidate.json
+      - name: Generate candidate wheel-hash lock from reviewed no-secret toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/astra-build-toolchain-evidence/wheels
+          docker run --rm --network bridge --pull never \
+            --mount "type=bind,src=$PWD/runtime/astra-build-toolchain-evidence,dst=/out" \
+            astra-build-toolchain-audit:v1 sh -ec \
+            'python -m pip freeze > /out/requirements-resolved.txt && \
+             python -m pip download --no-cache-dir --only-binary=:all: --no-deps \
+               -r /out/requirements-resolved.txt -d /out/wheels'
+          python scripts/api_agent/docker/inspect_astra_toolchain_lock_v1.py \
+            --freeze runtime/astra-build-toolchain-evidence/requirements-resolved.txt \
+            --wheels runtime/astra-build-toolchain-evidence/wheels \
+            --lock-out runtime/astra-build-toolchain-evidence/requirements.lock.candidate.txt
+          cmp -s scripts/api_agent/docker/astra-build-requirements.lock.txt \
+            runtime/astra-build-toolchain-evidence/requirements.lock.candidate.txt
+          sha256sum scripts/api_agent/docker/astra-build-requirements.lock.txt
+          echo "SOURCE_LOCK_EQUALS_NATIVE_WHEEL_HASH_CENSUS_NO_RELEASE"
+      - name: Read separate pristine public main checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: runtime/pristine-main
+          persist-credentials: false
+      - name: Independent no-secret M1 and M3 baseline probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          image_id=$(docker image inspect --format '{{.Id}}' astra-build-toolchain-audit:v1)
+          pristine_sha=$(git -C runtime/pristine-main rev-parse HEAD)
+          python -m scripts.api_agent.astra_build_baseline_probe_v1 \
+            --pristine runtime/pristine-main \
+            --sha "$pristine_sha" --image-id "$image_id" \
+            --out runtime/astra-build-toolchain-evidence/pristine-baseline.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: astra-build-toolchain-candidate-${{ github.run_id }}
+          path: runtime/astra-build-toolchain-evidence/
+          if-no-files-found: warn
+          retention-days: 30
+
   verify:
     if: >-
       github.event_name == 'issue_comment' && github.event.action == 'created' &&
@@ -355,14 +449,33 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Build source-reviewed hash-locked toolchain BEFORE any model artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --pull --platform linux/amd64 \
+            --file scripts/api_agent/docker/astra-build-toolchain-v1.Dockerfile.txt \
+            --tag astra-build-runtime:reviewed .
+          image_id=$(docker image inspect --format '{{.Id}}' astra-build-runtime:reviewed)
+          [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image_id")" = linux/amd64
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --memory-swap 256m \
+            --cpus 0.5 --pids-limit 32 "$image_id" python -m pytest --version
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --memory-swap 256m \
+            --cpus 0.5 --pids-limit 32 "$image_id" node --version
+          docker run --rm --pull never --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user 65534:65534 --memory 256m --memory-swap 256m \
+            --cpus 0.5 --pids-limit 32 "$image_id" git --version
+          echo "ASTRA_BUILD_IMAGE_ID=$image_id" >> "$GITHUB_ENV"
       - uses: actions/download-artifact@v4
         with:
           name: astra-mission-evidence-${{ github.run_id }}
           path: runtime/astra-build-input
-      - name: Pull exact source-reviewed Python image outside candidate container
-        run: |
-          docker pull --platform linux/amd64 python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b
-          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' python@sha256:1148dbb014615300fa7e713b2f94f550c0d1c69780c0805f84f093ceee34dd0b)" = linux/amd64
       - name: Bind exact original provider receipt and execute only fixed BUILD tests
         run: >-
           python -m scripts.api_agent.astra_build_driver_v1
@@ -372,6 +485,6 @@ jobs:
         if: always()
         with:
           name: astra-build-result-${{ github.run_id }}
-          path: runtime/astra-build-result/receipt.json
+          path: runtime/astra-build-result/
           if-no-files-found: warn
           retention-days: 90
