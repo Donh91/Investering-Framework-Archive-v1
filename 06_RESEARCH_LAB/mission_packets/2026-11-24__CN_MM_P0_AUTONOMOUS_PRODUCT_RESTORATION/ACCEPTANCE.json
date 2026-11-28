@@ -1,0 +1,301 @@
+{
+  "contract": "CN_MM_P0_PRODUCT_RESTORATION_MISSION_v1",
+  "status": "OPEN_COORDINATION_ONLY_DRAFT",
+  "priority": "P0_PRODUCT_RESTORATION",
+  "original_owners": {
+    "product_issue": 1516,
+    "scientific_issue": 1596,
+    "integrity_issue": 1827,
+    "hourly_gap_issue": 386,
+    "supervisor_issue": 1156,
+    "strategist_issue": 1157,
+    "research_issue": 1512,
+    "claude_bridge": "Donh91/Investering-AI-Audit-Bridge#173"
+  },
+  "implementation_prs": [
+    {
+      "pr": 2315,
+      "role": "original MM/CN repair, preserve writer"
+    },
+    {
+      "pr": 2318,
+      "role": "stacked research and implementation; M01-M11 and merge hold preserved"
+    },
+    {
+      "pr": 2312,
+      "role": "native weekly/Pages closure"
+    },
+    {
+      "pr": 2319,
+      "role": "public Kompas contract/UI"
+    },
+    {
+      "pr": 2292,
+      "role": "mature public scorecard"
+    },
+    {
+      "pr": 2333,
+      "role": "independent source-bound live cycle observation"
+    },
+    {
+      "pr": 2335,
+      "role": "native live participation, altseason and historical T6 readback"
+    }
+  ],
+  "gates": [
+    {
+      "id": "G00",
+      "priority": "P0",
+      "title": "Authority, owner census and no duplicate work",
+      "owners": "1516 / 1156 / 2315 / 2318",
+      "status": "OPEN",
+      "acceptance": "Fresh main, exact heads, changed paths, writer lease, review and dependency graph; original owners confirm routing; no separate writer",
+      "hold": "Stop if overlap or source identity unproved",
+      "evidence_refs": [],
+      "progress_evidence": "Original owner and PR-role register is present. Release-time head/CI/review and overlap checks remain read-time receipts, not static pins.",
+      "next_executable": "Before each write or review, read current main, exact PR heads, CI, affected files and writer leases; coordinate overlaps. Do not gate independent G05/G08 on unrelated research."
+    },
+    {
+      "id": "G01",
+      "priority": "P0",
+      "title": "Restore producer and input truth",
+      "owners": "2315 / 386",
+      "status": "OPEN",
+      "acceptance": "Existing Daily Capture FINAL 168h, source quote, exact source/receipt bytes, cutoff and weekly identity; native future freeze sidecar; no false retrospective attestation; positive/late/missing/revision tests",
+      "hold": "W47 legacy sidecar absent; CP19 must prove explicit historical abstention and future native positive fixture",
+      "evidence_refs": [
+        "PR #2318: tests/cycle_navigator/test_cn_mm_core_shadow_bridge_v1.py::test_real_historical_w47_context_and_gateway_preserve_unknown_feature",
+        "PR #2318: tests/cycle_navigator/test_cn_mm_core_shadow_bridge_v1.py::test_new_producer_binding_reaches_existing_cn_consumer_in_isolated_git_fixture"
+      ],
+      "progress_evidence": "Historical W47 UNKNOWN test and synthetic future producer-to-consumer fixture exist. Neither is an authentic future source delivery.",
+      "next_executable": "Observe authentic future source freeze/sidecar and independent known-by; never backfill W47."
+    },
+    {
+      "id": "G02",
+      "priority": "P0",
+      "title": "Complete Master Monday analysis and operational translation",
+      "owners": "2315 / 2318",
+      "status": "OPEN",
+      "acceptance": "Actual MM gateway schema plus typed validated translation, scorecard, forecast direction/horizon/sequence/uncertainty and source references. Real producer→machine→consumer tests. READY must not mask mandatory missing analysis",
+      "hold": "No invented translation or model-use claim; actual model delivery and deterministic fallback separately labeled",
+      "evidence_refs": [
+        "PR #2318: scripts/master_monday/publish_master_monday_outputs.py::experiment_outcome_scorecard",
+        "PR #2318: scripts/master_monday/publish_master_monday_outputs.py::analytical_translation",
+        "PR #2318: tests/cycle_navigator/test_cn_mm_core_shadow_bridge_v1.py::test_mm_translation_readback_rejects_malformed_or_authoritative_shadow_rows"
+      ],
+      "progress_evidence": "Descriptive outcome counts and typed, receipt-bound shadow metadata implemented; actual complete analytical decision and scorecard remain DEGRADED.",
+      "next_executable": "Complete nonpaid original MM translation/scorecard from qualified inputs; preserve DEGRADED until mandatory fields and actual utilization are verified."
+    },
+    {
+      "id": "G03",
+      "priority": "P0",
+      "title": "Restore all existing signal-to-consumer routes",
+      "owners": "2315 / 2318 / 1827",
+      "status": "OPEN",
+      "acceptance": "Inventory original active/shadow/retired sensors with owner/source/transform/output/consumer/outcome/test; prove each claimed active capability affects actual consumer via source mutation; correct data grain, clock, fallback; explicit approved disposition for irrecoverable items",
+      "hold": "No blanket reactivation, fake historical formula, duplicate indicators or guard relaxation",
+      "evidence_refs": [
+        "PR #2318: 06_RESEARCH_LAB/cn_signal_lineage_restoration_v1/CN_MM_LEGACY_RECOVERY_MAP_v1.json (recovered_definitions, historical_information_families)"
+      ],
+      "progress_evidence": "Original legacy recovery map inventories historical families and explicitly marks current evaluator/consumer effects as unverified; not proof of active sensor recovery.",
+      "next_executable": "Trace original source/transform/evaluator and consumer mutations; map each historical DATA PING lane to existing live owner, reviewed keyless collector, or visible retirement; preserve history."
+    },
+    {
+      "id": "G04",
+      "priority": "P0",
+      "title": "Restore intelligent 7-day BTC/ETH path",
+      "owners": "1516 / 2315 / 2318",
+      "status": "OPEN",
+      "acceptance": "Seven daily closes AND low/high per asset, original quote and frozen issue, valid range/close semantics; independent source signal changes affect actual synthesis, not just metadata. Separate official synthesis from deterministic fallback and C0/C1/C2 research",
+      "hold": "No arbitrary numerical predictions, no retrospective rewrite, no extra paid calls",
+      "evidence_refs": [
+        "PR #2318: scripts/research/cn_mm_c2_relative_tilt_fixture_v1.py::fixture_projection",
+        "PR #2318: tests/cycle_navigator/test_cn_mm_core_shadow_bridge_v1.py::test_relative_synthesis_changes_decision_branch_without_forecast_authority"
+      ],
+      "progress_evidence": "Original A and C2 projection and synthetic matched evaluator exist; no official signal-driven seven-day price effect established.",
+      "next_executable": "Restore source-driven official synthesis in original writer with mutation proof; label deterministic fallback honestly. Preserve Monday seven-day freeze and point-in-time scoring."
+    },
+    {
+      "id": "G05",
+      "priority": "P0",
+      "title": "Cycle stage, transitions and rotation",
+      "owners": "1516 / 1827 / 2315 / 2318",
+      "status": "OPEN",
+      "acceptance": "Recover existing regime/cycle taxonomy, current phase and evidence, next gate, invalidation, BTC→ETH→large→mid→micro transmission and altseason conditionality. Publish live stage, phase, rotation, altseason and path independently of weekly issue, at least daily (prefer existing hourly native capture); show source age, target at most 24h. Actual consumer mutation tests prove live phase/rotation respond to newest sensors. Distinct nowcast and forecast; uncertainty on conflicting signals, explicit missing/stale source on genuine data gaps.",
+      "hold": "Weekly freeze, offline issuer or pre-freeze-only rules must not hold live layers at UNKNOWN/UNCONFIRMED/stale. No synthetic phase/ETA or fabricated source.",
+      "evidence_refs": [
+        "PR #2333: 05_CYCLE_NAVIGATOR/site/premium-v2/cycle-source-readback.mjs",
+        "PR #2333: 05_CYCLE_NAVIGATOR/site/premium-v2/cycle-source-readback.test.mjs",
+        "PR #2335: 05_CYCLE_NAVIGATOR/site/cycle-participation.mjs::readCycleParticipation",
+        "PR #2335: 05_CYCLE_NAVIGATOR/site/cycle-participation.mjs::t6ResearchDisplay"
+      ],
+      "progress_evidence": "Live source-readback and relative participation implementation files exist in original product PRs; historical T6 is not confirmation of a current phase.",
+      "next_executable": "FIRST, with G08: restore live stage/phase/rotation/altseason/path from newest native sources, independent of weekly freeze. Prove source changes reach the live UI; show age, drivers, next gate, conflicting signals and genuine missing data."
+    },
+    {
+      "id": "G06",
+      "priority": "P0",
+      "title": "Path, horizons, pullback and protection",
+      "owners": "1516 / 2318",
+      "status": "OPEN",
+      "acceptance": "Existing 1–3d, 5–7d, 2–3w, 21–30d and longer shadow horizons; original checkpoints NOW, 3–7d, 8–14d, 15–21d, 22–30d, 4–6w, reconcile 4–8w. Live path context and pullback/protection update independently of the weekly price freeze, at least daily, with age and source mutation tests. Direction, scenario envelope, turning window, risk/depth, confirmation/invalidation and confidence semantics; no fabricated probabilities.",
+      "hold": "Preserve horizon authority and shadow status; no copy-forward of stale conclusions",
+      "evidence_refs": [
+        "PR #2318: scripts/learning/forward_price_research_oracle.py::inspect_native_usdt_candidate"
+      ],
+      "progress_evidence": "Native BTCUSDT forward range research oracle is implemented; no prospective live issuance, actual custody/delivery or calibrated probability established.",
+      "next_executable": "Restore live path/protection context independently of weekly issue, then reuse original forward-price custody and settlement for qualified 14/21/30/56d research; no unsupported numeric targets."
+    },
+    {
+      "id": "G07",
+      "priority": "P0",
+      "title": "Autonomous native weekly publication",
+      "owners": "2312 / 2315",
+      "status": "OPEN",
+      "acceptance": "Existing Sunday FINAL→Monday preflight→freeze→MM→CN→Pages native scheduled trace, exactly one issue per week, retries idempotent, correct Copenhagen ISO week/DST, original full path and CDN byte readback",
+      "hold": "No new scheduler, no manual DATA PING or manual dispatch to claim natural success",
+      "evidence_refs": [
+        "PR #2312: scripts/cycle_navigator/attest_weekly_pages_delivery.py::make_proof",
+        "PR #2312: scripts/cycle_navigator/attest_weekly_pages_delivery.py::self_test"
+      ],
+      "progress_evidence": "Original Pages proof implementation and self-test exist in #2312; no natural release is established by that code.",
+      "next_executable": "After live G05/G08 review, reconcile #2312 native publication dependency and observe genuine scheduled Sunday/Monday chain and CDN readback. Preserve existing governance."
+    },
+    {
+      "id": "G08",
+      "priority": "P0",
+      "title": "Public Kompas PRO and Navigator One contract",
+      "owners": "2319 / 2292 / 2312",
+      "status": "OPEN",
+      "acceptance": "Strict public v1 schema, current week/day frozen graph and independently refreshed live phase/stage/path/rotation/altseason/score/lineage; newest native sources at least daily, preferably hourly; visible age (target at most 24h), actual source-to-UI mutation tests and uncertainty when sensors disagree. Honest empty states only for genuine missing/stale inputs, not weekly freeze. Desktop/mobile, stale/cache/404/mismatch, public allowlist only; Navigator One same versioned data.",
+      "hold": "No second market owner; no private evidence leakage or unreviewed schema change",
+      "evidence_refs": [
+        "PR #2319: 05_CYCLE_NAVIGATOR/site/premium-v2/kompas-pro.v1.schema.json",
+        "PR #2319: 05_CYCLE_NAVIGATOR/site/premium-v2/kompas-pro-public-v1.test.mjs",
+        "PR #2292: 05_CYCLE_NAVIGATOR/site/premium-v2/challenger-a-panel.test.mjs",
+        "PR #2333: 05_CYCLE_NAVIGATOR/site/premium-v2/cycle-map.test.mjs",
+        "PR #2335: 05_CYCLE_NAVIGATOR/site/premium-v2/cycle-participation.test.mjs"
+      ],
+      "progress_evidence": "Strict public contract and scorecard implementation/test files exist; #2333/#2335 add independent live card paths. Shared builder and root overlap requires reconciliation.",
+      "next_executable": "FIRST, with G05: reconcile live public builder/root writers; ensure independent live refresh even with frozen/offline/mismatched weekly issue. Verify desktop/mobile, source age, uncertainty, stale and missing-source cases; shared versioned data for Navigator One."
+    },
+    {
+      "id": "G09",
+      "priority": "P0",
+      "title": "Autonomous health and anti-regression",
+      "owners": "1156 / 2315 / 2321",
+      "status": "OPEN",
+      "acceptance": "Mandatory capability effect tests and natural producer/consumer evidence. Existing S1 discovery and closure states, no false READY, independently verified native exact head review, recovery and rollback. Trace failure to exact owner/next action",
+      "hold": "Existing S1 root/fable priority preserved; no altered pins, new supervisor or simulated S1 receipt",
+      "evidence_refs": [],
+      "progress_evidence": "Capability and review controls require gate-specific operational verification; general green CI is not proof of autonomous health.",
+      "next_executable": "Verify effect/anti-bypass tests and natural failures/recovery for active capabilities under existing governance."
+    },
+    {
+      "id": "G10",
+      "priority": "P1",
+      "title": "Scientific matched calibration and incremental learning",
+      "owners": "1596 / 2318 / 2292",
+      "status": "OPEN",
+      "acceptance": "Original C0/C1 matched point/range score; prospective frozen C2 only after activation/source-known-by; matched denominators, abstention, width, MAE, interval score, independent blocks; CP17 same-run full equivalence; durable authenticated receipt/invalidation; eliminate 512 cap safely",
+      "hold": "No edge or promotion on historical cohort or green tests; no silent omission",
+      "evidence_refs": [
+        "PR #2318: scripts/research/cn_mm_c2_relative_tilt_fixture_v1.py::fixture_evaluation",
+        "PR #2318: tests/research/test_cn_mm_c2_relative_tilt_fixture_v1.py::test_three_model_common_population_and_distinct_interval_semantics",
+        "PR #2318: tests/research/test_cn_mm_c2_relative_tilt_fixture_v1.py::test_three_model_late_delivery_and_gap_remove_all_model_rows"
+      ],
+      "progress_evidence": "Synthetic C0/C1/C2 matched evaluator and explicit common-population tests exist. No independent prospective C2 sample or promotion.",
+      "next_executable": "Keep original matched scoring and frozen forecasts; verify durable incremental receipts/512 cap, prospective known-by/first-delivery and reviewed activation, then independent matured weeks."
+    },
+    {
+      "id": "G11",
+      "priority": "P1",
+      "title": "Legacy analytical recovery and learning evolution",
+      "owners": "2318 / 1516 / 1596 / 1512 / 1157",
+      "status": "OPEN",
+      "acceptance": "ETHBTC persistence, breadth, BTC.D, ETF absorption/decay/flow persistence, leverage/liquidation/reclaim, stablecoin deployment, CFGI, rotation readiness/fakeout/macro, pullback radar and remaining archive census; CCE ODM FAE SRE RWE with original-vs-descendant labels; matched outcomes and prospective falsifiers",
+      "hold": "Separate P0 required existing functionality from speculative research; original M01–M11 remain open until actual proof",
+      "evidence_refs": [
+        "PR #2318: 06_RESEARCH_LAB/cn_signal_lineage_restoration_v1/CN_MM_LEGACY_RECOVERY_MAP_v1.json (status INVENTORY_ONLY_EVALUATOR_RECOVERY_REQUIRED; CCE/ODM/FAE/SRE/RWE definitions)"
+      ],
+      "progress_evidence": "Legacy map contains original meta-learning and historical verdicts as inventory, not active evaluator or edge proof.",
+      "next_executable": "Recover original evaluator and outcome mapping, including historical DATA PING dispositions; retain negative evidence. No automatic weight promotion."
+    },
+    {
+      "id": "G12",
+      "priority": "P0",
+      "title": "Release and independent end-to-end closure",
+      "owners": "1156 / all original PRs",
+      "status": "OPEN",
+      "acceptance": "Exact-head independent Claude/Codex review, native required CI, owner-sensitive release/custody/rollback, no unresolved P0/P1; approved squash readback and natural weekly end-to-end receipt; evidence matrix per G00–G11",
+      "hold": "No claim 100% live until all mandatory product gates pass; future scientific maturity is separate open gate",
+      "evidence_refs": [],
+      "progress_evidence": "No gate closure, reviewed release or natural end-to-end receipt asserted by coordination document.",
+      "next_executable": "Re-read exact heads and independent verdicts at release time; required CI, owner disposition and natural readback. Do not alter #2318 merge hold without explicit reviewed owner decision."
+    }
+  ],
+  "checkpoint_rule": "Append source-bound gate transition receipts with actual head, main, native job IDs, exact source/consumer digests, review id, actor, blockers and next executable action. No simulated S1 identity or state comment. Use original PR checkpoints and this coordination index; no new queue. PASS only at exact evidence tier; code/test/merge/production/science distinct.",
+  "authority": {
+    "new_scheduler": false,
+    "new_writer": false,
+    "merge_authorization": false,
+    "paid_dispatch": false,
+    "production_change": false,
+    "portfolio_execution": false
+  },
+  "closure": "P0 product restored only after all mandatory P0 gates and natural post-release end-to-end proof. P1 research continues under #2318 M01–M11; no silent waiver or early merge of #2318. If scientific maturation blocks combined release, propose explicitly reviewed dependency-safe bounded P0 separation to owner, never silently split or merge parent.",
+  "roadmap_checkpoint": {
+    "policy": "Progress is gate-specific and descriptive. Exact heads, current CI, check runs, and observed main are recorded in read-time PR receipts, not live pins here. File/symbol references indicate code or test presence only unless independently verified in an exact-head receipt.",
+    "priority_order": [
+      "G05/G08 live cycle/stage/rotation and public UI",
+      "G07 native publication",
+      "G01–G04/G06 source truth, MM, intelligence and horizons",
+      "G09/G10/G11 regression and research",
+      "G12 reviewed release and natural proof"
+    ],
+    "gate_counts": {
+      "open": 13,
+      "closed": 0
+    },
+    "distinguish_code_test_review_merge_production_science": true
+  },
+  "historical_diagnostic_evidence": {
+    "description": "Initial mission diagnosis only; not current production state or acceptance. Current heads, main, CI and review IDs belong in read-time receipts.",
+    "main_cn_week": "2026-W48",
+    "cn_status": "DEGRADED",
+    "issuer": "CN_OWNER_AUTHORIZED_API_FREE_SEVEN_DAY_v1",
+    "path_points": {
+      "BTC": 7,
+      "ETH": 7
+    },
+    "cycle_phase": "UNAVAILABLE",
+    "mm_week": "2026-W47",
+    "mm_api": "success",
+    "mm_translation": "UNAVAILABLE_API_CONTRACT",
+    "mm_scorecard": "UNAVAILABLE_API_CONTRACT",
+    "cp19_semantic_job": 138497667404,
+    "cp19_failure": "Historical W47 has no authentic SOURCE_BINDINGS sidecar; actual builder correctly returns UNKNOWN; confirm exact cause through native verifier. Never backfill receipt.",
+    "cp17_semantic_job": 138494581202,
+    "cp17_incremental_equal": true
+  },
+  "execution_priority": {
+    "owner_decision": "Only the weekly seven-day BTC/ETH forecast is frozen; live Kompas/stage/phase/rotation/altseason/path context must update independently from newest qualified native sensors.",
+    "decision_ref": "Donh91/Investering-AI-Audit-Bridge: reports/claude/plan/OWNER_DECISION_ONLY_WEEKLY_FORECAST_IS_FROZEN_20261125.md",
+    "precondition": "G00 continuously checks existing owners, exact-head receipts and single-writer scope; this is not a new serial blocker for independent live work.",
+    "ordered_gates": [
+      "G05",
+      "G08",
+      "G07",
+      "G01",
+      "G02",
+      "G03",
+      "G04",
+      "G06",
+      "G09",
+      "G10",
+      "G11",
+      "G12"
+    ],
+    "parallelism": "Independent live G05/G08 work proceeds together; G07 follows; other gates may proceed in parallel within existing writer and release constraints."
+  }
+}
