@@ -104,8 +104,10 @@ test('independent momentum requires exact publication identity and expires at ow
 test('root quick decision and expanded horizon matrix use shared publication gate',async()=>{
  const source=await readFile(new URL('./root-compass-pro.mjs',import.meta.url),'utf8');
  assert.ok(source.includes('const liveMomentum=verifiedPublishedLiveMomentum({compass:feeds?.compass,view,publicationLineage:feeds?.publicationLineage});'));
- assert.ok(source.includes('const matrixView=verifiedKompasPublicationLineage(feeds?.publicationLineage,view)?view:'));
- assert.ok(source.includes('view?{...view,live_observation:null}:null;'));
+ assert.ok(source.includes('const matrixView=publicationQualifiedObservationView('));
+ const shared=await readFile(new URL('./compass-overview.mjs',import.meta.url),'utf8');
+ assert.match(shared,/function publicationQualifiedObservationView[\s\S]*?verifiedPublishedLiveMomentum\(/);
+ assert.match(shared,/live_observation:null/);
  assert.ok(source.includes('compass:feeds?.compass,view:matrixView,lang,strategic,trace,originalWeekPrice,'));
 });
 
